@@ -1,0 +1,116 @@
+#
+# File:    decodePMT_sbnd.fcl
+# Purpose: PMT Comfig dumper for studies in SBND.
+# Author:  Vu Chi Lan Nguyen 
+# Date:    Jan 11, 2023
+# 
+# 
+# Input
+# ------
+# 
+# * artDAQ fragments from all 8 PMT readout boards, named
+#   `daq:ContainerCAENV1730`
+# * DAQ configuration as FHiCL in the art/ROOT input file
+# 
+# This configuration requires a data fragment for each PMT readout board
+# which is mentioned in `physics.producers.daqPMT.DecoderTool.BoardSetup`,
+# which by default is all 24.
+# 
+# 
+# Output
+# -------
+# 
+# Only new data products are written in the art/ROOT output file, including:
+# 
+# * `daqPMT` (std::vector<raw::OpDetWaveform>): decoded waveforms,
+#   with our best reconstruction for their time stamps in LArSoft reference
+# 
+# 
+# The `Trees-<InputFile>*.root` file (from `TFileService`) includes ROOT tree
+# `PMTfragments`.
+# 
+# 
+# 
+# Service configuration
+# ----------------------
+# 
+# * `DetectorClocksService` is essential to assign a correct waveform timestamp
+# * `Geometry` service bundle is required by `DetectorClocksService`
+# * `SBNDChannelMap` to relate PMT fragment IDs to channels
+# * `TFileService` used to write trees (not needed if all trees are disabled)
+# 
+#
+
+
+# ------------------------------------------------------------------------------
+#
+# service configuration
+#
+
+#include "mctrutht0matching.fcl"
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "larfft_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+
+#include "rootoutput_sbnd.fcl"
+
+##include "channelmapping_sbnd.fcl" -> Not exist
+#include "decoderdefs_sbnd.fcl" 
+
+# ------------------------------------------------------------------------------
+process_name: DecodePMT
+
+
+# ------------------------------------------------------------------------------
+services: {
+  
+  # Load the service that manages root files for histograms.
+  TFileService:              { fileName: @local::sbnd_tfileoutput.fileName }
+  message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+  FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+                             @table::sbnd_services              # from services_sbnd.fcl
+                             @table::sbnd_random_services       # from services_sbnd.fcl; required by fuzzyCluster
+                             @table::sbnd_g4_services           # from simulationservices_sbnd.fcl; required by opt0finder
+  LArFFT:                    @local::sbnd_larfft
+  SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  BackTrackerService: @local::sbnd_backtrackerservice
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice 
+ 
+#  DetectorClocksService: @local::sbnd_detectorclocks
+#  SBNDChannelMap: @local::sbnd_channelmappinggservice
+}
+
+
+# ------------------------------------------------------------------------------
+physics: {
+  
+  producers: {
+    
+    pmtdumper: {
+	module_type: "DumpPMTconfiguration"
+     }
+  }
+  
+  dumping: [ pmtdumper ]
+  streams: [ rootoutput ]
+}
+
+
+# ------------------------------------------------------------------------------
+outputs: {
+  rootoutput: {
+                      @table::sbnd_rootoutput
+    dataTier:        "decoded"
+    fileProperties:   { maxInputFiles: 1 }
+    checkFileName:    false
+    compressionLevel: 501
+    
+#    outputCommands:  [ "drop *_*_*_*", "keep *_*_*_DecodePMT" ]
+  } # rootoutput
+} # outputs 
+
+
+# ------------------------------------------------------------------------------
