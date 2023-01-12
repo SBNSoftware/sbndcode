@@ -1,2 +1,4 @@
+#include "bnb_kaon_common.fcl"
+
 physics.producers.generator.RayTrace.Box: @local::sbnd_detector_box
 physics.producers.generator.RayTrace.ReferenceSolidAngle: @local::sbnd_bnb_solid_angle_box
