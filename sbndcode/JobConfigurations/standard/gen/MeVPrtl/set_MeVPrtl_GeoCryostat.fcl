@@ -1,4 +1,4 @@
-#include "bnb_kaon_common.fcl"
+sbnd_bnb_solid_angle_cryostat: 0.0133
 
 physics.producers.generator.RayTrace.Box: @erase
 physics.producers.generator.RayTrace.Volume: "volCryostat"

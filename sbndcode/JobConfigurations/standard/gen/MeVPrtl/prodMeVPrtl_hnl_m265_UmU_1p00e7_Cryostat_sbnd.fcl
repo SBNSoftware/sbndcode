@@ -1,7 +1,7 @@
 #include "standard_MeVPrtl_hnl_sbnd.fcl"
 
 ###----------Set mass of HNL [GeV]----------###
-hnlM: 0.385
+hnlM: 0.265
 physics.producers.generator.Flux.M: @local::hnlM
 physics.producers.generator.RayTrace.ReferencePrtlMass: @local::hnlM
 physics.producers.generator.Decay.ReferenceHNLMass: @local::hnlM
@@ -14,6 +14,5 @@ physics.producers.generator.Flux.MagUm4: @local::Umu4
 physics.producers.generator.Decay.ReferenceUE4: @local::Ume4
 physics.producers.generator.Decay.ReferenceUM4: @local::Umu4
                                                                          
-
 ###----------Set geometry ----------###
-#include "set_MeVPrtl_GeoTPC.fcl" 
+#include "set_MeVPrtl_GeoCryostat.fcl"
