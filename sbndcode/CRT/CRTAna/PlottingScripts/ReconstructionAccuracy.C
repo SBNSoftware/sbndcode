@@ -77,14 +77,14 @@ void ReconstructionAccuracy()
   };
 
   std::vector<plttwod> twodplots = {
-    {"sp_pe_energy_relation", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
-     50, 0, 700, 50, 0, 0.1, "cl_has_sp && cl_sp_complete"},
-    {"sp_pe_energy_relation_zoom", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
-     50, 0, 700, 50, 0, 0.02, "cl_has_sp && cl_sp_complete"},
-    {"sp_pe_energy_relation_log", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
-     50, 0, 700, 50, 0, 0.1, "cl_has_sp && cl_sp_complete", true},
-    {"sp_pe_energy_relation_zoom_log", "cl_truth_energy:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
-     50, 0, 700, 50, 0, 0.02, "cl_has_sp && cl_sp_complete", true},
+    {"sp_pe_energy_relation", "cl_truth_energy*1e3:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
+     50, 0, 700, 50, 0, 100, "cl_has_sp && cl_sp_complete"},
+    {"sp_pe_energy_relation_zoom", "cl_truth_energy*1e3:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
+     50, 0, 700, 50, 0, 20, "cl_has_sp && cl_sp_complete"},
+    {"sp_pe_energy_relation_log", "cl_truth_energy*1e3:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
+     50, 0, 700, 50, 0, 100, "cl_has_sp && cl_sp_complete", true},
+    {"sp_pe_energy_relation_zoom_log", "cl_truth_energy*1e3:cl_sp_pe", ";PE;True Energy (MeV);SpacePoints",
+     50, 0, 700, 50, 0, 20, "cl_has_sp && cl_sp_complete", true},
     {"sp_pos_accuracy_nhits", "cl_nhits:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];# Hits in Cluster;SpacePoints",
      55, -5, 50, 10, 0, 10, "cl_has_sp && cl_sp_complete", true},
     {"sp_pos_accuracy_completeness", "cl_truth_completeness:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster completeness;SpacePoints",
