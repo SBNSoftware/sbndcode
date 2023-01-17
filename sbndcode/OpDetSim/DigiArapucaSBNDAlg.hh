@@ -10,6 +10,9 @@
 #define SBND_OPDETSIM_DIGIARAPUCASBNDALG_HH
 
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/DelegatedParameter.h"
+#include "fhiclcpp/types/OptionalDelegatedParameter.h"
+
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
 #include "CLHEP/Random/RandFlat.h"
@@ -17,6 +20,7 @@
 #include "CLHEP/Random/RandGeneral.h"
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
+#include "art/Utilities/make_tool.h"
 
 #include <algorithm>
 #include <memory>
@@ -33,6 +37,8 @@
 #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
+
+#include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
 
 #include "TFile.h"
 
@@ -67,6 +73,7 @@ namespace opdet {
       double frequency_Daphne; ///< Optical-clock frequency for daphne readouts	
 
       CLHEP::HepRandomEngine* engine = nullptr;
+      fhicl::ParameterSet HDOpticalWaveformParams;
     };// ConfigurationParameters_t
 
     //Default constructor
@@ -119,6 +126,10 @@ namespace opdet {
     std::vector<double> fWaveformSP_Daphne_HD[10]; //single photon pulse vector
 
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
+
+    //HDWaveforms
+    std::unique_ptr<opdet::HDOpticalWaveform> fPMTHDOpticalWaveformsPtr;
+
 
     void CreatePDWaveform(sim::SimPhotons const& SimPhotons,
                           double t_min,
@@ -261,6 +272,11 @@ namespace opdet {
       fhicl::Atom<double> ampFluctuation {
         Name("AmpFluctuation"),
         Comment("Std of the gaussian fit (from data) to the 1PE distribution. Relative units i.e.: AmpFluctuation=0.1-> Amp(1PE)= 18+-1.8 ADC counts")
+      };
+
+      fhicl::OptionalDelegatedParameter hdOpticalWaveformParams {
+        Name("HDOpticalWaveformParams"),
+        Comment("Parameters used for high definition waveform")
       };
 
 

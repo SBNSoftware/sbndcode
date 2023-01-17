@@ -67,8 +67,11 @@ namespace opdet {
       fWaveformSP_Daphne = *SinglePEVec_40ftCable_Daphne;
       
       std::cout<<"~rodrigoa: testing......"<<std::endl;
-      produceSER_HD(fWaveformSP_Daphne_HD,fWaveformSP_Daphne);
-    }  
+
+      // Prepare HD waveforms
+      fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
+      fPMTHDOpticalWaveformsPtr->produceSER_HD(fWaveformSP_Daphne_HD,fWaveformSP_Daphne);
+    }
     else{
       mf::LogDebug("DigiArapucaSBNDAlg") << " using ideal pe response";
       Pulse1PE(fWaveformSP,fSampling);
@@ -131,8 +134,8 @@ namespace opdet {
           if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          size_t timeBin_HD = (is_daphne) ? std::floor(10*tphoton * fSampling_Daphne) : std::floor(10*tphoton * fSampling);//get first decimal of the bin
-          size_t wvf_shift  = timeBin_HD%10;
+          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
             if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
@@ -149,8 +152,8 @@ namespace opdet {
           if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
           size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          size_t timeBin_HD = (is_daphne) ? std::floor(10*tphoton * fSampling_Daphne) : std::floor(10*tphoton * fSampling);//get first decimal of the bin
-          size_t wvf_shift  = timeBin_HD%10;
+          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
             if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
@@ -229,8 +232,8 @@ namespace opdet {
         if(fParams.CrossTalk > 0.0 &&
            fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          size_t timeBin_HD = (is_daphne) ? std::floor(10*tphoton * fSampling_Daphne) : std::floor(10*tphoton * fSampling);//get first decimal of the bin
-          size_t wvf_shift  = timeBin_HD%10;
+          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
             // P_truth=P_truth+nCT;
             if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
@@ -266,8 +269,8 @@ namespace opdet {
         if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
         else nCT = 1;
           size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          size_t timeBin_HD = (is_daphne) ? std::floor(10*tphoton * fSampling_Daphne) : std::floor(10*tphoton * fSampling);//get first decimal of the bin
-          size_t wvf_shift  = timeBin_HD%10;
+          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
             // P_truth=P_truth+nCT;
             if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
@@ -399,6 +402,7 @@ namespace opdet {
     fBaseConfig.frequency_Daphne      = config.DaphneFrequency();
     fBaseConfig.MakeAmpFluctuations   = config.makeAmpFluctuations();
     fBaseConfig.AmpFluctuation        = config.ampFluctuation();
+    config.hdOpticalWaveformParams.get_if_present(fBaseConfig.HDOpticalWaveformParams);
   }
 
   std::unique_ptr<DigiArapucaSBNDAlg> DigiArapucaSBNDAlgMaker::operator()(
@@ -419,16 +423,16 @@ namespace opdet {
     return std::make_unique<DigiArapucaSBNDAlg>(params);
   } // DigiArapucaSBNDAlgMaker::create()
 
-  void DigiArapucaSBNDAlg::produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER)
-  {
-      int N=10; //TODO: sget the resolution factor(RF) from fcl file ~rodrigoa
-      for(int i=1; i<N;i++)SER_HD[i%N].push_back(0);
+  // void DigiArapucaSBNDAlg::produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER)
+  // {
+  //     int N=10; //TODO: sget the resolution factor(RF) from fcl file ~rodrigoa
+  //     for(int i=1; i<N;i++)SER_HD[i%N].push_back(0);
 
-      for(int i=0; i < (int)SER.size(); i++)
-      {
-        if (i%N == 0)SER_HD[i%N].push_back(SER.at(i)); //prepare xRF SPEs from higher sampling rate estimation
-        else SER_HD[N-i%N].push_back(SER.at(i));
-      }
-      SER_HD[0].push_back(0);//add an extra 0 to the first vector, so all of them have the same size (prevents issues at deconvolution stage)
-  }
+  //     for(int i=0; i < (int)SER.size(); i++)
+  //     {
+  //       if (i%N == 0)SER_HD[i%N].push_back(SER.at(i)); //prepare xRF SPEs from higher sampling rate estimation
+  //       else SER_HD[N-i%N].push_back(SER.at(i));
+  //     }
+  //     SER_HD[0].push_back(0);//add an extra 0 to the first vector, so all of them have the same size (prevents issues at deconvolution stage)
+  // }
 }
