@@ -7,6 +7,8 @@ sbnd_opt0_finder:
 {
   module_type:     "SBNDOpT0Finder"
   OpFlashProducers: ["opflashtpc0", "opflashtpc1"]
+  OpFlashAraProducers: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+  UseArapucas: true 
   TPCs: [0, 1]
   SliceProducer:   "pandora"
   TrackProducer:   "pandoraTrack"
@@ -16,7 +18,8 @@ sbnd_opt0_finder:
   FlashVetoTimeStart: -1e9
   FlashVetoTimeEnd:   +1e9
 
-  PhotoDetectors: ["pmt_coated", "pmt_uncoated"]
+  PhotoDetectors: ["pmt_coated", "pmt_uncoated", "xarapuca_vis", "xarapuca_vuv"]
+  # PhotoDetectors: ["pmt_coated", "pmt_uncoated"]
 
   VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
   VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
@@ -46,19 +49,22 @@ sbnd_opt0_finder_one_to_many: @local::sbnd_opt0_finder
 sbnd_opt0_finder_one_to_many.FlashVetoTimeStart: 0
 sbnd_opt0_finder_one_to_many.FlashVetoTimeEnd: 2
 sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.UseMinuit: false
+# only need to have the CCVCorrection params set if using XArapucas (which have different efficiencies than the PMTs)
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.CCVCorrection: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.CCVCorrectionRefl: [0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 
 # ... for TPC 0
 sbnd_opt0_finder_one_to_many_tpc0: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc0.TPC: 0
-sbnd_opt0_finder_one_to_many_tpc0.OpFlashProducer: "opflashtpc0"
+sbnd_opt0_finder_one_to_many_tpc0.OpFlashProducer: ["opflashtpc0","opflashtpc0xarapuca"]
 sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
 # sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.UseMinuit: false
 
 # ... for TPC 1
 sbnd_opt0_finder_one_to_many_tpc1: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc1.TPC: 1
-sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: "opflashtpc1"
+sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: ["opflashtpc1","opflashtpc1xarapuca"]
 sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
 # sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.UseMinuit: false
 
