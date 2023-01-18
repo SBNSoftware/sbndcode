@@ -102,6 +102,8 @@ private:
   std::vector<flashmatch::FlashMatch_t> _result_v; ///< Matching result will be stored here
 
   std::vector<std::string> _opflash_producer_v; ///< The OpFlash producers (to be set)
+  std::vector<std::string> _opflash_ara_producer_v;
+  bool _use_arapucas;
   std::vector<unsigned int> _tpc_v; ///< TPC number per OpFlash producer (to be set)
   std::string _slice_producer; ///< The Slice producer (to be set)
   std::string _trk_producer;
@@ -166,7 +168,9 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
   _semi_model = std::make_unique<SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
 
-  _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
+  _opflash_producer_v =     p.get<std::vector<std::string>>("OpFlashProducers");
+  _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
+  _use_arapucas = p.get<bool>("UseArapucas");
   _tpc_v = p.get<std::vector<unsigned int>>("TPCs");
   _slice_producer = p.get<std::string>("SliceProducer");
   _trk_producer   = p.get<std::string>("TrackProducer");
@@ -298,15 +302,23 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   _clusterid_to_slice.clear();
 
   auto const & flash_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[tpc]);
+  auto const & flash_ara_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_ara_producer_v[tpc]);
   if(!flash_h.isValid() || flash_h->empty()) {
     mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes from producer "
                                   << _opflash_producer_v[tpc] << std::endl;
     return;
   }
+  if(!flash_ara_h.isValid() || flash_ara_h->empty()) {
+    mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes from producer "
+                                  << _opflash_ara_producer_v[tpc] << std::endl;
+    return;
+  }
 
   // Construct the vector of OpFlashes
-  std::vector<art::Ptr<recob::OpFlash>> flash_v;
-  art::fill_ptr_vector(flash_v, flash_h);
+  std::vector<art::Ptr<recob::OpFlash>> flash_pmt_v;
+  std::vector<art::Ptr<recob::OpFlash>> flash_ara_v;
+  art::fill_ptr_vector(flash_pmt_v, flash_h);
+  art::fill_ptr_vector(flash_ara_v, flash_ara_h);
 
   ::art::ServiceHandle<geo::Geometry> geo;
   art::ServiceHandle<sim::LArG4Parameters const> g4param;
@@ -314,9 +326,43 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   int n_flashes = 0;
   std::vector<::flashmatch::Flash_t> all_flashes;
 
-  for (size_t n = 0; n < flash_v.size(); n++) {
+  std::vector<recob::OpFlash> flash_comb_v;
 
-    auto const& flash = *flash_v[n];
+  if (_use_arapucas){
+    for (size_t i=0; i < flash_pmt_v.size(); i++){
+      auto const& flash_pmt = *flash_pmt_v[i];
+      std::cout << "pmt flash time: " << flash_pmt.Time() << std::endl;
+      std::vector<double> combined_pe(geo->NOpDets(), 0.0); 
+      for (size_t j=0; j < flash_ara_v.size(); j++){
+        auto const& flash_ara = *flash_ara_v[j];
+        // if the ara and pmt flashes match: 
+        if (abs(flash_pmt.Time() - flash_ara.Time()) < 0.05){
+          std::cout << "PMT time: " << flash_pmt.Time() << ", ARA time: " << flash_ara.Time() << std::endl;
+          // add the arapuca flash PE to the pmt flash PE 
+          for(unsigned int op_ch = 0; op_ch < geo->NOpDets(); op_ch++){
+            combined_pe.at(op_ch) = flash_pmt.PE(op_ch) + flash_ara.PE(op_ch);
+          }
+          // create new flash with combined PE information and pmt flash information
+          recob::OpFlash new_flash(flash_pmt.Time(), flash_pmt.TimeWidth(), flash_pmt.AbsTime(),
+            flash_pmt.Frame(), combined_pe, flash_pmt.InBeamFrame(), flash_pmt.OnBeamTime(), 
+            flash_pmt.FastToTotal(), flash_pmt.XCenter(), flash_pmt.XWidth(), 
+            flash_pmt.YCenter(), flash_pmt.YWidth(), flash_pmt.ZCenter(), flash_pmt.ZWidth());
+        
+          flash_comb_v.push_back(new_flash);
+          break;
+        }
+      }
+    }
+    for (size_t j=0; j < flash_ara_v.size(); j++){
+      auto const& flash_ara = *flash_ara_v[j];
+      std::cout << "ara flash time: " << flash_ara.Time() << std::endl;
+    }
+  }
+  int nflashes_tot = (_use_arapucas)? flash_comb_v.size():flash_pmt_v.size(); 
+
+  for (int n = 0; n < nflashes_tot; n++) {
+
+    auto const& flash = (_use_arapucas)? flash_comb_v.at(n) : *flash_pmt_v[n];
 
     mf::LogDebug("SBNDOpT0Finder") << "Flash time from " << _opflash_producer_v[tpc] << ": " << flash.Time() << std::endl;
 
@@ -324,7 +370,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
       continue;
     }
 
-    _flashid_to_opflash[n_flashes] = flash_v[n];
+    _flashid_to_opflash[n_flashes] = flash_pmt_v[n];
 
     n_flashes++;
 
@@ -753,6 +799,9 @@ std::vector<int> SBNDOpT0Finder::GetUncoatedPTMList(std::vector<int> ch_to_use) 
 
   for (auto ch : ch_to_use) {
     if (_pds_map.isPDType(ch, "pmt_uncoated")) {
+      out_v.push_back(ch);
+    }
+    else if (_pds_map.isPDType(ch, "xarapuca_vis")){
       out_v.push_back(ch);
     }
   }
