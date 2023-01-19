@@ -8,9 +8,10 @@
 ###
 declare -ar TestNames=(
   'prod_eminus_0.1_0.9_sbnd'
-  'standard_g4_sbnd'
-  'standard_detsim_sbnd'
-  'standard_reco_sbnd_basic'
+  'g4_sce'
+  'detsim_sce'
+  'reco1_sce'
+  'reco2_sce'
 )
 #############################################################################
 
