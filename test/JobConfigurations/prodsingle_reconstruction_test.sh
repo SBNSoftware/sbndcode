@@ -7,7 +7,7 @@
 ###  Tests to be executed in chain:
 ###
 declare -ar TestNames=(
-	prodsingle_sbnd
+	prodsingle_sbnd_sce
 	reco1_sce
 	reco2_sce
 )
