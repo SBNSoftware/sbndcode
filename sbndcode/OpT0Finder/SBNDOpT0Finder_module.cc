@@ -52,6 +52,7 @@
 
 #include <memory>
 #include <algorithm>
+#include <cmath>
 
 
 
@@ -127,6 +128,7 @@ private:
   std::vector<std::string> _photo_detectors; ///< The photodetector to use (to be set)
   std::vector<int> _opch_to_use; ///< List of opch to use (will be infered from _photo_detectors)
   std::vector<int> _uncoated_pmts; ///< List of uncoated opch to use (will be infered from _opch_to_use)
+  std::vector<geo::Point_t> _opch_centers; ///< List of opch cneter coordinates 
 
   opdet::sbndPDMapAlg _pds_map; ///< map for photon detector types
   // std::unique_ptr<opdet::sbndPDMapAlg> _pds_map;
@@ -211,6 +213,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
   _flash_spec.resize(geo->NOpDets(), 0.);
   _hypo_spec.resize(geo->NOpDets(), 0.);
+  _opch_centers.resize(geo->NOpDets());
 
   art::ServiceHandle<art::TFileService> fs;
 
@@ -331,13 +334,15 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   if (_use_arapucas){
     for (size_t i=0; i < flash_pmt_v.size(); i++){
       auto const& flash_pmt = *flash_pmt_v[i];
-      std::cout << "pmt flash time: " << flash_pmt.Time() << std::endl;
       std::vector<double> combined_pe(geo->NOpDets(), 0.0); 
+      bool combine = false;
       for (size_t j=0; j < flash_ara_v.size(); j++){
         auto const& flash_ara = *flash_ara_v[j];
         // if the ara and pmt flashes match: 
         if (abs(flash_pmt.Time() - flash_ara.Time()) < 0.05){
-          std::cout << "PMT time: " << flash_pmt.Time() << ", ARA time: " << flash_ara.Time() << std::endl;
+          combine = true;
+          if (flash_pmt.Time() > 0 && flash_pmt.Time() < 2)
+            std::cout << "PMT time: " << flash_pmt.Time() << ", ARA time: " << flash_ara.Time() << std::endl;
           // add the arapuca flash PE to the pmt flash PE 
           for(unsigned int op_ch = 0; op_ch < geo->NOpDets(); op_ch++){
             combined_pe.at(op_ch) = flash_pmt.PE(op_ch) + flash_ara.PE(op_ch);
@@ -352,10 +357,9 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
           break;
         }
       }
-    }
-    for (size_t j=0; j < flash_ara_v.size(); j++){
-      auto const& flash_ara = *flash_ara_v[j];
-      std::cout << "ara flash time: " << flash_ara.Time() << std::endl;
+      // if no arapuca flashes are found
+      if (combine == false)
+        flash_comb_v.push_back(flash_pmt);
     }
   }
   int nflashes_tot = (_use_arapucas)? flash_comb_v.size():flash_pmt_v.size(); 
@@ -404,6 +408,11 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   if (n_flashes == 0) {
     mf::LogInfo("SBNDOpT0Finder") << "Zero good flashes in this event." << std::endl;
     return;
+  }
+
+  // Fill vector of opch centers 
+  for (size_t opch=0; opch < geo->NOpDets(); opch++){
+    _opch_centers[opch] = geo->OpDetGeoFromOpChannel(opch).GetCenter();
   }
 
   // Get all the ligh clusters
@@ -613,6 +622,40 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
         std::vector<art::Ptr<recob::Track>> track_v = pfp_to_trks.at(pfp.key());
         for (size_t n_trk = 0; n_trk < track_v.size(); n_trk++){
           auto track = track_v[n_trk];
+
+          // ** exiting track section ** 
+          // find if the track is uncontained and intersects the wire planes
+          ::art::ServiceHandle<geo::Geometry> geo;
+
+          bool uncontained = false;
+          auto const trk_start = track->Start();
+          auto const trk_end   = track->End();
+          geo::Point_t exit_pt; 
+          std::vector<int> opch_exit(geo->NOpDets(), 0); // mask of opch near the exit point 
+
+          if (abs(trk_start.X()) >= 198.0) {exit_pt = trk_start; uncontained = true;}
+          else if (abs(trk_end.X()) >= 198.0) {exit_pt = trk_end; uncontained = true;}
+
+          if (uncontained){
+            int tpc = (exit_pt.X() > 0)? 1 : 0; 
+            std::cout << "exit point: " << exit_pt.X() << ", " << exit_pt.Y() << ", " << exit_pt.Z() << std::endl;
+            std::cout << "theta:   " << (180./3.14)*track->Theta() << std::endl;
+            std::cout << "zenith:  " << (180./3.14)*track->ZenithAngle() << std::endl;
+            for (size_t opch=0; opch < geo->NOpDets(); opch++){
+              // only coated PMTs and vuv arapucas will be affected by direct light
+              if (_pds_map.isPDType(opch, "pmt_uncoated") || _pds_map.isPDType(opch, "xarapuca_vis"))
+                continue;
+              if (int(opch)%2 != tpc)
+                continue;
+              auto center = _opch_centers.at(opch);
+              if ((abs(center.Z() - (exit_pt.Z() + 75*std::cos(track->Theta()))) <= 75) && 
+                  (abs(center.Y() - (exit_pt.Y() + 75*std::cos(track->ZenithAngle()))) <= 75)){
+                std::cout << "opch: " << opch << ", at: " << center.Y() << ", " << center.Z() << std::endl;
+              }
+            }
+          }
+
+          // ** calo section ** 
           // access the vector from the association, **not necessarily ordered by planes** 
           std::vector<art::Ptr<anab::Calorimetry>> calo_assn_v = trk_to_calo.at(track.key());
           // fill a different vector that is **correctly ordered** 
