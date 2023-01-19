@@ -565,7 +565,7 @@ void Hitdumper::analyze(const art::Event& evt)
         int module = (chan>> 5);
         //
         std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
-        TVector3 center = fAuxDetGeoCore->AuxDetChannelToPosition(2*strip, name);
+        auto const center = fAuxDetGeoCore->AuxDetChannelToPosition(name, 2*strip);
         _crt_plane.push_back(ip);
         _crt_module.push_back(module);
         _crt_strip.push_back(strip);

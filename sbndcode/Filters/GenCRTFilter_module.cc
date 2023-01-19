@@ -284,22 +284,16 @@ namespace filt{
   bool GenFilter::UsesCRTAuxDet(const simb::MCParticle &particle, geo::AuxDetGeo const& crt){
     //We need to prepare the particle's position and direction and construct a bounding box from the CRT for the ray-box collision algorithm
     //Start with the particle
-    double particle_position_array[3], particle_direction_array[3], particle_local_position_array[3], particle_local_direction_array[3];
-    particle_position_array[0] = particle.Position(0).X();
-    particle_position_array[1] = particle.Position(0).Y();
-    particle_position_array[2] = particle.Position(0).Z();
-    particle_direction_array[0] = particle.Momentum(0).X()/particle.Momentum(0).Vect().Mag();
-    particle_direction_array[1] = particle.Momentum(0).Y()/particle.Momentum(0).Vect().Mag();
-    particle_direction_array[2] = particle.Momentum(0).Z()/particle.Momentum(0).Vect().Mag();
-    crt.WorldToLocal(particle_position_array,particle_local_position_array);
-    crt.WorldToLocalVect(particle_direction_array,particle_local_direction_array);
-    TVector3 particle_local_position(particle_local_position_array[0],particle_local_position_array[1],particle_local_position_array[2]);
-    TVector3 particle_local_direction(particle_local_direction_array[0],particle_local_direction_array[1],particle_local_direction_array[2]);
-    double norm[3], lnorm[3];
-    double center[3];
-    crt.GetNormalVector(norm);
-    crt.WorldToLocalVect(norm,lnorm);
-    crt.GetCenter(center);
+    auto const position = particle.Position(0).Vect();
+    auto const momentum_dir = particle.Momentum(0).Vect().Unit();
+    auto const particle_local_position_array = crt.toLocalCoords(geo::vect::toPoint(position));
+    auto const particle_local_direction_array = crt.toLocalCoords(geo::vect::toVector(momentum_dir));
+    TVector3 particle_local_position(particle_local_position_array.X(),
+                                     particle_local_position_array.Y(),
+                                     particle_local_position_array.Z());
+    TVector3 particle_local_direction(particle_local_direction_array.X(),
+                                      particle_local_direction_array.Y(),
+                                      particle_local_direction_array.Z());
 
     //Now make the bounding box min and max extent from the CRT
     //In local coordinates, the normal of the CRT is parallel to the z-axis, the length is parallel to z, width parallel to x and height parallel to y
@@ -351,10 +345,7 @@ namespace filt{
 
     double minimum = 99999;
     double maximum = -99999;
-    for(size_t c = 0; c < fGeometryService->Ncryostats(); c++){
-      const geo::CryostatGeo& cryostat = fGeometryService->Cryostat(c);
-      for(size_t t = 0; t < cryostat.NTPC(); t++){
-        const geo::TPCGeo& tpcGeo = cryostat.TPC(t);
+    for(auto const& tpcGeo : fGeometryService->Iterate<geo::TPCGeo>()) {
         // Find the intersection between the track and the TPC
         TVector3 min (tpcGeo.MinX(), tpcGeo.MinY(), tpcGeo.MinZ());
         TVector3 max (tpcGeo.MaxX(), tpcGeo.MaxY(), tpcGeo.MaxZ());
@@ -366,7 +357,6 @@ namespace filt{
         if(x1 != -99999 && x1 < minimum) minimum = x1;
         if(x2 != -99999 && x2 > maximum) maximum = x2;
         if(x2 != -99999 && x2 < minimum) minimum = x2;
-      }
     }
 
     return std::make_pair(minimum, maximum);
