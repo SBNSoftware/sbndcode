@@ -8,7 +8,8 @@
 ###
 declare -ar TestNames=(
 	prodsingle_sbnd
-	standard_reco_sbnd_basic
+	reco1_sce
+	reco2_sce
 )
 #############################################################################
 
