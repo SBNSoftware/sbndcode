@@ -19,7 +19,7 @@
 
 
 // SBND libraries
-#include "sbndcode/Decoders/DecoderTools/Dumpers/SBNDChannelMap.h"
+#include "sbndcode/Decoders/ChannelMapping/ISBNDChannelMap.h"
 #include "sbndcode/Decoders/DecoderTools/Dumpers/ReadArtConfiguration.h" // util::readConfigurationFromArtPrincipal()
 #include "sbnobj/Common/PMT/Data/PMTconfiguration.h"
 #include "sbnobj/Common/PMT/Data/V1730Configuration.h"
@@ -320,7 +320,7 @@ class sbnd::PMTconfigurationExtractor
   
   /// Constructor: use channel mapping to `finalize()` channel IDs.
   PMTconfigurationExtractor
-    (sbndDB::SBNDChannelMap const& channelMappingService);
+    (sbndDB::ISBNDChannelMap const& channelMappingService);
   
   
   // --- BEGIN -- Interface ----------------------------------------------------
@@ -359,7 +359,7 @@ class sbnd::PMTconfigurationExtractor
   static std::vector<std::regex> const ConfigurationNames;
   
   /// Hardware PMT channel mapping to LArSoft's.
-  sbndDB::SBNDChannelMap const* fChannelMap = nullptr;
+  sbndDB::ISBNDChannelMap const* fChannelMap = nullptr;
   
   /**
    * @brief Extracts PMT readout board configuration from `pset`.
@@ -403,7 +403,7 @@ class sbnd::PMTconfigurationExtractor
 // --- Inline implementation
 // -----------------------------------------------------------------------------
 sbnd::PMTconfigurationExtractor::PMTconfigurationExtractor
-  (sbndDB::SBNDChannelMap const& channelMappingService)
+  (sbndDB::ISBNDChannelMap const& channelMappingService)
   : fChannelMap(&channelMappingService)
   {}
 

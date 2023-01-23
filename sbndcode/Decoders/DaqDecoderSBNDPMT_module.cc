@@ -12,7 +12,7 @@
 #include "sbndcode/Decoders/DecoderTools/Dumpers/OpDetWaveformMetaUtils.h" // OpDetWaveformMetaMaker 
 #include "sbndcode/Decoders/DecoderTools/details/PMTDecoderUtils.h"
 #include "sbndcode/Decoders/DecoderTools/Dumpers/FragmentDumper.h"
-#include "sbndcode/Decoders/DecoderTools/Dumpers/SBNDChannelMap.h"
+#include "sbndcode/Decoders/ChannelMapping/ISBNDChannelMap.h"
 #include "sbndcode/Decoders/DecoderTools/Dumpers/PMTWaveformTimeCorrection.h"
 #include "sbndcode/Decoders/DecoderTools/Dumpers/PMTWaveformTimeCorrectionExtractor.h" 
 #include "sbndcode/Decoders/DecoderTools/Dumpers/IPMTTimingCorrectionService.h"
@@ -220,7 +220,7 @@ namespace sbnd { class DaqDecoderSBNDPMT; }
  * 
  * Services required include:
  * 
- * * `SBNDChannelMap` for the association of fragments to LArSoft channel ID;
+ * * `ISBNDChannelMap` for the association of fragments to LArSoft channel ID;
  * * `DetectorClocksService` for the correct decoding of the time stamps
  *   (always required, even when dumbed-down timestamp decoding is requested);
  * * `IPMTTimingCorrectionService` for the
@@ -868,7 +868,7 @@ class sbnd::DaqDecoderSBNDPMT: public art::EDProducer {
   detinfo::DetectorTimings const fDetTimings;
 
   /// Fragment/channel mapping database.
-  sbndDB::SBNDChannelMap const& fChannelMap;
+  sbndDB::ISBNDChannelMap const& fChannelMap;
 
   /// The online PMT corrections service provider.
   sbndDB::PMTTimingCorrections const* const fPMTTimingCorrectionsService;
@@ -1547,7 +1547,7 @@ sbnd::DaqDecoderSBNDPMT::DaqDecoderSBNDPMT(Parameters const& params)
   , fLogCategory{ params().LogCategory() }
   , fDetTimings
     { art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob() }
-  , fChannelMap{ *(art::ServiceHandle<sbndDB::SBNDChannelMap const>{}) }
+  , fChannelMap{ *(art::ServiceHandle<sbndDB::ISBNDChannelMap const>{}) }
   , fPMTTimingCorrectionsService{
       fApplyCableDelayCorrection
         ? lar::providerFrom<sbndDB::IPMTTimingCorrectionService const>()

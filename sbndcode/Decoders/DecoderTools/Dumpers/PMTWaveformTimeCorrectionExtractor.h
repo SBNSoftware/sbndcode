@@ -9,7 +9,7 @@
 #define SBNDCODE_DECODERS_DECODERTOOLS_DUMPERS_PMTWAVEFORMTIMECORRECTIONEXTRACTOR_H
 
 // SBND/SBN libraries
-#include "sbndcode/Decoders/DecoderTools/Dumpers/SBNDChannelMap.h"
+#include "sbndcode/Decoders/ChannelMapping/ISBNDChannelMap.h"
 #include "sbndcode/Decoders/DecoderTools/Dumpers/PMTTimingCorrections.h"
 #include "sbndcode/Decoders/DecoderTools/Dumpers/PMTWaveformTimeCorrection.h"
 
@@ -90,7 +90,7 @@ class sbnd::timing::PMTWaveformTimeCorrectionExtractor {
 
         PMTWaveformTimeCorrectionExtractor(
             detinfo::DetectorClocksData const detTimingService,
-            sbndDB::SBNDChannelMap const & channelMapService,
+            sbndDB::ISBNDChannelMap const & channelMapService,
             sbndDB::PMTTimingCorrections const* pmtTimingCorrectionsService, 
             bool verbose );
 
@@ -134,7 +134,7 @@ class sbnd::timing::PMTWaveformTimeCorrectionExtractor {
 
         detinfo::DetectorClocksData const fClocksData;
 
-        sbndDB::SBNDChannelMap const & fChannelMap;
+        sbndDB::ISBNDChannelMap const & fChannelMap;
 
         sbndDB::PMTTimingCorrections const* fPMTTimingCorrectionsService = nullptr;
 

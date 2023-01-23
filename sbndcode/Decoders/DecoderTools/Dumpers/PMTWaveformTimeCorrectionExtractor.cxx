@@ -7,7 +7,7 @@
 
 // SBND/SBN libraries
 #include "sbnobj/Common/PMT/Data/PMTconfiguration.h" // sbn::PMTconfiguration
-#include "sbndcode/Decoders/DecoderTools/Dumpers/SBNDChannelMap.h"
+#include "sbndcode/Decoders/ChannelMapping/ISBNDChannelMap.h"
 #include "sbndcode/Decoders/DecoderTools/Dumpers/PMTTimingCorrections.h"
 #include "sbndcode/Decoders/DecoderTools/Dumpers/PMTWaveformTimeCorrectionExtractor.h"
 
@@ -92,7 +92,7 @@ auto sbnd::timing::PMTWaveformTimeCorrectionExtractor::UnknownCrate::makeBaseExc
 
 sbnd::timing::PMTWaveformTimeCorrectionExtractor::PMTWaveformTimeCorrectionExtractor(
             detinfo::DetectorClocksData const detTimingService,
-            sbndDB::SBNDChannelMap const & channelMapService,
+            sbndDB::ISBNDChannelMap const & channelMapService,
             sbndDB::PMTTimingCorrections const* pmtTimingCorrectionsService, 
             bool verbose )
 : fClocksData( detTimingService )

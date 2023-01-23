@@ -7,7 +7,7 @@
 
 // SBND libraries
 #include "sbndcode/Decoders/DecoderTools/Dumpers/PMTconfigurationExtractor.h"
-#include "sbndcode/Decoders/DecoderTools/Dumpers/SBNDChannelMap.h"
+#include "sbndcode/Decoders/ChannelMapping/ISBNDChannelMap.h"
 #include "sbnobj/Common/PMT/Data/PMTconfiguration.h"
 
 // framework libraries
@@ -94,7 +94,7 @@ class sbnd::PMTconfigurationExtraction: public art::EDProducer {
   std::optional<sbn::PMTconfiguration> fPMTconfig;
   
   /// Pointer to the online channel mapping service.
-  sbndDB::SBNDChannelMap const* fChannelMap = nullptr;
+  sbndDB::ISBNDChannelMap const* fChannelMap = nullptr;
   
   /// Whether PMT configuration inconsistency is fatal.
   bool fRequireConsistency = true;
@@ -165,7 +165,7 @@ sbnd::PMTconfigurationExtraction::PMTconfigurationExtraction
   (Parameters const& config)
   : art::EDProducer(config)
   , fChannelMap(config().AssignOfflineChannelIDs()
-      ? art::ServiceHandle<sbndDB::SBNDChannelMap const>{}.get()
+      ? art::ServiceHandle<sbndDB::ISBNDChannelMap const>{}.get()
       : nullptr
     )
   , fRequireConsistency(config().RequireConsistentPMTconfigurations())
