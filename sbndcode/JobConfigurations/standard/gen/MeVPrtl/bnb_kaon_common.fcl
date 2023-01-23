@@ -17,8 +17,6 @@ sbnd_bnb_solid_angle_box: 1.3223e-3 #front face / detector distance ^2 = 4*4/110
 
 sbnd_bnb_solid_angle_cryostat: 0.0133 
 
-kaon_energy: 8 #GeV Max energy from kaon 
-
 bnb_kaon: {
   tool_type: "BNBKaonGen" # BooNe Ntuples
   SearchPath: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/"
@@ -28,6 +26,7 @@ bnb_kaon: {
   MaxFluxFileMB: 8192 # 8GB
   FluxCopyMethod: DIRECT
   RandomizeFiles: false
+  Verbose: false
   FluxFilesFullPath:[
           "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0000.root",
           "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/ForRodrigo/april07_baseline_0001.root",
@@ -82,34 +81,44 @@ bnb_kaon: {
 	]
 }
 
+kaon_energy: 8 #GeV Max energy from kaon 
+kaon_pdg: 321 #K+
+
 ray_trace_box: {
   tool_type: RayTraceBox
   # Volume: volCryostat
   Box: @local::sbnd_detector_box
+  Verbose: false
 }
 
 rethrow_ray_trace_box: {
   tool_type: ReThrowRayTraceBox
   Box: @local::sbnd_detector_box
   ReferenceLabSolidAngle: @local::sbnd_bnb_solid_angle_box
-  ReferenceKaonEnergy: @local::kaon_energy
+  ReferencePrimaryEnergy: @local::kaon_energy
+  ReferencePrimPDG: @local::kaon_pdg
+  Verbose: false
 }
 
 weighted_ray_trace_box: {
   tool_type: WeightedRayTraceBox
   Box: @local::sbnd_detector_box
   ReferenceLabSolidAngle: @local::sbnd_bnb_solid_angle_box
-  ReferenceKaonEnergy: @local::kaon_energy 
+  ReferencePrimaryEnergy: @local::kaon_energy 
+  ReferencePrimPDG: @local::kaon_pdg
+  Verbose: false
 }
 
 mixedweight_ray_trace_box: {
   tool_type: MixedWeightRayTraceBox
   Box: @local::sbnd_detector_box
   ReferenceLabSolidAngle: @local::sbnd_bnb_solid_angle_box
-  ReferenceKaonEnergy: @local::kaon_energy
+  ReferencePrimaryEnergy: @local::kaon_energy
+  ReferencePrimPDG: @local::kaon_pdg
   MaxWeightFudge: 2.
   NThrow: 250
   FixNSuccess: false
+  Verbose: false
 }
 
 END_PROLOG

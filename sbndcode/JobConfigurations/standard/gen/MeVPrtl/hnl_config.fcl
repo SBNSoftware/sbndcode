@@ -20,6 +20,7 @@ kaon2hnl: {
   SpillTimeConfig: "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=1.308"
   //SpilTimeConfig: "" #"evgb::EvtTimeFlat 10000 0" // 10us duration, no offset  
   GlobalTimeOffset: 0
+  Verbose: false
 }
 
 # RAY TRACE CONFIGS
@@ -43,11 +44,14 @@ decay_hnl: {
   Decays: ["mu_pi"]
   Majorana: true
   ReferenceUE4: 0
+  ReferenceUT4: 0
   ReferenceUM4: 1e-7
   ReferenceHNLMass: @local::hnlM
   ReferenceRayLength: 7.549834e2 # sqrt(57) = 7.549834 = diagonal length of detector
+  ReferenceRayDistance: 110e2 #110m = distance from beam target to detector
   ReferenceHNLEnergyFromKaonEnergy: @local::kaon_energy
-  MinDetectorDistance: 110e2 #110m
+  WidthDecays: ["mu_pi", "e_pi", "nu_mu_mu", "nu_e_e", "nu_nu_nu", "nu_pi0", "nu_eta", "nu_etap", "nu_rho0"]
+  Verbose: false
 }
 
 # KDAR CONFIGS
@@ -68,10 +72,11 @@ hnl_gen: {
   Deweight: false
   Produce: true
   AnaOutput: true
+  Verbose: false
   MesonGen: @local::bnb_kaon
   Flux: @local::kaon2hnl
-//  RayTrace: @local::mxdraytrace
-  RayTrace: @local::wgtraytrace
+  RayTrace: @local::mxdraytrace
+//  RayTrace: @local::wgtraytrace
   Decay: @local::decay_hnl
 }
 hnl_gen.RayTrace.Volume: "volCryostat" #Use Geometry Service instead 
@@ -83,6 +88,7 @@ hnl_gen_kdar: {
   Deweight: false
   Produce: true
   AnaOutput: true
+  Verbose: false
   MesonGen: @local::bnb_kaon
   Flux: @local::kaon2hnl_kdar
   RayTrace: @local::mxdraytrace_kdar
