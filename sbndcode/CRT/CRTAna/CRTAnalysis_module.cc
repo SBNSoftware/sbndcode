@@ -26,6 +26,7 @@
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
 namespace sbnd::crt {
   class CRTAnalysis;
@@ -304,10 +305,31 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
         for(auto const &[name, module] : fCRTGeoAlg.GetModules())
           {
-            std::cout << "Module:  " << module.name << '\n'
-                      << "X - Min: " << module.minX << " Max: " << module.maxX << '\n'
-                      << "Y - Min: " << module.minY << " Max: " << module.maxY << '\n'
-                      << "Z - Min: " << module.minZ << " Max: " << module.maxZ << '\n' << std::endl;
+            const CRTTagger tagger  = CRTCommonUtils::GetTaggerEnum(module.taggerName);
+            const CoordSet widthdir = CRTCommonUtils::GetStripWidthGlobalCoordinate(tagger, module.orientation);
+
+            std::cout << "Module:  " << module.name << " (" << module.taggerName << ")" << '\n';
+            if(module.minos)
+              std::cout << "MINOS module" << std::endl;
+            std::cout << "X - Min: " << module.minX << " Max: " << module.maxX << " Diff: " << module.maxX - module.minX << '\n' 
+                      << "Y - Min: " << module.minY << " Max: " << module.maxY << " Diff: " << module.maxY - module.minY << '\n' 
+                      << "Z - Min: " << module.minZ << " Max: " << module.maxZ << " Diff: " << module.maxZ - module.minZ << '\n' 
+                      << "Orientation: " << module.orientation << '\n'
+                      << "CoordSet: " << widthdir << '\n';
+            
+            if(module.maxX - module.minX > 1 && module.maxX - module.minX < 250) {
+              if(widthdir == 1) std::cout << "Correctly given width as X" << '\n';
+              else std::cout << "Wrongly given width as: " << widthdir << " should be X (1)" << '\n';
+            }
+            if(module.maxY - module.minY > 1 && module.maxY - module.minY < 250) {
+              if(widthdir == 2) std::cout << "Correctly given width as Y" << '\n';
+              else std::cout << "Wrongly given width as: " << widthdir << " should be Y (2)" << '\n';
+            }
+            if(module.maxZ - module.minZ > 1 && module.maxZ - module.minZ < 250) {
+              if(widthdir == 4) std::cout << "Correctly given width as Z" << '\n';
+              else std::cout << "Wrongly given width as: " << widthdir << " should be Z (4)" << '\n';
+            }
+            std::cout << std::endl;
           }
 
         std::cout << std::endl;
