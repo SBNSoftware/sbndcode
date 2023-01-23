@@ -101,7 +101,6 @@ namespace sbnd::crt {
       null  = false;
       
       std::string volumeName = stripNode->GetVolume()->GetName();
-      minos = volumeName.find("MINOS") != std::string::npos ? true : false;
     }
     std::string name;
     std::string moduleName;
@@ -116,7 +115,6 @@ namespace sbnd::crt {
     double      width;
     uint16_t    adsID;
     bool        null;
-    bool        minos;
   };
 
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
@@ -136,6 +134,7 @@ namespace sbnd::crt {
     , t0CableDelayCorrection(0)
     , t1CableDelayCorrection(0)
     , invertedOrdering(false)
+    , minos(false)
     , null(false)
     {}
 
@@ -143,7 +142,8 @@ namespace sbnd::crt {
                  const uint16_t _adID, const std::string &_taggerName,
                  const int32_t _t0CableDelayCorrection, 
                  const int32_t _t1CableDelayCorrection,
-                 const bool _invertedOrdering)
+                 const bool _invertedOrdering,
+                 const bool _minos)
     {
       name       = moduleNode->GetName();
       taggerName = _taggerName;
@@ -166,7 +166,10 @@ namespace sbnd::crt {
       double origin[3] = {0, 0, 0};
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
-      orientation = (modulePosMother[2] > 0);
+      if(_minos)
+        orientation = (modulePosMother[2] < 0);
+      else
+        orientation = (modulePosMother[2] > 0);
 
       // Location of SiPMs
       top = (orientation == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
@@ -183,8 +186,9 @@ namespace sbnd::crt {
       t1CableDelayCorrection = _t1CableDelayCorrection;
 
       invertedOrdering = _invertedOrdering;
-
       adID = _adID;
+      minos = _minos;
+
       null = false;
     }
     std::string   name;
@@ -201,6 +205,7 @@ namespace sbnd::crt {
     int32_t       t0CableDelayCorrection;
     int32_t       t1CableDelayCorrection;
     bool          invertedOrdering;
+    bool          minos;
     bool          null;
   };
 

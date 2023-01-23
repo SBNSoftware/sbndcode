@@ -374,7 +374,7 @@ namespace crt {
         const CRTStripGeo strip   = fCRTGeoAlg.GetStripByAuxDetIndices(adid, adsid);
         const CRTModuleGeo module = fCRTGeoAlg.GetModule(strip.moduleName);
 	
-	if(strip.minos)
+	if(module.minos)
 	  return;
         
         // Retrive the ID of this CRT module

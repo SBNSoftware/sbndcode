@@ -25,12 +25,12 @@ namespace sbnd::crt {
                                                            fT0CableLengthCorrectionsVector.end());
     fT1CableLengthCorrections = std::map<unsigned, double>(fT1CableLengthCorrectionsVector.begin(), 
                                                            fT1CableLengthCorrectionsVector.end());
-    fSiPMPedestals          = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), 
-                                                         fSiPMPedestalsVector.end());
-    fSiPMGains              = std::map<unsigned, double>(fSiPMGainsVector.begin(), 
-                                                         fSiPMGainsVector.end());
-    fChannelInversion       = std::map<unsigned, bool>(fChannelInversionVector.begin(), 
-                                                       fChannelInversionVector.end());
+    fSiPMPedestals            = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), 
+                                                           fSiPMPedestalsVector.end());
+    fSiPMGains                = std::map<unsigned, double>(fSiPMGainsVector.begin(), 
+                                                           fSiPMGainsVector.end());
+    fChannelInversion         = std::map<unsigned, bool>(fChannelInversionVector.begin(), 
+                                                         fChannelInversionVector.end());
 
     // Record used objects
     std::vector<std::string> usedTaggers;
@@ -90,9 +90,13 @@ namespace sbnd::crt {
                 const int32_t t1CableDelayCorrection = fT1CableLengthCorrections.size() ? 
                   fT1CableLengthCorrections.at(ad_i) : 0;
 
+                const std::string stripName = nodeStrip->GetVolume()->GetName();
+                const bool minos = stripName.find("MINOS") != std::string::npos ? true : false;
+
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
-                                                    t0CableDelayCorrection, t1CableDelayCorrection, invert);
+                                                    t0CableDelayCorrection, t1CableDelayCorrection,
+                                                    invert, minos);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
