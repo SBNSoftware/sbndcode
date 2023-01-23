@@ -24,7 +24,6 @@ physics:
     { 
       module_type:       "CRTAnalysis"
       CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
-      Debug:             true
     }
   }
 
