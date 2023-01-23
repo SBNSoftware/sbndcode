@@ -43,14 +43,16 @@ namespace sbnd::crt {
   
   enum CoordSet CRTCommonUtils::GetStripWidthGlobalCoordinate(const CRTTagger tagger, const uint16_t orientation)
   {
-    if(((tagger == kBottomTagger || tagger == kTopLowTagger || tagger == kTopHighTagger) && orientation == 0) ||
+    if((tagger == kBottomTagger && orientation == 1) ||
+       ((tagger == kTopLowTagger || tagger == kTopHighTagger) && orientation == 0) ||
        ((tagger == kSouthTagger || tagger == kNorthTagger) && orientation == 0))
       return kX;
     else if(((tagger == kSouthTagger || tagger == kNorthTagger) && orientation == 1) ||
-            ((tagger == kWestTagger || tagger == kEastTagger) && orientation == 0))
-      return kY;
-    else if(((tagger == kBottomTagger || tagger == kTopLowTagger || tagger == kTopHighTagger) && orientation == 1) ||
             ((tagger == kWestTagger || tagger == kEastTagger) && orientation == 1))
+      return kY;
+    else if((tagger == kBottomTagger && orientation == 0) ||
+            ((tagger == kTopLowTagger || tagger == kTopHighTagger) && orientation == 1) ||
+            ((tagger == kWestTagger || tagger == kEastTagger) && orientation == 0))
       return kZ;
 
     return kUndefinedSet;
