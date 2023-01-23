@@ -44,6 +44,9 @@
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "larsim/MCCheater/BackTrackerService.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
+#include "nusimdata/SimulationBase/GTruth.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/sim.h"
 
@@ -83,8 +86,6 @@ public:
 private:
 
   // define functions 
-  // art::Ptr<recob::Slice> SelectSlice(std::vector<art::Ptr<recob::Slice>> slice_v, std::vector<float> nuscore_v, std::vector<float> fmscore_v
-  //                                    std::vector<art::Ptr<recob::OpFlash>> opflash_v);
   opdet::sbndPDMapAlg _opdetmap; //map for photon detector types
   unsigned int _nchan = _opdetmap.size();
 
@@ -94,12 +95,13 @@ private:
   std::vector<double> CalcVisibility(std::vector<geo::Point_t> xyz_v, std::vector<double> charge_v);
   void CalcLight(std::vector<double> flash_pe_v, std::vector<double> visibility, std::vector<double>&total_pe_v);
   std::vector<std::string> _opflash_producer_v;
+  std::vector<std::string> _opflash_ara_producer_v;
   std::string _slice_producer;
   std::string _flashmatch_producer;
+  bool _use_arapucas;
   float _nuscore_cut; 
   float _fmscore_cut;
   std::vector<float> _cal_area_const; 
-  bool  _light_wavg;
 
   std::unique_ptr<SemiAnalyticalModel> _semi_model;
   fhicl::ParameterSet _vuv_params;
@@ -116,16 +118,20 @@ private:
   int _pfpid; 
   double _opflash_time;
 
-  std::vector<double> _rec_charge;
-  std::vector<float>  _dep_charge;
-  std::vector<float>  _dep_energy;
-
   std::vector<double> _dep_pe; 
   std::vector<double> _rec_gamma; 
 
   double _true_gamma;
   double _true_charge;
   double _true_energy;
+
+  double _median_gamma;
+  double _mean_gamma;
+
+  double _mean_charge; 
+  double _max_charge;
+  double _comp_charge;
+
   double _slice_L; 
   double _slice_Q; 
   double _slice_E;
@@ -134,11 +140,6 @@ private:
   double _frac_Q; 
   double _frac_E;
 
-  // TTree* _tree3; 
-  // double _rec_charge;
-  // float  _dep_charge;
-  // float  _dep_energy;
-  // float  _dep_photon;
 };
 
 
@@ -151,12 +152,13 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _semi_model = std::make_unique<SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
 
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
+  _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
   _slice_producer = p.get<std::string>("SliceProducer");
   _flashmatch_producer = p.get<std::string>("FlashMatchProducer");
+  _use_arapucas = p.get<bool>("UseArapucas");
   _nuscore_cut = p.get<float>("nuScoreCut");
   _fmscore_cut = p.get<float>("fmScoreCut");
   _cal_area_const    = p.get<std::vector<float>>("CalAreaConstants");
-  _light_wavg  = p.get<bool> ("LightWeightedAverage");
 
   art::ServiceHandle<art::TFileService> fs;
   _tree = fs->make<TTree>("slice_tree","");
@@ -173,16 +175,19 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _tree2->Branch("pfpid",         &_pfpid,        "pfpid/I");
   _tree2->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
 
-  _tree2->Branch("rec_charge",    "std::vector<double>", &_rec_charge);
-  _tree2->Branch("dep_charge",    "std::vector<float>",  &_dep_charge);
-  _tree2->Branch("dep_energy",    "std::vector<float>",  &_dep_energy);
-
   _tree2->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
   _tree2->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
 
   _tree2->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
   _tree2->Branch("true_charge",   &_true_charge,  "true_charge/D");
   _tree2->Branch("true_energy",   &_true_energy,  "true_energy/D");
+
+  _tree2->Branch("median_gamma",  &_median_gamma, "median_gamma/D");
+  _tree2->Branch("mean_gamma",    &_mean_gamma,   "mean_gamma/D");
+  _tree2->Branch("mean_charge",   &_mean_charge,  "mean_charge/D");
+  _tree2->Branch("max_charge",    &_max_charge,   "max_charge/D");
+  _tree2->Branch("comp_charge",   &_comp_charge,  "comp_charge/D");
+
   _tree2->Branch("slice_L",       &_slice_L,      "slice_L/D");
   _tree2->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
   _tree2->Branch("slice_E",       &_slice_E,      "slice_E/D");
@@ -190,11 +195,6 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _tree2->Branch("frac_Q",        &_frac_Q,       "frac_Q/D");
   _tree2->Branch("frac_E",        &_frac_E,       "frac_E/D");
 
-  // _tree3 = fs->make<TTree>("dep_tree","");
-  // _tree3->Branch("rec_charge", &_rec_charge, "rec_charge/D");
-  // _tree3->Branch("dep_energy", &_dep_energy, "dep_energy/F");
-  // _tree3->Branch("dep_charge", &_dep_charge, "dep_charge/F");
-  // _tree3->Branch("dep_photon", &_dep_photon, "dep_photon/F");
 }
 
 void sbnd::LightCaloAna::analyze(art::Event const& e)
@@ -232,6 +232,12 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   auto const & flash1_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[1]);
   if( (!flash0_h.isValid() || flash0_h->empty()) && (!flash1_h.isValid() || flash1_h->empty())) {
     std::cout << "don't have good flashes from producer " << _opflash_producer_v[0] << " or "  << _opflash_producer_v[1] << std::endl;
+    return;
+  }
+  auto const & flash0_ara_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_ara_producer_v[0]);
+  auto const & flash1_ara_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_ara_producer_v[1]);
+  if( _use_arapucas && (!flash0_ara_h.isValid() || flash0_ara_h->empty()) && (!flash1_ara_h.isValid() || flash1_ara_h->empty())) {
+    std::cout << "don't have good flashes from producer " << _opflash_ara_producer_v[0] << " or "  << _opflash_ara_producer_v[1] << std::endl;
     return;
   }
 
@@ -309,11 +315,17 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   std::vector<art::Ptr<recob::OpFlash>> match_op0; 
   bool found_opflash0 = MatchOpFlash(match_fm_v,flash0_v, match_op0);
 
+  std::vector<art::Ptr<recob::OpFlash>> flash0_ara_v;
+  art::fill_ptr_vector(flash0_ara_v, flash0_ara_h);
+
   // tpc1 
   std::vector<art::Ptr<recob::OpFlash>> flash1_v;
   art::fill_ptr_vector(flash1_v, flash1_h);
   std::vector<art::Ptr<recob::OpFlash>> match_op1; 
   bool found_opflash1 = MatchOpFlash(match_fm_v,flash1_v, match_op1);
+
+  std::vector<art::Ptr<recob::OpFlash>> flash1_ara_v;
+  art::fill_ptr_vector(flash1_ara_v, flash1_ara_h);
 
   if (found_opflash0 == false && found_opflash1 == false){
     std::cout << "no opflashes matched to simpleflashes" << std::endl;
@@ -325,7 +337,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   const art::ValidHandle<std::vector<sim::SimEnergyDeposit>>&
     energyDeps(e.getValidHandle<std::vector<sim::SimEnergyDeposit>>("ionandscint"));
   
-  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
+  art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
 
   int nsuccessful_matches=0;
   for (size_t n_slice=0; n_slice < match_slices_v.size(); n_slice++){
@@ -337,10 +349,6 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     _slice_L = 0; // total amount of light
     _slice_E = 0;
 
-    _rec_charge.clear();
-    _dep_charge.clear();
-    _dep_energy.clear();
-
     std::vector<geo::Point_t> sp_xyz;
     std::vector<double> sp_charge; // vector of charge info for charge-weighting
  
@@ -349,21 +357,36 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     auto opflash1 = (match_op1.at(n_slice));
     bool flash_in_0 = false;
     bool flash_in_1 = false;
+    // set threshold above noise PE levels for the flash 
+    double noise_thresh = (_use_arapucas)? 2000 : 1000; 
+
     if (!opflash0.isNull() &&  opflash1.isNull()){
       flash_time = opflash0->Time();
-      flash_in_0 = true;
+      if (opflash0->TotalPE() > noise_thresh)
+        flash_in_0 = true;
+      else
+        std::cout << "Flash Total PE in TPC 0 too low ("<< opflash0->TotalPE() << ")... Skipping" << std::endl;
     } 
     else if ( opflash0.isNull() && !opflash1.isNull()){
       flash_time = opflash1->Time(); 
-      flash_in_1 = true;
+      if (opflash1->TotalPE() > noise_thresh)
+        flash_in_1 = true;
+      else
+        std::cout << "Flash Total PE in TPC 1 too low(" << opflash1->TotalPE() << ")... Skipping" << std::endl;
     }
     else if (!opflash0.isNull() && !opflash1.isNull()){
       flash_time = opflash0->Time();
-      flash_in_0 = true;
-      flash_in_1 = true;
+      if (opflash0->TotalPE() > noise_thresh)
+        flash_in_0 = true;
+      else 
+        std::cout << "Flash Total PE in TPC 0 too low ("<< opflash0->TotalPE() << ")... Skipping" << std::endl;
+      if (opflash1->TotalPE() > noise_thresh)
+        flash_in_1 = true;
+      else
+        std::cout << "Flash Total PE in TPC 1 too low(" << opflash1->TotalPE() << ")... Skipping" << std::endl;
     }
     else if  (opflash0.isNull() &&  opflash1.isNull()){
-      std::cout << "err! no opflashes :(" << std::endl;
+      std::cout << "No opflashes matched with SimpleFlash objects" << std::endl;
       _match_type = -3;
       _tree->Fill();
       return;
@@ -374,27 +397,27 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     // find which plane has the most integrated charge for this slice
     std::vector<art::Ptr<recob::Hit>> slice_hits_v = slice_to_hit.at(slice.key());
     std::vector<double> plane_charge{0.,0.,0.};
+    std::vector<int>    plane_hits{0,0,0};
     for (size_t i=0; i < slice_hits_v.size(); i++){
       auto hit = slice_hits_v[i];
       auto drift_time = (hit->PeakTime() - 500)*0.5; // us 
       double atten_correction = std::exp(drift_time/10e3); // electron lifetime = 10e3 us, or 10 ms
       auto hit_plane = hit->View();
       plane_charge.at(hit_plane) += hit->Integral()*atten_correction*(1/_cal_area_const.at(hit_plane));
+      plane_hits.at(hit_plane)++; 
     }
+    std::cout << "charge: " << plane_charge[0] << ", " << plane_charge[1] << ", " << plane_charge[2] << std::endl;
     uint bestPlane = std::max_element(plane_charge.begin(), plane_charge.end()) - plane_charge.begin(); 
-    std::cout << "best plane: " << bestPlane << std::endl;
-    // bestPlane = 2;
-    _slice_Q = plane_charge.at(bestPlane);
-    std::cout << "charge from hits: " << _slice_Q << std::endl;
+    uint bestHits =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
 
-    _rec_charge.reserve(slice_hits_v.size()/2); // estimate the size of the vector to be between v.size()/3 and v.size()/2
-    _dep_charge.reserve(slice_hits_v.size()/2); 
-    _dep_energy.reserve(slice_hits_v.size()/2); 
+    _slice_Q = plane_charge.at(bestPlane);
+
+    _mean_charge = (plane_charge[0] + plane_charge[1] + plane_charge[2])/3; 
+    _max_charge  = plane_charge.at(bestPlane);
+    _comp_charge  = plane_charge.at(bestHits);
 
     double sps_Q = 0;
 
-    bool hit_in_0 = false;
-    bool hit_in_1 = false;
     // get charge information to create the weighted map 
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfp.at(slice.key());
     for (size_t n_pfp=0; n_pfp < pfp_v.size(); n_pfp++){
@@ -410,34 +433,9 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
           const auto &position(sp->XYZ());
           geo::Point_t xyz(position[0],position[1],position[2]);
           // correct for e- attenuation 
-          if (position[0] < 0) hit_in_0 = true;
-          if (position[0] > 0) hit_in_1 = true;
           double drift_time = abs(200.0 - abs(position[0]))/(0.16); // in us, drift velocity = 0.16 cm/us 
           double atten_correction = std::exp(drift_time/10e3); // electron lifetime = 10e3 us, or 10 ms
           double charge = (1/.0201293)*atten_correction*hit->Integral();
-          if (charge > 0){
-            // art::Ptr<sim::SimChannel> sim_chan_ptr = bt_serv->FindSimChannel(hit->Channel());
-            // if (sim_chan_ptr.isNull()) std::cout << "null channel" << std::endl;
-            if (hit->Channel() != 8294 && hit->Channel() != 8327){
-              std::vector<const sim::IDE*> ide_v = bt_serv->HitToSimIDEs_Ps(clockData, hit);
-              float ide_energy = 0.0;
-              float ide_charge = 0.0;
-              for (auto const ide: ide_v){
-                ide_energy += ide->energy;
-                ide_charge += ide->numElectrons;  
-              }
-              _rec_charge.push_back(charge);
-              _dep_charge.push_back(ide_charge*atten_correction);
-              _dep_energy.push_back(ide_energy);
-            }
-            else{
-              _rec_charge.push_back(charge);
-              _dep_charge.push_back(-1);
-              _dep_energy.push_back(-1);
-            }
-            // _dep_photon = ide_energy/(19.5*1e-6) - ide_charge*atten_correction; 
-            // _tree3->Fill();
-          }
           sp_xyz.push_back(xyz);
           sp_charge.push_back(charge);
 
@@ -445,29 +443,47 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
         }
       } // end spacepoint loop 
     } // end pfp loop
+
     // get total L count
-    std::cout << "sps charge: " << sps_Q << std::endl;
     std::vector<double> visibility_map = CalcVisibility(sp_xyz,sp_charge);
     std::vector<double> total_pe(_nchan,0.); 
     std::vector<double> total_gamma(_nchan, 0.);
 
-    if ( (flash_in_0 && !hit_in_0) || (!flash_in_0 && hit_in_0)) std::cout << "TPC 0 light and charge non-currence!" << std::endl;
-    if ( (flash_in_1 && !hit_in_1) || (!flash_in_1 && hit_in_1)) std::cout << "TPC 1 light and charge non-currence!" << std::endl;
-
     if (flash_in_0){
+      std::cout << "Using OpFlash in TPC 0..." << std::endl;
       auto flash_pe_v = opflash0->PEs();
+      flash_pe_v.insert(flash_pe_v.end(), {0,0,0,0,0,0});
+      if (_use_arapucas){
+        for (size_t nara=0; nara < flash0_ara_v.size(); nara++){
+          auto const &flash0_ara = *flash0_ara_v[nara];
+          if (flash0_ara.Time() - flash_time < 0.05){
+            for (size_t ich=0; ich < (flash0_ara.PEs()).size(); ich++)
+              flash_pe_v.at(ich) += (flash0_ara.PEs()).at(ich);
+            break;
+          }  
+        }
+      }
       for (size_t ich=0; ich<flash_pe_v.size(); ich++) total_pe[ich] += flash_pe_v[ich];
       CalcLight(flash_pe_v, visibility_map, total_gamma);
     }
     if (flash_in_1){
       auto flash_pe_v = opflash1->PEs();
+      std::cout << "Using OpFlash in TPC 1..." << std::endl;
+      flash_pe_v.insert(flash_pe_v.end(), {0,0,0,0,0,0});
+      if (_use_arapucas){
+        for (size_t nara=0; nara < flash0_ara_v.size(); nara++){
+          auto const &flash0_ara = *flash0_ara_v[nara];
+          if (flash0_ara.Time() - flash_time < 0.05){
+            for (size_t ich=0; ich < (flash0_ara.PEs()).size(); ich++)
+              flash_pe_v.at(ich) += (flash0_ara.PEs()).at(ich);
+            break;
+          }  
+        }
+      }
       for (size_t ich=0; ich<flash_pe_v.size(); ich++) total_pe[ich] += flash_pe_v[ich];
       CalcLight(flash_pe_v, visibility_map, total_gamma);
     }
 
-    for (size_t i=0; i < total_gamma.size(); i++){
-      std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) << " vis: "<< visibility_map[i] << std::endl;
-    }
     _dep_pe = total_pe;
     _rec_gamma = total_gamma;
     // get a map of sorted indices 
@@ -482,56 +498,43 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     for (size_t i=0; i < total_gamma.size(); i++){
       if (total_gamma.at(i) <= 0) zero_counter++;
     }
-    std::cout << "zero_counter: " << zero_counter << std::endl;
     int med_gamma_idx=0;
-    double med_gamma=0;
+    // double median_gamma=0;
     if (zero_counter != int(total_gamma.size())){
       med_gamma_idx = idx.at(int((total_gamma.size()-zero_counter))/2 + zero_counter); 
-      std::cout << "med_gamma_idx: " << med_gamma_idx << std::endl;
+      // std::cout << "med_gamma_idx: " << med_gamma_idx << std::endl;
       // std::cout << "median gamma idx: " << med_gamma_idx << std::endl;
-      med_gamma = total_gamma.at(med_gamma_idx);
-      std::cout << "median gamma: " << med_gamma << std::endl;
+      _median_gamma = total_gamma.at(med_gamma_idx);
+      // std::cout << "median gamma: " << med_gamma << std::endl;
     }
-    // for (auto i : idx){
-    //   std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) <<std::endl;
-    // }
 
-    // calculate the weighted average: 
     double counter = 0.0;  // counter of non-zero channels 
     double sum_gamma = 0.0;  // normal sum of photons 
-    double sum_pe = 0.0;     // normal sum of photoelectrons 
-    double wsum_gamma = 0.0; // weighted sum of photons 
     for (size_t ich=0; ich < total_pe.size(); ich++){
       auto gamma = total_gamma[ich];
-      auto pe    = total_pe[ich];
       if (gamma>0){
         counter += 1.0;
         sum_gamma += gamma;
-
-        sum_pe += pe;
-        wsum_gamma += gamma*pe;
       }
     }
-    // TO-DO: keep the amount of light as the weighted average amount of light? 
-    if ((sum_pe != 0) & (_light_wavg==true))
-      _slice_L = wsum_gamma/sum_pe;
-    if ((sum_pe != 0) & (_light_wavg==false))
-      _slice_L = sum_gamma/counter;
-    else
-      _slice_L = 0;
+    if (sum_gamma !=0) _mean_gamma = sum_gamma/counter;
+    _slice_L = _median_gamma;
+    _slice_E = (_slice_L + _slice_Q)*19.5*1e-6; 
+
+    // get truth information 
     _true_gamma = 0; 
     _true_charge = 0;
     _true_energy = 0;
-    // std::cout << "flash time: " << flash_time << std::endl;
+
     for (const sim::SimEnergyDeposit& energyDep:*energyDeps){
-      const double time = energyDep.Time() * 1e-3; 
-      if (abs(time-flash_time) < 1){
-        _true_gamma  += energyDep.NumPhotons()/0.03; 
+      auto trackID = energyDep.TrackID();
+      art::Ptr<simb::MCTruth> mctruth = pi_serv->TrackIdToMCTruth_P(trackID);
+      if (mctruth->Origin()==simb::kBeamNeutrino){
+        _true_gamma  += energyDep.NumPhotons()/0.03; // scint-prescale = 0.03
         _true_charge += energyDep.NumElectrons(); 
         _true_energy += energyDep.Energy(); 
       }
     }
-    _slice_E = (_slice_L + _slice_Q)*19.5*1e-6; 
 
     // std::cout << "true gamma: " <<  _true_gamma << std::endl;
     // std::cout << "calc gamma: " << _slice_L << std::endl;
@@ -540,9 +543,13 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
 
     // std::cout << "true deposited energy: " << _true_energy << std::endl;
     // std::cout << "calc deposited energy: " << _slice_E << std::endl;
-    std::cout << "ratio of gamma (median/true):  " << med_gamma/_true_gamma << std::endl;
-    std::cout << "ratio of gamma (calc/true):    " << _slice_L/_true_gamma << std::endl;
-    std::cout << "ratio of electron (calc/true): " << _slice_Q/_true_charge << std::endl;
+    std::cout << "ratio of gamma (median/true):  " << _median_gamma/_true_gamma << std::endl;
+    std::cout << "ratio of gamma (mean/true):    " << _mean_gamma/_true_gamma << std::endl;
+
+    std::cout << "ratio of electron (mean/true): " << _mean_charge/_true_charge << std::endl;
+    std::cout << "ratio of electron (max/true):  " << _max_charge/_true_charge << std::endl;
+    std::cout << "ratio of electron (comp/true): " << _comp_charge/_true_charge << std::endl;
+
     std::cout << "ratio of energy (calc/true):   " << _slice_E/_true_energy << std::endl;
     std::cout << "fractional energy difference:  " << (_true_energy - _slice_E)/_true_energy << std::endl;
   
@@ -573,7 +580,8 @@ bool sbnd::LightCaloAna::MatchOpFlash(std::vector<art::Ptr<sbn::SimpleFlashMatch
     auto match_time = fm->time;
     for (size_t iop=0; iop<flash_v.size(); iop++){
       auto opflash = flash_v[iop];
-      if (abs( opflash->Time() - match_time) < 0.05){
+      // only select opflashes that match the time and have total PE above noise levels
+      if (abs( opflash->Time() - match_time) < 0.17){
         found_match = true;
         any_match = true;
         match_v.push_back(opflash);
@@ -604,9 +612,14 @@ std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t>
     _semi_model->detectedReflectedVisibilities(reflect_visibility, xyz);
     if (visibility.size() != direct_visibility.size()) std::cout << "mismatch of visibility vector size" << std::endl;
 
-    // sum direct and reflected, weight by charge, and add to total visibility map
-    for (size_t ivis=0; ivis<direct_visibility.size(); ivis++){
-      visibility[ivis] += charge*(direct_visibility[ivis] + reflect_visibility[ivis]);
+    // weight by charge
+    for (size_t ch=0; ch<direct_visibility.size(); ch++){
+      if (_opdetmap.isPDType(ch, "pmt_uncoated") || _opdetmap.isPDType(ch, "xarapuca_vis"))
+        visibility[ch] += charge*reflect_visibility[ch];
+      else if (_opdetmap.isPDType(ch, "xarapuca_vuv"))
+        visibility[ch] += charge*direct_visibility[ch];
+      else if (_opdetmap.isPDType(ch, "pmt_coated"))
+        visibility[ch] += charge*(direct_visibility[ch] + reflect_visibility[ch]);
     }    
   } // end spacepoint loop
   // normalize by the total charge 
@@ -617,11 +630,18 @@ std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t>
 void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
                                    std::vector<double> visibility,
                                    std::vector<double> &total_pe_v){
-  for (size_t ichan = 0; ichan < flash_pe_v.size(); ichan++){
-    auto pe = flash_pe_v[ichan];
-    if((pe == 0) || std::isinf(1/visibility[ichan]))
+  for (size_t ch = 0; ch < flash_pe_v.size(); ch++){
+    auto pe = flash_pe_v[ch];
+    double efficiency = 0.03; 
+    if((pe == 0) || std::isinf(1/visibility[ch]))
       continue;
-    total_pe_v[ichan] += (1/0.03)*pe*(1/visibility[ichan]); 
+    if (_opdetmap.isPDType(ch, "pmt_uncoated") || _opdetmap.isPDType(ch, "pmt_coated"))
+      efficiency = 0.03;
+    else if (_opdetmap.isPDType(ch, "xarapuca_vuv"))
+      efficiency = 0.021;
+    else if (_opdetmap.isPDType(ch, "xarapuca_vis"))
+      efficiency = 0.014;
+    total_pe_v[ch] += (1/efficiency)*pe*(1/visibility[ch]); 
   }
 }
 
