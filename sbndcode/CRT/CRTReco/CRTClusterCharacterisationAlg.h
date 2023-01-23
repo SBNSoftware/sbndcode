@@ -64,11 +64,14 @@ namespace sbnd::crt {
 
     double ReconstructPE(const art::Ptr<CRTStripHit> &hit, const double dist);
 
-    double CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos);
+    void CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos,
+                     double &time, double &etime);
 
     double TimingCorrectionOffset(const double &dist, const double &pe);
 
     void AggregatePositions(const TVector3 &pos, const TVector3 &err, std::array<double, 6> &agg);
+
+    void TimeErrorCalculator(const std::vector<double> &times, double &mean, double &err);
 
   private:
 

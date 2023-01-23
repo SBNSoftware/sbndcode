@@ -28,7 +28,7 @@ namespace sbnd::crt {
     TVector3 pos, err;
     CentralPosition(hitPos, pos, err);
 
-    return CRTSpacePoint(pos, err, pe, stripHit->Ts1(), false);
+    return CRTSpacePoint(pos, err, pe, stripHit->Ts1(), 0., false);
   }
 
   bool CRTClusterCharacterisationAlg::CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits, CRTSpacePoint &spacepoint)
@@ -53,9 +53,10 @@ namespace sbnd::crt {
             CentralPosition(overlap, pos, err);
 
             const double pe   = ReconstructPE(hit0, hit1, pos);
-            const double time = CorrectTime(hit0, hit1, pos);
+            double time, etime;
+            CorrectTime(hit0, hit1, pos, time, etime);
 
-            spacepoint = CRTSpacePoint(pos, err, pe, time, true);
+            spacepoint = CRTSpacePoint(pos, err, pe, time, etime, true);
             return true;
           }
         return false;
@@ -70,9 +71,10 @@ namespace sbnd::crt {
             CentralPosition(overlap, pos, err);
 
             const double pe   = ADCToPE(hit0->Channel(), hit0->ADC1(), hit0->ADC2()) + ADCToPE(hit1->Channel(), hit1->ADC1(), hit1->ADC2());
-            const double time = (hit0->Ts1() + hit1->Ts1()) / 2.;
+            const double time  = (hit0->Ts1() + hit1->Ts1()) / 2.;
+            const double etime = std::abs((double)hit0->Ts1() - (double)hit1->Ts1()) / 2.;
 
-            spacepoint = CRTSpacePoint(pos, err, pe, time, false);
+            spacepoint = CRTSpacePoint(pos, err, pe, time, etime, false);
             return true;
           }
         return false;
@@ -108,21 +110,23 @@ namespace sbnd::crt {
     std::array<double, 6> aggregate_position({std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 
           -std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()});
 
-    double pe = 0., time = 0.;
+    double pe = 0.;
+    std::vector<double> times;
 
     for(auto const &sp : complete_spacepoints)
       {
         AggregatePositions(sp.Pos(), sp.Err(), aggregate_position);
-        pe   += sp.PE();
-        time += sp.Time();
+        pe += sp.PE();
+        times.push_back(sp.Time());
       }
 
     TVector3 pos, err;
     CentralPosition(aggregate_position, pos, err);
-    pe   /= complete_spacepoints.size();
-    time /= complete_spacepoints.size();
     
-    spacepoint = CRTSpacePoint(pos, err, pe, time, true);
+    double time, etime;
+    TimeErrorCalculator(times, time, etime);
+    
+    spacepoint = CRTSpacePoint(pos, err, pe, time, etime, true);
     return true;
   }
 
@@ -194,7 +198,8 @@ namespace sbnd::crt {
     return pe * correction;
   }
 
-  double CRTClusterCharacterisationAlg::CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos)
+  void CRTClusterCharacterisationAlg::CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos,
+                                                  double &time, double &etime)
   {
     const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0->Channel());
     const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1->Channel());
@@ -206,9 +211,15 @@ namespace sbnd::crt {
     const double corr1 = TimingCorrectionOffset(dist1, pe1);
 
     if(fUseT1)
-      return (hit0->Ts1() - corr0 + hit1->Ts1() - corr1) / 2.;
+      {
+        time  = ((double)hit0->Ts1() - corr0 + (double)hit1->Ts1() - corr1) / 2.;
+        etime = std::abs(((double)hit0->Ts1() - corr0) - ((double)hit1->Ts1() - corr1)) / 2.;
+      }
     else
-      return (hit0->Ts0() - corr0 + hit1->Ts0() - corr1) / 2.;
+      {
+        time  = ((double)hit0->Ts0() - corr0 + (double)hit1->Ts0() - corr1) / 2.;
+        etime = std::abs(((double)hit0->Ts0() - corr0) - ((double)hit1->Ts0() - corr1)) / 2.;
+      }
   }
 
   double CRTClusterCharacterisationAlg::TimingCorrectionOffset(const double &dist, const double &pe)
@@ -224,5 +235,20 @@ namespace sbnd::crt {
     agg[3] = std::max(pos.Y() + err.Y(), agg[3]);
     agg[4] = std::min(pos.Z() - err.Z(), agg[4]);
     agg[5] = std::max(pos.Z() + err.Z(), agg[5]);
+  }
+
+  void CRTClusterCharacterisationAlg::TimeErrorCalculator(const std::vector<double> &times, double &mean, double &err)
+  {
+    double sum = 0.;
+    for(auto const &time : times)
+      sum += time;
+
+    mean = sum / times.size();
+
+    double summed_var = 0.;
+    for(auto const &time : times)
+      summed_var += std::pow((time - mean), 2);
+
+    err = std::sqrt(summed_var / times.size());
   }
 }
