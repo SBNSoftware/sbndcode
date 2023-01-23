@@ -124,7 +124,8 @@ private:
   std::vector<double>   _sh_err;
   std::vector<uint16_t> _sh_adc1;
   std::vector<uint16_t> _sh_adc2;
-  std::vector<bool>     _sh_saturated;
+  std::vector<bool>     _sh_saturated1;
+  std::vector<bool>     _sh_saturated2;
   std::vector<int>      _sh_truth_trackid;
   std::vector<double>   _sh_truth_completeness;
   std::vector<double>   _sh_truth_purity;
@@ -137,7 +138,7 @@ private:
   std::vector<uint32_t> _cl_unixs;
   std::vector<uint16_t> _cl_nhits;
   std::vector<int16_t>  _cl_tagger;
-  std::vector<bool>     _cl_threed;
+  std::vector<uint8_t>  _cl_composition;
   std::vector<int>      _cl_truth_trackid;
   std::vector<double>   _cl_truth_completeness;
   std::vector<double>   _cl_truth_purity;
@@ -158,6 +159,7 @@ private:
   std::vector<double>   _cl_sp_ez;
   std::vector<double>   _cl_sp_pe;
   std::vector<double>   _cl_sp_time;
+  std::vector<double>   _cl_sp_etime;
   std::vector<bool>     _cl_sp_complete;
 
   std::vector<int>     _td_trackid;
@@ -240,7 +242,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("sh_err", "std::vector<double>", &_sh_err);
     fTree->Branch("sh_adc1", "std::vector<uint16_t>", &_sh_adc1);
     fTree->Branch("sh_adc2", "std::vector<uint16_t>", &_sh_adc2);
-    fTree->Branch("sh_saturated", "std::vector<bool>", &_sh_saturated);
+    fTree->Branch("sh_saturated1", "std::vector<bool>", &_sh_saturated1);
+    fTree->Branch("sh_saturated2", "std::vector<bool>", &_sh_saturated2);
     fTree->Branch("sh_truth_trackid", "std::vector<int>", &_sh_truth_trackid);
     fTree->Branch("sh_truth_completeness", "std::vector<double>", &_sh_truth_completeness);
     fTree->Branch("sh_truth_purity", "std::vector<double>", &_sh_truth_purity);
@@ -253,7 +256,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_unixs", "std::vector<uint32_t>", &_cl_unixs);
     fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
     fTree->Branch("cl_tagger", "std::vector<int16_t>", &_cl_tagger);
-    fTree->Branch("cl_threed", "std::vector<bool>", &_cl_threed);
+    fTree->Branch("cl_composition", "std::vector<uint8_t>", &_cl_composition);
     fTree->Branch("cl_truth_trackid", "std::vector<int>", &_cl_truth_trackid);
     fTree->Branch("cl_truth_completeness", "std::vector<double>", &_cl_truth_completeness);
     fTree->Branch("cl_truth_purity", "std::vector<double>", &_cl_truth_purity);
@@ -274,6 +277,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_sp_ez", "std::vector<double>", &_cl_sp_ez);
     fTree->Branch("cl_sp_pe", "std::vector<double>", &_cl_sp_pe);
     fTree->Branch("cl_sp_time", "std::vector<double>", &_cl_sp_time);
+    fTree->Branch("cl_sp_etime", "std::vector<double>", &_cl_sp_etime);
     fTree->Branch("cl_sp_complete", "std::vector<bool>", &_cl_sp_complete);
 
     fTree->Branch("td_trackid", "std::vector<int>", &_td_trackid);
@@ -552,7 +556,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
   _sh_err.resize(nStripHits);
   _sh_adc1.resize(nStripHits);
   _sh_adc2.resize(nStripHits);
-  _sh_saturated.resize(nStripHits);
+  _sh_saturated1.resize(nStripHits);
+  _sh_saturated2.resize(nStripHits);
   _sh_truth_trackid.resize(nStripHits);
   _sh_truth_completeness.resize(nStripHits);
   _sh_truth_purity.resize(nStripHits);
@@ -564,15 +569,16 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
     {
       const auto hit = CRTStripHitVec[i];
 
-      _sh_channel[i]   = hit->Channel();
-      _sh_ts0[i]       = hit->Ts0();
-      _sh_ts1[i]       = hit->Ts1();
-      _sh_unixs[i]     = hit->UnixS();
-      _sh_pos[i]       = hit->Pos();
-      _sh_err[i]       = hit->Error();
-      _sh_adc1[i]      = hit->ADC1();
-      _sh_adc2[i]      = hit->ADC2();
-      _sh_saturated[i] = hit->Saturated();
+      _sh_channel[i]    = hit->Channel();
+      _sh_ts0[i]        = hit->Ts0();
+      _sh_ts1[i]        = hit->Ts1();
+      _sh_unixs[i]      = hit->UnixS();
+      _sh_pos[i]        = hit->Pos();
+      _sh_err[i]        = hit->Error();
+      _sh_adc1[i]       = hit->ADC1();
+      _sh_adc2[i]       = hit->ADC2();
+      _sh_saturated1[i] = hit->Saturated1();
+      _sh_saturated2[i] = hit->Saturated2();
 
       const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, hit);
       const std::vector<double> localpos = fCRTGeoAlg.StripWorldToLocalPos(hit->Channel(), truthMatch.deposit.x, truthMatch.deposit.y, truthMatch.deposit.z);
@@ -596,7 +602,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_unixs.resize(nClusters);
   _cl_nhits.resize(nClusters);
   _cl_tagger.resize(nClusters);
-  _cl_threed.resize(nClusters);
+  _cl_composition.resize(nClusters);
   _cl_truth_trackid.resize(nClusters);
   _cl_truth_completeness.resize(nClusters);
   _cl_truth_purity.resize(nClusters);
@@ -617,18 +623,19 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_sp_ez.resize(nClusters);
   _cl_sp_pe.resize(nClusters);
   _cl_sp_time.resize(nClusters);
+  _cl_sp_etime.resize(nClusters);
   _cl_sp_complete.resize(nClusters);
 
   for(unsigned i = 0; i < nClusters; ++i)
     {
       const auto cluster = CRTClusterVec[i];
 
-      _cl_ts0[i]    = cluster->Ts0();
-      _cl_ts1[i]    = cluster->Ts1();
-      _cl_unixs[i]  = cluster->UnixS();
-      _cl_nhits[i]  = cluster->NHits();
-      _cl_tagger[i] = cluster->Tagger();
-      _cl_threed[i] = cluster->ThreeD();
+      _cl_ts0[i]         = cluster->Ts0();
+      _cl_ts1[i]         = cluster->Ts1();
+      _cl_unixs[i]       = cluster->UnixS();
+      _cl_nhits[i]       = cluster->NHits();
+      _cl_tagger[i]      = cluster->Tagger();
+      _cl_composition[i] = cluster->Composition();
 
       const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
       _cl_truth_trackid[i]          = truthMatch.trackid;
@@ -657,6 +664,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_sp_ez[i]       = spacepoint->ZErr();
           _cl_sp_pe[i]       = spacepoint->PE();
           _cl_sp_time[i]     = spacepoint->Time();
+          _cl_sp_etime[i]    = spacepoint->TimeErr();
           _cl_sp_complete[i] = spacepoint->Complete();
         }
       else
@@ -670,6 +678,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_sp_ez[i]       = -999999.;
           _cl_sp_pe[i]       = -999999.;
           _cl_sp_time[i]     = -999999.;
+          _cl_sp_etime[i]    = -999999.;
           _cl_sp_complete[i] = false;
         }
     }
