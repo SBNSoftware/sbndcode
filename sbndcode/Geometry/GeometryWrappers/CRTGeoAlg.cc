@@ -452,14 +452,28 @@ namespace sbnd::crt {
 
   enum CRTTagger CRTGeoAlg::WhichTagger(const double &x, const double &y, const double &z)
   {
-
     for(auto const [name, tagger] : fTaggers)
       {
-        if(x > tagger.minX - 1 && x < tagger.maxX + 1 &&
-           y > tagger.minY - 1 && y < tagger.maxY + 1 &&
-           z > tagger.minZ - 1 && z < tagger.maxZ + 1)
+        if(x > tagger.minX - std::numeric_limits<double>::epsilon() && 
+           x < tagger.maxX + std::numeric_limits<double>::epsilon() && 
+           y > tagger.minY - std::numeric_limits<double>::epsilon() && 
+           y < tagger.maxY + std::numeric_limits<double>::epsilon() &&
+           z > tagger.minZ - std::numeric_limits<double>::epsilon() && 
+           z < tagger.maxZ + std::numeric_limits<double>::epsilon())
           return CRTCommonUtils::GetTaggerEnum(name);
       }
     return kUndefinedTagger;
+  }
+
+  enum CoordSet CRTGeoAlg::GlobalConstrainedCoordinates(const uint16_t channel)
+  {
+    const std::string taggerName = ChannelToTaggerName(channel);
+    const CRTTagger tagger       = CRTCommonUtils::GetTaggerEnum(taggerName);
+    const uint16_t orientation   = GetModule(channel).orientation;
+
+    const CoordSet widthdir    = CRTCommonUtils::GetStripWidthGlobalCoordinate(tagger, orientation);
+    const CoordSet taggercoord = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
+
+    return widthdir | taggercoord;
   }
 }

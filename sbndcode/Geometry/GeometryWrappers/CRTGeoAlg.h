@@ -332,6 +332,8 @@ namespace sbnd::crt {
 
     enum CRTTagger WhichTagger(const double &x, const double &y, const double &z);
 
+    enum CoordSet GlobalConstrainedCoordinates(const uint16_t channel);
+
   private:
 
     std::map<std::string, CRTTaggerGeo> fTaggers;

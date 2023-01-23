@@ -162,7 +162,7 @@ sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const s
   const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(clusteredHits.at(0)->Channel());
 
   uint32_t ts0 = 0, ts1 = 0, s = 0;
-  bool threeD = false;
+  CoordSet composition = kUndefinedSet;
 
   for(uint16_t i = 0; i < clusteredHits.size(); ++i)
     {
@@ -173,14 +173,18 @@ sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const s
       s   += hit->UnixS();
 
       const CRTStripGeo strip = fCRTGeoAlg.GetStrip(hit->Channel());
-      threeD |= fCRTGeoAlg.DifferentOrientations(strip0, strip);
+      if(fCRTGeoAlg.DifferentOrientations(strip0, strip))
+        composition = kXYZ;
     }
+
+  if(composition == kUndefinedSet)
+    composition = fCRTGeoAlg.GlobalConstrainedCoordinates(strip0.channel0);
 
   s   /= nHits;
   ts0 /= nHits;
   ts1 /= nHits;
 
-  return CRTCluster(ts0, ts1, s, nHits, tagger, threeD);
+  return CRTCluster(ts0, ts1, s, nHits, tagger, composition);
 }
   
 DEFINE_ART_MODULE(sbnd::crt::CRTClusterProducer)
