@@ -24,6 +24,7 @@ namespace sbnd::crt {
     fDrawTaggers = config.DrawTaggers();
     fDrawModules = config.DrawModules();
     fDrawFEBs = config.DrawFEBs();
+    fDrawFEBEnds = config.DrawFEBEnds();
     fDrawStrips = config.DrawStrips();
     fDrawTpc = config.DrawTpc();
     fDrawTrueTracks = config.DrawTrueTracks();
@@ -37,6 +38,7 @@ namespace sbnd::crt {
 
     fTaggerColour = config.TaggerColour();
     fFEBColour = config.FEBColour();
+    fFEBEndColour = config.FEBEndColour();
     fTpcColour = config.TpcColour();
     fTrueTrackColour = config.TrueTrackColour();
     fSimDepositColour = config.SimDepositColour();
@@ -172,6 +174,21 @@ namespace sbnd::crt {
                                   febPos[5]};
 
                 DrawCube(c1, rmin, rmax, fFEBColour);
+
+                if(fDrawFEBEnds)
+                  {
+                    const std::array<double, 6> febCh0Pos = fCRTGeoAlg.FEBChannel0WorldPos(module);
+
+                    double rminCh0[3] = {febCh0Pos[0],
+                                         febCh0Pos[2],
+                                         febCh0Pos[4]};
+
+                    double rmaxCh0[3] = {febCh0Pos[1],
+                                         febCh0Pos[3],
+                                         febCh0Pos[5]};
+
+                    DrawCube(c1, rminCh0, rmaxCh0, fFEBEndColour);
+                  }
               }
           }
       }

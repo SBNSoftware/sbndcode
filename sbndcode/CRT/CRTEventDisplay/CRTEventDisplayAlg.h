@@ -88,6 +88,9 @@ namespace sbnd::crt {
       fhicl::Atom<bool> DrawFEBs {
         Name("DrawFEBs")
           };
+      fhicl::Atom<bool> DrawFEBEnds {
+        Name("DrawFEBEnds")
+          };
       fhicl::Atom<bool> DrawStrips {
         Name("DrawStrips")
           };
@@ -122,6 +125,9 @@ namespace sbnd::crt {
           };
       fhicl::Atom<int> FEBColour {
         Name("FEBColour")
+          };
+      fhicl::Atom<int> FEBEndColour {
+        Name("FEBEndColour")
           };
       fhicl::Atom<int> TpcColour {
         Name("TpcColour")
@@ -206,6 +212,7 @@ namespace sbnd::crt {
     bool fDrawTaggers;
     bool fDrawModules;
     bool fDrawFEBs;
+    bool fDrawFEBEnds;
     bool fDrawStrips;
     bool fDrawTpc;
     bool fDrawTrueTracks;
@@ -219,6 +226,7 @@ namespace sbnd::crt {
 
     int fTaggerColour;
     int fFEBColour;
+    int fFEBEndColour;
     int fTpcColour;
     int fTrueTrackColour;
     int fSimDepositColour;
