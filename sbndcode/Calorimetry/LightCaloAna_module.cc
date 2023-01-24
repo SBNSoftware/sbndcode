@@ -94,6 +94,8 @@ private:
                     std::vector<art::Ptr<recob::OpFlash>> &match_v);
   std::vector<double> CalcVisibility(std::vector<geo::Point_t> xyz_v, std::vector<double> charge_v);
   void CalcLight(std::vector<double> flash_pe_v, std::vector<double> visibility, std::vector<double>&total_pe_v);
+  double CalcMedian(std::vector<double> total_light);
+  double CalcMean(std::vector<double> total_light);
   std::vector<std::string> _opflash_producer_v;
   std::vector<std::string> _opflash_ara_producer_v;
   std::string _slice_producer;
@@ -410,11 +412,11 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     uint bestPlane = std::max_element(plane_charge.begin(), plane_charge.end()) - plane_charge.begin(); 
     uint bestHits =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
 
-    _slice_Q = plane_charge.at(bestPlane);
-
     _mean_charge = (plane_charge[0] + plane_charge[1] + plane_charge[2])/3; 
     _max_charge  = plane_charge.at(bestPlane);
     _comp_charge  = plane_charge.at(bestHits);
+
+    _slice_Q = _comp_charge;
 
     double sps_Q = 0;
 
@@ -484,40 +486,14 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       CalcLight(flash_pe_v, visibility_map, total_gamma);
     }
 
+    _median_gamma = CalcMedian(total_gamma);
+    _mean_gamma   = CalcMean(total_gamma);
+    // protect against double flash outliers: 
+  
+      // fill tree variables 
     _dep_pe = total_pe;
     _rec_gamma = total_gamma;
-    // get a map of sorted indices 
-    std::vector<int> idx(total_gamma.size());
-    std::iota(idx.begin(), idx.end(), 0);
-    std::sort(idx.begin(), idx.end(),
-            [&](int A, int B) -> bool {
-                  return total_gamma[A] < total_gamma[B];
-              });
-    // count number of zero entries: 
-    int zero_counter = 0;
-    for (size_t i=0; i < total_gamma.size(); i++){
-      if (total_gamma.at(i) <= 0) zero_counter++;
-    }
-    int med_gamma_idx=0;
-    // double median_gamma=0;
-    if (zero_counter != int(total_gamma.size())){
-      med_gamma_idx = idx.at(int((total_gamma.size()-zero_counter))/2 + zero_counter); 
-      // std::cout << "med_gamma_idx: " << med_gamma_idx << std::endl;
-      // std::cout << "median gamma idx: " << med_gamma_idx << std::endl;
-      _median_gamma = total_gamma.at(med_gamma_idx);
-      // std::cout << "median gamma: " << med_gamma << std::endl;
-    }
-
-    double counter = 0.0;  // counter of non-zero channels 
-    double sum_gamma = 0.0;  // normal sum of photons 
-    for (size_t ich=0; ich < total_pe.size(); ich++){
-      auto gamma = total_gamma[ich];
-      if (gamma>0){
-        counter += 1.0;
-        sum_gamma += gamma;
-      }
-    }
-    if (sum_gamma !=0) _mean_gamma = sum_gamma/counter;
+    
     _slice_L = _median_gamma;
     _slice_E = (_slice_L + _slice_Q)*19.5*1e-6; 
 
@@ -526,32 +502,38 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     _true_charge = 0;
     _true_energy = 0;
 
+    double _true_gamma_0 = 0;
+    double _true_gamma_1 = 0; 
+
     for (const sim::SimEnergyDeposit& energyDep:*energyDeps){
       auto trackID = energyDep.TrackID();
+      auto start_x   = energyDep.StartX(); 
+
       art::Ptr<simb::MCTruth> mctruth = pi_serv->TrackIdToMCTruth_P(trackID);
       if (mctruth->Origin()==simb::kBeamNeutrino){
+      
         _true_gamma  += energyDep.NumPhotons()/0.03; // scint-prescale = 0.03
         _true_charge += energyDep.NumElectrons(); 
         _true_energy += energyDep.Energy(); 
+        if (start_x > 0) _true_gamma_1+= energyDep.NumPhotons()/0.03;
+        if (start_x < 0) _true_gamma_0+= energyDep.NumPhotons()/0.03;
       }
     }
 
-    // std::cout << "true gamma: " <<  _true_gamma << std::endl;
-    // std::cout << "calc gamma: " << _slice_L << std::endl;
-    // std::cout << "true electrons: " << _true_charge << std::endl;
-    // std::cout << "calc electrons: " << _slice_Q << std::endl;
-
-    // std::cout << "true deposited energy: " << _true_energy << std::endl;
-    // std::cout << "calc deposited energy: " << _slice_E << std::endl;
+    // }
     std::cout << "ratio of gamma (median/true):  " << _median_gamma/_true_gamma << std::endl;
     std::cout << "ratio of gamma (mean/true):    " << _mean_gamma/_true_gamma << std::endl;
+    if (flash_in_0 && flash_in_1){
+      std::cout << "ratio of gamma (mean/true) TPC 0: " << mean_gamma0/_true_gamma_0 << std::endl;
+      std::cout << "ratio of gamma (mean/true) TPC 1: " << mean_gamma1/_true_gamma_1 << std::endl;
+    }
 
     std::cout << "ratio of electron (mean/true): " << _mean_charge/_true_charge << std::endl;
     std::cout << "ratio of electron (max/true):  " << _max_charge/_true_charge << std::endl;
     std::cout << "ratio of electron (comp/true): " << _comp_charge/_true_charge << std::endl;
 
     std::cout << "ratio of energy (calc/true):   " << _slice_E/_true_energy << std::endl;
-    std::cout << "fractional energy difference:  " << (_true_energy - _slice_E)/_true_energy << std::endl;
+    // std::cout << "fractional energy difference:  " << (_true_energy - _slice_E)/_true_energy << std::endl;
   
     _opflash_time = flash_time;
 
@@ -601,11 +583,16 @@ std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t>
   if (xyz_v.size() != charge_v.size()) std::cout << "spacepoint coord and charge vector size mismatch" << std::endl;
 
   std::vector<double> visibility(_nchan, 0);
-  double sum_charge = std::accumulate(charge_v.begin(), charge_v.end(), 0.0);
+  double sum_charge0 = 0;
+  double sum_charge1 = 0;
 
   for (size_t i=0; i<xyz_v.size(); i++){
     geo::Point_t const xyz = xyz_v[i];
     auto charge = charge_v[i];
+
+    if (xyz.X() < 0) sum_charge0+= charge;
+    else sum_charge1 += charge; 
+
     std::vector<double> direct_visibility;
     std::vector<double> reflect_visibility;
     _semi_model->detectedDirectVisibilities(direct_visibility, xyz);
@@ -620,11 +607,17 @@ std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t>
         visibility[ch] += charge*direct_visibility[ch];
       else if (_opdetmap.isPDType(ch, "pmt_coated"))
         visibility[ch] += charge*(direct_visibility[ch] + reflect_visibility[ch]);
+      
+      // std::cout << "x: " << xyz.X() << "vis: " << visibility[ch] << std::endl; 
     }    
   } // end spacepoint loop
-  // normalize by the total charge 
-  std::transform(visibility.begin(), visibility.end(), 
-                 visibility.begin(), [sum_charge](double &k){ return k/sum_charge; });
+  // normalize by the total charge in each TPC
+  for (size_t ch=0; ch < visibility.size(); ch++){
+    if (ch%2 == 0) visibility[ch] /= sum_charge0;
+    if (ch%2 == 1) visibility[ch] /= sum_charge1;
+  }
+  // std::transform(visibility.begin(), visibility.end(), 
+  //                visibility.begin(), [sum_charge](double &k){ return k/sum_charge; });
   return visibility;
 }
 void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
@@ -645,37 +638,62 @@ void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
   }
 }
 
-// double sbnd::LightCaloAna::EqualizeLight(std::vector<double> total_gamma,
-//                                          std::vector<double> total_pe){
+double sbnd::LightCaloAna::CalcMedian(std::vector<double> total_gamma){
+  std::vector<double> tpc0_gamma; 
+  std::vector<double> tpc1_gamma;
+  for (size_t i=0; i<total_gamma.size(); i++){
+    if (i%2==0) tpc0_gamma.push_back(total_gamma[i]);
+    if (i%2==1) tpc1_gamma.push_back(total_gamma[i]);
+  }
+  double median_gamma=0; 
+  for (int tpc=0; tpc < 2; tpc++){
+    double median = 0;
+    auto gamma_v = (tpc==0)? tpc0_gamma:tpc1_gamma;
+    std::vector<int> idx(gamma_v.size());
+    std::iota(idx.begin(), idx.end(), 0);
+    std::sort(idx.begin(), idx.end(),
+            [&](int A, int B) -> bool {
+                  return gamma_v[A] < gamma_v[B];
+              });
+    // count number of zero entries: 
+    int zero_counter = 0;
+    for (size_t i=0; i < gamma_v.size(); i++){
+      if (gamma_v.at(i) <= 0) zero_counter++;
+    }
+    int med_idx=0;
+    if (zero_counter != int(gamma_v.size())){
+      med_idx = idx.at(int((gamma_v.size()-zero_counter))/2 + zero_counter); 
+      median = gamma_v.at(med_idx);
+    }
+    median_gamma+=median;
+  }
+  return median_gamma;
+}
 
-//   for (size_t i=0; i < total_gamma.size(); i++){
-//     std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) std::endl;
-//   }
-//   // get a map of sorted indices 
-//   std::vector<int> idx(total_gamma.size());
-//   std::iota(idx.begin(), idx.end(), 0);
-//   std::sort(idx.begin(), idx.end(),
-//            [&](int A, int B) -> bool {
-//                 return total_gamma[A] < total_gamma[B];
-//             });
-//     for (auto i : idx){
-//       std::cout << "PE: " <<  total_pe.at(i) << "Gamma:" << total_gamma.at(i) std::endl;
-//     }
+double sbnd::LightCaloAna::CalcMean(std::vector<double> total_gamma){
+  std::vector<double> tpc0_gamma; 
+  std::vector<double> tpc1_gamma;
+  for (size_t i=0; i<total_gamma.size(); i++){
+    if (i%2==0) tpc0_gamma.push_back(total_gamma[i]);
+    if (i%2==1) tpc1_gamma.push_back(total_gamma[i]);
+  }
+  double mean_gamma=0;
+  for (int tpc=0; tpc < 2; tpc++){
+    auto gamma_v = (tpc==0)? tpc0_gamma:tpc1_gamma;
 
-  // std::vector<double> sorted_gamma = std::sort(total_gamma.begin(), total_gamma.end());
-  // sorted_gamma.erase(std::remove(sorted_gamma.begin(), sorted_gamma.end(), 0.), sorted_gamma.end());
-  // int nch = int(sorted_gamma.size()); // number of nonzero channels
-  // double gamma_median = sorted_gamma.at(int(nch/2));
-  // double gamma_mean   = std::accumulate(sorted_gamma.begin(), sorted_gamma.end(), 0.)/nch;
-  // // light estimate weighted by PE
-  // double gamma_wgt_sum = 0;
-  // double pe_sum = std::accumulate(total_pe.begin(), total_pe.end(), 0.);
-  // for (size_t i=0; i < total_gamma.size(); i++){
-  //   gamma_wgt_sum += total_gamma.at(i)*total_pe.at(i); 
-
-  // }
-
-// }
+    double counter=0;
+    double sum=0;
+    for (size_t i=0; i< gamma_v.size(); i++){
+      auto gamma = gamma_v[i];
+      if (gamma>0){
+        counter+=1.0;
+        sum+=gamma;
+      }
+    }
+    if (sum!=0) mean_gamma+= sum/counter;
+  }
+  return mean_gamma;
+}
 
 
 DEFINE_ART_MODULE(sbnd::LightCaloAna)
