@@ -22,6 +22,7 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/Sequence.h"
 
 //larsoft
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"
@@ -52,13 +53,13 @@ namespace sbnd::crt {
       using Comment = fhicl::Comment;
       
       fhicl::Table<fhicl::ParameterSet> GeoAlgConfig {
-	Name("CRTGeoAlg"),
+        Name("CRTGeoAlg"),
         Comment("Configuration parameters for the CRT geometry algorithm"),
         fhicl::ParameterSet()
       };
 
       fhicl::Table<CRTBackTrackerAlg::Config> BackTrackerAlgConfig {
-	Name("CRTBackTrackerAlg"),
+        Name("CRTBackTrackerAlg"),
         Comment("Configuration parameters for the CRT back tracking algorithm")
       };
       
@@ -84,6 +85,9 @@ namespace sbnd::crt {
       fhicl::Atom<bool> DrawModules {
         Name("DrawModules")
           };
+      fhicl::Atom<bool> DrawFEBs {
+        Name("DrawFEBs")
+          };
       fhicl::Atom<bool> DrawStrips {
         Name("DrawStrips")
           };
@@ -106,8 +110,18 @@ namespace sbnd::crt {
         Name("DrawSpacePoints")
           };
 
+      fhicl::Atom<bool> ChoseTaggers {
+        Name("ChoseTaggers")
+          };
+      fhicl::Sequence<int> ChosenTaggers {
+        Name("ChosenTaggers")
+          };
+
       fhicl::Atom<int> TaggerColour {
         Name("TaggerColour")
+          };
+      fhicl::Atom<int> FEBColour {
+        Name("FEBColour")
           };
       fhicl::Atom<int> TpcColour {
         Name("TpcColour")
@@ -132,14 +146,14 @@ namespace sbnd::crt {
           };
 
       fhicl::Atom<double> MinTime {
-	Name ("MinTime"),
+        Name ("MinTime"),
         Comment ("Ignore truth & reco products before this time"),
-	0.
+        0.
       };
       fhicl::Atom<double> MaxTime {
-	Name ("MaxTime"),
+        Name ("MaxTime"),
         Comment ("Ignore truth & reco products after this time"),
-	3.2e6
+        3.2e6
       };
 
       fhicl::Atom<bool> Print {
@@ -191,6 +205,7 @@ namespace sbnd::crt {
 
     bool fDrawTaggers;
     bool fDrawModules;
+    bool fDrawFEBs;
     bool fDrawStrips;
     bool fDrawTpc;
     bool fDrawTrueTracks;
@@ -199,7 +214,11 @@ namespace sbnd::crt {
     bool fDrawClusters;
     bool fDrawSpacePoints;
 
+    bool             fChoseTaggers;
+    std::vector<int> fChosenTaggers;
+
     int fTaggerColour;
+    int fFEBColour;
     int fTpcColour;
     int fTrueTrackColour;
     int fSimDepositColour;

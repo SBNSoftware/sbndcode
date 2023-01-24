@@ -23,6 +23,7 @@ namespace sbnd::crt {
 
     fDrawTaggers = config.DrawTaggers();
     fDrawModules = config.DrawModules();
+    fDrawFEBs = config.DrawFEBs();
     fDrawStrips = config.DrawStrips();
     fDrawTpc = config.DrawTpc();
     fDrawTrueTracks = config.DrawTrueTracks();
@@ -31,7 +32,11 @@ namespace sbnd::crt {
     fDrawClusters = config.DrawClusters();
     fDrawSpacePoints = config.DrawSpacePoints();
 
+    fChoseTaggers = config.ChoseTaggers();
+    fChosenTaggers = config.ChosenTaggers();
+
     fTaggerColour = config.TaggerColour();
+    fFEBColour = config.FEBColour();
     fTpcColour = config.TpcColour();
     fTrueTrackColour = config.TrueTrackColour();
     fSimDepositColour = config.SimDepositColour();
@@ -125,6 +130,9 @@ namespace sbnd::crt {
       {
         for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
           {
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(name)) == fChosenTaggers.end())
+              continue;
+               
             double rmin[3] = {tagger.minX, 
                               tagger.minY, 
                               tagger.minZ};
@@ -140,6 +148,9 @@ namespace sbnd::crt {
       {
         for(auto const &[name, module] : fCRTGeoAlg.GetModules())
           {
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(module.taggerName)) == fChosenTaggers.end())
+              continue;
+
             double rmin[3] = {module.minX, 
                               module.minY, 
                               module.minZ};
@@ -147,6 +158,21 @@ namespace sbnd::crt {
                               module.maxY, 
                               module.maxZ};
             DrawCube(c1, rmin, rmax, fTaggerColour);
+
+            if(fDrawFEBs)
+              {
+                const std::array<double, 6> febPos = fCRTGeoAlg.FEBWorldPos(module);
+                
+                double rmin[3] = {febPos[0],
+                                  febPos[2],
+                                  febPos[4]};
+
+                double rmax[3] = {febPos[1],
+                                  febPos[3],
+                                  febPos[5]};
+
+                DrawCube(c1, rmin, rmax, fFEBColour);
+              }
           }
       }
     
@@ -155,6 +181,9 @@ namespace sbnd::crt {
       {
         for(auto const &[name, strip] : fCRTGeoAlg.GetStrips())
           {
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), fCRTGeoAlg.ChannelToTaggerEnum(strip.channel0)) == fChosenTaggers.end())
+              continue;
+
             double rmin[3] = {strip.minX, 
                               strip.minY, 
                               strip.minZ};

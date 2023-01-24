@@ -21,7 +21,7 @@ physics:
 {
   analyzers:
   {
-    crtevd:   @local::crteventdisplay_sbnd
+    crtevd:   @local::crteventdisplay_sbnd_feb_layout_debug
   }
 
   ana: [ crtevd ]

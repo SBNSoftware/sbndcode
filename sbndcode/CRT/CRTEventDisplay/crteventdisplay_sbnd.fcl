@@ -8,4 +8,10 @@ crteventdisplay_sbnd:
    module_type:        "sbndcode/CRT/CRTEventDisplay/CRTEventDisplay"
 }
 
+crteventdisplay_sbnd_feb_layout_debug:
+{
+   EventDisplayConfig: @local::crteventdisplayalg_sbnd_feb_layout_debug
+   module_type:        "sbndcode/CRT/CRTEventDisplay/CRTEventDisplay"
+}
+
 END_PROLOG
