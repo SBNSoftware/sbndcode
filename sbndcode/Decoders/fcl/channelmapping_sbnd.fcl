@@ -1,0 +1,21 @@
+BEGIN_PROLOG
+
+ChannelMappingPostGres: {
+    tool_type:          ChannelMapPostGres
+    Nothing:            0
+}
+
+ChannelMappingSQLite: {
+    tool_type:          ChannelMapSQLite
+    DBFileName:         "ChannelMapSBND.db"
+	
+}
+
+sbnd_channelmappinggservice:
+{
+    service_provider:   SBNDChannelMap
+    DiagnosticOutput:   false
+    ChannelMappingTool: @local::ChannelMappingPostGres
+}
+
+END_PROLOG

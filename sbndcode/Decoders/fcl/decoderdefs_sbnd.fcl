@@ -1,0 +1,15 @@
+#include "CAEN_V1730_setup_sbnd.fcl"
+
+BEGIN_PROLOG
+
+extractPMTconfig: {
+                    module_type:        PMTconfigurationExtraction
+}
+
+decodePMT: {
+                    module_type:        DaqDecoderSBNDPMT
+                    FragmentsLabels:  [ "daq:CAENV1730", "daq:ContainerCAENV1730" ]
+                    BoardSetup:         @local::sbnd_V1730_setup
+}
+
+END_PROLOG

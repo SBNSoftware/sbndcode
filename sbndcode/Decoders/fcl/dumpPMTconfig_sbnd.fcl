@@ -1,21 +1,15 @@
 #
 # File:    decodePMT_sbnd.fcl
-# Purpose: PMT readout fragment decoding for studies in SBND.
-# Author:  Afroditi Papadopoulou (apapadopoulou@anl.gov)
-# Date:    Jan 28, 2023
-# 
-# 
-# PMT waveform decoding is performed, extensive debugging messages are
-# included in the `debug.log` log file, and ROOT trees are produced for studies.
-# This configuration, as is, is not meant for production.
+# Purpose: PMT Comfig dumper for studies in SBND.
+# Author:  Vu Chi Lan Nguyen 
+# Date:    Jan 11, 2023
 # 
 # 
 # Input
 # ------
 # 
-# * artDAQ fragments from all 24 PMT readout boards, named
+# * artDAQ fragments from all 8 PMT readout boards, named
 #   `daq:ContainerCAENV1730`
-# * trigger fragment `daq:ICARUSTriggerUDP` (will be decoded as well)
 # * DAQ configuration as FHiCL in the art/ROOT input file
 # 
 # This configuration requires a data fragment for each PMT readout board
@@ -60,18 +54,17 @@
 #include "sam_sbnd.fcl"
 #include "larfft_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
+
 #include "rootoutput_sbnd.fcl"
 
-#include "channelmapping_sbnd.fcl" 
+##include "channelmapping_sbnd.fcl" -> Not exist
 #include "decoderdefs_sbnd.fcl" 
-
 
 # ------------------------------------------------------------------------------
 process_name: DecodePMT
 
 
 # ------------------------------------------------------------------------------
-
 services: {
   
   # Load the service that manages root files for histograms.
@@ -87,21 +80,21 @@ services: {
   ParticleInventoryService:  @local::sbnd_particleinventoryservice 
  
 #  DetectorClocksService: @local::sbnd_detectorclocks
-  ISBNDChannelMap: @local::sbnd_channelmappinggservice
+#  SBNDChannelMap: @local::sbnd_channelmappinggservice
 }
+
 
 # ------------------------------------------------------------------------------
 physics: {
   
   producers: {
     
-    pmtconfig:     @local::extractPMTconfig
-    daqPMT:        @local::decodePMT
-    
+    pmtdumper: {
+	module_type: "DumpPMTconfiguration"
+     }
   }
-
-  decoding: [ pmtconfig, daqPMT ]
-
+  
+  dumping: [ pmtdumper ]
   streams: [ rootoutput ]
 }
 
@@ -115,7 +108,7 @@ outputs: {
     checkFileName:    false
     compressionLevel: 501
     
-    outputCommands:  [ "drop *_*_*_*", "keep *_*_*_DecodePMT" ]
+#    outputCommands:  [ "drop *_*_*_*", "keep *_*_*_DecodePMT" ]
   } # rootoutput
 } # outputs 
 

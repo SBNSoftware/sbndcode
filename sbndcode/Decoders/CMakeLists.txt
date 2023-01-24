@@ -55,4 +55,5 @@ install_source()
 
 # Add our tools directory
 add_subdirectory(DecoderTools)
-
+add_subdirectory(fcl)
+add_subdirectory(ChannelMapping)

@@ -99,6 +99,9 @@ add_subdirectory(test)
 # subdirectory for scripts
 add_subdirectory(bin)
 
+# Top level fcl files.
+add_subdirectory(fcl)
+
 # packaging utility
 
 cet_cmake_config()

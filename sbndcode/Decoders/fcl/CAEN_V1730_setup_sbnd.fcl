@@ -1,0 +1,36 @@
+#
+# Author:  Vu Chi Lan Nguyen (vclnguyen@sheffield.ac.uk)
+# Date:    Jan 11. 2023
+#
+# V1730 setup information:
+# 
+#  * Name: name of the board, as specified in DAQ configuration
+#  * TriggerDelay: delay from the time stamp of the global trigger to the
+#      first post-trigger sample of the board
+#
+
+BEGIN_PROLOG
+
+
+######################################################################
+#
+#  CRT SHARPS RUN
+#
+######################################################################
+
+
+sbnd_V1730_setup_RunSharp: [ 
+
+  { Name: "sbndpmtpush"  TriggerDelay: " 0 ns" },
+  { Name: "sbndpmtpull"  TriggerDelay: " 0 ns" }
+
+]
+
+################################################################################
+###  current default
+################################################################################
+sbnd_V1730_setup: @local::sbnd_V1730_setup_RunSharp
+
+
+################################################################################
+END_PROLOG
