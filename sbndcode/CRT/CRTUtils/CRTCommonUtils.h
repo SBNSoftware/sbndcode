@@ -20,7 +20,7 @@ namespace sbnd::crt {
     // Returns the coordinate constrained by virtue of the tagger's position
     enum CoordSet GetTaggerDefinedCoordinate(const CRTTagger tagger);
 
-    // Returns the global orientation of the strip given the tagger & local orientation
+    // Returns the coordinate direction of the strip's width given the tagger & local orientation
     enum CoordSet GetStripWidthGlobalCoordinate(const CRTTagger tagger, const uint16_t orientation);
   }
 }

@@ -347,6 +347,37 @@ namespace sbnd::crt {
     return StripWorldToLocalPos(strip, x, y, z);
   }
 
+  std::array<double, 6> CRTGeoAlg::FEBWorldPos(const CRTModuleGeo &module)
+  {
+    const geo::AuxDetGeo &auxDet = fAuxDetGeoCore->AuxDetGeoVec()[module.adID];
+
+    const double halfWidth  = auxDet.HalfWidth1();
+    const double halfLength = auxDet.Length() / 2.;
+
+    double limits[3]  = { - halfWidth - 5, -15, -halfLength - 5};
+    double limits2[3] = { - halfWidth,     15,  -halfLength + 5};
+
+    if(!module.top)
+      {
+        limits[0]  = -limits[0];
+        limits2[0] = -limits2[0];
+      }
+
+    double limitsWorld[3], limitsWorld2[3];
+    
+    auxDet.LocalToWorld(limits, limitsWorld);
+    auxDet.LocalToWorld(limits2, limitsWorld2);
+
+    const double minX = std::min(limitsWorld[0], limitsWorld2[0]);
+    const double maxX = std::max(limitsWorld[0], limitsWorld2[0]);
+    const double minY = std::min(limitsWorld[1], limitsWorld2[1]);
+    const double maxY = std::max(limitsWorld[1], limitsWorld2[1]);
+    const double minZ = std::min(limitsWorld[2], limitsWorld2[2]);
+    const double maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
+
+    return {minX, maxX, minY, maxY, minZ, maxZ};
+  }
+
   TVector3 CRTGeoAlg::ChannelToSipmPosition(const uint16_t channel) const
   {
     const CRTSiPMGeo &sipm = fSiPMs.at(channel);

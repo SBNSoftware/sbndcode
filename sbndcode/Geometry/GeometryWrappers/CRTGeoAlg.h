@@ -166,13 +166,17 @@ namespace sbnd::crt {
       double origin[3] = {0, 0, 0};
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
+
       if(_minos)
         orientation = (modulePosMother[2] < 0);
       else
         orientation = (modulePosMother[2] > 0);
 
       // Location of SiPMs
-      top = (orientation == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger)
+        top = (orientation == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+      else
+        top = (orientation == 0) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
 
       // Fill edges
       minX = std::min(limitsWorld[0], limitsWorld2[0]);
@@ -309,13 +313,15 @@ namespace sbnd::crt {
 
     size_t ChannelToOrientation(const uint16_t channel) const;
 
+    std::array<double, 6> StripHit3DPos(const uint16_t channel, const double x, const double ex);
+
     std::vector<double> StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
                                              const double y, const double z);
 
     std::vector<double> StripWorldToLocalPos(const uint16_t channel, const double x,
                                              const double y, const double z);
 
-    std::array<double, 6> StripHit3DPos(const uint16_t channel, const double x, const double ex);
+    std::array<double, 6> FEBWorldPos(const CRTModuleGeo &module);
 
     TVector3 ChannelToSipmPosition(const uint16_t channel) const;
 
