@@ -408,7 +408,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       plane_charge.at(hit_plane) += hit->Integral()*atten_correction*(1/_cal_area_const.at(hit_plane));
       plane_hits.at(hit_plane)++; 
     }
-    std::cout << "charge: " << plane_charge[0] << ", " << plane_charge[1] << ", " << plane_charge[2] << std::endl;
+    // std::cout << "charge: " << plane_charge[0] << ", " << plane_charge[1] << ", " << plane_charge[2] << std::endl;
     uint bestPlane = std::max_element(plane_charge.begin(), plane_charge.end()) - plane_charge.begin(); 
     uint bestHits =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
 
@@ -485,16 +485,20 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       for (size_t ich=0; ich<flash_pe_v.size(); ich++) total_pe[ich] += flash_pe_v[ich];
       CalcLight(flash_pe_v, visibility_map, total_gamma);
     }
-
-    _median_gamma = CalcMedian(total_gamma);
-    _mean_gamma   = CalcMean(total_gamma);
-    // protect against double flash outliers: 
-  
-      // fill tree variables 
+    // fill tree variables 
+    _opflash_time = flash_time;
     _dep_pe = total_pe;
     _rec_gamma = total_gamma;
+
+    // calculate final light estimate   
+    _median_gamma = CalcMedian(total_gamma);
+    _mean_gamma   = CalcMean(total_gamma);
     
-    _slice_L = _median_gamma;
+    if (_median_gamma!=0 && !std::isnan(_median_gamma))
+      _slice_L = _median_gamma;
+    else
+      _slice_L = _mean_gamma;
+    
     _slice_E = (_slice_L + _slice_Q)*19.5*1e-6; 
 
     // get truth information 
@@ -502,12 +506,8 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     _true_charge = 0;
     _true_energy = 0;
 
-    double _true_gamma_0 = 0;
-    double _true_gamma_1 = 0; 
-
     for (const sim::SimEnergyDeposit& energyDep:*energyDeps){
       auto trackID = energyDep.TrackID();
-      auto start_x   = energyDep.StartX(); 
 
       art::Ptr<simb::MCTruth> mctruth = pi_serv->TrackIdToMCTruth_P(trackID);
       if (mctruth->Origin()==simb::kBeamNeutrino){
@@ -515,32 +515,22 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
         _true_gamma  += energyDep.NumPhotons()/0.03; // scint-prescale = 0.03
         _true_charge += energyDep.NumElectrons(); 
         _true_energy += energyDep.Energy(); 
-        if (start_x > 0) _true_gamma_1+= energyDep.NumPhotons()/0.03;
-        if (start_x < 0) _true_gamma_0+= energyDep.NumPhotons()/0.03;
       }
     }
+    
+    _frac_L = (_true_gamma - _slice_L)/_true_gamma; 
+    _frac_Q = (_true_charge - _slice_Q)/_true_charge;
+    _frac_E = (_true_energy - _slice_E)/_true_energy;
+    _tree2->Fill();
 
-    // }
     std::cout << "ratio of gamma (median/true):  " << _median_gamma/_true_gamma << std::endl;
     std::cout << "ratio of gamma (mean/true):    " << _mean_gamma/_true_gamma << std::endl;
-    if (flash_in_0 && flash_in_1){
-      std::cout << "ratio of gamma (mean/true) TPC 0: " << mean_gamma0/_true_gamma_0 << std::endl;
-      std::cout << "ratio of gamma (mean/true) TPC 1: " << mean_gamma1/_true_gamma_1 << std::endl;
-    }
 
     std::cout << "ratio of electron (mean/true): " << _mean_charge/_true_charge << std::endl;
     std::cout << "ratio of electron (max/true):  " << _max_charge/_true_charge << std::endl;
     std::cout << "ratio of electron (comp/true): " << _comp_charge/_true_charge << std::endl;
 
     std::cout << "ratio of energy (calc/true):   " << _slice_E/_true_energy << std::endl;
-    // std::cout << "fractional energy difference:  " << (_true_energy - _slice_E)/_true_energy << std::endl;
-  
-    _opflash_time = flash_time;
-
-    _frac_L = (_true_gamma - _slice_L)/_true_gamma; 
-    _frac_Q = (_true_charge - _slice_Q)/_true_charge;
-    _frac_E = (_true_energy - _slice_E)/_true_energy;
-    _tree2->Fill();
     nsuccessful_matches++;
   } // end slice loop
   _match_type=nsuccessful_matches;
@@ -607,8 +597,6 @@ std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t>
         visibility[ch] += charge*direct_visibility[ch];
       else if (_opdetmap.isPDType(ch, "pmt_coated"))
         visibility[ch] += charge*(direct_visibility[ch] + reflect_visibility[ch]);
-      
-      // std::cout << "x: " << xyz.X() << "vis: " << visibility[ch] << std::endl; 
     }    
   } // end spacepoint loop
   // normalize by the total charge in each TPC
@@ -616,8 +604,6 @@ std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t>
     if (ch%2 == 0) visibility[ch] /= sum_charge0;
     if (ch%2 == 1) visibility[ch] /= sum_charge1;
   }
-  // std::transform(visibility.begin(), visibility.end(), 
-  //                visibility.begin(), [sum_charge](double &k){ return k/sum_charge; });
   return visibility;
 }
 void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
