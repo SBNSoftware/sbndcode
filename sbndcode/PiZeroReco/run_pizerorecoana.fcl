@@ -1,0 +1,32 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "pizerorecoana.fcl"
+
+process_name: PiZeroRecoAna
+
+services:
+{
+  @table::sbnd_services
+  TFileService:		    { fileName: "piZeroRecoAna.root" }
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:  	    @local::sbnd_backtrackerservice
+}
+
+source: 
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    pizerorecoana: @local::pizerorecoana
+  }
+
+  ana:       [ pizerorecoana ] 
+  end_paths: [ ana ] 
+
+}

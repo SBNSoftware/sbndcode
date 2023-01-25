@@ -84,6 +84,8 @@ private:
   art::ServiceHandle<cheat::ParticleInventoryService> particleInventory;
 
   sbnd::TPCGeoAlg fTPCGeo;
+
+  bool fVerbose;
   
   std::string fNuGenModuleLabel, fLArGeantModuleLabel, fPFParticleModuleLabel,
     fTrackModuleLabel, fShowerModuleLabel, fHitsModuleLabel;
@@ -116,6 +118,7 @@ private:
 
 PiZeroRecoAna::PiZeroRecoAna(fhicl::ParameterSet const &pset)
   : EDAnalyzer{pset},
+  fVerbose (pset.get<bool>("Verbose", false)),
   fNuGenModuleLabel (pset.get<std::string>("NuGenModuleLabel")),
   fLArGeantModuleLabel (pset.get<std::string>("LArGeantModuleLabel")),
   fPFParticleModuleLabel (pset.get<std::string>("PFParticleModuleLabel")),
@@ -277,12 +280,19 @@ void PiZeroRecoAna::ReconstructionProcessor(art::Event const &e)
 
   const std::vector<art::Ptr<recob::PFParticle> > primaries = GetPrimaryPFPs(e);
 
+  if(fVerbose) std::cout << "Primaries: " << primaries.size() << std::endl;
+
   for(auto primary : primaries){
     const std::vector<long unsigned int> daughterIDs = primary->Daughters();
+
+    if(fVerbose) std::cout << "\tPrimary " << primary->Self() << ", Slice ID: " << primary->PdgCode() 
+			   << " (" << daughterIDs.size() << " daughters)" << std::endl;
 
     for(auto id: daughterIDs){
       const art::Ptr<recob::PFParticle> daughter = GetPFP(e,id);
       if(daughter.isNull()) continue;
+
+      if(fVerbose) std::cout << "\t\tDaughter " << daughter->Self() << std::endl;
 
       if(daughter->PdgCode() == 13) {
 	const std::vector<art::Ptr<recob::Track> > tracksVec = pfpTrackAssn.at(daughter.key());
@@ -362,8 +372,14 @@ void PiZeroRecoAna::TruthProcessor(art::Event const &e)
     if(truthNeutrino.isNull()) continue;
     std::vector<art::Ptr<simb::MCParticle> > particles = nuParticleAssn.at(truthNeutrino.key());
 
+    if(fVerbose) std::cout << "True Particles: " << particles.size() << std::endl;
+
     for(auto particle : particles){
-      if(particle->Mother() != 0 || particle->StatusCode() != 1) continue;
+      
+      if((particle->Mother() != 0 && particle->Mother() != 10000000) || particle->StatusCode() != 1) continue;
+
+      if(fVerbose) std::cout << "\tParticle " << particle->TrackId() << " PDG: " << particle->PdgCode() << '\n'
+			     << "\t         Mother: " << particle->Mother() << " StatusCode: " << particle->StatusCode() << std::endl;
 
       ResetData();
 

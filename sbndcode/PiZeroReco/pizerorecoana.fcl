@@ -2,7 +2,10 @@ BEGIN_PROLOG
 
 pizerorecoana:
 {
-    module_type:                        "RecoEff"
+    module_type:                        "PiZeroRecoAna"
+
+    Verbose:				true
+
     NuGenModuleLabel:                   "generator"
     LArGeantModuleLabel:                "largeant"
     TrackModuleLabel:                   "pandoraTrack"

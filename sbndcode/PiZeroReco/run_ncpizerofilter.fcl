@@ -1,0 +1,39 @@
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+#include "ncpizerofilter.fcl"
+
+process_name: NCPiZeroFilter
+
+services:
+{
+  @table::sbnd_services
+}
+
+source: 
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  filters:
+  {
+    ncpizerofilter: @local::ncpizerofilter
+  }
+
+  filter:       [ ncpizerofilter ]
+  stream1:       [ out1 ]
+  trigger_paths: [ filter ]
+  end_paths:     [ stream1 ]
+}
+
+outputs:
+{
+  out1:
+  {
+	@table::sbnd_rootoutput
+	SelectEvents: [ "filter" ]
+  }
+}
+
