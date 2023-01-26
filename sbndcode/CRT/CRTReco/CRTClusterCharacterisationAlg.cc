@@ -25,7 +25,7 @@ namespace sbnd::crt {
 
     const double pe = ADCToPE(stripHit->Channel(), stripHit->ADC1(), stripHit->ADC2());
     
-    TVector3 pos, err;
+    geo::Point_t pos, err;
     CentralPosition(hitPos, pos, err);
 
     return CRTSpacePoint(pos, err, pe, stripHit->Ts1(), 0., false);
@@ -49,7 +49,7 @@ namespace sbnd::crt {
           {
             std::array<double, 6> overlap = FindOverlap(hit0, hit1);
             
-            TVector3 pos, err;
+            geo::Point_t pos, err;
             CentralPosition(overlap, pos, err);
 
             const double pe   = ReconstructPE(hit0, hit1, pos);
@@ -67,7 +67,7 @@ namespace sbnd::crt {
           {
             std::array<double, 6> overlap = FindAdjacentPosition(hit0, hit1);
 
-            TVector3 pos, err;
+            geo::Point_t pos, err;
             CentralPosition(overlap, pos, err);
 
             const double pe   = ADCToPE(hit0->Channel(), hit0->ADC1(), hit0->ADC2()) + ADCToPE(hit1->Channel(), hit1->ADC1(), hit1->ADC2());
@@ -120,7 +120,7 @@ namespace sbnd::crt {
         times.push_back(sp.Time());
       }
 
-    TVector3 pos, err;
+    geo::Point_t pos, err;
     CentralPosition(aggregate_position, pos, err);
     
     double time, etime;
@@ -171,18 +171,18 @@ namespace sbnd::crt {
   }
 
   void CRTClusterCharacterisationAlg::CentralPosition(const std::array<double, 6> overlap, 
-                                                      TVector3 &pos, TVector3 &err)
+                                                      geo::Point_t &pos, geo::Point_t &err)
   {
-    pos = TVector3((overlap[0] + overlap[1])/2.,
-                   (overlap[2] + overlap[3])/2.,
-                   (overlap[4] + overlap[5])/2.);
+    pos = geo::Point_t((overlap[0] + overlap[1])/2.,
+                       (overlap[2] + overlap[3])/2.,
+                       (overlap[4] + overlap[5])/2.);
     
-    err = TVector3(std::abs((overlap[0] - overlap[1])/2.),
-                   std::abs((overlap[2] - overlap[3])/2.),
-                   std::abs((overlap[4] - overlap[5])/2.));
+    err = geo::Point_t(std::abs((overlap[0] - overlap[1])/2.),
+                       std::abs((overlap[2] - overlap[3])/2.),
+                       std::abs((overlap[4] - overlap[5])/2.));
   }
 
-  double CRTClusterCharacterisationAlg::ReconstructPE(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos)
+  double CRTClusterCharacterisationAlg::ReconstructPE(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const geo::Point_t &pos)
   {
     const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0->Channel());
     const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1->Channel());
@@ -198,7 +198,7 @@ namespace sbnd::crt {
     return pe * correction;
   }
 
-  void CRTClusterCharacterisationAlg::CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const TVector3 &pos,
+  void CRTClusterCharacterisationAlg::CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const geo::Point_t &pos,
                                                   double &time, double &etime)
   {
     const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0->Channel());
@@ -227,7 +227,7 @@ namespace sbnd::crt {
     return dist * fPropDelay + fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset;
   }
 
-  void CRTClusterCharacterisationAlg::AggregatePositions(const TVector3 &pos, const TVector3 &err, std::array<double, 6> &agg)
+  void CRTClusterCharacterisationAlg::AggregatePositions(const geo::Point_t &pos, const geo::Point_t &err, std::array<double, 6> &agg)
   {
     agg[0] = std::min(pos.X() - err.X(), agg[0]);
     agg[1] = std::max(pos.X() + err.X(), agg[1]);

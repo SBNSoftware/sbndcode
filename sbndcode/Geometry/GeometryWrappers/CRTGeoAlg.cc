@@ -415,7 +415,7 @@ namespace sbnd::crt {
     return {minX, maxX, minY, maxY, minZ, maxZ};
   }
 
-  TVector3 CRTGeoAlg::ChannelToSipmPosition(const uint16_t channel) const
+  geo::Point_t CRTGeoAlg::ChannelToSipmPosition(const uint16_t channel) const
   {
     const CRTSiPMGeo &sipm = fSiPMs.at(channel);
     return {sipm.x, sipm.y, sipm.z};
@@ -427,7 +427,7 @@ namespace sbnd::crt {
     return std::make_pair(strip.channel0, strip.channel1);
   }
 
-  double CRTGeoAlg::DistanceDownStrip(const TVector3 position, const std::string stripName) const
+  double CRTGeoAlg::DistanceDownStrip(const geo::Point_t position, const std::string stripName) const
   {
     // === TO-DO ===
     // This assumes that the CRT is arranged such that its three axes map onto the
@@ -437,7 +437,7 @@ namespace sbnd::crt {
     const CRTStripGeo &strip = fStrips.at(stripName);
     double distance = std::numeric_limits<double>::max();
 
-    const TVector3 pos = ChannelToSipmPosition(strip.channel0);
+    const geo::Point_t pos = ChannelToSipmPosition(strip.channel0);
 
     const double xdiff = std::abs(strip.maxX-strip.minX);
     const double ydiff = std::abs(strip.maxY-strip.minY);
@@ -450,7 +450,7 @@ namespace sbnd::crt {
     return std::abs(distance);
   }
 
-  double CRTGeoAlg::DistanceDownStrip(const TVector3 position, const uint16_t channel) const
+  double CRTGeoAlg::DistanceDownStrip(const geo::Point_t position, const uint16_t channel) const
   {
     const CRTSiPMGeo sipm = fSiPMs.at(channel);
    

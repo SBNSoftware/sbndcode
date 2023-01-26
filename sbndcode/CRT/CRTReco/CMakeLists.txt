@@ -8,22 +8,22 @@ art_make_library(
 
 simple_plugin(
               CRTStripHitProducer module
-              larcorealg_Geometry
-              sbnobj_SBND_CRT
+              larcorealg::Geometry
+              sbnobj::SBND_CRT
               sbndcode_GeoWrappers
 )
 
 simple_plugin(
               CRTClusterProducer module
-              larcorealg_Geometry
-              sbnobj_SBND_CRT
+              larcorealg::Geometry
+              sbnobj::SBND_CRT
               sbndcode_GeoWrappers
 )
 
 simple_plugin(
               CRTSpacePointProducer module
-              larcorealg_Geometry
-              sbnobj_SBND_CRT
+              larcorealg::Geometry
+              sbnobj::SBND_CRT
               sbndcode_GeoWrappers
               sbndcode_CRT_CRTReco
 )

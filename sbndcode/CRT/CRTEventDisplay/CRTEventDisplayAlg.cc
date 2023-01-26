@@ -392,8 +392,8 @@ namespace sbnd::crt {
                 if(spacePointVec.size() == 1)
                   {
                     const art::Ptr<CRTSpacePoint> spacepoint = spacePointVec[0];
-                    const TVector3 pos = spacepoint->Pos();
-                    const TVector3 err = spacepoint->Err();
+                    const geo::Point_t pos = spacepoint->Pos();
+                    const geo::Point_t err = spacepoint->Err();
 
                     double rmin[3] = {pos.X() - err.X(), pos.Y() - err.Y(), pos.Z() - err.Z()};
                     double rmax[3] = {pos.X() + err.X(), pos.Y() + err.Y(), pos.Z() + err.Z()};

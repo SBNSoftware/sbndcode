@@ -409,7 +409,7 @@ namespace crt {
             const std::vector<double> localpos = fCRTGeoAlg.StripWorldToLocalPos(strip, x, y, z);
 
             // Calculate distance to the readout
-            const TVector3 worldpos(x, y, z);
+            const geo::Point_t worldpos(x, y, z);
             const double distToReadout = fCRTGeoAlg.DistanceDownStrip(worldpos, strip.channel0);
 
             // Calculate distance to fibers

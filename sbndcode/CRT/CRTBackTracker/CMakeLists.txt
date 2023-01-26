@@ -4,7 +4,7 @@ art_make_library(
                  LIBRARIES
                         sbnobj_SBND_CRT
                         sbndcode_GeoWrappers
-                        larsim_MCCheater_ParticleInventoryService_service
+                        larsim::MCCheater_ParticleInventoryService_service
 )
 
 install_fhicl()

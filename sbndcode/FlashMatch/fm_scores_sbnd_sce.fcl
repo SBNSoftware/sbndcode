@@ -1,0 +1,8 @@
+#include "fm_scores_sbnd.fcl"
+
+physics: {
+  producers: { fmatchSCE: @local::sbnd_simple_flashmatch_sce }
+  reco: [fmatchSCE]
+}
+
+#include "enable_spacecharge_services_sbnd.fcl"

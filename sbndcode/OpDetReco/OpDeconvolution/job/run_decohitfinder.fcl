@@ -3,8 +3,9 @@
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 
-#include "flashfinder_deco_sbnd.fcl"
 #include "opdeconvolution_sbnd.fcl"
+#include "sbnd_flashfinder_deco.fcl"
+#include "sbnd_ophitfinder_deco.fcl"
 
 process_name: DecoReco
 
@@ -41,12 +42,12 @@ physics:
   producers:
   {
     opdecopmt:     @local::SBNDOpDeconvolutionPMT
-    ophitdecopmt:  @local::SBNDDecoOpHitFinderPMT
-    opflashdecotpc0:   @local::SBNDDecoSimpleFlashTPC0
-    opflashdecotpc1:   @local::SBNDDecoSimpleFlashTPC1
+    ophitpmt:  @local::SBNDDecoOpHitFinderPMT
+    opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0
+    opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1
 
     opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
-    ophitdecoxarapuca:  @local::SBNDDecoOpHitFinderXArapuca
+    ophitxarapuca:  @local::SBNDDecoOpHitFinderXArapuca
     opflashdecotpc0arapuca:   @local::SBNDDecoSimpleFlashTPC0Arapuca
     opflashdecotpc1arapuca:   @local::SBNDDecoSimpleFlashTPC1Arapuca
 
@@ -54,12 +55,12 @@ physics:
 
   reco: [
     opdecopmt,
-    ophitdecopmt,
-    opflashdecotpc0,
-    opflashdecotpc1,
+    ophitpmt,
+    opflashtpc0,
+    opflashtpc1,
 
     opdecoxarapuca,
-    ophitdecoxarapuca,
+    ophitxarapuca,
     opflashdecotpc0arapuca,
     opflashdecotpc1arapuca
   ]

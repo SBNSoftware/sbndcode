@@ -18,6 +18,7 @@ SBNDSimpleFlash:
   FlashGeoConfig  : @local::FlashGeoBarycenter
   UseT0Tool       : false
   FlashT0Config   : @local::FlashT0SelectedChannels
+  ReadoutDelay    : 0. //in us
   CorrectLightPropagation : false
   DriftEstimatorConfig    : @local::DriftEstimatorPMTRatio
 }

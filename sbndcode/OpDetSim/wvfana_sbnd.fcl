@@ -3,7 +3,7 @@
 
 BEGIN_PROLOG
 
-wvf_ana:
+wvf_ana_sbnd:
 {
   module_type: "wvfAna"
   InputModule: "opdaq"

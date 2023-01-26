@@ -6,6 +6,7 @@
 
 #include "rootoutput_sbnd.fcl"
 #include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 
 process_name: CRUMBS
 
@@ -13,6 +14,8 @@ services:
 {
    TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
    @table::sbnd_services
+   BackTrackerService: @local::sbnd_backtrackerservice
+   ParticleInventoryService: @local::sbnd_particleinventoryservice
 }
 
 source: {

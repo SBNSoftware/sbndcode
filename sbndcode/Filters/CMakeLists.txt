@@ -1,41 +1,44 @@
 
-art_make(
+set(
         MODULE_LIBRARIES
-                larcorealg_Geometry
-                larcore_Geometry_Geometry_service
-                larsim_Simulation lardataobj_Simulation
-                larsim_MCCheater_BackTrackerService_service
-                larsim_MCCheater_ParticleInventoryService_service
-                lardata_Utilities
-                larevt_Filters
-                lardataobj_RawData
-                lardataobj_RecoBase
-                lardata_RecoObjects
-                larpandora_LArPandoraInterface
+                larcorealg::Geometry
+                larcore::Geometry_Geometry_service
+                larsim::Simulation
+                lardataobj::Simulation
+                larsim::MCCheater_BackTrackerService_service
+                larsim::MCCheater_ParticleInventoryService_service
+                lardata::Utilities
+                larevt::Filters
+                lardataobj::RawData
+                lardataobj::RecoBase
+                lardata::RecoObjects
+                larpandora::LArPandoraInterface
                 nusimdata::SimulationBase
 #                sbndcode_CRT
 #                sbndcode_CRTData
-                sbnobj_Common_CRT
-                sbnobj_SBND_CRT
+                sbnobj::Common_CRT
+                sbnobj::SBND_CRT
                 sbndcode_CRTUtils
                 art::Framework_Core
-                ${ART_FRAMEWORK_MODULES}
                 art::Framework_Principal
                 art::Framework_Services_Registry
-                ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-                
-                art::Persistency_Common canvas
-                art::Persistency_Provenance canvas
-                art::Utilities canvas
+                art::Persistency_Common
+                art::Persistency_Provenance
+                art::Utilities
                 messagefacility::MF_MessageLogger
-                
                 fhiclcpp::fhiclcpp
                 ROOT::Geom
                 ROOT::XMLIO
                 ROOT::Gdml
-                ${ROOT_BASIC_LIB_LIST}
+                ROOT::Core
                 sbndcode_RecoUtils
         )
+cet_build_plugin(CRTTrigFilter art::module SOURCE CRTTrigFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(GenCRTFilter art::module SOURCE GenCRTFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(GenNuFilter art::module SOURCE GenNuFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(LArG4CRTFilter art::module SOURCE LArG4CRTFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(LArG4FakeTriggerFilter art::module SOURCE LArG4FakeTriggerFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(SimEnergyDepFakeTriggerFilter art::module SOURCE SimEnergyDepFakeTriggerFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()

@@ -1,6 +1,6 @@
 void BasicVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/basicvariables";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_64_01/basicvariables";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -62,7 +62,11 @@ void BasicVariables()
                               50, 0, 5000, plotcolour},
                              {"sh_adc2","sh_adc2", ";ADC2;Strip Hits",
                               50, 0, 5000, plotcolour},
-                             {"sh_saturated","sh_saturated", ";;Strip Hits",
+                             {"sh_saturated1","sh_saturated1", ";SiPM 1;Strip Hits",
+                              2, 0, 2, plotcolour, {"Not Saturated", "Saturated"}, "", true},
+                             {"sh_saturated2","sh_saturated2", ";SiPM 2;Strip Hits",
+                              2, 0, 2, plotcolour, {"Not Saturated", "Saturated"}, "", true},
+                             {"sh_saturated","sh_saturated1 || sh_saturated2", ";Either SiPM;Strip Hits",
                               2, 0, 2, plotcolour, {"Not Saturated", "Saturated"}, "", true},
                              {"sh_completeness","sh_truth_completeness", ";Completeness;Strip Hits",
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
@@ -74,22 +78,30 @@ void BasicVariables()
                               100, 0, 1e7, plotcolour},
                              {"cl_nhits","cl_nhits", ";Hits per cluster;Clusters",
                               10, 0, 10, plotcolour},
-                             {"cl_threed","cl_threed", ";;Clusters",
-                              2, 0, 2, plotcolour, {"TwoD","ThreeD"}, "", true},
+                             {"cl_composition","cl_composition", ";Composition;Clusters",
+                              8, 0, 8, plotcolour, {"Undefined","X", "Y", "Z", "XY", "XZ", "YZ", "XYZ"}, "", true},
                              {"cl_completeness","cl_truth_completeness", ";Completeness;Clusters",
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
                              {"cl_purity","cl_truth_purity", ";Purity;Clusters",
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
 			     {"sp_x","cl_sp_x", ";x [cm];Space Points",
                               100, -500, 500, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+			     {"sp_ex","cl_sp_ex", ";x error [cm];Space Points",
+                              50, 0, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"sp_y","cl_sp_y", ";y [cm];Space Points",
                               100, -500, 1500, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+                             {"sp_ey","cl_sp_ey", ";y error [cm];Space Points",
+                              50, 0, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"sp_z","cl_sp_z", ";z [cm];Space Points",
                               100, -250, 850, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+                             {"sp_ez","cl_sp_ez", ";z error [cm];Space Points",
+                              50, 0, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"sp_pe","cl_sp_pe", ";PE;Space Points",
                               100, 0, 800, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"sp_time","cl_sp_time", ";Time in readout [ns];Space Points",
                               100, 0, 3.5e6, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+                             {"sp_etime","cl_sp_etime", ";Time error [ns];Space Points",
+                              50, 0, 100, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"cl_has_sp","cl_has_sp", ";Has SpacePoint?;Clusters",
                               2, 0, 2, plotcolour, {"No","Yes"}, "", true},
                              {"cl_sp_complete","cl_sp_complete", ";Is SpacePoint Complete?;Clusters",

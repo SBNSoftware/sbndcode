@@ -1,48 +1,46 @@
-simple_plugin(SBNDNoNoiseService   "service"                                                           
-                
+cet_build_plugin(SBNDNoNoiseService   art::service
+                 SOURCE SBNDNoNoiseService_service.cc
 )
 
-simple_plugin(SBNDThermalNoiseServiceInTime   "service"                                                           
-                
-		larcorealg_Geometry
+cet_build_plugin(SBNDThermalNoiseServiceInTime   art::service
+              SOURCE SBNDThermalNoiseServiceInTime_service.cc
+              LIBRARIES
+		larcorealg::Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
-		art_root_io::tfile_support ROOT::Core
+		art_root_io::tfile_support
 		art_root_io::TFileService_service
 		nurandom::RandomUtils_NuRandomService_service
 		art::Framework_Core
-		art::Utilities canvas
-		cetlib::cetlib cetlib_except
+		art::Utilities
+		cetlib::cetlib
 		CLHEP::CLHEP
- 		${ROOT_BASIC_LIB_LIST}                                                                                                                   
+ 		ROOT::Core
 )
 
-simple_plugin(SBNDThermalNoiseServiceInFreq   "service"               
-                
-		larcorealg_Geometry
+cet_build_plugin(SBNDThermalNoiseServiceInFreq   art::service
+               SOURCE SBNDThermalNoiseServiceInFreq_service.cc
+               LIBRARIES
+		larcorealg::Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
 		art_root_io::tfile_support ROOT::Core
 		art_root_io::TFileService_service
 		nurandom::RandomUtils_NuRandomService_service
 		art::Framework_Core
-		art::Utilities canvas
-		cetlib::cetlib cetlib_except
 		CLHEP::CLHEP
- 		${ROOT_BASIC_LIB_LIST}                                                                                                                   
-)      
+ 		ROOT::Core
+)
 
-simple_plugin(SBNDuBooNEDataDrivenNoiseService   "service"                                                           
-                
-		larcorealg_Geometry
+cet_build_plugin(SBNDuBooNEDataDrivenNoiseService   art::service
+                SOURCE SBNDuBooNEDataDrivenNoiseService_service.cc
+                LIBRARIES
+		larcorealg::Geometry
 		sbndcode_Utilities_SignalShapingServiceSBND_service
-		art_root_io::tfile_support ROOT::Core
+		art_root_io::tfile_support
 		art_root_io::TFileService_service
 		nurandom::RandomUtils_NuRandomService_service
 		art::Framework_Core
-		art::Utilities canvas
-		cetlib::cetlib cetlib_except
 		CLHEP::CLHEP
- 		${ROOT_BASIC_LIB_LIST}                                                                                                                   
-)      
-
+ 		ROOT::Core
+)
 
 install_fhicl()

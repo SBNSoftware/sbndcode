@@ -12,9 +12,9 @@ art_make(
 	 LIBRARY_NAME
 		sbndcode_CRTData
 	 LIB_LIBRARIES
-		larcorealg_Geometry
-		larcore_Geometry_Geometry_service
-		lardataobj_RecoBase
+		larcorealg::Geometry
+		larcore::Geometry_Geometry_service
+		lardataobj::RecoBase
 		art::Framework_Core
 		art::Framework_IO_Sources
 		art::Framework_Principal
@@ -23,7 +23,7 @@ art_make(
 		messagefacility::MF_MessageLogger
 		
 		fhiclcpp::fhiclcpp
-		${ROOT_BASIC_LIB_LIST}
+		ROOT::Core
 		ROOT::Geom
 		cetlib::cetlib
 )
@@ -32,12 +32,12 @@ art_make_library(
 		 LIBRARY_NAME sbndcode_CRT
     		 SOURCE       CRTChannelMapAlg.cxx
 		 LIBRARIES
-			larcorealg_Geometry
+			larcorealg::Geometry
         		sbndcode_CRTData
         		cetlib_except::cetlib_except
         		messagefacility::MF_MessageLogger
 			fhiclcpp::fhiclcpp
-			${ROOT_BASIC_LIB_LIST}
+			ROOT::Core
         		ROOT::Geom
         		cetlib::cetlib
 )

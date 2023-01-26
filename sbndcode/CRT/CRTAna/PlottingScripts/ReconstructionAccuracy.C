@@ -1,6 +1,6 @@
 void ReconstructionAccuracy()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/reconstructionaccuracy";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_64_01/reconstructionaccuracy";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 

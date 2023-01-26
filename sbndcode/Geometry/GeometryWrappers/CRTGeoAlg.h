@@ -32,7 +32,7 @@
 #include <vector>
 
 // ROOT
-#include "TVector3.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 #include "TGeoManager.h"
 
 // sbndcode
@@ -325,13 +325,13 @@ namespace sbnd::crt {
 
     std::array<double, 6> FEBChannel0WorldPos(const CRTModuleGeo &module);
 
-    TVector3 ChannelToSipmPosition(const uint16_t channel) const;
+    geo::Point_t ChannelToSipmPosition(const uint16_t channel) const;
 
     std::pair<int, int> GetStripSipmChannels(const std::string stripName) const;
 
-    double DistanceDownStrip(const TVector3 position, const std::string stripName) const;
+    double DistanceDownStrip(const geo::Point_t position, const std::string stripName) const;
 
-    double DistanceDownStrip(const TVector3 position, const uint16_t channel) const;
+    double DistanceDownStrip(const geo::Point_t position, const uint16_t channel) const;
 
     bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer = 0.);
 

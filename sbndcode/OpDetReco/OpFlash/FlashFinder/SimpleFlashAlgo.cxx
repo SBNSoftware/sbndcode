@@ -13,6 +13,8 @@ namespace lightana{
     : FlashAlgoBase(name)
     {}
 
+    size_t SimpleFlashAlgo::_nopdet_maxsize = 0;
+
     void SimpleFlashAlgo::Configure(const Config_t &p)
     {
         Reset();
@@ -113,6 +115,9 @@ namespace lightana{
           throw std::exception();
         }
         */
+
+        if(_index_to_opch_v.size()>_nopdet_maxsize) _nopdet_maxsize = _index_to_opch_v.size();
+
     }
 
     bool SimpleFlashAlgo::Veto(double t) const
@@ -149,7 +154,7 @@ namespace lightana{
         size_t nbins_pesum_v = (size_t)((max_time - min_time) / _time_res) + 1;
         if(_pesum_v.size() < nbins_pesum_v) _pesum_v.resize(nbins_pesum_v,0);
         if(mult_v.size()   < nbins_pesum_v) mult_v.resize(nbins_pesum_v,0);
-        if(pespec_v.size() < nbins_pesum_v) pespec_v.resize(nbins_pesum_v,std::vector<double>(NOpDet));
+        if(pespec_v.size() < nbins_pesum_v) pespec_v.resize(nbins_pesum_v,std::vector<double>(_nopdet_maxsize));
         if(hitidx_v.size() < nbins_pesum_v) hitidx_v.resize(nbins_pesum_v,std::vector<unsigned int>());
         for(size_t i=0; i<_pesum_v.size(); ++i) {
             _pesum_v[i] = 0;

@@ -1,6 +1,7 @@
 art_make(
-	 MODULE_LIBRARIES 
-	 sbnobj_SBND_CRT
+	 MODULE_LIBRARIES
+	 ROOT::Tree
+	 sbnobj::SBND_CRT
 	 sbndcode_GeoWrappers
 	 sbndcode_CRT_CRTBackTracker
 )

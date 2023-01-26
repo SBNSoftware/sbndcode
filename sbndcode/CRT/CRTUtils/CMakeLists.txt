@@ -4,3 +4,7 @@ art_make(
 	 LIB_LIBRARIES
 	 messagefacility::MF_MessageLogger	 
 )
+
+install_headers()
+install_fhicl()
+install_source()

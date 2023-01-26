@@ -1,5 +1,6 @@
 #include "caldata.fcl"
 #include "roitools_sbnd.fcl"
+#include "larfft_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -23,7 +24,9 @@ sbnd_calwire:
 {
  module_type:        "CalWireSBND"
  DigitModuleLabel:   "daq"
- FFTSize:             3000  # re-initialize FFT service to this size
+ FFTSize:             @local::sbnd_larfft.FFTSize  # reset FFT service to this size
+ FFTOption:           @local::sbnd_larfft.FFTOption  # reset FFT service to this option
+ FFTFitBins:          @local::sbnd_larfft.FitBins  # reset FFT service to this number
  DoBaselineSub:       true  # Baseline subtr. to restore DC component post-deconvolution
  DoAdvBaselineSub:    false # More advanced baseline subtr. using params below
  BaseSampleBins:      50    # Value should be modulo the data size (3200 for uB)

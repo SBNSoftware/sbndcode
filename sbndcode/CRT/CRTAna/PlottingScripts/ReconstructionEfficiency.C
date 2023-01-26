@@ -1,6 +1,6 @@
 void ReconstructionEfficiency()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/reconstructionefficiency";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_64_01/reconstructionefficiency";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 

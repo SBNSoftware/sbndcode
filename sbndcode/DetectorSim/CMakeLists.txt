@@ -1,10 +1,12 @@
 
-simple_plugin(SimWireSBND "module"
-                           larcore_Geometry_Geometry_service
-                           lardataobj_Simulation
-                           lardata_Utilities
-                           lardataobj_RawData
-                           lardata_DetectorInfoServices_DetectorClocksServiceStandard_service
+cet_build_plugin( SimWireSBND
+                           art::module LIBRARIES
+                           larcore::Geometry_Geometry_service
+                           lardataobj::Simulation
+                           lardata::Utilities
+                           lardataobj::RawData
+                           lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
+                           larevt::CalibrationDBI_Providers
                            sbndcode_Utilities_SignalShapingServiceSBND_service
                            nurandom::RandomUtils_NuRandomService_service
                            art::Framework_Core
@@ -13,13 +15,11 @@ simple_plugin(SimWireSBND "module"
                            art::Framework_Services_Optional_RandomNumberGenerator_service
                            canvas::canvas
                            messagefacility::MF_MessageLogger
-                           
                            fhiclcpp::fhiclcpp
-                           cetlib::cetlib cetlib_except
+                           cetlib::cetlib
+                           cetlib_except::cetlib_except
                            CLHEP::CLHEP
-                           ${ROOT_BASIC_LIB_LIST}
-			   
-			   
+                           ROOT::Core
 
 )
 
