@@ -107,8 +107,8 @@ physics:
 }
 
 
-physics.analyzers.hitdumper.pmtSoftTriggerModuleLabel: "SoftwareTriggerMetric"
-physics.analyzers.hitdumper.crtSoftTriggerModuleLabel: "SoftwareTriggerMetric"
+physics.analyzers.hitdumper.pmtSoftTriggerModuleLabel: "softmetric"
+physics.analyzers.hitdumper.crtSoftTriggerModuleLabel: "softmetric"
 physics.analyzers.hitdumper.HitsModuleLabel: "fasthit"
 physics.analyzers.hitdumper.keepCRThits: false
 physics.analyzers.hitdumper.keepCRTstrips: true

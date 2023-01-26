@@ -13,15 +13,15 @@ sbnd_digipmt_alg:
   TransitTime:           55.1       #ns
   TTS:                   2.4        #Transit Time Spread in ns
   CableTime:             135        #time delay of the 30 m long readout cable in ns
-  PMTChargeToADC:        -11.1927   #charge to adc factor
+  PMTChargeToADC:        -25.97   #charge to adc factor
   PMTSaturation:         300        #in number of p.e. to see saturation effects in the signal
   PMTBaseline:           8000.0     #in ADC
   PMTCoatedVUVEff:       0.11      #PMT coated detection efficiency for direct (VUV) light
   PMTCoatedVISEff:       0.08      #PMT coated detection efficiency for reflected (VIS) light
   PMTUncoatedEff:        0.11      #PMT uncoated detection efficiency
-  PMTSinglePEmodel:      false      #false for ideal PMT response, true for test bench measured response
-  PMTDataFile:           "OpDetSim/digi_pmt_sbnd.root" # located in sbnd_data
-  MakeGainFluctuations:  true
+  PMTSinglePEmodel:        true   # false for ideal PMT response, true for test bench measured response
+  PMTDataFile:             "OpDetSim/digi_pmt_sbnd_v2int0.root"  # located in sbnd_data
+  MakeGainFluctuations: true
   GainFluctuationsParams: @local::FirstDynodeGainFluctuations
 
 

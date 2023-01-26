@@ -393,7 +393,7 @@ double MCAssociations::length(const simb::MCParticle& part, double dx,
         {
             const geo::TPCGeo& tpcGeo = fGeometry->PositionToTPC(geo::vect::toPoint(pos));
             
-            TVector3 activePos = posVec - tpcGeo.GetActiveVolumeCenter();
+            geo::Vector_t activePos = geo::vect::toPoint(posVec) - tpcGeo.GetActiveVolumeCenter();
             
             if (part.TrackId() == findTrackID)
                 std::cout << "   --> traj point: " << i << ", pos: " << posVec.X() << "/" << posVec.Y() << "/" << posVec.Z() << ", active pos: " << activePos.X() << "/" << activePos.Y() << "/" << activePos.Z() << std::endl;

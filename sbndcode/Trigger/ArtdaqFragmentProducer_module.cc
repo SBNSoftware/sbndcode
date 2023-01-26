@@ -537,10 +537,12 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
 
     // index in full waveform, 2ns tick
     size_t trigIdx = wvfIdx*4;
-    size_t startIdx = trigIdx-500; // -1us
+    // size_t startIdx = trigIdx-500; // -1us
+    size_t startIdx = abs(fMinStartTime)*1000/2 + trigIdx-500;
 
     // determine and set timestamp for particular trigger
-    double triggerTime = fMinStartTime + wvfIdx*0.008; // in us
+    // double triggerTime = fMinStartTime + wvfIdx*0.008; // in us
+    double triggerTime = wvfIdx*0.008; // in us
     double timestampVal = 0.5 + (triggerTime*1e-6); // in seconds // std::time(nullptr); // current time
     metadata.timeStampSec = (uint32_t)timestampVal;
     metadata.timeStampNSec = (uint32_t)(timestampVal*1e9);
