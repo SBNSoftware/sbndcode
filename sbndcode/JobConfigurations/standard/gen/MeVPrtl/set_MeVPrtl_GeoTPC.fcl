@@ -1,0 +1,6 @@
+#sbnd detector in det frame +10cm around detector
+sbnd_detector_box: [-210, 210, -210, 210, -10, 510] #cm
+sbnd_bnb_solid_angle_box: 1.3223e-3 #front face / detector distance ^2 = 4*4/110^2
+
+physics.producers.generator.RayTrace.Box: @local::sbnd_detector_box
+physics.producers.generator.RayTrace.ReferenceSolidAngle: @local::sbnd_bnb_solid_angle_box

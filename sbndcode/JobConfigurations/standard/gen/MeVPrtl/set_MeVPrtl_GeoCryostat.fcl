@@ -1,0 +1,5 @@
+sbnd_bnb_solid_angle_cryostat: 0.0133
+
+physics.producers.generator.RayTrace.Box: @erase
+physics.producers.generator.RayTrace.Volume: "volCryostat"
+physics.producers.generator.RayTrace.ReferenceSolidAngle: @local::sbnd_bnb_solid_angle_cryostat
