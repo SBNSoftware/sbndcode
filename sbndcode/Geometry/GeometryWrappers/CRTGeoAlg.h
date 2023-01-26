@@ -343,7 +343,7 @@ namespace sbnd::crt {
 
     bool DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
 
-    enum CRTTagger WhichTagger(const double &x, const double &y, const double &z);
+    enum CRTTagger WhichTagger(const double &x, const double &y, const double &z, const double &buffer = 1);
 
     enum CoordSet GlobalConstrainedCoordinates(const uint16_t channel);
 

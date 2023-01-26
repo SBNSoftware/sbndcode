@@ -522,16 +522,16 @@ namespace sbnd::crt {
     return module1.orientation != module2.orientation;
   }
 
-  enum CRTTagger CRTGeoAlg::WhichTagger(const double &x, const double &y, const double &z)
+  enum CRTTagger CRTGeoAlg::WhichTagger(const double &x, const double &y, const double &z, const double &buffer)
   {
     for(auto const [name, tagger] : fTaggers)
       {
-        if(x > tagger.minX - std::numeric_limits<double>::epsilon() && 
-           x < tagger.maxX + std::numeric_limits<double>::epsilon() && 
-           y > tagger.minY - std::numeric_limits<double>::epsilon() && 
-           y < tagger.maxY + std::numeric_limits<double>::epsilon() &&
-           z > tagger.minZ - std::numeric_limits<double>::epsilon() && 
-           z < tagger.maxZ + std::numeric_limits<double>::epsilon())
+        if(x > tagger.minX - buffer &&
+           x < tagger.maxX + buffer &&
+           y > tagger.minY - buffer &&
+           y < tagger.maxY + buffer &&
+           z > tagger.minZ - buffer &&
+           z < tagger.maxZ + buffer)
           return CRTCommonUtils::GetTaggerEnum(name);
       }
     return kUndefinedTagger;
