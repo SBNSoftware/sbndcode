@@ -1,0 +1,30 @@
+#include "services_sbnd.fcl"
+#include "particleinventoryservice.fcl"
+
+process_name: PiZeroAnalyzer
+
+services:
+{
+  TFileService: { fileName: "pizeroana_sbnd.root" }
+  @table::sbnd_basic_services
+  ParticleInventoryService: @local::standard_particleinventoryservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    pizeroana:
+    { 
+      module_type:       "PiZeroAnalysis"
+    }
+  }
+
+  ana:       [ pizeroana ]
+  end_paths: [ ana ]
+}
