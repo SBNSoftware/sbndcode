@@ -30,7 +30,7 @@ sbnd_opticalproperties: {
     # ScintPreScale MUST be equal/larger than the largest detection efficiency applied at DetSim stage
     # This corresponds to the uncoated PMTs detection efficiency (9.6%)
     # See sbndcode/OpDetSim/digi_pmt_sbnd.fcl
-    ScintPreScale:  0.096
+    ScintPreScale:  0.19
 
     EnableCerenkovLight: false # Cerenkov light OFF by default
 
