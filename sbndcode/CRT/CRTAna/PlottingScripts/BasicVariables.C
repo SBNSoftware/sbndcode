@@ -27,6 +27,7 @@ void BasicVariables()
     std::vector<TString> binlabels = {};
     TCut req = "";
     bool yaxisfromzero = false;
+    bool logy = false;
   };
 
   struct plttwod {
@@ -79,7 +80,9 @@ void BasicVariables()
                              {"cl_nhits","cl_nhits", ";Hits per cluster;Clusters",
                               10, 0, 10, plotcolour},
                              {"cl_composition","cl_composition", ";Composition;Clusters",
-                              8, 0, 8, plotcolour, {"Undefined","X", "Y", "Z", "XY", "XZ", "YZ", "XYZ"}, "", true},
+                              8, 0, 8, plotcolour, {"Undefined","X", "Y", "XY", "Z", "XZ", "YZ", "XYZ"}, "", true},
+                             {"cl_composition_log","cl_composition", ";Composition;Clusters",
+                              8, 0, 8, plotcolour, {"Undefined","X", "Y", "XY", "Z", "XZ", "YZ", "XYZ"}, "", true, true},
                              {"cl_completeness","cl_truth_completeness", ";Completeness;Clusters",
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
                              {"cl_purity","cl_truth_purity", ";Purity;Clusters",
@@ -119,6 +122,7 @@ void BasicVariables()
     {
       TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
       canvas->cd();
+
       TH1F* hist = new TH1F(plot.name, plot.axes_labels,
                             plot.nbins, plot.xlow, plot.xhigh);
       hist->SetLineColor(plot.colour);
@@ -126,6 +130,12 @@ void BasicVariables()
       hist->GetYaxis()->SetNdivisions(507);
       if(plot.yaxisfromzero) hist->SetMinimum(0);
       tree->Draw(plot.var + ">>" + plot.name, plot.req,"histE");
+
+      if(plot.logy)
+	{
+	  hist->SetMinimum(1);
+	  canvas->SetLogy();
+	}
 
       if(plot.binlabels.size() == plot.nbins)
         {
