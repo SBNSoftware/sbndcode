@@ -19,19 +19,16 @@ namespace geo {
   static bool sortAuxDetSBND(const AuxDetGeo& ad1, const AuxDetGeo& ad2) {
     // Sort using the center of the detector - primary ordering by z,
     // then y, and x
-    double c1[3] = {0, 0, 0};
-    double c2[3] = {0, 0, 0};
-    ad1.GetCenter(c1);
-    ad2.GetCenter(c2);
+    auto const c1 = ad1.GetCenter();
+    auto const c2 = ad2.GetCenter();
 
-    for (int i=2; i>0; i--) {
-      if (c1[i] != c2[i]){
-        return c1[i] < c2[i];
+    if (c1.Z() != c2.Z()) {
+      return c1.Z() < c2.Z();
       }
+    if (c1.Y() != c2.Y()) {
+      return c1.Y() < c2.Y();
     }
-
-    return c1[0] < c2[0];
-
+    return c1.X() < c2.X();
   }
 
   //----------------------------------------------------------------------------

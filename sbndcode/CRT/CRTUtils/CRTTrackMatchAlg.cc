@@ -69,13 +69,9 @@ std::pair<TVector3, TVector3> CRTTrackMatchAlg::TpcIntersection(const geo::TPCGe
 // Function to calculate if a CRTTrack crosses the TPC volume
 bool CRTTrackMatchAlg::CrossesTPC(sbn::crt::CRTTrack track){
 
-  for(size_t c = 0; c < fGeometryService->Ncryostats(); c++){
-    const geo::CryostatGeo& cryostat = fGeometryService->Cryostat(c);
-    for(size_t t = 0; t < cryostat.NTPC(); t++){
-      const geo::TPCGeo& tpcGeo = cryostat.TPC(t);
+  for(auto const& tpcGeo : fGeometryService->Iterate<geo::TPCGeo>()) {
       std::pair<TVector3, TVector3> intersection = TpcIntersection(tpcGeo, track);
       if(intersection.first.X() != -99999) return true;
-    }
   }
   return false;
 

@@ -7,10 +7,11 @@
 ###  Tests to be executed in chain:
 ###
 declare -ar TestNames=(
-  'prod_eminus_0.1_0.9_sbnd'
-  'standard_g4_sbnd'
-  'standard_detsim_sbnd'
-  'standard_reco_sbnd_basic'
+    'prodsingle_electron_bnblike_newflux'
+    'g4_sce'
+    'detsim_sce'
+    'reco1_sce'
+    'reco2_sce'
 )
 #############################################################################
 

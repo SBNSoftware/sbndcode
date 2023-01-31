@@ -448,22 +448,21 @@ namespace crt {
                     << "TimeOffset: " << fTimeOffset << std::endl;
             }
 
-            double world[3] = {x, y, z};
-            double svHitPosLocal[3];
-            adsGeo.WorldToLocal(world, svHitPosLocal);
+            geo::Point_t const world{x, y, z};
+            auto const svHitPosLocal = adsGeo.toLocalCoords(world);
 
             // Calculate distance to the readout
             double distToReadout;
             if (top) {
-                distToReadout = abs( adsGeo.HalfWidth1() - svHitPosLocal[0]);
+                distToReadout = abs( adsGeo.HalfWidth1() - svHitPosLocal.X());
             }
             else {
-                distToReadout = abs(-adsGeo.HalfWidth1() - svHitPosLocal[0]);
+                distToReadout = abs(-adsGeo.HalfWidth1() - svHitPosLocal.X());
             }
 
             // Calculate distance to fibers
-            double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal[1]);  // L
-            double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal[1]);  // R
+            double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal.Y());  // L
+            double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal.Y());  // R
 
             // Simulate time response
             // Waveform emulation is added later, because
@@ -510,7 +509,7 @@ namespace crt {
 
             if (q0 > threshold &&
                 q1 > threshold &&
-                util::absDiff(ts1_ch0, ts1_ch1) < fParams.StripCoincidenceWindow())
+                lar::util::absDiff(ts1_ch0, ts1_ch1) < fParams.StripCoincidenceWindow())
             {
                 sipm_coinc = true;
             }
@@ -546,15 +545,14 @@ namespace crt {
             Tagger& tagger = fTaggers[nodeTagger->GetName()];
             tagger.data.push_back(strip_data);
 
-            double poss[3];
-            adsGeo.LocalToWorld(origin, poss);
+            auto const poss = adsGeo.GetCenter();
             mf::LogInfo("CRTDetSimAlg")
                 << "CRT HIT in adid/adsid " << adid << "/" << adsid << "\n"
                 << "MAC5 " << mac5 << "\n"
                 << "TRUE TIME  " << tTrue << "\n"
                 << "TRACK ID  " << ide.trackID << "\n"
                 << "CRT HIT POS " << x << " " << y << " " << z << "\n"
-                << "CRT STRIP POS " << poss[0] << " " << poss[1] << " " << poss[2] << "\n"
+                << "CRT STRIP POS " << poss.X() << " " << poss.Y() << " " << poss.Z() << "\n"
                 << "CRT MODULE POS " << modulePosMother[0] << " "
                                      << modulePosMother[1] << " "
                                      << modulePosMother[2] << " "
