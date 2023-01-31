@@ -10,8 +10,9 @@ namespace opdet {
   DigiPMTSBNDAlg::DigiPMTSBNDAlg(ConfigurationParameters_t const& config)
     : fParams(config)
     , fSampling(fParams.frequency)
-    , fQEDirect(fParams.QEDirect / fParams.larProp->ScintPreScale())
-    , fQERefl(fParams.QERefl / fParams.larProp->ScintPreScale())
+    , fPMTCoatedVUVEff(fParams.PMTCoatedVUVEff / fParams.larProp->ScintPreScale())
+    , fPMTCoatedVISEff(fParams.PMTCoatedVISEff / fParams.larProp->ScintPreScale())
+    , fPMTUncoatedEff(fParams.PMTUncoatedEff/ fParams.larProp->ScintPreScale())
       //  , fSinglePEmodel(fParams.SinglePEmodel)
     , fEngine(fParams.engine)
     , fFlatGen(*fEngine)
@@ -21,13 +22,15 @@ namespace opdet {
   {
 
     mf::LogInfo("DigiPMTSBNDAlg") << "PMT corrected efficiencies = "
-                                  << fQEDirect << " " << fQERefl;
+                                  << fPMTCoatedVUVEff << " " << fPMTCoatedVISEff << " " << fPMTUncoatedEff <<"\n";
 
-    if(fQERefl > 1.0001 || fQEDirect > 1.0001)
+    if(fPMTCoatedVUVEff > 1.0001 || fPMTCoatedVISEff > 1.0001 || fPMTUncoatedEff > 1.0001)
       mf::LogWarning("DigiPMTSBNDAlg")
-        << "Quantum efficiency set in fhicl file " << fParams.QERefl
-        << " or " << fParams.QEDirect << " seems to be too large!\n"
-        << "Final QE must be equal or smaller than the scintillation "
+        << "Detection efficiencies set in fhicl file seem to be too large!\n"
+        << "PMTCoatedVUVEff: " << fParams.PMTCoatedVUVEff << "\n"
+        << "PMTCoatedVISEff: " << fParams.PMTCoatedVISEff << "\n"
+        << "PMTUncoatedEff: " << fParams.PMTUncoatedEff << "\n"
+        << "Final efficiency must be equal or smaller than the scintillation "
         << "pre scale applied at simulation time.\n"
         << "Please check this number (ScintPreScale): "
         << fParams.larProp->ScintPreScale();
@@ -76,7 +79,7 @@ namespace opdet {
   DigiPMTSBNDAlg::~DigiPMTSBNDAlg(){}
 
 
-  void DigiPMTSBNDAlg::ConstructWaveform(
+  void DigiPMTSBNDAlg::ConstructWaveformUncoatedPMT(
     int ch,
     sim::SimPhotons const& simphotons,
     std::vector<short unsigned int>& waveform,
@@ -85,9 +88,10 @@ namespace opdet {
     unsigned n_sample)
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
-    CreatePDWaveform(simphotons, start_time, waves, ch, pdtype);
+    CreatePDWaveformUncoatedPMT(simphotons, start_time, waves, ch, pdtype);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
+
 
   void DigiPMTSBNDAlg::ConstructWaveformCoatedPMT(
     int ch,
@@ -103,7 +107,7 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::ConstructWaveformLite(
+  void DigiPMTSBNDAlg::ConstructWaveformLiteUncoatedPMT(
     int ch,
     sim::SimPhotonsLite const& litesimphotons,
     std::vector<short unsigned int>& waveform,
@@ -112,7 +116,7 @@ namespace opdet {
     unsigned n_sample)
   {
     std::vector<double> waves(n_sample, fParams.PMTBaseline);
-    CreatePDWaveformLite(litesimphotons, start_time, waves, ch, pdtype);
+    CreatePDWaveformLiteUncoatedPMT(litesimphotons, start_time, waves, ch, pdtype);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -131,7 +135,7 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::CreatePDWaveform(
+  void DigiPMTSBNDAlg::CreatePDWaveformUncoatedPMT(
     sim::SimPhotons const& simphotons,
     double t_min,
     std::vector<double>& wave,
@@ -143,7 +147,7 @@ namespace opdet {
     size_t timeBin;
     double ttpb=0;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
-      if(fFlatGen.fire(1.0) < fQERefl) {
+      if(fFlatGen.fire(1.0) < fPMTUncoatedEff) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + simphotons[i].Time - t_min + ttpb + fParams.CableTime;
@@ -177,7 +181,7 @@ namespace opdet {
     if(auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) )
     {auxphotons = it->second;}
     for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
-      if(fFlatGen.fire(1.0) < fQEDirect) {
+      if(fFlatGen.fire(1.0) < fPMTCoatedVUVEff) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
@@ -190,7 +194,7 @@ namespace opdet {
     if(auto it{ ReflectedPhotonsMap.find(ch) }; it != std::end(ReflectedPhotonsMap) )
     {auxphotons = it->second;}
     for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is now reflected light
-      if(fFlatGen.fire(1.0) < fQERefl) {
+      if(fFlatGen.fire(1.0) < fPMTCoatedVISEff) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
@@ -207,7 +211,7 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::CreatePDWaveformLite(
+  void DigiPMTSBNDAlg::CreatePDWaveformLiteUncoatedPMT(
     sim::SimPhotonsLite const& litesimphotons,
     double t_min,
     std::vector<double>& wave,
@@ -225,7 +229,7 @@ namespace opdet {
     for (auto const& reflectedPhotons : photonMap) {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias. ~icaza
-      mean_photons = reflectedPhotons.second*fQERefl;
+      mean_photons = reflectedPhotons.second*fPMTUncoatedEff;
       accepted_photons = fPoissonQGen.fire(mean_photons);
       for(size_t i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
@@ -261,7 +265,7 @@ namespace opdet {
       for (auto& directPhotons : (it->second).DetectedPhotons) {
         // TODO: check that this new approach of not using the last
         // (1-accepted_photons) doesn't introduce some bias. ~icaza
-        mean_photons = directPhotons.second*fQEDirect;
+        mean_photons = directPhotons.second*fPMTCoatedVUVEff;
         accepted_photons = fPoissonQGen.fire(mean_photons);
         for(size_t i = 0; i < accepted_photons; i++) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
@@ -279,7 +283,7 @@ namespace opdet {
       for (auto& reflectedPhotons : (it->second).DetectedPhotons) {
         // TODO: check that this new approach of not using the last
         // (1-accepted_photons) doesn't introduce some bias. ~icaza
-        mean_photons = reflectedPhotons.second*fQERefl;
+        mean_photons = reflectedPhotons.second*fPMTCoatedVISEff;
         accepted_photons = fPoissonQGen.fire(mean_photons);
         for(size_t i = 0; i < accepted_photons; i++) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
@@ -465,8 +469,9 @@ namespace opdet {
     fBaseConfig.PMTChargeToADC           = config.pmtchargeToADC();
     fBaseConfig.PMTBaseline              = config.pmtbaseline();
     fBaseConfig.PMTSaturation            = config.pmtsaturation();
-    fBaseConfig.QEDirect                 = config.qEDirect();
-    fBaseConfig.QERefl                   = config.qERefl();
+    fBaseConfig.PMTCoatedVUVEff          = config.pmtcoatedVUVEff();
+    fBaseConfig.PMTCoatedVISEff          = config.pmtcoatedVISEff();
+    fBaseConfig.PMTUncoatedEff           = config.pmtuncoatedEff();
     fBaseConfig.PMTSinglePEmodel         = config.PMTsinglePEmodel();
     fBaseConfig.PMTRiseTime              = config.pmtriseTime();
     fBaseConfig.PMTFallTime              = config.pmtfallTime();

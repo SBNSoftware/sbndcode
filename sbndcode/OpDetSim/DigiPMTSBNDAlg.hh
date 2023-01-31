@@ -59,8 +59,9 @@ namespace opdet {
       double PMTBaselineRMS; //Pedestal RMS in ADC counts
       double PMTDarkNoiseRate; //in Hz
       double PMTSaturation; //in number of p.e.
-      double QEDirect; //PMT quantum efficiency for direct (VUV) light
-      double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
+      double PMTCoatedVUVEff; //PMT (coated) efficiency for direct (VUV) light
+      double PMTCoatedVISEff; //PMT (coated) efficiency for reflected (VIS) light
+      double PMTUncoatedEff; //PMT (uncoated) efficiency
       std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
       bool PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
@@ -76,7 +77,7 @@ namespace opdet {
     //Default destructor
     ~DigiPMTSBNDAlg();
 
-    void ConstructWaveform(
+    void ConstructWaveformUncoatedPMT(
       int ch,
       sim::SimPhotons const& simphotons,
       std::vector<short unsigned int>& waveform,
@@ -92,7 +93,7 @@ namespace opdet {
       double start_time,
       unsigned n_sample);
 
-    void ConstructWaveformLite(
+    void ConstructWaveformLiteUncoatedPMT(
       int ch,
       sim::SimPhotonsLite const& litesimphotons,
       std::vector<short unsigned int>& waveform,
@@ -118,8 +119,9 @@ namespace opdet {
     ConfigurationParameters_t fParams;
     // Declare member data here.
     double fSampling;       //wave sampling frequency (GHz)
-    double fQEDirect;
-    double fQERefl;
+    double fPMTCoatedVUVEff;
+    double fPMTCoatedVISEff;
+    double fPMTUncoatedEff;
     //int fSinglePEmodel;
     double sigma1;
     double sigma2;
@@ -146,7 +148,7 @@ namespace opdet {
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
-    void CreatePDWaveform(
+    void CreatePDWaveformUncoatedPMT(
       sim::SimPhotons const& SimPhotons,
       double t_min,
       std::vector<double>& wave,
@@ -158,7 +160,7 @@ namespace opdet {
       std::vector<double>& wave,
       std::unordered_map<int, sim::SimPhotons>& DirectPhotonsMap,
       std::unordered_map<int, sim::SimPhotons>& ReflectedPhotonsMap);
-    void CreatePDWaveformLite(
+    void CreatePDWaveformLiteUncoatedPMT(
       sim::SimPhotonsLite const& litesimphotons,
       double t_min,
       std::vector<double>& wave,
@@ -247,14 +249,19 @@ namespace opdet {
         Comment("Saturation in number of p.e.")
       };
 
-      fhicl::Atom<double> qEDirect {
-        Name("QEDirect"),
-        Comment("PMT quantum efficiency for direct (VUV) light")
+      fhicl::Atom<double> pmtcoatedVUVEff {
+        Name("PMTCoatedVUVEff"),
+        Comment("PMT (coated) detection efficiency for direct (VUV) light")
       };
 
-      fhicl::Atom<double> qERefl {
-        Name("QERefl"),
-        Comment("PMT quantum efficiency for reflected (TPB emitted)light")
+      fhicl::Atom<double> pmtcoatedVISEff {
+        Name("PMTCoatedVISEff"),
+        Comment("PMT (coated) detection efficiency for reflected (VIS) light")
+      };
+
+      fhicl::Atom<double> pmtuncoatedEff {
+        Name("PMTUncoatedEff"),
+        Comment("PMT (uncoated) detection efficiency")
       };
 
       fhicl::Atom<bool> PMTsinglePEmodel {
