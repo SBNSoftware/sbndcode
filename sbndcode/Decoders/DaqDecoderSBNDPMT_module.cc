@@ -1853,13 +1853,11 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
 
     try {
 
-//apapadop
-/*
       fPMTWaveformTimeCorrectionManager.findWaveformTimeCorrections(
           waveform.waveform, 
           (waveform.channelSetup->category == fCorrectionInstance ? fApplyCableDelayCorrection : false),
           itCorr->second );
-*/
+
     }
 
     catch (sbnd::timing::PMTWaveformTimeCorrectionExtractor::MultipleCorrectionsForChannel const& e) {
@@ -2356,10 +2354,9 @@ auto sbnd::DaqDecoderSBNDPMT::processFragment(
   if (fPacketDump) {
     mf::LogVerbatim{ fLogCategory } << "PMT packet:"
       << "\n" << std::string(80, '-')
-// apapadop
-/*
+
       << "\n" << sbndaq::dumpFragment(artdaqFragment)
-*/
+
       << "\n" << std::string(80, '-')
       ;
   } // if diagnostics
@@ -2762,18 +2759,14 @@ sbnd::DaqDecoderSBNDPMT::createWaveformMetadata(
   TriggerInfo_t const& triggerInfo
 ) const {
   
-  //apapadop
-  /*
   sbn::OpDetWaveformMetaMaker const makeOpDetWaveformMeta
     { fOpticalTick, triggerInfo.relTriggerTime, triggerInfo.relBeamGateTime };
-  */
+  
   std::vector<sbn::OpDetWaveformMeta> waveformMeta;
   
-  // apapadop
-  /*
   for (auto const& waveform: waveforms)
     waveformMeta.push_back(makeOpDetWaveformMeta(waveform));
-  */
+  
   return waveformMeta;
 } // sbnd::DaqDecoderSBNDPMT::createWaveformMetadata()
 

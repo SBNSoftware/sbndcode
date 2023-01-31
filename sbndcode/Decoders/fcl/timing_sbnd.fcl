@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+sbnd_pmttimingservice:
+{
+    service_provider: PMTTimingCorrectionService
+    DatabaseURL:   "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/data?"
+    Timeout:   1000
+}
+
+END_PROLOG

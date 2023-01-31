@@ -61,14 +61,13 @@
 #include "larfft_sbnd.fcl"
 #include "signalservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-
 #include "channelmapping_sbnd.fcl" 
 #include "decoderdefs_sbnd.fcl" 
-
+#include "timing_sbnd.fcl"
 
 # ------------------------------------------------------------------------------
-process_name: DecodePMT
 
+process_name: DecodePMT
 
 # ------------------------------------------------------------------------------
 
@@ -84,10 +83,10 @@ services: {
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
   BackTrackerService: @local::sbnd_backtrackerservice
-  ParticleInventoryService:  @local::sbnd_particleinventoryservice 
- 
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice  
 #  DetectorClocksService: @local::sbnd_detectorclocks
   ISBNDChannelMap: @local::sbnd_channelmappinggservice
+  #IPMTTimingCorrectionService: @local::sbnd_pmttimingservice
 }
 
 # ------------------------------------------------------------------------------
@@ -119,5 +118,21 @@ outputs: {
   } # rootoutput
 } # outputs 
 
+# ------------------------------------------------------------------------------
+
+physics.producers.daqPMT.PMTconfigTag: pmtconfig # required
+physics.producers.daqPMT.TriggerTag:   daqTrigger # required
+
+#
+# customization of PMT decoding
+#
+
+physics.producers.daqPMT.SurviveExceptions: false
+physics.producers.daqPMT.DiagnosticOutput:  true
+physics.producers.daqPMT.PacketDump:        false
+physics.producers.daqPMT.RequireKnownBoards: true
+physics.producers.daqPMT.RequireBoardConfig: true
+physics.producers.daqPMT.DataTrees: [ "PMTfragments" ]
+physics.producers.daqPMT.ApplyCableDelayCorrection: false
 
 # ------------------------------------------------------------------------------
