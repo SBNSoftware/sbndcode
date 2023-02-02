@@ -123,13 +123,11 @@ namespace sbnd::crt {
             const double sipmX  = fModules.at(moduleName).top ? halfWidth : -halfWidth;
 
             // Find world coordinates
-            const double sipm0XYZ[3] = {sipmX, sipm0Y, 0};
-            double sipm0XYZWorld[3];
-            auxDetSensitive.LocalToWorld(sipm0XYZ, sipm0XYZWorld);
+	    geo::AuxDetSensitiveGeo::LocalPoint_t const sipm0XYZ{sipmX, sipm0Y, 0};
+            auto const sipm0XYZWorld = auxDetSensitive.toWorldCoords(sipm0XYZ);
 
-            const double sipm1XYZ[3] = {sipmX, sipm1Y, 0};
-            double sipm1XYZWorld[3];
-            auxDetSensitive.LocalToWorld(sipm1XYZ, sipm1XYZWorld);
+	    geo::AuxDetSensitiveGeo::LocalPoint_t const sipm1XYZ{sipmX, sipm1Y, 0};
+            auto const sipm1XYZWorld = auxDetSensitive.toWorldCoords(sipm1XYZ);
 
             const uint32_t pedestal0 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel0) : fDefaultPedestal;
             const uint32_t pedestal1 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel1) : fDefaultPedestal;
@@ -310,17 +308,15 @@ namespace sbnd::crt {
     double halfHeight = auxDetSensitive.HalfHeight();
     double halfLength = auxDetSensitive.Length()/2.;
   
-    double l1[3] = {halfWidth, -halfHeight + x + ex, halfLength};
-    double w1[3];
-    auxDetSensitive.LocalToWorld(l1, w1);
+    geo::AuxDetSensitiveGeo::LocalPoint_t l1{halfWidth, -halfHeight + x + ex, halfLength};
+    auto const w1 = auxDetSensitive.toWorldCoords(l1);
 
-    double l2[3] = {-halfWidth, -halfHeight + x - ex, -halfLength};
-    double w2[3];
-    auxDetSensitive.LocalToWorld(l2, w2);
+    geo::AuxDetSensitiveGeo::LocalPoint_t l2{-halfWidth, -halfHeight + x - ex, -halfLength};
+    auto const w2 = auxDetSensitive.toWorldCoords(l2);
 
-    std::array<double, 6> limits = {std::min(w1[0],w2[0]), std::max(w1[0],w2[0]),
-                                    std::min(w1[1],w2[1]), std::max(w1[1],w2[1]),
-                                    std::min(w1[2],w2[2]), std::max(w1[2],w2[2])};
+    std::array<double, 6> limits = {std::min(w1.X(),w2.X()), std::max(w1.X(),w2.X()),
+                                    std::min(w1.Y(),w2.Y()), std::max(w1.Y(),w2.Y()),
+                                    std::min(w1.Z(),w2.Z()), std::max(w1.Z(),w2.Z())};
     return limits;
   }
 
@@ -332,11 +328,10 @@ namespace sbnd::crt {
   
     const geo::AuxDetSensitiveGeo &auxDetSensitive = fAuxDetGeoCore->AuxDetGeoVec()[adID].SensitiveVolume(adsID);
 
-    double worldpos[3] = {x, y, z};
-    double localpos[3];
-    auxDetSensitive.WorldToLocal(worldpos, localpos);
+    geo::Point_t const worldpos{x, y, z};
+    auto const localpos = auxDetSensitive.toLocalCoords(worldpos);
 
-    std::vector<double> localvec = {localpos[0], localpos[1], localpos[2]};
+    std::vector<double> localvec = {localpos.X(), localpos.Y(), localpos.Z()};
     return localvec;
   }
 
@@ -354,26 +349,24 @@ namespace sbnd::crt {
     const double halfWidth  = auxDet.HalfWidth1();
     const double halfLength = auxDet.Length() / 2.;
 
-    double limits[3]  = { - halfWidth - 5, -15, -halfLength - 5};
-    double limits2[3] = { - halfWidth,     15,  -halfLength + 5};
+    geo::AuxDetGeo::LocalPoint_t limits { - halfWidth - 5, -15, -halfLength - 5};
+    geo::AuxDetGeo::LocalPoint_t limits2{ - halfWidth,     15,  -halfLength + 5};
 
     if(!module.top)
       {
-        limits[0]  = -limits[0];
-        limits2[0] = -limits2[0];
+        limits.SetX(-limits.X());
+        limits2.SetX(-limits2.X());
       }
 
-    double limitsWorld[3], limitsWorld2[3];
-    
-    auxDet.LocalToWorld(limits, limitsWorld);
-    auxDet.LocalToWorld(limits2, limitsWorld2);
+    auto const limitsWorld  = auxDet.toWorldCoords(limits);
+    auto const limitsWorld2 = auxDet.toWorldCoords(limits2);
 
-    const double minX = std::min(limitsWorld[0], limitsWorld2[0]);
-    const double maxX = std::max(limitsWorld[0], limitsWorld2[0]);
-    const double minY = std::min(limitsWorld[1], limitsWorld2[1]);
-    const double maxY = std::max(limitsWorld[1], limitsWorld2[1]);
-    const double minZ = std::min(limitsWorld[2], limitsWorld2[2]);
-    const double maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
+    const double minX = std::min(limitsWorld.X(), limitsWorld2.X());
+    const double maxX = std::max(limitsWorld.X(), limitsWorld2.X());
+    const double minY = std::min(limitsWorld.Y(), limitsWorld2.Y());
+    const double maxY = std::max(limitsWorld.Y(), limitsWorld2.Y());
+    const double minZ = std::min(limitsWorld.Z(), limitsWorld2.Z());
+    const double maxZ = std::max(limitsWorld.Z(), limitsWorld2.Z());
 
     return {minX, maxX, minY, maxY, minZ, maxZ};
   }
@@ -385,32 +378,30 @@ namespace sbnd::crt {
     const double halfWidth  = auxDet.HalfWidth1();
     const double halfLength = auxDet.Length() / 2.;
 
-    double limits[3]  = { - halfWidth - 5, -15, -halfLength - 5};
-    double limits2[3] = { - halfWidth,     -12, -halfLength + 5};
+    geo::AuxDetGeo::LocalPoint_t limits { - halfWidth - 5, -15, -halfLength - 5};
+    geo::AuxDetGeo::LocalPoint_t limits2{ - halfWidth,     -12, -halfLength + 5};
 
     if(!module.top)
       {
-        limits[0]  = -limits[0];
-        limits2[0] = -limits2[0];
+        limits.SetX(-limits.X());
+        limits.SetX(-limits2.X());
       }
     
     if(module.invertedOrdering)
       {
-        limits[1]  = -limits[1];
-        limits2[1] = -limits2[1];
+        limits.SetY(-limits.Y());
+        limits.SetY(-limits2.Y());
       }
 
-    double limitsWorld[3], limitsWorld2[3];
-    
-    auxDet.LocalToWorld(limits, limitsWorld);
-    auxDet.LocalToWorld(limits2, limitsWorld2);
+    auto const limitsWorld  = auxDet.toWorldCoords(limits);
+    auto const limitsWorld2 = auxDet.toWorldCoords(limits2);
 
-    const double minX = std::min(limitsWorld[0], limitsWorld2[0]);
-    const double maxX = std::max(limitsWorld[0], limitsWorld2[0]);
-    const double minY = std::min(limitsWorld[1], limitsWorld2[1]);
-    const double maxY = std::max(limitsWorld[1], limitsWorld2[1]);
-    const double minZ = std::min(limitsWorld[2], limitsWorld2[2]);
-    const double maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
+    const double minX = std::min(limitsWorld.X(), limitsWorld2.X());
+    const double maxX = std::max(limitsWorld.X(), limitsWorld2.X());
+    const double minY = std::min(limitsWorld.Y(), limitsWorld2.Y());
+    const double maxY = std::max(limitsWorld.Y(), limitsWorld2.Y());
+    const double minZ = std::min(limitsWorld.Z(), limitsWorld2.Z());
+    const double maxZ = std::max(limitsWorld.Z(), limitsWorld2.Z());
 
     return {minX, maxX, minY, maxY, minZ, maxZ};
   }

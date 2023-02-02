@@ -41,14 +41,14 @@
 namespace sbnd::crt {
 
   struct CRTSiPMGeo{
-    CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const double location[3],
+    CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const geo::Point_t location,
                const uint32_t _pedestal, const double _gain)
     {
       stripName = _stripName;
       channel   = _channel;
-      x         = location[0];
-      y         = location[1];
-      z         = location[2];
+      x         = location.X();
+      y         = location.Y();
+      z         = location.Z();
       pedestal  = _pedestal;
       gain      = _gain;
       null      = false;
@@ -74,27 +74,25 @@ namespace sbnd::crt {
       channel0   = _channel0;
       channel1   = _channel1;
 
-      // Strip Dimensions
+     // Strip Dimensions
       double halfWidth  = auxDetSensitive.HalfWidth1();
       double halfHeight = auxDetSensitive.HalfHeight();
       double halfLength = auxDetSensitive.Length()/2.;
 
       // Find world coordinates for edges
-      double limits[3] = {halfWidth, halfHeight, halfLength};
-      double limitsWorld[3];
-      auxDetSensitive.LocalToWorld(limits, limitsWorld);
+      geo::AuxDetSensitiveGeo::LocalPoint_t const limits{halfWidth, halfHeight, halfLength};
+      geo::AuxDetSensitiveGeo::LocalPoint_t const limits2{-halfWidth, -halfHeight, -halfLength};
 
-      double limits2[3] = {-halfWidth, -halfHeight, -halfLength};
-      double limitsWorld2[3];
-      auxDetSensitive.LocalToWorld(limits2, limitsWorld2);
+      auto const limitsWorld  = auxDetSensitive.toWorldCoords(limits);
+      auto const limitsWorld2 = auxDetSensitive.toWorldCoords(limits2);
 
       // Fill edges & width
-      minX  = std::min(limitsWorld[0], limitsWorld2[0]);
-      maxX  = std::max(limitsWorld[0], limitsWorld2[0]);
-      minY  = std::min(limitsWorld[1], limitsWorld2[1]);
-      maxY  = std::max(limitsWorld[1], limitsWorld2[1]);
-      minZ  = std::min(limitsWorld[2], limitsWorld2[2]);
-      maxZ  = std::max(limitsWorld[2], limitsWorld2[2]);
+      minX  = std::min(limitsWorld.X(), limitsWorld2.X());
+      maxX  = std::max(limitsWorld.X(), limitsWorld2.X());
+      minY  = std::min(limitsWorld.Y(), limitsWorld2.Y());
+      maxY  = std::max(limitsWorld.Y(), limitsWorld2.Y());
+      minZ  = std::min(limitsWorld.Z(), limitsWorld2.Z());
+      maxZ  = std::max(limitsWorld.Z(), limitsWorld2.Z());
       width = halfHeight * 2.;
       
       adsID = _adsID;
@@ -154,13 +152,11 @@ namespace sbnd::crt {
       double halfLength = auxDet.Length()/2;
 
       // Find world coordinates for edges
-      double limits[3] = {halfWidth, halfHeight, halfLength};
-      double limitsWorld[3];
-      auxDet.LocalToWorld(limits, limitsWorld);
+      geo::AuxDetGeo::LocalPoint_t const limits{halfWidth, halfHeight, halfLength};
+      geo::AuxDetGeo::LocalPoint_t const limits2{-halfWidth, -halfHeight, -halfLength};
 
-      double limits2[3] = {-halfWidth, -halfHeight, -halfLength};
-      double limitsWorld2[3];
-      auxDet.LocalToWorld(limits2, limitsWorld2);
+      auto const limitsWorld  = auxDet.toWorldCoords(limits);
+      auto const limitsWorld2 = auxDet.toWorldCoords(limits2);
 
       // Which plane within the tagger
       double origin[3] = {0, 0, 0};
@@ -179,12 +175,12 @@ namespace sbnd::crt {
         top = (orientation == 0) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
 
       // Fill edges
-      minX = std::min(limitsWorld[0], limitsWorld2[0]);
-      maxX = std::max(limitsWorld[0], limitsWorld2[0]);
-      minY = std::min(limitsWorld[1], limitsWorld2[1]);
-      maxY = std::max(limitsWorld[1], limitsWorld2[1]);
-      minZ = std::min(limitsWorld[2], limitsWorld2[2]);
-      maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
+      minX = std::min(limitsWorld.X(), limitsWorld2.X());
+      maxX = std::max(limitsWorld.X(), limitsWorld2.X());
+      minY = std::min(limitsWorld.Y(), limitsWorld2.Y());
+      maxY = std::max(limitsWorld.Y(), limitsWorld2.Y());
+      minZ = std::min(limitsWorld.Z(), limitsWorld2.Z());
+      maxZ = std::max(limitsWorld.Z(), limitsWorld2.Z());
 
       t0CableDelayCorrection = _t0CableDelayCorrection;
       t1CableDelayCorrection = _t1CableDelayCorrection;

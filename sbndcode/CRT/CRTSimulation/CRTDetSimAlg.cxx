@@ -462,7 +462,7 @@ namespace crt {
 
             if (q0 > threshold &&
                 q1 > threshold &&
-                util::absDiff(ts1_ch0, ts1_ch1) < fParams.StripCoincidenceWindow())
+                lar::util::absDiff(ts1_ch0, ts1_ch1) < fParams.StripCoincidenceWindow())
             {
                 sipm_coinc = true;
             }
