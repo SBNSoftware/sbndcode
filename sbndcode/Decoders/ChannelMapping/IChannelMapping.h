@@ -63,29 +63,6 @@ namespace sbndDB
 
     virtual int BuildFragmentToDigitizerChannelMap(FragmentToDigitizerChannelMap&) const = 0;
 
-    /**
-     *  @brief Define the returned data structures for a mapping between CRT hardware mac_address
-     *         to the simulated mac_address. 
-     *         Then define the function interface to fill these data structures
-     */
-
-    using CRTHWtoSimMacAddressPair                  = std::pair<unsigned int, unsigned int>;
-    using CRTChannelIDToHWtoSimMacAddressPairMap    = std::map<unsigned int, CRTHWtoSimMacAddressPair>;
-
-    virtual int BuildCRTChannelIDToHWtoSimMacAddressPairMap(CRTChannelIDToHWtoSimMacAddressPairMap&) const = 0;
-
-
-    using TopCRTHWtoSimMacAddressPairMap    = std::map<unsigned int, unsigned int>;
-
-    virtual int BuildTopCRTHWtoSimMacAddressPairMap(TopCRTHWtoSimMacAddressPairMap&) const = 0;
-
-    
-    using SideCRTMac5ToChannelPair = std::pair<unsigned int, unsigned int>;
-    using SideCRTGainToPedPair = std::pair<double, double>;
-    using SideCRTChannelToCalibrationMap = std::map< SideCRTMac5ToChannelPair, SideCRTGainToPedPair >;
-
-    virtual int BuildSideCRTCalibrationMap(SideCRTChannelToCalibrationMap&) const = 0;
-
 };
 
 } // namespace sbndDB 

@@ -14,7 +14,7 @@ ChannelMappingSQLite: {
 sbnd_channelmappinggservice:
 {
     service_provider:   SBNDChannelMap
-    DiagnosticOutput:   false
+    DiagnosticOutput:   true
     ChannelMappingTool: @local::ChannelMappingPostGres
 }
 

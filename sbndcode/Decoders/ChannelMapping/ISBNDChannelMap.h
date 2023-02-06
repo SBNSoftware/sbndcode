@@ -57,10 +57,6 @@ public:
     virtual unsigned int                            nPMTfragmentIDs() const = 0;
     virtual const DigitizerChannelChannelIDPairVec& getChannelIDPairVec(const unsigned int) const = 0;
 
-    virtual unsigned int                            getSimMacAddress(const unsigned int)    const = 0;    
-    virtual unsigned int                         gettopSimMacAddress(const unsigned int)    const = 0;    
-
-    virtual std::pair<double, double>          getSideCRTCalibrationMap(int mac5, int chan) const = 0;
 };
 
 } // end of namespace

@@ -67,26 +67,9 @@ public:
      */
     virtual int BuildFragmentToDigitizerChannelMap(FragmentToDigitizerChannelMap&) const override;
 
-
-  /**
-   *  @brief Define the returned data structures for a mapping between CRT hardware mac_address
-   *         to the simulated mac_address.
-   *         Then define the function interface to fill these data structures
-   */
-  virtual int BuildCRTChannelIDToHWtoSimMacAddressPairMap(CRTChannelIDToHWtoSimMacAddressPairMap&) const override;
-  virtual int BuildTopCRTHWtoSimMacAddressPairMap(TopCRTHWtoSimMacAddressPairMap&) const override;
-
-  /**
-   *  @brief Define the returned data structures for a mapping between Side CRT Channels and
-   *         their calibration values.
-   *         Then define the function interface to fill these data structures
-   */
-  virtual int BuildSideCRTCalibrationMap(SideCRTChannelToCalibrationMap&) const override;
-
 private:
     // Recover data from postgres database
     int GetDataset(const std::string&, const std::string&, const std::string&, Dataset&) const;
-    int GetCRTCaldata(const std::string&, const std::string&, Dataset&) const;
     uint32_t fNothing;     //< Nothing
 
 };
@@ -127,24 +110,6 @@ int ChannelMapPostGres::GetDataset(const std::string& name, const std::string& u
 
     return error;
 }
-
-  //Adding this so I can control how this workflow goes -TB
-  int ChannelMapPostGres::GetCRTCaldata(const std::string& name, const std::string& url, Dataset& dataSet) const
-  {
-    const int   timeout(200);
-    int error(0);
-    dataSet = getDataWithTimeout(url.c_str(),name.c_str(),timeout,&error);
-    if (error)
-      {
-	std::string errorMsg = "Database access GetDataset failed with error " + std::to_string(error) + "\nurl: "
-	  + url + ", name: " + name;
-	std::cout << "****> Database retrieval error, code: " << error << std::endl;
-        throw std::runtime_error(errorMsg);
-      }
-
-    return error;
-  }
-
 
 // -----------------------------------------------------
 // The aim of this function is to build a map between the
@@ -400,130 +365,5 @@ int ChannelMapPostGres::BuildFragmentToDigitizerChannelMap(FragmentToDigitizerCh
     return error;
 }
 
-  
-//******************* CRT Channel Mapping ***********************
-  
-  int ChannelMapPostGres::BuildCRTChannelIDToHWtoSimMacAddressPairMap(CRTChannelIDToHWtoSimMacAddressPairMap& crtChannelIDToHWtoSimMacAddressPairMap) const
-  {
-    // clearing is cleansing
-    crtChannelIDToHWtoSimMacAddressPairMap.clear();
-    // Recover the information from the database on the mapping 
-    const std::string  name("Feb_channels");
-    const std::string  dburl("https://dbdata0vm.fnal.gov:9443/QE/hw/app/SQ/query?dbname=sbnd_hardware_prd");
-    const std::string  dataType("feb_channels");
-    Dataset            dataset;
-    // Recover the data from the database
-    int error = GetDataset(name,dburl,dataType,dataset);
-    // If there was an error the function above would have printed a message so bail out
-    if (error) throw(std::exception());
-    // Ok, now we can start extracting the information
-    // We do this by looping through the database and building the map from that
-    for(int row = 1; row < getNtuples(dataset); row++)
-    {
-        // Recover the row
-        Tuple tuple = getTuple(dataset, row);
-        if (tuple != NULL)
-        {
-	  // Recover the simmacaddress
-            unsigned int simmacaddress = getLongValue(tuple, 11, &error);
-            if (error) throw std::runtime_error("Encountered error when trying to recover the CRT simmacaddress");
-            // Now recover the hwmacaddress
-            unsigned int hwmacaddress = getLongValue(tuple, 12, &error);
-            if (error) throw std::runtime_error("Encountered error when trying to recover the CRT hwmacaddress");
-            // Finally, get the LArsoft channel ID
-            unsigned int channelID = getLongValue(tuple, 10, &error);
-            if (error) throw std::runtime_error("Encountered error when trying to recover the CRT channel ID");
-            // Fill the map
-            crtChannelIDToHWtoSimMacAddressPairMap[channelID]=std::make_pair(hwmacaddress,simmacaddress);
-            releaseTuple(tuple);
-        }
-    }
-
-    return error;
-  }
-
-   
-  /// Top CRT harware mac5 to software mac5 relation
-  //----------------------------------------------------
-  int ChannelMapPostGres::BuildTopCRTHWtoSimMacAddressPairMap(TopCRTHWtoSimMacAddressPairMap& topcrtHWtoSimMacAddressPairMap) const
-  {
-    // clearing is cleansing
-    topcrtHWtoSimMacAddressPairMap.clear();
-    // Recover the information from the database on the mapping 
-    const std::string  name("topcrt_febs");
-    const std::string  dburl("https://dbdata0vm.fnal.gov:9443/QE/hw/app/SQ/query?dbname=sbnd_hardware_prd");
-    const std::string  dataType("crtfeb");
-    Dataset            dataset;
-    // Recover the data from the database
-    int error = GetDataset(name,dburl,dataType,dataset);
-    // If there was an error the function above would have printed a message so bail out
-    if (error) throw(std::exception());
-    // Ok, now we can start extracting the information
-    // We do this by looping through the database and building the map from that
-    for(int row = 1; row < getNtuples(dataset); row++)
-    {
-        // Recover the row
-        Tuple tuple = getTuple(dataset, row);
-        if (tuple != NULL)
-        {
-	  // Recover the simmacaddress
-            unsigned int simmacaddress = getLongValue(tuple, 41, &error);
-            if (error) throw std::runtime_error("Encountered error when trying to recover the CRT simmacaddress");
-            // Now recover the hwmacaddress
-            unsigned int hwmacaddress = getLongValue(tuple, 3, &error);
-            if (error) throw std::runtime_error("Encountered error when trying to recover the CRT hwmacaddress");
-
-            // Fill the map
-            topcrtHWtoSimMacAddressPairMap[hwmacaddress] = simmacaddress;
-            releaseTuple(tuple);
-        }
-    }
-
-    return error;
-  }
-  
-
-  /// Accesing the Side CRT charge calibration from the postgresql database
-  //------------------------------------------------------------------------
-
-  int ChannelMapPostGres::BuildSideCRTCalibrationMap(SideCRTChannelToCalibrationMap& sideCRTChannelToCalibrationMap) const {
-    //    sideCRTChannelToCalibrationMap.clear();
-    const std::string  name("SideCRT_calibration_data");
-    const std::string dburl("https://dbdata0vm.fnal.gov:9443/sbnd_con_prod/app/data?f=crt_gain_reco_data&t=1638918270");
-    Dataset            ds;
-    // Recover the data from the database
-    int error = GetCRTCaldata(name,dburl,ds);
-    if (error)
-      { fprintf(stderr, "error code=%d\n", error);    perror("error message"); }
-    if (getHTTPstatus(ds) != 200)
-      { fprintf(stderr, "HTTP code=%ld, message: '%s'\n", getHTTPstatus(ds), getHTTPmessage(ds)); }
-    int mac5, chan;
-    double gain, ped;
-    int err;
-    int nrows =  getNtuples(ds);
-    int ncols;
-    Tuple tup;
-    for (int rows = 0; rows < nrows; rows++ ){
-      tup = getTuple(ds, rows);                                           // Get the row with double array
-      ncols = getNfields(tup);//check number of columns
-      if(ncols <5) continue;//first few rows aren't actual data and have ncols==1, this excludes those
-      if (tup != NULL)/*check that the tup is not empty before proceeding*/ {
-        //assign values from the database to variables so we can use them
-        mac5 = (int)getDoubleValue(tup,1,&err);
-        chan = (int)getDoubleValue(tup,2,&err);
-        gain = getDoubleValue(tup,3,&err);
-        ped = getDoubleValue(tup,4,&err);
-        //This line adds the association between the two pairs to the map object
-        sideCRTChannelToCalibrationMap.insert(std::make_pair(std::make_pair(mac5,chan), std::make_pair(gain,ped)));
-
-        releaseTuple(tup);
-      }//end if(tup != NULL)
-      else releaseTuple(tup);
-    }//end loop over rows
-
-    return error;
-  }
-
- 
 DEFINE_ART_CLASS_TOOL(ChannelMapPostGres)
 } // namespace sbndDB

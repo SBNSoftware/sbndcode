@@ -36,8 +36,8 @@ sbndDB::SBNDChannelMap::SBNDChannelMap
 
 
 // -----------------------------------------------------------------------------
-DECLARE_ART_SERVICE_INTERFACE_IMPL(sbndDB::SBNDChannelMap, sbndDB::SBNDChannelMap, SHARED)
-DEFINE_ART_SERVICE_INTERFACE_IMPL(sbndDB::SBNDChannelMap, sbndDB::SBNDChannelMap)
+DECLARE_ART_SERVICE_INTERFACE_IMPL(sbndDB::SBNDChannelMap, sbndDB::ISBNDChannelMap, SHARED)
+DEFINE_ART_SERVICE_INTERFACE_IMPL(sbndDB::SBNDChannelMap, sbndDB::ISBNDChannelMap)
 
 
 // -----------------------------------------------------------------------------

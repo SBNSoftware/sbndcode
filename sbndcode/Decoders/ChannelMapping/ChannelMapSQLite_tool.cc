@@ -70,31 +70,18 @@ public:
    */
   virtual int BuildFragmentToDigitizerChannelMap(FragmentToDigitizerChannelMap&) const override;
   
-  
-  /**
-   *  @brief Define the returned data structures for a mapping between CRT hardware mac_address
-   *         to the simulated mac_address.
-   *         Then define the function interface to fill these data structures
-   */
-  virtual int BuildCRTChannelIDToHWtoSimMacAddressPairMap(CRTChannelIDToHWtoSimMacAddressPairMap&) const override;
-  virtual int BuildTopCRTHWtoSimMacAddressPairMap(TopCRTHWtoSimMacAddressPairMap&) const override;
-
-  virtual int BuildSideCRTCalibrationMap(SideCRTChannelToCalibrationMap&) const override;  
-  
 private:
   // Recover data from postgres database
   int GetDataset(const std::string&, int func(void*,int,char**,char**), void*) const;
   
 
   std::string fDBFileName;          //< File name of our sqlite database
-  std::string fCalibDBFileName;     //< File name of our side crt calibration sqlite database
   std::string fTag;                 //< Tag for conditioned database
 };
 
 ChannelMapSQLite::ChannelMapSQLite(fhicl::ParameterSet const &pset)
 {
     fDBFileName      = pset.get<std::string>("DBFileName");
-    fCalibDBFileName = pset.get<std::string>("CalibDBFileName");
     fTag             = pset.get<std::string>("Tag");
 
     return;
@@ -412,121 +399,6 @@ int buildTPCFragmentIDToReadoutIDMap_callback(void* dataIn, int argc, char**argv
   }
 
   
-  //******************* CRT Channel Mapping ***********************
-  
-  int buildCRTChannelIDToHWtoSimMacAddressPairMap_callback(void* dataIn, int argc, char**argv, char** azColName)
-  {
-    IChannelMapping::CRTChannelIDToHWtoSimMacAddressPairMap& crtChannelIDToHWtoSimMacAddressPairMap = *(IChannelMapping::CRTChannelIDToHWtoSimMacAddressPairMap*)dataIn;
-
-    /*    
-    // Start extracting info
-    unsigned int channelID         = std::stol(argv[10]);
-    unsigned int simmacaddress     = std::stol(argv[11]);
-    unsigned int hwmacaddress      = std::stol(argv[12]);
-    */
-     
-    unsigned int channelID         = strcmp(argv[10],"None")==0 ? 0 : std::stol(argv[10]);
-    unsigned int simmacaddress     = strcmp(argv[11],"None")==0 ? 0 : std::stol(argv[11]);
-    unsigned int hwmacaddress      = strcmp(argv[12],"None")==0 ? 0 : std::stol(argv[12]); 
-   
-    // Fill the map
-    crtChannelIDToHWtoSimMacAddressPairMap[channelID]=std::make_pair(hwmacaddress, simmacaddress);
-
-    return 0;
-  }
-  
-  int ChannelMapSQLite::BuildCRTChannelIDToHWtoSimMacAddressPairMap(CRTChannelIDToHWtoSimMacAddressPairMap& crtChannelIDToHWtoSimMacAddressPairMap) const
-  {
-    // clearing is cleansing
-    crtChannelIDToHWtoSimMacAddressPairMap.clear();
-    // Recover the information from the database on the mapping
-    const std::string  dataType("feb_channels");
     
-    // Recover the data from the database
-    int error = GetDataset(dataType,buildCRTChannelIDToHWtoSimMacAddressPairMap_callback,&crtChannelIDToHWtoSimMacAddressPairMap);
-    
-    // If there was an error the function above would have printed a message so bail out
-    if (error)
-      throw cet::exception("ChannelMapSQLite::BuildCRTChannelIDToHWtoSimMacAddressPairMap") << "Encountered error in reading the database: '" << error << "'\n";
-    
-    return error;
-  }
-
-  // Top CRT
-  //---------------------------------- 
-  int buildTopCRTHWtoSimMacAddressPairMap_callback(void* dataIn, int argc, char**argv, char** azColName)
-  {
-    IChannelMapping::TopCRTHWtoSimMacAddressPairMap& topcrtHWtoSimMacAddressPairMap = *(IChannelMapping::TopCRTHWtoSimMacAddressPairMap*)dataIn;
-    
-    // Start extracting info
-    unsigned int simmacaddress     =  strcmp(argv[41],"None")==0 ? 0 : std::stol(argv[41]);
-    unsigned int hwmacaddress      =  strcmp(argv[3], "None")==0 ? 0 : std::stol(argv[3]);
-        
-    // Fill the map
-    topcrtHWtoSimMacAddressPairMap[hwmacaddress] = simmacaddress;
-
-    return 0;
-  }
-
-  int ChannelMapSQLite::BuildTopCRTHWtoSimMacAddressPairMap(TopCRTHWtoSimMacAddressPairMap& topcrtHWtoSimMacAddressPairMap) const
-  {
-    // clearing is cleansing
-    topcrtHWtoSimMacAddressPairMap.clear();
-    // Recover the information from the database on the mapping
-    const std::string  dataType("crtfeb");
-    
-    // Recover the data from the database
-    int error = GetDataset(dataType,buildTopCRTHWtoSimMacAddressPairMap_callback,&topcrtHWtoSimMacAddressPairMap);
-    
-    // If there was an error the function above would have printed a message so bail out
-    if (error)
-      throw cet::exception("ChannelMapSQLite::BuildTopCRTHWtoSimMacAddressPairMap") << "Encountered error in reading the database: '" << error << "'\n";
-    
-    return error;
-  }
-    
-
-  //******************* Accessing Side CRT Calibration Database ***********************
-
-  int ChannelMapSQLite::BuildSideCRTCalibrationMap(SideCRTChannelToCalibrationMap& sideCRTChannelToCalibrationMap) const
-  {
-    // clearing is cleansing
-    sideCRTChannelToCalibrationMap.clear();
-        
-    std::string fullFileName;
-    cet::search_path searchPath("FW_SEARCH_PATH");
-
-    
-    if (!searchPath.find_file(fCalibDBFileName+".db", fullFileName)){
-      std::cout << "******* Succesfully found calibration input file:  " << fCalibDBFileName <<  std::endl;
-      throw cet::exception("ChannelMapSQLite::GetDataset") << "Can't find calibration input file: '" << fCalibDBFileName << "'\n";
-    }
-    
-    lariov::DBFolder database(fCalibDBFileName, "", "", fTag, true, false);
-    
-    database.UpdateData(1638918271*1e9);
-    
-    std::vector<unsigned int> channels;
-    database.GetChannelList(channels);
-    
-    for (auto it = channels.begin(); it != channels.end(); ++it) {
-      
-      long mac5, chan;
-      double  gain, ped;
-      
-      // Start extracting info
-      database.GetNamedChannelData(*it, "mac5", mac5);
-      database.GetNamedChannelData(*it, "localchannel", chan);
-      database.GetNamedChannelData(*it, "gain", gain);
-      database.GetNamedChannelData(*it, "pedestal", ped);
-      
-      // Fill the map
-      sideCRTChannelToCalibrationMap.insert(std::make_pair(std::make_pair((int)mac5,(int)chan), std::make_pair(gain,ped)));
-    }
-
-    return 0;
-  }
-
-  
   DEFINE_ART_CLASS_TOOL(ChannelMapSQLite)
 } // namespace lar_cluster3d
