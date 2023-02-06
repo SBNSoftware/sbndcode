@@ -30,29 +30,6 @@ namespace sbndDB
     virtual ~IChannelMapping() noexcept = default;
     
     /**
-     *  @brief Define the returned data structures for a mapping between TPC Fragment IDs
-     *         and the related crate and readout information. 
-     *         Then define the function interface to fill these data structures 
-     */
-    using ReadoutIDVec                = std::vector<unsigned int>;
-    using CrateNameReadoutIDPair      = std::pair<std::string,ReadoutIDVec>;
-    using TPCFragmentIDToReadoutIDMap = std::map<unsigned int, CrateNameReadoutIDPair>;
-    
-    virtual int BuildTPCFragmentIDToReadoutIDMap(TPCFragmentIDToReadoutIDMap&) const = 0;
-    
-    /**
-     *  @brief Define the returned data structures for a mapping between TPC readout boards
-     *         and the channel information 
-     *         Then define the function interface to fill these data structures 
-     */
-    using ChannelPlanePair            = std::pair<unsigned int, unsigned int>;
-    using ChannelPlanePairVec         = std::vector<ChannelPlanePair>;
-    using SlotChannelVecPair          = std::pair<unsigned int, ChannelPlanePairVec>;
-    using TPCReadoutBoardToChannelMap = std::map<unsigned int, SlotChannelVecPair>;
-
-    virtual int BuildTPCReadoutBoardToChannelMap(TPCReadoutBoardToChannelMap&) const = 0;
-
-    /**
      *  @brief Define the returned data structures for a mapping between PMT Fragment IDs
      *         and the related crate and readout information. 
      *         Then define the function interface to fill these data structures 
