@@ -82,9 +82,13 @@ ChannelMapPostGres::~ChannelMapPostGres()
 //-----------------------------------------------------
 int ChannelMapPostGres::GetDataset(const std::string& name, const std::string& url, const std::string& dataType, Dataset& dataSet) const
 {
-    const int   timeout(200);
+//    const int   timeout(200);
+    const int   timeout(10);
     std::string dburl = url + "&t=" + dataType;
     int error(0);
+
+    std::cout << "url = " << dburl.data() << std::endl; 
+
     dataSet = getDataWithTimeout(dburl.data(),name.data(),timeout,&error);
     if (error)
     {
@@ -101,12 +105,20 @@ int ChannelMapPostGres::GetDataset(const std::string& name, const std::string& u
 //******************* PMT Channel Mapping ***********************
 int ChannelMapPostGres::BuildFragmentToDigitizerChannelMap(FragmentToDigitizerChannelMap& fragmentToDigitizerChannelMap) const
 {
+
+    
+
     // clearing is cleansing
     fragmentToDigitizerChannelMap.clear();
     // Recover the information from the database on the mapping 
     const std::string  name("Pmt_placement");
-    const std::string  dburl("https://dbdata0vm.fnal.gov:9443/QE/hw/app/SQ/query?dbname=sbnd_hardware_prd");
-    const std::string  dataType("pmt_placements");
+//    const std::string  dburl("https://dbdata0vm.fnal.gov:9443/QE/hw/app/SQ/query?dbname=sbnd_hardware_prd");
+//    const std::string  dataType("pmt_placements");
+    
+    //LAN: No online database so use google drive for now
+    const std::string  dburl("https://docs.google.com/spreadsheets/d/183Ri3wMdBIsXpFP-jGajZZXQ-9_YCt-aifPQ5MB_VSQ/gviz/tq?tqx=out:csv&sheet=pmt_placements");
+   const std::string dataType("");
+
     Dataset            dataset;
     // Recover the data from the database
     int error = GetDataset(name,dburl,dataType,dataset);
@@ -114,37 +126,46 @@ int ChannelMapPostGres::BuildFragmentToDigitizerChannelMap(FragmentToDigitizerCh
     if (error) throw(std::exception());
     // Ok, now we can start extracting the information
     // We do this by looping through the database and building the map from that
-    for(int row = 1; row < getNtuples(dataset); row++)
+
+//    for(int row = 1; row < getNtuples(dataset); row++)
+    for(int row = 1; row < getNtuples(dataset) + 1; row++)
     {
+      
         // Recover the row
         Tuple tuple = getTuple(dataset, row);
         if (tuple != NULL)
         {
-            char digitizerBuffer[10];
             // Recover the digitizer label first 
-            getStringValue(tuple, 8, digitizerBuffer, sizeof(digitizerBuffer), &error);
+            char digitizerBuffer[10];
+            getStringValue(tuple, 1, digitizerBuffer, sizeof(digitizerBuffer), &error);
             if (error) throw std::runtime_error("Encountered error when trying to recover the PMT digitizer label");
             std::string digitizerLabel(digitizerBuffer, 8); //sizeof(digitizerBuffer));
+          
             // Recover the fragment id
-            unsigned fragmentID = getLongValue(tuple, 18, &error);
+            unsigned fragmentID = getLongValue(tuple, 2, &error);
             if (error) throw std::runtime_error("Encountered error when trying to recover the PMT fragment id");
+ 
             // Now recover the digitizer channel number
-            unsigned int digitizerChannelNo = getLongValue(tuple, 9, &error);
+            unsigned int digitizerChannelNo = getLongValue(tuple, 3, &error);
             if (error) throw std::runtime_error("Encountered error when trying to recover the PMT digitizer channel number");
+
             // Get the LArsoft channel ID
-            unsigned int channelID = getLongValue(tuple, 17, &error);
+            unsigned int channelID = getLongValue(tuple, 4, &error);
             if (error) throw std::runtime_error("Encountered error when trying to recover the PMT channel ID");
+
             // Get the laserChannelNumber 
             char laserChannelBuffer[10];
-            getStringValue(tuple, 7, laserChannelBuffer, sizeof(laserChannelBuffer), &error);
+            getStringValue(tuple, 5, laserChannelBuffer, sizeof(laserChannelBuffer), &error);
             if (error) throw std::runtime_error("Encountered error when trying to recover the PMT laser channel label");
+
             std::string laserChannelLabel(laserChannelBuffer, 2, sizeof(laserChannelBuffer)); //sizeof(digitizerBuffer));
             unsigned int laserChannel = std::stol(laserChannelLabel);  // try-catch syntax for stol or not necessary ? 
 
             // Fill the map
             fragmentToDigitizerChannelMap[fragmentID].emplace_back(digitizerChannelNo,channelID,laserChannel);
             releaseTuple(tuple);
-        }
+ 
+       }
     }
 
     return error;

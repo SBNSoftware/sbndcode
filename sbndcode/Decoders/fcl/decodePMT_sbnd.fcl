@@ -87,9 +87,9 @@ services: {
   ParticleInventoryService:  @local::sbnd_particleinventoryservice 
  
 #  DetectorClocksService: @local::sbnd_detectorclocks
-  ISBNDChannelMap: @local::sbnd_channelmappinggservice
+#  IPMTTimingCorrectionService: @local::sbnd_pmttimingservice
+  ISBNDChannelMap: @local::sbnd_channelmappingservice
 
- #IPMTTimingCorrectionService: @local::sbnd_pmttimingservice
 }
 
 
@@ -132,9 +132,9 @@ physics.producers.daqPMT.TriggerTag:   daqTrigger # required
 #
 
 physics.producers.daqPMT.SurviveExceptions: false
-physics.producers.daqPMT.DiagnosticOutput:  true
+physics.producers.daqPMT.DiagnosticOutput:  true  	#For testing
 physics.producers.daqPMT.PacketDump:        false
 physics.producers.daqPMT.RequireKnownBoards: true
-physics.producers.daqPMT.RequireBoardConfig: true
+physics.producers.daqPMT.RequireBoardConfig: false	#To look for DAQ config from binary file --> not required for testing
 physics.producers.daqPMT.DataTrees: [ "PMTfragments" ]
 physics.producers.daqPMT.ApplyCableDelayCorrection: false

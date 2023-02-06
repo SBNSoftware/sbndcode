@@ -11,7 +11,7 @@ ChannelMappingSQLite: {
 	
 }
 
-sbnd_channelmappinggservice:
+sbnd_channelmappingservice:
 {
     service_provider:   SBNDChannelMap
     DiagnosticOutput:   true
