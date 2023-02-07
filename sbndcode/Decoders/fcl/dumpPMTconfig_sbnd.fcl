@@ -57,7 +57,7 @@
 
 #include "rootoutput_sbnd.fcl"
 
-##include "channelmapping_sbnd.fcl" -> Not exist
+#include "channelmapping_sbnd.fcl"
 #include "decoderdefs_sbnd.fcl" 
 
 # ------------------------------------------------------------------------------
@@ -80,14 +80,16 @@ services: {
   ParticleInventoryService:  @local::sbnd_particleinventoryservice 
  
 #  DetectorClocksService: @local::sbnd_detectorclocks
-#  SBNDChannelMap: @local::sbnd_channelmappinggservice
+#  IPMTTimingCorrectionService: @local::sbnd_pmttimingservice
+  ISBNDChannelMap: @local::sbnd_channelmappingservice
+
 }
 
 
 # ------------------------------------------------------------------------------
 physics: {
   
-  producers: {
+  analyzers: {
     
     pmtdumper: {
 	module_type: "DumpPMTconfiguration"

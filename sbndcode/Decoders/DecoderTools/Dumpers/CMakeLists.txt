@@ -1,5 +1,11 @@
 cet_enable_asserts()
 
+art_dictionary(DICTIONARY_LIBRARIES
+                 lardataobj::RecoBase
+                 lardataalg::headers
+                 canvas::canvas
+              )
+
 set(    MODULE_LIBRARIES
         lardataobj::RecoBase
         lardataobj::RawData

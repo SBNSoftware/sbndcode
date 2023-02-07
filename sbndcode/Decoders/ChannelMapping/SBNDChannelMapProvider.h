@@ -24,36 +24,12 @@ public:
     // Constructor, destructor.
     SBNDChannelMapProvider(const fhicl::ParameterSet& pset);
     
-    // Section to access fragment to board mapping
-    bool                                    hasFragmentID(const unsigned int)       const override;
-
-    /// Returns the number of TPC fragment IDs known to the service.
-    unsigned int                            nTPCfragmentIDs() const override;
-    const std::string&                      getCrateName(const unsigned int)        const override;
-    const ReadoutIDVec&                     getReadoutBoardVec(const unsigned int)  const override;
-    const TPCReadoutBoardToChannelMap&      getReadoutBoardToChannelMap()           const override;
-
-    // Section to access channel information for a given board
-    bool                                    hasBoardID(const unsigned int)          const override;
-
-    /// Returns the number of TPC board IDs known to the service.
-    unsigned int                            nTPCboardIDs() const override;
-    unsigned int                            getBoardSlot(const unsigned int)        const override;
-    const ChannelPlanePairVec&              getChannelPlanePair(const unsigned int) const override;
-
     // Section for PMT channel mapping
     bool                                    hasPMTDigitizerID(const unsigned int)   const override;
 
     /// Returns the number of PMT fragment IDs known to the service.
     unsigned int                            nPMTfragmentIDs() const override;
     const DigitizerChannelChannelIDPairVec& getChannelIDPairVec(const unsigned int) const override;
-
-    // Section for CRT channel mapping    
-    unsigned int                            getSimMacAddress   (const unsigned int)    const override;
-    unsigned int                            gettopSimMacAddress(const unsigned int)    const override;
-
-    /// Returns the Gain and Pedestal for Side CRT 
-    std::pair<double, double>               getSideCRTCalibrationMap(int mac5, int chan) const override;    
 
     /// Returns the channel mapping database key for the specified PMT fragment ID.
     static constexpr unsigned int PMTfragmentIDtoDBkey(unsigned int fragmentID);
@@ -65,17 +41,7 @@ private:
     
     bool fDiagnosticOutput;
       
-    IChannelMapping::TPCFragmentIDToReadoutIDMap   fFragmentToReadoutMap;
-      
-    IChannelMapping::TPCReadoutBoardToChannelMap   fReadoutBoardToChannelMap;
-
     IChannelMapping::FragmentToDigitizerChannelMap fFragmentToDigitizerMap; 
-
-    IChannelMapping::CRTChannelIDToHWtoSimMacAddressPairMap fCRTChannelIDToHWtoSimMacAddressPairMap;
-
-    IChannelMapping::TopCRTHWtoSimMacAddressPairMap fTopCRTHWtoSimMacAddressPairMap;
-
-    IChannelMapping::SideCRTChannelToCalibrationMap fSideCRTChannelToCalibrationMap;
 
     std::unique_ptr<IChannelMapping>               fChannelMappingTool;
 
