@@ -89,7 +89,7 @@ services: {
 # ------------------------------------------------------------------------------
 physics: {
   
-  producers: {
+  analyzers: {
     
     pmtdumper: {
 	module_type: "DumpPMTconfiguration"
