@@ -70,22 +70,7 @@ void sbnd::crt::CRTSpacePointProducer::produce(art::Event& e)
       const uint nhits = cluster->NHits();
       const std::vector<art::Ptr<CRTStripHit>> stripHits = clusterToStripHits.at(cluster.key());
 
-      if(nhits == 1)
-        {
-          CRTSpacePoint spacepoint = fClusterCharacAlg.CharacteriseSingleHitCluster(cluster, stripHits[0]);
-          spacePointVec->push_back(spacepoint);
-          util::CreateAssn(*this, e, *spacePointVec, cluster, *spacePointClusterAssn);
-        }
-      else if(nhits == 2)
-        {
-          CRTSpacePoint spacepoint;
-          if(fClusterCharacAlg.CharacteriseDoubleHitCluster(cluster, stripHits, spacepoint))
-            {
-              spacePointVec->push_back(spacepoint);
-              util::CreateAssn(*this, e, *spacePointVec, cluster, *spacePointClusterAssn);
-            }
-        }
-      else
+      if(nhits > 1)
         {
           CRTSpacePoint spacepoint;
           if(fClusterCharacAlg.CharacteriseMultiHitCluster(cluster, stripHits, spacepoint))
