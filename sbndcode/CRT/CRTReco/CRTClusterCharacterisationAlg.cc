@@ -107,22 +107,18 @@ namespace sbnd::crt {
     if(complete_spacepoints.size() == 0)
       return false;
     
-    std::array<double, 6> aggregate_position({std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 
-          -std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()});
-
     double pe = 0.;
     std::vector<double> times;
 
     for(auto const &sp : complete_spacepoints)
       {
-        AggregatePositions(sp.Pos(), sp.Err(), aggregate_position);
         pe += sp.PE();
         times.push_back(sp.Time());
       }
 
     geo::Point_t pos, err;
-    CentralPosition(aggregate_position, pos, err);
-    
+    AggregatePositions(complete_spacepoints, pos, err);
+
     double time, etime;
     TimeErrorCalculator(times, time, etime);
     
@@ -227,14 +223,39 @@ namespace sbnd::crt {
     return dist * fPropDelay + fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset;
   }
 
-  void CRTClusterCharacterisationAlg::AggregatePositions(const geo::Point_t &pos, const geo::Point_t &err, std::array<double, 6> &agg)
+  void CRTClusterCharacterisationAlg::AggregatePositions(const std::vector<CRTSpacePoint> &complete_spacepoints, geo::Point_t &pos, geo::Point_t &err)
   {
-    agg[0] = std::min(pos.X() - err.X(), agg[0]);
-    agg[1] = std::max(pos.X() + err.X(), agg[1]);
-    agg[2] = std::min(pos.Y() - err.Y(), agg[2]);
-    agg[3] = std::max(pos.Y() + err.Y(), agg[3]);
-    agg[4] = std::min(pos.Z() - err.Z(), agg[4]);
-    agg[5] = std::max(pos.Z() + err.Z(), agg[5]);
+    double sum_x = 0., sum_y = 0., sum_z = 0.;
+    const unsigned n_sp = complete_spacepoints.size();
+
+    for(auto const &sp : complete_spacepoints)
+      {
+        const geo::Point_t sp_pos = sp.Pos();
+        sum_x += sp_pos.X();
+        sum_y += sp_pos.Y();
+        sum_z += sp_pos.Z();
+      }
+
+    pos = geo::Point_t(sum_x / n_sp, sum_y / n_sp, sum_z / n_sp);
+
+    double sum_var_x = 0., sum_var_y = 0., sum_var_z = 0.;
+
+    for(auto const &sp : complete_spacepoints)
+      {
+        const geo::Point_t sp_pos = sp.Pos();
+        sum_var_x += std::pow(sp_pos.X() - pos.X(), 2);
+        sum_var_y += std::pow(sp_pos.Y() - pos.Y(), 2);
+        sum_var_z += std::pow(sp_pos.Z() - pos.Z(), 2);
+      }
+
+    err = geo::Point_t(std::sqrt(sum_var_x / n_sp), std::sqrt(sum_var_y / n_sp), std::sqrt(sum_var_z / n_sp));
+
+    if(err.X() < std::numeric_limits<double>::epsilon())
+      err.SetX(complete_spacepoints[0].XErr());
+    if(err.Y() < std::numeric_limits<double>::epsilon())
+      err.SetY(complete_spacepoints[0].YErr());
+    if(err.Z() < std::numeric_limits<double>::epsilon())
+      err.SetZ(complete_spacepoints[0].ZErr());
   }
 
   void CRTClusterCharacterisationAlg::TimeErrorCalculator(const std::vector<double> &times, double &mean, double &err)

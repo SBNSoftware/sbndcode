@@ -69,7 +69,7 @@ namespace sbnd::crt {
 
     double TimingCorrectionOffset(const double &dist, const double &pe);
 
-    void AggregatePositions(const geo::Point_t &pos, const geo::Point_t &err, std::array<double, 6> &agg);
+    void AggregatePositions(const std::vector<CRTSpacePoint> &complete_spacepoints, geo::Point_t &pos, geo::Point_t &err);
 
     void TimeErrorCalculator(const std::vector<double> &times, double &mean, double &err);
 
