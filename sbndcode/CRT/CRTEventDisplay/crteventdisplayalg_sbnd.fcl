@@ -21,8 +21,8 @@ crteventdisplayalg_sbnd:
    DrawTpc:          true
    DrawTrueTracks:   true
    DrawSimDeposits:  false
-   DrawStripHits:    false
-   DrawClusters:     false
+   DrawStripHits:    true
+   DrawClusters:     true
    DrawSpacePoints:  true
 
    ## If chose taggers is set to true then the vector ChosenTaggers
@@ -50,8 +50,8 @@ crteventdisplayalg_sbnd:
    ClusterColourInterval:    20
    SpacePointColour:         6
 
-   MinTime: -200000
-   MaxTime: -100000
+   MinTime: -910000
+   MaxTime: -900000
 
    Print:            true
 
