@@ -93,7 +93,7 @@ private:
   std::vector<int> PDNamesToList(std::vector<std::string>);
 
   /// Returns a list of uncoated PMTs that are a subset of those in ch_to_use
-  std::vector<int> GetUncoatedPTMList(std::vector<int> ch_to_use);
+  std::vector<int> GetUncoatedPMTList(std::vector<int> ch_to_use);
 
   std::unique_ptr<SemiAnalyticalModel> _semi_model;
   fhicl::ParameterSet _vuv_params;
@@ -184,7 +184,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
   _photo_detectors = p.get<std::vector<std::string>>("PhotoDetectors");
   _opch_to_use = this->PDNamesToList(_photo_detectors);
-  _uncoated_pmts = this->GetUncoatedPTMList(_opch_to_use);
+  _uncoated_pmts = this->GetUncoatedPMTList(_opch_to_use);
 
   _select_nus = p.get<bool>("SelectNeutrino");
   _collection_only = p.get<bool>("CollectionPlaneOnly");
@@ -341,6 +341,12 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
         // if the ara and pmt flashes match: 
         if (abs(flash_pmt.Time() - flash_ara.Time()) < 0.05){
           combine = true;
+          std::vector<std::string> new_photo_detectors{"pmt_coated", "pmt_uncoated", "xarapuca_vis", "xarapuca_vuv"};
+          _opch_to_use = PDNamesToList(new_photo_detectors);
+          _uncoated_pmts = GetUncoatedPMTList(_opch_to_use);
+          _mgr.SetChannelMask(_opch_to_use);
+          _mgr.SetUncoatedPMTs(_uncoated_pmts);
+
           if (flash_pmt.Time() > 0 && flash_pmt.Time() < 2)
             std::cout << "PMT time: " << flash_pmt.Time() << ", ARA time: " << flash_ara.Time() << std::endl;
           // add the arapuca flash PE to the pmt flash PE 
@@ -358,8 +364,15 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
         }
       }
       // if no arapuca flashes are found
-      if (combine == false)
+      if (combine == false){
         flash_comb_v.push_back(flash_pmt);
+        std::vector<std::string> new_photo_detectors{"pmt_coated", "pmt_uncoated"};
+        _opch_to_use = PDNamesToList(new_photo_detectors);
+        _uncoated_pmts = GetUncoatedPMTList(_opch_to_use);
+        _mgr.SetChannelMask(_opch_to_use);
+        _mgr.SetUncoatedPMTs(_uncoated_pmts);
+      }
+
     }
   }
   int nflashes_tot = (_use_arapucas)? flash_comb_v.size():flash_pmt_v.size(); 
@@ -385,7 +398,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     f.pe_err_v.resize(geo->NOpDets());
     for (unsigned int op_ch = 0; op_ch < f.pe_v.size(); op_ch++) {
       unsigned int opdet = geo->OpDetFromOpChannel(op_ch);
-      if (std::find(_opch_to_use.begin(), _opch_to_use.end(), op_ch) == _opch_to_use.end()) {
+      if (std::find(_opch_to_use.begin(), _opch_to_use.end(), op_ch) == _opch_to_use.end() || flash.PE(op_ch)>1e6) {
         f.pe_v[opdet] = 0;
         f.pe_err_v[opdet] = 0;
       } else {
@@ -837,7 +850,7 @@ std::vector<int> SBNDOpT0Finder::PDNamesToList(std::vector<std::string> pd_names
 
 }
 
-std::vector<int> SBNDOpT0Finder::GetUncoatedPTMList(std::vector<int> ch_to_use) {
+std::vector<int> SBNDOpT0Finder::GetUncoatedPMTList(std::vector<int> ch_to_use) {
   std::vector<int> out_v;
 
   for (auto ch : ch_to_use) {
