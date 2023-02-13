@@ -450,6 +450,12 @@ namespace sbnd::crt {
 
   bool CRTGeoAlg::CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer)
   {
+    const CRTTagger tagger1 = CRTCommonUtils::GetTaggerEnum(ChannelToTaggerName(strip1.channel0));
+    const CRTTagger tagger2 = CRTCommonUtils::GetTaggerEnum(ChannelToTaggerName(strip2.channel0));
+
+    if(tagger1 != tagger2)
+      return false;
+
     const double minX = std::max(strip1.minX, strip2.minX) - overlap_buffer / 2.;
     const double maxX = std::min(strip1.maxX, strip2.maxX) + overlap_buffer / 2.;
     const double minY = std::max(strip1.minY, strip2.minY) - overlap_buffer / 2.;
@@ -457,8 +463,19 @@ namespace sbnd::crt {
     const double minZ = std::max(strip1.minZ, strip2.minZ) - overlap_buffer / 2.;
     const double maxZ = std::min(strip1.maxZ, strip2.maxZ) + overlap_buffer / 2.;
 
-    // If the two strips overlap in 2 dimensions then return true
-    return (minX<maxX && minY<maxY) || (minX<maxX && minZ<maxZ) || (minY<maxY && minZ<maxZ);
+    const CoordSet  taggerCoord = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger1);
+
+    if(taggerCoord == kX)
+      return minY<maxY && minZ<maxZ;
+    else if(taggerCoord == kY)
+      return minX<maxX && minZ<maxZ;
+    else if(taggerCoord == kZ)
+      return minX<maxX && minY<maxY;
+    else
+      {
+        std::cout << "Tagger coordinate ill-defined: " << taggerCoord << std::endl;
+        return false;
+      }
   }
 
   bool CRTGeoAlg::CheckOverlap(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer)
