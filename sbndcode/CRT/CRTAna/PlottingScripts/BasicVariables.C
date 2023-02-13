@@ -1,6 +1,6 @@
 void BasicVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_64_01/basicvariables";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_00/basicvariables";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void BasicVariables()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt/crt_clustering_bnb_cosmics/crtana_sbnd.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00.root");
 
   struct datacut {
     TCut cut;
@@ -87,6 +87,10 @@ void BasicVariables()
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
                              {"cl_purity","cl_truth_purity", ";Purity;Clusters",
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
+                             {"cl_completeness_multi_strip_clusters","cl_truth_completeness", ";Completeness;Clusters",
+                              50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour, {}, "cl_nhits>2"},
+                             {"cl_purity_multi_strip_clusters","cl_truth_purity", ";Purity;Clusters",
+                              50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour, {}, "cl_nhits>2"},
 			     {"sp_x","cl_sp_x", ";x [cm];Space Points",
                               100, -500, 500, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
 			     {"sp_ex","cl_sp_ex", ";x error [cm];Space Points",

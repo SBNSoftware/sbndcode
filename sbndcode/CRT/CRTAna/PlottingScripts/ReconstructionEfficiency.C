@@ -1,6 +1,6 @@
 void ReconstructionEfficiency()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_64_01/reconstructionefficiency";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_00_updated_clustering/reconstructionefficiency";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void ReconstructionEfficiency()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/pnfs/sbnd/scratch/users/hlay/crt/crt_clustering_bnb_cosmics/crtana_sbnd.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_updated_clustering.root");
 
   std::vector<double> *td_energy = 0;
   std::vector<bool> *td_reco_status = 0;
@@ -76,6 +76,8 @@ void ReconstructionEfficiency()
   eEnergyRecoEff->SetLineWidth(2);
 
   eEnergyRecoEff->Draw();
+  gPad->Update();
+  eEnergyRecoEff->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
   hTrueDepositEnergyClone->Draw("samehist");
 
   TLegend *lEnergyRecoEff = new TLegend(.6,.45,.85,.55);
@@ -104,6 +106,8 @@ void ReconstructionEfficiency()
   eEnergyNoDroppedRecoEff->SetLineWidth(2);
 
   eEnergyNoDroppedRecoEff->Draw();
+  gPad->Update();
+  eEnergyNoDroppedRecoEff->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
   hTrueDepositEnergyNoDroppedClone->Draw("samehist");
 
   TLegend *lEnergyNoDroppedRecoEff = new TLegend(.6,.45,.85,.55);
