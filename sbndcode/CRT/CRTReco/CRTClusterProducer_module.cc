@@ -47,6 +47,8 @@ public:
 
   std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> CreateClusters(const std::vector<art::Ptr<CRTStripHit>> &stripHits);
 
+  std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> SplitClusters(const std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> &initialClusters);
+
   CRTCluster CharacteriseCluster(const std::vector<art::Ptr<CRTStripHit>> &clusteredHits);
 
 private:
@@ -54,6 +56,7 @@ private:
   CRTGeoAlg   fCRTGeoAlg;
   std::string fCRTStripHitModuleLabel;
   uint32_t    fCoincidenceTimeRequirement;
+  double      fOverlapBuffer;
 };
 
 
@@ -62,6 +65,7 @@ sbnd::crt::CRTClusterProducer::CRTClusterProducer(fhicl::ParameterSet const& p)
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   , fCRTStripHitModuleLabel(p.get<std::string>("CRTStripHitModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<uint32_t>("CoincidenceTimeRequirement"))
+  , fOverlapBuffer(p.get<double>("OverlapBuffer"))
   {
     produces<std::vector<CRTCluster>>();
     produces<art::Assns<CRTCluster, CRTStripHit>>();
@@ -147,12 +151,84 @@ std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRT
                     }
                 }
             }
+          
           const CRTCluster &cluster = CharacteriseCluster(clusteredHits);
           clustersAndHits.emplace_back(cluster, clusteredHits);
-        }      
+        }
     }
-  return clustersAndHits;
+  return SplitClusters(clustersAndHits);
 }
+
+std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>>>
+  sbnd::crt::CRTClusterProducer::SplitClusters(const std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> &initialClusters)
+{
+  std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> clustersAndHits;
+
+  for(auto const& [cluster, hits] : initialClusters)
+    {
+      std::map<uint16_t, std::set<uint16_t>> overlaps;
+      
+      std::vector<bool> used(hits.size(), false);
+
+      for(uint16_t j = 0; j < hits.size(); ++j)
+        {
+          const art::Ptr<CRTStripHit> &hit1 = hits[j];
+          overlaps[j] = {j};
+          
+          for(uint16_t jj = 0; jj < hits.size(); ++jj)
+            {
+              const art::Ptr<CRTStripHit> &hit2 = hits[jj];
+              if(fCRTGeoAlg.CheckOverlap(hit1->Channel(), hit2->Channel(), 10.))
+                overlaps[j].insert(jj);
+            }
+        }
+
+      std::set<uint16_t> leftovers;
+      
+      for(auto const& [id, overlap_set] : overlaps)
+        {
+          if(used[id])
+            continue;
+
+          bool exclusive = true;
+          
+          for(auto const& id2 : overlap_set)
+            {
+              if(overlaps[id2] != overlap_set)
+                exclusive = false;
+            }
+          
+          if(exclusive)
+            {
+              std::vector<art::Ptr<CRTStripHit>> newClusteredHits;
+              
+              for(auto const& id2 : overlap_set)
+                {
+                  newClusteredHits.push_back(hits[id2]);
+                  used[id2] = true;
+                }
+              
+              const CRTCluster &cluster = CharacteriseCluster(newClusteredHits);
+              clustersAndHits.emplace_back(cluster, newClusteredHits);
+            }
+          else
+            leftovers.insert(id);
+        }
+      
+      std::vector<art::Ptr<CRTStripHit>> leftoverClusteredHits;
+      
+      for(auto const& id : leftovers)
+        leftoverClusteredHits.push_back(hits[id]);
+      
+      if(leftoverClusteredHits.size() != 0)
+        {
+          const CRTCluster &cluster = CharacteriseCluster(leftoverClusteredHits);
+          clustersAndHits.emplace_back(cluster, leftoverClusteredHits);
+        }
+    }
+
+  return clustersAndHits;
+}     
 
 sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const std::vector<art::Ptr<CRTStripHit>> &clusteredHits)
 {

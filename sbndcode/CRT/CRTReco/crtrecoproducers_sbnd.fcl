@@ -13,6 +13,7 @@ crtclusterproducer_sbnd:
 {
    CRTStripHitModuleLabel:     "crtstrips"
    CoincidenceTimeRequirement: 50
+   OverlapBuffer:              1.
    module_type:                "sbndcode/CRT/CRTReco/CRTClusterProducer"
 }
 
