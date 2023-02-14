@@ -36,12 +36,14 @@ namespace sbnd::crt {
 
     auto droppedTrackIdMaps = event.getMany<std::map<int, std::set<int>>>();
 
-    for(auto const& droppedTrackIdMap : droppedTrackIdMaps)
+    for(auto const& [i, droppedTrackIdMap] : util::enumerate(droppedTrackIdMaps))
       {
+        const int offset = (i+1) * 1e7;
+
         for(auto const& [mother, ids] : *droppedTrackIdMap)
           {
             for(auto const& id : ids)
-              fTrackIDMotherMap[id] = mother;
+              fTrackIDMotherMap[id + offset] = mother + offset;
           }
       }
 

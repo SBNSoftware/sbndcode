@@ -33,7 +33,11 @@
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
+// larsim
 #include "larsim/MCCheater/ParticleInventoryService.h"
+
+// larcorealg
+#include "larcorealg/CoreUtils/enumerate.h"
 
 namespace sbnd::crt {
   
