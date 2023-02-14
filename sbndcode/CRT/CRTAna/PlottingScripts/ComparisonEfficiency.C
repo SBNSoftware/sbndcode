@@ -8,7 +8,9 @@
 template<class T>
 void FillHists(T *t, TH1* hist, TH1* recoHist, const bool drop_bad_pdg = false);
 
-void ComparisonEfficiency()
+void ComparisonEfficiency(const TString &file1, const TString &file2, const TString &save_name_extra,
+			  const int &colour1 = kRed+2, const int &colour2 = kBlue+2,
+			  std::array<float, 4> legend_position = {.6, .45, .85, .55})
 {
   const TString save_dir = "/sbnd/data/users/hlay/crt/clustering/plots/comparison";
   gSystem->Exec("mkdir -p " + save_dir);
@@ -20,8 +22,8 @@ void ComparisonEfficiency()
 
   TChain *tree1 = new TChain("crtana/tree");
   TChain *tree2 = new TChain("crtana/tree");
-  tree1->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_updated_clustering.root");
-  tree2->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_fixed_truth_matching.root");
+  tree1->Add("/sbnd/data/users/hlay/crt/clustering/" + file1);
+  tree2->Add("/sbnd/data/users/hlay/crt/clustering/" + file2);
 
   double bins[23];
   for(int i = 0; i < 16; ++i)
@@ -50,12 +52,13 @@ void ComparisonEfficiency()
 
   MakeComparisonPlotEff(canvasEnergy, hTrueDepositEnergy1, hTrueDepositEnergyReco1,
 			hTrueDepositEnergy2, hTrueDepositEnergyReco2,
-			";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching", kRed+2, kBlue+2);
+			";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching",
+			colour1, colour2, legend_position);
 
   if(save)
     {
-      canvasEnergy->SaveAs(save_dir + "/true_energy_deposit_reco_eff_compare_fixed_truth_matching.png");
-      canvasEnergy->SaveAs(save_dir + "/true_energy_deposit_reco_eff_compare_fixed_truth_matching.pdf");
+      canvasEnergy->SaveAs(save_dir + "/true_energy_deposit_reco_eff_compare_" + save_name_extra + ".png");
+      canvasEnergy->SaveAs(save_dir + "/true_energy_deposit_reco_eff_compare_" + save_name_extra + ".pdf");
     }
 
   TCanvas *canvasEnergyNoDropped = new TCanvas("canvasEnergyNoDropped", "canvasEnergyNoDropped");
@@ -63,11 +66,12 @@ void ComparisonEfficiency()
 
   MakeComparisonPlotEff(canvasEnergyNoDropped, hTrueDepositEnergyNoDropped1, hTrueDepositEnergyNoDroppedReco1,
 			hTrueDepositEnergyNoDropped2, hTrueDepositEnergyNoDroppedReco2,
-			";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching", kRed+2, kBlue+2);
+			";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching",
+			colour1, colour2, legend_position);
   if(save)
     {
-      canvasEnergyNoDropped->SaveAs(save_dir + "/true_energy_deposit_no_dropped_reco_eff_compare_fixed_truth_matching.png");
-      canvasEnergyNoDropped->SaveAs(save_dir + "/true_energy_deposit_no_dropped_reco_eff_compare_fixed_truth_matching.pdf");
+      canvasEnergyNoDropped->SaveAs(save_dir + "/true_energy_deposit_no_dropped_reco_eff_compare_" + save_name_extra + ".png");
+      canvasEnergyNoDropped->SaveAs(save_dir + "/true_energy_deposit_no_dropped_reco_eff_compare_" + save_name_extra + ".pdf");
     }
 }
 

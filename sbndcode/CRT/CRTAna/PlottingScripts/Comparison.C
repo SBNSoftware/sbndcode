@@ -4,7 +4,8 @@
 
 #include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 
-void Comparison()
+void Comparison(const TString &file1, const TString &file2, const TString &save_name_extra,
+		const int &colour1 = kRed+2, const int &colour2 = kBlue+2, std::array<float, 4> legend_position = {.25, .82, .8, .87})
 {
   const TString save_dir = "/sbnd/data/users/hlay/crt/clustering/plots/comparison";
   gSystem->Exec("mkdir -p " + save_dir);
@@ -16,8 +17,8 @@ void Comparison()
 
   TChain *tree1 = new TChain("crtana/tree");
   TChain *tree2 = new TChain("crtana/tree");
-  tree1->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_updated_clustering.root");
-  tree2->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_fixed_truth_matching.root");
+  tree1->Add("/sbnd/data/users/hlay/crt/clustering/" + file1);
+  tree2->Add("/sbnd/data/users/hlay/crt/clustering/" + file2);
 
   const int plotcolour = kMagenta+2;
   
@@ -42,6 +43,9 @@ void Comparison()
                               505, -5, 500, plotcolour, false, "cl_has_sp && cl_sp_complete"},
                              {"sp_pos_accuracy_long_tail_log", "sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Space Points",
                               505, -5, 500, plotcolour, true, "cl_has_sp && cl_sp_complete"},
+			      {"sp_time_accuracy", "cl_sp_time - (cl_truth_time + 1.7e6)",
+			       ";(reco - (true - G4RefTime)) time [ns];Space Points",
+			       100, -50, 50, plotcolour, false, "cl_has_sp && cl_sp_complete"},
   };
   
   for(auto const &cut : cuts)
@@ -51,7 +55,7 @@ void Comparison()
 	  TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
 	  canvas->cd();
 
-	  MakeComparisonPlot(canvas, tree1, tree2, plot, "Improved Clustering", "Fixed Truth Matching", cut);
+	  MakeComparisonPlot(canvas, tree1, tree2, plot, "Improved Clustering", "Fixed Truth Matching", cut, colour1, colour2, legend_position);
 
 	  if(save)
 	    {
@@ -59,8 +63,8 @@ void Comparison()
 	      if(cut.name != "")
 		plot_name.Append("_" + cut.name);
 
-	      canvas->SaveAs(save_dir + "/" + plot_name + "_compare_fixed_truth_matching.png");
-	      canvas->SaveAs(save_dir + "/" + plot_name + "_compare_fixed_truth_matching.pdf");
+	      canvas->SaveAs(save_dir + "/" + plot_name + "_compare_" + save_name_extra + ".png");
+	      canvas->SaveAs(save_dir + "/" + plot_name + "_compare_" + save_name_extra + ".pdf");
 	    }
 
 	  delete canvas;
