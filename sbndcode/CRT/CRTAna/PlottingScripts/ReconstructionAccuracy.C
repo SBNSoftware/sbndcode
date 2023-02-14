@@ -1,6 +1,6 @@
 void ReconstructionAccuracy()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_00_updated_clustering/reconstructionaccuracy";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_00_fixed_truth_matching/reconstructionaccuracy";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void ReconstructionAccuracy()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_updated_clustering.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_fixed_truth_matching.root");
 
   struct datacut {
     TCut cut;

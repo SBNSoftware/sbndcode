@@ -16,8 +16,8 @@ void Comparison()
 
   TChain *tree1 = new TChain("crtana/tree");
   TChain *tree2 = new TChain("crtana/tree");
-  tree1->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00.root");
-  tree2->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_updated_clustering.root");
+  tree1->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_updated_clustering.root");
+  tree2->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_fixed_truth_matching.root");
 
   const int plotcolour = kMagenta+2;
   
@@ -51,7 +51,7 @@ void Comparison()
 	  TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
 	  canvas->cd();
 
-	  MakeComparisonPlot(canvas, tree1, tree2, plot, "Previous", "Improved Clustering", cut);
+	  MakeComparisonPlot(canvas, tree1, tree2, plot, "Improved Clustering", "Fixed Truth Matching", cut);
 
 	  if(save)
 	    {
@@ -59,8 +59,8 @@ void Comparison()
 	      if(cut.name != "")
 		plot_name.Append("_" + cut.name);
 
-	      canvas->SaveAs(save_dir + "/" + plot_name + "_compare_new_clustering.png");
-	      canvas->SaveAs(save_dir + "/" + plot_name + "_compare_new_clustering.pdf");
+	      canvas->SaveAs(save_dir + "/" + plot_name + "_compare_fixed_truth_matching.png");
+	      canvas->SaveAs(save_dir + "/" + plot_name + "_compare_fixed_truth_matching.pdf");
 	    }
 
 	  delete canvas;

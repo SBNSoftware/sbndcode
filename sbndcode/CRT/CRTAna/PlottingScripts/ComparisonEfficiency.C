@@ -20,8 +20,8 @@ void ComparisonEfficiency()
 
   TChain *tree1 = new TChain("crtana/tree");
   TChain *tree2 = new TChain("crtana/tree");
-  tree1->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00.root");
-  tree2->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_updated_clustering.root");
+  tree1->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_updated_clustering.root");
+  tree2->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_fixed_truth_matching.root");
 
   double bins[23];
   for(int i = 0; i < 16; ++i)
@@ -50,12 +50,12 @@ void ComparisonEfficiency()
 
   MakeComparisonPlotEff(canvasEnergy, hTrueDepositEnergy1, hTrueDepositEnergyReco1,
 			hTrueDepositEnergy2, hTrueDepositEnergyReco2,
-			";True energy (MeV);Efficiency", "Previous", "Improved Clustering", kRed+2, kBlue+2);
+			";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching", kRed+2, kBlue+2);
 
   if(save)
     {
-      canvasEnergy->SaveAs(save_dir + "/true_energy_deposit_reco_eff_compare_new_clustering.png");
-      canvasEnergy->SaveAs(save_dir + "/true_energy_deposit_reco_eff_compare_new_clustering.pdf");
+      canvasEnergy->SaveAs(save_dir + "/true_energy_deposit_reco_eff_compare_fixed_truth_matching.png");
+      canvasEnergy->SaveAs(save_dir + "/true_energy_deposit_reco_eff_compare_fixed_truth_matching.pdf");
     }
 
   TCanvas *canvasEnergyNoDropped = new TCanvas("canvasEnergyNoDropped", "canvasEnergyNoDropped");
@@ -63,11 +63,11 @@ void ComparisonEfficiency()
 
   MakeComparisonPlotEff(canvasEnergyNoDropped, hTrueDepositEnergyNoDropped1, hTrueDepositEnergyNoDroppedReco1,
 			hTrueDepositEnergyNoDropped2, hTrueDepositEnergyNoDroppedReco2,
-			";True energy (MeV);Efficiency", "Previous", "Improved Clustering", kRed+2, kBlue+2);
+			";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching", kRed+2, kBlue+2);
   if(save)
     {
-      canvasEnergyNoDropped->SaveAs(save_dir + "/true_energy_deposit_no_dropped_reco_eff_compare_new_clustering.png");
-      canvasEnergyNoDropped->SaveAs(save_dir + "/true_energy_deposit_no_dropped_reco_eff_compare_new_clustering.pdf");
+      canvasEnergyNoDropped->SaveAs(save_dir + "/true_energy_deposit_no_dropped_reco_eff_compare_fixed_truth_matching.png");
+      canvasEnergyNoDropped->SaveAs(save_dir + "/true_energy_deposit_no_dropped_reco_eff_compare_fixed_truth_matching.pdf");
     }
 }
 

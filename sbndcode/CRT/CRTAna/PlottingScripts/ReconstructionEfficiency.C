@@ -1,6 +1,6 @@
 void ReconstructionEfficiency()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_00_updated_clustering/reconstructionefficiency";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_00_fixed_truth_matching/reconstructionefficiency";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void ReconstructionEfficiency()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_updated_clustering.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_fixed_truth_matching.root");
 
   std::vector<double> *td_energy = 0;
   std::vector<bool> *td_reco_status = 0;
