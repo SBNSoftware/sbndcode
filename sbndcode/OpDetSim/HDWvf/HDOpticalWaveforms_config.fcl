@@ -4,7 +4,7 @@ IncludeHDOpticalWaveforms_XARAPUCA:
 {
   tool_type: "HDOpticalWaveforms"
 
-  ResolutionIncrease: 5.
+  ResolutionIncrease: 10.
 }
 
 IncludeHDOpticalWaveforms_PMT:

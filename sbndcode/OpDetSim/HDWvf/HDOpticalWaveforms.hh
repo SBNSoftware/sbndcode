@@ -6,8 +6,6 @@
 
 #ifndef SBND_HDOpticalWaveform_H
 #define SBND_HDOpticalWaveform_H
-#include <vector>
-
 
 
 namespace opdet {
@@ -24,7 +22,7 @@ public:
   virtual size_t TimeBinShift(double TimeBin_HD) = 0;
 
   //Returns fluctuated factor for SPR
-  virtual void produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER) = 0;
+  virtual int produceSER_HD(std::vector<std::vector<double>> &SER_HD, std::vector<double>& SER) = 0;
 };
 
 #endif

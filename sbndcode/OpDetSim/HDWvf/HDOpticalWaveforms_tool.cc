@@ -12,7 +12,7 @@
 #include "fhiclcpp/types/Atom.h"
 #include "fhiclcpp/types/Sequence.h"
 
-// #include <vector>
+#include <vector>
 #include <cmath>
 
 #include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
@@ -40,7 +40,7 @@ public:
 
   explicit HDOpticalWaveforms(art::ToolConfigTable<Config> const& config);
 
-  void produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER) override;
+  int produceSER_HD(std::vector<std::vector<double>> &SER_HD, std::vector<double>& SER) override;
   
   size_t TimeBinShift(double TimeBin_HD) override;
   
@@ -57,9 +57,11 @@ opdet::HDOpticalWaveforms::HDOpticalWaveforms(art::ToolConfigTable<Config> const
 {
 }
 
-void opdet::HDOpticalWaveforms::produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER)
+int opdet::HDOpticalWaveforms::produceSER_HD(std::vector<std::vector<double>> &SER_HD, std::vector<double>& SER)
 {
     int N=fResolution;
+    SER_HD.resize(N);
+
     for(int i=1; i<N;i++)SER_HD[i%N].push_back(0);
 
     for(int i=0; i < (int)SER.size(); i++)
@@ -68,12 +70,21 @@ void opdet::HDOpticalWaveforms::produceSER_HD(std::vector<double> *SER_HD, std::
       else SER_HD[N-i%N].push_back(SER.at(i));
     }
     SER_HD[0].push_back(0);//add an extra 0 to the first vector, so all of them have the same size (prevents issues at deconvolution stage)
+
+  return 0;
 }
 
 size_t opdet::HDOpticalWaveforms::TimeBinShift(double TimeBin_HD){
   
-  size_t shift=std::floor(TimeBin_HD*fResolution); // 1/fResolution it's the HD tick width: Res=10-> HDtick =1/10
+  // Get only the decimal part
+  float whole, fractional;
+
+  fractional = std::modf(TimeBin_HD, &whole);
   
+  size_t shift=std::floor(fractional*fResolution); // 1/fResolution it's the HD tick width: Res=10-> HDtick =1/10
+  
+  shift=shift% ((int)fResolution);
+
   return shift;
 }
 

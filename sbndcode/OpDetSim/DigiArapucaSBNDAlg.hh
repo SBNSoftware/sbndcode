@@ -123,8 +123,8 @@ namespace opdet {
 
     std::vector<double> fWaveformSP; //single photon pulse vector
     std::vector<double> fWaveformSP_Daphne; //single photon pulse vector
-    std::vector<double> fWaveformSP_Daphne_HD[10]; //single photon pulse vector
-
+    std::vector<std::vector<double>> fWaveformSP_Daphne_HD; //single photon pulse vector
+    
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
     //HDWaveforms
@@ -154,7 +154,7 @@ namespace opdet {
                                      bool is_daphne);
     void AddSPE(size_t time_bin, std::vector<double>& wave, const std::vector<double>& fWaveformSP, int nphotons); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave,const double sampling);
-    void produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER);
+    // void produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER);
     void AddLineNoise(std::vector<double>& wave);
     void AddDarkNoise(std::vector<double>& wave , std::vector<double>& WaveformSP);
     double FindMinimumTime(sim::SimPhotons const& simphotons);
