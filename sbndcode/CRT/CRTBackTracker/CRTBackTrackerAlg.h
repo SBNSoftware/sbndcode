@@ -39,6 +39,9 @@
 // larcorealg
 #include "larcorealg/CoreUtils/enumerate.h"
 
+// lardataobj
+#include "lardataobj/Simulation/ParticleAncestryMap.h"
+
 namespace sbnd::crt {
   
   class CRTBackTrackerAlg {
@@ -77,19 +80,31 @@ namespace sbnd::crt {
       double    z;
       double    energy;
       double    time;
+      double    coreX;
+      double    coreY;
+      double    coreZ;
+      double    coreEnergy;
+      double    coreTime;
       
       TrueDeposit(int _trackid = -999999, int _pdg = -999999, CRTTagger _tagger = kUndefinedTagger, 
                   double _x = -999999., double _y = -999999., double _z = -999999., 
-                  double _energy = -999999., double _time = -999999.)
+                  double _energy = -999999., double _time = -999999.,
+                  double _coreX = -999999., double _coreY = -999999., double _coreZ = -999999.,
+                  double _coreEnergy = -999999., double _coreTime = -999999.)
       {
-        trackid = _trackid;
-        pdg     = _pdg;
-        tagger  = _tagger;
-        x       = _x;
-        y       = _y;
-        z       = _z;
-        energy  = _energy;
-        time    = _time;
+        trackid    = _trackid;
+        pdg        = _pdg;
+        tagger     = _tagger;
+        x          = _x;
+        y          = _y;
+        z          = _z;
+        energy     = _energy;
+        time       = _time;
+        coreX      = _coreX;
+        coreY      = _coreY;
+        coreZ      = _coreZ;
+        coreEnergy = _coreEnergy;
+        coreTime   = _coreTime;
       }
     };
 
@@ -115,7 +130,7 @@ namespace sbnd::crt {
 
     CRTBackTrackerAlg(const Config& config);
     
-    CRTBackTrackerAlg(const fhicl::ParameterSet& pset) :
+  CRTBackTrackerAlg(const fhicl::ParameterSet& pset) :
     CRTBackTrackerAlg(fhicl::Table<Config>(pset, {})()) {}
     
     CRTBackTrackerAlg();

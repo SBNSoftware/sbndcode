@@ -34,16 +34,15 @@ namespace sbnd::crt {
     fTrackIDMotherMap.clear();
     fStripHitMCPMap.clear();
 
-    auto droppedTrackIdMaps = event.getMany<std::map<int, std::set<int>>>();
+    art::Handle<std::vector<sim::ParticleAncestryMap>> droppedTrackIDMapHandle;
+    event.getByLabel(fSimModuleLabel, droppedTrackIDMapHandle);
 
-    for(auto const& [i, droppedTrackIdMap] : util::enumerate(droppedTrackIdMaps))
+    for(auto const& droppedTrackIdMap : *droppedTrackIDMapHandle)
       {
-        const int offset = (i+1) * 1e7;
-
-        for(auto const& [mother, ids] : *droppedTrackIdMap)
+        for(auto const& [mother, ids] : droppedTrackIdMap.GetMap())
           {
             for(auto const& id : ids)
-              fTrackIDMotherMap[id + offset] = mother + offset;
+              fTrackIDMotherMap[id] = mother;
           }
       }
 
@@ -56,6 +55,8 @@ namespace sbnd::crt {
 
     std::map<std::pair<int, CRTTagger>, double> idToEnergyMap, idToXMap, idToYMap, idToZMap, idToTimeMap;
     std::map<std::pair<int, CRTTagger>, uint> idToNIDEsMap;
+    std::map<std::pair<int, CRTTagger>, double> coreIDToEnergyMap, coreIDToXMap, coreIDToYMap, coreIDToZMap, coreIDToTimeMap;
+    std::map<std::pair<int, CRTTagger>, uint> coreIDToNIDEsMap;
 
     for(auto const ide : ideVec)
       {
@@ -68,16 +69,27 @@ namespace sbnd::crt {
         
         fTrackIDRecoMap[{RollUpID(ide->trackID), tagger}] = false;
 
-        idToEnergyMap[{RollUpID(ide->trackID), tagger}] += ide->energyDeposited;            
+        idToEnergyMap[{RollUpID(ide->trackID), tagger}] += ide->energyDeposited;
         idToXMap[{RollUpID(ide->trackID), tagger}]      += x;
         idToYMap[{RollUpID(ide->trackID), tagger}]      += y;
         idToZMap[{RollUpID(ide->trackID), tagger}]      += z;
         idToTimeMap[{RollUpID(ide->trackID), tagger}]   += (ide->entryT + ide->exitT) / 2.;
 
+        coreIDToEnergyMap[{ide->trackID, tagger}] += ide->energyDeposited;
+        coreIDToXMap[{ide->trackID, tagger}]      += x;
+        coreIDToYMap[{ide->trackID, tagger}]      += y;
+        coreIDToZMap[{ide->trackID, tagger}]      += z;
+        coreIDToTimeMap[{ide->trackID, tagger}]   += (ide->entryT + ide->exitT) / 2.;
+
         if(idToNIDEsMap.find({RollUpID(ide->trackID), tagger}) == idToNIDEsMap.end())
           idToNIDEsMap[{RollUpID(ide->trackID), tagger}] = 0;
 
         ++idToNIDEsMap[{RollUpID(ide->trackID), tagger}];
+
+        if(coreIDToNIDEsMap.find({ide->trackID, tagger}) == coreIDToNIDEsMap.end())
+          coreIDToNIDEsMap[{ide->trackID, tagger}] = 0;
+
+        ++coreIDToNIDEsMap[{ide->trackID, tagger}];
       }
         
     for(auto const category : depositCategories)
@@ -90,11 +102,18 @@ namespace sbnd::crt {
         const double time   = idToTimeMap[category] / idToNIDEsMap[category];
         const double energy = idToEnergyMap[category];
 
+        const double coreX      = coreIDToXMap[category] / coreIDToNIDEsMap[category];
+        const double coreY      = coreIDToYMap[category] / coreIDToNIDEsMap[category];
+        const double coreZ      = coreIDToZMap[category] / coreIDToNIDEsMap[category];
+        const double coreTime   = coreIDToTimeMap[category] / coreIDToNIDEsMap[category];
+        const double coreEnergy = coreIDToEnergyMap[category];
+
         const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(category.first);
         const int pdg = particle == NULL ? -999999 : particle->PdgCode();
 
-        fTrueDepositsMap[category] = TrueDeposit(category.first, pdg, category.second, 
-                                                 x, y, z, energy, time);
+        fTrueDepositsMap[category] = TrueDeposit(category.first, pdg, category.second,
+                                                 x, y, z, energy, time,
+                                                 coreX, coreY, coreZ, coreEnergy, coreTime);
       }
       
     for(auto const ide : ideVec)
