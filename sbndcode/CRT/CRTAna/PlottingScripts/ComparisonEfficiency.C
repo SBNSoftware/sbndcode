@@ -9,8 +9,8 @@ template<class T>
 void FillHists(T *t, TH1* hist, TH1* recoHist, const bool drop_bad_pdg = false);
 
 void ComparisonEfficiency(const TString &file1, const TString &file2, const TString &save_name_extra,
-			  const int &colour1 = kRed+2, const int &colour2 = kBlue+2,
-			  std::array<float, 4> legend_position = {.6, .45, .85, .55})
+                          const int &colour1 = kRed+2, const int &colour2 = kBlue+2,
+                          std::array<float, 4> legend_position = {.6, .45, .85, .55})
 {
   const TString save_dir = "/sbnd/data/users/hlay/crt/clustering/plots/comparison";
   gSystem->Exec("mkdir -p " + save_dir);
@@ -51,9 +51,9 @@ void ComparisonEfficiency(const TString &file1, const TString &file2, const TStr
   canvasEnergy->cd();
 
   MakeComparisonPlotEff(canvasEnergy, hTrueDepositEnergy1, hTrueDepositEnergyReco1,
-			hTrueDepositEnergy2, hTrueDepositEnergyReco2,
-			";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching",
-			colour1, colour2, legend_position);
+                        hTrueDepositEnergy2, hTrueDepositEnergyReco2,
+                        ";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching",
+                        colour1, colour2, legend_position);
 
   if(save)
     {
@@ -65,9 +65,9 @@ void ComparisonEfficiency(const TString &file1, const TString &file2, const TStr
   canvasEnergyNoDropped->cd();
 
   MakeComparisonPlotEff(canvasEnergyNoDropped, hTrueDepositEnergyNoDropped1, hTrueDepositEnergyNoDroppedReco1,
-			hTrueDepositEnergyNoDropped2, hTrueDepositEnergyNoDroppedReco2,
-			";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching",
-			colour1, colour2, legend_position);
+                        hTrueDepositEnergyNoDropped2, hTrueDepositEnergyNoDroppedReco2,
+                        ";True energy (MeV);Efficiency", "Improved Clustering", "Fixed Truth Matching",
+                        colour1, colour2, legend_position);
   if(save)
     {
       canvasEnergyNoDropped->SaveAs(save_dir + "/true_energy_deposit_no_dropped_reco_eff_compare_" + save_name_extra + ".png");
@@ -101,7 +101,7 @@ void FillHists(T *t, TH1* hist, TH1* recoHist, const bool drop_bad_pdg)
 
           if(td_reco_status->at(ii))
             recoHist->Fill(1e3*td_energy->at(ii));
-	}
+        }
     }
 
   NormaliseEntriesByBinWidth(hist);

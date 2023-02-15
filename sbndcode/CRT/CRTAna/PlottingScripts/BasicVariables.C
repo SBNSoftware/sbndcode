@@ -91,9 +91,9 @@ void BasicVariables()
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour, {}, "cl_nhits>2"},
                              {"cl_purity_multi_strip_clusters","cl_truth_purity", ";Purity;Clusters",
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour, {}, "cl_nhits>2"},
-			     {"sp_x","cl_sp_x", ";x [cm];Space Points",
+                             {"sp_x","cl_sp_x", ";x [cm];Space Points",
                               100, -500, 500, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-			     {"sp_ex","cl_sp_ex", ";x error [cm];Space Points",
+                             {"sp_ex","cl_sp_ex", ";x error [cm];Space Points",
                               50, 0, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"sp_y","cl_sp_y", ";y [cm];Space Points",
                               100, -500, 1500, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
@@ -136,10 +136,10 @@ void BasicVariables()
       tree->Draw(plot.var + ">>" + plot.name, plot.req,"histE");
 
       if(plot.logy)
-	{
-	  hist->SetMinimum(1);
-	  canvas->SetLogy();
-	}
+        {
+          hist->SetMinimum(1);
+          canvas->SetLogy();
+        }
 
       if(plot.binlabels.size() == plot.nbins)
         {

@@ -38,20 +38,20 @@ void ReconstructionEfficiency()
       tree->GetEntry(i);
 
       for(unsigned ii = 0; ii < td_energy->size(); ++ii)
-	{
-	  hTrueDepositEnergy->Fill(1e3*td_energy->at(ii));
-	  
-	  if(td_reco_status->at(ii))
-	    hTrueDepositEnergyReco->Fill(1e3*td_energy->at(ii));
+        {
+          hTrueDepositEnergy->Fill(1e3*td_energy->at(ii));
 
-	  if(td_pdg->at(ii) == -999999) 
-	    continue;
+          if(td_reco_status->at(ii))
+            hTrueDepositEnergyReco->Fill(1e3*td_energy->at(ii));
 
-	  hTrueDepositEnergyNoDropped->Fill(1e3*td_energy->at(ii));
-	  
-	  if(td_reco_status->at(ii))
-	    hTrueDepositEnergyNoDroppedReco->Fill(1e3*td_energy->at(ii));
-	}
+          if(td_pdg->at(ii) == -999999)
+            continue;
+
+          hTrueDepositEnergyNoDropped->Fill(1e3*td_energy->at(ii));
+
+          if(td_reco_status->at(ii))
+            hTrueDepositEnergyNoDroppedReco->Fill(1e3*td_energy->at(ii));
+        }
     }
 
   for(unsigned i = 1; i <= hTrueDepositEnergy->GetNbinsX(); ++i)
