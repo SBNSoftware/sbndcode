@@ -151,6 +151,11 @@ private:
   std::vector<double>   _cl_truth_z;
   std::vector<double>   _cl_truth_energy;
   std::vector<double>   _cl_truth_time;
+  std::vector<double>   _cl_truth_core_x;
+  std::vector<double>   _cl_truth_core_y;
+  std::vector<double>   _cl_truth_core_z;
+  std::vector<double>   _cl_truth_core_energy;
+  std::vector<double>   _cl_truth_core_time;
   std::vector<bool>     _cl_has_sp;
   std::vector<double>   _cl_sp_x;
   std::vector<double>   _cl_sp_ex;
@@ -269,6 +274,11 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_truth_z", "std::vector<double>", &_cl_truth_z);
     fTree->Branch("cl_truth_energy", "std::vector<double>", &_cl_truth_energy);
     fTree->Branch("cl_truth_time", "std::vector<double>", &_cl_truth_time);
+    fTree->Branch("cl_truth_core_x", "std::vector<double>", &_cl_truth_core_x);
+    fTree->Branch("cl_truth_core_y", "std::vector<double>", &_cl_truth_core_y);
+    fTree->Branch("cl_truth_core_z", "std::vector<double>", &_cl_truth_core_z);
+    fTree->Branch("cl_truth_core_energy", "std::vector<double>", &_cl_truth_core_energy);
+    fTree->Branch("cl_truth_core_time", "std::vector<double>", &_cl_truth_core_time);
     fTree->Branch("cl_has_sp", "std::vector<bool>", &_cl_has_sp);
     fTree->Branch("cl_sp_x", "std::vector<double>", &_cl_sp_x);
     fTree->Branch("cl_sp_ex", "std::vector<double>", &_cl_sp_ex);
@@ -618,6 +628,11 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_truth_z.resize(nClusters);
   _cl_truth_energy.resize(nClusters);
   _cl_truth_time.resize(nClusters);
+  _cl_truth_core_x.resize(nClusters);
+  _cl_truth_core_y.resize(nClusters);
+  _cl_truth_core_z.resize(nClusters);
+  _cl_truth_core_energy.resize(nClusters);
+  _cl_truth_core_time.resize(nClusters);
   _cl_has_sp.resize(nClusters);
   _cl_sp_x.resize(nClusters);
   _cl_sp_ex.resize(nClusters);
@@ -653,6 +668,11 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_truth_z[i]                = truthMatch.deposit.z;
       _cl_truth_energy[i]           = truthMatch.deposit.energy;
       _cl_truth_time[i]             = truthMatch.deposit.time;
+      _cl_truth_core_x[i]           = truthMatch.deposit.coreX;
+      _cl_truth_core_y[i]           = truthMatch.deposit.coreY;
+      _cl_truth_core_z[i]           = truthMatch.deposit.coreZ;
+      _cl_truth_core_energy[i]      = truthMatch.deposit.coreEnergy;
+      _cl_truth_core_time[i]        = truthMatch.deposit.coreTime;
 
       const auto spacepoints = clustersToSpacePoints.at(cluster.key());
       if(spacepoints.size() == 1)
