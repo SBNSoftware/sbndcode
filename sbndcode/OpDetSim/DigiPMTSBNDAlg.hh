@@ -38,6 +38,7 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "sbndcode/OpDetSim/PMTAlg/PMTGainFluctuations.hh"
+#include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
 
 #include "TFile.h"
 
@@ -65,6 +66,7 @@ namespace opdet {
       bool PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
       fhicl::ParameterSet GainFluctuationsParams;
+      fhicl::ParameterSet HDOpticalWaveformParams;
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       double frequency;       //wave sampling frequency (GHz)
@@ -137,12 +139,15 @@ namespace opdet {
 
     //PMTFluctuationsAlg
     std::unique_ptr<opdet::PMTGainFluctuations> fPMTGainFluctuationsPtr;
+    //HDWaveforms
+    std::unique_ptr<opdet::HDOpticalWaveform> fPMTHDOpticalWaveformsPtr;
 
-    void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
+    void AddSPE(double time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
     std::vector<double> fSinglePEWave; // single photon pulse vector
+    std::vector<std::vector<double>> fSinglePEWave_HD; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
@@ -275,6 +280,11 @@ namespace opdet {
       fhicl::OptionalDelegatedParameter gainFluctuationsParams {
         Name("GainFluctuationsParams"),
         Comment("Parameters used for SinglePE response fluctuations")
+      };
+
+      fhicl::OptionalDelegatedParameter hdOpticalWaveformParams {
+        Name("HDOpticalWaveformParams"),
+        Comment("Parameters used for high definition waveform")
       };
 
     };    //struct Config

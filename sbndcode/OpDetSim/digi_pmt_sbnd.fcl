@@ -35,6 +35,7 @@ sbnd_digipmt_alg:
 
   MakeGainFluctuations: true
   GainFluctuationsParams: @local::FirstDynodeGainFluctuations
+  HDOpticalWaveformParams: @local::IncludeHDOpticalWaveforms_PMT
 }
 
 END_PROLOG

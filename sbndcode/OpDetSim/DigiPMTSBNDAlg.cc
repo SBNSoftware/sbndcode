@@ -49,9 +49,14 @@ namespace opdet {
     if (fParams.PMTSinglePEmodel) {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
       std::vector<double>* SinglePEVec_p;
-      file->GetObject("SinglePEVec", SinglePEVec_p);
+      file->GetObject("SinglePEVec_HD", SinglePEVec_p);
       fSinglePEWave = *SinglePEVec_p;
-      pulsesize = fSinglePEWave.size();
+
+      // Prepare HD waveforms
+      fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
+      fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD,fSinglePEWave);
+
+      pulsesize = fSinglePEWave_HD[0].size();
     }
     else {
       mf::LogDebug("DigiPMTSBNDAlg") << " using ideal pe response";
@@ -140,7 +145,7 @@ namespace opdet {
   {
     double ttsTime = 0;
     double tphoton;
-    size_t timeBin;
+    double timeBin;
     double ttpb=0;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
       if(fFlatGen.fire(1.0) < fQERefl) {
@@ -148,7 +153,7 @@ namespace opdet {
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + simphotons[i].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-        timeBin = std::floor(tphoton*fSampling);
+        timeBin = tphoton*fSampling;
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
@@ -169,7 +174,7 @@ namespace opdet {
 
     double ttsTime = 0;
     double tphoton;
-    size_t timeBin;
+    double timeBin;
     double ttpb=0;
     sim::SimPhotons auxphotons;
 
@@ -182,7 +187,7 @@ namespace opdet {
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-        timeBin = std::floor(tphoton*fSampling);
+        timeBin = tphoton*fSampling;
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
@@ -195,7 +200,7 @@ namespace opdet {
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-        timeBin = std::floor(tphoton*fSampling);
+        timeBin = tphoton*fSampling;
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
@@ -218,7 +223,7 @@ namespace opdet {
     size_t accepted_photons;
     double ttsTime = 0;
     double tphoton;
-    size_t timeBin;
+    double timeBin;
     double ttpb=0;
     // reflected light to be added to all PMTs
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
@@ -232,7 +237,7 @@ namespace opdet {
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-        timeBin = std::floor(tphoton*fSampling);
+        timeBin = tphoton*fSampling;
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
@@ -254,7 +259,7 @@ namespace opdet {
     size_t accepted_photons;
     double ttsTime = 0;
     double tphoton;
-    size_t timeBin;
+    double timeBin;
     double ttpb;
     // direct light
     if ( auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) ){
@@ -268,7 +273,7 @@ namespace opdet {
           ttpb = fTimeTPB->fire(); //for including TPB emission time
           tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-          timeBin = std::floor(tphoton*fSampling);
+          timeBin = tphoton*fSampling;
           if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
         }
       }
@@ -286,7 +291,7 @@ namespace opdet {
           ttpb = fTimeTPB->fire(); //for including TPB emission time
           tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-          timeBin = std::floor(tphoton*fSampling);
+          timeBin = tphoton*fSampling;
           if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
         }
       }
@@ -324,20 +329,23 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave)
+  void DigiPMTSBNDAlg::AddSPE(double time_bin_hd, std::vector<double>& wave)
   {
+    size_t time_bin=std::floor(time_bin_hd);
+    size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(time_bin_hd);
+    
     size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
     if(fParams.MakeGainFluctuations){
       double npe=fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine);
       std::transform(min_it, max_it,
-                     fSinglePEWave.begin(), min_it,
+                     fSinglePEWave_HD[wvf_shift].begin(), min_it,
                      [npe](auto a, auto b) { return a+npe*b; });
     }
     else{
       std::transform(min_it, max_it,
-                   fSinglePEWave.begin(), min_it,
+                   fSinglePEWave_HD[wvf_shift].begin(), min_it,
                    std::plus<double>( ));
     }
   }
@@ -373,7 +381,7 @@ namespace opdet {
 
   void DigiPMTSBNDAlg::AddDarkNoise(std::vector<double>& wave)
   {
-    size_t timeBin;
+    double timeBin;
     // Multiply by 10^9 since fParams.DarkNoiseRate is in Hz (conversion from s to ns)
     double mean =  1000000000.0 / fParams.PMTDarkNoiseRate;
     double darkNoiseTime = fExponentialGen.fire(mean);
@@ -479,6 +487,7 @@ namespace opdet {
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
     fBaseConfig.MakeGainFluctuations     = config.makeGainFluctuations();
     config.gainFluctuationsParams.get_if_present(fBaseConfig.GainFluctuationsParams);
+    config.hdOpticalWaveformParams.get_if_present(fBaseConfig.HDOpticalWaveformParams);
   }
 
   std::unique_ptr<DigiPMTSBNDAlg>
