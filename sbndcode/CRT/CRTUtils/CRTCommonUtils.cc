@@ -57,4 +57,9 @@ namespace sbnd::crt {
 
     return kUndefinedSet;
   }
+
+  bool CRTCommonUtils::IsHorizontalTagger(const CRTTagger tagger)
+  {
+    return tagger == kBottomTagger || tagger == kTopLowTagger || tagger == kTopHighTagger;
+  }
 }

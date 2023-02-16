@@ -30,7 +30,8 @@ art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
                            ROOT::Gdml
                            ${ROOT_BASIC_LIB_LIST}
 
-			   sbndcode_CRTUtils
+                           sbndcode_CRTUtils
+                           sbnobj::SBND_CRT
                            ROOT::Core
         )
 

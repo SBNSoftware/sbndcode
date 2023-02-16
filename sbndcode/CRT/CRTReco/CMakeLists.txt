@@ -28,5 +28,12 @@ simple_plugin(
               sbndcode_CRT_CRTReco
 )
 
+simple_plugin(
+              CRTTrackProducer module
+              larcorealg::Geometry
+              lardata::Utilities
+              sbnobj::SBND_CRT
+              sbndcode_CRTUtils
+)
 
 install_fhicl()

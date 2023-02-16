@@ -34,6 +34,7 @@ physics:
     crtstrips:      @local::crtstriphitproducer_sbnd
     crtclustering:  @local::crtclusterproducer_sbnd
     crtspacepoints: @local::crtspacepointproducer_sbnd
+    crttracks:      @local::crttrackproducer_sbnd
   }
 
   analyzers:
@@ -45,7 +46,7 @@ physics:
     }
   }
 
-  reco:    [ crtstrips, crtclustering, crtspacepoints ]
+  reco:    [ crtstrips, crtclustering, crtspacepoints, crttracks ]
   ana:     [ crtana ]
   stream1: [ out1 ]
 

@@ -34,4 +34,11 @@ crtspacepointproducer_sbnd:
    module_type:        "sbndcode/CRT/CRTReco/CRTSpacePointProducer"
 }
 
+crttrackproducer_sbnd:
+{
+   CRTSpacePointModuleLabel:   "crtspacepoints"
+   CoincidenceTimeRequirement: 100.
+   module_type:                "sbndcode/CRT/CRTReco/CRTTrackProducer"
+}
+
 END_PROLOG
