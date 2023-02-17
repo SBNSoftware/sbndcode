@@ -8,13 +8,27 @@ lightcalo_ana:
     VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
     VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
 
-    OpFlashProducers: ["opflashtpc0", "opflashtpc1"]
+    OpFlashProducers:    ["opflashtpc0", "opflashtpc1"]
     OpFlashAraProducers: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
-    SliceProducer:   "pandora"
-    FlashMatchProducer: "fmatch"
-    UseArapucas: false 
-    nuScoreCut: 0.4 # accept nusScore > 0.4, to analyze all slices, set = 0 
-    fmScoreCut: 7   # accept 0 < fm score < fmScoreCut, to analyze all slices, set = 1e3
-    CalAreaConstants: [ 0.0200906, 0.0200016, 0.0201293 ]
+    SliceProducer:       "pandora"
+    FlashMatchProducer:  "fmatch"
+    UseArapucas:         false 
+    nuScoreCut:          0.4 # default: accept nusScore > 0.4, to analyze all slices, set nuScoreCut = -1 
+    fmScoreCut:          7   # default: accept 0 < fm score < fmScoreCut, to analyze all slices, set fmScoreCut = 1e3
+
+    # flash parameters
+    SimpleOpFlashOffset: 0.2  # the offset between the t0 from SimpleFlash and OpFlashes 
+    PMTARAFlashOffset:   0.05 # the offset between the t0 of PMT OpFlashes and X-ARA OpFlashes
+    FlashNoiseThreshold: [ 600., 1500. ] # {PMT, xARAPUCA}, flash total PE threshold to ignore a flash
+
+    # calibration constants & simulation parameters  
+    ## shouldn't have to change this unless you change simulation parameters 
+    CalAreaConstants:    [ 0.0200906, 0.0200016, 0.0201293 ] # calibration constants for wire planes 
+    OpDetEfficiencies:   [ 0.03, 0.03, 0.014, 0.021 ] # efficiencies [uncoated PMT, coated PMT, vis ara, vuv ara
+    ScintPreScale:       0.03 # Scintillation Pre-Scale factor in simulation (set in ionandscint)
+    
+    # parameters for truth validation 
+    SimEnergyProducer:   "ionandscint" # only looking at energy deposits in the AV 
+    TruthNeutrino:       true # if analyzing cosmic sample (or non-beam neutrino), set to false 
 }
 END_PROLOG
