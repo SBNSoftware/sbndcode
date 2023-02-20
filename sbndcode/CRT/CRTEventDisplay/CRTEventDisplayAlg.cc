@@ -463,7 +463,8 @@ namespace sbnd::crt {
 			<< "\twith direction (" << dir.X() << ", " << dir.Y() << ", " << dir.Z() << ")\n"
 			<< "\tdrawn between (" << a.X() << ", " << a.Y() << ", " << a.Z() << ")\n"
 			<< "\tand (" << b.X() << ", " << b.Y() << ", " << b.Z() << ")\n"
-			<< "\tat time " << track->Time() << std::endl;
+			<< "\tat time " << track->Time() << '\n'
+			<< "\tfrom three hits? " << track->Triple() << std::endl;
 
 	  }
       }

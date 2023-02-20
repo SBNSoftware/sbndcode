@@ -53,8 +53,8 @@ crteventdisplayalg_sbnd:
    SpacePointColour:         6
    TrackColour:              9
 
-   MinTime: -1300000
-   MaxTime: -1200000
+   MinTime: -540000
+   MaxTime: -530000
 
    Print:            true
 
