@@ -20,6 +20,7 @@ namespace sbnd::crt {
     fStripHitLabel = config.StripHitLabel();
     fClusterLabel = config.ClusterLabel();
     fSpacePointLabel = config.SpacePointLabel();
+    fTrackLabel = config.TrackLabel();
 
     fDrawTaggers = config.DrawTaggers();
     fDrawModules = config.DrawModules();
@@ -32,6 +33,7 @@ namespace sbnd::crt {
     fDrawStripHits = config.DrawStripHits();
     fDrawClusters = config.DrawClusters();
     fDrawSpacePoints = config.DrawSpacePoints();
+    fDrawTracks = config.DrawTracks();
 
     fChoseTaggers = config.ChoseTaggers();
     fChosenTaggers = config.ChosenTaggers();
@@ -46,6 +48,7 @@ namespace sbnd::crt {
     fClusterStartingColour = config.ClusterStartingColour();
     fClusterColourInterval = config.ClusterColourInterval();
     fSpacePointColour = config.SpacePointColour();
+    fTrackColour = config.TrackColour();
 
     fMinTime = config.MinTime();
     fMaxTime = config.MaxTime();
@@ -127,6 +130,11 @@ namespace sbnd::crt {
     // Create a canvas 
     TCanvas *c1 = new TCanvas("c1","",700,700);
     
+    std::vector<double> crtLims = fCRTGeoAlg.CRTLimits();
+    crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
+    crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
+
+
     // Draw the CRT taggers
     if(fDrawTaggers)
       {
@@ -234,10 +242,6 @@ namespace sbnd::crt {
     if(fDrawTrueTracks)
       { 
         auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimLabel);
-
-        std::vector<double> crtLims = fCRTGeoAlg.CRTLimits();
-        crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
-        crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
 
         for(auto const& part : *particleHandle)
           {
@@ -413,7 +417,65 @@ namespace sbnd::crt {
           }
       }
 
+    if(fDrawTracks)
+      {
+        auto tracksHandle = event.getValidHandle<std::vector<CRTTrack>>(fTrackLabel);
+        std::vector<art::Ptr<CRTTrack>> tracksVec;
+        art::fill_ptr_vector(tracksVec, tracksHandle);
+
+	for(auto track : tracksVec)
+	  {
+            if(track->Time() - G4RefTime < fMinTime || track->Time() - G4RefTime > fMaxTime)
+              continue;
+
+	    const geo::Point_t start = track->Start();
+	    const geo::Vector_t dir  = track->Direction();
+
+	    TPolyLine3D *line = new TPolyLine3D(2);
+	    geo::Point_t a {0,0,0};
+	    geo::Point_t b {0,0,0};
+
+	    int i = 0;
+	    do
+              {
+		a = start + i * dir;
+		++i;
+	      }
+	    while(IsPointInsideBox(crtLims, a));
+
+	    i = 0;
+	    do
+              {
+		b = start + i * dir;
+		--i;
+	      }
+	    while(IsPointInsideBox(crtLims, b));
+
+	    line->SetPoint(0, a.X(), a.Y(), a.Z());
+	    line->SetPoint(1, b.X(), b.Y(), b.Z());
+
+            line->SetLineColor(fTrackColour);
+            line->SetLineWidth(fLineWidth);
+            line->Draw();
+
+	    if(fPrint)
+	      std::cout << "Track at (" << start.X() << ", " << start.Y() << ", " << start.Z() << ")\n"
+			<< "\twith direction (" << dir.X() << ", " << dir.Y() << ", " << dir.Z() << ")\n"
+			<< "\tdrawn between (" << a.X() << ", " << a.Y() << ", " << a.Z() << ")\n"
+			<< "\tand (" << b.X() << ", " << b.Y() << ", " << b.Z() << ")\n"
+			<< "\tat time " << track->Time() << std::endl;
+
+	  }
+      }
+
     c1->SaveAs(Form("crtEventDisplayEvent%d.root", event.event()));
     delete c1;
+  }
+
+  bool CRTEventDisplayAlg::IsPointInsideBox(const std::vector<double> &lims, const geo::Point_t &p)
+  {
+    return (p.X() > lims[0] && p.X() < lims[3])
+      && (p.Y() > lims[1] && p.Y() < lims[4])
+      && (p.Z() > lims[2] && p.Z() < lims[5]);
   }
 }

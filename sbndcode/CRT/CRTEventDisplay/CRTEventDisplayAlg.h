@@ -31,6 +31,7 @@
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+#include "sbnobj/SBND/CRT/CRTTrack.hh"
 
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
@@ -78,6 +79,9 @@ namespace sbnd::crt {
       fhicl::Atom<art::InputTag> SpacePointLabel {
         Name("SpacePointLabel")
           };
+      fhicl::Atom<art::InputTag> TrackLabel {
+        Name("TrackLabel")
+          };
 
       fhicl::Atom<bool> DrawTaggers {
         Name("DrawTaggers")
@@ -111,6 +115,9 @@ namespace sbnd::crt {
           };
       fhicl::Atom<bool> DrawSpacePoints {
         Name("DrawSpacePoints")
+          };
+      fhicl::Atom<bool> DrawTracks {
+        Name("DrawTracks")
           };
 
       fhicl::Atom<bool> ChoseTaggers {
@@ -149,6 +156,9 @@ namespace sbnd::crt {
           };
       fhicl::Atom<int> SpacePointColour {
         Name("SpacePointColour")
+          };
+      fhicl::Atom<int> TrackColour {
+        Name("TrackColour")
           };
 
       fhicl::Atom<double> MinTime {
@@ -195,6 +205,8 @@ namespace sbnd::crt {
 
     void Draw(detinfo::DetectorClocksData const& clockData, const art::Event& event);
 
+    bool IsPointInsideBox(const std::vector<double> &lims, const geo::Point_t &p);
+
   private:
     
     TPCGeoAlg         fTPCGeoAlg;
@@ -208,6 +220,7 @@ namespace sbnd::crt {
     art::InputTag fStripHitLabel;
     art::InputTag fClusterLabel;
     art::InputTag fSpacePointLabel;
+    art::InputTag fTrackLabel;
 
     bool fDrawTaggers;
     bool fDrawModules;
@@ -220,6 +233,7 @@ namespace sbnd::crt {
     bool fDrawStripHits;
     bool fDrawClusters;
     bool fDrawSpacePoints;
+    bool fDrawTracks;
 
     bool             fChoseTaggers;
     std::vector<int> fChosenTaggers;
@@ -234,6 +248,7 @@ namespace sbnd::crt {
     int fClusterStartingColour;
     int fClusterColourInterval;
     int fSpacePointColour;
+    int fTrackColour;
 
     double fMinTime;
     double fMaxTime;

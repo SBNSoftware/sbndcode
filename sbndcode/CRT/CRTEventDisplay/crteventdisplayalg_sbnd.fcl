@@ -12,6 +12,7 @@ crteventdisplayalg_sbnd:
    StripHitLabel:    "crtstrips"
    ClusterLabel:     "crtclustering"
    SpacePointLabel:  "crtspacepoints"
+   TrackLabel:       "crttracks"
 
    DrawTaggers:      true
    DrawModules:      false
@@ -24,6 +25,7 @@ crteventdisplayalg_sbnd:
    DrawStripHits:    true
    DrawClusters:     true
    DrawSpacePoints:  true
+   DrawTracks:       true
 
    ## If chose taggers is set to true then the vector ChosenTaggers
    ## is used to determine which taggers are drawn. The integer values
@@ -49,9 +51,10 @@ crteventdisplayalg_sbnd:
    ClusterStartingColour:    800
    ClusterColourInterval:    20
    SpacePointColour:         6
+   TrackColour:              9
 
-   MinTime: -910000
-   MaxTime: -900000
+   MinTime: -1300000
+   MaxTime: -1200000
 
    Print:            true
 
