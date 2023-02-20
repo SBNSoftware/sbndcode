@@ -1,38 +1,33 @@
 set(
     MODULE_LIBRARIES
-        larcorealg_CoreUtils
-        larcorealg_Geometry
-        larcore_Geometry_Geometry_service
-        larsim_Simulation lardataobj_Simulation
-        larsim_MCCheater_BackTrackerService_service
-        larsim_MCCheater_ParticleInventoryService_service
-        lardata_Utilities
-        larevt_Filters
-        lardataobj_RawData
-        lardataobj_RecoBase
-        lardataobj_MCBase
-        larreco_RecoAlg
-        lardata_RecoObjects
-        larpandora_LArPandoraInterface
-        nusimdata_SimulationBase
-        ${ART_FRAMEWORK_CORE}
-        ${ART_FRAMEWORK_PRINCIPAL}
-        ${ART_FRAMEWORK_SERVICES_REGISTRY}
-        ${ART_ROOT_IO_TFILE_SUPPORT} ${ROOT_CORE}
-        ${ART_ROOT_IO_TFILESERVICE_SERVICE}
-        art_Persistency_Common canvas
-        art_Persistency_Provenance canvas
-        art_Utilities canvas
-        ${MF_MESSAGELOGGER}
-
-        ${FHICLCPP}
-        ${ROOT_GEOM}
-        ${ROOT_XMLIO}
-        ${ROOT_GDML}
-        ${ROOT_EVE_LIB_LIST}
-        ${ROOT_X3d}
-        ${ROOT_BASIC_LIB_LIST}
-        sbndcode_RecoUtils
+        sbndcode::Geometry
+        larcorealg::Geometry
+        larcore::Geometry_Geometry_service
+        lardata::Utilities
+        lardataobj::AnalysisBase
+        lardataobj::RecoBase
+        larsim::Simulation
+        lardataobj::Simulation
+        larpandora::LArPandoraInterface
+        nusimdata::SimulationBase
+        canvas::canvas
+        cetlib::cetlib
+        cetlib_except::cetlib_except
+        art::Framework_Core
+        art::Framework_Principal
+        art::Framework_Services_Registry
+        art_root_io::tfile_support ROOT::Core
+        art_root_io::TFileService_service
+        art::Persistency_Common
+        art::Persistency_Provenance
+        art::Utilities
+        messagefacility::MF_MessageLogger
+        fhiclcpp::fhiclcpp
+        ROOT::Geom
+        ROOT::XMLIO
+        ROOT::Gdml
+        ROOT::Core
+        ROOT::Tree
 )
 
 cet_build_plugin(CosmicTagger art::module SOURCE CosmicTagger_module.cc LIBRARIES ${MODULE_LIBRARIES})

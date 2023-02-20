@@ -21,6 +21,7 @@
 
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "lardataobj/RecoBase/Wire.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
 
 class CosmicTagger;
@@ -78,9 +79,10 @@ void CosmicTagger::produce(art::Event& e)
   for (size_t i = 0; i < mct_v.size(); i++) {
 
     // Neutrino vertex
-    mct_v[i]->GetNeutrino().Nu().Vx();
-    mct_v[i]->GetNeutrino().Nu().Vy();
-    mct_v[i]->GetNeutrino().Nu().Vz();
+    double nu_x = mct_v[i]->GetNeutrino().Nu().Vx();
+    double nu_y = mct_v[i]->GetNeutrino().Nu().Vy();
+    double nu_z = mct_v[i]->GetNeutrino().Nu().Vz();
+    std::cout << geom.NearestWireID({nu_x, nu_y, nu_z}, geo::PlaneID(0, 0, 0)) << std::endl;
 
   }
 
@@ -98,6 +100,7 @@ void CosmicTagger::produce(art::Event& e)
 
   for (auto const &wire : wire_v) {
     // Wires...
+    std::cout << wire->Channel() << std::endl;
   }
 
 
