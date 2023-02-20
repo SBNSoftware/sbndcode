@@ -38,6 +38,7 @@ crttrackproducer_sbnd:
 {
    CRTSpacePointModuleLabel:   "crtspacepoints"
    CoincidenceTimeRequirement: 100.
+   ThirdSpacePointMaximumDCA:  50.
    module_type:                "sbndcode/CRT/CRTReco/CRTTrackProducer"
 }
 

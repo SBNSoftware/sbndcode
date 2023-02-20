@@ -23,8 +23,11 @@ namespace sbnd::crt {
     // Returns the coordinate direction of the strip's width given the tagger & local orientation
     enum CoordSet GetStripWidthGlobalCoordinate(const CRTTagger tagger, const uint16_t orientation);
 
-    // Returns whether the tagger is horizontal (top or bottom), useful for track building
-    bool IsHorizontalTagger(const CRTTagger tagger);
+    // Returns whether the tagger is one of the top taggers, useful for track building
+    bool IsTopTagger(const CRTTagger tagger);
+
+    // Returns whether a set of three taggers includes both of the top taggers, useful for track building
+    bool CoverTopTaggers(const CRTTagger tagger1, const CRTTagger tagger2, const CRTTagger tagger3);
   }
 }
 

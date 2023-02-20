@@ -17,6 +17,9 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "Math/GenVector/PositionVector2D.h"
+#include "Math/GenVector/DisplacementVector2D.h"
+
 #include "lardata/Utilities/AssociationUtil.h"
 
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
@@ -25,7 +28,20 @@
 
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
+#include "Eigen/Dense"
+
+#include "TMath.h"
+
 #include <memory>
+
+
+namespace geo {
+  using Point2D_t = ROOT::Math::PositionVector2D<ROOT::Math::Cartesian2D<double>,
+                                                 ROOT::Math::GlobalCoordinateSystemTag>;
+
+  using Vector2D_t = ROOT::Math::DisplacementVector2D<ROOT::Math::Cartesian2D<double>,
+                                                      ROOT::Math::GlobalCoordinateSystemTag>;
+}
 
 namespace sbnd::crt {
   class CRTTrackProducer;
@@ -54,10 +70,26 @@ public:
 
   std::vector<std::pair<CRTTrack, std::set<unsigned>>> ChoseTracks(std::vector<std::pair<CRTTrack, std::set<unsigned>>> &trackCandidates);
 
+  double DistanceOfClosestApproach(const CRTTagger tagger, const art::Ptr<CRTSpacePoint> &spacePoint,
+                                   const geo::Point_t &start, const geo::Vector_t &dir);
+
+  bool IsPointInsideBox(const geo::Point_t &point, const geo::Point_t &centre, const geo::Point_t &widths);
+
+  double DistanceOfClosestApproach(const CoordSet &constrainedPlane, const geo::Point_t &point,
+                                   const geo::Point_t &centre, const geo::Point_t &widths);
+
+  double MinimumApproach(const double &x, const double &dx, const double &y, const double &dy, const geo::Point2D_t &p);
+
+  double DistanceOfClosestApproach(const geo::Point2D_t &v1, const geo::Point2D_t &v2, const geo::Point2D_t &p);
+
+  void BestFitLine(const geo::Point_t &a, const geo::Point_t &b, const geo::Point_t &c,
+                   geo::Point_t &start, geo::Vector_t &dir, double &gof);
+
 private:
 
   std::string fCRTSpacePointModuleLabel;
   double      fCoincidenceTimeRequirement;
+  double      fThirdSpacePointMaximumDCA;
 };
 
 
@@ -65,6 +97,7 @@ sbnd::crt::CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
   , fCRTSpacePointModuleLabel(p.get<std::string>("CRTSpacePointModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<double>("CoincidenceTimeRequirement"))
+  , fThirdSpacePointMaximumDCA(p.get<double>("ThirdSpacePointMaximumDCA"))
   {
     produces<std::vector<CRTTrack>>();
     produces<art::Assns<CRTSpacePoint, CRTTrack>>();
@@ -134,22 +167,49 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
           const geo::Point_t &end   = secondarySpacePoint->Pos();
           const geo::Vector_t &dir  = (end - start).Unit();
 
-          if(CRTCommonUtils::IsHorizontalTagger(primaryCluster->Tagger()) && CRTCommonUtils::IsHorizontalTagger(secondaryCluster->Tagger()))
+          if(CRTCommonUtils::IsTopTagger(primaryCluster->Tagger()) || CRTCommonUtils::IsTopTagger(secondaryCluster->Tagger()))
             {
               for(unsigned iii = ii + 1; iii < spacePointVec.size(); ++iii)
                 {
-                  const art::Ptr<CRTSpacePoint> tertiarySpacePoint = spacePointVec[ii];
+                  const art::Ptr<CRTSpacePoint> tertiarySpacePoint = spacePointVec[iii];
                   const art::Ptr<CRTCluster> tertiaryCluster       = spacePointsToCluster.at(tertiarySpacePoint.key());
 
-                  if(!CRTCommonUtils::IsHorizontalTagger(tertiaryCluster->Tagger()))
+                  if(!CRTCommonUtils::CoverTopTaggers(primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()))
                     continue;
 
                   if(tertiarySpacePoint->Time() - primarySpacePoint->Time() > fCoincidenceTimeRequirement ||
                      tertiaryCluster->Tagger() == primaryCluster->Tagger())
                     continue;
 
-                  // const geo::Point_t &tertiaryPos = tertiarySpacePoint->Pos();
+                  if(tertiarySpacePoint->Time() - secondarySpacePoint->Time() > fCoincidenceTimeRequirement ||
+                     tertiaryCluster->Tagger() == secondaryCluster->Tagger())
+                    continue;
 
+                  const CRTTagger &tertiaryTagger = tertiaryCluster->Tagger();
+
+                  const double dca = DistanceOfClosestApproach(tertiaryTagger, tertiarySpacePoint, start, dir);
+
+                  if(dca < fThirdSpacePointMaximumDCA)
+                    {
+                      geo::Point_t fitStart;
+                      geo::Vector_t fitDir;
+                      double gof;
+
+                      BestFitLine(primarySpacePoint->Pos(), secondarySpacePoint->Pos(), tertiarySpacePoint->Pos(),
+                                  fitStart, fitDir, gof);
+
+                      double time, etime;
+                      const std::vector<double> times = {primarySpacePoint->Time(), secondarySpacePoint->Time(), tertiarySpacePoint->Time()};
+                      TimeErrorCalculator(times, time, etime);
+
+                      const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE() + tertiarySpacePoint->PE();
+                      const std::vector<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()};
+
+                      const CRTTrack track(fitStart, fitDir, time, etime, pe, true, used_taggers);
+                      const std::set<unsigned> used_spacepoints = {i, ii, iii};
+
+                      candidates.emplace_back(track, used_spacepoints);
+                    }
                 }
             }
           else
@@ -220,6 +280,144 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
     }
 
   return chosenTracks;
+}
+
+double sbnd::crt::CRTTrackProducer::DistanceOfClosestApproach(const CRTTagger tagger, const art::Ptr<CRTSpacePoint> &spacePoint,
+                                                              const geo::Point_t &start, const geo::Vector_t &dir)
+{
+  const CoordSet constrainedPlane = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
+  const geo::Point_t spacePointCentre = spacePoint->Pos();
+  const geo::Point_t spacePointWidths = spacePoint->Err();
+
+  double k;
+
+  switch(constrainedPlane)
+    {
+    case kX:
+      k = (spacePointCentre.X() - start.X()) / dir.X();
+      break;
+    case kY:
+      k = (spacePointCentre.Y() - start.Y()) / dir.Y();
+      break;
+    case kZ:
+      k = (spacePointCentre.Z() - start.Z()) / dir.Z();
+      break;
+    default:
+      std::cout << "Tagger not defined in one plane" << std::endl;
+      k = 999999.;
+      break;
+    }
+
+  const geo::Point_t planePoint = start + k * dir;
+
+  if(IsPointInsideBox(planePoint, spacePointCentre, spacePointWidths))
+    return 0.;
+
+  return DistanceOfClosestApproach(constrainedPlane, planePoint, spacePointCentre, spacePointWidths);
+}
+
+bool sbnd::crt::CRTTrackProducer::IsPointInsideBox(const geo::Point_t &point, const geo::Point_t &centre, const geo::Point_t &widths)
+{
+  return (point.X() < centre.X() + widths.X())
+    && (point.X() > centre.X() - widths.X())
+    && (point.Y() < centre.Y() + widths.Y())
+    && (point.Y() > centre.Y() - widths.Y())
+    && (point.Z() < centre.Z() + widths.Z())
+    && (point.Z() > centre.Z() - widths.Z());
+}
+
+double sbnd::crt::CRTTrackProducer::DistanceOfClosestApproach(const CoordSet &constrainedPlane, const geo::Point_t &point,
+                                                              const geo::Point_t &centre, const geo::Point_t &widths)
+{
+  switch(constrainedPlane)
+    {
+    case kX:
+      return MinimumApproach(centre.Y(), widths.Y(), centre.Z(), widths.Z(), {point.Y(), point.Z()});
+    case kY:
+      return MinimumApproach(centre.X(), widths.X(), centre.Z(), widths.Z(), {point.X(), point.Z()});
+    case kZ:
+      return MinimumApproach(centre.X(), widths.X(), centre.Y(), widths.Y(), {point.X(), point.Y()});
+    default:
+      std::cout << "Tagger not defined in one plane" << std::endl;
+      return 999999.;
+    }
+}
+
+double sbnd::crt::CRTTrackProducer::MinimumApproach(const double &x, const double &dx, const double &y, const double &dy, const geo::Point2D_t &p)
+{
+  const geo::Point2D_t v1(x - dx, y - dy);
+  const geo::Point2D_t v2(x - dx, y + dy);
+  const geo::Point2D_t v3(x + dx, y - dy);
+  const geo::Point2D_t v4(x + dx, y + dy);
+
+  return std::min({DistanceOfClosestApproach(v1, v2, p),
+        DistanceOfClosestApproach(v4, v2, p),
+        DistanceOfClosestApproach(v3, v4, p),
+        DistanceOfClosestApproach(v1, v3, p)
+        });
+}
+
+double sbnd::crt::CRTTrackProducer::DistanceOfClosestApproach(const geo::Point2D_t &v1, const geo::Point2D_t &v2, const geo::Point2D_t &p)
+{
+  const geo::Vector2D_t line = v2 - v1;
+  const geo::Vector2D_t v1p  = p - v1;
+  const geo::Vector2D_t v2p  = p - v2;
+
+  const double angle1 = TMath::RadToDeg() * TMath::ACos(line.Dot(v1p) / line.R() * v1p.R());
+  const double angle2 = TMath::RadToDeg() * TMath::ACos(line.Dot(v2p) / line.R() * v2p.R());
+
+  if((angle1 > 90 && angle2 > 90) || (angle1 < 90 && angle2 < 90))
+    return std::min(v1p.R(), v2p.R());
+  else
+    return std::abs((line.Y() * (p.X() - v1.X())) + (line.X() * (p.Y() - v1.Y()))) / line.R();
+}
+
+void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const geo::Point_t &b, const geo::Point_t &c,
+                                              geo::Point_t &start, geo::Vector_t &dir, double &gof)
+{
+  Eigen::Matrix3d X {
+    {a.X(), a.Y(), a.Z()},
+    {b.X(), b.Y(), b.Z()},
+    {c.X(), c.Y(), c.Z()}
+  };
+
+  Eigen::Matrix3d P {
+    {2/3., -1/3., -1/3.},
+    {-1/3., 2/3., -1/3.},
+    {-1/3., -1/3., 2/3.}
+  };
+
+  Eigen::Matrix3d sol = X.transpose() * P * X;
+
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigenMat(sol);
+
+  if(eigenMat.info() != Eigen::ComputationInfo::Success)
+    {
+      std::cout << "Decomposition Issue" << std::endl;
+      return;
+    }
+
+  const auto &eigenValues(eigenMat.eigenvalues());
+
+  std::vector<std::pair<float, unsigned>> eigenValuesAndColumns = {
+    {eigenValues[0], 0},
+    {eigenValues[1], 1},
+    {eigenValues[2], 2}
+  };
+
+  std::sort(eigenValuesAndColumns.begin(), eigenValuesAndColumns.end(),
+            [](const auto &a, const auto& b) { return a.first > b.first; });
+
+  const Eigen::Matrix3d eigenVectors = eigenMat.eigenvectors();
+  const unsigned column = eigenValuesAndColumns[0].second;
+
+  const Eigen::Vector3d eigenVector = { eigenVectors(0, column), eigenVectors(1, column), eigenVectors(2, column) };
+
+  start = {a.X() + b.X() + c.X(), a.Y() + b.Y() + c.Y(), a.Z() + b.Z() + c.Z()};
+  start /= 3.;
+
+  dir = {eigenVector(0), eigenVector(1), eigenVector(2)};
+  gof = eigenValuesAndColumns[0].first;
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTrackProducer)

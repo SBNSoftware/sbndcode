@@ -34,6 +34,7 @@ simple_plugin(
               lardata::Utilities
               sbnobj::SBND_CRT
               sbndcode_CRTUtils
+              Eigen3::Eigen
 )
 
 install_fhicl()

@@ -58,8 +58,14 @@ namespace sbnd::crt {
     return kUndefinedSet;
   }
 
-  bool CRTCommonUtils::IsHorizontalTagger(const CRTTagger tagger)
+  bool CRTCommonUtils::IsTopTagger(const CRTTagger tagger)
   {
-    return tagger == kBottomTagger || tagger == kTopLowTagger || tagger == kTopHighTagger;
+    return tagger == kTopLowTagger || tagger == kTopHighTagger;
+  }
+
+  bool CRTCommonUtils::CoverTopTaggers(const CRTTagger tagger1, const CRTTagger tagger2, const CRTTagger tagger3)
+  {
+    return ( tagger1 == kTopLowTagger || tagger2 == kTopLowTagger || tagger3 == kTopLowTagger)
+      && ( tagger1 == kTopHighTagger || tagger2 == kTopHighTagger || tagger3 == kTopHighTagger);
   }
 }
