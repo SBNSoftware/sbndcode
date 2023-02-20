@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+cosmictagger:
+{
+  module_type: "CosmicTagger"
+
+  WireLaberl: "caldara"
+  MCTruthLabel: "generator"
+}
+
+END_PROLOG
+
