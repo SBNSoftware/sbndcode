@@ -252,10 +252,10 @@ libdir	fq_dir		lib
 #
 ####################################
 product		version		qual	flags		<table_format=2>
-sbncode		v09_66_00	-
+sbncode		v09_66_02	-
 cetmodules	v3_20_00	-	only_for_build
 sbnd_data	v01_17_00	-	optional
-sbndutil	v09_66_00	-	optional
+sbndutil	v09_66_02	-	optional
 end_product_list
 ####################################
 
