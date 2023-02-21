@@ -1033,7 +1033,7 @@ class sbnd::DaqDecoderSBNDPMT: public art::EDProducer {
   
   
   // --- BEGIN -- Timestamps ---------------------------------------------------
-  
+ 
   /// Retrieves the global trigger time stamp from the event.
   TriggerInfo_t fetchTriggerTimestamp(art::Event const& event) const;
   
@@ -1710,7 +1710,7 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
   //
   
   fDataCacheRemover.useEvent(event);
-  
+ 
   //
   // global trigger
   //
@@ -1731,7 +1731,7 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
     log << ", type: " << name(triggerInfo.triggerType);
     if (fTriggerTag) log << ", spill count: " << triggerInfo.gateCount;
   } // local block
-  
+ 
   //
   // event ID
   //
@@ -1822,7 +1822,9 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
   mf::LogTrace(fLogCategory) << waveformsWithTrigger.size() << "/"
     << protoWaveforms.size() << " decoded waveforms include trigger time ("
     << fNominalTriggerTime << ").";
+ 
   
+  /**LAN: COMMENT OUT TIME CORRECTIONS 
   // ---------------------------------------------------------------------------
   // Time corrections
   //
@@ -1853,13 +1855,10 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
 
     try {
 
-//apapadop
-/*
       fPMTWaveformTimeCorrectionManager.findWaveformTimeCorrections(
           waveform.waveform, 
           (waveform.channelSetup->category == fCorrectionInstance ? fApplyCableDelayCorrection : false),
           itCorr->second );
-*/
     }
 
     catch (sbnd::timing::PMTWaveformTimeCorrectionExtractor::MultipleCorrectionsForChannel const& e) {
@@ -1894,6 +1893,11 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
   
   std::map<std::string, std::vector<raw::OpDetWaveform>> waveformProducts
      = prepareOutputWaveforms(std::move(protoWaveforms), waveformCorrection);
+  END OF LAN **/
+
+  //LAN: Default waveformCorrection to nullptr for now, in case we need it?
+  std::map<std::string, std::vector<raw::OpDetWaveform>> waveformProducts
+     = prepareOutputWaveforms(std::move(protoWaveforms), nullptr);
 
   // create metadata for standard waveforms and, optionally, their associations
   auto [ waveformMeta, metaToWaveform ]
@@ -1909,7 +1913,8 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
     event.put(moveToUniquePtr(waveforms), category);
   }
   if (fSaveRegulatWaveforms) event.put(moveToUniquePtr(metaToWaveform));
-  
+ 
+  /**LAN: Don't need to save correction for now 
   // put all the categories of corrections
   for( std::string const& category: fSaveCorrectionsFrom ){
     event.put(
@@ -1917,6 +1922,7 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
       category // the instance name is the category the waveforms belong to
       );
   }
+ END OF LAN **/
   
   event.put(moveToUniquePtr(waveformMeta)); // always save regular metadata
   
@@ -1941,8 +1947,8 @@ artdaq::Fragments const& sbnd::DaqDecoderSBNDPMT::readInputFragments
   art::Handle<artdaq::Fragments> handle;
   art::InputTag selectedInputTag; // empty
   for (art::InputTag const& inputTag: fInputTags) {
-    
-    mf::LogTrace(fLogCategory)
+   
+     mf::LogTrace(fLogCategory)
       << "DaqDecoderSBNDPMT trying data product: '" << inputTag.encode()
       << "'";
     
@@ -1958,6 +1964,7 @@ artdaq::Fragments const& sbnd::DaqDecoderSBNDPMT::readInputFragments
         << "Found multiple suitable input candidates: '"
         << inputTag.encode() << "' and '" << selectedInputTag << "'\n";
     }
+   
     selectedInputTag = inputTag;
     handle = thisHandle;
   } // for
@@ -2332,7 +2339,7 @@ auto sbnd::DaqDecoderSBNDPMT::processBoardFragments(
   mf::LogTrace(fLogCategory)
     << " - " << boardInfo.name << ": " << artdaqFragments.size()
     << " fragments";
-  
+ 
   std::vector<ProtoWaveform_t> waveforms;
   for (artdaq::FragmentPtr const& fragment: artdaqFragments)
     appendTo(waveforms, processFragment(*fragment, boardInfo, triggerInfo));
@@ -2356,10 +2363,7 @@ auto sbnd::DaqDecoderSBNDPMT::processFragment(
   if (fPacketDump) {
     mf::LogVerbatim{ fLogCategory } << "PMT packet:"
       << "\n" << std::string(80, '-')
-// apapadop
-/*
       << "\n" << sbndaq::dumpFragment(artdaqFragment)
-*/
       << "\n" << std::string(80, '-')
       ;
   } // if diagnostics
@@ -2693,7 +2697,11 @@ auto sbnd::DaqDecoderSBNDPMT::prepareOutputWaveforms(
       + extractTimeCorrection
         (waveform.waveform, useCorrection? timeCorrections: nullptr)
       ;
-    
+   
+    //LAN: IS THERE TIME CORRECTION?
+    std::cout << "Time Correction = " << extractTimeCorrection(waveform.waveform, useCorrection? timeCorrections: nullptr) << std::endl;
+
+ 
     // Set a new Timestamp
     waveform.waveform.SetTimeStamp(correctTimeStamp);
     itOutputWaves->second.push_back(std::move(waveform.waveform));
@@ -2897,7 +2905,24 @@ auto sbnd::DaqDecoderSBNDPMT::extractFragmentInfo
         << ", time stamp: " << (fragmentTimestamp / 1'000'000'000UL)
           << "." << (fragmentTimestamp % 1'000'000'000UL) << " s"
       ;
-    
+   
+     //LAN: dump out for info
+     std::cout 
+
+      << "----> PMT Fragment ID: " << fragment_id << std::dec
+        << ", size: " << eventSize << " B"
+        << ", data size: " << samplesInFragment << " samples"
+      << "\n    "
+        << "  channels/board: " << nChannelsPerBoard
+        << ", enabled: " << sbnd::ns::util::bin(enabledChannels)
+        << ", samples/channel: " << nSamplesPerChannel
+      << "\n    "
+        << "  event counter: " << eventCounter
+        << ", trigger time tag: " << TTT
+        << ", time stamp: " << (fragmentTimestamp / 1'000'000'000UL)
+          << "." << (fragmentTimestamp % 1'000'000'000UL) << " s"
+    << std::endl;
+
   } // if diagnostics
 
   //
