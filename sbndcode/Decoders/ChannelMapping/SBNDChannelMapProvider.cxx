@@ -48,7 +48,11 @@ SBNDChannelMapProvider::SBNDChannelMapProvider(const fhicl::ParameterSet& pset) 
     else if (fDiagnosticOutput)
       {
 	std::cout << "FragmentID to Readout ID map has " << fFragmentToDigitizerMap.size() << " Fragment IDs";
-	 for(const auto& pair : fFragmentToDigitizerMap) std::cout << "   Frag: " << std::hex << pair.first << ", # pairs: " 
+
+// 	for(const auto& pair : fFragmentToDigitizerMap) std::cout << "   Frag: " << std::hex << pair.first << ", # pairs: " 
+//								   << std::dec << pair.second.size() << std::endl;
+	 
+         for(const auto& pair : fFragmentToDigitizerMap) std::cout << "   Frag: " << std::dec << pair.first << ", # pairs: " 
 								   << std::dec << pair.second.size() << std::endl;
       }
     

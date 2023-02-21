@@ -128,9 +128,8 @@ int ChannelMapPostGres::BuildFragmentToDigitizerChannelMap(FragmentToDigitizerCh
     // We do this by looping through the database and building the map from that
 
 //    for(int row = 1; row < getNtuples(dataset); row++)
-    for(int row = 1; row < getNtuples(dataset) + 1; row++)
+    for(int row = 1; row < getNtuples(dataset) + 2; row++)
     {
-      
         // Recover the row
         Tuple tuple = getTuple(dataset, row);
         if (tuple != NULL)
@@ -164,7 +163,8 @@ int ChannelMapPostGres::BuildFragmentToDigitizerChannelMap(FragmentToDigitizerCh
             // Fill the map
             fragmentToDigitizerChannelMap[fragmentID].emplace_back(digitizerChannelNo,channelID,laserChannel);
             releaseTuple(tuple);
- 
+
+            std::cout << "row #: " << row << ", fragmentID: " << fragmentID << std::endl; 
        }
     }
 
