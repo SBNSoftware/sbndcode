@@ -1,15 +1,45 @@
-<lcgdict>
+<!--
   
+  ROOT dictionary generation for:
+  
+  * `sbn::OpDetWaveformMeta`
+  
+  
+  Reminder:
+  
+  * include `art::Wrapper` lines for objects that we would like to put into the event
+  * include the non-wrapper lines for all objects on the `art::Wrapper` lines
+    and for all objects that are data members of those objects.
+  
+  -->
+
+
+<lcgdict>
   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-  <!-- sbnd::timing::PMTWaveformTimeCorrection -->
-  <class name="sbnd::timing::PMTWaveformTimeCorrection" ClassVersion="11" >
-   <version ClassVersion="11" checksum="849345931"/>
-   <version ClassVersion="10" checksum="1609503266"/>
+  <!-- sbn::OpDetWaveformMeta -->
+
+  <!--   class -->
+  <class name="sbn::OpDetWaveformMeta" ClassVersion="11" >
+   <version ClassVersion="11" checksum="1457230748"/>
+   <!--<version ClassVersion="10" checksum="3749235884"/>-->
   </class>
 
-  <class name="art::Ptr<sbnd::timing::PMTWaveformTimeCorrection>"/>
-  <class name="std::vector<sbnd::timing::PMTWaveformTimeCorrection>"/>
-  <class name="art::Wrapper<std::vector<sbnd::timing::PMTWaveformTimeCorrection> >"/>
+    <!-- dependencies -->
 
-  
+    <!-- art pointers and wrappers -->
+  <class name="art::Ptr<sbn::OpDetWaveformMeta>"/>
+  <class name="std::vector<sbn::OpDetWaveformMeta>"/>
+  <class name="art::Wrapper<std::vector<sbn::OpDetWaveformMeta>>"/>
+
+    <!-- associations and wrappers -->
+      <!-- raw::OpDetWaveform -->
+  <class name="art::Assns<sbn::OpDetWaveformMeta, raw::OpDetWaveform, void>"/>
+  <class name="art::Assns<raw::OpDetWaveform, sbn::OpDetWaveformMeta, void>"/>
+  <class name="std::pair<sbn::OpDetWaveformMeta, raw::OpDetWaveform>"/>
+  <class name="std::pair<raw::OpDetWaveform, sbn::OpDetWaveformMeta>"/>
+  <class name="art::Wrapper<art::Assns<sbn::OpDetWaveformMeta, raw::OpDetWaveform, void>>"/>
+  <class name="art::Wrapper<art::Assns<raw::OpDetWaveform, sbn::OpDetWaveformMeta, void>>"/>
+
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
 </lcgdict>

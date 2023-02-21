@@ -18,7 +18,7 @@ art_make_library(SUBDIRS details
 )
 
 set(        TOOL_LIBRARIES
-                sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_ICARUS
+                sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND
                 artdaq_core::artdaq-core_Utilities
                 sbndcode::Decoders_DecoderTools
                 sbndcode::Decoders_DecoderTools_Dumpers
