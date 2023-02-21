@@ -1815,6 +1815,7 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
   //
   // post-processing
   //
+  /** LAN: COMMENT OUT SORTING WAVEFORMS
   sortWaveforms(protoWaveforms);
   
   std::vector<ProtoWaveform_t const*> const waveformsWithTrigger
@@ -1822,7 +1823,7 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
   mf::LogTrace(fLogCategory) << waveformsWithTrigger.size() << "/"
     << protoWaveforms.size() << " decoded waveforms include trigger time ("
     << fNominalTriggerTime << ").";
- 
+  END OF LAN**/ 
   
   /**LAN: COMMENT OUT TIME CORRECTIONS 
   // ---------------------------------------------------------------------------
