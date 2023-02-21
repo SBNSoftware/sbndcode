@@ -2961,11 +2961,15 @@ electronics_time sbnd::DaqDecoderSBNDPMT::fragmentWaveformTimestamp(
     return NoTimestamp;
   }
   
-  if (fTTTresetEverySecond)
+  if (fTTTresetEverySecond){
+    //LAN: which timestamp is being used?
+    std::cout << "Timestamp from TTT" << std::endl;
     return fragmentWaveformTimestampFromTTT(fragInfo, boardInfo, triggerTime);
-  else
+  }
+  else{
+    std::cout << "Timestamp on Trigger" << std::endl;
     return fragmentWaveformTimestampOnTrigger(fragInfo, boardInfo, triggerTime);
-  
+  }
 } // sbnd::DaqDecoderSBNDPMT::fragmentWaveformTimestamp()
 
 
@@ -2997,6 +3001,8 @@ auto sbnd::DaqDecoderSBNDPMT::fragmentWaveformTimestampFromTTT(
   SplitTimestamp_t triggerTime
 ) const -> electronics_time {
   
+  //LAN: THIS IS IRRELEVANT TO SBND. NOT CLEAR HOW TO DISTANGLE 
+ 
   /*
    * 1. goal is a timestamp in electronics time
    * 2. we have the global trigger time in electronics time
