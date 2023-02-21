@@ -1096,7 +1096,7 @@ class sbnd::DaqDecoderSBNDPMT: public art::EDProducer {
   mutable util::ArtHandleTrackerManager<art::Event> fDataCacheRemover;
   
   /// Reads the fragments to be processed.
-  artdaq::Fragments const& readInputFragments(art::Event const& event) const;
+  std::vector<art::Handle<artdaq::Fragments>> readInputFragments(art::Event const& event) const;
   
   /// Throws an exception if `artdaqFragment` is not of type `CAEN1730`.
   void checkFragmentType(artdaq::Fragment const& artdaqFragment) const;
@@ -1755,32 +1755,37 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
   //
   
   std::unordered_map<BoardID_t, unsigned int> boardCounts;
-  bool duplicateBoards = false;
+  //bool duplicateBoards = false; LAN: COMMENT OUT BOARD EXTRACTION
   try { // catch-all
-    auto const& fragments = readInputFragments(event);
+
+    auto const fragmentHandles = readInputFragments(event);   
+
+    for (auto const& handle : fragmentHandles) {
+
+      for (auto const& frag : *handle) {   
+
+	artdaq::FragmentPtrs const& fragmentCollection
+        = makeFragmentCollection(frag);
+      
+        if (empty(fragmentCollection)) {
+          mf::LogWarning("DaqDecoderSBNDPMT")
+            << "Found a data fragment (ID=" << extractFragmentBoardID(frag)
+            << ") containing no data.";
+          continue;
+        } // if no data
     
-    for (artdaq::Fragment const& fragment: fragments) {
-      
-      artdaq::FragmentPtrs const& fragmentCollection
-        = makeFragmentCollection(fragment);
-      
-      if (empty(fragmentCollection)) {
-        mf::LogWarning("DaqDecoderSBNDPMT")
-          << "Found a data fragment (ID=" << extractFragmentBoardID(fragment)
-          << ") containing no data.";
-        continue;
-      } // if no data
-      
-      BoardID_t const boardID
-        = extractFragmentBoardID(*(fragmentCollection.front()));
-      if (++boardCounts[boardID] > 1U) duplicateBoards = true;
-      
-      appendTo(
-        protoWaveforms,
-        processBoardFragments(fragmentCollection, triggerInfo)
-        );
-      
-    } // for all input fragments
+        /** LAN: COMMENT OUT BOARD EXTRACTION  
+        BoardID_t const boardID
+          = extractFragmentBoardID(*(fragmentCollection.front()));
+        if (++boardCounts[boardID] > 1U) duplicateBoards = true;
+        END OF LAN **/
+
+        appendTo(
+          protoWaveforms,
+          processBoardFragments(fragmentCollection, triggerInfo)
+          );
+      } // for fragment 
+    } // for handle
     
   }
   catch (cet::exception const& e) {
@@ -1797,7 +1802,8 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
     protoWaveforms.clear();
     ++fNFailures;
   }
-  
+ 
+  /** LAN: COMMENT OUT BOARD EXTRACTION 
   if (duplicateBoards) {
     mf::LogWarning log { "DaqDecoderSBNDPMT" };
     log << "found multiple data product entries for the same board:";
@@ -1806,7 +1812,7 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
       log << " " << std::hex << boardID << std::dec << " (x" << count << ");";
     } // for
   } // if duplicate board fragments
-  
+  END OF LAN **/
   
   // we are done with the input: drop the caches
   // (if we were asked not to, no data is registered)
@@ -1942,45 +1948,38 @@ void sbnd::DaqDecoderSBNDPMT::endJob() {
 
 
 //------------------------------------------------------------------------------
-artdaq::Fragments const& sbnd::DaqDecoderSBNDPMT::readInputFragments
+std::vector<art::Handle<artdaq::Fragments>> sbnd::DaqDecoderSBNDPMT::readInputFragments
   (art::Event const& event) const
 {
-  art::Handle<artdaq::Fragments> handle;
-  art::InputTag selectedInputTag; // empty
+  std::vector<art::Handle<artdaq::Fragments>> fragmentHandles;
+
   for (art::InputTag const& inputTag: fInputTags) {
    
-     mf::LogTrace(fLogCategory)
+    mf::LogTrace(fLogCategory)
       << "DaqDecoderSBNDPMT trying data product: '" << inputTag.encode()
       << "'";
     
     auto const& thisHandle = event.getHandle<artdaq::Fragments>(inputTag);
     if (!thisHandle.isValid() || thisHandle->empty()) continue;
-    
+   
     mf::LogTrace(fLogCategory)
       << "  => data product: '" << inputTag.encode() << "' is present and has "
       << thisHandle->size() << " entries";
     
-    if (!selectedInputTag.empty()) {
-      throw cet::exception("DaqDecoderSBNDPMT")
-        << "Found multiple suitable input candidates: '"
-        << inputTag.encode() << "' and '" << selectedInputTag << "'\n";
-    }
-   
-    selectedInputTag = inputTag;
-    handle = thisHandle;
+    fragmentHandles.push_back(thisHandle); 
+    
+    if (fDropRawDataAfterUse) fDataCacheRemover.registerHandle(thisHandle);
   } // for
-  
-  if (!handle.isValid()) {
+
+  if(fragmentHandles.empty()){
     cet::exception e { "DaqDecoderSBNDPMT" };
     e << "No suitable input data product found among:";
     for (art::InputTag const& inputTag: fInputTags)
       e << " '" << inputTag.encode() << "'";
     throw e << "\n";
   }
-  
-  if (fDropRawDataAfterUse) fDataCacheRemover.registerHandle(handle);
-  
-  return *handle;
+
+  return fragmentHandles;
 } // sbnd::DaqDecoderSBNDPMT::readInputFragments()
 
 
