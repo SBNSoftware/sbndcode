@@ -436,8 +436,10 @@ void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const CRTTa
   mean /= 3.;
 
   dir   = {eigenVector(0), eigenVector(1), eigenVector(2)};
-  start = LineTaggerIntersectionPoint(mean, dir, primary_tagger);  
+  start = LineTaggerIntersectionPoint(mean, dir, primary_tagger);
   gof   = eigenValuesAndColumns[0].first;
+
+  if((start.X() - mean.X()) / dir.X() > 0) dir *= -1.;
 }
 
 double sbnd::crt::CRTTrackProducer::TripleTrackLength(const geo::Point_t &start, const geo::Vector_t &dir, std::set<CRTTagger> taggers)
