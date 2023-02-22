@@ -123,10 +123,10 @@ namespace sbnd::crt {
             const double sipmX  = fModules.at(moduleName).top ? halfWidth : -halfWidth;
 
             // Find world coordinates
-	    geo::AuxDetSensitiveGeo::LocalPoint_t const sipm0XYZ{sipmX, sipm0Y, 0};
+            geo::AuxDetSensitiveGeo::LocalPoint_t const sipm0XYZ{sipmX, sipm0Y, 0};
             auto const sipm0XYZWorld = auxDetSensitive.toWorldCoords(sipm0XYZ);
 
-	    geo::AuxDetSensitiveGeo::LocalPoint_t const sipm1XYZ{sipmX, sipm1Y, 0};
+            geo::AuxDetSensitiveGeo::LocalPoint_t const sipm1XYZ{sipmX, sipm1Y, 0};
             auto const sipm1XYZWorld = auxDetSensitive.toWorldCoords(sipm1XYZ);
 
             const uint32_t pedestal0 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel0) : fDefaultPedestal;
@@ -555,5 +555,17 @@ namespace sbnd::crt {
     const CoordSet taggercoord = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
 
     return widthdir | taggercoord;
+  }
+
+  bool CRTGeoAlg::IsPointInsideCRTLimits(const geo::Point_t &point)
+  {
+    const std::vector<double> lims = CRTLimits();
+
+    return point.X() > lims[0] &&
+           point.X() < lims[3] &&
+           point.Y() > lims[1] &&
+           point.Y() < lims[4] &&
+           point.Z() > lims[2] &&
+           point.Z() < lims[5];
   }
 }

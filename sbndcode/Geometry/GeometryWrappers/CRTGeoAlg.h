@@ -74,7 +74,7 @@ namespace sbnd::crt {
       channel0   = _channel0;
       channel1   = _channel1;
 
-     // Strip Dimensions
+      // Strip Dimensions
       double halfWidth  = auxDetSensitive.HalfWidth1();
       double halfHeight = auxDetSensitive.HalfHeight();
       double halfLength = auxDetSensitive.Length()/2.;
@@ -342,6 +342,8 @@ namespace sbnd::crt {
     enum CRTTagger WhichTagger(const double &x, const double &y, const double &z, const double &buffer = 1);
 
     enum CoordSet GlobalConstrainedCoordinates(const uint16_t channel);
+
+    bool IsPointInsideCRTLimits(const geo::Point_t &point);
 
   private:
 

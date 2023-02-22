@@ -8,6 +8,7 @@ crtbacktrackeralg_sbnd:
    StripHitModuleLabel:    "crtstrips"
    ClusterModuleLabel:     "crtclustering"
    SpacePointModuleLabel:  "crtspacepoints"
+   TrackModuleLabel:       "crttracks"
 }
 
 END_PROLOG
