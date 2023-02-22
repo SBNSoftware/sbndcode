@@ -23,6 +23,7 @@
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+#include "sbnobj/SBND/CRT/CRTTrack.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
@@ -59,13 +60,15 @@ public:
 
   void AnalyseTrueDeposits(const std::map<std::pair<int, CRTTagger>, bool> &recoStatusMap);
 
+  void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec);
+
 private:
 
   CRTGeoAlg fCRTGeoAlg;
   CRTBackTrackerAlg fCRTBackTrackerAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
-    fCRTClusterModuleLabel, fCRTSpacePointModuleLabel;
+    fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel;
   bool fDebug;
 
   TTree* fTree;
@@ -146,16 +149,16 @@ private:
   std::vector<double>   _cl_truth_hit_completeness;
   std::vector<double>   _cl_truth_hit_purity;
   std::vector<int>      _cl_truth_pdg;
+  std::vector<double>   _cl_truth_energy;
+  std::vector<double>   _cl_truth_time;
   std::vector<double>   _cl_truth_x;
   std::vector<double>   _cl_truth_y;
   std::vector<double>   _cl_truth_z;
-  std::vector<double>   _cl_truth_energy;
-  std::vector<double>   _cl_truth_time;
+  std::vector<double>   _cl_truth_core_energy;
+  std::vector<double>   _cl_truth_core_time;
   std::vector<double>   _cl_truth_core_x;
   std::vector<double>   _cl_truth_core_y;
   std::vector<double>   _cl_truth_core_z;
-  std::vector<double>   _cl_truth_core_energy;
-  std::vector<double>   _cl_truth_core_time;
   std::vector<bool>     _cl_has_sp;
   std::vector<double>   _cl_sp_x;
   std::vector<double>   _cl_sp_ex;
@@ -171,12 +174,45 @@ private:
   std::vector<int>     _td_trackid;
   std::vector<int>     _td_pdg;
   std::vector<int16_t> _td_tagger;
+  std::vector<double>  _td_energy;
+  std::vector<double>  _td_time;
   std::vector<double>  _td_x;
   std::vector<double>  _td_y;
   std::vector<double>  _td_z;
-  std::vector<double>  _td_energy;
-  std::vector<double>  _td_time;
   std::vector<bool>    _td_reco_status;
+
+  std::vector<double>              _tr_start_x;
+  std::vector<double>              _tr_start_y;
+  std::vector<double>              _tr_start_z;
+  std::vector<double>              _tr_dir_x;
+  std::vector<double>              _tr_dir_y;
+  std::vector<double>              _tr_dir_z;
+  std::vector<double>              _tr_time;
+  std::vector<double>              _tr_etime;
+  std::vector<double>              _tr_pe;
+  std::vector<double>              _tr_length;
+  std::vector<double>              _tr_tof;
+  std::vector<double>              _tr_theta;
+  std::vector<double>              _tr_phi;
+  std::vector<bool>                _tr_triple;
+  std::vector<std::array<bool, 7>> _tr_taggers;
+  std::vector<int>                 _tr_truth_trackid;
+  std::vector<double>              _tr_truth_completeness;
+  std::vector<double>              _tr_truth_purity;
+  std::vector<int>                 _tr_truth_pdg;
+  std::vector<double>              _tr_truth_energy;
+  std::vector<double>              _tr_truth_time;
+  std::vector<double>              _tr_truth_start_x;
+  std::vector<double>              _tr_truth_start_y;
+  std::vector<double>              _tr_truth_start_z;
+  std::vector<double>              _tr_truth_dir_x;
+  std::vector<double>              _tr_truth_dir_y;
+  std::vector<double>              _tr_truth_dir_z;
+  std::vector<double>              _tr_truth_particle_energy;
+  std::vector<double>              _tr_truth_length;
+  std::vector<double>              _tr_truth_tof;
+  std::vector<double>              _tr_truth_theta;
+  std::vector<double>              _tr_truth_phi;
 };
 
 sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
@@ -190,6 +226,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fCRTStripHitModuleLabel   = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
     fCRTClusterModuleLabel    = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
     fCRTSpacePointModuleLabel = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
+    fCRTTrackModuleLabel      = p.get<std::string>("CRTTrackModuleLabel", "crttracks");
     fDebug                    = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
@@ -269,16 +306,16 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_truth_hit_completeness", "std::vector<double>", &_cl_truth_hit_completeness);
     fTree->Branch("cl_truth_hit_purity", "std::vector<double>", &_cl_truth_hit_purity);
     fTree->Branch("cl_truth_pdg", "std::vector<int>", &_cl_truth_pdg);
+    fTree->Branch("cl_truth_energy", "std::vector<double>", &_cl_truth_energy);
+    fTree->Branch("cl_truth_time", "std::vector<double>", &_cl_truth_time);
     fTree->Branch("cl_truth_x", "std::vector<double>", &_cl_truth_x);
     fTree->Branch("cl_truth_y", "std::vector<double>", &_cl_truth_y);
     fTree->Branch("cl_truth_z", "std::vector<double>", &_cl_truth_z);
-    fTree->Branch("cl_truth_energy", "std::vector<double>", &_cl_truth_energy);
-    fTree->Branch("cl_truth_time", "std::vector<double>", &_cl_truth_time);
+    fTree->Branch("cl_truth_core_energy", "std::vector<double>", &_cl_truth_core_energy);
+    fTree->Branch("cl_truth_core_time", "std::vector<double>", &_cl_truth_core_time);
     fTree->Branch("cl_truth_core_x", "std::vector<double>", &_cl_truth_core_x);
     fTree->Branch("cl_truth_core_y", "std::vector<double>", &_cl_truth_core_y);
     fTree->Branch("cl_truth_core_z", "std::vector<double>", &_cl_truth_core_z);
-    fTree->Branch("cl_truth_core_energy", "std::vector<double>", &_cl_truth_core_energy);
-    fTree->Branch("cl_truth_core_time", "std::vector<double>", &_cl_truth_core_time);
     fTree->Branch("cl_has_sp", "std::vector<bool>", &_cl_has_sp);
     fTree->Branch("cl_sp_x", "std::vector<double>", &_cl_sp_x);
     fTree->Branch("cl_sp_ex", "std::vector<double>", &_cl_sp_ex);
@@ -294,12 +331,45 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("td_trackid", "std::vector<int>", &_td_trackid);
     fTree->Branch("td_pdg", "std::vector<int>", &_td_pdg);
     fTree->Branch("td_tagger", "std::vector<int16_t>", &_td_tagger);
+    fTree->Branch("td_energy", "std::vector<double>", &_td_energy);
+    fTree->Branch("td_time", "std::vector<double>", &_td_time);
     fTree->Branch("td_x", "std::vector<double>", &_td_x);
     fTree->Branch("td_y", "std::vector<double>", &_td_y);
     fTree->Branch("td_z", "std::vector<double>", &_td_z);
-    fTree->Branch("td_energy", "std::vector<double>", &_td_energy);
-    fTree->Branch("td_time", "std::vector<double>", &_td_time);
     fTree->Branch("td_reco_status", "std::vector<bool>", &_td_reco_status);
+
+    fTree->Branch("tr_start_x", "std::vector<double>", &_tr_start_x);
+    fTree->Branch("tr_start_y", "std::vector<double>", &_tr_start_y);
+    fTree->Branch("tr_start_z", "std::vector<double>", &_tr_start_z);
+    fTree->Branch("tr_dir_x", "std::vector<double>", &_tr_dir_x);
+    fTree->Branch("tr_dir_y", "std::vector<double>", &_tr_dir_y);
+    fTree->Branch("tr_dir_z", "std::vector<double>", &_tr_dir_z);
+    fTree->Branch("tr_time", "std::vector<double>", &_tr_time);
+    fTree->Branch("tr_etime", "std::vector<double>", &_tr_etime);
+    fTree->Branch("tr_pe", "std::vector<double>", &_tr_pe);
+    fTree->Branch("tr_length", "std::vector<double>", &_tr_length);
+    fTree->Branch("tr_tof", "std::vector<double>", &_tr_tof);
+    fTree->Branch("tr_theta", "std::vector<double>", &_tr_theta);
+    fTree->Branch("tr_phi", "std::vector<double>", &_tr_phi);
+    fTree->Branch("tr_triple", "std::vector<bool>", &_tr_triple);
+    fTree->Branch("tr_taggers", "std::vector<std::array<bool, 7>>", &_tr_taggers);
+    fTree->Branch("tr_truth_trackid", "std::vector<int>", &_tr_truth_trackid);
+    fTree->Branch("tr_truth_completeness", "std::vector<double>", &_tr_truth_completeness);
+    fTree->Branch("tr_truth_purity", "std::vector<double>", &_tr_truth_purity);
+    fTree->Branch("tr_truth_pdg", "std::vector<int>", &_tr_truth_pdg);
+    fTree->Branch("tr_truth_energy", "std::vector<double>", &_tr_truth_energy);
+    fTree->Branch("tr_truth_time", "std::vector<double>", &_tr_truth_time);
+    fTree->Branch("tr_truth_start_x", "std::vector<double>", &_tr_truth_start_x);
+    fTree->Branch("tr_truth_start_y", "std::vector<double>", &_tr_truth_start_y);
+    fTree->Branch("tr_truth_start_z", "std::vector<double>", &_tr_truth_start_z);
+    fTree->Branch("tr_truth_dir_x", "std::vector<double>", &_tr_truth_dir_x);
+    fTree->Branch("tr_truth_dir_y", "std::vector<double>", &_tr_truth_dir_y);
+    fTree->Branch("tr_truth_dir_z", "std::vector<double>", &_tr_truth_dir_z);
+    fTree->Branch("tr_truth_particle_energy", "std::vector<double>", &_tr_truth_particle_energy);
+    fTree->Branch("tr_truth_length", "std::vector<double>", &_tr_truth_length);
+    fTree->Branch("tr_truth_tof", "std::vector<double>", &_tr_truth_tof);
+    fTree->Branch("tr_truth_theta", "std::vector<double>", &_tr_truth_theta);
+    fTree->Branch("tr_truth_phi", "std::vector<double>", &_tr_truth_phi);
 
     if(fDebug)
       {
@@ -414,10 +484,23 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   AnalyseCRTClusters(e, CRTClusterVec, clustersToSpacePoints);
 
   // Get Map of TrueDeposits from BackTracker
-  std::map<std::pair<int, CRTTagger>, bool> recoStatusMap = fCRTBackTrackerAlg.GetRecoStatusMap();
+  std::map<std::pair<int, CRTTagger>, bool> recoStatusMap = fCRTBackTrackerAlg.GetSpacePointRecoStatusMap();
   
   // Fill TrueDeposit variables
   AnalyseTrueDeposits(recoStatusMap);
+
+  // Get CRTTracks
+  art::Handle<std::vector<CRTTrack>> CRTTrackHandle;
+  e.getByLabel(fCRTTrackModuleLabel, CRTTrackHandle);
+  if(!CRTTrackHandle.isValid()){
+    std::cout << "CRTTrack product " << fCRTTrackModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+  std::vector<art::Ptr<CRTTrack>> CRTTrackVec;
+  art::fill_ptr_vector(CRTTrackVec, CRTTrackHandle);
+
+  // Fill CRTTrack variables
+  AnalyseCRTTracks(e, CRTTrackVec);
 
   // Fill the Tree
   fTree->Fill();
@@ -623,16 +706,16 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_truth_hit_completeness.resize(nClusters);
   _cl_truth_hit_purity.resize(nClusters);
   _cl_truth_pdg.resize(nClusters);
+  _cl_truth_energy.resize(nClusters);
+  _cl_truth_time.resize(nClusters);
   _cl_truth_x.resize(nClusters);
   _cl_truth_y.resize(nClusters);
   _cl_truth_z.resize(nClusters);
-  _cl_truth_energy.resize(nClusters);
-  _cl_truth_time.resize(nClusters);
+  _cl_truth_core_energy.resize(nClusters);
+  _cl_truth_core_time.resize(nClusters);
   _cl_truth_core_x.resize(nClusters);
   _cl_truth_core_y.resize(nClusters);
   _cl_truth_core_z.resize(nClusters);
-  _cl_truth_core_energy.resize(nClusters);
-  _cl_truth_core_time.resize(nClusters);
   _cl_has_sp.resize(nClusters);
   _cl_sp_x.resize(nClusters);
   _cl_sp_ex.resize(nClusters);
@@ -663,16 +746,16 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_truth_hit_completeness[i] = truthMatch.hitcompleteness;
       _cl_truth_hit_purity[i]       = truthMatch.hitpurity;
       _cl_truth_pdg[i]              = truthMatch.deposit.pdg;
+      _cl_truth_energy[i]           = truthMatch.deposit.energy;
+      _cl_truth_time[i]             = truthMatch.deposit.time;
       _cl_truth_x[i]                = truthMatch.deposit.x;
       _cl_truth_y[i]                = truthMatch.deposit.y;
       _cl_truth_z[i]                = truthMatch.deposit.z;
-      _cl_truth_energy[i]           = truthMatch.deposit.energy;
-      _cl_truth_time[i]             = truthMatch.deposit.time;
+      _cl_truth_core_energy[i]      = truthMatch.deposit.coreEnergy;
+      _cl_truth_core_time[i]        = truthMatch.deposit.coreTime;
       _cl_truth_core_x[i]           = truthMatch.deposit.coreX;
       _cl_truth_core_y[i]           = truthMatch.deposit.coreY;
       _cl_truth_core_z[i]           = truthMatch.deposit.coreZ;
-      _cl_truth_core_energy[i]      = truthMatch.deposit.coreEnergy;
-      _cl_truth_core_time[i]        = truthMatch.deposit.coreTime;
 
       const auto spacepoints = clustersToSpacePoints.at(cluster.key());
       if(spacepoints.size() == 1)
@@ -715,11 +798,11 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<std::pair<int, C
   _td_trackid.resize(nTrueDeposits);
   _td_pdg.resize(nTrueDeposits);
   _td_tagger.resize(nTrueDeposits);
+  _td_energy.resize(nTrueDeposits);
+  _td_time.resize(nTrueDeposits);
   _td_x.resize(nTrueDeposits);
   _td_y.resize(nTrueDeposits);
   _td_z.resize(nTrueDeposits);
-  _td_energy.resize(nTrueDeposits);
-  _td_time.resize(nTrueDeposits);
   _td_reco_status.resize(nTrueDeposits);
 
   unsigned entry = 0;
@@ -730,14 +813,102 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<std::pair<int, C
       _td_trackid[entry]     = deposit.trackid;
       _td_pdg[entry]         = deposit.pdg;
       _td_tagger[entry]      = deposit.tagger;
+      _td_energy[entry]      = deposit.energy;
+      _td_time[entry]        = deposit.time;
       _td_x[entry]           = deposit.x;
       _td_y[entry]           = deposit.y;
       _td_z[entry]           = deposit.z;
-      _td_energy[entry]      = deposit.energy;
-      _td_time[entry]        = deposit.time;
       _td_reco_status[entry] = status;
 
       ++entry;
+    }
+}
+
+void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec)
+{
+  const unsigned nTracks = CRTTrackVec.size();
+
+  _tr_start_x.resize(nTracks);
+  _tr_start_y.resize(nTracks);
+  _tr_start_z.resize(nTracks);
+  _tr_dir_x.resize(nTracks);
+  _tr_dir_y.resize(nTracks);
+  _tr_dir_z.resize(nTracks);
+  _tr_time.resize(nTracks);
+  _tr_etime.resize(nTracks);
+  _tr_pe.resize(nTracks);
+  _tr_length.resize(nTracks);
+  _tr_tof.resize(nTracks);
+  _tr_theta.resize(nTracks);
+  _tr_phi.resize(nTracks);
+  _tr_triple.resize(nTracks);
+  _tr_taggers.resize(nTracks);
+  _tr_truth_trackid.resize(nTracks);
+  _tr_truth_completeness.resize(nTracks);
+  _tr_truth_purity.resize(nTracks);
+  _tr_truth_pdg.resize(nTracks);
+  _tr_truth_energy.resize(nTracks);
+  _tr_truth_time.resize(nTracks);
+  _tr_truth_start_x.resize(nTracks);
+  _tr_truth_start_y.resize(nTracks);
+  _tr_truth_start_z.resize(nTracks);
+  _tr_truth_dir_x.resize(nTracks);
+  _tr_truth_dir_y.resize(nTracks);
+  _tr_truth_dir_z.resize(nTracks);
+  _tr_truth_particle_energy.resize(nTracks);
+  _tr_truth_length.resize(nTracks);
+  _tr_truth_tof.resize(nTracks);
+  _tr_truth_theta.resize(nTracks);
+  _tr_truth_phi.resize(nTracks);
+
+  for(unsigned i = 0; i < nTracks; ++i)
+    {
+      const auto track = CRTTrackVec[i];
+
+      const geo::Point_t start = track->Start();
+      _tr_start_x[i] = start.X();
+      _tr_start_y[i] = start.Y();
+      _tr_start_z[i] = start.Z();
+
+      const geo::Vector_t dir = track->Direction();
+      _tr_dir_x[i] = dir.X();
+      _tr_dir_y[i] = dir.Y();
+      _tr_dir_z[i] = dir.Z();
+
+      _tr_time[i]    = track->Time();
+      _tr_etime[i]   = track->TimeErr();
+      _tr_pe[i]      = track->PE();
+      _tr_length[i]  = track->Length();
+      _tr_tof[i]     = track->ToF();
+      _tr_theta[i]   = TMath::RadToDeg() * track->Theta();
+      _tr_phi[i]     = TMath::RadToDeg() * track->Phi();
+      _tr_triple[i]  = track->Triple();
+      _tr_taggers[i] = track->Taggers();
+
+      const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, track);
+      _tr_truth_trackid[i]          = truthMatch.trackid;
+      _tr_truth_completeness[i]     = truthMatch.completeness;
+      _tr_truth_purity[i]           = truthMatch.purity;
+      _tr_truth_pdg[i]              = truthMatch.deposit.pdg;
+      _tr_truth_energy[i]           = truthMatch.deposit.energy;
+      _tr_truth_time[i]             = truthMatch.deposit.time;
+
+      const geo::Point_t true_start(truthMatch.trackinfo.startx, truthMatch.trackinfo.starty, truthMatch.trackinfo.startz);
+      const geo::Point_t true_end(truthMatch.trackinfo.endx, truthMatch.trackinfo.endy, truthMatch.trackinfo.endz);
+      const geo::Vector_t true_dir = (true_end - true_start).Unit();
+
+      _tr_truth_start_x[i] = true_start.X();
+      _tr_truth_start_y[i] = true_start.Y();
+      _tr_truth_start_z[i] = true_start.Z();
+      _tr_truth_dir_x[i]   = true_dir.X();
+      _tr_truth_dir_y[i]   = true_dir.Y();
+      _tr_truth_dir_z[i]   = true_dir.Z();
+
+      _tr_truth_particle_energy[i] = truthMatch.trackinfo.energy;
+      _tr_truth_length[i]          = (true_end - true_start).R();
+      _tr_truth_tof[i]             = truthMatch.trackinfo.tof;
+      _tr_truth_theta[i]           = TMath::RadToDeg() * true_dir.Theta();
+      _tr_truth_phi[i]             = TMath::RadToDeg() * true_dir.Phi();
     }
 }
 
