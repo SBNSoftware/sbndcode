@@ -26,6 +26,7 @@
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
 #include "Eigen/Dense"
@@ -82,11 +83,18 @@ public:
 
   double DistanceOfClosestApproach(const geo::Point2D_t &v1, const geo::Point2D_t &v2, const geo::Point2D_t &p);
 
-  void BestFitLine(const geo::Point_t &a, const geo::Point_t &b, const geo::Point_t &c,
+  void BestFitLine(const geo::Point_t &a, const CRTTagger &primary_tagger, const geo::Point_t &b, const geo::Point_t &c,
                    geo::Point_t &start, geo::Vector_t &dir, double &gof);
+
+  double TripleTrackLength(const geo::Point_t &start, const geo::Vector_t &dir, std::set<CRTTagger> taggers);
+
+  geo::Point_t LineTaggerIntersectionPoint(const geo::Point_t &start, const geo::Vector_t &dir, const CRTTagger &tagger);
+
+  double TripleTrackToF(std::vector<double> times);
 
 private:
 
+  CRTGeoAlg   fCRTGeoAlg;
   std::string fCRTSpacePointModuleLabel;
   double      fCoincidenceTimeRequirement;
   double      fThirdSpacePointMaximumDCA;
@@ -95,6 +103,7 @@ private:
 
 sbnd::crt::CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
+  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   , fCRTSpacePointModuleLabel(p.get<std::string>("CRTSpacePointModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<double>("CoincidenceTimeRequirement"))
   , fThirdSpacePointMaximumDCA(p.get<double>("ThirdSpacePointMaximumDCA"))
@@ -195,17 +204,23 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
                       geo::Vector_t fitDir;
                       double gof;
 
-                      BestFitLine(primarySpacePoint->Pos(), secondarySpacePoint->Pos(), tertiarySpacePoint->Pos(),
-                                  fitStart, fitDir, gof);
+                      BestFitLine(primarySpacePoint->Pos(), primaryCluster->Tagger(), secondarySpacePoint->Pos(), 
+                                  tertiarySpacePoint->Pos(), fitStart, fitDir, gof);
 
                       double time, etime;
                       const std::vector<double> times = {primarySpacePoint->Time(), secondarySpacePoint->Time(), tertiarySpacePoint->Time()};
                       TimeErrorCalculator(times, time, etime);
 
-                      const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE() + tertiarySpacePoint->PE();
-                      const std::vector<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()};
+                      if(times[1] < times[0] || times[2] < times[1])
+                        std::cout << "Excuse me" << std::endl;
 
-                      const CRTTrack track(fitStart, fitDir, time, etime, pe, true, used_taggers);
+                      const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()};
+
+                      const double pe     = primarySpacePoint->PE() + secondarySpacePoint->PE() + tertiarySpacePoint->PE();
+                      const double length = TripleTrackLength(fitStart, fitDir, used_taggers);
+                      const double tof    = TripleTrackToF(times);
+
+                      const CRTTrack track(fitStart, fitDir, time, etime, pe, length, tof, true, used_taggers);
                       const std::set<unsigned> used_spacepoints = {i, ii, iii};
 
                       candidates.emplace_back(track, used_spacepoints);
@@ -216,10 +231,14 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
             {
               double time, etime;
               TimeErrorCalculator({primarySpacePoint->Time(), secondarySpacePoint->Time()}, time, etime);
-              const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE();
-              const std::vector<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
 
-              const CRTTrack track(start, dir, time, etime, pe, false, used_taggers);
+              const double pe     = primarySpacePoint->PE() + secondarySpacePoint->PE();
+              const double length = (secondarySpacePoint->Pos() - primarySpacePoint->Pos()).R();
+              const double tof    = secondarySpacePoint->Time() - primarySpacePoint->Time();
+
+              const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
+
+              const CRTTrack track(start, dir, time, etime, pe, length, tof, false, used_taggers);
               const std::set<unsigned> used_spacepoints = {i, ii};
 
               candidates.emplace_back(track, used_spacepoints);
@@ -351,9 +370,9 @@ double sbnd::crt::CRTTrackProducer::MinimumApproach(const double &x, const doubl
   const geo::Point2D_t v4(x + dx, y + dy);
 
   return std::min({DistanceOfClosestApproach(v1, v2, p),
-        DistanceOfClosestApproach(v4, v2, p),
-        DistanceOfClosestApproach(v3, v4, p),
-        DistanceOfClosestApproach(v1, v3, p)
+                   DistanceOfClosestApproach(v4, v2, p),
+                   DistanceOfClosestApproach(v3, v4, p),
+                   DistanceOfClosestApproach(v1, v3, p)
         });
 }
 
@@ -372,7 +391,7 @@ double sbnd::crt::CRTTrackProducer::DistanceOfClosestApproach(const geo::Point2D
     return std::abs((line.Y() * (p.X() - v1.X())) + (line.X() * (p.Y() - v1.Y()))) / line.R();
 }
 
-void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const geo::Point_t &b, const geo::Point_t &c,
+void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const CRTTagger &primary_tagger, const geo::Point_t &b, const geo::Point_t &c,
                                               geo::Point_t &start, geo::Vector_t &dir, double &gof)
 {
   Eigen::Matrix3d X {
@@ -413,11 +432,80 @@ void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const geo::
 
   const Eigen::Vector3d eigenVector = { eigenVectors(0, column), eigenVectors(1, column), eigenVectors(2, column) };
 
-  start = {a.X() + b.X() + c.X(), a.Y() + b.Y() + c.Y(), a.Z() + b.Z() + c.Z()};
-  start /= 3.;
+  geo::Point_t mean = {a.X() + b.X() + c.X(), a.Y() + b.Y() + c.Y(), a.Z() + b.Z() + c.Z()};
+  mean /= 3.;
 
-  dir = {eigenVector(0), eigenVector(1), eigenVector(2)};
-  gof = eigenValuesAndColumns[0].first;
+  dir   = {eigenVector(0), eigenVector(1), eigenVector(2)};
+  start = LineTaggerIntersectionPoint(mean, dir, primary_tagger);  
+  gof   = eigenValuesAndColumns[0].first;
+}
+
+double sbnd::crt::CRTTrackProducer::TripleTrackLength(const geo::Point_t &start, const geo::Vector_t &dir, std::set<CRTTagger> taggers)
+{
+  taggers.erase(kTopLowTagger);
+  
+  if(taggers.size() != 2)
+    {
+      std::cout << "There was a problem with the taggers used in this track" << std::endl;
+      return -std::numeric_limits<double>::max();
+    }
+
+  std::vector<geo::Point_t> points;
+
+  for(auto const &tagger : taggers)
+    {
+      points.push_back(LineTaggerIntersectionPoint(start, dir, tagger));
+    }
+
+  return (points[0] - points[1]).R();
+}
+
+geo::Point_t sbnd::crt::CRTTrackProducer::LineTaggerIntersectionPoint(const geo::Point_t &start, const geo::Vector_t &dir, const CRTTagger &tagger)
+{
+  const CoordSet constrainedPlane = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
+  const CRTTaggerGeo taggerGeo    = fCRTGeoAlg.GetTagger(CRTCommonUtils::GetTaggerName(tagger));
+  double k;
+
+  switch(constrainedPlane)
+    {
+    case kX:
+      {
+        const double x = (taggerGeo.maxX + taggerGeo.minX) / 2.;
+        k =  (x - start.X()) / dir.X();
+      }
+      break;
+    case kY:
+      {
+        const double y = (taggerGeo.maxY + taggerGeo.minY) / 2.;
+        k = (y - start.Y()) / dir.Y();
+      }
+      break;
+    case kZ:
+      {
+        const double z = (taggerGeo.maxZ + taggerGeo.minZ) / 2.;
+        k = (z - start.Z()) / dir.Z();
+      }
+      break;
+    default:
+      std::cout << "Tagger not defined in one plane" << std::endl;
+      k = 999999.;
+      break;
+    }
+
+  return start + k * dir;
+}
+
+double sbnd::crt::CRTTrackProducer::TripleTrackToF(std::vector<double> times)
+{
+  if(times.size() != 3)
+    {
+      std::cout << "There are not 3 space points in this track" << std::endl;
+      return -std::numeric_limits<double>::max();
+    }
+  
+  std::sort(times.begin(), times.end());
+
+  return times[2] - times[0];
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTrackProducer)

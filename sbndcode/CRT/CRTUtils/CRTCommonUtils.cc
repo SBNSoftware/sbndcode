@@ -5,7 +5,7 @@
 
 namespace sbnd::crt {
 
-  enum CRTTagger CRTCommonUtils::GetTaggerEnum(std::string tagger) 
+  enum CRTTagger CRTCommonUtils::GetTaggerEnum(const std::string tagger)
   {
     if      (tagger == "volTaggerBot_0"     ) return kBottomTagger;
     else if (tagger == "volTaggerSouth_0"   ) return kSouthTagger;
@@ -17,6 +17,21 @@ namespace sbnd::crt {
     else {
       mf::LogWarning("CRTCommonUtils") << "CRT tagger unknown: " << tagger << std::endl;
       return kUndefinedTagger;
+    }
+  }
+
+  std::string CRTCommonUtils::GetTaggerName(const CRTTagger tagger)
+  {
+    if      (tagger == kBottomTagger)  return "volTaggerBot_0";
+    else if (tagger == kSouthTagger)   return "volTaggerSouth_0";
+    else if (tagger == kNorthTagger)   return "volTaggerNorth_0";
+    else if (tagger == kWestTagger)    return "volTaggerWest_0";
+    else if (tagger == kEastTagger)    return "volTaggerEast_0";
+    else if (tagger == kTopLowTagger)  return "volTaggerTopLow_0";
+    else if (tagger == kTopHighTagger) return "volTaggerTopHigh_0";
+    else {
+      mf::LogWarning("CRTCommonUtils") << "CRT tagger unknown: " << tagger << std::endl;
+      return "";
     }
   }
 

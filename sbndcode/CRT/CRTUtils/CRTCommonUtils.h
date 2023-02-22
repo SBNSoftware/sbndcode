@@ -14,8 +14,11 @@ namespace sbnd::crt {
 
   namespace CRTCommonUtils{
 
-    // Returns the CRT plane index given the tagger name
-    enum CRTTagger GetTaggerEnum(std::string tagger);
+    // Returns the CRT tagger index given the tagger name
+    enum CRTTagger GetTaggerEnum(const std::string tagger);
+
+    // Returns the CRT tagger name given the tagger index
+    std::string GetTaggerName(const CRTTagger tagger);
 
     // Returns the coordinate constrained by virtue of the tagger's position
     enum CoordSet GetTaggerDefinedCoordinate(const CRTTagger tagger);

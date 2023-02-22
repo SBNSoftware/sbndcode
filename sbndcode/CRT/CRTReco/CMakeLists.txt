@@ -8,21 +8,18 @@ art_make_library(
 
 simple_plugin(
               CRTStripHitProducer module
-              larcorealg::Geometry
               sbnobj::SBND_CRT
               sbndcode_GeoWrappers
 )
 
 simple_plugin(
               CRTClusterProducer module
-              larcorealg::Geometry
               sbnobj::SBND_CRT
               sbndcode_GeoWrappers
 )
 
 simple_plugin(
               CRTSpacePointProducer module
-              larcorealg::Geometry
               sbnobj::SBND_CRT
               sbndcode_GeoWrappers
               sbndcode_CRT_CRTReco
@@ -30,10 +27,9 @@ simple_plugin(
 
 simple_plugin(
               CRTTrackProducer module
-              larcorealg::Geometry
-              lardata::Utilities
               sbnobj::SBND_CRT
               sbndcode_CRTUtils
+              sbndcode_GeoWrappers
               Eigen3::Eigen
 )
 
