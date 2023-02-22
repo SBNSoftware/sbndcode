@@ -218,12 +218,6 @@ namespace sbnd::crt {
                           return a.first < b.first;
                       });
 
-            for(auto const inte : intersects)
-              {
-                std::cout << inte.first << "\t" << inte.second << std::endl;
-              }
-            std::cout << "Chose: " << intersects.begin()->first << "\t" << intersects.begin()->second << std::endl;
-            std::cout << std::endl;
             start = intersects.begin()->second;
             end   = back_intersects.begin()->second;
             
