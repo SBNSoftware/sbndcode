@@ -15,6 +15,9 @@ MuonTrackProducer:
   KeepMuonTypes:        [0, 1, 2, 3, 4, 5] # default is keep all types 
   #KeepMuonTypes key: [anode-cathode crosser, anode-piercer, cathode-piercer, top-bottom crosser, up-downstream crosser, other]
 
+  SaveColMuonHits:      true
+  SaveIndMuonHits:      false
+
   LineCount:            20
 }
 

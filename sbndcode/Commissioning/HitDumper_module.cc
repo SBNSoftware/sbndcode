@@ -276,6 +276,7 @@ private:
   int                 _nmhits;               ///< Number of muon collection hits per track
   std::vector<int>    _mhit_trk;             ///< Track number that the hit belongs to
   std::vector<int>    _mhit_tpc;             ///< TPC where the hit belongs to
+  std::vector<int>    _mhit_plane;           ///< Wire plane where the hit belongs to
   std::vector<int>    _mhit_wire;            ///< Wire where the hit belongs to
   std::vector<int>    _mhit_channel;         ///< Channel where the hit belongs to
   std::vector<double> _mhit_peakT;           ///< Hit peak time
@@ -966,6 +967,7 @@ void Hitdumper::analyze(const art::Event& evt)
             geo::WireID wireid = muonhit->WireID();
             _mhit_trk.push_back(i);
             _mhit_tpc.push_back(wireid.TPC);
+	    _mhit_plane.push_back(wireid.Plane);
             _mhit_wire.push_back(wireid.Wire);
             _mhit_channel.push_back(muonhit->Channel());
             _mhit_peakT.push_back(muonhit->PeakTime());
@@ -1327,6 +1329,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("nmhits", &_nmhits, "nmhits/I");
     fTree->Branch("mhit_trk", &_mhit_trk);
     fTree->Branch("mhit_tpc", &_mhit_tpc);
+    fTree->Branch("mhit_plane", &_mhit_plane);
     fTree->Branch("mhit_wire", &_mhit_wire); 
     fTree->Branch("mhit_channel", &_mhit_channel);
     fTree->Branch("mhit_peakT", &_mhit_peakT);
@@ -1518,6 +1521,7 @@ void Hitdumper::ResetMuonTracksVars(int n){
 void Hitdumper::ResetMuonHitVars(int n){
   _mhit_trk.clear(); 
   _mhit_tpc.clear();
+  _mhit_plane.clear();
   _mhit_wire.clear();
   _mhit_channel.clear();
   _mhit_peakT.clear();
@@ -1525,6 +1529,7 @@ void Hitdumper::ResetMuonHitVars(int n){
 
   _mhit_trk.reserve(n);
   _mhit_tpc.reserve(n);
+  _mhit_plane.reserve(n);
   _mhit_wire.reserve(n);
   _mhit_channel.reserve(n);
   _mhit_peakT.reserve(n);
