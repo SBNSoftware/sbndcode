@@ -1,28 +1,26 @@
 #include "CRTTrackMatchAlg.h"
 
+#include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
+
 namespace sbnd{
 
-CRTTrackMatchAlg::CRTTrackMatchAlg(const Config& config) : CRTTrackMatchAlg(config, lar::providerFrom<geo::Geometry>())
+CRTTrackMatchAlg::CRTTrackMatchAlg(const Config& config) :
+  CRTTrackMatchAlg(config,
+                   lar::providerFrom<geo::Geometry>())
 {}
 
-CRTTrackMatchAlg::CRTTrackMatchAlg(const Config& config, geo::GeometryCore const* GeometryService){
+CRTTrackMatchAlg::CRTTrackMatchAlg(const Config& config,
+                                   geo::GeometryCore const* GeometryService) {
 
   this->reconfigure(config);
 
   fGeometryService = GeometryService;
-  
 }
 
 
-CRTTrackMatchAlg::CRTTrackMatchAlg(){
-
-
-}
-
-
-CRTTrackMatchAlg::~CRTTrackMatchAlg(){
-
-}
+CRTTrackMatchAlg::CRTTrackMatchAlg() = default;
+CRTTrackMatchAlg::~CRTTrackMatchAlg() = default;
 
 
 void CRTTrackMatchAlg::reconfigure(const Config& config){

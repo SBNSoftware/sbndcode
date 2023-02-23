@@ -23,12 +23,8 @@
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
-#include "larcore/Geometry/Geometry.h"
-#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
-#include "larcorealg/Geometry/GeometryCore.h"
 #include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
-#include "larcore/Geometry/Geometry.h"
-#include "larcorealg/Geometry/GeometryCore.h"
+#include "larcorealg/Geometry/fwd.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 #include "larcore/Geometry/AuxDetGeometry.h"
 #include "larevt/SpaceCharge/SpaceCharge.h"
@@ -167,13 +163,17 @@ namespace sbnd{
 		      
 
     CRTT0MatchAlg(const Config& config);
-    CRTT0MatchAlg(const Config& config, geo::GeometryCore const *GeometryService, spacecharge::SpaceCharge  const* SCE);
+    CRTT0MatchAlg(const Config& config,
+                  geo::GeometryCore const *GeometryService,
+                  spacecharge::SpaceCharge  const* SCE);
 
     CRTT0MatchAlg(const fhicl::ParameterSet& pset) :
     CRTT0MatchAlg(fhicl::Table<Config>(pset, {})()) {}
     
-    CRTT0MatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const *GeometryService, spacecharge::SpaceCharge const* SCE) :
-    CRTT0MatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService, SCE) {}
+    CRTT0MatchAlg(const fhicl::ParameterSet& pset,
+                  geo::GeometryCore const *GeometryService,
+                  spacecharge::SpaceCharge const* SCE) :
+      CRTT0MatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService, SCE) {}
     
     CRTT0MatchAlg();
     

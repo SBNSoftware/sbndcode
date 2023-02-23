@@ -11,8 +11,8 @@
 #include "messagefacility/MessageLogger/MessageLogger.h" 
 
 // LArSoft
-#include "larcore/Geometry/Geometry.h"
-#include "larcorealg/Geometry/GeometryCore.h"
+#include "larcorealg/Geometry/fwd.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "lardataobj/RecoBase/Hit.h"
 
@@ -21,12 +21,14 @@
 
 namespace sbnd {
 namespace TPCGeoUtil {
-  int DetectedInTPC(std::vector<art::Ptr<recob::Hit>> hits);
+  int DetectedInTPC(std::vector<art::Ptr<recob::Hit>> const& hits);
   // Work out the drift limits for a collection of hits
-  std::pair<double, double> XLimitsFromHits(const geo::GeometryCore *GeometryService, std::vector<art::Ptr<recob::Hit>> hits);
+  std::pair<double, double> XLimitsFromHits(const geo::GeometryCore *GeometryService,
+                                            std::vector<art::Ptr<recob::Hit>> const& hits);
   // Is point inside given TPC
   bool InsideTPC(geo::Point_t point, const geo::TPCGeo& tpc, double buffer);
-  int DriftDirectionFromHits(const geo::GeometryCore *GeometryService, std::vector<art::Ptr<recob::Hit>> hits);
+  int DriftDirectionFromHits(const geo::GeometryCore *GeometryService,
+                             std::vector<art::Ptr<recob::Hit>> const& hits);
 } // namespace TPCGeoUtil
 } // namespace sbnd
 #endif

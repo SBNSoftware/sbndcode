@@ -40,7 +40,6 @@ art_make_library(    LIBRARY_NAME sbndcode_CRTUtils
                            ROOT::Core
                            ROOT::Graf3d
                            ROOT::Gpad
-                           sbndcode_CRT
                            sbnobj::Common_CRT
                            sbnobj::SBND_CRT
                            sbndcode_GeoWrappers

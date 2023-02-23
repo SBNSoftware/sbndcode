@@ -24,6 +24,7 @@
 #include "canvas/Utilities/InputTag.h"
 
 // LArSoft includes
+#include "larcore/Geometry/AuxDetGeometry.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/PlaneGeo.h"
@@ -31,6 +32,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/OpHit.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -431,8 +433,7 @@ private:
 
   geo::GeometryCore const* fGeometryService;
   // detinfo::ElecClock fTrigClock;
-  art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
-  const geo::AuxDetGeometry* fAuxDetGeo;
+  const geo::WireReadoutGeom* fWireReadoutGeom;
   const geo::AuxDetGeometryCore* fAuxDetGeoCore;
 };
 
@@ -442,11 +443,11 @@ Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
 {
 
   fGeometryService = lar::providerFrom<geo::Geometry>();
+  fWireReadoutGeom = &art::ServiceHandle<geo::WireReadout>()->Get();
   // fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
   // fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
   // fTrigClock = fDetectorClocks->TriggerClock();
-  fAuxDetGeo = &(*fAuxDetGeoService);
-  fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
+  fAuxDetGeoCore = art::ServiceHandle<geo::AuxDetGeometry>()->GetProviderPtr();
 
   // Read in the parameters from the .fcl file.
   this->reconfigure(pset);
@@ -623,7 +624,7 @@ void Hitdumper::analyze(const art::Event& evt)
         int strip = (chan >> 1) & 15;
         int module = (chan>> 5);
         //
-        std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
+        std::string name = fAuxDetGeoCore->AuxDet(module).TotalVolume()->GetName();
         auto const center = fAuxDetGeoCore->AuxDetChannelToPosition(name, 2*strip);
         _crt_plane.push_back(ip);
         _crt_module.push_back(module);
@@ -897,7 +898,7 @@ void Hitdumper::analyze(const art::Event& evt)
       for (size_t i = 0; i < ophitlist.size(); ++i) {
         size_t index = previous_nophits + i;
         _ophit_opch[index] = ophitlist.at(i)->OpChannel();
-        _ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
+        _ophit_opdet[index] = fWireReadoutGeom->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
         _ophit_peakT[index] = ophitlist.at(i)->PeakTime();
         _ophit_startT[index] = ophitlist.at(i)->StartTime();
         _ophit_riseT[index] = ophitlist.at(i)->RiseTime();
@@ -905,7 +906,7 @@ void Hitdumper::analyze(const art::Event& evt)
         _ophit_area[index] = ophitlist.at(i)->Area();
         _ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
         _ophit_pe[index] = ophitlist.at(i)->PE();
-        auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
+        auto opdet_center = fWireReadoutGeom->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
         _ophit_opdet_x[index] = opdet_center.X();
         _ophit_opdet_y[index] = opdet_center.Y();
         _ophit_opdet_z[index] = opdet_center.Z();

@@ -1,11 +1,19 @@
 #include "CRTT0MatchAlg.h"
 
+#include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
+
 namespace sbnd{
 
-CRTT0MatchAlg::CRTT0MatchAlg(const Config& config) : CRTT0MatchAlg(config, lar::providerFrom<geo::Geometry>(), 
-lar::providerFrom<spacecharge::SpaceChargeService>()) {}
+CRTT0MatchAlg::CRTT0MatchAlg(const Config& config) :
+  CRTT0MatchAlg(config,
+                lar::providerFrom<geo::Geometry>(),
+                lar::providerFrom<spacecharge::SpaceChargeService>())
+{}
 
-CRTT0MatchAlg::CRTT0MatchAlg(const Config& config, geo::GeometryCore const *GeometryService,  spacecharge::SpaceCharge const *SCE){
+CRTT0MatchAlg::CRTT0MatchAlg(const Config& config,
+                             geo::GeometryCore const *GeometryService,
+                             spacecharge::SpaceCharge const *SCE){
   
   
   this->reconfigure(config);

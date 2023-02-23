@@ -34,7 +34,6 @@ set(
                            ROOT::RooFit
                            ROOT::RooFitCore
                            sbndcode_RecoUtils
-                           sbndcode_CRT
                            sbnobj::Common_CRT
                            sbndcode_CRTUtils
                            sbndcode_GeoWrappers

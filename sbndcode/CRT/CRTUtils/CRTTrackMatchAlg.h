@@ -23,9 +23,7 @@
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
-#include "larcore/Geometry/Geometry.h"
-#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
-#include "larcorealg/Geometry/GeometryCore.h"
+#include "larcorealg/Geometry/fwd.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardataalg/DetectorInfo/DetectorProperties.h"
 
@@ -97,7 +95,8 @@ namespace sbnd{
 
     CRTTrackMatchAlg(const fhicl::ParameterSet& pset) :
       CRTTrackMatchAlg(fhicl::Table<Config>(pset, {})()) {}
-    CRTTrackMatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const* GeometryService) :
+    CRTTrackMatchAlg(const fhicl::ParameterSet& pset,
+                     geo::GeometryCore const* GeometryService) :
       CRTTrackMatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService) {}
 
     CRTTrackMatchAlg();

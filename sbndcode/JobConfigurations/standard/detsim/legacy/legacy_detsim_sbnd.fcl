@@ -54,8 +54,7 @@ services:
   TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
   @table::sbnd_detsim_services
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
-  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
-  AuxDetGeometry: { @table::sbnd_geo_source }
+  AuxDetGeometry: @local::sbnd_auxdetgeo
 }
 
 
