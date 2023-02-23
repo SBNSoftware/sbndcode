@@ -184,6 +184,9 @@ private:
   std::vector<double>              _tr_start_x;
   std::vector<double>              _tr_start_y;
   std::vector<double>              _tr_start_z;
+  std::vector<double>              _tr_end_x;
+  std::vector<double>              _tr_end_y;
+  std::vector<double>              _tr_end_z;
   std::vector<double>              _tr_dir_x;
   std::vector<double>              _tr_dir_y;
   std::vector<double>              _tr_dir_z;
@@ -205,6 +208,9 @@ private:
   std::vector<double>              _tr_truth_start_x;
   std::vector<double>              _tr_truth_start_y;
   std::vector<double>              _tr_truth_start_z;
+  std::vector<double>              _tr_truth_end_x;
+  std::vector<double>              _tr_truth_end_y;
+  std::vector<double>              _tr_truth_end_z;
   std::vector<double>              _tr_truth_dir_x;
   std::vector<double>              _tr_truth_dir_y;
   std::vector<double>              _tr_truth_dir_z;
@@ -341,6 +347,9 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("tr_start_x", "std::vector<double>", &_tr_start_x);
     fTree->Branch("tr_start_y", "std::vector<double>", &_tr_start_y);
     fTree->Branch("tr_start_z", "std::vector<double>", &_tr_start_z);
+    fTree->Branch("tr_end_x", "std::vector<double>", &_tr_end_x);
+    fTree->Branch("tr_end_y", "std::vector<double>", &_tr_end_y);
+    fTree->Branch("tr_end_z", "std::vector<double>", &_tr_end_z);
     fTree->Branch("tr_dir_x", "std::vector<double>", &_tr_dir_x);
     fTree->Branch("tr_dir_y", "std::vector<double>", &_tr_dir_y);
     fTree->Branch("tr_dir_z", "std::vector<double>", &_tr_dir_z);
@@ -362,6 +371,9 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("tr_truth_start_x", "std::vector<double>", &_tr_truth_start_x);
     fTree->Branch("tr_truth_start_y", "std::vector<double>", &_tr_truth_start_y);
     fTree->Branch("tr_truth_start_z", "std::vector<double>", &_tr_truth_start_z);
+    fTree->Branch("tr_truth_end_x", "std::vector<double>", &_tr_truth_end_x);
+    fTree->Branch("tr_truth_end_y", "std::vector<double>", &_tr_truth_end_y);
+    fTree->Branch("tr_truth_end_z", "std::vector<double>", &_tr_truth_end_z);
     fTree->Branch("tr_truth_dir_x", "std::vector<double>", &_tr_truth_dir_x);
     fTree->Branch("tr_truth_dir_y", "std::vector<double>", &_tr_truth_dir_y);
     fTree->Branch("tr_truth_dir_z", "std::vector<double>", &_tr_truth_dir_z);
@@ -831,6 +843,9 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
   _tr_start_x.resize(nTracks);
   _tr_start_y.resize(nTracks);
   _tr_start_z.resize(nTracks);
+  _tr_end_x.resize(nTracks);
+  _tr_end_y.resize(nTracks);
+  _tr_end_z.resize(nTracks);
   _tr_dir_x.resize(nTracks);
   _tr_dir_y.resize(nTracks);
   _tr_dir_z.resize(nTracks);
@@ -852,6 +867,9 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
   _tr_truth_start_x.resize(nTracks);
   _tr_truth_start_y.resize(nTracks);
   _tr_truth_start_z.resize(nTracks);
+  _tr_truth_end_x.resize(nTracks);
+  _tr_truth_end_y.resize(nTracks);
+  _tr_truth_end_z.resize(nTracks);
   _tr_truth_dir_x.resize(nTracks);
   _tr_truth_dir_y.resize(nTracks);
   _tr_truth_dir_z.resize(nTracks);
@@ -869,6 +887,11 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
       _tr_start_x[i] = start.X();
       _tr_start_y[i] = start.Y();
       _tr_start_z[i] = start.Z();
+
+      const geo::Point_t end = track->End();
+      _tr_end_x[i] = end.X();
+      _tr_end_y[i] = end.Y();
+      _tr_end_z[i] = end.Z();
 
       const geo::Vector_t dir = track->Direction();
       _tr_dir_x[i] = dir.X();
@@ -893,22 +916,72 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
       _tr_truth_energy[i]           = truthMatch.deposit.energy;
       _tr_truth_time[i]             = truthMatch.deposit.time;
 
-      const geo::Point_t true_start(truthMatch.trackinfo.startx, truthMatch.trackinfo.starty, truthMatch.trackinfo.startz);
-      const geo::Point_t true_end(truthMatch.trackinfo.endx, truthMatch.trackinfo.endy, truthMatch.trackinfo.endz);
+      _tr_truth_particle_energy[i] = truthMatch.trackinfo.energy;
+
+      /*
+      if(truthMatch.trackinfo.found_ends)
+        {
+          const geo::Point_t true_start(truthMatch.trackinfo.startx, truthMatch.trackinfo.starty, truthMatch.trackinfo.startz);
+          const geo::Point_t true_end(truthMatch.trackinfo.endx, truthMatch.trackinfo.endy, truthMatch.trackinfo.endz);
+          const geo::Vector_t true_dir = (true_end - true_start).Unit();
+
+          _tr_truth_start_x[i] = true_start.X();
+          _tr_truth_start_y[i] = true_start.Y();
+          _tr_truth_start_z[i] = true_start.Z();
+
+          _tr_truth_end_x[i] = true_end.X();
+          _tr_truth_end_y[i] = true_end.Y();
+          _tr_truth_end_z[i] = true_end.Z();
+
+          _tr_truth_dir_x[i] = true_dir.X();
+          _tr_truth_dir_y[i] = true_dir.Y();
+          _tr_truth_dir_z[i] = true_dir.Z();
+
+          _tr_truth_length[i] = (true_end - true_start).R();
+          _tr_truth_tof[i]    = truthMatch.trackinfo.tof;
+          _tr_truth_theta[i]  = TMath::RadToDeg() * true_dir.Theta();
+          _tr_truth_phi[i]    = TMath::RadToDeg() * true_dir.Phi();
+        }
+      else
+        {
+          _tr_truth_start_x[i] = -999999.;
+          _tr_truth_start_y[i] = -999999.;
+          _tr_truth_start_z[i] = -999999.;
+
+          _tr_truth_end_x[i] = -999999.;
+          _tr_truth_end_y[i] = -999999.;
+          _tr_truth_end_z[i] = -999999.;
+
+          _tr_truth_dir_x[i] = -999999.;
+          _tr_truth_dir_y[i] = -999999.;
+          _tr_truth_dir_z[i] = -999999.;
+
+          _tr_truth_length[i] = -999999.;
+          _tr_truth_tof[i]    = -999999.;
+          _tr_truth_theta[i]  = -999999.;
+          _tr_truth_phi[i]    = -999999.;
+        }
+      */
+      const geo::Point_t true_start(truthMatch.trackinfo.deposit1.x, truthMatch.trackinfo.deposit1.y, truthMatch.trackinfo.deposit1.z);
+      const geo::Point_t true_end(truthMatch.trackinfo.deposit2.x, truthMatch.trackinfo.deposit2.y, truthMatch.trackinfo.deposit2.z);
       const geo::Vector_t true_dir = (true_end - true_start).Unit();
 
       _tr_truth_start_x[i] = true_start.X();
       _tr_truth_start_y[i] = true_start.Y();
       _tr_truth_start_z[i] = true_start.Z();
-      _tr_truth_dir_x[i]   = true_dir.X();
-      _tr_truth_dir_y[i]   = true_dir.Y();
-      _tr_truth_dir_z[i]   = true_dir.Z();
 
-      _tr_truth_particle_energy[i] = truthMatch.trackinfo.energy;
-      _tr_truth_length[i]          = (true_end - true_start).R();
-      _tr_truth_tof[i]             = truthMatch.trackinfo.tof;
-      _tr_truth_theta[i]           = TMath::RadToDeg() * true_dir.Theta();
-      _tr_truth_phi[i]             = TMath::RadToDeg() * true_dir.Phi();
+      _tr_truth_end_x[i] = true_end.X();
+      _tr_truth_end_y[i] = true_end.Y();
+      _tr_truth_end_z[i] = true_end.Z();
+
+      _tr_truth_dir_x[i] = true_dir.X();
+      _tr_truth_dir_y[i] = true_dir.Y();
+      _tr_truth_dir_z[i] = true_dir.Z();
+
+      _tr_truth_length[i] = (true_end - true_start).R();
+      _tr_truth_tof[i]    = truthMatch.trackinfo.deposit2.time - truthMatch.trackinfo.deposit1.time;
+      _tr_truth_theta[i]  = TMath::RadToDeg() * true_dir.Theta();
+      _tr_truth_phi[i]    = TMath::RadToDeg() * true_dir.Phi();
     }
 }
 
