@@ -187,6 +187,7 @@ private:
   std::vector<int>     _td_pdg;
   std::vector<double>  _td_energy;
   std::vector<double>  _td_time;
+  std::vector<bool>    _td_reconstructable;
   std::vector<bool>    _td_reco_status;
 
   std::vector<double>              _tr_start_x;
@@ -356,6 +357,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("td_pdg", "std::vector<int>", &_td_pdg);
     fTree->Branch("td_energy", "std::vector<double>", &_td_energy);
     fTree->Branch("td_time", "std::vector<double>", &_td_time);
+    fTree->Branch("td_reconstructable", "std::vector<bool>", &_td_reconstructable);
     fTree->Branch("td_reco_status", "std::vector<bool>", &_td_reco_status);
 
     fTree->Branch("tr_start_x", "std::vector<double>", &_tr_start_x);
@@ -865,6 +867,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, bool> &reco
   _td_pdg.resize(nTrueDeposits);
   _td_energy.resize(nTrueDeposits);
   _td_time.resize(nTrueDeposits);
+  _td_reconstructable.resize(nTrueDeposits);
   _td_reco_status.resize(nTrueDeposits);
 
   unsigned entry = 0;
@@ -872,11 +875,12 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, bool> &reco
     {
       const CRTBackTrackerAlg::TrueDeposit deposit = fCRTBackTrackerAlg.GetTrueDeposit(trackid);
 
-      _td_trackid[entry]     = deposit.trackid;
-      _td_pdg[entry]         = deposit.pdg;
-      _td_energy[entry]      = deposit.energy;
-      _td_time[entry]        = deposit.time;
-      _td_reco_status[entry] = status;
+      _td_trackid[entry]         = deposit.trackid;
+      _td_pdg[entry]             = deposit.pdg;
+      _td_energy[entry]          = deposit.energy;
+      _td_time[entry]            = deposit.time;
+      _td_reconstructable[entry] = deposit.reconstructable;
+      _td_reco_status[entry]     = status;
 
       ++entry;
     }
