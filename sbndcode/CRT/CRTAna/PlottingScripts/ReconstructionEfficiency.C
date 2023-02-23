@@ -1,6 +1,6 @@
 void ReconstructionEfficiency()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_00_fixed_truth_matching/reconstructionefficiency";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_02/reconstructionefficiency";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,15 +9,20 @@ void ReconstructionEfficiency()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_fixed_truth_matching.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_02.root");
 
+  std::vector<double> *td_tag_energy = 0;
+  std::vector<bool> *td_tag_reco_status = 0;
   std::vector<double> *td_energy = 0;
+  std::vector<bool> *td_reconstructable = 0;
   std::vector<bool> *td_reco_status = 0;
-  std::vector<int> *td_pdg = 0;
+
+  tree->SetBranchAddress("td_tag_energy", &td_tag_energy);
+  tree->SetBranchAddress("td_tag_reco_status", &td_tag_reco_status);
 
   tree->SetBranchAddress("td_energy", &td_energy);
+  tree->SetBranchAddress("td_reconstructable", &td_reconstructable);
   tree->SetBranchAddress("td_reco_status", &td_reco_status);
-  tree->SetBranchAddress("td_pdg", &td_pdg);
 
   double bins[23];
   for(int i = 0; i < 16; ++i)
@@ -28,8 +33,8 @@ void ReconstructionEfficiency()
 
   TH1F *hTrueDepositEnergy = new TH1F("hTrueDepositEnergy", ";True energy (MeV);Deposits", 22, bins);
   TH1F *hTrueDepositEnergyReco = new TH1F("hTrueDepositEnergyReco", ";True energy (MeV);Deposits", 22, bins);
-  TH1F *hTrueDepositEnergyNoDropped = new TH1F("hTrueDepositEnergyNoDropped", ";True energy (MeV);Deposits", 22, bins);
-  TH1F *hTrueDepositEnergyNoDroppedReco = new TH1F("hTrueDepositEnergyRecoNoDropped", ";True energy (MeV);Deposits", 22, bins);
+  TH1F *hTrueTrackDepositEnergy = new TH1F("hTrueTrackDepositEnergy", ";True energy (MeV);Deposits", 22, bins);
+  TH1F *hTrueTrackDepositEnergyReco = new TH1F("hTrueTrackDepositEnergyReco", ";True energy (MeV);Deposits", 22, bins);
 
   const unsigned N = tree->GetEntries();
 
@@ -37,20 +42,23 @@ void ReconstructionEfficiency()
     {
       tree->GetEntry(i);
 
+      for(unsigned ii = 0; ii < td_tag_energy->size(); ++ii)
+        {
+          hTrueDepositEnergy->Fill(1e3*td_tag_energy->at(ii));
+
+          if(td_tag_reco_status->at(ii))
+            hTrueDepositEnergyReco->Fill(1e3*td_tag_energy->at(ii));
+        }
+
       for(unsigned ii = 0; ii < td_energy->size(); ++ii)
         {
-          hTrueDepositEnergy->Fill(1e3*td_energy->at(ii));
-
-          if(td_reco_status->at(ii))
-            hTrueDepositEnergyReco->Fill(1e3*td_energy->at(ii));
-
-          if(td_pdg->at(ii) == -999999)
+          if(!td_reconstructable->at(ii))
             continue;
 
-          hTrueDepositEnergyNoDropped->Fill(1e3*td_energy->at(ii));
+          hTrueTrackDepositEnergy->Fill(1e3*td_energy->at(ii));
 
           if(td_reco_status->at(ii))
-            hTrueDepositEnergyNoDroppedReco->Fill(1e3*td_energy->at(ii));
+            hTrueTrackDepositEnergyReco->Fill(1e3*td_energy->at(ii));
         }
     }
 
@@ -58,8 +66,8 @@ void ReconstructionEfficiency()
     {
       hTrueDepositEnergy->SetBinContent(i, hTrueDepositEnergy->GetBinContent(i) / hTrueDepositEnergy->GetBinWidth(i));
       hTrueDepositEnergyReco->SetBinContent(i, hTrueDepositEnergyReco->GetBinContent(i) / hTrueDepositEnergyReco->GetBinWidth(i));
-      hTrueDepositEnergyNoDropped->SetBinContent(i, hTrueDepositEnergyNoDropped->GetBinContent(i) / hTrueDepositEnergyNoDropped->GetBinWidth(i));
-      hTrueDepositEnergyNoDroppedReco->SetBinContent(i, hTrueDepositEnergyNoDroppedReco->GetBinContent(i) / hTrueDepositEnergyNoDroppedReco->GetBinWidth(i));
+      hTrueTrackDepositEnergy->SetBinContent(i, hTrueTrackDepositEnergy->GetBinContent(i) / hTrueTrackDepositEnergy->GetBinWidth(i));
+      hTrueTrackDepositEnergyReco->SetBinContent(i, hTrueTrackDepositEnergyReco->GetBinContent(i) / hTrueTrackDepositEnergyReco->GetBinWidth(i));
     }
 
   TCanvas *cEnergyRecoEff = new TCanvas("cEnergyRecoEff", "cEnergyRecoEff");
@@ -92,33 +100,33 @@ void ReconstructionEfficiency()
       cEnergyRecoEff->SaveAs(saveDir + "/true_energy_deposit_reco_eff.pdf");
     }
 
-  TCanvas *cEnergyNoDroppedRecoEff = new TCanvas("cEnergyNoDroppedRecoEff", "cEnergyNoDroppedRecoEff");
-  cEnergyNoDroppedRecoEff->cd();
+  TCanvas *cTrackEnergyRecoEff = new TCanvas("cTrackEnergyRecoEff", "cTrackEnergyRecoEff");
+  cTrackEnergyRecoEff->cd();
   
-  TH1F *hTrueDepositEnergyNoDroppedClone = (TH1F*) hTrueDepositEnergyNoDropped->Clone("hTrueDepositEnergyNoDroppedClone");
-  hTrueDepositEnergyNoDroppedClone->Scale(1 / hTrueDepositEnergyNoDroppedClone->GetMaximum());
-  hTrueDepositEnergyNoDroppedClone->SetLineColor(kGray+2);
+  TH1F *hTrueTrackDepositEnergyClone = (TH1F*) hTrueTrackDepositEnergy->Clone("hTrueTrackDepositEnergyClone");
+  hTrueTrackDepositEnergyClone->Scale(1 / hTrueTrackDepositEnergyClone->GetMaximum());
+  hTrueTrackDepositEnergyClone->SetLineColor(kGray+2);
 
-  TEfficiency *eEnergyNoDroppedRecoEff = new TEfficiency(*hTrueDepositEnergyNoDroppedReco, *hTrueDepositEnergyNoDropped);
-  eEnergyNoDroppedRecoEff->SetTitle(";True energy (MeV);Efficiency");
-  eEnergyNoDroppedRecoEff->SetLineColor(kRed+2);
-  eEnergyNoDroppedRecoEff->SetMarkerColor(kRed+2);
-  eEnergyNoDroppedRecoEff->SetLineWidth(2);
+  TEfficiency *eTrackEnergyRecoEff = new TEfficiency(*hTrueTrackDepositEnergyReco, *hTrueTrackDepositEnergy);
+  eTrackEnergyRecoEff->SetTitle(";True energy (MeV);Efficiency");
+  eTrackEnergyRecoEff->SetLineColor(kRed+2);
+  eTrackEnergyRecoEff->SetMarkerColor(kRed+2);
+  eTrackEnergyRecoEff->SetLineWidth(2);
 
-  eEnergyNoDroppedRecoEff->Draw();
+  eTrackEnergyRecoEff->Draw();
   gPad->Update();
-  eEnergyNoDroppedRecoEff->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
-  hTrueDepositEnergyNoDroppedClone->Draw("samehist");
+  eTrackEnergyRecoEff->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
+  hTrueTrackDepositEnergyClone->Draw("samehist");
 
-  TLegend *lEnergyNoDroppedRecoEff = new TLegend(.6,.45,.85,.55);
-  lEnergyNoDroppedRecoEff->SetBorderSize(0);
-  lEnergyNoDroppedRecoEff->AddEntry(eEnergyNoDroppedRecoEff, "Efficiency","ple");
-  lEnergyNoDroppedRecoEff->AddEntry(hTrueDepositEnergyNoDroppedClone, "True Distribution","l");
-  lEnergyNoDroppedRecoEff->Draw();
+  TLegend *lTrackEnergyRecoEff = new TLegend(.6,.45,.85,.55);
+  lTrackEnergyRecoEff->SetBorderSize(0);
+  lTrackEnergyRecoEff->AddEntry(eTrackEnergyRecoEff, "Efficiency","ple");
+  lTrackEnergyRecoEff->AddEntry(hTrueTrackDepositEnergyClone, "True Distribution","l");
+  lTrackEnergyRecoEff->Draw();
 
   if(save)
     {
-      cEnergyNoDroppedRecoEff->SaveAs(saveDir + "/true_energy_deposit_no_dropped_reco_eff.png");
-      cEnergyNoDroppedRecoEff->SaveAs(saveDir + "/true_energy_deposit_no_dropped_reco_eff.pdf");
+      cTrackEnergyRecoEff->SaveAs(saveDir + "/true_track_energy_deposit_reco_eff.png");
+      cTrackEnergyRecoEff->SaveAs(saveDir + "/true_track_energy_deposit_reco_eff.pdf");
     }
 }

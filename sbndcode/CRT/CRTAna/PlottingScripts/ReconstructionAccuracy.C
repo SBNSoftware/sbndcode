@@ -1,6 +1,6 @@
 void ReconstructionAccuracy()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_00_core_truth_matching/reconstructionaccuracy";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_02/reconstructionaccuracy";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void ReconstructionAccuracy()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_00_core_truth_matching.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_02.root");
 
   struct datacut {
     TCut cut;
@@ -98,6 +98,34 @@ void ReconstructionAccuracy()
                               100, -50, 50, plotcolour},
                              {"sh_time_accuracy", "sh_ts1 - (sh_truth_time + 1.7e6)", ";(reco - (true - G4RefTime)) time [ns];Strip Hits",
                               100, -50, 50, plotcolour},
+                             {"tr_start_x_accuracy", "tr_start_x - tr_truth_start_x", ";(reco - true) Start x [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_start_y_accuracy", "tr_start_y - tr_truth_start_y", ";(reco - true) Start y [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_start_z_accuracy", "tr_start_z - tr_truth_start_z", ";(reco - true) Start z [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_end_x_accuracy", "tr_end_x - tr_truth_end_x", ";(reco - true) End x [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_end_y_accuracy", "tr_end_y - tr_truth_end_y", ";(reco - true) End y [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_end_z_accuracy", "tr_end_z - tr_truth_end_z", ";(reco - true) End z [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_dir_x_accuracy", "tr_dir_x - tr_truth_dir_x", ";(reco - true) Direction x [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_dir_y_accuracy", "tr_dir_y - tr_truth_dir_y", ";(reco - true) Direction y [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_dir_z_accuracy", "tr_dir_z - tr_truth_dir_z", ";(reco - true) Direction z [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_time_accuracy", "tr_time - (tr_truth_time + 1.7e6)", ";(reco - (true - G4RefTime)) time [ns];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_length_accuracy", "tr_length - tr_truth_length", ";(reco - true) Length [cm];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_tof_accuracy", "tr_tof - tr_truth_tof", ";(reco - true) ToF [ns];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_theta_accuracy", "tr_theta - tr_truth_theta", ";(reco - true) #theta [#circ];Tracks",
+                              100, -50, 50, plotcolour},
+                             {"tr_phi_accuracy", "tr_phi - tr_truth_phi", ";(reco - true) #phi [#circ];Tracks",
+                              100, -50, 50, plotcolour},
   };
 
   std::vector<plttwod> twodplots = {
@@ -119,6 +147,8 @@ void ReconstructionAccuracy()
      55, -5, 50, 50, 0, 1 + std::numeric_limits<double>::epsilon(), "cl_has_sp && cl_sp_complete && cl_nhits>2", true},
     {"sp_pos_accuracy_purity_multi_strip_clusters", "cl_truth_purity:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster purity;SpacePoints",
      55, -5, 50, 50, 0, 1 + std::numeric_limits<double>::epsilon(), "cl_has_sp && cl_sp_complete && cl_nhits>2", true},
+    {"tr_pe_energy_relation", "tr_truth_energy*1e3:tr_pe", ";PE;True Energy (MeV);Tracks",
+     50, 0, 1400, 50, 0, 200, "cl_has_sp && cl_sp_complete"},
   };
 
   for(auto const &plot : plots)
