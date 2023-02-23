@@ -180,6 +180,9 @@ namespace sbnd::crt {
 
         if(!found_start || !found_end)
           {
+            found_start = true;
+            found_end   = true;
+
             const TVector3 pos0 = particle->Position().Vect();
             const geo::Point_t point0(pos0.X(), pos0.Y(), pos0.Z());
             const TVector3 posN = particle->EndPosition().Vect();
@@ -218,6 +221,12 @@ namespace sbnd::crt {
                           return a.first < b.first;
                       });
 
+            if(intersects.begin()->first == 999999.)
+              found_start = false;
+
+            if(back_intersects.begin()->first == 999999.)
+              found_start = false;
+
             start = intersects.begin()->second;
             end   = back_intersects.begin()->second;
             
@@ -225,8 +234,62 @@ namespace sbnd::crt {
             end_time   = timeN - (back_intersects.begin()->first / kmax) * time_diff;
           }
 
-        fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
-                                                    end_time - start_time);
+        std::vector<std::tuple<double, double, CRTTagger>> taggers;
+
+        for(auto const& [category, deposit] : fTrueDepositsPerTaggerMap)
+          {
+            if(category.first == trackID)
+              taggers.push_back({deposit.time, deposit.energy, category.second});
+          }
+
+        std::sort(taggers.begin(), taggers.end(),
+                  [](const auto &a, const auto &b)
+                  {
+                    return std::get<0>(a) < std::get<0>(b);
+                  });
+        
+        if(taggers.size() == 1)
+          {         
+            fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
+                                                        end_time - start_time, found_start && found_end,
+                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[0])}],
+                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[0])}]);
+          }
+        else if(taggers.size() == 2)
+          {
+            fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
+                                                        end_time - start_time, found_start && found_end,
+                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[0])}],
+                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[1])}]);
+          }
+        else if(taggers.size() == 3)
+          {
+            fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
+                                                        end_time - start_time, found_start && found_end,
+                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[0])}],
+                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[2])}]);
+          }
+        else if(taggers.size() > 3)
+          {
+            std::sort(taggers.begin(), taggers.end(),
+                      [](const auto &a, const auto &b)
+                      {
+                        return std::get<1>(a) < std::get<1>(b);
+                      });
+
+            const unsigned n = taggers.size();
+
+            if(fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-1])}].time < fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-2])}].time)
+              fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
+                                                          end_time - start_time, found_start && found_end,
+                                                          fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-1])}],
+                                                          fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-2])}]);
+            else
+              fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
+                                                          end_time - start_time, found_start && found_end,
+                                                          fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-2])}],
+                                                          fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-1])}]);
+          }
 
         fTrueDepositsMap[trackID] = TrueDeposit(trackID, pdg, kUndefinedTagger,
                                                 energy, time, x, y, z);

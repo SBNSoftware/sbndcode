@@ -91,7 +91,7 @@ namespace sbnd::crt {
       double    coreX;
       double    coreY;
       double    coreZ;
-      
+
       TrueDeposit(int _trackid = -999999, int _pdg = -999999, CRTTagger _tagger = kUndefinedTagger, 
                   double _energy = -999999., double _time = -999999.,
                   double _x = -999999., double _y = -999999., double _z = -999999., 
@@ -125,34 +125,44 @@ namespace sbnd::crt {
       double endz;
       double energy;
       double tof;
+      bool found_ends;
+      TrueDeposit deposit1;
+      TrueDeposit deposit2;
 
       TrueTrackInfo()
       {
-        trackid = -std::numeric_limits<int>::max();
-        pdg     = -std::numeric_limits<int>::max();
-        startx  = -std::numeric_limits<double>::max();
-        starty  = -std::numeric_limits<double>::max();
-        startz  = -std::numeric_limits<double>::max();
-        endx    = -std::numeric_limits<double>::max();
-        endy    = -std::numeric_limits<double>::max();
-        endz    = -std::numeric_limits<double>::max();
-        energy  = -std::numeric_limits<double>::max();
-        tof     = -std::numeric_limits<double>::max();
+        trackid    = -std::numeric_limits<int>::max();
+        pdg        = -std::numeric_limits<int>::max();
+        startx     = -std::numeric_limits<double>::max();
+        starty     = -std::numeric_limits<double>::max();
+        startz     = -std::numeric_limits<double>::max();
+        endx       = -std::numeric_limits<double>::max();
+        endy       = -std::numeric_limits<double>::max();
+        endz       = -std::numeric_limits<double>::max();
+        energy     = -std::numeric_limits<double>::max();
+        tof        = -std::numeric_limits<double>::max();
+        found_ends = false;
+        deposit1   = TrueDeposit();
+        deposit2   = TrueDeposit();
       }
 
       TrueTrackInfo(int _trackid, int _pdg, geo::Point_t _start, geo::Point_t _end,
-                    double _energy, double _tof)
+                    double _energy, double _tof, bool _found_ends, TrueDeposit &_deposit1,
+                    TrueDeposit &_deposit2)
       {
-        trackid = _trackid;
-        pdg     = _pdg;
-        startx  = _start.X();
-        starty  = _start.Y();
-        startz  = _start.Z();
-        endx    = _end.X();
-        endy    = _end.Y();
-        endz    = _end.Z();
-        energy  = _energy;
-        tof     = _tof;
+        trackid    = _trackid;
+        pdg        = _pdg;
+        startx     = _start.X();
+        starty     = _start.Y();
+        startz     = _start.Z();
+        endx       = _end.X();
+        endy       = _end.Y();
+        endz       = _end.Z();
+        energy     = _energy;
+        tof        = _tof;
+        found_ends = _found_ends;
+        deposit1   = _deposit1;
+        deposit2   = _deposit2;
       }
     };
 
