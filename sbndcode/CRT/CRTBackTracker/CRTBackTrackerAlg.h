@@ -199,11 +199,17 @@ namespace sbnd::crt {
 
     int RollUpID(const int &id);
 
-    void RunRecoStatusChecks(const art::Event &event);
+    void RunSpacePointRecoStatusChecks(const art::Event &event);
+
+    void RunTrackRecoStatusChecks(const art::Event &event);
     
     std::map<Category, bool> GetSpacePointRecoStatusMap();
 
+    std::map<int, bool> GetTrackRecoStatusMap();
+
     TrueDeposit GetTrueDeposit(Category category);
+
+    TrueDeposit GetTrueDeposit(int trackid);
 
     TruthMatchMetrics TruthMatching(const art::Event &event, const art::Ptr<CRTStripHit> &stripHit);
 
@@ -232,6 +238,7 @@ namespace sbnd::crt {
     std::map<int, TrueDeposit>      fTrueDepositsMap;
     std::map<int, TrueTrackInfo>    fTrueTrackInfosMap;
     std::map<Category, bool>        fTrackIDSpacePointRecoMap;
+    std::map<int, bool>             fTrackIDTrackRecoMap;
     std::map<Category, double>      fMCPIDEsEnergyPerTaggerMap;
     std::map<int, double>           fMCPIDEsEnergyMap;
     std::map<Category, int>         fMCPStripHitsMap;

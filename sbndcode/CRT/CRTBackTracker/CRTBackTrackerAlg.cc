@@ -30,6 +30,7 @@ namespace sbnd::crt {
     fTrueDepositsMap.clear();
     fTrueTrackInfosMap.clear();
     fTrackIDSpacePointRecoMap.clear();
+    fTrackIDTrackRecoMap.clear();
     fMCPIDEsEnergyPerTaggerMap.clear();
     fMCPIDEsEnergyMap.clear();
     fMCPStripHitsMap.clear();
@@ -82,6 +83,7 @@ namespace sbnd::crt {
         depositTrackIDs.insert(rollUpID);
 
         fTrackIDSpacePointRecoMap[category] = false;
+        fTrackIDTrackRecoMap[rollUpID]      = false;
 
         categoryToEnergyMap[category] += ide->energyDeposited;
         categoryToXMap[category]      += x;
@@ -262,7 +264,7 @@ namespace sbnd::crt {
     return id;
   }
 
-  void CRTBackTrackerAlg::RunRecoStatusChecks(const art::Event &event)
+  void CRTBackTrackerAlg::RunSpacePointRecoStatusChecks(const art::Event &event)
   {
     art::Handle<std::vector<CRTSpacePoint>> spacePointHandle;
     event.getByLabel(fSpacePointModuleLabel, spacePointHandle);
@@ -271,14 +273,29 @@ namespace sbnd::crt {
 
     for(unsigned i = 0; i < spacePointHandle->size(); ++i)
       {
-        const art::Ptr<CRTSpacePoint> spacepoint(spacePointHandle, i);
-        const art::Ptr<CRTCluster> cluster = spacePointsToClusters.at(spacepoint.key())[0];
+        const art::Ptr<CRTSpacePoint> spacePoint(spacePointHandle, i);
+        const art::Ptr<CRTCluster> cluster = spacePointsToClusters.at(spacePoint.key())[0];
 
-        TruthMatchMetrics truthmatch = TruthMatching(event, cluster);
+        TruthMatchMetrics truthMatch = TruthMatching(event, cluster);
 
-        Category category(truthmatch.trackid, cluster->Tagger());
+        Category category(truthMatch.trackid, cluster->Tagger());
         fTrackIDSpacePointRecoMap[category] = true;
-      } 
+      }
+  }
+
+  void CRTBackTrackerAlg::RunTrackRecoStatusChecks(const art::Event &event)
+  {
+    art::Handle<std::vector<CRTTrack>> trackHandle;
+    event.getByLabel(fTrackModuleLabel, trackHandle);
+
+    for(unsigned i = 0; i < trackHandle->size(); ++i)
+      {
+        const art::Ptr<CRTTrack> track(trackHandle, i);
+
+        TruthMatchMetrics truthMatch = TruthMatching(event, track);
+
+        fTrackIDTrackRecoMap[truthMatch.trackid] = true;
+      }
   }
 
   std::map<CRTBackTrackerAlg::Category, bool> CRTBackTrackerAlg::GetSpacePointRecoStatusMap()
@@ -286,9 +303,19 @@ namespace sbnd::crt {
     return fTrackIDSpacePointRecoMap;
   }
 
+  std::map<int, bool> CRTBackTrackerAlg::GetTrackRecoStatusMap()
+  {
+    return fTrackIDTrackRecoMap;
+  }
+
   CRTBackTrackerAlg::TrueDeposit CRTBackTrackerAlg::GetTrueDeposit(Category category)
   {
     return fTrueDepositsPerTaggerMap[category];
+  }
+
+  CRTBackTrackerAlg::TrueDeposit CRTBackTrackerAlg::GetTrueDeposit(int trackid)
+  {
+    return fTrueDepositsMap[trackid];
   }
 
   CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<CRTStripHit> &stripHit)

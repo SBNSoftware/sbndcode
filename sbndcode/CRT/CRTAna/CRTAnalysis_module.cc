@@ -58,7 +58,9 @@ public:
 
   void AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints);
 
-  void AnalyseTrueDeposits(const std::map<CRTBackTrackerAlg::Category, bool> &recoStatusMap);
+  void AnalyseTrueDepositsPerTagger(const std::map<CRTBackTrackerAlg::Category, bool> &recoStatusMap);
+
+  void AnalyseTrueDeposits(const std::map<int, bool> &recoStatusMap);
 
   void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec);
 
@@ -171,14 +173,20 @@ private:
   std::vector<double>   _cl_sp_etime;
   std::vector<bool>     _cl_sp_complete;
 
+  std::vector<int>     _td_tag_trackid;
+  std::vector<int>     _td_tag_pdg;
+  std::vector<int16_t> _td_tag_tagger;
+  std::vector<double>  _td_tag_energy;
+  std::vector<double>  _td_tag_time;
+  std::vector<double>  _td_tag_x;
+  std::vector<double>  _td_tag_y;
+  std::vector<double>  _td_tag_z;
+  std::vector<bool>    _td_tag_reco_status;
+
   std::vector<int>     _td_trackid;
   std::vector<int>     _td_pdg;
-  std::vector<int16_t> _td_tagger;
   std::vector<double>  _td_energy;
   std::vector<double>  _td_time;
-  std::vector<double>  _td_x;
-  std::vector<double>  _td_y;
-  std::vector<double>  _td_z;
   std::vector<bool>    _td_reco_status;
 
   std::vector<double>              _tr_start_x;
@@ -334,14 +342,20 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("cl_sp_etime", "std::vector<double>", &_cl_sp_etime);
     fTree->Branch("cl_sp_complete", "std::vector<bool>", &_cl_sp_complete);
 
+    fTree->Branch("td_tag_trackid", "std::vector<int>", &_td_tag_trackid);
+    fTree->Branch("td_tag_pdg", "std::vector<int>", &_td_tag_pdg);
+    fTree->Branch("td_tag_tagger", "std::vector<int16_t>", &_td_tag_tagger);
+    fTree->Branch("td_tag_energy", "std::vector<double>", &_td_tag_energy);
+    fTree->Branch("td_tag_time", "std::vector<double>", &_td_tag_time);
+    fTree->Branch("td_tag_x", "std::vector<double>", &_td_tag_x);
+    fTree->Branch("td_tag_y", "std::vector<double>", &_td_tag_y);
+    fTree->Branch("td_tag_z", "std::vector<double>", &_td_tag_z);
+    fTree->Branch("td_tag_reco_status", "std::vector<bool>", &_td_tag_reco_status);
+
     fTree->Branch("td_trackid", "std::vector<int>", &_td_trackid);
     fTree->Branch("td_pdg", "std::vector<int>", &_td_pdg);
-    fTree->Branch("td_tagger", "std::vector<int16_t>", &_td_tagger);
     fTree->Branch("td_energy", "std::vector<double>", &_td_energy);
     fTree->Branch("td_time", "std::vector<double>", &_td_time);
-    fTree->Branch("td_x", "std::vector<double>", &_td_x);
-    fTree->Branch("td_y", "std::vector<double>", &_td_y);
-    fTree->Branch("td_z", "std::vector<double>", &_td_z);
     fTree->Branch("td_reco_status", "std::vector<bool>", &_td_reco_status);
 
     fTree->Branch("tr_start_x", "std::vector<double>", &_tr_start_x);
@@ -419,7 +433,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 {
   fCRTBackTrackerAlg.SetupMaps(e);
-  fCRTBackTrackerAlg.RunRecoStatusChecks(e);
+  fCRTBackTrackerAlg.RunSpacePointRecoStatusChecks(e);
+  fCRTBackTrackerAlg.RunTrackRecoStatusChecks(e);
 
   _run = e.id().run();
   _subrun = e.id().subRun();
@@ -495,11 +510,11 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   // Fill CRTCluster variables
   AnalyseCRTClusters(e, CRTClusterVec, clustersToSpacePoints);
 
-  // Get Map of TrueDeposits from BackTracker
-  std::map<CRTBackTrackerAlg::Category, bool> recoStatusMap = fCRTBackTrackerAlg.GetSpacePointRecoStatusMap();
-  
+  // Get Map of TrueDeposits per tagger from BackTracker
+  std::map<CRTBackTrackerAlg::Category, bool> spacePointRecoStatusMap = fCRTBackTrackerAlg.GetSpacePointRecoStatusMap();
+
   // Fill TrueDeposit variables
-  AnalyseTrueDeposits(recoStatusMap);
+  AnalyseTrueDepositsPerTagger(spacePointRecoStatusMap);
 
   // Get CRTTracks
   art::Handle<std::vector<CRTTrack>> CRTTrackHandle;
@@ -513,6 +528,12 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
   // Fill CRTTrack variables
   AnalyseCRTTracks(e, CRTTrackVec);
+
+  // Get Map of TrueDeposits from BackTracker
+  std::map<int, bool> trackRecoStatusMap = fCRTBackTrackerAlg.GetTrackRecoStatusMap();
+
+  // Fill TrueDeposit variables
+  AnalyseTrueDeposits(trackRecoStatusMap);
 
   // Fill the Tree
   fTree->Fill();
@@ -803,33 +824,58 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<CRTBackTrackerAlg::Category, bool> &recoStatusMap)
+void sbnd::crt::CRTAnalysis::AnalyseTrueDepositsPerTagger(const std::map<CRTBackTrackerAlg::Category, bool> &recoStatusMap)
 {
   const unsigned nTrueDeposits = recoStatusMap.size();
 
-  _td_trackid.resize(nTrueDeposits);
-  _td_pdg.resize(nTrueDeposits);
-  _td_tagger.resize(nTrueDeposits);
-  _td_energy.resize(nTrueDeposits);
-  _td_time.resize(nTrueDeposits);
-  _td_x.resize(nTrueDeposits);
-  _td_y.resize(nTrueDeposits);
-  _td_z.resize(nTrueDeposits);
-  _td_reco_status.resize(nTrueDeposits);
+  _td_tag_trackid.resize(nTrueDeposits);
+  _td_tag_pdg.resize(nTrueDeposits);
+  _td_tag_tagger.resize(nTrueDeposits);
+  _td_tag_energy.resize(nTrueDeposits);
+  _td_tag_time.resize(nTrueDeposits);
+  _td_tag_x.resize(nTrueDeposits);
+  _td_tag_y.resize(nTrueDeposits);
+  _td_tag_z.resize(nTrueDeposits);
+  _td_tag_reco_status.resize(nTrueDeposits);
 
   unsigned entry = 0;
   for(auto const& [category, status] : recoStatusMap)
     {
       const CRTBackTrackerAlg::TrueDeposit deposit = fCRTBackTrackerAlg.GetTrueDeposit(category);
 
+      _td_tag_trackid[entry]     = deposit.trackid;
+      _td_tag_pdg[entry]         = deposit.pdg;
+      _td_tag_tagger[entry]      = deposit.tagger;
+      _td_tag_energy[entry]      = deposit.energy;
+      _td_tag_time[entry]        = deposit.time;
+      _td_tag_x[entry]           = deposit.x;
+      _td_tag_y[entry]           = deposit.y;
+      _td_tag_z[entry]           = deposit.z;
+      _td_tag_reco_status[entry] = status;
+
+      ++entry;
+    }
+}
+
+void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, bool> &recoStatusMap)
+{
+  const unsigned nTrueDeposits = recoStatusMap.size();
+
+  _td_trackid.resize(nTrueDeposits);
+  _td_pdg.resize(nTrueDeposits);
+  _td_energy.resize(nTrueDeposits);
+  _td_time.resize(nTrueDeposits);
+  _td_reco_status.resize(nTrueDeposits);
+
+  unsigned entry = 0;
+  for(auto const& [trackid, status] : recoStatusMap)
+    {
+      const CRTBackTrackerAlg::TrueDeposit deposit = fCRTBackTrackerAlg.GetTrueDeposit(trackid);
+
       _td_trackid[entry]     = deposit.trackid;
       _td_pdg[entry]         = deposit.pdg;
-      _td_tagger[entry]      = deposit.tagger;
       _td_energy[entry]      = deposit.energy;
       _td_time[entry]        = deposit.time;
-      _td_x[entry]           = deposit.x;
-      _td_y[entry]           = deposit.y;
-      _td_z[entry]           = deposit.z;
       _td_reco_status[entry] = status;
 
       ++entry;
