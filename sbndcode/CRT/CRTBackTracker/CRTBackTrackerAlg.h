@@ -77,6 +77,26 @@ namespace sbnd::crt {
           };
     };
 
+    struct Category {
+      int       trackid;
+      CRTTagger tagger;
+
+      Category(int _trackid = -999999, CRTTagger _tagger = kUndefinedTagger)
+      {
+        trackid = _trackid;
+        tagger  = _tagger;
+      }
+
+      bool operator<(const Category &other) const
+      {
+        if(trackid == other.trackid)
+          return tagger < other.tagger;
+
+        return trackid < other.trackid;
+      }
+    };
+
+
     struct TrueDeposit {
       int       trackid;
       int       pdg;
@@ -117,15 +137,7 @@ namespace sbnd::crt {
     struct TrueTrackInfo {
       int trackid;
       int pdg;
-      double startx;
-      double starty;
-      double startz;
-      double endx;
-      double endy;
-      double endz;
       double energy;
-      double tof;
-      bool found_ends;
       TrueDeposit deposit1;
       TrueDeposit deposit2;
 
@@ -133,34 +145,17 @@ namespace sbnd::crt {
       {
         trackid    = -std::numeric_limits<int>::max();
         pdg        = -std::numeric_limits<int>::max();
-        startx     = -std::numeric_limits<double>::max();
-        starty     = -std::numeric_limits<double>::max();
-        startz     = -std::numeric_limits<double>::max();
-        endx       = -std::numeric_limits<double>::max();
-        endy       = -std::numeric_limits<double>::max();
-        endz       = -std::numeric_limits<double>::max();
         energy     = -std::numeric_limits<double>::max();
-        tof        = -std::numeric_limits<double>::max();
-        found_ends = false;
         deposit1   = TrueDeposit();
         deposit2   = TrueDeposit();
       }
 
-      TrueTrackInfo(int _trackid, int _pdg, geo::Point_t _start, geo::Point_t _end,
-                    double _energy, double _tof, bool _found_ends, TrueDeposit &_deposit1,
+      TrueTrackInfo(int _trackid, int _pdg, double _energy, TrueDeposit &_deposit1,
                     TrueDeposit &_deposit2)
       {
         trackid    = _trackid;
         pdg        = _pdg;
-        startx     = _start.X();
-        starty     = _start.Y();
-        startz     = _start.Z();
-        endx       = _end.X();
-        endy       = _end.Y();
-        endz       = _end.Z();
         energy     = _energy;
-        tof        = _tof;
-        found_ends = _found_ends;
         deposit1   = _deposit1;
         deposit2   = _deposit2;
       }
@@ -206,9 +201,9 @@ namespace sbnd::crt {
 
     void RunRecoStatusChecks(const art::Event &event);
     
-    std::map<std::pair<int, CRTTagger>, bool> GetSpacePointRecoStatusMap();
+    std::map<Category, bool> GetSpacePointRecoStatusMap();
 
-    TrueDeposit GetTrueDeposit(std::pair<int, CRTTagger> category);
+    TrueDeposit GetTrueDeposit(Category category);
 
     TruthMatchMetrics TruthMatching(const art::Event &event, const art::Ptr<CRTStripHit> &stripHit);
 
@@ -233,15 +228,15 @@ namespace sbnd::crt {
     art::InputTag fSpacePointModuleLabel;
     art::InputTag fTrackModuleLabel;
 
-    std::map<std::pair<int, CRTTagger>, TrueDeposit> fTrueDepositsPerTaggerMap;
-    std::map<int, TrueDeposit>                       fTrueDepositsMap;
-    std::map<int, TrueTrackInfo>                     fTrueTrackInfosMap;
-    std::map<std::pair<int, CRTTagger>, bool>        fTrackIDSpacePointRecoMap;
-    std::map<std::pair<int, CRTTagger>, double>      fMCPIDEsEnergyPerTaggerMap;
-    std::map<int, double>                            fMCPIDEsEnergyMap;
-    std::map<std::pair<int, CRTTagger>, int>         fMCPStripHitsMap;
-    std::map<int, int>                               fTrackIDMotherMap;
-    std::map<int, int>                               fStripHitMCPMap;
+    std::map<Category, TrueDeposit> fTrueDepositsPerTaggerMap;
+    std::map<int, TrueDeposit>      fTrueDepositsMap;
+    std::map<int, TrueTrackInfo>    fTrueTrackInfosMap;
+    std::map<Category, bool>        fTrackIDSpacePointRecoMap;
+    std::map<Category, double>      fMCPIDEsEnergyPerTaggerMap;
+    std::map<int, double>           fMCPIDEsEnergyMap;
+    std::map<Category, int>         fMCPStripHitsMap;
+    std::map<int, int>              fTrackIDMotherMap;
+    std::map<int, int>              fStripHitMCPMap;
     
   };
 }

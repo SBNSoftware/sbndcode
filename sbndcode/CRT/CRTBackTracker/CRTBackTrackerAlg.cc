@@ -53,20 +53,20 @@ namespace sbnd::crt {
     std::vector<art::Ptr<sim::AuxDetIDE>> ideVec;
     art::fill_ptr_vector(ideVec, ideHandle);
 
-    std::set<std::pair<int, CRTTagger>> depositCategories;
-    std::set<int>                       depositTrackIDs;
+    std::set<Category> depositCategories;
+    std::set<int>      depositTrackIDs;
 
-    std::map<std::pair<int, CRTTagger>, double> categoryToEnergyMap, categoryToXMap, categoryToYMap, 
+    std::map<Category, double> categoryToEnergyMap, categoryToXMap, categoryToYMap,
       categoryToZMap, categoryToTimeMap;
-    std::map<std::pair<int, CRTTagger>, uint> categoryToNIDEsMap;
+    std::map<Category, uint> categoryToNIDEsMap;
 
-    std::map<int, double> idToEnergyMap, idToXMap, idToYMap, 
+    std::map<int, double> idToEnergyMap, idToXMap, idToYMap,
       idToZMap, idToTimeMap;
     std::map<int, uint> idToNIDEsMap;
 
-    std::map<std::pair<int, CRTTagger>, double> coreCategoryToEnergyMap, coreCategoryToXMap, coreCategoryToYMap, 
+    std::map<Category, double> coreCategoryToEnergyMap, coreCategoryToXMap, coreCategoryToYMap,
       coreCategoryToZMap, coreCategoryToTimeMap;
-    std::map<std::pair<int, CRTTagger>, uint> coreCategoryToNIDEsMap;
+    std::map<Category, uint> coreCategoryToNIDEsMap;
 
     for(auto const ide : ideVec)
       {
@@ -77,16 +77,17 @@ namespace sbnd::crt {
 
         const int rollUpID = RollUpID(ide->trackID);
 
-        depositCategories.insert({rollUpID, tagger});
+        Category category(rollUpID, tagger);
+        depositCategories.insert(category);
         depositTrackIDs.insert(rollUpID);
-        
-        fTrackIDSpacePointRecoMap[{rollUpID, tagger}] = false;
 
-        categoryToEnergyMap[{rollUpID, tagger}] += ide->energyDeposited;
-        categoryToXMap[{rollUpID, tagger}]      += x;
-        categoryToYMap[{rollUpID, tagger}]      += y;
-        categoryToZMap[{rollUpID, tagger}]      += z;
-        categoryToTimeMap[{rollUpID, tagger}]   += (ide->entryT + ide->exitT) / 2.;
+        fTrackIDSpacePointRecoMap[category] = false;
+
+        categoryToEnergyMap[category] += ide->energyDeposited;
+        categoryToXMap[category]      += x;
+        categoryToYMap[category]      += y;
+        categoryToZMap[category]      += z;
+        categoryToTimeMap[category]   += (ide->entryT + ide->exitT) / 2.;
 
         idToEnergyMap[rollUpID] += ide->energyDeposited;
         idToXMap[rollUpID]      += x;
@@ -94,28 +95,29 @@ namespace sbnd::crt {
         idToZMap[rollUpID]      += z;
         idToTimeMap[rollUpID]   += (ide->entryT + ide->exitT) / 2.;
 
-        coreCategoryToEnergyMap[{ide->trackID, tagger}] += ide->energyDeposited;
-        coreCategoryToXMap[{ide->trackID, tagger}]      += x;
-        coreCategoryToYMap[{ide->trackID, tagger}]      += y;
-        coreCategoryToZMap[{ide->trackID, tagger}]      += z;
-        coreCategoryToTimeMap[{ide->trackID, tagger}]   += (ide->entryT + ide->exitT) / 2.;
+        Category coreCategory(ide->trackID, tagger);
+        coreCategoryToEnergyMap[coreCategory] += ide->energyDeposited;
+        coreCategoryToXMap[coreCategory]      += x;
+        coreCategoryToYMap[coreCategory]      += y;
+        coreCategoryToZMap[coreCategory]      += z;
+        coreCategoryToTimeMap[coreCategory]   += (ide->entryT + ide->exitT) / 2.;
 
-        if(categoryToNIDEsMap.find({rollUpID, tagger}) == categoryToNIDEsMap.end())
-          categoryToNIDEsMap[{rollUpID, tagger}] = 0;
+        if(categoryToNIDEsMap.find(category) == categoryToNIDEsMap.end())
+          categoryToNIDEsMap[category] = 0;
 
-        ++categoryToNIDEsMap[{rollUpID, tagger}];
+        ++categoryToNIDEsMap[category];
 
         if(idToNIDEsMap.find(rollUpID) == idToNIDEsMap.end())
           idToNIDEsMap[rollUpID] = 0;
 
         ++idToNIDEsMap[rollUpID];
 
-        if(coreCategoryToNIDEsMap.find({ide->trackID, tagger}) == coreCategoryToNIDEsMap.end())
-          coreCategoryToNIDEsMap[{ide->trackID, tagger}] = 0;
+        if(coreCategoryToNIDEsMap.find(coreCategory) == coreCategoryToNIDEsMap.end())
+          coreCategoryToNIDEsMap[coreCategory] = 0;
 
-        ++coreCategoryToNIDEsMap[{ide->trackID, tagger}];
+        ++coreCategoryToNIDEsMap[coreCategory];
       }
-        
+
     for(auto const category : depositCategories)
       {
         fMCPIDEsEnergyPerTaggerMap[category] = 0.;
@@ -132,10 +134,10 @@ namespace sbnd::crt {
         const double coreTime   = coreCategoryToTimeMap[category] / coreCategoryToNIDEsMap[category];
         const double coreEnergy = coreCategoryToEnergyMap[category];
 
-        const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(category.first);
+        const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(category.trackid);
         const int pdg = particle == NULL ? -999999 : particle->PdgCode();
 
-        fTrueDepositsPerTaggerMap[category] = TrueDeposit(category.first, pdg, category.second,
+        fTrueDepositsPerTaggerMap[category] = TrueDeposit(category.trackid, pdg, category.tagger,
                                                           energy, time, x, y, z,
                                                           coreEnergy, coreTime, coreX, coreY, coreZ);
       }
@@ -151,145 +153,68 @@ namespace sbnd::crt {
         const double energy = idToEnergyMap[trackID];
 
         const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(trackID);
-        const int pdg = particle == NULL ? -999999 : particle->PdgCode();
 
-        bool found_start = false, found_end = false;
-        geo::Point_t start, end;
-        double start_time = 0., end_time = 0.;
-        unsigned start_i = 0;
+        const int pdg                = particle == NULL ? -999999 : particle->PdgCode();
+        const double particle_energy = particle == NULL ? -999999. : particle->E();
 
-        for(unsigned i = 0; i < particle->NumberTrajectoryPoints(); ++i)
-          {
-            const TVector3 pos = particle->Position(i).Vect();
-            const geo::Point_t point(pos.X(), pos.Y(), pos.Z());
+        struct SortTagger {
+          double    time;
+          double    energy;
+          CRTTagger tagger;
+        };
 
-            if(!found_start && fCRTGeoAlg.IsPointInsideCRTLimits(point))
-              {
-                start       = point;
-                start_time  = particle->T(i);
-                start_i     = i;
-                found_start = true;
-              }
-            else if(fCRTGeoAlg.IsPointInsideCRTLimits(point))
-              {
-                end       = point;
-                end_time  = particle->T(i);
-                found_end = true;
-              }
-          }
-
-        if(!found_start || !found_end)
-          {
-            found_start = true;
-            found_end   = true;
-
-            const TVector3 pos0 = particle->Position().Vect();
-            const geo::Point_t point0(pos0.X(), pos0.Y(), pos0.Z());
-            const TVector3 posN = particle->EndPosition().Vect();
-            const geo::Point_t pointN(posN.X(), posN.Y(), posN.Z());
-            
-            const double kmax       = (pointN - point0).R();
-            const geo::Vector_t dir = (pointN - point0).Unit();
-
-            const double time0      = particle->T();
-            const double timeN      = particle->EndT();
-            const double time_diff  = timeN - time0;
-
-            std::vector<std::pair<double, geo::Point_t>> intersects, back_intersects;
-
-            for(unsigned tag_i = 0; tag_i < fCRTGeoAlg.NumTaggers(); ++tag_i)
-              {
-                CRTTagger tag = static_cast<CRTTagger>(tag_i);
-
-                intersects.push_back(LineTaggerIntersectionPoint(point0, dir, tag));
-                back_intersects.push_back(LineTaggerIntersectionPoint(pointN, -dir, tag));
-              }
-
-            std::sort(intersects.begin(), intersects.end(),
-                      [](const auto &a, const auto &b) { 
-                        if(a.first < 0 && b.first > 0 ) return false;
-                        else if(a.first > 0 && b.first < 0) return true;
-                        else
-                          return a.first < b.first;
-                      });
-
-            std::sort(back_intersects.begin(), back_intersects.end(),
-                      [](const auto &a, const auto &b) { 
-                        if(a.first < 0 && b.first > 0 ) return false;
-                        else if(a.first > 0 && b.first < 0) return true;
-                        else
-                          return a.first < b.first;
-                      });
-
-            if(intersects.begin()->first == 999999.)
-              found_start = false;
-
-            if(back_intersects.begin()->first == 999999.)
-              found_start = false;
-
-            start = intersects.begin()->second;
-            end   = back_intersects.begin()->second;
-            
-            start_time = time0 + (intersects.begin()->first / kmax) * time_diff;
-            end_time   = timeN - (back_intersects.begin()->first / kmax) * time_diff;
-          }
-
-        std::vector<std::tuple<double, double, CRTTagger>> taggers;
+        std::vector<SortTagger> taggers;
 
         for(auto const& [category, deposit] : fTrueDepositsPerTaggerMap)
           {
-            if(category.first == trackID)
-              taggers.push_back({deposit.time, deposit.energy, category.second});
+            if(category.trackid == trackID)
+              taggers.push_back({deposit.time, deposit.energy, category.tagger});
           }
 
         std::sort(taggers.begin(), taggers.end(),
-                  [](const auto &a, const auto &b)
-                  {
-                    return std::get<0>(a) < std::get<0>(b);
-                  });
-        
+                  [](const SortTagger &a, const SortTagger &b)
+                  { return a.time < b.time; });
+
+        Category category1, category2;
+
         if(taggers.size() == 1)
           {         
-            fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
-                                                        end_time - start_time, found_start && found_end,
-                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[0])}],
-                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[0])}]);
+            category1 = {trackID, taggers[0].tagger};
+            category2 = {trackID, taggers[0].tagger};
           }
         else if(taggers.size() == 2)
           {
-            fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
-                                                        end_time - start_time, found_start && found_end,
-                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[0])}],
-                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[1])}]);
+            category1 = {trackID, taggers[0].tagger};
+            category2 = {trackID, taggers[1].tagger};
           }
         else if(taggers.size() == 3)
           {
-            fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
-                                                        end_time - start_time, found_start && found_end,
-                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[0])}],
-                                                        fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[2])}]);
+            category1 = {trackID, taggers[0].tagger};
+            category2 = {trackID, taggers[2].tagger};
           }
         else if(taggers.size() > 3)
           {
             std::sort(taggers.begin(), taggers.end(),
                       [](const auto &a, const auto &b)
-                      {
-                        return std::get<1>(a) < std::get<1>(b);
-                      });
+                      { return a.energy < b.energy; });
 
             const unsigned n = taggers.size();
 
-            if(fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-1])}].time < fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-2])}].time)
-              fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
-                                                          end_time - start_time, found_start && found_end,
-                                                          fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-1])}],
-                                                          fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-2])}]);
+            if(taggers[n-1].time < taggers[n-2].time)
+              {
+                category1 = {trackID, taggers[n-1].tagger};
+                category2 = {trackID, taggers[n-2].tagger};
+              }
             else
-              fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, start, end, particle->E(start_i),
-                                                          end_time - start_time, found_start && found_end,
-                                                          fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-2])}],
-                                                          fTrueDepositsPerTaggerMap[{trackID, std::get<2>(taggers[n-1])}]);
+              {
+                category1 = {trackID, taggers[n-2].tagger};
+                category2 = {trackID, taggers[n-1].tagger};
+              }
           }
+
+        fTrueTrackInfosMap[trackID] = TrueTrackInfo(trackID, pdg, particle_energy,
+                                                    fTrueDepositsPerTaggerMap[category1],
+                                                    fTrueDepositsPerTaggerMap[category2]);
 
         fTrueDepositsMap[trackID] = TrueDeposit(trackID, pdg, kUndefinedTagger,
                                                 energy, time, x, y, z);
@@ -302,8 +227,11 @@ namespace sbnd::crt {
         const double z = (ide->entryZ + ide->exitZ) / 2.;
         const CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
 
-        fMCPIDEsEnergyPerTaggerMap[{RollUpID(ide->trackID), tagger}] += ide->energyDeposited;
-        fMCPIDEsEnergyMap[RollUpID(ide->trackID)]                    += ide->energyDeposited;   
+        const int rollUpID = RollUpID(ide->trackID);
+        Category category(rollUpID, tagger);
+
+        fMCPIDEsEnergyPerTaggerMap[category] += ide->energyDeposited;
+        fMCPIDEsEnergyMap[rollUpID]          += ide->energyDeposited;
       }
 
     art::Handle<std::vector<CRTStripHit>> stripHitHandle;
@@ -318,8 +246,9 @@ namespace sbnd::crt {
 
         fStripHitMCPMap[stripHit.key()] = truthMatch.trackid;
 
-        if(fMCPStripHitsMap.find({truthMatch.trackid, tagger}) == fMCPStripHitsMap.end())
-          fMCPStripHitsMap[{truthMatch.trackid, tagger}] = 0;
+        Category category(truthMatch.trackid, tagger);
+        if(fMCPStripHitsMap.find(category) == fMCPStripHitsMap.end())
+          fMCPStripHitsMap[category] = 0;
 
         ++fMCPStripHitsMap[{truthMatch.trackid, tagger}];
       }
@@ -347,16 +276,17 @@ namespace sbnd::crt {
 
         TruthMatchMetrics truthmatch = TruthMatching(event, cluster);
 
-        fTrackIDSpacePointRecoMap[{truthmatch.trackid, cluster->Tagger()}] = true;
+        Category category(truthmatch.trackid, cluster->Tagger());
+        fTrackIDSpacePointRecoMap[category] = true;
       } 
   }
 
-  std::map<std::pair<int, CRTTagger>, bool> CRTBackTrackerAlg::GetSpacePointRecoStatusMap()
+  std::map<CRTBackTrackerAlg::Category, bool> CRTBackTrackerAlg::GetSpacePointRecoStatusMap()
   {
     return fTrackIDSpacePointRecoMap;
   }
 
-  CRTBackTrackerAlg::TrueDeposit CRTBackTrackerAlg::GetTrueDeposit(std::pair<int, CRTTagger> category)
+  CRTBackTrackerAlg::TrueDeposit CRTBackTrackerAlg::GetTrueDeposit(Category category)
   {
     return fTrueDepositsPerTaggerMap[category];
   }
@@ -411,9 +341,11 @@ namespace sbnd::crt {
         double pur = en / totalEnergy;
         if(pur > bestPur)
           {
+            Category category(id, tagger);
+
             trackid = id;
             bestPur = pur;
-            comp    = en / fMCPIDEsEnergyPerTaggerMap[{id, tagger}];
+            comp    = en / fMCPIDEsEnergyPerTaggerMap[category];
           }
       }
 
@@ -473,17 +405,21 @@ namespace sbnd::crt {
         double pur = en / totalEnergy;
         if(pur > bestPur)
           {
+            Category category(id, cluster->Tagger());
+
             trackid = id;
             bestPur = pur;
-            comp    = en / fMCPIDEsEnergyPerTaggerMap[{id, cluster->Tagger()}];
+            comp    = en / fMCPIDEsEnergyPerTaggerMap[category];
           }
       }
 
-    double hitComp = idToNHitsMap[trackid] / (double) fMCPStripHitsMap[{trackid, cluster->Tagger()}];
+    Category category(trackid, cluster->Tagger());
+
+    double hitComp = idToNHitsMap[trackid] / (double) fMCPStripHitsMap[category];
     double hitPur  = idToNHitsMap[trackid] / (double) assnStripHitVec.size();
 
     return TruthMatchMetrics(trackid, comp, bestPur, hitComp, hitPur, 
-                             fTrueDepositsPerTaggerMap[{trackid, cluster->Tagger()}]);
+                             fTrueDepositsPerTaggerMap[category]);
   }
 
   CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<CRTTrack> &track)
