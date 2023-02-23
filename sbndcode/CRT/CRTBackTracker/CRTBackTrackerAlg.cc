@@ -140,7 +140,7 @@ namespace sbnd::crt {
         const int pdg = particle == NULL ? -999999 : particle->PdgCode();
 
         fTrueDepositsPerTaggerMap[category] = TrueDeposit(category.trackid, pdg, category.tagger,
-                                                          energy, time, x, y, z,
+                                                          energy, time, x, y, z, true,
                                                           coreEnergy, coreTime, coreX, coreY, coreZ);
       }
 
@@ -219,7 +219,7 @@ namespace sbnd::crt {
                                                     fTrueDepositsPerTaggerMap[category2]);
 
         fTrueDepositsMap[trackID] = TrueDeposit(trackID, pdg, kUndefinedTagger,
-                                                energy, time, x, y, z);
+                                                energy, time, x, y, z, taggers.size() > 1);
       }
 
     for(auto const ide : ideVec)
@@ -376,7 +376,7 @@ namespace sbnd::crt {
           }
       }
 
-    TrueDeposit deposit(-999999, -999999, tagger, totalEnergy, t, x, y, z);
+    TrueDeposit deposit(trackid, -999999, tagger, totalEnergy, t, x, y, z, true);
 
     return TruthMatchMetrics(trackid, comp, bestPur, 1., 1., deposit);
   }

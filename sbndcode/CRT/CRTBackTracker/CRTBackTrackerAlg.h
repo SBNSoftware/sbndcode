@@ -106,31 +106,34 @@ namespace sbnd::crt {
       double    x;
       double    y;
       double    z;
+      bool      reconstructable;
       double    coreEnergy;
       double    coreTime;
       double    coreX;
       double    coreY;
       double    coreZ;
 
-      TrueDeposit(int _trackid = -999999, int _pdg = -999999, CRTTagger _tagger = kUndefinedTagger, 
+      TrueDeposit(int _trackid = -999999, int _pdg = -999999, CRTTagger _tagger = kUndefinedTagger,
                   double _energy = -999999., double _time = -999999.,
-                  double _x = -999999., double _y = -999999., double _z = -999999., 
+                  double _x = -999999., double _y = -999999., double _z = -999999.,
+                  bool _reconstructable = false,
                   double _coreEnergy = -999999., double _coreTime = -999999.,
                   double _coreX = -999999., double _coreY = -999999., double _coreZ = -999999.)
       {
-        trackid    = _trackid;
-        pdg        = _pdg;
-        tagger     = _tagger;
-        energy     = _energy;
-        time       = _time;
-        x          = _x;
-        y          = _y;
-        z          = _z;
-        coreEnergy = _coreEnergy;
-        coreTime   = _coreTime;
-        coreX      = _coreX;
-        coreY      = _coreY;
-        coreZ      = _coreZ;
+        trackid         = _trackid;
+        pdg             = _pdg;
+        tagger          = _tagger;
+        energy          = _energy;
+        time            = _time;
+        x               = _x;
+        y               = _y;
+        z               = _z;
+        reconstructable = _reconstructable;
+        coreEnergy      = _coreEnergy;
+        coreTime        = _coreTime;
+        coreX           = _coreX;
+        coreY           = _coreY;
+        coreZ           = _coreZ;
       }
     };
 
