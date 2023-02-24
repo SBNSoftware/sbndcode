@@ -221,21 +221,19 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
                     }
                 }
             }
-          else
-            {
-              double time, etime;
-              TimeErrorCalculator({primarySpacePoint->Time(), secondarySpacePoint->Time()}, time, etime);
-              const double tof = secondarySpacePoint->Time() - primarySpacePoint->Time();
 
-              const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE();
+          double time, etime;
+          TimeErrorCalculator({primarySpacePoint->Time(), secondarySpacePoint->Time()}, time, etime);
+          const double tof = secondarySpacePoint->Time() - primarySpacePoint->Time();
 
-              const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
+          const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE();
 
-              const CRTTrack track(start, end, time, etime, pe, tof, false, used_taggers);
-              const std::set<unsigned> used_spacepoints = {i, ii};
+          const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
 
-              candidates.emplace_back(track, used_spacepoints);
-            }
+          const CRTTrack track(start, end, time, etime, pe, tof, false, used_taggers);
+          const std::set<unsigned> used_spacepoints = {i, ii};
+
+          candidates.emplace_back(track, used_spacepoints);
         }
     }
   return candidates;
