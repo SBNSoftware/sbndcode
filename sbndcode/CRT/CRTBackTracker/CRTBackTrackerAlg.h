@@ -208,7 +208,7 @@ namespace sbnd::crt {
     
     std::map<Category, bool> GetSpacePointRecoStatusMap();
 
-    std::map<int, bool> GetTrackRecoStatusMap();
+    std::map<int, std::pair<bool, bool>> GetTrackRecoStatusMap();
 
     TrueDeposit GetTrueDeposit(Category category);
 
@@ -237,16 +237,16 @@ namespace sbnd::crt {
     art::InputTag fSpacePointModuleLabel;
     art::InputTag fTrackModuleLabel;
 
-    std::map<Category, TrueDeposit> fTrueDepositsPerTaggerMap;
-    std::map<int, TrueDeposit>      fTrueDepositsMap;
-    std::map<int, TrueTrackInfo>    fTrueTrackInfosMap;
-    std::map<Category, bool>        fTrackIDSpacePointRecoMap;
-    std::map<int, bool>             fTrackIDTrackRecoMap;
-    std::map<Category, double>      fMCPIDEsEnergyPerTaggerMap;
-    std::map<int, double>           fMCPIDEsEnergyMap;
-    std::map<Category, int>         fMCPStripHitsMap;
-    std::map<int, int>              fTrackIDMotherMap;
-    std::map<int, int>              fStripHitMCPMap;
+    std::map<Category, TrueDeposit>      fTrueDepositsPerTaggerMap;
+    std::map<int, TrueDeposit>           fTrueDepositsMap;
+    std::map<int, TrueTrackInfo>         fTrueTrackInfosMap;
+    std::map<Category, bool>             fTrackIDSpacePointRecoMap;
+    std::map<int, std::pair<bool, bool>> fTrackIDTrackRecoMap;
+    std::map<Category, double>           fMCPIDEsEnergyPerTaggerMap;
+    std::map<int, double>                fMCPIDEsEnergyMap;
+    std::map<Category, int>              fMCPStripHitsMap;
+    std::map<int, int>                   fTrackIDMotherMap;
+    std::map<int, int>                   fStripHitMCPMap;
     
   };
 }

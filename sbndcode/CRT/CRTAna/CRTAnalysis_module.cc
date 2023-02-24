@@ -189,6 +189,7 @@ private:
   std::vector<double>  _td_time;
   std::vector<bool>    _td_reconstructable;
   std::vector<bool>    _td_reco_status;
+  std::vector<bool>    _td_reco_triple;
 
   std::vector<double>              _tr_start_x;
   std::vector<double>              _tr_start_y;
@@ -359,6 +360,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("td_time", "std::vector<double>", &_td_time);
     fTree->Branch("td_reconstructable", "std::vector<bool>", &_td_reconstructable);
     fTree->Branch("td_reco_status", "std::vector<bool>", &_td_reco_status);
+    fTree->Branch("td_reco_triple", "std::vector<bool>", &_td_reco_triple);
 
     fTree->Branch("tr_start_x", "std::vector<double>", &_tr_start_x);
     fTree->Branch("tr_start_y", "std::vector<double>", &_tr_start_y);
@@ -880,7 +882,8 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, bool> &reco
       _td_energy[entry]          = deposit.energy;
       _td_time[entry]            = deposit.time;
       _td_reconstructable[entry] = deposit.reconstructable;
-      _td_reco_status[entry]     = status;
+      _td_reco_status[entry]     = status.first;
+      _td_reco_triple[entry]     = status.second;
 
       ++entry;
     }

@@ -83,7 +83,7 @@ namespace sbnd::crt {
         depositTrackIDs.insert(rollUpID);
 
         fTrackIDSpacePointRecoMap[category] = false;
-        fTrackIDTrackRecoMap[rollUpID]      = false;
+        fTrackIDTrackRecoMap[rollUpID]      = { false, false };
 
         categoryToEnergyMap[category] += ide->energyDeposited;
         categoryToXMap[category]      += x;
@@ -294,7 +294,7 @@ namespace sbnd::crt {
 
         TruthMatchMetrics truthMatch = TruthMatching(event, track);
 
-        fTrackIDTrackRecoMap[truthMatch.trackid] = true;
+        fTrackIDTrackRecoMap[truthMatch.trackid] = { true, track->Triple()};
       }
   }
 
@@ -303,7 +303,7 @@ namespace sbnd::crt {
     return fTrackIDSpacePointRecoMap;
   }
 
-  std::map<int, bool> CRTBackTrackerAlg::GetTrackRecoStatusMap()
+  std::map<int, std::pair<bool, bool>> CRTBackTrackerAlg::GetTrackRecoStatusMap()
   {
     return fTrackIDTrackRecoMap;
   }
