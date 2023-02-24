@@ -273,7 +273,8 @@ namespace sbnd::crt {
                 ipt++;
               }
             line->SetLineColor(fTrueTrackColour);
-            line->SetLineWidth(fLineWidth);
+            line->SetLineWidth(fLineWidth+4);
+            line->SetLineStyle(9);
             line->Draw();
           
             if(fPrint) std::cout<<"MCParticle, Track ID: " << part.TrackId() << " PDG: " << part.PdgCode() << ", traj points: "<<npts<<", start = ("<<start.X()<<", "<<start.Y()<<", "
@@ -340,9 +341,8 @@ namespace sbnd::crt {
               std::cout << "Strip Hit: (" 
                         << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
                         << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << stripHit->Ts1()
+                        << " (" << stripHit->Ts1() - G4RefTime << ")"
                         << "\t Matches to trackID: " << truthMatch.trackid 
-                //                      << "(" << particleInv->TrackIdToMotherParticle_P(truthMatch.trackid)->TrackId() << ") "
-                //                      << "(" << particleInv->TrackIdToParticle_P(truthMatch.trackid)->PdgCode() << ") "
                         << " with completeness: " << truthMatch.completeness 
                         << " and purity: " << truthMatch.purity << std::endl;
 
@@ -384,6 +384,7 @@ namespace sbnd::crt {
 
                 if(fPrint)
                   std::cout << "Cluster of " << cluster->NHits() << " hits at t1 = " << cluster->Ts1()
+                            << " (" << cluster->Ts1() - G4RefTime << ")"
                             << "\t Matches to trackID: " << truthMatch.trackid
                             << " with completeness: " << truthMatch.completeness
                             << " and purity: " << truthMatch.purity << std::endl;
@@ -408,7 +409,8 @@ namespace sbnd::crt {
                       std::cout << "Space Point: (" 
                                 << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
                                 << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = "
-                                << spacepoint->Time() << " with PE " << spacepoint->PE() 
+                                << spacepoint->Time() << " (" << spacepoint->Time() - G4RefTime << ")"
+                                << " with PE " << spacepoint->PE()
                                 << std::endl;
                   }
                 else if(spacePointVec.size() != 0)
@@ -423,50 +425,50 @@ namespace sbnd::crt {
         std::vector<art::Ptr<CRTTrack>> tracksVec;
         art::fill_ptr_vector(tracksVec, tracksHandle);
 
-	for(auto track : tracksVec)
-	  {
+        for(auto track : tracksVec)
+          {
             if(track->Time() - G4RefTime < fMinTime || track->Time() - G4RefTime > fMaxTime)
               continue;
 
-	    const geo::Point_t start = track->Start();
-	    const geo::Vector_t dir  = track->Direction();
+            const geo::Point_t start = track->Start();
+            const geo::Vector_t dir  = track->Direction();
 
-	    TPolyLine3D *line = new TPolyLine3D(2);
-	    geo::Point_t a {0,0,0};
-	    geo::Point_t b {0,0,0};
+            TPolyLine3D *line = new TPolyLine3D(2);
+            geo::Point_t a {0,0,0};
+            geo::Point_t b {0,0,0};
 
-	    int i = 0;
-	    do
+            int i = 0;
+            do
               {
-		a = start + i * dir;
-		++i;
-	      }
-	    while(IsPointInsideBox(crtLims, a));
+                a = start + i * dir;
+                ++i;
+              }
+            while(IsPointInsideBox(crtLims, a));
 
-	    i = 0;
-	    do
+            i = 0;
+            do
               {
-		b = start + i * dir;
-		--i;
-	      }
-	    while(IsPointInsideBox(crtLims, b));
+                b = start + i * dir;
+                --i;
+              }
+            while(IsPointInsideBox(crtLims, b));
 
-	    line->SetPoint(0, a.X(), a.Y(), a.Z());
-	    line->SetPoint(1, b.X(), b.Y(), b.Z());
+            line->SetPoint(0, a.X(), a.Y(), a.Z());
+            line->SetPoint(1, b.X(), b.Y(), b.Z());
 
             line->SetLineColor(fTrackColour);
             line->SetLineWidth(fLineWidth);
             line->Draw();
 
-	    if(fPrint)
-	      std::cout << "Track at (" << start.X() << ", " << start.Y() << ", " << start.Z() << ")\n"
-			<< "\twith direction (" << dir.X() << ", " << dir.Y() << ", " << dir.Z() << ")\n"
-			<< "\tdrawn between (" << a.X() << ", " << a.Y() << ", " << a.Z() << ")\n"
-			<< "\tand (" << b.X() << ", " << b.Y() << ", " << b.Z() << ")\n"
-			<< "\tat time " << track->Time() << '\n'
-			<< "\tfrom three hits? " << track->Triple() << std::endl;
+            if(fPrint)
+              std::cout << "Track at (" << start.X() << ", " << start.Y() << ", " << start.Z() << ")\n"
+                        << "\twith direction (" << dir.X() << ", " << dir.Y() << ", " << dir.Z() << ")\n"
+                        << "\tdrawn between (" << a.X() << ", " << a.Y() << ", " << a.Z() << ")\n"
+                        << "\tand (" << b.X() << ", " << b.Y() << ", " << b.Z() << ")\n"
+                        << "\tat time " << track->Time() << " (" << track->Time() - G4RefTime << ")\n"
+                        << "\tfrom three hits? " << track->Triple() << std::endl;
 
-	  }
+          }
       }
 
     c1->SaveAs(Form("crtEventDisplayEvent%d.root", event.event()));

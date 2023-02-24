@@ -60,7 +60,7 @@ public:
 
   void AnalyseTrueDepositsPerTagger(const std::map<CRTBackTrackerAlg::Category, bool> &recoStatusMap);
 
-  void AnalyseTrueDeposits(const std::map<int, bool> &recoStatusMap);
+  void AnalyseTrueDeposits(const std::map<int, std::pair<bool, bool>> &recoStatusMap);
 
   void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec);
 
@@ -534,7 +534,7 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   AnalyseCRTTracks(e, CRTTrackVec);
 
   // Get Map of TrueDeposits from BackTracker
-  std::map<int, bool> trackRecoStatusMap = fCRTBackTrackerAlg.GetTrackRecoStatusMap();
+  std::map<int, std::pair<bool, bool>> trackRecoStatusMap = fCRTBackTrackerAlg.GetTrackRecoStatusMap();
 
   // Fill TrueDeposit variables
   AnalyseTrueDeposits(trackRecoStatusMap);
@@ -861,7 +861,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDepositsPerTagger(const std::map<CRTBack
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, bool> &recoStatusMap)
+void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, std::pair<bool, bool>> &recoStatusMap)
 {
   const unsigned nTrueDeposits = recoStatusMap.size();
 
