@@ -148,7 +148,7 @@ void ReconstructionAccuracy()
     {"sp_pos_accuracy_purity_multi_strip_clusters", "cl_truth_purity:sqrt((cl_sp_x - cl_truth_x)^2 + (cl_sp_y - cl_truth_y)^2 + (cl_sp_z - cl_truth_z)^2)", ";(reco - true) position [cm];Cluster purity;SpacePoints",
      55, -5, 50, 50, 0, 1 + std::numeric_limits<double>::epsilon(), "cl_has_sp && cl_sp_complete && cl_nhits>2", true},
     {"tr_pe_energy_relation", "tr_truth_energy*1e3:tr_pe", ";PE;True Energy (MeV);Tracks",
-     50, 0, 1400, 50, 0, 200, "cl_has_sp && cl_sp_complete"},
+     50, 0, 1400, 50, 0, 100, "cl_has_sp && cl_sp_complete"},
   };
 
   for(auto const &plot : plots)

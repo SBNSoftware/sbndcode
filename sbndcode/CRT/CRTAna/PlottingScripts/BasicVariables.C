@@ -150,6 +150,26 @@ void BasicVariables()
                              {"tr_purity","tr_truth_purity", ";Purity;Tracks",
                               50, 0, 1 + std::numeric_limits<double>::epsilon(), plotcolour},
   };
+
+  const auto copy_of_plots = plots;
+
+  for(auto const &plot : copy_of_plots)
+    {
+      if(plot.name.BeginsWith("tr_"))
+        {
+          plt a = plot;
+          plt b = plot;
+
+          a.req = "!tr_triple";
+          a.name.Append("_two_sp");
+
+          b.req = "tr_triple";
+          b.name.Append("_three_sp");
+
+          plots.push_back(a);
+          plots.push_back(b);
+        }
+    }
   
   std::vector<plttwod> twodplots = {
     {"cl_completeness_nhits","cl_nhits:cl_truth_completeness", ";Completeness;Hits per cluster;Clusters",
