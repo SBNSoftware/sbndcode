@@ -3,6 +3,7 @@ add_subdirectory(CRTBackTracker)
 add_subdirectory(CRTEventDisplay)
 add_subdirectory(CRTReco)
 add_subdirectory(CRTSimulation)
+add_subdirectory(CRTTPCMatching)
 add_subdirectory(CRTUtils)
 
 art_make(

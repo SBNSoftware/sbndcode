@@ -1,0 +1,20 @@
+BEGIN_PROLOG
+
+standard_crttrackmatchingalg:
+{
+    MaxAngleDiff:        0.4              # max difference between CRT and TPC angles
+    MaxDistance:         70.              # max distance between CRT and TPC start/end positions
+    MaxScore:            131.             # max score = DCA + 4*Angle[deg]
+    TPCTrackLabel:       "pandoraSCETrack"
+    SelectionMetric:     "score"          # Metric to choose best match "angle", "dca", or "score" (default)
+}
+
+sbnd_crttrackt0producer:
+{
+    module_type:         "sbndcode/CRT/CRTTPCMatching/CRTTrackMatching"
+    CrtTrackModuleLabel: "crttracks"
+    TpcTrackModuleLabel: "pandoraSCETrack"
+    CrtTrackAlg:         @local::standard_crttrackmatchingalg
+}
+
+END_PROLOG
