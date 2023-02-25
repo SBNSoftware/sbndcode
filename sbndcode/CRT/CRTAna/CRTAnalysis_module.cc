@@ -871,6 +871,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, std::pair<b
   _td_time.resize(nTrueDeposits);
   _td_reconstructable.resize(nTrueDeposits);
   _td_reco_status.resize(nTrueDeposits);
+  _td_reco_triple.resize(nTrueDeposits);
 
   unsigned entry = 0;
   for(auto const& [trackid, status] : recoStatusMap)
