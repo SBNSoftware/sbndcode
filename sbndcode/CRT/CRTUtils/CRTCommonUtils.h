@@ -7,10 +7,14 @@
 // Common functions for CRT reconstruction
 ///////////////////////////////////////////////
 
-#include <string>
+#include "canvas/Persistency/Common/Ptr.h"
+
 #include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
+
 #include "sbnobj/SBND/CRT/CRTEnums.hh"
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+
+#include <string>
 
 namespace sbnd::crt {
 
@@ -39,10 +43,10 @@ namespace sbnd::crt {
                                                            const geo::Point_t &start, const geo::Point_t &end);
 
     // Returns a simple distance of closest approach between an infinite track and CRTSpacePoint
-    double SimpleDCA(const sbnd::crt::CRTSpacePoint &sp, const geo::Point_t &start, const geo::Vector_t &direction);
+    double SimpleDCA(const art::Ptr<CRTSpacePoint> &sp, const geo::Point_t &start, const geo::Vector_t &direction);
 
     // Returns the minimum distance from an infinite tracks to a CRTSpacePoint assuming its a 2D rectangle
-    double DistToCRTSpacePoint(const sbnd::crt::CRTSpacePoint &sp, const geo::Point_t &start, const geo::Point_t &end);
+    double DistToCRTSpacePoint(const art::Ptr<CRTSpacePoint> &sp, const geo::Point_t &start, const geo::Point_t &end);
 
     // Returns the distance between an infinite line and a segment
     double LineSegmentDistance(const geo::Point_t &start1, const geo::Point_t &end1, const geo::Point_t &start2, const geo::Point_t &end2);

@@ -157,40 +157,40 @@ namespace sbnd::crt {
     return std::make_pair(enter, exit);
   }
 
-  double CRTCommonUtils::SimpleDCA(const sbnd::crt::CRTSpacePoint &sp, const geo::Point_t &start, const geo::Vector_t &direction)
+  double CRTCommonUtils::SimpleDCA(const art::Ptr<CRTSpacePoint> &sp, const geo::Point_t &start, const geo::Vector_t &direction)
   {
-    geo::Point_t pos = sp.Pos();
+    geo::Point_t pos = sp->Pos();
     geo::Point_t end = start + direction;
     double denominator = direction.R();
     double numerator = (pos - start).Cross(pos - end).R();
     return numerator/denominator;
   }
 
-  double CRTCommonUtils::DistToCRTSpacePoint(const sbnd::crt::CRTSpacePoint &sp, const geo::Point_t &start, const geo::Point_t &end)
+  double CRTCommonUtils::DistToCRTSpacePoint(const art::Ptr<CRTSpacePoint> &sp, const geo::Point_t &start, const geo::Point_t &end)
   {
     // Check if track goes inside hit
-    geo::Point_t min = sp.Pos() - geo::Vector_t(sp.Err());
-    geo::Point_t max = sp.Pos() + geo::Vector_t(sp.Err());
+    geo::Point_t min = sp->Pos() - geo::Vector_t(sp->Err());
+    geo::Point_t max = sp->Pos() + geo::Vector_t(sp->Err());
 
     if(CubeIntersection(min, max, start, end).first.X() != -99999) return 0;
 
     // Calculate the closest distance to each edge of the CRT hit
     // Assume min error is the fixed position of tagger
-    geo::Point_t vertex1 (sp.X(), sp.Y() - sp.YErr(), sp.Z() - sp.ZErr());
-    geo::Point_t vertex2 (sp.X(), sp.Y() + sp.YErr(), sp.Z() - sp.ZErr());
-    geo::Point_t vertex3 (sp.X(), sp.Y() - sp.YErr(), sp.Z() + sp.ZErr());
-    geo::Point_t vertex4 (sp.X(), sp.Y() + sp.YErr(), sp.Z() + sp.ZErr());
-    if(sp.YErr() < sp.XErr() && sp.YErr() < sp.ZErr()){
-      vertex1.SetXYZ(sp.X() - sp.XErr(), sp.Y(), sp.Z() - sp.ZErr());
-      vertex2.SetXYZ(sp.X() + sp.XErr(), sp.Y(), sp.Z() - sp.ZErr());
-      vertex3.SetXYZ(sp.X() - sp.XErr(), sp.Y(), sp.Z() + sp.ZErr());
-      vertex4.SetXYZ(sp.X() + sp.XErr(), sp.Y(), sp.Z() + sp.ZErr());
+    geo::Point_t vertex1 (sp->X(), sp->Y() - sp->YErr(), sp->Z() - sp->ZErr());
+    geo::Point_t vertex2 (sp->X(), sp->Y() + sp->YErr(), sp->Z() - sp->ZErr());
+    geo::Point_t vertex3 (sp->X(), sp->Y() - sp->YErr(), sp->Z() + sp->ZErr());
+    geo::Point_t vertex4 (sp->X(), sp->Y() + sp->YErr(), sp->Z() + sp->ZErr());
+    if(sp->YErr() < sp->XErr() && sp->YErr() < sp->ZErr()){
+      vertex1.SetXYZ(sp->X() - sp->XErr(), sp->Y(), sp->Z() - sp->ZErr());
+      vertex2.SetXYZ(sp->X() + sp->XErr(), sp->Y(), sp->Z() - sp->ZErr());
+      vertex3.SetXYZ(sp->X() - sp->XErr(), sp->Y(), sp->Z() + sp->ZErr());
+      vertex4.SetXYZ(sp->X() + sp->XErr(), sp->Y(), sp->Z() + sp->ZErr());
     }
-    if(sp.ZErr() < sp.XErr() && sp.ZErr() < sp.YErr()){
-      vertex1.SetXYZ(sp.X() - sp.XErr(), sp.Y() - sp.YErr(), sp.Z());
-      vertex2.SetXYZ(sp.X() + sp.XErr(), sp.Y() - sp.YErr(), sp.Z());
-      vertex3.SetXYZ(sp.X() - sp.XErr(), sp.Y() + sp.YErr(), sp.Z());
-      vertex4.SetXYZ(sp.X() + sp.XErr(), sp.Y() + sp.YErr(), sp.Z());
+    if(sp->ZErr() < sp->XErr() && sp->ZErr() < sp->YErr()){
+      vertex1.SetXYZ(sp->X() - sp->XErr(), sp->Y() - sp->YErr(), sp->Z());
+      vertex2.SetXYZ(sp->X() + sp->XErr(), sp->Y() - sp->YErr(), sp->Z());
+      vertex3.SetXYZ(sp->X() - sp->XErr(), sp->Y() + sp->YErr(), sp->Z());
+      vertex4.SetXYZ(sp->X() + sp->XErr(), sp->Y() + sp->YErr(), sp->Z());
     }
 
     double dist1 = LineSegmentDistance(vertex1, vertex2, start, end);
