@@ -40,11 +40,7 @@
 #include "particleid_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
-#include "crtsimhitproducer_sbnd.fcl"
-##include "crttzeroproducer_sbnd.fcl"
-#include "crttrackproducer_sbnd.fcl"
-#include "crtt0matchingalg_sbnd.fcl"
-#include "crttrackmatchingalg_sbnd.fcl"
+#include "crtrecoproducers_sbnd.fcl"
 
 #include "opt0finder_sbnd.fcl"
 
@@ -165,13 +161,10 @@ physics:
   pmatrackcalo:        @local::sbnd_calomc
   pmatrackpid:         @local::sbnd_chi2pid
 
-  crthit:              @local::standard_crtsimhitproducer
-  #crttzero:            @local::standard_crttzeroproducer
-  crttrack:            @local::standard_crttrackproducer
-  crthitt0:            @local::sbnd_crthitt0producer
-  crttrackt0:          @local::sbnd_crttrackt0producer
-  crthitt0SCE:         @local::sbnd_crthitt0producer
-  crttrackt0SCE:       @local::sbnd_crttrackt0producer
+  crtstrips:      @local::crtstriphitproducer_sbnd
+  crtclustering:  @local::crtclusterproducer_sbnd
+  crtspacepoints: @local::crtspacepointproducer_sbnd
+  crttracks:      @local::crttrackproducer_sbnd
 
   ### flash-matching
   fmatch:              @local::sbnd_simple_flashmatch
@@ -203,6 +196,7 @@ physics:
    #      , rffhit
    #      , corner
    #      , fuzzycluster
+   	 , crtstrips
  ]
 
  reco2_no_opt0finder: [
@@ -220,11 +214,9 @@ physics:
   #       , pmatrackcalo
   #       , pmatrackpid
   #        , emshower
-         , crthit
-   #      , crttzero
-         , crttrack
-         , crthitt0
-         , crttrackt0
+         , crtclustering
+	 , crtspacepoints
+	 , crttracks
          , fmatch
 	 , caloskimCalorimetry
  ]
@@ -323,11 +315,6 @@ physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCET
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
 physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
-
-physics.producers.crthitt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
-physics.producers.crthitt0SCE.T0Alg.TPCTrackLabel: "pandoraSCETrack"
-physics.producers.crttrackt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
-physics.producers.crttrackt0SCE.CrtTrackAlg.TPCTrackLabel: "pandoraSCETrack"
 
 #physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
