@@ -133,7 +133,7 @@ namespace sbnd::crt {
     else if(plane == kZ)
       return (value - start.Z()) / dir.Z();
 
-    h   std::cout << "Well this is disconcerting..." << std::endl;
+    std::cout << "Well this is disconcerting..." << std::endl;
     return -std::numeric_limits<double>::max();
   }
 

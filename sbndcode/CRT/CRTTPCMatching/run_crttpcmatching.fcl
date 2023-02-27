@@ -1,4 +1,4 @@
-h#include "services_sbnd.fcl"
+#include "services_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 #include "crttpcmatchingproducers_sbnd.fcl"
 
