@@ -38,7 +38,7 @@ namespace sbnd::crt {
   enum CoordSet CRTCommonUtils::GetTaggerDefinedCoordinate(const CRTTagger tagger)
   {
     switch(tagger)
-    {
+      {
       case kWestTagger:
       case kEastTagger:
         return kX;
@@ -51,7 +51,7 @@ namespace sbnd::crt {
         return kZ;
       case kUndefinedTagger:
         return kUndefinedSet;
-    }
+      }
 
     return kUndefinedSet;
   }
@@ -84,171 +84,179 @@ namespace sbnd::crt {
       && ( tagger1 == kTopHighTagger || tagger2 == kTopHighTagger || tagger3 == kTopHighTagger);
   }
 
-  std::pair<geo::Point_t, geo::Point_t> CRTCommonUtils::CubeIntersection(const geo::Point_t &min, const geo::Point_t &max,
-                                                                         const geo::Point_t &start, const geo::Point_t &end)
+  bool CRTCommonUtils::CuboidIntersection(const geo::Point_t &min, const geo::Point_t &max, const geo::Point_t &start, const geo::Point_t &end,
+                                          geo::Point_t &entry, geo::Point_t &exit)
   {
-    geo::Vector_t dir = (end - start);
-    geo::Vector_t invDir(1./dir.X(), 1./dir.Y(), 1./dir.Z());
+    const geo::Vector_t dir = (end - start);
 
-    double tmin, tmax, tymin, tymax, tzmin, tzmax;
+    std::vector<std::pair<double, CoordSet>> distances;
 
-    geo::Point_t enter (-99999, -99999, -99999);
-    geo::Point_t exit (-99999, -99999, -99999);
+    distances.emplace_back(LinePlaneIntersection(start, dir, kX, min.X()), kX);
+    distances.emplace_back(LinePlaneIntersection(start, dir, kX, max.X()), kX);
+    distances.emplace_back(LinePlaneIntersection(start, dir, kY, min.Y()), kY);
+    distances.emplace_back(LinePlaneIntersection(start, dir, kY, max.Y()), kY);
+    distances.emplace_back(LinePlaneIntersection(start, dir, kZ, min.Z()), kZ);
+    distances.emplace_back(LinePlaneIntersection(start, dir, kZ, max.Z()), kZ);
 
-    // Find the intersections with the X plane
-    if(invDir.X() >= 0){
-      tmin = (min.X() - start.X()) * invDir.X();
-      tmax = (max.X() - start.X()) * invDir.X();
-    }
-    else{
-      tmin = (max.X() - start.X()) * invDir.X();
-      tmax = (min.X() - start.X()) * invDir.X();
-    }
+    std::vector<double> chosen_distances;
 
-    // Find the intersections with the Y plane
-    if(invDir.Y() >= 0){
-      tymin = (min.Y() - start.Y()) * invDir.Y();
-      tymax = (max.Y() - start.Y()) * invDir.Y();
-    }
-    else{
-      tymin = (max.Y() - start.Y()) * invDir.Y();
-      tymax = (min.Y() - start.Y()) * invDir.Y();
-    }
+    for(auto const& [k, plane] : distances)
+      {
+        const geo::Point_t intersection = start + k * dir;
 
-    // Check that it actually intersects
-    if((tmin > tymax) || (tymin > tmax)) return std::make_pair(enter, exit);
+        if(IsInsideRectangle(min, max, intersection, plane))
+          chosen_distances.push_back(k);
+      }
 
-    // Max of the min points is the actual intersection
-    if(tymin > tmin) tmin = tymin;
+    if(chosen_distances.size() == 0)
+      return false;
+    else if(chosen_distances.size() == 2)
+      {
+        entry = start + chosen_distances[0] * dir;
+        exit  = start + chosen_distances[1] * dir;
 
-    // Min of the max points is the actual intersection
-    if(tymax < tmax) tmax = tymax;
+        if(chosen_distances[1] < chosen_distances[0])
+          std::swap(entry, exit);
 
-    // Find the intersection with the Z plane
-    if(invDir.Z() >= 0){
-      tzmin = (min.Z() - start.Z()) * invDir.Z();
-      tzmax = (max.Z() - start.Z()) * invDir.Z();
-    }
-    else{
-      tzmin = (max.Z() - start.Z()) * invDir.Z();
-      tzmax = (min.Z() - start.Z()) * invDir.Z();
-    }
+        return true;
+      }
+    else
+      return false;
+  }
 
-    // Check for intersection
-    if((tmin > tzmax) || (tzmin > tmax)) return std::make_pair(enter, exit);
+  double CRTCommonUtils::LinePlaneIntersection(const geo::Point_t &start ,const geo::Vector_t &dir, const CoordSet plane, const double value)
+  {
+    if(plane == kX)
+      return (value - start.X()) / dir.X();
+    else if(plane == kY)
+      return (value - start.Y()) / dir.Y();
+    else if(plane == kZ)
+      return (value - start.Z()) / dir.Z();
 
-    // Find final intersection points
-    if(tzmin > tmin) tmin = tzmin;
+    h   std::cout << "Well this is disconcerting..." << std::endl;
+    return -std::numeric_limits<double>::max();
+  }
 
-    // Find final intersection points
-    if(tzmax < tmax) tmax = tzmax;
+  bool CRTCommonUtils::IsInsideRectangle(const geo::Point_t &min, const geo::Point_t &max, const geo::Point_t &p, const CoordSet plane)
+  {
+    if(plane == kX)
+      return (p.Y() >= min.Y() && p.Y() <= max.Y())
+        && (p.Z() >= min.Z() && p.Z() <= max.Z());
+    else if(plane == kY)
+      return (p.X() >= min.X() && p.X() <= max.X())
+        && (p.Z() >= min.Z() && p.Z() <= max.Z());
+    else if(plane == kZ)
+      return (p.X() >= min.X() && p.X() <= max.X())
+        && (p.Y() >= min.Y() && p.Y() <= max.Y());
 
-    // Calculate the actual crossing points
-    double xmin = start.X() + tmin * dir.X();
-    double xmax = start.X() + tmax * dir.X();
-    double ymin = start.Y() + tmin * dir.Y();
-    double ymax = start.Y() + tmax * dir.Y();
-    double zmin = start.Z() + tmin * dir.Z();
-    double zmax = start.Z() + tmax * dir.Z();
-
-    // Return pair of entry and exit points
-    enter.SetXYZ(xmin, ymin, zmin);
-    exit.SetXYZ(xmax, ymax, zmax);
-    return std::make_pair(enter, exit);
+    std::cout << "Even more disconcerting..." << std::endl;
+    return false;
   }
 
   double CRTCommonUtils::SimpleDCA(const art::Ptr<CRTSpacePoint> &sp, const geo::Point_t &start, const geo::Vector_t &direction)
   {
-    geo::Point_t pos = sp->Pos();
-    geo::Point_t end = start + direction;
-    double denominator = direction.R();
-    double numerator = (pos - start).Cross(pos - end).R();
-    return numerator/denominator;
+    const geo::Point_t pos = sp->Pos();
+    const geo::Point_t end = start + direction;
+
+    const double denominator = direction.R();
+    const double numerator   = (pos - start).Cross(pos - end).R();
+
+    return numerator / denominator;
   }
 
-  double CRTCommonUtils::DistToCRTSpacePoint(const art::Ptr<CRTSpacePoint> &sp, const geo::Point_t &start, const geo::Point_t &end)
+  double CRTCommonUtils::DistToCRTSpacePoint(const art::Ptr<CRTSpacePoint> &sp, const geo::Point_t &start, const geo::Point_t &end, const CRTTagger tagger)
   {
-    // Check if track goes inside hit
-    geo::Point_t min = sp->Pos() - geo::Vector_t(sp->Err());
-    geo::Point_t max = sp->Pos() + geo::Vector_t(sp->Err());
+    const geo::Point_t min = sp->Pos() - geo::Vector_t(sp->Err());
+    const geo::Point_t max = sp->Pos() + geo::Vector_t(sp->Err());
 
-    if(CubeIntersection(min, max, start, end).first.X() != -99999) return 0;
+    geo::Point_t entry, exit;
 
-    // Calculate the closest distance to each edge of the CRT hit
-    // Assume min error is the fixed position of tagger
-    geo::Point_t vertex1 (sp->X(), sp->Y() - sp->YErr(), sp->Z() - sp->ZErr());
-    geo::Point_t vertex2 (sp->X(), sp->Y() + sp->YErr(), sp->Z() - sp->ZErr());
-    geo::Point_t vertex3 (sp->X(), sp->Y() - sp->YErr(), sp->Z() + sp->ZErr());
-    geo::Point_t vertex4 (sp->X(), sp->Y() + sp->YErr(), sp->Z() + sp->ZErr());
-    if(sp->YErr() < sp->XErr() && sp->YErr() < sp->ZErr()){
-      vertex1.SetXYZ(sp->X() - sp->XErr(), sp->Y(), sp->Z() - sp->ZErr());
-      vertex2.SetXYZ(sp->X() + sp->XErr(), sp->Y(), sp->Z() - sp->ZErr());
-      vertex3.SetXYZ(sp->X() - sp->XErr(), sp->Y(), sp->Z() + sp->ZErr());
-      vertex4.SetXYZ(sp->X() + sp->XErr(), sp->Y(), sp->Z() + sp->ZErr());
-    }
-    if(sp->ZErr() < sp->XErr() && sp->ZErr() < sp->YErr()){
-      vertex1.SetXYZ(sp->X() - sp->XErr(), sp->Y() - sp->YErr(), sp->Z());
-      vertex2.SetXYZ(sp->X() + sp->XErr(), sp->Y() - sp->YErr(), sp->Z());
-      vertex3.SetXYZ(sp->X() - sp->XErr(), sp->Y() + sp->YErr(), sp->Z());
-      vertex4.SetXYZ(sp->X() + sp->XErr(), sp->Y() + sp->YErr(), sp->Z());
-    }
+    if(CuboidIntersection(min, max, start, end, entry, exit))
+      return 0;
+
+    const CoordSet constrainedPlane = GetTaggerDefinedCoordinate(tagger);
+
+    geo::Point_t vertex1, vertex2, vertex3, vertex4;
+
+    if(constrainedPlane == kX)
+      {
+        vertex1 = {sp->X(), sp->Y() - sp->YErr(), sp->Z() - sp->ZErr()};
+        vertex2 = {sp->X(), sp->Y() + sp->YErr(), sp->Z() - sp->ZErr()};
+        vertex3 = {sp->X(), sp->Y() - sp->YErr(), sp->Z() + sp->ZErr()};
+        vertex4 = {sp->X(), sp->Y() + sp->YErr(), sp->Z() + sp->ZErr()};
+      }
+    else if(constrainedPlane == kY)
+      {
+        vertex1 = {sp->X() - sp->XErr(), sp->Y(), sp->Z() - sp->ZErr()};
+        vertex2 = {sp->X() + sp->XErr(), sp->Y(), sp->Z() - sp->ZErr()};
+        vertex3 = {sp->X() - sp->XErr(), sp->Y(), sp->Z() + sp->ZErr()};
+        vertex4 = {sp->X() + sp->XErr(), sp->Y(), sp->Z() + sp->ZErr()};
+      }
+    else if(constrainedPlane == kZ)
+      {
+        vertex1 = {sp->X() - sp->XErr(), sp->Y() - sp->YErr(), sp->Z()};
+        vertex2 = {sp->X() + sp->XErr(), sp->Y() - sp->YErr(), sp->Z()};
+        vertex3 = {sp->X() - sp->XErr(), sp->Y() + sp->YErr(), sp->Z()};
+        vertex4 = {sp->X() + sp->XErr(), sp->Y() + sp->YErr(), sp->Z()};
+      }
 
     double dist1 = LineSegmentDistance(vertex1, vertex2, start, end);
     double dist2 = LineSegmentDistance(vertex1, vertex3, start, end);
     double dist3 = LineSegmentDistance(vertex4, vertex2, start, end);
     double dist4 = LineSegmentDistance(vertex4, vertex3, start, end);
 
-    return std::min(std::min(dist1, dist2), std::min(dist3, dist4));
+    return std::min({dist1, dist2, dist3, dist4});
   }
 
   double CRTCommonUtils::LineSegmentDistance(const geo::Point_t &start1, const geo::Point_t &end1, const geo::Point_t &start2, const geo::Point_t &end2)
   {
-    double smallNum = 0.00001;
+    const double smallNum = std::numeric_limits<double>::epsilon(); //0.00001;
 
-    // 1 is segment
-    geo::Vector_t direction1 = end1 - start1;
-    // 2 is infinite line
-    geo::Vector_t direction2 = end2 - start2;
+    const geo::Vector_t direction1 = end1 - start1;
+    const geo::Vector_t direction2 = end2 - start2;
 
-    geo::Vector_t u = direction1;
-    geo::Vector_t v = direction2;
-    geo::Vector_t w = start1 - start2;
+    const geo::Vector_t w = start1 - start2;
 
-    double a = u.Dot(u);
-    double b = u.Dot(v);
-    double c = v.Dot(v);
-    double d = u.Dot(w);
-    double e = v.Dot(w);
-    double D = a * c - b * b;
-    double sc, sN, sD = D; // sc = sN/sD
-    double tc, tN, tD = D; // sc = sN/sD
+    const double a = direction1.Mag2();
+    const double b = direction1.Dot(direction2);
+    const double c = direction2.Mag2();
+    const double d = direction1.Dot(w);
+    const double e = direction2.Dot(w);
+    const double D = a * c - b * b;
 
-    // Compute the line parameters of the two closest points
-    if(D < smallNum){ // Lines are almost parallel
-      sN = 0.0;
-      sD = 1.0;
-      tN = e;
-      tD = c;
-    }
-    else{
-      sN = (b * e - c * d)/D;
-      tN = (a * e - b * d)/D;
-      if(sN < 0.){ // sc < 0, the s = 0 edge is visible
-        sN = 0.;
+    double sc, sN, sD = D;
+    double tc, tN, tD = D;
+
+    if(D < smallNum)
+      {
+        sN = 0.0;
+        sD = 1.0;
         tN = e;
         tD = c;
       }
-      else if(sN > sD){ // sc > 1, the s = 1 edge is visible
-        sN = sD;
-        tN = e + b;
-        tD = c;
+    else
+      {
+        sN = (b * e - c * d)/D;
+        tN = (a * e - b * d)/D;
+
+        if(sN < 0.)
+          {
+            sN = 0.;
+            tN = e;
+            tD = c;
+          }
+        else if(sN > sD)
+          {
+            sN = sD;
+            tN = e + b;
+            tD = c;
+          }
       }
-    }
 
     sc = (std::abs(sN) < smallNum ? 0.0 : sN / sD);
     tc = (std::abs(tN) < smallNum ? 0.0 : tN / tD);
-    // Get the difference of the two closest points
-    geo::Vector_t dP = w + (sc * u) - (tc * v);
+
+    const geo::Vector_t dP = w + (sc * direction1) - (tc * direction2);
 
     return dP.R();
   }

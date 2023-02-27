@@ -13,14 +13,12 @@
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h" 
 #include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Principal/Run.h"
-#include "art/Framework/Principal/SubRun.h"
 #include "canvas/Utilities/InputTag.h"
 #include "canvas/Persistency/Common/FindOneP.h"
 #include "fhiclcpp/ParameterSet.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "lardataobj/AnalysisBase/T0.h"
+#include "lardataobj/RecoBase/Track.h"
 
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -64,7 +62,7 @@ sbnd::crt::CRTSpacePointMatching::CRTSpacePointMatching(fhicl::ParameterSet cons
   {
     produces<std::vector<anab::T0>>();
     produces<art::Assns<recob::Track, anab::T0>>();
-    produces<art::Assns<sbnd::crt::CRTSpacePoint, anab::T0>>();
+    produces<art::Assns<CRTSpacePoint, anab::T0>>();
   }
 
 void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
@@ -73,13 +71,13 @@ void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
   auto trackT0Assn = std::make_unique<art::Assns<recob::Track, anab::T0>>();
   auto crtSPT0Assn = std::make_unique<art::Assns<CRTSpacePoint, anab::T0>>();
 
-  art::Handle<std::vector<sbnd::crt::CRTSpacePoint>> CRTSpacePointHandle;
+  art::Handle<std::vector<CRTSpacePoint>> CRTSpacePointHandle;
   e.getByLabel(fCRTSpacePointModuleLabel, CRTSpacePointHandle);
 
-  std::vector<art::Ptr<sbnd::crt::CRTSpacePoint>> CRTSpacePointVec;
+  std::vector<art::Ptr<CRTSpacePoint>> CRTSpacePointVec;
   art::fill_ptr_vector(CRTSpacePointVec, CRTSpacePointHandle);
 
-  art::FindOneP<sbnd::crt::CRTCluster> spacePointsToCluster(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
+  art::FindOneP<CRTCluster> spacePointsToCluster(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
 
   art::Handle<std::vector<recob::Track>> trackHandle;
   e.getByLabel(fTPCTrackModuleLabel, trackHandle);
@@ -89,15 +87,15 @@ void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
 
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
-  for(auto track : trackVec)
+  for(auto const &track : trackVec)
     {
       MatchCandidate closest = fMatchingAlg.GetClosestCRTSpacePoint(detProp, track, CRTSpacePointVec, e);
 
-      const art::Ptr<sbnd::crt::CRTCluster> &cluster = spacePointsToCluster.at(closest.thisSP.key());
-
       if(closest.dca >= 0)
         {
-          T0Vec->push_back(anab::T0(closest.t0*1e3, track->ID(),  cluster->Tagger(), (int)closest.extrapLen, closest.dca));
+          const art::Ptr<CRTCluster> &cluster = spacePointsToCluster.at(closest.thisSP.key());
+
+          T0Vec->push_back(anab::T0(closest.time*1e3, track->ID(),  cluster->Tagger(), (int)closest.extrapLen, closest.dca));
           util::CreateAssn(*this, e, *T0Vec, track, *trackT0Assn);
           util::CreateAssn(*this, e, *T0Vec, closest.thisSP, *crtSPT0Assn);
         }

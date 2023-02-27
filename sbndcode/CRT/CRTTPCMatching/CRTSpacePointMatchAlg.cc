@@ -19,14 +19,15 @@ namespace sbnd::crt {
   void CRTSpacePointMatchAlg::reconfigure(const Config& config)
   {
     fTrackDirectionFrac = config.TrackDirectionFrac();
-    fDistanceLimit = config.DistanceLimit();
-    fTimeCorrection = config.TimeCorrection();
-    fDirMethod = config.DirMethod();
-    fDCAuseBox = config.DCAuseBox();
-    fDCAoverLength = config.DCAoverLength();
-    fPECut = config.PECut();
-    fMaxUncert = config.MaxUncert();
-    fTPCTrackLabel = config.TPCTrackLabel();
+    fDistanceLimit      = config.DistanceLimit();
+    fTimeCorrection     = config.TimeCorrection();
+    fDirMethod          = config.DirMethod();
+    fDCAuseBox          = config.DCAuseBox();
+    fDCAoverLength      = config.DCAoverLength();
+    fPECut              = config.PECut();
+    fMaxUncert          = config.MaxUncert();
+    fTPCTrackLabel      = config.TPCTrackLabel();
+    fCRTSpacePointLabel = config.CRTSpacePointLabel();
 
     return;
   }
@@ -38,13 +39,14 @@ namespace sbnd::crt {
     e.getByLabel(fTPCTrackLabel, trackHandle);
 
     const art::FindManyP<recob::Hit> tracksToHits(trackHandle, e, fTPCTrackLabel);
-    std::vector<art::Ptr<recob::Hit>> hits = tracksToHits.at(track->ID());
+    const std::vector<art::Ptr<recob::Hit>> hits = tracksToHits.at(track.key());
 
-    return GetClosestCRTSpacePoint(detProp, track, hits, crtSPs);
+    return GetClosestCRTSpacePoint(detProp, track, hits, crtSPs, e);
   }
 
   MatchCandidate CRTSpacePointMatchAlg::GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                                                const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs)
+                                                                const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs,
+                                                                const art::Event &e)
   {
     const geo::Point_t start = track->Vertex();
     const geo::Point_t end   = track->End();
@@ -54,11 +56,12 @@ namespace sbnd::crt {
 
     const std::pair<double, double> t0MinMax = TrackT0Range(detProp, start.X(), end.X(), driftDirection, xLimits);
 
-    return GetClosestCRTSpacePoint(detProp, track, t0MinMax, crtSPs, driftDirection);
+    return GetClosestCRTSpacePoint(detProp, track, t0MinMax, crtSPs, driftDirection, e);
   }
 
   MatchCandidate CRTSpacePointMatchAlg::GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                                                const std::pair<double, double> t0MinMax, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const int driftDirection)
+                                                                const std::pair<double, double> t0MinMax, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const int driftDirection,
+                                                                const art::Event &e)
   {
     const geo::Point_t start = track->Vertex();
     const geo::Point_t end   = track->End();
@@ -87,8 +90,8 @@ namespace sbnd::crt {
       const geo::Vector_t startDir = startEndDir.first;
       const geo::Vector_t endDir   = startEndDir.second;
     
-      const double startDist = DistOfClosestApproach(detProp, start, startDir, crtSP, driftDirection, crtTime);
-      const double endDist   = DistOfClosestApproach(detProp, end, endDir, crtSP, driftDirection, crtTime);
+      const double startDist = DistOfClosestApproach(detProp, start, startDir, crtSP, driftDirection, crtTime, e);
+      const double endDist   = DistOfClosestApproach(detProp, end, endDir, crtSP, driftDirection, crtTime, e);
 
       const double xshift = driftDirection * crtTime * detProp.DriftVelocity();
 
@@ -108,6 +111,9 @@ namespace sbnd::crt {
             candidates.emplace_back(crtSP, crtTime, endDist, distE);
         }
     }
+
+    if(candidates.size() == 0)
+      return MatchCandidate();
 
     if(fDCAoverLength)
       {
@@ -165,15 +171,21 @@ namespace sbnd::crt {
 
   double CRTSpacePointMatchAlg::DistOfClosestApproach(detinfo::DetectorPropertiesData const &detProp, geo::Point_t trackStart,
                                                       const geo::Vector_t &trackDir, const art::Ptr<CRTSpacePoint> &crtSP,
-                                                      const int driftDirection, const double t0)
+                                                      const int driftDirection, const double t0, const art::Event &e)
   {
     const double xshift = driftDirection* t0 * detProp.DriftVelocity();
     trackStart.SetX(trackStart.X() + xshift);
 
     const geo::Point_t end = trackStart + trackDir;
 
+    art::Handle<std::vector<CRTSpacePoint>> spacePointHandle;
+    e.getByLabel(fCRTSpacePointLabel, spacePointHandle);
+
+    const art::FindOneP<CRTCluster> spacePointsToClusters(spacePointHandle, e, fCRTSpacePointLabel);
+    const art::Ptr<CRTCluster> cluster = spacePointsToClusters.at(crtSP.key());
+
     if(fDCAuseBox)
-      return CRTCommonUtils::DistToCRTSpacePoint(crtSP, trackStart, end);
+      return CRTCommonUtils::DistToCRTSpacePoint(crtSP, trackStart, end, cluster->Tagger());
     else
       return CRTCommonUtils::SimpleDCA(crtSP, trackStart, trackDir);
   }

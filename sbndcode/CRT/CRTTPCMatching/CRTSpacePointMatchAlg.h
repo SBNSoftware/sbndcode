@@ -4,8 +4,10 @@
 ///////////////////////////////////////////////
 // CRTSpacePointMatchAlg.h
 //
-// Functions for CRT t0 matching
+// Functions for CRT space point to TPC
+// track matching
 // T Brooks (tbrooks@fnal.gov), November 2018
+// H Lay (h.lay@lancaster.ac.uk) February 2023
 ///////////////////////////////////////////////
 
 #include "art/Framework/Principal/Event.h"
@@ -13,6 +15,7 @@
 #include "art/Framework/Principal/Handle.h" 
 #include "art/Framework/Services/Registry/ServiceHandle.h" 
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/FindOneP.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
@@ -25,6 +28,7 @@
 #include "larcore/CoreUtils/ServiceUtil.h"
 
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+#include "sbnobj/SBND/CRT/CRTCluster.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/CRT/CRTUtils/TPCGeoUtil.h"
 
@@ -32,15 +36,15 @@ namespace sbnd::crt {
 
   struct  MatchCandidate {
     art::Ptr<CRTSpacePoint> thisSP;
-    double                  t0;
+    double                  time;
     double                  dca;
     double                  extrapLen;
 
-    MatchCandidate(const art::Ptr<CRTSpacePoint> _thisSP, const double _t0,
-                   const double _dca, const double _extrapLen)
+    MatchCandidate(const art::Ptr<CRTSpacePoint> _thisSP = art::Ptr<CRTSpacePoint>(), const double _time = -std::numeric_limits<double>::max(),
+                   const double _dca = -std::numeric_limits<double>::max(), const double _extrapLen = -std::numeric_limits<double>::max())
     {
       thisSP    = _thisSP;
-      t0        = _t0;
+      time      = _time;
       dca       = _dca;
       extrapLen = _extrapLen;
     }
@@ -106,16 +110,21 @@ namespace sbnd::crt {
         Name("TPCTrackLabel"),
           Comment("")
           };
+
+      fhicl::Atom<art::InputTag> CRTSpacePointLabel {
+        Name("CRTSpacePointLabel"),
+          Comment("")
+          };
     };
 
     CRTSpacePointMatchAlg(const Config& config);
 
     CRTSpacePointMatchAlg(const Config& config, geo::GeometryCore const *GeometryService);
 
-  CRTSpacePointMatchAlg(const fhicl::ParameterSet& pset) :
+    CRTSpacePointMatchAlg(const fhicl::ParameterSet& pset) :
     CRTSpacePointMatchAlg(fhicl::Table<Config>(pset, {})()) {}
 
-  CRTSpacePointMatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const *GeometryService) :
+    CRTSpacePointMatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const *GeometryService) :
     CRTSpacePointMatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService) {}
 
     CRTSpacePointMatchAlg();
@@ -128,17 +137,19 @@ namespace sbnd::crt {
                                            const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const art::Event &e);
 
     MatchCandidate GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                           const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs);
+                                           const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs,
+                                           const art::Event &e);
 
     MatchCandidate GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                           const std::pair<double, double> t0MinMax, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const int driftDirection);
+                                           const std::pair<double, double> t0MinMax, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const int driftDirection,
+                                           const art::Event &e);
 
     std::pair<double, double> TrackT0Range(detinfo::DetectorPropertiesData const &detProp, const double startX,
                                            const double endX, const int driftDirection, const std::pair<double, double> xLimits);
 
     double DistOfClosestApproach(detinfo::DetectorPropertiesData const &detProp, geo::Point_t trackStart,
                                  const geo::Vector_t &trackDir, const art::Ptr<CRTSpacePoint> &crtSP,
-                                 const int driftDirection, const double t0);
+                                 const int driftDirection, const double t0, const art::Event &e);
 
     std::pair<geo::Vector_t, geo::Vector_t> AverageTrackDirections(const art::Ptr<recob::Track> &track, const double frac);
     std::pair<geo::Vector_t, geo::Vector_t> TrackDirections(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
@@ -158,6 +169,7 @@ namespace sbnd::crt {
     double fMaxUncert;
 
     art::InputTag fTPCTrackLabel;
+    art::InputTag fCRTSpacePointLabel;
   };
 }
 #endif
