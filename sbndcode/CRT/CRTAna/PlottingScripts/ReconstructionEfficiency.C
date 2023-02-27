@@ -41,9 +41,7 @@ void ReconstructionEfficiency()
   TH1F *hTrueDepositEnergyReco = new TH1F("hTrueDepositEnergyReco", ";True energy (MeV);Deposits", 22, bins);
   TH1F *hTrueTrackDepositEnergy = new TH1F("hTrueTrackDepositEnergy", ";True energy (MeV);Deposits", 22, binstracks);
   TH1F *hTrueTrackDepositEnergyReco = new TH1F("hTrueTrackDepositEnergyReco", ";True energy (MeV);Deposits", 22, binstracks);
-  TH1F *hTrue2TrackDepositEnergy = new TH1F("hTrue2TrackDepositEnergy", ";True energy (MeV);Deposits", 22, binstracks);
   TH1F *hTrue2TrackDepositEnergyReco = new TH1F("hTrue2TrackDepositEnergyReco", ";True energy (MeV);Deposits", 22, binstracks);
-  TH1F *hTrue3TrackDepositEnergy = new TH1F("hTrue3TrackDepositEnergy", ";True energy (MeV);Deposits", 22, binstracks);
   TH1F *hTrue3TrackDepositEnergyReco = new TH1F("hTrue3TrackDepositEnergyReco", ";True energy (MeV);Deposits", 22, binstracks);
 
   const unsigned N = tree->GetEntries();
@@ -70,15 +68,11 @@ void ReconstructionEfficiency()
           if(td_reco_status->at(ii))
             hTrueTrackDepositEnergyReco->Fill(1e3*td_energy->at(ii));
 
-          if(td_reco_triple->at(ii))
-            hTrue3TrackDepositEnergy->Fill(1e3*td_energy->at(ii));
           if(td_reco_triple->at(ii) && td_reco_status->at(ii))
-            hTrue3TrackDepositEnergy->Fill(1e3*td_energy->at(ii));
+            hTrue3TrackDepositEnergyReco->Fill(1e3*td_energy->at(ii));
 
-          if(!td_reco_triple->at(ii))
-            hTrue2TrackDepositEnergy->Fill(1e3*td_energy->at(ii));
           if(!td_reco_triple->at(ii) && td_reco_status->at(ii))
-            hTrue2TrackDepositEnergy->Fill(1e3*td_energy->at(ii));
+            hTrue2TrackDepositEnergyReco->Fill(1e3*td_energy->at(ii));
         }
     }
 
@@ -88,6 +82,8 @@ void ReconstructionEfficiency()
       hTrueDepositEnergyReco->SetBinContent(i, hTrueDepositEnergyReco->GetBinContent(i) / hTrueDepositEnergyReco->GetBinWidth(i));
       hTrueTrackDepositEnergy->SetBinContent(i, hTrueTrackDepositEnergy->GetBinContent(i) / hTrueTrackDepositEnergy->GetBinWidth(i));
       hTrueTrackDepositEnergyReco->SetBinContent(i, hTrueTrackDepositEnergyReco->GetBinContent(i) / hTrueTrackDepositEnergyReco->GetBinWidth(i));
+      hTrue2TrackDepositEnergyReco->SetBinContent(i, hTrue2TrackDepositEnergyReco->GetBinContent(i) / hTrue2TrackDepositEnergyReco->GetBinWidth(i));
+      hTrue3TrackDepositEnergyReco->SetBinContent(i, hTrue3TrackDepositEnergyReco->GetBinContent(i) / hTrue3TrackDepositEnergyReco->GetBinWidth(i));
     }
 
   TCanvas *cEnergyRecoEff = new TCanvas("cEnergyRecoEff", "cEnergyRecoEff");
@@ -153,11 +149,7 @@ void ReconstructionEfficiency()
   TCanvas *c2TrackEnergyRecoEff = new TCanvas("c2TrackEnergyRecoEff", "c2TrackEnergyRecoEff");
   c2TrackEnergyRecoEff->cd();
 
-  TH1F *hTrue2TrackDepositEnergyClone = (TH1F*) hTrue2TrackDepositEnergy->Clone("hTrue2TrackDepositEnergyClone");
-  hTrue2TrackDepositEnergyClone->Scale(1 / hTrue2TrackDepositEnergyClone->GetMaximum());
-  hTrue2TrackDepositEnergyClone->SetLineColor(kGray+2);
-
-  TEfficiency *e2TrackEnergyRecoEff = new TEfficiency(*hTrue2TrackDepositEnergyReco, *hTrue2TrackDepositEnergy);
+  TEfficiency *e2TrackEnergyRecoEff = new TEfficiency(*hTrue2TrackDepositEnergyReco, *hTrueTrackDepositEnergy);
   e2TrackEnergyRecoEff->SetTitle(";True energy (MeV);Efficiency");
   e2TrackEnergyRecoEff->SetLineColor(kRed+2);
   e2TrackEnergyRecoEff->SetMarkerColor(kRed+2);
@@ -166,12 +158,12 @@ void ReconstructionEfficiency()
   e2TrackEnergyRecoEff->Draw();
   gPad->Update();
   e2TrackEnergyRecoEff->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
-  hTrue2TrackDepositEnergyClone->Draw("samehist");
+  hTrueTrackDepositEnergyClone->Draw("samehist");
 
   TLegend *l2TrackEnergyRecoEff = new TLegend(.6,.45,.85,.55);
   l2TrackEnergyRecoEff->SetBorderSize(0);
   l2TrackEnergyRecoEff->AddEntry(e2TrackEnergyRecoEff, "Efficiency","ple");
-  l2TrackEnergyRecoEff->AddEntry(hTrue2TrackDepositEnergyClone, "True Distribution","l");
+  l2TrackEnergyRecoEff->AddEntry(hTrueTrackDepositEnergyClone, "True Distribution","l");
   l2TrackEnergyRecoEff->Draw();
 
   if(save)
@@ -183,11 +175,7 @@ void ReconstructionEfficiency()
   TCanvas *c3TrackEnergyRecoEff = new TCanvas("c3TrackEnergyRecoEff", "c3TrackEnergyRecoEff");
   c3TrackEnergyRecoEff->cd();
 
-  TH1F *hTrue3TrackDepositEnergyClone = (TH1F*) hTrue3TrackDepositEnergy->Clone("hTrue3TrackDepositEnergyClone");
-  hTrue3TrackDepositEnergyClone->Scale(1 / hTrue3TrackDepositEnergyClone->GetMaximum());
-  hTrue3TrackDepositEnergyClone->SetLineColor(kGray+2);
-
-  TEfficiency *e3TrackEnergyRecoEff = new TEfficiency(*hTrue3TrackDepositEnergyReco, *hTrue3TrackDepositEnergy);
+  TEfficiency *e3TrackEnergyRecoEff = new TEfficiency(*hTrue3TrackDepositEnergyReco, *hTrueTrackDepositEnergy);
   e3TrackEnergyRecoEff->SetTitle(";True energy (MeV);Efficiency");
   e3TrackEnergyRecoEff->SetLineColor(kRed+2);
   e3TrackEnergyRecoEff->SetMarkerColor(kRed+2);
@@ -196,12 +184,12 @@ void ReconstructionEfficiency()
   e3TrackEnergyRecoEff->Draw();
   gPad->Update();
   e3TrackEnergyRecoEff->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
-  hTrue3TrackDepositEnergyClone->Draw("samehist");
+  hTrueTrackDepositEnergyClone->Draw("samehist");
 
   TLegend *l3TrackEnergyRecoEff = new TLegend(.6,.45,.85,.55);
   l3TrackEnergyRecoEff->SetBorderSize(0);
   l3TrackEnergyRecoEff->AddEntry(e3TrackEnergyRecoEff, "Efficiency","ple");
-  l3TrackEnergyRecoEff->AddEntry(hTrue3TrackDepositEnergyClone, "True Distribution","l");
+  l3TrackEnergyRecoEff->AddEntry(hTrueTrackDepositEnergyClone, "True Distribution","l");
   l3TrackEnergyRecoEff->Draw();
 
   if(save)
