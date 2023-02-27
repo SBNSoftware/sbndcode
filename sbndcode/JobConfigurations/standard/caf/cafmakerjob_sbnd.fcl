@@ -25,7 +25,7 @@
 
 #include "flashmatch_sbnd.fcl"
 #include "sbn_stub.fcl"
-
+#include "sbn_cnnid.fcl"
 #include "cafmaker_common_defs.fcl"
 
 process_name: CAFmaker
@@ -53,6 +53,7 @@ services:
   ParticleInventoryService:  @local::standard_particleinventoryservice
   BackTrackerService:        @local::standard_backtrackerservice
   SpaceCharge:               @local::sbnd_spacecharge
+  ChannelStatusService:      @local::sbnd_channelstatus
   NuRandomService: {
     policy: perEvent
   }
@@ -96,6 +97,8 @@ physics:
    pandoraShowerSelectionVars:  @local::showerSelectionVars_sbn
    pandoraShowerCosmicDist: @local::showerCosmicDist_sbn
    pandoraShowerRazzle:         @local::razzle_sbnd
+
+   cnnid: @local::cnnid_sbnd
 }
   filters:{
     flashtrigfilter: @local::pmtflashtrigfilter_sbnd
@@ -107,7 +110,7 @@ physics:
  runprod: [ pandoraTrackMCS, pandoraTrackRange, pandoraShowerSelectionVars,
             pandoraTrackCRTHit, pandoraTrackCRTTrack, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
+            pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs, cnnid,
             cafmaker ]
 # makecaf: [cafmaker] #list the modules for this path, order matters, filters reject all following items
 # stream1: [metadata]
