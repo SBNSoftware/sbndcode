@@ -17,21 +17,22 @@ crtclusterproducer_sbnd:
    module_type:                "sbndcode/CRT/CRTReco/CRTClusterProducer"
 }
 
+crtclustercharacterisationalg_sbnd:
+{
+   OverlapBuffer:  1.
+   PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift
+   PropDelay:      @local::sbnd_crtsim.DetSimParams.PropDelay
+   TimeWalkNorm:   @local::sbnd_crtsim.DetSimParams.TDelayNorm
+   TimeWalkShift:  @local::sbnd_crtsim.DetSimParams.TDelayShift
+   TimeWalkSigma:  @local::sbnd_crtsim.DetSimParams.TDelaySigma
+   TimeWalkOffset: @local::sbnd_crtsim.DetSimParams.TDelayOffset
+}
+
 crtspacepointproducer_sbnd:
 {
-   ClusterCharacterisationAlg:
-   {   
-       OverlapBuffer:  1.
-       PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift
-       PropDelay:      @local::sbnd_crtsim.DetSimParams.PropDelay
-       TimeWalkNorm:   @local::sbnd_crtsim.DetSimParams.TDelayNorm
-       TimeWalkShift:  @local::sbnd_crtsim.DetSimParams.TDelayShift
-       TimeWalkSigma:  @local::sbnd_crtsim.DetSimParams.TDelaySigma
-       TimeWalkOffset: @local::sbnd_crtsim.DetSimParams.TDelayOffset
-   }
-   
-   ClusterModuleLabel: "crtclustering"
-   module_type:        "sbndcode/CRT/CRTReco/CRTSpacePointProducer"
+   ClusterCharacterisationAlg: @local::crtclustercharacterisationalg_sbnd
+   ClusterModuleLabel:         "crtclustering"
+   module_type:                "sbndcode/CRT/CRTReco/CRTSpacePointProducer"
 }
 
 crttrackproducer_sbnd:
