@@ -1,0 +1,40 @@
+BEGIN_PROLOG
+
+crtspacepointmatchalg_sbnd:
+{
+   TrackDirectionFrac: 0.5
+   DirMethod:          1
+   DCAuseBox:          false
+   DCAoverLength:      false
+   PECut:              60.
+   MaxUncert:          20.
+   TPCTrackLabel:      "pandoraTrack"
+   CRTSpacePointLabel: "crtspacepoints"
+}
+
+crtspacepointmatchproducer_sbnd:
+{
+   CRTSpacePointModuleLabel: "crtspacepoints"
+   TPCTrackModuleLabel:      @local::crtspacepointmatchalg_sbnd.TPCTrackLabel
+   MatchingAlg:              @local::crtspacepointmatchalg_sbnd
+   module_type:              "sbndcode/CRT/CRTTPCMatching/CRTSpacePointMatching"
+}
+
+crttrackmatchalg_sbnd:
+{
+   MaxAngleDiff:    0.4
+   MaxDCA:          70.
+   MaxScore:        131.
+   SelectionMetric: "score"
+   TPCTrackLabel:   "pandoraTrack"
+}
+
+crttrackmatchproducer_sbnd:
+{
+   CRTTrackModuleLabel: "crttracks"
+   TPCTrackModuleLabel: @local::crttrackmatchalg_sbnd.TPCTrackLabel
+   MatchingAlg:         @local::crttrackmatchalg_sbnd
+   module_type:         "sbndcode/CRT/CRTTPCMatching/CRTTrackMatching"
+}
+
+END_PROLOG
