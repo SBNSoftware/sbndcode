@@ -41,6 +41,7 @@
 #include "rootoutput_sbnd.fcl"
 
 #include "crtrecoproducers_sbnd.fcl"
+#include "crttpcmatchingproducers_sbnd.fcl"
 
 #include "opt0finder_sbnd.fcl"
 
@@ -161,10 +162,17 @@ physics:
   pmatrackcalo:        @local::sbnd_calomc
   pmatrackpid:         @local::sbnd_chi2pid
 
+  ### CRT reconstruction
   crtstrips:      @local::crtstriphitproducer_sbnd
   crtclustering:  @local::crtclusterproducer_sbnd
   crtspacepoints: @local::crtspacepointproducer_sbnd
   crttracks:      @local::crttrackproducer_sbnd
+
+  ### CRT-TPC matching
+  crtspacepointmatching:    @local::crtspacepointmatchproducer_sbnd
+  crttrackmatching:         @local::crttrackmatchproducer_sbnd
+  crtspacepointmatchingSCE: @local::crtspacepointmatchproducer_sbnd
+  crttrackmatchingSCE:      @local::crttrackmatchproducer_sbnd
 
   ### flash-matching
   fmatch:              @local::sbnd_simple_flashmatch
@@ -217,6 +225,8 @@ physics:
          , crtclustering
 	 , crtspacepoints
 	 , crttracks
+	 , crtspacepointmatching
+	 , crttrackmatching
          , fmatch
 	 , caloskimCalorimetry
  ]
@@ -360,5 +370,11 @@ physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 #physics.producers.gaushitTruthMatch.HitParticleAssociations:                        @local::DirectHitParticleAssnsTool
 physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
 #physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
+
+physics.producers.crtspacepointmatchingSCE.TPCTrackModuleLabel:       "pandoraSCETrack"
+physics.producers.crtspacepointmatchingSCE.MatchingAlg.TPCTrackLabel: "pandoraSCETrack"
+
+physics.producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSCETrack"
+physics.producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
