@@ -5,6 +5,7 @@ namespace sbnd::crt {
   CRTClusterCharacterisationAlg::CRTClusterCharacterisationAlg(const fhicl::ParameterSet& pset)
     : fCRTGeoAlg(pset.get<fhicl::ParameterSet>("GeoAlg", fhicl::ParameterSet()))
     , fUseT1(pset.get<bool>("UseT1", true))
+    , fTimeOffset(pset.get<double>("TimeOffset"))
     , fOverlapBuffer(pset.get<double>("OverlapBuffer"))
     , fPEAttenuation(pset.get<double>("PEAttenuation"))
     , fPropDelay(pset.get<double>("PropDelay"))
@@ -28,7 +29,7 @@ namespace sbnd::crt {
     geo::Point_t pos, err;
     CentralPosition(hitPos, pos, err);
 
-    return CRTSpacePoint(pos, err, pe, stripHit->Ts1(), 0., false);
+    return CRTSpacePoint(pos, err, pe, stripHit->Ts1() + fTimeOffset, 0., false);
   }
 
   bool CRTClusterCharacterisationAlg::CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits, CRTSpacePoint &spacepoint)
@@ -56,7 +57,7 @@ namespace sbnd::crt {
             double time, etime;
             CorrectTime(hit0, hit1, pos, time, etime);
 
-            spacepoint = CRTSpacePoint(pos, err, pe, time, etime, true);
+            spacepoint = CRTSpacePoint(pos, err, pe, time + fTimeOffset, etime, true);
             return true;
           }
         return false;
@@ -74,7 +75,7 @@ namespace sbnd::crt {
             const double time  = (hit0->Ts1() + hit1->Ts1()) / 2.;
             const double etime = std::abs((double)hit0->Ts1() - (double)hit1->Ts1()) / 2.;
 
-            spacepoint = CRTSpacePoint(pos, err, pe, time, etime, false);
+            spacepoint = CRTSpacePoint(pos, err, pe, time + fTimeOffset, etime, false);
             return true;
           }
         return false;

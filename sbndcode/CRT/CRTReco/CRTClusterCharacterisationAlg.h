@@ -77,8 +77,8 @@ namespace sbnd::crt {
 
     CRTGeoAlg fCRTGeoAlg;
 
-    bool fUseT1;
-
+    bool   fUseT1;
+    double fTimeOffset;
     double fOverlapBuffer;
     double fPEAttenuation;
     double fPropDelay;
