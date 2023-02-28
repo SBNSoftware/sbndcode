@@ -38,16 +38,14 @@ namespace sbnd::crt {
   {
     art::Ptr<CRTSpacePoint> thisSP;
     double                  time;
-    double                  dca;
-    double                  extrapLen;
+    double                  score;
 
     MatchCandidate(const art::Ptr<CRTSpacePoint> _thisSP = art::Ptr<CRTSpacePoint>(), const double _time = -std::numeric_limits<double>::max(),
-                   const double _dca = -std::numeric_limits<double>::max(), const double _extrapLen = -std::numeric_limits<double>::max())
+                   const double _score = -std::numeric_limits<double>::max())
     {
       thisSP    = _thisSP;
       time      = _time;
-      dca       = _dca;
-      extrapLen = _extrapLen;
+      score     = _score;
     }
   };
 
@@ -71,8 +69,8 @@ namespace sbnd::crt {
           0.
           };
 
-      fhicl::Atom<double> DistanceLimit {
-        Name("DistanceLimit"),
+      fhicl::Atom<double> DCALimit {
+        Name("DCALimit"),
           Comment(""),
           100.
           };
@@ -161,7 +159,7 @@ namespace sbnd::crt {
     geo::GeometryCore const* fGeometryService;
 
     double fTrackDirectionFrac;
-    double fDistanceLimit;
+    double fDCALimit;
     double fTimeCorrection;
     int    fDirMethod;
     bool   fDCAuseBox;

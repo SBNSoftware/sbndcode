@@ -24,7 +24,6 @@
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
-#include "sbnobj/SBND/CRT/CRTCluster.hh"
 
 #include "sbndcode/CRT/CRTTPCMatching/CRTSpacePointMatchAlg.h"
 
@@ -77,8 +76,6 @@ void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
   std::vector<art::Ptr<CRTSpacePoint>> CRTSpacePointVec;
   art::fill_ptr_vector(CRTSpacePointVec, CRTSpacePointHandle);
 
-  art::FindOneP<CRTCluster> spacePointsToCluster(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
-
   art::Handle<std::vector<recob::Track>> trackHandle;
   e.getByLabel(fTPCTrackModuleLabel, trackHandle);
 
@@ -91,11 +88,9 @@ void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
     {
       MatchCandidate closest = fMatchingAlg.GetClosestCRTSpacePoint(detProp, track, CRTSpacePointVec, e);
 
-      if(closest.dca >= 0)
+      if(closest.score >= 0)
         {
-          const art::Ptr<CRTCluster> &cluster = spacePointsToCluster.at(closest.thisSP.key());
-
-          T0Vec->push_back(anab::T0(closest.time*1e3, track->ID(),  cluster->Tagger(), (int)closest.extrapLen, closest.dca));
+          T0Vec->push_back(anab::T0(closest.time*1e3, 0, track->ID(),  T0Vec->size(), closest.score));
           util::CreateAssn(*this, e, *T0Vec, track, *trackT0Assn);
           util::CreateAssn(*this, e, *T0Vec, closest.thisSP, *crtSPT0Assn);
         }

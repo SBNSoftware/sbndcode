@@ -87,7 +87,7 @@ void sbnd::crt::CRTTrackMatching::produce(art::Event& e)
 
       if(best.valid)
         {
-          T0Vec->push_back(anab::T0(best.time*1e3, tpcTrack->ID(), 0, 0, best.score));
+          T0Vec->push_back(anab::T0(best.time * 1e3, 0, tpcTrack->ID(), T0Vec->size(), best.score));
           util::CreateAssn(*this, e, *T0Vec, tpcTrack, *tpcTrackT0Assn);
           util::CreateAssn(*this, e, *T0Vec, best.thisTrack, *crtTrackT0Assn);
         }

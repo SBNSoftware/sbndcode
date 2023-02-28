@@ -19,7 +19,7 @@ namespace sbnd::crt {
   void CRTSpacePointMatchAlg::reconfigure(const Config& config)
   {
     fTrackDirectionFrac = config.TrackDirectionFrac();
-    fDistanceLimit      = config.DistanceLimit();
+    fDCALimit           = config.DCALimit();
     fTimeCorrection     = config.TimeCorrection();
     fDirMethod          = config.DirMethod();
     fDCAuseBox          = config.DCAuseBox();
@@ -90,8 +90,8 @@ namespace sbnd::crt {
       const geo::Vector_t startDir = startEndDir.first;
       const geo::Vector_t endDir   = startEndDir.second;
     
-      const double startDist = DistOfClosestApproach(detProp, start, startDir, crtSP, driftDirection, crtTime, e);
-      const double endDist   = DistOfClosestApproach(detProp, end, endDir, crtSP, driftDirection, crtTime, e);
+      const double startDCA = DistOfClosestApproach(detProp, start, startDir, crtSP, driftDirection, crtTime, e);
+      const double endDCA   = DistOfClosestApproach(detProp, end, endDir, crtSP, driftDirection, crtTime, e);
 
       const double xshift = driftDirection * crtTime * detProp.DriftVelocity();
 
@@ -100,51 +100,36 @@ namespace sbnd::crt {
       geo::Point_t thisend = end;
       thisend.SetX(end.X()+xshift);
 
-      if (startDist < fDistanceLimit || endDist < fDistanceLimit)
+      if (startDCA < fDCALimit || endDCA < fDCALimit)
         {
           const double distS = (crtPoint - thisstart).R();
           const double distE = (crtPoint - thisend).R();
 
+          const double scoreS = fDCAoverLength ? startDCA / distS : startDCA;
+          const double scoreE = fDCAoverLength ? endDCA / distE : endDCA;
+
           if (distS < distE)
-            candidates.emplace_back(crtSP, crtTime, startDist, distS);
+            candidates.emplace_back(crtSP, crtTime, scoreS);
           else
-            candidates.emplace_back(crtSP, crtTime, endDist, distE);
+            candidates.emplace_back(crtSP, crtTime, scoreE);
         }
     }
 
     if(candidates.size() == 0)
       return MatchCandidate();
 
-    if(fDCAoverLength)
-      {
-        std::sort(candidates.begin(), candidates.end(),
-                  [](const MatchCandidate &a, const MatchCandidate &b)
-                  {
-                    if(a.dca < 0 && b.dca > 0)
-                      return false;
-                    else if(a.dca > 0 && b.dca < 0)
-                      return true;
-                    else
-                      return a.dca/a.extrapLen < b.dca/b.extrapLen;
-                  });
+    std::sort(candidates.begin(), candidates.end(),
+              [](const MatchCandidate &a, const MatchCandidate &b)
+              {
+                if(a.score < 0 && b.score > 0)
+                  return false;
+                else if(a.score > 0 && b.score < 0)
+                  return true;
+                else
+                  return a.score < b.score;
+              });
 
-        return candidates[0];
-      }
-    else
-      {
-        std::sort(candidates.begin(), candidates.end(),
-                  [](const MatchCandidate &a, const MatchCandidate &b)
-                  {
-                    if(a.dca < 0 && b.dca > 0)
-                      return false;
-                    else if(a.dca > 0 && b.dca < 0)
-                      return true;
-                    else
-                      return a.dca < b.dca;
-                  });
-
-        return candidates[0];
-      }
+    return candidates[0];
   }
 
   std::pair<double, double> CRTSpacePointMatchAlg::TrackT0Range(detinfo::DetectorPropertiesData const &detProp, const double startX,
