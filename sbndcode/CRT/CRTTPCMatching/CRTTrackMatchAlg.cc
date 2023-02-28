@@ -45,6 +45,7 @@ namespace sbnd::crt {
     if(fSelectionMetric == "angle")
       {
         MatchCandidate candidate = ClosestCRTTrackByAngle(detProp, tpcTrack, hits, crtTracks, fMaxDCA);
+
         if(candidate.score > fMaxAngleDiff)
           return MatchCandidate();
         else
@@ -53,6 +54,7 @@ namespace sbnd::crt {
     else if(fSelectionMetric == "dca")
       {
         MatchCandidate candidate = ClosestCRTTrackByDCA(detProp, tpcTrack, hits, crtTracks, fMaxAngleDiff);
+
         if(candidate.score > fMaxDCA)
           return MatchCandidate();
         else
@@ -61,6 +63,7 @@ namespace sbnd::crt {
     else
       {
         MatchCandidate candidate = ClosestCRTTrackByScore(detProp, tpcTrack, hits, crtTracks);
+
         if(candidate.score > fMaxScore)
           return MatchCandidate();
         else
@@ -72,6 +75,7 @@ namespace sbnd::crt {
   {
     const geo::Point_t start = track->Start();
     const geo::Point_t end   = track->End();
+
     const geo::Point_t min(tpcGeo.MinX(), tpcGeo.MinY(), tpcGeo.MinZ());
     const geo::Point_t max(tpcGeo.MaxX(), tpcGeo.MaxY(), tpcGeo.MaxZ());
 
@@ -247,6 +251,7 @@ namespace sbnd::crt {
         const double shift   = driftDirection * crtTime * detProp.DriftVelocity();
         const double DCA     = AveDCABetweenTracks(tpcTrack, possCRTTrack, shift);
         const double angle   = AngleBetweenTracks(tpcTrack, possCRTTrack);
+
         const double score   = DCA + 4 * 180 / TMath::Pi() * angle;
 
         candidates.emplace_back(possCRTTrack, crtTime, score, true);
@@ -274,7 +279,12 @@ namespace sbnd::crt {
     if(tpcStart.Y() < tpcEnd.Y())
       std::swap(tpcStart, tpcEnd);
 
-    return TMath::ACos((tpcStart - tpcEnd).Dot(crtStart - crtEnd) / ((tpcStart - tpcEnd).R() * (crtStart - crtEnd).R()));
+    double angle = TMath::ACos((tpcStart - tpcEnd).Dot(crtStart - crtEnd) / ((tpcStart - tpcEnd).R() * (crtStart - crtEnd).R()));
+
+    if(angle > TMath::Pi()/2. && angle < TMath::Pi())
+      angle = TMath::Pi() - angle;
+
+    return angle;
   }
 
   double CRTTrackMatchAlg::AveDCABetweenTracks(const art::Ptr<recob::Track> &tpcTrack, const art::Ptr<CRTTrack> &crtTrack, const double shift)

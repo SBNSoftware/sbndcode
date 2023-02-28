@@ -34,7 +34,8 @@
 
 namespace sbnd::crt {
 
-  struct  MatchCandidate {
+  struct  MatchCandidate
+  {
     art::Ptr<CRTSpacePoint> thisSP;
     double                  time;
     double                  dca;
