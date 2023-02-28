@@ -224,6 +224,8 @@ namespace sbnd::crt {
                                                                 const geo::Vector_t &dir, 
                                                                 const CRTTagger &tagger);
 
+    void TrueParticlePDGEnergyTime(const int trackID, int &pdg, double &energy, double &time);
+
   private:
     
     CRTGeoAlg fCRTGeoAlg;

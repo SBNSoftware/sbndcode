@@ -19,6 +19,12 @@
 
 #include "TTree.h"
 
+#include "lardataobj/AnalysisBase/T0.h"
+#include "lardataobj/RecoBase/Track.h"
+
+#include "larsim/Utils/TruthMatchUtils.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
@@ -26,6 +32,7 @@
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
@@ -64,13 +71,19 @@ public:
 
   void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec);
 
+  void AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
+                          const art::Handle<std::vector<anab::T0>> &SPMatchHandle, const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointModuleLabel,
+                          const art::Handle<std::vector<anab::T0>> &TrackMatchHandle);
+
 private:
 
   CRTGeoAlg fCRTGeoAlg;
+  TPCGeoAlg fTPCGeoAlg;
   CRTBackTrackerAlg fCRTBackTrackerAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
-    fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel;
+    fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTPCTrackModuleLabel,
+    fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel;
   bool fDebug;
 
   TTree* fTree;
@@ -229,6 +242,30 @@ private:
   std::vector<double>              _tr_truth_tof;
   std::vector<double>              _tr_truth_theta;
   std::vector<double>              _tr_truth_phi;
+
+  std::vector<double> _tpc_start_x;
+  std::vector<double> _tpc_start_y;
+  std::vector<double> _tpc_start_z;
+  std::vector<double> _tpc_end_x;
+  std::vector<double> _tpc_end_y;
+  std::vector<double> _tpc_end_z;
+  std::vector<double> _tpc_dir_x;
+  std::vector<double> _tpc_dir_y;
+  std::vector<double> _tpc_dir_z;
+  std::vector<int>    _tpc_truth_trackid;
+  std::vector<int>    _tpc_truth_pdg;
+  std::vector<double> _tpc_truth_energy;
+  std::vector<double> _tpc_truth_time;
+  std::vector<bool>   _tpc_sp_matchable;
+  std::vector<bool>   _tpc_sp_matched;
+  std::vector<bool>   _tpc_sp_good_match;
+  std::vector<double> _tpc_sp_time;
+  std::vector<double> _tpc_sp_score;
+  std::vector<bool>   _tpc_tr_matchable;
+  std::vector<bool>   _tpc_tr_matched;
+  std::vector<bool>   _tpc_tr_good_match;
+  std::vector<double> _tpc_tr_time;
+  std::vector<double> _tpc_tr_score;
 };
 
 sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
@@ -236,14 +273,17 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
   {
-    fMCParticleModuleLabel    = p.get<std::string>("MCParticleModuleLabel", "largeant");
-    fSimDepositModuleLabel    = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
-    fFEBDataModuleLabel       = p.get<std::string>("FEBDataModuleLabel", "crtsim");
-    fCRTStripHitModuleLabel   = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
-    fCRTClusterModuleLabel    = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
-    fCRTSpacePointModuleLabel = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
-    fCRTTrackModuleLabel      = p.get<std::string>("CRTTrackModuleLabel", "crttracks");
-    fDebug                    = p.get<bool>("Debug", false);
+    fMCParticleModuleLabel            = p.get<std::string>("MCParticleModuleLabel", "largeant");
+    fSimDepositModuleLabel            = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
+    fFEBDataModuleLabel               = p.get<std::string>("FEBDataModuleLabel", "crtsim");
+    fCRTStripHitModuleLabel           = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
+    fCRTClusterModuleLabel            = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
+    fCRTSpacePointModuleLabel         = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
+    fCRTTrackModuleLabel              = p.get<std::string>("CRTTrackModuleLabel", "crttracks");
+    fTPCTrackModuleLabel              = p.get<std::string>("TPCTrackModuleLabel", "pandoraSCETrack");
+    fCRTSpacePointMatchingModuleLabel = p.get<std::string>("CRTSpacePointMatchingModuleLabel", "crtspacepointmatchingSCE");
+    fCRTTrackMatchingModuleLabel      = p.get<std::string>("CRTTrackMatchingModuleLabel", "crttrackmatchingSCE");
+    fDebug                            = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
 
@@ -401,6 +441,30 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("tr_truth_theta", "std::vector<double>", &_tr_truth_theta);
     fTree->Branch("tr_truth_phi", "std::vector<double>", &_tr_truth_phi);
 
+    fTree->Branch("tpc_start_x", "std::vector<double>", &_tpc_start_x);
+    fTree->Branch("tpc_start_y", "std::vector<double>", &_tpc_start_y);
+    fTree->Branch("tpc_start_z", "std::vector<double>", &_tpc_start_z);
+    fTree->Branch("tpc_end_x", "std::vector<double>", &_tpc_end_x);
+    fTree->Branch("tpc_end_y", "std::vector<double>", &_tpc_end_y);
+    fTree->Branch("tpc_end_z", "std::vector<double>", &_tpc_end_z);
+    fTree->Branch("tpc_dir_x", "std::vector<double>", &_tpc_dir_x);
+    fTree->Branch("tpc_dir_y", "std::vector<double>", &_tpc_dir_y);
+    fTree->Branch("tpc_dir_z", "std::vector<double>", &_tpc_dir_z);
+    fTree->Branch("tpc_truth_trackid", "std::vector<int>", &_tpc_truth_trackid);
+    fTree->Branch("tpc_truth_pdg", "std::vector<int>", &_tpc_truth_pdg);
+    fTree->Branch("tpc_truth_energy", "std::vector<double>", &_tpc_truth_energy);
+    fTree->Branch("tpc_truth_time", "std::vector<double>", &_tpc_truth_time);
+    fTree->Branch("tpc_sp_matchable", "std::vector<bool>", &_tpc_sp_matchable);
+    fTree->Branch("tpc_sp_matched", "std::vector<bool>", &_tpc_sp_matched);
+    fTree->Branch("tpc_sp_good_match", "std::vector<bool>", &_tpc_sp_good_match);
+    fTree->Branch("tpc_sp_time", "std::vector<double>", &_tpc_sp_time);
+    fTree->Branch("tpc_sp_score", "std::vector<double>", &_tpc_sp_score);
+    fTree->Branch("tpc_tr_matchable", "std::vector<bool>", &_tpc_tr_matchable);
+    fTree->Branch("tpc_tr_matched", "std::vector<bool>", &_tpc_tr_matched);
+    fTree->Branch("tpc_tr_good_match", "std::vector<bool>", &_tpc_tr_good_match);
+    fTree->Branch("tpc_tr_time", "std::vector<double>", &_tpc_tr_time);
+    fTree->Branch("tpc_tr_score", "std::vector<double>", &_tpc_tr_score);
+
     if(fDebug)
       {
         for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
@@ -538,6 +602,40 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
   // Fill TrueDeposit variables
   AnalyseTrueDeposits(trackRecoStatusMap);
+
+  // Get TPC tracks
+  art::Handle<std::vector<recob::Track>> TPCTrackHandle;
+  e.getByLabel(fTPCTrackModuleLabel, TPCTrackHandle);
+  if(!TPCTrackHandle.isValid()){
+    std::cout << "TPCTrack product " << fTPCTrackModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
+  // Get CRTSpacePoints
+  art::Handle<std::vector<CRTSpacePoint>> CRTSpacePointHandle;
+  e.getByLabel(fCRTSpacePointModuleLabel, CRTSpacePointHandle);
+  if(!CRTSpacePointHandle.isValid()){
+    std::cout << "CRTSpacePoint product " << fCRTSpacePointModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
+  // Get CRTSpacePoint matches
+  art::Handle<std::vector<anab::T0>> SPMatchHandle;
+  e.getByLabel(fCRTSpacePointMatchingModuleLabel, SPMatchHandle);
+  if(!SPMatchHandle.isValid()){
+    std::cout << "CRTSpacePointMatching product " << fCRTSpacePointMatchingModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
+  art::Handle<std::vector<anab::T0>> TrackMatchHandle;
+  e.getByLabel(fCRTTrackMatchingModuleLabel, TrackMatchHandle);
+  if(!TrackMatchHandle.isValid()){
+    std::cout << "CRTTrackMatching product " << fCRTTrackMatchingModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
+  // Fill TPC matching variables
+  AnalyseTPCMatching(e, TPCTrackHandle, SPMatchHandle, CRTSpacePointHandle, TrackMatchHandle);
 
   // Fill the Tree
   fTree->Fill();
@@ -992,6 +1090,126 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
       _tr_truth_tof[i]    = truthMatch.trackinfo.deposit2.time - truthMatch.trackinfo.deposit1.time;
       _tr_truth_theta[i]  = TMath::RadToDeg() * true_dir.Theta();
       _tr_truth_phi[i]    = TMath::RadToDeg() * true_dir.Phi();
+    }
+}
+
+void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
+                                                const art::Handle<std::vector<anab::T0>> &SPMatchHandle, const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle,
+                                                const art::Handle<std::vector<anab::T0>> &TrackMatchHandle)
+{
+  std::vector<art::Ptr<recob::Track>> TPCTrackVec;
+  art::fill_ptr_vector(TPCTrackVec, TPCTrackHandle);
+
+  const unsigned nTracks = TPCTrackVec.size();
+
+  _tpc_start_x.resize(nTracks);
+  _tpc_start_y.resize(nTracks);
+  _tpc_start_z.resize(nTracks);
+  _tpc_end_x.resize(nTracks);
+  _tpc_end_y.resize(nTracks);
+  _tpc_end_z.resize(nTracks);
+  _tpc_dir_x.resize(nTracks);
+  _tpc_dir_y.resize(nTracks);
+  _tpc_dir_z.resize(nTracks);
+  _tpc_truth_trackid.resize(nTracks);
+  _tpc_truth_pdg.resize(nTracks);
+  _tpc_truth_energy.resize(nTracks);
+  _tpc_truth_time.resize(nTracks);
+  _tpc_sp_matchable.resize(nTracks);
+  _tpc_sp_matched.resize(nTracks);
+  _tpc_sp_good_match.resize(nTracks);
+  _tpc_sp_time.resize(nTracks);
+  _tpc_sp_score.resize(nTracks);
+  _tpc_tr_matchable.resize(nTracks);
+  _tpc_tr_matched.resize(nTracks);
+  _tpc_tr_good_match.resize(nTracks);
+  _tpc_tr_time.resize(nTracks);
+  _tpc_tr_score.resize(nTracks);
+
+  art::FindManyP<recob::Hit>   tracksToHits(TPCTrackHandle, e, fTPCTrackModuleLabel);
+  art::FindOneP<anab::T0>      tracksToSPMatches(TPCTrackHandle, e, fCRTSpacePointMatchingModuleLabel);
+  art::FindOneP<CRTSpacePoint> spMatchesToSPs(SPMatchHandle, e, fCRTSpacePointMatchingModuleLabel);
+  art::FindOneP<CRTCluster>    spsToClusters(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
+  art::FindOneP<anab::T0>      tracksToTrackMatches(TPCTrackHandle, e, fCRTTrackMatchingModuleLabel);
+  art::FindOneP<CRTTrack>      trackMatchesToCRTTracks(TrackMatchHandle, e, fCRTTrackMatchingModuleLabel);
+
+  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+  for(unsigned i = 0; i < nTracks; ++i)
+    {
+      const auto track = TPCTrackVec[i];
+
+      const geo::Point_t start = track->Start();
+      _tpc_start_x[i] = start.X();
+      _tpc_start_y[i] = start.Y();
+      _tpc_start_z[i] = start.Z();
+
+      const geo::Point_t end = track->End();
+      _tpc_end_x[i] = end.X();
+      _tpc_end_y[i] = end.Y();
+      _tpc_end_z[i] = end.Z();
+
+      const geo::Vector_t dir = track->StartDirection();
+      _tpc_dir_x[i] = dir.X();
+      _tpc_dir_y[i] = dir.Y();
+      _tpc_dir_z[i] = dir.Z();
+
+      const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
+      const int trackid = fCRTBackTrackerAlg.RollUpID(TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true));
+
+      _tpc_truth_trackid[i] = trackid;
+
+      int pdg;
+      double energy, time;
+      fCRTBackTrackerAlg.TrueParticlePDGEnergyTime(trackid, pdg, energy, time);
+
+      _tpc_truth_pdg[i]    = pdg;
+      _tpc_truth_energy[i] = energy;
+      _tpc_truth_time[i]   = time;
+
+      _tpc_sp_matchable[i]  = fTPCGeoAlg.MinDistToWall(start) < 20. || fTPCGeoAlg.MinDistToWall(end) < 20.;
+      _tpc_tr_matchable[i]  = fTPCGeoAlg.MinDistToWall(start) < 20. && fTPCGeoAlg.MinDistToWall(end) < 20.;
+
+      const art::Ptr<anab::T0> spMatch = tracksToSPMatches.at(track.key());
+
+      if(spMatch.isNonnull())
+        {
+          const art::Ptr<CRTSpacePoint> spacepoint              = spMatchesToSPs.at(spMatch.key());
+          const art::Ptr<CRTCluster> cluster                    = spsToClusters.at(spacepoint.key());
+          const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
+
+          _tpc_sp_matched[i]    = true;
+          _tpc_sp_good_match[i] = truthMatch.trackid == trackid;
+          _tpc_sp_time[i]       = spacepoint->Time();
+          _tpc_sp_score[i]      = spMatch->TriggerConfidence();
+        }
+      else
+        {
+          _tpc_sp_matched[i]    = false;
+          _tpc_sp_good_match[i] = false;
+          _tpc_sp_time[i]       = -std::numeric_limits<double>::max();
+          _tpc_sp_score[i]      = -std::numeric_limits<double>::max();
+        }
+
+      const art::Ptr<anab::T0> trackMatch = tracksToTrackMatches.at(track.key());
+
+      if(trackMatch.isNonnull())
+        {
+          const art::Ptr<CRTTrack> crttrack                     = trackMatchesToCRTTracks.at(trackMatch.key());
+          const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, crttrack);
+
+          _tpc_tr_matched[i]    = true;
+          _tpc_tr_good_match[i] = truthMatch.trackid == trackid;
+          _tpc_tr_time[i]       = crttrack->Time();
+          _tpc_tr_score[i]      = trackMatch->TriggerConfidence();
+        }
+      else
+        {
+          _tpc_tr_matched[i]    = false;
+          _tpc_tr_good_match[i] = false;
+          _tpc_tr_time[i]       = -std::numeric_limits<double>::max();
+          _tpc_tr_score[i]      = -std::numeric_limits<double>::max();
+        }
     }
 }
 

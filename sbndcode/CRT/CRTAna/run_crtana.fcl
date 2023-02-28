@@ -1,5 +1,4 @@
-#include "services_sbnd.fcl"
-#include "particleinventoryservice.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "crtbacktrackeralg_sbnd.fcl"
 
 process_name: CRTAnalyzer
@@ -8,7 +7,9 @@ services:
 {
   TFileService: { fileName: "crtana_sbnd.root" }
   @table::sbnd_basic_services
-  ParticleInventoryService: @local::standard_particleinventoryservice
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+  DetectorClocksService:    @local::sbnd_detectorclocks
 }
 
 source:

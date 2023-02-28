@@ -136,8 +136,9 @@ namespace sbnd::crt {
         const double coreTime   = coreCategoryToTimeMap[category] / coreCategoryToNIDEsMap[category];
         const double coreEnergy = coreCategoryToEnergyMap[category];
 
-        const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(category.trackid);
-        const int pdg = particle == NULL ? -999999 : particle->PdgCode();
+        int pdg;
+        double particle_energy, particle_time;
+        TrueParticlePDGEnergyTime(category.trackid, pdg, particle_energy, particle_time);
 
         fTrueDepositsPerTaggerMap[category] = TrueDeposit(category.trackid, pdg, category.tagger,
                                                           energy, time, x, y, z, true,
@@ -154,10 +155,9 @@ namespace sbnd::crt {
         const double time   = idToTimeMap[trackID] / idToNIDEsMap[trackID];
         const double energy = idToEnergyMap[trackID];
 
-        const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(trackID);
-
-        const int pdg                = particle == NULL ? -999999 : particle->PdgCode();
-        const double particle_energy = particle == NULL ? -999999. : particle->E();
+        int pdg;
+        double particle_energy, particle_time;
+        TrueParticlePDGEnergyTime(trackID, pdg, particle_energy, particle_time);
 
         struct SortTagger {
           double    time;
@@ -557,5 +557,14 @@ namespace sbnd::crt {
       return {999999., {999999., 999999., 999999.}};
     
     return {k, start + k * dir};
+  }
+
+  void CRTBackTrackerAlg::TrueParticlePDGEnergyTime(const int trackID, int &pdg, double &energy, double &time)
+  {
+    const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(trackID);
+
+    pdg    = particle == NULL ? -std::numeric_limits<int>::max()    : particle->PdgCode();
+    energy = particle == NULL ? -std::numeric_limits<double>::max() : particle->E();
+    time   = particle == NULL ? -std::numeric_limits<double>::max() : particle->T();
   }
 }
