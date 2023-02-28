@@ -69,7 +69,6 @@ int opdet::HDOpticalWaveforms::produceSER_HD(std::vector<std::vector<double>> &S
       if (i%N == 0)SER_HD[i%N].push_back(SER.at(i)); //prepare xRF SPEs from higher sampling rate estimation
       else SER_HD[N-i%N].push_back(SER.at(i));
     }
-    SER_HD[0].push_back(0);//add an extra 0 to the first vector, so all of them have the same size (prevents issues at deconvolution stage)
 
   return 0;
 }
