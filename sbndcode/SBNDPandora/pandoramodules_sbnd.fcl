@@ -92,7 +92,9 @@ sbnd_showerlinearenergy.Gradients: [0.00155644, 0.00173915, 0.00153631]
 sbnd_showerlinearenergy.Intercepts: [5.92931, -2.13307, 5.19711]
 sbnd_showernumelectronsenergy.CalorimetryAlg: @local::sbnd_calorimetryalgmc
 sbnd_showerunidirectiondedx.CalorimetryAlg:   @local::sbnd_calorimetryalgmc
+sbnd_showerunidirectiondedx.SumHitSnippets:   true
 sbnd_showertrajpointdedx.CalorimetryAlg:      @local::sbnd_calorimetryalgmc
+sbnd_showertrajpointdedx.SumHitSnippets:      true
 sbnd_showerbayesiantrucatingdedx.PriorFname: "PandoraMVAs/ShowerBayesdEdxPriors.root"
 
 sbnd_basic_pandoraModularShowerCreation.ShowerFinderTools: [
