@@ -49,6 +49,8 @@ void BasicVariables()
                               50, 0, 500, plotcolour},
                              {"n_clusters", "@cl_ts0.size()", ";nClusters;Events",
                               50, 0, 500, plotcolour},
+                             {"n_tracks", "@tr_time.size()", ";nTracks;Events",
+                              50, 0, 100, plotcolour},
                              {"sh_channel","sh_channel", ";Channel ID;Strip Hits",
                               10000, 0, 10000, plotcolour},
                              {"sh_ts0","sh_ts0", ";Ts0 [ns];Strip Hits",
