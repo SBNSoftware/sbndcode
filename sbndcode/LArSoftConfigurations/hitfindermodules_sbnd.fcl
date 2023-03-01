@@ -6,14 +6,30 @@ sbnd_hitfinder:               @local::standard_hitfinder
 sbnd_mc_hitfinder:            @local::standard_hitfinder
 sbnd_mc_hitfinder.AreaNorms:  [ 12.89, 14.51 ]
 
+sbnd_candhitfinder_morphological: @local::candhitfinder_morphological
+sbnd_candhitfinder_morphological.MinDeltaTicks: 2
+sbnd_candhitfinder_morphological.Plane: 999 # Set the defualt plane to fail and make sure we overridde the individual planes
+sbnd_candhitfinder_morphological_0: @local::sbnd_candhitfinder_morphological
+sbnd_candhitfinder_morphological_0.Plane: 0
+sbnd_candhitfinder_morphological_0.MinHitHeight: 12
+sbnd_candhitfinder_morphological_1: @local::sbnd_candhitfinder_morphological
+sbnd_candhitfinder_morphological_1.Plane: 1
+sbnd_candhitfinder_morphological_1.MinHitHeight: 15
+sbnd_candhitfinder_morphological_2: @local::sbnd_candhitfinder_morphological
+sbnd_candhitfinder_morphological_2.Plane: 2
+sbnd_candhitfinder_morphological_2.MinHitHeight: 8
+
 # generic (ArgoNeuT) GausHitFinder configuration from LArSoft 4.24.00:
 sbnd_gaushitfinder:                                                   @local::gaus_hitfinder
-sbnd_gaushitfinder.AreaNorms:                                         [ 13.25, 13.25, 26.31 ]  # normalizations that put signal area in 
-				                                                                               # same scale as peak height. 
-sbnd_gaushitfinder.TryNplus1Fits:                                     false                    # whether to try to re-fit poorly modled hits with n+1 gaussians
-sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane0.RoiThreshold: 14.
-sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane1.RoiThreshold: 17.
-sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane2.RoiThreshold: 10.
+sbnd_gaushitfinder.AreaNorms:                                         [ 13.25, 13.25, 26.31 ]  # normalizations that put signal area in
+                                                                                               # same scale as peak height.
+sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane0:              @local::sbnd_candhitfinder_morphological_0
+sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane1:              @local::sbnd_candhitfinder_morphological_1
+sbnd_gaushitfinder.HitFinderToolVec.CandidateHitsPlane2:              @local::sbnd_candhitfinder_morphological_2
+sbnd_gaushitfinder.PeakFitter.Refit:                                  true
+sbnd_gaushitfinder.LongMaxHits:                                     [ 25, 25, 25] # max widths for hits in long pulse trains
+sbnd_gaushitfinder.LongPulseWidth:                                  [ 10, 10, 10] # max number hits in long pulse trains
+sbnd_gaushitfinder.Chi2NDF:                                           500
 
 sbnd_fasthitfinder:                     @local::standard_fasthitfinder
 sbnd_fasthitfinder.DigitModuleLabel:    "daq"
