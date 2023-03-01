@@ -84,7 +84,8 @@ public:
   double DistanceOfClosestApproach(const geo::Point2D_t &v1, const geo::Point2D_t &v2, const geo::Point2D_t &p);
 
   void BestFitLine(const geo::Point_t &a, const geo::Point_t &b, const geo::Point_t &c, const CRTTagger &primary_tagger,
-                   const CRTTagger &tertiary_tagger, geo::Point_t &start, geo::Point_t &end, double &gof);
+                   const CRTTagger &secondary_tagger, const CRTTagger &tertiary_tagger, geo::Point_t &start,
+                   geo::Point_t &mid, geo::Point_t &end, double &gof);
 
   geo::Point_t LineTaggerIntersectionPoint(const geo::Point_t &start, const geo::Vector_t &dir, const CRTTagger &tagger);
 
@@ -207,14 +208,13 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
 
                       const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()};
  
-                      geo::Point_t fitStart;
-                      geo::Point_t fitEnd;
+                      geo::Point_t fitStart, fitMid, fitEnd;
                       double gof;
                       
                       BestFitLine(primarySpacePoint->Pos(), secondarySpacePoint->Pos(), tertiarySpacePoint->Pos(), primaryCluster->Tagger(), 
-                                  tertiaryCluster->Tagger(), fitStart, fitEnd, gof);
+                                  secondaryCluster->Tagger(), tertiaryCluster->Tagger(), fitStart, fitMid, fitEnd, gof);
 
-                      const CRTTrack track(fitStart, fitEnd, time, etime, pe, tof, true, used_taggers);
+                      const CRTTrack track({fitStart, fitMid, fitEnd}, time, etime, pe, tof, used_taggers);
                       const std::set<unsigned> used_spacepoints = {i, ii, iii};
 
                       candidates.emplace_back(track, used_spacepoints);
@@ -230,7 +230,7 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
 
           const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
 
-          const CRTTrack track(start, end, time, etime, pe, tof, false, used_taggers);
+          const CRTTrack track(start, end, time, etime, pe, tof, used_taggers);
           const std::set<unsigned> used_spacepoints = {i, ii};
 
           candidates.emplace_back(track, used_spacepoints);
@@ -382,8 +382,9 @@ double sbnd::crt::CRTTrackProducer::DistanceOfClosestApproach(const geo::Point2D
     return std::abs((line.Y() * (p.X() - v1.X())) + (line.X() * (p.Y() - v1.Y()))) / line.R();
 }
 
-void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const geo::Point_t &b, const geo::Point_t &c, const CRTTagger &primary_tagger,
-                                              const CRTTagger &tertiary_tagger, geo::Point_t &start, geo::Point_t &end, double &gof)
+void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const geo::Point_t &b, const geo::Point_t &c, const CRTTagger &primary_tagger, 
+                                              const CRTTagger &secondary_tagger, const CRTTagger &tertiary_tagger, geo::Point_t &start, 
+                                              geo::Point_t &mid, geo::Point_t &end, double &gof)
 {
   Eigen::Matrix3d X {
     {a.X(), a.Y(), a.Z()},
@@ -429,6 +430,7 @@ void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const geo::
   const geo::Vector_t dir = {eigenVector(0), eigenVector(1), eigenVector(2)};
 
   start = LineTaggerIntersectionPoint(mean, dir, primary_tagger);
+  mid   = LineTaggerIntersectionPoint(mean, dir, secondary_tagger);
   end   = LineTaggerIntersectionPoint(mean, dir, tertiary_tagger);
   gof   = eigenValuesAndColumns[0].first;
 

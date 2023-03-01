@@ -221,7 +221,7 @@ private:
   std::vector<double>              _tr_theta;
   std::vector<double>              _tr_phi;
   std::vector<bool>                _tr_triple;
-  std::vector<std::array<bool, 7>> _tr_taggers;
+  std::vector<std::set<CRTTagger>> _tr_taggers;
   std::vector<int>                 _tr_truth_trackid;
   std::vector<double>              _tr_truth_completeness;
   std::vector<double>              _tr_truth_purity;
@@ -419,7 +419,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("tr_theta", "std::vector<double>", &_tr_theta);
     fTree->Branch("tr_phi", "std::vector<double>", &_tr_phi);
     fTree->Branch("tr_triple", "std::vector<bool>", &_tr_triple);
-    fTree->Branch("tr_taggers", "std::vector<std::array<bool, 7>>", &_tr_taggers);
+    fTree->Branch("tr_taggers", "std::vector<std::set<sbnd::crt::CRTTagger>>", &_tr_taggers);
     fTree->Branch("tr_truth_trackid", "std::vector<int>", &_tr_truth_trackid);
     fTree->Branch("tr_truth_completeness", "std::vector<double>", &_tr_truth_completeness);
     fTree->Branch("tr_truth_purity", "std::vector<double>", &_tr_truth_purity);
