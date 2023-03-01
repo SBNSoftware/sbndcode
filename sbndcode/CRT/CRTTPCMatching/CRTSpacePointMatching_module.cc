@@ -19,6 +19,8 @@
 
 #include "lardataobj/AnalysisBase/T0.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/RecoBase/PFParticleMetadata.h"
 
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -50,6 +52,7 @@ private:
   CRTSpacePointMatchAlg fMatchingAlg;
   art::InputTag         fTPCTrackModuleLabel;
   art::InputTag         fCRTSpacePointModuleLabel;
+  art::InputTag         fPFPModuleLabel;
 };
 
 
@@ -58,6 +61,7 @@ sbnd::crt::CRTSpacePointMatching::CRTSpacePointMatching(fhicl::ParameterSet cons
   , fMatchingAlg(p.get<fhicl::ParameterSet>("MatchingAlg"))
   , fTPCTrackModuleLabel(p.get<art::InputTag>("TPCTrackModuleLabel"))
   , fCRTSpacePointModuleLabel(p.get<art::InputTag>("CRTSpacePointModuleLabel"))
+  , fPFPModuleLabel(p.get<art::InputTag>("PFPModuleLabel"))
   {
     produces<std::vector<anab::T0>>();
     produces<art::Assns<recob::Track, anab::T0>>();
@@ -82,10 +86,26 @@ void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
   std::vector<art::Ptr<recob::Track>> trackVec;
   art::fill_ptr_vector(trackVec, trackHandle);
 
+  art::Handle<std::vector<recob::PFParticle>> PFPHandle;
+  e.getByLabel(fPFPModuleLabel, PFPHandle);
+
+  std::vector<art::Ptr<recob::PFParticle>> PFPVec;
+  art::fill_ptr_vector(PFPVec, PFPHandle);
+
+  art::FindOneP<recob::PFParticle> tracksToPFPs(trackHandle, e, fTPCTrackModuleLabel);
+  art::FindOneP<larpandoraobj::PFParticleMetadata> pfpsToMetadata(PFPHandle, e, fPFPModuleLabel);
+
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
   for(auto const &track : trackVec)
     {
+      const art::Ptr<recob::PFParticle> pfp                          = tracksToPFPs.at(track.key());
+      const art::Ptr<larpandoraobj::PFParticleMetadata> metadata     = pfpsToMetadata.at(pfp.key());
+      const larpandoraobj::PFParticleMetadata::PropertiesMap propmap = metadata->GetPropertiesMap();
+
+      if(propmap.find("TrackScore")->second < 0.5)
+        continue;
+
       MatchCandidate closest = fMatchingAlg.GetClosestCRTSpacePoint(detProp, track, CRTSpacePointVec, e);
 
       if(closest.score >= 0)
