@@ -2521,7 +2521,6 @@ auto sbnd::DaqDecoderSBNDPMT::createFragmentWaveforms(
     //
     // create the proto-waveform
     //
-    timeStamp = 1800;
     std::cout << timeStamp.value() << std::endl;
     auto const [ itMin, itMax ] = std::minmax_element(wvfm.begin(), wvfm.end());
     protoWaveforms.push_back({ // create the waveform and its ancillary info
