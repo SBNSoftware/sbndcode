@@ -17,7 +17,6 @@
 #include "lardataobj/AnalysisBase/T0.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
-#include "lardataobj/RecoBase/PFParticleMetadata.h"
 
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -49,7 +48,6 @@ private:
     CRTTrackMatchAlg fMatchingAlg;
     art::InputTag    fTPCTrackModuleLabel;
     art::InputTag    fCRTTrackModuleLabel;
-    art::InputTag    fPFPModuleLabel;
 };
 
 
@@ -58,7 +56,6 @@ sbnd::crt::CRTTrackMatching::CRTTrackMatching(fhicl::ParameterSet const& p)
   , fMatchingAlg(p.get<fhicl::ParameterSet>("MatchingAlg"))
   , fTPCTrackModuleLabel(p.get<art::InputTag>("TPCTrackModuleLabel"))
   , fCRTTrackModuleLabel(p.get<art::InputTag>("CRTTrackModuleLabel"))
-  , fPFPModuleLabel(p.get<art::InputTag>("PFPModuleLabel"))
   {
     produces<std::vector<anab::T0>>();
     produces<art::Assns<recob::Track, anab::T0>>();
@@ -83,24 +80,15 @@ void sbnd::crt::CRTTrackMatching::produce(art::Event& e)
   std::vector<art::Ptr<recob::Track>> tpcTrackVec;
   art::fill_ptr_vector(tpcTrackVec, tpcTrackHandle);
 
-  art::Handle<std::vector<recob::PFParticle>> PFPHandle;
-  e.getByLabel(fPFPModuleLabel, PFPHandle);
-
-  std::vector<art::Ptr<recob::PFParticle>> PFPVec;
-  art::fill_ptr_vector(PFPVec, PFPHandle);
-
   art::FindOneP<recob::PFParticle> tracksToPFPs(tpcTrackHandle, e, fTPCTrackModuleLabel);
-  art::FindOneP<larpandoraobj::PFParticleMetadata> pfpsToMetadata(PFPHandle, e, fPFPModuleLabel);
 
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
   for(auto const &tpcTrack : tpcTrackVec)
     {
-      const art::Ptr<recob::PFParticle> pfp                          = tracksToPFPs.at(tpcTrack.key());
-      const art::Ptr<larpandoraobj::PFParticleMetadata> metadata     = pfpsToMetadata.at(pfp.key());
-      const larpandoraobj::PFParticleMetadata::PropertiesMap propmap = metadata->GetPropertiesMap();
+      const art::Ptr<recob::PFParticle> pfp = tracksToPFPs.at(tpcTrack.key());
 
-      if(propmap.find("TrackScore")->second < 0.5)
+      if(pfp->PdgCode() != 13)
 	continue;
 
       MatchCandidate best = fMatchingAlg.GetBestMatchedCRTTrack(detProp, tpcTrack, crtTrackVec, e);
