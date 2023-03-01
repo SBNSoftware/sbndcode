@@ -18,7 +18,7 @@ crtspacepointmatchproducer_sbnd:
    TPCTrackModuleLabel:      @local::crtspacepointmatchalg_sbnd.TPCTrackLabel
    PFPModuleLabel:           "pandora"
    MatchingAlg:              @local::crtspacepointmatchalg_sbnd
-   module_type:              "sbndcode/CRT/CRTTPCMatching/CRTSpacePointMatching"
+   module_type:              "CRTSpacePointMatching"
 }
 
 crttrackmatchalg_sbnd:
@@ -36,7 +36,7 @@ crttrackmatchproducer_sbnd:
    TPCTrackModuleLabel: @local::crttrackmatchalg_sbnd.TPCTrackLabel
    PFPModuleLabel:      "pandora"
    MatchingAlg:         @local::crttrackmatchalg_sbnd
-   module_type:         "sbndcode/CRT/CRTTPCMatching/CRTTrackMatching"
+   module_type:         "CRTTrackMatching"
 }
 
 END_PROLOG

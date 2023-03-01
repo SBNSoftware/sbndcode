@@ -6,7 +6,7 @@ crtstriphitproducer_sbnd:
 {
    FEBDataModuleLabel: "crtsim"
    ADCThreshold:       60
-   module_type:        "sbndcode/CRT/CRTReco/CRTStripHitProducer"
+   module_type:        "CRTStripHitProducer"
 }
 
 crtclusterproducer_sbnd:
@@ -14,7 +14,7 @@ crtclusterproducer_sbnd:
    CRTStripHitModuleLabel:     "crtstrips"
    CoincidenceTimeRequirement: 50
    OverlapBuffer:              1.
-   module_type:                "sbndcode/CRT/CRTReco/CRTClusterProducer"
+   module_type:                "CRTClusterProducer"
 }
 
 crtclustercharacterisationalg_sbnd:
@@ -33,7 +33,7 @@ crtspacepointproducer_sbnd:
 {
    ClusterCharacterisationAlg: @local::crtclustercharacterisationalg_sbnd
    ClusterModuleLabel:         "crtclustering"
-   module_type:                "sbndcode/CRT/CRTReco/CRTSpacePointProducer"
+   module_type:                "CRTSpacePointProducer"
 }
 
 crttrackproducer_sbnd:
@@ -41,7 +41,7 @@ crttrackproducer_sbnd:
    CRTSpacePointModuleLabel:   "crtspacepoints"
    CoincidenceTimeRequirement: 100.
    ThirdSpacePointMaximumDCA:  50.
-   module_type:                "sbndcode/CRT/CRTReco/CRTTrackProducer"
+   module_type:                "CRTTrackProducer"
 }
 
 END_PROLOG
