@@ -1,0 +1,10 @@
+This directory contains modules that simulate artdaq fragments and software trigger metrics for both the CRT and PMTs. The main directory contains modules that will create/analyze both CRT and PMTs fragments, the subdirectories are CRT-only and PMT-only.
+
+If using the Hitdumper module or another analyzer to analyze CRT or PMT metric information, make sure that the module label is correct for the workflow you are using: 
+- CRT & PMT metrics: `"softmetric"`
+- CRT only: `"softmetric"`
+- PMT metrics: `"pmtSoftwsareTrigger"`
+
+The fcl parameters for the `ArtdaqFragmentProducer` module and `MetricProducer` module are the default fcl parameters defined in the subdirectory files, such as `pmttriggerproducer.fcl`. 
+
+The default parameters for the PMT hardware and software triggers are set to look for PMT triggers during the beam spill *only*. 

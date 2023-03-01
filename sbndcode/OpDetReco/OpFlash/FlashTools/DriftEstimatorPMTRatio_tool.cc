@@ -126,7 +126,7 @@ namespace lightana
 
     geo::GeometryCore const& geom = *(lar::providerFrom<geo::Geometry>());
 
-    fDriftDistance = geom.TPC(0.0).DriftDistance();
+    fDriftDistance = geom.TPC().DriftDistance();
     fVISLightPropTime = fDriftDistance/fVGroupVIS;
     fKinkDistance = 0.5*fDriftDistance*(1-fVGroupVUV/fVGroupVIS);
 

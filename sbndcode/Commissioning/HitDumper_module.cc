@@ -565,7 +565,7 @@ void Hitdumper::analyze(const art::Event& evt)
         int module = (chan>> 5);
         //
         std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
-        TVector3 center = fAuxDetGeoCore->AuxDetChannelToPosition(2*strip, name);
+        auto const center = fAuxDetGeoCore->AuxDetChannelToPosition(name, 2*strip);
         _crt_plane.push_back(ip);
         _crt_module.push_back(module);
         _crt_strip.push_back(strip);
@@ -886,15 +886,19 @@ void Hitdumper::analyze(const art::Event& evt)
   // PMT Software Trigger
   //
   if (freadpmtSoftTrigger){
-    art::Handle<sbnd::trigger::pmtSoftwareTrigger> pmtSoftTriggerHandle;
-    if (evt.getByLabel(fpmtSoftTriggerModuleLabel, pmtSoftTriggerHandle)){
-      const sbnd::trigger::pmtSoftwareTrigger &pmtSoftTriggerMetrics = (*pmtSoftTriggerHandle);
+    art::Handle<std::vector<sbnd::trigger::pmtSoftwareTrigger>> pmtSoftTriggerListHandle;
+    std::vector<art::Ptr<sbnd::trigger::pmtSoftwareTrigger>> pmtsofttriggerlist;
+
+    if (evt.getByLabel(fpmtSoftTriggerModuleLabel, pmtSoftTriggerListHandle)){
+      art::fill_ptr_vector(pmtsofttriggerlist,pmtSoftTriggerListHandle);
       ResetPmtSoftTriggerVars();
-      _pmtSoftTrigger_foundBeamTrigger = pmtSoftTriggerMetrics.foundBeamTrigger;
-      _pmtSoftTrigger_tts = pmtSoftTriggerMetrics.triggerTimestamp;
-      _pmtSoftTrigger_promptPE = pmtSoftTriggerMetrics.promptPE;
-      _pmtSoftTrigger_prelimPE = pmtSoftTriggerMetrics.prelimPE;
-      _pmtSoftTrigger_nAboveThreshold = pmtSoftTriggerMetrics.nAboveThreshold;
+
+      auto pmtSoftTriggerMetrics = pmtsofttriggerlist[0];
+      _pmtSoftTrigger_foundBeamTrigger = pmtSoftTriggerMetrics->foundBeamTrigger;
+      _pmtSoftTrigger_tts = pmtSoftTriggerMetrics->triggerTimestamp;
+      _pmtSoftTrigger_promptPE = pmtSoftTriggerMetrics->promptPE;
+      _pmtSoftTrigger_prelimPE = pmtSoftTriggerMetrics->prelimPE;
+      _pmtSoftTrigger_nAboveThreshold = pmtSoftTriggerMetrics->nAboveThreshold;
       // _pmtSoftTrigger_pmtInfoVec = pmtsofttriggerlist[0]->pmtInfoVec;
     }
     else{
@@ -906,12 +910,15 @@ void Hitdumper::analyze(const art::Event& evt)
   // CRT Software Trigger
   //
   if (freadcrtSoftTrigger){
-    art::Handle<sbndaq::CRTmetric> crtSoftTriggerHandle;
-    if (evt.getByLabel(fcrtSoftTriggerModuleLabel, crtSoftTriggerHandle)){
-      const sbndaq::CRTmetric &crtSoftTriggerMetrics = (*crtSoftTriggerHandle);
+    art::Handle<std::vector<sbndaq::CRTmetric>> crtSoftTriggerListHandle;
+    std::vector<art::Ptr<sbndaq::CRTmetric>>    crtsofttriggerlist;
+    if (evt.getByLabel(fcrtSoftTriggerModuleLabel, crtSoftTriggerListHandle)){
+      art::fill_ptr_vector(crtsofttriggerlist, crtSoftTriggerListHandle);
       ResetCrtSoftTriggerVars();
+      auto crtSoftTriggerMetrics = crtsofttriggerlist[0];
+
       for (int i=0; i<7; i++){
-	_crtSoftTrigger_hitsperplane[i] = crtSoftTriggerMetrics.hitsperplane[i];
+	      _crtSoftTrigger_hitsperplane[i] = crtSoftTriggerMetrics->hitsperplane[i];
       }
     }
     else{

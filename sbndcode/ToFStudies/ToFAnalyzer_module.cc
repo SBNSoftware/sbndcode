@@ -547,7 +547,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 {
  ClearVecs();
  
- geo::CryostatGeo const& cryo0 = fGeometryService->Cryostat(0);
+ geo::CryostatGeo const& cryo0 = fGeometryService->Cryostat();
  geo::TPCGeo const& tpc00 = cryo0.TPC(0);
  geo::TPCGeo const& tpc01 = cryo0.TPC(1);
  
@@ -750,11 +750,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	       bool found_tpc_traj_point=false;
 	       for(size_t i=0; i<particle->NumberTrajectoryPoints(); i++){
 	           const TLorentzVector& pos = particle->Position(i);
-                   double point[3] = {pos.X(),pos.Y(),pos.Z()};
+                   geo::Point_t const point{pos.X(),pos.Y(),pos.Z()};
 		   if(tpc00.ContainsPosition(point) || tpc01.ContainsPosition(point)){
-		      double opDetPos[3];
-		     (cryo0.OpDet(cryo0.GetClosestOpDet(point))).GetCenter(opDetPos);
-		     double dprop=sqrt(pow(opDetPos[0]-pos[0],2) + pow(opDetPos[1]-pos[1],2) + pow(opDetPos[2]-pos[2],2)); 
+                     auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
+                     double dprop=(opDetPos - point).R();
 		     double tprop=pos.T() + dprop*LAR_PROP_DELAY;
 		     fTrue_TOF.push_back(crt->ts1_ns-tprop);
 		     fTrue_TOF_hit.push_back(true);
@@ -765,9 +764,9 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 		     art::Ptr<simb::MCTruth> truth=inventory_service->TrackIdToMCTruth_P(particle->TrackId());
 		     fTrue_TOF_part_org.push_back(truth->NeutrinoSet());
 		     fTrue_TOF_traj_T.push_back(pos.T());
-                     fTrue_TOF_traj_X.push_back(point[0]);
-                     fTrue_TOF_traj_Y.push_back(point[1]);
-                     fTrue_TOF_traj_Z.push_back(point[2]);
+                     fTrue_TOF_traj_X.push_back(point.X());
+                     fTrue_TOF_traj_Y.push_back(point.Y());
+                     fTrue_TOF_traj_Z.push_back(point.Z());
 		     fTrue_TOF_traj_in_TPC.push_back(true);
 		     found_tpc_traj_point=true;
 		     break;
@@ -777,11 +776,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	       if(!found_tpc_traj_point){
 	          for(size_t i=0; i<particle->NumberTrajectoryPoints(); i++){
 		      const TLorentzVector& pos = particle->Position(i);
-                      double point[3] = {pos.X(),pos.Y(),pos.Z()};
+                      geo::Point_t const point{pos.X(),pos.Y(),pos.Z()};
 		      if(cryo0.ContainsPosition(point)){
-		         double opDetPos[3];
-		         (cryo0.OpDet(cryo0.GetClosestOpDet(point))).GetCenter(opDetPos);
-		         double dprop=sqrt(pow(opDetPos[0]-pos[0],2) + pow(opDetPos[1]-pos[1],2) + pow(opDetPos[2]-pos[2],2)); 
+                        auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
+                        double dprop=(opDetPos - point).R();
 		         double tprop=pos.T() + dprop*LAR_PROP_DELAY;
 		         fTrue_TOF.push_back(crt->ts1_ns-tprop);
 		         fTrue_TOF_hit.push_back(true);
@@ -792,9 +790,9 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 		         art::Ptr<simb::MCTruth> truth=inventory_service->TrackIdToMCTruth_P(particle->TrackId());
 		         fTrue_TOF_part_org.push_back(truth->NeutrinoSet());
 		         fTrue_TOF_traj_T.push_back(pos.T());
-                         fTrue_TOF_traj_X.push_back(point[0]);
-                         fTrue_TOF_traj_Y.push_back(point[1]);
-                         fTrue_TOF_traj_Z.push_back(point[2]);
+                         fTrue_TOF_traj_X.push_back(point.X());
+                         fTrue_TOF_traj_Y.push_back(point.Y());
+                         fTrue_TOF_traj_Z.push_back(point.Z());
 		         fTrue_TOF_traj_in_TPC.push_back(false);
 		         break;
 		      } // found a trajectory point inside CRYO
@@ -852,11 +850,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	       fLhit_crttgr_vec.push_back(crt->tagger);
 	       fLhit_pmthitkey_vec.push_back(ophit_index);
 	       fLhit_pmthitT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
-	       double pos[3];
-               fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter(pos);  
-	       fLhit_pmthitX_vec.push_back(pos[0]);
-	       fLhit_pmthitY_vec.push_back(pos[1]);
-	       fLhit_pmthitZ_vec.push_back(pos[2]);
+               auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
+               fLhit_pmthitX_vec.push_back(pos.X());
+               fLhit_pmthitY_vec.push_back(pos.Y());
+               fLhit_pmthitZ_vec.push_back(pos.Z());
 	       fLhit_pmthitpe_vec.push_back(opHitList[ophit_index]->PE());
 	       //std::cout << "CRT time : " << crt->ts1_ns << "  CRT PE : " << crt->peshit << "   CRT Tagger : " << crt->tagger << "\n"; 
 	   }
@@ -909,11 +906,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	       fChit_crttgr_vec.push_back(crt->tagger);
 	       fChit_pmthitkey_vec.push_back(ophit_index);
 	       fChit_pmthitT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
-	       double pos[3];
-               fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter(pos);  
-	       fChit_pmthitX_vec.push_back(pos[0]);
-	       fChit_pmthitY_vec.push_back(pos[1]);
-	       fChit_pmthitZ_vec.push_back(pos[2]);
+               auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
+               fChit_pmthitX_vec.push_back(pos.X());
+               fChit_pmthitY_vec.push_back(pos.Y());
+               fChit_pmthitZ_vec.push_back(pos.Z());
 	       fChit_pmthitpe_vec.push_back(opHitList[ophit_index]->PE());
 	   }
 	}
@@ -1114,11 +1110,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                  fLflshhit_pmtflshkey_vec.push_back(opflash_index);
                  fLflshhit_pmtkey_vec.push_back(ophit_index);
                  fLflshhit_pmtflshT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
-                 double pos[3];
-                 fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter(pos);  
-		 fLflshhit_pmtflshX_vec.push_back(pos[0]);
-                 fLflshhit_pmtflshY_vec.push_back(pos[1]);
-                 fLflshhit_pmtflshZ_vec.push_back(pos[2]);
+                 auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
+                 fLflshhit_pmtflshX_vec.push_back(pos.X());
+                 fLflshhit_pmtflshY_vec.push_back(pos.Y());
+                 fLflshhit_pmtflshZ_vec.push_back(pos.Z());
                  fLflshhit_pmtflshpe_vec.push_back(opHitList[ophit_index]->PE());
             }
 	}
@@ -1197,11 +1192,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                  fCflshhit_pmtflshkey_vec.push_back(opflash_index);
                  fCflshhit_pmtkey_vec.push_back(ophit_index);
                  fCflshhit_pmtflshT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
-                 double pos[3];
-                 fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter(pos);  
-		 fCflshhit_pmtflshX_vec.push_back(pos[0]);
-                 fCflshhit_pmtflshY_vec.push_back(pos[1]);
-                 fCflshhit_pmtflshZ_vec.push_back(pos[2]);
+                 auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
+                 fCflshhit_pmtflshX_vec.push_back(pos.X());
+                 fCflshhit_pmtflshY_vec.push_back(pos.Y());
+                 fCflshhit_pmtflshZ_vec.push_back(pos.Z());
                  fCflshhit_pmtflshpe_vec.push_back(opHitList[ophit_index]->PE());
             }
 	}
@@ -1242,11 +1236,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    fLhit_crttgr_vec.push_back(trackhits[ele.first].front()->tagger);
 	    fLhit_pmthitkey_vec.push_back(Lhit_tof_op_hits[ele.first][min_index].key());
 	    fLhit_pmthitT_vec.push_back(Lhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-	    double pos[3];
-            fGeometryService->OpDetGeoFromOpChannel(Lhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter(pos); 
-	    fLhit_pmthitX_vec.push_back(pos[0]);
-	    fLhit_pmthitY_vec.push_back(pos[1]);
-	    fLhit_pmthitZ_vec.push_back(pos[2]);
+            auto const pos = fGeometryService->OpDetGeoFromOpChannel(Lhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
+            fLhit_pmthitX_vec.push_back(pos.X());
+            fLhit_pmthitY_vec.push_back(pos.Y());
+            fLhit_pmthitZ_vec.push_back(pos.Z());
 	    fLhit_pmthitpe_vec.push_back(Lhit_tof_op_hits[ele.first][min_index]->PE());
 	}
     }
@@ -1284,11 +1277,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    fChit_crttgr_vec.push_back(trackhits[ele.first].front()->tagger);
 	    fChit_pmthitkey_vec.push_back(Chit_tof_op_hits[ele.first][min_index].key());
 	    fChit_pmthitT_vec.push_back(Chit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-	    double pos[3];
-            fGeometryService->OpDetGeoFromOpChannel(Chit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter(pos); 
-	    fChit_pmthitX_vec.push_back(pos[0]);
-	    fChit_pmthitY_vec.push_back(pos[1]);
-	    fChit_pmthitZ_vec.push_back(pos[2]);
+            auto const pos = fGeometryService->OpDetGeoFromOpChannel(Chit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
+            fChit_pmthitX_vec.push_back(pos.X());
+            fChit_pmthitY_vec.push_back(pos.Y());
+            fChit_pmthitZ_vec.push_back(pos.Z());
 	    fChit_pmthitpe_vec.push_back(Chit_tof_op_hits[ele.first][min_index]->PE());
 	}
     }
@@ -1408,11 +1400,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
             fLflshhit_pmtflshkey_vec.push_back(Lflshhit_tof_op_flashes[ele.first][min_index].key());
             fLflshhit_pmtkey_vec.push_back(Lflshhit_tof_op_hits[ele.first][min_index].key());
             fLflshhit_pmtflshT_vec.push_back(Lflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-            double pos[3];
-            fGeometryService->OpDetGeoFromOpChannel(Lflshhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter(pos);  
-            fLflshhit_pmtflshX_vec.push_back(pos[0]);
-            fLflshhit_pmtflshY_vec.push_back(pos[1]);
-            fLflshhit_pmtflshZ_vec.push_back(pos[2]);
+            auto const pos = fGeometryService->OpDetGeoFromOpChannel(Lflshhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
+            fLflshhit_pmtflshX_vec.push_back(pos.X());
+            fLflshhit_pmtflshY_vec.push_back(pos.Y());
+            fLflshhit_pmtflshZ_vec.push_back(pos.Z());
             fLflshhit_pmtflshpe_vec.push_back(Lflshhit_tof_op_hits[ele.first][min_index]->PE());
        }
     }
@@ -1452,11 +1443,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
             fCflshhit_pmtflshkey_vec.push_back(Cflshhit_tof_op_flashes[ele.first][min_index].key());
             fCflshhit_pmtkey_vec.push_back(Cflshhit_tof_op_hits[ele.first][min_index].key());
             fCflshhit_pmtflshT_vec.push_back(Cflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-            double pos[3];
-            fGeometryService->OpDetGeoFromOpChannel(Cflshhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter(pos);  
-            fCflshhit_pmtflshX_vec.push_back(pos[0]);
-            fCflshhit_pmtflshY_vec.push_back(pos[1]);
-            fCflshhit_pmtflshZ_vec.push_back(pos[2]);
+            auto const pos = fGeometryService->OpDetGeoFromOpChannel(Cflshhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
+            fCflshhit_pmtflshX_vec.push_back(pos.X());
+            fCflshhit_pmtflshY_vec.push_back(pos.Y());
+            fCflshhit_pmtflshZ_vec.push_back(pos.Z());
             fCflshhit_pmtflshpe_vec.push_back(Cflshhit_tof_op_hits[ele.first][min_index]->PE());
        }
     }
@@ -1484,11 +1474,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    bool found_tpc_traj_point=false;
 	    for(size_t i=0; i<True_tof_sim_particles[ele.first][min_index]->NumberTrajectoryPoints(); i++){
 	        const TLorentzVector& pos = True_tof_sim_particles[ele.first][min_index]->Position(i);
-                double point[3] = {pos.X(),pos.Y(),pos.Z()};
+                geo::Point_t const point{pos.X(),pos.Y(),pos.Z()};
 		if(tpc00.ContainsPosition(point) || tpc01.ContainsPosition(point)){
-		   double opDetPos[3];
-		   (cryo0.OpDet(cryo0.GetClosestOpDet(point))).GetCenter(opDetPos);
-		   double dprop=sqrt(pow(opDetPos[0]-pos[0],2) + pow(opDetPos[1]-pos[1],2) + pow(opDetPos[2]-pos[2],2)); 
+                   auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
+                   double dprop=(opDetPos - point).R();
 		   double tprop=pos.T() + dprop*LAR_PROP_DELAY;
 		   fTrue_TOF.push_back(trackhits[ele.first].front()->ts1_ns-tprop);
 		   fTrue_TOF_hit.push_back(false);
@@ -1499,9 +1488,9 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 		   art::Ptr<simb::MCTruth> truth=inventory_service->TrackIdToMCTruth_P(True_tof_sim_particles[ele.first][min_index]->TrackId());
 		   fTrue_TOF_part_org.push_back(truth->NeutrinoSet());
 		   fTrue_TOF_traj_T.push_back(pos.T());
-                   fTrue_TOF_traj_X.push_back(point[0]);
-                   fTrue_TOF_traj_Y.push_back(point[1]);
-                   fTrue_TOF_traj_Z.push_back(point[2]);
+                   fTrue_TOF_traj_X.push_back(point.X());
+                   fTrue_TOF_traj_Y.push_back(point.Y());
+                   fTrue_TOF_traj_Z.push_back(point.Z());
 		   fTrue_TOF_traj_in_TPC.push_back(true);
 		   found_tpc_traj_point=true;
 		   break;
@@ -1511,11 +1500,10 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	     if(!found_tpc_traj_point){
 	          for(size_t i=0; i<True_tof_sim_particles[ele.first][min_index]->NumberTrajectoryPoints(); i++){
 		      const TLorentzVector& pos = True_tof_sim_particles[ele.first][min_index]->Position(i);
-                      double point[3] = {pos.X(),pos.Y(),pos.Z()};
+                      const geo::Point_t point{pos.X(),pos.Y(),pos.Z()};
 		      if(cryo0.ContainsPosition(point)){
-		         double opDetPos[3];
-		         (cryo0.OpDet(cryo0.GetClosestOpDet(point))).GetCenter(opDetPos);
-		         double dprop=sqrt(pow(opDetPos[0]-pos[0],2) + pow(opDetPos[1]-pos[1],2) + pow(opDetPos[2]-pos[2],2)); 
+                         auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
+                         double dprop=(opDetPos - point).R();
 		         double tprop=pos.T() + dprop*LAR_PROP_DELAY;
 		         fTrue_TOF.push_back(trackhits[ele.first].front()->ts1_ns-tprop);
 		         fTrue_TOF_hit.push_back(false);
@@ -1526,9 +1514,9 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 		         art::Ptr<simb::MCTruth> truth=inventory_service->TrackIdToMCTruth_P(True_tof_sim_particles[ele.first][min_index]->TrackId());
 		         fTrue_TOF_part_org.push_back(truth->NeutrinoSet());
 		         fTrue_TOF_traj_T.push_back(pos.T());
-                         fTrue_TOF_traj_X.push_back(point[0]);
-                         fTrue_TOF_traj_Y.push_back(point[1]);
-                         fTrue_TOF_traj_Z.push_back(point[2]);
+                         fTrue_TOF_traj_X.push_back(point.X());
+                         fTrue_TOF_traj_Y.push_back(point.Y());
+                         fTrue_TOF_traj_Z.push_back(point.Z());
 		         fTrue_TOF_traj_in_TPC.push_back(false);
 		         break;
 		      } // found a trajectory point inside CRYO
