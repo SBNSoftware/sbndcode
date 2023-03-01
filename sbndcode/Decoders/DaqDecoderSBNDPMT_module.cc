@@ -1704,7 +1704,11 @@ void sbnd::DaqDecoderSBNDPMT::beginRun(art::Run& run) {
 
 //------------------------------------------------------------------------------
 void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
-  
+ 
+  //LAN: event counter
+  std::cout << std::endl;
+  std::cout << "Processing Event: " << event.id().event() << std::endl;
+ 
   // ---------------------------------------------------------------------------
   // preparation
   //
@@ -1744,7 +1748,6 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
   //
   std::vector<ProtoWaveform_t> protoWaveforms; // as empty as fSaveWaveformsFrom
   
-  
   // ---------------------------------------------------------------------------
   // pre-processing
   //
@@ -1758,7 +1761,7 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
   //bool duplicateBoards = false; LAN: COMMENT OUT BOARD EXTRACTION
   try { // catch-all
 
-    auto const fragmentHandles = readInputFragments(event);   
+    auto fragmentHandles = readInputFragments(event);   
 
     for (auto const& handle : fragmentHandles) {
 
@@ -1784,6 +1787,10 @@ void sbnd::DaqDecoderSBNDPMT::produce(art::Event& event) {
           protoWaveforms,
           processBoardFragments(fragmentCollection, triggerInfo)
           );
+
+       //LAN cout check
+       std::cout << "ProtoWaveform size = " << protoWaveforms.size() << std::endl;
+
       } // for fragment 
     } // for handle
     
@@ -1959,13 +1966,19 @@ std::vector<art::Handle<artdaq::Fragments>> sbnd::DaqDecoderSBNDPMT::readInputFr
       << "DaqDecoderSBNDPMT trying data product: '" << inputTag.encode()
       << "'";
     
-    auto const& thisHandle = event.getHandle<artdaq::Fragments>(inputTag);
-    if (!thisHandle.isValid() || thisHandle->empty()) continue;
-   
+    art::Handle<artdaq::Fragments> thisHandle;
+
+    if( !event.getByLabel<std::vector<artdaq::Fragment>>(inputTag, thisHandle) ) continue;
+    if( !thisHandle.isValid() || thisHandle->empty() ) continue;  
+ 
     mf::LogTrace(fLogCategory)
       << "  => data product: '" << inputTag.encode() << "' is present and has "
       << thisHandle->size() << " entries";
-    
+   std::cout 
+      << "  => data product: '" << inputTag.encode() << "' is present and has "
+      << thisHandle->size() << " entries"
+      <<std::endl;
+
     fragmentHandles.push_back(thisHandle); 
     
     if (fDropRawDataAfterUse) fDataCacheRemover.registerHandle(thisHandle);
@@ -2339,12 +2352,19 @@ auto sbnd::DaqDecoderSBNDPMT::processBoardFragments(
   mf::LogTrace(fLogCategory)
     << " - " << boardInfo.name << ": " << artdaqFragments.size()
     << " fragments";
- 
+  
+  //LLAN
+  std::cout   
+  << " - " << boardInfo.name << ": " << artdaqFragments.size()
+  << " fragments"
+  << std::endl;
+
   std::vector<ProtoWaveform_t> waveforms;
   for (artdaq::FragmentPtr const& fragment: artdaqFragments)
     appendTo(waveforms, processFragment(*fragment, boardInfo, triggerInfo));
-  
-  mergeWaveforms(waveforms);
+
+    //LAN: merge nothing, I want individual waveforms please 
+//  mergeWaveforms(waveforms);
   
   return { waveforms };
   
@@ -2367,12 +2387,15 @@ auto sbnd::DaqDecoderSBNDPMT::processFragment(
       << "\n" << std::string(80, '-')
       ;
   } // if diagnostics
-  
+ 
+  //LAN: get fragment metadata 
   FragmentInfo_t const fragInfo = extractFragmentInfo(artdaqFragment);
   
   auto const timeStamp
     = fragmentWaveformTimestamp(fragInfo, boardInfo, triggerInfo.time);
-    
+
+  std::cout << "timestamp check: " << timeStamp << std::endl;  
+  
   if (fTreeFragment) fillPMTfragmentTree(fragInfo, triggerInfo, timeStamp);
   
   return (timeStamp != NoTimestamp)
@@ -2389,6 +2412,8 @@ auto sbnd::DaqDecoderSBNDPMT::createFragmentWaveforms(
   electronics_time const timeStamp
 ) const -> std::vector<ProtoWaveform_t>
 {
+  //LAN
+  std::cout << "creating waveforms from fragments" << std::endl;
 
   assert(timeStamp != NoTimestamp);
   
@@ -2422,11 +2447,16 @@ auto sbnd::DaqDecoderSBNDPMT::createFragmentWaveforms(
   
   std::size_t iNextChunk = 0;
   for (unsigned short int const channelNumber: util::counter(16U)) {
-    
+
+    //LAN
+    std::cout << "Processing digitizer chan "<<std::dec << channelNumber << std::endl;   
+ 
     if ((fragInfo.enabledChannels & (1 << channelNumber)) == 0) {
-      if (diagOut)
+      if (diagOut){
         (*diagOut) << " " << channelNumber << " [disabled];";
-      continue;
+        //LAN
+        std::cout << " " << channelNumber << " [disabled]" << std::endl;
+      continue;}
     }
     
     std::size_t const iChunk = iNextChunk++;
@@ -2439,12 +2469,15 @@ auto sbnd::DaqDecoderSBNDPMT::createFragmentWaveforms(
         << "Channel number " << channelNumber << " of board 0x"
         << std::hex << fragInfo.fragmentID << std::dec
         << " is enabled but is requested to be skipped.";
+        //LAN
+        std::cout << "" << channelNumber << "is skipped" << std::endl;
       continue;
     }
     
     //
     // assign the offline channel ID
     //
+ 
     raw::Channel_t channel = thisChannelSetup.hasChannel()
       ? thisChannelSetup.channelID: channelNumberToChannel(channelNumber);
     
@@ -2466,14 +2499,10 @@ auto sbnd::DaqDecoderSBNDPMT::createFragmentWaveforms(
           << " but was demanded to be saved.\n"
           ;
       }
-      mf::LogTrace(fLogCategory)
-        << "Channel number " << channelNumber << " of board 0x"
-        << std::hex << fragInfo.fragmentID << std::dec
-        << " is enabled but not associated to any channel ID:"
-           " it will be skipped.";
       continue;
     } // if no channel ID
     assert(thisChannelSetup.isChannel(channel));
+    std::cout << "Channel " << channel << " passes" << std::endl;   
     
     //
     // global trigger
@@ -2492,6 +2521,8 @@ auto sbnd::DaqDecoderSBNDPMT::createFragmentWaveforms(
     //
     // create the proto-waveform
     //
+    timeStamp = 1800;
+    std::cout << timeStamp.value() << std::endl;
     auto const [ itMin, itMax ] = std::minmax_element(wvfm.begin(), wvfm.end());
     protoWaveforms.push_back({ // create the waveform and its ancillary info
         raw::OpDetWaveform{ timeStamp.value(), channel, wvfm }  // waveform
@@ -2511,6 +2542,11 @@ auto sbnd::DaqDecoderSBNDPMT::createFragmentWaveforms(
         << "'";
     }
     
+    //LAN
+    std::cout << "PMT channel " << dumpChannel(protoWaveforms.back())
+      << " has " << wvfm.size() << " samples (read from entry #" << iChunk
+      << " in fragment data) starting at electronics time " << timeStamp
+      << std::endl;
   } // for all channels in the board
   
   
@@ -2698,10 +2734,7 @@ auto sbnd::DaqDecoderSBNDPMT::prepareOutputWaveforms(
         (waveform.waveform, useCorrection? timeCorrections: nullptr)
       ;
    
-    //LAN: IS THERE TIME CORRECTION?
-    std::cout << "Time Correction = " << extractTimeCorrection(waveform.waveform, useCorrection? timeCorrections: nullptr) << std::endl;
 
- 
     // Set a new Timestamp
     waveform.waveform.SetTimeStamp(correctTimeStamp);
     itOutputWaves->second.push_back(std::move(waveform.waveform));
@@ -3120,6 +3153,14 @@ auto sbnd::DaqDecoderSBNDPMT::fragmentWaveformTimestampFromTTT(
     << " - " << (fragInfo.nSamplesPerChannel * fOpticalTick) << " (buffer size)"
     << " + " << boardInfo.TTTresetDelay << " (reset delay)"
     ;
+  //LAN
+  std::cout << "V1730 board '" << boardInfo.name
+    << "' has data starting at electronics time " << waveformTime
+    << " = " << fNominalTriggerTime << " (global trigger)"
+    << " + " << nanoseconds(fragmentRelTime) << " (TTT - global trigger)"
+    << " - " << (fragInfo.nSamplesPerChannel * fOpticalTick) << " (buffer size)"
+    << " + " << boardInfo.TTTresetDelay << " (reset delay)"
+    << std::endl;
   
   return waveformTime;
   
