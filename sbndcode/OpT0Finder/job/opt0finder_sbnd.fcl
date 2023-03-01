@@ -8,7 +8,7 @@ sbnd_opt0_finder:
   module_type:     "SBNDOpT0Finder"
   OpFlashProducers: ["opflashtpc0", "opflashtpc1"]
   OpFlashAraProducers: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
-  UseArapucas: true 
+  UseArapucas: false 
   TPCs: [0, 1]
   SliceProducer:   "pandora"
   TrackProducer:   "pandoraTrack"
@@ -25,16 +25,22 @@ sbnd_opt0_finder:
   VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
 
   FlashMatchConfig: @local::flashmatch_config
-  SelectNeutrino: true # select only potential neutrino slices (ignore unambiguous cosmics)
-  CollectionPlaneOnly: false # use the collection plane hit information only 
-  CalAreaConstants: [ 0.0200906, 0.0200016, 0.0201293 ] # calibration constants for each plane 
-  dQdxLimit:       5e5 # units of e-/cm
-  PitchLimit:      2e2 # units of cm
-  ExcludeOutliers: false # to skip values w/ dQ/dx or pitch values greater than the limits above
-  ShowerConstantConversion: true # to use constant constanct conversion or energy information 
+  SelectNeutrino:       true # select only potential neutrino slices (ignore unambiguous cosmics)
+  CollectionPlaneOnly:  false # use the collection plane hit information only 
+  ExcludeExitingEvents: true  # if true, skip events that contain an exiting particle; 
+                              # if false, doesn't skip the event, but masks out the opdets near the exit point 
+  CalAreaConstants:     [ 0.0200906, 0.0200016, 0.0201293 ] # calibration constants for each plane, docdb 19505
 
-  ChargeToNPhotonsTrack:  0.5
-  ChargeToNPhotonsShower: 0.5
+  TrackConstantConversion:  false # to use constant Q/L conversion for track calorimetry objects 
+  ShowerConstantConversion: true # to use constant Q/L conversion or shower energy information 
+
+  # fcl parameters if using track calorimetry objects for Q/L conversion 
+  dQdxLimit:            5e5 # units of e-/cm
+  PitchLimit:           2e2 # units of cm
+
+  # constant Q/L conversion values of Track/ShowerConstantConversion is set to true 
+  ChargeToNPhotonsTrack:  0.5 # used also if hits in calo objects are outside the dQdx/Pitch Limits set above
+  ChargeToNPhotonsShower: 0.5 
   
   PDSMapTool: {
     tool_type: "sbndPDMapAlg"
@@ -58,14 +64,14 @@ sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.CCVCorrectionR
 sbnd_opt0_finder_one_to_many_tpc0: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc0.TPC: 0
 sbnd_opt0_finder_one_to_many_tpc0.OpFlashProducer: ["opflashtpc0","opflashtpc0xarapuca"]
-sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
+# sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
 # sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.UseMinuit: false
 
 # ... for TPC 1
 sbnd_opt0_finder_one_to_many_tpc1: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc1.TPC: 1
 sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: ["opflashtpc1","opflashtpc1xarapuca"]
-sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
+# sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
 # sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.UseMinuit: false
 
 #
