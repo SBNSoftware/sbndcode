@@ -46,9 +46,10 @@ public:
 
 private:
 
-  CRTGeoAlg   fCRTGeoAlg;
-  std::string fFEBDataModuleLabel;
-  uint16_t    fADCThreshold;
+  CRTGeoAlg           fCRTGeoAlg;
+  std::string         fFEBDataModuleLabel;
+  uint16_t            fADCThreshold;
+  std::vector<double> fErrorCoeff;
 };
 
 
@@ -57,6 +58,7 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
+  , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   {
     produces<std::vector<CRTStripHit>>();
     produces<art::Assns<FEBData, CRTStripHit>>();
@@ -92,45 +94,52 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 {
   std::vector<CRTStripHit> stripHits;
 
-  uint32_t mac5  = data->Mac5();
-  uint32_t unixs = data->UnixS();
+  const uint32_t mac5  = data->Mac5();
+  const uint32_t unixs = data->UnixS();
 
   // Only consider "real data" readouts, not clock resets etc
   if(data->Flags() != 3)
     return stripHits;
   
-  CRTModuleGeo module    = fCRTGeoAlg.GetModule(mac5 * 32);
+  const CRTModuleGeo module = fCRTGeoAlg.GetModule(mac5 * 32);
 
   // Correct for FEB readout cable length
-  uint32_t t0 = data->Ts0() + module.t0CableDelayCorrection;
-  uint32_t t1 = data->Ts1() + module.t1CableDelayCorrection;
+  // (time is FEB-by-FEB not channel-by-channel)
+  const uint32_t t0 = data->Ts0() + module.t0CableDelayCorrection;
+  const uint32_t t1 = data->Ts1() + module.t1CableDelayCorrection;
 
   // Iterate via strip (2 SiPMs per strip)
   const auto &sipm_adcs = data->ADC();
   for(unsigned adc_i = 0; adc_i < 32; adc_i+=2)
     {
-      // Add an offset for the SiPM channel number
-      uint16_t channel = mac5 * 32 + adc_i;
+      // Calculate SiPM channel number
+      const uint16_t channel = mac5 * 32 + adc_i;
 
-      CRTStripGeo strip = fCRTGeoAlg.GetStrip(channel);
-      CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
-      CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
+      const CRTStripGeo strip = fCRTGeoAlg.GetStrip(channel);
+      const CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
+      const CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
 
       // Subtract channel pedestals
-      uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i] - sipm1.pedestal   : 0;
-      uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1] - sipm2.pedestal : 0;
+      const uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i] - sipm1.pedestal   : 0;
+      const uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1] - sipm2.pedestal : 0;
 
       // Keep hit if both SiPMs above threshold
       if(adc1 > fADCThreshold && adc2 > fADCThreshold)
 	{
 	  // Access width of strip from the geometry algorithm
-	  double width = strip.width;
-	  double pos   = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
-	  // ===== TO-DO =====
-	  // Amend the error calculation!
-	  double err   = 2.5;
+	  const double width = strip.width;
 
-	  // Create hit
+	  // Use light ratio to infer lateral position
+	  const double pos = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
+	  double err       = fErrorCoeff[0] * width + fErrorCoeff[1] * pos + fErrorCoeff[2] * pos * pos;
+
+	  // Ensure error does not allow positions outside the strip geometry
+	  if(pos + err > width)
+	    err = width - pos;
+
+	  if(pos - err < 0)
+	    err = pos;
+
 	  stripHits.emplace_back(channel, t0, t1, unixs, pos, err, adc1, adc2);
 	}
     }

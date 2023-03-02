@@ -6,6 +6,7 @@ crtstriphitproducer_sbnd:
 {
    FEBDataModuleLabel: "crtsim"
    ADCThreshold:       60
+   ErrorCoeff:         [ 0.26, -0.27, 0.025 ]
    module_type:        "CRTStripHitProducer"
 }
 
