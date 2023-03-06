@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+pfpvalidation:
+{
+    module_type:      PFPValidation
+    SimChannelLabel:  "simdrift"
+    PFPLabels:       ["pandora"]
+    HitLabels:       ["gaushit"]
+}
+
+END_PROLOG
