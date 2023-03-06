@@ -59,6 +59,7 @@ Thumbs.db
 *.backup
 RepositoryTag
 
-# ROOT files #
+# Data files #
 ######################
 *.root
+*.csv
