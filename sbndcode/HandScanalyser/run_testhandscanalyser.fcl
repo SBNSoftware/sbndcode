@@ -3,11 +3,12 @@
 # Purpose: Find certain event topologies and fill list for looking at event displays
 # 
 #
+#
 # service configuration
 #
-###include "simulationservices_sbnd.fcl"
-###include "backtrackerservice.fcl"
-###include "particleinventoryservice.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
 
 #
 # algorithm configuration
@@ -15,18 +16,17 @@
 #include "test_handscanalysermodule.fcl"
 #include "rootoutput_sbnd.fcl"
 
-
 process_name: HandScanalyser
 
 services:
 {
-##FileCatalogMetadata: @local::sbnd_file_catalog_mc
+FileCatalogMetadata: @local::sbnd_file_catalog_mc
   # this is the real output file
   # DBrailsf 09/03/18 Use the standard outputfile naming for anatree
   TFileService: { fileName: @local::sbnd_rootoutput.fileName }
-  ##              @table::sbnd_services
- ## ParticleInventoryService: @local::standard_particleinventoryservice
-  ##BackTrackerService:  @local::standard_backtrackerservice
+                @table::sbnd_services
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService:  @local::standard_backtrackerservice
 }
 
 source: {

@@ -58,3 +58,7 @@ Thumbs.db
 *.bak
 *.backup
 RepositoryTag
+
+# ROOT files #
+######################
+*.root
