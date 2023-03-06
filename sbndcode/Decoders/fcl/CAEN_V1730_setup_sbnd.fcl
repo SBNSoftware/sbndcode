@@ -21,8 +21,8 @@ BEGIN_PROLOG
 
 sbnd_V1730_setup_RunSharp: [ 
 
-  { Name: "sbndpmtpush"  TriggerDelay: " 0 ns" },
-  { Name: "sbndpmtpull"  TriggerDelay: " 0 ns" }
+  { Name: "PUSH" },
+  { Name: "PULL" }
 
 ]
 

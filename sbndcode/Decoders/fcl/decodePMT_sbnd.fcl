@@ -133,10 +133,7 @@ physics.producers.daqPMT.SurviveExceptions: false
 physics.producers.daqPMT.DiagnosticOutput:  true  	#LAN: testing
 physics.producers.daqPMT.PacketDump:        true
 physics.producers.daqPMT.DataTrees: [ "PMTfragments" ]
-physics.producers.daqPMT.TTTresetEverySecond: true 	#LAN: CRT has PPS
 physics.producers.daqPMT.RequireKnownBoards: false	#LAN: To look for DAQ config from binary file --> not required for testing
 physics.producers.daqPMT.RequireBoardConfig: false	#LAN@ To look for DAQ config from binary file --> not required for testing
-physics.producers.daqPMT.ApplyCableDelayCorrection: false	#LAN Testing: no correction for now
 
 #physics.producers.daqPMT.PMTconfigTag: pmtconfig 	#LAN Testing: no config for now 
-#physics.producers.daqPMT.TriggerTag:   daqTrigger 	#LAN Testing: no config for now
