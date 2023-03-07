@@ -62,5 +62,5 @@ physics.producers.fragmentProducer.BeamWindowLength: 1.8
 physics.producers.fragmentProducer.ClockSpeedCRT: @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
 
 physics.producers.pmttriggerproducer.Verbose: true
-physics.producers.pmttriggerproducer.WindowStart: -1510.0
-physics.producers.pmttriggerproducer.WindowEnd: 1510.0
+# physics.producers.pmttriggerproducer.WindowStart: -1510.0
+# physics.producers.pmttriggerproducer.WindowEnd: 1510.0

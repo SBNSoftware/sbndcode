@@ -1,0 +1,7 @@
+This directory contains PMT trigger specific modules. To simulate the trigger hardware and software trigger, run the modules in this order: 
+
+1. hardware trigger
+2. artdaq fragment producer
+3. software trigger producer 
+
+The software trigger is configurable, meaning the various algorithms can be turned on and off in the fcl file. 

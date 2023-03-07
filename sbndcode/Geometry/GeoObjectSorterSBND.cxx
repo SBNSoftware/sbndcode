@@ -47,17 +47,15 @@ bool CryostatSorter(geo::CryostatGeo const& c1, geo::CryostatGeo const& c2) {
 //----------------------------------------------------------------------------
 static bool OpDetsSorter(geo::OpDetGeo const& t1, geo::OpDetGeo const& t2)
 {
-  double xyz1[3] = {0.}, xyz2[3] = {0.};
-  double local[3] = {0.};
-  t1.LocalToWorld(local, xyz1);
-  t2.LocalToWorld(local, xyz2);
+  auto const xyz1 = t1.GetCenter();
+  auto const xyz2 = t2.GetCenter();
 
-  if(xyz1[2] != xyz2[2])
-    return xyz1[2] < xyz2[2];
-  else if(xyz1[1] != xyz2[1])
-    return xyz1[1] < xyz2[1];
+  if(xyz1.Z() != xyz2.Z())
+    return xyz1.Z() < xyz2.Z();
+  else if(xyz1.Y() != xyz2.Y())
+    return xyz1.Y() < xyz2.Y();
   else
-    return xyz1[0] < xyz2[0];
+    return xyz1.X() < xyz2.X();
 } // OpDetsSorter
 
 //----------------------------------------------------------------------------

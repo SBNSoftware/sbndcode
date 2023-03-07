@@ -316,7 +316,7 @@ void pmtTriggerProducer::produce(art::Event & e)
     }else{
       std::cout<<"Threshold Array Empty!"<<std::endl;
     }
-    if(fVerbose){std::cout<<"Channel "<<fChNumber<<" is "<<opdetType<<" and is using theshold "<<adc_threshold<<" ADC."<<std::endl;}
+    // if(fVerbose){std::cout<<"Channel "<<fChNumber<<" is "<<opdetType<<" and is using theshold "<<adc_threshold<<" ADC."<<std::endl;}
 
       //create binary waveform
       std::vector<char> wvf_bin;
