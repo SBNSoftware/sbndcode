@@ -4,7 +4,9 @@
 // File:        LightCaloAna_module.cc
 //
 // This module reconstructs the total visible energy in an event by 
-// combining charge (recob::Hit) and light (recob::OpFlash) information
+// combining charge (recob::Hit) and light (recob::OpFlash) information.
+// Runs on reco2 files, requires flash-matching 
+// uses the Semi-Analytical Photon Model 
 // Authors: Lynn Tung 
 ////////////////////////////////////////////////////////////////////////
 
@@ -116,6 +118,7 @@ private:
   bool _use_arapucas;
   float _nuscore_cut; 
   float _fmscore_cut;
+  bool _verbose;
 
   float _simple_op_offset;
   float _pmt_ara_offset; 
@@ -125,6 +128,7 @@ private:
   std::vector<float> _opdet_eff;
   float _scint_prescale;
 
+  bool _truth_validation; 
   std::string _simenergy_producer;
   bool _truth_neutrino;
 
@@ -189,6 +193,7 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _use_arapucas = p.get<bool>("UseArapucas");
   _nuscore_cut = p.get<float>("nuScoreCut");
   _fmscore_cut = p.get<float>("fmScoreCut");
+  _verbose = p.get<bool>("Verbose");
 
   _simple_op_offset= p.get<float>("SimpleOpFlashOffset");
   _pmt_ara_offset  = p.get<float>("PMTARAFlashOffset");
@@ -198,6 +203,7 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _opdet_eff       = p.get<std::vector<float>>("OpDetEfficiencies");
   _scint_prescale  = p.get<float>("ScintPreScale");
 
+  _truth_validation   = p.get<bool>("TruthValidation");
   _simenergy_producer = p.get<std::string>("SimEnergyProducer"); 
   _truth_neutrino     = p.get<bool>("TruthNeutrino");
 
@@ -279,28 +285,17 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
 
   auto const & flash0_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[0]);
   auto const & flash1_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[1]);
-  if (!_use_arapucas)
+  if (!_use_arapucas && _verbose)
     std::cout << "Using PMT OpFlash only..." << std::endl;  
   if( (!flash0_h.isValid() || flash0_h->empty()) && (!flash1_h.isValid() || flash1_h->empty())) {
     std::cout << "don't have good PMT flashes from producer " << _opflash_producer_v[0] << " or "  << _opflash_producer_v[1] << std::endl;
     return;
   }
-  // if using arapucas
-  auto const & flash0_ara_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_ara_producer_v[0]);
-  auto const & flash1_ara_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_ara_producer_v[1]);
-  if (_use_arapucas)
-    std::cout << "Using PMT OpFlash + X-ARAPUCA OpFlash..." << std::endl; 
-  if( _use_arapucas && (!flash0_ara_h.isValid() || flash0_ara_h->empty()) && (!flash1_ara_h.isValid() || flash1_ara_h->empty())) {
-    std::cout << "don't have good X-ARAPUCA flashes from producer " << _opflash_ara_producer_v[0] << " or "  << _opflash_ara_producer_v[1] << std::endl;
-    return;
-  }
 
-    // get truth information
-  const art::ValidHandle<std::vector<sim::SimEnergyDeposit>>&
-    energyDeps(e.getValidHandle<std::vector<sim::SimEnergyDeposit>>(_simenergy_producer));
-  if (!energyDeps.isValid() || energyDeps->empty()){
-    std::cout << "Don't have good SimEnergyDeposits!" << std::endl;
-  }
+  // const art::ValidHandle<std::vector<sim::SimEnergyDeposit>>&
+  //   energyDeps(e.getValidHandle<std::vector<sim::SimEnergyDeposit>>(_simenergy_producer));
+  // if ( (!energyDeps.isValid() || energyDeps->empty()) && _truth_validation){
+  // }
 
   // Construct the vector of Slices
   std::vector<art::Ptr<recob::Slice>> slice_v;
@@ -377,8 +372,18 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   bool found_opflash0 = MatchOpFlash(match_fm_v,flash0_v, match_op0);
 
   std::vector<art::Ptr<recob::OpFlash>> flash0_ara_v;
-  art::fill_ptr_vector(flash0_ara_v, flash0_ara_h);
-
+  // if using arapucas
+  if (_use_arapucas){
+    ::art::Handle<std::vector<recob::OpFlash>> flash0_ara_h;
+    e.getByLabel(_opflash_ara_producer_v[0],flash0_ara_h);
+    if (_verbose) std::cout << "Using PMT OpFlash + X-ARAPUCA OpFlash..." << std::endl;
+    if (!flash0_ara_h.isValid() || flash0_ara_h->empty()) {
+      std::cout << "don't have good X-ARAPUCA flashes from producer " << _opflash_ara_producer_v[0] << std::endl;
+      // return;
+    }
+    else
+      art::fill_ptr_vector(flash0_ara_v, flash0_ara_h);
+  }
   // tpc1 
   std::vector<art::Ptr<recob::OpFlash>> flash1_v;
   art::fill_ptr_vector(flash1_v, flash1_h);
@@ -386,8 +391,17 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   bool found_opflash1 = MatchOpFlash(match_fm_v,flash1_v, match_op1);
 
   std::vector<art::Ptr<recob::OpFlash>> flash1_ara_v;
-  art::fill_ptr_vector(flash1_ara_v, flash1_ara_h);
-
+  if (_use_arapucas){
+    ::art::Handle<std::vector<recob::OpFlash>> flash1_ara_h;
+    e.getByLabel(_opflash_ara_producer_v[1],flash1_ara_h);
+    if (_verbose) std::cout << "Using PMT OpFlash + X-ARAPUCA OpFlash..." << std::endl;
+    if (!flash1_ara_h.isValid() || flash1_ara_h->empty()) {
+      std::cout << "don't have good X-ARAPUCA flashes from producer " << _opflash_ara_producer_v[1] << std::endl;
+      // return;
+    }
+    else 
+      art::fill_ptr_vector(flash1_ara_v, flash1_ara_h);
+  }
   if (found_opflash0 == false && found_opflash1 == false){
     std::cout << "no opflashes matched to simpleflashes" << std::endl;
     _match_type = -2;
@@ -420,26 +434,26 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       flash_time = opflash0->Time();
       if (opflash0->TotalPE() > noise_thresh)
         flash_in_0 = true;
-      else
-        std::cout << "Flash Total PE in TPC 0 too low ("<< opflash0->TotalPE() << ")... Skipping" << std::endl;
+      else if (_verbose)
+        std::cout << "Flash Total PE in TPC 0 (" << opflash0->TotalPE() << ") below noise threshold ... Skipping" << std::endl;
     } 
     else if ( opflash0.isNull() && !opflash1.isNull()){
       flash_time = opflash1->Time(); 
       if (opflash1->TotalPE() > noise_thresh)
         flash_in_1 = true;
-      else
-        std::cout << "Flash Total PE in TPC 1 too low(" << opflash1->TotalPE() << ")... Skipping" << std::endl;
+      else if (_verbose)
+        std::cout << "Flash Total PE in TPC 1 (" << opflash1->TotalPE() << ") below noise threshold ... Skipping" << std::endl;
     }
     else if (!opflash0.isNull() && !opflash1.isNull()){
       flash_time = opflash0->Time();
       if (opflash0->TotalPE() > noise_thresh)
         flash_in_0 = true;
-      else 
-        std::cout << "Flash Total PE in TPC 0 too low ("<< opflash0->TotalPE() << ")... Skipping" << std::endl;
+      else if (_verbose)
+        std::cout << "Flash Total PE in TPC 0 (" << opflash0->TotalPE() << ") below noise threshold ... Skipping" << std::endl;
       if (opflash1->TotalPE() > noise_thresh)
         flash_in_1 = true;
-      else
-        std::cout << "Flash Total PE in TPC 1 too low(" << opflash1->TotalPE() << ")... Skipping" << std::endl;
+      else if (_verbose)
+        std::cout << "Flash Total PE in TPC 1 (" << opflash1->TotalPE() << ") below noise threshold ... Skipping" << std::endl;
     }
     else if  (opflash0.isNull() &&  opflash1.isNull()){
       std::cout << "No opflashes matched with SimpleFlash objects" << std::endl;
@@ -519,7 +533,8 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
           for (size_t nara=0; nara < flash_ara_v.size(); nara++){
             auto const &flash_ara = *flash_ara_v[nara];
             if (abs(flash_time-flash_ara.Time()) < _pmt_ara_offset){
-              std::cout << "Combining PMT+XARA Flashes with PMT time: " << flash_time << ", ARA time: " << flash_ara.Time() << std::endl;            
+              if (_verbose)
+                std::cout << "Combining PMT+XARA Flashes with PMT time: " << flash_time << ", ARA time: " << flash_ara.Time() << std::endl;            
               for (size_t ich=0; ich < (flash_ara.PEs()).size(); ich++)
                 flash_pe_v.at(ich) += (flash_ara.PEs()).at(ich);
               break;
@@ -549,44 +564,63 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     
     _slice_E = (_slice_L + _slice_Q)*1e-6*g4param->Wph(); // MeV, Wph = 19.5 eV   
 
-    // get truth information 
     _true_gamma = 0; 
     _true_charge = 0;
     _true_energy = 0;
 
-    for (const sim::SimEnergyDeposit& energyDep:*energyDeps){
-      const auto trackID = energyDep.TrackID();
-      const double time = energyDep.Time() * 1e-3; // us 
+    if (_truth_validation){
+      ::art::Handle<std::vector<sim::SimEnergyDeposit>> energyDeps_h;
+      e.getByLabel(_simenergy_producer, energyDeps_h);
+      std::vector<art::Ptr<sim::SimEnergyDeposit>> energyDeps; 
+      
+      if (energyDeps_h.isValid() || energyDeps_h->empty())
+        std::cout << "Don't have good SimEnergyDeposits!" << std::endl;
+      else 
+        art::fill_ptr_vector(energyDeps, energyDeps_h);
+        
+      for (size_t n_dep=0; n_dep < energyDeps.size(); n_dep++){
+        auto energyDep = energyDeps[n_dep];
+        const auto trackID = energyDep->TrackID();
+        const double time = energyDep->Time() * 1e-3; // us 
 
-      art::Ptr<simb::MCTruth> mctruth = piserv->TrackIdToMCTruth_P(trackID);
+        art::Ptr<simb::MCTruth> mctruth = piserv->TrackIdToMCTruth_P(trackID);
 
-      if ((_truth_neutrino && mctruth->Origin()==simb::kBeamNeutrino ) || 
-          (!_truth_neutrino && abs(time-flash_time) < 1)){
-        // note: we divide by the prescale because NumPhotons() stored in simulation has the scint prescale applied 
-        _true_gamma  += energyDep.NumPhotons()/_scint_prescale;
-        _true_charge += energyDep.NumElectrons(); 
-        _true_energy += energyDep.Energy(); 
-      }       
+        if ((_truth_neutrino && mctruth->Origin()==simb::kBeamNeutrino ) || 
+            (!_truth_neutrino && abs(time-flash_time) < 1)){
+          // note: we divide by the prescale because NumPhotons() stored in simulation has the scint prescale applied 
+          _true_gamma  += energyDep->NumPhotons()/_scint_prescale;
+          _true_charge += energyDep->NumElectrons(); 
+          _true_energy += energyDep->Energy(); 
+        }       
+      }
+      _frac_L = (_true_gamma - _slice_L)/_true_gamma; 
+      _frac_Q = (_true_charge - _slice_Q)/_true_charge;
+      _frac_E = (_true_energy - _slice_E)/_true_energy;
+
+      if (_verbose){
+        std::cout << "ratio of gamma (median/true):  " << _median_gamma/_true_gamma << std::endl;
+        std::cout << "ratio of gamma (mean/true):    " << _mean_gamma/_true_gamma << std::endl;
+
+        std::cout << "ratio of electron (mean/true): " << _mean_charge/_true_charge << std::endl;
+        std::cout << "ratio of electron (max/true):  " << _max_charge/_true_charge << std::endl;
+        std::cout << "ratio of electron (comp/true): " << _comp_charge/_true_charge << std::endl;
+
+        std::cout << "ratio of energy (calc/true):   " << _slice_E/_true_energy << std::endl;
+      }
     }
-    
-    _frac_L = (_true_gamma - _slice_L)/_true_gamma; 
-    _frac_Q = (_true_charge - _slice_Q)/_true_charge;
-    _frac_E = (_true_energy - _slice_E)/_true_energy;
+    else{
+      _true_gamma = -9999; 
+      _true_charge = -9999;
+      _true_energy = -9999;
+      _frac_L = -9999;
+      _frac_Q = -9999;
+      _frac_E = -9999;
+    } 
     _tree2->Fill();
-
-    std::cout << "ratio of gamma (median/true):  " << _median_gamma/_true_gamma << std::endl;
-    std::cout << "ratio of gamma (mean/true):    " << _mean_gamma/_true_gamma << std::endl;
-
-    std::cout << "ratio of electron (mean/true): " << _mean_charge/_true_charge << std::endl;
-    std::cout << "ratio of electron (max/true):  " << _max_charge/_true_charge << std::endl;
-    std::cout << "ratio of electron (comp/true): " << _comp_charge/_true_charge << std::endl;
-
-    std::cout << "ratio of energy (calc/true):   " << _slice_E/_true_energy << std::endl;
     nsuccessful_matches++;
   } // end slice loop
   _match_type=nsuccessful_matches;
   _tree->Fill();
-
 } // end analyze
 
 
