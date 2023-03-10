@@ -79,7 +79,6 @@ install_headers()
 install_fhicl()
 install_source()
 cet_enable_asserts()
-add_subdirectory(FlashFinder)
 add_subdirectory(PMTAlg)
 
 # install sbnd_pds_mapping.json with mapping of the photon detectors
