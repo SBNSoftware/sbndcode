@@ -1,6 +1,6 @@
 void BasicVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_66_02/basicvariables";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_67_00/basicvariables";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void BasicVariables()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_66_02.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_67_00.root");
 
   struct datacut {
     TCut cut;
