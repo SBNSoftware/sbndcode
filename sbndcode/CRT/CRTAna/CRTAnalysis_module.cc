@@ -73,7 +73,8 @@ public:
 
   void AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
                           const art::Handle<std::vector<anab::T0>> &SPMatchHandle, const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointModuleLabel,
-                          const art::Handle<std::vector<anab::T0>> &TrackMatchHandle);
+                          const art::Handle<std::vector<anab::T0>> &TrackMatchHandle, const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap,
+                          const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap);
 
 private:
 
@@ -252,6 +253,7 @@ private:
   std::vector<double> _tpc_dir_x;
   std::vector<double> _tpc_dir_y;
   std::vector<double> _tpc_dir_z;
+  std::vector<double> _tpc_length;
   std::vector<int>    _tpc_truth_trackid;
   std::vector<int>    _tpc_truth_pdg;
   std::vector<double> _tpc_truth_energy;
@@ -450,6 +452,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("tpc_dir_x", "std::vector<double>", &_tpc_dir_x);
     fTree->Branch("tpc_dir_y", "std::vector<double>", &_tpc_dir_y);
     fTree->Branch("tpc_dir_z", "std::vector<double>", &_tpc_dir_z);
+    fTree->Branch("tpc_length", "std::vector<double>", &_tpc_length);
     fTree->Branch("tpc_truth_trackid", "std::vector<int>", &_tpc_truth_trackid);
     fTree->Branch("tpc_truth_pdg", "std::vector<int>", &_tpc_truth_pdg);
     fTree->Branch("tpc_truth_energy", "std::vector<double>", &_tpc_truth_energy);
@@ -635,7 +638,7 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   }
 
   // Fill TPC matching variables
-  AnalyseTPCMatching(e, TPCTrackHandle, SPMatchHandle, CRTSpacePointHandle, TrackMatchHandle);
+  AnalyseTPCMatching(e, TPCTrackHandle, SPMatchHandle, CRTSpacePointHandle, TrackMatchHandle, spacePointRecoStatusMap, trackRecoStatusMap);
 
   // Fill the Tree
   fTree->Fill();
@@ -1095,7 +1098,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
 
 void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
                                                 const art::Handle<std::vector<anab::T0>> &SPMatchHandle, const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle,
-                                                const art::Handle<std::vector<anab::T0>> &TrackMatchHandle)
+                                                const art::Handle<std::vector<anab::T0>> &TrackMatchHandle, const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap,
+                                                const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap)
 {
   std::vector<art::Ptr<recob::Track>> TPCTrackVec;
   art::fill_ptr_vector(TPCTrackVec, TPCTrackHandle);
@@ -1111,6 +1115,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_dir_x.resize(nTracks);
   _tpc_dir_y.resize(nTracks);
   _tpc_dir_z.resize(nTracks);
+  _tpc_length.resize(nTracks);
   _tpc_truth_trackid.resize(nTracks);
   _tpc_truth_pdg.resize(nTracks);
   _tpc_truth_energy.resize(nTracks);
@@ -1154,6 +1159,8 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       _tpc_dir_y[i] = dir.Y();
       _tpc_dir_z[i] = dir.Z();
 
+      _tpc_length[i] = track->Length();
+
       const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
       const int trackid = fCRTBackTrackerAlg.RollUpID(TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true));
 
@@ -1167,8 +1174,16 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       _tpc_truth_energy[i] = energy;
       _tpc_truth_time[i]   = time;
 
-      _tpc_sp_matchable[i]  = fTPCGeoAlg.MinDistToWall(start) < 20. || fTPCGeoAlg.MinDistToWall(end) < 20.;
-      _tpc_tr_matchable[i]  = fTPCGeoAlg.MinDistToWall(start) < 20. && fTPCGeoAlg.MinDistToWall(end) < 20.;
+      bool sp_matchable = false, tr_matchable = false;
+
+      for(auto const& [ category, status ] : spacePointRecoStatusMap)
+	sp_matchable |= (category.trackid == trackid && status);
+
+      tr_matchable |= trackRecoStatusMap.count(trackid) != 0;
+      if(tr_matchable) tr_matchable = trackRecoStatusMap.at(trackid).first;
+
+      _tpc_sp_matchable[i] = sp_matchable;
+      _tpc_tr_matchable[i] = tr_matchable;
 
       const art::Ptr<anab::T0> spMatch = tracksToSPMatches.at(track.key());
 
