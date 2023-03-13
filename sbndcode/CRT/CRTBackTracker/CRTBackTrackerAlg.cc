@@ -327,11 +327,11 @@ namespace sbnd::crt {
     event.getByLabel(fStripHitModuleLabel, stripHitHandle);
 
     art::FindManyP<sim::AuxDetIDE, FEBTruthInfo> febDataToIDEs(febDataHandle, event, fFEBDataModuleLabel);
-    art::FindManyP<FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
+    art::FindOneP<FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
     const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
 
     auto const febData = stripHitToFEBData.at(stripHit.key());
-    auto const assnIDEVec = febDataToIDEs.at(febData.at(0).key());
+    auto const assnIDEVec = febDataToIDEs.at(febData.key());
 
     std::map<int, double> idToEnergyMap;
     double totalEnergy = 0., x = 0., y = 0., z = 0., t = 0.;
@@ -340,7 +340,7 @@ namespace sbnd::crt {
     for(unsigned i = 0; i < assnIDEVec.size(); ++i)
       {
         const art::Ptr<sim::AuxDetIDE> ide = assnIDEVec[i];
-        const FEBTruthInfo *febTruthInfo = febDataToIDEs.data(febData.at(0).key())[i];
+        const FEBTruthInfo *febTruthInfo = febDataToIDEs.data(febData.key())[i];
         if((uint) febTruthInfo->GetChannel() == (stripHit->Channel() % 32))
           {
             idToEnergyMap[RollUpID(ide->trackID)] += ide->energyDeposited;
