@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+
+pfpvalidation:
+{
+    module_type:      PFPValidation
+    SimChannelLabel:  "simdrift"
+    HitLabel:       "gaushit"
+    PFPLabel:       "mypandora"
+    TrackLabel:     "mypandoraTrack"
+    ShowerLabel:    "mypandoraShower"
+    CaloLabel: 	    "mypandoraCalo"
+    Verbose: 	    true
+}
+
+END_PROLOG
