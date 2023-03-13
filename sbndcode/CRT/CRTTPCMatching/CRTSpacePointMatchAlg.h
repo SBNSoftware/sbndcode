@@ -77,7 +77,7 @@ namespace sbnd::crt {
       fhicl::Atom<double> DCALimit {
         Name("DCALimit"),
           Comment(""),
-          100.
+          200.
           };
 
       fhicl::Atom<int> DirMethod {

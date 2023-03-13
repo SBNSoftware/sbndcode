@@ -25,7 +25,7 @@ crttrackmatchalg_sbnd:
 {
    MaxAngleDiff:    0.4
    MaxDCA:          70.
-   MaxScore:        131.
+   MaxScore:        200.
    SelectionMetric: "score"
    TPCTrackLabel:   "pandoraTrack"
 }
