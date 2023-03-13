@@ -515,7 +515,7 @@ std::map<int, std::vector<std::vector<double>>> sbnd::PFPValidation::GetTruePrim
      
     for (const auto& ide: IDEs) {
       std::vector<double> XYZ{ide->x, ide->y, ide->z};
-      idToXYZEMap[std::abs(ide->trackID)].push_back(XYZ);
+      idToXYZMap[std::abs(ide->trackID)].push_back(XYZ);
     }
   }
 
