@@ -72,8 +72,7 @@ public:
   void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec);
 
   void AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
-                          const art::Handle<std::vector<anab::T0>> &SPMatchHandle, const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointModuleLabel,
-                          const art::Handle<std::vector<anab::T0>> &TrackMatchHandle, const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap,
+                          const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointModuleLabel, const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap,
                           const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap);
 
 private:
@@ -622,23 +621,8 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
     throw std::exception();
   }
 
-  // Get CRTSpacePoint matches
-  art::Handle<std::vector<anab::T0>> SPMatchHandle;
-  e.getByLabel(fCRTSpacePointMatchingModuleLabel, SPMatchHandle);
-  if(!SPMatchHandle.isValid()){
-    std::cout << "CRTSpacePointMatching product " << fCRTSpacePointMatchingModuleLabel << " not found..." << std::endl;
-    throw std::exception();
-  }
-
-  art::Handle<std::vector<anab::T0>> TrackMatchHandle;
-  e.getByLabel(fCRTTrackMatchingModuleLabel, TrackMatchHandle);
-  if(!TrackMatchHandle.isValid()){
-    std::cout << "CRTTrackMatching product " << fCRTTrackMatchingModuleLabel << " not found..." << std::endl;
-    throw std::exception();
-  }
-
   // Fill TPC matching variables
-  AnalyseTPCMatching(e, TPCTrackHandle, SPMatchHandle, CRTSpacePointHandle, TrackMatchHandle, spacePointRecoStatusMap, trackRecoStatusMap);
+  AnalyseTPCMatching(e, TPCTrackHandle, CRTSpacePointHandle, spacePointRecoStatusMap, trackRecoStatusMap);
 
   // Fill the Tree
   fTree->Fill();
@@ -1097,8 +1081,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
 }
 
 void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
-                                                const art::Handle<std::vector<anab::T0>> &SPMatchHandle, const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle,
-                                                const art::Handle<std::vector<anab::T0>> &TrackMatchHandle, const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap,
+                                                const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle, const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap,
                                                 const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap)
 {
   std::vector<art::Ptr<recob::Track>> TPCTrackVec;
@@ -1131,12 +1114,10 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_tr_time.resize(nTracks);
   _tpc_tr_score.resize(nTracks);
 
-  art::FindManyP<recob::Hit>   tracksToHits(TPCTrackHandle, e, fTPCTrackModuleLabel);
-  art::FindOneP<anab::T0>      tracksToSPMatches(TPCTrackHandle, e, fCRTSpacePointMatchingModuleLabel);
-  art::FindOneP<CRTSpacePoint> spMatchesToSPs(SPMatchHandle, e, fCRTSpacePointMatchingModuleLabel);
-  art::FindOneP<CRTCluster>    spsToClusters(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
-  art::FindOneP<anab::T0>      tracksToTrackMatches(TPCTrackHandle, e, fCRTTrackMatchingModuleLabel);
-  art::FindOneP<CRTTrack>      trackMatchesToCRTTracks(TrackMatchHandle, e, fCRTTrackMatchingModuleLabel);
+  art::FindManyP<recob::Hit>             tracksToHits(TPCTrackHandle, e, fTPCTrackModuleLabel);
+  art::FindOneP<CRTSpacePoint, anab::T0> tracksToSPMatches(TPCTrackHandle, e, fCRTSpacePointMatchingModuleLabel);
+  art::FindOneP<CRTCluster>              spsToClusters(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
+  art::FindOneP<CRTTrack, anab::T0>      tracksToTrackMatches(TPCTrackHandle, e, fCRTTrackMatchingModuleLabel);
 
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
@@ -1177,7 +1158,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       bool sp_matchable = false, tr_matchable = false;
 
       for(auto const& [ category, status ] : spacePointRecoStatusMap)
-	sp_matchable |= (category.trackid == trackid && status);
+        sp_matchable |= (category.trackid == trackid && status);
 
       tr_matchable |= trackRecoStatusMap.count(trackid) != 0;
       if(tr_matchable) tr_matchable = trackRecoStatusMap.at(trackid).first;
@@ -1185,18 +1166,18 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       _tpc_sp_matchable[i] = sp_matchable;
       _tpc_tr_matchable[i] = tr_matchable;
 
-      const art::Ptr<anab::T0> spMatch = tracksToSPMatches.at(track.key());
+      const art::Ptr<CRTSpacePoint> spacepoint = tracksToSPMatches.at(track.key());
 
-      if(spMatch.isNonnull())
+      if(spacepoint.isNonnull())
         {
-          const art::Ptr<CRTSpacePoint> spacepoint              = spMatchesToSPs.at(spMatch.key());
+          const anab::T0 spMatch                                = tracksToSPMatches.data(track.key()).ref();
           const art::Ptr<CRTCluster> cluster                    = spsToClusters.at(spacepoint.key());
           const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
 
           _tpc_sp_matched[i]    = true;
           _tpc_sp_good_match[i] = truthMatch.trackid == trackid;
           _tpc_sp_time[i]       = spacepoint->Time();
-          _tpc_sp_score[i]      = spMatch->TriggerConfidence();
+          _tpc_sp_score[i]      = spMatch.TriggerConfidence();
         }
       else
         {
@@ -1206,17 +1187,17 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
           _tpc_sp_score[i]      = -std::numeric_limits<double>::max();
         }
 
-      const art::Ptr<anab::T0> trackMatch = tracksToTrackMatches.at(track.key());
+      const art::Ptr<CRTTrack> crttrack = tracksToTrackMatches.at(track.key());
 
-      if(trackMatch.isNonnull())
+      if(crttrack.isNonnull())
         {
-          const art::Ptr<CRTTrack> crttrack                     = trackMatchesToCRTTracks.at(trackMatch.key());
+          const anab::T0 trackMatch                             = tracksToTrackMatches.data(track.key()).ref();
           const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, crttrack);
 
           _tpc_tr_matched[i]    = true;
           _tpc_tr_good_match[i] = truthMatch.trackid == trackid;
           _tpc_tr_time[i]       = crttrack->Time();
-          _tpc_tr_score[i]      = trackMatch->TriggerConfidence();
+          _tpc_tr_score[i]      = trackMatch.TriggerConfidence();
         }
       else
         {
