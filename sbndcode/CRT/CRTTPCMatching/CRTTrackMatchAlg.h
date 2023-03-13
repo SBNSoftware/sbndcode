@@ -31,19 +31,22 @@
 
 namespace sbnd::crt {
 
-  struct MatchCandidate {
-    art::Ptr<CRTTrack> thisTrack;
-    double             time;
-    double             score;
-    bool               valid;
+  struct TrackMatchCandidate {
+    art::Ptr<CRTTrack>     thisCRTTrack;
+    art::Ptr<recob::Track> thisTPCTrack;
+    double                 time;
+    double                 score;
+    bool                   valid;
 
-    MatchCandidate(const art::Ptr<CRTTrack> _thisTrack = art::Ptr<CRTTrack>(), const double _time = -std::numeric_limits<double>::max(),
-                   const double _score = -std::numeric_limits<double>::max(), const bool _valid = false)
+    TrackMatchCandidate(const art::Ptr<CRTTrack> _thisCRTTrack = art::Ptr<CRTTrack>(), const art::Ptr<recob::Track> _thisTPCTrack = art::Ptr<recob::Track>(),
+                        const double _time = -std::numeric_limits<double>::max(), const double _score = -std::numeric_limits<double>::max(),
+                        const bool _valid = false)
     {
-      thisTrack = _thisTrack;
-      time      = _time;
-      score     = _score;
-      valid     = _valid;
+      thisCRTTrack = _thisCRTTrack;
+      thisTPCTrack = _thisTPCTrack;
+      time         = _time;
+      score        = _score;
+      valid        = _valid;
     }
   };
 
@@ -98,11 +101,11 @@ namespace sbnd::crt {
 
     bool TPCIntersection(const geo::TPCGeo &tpcGeo, const art::Ptr<CRTTrack> &track, geo::Point_t &entry, geo::Point_t &exit);
 
-    MatchCandidate GetBestMatchedCRTTrack(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                          const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e);
+    TrackMatchCandidate GetBestMatchedCRTTrack(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                               const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e);
 
-    MatchCandidate GetBestMatchedCRTTrack(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                          const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks);
+    TrackMatchCandidate GetBestMatchedCRTTrack(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                               const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks);
 
     std::vector<art::Ptr<CRTTrack>> AllPossibleCRTTracks(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
                                                          const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e);
@@ -110,23 +113,23 @@ namespace sbnd::crt {
     std::vector<art::Ptr<CRTTrack>> AllPossibleCRTTracks(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
                                                          const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks);
 
-    MatchCandidate ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                          const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e, const double maxDCA);
+    TrackMatchCandidate ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                               const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e, const double maxDCA);
 
-    MatchCandidate ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                          const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks, const double maxDCA);
+    TrackMatchCandidate ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                               const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks, const double maxDCA);
 
-    MatchCandidate ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                        const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e, const double maxAngle);
+    TrackMatchCandidate ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                             const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e, const double maxAngle);
 
-    MatchCandidate ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                        const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks, const double maxAngle);
+    TrackMatchCandidate ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                             const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks, const double maxAngle);
 
-    MatchCandidate ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                          const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e);
+    TrackMatchCandidate ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                               const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e);
 
-    MatchCandidate ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                          const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks);
+    TrackMatchCandidate ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                               const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks);
 
     double AngleBetweenTracks(const art::Ptr<recob::Track> &tpcTrack, const art::Ptr<CRTTrack> &crtTrack);
 

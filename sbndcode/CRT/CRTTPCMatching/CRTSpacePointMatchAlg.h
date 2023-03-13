@@ -34,18 +34,23 @@
 
 namespace sbnd::crt {
 
-  struct  MatchCandidate
+  struct SPMatchCandidate
   {
     art::Ptr<CRTSpacePoint> thisSP;
+    art::Ptr<recob::Track>  thisTrack;
     double                  time;
     double                  score;
+    bool                    valid;
 
-    MatchCandidate(const art::Ptr<CRTSpacePoint> _thisSP = art::Ptr<CRTSpacePoint>(), const double _time = -std::numeric_limits<double>::max(),
-                   const double _score = -std::numeric_limits<double>::max())
+    SPMatchCandidate(const art::Ptr<CRTSpacePoint> _thisSP = art::Ptr<CRTSpacePoint>(), const art::Ptr<recob::Track> _thisTrack = art::Ptr<recob::Track>(),
+                     const double _time = -std::numeric_limits<double>::max(), const double _score = -std::numeric_limits<double>::max(),
+                     const bool _valid = false)
     {
       thisSP    = _thisSP;
+      thisTrack = _thisTrack;
       time      = _time;
       score     = _score;
+      valid     = _valid;
     }
   };
 
@@ -132,16 +137,16 @@ namespace sbnd::crt {
 
     void reconfigure(const Config& config);
 
-    MatchCandidate GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                           const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const art::Event &e);
+    SPMatchCandidate GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
+                                             const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const art::Event &e);
 
-    MatchCandidate GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                           const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs,
-                                           const art::Event &e);
+    SPMatchCandidate GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
+                                             const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs,
+                                             const art::Event &e);
 
-    MatchCandidate GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                           const std::pair<double, double> t0MinMax, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const int driftDirection,
-                                           const art::Event &e);
+    SPMatchCandidate GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
+                                             const std::pair<double, double> t0MinMax, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const int driftDirection,
+                                             const art::Event &e);
 
     std::pair<double, double> TrackT0Range(detinfo::DetectorPropertiesData const &detProp, const double startX,
                                            const double endX, const int driftDirection, const std::pair<double, double> xLimits);

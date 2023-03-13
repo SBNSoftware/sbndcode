@@ -57,16 +57,12 @@ sbnd::crt::CRTTrackMatching::CRTTrackMatching(fhicl::ParameterSet const& p)
   , fTPCTrackModuleLabel(p.get<art::InputTag>("TPCTrackModuleLabel"))
   , fCRTTrackModuleLabel(p.get<art::InputTag>("CRTTrackModuleLabel"))
   {
-    produces<std::vector<anab::T0>>();
-    produces<art::Assns<recob::Track, anab::T0>>();
-    produces<art::Assns<CRTTrack, anab::T0>>();
+    produces<art::Assns<CRTTrack, recob::Track, anab::T0>>();
   }
 
 void sbnd::crt::CRTTrackMatching::produce(art::Event& e)
 {
-  auto T0Vec          = std::make_unique<std::vector<anab::T0>>();
-  auto tpcTrackT0Assn = std::make_unique<art::Assns<recob::Track, anab::T0>>();
-  auto crtTrackT0Assn = std::make_unique<art::Assns<CRTTrack, anab::T0>>();
+  auto crtTrackTPCTrackAssn = std::make_unique<art::Assns<CRTTrack, recob::Track, anab::T0>>();
 
   art::Handle<std::vector<CRTTrack>> crtTrackHandle;
   e.getByLabel(fCRTTrackModuleLabel, crtTrackHandle);
@@ -84,26 +80,39 @@ void sbnd::crt::CRTTrackMatching::produce(art::Event& e)
 
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
+  std::vector<TrackMatchCandidate> candidates;
+
   for(auto const &tpcTrack : tpcTrackVec)
     {
       const art::Ptr<recob::PFParticle> pfp = tracksToPFPs.at(tpcTrack.key());
 
       if(pfp->PdgCode() != 13)
-	continue;
+        continue;
 
-      MatchCandidate best = fMatchingAlg.GetBestMatchedCRTTrack(detProp, tpcTrack, crtTrackVec, e);
+      TrackMatchCandidate best = fMatchingAlg.GetBestMatchedCRTTrack(detProp, tpcTrack, crtTrackVec, e);
 
       if(best.valid)
+        candidates.push_back(best);
+    }
+
+  std::sort(candidates.begin(), candidates.end(),
+            [](const TrackMatchCandidate &a, const TrackMatchCandidate &b)
+            { return a.score < b.score; });
+
+  std::set<int> used_crt_tracks;
+
+  for(auto const &candidate : candidates)
+    {
+      if(used_crt_tracks.count(candidate.thisCRTTrack.key()) == 0)
         {
-          T0Vec->push_back(anab::T0(best.time * 1e3, 0, tpcTrack->ID(), T0Vec->size(), best.score));
-          util::CreateAssn(*this, e, *T0Vec, tpcTrack, *tpcTrackT0Assn);
-          util::CreateAssn(*this, e, *T0Vec, best.thisTrack, *crtTrackT0Assn);
+          const anab::T0 t0(candidate.time * 1e3, 0, 0, 0, candidate.score);
+          crtTrackTPCTrackAssn->addSingle(candidate.thisCRTTrack, candidate.thisTPCTrack, t0);
+
+          used_crt_tracks.insert(candidate.thisCRTTrack.key());
         }
     }
 
-  e.put(std::move(T0Vec));
-  e.put(std::move(tpcTrackT0Assn));
-  e.put(std::move(crtTrackT0Assn));
+  e.put(std::move(crtTrackTPCTrackAssn));
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTrackMatching)

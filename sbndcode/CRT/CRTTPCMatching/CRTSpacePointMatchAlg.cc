@@ -32,8 +32,8 @@ namespace sbnd::crt {
     return;
   }
 
-  MatchCandidate CRTSpacePointMatchAlg::GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                                                const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const art::Event &e)
+  SPMatchCandidate CRTSpacePointMatchAlg::GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
+                                                                  const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const art::Event &e)
   {
     art::Handle<std::vector<recob::Track>> trackHandle;
     e.getByLabel(fTPCTrackLabel, trackHandle);
@@ -44,9 +44,9 @@ namespace sbnd::crt {
     return GetClosestCRTSpacePoint(detProp, track, hits, crtSPs, e);
   }
 
-  MatchCandidate CRTSpacePointMatchAlg::GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                                                const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs,
-                                                                const art::Event &e)
+  SPMatchCandidate CRTSpacePointMatchAlg::GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
+                                                                  const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs,
+                                                                  const art::Event &e)
   {
     const geo::Point_t start = track->Vertex();
     const geo::Point_t end   = track->End();
@@ -59,14 +59,14 @@ namespace sbnd::crt {
     return GetClosestCRTSpacePoint(detProp, track, t0MinMax, crtSPs, driftDirection, e);
   }
 
-  MatchCandidate CRTSpacePointMatchAlg::GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                                                const std::pair<double, double> t0MinMax, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const int driftDirection,
-                                                                const art::Event &e)
+  SPMatchCandidate CRTSpacePointMatchAlg::GetClosestCRTSpacePoint(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
+                                                                  const std::pair<double, double> t0MinMax, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const int driftDirection,
+                                                                  const art::Event &e)
   {
     const geo::Point_t start = track->Vertex();
     const geo::Point_t end   = track->End();
 
-    std::vector<MatchCandidate> candidates;
+    std::vector<SPMatchCandidate> candidates;
 
     for(auto &crtSP : crtSPs){
 
@@ -100,7 +100,7 @@ namespace sbnd::crt {
       geo::Point_t thisend = end;
       thisend.SetX(end.X()+xshift);
 
-      if (startDCA < fDCALimit || endDCA < fDCALimit)
+      if(startDCA < fDCALimit || endDCA < fDCALimit)
         {
           const double distS = (crtPoint - thisstart).R();
           const double distE = (crtPoint - thisend).R();
@@ -108,18 +108,18 @@ namespace sbnd::crt {
           const double scoreS = fDCAoverLength ? startDCA / distS : startDCA;
           const double scoreE = fDCAoverLength ? endDCA / distE : endDCA;
 
-          if (distS < distE)
-            candidates.emplace_back(crtSP, crtTime, scoreS);
-          else
-            candidates.emplace_back(crtSP, crtTime, scoreE);
+          if(distS < distE && startDCA < fDCALimit)
+            candidates.emplace_back(crtSP, track, crtTime, scoreS, true);
+          else if(endDCA < fDCALimit)
+            candidates.emplace_back(crtSP, track, crtTime, scoreE, true);
         }
     }
 
     if(candidates.size() == 0)
-      return MatchCandidate();
+      return SPMatchCandidate();
 
     std::sort(candidates.begin(), candidates.end(),
-              [](const MatchCandidate &a, const MatchCandidate &b)
+              [](const SPMatchCandidate &a, const SPMatchCandidate &b)
               {
                 if(a.score < 0 && b.score > 0)
                   return false;

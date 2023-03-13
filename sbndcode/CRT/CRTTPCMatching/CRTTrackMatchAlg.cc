@@ -27,8 +27,8 @@ namespace sbnd::crt {
     return;
   }
  
-  MatchCandidate CRTTrackMatchAlg::GetBestMatchedCRTTrack(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                                          const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e)
+  TrackMatchCandidate CRTTrackMatchAlg::GetBestMatchedCRTTrack(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                                               const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e)
   {
     art::Handle<std::vector<recob::Track>> tpcTrackHandle;
     e.getByLabel(fTPCTrackLabel, tpcTrackHandle);
@@ -39,33 +39,33 @@ namespace sbnd::crt {
     return GetBestMatchedCRTTrack(detProp, tpcTrack, hits, crtTracks);
   }
 
-  MatchCandidate CRTTrackMatchAlg::GetBestMatchedCRTTrack(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                                          const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks)
+  TrackMatchCandidate CRTTrackMatchAlg::GetBestMatchedCRTTrack(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                                               const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks)
   {
     if(fSelectionMetric == "angle")
       {
-        MatchCandidate candidate = ClosestCRTTrackByAngle(detProp, tpcTrack, hits, crtTracks, fMaxDCA);
+        TrackMatchCandidate candidate = ClosestCRTTrackByAngle(detProp, tpcTrack, hits, crtTracks, fMaxDCA);
 
         if(candidate.score > fMaxAngleDiff)
-          return MatchCandidate();
+          return TrackMatchCandidate();
         else
           return candidate;
       }
     else if(fSelectionMetric == "dca")
       {
-        MatchCandidate candidate = ClosestCRTTrackByDCA(detProp, tpcTrack, hits, crtTracks, fMaxAngleDiff);
+        TrackMatchCandidate candidate = ClosestCRTTrackByDCA(detProp, tpcTrack, hits, crtTracks, fMaxAngleDiff);
 
         if(candidate.score > fMaxDCA)
-          return MatchCandidate();
+          return TrackMatchCandidate();
         else
           return candidate;
       }
     else
       {
-        MatchCandidate candidate = ClosestCRTTrackByScore(detProp, tpcTrack, hits, crtTracks);
+        TrackMatchCandidate candidate = ClosestCRTTrackByScore(detProp, tpcTrack, hits, crtTracks);
 
         if(candidate.score > fMaxScore)
-          return MatchCandidate();
+          return TrackMatchCandidate();
         else
           return candidate;
       }
@@ -131,8 +131,8 @@ namespace sbnd::crt {
     return candidates;
   }
 
-  MatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                                          const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e, const double maxDCA)
+  TrackMatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                                               const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e, const double maxDCA)
   {
     art::Handle<std::vector<recob::Track>> tpcTrackHandle;
     e.getByLabel(fTPCTrackLabel, tpcTrackHandle);
@@ -143,17 +143,17 @@ namespace sbnd::crt {
     return ClosestCRTTrackByAngle(detProp, tpcTrack, hits, crtTracks, maxDCA);
   }
 
-  MatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                                          const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks, const double maxDCA)
+  TrackMatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByAngle(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                                               const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks, const double maxDCA)
   {
     if(maxDCA == - 1.)
-      return MatchCandidate();
+      return TrackMatchCandidate();
 
     const int driftDirection = TPCGeoUtil::DriftDirectionFromHits(fGeometryService, hits);
 
     const std::vector<art::Ptr<CRTTrack>> possCRTTracks = AllPossibleCRTTracks(detProp, tpcTrack, hits, crtTracks);
 
-    std::vector<MatchCandidate> candidates;
+    std::vector<TrackMatchCandidate> candidates;
 
     for(auto const &possCRTTrack : possCRTTracks)
       {
@@ -165,21 +165,21 @@ namespace sbnd::crt {
         if(DCA > maxDCA)
           continue;
 
-        candidates.emplace_back(possCRTTrack, crtTime, angle, true);
+        candidates.emplace_back(possCRTTrack, tpcTrack, crtTime, angle, true);
       }
 
     std::sort(candidates.begin(), candidates.end(),
-              [](const MatchCandidate &a, const MatchCandidate &b)
+              [](const TrackMatchCandidate &a, const TrackMatchCandidate &b)
               { return a.score < b.score; });
 
     if(candidates.size() > 0)
       return candidates[0];
     else
-      return MatchCandidate();
+      return TrackMatchCandidate();
   }
 
-  MatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack, 
-                                                        const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e, const double maxAngle)
+  TrackMatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                                             const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e, const double maxAngle)
   {
     art::Handle<std::vector<recob::Track>> tpcTrackHandle;
     e.getByLabel(fTPCTrackLabel, tpcTrackHandle);
@@ -190,17 +190,17 @@ namespace sbnd::crt {
     return ClosestCRTTrackByDCA(detProp, tpcTrack, hits, crtTracks, maxAngle);
   }
 
-  MatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                                        const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks,  const double maxAngle)
+  TrackMatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByDCA(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                                             const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks,  const double maxAngle)
   {
     if(maxAngle == -1.)
-      return MatchCandidate();
+      return TrackMatchCandidate();
 
     const int driftDirection = TPCGeoUtil::DriftDirectionFromHits(fGeometryService, hits);
 
     const std::vector<art::Ptr<CRTTrack>> possCRTTracks = AllPossibleCRTTracks(detProp, tpcTrack, hits, crtTracks);
 
-    std::vector<MatchCandidate> candidates;
+    std::vector<TrackMatchCandidate> candidates;
 
     for(auto const &possCRTTrack : possCRTTracks)
       {
@@ -211,21 +211,21 @@ namespace sbnd::crt {
 
         if(angle > maxAngle)
           continue;
-        candidates.emplace_back(possCRTTrack, crtTime, DCA, true);
+        candidates.emplace_back(possCRTTrack, tpcTrack, crtTime, DCA, true);
       }
 
     std::sort(candidates.begin(), candidates.end(),
-              [](const MatchCandidate &a, const MatchCandidate &b)
+              [](const TrackMatchCandidate &a, const TrackMatchCandidate &b)
               { return a.score < b.score; });
 
     if(candidates.size() > 0)
       return candidates[0];
     else
-      return MatchCandidate();
+      return TrackMatchCandidate();
   }
 
-  MatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                                          const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e)
+  TrackMatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                                               const std::vector<art::Ptr<CRTTrack>> &crtTracks, const art::Event &e)
   {
     art::Handle<std::vector<recob::Track>> tpcTrackHandle;
     e.getByLabel(fTPCTrackLabel, tpcTrackHandle);
@@ -236,14 +236,14 @@ namespace sbnd::crt {
     return ClosestCRTTrackByScore(detProp, tpcTrack, hits, crtTracks);
   }
 
-  MatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
-                                                          const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks)
+  TrackMatchCandidate CRTTrackMatchAlg::ClosestCRTTrackByScore(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
+                                                               const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks)
   {
     const int driftDirection = TPCGeoUtil::DriftDirectionFromHits(fGeometryService, hits);
 
     const std::vector<art::Ptr<CRTTrack>> possCRTTracks = AllPossibleCRTTracks(detProp, tpcTrack, hits, crtTracks);
 
-    std::vector<MatchCandidate> candidates;
+    std::vector<TrackMatchCandidate> candidates;
 
     for(auto const &possCRTTrack : possCRTTracks)
       {
@@ -254,17 +254,17 @@ namespace sbnd::crt {
 
         const double score   = DCA + 4 * 180 / TMath::Pi() * angle;
 
-        candidates.emplace_back(possCRTTrack, crtTime, score, true);
+        candidates.emplace_back(possCRTTrack, tpcTrack, crtTime, score, true);
       }
 
     std::sort(candidates.begin(), candidates.end(),
-              [](const MatchCandidate &a, const MatchCandidate &b)
+              [](const TrackMatchCandidate &a, const TrackMatchCandidate &b)
               { return a.score < b.score; });
 
     if(candidates.size() > 0)
       return candidates[0];
     else
-      return MatchCandidate();
+      return TrackMatchCandidate();
   }
 
   double CRTTrackMatchAlg::AngleBetweenTracks(const art::Ptr<recob::Track> &tpcTrack, const art::Ptr<CRTTrack> &crtTrack)

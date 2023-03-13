@@ -60,16 +60,12 @@ sbnd::crt::CRTSpacePointMatching::CRTSpacePointMatching(fhicl::ParameterSet cons
   , fTPCTrackModuleLabel(p.get<art::InputTag>("TPCTrackModuleLabel"))
   , fCRTSpacePointModuleLabel(p.get<art::InputTag>("CRTSpacePointModuleLabel"))
   {
-    produces<std::vector<anab::T0>>();
-    produces<art::Assns<recob::Track, anab::T0>>();
-    produces<art::Assns<CRTSpacePoint, anab::T0>>();
+    produces<art::Assns<CRTSpacePoint, recob::Track, anab::T0>>();
   }
 
 void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
 {
-  auto T0Vec       = std::make_unique<std::vector<anab::T0>>();
-  auto trackT0Assn = std::make_unique<art::Assns<recob::Track, anab::T0>>();
-  auto crtSPT0Assn = std::make_unique<art::Assns<CRTSpacePoint, anab::T0>>();
+  auto crtSPTPCTrackAssn = std::make_unique<art::Assns<CRTSpacePoint, recob::Track, anab::T0>>();
 
   art::Handle<std::vector<CRTSpacePoint>> CRTSpacePointHandle;
   e.getByLabel(fCRTSpacePointModuleLabel, CRTSpacePointHandle);
@@ -87,6 +83,8 @@ void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
 
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
+  std::vector<SPMatchCandidate> candidates;
+
   for(auto const &track : trackVec)
     {
       const art::Ptr<recob::PFParticle> pfp = tracksToPFPs.at(track.key());
@@ -94,19 +92,30 @@ void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
       if(pfp->PdgCode() != 13)
         continue;
 
-      MatchCandidate closest = fMatchingAlg.GetClosestCRTSpacePoint(detProp, track, CRTSpacePointVec, e);
+      SPMatchCandidate closest = fMatchingAlg.GetClosestCRTSpacePoint(detProp, track, CRTSpacePointVec, e);
 
-      if(closest.score >= 0)
+      if(closest.valid)
+        candidates.push_back(closest);
+    }
+
+  std::sort(candidates.begin(), candidates.end(),
+            [](const SPMatchCandidate &a, const SPMatchCandidate &b)
+            { return a.score < b.score; });
+
+  std::set<int> used_crt_sps;
+
+  for(auto const &candidate : candidates)
+    {
+      if(used_crt_sps.count(candidate.thisSP.key()) == 0)
         {
-          T0Vec->push_back(anab::T0(closest.time*1e3, 0, track->ID(),  T0Vec->size(), closest.score));
-          util::CreateAssn(*this, e, *T0Vec, track, *trackT0Assn);
-          util::CreateAssn(*this, e, *T0Vec, closest.thisSP, *crtSPT0Assn);
+          const anab::T0 t0(candidate.time * 1e3, 0, 0, 0, candidate.score);
+          crtSPTPCTrackAssn->addSingle(candidate.thisSP, candidate.thisTrack, t0);
+
+          used_crt_sps.insert(candidate.thisSP.key());
         }
     }
 
-  e.put(std::move(T0Vec));
-  e.put(std::move(trackT0Assn));
-  e.put(std::move(crtSPT0Assn));
+  e.put(std::move(crtSPTPCTrackAssn));
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTSpacePointMatching)
