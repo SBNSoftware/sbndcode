@@ -43,6 +43,7 @@ decay_hnl: {
   tool_type: HNLMakeDecay
   Decays: ["mu_pi"]
   Majorana: true
+  DecayIsThreeBodyAnisotropic: true
   ReferenceUE4: 0
   ReferenceUT4: 0
   ReferenceUM4: 1e-7
