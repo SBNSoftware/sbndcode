@@ -156,8 +156,12 @@ namespace lightana{
         if(mult_v.size()   < nbins_pesum_v) mult_v.resize(nbins_pesum_v,0);
         if(pespec_v.size() < nbins_pesum_v) pespec_v.resize(nbins_pesum_v,std::vector<double>(_nopdet_maxsize));
         if(hitidx_v.size() < nbins_pesum_v) hitidx_v.resize(nbins_pesum_v,std::vector<unsigned int>());
+        // reset pe_sum_v
         for(size_t i=0; i<_pesum_v.size(); ++i) {
             _pesum_v[i] = 0;
+        }
+        // reset static vectors
+        for(size_t i=0; i<mult_v.size(); ++i) {
             mult_v[i]  = 0;
             hitidx_v[i].clear();
             for(auto& v : pespec_v[i]) v=0;
