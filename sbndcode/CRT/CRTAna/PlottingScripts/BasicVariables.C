@@ -1,6 +1,6 @@
 void BasicVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_67_00/basicvariables";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_67_00_no_duplicates/basicvariables";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void BasicVariables()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_67_00.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_67_00_no_duplicates.root");
 
   struct datacut {
     TCut cut;
@@ -108,7 +108,7 @@ void BasicVariables()
                              {"sp_pe","cl_sp_pe", ";PE;Space Points",
                               100, 0, 800, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"sp_time","cl_sp_time", ";Time in readout [ns];Space Points",
-                              100, 0, 3.5e6, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
+                              100, -1.8e6, 1.7e6, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"sp_etime","cl_sp_etime", ";Time error [ns];Space Points",
                               50, 0, 100, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"cl_has_sp","cl_has_sp", ";Has SpacePoint?;Clusters",
@@ -134,7 +134,7 @@ void BasicVariables()
                              {"tr_dir_z","tr_dir_z", ";z direction [cm];Tracks",
                               50, -1, 1, plotcolour},
                              {"tr_time","tr_time", ";Time in readout [ns];Tracks",
-                              100, 0, 3.5e6, plotcolour},
+                              100, -1.8e6, 1.7e6, plotcolour},
                              {"tr_pe","tr_pe", ";PE;Tracks",
                               100, 0, 2000, plotcolour},
                              {"tr_length", "tr_length", ";Length [cm];Tracks",

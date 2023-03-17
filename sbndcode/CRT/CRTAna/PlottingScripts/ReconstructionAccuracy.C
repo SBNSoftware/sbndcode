@@ -1,6 +1,6 @@
 void ReconstructionAccuracy()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_67_00/reconstructionaccuracy";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_67_00_no_duplicates/reconstructionaccuracy";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void ReconstructionAccuracy()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_67_00.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_67_00_no_duplicates.root");
 
   struct datacut {
     TCut cut;
@@ -90,9 +90,9 @@ void ReconstructionAccuracy()
                               55, -5, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"sp_core_pos_accuracy_multi_strip_clusters", "sqrt((cl_sp_x - cl_truth_core_x)^2 + (cl_sp_y - cl_truth_core_y)^2 + (cl_sp_z - cl_truth_core_z)^2)", ";(reco - true) position [cm];Space Points",
                               55, -5, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete && cl_nhits>2"},
-                             {"sp_time_accuracy", "cl_sp_time - (cl_truth_time + 1.7e6)", ";(reco - (true - G4RefTime)) time [ns];Space Points",
+                             {"sp_time_accuracy", "cl_sp_time - cl_truth_time", ";(reco - true) time [ns];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
-                             {"sp_core_time_accuracy", "cl_sp_time - (cl_truth_core_time + 1.7e6)", ";(reco - (true - G4RefTime)) time [ns];Space Points",
+                             {"sp_core_time_accuracy", "cl_sp_time - cl_truth_core_time", ";(reco - true) time [ns];Space Points",
                               100, -50, 50, plotcolour, {}, "cl_has_sp && cl_sp_complete"},
                              {"sh_pos_accuracy", "sh_pos - sh_truth_pos", ";(reco - true) position [cm];Strip Hits",
                               100, -50, 50, plotcolour},
@@ -116,7 +116,7 @@ void ReconstructionAccuracy()
                               100, -1, 1, plotcolour},
                              {"tr_dir_z_accuracy", "tr_dir_z - tr_truth_dir_z", ";(reco - true) Direction z;Tracks",
                               100, -1, 1, plotcolour},
-                             {"tr_time_accuracy", "tr_time - (tr_truth_time + 1.7e6)", ";(reco - (true - G4RefTime)) time [ns];Tracks",
+                             {"tr_time_accuracy", "tr_time - tr_truth_time", ";(reco -true) time [ns];Tracks",
                               100, -50, 50, plotcolour},
                              {"tr_length_accuracy", "tr_length - tr_truth_length", ";(reco - true) Length [cm];Tracks",
                               100, -50, 50, plotcolour},
