@@ -281,6 +281,7 @@ sbnd_genie: {
   #EventGeneratorList:      "Default+CCMEC+NCMEC" # Only needed to generate partial samples in GENIE v3
    DefinedVtxHistRange: true
    VtxPosHistRange:     [ -210, 210, -210, 210, -10, 510 ]
+   AddGenieVtxTime: true		#Enable adding time of flight to neutrino vertex
 } # sbnd_genie
 
 sbnd_genie_hist: {
