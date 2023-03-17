@@ -147,7 +147,7 @@
   <algorithm type = "LArCheatingVertexCreation">
     <OutputVertexListName>NVertices</OutputVertexListName>
     <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
-    <VertexXCorrection>0.495694</VertexXCorrection>
+    <VertexXCorrection>0</VertexXCorrection>
   </algorithm>
 
   <!-- 3D neutrino-induced event reconstruction -->
