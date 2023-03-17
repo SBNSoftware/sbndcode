@@ -69,7 +69,14 @@ namespace sbnd::crt {
 
       fhicl::Atom<double> MaxScore {
         Name("MaxScore"),
-          Comment("")
+          Comment(""),
+          200.
+          };
+
+      fhicl::Atom<double> MinTPCTrackLength {
+        Name("MinTPCTrackLength"),
+          Comment(""),
+          0.
           };
 
       fhicl::Atom<std::string> SelectionMetric {
@@ -142,6 +149,7 @@ namespace sbnd::crt {
     double      fMaxAngleDiff;
     double      fMaxDCA;
     double      fMaxScore;
+    double      fMinTPCTrackLength;
     std::string fSelectionMetric;
 
     art::InputTag fTPCTrackLabel;

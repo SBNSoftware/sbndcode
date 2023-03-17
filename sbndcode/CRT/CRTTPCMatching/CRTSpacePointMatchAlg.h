@@ -80,6 +80,12 @@ namespace sbnd::crt {
           200.
           };
 
+      fhicl::Atom<double> MinTPCTrackLength {
+        Name("MinTPCTrackLength"),
+          Comment("Only consider TPC tracks with a length longer than this (cm)"),
+          0.
+          };
+
       fhicl::Atom<int> DirMethod {
         Name("DirMethod"),
           Comment("1=endpoints (default), 2=average;  must use endpoints if applying SCE position corrections"),
@@ -166,6 +172,7 @@ namespace sbnd::crt {
     double fTrackDirectionFrac;
     double fDCALimit;
     double fTimeCorrection;
+    double fMinTPCTrackLength;
     int    fDirMethod;
     bool   fDCAuseBox;
     bool   fDCAoverLength;

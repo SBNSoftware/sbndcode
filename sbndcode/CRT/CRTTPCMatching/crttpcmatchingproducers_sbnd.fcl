@@ -3,6 +3,8 @@ BEGIN_PROLOG
 crtspacepointmatchalg_sbnd:
 {
    TrackDirectionFrac: 0.5
+   DCALimit:           70.
+   MinTPCTrackLength:  10.
    DirMethod:          1
    DCAuseBox:          false
    DCAoverLength:      false
@@ -23,11 +25,12 @@ crtspacepointmatchproducer_sbnd:
 
 crttrackmatchalg_sbnd:
 {
-   MaxAngleDiff:    0.4
-   MaxDCA:          70.
-   MaxScore:        200.
-   SelectionMetric: "score"
-   TPCTrackLabel:   "pandoraTrack"
+   MaxAngleDiff:      0.4
+   MaxDCA:            70.
+   MaxScore:          150.
+   MinTPCTrackLength: 5.
+   SelectionMetric:   "score"
+   TPCTrackLabel:     "pandoraTrack"
 }
 
 crttrackmatchproducer_sbnd:

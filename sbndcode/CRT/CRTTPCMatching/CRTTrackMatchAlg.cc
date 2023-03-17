@@ -18,11 +18,12 @@ namespace sbnd::crt {
 
   void CRTTrackMatchAlg::reconfigure(const Config& config)
   {
-    fMaxAngleDiff    = config.MaxAngleDiff();
-    fMaxDCA          = config.MaxDCA();
-    fMaxScore        = config.MaxScore();
-    fTPCTrackLabel   = config.TPCTrackLabel();
-    fSelectionMetric = config.SelectionMetric();
+    fMaxAngleDiff      = config.MaxAngleDiff();
+    fMaxDCA            = config.MaxDCA();
+    fMaxScore          = config.MaxScore();
+    fMinTPCTrackLength = config.MinTPCTrackLength();
+    fTPCTrackLabel     = config.TPCTrackLabel();
+    fSelectionMetric   = config.SelectionMetric();
 
     return;
   }
@@ -42,6 +43,9 @@ namespace sbnd::crt {
   TrackMatchCandidate CRTTrackMatchAlg::GetBestMatchedCRTTrack(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &tpcTrack,
                                                                const std::vector<art::Ptr<recob::Hit>> &hits, const std::vector<art::Ptr<CRTTrack>> &crtTracks)
   {
+    if(tpcTrack->Length() < fMinTPCTrackLength)
+      return TrackMatchCandidate();
+
     if(fSelectionMetric == "angle")
       {
         TrackMatchCandidate candidate = ClosestCRTTrackByAngle(detProp, tpcTrack, hits, crtTracks, fMaxDCA);

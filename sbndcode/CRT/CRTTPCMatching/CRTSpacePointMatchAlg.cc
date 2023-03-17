@@ -21,6 +21,7 @@ namespace sbnd::crt {
     fTrackDirectionFrac = config.TrackDirectionFrac();
     fDCALimit           = config.DCALimit();
     fTimeCorrection     = config.TimeCorrection();
+    fMinTPCTrackLength  = config.MinTPCTrackLength();
     fDirMethod          = config.DirMethod();
     fDCAuseBox          = config.DCAuseBox();
     fDCAoverLength      = config.DCAoverLength();
@@ -63,6 +64,9 @@ namespace sbnd::crt {
                                                                   const std::pair<double, double> t0MinMax, const std::vector<art::Ptr<CRTSpacePoint>> &crtSPs, const int driftDirection,
                                                                   const art::Event &e)
   {
+    if(track->Length() < fMinTPCTrackLength)
+      return SPMatchCandidate();
+
     const geo::Point_t start = track->Vertex();
     const geo::Point_t end   = track->End();
 
