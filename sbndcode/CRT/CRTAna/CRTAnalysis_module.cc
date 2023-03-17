@@ -21,6 +21,7 @@
 
 #include "lardataobj/AnalysisBase/T0.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/PFParticle.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
@@ -1114,46 +1115,52 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_tr_time.resize(nTracks);
   _tpc_tr_score.resize(nTracks);
 
+  art::FindOneP<recob::PFParticle>       tracksToPFPs(TPCTrackHandle, e, fTPCTrackModuleLabel);
   art::FindManyP<recob::Hit>             tracksToHits(TPCTrackHandle, e, fTPCTrackModuleLabel);
   art::FindOneP<CRTSpacePoint, anab::T0> tracksToSPMatches(TPCTrackHandle, e, fCRTSpacePointMatchingModuleLabel);
   art::FindOneP<CRTCluster>              spsToClusters(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
   art::FindOneP<CRTTrack, anab::T0>      tracksToTrackMatches(TPCTrackHandle, e, fCRTTrackMatchingModuleLabel);
 
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+  int nActualTracks = 0;
 
   for(unsigned i = 0; i < nTracks; ++i)
     {
       const auto track = TPCTrackVec[i];
+      const auto pfp   = tracksToPFPs.at(track.key());
+
+      if(pfp->PdgCode() != 13)
+        continue;
 
       const geo::Point_t start = track->Start();
-      _tpc_start_x[i] = start.X();
-      _tpc_start_y[i] = start.Y();
-      _tpc_start_z[i] = start.Z();
+      _tpc_start_x[nActualTracks] = start.X();
+      _tpc_start_y[nActualTracks] = start.Y();
+      _tpc_start_z[nActualTracks] = start.Z();
 
       const geo::Point_t end = track->End();
-      _tpc_end_x[i] = end.X();
-      _tpc_end_y[i] = end.Y();
-      _tpc_end_z[i] = end.Z();
+      _tpc_end_x[nActualTracks] = end.X();
+      _tpc_end_y[nActualTracks] = end.Y();
+      _tpc_end_z[nActualTracks] = end.Z();
 
       const geo::Vector_t dir = track->StartDirection();
-      _tpc_dir_x[i] = dir.X();
-      _tpc_dir_y[i] = dir.Y();
-      _tpc_dir_z[i] = dir.Z();
+      _tpc_dir_x[nActualTracks] = dir.X();
+      _tpc_dir_y[nActualTracks] = dir.Y();
+      _tpc_dir_z[nActualTracks] = dir.Z();
 
-      _tpc_length[i] = track->Length();
+      _tpc_length[nActualTracks] = track->Length();
 
       const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
       const int trackid = fCRTBackTrackerAlg.RollUpID(TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true));
 
-      _tpc_truth_trackid[i] = trackid;
+      _tpc_truth_trackid[nActualTracks] = trackid;
 
       int pdg;
       double energy, time;
       fCRTBackTrackerAlg.TrueParticlePDGEnergyTime(trackid, pdg, energy, time);
 
-      _tpc_truth_pdg[i]    = pdg;
-      _tpc_truth_energy[i] = energy;
-      _tpc_truth_time[i]   = time;
+      _tpc_truth_pdg[nActualTracks]    = pdg;
+      _tpc_truth_energy[nActualTracks] = energy;
+      _tpc_truth_time[nActualTracks]   = time;
 
       bool sp_matchable = false, tr_matchable = false;
 
@@ -1163,8 +1170,8 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       tr_matchable |= trackRecoStatusMap.count(trackid) != 0;
       if(tr_matchable) tr_matchable = trackRecoStatusMap.at(trackid).first;
 
-      _tpc_sp_matchable[i] = sp_matchable;
-      _tpc_tr_matchable[i] = tr_matchable;
+      _tpc_sp_matchable[nActualTracks] = sp_matchable;
+      _tpc_tr_matchable[nActualTracks] = tr_matchable;
 
       const art::Ptr<CRTSpacePoint> spacepoint = tracksToSPMatches.at(track.key());
 
@@ -1174,17 +1181,17 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
           const art::Ptr<CRTCluster> cluster                    = spsToClusters.at(spacepoint.key());
           const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
 
-          _tpc_sp_matched[i]    = true;
-          _tpc_sp_good_match[i] = truthMatch.trackid == trackid;
-          _tpc_sp_time[i]       = spacepoint->Time();
-          _tpc_sp_score[i]      = spMatch.TriggerConfidence();
+          _tpc_sp_matched[nActualTracks]    = true;
+          _tpc_sp_good_match[nActualTracks] = truthMatch.trackid == trackid;
+          _tpc_sp_time[nActualTracks]       = spacepoint->Time();
+          _tpc_sp_score[nActualTracks]      = spMatch.TriggerConfidence();
         }
       else
         {
-          _tpc_sp_matched[i]    = false;
-          _tpc_sp_good_match[i] = false;
-          _tpc_sp_time[i]       = -std::numeric_limits<double>::max();
-          _tpc_sp_score[i]      = -std::numeric_limits<double>::max();
+          _tpc_sp_matched[nActualTracks]    = false;
+          _tpc_sp_good_match[nActualTracks] = false;
+          _tpc_sp_time[nActualTracks]       = -std::numeric_limits<double>::max();
+          _tpc_sp_score[nActualTracks]      = -std::numeric_limits<double>::max();
         }
 
       const art::Ptr<CRTTrack> crttrack = tracksToTrackMatches.at(track.key());
@@ -1194,19 +1201,46 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
           const anab::T0 trackMatch                             = tracksToTrackMatches.data(track.key()).ref();
           const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, crttrack);
 
-          _tpc_tr_matched[i]    = true;
-          _tpc_tr_good_match[i] = truthMatch.trackid == trackid;
-          _tpc_tr_time[i]       = crttrack->Time();
-          _tpc_tr_score[i]      = trackMatch.TriggerConfidence();
+          _tpc_tr_matched[nActualTracks]    = true;
+          _tpc_tr_good_match[nActualTracks] = truthMatch.trackid == trackid;
+          _tpc_tr_time[nActualTracks]       = crttrack->Time();
+          _tpc_tr_score[nActualTracks]      = trackMatch.TriggerConfidence();
         }
       else
         {
-          _tpc_tr_matched[i]    = false;
-          _tpc_tr_good_match[i] = false;
-          _tpc_tr_time[i]       = -std::numeric_limits<double>::max();
-          _tpc_tr_score[i]      = -std::numeric_limits<double>::max();
+          _tpc_tr_matched[nActualTracks]    = false;
+          _tpc_tr_good_match[nActualTracks] = false;
+          _tpc_tr_time[nActualTracks]       = -std::numeric_limits<double>::max();
+          _tpc_tr_score[nActualTracks]      = -std::numeric_limits<double>::max();
         }
+
+      ++nActualTracks;
     }
+
+  _tpc_start_x.resize(nActualTracks);
+  _tpc_start_y.resize(nActualTracks);
+  _tpc_start_z.resize(nActualTracks);
+  _tpc_end_x.resize(nActualTracks);
+  _tpc_end_y.resize(nActualTracks);
+  _tpc_end_z.resize(nActualTracks);
+  _tpc_dir_x.resize(nActualTracks);
+  _tpc_dir_y.resize(nActualTracks);
+  _tpc_dir_z.resize(nActualTracks);
+  _tpc_length.resize(nActualTracks);
+  _tpc_truth_trackid.resize(nActualTracks);
+  _tpc_truth_pdg.resize(nActualTracks);
+  _tpc_truth_energy.resize(nActualTracks);
+  _tpc_truth_time.resize(nActualTracks);
+  _tpc_sp_matchable.resize(nActualTracks);
+  _tpc_sp_matched.resize(nActualTracks);
+  _tpc_sp_good_match.resize(nActualTracks);
+  _tpc_sp_time.resize(nActualTracks);
+  _tpc_sp_score.resize(nActualTracks);
+  _tpc_tr_matchable.resize(nActualTracks);
+  _tpc_tr_matched.resize(nActualTracks);
+  _tpc_tr_good_match.resize(nActualTracks);
+  _tpc_tr_time.resize(nActualTracks);
+  _tpc_tr_score.resize(nActualTracks);
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTAnalysis)
