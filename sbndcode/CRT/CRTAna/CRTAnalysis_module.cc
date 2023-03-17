@@ -22,6 +22,7 @@
 #include "lardataobj/AnalysisBase/T0.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/RecoBase/PFParticleMetadata.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
@@ -73,8 +74,8 @@ public:
   void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec);
 
   void AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
-                          const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointModuleLabel, const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap,
-                          const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap);
+                          const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointModuleLabel, const art::Handle<std::vector<recob::PFParticle>> &PFPHandle,
+                          const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap, const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap);
 
 private:
 
@@ -84,7 +85,7 @@ private:
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
     fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTPCTrackModuleLabel,
-    fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel;
+    fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel, fPFPModuleLabel;
   bool fDebug;
 
   TTree* fTree;
@@ -254,6 +255,7 @@ private:
   std::vector<double> _tpc_dir_y;
   std::vector<double> _tpc_dir_z;
   std::vector<double> _tpc_length;
+  std::vector<double> _tpc_track_score;
   std::vector<int>    _tpc_truth_trackid;
   std::vector<int>    _tpc_truth_pdg;
   std::vector<double> _tpc_truth_energy;
@@ -285,6 +287,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTPCTrackModuleLabel              = p.get<std::string>("TPCTrackModuleLabel", "pandoraSCETrack");
     fCRTSpacePointMatchingModuleLabel = p.get<std::string>("CRTSpacePointMatchingModuleLabel", "crtspacepointmatchingSCE");
     fCRTTrackMatchingModuleLabel      = p.get<std::string>("CRTTrackMatchingModuleLabel", "crttrackmatchingSCE");
+    fPFPModuleLabel                   = p.get<std::string>("PFPModuleLabel", "pandora");
     fDebug                            = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
@@ -453,6 +456,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     fTree->Branch("tpc_dir_y", "std::vector<double>", &_tpc_dir_y);
     fTree->Branch("tpc_dir_z", "std::vector<double>", &_tpc_dir_z);
     fTree->Branch("tpc_length", "std::vector<double>", &_tpc_length);
+    fTree->Branch("tpc_track_score", "std::vector<double>", &_tpc_track_score);
     fTree->Branch("tpc_truth_trackid", "std::vector<int>", &_tpc_truth_trackid);
     fTree->Branch("tpc_truth_pdg", "std::vector<int>", &_tpc_truth_pdg);
     fTree->Branch("tpc_truth_energy", "std::vector<double>", &_tpc_truth_energy);
@@ -622,8 +626,16 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
     throw std::exception();
   }
 
+  // Get PFPs
+  art::Handle<std::vector<recob::PFParticle>> PFPHandle;
+  e.getByLabel(fPFPModuleLabel, PFPHandle);
+  if(!PFPHandle.isValid()){
+    std::cout << "PFP product " << fPFPModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
   // Fill TPC matching variables
-  AnalyseTPCMatching(e, TPCTrackHandle, CRTSpacePointHandle, spacePointRecoStatusMap, trackRecoStatusMap);
+  AnalyseTPCMatching(e, TPCTrackHandle, CRTSpacePointHandle, PFPHandle, spacePointRecoStatusMap, trackRecoStatusMap);
 
   // Fill the Tree
   fTree->Fill();
@@ -1082,8 +1094,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
 }
 
 void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
-                                                const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle, const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap,
-                                                const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap)
+                                                const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle, const art::Handle<std::vector<recob::PFParticle>> &PFPHandle,
+                                                const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap, const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap)
 {
   std::vector<art::Ptr<recob::Track>> TPCTrackVec;
   art::fill_ptr_vector(TPCTrackVec, TPCTrackHandle);
@@ -1100,6 +1112,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_dir_y.resize(nTracks);
   _tpc_dir_z.resize(nTracks);
   _tpc_length.resize(nTracks);
+  _tpc_track_score.resize(nTracks);
   _tpc_truth_trackid.resize(nTracks);
   _tpc_truth_pdg.resize(nTracks);
   _tpc_truth_energy.resize(nTracks);
@@ -1115,11 +1128,12 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_tr_time.resize(nTracks);
   _tpc_tr_score.resize(nTracks);
 
-  art::FindOneP<recob::PFParticle>       tracksToPFPs(TPCTrackHandle, e, fTPCTrackModuleLabel);
-  art::FindManyP<recob::Hit>             tracksToHits(TPCTrackHandle, e, fTPCTrackModuleLabel);
-  art::FindOneP<CRTSpacePoint, anab::T0> tracksToSPMatches(TPCTrackHandle, e, fCRTSpacePointMatchingModuleLabel);
-  art::FindOneP<CRTCluster>              spsToClusters(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
-  art::FindOneP<CRTTrack, anab::T0>      tracksToTrackMatches(TPCTrackHandle, e, fCRTTrackMatchingModuleLabel);
+  art::FindOneP<recob::PFParticle>                 tracksToPFPs(TPCTrackHandle, e, fTPCTrackModuleLabel);
+  art::FindOneP<larpandoraobj::PFParticleMetadata> pfpsToMetadata(PFPHandle, e, fPFPModuleLabel);
+  art::FindManyP<recob::Hit>                       tracksToHits(TPCTrackHandle, e, fTPCTrackModuleLabel);
+  art::FindOneP<CRTSpacePoint, anab::T0>           tracksToSPMatches(TPCTrackHandle, e, fCRTSpacePointMatchingModuleLabel);
+  art::FindOneP<CRTCluster>                        spsToClusters(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
+  art::FindOneP<CRTTrack, anab::T0>                tracksToTrackMatches(TPCTrackHandle, e, fCRTTrackMatchingModuleLabel);
 
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
   int nActualTracks = 0;
@@ -1128,6 +1142,8 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
     {
       const auto track = TPCTrackVec[i];
       const auto pfp   = tracksToPFPs.at(track.key());
+      const auto meta  = pfpsToMetadata.at(pfp.key());
+      const auto props = meta->GetPropertiesMap();
 
       if(pfp->PdgCode() != 13)
         continue;
@@ -1148,6 +1164,12 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       _tpc_dir_z[nActualTracks] = dir.Z();
 
       _tpc_length[nActualTracks] = track->Length();
+
+      const auto trackscore = props.find("TrackScore");
+      if(trackscore != props.end())
+        _tpc_track_score[nActualTracks] = trackscore->second;
+      else
+        _tpc_track_score[nActualTracks] = -std::numeric_limits<double>::max();
 
       const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
       const int trackid = fCRTBackTrackerAlg.RollUpID(TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true));
@@ -1227,6 +1249,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_dir_y.resize(nActualTracks);
   _tpc_dir_z.resize(nActualTracks);
   _tpc_length.resize(nActualTracks);
+  _tpc_track_score.resize(nActualTracks);
   _tpc_truth_trackid.resize(nActualTracks);
   _tpc_truth_pdg.resize(nActualTracks);
   _tpc_truth_energy.resize(nActualTracks);
