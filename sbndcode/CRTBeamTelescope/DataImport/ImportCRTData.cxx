@@ -57,7 +57,8 @@ namespace crt {
     // Fill and return a new Fileblock.
     fb = new art::FileBlock(art::FileFormatVersion(1, "ImportCRTData"), name);
 
-    fCRTInputFile=new TFile(name.c_str());
+    //fCRTInputFile=new TFile(name.c_str());
+    fCRTInputFile = TFile::Open(name.c_str());
     if (fCRTInputFile->IsZombie()) {
       //throw cet::exception(__PRETTY_FUNCTION__) << "Failed to open "<<fCRTInputFile<<std::endl;
     }
@@ -103,6 +104,7 @@ namespace crt {
                                art::SubRunPrincipal* &outSR,
                                art::EventPrincipal* &outE)
   {
+
     if ((fMaxEvents > 0 && fEventCounter == unsigned(fMaxEvents)) || fEventCounter == fTotalTreeEvents) {
       return false;
     }
@@ -139,6 +141,7 @@ namespace crt {
       febdata_v->push_back(feb_data_1);
 
       max_s = 999999; max_adc = 0;
+
       for (int s = 0; s < 32; s++) 
 	{ 
 	  adc[s] = fHit2Adc->at(j)[s];
@@ -186,7 +189,9 @@ namespace crt {
     art::Timestamp tstamp(time(0));
 
     art::SubRunID newID(rn, 0);
+//std::cout<<"I'm helpless"<<std::endl;
     if (fSubRunID.runID() != newID.runID()) { // New Run
+      std::cout<<"AHHhHHHHHHHHHHH: "<<rn<<std::endl;
       outR = fSourceHelper.makeRunPrincipal(rn, tstamp);
       outSR = fSourceHelper.makeSubRunPrincipal(rn,0,tstamp);
       std::cout << "Made new run " << outSR->run() << ", subrun " << outSR->subRun() << std::endl;

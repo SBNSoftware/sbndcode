@@ -516,8 +516,14 @@ void CRTAnalysis::analyze(art::Event const& e)
   std::vector<art::Ptr<sbnd::crt::FEBData>> feb_data_v;
   art::fill_ptr_vector(feb_data_v, feb_data_h);
 
-  art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febdata_to_ides (feb_data_h, e, _febdata_label);
+  //art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febdata_to_ides (feb_data_h, e, _febdata_label);
 
+  // Get the FEBData to AuxDetIDE & FEBTruthInfo association
+  art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> *febdata_to_ides;
+  if(!_data_mode) {
+    febdata_to_ides = new art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>(feb_data_h, e, _febdata_label);
+  }
+  
 
   // // Get the CRT Hits to CRTData association
   // art::FindManyP<sbnd::crt::CRTData> crt_hit_to_data (crt_hit_h, e, _crthit_label);
@@ -848,26 +854,27 @@ void CRTAnalysis::analyze(art::Event const& e)
     // From the hit, get the associated CRTData,
     // then the associated AuxDetIDE, so we can
     // retrieve the truth info
-    _chit_true_t[i] = 0;
-    _chit_true_e[i] = 0;
-    size_t n_ides = 0;
-    for (auto feb_data : feb_datas) {
-      auto ide_v = febdata_to_ides.at(feb_data.key());
-      for (auto ide : ide_v) {
-        _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
-        _chit_true_e[i] += ide->energyDeposited;
-        _chit_true_x[i] += 0.5 * (ide->entryX + ide->exitX);
-        _chit_true_y[i] += 0.5 * (ide->entryY + ide->exitY);
-        _chit_true_z[i] += 0.5 * (ide->entryZ + ide->exitZ);
-        n_ides++;
+    if(!_data_mode) {
+      _chit_true_t[i] = 0;
+      _chit_true_e[i] = 0;
+      size_t n_ides = 0;
+      for (auto feb_data : feb_datas) {
+        auto ide_v = febdata_to_ides->at(feb_data.key());
+        for (auto ide : ide_v) {
+          _chit_true_t[i] += 0.5 * (ide->entryT + ide->exitT);
+          _chit_true_e[i] += ide->energyDeposited;
+          _chit_true_x[i] += 0.5 * (ide->entryX + ide->exitX);
+          _chit_true_y[i] += 0.5 * (ide->entryY + ide->exitY);
+          _chit_true_z[i] += 0.5 * (ide->entryZ + ide->exitZ);
+          n_ides++;
+        }
       }
+      _chit_true_t[i] /= n_ides;
+      _chit_true_e[i] /= n_ides;
+      _chit_true_x[i] /= n_ides;
+      _chit_true_y[i] /= n_ides;
+      _chit_true_z[i] /= n_ides;
     }
-    _chit_true_t[i] /= n_ides;
-    _chit_true_e[i] /= n_ides;
-    _chit_true_x[i] /= n_ides;
-    _chit_true_y[i] /= n_ides;
-    _chit_true_z[i] /= n_ides;
-
     if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_t1[i] << ", h2 time " << _chit_h2_t1[i] << ", hit time " << _chit_t1[i] << std::endl;
   }
 
@@ -935,12 +942,12 @@ void CRTAnalysis::analyze(art::Event const& e)
     _ct_hit2_nhits[i] = 0;
 
     for(auto hit : hit_v)
-      {
-	if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
-	  ++_ct_hit1_nhits[i];
-	else if(std::signbit(hit->z_pos) == std::signbit(track->z2_pos))
-	  ++_ct_hit2_nhits[i];
-      }
+    {
+    	if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
+    	  ++_ct_hit1_nhits[i];
+    	else if(std::signbit(hit->z_pos) == std::signbit(track->z2_pos))
+    	  ++_ct_hit2_nhits[i];
+    }
 
     _ct_hit1_sipm_raw_adc[i].resize(4 * _ct_hit1_nhits[i]);
     _ct_hit1_sipm_adc[i].resize(4 * _ct_hit1_nhits[i]);
@@ -949,49 +956,49 @@ void CRTAnalysis::analyze(art::Event const& e)
     _ct_hit2_sipm_adc[i].resize(4 * _ct_hit2_nhits[i]);
     _ct_hit2_sipm_corr_adc[i].resize(4 * _ct_hit2_nhits[i]);
 
-    _ct_true_tof[i] = 0;
+    if(!_data_mode) _ct_true_tof[i] = 0;
 
     unsigned used_hits_1 = 0, used_hits_2 = 0;
 
     for (size_t i_hit = 0; i_hit < hit_v.size(); i_hit++)
-      {
-	auto hit = hit_v[i_hit];
-	  
-	if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
-	  {
-	    _ct_hit1_t0[i] = hit->ts0_ns;
-	    _ct_hit1_t1[i] = hit->ts1_ns;
+    {
+    	auto hit = hit_v[i_hit];
+    	  
+    	if(std::signbit(hit->z_pos) == std::signbit(track->z1_pos))
+  	  {
+  	    _ct_hit1_t0[i] = hit->ts0_ns;
+  	    _ct_hit1_t1[i] = hit->ts1_ns;
 
-	    const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
-	    const std::array<uint16_t,4> adcs      = hit->adcs;
-	    const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
+  	    const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
+  	    const std::array<uint16_t,4> adcs      = hit->adcs;
+  	    const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
 
-	    for(uint adc_i = 0; adc_i < 4; ++adc_i)
+  	    for(uint adc_i = 0; adc_i < 4; ++adc_i)
 	      {
-		_ct_hit1_sipm_raw_adc[i][4 * used_hits_1 + adc_i]  = raw_adcs[adc_i];
-		_ct_hit1_sipm_adc[i][4 * used_hits_1 + adc_i]      = adcs[adc_i];
-		_ct_hit1_sipm_corr_adc[i][4 * used_hits_1 + adc_i] = corr_adcs[adc_i];
-	      }
-	    ++used_hits_1;
-	  }
-	else if(std::signbit(hit->z_pos) == std::signbit(track->z2_pos))
-	  {
-	    _ct_hit2_t0[i] = hit->ts0_ns;
-	    _ct_hit2_t1[i] = hit->ts1_ns;
+      		_ct_hit1_sipm_raw_adc[i][4 * used_hits_1 + adc_i]  = raw_adcs[adc_i];
+      		_ct_hit1_sipm_adc[i][4 * used_hits_1 + adc_i]      = adcs[adc_i];
+      		_ct_hit1_sipm_corr_adc[i][4 * used_hits_1 + adc_i] = corr_adcs[adc_i];
+  	     }
+  	    ++used_hits_1;
+  	  }
+    	else if(std::signbit(hit->z_pos) == std::signbit(track->z2_pos))
+  	  {
+  	    _ct_hit2_t0[i] = hit->ts0_ns;
+  	    _ct_hit2_t1[i] = hit->ts1_ns;
 
-	    const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
-	    const std::array<uint16_t,4> adcs      = hit->adcs;
-	    const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
+  	    const std::array<uint16_t,4> raw_adcs  = hit->raw_adcs;
+  	    const std::array<uint16_t,4> adcs      = hit->adcs;
+  	    const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
 
-	    for(uint adc_i = 0; adc_i < 4; ++adc_i)
+  	    for(uint adc_i = 0; adc_i < 4; ++adc_i)
 	      {
-		_ct_hit2_sipm_raw_adc[i][4 * used_hits_2 + adc_i]  = raw_adcs[adc_i];
-		_ct_hit2_sipm_adc[i][4 * used_hits_2 + adc_i]      = adcs[adc_i];
-		_ct_hit2_sipm_corr_adc[i][4 * used_hits_2 + adc_i] = corr_adcs[adc_i];
+      		_ct_hit2_sipm_raw_adc[i][4 * used_hits_2 + adc_i]  = raw_adcs[adc_i];
+      		_ct_hit2_sipm_adc[i][4 * used_hits_2 + adc_i]      = adcs[adc_i];
+      		_ct_hit2_sipm_corr_adc[i][4 * used_hits_2 + adc_i] = corr_adcs[adc_i];
 	      }
-	    ++used_hits_2;
-	  }
-      }
+  	    ++used_hits_2;
+  	  }
+    }
   }
 
   //
