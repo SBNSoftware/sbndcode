@@ -10,6 +10,7 @@
 #define SBND_OPDETSIM_DIGIPMTSBNDALG_HH
 
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/Sequence.h"
 #include "fhiclcpp/types/DelegatedParameter.h"
 #include "fhiclcpp/types/OptionalDelegatedParameter.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -38,6 +39,7 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "sbndcode/OpDetSim/PMTAlg/PMTGainFluctuations.hh"
+#include "sbndcode/OpDetSim/PMTAlg/PMTNonLinearity.hh"
 
 #include "TFile.h"
 
@@ -58,7 +60,7 @@ namespace opdet {
       double PMTMeanAmplitude; //mean amplitude for single pe in pC
       double PMTBaselineRMS; //Pedestal RMS in ADC counts
       double PMTDarkNoiseRate; //in Hz
-      double PMTSaturation; //in number of p.e.
+      double PMTADCDynamicRange; //ADC dynbamic range
       double PMTCoatedVUVEff; //PMT (coated) efficiency for direct (VUV) light
       double PMTCoatedVISEff; //PMT (coated) efficiency for reflected (VIS) light
       double PMTUncoatedEff; //PMT (uncoated) efficiency
@@ -66,7 +68,9 @@ namespace opdet {
       bool PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
       fhicl::ParameterSet GainFluctuationsParams;
-
+      bool SimulateNonLinearity; //Fluctuate PMT gain
+      fhicl::ParameterSet NonLinearityParams;
+      
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       double frequency;       //wave sampling frequency (GHz)
       CLHEP::HepRandomEngine* engine = nullptr;
@@ -122,12 +126,13 @@ namespace opdet {
     double fPMTCoatedVUVEff;
     double fPMTCoatedVISEff;
     double fPMTUncoatedEff;
-    //int fSinglePEmodel;
+    bool fPositivePolarity;
+    int fADCSaturation;
+
     double sigma1;
     double sigma2;
 
     const double transitTimeSpread_frac = 2.0 * std::sqrt(2.0 * std::log(2.0));
-    double saturation;
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
     CLHEP::RandFlat fFlatGen;
@@ -136,11 +141,13 @@ namespace opdet {
     CLHEP::RandExponential fExponentialGen;
     std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for coated PMTs
 
-
     //PMTFluctuationsAlg
     std::unique_ptr<opdet::PMTGainFluctuations> fPMTGainFluctuationsPtr;
 
-    void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
+    //PMTNonLinearity
+    std::unique_ptr<opdet::PMTNonLinearity> fPMTNonLinearityPtr;
+
+    void AddSPE(size_t time_bin, std::vector<double>& wave, double npe = 1); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
@@ -172,7 +179,7 @@ namespace opdet {
       std::vector<double>& wave,
       std::unordered_map<int, sim::SimPhotonsLite>& DirectPhotonsMap,
       std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap);
-    void CreateSaturation(std::vector<double>& wave);//Including saturation effects
+    void CreateSaturation(std::vector<double>& wave);//Including saturation effects (dynamic range)
     void AddLineNoise(std::vector<double>& wave); //add noise to baseline
     void AddDarkNoise(std::vector<double>& wave); //add dark noise
     double FindMinimumTime(
@@ -244,9 +251,9 @@ namespace opdet {
         Comment("Dark noise rate in Hz")
       };
 
-      fhicl::Atom<double> pmtsaturation {
-        Name("PMTSaturation"),
-        Comment("Saturation in number of p.e.")
+      fhicl::Atom<double> pmtADCDynamicRange {
+        Name("PMTADCDynamicRange"),
+        Comment("Saturation in number of ADCs")
       };
 
       fhicl::Atom<double> pmtcoatedVUVEff {
@@ -274,14 +281,14 @@ namespace opdet {
         Comment("File containing timing emission distribution for TPB and single pe pulse from data")
       };
 
-      fhicl::Atom<bool> makeGainFluctuations {
-        Name("MakeGainFluctuations"),
-        Comment("Option to fluctuate PMT gain")
-      };
-
       fhicl::OptionalDelegatedParameter gainFluctuationsParams {
         Name("GainFluctuationsParams"),
         Comment("Parameters used for SinglePE response fluctuations")
+      };
+
+      fhicl::OptionalDelegatedParameter nonLinearityParams {
+        Name("NonLinearityParams"),
+        Comment("Parameters used for simulating PMT non linear effects")
       };
 
     };    //struct Config

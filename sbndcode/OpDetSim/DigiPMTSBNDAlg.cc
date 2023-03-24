@@ -69,9 +69,25 @@ namespace opdet {
 
     if(fParams.MakeGainFluctuations){
       fPMTGainFluctuationsPtr = art::make_tool<opdet::PMTGainFluctuations>(fParams.GainFluctuationsParams);
+      std::cout<<" Constru: Simulating gain fluctuations"<<std::endl;
     }
+    if(fParams.SimulateNonLinearity){
+      fPMTNonLinearityPtr = art::make_tool<opdet::PMTNonLinearity>(fParams.NonLinearityParams);
+      std::cout<<" Constru: Simulating non linearity"<<std::endl;
+    }  
 
-    saturation = fParams.PMTBaseline + fParams.PMTSaturation * fParams.PMTChargeToADC * fParams.PMTMeanAmplitude;
+    // infer pulse polarity from SER peak sign
+    double minADC_SinglePE = *min_element(fSinglePEWave.begin(), fSinglePEWave.end());
+    double maxADC_SinglePE = *max_element(fSinglePEWave.begin(), fSinglePEWave.end());
+    fPositivePolarity = std::abs(maxADC_SinglePE) > std::abs(minADC_SinglePE); 
+    std::cout<<"Pulse polarity.... Positive="<<fPositivePolarity<<" Min: "<<minADC_SinglePE<<" maxSER: "<<maxADC_SinglePE<<std::endl;
+
+    // get ADC saturation value
+    // currently assumes all dynamic range for PE (no overshoot)
+    fADCSaturation = (fPositivePolarity ? fParams.PMTBaseline + fParams.PMTADCDynamicRange : fParams.PMTBaseline - fParams.PMTADCDynamicRange);
+    std::cout<<" ADCSatValue: "<<fADCSaturation<<std::endl;
+
+
     file->Close();
   } // end constructor
 
@@ -224,6 +240,9 @@ namespace opdet {
     double tphoton;
     size_t timeBin;
     double ttpb=0;
+
+    std::vector<unsigned int> nPE(wave.size(), 0);
+
     // reflected light to be added to all PMTs
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
     for (auto const& reflectedPhotons : photonMap) {
@@ -237,10 +256,22 @@ namespace opdet {
         tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         timeBin = std::floor(tphoton*fSampling);
-        if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+        //if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+        if(timeBin < wave.size()) nPE[timeBin]++;
       }
     }
 
+    for(size_t k=0; k<nPE.size(); k++){
+      if(nPE[k] > 0) {
+        if(fParams.SimulateNonLinearity){
+          AddSPE(k, wave, fPMTNonLinearityPtr->NObservedPE(k, nPE) );
+        }
+        else{
+          AddSPE(k, wave, nPE[k]);
+        }
+      }
+    }
+    
     if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
@@ -254,12 +285,17 @@ namespace opdet {
     std::unordered_map<int, sim::SimPhotonsLite>& DirectPhotonsMap,
     std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap)
   {
+
+    //DEBUG: std::cout<<"DEBUGGING OpDetSim  "<<fParams.PMTNonLinearityTF1<<std::endl;
     double mean_photons;
     size_t accepted_photons;
     double ttsTime = 0;
     double tphoton;
     size_t timeBin;
     double ttpb;
+
+    std::vector<unsigned int> nPE(wave.size(), 0);
+
     // direct light
     if ( auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) ){
       for (auto& directPhotons : (it->second).DetectedPhotons) {
@@ -273,7 +309,8 @@ namespace opdet {
           tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           timeBin = std::floor(tphoton*fSampling);
-          if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+          //if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+          if(timeBin < wave.size()) nPE[timeBin]++;
         }
       }
     }
@@ -291,10 +328,25 @@ namespace opdet {
           tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           timeBin = std::floor(tphoton*fSampling);
-          if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+          //if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+          if(timeBin < wave.size()) nPE[timeBin]++;
         }
       }
     }
+    int NPre=0; int NPost=0;
+    for(size_t k=0; k<nPE.size(); k++){
+      if(nPE[k] > 0) {
+        if(fParams.SimulateNonLinearity){
+          AddSPE(k, wave, fPMTNonLinearityPtr->NObservedPE(k, nPE) );
+          NPre=NPre+nPE[k]; NPost+=fPMTNonLinearityPtr->NObservedPE(k, nPE);
+        }
+        else{
+          AddSPE(k, wave, nPE[k]);
+        }
+      }
+    }
+
+    std::cout<<" NPre: "<<NPre<<" NPost: "<<NPost<<std::endl;
 
     //Adding noise and saturation
     if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
@@ -328,29 +380,40 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave)
-  {
+  void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave, double npe)
+  {    
     size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
-    if(fParams.MakeGainFluctuations){
-      double npe=fPMTGainFluctuationsPtr->GainFluctuation(1,fEngine);
-      std::transform(min_it, max_it,
+    double npe_anode = npe;
+    if(fParams.MakeGainFluctuations)
+      npe_anode=fPMTGainFluctuationsPtr->GainFluctuation(npe, fEngine);
+
+    //std::cout<<npe<<" "<<npe_anode<<std::endl;
+    /* std::transform(min_it, max_it,
                      fSinglePEWave.begin(), min_it,
-                     [npe](auto a, auto b) { return a+npe*b; });
+                     [npe_an](auto a, auto b) { return a+npe_an*b; });
     }
     else{
       std::transform(min_it, max_it,
                    fSinglePEWave.begin(), min_it,
                    std::plus<double>( ));
-    }
+    }*/
+
+    std::transform(min_it, max_it,
+                     fSinglePEWave.begin(), min_it,
+                     [npe_anode](auto a, auto b) { return a+npe_anode*b; });
   }
 
 
   void DigiPMTSBNDAlg::CreateSaturation(std::vector<double>& wave)
   {
-    std::replace_if(wave.begin(), wave.end(),
-                    [&](auto w){return w < saturation;}, saturation);
+    if(fPositivePolarity)
+      std::replace_if(wave.begin(), wave.end(),
+                      [&](auto w){return w > fADCSaturation;}, fADCSaturation);
+    else
+      std::replace_if(wave.begin(), wave.end(),
+                        [&](auto w){return w < fADCSaturation;}, fADCSaturation);
   }
 
 
@@ -468,7 +531,7 @@ namespace opdet {
     // settings
     fBaseConfig.PMTChargeToADC           = config.pmtchargeToADC();
     fBaseConfig.PMTBaseline              = config.pmtbaseline();
-    fBaseConfig.PMTSaturation            = config.pmtsaturation();
+    fBaseConfig.PMTADCDynamicRange       = config.pmtADCDynamicRange();
     fBaseConfig.PMTCoatedVUVEff          = config.pmtcoatedVUVEff();
     fBaseConfig.PMTCoatedVISEff          = config.pmtcoatedVISEff();
     fBaseConfig.PMTUncoatedEff           = config.pmtuncoatedEff();
@@ -482,8 +545,8 @@ namespace opdet {
     fBaseConfig.TTS                      = config.tts();
     fBaseConfig.CableTime                = config.cableTime();
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
-    fBaseConfig.MakeGainFluctuations     = config.makeGainFluctuations();
-    config.gainFluctuationsParams.get_if_present(fBaseConfig.GainFluctuationsParams);
+    fBaseConfig.MakeGainFluctuations = config.gainFluctuationsParams.get_if_present(fBaseConfig.GainFluctuationsParams);
+    fBaseConfig.SimulateNonLinearity = config.nonLinearityParams.get_if_present(fBaseConfig.NonLinearityParams);
   }
 
   std::unique_ptr<DigiPMTSBNDAlg>
