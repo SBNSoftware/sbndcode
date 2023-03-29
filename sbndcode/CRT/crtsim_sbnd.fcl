@@ -11,7 +11,6 @@
 # modules
 #
 
-#include "detsimmodules_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
 #include "crtslimmer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"

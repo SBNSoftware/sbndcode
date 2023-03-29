@@ -54,8 +54,8 @@ class SBNDGeometryIteratorTestFixture:
   geo::GeometryIteratorTestAlg Tester;
   
   /// Constructor: initialize the tester with the Geometry from base class
-  SBNDGeometryIteratorTestFixture(): Tester(TesterParameters())
-    { Tester.Setup(*Geometry()); }
+  SBNDGeometryIteratorTestFixture(): Tester(Geometry())
+    {}
 
 }; // class SBNDGeometryIteratorTestFixture
 
@@ -104,4 +104,3 @@ BOOST_AUTO_TEST_CASE( WireIteratorsTest )
 */
 
 BOOST_AUTO_TEST_SUITE_END()
-

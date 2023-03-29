@@ -53,9 +53,9 @@ void HitAnalysisAlg::setup(const geo::GeometryCore&           geometry,
     // Make a directory for these histograms
 //    art::TFileDirectory dir = tfs->mkdir(fLocalDirName.c_str());
 
-    fHitsByWire[0]            = std::make_unique<TH1D>("HitsByWire0", ";Wire #", fGeometry->Nwires(0), 0., fGeometry->Nwires(0));
-    fHitsByWire[1]            = std::make_unique<TH1D>("HitsByWire1", ";Wire #", fGeometry->Nwires(1), 0., fGeometry->Nwires(1));
-    fHitsByWire[2]            = std::make_unique<TH1D>("HitsByWire2", ";Wire #", fGeometry->Nwires(2), 0., fGeometry->Nwires(2));
+    fHitsByWire[0]            = std::make_unique<TH1D>("HitsByWire0", ";Wire #", fGeometry->Nwires(geo::PlaneID(0, 0, 0)), 0., fGeometry->Nwires(geo::PlaneID(0, 0, 0)));
+    fHitsByWire[1]            = std::make_unique<TH1D>("HitsByWire1", ";Wire #", fGeometry->Nwires(geo::PlaneID(0, 0, 1)), 0., fGeometry->Nwires(geo::PlaneID(0, 0, 1)));
+    fHitsByWire[2]            = std::make_unique<TH1D>("HitsByWire2", ";Wire #", fGeometry->Nwires(geo::PlaneID(0, 0, 2)), 0., fGeometry->Nwires(geo::PlaneID(0, 0, 2)));
     
     fDriftTimes[0]            = std::make_unique<TH1D>("DriftTime0",  ";time(ticks)", 3200, 0., 9600.);
     fDriftTimes[1]            = std::make_unique<TH1D>("DriftTime1",  ";time(ticks)", 3200, 0., 9600.);
@@ -122,7 +122,7 @@ void HitAnalysisAlg::setup(const geo::GeometryCore&           geometry,
     
     fBadWPulseHeight          = std::make_unique<TH1D>("BWPulseHeight", "PH (ADC)",  300,  0.,  150.);
     fBadWPulseHVsWidth        = std::make_unique<TH2D>("BWPHVsWidth",   ";PH;Width", 100,  0.,  100., 100,  0., 10.);
-    fBadWHitsByWire           = std::make_unique<TH1D>("BWHitsByWire",  ";Wire #", fGeometry->Nwires(2), 0., fGeometry->Nwires(2));
+    fBadWHitsByWire           = std::make_unique<TH1D>("BWHitsByWire",  ";Wire #", fGeometry->Nwires(geo::PlaneID(0, 0, 2)), 0., fGeometry->Nwires(geo::PlaneID(0, 0, 2)));
     
     fSPHvsIdx[0]              = std::make_unique<TH2D>("SPHVsIdx0",     ";PH;Idx", 30,  0.,  30., 100,  0., 100.);
     fSPHvsIdx[1]              = std::make_unique<TH2D>("SPHVsIdx1",     ";PH;Idx", 30,  0.,  30., 100,  0., 100.);
