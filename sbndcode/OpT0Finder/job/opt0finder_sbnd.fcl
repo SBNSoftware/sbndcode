@@ -27,8 +27,7 @@ sbnd_opt0_finder:
   FlashMatchConfig: @local::flashmatch_config
   SelectNeutrino:       true # select only potential neutrino slices (ignore unambiguous cosmics)
   CollectionPlaneOnly:  false # use the collection plane hit information only 
-  ExcludeExitingEvents: true  # if true, skip events that contain an exiting particle; 
-                              # if false, doesn't skip the event, but masks out the opdets near the exit point 
+  ExcludeExitingOpDets: true  # if true, skip opdets near an exiting by adding it to the channel mask 
   CalAreaConstants:     [ 0.0200906, 0.0200016, 0.0201293 ] # calibration constants for each plane, docdb 19505
 
   TrackConstantConversion:  false # to use constant Q/L conversion for track calorimetry objects 
@@ -54,11 +53,18 @@ sbnd_opt0_finder:
 sbnd_opt0_finder_one_to_many: @local::sbnd_opt0_finder
 sbnd_opt0_finder_one_to_many.FlashVetoTimeStart: 0
 sbnd_opt0_finder_one_to_many.FlashVetoTimeEnd: 2
-sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.UseMinuit: false
-# only need to have the CCVCorrection params set if using XArapucas (which have different efficiencies than the PMTs)
+
+# PhotonLibHypothesis configuration: configures the hypothesis generation stage
+# need to specify CCVCorrection for every optical detector if different from the GlobalEff
+# sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.GlobalQE: 0.03 # default value
+# sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.GlobalQERefl: 0.03 # default value 
 sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.CCVCorrection: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
 sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.CCVCorrectionRefl: [0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
+# QLLMatch configuration: configures the scoring stage
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.UseMinuit: false
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.SaturatedThreshold: 600
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.ChiErrorWidth: 0.1
 
 # ... for TPC 0
 sbnd_opt0_finder_one_to_many_tpc0: @local::sbnd_opt0_finder_one_to_many
@@ -74,23 +80,25 @@ sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: ["opflashtpc1","opflashtpc1xa
 # sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
 # sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.UseMinuit: false
 
+
+# WARNING: many-to-many matching is untested! 
 #
 # Configuration to run the flash matching in many flashes to many slices configuration
 #
-sbnd_opt0_finder_many_to_many: @local::sbnd_opt0_finder
-sbnd_opt0_finder_many_to_many.FlashVetoTimeStart: -1e9
-sbnd_opt0_finder_many_to_many.FlashVetoTimeEnd: +1e9
+# sbnd_opt0_finder_many_to_many: @local::sbnd_opt0_finder
+# sbnd_opt0_finder_many_to_many.FlashVetoTimeStart: -1e9
+# sbnd_opt0_finder_many_to_many.FlashVetoTimeEnd: +1e9
 
-# ... for TPC 0
-sbnd_opt0_finder_many_to_many_tpc0: @local::sbnd_opt0_finder_many_to_many
-sbnd_opt0_finder_many_to_many_tpc0.TPC: 0
-sbnd_opt0_finder_many_to_many_tpc0.OpFlashProducer: "opflashtpc0"
-sbnd_opt0_finder_many_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
+# # ... for TPC 0
+# sbnd_opt0_finder_many_to_many_tpc0: @local::sbnd_opt0_finder_many_to_many
+# sbnd_opt0_finder_many_to_many_tpc0.TPC: 0
+# sbnd_opt0_finder_many_to_many_tpc0.OpFlashProducer: "opflashtpc0"
+# sbnd_opt0_finder_many_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
 
-# ... for TPC 1
-sbnd_opt0_finder_many_to_many_tpc1: @local::sbnd_opt0_finder_many_to_many
-sbnd_opt0_finder_many_to_many_tpc1.TPC: 1
-sbnd_opt0_finder_many_to_many_tpc1.OpFlashProducer: "opflashtpc1"
-sbnd_opt0_finder_many_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
+# # ... for TPC 1
+# sbnd_opt0_finder_many_to_many_tpc1: @local::sbnd_opt0_finder_many_to_many
+# sbnd_opt0_finder_many_to_many_tpc1.TPC: 1
+# sbnd_opt0_finder_many_to_many_tpc1.OpFlashProducer: "opflashtpc1"
+# sbnd_opt0_finder_many_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
 
 END_PROLOG
