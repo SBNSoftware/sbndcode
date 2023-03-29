@@ -139,7 +139,7 @@ private:
   std::vector<int> _opch_to_use; ///< List of opch to use (will be infered from _photo_detectors)
   std::vector<int> _uncoated_pmts; ///< List of uncoated opch to use (will be infered from _opch_to_use)
   std::vector<geo::Point_t> _opch_centers; ///< List of opch cneter coordinates 
-  std::vector<int> _opch_to_mask; /// List of opch to mask-out (due to exiting particles, failed xARA flashes)
+  std::vector<int> _opch_to_mask; /// List of opch to mask-out (due to exiting particles, failed xARA flashes, apsia xARAs)
 
   opdet::sbndPDMapAlg _pds_map; ///< map for photon detector types
 
@@ -202,7 +202,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _dQdx_limit        = p.get<float>("dQdxLimit");
   _pitch_limit       = p.get<float>("PitchLimit");
 
-  _exclude_exiting   = p.get<bool>("ExcludeExitingEvents");
+  _exclude_exiting   = p.get<bool>("ExcludeExitingOpDets");
   _track_const_conv  = p.get<bool>("TrackConstantConversion");
   _shower_const_conv = p.get<bool>("ShowerConstantConversion");
 
@@ -319,23 +319,27 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   _clusterid_to_slice.clear();
 
   auto const & flash_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[tpc]);
-  auto const & flash_ara_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_ara_producer_v[tpc]);
   if(!flash_h.isValid() || flash_h->empty()) {
     mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes from producer "
                                   << _opflash_producer_v[tpc] << std::endl;
     return;
   }
-  if(!flash_ara_h.isValid() || flash_ara_h->empty()) {
-    mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes from producer "
-                                  << _opflash_ara_producer_v[tpc] << std::endl;
-    return;
-  }
 
   // Construct the vector of OpFlashes
   std::vector<art::Ptr<recob::OpFlash>> flash_pmt_v;
-  std::vector<art::Ptr<recob::OpFlash>> flash_ara_v;
   art::fill_ptr_vector(flash_pmt_v, flash_h);
-  art::fill_ptr_vector(flash_ara_v, flash_ara_h);
+  
+  // if using arapucas: 
+  std::vector<art::Ptr<recob::OpFlash>> flash_ara_v;
+  if (_use_arapucas){
+    auto const & flash_ara_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_ara_producer_v[tpc]);
+    if(!flash_ara_h.isValid() || flash_ara_h->empty()) {
+      mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes from producer "
+                                    << _opflash_ara_producer_v[tpc] << std::endl;
+      return;
+    }
+    art::fill_ptr_vector(flash_ara_v, flash_ara_h);
+  }
 
   ::art::ServiceHandle<geo::Geometry> geo;
 
@@ -354,12 +358,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
         // if the ara and pmt flashes match: 
         if (abs(flash_pmt.Time() - flash_ara.Time()) < 0.05){
           combine = true;
-          // std::vector<std::string> new_photo_detectors{"pmt_coated", "pmt_uncoated", "xarapuca_vis", "xarapuca_vuv"};
-          // auto opch_v = PDNamesToList(new_photo_detectors);
-          // auto uncoated_v = GetUncoatedPMTList(opch_v);
-          // _mgr.SetChannelMask(opch_v);
-          // _mgr.SetUncoatedPMTs(uncoated_v);
-
           if (flash_pmt.Time() > 0 && flash_pmt.Time() < 2)
             std::cout << "PMT time: " << flash_pmt.Time() << ", ARA time: " << flash_ara.Time() << std::endl;
           // add the arapuca flash PE to the pmt flash PE 
@@ -379,7 +377,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
       // if no arapuca flashes are found
       if (combine == false){
         flash_comb_v.push_back(flash_pmt);
-        // std::vector<std::string> xara_detectors{"xarapuca_vis","xarapuca_vuv"};
         auto xara_opch = PDNamesToList({"xarapuca_vis","xarapuca_vuv"}); 
         _opch_to_mask.insert(_opch_to_mask.end(), xara_opch.begin(), xara_opch.end());
       }
@@ -454,14 +451,19 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   }
 
   // Update masks
-  // ! ** TODO: masks should be applied on a slice-by-slice basis, but can only implement in on an tpc per event basis **
+  // ! ** Note: masks are applied on a per tpc per event basis ** 
+  // temp: add apsia x-arapucas to mask:
+  std::vector<int> apsia_ch{134,135,150,151,152,153,154,155,156,157,158,159,160,161,176,177};
+  for (auto apsia : apsia_ch){
+    _opch_to_mask.push_back(apsia);
+  } 
+  // temp: end temp fix 
   if (!_opch_to_mask.empty()){
     auto masked_opch_to_use = _opch_to_use;
     for (auto opch : _opch_to_mask){
       masked_opch_to_use.erase(std::remove_if(
             masked_opch_to_use.begin(), masked_opch_to_use.end(),
-            [&opch](int x) { return x == opch; }
-            ), 
+            [&opch](int x) { return x == opch; }), 
             masked_opch_to_use.end());
     } 
     auto masked_uncoated_pmts = GetUncoatedPMTList(masked_opch_to_use);
@@ -572,12 +574,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
       }
     }
     double new_score = t0.TriggerConfidence(); 
-    // std::cout << "new_score: " << new_score << std::endl;
     _score = new_score; 
-    // std::cout << "score: " << _score << std::endl;
-    // std::cout << "alt score:" << t0.TriggerConfidence() << std::endl;
-    // _score    = t0.TriggerConfidence();
-
     _tree2->Fill();
   }
 
@@ -697,27 +694,20 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           if (abs(trk_start.X()) >= 198.0) {exit_pt = trk_start; uncontained = true;}
           else if (abs(trk_end.X()) >= 198.0) {exit_pt = trk_end; uncontained = true;}
 
-          if (uncontained){
+          if (uncontained && _exclude_exiting){
             std::cout << "Found particle with exit point: " << exit_pt.X() << ", " << exit_pt.Y() << ", " << exit_pt.Z() << std::endl;
-            if (_exclude_exiting){
-              mf::LogWarning("SBNDOpT0Finder") << "Skipping event with exiting particle." << std::endl;
-              return false;
-            }
-            else{
-              int tpc = (exit_pt.X() > 0)? 1 : 0; 
-              // std::cout << "theta:   " << (180./3.14)*track->Theta() << std::endl;
-              // std::cout << "zenith:  " << (180./3.14)*track->ZenithAngle() << std::endl;
-              for (size_t opch=0; opch < geo->NOpDets(); opch++){
-                if (int(opch)%2 != tpc) continue;
-                // only coated PMTs and vuv arapucas will be affected by direct light
-                if (_pds_map.isPDType(opch, "pmt_uncoated") || _pds_map.isPDType(opch, "xarapuca_vis")) continue;
-                if (!_use_arapucas && _pds_map.isPDType(opch, "xarapuca_vuv")) continue;
-                auto center = _opch_centers.at(opch);
-                // TODO: don't have these values hardcoded 
-                if ((abs(center.Z() - (exit_pt.Z() + 75*std::cos(track->Theta()))) <= 75) && 
-                    (abs(center.Y() - (exit_pt.Y() + 75*std::cos(track->ZenithAngle()))) <= 75)){
-                  exit_opch.push_back(opch);
-                }
+
+            int tpc = (exit_pt.X() > 0)? 1 : 0; 
+            for (size_t opch=0; opch < geo->NOpDets(); opch++){
+              if (int(opch)%2 != tpc) continue;
+              // only coated PMTs and vuv arapucas will be affected by direct light
+              if (_pds_map.isPDType(opch, "pmt_uncoated") || _pds_map.isPDType(opch, "xarapuca_vis")) continue;
+              if (!_use_arapucas && _pds_map.isPDType(opch, "xarapuca_vuv")) continue;
+              auto center = _opch_centers.at(opch);
+              // TODO: don't have these values hardcoded 
+              if ((abs(center.Z() - (exit_pt.Z() + 75*std::cos(track->Theta()))) <= 75) && 
+                  (abs(center.Y() - (exit_pt.Y() + 75*std::cos(track->ZenithAngle()))) <= 75)){
+                exit_opch.push_back(opch);
               }
             }
           }
@@ -727,7 +717,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             // ** calo section ** 
             // access the vector from the association, **not necessarily ordered by planes** 
             std::vector<art::Ptr<anab::Calorimetry>> calo_assn_v = trk_to_calo.at(track.key());
-            // fill a different vector that is **correctly ordered** 
+            // fill a different vector that is **correctly ordered** by plane 
             std::vector<art::Ptr<anab::Calorimetry>> calo_v(3);
             for (auto calo : calo_assn_v){
               if (calo->PlaneID().Plane == 0) calo_v.at(0) = calo;
@@ -811,7 +801,17 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             for (size_t n_spacepoint = 0; n_spacepoint < spacepoint_v.size(); n_spacepoint++) {
               auto spacepoint = spacepoint_v[n_spacepoint];
               std::vector<art::Ptr<recob::Hit>> hit_v = spacepoint_to_hits.at(spacepoint.key());
-              
+              if (!_collection_only){ // find best track planes if other planes are allowed 
+                int nhit0_trk=0; int nhit1_trk=0; int nhit2_trk=0;
+                for (size_t n_hit = 0; n_hit < hit_v.size(); n_hit++) {
+                  auto hit = hit_v[n_hit];
+                  if (hit->View() == 0 && hit->WireID().TPC == tpc) nhit0_trk++; 
+                  if (hit->View() == 1 && hit->WireID().TPC == tpc) nhit1_trk++; 
+                  if (hit->View() == 2 && hit->WireID().TPC == tpc) nhit2_trk++;
+                 } 
+                const int maxHits = std::max({ nhit0_trk, nhit1_trk, nhit2_trk});
+                bestPlane_trk = ((nhit2_trk == maxHits) ? 2 : (nhit1_trk == maxHits) ? 1 : (nhit0_trk == maxHits) ? 0 : -1);
+              } 
               for (size_t n_hit = 0; n_hit < hit_v.size(); n_hit++) {
                 auto hit = hit_v[n_hit];
                 // Only select hits from the collection plane/best plane and in the specified TPC
@@ -868,7 +868,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
                   if (hit->View() == 1 && hit->WireID().TPC == tpc) nhit1_shw++; 
                   if (hit->View() == 2 && hit->WireID().TPC == tpc) nhit2_shw++;
                 }
-                std::cout << "0, 1, 2: " << nhit0_shw << ", " << nhit1_shw << ", " << nhit2_shw << std::endl;
+                // std::cout << "0, 1, 2: " << nhit0_shw << ", " << nhit1_shw << ", " << nhit2_shw << std::endl;
                 const int maxHits = std::max({ nhit0_shw, nhit1_shw, nhit2_shw});
                 bestPlane_shw = ((nhit2_shw == maxHits) ? 2 : (nhit1_shw == maxHits) ? 1 : (nhit0_shw == maxHits) ? 0 : -1);
               }
@@ -890,7 +890,10 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
  
               if ( _shower_const_conv) nphotons = charge*_shower_to_photons;
               // if (!_shower_const_conv) nphotons = (integral_weight*energy_shw)/(19.5e-6) - charge;
-
+              else{
+                std::cout << "Only have shower constant conversion calculation... using constant conversion" << std::endl;
+                nphotons = charge*_shower_to_photons;
+              }
               // Emplace this point with charge to the light cluster
               light_cluster.emplace_back(position[0],
                                         position[1],
