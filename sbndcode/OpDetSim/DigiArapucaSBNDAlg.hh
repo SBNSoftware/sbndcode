@@ -275,7 +275,7 @@ namespace opdet {
       };
 
       fhicl::OptionalDelegatedParameter hdOpticalWaveformParams {
-        Name("HDOpticalWaveformParams"),
+        Name("HDOpticalWaveformParamsXARAPUCA"),
         Comment("Parameters used for high definition waveform")
       };
 
