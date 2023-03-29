@@ -30,7 +30,7 @@ sbnd_digiarapuca_alg:
   DaphneFrequency:           80.0    #in MHz. Frequency of the Daphne Readouts
   MakeAmpFluctuations:       true
   AmpFluctuation:            0.099   #STD of the first PE Gaussian
-  HDOpticalWaveformParams: @local::IncludeHDOpticalWaveforms_XARAPUCA
+  HDOpticalWaveformParamsXARAPUCA: @local::IncludeHDOpticalWaveforms_XARAPUCA
 }
 
 END_PROLOG
