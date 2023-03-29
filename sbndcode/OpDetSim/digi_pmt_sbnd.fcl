@@ -1,5 +1,6 @@
 #include "detsimmodules.fcl"
 #include "pmtgainfluctuations_config.fcl"
+#include "HDOpticalWaveforms_config.fcl"
 
 BEGIN_PROLOG
 
@@ -35,6 +36,7 @@ sbnd_digipmt_alg:
 
   MakeGainFluctuations: true
   GainFluctuationsParams: @local::FirstDynodeGainFluctuations
+  HDOpticalWaveformParamsPMT: @local::IncludeHDOpticalWaveforms_PMT
 }
 
 END_PROLOG
