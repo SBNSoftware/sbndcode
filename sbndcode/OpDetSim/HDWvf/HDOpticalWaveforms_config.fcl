@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+IncludeHDOpticalWaveforms_XARAPUCA:
+{
+  tool_type: "HDOpticalWaveforms"
+
+  ResolutionIncrease: 10.
+}
+
+IncludeHDOpticalWaveforms_PMT:
+{
+  tool_type: "HDOpticalWaveforms"
+
+  ResolutionIncrease: 2.
+}
+
+END_PROLOG
