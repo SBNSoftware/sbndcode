@@ -60,13 +60,14 @@ namespace opdet {
       std::vector<double>* SinglePEVec_40ftCable_Daphne;
       std::vector<double>* SinglePEVec_40ftCable_Apsaia;
       file->GetObject("SinglePEVec_40ftCable_Apsaia", SinglePEVec_40ftCable_Apsaia);
-      file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_40ftCable_Daphne);
+      file->GetObject("SinglePEVec_40ftCable_Daphne_HD", SinglePEVec_40ftCable_Daphne);
       fWaveformSP = *SinglePEVec_40ftCable_Apsaia;
       fWaveformSP_Daphne = *SinglePEVec_40ftCable_Daphne;
 
       // Prepare HD waveforms
       fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
       fPMTHDOpticalWaveformsPtr->produceSER_HD(fWaveformSP_Daphne_HD,fWaveformSP_Daphne);
+      mf::LogDebug("DigiArapucaSBNDAlg")<<"HD wvfs size: "<<fWaveformSP_Daphne_HD[0].size();
     }
     else{
       mf::LogDebug("DigiArapucaSBNDAlg") << " using ideal pe response";

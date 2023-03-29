@@ -37,8 +37,7 @@ namespace opdet {
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
     sp.find_file(fParams.PMTDataFile, fname);
-    // TFile* file = TFile::Open(fname.c_str(), "READ");
-    TFile* file = TFile::Open("/sbnd/app/users/rodrigoa/detsim_PR/new_digi_pmt_sbnd.root", "READ");
+    TFile* file = TFile::Open(fname.c_str(), "READ");
 
     // TPB emission time histogram for pmt_coated histogram
     std::vector<double>* timeTPB_p;
@@ -50,7 +49,7 @@ namespace opdet {
     if (fParams.PMTSinglePEmodel) {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
       std::vector<double>* SinglePEVec_p;
-      file->GetObject("SinglePEVec_HD_cubic", SinglePEVec_p);
+      file->GetObject("SinglePEVec_HD", SinglePEVec_p);
       fSinglePEWave = *SinglePEVec_p;
 
       // Prepare HD waveforms
@@ -58,6 +57,7 @@ namespace opdet {
       fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD,fSinglePEWave);
 
       pulsesize = fSinglePEWave_HD[0].size();
+      mf::LogDebug("DigiPMTSBNDAlg")<<"HD wvfs size: "<<pulsesize;
     }
     else {
       mf::LogDebug("DigiPMTSBNDAlg") << " using ideal pe response";
