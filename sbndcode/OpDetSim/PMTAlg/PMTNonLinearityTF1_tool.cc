@@ -99,12 +99,13 @@ opdet::PMTNonLinearityTF1::PMTNonLinearityTF1(art::ToolConfigTable<Config> const
   for(size_t pe=fNonLinearRange[0]; pe<fNonLinearRange[1]; pe++){
     fPEAttenuation_V[pe] = fNonLinearTF1->Eval(pe)/pe;
   }
-  fPESaturationValue = fPEAttenuation_V[fNonLinearRange[1]-1];
+  fPESaturationValue = fNonLinearTF1->Eval(fNonLinearRange[1]);
 
   std::cout<<" fAttFunc:  ";
   for(size_t pe=0; pe<fNonLinearRange[1]; pe++){
     std::cout<<pe<<":"<<pe*fPEAttenuation_V[pe]<<":"<<fPEAttenuation_V[pe]<<"  ";
   }
+  std::cout<<" PESatValue: "<<fPESaturationValue<<std::endl;
 
 }
 
