@@ -84,8 +84,8 @@
   <!-- VertexAlgorithms -->
   <!-- 3D neutrino vertex reconstruction -->                 
   <algorithm type = "LArCheatingVertexCreation">             
-    <OutputVertexListName>NVertices</OutputVertexListName>   
-    <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
+    <OutputVertexListName>NeutrinoVertices3D</OutputVertexListName>   
+    <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList> 
     <VertexXCorrection>0</VertexXCorrection>                 
   </algorithm>                                               
 
