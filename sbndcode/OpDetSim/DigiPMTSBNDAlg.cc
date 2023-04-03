@@ -36,6 +36,7 @@ namespace opdet {
         << fParams.larProp->ScintPreScale();
 
     fSampling = fSampling / 1000.0; //in GHz, to cancel with ns
+    fSamplingPeriod = 1./fSampling;
 
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
@@ -52,9 +53,15 @@ namespace opdet {
     if (fParams.PMTSinglePEmodel) {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
       std::vector<double>* SinglePEVec_p;
-      file->GetObject("SinglePEVec", SinglePEVec_p);
+      file->GetObject("SinglePEVec_HD", SinglePEVec_p);
       fSinglePEWave = *SinglePEVec_p;
-      pulsesize = fSinglePEWave.size();
+
+      // Prepare HD waveforms
+      fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
+      fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD,fSinglePEWave);
+
+      pulsesize = fSinglePEWave_HD[0].size();
+      mf::LogDebug("DigiPMTSBNDAlg")<<"HD wvfs size: "<<pulsesize;
     }
     else {
       mf::LogDebug("DigiPMTSBNDAlg") << " using ideal pe response";
@@ -160,7 +167,7 @@ namespace opdet {
   {
     double ttsTime = 0;
     double tphoton;
-    size_t timeBin;
+    double timeBin;
     double ttpb=0;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
       if(fFlatGen.fire(1.0) < fPMTUncoatedEff) {
@@ -168,7 +175,7 @@ namespace opdet {
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + simphotons[i].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-        timeBin = std::floor(tphoton*fSampling);
+        timeBin = tphoton*fSampling;
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
@@ -189,7 +196,7 @@ namespace opdet {
 
     double ttsTime = 0;
     double tphoton;
-    size_t timeBin;
+    double timeBin;
     double ttpb=0;
     sim::SimPhotons auxphotons;
 
@@ -202,7 +209,7 @@ namespace opdet {
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-        timeBin = std::floor(tphoton*fSampling);
+        timeBin = tphoton*fSampling;
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
@@ -215,7 +222,7 @@ namespace opdet {
         ttpb = fTimeTPB->fire(); //for including TPB emission time
         tphoton = ttsTime + auxphotons[j].Time - t_min + ttpb + fParams.CableTime;
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-        timeBin = std::floor(tphoton*fSampling);
+        timeBin = tphoton*fSampling;
         if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
       }
     }
@@ -238,12 +245,14 @@ namespace opdet {
     size_t accepted_photons;
     double ttsTime = 0;
     double tphoton;
-    size_t timeBin;
     double ttpb=0;
 
-    std::vector<unsigned int> nPE(wave.size(), 0);
+    // we want to keep the 1 ns SimPhotonLite resolution
+    // digitizer sampling period is 2 ns
+    // create a PE accumulator vector with size x2 the waveform size
+    std::vector<unsigned int> nPE_v( (size_t) fSampling*wave.size(), 0);
 
-    // reflected light to be added to all PMTs
+    // here litesimphotons corresponds only to reflected light
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
     for (auto const& reflectedPhotons : photonMap) {
       // TODO: check that this new approach of not using the last
@@ -251,23 +260,24 @@ namespace opdet {
       mean_photons = reflectedPhotons.second*fPMTUncoatedEff;
       accepted_photons = fPoissonQGen.fire(mean_photons);
       for(size_t i = 0; i < accepted_photons; i++) {
-        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
-        ttpb = fTimeTPB->fire(); //for including TPB emission time
+        if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
+        ttpb = fTimeTPB->fire(); // TPB emission time (cathode foils)
+
+        //photon time in ns (w.r.t. the waveform start time a.k.a t_min)
         tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
-        if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-        timeBin = std::floor(tphoton*fSampling);
-        //if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
-        if(timeBin < wave.size()) nPE[timeBin]++;
+        
+        // store the pgoton time if it's within the readout window
+        if(tphoton > 0 && tphoton < nPE_v.size()) nPE_v[(size_t)tphoton]++;
       }
     }
 
-    for(size_t k=0; k<nPE.size(); k++){
-      if(nPE[k] > 0) {
+    for(size_t t=0; t<nPE_v.size(); t++){
+      if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(k, wave, fPMTNonLinearityPtr->NObservedPE(k, nPE) );
+          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
         }
         else{
-          AddSPE(k, wave, nPE[k]);
+          AddSPE(t, wave, nPE_v[t]);
         }
       }
     }
@@ -291,10 +301,12 @@ namespace opdet {
     size_t accepted_photons;
     double ttsTime = 0;
     double tphoton;
-    size_t timeBin;
     double ttpb;
 
-    std::vector<unsigned int> nPE(wave.size(), 0);
+    // we want to keep the 1 ns SimPhotonLite resolution
+    // digitizer sampling period is 2 ns
+    // create a PE accumulator vector with size x2 the waveform size
+    std::vector<unsigned int> nPE_v( (size_t) fSampling*wave.size(), 0);
 
     // direct light
     if ( auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) ){
@@ -305,12 +317,13 @@ namespace opdet {
         accepted_photons = fPoissonQGen.fire(mean_photons);
         for(size_t i = 0; i < accepted_photons; i++) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-          ttpb = fTimeTPB->fire(); //for including TPB emission time
+          ttpb = fTimeTPB->fire(); // TPB emission time (PMT coating)
+
+          //photon time in ns (w.r.t. the waveform start time a.k.a t_min)
           tphoton = ttsTime + directPhotons.first - t_min + ttpb + fParams.CableTime;
-          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-          timeBin = std::floor(tphoton*fSampling);
-          //if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
-          if(timeBin < wave.size()) nPE[timeBin]++;
+
+          // store the pgoton time if it's within the readout window
+          if(tphoton > 0 && tphoton < nPE_v.size()) nPE_v[(size_t)tphoton]++;
         }
       }
     }
@@ -324,28 +337,29 @@ namespace opdet {
         accepted_photons = fPoissonQGen.fire(mean_photons);
         for(size_t i = 0; i < accepted_photons; i++) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
-          ttpb = fTimeTPB->fire(); //for including TPB emission time
+          ttpb = fTimeTPB->fire(); // TPB emission time (in the cathode foils)
+          
+          //photon time in ns (w.r.t. the waveform start time a.k.a t_min)
           tphoton = ttsTime + reflectedPhotons.first - t_min + ttpb + fParams.CableTime;
-          if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
-          timeBin = std::floor(tphoton*fSampling);
-          //if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
-          if(timeBin < wave.size()) nPE[timeBin]++;
+
+          // store the pgoton time if it's within the readout window
+          if(tphoton > 0 && tphoton < nPE_v.size()) nPE_v[(size_t)tphoton]++;
         }
       }
     }
+    
     int NPre=0; int NPost=0;
-    for(size_t k=0; k<nPE.size(); k++){
-      if(nPE[k] > 0) {
+    for(size_t t=0; t<nPE_v.size(); t++){
+      if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(k, wave, fPMTNonLinearityPtr->NObservedPE(k, nPE) );
-          NPre=NPre+nPE[k]; NPost+=fPMTNonLinearityPtr->NObservedPE(k, nPE);
+          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          NPre=NPre+nPE_v[t]; NPost+=fPMTNonLinearityPtr->NObservedPE(t, nPE_v);
         }
         else{
-          AddSPE(k, wave, nPE[k]);
+          AddSPE(t, wave, nPE_v[t]);
         }
       }
     }
-
     std::cout<<" NPre: "<<NPre<<" NPost: "<<NPost<<std::endl;
 
     //Adding noise and saturation
@@ -380,28 +394,29 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::AddSPE(size_t time_bin, std::vector<double>& wave, double npe)
-  {    
+  void DigiPMTSBNDAlg::AddSPE(size_t time, std::vector<double>& wave, double npe)
+  {
+    // time bin HD (double precision)
+    // used to gert the time-shifted SER
+    double time_bin_hd = fSampling*time;
+    size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(time_bin_hd);
+
+    std::cout<<" TimeShift: "<<time_bin_hd<<" "<<wvf_shift<<std::endl;
+    
+    // get actual time bin and waveform min/max iterators
+    size_t time_bin=std::floor(time_bin_hd);
     size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
     auto min_it = std::next(wave.begin(), time_bin);
     auto max_it = std::next(wave.begin(), max);
+    
+    // simulate gain fluctuations
     double npe_anode = npe;
     if(fParams.MakeGainFluctuations)
       npe_anode=fPMTGainFluctuationsPtr->GainFluctuation(npe, fEngine);
 
-    //std::cout<<npe<<" "<<npe_anode<<std::endl;
-    /* std::transform(min_it, max_it,
-                     fSinglePEWave.begin(), min_it,
-                     [npe_an](auto a, auto b) { return a+npe_an*b; });
-    }
-    else{
-      std::transform(min_it, max_it,
-                   fSinglePEWave.begin(), min_it,
-                   std::plus<double>( ));
-    }*/
-
+    // add SER to the waveform
     std::transform(min_it, max_it,
-                     fSinglePEWave.begin(), min_it,
+                     fSinglePEWave_HD[wvf_shift].begin(), min_it,
                      [npe_anode](auto a, auto b) { return a+npe_anode*b; });
   }
 
@@ -440,7 +455,7 @@ namespace opdet {
 
   void DigiPMTSBNDAlg::AddDarkNoise(std::vector<double>& wave)
   {
-    size_t timeBin;
+    double timeBin;
     // Multiply by 10^9 since fParams.DarkNoiseRate is in Hz (conversion from s to ns)
     double mean =  1000000000.0 / fParams.PMTDarkNoiseRate;
     double darkNoiseTime = fExponentialGen.fire(mean);
@@ -547,6 +562,7 @@ namespace opdet {
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
     fBaseConfig.MakeGainFluctuations = config.gainFluctuationsParams.get_if_present(fBaseConfig.GainFluctuationsParams);
     fBaseConfig.SimulateNonLinearity = config.nonLinearityParams.get_if_present(fBaseConfig.NonLinearityParams);
+    config.hdOpticalWaveformParams.get_if_present(fBaseConfig.HDOpticalWaveformParams);
   }
 
   std::unique_ptr<DigiPMTSBNDAlg>

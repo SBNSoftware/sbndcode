@@ -40,6 +40,7 @@
 
 #include "sbndcode/OpDetSim/PMTAlg/PMTGainFluctuations.hh"
 #include "sbndcode/OpDetSim/PMTAlg/PMTNonLinearity.hh"
+#include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
 
 #include "TFile.h"
 
@@ -71,6 +72,8 @@ namespace opdet {
       bool SimulateNonLinearity; //Fluctuate PMT gain
       fhicl::ParameterSet NonLinearityParams;
       
+      fhicl::ParameterSet HDOpticalWaveformParams;
+
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       double frequency;       //wave sampling frequency (GHz)
       CLHEP::HepRandomEngine* engine = nullptr;
@@ -123,6 +126,7 @@ namespace opdet {
     ConfigurationParameters_t fParams;
     // Declare member data here.
     double fSampling;       //wave sampling frequency (GHz)
+    double fSamplingPeriod; //wave sampling period (ns)
     double fPMTCoatedVUVEff;
     double fPMTCoatedVISEff;
     double fPMTUncoatedEff;
@@ -143,15 +147,18 @@ namespace opdet {
 
     //PMTFluctuationsAlg
     std::unique_ptr<opdet::PMTGainFluctuations> fPMTGainFluctuationsPtr;
+    //HDWaveforms
+    std::unique_ptr<opdet::HDOpticalWaveform> fPMTHDOpticalWaveformsPtr;
 
     //PMTNonLinearity
     std::unique_ptr<opdet::PMTNonLinearity> fPMTNonLinearityPtr;
 
-    void AddSPE(size_t time_bin, std::vector<double>& wave, double npe = 1); // add single pulse to auxiliary waveform
+    void AddSPE(size_t time, std::vector<double>& wave, double npe = 1); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
     std::vector<double> fSinglePEWave; // single photon pulse vector
+    std::vector<std::vector<double>> fSinglePEWave_HD; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
@@ -289,6 +296,11 @@ namespace opdet {
       fhicl::OptionalDelegatedParameter nonLinearityParams {
         Name("NonLinearityParams"),
         Comment("Parameters used for simulating PMT non linear effects")
+      };
+      
+      fhicl::OptionalDelegatedParameter hdOpticalWaveformParams {
+        Name("HDOpticalWaveformParamsPMT"),
+        Comment("Parameters used for high definition waveform")
       };
 
     };    //struct Config

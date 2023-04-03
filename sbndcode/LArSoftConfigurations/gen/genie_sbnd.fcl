@@ -174,14 +174,28 @@ sbnd_flux_bnb_nu_Iv1_test1: {
 }
 
 
+#
+# Booster Neutrino Beam, neutrino mode, configuration J (v1)
+#
+sbnd_flux_bnb_nu_Jv1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configJ-v1/feb2023/neutrinoMode/"
+  FluxFiles: [ "gsimple_bnb_neutrino_sbnd_v2_wvtxt_20210322_*.root" ]
+}
+
+sbnd_flux_bnb_nu_Jv1_test1: {
+  @table::sbnd_flux_bnb_nu_Jv1
+  FluxFiles: [ "gsimple_bnb_neutrino_sbnd_v2_wvtxt_20210322_1969.root" ]
+}
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Booster Neutrino Beam, neutrino mode, "default" configuration
 #
-sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Hv1
-sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Hv1_test1
+sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Jv1
+sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Jv1_test1
 
 #
 # Booster Neutrino Beam, interaction from dirt
@@ -281,6 +295,7 @@ sbnd_genie: {
   #EventGeneratorList:      "Default+CCMEC+NCMEC" # Only needed to generate partial samples in GENIE v3
    DefinedVtxHistRange: true
    VtxPosHistRange:     [ -210, 210, -210, 210, -10, 510 ]
+   AddGenieVtxTime: true		#Enable adding time of flight to neutrino vertex   
 } # sbnd_genie
 
 sbnd_genie_hist: {

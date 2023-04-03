@@ -1,6 +1,7 @@
 #include "detsimmodules.fcl"
 #include "pmtgainfluctuations_config.fcl"
 #include "pmtnonlinearity_config.fcl"
+#include "HDOpticalWaveforms_config.fcl"
 
 BEGIN_PROLOG
 
@@ -42,6 +43,7 @@ sbnd_digipmt_alg:
   # (comment-out to skip non linearities simulation)
   NonLinearityParams: @local::PMTNonLinearityTF1
 
+  HDOpticalWaveformParamsPMT: @local::IncludeHDOpticalWaveforms_PMT
 }
 
 END_PROLOG

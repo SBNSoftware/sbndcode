@@ -10,6 +10,9 @@
 #define SBND_OPDETSIM_DIGIARAPUCASBNDALG_HH
 
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/DelegatedParameter.h"
+#include "fhiclcpp/types/OptionalDelegatedParameter.h"
+
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
 #include "CLHEP/Random/RandFlat.h"
@@ -17,6 +20,7 @@
 #include "CLHEP/Random/RandGeneral.h"
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
+#include "art/Utilities/make_tool.h"
 
 #include <algorithm>
 #include <memory>
@@ -33,6 +37,8 @@
 #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
+
+#include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
 
 #include "TFile.h"
 
@@ -67,6 +73,7 @@ namespace opdet {
       double frequency_Daphne; ///< Optical-clock frequency for daphne readouts	
 
       CLHEP::HepRandomEngine* engine = nullptr;
+      fhicl::ParameterSet HDOpticalWaveformParams;
     };// ConfigurationParameters_t
 
     //Default constructor
@@ -116,7 +123,13 @@ namespace opdet {
 
     std::vector<double> fWaveformSP; //single photon pulse vector
     std::vector<double> fWaveformSP_Daphne; //single photon pulse vector
+    std::vector<std::vector<double>> fWaveformSP_Daphne_HD; //single photon pulse vector
+    
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
+
+    //HDWaveforms
+    std::unique_ptr<opdet::HDOpticalWaveform> fPMTHDOpticalWaveformsPtr;
+
 
     void CreatePDWaveform(sim::SimPhotons const& SimPhotons,
                           double t_min,
@@ -141,6 +154,7 @@ namespace opdet {
                                      bool is_daphne);
     void AddSPE(size_t time_bin, std::vector<double>& wave, const std::vector<double>& fWaveformSP, int nphotons); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave,const double sampling);
+    // void produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER);
     void AddLineNoise(std::vector<double>& wave);
     void AddDarkNoise(std::vector<double>& wave , std::vector<double>& WaveformSP);
     double FindMinimumTime(sim::SimPhotons const& simphotons);
@@ -258,6 +272,11 @@ namespace opdet {
       fhicl::Atom<double> ampFluctuation {
         Name("AmpFluctuation"),
         Comment("Std of the gaussian fit (from data) to the 1PE distribution. Relative units i.e.: AmpFluctuation=0.1-> Amp(1PE)= 18+-1.8 ADC counts")
+      };
+
+      fhicl::OptionalDelegatedParameter hdOpticalWaveformParams {
+        Name("HDOpticalWaveformParamsXARAPUCA"),
+        Comment("Parameters used for high definition waveform")
       };
 
 
