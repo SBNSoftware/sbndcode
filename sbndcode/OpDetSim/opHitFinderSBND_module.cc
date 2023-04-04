@@ -88,8 +88,6 @@ namespace opdet {
     std::string opdetType;
     std::string electronicsType;
     int threshold;
-    std::vector<double> fwaveform;
-    std::vector<double> outwvform;
     //int fSize;
     //int fTimePMT;         //Start time of PMT signal
     //int fTimeMax;         //Time of maximum (minimum) PMT signal
@@ -136,25 +134,25 @@ namespace opdet {
     mf::LogInfo("opHitFinder") << "Event #" << fEvNumber;
 
     std::unique_ptr< std::vector< recob::OpHit > > pulseVecPtr(std::make_unique< std::vector< recob::OpHit > > ());
+    std::vector<double> fwaveform;
+    std::vector<double> outwvform;
     fwaveform.reserve(30000); // TODO: no hardcoded value
     outwvform.reserve(30000); // TODO: no hardcoded value
 
     art::ServiceHandle<art::TFileService> tfs;
     art::Handle< std::vector< raw::OpDetWaveform > > wvfHandle;
-    std::vector<art::Ptr<raw::OpDetWaveform>> wvfList;
-    if(e.getByLabel(fInputModuleName, wvfHandle))
-      art::fill_ptr_vector(wvfList, wvfHandle);
-
-    if(!wvfHandle.isValid()) {
+    auto const wvfH = e.getHandle<std::vector<raw::OpDetWaveform>>(fInputModuleName);
+    if(!wvfH) {
       mf::LogWarning("opHitFinder") << Form("Did not find any waveform");
+      e.put(std::move(pulseVecPtr));
+      return;
     }
 
     size_t timebin = 0;
     double FWHM = 1, Area = 0, phelec, fasttotal = 3./4., rms = 0, amplitude = 0, time = 0;
     unsigned short frame = 1;
     //int histogram_number = 0;
-    for(auto const& wvf_P : wvfList) {
-      auto const& wvf = *wvf_P;
+    for(auto const& wvf : *wvfH) {
       if (wvf.size() == 0 ) {
         mf::LogInfo("opHitFinder") << "Empty waveform, continue.";
         continue;
@@ -215,10 +213,8 @@ namespace opdet {
         recob::OpHit opHit(fChNumber, time, time, frame, FWHM, Area, amplitude, phelec, fasttotal);
         pulseVecPtr->emplace_back(opHit);
       } // while findAndSuppressPeak()
-    } // for(auto const& wvf : (*wvfHandle)){
+    }
     e.put(std::move(pulseVecPtr));
-    std::vector<double>().swap(fwaveform); // clear and release the memory of fwaveform
-    std::vector<double>().swap(outwvform); // clear and release the memory of outwvform
   } // void opHitFinderSBND::produce(art::Event & e)
 
   DEFINE_ART_MODULE(opHitFinderSBND)

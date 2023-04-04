@@ -244,15 +244,11 @@ void ana::PFPSliceValidation::analyze(art::Event const &evt) {
   //std::vector<art::Handle<std::vector<recob::Hit>>> hitHandles;
   //evt.getManyByType(hitHandles);
   auto hitHandles = evt.getMany<std::vector<recob::Hit>>();
-  //std::vector<art::Handle<std::vector<recob::Vertex>>> vertexHandles;
-  //evt.getManyByType(vertexHandles);
-  auto vertexHandles = evt.getMany<std::vector<recob::Vertex>>();
 
   // Set the handles
   art::Handle<std::vector<recob::Hit>> hitHandle;
   art::Handle<std::vector<recob::PFParticle>> pfpHandle;
   art::Handle<std::vector<recob::Slice>> sliceHandle;
-  art::Handle<std::vector<recob::Vertex>> vertexHandle;
 
   // Get all the hits
   std::vector<art::Ptr<recob::Hit>> allHits;
@@ -293,12 +289,9 @@ void ana::PFPSliceValidation::analyze(art::Event const &evt) {
       art::fill_ptr_vector(pfps, pfpHandle);
 
     art::FindOneP<recob::Vertex> fopfv(pfpHandle, evt, fPFParticleLabel);
-    if (fopfv.isValid() && fopfv.size() > 0) {
-      evt.get(fopfv.at(0).id(), vertexHandle);
-      if (!vertexHandle.isValid()) {
-        std::cout << "Vertex handle not valid" << std::endl;
+    if (!fopfv.isValid() || fopfv.size() == 0) {
+      std::cout << "FindMany Vertex handle not valid" << std::endl;
         return;
-      }
     }
 
     art::FindManyP<recob::Hit> fmSliceHits(pfpSliceVec, evt, fPFParticleLabel);
