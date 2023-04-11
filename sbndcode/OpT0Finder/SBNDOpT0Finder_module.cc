@@ -89,7 +89,7 @@ private:
   /// Returns a list of uncoated PMTs that are a subset of those in ch_to_use
   std::vector<int> GetUncoatedPTMList(std::vector<int> ch_to_use);
 
-  std::unique_ptr<SemiAnalyticalModel> _semi_model;
+  std::unique_ptr<phot::SemiAnalyticalModel> _semi_model;
   fhicl::ParameterSet _vuv_params;
   fhicl::ParameterSet _vis_params;
 
@@ -145,7 +145,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
   _vuv_params = p.get<fhicl::ParameterSet>("VUVHits");
   _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
-  _semi_model = std::make_unique<SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
+  _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
 
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   _tpc_v = p.get<std::vector<unsigned int>>("TPCs");
