@@ -54,6 +54,7 @@
 #include "sbncode/OpT0Finder/flashmatch/Algorithms/PhotonLibHypothesis.h"
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbnobj/Common/Reco/OpT0FinderResult.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -85,11 +86,17 @@ public:
 private:
 
   /// Performs the matching in a specified tpc
+  // void DoMatch(art::Event& e,
+  //              int tpc,
+  //              std::unique_ptr<std::vector<anab::T0>> & t0_v,
+  //              std::unique_ptr< art::Assns<recob::Slice, anab::T0>> & slice_t0_assn_v,
+  //              std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> & flash_t0_assn_v);
+
   void DoMatch(art::Event& e,
                int tpc,
-               std::unique_ptr<std::vector<anab::T0>> & t0_v,
-               std::unique_ptr< art::Assns<recob::Slice, anab::T0>> & slice_t0_assn_v,
-               std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> & flash_t0_assn_v);
+               std::unique_ptr<std::vector<sbn::OpT0Finder>> & t0_v,
+               std::unique_ptr< art::Assns<recob::Slice, sbn::OpT0Finder>> & slice_t0_assn_v,
+               std::unique_ptr< art::Assns<recob::OpFlash, sbn::OpT0Finder>> & flash_t0_assn_v);
 
   /// Constructs all the LightClusters (TPC Objects) in a specified TPC
   bool ConstructLightClusters(art::Event& e, unsigned int tpc);
@@ -125,6 +132,7 @@ private:
   bool _select_nus;
   bool _collection_only;
   std::vector<float> _cal_area_const; 
+  std::vector<int>   _opch_to_skip;
   float _dQdx_limit;
   float _pitch_limit;
 
@@ -153,7 +161,6 @@ private:
   int _tpc;
   int _matchid, _flashid, _tpcid, _sliceid, _pfpid; 
   double _t0, _score;
-  double _tpc_xmin, _qll_xmin;
   double _hypo_pe, _flash_pe;
   std::vector<double> _flash_spec;
   std::vector<double> _hypo_spec;
@@ -170,9 +177,13 @@ private:
 SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   : EDProducer{p}
 {
-  produces<std::vector<anab::T0>>();
-  produces<art::Assns<recob::Slice, anab::T0>>();
-  produces<art::Assns<recob::OpFlash, anab::T0>>();
+  // produces<std::vector<anab::T0>>();
+  // produces<art::Assns<recob::Slice, anab::T0>>();
+  // produces<art::Assns<recob::OpFlash, anab::T0>>();
+
+  produces<std::vector<sbn::OpT0Finder>>();
+  produces<art::Assns<recob::Slice, sbn::OpT0Finder>>();
+  produces<art::Assns<recob::OpFlash, sbn::OpT0Finder>>();
 
   ::art::ServiceHandle<geo::Geometry> geo;
 
@@ -199,6 +210,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _select_nus        = p.get<bool>("SelectNeutrino");
   _collection_only   = p.get<bool>("CollectionPlaneOnly");
   _cal_area_const    = p.get<std::vector<float>>("CalAreaConstants");
+  _opch_to_skip      = p.get<std::vector<int>>("OpChannelsToSkip");
   _dQdx_limit        = p.get<float>("dQdxLimit");
   _pitch_limit       = p.get<float>("PitchLimit");
 
@@ -250,8 +262,6 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _tree2->Branch("sliceid",         &_sliceid,                         "sliceid/I");
   _tree2->Branch("pfpid",           &_pfpid,                           "pfpid/I");
   _tree2->Branch("flashid",         &_flashid,                         "flashid/I");
-  _tree2->Branch("tpc_xmin",        &_tpc_xmin,                        "tpc_xmin/D");
-  _tree2->Branch("qll_xmin",        &_qll_xmin,                        "qll_xmin/D");
   _tree2->Branch("t0",              &_t0,                              "t0/D");
   _tree2->Branch("score",           &_score,                           "score/D");
   _tree2->Branch("hypo_pe",         &_hypo_pe,                         "hypo_pe/D");
@@ -263,9 +273,13 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
 void SBNDOpT0Finder::produce(art::Event& e)
 {
-  std::unique_ptr<std::vector<anab::T0>> t0_v (new std::vector<anab::T0>);
-  std::unique_ptr< art::Assns<recob::Slice, anab::T0>> slice_t0_assn_v (new art::Assns<recob::Slice, anab::T0>);
-  std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> flash_t0_assn_v (new art::Assns<recob::OpFlash, anab::T0>);
+  // std::unique_ptr<std::vector<anab::T0>> t0_v (new std::vector<anab::T0>);
+  // std::unique_ptr< art::Assns<recob::Slice, anab::T0>> slice_t0_assn_v (new art::Assns<recob::Slice, anab::T0>);
+  // std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> flash_t0_assn_v (new art::Assns<recob::OpFlash, anab::T0>);
+
+  std::unique_ptr<std::vector<sbn::OpT0Finder>> opt0_result_v (new std::vector<sbn::OpT0Finder>);
+  std::unique_ptr< art::Assns<recob::Slice, sbn::OpT0Finder>> slice_opt0_assn_v (new art::Assns<recob::Slice, sbn::OpT0Finder>);
+  std::unique_ptr< art::Assns<recob::OpFlash, sbn::OpT0Finder>> flash_opt0_assn_v (new art::Assns<recob::OpFlash, sbn::OpT0Finder>);
 
   // set default masks at the beginning of every event 
   _mgr.SetChannelMask(_opch_to_use);
@@ -277,10 +291,6 @@ void SBNDOpT0Finder::produce(art::Event& e)
   _run    = e.id().run();
   _subrun = e.id().subRun();
   _event  = e.id().event();
-
-  std::cout << "run: " << _run <<  std::endl;
-  std::cout << "subrun: " << _subrun  << std::endl;
-  std::cout << "event: " <<  _event << std::endl;
 
   // Loop over the specified TPCs
   for (auto tpc : _tpc_v) {
@@ -297,23 +307,23 @@ void SBNDOpT0Finder::produce(art::Event& e)
     _mgr.SetTPCCryo(tpc, 0);
 
     // Perform the matching in the specified TPC
-    DoMatch(e, tpc, t0_v, slice_t0_assn_v, flash_t0_assn_v);
+    DoMatch(e, tpc, opt0_result_v, slice_opt0_assn_v, flash_opt0_assn_v);
 
   }
 
   // Finally, place the anab::T0 vector and the associations in the Event
-  e.put(std::move(t0_v));
-  e.put(std::move(slice_t0_assn_v));
-  e.put(std::move(flash_t0_assn_v));
+  e.put(std::move(opt0_result_v));
+  e.put(std::move(slice_opt0_assn_v));
+  e.put(std::move(flash_opt0_assn_v));
 
   return;
 }
 
 void SBNDOpT0Finder::DoMatch(art::Event& e,
                              int tpc,
-                             std::unique_ptr<std::vector<anab::T0>> & t0_v,
-                             std::unique_ptr< art::Assns<recob::Slice, anab::T0>> & slice_t0_assn_v,
-                             std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> & flash_t0_assn_v) {
+                             std::unique_ptr<std::vector<sbn::OpT0Finder>> & opt0_result_v,
+                             std::unique_ptr< art::Assns<recob::Slice, sbn::OpT0Finder>> & slice_opt0_assn_v,
+                             std::unique_ptr< art::Assns<recob::OpFlash, sbn::OpT0Finder>> & flash_opt0_assn_v) {
 
   _flashid_to_opflash.clear();
   _clusterid_to_slice.clear();
@@ -359,7 +369,10 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
         if (abs(flash_pmt.Time() - flash_ara.Time()) < 0.05){
           combine = true;
           if (flash_pmt.Time() > 0 && flash_pmt.Time() < 2)
-            std::cout << "PMT time: " << flash_pmt.Time() << ", ARA time: " << flash_ara.Time() << std::endl;
+            mf::LogInfo("SBNDOpT0Finder") << "Combining PMT OpFlash (time: " 
+                                          << flash_pmt.Time() 
+                                          << "), with ARA OpFlash (time: " 
+                                          << flash_ara.Time() << ")" << std::endl;
           // add the arapuca flash PE to the pmt flash PE 
           for(unsigned int op_ch = 0; op_ch < geo->NOpDets(); op_ch++){
             combined_pe.at(op_ch) = flash_pmt.PE(op_ch) + flash_ara.PE(op_ch);
@@ -437,7 +450,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     _opch_centers[opch] = geo->OpDetGeoFromOpChannel(opch).GetCenter();
   }
 
-  // Get all the ligh clusters
+  // Get all the light clusters
   // auto light_cluster_v = GetLighClusters(e);
   if (!ConstructLightClusters(e, tpc)) {
     mf::LogInfo("SBNDOpT0Finder") << "Cannot construct Light Clusters." << std::endl;
@@ -452,14 +465,11 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
   // Update masks
   // ! ** Note: masks are applied on a per tpc per event basis ** 
-  // temp: add apsia x-arapucas to mask:
-  std::vector<int> apsia_ch{134,135,150,151,152,153,154,155,156,157,158,159,160,161,176,177};
-  for (auto apsia : apsia_ch){
-    _opch_to_mask.push_back(apsia);
-  } 
-  // temp: end temp fix 
+  // add channels specified to skip in fcl :
+  for (auto ch : _opch_to_skip)
+    _opch_to_mask.push_back(ch);
+  auto masked_opch_to_use = _opch_to_use;
   if (!_opch_to_mask.empty()){
-    auto masked_opch_to_use = _opch_to_use;
     for (auto opch : _opch_to_mask){
       masked_opch_to_use.erase(std::remove_if(
             masked_opch_to_use.begin(), masked_opch_to_use.end(),
@@ -492,19 +502,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     _tpcid    = match.tpc_id;
     _flashid  = match.flash_id;
     _score    = match.score;
-    _qll_xmin = match.tpc_point.x;
-
-    mf::LogInfo("SBNDOpT0Finder") << "Matched TPC object " << _tpcid
-                                  << " with flash number " << _flashid
-                                  << " in TPC " << tpc
-                                  << " -> score: " << _score
-                                  << ", qll xmin: " << _qll_xmin << std::endl;
-
-    // Get the minimum x position of the TPC Object
-    _tpc_xmin = 1.e4;
-    for(auto const& pt : _mgr.QClusterArray()[_tpcid]) {
-      if(pt.x < _tpc_xmin) _tpc_xmin = pt.x;
-    }
 
     // Get the matched flash time, the t0
     auto const& flash = _mgr.FlashArray()[_flashid];
@@ -537,17 +534,41 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     for(auto const& v : _hypo_spec) _hypo_pe += v;
     for(auto const& v : _flash_spec) _flash_pe += v;
 
+    mf::LogInfo("SBNDOpT0Finder") << "Matched TPC object " << _tpcid
+                                  << " with flash number " << _flashid
+                                  << " in TPC " << tpc
+                                  << " at time " << _t0
+                                  << " -> score: " << _score << std::endl;
 
     // Construct the anab::T0 dataproduct to put in the Event
-    auto t0 = anab::T0(_t0,        // "Time": The recontructed flash time, or t0
-                       _flash_pe,  // "TriggerType": placing the reconstructed total PE instead
-                       _tpcid,     // "TriggerBits": placing the tpc id instead
-                       _flashid,   // "ID": placing the flash id instead
-                       _score);    // "TriggerConfidence": Matching score
+    // auto t0 = anab::T0(_t0,        // "Time": The recontructed flash time, or t0
+    //                    _flash_pe,  // "TriggerType": placing the reconstructed total PE instead
+    //                    _tpcid,     // "TriggerBits": placing the tpc id instead
+    //                    _flashid,   // "ID": placing the flash id instead
+    //                    _score);    // "TriggerConfidence": Matching score
 
-    t0_v->push_back(t0);
-    util::CreateAssn(*this, e, *t0_v, _clusterid_to_slice[_tpcid], *slice_t0_assn_v);
-    util::CreateAssn(*this, e, *t0_v, _flashid_to_opflash[_flashid], *flash_t0_assn_v);
+    // t0_v->push_back(t0);
+    // util::CreateAssn(*this, e, *t0_v, _clusterid_to_slice[_tpcid], *slice_t0_assn_v);
+    // util::CreateAssn(*this, e, *t0_v, _flashid_to_opflash[_flashid], *flash_t0_assn_v);
+
+    sbn::OpT0Finder opt0_result;
+    opt0_result.score  = _score; 
+    opt0_result.time   = _t0;
+    opt0_result.hypoPE = _hypo_pe;
+    opt0_result.measPE = _flash_pe;
+    opt0_result.hypoPESpec = _hypo_spec; 
+    opt0_result.measPESpec = _flash_spec;
+    std::vector<int> result_opch(geo->NOpDets(), 0);
+    for (auto i : masked_opch_to_use)
+      result_opch[i] = 1; // if the opch was used, set equal to 1
+    opt0_result.opch = result_opch;
+
+    // t0_v->push_back(t0);
+    // util::CreateAssn(*this, e, *t0_v, _clusterid_to_slice[_tpcid], *slice_t0_assn_v);
+    // util::CreateAssn(*this, e, *t0_v, _flashid_to_opflash[_flashid], *flash_t0_assn_v);
+    opt0_result_v->push_back(opt0_result);
+    util::CreateAssn(*this, e, *opt0_result_v, _clusterid_to_slice[_tpcid], *slice_opt0_assn_v);
+    util::CreateAssn(*this, e, *opt0_result_v, _flashid_to_opflash[_flashid], *flash_opt0_assn_v);
 
     art::Ptr<recob::Slice> ptr_slice = _clusterid_to_slice[_tpcid];
     int slice_id = ptr_slice->ID();
@@ -573,8 +594,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
         _pfpid = pfp->Self();
       }
     }
-    double new_score = t0.TriggerConfidence(); 
-    _score = new_score; 
     _tree2->Fill();
   }
 
@@ -627,7 +646,6 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
 
   // Get the associations between slice->pfp->spacepoint->hit
   art::FindManyP<recob::PFParticle> slice_to_pfps (slice_h, e, _slice_producer);
-  // art::FindManyP<recob::SpacePoint> pfp_to_spacepoints (pfp_h, e, _slice_producer);
   // For using track calorimetry objects, get slice->pfp->track->calo 
   art::FindManyP<recob::Track>  pfp_to_trks (pfp_h, e, _trk_producer);
   art::FindManyP<anab::Calorimetry> trk_to_calo (trk_h, e, _calo_producer);
@@ -637,9 +655,6 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
   art::FindManyP<recob::Shower> pfp_to_shws (pfp_h, e, _shw_producer);
   art::FindManyP<recob::SpacePoint> shw_to_spacepoints(shw_h, e, _shw_producer);
   art::FindManyP<recob::Hit> spacepoint_to_hits (spacepoint_h, e, _slice_producer);
-  // for truth information 
-  // art::FindManyP<recob::Hit> trk_to_hits (trk_h, e, _trk_producer);
-  // art::FindManyP<recob::Hit> shw_to_hits (shw_h, e, _shw_producer);
 
   // Loop over the Slices
   for (size_t n_slice = 0; n_slice < slice_h->size(); n_slice++) {
@@ -695,7 +710,10 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           else if (abs(trk_end.X()) >= 198.0) {exit_pt = trk_end; uncontained = true;}
 
           if (uncontained && _exclude_exiting){
-            std::cout << "Found particle with exit point: " << exit_pt.X() << ", " << exit_pt.Y() << ", " << exit_pt.Z() << std::endl;
+            mf::LogInfo("SBNDOpT0Finder") << "Found particle with exit point: " 
+                                          << exit_pt.X() << ", " 
+                                          << exit_pt.Y() << ", " 
+                                          << exit_pt.Z() << std::endl;
 
             int tpc = (exit_pt.X() > 0)? 1 : 0; 
             for (size_t opch=0; opch < geo->NOpDets(); opch++){
@@ -704,9 +722,8 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
               if (_pds_map.isPDType(opch, "pmt_uncoated") || _pds_map.isPDType(opch, "xarapuca_vis")) continue;
               if (!_use_arapucas && _pds_map.isPDType(opch, "xarapuca_vuv")) continue;
               auto center = _opch_centers.at(opch);
-              // TODO: don't have these values hardcoded 
-              if ((abs(center.Z() - (exit_pt.Z() + 75*std::cos(track->Theta()))) <= 75) && 
-                  (abs(center.Y() - (exit_pt.Y() + 75*std::cos(track->ZenithAngle()))) <= 75)){
+              if ((abs(center.Z() - (exit_pt.Z() + 50*std::cos(track->Theta()))) <= 75) && 
+                  (abs(center.Y() - (exit_pt.Y() + 50*std::cos(track->ZenithAngle()))) <= 75)){
                 exit_opch.push_back(opch);
               }
             }
@@ -868,7 +885,6 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
                   if (hit->View() == 1 && hit->WireID().TPC == tpc) nhit1_shw++; 
                   if (hit->View() == 2 && hit->WireID().TPC == tpc) nhit2_shw++;
                 }
-                // std::cout << "0, 1, 2: " << nhit0_shw << ", " << nhit1_shw << ", " << nhit2_shw << std::endl;
                 const int maxHits = std::max({ nhit0_shw, nhit1_shw, nhit2_shw});
                 bestPlane_shw = ((nhit2_shw == maxHits) ? 2 : (nhit1_shw == maxHits) ? 1 : (nhit0_shw == maxHits) ? 0 : -1);
               }
@@ -884,12 +900,10 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
               double drift_time = ((2.0*geo->DetHalfWidth()) - abs(position[0]))/(det_prop.DriftVelocity()); // cm / (cm/us) 
               double atten_corr = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
 
-              // double integral_weight = hit->Integral()/integral_shw;
               const auto charge((1/_cal_area_const.at(bestPlane_shw))*hit->Integral()*atten_corr);
               double nphotons = 0;
  
               if ( _shower_const_conv) nphotons = charge*_shower_to_photons;
-              // if (!_shower_const_conv) nphotons = (integral_weight*energy_shw)/(19.5e-6) - charge;
               else{
                 std::cout << "Only have shower constant conversion calculation... using constant conversion" << std::endl;
                 nphotons = charge*_shower_to_photons;
@@ -914,8 +928,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
             }
           } // End loop over Spacepoints
         } // end shower loop
-        // loop over spacepoints to get position information 
-      }
+      } // end if pfpisshower
     } // End loop over PFParticle
 
     _tree1->Fill();
@@ -931,7 +944,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
 
     // add opdets affected by an exiting particle to the mask 
     if (!exit_opch.empty()){
-      std::cout << "Not evaluating the following OpDets: { ";
+      std::cout << "Not evaluating the following OpDets due to exiting particle: { ";
       for (auto opch : exit_opch)
           std::cout << opch << ' ';
       std::cout << "}\n";

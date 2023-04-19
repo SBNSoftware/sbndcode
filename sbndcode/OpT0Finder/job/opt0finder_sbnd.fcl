@@ -29,9 +29,10 @@ sbnd_opt0_finder:
   CollectionPlaneOnly:  false # use the collection plane hit information only 
   ExcludeExitingOpDets: true  # if true, skip opdets near an exiting by adding it to the channel mask 
   CalAreaConstants:     [ 0.0200906, 0.0200016, 0.0201293 ] # calibration constants for each plane, docdb 19505
+  OpChannelsToSkip:     [134,135,150,151,152,153,154,155,156,157,158,159,160,161,176,177] # opchannels to skip/mask, currently holds APSIA channels
 
   TrackConstantConversion:  false # to use constant Q/L conversion for track calorimetry objects 
-  ShowerConstantConversion: true # to use constant Q/L conversion or shower energy information 
+  ShowerConstantConversion: true # to use constant Q/L conversion or shower energy information, MUST BE TRUE 
 
   # fcl parameters if using track calorimetry objects for Q/L conversion 
   dQdxLimit:            5e5 # units of e-/cm
@@ -70,15 +71,11 @@ sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.ChiErrorWidth: 0.1
 sbnd_opt0_finder_one_to_many_tpc0: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc0.TPC: 0
 sbnd_opt0_finder_one_to_many_tpc0.OpFlashProducer: ["opflashtpc0","opflashtpc0xarapuca"]
-# sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
-# sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.UseMinuit: false
 
 # ... for TPC 1
 sbnd_opt0_finder_one_to_many_tpc1: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc1.TPC: 1
 sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: ["opflashtpc1","opflashtpc1xarapuca"]
-# sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
-# sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.UseMinuit: false
 
 
 # WARNING: many-to-many matching is untested! 
