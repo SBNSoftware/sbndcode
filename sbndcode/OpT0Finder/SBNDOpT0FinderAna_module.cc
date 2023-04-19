@@ -20,7 +20,6 @@
 
 #include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/RecoBase/OpFlash.h"
-#include "lardataobj/AnalysisBase/T0.h"
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
 
 #include <numeric>
@@ -59,11 +58,13 @@ SBNDOpT0FinderAna::SBNDOpT0FinderAna(fhicl::ParameterSet const& p)
 void SBNDOpT0FinderAna::analyze(art::Event const& e)
 {
 
+  std::cout << "Run: " << e.id().run() << " Sub: " << e.id().subRun() << " Evt: " << e.id().event() << std::endl;
+
   // Get all the T0 objects
   ::art::Handle<std::vector<sbn::OpT0Finder>> opt0_h;
   e.getByLabel(_t0_producer, opt0_h);
   if(!opt0_h.isValid() || opt0_h->empty()) {
-    mf::LogWarning("SBNDOpT0FinderAna") << "Don't have good T0s." << std::endl;
+    mf::LogWarning("SBNDOpT0FinderAna") << "No OpT0Finder (flash-match) objects." << std::endl;
     return;
   }
   std::vector<art::Ptr<sbn::OpT0Finder>> opt0_v;
@@ -86,17 +87,17 @@ void SBNDOpT0FinderAna::analyze(art::Event const& e)
     assert(slice_v.size() == 1);
     assert(flash_v.size() == 1);
 
-    int nopdet = std::accumulate((opt0->opch).begin(),  (opt0->opch).end(), 0);
-
-    std::cout << "T0 obj: " << n_t0 << ", score: " << opt0->score << std::endl;
+    int nopdet = 0; 
+    for (size_t nch=0; nch < (opt0->opch).size(); nch++){
+      if (int(nch)%2 == opt0->tpc) nopdet += (opt0->opch).at(nch);
+    }
+    std::cout << "T0 obj: " << n_t0 << " in TPC " << opt0->tpc << ", score: " << opt0->score << std::endl;
     std::cout << "\t is associated with slice ID " << slice_v[0]->ID() << std::endl;
-    std::cout << "\t is associated with flash with time " << opt0->time 
-                                         << ", total meas PE " << opt0->measPE  
-                                         << ", total hypo PE " << opt0->hypoPE
-                                         << ", using " <<  nopdet << " optical detectors for scoring."
-                                         << std::endl;
+    std::cout << "\t is associated with flash with time " << opt0->time << std::endl;
+    std::cout << "\t with total measured PE " << opt0->measPE << std::endl;
+    std::cout << "\t with total hypothesized PE " << opt0->hypoPE << std::endl;
+    std::cout << "\t using " <<  nopdet << " optical detectors for scoring." << std::endl;
   }
-
 }
 
 DEFINE_ART_MODULE(SBNDOpT0FinderAna)

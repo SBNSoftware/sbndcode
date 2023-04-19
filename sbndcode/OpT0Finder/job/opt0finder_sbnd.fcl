@@ -63,9 +63,10 @@ sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.CCVCorrection:
 sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.CCVCorrectionRefl: [0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 0.4667, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 # QLLMatch configuration: configures the scoring stage
-sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.UseMinuit: false
-sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.SaturatedThreshold: 600
-sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.ChiErrorWidth: 0.1
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.UseMinuit: false # do not perform minimiziation 
+                                                                        # Minuit not needed for one-to-many matching
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.SaturatedThreshold: 600 # fix for saturated PMTs
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.ChiErrorWidth: 0.1 # adding additional spread in chi-sq method
 
 # ... for TPC 0
 sbnd_opt0_finder_one_to_many_tpc0: @local::sbnd_opt0_finder_one_to_many
@@ -78,7 +79,7 @@ sbnd_opt0_finder_one_to_many_tpc1.TPC: 1
 sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: ["opflashtpc1","opflashtpc1xarapuca"]
 
 
-# WARNING: many-to-many matching is untested! 
+# WARNING: many-to-many matching is untested, performance unknown! 
 #
 # Configuration to run the flash matching in many flashes to many slices configuration
 #
