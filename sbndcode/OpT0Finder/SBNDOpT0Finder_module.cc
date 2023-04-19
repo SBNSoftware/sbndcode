@@ -85,13 +85,6 @@ public:
 
 private:
 
-  /// Performs the matching in a specified tpc
-  // void DoMatch(art::Event& e,
-  //              int tpc,
-  //              std::unique_ptr<std::vector<anab::T0>> & t0_v,
-  //              std::unique_ptr< art::Assns<recob::Slice, anab::T0>> & slice_t0_assn_v,
-  //              std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> & flash_t0_assn_v);
-
   void DoMatch(art::Event& e,
                int tpc,
                std::unique_ptr<std::vector<sbn::OpT0Finder>> & t0_v,
@@ -100,9 +93,6 @@ private:
 
   /// Constructs all the LightClusters (TPC Objects) in a specified TPC
   bool ConstructLightClusters(art::Event& e, unsigned int tpc);
-
-  /// Returns the number of photons given charge and PFParticle
-  // float GetNPhotons(const float charge, const art::Ptr<recob::PFParticle> &pfp, art::ServiceHandle<sim::LArG4Parameters const> g4param);
 
   /// Convert from a list of PDS names to a list of op channels
   std::vector<int> PDNamesToList(std::vector<std::string>);
@@ -177,10 +167,6 @@ private:
 SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   : EDProducer{p}
 {
-  // produces<std::vector<anab::T0>>();
-  // produces<art::Assns<recob::Slice, anab::T0>>();
-  // produces<art::Assns<recob::OpFlash, anab::T0>>();
-
   produces<std::vector<sbn::OpT0Finder>>();
   produces<art::Assns<recob::Slice, sbn::OpT0Finder>>();
   produces<art::Assns<recob::OpFlash, sbn::OpT0Finder>>();
@@ -273,10 +259,6 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
 void SBNDOpT0Finder::produce(art::Event& e)
 {
-  // std::unique_ptr<std::vector<anab::T0>> t0_v (new std::vector<anab::T0>);
-  // std::unique_ptr< art::Assns<recob::Slice, anab::T0>> slice_t0_assn_v (new art::Assns<recob::Slice, anab::T0>);
-  // std::unique_ptr< art::Assns<recob::OpFlash, anab::T0>> flash_t0_assn_v (new art::Assns<recob::OpFlash, anab::T0>);
-
   std::unique_ptr<std::vector<sbn::OpT0Finder>> opt0_result_v (new std::vector<sbn::OpT0Finder>);
   std::unique_ptr< art::Assns<recob::Slice, sbn::OpT0Finder>> slice_opt0_assn_v (new art::Assns<recob::Slice, sbn::OpT0Finder>);
   std::unique_ptr< art::Assns<recob::OpFlash, sbn::OpT0Finder>> flash_opt0_assn_v (new art::Assns<recob::OpFlash, sbn::OpT0Finder>);
@@ -540,32 +522,13 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
                                   << " at time " << _t0
                                   << " -> score: " << _score << std::endl;
 
-    // Construct the anab::T0 dataproduct to put in the Event
-    // auto t0 = anab::T0(_t0,        // "Time": The recontructed flash time, or t0
-    //                    _flash_pe,  // "TriggerType": placing the reconstructed total PE instead
-    //                    _tpcid,     // "TriggerBits": placing the tpc id instead
-    //                    _flashid,   // "ID": placing the flash id instead
-    //                    _score);    // "TriggerConfidence": Matching score
-
-    // t0_v->push_back(t0);
-    // util::CreateAssn(*this, e, *t0_v, _clusterid_to_slice[_tpcid], *slice_t0_assn_v);
-    // util::CreateAssn(*this, e, *t0_v, _flashid_to_opflash[_flashid], *flash_t0_assn_v);
-
-    sbn::OpT0Finder opt0_result;
-    opt0_result.score  = _score; 
-    opt0_result.time   = _t0;
-    opt0_result.hypoPE = _hypo_pe;
-    opt0_result.measPE = _flash_pe;
-    opt0_result.hypoPESpec = _hypo_spec; 
-    opt0_result.measPESpec = _flash_spec;
     std::vector<int> result_opch(geo->NOpDets(), 0);
     for (auto i : masked_opch_to_use)
       result_opch[i] = 1; // if the opch was used, set equal to 1
-    opt0_result.opch = result_opch;
 
-    // t0_v->push_back(t0);
-    // util::CreateAssn(*this, e, *t0_v, _clusterid_to_slice[_tpcid], *slice_t0_assn_v);
-    // util::CreateAssn(*this, e, *t0_v, _flashid_to_opflash[_flashid], *flash_t0_assn_v);
+    sbn::OpT0Finder opt0_result(tpc, _t0, _score, _flash_pe, _hypo_pe,
+                                _flash_spec, _hypo_spec, result_opch);
+
     opt0_result_v->push_back(opt0_result);
     util::CreateAssn(*this, e, *opt0_result_v, _clusterid_to_slice[_tpcid], *slice_opt0_assn_v);
     util::CreateAssn(*this, e, *opt0_result_v, _flashid_to_opflash[_flashid], *flash_opt0_assn_v);
