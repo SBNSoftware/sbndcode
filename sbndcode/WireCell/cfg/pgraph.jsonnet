@@ -15,6 +15,8 @@ local wc = import "wirecell.jsonnet";
 
     // Make an edge between two pnodes by passing those pnodes as objects
     edge(tail, head, tp=0, hp=0):: {
+        assert tp >= 0 && tp < std.length(tail.oports) : "Illegal tail port number %d\ntail:\n%s\nhead:\n%s" %[tp,tail,head],
+        assert hp >= 0 && hp < std.length(head.iports) : "Illegal head port number %d\ntail:\n%s\nhead:\n%s" %[tp,tail,head],
         tail: tail.oports[tp],
         head: head.iports[hp],
     },
@@ -87,34 +89,25 @@ local wc = import "wirecell.jsonnet";
     // be passed to wc.unique_list().
     resolve_uses(seq):: $.strip_pnodes(std.foldl($.popuses, seq, [])),
     
-    // Make a pnode from an inode, giving its input and output port
-    // multiplicity.  Use this instead of creating a pnode by hand.
+    // Make a pnode from an inode and provide input and output ports.
+    // A unique name can be provided for the resulting pnode or the
+    // inode name will be used, if defined.  
     // Any other WCT component objects which are referenced by this
     // one should be passed in "uses" (or, as a special inode.uses).
-    pnode(inode, nin=0, nout=0, uses=[]):: {
+    // See intern() for general purpose aggregation of a subgraph.
+    pnode(inode, nin=0, nout=0, uses=[], name=null):: {
         type: "Pnode",
-        name: wc.tn(inode),
+        name: $.prune_array([name, inode.name, ""])[0],
         edges: [],
         uses: uses + [inode],
         iports: [$.port(inode, n) for n in std.range(0,nin)][:nin],
         oports: [$.port(inode, n) for n in std.range(0,nout)][:nout],
     },
 
-    // Unwrap the underlying object type and instance names
-    ptype(pn) ::
-        std.split(pn.name, ":")[0],
-    pname(pn) ::
-        local s = std.split(pn.name, ":");
-        if std.length(s) == 1
-        then ""
-        else s[1],
-    
-
-    // Produce a new pnode from collections of input and output pnodes
-    // and any internal nodes and edges.  The resulting "uses" and
-    // "edges" are then resolved, aggregated, flattened.  Unless
-    // explicitly given, all iports of innodes become iports of the
-    // new pnode, etc for output.
+    // Produce an abstract pnode from a sugraph of other pnodes.  The
+    // resulting "uses" and "edges" are then resolved, aggregated,
+    // flattened.  Unless explicitly given, all iports of innodes
+    // become iports of the new pnode, etc for output.
     intern(innodes=[], outnodes=[], centernodes=[], edges=[], iports=[], oports=[], name=""):: {
         local nodes = innodes+outnodes+centernodes,
         type: "Pnode",
@@ -125,11 +118,13 @@ local wc = import "wirecell.jsonnet";
         oports: if std.length(oports) == 0 then std.flattenArrays([n.oports for n in outnodes]) else oports,
     },
 
-
-    // Intern an ordered list of elements to form a linear pipeline by
-    // subsequently connecting one element's output port 0 to the next
-    // element's input port 0.  The first/last elements iport/oport
-    // will be used for the pipeline's iport/oport if existing.
+    // Produce an abstract pnode by arranging other pnode elements
+    // into a linear pipeline.  Internal connections are all through
+    // output port 0 to input port 0.  Use intern() for more complex
+    // connections.  The iport/oport of the first/last pnodes in
+    // elements will be used for the pipeline's iport/oport, if those
+    // ports exist (eg, it is okay to have a pipeline begin with a
+    // source and/or end with a sink).
     pipeline(elements, name=""):: {
         local nele = std.length(elements),
         local pedges = [$.edge(elements[i], elements[i+1]) for i in std.range(0,nele-2)],
@@ -142,13 +137,19 @@ local wc = import "wirecell.jsonnet";
     },
 
 
-    // Return a new pnode built by breaking an existing edge at given
+    // Collect a number of closed component graphs into a single graph
+    // represented by one pnode.  Each component must be closed in the
+    // sense that it has no unattached ports.
+    components(subgraphs, name="") :: $.intern(centernodes=subgraphs, name=name),
+
+
+    // Produce a new pnode built by breaking an existing edge at given
     // index and patching the break with the given head and tail nodes
-    // and their ports.  If a name is given it is set else the name of
-    // the original pnode is kept.
+    // and their ports.  If a name is not given the name of the
+    // original pnode is used for the produced pnode.
     insert_one(pnode, index, newhead, newtail, iport=0, oport=0, name=null):: {
         type: "Pnode",
-        name: $.prune_array([name, pnode.name])[0],
+        name: $.prune_array([name, pnode.name,""])[0],
         uses: [pnode,newhead,newtail],
         edges: $.break_insert_edge(index, pnode.edges, newhead.iports[iport], newtail.oports[oport]) + newhead.edges + newtail.edges,
         iports: pnode.iports,
@@ -172,12 +173,13 @@ local wc = import "wirecell.jsonnet";
     // single source.  The joiner must be capable of handling and
     // N-join.  Each source is connected to joiner's input ports in
     // order.
-    join_sources(joiner, sources, n=2) :: $.intern(outnodes=[joiner],
-                                                   centernodes=sources,
-                                                   iports=[],
-                                                   edges=std.mapWithIndex(function(ind,s) $.edge(s,joiner,0,ind),
-                                                                          sources),
-                                                  ),
+    join_sources(joiner, sources, n=2) :: 
+        $.intern(outnodes=[joiner],
+                 centernodes=sources,
+                 iports=[],
+                 edges=std.mapWithIndex(function(ind,s) $.edge(s,joiner,0,ind),
+                                        sources),
+                ),
     
 
     // Call this to return the edges from a graph (a pnode).  It takes
