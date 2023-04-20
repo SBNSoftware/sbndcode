@@ -1,9 +1,9 @@
 #include "opticalsimparameterisations_sbnd.fcl"
 
 BEGIN_PROLOG
-lightcalo:
+lightcalo_ana:
 {
-    module_type: "LightCaloProducer"
+    module_type: "LightCaloAna"
 
     VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
     VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization

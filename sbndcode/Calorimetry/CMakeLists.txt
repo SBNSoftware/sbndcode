@@ -26,6 +26,7 @@ set (MODULE_LIBRARIES
                 art_root_io::TFileService_service
                 art::Utilities canvas::canvas
                 messagefacility::MF_MessageLogger
+                sbnobj::Common_Reco
                 
                 fhiclcpp::fhiclcpp
                 ROOT::Geom
@@ -36,6 +37,7 @@ set (MODULE_LIBRARIES
                 sbndcode_OpDetSim
 )
 cet_build_plugin(LightCaloAna art::module SOURCE LightCaloAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(LightCaloProducer art::module SOURCE LightCaloProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
