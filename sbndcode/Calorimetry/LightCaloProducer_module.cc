@@ -1,16 +1,13 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       LightCaloAna
-// Plugin Type: analyzer 
-// File:        LightCaloAna_module.cc
+// Class:       LightCaloProducer
+// Plugin Type: producer (Unknown Unknown)
+// File:        LightCaloProducer_module.cc
 //
-// This module reconstructs the total visible energy in an event by 
-// combining charge (recob::Hit) and light (recob::OpFlash) information.
-// Runs on reco2 files, requires flash-matching 
-// uses the Semi-Analytical Photon Model 
-// Authors: Lynn Tung 
+// Generated at Wed Apr 19 16:49:20 2023 by Lynn Tung using cetskelgen
+// from  version .
 ////////////////////////////////////////////////////////////////////////
 
-#include "art/Framework/Core/EDAnalyzer.h"
+#include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
@@ -58,6 +55,7 @@
 // SBND includes
 #include "sbnobj/Common/Reco/SimpleFlashMatchVars.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbnobj/Common/Reco/LightCaloInfo.h"
 
 // ROOT includes
 #include "TFile.h"
@@ -69,23 +67,28 @@
 #include <algorithm> // sort 
 
 namespace sbnd {
-  class LightCaloAna;
+  class LightCaloProducer;
 }
 
-class sbnd::LightCaloAna : public art::EDAnalyzer {
+
+class sbnd::LightCaloProducer : public art::EDProducer {
 public:
-  explicit LightCaloAna(fhicl::ParameterSet const& p);
+  explicit LightCaloProducer(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
   // Plugins should not be copied or assigned.
-  LightCaloAna(LightCaloAna const&) = delete;
-  LightCaloAna(LightCaloAna&&) = delete;
-  LightCaloAna& operator=(LightCaloAna const&) = delete;
-  LightCaloAna& operator=(LightCaloAna&&) = delete;
+  LightCaloProducer(LightCaloProducer const&) = delete;
+  LightCaloProducer(LightCaloProducer&&) = delete;
+  LightCaloProducer& operator=(LightCaloProducer const&) = delete;
+  LightCaloProducer& operator=(LightCaloProducer&&) = delete;
 
   // Required functions.
-  void analyze(art::Event const& e) override;
+  void produce(art::Event& e) override;
+
+  // Selected optional functions.
+  void beginJob() override;
+  void endJob() override;
 
 private:
 
@@ -154,23 +157,20 @@ private:
   double _opflash_time; // time of matched opflash 
 
   std::vector<double> _dep_pe; // vector of measured photo-electron (PE), one entry = one channel 
-  std::vector<double> _rec_gamma; // vector of reconstructed photon count, one entry = one channel 
+  std::vector<double> _rec_gamma; // vector of reconstructed photon counts, one entry = one channel (plane with most hits)
 
   double _true_gamma;  // true photon count from all energy depositions 
   double _true_charge; // true electron count from all energy depositions 
   double _true_energy; // true deposited energy 
 
-  double _median_gamma; // median of all reconstructed light estimates 
-  double _mean_gamma;   // mean of all reconstructed light estimates
+  std::vector<double> _charge; // reconstructed electron count per plane 
+  std::vector<double> _light_med;  // median reconstructed photon count per plane
+  std::vector<double> _light_avg;  // average reconstructed photon count per plane
+  std::vector<double> _energy;
 
-  double _mean_charge; // avg charge from all three planes 
-  double _max_charge;  // charge from the plane with the highest amount of charge
-  double _comp_charge; // charge from the plane with the highest number of hits, "highest completeness"
-  double _coll_charge; // charge from collection plane only 
-
-  double _slice_L; // reconstructed photon count 
-  double _slice_Q; // reconstructed electron count 
-  double _slice_E; // reconstructed deposited energy 
+  double _slice_L; // reconstructed photon count (plane with most hits)
+  double _slice_Q; // reconstructed electron count for plane with the most hits 
+  double _slice_E; // reconstructed deposited energy, sum of slice_L and slice_Q
 
   double _frac_L;  // light fractional difference:  (L_{true} - L_{reco})/(L_{true})
   double _frac_Q;  // charge fractional difference: (Q_{true} - Q_{reco})/(Q_{true})
@@ -178,8 +178,8 @@ private:
 };
 
 
-sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
-  : EDAnalyzer{p}  // ,
+sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
+  : EDProducer{p}  // ,
   // More initializers here.
 {
   _vuv_params = p.get<fhicl::ParameterSet>("VUVHits");
@@ -207,50 +207,22 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _simenergy_producer = p.get<std::string>("SimEnergyProducer"); 
   _truth_neutrino     = p.get<bool>("TruthNeutrino");
 
-  art::ServiceHandle<art::TFileService> fs;
-  _tree = fs->make<TTree>("slice_tree","");
-  _tree->Branch("run",             &_run,        "run/I");
-  _tree->Branch("subrun",          &_subrun,     "subrun/I");
-  _tree->Branch("event",           &_event,      "event/I");
-  _tree->Branch("match_type",      &_match_type, "match_type/I");
-
-  _tree2 = fs->make<TTree>("match_tree","");
-  _tree2->Branch("run",           &_run,          "run/I");
-  _tree2->Branch("subrun",        &_subrun,       "subrun/I");
-  _tree2->Branch("event",         &_event,        "event/I");
-  _tree2->Branch("nmatch",        &_nmatch,       "nmatch/I");
-  _tree2->Branch("pfpid",         &_pfpid,        "pfpid/I");
-  _tree2->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
-
-  _tree2->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
-  _tree2->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
-
-  _tree2->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
-  _tree2->Branch("true_charge",   &_true_charge,  "true_charge/D");
-  _tree2->Branch("true_energy",   &_true_energy,  "true_energy/D");
-
-  _tree2->Branch("median_gamma",  &_median_gamma, "median_gamma/D");
-  _tree2->Branch("mean_gamma",    &_mean_gamma,   "mean_gamma/D");
-  _tree2->Branch("mean_charge",   &_mean_charge,  "mean_charge/D");
-  _tree2->Branch("max_charge",    &_max_charge,   "max_charge/D");
-  _tree2->Branch("comp_charge",   &_comp_charge,  "comp_charge/D");
-  _tree2->Branch("coll_charge",   &_coll_charge,  "coll_charge/D");
-
-  _tree2->Branch("slice_L",       &_slice_L,      "slice_L/D");
-  _tree2->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
-  _tree2->Branch("slice_E",       &_slice_E,      "slice_E/D");
-  _tree2->Branch("frac_L",        &_frac_L,       "frac_L/D");
-  _tree2->Branch("frac_Q",        &_frac_Q,       "frac_Q/D");
-  _tree2->Branch("frac_E",        &_frac_E,       "frac_E/D");
+  // Call appropriate produces<>() functions here.
+  produces<std::vector<sbn::LightCalo>>();
+  produces<std::vector<recob::Slice, sbn::LightCalo>>();
+  // Call appropriate consumes<>() for any products to be retrieved by this module.
 
 }
 
-void sbnd::LightCaloAna::analyze(art::Event const& e)
+void sbnd::LightCaloProducer::produce(art::Event& e)
 {
+
+  std::unique_ptr<std::vector<sbn::LightCalo>> lightcalo_v (new std::vector<sbn::LightCalo>);
+  std::unique_ptr<art::Assns<recob::Slice, sbn::LightCalo>> slice_lightcalo_assn_v (new art::Assns<recob::Slice, sbn::LightCalo>);
+
   // services 
   auto const clock_data = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
   auto const det_prop = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e, clock_data);
-  
   
   art::ServiceHandle<geo::Geometry> geom;
   art::ServiceHandle<sim::LArG4Parameters const> g4param;
@@ -419,8 +391,8 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     _slice_L = 0; // total amount of light
     _slice_E = 0;
 
-    std::vector<geo::Point_t> sp_xyz;
-    std::vector<double> sp_charge; // vector of charge info for charge-weighting
+    std::vector<std::vector<geo::Point_t>> sp_xyz; // position info of each spacepoint per plane 
+    std::vector<std::vector<double>> sp_charge; // vector of charge info for charge-weighting for each plane 
  
     double flash_time = -999;
     auto opflash0 = (match_op0.at(n_slice));
@@ -476,18 +448,9 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       plane_charge.at(hit_plane) += hit->Integral()*atten_correction*(1/_cal_area_const.at(hit_plane));
       plane_hits.at(hit_plane)++; 
     }
-
-    uint bestPlane = std::max_element(plane_charge.begin(), plane_charge.end()) - plane_charge.begin(); 
-    uint bestHits =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
-
-    _mean_charge = (plane_charge[0] + plane_charge[1] + plane_charge[2])/3; 
-    _max_charge  = plane_charge.at(bestPlane);
-    _comp_charge  = plane_charge.at(bestHits);
-    _coll_charge  = plane_charge[2];
-
-    _slice_Q = _comp_charge;
-
-    double sps_Q = 0;
+    int bestPlane =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
+    _slice_Q  = plane_charge.at(bestPlane);
+    _charge = plane_charge;
 
     // get charge information to create the weighted map 
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfp.at(slice.key());
@@ -500,26 +463,22 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
         std::vector<art::Ptr<recob::Hit>> hit_v = spacepoint_to_hit.at(sp.key());
         for (size_t n_hit=0; n_hit < hit_v.size(); n_hit++){
           auto hit = hit_v[n_hit];
-          if (hit->View() !=bestPlane) continue;
-          const auto &position(sp->XYZ());
+          auto hit_plane = hit->View(); 
+          // get position
+          const auto &position(sp->XYZ());  
           geo::Point_t xyz(position[0],position[1],position[2]);
           // correct for e- attenuation 
           double drift_time = ((2.0*geom->DetHalfWidth()) - abs(position[0]))/(det_prop.DriftVelocity()); // cm / (cm/us) 
           double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
-          double charge = (1/_cal_area_const.at(bestPlane))*atten_correction*hit->Integral();
-          sp_xyz.push_back(xyz);
-          sp_charge.push_back(charge);
-
-          sps_Q += charge;
+          double charge = (1/_cal_area_const.at(hit_plane))*atten_correction*hit->Integral();
+                    
+          sp_xyz.at(hit_plane).push_back(xyz);
+          sp_charge.at(hit_plane).push_back(charge);
         }
       } // end spacepoint loop 
     } // end pfp loop
-
-    // get total L count
-    std::vector<double> visibility_map = CalcVisibility(sp_xyz,sp_charge);
-    std::vector<double> total_pe(_nchan,0.); 
-    std::vector<double> total_gamma(_nchan, 0.);
-
+ 
+    std::vector<double> total_pe(_nchan,0.);  // contains PE info from both TPCs, PMTs, and ARA (if applicable)
     // combining flash PE information from separate TPCs into a single vector 
     for (int tpc=0; tpc<2; tpc++){
       bool found_flash = (tpc==0)? flash_in_0 : flash_in_1; 
@@ -543,31 +502,65 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
         } // end of arapuca if 
         for (size_t ich=0; ich<flash_pe_v.size(); ich++) total_pe[ich] += flash_pe_v[ich];
       }
-    } // end of TPC loop 
+    } // end of TPC loop
 
-    // calculate the photon estimates for every entry in total_pe
-    CalcLight(total_pe, visibility_map, total_gamma);
-    
     // fill tree variables 
     _opflash_time = flash_time;
     _dep_pe = total_pe;
-    _rec_gamma = total_gamma;
 
-    // calculate final light estimate   
-    _median_gamma = CalcMedian(total_gamma);
-    _mean_gamma   = CalcMean(total_gamma);
-    
-    if (_median_gamma!=0 && !std::isnan(_median_gamma))
-      _slice_L = _median_gamma;
-    else
-      _slice_L = _mean_gamma;
-    
-    _slice_E = (_slice_L + _slice_Q)*1e-6*g4param->Wph(); // MeV, Wph = 19.5 eV   
+    // create variabls to push into the data product (not ordered by typical plane number)
+    std::vector<double> lightcalo_charge;
+    std::vector<double> lightcalo_light;
+    std::vector<double> lightcalo_energy;
+    std::vector<int> lightcalo_plane;
+
+    std::vector<std::vector<double>> total_gamma(3, std::vector<double>(_nchan,0.));
+    for (int nplane = 0; nplane<3; nplane++){
+      // get total L count
+      std::vector<double> visibility_map = CalcVisibility(sp_xyz.at(nplane),sp_charge.at(nplane));
+      // calculate the photon estimates for every entry in total_pe
+      CalcLight(total_pe, visibility_map, total_gamma.at(nplane));
+      _light_med.at(nplane) = CalcMedian(total_gamma.at(nplane));
+      _light_avg.at(nplane) = CalcMedian(total_gamma.at(nplane));
+
+      _energy.at(nplane) = (_charge.at(nplane) + _light_med.at(nplane))*1e-6*g4param->Wph();
+
+      gamma_avg = _light_avg.at(nplane);
+      gamma_med = _light_med.at(nplane);
+      int planeID = nplane;
+      if (nplane==bestPlane){
+        _rec_gamma = total_gamma.at(nplane);
+        if (gamma_med!=0 && !std::isnan(gamma_med))
+          _slice_L = gamma_med;
+        else
+          _slice_L = gamma_avg;
+        lightcalo_charge.insert(lightcalo_charge.begin(),_charge.at(nplane));
+        lightcalo_light.insert(lightcalo_light.begin(),gamma_med);
+        lightcalo_energy.insert(lightcalo_energy.begin(),_energy.at(nplane));
+        lightcalo_plane.insert(lightcalo_plane.begin(),planeID);
+      }
+      else{
+        lightcalo_charge.push_back(_charge.at(nplane));
+        lightcalo_light.push_back(gamma_med);
+        lightcalo_energy.push_back(_energy.at(nplane));
+        lightcalo_plane.push_back(planeID);
+      }
+    }
+        _slice_E = _energy.at(bestPlane);
+
+    sbn::LightCalo lightcalo(lightcalo_charge,
+                             lightcalo_light,
+                             lightcalo_energy,
+                             lightcalo_plane,
+                             flash_time);
+
+    lightcalo_v->push_back(lightcalo);
 
     _true_gamma = 0; 
     _true_charge = 0;
     _true_energy = 0;
 
+    //* start truth validation section *//
     if (_truth_validation){
       ::art::Handle<std::vector<sim::SimEnergyDeposit>> energyDeps_h;
       e.getByLabel(_simenergy_producer, energyDeps_h);
@@ -593,18 +586,15 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
           _true_energy += energyDep->Energy(); 
         }       
       }
+      //* end truth validation section *//
+
       _frac_L = (_true_gamma - _slice_L)/_true_gamma; 
       _frac_Q = (_true_charge - _slice_Q)/_true_charge;
       _frac_E = (_true_energy - _slice_E)/_true_energy;
 
       if (_verbose){
-        std::cout << "ratio of gamma (median/true):  " << _median_gamma/_true_gamma << std::endl;
-        std::cout << "ratio of gamma (mean/true):    " << _mean_gamma/_true_gamma << std::endl;
-
-        std::cout << "ratio of electron (mean/true): " << _mean_charge/_true_charge << std::endl;
-        std::cout << "ratio of electron (max/true):  " << _max_charge/_true_charge << std::endl;
-        std::cout << "ratio of electron (comp/true): " << _comp_charge/_true_charge << std::endl;
-
+        std::cout << "ratio of gamma (median/true):  " << _slice_L/_true_gamma << std::endl;
+        std::cout << "ratio of electron (comp/true): " << _slice_Q/_true_charge << std::endl;
         std::cout << "ratio of energy (calc/true):   " << _slice_E/_true_energy << std::endl;
       }
     }
@@ -616,17 +606,70 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       _frac_Q = -9999;
       _frac_E = -9999;
     } 
+    
+    util::CreateAssn(*this, e, *lightcalo_v, slice, *slice_lightcalo_assn_v);
+
     _tree2->Fill();
     nsuccessful_matches++;
   } // end slice loop
   _match_type=nsuccessful_matches;
   _tree->Fill();
-} // end analyze
+  e.put(std::move(lightcalo_v));
+  e.put(std::move(slice_lightcalo_assn_v));
+}
 
+void sbnd::LightCaloProducer::beginJob()
+{
+  art::ServiceHandle<art::TFileService> fs;
+  _tree = fs->make<TTree>("slice_tree","");
+  _tree->Branch("run",             &_run,        "run/I");
+  _tree->Branch("subrun",          &_subrun,     "subrun/I");
+  _tree->Branch("event",           &_event,      "event/I");
+  _tree->Branch("match_type",      &_match_type, "match_type/I");
+
+  _tree2 = fs->make<TTree>("match_tree","");
+  _tree2->Branch("run",           &_run,          "run/I");
+  _tree2->Branch("subrun",        &_subrun,       "subrun/I");
+  _tree2->Branch("event",         &_event,        "event/I");
+  _tree2->Branch("nmatch",        &_nmatch,       "nmatch/I");
+  _tree2->Branch("pfpid",         &_pfpid,        "pfpid/I");
+  _tree2->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
+
+  _tree2->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
+  _tree2->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
+
+  _tree2->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
+  _tree2->Branch("true_charge",   &_true_charge,  "true_charge/D");
+  _tree2->Branch("true_energy",   &_true_energy,  "true_energy/D");
+
+  _tree2->Branch("charge_plane0", &_charge[0],    "charge_plane0/D");
+  _tree2->Branch("charge_plane1", &_charge[1],    "charge_plane1/D");
+  _tree2->Branch("charge_plane2", &_charge[2],    "charge_plane2/D");
+  
+  _tree2->Branch("light_med_plane0", &_light_med[0] ,"light_med_plane0/D");
+  _tree2->Branch("light_med_plane1", &_light_med[1] ,"light_med_plane1/D");
+  _tree2->Branch("light_med_plane2", &_light_med[2] ,"light_med_plane2/D");
+
+  _tree2->Branch("light_avg_plane0", &_light_avg[0] ,"light_avg_plane0/D");
+  _tree2->Branch("light_avg_plane1", &_light_avg[1] ,"light_avg_plane1/D");
+  _tree2->Branch("light_avg_plane2", &_light_avg[2] ,"light_avg_plane2/D");
+
+  _tree2->Branch("slice_L",       &_slice_L,      "slice_L/D");
+  _tree2->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
+  _tree2->Branch("slice_E",       &_slice_E,      "slice_E/D");
+  _tree2->Branch("frac_L",        &_frac_L,       "frac_L/D");
+  _tree2->Branch("frac_Q",        &_frac_Q,       "frac_Q/D");
+  _tree2->Branch("frac_E",        &_frac_E,       "frac_E/D");
+}
+
+void sbnd::LightCaloProducer::endJob()
+{
+  // Implementation of optional member function here.
+}
 
 // define functions 
 
-bool sbnd::LightCaloAna::MatchOpFlash(std::vector<art::Ptr<sbn::SimpleFlashMatch>> fm_v,
+bool sbnd::LightCaloProducer::MatchOpFlash(std::vector<art::Ptr<sbn::SimpleFlashMatch>> fm_v,
                                       std::vector<art::Ptr<recob::OpFlash>> flash_v,
                                       std::vector<art::Ptr<recob::OpFlash>> &match_v){
   bool any_match = false; 
@@ -652,7 +695,7 @@ bool sbnd::LightCaloAna::MatchOpFlash(std::vector<art::Ptr<sbn::SimpleFlashMatch
 }
 
 
-std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t> xyz_v,
+std::vector<double> sbnd::LightCaloProducer::CalcVisibility(std::vector<geo::Point_t> xyz_v,
                                                        std::vector<double> charge_v){
   // returns of a vector (len is # of opdet) for the visibility for every opdet                                     
   if (xyz_v.size() != charge_v.size()) std::cout << "spacepoint coord and charge vector size mismatch" << std::endl;
@@ -691,7 +734,7 @@ std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t>
   }
   return visibility;
 }
-void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
+void sbnd::LightCaloProducer::CalcLight(std::vector<double> flash_pe_v,
                                    std::vector<double> visibility,
                                    std::vector<double> &total_gamma_v){
   for (size_t ch = 0; ch < flash_pe_v.size(); ch++){
@@ -712,7 +755,7 @@ void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
   }
 }
 
-double sbnd::LightCaloAna::CalcMedian(std::vector<double> total_gamma){
+double sbnd::LightCaloProducer::CalcMedian(std::vector<double> total_gamma){
   std::vector<double> tpc0_gamma; 
   std::vector<double> tpc1_gamma;
   // split into two TPCs 
@@ -745,7 +788,7 @@ double sbnd::LightCaloAna::CalcMedian(std::vector<double> total_gamma){
   return median_gamma;
 }
 
-double sbnd::LightCaloAna::CalcMean(std::vector<double> total_gamma){
+double sbnd::LightCaloProducer::CalcMean(std::vector<double> total_gamma){
   std::vector<double> tpc0_gamma; 
   std::vector<double> tpc1_gamma;
   for (size_t i=0; i<total_gamma.size(); i++){
@@ -770,4 +813,4 @@ double sbnd::LightCaloAna::CalcMean(std::vector<double> total_gamma){
   return mean_gamma;
 }
 
-DEFINE_ART_MODULE(sbnd::LightCaloAna)
+DEFINE_ART_MODULE(sbnd::LightCaloProducer)
