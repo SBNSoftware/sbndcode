@@ -163,10 +163,10 @@ private:
   double _true_charge; // true electron count from all energy depositions 
   double _true_energy; // true deposited energy 
 
-  std::vector<double> _charge; // reconstructed electron count per plane 
-  std::vector<double> _light_med;  // median reconstructed photon count per plane
-  std::vector<double> _light_avg;  // average reconstructed photon count per plane
-  std::vector<double> _energy;
+  std::vector<double> _charge = std::vector<double>(3); // reconstructed electron count per plane 
+  std::vector<double> _light_med = std::vector<double>(3);  // median reconstructed photon count per plane
+  std::vector<double> _light_avg = std::vector<double>(3);  // average reconstructed photon count per plane
+  std::vector<double> _energy = std::vector<double>(3);
 
   double _slice_L; // reconstructed photon count (plane with most hits)
   double _slice_Q; // reconstructed electron count for plane with the most hits 
@@ -209,7 +209,7 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
 
   // Call appropriate produces<>() functions here.
   produces<std::vector<sbn::LightCalo>>();
-  produces<std::vector<recob::Slice, sbn::LightCalo>>();
+  produces<art::Assns<recob::Slice, sbn::LightCalo>>();
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 
 }
@@ -238,6 +238,8 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
   e.getByLabel(_slice_producer, slice_h);
   if(!slice_h.isValid() || slice_h->empty()){
     std::cout << "don't have good slices!" << std::endl;
+    e.put(std::move(lightcalo_v));
+    e.put(std::move(slice_lightcalo_assn_v));
     return;
   }
 
@@ -245,6 +247,8 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
   e.getByLabel(_slice_producer, pfp_h);
   if(!pfp_h.isValid() || pfp_h->empty()) {
     std::cout << "don't have good PFParticle!" << std::endl;
+    e.put(std::move(lightcalo_v));
+    e.put(std::move(slice_lightcalo_assn_v));
     return;
   }
 
@@ -252,6 +256,8 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
   e.getByLabel(_slice_producer, spacepoint_h);
   if(!spacepoint_h.isValid() || spacepoint_h->empty()) {
     std::cout << "don't have good SpacePoints!" << std::endl;
+    e.put(std::move(lightcalo_v));
+    e.put(std::move(slice_lightcalo_assn_v));
     return;
   }
 
@@ -261,13 +267,10 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     std::cout << "Using PMT OpFlash only..." << std::endl;  
   if( (!flash0_h.isValid() || flash0_h->empty()) && (!flash1_h.isValid() || flash1_h->empty())) {
     std::cout << "don't have good PMT flashes from producer " << _opflash_producer_v[0] << " or "  << _opflash_producer_v[1] << std::endl;
+    e.put(std::move(lightcalo_v));
+    e.put(std::move(slice_lightcalo_assn_v));
     return;
   }
-
-  // const art::ValidHandle<std::vector<sim::SimEnergyDeposit>>&
-  //   energyDeps(e.getValidHandle<std::vector<sim::SimEnergyDeposit>>(_simenergy_producer));
-  // if ( (!energyDeps.isValid() || energyDeps->empty()) && _truth_validation){
-  // }
 
   // Construct the vector of Slices
   std::vector<art::Ptr<recob::Slice>> slice_v;
@@ -328,11 +331,15 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     std::cout << "no slices passed the cuts" << std::endl;
     _match_type = -1;
     _tree->Fill();
+    e.put(std::move(lightcalo_v));
+    e.put(std::move(slice_lightcalo_assn_v));
     return;
   }
 
   if (match_slices_v.size() != match_fm_v.size()){
     std::cout << "slice and flashmatch vector length mismatch!" << std::endl;
+    e.put(std::move(lightcalo_v));
+    e.put(std::move(slice_lightcalo_assn_v));
     return;
   }
 
@@ -351,7 +358,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     if (_verbose) std::cout << "Using PMT OpFlash + X-ARAPUCA OpFlash..." << std::endl;
     if (!flash0_ara_h.isValid() || flash0_ara_h->empty()) {
       std::cout << "don't have good X-ARAPUCA flashes from producer " << _opflash_ara_producer_v[0] << std::endl;
-      // return;
     }
     else
       art::fill_ptr_vector(flash0_ara_v, flash0_ara_h);
@@ -369,7 +375,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     if (_verbose) std::cout << "Using PMT OpFlash + X-ARAPUCA OpFlash..." << std::endl;
     if (!flash1_ara_h.isValid() || flash1_ara_h->empty()) {
       std::cout << "don't have good X-ARAPUCA flashes from producer " << _opflash_ara_producer_v[1] << std::endl;
-      // return;
     }
     else 
       art::fill_ptr_vector(flash1_ara_v, flash1_ara_h);
@@ -378,6 +383,8 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     std::cout << "no opflashes matched to simpleflashes" << std::endl;
     _match_type = -2;
     _tree->Fill();
+    e.put(std::move(lightcalo_v));
+    e.put(std::move(slice_lightcalo_assn_v));
     return;
   }
 
@@ -391,8 +398,8 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     _slice_L = 0; // total amount of light
     _slice_E = 0;
 
-    std::vector<std::vector<geo::Point_t>> sp_xyz; // position info of each spacepoint per plane 
-    std::vector<std::vector<double>> sp_charge; // vector of charge info for charge-weighting for each plane 
+    std::vector<std::vector<geo::Point_t>> sp_xyz(3); // position info of each spacepoint per plane 
+    std::vector<std::vector<double>> sp_charge(3); // vector of charge info for charge-weighting for each plane 
  
     double flash_time = -999;
     auto opflash0 = (match_op0.at(n_slice));
@@ -431,6 +438,8 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
       std::cout << "No opflashes matched with SimpleFlash objects" << std::endl;
       _match_type = -3;
       _tree->Fill();
+      e.put(std::move(lightcalo_v));
+      e.put(std::move(slice_lightcalo_assn_v));
       return;
     }
     
@@ -471,7 +480,7 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
           double drift_time = ((2.0*geom->DetHalfWidth()) - abs(position[0]))/(det_prop.DriftVelocity()); // cm / (cm/us) 
           double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
           double charge = (1/_cal_area_const.at(hit_plane))*atten_correction*hit->Integral();
-                    
+
           sp_xyz.at(hit_plane).push_back(xyz);
           sp_charge.at(hit_plane).push_back(charge);
         }
@@ -487,17 +496,22 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
         // if using arapucas, need to combine PMT and arapuca PE information into a single vector 
         if (_use_arapucas){
           auto flash_ara_v = (tpc==0)? flash0_ara_v : flash1_ara_v;
-          // for PMT flashes, the PE vector is shortened and don't include the last 6 entries for ARAPUCAs 
-          if (flash_pe_v.size()!= _nchan) flash_pe_v.insert(flash_pe_v.end(), {0,0,0,0,0,0}); 
-          for (size_t nara=0; nara < flash_ara_v.size(); nara++){
-            auto const &flash_ara = *flash_ara_v[nara];
-            if (abs(flash_time-flash_ara.Time()) < _pmt_ara_offset){
-              if (_verbose)
-                std::cout << "Combining PMT+XARA Flashes with PMT time: " << flash_time << ", ARA time: " << flash_ara.Time() << std::endl;            
-              for (size_t ich=0; ich < (flash_ara.PEs()).size(); ich++)
-                flash_pe_v.at(ich) += (flash_ara.PEs()).at(ich);
-              break;
-            }     
+          if (flash_ara_v.empty())
+            // if there are no valid arapuca flashes
+            std::cout << "Using PMT information Only..." << std::endl;
+          else{
+            // for PMT flashes, the PE vector is shortened and don't include the last 6 entries for ARAPUCAs 
+            if (flash_pe_v.size()!= _nchan) flash_pe_v.insert(flash_pe_v.end(), {0,0,0,0,0,0}); 
+            for (size_t nara=0; nara < flash_ara_v.size(); nara++){
+              auto const &flash_ara = *flash_ara_v[nara];
+              if (abs(flash_time-flash_ara.Time()) < _pmt_ara_offset){
+                if (_verbose)
+                  std::cout << "Combining PMT+XARA Flashes with PMT time: " << flash_time << ", ARA time: " << flash_ara.Time() << std::endl;            
+                for (size_t ich=0; ich < (flash_ara.PEs()).size(); ich++)
+                  flash_pe_v.at(ich) += (flash_ara.PEs()).at(ich);
+                break;
+              }     
+            }
           }
         } // end of arapuca if 
         for (size_t ich=0; ich<flash_pe_v.size(); ich++) total_pe[ich] += flash_pe_v[ich];
@@ -508,7 +522,7 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     _opflash_time = flash_time;
     _dep_pe = total_pe;
 
-    // create variabls to push into the data product (not ordered by typical plane number)
+    // create variables to push into the data product (not ordered by typical plane number)
     std::vector<double> lightcalo_charge;
     std::vector<double> lightcalo_light;
     std::vector<double> lightcalo_energy;
@@ -517,36 +531,46 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     std::vector<std::vector<double>> total_gamma(3, std::vector<double>(_nchan,0.));
     for (int nplane = 0; nplane<3; nplane++){
       // get total L count
-      std::vector<double> visibility_map = CalcVisibility(sp_xyz.at(nplane),sp_charge.at(nplane));
-      // calculate the photon estimates for every entry in total_pe
-      CalcLight(total_pe, visibility_map, total_gamma.at(nplane));
-      _light_med.at(nplane) = CalcMedian(total_gamma.at(nplane));
-      _light_avg.at(nplane) = CalcMedian(total_gamma.at(nplane));
+      if (!sp_xyz.at(nplane).empty()){
+        std::vector<double> visibility_map = CalcVisibility(sp_xyz.at(nplane),sp_charge.at(nplane));
+        // calculate the photon estimates for every entry in total_pe
+        CalcLight(total_pe, visibility_map, total_gamma.at(nplane));
+        _light_med.at(nplane) = CalcMedian(total_gamma.at(nplane));
+        _light_avg.at(nplane) = CalcMedian(total_gamma.at(nplane));
 
-      _energy.at(nplane) = (_charge.at(nplane) + _light_med.at(nplane))*1e-6*g4param->Wph();
+        _energy.at(nplane) = (_charge.at(nplane) + _light_med.at(nplane))*1e-6*g4param->Wph();
 
-      gamma_avg = _light_avg.at(nplane);
-      gamma_med = _light_med.at(nplane);
-      int planeID = nplane;
-      if (nplane==bestPlane){
-        _rec_gamma = total_gamma.at(nplane);
-        if (gamma_med!=0 && !std::isnan(gamma_med))
-          _slice_L = gamma_med;
-        else
-          _slice_L = gamma_avg;
-        lightcalo_charge.insert(lightcalo_charge.begin(),_charge.at(nplane));
-        lightcalo_light.insert(lightcalo_light.begin(),gamma_med);
-        lightcalo_energy.insert(lightcalo_energy.begin(),_energy.at(nplane));
-        lightcalo_plane.insert(lightcalo_plane.begin(),planeID);
+        double gamma_avg = _light_avg.at(nplane);
+        double gamma_med = _light_med.at(nplane);
+        if (nplane==bestPlane){
+          _rec_gamma = total_gamma.at(nplane);
+          if (gamma_med!=0 && !std::isnan(gamma_med))
+            _slice_L = gamma_med;
+          else
+            _slice_L = gamma_avg;
+          lightcalo_charge.insert(lightcalo_charge.begin(),_charge.at(nplane));
+          lightcalo_light.insert(lightcalo_light.begin(),gamma_med);
+          lightcalo_energy.insert(lightcalo_energy.begin(),_energy.at(nplane));
+          lightcalo_plane.insert(lightcalo_plane.begin(),nplane);
+        }
+        else{
+          lightcalo_charge.push_back(_charge.at(nplane));
+          lightcalo_light.push_back(gamma_med);
+          lightcalo_energy.push_back(_energy.at(nplane));
+          lightcalo_plane.push_back(nplane);
+        }
       }
       else{
-        lightcalo_charge.push_back(_charge.at(nplane));
-        lightcalo_light.push_back(gamma_med);
-        lightcalo_energy.push_back(_energy.at(nplane));
-        lightcalo_plane.push_back(planeID);
+        _light_med.at(nplane) = -1.;
+        _light_avg.at(nplane) = -1.; 
+        _energy.at(nplane) = -1.;
+        lightcalo_charge.push_back(-1.);
+        lightcalo_light.push_back(-1.);
+        lightcalo_energy.push_back(-1.);
+        lightcalo_plane.push_back(-1);  
       }
     }
-        _slice_E = _energy.at(bestPlane);
+    _slice_E = _energy.at(bestPlane);
 
     sbn::LightCalo lightcalo(lightcalo_charge,
                              lightcalo_light,
@@ -555,6 +579,7 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
                              flash_time);
 
     lightcalo_v->push_back(lightcalo);
+    util::CreateAssn(*this, e, *lightcalo_v, slice, *slice_lightcalo_assn_v);
 
     _true_gamma = 0; 
     _true_charge = 0;
@@ -606,9 +631,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
       _frac_Q = -9999;
       _frac_E = -9999;
     } 
-    
-    util::CreateAssn(*this, e, *lightcalo_v, slice, *slice_lightcalo_assn_v);
-
     _tree2->Fill();
     nsuccessful_matches++;
   } // end slice loop

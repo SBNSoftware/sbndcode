@@ -1,7 +1,7 @@
 #include "opticalsimparameterisations_sbnd.fcl"
 
 BEGIN_PROLOG
-lightcalo_ana:
+lightcaloana:
 {
     module_type: "LightCaloAna"
 
