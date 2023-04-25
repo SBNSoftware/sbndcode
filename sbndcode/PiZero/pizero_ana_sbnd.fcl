@@ -1,13 +1,13 @@
-#include "services_sbnd.fcl"
-#include "particleinventoryservice.fcl"
+#include "simulationservices_sbnd.fcl"
 
 process_name: PiZeroAnalyzer
 
 services:
 {
   TFileService: { fileName: "pizeroana_sbnd.root" }
-  @table::sbnd_basic_services
-  ParticleInventoryService: @local::standard_particleinventoryservice
+  @table::sbnd_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
 }
 
 source:
