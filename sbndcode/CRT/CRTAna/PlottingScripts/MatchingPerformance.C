@@ -1,6 +1,6 @@
 void MatchingPerformance()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/v09_67_00_no_duplicates/matchingperformance";
+  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/large_samples/combined/matchingperformance";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void MatchingPerformance()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/crtana_v09_67_00_no_duplicates.root");
+  tree->Add("/sbnd/data/users/hlay/crt/clustering/production/ana/crtana_sbnd.root");
 
   std::vector<double> *tpc_truth_energy = 0, *tpc_length = 0, *tpc_sp_score = 0, *tpc_tr_score = 0;
   std::vector<bool> *tpc_sp_matchable = 0, *tpc_sp_matched = 0, *tpc_sp_good_match = 0;
