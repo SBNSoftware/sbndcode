@@ -1,0 +1,29 @@
+#include "simulationservices_sbnd.fcl"
+
+process_name: EventInfoDumper
+
+services:
+{
+  @table::sbnd_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    eventinfo:
+    { 
+      module_type: "EventInfoDumper"
+    }
+  }
+
+  ana:       [ eventinfo ]
+  end_paths: [ ana ]
+}
