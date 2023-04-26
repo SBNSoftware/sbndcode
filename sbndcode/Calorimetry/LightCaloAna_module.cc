@@ -573,7 +573,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       e.getByLabel(_simenergy_producer, energyDeps_h);
       std::vector<art::Ptr<sim::SimEnergyDeposit>> energyDeps; 
       
-      if (energyDeps_h.isValid() || energyDeps_h->empty())
+      if (!energyDeps_h.isValid() || energyDeps_h->empty())
         std::cout << "Don't have good SimEnergyDeposits!" << std::endl;
       else 
         art::fill_ptr_vector(energyDeps, energyDeps_h);
