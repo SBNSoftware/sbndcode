@@ -71,9 +71,9 @@ standard_sbnd_crtsimparams: {
 }
 
 sbnd_crtsim: {
-  module_type: "sbndcode/CRT/CRTDetSim"
+  module_type:   "CRTDetSim"
   G4ModuleLabel: "genericcrt"
-  DetSimParams: @local::standard_sbnd_crtsimparams
+  DetSimParams:  @local::standard_sbnd_crtsimparams
 }
 
 END_PROLOG
