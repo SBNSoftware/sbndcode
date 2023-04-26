@@ -37,16 +37,33 @@ namespace sbnd::crt {
     fTrackIDMotherMap.clear();
     fStripHitMCPMap.clear();
 
-    art::Handle<std::vector<sim::ParticleAncestryMap>> droppedTrackIDMapHandle;
+    art::Handle<std::vector<sim::ParticleAncestryMap>> droppedTrackIDMapVecHandle;
+    event.getByLabel(fSimModuleLabel, droppedTrackIDMapVecHandle);
+
+    if(droppedTrackIDMapVecHandle.isValid())
+      {
+	for(auto const& droppedTrackIdMap : *droppedTrackIDMapVecHandle)
+	  {
+	    for(auto const& [mother, ids] : droppedTrackIdMap.GetMap())
+	      {
+		for(auto const& id : ids)
+		  fTrackIDMotherMap[id] = mother;
+	      }
+	  }
+      }
+
+    art::Handle<sim::ParticleAncestryMap> droppedTrackIDMapHandle;
     event.getByLabel(fSimModuleLabel, droppedTrackIDMapHandle);
 
-    for(auto const& droppedTrackIdMap : *droppedTrackIDMapHandle)
+    if(droppedTrackIDMapHandle.isValid())
       {
-        for(auto const& [mother, ids] : droppedTrackIdMap.GetMap())
-          {
-            for(auto const& id : ids)
-              fTrackIDMotherMap[id] = mother;
-          }
+	auto const& droppedTrackIdMap = droppedTrackIDMapHandle->GetMap();
+
+	for(auto const& [mother, ids] : droppedTrackIdMap)
+	  {
+	    for(auto const& id : ids)
+	      fTrackIDMotherMap[id] = mother;
+	  }
       }
 
     art::Handle<std::vector<sim::AuxDetIDE>> ideHandle;
