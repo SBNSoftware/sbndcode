@@ -30,7 +30,6 @@ art_make(
 )
 
 art_make_library(
-                 LIBRARY_NAME sbndcode_CRT
                  SOURCE       CRTChannelMapAlg.cxx
                  LIBRARIES
                         larcorealg::Geometry
