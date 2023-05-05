@@ -1,6 +1,6 @@
 #include "simulationservices_sbnd.fcl"
 
-process_name: EventInfoDumper
+process_name: EventDisplayAndDump
 
 services:
 {
@@ -18,12 +18,12 @@ physics:
 {
   analyzers:
   {
-    eventinfo:
+    eventdisp:
     { 
-      module_type: "EventInfoDumper"
+      module_type: "EventDisplayAndDump"
     }
   }
 
-  ana:       [ eventinfo ]
+  ana:       [ eventdisp ]
   end_paths: [ ana ]
 }
