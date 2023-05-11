@@ -7,10 +7,12 @@
 
 void InputVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/razzled/plots/investigations/inputvariables";
+  const TString saveDir = "/sbnd/data/users/hlay/razzled/plots/investigations/inputvariables_no_other";
   const bool save = true;
   if(save)
     gSystem->Exec("mkdir -p " + saveDir);
+
+  const bool all = false, split = true;
 
   using namespace std;
   gROOT->SetStyle("henrySBND");
@@ -28,13 +30,13 @@ void InputVariables()
 				 {"photon", "abs(truePdg)==22 && !unambiguousSlice", "#gamma", kBlue+2},
 				 {"pion", "abs(truePdg)==211 && !unambiguousSlice", "#pi^{#pm}", kGreen+2},
 				 {"proton", "abs(truePdg)==2212 && !unambiguousSlice", "p", kOrange+2},
-				 {"other", "abs(truePdg)!=11 && abs(truePdg)!=13 && abs(truePdg)!=22 && abs(truePdg)!=211 && abs(truePdg)!=2212 && !unambiguousSlice", "Other", kBlack}
+				 //				 {"other", "abs(truePdg)!=11 && abs(truePdg)!=13 && abs(truePdg)!=22 && abs(truePdg)!=211 && abs(truePdg)!=2212 && !unambiguousSlice", "Other", kBlack}
   };
 
   std::vector<Plot> plots = { {"pfp_numDaughters", "pfp_numDaughters", ";PFP N Daughters;PFPs",
-                               33, -8.5, 24.5},
+                               19, -8.5, 8.5},
                               {"pfp_numDaughters_filled", "pfp_numDaughters", ";PFP N Daughters;PFPs",
-                               25, -.5, 24.5},
+                               9, -.5, 8.5},
                               {"pfp_maxDaughterHits", "pfp_maxDaughterHits", ";PFP Max Daughter Hits;PFPs",
                                100, -100, 400},
                               {"pfp_maxDaughterHits_filled", "pfp_maxDaughterHits", ";PFP Max Daughter Hits;PFPs",
@@ -54,7 +56,7 @@ void InputVariables()
                               {"pfp_linearFitDiff", "pfp_linearFitDiff", ";PFP Linear Fit Difference;PFPs",
                                180, -1.2, .6},
                               {"pfp_linearFitDiff_filled", "pfp_linearFitDiff", ";PFP Linear Fit Difference;PFPs",
-                               80, -.2, .6},
+                               80, -.1, .3},
                               {"pfp_linearFitLength", "pfp_linearFitLength", ";PFP Linear Fit Length (cm);PFPs",
                                60, -100, 500},
                               {"pfp_linearFitLength_filled", "pfp_linearFitLength", ";PFP Linear Fit Length (cm);PFPs",
@@ -87,17 +89,17 @@ void InputVariables()
                                140, -.2, 1.2},
                               {"pfp_tertiaryPCARatio_filled_log", "pfp_tertiaryPCARatio", ";PFP Tertiary PCA Ratio;PFPs",
                                140, -.2, 1.2, kBlack, true},
-                              {"pfp_vertexDist", "pfp_vertexDist", ";PFP Vertex Distance;PFPs",
+                              {"pfp_vertexDist", "pfp_vertexDist", ";PFP Vertex Distance (cm);PFPs",
                                250, -100, 400},
-                              {"pfp_vertexDist_log", "pfp_vertexDist", ";PFP Vertex Distance;PFPs",
+                              {"pfp_vertexDist_log", "pfp_vertexDist", ";PFP Vertex Distance (cm);PFPs",
                                250, -100, 400, kBlack, true},
-                              {"pfp_vertexDist_filled", "pfp_vertexDist", ";PFP Vertex Distance;PFPs",
+                              {"pfp_vertexDist_filled", "pfp_vertexDist", ";PFP Vertex Distance (cm);PFPs",
                                205, -10, 400},
-                              {"pfp_vertexDist_filled_log", "pfp_vertexDist", ";PFP Vertex Distance;PFPs",
+                              {"pfp_vertexDist_filled_log", "pfp_vertexDist", ";PFP Vertex Distance (cm);PFPs",
                                205, -10, 400, kBlack, true},
-                              {"trk_length", "trk_length", ";Track Length;PFPs",
+                              {"trk_length", "trk_length", ";Track Length (cm);PFPs",
                                100, -200, 800},
-                              {"trk_length_filled", "trk_length", ";Track Length;PFPs",
+                              {"trk_length_filled", "trk_length", ";Track Length (cm);PFPs",
                                85, -50, 800},
                               {"trk_chi2PIDMuon", "trk_chi2PIDMuon", ";Track #chi^{2} PID Muon;PFPs",
                                60, -20, 100},
@@ -111,25 +113,25 @@ void InputVariables()
                                90, -120, 60},
                               {"trk_chi2PIDMuonPionDiff_filled", "trk_chi2PIDMuonPionDiff", ";Track #chi^{2} PID Muon Pion Difference;PFPs",
                                60, -60, 60},
-                              {"trk_mcsScatterMean", "trk_mcsScatterMean", ";Track MCS Mean;PFPs",
+                              {"trk_mcsScatterMean", "trk_mcsScatterMean", ";Track MCS Mean (mrad);PFPs",
                                60, -200, 1000},
-                              {"trk_mcsScatterMean_log", "trk_mcsScatterMean", ";Track MCS Mean;PFPs",
+                              {"trk_mcsScatterMean_log", "trk_mcsScatterMean", ";Track MCS Mean (mrad);PFPs",
                                60, -200, 1000, kBlack, true},
-                              {"trk_mcsScatterMean_filled", "trk_mcsScatterMean", ";Track MCS Mean;PFPs",
+                              {"trk_mcsScatterMean_filled", "trk_mcsScatterMean", ";Track MCS Mean (mrad);PFPs",
                                50, 0, 1000},
-                              {"trk_mcsScatterMean_filled_log", "trk_mcsScatterMean", ";Track MCS Mean;PFPs",
+                              {"trk_mcsScatterMean_filled_log", "trk_mcsScatterMean", ";Track MCS Mean (mrad);PFPs",
                                50, 0, 1000, kBlack, true},
                               {"trk_mcsScatterMaxRatio", "trk_mcsScatterMaxRatio", ";Track MCS Max Ratio;PFPs",
                                200, -1.5, 2.5},
                               {"trk_mcsScatterMaxRatio_filled", "trk_mcsScatterMaxRatio", ";Track MCS Max Ratio;PFPs",
                                120, -.2, 2.2},
-                              {"trk_meanDCA", "trk_meanDCA", ";Track Mean DCA;PFPs",
+                              {"trk_meanDCA", "trk_meanDCA", ";Track Mean DCA (cm);PFPs",
                                70, -10, 60},
-                              {"trk_meanDCA_log", "trk_meanDCA", ";Track Mean DCA;PFPs",
+                              {"trk_meanDCA_log", "trk_meanDCA", ";Track Mean DCA (cm);PFPs",
                                70, -10, 60, kBlack, true},
-                              {"trk_meanDCA_filled", "trk_meanDCA", ";Track Mean DCA;PFPs",
+                              {"trk_meanDCA_filled", "trk_meanDCA", ";Track Mean DCA (cm);PFPs",
                                60, 0, 60},
-                              {"trk_meanDCA_filled_log", "trk_meanDCA", ";Track Mean DCA;PFPs",
+                              {"trk_meanDCA_filled_log", "trk_meanDCA", ";Track Mean DCA (cm);PFPs",
                                60, 0, 60, kBlack, true},
                               {"trk_stoppingdEdxChi2Ratio", "trk_stoppingdEdxChi2Ratio", ";Track Stopping dE/dx Fit #chi^{2} Ratio;PFPs",
                                50, -10, 15},
@@ -139,25 +141,25 @@ void InputVariables()
                                30, 0, 15},
                               {"trk_stoppingdEdxChi2Ratio_filled_log", "trk_stoppingdEdxChi2Ratio", ";Track Stopping dE/dx Fit #chi^{2} Ratio;PFPs",
                                30, 0, 15, kBlack, true},
-                              {"trk_chi2Pol0dEdxFit", "trk_chi2Pol0dEdxFit", ";Track Stopping dE/dx Pol0 Fit Value;PFPs",
+                              {"trk_chi2Pol0dEdxFit", "trk_chi2Pol0dEdxFit", ";Track dE/dx Pol0 Fit Value (MeV/cm);PFPs",
                                50, -10, 15},
-                              {"trk_chi2Pol0dEdxFit_filled", "trk_chi2Pol0dEdxFit", ";Track Stopping dE/dx Pol0 Fit Value;PFPs",
+                              {"trk_chi2Pol0dEdxFit_filled", "trk_chi2Pol0dEdxFit", ";Track dE/dx Pol0 Fit Value (MeV/cm);PFPs",
                                30, 0, 15},
-                              {"trk_momDiff", "trk_momDiff", ";Track p_{MCS} - p_{Range} / p_{Range};PFPs",
+                              {"trk_momDiff", "trk_momDiff", ";Track (p_{MCS} - p_{Range}) / p_{Range};PFPs",
                                90, -20, 70},
-                              {"trk_momDiff_filled", "trk_momDiff", ";Track p_{MCS} - p_{Range} / p_{Range};PFPs",
+                              {"trk_momDiff_filled", "trk_momDiff", ";Track (p_{MCS} - p_{Range}) / p_{Range};PFPs",
                                70, 0, 70},
                               {"shw_bestdEdx", "shw_bestdEdx", ";Shower Best Plane dE/dx (MeV/cm);PFPs",
                                60, -10, 20},
                               {"shw_bestdEdx_filled", "shw_bestdEdx", ";Shower Best Plane dE/dx (MeV/cm);PFPs",
                                40, 0, 20},
-                              {"shw_convGap", "shw_convGap", ";Shower Conversion Gap;PFPs",
+                              {"shw_convGap", "shw_convGap", ";Shower Conversion Gap (cm);PFPs",
                                60, -10, 50},
-                              {"shw_convGap_log", "shw_convGap", ";Shower Conversion Gap;PFPs",
+                              {"shw_convGap_log", "shw_convGap", ";Shower Conversion Gap (cm);PFPs",
                                60, -10, 50, kBlack, true},
-                              {"shw_convGap_filled", "shw_convGap", ";Shower Conversion Gap;PFPs",
+                              {"shw_convGap_filled", "shw_convGap", ";Shower Conversion Gap (cm);PFPs",
                                52, -2, 50},
-                              {"shw_convGap_filled_log", "shw_convGap", ";Shower Conversion Gap;PFPs",
+                              {"shw_convGap_filled_log", "shw_convGap", ";Shower Conversion Gap (cm);PFPs",
                                52, -2, 50, kBlack, true},
                               {"shw_openAngle", "shw_openAngle", ";Shower Opening Angle (#circ);PFPs",
                                60, -20, 100},
@@ -167,57 +169,62 @@ void InputVariables()
                                52, -4, 100},
                               {"shw_openAngle_filled_log", "shw_openAngle", ";Shower Opening Angle (#circ);PFPs",
                                52, -4, 100, kBlack, true},
-                              {"shw_modHitDensity", "shw_modHitDensity", ";Shower |Hit Density|;PFPs",
+                              {"shw_modHitDensity", "shw_modHitDensity", ";Shower |Hit Density| (hits/wire);PFPs",
                                50, -10, 40},
-                              {"shw_modHitDensity_filled", "shw_modHitDensity", ";Shower |Hit Density|;PFPs",
+                              {"shw_modHitDensity_filled", "shw_modHitDensity", ";Shower |Hit Density| (hits/wire);PFPs",
                                44, -4, 40},
-                              {"shw_sqrtEnergyDensity", "shw_sqrtEnergyDensity", ";Shower |Hit Density|;PFPs",
-                               50, -6, 4},
-                              {"shw_sqrtEnergyDensity_filled", "shw_sqrtEnergyDensity", ";Shower |Hit Density|;PFPs",
-                               25, -1, 4},
+                              {"shw_sqrtEnergyDensity", "shw_sqrtEnergyDensity", ";Shower #sqrt{Energy Density} (#sqrt{MeV}/cm);PFPs",
+                               150, -6, 4},
+                              {"shw_sqrtEnergyDensity_filled", "shw_sqrtEnergyDensity", ";Shower #sqrt{Energy Density} (#sqrt{MeV}/cm);PFPs",
+                               75, -1, 4},
   };
   
-  if(save)
-    gSystem->Exec("mkdir -p " + saveDir + "/all");
-
-  for(auto const & cut : cuts)
+  if(all)
     {
-      for(auto &plot : plots)
-        {
-          TCanvas *canvas = new TCanvas("c_" + plot.name + "_" + cut.name,
-                                        "c_" + plot.name + "_" + cut.name);
-          canvas->cd();
-
-          plot.colour = cut.colour;
-
-          MakePlot(canvas, tree, plot, cut);
-
-          if(save)
-            {
-              canvas->SaveAs(saveDir + "/all/" + plot.name + "_" + cut.name + ".png");
-              canvas->SaveAs(saveDir + "/all/" + plot.name + "_" + cut.name + ".pdf");
-            }
-          delete canvas;
-        }
-    }
-
-  if(save)
-    gSystem->Exec("mkdir -p " + saveDir + "/split");
-
-  for(auto &plot : plots)
-    {
-      TCanvas *canvas = new TCanvas("c_" + plot.name + "_byType",
-				    "c_" + plot.name + "_byType");
-      canvas->cd();
-
-      MakeComparisonPlot(canvas, tree, plot, particles, {.35, .79, .8, .87});
-
       if(save)
+	gSystem->Exec("mkdir -p " + saveDir + "/all");
+
+      for(auto const & cut : cuts)
 	{
-	  canvas->SaveAs(saveDir + "/split/" + plot.name + ".png");
-	  canvas->SaveAs(saveDir + "/split/" + plot.name + ".pdf");
+	  for(auto &plot : plots)
+	    {
+	      TCanvas *canvas = new TCanvas("c_" + plot.name + "_" + cut.name,
+					    "c_" + plot.name + "_" + cut.name);
+	      canvas->cd();
+
+	      plot.colour = cut.colour;
+
+	      MakePlot(canvas, tree, plot, cut);
+
+	      if(save)
+		{
+		  canvas->SaveAs(saveDir + "/all/" + plot.name + "_" + cut.name + ".png");
+		  canvas->SaveAs(saveDir + "/all/" + plot.name + "_" + cut.name + ".pdf");
+		}
+	      delete canvas;
+	    }
 	}
-      delete canvas;
     }
-	  
+
+  if(split)
+    {
+      if(save)
+	gSystem->Exec("mkdir -p " + saveDir + "/split");
+
+      for(auto &plot : plots)
+	{
+	  TCanvas *canvas = new TCanvas("c_" + plot.name + "_byType",
+					"c_" + plot.name + "_byType");
+	  canvas->cd();
+
+	  MakeComparisonPlot(canvas, tree, plot, particles, {.35, .77, .8, .87});
+
+	  if(save)
+	    {
+	      canvas->SaveAs(saveDir + "/split/" + plot.name + ".png");
+	      canvas->SaveAs(saveDir + "/split/" + plot.name + ".pdf");
+	    }
+	  delete canvas;
+	}
+    }	  
 }
