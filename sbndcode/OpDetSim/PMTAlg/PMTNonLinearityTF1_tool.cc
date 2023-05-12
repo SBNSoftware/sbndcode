@@ -47,12 +47,12 @@ public:
 
     fhicl::Atom<unsigned int> attenuationPreTime {
       Name("AttenuationPreTime"),
-      Comment("Pre bins to conisder")
+      Comment("For the non-linear attenuation, consider photons arriving given by this time window. In nanoseconds.")
     };
 
     fhicl::Sequence<unsigned int> nonLinearRange {
       Name("NonLinearRange"),
-      Comment("Non linear range. Assume linear response/completely saturated response out of this range")
+      Comment("Non linear range. Assume linear response/completely saturated response out of this range. In #PE.")
     };
 
   };
@@ -87,11 +87,8 @@ opdet::PMTNonLinearityTF1::PMTNonLinearityTF1(art::ToolConfigTable<Config> const
   , fNonLinearRange { config().nonLinearRange() }
 {
   fNonLinearTF1 = new TF1("NonLinearTF1", fAttenuationForm.c_str());
-  std::cout<<" Non Linearity Parameteres: \n";
-  std::cout<<fAttenuationForm<<"  PreTime"<<fAttenuationPreTime<<" PESat: "<<fNonLinearRange[1]<<"\n";
   for(size_t k=0; k<fAttenuationFormParams.size(); k++){
     fNonLinearTF1->SetParameter(k, fAttenuationFormParams[k]);
-    std::cout<<" Par "<<k<<" "<<fAttenuationFormParams[k]<<std::endl;
   }
 
   // Initialize attenuation vector
@@ -101,34 +98,15 @@ opdet::PMTNonLinearityTF1::PMTNonLinearityTF1(art::ToolConfigTable<Config> const
   }
   fPESaturationValue = fNonLinearTF1->Eval(fNonLinearRange[1]);
 
-  std::cout<<" fAttFunc:  ";
-  for(size_t pe=0; pe<fNonLinearRange[1]; pe++){
-    std::cout<<pe<<":"<<pe*fPEAttenuation_V[pe]<<":"<<fPEAttenuation_V[pe]<<"  ";
-  }
-  std::cout<<" PESatValue: "<<fPESaturationValue<<std::endl;
-
 }
 
 double opdet::PMTNonLinearityTF1::NObservedPE(size_t bin, std::vector<unsigned int> & pe_vector){
-  
-  /*std::vector<unsigned int>::iterator it1 = pe_vector.begin();
-  std::vector<unsigned int>::iterator it2 = std::next(pe_vector.begin(), -1);
-  std::cout<<" ITER: "<<std::distance(pe_vector.begin(), it1)<<" "<<std::distance(pe_vector.begin(), it2)<<std::endl;
-  */
 
   // get first bin
   size_t start_bin = bin-fAttenuationPreTime;
   
   if(fAttenuationPreTime<0) start_bin=0;
   unsigned int npe_acc = std::accumulate(pe_vector.begin()+start_bin,pe_vector.begin()+bin+1, 0);
-  
-  /*std::cout<<" In bin: "<<bin<<std::endl;
-  for(size_t k=start_bin; k<=bin; k++){
-    std::cout<<"  "<<k<<" "<<pe_vector[k];
-  }
-  std::cout<< "    Acc"<<npe_acc<<"  Rescales: "<<pe_vector[bin]*fPEAttenuation_V[npe_acc]<<std::endl;*/
-
-  //std::cout<< "   Bin="<<bin<<" Acc"<<npe_acc<<"  Rescales: "<<pe_vector[bin]*fPEAttenuation_V[npe_acc]<<std::endl;
   
   if(pe_vector[bin]>100) std::cout<<"  High En: "<<pe_vector[bin]<<" Acc="<<npe_acc<<" "<<pe_vector[bin]*fPEAttenuation_V[npe_acc]<<std::endl;
 

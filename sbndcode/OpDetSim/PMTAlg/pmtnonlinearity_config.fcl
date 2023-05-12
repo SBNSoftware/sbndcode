@@ -8,8 +8,8 @@ PMTNonLinearityTF1:
   #AttenuationFormParams: [78.15, 1.96]
   AttenuationForm:    "x/sqrt(1+(x/[0])**[1])"
   AttenuationFormParams: [269, 1.84]
-  AttenuationPreTime: 1 
-  NonLinearRange: [75, 701]
+  AttenuationPreTime: 4 #ns
+  NonLinearRange: [100, 701]
 }
 
 END_PROLOG

@@ -76,23 +76,19 @@ namespace opdet {
 
     if(fParams.MakeGainFluctuations){
       fPMTGainFluctuationsPtr = art::make_tool<opdet::PMTGainFluctuations>(fParams.GainFluctuationsParams);
-      std::cout<<" Constru: Simulating gain fluctuations"<<std::endl;
     }
     if(fParams.SimulateNonLinearity){
       fPMTNonLinearityPtr = art::make_tool<opdet::PMTNonLinearity>(fParams.NonLinearityParams);
-      std::cout<<" Constru: Simulating non linearity"<<std::endl;
     }  
 
     // infer pulse polarity from SER peak sign
     double minADC_SinglePE = *min_element(fSinglePEWave.begin(), fSinglePEWave.end());
     double maxADC_SinglePE = *max_element(fSinglePEWave.begin(), fSinglePEWave.end());
     fPositivePolarity = std::abs(maxADC_SinglePE) > std::abs(minADC_SinglePE); 
-    std::cout<<"Pulse polarity.... Positive="<<fPositivePolarity<<" Min: "<<minADC_SinglePE<<" maxSER: "<<maxADC_SinglePE<<std::endl;
-
+    
     // get ADC saturation value
     // currently assumes all dynamic range for PE (no overshoot)
     fADCSaturation = (fPositivePolarity ? fParams.PMTBaseline + fParams.PMTADCDynamicRange : fParams.PMTBaseline - fParams.PMTADCDynamicRange);
-    std::cout<<" ADCSatValue: "<<fADCSaturation<<std::endl;
 
 
     file->Close();
@@ -250,7 +246,7 @@ namespace opdet {
     // we want to keep the 1 ns SimPhotonLite resolution
     // digitizer sampling period is 2 ns
     // create a PE accumulator vector with size x2 the waveform size
-    std::vector<unsigned int> nPE_v( (size_t) fSampling*wave.size(), 0);
+    std::vector<unsigned int> nPE_v( (size_t) fSamplingPeriod*wave.size(), 0);
 
     // here litesimphotons corresponds only to reflected light
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
@@ -296,7 +292,6 @@ namespace opdet {
     std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap)
   {
 
-    //DEBUG: std::cout<<"DEBUGGING OpDetSim  "<<fParams.PMTNonLinearityTF1<<std::endl;
     double mean_photons;
     size_t accepted_photons;
     double ttsTime = 0;
@@ -306,7 +301,7 @@ namespace opdet {
     // we want to keep the 1 ns SimPhotonLite resolution
     // digitizer sampling period is 2 ns
     // create a PE accumulator vector with size x2 the waveform size
-    std::vector<unsigned int> nPE_v( (size_t) fSampling*wave.size(), 0);
+    std::vector<unsigned int> nPE_v( (size_t) fSamplingPeriod*wave.size(), 0);
 
     // direct light
     if ( auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) ){
@@ -348,19 +343,16 @@ namespace opdet {
       }
     }
     
-    int NPre=0; int NPost=0;
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
           AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
-          NPre=NPre+nPE_v[t]; NPost+=fPMTNonLinearityPtr->NObservedPE(t, nPE_v);
         }
         else{
           AddSPE(t, wave, nPE_v[t]);
         }
       }
     }
-    std::cout<<" NPre: "<<NPre<<" NPost: "<<NPost<<std::endl;
 
     //Adding noise and saturation
     if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
@@ -400,8 +392,6 @@ namespace opdet {
     // used to gert the time-shifted SER
     double time_bin_hd = fSampling*time;
     size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(time_bin_hd);
-
-    std::cout<<" TimeShift: "<<time_bin_hd<<" "<<wvf_shift<<std::endl;
     
     // get actual time bin and waveform min/max iterators
     size_t time_bin=std::floor(time_bin_hd);
@@ -461,7 +451,7 @@ namespace opdet {
     double darkNoiseTime = fExponentialGen.fire(mean);
     while(darkNoiseTime < wave.size()) {
       timeBin = std::round(darkNoiseTime);
-      if(timeBin < wave.size()) {AddSPE(timeBin, wave);}
+      if(timeBin < wave.size()) {AddSPE(fSamplingPeriod*timeBin, wave);}
       // Find next time to add dark noise
       darkNoiseTime += fExponentialGen.fire(mean);
     }
