@@ -5,13 +5,13 @@ BEGIN_PROLOG
 #####OpHit finder for PMT deconvolved waveforms#####
 SBNDDecoOpHitFinderPMT: @local::sbnd_ophit_finder_pmt
 ####SPE area must be 1./DecoWaveformPrecision
-SBNDDecoOpHitFinderPMT.SPEArea: 500
+SBNDDecoOpHitFinderPMT.SPEArea: 200
 SBNDDecoOpHitFinderPMT.InputModule: "opdecopmt"
 SBNDDecoOpHitFinderPMT.HitThreshold: 1
 SBNDDecoOpHitFinderPMT.RiseTimeCalculator:   @local::sbnd_opreco_risetimecalculator
 
 #HitAlgoPset
-SBNDDecoOpHitFinderPMT.HitAlgoPset.ADCThreshold: 30
+SBNDDecoOpHitFinderPMT.HitAlgoPset.ADCThreshold: 12
 SBNDDecoOpHitFinderPMT.HitAlgoPset.NSigmaThreshold: 3
 SBNDDecoOpHitFinderPMT.HitAlgoPset.EndADCThreshold: 8
 SBNDDecoOpHitFinderPMT.HitAlgoPset.EndNSigmaThreshold: 0.2

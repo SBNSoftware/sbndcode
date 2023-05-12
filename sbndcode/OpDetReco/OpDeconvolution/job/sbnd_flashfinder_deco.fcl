@@ -5,7 +5,7 @@ BEGIN_PROLOG
 ####OpFlash finder for PMT deconvolved waveforms#####
 ###TPC0
 SBNDDecoSimpleFlashTPC0: @local::SBNDSimpleFlashTPC0
-SBNDDecoSimpleFlashTPC0.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC0.PECalib.SPEAreaGain: 200
 SBNDDecoSimpleFlashTPC0.OpHitProducers: ["ophitpmt"]
 SBNDDecoSimpleFlashTPC0.OpHitInputTime: "RiseTime"
 SBNDDecoSimpleFlashTPC0.UseT0Tool: true
@@ -14,7 +14,7 @@ SBNDDecoSimpleFlashTPC0.CorrectLightPropagation: true
 
 #TPC1
 SBNDDecoSimpleFlashTPC1: @local::SBNDSimpleFlashTPC1
-SBNDDecoSimpleFlashTPC1.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC1.PECalib.SPEAreaGain: 200
 SBNDDecoSimpleFlashTPC1.OpHitProducers: ["ophitpmt"]
 SBNDDecoSimpleFlashTPC1.OpHitInputTime: "RiseTime"
 SBNDDecoSimpleFlashTPC1.UseT0Tool: true
