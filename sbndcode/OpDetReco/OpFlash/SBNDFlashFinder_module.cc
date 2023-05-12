@@ -185,7 +185,6 @@ namespace opdet{
                            drift_distance, -1, Ycenter, Ywidth, Zcenter, Zwidth);
         opflashes->emplace_back(std::move(flash));
 
-        std::cout<<" FLASH GEO: Yc="<<Ycenter<<" Zc="<<Zcenter<<" Yw"<<Ywidth<<" Zw"<<Zwidth<<std::endl;
       }
       else{
         recob::OpFlash flash(flasht0, lflash.time_err, trigger_time + flasht0,

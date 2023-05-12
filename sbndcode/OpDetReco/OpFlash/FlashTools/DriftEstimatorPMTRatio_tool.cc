@@ -142,13 +142,6 @@ namespace lightana
 
   double DriftEstimatorPMTRatio::GetDriftPosition(std::vector<double> PE_v){
 
-    /*
-    double coatedPE=0, uncoatedPE=0;
-    for(size_t oc=0; oc<PE_v.size(); oc++){
-      if( fPDSMap.pdType(oc)=="pmt_coated" ) coatedPE+=PE_v[oc];
-      else if( fPDSMap.pdType(oc)=="pmt_uncoated" ) uncoatedPE+=PE_v[oc];
-    }*/
-
     std::map<int, double> fBoxMap_PECoated;
     std::map<int, double> fBoxMap_PEUncoated;
     std::map<int, int> fBoxMap_NCoatedCh;
@@ -168,12 +161,10 @@ namespace lightana
       // we store the pe in each box per PMT flavour
       // and the number of "triggered" PMTs
       if(pd_type=="pmt_coated") {
-        //fPECoated+=FlashPE_v[oc];
         fBoxMap_PECoated[box_id]+=PE_v[oc];
         fBoxMap_NCoatedCh[box_id]+=1;
       }
       else if(pd_type=="pmt_uncoated") {
-        //fPEUncoated+=FlashPE_v[oc];
         fBoxMap_PEUncoated[box_id]+=PE_v[oc];
         fBoxMap_NUncoatedCh[box_id]+=1;
       }
@@ -185,32 +176,26 @@ namespace lightana
       //we need the uncoated PMT in each window and at least one coated
       if( fBoxMap_NUncoatedCh[boxID]==1 && fBoxMap_NCoatedCh[boxID]>=1){
         double CoWeight = 1./fBoxMap_NCoatedCh[boxID];
-        std::cout<<"Using box "<<boxID<<" W="<<CoWeight<<" "<<fBoxMap_PECoated[boxID]<<" "<<fBoxMap_PEUncoated[boxID]<<std::endl;
-        
         fPECoated+=CoWeight * fBoxMap_PECoated[boxID];
         fPEUncoated+=fBoxMap_PEUncoated[boxID];
       }
     }
 
-    /*double pmtratio=1.;
-    if(coatedPE!=0)
-      pmtratio = 4*uncoatedPE/coatedPE;*/
+    if(fPECoated!=0){
+      double pmtratio = fPEUncoated/fPECoated;
 
-    double pmtratio=1.2;
-    if(fPECoated!=0)
-      pmtratio = fPEUncoated/fPECoated;
+      double drift_distance;
+      if(pmtratio<=fPMTRatioCal[0])
+        drift_distance=fDriftCal[0];
+      else if(pmtratio>=fPMTRatioCal[fNCalBins-1])
+        drift_distance=fDriftCal[fNCalBins-1];
+      else
+        drift_distance=Interpolate(pmtratio);
 
-    double drift_distance;
-    if(pmtratio<=fPMTRatioCal[0])
-      drift_distance=fDriftCal[0];
-    else if(pmtratio>=fPMTRatioCal[fNCalBins-1])
-      drift_distance=fDriftCal[fNCalBins-1];
-    else
-      drift_distance=Interpolate(pmtratio);
-
-    std::cout<<"Flash: "<<drift_distance<<" "<<pmtratio<<std::endl;
-    return drift_distance;
-   }
+      return drift_distance;
+    }
+    else return fDriftCal[fNCalBins-1]; 
+  }
 
   double DriftEstimatorPMTRatio::GetPropagationTime(double drift){
 
