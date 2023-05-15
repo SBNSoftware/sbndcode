@@ -142,10 +142,10 @@ namespace lightana
 
   double DriftEstimatorPMTRatio::GetDriftPosition(std::vector<double> PE_v){
 
-    std::map<int, double> fBoxMap_PECoated;
-    std::map<int, double> fBoxMap_PEUncoated;
-    std::map<int, int> fBoxMap_NCoatedCh;
-    std::map<int, int> fBoxMap_NUncoatedCh;
+    std::map<int, double> BoxMap_PECoated;
+    std::map<int, double> BoxMap_PEUncoated;
+    std::map<int, int> BoxMap_NCoatedCh;
+    std::map<int, int> BoxMap_NUncoatedCh;
 
     for(size_t oc=0; oc<PE_v.size(); oc++){
       // skip 0 PE channels
@@ -161,28 +161,28 @@ namespace lightana
       // we store the pe in each box per PMT flavour
       // and the number of "triggered" PMTs
       if(pd_type=="pmt_coated") {
-        fBoxMap_PECoated[box_id]+=PE_v[oc];
-        fBoxMap_NCoatedCh[box_id]+=1;
+        BoxMap_PECoated[box_id]+=PE_v[oc];
+        BoxMap_NCoatedCh[box_id]+=1;
       }
       else if(pd_type=="pmt_uncoated") {
-        fBoxMap_PEUncoated[box_id]+=PE_v[oc];
-        fBoxMap_NUncoatedCh[box_id]+=1;
+        BoxMap_PEUncoated[box_id]+=PE_v[oc];
+        BoxMap_NUncoatedCh[box_id]+=1;
       }
     }
 
     // compute PMTRatio metric
-    double fPECoated=0, fPEUncoated=0;
+    double PECoated=0, PEUncoated=0;
     for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
       //we need the uncoated PMT in each window and at least one coated
-      if( fBoxMap_NUncoatedCh[boxID]==1 && fBoxMap_NCoatedCh[boxID]>=1){
-        double CoWeight = 1./fBoxMap_NCoatedCh[boxID];
-        fPECoated+=CoWeight * fBoxMap_PECoated[boxID];
-        fPEUncoated+=fBoxMap_PEUncoated[boxID];
+      if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
+        double CoWeight = 1./BoxMap_NCoatedCh[boxID];
+        PECoated+=CoWeight * BoxMap_PECoated[boxID];
+        PEUncoated+=BoxMap_PEUncoated[boxID];
       }
     }
 
-    if(fPECoated!=0){
-      double pmtratio = fPEUncoated/fPECoated;
+    if(PECoated!=0){
+      double pmtratio = PEUncoated/PECoated;
 
       double drift_distance;
       if(pmtratio<=fPMTRatioCal[0])

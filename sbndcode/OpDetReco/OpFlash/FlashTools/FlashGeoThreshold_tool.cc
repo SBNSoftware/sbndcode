@@ -149,37 +149,20 @@ namespace lightana{
       fYPEAccumulator[(int) fPDxyz[1] ]+=pePerOpChannel[opch];
       fZPEAccumulator[(int) fPDxyz[2] ]+=pePerOpChannel[opch];
     }
-    
-    std::cout<<" YYY \n";
-    for(auto & y: fYPEAccumulator){
-      std::cout<<y.first<<":"<<y.second<<" ";
-    }
-    std::cout<<std::endl;
-
-    std::cout<<" ZZZ \n";
-    for(auto & z: fZPEAccumulator){
-      std::cout<<z.first<<":"<<z.second<<" ";
-    }
-    std::cout<<std::endl;
 
     // Normalize PE accumulators
     if(fNormalizeByPDType){
-      std::cout<<"Normalizing by PDType\n";
-
-      // Get normalization values for each PD type
+      
+      // Get normalization values for each PD type (Z)
       for(auto & z: fZPEAccumulator){
         if(z.second>fNormFactorsZ[ fPDTypeByZ[z.first] ]) 
           fNormFactorsZ[ fPDTypeByZ[z.first] ] = z.second;
       }
 
+      // Get normalization values for each PD type (Y)
       for(auto & y: fYPEAccumulator){
         if(y.second>fNormFactorsY[ fPDTypeByY[y.first] ]) 
           fNormFactorsY[ fPDTypeByY[y.first] ] = y.second;
-      }
-
-      std::cout<<" Norms are: \n";
-      for(auto & pd:fPDTypes){
-        std::cout<<"PDTypes: "<<pd<<" NormY: "<<fNormFactorsY[pd]<<" NormZ: "<<fNormFactorsZ[pd]<<std::endl;
       }
 
       for(auto & y: fYPEAccumulator)
@@ -190,7 +173,6 @@ namespace lightana{
 
     }
     else{
-      std::cout<<"Not normalizing by PDType\n";
 
       double normY = std::max_element(fYPEAccumulator.begin(), fYPEAccumulator.end(), 
                       [](const std::pair<int, double> &pe1, const std::pair<int, double> &pe2) 
@@ -199,25 +181,11 @@ namespace lightana{
       double normZ =  std::max_element(fZPEAccumulator.begin(), fZPEAccumulator.end(), 
                       [](const std::pair<int, double> &pe1, const std::pair<int, double> &pe2) 
                       {return pe1.second < pe2.second;})->second;
-      
-        
-      std::cout<<" Norms are: Y=" <<normY<<" Z="<<normZ<<"\n";
 
       for(auto & y: fYPEAccumulator) fYPEAccumulator[y.first] = y.second / normY; 
       for(auto & z: fZPEAccumulator) fZPEAccumulator[z.first] = z.second / normZ;
  
     }
-
-    std::cout<<" After norm...\n YYY \n";
-    for(auto & y: fYPEAccumulator){
-      std::cout<<y.first<<":"<<y.second<<" ";
-    }
-    std::cout<<std::endl;
-    std::cout<<" ZZZ \n";
-    for(auto & z: fZPEAccumulator){
-      std::cout<<z.first<<":"<<z.second<<" ";
-    }
-    std::cout<<std::endl;
 
     // Get YZ position of selected channels (above threshold)
     GetCenter(fYPEAccumulator, Ycenter, Ywidth);
