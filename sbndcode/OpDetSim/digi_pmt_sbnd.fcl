@@ -23,9 +23,9 @@ sbnd_digipmt_alg:
   CableTime:             135        #time delay of the 30 m long readout cable in ns
 
   # Digitizer simulation
-  PMTADCDynamicRange:    16384      #in ADC values
-  PMTBaseline:           8000.0     #in ADC
-  PMTBaselineRMS:        1.0        #in ADC
+  PMTADCDynamicRange:    15564      #in ADC values
+  PMTBaseline:           15564      #in ADC
+  PMTBaselineRMS:        2.6        #in ADC
   
   # Dark counts
   PMTDarkNoiseRate:      1000.0     #in Hz

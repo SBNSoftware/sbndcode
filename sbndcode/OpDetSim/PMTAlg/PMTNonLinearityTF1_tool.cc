@@ -107,8 +107,6 @@ double opdet::PMTNonLinearityTF1::NObservedPE(size_t bin, std::vector<unsigned i
   
   if(fAttenuationPreTime<0) start_bin=0;
   unsigned int npe_acc = std::accumulate(pe_vector.begin()+start_bin,pe_vector.begin()+bin+1, 0);
-  
-  if(pe_vector[bin]>100) std::cout<<"  High En: "<<pe_vector[bin]<<" Acc="<<npe_acc<<" "<<pe_vector[bin]*fPEAttenuation_V[npe_acc]<<std::endl;
 
   if(npe_acc<fNonLinearRange[1]) return pe_vector[bin]*fPEAttenuation_V[npe_acc];
   else return fPESaturationValue;

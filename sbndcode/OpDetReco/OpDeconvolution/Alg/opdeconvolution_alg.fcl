@@ -5,11 +5,11 @@ OpDeconvolutionAlg:
 {
   tool_type: "OpDeconvolutionAlgWiener"
   Debug: false
-  MaxFFTSizePow: 15
+  MaxFFTSizePow: 16
   OpDetDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"
   PositivePolarity: false
   UseSaturated: false
-  ADCSaturationValue: 988
+  ADCSaturationValue: 0
   ApplyExpoAvSmooth: true
   ApplyUnAvSmooth: true
   ExpoAvSmoothPar: 0.3
