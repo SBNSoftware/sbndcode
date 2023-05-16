@@ -151,17 +151,16 @@ private:
   opdet::sbndPDMapAlg _opdetmap; //map for photon detector types
   unsigned int _nchan = _opdetmap.size();
 
-  int _run, _subrun, _event;
-
   TTree* _tree;
-  int _match_type; 
+  int _run, _subrun, _event;
+  int _match_type;
   // match_type key: 
-  /// -1: no slices passed both the nuscore and flash match score cut 
-  /// -2: no opflashes times found in coincidence with simpleflash time
-  /// -3: opflashes are empty or PE count too low 
+  /// -1: no slices passed both the nuscore and flash match score cut (in the entire event)
+  /// -2: no opflashes times found in coincidence with simpleflash time (in the entire event)
+  /// -3: no opflashes in coincidence with simpleflash (for this slice)
+  /// -4: opflashes are below the noise threshold (for this slice)
+  /// 1: successful match 
 
-  TTree* _tree2;
-  int _nmatch=0; // number of matches in an event 
   int _pfpid; // ID of the matched slice 
   double _opflash_time; // time of matched opflash 
 
@@ -245,6 +244,14 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
   _subrun = e.id().subRun();
   _event  = e.id().event();
   std::cout << "run: " << _run <<  ", subrun: " << _subrun  << ", event: " <<  _event << std::endl;
+  
+  // initialize tree variables 
+  _match_type=0; _pfpid = -1; _opflash_time=-9999;
+  _dep_pe.clear(); _rec_gamma.clear();
+  _true_gamma = -9999; _true_charge = -9999; _true_energy = -9999;
+  _charge.assign(3,0); _light_med.assign(3,0); _light_avg.assign(3,0); _energy.assign(3,0);
+  _slice_L = -1; _slice_Q = -1; _slice_E = -1; 
+  _frac_L = -9999; _frac_Q = -9999; _frac_E = -9999;
 
   // get slices 
   ::art::Handle<std::vector<recob::Slice>> slice_h;
@@ -298,6 +305,7 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
   art::FindManyP<recob::Hit> spacepoint_to_hit(spacepoint_h, e, _slice_producer);
 
   std::vector<art::Ptr<recob::Slice>> match_slices_v; 
+  std::vector<int> match_pfpid_v;
   std::vector<art::Ptr<sbn::SimpleFlashMatch>> match_fm_v;
 
   //------------------------------//
@@ -340,12 +348,15 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
           match_fm_v.push_back(fm);
         }
       } // end flashmatch loop
-      if (found_fm ==true) match_slices_v.push_back(slice);
+      if (found_fm ==true){
+        match_slices_v.push_back(slice);
+        match_pfpid_v.push_back(pfp->Self());
+      }
     } // end pfp loop
   } // end slice loop
   if (match_slices_v.empty() && !slice_v.empty()){
     std::cout << "no slices passed the cuts" << std::endl;
-    _match_type = -1;
+    _match_type = -1; _pfpid = -1;
     _tree->Fill();
     e.put(std::move(lightcalo_v));
     e.put(std::move(slice_lightcalo_assn_v));
@@ -402,27 +413,27 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
   // if no opflashes found in either TPC
   if (found_opflash0 == false && found_opflash1 == false){
     std::cout << "No OpFlashes matched to SimpleFlashes (for the entire event)" << std::endl;
-    _match_type = -2;
-    _tree->Fill();
+    for (size_t n_slice=0; n_slice < match_pfpid_v.size(); n_slice++){
+      _match_type = -2;
+      _pfpid = match_pfpid_v.at(n_slice);
+      _tree->Fill();
+    }
     e.put(std::move(lightcalo_v));
     e.put(std::move(slice_lightcalo_assn_v));
     return;
   }
   //* OBTAINING OPFLASH INFORMATION END *// 
 
-  int nsuccessful_matches=0;
   for (size_t n_slice=0; n_slice < match_slices_v.size(); n_slice++){
-    // initialize tree2 variables 
-    _nmatch++;
-    _pfpid = -1; 
-
-    _slice_Q = 0; // total amount of charge
-    _slice_L = 0; // total amount of light
-    _slice_E = 0;
+    // initialize tree variables 
+    _pfpid = match_pfpid_v.at(n_slice); 
 
     std::vector<std::vector<geo::Point_t>> sp_xyz(3); // position info of each spacepoint per plane 
-    std::vector<std::vector<double>> sp_charge(3); // vector of charge info for charge-weighting for each plane 
- 
+    std::vector<std::vector<double>> sp_charge(3); // vector of charge info for charge-weighting for each plane
+
+    if (_verbose)
+      std::cout << "Reconstructing slice " << n_slice << std::endl;
+
     double flash_time = -999;
     auto opflash0 = (match_op0_v.at(n_slice));
     auto opflash1 = (match_op1_v.at(n_slice));
@@ -432,7 +443,7 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
       if (opflash0->TotalPE() > _noise_thresh)
         flash_in_0 = true;
       else if (_verbose)
-        std::cout << "Flash Total PE in TPC 0 (" << opflash0->TotalPE() << ") below noise threshold ... Skipping" << std::endl;
+        std::cout << "Flash Total PE in TPC 0 (" << opflash0->TotalPE() << ") below noise threshold ..." << std::endl;
     } 
     if (!opflash1.isNull()){
       if (opflash1->TotalPE() > _noise_thresh)
@@ -441,14 +452,30 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
         std::cout << "Flash Total PE in TPC 1 (" << opflash1->TotalPE() << ") below noise threshold ... Skipping" << std::endl;
     } 
     if  (!flash_in_0 && !flash_in_1){
-      std::cout << "No OpFlashes matched with SimpleFlash objects (for this slice)" << std::endl;
-      _match_type = -3;
+      if (opflash0.isNull() || opflash1.isNull()){
+        std::cout << "No OpFlashes matched with SimpleFlash objects (for this slice)" << std::endl;
+        _match_type = -3;
+      }
+      else if (opflash0->TotalPE() < _noise_thresh|| opflash1->TotalPE() < _noise_thresh){
+        std::cout << "All OpFlashes are below noise threshold..." << std::endl;
+        _match_type = -4;
+      }
+       _opflash_time=-9999;
+      _dep_pe.clear(); _rec_gamma.clear();
+      _true_gamma = -9999; _true_charge = -9999; _true_energy = -9999;
+      _charge.assign(3,0); _light_med.assign(3,0); _light_avg.assign(3,0); _energy.assign(3,0);
+      _slice_L = -1; _slice_Q = -1; _slice_E = -1; 
+      _frac_L = -9999; _frac_Q = -9999; _frac_E = -9999;
       _tree->Fill();
       continue;
     }
 
     if (flash_in_0) flash_time = opflash0->Time();
     else if (flash_in_1) flash_time = opflash1->Time();
+
+    _slice_Q = 0; // total amount of charge
+    _slice_L = 0; // total amount of light
+    _slice_E = 0; 
     
     auto slice = match_slices_v[n_slice];
     // sum charge information (without position info) for Q, higher completeness 
@@ -468,7 +495,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     int bestPlane =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
     _slice_Q  = plane_charge.at(bestPlane);
     _charge = plane_charge;
-
     // get charge information to create the weighted map 
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfp.at(slice.key());
     for (size_t n_pfp=0; n_pfp < pfp_v.size(); n_pfp++){
@@ -499,8 +525,7 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
         }
       } // end spacepoint loop 
     } // end pfp loop
- 
-    std::vector<double> total_pe(_nchan,0.);  // contains PE info from both TPCs, PMTs, and ARA (if applicable)
+    std::vector<double> total_pe(_nchan,0.);  // contains PE info from both TPCs: PMTs and ARA (if applicable)
 
     // combining flash PE information from separate TPCs into a single vector 
     for (int tpc=0; tpc<2; tpc++){
@@ -528,7 +553,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
         } // end of arapuca if 
       } // end of found flash if 
     } // end of TPC loop
-
     // fill tree variables 
     _opflash_time = flash_time;
     _dep_pe = total_pe;
@@ -550,17 +574,13 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
         CalcLight(total_pe, dir_vis_v, ref_vis_v, total_gamma.at(nplane));
         _light_med.at(nplane) = CalcMedian(total_gamma.at(nplane));
         _light_avg.at(nplane) = CalcMedian(total_gamma.at(nplane));
-
         _energy.at(nplane) = (_charge.at(nplane) + _light_med.at(nplane))*1e-6*g4param->Wph();
-
         double gamma_avg = _light_avg.at(nplane);
         double gamma_med = _light_med.at(nplane);
         if (nplane==bestPlane){
           _rec_gamma = total_gamma.at(nplane);
-          if (gamma_med!=0 && !std::isnan(gamma_med))
-            _slice_L = gamma_med;
-          else
-            _slice_L = gamma_avg;
+          if (gamma_med!=0 && !std::isnan(gamma_med)) _slice_L = gamma_med;
+          else _slice_L = gamma_avg;
           // if the plane is the bestPlane, insert it at the front
           lightcalo_charge.insert(lightcalo_charge.begin(),_charge.at(nplane));
           lightcalo_light.insert(lightcalo_light.begin(),gamma_med);
@@ -582,11 +602,8 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     }
     _slice_E = _energy.at(bestPlane);
 
-    sbn::LightCalo lightcalo(lightcalo_charge,
-                              lightcalo_light,
-                              lightcalo_energy,
-                              lightcalo_plane,
-                              flash_time);
+    sbn::LightCalo lightcalo(lightcalo_charge, lightcalo_light,lightcalo_energy,
+                             lightcalo_plane,flash_time);
 
     lightcalo_v->push_back(lightcalo);
     util::CreateAssn(*this, e, *lightcalo_v, slice, *slice_lightcalo_assn_v);
@@ -600,12 +617,9 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
       _true_gamma = -9999; _true_charge = -9999; _true_energy = -9999;
       _frac_L = -9999; _frac_Q = -9999; _frac_E = -9999;
     }
-
-    _tree2->Fill();
-    nsuccessful_matches++;
+    _match_type = 1;
+    _tree->Fill();
   } // end slice loop
-  _match_type=nsuccessful_matches;
-  _tree->Fill();
   e.put(std::move(lightcalo_v));
   e.put(std::move(slice_lightcalo_assn_v));
 }
@@ -614,44 +628,43 @@ void sbnd::LightCaloProducer::beginJob()
 {
   art::ServiceHandle<art::TFileService> fs;
   _tree = fs->make<TTree>("slice_tree","");
-  _tree->Branch("run",             &_run,        "run/I");
-  _tree->Branch("subrun",          &_subrun,     "subrun/I");
-  _tree->Branch("event",           &_event,      "event/I");
-  _tree->Branch("match_type",      &_match_type, "match_type/I");
 
-  _tree2 = fs->make<TTree>("match_tree","");
-  _tree2->Branch("run",           &_run,          "run/I");
-  _tree2->Branch("subrun",        &_subrun,       "subrun/I");
-  _tree2->Branch("event",         &_event,        "event/I");
-  _tree2->Branch("nmatch",        &_nmatch,       "nmatch/I");
-  _tree2->Branch("pfpid",         &_pfpid,        "pfpid/I");
-  _tree2->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
+  _tree->Branch("run",           &_run,          "run/I");
+  _tree->Branch("subrun",        &_subrun,       "subrun/I");
+  _tree->Branch("event",         &_event,        "event/I"); 
+  _tree->Branch("match_type",    &_match_type,   "match_type/I");
+  _tree->Branch("pfpid",         &_pfpid,        "pfpid/I");
+  _tree->Branch("opflash_time",  &_opflash_time, "opflash_time/D");
 
-  _tree2->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
-  _tree2->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
+  _tree->Branch("rec_gamma",    "std::vector<double>", &_rec_gamma);
+  _tree->Branch("dep_pe",       "std::vector<double>", &_dep_pe);
 
-  _tree2->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
-  _tree2->Branch("true_charge",   &_true_charge,  "true_charge/D");
-  _tree2->Branch("true_energy",   &_true_energy,  "true_energy/D");
+  _tree->Branch("true_gamma",    &_true_gamma,   "true_gamma/D");
+  _tree->Branch("true_charge",   &_true_charge,  "true_charge/D");
+  _tree->Branch("true_energy",   &_true_energy,  "true_energy/D");
 
-  _tree2->Branch("charge_plane0", &_charge[0],    "charge_plane0/D");
-  _tree2->Branch("charge_plane1", &_charge[1],    "charge_plane1/D");
-  _tree2->Branch("charge_plane2", &_charge[2],    "charge_plane2/D");
+  _tree->Branch("charge_plane0", &_charge[0],    "charge_plane0/D");
+  _tree->Branch("charge_plane1", &_charge[1],    "charge_plane1/D");
+  _tree->Branch("charge_plane2", &_charge[2],    "charge_plane2/D");
   
-  _tree2->Branch("light_med_plane0", &_light_med[0] ,"light_med_plane0/D");
-  _tree2->Branch("light_med_plane1", &_light_med[1] ,"light_med_plane1/D");
-  _tree2->Branch("light_med_plane2", &_light_med[2] ,"light_med_plane2/D");
+  _tree->Branch("light_med_plane0", &_light_med[0] ,"light_med_plane0/D");
+  _tree->Branch("light_med_plane1", &_light_med[1] ,"light_med_plane1/D");
+  _tree->Branch("light_med_plane2", &_light_med[2] ,"light_med_plane2/D");
 
-  _tree2->Branch("light_avg_plane0", &_light_avg[0] ,"light_avg_plane0/D");
-  _tree2->Branch("light_avg_plane1", &_light_avg[1] ,"light_avg_plane1/D");
-  _tree2->Branch("light_avg_plane2", &_light_avg[2] ,"light_avg_plane2/D");
+  _tree->Branch("light_avg_plane0", &_light_avg[0] ,"light_avg_plane0/D");
+  _tree->Branch("light_avg_plane1", &_light_avg[1] ,"light_avg_plane1/D");
+  _tree->Branch("light_avg_plane2", &_light_avg[2] ,"light_avg_plane2/D");
 
-  _tree2->Branch("slice_L",       &_slice_L,      "slice_L/D");
-  _tree2->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
-  _tree2->Branch("slice_E",       &_slice_E,      "slice_E/D");
-  _tree2->Branch("frac_L",        &_frac_L,       "frac_L/D");
-  _tree2->Branch("frac_Q",        &_frac_Q,       "frac_Q/D");
-  _tree2->Branch("frac_E",        &_frac_E,       "frac_E/D");
+  _tree->Branch("energy_plane0", &_energy[0],    "energy_plane0/D");
+  _tree->Branch("energy_plane1", &_energy[1],    "energy_plane1/D");
+  _tree->Branch("energy_plane2", &_energy[2],    "energy_plane2/D");
+
+  _tree->Branch("slice_L",       &_slice_L,      "slice_L/D");
+  _tree->Branch("slice_Q",       &_slice_Q,      "slice_Q/D");
+  _tree->Branch("slice_E",       &_slice_E,      "slice_E/D");
+  _tree->Branch("frac_L",        &_frac_L,       "frac_L/D");
+  _tree->Branch("frac_Q",        &_frac_Q,       "frac_Q/D");
+  _tree->Branch("frac_E",        &_frac_E,       "frac_E/D");
 }
 
 void sbnd::LightCaloProducer::endJob()
@@ -852,9 +865,9 @@ void sbnd::LightCaloProducer::TruthValidation(art::Event& e, art::ServiceHandle<
       _true_energy += energyDep->Energy(); 
     }       
   }
-  _frac_L = (_true_gamma - _slice_L)/_true_gamma; 
-  _frac_Q = (_true_charge - _slice_Q)/_true_charge;
-  _frac_E = (_true_energy - _slice_E)/_true_energy;
+  _frac_L = _true_gamma > 0? (_true_gamma - _slice_L)/_true_gamma : -9999; 
+  _frac_Q = _true_charge > 0? (_true_charge - _slice_Q)/_true_charge : -9999;
+  _frac_E = _true_energy > 0? (_true_energy - _slice_E)/_true_energy : -9999;
 
   if (_verbose){
     std::cout << "ratio of gamma (median/true):  " << _slice_L/_true_gamma << std::endl;
