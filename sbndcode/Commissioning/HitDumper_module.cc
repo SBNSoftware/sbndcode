@@ -180,7 +180,7 @@ private:
   int                 _adc_count;               ///<Used for plotting waveforms
   std::vector<int>    _waveform_integral;       ///<Used to see progression of the waveform integral
   std::vector<int>    _adc_count_in_waveform;   ///<Used to view all waveforms on a hitplane together
-
+  std::vector<std::pair<int, TH1D> > TPC_histos; ///< Used to store wire ID and corresponding waveform 
 
   // CRT strip variables
   int _nstrips;                          ///< Number of CRT strips
@@ -365,6 +365,7 @@ private:
   bool freadcrtSoftTrigger;///< Add crt software trigger info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
+  bool fcheckWires; ///< Set to true to save waveforms (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
   int fWindow;
   bool fSkipInd;           ///< If true, induction planes are not saved (to be set via fcl)
@@ -430,6 +431,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadMuonTracks    = p.get<bool>("readMuonTracks",true);
   freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
+  fcheckWires        = p.get<bool>("checkWires",false);
   freadTruth         = p.get<bool>("readTruth",true);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
@@ -978,6 +980,51 @@ void Hitdumper::analyze(const art::Event& evt)
     }
   }
 
+
+if (fcheckWires) {
+    _waveform_number.resize(_max_hits*_max_samples, -9999.);
+    _adc_on_wire.resize(_max_hits*_max_samples, -9999.);
+    _time_for_waveform.resize(_max_hits*_max_samples, -9999.);
+    _waveform_integral.resize(_max_hits*_max_samples, -9999.);
+    _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
+
+    art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
+
+    bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
+    if(retVal == true) {
+      mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
+    } else {
+      mf::LogWarning("HitDumper") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
+    }
+
+    int waveform_number_tracker = 0;
+    int adc_counter = 1;
+    _adc_count = _nhits * (fWindow * 2 + 1);
+
+    // loop over waveforms
+    for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
+    
+      //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
+      art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
+      int channel   = digitVec->Channel();
+      auto fDataSize = digitVec->Samples();
+      std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
+
+      auto min_range = std::min_element(rawadc.begin(), rawadc.end());
+      auto max_range = std::max_element(rawadc.begin(), rawadc.end());
+	  
+      //declare histogram needed to store waveform
+      TH1D* histo = new TH1D("waveform_histo", "waveform_histo", 10000, min_range, max_range)
+
+      //fill waveform histogram
+      histo->Fill(rawadc);
+      TPC_histos->emplace_back( make_pair(rdIter,histo) ) ;
+
+    }
+
+
+
+
   if (fcheckTransparency) {
 
     _waveform_number.resize(_max_hits*_max_samples, -9999.);
@@ -1225,6 +1272,11 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("waveform_integral", &_waveform_integral);
     fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
   }
+
+  if (fcheckWires) {
+    fTree->Branch("TPC_histos",&TPC_histos,"TPC_histos");
+  }
+
 
   if (fkeepCRTstrips) {
     fTree->Branch("nstrips", &_nstrips, "nstrips/I");
@@ -1585,9 +1637,6 @@ void Hitdumper::ResizeGenie(int nPrimaries) {
   genie_Px.assign(MaxGeniePrimaries, DEFAULT_VALUE);
   genie_Py.assign(MaxGeniePrimaries, DEFAULT_VALUE);
   genie_Pz.assign(MaxGeniePrimaries, DEFAULT_VALUE);
-  genie_P.assign(MaxGeniePrimaries, DEFAULT_VALUE);
-  genie_status_code.assign(MaxGeniePrimaries, DEFAULT_VALUE);
-  genie_mass.assign(MaxGeniePrimaries, DEFAULT_VALUE);
   genie_trackID.assign(MaxGeniePrimaries, DEFAULT_VALUE);
   genie_ND.assign(MaxGeniePrimaries, DEFAULT_VALUE);
   genie_mother.assign(MaxGeniePrimaries, DEFAULT_VALUE);
