@@ -104,6 +104,8 @@ physics.analyzers.hitdumper.readTruth:     false
 physics.analyzers.hitdumper.savePOTinfo:   false
 physics.analyzers.hitdumper.readMuonHits:  true
 physics.analyzers.hitdumper.SelectEvents:  [reco] 
+physics.analyzers.hitdumper.fcheckWires:  true
+
 
 # set thresholds 
 physics.producers.fasthit.MinSigInd: 15.0
