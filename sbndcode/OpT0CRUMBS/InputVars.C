@@ -1,0 +1,85 @@
+#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+
+#include "TSystem.h"
+#include "TROOT.h"
+#include "TFile.h"
+#include "TTree.h"
+
+void InputVars()
+{
+  const TString save_dir = "/sbnd/data/users/hlay/opt0_crumbs/plots/inputvars";
+  const bool save = true;
+
+  if(save)
+    gSystem->Exec("mkdir -p " + save_dir);
+
+  gROOT->SetStyle("henrySBND");
+  gROOT->ForceStyle();
+
+  TFile *file = new TFile("/sbnd/data/users/hlay/opt0_crumbs/quick_test_trees/crumbs_trees.root","READ");
+  TTree *slices = (TTree*) file->Get("crumbs/SliceTree");
+
+  std::vector<Plot> plots = { { "tpc_CRFracHitsInLongestTrack", "tpc_CRFracHitsInLongestTrack", ";CRFracHitsInLongestTrack;Slices (normalised)",
+				50, 0, 1 },
+			      { "tpc_CRLongestTrackDeflection", "tpc_CRLongestTrackDeflection", ";CRLongestTrackDeflection;Slices (normalised)",
+				50, 0, 1 },
+			      { "tpc_CRLongestTrackDirY", "tpc_CRLongestTrackDirY", ";CRLongestTrackDirY;Slices (normalised)",
+				50, -1, .5 },
+			      { "tpc_CRNHitsMax", "tpc_CRNHitsMax", ";CRNHitsMax;Slices (normalised)",
+				50, 0, 3000 },
+			      { "tpc_NuEigenRatioInSphere", "tpc_NuEigenRatioInSphere", ";NuEigenRatioInSphere;Slices (normalised)",
+				50, 0, 1 },
+			      { "tpc_NuNFinalStatePfos", "tpc_NuNFinalStatePfos", ";NuNFinalStatePfos;Slices (normalised)",
+				10, -0.5, 9.5 },
+			      { "tpc_NuNHitsTotal", "tpc_NuNHitsTotal", ";NuNHitsTotal;Slices (normalised)",
+				50, 0, 5000 },
+			      { "tpc_NuNSpacePointsInSphere", "tpc_NuNSpacePointsInSphere", ";NuNSpacePointsInSphere;Slices (normalised)",
+				50, 0, 300 },
+			      { "tpc_NuVertexY", "tpc_NuVertexY", ";NuVertexY (cm);Slices (normalised)",
+				50, -500, 500 },
+			      { "tpc_NuWeightedDirZ", "tpc_NuWeightedDirZ", ";NuWeightedDirZ;Slices (normalised)",
+				50, -1, 1 },
+			      { "tpc_StoppingChi2CosmicRatio", "tpc_StoppingChi2CosmicRatio", ";StoppingChi2CosmicRatio;Slices (normalised)",
+				50, -5, 10 },
+			      { "pds_FMTotalScore", "pds_FMTotalScore", ";FMTotalScore;Slices (normalised)",
+				50, -10, 60 },
+			      { "pds_FMPE", "pds_FMPE", ";FMPE;Slices (normalised)",
+				50, -10000, 40000 },
+			      { "pds_FMTime", "pds_FMTime", ";FMTime (#mus);Slices (normalised)",
+				50, -500, 200 },
+			      { "crt_TrackScore", "crt_TrackScore", ";CRTTrackScore;Slices (normalised)",
+				50, -4, 150 },
+			      { "crt_HitScore", "crt_HitScore", ";HitScore (cm);Slices (normalised)",
+				50, -4, 150 },
+			      { "crt_TrackTime", "crt_TrackTime",  ";TrackTime (#mus);Slices (normalised)",
+				50, -3000, 1500 },
+			      { "crt_HitTime", "crt_HitTime", ";HitTime (#mus);Slices (normalised)",
+				50, -3000, 1500 },
+			      { "pds_OpT0Time", "pds_OpT0Time", ";OpT0Time (#mus);Slices (normalised)",
+				50, -1, 2 },
+			      { "pds_OpT0Score", "pds_OpT0Score", ";OpT0Score;Slices (normalised)",
+				50, -5000, 40000 },
+			      { "pds_OpT0MeasuredPE", "pds_OpT0MeasuredPE", ";OpT0MeasuredPE;Slices (normalised)",
+				50, -10000, 100000 },
+			      { "pds_OpT0HypothesisPE", "pds_OpT0HypothesisPE", ";OpT0HypothesisPE;Slices (normalised)",
+				50, -10000, 100000 },
+  };
+
+  std::vector<Cut> cuts = { { "signal", "strstr(matchedType,\"Nu\") && !strstr(matchedType,\"DirtNu\") && matchedPurity > 0.8 && matchedCompleteness > 0.8", "#nu Slices", kBlue+2 },
+			    { "background", "!strstr(matchedType,\"Nu\")", "Other Slices", kRed+2 }
+  };
+
+  for(auto const& plot : plots)
+    {
+      TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
+
+      MakeComparisonPlot(canvas, slices, plot, cuts);
+
+       if(save)
+	{
+	  canvas->SaveAs(save_dir + "/" + plot.name + ".png");
+	  canvas->SaveAs(save_dir + "/" + plot.name + ".pdf");
+	}
+    }
+}
