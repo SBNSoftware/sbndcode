@@ -10,10 +10,11 @@
 
 #include "reco_sbnd.fcl"
 
-process_name: Reco2
+process_name: Reco2SCE
 
-physics.reco2_sce: [@sequence::physics.reco2,
-            pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECalo, pandoraSCEPid, crthitt0SCE, crttrackt0SCE, fmatchSCE, opt0finderSCE]
+physics.reco2_sce: [ @sequence::physics.reco2,
+                     pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECalo,
+                     pandoraSCEPid, crthitt0SCE, crttrackt0SCE, fmatchSCE, opt0finderSCE, crumbsSCE ]
 
 physics.trigger_paths: [ reco2_sce ]
 

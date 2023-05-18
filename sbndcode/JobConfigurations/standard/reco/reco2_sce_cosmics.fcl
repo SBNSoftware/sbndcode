@@ -1,0 +1,3 @@
+#include "reco_sce.fcl"
+
+physics.producers.crumbsSCE.ProcessNeutrinos: false

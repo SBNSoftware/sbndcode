@@ -55,6 +55,8 @@
 
 #include "sbnd_trackcalo_skimmer.fcl"
 
+#include "sbn_crumbs_producer.fcl"
+
 process_name: Reco
 
 services:
@@ -182,6 +184,7 @@ physics:
   ### Uncalibrated calorimetry producer for calibration caloskimmer
   caloskimCalorimetry: @local::caloskim_calorimetry
 
+  crumbsSCE: @local::crumbs_sbnd
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -322,8 +325,6 @@ physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
-physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
-
 physics.producers.crthitt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
 physics.producers.crthitt0SCE.T0Alg.TPCTrackLabel: "pandoraSCETrack"
 physics.producers.crttrackt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
@@ -373,5 +374,31 @@ physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 #physics.producers.gaushitTruthMatch.HitParticleAssociations:                        @local::DirectHitParticleAssnsTool
 physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
 #physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
+
+physics.producers.opt0finder.SelectNeutrino: true
+physics.producers.opt0finder.ExcludeExitingOpDets: true
+physics.producers.opt0finder.UseArapucas: false
+physics.producers.opt0finder.PhotoDetectors: ["pmt_coated", "pmt_uncoated"]
+physics.producers.opt0finder.FlashMatchConfig.QLLMatch.NormalizeFlash: true
+physics.producers.opt0finder.FlashMatchConfig.QLLMatch.QLLMode: 0
+
+physics.producers.opt0finderSCE.SelectNeutrino: true
+physics.producers.opt0finderSCE.ExcludeExitingOpDets: true
+physics.producers.opt0finderSCE.UseArapucas: false
+physics.producers.opt0finderSCE.PhotoDetectors: ["pmt_coated", "pmt_uncoated"]
+physics.producers.opt0finderSCE.FlashMatchConfig.QLLMatch.NormalizeFlash: true
+physics.producers.opt0finderSCE.FlashMatchConfig.QLLMatch.QLLMode: 0
+physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
+
+physics.producers.crumbsSCE.TrainingMode: true
+physics.producers.crumbsSCE.EvaluateResultInTrainingMode: true
+physics.producers.crumbsSCE.PFParticleModuleLabel:        "pandoraSCE"
+physics.producers.crumbsSCE.TrackModuleLabel:             "pandoraSCETrack"
+physics.producers.crumbsSCE.SliceModuleLabel:             "pandoraSCE"
+physics.producers.crumbsSCE.FlashMatchModuleLabel:        "fmatchSCE"
+physics.producers.crumbsSCE.CalorimetryModuleLabel:       "pandoraSCECalo"
+physics.producers.crumbsSCE.CRTHitMatchModuleLabel:       "crthitt0SCE"
+physics.producers.crumbsSCE.CRTTrackMatchModuleLabel:     "crttrackt0SCE"
+physics.producers.crumbsSCE.OpT0ModuleLabel:              "opt0finderSCE"
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
