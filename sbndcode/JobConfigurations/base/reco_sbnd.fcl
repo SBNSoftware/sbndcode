@@ -388,7 +388,10 @@ physics.producers.opt0finderSCE.UseArapucas: false
 physics.producers.opt0finderSCE.PhotoDetectors: ["pmt_coated", "pmt_uncoated"]
 physics.producers.opt0finderSCE.FlashMatchConfig.QLLMatch.NormalizeFlash: true
 physics.producers.opt0finderSCE.FlashMatchConfig.QLLMatch.QLLMode: 0
-physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
+physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
+physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
+physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShower"
+physics.producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
 
 physics.producers.crumbsSCE.TrainingMode: true
 physics.producers.crumbsSCE.EvaluateResultInTrainingMode: true

@@ -1,0 +1,10 @@
+#include "reco2_sce.fcl"
+
+process_name: "OpT0CRUMBS"
+
+#source.inputCommands: [ "keep *",
+#		      	"drop opt0finderSCE_*_*_*",
+#			"drop crumbsSCE_*_*_*"
+#]
+
+physics.reco2_sce: [ opt0finderSCE, crumbsSCE ]
