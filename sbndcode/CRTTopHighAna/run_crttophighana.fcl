@@ -1,0 +1,35 @@
+#include "simulationservices_sbnd.fcl"
+
+process_name: CRTTopHighAna
+
+services:
+{
+  TFileService:             { fileName: "crttophighana.root" }
+  @table::sbnd_basic_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+  DetectorClocksService:    @local::sbnd_detectorclocks
+}
+
+source:
+{
+  module_type: RootInput
+  inputCommands: [ "keep *",
+                   "drop *_opt0finder_*_*",
+                   "drop *_opt0finderSCE_*_*",
+                   "drop *_crumbsSCE_*_*" ]
+}
+
+physics:
+{
+  analyzers:
+  {
+    crtana: 
+    { 
+      module_type:       "CRTTopHighAna"
+    }
+  }
+
+  ana:       [ crtana ]
+  end_paths: [ ana ]
+}

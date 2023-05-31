@@ -1,0 +1,7 @@
+#include "reco2_sce.fcl"
+
+physics.analyzers.crtana: { module_type: "CRTTopHighAna" }
+
+physics.ana: [ crtana ]
+
+physics.end_paths: [ stream1, caloskimana, ana ]
