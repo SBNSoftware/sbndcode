@@ -259,6 +259,33 @@ std::vector<double> CRTGeoAlg::CRTLimits() const {
   return limits;
 }
 
+std::vector<double> CRTGeoAlg::CRTLimitsStrips() const {
+  std::vector<double> limits;
+
+  std::vector<double> minXs;
+  std::vector<double> minYs;
+  std::vector<double> minZs;
+  std::vector<double> maxXs;
+  std::vector<double> maxYs;
+  std::vector<double> maxZs;
+  for(auto const& strip : fStrips){
+    minXs.push_back(strip.second.minX);
+    minYs.push_back(strip.second.minY);
+    minZs.push_back(strip.second.minZ);
+    maxXs.push_back(strip.second.maxX);
+    maxYs.push_back(strip.second.maxY);
+    maxZs.push_back(strip.second.maxZ);
+  }
+  limits.push_back(*std::min_element(minXs.begin(), minXs.end()));
+  limits.push_back(*std::min_element(minYs.begin(), minYs.end()));
+  limits.push_back(*std::min_element(minZs.begin(), minZs.end()));
+  limits.push_back(*std::max_element(maxXs.begin(), maxXs.end()));
+  limits.push_back(*std::max_element(maxYs.begin(), maxYs.end()));
+  limits.push_back(*std::max_element(maxZs.begin(), maxZs.end()));
+
+  return limits;
+}
+
 // ----------------------------------------------------------------------------------
 // Get the number of taggers in the geometry
 size_t CRTGeoAlg::NumTaggers() const{

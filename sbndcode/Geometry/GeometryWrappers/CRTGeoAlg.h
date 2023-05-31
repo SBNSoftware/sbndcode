@@ -106,6 +106,7 @@ namespace sbnd{
 
     // Return the volume enclosed by the whole CRT system
     std::vector<double> CRTLimits() const;
+    std::vector<double> CRTLimitsStrips() const;
 
     // Get the number of taggers in the geometry
     size_t NumTaggers() const;
