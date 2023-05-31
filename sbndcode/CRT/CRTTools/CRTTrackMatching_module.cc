@@ -102,7 +102,7 @@ namespace sbnd {
     // Call appropriate produces<>() functions here.
     produces< std::vector<anab::T0> >();
     produces< art::Assns<recob::Track , anab::T0> >();
-    //produces< art::Assns<recob::Track , sbn::crt::CRTTrack> >();
+    produces< art::Assns<sbn::crt::CRTTrack , anab::T0> >();
     
     reconfigure(p);
 
@@ -132,7 +132,7 @@ namespace sbnd {
     // Create anab::T0 objects and make association with recob::Track
     std::unique_ptr< std::vector<anab::T0> > T0col( new std::vector<anab::T0>);
     std::unique_ptr< art::Assns<recob::Track, anab::T0> > Trackassn( new art::Assns<recob::Track, anab::T0>);
-    //std::unique_ptr< art::Assns<recob::Track, sbn::crt::CRTTrack> > Crtassn( new art::Assns<recob::Track, sbn::crt::CRTTrack>);
+    std::unique_ptr< art::Assns <sbn::crt::CRTTrack, anab::T0> > t0_crttrack_assn( new art::Assns<sbn::crt::CRTTrack, anab::T0> );
 
     // Get TPC tracks
     art::Handle< std::vector<recob::Track> > tpcTrackListHandle;
@@ -173,7 +173,7 @@ namespace sbnd {
           double crtTime = ((double)(int)crtTracks.at(matchedID).ts1_ns); // [ns]
           T0col->push_back(anab::T0(crtTime, 0, tpcTrackList[tpc_i]->ID(), (*T0col).size(), matchedScore)); 
           util::CreateAssn(*this, event, *T0col, tpcTrackList[tpc_i], *Trackassn);
-          //util::CreateAssn(*this, event, crtTrackList[matchedID], tpcTrackList[tpc_i], *Crtassn);
+          util::CreateAssn(*this, event, *T0col, crtTrackList[matchedID], *t0_crttrack_assn);
         }
       }
 
@@ -181,7 +181,7 @@ namespace sbnd {
    
     event.put(std::move(T0col));
     event.put(std::move(Trackassn));
-    //event.put(std::move(Crtassn));
+    event.put(std::move(t0_crttrack_assn));
     
   } // CRTTrackMatching::produce()
 
