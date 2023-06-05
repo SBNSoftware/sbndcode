@@ -1,10 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
-// Specific class tool for PMTGainFluctuations
-// File: PMTGainFluctuations1Dynode_tool.hh
-// Base class:        PMTGainFluctuations.hh
-// Algorithm based on function
-// 'multiplicationStageGain(unsigned int i /* = 1 */) const'
-// in icaruscode/PMT/Algorithms/PMTsimulationAlg.cxx
+// Specific class tool for PMTNonLinearity
+// File: PMTNonLinearityTF1_tool.hh
+// Base class:        PMTNonLinearity.hh
 ////////////////////////////////////////////////////////////////////////
 
 #include "fhiclcpp/ParameterSet.h"
