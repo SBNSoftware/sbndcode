@@ -43,6 +43,7 @@ decay_hnl: {
   tool_type: HNLMakeDecay
   Decays: ["mu_pi"]
   Majorana: true
+  DecayIsThreeBodyAnisotropic: false
   ReferenceUE4: 0
   ReferenceUT4: 0
   ReferenceUM4: 1e-7
@@ -50,7 +51,7 @@ decay_hnl: {
   ReferenceRayLength: 7.549834e2 # sqrt(57) = 7.549834 = diagonal length of detector
   ReferenceRayDistance: 110e2 #110m = distance from beam target to detector
   ReferenceHNLEnergyFromKaonEnergy: @local::kaon_energy
-  WidthDecays: ["mu_pi", "e_pi", "nu_mu_mu", "nu_e_e", "nu_nu_nu", "nu_pi0", "nu_eta", "nu_etap", "nu_rho0"]
+  WidthDecays: ["mu_pi", "e_pi", "nu_mu_mu", "nu_e_e", "nu_nu_nu", "nu_pi0", "nu_eta", "nu_etap", "nu_rho0", "nu_mu_e"]
   Verbose: false
 }
 
