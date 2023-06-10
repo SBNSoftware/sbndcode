@@ -4,7 +4,7 @@ sbnd_optrigger_alg:
 {
   PulsePolarityPMT: -1
   PulsePolarityArapuca: 1
-  TriggerThresholdADCPMT: 9
+  TriggerThresholdADCPMT: 20
   TriggerThresholdADCArapuca: 17
   BeamTriggerEnable: true
   BeamTriggerTime: 0.
