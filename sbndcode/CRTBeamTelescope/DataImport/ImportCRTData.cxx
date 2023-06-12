@@ -60,41 +60,41 @@ namespace crt {
     //fCRTInputFile=new TFile(name.c_str());
     fCRTInputFile = TFile::Open(name.c_str());
     if (fCRTInputFile->IsZombie()) {
-      //throw cet::exception(__PRETTY_FUNCTION__) << "Failed to open "<<fCRTInputFile<<std::endl;
+      throw cet::exception(__PRETTY_FUNCTION__) << "Failed to open "<<name<<std::endl;
+    }else{
+      fTree = (TTree*)(fCRTInputFile->Get("t"));
+
+      fTree->SetBranchAddress("s", &fUnixS);
+
+      fTree->SetBranchAddress("hit1_feb", &fHit1Feb);
+      fTree->SetBranchAddress("hit1_flags", &fHit1Flags);
+      fTree->SetBranchAddress("hit1_t0", &fHit1T0);
+      fTree->SetBranchAddress("hit1_t1", &fHit1T1);
+      fTree->SetBranchAddress("hit1_adc", &fHit1Adc);
+
+      fTree->SetBranchAddress("hit2_feb", &fHit2Feb);
+      fTree->SetBranchAddress("hit2_flags", &fHit2Flags);
+      fTree->SetBranchAddress("hit2_t0", &fHit2T0);
+      fTree->SetBranchAddress("hit2_t1", &fHit2T1);
+      fTree->SetBranchAddress("hit2_adc", &fHit2Adc);
+
+
+      TTree * aux = (TTree*)(fCRTInputFile->Get("aux"));
+      double pot = 0., spills = 0.;
+      aux->SetBranchAddress("pot", &pot);
+      aux->SetBranchAddress("spills", &spills);
+      aux->GetEntry(0);
+
+      std::cout << "Reading in file " << name << std::endl;
+      std::cout << "POT = " << pot << std::endl;
+      std::cout << "Spills = " << spills << std::endl;
+      fPOT           += pot;
+      fCurrentPOT    =  pot;
+      fSpills        += spills;
+      fCurrentSpills =  spills;
+
+      fTotalTreeEvents = fTree->GetEntries();
     }
-
-    fTree = (TTree*)(fCRTInputFile->Get("t"));
-
-    fTree->SetBranchAddress("s", &fUnixS);
-
-    fTree->SetBranchAddress("hit1_feb", &fHit1Feb);
-    fTree->SetBranchAddress("hit1_flags", &fHit1Flags);
-    fTree->SetBranchAddress("hit1_t0", &fHit1T0);
-    fTree->SetBranchAddress("hit1_t1", &fHit1T1);
-    fTree->SetBranchAddress("hit1_adc", &fHit1Adc);
-
-    fTree->SetBranchAddress("hit2_feb", &fHit2Feb);
-    fTree->SetBranchAddress("hit2_flags", &fHit2Flags);
-    fTree->SetBranchAddress("hit2_t0", &fHit2T0);
-    fTree->SetBranchAddress("hit2_t1", &fHit2T1);
-    fTree->SetBranchAddress("hit2_adc", &fHit2Adc);
-
-
-    TTree * aux = (TTree*)(fCRTInputFile->Get("aux"));
-    double pot = 0., spills = 0.;
-    aux->SetBranchAddress("pot", &pot);
-    aux->SetBranchAddress("spills", &spills);
-    aux->GetEntry(0);
-
-    std::cout << "Reading in file " << name << std::endl;
-    std::cout << "POT = " << pot << std::endl;
-    std::cout << "Spills = " << spills << std::endl;
-    fPOT           += pot;
-    fCurrentPOT    =  pot;
-    fSpills        += spills;
-    fCurrentSpills =  spills;
-
-    fTotalTreeEvents = fTree->GetEntries();
   }
 
 
@@ -189,11 +189,12 @@ namespace crt {
     art::Timestamp tstamp(time(0));
 
     art::SubRunID newID(rn, 0);
-//std::cout<<"I'm helpless"<<std::endl;
     if (fSubRunID.runID() != newID.runID()) { // New Run
-      std::cout<<"AHHhHHHHHHHHHHH: "<<rn<<std::endl;
       outR = fSourceHelper.makeRunPrincipal(rn, tstamp);
-      outSR = fSourceHelper.makeSubRunPrincipal(rn,0,tstamp);
+    }
+
+    if (fSubRunID != newID) { // New SubRun
+      outSR = fSourceHelper.makeSubRunPrincipal(rn, 0, tstamp);
       std::cout << "Made new run " << outSR->run() << ", subrun " << outSR->subRun() << std::endl;
 
       // Save POTs
@@ -203,11 +204,17 @@ namespace crt {
       pot->totspills  = fSpills;
       pot->goodspills = fSpills;
 
-      art::put_product_in_principal(std::move(pot),
+
+      //std::cout<<"1 AHHhHHHHHHHHHHH: pot->totpot:"<<pot->totpot<<", pot->totspills: "<<pot->totspills<<", fSubRunID: "<<fSubRunID<<std::endl;
+      fSubRunID = newID;
+      //std::cout<<"2 AHHhHHHHHHHHHHH: pot->totpot:"<<pot->totpot<<", pot->totspills: "<<pot->totspills<<", fSubRunID: "<<fSubRunID<<std::endl;
+      // this means products of sumdata::POTSummary is being written. 
+
+      art::put_product_in_principal(std::move(pot), //
                                     *outSR,
                                     "crtdata");
+      //fSubRunID = newID;
 
-      fSubRunID = newID;
     }
     
     std::sort(febdata_v->begin(), febdata_v->end(),

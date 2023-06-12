@@ -22,7 +22,7 @@ CRTEventDisplayAlg::~CRTEventDisplayAlg(){
 void CRTEventDisplayAlg::reconfigure(const Config& config){
 
   fSimLabel = config.SimLabel();
-  fCRTDataLabel = config.CRTDataLabel();
+  fFEBDataLabel = config.FEBDataLabel();
   fCRTHitLabel = config.CRTHitLabel();
   fCRTTrackLabel = config.CRTTrackLabel();
   fTPCTrackLabel = config.TPCTrackLabel();
@@ -31,7 +31,7 @@ void CRTEventDisplayAlg::reconfigure(const Config& config){
   fDrawTaggers = config.DrawTaggers();
   fDrawModules = config.DrawModules();
   fDrawTpc = config.DrawTpc();
-  fDrawCrtData = config.DrawCrtData();
+  fDrawFEBData = config.DrawFEBData();
   fDrawCrtHits = config.DrawCrtHits();
   fDrawCrtTracks = config.DrawCrtTracks();
   fDrawIncompleteTracks = config.DrawIncompleteTracks();
@@ -40,7 +40,7 @@ void CRTEventDisplayAlg::reconfigure(const Config& config){
 
   fTaggerColour = config.TaggerColour();
   fTpcColour = config.TpcColour();
-  fCrtDataColour = config.CrtDataColour();
+  fFEBDataColour = config.FEBDataColour();
   fCrtHitColour = config.CrtHitColour();
   fCrtTrackColour = config.CrtTrackColour();
   fTpcTrackColour = config.TpcTrackColour();
@@ -68,8 +68,8 @@ void CRTEventDisplayAlg::SetDrawTaggers(bool tf){
 void CRTEventDisplayAlg::SetDrawTpc(bool tf){
   fDrawTpc = tf;
 }
-void CRTEventDisplayAlg::SetDrawCrtData(bool tf){
-  fDrawCrtData = tf;
+void CRTEventDisplayAlg::SetDrawFEBData(bool tf){
+  fDrawFEBData = tf;
 }
 void CRTEventDisplayAlg::SetDrawCrtHits(bool tf){
   fDrawCrtHits = tf;
@@ -180,35 +180,35 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
   }
 
   // Draw the CRT data in the event
-  if(fDrawCrtData){
+  if(fDrawFEBData){
 
     if(fPrint) std::cout<<"\nCRT data in event:\n";
 
-    auto crtDataHandle = event.getValidHandle<std::vector<sbnd::crt::CRTData>>(fCRTDataLabel);
+    auto FEBDataHandle = event.getValidHandle<std::vector<sbnd::crt::FEBData>>(fFEBDataLabel);
     //detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
     //detinfo::ElecClock fTrigClock = fDetectorClocks->TriggerClock();
-    for(auto const& data : (*crtDataHandle)){
+    for(auto const& data : (*FEBDataHandle)){
 
       // Skip if outside specified time window if time window used
       //fTrigClock.SetTime(data.T0());
       //double time = fTrigClock.Time();
-      double time = (double)(int)data.T0()/fClockSpeedCRT; // [tick -> us]
+      double time = (double)(int)data.Ts0()/fClockSpeedCRT; // [tick -> us]
       if(!(fMinTime == fMaxTime || (time > fMinTime && time < fMaxTime))) continue;
 
       // Skip if it doesn't match the true ID if true ID is used
       int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, data);
       if(fUseTrueID && trueId != fTrueID) continue;
 
-      std::string stripName = fCrtGeo.ChannelToStripName(data.Channel());
+      std::string stripName = fCrtGeo.ChannelToStripName(data.Coinc());
       double rmin[3] = {fCrtGeo.GetStrip(stripName).minX, 
                         fCrtGeo.GetStrip(stripName).minY, 
                         fCrtGeo.GetStrip(stripName).minZ};
       double rmax[3] = {fCrtGeo.GetStrip(stripName).maxX, 
                         fCrtGeo.GetStrip(stripName).maxY, 
                         fCrtGeo.GetStrip(stripName).maxZ};
-      DrawCube(c1, rmin, rmax, fCrtDataColour);
+      DrawCube(c1, rmin, rmax, fFEBDataColour);
 
-      if(fPrint) std::cout<<"->True ID: "<<trueId<<", channel = "<<data.Channel()<<", tagger = "
+      if(fPrint) std::cout<<"->True ID: "<<trueId<<", channel = "<<data.Coinc()<<", tagger = "
                           <<fCrtGeo.GetModule(fCrtGeo.GetStrip(stripName).moduleName).taggerName<<", time = "<<time<<"\n";
     }
   }
@@ -255,6 +255,7 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
 
       // Skip if it doesn't match the true ID if true ID is used
       int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, track);
+
       if(fUseTrueID && trueId != fTrueID) continue;
 
       TPolyLine3D *line = new TPolyLine3D(2);

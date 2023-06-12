@@ -58,10 +58,11 @@ sbnd::CRTHitProducer::CRTHitProducer(fhicl::ParameterSet const& p)
   {
     produces<std::vector<sbn::crt::CRTHit>>();
     produces<art::Assns<sbnd::crt::FEBData, sbn::crt::CRTHit>>();
+
   }
 
 void sbnd::CRTHitProducer::produce(art::Event& e)
-{
+{ 
   auto crtHitVec      = std::make_unique<std::vector<sbn::crt::CRTHit>>();
   auto crtHitDataAssn = std::make_unique<art::Assns<sbnd::crt::FEBData, sbn::crt::CRTHit>>();
   

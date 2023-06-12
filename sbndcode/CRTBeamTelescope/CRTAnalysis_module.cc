@@ -5,8 +5,10 @@
 //
 // Generated at Tue Feb  1 17:05:06 2022 by Marco Del Tutto using cetskelgen
 // from  version .
+// Modified by Jiaoyan Li/李 娇瑒 (jiaoyang.li@ed.ac.uk)
 ////////////////////////////////////////////////////////////////////////
 
+// Search for **To-do**
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
@@ -20,19 +22,23 @@
 #include "canvas/Persistency/Common/FindManyP.h"
 
 #include "TTree.h"
-
 #include "nusimdata/SimulationBase/MCTruth.h"
+
+#include "larcoreobj/SummaryData/POTSummary.h"
+#include "lardataobj/Simulation/AuxDetHit.h"
+#include "lardataobj/Simulation/AuxDetSimChannel.h"
+
+#include "larsim/MCCheater/ParticleInventoryService.h"
+
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/FEBTruthInfo.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
-#include "larcoreobj/SummaryData/POTSummary.h"
-#include "lardataobj/Simulation/AuxDetHit.h"
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
+
+#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 
 class CRTAnalysis;
-
 
 class CRTAnalysis : public art::EDAnalyzer {
 public:
@@ -52,6 +58,12 @@ public:
 
 private:
 
+  art::ServiceHandle<cheat::ParticleInventoryService> _particleInventory;
+
+  sbnd::CRTBackTracker _crt_back_tracker;
+
+  std::string _feb_data_producer;
+
   std::string _mctruth_label;
   std::string _g4_label;
   std::string _auxdethit_label;
@@ -60,6 +72,7 @@ private:
   std::string _crttrack_label;
   std::string _febdata_label;
   std::string _pot_label;
+
   bool _debug;
   bool _keep_mcp_from_adh; ///< Whether or not to keep only MCParticles that produce energy deposit on the CRT
   bool _data_mode;
@@ -81,22 +94,22 @@ private:
   float _nu_pz; ///< Neutrino momentum along Z
 
   float _mct_sp_pdg; ///< Single particle PDG
-  float _mct_sp_e; ///< Single particle energy
-  float _mct_sp_px; ///< Single particle momentum X
-  float _mct_sp_py; ///< Single particle momentum Y
-  float _mct_sp_pz; ///< Single particle momentum Z
-  float _mct_sp_vx; ///< Single particle vertex X
-  float _mct_sp_vy; ///< Single particle vertex Y
-  float _mct_sp_vz; ///< Single particle vertex Z
+  float _mct_sp_e;   ///< Single particle energy
+  float _mct_sp_px;  ///< Single particle momentum X
+  float _mct_sp_py;  ///< Single particle momentum Y
+  float _mct_sp_pz;  ///< Single particle momentum Z
+  float _mct_sp_vx;  ///< Single particle vertex X
+  float _mct_sp_vy;  ///< Single particle vertex Y
+  float _mct_sp_vz;  ///< Single particle vertex Z
 
   float _mct_sp_2_pdg; ///< For the double-muon studys, the second particle PDG
-  float _mct_sp_2_e; ///< For the double-muon studys, the second particle energy
-  float _mct_sp_2_px; ///< For the double-muon studys, the second particle momentum X
-  float _mct_sp_2_py; ///< For the double-muon studys, the second particle momentum Y
-  float _mct_sp_2_pz; ///< For the double-muon studys, the second particle momentum Z
-  float _mct_sp_2_vx; ///< For the double-muon studys, the second particle vertex X
-  float _mct_sp_2_vy; ///< For the double-muon studys, the second particle vertex Y
-  float _mct_sp_2_vz; ///< For the double-muon studys, the second particle vertex Z
+  float _mct_sp_2_e;   ///< For the double-muon studys, the second particle energy
+  float _mct_sp_2_px;  ///< For the double-muon studys, the second particle momentum X
+  float _mct_sp_2_py;  ///< For the double-muon studys, the second particle momentum Y
+  float _mct_sp_2_pz;  ///< For the double-muon studys, the second particle momentum Z
+  float _mct_sp_2_vx;  ///< For the double-muon studys, the second particle vertex X
+  float _mct_sp_2_vy;  ///< For the double-muon studys, the second particle vertex Y
+  float _mct_sp_2_vz;  ///< For the double-muon studys, the second particle vertex Z
 
   float _mct_darkNeutrino_e;
   float _weight; //the weight which store as the vertex of dark neutrino.
@@ -194,6 +207,11 @@ private:
   std::vector<std::vector<uint16_t> > _ct_hit2_sipm_raw_adc; ///< CRT track, 4 ADC values from hit 2 before corrections are made or pedestals subtracted
   std::vector<std::vector<uint16_t> > _ct_hit2_sipm_adc; ///< CRT track, 4 ADC values from hit 2 before corrections are made (but with pedestals subtracted)
   std::vector<std::vector<uint16_t> > _ct_hit2_sipm_corr_adc; ///< CRT track, 4 ADC values from hit 2
+  // truth info for crt_track
+  std::vector<int> _ct_pdg; ///< CRT track, truth information of the pdg code 
+  std::vector<double> _ct_energy; ///< CRT track, truth information of the particle energy
+  std::vector<double> _ct_deposited_energy; ///< CRT track, truth information of the deposited energy for both upstream and downstream
+  std::vector<double> _ct_purity; ///< CRT track, truth information of selection purity
 
   std::vector<uint16_t> _feb_mac5; ///< FEBData Mac5 ID
   std::vector<uint16_t> _feb_flags; ///< FEBData Flags
@@ -228,7 +246,6 @@ private:
   // std::vector<double> _crt_true_mcp_vy; ///< crtData, assns truth, MCP start Y
   // std::vector<double> _crt_true_mcp_vz; ///< crtData, assns truth, MCP start Z
 
-
   TTree* _sr_tree;
   int _sr_run, _sr_subrun;
   double _sr_begintime, _sr_endtime;
@@ -241,17 +258,19 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}  // ,
   // More initializers here.
 {
-  _mctruth_label = p.get<std::string>("MCTruthLabel", "generator");
-  _g4_label = p.get<std::string>("G4Label", "largeant");
-  _auxdethit_label = p.get<std::string>("AuxDetHitLabel", "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN");
-  // _crtdata_label = p.get<std::string>("CRTDataLabel", "crt");
-  _crthit_label = p.get<std::string>("CRTHitLabel", "crthit");
-  _crttrack_label = p.get<std::string>("CRTTrackLabel", "crttrack");
-  _febdata_label = p.get<std::string>("FEBDataLabel", "crtsim");
-  _debug = p.get<bool>("Debug", false);
+  //_feb_data_producer = p.get<std::string>("FEBDataProducer", fhicl::ParameterSet());
+  _mctruth_label     = p.get<std::string>("MCTruthLabel", "generator");
+  _g4_label          = p.get<std::string>("G4Label", "largeant");
+  _auxdethit_label   = p.get<std::string>("AuxDetHitLabel", "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN");
+  // _crtdata_label  = p.get<std::string>("CRTDataLabel", "crt");
+  _febdata_label     = p.get<std::string>("FEBDataLabel", "crtsim");
+  _crthit_label      = p.get<std::string>("CRTHitLabel", "crthit");
+  _crttrack_label    = p.get<std::string>("CRTTrackLabel", "crttrack");
+  _debug             = p.get<bool>("Debug", false);
   _keep_mcp_from_adh = p.get<bool>("KeepMCPFromADH", false);
-  _data_mode = p.get<bool>("DataMode", false);
-  _pot_label = p.get<std::string>("POTLabel", "generator");
+  _data_mode         = p.get<bool>("DataMode", false);
+  _pot_label         = p.get<std::string>("POTLabel", "generator");
+  _crt_back_tracker  = p.get<fhicl::ParameterSet>("CRTBackTracker", fhicl::ParameterSet());
 
   art::ServiceHandle<art::TFileService> fs;
 
@@ -274,6 +293,7 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     _tree->Branch("nu_py", &_nu_py, "nu_py/F");
     _tree->Branch("nu_pz", &_nu_pz, "nu_pz/F");
 
+    // MCTruth info for the signal (dark neutrino)
     _tree->Branch("mct_sp_pdg", &_mct_sp_pdg, "mct_sp_pdg/F");
     _tree->Branch("mct_sp_e", &_mct_sp_e, "mct_sp_e/F");
     _tree->Branch("mct_sp_px", &_mct_sp_px, "mct_sp_px/F");
@@ -291,10 +311,10 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     _tree->Branch("mct_sp_2_vy", &_mct_sp_2_vy, "mct_sp_2_vy/F");
     _tree->Branch("mct_sp_2_vz", &_mct_sp_2_vz, "mct_sp_2_vz/F");
 
-
     _tree->Branch("mct_darkNeutrino_e", &_mct_darkNeutrino_e, "mct_darkNeutrino_e/F");
     _tree->Branch("weight", &_weight, "weight/F");
 
+    // MCParticle truth info. 
     _tree->Branch("mcp_pdg", "std::vector<int>", &_mcp_pdg);
     _tree->Branch("mcp_e", "std::vector<double>", &_mcp_e);
     //_tree->Branch("mcp_e_vec", "std::vector<std::vector<double>>", &_mcp_e_vec);
@@ -393,6 +413,13 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("ct_hit2_sipm_raw_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_raw_adc);
   _tree->Branch("ct_hit2_sipm_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_adc);
   _tree->Branch("ct_hit2_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_corr_adc);
+  // truth information
+  if(!_data_mode){
+    _tree->Branch("ct_pdg", "std::vector<int>", &_ct_pdg);
+    _tree->Branch("ct_energy", "std::vector<double>", &_ct_energy);
+    _tree->Branch("ct_deposited_energy", "std::vector<double>", &_ct_deposited_energy);
+    _tree->Branch("ct_purity", "std::vector<double>", &_ct_purity);
+  }
 
   _tree->Branch("feb_mac5", "std::vector<uint16_t>", &_feb_mac5);
   _tree->Branch("feb_flags", "std::vector<uint16_t>", &_feb_flags);
@@ -436,13 +463,15 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 }
 
 void CRTAnalysis::analyze(art::Event const& e)
-{
-  _run = e.id().run();
+{ 
+
+  _crt_back_tracker.Initialize(e); // Initialise the backtrack alg. 
+
+  _run    = e.id().run();
   _subrun = e.id().subRun();
-  _event =  e.id().event();
+  _event  =  e.id().event();
 
-  std::cout << "This is event " << _event << std::endl;
-
+  if(_debug) std::cout << "This is event " << _event << std::endl;
 
   art::Handle<std::vector<simb::MCTruth>> mct_h;
   std::vector<art::Ptr<simb::MCTruth>> mct_v;
@@ -515,8 +544,6 @@ void CRTAnalysis::analyze(art::Event const& e)
   }
   std::vector<art::Ptr<sbnd::crt::FEBData>> feb_data_v;
   art::fill_ptr_vector(feb_data_v, feb_data_h);
-
-  //art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febdata_to_ides (feb_data_h, e, _febdata_label);
 
   // Get the FEBData to AuxDetIDE & FEBTruthInfo association
   art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> *febdata_to_ides;
@@ -670,7 +697,7 @@ void CRTAnalysis::analyze(art::Event const& e)
                                  auxdethit->GetExitMomentumZ()*auxdethit->GetExitMomentumZ());
       _adh_trackid[i] = auxdethit->GetTrackID();
       trackids_from_adh.insert(auxdethit->GetTrackID());
-      std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
+      if (_debug) std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
     }
 
 
@@ -830,13 +857,14 @@ void CRTAnalysis::analyze(art::Event const& e)
     const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
 
     for(uint adc_i = 0; adc_i < 4; ++adc_i)
-      {
-        _chit_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
-        _chit_sipm_adc[i][adc_i]      = adcs[adc_i];
-        _chit_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
-      }
+    {
+      _chit_sipm_raw_adc[i][adc_i]  = raw_adcs[adc_i];
+      _chit_sipm_adc[i][adc_i]      = adcs[adc_i];
+      _chit_sipm_corr_adc[i][adc_i] = corr_adcs[adc_i];
+    }
 
-    auto feb_datas = crt_hit_to_feb_data.at(hit.key());
+    // CRTHit matches to AuxDetIDE.  **To-do** need to find the correct channel for CRT Hits. 
+    auto feb_datas = crt_hit_to_feb_data.at(hit.key()); // Use the Assn to find the AuxDetIDE from FEBData. 
     if(feb_datas.size() != 2) std::cout << "ERROR: CRTHit associated to " << feb_datas.size() << " FEBDatas" << std::endl;
 
     _chit_sipm_feb_mac5[i].resize(feb_datas.size());
@@ -851,7 +879,7 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_sipm_feb_mac5[i][ii] = feb_data->Mac5();
     }
 
-    // From the hit, get the associated CRTData,
+    // From the hit, get the associated FEBData,
     // then the associated AuxDetIDE, so we can
     // retrieve the truth info
     if(!_data_mode) {
@@ -875,6 +903,7 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_true_y[i] /= n_ides;
       _chit_true_z[i] /= n_ides;
     }
+
     if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_t1[i] << ", h2 time " << _chit_h2_t1[i] << ", hit time " << _chit_t1[i] << std::endl;
   }
 
@@ -883,7 +912,6 @@ void CRTAnalysis::analyze(art::Event const& e)
   // Fill the CRT Tracks in the tree
   //
   size_t n_tracks = crt_track_v.size();
-
   _ct_pes.resize(n_tracks);
   _ct_time.resize(n_tracks);
   _ct_length.resize(n_tracks);
@@ -913,6 +941,15 @@ void CRTAnalysis::analyze(art::Event const& e)
   _ct_hit2_sipm_raw_adc.resize(n_tracks);
   _ct_hit2_sipm_adc.resize(n_tracks);
   _ct_hit2_sipm_corr_adc.resize(n_tracks);
+
+  if(!_data_mode){
+    _ct_pdg.resize(n_tracks);
+    _ct_energy.resize(n_tracks);
+    _ct_deposited_energy.resize(n_tracks);
+    _ct_purity.resize(n_tracks);
+  }
+
+
 
   for (size_t i = 0; i < n_tracks; ++i){
 
@@ -999,7 +1036,22 @@ void CRTAnalysis::analyze(art::Event const& e)
   	    ++used_hits_2;
   	  }
     }
+    // truth information
+    if (!_data_mode){
+      const sbnd::CRTBackTracker::TruthMatchMetrics truthMatch = _crt_back_tracker.TruthMatrixFromTotalEnergy(e, track);
+      
+      _ct_pdg[i]              = truthMatch.pdg;
+      _ct_energy[i]           = truthMatch.particle_energy;
+      _ct_deposited_energy[i] = truthMatch.depEnergy_total;
+      _ct_purity[i]           = truthMatch.purity;
+      if (_debug) std::cout<<"Number of tracks: "<<n_tracks<<" This track "<< i <<", id: "<<truthMatch.trackid<<", PDG code: "<<truthMatch.pdg<<", energy: "<<truthMatch.particle_energy
+                           <<", total deposited energy: "<<truthMatch.depEnergy_total<<", selection purity: "<<truthMatch.purity<<std::endl;
+    }
   }
+
+
+
+
 
   //
   // Fill the FEBData objects in the tree
@@ -1131,7 +1183,8 @@ void CRTAnalysis::beginSubRun(art::SubRun const& sr) {
   _sr_endtime   = sr.endTime().value();
 
   art::Handle<sumdata::POTSummary> pot_handle;
-  sr.getByLabel(_mctruth_label, pot_handle);
+
+  sr.getByLabel(_pot_label, pot_handle);
 
   if (pot_handle.isValid()) {
     _sr_pot = pot_handle->totpot;
@@ -1140,6 +1193,7 @@ void CRTAnalysis::beginSubRun(art::SubRun const& sr) {
     _sr_pot = 0.;
     _sr_spills = 0.;
   }
+
   std::cout << "POT for this subrun: " << _sr_pot << " (" << _sr_spills << " spills)" << std::endl;
 
   _sr_tree->Fill();

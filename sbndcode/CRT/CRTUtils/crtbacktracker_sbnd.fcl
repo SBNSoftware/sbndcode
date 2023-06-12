@@ -3,6 +3,7 @@ BEGIN_PROLOG
 standard_crtbacktracker:
 {
     CRTDataLabel:     "crt"
+    FEBDataLabel:     "crtsim"
     CRTHitLabel:      "crthit"
     CRTTrackLabel:    "crttrack"
     RollupUnsavedIds: true

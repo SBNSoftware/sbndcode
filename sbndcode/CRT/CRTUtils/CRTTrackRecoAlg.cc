@@ -223,6 +223,8 @@ sbn::crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<sbn::crt::CRTHi
 
   // Initialize values
   std::string tagger = hits[0]->tagger;
+  if(tagger == "volTaggerSouthOne_0" || tagger == "volTaggerSouthTwo_0" || tagger == "volTaggerSouthThree_0") { tagger = "volTaggerSouth_0"; }
+
   double xpos = 0.; 
   double ypos = 0.;
   double zpos = 0.;
@@ -277,7 +279,7 @@ std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::Cr
 
       // Draw a track between the two hits
       TVector3 start (hits[i].first.x_pos, hits[i].first.y_pos, hits[i].first.z_pos);
-      TVector3 end (hits[j].first.x_pos, hits[j].first.y_pos, hits[j].first.z_pos);
+      TVector3 end   (hits[j].first.x_pos, hits[j].first.y_pos, hits[j].first.z_pos);
       TVector3 diff = end - start;
 
       std::vector<size_t> candidate {i, j};

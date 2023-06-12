@@ -31,7 +31,8 @@ namespace detinfo { class DetectorClocksData; }
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
 
-#include "sbnobj/SBND/CRT/CRTData.hh"
+#include "sbnobj/SBND/CRT/FEBData.hh"
+#include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
@@ -66,8 +67,8 @@ namespace sbnd{
       fhicl::Atom<art::InputTag> SimLabel {
         Name("SimLabel")
       };
-      fhicl::Atom<art::InputTag> CRTDataLabel {
-        Name("CRTDataLabel")
+      fhicl::Atom<art::InputTag> FEBDataLabel {
+        Name("FEBDataLabel")
       };
       fhicl::Atom<art::InputTag> CRTHitLabel {
         Name("CRTHitLabel")
@@ -91,8 +92,8 @@ namespace sbnd{
       fhicl::Atom<bool> DrawTpc {
         Name("DrawTpc")
       };
-      fhicl::Atom<bool> DrawCrtData {
-        Name("DrawCrtData")
+      fhicl::Atom<bool> DrawFEBData {
+        Name("DrawFEBData")
       };
       fhicl::Atom<bool> DrawCrtHits {
         Name("DrawCrtHits")
@@ -116,8 +117,8 @@ namespace sbnd{
       fhicl::Atom<int> TpcColour {
         Name("TpcColour")
       };
-      fhicl::Atom<int> CrtDataColour {
-        Name("CrtDataColour")
+      fhicl::Atom<int> FEBDataColour {
+        Name("FEBDataColour")
       };
       fhicl::Atom<int> CrtHitColour {
         Name("CrtHitColour")
@@ -175,7 +176,7 @@ namespace sbnd{
 
     void SetDrawTaggers(bool tf);
     void SetDrawTpc(bool tf);
-    void SetDrawCrtData(bool tf);
+    void SetDrawFEBData(bool tf);
     void SetDrawCrtHits(bool tf);
     void SetDrawCrtTracks(bool tf);
     void SetDrawTpcTracks(bool tf);
@@ -198,7 +199,7 @@ namespace sbnd{
     CRTBackTracker fCrtBackTrack;
 
     art::InputTag fSimLabel;
-    art::InputTag fCRTDataLabel;
+    art::InputTag fFEBDataLabel;
     art::InputTag fCRTHitLabel;
     art::InputTag fCRTTrackLabel;
     art::InputTag fTPCTrackLabel;
@@ -208,7 +209,7 @@ namespace sbnd{
     bool fDrawTaggers;
     bool fDrawModules;
     bool fDrawTpc;
-    bool fDrawCrtData;
+    bool fDrawFEBData;
     bool fDrawCrtHits;
     bool fDrawCrtTracks;
     bool fDrawIncompleteTracks;
@@ -217,7 +218,7 @@ namespace sbnd{
 
     int fTaggerColour;
     int fTpcColour;
-    int fCrtDataColour;
+    int fFEBDataColour;
     int fCrtHitColour;
     int fCrtTrackColour;
     int fTpcTrackColour;
