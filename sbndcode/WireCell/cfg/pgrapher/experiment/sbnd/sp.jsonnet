@@ -51,7 +51,7 @@ function(params, tools, override = {}) {
       field_response: wc.tn(tools.field),
       elecresponse: wc.tn(tools.elec_resp),
       ftoffset: 0.0, // default 0.0
-      ctoffset: 1.0*wc.microsecond, // default -8.0
+      ctoffset: 2.0*wc.microsecond, // default -8.0
       per_chan_resp: pc.name,
       fft_flag: 0,  // 1 is faster but higher memory, 0 is slightly slower but lower memory
       postgain: 1.0,  // default 1.2
