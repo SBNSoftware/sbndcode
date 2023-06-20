@@ -309,11 +309,24 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
   _flashid_to_opflash.clear();
   _clusterid_to_slice.clear();
+  _tpc = tpc;
+  _sliceid = -1;
+  _pfpid = -1; 
+  _flashid = -1;
+  _t0 = -9999;
+  _score = -1; 
+  _hypo_pe = -1;
+  _flash_pe = -1;
+  std::fill(_hypo_spec.begin(), _hypo_spec.end(), 0);
+  std::fill(_flash_spec.begin(), _flash_spec.end(), 0);
+  _nopdets_masked=0;
 
   auto const & flash_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[tpc]);
   if(!flash_h.isValid() || flash_h->empty()) {
     mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes from producer "
                                   << _opflash_producer_v[tpc] << std::endl;
+    _matchid = -1; 
+    _tree2->Fill();
     return;
   }
 
@@ -328,6 +341,8 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     if(!flash_ara_h.isValid() || flash_ara_h->empty()) {
       mf::LogInfo("SBNDOpT0Finder") << "Don't have good flashes from producer "
                                     << _opflash_ara_producer_v[tpc] << std::endl;
+      _matchid = -1; 
+      _tree2->Fill();
       return;
     }
     art::fill_ptr_vector(flash_ara_v, flash_ara_h);
@@ -340,9 +355,17 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
   std::vector<recob::OpFlash> flash_comb_v;
 
-  if (_use_arapucas){
-    for (size_t i=0; i < flash_pmt_v.size(); i++){
-      auto const& flash_pmt = *flash_pmt_v[i];
+  for (size_t i=0; i < flash_pmt_v.size(); i++){
+    // check that the pe per pmt does not exceed the threshold
+    // if it exceeds the threshold, mask the channel out 
+    auto const& flash_pmt = *flash_pmt_v[i];
+    // for(int op_ch = 0; op_ch < int(geo->NOpDets()); op_ch++){
+    //   if (flash_pmt.PE(op_ch) > _pmt_saturation_thresh)
+    //     _opch_to_mask.push_back(op_ch);
+    // }
+
+    // combine xara + pmt PE information
+    if (_use_arapucas){
       std::vector<double> combined_pe(geo->NOpDets(), 0.0); 
       bool combine = false;
       for (size_t j=0; j < flash_ara_v.size(); j++){
@@ -375,7 +398,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
         auto xara_opch = PDNamesToList({"xarapuca_vis","xarapuca_vuv"}); 
         _opch_to_mask.insert(_opch_to_mask.end(), xara_opch.begin(), xara_opch.end());
       }
-
     }
   }
   int nflashes_tot = (_use_arapucas)? flash_comb_v.size():flash_pmt_v.size(); 
@@ -424,6 +446,8 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   // Don't waste time if there are no flashes
   if (n_flashes == 0) {
     mf::LogInfo("SBNDOpT0Finder") << "Zero good flashes in this event." << std::endl;
+    _matchid = -2; 
+    _tree2->Fill();
     return;
   }
 
@@ -436,12 +460,16 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   // auto light_cluster_v = GetLighClusters(e);
   if (!ConstructLightClusters(e, tpc)) {
     mf::LogInfo("SBNDOpT0Finder") << "Cannot construct Light Clusters." << std::endl;
+    _matchid = -3; 
+    _tree2->Fill();
     return;
   }
 
   // Don't waste time if there are no clusters
   if (!_light_cluster_v.size()) {
     mf::LogInfo("SBNDOpT0Finder") << "No slices to work with in TPC " << tpc << "." << std::endl;
+    _matchid = -3; 
+    _tree2->Fill();
     return;
   }
 
