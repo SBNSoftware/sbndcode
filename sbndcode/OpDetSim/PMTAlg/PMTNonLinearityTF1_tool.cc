@@ -64,8 +64,6 @@ private:
   std::vector<double> fAttenuationFormParams;
   unsigned int fAttenuationPreTime;
   std::vector<unsigned int> fNonLinearRange;
-  unsigned int fPEStartSat;
-  unsigned int fPEMaxSat;
 
   //TF1 for non linearity function
   TF1 *fNonLinearTF1;

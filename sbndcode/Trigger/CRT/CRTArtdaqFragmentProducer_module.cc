@@ -63,6 +63,7 @@
 #include "TString.h"
 
 // C++ includes
+#include <bitset>
 #include <map>
 #include <vector>
 #include <string>

@@ -98,19 +98,15 @@ namespace filt{
 
 
   bool GenFilter::filter(art::Event & e){
-    //std::vector< art::Handle< std::vector<simb::MCTruth> > > mclists;
-    //e.getManyByType(mclists);
     auto mclists = e.getMany< std::vector<simb::MCTruth> >();
 
     auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
     for (unsigned int i = 0; i < mclists.size() ; i++){
-      for (unsigned int j = 0; j < mclists[i]->size(); j++){
-        //Should have the truth record for the event now
-        const art::Ptr<simb::MCTruth> mc_truth(mclists[i],j);
-        // std::cout << " MCtruth particles " << mc_truth->NParticles() << std::endl;
-        for (int part = 0; part < mc_truth->NParticles(); part++){
-          const simb::MCParticle particle = mc_truth->GetParticle(part);
+      for (simb::MCTruth const& mc_truth : *mclists[i]) {
+        // std::cout << " MCtruth particles " << mc_truth.NParticles() << std::endl;
+        for (int part = 0; part < mc_truth.NParticles(); part++){
+          const simb::MCParticle particle = mc_truth.GetParticle(part);
 
           if (!IsInterestingParticle(particle)) continue;
 

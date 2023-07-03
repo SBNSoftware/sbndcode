@@ -401,18 +401,18 @@ namespace sbnd{
         evt.getByLabel(fLarg4ModuleLabel,mclistLARG4);
 
     // contains the mctruth object from genie
-    art::Ptr<simb::MCTruth> mc(mclistGENIE,0);
+    simb::MCTruth const& mc = mclistGENIE->front();
 
     // contains the mcflux object
-    art::Ptr<simb::MCFlux > flux(mcflux,0);
+    simb::MCFlux const& flux = mcflux->front();
 
     // contains the gtruth object
-    art::Ptr<simb::GTruth > gtruth(mcgtruth,0);
+    simb::GTruth const& gtruth = mcgtruth->front();
 
 
 
     // Contains the neutrino info
-    simb::MCNeutrino neutrino = mc -> GetNeutrino();
+    simb::MCNeutrino neutrino = mc.GetNeutrino();
 
     // std::cout << "The interaction info is: \n"
     //           << "  gtruth->ftgtPDG................." << gtruth->ftgtPDG << "\n"
@@ -472,7 +472,7 @@ namespace sbnd{
 
     // pack up the larg4 photon info:
     if(!fFullOscTrue)
-        fNuAnaAlg.packLarg4Info(mclistLARG4, isCC, NPi0FinalState,
+        fNuAnaAlg.packLarg4Info(*mclistLARG4, isCC, NPi0FinalState,
                                 NGamma, NChargedPions,
                                 leptonPos,
                                 leptonMom,

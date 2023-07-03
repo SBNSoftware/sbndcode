@@ -978,5 +978,3 @@ std::vector<int> SBNDOpT0Finder::GetUncoatedPMTList(std::vector<int> ch_to_use) 
 
 
 DEFINE_ART_MODULE(SBNDOpT0Finder)
-
-
