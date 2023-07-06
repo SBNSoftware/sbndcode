@@ -72,29 +72,25 @@ local wf(name, data={}) = {
 //   wf('Wire_col', { sigma: 1.0 / wc.sqrtpi * 3.0 }),
 // ]
 
-/**  
- *  Optimized SP parameters (May 2019)
- *  Associated tuning in sp.jsonnet
- */
 [
-  lf('ROI_tight_lf', { tau: 0.014 * wc.megahertz }),  // 0.02 
-  lf('ROI_tighter_lf', { tau: 0.06 * wc.megahertz }),  // 0.1 
-  lf('ROI_loose_lf', { tau: 0.002 * wc.megahertz }),  // 0.0025 
+  lf('ROI_tight_lf', { tau: 0.0185 * wc.megahertz }),  // 0.02 
+  lf('ROI_tighter_lf', { tau: 0.145 * wc.megahertz }),  // 0.1 
+  lf('ROI_loose_lf', { tau: 0.00175 * wc.megahertz }),  // 0.0025 
 
   hf('Gaus_tight'),
-  hf('Gaus_wide', { sigma: 0.12 * wc.megahertz }), 
+  hf('Gaus_wide', { sigma: 0.10 * wc.megahertz }), 
 
 
   hf('Wiener_tight_U', {
-    sigma: 0.148788  * wc.megahertz,
-    power: 3.76194,
+    sigma: 0.15  * wc.megahertz,
+    power: 5.5,
   }),
   hf("Wiener_tight_V", {
-    sigma: 0.1596568 * wc.megahertz,
-    power: 4.36125 }),
+    sigma: 0.15 * wc.megahertz,
+    power: 5.0 }),
   hf('Wiener_tight_W', {
-    sigma: 0.13623 * wc.megahertz,
-    power: 3.35324,
+    sigma: 0.25 * wc.megahertz,
+    power: 3.0,
   }),
 
   hf('Wiener_wide_U', {
@@ -110,6 +106,6 @@ local wf(name, data={}) = {
     power: 4.37928,
   }),
 
-  wf('Wire_ind', { sigma: 1.0 / wc.sqrtpi * 0.75 }), 
-  wf('Wire_col', { sigma: 1.0 / wc.sqrtpi * 5.0 }),
+  wf('Wire_ind', { sigma: 1.0 / wc.sqrtpi * 1.05 }), 
+  wf('Wire_col', { sigma: 1.0 / wc.sqrtpi * 3.60 }),
 ]
