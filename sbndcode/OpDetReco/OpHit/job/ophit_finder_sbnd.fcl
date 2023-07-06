@@ -11,7 +11,7 @@ sbnd_ophit_finder:
   ChannelMasks:   []                  # Will ignore channels in this list
   PD:             ["pmt_coated", "pmt_uncoated"]  # Will only use PDS in this list
   Electronics:    "CAEN" #Will only use PDS with CAEN/Daphne readouts (500/80MHz sampling frec)
-  DaphneFreq:     80    # Frequency of Daphne(XArapucas) readouts (in MHz)
+  DaphneFreq:     62.5  # Frequency of Daphne(XArapucas) readouts (in MHz)
   HitThreshold:   0.2   # PE
   AreaToPE:       true  # Use area to calculate number of PEs
   SPEArea:        66.33 # If AreaToPE is true, this number is
