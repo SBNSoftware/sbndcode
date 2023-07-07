@@ -53,8 +53,8 @@
 #include "sbnobj/SBND/Trigger/CRTmetric.hh"
 
 // Truth includes
-//#include "larsim/MCCheater/BackTrackerService.h"
-//#include "larsim/MCCheater/ParticleInventoryService.h"
+#include "larsim/MCCheater/BackTrackerService.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
 #include "nusimdata/SimulationBase/GTruth.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
@@ -151,6 +151,10 @@ private:
   void ResizeMCNeutrino(int nNeutrinos);
   /// Resize the data structure for Genie primaries
   void ResizeGenie(int nPrimaries);
+  // Resize the data structure for Geant4 particles
+  void ResizeGEANT(int nGEANTParticles);
+
+  double length(const simb::MCParticle& part, TVector3& start, TVector3& end);
 
   opdet::sbndPDMapAlg _pd_map;
 
@@ -324,6 +328,50 @@ private:
   std::vector<Int_t>     genie_ND;
   std::vector<Int_t>     genie_mother;
 
+  //geant information
+  size_t MaxGEANTparticles = 0; ///! how many particles there is currently room for
+  Int_t     geant_no_primaries;  //number of primary geant particles
+  Int_t     geant_list_size;  //number of all geant particles
+  Int_t     geant_list_size_in_tpcAV;
+  std::vector<Int_t>    geant_pdg;
+  std::vector<Int_t>    geant_status;    
+  std::vector<Float_t>  geant_Eng;
+  std::vector<Float_t>  geant_EndE;
+  std::vector<Float_t>  geant_Mass;
+  std::vector<Float_t>  geant_Px;
+  std::vector<Float_t>  geant_Py;
+  std::vector<Float_t>  geant_Pz;
+  std::vector<Float_t>  geant_P;
+  std::vector<Float_t>  geant_StartPointx;
+  std::vector<Float_t>  geant_StartPointy;
+  std::vector<Float_t>  geant_StartPointz;
+  std::vector<Float_t>  geant_StartT;  
+  std::vector<Float_t>  geant_EndT;          
+  std::vector<Float_t>  geant_EndPointx;
+  std::vector<Float_t>  geant_EndPointy;
+  std::vector<Float_t>  geant_EndPointz;
+  std::vector<Float_t>  geant_theta;    
+  std::vector<Float_t>  geant_phi;    
+  std::vector<Float_t>  geant_theta_xz;    
+  std::vector<Float_t>  geant_theta_yz;    
+  std::vector<Float_t>  geant_pathlen;    
+  std::vector<Int_t>    geant_inTPCActive;    
+  std::vector<Float_t>  geant_StartPointx_tpcAV;
+  std::vector<Float_t>  geant_StartPointy_tpcAV;
+  std::vector<Float_t>  geant_StartPointz_tpcAV;
+  std::vector<Float_t>  geant_EndPointx_tpcAV;
+  std::vector<Float_t>  geant_EndPointy_tpcAV;
+  std::vector<Float_t>  geant_EndPointz_tpcAV;
+  std::vector<Int_t>    geant_NumberDaughters;
+  std::vector<Int_t>    geant_TrackId;
+  std::vector<Int_t>    geant_Mother;
+  std::vector<Int_t>    geant_process_primary;
+  std::vector<std::string> geant_processname;
+  std::vector<Int_t>    geant_MergedId; //geant track segments, which belong to the same particle, get the same
+  std::vector<Int_t>    geant_MotherNuId; //The unique ID of the mother neutrino
+  std::vector<Float_t>  geant_DepEnergy; //energy deposited by this particle in AV (based on sim::IDEs)
+  std::vector<Float_t>  geant_NumElectrons; //ionization electrons reaching anode for this particle
+
 
   TTree* _sr_tree; ///< A tree filled per subrun (for POT accounting)
   int _sr_run, _sr_subrun;
@@ -360,6 +408,8 @@ private:
   bool freadMuonTracks;    ///< Add MuonTracks to output (to be set via fcl)
   bool freadMuonHits;      ///< Add MuonTrack hits to output(to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
+  bool freadGeant4;        ///< Add Geant4 info to output (to be set via fcl)
+  float fG4minE;         ///< Energy threshold to save g4 particle info (to be set via fcl)
   bool freadpmtTrigger;    ///< Add pmt hardware trigger info to output (to be set via fcl)
   bool freadpmtSoftTrigger;///< Add pmt software trigger info to output (to be set via fcl)
   bool freadcrtSoftTrigger;///< Add crt software trigger info to output (to be set via fcl)
@@ -370,6 +420,7 @@ private:
   bool fSkipInd;           ///< If true, induction planes are not saved (to be set via fcl)
   // double fSelectedPDG;
 
+
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
   sbnd::CRTHitRecoAlg hitAlg;
@@ -379,6 +430,12 @@ private:
   art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
   const geo::AuxDetGeometry* fAuxDetGeo;
   const geo::AuxDetGeometryCore* fAuxDetGeoCore;
+  
+  // ParticleInventoryService
+  art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
+
+  // BackTrackerService
+  art::ServiceHandle<cheat::BackTrackerService> bt_serv;
 };
 
 
@@ -431,8 +488,11 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
+  freadGeant4        = p.get<bool>("readGeant4",true);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
+
+  fG4minE            = p.get<float>("G4minE",0.01);
 
   fWindow            = p.get<int>("window",100);
   fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
@@ -1188,7 +1248,124 @@ void Hitdumper::analyze(const art::Event& evt)
     }//if (mcevts_truth)
   }//if (fReadTruth){
 
+  // GEANT particles information
+  if (freadGeant4) {
 
+    const sim::ParticleList& plist = pi_serv->ParticleList();
+    int nGEANTparticles = plist.size();
+    ResizeGEANT(nGEANTparticles);
+
+    // simchannels
+    std::vector<const sim::SimChannel*> fSimChannels;
+    evt.getView("simdrift", fSimChannels);
+
+    std::string pri("primary");
+    int primary=0;
+    int active = 0;
+    int geant_particle=0;
+    sim::ParticleList::const_iterator itPart = plist.begin(), 
+      pend = plist.end(); // iterator to pairs (track id, particle)
+
+    for(size_t iPart = 0; (iPart < plist.size()) && (itPart != pend); ++iPart){
+      const simb::MCParticle* pPart = (itPart++)->second;
+      if (!pPart) {
+        throw art::Exception(art::errors::LogicError)
+          << "GEANT particle #" << iPart << " returned a null pointer";
+      }
+
+      ++geant_particle;
+      bool isPrimary = pPart->Process() == pri;
+      if (isPrimary) ++primary;
+      int TrackID = pPart->TrackId();
+      
+      // calculate traj length in AV
+      TVector3 mcstart, mcend;
+      double plen = length(*pPart, mcstart, mcend);
+      bool isActive = plen != 0;
+      if (plen) active++;
+
+      // Get the total energy deposited by this particle by looking at IDEs from 3 planes.
+      // The value should be the same on all planes, but better safe than sorry...
+      geo::View_t views[3]={geo::kU, geo::kV, geo::kW};
+      int nPlanes = 0;
+      float totalE_particle = 0;
+      float totalne_particle = 0;
+      for(const geo::View_t view : views ) {
+        std::vector<const sim::IDE* > ides = bt_serv->TrackIdToSimIDEs_Ps(TrackID, view);
+
+        if( ides.size() ){
+          for (auto ide: ides) {
+            totalE_particle += ide->energy;
+            totalne_particle += ide->numElectrons;
+          }
+          nPlanes++;
+        }
+      }
+
+      if(nPlanes) {
+        totalE_particle /= nPlanes;
+        totalne_particle /= nPlanes;
+      }
+
+      // Save particle info to tree
+      if (iPart < MaxGEANTparticles) {
+        if (pPart->E()>fG4minE || isPrimary){
+          geant_process_primary[iPart] = int(isPrimary);
+          geant_processname[iPart]= pPart->Process();
+          geant_Mother[iPart]=pPart->Mother();
+          geant_TrackId[iPart]=TrackID;
+          geant_pdg[iPart]=pPart->PdgCode();
+          geant_status[iPart] = pPart->StatusCode();
+          geant_Eng[iPart]=pPart->E();
+          geant_EndE[iPart]=pPart->EndE();
+          geant_Mass[iPart]=pPart->Mass();
+          geant_Px[iPart]=pPart->Px();
+          geant_Py[iPart]=pPart->Py();
+          geant_Pz[iPart]=pPart->Pz();
+          geant_P[iPart]=pPart->Momentum().Vect().Mag();
+          geant_StartPointx[iPart]=pPart->Vx();
+          geant_StartPointy[iPart]=pPart->Vy();
+          geant_StartPointz[iPart]=pPart->Vz();
+          geant_StartT[iPart] = pPart->T();
+          geant_EndPointx[iPart]=pPart->EndPosition()[0];
+          geant_EndPointy[iPart]=pPart->EndPosition()[1];
+          geant_EndPointz[iPart]=pPart->EndPosition()[2];
+          geant_EndT[iPart] = pPart->EndT();
+          geant_theta[iPart] = pPart->Momentum().Theta();
+          geant_phi[iPart] = pPart->Momentum().Phi();
+          geant_theta_xz[iPart] = std::atan2(pPart->Px(), pPart->Pz());
+          geant_theta_yz[iPart] = std::atan2(pPart->Py(), pPart->Pz());
+          geant_pathlen[iPart]  = plen;
+          geant_NumberDaughters[iPart]=pPart->NumberDaughters();
+          geant_inTPCActive[iPart] = int(isActive);
+          geant_DepEnergy[iPart] = totalE_particle;
+          geant_NumElectrons[iPart] = totalne_particle;
+          if (isActive){    
+            geant_StartPointx_tpcAV[iPart] = mcstart.X();
+            geant_StartPointy_tpcAV[iPart] = mcstart.Y();
+            geant_StartPointz_tpcAV[iPart] = mcstart.Z();
+            geant_EndPointx_tpcAV[iPart] = mcend.X();
+            geant_EndPointy_tpcAV[iPart] = mcend.Y();
+            geant_EndPointz_tpcAV[iPart] = mcend.Z();
+          }
+          //Get the mother neutrino of this particle and use the hosting art::Ptr key as the matched ID
+          const art::Ptr<simb::MCTruth> matched_mctruth = pi_serv->ParticleToMCTruth_P(pPart);
+          geant_MotherNuId[iPart] = matched_mctruth.key();
+        } //endif E>G4min || isPrimary
+      } else if (iPart == MaxGEANTparticles) {
+        // got this error? it might be a bug,
+        // since the structure should have enough room for everything
+        mf::LogError("Hitdumper") << "event has "
+          << plist.size() << " MC particles, only "
+          << MaxGEANTparticles << " will be stored in tree";
+      }
+    }//<-- end loop over particles
+
+    geant_list_size_in_tpcAV = active;
+    geant_no_primaries = primary;
+    geant_list_size = geant_particle;
+
+  } //if (freadGeant4)
 
   fTree->Fill();
 
@@ -1373,6 +1550,51 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("genie_mother",&genie_mother);
   }
 
+  // geant4 information
+  if (freadGeant4) {
+    fTree->Branch("geant_no_primaries",&geant_no_primaries);
+    fTree->Branch("geant_list_size",&geant_list_size);
+    fTree->Branch("geant_list_size_in_tpcAV",&geant_list_size_in_tpcAV);
+    fTree->Branch("geant_pdg",&geant_pdg);
+    fTree->Branch("geant_status",&geant_status);
+    fTree->Branch("geant_Eng",&geant_Eng);
+    fTree->Branch("geant_EndE",&geant_EndE);
+    fTree->Branch("geant_Mass",&geant_Mass);
+    fTree->Branch("geant_Px",&geant_Px);
+    fTree->Branch("geant_Py",&geant_Py);
+    fTree->Branch("geant_Pz",&geant_Pz);
+    fTree->Branch("geant_P",&geant_P);
+    fTree->Branch("geant_StartPointx",&geant_StartPointx);
+    fTree->Branch("geant_StartPointy",&geant_StartPointy);
+    fTree->Branch("geant_StartPointz",&geant_StartPointz);
+    fTree->Branch("geant_StartT",&geant_StartT);
+    fTree->Branch("geant_EndT",&geant_EndT);
+    fTree->Branch("geant_EndPointx",&geant_EndPointx);
+    fTree->Branch("geant_EndPointy",&geant_EndPointy);
+    fTree->Branch("geant_EndPointz",&geant_EndPointz);
+    fTree->Branch("geant_theta",&geant_theta);
+    fTree->Branch("geant_phi",&geant_phi);
+    fTree->Branch("geant_theta_xz",&geant_theta_xz);
+    fTree->Branch("geant_theta_yz",&geant_theta_yz);
+    fTree->Branch("geant_pathlen",&geant_pathlen);
+    fTree->Branch("geant_inTPCActive",&geant_inTPCActive);
+    fTree->Branch("geant_StartPointx_tpcAV",&geant_StartPointx_tpcAV);
+    fTree->Branch("geant_StartPointy_tpcAV",&geant_StartPointy_tpcAV);
+    fTree->Branch("geant_StartPointz_tpcAV",&geant_StartPointz_tpcAV);
+    fTree->Branch("geant_EndPointx_tpcAV",&geant_EndPointx_tpcAV);
+    fTree->Branch("geant_StartPointy_tpcAV",&geant_StartPointy_tpcAV);
+    fTree->Branch("geant_StartPointz_tpcAV",&geant_StartPointz_tpcAV);
+    fTree->Branch("geant_NumberDaughters",&geant_NumberDaughters);
+    fTree->Branch("geant_TrackId",&geant_TrackId);
+    fTree->Branch("geant_Mother",&geant_Mother);
+    fTree->Branch("geant_process_primary",&geant_process_primary);
+    fTree->Branch("geant_processname",&geant_processname);
+    fTree->Branch("geant_MergedId",&geant_MergedId);
+    fTree->Branch("geant_MotherNuId",&geant_MotherNuId);
+    fTree->Branch("geant_DepEnergy",&geant_DepEnergy);
+    fTree->Branch("geant_NumElectrons",&geant_NumElectrons);
+  }
+
   if (fsavePOTInfo) {
     _sr_tree = tfs->make<TTree>("pottree","");
     _sr_tree->Branch("run", &_sr_run, "run/I");
@@ -1541,6 +1763,11 @@ void Hitdumper::ResetVars() {
 
   mcevts_truth = 0;
   genie_no_primaries = 0;
+
+  geant_no_primaries = 0;
+  geant_list_size = 0;
+  geant_list_size_in_tpcAV = 0;
+  
 }
 
 void Hitdumper::ResizeMCNeutrino(int nNeutrinos) {
@@ -1594,6 +1821,49 @@ void Hitdumper::ResizeGenie(int nPrimaries) {
 
 }
 
+void Hitdumper::ResizeGEANT(int nGEANTParticles) {
+  // minimum size is 1, so that we always have an address
+  MaxGEANTparticles = (size_t) std::max(nGEANTParticles, 1);
+  geant_pdg.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_status.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_Eng.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_EndE.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_Mass.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_Px.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_Py.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_Pz.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_P.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_StartPointx.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_StartPointy.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_StartPointz.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_StartT.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_EndT.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_EndPointx.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_EndPointy.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_EndPointz.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_theta.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_phi.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_theta_xz.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_theta_yz.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_pathlen.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_inTPCActive.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_StartPointx_tpcAV.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_StartPointy_tpcAV.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_StartPointz_tpcAV.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_EndPointx_tpcAV.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_EndPointy_tpcAV.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_EndPointz_tpcAV.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_NumberDaughters.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_TrackId.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_Mother.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_process_primary.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_processname.assign(MaxGEANTparticles, "noname");
+  geant_MergedId.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_MotherNuId.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_DepEnergy.assign(MaxGEANTparticles, DEFAULT_VALUE);
+  geant_NumElectrons.assign(MaxGEANTparticles, DEFAULT_VALUE); 
+}
+
 
 void Hitdumper::beginSubRun(art::SubRun const& sr) {
 
@@ -1617,6 +1887,48 @@ void Hitdumper::beginSubRun(art::SubRun const& sr) {
 
   _sr_tree->Fill();
 
+}
+
+// Length of MC particle, trajectory by trajectory.
+double Hitdumper::length(const simb::MCParticle& part, TVector3& start, TVector3& end)
+{
+  // Get geometry.
+  art::ServiceHandle<geo::Geometry> geom;
+
+  // Get active volume boundary.
+  double xmin = -2.0 * geom->DetHalfWidth() - 1e-8;
+  double xmax = 2.0 * geom->DetHalfWidth() + 1e-8;
+  double ymin = -geom->DetHalfHeight() -1e-8;
+  double ymax = geom->DetHalfHeight() + 1e-8;
+  double zmin = 0. -1e-8;
+  double zmax = geom->DetLength() + 1e-8;
+  
+  // Get number traj points
+  int n = part.NumberTrajectoryPoints();
+  if( n <= 1 ) return 0.;
+  
+  double  L = 0.;
+  bool    first = true; 
+
+  // Loop over points (start with 2nd)
+  for(int i = 1; i < n; ++i) {
+
+    TVector3 p1(part.Vx(i),part.Vy(i),part.Vz(i));
+    
+    if(   p1.X() >= xmin && p1.X() <= xmax
+      &&  p1.Y() >= ymin && p1.Y() <= ymax
+      &&  p1.Z() >= zmin && p1.Z() <= zmax ) {
+    
+      TVector3 p0(part.Vx(i-1),part.Vy(i-1),part.Vz(i-1));
+      
+      if(first) start = p1; 
+      else L += (p1-p0).Mag();
+      first = false;
+      end   = p1;
+    }
+  }
+
+  return L;
 }
 
 DEFINE_ART_MODULE(Hitdumper)

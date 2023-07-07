@@ -9,6 +9,9 @@
 #include "signalservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
 #
 # module configuration
 #
@@ -35,6 +38,8 @@ services:
                              @table::sbnd_services              # from services_sbnd.fcl
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND:  @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  BackTrackerService:  @local::standard_backtrackerservice
 }
 
 
@@ -129,3 +134,5 @@ physics.producers.fasthit.ColMinWidth: 100.0
 physics.producers.fasthit.UncompressWithPed: false
 
 #services.DetectorClocksService.TriggerOffsetTPC: 100
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
