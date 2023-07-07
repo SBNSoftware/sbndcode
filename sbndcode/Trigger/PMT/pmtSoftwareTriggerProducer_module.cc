@@ -267,7 +267,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
 
     int nAboveThreshold = 0;
     // find the waveform bins that correspond to the start and end of the extended spill window (0 -> 1.8 us) within the 10 us waveform 
-    // if the triggerTimeStamp < 1000, the beginning of the beam spill is *not* contained within the waveform 
     // !! if the triggerTimeStamp > 1000, the beginning of the beam spill is *not* contained within the waveform 
     int beamStartBin = (triggerTimeStamp >= 1000)? 0 : int(500 - (triggerTimeStamp)/2); // units of bins 
     int beamEndBin   = (triggerTimeStamp >= 1000)? (fBeamWindowLength*1e3 - (triggerTimeStamp-1000) )/2 : (beamStartBin + (fBeamWindowLength*1e3)/2);
@@ -325,11 +324,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
         std::cout << "Finding pulses for PMT #" << channelList.at(i_ch) << std::endl;
         SimpleThreshAlgo(i_ch);
 
-        // std::vector<double> t_start_v; 
-        // std::vector<double> t_end_v; 
-        // std::vector<double> t_peak_v; 
-        // std::vector<double> peak_v; 
-        // std::vector<double> area_v;
         for (auto pulse : pmtInfo.pulseVec){
           pulse_counter++; 
           // times in pulse.t_**** are in units of *bins* not actually time 
@@ -347,7 +341,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
           else if (triggerTimeStamp < 1000){
             if (pulse.t_start > (500 - abs((triggerTimeStamp-1000)/2)) && pulse.t_end < 500) prelimPE+=pulse.pe; 
           }
-        // _pulse_npulses.push_back(pulse_counter);
           _npulses++;
           _pulse_ch.push_back(channelList.at(i_ch));
           _pulse_t_start.push_back((pulse.t_start - beamStartBin)*2);
@@ -355,11 +348,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
           _pulse_t_peak.push_back( (pulse.t_peak  - beamStartBin)*2);
           _pulse_peak.push_back(pulse.peak);
           _pulse_area.push_back(pulse.area);
-          // t_start_v.push_back((pulse.t_start - beamStartBin)*2);
-          // t_end_v.push_back(  (pulse.t_end   - beamStartBin)*2);
-          // t_peak_v.push_back( (pulse.t_peak  - beamStartBin)*2);
-          // peak_v.push_back(pulse.peak);
-          // area_v.push_back(pulse.area);
         } // end of pulse loop 
 
       }
@@ -391,8 +379,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
                     << "subrun_" <<fSubrun
                     << "event_" << fEvent
                     << "_pmtnum_" << channelList.at(i_wvfm);
-            // double StartTime = ((fTriggerTime-beamWindowStart) - 500)*1e-3; // us
-            // double EndTime = StartTime + (5210*2)*1e-03; // us 
             // assuming that we save ~1 us before the triggerTimeStamp  
             double StartTime = (triggerTimeStamp-1000)*1e-3; // us
             double EndTime   = StartTime + (fWvfmLength*2)*1e-3;
