@@ -6,12 +6,6 @@
 // Authors: Marco del Tutto and Lynn Tung 
 
 // Flash Matching using charge-to-light likelihood scoring 
-// matches are stored in anab::T0 objects, with the following attributes: 
-//  - "Time": The recontructed flash time, or t0
-//  - "TriggerType":  the reconstructed total PE 
-//  - "TriggerBits":  the tpc object id
-//  - "ID": the flash id
-//  - "TriggerConfidence": Matching score
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +89,13 @@ private:
   bool ConstructLightClusters(art::Event& e, unsigned int tpc);
 
   /// Convert from a list of PDS names to a list of op channels
-  std::vector<int> PDNamesToList(std::vector<std::string>);
+  std::vector<int> PDNamesToList(std::vector<std::string> pd_names);
+
+  /// return if "xarapucas" are included in the list of photodetectors
+  bool UseArapucas(std::vector<std::string> pd_names);
+
+  /// returns if a channel corresponds to PMT (0) or X-Arapuca (1)
+  std::vector<int> GetChannelTypes(std::vector<int> ch_to_use);
 
   /// Returns a list of uncoated PMTs that are a subset of those in ch_to_use
   std::vector<int> GetUncoatedPMTList(std::vector<int> ch_to_use);
@@ -135,6 +135,7 @@ private:
 
   std::vector<std::string> _photo_detectors; ///< The photodetector to use (to be set)
   std::vector<int> _opch_to_use; ///< List of opch to use (will be infered from _photo_detectors)
+  std::vector<int> _opch_types; ///< List of opch types, 0 for PMT and 1 for xARAPUCAs, -1 for other 
   std::vector<int> _uncoated_pmts; ///< List of uncoated opch to use (will be infered from _opch_to_use)
   std::vector<geo::Point_t> _opch_centers; ///< List of opch cneter coordinates 
   std::vector<int> _opch_to_mask; /// List of opch to mask-out (due to exiting particles, failed xARA flashes, apsia xARAs)
@@ -179,7 +180,6 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
   _opflash_producer_v =     p.get<std::vector<std::string>>("OpFlashProducers");
   _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
-  _use_arapucas = p.get<bool>("UseArapucas");
   _tpc_v = p.get<std::vector<unsigned int>>("TPCs");
   _slice_producer = p.get<std::string>("SliceProducer");
   _trk_producer   = p.get<std::string>("TrackProducer");
@@ -190,7 +190,9 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _flash_trange_end = p.get<double>("FlashVetoTimeEnd", 2);
 
   _photo_detectors = p.get<std::vector<std::string>>("PhotoDetectors");
+  _use_arapucas = this->UseArapucas(_photo_detectors);
   _opch_to_use = this->PDNamesToList(_photo_detectors);
+  _opch_types  = this->GetChannelTypes(_opch_to_use);
   _uncoated_pmts = this->GetUncoatedPMTList(_opch_to_use);
 
   _select_nus        = p.get<bool>("SelectNeutrino");
@@ -265,6 +267,7 @@ void SBNDOpT0Finder::produce(art::Event& e)
 
   // set default masks at the beginning of every event 
   _mgr.SetChannelMask(_opch_to_use);
+  _mgr.SetChannelType(_opch_types);
   _mgr.SetUncoatedPMTs(_uncoated_pmts);
   _opch_to_mask.reserve(_opch_to_use.size());
   _opch_to_mask.clear(); 
@@ -354,16 +357,10 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
   std::vector<::flashmatch::Flash_t> all_flashes;
 
   std::vector<recob::OpFlash> flash_comb_v;
+  std::vector<bool> combine_v;
 
   for (size_t i=0; i < flash_pmt_v.size(); i++){
-    // check that the pe per pmt does not exceed the threshold
-    // if it exceeds the threshold, mask the channel out 
     auto const& flash_pmt = *flash_pmt_v[i];
-    // for(int op_ch = 0; op_ch < int(geo->NOpDets()); op_ch++){
-    //   if (flash_pmt.PE(op_ch) > _pmt_saturation_thresh)
-    //     _opch_to_mask.push_back(op_ch);
-    // }
-
     // combine xara + pmt PE information
     if (_use_arapucas){
       std::vector<double> combined_pe(geo->NOpDets(), 0.0); 
@@ -373,15 +370,17 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
         // if the ara and pmt flashes match: 
         if (abs(flash_pmt.Time() - flash_ara.Time()) < 0.05){
           combine = true;
-          if (flash_pmt.Time() > 0 && flash_pmt.Time() < 2)
+          if (flash_pmt.Time() > _flash_trange_start  && flash_pmt.Time() < _flash_trange_end)
             mf::LogInfo("SBNDOpT0Finder") << "Combining PMT OpFlash (time: " 
                                           << flash_pmt.Time() 
                                           << "), with ARA OpFlash (time: " 
                                           << flash_ara.Time() << ")" << std::endl;
-          // add the arapuca flash PE to the pmt flash PE 
-          for(unsigned int op_ch = 0; op_ch < geo->NOpDets(); op_ch++){
-            combined_pe.at(op_ch) = flash_pmt.PE(op_ch) + flash_ara.PE(op_ch);
-          }
+          // add the arapuca flash PE to the pmt flash PE (the PEs vector are different sizes for PMT and xARAPUCAs)
+          for(unsigned int pmt_ch = 0; pmt_ch < flash_pmt.PEs().size(); pmt_ch++)
+            combined_pe.at(pmt_ch) = flash_pmt.PEs().at(pmt_ch);
+          for(unsigned int ara_ch = 0; ara_ch < flash_ara.PEs().size(); ara_ch++)
+            combined_pe.at(ara_ch) = flash_ara.PEs().at(ara_ch);
+  
           // create new flash with combined PE information and pmt flash information
           recob::OpFlash new_flash(flash_pmt.Time(), flash_pmt.TimeWidth(), flash_pmt.AbsTime(),
             flash_pmt.Frame(), combined_pe, flash_pmt.InBeamFrame(), flash_pmt.OnBeamTime(), 
@@ -395,9 +394,8 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
       // if no arapuca flashes are found
       if (combine == false){
         flash_comb_v.push_back(flash_pmt);
-        auto xara_opch = PDNamesToList({"xarapuca_vis","xarapuca_vuv"}); 
-        _opch_to_mask.insert(_opch_to_mask.end(), xara_opch.begin(), xara_opch.end());
       }
+      combine_v.push_back(combine);
     }
   }
   int nflashes_tot = (_use_arapucas)? flash_comb_v.size():flash_pmt_v.size(); 
@@ -412,6 +410,12 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
       continue;
     }
 
+    if (_use_arapucas && combine_v.at(n) == false){
+        std::cout << "unable to match in-beam flash with pmt + ara" << std::endl;
+        auto xara_opch = PDNamesToList({"xarapuca_vis","xarapuca_vuv"}); 
+        _opch_to_mask.insert(_opch_to_mask.end(), xara_opch.begin(), xara_opch.end());
+    }
+
     _flashid_to_opflash[n_flashes] = flash_pmt_v[n];
 
     n_flashes++;
@@ -423,7 +427,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     f.pe_err_v.resize(geo->NOpDets());
     for (unsigned int op_ch = 0; op_ch < f.pe_v.size(); op_ch++) {
       unsigned int opdet = geo->OpDetFromOpChannel(op_ch);
-      if (std::find(_opch_to_use.begin(), _opch_to_use.end(), op_ch) == _opch_to_use.end() || flash.PE(op_ch)>1e6) {
+      if (std::find(_opch_to_use.begin(), _opch_to_use.end(), op_ch) == _opch_to_use.end()) {
         f.pe_v[opdet] = 0;
         f.pe_err_v[opdet] = 0;
       } 
@@ -486,8 +490,10 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
             [&opch](int x) { return x == opch; }), 
             masked_opch_to_use.end());
     } 
+    auto masked_opch_types = GetChannelTypes(masked_opch_to_use);
     auto masked_uncoated_pmts = GetUncoatedPMTList(masked_opch_to_use);
     _mgr.SetChannelMask(masked_opch_to_use);
+    _mgr.SetChannelType(masked_opch_types);
     _mgr.SetUncoatedPMTs(masked_uncoated_pmts);
   }
 
@@ -711,7 +717,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
               if (int(opch)%2 != tpc) continue;
               // only coated PMTs and vuv arapucas will be affected by direct light
               if (_pds_map.isPDType(opch, "pmt_uncoated") || _pds_map.isPDType(opch, "xarapuca_vis")) continue;
-              if (!_use_arapucas && _pds_map.isPDType(opch, "xarapuca_vuv")) continue;
+              if (_use_arapucas && _pds_map.isPDType(opch, "xarapuca_vuv")) continue;
               auto center = _opch_centers.at(opch);
               if ((abs(center.Z() - (exit_pt.Z() + 50*std::cos(track->Theta()))) <= 75) && 
                   (abs(center.Y() - (exit_pt.Y() + 50*std::cos(track->ZenithAngle()))) <= 75)){
@@ -958,6 +964,30 @@ std::vector<int> SBNDOpT0Finder::PDNamesToList(std::vector<std::string> pd_names
 
   return out_ch_v;
 
+}
+ 
+bool SBNDOpT0Finder::UseArapucas(std::vector<std::string> pd_names){
+  bool found_ara = false;
+  for (auto name : pd_names){
+    if ((name == "xarapuca_vis") | ( name =="xarapuca_vis")){
+      found_ara = true;
+      break;
+    }
+  }
+  return found_ara;
+}
+
+std::vector<int> SBNDOpT0Finder::GetChannelTypes(std::vector<int> ch_to_use){
+  std::vector<int> out_v; 
+  for (auto ch : ch_to_use){
+    if (_pds_map.isPDType(ch, "pmt_uncoated") | _pds_map.isPDType(ch, "pmt_coated"))
+      out_v.push_back(0);
+    else if (_pds_map.isPDType(ch, "xarapuca_vis") | _pds_map.isPDType(ch, "xarapuca_vis"))
+      out_v.push_back(1);
+    else 
+      out_v.push_back(-1);
+  }
+  return out_v;
 }
 
 std::vector<int> SBNDOpT0Finder::GetUncoatedPMTList(std::vector<int> ch_to_use) {

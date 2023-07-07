@@ -83,7 +83,6 @@ physics:
 ## default settings 
 physics.producers.opt0finder.SelectNeutrino: true # ignore unambiguous cosmics 
 physics.producers.opt0finder.ExcludeExitingOpDets: true # exclude optical detectors near exiting track exit points 
-physics.producers.opt0finder.UseArapucas: false # use PMTs only
 physics.producers.opt0finder.PhotoDetectors: ["pmt_coated", "pmt_uncoated"] # use PMTs only 
 physics.producers.opt0finder.FlashMatchConfig.QLLMatch.NormalizeFlash: true # use normalized meas/hypo flases
 physics.producers.opt0finder.FlashMatchConfig.QLLMatch.QLLMode: 0 # use chisq with ^^ normalization above
