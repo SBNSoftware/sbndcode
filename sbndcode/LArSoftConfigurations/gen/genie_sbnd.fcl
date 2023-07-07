@@ -191,7 +191,7 @@ sbnd_flux_bnb_nu_Jv1_test1: {
 
 
 #
-# Booster Neutrino Beam, neutrino mode, configuration J (v1)
+# Booster Neutrino Beam, neutrino mode, configuration K (v1)
 #
 sbnd_flux_bnb_nu_Kv1: {
   FluxType:       "simple_flux"
@@ -201,7 +201,7 @@ sbnd_flux_bnb_nu_Kv1: {
 }
 
 sbnd_flux_bnb_nu_Kv1_test1: {
-  @table::sbnd_flux_bnb_nu_Jv1
+  @table::sbnd_flux_bnb_nu_Kv1
   FluxFiles: [ "gsimple_april07_baseline_0732_redecay_wkaonwgh.root" ]
 }
 
