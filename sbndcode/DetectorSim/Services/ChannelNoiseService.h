@@ -8,11 +8,13 @@
 #ifndef ChannelNoiseService_H
 #define ChannelNoiseService_H
 
+#include <functional>
 #include <vector>
 #include <iostream>
 #include "sbndcode/DetectorSim/Services/AdcTypes.h"
-#include "art/Framework/Core/EDProducer.h"
 #include "fhiclcpp/ParameterSet.h"
+
+namespace CLHEP { class HepRandomEngine; }
 namespace detinfo { class DetectorClocksData; }
 
 class ChannelNoiseService {
@@ -34,7 +36,9 @@ public:
   // Print parameters.
   virtual std::ostream& print(std::ostream& out =std::cout, std::string prefix ="") const =0;
   
-  virtual void InitialiseProducerDeps(art::EDProducer * EDProdPointer, fhicl::ParameterSet const& pset){
+  using EngineCreator = std::function<CLHEP::HepRandomEngine&(std::string const&, std::string const&)>;
+
+  virtual void InitialiseProducerDeps(EngineCreator createEngine, fhicl::ParameterSet const& pset){
     return; 
   } 
 

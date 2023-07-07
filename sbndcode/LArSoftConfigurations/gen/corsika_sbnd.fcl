@@ -49,7 +49,7 @@ sbnd_corsika_p: {
   
   # use the shared copy of CORSIKA database files
   ShowerInputFiles: [
-    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/p_showers_*.db"
+    "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/cosmics/Fermilab/CORSIKA/standard/v01_00/p_showers_*.db"
   ] # ShowerInputFiles
   
   
@@ -68,11 +68,11 @@ sbnd_corsika_cmc: {
   
   # use the shared copy of CORSIKA database files
   ShowerInputFiles: [
-    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/p_showers_*.db",
-    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/He_showers_*.db",
-    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/N_showers_*.db",
-    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/Mg_showers_*.db",
-    "/pnfs/larsoft/persistent/physics/cosmics/Fermilab/CORSIKA/standard/Fe_showers_*.db"
+    "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/cosmics/Fermilab/CORSIKA/standard/v01_00/p_showers_*.db",
+    "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/cosmics/Fermilab/CORSIKA/standard/v01_00/He_showers_*.db",
+    "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/cosmics/Fermilab/CORSIKA/standard/v01_00/N_showers_*.db",
+    "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/cosmics/Fermilab/CORSIKA/standard/v01_00/Mg_showers_*.db",
+    "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/cosmics/Fermilab/CORSIKA/standard/v01_00/Fe_showers_*.db"
   ] # ShowerInputFiles
   
   

@@ -1,0 +1,203 @@
+#+title: Pgrapher Reference Configuration
+
+This area holds a set of *reference configuration* files spanning many
+targets.  It is self-contained except for depending on the files at
+the top of the ~cfg~ package.  These are expected to provide a set of
+examples or a starting point for deriving production configuration.
+
+* Organization
+
+The *reference configuration* files are factored into sub-directories
+according to their scope of use.
+
+- [[./ui/]] :: configuration which targets a specific user interface (eg
+               [[./ui/cli/]] and [[./ui/wcls]])
+
+- [[./common/]] :: "base objects" and other structures and functions
+                   shared by the other scopes.  Be very careful
+                   changing things here as it will impact each
+                   experiments output.
+
+- [[./experiment/]] :: reference configuration specific to one experiment
+     or detector (eg [[./experiment/uboone/]])
+
+- [[./test/]] :: it should be possible to individually compile all files
+                 above to JSON but this directory holds some
+                 additional files that test integrating files from the
+                 above directories.
+
+
+* Guidelines for developing specific configuration
+
+These reference configurations may be used as a basis for developing
+user and/or production configuration.  Some guidelines are given for
+their effective use
+
+- clone this ~wire-cell-cfg~ repository but otherwise leave its
+  contents unmodified
+
+- maintain a separate directory / repository holding *job-specific*
+  configuration which import and extend the ~/pgrapher/~ files.
+
+- mimic the organization patterns described above
+
+Note, the *reference configuration* given here is subject to change
+without warning in the ~master~ branch.  It will remain more stable
+within a release branch.
+
+* Checking configuration
+
+While developing a configuration it is useful to periodically test
+that it is correct.  There are several levels at which correctness can
+be checked.
+
+** Check syntax
+
+In principle, every Jsonnet file should compile as a "main" file and
+testing this is easy.  Simply run ~jsonnet~ specifying the top
+directory location for the ~wire-cell-cfg~ package.  Eg:
+
+#+BEGIN_EXAMPLE
+  $ jsonnet -J cfg cfg/pgrapher/uboone/test-nf.jsonnet > test-nf.json
+#+END_EXAMPLE
+
+If this spits out JSON then the Jsonnet is correctly formed.  Some
+common mistakes are:
+
+ - defining an attribute of an object as an exported function.  In
+   principle, function values are allowed as long as they are not
+   retained in the /configuration sequence/.  A simple fix that allows
+   intermediate testing is to define the attribute with ~::~ instead
+   of the singular ~:~.
+
+** Check content
+
+There are many ways to check if the configuration is what you expect.
+
+*** Read the JSON file
+
+The JSON can get big but it's where the truth is.  Remember that units
+have been resolved so any quantities are expressed implicitly in the
+system of units.
+
+*** Query the JSON file
+
+Lots of tricks can be played with [[https://stedolan.github.io/jq/][jq]].  For example, print out all
+configurations for a particular component ~type~:
+
+#+BEGIN_EXAMPLE
+$ jq '.[] | select(.type | contains("Ductor"))' < ../foo.json
+{
+  "data": {
+    "anode": "AnodePlane:uboone",
+    "pirs": [
+      "PlaneImpactResponse:PIRfield0plane0",
+      "PlaneImpactResponse:PIRfield0plane1",
+      "PlaneImpactResponse:PIRfield0plane2"
+    ],
+    "rng": "Random"
+  },
+  "name": "nominal",
+  "type": "Ductor"
+}
+#+END_EXAMPLE
+
+Find every object that is configured with a ~filename~ attribute set
+to some value:
+
+#+BEGIN_EXAMPLE
+$ jq '.[] | select(.data.filename == "ub-10-half.json.bz2")' < ../foo.json
+{
+  "data": {
+    "filename": "ub-10-half.json.bz2"
+  },
+  "name": "field0",
+  "type": "FieldResponse"
+}
+#+END_EXAMPLE
+
+Rejigger the output to see what things have some value:
+
+#+BEGIN_EXAMPLE
+jq '.[] | select(.data.nticks==9600) | {type:.type}' < wcls-sim-nf-sp.json | grep type|sort |uniq
+  "type": "Reframer"
+  "type": "wclsFrameSaver"
+jq '.[] | select(.data.nticks > 9600) | {type:.type,nticks:.data.nticks}' < wcls-sim-nf-sp.json | grep type|sort |uniq
+  "type": "ColdElecResponse",
+  "type": "PlaneImpactResponse",
+  "type": "RCResponse",
+jq '.[] | select(.data.nticks > 9600) | {type:.type,nticks:.data.nticks}' < wcls-sim-nf-sp.json | grep nticks|sort |uniq
+  "nticks": 9782
+#+END_EXAMPLE
+
+** Check graph
+
+Just having correct syntax goes a long way to having correct
+configuration but of course it does not guarantee correct content and
+semantics.
+
+Much of the configuration culminates in the Pgrapher component graph.
+The ~wire-cell-python~ package provides a utility to generate a visual
+representation of this graph which quickly allows problems to be
+identified.  Currently, this command needs to operate on precompiled
+JSON which can be generated as described by the syntax checking above.
+
+#+BEGIN_EXAMPLE
+  $ wirecell-pgraph dotify --jpath '.' test-nf.json test-nf.pdf
+#+END_EXAMPLE
+
+The use of ~--jpath '.'~ is to tell the command how to locate the
+~edges~ attribute.  By default the command assumes a full
+/configuration sequence/ with the ~Pgrapher~ configuration object as
+the last element.
+
+** Check C++ defaults
+
+The C++ components hard-code some default configuration.  See [[https://wirecell.github.io/news/posts/default-config-dumper/][this blog entry]].
+
+#+BEGIN_EXAMPLE
+$ wire-cell -p WireCellApps -p WireCellGen -a ConfigDumper > foo.json
+$ jq '.[]|select(.type|contains("Ductor"))' < ../foo.json
+{
+  "data": {
+    "anode": "AnodePlane",
+    "continuous": true,
+    "drift_speed": 0.001,
+    "first_frame_number": 0,
+    "fluctuate": true,
+    "nsigma": 3,
+    "pirs": [],
+    "readout_time": 5000000,
+    "rng": "Random",
+    "start_time": 0,
+    "tick": 500
+  },
+  "name": "",
+  "type": "Ductor"
+}
+{
+  "data": {
+    "anode": "AnodePlane",
+    "chain": [],
+    "continuous": false,
+    "first_frame_number": 0,
+    "readout_time": 5000000,
+    "start_time": 0
+  },
+  "name": "",
+  "type": "MultiDuctor"
+}
+#+END_EXAMPLE
+
+** Check usage
+
+Finally, one must use the configuration and validate results.  Usage
+of WCT is described in detail in the manual and news blog and
+elsewhere.  The only thing to add here is that this file naming
+convention is followed for the main entry points:
+
+- ~wct-*.jsonnet~ :: files intended for use in stand-alone ~wire-cell~ command line interface.
+
+- ~wcls-*.jsonnet~ :: files intended for use in WC/LS /art/ jobs.
+     Reference FHiCL is provided in files of the same name but with
+     ~.fcl~ extension.
