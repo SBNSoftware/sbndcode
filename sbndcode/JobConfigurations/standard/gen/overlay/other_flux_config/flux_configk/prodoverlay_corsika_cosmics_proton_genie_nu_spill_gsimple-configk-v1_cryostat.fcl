@@ -1,0 +1,3 @@
+#include "prodoverlay_corsika_cosmics_cmc_genie_nu_spill_gsimple-configk-v1_cryostat.fcl"
+
+physics.producers.corsika: @local::sbnd_corsika_p
