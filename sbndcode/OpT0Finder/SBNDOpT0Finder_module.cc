@@ -138,7 +138,6 @@ private:
   std::vector<int> _opch_types; ///< List of opch types, 0 for PMT and 1 for xARAPUCAs, -1 for other 
   std::vector<int> _uncoated_pmts; ///< List of uncoated opch to use (will be infered from _opch_to_use)
   std::vector<geo::Point_t> _opch_centers; ///< List of opch cneter coordinates 
-  std::vector<int> _opch_to_mask; /// List of opch to mask-out (due to exiting particles, failed xARA flashes, apsia xARAs)
 
   opdet::sbndPDMapAlg _pds_map; ///< map for photon detector types
 
@@ -269,8 +268,6 @@ void SBNDOpT0Finder::produce(art::Event& e)
   _mgr.SetChannelMask(_opch_to_use);
   _mgr.SetChannelType(_opch_types);
   _mgr.SetUncoatedPMTs(_uncoated_pmts);
-  _opch_to_mask.reserve(_opch_to_use.size());
-  _opch_to_mask.clear(); 
   // _mgr.PrintConfig();
 
   _run    = e.id().run();
@@ -377,9 +374,9 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
                                           << flash_ara.Time() << ")" << std::endl;
           // add the arapuca flash PE to the pmt flash PE (the PEs vector are different sizes for PMT and xARAPUCAs)
           for(unsigned int pmt_ch = 0; pmt_ch < flash_pmt.PEs().size(); pmt_ch++)
-            combined_pe.at(pmt_ch) = flash_pmt.PEs().at(pmt_ch);
+            combined_pe.at(pmt_ch) += flash_pmt.PEs().at(pmt_ch);
           for(unsigned int ara_ch = 0; ara_ch < flash_ara.PEs().size(); ara_ch++)
-            combined_pe.at(ara_ch) = flash_ara.PEs().at(ara_ch);
+            combined_pe.at(ara_ch) += flash_ara.PEs().at(ara_ch);
   
           // create new flash with combined PE information and pmt flash information
           recob::OpFlash new_flash(flash_pmt.Time(), flash_pmt.TimeWidth(), flash_pmt.AbsTime(),
@@ -394,11 +391,14 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
       // if no arapuca flashes are found
       if (combine == false){
         flash_comb_v.push_back(flash_pmt);
+        if (flash_pmt.Time() > _flash_trange_start  && flash_pmt.Time() < _flash_trange_end)
+          mf::LogInfo("SBNDOpT0Finder") << "Unable to combine XARAPUCA OpFlash with PMT OpFlash... Using PMT Only" << std::endl;
       }
       combine_v.push_back(combine);
     }
   }
   int nflashes_tot = (_use_arapucas)? flash_comb_v.size():flash_pmt_v.size(); 
+  auto xara_opch = PDNamesToList({"xarapuca_vis","xarapuca_vuv"}); 
 
   for (int n = 0; n < nflashes_tot; n++) {
 
@@ -410,12 +410,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
       continue;
     }
 
-    if (_use_arapucas && combine_v.at(n) == false){
-        std::cout << "unable to match in-beam flash with pmt + ara" << std::endl;
-        auto xara_opch = PDNamesToList({"xarapuca_vis","xarapuca_vuv"}); 
-        _opch_to_mask.insert(_opch_to_mask.end(), xara_opch.begin(), xara_opch.end());
-    }
-
     _flashid_to_opflash[n_flashes] = flash_pmt_v[n];
 
     n_flashes++;
@@ -425,15 +419,20 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     f.x = f.x_err = 0;
     f.pe_v.resize(geo->NOpDets());
     f.pe_err_v.resize(geo->NOpDets());
+    f.pds_mask_v.resize(geo->NOpDets(), 0);
+
     for (unsigned int op_ch = 0; op_ch < f.pe_v.size(); op_ch++) {
-      unsigned int opdet = geo->OpDetFromOpChannel(op_ch);
-      if (std::find(_opch_to_use.begin(), _opch_to_use.end(), op_ch) == _opch_to_use.end()) {
-        f.pe_v[opdet] = 0;
-        f.pe_err_v[opdet] = 0;
-      } 
+      bool skip = std::find(_opch_to_skip.begin(), _opch_to_skip.end(), op_ch) != _opch_to_skip.end(); 
+      bool skip_ara = ((_use_arapucas == false) && (std::find(xara_opch.begin(), xara_opch.end(), op_ch) != xara_opch.end()));
+      bool skip_combine = ((_use_arapucas) && (combine_v.at(n) == false) && (std::find(xara_opch.begin(), xara_opch.end(), op_ch) != xara_opch.end())); 
+      if (skip || skip_ara || skip_combine ){
+        f.pds_mask_v.at(op_ch) = 1;
+        f.pe_v[op_ch] = 0.;
+        f.pe_err_v[op_ch] = 0.;
+      }
       else {
-        f.pe_v[opdet] = flash.PE(op_ch);
-        f.pe_err_v[opdet] = sqrt(flash.PE(op_ch));
+        f.pe_v[op_ch] = flash.PE(op_ch);
+        f.pe_err_v[op_ch] = sqrt(flash.PE(op_ch));
       }
     }
     f.y = flash.YCenter();
@@ -477,26 +476,6 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     return;
   }
 
-  // Update masks
-  // ! ** Note: masks are applied on a per tpc per event basis ** 
-  // add channels specified to skip in fcl :
-  for (auto ch : _opch_to_skip)
-    _opch_to_mask.push_back(ch);
-  auto masked_opch_to_use = _opch_to_use;
-  if (!_opch_to_mask.empty()){
-    for (auto opch : _opch_to_mask){
-      masked_opch_to_use.erase(std::remove_if(
-            masked_opch_to_use.begin(), masked_opch_to_use.end(),
-            [&opch](int x) { return x == opch; }), 
-            masked_opch_to_use.end());
-    } 
-    auto masked_opch_types = GetChannelTypes(masked_opch_to_use);
-    auto masked_uncoated_pmts = GetUncoatedPMTList(masked_opch_to_use);
-    _mgr.SetChannelMask(masked_opch_to_use);
-    _mgr.SetChannelType(masked_opch_types);
-    _mgr.SetUncoatedPMTs(masked_uncoated_pmts);
-  }
-
   // Emplace flashes to Flash Matching Manager
   for (auto f : all_flashes) {
     _mgr.Emplace(std::move(f));
@@ -521,6 +500,7 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
 
     // Get the matched flash time, the t0
     auto const& flash = _mgr.FlashArray()[_flashid];
+    auto const& cluster = _mgr.QClusterArray()[_tpcid];
     _t0 = flash.time;
 
     // Save the reconstructed flash and hypothesis flash PE spectrum
@@ -529,21 +509,20 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
     }
 
     _nopdets_masked = 0;
-    if (!_opch_to_mask.empty()) _nopdets_masked = _opch_to_mask.size();
 
-    for(size_t pmt=0; pmt<_hypo_spec.size(); ++pmt){
-      if (std::find(_opch_to_mask.begin(), _opch_to_mask.end(), pmt) != _opch_to_mask.end())
-        _hypo_spec[pmt] = 0;
-      else
-        _hypo_spec[pmt]  = match.hypothesis[pmt];
+    std::vector<int> result_opch_v(geo->NOpDets(), 0);
+    for(size_t opch=0; opch<_hypo_spec.size(); ++opch){
+      if (flash.pds_mask_v.at(opch)!=0 || cluster.tpc_mask_v.at(opch)!=0){
+        _hypo_spec[opch] = 0;
+        _flash_spec[opch] = 0;
+        _nopdets_masked++;
+      }
+      else{
+        _hypo_spec[opch]  = match.hypothesis[opch];
+        _flash_spec[opch] = flash.pe_v[opch];
+        result_opch_v[opch] = 1;
+      }
     }
-    for(size_t pmt=0; pmt<_hypo_spec.size(); ++pmt){
-      if (std::find(_opch_to_mask.begin(), _opch_to_mask.end(), pmt) != _opch_to_mask.end())
-        _flash_spec[pmt] = 0; 
-      else 
-        _flash_spec[pmt] = flash.pe_v[pmt];
-    }
-
     // Also save the total number of photoelectrons
     _flash_pe = 0.;
     _hypo_pe  = 0.;
@@ -556,12 +535,8 @@ void SBNDOpT0Finder::DoMatch(art::Event& e,
                                   << " at time " << _t0
                                   << " -> score: " << _score << std::endl;
 
-    std::vector<int> result_opch(geo->NOpDets(), 0);
-    for (auto i : masked_opch_to_use)
-      result_opch[i] = 1; // if the opch was used, set equal to 1
-
     sbn::OpT0Finder opt0_result(tpc, _t0, _score, _flash_pe, _hypo_pe,
-                                _flash_spec, _hypo_spec, result_opch);
+                                _flash_spec, _hypo_spec, result_opch_v);
 
     opt0_result_v->push_back(opt0_result);
     util::CreateAssn(*this, e, *opt0_result_v, _clusterid_to_slice[_tpcid], *slice_opt0_assn_v);
@@ -656,6 +631,7 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
   // Loop over the Slices
   for (size_t n_slice = 0; n_slice < slice_h->size(); n_slice++) {
     flashmatch::QCluster_t light_cluster;
+    light_cluster.tpc_mask_v.resize(geo->NOpDets(), 0);
 
     _dep_slice.clear();
     _dep_pfpid.clear();
@@ -703,9 +679,8 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
           auto const trk_end   = track->End();
           geo::Point_t exit_pt; 
 
-          if (abs(trk_start.X()) >= 198.0) {exit_pt = trk_start; uncontained = true;}
-          else if (abs(trk_end.X()) >= 198.0) {exit_pt = trk_end; uncontained = true;}
-
+          if (abs(trk_start.X()) >= 2.0*geo->DetHalfWidth()-3.0) {exit_pt = trk_start; uncontained = true;}
+          else if (abs(trk_end.X()) >= 2.0*geo->DetHalfWidth()-3.0) {exit_pt = trk_end; uncontained = true;}
           if (uncontained && _exclude_exiting){
             mf::LogInfo("SBNDOpT0Finder") << "Found particle with exit point: " 
                                           << exit_pt.X() << ", " 
@@ -719,9 +694,12 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
               if (_pds_map.isPDType(opch, "pmt_uncoated") || _pds_map.isPDType(opch, "xarapuca_vis")) continue;
               if (_use_arapucas && _pds_map.isPDType(opch, "xarapuca_vuv")) continue;
               auto center = _opch_centers.at(opch);
+              // find which optical detectors are within range of an exiting particle
+              // ** uses the projection in the beam direction ** 
               if ((abs(center.Z() - (exit_pt.Z() + 50*std::cos(track->Theta()))) <= 75) && 
                   (abs(center.Y() - (exit_pt.Y() + 50*std::cos(track->ZenithAngle()))) <= 75)){
                 exit_opch.push_back(opch);
+                light_cluster.tpc_mask_v.at(opch) = 1;
               }
             }
           }
@@ -937,16 +915,14 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
 
     // Save the light cluster, and remember the correspondance from index to slice
     _clusterid_to_slice[_light_cluster_v.size()] = slice_v.at(n_slice);
+
     _light_cluster_v.emplace_back(light_cluster);
 
-    // add opdets affected by an exiting particle to the mask 
     if (!exit_opch.empty()){
       std::cout << "Not evaluating the following OpDets due to exiting particle: { ";
       for (auto opch : exit_opch)
           std::cout << opch << ' ';
       std::cout << "}\n";
-      // update opdet mask to exclude the exiting-related opdets 
-      _opch_to_mask.insert(_opch_to_mask.end(), exit_opch.begin(), exit_opch.end());
     }
   } // End loop over Slices
 
