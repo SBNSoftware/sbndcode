@@ -17,7 +17,7 @@
 process_name: G4var
 
 services.LArG4Parameters.ModBoxA: 0.93
-services.LArG4Parameters.ModBoxB: 0.214
+services.LArG4Parameters.ModBoxB: 0.218
 
 #Input to the detector variation sample is CV reco1 files
 #so we have to drop all products created after G4 for CV

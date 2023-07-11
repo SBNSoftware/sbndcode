@@ -14,9 +14,19 @@
 #include "g4_sce_dirt_filter.fcl"
 
 # Drop truth data products.
+process_name: G4var
 
 services.LArG4Parameters.ModBoxA: 0.91
 services.LArG4Parameters.ModBoxB: 0.21
+
+#Input to the detector variation sample is CV reco1 files
+#so we have to drop all products created after G4 for CV
+source.inputCommands: [ "keep *_*_*_*",
+                        "drop *_*_*_G4",
+                        "drop *_*_*_WCLS", 
+                        "drop *_*_*_DetSim",
+                        "drop *_*_*_Reco1"
+                      ]
 
 outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
                                @sequence::g4_drops,
