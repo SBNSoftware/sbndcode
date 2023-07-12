@@ -1,0 +1,35 @@
+#-------------------------------------------------------------------
+#
+# Name: g4_sce_dirt_filter_lite.fcl
+#
+# Purpose: Lite version of g4_sce_dirt_filter.fcl
+#
+# Created: 01-Apr-2022  H. Greenlee
+#
+# Automatically generated.
+#
+#-------------------------------------------------------------------
+
+#include "g4_drops.fcl"
+#include "g4_sce_dirt_filter.fcl"
+
+# Drop truth data products.
+process_name: G4var
+
+services.LArG4Parameters.ModBoxA: 0.87
+services.LArG4Parameters.ModBoxB: 0.205
+
+#Input to the detector variation sample is CV reco1 files
+#so we have to drop all products created after G4 for CV
+source.inputCommands: [ "keep *_*_*_*",
+                        "drop *_*_*_G4",
+                        "drop *_*_*_WCLS", 
+                        "drop *_*_*_DetSim",
+                        "drop *_*_*_Reco1"
+                      ]
+
+outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
+                               @sequence::g4_drops,
+			       "keep *_ionandscint_*_*",
+                               "drop *_ionandscint_priorSCE_*"
+                             ]

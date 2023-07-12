@@ -125,7 +125,7 @@ outputs:
     dataTier:       "simulated"
     outputCommands: [ "keep *_*_*_*"
                     # Drop the SimEnergyDeposits made by LArG4
-                    , "drop sim::SimEnergyDeposits_largeant_*_*"
+#		    #, "drop sim::SimEnergyDeposits_largeant_*_*"
                     # Drop the IonAndScint w/ SCE offsets applied
                     , "drop *_ionandscint__*"
                     # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
