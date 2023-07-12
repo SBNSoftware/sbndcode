@@ -16,7 +16,7 @@ sbnd_simple_flashmatch:{
   FlashFindingTimeEnd:    100.   # us # TODO: tune
   FlashStart:              -0.02 # us, wrt flash time
   FlashEnd:                 0.08 # us, wrt flash time
-  OnlyCollectionWires: false
+  PlaneList: [0, 1, 2]	# Choose which wire planes to use (0, 1, 2 = U, V, W)
   ForceConcurrence: true
   CorrectDriftDistance: true
   UseARAPUCAS: false # TODO: use arapucas when their clock gets fixed
