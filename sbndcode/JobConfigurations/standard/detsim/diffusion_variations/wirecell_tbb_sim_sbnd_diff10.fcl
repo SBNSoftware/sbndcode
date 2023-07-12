@@ -1,0 +1,4 @@
+#include "wirecell_tbb_sim_sbnd.fcl"
+
+physics.producers.simtpc2d.wcls_main.structs.DL: 4.4
+physics.producers.simtpc2d.wcls_main.structs.DT: 8.8
