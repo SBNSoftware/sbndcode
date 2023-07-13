@@ -1,0 +1,8 @@
+# File:    detsim_sce_lite_wc.fcl 
+# Purpose: Simulates readout response to induced and collected charge
+#          ****DROPS 1D TPC SIM, includes optical+crt simulation ONLY  ****
+#
+
+#include "detsim_sce_lite.fcl"
+
+physics.simulate: [rns, crtsim, crt, opdaq] # removes the "daq" producer

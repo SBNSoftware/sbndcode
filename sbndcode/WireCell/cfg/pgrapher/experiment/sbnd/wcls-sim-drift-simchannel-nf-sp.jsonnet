@@ -246,7 +246,7 @@ local wcls_output_sp = {
       frame_tags: ['gauss', 'wiener'],
 
       // this may be needed to convert the decon charge [units:e-] to be consistent with the LArSoft default ?unit? e.g. decon charge * 0.005 --> "charge value" to GaussHitFinder
-      frame_scale: [1.0, 1.0],
+      frame_scale: [0.02, 0.02],
        nticks: params.daq.nticks,
       chanmaskmaps: [],
       //nticks: -1,
