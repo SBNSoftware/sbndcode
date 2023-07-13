@@ -81,7 +81,7 @@ physics:
 
           outputers: [
              "wclsDepoSetSimChannelSink:postdrift", #<- included for larwirecell v09_12_01 or higher
-             //"wclsFrameSaver:simdigits" , # <- uncomment this line to use graph1 (FrameSaver-simdigits) Ewerton-2023-05-29
+             "wclsFrameSaver:simdigits" , # <- uncomment this line to use graph1 (FrameSaver-simdigits) Ewerton-2023-05-29
              "wclsFrameSaver:spsaver"
           ]
 
@@ -113,7 +113,7 @@ physics:
 
              // If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
              // If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
-             save_simdigits: "false"
+             save_simdigits: "true"
 
              // Set the waveform sample length, eg, 6000, 15000, "auto"
              // nsample: 6000
@@ -169,3 +169,6 @@ outputs:
                     ]
   }
 }
+
+
+
