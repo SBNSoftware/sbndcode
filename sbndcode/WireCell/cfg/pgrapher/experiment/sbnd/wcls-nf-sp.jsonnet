@@ -42,13 +42,7 @@ local tools = tools_maker(params);
 local wcls_maker = import 'pgrapher/ui/wcls/nodes.jsonnet';
 local wcls = wcls_maker(params, tools);
 
-//local nf_maker = import "pgrapher/experiment/pdsp/nf.jsonnet";
-//local chndb_maker = import "pgrapher/experiment/pdsp/chndb.jsonnet";
-
 local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
-
-//local chndbm = chndb_maker(params, tools);
-//local chndb = if epoch == "dynamic" then chndbm.wcls_multi(name="") else chndbm.wct(epoch);
 
 
 // Collect the WC/LS input converters for use below.  Make sure the
@@ -111,26 +105,29 @@ local wcls_output = {
       frame_tags: ['gauss', 'wiener'],
 
       // this may be needed to convert the decon charge [units:e-] to be consistent with the LArSoft default ?unit? e.g. decon charge * 0.005 --> "charge value" to GaussHitFinder
-      frame_scale: [1.0, 1.0],
-      // nticks: params.daq.nticks,
+      frame_scale: [0.02, 0.02],
+       nticks: params.daq.nticks,
       chanmaskmaps: [],
-      nticks: -1,
+      //nticks: ,
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 };
 
-// local perfect = import 'chndb-perfect.jsonnet';
-local base = import 'chndb-base.jsonnet';
+
+local perfect = import 'pgrapher/experiment/sbnd/chndb-perfect.jsonnet';
+//local base = import 'chndb-base_sbnd.jsonnet';
+
 local chndb = [{
   type: 'OmniChannelNoiseDB',
   name: 'ocndbperfect%d' % n,
-  // data: perfect(params, tools.anodes[n], tools.field, n),
-  data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
+  data: perfect(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
+  // data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   uses: [tools.anodes[n], tools.field, tools.dft],
 } for n in std.range(0, std.length(tools.anodes) - 1)];
 
-// local nf_maker = import 'pgrapher/experiment/pdsp/nf.jsonnet';
-// local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
+
+local nf_maker = import 'pgrapher/experiment/sbnd/nf.jsonnet';
+local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
 
 local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
 local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
@@ -140,38 +137,35 @@ local chsel_pipes = [
     type: 'ChannelSelector',
     name: 'chsel%d' % n,
     data: {
-      channels: std.range(5638 * n, 5638 * (n + 1) - 1),
+      channels: std.range(5632 * n, 5632 * (n + 1) - 1),
       //tags: ['orig%d' % n], // traces tag
     },
   }, nin=1, nout=1)
   for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-local magoutput = 'protodune-data-check.root';
+local magoutput = 'sbnd-data-check.root';
 local magnify = import 'pgrapher/experiment/sbnd/magnify-sinks.jsonnet';
 local sinks = magnify(tools, magoutput);
 
 local nfsp_pipes = [
   g.pipeline([
                chsel_pipes[n],
-               // sinks.orig_pipe[n],
+               //sinks.orig_pipe[n],
 
-               // nf_pipes[n],
-               // sinks.raw_pipe[n],
+               //nf_pipes[n],
+               //sinks.raw_pipe[n],
 
                sp_pipes[n],
-               // sinks.decon_pipe[n],
-               // sinks.threshold_pipe[n],
+               //sinks.decon_pipe[n],
+               //sinks.threshold_pipe[n],
                // sinks.debug_pipe[n], // use_roi_debug_mode=true in sp.jsonnet
              ],
              'nfsp_pipe_%d' % n)
   for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-//local f = import 'pgrapher/common/funcs.jsonnet';
 local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
-//local outtags = ['gauss%d' % n for n in std.range(0, std.length(tools.anodes) - 1)];
-//local fanpipe = f.fanpipe('FrameFanout', nfsp_pipes, 'FrameFanin', 'sn_mag_nf', outtags);
 local fanpipe = f.fanpipe('FrameFanout', nfsp_pipes, 'FrameFanin', 'sn_mag_nf');
 
 local retagger = g.pnode({
@@ -199,7 +193,7 @@ local sink = g.pnode({ type: 'DumpFrames' }, nin=1, nout=0);
 local graph = g.pipeline([wcls_input.adc_digits, fanpipe, retagger, wcls_output.sp_signals, sink]);
 
 local app = {
-  type: 'TbbFlow:',
+  type: 'TbbFlow',
   data: {
     edges: g.edges(graph),
   },
