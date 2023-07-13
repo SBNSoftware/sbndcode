@@ -1,21 +1,16 @@
 #-------------------------------------------------------------------
 #
-# Name: reco1_sce_lite_wc.fcl
+# Name: reco1_sce_lite_wc1d.fcl
 #
 # Purpose: Lite version of reco1_sce.fcl, 
-#          *** takes wirecell 2DSIM as input, 2d sim + 1D deconvolution *** 
+#          *** takes wirecell 2DSIM as input, performs 1D deconvolution *** 
 #
 #
 #-------------------------------------------------------------------
 
 #include "reco_drops.fcl"
-#include "reco1_sce.fcl"
-
-# Drop truth data products.
+#include "reco1_sce_lite.fcl"
 
 physics.producers.caldata.DigitModuleLabel: "simtpc2d:daq"
 physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq" 
 physics.producers.gaushit.CalDataModuleLabel: "caldata:daq"
-
-outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
-                               @sequence::reco_drops ]
