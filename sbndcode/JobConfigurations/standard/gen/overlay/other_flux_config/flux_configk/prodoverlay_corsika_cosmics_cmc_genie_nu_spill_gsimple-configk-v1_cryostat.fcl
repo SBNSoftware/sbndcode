@@ -1,0 +1,10 @@
+#include "prodgenie_bnb_nu_cosmic_sbnd.fcl"
+
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_nu_Kv1
+     EventsPerSpill: 0
+     TopVolume: "volCryostat"
+}
+#DO NOT DELETE.  NEEDED FOR MCC
+#MCCSTATEMENT: production, ANATREE: anatree_prodoverlay_corsika_genie.fcl 

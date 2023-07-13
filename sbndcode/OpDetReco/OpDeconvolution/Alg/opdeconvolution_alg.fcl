@@ -32,8 +32,8 @@ OpDeconvolutionAlg:
   UseParamFilter: false
   #Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))"
   FilterParams: [0.1, 20]
-  Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 80MHz/12.5 ns
-  DaphneFreq:  80 # in MHz
+  Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 62.5MHz/16 ns
+  DaphneFreq:  62.5 # in MHz
 }
 
 END_PROLOG

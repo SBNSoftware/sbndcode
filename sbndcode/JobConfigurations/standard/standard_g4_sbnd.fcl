@@ -123,8 +123,7 @@ outputs:
   {
                     @table::sbnd_rootoutput
     dataTier:       "simulated"
-    outputCommands: [ "keep *_*_*_*"
-                    ]
+    outputCommands: [ "keep *_*_*_*" ]
   }
 }
 

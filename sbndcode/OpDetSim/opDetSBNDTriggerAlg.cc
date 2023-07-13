@@ -4,7 +4,7 @@
 namespace {
   double optical_period(detinfo::DetectorClocksData const& clockData,bool is_daphne)
   {
-    if (is_daphne) return clockData.OpticalClock().TickPeriod()*500/80; //500MHz Apsaia, 80MHz Daphne. TODO load frequency values from fcl ~rodrigoa
+    if (is_daphne) return clockData.OpticalClock().TickPeriod()*500/62.5; //500MHz Apsaia, 62.5MHz Daphne. TODO load frequency values from fcl ~rodrigoa
     return clockData.OpticalClock().TickPeriod();
   }
 

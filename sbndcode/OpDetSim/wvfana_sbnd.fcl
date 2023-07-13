@@ -10,7 +10,7 @@ wvf_ana_sbnd:
   ClusterModuleLabel: "linecluster"
   OpDetsToPlot: ["pmt_coated", "pmt_uncoated",
                  "xarapuca_vuv", "xarapuca_vis"]
-  DaphneFrequency: 80.0  #in MHz. Frequency of the Daphne Readouts
+  DaphneFrequency: 62.5  #in MHz. Frequency of the Daphne Readouts
 
 }
 
