@@ -8,7 +8,6 @@
 #
 #-------------------------------------------------------------------
 
-#include "reco_drops.fcl"
 #include "reco1_sce_lite.fcl"
 
 physics.producers.caldata.DigitModuleLabel: "simtpc2d:daq"
