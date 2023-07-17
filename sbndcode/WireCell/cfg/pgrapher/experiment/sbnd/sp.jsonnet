@@ -79,7 +79,8 @@ function(params, tools, override = {}) {
       decon_charge_tag: 'decon_charge%d' % anode.data.ident,
       gauss_tag: 'gauss%d' % anode.data.ident,
 
-      use_roi_debug_mode: false,
+      use_roi_debug_mode: true,
+      decon_2D_init_tag: 'decon_2D_init%d' % anode.data.ident,
       tight_lf_tag: 'tight_lf%d' % anode.data.ident,
       loose_lf_tag: 'loose_lf%d' % anode.data.ident,
       cleanup_roi_tag: 'cleanup_roi%d' % anode.data.ident,

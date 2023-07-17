@@ -66,9 +66,12 @@ function(tools, outputfile) {
       data: {
         output_filename: outputfile,
         root_file_mode: 'UPDATE',
-        frames: ['tight_lf%d' %n, 'loose_lf%d' %n, 'cleanup_roi%d' %n,
-                 'break_roi_1st%d' %n, 'break_roi_2nd%d' %n,
-                 'shrink_roi%d' %n, 'extend_roi%d' %n],
+        frames: ['decon_2D_init%d' %n,
+                 'tight_lf%d' %n, 'loose_lf%d' %n, 
+                //  'cleanup_roi%d' %n,
+                //  'break_roi_1st%d' %n, 'break_roi_2nd%d' %n,
+                //  'shrink_roi%d' %n, 'extend_roi%d' %n
+                 ],
         trace_has_tag: true,
         anode: wc.tn(tools.anodes[n]),
       },

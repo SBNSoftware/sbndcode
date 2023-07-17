@@ -16,11 +16,7 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
         noisedb: wc.tn(chndbobj),
         anode: wc.tn(anode),
         dft: wc.tn(dft),
-        resmp: [
-          {channels: std.range(2128, 2175), sample_from: 5996},
-          {channels: std.range(1520, 1559), sample_from: 5996},
-          {channels: std.range( 440,  479), sample_from: 5996},
-        ],
+        resmp: [],
       },
     },
     local grouped = {
@@ -39,15 +35,7 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
       name: name,
       uses: [dft, chndbobj, anode],
       data: {
-        extra_stky: [
-          {channels: std.range(n * 2560, (n + 1) * 2560 - 1), bits: [0,1,63]},
-          {channels: [4], bits: [6]  },
-          {channels: [159], bits: [6]  },
-          {channels: [164], bits: [36] },
-          {channels: [168], bits: [7]  },
-          {channels: [323], bits: [24] },
-          {channels: [451], bits: [25] },
-        ],
+        extra_stky: [],
         noisedb: wc.tn(chndbobj),
         anode: wc.tn(anode),
         dft: wc.tn(dft),
@@ -83,7 +71,7 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
           // wc.tn(gaincalib),
         ],
         grouped_filters: [
-          // wc.tn(grouped),
+          wc.tn(grouped),
         ],
         channel_status_filters: [
         ],
