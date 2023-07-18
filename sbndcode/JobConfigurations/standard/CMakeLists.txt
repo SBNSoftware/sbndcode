@@ -7,5 +7,6 @@ add_subdirectory(anatree)
 add_subdirectory(workshops)
 add_subdirectory(deprecated)
 add_subdirectory(ana)
+add_subdirectory(scrubs)
 
 install_fhicl()
