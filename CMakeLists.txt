@@ -20,7 +20,7 @@ find_package(cetmodules REQUIRED)
 project(sbndcode LANGUAGES CXX)
 
 # for CI:
-# project(sbndcode VERSION 09.75.03)
+# project(sbndcode VERSION 09.75.03.01)
 
 message(STATUS "\n")
 message(STATUS "=================================   ${PROJECT_NAME}   =================================")
