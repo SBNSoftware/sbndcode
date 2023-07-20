@@ -944,6 +944,7 @@ void Hitdumper::analyze(const art::Event& evt)
       ResetMuonTracksVars(_nmuontrks);
 
       for (int i=0; i < _nmuontrks; i++){ 
+        
         _muontrk_t0[i] = muontrklist[i]->t0_us; 
         _muontrk_x1[i] = muontrklist[i]->x1_pos;
         _muontrk_y1[i] = muontrklist[i]->y1_pos;
@@ -1063,7 +1064,6 @@ void Hitdumper::analyze(const art::Event& evt)
 
 
   if (freadTruth){
-
     int nGeniePrimaries = 0, nMCNeutrinos = 0;
     art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
     std::vector<art::Ptr<simb::MCTruth> > mclist;
