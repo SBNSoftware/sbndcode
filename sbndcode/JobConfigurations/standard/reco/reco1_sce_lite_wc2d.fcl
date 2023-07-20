@@ -31,3 +31,5 @@ physics.reco1: [ rns
  ]
 
 physics.producers.gaushit.CalDataModuleLabel: "simtpc2d:gauss"
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
