@@ -322,49 +322,20 @@ void pmtTriggerProducer::produce(art::Event & e)
       std::vector<char> wvf_bin;
       wvf_bin.reserve(wvf.size());
       // start histo
-      // if (i_ev!=-1 && i_ev<3){
-      //    histname.str(std::string());
-      //    histname << "event_" << fEvNumber
-      //            << "_opchannel_" << fChNumber
-      //            << "_" << opdetType
-      //            << "_" << hist_id
-      //            << "_raw";
-      //    //Create a new histogram for binary waveform
-      //    TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), "Raw Waveform", wvf.size(), fStartTime, fEndTime);
-      //    wvfHist->GetXaxis()->SetTitle("t (#mus)");
-      //    for(unsigned int i = 0; i < wvf.size(); i++) {
-      //       wvfHist->SetBinContent(i + 1, (double)wvf[i]);
-      //    }
-      // } // end histo
-      // start trigger histo 
       if (i_ev!=-1 && i_ev<3){
-        if ( fWindowStart > fStartTime && fWindowEnd < fEndTime ){
-        //  std::vector<double> beam_wvfm; 
-        //  for (unsigned int i = 0; i < wvf.size(); i++){
-        //     auto bin_time = double(i)/fSampling + fStartTime;
-        //  }
          histname.str(std::string());
          histname << "event_" << fEvNumber
                  << "_opchannel_" << fChNumber
                  << "_" << opdetType
-                //  << "_" << hist_id
+                 << "_" << hist_id
                  << "_raw";
-        //Create a new histogram for raw waveform in beam spill 
-         TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), 
-                                           "Raw (Trigger) Waveform", 
-                                           int((fWindowEnd-fWindowStart)/(1./fSampling)), 
-                                           fWindowStart,
-                                           fWindowEnd+(1./fSampling));
+         //Create a new histogram for binary waveform
+         TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), "Raw Waveform", wvf.size(), fStartTime, fEndTime);
          wvfHist->GetXaxis()->SetTitle("t (#mus)");
          for(unsigned int i = 0; i < wvf.size(); i++) {
-            auto bin_time = double(i)/fSampling + fStartTime; // us
-            if ( (bin_time >= fWindowStart) && (bin_time <= fWindowEnd)){
-              auto hist_bin = i + fStartTime*fSampling - (fWindowStart)*fSampling;
-              wvfHist->SetBinContent(hist_bin + 1, (double)wvf[i]);
-            }
+            wvfHist->SetBinContent(i + 1, (double)wvf[i]);
          }
-        }
-      }
+      } // end histo
 
       if (fStartTime > fMinStartTime){
          for (double i = fStartTime-fMinStartTime; i>0.; i-=(1./fSampling)){
@@ -421,30 +392,30 @@ void pmtTriggerProducer::produce(art::Event & e)
 
        num_pmt_ch++;
 
-    //   if (i_ev!=-1 && i_ev<3){
-    //    histname2.str(std::string());
-    //    histname2 << "event_" << fEvNumber
-    //             << "_opchannel_" << fChNumber
-    //             << "_binary";
-    //    TH1D *wvfbHist = tfs->make< TH1D >(histname2.str().c_str(), "Binary Waveform", wvf_bin.size(), fStartTime, fEndTime);
-    //    wvfbHist->GetXaxis()->SetTitle("t (#mus)");
-    //    for(unsigned int i = 0; i < wvf_bin.size(); i++) {
-    //      wvfbHist->SetBinContent(i + 1, wvf_bin[i]);
-    //    }
-    //  }
+      if (i_ev!=-1 && i_ev<3){
+       histname2.str(std::string());
+       histname2 << "event_" << fEvNumber
+                << "_opchannel_" << fChNumber
+                << "_binary";
+       TH1D *wvfbHist = tfs->make< TH1D >(histname2.str().c_str(), "Binary Waveform", wvf_bin.size(), fStartTime, fEndTime);
+       wvfbHist->GetXaxis()->SetTitle("t (#mus)");
+       for(unsigned int i = 0; i < wvf_bin.size(); i++) {
+         wvfbHist->SetBinContent(i + 1, wvf_bin[i]);
+       }
+     }
 
-    //  if (i_ev!=-1 && i_ev<3){
-    //    histname2.str(std::string());
-    //    histname2 << "event_" << fEvNumber
-    //             << "_opchannel_" << fChNumber
-    //             << "_binary_down";
+     if (i_ev!=-1 && i_ev<3){
+       histname2.str(std::string());
+       histname2 << "event_" << fEvNumber
+                << "_opchannel_" << fChNumber
+                << "_binary_down";
 
-    //    TH1D *wvfbdHist = tfs->make< TH1D >(histname2.str().c_str(), "Downsampled Binary Waveform", wvf_bin_down.size(), fStartTime, fEndTime);
-    //    wvfbdHist->GetXaxis()->SetTitle("t (#mus)");
-    //    for(unsigned int i = 0; i < wvf_bin_down.size(); i++) {
-    //      wvfbdHist->SetBinContent(i + 1, wvf_bin_down[i]);
-    //    }
-    //  }
+       TH1D *wvfbdHist = tfs->make< TH1D >(histname2.str().c_str(), "Downsampled Binary Waveform", wvf_bin_down.size(), fStartTime, fEndTime);
+       wvfbdHist->GetXaxis()->SetTitle("t (#mus)");
+       for(unsigned int i = 0; i < wvf_bin_down.size(); i++) {
+         wvfbdHist->SetBinContent(i + 1, wvf_bin_down[i]);
+       }
+     }
 
        bool combine = false;
        bool found = false;
@@ -491,26 +462,26 @@ void pmtTriggerProducer::produce(art::Event & e)
            wvf_combine = wvf_bin_down;
          }
 
-    //   if (i_ev!=-1 && i_ev<3){
-    //    histname2.str(std::string());
-    //    if (unpaired){
-    //      histname2 << "event_" << fEvNumber
-    //               << "_opchannels_" << fChNumber
-    //               << "_unpaired"
-    //               << "_combined";
-    //    }else{
-    //      histname2 << "event_" << fEvNumber
-    //               << "_opchannels_" << fPair1.at(pair_num)
-    //               << "_" << fPair2.at(pair_num)
-    //               << "_combined";
-    //    }
+      if (i_ev!=-1 && i_ev<3){
+       histname2.str(std::string());
+       if (unpaired){
+         histname2 << "event_" << fEvNumber
+                  << "_opchannels_" << fChNumber
+                  << "_unpaired"
+                  << "_combined";
+       }else{
+         histname2 << "event_" << fEvNumber
+                  << "_opchannels_" << fPair1.at(pair_num)
+                  << "_" << fPair2.at(pair_num)
+                  << "_combined";
+       }
 
-    //    TH1D *wvfcHist = tfs->make< TH1D >(histname2.str().c_str(), "Paired Waveform", wvf_combine.size(), fStartTime, fEndTime);
-    //    wvfcHist->GetXaxis()->SetTitle("t (#mus)");
-    //    for(unsigned int i = 0; i < wvf_combine.size(); i++) {
-    //      wvfcHist->SetBinContent(i + 1, wvf_combine[i]);
-    //    }
-    //  }
+       TH1D *wvfcHist = tfs->make< TH1D >(histname2.str().c_str(), "Paired Waveform", wvf_combine.size(), fStartTime, fEndTime);
+       wvfcHist->GetXaxis()->SetTitle("t (#mus)");
+       for(unsigned int i = 0; i < wvf_combine.size(); i++) {
+         wvfcHist->SetBinContent(i + 1, wvf_combine[i]);
+       }
+     }
 
        //implement over threshold trigger signal width
        //(Every time the combined waveform transitions from 0 to 1, change the next fOVTHRWidth values to 1 (ex: fOVTHRWidth=11 -> 12 high -> 12*8=96 ns true) )
@@ -522,26 +493,26 @@ void pmtTriggerProducer::produce(art::Event & e)
            }
        }
 
-      // if (i_ev!=-1 && i_ev<3){
-      //  histname2.str(std::string());
-      //  if (unpaired){
-      //    histname2 << "event_" << fEvNumber
-      //             << "_opchannels_" << fChNumber
-      //             << "_unpaired"
-      //             << "_combined_width";
-      //  }else{
-      //    histname2 << "event_" << fEvNumber
-      //             << "_opchannels_" << fPair1.at(pair_num)
-      //             << "_" << fPair2.at(pair_num)
-      //             << "_combined_width";
-      //  }
+      if (i_ev!=-1 && i_ev<3){
+       histname2.str(std::string());
+       if (unpaired){
+         histname2 << "event_" << fEvNumber
+                  << "_opchannels_" << fChNumber
+                  << "_unpaired"
+                  << "_combined_width";
+       }else{
+         histname2 << "event_" << fEvNumber
+                  << "_opchannels_" << fPair1.at(pair_num)
+                  << "_" << fPair2.at(pair_num)
+                  << "_combined_width";
+       }
 
-    //    TH1D *wvfcwHist = tfs->make< TH1D >(histname2.str().c_str(), "Over Threshold Paired Waveform", wvf_combine.size(), fStartTime, fEndTime);
-    //    wvfcwHist->GetXaxis()->SetTitle("t (#mus)");
-    //    for(unsigned int i = 0; i < wvf_combine.size(); i++) {
-    //      wvfcwHist->SetBinContent(i + 1, wvf_combine[i]);
-    //    }
-    //  }
+       TH1D *wvfcwHist = tfs->make< TH1D >(histname2.str().c_str(), "Over Threshold Paired Waveform", wvf_combine.size(), fStartTime, fEndTime);
+       wvfcwHist->GetXaxis()->SetTitle("t (#mus)");
+       for(unsigned int i = 0; i < wvf_combine.size(); i++) {
+         wvfcwHist->SetBinContent(i + 1, wvf_combine[i]);
+       }
+     }
 
        //Combine the waveforms to get a 1D array of integers where the value corresponds to the number of pairs ON and the
        //index corresponds to the tick in the waveform

@@ -8,13 +8,13 @@ pmtSoftwareTriggerProducer:
   BeamWindowLength: 1.8     # us, extended by 0.2us to account for delayed signals
   WvfmLength: 5120
   Verbose: true
-  SaveHists: true          # save 10 us waveform histograms
+  SaveHists: false          # save 10 us waveform histograms
 
   # turn on/off various metric calculations 
   CalculateBaseline:  true   # if true, will calculate baseline, if false, will use provided InputBaseline parameters below! 
   CountPMTs:          true   # if true, will count number of PMTS above threshold in the beam window
   CalculatePEMetrics: true   # if true, will calculate prompt/preliminary PE 
-  FindPulses:         true  # if true, will use crude pulse finding algorithm 
+  FindPulses:         false  # if true, will use crude pulse finding algorithm 
 
   # metric input parameters 
   InputBaseline: [8000.0, 2.0] # in ADC, used if CalculateBaseline is FALSE // first entry is baseline, second entry is baseline error 
