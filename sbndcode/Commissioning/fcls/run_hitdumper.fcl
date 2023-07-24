@@ -94,7 +94,7 @@ physics:
     ophitpmt,
     ophitarapuca,
     MuonTrackProducer, 
-    MuonTrackFilter
+    #MuonTrackFilter
   ]
 
   ana: [hitdumper]
