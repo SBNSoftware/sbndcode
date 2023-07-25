@@ -93,7 +93,7 @@ physics:
     fasthit,
     ophitpmt,
     ophitarapuca,
-    MuonTrackProducer, 
+    #MuonTrackProducer, 
     #MuonTrackFilter
   ]
 
