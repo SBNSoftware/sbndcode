@@ -1,0 +1,15 @@
+#include "config_GENIEReWeightMultisigma_sbnd_v1.fcl"
+#include "config_GENIEReWeightMultisim_sbnd_v1.fcl"
+#include "config_MINERvA_E2p2h_sbnd_v1.fcl"
+#include "config_MINERvAq0q3Tune_sbnd_v1.fcl"
+#include "config_MiscInteractionSysts_sbnd_v1.fcl"
+#include "config_NOvAStyleNonResPion_sbnd_v1.fcl"
+
+syst_providers: [
+GENIEReWeight_Multisigma_Tool_Config,
+GENIEReWeight_Multisim_Tool_Config,
+MINERvA_E2p2h_Tool_Config,
+MINERvAq0q3Tune_Tool_Config,
+MiscInteractionSysts_Tool_Config,
+NOvAStyleNonResPionNorm_Tool_Config
+]
