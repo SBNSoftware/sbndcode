@@ -30,8 +30,8 @@ hitdumper:
     readpmtTrigger:	          true
     readpmtSoftTrigger:       true
     readcrtSoftTrigger:	      false
-    readMuonTracks:           true
-    readMuonHits:             true
+    readMuonTracks:           false
+    readMuonHits:             false
     readTruth:                true
     savePOTinfo:              true
     checkTransparency:        false
