@@ -18,7 +18,7 @@ process_name: BlipAna
 services: 
 {
   FileCatalogMetadata:      @local::sbnd_file_catalog_mc
-  TFileService:             { fileName: @local::sbnd_rootoutput.fileName }
+  TFileService:            { fileName: "hist_%p_%tc.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
   BackTrackerService:       @local::standard_backtrackerservice
                             @table::sbnd_services

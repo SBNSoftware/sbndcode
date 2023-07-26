@@ -6,13 +6,12 @@ sbnd_blipalg:
   HitProducer:          "gaushit"       #// input recob::Hits to use for blip reconstruction
   TrkProducer:          "pandora"       #// input recob::Tracks to use for blip reconstruction
   GeantProducer:        "largeant"      #// input sim::MCParticles (getting true particle info)
-  SimEDepProducer:      "ionization"    #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
-  SimChanProducer:      "driftWC:simpleSC" #// label for sim::SimChannels (getting drifted charge; optional)
-  SimGainFactor:        0.826           #// gain fudge factor applied in WireCell detsim
+  SimEDepProducer:      "ionandscint"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
+  SimChanProducer:      "simtpc2d:simpleSC" #// label for sim::SimChannels (getting drifted charge; optional)
   MaxHitTrkLength:      5.0             #// hits in trks > this length will be vetoed [cm]
   DoHitFiltering:       true            #// filter hits based on amp, width, RMS
   MinHitGOF:            [0, 0, 0]       #// -- exclude pulse-train hits
-  MinHitRMS:            [0, 0, 2.3]     #// -- exclude narrow noise-like hits on collection plane
+  MinHitRMS:            [0, 0, 0]       #// -- exclude narrow noise-like hits on collection plane
   MaxWiresInCluster:    10              #// max allowable wires in a cluster
   MaxClusterSpan:       50              #// max allowable time-ticks of a cluster
   ClustMatchMinOverlap: 0.5             #// minimum fractional overlap to be eligible for matching

@@ -422,7 +422,7 @@ class BlipAnaTreeDataStruct
       
     if( saveHitInfo ) {
       evtTree->Branch("nhits",&nhits,"nhits/I");
-      //evtTree->Branch("hit_tpc",hit_tpc,"hit_tpc[nhits]/I"); 
+      evtTree->Branch("hit_tpc",hit_tpc,"hit_tpc[nhits]/I"); 
       evtTree->Branch("hit_plane",hit_plane,"hit_plane[nhits]/I"); 
       evtTree->Branch("hit_wire",hit_wire,"hit_wire[nhits]/I"); 
       evtTree->Branch("hit_peakT",hit_peakT,"hit_peakT[nhits]/F"); 
@@ -460,12 +460,10 @@ class BlipAnaTreeDataStruct
 
     if( saveClustInfo ) {
       evtTree->Branch("nclusts",        &nclusts,       "nclusts/I");
-      //evtTree->Branch("clust_id",       clust_id,       "clust_id[nclusts]/I");
+      evtTree->Branch("clust_tpc",    clust_tpc,    "clust_tpc[nclusts]/I");
       evtTree->Branch("clust_plane",    clust_plane,    "clust_plane[nclusts]/I");
-      //evtTree->Branch("clust_wire",     clust_wire,     "clust_wire[nclusts]/I");
       evtTree->Branch("clust_nhits",    clust_nhits,    "clust_nhits[nclusts]/I");
       evtTree->Branch("clust_nwires",   clust_nwires,   "clust_nwires[nclusts]/I");
-      //evtTree->Branch("clust_nticks",   clust_nticks,   "clust_nticks[nclusts]/I");
       evtTree->Branch("clust_startwire",clust_startwire,"clust_startwire[nclusts]/I");
       evtTree->Branch("clust_endwire",  clust_endwire,  "clust_endwire[nclusts]/I");
       evtTree->Branch("clust_bydeadwire",   clust_bydeadwire,   "clust_bydeadwire[nclusts]/O");
@@ -477,7 +475,7 @@ class BlipAnaTreeDataStruct
       //evtTree->Branch("clust_starttime",clust_starttime,"clust_starttime[nclusts]/F");
       //evtTree->Branch("clust_endtime",  clust_endtime,"clust_endtime[nclusts]/F");
       evtTree->Branch("clust_charge",   clust_charge,   "clust_charge[nclusts]/I");
-      evtTree->Branch("clust_chargeErr",   clust_chargeErr,   "clust_chargeErr[nclusts]/I");
+      //evtTree->Branch("clust_chargeErr",   clust_chargeErr,   "clust_chargeErr[nclusts]/I");
       evtTree->Branch("clust_amp",      clust_amp,      "clust_amp[nclusts]/F");
       //evtTree->Branch("clust_gof",      clust_gof,      "clust_gof[nclusts]/F");
       //evtTree->Branch("clust_ratio",      clust_ratio,  "clust_ratio[nclusts]/F");
@@ -487,6 +485,7 @@ class BlipAnaTreeDataStruct
     }
 
     evtTree->Branch("nblips",&nblips,"nblips/I");
+    evtTree->Branch("blip_tpc",blip_tpc,"blip_tpc[nblips]/I");
     evtTree->Branch("blip_nplanes",blip_nplanes,"blip_nplanes[nblips]/I");
     evtTree->Branch("blip_x",blip_x,"blip_x[nblips]/F");
     evtTree->Branch("blip_y",blip_y,"blip_y[nblips]/F");
@@ -497,7 +496,7 @@ class BlipAnaTreeDataStruct
     evtTree->Branch("blip_size",blip_size,"blip_size[nblips]/F");
     evtTree->Branch("blip_charge",blip_charge,"blip_charge[nblips]/I");
     evtTree->Branch("blip_energy",blip_energy,"blip_energy[nblips]/F");
-    evtTree->Branch("blip_yzcorr",blip_yzcorr,"blip_yzcorr[nblips]/F");
+    //evtTree->Branch("blip_yzcorr",blip_yzcorr,"blip_yzcorr[nblips]/F");
     //evtTree->Branch("blip_energyTrue",blip_energyTrue,"blip_energyTrue[nblips]/F");
     evtTree->Branch("blip_incylinder",blip_incylinder,"blip_incylinder[nblips]/O");
     evtTree->Branch("blip_proxtrkdist",blip_proxtrkdist,"blip_proxtrkdist[nblips]/F");

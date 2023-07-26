@@ -50,7 +50,7 @@ namespace blip {
     printf("******************************************\n");
     printf("Initializing BlipRecoAlg...\n");
     printf("  - Efield: %.4f kV/cm\n",kNominalEfield);
-    printf("  - Drift velocity: %.4f\n",kDriftVelocity);
+    printf("  - Drift velocity: %.4f cm/us\n",kDriftVelocity);
     printf("  - using dE/dx: %.2f MeV/cm\n",fCalodEdx);
     printf("  - equiv. recomb: %.4f\n",fNominalRecombFactor);
     //printf("  - custom bad chans: %i\n",NBadChansFromFile);
@@ -145,7 +145,7 @@ namespace blip {
     fGeantProducer      = pset.get<std::string>   ("GeantProducer",     "largeant");
     fSimDepProducer     = pset.get<std::string>   ("SimEDepProducer",   "ionization");
     fSimChanProducer    = pset.get<std::string>   ("SimChanProducer",   "driftWC:simpleSC");
-    fSimGainFactor      = pset.get<float>         ("SimGainFactor",     0.826);
+    fSimGainFactor      = pset.get<float>         ("SimGainFactor",     -9);
     fTrueBlipMergeDist  = pset.get<float>         ("TrueBlipMergeDist", 0.3);
     fMaxHitTrkLength    = pset.get<float>               ("MaxHitTrkLength", 5);
     fDoHitFiltering     = pset.get<bool>                ("DoHitFiltering",  false);
@@ -370,7 +370,8 @@ namespace blip {
           double ne = ide.numElectrons;
           
           // ####################################################
-          // ###         behavior as of Nov 2022              ###
+          // # behavior in MicroBooNE as of Nov 2022            #
+          // ####################################################
           // WireCell's detsim implements its gain "fudge factor" 
           // by scaling the SimChannel electrons (DocDB 31089)
           // instead of the electronics gain. So we need to correct 
