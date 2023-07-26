@@ -126,6 +126,6 @@ physics.producers.cafmaker.CosmicGenLabel: "corsika"
 physics.producers.cafmaker.CreateBlindedCAF: false
 
 # input art file.
-physics.producers.cafmaker.SystWeightLabels: []
+physics.producers.cafmaker.SystWeightLabels: ["systtools"]
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"

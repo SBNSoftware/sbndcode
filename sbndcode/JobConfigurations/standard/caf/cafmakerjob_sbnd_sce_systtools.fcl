@@ -1,3 +1,4 @@
+#include "eventweight_genie_systtools.fcl"
 #include "transfer_crtt0_producer.fcl"
 #include "transfer_flashmatch_producer.fcl"
 #include "cafmakerjob_sbnd_systtools.fcl"
@@ -55,12 +56,14 @@ physics.producers.crumbs.CRTTrackMatchModuleLabel: "crttrackt0SCE"
 physics.producers.crumbs.Chi2FitParams.TrackLabel: "pandoraSCETrack"
 physics.producers.crumbs.Chi2FitParams.CaloLabel:  "pandoraSCECalo"
 
+physics.producers.systtools: @local::sbn_systtools
+
 physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
             pandoraTrackCRTHit, pandoraTrackCRTTrack,
             pandoraSCETrackCRTHit, pandoraSCETrackCRTTrack, fmatchSCE, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
             pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
-            cafmaker ]
+            systtools, cafmaker ]
 
 # Enable the Space-Charge service
 #include "enable_spacecharge_services_sbnd.fcl"
