@@ -90,11 +90,11 @@ physics:
   #define the producer and filter modules for this path, order matters,
   #filters reject all following items.  see lines starting physics.producers below
   reco2: [
-    fasthit,
-    ophitpmt,
-    ophitarapuca,
-    #MuonTrackProducer, 
-    #MuonTrackFilter
+    fasthit
+    , ophitpmt
+    , ophitarapuca
+    #, MuonTrackProducer 
+    #, MuonTrackFilter
   ]
 
   ana: [hitdumper]
