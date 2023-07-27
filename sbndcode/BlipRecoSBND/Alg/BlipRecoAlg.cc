@@ -55,7 +55,6 @@ namespace blip {
     printf("  - equiv. recomb: %.4f\n",fNominalRecombFactor);
     //printf("  - custom bad chans: %i\n",NBadChansFromFile);
     printf("*******************************************\n");
-    std::cout<<"LArIAT R = "<<ModBoxRecomb(2.8,0.484);
 
     // create diagnostic histograms
     art::ServiceHandle<art::TFileService> tfs;
@@ -248,51 +247,45 @@ namespace blip {
     art::ServiceHandle<geo::Geometry> geom;
 
     // -- G4 particles
-    //art::Handle< std::vector<simb::MCParticle> > pHandle;
-    auto pHandle = evt.getValidHandle<std::vector<simb::MCParticle>>(fGeantProducer);
+    art::Handle< std::vector<simb::MCParticle> > pHandle;
     std::vector<art::Ptr<simb::MCParticle> > plist;
-    //if (evt.getByLabel(fGeantProducer,pHandle))
+    if (evt.getByLabel(fGeantProducer,pHandle))
       art::fill_ptr_vector(plist, pHandle);
  
     // -- SimEnergyDeposits
-    //art::Handle<std::vector<sim::SimEnergyDeposit> > sedHandle;
-    auto sedHandle = evt.getValidHandle<std::vector<sim::SimEnergyDeposit>>(fGeantProducer);
+    art::Handle<std::vector<sim::SimEnergyDeposit> > sedHandle;
     std::vector<art::Ptr<sim::SimEnergyDeposit> > sedlist;
-    //if (evt.getByLabel(fSimDepProducer,sedHandle)) 
+    if (evt.getByLabel(fSimDepProducer,sedHandle)) 
       art::fill_ptr_vector(sedlist, sedHandle);
     
     // -- SimChannels (usually dropped in reco)
-    //art::Handle<std::vector<sim::SimChannel> > simchanHandle;
-    auto simchanHandle = evt.getValidHandle<std::vector<sim::SimChannel>>(fSimChanProducer);
+    art::Handle<std::vector<sim::SimChannel> > simchanHandle;
     std::vector<art::Ptr<sim::SimChannel> > simchanlist;
-    //if (evt.getByLabel(fSimChanProducer,simchanHandle)) 
+    if (evt.getByLabel(fSimChanProducer,simchanHandle)) 
       art::fill_ptr_vector(simchanlist, simchanHandle);
 
     // -- hits (from input module, usually track-masked subset of gaushit)
-    //art::Handle< std::vector<recob::Hit> > hitHandle;
-    auto hitHandle = evt.getValidHandle<std::vector<recob::Hit>>(fHitProducer);
+    art::Handle< std::vector<recob::Hit> > hitHandle;
     std::vector<art::Ptr<recob::Hit> > hitlist;
-    //if (evt.getByLabel(fHitProducer,hitHandle))
+    if (evt.getByLabel(fHitProducer,hitHandle))
       art::fill_ptr_vector(hitlist, hitHandle);
 
     // -- hits (from gaushit), these are used in truth-matching of hits
-    //art::Handle< std::vector<recob::Hit> > hitHandleGH;
-    auto hitHandleGH = evt.getValidHandle<std::vector<recob::Hit>>("gaushit");
+    art::Handle< std::vector<recob::Hit> > hitHandleGH;
     std::vector<art::Ptr<recob::Hit> > hitlistGH;
-    //if (evt.getByLabel("gaushit",hitHandleGH))
+    if (evt.getByLabel("gaushit",hitHandleGH))
       art::fill_ptr_vector(hitlistGH, hitHandleGH);
 
     // -- tracks
-    //art::Handle< std::vector<recob::Track> > tracklistHandle;
-    auto tracklistHandle = evt.getValidHandle<std::vector<recob::Track>>(fTrkProducer);
+    art::Handle< std::vector<recob::Track> > tracklistHandle;
     std::vector<art::Ptr<recob::Track> > tracklist;
-    //if (evt.getByLabel(fTrkProducer,tracklistHandle))
+    if (evt.getByLabel(fTrkProducer,tracklistHandle))
       art::fill_ptr_vector(tracklist, tracklistHandle);
   
     // -- associations
     art::FindManyP<recob::Track> fmtrk(hitHandle,evt,fTrkProducer);
     art::FindManyP<recob::Track> fmtrkGH(hitHandleGH,evt,fTrkProducer);
-    //art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"gaushitTruthMatch");
+    art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"gaushitTruthMatch");
   
     /*
     //====================================================
@@ -313,7 +306,8 @@ namespace blip {
       }
     }
     */
-    
+   
+    std::cout<<"Here we are!\n";
     //====================================================
     // Prep the particle inventory service for MC+overlay
     //====================================================
@@ -346,6 +340,7 @@ namespace blip {
       }
     }
    
+    std::cout<<"Here we are!\n";
     //=====================================================
     // Record PDG for every G4 Track ID
     //=====================================================
@@ -407,6 +402,7 @@ namespace blip {
     }
    
 
+    std::cout<<"Finding trueblips\n";
     //==================================================
     // Use G4 information to determine the "true" blips in this event.
     //==================================================
@@ -468,11 +464,11 @@ namespace blip {
         //float truthidfrac, numElectrons, energy;
         //BlipUtils::HitTruth( thisHit, truthid, truthidfrac, energy, numElectrons);
 
-        /*
         //--------------------------------------------------
-        // MicroBooNE-specific truth-matching: since SimChannels aren't
-        // saved by default, the normal backtracker won't work, so instead
-        // the truth-matching metadata is stored in the event
+        // since SimChannels aren't saved by default, the normal 
+        // backtracker won't work, so instead the truth-matching metadata 
+        // is stored in the event in the form of the "gaushitTruthMatch"
+        // data association.
         //--------------------------------------------------
         int igh = map_gh[i];
         if( fmhh.at(igh).size() ) {
@@ -511,7 +507,6 @@ namespace blip {
           }
 
         }
-        */
 
 
       }//endif MC
