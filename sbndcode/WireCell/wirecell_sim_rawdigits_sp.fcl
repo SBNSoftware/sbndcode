@@ -1,0 +1,174 @@
+#
+# File:    standard_detsim_sbnd.fcl
+# Purpose: Simulates readout response to induced and collected charge
+#
+# This configuration runs the detector simulation
+#
+# Input:
+# - output of OpticalFastSimulation and ElectronDrift modules
+#
+# Output:
+# - daq: RawDigit collection with simulated TPC readout response as waveforms
+# - includes the whole input data
+#
+#
+# Dependencies:
+# - uses the bundle of SBND simulation services for readout simulation
+
+
+#
+# services
+#
+
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+#
+# modules
+#
+
+#include "detsimmodules_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+
+process_name: WCLS
+
+services:
+{
+  TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+  #@table::sbnd_detsim_services
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  #AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
+  #AuxDetGeometry: { @table::sbnd_geo_source }
+  message:      { debugModules: ["*"] destinations: { debugmsg:{type: "cout" threshold: "INFO"} } } #added Ewerton 2023-06-30
+  TimeTracker:  { printSummary: true } #added Ewerton 2023-06-30
+}
+
+
+source:
+{
+  module_type:     RootInput
+}
+
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+  producers:
+  {
+    rns:       { module_type: "RandomNumberSaver" }
+    #daq:       @local::sbnd_simwire
+ 
+    simtpc2d : {
+       module_type : WireCellToolkit
+       wcls_main: {
+          tool_type: WCLS
+          apps: ["TbbFlow"] // changed Pgrapher TbbFlow Ewerton 2023-05-16
+
+          //loglevels: ["debug", "pgraph:info"]
+          //logsinks: ["stdout"]
+
+          // Libraries in which to look for WCT components
+          plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb"]
+
+          // The tool marshals the art::Event to these visitors before.
+          // See notes below in params.
+
+          inputers: ["wclsSimDepoSetSource:"] // added Ewerton 2023-05-25
+
+          outputers: [
+             "wclsDepoSetSimChannelSink:postdrift", #<- included for larwirecell v09_12_01 or higher
+             "wclsFrameSaver:simdigits" , # <- uncomment this line to use graph1 (FrameSaver-simdigits) Ewerton-2023-05-29
+             "wclsFrameSaver:spsaver"
+          ]
+
+          // This sets the "main" Jsonnet file which provides the 
+          // configuration for the Wire-Cell Toolkit components.  It is
+          // take as relative to entries in WIRECELL_PATH.
+          configs: ["pgrapher/experiment/sbnd/wcls-sim-drift-simchannel-nf-sp.jsonnet"]
+    
+    
+          // Set the "external variables" required by the Jsonnet.
+          params : {
+             // This locates the input raw::RawDigit collection in the art::Event 
+             inputTag: "ionandscint:"
+
+             // Set "data" vs. "sim".  The epoch below probably should follow suit.
+             //reality: "data"
+              reality: "sim"
+
+             // if epoch is "dynamic" you MUST add
+             // "wclsMultiChannelNoiseDB" to "inputers" and must NOT
+             // add it if not "dynamic"
+             // epoch: "dynamic"
+             epoch: "perfect"
+             //epoch: "after"
+
+
+             // Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
+             signal_output_form: "sparse"
+
+             // If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
+             // If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
+             save_simdigits: "true"
+
+             // Set the waveform sample length, eg, 6000, 15000, "auto"
+             // nsample: 6000
+
+          }
+
+          structs: {
+            # Longitudinal diffusion constant [cm2/s]
+            DL: 4.0
+            # Transverse diffusion constant [cm2/s]
+            DT: 8.8
+            # Electron lifetime [ms]
+            lifetime: 10.0
+            # Electron drift speed, assumes 0.5 kV/cm and 88.4 K. Units: mm/us
+            driftSpeed: 1.563
+          }
+       }
+    }
+
+
+    #crt:       @local::sbnd_crtsim
+    #opdaq:     @local::sbnd_opdetdigitizer
+  }
+
+  #define the producer and filter modules for this path, order matters,
+  #simulate:  [ rns, daq, crt, opdaq] #default 
+  #simulate:  [ rns, daq, simtpc2d, crt, opdaq] #default (daq) plus wirecell drift simulation (simtpc2d)
+  simulate:  [ simtpc2d] #added wctsp Ewerton 2023-05-16
+
+  trigger_paths : [ simulate ]
+
+  #define the output stream, there could be more than one if using filters
+  stream1:   [ out1 ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
+
+# block to define where the output goes.  if you defined a filter in the physics
+# block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+# entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput # inherit shared settings
+    dataTier: "reconstructed" //     added Ewerton 2023-05-16
+    #compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
+    outputCommands: [ 
+                      "keep *_*_*_*" ,
+                      "drop *_ionandscint_*_*",
+                      "keep *_simdigits_*_*"
+                    ]
+  }
+}
+
+
+

@@ -190,12 +190,28 @@ sbnd_flux_bnb_nu_Jv1_test1: {
 }
 
 
+#
+# Booster Neutrino Beam, neutrino mode, configuration K (v1)
+#
+sbnd_flux_bnb_nu_Kv1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configK-v1/july2023/neutrinoMode"
+  FluxFiles: [ "gsimple_april07_baseline_*_redecay_wkaonwgh.root" ]
+}
+
+sbnd_flux_bnb_nu_Kv1_test1: {
+  @table::sbnd_flux_bnb_nu_Kv1
+  FluxFiles: [ "gsimple_april07_baseline_0732_redecay_wkaonwgh.root" ]
+}
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Booster Neutrino Beam, neutrino mode, "default" configuration
 #
-sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Jv1
-sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Jv1_test1
+sbnd_flux_bnb_nu: @local::sbnd_flux_bnb_nu_Kv1
+sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Kv1_test1
 
 #
 # Booster Neutrino Beam, interaction from dirt

@@ -1,0 +1,3 @@
+#include "reco1_sce_lite_wc2d.fcl"
+
+process_name: Reco1Var
