@@ -95,7 +95,7 @@ private:
   bool UseArapucas(std::vector<std::string> pd_names);
 
   /// returns if a channel corresponds to PMT (0) or X-Arapuca (1)
-  std::vector<int> GetChannelTypes(std::vector<int> ch_to_use);
+  std::vector<int> GetChannelTypes(int nopdets);
 
   /// Returns a list of uncoated PMTs that are a subset of those in ch_to_use
   std::vector<int> GetUncoatedPMTList(std::vector<int> ch_to_use);
@@ -191,7 +191,7 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
   _photo_detectors = p.get<std::vector<std::string>>("PhotoDetectors");
   _use_arapucas = this->UseArapucas(_photo_detectors);
   _opch_to_use = this->PDNamesToList(_photo_detectors);
-  _opch_types  = this->GetChannelTypes(_opch_to_use);
+  _opch_types  = this->GetChannelTypes(geo->NOpDets());
   _uncoated_pmts = this->GetUncoatedPMTList(_opch_to_use);
 
   _select_nus        = p.get<bool>("SelectNeutrino");
@@ -953,15 +953,13 @@ bool SBNDOpT0Finder::UseArapucas(std::vector<std::string> pd_names){
   return found_ara;
 }
 
-std::vector<int> SBNDOpT0Finder::GetChannelTypes(std::vector<int> ch_to_use){
-  std::vector<int> out_v; 
-  for (auto ch : ch_to_use){
+std::vector<int> SBNDOpT0Finder::GetChannelTypes(int nopdets){
+  std::vector<int> out_v(nopdets,-1); 
+  for (size_t ch = 0; ch < out_v.size(); ch ++){
     if (_pds_map.isPDType(ch, "pmt_uncoated") | _pds_map.isPDType(ch, "pmt_coated"))
-      out_v.push_back(0);
-    else if (_pds_map.isPDType(ch, "xarapuca_vis") | _pds_map.isPDType(ch, "xarapuca_vis"))
-      out_v.push_back(1);
-    else 
-      out_v.push_back(-1);
+      out_v.at(ch) = 0;
+    else if (_pds_map.isPDType(ch, "xarapuca_vis") | _pds_map.isPDType(ch, "xarapuca_vuv"))
+      out_v.at(ch) = 1;
   }
   return out_v;
 }
