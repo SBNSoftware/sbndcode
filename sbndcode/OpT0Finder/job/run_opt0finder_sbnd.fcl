@@ -6,7 +6,7 @@
 #include "opt0finder_sbnd.fcl"
 #include "opt0finderana_sbnd.fcl"
 
-process_name: FlashFinder
+process_name: OpT0Finder
 
 services:
 {
@@ -80,6 +80,12 @@ physics:
   # ie analyzers and output streams.  these all run simultaneously
   end_paths: [ana, stream1]
 }
+## default settings 
+physics.producers.opt0finder.SelectNeutrino: true # ignore unambiguous cosmics 
+physics.producers.opt0finder.ExcludeExitingOpDets: true # exclude optical detectors near exiting track exit points 
+physics.producers.opt0finder.PhotoDetectors: ["pmt_coated", "pmt_uncoated"] # use PMTs only 
+physics.producers.opt0finder.FlashMatchConfig.QLLMatch.NormalizeFlash: true # use normalized meas/hypo flases
+physics.producers.opt0finder.FlashMatchConfig.QLLMatch.QLLMode: 0 # use chisq with ^^ normalization above
 
 # To use Optical Library fast mode:
 # services.PhotonVisibilityService: @local::sbnd_library_vuv_vis_prop_timing_photonvisibilityservice
