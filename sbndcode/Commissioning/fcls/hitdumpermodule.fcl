@@ -33,6 +33,7 @@ hitdumper:
     readMuonTracks:           false
     readMuonHits:             false
     readTruth:                true
+    readMCParticle:           false
     savePOTinfo:              true
     checkTransparency:        false
 
