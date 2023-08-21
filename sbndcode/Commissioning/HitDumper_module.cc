@@ -463,7 +463,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
-  freadMCParticle    = p.get<bool>("readTruth",false);
+  freadMCParticle    = p.get<bool>("readMCParticle",false);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
 
