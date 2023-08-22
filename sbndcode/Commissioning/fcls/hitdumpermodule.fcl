@@ -21,6 +21,9 @@ hitdumper:
     crtSoftTriggerModuleLabel:"MetricProducer"
     MuonTrackModuleLabel:     "MuonTrackProducer"
     GenieGenModuleLabel:      "generator"
+    MCParticleModuleLabel:    "largeant"
+    MCTrackModuleLabel:       "mcreco"
+    MCShowerModuleLabel:      "mcreco"
  
     keepCRThits:              true
     keepCRTstrips:            false
