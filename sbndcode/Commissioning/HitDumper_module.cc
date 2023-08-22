@@ -1709,6 +1709,9 @@ void Hitdumper::ResetVars() {
   mcevts_truth = 0;
   genie_no_primaries = 0;
   mcpart_no_primaries = 0;
+  mctrack_no_primaries = 0;
+  mcshower_no_primaries = 0;
+
 }
 
 void Hitdumper::ResizeMCNeutrino(int nNeutrinos) {
