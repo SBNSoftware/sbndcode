@@ -241,7 +241,9 @@ private:
   int _nophits;                               ///< Number of Optical Hits
   std::vector<int> _ophit_opch;               ///< OpChannel of the optical hit
   std::vector<int> _ophit_opdet;              ///< OpDet of the optical hit
-  std::vector<double> _ophit_peakT;           ///< Peak time of the optical hit
+  std::vector<double> _ophit_peakT;           ///< Peak time of the optical hit [us]
+  std::vector<double> _ophit_startT;          ///< Start time of the optical hit [us]
+  std::vector<double> _ophit_riseT;           ///< Rise time of the optical hit [ns]
   std::vector<double> _ophit_width;           ///< Width of the optical hit
   std::vector<double> _ophit_area;            ///< Area of the optical hit
   std::vector<double> _ophit_amplitude;       ///< Amplitude of the optical hit
@@ -338,6 +340,8 @@ private:
   Int_t     mcpart_no_primaries;                 
   std::vector<Int_t>    mcpart_pdg;              
   std::vector<Int_t>    mcpart_status;           
+  std::vector<std::string>    mcpart_process;
+  std::vector<std::string>    mcpart_endprocess;
   std::vector<Float_t>  mcpart_Eng;              
   std::vector<Float_t>  mcpart_EndE;
   std::vector<Float_t>  mcpart_Mass;
@@ -895,6 +899,8 @@ void Hitdumper::analyze(const art::Event& evt)
         _ophit_opch[index] = ophitlist.at(i)->OpChannel();
         _ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
         _ophit_peakT[index] = ophitlist.at(i)->PeakTime();
+        _ophit_startT[index] = ophitlist.at(i)->StartTime();
+        _ophit_riseT[index] = ophitlist.at(i)->RiseTime();
         _ophit_width[index] = ophitlist.at(i)->Width();
         _ophit_area[index] = ophitlist.at(i)->Area();
         _ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
@@ -1130,6 +1136,8 @@ void Hitdumper::analyze(const art::Event& evt)
         mcpart_TrackId[iMCPart] = pPart->TrackId();
         mcpart_pdg[iMCPart] = pPart->PdgCode();
         mcpart_status[iMCPart] =  pPart->StatusCode();
+        mcpart_process[iMCPart] =  pPart->Process();
+        mcpart_endprocess[iMCPart] =  pPart->EndProcess();
         mcpart_Eng[iMCPart] = pPart->E();
         mcpart_EndE[iMCPart] = pPart->EndE();
         mcpart_Mass[iMCPart] = pPart->Mass();
@@ -1411,6 +1419,8 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ophit_opch", &_ophit_opch);
     fTree->Branch("ophit_opdet", &_ophit_opdet);
     fTree->Branch("ophit_peakT", &_ophit_peakT);
+    fTree->Branch("ophit_startT", &_ophit_startT);
+    fTree->Branch("ophit_riseT", &_ophit_riseT);
     fTree->Branch("ophit_width", &_ophit_width);
     fTree->Branch("ophit_area", &_ophit_area);
     fTree->Branch("ophit_amplitude", &_ophit_amplitude);
@@ -1508,6 +1518,8 @@ void Hitdumper::analyze(const art::Event& evt)
     //MCParticle
     fTree->Branch("mcpart_pdg",&mcpart_pdg);
     fTree->Branch("mcpart_status",&mcpart_status);    
+    fTree->Branch("mcpart_process",&mcpart_process);  
+    fTree->Branch("mcpart_endprocess",&mcpart_endprocess);  
     fTree->Branch("mcpart_Eng",&mcpart_Eng);
     fTree->Branch("mcpart_EndE",&mcpart_EndE);
     fTree->Branch("mcpart_Mass",&mcpart_Mass);
@@ -1638,6 +1650,8 @@ void Hitdumper::ResetOpHitsVars(int n) {
   _ophit_opch.resize(n, DEFAULT_VALUE);
   _ophit_opdet.resize(n, DEFAULT_VALUE);
   _ophit_peakT.resize(n, DEFAULT_VALUE);
+  _ophit_startT.resize(n, DEFAULT_VALUE);
+  _ophit_riseT.resize(n, DEFAULT_VALUE);
   _ophit_width.resize(n, DEFAULT_VALUE);
   _ophit_area.resize(n, DEFAULT_VALUE);
   _ophit_amplitude.resize(n, DEFAULT_VALUE);
@@ -1771,7 +1785,9 @@ void Hitdumper::ResizeMCParticle(int nParticles) {
   MaxMCParticles = (size_t) std::max(nParticles, 1);
               
   mcpart_pdg.assign(MaxMCParticles,DEFAULT_VALUE);              
-  mcpart_status.assign(MaxMCParticles,DEFAULT_VALUE);           
+  mcpart_status.assign(MaxMCParticles,DEFAULT_VALUE); 
+  mcpart_process.assign(MaxMCParticles,"Dummy"); 
+  mcpart_endprocess.assign(MaxMCParticles,"Dummy");           
   mcpart_Eng.assign(MaxMCParticles,DEFAULT_VALUE);              
   mcpart_EndE.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_Mass.assign(MaxMCParticles,DEFAULT_VALUE);
