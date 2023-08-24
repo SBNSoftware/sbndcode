@@ -1,0 +1,38 @@
+#include "TPCChannelMapService.fcl"
+
+physics:
+{
+  // now also have something produce the digits and headers
+  producers:
+  {
+    daq: {
+      module_type: SBNDTPCDecoder
+      produce_header: true
+      baseline_calc: true
+      timesize: 2559          // for computing timestamps
+      frame_to_dt: 0.5        // produce timestamps in units of microseconds
+      min_slot_no: 3          // channel mapping -- 16 slots don't start at 1 but this number
+      channel_per_slot: 64
+    }
+  }
+
+  analyzers: {}
+
+  my_producer_modules: [daq]
+  trigger_paths: [my_producer_modules]
+  a: [rootout]
+  end_paths: [a]
+}
+
+source: {}
+
+outputs: {
+  rootout: {
+    module_type: "RootOutput"
+    fileName: "digits.root"
+  }
+}
+
+
+process_name: TPCDECODER
+
