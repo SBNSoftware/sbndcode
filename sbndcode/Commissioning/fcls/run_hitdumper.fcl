@@ -123,6 +123,8 @@ physics.analyzers.hitdumper.keepCRTstrips: true
 physics.analyzers.hitdumper.makeCRTtracks: true
 physics.analyzers.hitdumper.readCRTtracks: true
 physics.analyzers.hitdumper.readcrtSoftTrigger: true
+# physics.analyzers.hitdumper.readTruth: false
+# physics.analyzers.hitdumper.readMCParticle: true
 
 # set thresholds
 physics.producers.fasthit.MinSigInd: 15.0
