@@ -1,0 +1,6 @@
+<lcgdict>
+  <class name="tpcAnalysis::HeaderData"/>
+  <class name="std::vector<tpcAnalysis::HeaderData>"/>
+  <class name="art::Wrapper<tpcAnalysis::HeaderData>"/>
+  <class name="art::Wrapper<std::vector<tpcAnalysis::HeaderData>>"/>
+</lcgdict>
