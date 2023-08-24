@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+SBNDTPCChannelMapServiceDefaults: {
+  UseHWDB: false           # if true, read map data from the hardware database
+  ReadMapFromFile: true    # if true, read map data from a file
+  FileName: "SBNDTPCChannelMap_v1.txt"
+}
+
+END_PROLOG
