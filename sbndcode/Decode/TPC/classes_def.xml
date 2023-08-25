@@ -1,5 +1,7 @@
 <lcgdict>
-  <class name="tpcAnalysis::HeaderData"/>
+  <class name="tpcAnalysis::HeaderData" ClassVersion="10">
+   <version ClassVersion="10" checksum="4076812959"/>
+  </class>
   <class name="std::vector<tpcAnalysis::HeaderData>"/>
   <class name="art::Wrapper<tpcAnalysis::HeaderData>"/>
   <class name="art::Wrapper<std::vector<tpcAnalysis::HeaderData>>"/>
