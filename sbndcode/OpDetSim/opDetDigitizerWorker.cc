@@ -205,7 +205,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
           coatedpmts_todigitize.insert(ch);
         }
         else if( (Reflected) && (pdtype == "pmt_uncoated") ) { //Uncoated PMT channels
-          pmtDigitizer->ConstructWaveformLite(ch,
+          pmtDigitizer->ConstructWaveformLiteUncoatedPMT(ch,
                                               litesimphotons,
                                               waveform,
                                               pdtype,
@@ -323,7 +323,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
         }
         // uncoated PMTs
         else if(Reflected && pdtype == "pmt_uncoated") {
-          pmtDigitizer->ConstructWaveform(ch,
+          pmtDigitizer->ConstructWaveformUncoatedPMT(ch,
                                           simphotons,
                                           waveform,
                                           pdtype,

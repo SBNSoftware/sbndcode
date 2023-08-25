@@ -254,8 +254,8 @@ namespace sbnd{
   }
 
 
-  void NuAnaAlg::calcWeight(art::Ptr<simb::MCTruth> mctruth,
-                            art::Ptr<simb::GTruth > gtruth,
+  void NuAnaAlg::calcWeight(simb::MCTruth const& mctruth,
+                            simb::GTruth const& gtruth,
                             std::vector<std::vector<float>>& weights){
     // return reweight.CalcWeight(*mctruth,*gtruth);
     // if (weights.size() == 0) weights.resize(1);
@@ -275,7 +275,7 @@ namespace sbnd{
       {
         weights[i_weight][i_reweightingKnob]
           = reweightVector[i_weight][i_reweightingKnob]
-            -> CalcWeight(*mctruth,*gtruth);
+            -> CalcWeight(mctruth,gtruth);
       }
     }
 
@@ -330,7 +330,7 @@ namespace sbnd{
 
   }
 
-  void NuAnaAlg::packFluxInfo(art::Ptr<simb::MCFlux > flux,
+  void NuAnaAlg::packFluxInfo(simb::MCFlux const& flux,
                               int& ptype, int& tptype, int& ndecay,
                               std::vector<float>& neutVertexInWindow,
                               std::vector<float>& ParentVertex,
@@ -338,9 +338,9 @@ namespace sbnd{
                               std::vector<float>& nuParentMomAtProd,
                               std::vector<float>& nuParentMomTargetExit){
 
-    ptype  = flux -> fptype;
-    tptype = flux->ftptype;
-    ndecay = flux->fndecay;
+    ptype  = flux.fptype;
+    tptype = flux.ftptype;
+    ndecay = flux.fndecay;
 
     neutVertexInWindow.clear();
     ParentVertex.clear();
@@ -348,27 +348,27 @@ namespace sbnd{
     nuParentMomAtProd.clear();
     nuParentMomTargetExit.clear();
 
-    neutVertexInWindow.push_back(flux -> fgenx);
-    neutVertexInWindow.push_back(flux -> fgeny);
-    neutVertexInWindow.push_back(flux -> fgenz);
-    ParentVertex.push_back(flux -> fvx);
-    ParentVertex.push_back(flux -> fvy);
-    ParentVertex.push_back(flux -> fvz);
-    nuParentMomAtDecay.push_back(flux -> fpdpx);
-    nuParentMomAtDecay.push_back(flux -> fpdpy);
-    nuParentMomAtDecay.push_back(flux -> fpdpz);
-    nuParentMomAtProd.push_back(flux -> fppdxdz);
-    nuParentMomAtProd.push_back(flux -> fppdydz);
-    nuParentMomAtProd.push_back(flux -> fpppz);
-    nuParentMomTargetExit.push_back(flux -> ftpx);
-    nuParentMomTargetExit.push_back(flux -> ftpy);
-    nuParentMomTargetExit.push_back(flux -> ftpz);
+    neutVertexInWindow.push_back(flux.fgenx);
+    neutVertexInWindow.push_back(flux.fgeny);
+    neutVertexInWindow.push_back(flux.fgenz);
+    ParentVertex.push_back(flux.fvx);
+    ParentVertex.push_back(flux.fvy);
+    ParentVertex.push_back(flux.fvz);
+    nuParentMomAtDecay.push_back(flux.fpdpx);
+    nuParentMomAtDecay.push_back(flux.fpdpy);
+    nuParentMomAtDecay.push_back(flux.fpdpz);
+    nuParentMomAtProd.push_back(flux.fppdxdz);
+    nuParentMomAtProd.push_back(flux.fppdydz);
+    nuParentMomAtProd.push_back(flux.fpppz);
+    nuParentMomTargetExit.push_back(flux.ftpx);
+    nuParentMomTargetExit.push_back(flux.ftpy);
+    nuParentMomTargetExit.push_back(flux.ftpz);
 
     return;
   }
 
   // Pack up the genie info:
-  void NuAnaAlg::packGenieInfo(art::Ptr<simb::MCTruth>  truth,
+  void NuAnaAlg::packGenieInfo(simb::MCTruth const&  truth,
                                std::vector<int> & GeniePDG,
                                std::vector<std::vector<float>>& GenieMomentum,
                                std::vector<std::string>& GenieProc,
@@ -378,8 +378,8 @@ namespace sbnd{
     int i = 0;
     std::vector<float> tempMomentum;
     tempMomentum.resize(4);
-    while( i < truth -> NParticles()){
-      auto part = truth -> GetParticle(i);
+    while( i < truth.NParticles()){
+      auto part = truth.GetParticle(i);
       if (part.StatusCode() == 1){
         GeniePDG.push_back(part.PdgCode());
         GenieMomentum.push_back(tempMomentum);
@@ -393,33 +393,28 @@ namespace sbnd{
     }
   }
 
-  art::Ptr<simb::MCParticle> NuAnaAlg::getParticleByID(
-          art::Handle< std::vector<simb::MCParticle> > & mclistLARG4,
+  simb::MCParticle const* NuAnaAlg::getParticleByID(
+          std::vector<simb::MCParticle> const& mclistLARG4,
           int TrackId) const
   {
-    for(unsigned int i = 0; i < mclistLARG4 -> size(); i ++){
-      art::Ptr<simb::MCParticle> particle(mclistLARG4,i);
-      if ( particle -> TrackId() == TrackId){
-        return particle;
+    for(simb::MCParticle const& particle : mclistLARG4) {
+      if ( particle.TrackId() == TrackId){
+        return &particle;
       }
     }
-    art::Ptr<simb::MCParticle> part;
-    return part;
+    return nullptr;
   }
-  art::Ptr<simb::MCParticle> NuAnaAlg::getParticleByPDG(
-          art::Handle< std::vector<simb::MCParticle> > & mclistLARG4,
-          int PDG) const
-  {
 
-    for(unsigned int i = 0; i < mclistLARG4 -> size(); i ++){
-      art::Ptr<simb::MCParticle> particle(mclistLARG4,i);
-      if ( particle -> PdgCode() == PDG){
-        return particle;
-      }
+  simb::MCParticle const& NuAnaAlg::getParticleByIDStrict(
+          std::vector<simb::MCParticle> const& mclistLARG4,
+          int TrackId) const
+  {
+    if (auto particle = getParticleByID(mclistLARG4, TrackId)) {
+      return *particle;
     }
-    art::Ptr<simb::MCParticle> part;
-    return part;
+    throw cet::exception("NuAnaAlg") << "Particle with track ID: " << TrackId << " not found.";
   }
+
   bool NuAnaAlg::isInTPC(const TVector3 & v) const{
     if (v.X() > xhigh || v.X() < xlow) return false;
     if (v.Y() > yhigh || v.Y() < ylow) return false;
@@ -429,7 +424,7 @@ namespace sbnd{
 
   // Method to take in a photon and determine where it started converting.
   // Looks at the photon's energy at each step.
-  void NuAnaAlg::GetPhotonConversionInfo(art::Ptr<simb::MCParticle> photon,
+  void NuAnaAlg::GetPhotonConversionInfo(simb::MCParticle const& photon,
                                       TLorentzVector& ConversionPos,
                                       TLorentzVector& ConversionMom){
     // Just loop over the photons Trajectory points in momentum space
@@ -440,43 +435,43 @@ namespace sbnd{
 
     // Going to be watching for changes in energy,
     // so we'd better know the start energy.
-    double E = photon->E(0);
+    double E = photon.E(0);
     // std::cout << "Starting Energy is " << E << std::endl;
     // std::cout << "Looking at photon 4 vector, momentum currently starts \n\t("
-    //     << photon->Momentum().X() << ", "
-    //     << photon->Momentum().Y() << ", "
-    //     << photon->Momentum().Z() << ", "
-    //     << photon->Momentum().T() << ") ";
+    //     << photon.Momentum().X() << ", "
+    //     << photon.Momentum().Y() << ", "
+    //     << photon.Momentum().Z() << ", "
+    //     << photon.Momentum().T() << ") ";
     // std::cout << " At position \n\t( "
-    //     << photon->Position().X() << ", "
-    //     << photon->Position().Y() << ", "
-    //     << photon->Position().Z() << ", "
-    //     << photon->Position().T() << ") " << std::endl;
+    //     << photon.Position().X() << ", "
+    //     << photon.Position().Y() << ", "
+    //     << photon.Position().Z() << ", "
+    //     << photon.Position().T() << ") " << std::endl;
     //Catch some special cases first.
-    if (photon->NumberTrajectoryPoints() == 0) return;
-    if (photon->NumberTrajectoryPoints() == 1){
-      ConversionPos = photon->EndPosition();
-      ConversionMom = photon->EndMomentum();
+    if (photon.NumberTrajectoryPoints() == 0) return;
+    if (photon.NumberTrajectoryPoints() == 1){
+      ConversionPos = photon.EndPosition();
+      ConversionMom = photon.EndMomentum();
       return;
     }
 
-    for(unsigned int i = 1; i < photon->NumberTrajectoryPoints(); i ++){
+    for(unsigned int i = 1; i < photon.NumberTrajectoryPoints(); i ++){
       //ok, check if the energy has changed.
       // std::cout << "Looking at photon 4 vector, momentum currently is \n\t("
-      //     << photon->Momentum(i).X() << ", "
-      //     << photon->Momentum(i).Y() << ", "
-      //     << photon->Momentum(i).Z() << ", "
-      //     << photon->Momentum(i).T() << ") ";
+      //     << photon.Momentum(i).X() << ", "
+      //     << photon.Momentum(i).Y() << ", "
+      //     << photon.Momentum(i).Z() << ", "
+      //     << photon.Momentum(i).T() << ") ";
       // std::cout << " At position \n\t("
-      //     << photon->Position(i).X() << ", "
-      //     << photon->Position(i).Y() << ", "
-      //     << photon->Position(i).Z() << ", "
-      //     << photon->Position(i).T() << ") " << std::endl;
-      if (photon->E(i) != E) {
+      //     << photon.Position(i).X() << ", "
+      //     << photon.Position(i).Y() << ", "
+      //     << photon.Position(i).Z() << ", "
+      //     << photon.Position(i).T() << ") " << std::endl;
+      if (photon.E(i) != E) {
         //then the energy is different.  Must be scattering or something.
         //set the conversion points and bail!
-        ConversionPos = photon->Position(i);
-        ConversionMom = photon->Momentum(i-1); //<- This i OK since i starts at 1.
+        ConversionPos = photon.Position(i);
+        ConversionMom = photon.Momentum(i-1); //<- This i OK since i starts at 1.
     //      std::cout << "Conversion Pos is " << ConversionPos << std::endl;
         return;
       }
@@ -484,13 +479,13 @@ namespace sbnd{
 
     // If we made it out here, the photon must have ended without changing energy.
     // So send back end position, momentum.
-    ConversionPos = photon->EndPosition();
-    ConversionMom = photon->EndMomentum();
+    ConversionPos = photon.EndPosition();
+    ConversionMom = photon.EndMomentum();
 
     return;
   }
 
-  void NuAnaAlg::packLarg4Info( art::Handle< std::vector<simb::MCParticle> > mclarg4, int isCC,
+  void NuAnaAlg::packLarg4Info( std::vector<simb::MCParticle> const& mclarg4, int isCC,
                                 int NPi0FinalState, int NGamma, int NChargedPions,
                                 std::vector<std::vector<float>> & leptonPos,
                                 std::vector<std::vector<float>> & leptonMom,
@@ -533,39 +528,36 @@ namespace sbnd{
 
 
       // loop over the particles, extending the pion vectors as it goes.
-      for (unsigned int i = 0; i < mclarg4 -> size(); i ++){
-        art::Ptr<simb::MCParticle> particle(mclarg4,i);
+      for (simb::MCParticle const& particle : mclarg4) {
 
-
-
-        if (particle -> Mother() == 0 ){ // then this is a primary
-          // std::cout << "On particle " << particle -> TrackId()
-          //           << " with PDG " << particle -> PdgCode() << std::endl;
+        if (particle.Mother() == 0 ){ // then this is a primary
+          // std::cout << "On particle " << particle.TrackId()
+          //           << " with PDG " << particle.PdgCode() << std::endl;
 
           // For older files, set the nPrimaryLepton up since it didn't track neutrinos
           if (isCC == 0) nPrimaryLepton ++;
 
-          if (abs(particle -> PdgCode()) == 11 ||
-              abs(particle -> PdgCode()) == 12 ||
-              abs(particle -> PdgCode()) == 13 ||
-              abs(particle -> PdgCode()) == 14 )
+          if (abs(particle.PdgCode()) == 11 ||
+              abs(particle.PdgCode()) == 12 ||
+              abs(particle.PdgCode()) == 13 ||
+              abs(particle.PdgCode()) == 14 )
           {
 
             // then this is definitely the lepton.
             nPrimaryLepton ++;
-            int nTrajectoryPoints = particle -> NumberTrajectoryPoints();
+            int nTrajectoryPoints = particle.NumberTrajectoryPoints();
             leptonPos.reserve(nTrajectoryPoints);
             leptonMom.reserve(nTrajectoryPoints);
             for (int traj_point = 0; traj_point < nTrajectoryPoints; ++traj_point){
               leptonPos.push_back(empty4Vector);
-              pack4Vector(particle -> Position(traj_point),leptonPos.back());
+              pack4Vector(particle.Position(traj_point),leptonPos.back());
               leptonMom.push_back(empty4Vector);
-              pack4Vector(particle -> Momentum(traj_point),leptonMom.back());
-              if (!isInTPC(particle -> Position(traj_point).Vect())) break;
+              pack4Vector(particle.Momentum(traj_point),leptonMom.back());
+              if (!isInTPC(particle.Position(traj_point).Vect())) break;
             }
           } // end lepton if block
 
-          if (particle -> PdgCode() == 22)  //  misc gamma
+          if (particle.PdgCode() == 22)  //  misc gamma
           {
             nPrimaryGamma ++;
             TLorentzVector conversionPoint, conversionMom;
@@ -576,19 +568,19 @@ namespace sbnd{
             pack4Vector(conversionMom,  miscPhotonConversionMom.back());
           }
 
-          if (particle -> PdgCode() == 111)  // neutral pion
+          if (particle.PdgCode() == 111)  // neutral pion
           {
             pionPos.push_back(empty4Vector);
             pionMom.push_back(empty4Vector);
-            pack4Vector(particle->EndPosition(),pionPos.back());
-            pack4Vector(particle->Momentum(),pionMom.back());
+            pack4Vector(particle.EndPosition(),pionPos.back());
+            pack4Vector(particle.Momentum(),pionMom.back());
             nPrimaryPi0 ++;
             // get the conversion point of each photon
-            if ( particle -> NumberDaughters() == 2){
+            if ( particle.NumberDaughters() == 2){
               // Get the info:
               TLorentzVector conversionPoint, conversionMom;
-              art::Ptr<simb::MCParticle> daughter0
-                  = getParticleByID(mclarg4,particle->Daughter(0));
+              simb::MCParticle const& daughter0
+                  = getParticleByIDStrict(mclarg4,particle.Daughter(0));
               GetPhotonConversionInfo(daughter0, conversionPoint,conversionMom);
               // Pack it into the vectors
               p1PhotonConversionPos.push_back(empty4Vector);
@@ -597,8 +589,8 @@ namespace sbnd{
               pack4Vector(conversionMom,  p1PhotonConversionMom.back());
 
               // get photon2:
-              art::Ptr<simb::MCParticle> daughter1
-                  = getParticleByID(mclarg4,particle->Daughter(1));
+              simb::MCParticle const& daughter1
+                  = getParticleByIDStrict(mclarg4,particle.Daughter(1));
               GetPhotonConversionInfo(daughter1, conversionPoint,conversionMom);
               // Pack it into the vectors:
               p2PhotonConversionPos.push_back(empty4Vector);
@@ -612,10 +604,10 @@ namespace sbnd{
               p2PhotonConversionPos.push_back(empty4Vector);
               p2PhotonConversionMom.push_back(empty4Vector);
               for (int daughter = 0; daughter < 3; daughter ++ ){
-                art::Ptr<simb::MCParticle> daughterParticle
-                  = getParticleByID(mclarg4,particle->Daughter(daughter));
-                if (daughterParticle->PdgCode() == 22) {
-                  GetPhotonConversionInfo(daughterParticle,
+                simb::MCParticle const* daughterParticle
+                  = getParticleByID(mclarg4,particle.Daughter(daughter));
+                if (daughterParticle and daughterParticle->PdgCode() == 22) {
+                  GetPhotonConversionInfo(*daughterParticle,
                                           conversionPoint,
                                           conversionMom);
                   p1PhotonConversionPos.push_back(empty4Vector);
@@ -629,19 +621,19 @@ namespace sbnd{
 
           }
 
-          if (abs(particle -> PdgCode()) == 211)  // charged pion
+          if (abs(particle.PdgCode()) == 211)  // charged pion
           {
-            chargedPionSign.push_back(particle ->PdgCode() / 211);
-            int nTrajectoryPoints = particle -> NumberTrajectoryPoints();
+            chargedPionSign.push_back(particle.PdgCode() / 211);
+            int nTrajectoryPoints = particle.NumberTrajectoryPoints();
             unsigned int index = chargedPionSign.size() - 1;
             chargedPionPos[index].reserve(nTrajectoryPoints);
             chargedPionMom[index].reserve(nTrajectoryPoints);
             for (int traj_point = 0; traj_point < nTrajectoryPoints; ++ traj_point){
               chargedPionPos[index].push_back(empty4Vector);
-              pack4Vector(particle -> Position(traj_point),
+              pack4Vector(particle.Position(traj_point),
                           chargedPionPos[index].back());
               chargedPionMom[index].push_back(empty4Vector);
-              pack4Vector(particle -> Momentum(traj_point),
+              pack4Vector(particle.Momentum(traj_point),
                           chargedPionMom[index].back());
             }
           }
@@ -688,7 +680,7 @@ namespace sbnd{
 
 
 #ifdef CUSTOM_NUTOOLS
-    void NuAnaAlg::packFluxWeight(    art::Ptr<simb::MCFlux >  flux,
+    void NuAnaAlg::packFluxWeight(simb::MCFlux const& flux,
                             std::vector<std::vector<float>>& eventReweight)
     {
       // This is getting the flux weights from the flux object.
@@ -701,7 +693,7 @@ namespace sbnd{
         eventReweight[i].resize(1000);
         for (int j = 0; j < 1000; ++j)
         {
-          eventReweight[i][j]=flux->eventReweight[i*1000+j];
+          eventReweight[i][j]=flux.eventReweight[i*1000+j];
         }
       }
 
@@ -709,7 +701,7 @@ namespace sbnd{
     }
 
 #else
-     void NuAnaAlg::packFluxWeight(    art::Ptr<simb::MCFlux >  flux,
+     void NuAnaAlg::packFluxWeight(simb::MCFlux const& flux,
                              std::vector<std::vector<float>>&)
     {
 

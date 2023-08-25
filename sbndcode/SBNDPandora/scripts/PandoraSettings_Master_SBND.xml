@@ -33,6 +33,7 @@
         <MvaFileName>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileName>
         <MvaName>NeutrinoId</MvaName>
         <MinimumNeutrinoProbability>0</MinimumNeutrinoProbability>
+        <DefaultProbability>-1</DefaultProbability>
         <MaximumNeutrinos>999</MaximumNeutrinos>
         <PersistFeatures>true</PersistFeatures>
       </tool>

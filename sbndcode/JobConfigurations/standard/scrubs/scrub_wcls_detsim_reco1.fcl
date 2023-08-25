@@ -1,0 +1,33 @@
+# This fcl purely removes products made in theWCLS, DetSim & Reco1 processes.
+# This allows for keeping the identical simulated event on the file and running
+# a variation of the downstream detector simulation / reconstruction.
+#
+# Author Henry Lay (h.lay@lancaster.ac.uk)
+
+#include "rootoutput_sbnd.fcl"
+
+process_name: Scrub
+
+source:
+{
+  module_type:   RootInput
+  inputCommands: [ "keep *_*_*_*",
+                   "drop *_*_*_WCLS",
+                   "drop *_*_*_DetSim",
+                   "drop *_*_*_Reco1" ]
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "simulated"
+  }
+}
+
+physics:
+{
+  stream1:   [ out1 ]
+  end_paths: [ stream1 ]
+}
