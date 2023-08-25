@@ -7,7 +7,6 @@ sbnd_simple_flashmatch:{
   PandoraProducer: "pandora"
   SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
-  OpHitARAProducer: "ophitxarapuca"
   OpFlashProducer: ["opflashtpc0", "opflashtpc1"]
   OpFlashHitProducer: ["opflashtpc0", "opflashtpc1"]
   BeamSpillTimeStart:       0.1 # us, with some tolerance # TODO: update this when time gets zeroed
@@ -16,14 +15,11 @@ sbnd_simple_flashmatch:{
   FlashFindingTimeEnd:    100.   # us # TODO: tune
   FlashStart:              -0.02 # us, wrt flash time
   FlashEnd:                 0.08 # us, wrt flash time
-  PlaneList: [0, 1, 2]	# Choose which wire planes to use (0, 1, 2 = U, V, W)
   ForceConcurrence: true
   CorrectDriftDistance: true
-  UseARAPUCAS: false # TODO: use arapucas when their clock gets fixed
-#  UseXARAPUCAs: false # Test
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
-  SelectNeutrino: true # it's too buggy to set 'false'
+  SelectNeutrino: false # it's too buggy to set 'false'
   MakeTree: false
   StoreMCInfo: false
   # TODO: tune below
@@ -37,6 +33,7 @@ sbnd_simple_flashmatch:{
   MinOpHPE: 0.
   MinFlashPE: 10.
   FlashPEFraction: 0.8
+  PlaneList: [0, 1, 2]  # Choose which wire planes to use (0, 1, 2 = U, V, W)
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
   # TODO: tune above
@@ -129,7 +126,7 @@ sbnd_simple_flashmatch_ara.BeamSpillTimeEnd: 1.8
 
 sbnd_simple_flashmatch_ara_sce: @local::sbnd_simple_flashmatch
 sbnd_simple_flashmatch_ara_sce.FlashType: "simpleflash_ara"
-sbnd_simple_flashmatch__arasce.PandoraProducer: "pandoraSCE"
+sbnd_simple_flashmatch_arasce.PandoraProducer: "pandoraSCE"
 sbnd_simple_flashmatch_ara_sce.TrackProducer: "pandoraSCETrack"
 sbnd_simple_flashmatch_ara_sce.CaloProducer: "pandoraSCECalo"
 sbnd_simple_flashmatch_ara_sce.SpacePointProducer: "pandoraSCE"
@@ -167,7 +164,7 @@ sbnd_simple_flashmatch_opara.BeamSpillTimeEnd: 1.65
 sbnd_simple_flashmatch_opara_sce: @local::sbnd_simple_flashmatch
 sbnd_simple_flashmatch_opara_sce.IsSimple: false
 sbnd_simple_flashmatch_opara_sce.FlashType: "opflash_ara"
-sbnd_simple_flashmatch_sce_sce.PandoraProducer: "pandoraSCE"
+sbnd_simple_flashmatch_opara_sce.PandoraProducer: "pandoraSCE"
 sbnd_simple_flashmatch_opara_sce.TrackProducer: "pandoraSCETrack"
 sbnd_simple_flashmatch_opara_sce.CaloProducer: "pandoraSCECalo"
 sbnd_simple_flashmatch_opara_sce.SpacePointProducer: "pandoraSCE"
