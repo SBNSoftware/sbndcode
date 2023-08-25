@@ -77,6 +77,6 @@ private:
 };
 
 
-DECLARE_ART_SERVICE_INTERFACE(SBND::TPCChannelMapService, LEGACY)
+DECLARE_ART_SERVICE(SBND::TPCChannelMapService, LEGACY)
 
 #endif
