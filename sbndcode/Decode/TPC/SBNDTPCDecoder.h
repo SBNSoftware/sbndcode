@@ -11,7 +11,11 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDProducer.h"
+#include "canvas/Persistency/Common/Assns.h"
+#include "art/Persistency/Common/PtrMaker.h"
 #include "lardataobj/RawData/RawDigit.h"
+#include "lardataobj/RawData/RDTimeStamp.h"
+
 #include "artdaq-core/Data/Fragment.hh"
 #include "canvas/Utilities/InputTag.h"
 
@@ -52,7 +56,6 @@ private:
   class Config {
     public:
     bool produce_header;
-    bool produce_metadata;
     bool baseline_calc;
     unsigned n_mode_skip;
     bool subtract_pedestal;
@@ -67,18 +70,22 @@ private:
     Config(fhicl::ParameterSet const & p);
   };
 
+  typedef std::vector<raw::RawDigit> RawDigits;
+  typedef std::vector<raw::RDTimeStamp> RDTimeStamps;
+  typedef art::Assns<raw::RawDigit,raw::RDTimeStamp> RDTsAssocs;
+  typedef art::PtrMaker<raw::RawDigit> RDPmkr;
+  typedef art::PtrMaker<raw::RDTimeStamp> TSPmkr;
+    
   // process an individual fragment inside an art event
-  void process_fragment(art::Event &event, const artdaq::Fragment &frag,
-    std::unique_ptr<std::vector<raw::RawDigit>> &product_collection,
-    std::unique_ptr<std::vector<tpcAnalysis::HeaderData>> &header_collection);
+  void process_fragment(art::Event &event,
+			const artdaq::Fragment &frag,
+                        std::unique_ptr<RawDigits> &rd_collection,
+                        std::unique_ptr<std::vector<tpcAnalysis::HeaderData>> &header_collection,
+			RDPmkr &rdpm,
+			TSPmkr &tspm,
+			std::unique_ptr<RDTimeStamps> &rdts_collection,
+			std::unique_ptr<RDTsAssocs> &rdtsassoc_collection);
 
-
-  // Gets the WIRE ID of the channel. This wire id can be then passed
-  // to the Lariat geometry.
-  raw::ChannelID_t get_wire_id(const sbndaq::NevisTPCHeader *header, uint16_t nevis_channel_id);
-
-  // whether the given nevis readout channel is mapped to a wire
-  bool is_mapped_channel(const sbndaq::NevisTPCHeader *header, uint16_t nevis_channel_id);
 
   // build a HeaderData object from the Nevis Header
   tpcAnalysis::HeaderData Fragment2HeaderData(art::Event &event, const artdaq::Fragment &frag);
@@ -90,6 +97,7 @@ private:
   uint32_t _last_trig_frame_number;
 
   void getMedianSigma(const std::vector<int16_t> &v_adc, float &median, float &sigma);
+
 };
 
 #endif /* SBNDTPCDecoder_h */

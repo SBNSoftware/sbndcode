@@ -31,8 +31,6 @@
 
 #include "artdaq-core/Data/Fragment.hh"
 
-#include "lardataobj/RawData/RawDigit.h"
-
 #include "sbndaq-artdaq-core/Overlays/SBND/NevisTPCFragment.hh"
 #include "sbndaq-artdaq-core/Overlays/SBND/NevisTPC/NevisTPCTypes.hh"
 #include "sbndaq-artdaq-core/Overlays/SBND/NevisTPC/NevisTPCUtilities.hh"
@@ -47,7 +45,6 @@ tpcAnalysis::HeaderData daq::SBNDTPCDecoder::Fragment2HeaderData(art::Event &eve
 
   const sbndaq::NevisTPCHeader *raw_header = fragment.header();
   tpcAnalysis::HeaderData ret;
-
 
   ret.crate = raw_header->getFEMID();
   ret.slot = raw_header->getSlot();
@@ -74,9 +71,10 @@ daq::SBNDTPCDecoder::SBNDTPCDecoder(fhicl::ParameterSet const & param):
   _last_event_number(0),
   _last_trig_frame_number(0)
 {
-  
-  // produce stuff
-  produces<std::vector<raw::RawDigit>>();
+  consumes<artdaq::Fragments>(_tag);
+  produces<RawDigits>();
+  produces<RDTimeStamps>();
+  produces<RDTsAssocs>();
   if (_config.produce_header) {
     produces<std::vector<tpcAnalysis::HeaderData>>();
   }
@@ -105,33 +103,37 @@ daq::SBNDTPCDecoder::Config::Config(fhicl::ParameterSet const & param) {
 void daq::SBNDTPCDecoder::produce(art::Event & event)
 {
   auto const& daq_handle = event.getValidHandle<artdaq::Fragments>(_tag);
-  
-  // storage for waveform
-  std::unique_ptr<std::vector<raw::RawDigit>> product_collection(new std::vector<raw::RawDigit>);
-  // storage for header info
+
+  RDPmkr rdpm(event);
+  TSPmkr tspm(event);
+
+  // output collections
+  std::unique_ptr<RawDigits> rawdigit_collection(new RawDigits);
+  std::unique_ptr<RDTimeStamps> rdts_collection(new RDTimeStamps);
+  std::unique_ptr<RDTsAssocs> rdtsassoc_collection(new RDTsAssocs);
   std::unique_ptr<std::vector<tpcAnalysis::HeaderData>> header_collection(new std::vector<tpcAnalysis::HeaderData>);
 
   for (auto const &rawfrag: *daq_handle) {
-    process_fragment(event, rawfrag, product_collection, header_collection);
+    process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
   }
 
-  event.put(std::move(product_collection));
+  event.put(std::move(rawdigit_collection));
+  event.put(std::move(rdts_collection));
+  event.put(std::move(rdtsassoc_collection));
 
   if (_config.produce_header) {
     event.put(std::move(header_collection));
   }
-
-}
-
-raw::ChannelID_t daq::SBNDTPCDecoder::get_wire_id(const sbndaq::NevisTPCHeader *header, uint16_t nevis_channel_id) {
-  // TODO: make better
-  return (header->getSlot() - _config.min_slot_no) * _config.channel_per_slot + nevis_channel_id;
 }
 
 
 void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Fragment &frag, 
-					   std::unique_ptr<std::vector<raw::RawDigit>> &product_collection,
-					   std::unique_ptr<std::vector<tpcAnalysis::HeaderData>> &header_collection) {
+					   std::unique_ptr<RawDigits> &rd_collection,
+					   std::unique_ptr<std::vector<tpcAnalysis::HeaderData>> &header_collection,
+					   RDPmkr &rdpm,
+					   TSPmkr &tspm,
+					   std::unique_ptr<RDTimeStamps> &rdts_collection,
+					   std::unique_ptr<RDTsAssocs> &rdtsassoc_collection) {
 
   art::ServiceHandle<SBND::TPCChannelMapService> channelMap;
   
@@ -142,24 +144,18 @@ void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Frag
   size_t n_waveforms = fragment.decode_data(waveform_map);
   (void)n_waveforms;
 
+  // need to retrieve the timestamp from the Nevis header and save it in the art event only on request
+  
+  auto header_data = Fragment2HeaderData(event, frag);
   if (_config.produce_header) {
-    auto header_data = Fragment2HeaderData(event, frag);
-    if (_config.produce_header || _config.produce_metadata) {
-      // Construct HeaderData from the Nevis Header and throw it in the collection
-      header_collection->push_back(header_data);
-    }
+    header_collection->push_back(header_data);
   }
 
   for (auto waveform: waveform_map) {
-
-    
     auto chanInfo = channelMap->GetChanInfoFromFEMElements(
 							   fragment.header()->getFEMID(), // FEM crate
 							   fragment.header()->getSlot()-_config.min_slot_no + 1, // FEM slot
-							   waveform.first + 1); // nevis_channel_id
-    
-    // ignore channels that aren't mapped to a wire
-
+							   waveform.first + 1); // nevis_channel_id    
     if (!chanInfo.valid) continue;
 
     std::vector<int16_t> raw_digits_waveform;
@@ -176,8 +172,14 @@ void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Frag
     }
 
     // construct the next RawDigit object
-    product_collection->emplace_back(wire_id, raw_digits_waveform.size(), raw_digits_waveform);
-    (*product_collection)[product_collection->size() - 1].SetPedestal( median, sigma );
+    rd_collection->emplace_back(wire_id, raw_digits_waveform.size(), raw_digits_waveform);
+    (*rd_collection)[rd_collection->size() - 1].SetPedestal( median, sigma );
+
+    // construct the RDTimeStamp object and make the association
+    rdts_collection->emplace_back(header_data.timestamp,0);
+    auto const rawdigitptr = rdpm(rd_collection->size()-1);
+    auto const rdtimestampptr = tspm(rdts_collection->size()-1);
+    rdtsassoc_collection->addSingle(rawdigitptr,rdtimestampptr);       
   }
 }
 
