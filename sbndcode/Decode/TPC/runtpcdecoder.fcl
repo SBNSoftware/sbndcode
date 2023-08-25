@@ -1,5 +1,7 @@
 #include "TPCChannelMapService.fcl"
 
+services.TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
+
 physics:
 {
   // now also have something produce the digits and headers
