@@ -1,8 +1,8 @@
 <lcgdict>
-  <class name="tpcAnalysis::HeaderData" ClassVersion="10">
-   <version ClassVersion="10" checksum="4076812959"/>
+  <class name="tpcAnalysis::TPCDecodeAna" ClassVersion="10">
+   <version ClassVersion="10" checksum="3825172703"/>
   </class>
-  <class name="std::vector<tpcAnalysis::HeaderData>"/>
-  <class name="art::Wrapper<tpcAnalysis::HeaderData>"/>
-  <class name="art::Wrapper<std::vector<tpcAnalysis::HeaderData>>"/>
+  <class name="std::vector<tpcAnalysis::TPCDecodeAna>"/>
+  <class name="art::Wrapper<tpcAnalysis::TPCDecodeAna>"/>
+  <class name="art::Wrapper<std::vector<tpcAnalysis::TPCDecodeAna>>"/>
 </lcgdict>

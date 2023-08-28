@@ -1,5 +1,5 @@
-#ifndef _sbnddaq_analysis_HeaderData
-#define _sbnddaq_analysis_HeaderData
+#ifndef _sbnddaq_analysis_TPCDecodeAna
+#define _sbnddaq_analysis_TPCDecodeAna
 
 #include <string>
 #include <iostream>
@@ -9,10 +9,10 @@
 
 namespace tpcAnalysis {
 
-// HeaderData: assumes the each board is 
+// TPCDecodeAna: assumes the each board is 
 // generating one fragment, and the each fragment has one header
 // which is associated with a seuqence of ADC counts 
-class HeaderData {
+class TPCDecodeAna {
   public:
   uint8_t crate; //!< Index of readout electronics crate
   uint8_t slot; //!< Index of "slot" of readout board 
@@ -27,7 +27,7 @@ class HeaderData {
   // by default make words noticable
   // Nevis uses DEADBEEF as a default, so distinguish from
   // that use BEEFDEAD
-  HeaderData():
+  TPCDecodeAna():
     crate(0xFF),
     slot(0xFF),
     event_number(0xBEEFDEAD),

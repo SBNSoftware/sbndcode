@@ -40,11 +40,11 @@ DEFINE_ART_MODULE(daq::SBNDTPCDecoder)
 
 // constructs a header data object from a nevis header
 // construct from a nevis header
-tpcAnalysis::HeaderData daq::SBNDTPCDecoder::Fragment2HeaderData(art::Event &event, const artdaq::Fragment &frag) {
+tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(art::Event &event, const artdaq::Fragment &frag) {
   sbndaq::NevisTPCFragment fragment(frag);
 
   const sbndaq::NevisTPCHeader *raw_header = fragment.header();
-  tpcAnalysis::HeaderData ret;
+  tpcAnalysis::TPCDecodeAna ret;
 
   ret.crate = raw_header->getFEMID();
   ret.slot = raw_header->getSlot();
@@ -76,7 +76,7 @@ daq::SBNDTPCDecoder::SBNDTPCDecoder(fhicl::ParameterSet const & param):
   produces<RDTimeStamps>();
   produces<RDTsAssocs>();
   if (_config.produce_header) {
-    produces<std::vector<tpcAnalysis::HeaderData>>();
+    produces<std::vector<tpcAnalysis::TPCDecodeAna>>();
   }
 }
 
@@ -111,7 +111,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   std::unique_ptr<RawDigits> rawdigit_collection(new RawDigits);
   std::unique_ptr<RDTimeStamps> rdts_collection(new RDTimeStamps);
   std::unique_ptr<RDTsAssocs> rdtsassoc_collection(new RDTsAssocs);
-  std::unique_ptr<std::vector<tpcAnalysis::HeaderData>> header_collection(new std::vector<tpcAnalysis::HeaderData>);
+  std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> header_collection(new std::vector<tpcAnalysis::TPCDecodeAna>);
 
   for (auto const &rawfrag: *daq_handle) {
     process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
@@ -129,7 +129,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
 
 void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Fragment &frag, 
 					   std::unique_ptr<RawDigits> &rd_collection,
-					   std::unique_ptr<std::vector<tpcAnalysis::HeaderData>> &header_collection,
+					   std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> &header_collection,
 					   RDPmkr &rdpm,
 					   TSPmkr &tspm,
 					   std::unique_ptr<RDTimeStamps> &rdts_collection,
@@ -146,7 +146,7 @@ void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Frag
 
   // need to retrieve the timestamp from the Nevis header and save it in the art event only on request
   
-  auto header_data = Fragment2HeaderData(event, frag);
+  auto header_data = Fragment2TPCDecodeAna(event, frag);
   if (_config.produce_header) {
     header_collection->push_back(header_data);
   }
