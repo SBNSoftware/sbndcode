@@ -83,7 +83,7 @@ SBND::TPCChannelMapService::TPCChannelMapService(fhicl::ParameterSet const& pset
   }
   else
     {
-      std::cout << "SBND::TPCChannelMapSerivce Database access to be implemented" << std::endl;
+      throw cet::exception("SBND:TPCChannelMapService: Database access to be implemented.");
     }
 }
 

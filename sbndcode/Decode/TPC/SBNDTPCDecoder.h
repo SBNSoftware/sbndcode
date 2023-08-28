@@ -80,15 +80,15 @@ private:
   void process_fragment(art::Event &event,
 			const artdaq::Fragment &frag,
                         std::unique_ptr<RawDigits> &rd_collection,
-                        std::unique_ptr<std::vector<tpcAnalysis::HeaderData>> &header_collection,
+                        std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> &header_collection,
 			RDPmkr &rdpm,
 			TSPmkr &tspm,
 			std::unique_ptr<RDTimeStamps> &rdts_collection,
 			std::unique_ptr<RDTsAssocs> &rdtsassoc_collection);
 
 
-  // build a HeaderData object from the Nevis Header
-  tpcAnalysis::HeaderData Fragment2HeaderData(art::Event &event, const artdaq::Fragment &frag);
+  // build a TPCDecodeAna object from the Nevis Header
+  tpcAnalysis::TPCDecodeAna Fragment2TPCDecodeAna(art::Event &event, const artdaq::Fragment &frag);
 
   art::InputTag _tag;
   Config _config;

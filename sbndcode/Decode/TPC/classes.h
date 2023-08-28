@@ -5,10 +5,10 @@
 
 namespace {
   struct dictionary {
-    tpcAnalysis::HeaderData h;
-    std::vector<tpcAnalysis::HeaderData> h_v;
-    art::Wrapper<tpcAnalysis::HeaderData> h_w;
-    art::Wrapper<std::vector<tpcAnalysis::HeaderData>> h_v_w;
+    tpcAnalysis::TPCDecodeAna h;
+    std::vector<tpcAnalysis::TPCDecodeAna> h_v;
+    art::Wrapper<tpcAnalysis::TPCDecodeAna> h_w;
+    art::Wrapper<std::vector<tpcAnalysis::TPCDecodeAna>> h_v_w;
   };
 }
 
