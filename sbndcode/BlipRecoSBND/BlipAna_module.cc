@@ -978,13 +978,18 @@ void BlipAna::analyze(const art::Event& evt)
     art::fill_ptr_vector(hitlist, hitHandle);
 
   // -- tracks
-  art::Handle< std::vector<recob::Track> > tracklistHandle;
+//  art::Handle< std::vector<recob::Track> > tracklistHandle;
+//  std::vector<art::Ptr<recob::Track> > tracklist;
+//  if (evt.getByLabel(fTrkProducer,tracklistHandle))
+//    art::fill_ptr_vector(tracklist, tracklistHandle);
+  
+  auto tracklistHandle = evt.getHandle<std::vector<recob::Track>>(fTrkProducer);
   std::vector<art::Ptr<recob::Track> > tracklist;
-  if (evt.getByLabel(fTrkProducer,tracklistHandle))
+  if (tracklistHandle)
     art::fill_ptr_vector(tracklist, tracklistHandle);
- 
+
   // pandoracalo = no corrections; pandoracali = YZ corrections
-  art::FindManyP<anab::Calorimetry> fmcal(tracklistHandle, evt, "pandoracali");
+  //art::FindManyP<anab::Calorimetry> fmcal(tracklistHandle, evt, "pandoracali");
  
   // Resize data struct objects
   fData->nhits      = (int)hitlist.size();

@@ -9,9 +9,7 @@ sbnd_blipalg:
   SimEDepProducer:      "ionandscint"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
   SimChanProducer:      "simtpc2d:simpleSC" #// label for sim::SimChannels (getting drifted charge; optional)
   MaxHitTrkLength:      5.0             #// hits in trks > this length will be vetoed [cm]
-  DoHitFiltering:       true            #// filter hits based on amp, width, RMS
-  MinHitGOF:            [0, 0, 0]       #// -- exclude pulse-train hits
-  MinHitRMS:            [0, 0, 0]       #// -- exclude narrow noise-like hits on collection plane
+  DoHitFiltering:       false           #// filter hits based on amp, width, RMS
   MaxWiresInCluster:    10              #// max allowable wires in a cluster
   MaxClusterSpan:       50              #// max allowable time-ticks of a cluster
   ClustMatchMinOverlap: 0.5             #// minimum fractional overlap to be eligible for matching
@@ -29,7 +27,7 @@ sbnd_blipalg:
   SCECorrection:        false           #// correct blips for space charge (requires known XYZ)
   CaloAlg:              @local::sbnd_calorimetryalgmc
   
-  VetoBadChannels:      true            #// don't cluster hits from "bad" channels
+  VetoBadChannels:      false            #// don't cluster hits from "bad" channels
   BadChanProducer:      "nfspl1:badchannels" #// label for vector of bad channel IDs from signal processing
   #BadChanFile:          "blipreco_badchannels.txt"
   MinDeadWireGap:       0               #// min wire gap size separating cluster from a dead region

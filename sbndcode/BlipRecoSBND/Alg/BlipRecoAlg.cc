@@ -139,8 +139,8 @@ namespace blip {
   //###########################################################
   void BlipRecoAlg::reconfigure( fhicl::ParameterSet const& pset ){
     
-    fHitProducer        = pset.get<std::string>   ("HitProducer",       "pandora");
-    fTrkProducer        = pset.get<std::string>   ("TrkProducer",       "gaushit");
+    fHitProducer        = pset.get<std::string>   ("HitProducer",       "gaushit");
+    fTrkProducer        = pset.get<std::string>   ("TrkProducer",       "pandora");
     fGeantProducer      = pset.get<std::string>   ("GeantProducer",     "largeant");
     fSimDepProducer     = pset.get<std::string>   ("SimEDepProducer",   "ionization");
     fSimChanProducer    = pset.get<std::string>   ("SimChanProducer",   "driftWC:simpleSC");
@@ -418,6 +418,7 @@ namespace blip {
     }
 
 
+    std::cout<<"Mapping track index\n";
     //=======================================
     // Map track IDs to the index in the vector
     //=======================================
@@ -431,13 +432,15 @@ namespace blip {
     //========================================
     hitinfo.resize(hitlist.size());
     
-    std::map<int,std::vector<int>> planehitsMap;
+    //std::map<int,std::vector<int>> planehitsMap;
+    std::map<int, std::map<int,std::vector<int>> > tpc_plane_hitsMap;
     int nhits_untracked = 0;
 
-    //std::cout<<"Looping over the hits...\n";
+    std::cout<<"Looping over the hits...\n";
     for(size_t i=0; i<hitlist.size(); i++){
       auto const& thisHit = hitlist[i];
       int   chan    = thisHit->Channel();
+      int   tpc     = thisHit->WireID().TPC;
       int   plane   = thisHit->WireID().Plane;
       int   wire    = thisHit->WireID().Wire;
       
@@ -445,7 +448,7 @@ namespace blip {
       hitinfo[i].plane        = plane;
       hitinfo[i].chan         = chan;
       hitinfo[i].wire         = wire;
-      hitinfo[i].tpc          = thisHit->WireID().TPC;
+      hitinfo[i].tpc          = tpc;
       hitinfo[i].amp          = thisHit->PeakAmplitude();
       hitinfo[i].rms          = thisHit->RMS();
       hitinfo[i].integralADC  = thisHit->Integral();
@@ -497,7 +500,7 @@ namespace blip {
           
           if( map_g4trkid_chan_energy[hitinfo[i].g4trkid][chan] > 0 ) {
             double trueEnergyDep = map_g4trkid_chan_energy[hitinfo[i].g4trkid][chan];
-            //std::cout<<"Hit on channel "<<chan<<" came from G4ID "<<hitinfo[i].g4trkid<<" ("<<trueEnergyDep<<" MeV)\n";
+            std::cout<<"Hit on channel "<<chan<<" came from G4ID "<<hitinfo[i].g4trkid<<" ("<<trueEnergyDep<<" MeV)\n";
             h_recoWireEff_num->Fill(trueEnergyDep);
           }
          
@@ -524,11 +527,17 @@ namespace blip {
       }
 
       // add to the map
-      planehitsMap[plane].push_back(i);
+      //planehitsMap[plane].push_back(i);
+      tpc_plane_hitsMap[tpc][plane].push_back(i);
       if( hitinfo[i].trkid < 0 ) nhits_untracked++;
       //printf("  %lu   plane: %i,  wire: %i, time: %i\n",i,hitinfo[i].plane,hitinfo[i].wire,int(hitinfo[i].driftTime));
 
     }//endloop over hits
+    
+    for(auto& a : tpc_plane_hitsMap ) {
+      for(auto& b : a.second ) 
+        std::cout<<"TPC "<<a.first<<", plane "<<b.first<<": "<<b.second.size()<<" hits\n";
+    }
 
 
     //=================================================================
@@ -586,136 +595,155 @@ namespace blip {
       }
     }
 
-  
+    std::cout<<"Hit clustering\n";
     // ---------------------------------------------------
     // Hit clustering
     // ---------------------------------------------------
     std::map<int,std::map<int,std::vector<int>>> tpc_planeclustsMap;
-    for(auto const& planehits : planehitsMap){
-      for(auto const& hi : planehits.second ){
-        
-        // skip hits flagged as bad, or already clustered
-        if( !hitIsGood[hi] || hitIsClustered[hi] ) continue; 
-        
-        // initialize a new cluster with this hit as seed
-        std::vector<blip::HitInfo> hitinfoVec;
-        std::set<int> hitIDs;
-        
-        hitinfoVec    .push_back(hitinfo[hi]);
-        hitIDs        .insert(hi);
-        int startWire = hitinfo[hi].wire;
-        int endWire   = hitinfo[hi].wire;
-        hitIsClustered[hi] = true;
+    
+    for(auto const& plane_hitsMap : tpc_plane_hitsMap ) {
+      //std::cout<<"Looking at TPC "<<plane_hitsMap.first<<", which has hits appearing in "<<plane_hitsMap.second.size()<<" planes\n";
 
-        // see if we can add other hits to it; continue until 
-        // no new hits can be lumped in with this clust
-        int hitsAdded;
-        do{
-          hitsAdded = 0;  
-          for(auto const& hj : planehits.second ) {
-            
-            if( !hitIsGood[hj] || hitIsClustered[hj] ) continue; 
+      for(auto const& planehits : plane_hitsMap.second){
+        std::cout<<"Looking at TPC "<<plane_hitsMap.first<<", plane "<<planehits.first<<", which has "<<planehits.second.size()<<" hits\n"; 
 
-            // skip hits outside overall cluster wire range
-            int w1 = hitinfo[hj].wire - fHitClustWireRange;
-            int w2 = hitinfo[hj].wire + fHitClustWireRange;
-            if( w2 < startWire    || w1 > endWire ) continue;
-            
-            // check for proximity with every other hit added
-            // to this cluster so far
-            for(auto const& hii : hitIDs ) {
+        for(auto const& hi : planehits.second ){
+          
+          std::cout<<"hit "<<hi<<": good "<<hitIsGood[hi]<<", clustered "<<hitIsClustered[hi]<<"\n";
 
-              if( hitinfo[hii].wire > w2 ) continue;
-              if( hitinfo[hii].wire < w1 ) continue;
+          // skip hits flagged as bad, or already clustered
+          if( !hitIsGood[hi] || hitIsClustered[hi] ) continue; 
+          
+          std::cout<<"A\n";
+
+          // initialize a new cluster with this hit as seed
+          std::vector<blip::HitInfo> hitinfoVec;
+          std::set<int> hitIDs;
+          
+          hitinfoVec    .push_back(hitinfo[hi]);
+          hitIDs        .insert(hi);
+          int startWire = hitinfo[hi].wire;
+          int endWire   = hitinfo[hi].wire;
+          hitIsClustered[hi] = true;
+
+          // see if we can add other hits to it; continue until 
+          // no new hits can be lumped in with this clust
+          int hitsAdded;
+          do{
+            hitsAdded = 0;  
+            for(auto const& hj : planehits.second ) {
               
-              float t1 = hitinfo[hj].driftTime;
-              float t2 = hitinfo[hii].driftTime;
-              float rms_sum = (hitinfo[hii].rms + hitinfo[hj].rms);
-              if( fabs(t1-t2) > fHitClustWidthFact * rms_sum ) continue;
+              if( !hitIsGood[hj] || hitIsClustered[hj] ) continue; 
 
-              hitinfoVec.push_back(hitinfo[hj]);
-              startWire = std::min( hitinfo[hj].wire, startWire );
-              endWire   = std::max( hitinfo[hj].wire, endWire );
-              hitIDs.insert(hj);
-              hitIsClustered[hj] = true;
-              hitsAdded++;
-              break;
-            }
-          
+              // skip hits outside overall cluster wire range
+              int w1 = hitinfo[hj].wire - fHitClustWireRange;
+              int w2 = hitinfo[hj].wire + fHitClustWireRange;
+              if( w2 < startWire    || w1 > endWire ) continue;
+              
+              // check for proximity with every other hit added
+              // to this cluster so far
+              for(auto const& hii : hitIDs ) {
 
-          }
-        } while ( hitsAdded!=0 );
-        
-        blip::HitClust hc = BlipUtils::MakeHitClust(hitinfoVec);
-        float span = hc.EndTime - hc.StartTime;
-        h_clust_nwires->Fill(hc.NWires);
-        h_clust_timespan->Fill(span);
-          
-        // basic cluster checks
-        if( span      > fMaxClusterSpan   )   continue;
-        if( hc.NWires > fMaxWiresInCluster )  continue;
-        if( hc.Charge < fMinClusterCharge )   continue;
-        if( hc.Charge > fMaxClusterCharge )   continue;
-       
-        // Exclude cluster if it is *entirely* on bad channels
-        if( fVetoBadChannels ) {
-          int nbadchanhits = 0;
-          for(auto const& hitID : hc.HitIDs ) {
-            int chan = hitinfo[hitID].chan;
-            if( chanFilt.Status(chan) < 4 ||
-              fBadChanMaskPerEvt[chan] ) nbadchanhits++;
-          }
-          if( nbadchanhits == hc.NHits ) continue;
-        }
-        
-        // measure wire separation to nearest dead region
-        // (0 = directly adjacent)
-        for(size_t dw=1; dw<=5; dw++){
-          int  w1   = hc.StartWire-dw;
-          int  w2   = hc.EndWire+dw;
-          bool flag = false;
-          // treat edges of wireplane as "dead"
-          //if( w1 < 0 || w2 >= (int)geom->Nwires(hc.Plane) )
-          if( w1 < 0 || w2 >= (int)geom->Nwires(geo::PlaneID(0,hc.TPC,hc.Plane)))
-            flag=true;
-          //otherwise, use channel filter service
-          else {
-            int ch1 = geom->PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w1));
-            int ch2 = geom->PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w2));
-            if( chanFilt.Status(ch1)<2 ) flag=true;
-            if( chanFilt.Status(ch2)<2 ) flag=true;
-          }
-          if( flag ) { hc.DeadWireSep = dw-1; break; }
-        }
-       
-        // veto this cluster if the gap between it and the
-        // nearest dead wire (calculated above) isn't big enough
-        if( fMinDeadWireGap > 0 && hc.DeadWireSep < fMinDeadWireGap ) continue;
-        
-        // **************************************
-        // assign the ID, then go back and encode this 
-        // cluster ID into the hit information
-        // **************************************
-        int idx = (int)hitclust.size();
-        hc.ID = idx;
-        tpc_planeclustsMap[hc.TPC][hc.Plane].push_back(idx);
-        for(auto const& hitID : hc.HitIDs) hitinfo[hitID].clustid = hc.ID;
-        // ... and find the associated truth-blip
-        if( hc.G4IDs.size() ) {
-          for(size_t j=0; j< trueblips.size(); j++){
-            if( hc.G4IDs.count(trueblips[j].LeadG4ID)) {
-              hc.EdepID = trueblips[j].ID; // we have a match!
-              break;
+                if( hitinfo[hii].wire > w2 ) continue;
+                if( hitinfo[hii].wire < w1 ) continue;
+                
+                float t1 = hitinfo[hj].driftTime;
+                float t2 = hitinfo[hii].driftTime;
+                float rms_sum = (hitinfo[hii].rms + hitinfo[hj].rms);
+                if( fabs(t1-t2) > fHitClustWidthFact * rms_sum ) continue;
+
+                hitinfoVec.push_back(hitinfo[hj]);
+                startWire = std::min( hitinfo[hj].wire, startWire );
+                endWire   = std::max( hitinfo[hj].wire, endWire );
+                hitIDs.insert(hj);
+                hitIsClustered[hj] = true;
+                hitsAdded++;
+                break;
+              }
+            
+
             }
-          }
-        }
+          } while ( hitsAdded!=0 );
+          
+          blip::HitClust hc = BlipUtils::MakeHitClust(hitinfoVec);
+          float span = hc.EndTime - hc.StartTime;
+          h_clust_nwires->Fill(hc.NWires);
+          h_clust_timespan->Fill(span);
+          
+          // basic cluster checks
+          if( span      <= 0                )   continue;
+          if( span      > fMaxClusterSpan   )   continue;
+          if( hc.NWires > fMaxWiresInCluster )  continue;
+          if( hc.Charge < fMinClusterCharge )   continue;
+          if( hc.Charge > fMaxClusterCharge )   continue;
+          
+          std::cout<<"Making a new cluster on plane "<<planehits.first<<"\n";
+          std::cout<<"span "<<span<<" ticks, "<<hc.NWires<<" wires, "<<hc.Charge<<" electrons\n";
          
-        // finally, add the finished cluster to the stack
-        hitclust.push_back(hc);
-      
-      }
-    }
-   
+          // Exclude cluster if it is *entirely* on bad channels
+          if( fVetoBadChannels ) {
+            int nbadchanhits = 0;
+            for(auto const& hitID : hc.HitIDs ) {
+              int chan = hitinfo[hitID].chan;
+              if( chanFilt.Status(chan) < 4 ||
+                fBadChanMaskPerEvt[chan] ) nbadchanhits++;
+            }
+            if( nbadchanhits == hc.NHits ) continue;
+          }
+          
+          // measure wire separation to nearest dead region
+          // (0 = directly adjacent)
+          for(size_t dw=1; dw<=5; dw++){
+            int  w1   = hc.StartWire-dw;
+            int  w2   = hc.EndWire+dw;
+            bool flag = false;
+            // treat edges of wireplane as "dead"
+            //if( w1 < 0 || w2 >= (int)geom->Nwires(hc.Plane) )
+            if( w1 < 0 || w2 >= (int)geom->Nwires(geo::PlaneID(0,hc.TPC,hc.Plane)))
+              flag=true;
+            //otherwise, use channel filter service
+            else {
+              int ch1 = geom->PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w1));
+              int ch2 = geom->PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w2));
+              if( chanFilt.Status(ch1)<2 ) flag=true;
+              if( chanFilt.Status(ch2)<2 ) flag=true;
+            }
+            if( flag ) { hc.DeadWireSep = dw-1; break; }
+          }
+          std::cout<<"DeadWireSep "<<hc.DeadWireSep<<"\n";
+         
+          // veto this cluster if the gap between it and the
+          // nearest dead wire (calculated above) isn't big enough
+          if( fMinDeadWireGap > 0 && hc.DeadWireSep < fMinDeadWireGap ) continue;
+          
+          // **************************************
+          // assign the ID, then go back and encode this 
+          // cluster ID into the hit information
+          // **************************************
+          int idx = (int)hitclust.size();
+          hc.ID = idx;
+          tpc_planeclustsMap[hc.TPC][hc.Plane].push_back(idx);
+          for(auto const& hitID : hc.HitIDs) hitinfo[hitID].clustid = hc.ID;
+          // ... and find the associated truth-blip
+          if( hc.G4IDs.size() ) {
+            for(size_t j=0; j< trueblips.size(); j++){
+              if( hc.G4IDs.count(trueblips[j].LeadG4ID)) {
+                hc.EdepID = trueblips[j].ID; // we have a match!
+                break;
+              }
+            }
+          }
+           
+          // finally, add the finished cluster to the stack
+          hitclust.push_back(hc);
+          std::cout<<"Added this clust to the stack!\n";
+
+        }
+      }//loop over planes
+    }//loop over TPCs
+    std::cout<<"All done with clustering\n";
+    
+
 
     // =============================================================================
     // Plane matching and 3D blip formation
@@ -733,14 +761,16 @@ namespace blip {
     float _matchMaxQRatio = (fMatchMaxQRatio  <= 0 ) ? std::numeric_limits<float>::max() : fMatchMaxQRatio;
      
     for(auto& tpcMap : tpc_planeclustsMap ) { // loop on TPCs
-     
-      //std::cout
-      //<<"Performing cluster matching in TPC "<<tpcMap.first<<", which has "<<tpcMap.second.size()<<" planes\n";
+      
+
+
+      std::cout
+      <<"Performing cluster matching in TPC "<<tpcMap.first<<", which has clusters in "<<tpcMap.second.size()<<" planes\n";
       auto& planeMap = tpcMap.second;
       if( planeMap.find(fCaloPlane) != planeMap.end() ){
         int   planeA              = fCaloPlane;
         auto&  hitclusts_planeA   = planeMap[planeA];
-        //std::cout<<"using plane "<<fCaloPlane<<" as reference/calo plane ("<<planeMap[planeA].size()<<" clusts)\n";
+        std::cout<<"using plane "<<fCaloPlane<<" as reference/calo plane ("<<planeMap[planeA].size()<<" clusts)\n";
         for(auto& i : hitclusts_planeA ) {
           auto& hcA = hitclust[i];
           
@@ -942,7 +972,9 @@ namespace blip {
       }
       hitclust = hitclust_filt;
     }
-
+    
+    std::cout<<"Found "<<hitclust.size()<<" clusters and "<<blips.size()<<" blips\n";
+    
 
     for(size_t i=0; i<hitlist.size(); i++){
       if (hitinfo[i].trkid >= 0 ) continue;
@@ -964,8 +996,9 @@ namespace blip {
     //*************************************************************************
     for(size_t i=0; i<blips.size(); i++){
       auto& blip = blips[i];
-      
+     
       blip.Charge = blip.clusters[fCaloPlane].Charge;
+      std::cout<<"blip "<<i<<": TPC "<<blip.TPC<<", XYZ "<<blip.X()<<","<<blip.Y()<<","<<blip.Z()<<", charge "<<blip.Charge<<"\n";
       
       // ***** MICROBOONE ************
       // --- YZ uniformity correction ---
@@ -989,7 +1022,7 @@ namespace blip {
       // units of 'ms', not microseconds, hence the 1E-3 conversion factor.
       //if( fLifetimeCorr && blip.Time>0 ) depEl *= exp( 1e-3*blip.Time/lifetime_provider.Lifetime() );
       if( fLifetimeCorr && blip.Time>0 ) depEl *= exp( 1e-3*blip.Time/detProp.ElectronLifetime());
-
+      
       // --- SCE corrections ---
       geo::Point_t point( blip.Position.X(),blip.Position.Y(),blip.Position.Z() );
       if( fSCECorr ) {
@@ -1019,6 +1052,7 @@ namespace blip {
 
       }
       
+      std::cout<<"Final energy calculation\n";
       // METHOD 1
       float recomb  = ModBoxRecomb(fCalodEdx,Efield);
       blip.Energy   = depEl * (1./recomb) * mWion;
