@@ -11,7 +11,7 @@ cet_build_plugin( SBNDTPCDecoder art::module
   art::Framework_Core
   ROOT::Core
   ROOT::Tree
-  sbndcode_ChannelMap_TPC_TPCChannelMapService_service
+  sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
 )
 
 install_headers()

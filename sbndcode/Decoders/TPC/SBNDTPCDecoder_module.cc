@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include "SBNDTPCDecoder.h"
-#include "sbndcode/ChannelMap/TPC/TPCChannelMapService.h"
+#include "sbndcode/ChannelMaps/TPC/TPCChannelMapService.h"
 
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
