@@ -1,3 +1,8 @@
+
+# this is borrowed from sbndaq-artdaq-core to make the c7 compiler happy
+
+add_definitions(-Wno-nested-anon-types)
+
 cet_build_plugin( SBNDTPCDecoder art::module
   SOURCE SBNDTPCDecoder_module.cc
   LIBRARIES
