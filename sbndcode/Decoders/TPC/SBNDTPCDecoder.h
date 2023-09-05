@@ -92,9 +92,6 @@ private:
 
   art::InputTag _tag;
   Config _config;
-  // keeping track of incrementing numbers
-  uint32_t _last_event_number;
-  uint32_t _last_trig_frame_number;
 
   void getMedianSigma(const std::vector<int16_t> &v_adc, float &median, float &sigma);
 
