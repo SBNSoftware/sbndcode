@@ -67,9 +67,7 @@ tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(art::Event 
 daq::SBNDTPCDecoder::SBNDTPCDecoder(fhicl::ParameterSet const & param): 
   art::EDProducer{param},
   _tag(param.get<std::string>("raw_data_label", "daq"),param.get<std::string>("fragment_type_label", "NEVISTPC")),
-  _config(param),
-  _last_event_number(0),
-  _last_trig_frame_number(0)
+  _config(param)
 {
   consumes<artdaq::Fragments>(_tag);
   produces<RawDigits>();
