@@ -476,44 +476,46 @@ int CRTBackTracker::TrueIdFromTotalEnergy(const art::Event& event, const sbn::cr
 // Get the true particle ID that contributed the most energy to the CRT track
 CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(const art::Event& event, const art::Ptr<sbn::crt::CRTTrack> &track){
 
-  std::map<int, double> TrackIDToIDEMap;
-  double totalEnergy = 0.;
   // Get a handle to the CRT tracks in the event
   auto crtTrackHandle = event.getValidHandle<std::vector<sbn::crt::CRTTrack>>(fCRTTrackLabel);
+  auto crtHitHandle   = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel); 
+  auto febDataHandle  = event.getValidHandle<std::vector<sbnd::crt::FEBData>>(fFEBDataLabel); 
+  std::cout<<"crtTrackHandle->size(): "<<crtTrackHandle->size()<<", crtHitHandle->size(): "<<crtHitHandle->size()<<", febDataHandle->size(): "<<febDataHandle->size()<<std::endl;
   
   art::FindManyP<sbn::crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
+  art::FindManyP<sbnd::crt::FEBData> findManyFEBData(crtHitHandle, event, fCRTHitLabel);
+  art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febdata_to_ides(febDataHandle, event, fFEBDataLabel);
 
-  // Find which one matches the track passed to the function
-  /*int track_i = 0, index = 0;
-  for(auto const& crtTrack : (*crtTrackHandle)){
-    if(TrackCompare(crtTrack, track)) track_i = index;
-    index++;
-  }*/
+  std::map<int, double> TrackIDToIDEMap;
+  double totalEnergy = 0.;
 
   // Get the crt hits associated to that hit and the data associate to the hits
-  std::vector<art::Ptr<sbn::crt::CRTHit>> hits = findManyHits.at(track.key());
-  art::FindManyP<sbnd::crt::FEBData> findManyData(hits, event, fCRTHitLabel);
+  std::vector<art::Ptr<sbn::crt::CRTHit>> crtHitVec = findManyHits.at(track.key());
+  
+  std::cout<<std::endl<<"track.key(): "<<track.key()<<". Associate with this CRT track, we have "<<crtHitVec.size()<<" in the CRTHitsVector. "<<std::endl;
 
-  // Get all the true IDs from all the IDEs in the track
-  for(size_t ihit = 0; ihit < hits.size(); ihit++){
+  for(auto const crtHit : crtHitVec){
+    std::vector<art::Ptr<sbnd::crt::FEBData>> FEBdataVec = findManyFEBData.at(crtHit.key());
 
-    std::vector<art::Ptr<sbnd::crt::FEBData>> FEBdata = findManyData.at(ihit);
-    //art::FindManyP<sim::AuxDetIDE> findManyIdes(FEBdata, event, fFEBDataLabel);
-    art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febdata_to_ides(FEBdata, event, fFEBDataLabel);
-
-    for(size_t feb_i = 0; feb_i < FEBdata.size(); feb_i++){
-      std::vector<art::Ptr<sim::AuxDetIDE>> ides = febdata_to_ides.at(feb_i);
+    std::cout<<"For crtHit.key() =="<<crtHit.key()<<", **CRT crtHit** positions: ("<<crtHit->x_pos<<", "<<crtHit->y_pos<<", "<<crtHit->z_pos<<"). "<<std::endl;
+    std::cout<<"For this CRT hit, associated FEBdataVector has "<<FEBdataVec.size()<<" Elements"<<std::endl;
+    for(auto const FEBdata : FEBdataVec){
+      std::vector<art::Ptr<sim::AuxDetIDE>> ides = febdata_to_ides.at(FEBdata.key());
+      //std::cout<<"For FEBdata.key() == "<<FEBdata.key()<<std::endl;
       for(size_t ide_i = 0; ide_i < ides.size(); ide_i++){
-
-        const sbnd::crt::FEBTruthInfo *fti = febdata_to_ides.data(feb_i)[ide_i]; // use .data() to access the metadata/third-layer data
-        /*std::cout<<"track.key(): "<<track.key()<<", ihit: "<<ihit<<", feb_i: "<<feb_i<<", fti->GetChannel(): "<<fti->GetChannel()<<", hits.at(ihit)->channel0: "<<hits.at(ihit)->channel0
-        <<", hits.at(ihit)->channel1: "<<hits.at(ihit)->channel1<<std::endl;
-        std::cout<<"track id: "<<ides[ide_i]->trackID<<", ides[ide_i]->energyDeposited: "<<ides[ide_i]->energyDeposited<<std::endl; */
-        if ( fti->GetChannel()== (int)(hits.at(ihit)->channel0 % 32) || fti->GetChannel()==(int)(hits.at(ihit)->channel1 % 32) ){ 
+        const sbnd::crt::FEBTruthInfo *fti = febdata_to_ides.data(FEBdata.key())[ide_i]; // use .data() to access the metadata/third-layer data
+        //std::cout<<"Before the comparisons:  ide_i: "<<ide_i<<", crtHit->channel0 % 32: "<<crtHit->channel0 % 32<<", crtHit->channel1 % 32: "<<crtHit->channel1 % 32<<std::endl;
+        if ( fti->GetChannel()== (int)(crtHit->channel0 % 32) || fti->GetChannel()==(int)(crtHit->channel1 % 32) ){ 
           int id = ides[ide_i]->trackID;
           if(fRollupUnsavedIds) id = std::abs(id);
           TrackIDToIDEMap[id]     += ides[ide_i]->energyDeposited;
           totalEnergy             += ides[ide_i]->energyDeposited;
+
+          double particle_energy = 0.; int pdg = -1; double time = -1.;
+          TrueParticlePDGEnergyTime(id, pdg, particle_energy, time);
+
+          std::cout<<std::endl<<"After the comparisons. fti->GetChannel(): "<<fti->GetChannel()<<", crtHit->channel0%32: "<<(crtHit->channel0)%32<<", crtHit->channel1% 32: "<<(crtHit->channel1)%32<<std::endl;
+          std::cout<<"IDE: "<<ide_i<<", track id from IDE: "<<ides[ide_i]->trackID<<", pdg: "<<pdg<<", ides[ide_i]->energyDeposited: "<<ides[ide_i]->energyDeposited<<std::endl;    
         }
       }
     }
@@ -536,7 +538,6 @@ CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(con
     }
   }
 
-  //return trackid_true;
   return TruthMatchMetrics(trackid_true, comp, bestPur, 1., 1., pdg, particle_energy, deposited_energy_track);
 }
 

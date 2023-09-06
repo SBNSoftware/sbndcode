@@ -6,34 +6,37 @@ BEGIN_PROLOG
 crteventdisplayalg_sbnd:
 {
     SimLabel:         "largeant"
-    CRTDataLabel:     "crt"
+    FEBDataLabel:     "crtsim"
+    SimDepositsLabel: "genericcrt" 
     CRTHitLabel:      "crthit"
     CRTTrackLabel:    "crttrack"
-    TPCTrackLabel:    "pandoraTrack"
     ClockSpeedCRT:    @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
 
-    DrawTaggers:          false
+    DrawTaggers:          true
     DrawModules:          false
-    DrawTpc:              true
-    DrawCrtData:          false
+    DrawFEBs:             false
+    DrawStrips:           false
+    DrawFEBData:          false
     DrawCrtHits:          false
     DrawCrtTracks:        false
-    DrawIncompleteTracks: true
+    DrawSimDeposits:      false
+    DrawIncompleteTracks: false
     DrawTrueTracks:       false
-    DrawTpcTracks:        false
 
-    TaggerColour:     1
-    TpcColour:        1
-    CrtDataColour:    8
-    CrtHitColour:     2
-    CrtTrackColour:   2
-    TpcTrackColour:   4
-    TrueTrackColour:  8
+    TaggerColour:      1
+    FEBEndColour:      46
+    StripColour:       16
+
+    FEBDataColour:     8
+    CrtHitColour:      2
+    CrtTrackColour:    2
+    TrueTrackColour:   8
+    SimDepositsColour: 4
 
     UseTrueID:        false
     TrueID:           341
 
-    Print:            false
+    Print:            true
 
     LineWidth:             2.
     IncompleteTrackLength: 500.
@@ -41,7 +44,6 @@ crteventdisplayalg_sbnd:
     MaxTime:               0. #1300.
 
     CrtBackTrack:  @local::standard_crtbacktracker
-
 }
 
 END_PROLOG

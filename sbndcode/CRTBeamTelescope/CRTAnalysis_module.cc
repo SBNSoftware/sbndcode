@@ -950,7 +950,10 @@ void CRTAnalysis::analyze(art::Event const& e)
   }
 
 
-
+  if (n_tracks>0){
+    std::cout<<std::endl<<std::endl<<" ------------------------ track ------------------"<<std::endl;
+    std::cout<<"Summary -- "<<n_tracks<<" tracks in this event: "<<std::endl;
+  }
   for (size_t i = 0; i < n_tracks; ++i){
 
     auto track = crt_track_v[i];
@@ -1038,14 +1041,19 @@ void CRTAnalysis::analyze(art::Event const& e)
     }
     // truth information
     if (!_data_mode){
+
+      std::cout<<"This track "<< i << ". Start position: [ "<<_ct_hit2_x[i]<<", "<<_ct_hit2_y[i]<<", "<<_ct_hit2_z[i]<<"]. hit timing t0: "<<_ct_hit2_t0[i]<<std::endl<<". track end position: [ "<<_ct_hit1_x[i]<<", "<<_ct_hit1_y[i]<<", "<<_ct_hit1_z[i]<<"]. hit timing t0: "<<_ct_hit1_t0[i]<<std::endl;
+
+      std::cout<<"We are doing back tracker from these tracks: "<<std::endl;
+
       const sbnd::CRTBackTracker::TruthMatchMetrics truthMatch = _crt_back_tracker.TruthMatrixFromTotalEnergy(e, track);
-      
+
+      std::cout<<"**truth matching** track id: "<<truthMatch.trackid <<", PDG code: "<<truthMatch.pdg<<", energy: "<<truthMatch.particle_energy <<", total deposited energy: "<<truthMatch.depEnergy_total<<", selection purity: "<<truthMatch.purity<<std::endl;
       _ct_pdg[i]              = truthMatch.pdg;
       _ct_energy[i]           = truthMatch.particle_energy;
       _ct_deposited_energy[i] = truthMatch.depEnergy_total;
       _ct_purity[i]           = truthMatch.purity;
-      if (_debug) std::cout<<"Number of tracks: "<<n_tracks<<" This track "<< i <<", id: "<<truthMatch.trackid<<", PDG code: "<<truthMatch.pdg<<", energy: "<<truthMatch.particle_energy
-                           <<", total deposited energy: "<<truthMatch.depEnergy_total<<", selection purity: "<<truthMatch.purity<<std::endl;
+      
     }
   }
 

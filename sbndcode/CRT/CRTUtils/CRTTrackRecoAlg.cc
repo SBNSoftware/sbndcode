@@ -3,9 +3,10 @@
 namespace sbnd{
 
   CRTTrackRecoAlg::CRTTrackRecoAlg(const fhicl::ParameterSet &p)
-    : fTimeLimit(p.get<double>("TimeLimit"))
+    : fTimeLimitT0(p.get<double>("TimeLimitT0"))
     , fAverageHitDistance(p.get<double>("AverageHitDistance"))
     , fDistanceLimit(p.get<double>("DistanceLimit"))
+    , fCoincidenceTimeRequirement(p.get<double>("CoincidenceTimeRequirement"))
     , hitAlg(p.get<fhicl::ParameterSet>("HitRecoAlg"))
     , fCrtGeo(p.get<fhicl::ParameterSet>("GeoAlg", fhicl::ParameterSet()))
  {}
@@ -49,8 +50,8 @@ std::vector<std::vector<art::Ptr<sbn::crt::CRTHit>>> CRTTrackRecoAlg::CreateCRTT
         if(iflag[j] == 0){
           // If ts1_ns - ts1_ns < diff then put them in a vector
           double time_ns_B = hits[j]->ts1_ns; 
-          double diff = std::abs(time_ns_B - time_ns_A) * 1e-3; // [us]
-          if(diff < fTimeLimit){
+          double diff = std::abs(time_ns_B - time_ns_A); // [ns] // old: * 1e-3; // [us]
+          if(diff < fTimeLimitT0){
             iflag[j] = 1;
             crtTzero.push_back(hits[j]);
           }
@@ -266,17 +267,21 @@ sbn::crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<sbn::crt::CRTHi
 // Function to create tracks from tzero hit collections
 std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::CreateTracks(std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> hits)
 {
-
+  std::cout<<"Calling CreateTracks function. "<<std::endl;
   std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> returnTracks;
 
   std::vector<std::vector<size_t>> trackCandidates;
   // Loop over all hits
+  std::cout<<"hits.size(): "<<hits.size()<<std::endl;
   for(size_t i = 0; i < hits.size(); i++){
 
     // Loop over all unique pairs
-    for(size_t j = i+1; j < hits.size(); j++){
-      if(hits[i].first.tagger == hits[j].first.tagger) continue;
+    for(size_t j = i+1; j < hits.size(); j++){      
+      std::cout<<"CRT hit "<<i<<", ts1_ns: "<<hits[i].first.ts1_ns<<"; ts0_ns: "<<hits[i].first.ts0_ns<<"; ts0_ns_corr:"<<hits[i].first.ts0_ns_corr<<"; ( "<<hits[i].first.x_pos<<", "<<hits[i].first.y_pos<<", "<<hits[i].first.z_pos<<") "<<std::endl;
 
+      if(hits[i].first.tagger == hits[j].first.tagger || std::abs(hits[i].first.ts1_ns - hits[j].first.ts1_ns) > fCoincidenceTimeRequirement )  continue;
+
+      if(hits[i].first.tagger == hits[j].first.tagger)  continue;
       // Draw a track between the two hits
       TVector3 start (hits[i].first.x_pos, hits[i].first.y_pos, hits[i].first.z_pos);
       TVector3 end   (hits[j].first.x_pos, hits[j].first.y_pos, hits[j].first.z_pos);
@@ -285,11 +290,11 @@ std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::Cr
       std::vector<size_t> candidate {i, j};
 
       // Loop over all other hits on different taggers and calculate DCA with variations
-      for(size_t k = 0; k < hits.size(); k++){
-        if(k == i || k == j || hits[k].first.tagger == hits[i].first.tagger 
-           || hits[k].first.tagger == hits[j].first.tagger) continue;
-
-        //  If hit within certain distance then add it to the track candidate
+      for(size_t k = j+1; k < hits.size(); k++){
+        if(hits[i].first.tagger == hits[k].first.tagger || std::abs(hits[i].first.ts1_ns - hits[k].first.ts1_ns) > fCoincidenceTimeRequirement )  continue;
+        if(hits[j].first.tagger == hits[k].first.tagger || std::abs(hits[j].first.ts1_ns - hits[k].first.ts1_ns) > fCoincidenceTimeRequirement )  continue;
+        // Draw a track between the two hits
+        // If hit within certain distance then add it to the track candidate
         if(CRTCommonUtils::DistToCrtHit(hits[k].first, start, end) < fDistanceLimit){
           candidate.push_back(k);
         }
@@ -314,9 +319,12 @@ std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::Cr
     if(used) continue;
 
     // Create track 
-    if(candidate.size() < 2) continue;
+    if(candidate.size() < 2) continue; // Minimun requirement of 2 hits to form a track. 
     sbn::crt::CRTHit ihit = hits[candidate[0]].first;
     sbn::crt::CRTHit jhit = hits[candidate[1]].first;
+    std::cout<<"candidate.size(): "<<candidate.size()<<std::endl;
+    std::cout<<"CRT hit, ihit (candidate[0]): ("<<ihit.x_pos<<", "<<ihit.y_pos<<", "<<ihit.z_pos<<")"<<std::endl;
+    std::cout<<"CRT hit, jhit (candidate[1]): ("<<jhit.x_pos<<", "<<jhit.y_pos<<", "<<jhit.z_pos<<")"<<std::endl;
     sbn::crt::CRTTrack crtTrack = FillCrtTrack(ihit, jhit, candidate.size());
 
     std::vector<int> ids;
@@ -324,11 +332,20 @@ std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::Cr
     // If nhits > 2 then record used hits
     for(size_t i = 0; i < candidate.size(); i++){
       ids.insert(ids.end(), hits[candidate[i]].second.begin(), hits[candidate[i]].second.end());
-      if(candidate.size()>2) usedHits.push_back(candidate[i]);
+      for (size_t i_id=0; i_id<ids.size(); i_id++){
+        std::cout<<"i_id: "<<i_id<<", ids[i_id]: "<<ids[i_id]<<std::endl;
+      }
+
+      if(candidate.size()>2) { //temporialy not saveing the used hit bc of we might have double hits.  
+        usedHits.push_back(candidate[i]);
+
+        std::cout<<"CRT hit, used candidate[i]: ("<<hits[candidate[i]].first.x_pos<<", "<<hits[candidate[i]].first.y_pos<<", "<<hits[candidate[i]].first.z_pos<<")"<<std::endl;
+      }
+      std::cout<<"usedHits.size: "<<usedHits.size()<<std::endl;
     }
 
     returnTracks.push_back(std::make_pair(crtTrack, ids));
-
+    std::cout<<"returnTracks.size() "<<returnTracks.size()<<std::endl;
   }
 
   return returnTracks;

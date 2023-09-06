@@ -284,11 +284,15 @@ namespace sbnd{
 
     size_t ChannelToOrientation(const uint16_t channel) const;
 
+    std::vector<double> StripHit3DPos(const std::string stripName, const double x, const double ex);
+
     std::vector<double> StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
                                              const double y, const double z);
 
-    std::vector<double> StripHit3DPos(const std::string stripName, const double x, const double ex);
+    std::array<double, 6> FEBWorldPos(const CRTModuleGeo &module);
 
+    std::array<double, 6> FEBChannel0WorldPos(const CRTModuleGeo &module);
+    
     TVector3 ChannelToSipmPosition(const uint16_t channel) const;
 
     std::pair<int, int> GetStripSipmChannels(const std::string stripName) const;

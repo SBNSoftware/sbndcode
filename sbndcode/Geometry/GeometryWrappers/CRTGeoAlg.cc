@@ -307,6 +307,70 @@ namespace sbnd{
     return localvec;
   }
 
+  std::array<double, 6> CRTGeoAlg::FEBWorldPos(const CRTModuleGeo &module)
+  {
+    const geo::AuxDetGeo &auxDet = fAuxDetGeoCore->AuxDetGeoVec()[module.adID];
+
+    const double halfWidth  = auxDet.HalfWidth1();
+    const double halfLength = auxDet.Length() / 2.;
+
+    geo::AuxDetGeo::LocalPoint_t limits { - halfWidth - 5, -15, -halfLength - 5};
+    geo::AuxDetGeo::LocalPoint_t limits2{ - halfWidth,     15,  -halfLength + 5};
+
+    if(!module.top)
+    {
+      limits.SetX(-limits.X());
+      limits2.SetX(-limits2.X());
+    }
+
+    auto const limitsWorld  = auxDet.toWorldCoords(limits);
+    auto const limitsWorld2 = auxDet.toWorldCoords(limits2);
+
+    const double minX = std::min(limitsWorld.X(), limitsWorld2.X());
+    const double maxX = std::max(limitsWorld.X(), limitsWorld2.X());
+    const double minY = std::min(limitsWorld.Y(), limitsWorld2.Y());
+    const double maxY = std::max(limitsWorld.Y(), limitsWorld2.Y());
+    const double minZ = std::min(limitsWorld.Z(), limitsWorld2.Z());
+    const double maxZ = std::max(limitsWorld.Z(), limitsWorld2.Z());
+
+    return {minX, maxX, minY, maxY, minZ, maxZ};
+  }
+
+  std::array<double, 6> CRTGeoAlg::FEBChannel0WorldPos(const CRTModuleGeo &module)
+  {
+    const geo::AuxDetGeo &auxDet = fAuxDetGeoCore->AuxDetGeoVec()[module.adID];
+
+    const double halfWidth  = auxDet.HalfWidth1();
+    const double halfLength = auxDet.Length() / 2.;
+
+    geo::AuxDetGeo::LocalPoint_t limits { - halfWidth - 5, -15, -halfLength - 5};
+    geo::AuxDetGeo::LocalPoint_t limits2{ - halfWidth,     -12, -halfLength + 5};
+
+    if(!module.top)
+    {
+      limits.SetX(-limits.X());
+      limits.SetX(-limits2.X());
+    }
+    
+    if(module.invertedOrdering)
+    {
+      limits.SetY(-limits.Y());
+      limits.SetY(-limits2.Y());
+    }
+
+    auto const limitsWorld  = auxDet.toWorldCoords(limits);
+    auto const limitsWorld2 = auxDet.toWorldCoords(limits2);
+
+    const double minX = std::min(limitsWorld.X(), limitsWorld2.X());
+    const double maxX = std::max(limitsWorld.X(), limitsWorld2.X());
+    const double minY = std::min(limitsWorld.Y(), limitsWorld2.Y());
+    const double maxY = std::max(limitsWorld.Y(), limitsWorld2.Y());
+    const double minZ = std::min(limitsWorld.Z(), limitsWorld2.Z());
+    const double maxZ = std::max(limitsWorld.Z(), limitsWorld2.Z());
+
+    return {minX, maxX, minY, maxY, minZ, maxZ};
+  }
+
   TVector3 CRTGeoAlg::ChannelToSipmPosition(const uint16_t channel) const
   {
     const CRTSiPMGeo &sipm = fSiPMs.at(channel);

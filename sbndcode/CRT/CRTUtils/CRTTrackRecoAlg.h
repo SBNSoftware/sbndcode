@@ -85,9 +85,10 @@ namespace sbnd{
 
   private:
 
-    double fTimeLimit;
+    double fTimeLimitT0;
     double fAverageHitDistance;
     double fDistanceLimit;
+    double fCoincidenceTimeRequirement;
 
     CRTHitRecoAlg hitAlg;
     CRTGeoAlg fCrtGeo;
