@@ -1,4 +1,5 @@
 #include "TPCChannelMapService.fcl"
+#include "SBNDTPCDecoderDefaults.fcl"
 
 services.TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
 
@@ -7,15 +8,7 @@ physics:
   // now also have something produce the digits and headers
   producers:
   {
-    daq: {
-      module_type: SBNDTPCDecoder
-      produce_header: true
-      baseline_calc: true
-      timesize: 2559          // for computing timestamps
-      frame_to_dt: 0.5        // produce timestamps in units of microseconds
-      min_slot_no: 3          // channel mapping -- 16 slots don't start at 1 but this number
-      channel_per_slot: 64
-    }
+    daq: @local::SBNDTPCDecoderDefaults
   }
 
   analyzers: {}
