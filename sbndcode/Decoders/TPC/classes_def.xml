@@ -1,0 +1,8 @@
+<lcgdict>
+  <class name="tpcAnalysis::TPCDecodeAna" ClassVersion="10">
+   <version ClassVersion="10" checksum="3825172703"/>
+  </class>
+  <class name="std::vector<tpcAnalysis::TPCDecodeAna>"/>
+  <class name="art::Wrapper<tpcAnalysis::TPCDecodeAna>"/>
+  <class name="art::Wrapper<std::vector<tpcAnalysis::TPCDecodeAna>>"/>
+</lcgdict>
