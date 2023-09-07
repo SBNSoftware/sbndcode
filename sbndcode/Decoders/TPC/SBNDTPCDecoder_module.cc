@@ -153,7 +153,7 @@ void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Frag
     auto chanInfo = channelMap->GetChanInfoFromFEMElements(
 							   fragment.header()->getFEMID(), // FEM crate
 							   fragment.header()->getSlot()-_config.min_slot_no + 1, // FEM slot
-							   waveform.first + 1); // nevis_channel_id    
+							   waveform.first); // nevis_channel_id    
     if (!chanInfo.valid) continue;
 
     std::vector<int16_t> raw_digits_waveform;
