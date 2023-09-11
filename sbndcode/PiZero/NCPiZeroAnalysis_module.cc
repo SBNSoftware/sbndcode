@@ -54,8 +54,96 @@ enum EventType
     kNonFV,
     kCosmic,
     kBadRecoSignal,
-    kUnknown = -1
+    kUnknownEv = -1
   };
+
+enum VarType
+  {
+    kBool,
+    kInt,
+    kDouble,
+    kEventType,
+    kUnknownVar = -1
+  };
+    
+class VecVar
+{
+  std::string    name;
+
+  public:
+  
+  VecVar(std::string n = "")
+    : name(n)
+  {}
+
+  std::string Name() const
+  {
+    return name;
+  }
+
+  VarType Identify() const
+  {
+    return kUnknownVar;
+  }
+
+  virtual void Resize(const int size) = 0;
+
+  template<typename T>
+  void SetVal(const int pos, const T val) {}
+};
+
+template<typename T>
+class InhVecVar;
+
+template<typename T>
+class InhVecVar : public VecVar
+{
+  std::vector<T> var;
+
+  public:
+
+  InhVecVar(std::string n, std::vector<T> v)
+    : VecVar(n),
+      var(v)
+  {}
+
+  InhVecVar(std::string n = "")
+    : VecVar(n),
+      var(std::vector<T>())
+  {}
+
+  std::vector<T>& Var()
+  {
+    return var;
+  }
+
+  void Resize(const int size)
+  {
+    var.resize(size);
+  }
+
+  void SetVal(const int pos, const T value)
+  {
+    var[pos] = value;
+  }
+
+  VarType Identify()
+  {
+    return kUnknownVar;
+  }
+};
+
+template<>
+VarType InhVecVar<bool>::Identify() { return kBool; }
+
+template<>
+VarType InhVecVar<int>::Identify() { return kInt; }
+
+template<>
+VarType InhVecVar<double>::Identify() { return kDouble; }
+
+template<>
+VarType InhVecVar<EventType>::Identify() { return kEventType; }
 
 class sbnd::NCPiZeroAnalysis : public art::EDAnalyzer {
 public:
@@ -107,23 +195,26 @@ private:
   int  _event;
 
   int _n_nu;
-  std::vector<EventType> _nu_event_type;
-  std::vector<bool>      _nu_signal;
-  std::vector<double>    _nu_true_en_dep;
-  std::vector<int>       _nu_ccnc;
-  std::vector<int>       _nu_mode;
-  std::vector<int>       _nu_int_type;
-  std::vector<double>    _nu_w;
-  std::vector<double>    _nu_x;
-  std::vector<double>    _nu_y;
-  std::vector<double>    _nu_q_sqr;
-  std::vector<double>    _nu_pt;
-  std::vector<double>    _nu_theta;
-  std::vector<double>    _nu_e;
-  std::vector<double>    _nu_vtx_x;
-  std::vector<double>    _nu_vtx_y;
-  std::vector<double>    _nu_vtx_z;
-};
+
+  std::map<std::string, VecVar*> nuVars = {
+    { "nu_event_type", new InhVecVar<EventType>("nu_event_type") },
+    { "nu_signal", new InhVecVar<bool>("nu_signal") },
+    { "nu_true_en_dep", new InhVecVar<double>("nu_true_en_dep") },
+    { "nu_ccnc", new InhVecVar<int>("nu_ccnc") },
+    { "nu_mode", new InhVecVar<int>("nu_mode") },
+    { "nu_int_type", new InhVecVar<int>("nu_int_type") },
+    { "nu_w", new InhVecVar<double>("nu_w") },
+    { "nu_x", new InhVecVar<double>("nu_x") },
+    { "nu_y", new InhVecVar<double>("nu_y") },
+    { "nu_q_sqr", new InhVecVar<double>("nu_q_sqr") },
+    { "nu_pt", new InhVecVar<double>("nu_pt") },
+    { "nu_theta", new InhVecVar<double>("nu_theta") },
+    { "nu_e", new InhVecVar<double>("nu_e") },
+    { "nu_vtx_x", new InhVecVar<double>("nu_vtx_x") },
+    { "nu_vtx_y", new InhVecVar<double>("nu_vtx_y") },
+    { "nu_vtx_z", new InhVecVar<double>("nu_vtx_z") },
+  };
+  };
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
@@ -144,22 +235,27 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fEventTree->Branch("event", &_event);
 
     fEventTree->Branch("_n_nu", &_n_nu);
-    fEventTree->Branch("_nu_event_type", &_nu_event_type);
-    fEventTree->Branch("_nu_signal", &_nu_signal);
-    fEventTree->Branch("_nu_true_en_dep", &_nu_true_en_dep);
-    fEventTree->Branch("_nu_ccnc", &_nu_ccnc);
-    fEventTree->Branch("_nu_mode", &_nu_mode);
-    fEventTree->Branch("_nu_int_type", &_nu_int_type);
-    fEventTree->Branch("_nu_w", &_nu_w);
-    fEventTree->Branch("_nu_x", &_nu_x);
-    fEventTree->Branch("_nu_y", &_nu_y);
-    fEventTree->Branch("_nu_q_sqr", &_nu_q_sqr);
-    fEventTree->Branch("_nu_pt", &_nu_pt);
-    fEventTree->Branch("_nu_theta", &_nu_theta);
-    fEventTree->Branch("_nu_e", &_nu_e);
-    fEventTree->Branch("_nu_vtx_x", &_nu_vtx_x);
-    fEventTree->Branch("_nu_vtx_y", &_nu_vtx_y);
-    fEventTree->Branch("_nu_vtx_z", &_nu_vtx_z);
+
+    for(auto const& [name, nuVar] : nuVars)
+      {
+	switch(nuVar->Identify())
+	  {
+	  case kBool:
+	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<bool>*>(nuVar)->Var()));
+	    break;
+	  case kInt:
+	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<int>*>(nuVar)->Var()));
+	    break;
+	  case kDouble:
+	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<double>*>(nuVar)->Var()));
+	    break;
+	  case kEventType:
+	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<EventType>*>(nuVar)->Var()));
+	    break;
+	  case kUnknownVar:
+	    break;
+	  }
+      }
   }
 
 void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
@@ -258,19 +354,24 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
 
 	  if(nc && fv && pizero)
 	    {
-	      _nu_event_type[nuCounter] = kNCPiZero;
-	      _nu_signal[nuCounter]     = true;
+	      nuVars["nu_event_type"]->SetVal(nuCounter, kNCPiZero);
+	      nuVars["nu_signal"]->SetVal(nuCounter, true);
 	    }
-	  else if(nc && fv)
-	    _nu_event_type[nuCounter] = kOtherNC;
-	  else if(abs(nu.PdgCode()) == 14 && !nc && fv)
-	    _nu_event_type[nuCounter] = kCCNuMu;
-	  else if(abs(nu.PdgCode()) == 12 && !nc && fv)
-	    _nu_event_type[nuCounter] = kCCNuE;
-	  else if(!fv)
-	    _nu_event_type[nuCounter] = kNonFV;
-	  else
-	    _nu_event_type[nuCounter] = kUnknown;
+	  else 
+	    {
+	      nuVars["nu_signal"]->SetVal(nuCounter, false);
+
+	      if(nc && fv)
+		  nuVars["nu_event_type"]->SetVal(nuCounter, kOtherNC);
+	      else if(abs(nu.PdgCode()) == 14 && !nc && fv)
+		nuVars["nu_event_type"]->SetVal(nuCounter, kCCNuMu);
+	      else if(abs(nu.PdgCode()) == 12 && !nc && fv)
+		nuVars["nu_event_type"]->SetVal(nuCounter, kCCNuE);
+	      else if(!fv)
+		nuVars["nu_event_type"]->SetVal(nuCounter, kNonFV);
+	      else
+		nuVars["nu_event_type"]->SetVal(nuCounter, kUnknownEv);
+	    }
 
 	  const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(mct.key());
 	  double trueEnDep = 0.;
@@ -283,20 +384,20 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
 		trueEnDep += ide->energy / 1000.;
 	    }
 
-	  _nu_true_en_dep[nuCounter] = trueEnDep;
-	  _nu_ccnc[nuCounter]        = mcn.CCNC();
-	  _nu_mode[nuCounter]        = mcn.Mode();
-	  _nu_int_type[nuCounter]    = mcn.InteractionType();
-	  _nu_w[nuCounter]           = mcn.W();
-	  _nu_x[nuCounter]           = mcn.X();
-	  _nu_y[nuCounter]           = mcn.Y();
-	  _nu_q_sqr[nuCounter]       = mcn.QSqr();
-	  _nu_pt[nuCounter]          = mcn.Pt();
-	  _nu_theta[nuCounter]       = mcn.Theta();
-	  _nu_e[nuCounter]           = nu.E();
-	  _nu_vtx_x[nuCounter]       = nu.Vx();
-	  _nu_vtx_y[nuCounter]       = nu.Vy();
-	  _nu_vtx_z[nuCounter]       = nu.Vz();
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_true_en_dep"])->SetVal(nuCounter, trueEnDep);
+	  nuVars["nu_ccnc"]->SetVal(nuCounter, mcn.CCNC());
+	  nuVars["nu_mode"]->SetVal(nuCounter, mcn.Mode());
+	  nuVars["nu_int_type"]->SetVal(nuCounter, mcn.InteractionType());
+	  nuVars["nu_w"]->SetVal(nuCounter, mcn.W());
+	  nuVars["nu_x"]->SetVal(nuCounter, mcn.X());
+	  nuVars["nu_y"]->SetVal(nuCounter, mcn.Y());
+	  nuVars["nu_q_sqr"]->SetVal(nuCounter, mcn.QSqr());
+	  nuVars["nu_pt"]->SetVal(nuCounter, mcn.Pt());
+	  nuVars["nu_theta"]->SetVal(nuCounter, mcn.Theta());
+	  nuVars["nu_e"]->SetVal(nuCounter, nu.E());
+	  nuVars["nu_vtx_x"]->SetVal(nuCounter, nu.Vx());
+	  nuVars["nu_vtx_y"]->SetVal(nuCounter, nu.Vy());
+	  nuVars["nu_vtx_z"]->SetVal(nuCounter, nu.Vz());
 
 	  ++nuCounter;
 	}
@@ -346,22 +447,10 @@ void sbnd::NCPiZeroAnalysis::ResetVars()
 
 void sbnd::NCPiZeroAnalysis::ResizeNeutrinoVectors(const int size)
 {
-  _nu_event_type.resize(size);
-  _nu_signal.resize(size);
-  _nu_true_en_dep.resize(size);
-  _nu_ccnc.resize(size);
-  _nu_mode.resize(size);
-  _nu_int_type.resize(size);
-  _nu_w.resize(size);
-  _nu_x.resize(size);
-  _nu_y.resize(size);
-  _nu_q_sqr.resize(size);
-  _nu_pt.resize(size);
-  _nu_theta.resize(size);
-  _nu_e.resize(size);
-  _nu_vtx_x.resize(size);
-  _nu_vtx_y.resize(size);
-  _nu_vtx_z.resize(size);
+  for(auto const& [name, nuVar] : nuVars)
+    {
+      nuVar->Resize(size);
+    }
 }
 
 DEFINE_ART_MODULE(sbnd::NCPiZeroAnalysis)
