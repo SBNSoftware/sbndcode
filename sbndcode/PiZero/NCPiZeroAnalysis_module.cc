@@ -76,7 +76,7 @@ public:
   void AnalyseNeutrinos(const art::Event &e, const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles);
 
   void AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
-		     const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
+                     const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
 
   double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
 
@@ -141,7 +141,7 @@ private:
     { "slc_is_fv", new InhVecVar<bool>("slc_is_fv") },
   };
 
-  };
+};
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
@@ -167,40 +167,40 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
 
     for(auto const& [name, nuVar] : nuVars)
       {
-	switch(nuVar->Identify())
-	  {
-	  case kBool:
-	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<bool>*>(nuVar)->Var()));
-	    break;
-	  case kInt:
-	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<int>*>(nuVar)->Var()));
-	    break;
-	  case kDouble:
-	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<double>*>(nuVar)->Var()));
-	    break;
-	  case kUnknownVar:
-	    break;
-	  }
+        switch(nuVar->Identify())
+          {
+          case kBool:
+            fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<bool>*>(nuVar)->Var()));
+            break;
+          case kInt:
+            fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<int>*>(nuVar)->Var()));
+            break;
+          case kDouble:
+            fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<double>*>(nuVar)->Var()));
+            break;
+          case kUnknownVar:
+            break;
+          }
       }
 
     fEventTree->Branch("n_slc", &_n_slc);
 
     for(auto const& [name, slcVar] : slcVars)
       {
-	switch(slcVar->Identify())
-	  {
-	  case kBool:
-	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<bool>*>(slcVar)->Var()));
-	    break;
-	  case kInt:
-	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<int>*>(slcVar)->Var()));
-	    break;
-	  case kDouble:
-	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<double>*>(slcVar)->Var()));
-	    break;
-	  case kUnknownVar:
-	    break;
-	  }
+        switch(slcVar->Identify())
+          {
+          case kBool:
+            fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<bool>*>(slcVar)->Var()));
+            break;
+          case kInt:
+            fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<int>*>(slcVar)->Var()));
+            break;
+          case kDouble:
+            fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<double>*>(slcVar)->Var()));
+            break;
+          case kUnknownVar:
+            break;
+          }
       }
   }
 
@@ -274,12 +274,12 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
       art::FindManyP<simb::MCParticle> MCTruthToMCParticles(MCTruthHandle, e, fMCParticleModuleLabel);
 
       for(auto const& mct : MCTruthVec)
-	{
-	  if(mct->Origin() != 1)
-	    continue;
+        {
+          if(mct->Origin() != 1)
+            continue;
 
-	  ++_n_nu;
-	}
+          ++_n_nu;
+        }
     }
 
   ResizeNeutrinoVectors(_n_nu);
@@ -294,15 +294,15 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
       art::FindManyP<simb::MCParticle> MCTruthToMCParticles(MCTruthHandle, e, fMCParticleModuleLabel);
 
       for(auto const& mct : MCTruthVec)
-	{
-	  if(mct->Origin() != 1)
-	    continue;
+        {
+          if(mct->Origin() != 1)
+            continue;
 
-	  const simb::MCNeutrino mcn = mct->GetNeutrino();
-	  const simb::MCParticle nu  = mcn.Nu();
+          const simb::MCNeutrino mcn = mct->GetNeutrino();
+          const simb::MCParticle nu  = mcn.Nu();
 
-	  const bool nc = mcn.CCNC() == 1;
-	  const bool fv = VolumeCheck(nu.Position().Vect(), 20., 5., 10., 50.);
+          const bool nc = mcn.CCNC() == 1;
+          const bool fv = VolumeCheck(nu.Position().Vect(), 20., 5., 10., 50.);
 
           unsigned pizeros = 0;
 
@@ -314,62 +314,62 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
                 ++pizeros;
             }
 
-	  const bool pizero = pizeros > 0;
+          const bool pizero = pizeros > 0;
 
-	  if(nc && fv && pizero)
-	    {
-	      dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kNCPiZero);
-	      dynamic_cast<InhVecVar<bool>*>(nuVars["nu_signal"])->SetVal(nuCounter, true);
-	    }
-	  else 
-	    {
-	      dynamic_cast<InhVecVar<bool>*>(nuVars["nu_signal"])->SetVal(nuCounter, false);
+          if(nc && fv && pizero)
+            {
+              dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kNCPiZero);
+              dynamic_cast<InhVecVar<bool>*>(nuVars["nu_signal"])->SetVal(nuCounter, true);
+            }
+          else
+            {
+              dynamic_cast<InhVecVar<bool>*>(nuVars["nu_signal"])->SetVal(nuCounter, false);
 
-	      if(nc && fv)
-		  dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kOtherNC);
-	      else if(abs(nu.PdgCode()) == 14 && !nc && fv)
-		dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kCCNuMu);
-	      else if(abs(nu.PdgCode()) == 12 && !nc && fv)
-		dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kCCNuE);
-	      else if(!fv)
-		dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kNonFV);
-	      else
-		dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kUnknownEv);
-	    }
+              if(nc && fv)
+                dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kOtherNC);
+              else if(abs(nu.PdgCode()) == 14 && !nc && fv)
+                dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kCCNuMu);
+              else if(abs(nu.PdgCode()) == 12 && !nc && fv)
+                dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kCCNuE);
+              else if(!fv)
+                dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kNonFV);
+              else
+                dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kUnknownEv);
+            }
 
-	  const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(mct.key());
-	  double trueEnDep = 0.;
+          const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(mct.key());
+          double trueEnDep = 0.;
 
-	  for(auto const& mcp : MCParticleVec)
-	    {
-	      std::vector<const sim::IDE*> ides = backTracker->TrackIdToSimIDEs_Ps(mcp->TrackId());
+          for(auto const& mcp : MCParticleVec)
+            {
+              std::vector<const sim::IDE*> ides = backTracker->TrackIdToSimIDEs_Ps(mcp->TrackId());
 
-	      for(auto const& ide : ides)
-		trueEnDep += ide->energy / 1000.;
-	    }
+              for(auto const& ide : ides)
+                trueEnDep += ide->energy / 1000.;
+            }
 
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_true_en_dep"])->SetVal(nuCounter, trueEnDep);
-	  dynamic_cast<InhVecVar<int>*>(nuVars["nu_ccnc"])->SetVal(nuCounter, mcn.CCNC());
-	  dynamic_cast<InhVecVar<int>*>(nuVars["nu_mode"])->SetVal(nuCounter, mcn.Mode());
-	  dynamic_cast<InhVecVar<int>*>(nuVars["nu_int_type"])->SetVal(nuCounter, mcn.InteractionType());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_w"])->SetVal(nuCounter, mcn.W());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_x"])->SetVal(nuCounter, mcn.X());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_y"])->SetVal(nuCounter, mcn.Y());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_q_sqr"])->SetVal(nuCounter, mcn.QSqr());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_pt"])->SetVal(nuCounter, mcn.Pt());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_theta"])->SetVal(nuCounter, mcn.Theta());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_e"])->SetVal(nuCounter, nu.E());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_vtx_x"])->SetVal(nuCounter, nu.Vx());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_vtx_y"])->SetVal(nuCounter, nu.Vy());
-	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_vtx_z"])->SetVal(nuCounter, nu.Vz());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_true_en_dep"])->SetVal(nuCounter, trueEnDep);
+          dynamic_cast<InhVecVar<int>*>(nuVars["nu_ccnc"])->SetVal(nuCounter, mcn.CCNC());
+          dynamic_cast<InhVecVar<int>*>(nuVars["nu_mode"])->SetVal(nuCounter, mcn.Mode());
+          dynamic_cast<InhVecVar<int>*>(nuVars["nu_int_type"])->SetVal(nuCounter, mcn.InteractionType());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_w"])->SetVal(nuCounter, mcn.W());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_x"])->SetVal(nuCounter, mcn.X());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_y"])->SetVal(nuCounter, mcn.Y());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_q_sqr"])->SetVal(nuCounter, mcn.QSqr());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_pt"])->SetVal(nuCounter, mcn.Pt());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_theta"])->SetVal(nuCounter, mcn.Theta());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_e"])->SetVal(nuCounter, nu.E());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_vtx_x"])->SetVal(nuCounter, nu.Vx());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_vtx_y"])->SetVal(nuCounter, nu.Vy());
+          dynamic_cast<InhVecVar<double>*>(nuVars["nu_vtx_z"])->SetVal(nuCounter, nu.Vz());
 
-	  ++nuCounter;
-	}
+          ++nuCounter;
+        }
     }
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
-					   const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
+                                           const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
 {
   std::vector<art::Ptr<recob::Slice>> sliceVec;
   art::fill_ptr_vector(sliceVec, sliceHandle);
@@ -389,25 +389,25 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
       int nprims = 0;
 
       for(auto const& pfp : pfps)
-	{
-	  if(pfp->IsPrimary())
-	    {
-	      dynamic_cast<InhVecVar<int>*>(slcVars["slc_primary_pfp_id"])->SetVal(slcCounter, pfp->Self());
-	      dynamic_cast<InhVecVar<int>*>(slcVars["slc_primary_pfp_pdg"])->SetVal(slcCounter, pfp->PdgCode());
-	      if(abs(pfp->PdgCode()) == 13 || abs(pfp->PdgCode()) == 11)
-		dynamic_cast<InhVecVar<bool>*>(slcVars["slc_is_clear_cosmic"])->SetVal(slcCounter, true);
-	      else
-		dynamic_cast<InhVecVar<bool>*>(slcVars["slc_is_clear_cosmic"])->SetVal(slcCounter, false);
+        {
+          if(pfp->IsPrimary())
+            {
+              dynamic_cast<InhVecVar<int>*>(slcVars["slc_primary_pfp_id"])->SetVal(slcCounter, pfp->Self());
+              dynamic_cast<InhVecVar<int>*>(slcVars["slc_primary_pfp_pdg"])->SetVal(slcCounter, pfp->PdgCode());
+              if(abs(pfp->PdgCode()) == 13 || abs(pfp->PdgCode()) == 11)
+                dynamic_cast<InhVecVar<bool>*>(slcVars["slc_is_clear_cosmic"])->SetVal(slcCounter, true);
+              else
+                dynamic_cast<InhVecVar<bool>*>(slcVars["slc_is_clear_cosmic"])->SetVal(slcCounter, false);
 
-	      const art::Ptr<recob::Vertex> vtx = pfpToVertices.at(pfp.key());
-	      dynamic_cast<InhVecVar<bool>*>(slcVars["slc_vtx_x"])->SetVal(slcCounter, vtx->position().X());
-	      dynamic_cast<InhVecVar<bool>*>(slcVars["slc_vtx_y"])->SetVal(slcCounter, vtx->position().Y());
-	      dynamic_cast<InhVecVar<bool>*>(slcVars["slc_vtx_z"])->SetVal(slcCounter, vtx->position().Z());
-	      dynamic_cast<InhVecVar<bool>*>(slcVars["slc_is_fv"])->SetVal(slcCounter, VolumeCheck(vtx->position(), 20., 5., 10., 50.));
+              const art::Ptr<recob::Vertex> vtx = pfpToVertices.at(pfp.key());
+              dynamic_cast<InhVecVar<bool>*>(slcVars["slc_vtx_x"])->SetVal(slcCounter, vtx->position().X());
+              dynamic_cast<InhVecVar<bool>*>(slcVars["slc_vtx_y"])->SetVal(slcCounter, vtx->position().Y());
+              dynamic_cast<InhVecVar<bool>*>(slcVars["slc_vtx_z"])->SetVal(slcCounter, vtx->position().Z());
+              dynamic_cast<InhVecVar<bool>*>(slcVars["slc_is_fv"])->SetVal(slcCounter, VolumeCheck(vtx->position(), 20., 5., 10., 50.));
 
-	      ++nprims;
-	    }
-	}
+              ++nprims;
+            }
+        }
 
       dynamic_cast<InhVecVar<int>*>(slcVars["slc_n_primaries"])->SetVal(slcCounter, nprims);
 
