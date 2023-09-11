@@ -62,13 +62,12 @@ enum VarType
     kBool,
     kInt,
     kDouble,
-    kEventType,
     kUnknownVar = -1
   };
     
 class VecVar
 {
-  std::string    name;
+  std::string name;
 
   public:
   
@@ -81,7 +80,7 @@ class VecVar
     return name;
   }
 
-  VarType Identify() const
+  virtual VarType Identify() const
   {
     return kUnknownVar;
   }
@@ -127,23 +126,17 @@ class InhVecVar : public VecVar
     var[pos] = value;
   }
 
-  VarType Identify()
-  {
-    return kUnknownVar;
-  }
+  virtual VarType Identify() const;
 };
 
 template<>
-VarType InhVecVar<bool>::Identify() { return kBool; }
+VarType InhVecVar<bool>::Identify() const { return kBool; }
 
 template<>
-VarType InhVecVar<int>::Identify() { return kInt; }
+VarType InhVecVar<int>::Identify() const { return kInt; }
 
 template<>
-VarType InhVecVar<double>::Identify() { return kDouble; }
-
-template<>
-VarType InhVecVar<EventType>::Identify() { return kEventType; }
+VarType InhVecVar<double>::Identify() const { return kDouble; }
 
 class sbnd::NCPiZeroAnalysis : public art::EDAnalyzer {
 public:
@@ -197,7 +190,7 @@ private:
   int _n_nu;
 
   std::map<std::string, VecVar*> nuVars = {
-    { "nu_event_type", new InhVecVar<EventType>("nu_event_type") },
+    { "nu_event_type", new InhVecVar<int>("nu_event_type") },
     { "nu_signal", new InhVecVar<bool>("nu_signal") },
     { "nu_true_en_dep", new InhVecVar<double>("nu_true_en_dep") },
     { "nu_ccnc", new InhVecVar<int>("nu_ccnc") },
@@ -229,12 +222,12 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
 
     art::ServiceHandle<art::TFileService> fs;
 
-    fEventTree = fs->make<TTree>("pizeros","");
+    fEventTree = fs->make<TTree>("events","");
     fEventTree->Branch("run", &_run);
     fEventTree->Branch("subrun", &_subrun);
     fEventTree->Branch("event", &_event);
 
-    fEventTree->Branch("_n_nu", &_n_nu);
+    fEventTree->Branch("n_nu", &_n_nu);
 
     for(auto const& [name, nuVar] : nuVars)
       {
@@ -248,9 +241,6 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
 	    break;
 	  case kDouble:
 	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<double>*>(nuVar)->Var()));
-	    break;
-	  case kEventType:
-	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<EventType>*>(nuVar)->Var()));
 	    break;
 	  case kUnknownVar:
 	    break;
@@ -354,23 +344,23 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
 
 	  if(nc && fv && pizero)
 	    {
-	      nuVars["nu_event_type"]->SetVal(nuCounter, kNCPiZero);
-	      nuVars["nu_signal"]->SetVal(nuCounter, true);
+	      dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kNCPiZero);
+	      dynamic_cast<InhVecVar<bool>*>(nuVars["nu_signal"])->SetVal(nuCounter, true);
 	    }
 	  else 
 	    {
-	      nuVars["nu_signal"]->SetVal(nuCounter, false);
+	      dynamic_cast<InhVecVar<bool>*>(nuVars["nu_signal"])->SetVal(nuCounter, false);
 
 	      if(nc && fv)
-		  nuVars["nu_event_type"]->SetVal(nuCounter, kOtherNC);
+		  dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kOtherNC);
 	      else if(abs(nu.PdgCode()) == 14 && !nc && fv)
-		nuVars["nu_event_type"]->SetVal(nuCounter, kCCNuMu);
+		dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kCCNuMu);
 	      else if(abs(nu.PdgCode()) == 12 && !nc && fv)
-		nuVars["nu_event_type"]->SetVal(nuCounter, kCCNuE);
+		dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kCCNuE);
 	      else if(!fv)
-		nuVars["nu_event_type"]->SetVal(nuCounter, kNonFV);
+		dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kNonFV);
 	      else
-		nuVars["nu_event_type"]->SetVal(nuCounter, kUnknownEv);
+		dynamic_cast<InhVecVar<int>*>(nuVars["nu_event_type"])->SetVal(nuCounter, kUnknownEv);
 	    }
 
 	  const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(mct.key());
@@ -385,19 +375,19 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
 	    }
 
 	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_true_en_dep"])->SetVal(nuCounter, trueEnDep);
-	  nuVars["nu_ccnc"]->SetVal(nuCounter, mcn.CCNC());
-	  nuVars["nu_mode"]->SetVal(nuCounter, mcn.Mode());
-	  nuVars["nu_int_type"]->SetVal(nuCounter, mcn.InteractionType());
-	  nuVars["nu_w"]->SetVal(nuCounter, mcn.W());
-	  nuVars["nu_x"]->SetVal(nuCounter, mcn.X());
-	  nuVars["nu_y"]->SetVal(nuCounter, mcn.Y());
-	  nuVars["nu_q_sqr"]->SetVal(nuCounter, mcn.QSqr());
-	  nuVars["nu_pt"]->SetVal(nuCounter, mcn.Pt());
-	  nuVars["nu_theta"]->SetVal(nuCounter, mcn.Theta());
-	  nuVars["nu_e"]->SetVal(nuCounter, nu.E());
-	  nuVars["nu_vtx_x"]->SetVal(nuCounter, nu.Vx());
-	  nuVars["nu_vtx_y"]->SetVal(nuCounter, nu.Vy());
-	  nuVars["nu_vtx_z"]->SetVal(nuCounter, nu.Vz());
+	  dynamic_cast<InhVecVar<int>*>(nuVars["nu_ccnc"])->SetVal(nuCounter, mcn.CCNC());
+	  dynamic_cast<InhVecVar<int>*>(nuVars["nu_mode"])->SetVal(nuCounter, mcn.Mode());
+	  dynamic_cast<InhVecVar<int>*>(nuVars["nu_int_type"])->SetVal(nuCounter, mcn.InteractionType());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_w"])->SetVal(nuCounter, mcn.W());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_x"])->SetVal(nuCounter, mcn.X());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_y"])->SetVal(nuCounter, mcn.Y());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_q_sqr"])->SetVal(nuCounter, mcn.QSqr());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_pt"])->SetVal(nuCounter, mcn.Pt());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_theta"])->SetVal(nuCounter, mcn.Theta());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_e"])->SetVal(nuCounter, nu.E());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_vtx_x"])->SetVal(nuCounter, nu.Vx());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_vtx_y"])->SetVal(nuCounter, nu.Vy());
+	  dynamic_cast<InhVecVar<double>*>(nuVars["nu_vtx_z"])->SetVal(nuCounter, nu.Vz());
 
 	  ++nuCounter;
 	}
