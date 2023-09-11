@@ -27,7 +27,9 @@
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
+#include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Shower.h"
@@ -62,7 +64,10 @@ public:
   void analyze(const art::Event &e) override;
 
   void ResetVars();
+
   void ResizeNeutrinoVectors(const int size);
+
+  void ResizeSliceVectors(const int size);
 
   void ClearMaps(const art::Event &e);
 
@@ -70,9 +75,14 @@ public:
 
   void AnalyseNeutrinos(const art::Event &e, const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles);
 
+  void AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+		     const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
+
   double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
 
   double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
+
+  bool VolumeCheck(const geo::Point_t &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
 
   bool VolumeCheck(const TVector3 &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
 
@@ -81,7 +91,8 @@ private:
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
-  std::string fMCParticleModuleLabel, fPFParticleModuleLabel, fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel;
+  std::string fMCParticleModuleLabel, fSliceModuleLabel, fPFParticleModuleLabel, fVertexModuleLabel,
+    fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel;
   bool fDebug;
 
   std::map<int,int> fHitsMap;
@@ -115,13 +126,30 @@ private:
     { "nu_vtx_y", new InhVecVar<double>("nu_vtx_y") },
     { "nu_vtx_z", new InhVecVar<double>("nu_vtx_z") },
   };
+
+  int _n_slc;
+
+  std::map<std::string, VecVar*> slcVars = {
+    { "slc_n_pfps", new InhVecVar<int>("slc_n_pfps") },
+    { "slc_primary_pfp_id", new InhVecVar<int>("slc_primary_pfp_id") },
+    { "slc_primary_pfp_pdg", new InhVecVar<int>("slc_primary_pfp_pdg") },
+    { "slc_is_clear_cosmic", new InhVecVar<int>("slc_is_clear_cosmic") },
+    { "slc_n_primaries", new InhVecVar<int>("slc_n_primaries") },
+    { "slc_vtx_x", new InhVecVar<double>("slc_vtx_x") },
+    { "slc_vtx_y", new InhVecVar<double>("slc_vtx_y") },
+    { "slc_vtx_z", new InhVecVar<double>("slc_vtx_z") },
+    { "slc_is_fv", new InhVecVar<bool>("slc_is_fv") },
+  };
+
   };
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   {
     fMCParticleModuleLabel       = p.get<std::string>("MCParticleModuleLabel", "largeant");
+    fSliceModuleLabel            = p.get<std::string>("SliceModuleLabel", "pandoraSCE");
     fPFParticleModuleLabel       = p.get<std::string>("PFParticleModuleLabel", "pandoraSCE");
+    fVertexModuleLabel           = p.get<std::string>("VertexModuleLabel", "pandoraSCE");
     fHitModuleLabel              = p.get<std::string>("HitModuleLabel", "gaushit");
     fTrackModuleLabel            = p.get<std::string>("TrackModuleLabel", "pandoraSCETrack");
     fShowerModuleLabel           = p.get<std::string>("ShowerModuleLabel", "pandoraSCEShower");
@@ -154,6 +182,26 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
 	    break;
 	  }
       }
+
+    fEventTree->Branch("n_slc", &_n_slc);
+
+    for(auto const& [name, slcVar] : slcVars)
+      {
+	switch(slcVar->Identify())
+	  {
+	  case kBool:
+	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<bool>*>(slcVar)->Var()));
+	    break;
+	  case kInt:
+	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<int>*>(slcVar)->Var()));
+	    break;
+	  case kDouble:
+	    fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<double>*>(slcVar)->Var()));
+	    break;
+	  case kUnknownVar:
+	    break;
+	  }
+      }
   }
 
 void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
@@ -174,6 +222,24 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
   std::vector<art::Handle<std::vector<simb::MCTruth>>> MCTruthHandles = e.getMany<std::vector<simb::MCTruth>>();
 
   AnalyseNeutrinos(e, MCTruthHandles);
+
+  // Get Slices
+  art::Handle<std::vector<recob::Slice>> sliceHandle;
+  e.getByLabel(fSliceModuleLabel, sliceHandle);
+  if(!sliceHandle.isValid()){
+    std::cout << "Slice product " << fSliceModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
+  // Get PFParticles
+  art::Handle<std::vector<recob::PFParticle>> pfpHandle;
+  e.getByLabel(fPFParticleModuleLabel, pfpHandle);
+  if(!pfpHandle.isValid()){
+    std::cout << "PFParticle product " << fPFParticleModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
+  AnalyseSlices(e, sliceHandle, pfpHandle);
 
   // Fill the Tree
   fEventTree->Fill();
@@ -302,6 +368,53 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
     }
 }
 
+void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+					   const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
+{
+  std::vector<art::Ptr<recob::Slice>> sliceVec;
+  art::fill_ptr_vector(sliceVec, sliceHandle);
+
+  _n_slc = sliceVec.size();
+  ResizeSliceVectors(_n_slc);
+
+  art::FindManyP<recob::PFParticle> slicesToPFPs(sliceHandle, e, fPFParticleModuleLabel);
+  art::FindOneP<recob::Vertex> pfpToVertices(pfpHandle, e, fVertexModuleLabel);
+
+  for (auto&& [slcCounter, slc] : enumerate(sliceVec))
+    {
+      const std::vector<art::Ptr<recob::PFParticle>> pfps = slicesToPFPs.at(slc.key());
+
+      dynamic_cast<InhVecVar<int>*>(slcVars["slc_n_pfps"])->SetVal(slcCounter, pfps.size());
+
+      int nprims = 0;
+
+      for(auto const& pfp : pfps)
+	{
+	  if(pfp->IsPrimary())
+	    {
+	      dynamic_cast<InhVecVar<int>*>(slcVars["slc_primary_pfp_id"])->SetVal(slcCounter, pfp->Self());
+	      dynamic_cast<InhVecVar<int>*>(slcVars["slc_primary_pfp_pdg"])->SetVal(slcCounter, pfp->PdgCode());
+	      if(abs(pfp->PdgCode()) == 13 || abs(pfp->PdgCode()) == 11)
+		dynamic_cast<InhVecVar<bool>*>(slcVars["slc_is_clear_cosmic"])->SetVal(slcCounter, true);
+	      else
+		dynamic_cast<InhVecVar<bool>*>(slcVars["slc_is_clear_cosmic"])->SetVal(slcCounter, false);
+
+	      const art::Ptr<recob::Vertex> vtx = pfpToVertices.at(pfp.key());
+	      dynamic_cast<InhVecVar<bool>*>(slcVars["slc_vtx_x"])->SetVal(slcCounter, vtx->position().X());
+	      dynamic_cast<InhVecVar<bool>*>(slcVars["slc_vtx_y"])->SetVal(slcCounter, vtx->position().Y());
+	      dynamic_cast<InhVecVar<bool>*>(slcVars["slc_vtx_z"])->SetVal(slcCounter, vtx->position().Z());
+	      dynamic_cast<InhVecVar<bool>*>(slcVars["slc_is_fv"])->SetVal(slcCounter, VolumeCheck(vtx->position(), 20., 5., 10., 50.));
+
+	      ++nprims;
+	    }
+	}
+
+      dynamic_cast<InhVecVar<int>*>(slcVars["slc_n_primaries"])->SetVal(slcCounter, nprims);
+
+    }
+}
+
+
 double sbnd::NCPiZeroAnalysis::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)
 {
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
@@ -326,6 +439,12 @@ double sbnd::NCPiZeroAnalysis::Completeness(const art::Event &e, const std::vect
   return (fHitsMap[trackID] == 0) ? def_double : objectHitsMap[trackID]/static_cast<double>(fHitsMap[trackID]);
 }
 
+bool sbnd::NCPiZeroAnalysis::VolumeCheck(const geo::Point_t &pos, const double &walls, const double &cath, const double &front, const double &back)
+{
+  const TVector3 posVec(pos.X(), pos.Y(), pos.Z());
+  return VolumeCheck(posVec, walls, cath, front, back);
+}
+
 bool sbnd::NCPiZeroAnalysis::VolumeCheck(const TVector3 &pos, const double &walls, const double &cath, const double &front, const double &back)
 {
   const bool xedges = pos.X() < (200. - walls) && pos.X() > (-200. + walls);
@@ -340,7 +459,7 @@ void sbnd::NCPiZeroAnalysis::ResetVars()
 {
   _run = -1; _subrun = -1; _event  = -1;
 
-  _n_nu = 0;
+  _n_nu = 0; _n_slc  = 0;
 }
 
 void sbnd::NCPiZeroAnalysis::ResizeNeutrinoVectors(const int size)
@@ -348,6 +467,14 @@ void sbnd::NCPiZeroAnalysis::ResizeNeutrinoVectors(const int size)
   for(auto const& [name, nuVar] : nuVars)
     {
       nuVar->Resize(size);
+    }
+}
+
+void sbnd::NCPiZeroAnalysis::ResizeSliceVectors(const int size)
+{
+  for(auto const& [name, slcVar] : slcVars)
+    {
+      slcVar->Resize(size);
     }
 }
 
