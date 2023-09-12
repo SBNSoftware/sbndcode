@@ -1,0 +1,55 @@
+#include "sbn_crumbs_producer.fcl"
+#include "sbn_pid.fcl"
+#include "mcsproducer.fcl"
+#include "rangeproducer.fcl"
+#include "trackscatterclosestapproach.fcl"
+#include "trackstoppingchi2fitter.fcl"
+
+ncpizero_producers:
+{
+  crumbs:
+  {
+    @table::crumbs_sbnd
+    PFParticleModuleLabel:    "pandoraSCE"
+    TrackModuleLabel:         "pandoraSCETrack"
+    SliceModuleLabel:         "pandoraSCE"
+    FlashMatchModuleLabel:    "fmatchSCE"
+    CalorimetryModuleLabel:   "pandoraSCECalo"
+    CRTHitMatchModuleLabel:   "crthitt0SCE"
+    CRTTrackMatchModuleLabel: "crttrackt0SCE"
+  }
+
+  dazzle:
+  {
+    @table::dazzle_sbnd
+    PFPLabel:   "pandoraSCE"
+    TrackLabel: "pandoraSCETrack"
+    CaloLabel:  "pandoraSCECalo"
+    Chi2Label:  "pandoraSCEPid"
+  }
+
+  pandoraTrackMCS:
+  {
+    @table::mcs_sbn
+    TrackLabel: "pandoraSCETrack"
+  }
+
+  pandoraTrackRange:
+  {
+    @table::range_sbn
+    TrackLabel: "pandoraSCETrack"
+  }
+
+  pandoraTrackClosestApproach:
+  {
+    @table::trackscatterclosestapproach_sbn
+    TrackLabel: "pandoraSCETrack"
+  }
+
+  pandoraTrackStoppingChi2:
+  {
+    @table::trackstoppingchi2fitter_sbn
+    TrackLabel: "pandoraSCETrack"
+    CaloLabel:  "pandoraSCECalo"
+  }
+}

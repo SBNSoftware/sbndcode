@@ -9,6 +9,7 @@ art_make(
          larsim::Utils
          lardataobj::RecoBase
          lardata::Utilities
+         sbnobj::Common_Reco
 )
 
 install_fhicl()

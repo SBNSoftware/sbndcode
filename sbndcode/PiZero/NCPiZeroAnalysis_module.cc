@@ -34,16 +34,22 @@
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
+#include "lardataobj/RecoBase/MCSFitResult.h"
 
 #include "lardataobj/AnalysisBase/Calorimetry.h"
+#include "lardataobj/AnalysisBase/ParticleID.h"
 
 #include "sbnobj/Common/Reco/CRUMBSResult.h"
+#include "sbnobj/Common/Reco/MVAPID.h"
+#include "sbnobj/Common/Reco/RangeP.h"
+#include "sbnobj/Common/Reco/ScatterClosestApproach.h"
+#include "sbnobj/Common/Reco/StoppingChi2Fit.h"
 
 #include "NCPiZeroStructs.h"
 
 #include <numeric>
 
-constexpr int def_int       = -std::numeric_limits<int>::max();
+constexpr int def_int       = std::numeric_limits<int>::min();
 constexpr size_t def_size   = std::numeric_limits<size_t>::max();
 constexpr double def_double = -std::numeric_limits<double>::max();
 
@@ -79,8 +85,17 @@ public:
   void AnalyseNeutrinos(const art::Event &e, const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles);
 
   void AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
-                     const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
+                     const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
+                     const art::Handle<std::vector<recob::Track>> &trackHandle,
+                     const art::Handle<std::vector<recob::Shower>> &showerHandle);
 
+  void AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
+                    const art::Handle<std::vector<recob::Track>> &trackHandle);
+
+  void ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, const int slcCounter, const int pfpCounter);
+  void ExtractChi2PID(const art::Ptr<anab::ParticleID> &chi2pid, const int slcCounter, const int pfpCounter);
+  void ExtractMCS(const art::Ptr<recob::MCSFitResult> &mcs, const int slcCounter, const int pfpCounter);
+  void ExtractStoppingChi2(const art::Ptr<sbn::StoppingChi2Fit> &stoppingChi2, const int slcCounter, const int pfpCounter);
 
   double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
   double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
@@ -100,9 +115,10 @@ private:
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
-  std::string fMCParticleModuleLabel, fSliceModuleLabel, fPFParticleModuleLabel, fVertexModuleLabel,
+  art::InputTag fMCParticleModuleLabel, fSliceModuleLabel, fPFParticleModuleLabel, fVertexModuleLabel,
     fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel,
-    fCRUMBSModuleLabel;
+    fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
+    fClosestApproachModuleLabel, fStoppingChi2ModuleLabel;
   bool fDebug;
 
   std::map<int,int> fHitsMap;
@@ -146,6 +162,8 @@ private:
     { "slc_primary_pfp_pdg", new InhVecVar<int>("slc_primary_pfp_pdg") },
     { "slc_is_clear_cosmic", new InhVecVar<bool>("slc_is_clear_cosmic") },
     { "slc_n_primary_daughters", new InhVecVar<int>("slc_n_primary_daughters") },
+    { "slc_n_trks", new InhVecVar<int>("slc_n_trks") },
+    { "slc_n_shws", new InhVecVar<int>("slc_n_shws") },
     { "slc_vtx_x", new InhVecVar<double>("slc_vtx_x") },
     { "slc_vtx_y", new InhVecVar<double>("slc_vtx_y") },
     { "slc_vtx_z", new InhVecVar<double>("slc_vtx_z") },
@@ -154,9 +172,30 @@ private:
     { "slc_crumbs_nc_score", new InhVecVar<double>("slc_crumbs_nc_score") },
     { "slc_crumbs_ccnue_score", new InhVecVar<double>("slc_crumbs_ccnue_score") },
     { "slc_pfp_id", new InhVecVecVar<size_t>("slc_pfp_id") },
+    { "slc_pfp_pdg", new InhVecVecVar<int>("slc_pfp_pdg") },
     { "slc_pfp_track_score", new InhVecVecVar<double>("slc_pfp_track_score") },
     { "slc_pfp_good_track", new InhVecVecVar<bool>("slc_pfp_good_track") },
     { "slc_pfp_good_shower", new InhVecVecVar<bool>("slc_pfp_good_shower") },
+    { "slc_pfp_true_trackid", new InhVecVecVar<int>("slc_pfp_true_trackid") },
+    { "slc_pfp_true_pdg", new InhVecVecVar<int>("slc_pfp_true_pdg") },
+    { "slc_pfp_comp", new InhVecVecVar<double>("slc_pfp_comp") },
+    { "slc_pfp_pur", new InhVecVecVar<double>("slc_pfp_pur") },
+    { "slc_pfp_track_dazzle_muon_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_muon_score") },
+    { "slc_pfp_track_dazzle_pion_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_pion_score") },
+    { "slc_pfp_track_dazzle_proton_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_proton_score") },
+    { "slc_pfp_track_dazzle_other_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_other_score") },
+    { "slc_pfp_track_dazzle_pdg", new InhVecVecVar<int>("slc_pfp_track_dazzle_pdg") },
+    { "slc_pfp_track_chi2_muon", new InhVecVecVar<double>("slc_pfp_track_chi2_muon") },
+    { "slc_pfp_track_chi2_pion", new InhVecVecVar<double>("slc_pfp_track_chi2_pion") },
+    { "slc_pfp_track_chi2_kaon", new InhVecVecVar<double>("slc_pfp_track_chi2_kaon") },
+    { "slc_pfp_track_chi2_proton", new InhVecVecVar<double>("slc_pfp_track_chi2_proton") },
+    { "slc_pfp_track_chi2_pdg", new InhVecVecVar<int>("slc_pfp_track_chi2_pdg") },
+    { "slc_pfp_track_mcs_mean_scatter", new InhVecVecVar<double>("slc_pfp_track_mcs_mean_scatter") },
+    { "slc_pfp_track_mcs_max_scatter_ratio", new InhVecVecVar<double>("slc_pfp_track_mcs_max_scatter_ratio") },
+    { "slc_pfp_track_range_p", new InhVecVecVar<double>("slc_pfp_track_range_p") },
+    { "slc_pfp_track_closest_approach_mean_dca", new InhVecVecVar<double>("slc_pfp_track_closest_approach_mean_dca") },
+    { "slc_pfp_track_stopping_dEdx_chi2_ratio", new InhVecVecVar<double>("slc_pfp_track_stopping_dEdx_chi2_ratio") },
+    { "slc_pfp_track_stopping_dEdx_pol0_fit", new InhVecVecVar<double>("slc_pfp_track_stopping_dEdx_pol0_fit") },
   };
 
 };
@@ -164,15 +203,22 @@ private:
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   {
-    fMCParticleModuleLabel       = p.get<std::string>("MCParticleModuleLabel", "largeant");
-    fSliceModuleLabel            = p.get<std::string>("SliceModuleLabel", "pandoraSCE");
-    fPFParticleModuleLabel       = p.get<std::string>("PFParticleModuleLabel", "pandoraSCE");
-    fVertexModuleLabel           = p.get<std::string>("VertexModuleLabel", "pandoraSCE");
-    fHitModuleLabel              = p.get<std::string>("HitModuleLabel", "gaushit");
-    fTrackModuleLabel            = p.get<std::string>("TrackModuleLabel", "pandoraSCETrack");
-    fShowerModuleLabel           = p.get<std::string>("ShowerModuleLabel", "pandoraSCEShower");
-    fTrackCalorimetryModuleLabel = p.get<std::string>("TrackCalorimetryModuleLabel", "pandoraSCECalo");
-    fCRUMBSModuleLabel           = p.get<std::string>("CRUMBSModuleLabel", "crumbs");
+    fMCParticleModuleLabel       = p.get<art::InputTag>("MCParticleModuleLabel", "largeant");
+    fSliceModuleLabel            = p.get<art::InputTag>("SliceModuleLabel", "pandoraSCE");
+    fPFParticleModuleLabel       = p.get<art::InputTag>("PFParticleModuleLabel", "pandoraSCE");
+    fVertexModuleLabel           = p.get<art::InputTag>("VertexModuleLabel", "pandoraSCE");
+    fHitModuleLabel              = p.get<art::InputTag>("HitModuleLabel", "gaushit");
+    fTrackModuleLabel            = p.get<art::InputTag>("TrackModuleLabel", "pandoraSCETrack");
+    fShowerModuleLabel           = p.get<art::InputTag>("ShowerModuleLabel", "pandoraSCEShower");
+    fTrackCalorimetryModuleLabel = p.get<art::InputTag>("TrackCalorimetryModuleLabel", "pandoraSCECalo");
+    fCRUMBSModuleLabel           = p.get<art::InputTag>("CRUMBSModuleLabel", "crumbs");
+    fDazzleModuleLabel           = p.get<art::InputTag>("DazzleModuleLabel", "dazzle");
+    fCaloModuleLabel             = p.get<art::InputTag>("CaloModuleLabel", "pandoraSCECalo");
+    fMCSModuleLabel              = p.get<art::InputTag>("MCSModuleLabel", "pandoraTrackMCS:muon");
+    fChi2ModuleLabel             = p.get<art::InputTag>("Chi2ModuleLabel", "pandoraSCEPid");
+    fRangeModuleLabel            = p.get<art::InputTag>("RangeModuleLabel", "pandoraTrackRange:muon");
+    fClosestApproachModuleLabel  = p.get<art::InputTag>("ClosestApproachModuleLabel", "pandoraTrackClosestApproach");
+    fStoppingChi2ModuleLabel     = p.get<art::InputTag>("StoppingChi2ModuleLabel", "pandoraTrackStoppingChi2");
     fDebug                       = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
@@ -276,9 +322,25 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
     throw std::exception();
   }
 
+  // Get Tracks
+  art::Handle<std::vector<recob::Track>> trackHandle;
+  e.getByLabel(fTrackModuleLabel, trackHandle);
+  if(!trackHandle.isValid()){
+    std::cout << "Track product " << fTrackModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
+  // Get Showers
+  art::Handle<std::vector<recob::Shower>> showerHandle;
+  e.getByLabel(fShowerModuleLabel, showerHandle);
+  if(!showerHandle.isValid()){
+    std::cout << "Shower product " << fShowerModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
   SetupMaps(e, hitHandle, pfpHandle);
   AnalyseNeutrinos(e, MCTruthHandles);
-  AnalyseSlices(e, sliceHandle, pfpHandle);
+  AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
 
   // Fill the Tree
   fEventTree->Fill();
@@ -417,7 +479,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
-                                           const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
+                                           const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
+                                           const art::Handle<std::vector<recob::Track>> &trackHandle,
+                                           const art::Handle<std::vector<recob::Shower>> &showerHandle)
 {
   std::vector<art::Ptr<recob::Slice>> sliceVec;
   art::fill_ptr_vector(sliceVec, sliceHandle);
@@ -431,6 +495,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
   art::FindOneP<recob::Track>                      pfpToTrack(pfpHandle, e, fTrackModuleLabel);
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
   art::FindOneP<larpandoraobj::PFParticleMetadata> pfpToMeta(pfpHandle, e, fPFParticleModuleLabel);
+  art::FindManyP<recob::Hit>                       tracksToHits(trackHandle, e, fTrackModuleLabel);
+  art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
 
   for (auto&& [slcCounter, slc] : enumerate(sliceVec))
     {
@@ -471,12 +537,25 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement<double>(slcVars["slc_crumbs_ccnue_score"], slcCounter, crumbs->ccnuescore);
         }
 
+      int ntrks = 0, nshws = 0;
+
       ResizeSubVectors(slcVars, slcCounter, prim->NumDaughters());
 
       for(auto&& [pfpCounter, id] : enumerate(prim->Daughters()))
         {
           const art::Ptr<recob::PFParticle> pfp = fPFPMap[id];
           FillElement(slcVars["slc_pfp_id"], slcCounter, pfpCounter, id);
+          FillElement(slcVars["slc_pfp_pdg"], slcCounter, pfpCounter, pfp->PdgCode());
+
+          if(abs(pfp->PdgCode()) == 11)
+            ++nshws;
+          else if(abs(pfp->PdgCode()) == 13)
+            ++ntrks;
+          else
+            {
+              std::cout << "PFP with PDG: " << pfp->PdgCode() << std::endl;
+              throw std::exception();
+            }
 
           const art::Ptr<larpandoraobj::PFParticleMetadata> meta         = pfpToMeta.at(pfp.key());
           const larpandoraobj::PFParticleMetadata::PropertiesMap metaMap = meta->GetPropertiesMap();
@@ -490,8 +569,156 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
           FillElement(slcVars["slc_pfp_good_track"], slcCounter, pfpCounter, track.isNonnull());
           FillElement(slcVars["slc_pfp_good_shower"], slcCounter, pfpCounter, shower.isNonnull());
+
+          const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+          const std::vector<art::Ptr<recob::Hit>> showerHits = showersToHits.at(shower.key());
+          const int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
+          FillElement(slcVars["slc_pfp_true_trackid"], slcCounter, pfpCounter, trackID);
+          FillElement(slcVars["slc_pfp_comp"], slcCounter, pfpCounter, Completeness(e, showerHits, trackID));
+          FillElement(slcVars["slc_pfp_pur"], slcCounter, pfpCounter, Purity(e, showerHits, trackID));
+
+          if(trackID != def_int)
+            {
+              const simb::MCParticle* mcp = particleInv->TrackIdToParticle_P(trackID);
+              if(mcp != NULL)
+                FillElement(slcVars["slc_pfp_true_pdg"], slcCounter, pfpCounter, mcp->PdgCode());
+            }
+
+          if(track.isNonnull())
+            AnalyseTrack(e, track, slcCounter, pfpCounter, trackHandle);
+        }
+
+      FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
+      FillElement(slcVars["slc_n_shws"], slcCounter, nshws);
+    }
+}
+
+void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
+                                          const art::Handle<std::vector<recob::Track>> &trackHandle)
+{
+  art::FindOneP<sbn::MVAPID> tracksToDazzle(trackHandle, e, fDazzleModuleLabel);
+  art::FindManyP<anab::Calorimetry> tracksToCalos(trackHandle, e, fCaloModuleLabel);
+  art::FindOneP<recob::MCSFitResult> tracksToMCSs(trackHandle, e, fMCSModuleLabel);
+  art::FindManyP<anab::ParticleID> tracksToChi2s(trackHandle, e, fChi2ModuleLabel);
+  art::FindOneP<sbn::RangeP> tracksToRangePs(trackHandle, e, fRangeModuleLabel);
+  art::FindOneP<sbn::ScatterClosestApproach> tracksToClosestApproaches(trackHandle, e, fClosestApproachModuleLabel);
+  art::FindOneP<sbn::StoppingChi2Fit> tracksToStoppingChi2s(trackHandle, e, fStoppingChi2ModuleLabel);
+
+  const art::Ptr<sbn::MVAPID> dazzle = tracksToDazzle.at(track.key());
+  if(dazzle.isNonnull())
+    ExtractDazzle(dazzle, slcCounter, pfpCounter);
+
+  const std::vector<art::Ptr<anab::Calorimetry>> calos = tracksToCalos.at(track.key());
+  const size_t maxHits = calos.size() != 3 ? -1 : std::max({calos[0]->dEdx().size(), calos[1]->dEdx().size(), calos[2]->dEdx().size()});
+  const int bestPlane  = calos.size() != 3 ? -1 : (calos[2]->dEdx().size() == maxHits) ? 2 : (calos[0]->dEdx().size() == maxHits) ? 0 : 
+    (calos[1]->dEdx().size() == maxHits) ? 1 : -1;
+
+  const std::vector<art::Ptr<anab::ParticleID>> chi2s = tracksToChi2s.at(track.key());
+  if(chi2s.size() == 3)
+    ExtractChi2PID(chi2s[bestPlane], slcCounter, pfpCounter);
+
+  const art::Ptr<recob::MCSFitResult> mcs = tracksToMCSs.at(track.key());
+  if(mcs.isNonnull())
+    ExtractMCS(mcs, slcCounter, pfpCounter);
+
+  const art::Ptr<sbn::RangeP> rangeP = tracksToRangePs.at(track.key());
+  if(rangeP.isNonnull())
+    FillElement<double>(slcVars["slc_pfp_track_range_p"], slcCounter, pfpCounter, rangeP->range_p);
+
+  const art::Ptr<sbn::ScatterClosestApproach> closestApproach = tracksToClosestApproaches.at(track.key());
+  if(closestApproach.isNonnull())
+    FillElement<double>(slcVars["slc_pfp_track_closest_approach_mean_dca"], slcCounter, pfpCounter, closestApproach->mean);
+
+  const art::Ptr<sbn::StoppingChi2Fit> stoppingChi2 = tracksToStoppingChi2s.at(track.key());
+  if(stoppingChi2.isNonnull())
+    ExtractStoppingChi2(stoppingChi2, slcCounter, pfpCounter);
+}
+
+void sbnd::NCPiZeroAnalysis::ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, const int slcCounter, const int pfpCounter)
+{
+  const std::map<int, float> map = dazzle->mvaScoreMap;
+
+  FillElement<double>(slcVars["slc_pfp_track_dazzle_muon_score"], slcCounter, pfpCounter, map.at(13));
+  FillElement<double>(slcVars["slc_pfp_track_dazzle_pion_score"], slcCounter, pfpCounter, map.at(211));
+  FillElement<double>(slcVars["slc_pfp_track_dazzle_proton_score"], slcCounter, pfpCounter, map.at(2212));
+  FillElement<double>(slcVars["slc_pfp_track_dazzle_other_score"], slcCounter, pfpCounter, map.at(0));
+  FillElement(slcVars["slc_pfp_track_dazzle_pdg"], slcCounter, pfpCounter, dazzle->BestPDG());
+}
+
+void sbnd::NCPiZeroAnalysis::ExtractChi2PID(const art::Ptr<anab::ParticleID> &chi2pid, const int slcCounter, const int pfpCounter)
+{
+  const std::vector<anab::sParticleIDAlgScores> AlgScoresVec = chi2pid->ParticleIDAlgScores();
+  std::vector<std::pair<int, double>> chi2s;
+
+  for(size_t i_algscore = 0; i_algscore < AlgScoresVec.size(); i_algscore++)
+    {
+      const anab::sParticleIDAlgScores AlgScore = AlgScoresVec.at(i_algscore);
+
+      if(AlgScore.fAlgName == "Chi2")
+        {
+          chi2s.push_back({AlgScore.fAssumedPdg, AlgScore.fValue});
+
+          switch(AlgScore.fAssumedPdg)
+            {
+            case 13:
+              FillElement<double>(slcVars["slc_pfp_track_chi2_muon"], slcCounter, pfpCounter, AlgScore.fValue);
+              break;
+            case 211:
+              FillElement<double>(slcVars["slc_pfp_track_chi2_pion"], slcCounter, pfpCounter, AlgScore.fValue);
+              break;
+            case 321:
+              FillElement<double>(slcVars["slc_pfp_track_chi2_kaon"], slcCounter, pfpCounter, AlgScore.fValue);
+              break;
+            case 2212:
+              FillElement<double>(slcVars["slc_pfp_track_chi2_proton"], slcCounter, pfpCounter, AlgScore.fValue);
+              break;
+            }
         }
     }
+
+  if(chi2s.size() > 0)
+    {
+      std::sort(chi2s.begin(), chi2s.end(),
+                [](auto const& a, auto const& b)
+                { return a.second < b.second; });
+
+      FillElement(slcVars["slc_pfp_track_chi2_pdg"], slcCounter, pfpCounter, chi2s[0].first);
+    }
+}
+
+void sbnd::NCPiZeroAnalysis::ExtractMCS(const art::Ptr<recob::MCSFitResult> &mcs, const int slcCounter, const int pfpCounter)
+{
+  if(mcs->scatterAngles().empty())
+    return;
+
+  unsigned int counter = 0;
+  double maxScatter = 0.f, sumScatter = 0.f;
+
+  for(const double& angle : mcs->scatterAngles())
+    {
+      if(angle < 0)
+        continue;
+
+      maxScatter = std::max(maxScatter, angle);
+      sumScatter += angle;
+      counter++;
+    }
+
+  if(!counter)
+    return;
+
+  FillElement(slcVars["slc_pfp_track_mcs_mean_scatter"], slcCounter, pfpCounter, sumScatter / counter);
+  FillElement(slcVars["slc_pfp_track_mcs_max_scatter_ratio"], slcCounter, pfpCounter, maxScatter / sumScatter);
+}
+
+void sbnd::NCPiZeroAnalysis::ExtractStoppingChi2(const art::Ptr<sbn::StoppingChi2Fit> &stoppingChi2, const int slcCounter, const int pfpCounter)
+{
+  const double pol0Chi2 = stoppingChi2->pol0Chi2;
+  const double expChi2  = stoppingChi2->expChi2;
+  const double ratio    = (pol0Chi2 > 0.f && expChi2 > 0.f) ? pol0Chi2 / expChi2 : -5.f;
+
+  FillElement(slcVars["slc_pfp_track_stopping_dEdx_chi2_ratio"], slcCounter, pfpCounter, ratio);
+  FillElement<double>(slcVars["slc_pfp_track_stopping_dEdx_pol0_fit"], slcCounter, pfpCounter, stoppingChi2->pol0Fit);
 }
 
 double sbnd::NCPiZeroAnalysis::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)

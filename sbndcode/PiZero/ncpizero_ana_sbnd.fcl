@@ -1,5 +1,5 @@
 #include "simulationservices_sbnd.fcl"
-#include "sbn_crumbs_producer.fcl"
+#include "ncpizero_producers.fcl"
 
 process_name: NCPiZeroAnalyzer
 
@@ -20,7 +20,7 @@ physics:
 {
   producers:
   {
-    crumbs: @local::crumbs_sbnd
+    @table::ncpizero_producers
   }
 
   analyzers:
@@ -31,17 +31,11 @@ physics:
     }
   }
 
-  prods:         [ crumbs ]
+  prods:         [ crumbs, pandoraTrackMCS, pandoraTrackRange,
+                   pandoraTrackClosestApproach, pandoraTrackStoppingChi2,
+                   dazzle ]
   trigger_paths: [ prods ]
 
   ana:       [ ncpizeroana ]
   end_paths: [ ana ]
 }
-
-physics.producers.crumbs.PFParticleModuleLabel:    "pandoraSCE"
-physics.producers.crumbs.TrackModuleLabel:         "pandoraSCETrack"
-physics.producers.crumbs.SliceModuleLabel:         "pandoraSCE"
-physics.producers.crumbs.FlashMatchModuleLabel:    "fmatchSCE"
-physics.producers.crumbs.CalorimetryModuleLabel:   "pandoraSCECalo"
-physics.producers.crumbs.CRTHitMatchModuleLabel:   "crthitt0SCE"
-physics.producers.crumbs.CRTTrackMatchModuleLabel: "crttrackt0SCE"
