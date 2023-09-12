@@ -93,6 +93,7 @@ public:
                     const art::Handle<std::vector<recob::Track>> &trackHandle);
 
   void ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, const int slcCounter, const int pfpCounter);
+  void ExtractCalo(const art::Ptr<anab::Calorimetry> &calo, const int slcCounter, const int pfpCounter);
   void ExtractChi2PID(const art::Ptr<anab::ParticleID> &chi2pid, const int slcCounter, const int pfpCounter);
   void ExtractMCS(const art::Ptr<recob::MCSFitResult> &mcs, const int slcCounter, const int pfpCounter);
   void ExtractStoppingChi2(const art::Ptr<sbn::StoppingChi2Fit> &stoppingChi2, const int slcCounter, const int pfpCounter);
@@ -180,11 +181,20 @@ private:
     { "slc_pfp_true_pdg", new InhVecVecVar<int>("slc_pfp_true_pdg") },
     { "slc_pfp_comp", new InhVecVecVar<double>("slc_pfp_comp") },
     { "slc_pfp_pur", new InhVecVecVar<double>("slc_pfp_pur") },
+    { "slc_pfp_track_start_x", new InhVecVecVar<double>("slc_pfp_track_start_x") },
+    { "slc_pfp_track_start_y", new InhVecVecVar<double>("slc_pfp_track_start_y") },
+    { "slc_pfp_track_start_z", new InhVecVecVar<double>("slc_pfp_track_start_z") },
+    { "slc_pfp_track_dir_x", new InhVecVecVar<double>("slc_pfp_track_dir_x") },
+    { "slc_pfp_track_dir_y", new InhVecVecVar<double>("slc_pfp_track_dir_y") },
+    { "slc_pfp_track_dir_z", new InhVecVecVar<double>("slc_pfp_track_dir_z") },
+    { "slc_pfp_track_length", new InhVecVecVar<double>("slc_pfp_track_length") },
     { "slc_pfp_track_dazzle_muon_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_muon_score") },
     { "slc_pfp_track_dazzle_pion_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_pion_score") },
     { "slc_pfp_track_dazzle_proton_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_proton_score") },
     { "slc_pfp_track_dazzle_other_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_other_score") },
     { "slc_pfp_track_dazzle_pdg", new InhVecVecVar<int>("slc_pfp_track_dazzle_pdg") },
+    { "slc_pfp_track_ke", new InhVecVecVar<double>("slc_pfp_track_ke") },
+    { "slc_pfp_track_charge", new InhVecVecVar<double>("slc_pfp_track_charge") },
     { "slc_pfp_track_chi2_muon", new InhVecVecVar<double>("slc_pfp_track_chi2_muon") },
     { "slc_pfp_track_chi2_pion", new InhVecVecVar<double>("slc_pfp_track_chi2_pion") },
     { "slc_pfp_track_chi2_kaon", new InhVecVecVar<double>("slc_pfp_track_chi2_kaon") },
@@ -604,6 +614,18 @@ void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<re
   art::FindOneP<sbn::ScatterClosestApproach> tracksToClosestApproaches(trackHandle, e, fClosestApproachModuleLabel);
   art::FindOneP<sbn::StoppingChi2Fit> tracksToStoppingChi2s(trackHandle, e, fStoppingChi2ModuleLabel);
 
+  geo::Point_t start = track->Start();
+  FillElement(slcVars["slc_pfp_track_start_x"], slcCounter, pfpCounter, start.X());
+  FillElement(slcVars["slc_pfp_track_start_y"], slcCounter, pfpCounter, start.Y());
+  FillElement(slcVars["slc_pfp_track_start_z"], slcCounter, pfpCounter, start.Z());
+
+  geo::Vector_t dir = track->StartDirection();
+  FillElement(slcVars["slc_pfp_track_dir_x"], slcCounter, pfpCounter, dir.X());
+  FillElement(slcVars["slc_pfp_track_dir_y"], slcCounter, pfpCounter, dir.Y());
+  FillElement(slcVars["slc_pfp_track_dir_z"], slcCounter, pfpCounter, dir.Z());
+
+  FillElement(slcVars["slc_pfp_track_length"], slcCounter, pfpCounter, track->Length());
+
   const art::Ptr<sbn::MVAPID> dazzle = tracksToDazzle.at(track.key());
   if(dazzle.isNonnull())
     ExtractDazzle(dazzle, slcCounter, pfpCounter);
@@ -612,6 +634,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<re
   const size_t maxHits = calos.size() != 3 ? -1 : std::max({calos[0]->dEdx().size(), calos[1]->dEdx().size(), calos[2]->dEdx().size()});
   const int bestPlane  = calos.size() != 3 ? -1 : (calos[2]->dEdx().size() == maxHits) ? 2 : (calos[0]->dEdx().size() == maxHits) ? 0 : 
     (calos[1]->dEdx().size() == maxHits) ? 1 : -1;
+
+  if(calos.size() == 3)
+    ExtractCalo(calos[bestPlane], slcCounter, pfpCounter);
 
   const std::vector<art::Ptr<anab::ParticleID>> chi2s = tracksToChi2s.at(track.key());
   if(chi2s.size() == 3)
@@ -643,6 +668,24 @@ void sbnd::NCPiZeroAnalysis::ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, 
   FillElement<double>(slcVars["slc_pfp_track_dazzle_proton_score"], slcCounter, pfpCounter, map.at(2212));
   FillElement<double>(slcVars["slc_pfp_track_dazzle_other_score"], slcCounter, pfpCounter, map.at(0));
   FillElement(slcVars["slc_pfp_track_dazzle_pdg"], slcCounter, pfpCounter, dazzle->BestPDG());
+}
+
+void sbnd::NCPiZeroAnalysis::ExtractCalo(const art::Ptr<anab::Calorimetry> &calo, const int slcCounter, const int pfpCounter)
+{
+  const std::vector<float> &dQdx = calo->dQdx();
+  const std::vector<float> &dEdx = calo->dEdx();
+  const std::vector<float> &pitch = calo->TrkPitchVec();
+
+  double ke = 0., charge = 0.;
+
+  for(size_t i = 0; i < dQdx.size(); ++i)
+    {
+      ke     += dEdx[i] * pitch[i];
+      charge += dQdx[i] * pitch[i];
+    }
+
+  FillElement(slcVars["slc_pfp_track_ke"], slcCounter, pfpCounter, ke);
+  FillElement(slcVars["slc_pfp_track_charge"], slcCounter, pfpCounter, charge);
 }
 
 void sbnd::NCPiZeroAnalysis::ExtractChi2PID(const art::Ptr<anab::ParticleID> &chi2pid, const int slcCounter, const int pfpCounter)
