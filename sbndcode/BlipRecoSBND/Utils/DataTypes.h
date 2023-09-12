@@ -10,7 +10,9 @@ typedef std::vector<float>      vfloat_t;
 typedef std::set<int>           si_t;
 typedef std::map<int,float>     mif_t;
 
-const int kNplanes  = 3;  
+const int kNcryostats = 1;
+const int kNtpcs      = 2;
+const int kNplanes    = 3;  
 
 namespace blip {
   
@@ -94,6 +96,7 @@ namespace blip {
     bool    isValid         = false;
     int     CenterChan      = -999;
     int     CenterWire      = -999;
+    bool    isTruthMatched  = false;
     bool    isMerged        = false;
     bool    isMatched       = false;
     int     DeadWireSep     = 99;

@@ -17,6 +17,25 @@ namespace blip {
 
     fNominalRecombFactor  = ModBoxRecomb(fCalodEdx,kNominalEfield);
     mWion                 = 1000./util::kGeVToElectrons;
+    
+    // -- geometry
+    art::ServiceHandle<geo::Geometry> geom;
+   
+    // Determine number cryostats, TPC, planes, wires
+    // (this should be separate function that is called once per job to set up all the histograms)
+    std::cout<<"NCryostats: "<<geom->Ncryostats()<<"\n";
+    for(size_t i=0; i<geom->Ncryostats(); i++){
+      auto const& cryoObj = geo::CryostatID(i);
+      std::cout<<"TPCs in cryostat"<<i<<": "<<geom->NTPC(cryoObj)<<"\n";
+      for(size_t j=0; j<geom->NTPC(cryoObj); j++){
+        auto const& tpcObj = geo::TPCID(cryoObj,j);
+        std::cout<<"TPC "<<j<<" has "<<geom->Nplanes(tpcObj)<<" planes\n";
+        for(size_t k=0; k<geom->Nplanes(tpcObj); k++){
+          auto const& planeObj = geo::PlaneID(i,j,k);
+          std::cout<<"  plane "<<k<<" has "<<geom->Nwires(planeObj)<<"\n";
+        }
+      }
+    }
       
    
     /*
@@ -107,9 +126,19 @@ namespace blip {
       h_clust_picky_dt[i]        = hdir.make<TH1D>(Form("pl%i_clust_picky_dt",i),       Form("Plane %i clusters (3 planes, intersect #Delta cut);dT [ticks]",i),200,-10,10);
       h_clust_picky_dtfrac[i]      = hdir.make<TH1D>(Form("pl%i_clust_picky_dtfrac",i),Form("Plane %i clusters (3 planes, intersect #Delta cut);Charge-weighted mean dT/RMS",i),120,-3,3);
       h_clust_picky_q[i]  = hdir.make<TH2D>(Form("pl%i_clust_picky_charge",i),  
-        Form("3 planes, intersect #Delta < 0.5 cm;Plane %i cluster charge [#times 10^{3} e-];Plane %i cluster charge [#times 10^{3} e-]",fCaloPlane,i),
+        Form("3 planes, intersect #Delta cut;Plane %i cluster charge [#times 10^{3} e-];Plane %i cluster charge [#times 10^{3} e-]",fCaloPlane,i),
         qbins,0,qmax,qbins,0,qmax);
       h_clust_picky_q[i]     ->SetOption("colz");
+      
+      h_clust_truematch_overlap[i]   = hdir.make<TH1D>(Form("pl%i_clust_truematch_overlap",i),  Form("Plane %i clusters (MC match);Overlap fraction",i),101,0,1.01);
+      h_clust_truematch_dt[i]        = hdir.make<TH1D>(Form("pl%i_clust_truematch_dt",i),       Form("Plane %i clusters (MC match);dT [ticks]",i),200,-10,10);
+      h_clust_truematch_dtfrac[i]      = hdir.make<TH1D>(Form("pl%i_clust_truematch_dtfrac",i),Form("Plane %i clusters (MC match);Charge-weighted mean dT/RMS",i),120,-3,3);
+      h_clust_truematch_q[i]  = hdir.make<TH2D>(Form("pl%i_clust_truematch_charge",i),  
+        Form("3 planes, intersect #Delta cut ;Plane %i cluster charge [#times 10^{3} e-];Plane %i cluster charge [#times 10^{3} e-]",fCaloPlane,i),
+        qbins,0,qmax,qbins,0,qmax);
+      h_clust_truematch_q[i]     ->SetOption("colz");
+      
+      
       h_nmatches[i]         = hdir.make<TH1D>(Form("pl%i_nmatches",i),Form("number of plane%i matches to single collection cluster",i),20,0,20);
     }
   
@@ -307,7 +336,6 @@ namespace blip {
     }
     */
    
-    std::cout<<"Here we are!\n";
     //====================================================
     // Prep the particle inventory service for MC+overlay
     //====================================================
@@ -340,7 +368,6 @@ namespace blip {
       }
     }
    
-    std::cout<<"Here we are!\n";
     //=====================================================
     // Record PDG for every G4 Track ID
     //=====================================================
@@ -402,7 +429,6 @@ namespace blip {
     }
    
 
-    std::cout<<"Finding trueblips\n";
     //==================================================
     // Use G4 information to determine the "true" blips in this event.
     //==================================================
@@ -418,7 +444,6 @@ namespace blip {
     }
 
 
-    std::cout<<"Mapping track index\n";
     //=======================================
     // Map track IDs to the index in the vector
     //=======================================
@@ -436,7 +461,6 @@ namespace blip {
     std::map<int, std::map<int,std::vector<int>> > tpc_plane_hitsMap;
     int nhits_untracked = 0;
 
-    std::cout<<"Looping over the hits...\n";
     for(size_t i=0; i<hitlist.size(); i++){
       auto const& thisHit = hitlist[i];
       int   chan    = thisHit->Channel();
@@ -500,7 +524,7 @@ namespace blip {
           
           if( map_g4trkid_chan_energy[hitinfo[i].g4trkid][chan] > 0 ) {
             double trueEnergyDep = map_g4trkid_chan_energy[hitinfo[i].g4trkid][chan];
-            std::cout<<"Hit on channel "<<chan<<" came from G4ID "<<hitinfo[i].g4trkid<<" ("<<trueEnergyDep<<" MeV)\n";
+            //std::cout<<"Hit on channel "<<chan<<" came from G4ID "<<hitinfo[i].g4trkid<<" ("<<trueEnergyDep<<" MeV)\n";
             h_recoWireEff_num->Fill(trueEnergyDep);
           }
          
@@ -534,10 +558,10 @@ namespace blip {
 
     }//endloop over hits
     
-    for(auto& a : tpc_plane_hitsMap ) {
-      for(auto& b : a.second ) 
-        std::cout<<"TPC "<<a.first<<", plane "<<b.first<<": "<<b.second.size()<<" hits\n";
-    }
+    //for(auto& a : tpc_plane_hitsMap ) {
+      //for(auto& b : a.second ) 
+        //std::cout<<"TPC "<<a.first<<", plane "<<b.first<<": "<<b.second.size()<<" hits\n";
+    //}
 
 
     //=================================================================
@@ -595,7 +619,7 @@ namespace blip {
       }
     }
 
-    std::cout<<"Hit clustering\n";
+    //std::cout<<"Hit clustering\n";
     // ---------------------------------------------------
     // Hit clustering
     // ---------------------------------------------------
@@ -605,17 +629,15 @@ namespace blip {
       //std::cout<<"Looking at TPC "<<plane_hitsMap.first<<", which has hits appearing in "<<plane_hitsMap.second.size()<<" planes\n";
 
       for(auto const& planehits : plane_hitsMap.second){
-        std::cout<<"Looking at TPC "<<plane_hitsMap.first<<", plane "<<planehits.first<<", which has "<<planehits.second.size()<<" hits\n"; 
+        //std::cout<<"Looking at TPC "<<plane_hitsMap.first<<", plane "<<planehits.first<<", which has "<<planehits.second.size()<<" hits\n"; 
 
         for(auto const& hi : planehits.second ){
           
-          std::cout<<"hit "<<hi<<": good "<<hitIsGood[hi]<<", clustered "<<hitIsClustered[hi]<<"\n";
+          //std::cout<<"hit "<<hi<<": good "<<hitIsGood[hi]<<", clustered "<<hitIsClustered[hi]<<"\n";
 
           // skip hits flagged as bad, or already clustered
           if( !hitIsGood[hi] || hitIsClustered[hi] ) continue; 
           
-          std::cout<<"A\n";
-
           // initialize a new cluster with this hit as seed
           std::vector<blip::HitInfo> hitinfoVec;
           std::set<int> hitIDs;
@@ -677,8 +699,8 @@ namespace blip {
           if( hc.Charge < fMinClusterCharge )   continue;
           if( hc.Charge > fMaxClusterCharge )   continue;
           
-          std::cout<<"Making a new cluster on plane "<<planehits.first<<"\n";
-          std::cout<<"span "<<span<<" ticks, "<<hc.NWires<<" wires, "<<hc.Charge<<" electrons\n";
+          //std::cout<<"Making a new cluster on plane "<<planehits.first<<"\n";
+          //std::cout<<"span "<<span<<" ticks, "<<hc.NWires<<" wires, "<<hc.Charge<<" electrons\n";
          
           // Exclude cluster if it is *entirely* on bad channels
           if( fVetoBadChannels ) {
@@ -710,7 +732,7 @@ namespace blip {
             }
             if( flag ) { hc.DeadWireSep = dw-1; break; }
           }
-          std::cout<<"DeadWireSep "<<hc.DeadWireSep<<"\n";
+          //std::cout<<"DeadWireSep "<<hc.DeadWireSep<<"\n";
          
           // veto this cluster if the gap between it and the
           // nearest dead wire (calculated above) isn't big enough
@@ -727,8 +749,10 @@ namespace blip {
           // ... and find the associated truth-blip
           if( hc.G4IDs.size() ) {
             for(size_t j=0; j< trueblips.size(); j++){
+              //std::cout<<"Looking at true blip "<<j<<" which has LeadG4ID of "<<trueblips[j].LeadG4ID<<"\n";
               if( hc.G4IDs.count(trueblips[j].LeadG4ID)) {
-                hc.EdepID = trueblips[j].ID; // we have a match!
+                hc.isTruthMatched = true;
+                hc.EdepID         = trueblips[j].ID;
                 break;
               }
             }
@@ -736,12 +760,12 @@ namespace blip {
            
           // finally, add the finished cluster to the stack
           hitclust.push_back(hc);
-          std::cout<<"Added this clust to the stack!\n";
+          //std::cout<<"Added this clust to the stack!\n";
 
         }
       }//loop over planes
     }//loop over TPCs
-    std::cout<<"All done with clustering\n";
+    //std::cout<<"All done with clustering\n";
     
 
 
@@ -762,15 +786,13 @@ namespace blip {
      
     for(auto& tpcMap : tpc_planeclustsMap ) { // loop on TPCs
       
-
-
-      std::cout
-      <<"Performing cluster matching in TPC "<<tpcMap.first<<", which has clusters in "<<tpcMap.second.size()<<" planes\n";
+      //std::cout
+      //<<"Performing cluster matching in TPC "<<tpcMap.first<<", which has clusters in "<<tpcMap.second.size()<<" planes\n";
       auto& planeMap = tpcMap.second;
       if( planeMap.find(fCaloPlane) != planeMap.end() ){
         int   planeA              = fCaloPlane;
         auto&  hitclusts_planeA   = planeMap[planeA];
-        std::cout<<"using plane "<<fCaloPlane<<" as reference/calo plane ("<<planeMap[planeA].size()<<" clusts)\n";
+        //std::cout<<"using plane "<<fCaloPlane<<" as reference/calo plane ("<<planeMap[planeA].size()<<" clusts)\n";
         for(auto& i : hitclusts_planeA ) {
           auto& hcA = hitclust[i];
           
@@ -798,13 +820,6 @@ namespace blip {
               auto& hcB = hitclust[j];
               if( hcB.isMatched ) continue;
               
-              // ***********************************
-              // Calculate the cluster overlap
-              // ***********************************
-              float overlapFrac = BlipUtils::CalcHitClustsOverlap(hcA,hcB);
-              h_clust_overlap[planeB]->Fill(overlapFrac);
-              if( overlapFrac < fMatchMinOverlap ) continue;
-              
               // *******************************************
               // Check that the two central wires intersect
               // *******************************************
@@ -819,6 +834,12 @@ namespace blip {
               hcA.IntersectLocations[hcB.ID] = xloc;
               hcB.IntersectLocations[hcA.ID] = xloc;
               
+
+              // ***********************************
+              // Calculate the cluster overlap
+              // ***********************************
+              float overlapFrac = BlipUtils::CalcHitClustsOverlap(hcA,hcB);
+              
               // *******************************************
               // Calculate time difference for start/end, and
               // check that Q-weighted means are comparable
@@ -826,22 +847,42 @@ namespace blip {
               float dt_start  = (hcB.StartTime - hcA.StartTime);
               float dt_end    = (hcB.EndTime   - hcA.EndTime);
               float dt        = ( fabs(dt_start) < fabs(dt_end) ) ? dt_start : dt_end;
-              h_clust_dt[planeB]->Fill(dt);
-              if( fabs(dt) > fMatchMaxTicks ) continue;
-              
               // Charge-weighted mean:
               float sigmaT = std::sqrt(pow(hcA.RMS,2)+pow(hcB.RMS,2));
               float dtfrac = (hcB.Time - hcA.Time) / sigmaT;
-              h_clust_dtfrac[planeB]->Fill(dtfrac);
-              if( fabs(dtfrac) > fMatchSigmaFact ) continue;
-
+              
               // *******************************************
               // Check relative charge between clusters
               // *******************************************
               float qdiff     = fabs(hcB.Charge-hcA.Charge);
               float ratio     = std::max(hcA.Charge,hcB.Charge)/std::min(hcA.Charge,hcB.Charge);
+              
+              // If both clusters are matched to the same MC truth particle,
+              // set flag to fill special diagnostic histograms...
+              bool trueFlag = (hcA.isTruthMatched && (hcA.EdepID == hcB.EdepID)) ? true : false;
+             
+              // Diagnostic histograms
+              h_clust_overlap[planeB] ->Fill(overlapFrac);
+              h_clust_dt[planeB]      ->Fill(dt);
+              h_clust_dtfrac[planeB]  ->Fill(dtfrac);
               h_clust_q[planeB]->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
-              if( qdiff > _matchQDiffLimit && ratio > _matchMaxQRatio ) continue;
+              if( trueFlag ) {
+                h_clust_truematch_overlap[planeB]->Fill(overlapFrac);
+                h_clust_truematch_dt[planeB]     ->Fill(dt);
+                h_clust_truematch_dtfrac[planeB] ->Fill(dtfrac);
+                h_clust_truematch_q[planeB]      ->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
+              }
+
+              if( overlapFrac   < fMatchMinOverlap  ) continue;
+              if( fabs(dt)      > fMatchMaxTicks    ) continue;
+              if( fabs(dtfrac)  > fMatchSigmaFact   ) continue;
+              if( qdiff         > _matchQDiffLimit 
+               && ratio         > _matchMaxQRatio   ) continue;
+              
+              //if( hcA.isTruthMatched ) {
+                //std::cout<<"Cluster A on plane "<<planeA<<" is truth-matched to EDepID "<<hcA.EdepID<<"... B on plane "<<planeB<<" matched to "<<hcB.EdepID<<"\n";
+              //}
+              
               h_clust_q_cut[planeB]->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
               
               // **************************************************
@@ -886,26 +927,25 @@ namespace blip {
             
             // ---------------------------------------
             // does this qualify as a "picky" blip?
-            bool picky = ( newBlip.NPlanes > 2 && newBlip.SigmaYZ < 1. );
+            bool picky = ( newBlip.NPlanes >= 3 && newBlip.SigmaYZ < 1. );
 
             // ----------------------------------------
             // save matching information
             for(auto& hc : hcGroup ) {
               hitclust[hc.ID].isMatched = true;
               for(auto hit : hitclust[hc.ID].HitIDs) hitinfo[hit].ismatch = true;
-            
-              // if this is a 3-plane blip with good intersection, fill diagnostic histos
-              if( picky ) {
-                int ipl = hc.Plane;
-                if( ipl == fCaloPlane ) continue;
+             
+              // Diagnostic plots for successful 3-plane matches
+              if( picky && hc.Plane != fCaloPlane ) {
                 float q1 = (float)newBlip.clusters[fCaloPlane].Charge;
-                float q2 = (float)newBlip.clusters[ipl].Charge;
-                h_clust_picky_overlap[ipl]->Fill(map_clust_overlap[hc.ID]);
-                h_clust_picky_dtfrac[ipl] ->Fill(map_clust_dtfrac[hc.ID]);
-                h_clust_picky_dt[ipl]     ->Fill(map_clust_dt[hc.ID]);
-                h_clust_picky_q[ipl]  ->Fill(0.001*q1,0.001*q2);
-              }
-            }
+                float q2 = (float)newBlip.clusters[hc.Plane].Charge;
+                h_clust_picky_overlap[hc.Plane]->Fill(map_clust_overlap[hc.ID]);
+                h_clust_picky_dtfrac[hc.Plane] ->Fill(map_clust_dtfrac[hc.ID]);
+                h_clust_picky_dt[hc.Plane]     ->Fill(map_clust_dt[hc.ID]);
+                h_clust_picky_q[hc.Plane]  ->Fill(0.001*q1,0.001*q2);
+              }//end diagnostic plots
+              
+            }//end loop over clusters
 
             if( fPickyBlips && !picky ) continue;
 
@@ -973,7 +1013,7 @@ namespace blip {
       hitclust = hitclust_filt;
     }
     
-    std::cout<<"Found "<<hitclust.size()<<" clusters and "<<blips.size()<<" blips\n";
+    //std::cout<<"Found "<<hitclust.size()<<" clusters and "<<blips.size()<<" blips\n";
     
 
     for(size_t i=0; i<hitlist.size(); i++){
@@ -998,7 +1038,7 @@ namespace blip {
       auto& blip = blips[i];
      
       blip.Charge = blip.clusters[fCaloPlane].Charge;
-      std::cout<<"blip "<<i<<": TPC "<<blip.TPC<<", XYZ "<<blip.X()<<","<<blip.Y()<<","<<blip.Z()<<", charge "<<blip.Charge<<"\n";
+      //std::cout<<"blip "<<i<<": TPC "<<blip.TPC<<", XYZ "<<blip.X()<<","<<blip.Y()<<","<<blip.Z()<<", charge "<<blip.Charge<<"\n";
       
       // ***** MICROBOONE ************
       // --- YZ uniformity correction ---
@@ -1052,7 +1092,7 @@ namespace blip {
 
       }
       
-      std::cout<<"Final energy calculation\n";
+      //std::cout<<"Final energy calculation\n";
       // METHOD 1
       float recomb  = ModBoxRecomb(fCalodEdx,Efield);
       blip.Energy   = depEl * (1./recomb) * mWion;

@@ -1562,7 +1562,7 @@ void BlipAna::endJob(){
 //###################################################
 
 void BlipAna::PrintParticleInfo(size_t i){
-  printf("  %5i  trkID: %-6i PDG: %-10i XYZ= %7.1f %7.1f %7.1f, dL=%7.1f, Npts=%4i, KE0=%8.3f, Edep=%8.3f, T=%10.2f, moth=%5i, %12s, ND=%i\n",
+  printf("  %5i  trkID: %-6i PDG: %-10i XYZ= %7.1f %7.1f %7.1f, dL=%7.2f, Npts=%4i, KE0=%8.3f, Edep=%8.3f, T=%10.2f, moth=%5i, %12s, ND=%i\n",
    (int)i,
    fData->part_trackID[i],
    fData->part_pdg[i],

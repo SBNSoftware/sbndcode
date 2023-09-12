@@ -80,6 +80,8 @@ namespace BlipUtils {
     for(size_t i=0; i<pinfo.size(); i++){
       auto& part = pinfo[i].particle;
       
+      //std::cout<<"Making true blip for "<<part.TrackId()<<" (PDG "<<part.PdgCode()<<", which deposited "<<pinfo[i].depEnergy<<"\n";
+
       // If this is a photon or neutron, don't even bother!
       if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) continue;
 
@@ -110,7 +112,7 @@ namespace BlipUtils {
       if( tb.DepElectrons >= 20 ) {
         tb.ID = trueblips.size();
         trueblips.push_back(tb);
-      }
+      } 
 
     }
     
@@ -124,7 +126,7 @@ namespace BlipUtils {
 
     // Skip neutrons, photons
     if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
-
+    
     // Check that path length isn't zero
     if( !pinfo.pathLength ) return;
 
@@ -152,8 +154,6 @@ namespace BlipUtils {
     tblip.DepElectrons+= pinfo.depElectrons;
     tblip.NumElectrons+= std::max(0.,pinfo.numElectrons);
 
-    //auto const* detProp   = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    //auto const* detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
     auto const detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
     float driftVel = detProp.DriftVelocity(detProp.Efield(0),detProp.Temperature());
     tblip.DriftTime = tblip.Position.X() / driftVel;
@@ -276,7 +276,7 @@ namespace BlipUtils {
         qvec          .push_back(q);
         dqvec         .push_back(dq);
         rmsvec        .push_back(hitinfo.rms);
-        if( hitinfo.g4trkid > 0 ) hc.G4IDs.insert(hitinfo.g4trkid);
+        if( hitinfo.g4trkid >= 0 ) hc.G4IDs.insert(hitinfo.g4trkid);
         if( hitinfo.gof < 0 ) {
           hc.NPulseTrainHits++;
         } else { 
@@ -581,27 +581,17 @@ namespace BlipUtils {
 
   
   //=============================================================================
-  // Length of reconstructed track, trajectory by trajectory.
+  // Length of particle trajectory
   double PathLength(const simb::MCParticle& part, TVector3& start, TVector3& end)
   {
-    // Get geo boundaries
-    double xmin, xmax, ymin, ymax, zmin, zmax;
-    GetGeoBoundaries(xmin,xmax,ymin,ymax,zmin,zmax);
-   
-    // Get number traj points
     int n = part.NumberTrajectoryPoints();
     if( n <= 1 ) return 0.;
     double  L	= 0.;
     bool	  first	= true; 
-    // Loop over points (start with 2nd)
     for(int i = 1; i < n; ++i) {
-      //TVector3 p1(part.Vx(i),part.Vy(i),part.Vz(i));
       const auto& p1 = part.Position(i).Vect();
       const auto& p0 = part.Position(i-1).Vect();
-      if(	  p1.X() >= xmin && p1.X() <= xmax
-        &&  p1.Y() >= ymin && p1.Y() <= ymax
-        &&  p1.Z() >= zmin && p1.Z() <= zmax ) {
-        //TVector3 p0(part.Vx(i-1),part.Vy(i-1),part.Vz(i-1));
+      if( IsPointInAV(p1.X(),p1.Y(),p1.Z()) ) {
         L += (p1-p0).Mag();
         if(first)	start = p1; 
         first = false;
@@ -620,13 +610,17 @@ namespace BlipUtils {
   // Calculate distance to boundary.
   double DistToBoundary(const recob::Track::Point_t& pos)
   {
-    double xmin, xmax, ymin, ymax, zmin, zmax;
-    GetGeoBoundaries(xmin,xmax,ymin,ymax,zmin,zmax);
-    double d1 = std::min(pos.X()-xmin,xmax-pos.X());  // dist to wire plane
-    double d2 = fabs(pos.X());                        // dist to cathode
-    double d3 = std::min(pos.Y()-ymin,ymax-pos.Y());  // dist to closest top/bottom
-    double d4 = std::min(pos.Z()-zmin,zmax-pos.Z());  // dist to closest upstream/downstream wall
-    return std::min( std::min( std::min(d1,d2), d3), d4);
+    art::ServiceHandle<geo::Geometry> geom;
+    double x = pos.X();
+    double y = pos.Y();
+    double z = pos.Z();
+    auto const& tpcid = geom->FindTPCAtPosition(geo::Point_t{x,y,z});
+    if( tpcid.TPC == geo::TPCID::InvalidID )  return -9;
+    auto const& tpc = geom->TPC(tpcid);
+    double dx = std::min(x-tpc.MinX(),tpc.MaxX()-x);
+    double dy = std::min(y-tpc.MinY(),tpc.MaxY()-y);
+    double dz = std::min(z-tpc.MinZ(),tpc.MaxZ()-z);
+    return std::min( std::min(dx,dy), dz );
   }
 
   //===========================================================================
@@ -665,6 +659,7 @@ namespace BlipUtils {
     return DistToLine(newL1,newL2,newp);
   }
 
+  /*
   //===========================================================================
   void GetGeoBoundaries(double& xmin, double& xmax, double& ymin, double& ymax, double&zmin, double& zmax){
     art::ServiceHandle<geo::Geometry> geom;
@@ -675,22 +670,18 @@ namespace BlipUtils {
     zmin = 0. + 1e-8;
     zmax = geom->DetLength() - 1e-8;
   }
+  */
 
   //===========================================================================
   bool IsPointInAV(float x, float y, float z){
-    
-    // Get geo boundaries
-    double xmin, xmax, ymin, ymax, zmin, zmax;
-    GetGeoBoundaries(xmin,xmax,ymin,ymax,zmin,zmax);
-      
-    if(     x >= xmin && x <= xmax
-        &&  y >= ymin && y <= ymax
-        &&  z >= zmin && z <= zmax ) {
-      return true;
-    } else {
-      return false;
-    }
-    
+    art::ServiceHandle<geo::Geometry> geom;
+    auto const& tpcid = geom->FindTPCAtPosition(geo::Point_t{x,y,z});
+    if( tpcid.TPC == geo::TPCID::InvalidID )  return false;
+    auto const& tpc = geom->TPC(tpcid);
+    if( x < tpc.MinX() || x > tpc.MaxX() ) return false;
+    if( y < tpc.MinY() || y > tpc.MaxY() ) return false;
+    if( z < tpc.MinZ() || z > tpc.MaxZ() ) return false;
+    return true;
   }
   
   bool IsPointInAV(TVector3& v){
@@ -698,35 +689,6 @@ namespace BlipUtils {
   }
   
   
-  //===========================================================================
-  bool IsPointAtBnd(float x, float y, float z){
-    
-    // Get geo boundaries
-    double xmin, xmax, ymin, ymax, zmin, zmax;
-    GetGeoBoundaries(xmin,xmax,ymin,ymax,zmin,zmax);
-    
-    // 5cm chosen arbitrarily... need to check what the
-    // space charge distortion is and find a better value
-    float margin = 5;
-    if(     fabs(x-xmin) < margin
-        ||  fabs(x-xmax) < margin
-        ||  fabs(y-ymax) < margin
-        ||  fabs(y-ymax) < margin
-        ||  fabs(z-zmax) < margin
-        ||  fabs(z-zmax) < margin
-      ) {
-      return true;
-
-    } else { 
-      return false;
-    }
-    
-  }
-  
-  bool IsPointAtBnd(TVector3& v){
-    return IsPointAtBnd(v.X(), v.Y(), v.Z());
-  }
-
   //==========================================================================
   void NormalizeHist(TH1D* h){
     if( h->GetEntries() > 0 ) {

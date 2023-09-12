@@ -190,6 +190,12 @@ namespace blip {
     TH1D*   h_clust_picky_dt[kNplanes];
     TH1D*   h_clust_picky_dtfrac[kNplanes];
     TH2D*   h_clust_picky_q[kNplanes]; 
+    
+    TH1D*   h_clust_truematch_overlap[kNplanes];
+    TH1D*   h_clust_truematch_dt[kNplanes];
+    TH1D*   h_clust_truematch_dtfrac[kNplanes];
+    TH2D*   h_clust_truematch_q[kNplanes]; 
+
     TH1D*   h_nmatches[kNplanes];
 
     TH1D*   h_recomb;
