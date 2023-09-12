@@ -7,12 +7,13 @@ sbnd_blipalg:
   TrkProducer:          "pandora"       #// input recob::Tracks to use for blip reconstruction
   GeantProducer:        "largeant"      #// input sim::MCParticles (getting true particle info)
   SimEDepProducer:      "ionandscint"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
-  SimChanProducer:      "simtpc2d:simpleSC" #// label for sim::SimChannels (getting drifted charge; optional)
+  #SimChanProducer:      "simtpc2d:simpleSC" #// label for sim::SimChannels (getting drifted charge; optional)
+  SimChanProducer:      "simdrift"      #// label for sim::SimChannels (getting drifted charge; optional)
   MaxHitTrkLength:      5.0             #// hits in trks > this length will be vetoed [cm]
   DoHitFiltering:       false           #// filter hits based on amp, width, RMS
   MaxWiresInCluster:    10              #// max allowable wires in a cluster
   MaxClusterSpan:       50              #// max allowable time-ticks of a cluster
-  ClustMatchMinOverlap: 0.6             #// minimum fractional overlap to be eligible for matching
+  ClustMatchMinOverlap: 0.5             #// minimum fractional overlap to be eligible for matching
   ClustMatchMaxTicks:   2.0             #// max extent for matching start/end time of clusters [ticks]
   ClustMatchSigmaFact:  0.8             #// max extent for matching charge-weighted time [xRMS]
   ClustMatchMaxQRatio:  4.0             #// max allowed charge ratio of two clusters to be matched

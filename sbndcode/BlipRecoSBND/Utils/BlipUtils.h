@@ -74,9 +74,7 @@ namespace BlipUtils {
   double  DistToBoundary(const recob::Track::Point_t&);
   double  DistToLine(TVector3&, TVector3&, TVector3&);
   double  DistToLine2D(TVector2&, TVector2&, TVector2&);
-  //void    GetGeoBoundaries(double&,double&,double&,double&,double&,double&);
-  bool    IsPointInAV(float,float,float);
-  bool    IsPointInAV(TVector3&);
+  bool    IsInActiveVolume(geo::Point_t const&);
   void    NormalizeHist(TH1D*);
   float   FindMedian(std::vector<float>&);
   float   FindMean(std::vector<float>&);

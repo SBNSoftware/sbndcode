@@ -34,7 +34,6 @@ namespace BlipUtils {
   // and save into ParticleInfo object
   void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, SEDVec_t& sedvec, int caloPlane){
     
-
     // Get important info and do conversions
     pinfo.particle    = part;
     pinfo.trackId     = part.TrackId();
@@ -227,17 +226,19 @@ namespace BlipUtils {
     if( hitinfoVec.size() ) {
       int tpc   = hitinfoVec[0].tpc;
       int plane = hitinfoVec[0].plane;
+      int cryo  = hitinfoVec[0].cryo;
 
       // check that all hits are on same plane;
-      // abort if this is not the case
       for(auto& h : hitinfoVec ) {
-        if( h.plane != plane ) return hc;
-        if( h.tpc   != tpc   ) return hc;
+        if( h.cryo  != cryo   ) return hc;
+        if( h.tpc   != tpc    ) return hc;
+        if( h.plane != plane  ) return hc;
       }
 
-      // initialize values 
-      hc.Plane            = plane;
+      // initialize values
+      hc.Cryostat         = cryo;
       hc.TPC              = tpc;
+      hc.Plane            = plane;
       hc.ADCs             = 0;
       hc.Charge           = 0;
       hc.SigmaCharge      = 0;
@@ -281,16 +282,12 @@ namespace BlipUtils {
           hc.NPulseTrainHits++;
         } else { 
           weightedGOF   += q*hitinfo.gof; 
-          //weightedRatio += q*(hitinfo.rms/hitinfo.amp);
           qGOF          += q;
         }
       }//endloop over hits
       
       // mean goodness of fit
-      if( qGOF ) {
-        hc.GoodnessOfFit = weightedGOF/qGOF;
-        //hc.Ratio         = weightedRatio/qGOF;
-      }
+      if( qGOF ) hc.GoodnessOfFit = weightedGOF/qGOF;
 
       // calculate other quantities
       hc.NHits      = hc.HitIDs.size();
@@ -591,7 +588,8 @@ namespace BlipUtils {
     for(int i = 1; i < n; ++i) {
       const auto& p1 = part.Position(i).Vect();
       const auto& p0 = part.Position(i-1).Vect();
-      if( IsPointInAV(p1.X(),p1.Y(),p1.Z()) ) {
+      geo::Point_t pp1 { p1.X(), p1.Y(), p1.Z() };
+      if( IsInActiveVolume(pp1) ) {
         L += (p1-p0).Mag();
         if(first)	start = p1; 
         first = false;
@@ -659,40 +657,17 @@ namespace BlipUtils {
     return DistToLine(newL1,newL2,newp);
   }
 
-  /*
-  //===========================================================================
-  void GetGeoBoundaries(double& xmin, double& xmax, double& ymin, double& ymax, double&zmin, double& zmax){
-    art::ServiceHandle<geo::Geometry> geom;
-    xmin = 0. + 1e-8;
-    xmax = 2.0 * geom->DetHalfWidth() - 1e-8;
-    ymin = - (geom->DetHalfHeight() + 1e-8);
-    ymax = geom->DetHalfHeight() -  1e-8;
-    zmin = 0. + 1e-8;
-    zmax = geom->DetLength() - 1e-8;
-  }
-  */
 
   //===========================================================================
-  bool IsPointInAV(float x, float y, float z){
-    art::ServiceHandle<geo::Geometry> geom;
-    auto const& tpcid = geom->FindTPCAtPosition(geo::Point_t{x,y,z});
-    if( tpcid.TPC == geo::TPCID::InvalidID )  return false;
-    auto const& tpc = geom->TPC(tpcid);
-    if( x < tpc.MinX() || x > tpc.MaxX() ) return false;
-    if( y < tpc.MinY() || y > tpc.MaxY() ) return false;
-    if( z < tpc.MinZ() || z > tpc.MaxZ() ) return false;
-    return true;
+  bool IsInActiveVolume(geo::Point_t const& p){
+    geo::TPCGeo const* TPC = art::ServiceHandle<geo::Geometry>()->PositionToTPCptr(p);
+    return TPC? TPC->ActiveBoundingBox().ContainsPosition(p): false;
   }
-  
-  bool IsPointInAV(TVector3& v){
-    return IsPointInAV(v.X(), v.Y(), v.Z());
-  }
-  
+
   
   //==========================================================================
   void NormalizeHist(TH1D* h){
     if( h->GetEntries() > 0 ) {
-      //h->Scale(1./h->GetEntries());
       h->Scale(1./h->Integral());
       h->SetBit(TH1::kIsAverage);
       h->SetOption("HIST");

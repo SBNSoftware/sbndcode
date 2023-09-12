@@ -610,6 +610,7 @@ class BlipAna : public art::EDAnalyzer
   int   fNum3DBlips3Plane   = 0;
   int   fNum3DBlipsPicky    = 0;
   int   fNum3DBlipsTrue     = 0;
+  int   fNum3DBlipsTrue3P   = 0;
 
   // --- Histograms ---
   TH1D*   h_part_process;
@@ -639,7 +640,7 @@ class BlipAna : public art::EDAnalyzer
   TH2D*   h_hit_charge_vs_rms[kNplanes];
   TH2D*   h_hit_charge_vs_gof[kNplanes];
  
-
+  TH1D*   h_hitpur[kNplanes];
   TH1D*   h_hitqres[kNplanes];
   TH2D*   h_hitqres_scatter[kNplanes];
   TH2D*   h_hitqres_vs_q[kNplanes];
@@ -829,7 +830,7 @@ class BlipAna : public art::EDAnalyzer
       
       
       h_chargecomp[i] = dir_truth.make<TH1D>(Form("pl%i_hit_charge_completeness",i),Form("charge completness, plane %i",i),101,0,1.01);
-      //h_hitpur[i]     = dir_truth.make<TH1D>(Form("pl%i_hit_purity",i),Form("hit purity, plane %i",i),101,0,1.01);
+      h_hitpur[i]     = dir_truth.make<TH1D>(Form("pl%i_hit_purity",i),Form("hit purity, plane %i",i),101,0,1.01);
       h_hitqres[i] = dir_truth.make<TH1D>( Form("pl%i_hit_qres",i),Form("Plane %i;hit charge resolution: (reco-true)/true",i),300,-1.5,1.5);
       h_hitqres_scatter[i] = dir_truth.make<TH2D>( Form("pl%i_hit_qres_scatter",i),
         Form("Plane %i;true hit charge [ #times 10^{3} electrons ];Reconstructed hit charge [ #times 10^{3} electrons ]",i),160,0,80, 160,0,80);
@@ -947,7 +948,7 @@ void BlipAna::analyze(const art::Event& evt)
   if( fNumEvents < 200 || (fNumEvents % 100) == 0 ) {
   std::cout<<"\n"
   <<"=========== BlipAna =========================\n"
-  <<"Event "<<evt.id().event()<<" / run "<<evt.id().run()<<"; total: "<<fNumEvents<<"\n";
+  <<"Event "<<evt.id().event()<<" / run "<<evt.id().run()<<"; total events processed: "<<fNumEvents<<"\n";
   }
   //std::cout<<"Lifetime is "<<electronLifetime<<" microseconds\n";
   
@@ -1299,9 +1300,11 @@ void BlipAna::analyze(const art::Event& evt)
   for(size_t ip=0; ip<kNplanes; ip++){
     h_nhits[ip]   ->Fill(num_hits[ip]);
     float qcomp     = -9;
+    std::cout<<"NUM hits true "<<num_hits_true[ip]<<"\n";
     if( num_hits_true[ip] ) {
       if(total_numElectrons )  qcomp = total_hit_charge[ip]/total_depElectrons;
       h_chargecomp[ip]->Fill( qcomp );
+      h_hitpur[ip]->Fill((float)num_hits_true[ip]/num_hits[ip]);
     }
   }//endloop over planes
     
@@ -1424,7 +1427,7 @@ void BlipAna::analyze(const art::Event& evt)
     }
 
     // Select picky (high-quality) blips:
-    if(blp.NPlanes == 3 && blp.SigmaYZ < 1.) {
+    if(blp.NPlanes >= 3 && blp.SigmaYZ < 1.) {
       nblips_picky++;
       fNum3DBlipsPicky++;
       h_blip_charge_picky ->Fill(blp.clusters[fCaloPlane].Charge);
@@ -1446,6 +1449,7 @@ void BlipAna::analyze(const art::Event& evt)
       fData->blip_energyTrue[i]       = blp.truth.Energy;
       fData->edep_blipid[blp.truth.ID]  = blp.ID;
       fNum3DBlipsTrue++;
+      if( blp.NPlanes >= 3 ) fNum3DBlipsTrue3P++;
       nblips_matched++;
       true_blip_charge += blp.truth.NumElectrons;
       //if( blp.truth.Energy < 2 ) true_blip_charge_2MeV += blp.truth.NumElectrons;
@@ -1519,6 +1523,7 @@ void BlipAna::endJob(){
     BlipUtils::NormalizeHist(h_hitrms_iso_true[i]);
     BlipUtils::NormalizeHist(h_hitrms_isomatch_true[i]);
   }
+  
 
   printf("\n***********************************************\n");
   fBlipAlg->PrintConfig();
@@ -1526,17 +1531,19 @@ void BlipAna::endJob(){
   printf("  Total events                : %i\n",        fNumEvents);
   printf("  Blips per evt, total        : %.3f\n",      fNum3DBlips/nEvents);
   printf("                 3 planes     : %.3f\n",      fNum3DBlips3Plane/nEvents);
-  printf("                 picky        : %.3f\n",      fNum3DBlipsPicky/nEvents);
-  printf("                 picky frac   : %5.3f\n",     fNum3DBlipsPicky/float(fNum3DBlips));
+  //printf("                 picky        : %.3f\n",      fNum3DBlipsPicky/nEvents);
+  //printf("                 picky frac   : %5.3f\n",     fNum3DBlipsPicky/float(fNum3DBlips));
   
   if(fIsMC){
   printf("  MC-matched blips per evt    : %.3f\n",       fNum3DBlipsTrue/nEvents);
+  printf("  MC blip purity              : %.3f\n",       fNum3DBlipsTrue/float(fNum3DBlips));
+  printf("  MC blip purity, 3 planes    : %.3f\n",      fNum3DBlipsTrue3P/float(fNum3DBlips3Plane));
   if( h_blip_qcomp->GetMean() > 0 ) 
   printf("  Charge completeness, total  : %.4f +/- %.4f\n", h_blip_qcomp->GetMean(), h_blip_qcomp->GetStdDev()/sqrt(fNumEvents));
   //printf("                       < 2MeV : %.4f +/- %.4f\n", h_blip_qcomp_2MeV->GetMean(), h_blip_qcomp_2MeV->GetStdDev()/sqrt(fNumEvents));
   //printf("  Blip purity                 : %.4f\n",       h_blip_pur->GetMean());
   }
-  printf("  Mean blip charge            : %.0f\n",      h_blip_charge->GetMean());
+  printf("  Mean blip charge            : %.0f e-\n",      h_blip_charge->GetMean());
   printf("\n");
   for(size_t i=0; i<kNplanes; i++){
   printf("  Plane %lu -------------------------\n",i);
@@ -1547,7 +1554,7 @@ void BlipAna::endJob(){
   printf("   * true-matched hits/evt    : %.2f (%.2f plane-matched)\n",fNumHitsTrue[i]/(float)fNumEvents, fNumHitsMatchedTrue[i]/(float)fNumEvents);
   if( h_chargecomp[i]->GetMean() > 0 ) 
   printf("   * charge completeness      : %.4f\n",h_chargecomp[i]->GetMean());
-  //printf("   * hit purity               : %.4f\n",h_hitpur[i]->GetMean());
+  printf("   * hit purity               : %.4f\n",h_hitpur[i]->GetMean());
   }
   } 
   printf("\n***********************************************\n");

@@ -6,9 +6,10 @@ namespace blip {
   // Constructor
   //###########################################################
   BlipRecoAlg::BlipRecoAlg( fhicl::ParameterSet const& pset )
+  : fGeom { *lar::providerFrom<geo::Geometry>() }
   {
     this->reconfigure(pset);
-    
+
     //detProp               = art::ServiceHandle<detinfo::DetectorPropertiesService>()->provider();
     auto const detProp    = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
     kNominalEfield        = detProp.Efield();
@@ -17,22 +18,19 @@ namespace blip {
 
     fNominalRecombFactor  = ModBoxRecomb(fCalodEdx,kNominalEfield);
     mWion                 = 1000./util::kGeVToElectrons;
-    
-    // -- geometry
-    art::ServiceHandle<geo::Geometry> geom;
    
     // Determine number cryostats, TPC, planes, wires
     // (this should be separate function that is called once per job to set up all the histograms)
-    std::cout<<"NCryostats: "<<geom->Ncryostats()<<"\n";
-    for(size_t i=0; i<geom->Ncryostats(); i++){
+    std::cout<<"NCryostats: "<<fGeom.Ncryostats()<<"\n";
+    for(size_t i=0; i<fGeom.Ncryostats(); i++){
       auto const& cryoObj = geo::CryostatID(i);
-      std::cout<<"TPCs in cryostat"<<i<<": "<<geom->NTPC(cryoObj)<<"\n";
-      for(size_t j=0; j<geom->NTPC(cryoObj); j++){
+      std::cout<<"TPCs in cryostat"<<i<<": "<<fGeom.NTPC(cryoObj)<<"\n";
+      for(size_t j=0; j<fGeom.NTPC(cryoObj); j++){
         auto const& tpcObj = geo::TPCID(cryoObj,j);
-        std::cout<<"TPC "<<j<<" has "<<geom->Nplanes(tpcObj)<<" planes\n";
-        for(size_t k=0; k<geom->Nplanes(tpcObj); k++){
+        std::cout<<"TPC "<<j<<" has "<<fGeom.Nplanes(tpcObj)<<" planes\n";
+        for(size_t k=0; k<fGeom.Nplanes(tpcObj); k++){
           auto const& planeObj = geo::PlaneID(i,j,k);
-          std::cout<<"  plane "<<k<<" has "<<geom->Nwires(planeObj)<<"\n";
+          std::cout<<"  plane "<<k<<" has "<<fGeom.Nwires(planeObj)<<"\n";
         }
       }
     }
@@ -122,6 +120,9 @@ namespace blip {
         Form("Post-cut;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3}]",fCaloPlane,i),
         qbins,0,qmax,qbins,0,qmax);
       h_clust_q_cut[i]    ->SetOption("colz");
+      
+      h_clust_score[i]    = hdir.make<TH1D>(Form("pl%i_clust_matchscore",i),   Form("Plane %i clusters;Match score",i),101,0,1.01);
+
       h_clust_picky_overlap[i]   = hdir.make<TH1D>(Form("pl%i_clust_picky_overlap",i),  Form("Plane %i clusters (3 planes, intersect #Delta cut);Overlap fraction",i),101,0,1.01);
       h_clust_picky_dt[i]        = hdir.make<TH1D>(Form("pl%i_clust_picky_dt",i),       Form("Plane %i clusters (3 planes, intersect #Delta cut);dT [ticks]",i),200,-10,10);
       h_clust_picky_dtfrac[i]      = hdir.make<TH1D>(Form("pl%i_clust_picky_dtfrac",i),Form("Plane %i clusters (3 planes, intersect #Delta cut);Charge-weighted mean dT/RMS",i),120,-3,3);
@@ -137,6 +138,7 @@ namespace blip {
         Form("3 planes, intersect #Delta cut ;Plane %i cluster charge [#times 10^{3} e-];Plane %i cluster charge [#times 10^{3} e-]",fCaloPlane,i),
         qbins,0,qmax,qbins,0,qmax);
       h_clust_truematch_q[i]     ->SetOption("colz");
+      h_clust_truematch_score[i]    = hdir.make<TH1D>(Form("pl%i_clust_truematch_matchscore",i),   Form("Plane %i clusters;Match score",i),101,0,1.01);
       
       
       h_nmatches[i]         = hdir.make<TH1D>(Form("pl%i_nmatches",i),Form("number of plane%i matches to single collection cluster",i),20,0,20);
@@ -152,9 +154,9 @@ namespace blip {
   }
   
   //--------------------------------------------------------------
-  BlipRecoAlg::BlipRecoAlg( )
-  {
-  }
+  //BlipRecoAlg::BlipRecoAlg( )
+  //{
+  //}
   
   //--------------------------------------------------------------  
   //Destructor
@@ -187,11 +189,11 @@ namespace blip {
     fMaxHitGOF          = pset.get<std::vector<float>>  ("MaxHitGOF",       { 99e9, 99e9, 99e9});
     fMinHitGOF          = pset.get<std::vector<float>>  ("MinHitGOF",       {-99e9,-99e9,-99e9});
     
-    fHitClustWidthFact  = pset.get<float>         ("HitClustWidthFact", 3.0);
+    fHitClustWidthFact  = pset.get<float>         ("HitClustWidthFact", 5.0);
     fHitClustWireRange  = pset.get<int>           ("HitClustWireRange", 1);
     fMaxWiresInCluster  = pset.get<int>           ("MaxWiresInCluster", 10);
     fMaxClusterSpan     = pset.get<float>         ("MaxClusterSpan",    30);
-    fMinClusterCharge   = pset.get<float>         ("MinClusterCharge",  500);
+    fMinClusterCharge   = pset.get<float>         ("MinClusterCharge",  300);
     fMaxClusterCharge   = pset.get<float>         ("MaxClusterCharge",  12e6);
 
     //fTimeOffsets        = pset.get<std::vector<float>>("TimeOffsets", {0.,0.,0.});
@@ -273,7 +275,7 @@ namespace blip {
     auto const detProp              = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
   
     // -- geometry
-    art::ServiceHandle<geo::Geometry> geom;
+    //art::ServiceHandle<geo::Geometry> geom;
 
     // -- G4 particles
     art::Handle< std::vector<simb::MCParticle> > pHandle;
@@ -384,7 +386,7 @@ namespace blip {
     //======================================================
     std::map<int,double> map_g4trkid_charge;
     for(auto const &chan : simchanlist ) {
-      if( geom->View(chan->Channel()) != geo::kW ) continue;
+      if( fGeom.View(chan->Channel()) != geo::kW ) continue;
       //std::map<int,double> map_g4trkid_perWireEnergyDep;
       for(auto const& tdcide : chan->TDCIDEMap() ) {
         for(auto const& ide : tdcide.second) {
@@ -456,23 +458,25 @@ namespace blip {
     // Fill vector of hit info
     //========================================
     hitinfo.resize(hitlist.size());
-    
-    //std::map<int,std::vector<int>> planehitsMap;
-    std::map<int, std::map<int,std::vector<int>> > tpc_plane_hitsMap;
+   
+    std::map<int, std::map<int, std::map<int,std::vector<int> >>> cryo_tpc_plane_hitsMap;
+    //std::map<int, std::map<int,std::vector<int>> > tpc_plane_hitsMap;
     int nhits_untracked = 0;
 
     for(size_t i=0; i<hitlist.size(); i++){
       auto const& thisHit = hitlist[i];
       int   chan    = thisHit->Channel();
+      int   cryo    = thisHit->WireID().Cryostat;
       int   tpc     = thisHit->WireID().TPC;
       int   plane   = thisHit->WireID().Plane;
       int   wire    = thisHit->WireID().Wire;
       
       hitinfo[i].hitid        = i;
+      hitinfo[i].cryo         = cryo;
+      hitinfo[i].tpc          = tpc;
       hitinfo[i].plane        = plane;
       hitinfo[i].chan         = chan;
       hitinfo[i].wire         = wire;
-      hitinfo[i].tpc          = tpc;
       hitinfo[i].amp          = thisHit->PeakAmplitude();
       hitinfo[i].rms          = thisHit->RMS();
       hitinfo[i].integralADC  = thisHit->Integral();
@@ -521,13 +525,11 @@ namespace blip {
           // So we need to correct for this effect to get accurate
           // count of 'true' electrons collected on channel.
           if( fSimGainFactor > 0 ) hitinfo[i].g4charge /= fSimGainFactor;
-          
+         
           if( map_g4trkid_chan_energy[hitinfo[i].g4trkid][chan] > 0 ) {
             double trueEnergyDep = map_g4trkid_chan_energy[hitinfo[i].g4trkid][chan];
-            //std::cout<<"Hit on channel "<<chan<<" came from G4ID "<<hitinfo[i].g4trkid<<" ("<<trueEnergyDep<<" MeV)\n";
             h_recoWireEff_num->Fill(trueEnergyDep);
           }
-         
           if( map_g4trkid_chan_charge[hitinfo[i].g4trkid][chan] > 0 ) {
             double trueChargeDep = map_g4trkid_chan_charge[hitinfo[i].g4trkid][chan];
             h_recoWireEffQ_num->Fill(trueChargeDep);
@@ -552,7 +554,8 @@ namespace blip {
 
       // add to the map
       //planehitsMap[plane].push_back(i);
-      tpc_plane_hitsMap[tpc][plane].push_back(i);
+      cryo_tpc_plane_hitsMap[cryo][tpc][plane].push_back(i);
+      //tpc_plane_hitsMap[tpc][plane].push_back(i);
       if( hitinfo[i].trkid < 0 ) nhits_untracked++;
       //printf("  %lu   plane: %i,  wire: %i, time: %i\n",i,hitinfo[i].plane,hitinfo[i].wire,int(hitinfo[i].driftTime));
 
@@ -624,8 +627,10 @@ namespace blip {
     // Hit clustering
     // ---------------------------------------------------
     std::map<int,std::map<int,std::vector<int>>> tpc_planeclustsMap;
+   
+    for(auto const& tpc_plane_hitsMap : cryo_tpc_plane_hitsMap ) {
     
-    for(auto const& plane_hitsMap : tpc_plane_hitsMap ) {
+    for(auto const& plane_hitsMap : tpc_plane_hitsMap.second ) {
       //std::cout<<"Looking at TPC "<<plane_hitsMap.first<<", which has hits appearing in "<<plane_hitsMap.second.size()<<" planes\n";
 
       for(auto const& planehits : plane_hitsMap.second){
@@ -720,13 +725,13 @@ namespace blip {
             int  w2   = hc.EndWire+dw;
             bool flag = false;
             // treat edges of wireplane as "dead"
-            //if( w1 < 0 || w2 >= (int)geom->Nwires(hc.Plane) )
-            if( w1 < 0 || w2 >= (int)geom->Nwires(geo::PlaneID(0,hc.TPC,hc.Plane)))
+            //if( w1 < 0 || w2 >= (int)fGeom.Nwires(hc.Plane) )
+            if( w1 < 0 || w2 >= (int)fGeom.Nwires(geo::PlaneID(0,hc.TPC,hc.Plane)))
               flag=true;
             //otherwise, use channel filter service
             else {
-              int ch1 = geom->PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w1));
-              int ch2 = geom->PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w2));
+              int ch1 = fGeom.PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w1));
+              int ch2 = fGeom.PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w2));
               if( chanFilt.Status(ch1)<2 ) flag=true;
               if( chanFilt.Status(ch2)<2 ) flag=true;
             }
@@ -757,14 +762,14 @@ namespace blip {
               }
             }
           }
-           
+          
           // finally, add the finished cluster to the stack
           hitclust.push_back(hc);
-          //std::cout<<"Added this clust to the stack!\n";
 
         }
       }//loop over planes
     }//loop over TPCs
+    }//loop over cryostats
     //std::cout<<"All done with clustering\n";
     
 
@@ -847,15 +852,19 @@ namespace blip {
               float dt_start  = (hcB.StartTime - hcA.StartTime);
               float dt_end    = (hcB.EndTime   - hcA.EndTime);
               float dt        = ( fabs(dt_start) < fabs(dt_end) ) ? dt_start : dt_end;
-              // Charge-weighted mean:
-              float sigmaT = std::sqrt(pow(hcA.RMS,2)+pow(hcB.RMS,2));
-              float dtfrac = (hcB.Time - hcA.Time) / sigmaT;
+              float sigmaT    = std::sqrt(pow(hcA.RMS,2)+pow(hcB.RMS,2));
+              float dtfrac    = (hcB.Time - hcA.Time) / sigmaT;
               
               // *******************************************
               // Check relative charge between clusters
               // *******************************************
               float qdiff     = fabs(hcB.Charge-hcA.Charge);
               float ratio     = std::max(hcA.Charge,hcB.Charge)/std::min(hcA.Charge,hcB.Charge);
+              
+              // *******************************************
+              // Combine metrics into a consolidated score
+              // *******************************************
+              float score = overlapFrac * exp(-fabs(ratio-1.)) * exp(-fabs(dt)/float(fMatchMaxTicks));
               
               // If both clusters are matched to the same MC truth particle,
               // set flag to fill special diagnostic histograms...
@@ -865,12 +874,14 @@ namespace blip {
               h_clust_overlap[planeB] ->Fill(overlapFrac);
               h_clust_dt[planeB]      ->Fill(dt);
               h_clust_dtfrac[planeB]  ->Fill(dtfrac);
-              h_clust_q[planeB]->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
+              h_clust_q[planeB]       ->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
+              if( score > 0 ) h_clust_score[planeB]   ->Fill(score);
               if( trueFlag ) {
                 h_clust_truematch_overlap[planeB]->Fill(overlapFrac);
                 h_clust_truematch_dt[planeB]     ->Fill(dt);
                 h_clust_truematch_dtfrac[planeB] ->Fill(dtfrac);
                 h_clust_truematch_q[planeB]      ->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
+                if( score > 0 ) h_clust_truematch_score[planeB]  ->Fill(score);
               }
 
               if( overlapFrac   < fMatchMinOverlap  ) continue;
@@ -879,10 +890,6 @@ namespace blip {
               if( qdiff         > _matchQDiffLimit 
                && ratio         > _matchMaxQRatio   ) continue;
               
-              //if( hcA.isTruthMatched ) {
-                //std::cout<<"Cluster A on plane "<<planeA<<" is truth-matched to EDepID "<<hcA.EdepID<<"... B on plane "<<planeB<<" matched to "<<hcB.EdepID<<"\n";
-              //}
-              
               h_clust_q_cut[planeB]->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
               
               // **************************************************
@@ -890,7 +897,6 @@ namespace blip {
               // Combine metrics into a consolidated "score" that 
               // we can use later in the case of degenerate matches.
               // **************************************************
-              float score = overlapFrac * exp(-fabs(ratio-1.)) * exp(-fabs(dt)/float(fMatchMaxTicks));
               map_clust_dt[j]       = dt;
               map_clust_dtfrac[j]   = dtfrac;
               map_clust_overlap[j]  = overlapFrac;
@@ -1018,16 +1024,16 @@ namespace blip {
 
     for(size_t i=0; i<hitlist.size(); i++){
       if (hitinfo[i].trkid >= 0 ) continue;
-      h_chan_nhits->Fill(geom->PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
+      h_chan_nhits->Fill(fGeom.PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
       
       int clustid = hitinfo[i].clustid;
       if( clustid >= 0 ) {
         if( hitclust[clustid].NWires > 1 ) continue;
-        h_chan_nclusts->Fill(geom->PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
+        h_chan_nclusts->Fill(fGeom.PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
       }
       //if( hitinfo[i].ismatch    ) continue;
       //if( hitclust[clustid].NWires > 1 ) continue;
-      //h_chan_nclusts->Fill(geom->PlaneWireToChannel(hitinfo[i].plane,hitinfo[i].wire));
+      //h_chan_nclusts->Fill(fGeom.PlaneWireToChannel(hitinfo[i].plane,hitinfo[i].wire));
     }
 
     

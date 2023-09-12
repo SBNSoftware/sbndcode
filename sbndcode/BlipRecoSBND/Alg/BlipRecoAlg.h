@@ -36,6 +36,7 @@
 #include "lardataobj/AnalysisBase/BackTrackerMatchingData.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcorealg/Geometry/GeometryCore.h"
 #include "larreco/Calorimetry/CalorimetryAlg.h"
 #include "art/Framework/Principal/Event.h"
 
@@ -75,7 +76,7 @@ namespace blip {
     
     //Constructor/destructor
     BlipRecoAlg( fhicl::ParameterSet const& pset );
-    BlipRecoAlg();
+    //BlipRecoAlg();
     ~BlipRecoAlg();
   
     void    reconfigure(fhicl::ParameterSet const& pset );
@@ -89,7 +90,6 @@ namespace blip {
     std::vector<blip::TrueBlip>     trueblips;
     std::vector<blip::ParticleInfo> pinfo;
     
-    calo::CalorimetryAlg*   fCaloAlg;
     float   ModBoxRecomb(float,float);
     float   dQdx_to_dEdx(float,float);
     float   Q_to_E(float,float);
@@ -109,7 +109,9 @@ namespace blip {
 
    private:
     
-    //const detinfo::DetectorProperties& detProp;
+    calo::CalorimetryAlg* fCaloAlg;
+    geo::GeometryCore const&  fGeom;
+
     float kLArDensity;
     float kNominalEfield;
     float kDriftVelocity;
@@ -185,7 +187,8 @@ namespace blip {
     TH1D*   h_clust_dt[kNplanes];
     TH1D*   h_clust_dtfrac[kNplanes];
     TH2D*   h_clust_q[kNplanes]; 
-    TH2D*   h_clust_q_cut[kNplanes]; 
+    TH2D*   h_clust_q_cut[kNplanes];
+    TH1D*   h_clust_score[kNplanes];
     TH1D*   h_clust_picky_overlap[kNplanes];
     TH1D*   h_clust_picky_dt[kNplanes];
     TH1D*   h_clust_picky_dtfrac[kNplanes];
@@ -194,6 +197,7 @@ namespace blip {
     TH1D*   h_clust_truematch_overlap[kNplanes];
     TH1D*   h_clust_truematch_dt[kNplanes];
     TH1D*   h_clust_truematch_dtfrac[kNplanes];
+    TH1D*   h_clust_truematch_score[kNplanes]; 
     TH2D*   h_clust_truematch_q[kNplanes]; 
 
     TH1D*   h_nmatches[kNplanes];

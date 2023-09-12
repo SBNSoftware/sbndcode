@@ -10,8 +10,6 @@ typedef std::vector<float>      vfloat_t;
 typedef std::set<int>           si_t;
 typedef std::map<int,float>     mif_t;
 
-const int kNcryostats = 1;
-const int kNtpcs      = 2;
 const int kNplanes    = 3;  
 
 namespace blip {
@@ -66,8 +64,9 @@ namespace blip {
 
   struct HitInfo {
     int   hitid         = -9;
-    int   plane         = -9;
+    int   cryo          = -9;
     int   tpc           = -9;
+    int   plane         = -9;
     int   wire          = -9;
     int   chan          = -9;
     float amp           = -9;
@@ -100,6 +99,7 @@ namespace blip {
     bool    isMerged        = false;
     bool    isMatched       = false;
     int     DeadWireSep     = 99;
+    int     Cryostat        = -9;
     int     TPC             = -9;
     int     Plane           = -9;
     int     NHits           = -9;
