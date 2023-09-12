@@ -15,8 +15,16 @@ enum VarType
   {
     kBool,
     kInt,
+    kUInt,
     kDouble,
     kUnknownVar = -1
+  };
+
+enum VecType
+  {
+    kOneD,
+    kTwoD,
+    kUnknownVec = -1
   };
     
 class VecVar
@@ -34,15 +42,31 @@ class VecVar
     return name;
   }
 
-  virtual VarType Identify() const
+  virtual VarType IdentifyVar() const
   {
     return kUnknownVar;
   }
 
+  virtual VecType IdentifyVec() const
+  {
+    return kUnknownVec;
+  }
+
   virtual void Resize(const int size) = 0;
+
+  virtual void Resize(const int pos, const int size) = 0;
+
+  template<typename T>
+  void Assign(const int size, const T val) {}
 
   template<typename T>
   void SetVal(const int pos, const T val) {}
+
+  template<typename T>
+  void Assign(const int pos, const int size, const T val) {}
+
+  template<typename T>
+  void SetVal(const int posA, const int posB, const T val) {}
 };
 
 template<typename T>
@@ -75,22 +99,108 @@ class InhVecVar : public VecVar
     var.resize(size);
   }
 
+  void Resize(const int pos, const int size) {};
+
   void SetVal(const int pos, const T value)
   {
     var[pos] = value;
   }
 
-  virtual VarType Identify() const;
+  void Assign(const int size, const T value)
+  {
+    var.assign(size, value);
+  }
+
+  void Assign(const int pos, const int size, const T val) {}
+
+  void SetVal(const int posA, const int posB, const T val) {}
+
+  virtual VarType IdentifyVar() const;
+
+  VecType IdentifyVec() const
+  {
+    return kOneD;
+  }
 };
 
 template<>
-VarType InhVecVar<bool>::Identify() const { return kBool; }
+VarType InhVecVar<bool>::IdentifyVar() const { return kBool; }
 
 template<>
-VarType InhVecVar<int>::Identify() const { return kInt; }
+VarType InhVecVar<int>::IdentifyVar() const { return kInt; }
 
 template<>
-VarType InhVecVar<double>::Identify() const { return kDouble; }
+VarType InhVecVar<size_t>::IdentifyVar() const { return kUInt; }
+
+template<>
+VarType InhVecVar<double>::IdentifyVar() const { return kDouble; }
+
+template<typename T>
+class InhVecVecVar;
+
+template<typename T>
+class InhVecVecVar : public VecVar
+{
+  std::vector<std::vector<T>> var;
+
+  public:
+
+ InhVecVecVar(std::string n, std::vector<std::vector<T>> v)
+    : VecVar(n)
+    , var(v)
+    {}
+
+  InhVecVecVar(std::string n = "")
+    : VecVar(n)
+    , var(std::vector<std::vector<T>>())
+    {}
+
+  std::vector<std::vector<T>>& Var()
+  {
+    return var;
+  }
+
+  void Resize(const int size)
+  {
+    var.resize(size);
+  }
+
+  void Resize(const int pos, const int size)
+  {
+    var[pos].resize(size);
+  }
+
+  void SetVal(const int posA, const int posB, const T value)
+  {
+    var[posA][posB] = value;
+  }
+
+  void Assign(const int pos, const int size, const T value)
+  {
+    var[pos].assign(size, value);
+  }
+
+  virtual VarType IdentifyVar() const;
+
+  VecType IdentifyVec() const
+  {
+    return kTwoD;
+  }
+};
+
+template<>
+VarType InhVecVecVar<bool>::IdentifyVar() const { return kBool; }
+
+template<>
+VarType InhVecVecVar<int>::IdentifyVar() const { return kInt; }
+
+template<>
+VarType InhVecVecVar<size_t>::IdentifyVar() const { return kUInt; }
+
+template<>
+VarType InhVecVecVar<double>::IdentifyVar() const { return kDouble; }
+
+typedef std::map<std::string, VecVar*> VecVarMap;
 
 template <typename T,
   typename TIter = decltype(std::begin(std::declval<T>())),
