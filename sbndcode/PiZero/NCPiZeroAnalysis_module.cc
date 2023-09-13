@@ -79,7 +79,8 @@ public:
   void ResetVars();
   void ClearMaps();
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
-                 const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
+                 const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
+                 const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles);
 
   void SetupBranches(VecVarMap &map);
 
@@ -137,6 +138,7 @@ private:
   std::map<int,int> fHitsMap;
   std::map<int, art::Ptr<recob::PFParticle>> fPFPMap;
   std::map<int, std::set<art::Ptr<recob::PFParticle>>> fRecoPFPMap;
+  std::map<int, std::pair<const art::Ptr<simb::MCTruth>*, const art::Handle<std::vector<simb::MCTruth>>*>> fKeyMCTruthMap;
 
   TTree* fEventTree;
 
@@ -399,7 +401,7 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
     throw std::exception();
   }
 
-  SetupMaps(e, hitHandle, pfpHandle);
+  SetupMaps(e, hitHandle, pfpHandle, MCTruthHandles);
   AnalyseNeutrinos(e, MCTruthHandles);
   AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
 
@@ -412,10 +414,12 @@ void sbnd::NCPiZeroAnalysis::ClearMaps()
   fHitsMap.clear();
   fPFPMap.clear();
   fRecoPFPMap.clear();
+  fKeyMCTruthMap.clear();
 }
 
 void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
-                                       const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
+                                       const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
+                                       const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles)
 {
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
@@ -430,6 +434,15 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
 
   for(auto const& pfp : pfpVec)
     fPFPMap[pfp->Self()] = pfp;
+
+  for(auto const& MCTruthHandle : MCTruthHandles)
+    {
+      std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
+      art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
+
+      for(auto const& mct : MCTruthVec)
+        fKeyMCTruthMap[mct.key()] = {&mct, &MCTruthHandle};
+    }
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles)
