@@ -138,7 +138,8 @@ private:
     fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel;
   bool fDebug;
 
-  std::map<int,int> fHitsMap;
+  std::map<int, int> fHitsMap;
+  std::map<int, int> fNuHitsMap;
   std::map<int, art::Ptr<recob::PFParticle>> fPFPMap;
   std::map<int, std::set<art::Ptr<recob::PFParticle>>> fRecoPFPMap;
   std::map<int, std::pair<const art::Ptr<simb::MCTruth>*, const art::Handle<std::vector<simb::MCTruth>>*>> fKeyMCTruthMap;
@@ -435,6 +436,7 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
 void sbnd::NCPiZeroAnalysis::ClearMaps()
 {
   fHitsMap.clear();
+  fNuHitsMap.clear();
   fPFPMap.clear();
   fRecoPFPMap.clear();
   fKeyMCTruthMap.clear();
@@ -450,7 +452,12 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
   art::fill_ptr_vector(hitVec, hitHandle);
 
   for(auto const& hit : hitVec)
-    fHitsMap[TruthMatchUtils::TrueParticleID(clockData,hit,true)]++;
+    {
+      const int trackID   = TruthMatchUtils::TrueParticleID(clockData,hit,true);
+      fHitsMap[trackID]++;
+      const int mcTruthID = trackID == def_int ? def_int : particleInv->TrackIdToMCTruth_P(trackID).key();
+      fNuHitsMap[mcTruthID]++;
+    }
 
   std::vector<art::Ptr<recob::PFParticle>> pfpVec;
   art::fill_ptr_vector(pfpVec, pfpHandle);
