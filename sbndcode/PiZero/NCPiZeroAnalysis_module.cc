@@ -482,8 +482,6 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
       std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
       art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
 
-      art::FindManyP<simb::MCParticle> MCTruthToMCParticles(MCTruthHandle, e, fMCParticleModuleLabel);
-
       for(auto const& mct : MCTruthVec)
         {
           if(mct->Origin() != 1)
@@ -601,12 +599,13 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
   art::FindManyP<recob::PFParticle>                slicesToPFPs(sliceHandle, e, fPFParticleModuleLabel);
   art::FindOneP<recob::Vertex>                     pfpToVertices(pfpHandle, e, fVertexModuleLabel);
-  art::FindOneP<sbn::CRUMBSResult>                 sliceToCRUMBS(sliceHandle, e, fCRUMBSModuleLabel);
+  art::FindOneP<sbn::CRUMBSResult>                 slicesToCRUMBS(sliceHandle, e, fCRUMBSModuleLabel);
   art::FindOneP<recob::Track>                      pfpToTrack(pfpHandle, e, fTrackModuleLabel);
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
   art::FindOneP<larpandoraobj::PFParticleMetadata> pfpToMeta(pfpHandle, e, fPFParticleModuleLabel);
   art::FindManyP<recob::Hit>                       tracksToHits(trackHandle, e, fTrackModuleLabel);
   art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
+  art::FindManyP<recob::Hit>                       slicesToHits(sliceHandle, e, fSliceModuleLabel);
 
   for (auto&& [slcCounter, slc] : enumerate(sliceVec))
     {
@@ -639,7 +638,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
       FillElement(slcVars["slc_vtx_z"], slcCounter, vtxPos.Z());
       FillElement(slcVars["slc_is_fv"], slcCounter, VolumeCheck(vtxPos, 20., 5., 10., 50.));
 
-      const art::Ptr<sbn::CRUMBSResult> crumbs = sliceToCRUMBS.at(slc.key());
+      const art::Ptr<sbn::CRUMBSResult> crumbs = slicesToCRUMBS.at(slc.key());
       if(crumbs.isNonnull())
         {
           FillElement(slcVars["slc_crumbs_score"], slcCounter, crumbs->score);
@@ -738,6 +737,37 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
       FillElement(slcVars["slc_n_razzle_electrons"], slcCounter, nrazzleelectrons);
       FillElement(slcVars["slc_n_razzle_photons"], slcCounter, nrazzlephotons);
       FillElement(slcVars["slc_n_razzle_other"], slcCounter, nrazzleother);
+
+      const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+      const std::vector<art::Ptr<recob::Hit>> sliceHits = slicesToHits.at(slc.key());
+
+      std::map<int, int> objectHitMap;
+      for(auto const &hit : sliceHits)
+        objectHitMap[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+
+      std::map<int, int> mcTruthHitMap;
+      for(auto const& [trackID, nhits] : objectHitMap)
+        {
+          const int mcTruthID = trackID == def_int ? def_int : particleInv->TrackIdToMCTruth_P(trackID).key();
+          mcTruthHitMap[mcTruthID] += nhits;
+        }
+
+      int maxHits  = def_int, maxID = def_int;
+
+      for(auto const& [mcTruthID, nhits] : mcTruthHitMap)
+        {
+          if(nhits > maxHits)
+            {
+              maxHits = nhits;
+              maxID   = mcTruthID;
+            }
+        }
+
+      const float comp = fNuHitsMap[maxID] == 0 ? def_float : mcTruthHitMap[maxID] / static_cast<float>(fNuHitsMap[maxID]);
+      const float pur  = sliceHits.size() == 0 ? def_float : mcTruthHitMap[maxID] / static_cast<float>(sliceHits.size());
+
+      FillElement(slcVars["slc_comp"], slcCounter, comp);
+      FillElement(slcVars["slc_pur"], slcCounter, pur);
     }
 }
 
