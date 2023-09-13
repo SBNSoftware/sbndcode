@@ -54,13 +54,13 @@ class VecVar
 
   virtual void Resize(const int size) = 0;
 
-  virtual void Resize(const int pos, const int size) = 0;
-
   template<typename T>
   void Assign(const int size, const T val) {}
 
   template<typename T>
   void SetVal(const int pos, const T val) {}
+
+  virtual void Resize(const int pos, const int size) = 0;
 
   template<typename T>
   void Assign(const int pos, const int size, const T val) {}
@@ -94,16 +94,16 @@ class InhVecVar : public VecVar
     return var;
   }
 
+  virtual VarType IdentifyVar() const;
+
+  VecType IdentifyVec() const
+  {
+    return kOneD;
+  }
+
   void Resize(const int size)
   {
     var.resize(size);
-  }
-
-  void Resize(const int pos, const int size) {};
-
-  void SetVal(const int pos, const T value)
-  {
-    var[pos] = value;
   }
 
   void Assign(const int size, const T value)
@@ -111,16 +111,21 @@ class InhVecVar : public VecVar
     var.assign(size, value);
   }
 
+  void SetVal(const int pos, const T value)
+  {
+    var[pos] = value;
+  }
+
+  T GetVal(const int pos)
+  {
+    return var[pos];
+  }
+
+  void Resize(const int pos, const int size) {};
+
   void Assign(const int pos, const int size, const T val) {}
 
   void SetVal(const int posA, const int posB, const T val) {}
-
-  virtual VarType IdentifyVar() const;
-
-  VecType IdentifyVec() const
-  {
-    return kOneD;
-  }
 };
 
 template<>
@@ -160,6 +165,13 @@ class InhVecVecVar : public VecVar
     return var;
   }
 
+  virtual VarType IdentifyVar() const;
+
+  VecType IdentifyVec() const
+  {
+    return kTwoD;
+  }
+
   void Resize(const int size)
   {
     var.resize(size);
@@ -170,21 +182,19 @@ class InhVecVecVar : public VecVar
     var[pos].resize(size);
   }
 
-  void SetVal(const int posA, const int posB, const T value)
-  {
-    var[posA][posB] = value;
-  }
-
   void Assign(const int pos, const int size, const T value)
   {
     var[pos].assign(size, value);
   }
 
-  virtual VarType IdentifyVar() const;
-
-  VecType IdentifyVec() const
+  void SetVal(const int posA, const int posB, const T value)
   {
-    return kTwoD;
+    var[posA][posB] = value;
+  }
+
+  T GetVal(const int posA, const int posB)
+  {
+    return var[posA][posB];
   }
 };
 
