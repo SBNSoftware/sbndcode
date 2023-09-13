@@ -89,6 +89,9 @@ public:
 
   void AnalyseNeutrinos(const art::Event &e, const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles);
 
+  void AnalyseMCTruth(VecVarMap &vars, const art::Ptr<simb::MCTruth> &mct, const int counter, const std::string prefix,
+                      const art::FindManyP<simb::MCParticle> &MCTruthToMCParticles);
+
   void AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                      const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
                      const art::Handle<std::vector<recob::Track>> &trackHandle,
@@ -479,77 +482,83 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
           if(mct->Origin() != 1)
             continue;
 
-          const simb::MCNeutrino mcn = mct->GetNeutrino();
-          const simb::MCParticle nu  = mcn.Nu();
-
-          const bool nc = mcn.CCNC() == 1;
-          const bool av = VolumeCheck(nu.Position().Vect());
-          const bool fv = VolumeCheck(nu.Position().Vect(), 20., 5., 10., 50.);
-
-          unsigned pizeros = 0;
-
-          for(int i = 0; i < mct->NParticles(); ++i)
-            {
-              const auto mcp = mct->GetParticle(i);
-
-              if(mcp.PdgCode() == 111 && mcp.StatusCode() != 1)
-                ++pizeros;
-            }
-
-          const bool pizero = pizeros > 0;
-
-          if(nc && fv && pizero)
-            {
-              FillElement(nuVars["nu_event_type"], nuCounter, (int) kNCPiZero);
-              FillElement(nuVars["nu_signal"], nuCounter, true);
-            }
-          else
-            {
-              FillElement(nuVars["nu_signal"], nuCounter, false);
-
-              if(nc && fv)
-                FillElement(nuVars["nu_event_type"], nuCounter, (int) kOtherNC);
-              else if(abs(nu.PdgCode()) == 14 && !nc && fv)
-                FillElement(nuVars["nu_event_type"], nuCounter, (int) kCCNuMu);
-              else if(abs(nu.PdgCode()) == 12 && !nc && fv)
-                FillElement(nuVars["nu_event_type"], nuCounter, (int) kCCNuE);
-              else if(!fv && av)
-                FillElement(nuVars["nu_event_type"], nuCounter, (int) kNonFV);
-              else if(!av)
-                FillElement(nuVars["nu_event_type"], nuCounter, (int) kDirt);
-              else
-                FillElement(nuVars["nu_event_type"], nuCounter, (int) kUnknownEv);
-            }
-
-          const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(mct.key());
-          float trueEnDep = 0.;
-
-          for(auto const& mcp : MCParticleVec)
-            {
-              std::vector<const sim::IDE*> ides = backTracker->TrackIdToSimIDEs_Ps(mcp->TrackId());
-
-              for(auto const& ide : ides)
-                trueEnDep += ide->energy / 1000.;
-            }
-
-          FillElement(nuVars["nu_true_en_dep"], nuCounter, trueEnDep);
-          FillElement(nuVars["nu_ccnc"], nuCounter, mcn.CCNC());
-          FillElement(nuVars["nu_mode"], nuCounter, mcn.Mode());
-          FillElement(nuVars["nu_int_type"], nuCounter, mcn.InteractionType());
-          FillElement(nuVars["nu_w"], nuCounter, mcn.W());
-          FillElement(nuVars["nu_x"], nuCounter, mcn.X());
-          FillElement(nuVars["nu_y"], nuCounter, mcn.Y());
-          FillElement(nuVars["nu_q_sqr"], nuCounter, mcn.QSqr());
-          FillElement(nuVars["nu_pt"], nuCounter, mcn.Pt());
-          FillElement(nuVars["nu_theta"], nuCounter, mcn.Theta());
-          FillElement(nuVars["nu_e"], nuCounter, nu.E());
-          FillElement(nuVars["nu_vtx_x"], nuCounter, nu.Vx());
-          FillElement(nuVars["nu_vtx_y"], nuCounter, nu.Vy());
-          FillElement(nuVars["nu_vtx_z"], nuCounter, nu.Vz());
+          AnalyseMCTruth(nuVars, mct, nuCounter, "nu", MCTruthToMCParticles);
 
           ++nuCounter;
         }
     }
+}
+
+void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(VecVarMap &vars, const art::Ptr<simb::MCTruth> &mct, const int counter, const std::string prefix,
+                                            const art::FindManyP<simb::MCParticle> &MCTruthToMCParticles)
+{
+  const simb::MCNeutrino mcn = mct->GetNeutrino();
+  const simb::MCParticle nu  = mcn.Nu();
+
+  const bool nc = mcn.CCNC() == 1;
+  const bool av = VolumeCheck(nu.Position().Vect());
+  const bool fv = VolumeCheck(nu.Position().Vect(), 20., 5., 10., 50.);
+
+  unsigned pizeros = 0;
+
+  for(int i = 0; i < mct->NParticles(); ++i)
+    {
+      const auto mcp = mct->GetParticle(i);
+
+      if(mcp.PdgCode() == 111 && mcp.StatusCode() != 1)
+        ++pizeros;
+    }
+
+  const bool pizero = pizeros > 0;
+
+  if(nc && fv && pizero)
+    {
+      FillElement(vars[prefix + "_event_type"], counter, (int) kNCPiZero);
+      FillElement(vars[prefix + "_signal"], counter, true);
+    }
+  else
+    {
+      FillElement(vars[prefix + "_signal"], counter, false);
+
+      if(nc && fv)
+        FillElement(vars[prefix + "_event_type"], counter, (int) kOtherNC);
+      else if(abs(nu.PdgCode()) == 14 && !nc && fv)
+        FillElement(vars[prefix + "_event_type"], counter, (int) kCCNuMu);
+      else if(abs(nu.PdgCode()) == 12 && !nc && fv)
+        FillElement(vars[prefix + "_event_type"], counter, (int) kCCNuE);
+      else if(!fv && av)
+        FillElement(vars[prefix + "_event_type"], counter, (int) kNonFV);
+      else if(!av)
+        FillElement(vars[prefix + "_event_type"], counter, (int) kDirt);
+      else
+        FillElement(vars[prefix + "_event_type"], counter, (int) kUnknownEv);
+    }
+
+  const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(mct.key());
+  float trueEnDep = 0.;
+
+  for(auto const& mcp : MCParticleVec)
+    {
+      std::vector<const sim::IDE*> ides = backTracker->TrackIdToSimIDEs_Ps(mcp->TrackId());
+
+      for(auto const& ide : ides)
+        trueEnDep += ide->energy / 1000.;
+    }
+
+  FillElement(vars[prefix + "_true_en_dep"], counter, trueEnDep);
+  FillElement(vars[prefix + "_ccnc"], counter, mcn.CCNC());
+  FillElement(vars[prefix + "_mode"], counter, mcn.Mode());
+  FillElement(vars[prefix + "_int_type"], counter, mcn.InteractionType());
+  FillElement(vars[prefix + "_w"], counter, mcn.W());
+  FillElement(vars[prefix + "_x"], counter, mcn.X());
+  FillElement(vars[prefix + "_y"], counter, mcn.Y());
+  FillElement(vars[prefix + "_q_sqr"], counter, mcn.QSqr());
+  FillElement(vars[prefix + "_pt"], counter, mcn.Pt());
+  FillElement(vars[prefix + "_theta"], counter, mcn.Theta());
+  FillElement(vars[prefix + "_e"], counter, nu.E());
+  FillElement(vars[prefix + "_vtx_x"], counter, nu.Vx());
+  FillElement(vars[prefix + "_vtx_y"], counter, nu.Vy());
+  FillElement(vars[prefix + "_vtx_z"], counter, nu.Vz());
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
