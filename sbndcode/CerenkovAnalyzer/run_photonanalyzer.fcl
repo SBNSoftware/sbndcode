@@ -1,0 +1,33 @@
+#include "simulationservices_sbnd.fcl"
+#include "analysisConfig.fcl"
+
+
+
+process_name: AnalyzeEvents # The process name must NOT contain any underscores
+
+source:
+{
+  module_type: RootInput # Telling art we want a ROOT input
+  maxEvents:   -1
+}
+
+services:
+{
+  TFileService: { fileName: "analysisCerenkov_tree.root"}
+  @table::sbnd_services
+}
+
+physics:
+{
+  analyzers:
+  {
+    ana: @local::AnalyzeEvents  #inserts into workflow, matches name in config fcl
+  }
+  path0:        [ ana ]
+  end_paths:    [ path0 ]
+
+}
+physics.analyzers.ana.AnalyzeSimPhotonsLite: false
+physics.analyzers.ana.AnalyzeSimPhotons: true
+physics.analyzers.ana.SimPhotonsLiteLabel: PhotonHitConverter
+physics.analyzers.ana.SimPhotonsLabel: PhotonHitConverter
