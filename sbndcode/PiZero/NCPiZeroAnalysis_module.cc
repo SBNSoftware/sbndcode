@@ -26,6 +26,8 @@
 #include "larsim/MCCheater/ParticleInventoryService.h"
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
+#include "larcore/Geometry/Geometry.h"
 
 #include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/RecoBase/PFParticle.h"
@@ -44,6 +46,7 @@
 #include "sbnobj/Common/Reco/RangeP.h"
 #include "sbnobj/Common/Reco/ScatterClosestApproach.h"
 #include "sbnobj/Common/Reco/StoppingChi2Fit.h"
+#include "sbnobj/Common/Reco/ShowerSelectionVars.h"
 
 #include "NCPiZeroStructs.h"
 
@@ -51,6 +54,7 @@
 
 constexpr int def_int       = std::numeric_limits<int>::min();
 constexpr size_t def_size   = std::numeric_limits<size_t>::max();
+constexpr float def_float   = -std::numeric_limits<float>::max();
 constexpr double def_double = -std::numeric_limits<double>::max();
 
 namespace sbnd {
@@ -91,6 +95,9 @@ public:
 
   void AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
                     const art::Handle<std::vector<recob::Track>> &trackHandle);
+  void AnalyseShower(const art::Event &e, const art::Ptr<recob::Shower> &shower, const int slcCounter, const int pfpCounter,
+                     const art::Handle<std::vector<recob::Shower>> &showerHandle, const art::Ptr<recob::Vertex> &vtx,
+                     const std::vector<art::Ptr<recob::Hit>> &hits);
 
   void ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, const int slcCounter, const int pfpCounter);
   void ExtractCalo(const art::Ptr<anab::Calorimetry> &calo, const int slcCounter, const int pfpCounter);
@@ -98,8 +105,12 @@ public:
   void ExtractMCS(const art::Ptr<recob::MCSFitResult> &mcs, const int slcCounter, const int pfpCounter);
   void ExtractStoppingChi2(const art::Ptr<sbn::StoppingChi2Fit> &stoppingChi2, const int slcCounter, const int pfpCounter);
 
-  double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
-  double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
+  void ExtractRazzle(const art::Ptr<sbn::MVAPID> &razzle, const int slcCounter, const int pfpCounter);
+  void ExtractCalo(const art::Ptr<recob::Shower> &shower, const int slcCounter, const int pfpCounter,
+                   const std::vector<art::Ptr<recob::Hit>> &hits);
+
+  float Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
+  float Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
 
   bool VolumeCheck(const geo::Point_t &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
   bool VolumeCheck(const TVector3 &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
@@ -119,7 +130,8 @@ private:
   art::InputTag fMCParticleModuleLabel, fSliceModuleLabel, fPFParticleModuleLabel, fVertexModuleLabel,
     fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel,
     fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
-    fClosestApproachModuleLabel, fStoppingChi2ModuleLabel;
+    fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
+    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel;
   bool fDebug;
 
   std::map<int,int> fHitsMap;
@@ -139,7 +151,7 @@ private:
   VecVarMap nuVars = {
     { "nu_event_type", new InhVecVar<int>("nu_event_type") },
     { "nu_signal", new InhVecVar<bool>("nu_signal") },
-    { "nu_true_en_dep", new InhVecVar<double>("nu_true_en_dep") },
+    { "nu_true_en_dep", new InhVecVar<float>("nu_true_en_dep") },
     { "nu_ccnc", new InhVecVar<int>("nu_ccnc") },
     { "nu_mode", new InhVecVar<int>("nu_mode") },
     { "nu_int_type", new InhVecVar<int>("nu_int_type") },
@@ -173,18 +185,18 @@ private:
     { "slc_vtx_y", new InhVecVar<double>("slc_vtx_y") },
     { "slc_vtx_z", new InhVecVar<double>("slc_vtx_z") },
     { "slc_is_fv", new InhVecVar<bool>("slc_is_fv") },
-    { "slc_crumbs_score", new InhVecVar<double>("slc_crumbs_score") },
-    { "slc_crumbs_nc_score", new InhVecVar<double>("slc_crumbs_nc_score") },
-    { "slc_crumbs_ccnue_score", new InhVecVar<double>("slc_crumbs_ccnue_score") },
+    { "slc_crumbs_score", new InhVecVar<float>("slc_crumbs_score") },
+    { "slc_crumbs_nc_score", new InhVecVar<float>("slc_crumbs_nc_score") },
+    { "slc_crumbs_ccnue_score", new InhVecVar<float>("slc_crumbs_ccnue_score") },
     { "slc_pfp_id", new InhVecVecVar<size_t>("slc_pfp_id") },
     { "slc_pfp_pdg", new InhVecVecVar<int>("slc_pfp_pdg") },
-    { "slc_pfp_track_score", new InhVecVecVar<double>("slc_pfp_track_score") },
+    { "slc_pfp_track_score", new InhVecVecVar<float>("slc_pfp_track_score") },
     { "slc_pfp_good_track", new InhVecVecVar<bool>("slc_pfp_good_track") },
     { "slc_pfp_good_shower", new InhVecVecVar<bool>("slc_pfp_good_shower") },
     { "slc_pfp_true_trackid", new InhVecVecVar<int>("slc_pfp_true_trackid") },
     { "slc_pfp_true_pdg", new InhVecVecVar<int>("slc_pfp_true_pdg") },
-    { "slc_pfp_comp", new InhVecVecVar<double>("slc_pfp_comp") },
-    { "slc_pfp_pur", new InhVecVecVar<double>("slc_pfp_pur") },
+    { "slc_pfp_comp", new InhVecVecVar<float>("slc_pfp_comp") },
+    { "slc_pfp_pur", new InhVecVecVar<float>("slc_pfp_pur") },
     { "slc_pfp_track_start_x", new InhVecVecVar<double>("slc_pfp_track_start_x") },
     { "slc_pfp_track_start_y", new InhVecVecVar<double>("slc_pfp_track_start_y") },
     { "slc_pfp_track_start_z", new InhVecVecVar<double>("slc_pfp_track_start_z") },
@@ -192,24 +204,46 @@ private:
     { "slc_pfp_track_dir_y", new InhVecVecVar<double>("slc_pfp_track_dir_y") },
     { "slc_pfp_track_dir_z", new InhVecVecVar<double>("slc_pfp_track_dir_z") },
     { "slc_pfp_track_length", new InhVecVecVar<double>("slc_pfp_track_length") },
-    { "slc_pfp_track_dazzle_muon_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_muon_score") },
-    { "slc_pfp_track_dazzle_pion_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_pion_score") },
-    { "slc_pfp_track_dazzle_proton_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_proton_score") },
-    { "slc_pfp_track_dazzle_other_score", new InhVecVecVar<double>("slc_pfp_track_dazzle_other_score") },
+    { "slc_pfp_track_dazzle_muon_score", new InhVecVecVar<float>("slc_pfp_track_dazzle_muon_score") },
+    { "slc_pfp_track_dazzle_pion_score", new InhVecVecVar<float>("slc_pfp_track_dazzle_pion_score") },
+    { "slc_pfp_track_dazzle_proton_score", new InhVecVecVar<float>("slc_pfp_track_dazzle_proton_score") },
+    { "slc_pfp_track_dazzle_other_score", new InhVecVecVar<float>("slc_pfp_track_dazzle_other_score") },
     { "slc_pfp_track_dazzle_pdg", new InhVecVecVar<int>("slc_pfp_track_dazzle_pdg") },
-    { "slc_pfp_track_ke", new InhVecVecVar<double>("slc_pfp_track_ke") },
-    { "slc_pfp_track_charge", new InhVecVecVar<double>("slc_pfp_track_charge") },
-    { "slc_pfp_track_chi2_muon", new InhVecVecVar<double>("slc_pfp_track_chi2_muon") },
-    { "slc_pfp_track_chi2_pion", new InhVecVecVar<double>("slc_pfp_track_chi2_pion") },
-    { "slc_pfp_track_chi2_kaon", new InhVecVecVar<double>("slc_pfp_track_chi2_kaon") },
-    { "slc_pfp_track_chi2_proton", new InhVecVecVar<double>("slc_pfp_track_chi2_proton") },
+    { "slc_pfp_track_ke", new InhVecVecVar<float>("slc_pfp_track_ke") },
+    { "slc_pfp_track_charge", new InhVecVecVar<float>("slc_pfp_track_charge") },
+    { "slc_pfp_track_chi2_muon", new InhVecVecVar<float>("slc_pfp_track_chi2_muon") },
+    { "slc_pfp_track_chi2_pion", new InhVecVecVar<float>("slc_pfp_track_chi2_pion") },
+    { "slc_pfp_track_chi2_kaon", new InhVecVecVar<float>("slc_pfp_track_chi2_kaon") },
+    { "slc_pfp_track_chi2_proton", new InhVecVecVar<float>("slc_pfp_track_chi2_proton") },
     { "slc_pfp_track_chi2_pdg", new InhVecVecVar<int>("slc_pfp_track_chi2_pdg") },
-    { "slc_pfp_track_mcs_mean_scatter", new InhVecVecVar<double>("slc_pfp_track_mcs_mean_scatter") },
-    { "slc_pfp_track_mcs_max_scatter_ratio", new InhVecVecVar<double>("slc_pfp_track_mcs_max_scatter_ratio") },
-    { "slc_pfp_track_range_p", new InhVecVecVar<double>("slc_pfp_track_range_p") },
-    { "slc_pfp_track_closest_approach_mean_dca", new InhVecVecVar<double>("slc_pfp_track_closest_approach_mean_dca") },
-    { "slc_pfp_track_stopping_dEdx_chi2_ratio", new InhVecVecVar<double>("slc_pfp_track_stopping_dEdx_chi2_ratio") },
-    { "slc_pfp_track_stopping_dEdx_pol0_fit", new InhVecVecVar<double>("slc_pfp_track_stopping_dEdx_pol0_fit") },
+    { "slc_pfp_track_mcs_mean_scatter", new InhVecVecVar<float>("slc_pfp_track_mcs_mean_scatter") },
+    { "slc_pfp_track_mcs_max_scatter_ratio", new InhVecVecVar<float>("slc_pfp_track_mcs_max_scatter_ratio") },
+    { "slc_pfp_track_range_p", new InhVecVecVar<float>("slc_pfp_track_range_p") },
+    { "slc_pfp_track_closest_approach_mean_dca", new InhVecVecVar<float>("slc_pfp_track_closest_approach_mean_dca") },
+    { "slc_pfp_track_stopping_dedx_chi2_ratio", new InhVecVecVar<float>("slc_pfp_track_stopping_dedx_chi2_ratio") },
+    { "slc_pfp_track_stopping_dedx_pol0_fit", new InhVecVecVar<float>("slc_pfp_track_stopping_dedx_pol0_fit") },
+    { "slc_pfp_shower_start_x", new InhVecVecVar<double>("slc_pfp_shower_start_x") },
+    { "slc_pfp_shower_start_y", new InhVecVecVar<double>("slc_pfp_shower_start_y") },
+    { "slc_pfp_shower_start_z", new InhVecVecVar<double>("slc_pfp_shower_start_z") },
+    { "slc_pfp_shower_conv_gap", new InhVecVecVar<double>("slc_pfp_shower_conv_gap") },
+    { "slc_pfp_shower_dir_x", new InhVecVecVar<double>("slc_pfp_shower_dir_x") },
+    { "slc_pfp_shower_dir_y", new InhVecVecVar<double>("slc_pfp_shower_dir_y") },
+    { "slc_pfp_shower_dir_z", new InhVecVecVar<double>("slc_pfp_shower_dir_z") },
+    { "slc_pfp_shower_length", new InhVecVecVar<double>("slc_pfp_shower_length") },
+    { "slc_pfp_shower_open_angle", new InhVecVecVar<double>("slc_pfp_shower_open_angle") },
+    { "slc_pfp_shower_energy", new InhVecVecVar<double>("slc_pfp_shower_energy") },
+    { "slc_pfp_shower_dedx", new InhVecVecVar<double>("slc_pfp_shower_dedx") },
+    { "slc_pfp_shower_sqrt_energy_density", new InhVecVecVar<double>("slc_pfp_shower_sqrt_energy_density") },
+    { "slc_pfp_shower_modified_hit_density", new InhVecVecVar<double>("slc_pfp_shower_modified_hit_density") },
+    { "slc_pfp_shower_razzle_electron_score", new InhVecVecVar<float>("slc_pfp_shower_razzle_electron_score") },
+    { "slc_pfp_shower_razzle_photon_score", new InhVecVecVar<float>("slc_pfp_shower_razzle_photon_score") },
+    { "slc_pfp_shower_razzle_other_score", new InhVecVecVar<float>("slc_pfp_shower_razzle_other_score") },
+    { "slc_pfp_shower_razzle_pdg", new InhVecVecVar<int>("slc_pfp_shower_razzle_pdg") },
+    { "slc_pfp_shower_cosmic_dist", new InhVecVecVar<float>("slc_pfp_shower_cosmic_dist") },
+    { "slc_pfp_shower_track_length", new InhVecVecVar<double>("slc_pfp_shower_track_length") },
+    { "slc_pfp_shower_track_width", new InhVecVecVar<double>("slc_pfp_shower_track_width") },
+    { "slc_pfp_shower_density_grad", new InhVecVecVar<double>("slc_pfp_shower_density_grad") },
+    { "slc_pfp_shower_density_pow", new InhVecVecVar<double>("slc_pfp_shower_density_pow") },
   };
 
 };
@@ -233,6 +267,10 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fRangeModuleLabel            = p.get<art::InputTag>("RangeModuleLabel", "pandoraTrackRange:muon");
     fClosestApproachModuleLabel  = p.get<art::InputTag>("ClosestApproachModuleLabel", "pandoraTrackClosestApproach");
     fStoppingChi2ModuleLabel     = p.get<art::InputTag>("StoppingChi2ModuleLabel", "pandoraTrackStoppingChi2");
+    fRazzleModuleLabel           = p.get<art::InputTag>("RazzleModuleLabel", "razzle");
+    fCosmicDistModuleLabel       = p.get<art::InputTag>("CosmicDistModuleLabel", "pandoraShowerCosmicDist");
+    fShowerTrackFitModuleLabel   = p.get<art::InputTag>("ShowerTrackFitModuleLabel", "pandoraShowerSelectionVars");
+    fShowerDensityFitModuleLabel = p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
     fDebug                       = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
@@ -266,6 +304,9 @@ void sbnd::NCPiZeroAnalysis::SetupBranches(VecVarMap &map)
             case kUInt:
               fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<size_t>*>(var)->Var()));
               break;
+            case kFloat:
+              fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<float>*>(var)->Var()));
+              break;
             case kDouble:
               fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVar<double>*>(var)->Var()));
               break;
@@ -285,6 +326,9 @@ void sbnd::NCPiZeroAnalysis::SetupBranches(VecVarMap &map)
               break;
             case kUInt:
               fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVecVar<size_t>*>(var)->Var()));
+              break;
+            case kFloat:
+              fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVecVar<float>*>(var)->Var()));
               break;
             case kDouble:
               fEventTree->Branch(name.c_str(), &(dynamic_cast<InhVecVecVar<double>*>(var)->Var()));
@@ -462,7 +506,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
             }
 
           const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(mct.key());
-          double trueEnDep = 0.;
+          float trueEnDep = 0.;
 
           for(auto const& mcp : MCParticleVec)
             {
@@ -546,9 +590,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
       const art::Ptr<sbn::CRUMBSResult> crumbs = sliceToCRUMBS.at(slc.key());
       if(crumbs.isNonnull())
         {
-          FillElement<double>(slcVars["slc_crumbs_score"], slcCounter, crumbs->score);
-          FillElement<double>(slcVars["slc_crumbs_nc_score"], slcCounter, crumbs->ncscore);
-          FillElement<double>(slcVars["slc_crumbs_ccnue_score"], slcCounter, crumbs->ccnuescore);
+          FillElement(slcVars["slc_crumbs_score"], slcCounter, crumbs->score);
+          FillElement(slcVars["slc_crumbs_nc_score"], slcCounter, crumbs->ncscore);
+          FillElement(slcVars["slc_crumbs_ccnue_score"], slcCounter, crumbs->ccnuescore);
         }
 
       int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzleprotons = 0, ndazzleother = 0;
@@ -576,7 +620,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           const std::map<std::string, float>::const_iterator scoreIter   = metaMap.find("TrackScore");
 
           if(scoreIter != metaMap.end())
-            FillElement<double>(slcVars["slc_pfp_track_score"], slcCounter, pfpCounter, scoreIter->second);
+            FillElement(slcVars["slc_pfp_track_score"], slcCounter, pfpCounter, scoreIter->second);
 
           const art::Ptr<recob::Track> track   = pfpToTrack.at(pfp.key());
           const art::Ptr<recob::Shower> shower = pfpToShower.at(pfp.key());
@@ -614,6 +658,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
               else if(dazzlepdg == 0)
                 ++ndazzleother;
             }
+
+          if(shower.isNonnull())
+            AnalyseShower(e, shower, slcCounter, pfpCounter, showerHandle, vtx, showerHits);
         }
 
       FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
@@ -670,11 +717,11 @@ void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<re
 
   const art::Ptr<sbn::RangeP> rangeP = tracksToRangePs.at(track.key());
   if(rangeP.isNonnull())
-    FillElement<double>(slcVars["slc_pfp_track_range_p"], slcCounter, pfpCounter, rangeP->range_p);
+    FillElement(slcVars["slc_pfp_track_range_p"], slcCounter, pfpCounter, rangeP->range_p);
 
   const art::Ptr<sbn::ScatterClosestApproach> closestApproach = tracksToClosestApproaches.at(track.key());
   if(closestApproach.isNonnull())
-    FillElement<double>(slcVars["slc_pfp_track_closest_approach_mean_dca"], slcCounter, pfpCounter, closestApproach->mean);
+    FillElement(slcVars["slc_pfp_track_closest_approach_mean_dca"], slcCounter, pfpCounter, closestApproach->mean);
 
   const art::Ptr<sbn::StoppingChi2Fit> stoppingChi2 = tracksToStoppingChi2s.at(track.key());
   if(stoppingChi2.isNonnull())
@@ -685,10 +732,10 @@ void sbnd::NCPiZeroAnalysis::ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, 
 {
   const std::map<int, float> map = dazzle->mvaScoreMap;
 
-  FillElement<double>(slcVars["slc_pfp_track_dazzle_muon_score"], slcCounter, pfpCounter, map.at(13));
-  FillElement<double>(slcVars["slc_pfp_track_dazzle_pion_score"], slcCounter, pfpCounter, map.at(211));
-  FillElement<double>(slcVars["slc_pfp_track_dazzle_proton_score"], slcCounter, pfpCounter, map.at(2212));
-  FillElement<double>(slcVars["slc_pfp_track_dazzle_other_score"], slcCounter, pfpCounter, map.at(0));
+  FillElement(slcVars["slc_pfp_track_dazzle_muon_score"], slcCounter, pfpCounter, map.at(13));
+  FillElement(slcVars["slc_pfp_track_dazzle_pion_score"], slcCounter, pfpCounter, map.at(211));
+  FillElement(slcVars["slc_pfp_track_dazzle_proton_score"], slcCounter, pfpCounter, map.at(2212));
+  FillElement(slcVars["slc_pfp_track_dazzle_other_score"], slcCounter, pfpCounter, map.at(0));
   FillElement(slcVars["slc_pfp_track_dazzle_pdg"], slcCounter, pfpCounter, dazzle->BestPDG());
 }
 
@@ -698,7 +745,7 @@ void sbnd::NCPiZeroAnalysis::ExtractCalo(const art::Ptr<anab::Calorimetry> &calo
   const std::vector<float> &dEdx = calo->dEdx();
   const std::vector<float> &pitch = calo->TrkPitchVec();
 
-  double ke = 0., charge = 0.;
+  float ke = 0., charge = 0.;
 
   for(size_t i = 0; i < dQdx.size(); ++i)
     {
@@ -713,7 +760,7 @@ void sbnd::NCPiZeroAnalysis::ExtractCalo(const art::Ptr<anab::Calorimetry> &calo
 void sbnd::NCPiZeroAnalysis::ExtractChi2PID(const art::Ptr<anab::ParticleID> &chi2pid, const int slcCounter, const int pfpCounter)
 {
   const std::vector<anab::sParticleIDAlgScores> AlgScoresVec = chi2pid->ParticleIDAlgScores();
-  std::vector<std::pair<int, double>> chi2s;
+  std::vector<std::pair<int, float>> chi2s;
 
   for(size_t i_algscore = 0; i_algscore < AlgScoresVec.size(); i_algscore++)
     {
@@ -726,16 +773,16 @@ void sbnd::NCPiZeroAnalysis::ExtractChi2PID(const art::Ptr<anab::ParticleID> &ch
           switch(AlgScore.fAssumedPdg)
             {
             case 13:
-              FillElement<double>(slcVars["slc_pfp_track_chi2_muon"], slcCounter, pfpCounter, AlgScore.fValue);
+              FillElement(slcVars["slc_pfp_track_chi2_muon"], slcCounter, pfpCounter, AlgScore.fValue);
               break;
             case 211:
-              FillElement<double>(slcVars["slc_pfp_track_chi2_pion"], slcCounter, pfpCounter, AlgScore.fValue);
+              FillElement(slcVars["slc_pfp_track_chi2_pion"], slcCounter, pfpCounter, AlgScore.fValue);
               break;
             case 321:
-              FillElement<double>(slcVars["slc_pfp_track_chi2_kaon"], slcCounter, pfpCounter, AlgScore.fValue);
+              FillElement(slcVars["slc_pfp_track_chi2_kaon"], slcCounter, pfpCounter, AlgScore.fValue);
               break;
             case 2212:
-              FillElement<double>(slcVars["slc_pfp_track_chi2_proton"], slcCounter, pfpCounter, AlgScore.fValue);
+              FillElement(slcVars["slc_pfp_track_chi2_proton"], slcCounter, pfpCounter, AlgScore.fValue);
               break;
             }
         }
@@ -757,9 +804,9 @@ void sbnd::NCPiZeroAnalysis::ExtractMCS(const art::Ptr<recob::MCSFitResult> &mcs
     return;
 
   unsigned int counter = 0;
-  double maxScatter = 0.f, sumScatter = 0.f;
+  float maxScatter = 0.f, sumScatter = 0.f;
 
-  for(const double& angle : mcs->scatterAngles())
+  for(auto const& angle : mcs->scatterAngles())
     {
       if(angle < 0)
         continue;
@@ -778,15 +825,111 @@ void sbnd::NCPiZeroAnalysis::ExtractMCS(const art::Ptr<recob::MCSFitResult> &mcs
 
 void sbnd::NCPiZeroAnalysis::ExtractStoppingChi2(const art::Ptr<sbn::StoppingChi2Fit> &stoppingChi2, const int slcCounter, const int pfpCounter)
 {
-  const double pol0Chi2 = stoppingChi2->pol0Chi2;
-  const double expChi2  = stoppingChi2->expChi2;
-  const double ratio    = (pol0Chi2 > 0.f && expChi2 > 0.f) ? pol0Chi2 / expChi2 : -5.f;
+  const float pol0Chi2 = stoppingChi2->pol0Chi2;
+  const float expChi2  = stoppingChi2->expChi2;
+  const float ratio    = (pol0Chi2 > 0.f && expChi2 > 0.f) ? pol0Chi2 / expChi2 : -5.f;
 
-  FillElement(slcVars["slc_pfp_track_stopping_dEdx_chi2_ratio"], slcCounter, pfpCounter, ratio);
-  FillElement<double>(slcVars["slc_pfp_track_stopping_dEdx_pol0_fit"], slcCounter, pfpCounter, stoppingChi2->pol0Fit);
+  FillElement(slcVars["slc_pfp_track_stopping_dedx_chi2_ratio"], slcCounter, pfpCounter, ratio);
+  FillElement(slcVars["slc_pfp_track_stopping_dedx_pol0_fit"], slcCounter, pfpCounter, stoppingChi2->pol0Fit);
 }
 
-double sbnd::NCPiZeroAnalysis::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)
+void sbnd::NCPiZeroAnalysis::AnalyseShower(const art::Event &e, const art::Ptr<recob::Shower> &shower, const int slcCounter, const int pfpCounter,
+                                           const art::Handle<std::vector<recob::Shower>> &showerHandle, const art::Ptr<recob::Vertex> &vtx,
+                                           const std::vector<art::Ptr<recob::Hit>> &hits)
+{
+  art::FindOneP<sbn::MVAPID> showersToRazzle(showerHandle, e, fRazzleModuleLabel);
+  art::FindOneP<float> showersToCosmicDist(showerHandle, e, fCosmicDistModuleLabel);
+  art::FindOneP<sbn::ShowerTrackFit> showersToTrackFit(showerHandle, e, fShowerTrackFitModuleLabel);
+  art::FindOneP<sbn::ShowerDensityFit> showersToDensityFit(showerHandle, e, fShowerDensityFitModuleLabel);
+
+  geo::Point_t start(shower->ShowerStart().X(), shower->ShowerStart().Y(), shower->ShowerStart().Z());
+  FillElement(slcVars["slc_pfp_shower_start_x"], slcCounter, pfpCounter, start.X());
+  FillElement(slcVars["slc_pfp_shower_start_y"], slcCounter, pfpCounter, start.Y());
+  FillElement(slcVars["slc_pfp_shower_start_z"], slcCounter, pfpCounter, start.Z());
+
+  double convGap = (start - vtx->position()).R();
+  FillElement(slcVars["slc_pfp_shower_conv_gap"], slcCounter, pfpCounter, convGap);
+
+  geo::Vector_t dir(shower->Direction().X(), shower->Direction().Y(), shower->Direction().Z());
+  FillElement(slcVars["slc_pfp_shower_dir_x"], slcCounter, pfpCounter, dir.X());
+  FillElement(slcVars["slc_pfp_shower_dir_y"], slcCounter, pfpCounter, dir.Y());
+  FillElement(slcVars["slc_pfp_shower_dir_z"], slcCounter, pfpCounter, dir.Z());
+
+  FillElement(slcVars["slc_pfp_shower_length"], slcCounter, pfpCounter, shower->Length());
+  FillElement(slcVars["slc_pfp_shower_open_angle"], slcCounter, pfpCounter, shower->OpenAngle());
+
+  ExtractCalo(shower, slcCounter, pfpCounter, hits);
+
+  const art::Ptr<sbn::MVAPID> razzle = showersToRazzle.at(shower.key());
+  if(razzle.isNonnull())
+    ExtractRazzle(razzle, slcCounter, pfpCounter);
+
+  const art::Ptr<float> cosmicDist = showersToCosmicDist.at(shower.key());
+  if(cosmicDist.isNonnull())
+    FillElement(slcVars["slc_pfp_shower_cosmic_dist"], slcCounter, pfpCounter, *cosmicDist);
+
+  const art::Ptr<sbn::ShowerTrackFit> trackFit = showersToTrackFit.at(shower.key());
+  if(trackFit.isNonnull())
+    {
+      FillElement(slcVars["slc_pfp_shower_track_length"], slcCounter, pfpCounter, trackFit->mTrackLength);
+      FillElement(slcVars["slc_pfp_shower_track_width"], slcCounter, pfpCounter, trackFit->mTrackWidth);
+    }
+
+  const art::Ptr<sbn::ShowerDensityFit> densityFit = showersToDensityFit.at(shower.key());
+  if(densityFit.isNonnull())
+    {
+      FillElement(slcVars["slc_pfp_shower_density_grad"], slcCounter, pfpCounter, densityFit->mDensityGrad);
+      FillElement(slcVars["slc_pfp_shower_density_pow"], slcCounter, pfpCounter, densityFit->mDensityPow);
+    }
+}
+
+void sbnd::NCPiZeroAnalysis::ExtractRazzle(const art::Ptr<sbn::MVAPID> &razzle, const int slcCounter, const int pfpCounter)
+{
+  const std::map<int, float> map = razzle->mvaScoreMap;
+
+  FillElement(slcVars["slc_pfp_shower_razzle_electron_score"], slcCounter, pfpCounter, map.at(11));
+  FillElement(slcVars["slc_pfp_shower_razzle_photon_score"], slcCounter, pfpCounter, map.at(22));
+  FillElement(slcVars["slc_pfp_shower_razzle_other_score"], slcCounter, pfpCounter, map.at(0));
+  FillElement(slcVars["slc_pfp_shower_razzle_pdg"], slcCounter, pfpCounter, razzle->BestPDG());
+}
+
+void sbnd::NCPiZeroAnalysis::ExtractCalo(const art::Ptr<recob::Shower> &shower, const int slcCounter, const int pfpCounter,
+                                         const std::vector<art::Ptr<recob::Hit>> &hits)
+{
+  const geo::GeometryCore* geom = lar::providerFrom<geo::Geometry>();
+
+  std::array<int, 3> showerPlaneHits      = { 0, 0, 0 };
+  std::array<double, 3> showerPlanePitches = { -1., -1., -1. };
+
+  for(auto const& hit : hits)
+    showerPlaneHits[hit->WireID().Plane]++;
+
+  for(geo::PlaneGeo const& plane : geom->Iterate<geo::PlaneGeo>())
+    {
+      const double angleToVert = geom->WireAngleToVertical(plane.View(), plane.ID()) - 0.5 * M_PI;
+      const double cosgamma    = std::abs(std::sin(angleToVert) * shower->Direction().Y() + std::cos(angleToVert) * shower->Direction().Z());
+
+      showerPlanePitches[plane.ID().Plane] = plane.WirePitch() / cosgamma;
+    }
+
+  int bestPlane = shower->best_plane();
+
+  FillElement(slcVars["slc_pfp_shower_energy"], slcCounter, pfpCounter, shower->Energy()[bestPlane]);
+  FillElement(slcVars["slc_pfp_shower_dedx"], slcCounter, pfpCounter, shower->dEdx()[bestPlane]);
+
+  const double length      = shower->Length();
+  const double bestEnergy  = shower->Energy()[bestPlane];
+  const int bestPlaneHits  = showerPlaneHits[bestPlane];
+  const double bestPitch   = showerPlanePitches[bestPlane];
+  const double wiresHit    = bestPitch > std::numeric_limits<double>::epsilon() ? length / bestPitch : -5.;
+
+  FillElement(slcVars["slc_pfp_shower_sqrt_energy_density"], slcCounter, pfpCounter,
+              (length > 0 && bestEnergy > 0) ? std::sqrt(bestEnergy) / length : -5.);
+  FillElement(slcVars["slc_pfp_shower_modified_hit_density"], slcCounter, pfpCounter,
+              wiresHit > 1. ? bestPlaneHits / wiresHit : -5.);
+}
+
+float sbnd::NCPiZeroAnalysis::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)
 {
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
@@ -795,10 +938,10 @@ double sbnd::NCPiZeroAnalysis::Purity(const art::Event &e, const std::vector<art
   for(unsigned int i = 0; i < objectHits.size(); ++i)
     ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
 
-  return (objectHits.size() == 0) ? def_double : objectHitsMap[trackID]/static_cast<double>(objectHits.size());
+  return (objectHits.size() == 0) ? def_float : objectHitsMap[trackID]/static_cast<float>(objectHits.size());
 }
 
-double sbnd::NCPiZeroAnalysis::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)
+float sbnd::NCPiZeroAnalysis::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)
 {
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
@@ -807,7 +950,7 @@ double sbnd::NCPiZeroAnalysis::Completeness(const art::Event &e, const std::vect
   for(unsigned int i = 0; i < objectHits.size(); ++i)
     ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
 
-  return (fHitsMap[trackID] == 0) ? def_double : objectHitsMap[trackID]/static_cast<double>(fHitsMap[trackID]);
+  return (fHitsMap[trackID] == 0) ? def_float : objectHitsMap[trackID]/static_cast<float>(fHitsMap[trackID]);
 }
 
 bool sbnd::NCPiZeroAnalysis::VolumeCheck(const geo::Point_t &pos, const double &walls, const double &cath, const double &front, const double &back)
@@ -850,6 +993,9 @@ void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
             case kUInt:
               dynamic_cast<InhVecVar<size_t>*>(var)->Assign(size, def_size);
               break;
+            case kFloat:
+              dynamic_cast<InhVecVar<float>*>(var)->Assign(size, def_float);
+              break;
             case kDouble:
               dynamic_cast<InhVecVar<double>*>(var)->Assign(size, def_double);
               break;
@@ -869,6 +1015,9 @@ void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
               break;
             case kUInt:
               dynamic_cast<InhVecVecVar<size_t>*>(var)->Resize(size);
+              break;
+            case kFloat:
+              dynamic_cast<InhVecVecVar<float>*>(var)->Resize(size);
               break;
             case kDouble:
               dynamic_cast<InhVecVecVar<double>*>(var)->Resize(size);
@@ -896,6 +1045,9 @@ void sbnd::NCPiZeroAnalysis::ResizeSubVectors(VecVarMap &map, const int pos, con
               break;
             case kUInt:
               dynamic_cast<InhVecVecVar<size_t>*>(var)->Assign(pos, size, def_size);
+              break;
+            case kFloat:
+              dynamic_cast<InhVecVecVar<float>*>(var)->Assign(pos, size, def_float);
               break;
             case kDouble:
               dynamic_cast<InhVecVecVar<double>*>(var)->Assign(pos, size, def_double);

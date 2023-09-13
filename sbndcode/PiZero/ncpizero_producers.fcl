@@ -4,6 +4,8 @@
 #include "rangeproducer.fcl"
 #include "trackscatterclosestapproach.fcl"
 #include "trackstoppingchi2fitter.fcl"
+#include "showercosmicdistanceproducer.fcl"
+#include "showerselectionvarsproducer.fcl"
 
 ncpizero_producers:
 {
@@ -26,6 +28,13 @@ ncpizero_producers:
     TrackLabel: "pandoraSCETrack"
     CaloLabel:  "pandoraSCECalo"
     Chi2Label:  "pandoraSCEPid"
+  }
+
+  razzle:
+  {
+    @table::razzle_sbnd
+    PFPLabel:    "pandoraSCE"
+    ShowerLabel: "pandoraSCEShower"
   }
 
   pandoraTrackMCS:
@@ -51,5 +60,19 @@ ncpizero_producers:
     @table::trackstoppingchi2fitter_sbn
     TrackLabel: "pandoraSCETrack"
     CaloLabel:  "pandoraSCECalo"
+  }
+
+  pandoraShowerCosmicDist:
+  {
+    @table::showerCosmicDist_sbn
+    PandoraLabel: "pandoraSCE"
+    ShowerLabel:  "pandoraSCEShower"
+  }
+
+  pandoraShowerSelectionVars:
+  {
+    @table::showerSelectionVars_sbn
+    PandoraLabel: "pandoraSCE"
+    ShowerLabel:  "pandoraSCEShower"
   }
 }

@@ -33,7 +33,8 @@ physics:
 
   prods:         [ crumbs, pandoraTrackMCS, pandoraTrackRange,
                    pandoraTrackClosestApproach, pandoraTrackStoppingChi2,
-                   dazzle ]
+                   dazzle, pandoraShowerCosmicDist, pandoraShowerSelectionVars,
+                   razzle ]
   trigger_paths: [ prods ]
 
   ana:       [ ncpizeroana ]

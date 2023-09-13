@@ -16,6 +16,7 @@ enum VarType
     kBool,
     kInt,
     kUInt,
+    kFloat,
     kDouble,
     kUnknownVar = -1
   };
@@ -138,6 +139,9 @@ template<>
 VarType InhVecVar<size_t>::IdentifyVar() const { return kUInt; }
 
 template<>
+VarType InhVecVar<float>::IdentifyVar() const { return kFloat; }
+
+template<>
 VarType InhVecVar<double>::IdentifyVar() const { return kDouble; }
 
 template<typename T>
@@ -206,6 +210,9 @@ VarType InhVecVecVar<int>::IdentifyVar() const { return kInt; }
 
 template<>
 VarType InhVecVecVar<size_t>::IdentifyVar() const { return kUInt; }
+
+template<>
+VarType InhVecVecVar<float>::IdentifyVar() const { return kFloat; }
 
 template<>
 VarType InhVecVecVar<double>::IdentifyVar() const { return kDouble; }
