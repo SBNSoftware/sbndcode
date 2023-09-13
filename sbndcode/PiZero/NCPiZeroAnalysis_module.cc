@@ -181,6 +181,9 @@ private:
     { "slc_n_dazzle_pions", new InhVecVar<int>("slc_n_dazzle_pions") },
     { "slc_n_dazzle_protons", new InhVecVar<int>("slc_n_dazzle_protons") },
     { "slc_n_dazzle_other", new InhVecVar<int>("slc_n_dazzle_other") },
+    { "slc_n_razzle_electrons", new InhVecVar<int>("slc_n_razzle_electrons") },
+    { "slc_n_razzle_photons", new InhVecVar<int>("slc_n_razzle_photons") },
+    { "slc_n_razzle_other", new InhVecVar<int>("slc_n_razzle_other") },
     { "slc_vtx_x", new InhVecVar<double>("slc_vtx_x") },
     { "slc_vtx_y", new InhVecVar<double>("slc_vtx_y") },
     { "slc_vtx_z", new InhVecVar<double>("slc_vtx_z") },
@@ -595,7 +598,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement(slcVars["slc_crumbs_ccnue_score"], slcCounter, crumbs->ccnuescore);
         }
 
-      int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzleprotons = 0, ndazzleother = 0;
+      int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzleprotons = 0, ndazzleother = 0,
+        nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0;
 
       ResizeSubVectors(slcVars, slcCounter, prim->NumDaughters());
 
@@ -661,6 +665,19 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
           if(shower.isNonnull())
             AnalyseShower(e, shower, slcCounter, pfpCounter, showerHandle, vtx, showerHits);
+
+          if(pfp->PdgCode() == 11)
+            {
+              int razzlepdg = dynamic_cast<InhVecVecVar<int>*>(slcVars["slc_pfp_shower_razzle_pdg"])->GetVal(slcCounter, pfpCounter);
+
+              if(razzlepdg == 11)
+                ++nrazzleelectrons;
+              else if(razzlepdg == 22)
+                ++nrazzlephotons;
+              else if(razzlepdg == 0)
+                ++nrazzleother;
+            }
+
         }
 
       FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
@@ -669,6 +686,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
       FillElement(slcVars["slc_n_dazzle_pions"], slcCounter, ndazzlepions);
       FillElement(slcVars["slc_n_dazzle_protons"], slcCounter, ndazzleprotons);
       FillElement(slcVars["slc_n_dazzle_other"], slcCounter, ndazzleother);
+      FillElement(slcVars["slc_n_razzle_electrons"], slcCounter, nrazzleelectrons);
+      FillElement(slcVars["slc_n_razzle_photons"], slcCounter, nrazzlephotons);
+      FillElement(slcVars["slc_n_razzle_other"], slcCounter, nrazzleother);
     }
 }
 
