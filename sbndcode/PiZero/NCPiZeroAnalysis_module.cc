@@ -41,6 +41,8 @@
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
 
+#include "larcoreobj/SummaryData/POTSummary.h"
+
 #include "sbnobj/Common/Reco/CRUMBSResult.h"
 #include "sbnobj/Common/Reco/MVAPID.h"
 #include "sbnobj/Common/Reco/RangeP.h"
@@ -75,8 +77,10 @@ public:
 
   // Required functions.
   void analyze(const art::Event &e) override;
+  virtual void beginSubRun(const art::SubRun& sr);
 
-  void ResetVars();
+  void ResetSubRunVars();
+  void ResetEventVars();
   void ClearMaps();
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
                  const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
@@ -138,7 +142,7 @@ private:
     fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel,
     fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
     fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
-    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel;
+    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel;
   bool fDebug;
 
   std::map<int, int> fHitsMap;
@@ -146,9 +150,12 @@ private:
   std::map<int, art::Ptr<recob::PFParticle>> fPFPMap;
   std::map<int, std::set<art::Ptr<recob::PFParticle>>> fRecoPFPMap;
 
-  TTree* fEventTree;
+  TTree* fSubRunTree;
 
-  // Tree variables
+  double _pot;
+  int    _spills;
+
+  TTree* fEventTree;
 
   int  _run;
   int  _subrun;
@@ -302,9 +309,15 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fCosmicDistModuleLabel       = p.get<art::InputTag>("CosmicDistModuleLabel", "pandoraShowerCosmicDist");
     fShowerTrackFitModuleLabel   = p.get<art::InputTag>("ShowerTrackFitModuleLabel", "pandoraShowerSelectionVars");
     fShowerDensityFitModuleLabel = p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
+    fPOTModuleLabel              = p.get<art::InputTag>("POTModuleLabel", "generator");
     fDebug                       = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
+
+    fSubRunTree = fs->make<TTree>("subruns","");
+
+    fSubRunTree->Branch("pot", &_pot);
+    fSubRunTree->Branch("spills", &_spills);
 
     fEventTree = fs->make<TTree>("events","");
     fEventTree->Branch("run", &_run);
@@ -371,9 +384,27 @@ void sbnd::NCPiZeroAnalysis::SetupBranches(VecVarMap &map)
     }
 }
 
+void sbnd::NCPiZeroAnalysis::beginSubRun(const art::SubRun &sr)
+{
+  ResetSubRunVars();
+
+  // Get POT
+  art::Handle<sumdata::POTSummary> potHandle;
+  sr.getByLabel(fPOTModuleLabel, potHandle);
+  if(!potHandle.isValid()){
+    std::cout << "POT product " << fPOTModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
+  _pot    = potHandle->totpot;
+  _spills = potHandle->totspills;
+
+  fSubRunTree->Fill();
+}
+
 void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
 {
-  ResetVars();
+  ResetEventVars();
   ClearMaps();
 
   _run    = e.id().run();
@@ -1085,7 +1116,12 @@ bool sbnd::NCPiZeroAnalysis::VolumeCheck(const TVector3 &pos, const double &wall
   return xedges && yedges && zedges && caths;
 }
 
-void sbnd::NCPiZeroAnalysis::ResetVars()
+void sbnd::NCPiZeroAnalysis::ResetSubRunVars()
+{
+  _pot = 0.; _spills = 0;
+}
+
+void sbnd::NCPiZeroAnalysis::ResetEventVars()
 {
   _run = -1; _subrun = -1; _event  = -1;
 
