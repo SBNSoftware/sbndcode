@@ -155,7 +155,7 @@ private:
     { "nu_mctruth_id", new InhVecVar<size_t>("nu_mctruth_id") },
     { "nu_event_type", new InhVecVar<int>("nu_event_type") },
     { "nu_signal", new InhVecVar<bool>("nu_signal") },
-    { "nu_true_en_dep", new InhVecVar<float>("nu_true_en_dep") },
+    { "nu_en_dep", new InhVecVar<float>("nu_en_dep") },
     { "nu_ccnc", new InhVecVar<int>("nu_ccnc") },
     { "nu_mode", new InhVecVar<int>("nu_mode") },
     { "nu_int_type", new InhVecVar<int>("nu_int_type") },
@@ -193,7 +193,7 @@ private:
     { "slc_true_signal", new InhVecVar<bool>("slc_true_signal") },
     { "slc_comp", new InhVecVar<float>("slc_comp") },
     { "slc_pur", new InhVecVar<float>("slc_pur") },
-    { "slc_true_true_en_dep", new InhVecVar<float>("slc_true_true_en_dep") },
+    { "slc_true_en_dep", new InhVecVar<float>("slc_true_en_dep") },
     { "slc_true_ccnc", new InhVecVar<int>("slc_true_ccnc") },
     { "slc_true_mode", new InhVecVar<int>("slc_true_mode") },
     { "slc_true_int_type", new InhVecVar<int>("slc_true_int_type") },
@@ -565,7 +565,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
         trueEnDep += ide->energy / 1000.;
     }
 
-  FillElement(vars[prefix + "_true_en_dep"], counter, trueEnDep);
+  FillElement(vars[prefix + "_en_dep"], counter, trueEnDep);
   FillElement(vars[prefix + "_ccnc"], counter, mcn.CCNC());
   FillElement(vars[prefix + "_mode"], counter, mcn.Mode());
   FillElement(vars[prefix + "_int_type"], counter, mcn.InteractionType());
