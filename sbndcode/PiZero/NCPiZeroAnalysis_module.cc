@@ -79,8 +79,7 @@ public:
   void ResetVars();
   void ClearMaps();
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
-                 const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
-                 const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles);
+                 const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
 
   void SetupBranches(VecVarMap &map);
 
@@ -89,8 +88,7 @@ public:
 
   void AnalyseNeutrinos(const art::Event &e, const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles);
 
-  void AnalyseMCTruth(VecVarMap &vars, const art::Ptr<simb::MCTruth> &mct, const int counter, const std::string prefix,
-                      const art::FindManyP<simb::MCParticle> &MCTruthToMCParticles);
+  void AnalyseMCTruth(const art::Event &e, VecVarMap &vars, const art::Ptr<simb::MCTruth> &mct, const int counter, const std::string prefix);
 
   void AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                      const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
@@ -139,10 +137,9 @@ private:
   bool fDebug;
 
   std::map<int, int> fHitsMap;
-  std::map<int, int> fNuHitsMap;
+  std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap;
   std::map<int, art::Ptr<recob::PFParticle>> fPFPMap;
   std::map<int, std::set<art::Ptr<recob::PFParticle>>> fRecoPFPMap;
-  std::map<int, std::pair<const art::Ptr<simb::MCTruth>*, const art::Handle<std::vector<simb::MCTruth>>*>> fKeyMCTruthMap;
 
   TTree* fEventTree;
 
@@ -425,7 +422,7 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
     throw std::exception();
   }
 
-  SetupMaps(e, hitHandle, pfpHandle, MCTruthHandles);
+  SetupMaps(e, hitHandle, pfpHandle);
   AnalyseNeutrinos(e, MCTruthHandles);
   AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
 
@@ -439,12 +436,10 @@ void sbnd::NCPiZeroAnalysis::ClearMaps()
   fNuHitsMap.clear();
   fPFPMap.clear();
   fRecoPFPMap.clear();
-  fKeyMCTruthMap.clear();
 }
 
 void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
-                                       const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
-                                       const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles)
+                                       const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
 {
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
@@ -455,8 +450,8 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
     {
       const int trackID   = TruthMatchUtils::TrueParticleID(clockData,hit,true);
       fHitsMap[trackID]++;
-      const int mcTruthID = trackID == def_int ? def_int : particleInv->TrackIdToMCTruth_P(trackID).key();
-      fNuHitsMap[mcTruthID]++;
+      const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
+      fNuHitsMap[mct]++;
     }
 
   std::vector<art::Ptr<recob::PFParticle>> pfpVec;
@@ -464,15 +459,6 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
 
   for(auto const& pfp : pfpVec)
     fPFPMap[pfp->Self()] = pfp;
-
-  for(auto const& MCTruthHandle : MCTruthHandles)
-    {
-      std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
-      art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
-
-      for(auto const& mct : MCTruthVec)
-        fKeyMCTruthMap[mct.key()] = {&mct, &MCTruthHandle};
-    }
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles)
@@ -500,23 +486,31 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
       std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
       art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
 
-      art::FindManyP<simb::MCParticle> MCTruthToMCParticles(MCTruthHandle, e, fMCParticleModuleLabel);
-
       for(auto const& mct : MCTruthVec)
         {
           if(mct->Origin() != 1)
             continue;
 
-          AnalyseMCTruth(nuVars, mct, nuCounter, "nu", MCTruthToMCParticles);
+          AnalyseMCTruth(e, nuVars, mct, nuCounter, "nu");
 
           ++nuCounter;
         }
     }
 }
 
-void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(VecVarMap &vars, const art::Ptr<simb::MCTruth> &mct, const int counter, const std::string prefix,
-                                            const art::FindManyP<simb::MCParticle> &MCTruthToMCParticles)
+void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars, const art::Ptr<simb::MCTruth> &mct, const int counter, const std::string prefix)
 {
+  if(mct->Origin() == 0)
+    {
+      FillElement(vars[prefix + "_event_type"], counter, (int) kCosmic);
+      return;
+    }
+  else if(mct->Origin() != 1)
+    {
+      FillElement(vars[prefix + "_event_type"], counter, (int) kUnknownEv);
+      return;
+    }
+
   const simb::MCNeutrino mcn = mct->GetNeutrino();
   const simb::MCParticle nu  = mcn.Nu();
 
@@ -559,7 +553,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(VecVarMap &vars, const art::Ptr<simb
         FillElement(vars[prefix + "_event_type"], counter, (int) kUnknownEv);
     }
 
-  const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(mct.key());
+  art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
+  const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
   float trueEnDep = 0.;
 
   for(auto const& mcp : MCParticleVec)
@@ -745,29 +740,33 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
       for(auto const &hit : sliceHits)
         objectHitMap[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
 
-      std::map<int, int> mcTruthHitMap;
+      std::map<const art::Ptr<simb::MCTruth>, int> mcTruthHitMap;
       for(auto const& [trackID, nhits] : objectHitMap)
         {
-          const int mcTruthID = trackID == def_int ? def_int : particleInv->TrackIdToMCTruth_P(trackID).key();
-          mcTruthHitMap[mcTruthID] += nhits;
+          const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
+          mcTruthHitMap[mct] += nhits;
         }
 
-      int maxHits  = def_int, maxID = def_int;
+      int maxHits  = def_int;
+      art::Ptr<simb::MCTruth> bestMCT = art::Ptr<simb::MCTruth>();
 
-      for(auto const& [mcTruthID, nhits] : mcTruthHitMap)
+      for(auto const& [mct, nhits] : mcTruthHitMap)
         {
           if(nhits > maxHits)
             {
               maxHits = nhits;
-              maxID   = mcTruthID;
+              bestMCT  = mct;
             }
         }
 
-      const float comp = fNuHitsMap[maxID] == 0 ? def_float : mcTruthHitMap[maxID] / static_cast<float>(fNuHitsMap[maxID]);
-      const float pur  = sliceHits.size() == 0 ? def_float : mcTruthHitMap[maxID] / static_cast<float>(sliceHits.size());
+      const float comp = fNuHitsMap[bestMCT] == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(fNuHitsMap[bestMCT]);
+      const float pur  = sliceHits.size() == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(sliceHits.size());
 
       FillElement(slcVars["slc_comp"], slcCounter, comp);
       FillElement(slcVars["slc_pur"], slcCounter, pur);
+
+      if(bestMCT.isNonnull())
+        AnalyseMCTruth(e, slcVars, bestMCT, slcCounter, "slc_true");
     }
 }
 
@@ -946,7 +945,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseShower(const art::Event &e, const art::Ptr<r
   FillElement(slcVars["slc_pfp_shower_start_y"], slcCounter, pfpCounter, start.Y());
   FillElement(slcVars["slc_pfp_shower_start_z"], slcCounter, pfpCounter, start.Z());
 
-  double convGap = (start - vtx->position()).R();
+  double convGap = vtx.isNonnull() ? (start - vtx->position()).R() : def_double;
   FillElement(slcVars["slc_pfp_shower_conv_gap"], slcCounter, pfpCounter, convGap);
 
   geo::Vector_t dir(shower->Direction().X(), shower->Direction().Y(), shower->Direction().Z());
