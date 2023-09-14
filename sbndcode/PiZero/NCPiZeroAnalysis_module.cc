@@ -95,6 +95,9 @@ public:
                      const art::Handle<std::vector<recob::Track>> &trackHandle,
                      const art::Handle<std::vector<recob::Shower>> &showerHandle);
 
+  void AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
+                   const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const art::Handle<std::vector<recob::Track>> &trackHandle,
+                   const art::Handle<std::vector<recob::Shower>> &showerHandle);
   void AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
                     const art::Handle<std::vector<recob::Track>> &trackHandle);
   void AnalyseShower(const art::Event &e, const art::Ptr<recob::Shower> &shower, const int slcCounter, const int pfpCounter,
@@ -595,11 +598,6 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
   art::FindManyP<recob::PFParticle>                slicesToPFPs(sliceHandle, e, fPFParticleModuleLabel);
   art::FindOneP<recob::Vertex>                     pfpToVertices(pfpHandle, e, fVertexModuleLabel);
   art::FindOneP<sbn::CRUMBSResult>                 slicesToCRUMBS(sliceHandle, e, fCRUMBSModuleLabel);
-  art::FindOneP<recob::Track>                      pfpToTrack(pfpHandle, e, fTrackModuleLabel);
-  art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
-  art::FindOneP<larpandoraobj::PFParticleMetadata> pfpToMeta(pfpHandle, e, fPFParticleModuleLabel);
-  art::FindManyP<recob::Hit>                       tracksToHits(trackHandle, e, fTrackModuleLabel);
-  art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
   art::FindManyP<recob::Hit>                       slicesToHits(sliceHandle, e, fSliceModuleLabel);
 
   for (auto&& [slcCounter, slc] : enumerate(sliceVec))
@@ -641,97 +639,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement(slcVars["slc_crumbs_ccnue_score"], slcCounter, crumbs->ccnuescore);
         }
 
-      int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzleprotons = 0, ndazzleother = 0,
-        nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0;
-
       ResizeSubVectors(slcVars, slcCounter, prim->NumDaughters());
 
-      for(auto&& [pfpCounter, id] : enumerate(prim->Daughters()))
-        {
-          const art::Ptr<recob::PFParticle> pfp = fPFPMap[id];
-          FillElement(slcVars["slc_pfp_id"], slcCounter, pfpCounter, id);
-          FillElement(slcVars["slc_pfp_pdg"], slcCounter, pfpCounter, pfp->PdgCode());
-
-          if(abs(pfp->PdgCode()) == 11)
-            ++nshws;
-          else if(abs(pfp->PdgCode()) == 13)
-            ++ntrks;
-          else
-            {
-              std::cout << "PFP with PDG: " << pfp->PdgCode() << std::endl;
-              throw std::exception();
-            }
-
-          const art::Ptr<larpandoraobj::PFParticleMetadata> meta         = pfpToMeta.at(pfp.key());
-          const larpandoraobj::PFParticleMetadata::PropertiesMap metaMap = meta->GetPropertiesMap();
-          const std::map<std::string, float>::const_iterator scoreIter   = metaMap.find("TrackScore");
-
-          if(scoreIter != metaMap.end())
-            FillElement(slcVars["slc_pfp_track_score"], slcCounter, pfpCounter, scoreIter->second);
-
-          const art::Ptr<recob::Track> track   = pfpToTrack.at(pfp.key());
-          const art::Ptr<recob::Shower> shower = pfpToShower.at(pfp.key());
-
-          FillElement(slcVars["slc_pfp_good_track"], slcCounter, pfpCounter, track.isNonnull());
-          FillElement(slcVars["slc_pfp_good_shower"], slcCounter, pfpCounter, shower.isNonnull());
-
-          const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
-          const std::vector<art::Ptr<recob::Hit>> showerHits = showersToHits.at(shower.key());
-          const int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
-          FillElement(slcVars["slc_pfp_true_trackid"], slcCounter, pfpCounter, trackID);
-          FillElement(slcVars["slc_pfp_comp"], slcCounter, pfpCounter, Completeness(e, showerHits, trackID));
-          FillElement(slcVars["slc_pfp_pur"], slcCounter, pfpCounter, Purity(e, showerHits, trackID));
-
-          if(trackID != def_int)
-            {
-              const simb::MCParticle* mcp = particleInv->TrackIdToParticle_P(trackID);
-              if(mcp != NULL)
-                FillElement(slcVars["slc_pfp_true_pdg"], slcCounter, pfpCounter, mcp->PdgCode());
-            }
-
-          if(track.isNonnull())
-            AnalyseTrack(e, track, slcCounter, pfpCounter, trackHandle);
-
-          if(pfp->PdgCode() == 13)
-            {
-              int dazzlepdg = dynamic_cast<InhVecVecVar<int>*>(slcVars["slc_pfp_track_dazzle_pdg"])->GetVal(slcCounter, pfpCounter);
-
-              if(dazzlepdg == 13)
-                ++ndazzlemuons;
-              else if(dazzlepdg == 211)
-                ++ndazzlepions;
-              else if(dazzlepdg == 2212)
-                ++ndazzleprotons;
-              else if(dazzlepdg == 0)
-                ++ndazzleother;
-            }
-
-          if(shower.isNonnull())
-            AnalyseShower(e, shower, slcCounter, pfpCounter, showerHandle, vtx, showerHits);
-
-          if(pfp->PdgCode() == 11)
-            {
-              int razzlepdg = dynamic_cast<InhVecVecVar<int>*>(slcVars["slc_pfp_shower_razzle_pdg"])->GetVal(slcCounter, pfpCounter);
-
-              if(razzlepdg == 11)
-                ++nrazzleelectrons;
-              else if(razzlepdg == 22)
-                ++nrazzlephotons;
-              else if(razzlepdg == 0)
-                ++nrazzleother;
-            }
-
-        }
-
-      FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
-      FillElement(slcVars["slc_n_shws"], slcCounter, nshws);
-      FillElement(slcVars["slc_n_dazzle_muons"], slcCounter, ndazzlemuons);
-      FillElement(slcVars["slc_n_dazzle_pions"], slcCounter, ndazzlepions);
-      FillElement(slcVars["slc_n_dazzle_protons"], slcCounter, ndazzleprotons);
-      FillElement(slcVars["slc_n_dazzle_other"], slcCounter, ndazzleother);
-      FillElement(slcVars["slc_n_razzle_electrons"], slcCounter, nrazzleelectrons);
-      FillElement(slcVars["slc_n_razzle_photons"], slcCounter, nrazzlephotons);
-      FillElement(slcVars["slc_n_razzle_other"], slcCounter, nrazzleother);
+      AnalysePFPs(e, prim, vtx, slcCounter, pfpHandle, trackHandle, showerHandle);
 
       const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
       const std::vector<art::Ptr<recob::Hit>> sliceHits = slicesToHits.at(slc.key());
@@ -770,6 +680,104 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
     }
 }
 
+void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
+                                         const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const art::Handle<std::vector<recob::Track>> &trackHandle,
+                                         const art::Handle<std::vector<recob::Shower>> &showerHandle)
+{
+  art::FindOneP<recob::Track>                      pfpToTrack(pfpHandle, e, fTrackModuleLabel);
+  art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
+  art::FindOneP<larpandoraobj::PFParticleMetadata> pfpToMeta(pfpHandle, e, fPFParticleModuleLabel);
+  art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
+
+  int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzleprotons = 0, ndazzleother = 0,
+    nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0;
+
+  for(auto&& [pfpCounter, id] : enumerate(prim->Daughters()))
+    {
+      const art::Ptr<recob::PFParticle> pfp = fPFPMap[id];
+      FillElement(slcVars["slc_pfp_id"], slcCounter, pfpCounter, id);
+      FillElement(slcVars["slc_pfp_pdg"], slcCounter, pfpCounter, pfp->PdgCode());
+
+      if(abs(pfp->PdgCode()) == 11)
+        ++nshws;
+      else if(abs(pfp->PdgCode()) == 13)
+        ++ntrks;
+      else
+        {
+          std::cout << "PFP with PDG: " << pfp->PdgCode() << std::endl;
+          throw std::exception();
+        }
+
+      const art::Ptr<larpandoraobj::PFParticleMetadata> meta         = pfpToMeta.at(pfp.key());
+      const larpandoraobj::PFParticleMetadata::PropertiesMap metaMap = meta->GetPropertiesMap();
+      const std::map<std::string, float>::const_iterator scoreIter   = metaMap.find("TrackScore");
+
+      if(scoreIter != metaMap.end())
+        FillElement(slcVars["slc_pfp_track_score"], slcCounter, pfpCounter, scoreIter->second);
+
+      const art::Ptr<recob::Track> track   = pfpToTrack.at(pfp.key());
+      const art::Ptr<recob::Shower> shower = pfpToShower.at(pfp.key());
+
+      FillElement(slcVars["slc_pfp_good_track"], slcCounter, pfpCounter, track.isNonnull());
+      FillElement(slcVars["slc_pfp_good_shower"], slcCounter, pfpCounter, shower.isNonnull());
+
+      const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+      const std::vector<art::Ptr<recob::Hit>> hits = showersToHits.at(shower.key());
+      const int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, true);
+      FillElement(slcVars["slc_pfp_true_trackid"], slcCounter, pfpCounter, trackID);
+      FillElement(slcVars["slc_pfp_comp"], slcCounter, pfpCounter, Completeness(e, hits, trackID));
+      FillElement(slcVars["slc_pfp_pur"], slcCounter, pfpCounter, Purity(e, hits, trackID));
+
+      if(trackID != def_int)
+        {
+          const simb::MCParticle* mcp = particleInv->TrackIdToParticle_P(trackID);
+          if(mcp != NULL)
+            FillElement(slcVars["slc_pfp_true_pdg"], slcCounter, pfpCounter, mcp->PdgCode());
+        }
+
+      if(track.isNonnull())
+        AnalyseTrack(e, track, slcCounter, pfpCounter, trackHandle);
+
+      if(pfp->PdgCode() == 13)
+        {
+          int dazzlepdg = dynamic_cast<InhVecVecVar<int>*>(slcVars["slc_pfp_track_dazzle_pdg"])->GetVal(slcCounter, pfpCounter);
+
+          if(dazzlepdg == 13)
+            ++ndazzlemuons;
+          else if(dazzlepdg == 211)
+            ++ndazzlepions;
+          else if(dazzlepdg == 2212)
+            ++ndazzleprotons;
+          else if(dazzlepdg == 0)
+            ++ndazzleother;
+        }
+
+      if(shower.isNonnull())
+        AnalyseShower(e, shower, slcCounter, pfpCounter, showerHandle, vtx, hits);
+
+      if(pfp->PdgCode() == 11)
+        {
+          int razzlepdg = dynamic_cast<InhVecVecVar<int>*>(slcVars["slc_pfp_shower_razzle_pdg"])->GetVal(slcCounter, pfpCounter);
+
+          if(razzlepdg == 11)
+            ++nrazzleelectrons;
+          else if(razzlepdg == 22)
+            ++nrazzlephotons;
+          else if(razzlepdg == 0)
+            ++nrazzleother;
+        }
+    }
+
+  FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
+  FillElement(slcVars["slc_n_shws"], slcCounter, nshws);
+  FillElement(slcVars["slc_n_dazzle_muons"], slcCounter, ndazzlemuons);
+  FillElement(slcVars["slc_n_dazzle_pions"], slcCounter, ndazzlepions);
+  FillElement(slcVars["slc_n_dazzle_protons"], slcCounter, ndazzleprotons);
+  FillElement(slcVars["slc_n_dazzle_other"], slcCounter, ndazzleother);
+  FillElement(slcVars["slc_n_razzle_electrons"], slcCounter, nrazzleelectrons);
+  FillElement(slcVars["slc_n_razzle_photons"], slcCounter, nrazzlephotons);
+  FillElement(slcVars["slc_n_razzle_other"], slcCounter, nrazzleother);
+}
 void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
                                           const art::Handle<std::vector<recob::Track>> &trackHandle)
 {
