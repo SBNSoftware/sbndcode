@@ -8,7 +8,7 @@ hitdumper:
     MaxOpHits: 100000
     MaxSamples: 5001
     MaxCRTHits: 5000
-    MaxCRTTracks: 10
+    MaxCRTTracks: 100
 
     DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
