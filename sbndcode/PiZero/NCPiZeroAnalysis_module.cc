@@ -496,7 +496,7 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
 
   for(auto const& hit : hitVec)
     {
-      const int trackID   = TruthMatchUtils::TrueParticleID(clockData,hit,true);
+      const int trackID = TruthMatchUtils::TrueParticleID(clockData,hit,true);
       fHitsMap[trackID]++;
       const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
       fNuHitsMap[mct]++;
@@ -548,7 +548,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseNeutrinos(const art::Event &e, const std::ve
 
 void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars, const art::Ptr<simb::MCTruth> &mct, const int counter, const std::string prefix)
 {
-  if(mct->Origin() == 0)
+  if(mct->Origin() == 2)
     {
       FillElement(vars[prefix + "_event_type"], counter, (int) kCosmic);
       return;
