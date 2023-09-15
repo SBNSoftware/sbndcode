@@ -20,12 +20,14 @@
 #include "TLine.h"
 #include "TStyle.h"
 #include "TLegend.h"
+#include "TGaxis.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/Simulation/SimChannel.h"
 
 constexpr int def_int = std::numeric_limits<int>::min();
@@ -52,13 +54,14 @@ public:
 
 private:
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
-  art::InputTag fHitModuleLabel;
+  art::InputTag fHitModuleLabel, fWireModuleLabel;
 };
 
 sbnd::HitWaveformDisplay::HitWaveformDisplay(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   {
-    fHitModuleLabel = p.get<art::InputTag>("HitModuleLabel", "gaushit");
+    fHitModuleLabel  = p.get<art::InputTag>("HitModuleLabel", "gaushit");
+    fWireModuleLabel = p.get<art::InputTag>("WireModuleLabel", "simtpc2d:gauss");
   }
 
 void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
@@ -71,11 +74,19 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
     std::cout << "Hit product " << fHitModuleLabel << " not found..." << std::endl;
     throw std::exception();
   }
-
-  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
-
   std::vector<art::Ptr<recob::Hit>> hitVec;
   art::fill_ptr_vector(hitVec, hitHandle);
+
+  art::Handle<std::vector<recob::Wire>> wireHandle;
+  e.getByLabel(fWireModuleLabel, wireHandle);
+  if(!wireHandle.isValid()){
+    std::cout << "Wire product " << fWireModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+  std::vector<art::Ptr<recob::Wire>> wireVec;
+  art::fill_ptr_vector(wireVec, wireHandle);
+
+  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
   for(auto const& hit : hitVec)
     {
@@ -102,7 +113,8 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
           mintdc = std::min(mintdc, hitStartTDC);
           maxtdc = std::max(maxtdc, hitEndTDC);
 
-          std::vector<std::pair<unsigned short, unsigned short>> extraHits;
+          std::vector<std::pair<unsigned short, unsigned short>> extraGoodHits;
+          std::vector<std::pair<unsigned short, unsigned short>> extraBadHits;
 
           for(auto const &otherHit : hitVec)
             {
@@ -118,50 +130,79 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
               mintdc = std::min(mintdc, otherHitStartTDC);
               maxtdc = std::max(maxtdc, otherHitEndTDC);
 
-              extraHits.emplace_back(otherHitStartTDC, otherHitEndTDC);
+              const int otherTrackID = TruthMatchUtils::TrueParticleID(clockData,otherHit,true);
+              if(otherTrackID == def_int)
+                extraBadHits.emplace_back(otherHitStartTDC, otherHitEndTDC);
+              else
+                extraGoodHits.emplace_back(otherHitStartTDC, otherHitEndTDC);
+            }
+
+          for(auto const &wire : wireVec)
+            {
+              if(wire->Channel() != hit->Channel())
+                continue;
+
+              const recob::Wire::RegionsOfInterest_t& signalROI = wire->SignalROI();
+
+              for(auto const &roi : signalROI.get_ranges())
+                {
+                  const unsigned short roiStart = roi.begin_index();
+                  const unsigned short roiEnd   = roi.begin_index() + roi.size();
+
+                  const unsigned short roiStartTDC = std::max(0, (int) clockData.TPCTick2TDC(roiStart));
+                  const unsigned short roiEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(roiEnd));
+
+                  mintdc = std::min(mintdc, roiStartTDC);
+                  maxtdc = std::max(maxtdc, roiEndTDC);
+                }
             }
 
           const unsigned short nBins = maxtdc - mintdc + 21;
           const float xLow   = mintdc - 10.5;
           const float xHigh  = maxtdc + 10.5;
 
-          TH1D *hist = new TH1D("hist", Form("Channel %d;Tick (TDC);N Electrons", hit->Channel()), nBins, xLow, xHigh);
+          TH1D *simHist  = new TH1D("simHist", Form("Channel %d;Tick (TDC);N Electrons", hit->Channel()), nBins, xLow, xHigh);
 
           for(unsigned short tdc = mintdc; tdc < maxtdc+1; ++tdc)
             {
               const unsigned short bin = tdc - mintdc + 11;
-              hist->SetBinContent(bin, sc->Charge(tdc));
+              simHist->SetBinContent(bin, sc->Charge(tdc));
             }
+
+          if(simHist->Integral() == 0)
+            continue;
 
           TCanvas *canvas = new TCanvas("canvas", "canvas");
           canvas->cd();
 
-          const double max = hist->GetMaximum();
-          hist->SetMaximum(1.2 * max);
-          hist->Draw("hist");
+          const double max = simHist->GetMaximum();
+          simHist->SetMaximum(1.5 * max);
+          simHist->Draw("hist");
+          simHist->GetXaxis()->SetNdivisions(505);
+          simHist->GetYaxis()->SetNdivisions(507);
 
-          TLine *startLine = new TLine(hitStartTDC, 0, hitStartTDC, max);
+          TLine *startLine = new TLine(hitStartTDC, 0, hitStartTDC, 1.2 * max);
           startLine->SetLineColor(kRed);
           startLine->SetLineWidth(4);
-          TLine *endLine = new TLine(hitEndTDC, 0, hitEndTDC, max);
+          TLine *endLine = new TLine(hitEndTDC, 0, hitEndTDC, 1.2 * max);
           endLine->SetLineColor(kRed);
           endLine->SetLineWidth(4);
 
           startLine->Draw();
           endLine->Draw();
 
-          TLegend *legend = new TLegend(0.3, 0.85, 0.8, 0.9);
-          legend->SetNColumns(3);
-          legend->AddEntry(hist, "Sim Deposits", "l");
+          TLegend *legend = new TLegend(0.3, 0.78, 0.8, 0.9);
+          legend->SetNColumns(2);
+          legend->AddEntry(simHist, "Sim Deposits", "l");
           legend->AddEntry(startLine, "#pm1#sigma ghost hit", "l");
 
           int hitN = 0;
-          for(auto const& [startTDC, endTDC] : extraHits)
+          for(auto const& [startTDC, endTDC] : extraGoodHits)
             {
-              TLine *otherStartLine = new TLine(startTDC, 0, startTDC, max);
+              TLine *otherStartLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
               otherStartLine->SetLineColor(kOrange);
               otherStartLine->SetLineWidth(4);
-              TLine *otherEndLine = new TLine(endTDC, 0, endTDC, max);
+              TLine *otherEndLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
               otherEndLine->SetLineColor(kOrange);
               otherEndLine->SetLineWidth(4);
 
@@ -174,13 +215,65 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
               ++hitN;
             }
 
+          for(auto const& [startTDC, endTDC] : extraBadHits)
+            {
+              TLine *otherStartLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
+              otherStartLine->SetLineColor(kRed);
+              otherStartLine->SetLineWidth(4);
+              TLine *otherEndLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
+              otherEndLine->SetLineColor(kRed);
+              otherEndLine->SetLineWidth(4);
+
+              otherStartLine->Draw();
+              otherEndLine->Draw();
+            }
+
+          simHist->Draw("histsame");
+          TH1D *wireHist = new TH1D("wireHist", Form("Channel %d;Tick (TDC);ADC", hit->Channel()), nBins, xLow, xHigh);
+
+          for(auto const &wire : wireVec)
+            {
+              if(wire->Channel() != hit->Channel())
+                continue;
+
+              const recob::Wire::RegionsOfInterest_t& signalROI = wire->SignalROI();
+
+              for(auto const &roi : signalROI.get_ranges())
+                {
+                  const unsigned short roiStart = roi.begin_index();
+                  unsigned short tdc = std::max(0, (int) clockData.TPCTick2TDC(roiStart));
+
+                  for(auto const& value : roi)
+                    {
+                      const unsigned short bin = tdc - mintdc + 11;
+                      wireHist->SetBinContent(bin, value);
+                      ++tdc;
+                    }
+                }
+
+              const double wireMax = wireHist->GetMaximum();
+              wireHist->Scale(max / wireMax);
+              wireHist->Draw("same hist");
+              wireHist->SetLineColor(kMagenta);
+
+              TGaxis *wireAxis = new TGaxis(xHigh, 0, xHigh, 1.5*max,
+                                            0, 1.5*wireMax, 507, "+L");
+              wireAxis->SetLineWidth(2);
+              wireAxis->SetLabelSize(0.05);
+              wireAxis->SetTitleSize(0.05);
+              wireAxis->SetTitleOffset(0.7);
+              wireAxis->SetTitle("ADC");
+              wireAxis->Draw();
+
+              legend->AddEntry(wireHist, "Deconv. Waveform", "l");
+            }
+
           legend->Draw();
 
           canvas->SaveAs(Form("channel%d.png",hit->Channel()));
           canvas->SaveAs(Form("channel%d.pdf",hit->Channel()));
 
           delete canvas;
-          delete hist;
         }
     }
 }
@@ -201,20 +294,20 @@ void sbnd::HitWaveformDisplay::SetStyle()
   gStyle->SetCanvasDefH(1000);
   gStyle->SetCanvasDefW(1700);
   gStyle->SetPadTopMargin(0.08);
-  gStyle->SetPadRightMargin(0.06);
-  gStyle->SetPadBottomMargin(0.18);
-  gStyle->SetPadLeftMargin(0.18);
+  gStyle->SetPadRightMargin(0.12);
+  gStyle->SetPadBottomMargin(0.12);
+  gStyle->SetPadLeftMargin(0.12);
 
   gStyle->SetTextFont(62);
   gStyle->SetTextSize(0.09);
 
   gStyle->SetLabelFont(62,"xyz");
-  gStyle->SetLabelSize(0.07,"xyz");
-  gStyle->SetTitleSize(0.07,"xyz");
+  gStyle->SetLabelSize(0.05,"xyz");
+  gStyle->SetTitleSize(0.05,"xyz");
   gStyle->SetTitleFont(62,"xyz");
 
-  gStyle->SetTitleOffset(1.1,"x");
-  gStyle->SetTitleOffset(1.1,"y");
+  gStyle->SetTitleOffset(1.07,"x");
+  gStyle->SetTitleOffset(1.12,"y");
   gStyle->SetTitleOffset(1,"z");
 
   gStyle->SetMarkerStyle(20);
@@ -228,7 +321,7 @@ void sbnd::HitWaveformDisplay::SetStyle()
   gStyle->SetOptFit(0);
 
   gStyle->SetPadTickX(1);
-  gStyle->SetPadTickY(1);
+  gStyle->SetPadTickY(0);
 }
 
 DEFINE_ART_MODULE(sbnd::HitWaveformDisplay)
