@@ -55,6 +55,8 @@ public:
 private:
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
   art::InputTag fHitModuleLabel, fWireModuleLabel;
+
+  bool fROIOnly;
 };
 
 sbnd::HitWaveformDisplay::HitWaveformDisplay(fhicl::ParameterSet const& p)
@@ -62,6 +64,7 @@ sbnd::HitWaveformDisplay::HitWaveformDisplay(fhicl::ParameterSet const& p)
   {
     fHitModuleLabel  = p.get<art::InputTag>("HitModuleLabel", "gaushit");
     fWireModuleLabel = p.get<art::InputTag>("WireModuleLabel", "simtpc2d:gauss");
+    fROIOnly         = p.get<bool>("ROIOnly", true);
   }
 
 void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
@@ -101,41 +104,29 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
           const unsigned short hitStartTDC = std::max(0, (int) clockData.TPCTick2TDC(hitStart));
           const unsigned short hitEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(hitEnd));
 
+          const double hitStartWide = hit->PeakTimeMinusRMS(10.);
+          const double hitEndWide   = hit->PeakTimePlusRMS(10.);
+
+          const unsigned short hitStartWideTDC = std::max(0, (int) clockData.TPCTick2TDC(hitStartWide));
+          const unsigned short hitEndWideTDC   = std::max(0, (int) clockData.TPCTick2TDC(hitEndWide));
+
           auto const &map = sc->TDCIDEMap();
-          unsigned short mintdc = std::numeric_limits<unsigned short>::max(), maxtdc = 0;
+          unsigned short mintdc = hitStartWideTDC, maxtdc = hitEndWideTDC;
 
-          for(auto const& [tdc, ides] : map)
+          if(!fROIOnly)
             {
-              mintdc = std::min(mintdc, tdc);
-              maxtdc = std::max(maxtdc, tdc);
-            }
+              for(auto const& [tdc, ides] : map)
+                {
+                  mintdc = std::min(mintdc, tdc);
+                  maxtdc = std::max(maxtdc, tdc);
+                }
 
-          mintdc = std::min(mintdc, hitStartTDC);
-          maxtdc = std::max(maxtdc, hitEndTDC);
+              mintdc = std::min(mintdc, hitStartTDC);
+              maxtdc = std::max(maxtdc, hitEndTDC);
+            }
 
           std::vector<std::pair<unsigned short, unsigned short>> extraGoodHits;
           std::vector<std::pair<unsigned short, unsigned short>> extraBadHits;
-
-          for(auto const &otherHit : hitVec)
-            {
-              if(otherHit == hit || otherHit->Channel() != hit->Channel())
-                continue;
-
-              const double otherHitStart = otherHit->PeakTimeMinusRMS(1.);
-              const double otherHitEnd   = otherHit->PeakTimePlusRMS(1.);
-
-              const unsigned short otherHitStartTDC = std::max(0, (int) clockData.TPCTick2TDC(otherHitStart));
-              const unsigned short otherHitEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(otherHitEnd));
-
-              mintdc = std::min(mintdc, otherHitStartTDC);
-              maxtdc = std::max(maxtdc, otherHitEndTDC);
-
-              const int otherTrackID = TruthMatchUtils::TrueParticleID(clockData,otherHit,true);
-              if(otherTrackID == def_int)
-                extraBadHits.emplace_back(otherHitStartTDC, otherHitEndTDC);
-              else
-                extraGoodHits.emplace_back(otherHitStartTDC, otherHitEndTDC);
-            }
 
           for(auto const &wire : wireVec)
             {
@@ -152,21 +143,54 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
                   const unsigned short roiStartTDC = std::max(0, (int) clockData.TPCTick2TDC(roiStart));
                   const unsigned short roiEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(roiEnd));
 
-                  mintdc = std::min(mintdc, roiStartTDC);
-                  maxtdc = std::max(maxtdc, roiEndTDC);
+                  if(!fROIOnly || (roiStartTDC > mintdc && roiStartTDC < maxtdc) ||
+                     (roiEndTDC > mintdc && roiEndTDC < maxtdc) || (roiStartTDC < mintdc && roiEndTDC > maxtdc))
+                    {
+                      mintdc = std::min(mintdc, roiStartTDC);
+                      maxtdc = std::max(maxtdc, roiEndTDC);
+                    }
                 }
+            }
+
+          for(auto const &otherHit : hitVec)
+            {
+              if(otherHit == hit || otherHit->Channel() != hit->Channel())
+                continue;
+
+              const double otherHitStart = otherHit->PeakTimeMinusRMS(1.);
+              const double otherHitEnd   = otherHit->PeakTimePlusRMS(1.);
+
+              const unsigned short otherHitStartTDC = std::max(0, (int) clockData.TPCTick2TDC(otherHitStart));
+              const unsigned short otherHitEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(otherHitEnd));
+
+              if(!fROIOnly)
+                {
+                  mintdc = std::min(mintdc, otherHitStartTDC);
+                  maxtdc = std::max(maxtdc, otherHitEndTDC);
+                }
+              else
+                {
+                  if(otherHitStartTDC > maxtdc || otherHitEndTDC < mintdc)
+                    continue;
+                }
+
+              const int otherTrackID = TruthMatchUtils::TrueParticleID(clockData,otherHit,true);
+              if(otherTrackID == def_int)
+                extraBadHits.emplace_back(otherHitStartTDC, otherHitEndTDC);
+              else
+                extraGoodHits.emplace_back(otherHitStartTDC, otherHitEndTDC);
             }
 
           const unsigned short nBins = maxtdc - mintdc + 21;
           const float xLow   = mintdc - 10.5;
           const float xHigh  = maxtdc + 10.5;
 
-          TH1D *simHist  = new TH1D("simHist", Form("Channel %d;Tick (TDC);N Electrons", hit->Channel()), nBins, xLow, xHigh);
+          TH1D *simHist  = new TH1D("simHist", Form("Channel %d;Tick (TDC);True energy deposition (MeV)", hit->Channel()), nBins, xLow, xHigh);
 
-          for(unsigned short tdc = mintdc; tdc < maxtdc+1; ++tdc)
+          for(unsigned short tdc = mintdc - 11; tdc < maxtdc+11; ++tdc)
             {
-              const unsigned short bin = tdc - mintdc + 11;
-              simHist->SetBinContent(bin, sc->Charge(tdc));
+              const int bin = simHist->FindBin(tdc);
+              simHist->SetBinContent(bin, sc->Energy(tdc));
             }
 
           if(simHist->Integral() == 0)
@@ -229,7 +253,7 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
             }
 
           simHist->Draw("histsame");
-          TH1D *wireHist = new TH1D("wireHist", Form("Channel %d;Tick (TDC);ADC", hit->Channel()), nBins, xLow, xHigh);
+          TH1D *wireHist = new TH1D("wireHist", Form("Channel %d;Tick (TDC);N Electrons", hit->Channel()), nBins, xLow, xHigh);
 
           for(auto const &wire : wireVec)
             {
@@ -240,14 +264,14 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
 
               for(auto const &roi : signalROI.get_ranges())
                 {
-                  const unsigned short roiStart = roi.begin_index();
-                  unsigned short tdc = std::max(0, (int) clockData.TPCTick2TDC(roiStart));
+                  unsigned short roiStart = roi.begin_index();
 
                   for(auto const& value : roi)
                     {
-                      const unsigned short bin = tdc - mintdc + 11;
-                      wireHist->SetBinContent(bin, value);
-                      ++tdc;
+                      unsigned short tdc = clockData.TPCTick2TDC(roiStart);
+                      const int bin = simHist->FindBin(tdc);
+                      wireHist->SetBinContent(bin, 50 * value);
+                      ++roiStart;
                     }
                 }
 
@@ -258,11 +282,11 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
 
               TGaxis *wireAxis = new TGaxis(xHigh, 0, xHigh, 1.5*max,
                                             0, 1.5*wireMax, 507, "+L");
-              wireAxis->SetLineWidth(2);
+              wireAxis->SetLineWidth(1);
               wireAxis->SetLabelSize(0.05);
               wireAxis->SetTitleSize(0.05);
-              wireAxis->SetTitleOffset(0.7);
-              wireAxis->SetTitle("ADC");
+              wireAxis->SetTitleOffset(1);
+              wireAxis->SetTitle("e^{-}");
               wireAxis->Draw();
 
               legend->AddEntry(wireHist, "Deconv. Waveform", "l");
@@ -270,9 +294,16 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
 
           legend->Draw();
 
-          canvas->SaveAs(Form("channel%d.png",hit->Channel()));
-          canvas->SaveAs(Form("channel%d.pdf",hit->Channel()));
-
+          if(fROIOnly)
+            {
+              canvas->SaveAs(Form("channel%d_hit%lu.png", hit->Channel(), hit.key()));
+              canvas->SaveAs(Form("channel%d_hit%lu.pdf", hit->Channel(), hit.key()));
+            }
+          else
+            {
+              canvas->SaveAs(Form("channel%d.png", hit->Channel()));
+              canvas->SaveAs(Form("channel%d.pdf", hit->Channel()));
+            }
           delete canvas;
         }
     }
