@@ -19,6 +19,7 @@
 #include "TH1D.h"
 #include "TLine.h"
 #include "TStyle.h"
+#include "TLegend.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "larsim/MCCheater/BackTrackerService.h"
@@ -134,34 +135,47 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
 
           TCanvas *canvas = new TCanvas("canvas", "canvas");
           canvas->cd();
-          hist->Draw("hist");
-          hist->SetTitleSize(0.07);
-          hist->SetTitleFont(62);
 
-          TLine *startLine = new TLine(hitStartTDC, 0, hitStartTDC, hist->GetMaximum());
+          const double max = hist->GetMaximum();
+          hist->SetMaximum(1.2 * max);
+          hist->Draw("hist");
+
+          TLine *startLine = new TLine(hitStartTDC, 0, hitStartTDC, max);
           startLine->SetLineColor(kRed);
           startLine->SetLineWidth(4);
-          TLine *endLine = new TLine(hitEndTDC, 0, hitEndTDC, hist->GetMaximum());
+          TLine *endLine = new TLine(hitEndTDC, 0, hitEndTDC, max);
           endLine->SetLineColor(kRed);
           endLine->SetLineWidth(4);
 
           startLine->Draw();
           endLine->Draw();
 
+          TLegend *legend = new TLegend(0.3, 0.85, 0.8, 0.9);
+          legend->SetNColumns(3);
+          legend->AddEntry(hist, "Sim Deposits", "l");
+          legend->AddEntry(startLine, "#pm1#sigma ghost hit", "l");
+
+          int hitN = 0;
           for(auto const& [startTDC, endTDC] : extraHits)
             {
-              TLine *otherStartLine = new TLine(startTDC, 0, startTDC, hist->GetMaximum());
+              TLine *otherStartLine = new TLine(startTDC, 0, startTDC, max);
               otherStartLine->SetLineColor(kOrange);
               otherStartLine->SetLineWidth(4);
-              TLine *otherEndLine = new TLine(endTDC, 0, endTDC, hist->GetMaximum());
+              TLine *otherEndLine = new TLine(endTDC, 0, endTDC, max);
               otherEndLine->SetLineColor(kOrange);
               otherEndLine->SetLineWidth(4);
 
               otherStartLine->Draw();
               otherEndLine->Draw();
+
+              if(hitN == 0)
+                legend->AddEntry(otherStartLine, "#pm1#sigma good hit", "l");
+
+              ++hitN;
             }
 
-          canvas->SaveAs(Form("channel%d.root",hit->Channel()));
+          legend->Draw();
+
           canvas->SaveAs(Form("channel%d.png",hit->Channel()));
           canvas->SaveAs(Form("channel%d.pdf",hit->Channel()));
 
