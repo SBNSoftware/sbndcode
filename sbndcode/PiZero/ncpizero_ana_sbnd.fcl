@@ -40,3 +40,5 @@ physics:
   ana:       [ ncpizeroana ]
   end_paths: [ ana ]
 }
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

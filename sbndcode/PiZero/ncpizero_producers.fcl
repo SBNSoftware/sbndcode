@@ -24,17 +24,19 @@ ncpizero_producers:
   dazzle:
   {
     @table::dazzle_sbnd
-    PFPLabel:   "pandoraSCE"
-    TrackLabel: "pandoraSCETrack"
-    CaloLabel:  "pandoraSCECalo"
-    Chi2Label:  "pandoraSCEPid"
+    PFPLabel:        "pandoraSCE"
+    TrackLabel:      "pandoraSCETrack"
+    CaloLabel:       "pandoraSCECalo"
+    Chi2Label:       "pandoraSCEPid"
+    SimChannelLabel: "simtpc2d:simpleSC"
   }
 
   razzle:
   {
     @table::razzle_sbnd
-    PFPLabel:    "pandoraSCE"
-    ShowerLabel: "pandoraSCEShower"
+    PFPLabel:        "pandoraSCE"
+    ShowerLabel:     "pandoraSCEShower"
+    SimChannelLabel: "simtpc2d:simpleSC"
   }
 
   pandoraTrackMCS:
