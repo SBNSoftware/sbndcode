@@ -312,8 +312,12 @@ end_product_list
 #
 ####################################
 qualifier	sbncode		sbndutil	sbnd_data	notes
+c14:debug	c14:debug	c14:debug	-nq-
+c14:prof	c14:prof	c14:prof	-nq-
 c7:debug	c7:debug	c7:debug	-nq-
 c7:prof		c7:prof		c7:prof		-nq-
+e26:debug	e26:debug	e26:debug	-nq-
+e26:prof	e26:prof	e26:prof	-nq-
 e20:debug	e20:debug	e20:debug	-nq-
 e20:prof	e20:prof	e20:prof	-nq-
 end_qualifier_list
