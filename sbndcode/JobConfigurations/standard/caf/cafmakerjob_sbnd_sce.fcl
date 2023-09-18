@@ -13,6 +13,9 @@ physics.producers.cafmaker.CRTHitMatchLabel: "pandoraSCETrackCRTHit"
 physics.producers.cafmaker.CRTTrackMatchLabel: "pandoraSCETrackCRTTrack"
 physics.producers.cafmaker.FlashMatchLabel:  "fmatchSCE"
 
+physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
+physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"
+
 physics.producers.pandoraTrackMCS.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
 
@@ -59,7 +62,7 @@ physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
             pandoraTrackCRTHit, pandoraTrackCRTTrack,
             pandoraSCETrackCRTHit, pandoraSCETrackCRTTrack, fmatchSCE, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
+            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs, cnnid,
             cafmaker ]
 
 # Enable the Space-Charge service
