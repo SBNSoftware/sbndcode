@@ -6,7 +6,7 @@
 
 void ReconstructionEfficiency()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/pizero/plots/reconstructionefficiency";
+  const TString saveDir = "/sbnd/data/users/hlay/pizero/plots/pizeroreco/reconstructionefficiency";
   const bool save = true;
 
   using namespace std;

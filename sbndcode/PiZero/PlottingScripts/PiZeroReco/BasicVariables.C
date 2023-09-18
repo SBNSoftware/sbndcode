@@ -7,7 +7,7 @@
 
 void BasicVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/pizero/plots/basicvariables/tmp";
+  const TString saveDir = "/sbnd/data/users/hlay/pizero/plots/pizeroreco/basicvariables/tmp";
   const bool save = true;
 
   using namespace std;

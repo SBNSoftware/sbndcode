@@ -7,7 +7,7 @@
 
 void RecoVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/pizero/plots/recovariables";
+  const TString saveDir = "/sbnd/data/users/hlay/pizero/plots/pizeroreco/recovariables";
   const bool save = true;
 
   using namespace std;
