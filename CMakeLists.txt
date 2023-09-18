@@ -40,6 +40,7 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
   NO_UNDEFINED
   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
               -Wno-uninitialized
+              $<$<CXX_COMPILER_ID:Clang>:-Wno-return-stack-address>
 )
 ##add_definitions(-DGENIE_PRE_R3)
 
