@@ -4,6 +4,7 @@ sbnd_simple_flashmatch:{
   module_type: FlashPredict
   IsSimple: true
   FlashType: "simpleflash_pmt"
+  UseOldMetrics: false
   PandoraProducer: "pandora"
   SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
@@ -126,7 +127,7 @@ sbnd_simple_flashmatch_ara.BeamSpillTimeEnd: 1.8
 
 sbnd_simple_flashmatch_ara_sce: @local::sbnd_simple_flashmatch
 sbnd_simple_flashmatch_ara_sce.FlashType: "simpleflash_ara"
-sbnd_simple_flashmatch_arasce.PandoraProducer: "pandoraSCE"
+sbnd_simple_flashmatch_ara_sce.PandoraProducer: "pandoraSCE"
 sbnd_simple_flashmatch_ara_sce.TrackProducer: "pandoraSCETrack"
 sbnd_simple_flashmatch_ara_sce.CaloProducer: "pandoraSCECalo"
 sbnd_simple_flashmatch_ara_sce.SpacePointProducer: "pandoraSCE"
