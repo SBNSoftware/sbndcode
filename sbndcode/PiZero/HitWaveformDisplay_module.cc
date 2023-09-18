@@ -21,6 +21,7 @@
 #include "TStyle.h"
 #include "TLegend.h"
 #include "TGaxis.h"
+#include "TSystem.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "larsim/MCCheater/BackTrackerService.h"
@@ -56,6 +57,8 @@ private:
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
   art::InputTag fHitModuleLabel, fWireModuleLabel;
 
+  std::string fSaveDir;
+
   bool fROIOnly;
 };
 
@@ -64,6 +67,7 @@ sbnd::HitWaveformDisplay::HitWaveformDisplay(fhicl::ParameterSet const& p)
   {
     fHitModuleLabel  = p.get<art::InputTag>("HitModuleLabel", "gaushit");
     fWireModuleLabel = p.get<art::InputTag>("WireModuleLabel", "simtpc2d:gauss");
+    fSaveDir         = p.get<std::string>("SaveDir", ".");
     fROIOnly         = p.get<bool>("ROIOnly", true);
   }
 
@@ -90,6 +94,9 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
   art::fill_ptr_vector(wireVec, wireHandle);
 
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+  const int run = e.id().run(), subrun = e.id().subRun(), ev = e.id().event();
+  const TString saveLoc  = fSaveDir + Form("/run%dsubrun%devent%d/", run, subrun, ev);
 
   for(auto const& hit : hitVec)
     {
@@ -294,16 +301,13 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
 
           legend->Draw();
 
-          if(fROIOnly)
-            {
-              canvas->SaveAs(Form("channel%d_hit%lu.png", hit->Channel(), hit.key()));
-              canvas->SaveAs(Form("channel%d_hit%lu.pdf", hit->Channel(), hit.key()));
-            }
-          else
-            {
-              canvas->SaveAs(Form("channel%d.png", hit->Channel()));
-              canvas->SaveAs(Form("channel%d.pdf", hit->Channel()));
-            }
+          const TString fileName = fROIOnly ? Form("channel%d_hit%lu", hit->Channel(), hit.key()) : Form("channel%d", hit->Channel());
+
+          gSystem->Exec("mkdir -p " + saveLoc);
+
+          canvas->SaveAs(saveLoc + fileName + ".png");
+          canvas->SaveAs(saveLoc + fileName + ".pdf");
+
           delete canvas;
         }
     }
