@@ -2,14 +2,14 @@
 #include "LatexHeaders.h"
 
 const std::vector<Cut> categories = {
-  { "Signal", "slc_true_event_type==0", "Signal (NC #pi^{0})", kMagenta+2 },
+  { "Signal", "slc_true_event_type==0 && slc_comp>.5", "Signal (NC #pi^{0})", kMagenta+2 },
   { "NC", "slc_true_event_type==1", "Other NC", kOrange+2 },
   { "CCNuMu", "slc_true_event_type==2", "CC #nu_{#mu}", kGreen+2 },
   { "CCNuE", "slc_true_event_type==3", "CC #nu_{e}", kCyan+2 },
   { "Dirt", "slc_true_event_type==4", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type==5", "Non-FV #nu", kGray+2 },
   { "Cosmic", "slc_true_event_type==6", "Cosmic", kRed+1 },
-  { "BadRecoSignal", "slc_true_event_type==7", "Bad Reco Signal", kBlack }
+  { "BadRecoSignal", "slc_true_event_type==0 && slc_comp<=.5", "Bad Reco Signal", kBlack }
 };
 
 std::vector<Cut> cuts = {
@@ -28,6 +28,10 @@ std::vector<Plot> plots = {
   { "slc_is_fv", "slc_is_fv", ";IsFV?;Slice",
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
   { "slc_crumbs_score", "slc_crumbs_score", ";CRUMBS Score;Slices",
+    42, -1.5, .6 },
+  { "slc_crumbs_nc_score", "slc_crumbs_nc_score", ";CRUMBS NC Score;Slices",
+    42, -1.5, .6 },
+  { "slc_crumbs_ccnue_score", "slc_crumbs_ccnue_score", ";CRUMBS CC#nu_{e} Score;Slices",
     42, -1.5, .6 },
   { "slc_n_dazzle_muons_cut_based", "slc_n_dazzle_muons_cut_based", ";N Dazzle Muons;Slices",
     5, -0.5, 4.5 },
@@ -74,7 +78,7 @@ void Selection(const TString saveDirExt = "tmp")
 
       gSystem->Exec("mkdir -p " + saveDir + "/" + cut.name);
 
-      for(auto &plot : plots)
+      for(auto plot : plots)
         {
           TCanvas *canvas = new TCanvas("c_" + plot.name + "_" + cut.name,
                                         "c_" + plot.name + "_" + cut.name);
@@ -115,7 +119,7 @@ void ProduceCutTable(const TString &saveDir, TChain *events)
   texFile.open(saveDir + "/cut_table.tex");
 
   const double totalSignal         = events->Draw("", "nu_signal");
-  const double totalSignalSlices   = events->Draw("", "slc_true_signal");
+  const double totalSignalSlices   = events->Draw("", "slc_true_signal && slc_comp>.5");
   const double totalBackSlices     = events->Draw("", "!slc_true_signal");
   const double totalNuFVBackSlices = events->Draw("", "!slc_true_signal && slc_true_event_type!=5 && slc_true_event_type!=6");
 
