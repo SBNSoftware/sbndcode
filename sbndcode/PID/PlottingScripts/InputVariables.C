@@ -7,7 +7,7 @@
 
 void InputVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/razzled/plots/investigations/inputvariables_no_other";
+  const TString saveDir = "/sbnd/data/users/hlay/razzled/plots/investigations/inputvariables_no_other_quality_cuts";
   const bool save = true;
   if(save)
     gSystem->Exec("mkdir -p " + saveDir);
@@ -25,13 +25,18 @@ void InputVariables()
                             {"ambiguous", "!unambiguousSlice", "", kGreen+2},
   };
 
-  std::vector<Cut> particles = { {"electron", "abs(truePdg)==11 && !unambiguousSlice", "e^{#pm}", kMagenta+2},
-				 {"muon", "abs(truePdg)==13 && !unambiguousSlice", "#mu^{#pm}", kRed+2},
-				 {"photon", "abs(truePdg)==22 && !unambiguousSlice", "#gamma", kBlue+2},
-				 {"pion", "abs(truePdg)==211 && !unambiguousSlice", "#pi^{#pm}", kGreen+2},
-				 {"proton", "abs(truePdg)==2212 && !unambiguousSlice", "p", kOrange+2},
-				 //				 {"other", "abs(truePdg)!=11 && abs(truePdg)!=13 && abs(truePdg)!=22 && abs(truePdg)!=211 && abs(truePdg)!=2212 && !unambiguousSlice", "Other", kBlack}
+  std::vector<Cut> particles = { {"electron", "abs(truePDG)==11 && !unambiguousSlice", "e^{#pm}", kMagenta+2},
+				 {"muon", "abs(truePDG)==13 && !unambiguousSlice", "#mu^{#pm}", kRed+2},
+				 {"photon", "abs(truePDG)==22 && !unambiguousSlice", "#gamma", kBlue+2},
+				 {"pion", "abs(truePDG)==211 && !unambiguousSlice", "#pi^{#pm}", kGreen+2},
+				 {"proton", "abs(truePDG)==2212 && !unambiguousSlice", "p", kOrange+2},
+				 //				 {"other", "abs(truePDG)!=11 && abs(truePDG)!=13 && abs(truePDG)!=22 && abs(truePDG)!=211 && abs(truePDG)!=2212 && !unambiguousSlice", "Other", kBlack}
   };
+
+  TCut quality_cut = "trk_length > 5 && showerEnergy > 10 && trackContained && showerContained";
+
+  for(auto& particle : particles)
+    particle.cut += quality_cut;
 
   std::vector<Plot> plots = { {"pfp_numDaughters", "pfp_numDaughters", ";PFP N Daughters;PFPs",
                                19, -8.5, 8.5},
@@ -106,9 +111,9 @@ void InputVariables()
                               {"trk_chi2PIDMuon_filled", "trk_chi2PIDMuon", ";Track #chi^{2} PID Muon;PFPs",
                                52, -4, 100},
                               {"trk_chi2PIDProton", "trk_chi2PIDProton", ";Track #chi^{2} PID Proton;PFPs",
-                               85, -20, 150},
+                               84, -20, 400},
                               {"trk_chi2PIDProton_filled", "trk_chi2PIDProton", ";Track #chi^{2} PID Proton;PFPs",
-                               77, -4, 150},
+                               81, -5, 400},
                               {"trk_chi2PIDMuonPionDiff", "trk_chi2PIDMuonPionDiff", ";Track #chi^{2} PID Muon Pion Difference;PFPs",
                                90, -120, 60},
                               {"trk_chi2PIDMuonPionDiff_filled", "trk_chi2PIDMuonPionDiff", ";Track #chi^{2} PID Muon Pion Difference;PFPs",
@@ -184,7 +189,7 @@ void InputVariables()
       if(save)
 	gSystem->Exec("mkdir -p " + saveDir + "/all");
 
-      for(auto const & cut : cuts)
+      for(auto& cut : cuts)
 	{
 	  for(auto &plot : plots)
 	    {
@@ -193,6 +198,7 @@ void InputVariables()
 	      canvas->cd();
 
 	      plot.colour = cut.colour;
+	      cut.cut     += quality_cut;
 
 	      MakePlot(canvas, tree, plot, cut);
 

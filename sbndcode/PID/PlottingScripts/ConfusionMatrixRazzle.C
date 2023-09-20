@@ -24,7 +24,7 @@ void ConfusionMatrixRazzle(const bool efficiency_mode = true, const bool purity_
   if(save)
     gSystem->Exec("mkdir -p " + save_dir);
   
-  const TString weights_file = "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_19_00/PID/Razzle.weights.xml";
+  const TString weights_file = "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_17_00/PID/Razzle.weights.xml";
 
   using namespace std;
   gROOT->SetStyle("henrySBND");
@@ -36,8 +36,8 @@ void ConfusionMatrixRazzle(const bool efficiency_mode = true, const bool purity_
   const std::map<int, int> razzledMap = { { 11, 0 }, { 22, 1 }, { 0, 2 } };
   std::vector<TString> axisLabels  = { "", "e^{#pm}", "#gamma", "other" };
 
-  int truePdg;
-  float energyComp, energyPurity, showerStartX, showerStartY, showerStartZ;
+  int truePDG;
+  float energyComp, energyPurity, showerStartX, showerStartY, showerStartZ, showerEnergy;
   bool recoPrimary, unambiguousSlice, showerContained;
 
   float pfp_trackScore;
@@ -51,7 +51,7 @@ void ConfusionMatrixRazzle(const bool efficiency_mode = true, const bool purity_
   tree->SetBranchAddress("shw_modHitDensity", &shw_modHitDensity);
   tree->SetBranchAddress("shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
   
-  tree->SetBranchAddress("truePdg", &truePdg);
+  tree->SetBranchAddress("truePDG", &truePDG);
   tree->SetBranchAddress("energyComp", &energyComp);
   tree->SetBranchAddress("energyPurity", &energyPurity);
   tree->SetBranchAddress("recoPrimary", &recoPrimary);
@@ -61,6 +61,7 @@ void ConfusionMatrixRazzle(const bool efficiency_mode = true, const bool purity_
   tree->SetBranchAddress("showerStartY", &showerStartY);
   tree->SetBranchAddress("showerStartZ", &showerStartZ);
   tree->SetBranchAddress("showerContained", &showerContained);
+  tree->SetBranchAddress("showerEnergy", &showerEnergy);
 
   TMVA::Reader *reader = new TMVA::Reader("!Color:!Silent");
   reader->AddVariable("bestdEdx", &shw_bestdEdx);
@@ -84,8 +85,8 @@ void ConfusionMatrixRazzle(const bool efficiency_mode = true, const bool purity_
       if(unambiguousSlice)
        	continue;
       
-      if(abs(truePdg) != 11 && abs(truePdg) != 22)
-	truePdg = 0;
+      if(abs(truePDG) != 11 && abs(truePDG) != 22)
+	truePDG = 0;
 
       if(require_primary && !recoPrimary)
 	continue;
@@ -102,7 +103,14 @@ void ConfusionMatrixRazzle(const bool efficiency_mode = true, const bool purity_
       if(!showerContained)
         continue;
 
+      if(showerEnergy < 10)
+	continue;
+
       shw_openAngle *= TMath::DegToRad();
+
+      if(shw_openAngle < 0.f)
+        shw_openAngle = -5.f;
+
       const std::vector<float> bdtScores = reader->EvaluateMulticlass(method_name);
 
       float bestScore = -std::numeric_limits<float>::max();
@@ -117,7 +125,7 @@ void ConfusionMatrixRazzle(const bool efficiency_mode = true, const bool purity_
 	    }
 	}
       
-      const int trueClass = razzledMap.at(abs(truePdg));
+      const int trueClass = razzledMap.at(abs(truePDG));
 
       hConfusionMatrix->Fill(trueClass, recoClass);
     }

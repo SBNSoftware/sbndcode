@@ -24,7 +24,7 @@ void ConfusionMatrixDazzle(const bool efficiency_mode = true, const bool purity_
   if(save)
     gSystem->Exec("mkdir -p " + save_dir);
   
-  const TString weights_file = "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_19_00/PID/Dazzle.weights.xml";
+  const TString weights_file = "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_17_00/PID/Dazzle.weights.xml";
 
   using namespace std;
   gROOT->SetStyle("henrySBND");
@@ -36,7 +36,7 @@ void ConfusionMatrixDazzle(const bool efficiency_mode = true, const bool purity_
   const std::map<int, int> razzledMap = { { 13, 0 }, { 211, 1 }, { 2212, 2 }, { 0, 3 } };
   std::vector<TString> axisLabels  = { "", "#mu^{#pm}", "#pi^{#pm}", "p", "other" };
 
-  int truePdg;
+  int truePDG;
   float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ;
   bool recoPrimary, unambiguousSlice, trackContained;
 
@@ -60,7 +60,7 @@ void ConfusionMatrixDazzle(const bool efficiency_mode = true, const bool purity_
   tree->SetBranchAddress("trk_chi2Pol0dEdxFit", &trk_chi2Pol0dEdxFit);
   tree->SetBranchAddress("trk_momDiff", &trk_momDiff);
 
-  tree->SetBranchAddress("truePdg", &truePdg);
+  tree->SetBranchAddress("truePDG", &truePDG);
   tree->SetBranchAddress("energyComp", &energyComp);
   tree->SetBranchAddress("energyPurity", &energyPurity);
   tree->SetBranchAddress("recoPrimary", &recoPrimary);
@@ -101,8 +101,8 @@ void ConfusionMatrixDazzle(const bool efficiency_mode = true, const bool purity_
       if(unambiguousSlice)
 	continue;
       
-      if(abs(truePdg) != 13 && abs(truePdg) != 211 && abs(truePdg) != 2212)
-	truePdg = 0;
+      if(abs(truePDG) != 13 && abs(truePDG) != 211 && abs(truePDG) != 2212)
+	truePDG = 0;
 
       if(require_primary && !recoPrimary)
 	continue;
@@ -119,6 +119,33 @@ void ConfusionMatrixDazzle(const bool efficiency_mode = true, const bool purity_
       if(!trackContained)
         continue;
 
+      if(trk_length < -6.f)
+        trk_length = -5.f;
+
+      if(trk_chi2PIDMuonPionDiff < -6.f)
+        trk_chi2PIDMuonPionDiff = -5.f;
+
+      if(trk_momDiff < -6.f)
+        trk_momDiff = -5.f;
+
+      if(trk_chi2PIDMuon < -6.f)
+        trk_chi2PIDMuon = -5.f;
+
+      if(trk_chi2PIDProton < -6.f)
+        trk_chi2PIDProton = -5.f;
+
+      if(trk_mcsScatterMean < -6.f)
+        trk_mcsScatterMean = -5.f;
+
+      if(trk_mcsScatterMaxRatio < -.5f)
+        trk_mcsScatterMaxRatio = -5.f;
+
+      if(pfp_maxDaughterHits < -6.f)
+        pfp_maxDaughterHits = -5.f;
+
+      if(trk_length < 10.)
+        continue;
+
       const std::vector<float> bdtScores = reader->EvaluateMulticlass(method_name);
 
       float bestScore = -std::numeric_limits<float>::max();
@@ -133,7 +160,7 @@ void ConfusionMatrixDazzle(const bool efficiency_mode = true, const bool purity_
 	    }
 	}
       
-      const int trueClass = razzledMap.at(abs(truePdg));
+      const int trueClass = razzledMap.at(abs(truePDG));
 
       hConfusionMatrix->Fill(trueClass, recoClass);
     }

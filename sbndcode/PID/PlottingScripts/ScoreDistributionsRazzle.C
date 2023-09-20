@@ -8,7 +8,7 @@
 #include "TMVA/Reader.h"
 
 void ScoreDistributionsRazzle(const bool require_primary = false, const double comp_thresh = -1,
-			      const double pur_thresh = -1)
+			      const double pur_thresh = -1, const bool pre_calc = false)
 {
   const TString save_dir = "/sbnd/data/users/hlay/razzled/plots/investigations/score_distributions_razzle";
   const bool save = true;
@@ -16,7 +16,7 @@ void ScoreDistributionsRazzle(const bool require_primary = false, const double c
     gSystem->Exec("mkdir -p " + save_dir);
   
   const TString method_name = "BDT::BDTG";
-  const TString weights_file = "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_19_00/PID/Razzle.weights.xml";
+  const TString weights_file = "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_17_00/PID/Razzle.weights.xml";
 
   using namespace std;
   gROOT->SetStyle("henrySBND");
@@ -41,12 +41,15 @@ void ScoreDistributionsRazzle(const bool require_primary = false, const double c
 
   std::map<int, int> razzledMap = { { 11, 0 }, { 22, 1 }, { 0, 2 } };
   
-  int truePdg;
-  float energyComp, energyPurity, showerStartX, showerStartY, showerStartZ;
+  int truePDG;
+  float energyComp, energyPurity, showerStartX, showerStartY, showerStartZ, showerEnergy;
   bool recoPrimary, unambiguousSlice, showerContained;
 
   float pfp_trackScore;
   float shw_bestdEdx, shw_convGap, shw_openAngle, shw_modHitDensity, shw_sqrtEnergyDensity;
+
+  int razzlePDG;
+  float razzleElectronScore, razzlePhotonScore, razzleOtherScore;
 
   tree->SetBranchAddress("pfp_trackScore", &pfp_trackScore);
 
@@ -56,7 +59,7 @@ void ScoreDistributionsRazzle(const bool require_primary = false, const double c
   tree->SetBranchAddress("shw_modHitDensity", &shw_modHitDensity);
   tree->SetBranchAddress("shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
   
-  tree->SetBranchAddress("truePdg", &truePdg);
+  tree->SetBranchAddress("truePDG", &truePDG);
   tree->SetBranchAddress("energyComp", &energyComp);
   tree->SetBranchAddress("energyPurity", &energyPurity);
   tree->SetBranchAddress("recoPrimary", &recoPrimary);
@@ -66,6 +69,12 @@ void ScoreDistributionsRazzle(const bool require_primary = false, const double c
   tree->SetBranchAddress("showerStartY", &showerStartY);
   tree->SetBranchAddress("showerStartZ", &showerStartZ);
   tree->SetBranchAddress("showerContained", &showerContained);
+  tree->SetBranchAddress("showerEnergy", &showerEnergy);
+
+  tree->SetBranchAddress("razzlePDG", &razzlePDG);
+  tree->SetBranchAddress("razzleElectronScore", &razzleElectronScore);
+  tree->SetBranchAddress("razzlePhotonScore", &razzlePhotonScore);
+  tree->SetBranchAddress("razzleOtherScore", &razzleOtherScore);
 
   TMVA::Reader *reader = new TMVA::Reader("!Color:!Silent");
   reader->AddVariable("bestdEdx", &shw_bestdEdx);
@@ -95,8 +104,8 @@ void ScoreDistributionsRazzle(const bool require_primary = false, const double c
       if(unambiguousSlice)
 	continue;
       
-      if(abs(truePdg) != 11 && abs(truePdg) != 22)
-	truePdg = 0;
+      if(abs(truePDG) != 11 && abs(truePDG) != 22)
+	truePDG = 0;
 
       if(require_primary && !recoPrimary)
 	continue;
@@ -113,11 +122,32 @@ void ScoreDistributionsRazzle(const bool require_primary = false, const double c
       if(pfp_trackScore > .5)
 	continue;
 
-      const std::vector<float> bdtScores = reader->EvaluateMulticlass(method_name);
-      const int trueClass = razzledMap.at(abs(truePdg));
+      if(razzlePDG == -1)
+	continue;
 
-      for(unsigned j = 0; j < bdtScores.size(); ++j)
-	hScores[j][trueClass]->Fill(bdtScores[j]);
+      shw_openAngle *= TMath::DegToRad();
+
+      if(shw_openAngle < 0.f)
+	shw_openAngle = -5.f;
+
+      if(showerEnergy < 50)
+	continue;
+
+      const int trueClass = razzledMap.at(abs(truePDG));
+
+      if(pre_calc)
+	{
+	  hScores[0][trueClass]->Fill(razzleElectronScore);
+	  hScores[1][trueClass]->Fill(razzlePhotonScore);
+	  hScores[2][trueClass]->Fill(razzleOtherScore);
+	}
+      else
+	{
+	  const std::vector<float> bdtScores = reader->EvaluateMulticlass(method_name);
+
+	  for(unsigned j = 0; j < bdtScores.size(); ++j)
+	    hScores[j][trueClass]->Fill(bdtScores[j]);
+	}
     }
 
   for(unsigned i = 0; i < particles.size(); ++i)
@@ -163,6 +193,8 @@ void ScoreDistributionsRazzle(const bool require_primary = false, const double c
 	file_name += Form("_comp_thresh_%f", comp_thresh);
       if(pur_thresh != -1)
 	file_name += Form("_pur_thresh_%f", pur_thresh);
+      if(pre_calc)
+        file_name += "_pre_calc";
 
       if(save)
 	{

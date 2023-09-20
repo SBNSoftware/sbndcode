@@ -8,7 +8,7 @@
 #include "TMVA/Reader.h"
 
 void ScoreDistributionsDazzle(const bool require_primary = false, const double comp_thresh = -1,
-			      const double pur_thresh = -1)
+			      const double pur_thresh = -1, const bool pre_calc = false)
 {
   const TString save_dir = "/sbnd/data/users/hlay/razzled/plots/investigations/score_distributions_dazzle";
   const bool save = true;
@@ -16,7 +16,7 @@ void ScoreDistributionsDazzle(const bool require_primary = false, const double c
     gSystem->Exec("mkdir -p " + save_dir);
   
   const TString method_name = "BDT::BDTG";
-  const TString weights_file = "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_19_00/PID/Dazzle.weights.xml";
+  const TString weights_file = "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_17_00/PID/Dazzle.weights.xml";
   
   using namespace std;
   gROOT->SetStyle("henrySBND");
@@ -42,7 +42,7 @@ void ScoreDistributionsDazzle(const bool require_primary = false, const double c
 
   std::map<int, int> razzledMap = { { 13, 0 }, { 211, 1 }, { 2212, 2 }, { 0, 3 } };
   
-  int truePdg;
+  int truePDG;
   float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ;
   bool recoPrimary, unambiguousSlice, trackContained;
 
@@ -50,6 +50,9 @@ void ScoreDistributionsDazzle(const bool require_primary = false, const double c
 
   float trk_length, trk_chi2PIDMuon, trk_chi2PIDProton, trk_chi2PIDMuonPionDiff, trk_mcsScatterMean,
     trk_mcsScatterMaxRatio, trk_momDiff, trk_meanDCA, trk_stoppingdEdxChi2Ratio, trk_chi2Pol0dEdxFit;
+
+  int dazzlePDG;
+  float dazzleMuonScore, dazzlePionScore, dazzleProtonScore, dazzleOtherScore;
 
   tree->SetBranchAddress("pfp_numDaughters", &pfp_numDaughters);
   tree->SetBranchAddress("pfp_maxDaughterHits", &pfp_maxDaughterHits);
@@ -66,7 +69,7 @@ void ScoreDistributionsDazzle(const bool require_primary = false, const double c
   tree->SetBranchAddress("trk_chi2Pol0dEdxFit", &trk_chi2Pol0dEdxFit);
   tree->SetBranchAddress("trk_momDiff", &trk_momDiff);
   
-  tree->SetBranchAddress("truePdg", &truePdg);
+  tree->SetBranchAddress("truePDG", &truePDG);
   tree->SetBranchAddress("energyComp", &energyComp);
   tree->SetBranchAddress("energyPurity", &energyPurity);
   tree->SetBranchAddress("recoPrimary", &recoPrimary);
@@ -76,6 +79,12 @@ void ScoreDistributionsDazzle(const bool require_primary = false, const double c
   tree->SetBranchAddress("trackStartY", &trackStartY);
   tree->SetBranchAddress("trackStartZ", &trackStartZ);
   tree->SetBranchAddress("trackContained", &trackContained);
+
+  tree->SetBranchAddress("dazzlePDG", &dazzlePDG);
+  tree->SetBranchAddress("dazzleMuonScore", &dazzleMuonScore);
+  tree->SetBranchAddress("dazzlePionScore", &dazzlePionScore);
+  tree->SetBranchAddress("dazzleProtonScore", &dazzleProtonScore);
+  tree->SetBranchAddress("dazzleOtherScore", &dazzleOtherScore);
 
   TMVA::Reader *reader = new TMVA::Reader("!Color:!Silent");
   reader->AddVariable("recoLen", &trk_length);
@@ -112,8 +121,8 @@ void ScoreDistributionsDazzle(const bool require_primary = false, const double c
       if(unambiguousSlice)
 	continue;
       
-      if(abs(truePdg) != 13 && abs(truePdg) != 211 && abs(truePdg) != 2212)
-	truePdg = 0;
+      if(abs(truePDG) != 13 && abs(truePDG) != 211 && abs(truePDG) != 2212)
+	truePDG = 0;
 
       if(require_primary && !recoPrimary)
 	continue;
@@ -130,11 +139,52 @@ void ScoreDistributionsDazzle(const bool require_primary = false, const double c
       if(pfp_trackScore < .5)
 	continue;
 
-      const std::vector<float> bdtScores = reader->EvaluateMulticlass(method_name);
-      const int trueClass = razzledMap.at(abs(truePdg));
+      const int trueClass = razzledMap.at(abs(truePDG));
 
-      for(unsigned j = 0; j < bdtScores.size(); ++j)
-	hScores[j][trueClass]->Fill(bdtScores[j]);
+      if(dazzlePDG == -1)
+	continue;
+
+      if(trk_length < -6.f)
+	trk_length = -5.f;
+
+      if(trk_chi2PIDMuonPionDiff < -6.f)
+	trk_chi2PIDMuonPionDiff = -5.f;
+
+      if(trk_momDiff < -6.f)
+	trk_momDiff = -5.f;
+
+      if(trk_chi2PIDMuon < -6.f)
+	trk_chi2PIDMuon = -5.f;
+
+      if(trk_chi2PIDProton < -6.f)
+	trk_chi2PIDProton = -5.f;
+
+      if(trk_mcsScatterMean < -6.f)
+	trk_mcsScatterMean = -5.f;
+
+      if(trk_mcsScatterMaxRatio < -.5f)
+	trk_mcsScatterMaxRatio = -5.f;
+
+      if(pfp_maxDaughterHits < -6.f)
+	pfp_maxDaughterHits = -5.f;
+
+      if(trk_length < 10.)
+	continue;
+
+      if(pre_calc)
+	{
+	  hScores[0][trueClass]->Fill(dazzleMuonScore);
+	  hScores[1][trueClass]->Fill(dazzlePionScore);
+	  hScores[2][trueClass]->Fill(dazzleProtonScore);
+	  hScores[3][trueClass]->Fill(dazzleOtherScore);
+	}
+      else
+	{
+	  const std::vector<float> bdtScores = reader->EvaluateMulticlass(method_name);
+	  
+	  for(unsigned j = 0; j < bdtScores.size(); ++j)
+	    hScores[j][trueClass]->Fill(bdtScores[j]);
+	}
     }
 
   for(unsigned i = 0; i < particles.size(); ++i)
@@ -180,6 +230,8 @@ void ScoreDistributionsDazzle(const bool require_primary = false, const double c
 	file_name += Form("_comp_thresh_%f", comp_thresh);
       if(pur_thresh != -1)
 	file_name += Form("_pur_thresh_%f", pur_thresh);
+      if(pre_calc)
+	file_name += "_pre_calc";
 
       if(save)
 	{

@@ -7,7 +7,7 @@
 #include "TStyle.h"
 #include "TMVA/Reader.h"
 
-void ConfusionMatrix(const TString weights_name = "Razzled_Standard",
+void ConfusionMatrix(const TString weights_name = "Razzled_standard",
 		     const TString method_name = "BDTG", const bool other_category = false,
 		     const bool efficiency_mode = true, const bool purity_mode = false,
 		     const bool require_primary = false, const double comp_thresh = -1,
@@ -26,12 +26,12 @@ void ConfusionMatrix(const TString weights_name = "Razzled_Standard",
       return;
     }
 
-  const TString save_dir = "/sbnd/data/users/hlay/razzled/plots/investigations/confusion_matrices";
+  TString save_dir = "/sbnd/data/users/hlay/razzled/plots/investigations/confusion_matrices";
   const bool save = true;
   if(save)
     gSystem->Exec("mkdir -p " + save_dir);
   
-  const TString weights_file = "/sbnd/data/users/hlay/razzled/training/first_pass/" + weights_name + "/weights/" + weights_name + "_BDTG.weights.xml";
+  const TString weights_file = "/sbnd/data/users/hlay/razzled/training/second_pass/" + weights_name + "/weights/" + weights_name + "_BDTG.weights.xml";
 
   using namespace std;
   gROOT->SetStyle("henrySBND");
@@ -45,8 +45,8 @@ void ConfusionMatrix(const TString weights_name = "Razzled_Standard",
   if(other_category)
     axisLabels.push_back("Other");
 
-  int truePdg;
-  float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ, showerStartX, showerStartY, showerStartZ;
+  int truePDG;
+  float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ, showerStartX, showerStartY, showerStartZ, showerEnergy;
   bool recoPrimary, unambiguousSlice, trackContained, showerContained;
 
   float pfp_numDaughters, pfp_maxDaughterHits, pfp_trackScore, pfp_chargeEndFrac, pfp_chargeFracSpread,
@@ -89,7 +89,7 @@ void ConfusionMatrix(const TString weights_name = "Razzled_Standard",
   tree->SetBranchAddress("shw_modHitDensity", &shw_modHitDensity);
   tree->SetBranchAddress("shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
   
-  tree->SetBranchAddress("truePdg", &truePdg);
+  tree->SetBranchAddress("truePDG", &truePDG);
   tree->SetBranchAddress("energyComp", &energyComp);
   tree->SetBranchAddress("energyPurity", &energyPurity);
   tree->SetBranchAddress("recoPrimary", &recoPrimary);
@@ -104,23 +104,27 @@ void ConfusionMatrix(const TString weights_name = "Razzled_Standard",
   tree->SetBranchAddress("showerStartY", &showerStartY);
   tree->SetBranchAddress("showerStartZ", &showerStartZ);
   tree->SetBranchAddress("showerContained", &showerContained);
+  tree->SetBranchAddress("showerEnergy", &showerEnergy);
 
   TMVA::Reader *reader = new TMVA::Reader("!Color:!Silent");
   reader->AddVariable("pfp_numDaughters", &pfp_numDaughters);
   reader->AddVariable("pfp_maxDaughterHits", &pfp_maxDaughterHits);
-  reader->AddVariable("pfp_trackScore", &pfp_trackScore);
-  if(weights_name != "Razzled_no_track_score_inputs")
+  if(weights_name != "Razzled_no_track_score")
     {
-      reader->AddVariable("pfp_chargeEndFrac", &pfp_chargeEndFrac);
-      reader->AddVariable("pfp_chargeFracSpread", &pfp_chargeFracSpread);
-      reader->AddVariable("pfp_linearFitDiff", &pfp_linearFitDiff);
-      reader->AddVariable("pfp_linearFitLength", &pfp_linearFitLength);
-      reader->AddVariable("pfp_linearFitGapLength", &pfp_linearFitGapLength);
-      reader->AddVariable("pfp_linearFitRMS", &pfp_linearFitRMS);
-      reader->AddVariable("pfp_openAngleDiff", &pfp_openAngleDiff);
-      reader->AddVariable("pfp_secondaryPCARatio", &pfp_secondaryPCARatio);
-      reader->AddVariable("pfp_tertiaryPCARatio", &pfp_tertiaryPCARatio);
-      reader->AddVariable("pfp_vertexDist", &pfp_vertexDist);
+      reader->AddVariable("pfp_trackScore", &pfp_trackScore);
+      if(weights_name != "Razzled_no_track_score_inputs")
+	{
+	  reader->AddVariable("pfp_chargeEndFrac", &pfp_chargeEndFrac);
+	  reader->AddVariable("pfp_chargeFracSpread", &pfp_chargeFracSpread);
+	  reader->AddVariable("pfp_linearFitDiff", &pfp_linearFitDiff);
+	  reader->AddVariable("pfp_linearFitLength", &pfp_linearFitLength);
+	  reader->AddVariable("pfp_linearFitGapLength", &pfp_linearFitGapLength);
+	  reader->AddVariable("pfp_linearFitRMS", &pfp_linearFitRMS);
+	  reader->AddVariable("pfp_openAngleDiff", &pfp_openAngleDiff);
+	  reader->AddVariable("pfp_secondaryPCARatio", &pfp_secondaryPCARatio);
+	  reader->AddVariable("pfp_tertiaryPCARatio", &pfp_tertiaryPCARatio);
+	  reader->AddVariable("pfp_vertexDist", &pfp_vertexDist);
+	}
     }
 
   reader->AddVariable("trk_length", &trk_length);
@@ -155,11 +159,11 @@ void ConfusionMatrix(const TString weights_name = "Razzled_Standard",
       if(unambiguousSlice)
 	continue;
       
-      if(abs(truePdg) != 11 && abs(truePdg) != 13 && abs(truePdg) != 22 
-	 && abs(truePdg) != 211 && abs(truePdg) != 2212)
+      if(abs(truePDG) != 11 && abs(truePDG) != 13 && abs(truePDG) != 22 
+	 && abs(truePDG) != 211 && abs(truePDG) != 2212)
 	{
 	  if(other_category)
-	    truePdg = 0;
+	    truePDG = 0;
 	  else
 	    continue;
 	}
@@ -183,6 +187,9 @@ void ConfusionMatrix(const TString weights_name = "Razzled_Standard",
       if(!trackContained || !showerContained)
 	continue;
 
+      if(trk_length < 5 || showerEnergy < 10)
+	continue;
+
       const std::vector<float> bdtScores = reader->EvaluateMulticlass(method_name);
 
       float bestScore = -std::numeric_limits<float>::max();
@@ -197,7 +204,7 @@ void ConfusionMatrix(const TString weights_name = "Razzled_Standard",
 	    }
 	}
       
-      const int trueClass = razzledMap.at(abs(truePdg));
+      const int trueClass = razzledMap.at(abs(truePDG));
 
       hConfusionMatrix->Fill(trueClass, recoClass);
     }
@@ -222,6 +229,11 @@ void ConfusionMatrix(const TString weights_name = "Razzled_Standard",
 
   TString file_name = weights_name;
   file_name.ToLower();
+
+  save_dir += "/" + file_name;
+
+  if(save)
+    gSystem->Exec("mkdir -p " + save_dir);
 
   if(efficiency_mode)
     file_name += "_efficiency";

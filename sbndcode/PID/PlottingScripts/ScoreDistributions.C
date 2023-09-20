@@ -7,7 +7,7 @@
 #include "TStyle.h"
 #include "TMVA/Reader.h"
 
-void ScoreDistributions(const TString weights_name = "Razzled_Standard",
+void ScoreDistributions(const TString weights_name = "Razzled_standard",
 			const TString method_name = "BDT::BDTG", const bool other_category = false,
 			const bool require_primary = false, const double comp_thresh = -1,
 			const double pur_thresh = -1)
@@ -17,7 +17,7 @@ void ScoreDistributions(const TString weights_name = "Razzled_Standard",
   if(save)
     gSystem->Exec("mkdir -p " + save_dir);
   
-  const TString weights_file = "/sbnd/data/users/hlay/razzled/training/first_pass/" + weights_name + "/weights/" + weights_name + "_BDTG.weights.xml";
+  const TString weights_file = "/sbnd/data/users/hlay/razzled/training/second_pass/" + weights_name + "/weights/" + weights_name + "_BDTG.weights.xml";
 
   using namespace std;
   gROOT->SetStyle("henrySBND");
@@ -47,7 +47,7 @@ void ScoreDistributions(const TString weights_name = "Razzled_Standard",
   if(other_category)
     particles.push_back({ 0, 5, kBlack, "Other", "Other" });
 
-  int truePdg;
+  int truePDG;
   float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ, showerStartX, showerStartY, showerStartZ;
   bool recoPrimary, unambiguousSlice, trackContained, showerContained;
 
@@ -91,7 +91,7 @@ void ScoreDistributions(const TString weights_name = "Razzled_Standard",
   tree->SetBranchAddress("shw_modHitDensity", &shw_modHitDensity);
   tree->SetBranchAddress("shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
   
-  tree->SetBranchAddress("truePdg", &truePdg);
+  tree->SetBranchAddress("truePDG", &truePDG);
   tree->SetBranchAddress("energyComp", &energyComp);
   tree->SetBranchAddress("energyPurity", &energyPurity);
   tree->SetBranchAddress("recoPrimary", &recoPrimary);
@@ -110,21 +110,24 @@ void ScoreDistributions(const TString weights_name = "Razzled_Standard",
   TMVA::Reader *reader = new TMVA::Reader("!Color:!Silent");
   reader->AddVariable("pfp_numDaughters", &pfp_numDaughters);
   reader->AddVariable("pfp_maxDaughterHits", &pfp_maxDaughterHits);
-  reader->AddVariable("pfp_trackScore", &pfp_trackScore);
-  if(weights_name != "Razzled_no_track_score_inputs")
+  if(weights_name != "Razzled_no_track_score")
     {
-      reader->AddVariable("pfp_chargeEndFrac", &pfp_chargeEndFrac);
-      reader->AddVariable("pfp_chargeFracSpread", &pfp_chargeFracSpread);
-      reader->AddVariable("pfp_linearFitDiff", &pfp_linearFitDiff);
-      reader->AddVariable("pfp_linearFitLength", &pfp_linearFitLength);
-      reader->AddVariable("pfp_linearFitGapLength", &pfp_linearFitGapLength);
-      reader->AddVariable("pfp_linearFitRMS", &pfp_linearFitRMS);
-      reader->AddVariable("pfp_openAngleDiff", &pfp_openAngleDiff);
-      reader->AddVariable("pfp_secondaryPCARatio", &pfp_secondaryPCARatio);
-      reader->AddVariable("pfp_tertiaryPCARatio", &pfp_tertiaryPCARatio);
-      reader->AddVariable("pfp_vertexDist", &pfp_vertexDist);
-    }
+      reader->AddVariable("pfp_trackScore", &pfp_trackScore);
 
+      if(weights_name != "Razzled_no_track_score_inputs")
+	{
+	  reader->AddVariable("pfp_chargeEndFrac", &pfp_chargeEndFrac);
+	  reader->AddVariable("pfp_chargeFracSpread", &pfp_chargeFracSpread);
+	  reader->AddVariable("pfp_linearFitDiff", &pfp_linearFitDiff);
+	  reader->AddVariable("pfp_linearFitLength", &pfp_linearFitLength);
+	  reader->AddVariable("pfp_linearFitGapLength", &pfp_linearFitGapLength);
+	  reader->AddVariable("pfp_linearFitRMS", &pfp_linearFitRMS);
+	  reader->AddVariable("pfp_openAngleDiff", &pfp_openAngleDiff);
+	  reader->AddVariable("pfp_secondaryPCARatio", &pfp_secondaryPCARatio);
+	  reader->AddVariable("pfp_tertiaryPCARatio", &pfp_tertiaryPCARatio);
+	  reader->AddVariable("pfp_vertexDist", &pfp_vertexDist);
+	}
+    }
   reader->AddVariable("trk_length", &trk_length);
   reader->AddVariable("trk_chi2PIDMuon", &trk_chi2PIDMuon);
   reader->AddVariable("trk_chi2PIDProton", &trk_chi2PIDProton);
@@ -163,11 +166,11 @@ void ScoreDistributions(const TString weights_name = "Razzled_Standard",
       if(unambiguousSlice)
 	continue;
       
-      if(abs(truePdg) != 11 && abs(truePdg) != 13 && abs(truePdg) != 22 
-	 && abs(truePdg) != 211 && abs(truePdg) != 2212)
+      if(abs(truePDG) != 11 && abs(truePDG) != 13 && abs(truePDG) != 22 
+	 && abs(truePDG) != 211 && abs(truePDG) != 2212)
 	{
 	  if(other_category)
-	    truePdg = 0;
+	    truePDG = 0;
 	  else
 	    continue;
 	}
@@ -186,7 +189,7 @@ void ScoreDistributions(const TString weights_name = "Razzled_Standard",
 	continue;
 
       const std::vector<float> bdtScores = reader->EvaluateMulticlass(method_name);
-      const int trueClass = razzledMap.at(abs(truePdg));
+      const int trueClass = razzledMap.at(abs(truePDG));
 
       for(unsigned j = 0; j < bdtScores.size(); ++j)
 	hScores[j][trueClass]->Fill(bdtScores[j]);
