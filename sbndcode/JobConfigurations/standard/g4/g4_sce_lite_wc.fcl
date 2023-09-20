@@ -4,3 +4,14 @@ outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
                                "keep *_ionandscint_*_*",
                                "drop *_ionandscint_priorSCE_*"
                              ]
+
+physics.simulate: [
+  rns,
+  loader,
+  largeant,
+  ionandscint,
+  ionandscintout,
+  pdfastsim,
+  pdfastsimout,
+  genericcrt
+]
