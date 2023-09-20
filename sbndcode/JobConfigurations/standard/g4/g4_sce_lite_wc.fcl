@@ -1,4 +1,4 @@
-#include "g4_sce_dirt_filter_lite.fcl"
+#include "g4_sce_lite.fcl"
 
 outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
                                "keep *_ionandscint_*_*",
