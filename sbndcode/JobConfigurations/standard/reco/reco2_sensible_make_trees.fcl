@@ -1,0 +1,8 @@
+#include "reco2_sensible.fcl"
+
+physics.producers.crumbs.TrainingMode:                 true
+physics.producers.crumbs.EvaluateResultInTrainingMode: true
+physics.producers.dazzle.MakeTree:                     true
+physics.producers.razzle.MakeTree:                     true
+physics.producers.razzled.MakeTree:                    true
+physics.producers.razzled.RunMVA:                      false
