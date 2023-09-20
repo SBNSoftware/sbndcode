@@ -1,0 +1,60 @@
+#include "reco_sbnd.fcl"
+
+process_name: Reco2
+
+physics.reco2_sensible: [ rns,
+  pandora,
+  pandoraSCE,
+  pandoraTrack,
+  pandoraShowerSBN,
+  pandoraCalo,
+  pandoraPid,
+  crtclustering,
+  crtspacepoints,
+  crttracks,
+  crtspacepointmatching,
+  crttrackmatching,
+  fmatch,
+  opt0finder,
+  crumbs,
+  pandoraTrackMCS,
+  pandoraTrackRange,
+  pandoraTrackClosestApproach,
+  pandoraTrackStoppingChi2,
+  dazzle,
+  pandoraShowerCosmicDist,
+  pandoraShowerSelectionVars,
+  razzle,
+  razzled
+]
+
+physics.trigger_paths: [ reco2_sensible ]
+
+physics.end_paths: [ stream1 ]
+
+#include "enable_spacecharge_services_sbnd.fcl"
+
+physics.producers.crtspacepointmatching.PFPModuleLabel:    "pandoraSCE"
+physics.producers.crttrackmatching.PFPModuleLabel:         "pandoraSCE"
+physics.producers.crumbs.PFParticleModuleLabel:            "pandoraSCE"
+physics.producers.crumbs.SliceModuleLabel:                 "pandoraSCE"
+physics.producers.dazzle.PFPLabel:                         "pandoraSCE"
+physics.producers.fmatch.PandoraProducer:                  "pandoraSCE"
+physics.producers.fmatch.SpacePointProducer:               "pandoraSCE"
+physics.producers.opt0finder.SliceProducer:                "pandoraSCE"
+physics.producers.pandoraShowerCosmicDist.PandoraLabel:    "pandoraSCE"
+physics.producers.pandoraShowerSBN.PFParticleLabel:        "pandoraSCE"
+physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
+physics.producers.pandoraTrack.PFParticleLabel:            "pandoraSCE"
+physics.producers.razzle.PFPLabel:                         "pandoraSCE"
+physics.producers.razzled.ClusterLabel:                    "pandoraSCE"
+physics.producers.razzled.DazzleLabel:                     "dazzle"
+physics.producers.razzled.RazzleLabel:                     "razzle"
+physics.producers.razzled.PFPLabel:                        "pandoraSCE"
+
+physics.producers.pandora.SimChannelModuleLabel: "simtpc2d:simpleSC"
+physics.producers.dazzle.SimChannelLabel:        "simtpc2d:simpleSC"
+physics.producers.razzle.SimChannelLabel:        "simtpc2d:simpleSC"
+physics.producers.razzled.SimChannelLabel:       "simtpc2d:simpleSC"
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
