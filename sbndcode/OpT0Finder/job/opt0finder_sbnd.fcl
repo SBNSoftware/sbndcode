@@ -7,32 +7,40 @@ sbnd_opt0_finder:
 {
   module_type:     "SBNDOpT0Finder"
   OpFlashProducers: ["opflashtpc0", "opflashtpc1"]
+  OpFlashAraProducers: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
   TPCs: [0, 1]
   SliceProducer:   "pandora"
+  TrackProducer:   "pandoraTrack"
+  ShowerProducer:  "pandoraShowerSBN"
+  CaloProducer:    "pandoraCalo"
 
   FlashVetoTimeStart: -1e9
   FlashVetoTimeEnd:   +1e9
 
-  PhotoDetectors: ["pmt_coated", "pmt_uncoated"]
-  TPC: 0
+  # PhotoDetectors: ["pmt_coated", "pmt_uncoated", "xarapuca_vis", "xarapuca_vuv"]
+  PhotoDetectors: ["pmt_coated", "pmt_uncoated"] # use pmts only as default 
 
   VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
   VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
 
   FlashMatchConfig: @local::flashmatch_config
+  SelectNeutrino:       true # select only potential neutrino slices (ignore unambiguous cosmics)
+  CollectionPlaneOnly:  false # use the collection plane hit information only 
+  ExcludeExitingOpDets: true  # if true, skip opdets near an exiting by adding it to the channel mask 
+  CalAreaConstants:     [ 0.0200906, 0.0200016, 0.0201293 ] # calibration constants for each plane, docdb 19505
+  OpChannelsToSkip:     [134,135,150,151,152,153,154,155,156,157,158,159,160,161,176,177] # opchannels to skip/mask, currently holds APSIA channels
 
-  ChargeToNPhotonsTrack:    39   #  (1 / 0.0201293) e-/ADC*time_ticks  x
-                                 #  x  23.6e-6 MeV/e-  x
-                                 #  x  24,000 gamma/MeV  =
-                                 #  =  28 (not including recombination)
-                                 #  0.0201293 is the calibration constant for
-                                 #  collection plane derived in docdb 19505
-  ChargeToNPhotonsShower:   39   #  Not tuned! higher mainly beacause we need
-                                 #  to account for missing charge contributions
+  TrackConstantConversion:  false # to use constant Q/L conversion for track calorimetry objects 
+  ShowerConstantConversion: true # to use constant Q/L conversion or shower energy information, MUST BE TRUE 
 
-  # ChargeToNPhotonsTrack:    164. # 240 e-/ADC x 23.6/1e6 MeV/e- x 29,000 gamma/MeV = 164. (not including recombination)
-  # ChargeToNPhotonsShower:   164. # Not tuned! higher mainly beacause we need to account for missing charge contributions
+  # fcl parameters if using track calorimetry objects for Q/L conversion 
+  dQdxLimit:            5e5 # units of e-/cm
+  PitchLimit:           2e2 # units of cm
 
+  # constant Q/L conversion values of Track/ShowerConstantConversion is set to true 
+  ChargeToNPhotonsTrack:  1.0 # used also if hits in calo objects are outside the dQdx/Pitch Limits set above
+  ChargeToNPhotonsShower: 1.25
+  
   PDSMapTool: {
     tool_type: "sbndPDMapAlg"
   }
@@ -46,35 +54,50 @@ sbnd_opt0_finder_one_to_many: @local::sbnd_opt0_finder
 sbnd_opt0_finder_one_to_many.FlashVetoTimeStart: 0
 sbnd_opt0_finder_one_to_many.FlashVetoTimeEnd: 2
 
+# PhotonLibHypothesis configuration: configures the hypothesis generation stage
+# need to specify CCVCorrection for every optical detector if different from the GlobalEff
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.GlobalQE:  1.0 # set to ONE for ease 
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.GlobalQERefl: 1.0 # set to ONE for ease 
+# below is the UPDATED PMT EFFICIENCIES  
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.VUVEfficiency: [0., 0., 0., 0., 0., 0., 0.12 , 0.12 , 0.12 ,0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 ,0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0., 0., 0.,0., 0., 0., 0., 0., 0., 0., 0., 0.,0., 0., 0., 0., 0., 0., 0.021, 0.021, 0.021,0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0.021,0., 0., 0., 0., 0., 0., 0.12 , 0.12 , 0.12 ,0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 ,0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0., 0., 0.,0., 0., 0., 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 ,0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.021, 0.021, 0.021,0.021, 0.021, 0.021, 0., 0., 0., 0., 0., 0.,0., 0., 0., 0., 0., 0., 0., 0., 0.,0., 0., 0., 0.021, 0.021, 0.021, 0.021, 0.021, 0.021,0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0., 0., 0.,0., 0., 0., 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 ,0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.021, 0.021, 0.021,0.021, 0.021, 0.021, 0., 0., 0., 0., 0., 0.,0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 ,0.12 , 0.12 , 0.12 , 0.021, 0.021, 0.021, 0.021, 0.021, 0.021,0., 0., 0., 0., 0., 0., 0., 0., 0.,0., 0., 0., 0., 0., 0., 0., 0., 0.,0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0.021,0.021, 0.021, 0.021, 0., 0., 0., 0., 0., 0.,0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 ,0.12 , 0.12 , 0.12 , 0.021, 0.021, 0.021, 0.021, 0.021, 0.021,0., 0., 0., 0., 0., 0., 0.12 , 0.12 , 0.12 ,0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 ,0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0., 0., 0.,0., 0., 0., 0., 0., 0., 0., 0., 0.,0., 0., 0., 0., 0., 0., 0.021, 0.021, 0.021,0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0.021, 0.021,0., 0., 0., 0., 0., 0., 0.12 , 0.12 , 0.12 ,0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 , 0.12 ,0.021, 0.021, 0.021, 0.021, 0.021, 0.021]
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.PhotonLibHypothesis.VISEfficiency: [0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.13 , 0.13 , 0.13 ,0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 ,0., 0., 0., 0., 0., 0., 0.014, 0.014, 0.014,0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014,0.19 , 0.19 , 0.19 , 0.19 , 0.19 , 0.19 , 0., 0., 0.,0., 0., 0., 0., 0., 0., 0., 0., 0.,0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.13 , 0.13 , 0.13 ,0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 ,0., 0., 0., 0., 0., 0., 0.014, 0.014, 0.014,0.014, 0.014, 0.014, 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 ,0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0., 0., 0.,0., 0., 0., 0.014, 0.014, 0.014, 0.014, 0.014, 0.014,0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.19 , 0.19 , 0.19 ,0.19 , 0.19 , 0.19 , 0., 0., 0., 0., 0., 0.,0., 0., 0., 0., 0., 0., 0.014, 0.014, 0.014,0.014, 0.014, 0.014, 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 ,0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0., 0., 0.,0., 0., 0., 0.014, 0.014, 0.014, 0.014, 0.014, 0.014,0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 ,0.13 , 0.13 , 0.13 , 0., 0., 0., 0., 0., 0.,0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014,0.014, 0.014, 0.014, 0.19 , 0.19 , 0.19 , 0.19 , 0.19 , 0.19 ,0., 0., 0., 0., 0., 0., 0., 0., 0.,0., 0., 0., 0.014, 0.014, 0.014, 0.014, 0.014, 0.014,0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 ,0.13 , 0.13 , 0.13 , 0., 0., 0., 0., 0., 0.,0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.13 , 0.13 , 0.13 ,0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 ,0., 0., 0., 0., 0., 0., 0.014, 0.014, 0.014,0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014,0.19 , 0.19 , 0.19 , 0.19 , 0.19 , 0.19 , 0., 0., 0.,0., 0., 0., 0., 0., 0., 0., 0., 0.,0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.13 , 0.13 , 0.13 ,0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 , 0.13 ,0., 0., 0., 0., 0., 0.]
+
+# QLLMatch configuration: configures the scoring stage
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.NormalizeFlash:     true    # use normalized meas/hypo flases
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.QLLMode:            0       # use chisq method with ^^ normalization above
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.ChiErrorWidth:      0.1     # adding additional spread in chi-sq method
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.UseMinuit:          false   # do not perform minimiziation!!; Minuit not needed for one-to-many matching
+sbnd_opt0_finder_one_to_many.FlashMatchConfig.QLLMatch.SaturatedThreshold: 2.5e3   # fix for saturated PMTs, determines when to evaluate non-linearities 
+
 # ... for TPC 0
 sbnd_opt0_finder_one_to_many_tpc0: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc0.TPC: 0
-sbnd_opt0_finder_one_to_many_tpc0.OpFlashProducer: "opflashtpc0"
-sbnd_opt0_finder_one_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
+sbnd_opt0_finder_one_to_many_tpc0.OpFlashProducer: ["opflashtpc0","opflashtpc0xarapuca"]
 
 # ... for TPC 1
 sbnd_opt0_finder_one_to_many_tpc1: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_one_to_many_tpc1.TPC: 1
-sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: "opflashtpc1"
-sbnd_opt0_finder_one_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
+sbnd_opt0_finder_one_to_many_tpc1.OpFlashProducer: ["opflashtpc1","opflashtpc1xarapuca"]
 
+
+# WARNING: many-to-many matching is untested, performance unknown! 
 #
 # Configuration to run the flash matching in many flashes to many slices configuration
 #
-sbnd_opt0_finder_many_to_many: @local::sbnd_opt0_finder
-sbnd_opt0_finder_many_to_many.FlashVetoTimeStart: -1e9
-sbnd_opt0_finder_many_to_many.FlashVetoTimeEnd: +1e9
+# sbnd_opt0_finder_many_to_many: @local::sbnd_opt0_finder
+# sbnd_opt0_finder_many_to_many.FlashVetoTimeStart: -1e9
+# sbnd_opt0_finder_many_to_many.FlashVetoTimeEnd: +1e9
 
-# ... for TPC 0
-sbnd_opt0_finder_many_to_many_tpc0: @local::sbnd_opt0_finder_many_to_many
-sbnd_opt0_finder_many_to_many_tpc0.TPC: 0
-sbnd_opt0_finder_many_to_many_tpc0.OpFlashProducer: "opflashtpc0"
-sbnd_opt0_finder_many_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
+# # ... for TPC 0
+# sbnd_opt0_finder_many_to_many_tpc0: @local::sbnd_opt0_finder_many_to_many
+# sbnd_opt0_finder_many_to_many_tpc0.TPC: 0
+# sbnd_opt0_finder_many_to_many_tpc0.OpFlashProducer: "opflashtpc0"
+# sbnd_opt0_finder_many_to_many_tpc0.FlashMatchConfig.QLLMatch.TPCNumber: 0
 
-# ... for TPC 1
-sbnd_opt0_finder_many_to_many_tpc1: @local::sbnd_opt0_finder_many_to_many
-sbnd_opt0_finder_many_to_many_tpc1.TPC: 1
-sbnd_opt0_finder_many_to_many_tpc1.OpFlashProducer: "opflashtpc1"
-sbnd_opt0_finder_many_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
+# # ... for TPC 1
+# sbnd_opt0_finder_many_to_many_tpc1: @local::sbnd_opt0_finder_many_to_many
+# sbnd_opt0_finder_many_to_many_tpc1.TPC: 1
+# sbnd_opt0_finder_many_to_many_tpc1.OpFlashProducer: "opflashtpc1"
+# sbnd_opt0_finder_many_to_many_tpc1.FlashMatchConfig.QLLMatch.TPCNumber: 1
 
 END_PROLOG

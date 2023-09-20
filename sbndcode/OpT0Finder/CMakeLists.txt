@@ -5,6 +5,7 @@ set(
         # sbndcode_OpDetReco_OpFlash_FlashFinder
         sbndcode_OpDetSim
         sbndcode::Geometry
+        sbnobj::Common_Reco
         larcorealg::Geometry
         larcore::Geometry_Geometry_service
         lardata::Utilities
