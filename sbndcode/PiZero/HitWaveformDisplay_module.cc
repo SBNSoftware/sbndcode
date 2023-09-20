@@ -22,6 +22,7 @@
 #include "TLegend.h"
 #include "TGaxis.h"
 #include "TSystem.h"
+#include "TText.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "larsim/MCCheater/BackTrackerService.h"
@@ -29,6 +30,7 @@
 
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Wire.h"
+#include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/Simulation/SimChannel.h"
 
 constexpr int def_int = std::numeric_limits<int>::min();
@@ -55,20 +57,25 @@ public:
 
 private:
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
-  art::InputTag fHitModuleLabel, fWireModuleLabel;
+  art::InputTag fHitModuleLabel, fWireModuleLabel, fSliceModuleLabel;
 
   std::string fSaveDir;
 
-  bool fROIOnly;
+  bool fBadHitMode, fROIOnly;
+
+  int fSliceID;
 };
 
 sbnd::HitWaveformDisplay::HitWaveformDisplay(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   {
-    fHitModuleLabel  = p.get<art::InputTag>("HitModuleLabel", "gaushit");
-    fWireModuleLabel = p.get<art::InputTag>("WireModuleLabel", "simtpc2d:gauss");
-    fSaveDir         = p.get<std::string>("SaveDir", ".");
-    fROIOnly         = p.get<bool>("ROIOnly", true);
+    fHitModuleLabel   = p.get<art::InputTag>("HitModuleLabel", "gaushit");
+    fWireModuleLabel  = p.get<art::InputTag>("WireModuleLabel", "simtpc2d:gauss");
+    fSliceModuleLabel = p.get<art::InputTag>("SliceModuleLabel", "pandoraSCE");
+    fSaveDir          = p.get<std::string>("SaveDir", ".");
+    fBadHitMode       = p.get<bool>("BadHitMode", true);
+    fROIOnly          = p.get<bool>("ROIOnly", true);
+    fSliceID          = p.get<int>("SliceID", -1);
   }
 
 void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
@@ -93,223 +100,274 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
   std::vector<art::Ptr<recob::Wire>> wireVec;
   art::fill_ptr_vector(wireVec, wireHandle);
 
+  art::Handle<std::vector<recob::Slice>> sliceHandle;
+  e.getByLabel(fSliceModuleLabel, sliceHandle);
+  if(!sliceHandle.isValid()){
+    std::cout << "Slice product " << fSliceModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+  std::vector<art::Ptr<recob::Slice>> sliceVec;
+  art::fill_ptr_vector(sliceVec, sliceHandle);
+
+  if(fSliceID != -1)
+    {
+      art::FindManyP<recob::Hit> slicesToHits(sliceHandle, e, fSliceModuleLabel);
+      const art::Ptr<recob::Slice> slice = sliceVec[fSliceID];
+      hitVec = slicesToHits.at(slice.key());
+    }
+
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
   const int run = e.id().run(), subrun = e.id().subRun(), ev = e.id().event();
-  const TString saveLoc  = fSaveDir + Form("/run%dsubrun%devent%d/", run, subrun, ev);
+  const TString saveLoc  = (fSliceID == -1) ? fSaveDir + Form("/run%dsubrun%devent%d/", run, subrun, ev)
+    : fSaveDir + Form("/run%dsubrun%devent%dslice%d/", run, subrun, ev, fSliceID);
+
+  std::set<unsigned long> usedHits;
 
   for(auto const& hit : hitVec)
     {
-      const int trackID = TruthMatchUtils::TrueParticleID(clockData,hit,true);
-      if(trackID == def_int)
+      if(usedHits.count(hit.key()) != 0)
+        continue;
+
+      const int trackID = TruthMatchUtils::TrueParticleID(clockData, hit, true);
+
+      if(fBadHitMode && trackID != def_int)
+        continue;
+
+      const art::Ptr<sim::SimChannel> sc = backTracker->FindSimChannel(hit->Channel());
+
+      const double hitStart = hit->PeakTimeMinusRMS(1.);
+      const double hitEnd   = hit->PeakTimePlusRMS(1.);
+
+      const unsigned short hitStartTDC = std::max(0, (int) clockData.TPCTick2TDC(hitStart));
+      const unsigned short hitEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(hitEnd));
+
+      const double hitStartWide = hit->PeakTimeMinusRMS(10.);
+      const double hitEndWide   = hit->PeakTimePlusRMS(10.);
+
+      const unsigned short hitStartWideTDC = std::max(0, (int) clockData.TPCTick2TDC(hitStartWide));
+      const unsigned short hitEndWideTDC   = std::max(0, (int) clockData.TPCTick2TDC(hitEndWide));
+
+      auto const &map = sc->TDCIDEMap();
+      unsigned short mintdc = hitStartWideTDC, maxtdc = hitEndWideTDC;
+
+      if(!fROIOnly)
         {
-          const art::Ptr<sim::SimChannel> sc = backTracker->FindSimChannel(hit->Channel());
+          for(auto const& [tdc, ides] : map)
+            {
+              mintdc = std::min(mintdc, tdc);
+              maxtdc = std::max(maxtdc, tdc);
+            }
 
-          const double hitStart = hit->PeakTimeMinusRMS(1.);
-          const double hitEnd   = hit->PeakTimePlusRMS(1.);
+          mintdc = std::min(mintdc, hitStartTDC);
+          maxtdc = std::max(maxtdc, hitEndTDC);
+        }
 
-          const unsigned short hitStartTDC = std::max(0, (int) clockData.TPCTick2TDC(hitStart));
-          const unsigned short hitEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(hitEnd));
+      for(auto const &wire : wireVec)
+        {
+          if(wire->Channel() != hit->Channel())
+            continue;
 
-          const double hitStartWide = hit->PeakTimeMinusRMS(10.);
-          const double hitEndWide   = hit->PeakTimePlusRMS(10.);
+          const recob::Wire::RegionsOfInterest_t& signalROI = wire->SignalROI();
 
-          const unsigned short hitStartWideTDC = std::max(0, (int) clockData.TPCTick2TDC(hitStartWide));
-          const unsigned short hitEndWideTDC   = std::max(0, (int) clockData.TPCTick2TDC(hitEndWide));
+          for(auto const &roi : signalROI.get_ranges())
+            {
+              const unsigned short roiStart = roi.begin_index();
+              const unsigned short roiEnd   = roi.begin_index() + roi.size();
 
-          auto const &map = sc->TDCIDEMap();
-          unsigned short mintdc = hitStartWideTDC, maxtdc = hitEndWideTDC;
+              const unsigned short roiStartTDC = std::max(0, (int) clockData.TPCTick2TDC(roiStart));
+              const unsigned short roiEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(roiEnd));
+
+              if(!fROIOnly || (roiStartTDC > mintdc && roiStartTDC < maxtdc) ||
+                 (roiEndTDC > mintdc && roiEndTDC < maxtdc) || (roiStartTDC < mintdc && roiEndTDC > maxtdc))
+                {
+                  mintdc = std::min(mintdc, roiStartTDC);
+                  maxtdc = std::max(maxtdc, roiEndTDC);
+                }
+            }
+        }
+
+      std::vector<std::tuple<unsigned long, unsigned short, unsigned short>> goodHits;
+      std::vector<std::tuple<unsigned long, unsigned short, unsigned short>> badHits;
+
+      if(trackID == def_int)
+        badHits.emplace_back(hit.key(), hitStartTDC, hitEndTDC);
+      else
+        goodHits.emplace_back(hit.key(), hitStartTDC, hitEndTDC);
+
+      usedHits.insert(hit.key());
+
+      for(auto const &otherHit : hitVec)
+        {
+          if(otherHit == hit || otherHit->Channel() != hit->Channel())
+            continue;
+
+          const double otherHitStart = otherHit->PeakTimeMinusRMS(1.);
+          const double otherHitEnd   = otherHit->PeakTimePlusRMS(1.);
+
+          const unsigned short otherHitStartTDC = std::max(0, (int) clockData.TPCTick2TDC(otherHitStart));
+          const unsigned short otherHitEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(otherHitEnd));
 
           if(!fROIOnly)
             {
-              for(auto const& [tdc, ides] : map)
-                {
-                  mintdc = std::min(mintdc, tdc);
-                  maxtdc = std::max(maxtdc, tdc);
-                }
-
-              mintdc = std::min(mintdc, hitStartTDC);
-              maxtdc = std::max(maxtdc, hitEndTDC);
+              mintdc = std::min(mintdc, otherHitStartTDC);
+              maxtdc = std::max(maxtdc, otherHitEndTDC);
             }
-
-          std::vector<std::pair<unsigned short, unsigned short>> extraGoodHits;
-          std::vector<std::pair<unsigned short, unsigned short>> extraBadHits;
-
-          for(auto const &wire : wireVec)
+          else
             {
-              if(wire->Channel() != hit->Channel())
+              if(otherHitStartTDC > maxtdc || otherHitEndTDC < mintdc)
                 continue;
-
-              const recob::Wire::RegionsOfInterest_t& signalROI = wire->SignalROI();
-
-              for(auto const &roi : signalROI.get_ranges())
-                {
-                  const unsigned short roiStart = roi.begin_index();
-                  const unsigned short roiEnd   = roi.begin_index() + roi.size();
-
-                  const unsigned short roiStartTDC = std::max(0, (int) clockData.TPCTick2TDC(roiStart));
-                  const unsigned short roiEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(roiEnd));
-
-                  if(!fROIOnly || (roiStartTDC > mintdc && roiStartTDC < maxtdc) ||
-                     (roiEndTDC > mintdc && roiEndTDC < maxtdc) || (roiStartTDC < mintdc && roiEndTDC > maxtdc))
-                    {
-                      mintdc = std::min(mintdc, roiStartTDC);
-                      maxtdc = std::max(maxtdc, roiEndTDC);
-                    }
-                }
             }
 
-          for(auto const &otherHit : hitVec)
-            {
-              if(otherHit == hit || otherHit->Channel() != hit->Channel())
-                continue;
+          const int otherTrackID = TruthMatchUtils::TrueParticleID(clockData, otherHit, true);
+          if(otherTrackID == def_int)
+            badHits.emplace_back(otherHit.key(), otherHitStartTDC, otherHitEndTDC);
+          else
+            goodHits.emplace_back(otherHit.key(), otherHitStartTDC, otherHitEndTDC);
 
-              const double otherHitStart = otherHit->PeakTimeMinusRMS(1.);
-              const double otherHitEnd   = otherHit->PeakTimePlusRMS(1.);
+          usedHits.insert(otherHit.key());
+        }
 
-              const unsigned short otherHitStartTDC = std::max(0, (int) clockData.TPCTick2TDC(otherHitStart));
-              const unsigned short otherHitEndTDC   = std::max(0, (int) clockData.TPCTick2TDC(otherHitEnd));
+      const unsigned short nBins = maxtdc - mintdc + 21;
+      const float xLow   = mintdc - 10.5;
+      const float xHigh  = maxtdc + 10.5;
 
-              if(!fROIOnly)
-                {
-                  mintdc = std::min(mintdc, otherHitStartTDC);
-                  maxtdc = std::max(maxtdc, otherHitEndTDC);
-                }
-              else
-                {
-                  if(otherHitStartTDC > maxtdc || otherHitEndTDC < mintdc)
-                    continue;
-                }
+      TH1D *simHist  = new TH1D("simHist", Form("Channel %d;Tick (TDC);True energy deposition (MeV)", hit->Channel()), nBins, xLow, xHigh);
 
-              const int otherTrackID = TruthMatchUtils::TrueParticleID(clockData,otherHit,true);
-              if(otherTrackID == def_int)
-                extraBadHits.emplace_back(otherHitStartTDC, otherHitEndTDC);
-              else
-                extraGoodHits.emplace_back(otherHitStartTDC, otherHitEndTDC);
-            }
+      for(unsigned short tdc = mintdc - 11; tdc < maxtdc+11; ++tdc)
+        {
+          const int bin = simHist->FindBin(tdc);
+          simHist->SetBinContent(bin, sc->Energy(tdc));
+        }
 
-          const unsigned short nBins = maxtdc - mintdc + 21;
-          const float xLow   = mintdc - 10.5;
-          const float xHigh  = maxtdc + 10.5;
+      if(simHist->Integral() == 0)
+        continue;
 
-          TH1D *simHist  = new TH1D("simHist", Form("Channel %d;Tick (TDC);True energy deposition (MeV)", hit->Channel()), nBins, xLow, xHigh);
+      TCanvas *canvas = new TCanvas("canvas", "canvas");
+      canvas->cd();
 
-          for(unsigned short tdc = mintdc - 11; tdc < maxtdc+11; ++tdc)
-            {
-              const int bin = simHist->FindBin(tdc);
-              simHist->SetBinContent(bin, sc->Energy(tdc));
-            }
+      const double max = simHist->GetMaximum();
+      simHist->SetMaximum(1.5 * max);
+      simHist->Draw("hist");
+      simHist->GetXaxis()->SetNdivisions(505);
+      simHist->GetYaxis()->SetNdivisions(507);
 
-          if(simHist->Integral() == 0)
-            continue;
+      TLegend *legend = new TLegend(0.3, 0.78, 0.8, 0.9);
+      legend->SetNColumns(2);
+      legend->AddEntry(simHist, "Sim Deposits", "l");
 
-          TCanvas *canvas = new TCanvas("canvas", "canvas");
-          canvas->cd();
+      int hitN = 0;
+      for(auto const& [hitKey, startTDC, endTDC] : goodHits)
+        {
+          TLine *startLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
+          startLine->SetLineColor(kOrange);
+          startLine->SetLineWidth(4);
+          TLine *endLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
+          endLine->SetLineColor(kOrange);
+          endLine->SetLineWidth(4);
 
-          const double max = simHist->GetMaximum();
-          simHist->SetMaximum(1.5 * max);
-          simHist->Draw("hist");
-          simHist->GetXaxis()->SetNdivisions(505);
-          simHist->GetYaxis()->SetNdivisions(507);
+          TText *startText = new TText(startTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
+          startText->SetTextAngle(270);
+          startText->SetTextSize(0.02);
+          startText->SetTextColor(kOrange);
 
-          TLine *startLine = new TLine(hitStartTDC, 0, hitStartTDC, 1.2 * max);
+          TText *endText = new TText(endTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
+          endText->SetTextAngle(270);
+          endText->SetTextSize(0.02);
+          endText->SetTextColor(kOrange);
+
+          startLine->Draw();
+          startText->Draw();
+          endLine->Draw();
+          endText->Draw();
+
+          if(hitN == 0)
+            legend->AddEntry(startLine, "#pm1#sigma good hit", "l");
+
+          ++hitN;
+        }
+
+      hitN = 0;
+      for(auto const& [hitKey, startTDC, endTDC] : badHits)
+        {
+          TLine *startLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
           startLine->SetLineColor(kRed);
           startLine->SetLineWidth(4);
-          TLine *endLine = new TLine(hitEndTDC, 0, hitEndTDC, 1.2 * max);
+          TLine *endLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
           endLine->SetLineColor(kRed);
           endLine->SetLineWidth(4);
 
+          TText *startText = new TText(startTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
+          startText->SetTextAngle(270);
+          startText->SetTextSize(0.02);
+          startText->SetTextColor(kRed);
+
+          TText *endText = new TText(endTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
+          endText->SetTextAngle(270);
+          endText->SetTextSize(0.02);
+          endText->SetTextColor(kRed);
+
           startLine->Draw();
+          startText->Draw();
           endLine->Draw();
+          endText->Draw();
 
-          TLegend *legend = new TLegend(0.3, 0.78, 0.8, 0.9);
-          legend->SetNColumns(2);
-          legend->AddEntry(simHist, "Sim Deposits", "l");
-          legend->AddEntry(startLine, "#pm1#sigma ghost hit", "l");
+          if(hitN == 0)
+            legend->AddEntry(startLine, "#pm1#sigma ghost hit", "l");
 
-          int hitN = 0;
-          for(auto const& [startTDC, endTDC] : extraGoodHits)
-            {
-              TLine *otherStartLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
-              otherStartLine->SetLineColor(kOrange);
-              otherStartLine->SetLineWidth(4);
-              TLine *otherEndLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
-              otherEndLine->SetLineColor(kOrange);
-              otherEndLine->SetLineWidth(4);
-
-              otherStartLine->Draw();
-              otherEndLine->Draw();
-
-              if(hitN == 0)
-                legend->AddEntry(otherStartLine, "#pm1#sigma good hit", "l");
-
-              ++hitN;
-            }
-
-          for(auto const& [startTDC, endTDC] : extraBadHits)
-            {
-              TLine *otherStartLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
-              otherStartLine->SetLineColor(kRed);
-              otherStartLine->SetLineWidth(4);
-              TLine *otherEndLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
-              otherEndLine->SetLineColor(kRed);
-              otherEndLine->SetLineWidth(4);
-
-              otherStartLine->Draw();
-              otherEndLine->Draw();
-            }
-
-          simHist->Draw("histsame");
-          TH1D *wireHist = new TH1D("wireHist", Form("Channel %d;Tick (TDC);N Electrons", hit->Channel()), nBins, xLow, xHigh);
-
-          for(auto const &wire : wireVec)
-            {
-              if(wire->Channel() != hit->Channel())
-                continue;
-
-              const recob::Wire::RegionsOfInterest_t& signalROI = wire->SignalROI();
-
-              for(auto const &roi : signalROI.get_ranges())
-                {
-                  unsigned short roiStart = roi.begin_index();
-
-                  for(auto const& value : roi)
-                    {
-                      unsigned short tdc = clockData.TPCTick2TDC(roiStart);
-                      const int bin = simHist->FindBin(tdc);
-                      wireHist->SetBinContent(bin, 50 * value);
-                      ++roiStart;
-                    }
-                }
-
-              const double wireMax = wireHist->GetMaximum();
-              wireHist->Scale(max / wireMax);
-              wireHist->Draw("same hist");
-              wireHist->SetLineColor(kMagenta);
-
-              TGaxis *wireAxis = new TGaxis(xHigh, 0, xHigh, 1.5*max,
-                                            0, 1.5*wireMax, 507, "+L");
-              wireAxis->SetLineWidth(1);
-              wireAxis->SetLabelSize(0.05);
-              wireAxis->SetTitleSize(0.05);
-              wireAxis->SetTitleOffset(1);
-              wireAxis->SetTitle("e^{-}");
-              wireAxis->Draw();
-
-              legend->AddEntry(wireHist, "Deconv. Waveform", "l");
-            }
-
-          legend->Draw();
-
-          const TString fileName = fROIOnly ? Form("channel%d_hit%lu", hit->Channel(), hit.key()) : Form("channel%d", hit->Channel());
-
-          gSystem->Exec("mkdir -p " + saveLoc);
-
-          canvas->SaveAs(saveLoc + fileName + ".png");
-          canvas->SaveAs(saveLoc + fileName + ".pdf");
-
-          delete canvas;
+          ++hitN;
         }
+
+      simHist->Draw("histsame");
+      TH1D *wireHist = new TH1D("wireHist", Form("Channel %d;Tick (TDC);N Electrons", hit->Channel()), nBins, xLow, xHigh);
+
+      for(auto const &wire : wireVec)
+        {
+          if(wire->Channel() != hit->Channel())
+            continue;
+
+          const recob::Wire::RegionsOfInterest_t& signalROI = wire->SignalROI();
+
+          for(auto const &roi : signalROI.get_ranges())
+            {
+              unsigned short roiStart = roi.begin_index();
+
+              for(auto const& value : roi)
+                {
+                  unsigned short tdc = clockData.TPCTick2TDC(roiStart);
+                  const int bin = simHist->FindBin(tdc);
+                  wireHist->SetBinContent(bin, 50 * value);
+                  ++roiStart;
+                }
+            }
+
+          const double wireMax = wireHist->GetMaximum();
+          wireHist->Scale(max / wireMax);
+          wireHist->Draw("same hist");
+          wireHist->SetLineColor(kMagenta);
+
+          TGaxis *wireAxis = new TGaxis(xHigh, 0, xHigh, 1.5*max,
+                                        0, 1.5*wireMax, 507, "+L");
+          wireAxis->SetLineWidth(1);
+          wireAxis->SetLabelSize(0.05);
+          wireAxis->SetTitleSize(0.05);
+          wireAxis->SetTitleOffset(1);
+          wireAxis->SetTitle("e^{-}");
+          wireAxis->Draw();
+
+          legend->AddEntry(wireHist, "Deconv. Waveform", "l");
+        }
+
+      legend->Draw();
+
+      const TString fileName = fROIOnly ? Form("channel%d_hit%lu", hit->Channel(), hit.key()) : Form("channel%d", hit->Channel());
+
+      gSystem->Exec("mkdir -p " + saveLoc);
+
+      canvas->SaveAs(saveLoc + fileName + ".png");
+      canvas->SaveAs(saveLoc + fileName + ".pdf");
+
+      delete canvas;
     }
 }
 

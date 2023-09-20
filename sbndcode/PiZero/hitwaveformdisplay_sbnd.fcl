@@ -21,7 +21,9 @@ physics:
     hitwaveformdisplay:
     { 
       module_type: "HitWaveformDisplay"
-      SaveDir:     "/sbnd/data/users/hlay/pizero/plots/badhits/waveformanalysis/"
+      SaveDir:     "/sbnd/data/users/hlay/MCP2023B/slice_completeness/23B/waveformanalysis/"
+      BadHitMode:  false
+      SliceID:     0
     }
   }
 
