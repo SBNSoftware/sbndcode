@@ -152,7 +152,7 @@ private:
     fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
     fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
     fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel;
-  bool fDebug;
+  bool fDebug, fBeamOff;
 
   std::map<int, int> fHitsMap;
   std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap;
@@ -329,6 +329,7 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fPOTModuleLabel              = p.get<art::InputTag>("POTModuleLabel", "generator");
     fOpT0ModuleLabel             = p.get<art::InputTag>("OpT0ModuleLabel", "opt0finder");
     fDebug                       = p.get<bool>("Debug", false);
+    fBeamOff                     = p.get<bool>("BeamOff", false);
 
     art::ServiceHandle<art::TFileService> fs;
 
@@ -404,6 +405,9 @@ void sbnd::NCPiZeroAnalysis::SetupBranches(VecVarMap &map)
 
 void sbnd::NCPiZeroAnalysis::beginSubRun(const art::SubRun &sr)
 {
+  if(fBeamOff)
+    return;
+
   ResetSubRunVars();
 
   // Get POT
