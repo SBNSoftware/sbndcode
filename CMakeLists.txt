@@ -15,12 +15,12 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.78.02)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.78.04)
 find_package(cetmodules REQUIRED)
 project(sbndcode LANGUAGES CXX)
 
 # for CI:
-# project(sbndcode VERSION 09.78.02)
+# project(sbndcode VERSION 09.78.04)
 
 message(STATUS "\n")
 message(STATUS "=================================   ${PROJECT_NAME}   =================================")
