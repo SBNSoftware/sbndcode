@@ -50,6 +50,7 @@ physics.producers.largeant.InputSourcesLabels: [ "larg4intime", "larg4outtime"]
 physics.producers.ionandscint: @local::sbnd_merge_sim_sources
 physics.producers.ionandscint.FillSimEnergyDeposits: true
 physics.producers.ionandscint.InputSourcesLabels: [ "ionandscintintime", "ionandscintouttime"]
+physics.producers.ionandscint.EnergyDepositInstanceLabels: [ "", "priorSCE" ]
 
 # Add a process that merges the SimChannels
 physics.producers.simdrift: @local::sbnd_merge_sim_sources
