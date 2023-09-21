@@ -559,6 +559,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
       return;
     }
 
+  FillElement(vars[prefix + "_mctruth_id"], counter, mct.key());
+
   const simb::MCNeutrino mcn = mct->GetNeutrino();
   const simb::MCParticle nu  = mcn.Nu();
 
