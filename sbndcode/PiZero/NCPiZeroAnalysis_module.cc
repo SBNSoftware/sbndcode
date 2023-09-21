@@ -49,6 +49,7 @@
 #include "sbnobj/Common/Reco/ScatterClosestApproach.h"
 #include "sbnobj/Common/Reco/StoppingChi2Fit.h"
 #include "sbnobj/Common/Reco/ShowerSelectionVars.h"
+#include "sbnobj/Common/Reco/OpT0FinderResult.h"
 
 #include "NCPiZeroStructs.h"
 
@@ -150,7 +151,7 @@ private:
     fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel,
     fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
     fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
-    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel;
+    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel;
   bool fDebug;
 
   std::map<int, int> fHitsMap;
@@ -236,6 +237,10 @@ private:
     { "slc_crumbs_score", new InhVecVar<float>("slc_crumbs_score") },
     { "slc_crumbs_nc_score", new InhVecVar<float>("slc_crumbs_nc_score") },
     { "slc_crumbs_ccnue_score", new InhVecVar<float>("slc_crumbs_ccnue_score") },
+    { "slc_opt0_time", new InhVecVar<double>("slc_opt0_time") },
+    { "slc_opt0_score", new InhVecVar<double>("slc_opt0_score") },
+    { "slc_opt0_measPE", new InhVecVar<double>("slc_opt0_measPE") },
+    { "slc_opt0_hypPE", new InhVecVar<double>("slc_opt0_hypPE") },
     { "slc_pfp_id", new InhVecVecVar<size_t>("slc_pfp_id") },
     { "slc_pfp_pdg", new InhVecVecVar<int>("slc_pfp_pdg") },
     { "slc_pfp_track_score", new InhVecVecVar<float>("slc_pfp_track_score") },
@@ -306,14 +311,14 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fPFParticleModuleLabel       = p.get<art::InputTag>("PFParticleModuleLabel", "pandoraSCE");
     fVertexModuleLabel           = p.get<art::InputTag>("VertexModuleLabel", "pandoraSCE");
     fHitModuleLabel              = p.get<art::InputTag>("HitModuleLabel", "gaushit");
-    fTrackModuleLabel            = p.get<art::InputTag>("TrackModuleLabel", "pandoraSCETrack");
-    fShowerModuleLabel           = p.get<art::InputTag>("ShowerModuleLabel", "pandoraSCEShower");
-    fTrackCalorimetryModuleLabel = p.get<art::InputTag>("TrackCalorimetryModuleLabel", "pandoraSCECalo");
+    fTrackModuleLabel            = p.get<art::InputTag>("TrackModuleLabel", "pandoraTrack");
+    fShowerModuleLabel           = p.get<art::InputTag>("ShowerModuleLabel", "pandoraShowerSBN");
+    fTrackCalorimetryModuleLabel = p.get<art::InputTag>("TrackCalorimetryModuleLabel", "pandoraCalo");
     fCRUMBSModuleLabel           = p.get<art::InputTag>("CRUMBSModuleLabel", "crumbs");
     fDazzleModuleLabel           = p.get<art::InputTag>("DazzleModuleLabel", "dazzle");
-    fCaloModuleLabel             = p.get<art::InputTag>("CaloModuleLabel", "pandoraSCECalo");
+    fCaloModuleLabel             = p.get<art::InputTag>("CaloModuleLabel", "pandoraCalo");
     fMCSModuleLabel              = p.get<art::InputTag>("MCSModuleLabel", "pandoraTrackMCS:muon");
-    fChi2ModuleLabel             = p.get<art::InputTag>("Chi2ModuleLabel", "pandoraSCEPid");
+    fChi2ModuleLabel             = p.get<art::InputTag>("Chi2ModuleLabel", "pandoraPid");
     fRangeModuleLabel            = p.get<art::InputTag>("RangeModuleLabel", "pandoraTrackRange:muon");
     fClosestApproachModuleLabel  = p.get<art::InputTag>("ClosestApproachModuleLabel", "pandoraTrackClosestApproach");
     fStoppingChi2ModuleLabel     = p.get<art::InputTag>("StoppingChi2ModuleLabel", "pandoraTrackStoppingChi2");
@@ -322,6 +327,7 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fShowerTrackFitModuleLabel   = p.get<art::InputTag>("ShowerTrackFitModuleLabel", "pandoraShowerSelectionVars");
     fShowerDensityFitModuleLabel = p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
     fPOTModuleLabel              = p.get<art::InputTag>("POTModuleLabel", "generator");
+    fOpT0ModuleLabel             = p.get<art::InputTag>("OpT0ModuleLabel", "opt0finder");
     fDebug                       = p.get<bool>("Debug", false);
 
     art::ServiceHandle<art::TFileService> fs;
@@ -645,6 +651,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
   art::FindManyP<recob::PFParticle> slicesToPFPs(sliceHandle, e, fPFParticleModuleLabel);
   art::FindOneP<recob::Vertex>      pfpToVertices(pfpHandle, e, fVertexModuleLabel);
   art::FindOneP<sbn::CRUMBSResult>  slicesToCRUMBS(sliceHandle, e, fCRUMBSModuleLabel);
+  art::FindManyP<sbn::OpT0Finder>  slicesToOpT0(sliceHandle, e, fOpT0ModuleLabel);
 
   for (auto&& [slcCounter, slc] : enumerate(sliceVec))
     {
@@ -683,6 +690,19 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement(slcVars["slc_crumbs_score"], slcCounter, crumbs->score);
           FillElement(slcVars["slc_crumbs_nc_score"], slcCounter, crumbs->ncscore);
           FillElement(slcVars["slc_crumbs_ccnue_score"], slcCounter, crumbs->ccnuescore);
+        }
+
+      std::vector<art::Ptr<sbn::OpT0Finder>> opT0Vec = slicesToOpT0.at(slc.key());
+      if(opT0Vec.size() > 0)
+        {
+          std::sort(opT0Vec.begin(), opT0Vec.end(),
+                    [](auto const& a, auto const& b)
+                    { return a->score > b->score; });
+
+          FillElement(slcVars["slc_opt0_time"], slcCounter, opT0Vec[0]->time);
+          FillElement(slcVars["slc_opt0_score"], slcCounter, opT0Vec[0]->score);
+          FillElement(slcVars["slc_opt0_measPE"], slcCounter, opT0Vec[0]->measPE);
+          FillElement(slcVars["slc_opt0_hypPE"], slcCounter, opT0Vec[0]->hypoPE);
         }
 
       ResizeSubVectors(slcVars, slcCounter, prim->NumDaughters());
