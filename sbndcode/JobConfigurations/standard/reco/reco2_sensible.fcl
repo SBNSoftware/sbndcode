@@ -2,6 +2,11 @@
 
 process_name: Reco2
 
+physics.analyzers.ncpizeroana:
+{
+  module_type: "NCPiZeroAnalysis"
+}
+
 physics.reco2_sensible: [ rns,
   pandora,
   pandoraSCE,
@@ -28,9 +33,10 @@ physics.reco2_sensible: [ rns,
   razzled
 ]
 
-physics.trigger_paths: [ reco2_sensible ]
+physics.ana: [ ncpizeroana ]
 
-physics.end_paths: [ stream1 ]
+physics.trigger_paths: [ reco2_sensible ]
+physics.end_paths: [ stream1, ana ]
 
 #include "enable_spacecharge_services_sbnd.fcl"
 
