@@ -17,6 +17,8 @@
 #include "art_root_io/TFileService.h"
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Persistency/Common/FindOneP.h"
+#include "canvas/Persistency/Provenance/ProcessConfiguration.h"
+#include "canvas/Persistency/Provenance/ProcessHistory.h"
 
 #include "TTree.h"
 
@@ -79,12 +81,15 @@ public:
   // Required functions.
   void analyze(const art::Event &e) override;
   virtual void beginSubRun(const art::SubRun& sr);
+  virtual void endSubRun(const art::SubRun& sr);
 
   void ResetSubRunVars();
   void ResetEventVars();
   void ClearMaps();
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
                  const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
+
+  int GetTotalGenEvents(const art::Event &e);
 
   void SetupBranches(VecVarMap &map);
 
@@ -162,7 +167,7 @@ private:
   TTree* fSubRunTree;
 
   double _pot;
-  int    _spills;
+  int    _spills, _ngenevts;
 
   TTree* fEventTree;
 
@@ -337,6 +342,7 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
 
     fSubRunTree->Branch("pot", &_pot);
     fSubRunTree->Branch("spills", &_spills);
+    fSubRunTree->Branch("ngenevts", &_ngenevts);
 
     fEventTree = fs->make<TTree>("events","");
     fEventTree->Branch("run", &_run);
@@ -405,10 +411,10 @@ void sbnd::NCPiZeroAnalysis::SetupBranches(VecVarMap &map)
 
 void sbnd::NCPiZeroAnalysis::beginSubRun(const art::SubRun &sr)
 {
+  ResetSubRunVars();
+
   if(fBeamOff)
     return;
-
-  ResetSubRunVars();
 
   // Get POT
   art::Handle<sumdata::POTSummary> potHandle;
@@ -420,7 +426,10 @@ void sbnd::NCPiZeroAnalysis::beginSubRun(const art::SubRun &sr)
 
   _pot    = potHandle->totpot;
   _spills = potHandle->totspills;
+}
 
+void sbnd::NCPiZeroAnalysis::endSubRun(const art::SubRun &sr)
+{
   fSubRunTree->Fill();
 }
 
@@ -432,6 +441,10 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
   _run    = e.id().run();
   _subrun = e.id().subRun();
   _event  =  e.id().event();
+
+  // Note this can only be accessed from the event object but is a subrun level quantity.
+  // Hence, we override it every event but it is only filled in the subrun tree.
+  _ngenevts = GetTotalGenEvents(e);
 
   if(fDebug)
     std::cout << "This is event " << _run << "-" << _subrun << "-" << _event << std::endl;
@@ -1207,7 +1220,7 @@ bool sbnd::NCPiZeroAnalysis::VolumeCheck(const TVector3 &pos, const double &wall
 
 void sbnd::NCPiZeroAnalysis::ResetSubRunVars()
 {
-  _pot = 0.; _spills = 0;
+  _pot = 0.; _spills = 0; _ngenevts = 0;
 }
 
 void sbnd::NCPiZeroAnalysis::ResetEventVars()
@@ -1215,6 +1228,23 @@ void sbnd::NCPiZeroAnalysis::ResetEventVars()
   _run = -1; _subrun = -1; _event  = -1;
 
   _n_nu = 0; _n_slc  = 0;
+}
+
+int sbnd::NCPiZeroAnalysis::GetTotalGenEvents(const art::Event &e)
+{
+  int nGenEvt = 0;
+  for (const art::ProcessConfiguration &process: e.processHistory()) {
+    std::optional<fhicl::ParameterSet> genConfig = e.getProcessParameterSet(process.processName());
+    if (genConfig && genConfig->has_key("source") && genConfig->has_key("source.maxEvents") && genConfig->has_key("source.module_type") ) {
+      int maxEvents = genConfig->get<int>("source.maxEvents");
+      std::string moduleType = genConfig->get<std::string>("source.module_type");
+      if (moduleType == "EmptyEvent") {
+        nGenEvt += maxEvents;
+      }
+    }
+  }
+
+  return nGenEvt;
 }
 
 void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
