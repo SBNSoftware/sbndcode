@@ -20,7 +20,6 @@ services:
   FileCatalogMetadata:      @local::sbnd_file_catalog_mc
   TFileService:            { fileName: "hist_%p.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
-  #BackTrackerService:       @local::standard_backtrackerservice
                             @table::sbnd_services
 }
 

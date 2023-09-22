@@ -75,7 +75,11 @@ namespace BlipUtils {
   // Provided a vector of all particle information for event, fill a
   // vector of true blips
   void MakeTrueBlips( std::vector<blip::ParticleInfo>& pinfo, std::vector<blip::TrueBlip>& trueblips ) {
-   
+     
+    art::ServiceHandle<geo::Geometry> geom;
+    auto const& detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+    auto const& clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    
     for(size_t i=0; i<pinfo.size(); i++){
       auto& part = pinfo[i].particle;
       
@@ -108,10 +112,21 @@ namespace BlipUtils {
       
       // Final check -- ensure there was non-negligible number 
       // of deposted ionization electrons
-      if( tb.DepElectrons >= 20 ) {
-        tb.ID = trueblips.size();
-        trueblips.push_back(tb);
-      } 
+      if( tb.DepElectrons < 20 ) continue;
+
+      // Calculate TPC-specific quantities
+      //auto point = geo::Point_t{tb.Position.X(),tb.Position.Y(),tb.Position.Z()};
+      //auto const& tpcID   = geom->FindTPCAtPosition(point);
+      
+      // 'ConvertXToTicks' does not account for time offset of particle (i.e., it
+      // assumes particle T0 = 0 with the trigger). We need to correct for that.
+      //auto const& planeID = geom->GetBeginPlaneID(tpcID);
+      //float tick_offset = (tb.Time>0) ? tb.Time/clockData.TPCClock().TickPeriod() : 0;
+      float tick_calc   = 0; //(float)detProp.ConvertXToTicks(tb.Position.X(),planeID);
+      tb.DriftTime      = tick_calc*clockData.TPCClock().TickPeriod() + clockData.TriggerOffsetTPC();
+      
+      tb.ID = trueblips.size();
+      trueblips.push_back(tb);
 
     }
     
@@ -152,11 +167,7 @@ namespace BlipUtils {
     tblip.Energy      += pinfo.depEnergy;
     tblip.DepElectrons+= pinfo.depElectrons;
     tblip.NumElectrons+= std::max(0.,pinfo.numElectrons);
-
-    auto const detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
-    float driftVel = detProp.DriftVelocity(detProp.Efield(0),detProp.Temperature());
-    tblip.DriftTime = tblip.Position.X() / driftVel;
-
+    
     tblip.G4ChargeMap[part.TrackId()] += pinfo.depElectrons;
     tblip.G4PDGMap[part.TrackId()]    = part.PdgCode();
     if(pinfo.depElectrons > tblip.LeadCharge ) {
@@ -185,7 +196,7 @@ namespace BlipUtils {
         if( blip_i.TPC != blip_j.TPC ) continue;
         // check that the times are similar (we don't want to merge
         // together a blip that happened much later but in the same spot)
-        if( fabs(blip_i.Time - blip_j.Time) > 3 ) continue;
+        if( fabs(blip_i.Time - blip_j.Time) > 5 ) continue;
         float d = (blip_i.Position-blip_j.Position).Mag();
         if( d < dmin ) {
           isGrouped.at(j) = true;
@@ -195,8 +206,8 @@ namespace BlipUtils {
           float w2 = blip_j.DepElectrons/totQ;
           blip_i.Energy       += blip_j.Energy;
           blip_i.Position     = w1*blip_i.Position + w2*blip_j.Position;
-          blip_i.Time         = w1*blip_i.Time     + w2*blip_j.Time; 
           blip_i.DriftTime    = w1*blip_i.DriftTime+ w2*blip_j.DriftTime; 
+          blip_i.Time         = w1*blip_i.Time + w2*blip_j.Time; 
           blip_i.DepElectrons += blip_j.DepElectrons;
           if( blip_j.NumElectrons ) blip_i.NumElectrons += blip_j.NumElectrons;
           
@@ -246,6 +257,7 @@ namespace BlipUtils {
       hc.NPulseTrainHits  = 0;
       float startTime     = 9e9;
       float endTime       = -9e9;
+      float weightedTick  = 0;
       float weightedTime  = 0;
       float weightedGOF   = 0;
       //float weightedRatio = 0;
@@ -270,6 +282,7 @@ namespace BlipUtils {
         hc.Charge     += q;
         hc.ADCs       += hitinfo.integralADC;
         hc.Amplitude  = std::max(hc.Amplitude, hitinfo.amp );
+        weightedTick  += q*hitinfo.peakTime;
         weightedTime  += q*hitinfo.driftTime;
         startTime     = std::min(startTime, hitinfo.driftTime-hitinfo.rms);
         endTime       = std::max(endTime,   hitinfo.driftTime+hitinfo.rms);
@@ -300,6 +313,7 @@ namespace BlipUtils {
       hc.EndTime    = endTime;
       hc.Timespan   = hc.EndTime - hc.StartTime;
       hc.Time       = weightedTime / hc.Charge;
+      hc.TimeTick   = weightedTick / hc.Charge;
 
       // overall cluster RMS and uncertainty in charge
       float sig_sumSq = 0;
@@ -310,6 +324,7 @@ namespace BlipUtils {
         dt_sumSq  += w*pow(tvec[i]-hc.Time,2);
         sig_sumSq += pow(w*rmsvec[i],2);
         dq        += w*dqvec[i];
+
       }
       hc.RMS = sqrt( sig_sumSq + dt_sumSq );
       hc.SigmaCharge = dq;
@@ -324,7 +339,9 @@ namespace BlipUtils {
 
 
   //=================================================================
-  blip::Blip MakeBlip( std::vector<blip::HitClust> const& hcs){
+  blip::Blip MakeBlip( std::vector<blip::HitClust> const& hcs,
+    detinfo::DetectorPropertiesData const& detProp,
+    detinfo::DetectorClocksData const& clockData ){
     
     blip::Blip  newblip;
     
@@ -342,25 +359,21 @@ namespace BlipUtils {
         if( hcs[i].TPC   != hcs[j].TPC )    { return newblip; }
       }
     }
-    
-    newblip.TPC     = hcs[0].TPC;
-    newblip.NPlanes = planeIDs.size();
-   
+      
     // ------------------------------------------------
     // detector properties initialization
-    //if( _tick_to_cm < 0 ) InitializeDetProps();
-    //auto const* detProp   = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    //auto const* detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService>()->provider();
-    auto const detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
-    //double samplePeriod  = lar::providerFrom<detinfo::DetectorClocksService>()->TPCClock().TickPeriod();
-    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
-    double samplePeriod  = clockData.TPCClock().TickPeriod();
-    double driftVelocity = detProp.DriftVelocity(detProp.Efield(0),detProp.Temperature()); 
-    double tick_to_cm    = samplePeriod * driftVelocity;
+    //auto const& detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+    //auto const& clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    float driftVelocity   = detProp.DriftVelocity(detProp.Efield(0),detProp.Temperature()); 
+    float tick_to_cm      = clockData.TPCClock().TickPeriod() * driftVelocity;
+    
 
+    newblip.Cryostat = hcs[0].Cryostat;
+    newblip.TPC     = hcs[0].TPC;
+    newblip.NPlanes = planeIDs.size();
     
     // ------------------------------------------------
-    // Look for valid wire intersections between 
+    /// Look for valid wire intersections between 
     // central-most hits in each cluster
     std::vector<TVector3> wirex;
     for(size_t i=0; i<hcs.size(); i++) {
@@ -399,10 +412,6 @@ namespace BlipUtils {
     // Require some number of intersection points.
     if( !wirex.size() ) return newblip;
     
-    // If there were 3 or more planes matched, require
-    // that there be at least 3 intersection points.
-    if( newblip.NPlanes >= 3 && wirex.size() < 3 ) return newblip;
-    
     // Loop over the intersection points and calculate average position in 
     // YZ-plane, as well as the mean difference between intersection points.
     newblip.Position.SetXYZ(0,0,0);
@@ -418,18 +427,38 @@ namespace BlipUtils {
       if( newblip.SigmaYZ > std::max(1.,0.5*newblip.dYZ) ) return newblip;
     }
     
-    // Calculate mean drift time and X-position 
+    // Calculate mean drift time and X-position
+    // (note that the 'time' of each of the hit clusters
+    // have already been corrected for plane-to-plane offsets)
+    newblip.TimeTick= 0;
     newblip.Time = 0;
-    float t_min = 99e9;
-    float t_max = -99e9;
+    newblip.dX = 0;
+    float vsize = (float)hcs.size();
     for(auto hc : hcs ) {
-      newblip.Time      += hc.Time / float(hcs.size());
-      t_min = std::min( t_min, hc.StartTime );
-      t_max = std::max( t_max, hc.EndTime   );
+      newblip.TimeTick  += hc.TimeTick / vsize;
+      newblip.Time      += hc.Time / vsize;
+      newblip.dX  = std::max((float)(hc.EndTime-hc.StartTime)*tick_to_cm, newblip.dX);
     }
-    newblip.Position.SetX(newblip.Time*tick_to_cm);
-    newblip.dX = (t_max-t_min) * tick_to_cm;
+   
+    //auto const& tpcID = geo::TPCID(geo::CryostatID(newblip.Cryostat),newblip.TPC);
+    //auto const& planeID = art::ServiceHandle<geo::Geometry>()->GetBeginPlaneID(tpcID);
+    //newblip.Position  .SetX(detProp.ConvertTicksToX(newblip.TimeTick, planeID)); 
     
+    // convert ticks to X
+      auto const& cryostat= art::ServiceHandle<geo::Geometry>()->Cryostat(geo::CryostatID(newblip.Cryostat));
+      auto const& tpcgeom = cryostat.TPC(newblip.TPC);
+      auto const  xyz     = tpcgeom.Plane(0).GetCenter();
+      int         dirx    = DriftDirX(tpcgeom);
+      
+      newblip.Position.SetX( xyz.X() + dirx * tick_to_cm * newblip.Time );
+
+    // this should ALREADY be accounted for at the hit-processing level in BlipRecoAlg,
+    // through the use of GetXTicksOffset...
+    //float offset_ticks = clockData.TriggerOffsetTPC() /  clockData.TPCClock().TickPeriod();
+    //float driftTicks = newblip.Time + clockData.TriggerOffsetTPC();
+    //std::cout<<"blip time "<<newblip.TimeTick<<"  TPC offset "<<clockData.TriggerOffsetTPC()<<"\n";
+   
+    //std::cout<<"Made new blip with recoX = "<<newblip.Position.X()<<" and drift time "<<newblip.DriftTime<<" us\n";
     // OK, we made it! Flag as "valid" and ship it out.
     newblip.isValid = true;
     return newblip;
@@ -461,6 +490,11 @@ namespace BlipUtils {
 
     return false;
   }
+  
+  //===================================================================
+  int DriftDirX(geo::TPCGeo const& tpcgeom) { 
+    return ((tpcgeom.DriftDirection() == geo::kNegX) ? +1.0 : -1.0);
+  }
 
   //====================================================================
   bool DoHitsOverlap(art::Ptr<recob::Hit> const& hit1, art::Ptr<recob::Hit> const& hit2){
@@ -471,6 +505,7 @@ namespace BlipUtils {
     if( fabs(t1-t2) < 1.0*sig ) return true;
     else return false;
   }
+
   
   //====================================================================
   bool DoHitClustsOverlap(blip::HitClust const& hc1, blip::HitClust const& hc2){

@@ -47,12 +47,14 @@ namespace blip {
   // True energy depositions
   struct TrueBlip {
     int       ID            = -9;     // unique blip ID
+    int       Cryostat      = -9;     // Cryostat ID
     int       TPC           = -9;     // TPC ID
-    float     Time          = -999e9; // time [us]
+    float     Time          = -9;     // time of particle interaction
+    int       TimeTick      = -9;     // time tick
+    float     DriftTime     = -9;     // drift time [us]
     float     Energy        = 0;      // energy dep [MeV]
     int       DepElectrons  = 0;      // deposited electrons
     int       NumElectrons  = 0;      // electrons reaching wires
-    float     DriftTime     = -9;     // drift time [us]
     int       LeadG4ID      = -9;     // lead G4 track ID
     int       LeadG4Index   = -9;     // lead G4 track index
     int       LeadG4PDG     = -9;     // lead G4 PDG
@@ -108,13 +110,14 @@ namespace blip {
     float   Amplitude       = -999;
     float   Charge          = -999;
     float   SigmaCharge     = -999;
+    float   TimeTick        = -999;
     float   Time            = -999;
-    float   RMS             = -999;
     float   StartHitTime    = -999;
     float   EndHitTime      = -999;
     float   StartTime       = -999;
     float   EndTime         = -999;
     float   Timespan        = -999;
+    float   RMS             = -999;
     int     StartWire       = -999;
     int     EndWire         = -999;
     int     NPulseTrainHits = -9;
@@ -133,13 +136,15 @@ namespace blip {
     
     int       ID              = -9;         // Blip ID / index
     bool      isValid         = false;      // Blip passes basic checks
+    int       Cryostat        = -9;         // Cryostat
     int       TPC             = -9;         // TPC
     int       NPlanes         = -9;         // Num. matched planes
     int       MaxWireSpan     = -9;         // Maximum span of wires on any plane cluster
+    float     TimeTick        = -999;       // Readout time [ticks]
+    float     Time            = -999;       // Drift time [us]
     float     Charge          = -9;         // Charge on calorimetry plane
     float     Energy          = -999;       // Energy (const dE/dx, fcl-configurable)
     float     EnergyESTAR     = -999;       // Energy (ESTAR method from ArgoNeuT)
-    float     Time            = -999;       // Drift time [ticks]
     float     ProxTrkDist     = -9;         // Distance to cloest track
     int       ProxTrkID       = -9;         // ID of closest track
     bool      inCylinder      = false;      // Is it in a cone/cylinder region? 

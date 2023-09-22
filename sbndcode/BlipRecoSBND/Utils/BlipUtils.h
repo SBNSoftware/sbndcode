@@ -47,7 +47,7 @@ namespace BlipUtils {
   void      FillParticleInfo(simb::MCParticle const&, blip::ParticleInfo&, SEDVec_t&, int plane=2);
   //void      CalcPartDrift(blip::ParticleInfo&, int);
   //void      CalcTotalDep(float&,int&,float&, SEDVec_t&);
-  void      MakeTrueBlips(std::vector<blip::ParticleInfo>&, std::vector<blip::TrueBlip>&);
+  void      MakeTrueBlips(std::vector<blip::ParticleInfo>&, std::vector<blip::TrueBlip>&); 
   void      GrowTrueBlip(blip::ParticleInfo&, blip::TrueBlip&);
   void      MergeTrueBlips(std::vector<blip::TrueBlip>&, float);
   void      GrowHitClust(blip::HitInfo const&, blip::HitClust&);
@@ -59,7 +59,12 @@ namespace BlipUtils {
   bool      DoChannelsIntersect(int,int);
   bool      DoHitClustsMatch(blip::HitClust const&, blip::HitClust const&,float);
   blip::HitClust  MakeHitClust(std::vector<blip::HitInfo> const&);
-  blip::Blip      MakeBlip(std::vector<blip::HitClust> const&);
+  //blip::Blip      MakeBlip(std::vector<blip::HitClust> const&);
+  blip::Blip  MakeBlip(std::vector<blip::HitClust> const&,
+                       detinfo::DetectorPropertiesData const&,
+                       detinfo::DetectorClocksData const&);
+
+  int       DriftDirX(geo::TPCGeo const&);
   
 
   //###################################################

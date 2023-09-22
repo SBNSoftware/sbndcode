@@ -9,33 +9,73 @@ namespace blip {
   : fGeom { *lar::providerFrom<geo::Geometry>() }
   {
     this->reconfigure(pset);
-
-    //detProp               = art::ServiceHandle<detinfo::DetectorPropertiesService>()->provider();
-    auto const detProp    = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
-    kNominalEfield        = detProp.Efield();
-    kDriftVelocity        = detProp.DriftVelocity(kNominalEfield,detProp.Temperature());
+    
+    auto const& detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+    auto const& clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     kLArDensity           = detProp.Density();
-
-    fNominalRecombFactor  = ModBoxRecomb(fCalodEdx,kNominalEfield);
-    mWion                 = 1000./util::kGeVToElectrons;
+    kNominalEfield        = detProp.Efield();
+    kDriftVelocity        = detProp.DriftVelocity(detProp.Efield(0),detProp.Temperature()); 
+    kTickPeriod           = clockData.TPCClock().TickPeriod();
+    kNominalRecombFactor  = ModBoxRecomb(fCalodEdx,kNominalEfield);
+    kWion                 = 1000./util::kGeVToElectrons;
    
-    // Determine number cryostats, TPC, planes, wires
-    // (this should be separate function that is called once per job to set up all the histograms)
+    // -------------------------------------------------------------------
+    // Determine number cryostats, TPC, planes, wires.
+    //
+    // Also cache all the X tick offsets so we don't have to keep re-calculating them 
+    // for every single hit. Note that 'detProp.GetXTicksOffset()' does not make intuitive 
+    // sense for cases with wireplanes aren't at X~0 (i.e., SBND).  We will account 
+    // for that here so that our calculated drift times for hits makes sense.
+      
+
+    // Loop over cryostats
     std::cout<<"NCryostats: "<<fGeom.Ncryostats()<<"\n";
-    for(size_t i=0; i<fGeom.Ncryostats(); i++){
-      auto const& cryoObj = geo::CryostatID(i);
-      std::cout<<"TPCs in cryostat"<<i<<": "<<fGeom.NTPC(cryoObj)<<"\n";
-      for(size_t j=0; j<fGeom.NTPC(cryoObj); j++){
-        auto const& tpcObj = geo::TPCID(cryoObj,j);
-        std::cout<<"TPC "<<j<<" has "<<fGeom.Nplanes(tpcObj)<<" planes\n";
-        for(size_t k=0; k<fGeom.Nplanes(tpcObj); k++){
-          auto const& planeObj = geo::PlaneID(i,j,k);
-          std::cout<<"  plane "<<k<<" has "<<fGeom.Nwires(planeObj)<<"\n";
+    for(size_t cstat=0; cstat<fGeom.Ncryostats(); cstat++){
+      auto const& cryoid = geo::CryostatID(cstat);
+
+      // Loop TPCs in cryostat 'cstat'
+      for(size_t tpc=0; tpc<fGeom.NTPC(cryoid); tpc++){
+        auto const& tpcid = geo::TPCID(cryoid,tpc);
+
+        // Loop planes in TPC 'tpc'
+        for(size_t pl=0; pl<fGeom.Nplanes(tpcid); pl++){
+          auto const& planeid = geo::PlaneID(cstat,tpc,pl);
+          
+          float offset = detProp.GetXTicksOffset(pl,tpc,cstat);
+          std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<fGeom.Nwires(planeid)<<" wires\n";
+          std::cout<<"  XTicksOffset (from detProp): "<<offset<<"\n";
+          
+          
+          // subtract out the geometric time offset added to account for the 
+          // distance between plane0 and X=0. This is based on code in
+          // lardataalg/DetectorInfo/DetectorPropertiesStandard.cxx 
+          // (as of lardataalg v9_15_01)
+          auto const& cryostat  = fGeom.Cryostat(geo::CryostatID(cstat));
+          auto const& tpcgeom   = cryostat.TPC(tpc);
+          auto const xyz        = tpcgeom.Plane(0).GetCenter();
+          const double dir((tpcgeom.DriftDirection() == geo::kNegX) ? +1.0 : -1.0);
+          float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
+          
+          float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
+          std::cout<<"  After geometric correction: "<<offset - goofy_offset<<"\n";
+
+          kXTicksOffsets[cstat][tpc][pl] = offset - goofy_offset;
+
+
         }
       }
     }
-      
-   
+
+    /*
+    std::cout<<"XticksOffset, Plane 0: "<<detProp.GetXTicksOffset(0,1,0)<<"\n";
+    std::cout<<"XticksOffset, Plane 1: "<<detProp.GetXTicksOffset(1,1,0)<<"\n";
+    std::cout<<"XticksOffset, Plane 2: "<<detProp.GetXTicksOffset(2,1,0)<<"\n";
+    std::cout<<"XticksOffset, Plane 0: "<<detProp.GetXTicksOffset(0,0,0)<<"\n";
+    std::cout<<"XticksOffset, Plane 1: "<<detProp.GetXTicksOffset(1,0,0)<<"\n";
+    std::cout<<"XticksOffset, Plane 2: "<<detProp.GetXTicksOffset(2,0,0)<<"\n";
+    */
+
+    
     /*
     // initialize channel list
     fBadChanMask       .resize(8256,false);
@@ -69,7 +109,7 @@ namespace blip {
     printf("  - Efield: %.4f kV/cm\n",kNominalEfield);
     printf("  - Drift velocity: %.4f cm/us\n",kDriftVelocity);
     printf("  - using dE/dx: %.2f MeV/cm\n",fCalodEdx);
-    printf("  - equiv. recomb: %.4f\n",fNominalRecombFactor);
+    printf("  - equiv. recomb: %.4f\n",kNominalRecombFactor);
     //printf("  - custom bad chans: %i\n",NBadChansFromFile);
     printf("*******************************************\n");
 
@@ -93,6 +133,7 @@ namespace blip {
     h_hit_chanstatus     ->GetXaxis()->SetBinLabel(5, "good");
     */
 
+    //h_hit_times       = hdir.make<TH1D>("hit_peaktime","Hit peaktimes",500,-5000,5000);
     h_chan_nhits      = hdir.make<TH1D>("chan_nhits","Untracked hits;TPC readout channel;Total hits",8256,0,8256);
     h_chan_nclusts    = hdir.make<TH1D>("chan_nclusts","Untracked isolated hits;TPC readout channel;Total clusts",8256,0,8256);
     h_chan_bad        = hdir.make<TH1D>("chan_bad","Channels marked as bad;TPC readout channel",8256,0,8256);
@@ -145,11 +186,11 @@ namespace blip {
     }
   
     // Efficiency as a function of energy deposited on a wire
-    h_recoWireEff_denom = hdir.make<TH1D>("recoWireEff_trueCount","Collection plane;Electron energy deposited on wire [MeV];Count",40,0,2.0);
-    h_recoWireEff_num   = hdir.make<TH1D>("recoWireEff","Collection plane;Electron energy deposited on wire [MeV];Hit reco efficiency",40,0,2.0);
+    h_recoWireEff_denom = hdir.make<TH1D>("recoWireEff_trueCount","Collection plane;Electron energy deposited on wire [MeV];Count",150,0,1.5);
+    h_recoWireEff_num   = hdir.make<TH1D>("recoWireEff","Collection plane;Electron energy deposited on wire [MeV];Hit reco efficiency",150,0,1.5);
     
-    h_recoWireEffQ_denom = hdir.make<TH1D>("recoWireEffQ_trueCount","Collection plane;Charge deposited on wire [e-];Count",50,0,100000);
-    h_recoWireEffQ_num   = hdir.make<TH1D>("recoWireEffQ","Collection plane;Charge deposited on wire [e-];Hit reco efficiency",50,0,100000);
+    h_recoWireEffQ_denom = hdir.make<TH1D>("recoWireEffQ_trueCount","Collection plane;Charge deposited on wire [e-];Count",80,0,20000);
+    h_recoWireEffQ_num   = hdir.make<TH1D>("recoWireEffQ","Collection plane;Charge deposited on wire [e-];Hit reco efficiency",80,0,20000);
 
   }
   
@@ -269,13 +310,16 @@ namespace blip {
     
     // --- detector properties
     auto const& SCE_provider        = lar::providerFrom<spacecharge::SpaceChargeService>();
+    auto const& chanFilt            = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
+    auto const& detProp             = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+    auto const& clockData           = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    //auto const& detProp              = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
     //auto const& lifetime_provider   = art::ServiceHandle<lariov::UBElectronLifetimeService>()->GetProvider();
     //auto const& tpcCalib_provider   = art::ServiceHandle<lariov::TPCEnergyCalibService>()->GetProvider();
-    auto const& chanFilt            = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
-    auto const detProp              = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
+    
   
     // -- geometry
-    //art::ServiceHandle<geo::Geometry> geom;
+    art::ServiceHandle<geo::Geometry> geom;
 
     // -- G4 particles
     art::Handle< std::vector<simb::MCParticle> > pHandle;
@@ -458,21 +502,36 @@ namespace blip {
     // Fill vector of hit info
     //========================================
     hitinfo.resize(hitlist.size());
-   
     std::map<int, std::map<int, std::map<int,std::vector<int> >>> cryo_tpc_plane_hitsMap;
-    //std::map<int, std::map<int,std::vector<int>> > tpc_plane_hitsMap;
     int nhits_untracked = 0;
 
     for(size_t i=0; i<hitlist.size(); i++){
       auto const& thisHit = hitlist[i];
+      auto const& wireid  = thisHit->WireID();
       int   chan    = thisHit->Channel();
-      int   cryo    = thisHit->WireID().Cryostat;
-      int   tpc     = thisHit->WireID().TPC;
-      int   plane   = thisHit->WireID().Plane;
-      int   wire    = thisHit->WireID().Wire;
+      int   cstat   = wireid.Cryostat;
+      int   tpc     = wireid.TPC;
+      int   plane   = wireid.Plane;
+      int   wire    = wireid.Wire;
       
+      /*
+      const geo::TPCGeo& tpcgeom = fGeom.Cryostat(geo::CryostatID(cstat)).TPC(tpc);
+      std::cout<<"Hit in cryo/TPC "<<cstat<<"/"<<tpc<<", drift direction "<<tpcgeom.DriftDirection()<<"\n";
+
+      auto center = tpcgeom.GetCenter();
+      auto planecenter = tpcgeom.Plane(0).GetBoxCenter();
+      std::cout<<"Center of TPC: "<<center.X()<<","<<center.Y()<<","<<center.Z()<<"\n";
+      std::cout<<"Center of planes: "<<planecenter.X()<<","<<planecenter.Y()<<","<<planecenter.Z()<<"\n";
+      
+      auto const driftVec = planecenter - center;
+      std::cout<<"DriftVec: "<<driftVec.X()<<","<<driftVec.Y()<<","<<driftVec.Z()<<"\n";
+
+      short int drift   = tpcgeom.DriftDirection();
+      std::cout<<"Drift direction: "<<drift<<"\n";
+      */
+        
       hitinfo[i].hitid        = i;
-      hitinfo[i].cryo         = cryo;
+      hitinfo[i].cryo         = cstat;
       hitinfo[i].tpc          = tpc;
       hitinfo[i].plane        = plane;
       hitinfo[i].chan         = chan;
@@ -484,9 +543,10 @@ namespace blip {
       hitinfo[i].sumADC       = thisHit->SummedADC();
       hitinfo[i].charge       = fCaloAlg->ElectronsFromADCArea(thisHit->Integral(),plane);
       hitinfo[i].peakTime     = thisHit->PeakTime();
-      hitinfo[i].driftTime    = thisHit->PeakTime() - detProp.GetXTicksOffset(plane,0,0); // - fTimeOffsets[plane];
+      hitinfo[i].driftTime    = thisHit->PeakTime()-kXTicksOffsets[cstat][tpc][plane]; //detProp.GetXTicksOffset(wireid);
       hitinfo[i].gof          = thisHit->GoodnessOfFit() / thisHit->DegreesOfFreedom();
-     
+      
+      //h_hit_times->Fill(thisHit->PeakTime());
       //h_hit_chanstatus->Fill( chanFilt.Status(chan) );
 
       if( plist.size() ) {
@@ -554,7 +614,7 @@ namespace blip {
 
       // add to the map
       //planehitsMap[plane].push_back(i);
-      cryo_tpc_plane_hitsMap[cryo][tpc][plane].push_back(i);
+      cryo_tpc_plane_hitsMap[cstat][tpc][plane].push_back(i);
       //tpc_plane_hitsMap[tpc][plane].push_back(i);
       if( hitinfo[i].trkid < 0 ) nhits_untracked++;
       //printf("  %lu   plane: %i,  wire: %i, time: %i\n",i,hitinfo[i].plane,hitinfo[i].wire,int(hitinfo[i].driftTime));
@@ -674,8 +734,8 @@ namespace blip {
                 if( hitinfo[hii].wire > w2 ) continue;
                 if( hitinfo[hii].wire < w1 ) continue;
                 
-                float t1 = hitinfo[hj].driftTime;
-                float t2 = hitinfo[hii].driftTime;
+                float t1 = hitinfo[hj].peakTime;
+                float t2 = hitinfo[hii].peakTime;
                 float rms_sum = (hitinfo[hii].rms + hitinfo[hj].rms);
                 if( fabs(t1-t2) > fHitClustWidthFact * rms_sum ) continue;
 
@@ -927,7 +987,7 @@ namespace blip {
             
             // ----------------------------------------
             // make our new blip, but if it isn't valid, forget it and move on
-            blip::Blip newBlip = BlipUtils::MakeBlip(hcGroup);
+            blip::Blip newBlip = BlipUtils::MakeBlip(hcGroup,detProp,clockData);
             if( !newBlip.isValid ) continue;
             if( newBlip.NPlanes < fMinMatchedPlanes ) continue;
             
@@ -1060,7 +1120,7 @@ namespace blip {
       //    Method 2: ESTAR lookup table method ala ArgoNeuT
       // ================================================================================
       float depEl   = std::max(0.0,(double)blip.Charge);
-      float Efield  = detProp.Efield();
+      float Efield  = kNominalEfield;
 
       // --- Lifetime correction ---
       // Ddisabled by default. Without knowing real T0 of a blip, attempting to 
@@ -1101,7 +1161,7 @@ namespace blip {
       //std::cout<<"Final energy calculation\n";
       // METHOD 1
       float recomb  = ModBoxRecomb(fCalodEdx,Efield);
-      blip.Energy   = depEl * (1./recomb) * mWion;
+      blip.Energy   = depEl * (1./recomb) * kWion;
       h_recomb      ->Fill(recomb);
       
       // METHOD 2 (TODO)
@@ -1139,12 +1199,12 @@ namespace blip {
     float rho = kLArDensity;
     float beta  = fModBoxB / (rho * Efield);
     float alpha = fModBoxA;
-    return ( exp( beta * mWion * dQdx_e ) - alpha ) / beta;
+    return ( exp( beta * kWion * dQdx_e ) - alpha ) / beta;
   }
   
   float BlipRecoAlg::Q_to_E(float Q, float Efield){
-    if( Efield != kNominalEfield )  return mWion * (Q/ModBoxRecomb(fCalodEdx,Efield));
-    else                            return mWion * (Q/fNominalRecombFactor);
+    if( Efield != kNominalEfield )  return kWion * (Q/ModBoxRecomb(fCalodEdx,Efield));
+    else                            return kWion * (Q/kNominalRecombFactor);
   }
 
   

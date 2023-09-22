@@ -67,6 +67,9 @@
 #include <math.h>
 #include <limits>
 
+typedef std::map<int, std::map<int, std::map< int,float >>> CTPMap_t;
+typedef std::map<int, std::map<int,float >>                 CTMap_t;
+
 
 namespace blip {
 
@@ -94,7 +97,6 @@ namespace blip {
     float   dQdx_to_dEdx(float,float);
     float   Q_to_E(float,float);
 
-    float   fNominalRecombFactor;
    
     std::vector<bool>   fBadChanMask;
     std::vector<bool>   fBadChanMaskPerEvt;
@@ -105,18 +107,20 @@ namespace blip {
     
     TH1D*   h_recoWireEffQ_denom;
     TH1D*   h_recoWireEffQ_num;
-
+    
+    float   kWion;
+    float   kNominalRecombFactor;
+    float   kLArDensity;
+    float   kNominalEfield;
+    float   kDriftVelocity;
+    float   kTickPeriod;
 
    private:
     
     calo::CalorimetryAlg* fCaloAlg;
-    geo::GeometryCore const&  fGeom;
+    geo::GeometryCore const&                fGeom;
 
-    float kLArDensity;
-    float kNominalEfield;
-    float kDriftVelocity;
-    
-    float               mWion;
+    CTPMap_t  kXTicksOffsets;
 
     // --- FCL configs ---
     std::string         fHitProducer;
@@ -176,6 +180,7 @@ namespace blip {
     // --- Histograms ---
     //TH1D*   h_chanstatus;
     //TH1D*   h_hit_chanstatus;
+    TH1D*   h_hit_times;
     TH1D*   h_chan_nhits;
     TH1D*   h_chan_nclusts;
     TH1D*   h_chan_bad;
