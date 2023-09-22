@@ -11,7 +11,7 @@
 #-------------------------------------------------------------------
 
 #include "reco_drops.fcl"
-#include "reco1_sce.fcl"
+#include "standard_reco1_sbnd.fcl"
 
 # Drop truth data products.
 
