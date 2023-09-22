@@ -90,6 +90,3 @@ outputs:
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
   }
 }
-
-
-

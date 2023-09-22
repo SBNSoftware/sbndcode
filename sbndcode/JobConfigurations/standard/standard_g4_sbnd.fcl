@@ -126,5 +126,3 @@ outputs:
     outputCommands: [ "keep *_*_*_*" ]
   }
 }
-
-

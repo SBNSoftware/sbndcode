@@ -1,0 +1,5 @@
+# Author: Henry Lay (h.lay@lancaster.ac.uk)
+# Include this file at the bottom of any fhicl file where you want to
+# disable the simulated space charge effects
+
+services.SpaceCharge: @local::sbnd_nospacecharge
