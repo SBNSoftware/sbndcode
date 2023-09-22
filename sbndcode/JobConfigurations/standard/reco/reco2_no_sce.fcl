@@ -1,0 +1,5 @@
+#include "standard_reco2_sbnd.fcl"
+
+physics.trigger_paths: [ reco2_no_sce ]
+
+#include "disable_spacecharge_services_sbnd.fcl"

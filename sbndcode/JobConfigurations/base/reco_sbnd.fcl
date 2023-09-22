@@ -131,6 +131,8 @@ physics:
 
   ### pandora
   pandora:             @local::sbnd_pandora
+
+  ### pandora characterisations
   pandoraTrack:        @local::sbnd_pandoraTrackCreation
   pandoraShowerLegacy: @local::sbnd_pandoraShowerCreation
   pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
@@ -138,14 +140,16 @@ physics:
   pandoraCalo:         @local::sbnd_gnewcalomc
   pandoraPid:          @local::sbnd_chi2pid
 
-  pandoraSCECalo:      @local::sbnd_gnewcalomc
-  pandoraSCEPid:       @local::sbnd_chi2pid
-
-  ### SCE-aware pandora:
+  ### correct pandora positions for SCE
   pandoraSCE:          @local::scecorrection
+
+  ### pandora characterisations for SCE-corrected pandora
   pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
   pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
   pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
+  pandoraSCECalo:      @local::sbnd_gnewcalomc
+  pandoraSCEPid:       @local::sbnd_chi2pid
+
 
   ### track-finder producers
   #trackkalmanhit:      @local::sbnd_track3Dkalmanhit
@@ -211,9 +215,42 @@ physics:
    #      , cccluster
    #      , spacepts,
    #       , blurredcluster
-          , pandora, pandoraTrack, pandoraShower, pandoraShowerSBN
+          , pandora,
+          , pandoraSCE
+          , pandoraSCETrack
+          , pandoraSCEShower
+          , pandoraSCEShowerSBN
   #       , pandoraShowerLegacy
-          , pandoraCalo, pandoraPid
+          , pandoraSCECalo
+          , pandoraSCEPid
+   #      , trackkalmanhit, spacepointfinder, trackkalsps,
+   #      , pmalgtrackmaker
+   #      , trackkalmanhitcalo,
+  #       , pmatrackcalo
+  #       , pmatrackpid
+  #        , emshower
+         , crthit
+   #      , crttzero
+         , crttrack
+         , crthitt0SCE
+         , crttrackt0SCE
+         , fmatchSCE
+         , caloskimCalorimetry
+ ]
+
+ reco2_no_sce_no_opt0finder: [
+          rns
+#         , linecluster
+   #      , cccluster
+   #      , spacepts,
+   #       , blurredcluster
+          , pandora,
+          , pandoraTrack
+          , pandoraShower
+          , pandoraShowerSBN
+  #       , pandoraShowerLegacy
+          , pandoraCalo
+          , pandoraPid
    #      , trackkalmanhit, spacepointfinder, trackkalsps,
    #      , pmalgtrackmaker
    #      , trackkalmanhitcalo,
@@ -226,7 +263,7 @@ physics:
          , crthitt0
          , crttrackt0
          , fmatch
-	 , caloskimCalorimetry
+         , caloskimCalorimetry
  ]
 
 
@@ -272,12 +309,13 @@ outputs:
  }
 }
 
-physics.reco2: [ @sequence::physics.reco2_no_opt0finder, opt0finder ]
+physics.reco2:        [ @sequence::physics.reco2_no_opt0finder, opt0finder ]
+physics.reco2_no_sce: [ @sequence::physics.reco2_no_sce_no_opt0finder, opt0finder ]
 
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
 physics.fullreco: [ @sequence::physics.reco1,
                     @sequence::physics.reco2
-		          ]
+                          ]
 physics.fullreco_no_opt0finder: [ @sequence::physics.reco1,
                                  @sequence::physics.reco2_no_opt0finder]
 
@@ -309,9 +347,9 @@ physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 
 ### Added for Rhiannon's analysis work
 physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
-physics.producers.pandoraCalo.FieldDistortion:                	 false
-physics.producers.pandoraCalo.FieldDistortionEfield:          	 false
-physics.producers.pandoraCalo.TrackIsFieldDistortionCorrected:	 false
+physics.producers.pandoraCalo.FieldDistortion:                   false
+physics.producers.pandoraCalo.FieldDistortionEfield:             false
+physics.producers.pandoraCalo.TrackIsFieldDistortionCorrected:   false
 physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
 physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
 
