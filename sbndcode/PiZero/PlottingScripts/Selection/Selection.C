@@ -41,33 +41,54 @@ std::vector<Plot> plots = {
     5, -0.5, 4.5 },
 };
 
+const double goalPOT     = 10e20;
+const double potPerSpill = 5e12;
+const double goalSpills  = goalPOT / potPerSpill;
+
 double GetPOT(TChain *subruns);
-void ProduceCutTable(const TString &saveDir, TChain *events);
+int GetGenEvents(TChain *subruns);
+
+template<class T>
+void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples);
 
 void Selection(const TString saveDirExt = "tmp")
 {
-  const TString saveDir = "/sbnd/data/users/hlay/pizero/plots/selection/" + saveDirExt;
+  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroA/selection/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
-  const TString file    = "/sbnd/data/users/hlay/pizero/ncpizeroana_sbnd.root";
+
+  const TString rockboxFile = "/sbnd/data/users/hlay/ncpizero/production/NCPiZeroA/NCPiZeroA_test_rockbox.root";
+  const TString intimeFile  = "/sbnd/data/users/hlay/ncpizero/production/NCPiZeroA/NCPiZeroA_test_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *events = new TChain("ncpizeroana/events");
-  events->Add("/sbnd/data/users/hlay/pizero/ncpizeroana_sbnd.root");
+  TChain *rockboxEvents = new TChain("ncpizeroana/events");
+  rockboxEvents->Add(rockboxFile);
+  TChain *intimeEvents = new TChain("ncpizeroana/events");
+  intimeEvents->Add(intimeFile);
 
-  TChain *subruns = new TChain("ncpizeroana/subruns");
-  subruns->Add("/sbnd/data/users/hlay/pizero/ncpizeroana_sbnd.root");
+  TChain *rockboxsubruns = new TChain("ncpizeroana/subruns");
+  rockboxsubruns->Add(rockboxFile);
+  TChain *intimesubruns = new TChain("ncpizeroana/subruns");
+  intimesubruns->Add(intimeFile);
 
-  const double goalPOT = 10e20;
   TString potString = Form(" (%g POT)", goalPOT);
   potString.ReplaceAll("e+","x10^{");
   potString.ReplaceAll(" POT","} POT");
 
-  const double totalPOT = GetPOT(subruns);
-  const double scaling  = goalPOT / totalPOT;
+  const double rockboxPOT = GetPOT(rockboxsubruns);
+  const int rockboxSpills = 6300; //GetGenEvents(rockboxsubruns);
+  const int intimeSpills  = GetGenEvents(intimesubruns);
 
-  ProduceCutTable(saveDir, events);
+  const double rockboxScaling      = goalPOT / rockboxPOT;
+  const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
+  const double intimeScaling       = (goalSpills - scaledRockboxSpills) / intimeSpills;
+
+  std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling },
+                                          { "intime", intimeEvents, intimeScaling }
+  };
+
+  ProduceCutTable(saveDir, samples);
 
   TCut currentCut = "";
 
@@ -86,7 +107,7 @@ void Selection(const TString saveDirExt = "tmp")
 
           plot.axes_labels += potString;
 
-          MakeStackedPlot(canvas, events, plot, cut, categories, scaling, {.25, .8, .8, .87}, 4);
+          MakeStackedPlot(canvas, samples, plot, cut, categories, {.25, .8, .8, .87}, 4);
 
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".png");
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".pdf");
@@ -113,15 +134,36 @@ double GetPOT(TChain *subruns)
   return sum;
 }
 
-void ProduceCutTable(const TString &saveDir, TChain *events)
+int GetGenEvents(TChain *subruns)
+{
+  int sum = 0., ngenevts = 0;
+
+  subruns->SetBranchAddress("ngenevts", &ngenevts);
+
+  for(size_t i = 0; i < subruns->GetEntries(); ++i)
+    {
+      subruns->GetEntry(i);
+      sum += ngenevts;
+    }
+
+  return sum;
+}
+
+template<class T>
+void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples)
 {
   ofstream texFile;
   texFile.open(saveDir + "/cut_table.tex");
 
-  const double totalSignal         = events->Draw("", "nu_signal");
-  const double totalSignalSlices   = events->Draw("", "slc_true_signal && slc_comp>.5");
-  const double totalBackSlices     = events->Draw("", "!slc_true_signal");
-  const double totalNuFVBackSlices = events->Draw("", "!slc_true_signal && slc_true_event_type!=5 && slc_true_event_type!=6");
+  double totalSignal = 0, totalSignalSlices = 0, totalBackSlices = 0, totalNuFVBackSlices = 0;
+
+  for(auto const& sample : samples)
+    {
+      totalSignal         += sample.tree->Draw("", "nu_signal");
+      totalSignalSlices   += sample.tree->Draw("", "slc_true_signal && slc_comp>.5");
+      totalBackSlices     += sample.tree->Draw("", "!slc_true_signal");
+      totalNuFVBackSlices += sample.tree->Draw("", "!slc_true_signal && slc_true_event_type!=5 && slc_true_event_type!=6");
+    }
 
   texFile << docStart;
 
@@ -147,12 +189,15 @@ void ProduceCutTable(const TString &saveDir, TChain *events)
       double sigSlices = 0., nuFVBackSlices = 0., otherBackSlices = 0.;
       for(unsigned j = 0; j < categories.size(); ++j)
         {
-          if(j == 0)
-            sigSlices = events->Draw("", cut.cut + categories[j].cut);
-          else if(j == 5 || j == 6)
-            otherBackSlices += events->Draw("", cut.cut + categories[j].cut);
-          else
-            nuFVBackSlices += events->Draw("", cut.cut + categories[j].cut);
+          for(auto const& sample : samples)
+            {
+              if(j == 0)
+                sigSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
+              else if(j == 5 || j == 6)
+                otherBackSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
+              else
+                nuFVBackSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
+            }
         }
 
       const double eff         = sigSlices * 100. / totalSignal;
