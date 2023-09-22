@@ -4,6 +4,6 @@
 # This runs the new, refactored, LArG4 simulation.
 
 
-#include "g4_sce.fcl"
+#include "standard_g4_sbnd.fcl
 
 services.ParticleListAction.keepEMShowerDaughters: true
