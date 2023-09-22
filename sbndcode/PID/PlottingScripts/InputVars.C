@@ -5,25 +5,17 @@
 #include "TSystem.h"
 #include "TStyle.h"
 
-void InputVariables()
+void InputVars()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/razzled/plots/investigations/inputvariables_no_other_quality_cuts";
-  const bool save = true;
-  if(save)
-    gSystem->Exec("mkdir -p " + saveDir);
-
-  const bool all = false, split = true;
+  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroA/razzled/training/inputvars";
+  gSystem->Exec("mkdir -p " + saveDir);
 
   using namespace std;
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *tree = new TChain("pandoraRazzled/pfpTree");
-  tree->Add("/sbnd/data/users/hlay/razzled/razzled_trees.root");
-
-  std::vector<Cut> cuts = { {"all", "", "", kMagenta+2},
-                            {"ambiguous", "!unambiguousSlice", "", kGreen+2},
-  };
+  TChain *tree = new TChain("razzled/pfpTree");
+  tree->Add("/sbnd/data/users/hlay/ncpizero/production/NCPiZeroA/NCPiZeroA_test_rockbox.root");
 
   std::vector<Cut> particles = { {"electron", "abs(truePDG)==11 && !unambiguousSlice", "e^{#pm}", kMagenta+2},
 				 {"muon", "abs(truePDG)==13 && !unambiguousSlice", "#mu^{#pm}", kRed+2},
@@ -184,53 +176,17 @@ void InputVariables()
                                75, -1, 4},
   };
   
-  if(all)
+  for(auto &plot : plots)
     {
-      if(save)
-	gSystem->Exec("mkdir -p " + saveDir + "/all");
+      TCanvas *canvas = new TCanvas("c_" + plot.name + "_byType",
+				    "c_" + plot.name + "_byType");
+      canvas->cd();
 
-      for(auto& cut : cuts)
-	{
-	  for(auto &plot : plots)
-	    {
-	      TCanvas *canvas = new TCanvas("c_" + plot.name + "_" + cut.name,
-					    "c_" + plot.name + "_" + cut.name);
-	      canvas->cd();
+      MakeComparisonPlot(canvas, tree, plot, particles, {.35, .77, .8, .87});
 
-	      plot.colour = cut.colour;
-	      cut.cut     += quality_cut;
-
-	      MakePlot(canvas, tree, plot, cut);
-
-	      if(save)
-		{
-		  canvas->SaveAs(saveDir + "/all/" + plot.name + "_" + cut.name + ".png");
-		  canvas->SaveAs(saveDir + "/all/" + plot.name + "_" + cut.name + ".pdf");
-		}
-	      delete canvas;
-	    }
-	}
+      canvas->SaveAs(saveDir + "/" + plot.name + ".png");
+      canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
+	  
+      delete canvas;
     }
-
-  if(split)
-    {
-      if(save)
-	gSystem->Exec("mkdir -p " + saveDir + "/split");
-
-      for(auto &plot : plots)
-	{
-	  TCanvas *canvas = new TCanvas("c_" + plot.name + "_byType",
-					"c_" + plot.name + "_byType");
-	  canvas->cd();
-
-	  MakeComparisonPlot(canvas, tree, plot, particles, {.35, .77, .8, .87});
-
-	  if(save)
-	    {
-	      canvas->SaveAs(saveDir + "/split/" + plot.name + ".png");
-	      canvas->SaveAs(saveDir + "/split/" + plot.name + ".pdf");
-	    }
-	  delete canvas;
-	}
-    }	  
 }
