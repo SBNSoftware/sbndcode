@@ -1,4 +1,4 @@
-#include "standard_g4_sbnd.fcl"
+#include "g4_no_sce.fcl"
 
 services.PhysicsList.enableOptical: true
 services.PhysicsList.enableScintillation: true

@@ -1,5 +1,5 @@
 #include "larg4crtfilter.fcl"
-#include "standard_g4_sbnd.fcl"
+#include "g4_no_sce.fcl"
 
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE: true

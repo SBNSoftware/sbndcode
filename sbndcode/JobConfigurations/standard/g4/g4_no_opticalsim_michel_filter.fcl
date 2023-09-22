@@ -1,5 +1,5 @@
 # File:    g4_no_opticalsim_michel_filter.fcl
-# Purpose: Same as standard_g4_sbnd.fcl, but does not do light simulation and applies the Michel
+# Purpose: Same as g4_no_sce.fcl, but does not do light simulation and applies the Michel
 #          electron filter
 #
 # This runs the new, refactored, LArG4 simulation.

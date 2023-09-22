@@ -1,4 +1,4 @@
-#include "standard_g4_sbnd.fcl"
+#include "g4_no_sce.fcl"
 
 #include "3drift_services_sbnd.fcl"
 #include "enable_spacecharge_services_sbnd.fcl"

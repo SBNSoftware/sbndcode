@@ -1,4 +1,4 @@
-#include "standard_g4_sbnd.fcl"
+#include "legacy_g4_sbnd.fcl
 
 # Calculate ionization and scintillation yield independently (LegacyLArG4)
 services.LArG4Parameters.IonAndScintCalculator: "Separate"

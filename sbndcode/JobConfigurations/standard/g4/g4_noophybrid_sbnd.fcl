@@ -1,10 +1,10 @@
 # File:    g4_noophybrid_sbnd.fcl
-# Purpose: Same as standard_g4_sbnd.fcl, but does not includ light produced outside the active volume
+# Purpose: Same as g4_no_sce.fcl, but does not includ light produced outside the active volume
 #
 # This runs the new, refactored, LArG4 simulation.
 
 
-#include "standard_g4_sbnd.fcl"
+#include "g4_no_sce.fcl"
 
 
 # Update the services to use the hybrid ones

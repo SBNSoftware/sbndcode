@@ -1,5 +1,5 @@
 #include "larg4particlefilter.fcl"
-#include "standard_g4_sbnd.fcl"
+#include "g4_no_sce.fcl"
 
 
 physics.simulate: [ rns

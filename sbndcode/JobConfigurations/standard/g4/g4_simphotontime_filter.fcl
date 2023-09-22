@@ -6,7 +6,7 @@
 
 #include "mergesimsources_sbnd.fcl"
 
-#include "standard_g4_sbnd.fcl"
+#include "g4_no_sce.fcl"
 
 # Add process to finish the electron drift simulation for the intimes
 physics.producers.simdriftintime: @local::sbnd_simdrift
