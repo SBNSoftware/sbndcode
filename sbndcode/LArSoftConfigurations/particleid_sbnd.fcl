@@ -4,8 +4,8 @@ BEGIN_PROLOG
 sbnd_chi2pid:
 {
  module_type:            "Chi2ParticleID"
- TrackModuleLabel:       "spacepts"
- CalorimetryModuleLabel: "calo"
+ TrackModuleLabel:       "pandoraTrack"
+ CalorimetryModuleLabel: "pandoraCalo"
  Chi2PIDAlg:             @local::standard_chi2pidalg
 }
 

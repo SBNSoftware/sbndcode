@@ -16,9 +16,14 @@ sbnd_calodata.CaloAlg:      @local::sbnd_calorimetryalgdata
 sbnd_calomc:                @local::standard_calomc
 sbnd_calomc.CaloAlg:        @local::sbnd_calorimetryalgmc
 
-sbnd_gnewcalomc:              @local::standard_gnocchicalo
-sbnd_gnewcalomc.CaloAlg:      @local::sbnd_calorimetryalgmc
-sbnd_gnewcalomc.ChargeMethod: 3
-sbnd_gnewcalomc.SpacePointModuleLabel: @erase
+sbnd_gnewcalomc:                                 @local::standard_gnocchicalo
+sbnd_gnewcalomc.CaloAlg:                         @local::sbnd_calorimetryalgmc
+sbnd_gnewcalomc.ChargeMethod:                    3
+sbnd_gnewcalomc.SpacePointModuleLabel:           @erase
+sbnd_gnewcalomc.TrackModuleLabel:                "pandoraTrack"
+sbnd_gnewcalomc.FieldDistortion:                 false
+sbnd_gnewcalomc.FieldDistortionEfield:           false
+sbnd_gnewcalomc.TrackIsFieldDistortionCorrected: false
+
 
 END_PROLOG

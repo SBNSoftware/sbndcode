@@ -29,19 +29,15 @@
 #include "calorimetry_sbnd.fcl"
 #include "showerfindermodules_sbnd.fcl"
 #include "databaseutil_sbnd.fcl"
-##include "opticaldetectormodules_sbnd.fcl"
 #include "opdeconvolution_sbnd.fcl"
 #include "sbnd_ophitfinder_deco.fcl"
 #include "sbnd_flashfinder_deco.fcl"
 #include "vertexfindermodules.fcl"
 #include "pandoramodules_sbnd.fcl"
-##include "triggeralgo_service.fcl"
-##include "photpropservices_sbnd.fcl"
 #include "particleid_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 #include "crtsimhitproducer_sbnd.fcl"
-##include "crttzeroproducer_sbnd.fcl"
 #include "crttrackproducer_sbnd.fcl"
 #include "crtt0matchingalg_sbnd.fcl"
 #include "crttrackmatchingalg_sbnd.fcl"
@@ -50,8 +46,6 @@
 
 #include "scecorrections.fcl"
 #include "flashmatch_sbnd.fcl"
-
-###include "hitparticleassociations.fcl"
 
 #include "sbnd_trackcalo_skimmer.fcl"
 
@@ -95,16 +89,13 @@ physics:
   opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
 
   ### optical hit finders
-  # ophit:               @local::sbnd_hit_finder
-  ophitpmt:            @local::SBNDDecoOpHitFinderPMT
+  ophitpmt:        @local::SBNDDecoOpHitFinderPMT
   ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
 
   ### flash finders
-  # opflash:             @local::sbnd_opflash
   opflashtpc0:         @local::SBNDDecoSimpleFlashTPC0
   opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1
 
-  # opflash(arapucas):             @local::sbnd_opflash
   opflashtpc0xarapuca:         @local::SBNDDecoSimpleFlashTPC0Arapuca
   opflashtpc1xarapuca:         @local::SBNDDecoSimpleFlashTPC1Arapuca
 
@@ -114,20 +105,9 @@ physics:
   ### hit-finder producers
   gaushit:             @local::sbnd_gaushitfinder
   fasthit:             @local::sbnd_fasthitfinder
-#  rffhit:              @local::sbnd_rffhitfinder
 
   ### Truth-matich for hits
   gaushitTruthMatch:   @local::standard_mcparticlehitmatching
-
-  ### corner-finder
-  #corner:              @local::standard_cornerfinder
-
-  ### cluster-finder producers
-  #fuzzycluster:        @local::sbnd_fuzzycluster
-  linecluster:         @local::sbnd_linecluster
-  #cccluster:           @local::sbnd_clustercrawler
-  #spacepts:            @local::sbnd_spacepts
-  blurredcluster:      @local::sbnd_blurredcluster
 
   ### pandora
   pandora:             @local::sbnd_pandora
@@ -150,27 +130,7 @@ physics:
   pandoraSCECalo:      @local::sbnd_gnewcalomc
   pandoraSCEPid:       @local::sbnd_chi2pid
 
-
-  ### track-finder producers
-  #trackkalmanhit:      @local::sbnd_track3Dkalmanhit
-  #spacepointfinder:    @local::sbnd_spacepoint_finder
-  #trackkalsps:         @local::sbnd_kalman
-
-  pmalgtrackmaker:     @local::sbnd_pmalgtrackmaker
-
-  ### shower-finder producers
-  emshower:            @local::sbnd_emshower
-
-
-  ### vertex-finder producers
-
-  ### calorimetry producers
-  #trackkalmanhitcalo:  @local::sbnd_calomc
-  pmatrackcalo:        @local::sbnd_calomc
-  pmatrackpid:         @local::sbnd_chi2pid
-
   crthit:              @local::standard_crtsimhitproducer
-  #crttzero:            @local::standard_crttzeroproducer
   crttrack:            @local::standard_crttrackproducer
   crthitt0:            @local::sbnd_crthitt0producer
   crttrackt0:          @local::sbnd_crttrackt0producer
@@ -185,7 +145,6 @@ physics:
 
   ### Uncalibrated calorimetry producer for calibration caloskimmer
   caloskimCalorimetry: @local::caloskim_calorimetry
-
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -202,68 +161,40 @@ physics:
          , caldata
          , gaushit
          , fasthit
-   #         , linecluster
          , gaushitTruthMatch
-   #      , rffhit
-   #      , corner
-   #      , fuzzycluster
  ]
 
  reco2_no_opt0finder: [
           rns
-#         , linecluster
-   #      , cccluster
-   #      , spacepts,
-   #       , blurredcluster
           , pandora,
           , pandoraSCE
           , pandoraSCETrack
           , pandoraSCEShower
           , pandoraSCEShowerSBN
-  #       , pandoraShowerLegacy
           , pandoraSCECalo
           , pandoraSCEPid
-   #      , trackkalmanhit, spacepointfinder, trackkalsps,
-   #      , pmalgtrackmaker
-   #      , trackkalmanhitcalo,
-  #       , pmatrackcalo
-  #       , pmatrackpid
-  #        , emshower
-         , crthit
-   #      , crttzero
-         , crttrack
-         , crthitt0SCE
-         , crttrackt0SCE
-         , fmatchSCE
-         , caloskimCalorimetry
+          , crthit
+          , crttrack
+          , crthitt0SCE
+          , crttrackt0SCE
+          , fmatchSCE
+          , caloskimCalorimetry
  ]
 
  reco2_no_sce_no_opt0finder: [
           rns
-#         , linecluster
-   #      , cccluster
-   #      , spacepts,
-   #       , blurredcluster
           , pandora,
           , pandoraTrack
           , pandoraShower
           , pandoraShowerSBN
-  #       , pandoraShowerLegacy
           , pandoraCalo
           , pandoraPid
-   #      , trackkalmanhit, spacepointfinder, trackkalsps,
-   #      , pmalgtrackmaker
-   #      , trackkalmanhitcalo,
-  #       , pmatrackcalo
-  #       , pmatrackpid
-  #        , emshower
-         , crthit
-   #      , crttzero
-         , crttrack
-         , crthitt0
-         , crttrackt0
-         , fmatch
-         , caloskimCalorimetry
+          , crthit
+          , crttrack
+          , crthitt0
+          , crttrackt0
+          , fmatch
+          , caloskimCalorimetry
  ]
 
 
@@ -299,17 +230,13 @@ outputs:
          "keep *_*_*_*",
          "drop raw::OpDetWaveforms_*_*_*",
          "drop *raw::RawDigits*_*_*_*",
-         #"drop sim::SimChannels_*_*_*",
          "drop sim::OpDetBacktrackerRecords_*_*_*",
-         "drop *_linecluster_*_*",
          "drop *_fasthit_*_*"
      ]
-
-
  }
 }
 
-physics.reco2:        [ @sequence::physics.reco2_no_opt0finder, opt0finder ]
+physics.reco2:        [ @sequence::physics.reco2_no_opt0finder, opt0finderSCE ]
 physics.reco2_no_sce: [ @sequence::physics.reco2_no_sce_no_opt0finder, opt0finder ]
 
 #Here we tell ART that we want to run both sequences of paths.  This has to be done here as ART is not able to find the sequences while still wrapped in physics{ }
@@ -324,95 +251,36 @@ physics.trigger_paths: [ fullreco ]
 
 
 ### Here, we overwrite ALL module labels with the ones defined above.
-
-#physics.producers.opflash.InputModule:                          "optreadout"
-#physics.producers.opflash.GenModule:                            "generator"
-
-physics.producers.caldata.DigitModuleLabel:                     "daq"
-
-physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
-physics.producers.fasthit.DigitModuleLabel:                     "daq"
-#physics.producers.rffhit.CalDataModuleLabel:                    "caldata"
-
-#physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"
-#physics.producers.corner.CornerAlgParamSet.CalDataModuleLabel:  "caldata"
-#
-physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
-
-#physics.producers.fuzzycluster.HitsModuleLabel:                 "gaushit"
-#physics.producers.fuzzycluster.CalDataModuleLabel:              "caldata"
-
-#physics.producers.cccluster.CalDataModuleLabel:                 "caldata"
-#physics.producers.cccluster.CCHitFinderAlg.CalDataModuleLabel:  "caldata"
-
-### Added for Rhiannon's analysis work
-physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
-physics.producers.pandoraCalo.FieldDistortion:                   false
-physics.producers.pandoraCalo.FieldDistortionEfield:             false
-physics.producers.pandoraCalo.TrackIsFieldDistortionCorrected:   false
-physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
-physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
-
-physics.producers.pandoraSCECalo.TrackModuleLabel:               "pandoraSCETrack"
-physics.producers.pandoraSCECalo.FieldDistortion:                true
-physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
-physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
-physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
-physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
-
-physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
-physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
-physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
-physics.producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
-
-physics.producers.crthitt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
-physics.producers.crthitt0SCE.T0Alg.TPCTrackLabel: "pandoraSCETrack"
-physics.producers.crttrackt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
-physics.producers.crttrackt0SCE.CrtTrackAlg.TPCTrackLabel: "pandoraSCETrack"
-
-#physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
-#physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
-#physics.producers.trackkalmanhit.ClusterModuleLabel:   "cccluster"
-
-physics.producers.pmalgtrackmaker.HitModuleLabel:               "linecluster"
-physics.producers.pmalgtrackmaker.ClusterModuleLabel:           "linecluster"
-physics.producers.pmalgtrackmaker.EmClusterModuleLabel:         "" # do not exculde any cluster
-
-
-#physics.producers.spacepointfinder.ClusterModuleLabel:          "fuzzycluster"
-#physics.producers.spacepointfinder.ClusterModuleLabel:          "cccluster"
-
-#physics.producers.trackkalmanhitcalo.TrackModuleLabel:          "trackkalmanhit"
-#physics.producers.trackkalmanhitcalo.SpacePointModuleLabel:     "trackkalmanhit"
-
-physics.producers.pmatrackcalo.TrackModuleLabel:                "pmalgtrackmaker"
-physics.producers.pmatrackcalo.SpacePointModuleLabel:           "pmalgtrackmaker"
-physics.producers.pmatrackpid.TrackModuleLabel:                 "pmalgtrackmaker"
-physics.producers.pmatrackpid.CalorimetryModuleLabel:           "pmatrackcalo"
-
-
-physics.producers.blurredcluster.HitsModuleLabel:               "linecluster"
-physics.producers.blurredcluster.TrackModuleLabel:              "pmalgtrackmaker"
-physics.producers.blurredcluster.VertexModuleLabel:             "linecluster"
-
-#To use Blurred Cluster the ClusterModuleLabel to blurredcluster and comment out the PFParticle module label, add blurred cluster to the reco chain.
-physics.producers.emshower.ClusterModuleLabel:                  "pandora"
-physics.producers.emshower.HitsModuleLabel:                     "gaushit"
-physics.producers.emshower.PFParticleModuleLabel:                "pandora"
-physics.producers.emshower.TrackModuleLabel:                    "pmalgtrackmaker"
+physics.producers.gaushit.CalDataModuleLabel: "caldata"
 
 # Configure the SCE corrections
 # For now: always assume t = 0
 physics.producers.pandoraSCE.T0Labels: []
 physics.producers.pandoraSCE.T0LabelsCorrectT0: []
 physics.producers.pandoraSCE.CorrectNoT0Tag: true
-# point track/shower creation to the SCE pandora
+
 physics.producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
 physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
 physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 
-#physics.producers.gaushitTruthMatch.HitParticleAssociations:                        @local::DirectHitParticleAssnsTool
+physics.producers.pandoraSCECalo.TrackModuleLabel:                "pandoraSCETrack"
+physics.producers.pandoraSCECalo.FieldDistortion:                 true
+physics.producers.pandoraSCECalo.FieldDistortionEfield:           true
+physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected: true
+
+physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
+physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
+
+physics.producers.crthitt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
+physics.producers.crthitt0SCE.T0Alg.TPCTrackLabel: "pandoraSCETrack"
+physics.producers.crttrackt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
+physics.producers.crttrackt0SCE.CrtTrackAlg.TPCTrackLabel: "pandoraSCETrack"
+
+physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
+physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
+physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
+physics.producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
+
 physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
-#physics.producers.gaushitTruthMatch.HitParticleAssociations.MCParticleModuleLabelVec:  ["largeant"]
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
