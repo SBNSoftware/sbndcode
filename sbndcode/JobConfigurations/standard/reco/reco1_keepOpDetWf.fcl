@@ -1,4 +1,4 @@
-#include "standard_reco1_sbnd.fcl"
+#include "reco1_no_sce.fcl"
 
 outputs.out1.outputCommands: [
          "keep *_*_*_*",
