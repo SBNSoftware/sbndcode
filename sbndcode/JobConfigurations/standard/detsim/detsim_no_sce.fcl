@@ -1,2 +1,2 @@
-#include "standard_detsim_sbnd.fcl"
+#include "detsim_no_sce.fcl
 #include "disable_spacecharge_services_sbnd.fcl"

@@ -5,6 +5,6 @@
 # Date:    7th August 2019
 
 
-#include "standard_detsim_sbnd.fcl"
+#include "detsim_no_sce.fcl
 
 services.NoiseModel: @local::sbnd_thermalnoiseserviceintime
