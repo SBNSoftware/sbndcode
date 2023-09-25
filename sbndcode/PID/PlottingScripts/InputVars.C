@@ -7,7 +7,7 @@
 
 void InputVars()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroA/razzled/training/inputvars";
+  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/inputvars";
   gSystem->Exec("mkdir -p " + saveDir);
 
   using namespace std;
@@ -15,14 +15,16 @@ void InputVars()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("razzled/pfpTree");
-  tree->Add("/sbnd/data/users/hlay/ncpizero/production/NCPiZeroA/NCPiZeroA_test_rockbox.root");
+  tree->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_rockbox.root");
+  tree->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intrnue.root");
+  tree->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root");
 
   std::vector<Cut> particles = { {"electron", "abs(truePDG)==11 && !unambiguousSlice", "e^{#pm}", kMagenta+2},
-				 {"muon", "abs(truePDG)==13 && !unambiguousSlice", "#mu^{#pm}", kRed+2},
-				 {"photon", "abs(truePDG)==22 && !unambiguousSlice", "#gamma", kBlue+2},
-				 {"pion", "abs(truePDG)==211 && !unambiguousSlice", "#pi^{#pm}", kGreen+2},
-				 {"proton", "abs(truePDG)==2212 && !unambiguousSlice", "p", kOrange+2},
-				 //				 {"other", "abs(truePDG)!=11 && abs(truePDG)!=13 && abs(truePDG)!=22 && abs(truePDG)!=211 && abs(truePDG)!=2212 && !unambiguousSlice", "Other", kBlack}
+                                 {"muon", "abs(truePDG)==13 && !unambiguousSlice", "#mu^{#pm}", kRed+2},
+                                 {"photon", "abs(truePDG)==22 && !unambiguousSlice", "#gamma", kBlue+2},
+                                 {"pion", "abs(truePDG)==211 && !unambiguousSlice", "#pi^{#pm}", kGreen+2},
+                                 {"proton", "abs(truePDG)==2212 && !unambiguousSlice", "p", kOrange+2},
+                                 //                              {"other", "abs(truePDG)!=11 && abs(truePDG)!=13 && abs(truePDG)!=22 && abs(truePDG)!=211 && abs(truePDG)!=2212 && !unambiguousSlice", "Other", kBlack}
   };
 
   TCut quality_cut = "trk_length > 5 && showerEnergy > 10 && trackContained && showerContained";
@@ -179,14 +181,14 @@ void InputVars()
   for(auto &plot : plots)
     {
       TCanvas *canvas = new TCanvas("c_" + plot.name + "_byType",
-				    "c_" + plot.name + "_byType");
+                                    "c_" + plot.name + "_byType");
       canvas->cd();
 
       MakeComparisonPlot(canvas, tree, plot, particles, {.35, .77, .8, .87});
 
       canvas->SaveAs(saveDir + "/" + plot.name + ".png");
       canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
-	  
+          
       delete canvas;
     }
 }

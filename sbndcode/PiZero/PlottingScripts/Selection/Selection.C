@@ -56,8 +56,8 @@ void Selection(const TString saveDirExt = "tmp")
   const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroA/selection/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = "/sbnd/data/users/hlay/ncpizero/production/NCPiZeroA/NCPiZeroA_test_rockbox.root";
-  const TString intimeFile  = "/sbnd/data/users/hlay/ncpizero/production/NCPiZeroA/NCPiZeroA_test_intime.root";
+  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_rockbox.root";
+  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -77,7 +77,7 @@ void Selection(const TString saveDirExt = "tmp")
   potString.ReplaceAll(" POT","} POT");
 
   const double rockboxPOT = GetPOT(rockboxsubruns);
-  const int rockboxSpills = 6300; //GetGenEvents(rockboxsubruns);
+  const int rockboxSpills = GetGenEvents(rockboxsubruns);
   const int intimeSpills  = GetGenEvents(intimesubruns);
 
   const double rockboxScaling      = goalPOT / rockboxPOT;
@@ -162,7 +162,7 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples)
       totalSignal         += sample.tree->Draw("", "nu_signal");
       totalSignalSlices   += sample.tree->Draw("", "slc_true_signal && slc_comp>.5");
       totalBackSlices     += sample.tree->Draw("", "!slc_true_signal");
-      totalNuFVBackSlices += sample.tree->Draw("", "!slc_true_signal && slc_true_event_type!=5 && slc_true_event_type!=6");
+      totalNuFVBackSlices += sample.tree->Draw("", "!slc_true_signal && slc_true_event_type!=4 && slc_true_event_type!=5 && slc_true_event_type!=6");
     }
 
   texFile << docStart;
@@ -193,7 +193,7 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples)
             {
               if(j == 0)
                 sigSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
-              else if(j == 5 || j == 6)
+              else if(j==4 || j == 5 || j == 6)
                 otherBackSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
               else
                 nuFVBackSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
