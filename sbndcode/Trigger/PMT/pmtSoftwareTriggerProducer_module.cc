@@ -50,7 +50,7 @@ namespace sbnd {
   }
 }
 
-class sbnd::trigger::pmtSoftwareTriggerProducer : public art::EDProducer{
+class sbnd::trigger::pmtSoftwareTriggerProducer : public art::EDProducer {
 public:
   explicit pmtSoftwareTriggerProducer(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
@@ -125,8 +125,6 @@ private:
   double _promptPE, _prelimPE;
   std::vector<double> _ch_prelimPE, _ch_promptPE;
   std::vector<int> _ch_AboveThreshold,_ch_type,_ch_ID;
-  // std::vector<double> ch_prelimPE,ch_promptPE;
-  // std::vector<int> ch_AboveThreshold;
 
 
   TTree* _pulse_tree;
@@ -270,7 +268,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     trig_metrics.foundBeamTrigger = true;
     _beam_trig = true;
 
-    // store timestamp of trigger, relative to beam window startj
+    // store timestamp of trigger, relative to beam window start
     double triggerTimeStamp = fTriggerTime - beamWindowStart;
     trig_metrics.triggerTimestamp = triggerTimeStamp;
     _time_trig = triggerTimeStamp;
@@ -298,10 +296,8 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     _pulse_t_start.reserve(1000); _pulse_t_end.reserve(1000); _pulse_t_peak.reserve(1000);
     _pulse_peak.reserve(1000); _pulse_area.reserve(1000);
 
-    std::cout<<"ch for loop"<<std::endl;
     for (int i_ch = 0; i_ch < 120; ++i_ch){
       ch_ID[i_ch] = channelList.at(i_ch);
-      std::cout<<"ch : "<< i_ch << " , " <<channelList.at(i_ch) << std::endl;
       auto &pmtInfo = fpmtInfoVec.at(i_ch);
       auto wvfm = fWvfmsVec[i_ch];
 
@@ -335,11 +331,8 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
         auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
         auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
         if (fFindPulses == false){
-          std::cout<<"hello3"<<std::endl;
           double ch_promptPE_ = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
           double ch_prelimPE_ = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
-          std::cout<<" -- ch_promptPE_ : "<<ch_promptPE_<<std::endl;
-          std::cout<<" -- ch_prelimPE_ : "<<ch_prelimPE_<<std::endl;
           ch_prelimPE[i_ch] = ch_prelimPE_;
           ch_promptPE[i_ch] = ch_promptPE_;
           promptPE += ch_promptPE_;
@@ -390,7 +383,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
           _pulse_peak.push_back(pulse.peak);
           _pulse_area.push_back(pulse.area);
         } // end of pulse loop 
-
       }
     } // end of wvfm loop 
 
@@ -539,7 +531,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::estimateBaseline(int i_ch){
 }
 
 /*
-
 PE threshold algorithm
 */
 void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){

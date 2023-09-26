@@ -8,7 +8,7 @@ pmtSoftwareTriggerProducer:
   BeamWindowLength: 1.8     # us, extended by 0.2us to account for delayed signals
   WvfmLength: 5120
   Verbose: true
-  SaveHists: true          # save 10 us waveform histograms
+  SaveHists: false          # save 10 us waveform histograms
 
   # turn on/off various metric calculations 
   CalculateBaseline:  true   # if true, will calculate baseline, if false, will use provided InputBaseline parameters below! 
