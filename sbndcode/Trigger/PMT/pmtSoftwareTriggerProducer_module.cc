@@ -339,7 +339,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
           prelimPE += ch_prelimPE_;
         }
       }
-      else {promptPE = -9999; prelimPE =-9999;ch_prelimPE[i_ch] = -9999; ch_promptPE[i_ch] = -9999}
+      else {promptPE = -9999; prelimPE =-9999;ch_prelimPE[i_ch] = -9999; ch_promptPE[i_ch] = -9999;}
 
       // pulse finder + prompt and prelim calculation with pulses 
       if (fFindPulses == true){
