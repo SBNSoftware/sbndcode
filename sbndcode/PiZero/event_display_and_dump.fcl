@@ -21,9 +21,13 @@ physics:
     eventdisp:
     { 
       module_type: "EventDisplayAndDump"
+      SaveDir:     "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/split_slice_selection/evds/unselected_signal"
+      SliceMode:   true
     }
   }
 
   ana:       [ eventdisp ]
   end_paths: [ ana ]
 }
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

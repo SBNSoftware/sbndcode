@@ -112,7 +112,7 @@ private:
     fPFPModuleLabel, fTrackModuleLabel, fShowerModuleLabel;
 
   bool fAVOnly, fPrintTrue, fLogTrue, fPrintReco, fLogReco, fDrawTrueFull, fDrawTrueSep, fDrawRecoFull, fDrawRecoSep,
-    fSavePDF, fSavePNG;
+    fSavePDF, fSavePNG, fSliceMode;
 
   std::string fSaveDir, fEventSaveDir;
 
@@ -136,8 +136,8 @@ sbnd::EventDisplayAndDump::EventDisplayAndDump(fhicl::ParameterSet const& p)
   , fHitModuleLabel(p.get<std::string>("HitModuleLabel", "gaushit"))
   , fSliceModuleLabel(p.get<std::string>("SliceModuleLabel", "pandoraSCE"))
   , fPFPModuleLabel(p.get<std::string>("PFPModuleLabel", "pandoraSCE"))
-  , fTrackModuleLabel(p.get<std::string>("TrackModuleLabel", "pandoraSCETrack"))
-  , fShowerModuleLabel(p.get<std::string>("ShowerModuleLabel", "pandoraSCEShower"))
+  , fTrackModuleLabel(p.get<std::string>("TrackModuleLabel", "pandoraTrack"))
+  , fShowerModuleLabel(p.get<std::string>("ShowerModuleLabel", "pandoraShowerSBN"))
   , fAVOnly(p.get<bool>("AVOnly", true))
   , fPrintTrue(p.get<bool>("PrintTrue", true))
   , fLogTrue(p.get<bool>("LogTrue", true))
@@ -149,6 +149,7 @@ sbnd::EventDisplayAndDump::EventDisplayAndDump(fhicl::ParameterSet const& p)
   , fDrawRecoSep(p.get<bool>("DrawRecoSep", true))
   , fSavePDF(p.get<bool>("SavePDF", true))
   , fSavePNG(p.get<bool>("SavePNG", true))
+  , fSliceMode(p.get<bool>("SliceMode", false))
   , fSaveDir(p.get<std::string>("SaveDir", "/sbnd/data/users/hlay/ncpizero/2022A/plots/spring2023/evds"))
   {
     fEventSaveDir = fSaveDir;
@@ -613,7 +614,7 @@ std::vector<HitMap> sbnd::EventDisplayAndDump::GetRecoMaps(const art::Event &e, 
 
       for(auto const& pfp : pfps)
         {
-          const int self = pfp->Self();
+          const int self = fSliceMode ? slice.key() : pfp->Self();
           std::vector<art::Ptr<recob::Hit>> hits;
 
           if(pfp->PdgCode() == 13)
@@ -738,8 +739,10 @@ void sbnd::EventDisplayAndDump::DrawRecoFull(const art::Event &e, const std::vec
   c->cd(3);
   DrawRecoView(maps[2], maps[5], "W view", true);
 
-  if(fSavePDF) c->SaveAs(Form("%s/evd_r%i_s%i_e%i_reco.pdf", fEventSaveDir.c_str(), fRun, fSubRun, fEvent));
-  if(fSavePNG) c->SaveAs(Form("%s/evd_r%i_s%i_e%i_reco.png", fEventSaveDir.c_str(), fRun, fSubRun, fEvent));
+  const std::string suffix = fSliceMode ? "reco_by_slice" : "reco_by_pfp";
+
+  if(fSavePDF) c->SaveAs(Form("%s/evd_r%i_s%i_e%i_%s.pdf", fEventSaveDir.c_str(), fRun, fSubRun, fEvent, suffix.c_str()));
+  if(fSavePNG) c->SaveAs(Form("%s/evd_r%i_s%i_e%i_%s.png", fEventSaveDir.c_str(), fRun, fSubRun, fEvent, suffix.c_str()));
 
   delete c;
 }
@@ -753,8 +756,10 @@ void sbnd::EventDisplayAndDump::DrawRecoSep(const art::Event &e, const std::vect
   cU->cd();
   DrawRecoView(maps[0], maps[3], "U view", false);
 
-  if(fSavePDF) cU->SaveAs(Form("%s/evd_r%i_s%i_e%i_u_view_reco.pdf", fEventSaveDir.c_str(), fRun, fSubRun, fEvent));
-  if(fSavePNG) cU->SaveAs(Form("%s/evd_r%i_s%i_e%i_u_view_reco.png", fEventSaveDir.c_str(), fRun, fSubRun, fEvent));
+  const std::string suffix = fSliceMode ? "reco_by_slice" : "reco_by_pfp";
+
+  if(fSavePDF) cU->SaveAs(Form("%s/evd_r%i_s%i_e%i_u_view_%s.pdf", fEventSaveDir.c_str(), fRun, fSubRun, fEvent, suffix.c_str()));
+  if(fSavePNG) cU->SaveAs(Form("%s/evd_r%i_s%i_e%i_u_view_%s.png", fEventSaveDir.c_str(), fRun, fSubRun, fEvent, suffix.c_str()));
 
   delete cU;
 
@@ -762,8 +767,8 @@ void sbnd::EventDisplayAndDump::DrawRecoSep(const art::Event &e, const std::vect
   cV->cd();
   DrawRecoView(maps[1], maps[4], "V view", false);
 
-  if(fSavePDF) cV->SaveAs(Form("%s/evd_r%i_s%i_e%i_v_view_reco.pdf", fEventSaveDir.c_str(), fRun, fSubRun, fEvent));
-  if(fSavePNG) cV->SaveAs(Form("%s/evd_r%i_s%i_e%i_v_view_reco.png", fEventSaveDir.c_str(), fRun, fSubRun, fEvent));
+  if(fSavePDF) cV->SaveAs(Form("%s/evd_r%i_s%i_e%i_v_view_%s.pdf", fEventSaveDir.c_str(), fRun, fSubRun, fEvent, suffix.c_str()));
+  if(fSavePNG) cV->SaveAs(Form("%s/evd_r%i_s%i_e%i_v_view_%s.png", fEventSaveDir.c_str(), fRun, fSubRun, fEvent, suffix.c_str()));
 
   delete cV;
 
@@ -771,8 +776,8 @@ void sbnd::EventDisplayAndDump::DrawRecoSep(const art::Event &e, const std::vect
   cW->cd();
   DrawRecoView(maps[2], maps[5], "W view", true);
 
-  if(fSavePDF) cW->SaveAs(Form("%s/evd_r%i_s%i_e%i_w_view_reco.pdf", fEventSaveDir.c_str(), fRun, fSubRun, fEvent));
-  if(fSavePNG) cW->SaveAs(Form("%s/evd_r%i_s%i_e%i_w_view_reco.png", fEventSaveDir.c_str(), fRun, fSubRun, fEvent));
+  if(fSavePDF) cW->SaveAs(Form("%s/evd_r%i_s%i_e%i_w_view_%s.pdf", fEventSaveDir.c_str(), fRun, fSubRun, fEvent, suffix.c_str()));
+  if(fSavePNG) cW->SaveAs(Form("%s/evd_r%i_s%i_e%i_w_view_%s.png", fEventSaveDir.c_str(), fRun, fSubRun, fEvent, suffix.c_str()));
 
   delete cW;
 }
@@ -935,6 +940,9 @@ void sbnd::EventDisplayAndDump::DrawTrueView(const HitMap &hitMap0, const HitMap
       l2->SetLineColor(kBlack);
       l2->Draw();
     }
+
+  if(!fTrueColourCounter)
+    return;
 
   leg->SetNColumns(fTrueColourCounter);
   leg->Draw();
