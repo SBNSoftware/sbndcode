@@ -48,7 +48,7 @@ namespace sbnd{
     ~CRTHitRecoAlg();
 
     std::map<std::string, std::vector<std::vector<CRTStripHit>>>
-      ProduceStripHits(const std::vector<art::Ptr<sbnd::crt::FEBData>> &dataVec);
+      ProduceStripHits(const std::vector<art::Ptr<sbnd::crt::FEBData>> &FEBdataVec);
     
     std::vector<sbn::crt::CRTHit> ProduceCRTHits(const std::map<std::string, std::vector<std::vector<CRTStripHit>>> &taggerStripHits);
 
@@ -72,9 +72,9 @@ namespace sbnd{
 
     void CorrectTimings(const TVector3 &pos, const CRTStripHit &hit0,
                         const CRTStripHit &hit1, const double &pe0, const double &pe1,
-                        uint32_t &t0, uint32_t &t1, double &diff);
+                        uint32_t &t0, uint32_t &t1, uint32_t &diff);
 
-    double TimingCorrectionOffset(const double &dist, const double &pe);
+    uint32_t TimingCorrectionOffset(const double &dist, const double &pe);
 
   private:
     
@@ -88,7 +88,7 @@ namespace sbnd{
     double    fTimeWalkShift;
     double    fTimeWalkSigma;
     double    fTimeWalkOffset;
-    double    fHitCoincidenceRequirement;
+    uint32_t  fHitCoincidenceRequirement;
     uint32_t  fT1Offset;
   };
 

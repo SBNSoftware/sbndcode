@@ -167,6 +167,8 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
                         module.maxZ};
       DrawCube(c1, rmin, rmax, fTaggerColour);
 
+      std::cout<<name<<", "<<module.minX<<", "<<module.minY<<", "<<module.minZ<<std::endl;
+
       if(fDrawFEBs){
         const std::array<double, 6> febPos = fCrtGeo.FEBWorldPos(module);
 
@@ -216,10 +218,12 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
 
   // Draw Energy depositions in the event
   if(fDrawSimDeposits){
-    auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetSimChannel>>(fSimDepositsLabel);
+    //auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetSimChannel>>(fSimDepositsLabel);
+    auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetIDE>>(fSimDepositsLabel);
     
-    for(auto const simDep : *simDepositsHandle){
-      for(auto const ide : simDep.AuxDetIDEs()){
+    
+    //for(auto const simDep : *simDepositsHandle){
+      for(auto const ide : *simDepositsHandle){ //simDep.AuxDetIDEs()){
         double x = (ide.entryX + ide.exitX) / 2.;
         double y = (ide.entryY + ide.exitY) / 2.;
         double z = (ide.entryZ + ide.exitZ) / 2.;
@@ -245,7 +249,7 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
 
         DrawCube(c1, rmin, rmax, fSimDepositsColour);
       }
-    } 
+    //} 
 
     /*auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetHit>>(fSimDepositsLabel);
     for(auto const simDep : *simDepositsHandle){

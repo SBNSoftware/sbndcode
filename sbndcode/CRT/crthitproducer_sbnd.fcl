@@ -13,7 +13,7 @@ standard_crthitalg:
    TimeWalkShift:  @local::sbnd_crtsim.DetSimParams.TDelayShift
    TimeWalkSigma:  @local::sbnd_crtsim.DetSimParams.TDelaySigma
    TimeWalkOffset: @local::sbnd_crtsim.DetSimParams.TDelayOffset
-   HitCoincidenceRequirement: 80
+   HitCoincidenceRequirement: 10
 }
 
 

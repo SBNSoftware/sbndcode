@@ -115,8 +115,8 @@ sbn::crt::CRTTrack CRTTrackRecoAlg::FillCrtTrack(sbn::crt::CRTHit hit1, sbn::crt
   bool complete = true;
   if(nhits == 2){
     // Track is incomplete if just between 2 top planes
-    if((hit1.tagger == "volTaggerTopHigh_0" && hit2.tagger == "volTaggerTopLow_0")
-       || (hit2.tagger == "volTaggerTopHigh_0" && hit1.tagger == "volTaggerTopLow_0")) complete = false;
+    if((hit1.tagger == "volTaggerTopHigh_0" && hit2.tagger == "volTaggerTopLow_0") ||
+       (hit2.tagger == "volTaggerTopHigh_0" && hit1.tagger == "volTaggerTopLow_0")) complete = false;
     return FillCrtTrack(hit1, hit2, complete);
   }
   else{
@@ -169,6 +169,7 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTTrackRecoAlg::Aver
         first = false;
       }
       // If distance from average < limit then add to average
+      std::cout<<"(pos-middle).Mag(): "<<(pos-middle).Mag()<<" fAverageHitDistance: "<<fAverageHitDistance<<std::endl;
       if((pos-middle).Mag() < fAverageHitDistance){
         aveHits.push_back(hits[i]);
       }
@@ -277,7 +278,7 @@ std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::Cr
 
     // Loop over all unique pairs
     for(size_t j = i+1; j < hits.size(); j++){      
-      std::cout<<"CRT hit "<<i<<", ts1_ns: "<<hits[i].first.ts1_ns<<"; ts0_ns: "<<hits[i].first.ts0_ns<<"; ts0_ns_corr:"<<hits[i].first.ts0_ns_corr<<"; ( "<<hits[i].first.x_pos<<", "<<hits[i].first.y_pos<<", "<<hits[i].first.z_pos<<") "<<std::endl;
+      //std::cout<<"CRT hit "<<i<<", ts1_ns: "<<hits[i].first.ts1_ns<<"; ts0_ns: "<<hits[i].first.ts0_ns<<"; ts0_ns_corr:"<<hits[i].first.ts0_ns_corr<<"; ( "<<hits[i].first.x_pos<<", "<<hits[i].first.y_pos<<", "<<hits[i].first.z_pos<<") "<<std::endl;
 
       if(hits[i].first.tagger == hits[j].first.tagger || std::abs(hits[i].first.ts1_ns - hits[j].first.ts1_ns) > fCoincidenceTimeRequirement )  continue;
 
@@ -332,16 +333,10 @@ std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::Cr
     // If nhits > 2 then record used hits
     for(size_t i = 0; i < candidate.size(); i++){
       ids.insert(ids.end(), hits[candidate[i]].second.begin(), hits[candidate[i]].second.end());
-      for (size_t i_id=0; i_id<ids.size(); i_id++){
-        std::cout<<"i_id: "<<i_id<<", ids[i_id]: "<<ids[i_id]<<std::endl;
-      }
 
       if(candidate.size()>2) { //temporialy not saveing the used hit bc of we might have double hits.  
         usedHits.push_back(candidate[i]);
-
-        std::cout<<"CRT hit, used candidate[i]: ("<<hits[candidate[i]].first.x_pos<<", "<<hits[candidate[i]].first.y_pos<<", "<<hits[candidate[i]].first.z_pos<<")"<<std::endl;
       }
-      std::cout<<"usedHits.size: "<<usedHits.size()<<std::endl;
     }
 
     returnTracks.push_back(std::make_pair(crtTrack, ids));

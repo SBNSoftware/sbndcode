@@ -7,7 +7,7 @@ crteventdisplayalg_sbnd:
 {
     SimLabel:         "largeant"
     FEBDataLabel:     "crtsim"
-    SimDepositsLabel: "genericcrt" 
+    SimDepositsLabel: "crt" #genericcrt 
     CRTHitLabel:      "crthit"
     CRTTrackLabel:    "crttrack"
     ClockSpeedCRT:    @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
@@ -27,11 +27,11 @@ crteventdisplayalg_sbnd:
     FEBEndColour:      46
     StripColour:       16
 
-    FEBDataColour:     8
+    FEBDataColour:     4
     CrtHitColour:      2
     CrtTrackColour:    2
     TrueTrackColour:   8
-    SimDepositsColour: 4
+    SimDepositsColour: 8
 
     UseTrueID:        false
     TrueID:           341

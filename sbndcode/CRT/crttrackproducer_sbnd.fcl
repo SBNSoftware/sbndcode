@@ -4,7 +4,7 @@ BEGIN_PROLOG
 
 standard_crttrackalg:
 {
-    AverageHitDistance:             60. # Maximum distance to avarage hits on the same tagger over [cm]
+    AverageHitDistance:             6. # Maximum distance to avarage hits on the same tagger over [cm]
     DistanceLimit:                  25. # Maximum distance from CRTTrack to absorb a new CRTHit [cm]
     TimeLimitT0:                    100 # Maximum time difference to combine hits into a tzero [ns]
     HitRecoAlg:                     @local::standard_crthitalg

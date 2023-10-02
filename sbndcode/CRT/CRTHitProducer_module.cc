@@ -78,7 +78,6 @@ void sbnd::CRTHitProducer::produce(art::Event& e)
 
   // Finds coincidences between overlapping perpendicular strips
   const std::vector<sbn::crt::CRTHit> crtHits = fHitRecoAlg.ProduceCRTHits(stripHits);
-
   // Save hits and associations to FEBDatas to the event record
   for(auto const &hit : crtHits)
     {
