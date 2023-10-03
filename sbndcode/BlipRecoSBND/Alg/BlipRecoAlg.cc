@@ -954,8 +954,6 @@ namespace blip {
               
               // **************************************************
               // We made it through the cuts -- the match is good!
-              // Combine metrics into a consolidated "score" that 
-              // we can use later in the case of degenerate matches.
               // **************************************************
               map_clust_dt[j]       = dt;
               map_clust_dtfrac[j]   = dtfrac;

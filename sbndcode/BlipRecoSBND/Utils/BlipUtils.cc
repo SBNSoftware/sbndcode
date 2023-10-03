@@ -115,15 +115,15 @@ namespace BlipUtils {
       if( tb.DepElectrons < 20 ) continue;
 
       // Calculate TPC-specific quantities
-      //auto point = geo::Point_t{tb.Position.X(),tb.Position.Y(),tb.Position.Z()};
-      //auto const& tpcID   = geom->FindTPCAtPosition(point);
       
       // 'ConvertXToTicks' does not account for time offset of particle (i.e., it
       // assumes particle T0 = 0 with the trigger). We need to correct for that.
-      //auto const& planeID = geom->GetBeginPlaneID(tpcID);
       //float tick_offset = (tb.Time>0) ? tb.Time/clockData.TPCClock().TickPeriod() : 0;
-      float tick_calc   = 0; //(float)detProp.ConvertXToTicks(tb.Position.X(),planeID);
-      tb.DriftTime      = tick_calc*clockData.TPCClock().TickPeriod() + clockData.TriggerOffsetTPC();
+      auto point = geo::Point_t{tb.Position.X(),tb.Position.Y(),tb.Position.Z()};
+      auto const& tpcID   = geom->FindTPCAtPosition(point);
+      auto const& planeID = art::ServiceHandle<geo::Geometry>()->GetBeginPlaneID(tpcID);
+      float tick_calc = (float)detProp.ConvertXToTicks(tb.Position.X(),planeID);
+      tb.DriftTime = tick_calc*clockData.TPCClock().TickPeriod() + clockData.TriggerOffsetTPC();
       
       tb.ID = trueblips.size();
       trueblips.push_back(tb);
