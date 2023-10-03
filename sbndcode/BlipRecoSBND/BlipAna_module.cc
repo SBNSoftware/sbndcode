@@ -1292,7 +1292,6 @@ void BlipAna::analyze(const art::Event& evt)
         h_clust_qres_anode   ->Fill( (q_reco-q_anode)/q_anode );
         h_clust_qres_dep     ->Fill( (q_reco-q_dep)/q_dep );
         h_clust_qres_vs_q    ->Fill( q_dep/1e3, (q_reco-q_dep)/q_dep );
-        std::cout<<"qratio "<<q_anode/q_dep<<"  tdrift "<<tdrift<<"\n";
         h_qratio_vs_time_sim ->Fill( tdrift, q_anode/q_dep );
       }
     
