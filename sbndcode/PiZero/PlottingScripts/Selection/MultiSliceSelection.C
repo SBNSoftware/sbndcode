@@ -1,29 +1,31 @@
 #include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "LatexHeaders.h"
 
-/*
-  const std::vector<Cut> categories = {
+
+const std::vector<Cut> categories = {
   { "Signal", "signal_cand && matching_flash_pe", "Signal (x100)", kMagenta+2, 100 },
   { "SignalDiffFlash", "signal_cand && !matching_flash_pe", "Signal (Diff Flash) (x100)", kMagenta-7, 100 },
   { "Background", "!signal_cand && matching_flash_pe", "Background", kRed+1 },
   { "BackgroundDiffFlash", "!signal_cand && !matching_flash_pe", "Background (Diff Flash)", kRed-7 },
-  };
-*/
+};
 
-const std::vector<Cut> categories = {
+/*
+  const std::vector<Cut> categories = {
   { "Signal", "good_cand && matching_flash_pe", "Signal", kMagenta+2 },
   { "SignalDiffFlash", "good_cand && !matching_flash_pe", "Signal (Diff Flash)", kMagenta-7 },
   { "Background", "!good_cand && matching_flash_pe", "Background", kRed+1 },
   { "BackgroundDiffFlash", "!good_cand && !matching_flash_pe", "Background (Diff Flash)", kRed-7 },
-};
+  };
+*/
 
 std::vector<Cut> cuts = {
   { "no_cut", "", "No Cut" },
+  { "good_opT0s_cut", "goodOpT00 && goodOpT01", "Good OpT0s" },
   { "opT0Frac0_cut", "opT0Frac0<0", "OpT0Frac0 \\textless 0" },
   { "opT0Frac1_cut", "opT0Frac1<0", "OpT0Frac1 \\textless 0" },
   { "sumOpT0Frac_cut", "!matching_flash_pe || (sumOpT0Frac<0.2 && sumOpT0Frac>-0.6)", "-0.6 \\textless sumOpT0Frac \\textless 0.2" },
   //  { "either_opT0Frac_cut", "matching_flash_pe || (opT0Frac0>-0.6 && opT0Frac1>-0.6)", "-0.6 \\textless OpT0Frac0,1 \\textless 0" },
-  { "sep_cut", "sep<200", "Seperation \\textless 200cm" },
+  { "sep_cut", "sep<200", "Separation \\textless 200cm" },
   { "crumbs_cut", "crumbs0>-0.2 || crumbs1>-0.2", "Higher CRUMBS Score \\textgreater -0.2"},
 };
 
@@ -51,6 +53,8 @@ std::vector<Plot> plots = {
   { "crumbs1", "crumbs1", ";CRUMBS Score 1;Candidates",
     28, -0.8, 0.6 },
   { "same_tpcs", "(vtx_x0 > 0 && vtx_x1 > 0) + (vtx_x0 < 0 && vtx_x1 < 0)", ";Same TPC?;Candidates",
+    2, -0.5, 1.5, kBlack, false, "", true, { "No", "Yes" } },
+  { "good_opT0s", "goodOpT00 && goodOpT01", ";Good OpT0 Matches?;Candidates",
     2, -0.5, 1.5, kBlack, false, "", true, { "No", "Yes" } },
 };
 
@@ -113,8 +117,8 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples)
   for(auto const& sample : samples)
     {
       totalSignal           += sample.tree->Draw("", "signal");
-      totalSignalCandidates += sample.tree->Draw("", "good_cand");
-      totalBackCandidates   += sample.tree->Draw("", "!good_cand");
+      totalSignalCandidates += sample.tree->Draw("", "signal_cand");
+      totalBackCandidates   += sample.tree->Draw("", "!signal_cand");
     }
 
   texFile << docStart;
@@ -127,7 +131,7 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples)
 
   texFile << tableStart 
           << "\\hline\n"
-          << "Cut Name & $\\epsilon$ (\\%) & $\\rho$ (\\%) & $\\epsilon\\rho$ & Selection $\\epsilon$ (\\%) & BR (\\%)\\\\ \\hline" 
+          << "Cut Name & $\\epsilon$ (\\%) & $\\rho$ (\\%) & $\\epsilon\\rho$ & BR (\\%)\\\\ \\hline"
           << std::endl;
 
   TCut currentCut = "";
@@ -152,13 +156,12 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples)
         }
 
       const double eff         = sigCandidates * 100. / totalSignal;
-      const double selEff      = sigCandidates * 100. / totalSignalCandidates;
       const double pur         = sigCandidates * 100./ (sigCandidates + backCandidates);
       const double backRej     = 100. - 100. * backCandidates / totalBackCandidates;
 
       texFile << cut.printed_name << " & " << Form("%.2f", eff) << " & " << Form("%.2f", pur)
               << " & " << Form("%.2f", (eff * pur) / 100.)
-              << " & " << Form("%.2f", selEff) << " & " << Form("%.2f", backRej)
+              << " & " << Form("%.2f", backRej)
               << "\\\\ \\hline" << std::endl;
     }
 
