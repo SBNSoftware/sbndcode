@@ -591,14 +591,21 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
   const bool av = VolumeCheck(nu.Position().Vect());
   const bool fv = VolumeCheck(nu.Position().Vect(), 20., 5., 10., 50.);
 
+  art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
+  const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
+
   unsigned pizeros = 0;
+  float trueEnDep = 0.;
 
-  for(int i = 0; i < mct->NParticles(); ++i)
+  for(auto const& mcp : MCParticleVec)
     {
-      const auto mcp = mct->GetParticle(i);
-
-      if(mcp.PdgCode() == 111 && mcp.StatusCode() != 1)
+      if(mcp->Process() == "primary" && mcp->StatusCode() == 1 && mcp->PdgCode() == 111)
         ++pizeros;
+
+      std::vector<const sim::IDE*> ides = backTracker->TrackIdToSimIDEs_Ps(mcp->TrackId());
+
+      for(auto const& ide : ides)
+        trueEnDep += ide->energy / 1000.;
     }
 
   const bool pizero = pizeros > 0;
@@ -624,18 +631,6 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
         FillElement(vars[prefix + "_event_type"], counter, (int) kDirt);
       else
         FillElement(vars[prefix + "_event_type"], counter, (int) kUnknownEv);
-    }
-
-  art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
-  const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
-  float trueEnDep = 0.;
-
-  for(auto const& mcp : MCParticleVec)
-    {
-      std::vector<const sim::IDE*> ides = backTracker->TrackIdToSimIDEs_Ps(mcp->TrackId());
-
-      for(auto const& ide : ides)
-        trueEnDep += ide->energy / 1000.;
     }
 
   FillElement(vars[prefix + "_en_dep"], counter, trueEnDep);
