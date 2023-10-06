@@ -146,6 +146,8 @@ public:
   template<typename T>
   void AccessElement(VecVar *vec, const int pos, T &value);
   template<typename T>
+  void AccessElement(VecVar *vec, const int pos, std::vector<T> &value);
+  template<typename T>
   void AccessElement(VecVar *vec, const int posA, const int posB, T &value);
 
 
@@ -1444,6 +1446,12 @@ template<typename T>
 void sbnd::NCPiZeroAnalysis::AccessElement(VecVar *vec, const int pos, T &value)
 {
   value = dynamic_cast<InhVecVar<T>*>(vec)->GetVal(pos);
+}
+
+template<typename T>
+void sbnd::NCPiZeroAnalysis::AccessElement(VecVar *vec, const int pos, std::vector<T> &value)
+{
+  value = dynamic_cast<InhVecVecVar<T>*>(vec)->GetVecVal(pos);
 }
 
 template<typename T>

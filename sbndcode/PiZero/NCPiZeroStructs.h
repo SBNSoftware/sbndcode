@@ -195,6 +195,11 @@ class InhVecVecVar : public VecVar
     var[posA][posB] = value;
   }
 
+  std::vector<T> GetVecVal(const int pos)
+  {
+    return var[pos];
+  }
+
   T GetVal(const int posA, const int posB)
   {
     return var[posA][posB];

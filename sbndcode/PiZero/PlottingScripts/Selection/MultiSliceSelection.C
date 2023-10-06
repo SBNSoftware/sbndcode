@@ -1,7 +1,6 @@
 #include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "LatexHeaders.h"
 
-
 const std::vector<Cut> categories = {
   { "Signal", "signal_cand && matching_flash_pe", "Signal (x100)", kMagenta+2, 100 },
   { "SignalDiffFlash", "signal_cand && !matching_flash_pe", "Signal (Diff Flash) (x100)", kMagenta-7, 100 },
