@@ -42,7 +42,7 @@ void MakeMultiSliceTrees()
   std::vector<double> vtx_x0, vtx_y0, vtx_z0, crumbs0, crumbs_nc0, crumbs_ccnue0, opT0Frac0,
     vtx_x1, vtx_y1, vtx_z1, crumbs1, crumbs_nc1, crumbs_ccnue1, opT0Frac1, sep, sumOpT0Frac;
   std::vector<int> n_dazzle_muons0, n_dazzle_muons1;
-  std::vector<bool> matching_flash_pe, signal_cand, good_cand;
+  std::vector<bool> matching_flash_pe, signal_cand, good_cand, goodOpT00, goodOpT01;
 
   outevents->Branch("run", &run);
   outevents->Branch("subrun", &subrun);
@@ -61,6 +61,7 @@ void MakeMultiSliceTrees()
   outevents->Branch("crumbs_ccnue0", &crumbs_ccnue0);
   outevents->Branch("n_dazzle_muons0", &n_dazzle_muons0);
   outevents->Branch("opT0Frac0", &opT0Frac0);
+  outevents->Branch("goodOpT00", &goodOpT00);
 
   outevents->Branch("slc1", &slc1);
   outevents->Branch("vtx_x1", &vtx_x1);
@@ -71,6 +72,7 @@ void MakeMultiSliceTrees()
   outevents->Branch("crumbs_ccnue1", &crumbs_ccnue1);
   outevents->Branch("n_dazzle_muons1", &n_dazzle_muons1);
   outevents->Branch("opT0Frac1", &opT0Frac1);
+  outevents->Branch("goodOpT01", &goodOpT01);
 
   outevents->Branch("sep", &sep);
   outevents->Branch("sumOpT0Frac", &sumOpT0Frac);
@@ -84,11 +86,11 @@ void MakeMultiSliceTrees()
 
       slc0.clear(); vtx_x0.clear(); vtx_y0.clear(); vtx_z0.clear();
       crumbs0.clear(); crumbs_nc0.clear(); crumbs_ccnue0.clear();
-      n_dazzle_muons0.clear(); opT0Frac0.clear();
+      n_dazzle_muons0.clear(); opT0Frac0.clear(); goodOpT00.clear();
 
       slc1.clear(); vtx_x1.clear(); vtx_y1.clear(); vtx_z1.clear();
       crumbs1.clear(); crumbs_nc1.clear(); crumbs_ccnue1.clear();
-      n_dazzle_muons1.clear(); opT0Frac1.clear();
+      n_dazzle_muons1.clear(); opT0Frac1.clear(); goodOpT01.clear();
 
       sep.clear(); matching_flash_pe.clear(); sumOpT0Frac.clear();
       signal_cand.clear(); good_cand.clear();
@@ -161,6 +163,7 @@ void MakeMultiSliceTrees()
               crumbs_ccnue0.push_back(slc_crumbs_ccnue_score->at(j));
               n_dazzle_muons0.push_back(slc_n_dazzle_muons_cut_based->at(j));
               opT0Frac0.push_back((hypPE0 - measPE0) / measPE0);
+              goodOpT00.push_back((hypPE0 > 0 && measPE0 > 0));
 
               slc1.push_back(k);
               vtx_x1.push_back(vertex1.X());
@@ -171,6 +174,7 @@ void MakeMultiSliceTrees()
               crumbs_ccnue1.push_back(slc_crumbs_ccnue_score->at(k));
               n_dazzle_muons1.push_back(slc_n_dazzle_muons_cut_based->at(k));
               opT0Frac1.push_back((hypPE1 - measPE1) / measPE1);
+              goodOpT01.push_back((hypPE1 > 0 && measPE1 > 0));
 
               sep.push_back((vertex0 - vertex1).Mag());
               matching_flash_pe.push_back(measPE0 == measPE1);
