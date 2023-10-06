@@ -182,9 +182,16 @@ private:
     { "nu_event_type", new InhVecVar<int>("nu_event_type") },
     { "nu_signal", new InhVecVar<bool>("nu_signal") },
     { "nu_en_dep", new InhVecVar<float>("nu_en_dep") },
+    { "nu_pdg", new InhVecVar<int>("nu_pdg") },
     { "nu_ccnc", new InhVecVar<int>("nu_ccnc") },
     { "nu_mode", new InhVecVar<int>("nu_mode") },
     { "nu_int_type", new InhVecVar<int>("nu_int_type") },
+    { "nu_n_protons", new InhVecVar<int>("nu_n_protons") },
+    { "nu_n_neutrons", new InhVecVar<int>("nu_n_neutrons") },
+    { "nu_n_charged_pions", new InhVecVar<int>("nu_n_charged_pions") },
+    { "nu_n_neutral_pions", new InhVecVar<int>("nu_n_neutral_pions") },
+    { "nu_n_photons", new InhVecVar<int>("nu_n_photons") },
+    { "nu_n_others", new InhVecVar<int>("nu_n_others") },
     { "nu_w", new InhVecVar<double>("nu_w") },
     { "nu_x", new InhVecVar<double>("nu_x") },
     { "nu_y", new InhVecVar<double>("nu_y") },
@@ -222,9 +229,16 @@ private:
     { "slc_comp", new InhVecVar<float>("slc_comp") },
     { "slc_pur", new InhVecVar<float>("slc_pur") },
     { "slc_true_en_dep", new InhVecVar<float>("slc_true_en_dep") },
+    { "slc_true_pdg", new InhVecVar<int>("slc_true_pdg") },
     { "slc_true_ccnc", new InhVecVar<int>("slc_true_ccnc") },
     { "slc_true_mode", new InhVecVar<int>("slc_true_mode") },
     { "slc_true_int_type", new InhVecVar<int>("slc_true_int_type") },
+    { "slc_true_n_protons", new InhVecVar<int>("slc_true_n_protons") },
+    { "slc_true_n_neutrons", new InhVecVar<int>("slc_true_n_neutrons") },
+    { "slc_true_n_charged_pions", new InhVecVar<int>("slc_true_n_charged_pions") },
+    { "slc_true_n_neutral_pions", new InhVecVar<int>("slc_true_n_neutral_pions") },
+    { "slc_true_n_photons", new InhVecVar<int>("slc_true_n_photons") },
+    { "slc_true_n_others", new InhVecVar<int>("slc_true_n_others") },
     { "slc_true_w", new InhVecVar<double>("slc_true_w") },
     { "slc_true_x", new InhVecVar<double>("slc_true_x") },
     { "slc_true_y", new InhVecVar<double>("slc_true_y") },
@@ -594,13 +608,35 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
   art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
   const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
 
-  unsigned pizeros = 0;
+  int protons = 0, neutrons = 0, charged_pions = 0, neutral_pions = 0, photons = 0, others = 0;
   float trueEnDep = 0.;
 
   for(auto const& mcp : MCParticleVec)
     {
-      if(mcp->Process() == "primary" && mcp->StatusCode() == 1 && mcp->PdgCode() == 111)
-        ++pizeros;
+      if(mcp->Process() == "primary" && mcp->StatusCode() == 1)
+        {
+          switch(abs(mcp->PdgCode()))
+            {
+            case 2212:
+              ++protons;
+              break;
+            case 2112:
+              ++neutrons;
+              break;
+            case 211:
+              ++charged_pions;
+              break;
+            case 111:
+              ++neutral_pions;
+              break;
+            case 22:
+              ++photons;
+              break;
+            default:
+              ++others;
+              break;
+            }
+        }
 
       std::vector<const sim::IDE*> ides = backTracker->TrackIdToSimIDEs_Ps(mcp->TrackId());
 
@@ -608,7 +644,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
         trueEnDep += ide->energy / 1000.;
     }
 
-  const bool pizero = pizeros > 0;
+  const bool pizero = neutral_pions > 0;
 
   if(nc && fv && pizero)
     {
@@ -634,9 +670,16 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
     }
 
   FillElement(vars[prefix + "_en_dep"], counter, trueEnDep);
+  FillElement(vars[prefix + "_pdg"], counter, nu.PdgCode());
   FillElement(vars[prefix + "_ccnc"], counter, mcn.CCNC());
   FillElement(vars[prefix + "_mode"], counter, mcn.Mode());
   FillElement(vars[prefix + "_int_type"], counter, mcn.InteractionType());
+  FillElement(vars[prefix + "_n_protons"], counter, protons);
+  FillElement(vars[prefix + "_n_neutrons"], counter, neutrons);
+  FillElement(vars[prefix + "_n_charged_pions"], counter, charged_pions);
+  FillElement(vars[prefix + "_n_neutral_pions"], counter, neutral_pions);
+  FillElement(vars[prefix + "_n_photons"], counter, photons);
+  FillElement(vars[prefix + "_n_others"], counter, others);
   FillElement(vars[prefix + "_w"], counter, mcn.W());
   FillElement(vars[prefix + "_x"], counter, mcn.X());
   FillElement(vars[prefix + "_y"], counter, mcn.Y());
