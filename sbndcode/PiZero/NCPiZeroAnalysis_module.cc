@@ -126,6 +126,8 @@ public:
   void ExtractCalo(const art::Ptr<recob::Shower> &shower, const int slcCounter, const int pfpCounter,
                    const std::vector<art::Ptr<recob::Hit>> &hits);
 
+  void ExtractRazzled(const art::Ptr<sbn::MVAPID> &razzled, const int slcCounter, const int pfpCounter);
+
   void SelectSlice(const int counter);
 
   float Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
@@ -156,7 +158,7 @@ private:
     fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel,
     fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
     fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
-    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel;
+    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel, fRazzledModuleLabel;
   bool fDebug, fBeamOff;
 
   std::map<int, int> fHitsMap;
@@ -223,6 +225,11 @@ private:
     { "slc_n_razzle_photons", new InhVecVar<int>("slc_n_razzle_photons") },
     { "slc_n_razzle_photons_cut_based", new InhVecVar<int>("slc_n_razzle_photons_cut_based") },
     { "slc_n_razzle_other", new InhVecVar<int>("slc_n_razzle_other") },
+    { "slc_n_razzled_electrons", new InhVecVar<int>("slc_n_razzled_electrons") },
+    { "slc_n_razzled_muons", new InhVecVar<int>("slc_n_razzled_muons") },
+    { "slc_n_razzled_photons", new InhVecVar<int>("slc_n_razzled_photons") },
+    { "slc_n_razzled_pions", new InhVecVar<int>("slc_n_razzled_pions") },
+    { "slc_n_razzled_protons", new InhVecVar<int>("slc_n_razzled_protons") },
     { "slc_true_mctruth_id", new InhVecVar<size_t>("slc_true_mctruth_id") },
     { "slc_true_event_type", new InhVecVar<int>("slc_true_event_type") },
     { "slc_true_signal", new InhVecVar<bool>("slc_true_signal") },
@@ -316,6 +323,12 @@ private:
     { "slc_pfp_shower_track_width", new InhVecVecVar<double>("slc_pfp_shower_track_width") },
     { "slc_pfp_shower_density_grad", new InhVecVecVar<double>("slc_pfp_shower_density_grad") },
     { "slc_pfp_shower_density_pow", new InhVecVecVar<double>("slc_pfp_shower_density_pow") },
+    { "slc_pfp_razzled_electron_score", new InhVecVecVar<float>("slc_pfp_razzled_electron_score") },
+    { "slc_pfp_razzled_muon_score", new InhVecVecVar<float>("slc_pfp_razzled_muon_score") },
+    { "slc_pfp_razzled_photon_score", new InhVecVecVar<float>("slc_pfp_razzled_photon_score") },
+    { "slc_pfp_razzled_pion_score", new InhVecVecVar<float>("slc_pfp_razzled_pion_score") },
+    { "slc_pfp_razzled_proton_score", new InhVecVecVar<float>("slc_pfp_razzled_proton_score") },
+    { "slc_pfp_razzled_pdg", new InhVecVecVar<int>("slc_pfp_razzled_pdg") },
     { "slc_sel1", new InhVecVar<bool>("slc_sel1") },
     { "slc_sel2", new InhVecVar<bool>("slc_sel2") },
   };
@@ -347,6 +360,7 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fShowerDensityFitModuleLabel = p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
     fPOTModuleLabel              = p.get<art::InputTag>("POTModuleLabel", "generator");
     fOpT0ModuleLabel             = p.get<art::InputTag>("OpT0ModuleLabel", "opt0finder");
+    fRazzledModuleLabel          = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
     fDebug                       = p.get<bool>("Debug", false);
     fBeamOff                     = p.get<bool>("BeamOff", false);
 
@@ -778,9 +792,11 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
   art::FindOneP<larpandoraobj::PFParticleMetadata> pfpToMeta(pfpHandle, e, fPFParticleModuleLabel);
   art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
+  art::FindOneP<sbn::MVAPID>                       pfpsToRazzled(pfpHandle, e, fRazzledModuleLabel);
 
   int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzleprotons = 0, ndazzleother = 0,
-    nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0, ndazzlemuonscut = 0, nrazzlephotonscut = 0;
+    nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0, ndazzlemuonscut = 0, nrazzlephotonscut = 0,
+    nrazzledelectrons = 0, nrazzledmuons = 0, nrazzledphotons = 0, nrazzledpions = 0, nrazzledprotons = 0;
 
   for(auto&& [pfpCounter, id] : enumerate(prim->Daughters()))
     {
@@ -810,6 +826,10 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
 
       FillElement(slcVars["slc_pfp_good_track"], slcCounter, pfpCounter, track.isNonnull());
       FillElement(slcVars["slc_pfp_good_shower"], slcCounter, pfpCounter, shower.isNonnull());
+
+      const art::Ptr<sbn::MVAPID> razzled = pfpsToRazzled.at(pfp.key());
+      if(razzled.isNonnull())
+        ExtractRazzled(razzled, slcCounter, pfpCounter);
 
       const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
       const std::vector<art::Ptr<recob::Hit>> hits = showersToHits.at(shower.key());
@@ -868,6 +888,20 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
           if(razzlephotonscore > 0.05)
             ++nrazzlephotonscut;
         }
+
+      int razzledpdg;
+      AccessElement(slcVars["slc_pfp_razzled_pdg"], slcCounter, pfpCounter, razzledpdg);
+
+      if(razzledpdg == 11)
+        ++nrazzledelectrons;
+      else if(razzledpdg == 13)
+        ++nrazzledmuons;
+      else if(razzledpdg == 22)
+        ++nrazzledphotons;
+      else if(razzledpdg == 211)
+        ++nrazzledpions;
+      else if(razzledpdg == 2212)
+        ++nrazzledprotons;
     }
 
   FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
@@ -881,6 +915,11 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
   FillElement(slcVars["slc_n_razzle_photons"], slcCounter, nrazzlephotons);
   FillElement(slcVars["slc_n_razzle_photons_cut_based"], slcCounter, nrazzlephotonscut);
   FillElement(slcVars["slc_n_razzle_other"], slcCounter, nrazzleother);
+  FillElement(slcVars["slc_n_razzled_electrons"], slcCounter, nrazzledelectrons);
+  FillElement(slcVars["slc_n_razzled_muons"], slcCounter, nrazzledmuons);
+  FillElement(slcVars["slc_n_razzled_photons"], slcCounter, nrazzledphotons);
+  FillElement(slcVars["slc_n_razzled_pions"], slcCounter, nrazzledpions);
+  FillElement(slcVars["slc_n_razzled_protons"], slcCounter, nrazzledprotons);
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
@@ -1138,6 +1177,18 @@ void sbnd::NCPiZeroAnalysis::ExtractCalo(const art::Ptr<recob::Shower> &shower, 
               (length > 0 && bestEnergy > 0) ? std::sqrt(bestEnergy) / length : -5.);
   FillElement(slcVars["slc_pfp_shower_modified_hit_density"], slcCounter, pfpCounter,
               wiresHit > 1. ? bestPlaneHits / wiresHit : -5.);
+}
+
+void sbnd::NCPiZeroAnalysis::ExtractRazzled(const art::Ptr<sbn::MVAPID> &razzled, const int slcCounter, const int pfpCounter)
+{
+  const std::map<int, float> map = razzled->mvaScoreMap;
+
+  FillElement(slcVars["slc_pfp_razzled_electron_score"], slcCounter, pfpCounter, map.at(11));
+  FillElement(slcVars["slc_pfp_razzled_muon_score"], slcCounter, pfpCounter, map.at(13));
+  FillElement(slcVars["slc_pfp_razzled_photon_score"], slcCounter, pfpCounter, map.at(22));
+  FillElement(slcVars["slc_pfp_razzled_pion_score"], slcCounter, pfpCounter, map.at(211));
+  FillElement(slcVars["slc_pfp_razzled_proton_score"], slcCounter, pfpCounter, map.at(2212));
+  FillElement(slcVars["slc_pfp_razzled_pdg"], slcCounter, pfpCounter, razzled->BestPDG());
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::Ptr<recob::Slice> &slc, const int slcCounter,
