@@ -7,7 +7,6 @@ enum EventType
     kDirt,
     kNonFV,
     kCosmic,
-    kBadRecoSignal,
     kUnknownEv = -1
   };
 
