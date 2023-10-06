@@ -64,3 +64,13 @@ physics.producers.razzle.SimChannelLabel:        "simtpc2d:simpleSC"
 physics.producers.razzled.SimChannelLabel:       "simtpc2d:simpleSC"
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+physics.producers.razzle.WeightFile:        "Razzle_BDTG_NCPiZeroAv2.weights.xml"
+physics.producers.dazzle.WeightFile:        "Dazzle_BDTG_NCPiZeroAv2.weights.xml"
+physics.producers.razzled.WeightFile:       "Razzled_BDTG_NCPiZeroAv2.weights.xml"
+physics.producers.crumbs.UseSimpleFlash:    false
+physics.producers.crumbs.UseOpT0Finder:     true
+physics.producers.crumbs.MVAFileName:       "CRUMBS_Inclusive_NCPiZeroAv2.weights.xml"
+physics.producers.crumbs.CCNuMuMVAFileName: "CRUMBS_CCNuMu_NCPiZeroAv2.weights.xml"
+physics.producers.crumbs.CCNuEMVAFileName:  "CRUMBS_CCNuE_NCPiZeroAv2.weights.xml"
+physics.producers.crumbs.NCMVAFileName:     "CRUMBS_NC_NCPiZeroAv2.weights.xml"
