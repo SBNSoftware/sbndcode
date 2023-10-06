@@ -130,6 +130,8 @@ public:
 
   void SelectSlice(const int counter);
 
+  void ProduceMultiSliceCandidates();
+
   float Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
   float Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
 
@@ -146,10 +148,9 @@ public:
   template<typename T>
   void AccessElement(VecVar *vec, const int pos, T &value);
   template<typename T>
-  void AccessElement(VecVar *vec, const int pos, std::vector<T> &value);
-  template<typename T>
   void AccessElement(VecVar *vec, const int posA, const int posB, T &value);
-
+  template<typename T>
+  void GetVar(VecVar *vec, std::vector<T> &var);
 
 private:
 
@@ -335,6 +336,41 @@ private:
     { "slc_sel2", new InhVecVar<bool>("slc_sel2") },
   };
 
+  int _n_multi_slice_candidates;
+
+  VecVarMap mscVars = {
+    { "msc_0_slc_id", new InhVecVar<int>("msc_0_slc_id") },
+    { "msc_0_true_mctruth_id", new InhVecVar<size_t>("msc_0_true_mctruth_id") },
+    { "msc_0_true_event_type", new InhVecVar<int>("msc_0_true_event_type") },
+    { "msc_0_comp", new InhVecVar<float>("msc_0_comp") },
+    { "msc_0_pur", new InhVecVar<float>("msc_0_pur") },
+    { "msc_0_vtx_x", new InhVecVar<double>("msc_0_vtx_x") },
+    { "msc_0_vtx_y", new InhVecVar<double>("msc_0_vtx_y") },
+    { "msc_0_vtx_z", new InhVecVar<double>("msc_0_vtx_z") },
+    { "msc_0_opt0_measPE", new InhVecVar<double>("msc_0_opt0_measPE") },
+    { "msc_0_opt0_hypPE", new InhVecVar<double>("msc_0_opt0_hypPE") },
+    { "msc_0_crumbs_score", new InhVecVar<float>("msc_0_crumbs_score") },
+    { "msc_0_good_opt0", new InhVecVar<bool>("msc_0_good_opt0") },
+    { "msc_0_opt0_frac", new InhVecVar<double>("msc_0_opt0_frac") },
+    { "msc_1_slc_id", new InhVecVar<int>("msc_1_slc_id") },
+    { "msc_1_true_mctruth_id", new InhVecVar<size_t>("msc_1_true_mctruth_id") },
+    { "msc_1_true_event_type", new InhVecVar<int>("msc_1_true_event_type") },
+    { "msc_1_comp", new InhVecVar<float>("msc_1_comp") },
+    { "msc_1_pur", new InhVecVar<float>("msc_1_pur") },
+    { "msc_1_vtx_x", new InhVecVar<double>("msc_1_vtx_x") },
+    { "msc_1_vtx_y", new InhVecVar<double>("msc_1_vtx_y") },
+    { "msc_1_vtx_z", new InhVecVar<double>("msc_1_vtx_z") },
+    { "msc_1_opt0_measPE", new InhVecVar<double>("msc_1_opt0_measPE") },
+    { "msc_1_opt0_hypPE", new InhVecVar<double>("msc_1_opt0_hypPE") },
+    { "msc_1_crumbs_score", new InhVecVar<float>("msc_1_crumbs_score") },
+    { "msc_1_good_opt0", new InhVecVar<bool>("msc_1_good_opt0") },
+    { "msc_1_opt0_frac", new InhVecVar<double>("msc_1_opt0_frac") },
+    { "msc_signal", new InhVecVar<bool>("msc_signal") },
+    { "msc_sep", new InhVecVar<double>("msc_sep") },
+    { "msc_matching_flash_pe", new InhVecVar<bool>("msc_matching_flash_pe") },
+    { "msc_same_tpc", new InhVecVar<bool>("msc_same_tpc") },
+    { "msc_sum_opt0_frac", new InhVecVar<double>("msc_sum_opt0_frac") },
+  };
 };
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
@@ -384,6 +420,9 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
 
     fEventTree->Branch("n_slc", &_n_slc);
     SetupBranches(slcVars);
+
+    fEventTree->Branch("n_multi_slice_candidates", &_n_multi_slice_candidates);
+    SetupBranches(mscVars);
   }
 
 void sbnd::NCPiZeroAnalysis::SetupBranches(VecVarMap &map)
@@ -784,6 +823,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
       AnalyseSliceTruth(e, slc, slcCounter, sliceHandle);
     }
+
+  ProduceMultiSliceCandidates();
 }
 
 void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
@@ -1269,6 +1310,110 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   FillElement(slcVars["slc_sel2"], counter, sel2);
 }
 
+void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
+{
+  std::vector<bool> slc_is_clear_cosmic;
+  GetVar(slcVars["slc_is_clear_cosmic"], slc_is_clear_cosmic);
+
+  _n_multi_slice_candidates = 0;
+
+  for(int i = 0; i < _n_slc; ++i)
+    {
+      if(slc_is_clear_cosmic.at(i))
+        continue;
+
+      for(int j = i + 1; j < _n_slc; ++j)
+        {
+          if(slc_is_clear_cosmic.at(j))
+            continue;
+
+          ++_n_multi_slice_candidates;
+        }
+    }
+
+  ResizeVectors(mscVars, _n_multi_slice_candidates);
+
+  int mscCounter = 0;
+
+  std::vector<size_t> slc_true_mctruth_id;
+  std::vector<int> slc_true_event_type;
+  std::vector<float> slc_comp, slc_pur, slc_crumbs_score;
+  std::vector<double> slc_vtx_x, slc_vtx_y, slc_vtx_z,
+    slc_opt0_measPE, slc_opt0_hypPE;
+
+  GetVar(slcVars["slc_true_mctruth_id"], slc_true_mctruth_id);
+  GetVar(slcVars["slc_true_event_type"], slc_true_event_type);
+  GetVar(slcVars["slc_comp"], slc_comp);
+  GetVar(slcVars["slc_pur"], slc_pur);
+  GetVar(slcVars["slc_vtx_x"], slc_vtx_x);
+  GetVar(slcVars["slc_vtx_y"], slc_vtx_y);
+  GetVar(slcVars["slc_vtx_z"], slc_vtx_z);
+  GetVar(slcVars["slc_opt0_measPE"], slc_opt0_measPE);
+  GetVar(slcVars["slc_opt0_hypPE"], slc_opt0_hypPE);
+  GetVar(slcVars["slc_crumbs_score"], slc_crumbs_score);
+
+  for(int i = 0; i < _n_slc; ++i)
+    {
+      if(slc_is_clear_cosmic.at(i))
+        continue;
+
+      for(int j = i + 1; j < _n_slc; ++j)
+        {
+          if(slc_is_clear_cosmic.at(j))
+            continue;
+
+          auto FillHalfCandidate = [&] (VecVarMap &vars, const int counter, const int index, const std::string prefix)
+            {
+              FillElement(vars[prefix + "_slc_id"], counter, index);
+              FillElement(vars[prefix + "_true_mctruth_id"], counter, slc_true_mctruth_id.at(index));
+              FillElement(vars[prefix + "_true_event_type"], counter, slc_true_event_type.at(index));
+              FillElement(vars[prefix + "_comp"], counter, slc_comp.at(index));
+              FillElement(vars[prefix + "_pur"], counter, slc_pur.at(index));
+              FillElement(vars[prefix + "_vtx_x"], counter, slc_vtx_x.at(index));
+              FillElement(vars[prefix + "_vtx_y"], counter, slc_vtx_y.at(index));
+              FillElement(vars[prefix + "_vtx_z"], counter, slc_vtx_z.at(index));
+              FillElement(vars[prefix + "_opt0_measPE"], counter, slc_opt0_measPE.at(index));
+              FillElement(vars[prefix + "_opt0_hypPE"], counter, slc_opt0_hypPE.at(index));
+              FillElement(vars[prefix + "_crumbs_score"], counter, slc_crumbs_score.at(index));
+
+              const bool good_opt0 = slc_opt0_measPE.at(index) > 0 && slc_opt0_hypPE.at(index) > 0;
+              FillElement(vars[prefix + "_good_opt0"], counter, good_opt0);
+
+              const double opt0_frac = (slc_opt0_hypPE.at(index) - slc_opt0_measPE.at(index)) / slc_opt0_measPE.at(index);
+              FillElement(vars[prefix + "_opt0_frac"], counter, opt0_frac);
+            };
+
+          FillHalfCandidate(mscVars, mscCounter, i, "msc_0");
+          FillHalfCandidate(mscVars, mscCounter, j, "msc_1");
+
+          const bool signal = (slc_comp.at(i) + slc_comp.at(j)) > .8
+            && (slc_comp.at(i) + slc_comp.at(j)) <= 1.0001
+            && slc_comp.at(i) > .15 && slc_comp.at(j) > .15
+            && (slc_pur.at(i) + slc_pur.at(j)) / 2. > .8
+            && slc_true_event_type.at(i) == 0 && slc_true_event_type.at(j) == 0
+            && slc_true_mctruth_id.at(i) == slc_true_mctruth_id.at(j);
+
+          const double sep = TMath::Sqrt(TMath::Power(slc_vtx_x.at(i) - slc_vtx_x.at(j), 2) +
+                                         TMath::Power(slc_vtx_y.at(i) - slc_vtx_y.at(j), 2) +
+                                         TMath::Power(slc_vtx_z.at(i) - slc_vtx_z.at(j), 2));
+
+          const bool matching_flash_pe = slc_opt0_measPE.at(i) == slc_opt0_measPE.at(j);
+
+          const bool same_tpc = (slc_vtx_x.at(i) > 0 && slc_vtx_x.at(j) > 0) + (slc_vtx_x.at(i) < 0 && slc_vtx_x.at(j) < 0);
+
+          const double sum_opt0_frac = (slc_opt0_hypPE.at(i) + slc_opt0_hypPE.at(j) - slc_opt0_measPE.at(i)) / slc_opt0_measPE.at(i);
+
+          FillElement(mscVars["msc_signal"], mscCounter, signal);
+          FillElement(mscVars["msc_sep"], mscCounter, sep);
+          FillElement(mscVars["msc_matching_flash_pe"], mscCounter, matching_flash_pe);
+          FillElement(mscVars["msc_same_tpc"], mscCounter, same_tpc);
+          FillElement(mscVars["msc_sum_opt0_frac"], mscCounter, sum_opt0_frac);
+
+          ++mscCounter;
+        }
+    }
+}
+
 float sbnd::NCPiZeroAnalysis::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)
 {
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
@@ -1449,15 +1594,15 @@ void sbnd::NCPiZeroAnalysis::AccessElement(VecVar *vec, const int pos, T &value)
 }
 
 template<typename T>
-void sbnd::NCPiZeroAnalysis::AccessElement(VecVar *vec, const int pos, std::vector<T> &value)
-{
-  value = dynamic_cast<InhVecVecVar<T>*>(vec)->GetVecVal(pos);
-}
-
-template<typename T>
 void sbnd::NCPiZeroAnalysis::AccessElement(VecVar *vec, const int posA, const int posB, T &value)
 {
   value = dynamic_cast<InhVecVecVar<T>*>(vec)->GetVal(posA, posB);
+}
+
+template<typename T>
+void sbnd::NCPiZeroAnalysis::GetVar(VecVar *vec, std::vector<T> &var)
+{
+  var = dynamic_cast<InhVecVar<T>*>(vec)->Var();
 }
 
 DEFINE_ART_MODULE(sbnd::NCPiZeroAnalysis)
