@@ -42,7 +42,7 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
       return;
     }
 
-  TString save_dir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/confusionmatrices";
+  TString save_dir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/confusionmatrices_rockbox_only";
   gSystem->Exec("mkdir -p " + save_dir);
   
   gROOT->SetStyle("henrySBND");
@@ -50,8 +50,8 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
 
   TChain *pfps = new TChain("razzled/pfpTree");
   pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_rockbox.root");
-  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intrnue.root");
-  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root");
+  // pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intrnue.root");
+  // pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root");
 
   int truePDG, recoPDG;
   float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ,
@@ -257,6 +257,9 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
   gStyle->SetPaintTextFormat("1.2g");
   hConfusionMatrix->SetMarkerSize(3);
   hConfusionMatrix->Draw("col text");
+
+  if(training.dazzle)
+    hConfusionMatrix->GetYaxis()->SetTitleOffset(1.3);
 
   TString file_name = training.name;
 
