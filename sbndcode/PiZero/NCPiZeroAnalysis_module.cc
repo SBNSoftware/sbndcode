@@ -352,6 +352,12 @@ private:
     { "msc_0_crumbs_score", new InhVecVar<float>("msc_0_crumbs_score") },
     { "msc_0_good_opt0", new InhVecVar<bool>("msc_0_good_opt0") },
     { "msc_0_opt0_frac", new InhVecVar<double>("msc_0_opt0_frac") },
+    { "msc_0_n_pfps", new InhVecVar<size_t>("msc_0_n_pfps") },
+    { "msc_0_n_razzled_electrons", new InhVecVar<int>("msc_0_n_razzled_electrons") },
+    { "msc_0_n_razzled_muons", new InhVecVar<int>("msc_0_n_razzled_muons") },
+    { "msc_0_n_razzled_photons", new InhVecVar<int>("msc_0_n_razzled_photons") },
+    { "msc_0_n_razzled_pions", new InhVecVar<int>("msc_0_n_razzled_pions") },
+    { "msc_0_n_razzled_protons", new InhVecVar<int>("msc_0_n_razzled_protons") },
     { "msc_1_slc_id", new InhVecVar<int>("msc_1_slc_id") },
     { "msc_1_true_mctruth_id", new InhVecVar<size_t>("msc_1_true_mctruth_id") },
     { "msc_1_true_event_type", new InhVecVar<int>("msc_1_true_event_type") },
@@ -365,6 +371,12 @@ private:
     { "msc_1_crumbs_score", new InhVecVar<float>("msc_1_crumbs_score") },
     { "msc_1_good_opt0", new InhVecVar<bool>("msc_1_good_opt0") },
     { "msc_1_opt0_frac", new InhVecVar<double>("msc_1_opt0_frac") },
+    { "msc_1_n_pfps", new InhVecVar<size_t>("msc_1_n_pfps") },
+    { "msc_1_n_razzled_electrons", new InhVecVar<int>("msc_1_n_razzled_electrons") },
+    { "msc_1_n_razzled_muons", new InhVecVar<int>("msc_1_n_razzled_muons") },
+    { "msc_1_n_razzled_photons", new InhVecVar<int>("msc_1_n_razzled_photons") },
+    { "msc_1_n_razzled_pions", new InhVecVar<int>("msc_1_n_razzled_pions") },
+    { "msc_1_n_razzled_protons", new InhVecVar<int>("msc_1_n_razzled_protons") },
     { "msc_signal", new InhVecVar<bool>("msc_signal") },
     { "msc_sep", new InhVecVar<double>("msc_sep") },
     { "msc_matching_flash_pe", new InhVecVar<bool>("msc_matching_flash_pe") },
@@ -1335,8 +1347,9 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
 
   int mscCounter = 0;
 
-  std::vector<size_t> slc_true_mctruth_id;
-  std::vector<int> slc_true_event_type;
+  std::vector<size_t> slc_true_mctruth_id, slc_n_pfps;
+  std::vector<int> slc_true_event_type, slc_n_razzled_electrons, slc_n_razzled_muons,
+    slc_n_razzled_photons, slc_n_razzled_pions, slc_n_razzled_protons;
   std::vector<float> slc_comp, slc_pur, slc_crumbs_score;
   std::vector<double> slc_vtx_x, slc_vtx_y, slc_vtx_z,
     slc_opt0_measPE, slc_opt0_hypPE;
@@ -1351,6 +1364,12 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
   GetVar(slcVars["slc_opt0_measPE"], slc_opt0_measPE);
   GetVar(slcVars["slc_opt0_hypPE"], slc_opt0_hypPE);
   GetVar(slcVars["slc_crumbs_score"], slc_crumbs_score);
+  GetVar(slcVars["slc_n_pfps"], slc_n_pfps);
+  GetVar(slcVars["slc_n_razzled_electrons"], slc_n_razzled_electrons);
+  GetVar(slcVars["slc_n_razzled_muons"], slc_n_razzled_muons);
+  GetVar(slcVars["slc_n_razzled_photons"], slc_n_razzled_photons);
+  GetVar(slcVars["slc_n_razzled_pions"], slc_n_razzled_pions);
+  GetVar(slcVars["slc_n_razzled_protons"], slc_n_razzled_protons);
 
   for(int i = 0; i < _n_slc; ++i)
     {
@@ -1375,6 +1394,12 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
               FillElement(vars[prefix + "_opt0_measPE"], counter, slc_opt0_measPE.at(index));
               FillElement(vars[prefix + "_opt0_hypPE"], counter, slc_opt0_hypPE.at(index));
               FillElement(vars[prefix + "_crumbs_score"], counter, slc_crumbs_score.at(index));
+              FillElement(vars[prefix + "_n_pfps"], counter, slc_n_pfps.at(index));
+              FillElement(vars[prefix + "_n_razzled_electrons"], counter, slc_n_razzled_electrons.at(index));
+              FillElement(vars[prefix + "_n_razzled_muons"], counter, slc_n_razzled_muons.at(index));
+              FillElement(vars[prefix + "_n_razzled_photons"], counter, slc_n_razzled_photons.at(index));
+              FillElement(vars[prefix + "_n_razzled_pions"], counter, slc_n_razzled_pions.at(index));
+              FillElement(vars[prefix + "_n_razzled_protons"], counter, slc_n_razzled_protons.at(index));
 
               const bool good_opt0 = slc_opt0_measPE.at(index) > 0 && slc_opt0_hypPE.at(index) > 0;
               FillElement(vars[prefix + "_good_opt0"], counter, good_opt0);
