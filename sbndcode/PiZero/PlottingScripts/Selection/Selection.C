@@ -1,63 +1,37 @@
 #include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "LatexHeaders.h"
-
-const std::vector<Cut> categories = {
-  { "Signal", "slc_true_event_type==0 && slc_comp>.5", "Signal (NC #pi^{0})", kMagenta+2 },
-  { "NC", "slc_true_event_type==1", "Other NC", kOrange+2 },
-  { "CCNuMu", "slc_true_event_type==2", "CC #nu_{#mu}", kGreen+2 },
-  { "CCNuE", "slc_true_event_type==3", "CC #nu_{e}", kCyan+2 },
-  { "Dirt", "slc_true_event_type==4", "Dirt", kOrange+3 },
-  { "NonFVNu", "slc_true_event_type==5", "Non-FV #nu", kGray+2 },
-  { "Cosmic", "slc_true_event_type==6", "Cosmic", kRed+1 },
-  { "BadRecoSignal", "slc_true_event_type==0 && slc_comp<=.5", "Bad Reco Signal", kBlack }
-};
-
-std::vector<Cut> cuts = {
-  { "no_cut", "", "No Cut" },
-  { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },
-  { "fv", "slc_is_fv", "FV" },
-  { "crumbs", "slc_crumbs_score>-0.025", "CRUMBS Cut" },
-  { "no_dazzle_muons", "slc_n_dazzle_muons_cut_based==0", "No Dazzle Muons" },
-  { "has_two_shws", "slc_n_shws>1", "Has Two Showers" },
-  { "has_two_razzle_photons", "slc_n_razzle_photons>1", "Has Two Razzle Photons" },
-};
-
-std::vector<Plot> plots = {
-  { "slc_is_clear_cosmic", "slc_is_clear_cosmic", ";Is Clear Cosmic?;Slices",
-    2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
-  { "slc_is_fv", "slc_is_fv", ";IsFV?;Slice",
-    2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
-  { "slc_crumbs_score", "slc_crumbs_score", ";CRUMBS Score;Slices",
-    42, -1.5, .6 },
-  { "slc_crumbs_nc_score", "slc_crumbs_nc_score", ";CRUMBS NC Score;Slices",
-    42, -1.5, .6 },
-  { "slc_crumbs_ccnue_score", "slc_crumbs_ccnue_score", ";CRUMBS CC#nu_{e} Score;Slices",
-    42, -1.5, .6 },
-  { "slc_n_dazzle_muons_cut_based", "slc_n_dazzle_muons_cut_based", ";N Dazzle Muons;Slices",
-    5, -0.5, 4.5 },
-  { "slc_n_shws", "slc_n_shws", ";N Showers;Slices",
-    5, -0.5, 4.5 },
-  { "slc_n_razzle_photons", "slc_n_razzle_photons", ";N Razzle Photons;Slices",
-    5, -0.5, 4.5 },
-};
+#include "Cuts.h"
+#include "Categories.h"
+#include "Plots.h"
 
 const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
 const double goalSpills  = goalPOT / potPerSpill;
 
+void Selection(const TString saveDirExt = "tmp", std::vector<Cut> &cuts = razzled_cuts,
+               const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots);
+
 double GetPOT(TChain *subruns);
 int GetGenEvents(TChain *subruns);
 
 template<class T>
-void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples);
+void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, std::vector<Cut> &cuts,
+                     const std::vector<Cut> &categories);
 
-void Selection(const TString saveDirExt = "tmp")
+void RunMultiSelection()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroA/selection/" + saveDirExt;
+  Selection("razzled_muons_razzle_photons_cuts", razzled_muons_razzle_photons_cuts);
+  Selection("razzled_cuts", razzled_cuts);
+}
+
+void Selection(const TString saveDirExt, std::vector<Cut> &cuts, const std::vector<Cut> &categories,
+               std::vector<Plot> &plots)
+{
+  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv3/selection/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_rockbox.root";
-  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root";
+  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv3/NCPiZeroAv3_rockbox.root";
+  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv3/NCPiZeroAv3_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -88,7 +62,7 @@ void Selection(const TString saveDirExt = "tmp")
                                           { "intime", intimeEvents, intimeScaling }
   };
 
-  ProduceCutTable(saveDir, samples);
+  ProduceCutTable(saveDir, samples, cuts, categories);
 
   TCut currentCut = "";
 
@@ -150,7 +124,8 @@ int GetGenEvents(TChain *subruns)
 }
 
 template<class T>
-void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples)
+void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, std::vector<Cut> &cuts,
+                     const std::vector<Cut> &categories)
 {
   ofstream texFile;
   texFile.open(saveDir + "/cut_table.tex");
