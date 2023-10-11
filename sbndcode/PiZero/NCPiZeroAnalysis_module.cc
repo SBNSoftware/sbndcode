@@ -189,6 +189,8 @@ private:
     { "nu_en_dep", new InhVecVar<float>("nu_en_dep") },
     { "nu_pdg", new InhVecVar<int>("nu_pdg") },
     { "nu_ccnc", new InhVecVar<int>("nu_ccnc") },
+    { "nu_av", new InhVecVar<bool>("nu_av") },
+    { "nu_fv", new InhVecVar<bool>("nu_fv") },
     { "nu_mode", new InhVecVar<int>("nu_mode") },
     { "nu_int_type", new InhVecVar<int>("nu_int_type") },
     { "nu_n_protons", new InhVecVar<int>("nu_n_protons") },
@@ -241,6 +243,8 @@ private:
     { "slc_true_en_dep", new InhVecVar<float>("slc_true_en_dep") },
     { "slc_true_pdg", new InhVecVar<int>("slc_true_pdg") },
     { "slc_true_ccnc", new InhVecVar<int>("slc_true_ccnc") },
+    { "slc_true_av", new InhVecVar<bool>("slc_true_av") },
+    { "slc_true_fv", new InhVecVar<bool>("slc_true_fv") },
     { "slc_true_mode", new InhVecVar<int>("slc_true_mode") },
     { "slc_true_int_type", new InhVecVar<int>("slc_true_int_type") },
     { "slc_true_n_protons", new InhVecVar<int>("slc_true_n_protons") },
@@ -685,13 +689,15 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
           switch(abs(mcp->PdgCode()))
             {
             case 2212:
-              ++protons;
+              if(mcp->P() > 300)
+                ++protons;
               break;
             case 2112:
               ++neutrons;
               break;
             case 211:
-              ++charged_pions;
+              if(mcp->P() > 100)
+                ++charged_pions;
               break;
             case 111:
               ++neutral_pions;
@@ -739,6 +745,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
   FillElement(vars[prefix + "_en_dep"], counter, trueEnDep);
   FillElement(vars[prefix + "_pdg"], counter, nu.PdgCode());
   FillElement(vars[prefix + "_ccnc"], counter, mcn.CCNC());
+  FillElement(vars[prefix + "_av"], counter, av);
+  FillElement(vars[prefix + "_fv"], counter, fv);
   FillElement(vars[prefix + "_mode"], counter, mcn.Mode());
   FillElement(vars[prefix + "_int_type"], counter, mcn.InteractionType());
   FillElement(vars[prefix + "_n_protons"], counter, protons);
@@ -773,7 +781,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
   art::FindManyP<recob::PFParticle> slicesToPFPs(sliceHandle, e, fPFParticleModuleLabel);
   art::FindOneP<recob::Vertex>      pfpToVertices(pfpHandle, e, fVertexModuleLabel);
   art::FindOneP<sbn::CRUMBSResult>  slicesToCRUMBS(sliceHandle, e, fCRUMBSModuleLabel);
-  art::FindManyP<sbn::OpT0Finder>  slicesToOpT0(sliceHandle, e, fOpT0ModuleLabel);
+  art::FindManyP<sbn::OpT0Finder>   slicesToOpT0(sliceHandle, e, fOpT0ModuleLabel);
 
   for (auto&& [slcCounter, slc] : enumerate(sliceVec))
     {
@@ -1265,7 +1273,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::P
       mcTruthHitMap[mct] += nhits;
     }
 
-  int maxHits  = def_int;
+  int maxHits = def_int;
   art::Ptr<simb::MCTruth> bestMCT = art::Ptr<simb::MCTruth>();
 
   for(auto const& [mct, nhits] : mcTruthHitMap)
@@ -1283,8 +1291,12 @@ void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::P
   FillElement(slcVars["slc_comp"], slcCounter, comp);
   FillElement(slcVars["slc_pur"], slcCounter, pur);
 
-  if(bestMCT.isNonnull())
+  if(fBeamOff)
+    FillElement(slcVars["slc_true_event_type"], slcCounter, (int) kCosmic);
+  else if(bestMCT.isNonnull())
     AnalyseMCTruth(e, slcVars, bestMCT, slcCounter, "slc_true");
+  else
+    FillElement(slcVars["slc_true_event_type"], slcCounter, (int) kFailedTruthMatch);
 }
 
 void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
