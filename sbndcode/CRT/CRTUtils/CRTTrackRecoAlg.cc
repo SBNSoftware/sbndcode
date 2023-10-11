@@ -169,7 +169,7 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTTrackRecoAlg::Aver
         first = false;
       }
       // If distance from average < limit then add to average
-      std::cout<<"(pos-middle).Mag(): "<<(pos-middle).Mag()<<" fAverageHitDistance: "<<fAverageHitDistance<<std::endl;
+//std::cout<<"(pos-middle).Mag(): "<<(pos-middle).Mag()<<" fAverageHitDistance: "<<fAverageHitDistance<<std::endl;
       if((pos-middle).Mag() < fAverageHitDistance){
         aveHits.push_back(hits[i]);
       }
@@ -268,12 +268,10 @@ sbn::crt::CRTHit CRTTrackRecoAlg::DoAverage(std::vector<art::Ptr<sbn::crt::CRTHi
 // Function to create tracks from tzero hit collections
 std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::CreateTracks(std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> hits)
 {
-  std::cout<<"Calling CreateTracks function. "<<std::endl;
   std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> returnTracks;
 
   std::vector<std::vector<size_t>> trackCandidates;
   // Loop over all hits
-  std::cout<<"hits.size(): "<<hits.size()<<std::endl;
   for(size_t i = 0; i < hits.size(); i++){
 
     // Loop over all unique pairs

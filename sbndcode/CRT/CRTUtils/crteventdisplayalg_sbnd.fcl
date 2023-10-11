@@ -6,38 +6,38 @@ BEGIN_PROLOG
 crteventdisplayalg_sbnd:
 {
     SimLabel:         "largeant"
-    FEBDataLabel:     "crtsim"
-    SimDepositsLabel: "crt" #genericcrt 
+    AuxDetIDEsLabel:  "genericcrt" 
+    AuxDetHitsLabel:  "largeant;LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN" 
     CRTHitLabel:      "crthit"
     CRTTrackLabel:    "crttrack"
-    ClockSpeedCRT:    @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
+    #ClockSpeedCRT:    @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
 
     DrawTaggers:          true
-    DrawModules:          false
-    DrawFEBs:             false
-    DrawStrips:           false
-    DrawFEBData:          false
-    DrawCrtHits:          false
-    DrawCrtTracks:        false
-    DrawSimDeposits:      false
+    DrawModules:          true
+    DrawFEBs:             true
+    DrawStrips:           true
+    DrawCrtHits:          true
+    DrawCrtTracks:        true
+    DrawAuxDetHits:       false
+    DrawAuxDetIDEs:       true
     DrawIncompleteTracks: false
-    DrawTrueTracks:       false
+    DrawInvisibleTracks:  false
+    DrawTrueTracks:       true
 
     TaggerColour:      1
-    FEBEndColour:      46
+    FEBEndColour:      16
     StripColour:       16
-
-    FEBDataColour:     4
     CrtHitColour:      2
     CrtTrackColour:    2
     TrueTrackColour:   8
-    SimDepositsColour: 8
+    AuxDetIDEsColour:  8
+    AuxDetHitsColour:  4
 
     UseTrueID:        false
     TrueID:           341
 
-    Print:            true
-
+    Print:                 true
+    VolumeSizeOffset:      300.
     LineWidth:             2.
     IncompleteTrackLength: 500.
     MinTime:               0. #-1276.

@@ -27,6 +27,7 @@ namespace sbnd{
     std::map<std::string, std::vector<std::vector<CRTStripHit>>> stripHits;
     // Iterate through each FEBData
     int count=0;
+std::cout<<"diff: FEBdataVec.size(): "<<FEBdataVec.size()<<std::endl;
     for(unsigned feb_i = 0; feb_i < FEBdataVec.size(); ++feb_i)
       {
         art::Ptr<sbnd::crt::FEBData> FEBdata = FEBdataVec.at(feb_i);
@@ -62,6 +63,7 @@ namespace sbnd{
             // Keep hit if both SiPMs above threshold
             if(adc1 > fADCThreshold && adc2 > fADCThreshold)
               {
+std::cout<<"diff: adc_i: "<<adc_i<<", adc1: "<<adc1<<", adc2: "<<adc2<<", fADCThreshold: "<<fADCThreshold<<"; t1: "<<t1<<std::endl;
                 // Access width of strip from the geometry algorithm
                 // === TO-DO === //
                 // AMEND THE CODE AND IMPROVE CALCULATION
@@ -75,6 +77,7 @@ namespace sbnd{
               }
           }
       }
+std::cout<<"diff: strip hits number: "<<count<<std::endl;
     return stripHits;
   }
 
@@ -122,7 +125,7 @@ namespace sbnd{
   std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> CRTHitRecoAlg::ProduceCRTHitCandidates(const std::string &tagger, const std::vector<CRTStripHit> &hitsOrien0, const std::vector<CRTStripHit> &hitsOrien1)
   {
     std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> candidates;
-
+std::cout<<"diff: hitsOrien0.size(): "<<hitsOrien0.size()<<"; hitsOrien1.size():"<<hitsOrien1.size()<<std::endl;
     for(unsigned i = 0; i < hitsOrien0.size(); ++i)
       {
         const CRTStripHit hit0   = hitsOrien0[i];
@@ -164,8 +167,13 @@ namespace sbnd{
             uint32_t t0, t1;
             uint32_t diff;
             CorrectTimings(pos, hit0, hit1, pe0, pe1, t0, t1, diff);
-          
+
+std::cout<<"diff: "<<diff<<"; fHitCoincidenceRequirement: "<<fHitCoincidenceRequirement<< "; at position: " << pos.X() << ", "<< pos.Y() << ", " << pos.Z() << "cm\n"<<std::endl;
+
             if(diff > fHitCoincidenceRequirement) continue;
+
+std::cout<<"after selection diff: "<<diff<<"; fHitCoincidenceRequirement: "<<fHitCoincidenceRequirement<< "; at position: " << pos.X() << ", "<< pos.Y() << ", " << pos.Z() << "cm\n"<<std::endl;
+
             //if(abs((int)hit0.s - (int)hit1.s) > 1) continue;
             const uint64_t unixs = std::min(hit0.s, hit1.s);
             sbn::crt::CRTHit crtHit({(uint8_t)hit0.febdataindex, (uint8_t)hit1.febdataindex},
@@ -213,13 +221,11 @@ namespace sbnd{
                                  std::max(hit0pos[4], hit1pos[4]),
                                  std::min(hit0pos[5], hit1pos[5])});
     
-std::cout<<std::endl<<"Inside FindOverlap function."<<std::endl;
-
+/*std::cout<<std::endl<<"Inside FindOverlap function."<<std::endl;
 std::cout<<"detla_t1: "<<((hit0.t1 >= hit1.t1) ? hit0.t1 - hit1.t1 : hit1.t1 - hit0.t1)<<", delta_t0: "<<((hit0.t0 >= hit1.t0) ? hit0.t0 - hit1.t0 : hit1.t0 - hit0.t0)<<std::endl;
-
 std::cout<<"hit0pos[0]: "<<hit0pos[0]<<", hit0pos[1]: "<<hit0pos[1]<<", hit0pos[2]: "<<hit0pos[2]<<", hit0pos[3]: "<<hit0pos[3]<<", hit0pos[4]: "<<hit0pos[4]<<", hit0pos[5]: "<<hit0pos[5]<<", hit0pos[6]: "<<hit0pos[6]<<std::endl;
 std::cout<<"hit1pos[0]: "<<hit1pos[0]<<", hit1pos[1]: "<<hit1pos[1]<<", hit1pos[2]: "<<hit1pos[2]<<", hit1pos[3]: "<<hit1pos[3]<<", hit1pos[4]: "<<hit1pos[4]<<", hit1pos[5]: "<<hit1pos[5]<<", hit1pos[6]: "<<hit1pos[6]<<std::endl;
-std::cout<<"End of FindOverlap function."<<std::endl<<std::endl;
+std::cout<<"End of FindOverlap function."<<std::endl<<std::endl;*/
 
     return overlap;
   }
@@ -284,8 +290,12 @@ std::cout<<"End of FindOverlap function."<<std::endl<<std::endl;
 
     t0 = (hit0.t0 - corr0 + hit1.t0 - corr1) / 2.;
     t1 = (hit0.t1 - corr0 + hit1.t1 - corr1) / 2.;
-    
-    diff = ((hit0.t1 >= hit1.t1) ? hit0.t1 - hit1.t1 : hit1.t1 - hit0.t1);
+
+    uint32_t diff1 = (hit0.t1 >= hit1.t1) ? hit0.t1 - hit1.t1 : hit1.t1 - hit0.t1;
+
+    diff = (((hit0.t1 - corr0) >= (hit1.t1 - corr1)) ? (hit0.t1 - corr0)-(hit1.t1 - corr1) : (hit1.t1 - corr1)-(hit0.t1 - corr0));
+
+    std::cout<<"diff: Before correction: "<<diff1<<"; After correction: "<<diff<<std::endl;
   }
 
   uint32_t CRTHitRecoAlg::TimingCorrectionOffset(const double &dist, const double &pe)

@@ -9,12 +9,10 @@
 #include "larg4_sbnd.fcl"
 #include "config_genericCRT.fcl"
 #include "crtsimmodules_sbnd.fcl"
-#include "crtslimmer_sbnd.fcl"
+# #include "crtslimmer_sbnd.fcl"
 #include "crthitproducer_sbnd.fcl"
 #include "crttrackproducer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-#include "config_crt_analyzer.fcl"
-
 
 
 process_name: FullCRTSim
@@ -22,8 +20,7 @@ process_name: FullCRTSim
 
 services:
 {
-  TFileService: { fileName: "crtana_sbnd.root" }
-  # TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+  TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   @table::sbnd_simulation_services
 }
@@ -55,19 +52,14 @@ physics:
     crtsim: @local::sbnd_crtsim
 
     # CRT Slimmer
-    crt: @local::sbnd_crtslimmer
+    #crt: @local::sbnd_crtslimmer
 
     # CRT Hits
     crthit: @local::standard_crthitproducer
 
     # CRT Tracks
     crttrack: @local::standard_crttrackproducer
-  }
 
-  analyzers:
-  {
-    # Analysis
-    crtana: @local::sbnd_crtana
   }
 
   # All producers and filters modules for this path, order matters
@@ -76,12 +68,10 @@ physics:
             , largeant
             , genericcrt
             , crtsim
-            , crt
+            #, crt
             , crthit
             , crttrack
           ]
-
-  ana: [ ]
 
   # The output stream, there could be more than one if using filters
   stream1: [ out1 ]
@@ -90,7 +80,7 @@ physics:
   trigger_paths: [ simulate ]
 
   # Contains the paths that do not modify the art::Event
-  end_paths: [ ana, stream1 ]
+  end_paths: [ stream1 ]
 }
 
 

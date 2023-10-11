@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+sbnd_crtana:
+{
+    module_type:    "CRTAnalysis" 
+    POTLabel:       "generator"
+    CRTBackTracker: @local::standard_crtbacktracker
+    SaveMCParticle: false
+}
+
+END_PROLOG

@@ -57,9 +57,6 @@ public:
   virtual void beginSubRun(art::SubRun const& sr) override;
 
 private:
-
-  art::ServiceHandle<cheat::ParticleInventoryService> _particleInventory;
-
   sbnd::CRTBackTracker _crt_back_tracker;
 
   std::string _feb_data_producer;
@@ -75,6 +72,7 @@ private:
 
   bool _debug;
   bool _keep_mcp_from_adh; ///< Whether or not to keep only MCParticles that produce energy deposit on the CRT
+  bool _save_mcpartile; ///< Whether or not to keep only MCParticles that produce energy deposit on the CRT
   bool _data_mode;
 
   TTree* _tree;
@@ -113,10 +111,9 @@ private:
 
   float _mct_darkNeutrino_e;
   float _weight; //the weight which store as the vertex of dark neutrino.
-
+  
   std::vector<int> _mcp_pdg; ///< G4 MCParticle PDG
   std::vector<double> _mcp_e; ///< G4 MCParticle Energy
-  //std::vector<std::vector<double>> _mcp_e_vec; ///< G4 MCParticle Energy per trajectory point.
   std::vector<double> _mcp_px; ///< G4 MCParticle Momentum along X
   std::vector<double> _mcp_py; ///< G4 MCParticle Momentum along Y
   std::vector<double> _mcp_pz; ///< G4 MCParticle Momentum along Z
@@ -177,7 +174,15 @@ private:
   std::vector<std::vector<uint16_t> > _chit_sipm_corr_adc; ///< The 4 contributing ADC values to this CRTHit
   std::vector<std::vector<uint16_t> > _chit_sipm_channel_id; ///< The IDs of the four SiPMs that were used to make this CRTHit
   std::vector<std::vector<uint16_t> > _chit_sipm_feb_mac5; ///< The IDs of the two FEBs that were used in the making of this hit.
+  // truth info for crt_hit
+  std::vector<int> _chit_backtrack_pdg; ///< CRT hit, truth information of the pdg code 
+  std::vector<double> _chit_backtrack_energy; ///< CRT hit, truth information of the particle energy
+  std::vector<double> _chit_backtrack_deposited_energy; ///< CRT hit, truth information of the deposited energy for both upstream and downstream
+  std::vector<double> _chit_backtrack_purity; ///< CRT hit, truth information of selection purity
+  std::vector<double> _chit_backtrack_trackID; ///< CRT hit, truth information of selection purity
 
+
+  // crt tracks.
   std::vector<double> _ct_time; ///< CRT track time
   std::vector<double> _ct_pes; ///< CRT track PEs
   std::vector<double> _ct_length; ///< CRT track length
@@ -208,10 +213,10 @@ private:
   std::vector<std::vector<uint16_t> > _ct_hit2_sipm_adc; ///< CRT track, 4 ADC values from hit 2 before corrections are made (but with pedestals subtracted)
   std::vector<std::vector<uint16_t> > _ct_hit2_sipm_corr_adc; ///< CRT track, 4 ADC values from hit 2
   // truth info for crt_track
-  std::vector<int> _ct_pdg; ///< CRT track, truth information of the pdg code 
-  std::vector<double> _ct_energy; ///< CRT track, truth information of the particle energy
-  std::vector<double> _ct_deposited_energy; ///< CRT track, truth information of the deposited energy for both upstream and downstream
-  std::vector<double> _ct_purity; ///< CRT track, truth information of selection purity
+  std::vector<int> _ct_backtrack_pdg; ///< CRT track, truth information of the pdg code 
+  std::vector<double> _ct_backtrack_energy; ///< CRT track, truth information of the particle energy
+  std::vector<double> _ct_backtrack_deposited_energy; ///< CRT track, truth information of the deposited energy for both upstream and downstream
+  std::vector<double> _ct_backtrack_purity; ///< CRT track, truth information of selection purity
 
   std::vector<uint16_t> _feb_mac5; ///< FEBData Mac5 ID
   std::vector<uint16_t> _feb_flags; ///< FEBData Flags
@@ -262,12 +267,12 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _mctruth_label     = p.get<std::string>("MCTruthLabel", "generator");
   _g4_label          = p.get<std::string>("G4Label", "largeant");
   _auxdethit_label   = p.get<std::string>("AuxDetHitLabel", "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN");
-  // _crtdata_label  = p.get<std::string>("CRTDataLabel", "crt");
   _febdata_label     = p.get<std::string>("FEBDataLabel", "crtsim");
   _crthit_label      = p.get<std::string>("CRTHitLabel", "crthit");
   _crttrack_label    = p.get<std::string>("CRTTrackLabel", "crttrack");
   _debug             = p.get<bool>("Debug", false);
   _keep_mcp_from_adh = p.get<bool>("KeepMCPFromADH", false);
+  _save_mcpartile    = p.get<bool>("SaveMCParticle", false);
   _data_mode         = p.get<bool>("DataMode", false);
   _pot_label         = p.get<std::string>("POTLabel", "generator");
   _crt_back_tracker  = p.get<fhicl::ParameterSet>("CRTBackTracker", fhicl::ParameterSet());
@@ -314,22 +319,23 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     _tree->Branch("mct_darkNeutrino_e", &_mct_darkNeutrino_e, "mct_darkNeutrino_e/F");
     _tree->Branch("weight", &_weight, "weight/F");
 
-    // MCParticle truth info. 
-    _tree->Branch("mcp_pdg", "std::vector<int>", &_mcp_pdg);
-    _tree->Branch("mcp_e", "std::vector<double>", &_mcp_e);
-    //_tree->Branch("mcp_e_vec", "std::vector<std::vector<double>>", &_mcp_e_vec);
-    _tree->Branch("mcp_px", "std::vector<double>", &_mcp_px);
-    _tree->Branch("mcp_py", "std::vector<double>", &_mcp_py);
-    _tree->Branch("mcp_pz", "std::vector<double>", &_mcp_pz);
-    _tree->Branch("mcp_startx", "std::vector<double>", &_mcp_startx);
-    _tree->Branch("mcp_starty", "std::vector<double>", &_mcp_starty);
-    _tree->Branch("mcp_startz", "std::vector<double>", &_mcp_startz);
-    _tree->Branch("mcp_endx", "std::vector<double>", &_mcp_endx);
-    _tree->Branch("mcp_endy", "std::vector<double>", &_mcp_endy);
-    _tree->Branch("mcp_endz", "std::vector<double>", &_mcp_endz);
-    _tree->Branch("mcp_isprimary", "std::vector<int>", &_mcp_isprimary);
-    _tree->Branch("mcp_trackid", "std::vector<int>", &_mcp_trackid);
-    _tree->Branch("mcp_makes_adh", "std::vector<int>", &_mcp_makes_adh);
+    // MCParticle truth info. Jiaoyang: temporily disable mcp info as in it makes file too huge. 
+    if (_save_mcpartile){
+      _tree->Branch("mcp_pdg", "std::vector<int>", &_mcp_pdg);
+      _tree->Branch("mcp_e", "std::vector<double>", &_mcp_e);
+      _tree->Branch("mcp_px", "std::vector<double>", &_mcp_px);
+      _tree->Branch("mcp_py", "std::vector<double>", &_mcp_py);
+      _tree->Branch("mcp_pz", "std::vector<double>", &_mcp_pz);
+      _tree->Branch("mcp_startx", "std::vector<double>", &_mcp_startx);
+      _tree->Branch("mcp_starty", "std::vector<double>", &_mcp_starty);
+      _tree->Branch("mcp_startz", "std::vector<double>", &_mcp_startz);
+      _tree->Branch("mcp_endx", "std::vector<double>", &_mcp_endx);
+      _tree->Branch("mcp_endy", "std::vector<double>", &_mcp_endy);
+      _tree->Branch("mcp_endz", "std::vector<double>", &_mcp_endz);
+      _tree->Branch("mcp_isprimary", "std::vector<int>", &_mcp_isprimary);
+      _tree->Branch("mcp_trackid", "std::vector<int>", &_mcp_trackid);
+      _tree->Branch("mcp_makes_adh", "std::vector<int>", &_mcp_makes_adh);
+    }
 
     _tree->Branch("adh_t", "std::vector<double>", &_adh_t);
     _tree->Branch("adh_e", "std::vector<double>", &_adh_e);
@@ -364,6 +370,12 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     _tree->Branch("chit_true_x", "std::vector<float>", &_chit_true_x);
     _tree->Branch("chit_true_y", "std::vector<float>", &_chit_true_y);
     _tree->Branch("chit_true_z", "std::vector<float>", &_chit_true_z);
+
+    _tree->Branch("chit_backtrack_pdg", "std::vector<int>", &_chit_backtrack_pdg);
+    _tree->Branch("chit_backtrack_energy", "std::vector<double>", &_chit_backtrack_energy);
+    _tree->Branch("chit_backtrack_deposited_energy", "std::vector<double>", &_chit_backtrack_deposited_energy);
+    _tree->Branch("chit_backtrack_purity", "std::vector<double>", &_chit_backtrack_purity);
+    _tree->Branch("chit_backtrack_trackID", "std::vector<double>", &_chit_backtrack_trackID);
     // _tree->Branch("chit_true_mcp_trackids", "std::vector<std::vector<int> >", &_chit_true_mcp_trackids);
     // _tree->Branch("chit_true_mcp_pdg", "std::vector<std::vector<int> >", &_chit_true_mcp_pdg);
     // _tree->Branch("chit_true_mcp_e", "std::vector<std::vector<double> >", &_chit_true_mcp_e);
@@ -415,10 +427,10 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("ct_hit2_sipm_corr_adc", "std::vector<std::vector<uint16_t> >", &_ct_hit2_sipm_corr_adc);
   // truth information
   if(!_data_mode){
-    _tree->Branch("ct_pdg", "std::vector<int>", &_ct_pdg);
-    _tree->Branch("ct_energy", "std::vector<double>", &_ct_energy);
-    _tree->Branch("ct_deposited_energy", "std::vector<double>", &_ct_deposited_energy);
-    _tree->Branch("ct_purity", "std::vector<double>", &_ct_purity);
+    _tree->Branch("ct_backtrack_pdg", "std::vector<int>", &_ct_backtrack_pdg);
+    _tree->Branch("ct_backtrack_energy", "std::vector<double>", &_ct_backtrack_energy);
+    _tree->Branch("ct_backtrack_deposited_energy", "std::vector<double>", &_ct_backtrack_deposited_energy);
+    _tree->Branch("ct_backtrack_purity", "std::vector<double>", &_ct_backtrack_purity);
   }
 
   _tree->Branch("feb_mac5", "std::vector<uint16_t>", &_feb_mac5);
@@ -704,78 +716,81 @@ void CRTAnalysis::analyze(art::Event const& e)
     //
     // Fill the MCParticles in the tree
     //
-    size_t n_mcp = 0; // mcp_v.size();
-    // Count mcp that have status code different than zero
-    for (auto mcp : mcp_v) { if (mcp->StatusCode() == 1) n_mcp++; }
-    // If we only keep MCP that make energy deposits in the CRT, count only those
-    if (_keep_mcp_from_adh) { n_mcp = trackids_from_adh.size(); }
-    _mcp_pdg.resize(n_mcp);
-    _mcp_e.resize(n_mcp);
+    if (_save_mcpartile){
+      size_t n_mcp = 0; // mcp_v.size();
+      // Count mcp that have status code different than zero
+      for (auto mcp : mcp_v) { if (mcp->StatusCode() == 1) n_mcp++; }
+      // If we only keep MCP that make energy deposits in the CRT, count only those
+      if (_keep_mcp_from_adh) { n_mcp = trackids_from_adh.size(); }
+      _mcp_pdg.resize(n_mcp);
+      _mcp_e.resize(n_mcp); 
 
-    /*
-    for (auto mcp : mcp_v){ 
-      if (mcp->StatusCode() == 1) 
-      {
-        size_t n_trajectoryPoints = mcp->NumberTrajectoryPoints(); 
-        _mcp_e_vec.resize(n_mcp, std::vector<double>(n_trajectoryPoints)); 
+      /*
+      for (auto mcp : mcp_v){ 
+        if (mcp->StatusCode() == 1) 
+        {
+          size_t n_trajectoryPoints = mcp->NumberTrajectoryPoints(); 
+          _mcp_e_vec.resize(n_mcp, std::vector<double>(n_trajectoryPoints)); 
+        }
+      }*/
+
+      _mcp_px.resize(n_mcp); 
+      _mcp_py.resize(n_mcp);
+      _mcp_pz.resize(n_mcp);
+      _mcp_startx.resize(n_mcp);
+      _mcp_starty.resize(n_mcp);
+      _mcp_startz.resize(n_mcp);
+      _mcp_endx.resize(n_mcp);
+      _mcp_endy.resize(n_mcp);
+      _mcp_endz.resize(n_mcp);
+      _mcp_isprimary.resize(n_mcp);
+      _mcp_trackid.resize(n_mcp);
+      _mcp_makes_adh.resize(n_mcp);
+
+      size_t counter = 0;
+      for (size_t i = 0; i < mcp_v.size(); i++) {
+        auto particle = mcp_v[i];
+        // Exclude particles that are not propagated
+        if (particle->StatusCode() != 1) continue;
+        // Exclude particles that don't make energy deposit in the CRT, if we only keep those
+        if (_keep_mcp_from_adh &&
+            trackids_from_adh.find(particle->TrackId()) == trackids_from_adh.end()) {
+          continue;
+        }
+        // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
+        _mcp_pdg[counter] = particle->PdgCode();
+        _mcp_e[counter] = particle->E();
+
+        //for (size_t j = 0; j < _mcp_e_vec[counter].size(); j++)
+          //_mcp_e_vec[counter].at(j) = particle->E(j);
+
+        _mcp_px[counter] = particle->Px();
+        _mcp_py[counter] = particle->Py();
+        _mcp_pz[counter] = particle->Pz();
+        _mcp_startx[counter] = particle->Vx();
+        _mcp_starty[counter] = particle->Vy();
+        _mcp_startz[counter] = particle->Vz();
+        _mcp_endx[counter] = particle->EndX();
+        _mcp_endy[counter] = particle->EndY();
+        _mcp_endz[counter] = particle->EndZ();
+        _mcp_isprimary[counter] = particle->Process() == "primary";
+        _mcp_trackid[counter] = particle->TrackId();
+        _mcp_makes_adh[counter] = trackids_from_adh.find(particle->TrackId()) != trackids_from_adh.end();
+
+
+        if (_debug) {
+          std::cout << counter << ", " << i << "MCP " << _mcp_pdg[counter] << ", trackID = " << _mcp_trackid[counter]
+                    << ", p = " << particle->P()
+                    << ", (" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
+                    << ", process = "
+                    << particle->Process() << ": start point = ("
+                    << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter]
+                    << ") - start process: " << particle->Process()
+                    << " --- end point = (" 
+                    << _mcp_endx[counter] << ", " << _mcp_endy[counter] << ", " << _mcp_endz[counter] << "); "<< std::endl;
+        }
+        counter++;
       }
-    }*/
-    _mcp_px.resize(n_mcp);
-    _mcp_py.resize(n_mcp);
-    _mcp_pz.resize(n_mcp);
-    _mcp_startx.resize(n_mcp);
-    _mcp_starty.resize(n_mcp);
-    _mcp_startz.resize(n_mcp);
-    _mcp_endx.resize(n_mcp);
-    _mcp_endy.resize(n_mcp);
-    _mcp_endz.resize(n_mcp);
-    _mcp_isprimary.resize(n_mcp);
-    _mcp_trackid.resize(n_mcp);
-    _mcp_makes_adh.resize(n_mcp);
-
-    size_t counter = 0;
-    for (size_t i = 0; i < mcp_v.size(); i++) {
-      auto particle = mcp_v[i];
-      // Exclude particles that are not propagated
-      if (particle->StatusCode() != 1) continue;
-      // Exclude particles that don't make energy deposit in the CRT, if we only keep those
-      if (_keep_mcp_from_adh and
-           trackids_from_adh.find(particle->TrackId()) == trackids_from_adh.end()) {
-        continue;
-      }
-      // if (particle->Process() != "primary" || particle->StatusCode() != 1) continue;
-      _mcp_pdg[counter] = particle->PdgCode();
-      _mcp_e[counter] = particle->E();
-
-      //for (size_t j = 0; j < _mcp_e_vec[counter].size(); j++)
-        //_mcp_e_vec[counter].at(j) = particle->E(j);
-
-      _mcp_px[counter] = particle->Px();
-      _mcp_py[counter] = particle->Py();
-      _mcp_pz[counter] = particle->Pz();
-      _mcp_startx[counter] = particle->Vx();
-      _mcp_starty[counter] = particle->Vy();
-      _mcp_startz[counter] = particle->Vz();
-      _mcp_endx[counter] = particle->EndX();
-      _mcp_endy[counter] = particle->EndY();
-      _mcp_endz[counter] = particle->EndZ();
-      _mcp_isprimary[counter] = particle->Process() == "primary";
-      _mcp_trackid[counter] = particle->TrackId();
-      _mcp_makes_adh[counter] = trackids_from_adh.find(particle->TrackId()) != trackids_from_adh.end();
-
-
-      if (_debug) {
-        std::cout << counter << ", " << i << "MCP " << _mcp_pdg[counter] << ", trackID = " << _mcp_trackid[counter]
-                  << ", p = " << particle->P()
-                  << ", (" << particle->Px() << "," << particle->Py() << "," << particle->Pz() << ")"
-                  << ", process = "
-                  << particle->Process() << ": start point = ("
-                  << _mcp_startx[counter] << ", " << _mcp_starty[counter] << ", " << _mcp_startz[counter]
-                  << ") - start process: " << particle->Process()
-                  << " --- end point = (" 
-                  << _mcp_endx[counter] << ", " << _mcp_endy[counter] << ", " << _mcp_endz[counter] << "); "<< std::endl;
-      }
-      counter++;
     }
   }
 
@@ -826,7 +841,13 @@ void CRTAnalysis::analyze(art::Event const& e)
   _chit_sipm_corr_adc.resize(n_hits);
   _chit_sipm_channel_id.resize(n_hits);
   _chit_sipm_feb_mac5.resize(n_hits);
-
+  if(!_data_mode){
+    _chit_backtrack_pdg.resize(n_hits);
+    _chit_backtrack_energy.resize(n_hits);
+    _chit_backtrack_deposited_energy.resize(n_hits);
+    _chit_backtrack_purity.resize(n_hits);
+    _chit_backtrack_trackID.resize(n_hits);
+  }
   for (size_t i = 0; i < n_hits; i++) {
 
     auto hit = crt_hit_v[i];
@@ -902,6 +923,18 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_true_x[i] /= n_ides;
       _chit_true_y[i] /= n_ides;
       _chit_true_z[i] /= n_ides;
+
+      std::cout<<"This hit "<< i << "; Hit position: [ "<<_chit_true_x[i]<<", "<<_chit_true_y[i]<<", "<<_chit_true_z[i]<<"]. hit timing t0: "<<_chit_true_t[i]<<std::endl;
+      std::cout<<"We are doing back tracker from these hits: "<<std::endl;
+
+      const sbnd::CRTBackTracker::TruthMatchMetrics truthMatch = _crt_back_tracker.TruthMatrixFromTotalEnergy(e, hit);
+
+      std::cout<<"**truth matching for hits** track id: "<<truthMatch.trackid <<", PDG code: "<<truthMatch.pdg<<", energy: "<<truthMatch.particle_energy <<", total deposited energy: "<<truthMatch.depEnergy_total<<", selection purity: "<<truthMatch.purity<<std::endl;
+      _chit_backtrack_pdg[i]              = truthMatch.pdg;
+      _chit_backtrack_energy[i]           = truthMatch.particle_energy;
+      _chit_backtrack_deposited_energy[i] = truthMatch.depEnergy_total;
+      _chit_backtrack_purity[i]           = truthMatch.purity;
+      _chit_backtrack_trackID[i]          = truthMatch.trackid;
     }
 
     if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_t1[i] << ", h2 time " << _chit_h2_t1[i] << ", hit time " << _chit_t1[i] << std::endl;
@@ -943,10 +976,10 @@ void CRTAnalysis::analyze(art::Event const& e)
   _ct_hit2_sipm_corr_adc.resize(n_tracks);
 
   if(!_data_mode){
-    _ct_pdg.resize(n_tracks);
-    _ct_energy.resize(n_tracks);
-    _ct_deposited_energy.resize(n_tracks);
-    _ct_purity.resize(n_tracks);
+    _ct_backtrack_pdg.resize(n_tracks);
+    _ct_backtrack_energy.resize(n_tracks);
+    _ct_backtrack_deposited_energy.resize(n_tracks);
+    _ct_backtrack_purity.resize(n_tracks);
   }
 
 
@@ -1049,15 +1082,13 @@ void CRTAnalysis::analyze(art::Event const& e)
       const sbnd::CRTBackTracker::TruthMatchMetrics truthMatch = _crt_back_tracker.TruthMatrixFromTotalEnergy(e, track);
 
       std::cout<<"**truth matching** track id: "<<truthMatch.trackid <<", PDG code: "<<truthMatch.pdg<<", energy: "<<truthMatch.particle_energy <<", total deposited energy: "<<truthMatch.depEnergy_total<<", selection purity: "<<truthMatch.purity<<std::endl;
-      _ct_pdg[i]              = truthMatch.pdg;
-      _ct_energy[i]           = truthMatch.particle_energy;
-      _ct_deposited_energy[i] = truthMatch.depEnergy_total;
-      _ct_purity[i]           = truthMatch.purity;
+      _ct_backtrack_pdg[i]              = truthMatch.pdg;
+      _ct_backtrack_energy[i]           = truthMatch.particle_energy;
+      _ct_backtrack_deposited_energy[i] = truthMatch.depEnergy_total;
+      _ct_backtrack_purity[i]           = truthMatch.purity;
       
     }
   }
-
-
 
 
 

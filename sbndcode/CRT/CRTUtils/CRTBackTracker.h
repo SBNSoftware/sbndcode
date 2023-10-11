@@ -37,7 +37,8 @@
 #include "larsim/MCCheater/ParticleInventoryService.h"
 
 // lardataobj
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
+#include "lardataobj/Simulation/AuxDetSimChannel.h" 
+#include "lardataobj/Simulation/ParticleAncestryMap.h"
 // c++
 #include <vector>
 
@@ -65,6 +66,9 @@ namespace sbnd{
       };
       fhicl::Atom<bool> RollupUnsavedIds {
         Name("RollupUnsavedIds")
+      };
+      fhicl::Atom<art::InputTag> SimModuleLabel {
+        Name("SimModuleLabel")
       };
 
     };
@@ -139,11 +143,18 @@ namespace sbnd{
     // Get the true particle ID that contributed the most energy to the CRT track
     int TrueIdFromTotalEnergy(const art::Event& event, const sbn::crt::CRTTrack& track);
 
-    TruthMatchMetrics TruthMatrixFromTotalEnergy(const art::Event& event, const art::Ptr<sbn::crt::CRTTrack> &track);//const sbn::crt::CRTTrack& track);
     // Faster function - needs Initialize() to be called first
     int TrueIdFromTrackId(const art::Event& event, int track_i);
 
+
+
+    // new functions: 
+    TruthMatchMetrics TruthMatrixFromTotalEnergy(const art::Event& event, const art::Ptr<sbn::crt::CRTTrack> &crtTrack);//const sbn::crt::CRTTrack& track);
+    TruthMatchMetrics TruthMatrixFromTotalEnergy(const art::Event& event, const art::Ptr<sbn::crt::CRTHit> &crtHit);//const sbn::crt::CRTTrack& track);
     void TrueParticlePDGEnergyTime(const int trackID, int &pdg, double &energy, double &time);
+    int  RollUpID(const int &id);
+
+    
   private:
 
     art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
@@ -153,12 +164,15 @@ namespace sbnd{
     art::InputTag fCRTHitLabel;
     art::InputTag fCRTTrackLabel;
 
+    art::InputTag fSimModuleLabel;
+
     bool fRollupUnsavedIds;
 
     std::map<int, std::map<int, double>> fCRTDataTrueIds;
     std::map<int, std::map<int, double>> fFEBDataTrueIds;
     std::map<int, std::map<int, double>> fHitTrueIds;
     std::map<int, std::map<int, double>> fTrackTrueIds;
+    std::map<int, int>                   fTrackIDMotherMap;
 
 
   };

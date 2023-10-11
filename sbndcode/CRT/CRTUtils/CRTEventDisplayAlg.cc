@@ -22,29 +22,29 @@ CRTEventDisplayAlg::~CRTEventDisplayAlg(){
 void CRTEventDisplayAlg::reconfigure(const Config& config){
 
   fSimLabel         = config.SimLabel();
-  fFEBDataLabel     = config.FEBDataLabel();
-  fSimDepositsLabel = config.SimDepositsLabel();
+  fAuxDetIDEsLabel  = config.AuxDetIDEsLabel();
+  fAuxDetHitsLabel  = config.AuxDetHitsLabel();
   fCRTHitLabel      = config.CRTHitLabel();
   fCRTTrackLabel    = config.CRTTrackLabel();
-  fClockSpeedCRT    = config.ClockSpeedCRT();
 
   fDrawTaggers      = config.DrawTaggers();
   fDrawModules      = config.DrawModules();
   fDrawFEBs         = config.DrawFEBs();
   fDrawStrips       = config.DrawStrips();
-  fDrawFEBData      = config.DrawFEBData();
-  fDrawSimDeposits  = config.DrawSimDeposits();
+  fDrawAuxDetIDEs   = config.DrawAuxDetIDEs();
+  fDrawAuxDetHits  = config.DrawAuxDetHits();
   fDrawCrtHits      = config.DrawCrtHits();
   fDrawCrtTracks    = config.DrawCrtTracks();
   fDrawTrueTracks   = config.DrawTrueTracks();
   
   fDrawIncompleteTracks = config.DrawIncompleteTracks();
+  fDrawInvisibleTracks  = config.DrawInvisibleTracks();
 
   fTaggerColour      = config.TaggerColour();
-  fFEBEndColour      = config.FEBEndColour();
   fStripColour       = config.StripColour();
-  fFEBDataColour     = config.FEBDataColour();
-  fSimDepositsColour = config.SimDepositsColour();
+  fFEBEndColour      = config.FEBEndColour();
+  fAuxDetHitsColour  = config.AuxDetHitsColour();
+  fAuxDetIDEsColour  = config.AuxDetIDEsColour();
   fCrtHitColour      = config.CrtHitColour();
   fCrtTrackColour    = config.CrtTrackColour();
   fTrueTrackColour   = config.TrueTrackColour();
@@ -55,6 +55,7 @@ void CRTEventDisplayAlg::reconfigure(const Config& config){
   fPrint = config.Print();
 
   fLineWidth             = config.LineWidth();
+  fVolumeSizeOffset      = config.VolumeSizeOffset();
   fIncompleteTrackLength = config.IncompleteTrackLength();
   fMinTime               = config.MinTime();
   fMaxTime               = config.MaxTime();
@@ -62,7 +63,6 @@ void CRTEventDisplayAlg::reconfigure(const Config& config){
   fCrtBackTrack          = config.CrtBackTrack();
 
   return;
-
 }
  
 void CRTEventDisplayAlg::SetDrawTaggers(bool tf){
@@ -74,11 +74,11 @@ void CRTEventDisplayAlg::SetDrawFEBs(bool tf){
 void CRTEventDisplayAlg::SetDrawStrips(bool tf){
   fDrawStrips = tf;
 }
-void CRTEventDisplayAlg::SetDrawSimDeposits(bool tf){
-  fDrawSimDeposits = tf;
+void CRTEventDisplayAlg::SetDrawAuxDetHits(bool tf){
+  fDrawAuxDetHits = tf;
 }
-void CRTEventDisplayAlg::SetDrawFEBData(bool tf){
-  fDrawFEBData = tf;
+void CRTEventDisplayAlg::SetDrawAuxDetIDEs(bool tf){
+  fDrawAuxDetIDEs = tf;
 }
 void CRTEventDisplayAlg::SetDrawCrtHits(bool tf){
   fDrawCrtHits = tf;
@@ -141,6 +141,32 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
   // Create a canvas 
   TCanvas *c1 = new TCanvas("c1","",700,700);
 
+  // Draw the coordinate system as a reference. 
+  std::vector<double> crtLims = fCrtGeo.CRTLimits();
+  TPolyLine3D *linex = new TPolyLine3D(2);
+  linex->SetPoint(0, (crtLims[0]+crtLims[3])/2, (crtLims[1]+crtLims[4])/2, (crtLims[2]+crtLims[5])/2);
+  linex->SetPoint(1, (crtLims[0]+crtLims[3])/2+20., (crtLims[1]+crtLims[4])/2, (crtLims[2]+crtLims[5])/2);
+  linex->SetLineColor(15);
+  linex->SetLineStyle(kDashed);
+  linex->SetLineWidth(fLineWidth);
+  linex->Draw();
+
+  TPolyLine3D *liney = new TPolyLine3D(2);
+  liney->SetPoint(0, (crtLims[0]+crtLims[3])/2, (crtLims[1]+crtLims[4])/2, (crtLims[2]+crtLims[5])/2);
+  liney->SetPoint(1, (crtLims[0]+crtLims[3])/2, (crtLims[1]+crtLims[4])/2+20., (crtLims[2]+crtLims[5])/2);
+  liney->SetLineColor(15);
+  liney->SetLineStyle(kDashed);
+  liney->SetLineWidth(fLineWidth);
+  liney->Draw();
+
+  TPolyLine3D *linez = new TPolyLine3D(2);
+  linez->SetPoint(0, (crtLims[0]+crtLims[3])/2, (crtLims[1]+crtLims[4])/2, (crtLims[2]+crtLims[5])/2);
+  linez->SetPoint(1, (crtLims[0]+crtLims[3])/2, (crtLims[1]+crtLims[4])/2, (crtLims[2]+crtLims[5])/2+20.);
+  linez->SetLineColor(15);
+  linez->SetLineStyle(kDashed);
+  linez->SetLineWidth(fLineWidth);
+  linez->Draw();
+
   // Draw the CRT taggers
   if(fDrawTaggers){
     for(auto const &[name, tagger] : fCrtGeo.GetTaggers()){
@@ -195,8 +221,6 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
 
         DrawCube(c1, rminCh0, rmaxCh0, fFEBEndColour);
 
-        
-
       }
     }
   }
@@ -216,14 +240,14 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
     }
   }
 
-  // Draw Energy depositions in the event
-  if(fDrawSimDeposits){
-    //auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetSimChannel>>(fSimDepositsLabel);
-    auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetIDE>>(fSimDepositsLabel);
+  // Draw DrawAuxDetIDEs (detsim) in the event
+  if(fDrawAuxDetIDEs){
+    auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetSimChannel>>(fAuxDetIDEsLabel);
+    //auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetIDE>>(fAuxDetIDEsLabel);
     
-    
-    //for(auto const simDep : *simDepositsHandle){
-      for(auto const ide : *simDepositsHandle){ //simDep.AuxDetIDEs()){
+    for(auto const simDep : *simDepositsHandle){
+      //for(auto const ide : *simDepositsHandle){ //simDep.AuxDetIDEs()){
+      for(auto const ide : simDep.AuxDetIDEs()){
         double x = (ide.entryX + ide.exitX) / 2.;
         double y = (ide.entryY + ide.exitY) / 2.;
         double z = (ide.entryZ + ide.exitZ) / 2.;
@@ -247,11 +271,16 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
                     << ")  +/- (" << ex << ", " << ey << ", " << ez << ") by trackID: " 
                     << ide.trackID << " at t = " << t << std::endl;
 
-        DrawCube(c1, rmin, rmax, fSimDepositsColour);
+        DrawCube(c1, rmin, rmax, fAuxDetIDEsColour);
       }
-    //} 
+    } 
 
-    /*auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetHit>>(fSimDepositsLabel);
+    /**/
+  }
+
+  // Draw the AuxDetHits (from g4) in the event
+  if(fDrawAuxDetHits){
+    auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetHit>>(fAuxDetHitsLabel); 
     for(auto const simDep : *simDepositsHandle){
       double x = (simDep.GetEntryX() + simDep.GetExitX()) / 2.;
       double y = (simDep.GetEntryY() + simDep.GetExitY()) / 2.;
@@ -272,41 +301,7 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
                   << ")  +/- (" << ex << ", " << ey << ", " << ez << ") by trackID: " 
                   << simDep.GetTrackID() << " at t = " << t << std::endl;
 
-      DrawCube(c1, rmin, rmax, fSimDepositsColour);
-    }*/
-  }
-
-  // Draw the FEB data in the event
-  if(fDrawFEBData){
-
-    if(fPrint) std::cout<<std::endl<<"FEB data in event:"<<std::endl;
-
-    auto FEBDataHandle = event.getValidHandle<std::vector<sbnd::crt::FEBData>>(fFEBDataLabel);
-    //detinfo::DetectorClocks const* fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-    //detinfo::ElecClock fTrigClock = fDetectorClocks->TriggerClock();
-    for(auto const& data : (*FEBDataHandle)){
-
-      // Skip if outside specified time window if time window used
-      //fTrigClock.SetTime(data.T0());
-      //double time = fTrigClock.Time();
-      double time = (double)(int)data.Ts0()/fClockSpeedCRT; // [tick -> us]
-      if(!(fMinTime == fMaxTime || (time > fMinTime && time < fMaxTime))) continue;
-
-      // Skip if it doesn't match the true ID if true ID is used
-      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, data);
-      if(fUseTrueID && trueId != fTrueID) continue;
-
-      std::string stripName = fCrtGeo.ChannelToStripName(data.Coinc());
-      double rmin[3] = {fCrtGeo.GetStrip(stripName).minX, 
-                        fCrtGeo.GetStrip(stripName).minY, 
-                        fCrtGeo.GetStrip(stripName).minZ};
-      double rmax[3] = {fCrtGeo.GetStrip(stripName).maxX, 
-                        fCrtGeo.GetStrip(stripName).maxY, 
-                        fCrtGeo.GetStrip(stripName).maxZ};
-      DrawCube(c1, rmin, rmax, fFEBDataColour);
-
-      if(fPrint) std::cout<<"->True ID: "<<trueId<<", channel = "<<data.Coinc()<<", tagger = "
-                          <<fCrtGeo.GetModule(fCrtGeo.GetStrip(stripName).moduleName).taggerName<<", time = "<<time<<""<<std::endl;
+      DrawCube(c1, rmin, rmax, fAuxDetHitsColour);
     }
   }
 
@@ -317,14 +312,7 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
 
     auto crtHitHandle = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
     for(auto const& hit : (*crtHitHandle)){
-      // Skip if outside specified time window if time window used
-      /*      double time = (double)(int)hit.ts1_ns * 1e-3;
-      if(!(fMinTime == fMaxTime || (time > fMinTime && time < fMaxTime))) continue;
 
-      // Skip if it doesn't match the true ID if true ID is used
-      int trueId = fCrtBackTrack.TrueIdFromTotalEnergy(event, hit);
-      if(fUseTrueID && trueId != fTrueID) continue;
-      */
       double rmin[3] = {hit.x_pos - hit.x_err,
                         hit.y_pos - hit.y_err,
                         hit.z_pos - hit.z_err};
@@ -383,18 +371,12 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
     if(fPrint) std::cout<<std::endl<<"True tracks in event:"<<std::endl;
 
     auto particleHandle = event.getValidHandle<std::vector<simb::MCParticle>>(fSimLabel);
-    std::vector<double> crtLims = fCrtGeo.CRTLimits();
     for(auto const& part : (*particleHandle)){
 
-      // Skip if it doesn't match the true ID if true ID is used
-      //if(fUseTrueID && part.TrackId() != fTrueID) continue;
-
-      // Skip if outside specified time window if time window used
-      //std::cout<<"Time: "<<part.T()<<std::endl;
-      //if(part.T() < fMinTime || part.T() > fMaxTime) continue;
       // Skip if particle isn't visible
-      if(!IsVisible(part)) continue;
-
+      if(!IsVisible(part) && !fDrawInvisibleTracks) continue;
+      
+      if(fUseTrueID && part.TrackId() != fTrueID) continue;
       // Skip if particle doesn't cross the boundary enclosed by the CRTs
       //      if(!fCrtGeo.EntersVolume(part)) continue;
 
@@ -408,7 +390,7 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
         geo::Point_t pos {part.Vx(i), part.Vy(i), part.Vz(i)};
 
         // Don't draw trajectories outside of the CRT volume
-        //if(pos.X() < crtLims[0] || pos.X() > crtLims[3] || pos.Y() < crtLims[1] || pos.Y() > crtLims[4] || pos.Z() < crtLims[2] || pos.Z() > crtLims[5]) continue;
+        if(pos.X() < crtLims[0]-fVolumeSizeOffset || pos.X() > crtLims[3]+fVolumeSizeOffset || pos.Y() < crtLims[1]-fVolumeSizeOffset || pos.Y() > crtLims[4]+fVolumeSizeOffset || pos.Z() < crtLims[2]-fVolumeSizeOffset || pos.Z() > crtLims[5]+fVolumeSizeOffset) continue;
 
         if(first){
           first = false;

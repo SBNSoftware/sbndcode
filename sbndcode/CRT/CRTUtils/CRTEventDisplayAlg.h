@@ -21,8 +21,7 @@
 
 // LArSoft
 #include "lardataobj/RecoBase/Hit.h"
-#include "lardataobj/RecoBase/Hit.h"
-//#include "lardataobj/Simulation/AuxDetHit.h"
+#include "lardataobj/Simulation/AuxDetHit.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 namespace detinfo { class DetectorClocksData; }
 
@@ -52,6 +51,7 @@ namespace detinfo { class DetectorClocksData; }
 #include "TMarker.h"
 #include "TBox.h"
 #include "TPad.h"
+//#include "TAttLine.h"
 
 
 namespace sbnd{
@@ -66,11 +66,11 @@ namespace sbnd{
       fhicl::Atom<art::InputTag> SimLabel {
         Name("SimLabel")
       };
-      fhicl::Atom<art::InputTag> FEBDataLabel {
-        Name("FEBDataLabel")
+      fhicl::Atom<art::InputTag> AuxDetIDEsLabel {
+        Name("AuxDetIDEsLabel")
       };
-      fhicl::Atom<art::InputTag> SimDepositsLabel {
-        Name("SimDepositsLabel")
+      fhicl::Atom<art::InputTag> AuxDetHitsLabel {
+        Name("AuxDetHitsLabel")
       };
       fhicl::Atom<art::InputTag> CRTHitLabel {
         Name("CRTHitLabel")
@@ -78,10 +78,6 @@ namespace sbnd{
       fhicl::Atom<art::InputTag> CRTTrackLabel {
         Name("CRTTrackLabel")
       };
-      fhicl::Atom<double> ClockSpeedCRT {
-        Name("ClockSpeedCRT")
-      };
-
       fhicl::Atom<bool> DrawTaggers {
         Name("DrawTaggers")
       };
@@ -94,11 +90,11 @@ namespace sbnd{
       fhicl::Atom<bool> DrawStrips {
         Name("DrawStrips")
       };
-      fhicl::Atom<bool> DrawFEBData {
-        Name("DrawFEBData")
+      fhicl::Atom<bool> DrawAuxDetIDEs {
+        Name("DrawAuxDetIDEs")
       };
-      fhicl::Atom<bool> DrawSimDeposits {
-        Name("DrawSimDeposits")
+      fhicl::Atom<bool> DrawAuxDetHits {
+        Name("DrawAuxDetHits")
       };
       fhicl::Atom<bool> DrawCrtHits {
         Name("DrawCrtHits")
@@ -109,6 +105,9 @@ namespace sbnd{
       fhicl::Atom<bool> DrawIncompleteTracks {
         Name("DrawIncompleteTracks")
       };
+      fhicl::Atom<bool> DrawInvisibleTracks {
+        Name("DrawInvisibleTracks")
+      };
       fhicl::Atom<bool> DrawTrueTracks {
         Name("DrawTrueTracks")
       };
@@ -116,17 +115,17 @@ namespace sbnd{
       fhicl::Atom<int> TaggerColour {
         Name("TaggerColour")
       };
-      fhicl::Atom<int> FEBEndColour {
-        Name("FEBEndColour")
-      };
       fhicl::Atom<int> StripColour {
         Name("StripColour")
       };
-      fhicl::Atom<int> FEBDataColour {
-        Name("FEBDataColour")
+      fhicl::Atom<int> FEBEndColour {
+        Name("FEBEndColour")
       };
-      fhicl::Atom<int> SimDepositsColour {
-        Name("SimDepositsColour")
+      fhicl::Atom<int> AuxDetIDEsColour {
+        Name("AuxDetIDEsColour")
+      };
+      fhicl::Atom<int> AuxDetHitsColour {
+        Name("AuxDetHitsColour")
       };
       fhicl::Atom<int> CrtHitColour {
         Name("CrtHitColour")
@@ -148,9 +147,11 @@ namespace sbnd{
       fhicl::Atom<bool> Print {
         Name("Print")
       };
-
       fhicl::Atom<double> LineWidth {
         Name("LineWidth")
+      };
+      fhicl::Atom<double> VolumeSizeOffset {
+        Name("VolumeSizeOffset")
       };
       fhicl::Atom<double> IncompleteTrackLength {
         Name("IncompleteTrackLength")
@@ -182,8 +183,8 @@ namespace sbnd{
     void SetDrawTaggers(bool tf);
     void SetDrawFEBs(bool tf);
     void SetDrawStrips(bool tf);
-    void SetDrawFEBData(bool tf);
-    void SetDrawSimDeposits(bool tf);
+    void SetDrawAuxDetIDEs(bool tf);
+    void SetDrawAuxDetHits(bool tf);
     void SetDrawCrtHits(bool tf);
     void SetDrawCrtTracks(bool tf);
     void SetDrawTrueTracks(bool tf);
@@ -203,29 +204,28 @@ namespace sbnd{
     CRTBackTracker fCrtBackTrack;
 
     art::InputTag fSimLabel;
-    art::InputTag fFEBDataLabel;
-    art::InputTag fSimDepositsLabel;
+    art::InputTag fAuxDetHitsLabel;
+    art::InputTag fAuxDetIDEsLabel;
     art::InputTag fCRTHitLabel;
     art::InputTag fCRTTrackLabel;
-
-    double fClockSpeedCRT;
 
     bool fDrawTaggers;
     bool fDrawModules;
     bool fDrawStrips;
     bool fDrawFEBs;
-    bool fDrawFEBData;
-    bool fDrawSimDeposits;
+    bool fDrawAuxDetIDEs;
+    bool fDrawAuxDetHits;
     bool fDrawCrtHits;
     bool fDrawCrtTracks;
     bool fDrawIncompleteTracks;
+    bool fDrawInvisibleTracks;
     bool fDrawTrueTracks;
 
     int fTaggerColour;
     int fStripColour;
     int fFEBEndColour;
-    int fFEBDataColour;
-    int fSimDepositsColour;
+    int fAuxDetIDEsColour;
+    int fAuxDetHitsColour;
     int fCrtHitColour;
     int fCrtTrackColour;
     int fTrueTrackColour;
@@ -236,6 +236,7 @@ namespace sbnd{
     bool fPrint;
 
     double fLineWidth;
+    double fVolumeSizeOffset;
     double fIncompleteTrackLength;
     double fMinTime;
     double fMaxTime;

@@ -6,6 +6,7 @@ standard_crtbacktracker:
     FEBDataLabel:     "crtsim"
     CRTHitLabel:      "crthit"
     CRTTrackLabel:    "crttrack"
+    SimModuleLabel:   "largeant"
     RollupUnsavedIds: true
 }
 

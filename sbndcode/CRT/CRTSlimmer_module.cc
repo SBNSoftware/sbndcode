@@ -81,6 +81,7 @@ sbnd::crt::CRTSlimmer::CRTSlimmer(fhicl::ParameterSet const& p)
   if(!_data_mode)  
     produces<art::Assns<sbnd::crt::CRTData, sim::AuxDetIDE>>();
 
+  //produces<std::vector<sbnd::crt::FEBData>>();
   consumes<std::vector<sbnd::crt::FEBData>>(_feb_data_producer);
   if(!_data_mode)
     consumes<art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>>(_feb_data_producer);
@@ -118,31 +119,31 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
       
       for (size_t i = 0; i < adcs.size(); i+=2) {
 	
-	// Both sipms need to be above threshold to save them
-	if (not (adcs[i] >= _adc_threshold and adcs[i+1] >= _adc_threshold)) {
-	  continue;
-	}
+        // Both sipms need to be above threshold to save them
+        if (not (adcs[i] >= _adc_threshold and adcs[i+1] >= _adc_threshold)) {
+          continue;
+        }
 
-	for (size_t sipm = 0; sipm < 2; sipm++) {
-	  sbnd::crt::CRTData crt_data = sbnd::crt::CRTData(feb_data->Mac5() * 32 + i + sipm,
-							   feb_data->Ts0(),
-							   feb_data->Ts1(),
-							   adcs[i+sipm]);
+        for (size_t sipm = 0; sipm < 2; sipm++) {
+          sbnd::crt::CRTData crt_data = sbnd::crt::CRTData(feb_data->Mac5() * 32 + i + sipm,
+                      feb_data->Ts0(),
+                      feb_data->Ts1(),
+                      adcs[i+sipm]);
 
-	  mf::LogDebug("CRTSlimmer") << "Adding SiPM " << i + sipm << " with mac " << feb_data->Mac5()
-				     << " mapped to channel " << crt_data.Channel() << std::endl;
-	  
-	  crt_data_v->emplace_back(std::move(crt_data));
-	  
-	  art::Ptr<sbnd::crt::CRTData> crt_data_p = makeDataPtr(crt_data_v->size() - 1);
-	  
-	  // Create the association between CRTData and FEBData
-	  crtdata_to_febdata_assns->addSingle(crt_data_p, feb_data);	  
-	}
+          mf::LogDebug("CRTSlimmer") << "Adding SiPM " << i + sipm << " with mac " << feb_data->Mac5()
+                  << " mapped to channel " << crt_data.Channel() << std::endl;
+          
+          crt_data_v->emplace_back(std::move(crt_data));
+          
+          art::Ptr<sbnd::crt::CRTData> crt_data_p = makeDataPtr(crt_data_v->size() - 1);
+          
+          // Create the association between CRTData and FEBData
+          crtdata_to_febdata_assns->addSingle(crt_data_p, feb_data);	  
+        }
       }
     }
   }
-  else {
+  else { // not data mode. 
     art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febdata_to_ides (feb_data_h, e, _feb_data_producer);
     
     art::PtrMaker<sbnd::crt::CRTData> makeDataPtr(e);
@@ -161,44 +162,44 @@ void sbnd::crt::CRTSlimmer::produce(art::Event& e)
       std::map<int, std::vector<int>> sipm_to_ideids;
       for (size_t j = 0; j < 32; j++) sipm_to_ideids[j] = std::vector<int>();
       for (size_t ide_i = 0; ide_i < febdata_to_ides.data(feb_i).size(); ide_i++) {
-	const sbnd::crt::FEBTruthInfo *fti = febdata_to_ides.data(feb_i)[ide_i];
-	sipm_to_ideids[fti->GetChannel()].push_back(ide_i);
-	mf::LogDebug("CRTSlimmer") << "ide_i " << ide_i << " ene " << ides[ide_i]->energyDeposited << " fti->GetChannel() " << fti->GetChannel() << std::endl;
+        const sbnd::crt::FEBTruthInfo *fti = febdata_to_ides.data(feb_i)[ide_i];
+        sipm_to_ideids[fti->GetChannel()].push_back(ide_i);
+        mf::LogDebug("CRTSlimmer") << "ide_i " << ide_i << " ene " << ides[ide_i]->energyDeposited << " fti->GetChannel() " << fti->GetChannel() << std::endl;
       }
 
       auto adcs = feb_data->ADC();
 
       for (size_t i = 0; i < adcs.size(); i+=2) {
 
-	// Both sipms need to be above threshold to save them
-	if (not (adcs[i] >= _adc_threshold and adcs[i+1] >= _adc_threshold)) {
-	  continue;
-	}
+        // Both sipms need to be above threshold to save them
+        if (not (adcs[i] >= _adc_threshold and adcs[i+1] >= _adc_threshold)) {
+          continue;
+        }
 
-	for (size_t sipm = 0; sipm < 2; sipm++) {
-	  sbnd::crt::CRTData crt_data = sbnd::crt::CRTData(feb_data->Mac5() * 32 + i + sipm,
-							   feb_data->Ts0(),
-							   feb_data->Ts1(),
-							   adcs[i+sipm]);
+        for (size_t sipm = 0; sipm < 2; sipm++) {
+          sbnd::crt::CRTData crt_data = sbnd::crt::CRTData(feb_data->Mac5() * 32 + i + sipm,
+                      feb_data->Ts0(),
+                      feb_data->Ts1(),
+                      adcs[i+sipm]);
 
-	  mf::LogDebug("CRTSlimmer") << "Adding SiPM " << i + sipm << " with mac " << feb_data->Mac5()
-				     << " mapped to channel " << crt_data.Channel() << std::endl;
-	  
-	  crt_data_v->emplace_back(std::move(crt_data));
+          mf::LogDebug("CRTSlimmer") << "Adding SiPM " << i + sipm << " with mac " << feb_data->Mac5()
+                  << " mapped to channel " << crt_data.Channel() << std::endl;
+          
+          crt_data_v->emplace_back(std::move(crt_data));
 
-	  art::Ptr<sbnd::crt::CRTData> crt_data_p = makeDataPtr(crt_data_v->size() - 1);
+          art::Ptr<sbnd::crt::CRTData> crt_data_p = makeDataPtr(crt_data_v->size() - 1);
 
-	  // Create the association between CRTData and FEBData
-	  crtdata_to_febdata_assns->addSingle(crt_data_p, feb_data);
+          // Create the association between CRTData and FEBData
+          crtdata_to_febdata_assns->addSingle(crt_data_p, feb_data);
 
-	  // Create the association between CRTData and AuxDetIDEs
-	  auto & ide_ids = sipm_to_ideids[i];
-	  for (auto ide_id: ide_ids) {
-	    auto ide = ides[ide_id];
-	    mf::LogDebug("CRTSlimmer") << "Adding IDE with ID " << ide_id << std::endl;
-	    crtdata_to_ide_assns->addSingle(crt_data_p, ide);
-	  }
-	}
+          // Create the association between CRTData and AuxDetIDEs
+          auto & ide_ids = sipm_to_ideids[i];
+          for (auto ide_id: ide_ids) {
+            auto ide = ides[ide_id];
+            mf::LogDebug("CRTSlimmer") << "Adding IDE with ID " << ide_id << std::endl;
+            crtdata_to_ide_assns->addSingle(crt_data_p, ide);
+          }
+        }
       }
     }
   }

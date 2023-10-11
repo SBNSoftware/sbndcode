@@ -92,9 +92,10 @@ void CRTDetSim::produce(art::Event & e) {
   //
   // Step 1: Construct Taggers
   //
+std::cout<<"diff: channel.size: "<<channels->size()<<std::endl;
   for(auto const& adsc : *channels) {
-
     if(adsc.AuxDetID() == UINT_MAX || adsc.AuxDetSensitiveID() == UINT_MAX) {
+std::cout<<"diff: I am in this if-condition! adsc.AuxDetID(): "<<adsc.AuxDetID()<<"; adsc.AuxDetSensitiveID()"<<adsc.AuxDetSensitiveID()<<std::endl;
       mf::LogWarning("CRTDetSim") << "AuxDetSimChannel with ID: UINT_MAX\n"
                                   << "skipping channel...";
       continue;
@@ -120,7 +121,7 @@ void CRTDetSim::produce(art::Event & e) {
   //
   // Step 3: Save output
   //
-
+std::cout<<"diff: in CRTdetsim_module: data.size(): "<<data.size()<<std::endl;
   // for(auto const& dataPair : data){
   for (size_t i = 0; i < data.size(); i++) {
 

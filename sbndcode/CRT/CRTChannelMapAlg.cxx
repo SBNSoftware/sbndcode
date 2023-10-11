@@ -56,7 +56,7 @@ namespace geo {
       long unsigned int number_scintillating_strips = 0;
 
       if (strncmp(((adgeo[a].TotalVolume())->GetShape())->GetName(), "CRTstripMINOSArray", 18) == 0) {
-	number_scintillating_strips = 20;    //To account for the MINOS modules.
+	      number_scintillating_strips = 20;    //To account for the MINOS modules.
       }
       else {number_scintillating_strips = 16;}
       

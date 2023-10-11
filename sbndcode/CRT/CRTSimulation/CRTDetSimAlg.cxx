@@ -282,7 +282,7 @@ namespace crt {
             auto & name = iter.first;
             auto & tagger = iter.second;
 
-           mf::LogInfo("CRTDetSimAlg") << "Simulating trigger for tagger " << name << std::endl;
+            mf::LogInfo("CRTDetSimAlg") << "Simulating trigger for tagger " << name << std::endl;
 
             bool is_bottom = name.find("Bottom") != std::string::npos;
             Trigger trigger(is_bottom, fParams.DeadTime(), fParams.DebugTrigger());
