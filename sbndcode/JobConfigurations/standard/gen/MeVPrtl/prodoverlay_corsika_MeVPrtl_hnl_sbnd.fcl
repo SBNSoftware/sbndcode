@@ -5,3 +5,7 @@
 physics.producers.corsika: @local::sbnd_corsika_p
 
 physics.simulate: [ rns, generator, corsika ]
+
+# Overidde the names of the output files
+outputs.out1.fileName: "prodMeVPrtl_cosmic_HNL_sbnd_%p-%tc.root"
+services.TFileService.fileName: "hists_prodMeVPrtl_cosmic_HNL_sbnd_%p-%tc.root"
