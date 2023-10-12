@@ -245,6 +245,10 @@ private:
   std::vector<int>	slc_n_trks, slc_n_shws;
   std::vector<int>      slc_n_dazzle_muons, slc_n_dazzle_muons_cut_based, slc_n_dazzle_pions, slc_n_dazzle_protons, slc_n_dazzle_other;
   std::vector<int>      slc_n_razzle_electrons, slc_n_razzle_photons, slc_n_razzle_photons_cut_based, slc_n_razzle_other;
+ 
+  // Event Tree: Slice Truth
+  std::vector<float> 	slc_comp, slc_pur;
+  std::vector<size_t> 	slc_true_mctruth_id;
 
   // Event Tree: Slice -> PFP -- 2D vector
   std::vector<std::vector<size_t>>	slc_pfp_id;
@@ -419,6 +423,11 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_n_razzle_photons", &slc_n_razzle_photons);
   fEventTree->Branch("slc_n_razzle_photons_cut_based", &slc_n_razzle_photons_cut_based);
   fEventTree->Branch("slc_n_razzle_other", &slc_n_razzle_other);
+  
+  //Event Tree: Slice Truth
+  fEventTree->Branch("slc_comp" , &slc_comp);
+  fEventTree->Branch("slc_pur" , &slc_pur);
+  fEventTree->Branch("slc_true_mctruth_id", &slc_true_mctruth_id);
 
   // Event Tree: Slice -> PFP
   fEventTree->Branch("slc_pfp_id", &slc_pfp_id);
@@ -550,15 +559,6 @@ void sbnd::HNLPiZeroAnalysis::analyze(art::Event const& e)
   AnalyseMCTruth(e, MCTruthHandles);
   AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
  
-
-  for(auto const it: nu_event_type){
-    std::cout <<"event type = " << it << std::endl;
-  }
-  
-  for(auto const it: nu_signal){
-    std::cout <<"event signal = " << it << std::endl;
-  }
-
   // Fill Tree
   fEventTree->Fill();
 }
@@ -657,6 +657,10 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_n_razzle_photons.clear();
   slc_n_razzle_photons_cut_based.clear();
   slc_n_razzle_other.clear();
+
+  slc_comp.clear();
+  slc_pur.clear();
+  slc_true_mctruth_id.clear();
 
   slc_pfp_id.clear();
   slc_pfp_pdg.clear();
@@ -1539,13 +1543,14 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
     }
   }
   
-//  const float comp = fNuHitsMap[bestMCT] == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(fNuHitsMap[bestMCT]);
-//  const float pur  = sliceHits.size() == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(sliceHits.size());
-//
-//  FillElement(slcVars["slc_comp"], slcCounter, comp);
-//  FillElement(slcVars["slc_pur"], slcCounter, pur);
-//
-//  if(bestMCT.isNonnull())
-//    AnalyseMCTruth(e, slcVars, bestMCT, slcCounter, "slc_true");
+  const float comp = fMCTruthHitsMap[bestMCT] == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(fMCTruthHitsMap[bestMCT]);
+  const float pur  = sliceHits.size() == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(sliceHits.size());
+
+  slc_comp.push_back(comp);
+  slc_pur.push_back(pur);
+
+  if(bestMCT.isNonnull()){
+    slc_true_mctruth_id.push_back(bestMCT.key());
+  }
 }
 DEFINE_ART_MODULE(sbnd::HNLPiZeroAnalysis)
