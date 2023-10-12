@@ -8,9 +8,14 @@
 #include "showerselectionvarsproducer.fcl"
 #include "sbn_stub.fcl"
 #include "calorimetry_sbnd.fcl"
+#include "sbn_cnnid.fcl"
 
 hnlpizero_producers:
 {
+  cnnid: {
+    @table::cnnid_sbnd_sce
+  }
+
   crumbs:
   {
     @table::crumbs_sbnd

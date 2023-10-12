@@ -9,6 +9,16 @@ services:
 	@table::sbnd_services
 	ParticleInventoryService: @local::sbnd_particleinventoryservice
 	BackTrackerService: @local::sbnd_backtrackerservice
+  	AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
+	ExptGeoHelperInterface:    @local::sbnd_geometry_helper
+	GeometryConfigurationWriter: {}
+	Geometry:                  @local::sbnd_geo
+	AuxDetGeometry:            @local::sbnd_auxdetgeo
+	LArPropertiesService:      @local::standard_properties
+	DetectorClocksService:     @local::sbnd_services.DetectorClocksService
+	DetectorPropertiesService: @local::sbnd_detproperties
+	ChannelStatusService:      @local::sbnd_channelstatus
+        SpaceCharge:               @local::sbnd_spacecharge
 }
 
 source:
@@ -28,7 +38,8 @@ physics:
 		pandoraTrackClosestApproach,pandoraTrackStoppingChi2, 
 		pandoraShowerCosmicDist, pandoraShowerSelectionVars,
 		dazzle, razzle,
-		vertexCharge, vertexStub 
+		vertexCharge, vertexStub,
+		cnnid
 		]
 	trigger_paths: [prods]
 
