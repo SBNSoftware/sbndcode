@@ -1,0 +1,37 @@
+#include "simulationservices_sbnd.fcl"
+#include "hnlpizero_producers.fcl"
+
+process_name: HighLevelProd
+
+services:
+{
+	TFileService: { fileName: "highlevel_sbnd.root"}
+	@table::sbnd_services
+	ParticleInventoryService: @local::sbnd_particleinventoryservice
+	BackTrackerService: @local::sbnd_backtrackerservice
+}
+
+source:
+{
+	module_type: RootInput
+}
+
+physics:
+{
+	producers:
+	{
+		@table::hnlpizero_producers 
+	}
+
+	prods: [crumbs, 		
+		pandoraTrackMCS, pandoraTrackRange, 
+		pandoraTrackClosestApproach,pandoraTrackStoppingChi2, 
+		pandoraShowerCosmicDist, pandoraShowerSelectionVars,
+		dazzle, razzle,
+		vertexCharge, vertexStub 
+		]
+	trigger_paths: [prods]
+
+}
+
+services.BackTrackerService.BackTrack.SimChannelModuleLabel: "simtpc2d:simpleSC"

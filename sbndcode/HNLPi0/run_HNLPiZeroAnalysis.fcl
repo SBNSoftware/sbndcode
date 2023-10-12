@@ -1,0 +1,59 @@
+#include "simulationservices_sbnd.fcl"
+#include "hnlpizero_producers.fcl"
+
+process_name: HNLPiZeroAnalyzer
+
+services:
+{
+	TFileService: { fileName: "hnlpizeroana_hist.root"}
+	@table::sbnd_services
+	ParticleInventoryService: @local::sbnd_particleinventoryservice
+	BackTrackerService: @local::sbnd_backtrackerservice
+}
+
+source:
+{
+	module_type: RootInput
+}
+
+outputs:
+{
+ out1:
+  {
+    module_type: RootOutput
+    fileName:    "hnlpizeroana_art.root"
+  }
+}
+
+physics:
+{
+	producers:
+	{
+		@table::hnlpizero_producers 
+	}
+
+	analyzers:
+	{
+		hnlpizeroana: 
+		{
+			module_type: "HNLPiZeroAnalysis"
+		}
+	}
+
+	prods: [crumbs, 		
+		pandoraTrackMCS, pandoraTrackRange, 
+		pandoraTrackClosestApproach,pandoraTrackStoppingChi2, 
+		pandoraShowerCosmicDist, pandoraShowerSelectionVars,
+		dazzle, razzle,
+		vertexCharge, vertexStub 
+		]
+	trigger_paths: []
+
+	ana: [hnlpizeroana]
+	
+	end_paths: [ana]
+
+	stream1: []
+}
+
+services.BackTrackerService.BackTrack.SimChannelModuleLabel: "simtpc2d:simpleSC"

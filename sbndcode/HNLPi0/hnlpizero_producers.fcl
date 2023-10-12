@@ -1,0 +1,97 @@
+#include "sbn_crumbs_producer.fcl"
+#include "sbn_pid.fcl"
+#include "mcsproducer.fcl"
+#include "rangeproducer.fcl"
+#include "trackscatterclosestapproach.fcl"
+#include "trackstoppingchi2fitter.fcl"
+#include "showercosmicdistanceproducer.fcl"
+#include "showerselectionvarsproducer.fcl"
+#include "sbn_stub.fcl"
+#include "calorimetry_sbnd.fcl"
+
+hnlpizero_producers:
+{
+  crumbs:
+  {
+    @table::crumbs_sbnd
+    PFParticleModuleLabel:    "pandoraSCE"
+    TrackModuleLabel:         "pandoraSCETrack"
+    SliceModuleLabel:         "pandoraSCE"
+    FlashMatchModuleLabel:    "fmatchSCE"
+    CalorimetryModuleLabel:   "pandoraSCECalo"
+    CRTSPMatchModuleLabel:   "crtspacepointmatchingSCE"
+    CRTTrackMatchModuleLabel: "crttrackmatchingSCE"
+  }
+
+  dazzle:
+  {
+    @table::dazzle_sbnd
+    PFPLabel:        "pandoraSCE"
+    TrackLabel:      "pandoraSCETrack"
+    CaloLabel:       "pandoraSCECalo"
+    Chi2Label:       "pandoraSCEPid"
+    SimChannelLabel: "simtpc2d:simpleSC"
+  }
+
+  razzle:
+  {
+    @table::razzle_sbnd
+    PFPLabel:        "pandoraSCE"
+    ShowerLabel:     "pandoraSCEShower"
+    SimChannelLabel: "simtpc2d:simpleSC"
+  }
+
+  pandoraTrackMCS:
+  {
+    @table::mcs_sbn
+    TrackLabel: "pandoraSCETrack"
+  }
+
+  pandoraTrackRange:
+  {
+    @table::range_sbn
+    TrackLabel: "pandoraSCETrack"
+  }
+
+  pandoraTrackClosestApproach:
+  {
+    @table::trackscatterclosestapproach_sbn
+    TrackLabel: "pandoraSCETrack"
+  }
+
+  pandoraTrackStoppingChi2:
+  {
+    @table::trackstoppingchi2fitter_sbn
+    TrackLabel: "pandoraSCETrack"
+    CaloLabel:  "pandoraSCECalo"
+  }
+
+  pandoraShowerCosmicDist:
+  {
+    @table::showerCosmicDist_sbn
+    PandoraLabel: "pandoraSCE"
+    ShowerLabel:  "pandoraSCEShower"
+  }
+
+  pandoraShowerSelectionVars:
+  {
+    @table::showerSelectionVars_sbn
+    PandoraLabel: "pandoraSCE"
+    ShowerLabel:  "pandoraSCEShower"
+  }
+
+  vertexCharge:	
+  {
+    @table::vertex_charge_sbnd_sce 
+    CaloAlg: @local::sbnd_calorimetryalgmc
+  }  
+
+  vertexStub:	
+  {
+    @table::vertex_stub_sbnd_sce 
+    CaloAlg: @local::sbnd_calorimetryalgmc
+  }  
+}
+
+hnlpizero_producers.crumbs.Chi2FitParams.TrackLabel: "pandoraSCETrack"
+hnlpizero_producers.crumbs.Chi2FitParams.CaloLabel: "pandoraSCECalo"

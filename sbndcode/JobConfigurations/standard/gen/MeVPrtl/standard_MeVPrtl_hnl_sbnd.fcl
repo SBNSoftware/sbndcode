@@ -4,7 +4,7 @@
 #include "simulationservices_sbnd.fcl"
 
 
-process_name: Gen
+process_name: MeVPrtlGen
 
 services:
 {
