@@ -77,12 +77,8 @@ hnl_gen: {
   MesonGen: @local::bnb_kaon
   Flux: @local::kaon2hnl
   RayTrace: @local::mxdraytrace
-//  RayTrace: @local::wgtraytrace
   Decay: @local::decay_hnl
 }
-hnl_gen.RayTrace.Volume: "volCryostat" #Use Geometry Service instead 
-hnl_gen.RayTrace.Box: @erase
-hnl_gen.RayTrace.ReferenceLabSolidAngle: @local::sbnd_bnb_solid_angle_cryostat
 
 hnl_gen_kdar: {
   module_type: MeVPrtlGen
