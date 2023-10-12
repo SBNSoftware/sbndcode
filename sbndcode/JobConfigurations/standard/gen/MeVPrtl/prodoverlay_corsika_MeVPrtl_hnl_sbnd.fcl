@@ -1,0 +1,7 @@
+#include "corsika_sbnd.fcl"
+#include "prodMeVPrtl_hnl_sbnd.fcl"
+
+# Now we are generating overlays we need to add CORSIKA to producers 
+physics.producers.corsika: @local::sbnd_corsika_p
+
+physics.simulate: [ rns, generator, corsika ]

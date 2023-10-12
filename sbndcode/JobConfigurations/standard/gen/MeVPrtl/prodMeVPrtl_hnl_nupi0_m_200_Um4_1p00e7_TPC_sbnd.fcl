@@ -1,4 +1,4 @@
-#include "standard_MeVPrtl_hnl_sbnd.fcl"
+#include "prodMeVPrtl_hnl_sbnd.fcl"
 
 ###----------Set mass of HNL [GeV]----------###
 hnlM: 0.200
