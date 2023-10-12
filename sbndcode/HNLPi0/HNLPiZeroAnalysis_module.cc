@@ -558,7 +558,7 @@ void sbnd::HNLPiZeroAnalysis::analyze(art::Event const& e)
   AnalyseMeVPrtlTruth(e, mevptHandle);
   AnalyseMCTruth(e, MCTruthHandles);
   AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
- 
+
   // Fill Tree
   fEventTree->Fill();
 }
@@ -784,18 +784,6 @@ void sbnd::HNLPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<s
   for(auto const& pfp : pfpVec)
     fPFPMap[pfp->Self()] = pfp;
 
-  if (fDebug){
-    std::cout << "MCTRUTH Map" << std::endl;
-    for (auto const nuHit: fMCTruthHitsMap ){
-      std::cout << nuHit.first << " " << nuHit.second << std::endl;
-    }
-    
-    std::cout << "Hit Map" << std::endl;
-    for (auto const hit: fHitsMap ){
-      std::cout << hit.first << " " << hit.second << std::endl;
-    }
-    
-  }
 }
 
 void sbnd::HNLPiZeroAnalysis::AnalyseMeVPrtlTruth(const art::Event &e, const art::Handle<std::vector<evgen::ldm::MeVPrtlTruth>> mevptHandle)
@@ -803,8 +791,6 @@ void sbnd::HNLPiZeroAnalysis::AnalyseMeVPrtlTruth(const art::Event &e, const art
 
   std::vector<art::Ptr<evgen::ldm::MeVPrtlTruth>> mevptVec;
   if (mevptHandle.isValid()) art::fill_ptr_vector(mevptVec, mevptHandle);
-
-  std::cout << "Found " << mevptVec.size() << " HNLs" << std::endl;
 
   for (auto const &mevpt: mevptVec){
 
@@ -844,9 +830,6 @@ void sbnd::HNLPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, const std::vec
   {
       std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
       art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
-
-      if (fDebug)
-	      std::cout << "Found " << MCTruthVec.size() << "MCTruths" << std::endl;
 
       for(auto const& mct : MCTruthVec)
       {
@@ -1549,8 +1532,15 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
   slc_comp.push_back(comp);
   slc_pur.push_back(pur);
 
-  if(bestMCT.isNonnull()){
+  if(bestMCT.isNonnull())
+  {
     slc_true_mctruth_id.push_back(bestMCT.key());
   }
+  else
+  {
+    slc_true_mctruth_id.push_back(-999);
+  }
+
+
 }
 DEFINE_ART_MODULE(sbnd::HNLPiZeroAnalysis)
