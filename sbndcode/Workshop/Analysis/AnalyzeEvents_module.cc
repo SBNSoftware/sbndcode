@@ -21,10 +21,11 @@
 #include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Track.h"
-#include "canvas/Persistency/Common/FindManyP.h"
+#include "lardataobj/AnalysisBase/Calorimetry.h"
 
 // Additional framework includes
 #include "art_root_io/TFileService.h"
+#include "canvas/Persistency/Common/FindManyP.h"
 
 // ROOT includes
 #include <TTree.h>
@@ -67,18 +68,22 @@ private:
   unsigned int fNPrimaryChildren;
 
   std::vector<float> fChildTrackLengths;
+  std::vector<std::vector<float>> fChildTrackdEdx;
+  std::vector<std::vector<float>> fChildTrackResRange;
 
   // Define input labels
   std::string fSliceLabel;
   std::string fPFParticleLabel;
   std::string fTrackLabel;
+  std::string fCalorimetryLabel;
 };
 
 test::AnalyzeEvents::AnalyzeEvents(fhicl::ParameterSet const& p)
     : EDAnalyzer{p},
     fSliceLabel(p.get<std::string>("SliceLabel")),
     fPFParticleLabel(p.get<std::string>("PFParticleLabel")),
-    fTrackLabel(p.get<std::string>("TrackLabel"))
+    fTrackLabel(p.get<std::string>("TrackLabel")),
+    fCalorimetryLabel(p.get<std::string>("CalorimetryLabel"))
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
@@ -92,6 +97,8 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
   fNPFParticles = 0;
   fNPrimaryChildren = 0;
   fChildTrackLengths.clear();
+  fChildTrackdEdx.clear();
+  fChildTrackResRange.clear();
 
   // Get event slices
   art::ValidHandle<std::vector<recob::Slice>> sliceHandle = e.getValidHandle<std::vector<recob::Slice>>(fSliceLabel);
@@ -136,7 +143,10 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
 
   // Now let's look at our tracks
   art::ValidHandle<std::vector<recob::PFParticle>> pfpHandle = e.getValidHandle<std::vector<recob::PFParticle>>(fPFParticleLabel);
+  art::ValidHandle<std::vector<recob::Track>> trackHandle = e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
+
   art::FindManyP<recob::Track> pfpTrackAssoc(pfpHandle, e, fTrackLabel);
+  art::FindManyP<anab::Calorimetry> trackCaloAssoc(trackHandle, e, fCalorimetryLabel);
 
   std::vector<art::Ptr<recob::PFParticle>> nuSlicePFPs(slicePFPAssoc.at(nuSliceKey));
 
@@ -161,6 +171,21 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
 
       // Fill the track length histogram with this entry
       fTrackLengthHist->Fill(track->Length());
+
+      // Get the calorimetry object
+      std::vector<art::Ptr<anab::Calorimetry>> calos = trackCaloAssoc.at(track.key());
+
+      for(auto const& calo : calos)
+	{
+	  const int plane = calo->PlaneID().Plane;
+
+	  // Only interested in the collection plane (2)
+	  if(plane != 2)
+	    continue;
+
+	  fChildTrackdEdx.push_back(calo->dEdx());
+	  fChildTrackResRange.push_back(calo->ResidualRange());
+	}
   }
 
   // Fill tree
@@ -179,6 +204,8 @@ void test::AnalyzeEvents::beginJob()
   fTree->Branch("nPFParticles", &fNPFParticles);
   fTree->Branch("nPrimaryChildren", &fNPrimaryChildren);
   fTree->Branch("childTrackLengths", &fChildTrackLengths);
+  fTree->Branch("childTrackdEdx", &fChildTrackdEdx);
+  fTree->Branch("childTrackResRange", &fChildTrackResRange);
 }
 
 void test::AnalyzeEvents::endJob()

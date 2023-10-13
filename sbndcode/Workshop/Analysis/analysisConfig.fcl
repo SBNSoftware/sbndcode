@@ -4,9 +4,10 @@ analyzeEvents:
 {
   module_type:  "AnalyzeEvents"
 
-  SliceLabel:      "pandora"
-  PFParticleLabel: "pandora"
-  TrackLabel:      "pandoraTrack"
+  SliceLabel:       "pandora"
+  PFParticleLabel:  "pandora"
+  TrackLabel:       "pandoraTrack"
+  CalorimetryLabel: "pandoraCalo"
 }
 
 END_PROLOG
