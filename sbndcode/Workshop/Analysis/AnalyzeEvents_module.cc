@@ -68,6 +68,7 @@ private:
   unsigned int fNPrimaryChildren;
 
   std::vector<float> fChildTrackLengths;
+  std::vector<bool> fChildTrackIsLongest;
   std::vector<std::vector<float>> fChildTrackdEdx;
   std::vector<std::vector<float>> fChildTrackResRange;
 
@@ -97,6 +98,7 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
   fNPFParticles = 0;
   fNPrimaryChildren = 0;
   fChildTrackLengths.clear();
+  fChildTrackIsLongest.clear();
   fChildTrackdEdx.clear();
   fChildTrackResRange.clear();
 
@@ -150,6 +152,36 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
 
   std::vector<art::Ptr<recob::PFParticle>> nuSlicePFPs(slicePFPAssoc.at(nuSliceKey));
 
+  // Let's find the longest track before we progress with filling the track variables
+  int longestID = std::numeric_limits<int>::lowest();
+  float longestLength = std::numeric_limits<float>::lowest();
+
+  for(const art::Ptr<recob::PFParticle> &nuSlicePFP : nuSlicePFPs)
+    {
+      // We are only interested in neutrino children particles
+      if (nuSlicePFP->Parent() != static_cast<long unsigned int>(nuID))
+          continue;
+
+      // Get tracks associated with this PFParticle
+      std::vector<art::Ptr<recob::Track>> tracks = pfpTrackAssoc.at(nuSlicePFP.key());
+
+      // There should only be 0 or 1 tracks associated with a PFP
+      if (tracks.size() != 1)
+          continue;
+
+      // Get the track
+      art::Ptr<recob::Track> track = tracks.at(0);
+
+      // Check if this track is longer than the current longest
+      if(track->Length() > longestLength)
+	{
+	  // If yes, then overwrite the variables to reflect the new longest track
+	  longestID = track->ID();
+	  longestLength = track->Length();
+	}
+    }
+
+  // Now loop through the PFPs again to fill the track variables for the tree
   for (const art::Ptr<recob::PFParticle> &nuSlicePFP : nuSlicePFPs)
   {
       // We are only interested in neutrino children particles
@@ -168,6 +200,8 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
 
       // Add parameters from the track to the branch vector
       fChildTrackLengths.push_back(track->Length());
+      // Was this track the one we found to be the longest earlier?
+      fChildTrackIsLongest.push_back(track->ID() == longestID);
 
       // Fill the track length histogram with this entry
       fTrackLengthHist->Fill(track->Length());
@@ -204,6 +238,7 @@ void test::AnalyzeEvents::beginJob()
   fTree->Branch("nPFParticles", &fNPFParticles);
   fTree->Branch("nPrimaryChildren", &fNPrimaryChildren);
   fTree->Branch("childTrackLengths", &fChildTrackLengths);
+  fTree->Branch("childTrackIsLongest", &fChildTrackIsLongest);
   fTree->Branch("childTrackdEdx", &fChildTrackdEdx);
   fTree->Branch("childTrackResRange", &fChildTrackResRange);
 }
