@@ -119,7 +119,7 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
 
           // We have found our neutrino!
           nuSliceKey = slice.key();
-          nuID = slicePFP.key();
+          nuID = slicePFP->Self();
           fNPFParticles = slicePFPs.size();
           fNPrimaryChildren = slicePFP->NumDaughters();
 
