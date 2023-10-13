@@ -8,6 +8,7 @@ analyzeEvents:
   PFParticleLabel:  "pandora"
   TrackLabel:       "pandoraTrack"
   CalorimetryLabel: "pandoraCalo"
+  OpT0FinderLabel:  "opt0finder"
 }
 
 END_PROLOG

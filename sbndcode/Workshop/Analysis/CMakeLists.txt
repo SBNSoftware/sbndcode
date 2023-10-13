@@ -23,7 +23,7 @@ art_make(  MODULE_LIBRARIES  larpandora::LArPandoraInterface
                              ${FHICLCPP}
                              ${CLHEP}
                              sbndcode::RecoUtils
-                             sbndcode::OpDetSim
+                             sbnobj::Common_Reco
 
 
                              messagefacility::MF_MessageLogger
