@@ -28,6 +28,7 @@
 
 // ROOT includes
 #include <TTree.h>
+#include <TH1F.h>
 
 namespace test {
   class AnalyzeEvents;
@@ -56,6 +57,9 @@ public:
 private:
   // Create output TTree
   TTree *fTree;
+
+  // Create output histogram
+  TH1F *fTrackLengthHist;
 
   // Tree variables
   unsigned int fEventID;
@@ -154,6 +158,9 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
 
       // Add parameters from the track to the branch vector
       fChildTrackLengths.push_back(track->Length());
+
+      // Fill the track length histogram with this entry
+      fTrackLengthHist->Fill(track->Length());
   }
 
   // Fill tree
@@ -165,6 +172,7 @@ void test::AnalyzeEvents::beginJob()
   // Get the TFileService to create the output TTree for us
   art::ServiceHandle<art::TFileService> tfs;
   fTree = tfs->make<TTree>("tree", "Output TTree");
+  fTrackLengthHist = tfs->make<TH1F>("trackLengthHist", "Reconstructed Track Lengths; Track Length (cm);N Tracks", 20, 0, 350);
 
   // Add branches to TTree
   fTree->Branch("eventID", &fEventID);
