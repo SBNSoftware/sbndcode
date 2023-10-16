@@ -86,6 +86,8 @@ public:
   void ResetSubRunVars();
   void ResetEventVars();
   void ClearMaps();
+  void ClearVectors(VecVarMap &map);
+
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
                  const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
 
@@ -94,7 +96,7 @@ public:
   void SetupBranches(VecVarMap &map);
 
   void ResizeVectors(VecVarMap &map, const int size);
-  void ResizeSubVectors(VecVarMap &map, const int pos, const int size);
+  void ResizeSubVectors(VecVarMap &map, const std::string &subname, const int pos, const int size);
 
   void AnalyseNeutrinos(const art::Event &e, const std::vector<art::Handle<std::vector<simb::MCTruth>>> &MCTruthHandles);
 
@@ -132,6 +134,12 @@ public:
 
   void ProduceMultiSliceCandidates();
 
+  void ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,
+                               const int counter, const std::vector<int> slc_ids);
+
+  void ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
+                              const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1);
+
   float Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
   float Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
 
@@ -151,6 +159,8 @@ public:
   void AccessElement(VecVar *vec, const int posA, const int posB, T &value);
   template<typename T>
   void GetVar(VecVar *vec, std::vector<T> &var);
+  template<typename T>
+  void GetVar(VecVar *vec, std::vector<std::vector<T>> &var);
 
 private:
 
@@ -302,6 +312,7 @@ private:
     { "slc_pfp_track_chi2_kaon", new InhVecVecVar<float>("slc_pfp_track_chi2_kaon") },
     { "slc_pfp_track_chi2_proton", new InhVecVecVar<float>("slc_pfp_track_chi2_proton") },
     { "slc_pfp_track_chi2_pdg", new InhVecVecVar<int>("slc_pfp_track_chi2_pdg") },
+    { "slc_pfp_track_mcs_mom", new InhVecVecVar<float>("slc_pfp_track_mcs_mom") },
     { "slc_pfp_track_mcs_mean_scatter", new InhVecVecVar<float>("slc_pfp_track_mcs_mean_scatter") },
     { "slc_pfp_track_mcs_max_scatter_ratio", new InhVecVecVar<float>("slc_pfp_track_mcs_max_scatter_ratio") },
     { "slc_pfp_track_range_p", new InhVecVecVar<float>("slc_pfp_track_range_p") },
@@ -336,6 +347,14 @@ private:
     { "slc_pfp_razzled_pion_score", new InhVecVecVar<float>("slc_pfp_razzled_pion_score") },
     { "slc_pfp_razzled_proton_score", new InhVecVecVar<float>("slc_pfp_razzled_proton_score") },
     { "slc_pfp_razzled_pdg", new InhVecVecVar<int>("slc_pfp_razzled_pdg") },
+    { "slc_n_pzcs", new InhVecVar<size_t>("slc_n_pzcs") },
+    { "slc_pzc_photon_0_id", new InhVecVecVar<int>("slc_pzc_photon_0_id") },
+    { "slc_pzc_photon_1_id", new InhVecVecVar<int>("slc_pzc_photon_1_id") },
+    { "slc_pzc_good_kinematics", new InhVecVecVar<bool>("slc_pzc_good_kinematics") },
+    { "slc_pzc_invariant_mass", new InhVecVecVar<double>("slc_pzc_invariant_mass") },
+    { "slc_pzc_pizero_mom", new InhVecVecVar<double>("slc_pzc_pizero_mom") },
+    { "slc_pzc_cos_theta_pizero", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero") },
+    { "slc_pzc_cos_com", new InhVecVecVar<double>("slc_pzc_cos_com") },
     { "slc_sel1", new InhVecVar<bool>("slc_sel1") },
     { "slc_sel2", new InhVecVar<bool>("slc_sel2") },
   };
@@ -386,6 +405,16 @@ private:
     { "msc_matching_flash_pe", new InhVecVar<bool>("msc_matching_flash_pe") },
     { "msc_same_tpc", new InhVecVar<bool>("msc_same_tpc") },
     { "msc_sum_opt0_frac", new InhVecVar<double>("msc_sum_opt0_frac") },
+    { "msc_n_pzcs", new InhVecVar<size_t>("msc_n_pzcs") },
+    { "msc_pzc_photon_0_id", new InhVecVecVar<int>("msc_pzc_photon_0_id") },
+    { "msc_pzc_photon_1_id", new InhVecVecVar<int>("msc_pzc_photon_1_id") },
+    { "msc_pzc_photon_0_slc_id", new InhVecVecVar<int>("msc_pzc_photon_0_slc_id") },
+    { "msc_pzc_photon_1_slc_id", new InhVecVecVar<int>("msc_pzc_photon_1_slc_id") },
+    { "msc_pzc_good_kinematics", new InhVecVecVar<bool>("msc_pzc_good_kinematics") },
+    { "msc_pzc_invariant_mass", new InhVecVecVar<double>("msc_pzc_invariant_mass") },
+    { "msc_pzc_cos_theta_pizero", new InhVecVecVar<double>("msc_pzc_cos_theta_pizero") },
+    { "msc_pzc_pizero_mom", new InhVecVecVar<double>("msc_pzc_pizero_mom") },
+    { "msc_pzc_cos_com", new InhVecVecVar<double>("msc_pzc_cos_com") },
   };
 };
 
@@ -805,7 +834,10 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
       if(abs(prim->PdgCode()) == 13 || abs(prim->PdgCode()) == 11)
         FillElement(slcVars["slc_is_clear_cosmic"], slcCounter, true);
       else
-        FillElement(slcVars["slc_is_clear_cosmic"], slcCounter, false);
+        {
+          FillElement(slcVars["slc_n_pfps"], slcCounter, pfps.size() - 1);
+          FillElement(slcVars["slc_is_clear_cosmic"], slcCounter, false);
+        }
 
       const art::Ptr<recob::Vertex> vtx = pfpToVertices.at(prim.key());
       geo::Point_t vtxPos = vtx.isNonnull() ? vtx->position() : geo::Point_t(def_double, def_double, def_double);
@@ -835,9 +867,14 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement(slcVars["slc_opt0_hypPE"], slcCounter, opT0Vec[0]->hypoPE);
         }
 
-      ResizeSubVectors(slcVars, slcCounter, prim->NumDaughters());
+      ResizeSubVectors(slcVars, "slc_pfp", slcCounter, prim->NumDaughters());
 
       AnalysePFPs(e, prim, vtx, slcCounter, pfpHandle, trackHandle, showerHandle);
+
+      if(abs(prim->PdgCode()) == 13 || abs(prim->PdgCode()) == 11)
+        ResizeSubVectors(slcVars, "slc_pzc", slcCounter, 0);
+      else
+        ProducePiZeroCandidates(slcVars, "slc", slcCounter, { (int) slcCounter });
 
       SelectSlice(slcCounter);
 
@@ -1132,6 +1169,7 @@ void sbnd::NCPiZeroAnalysis::ExtractMCS(const art::Ptr<recob::MCSFitResult> &mcs
   if(!counter)
     return;
 
+  FillElement(slcVars["slc_pfp_track_mcs_mom"], slcCounter, pfpCounter, mcs->fwdMomentum());
   FillElement(slcVars["slc_pfp_track_mcs_mean_scatter"], slcCounter, pfpCounter, sumScatter / counter);
   FillElement(slcVars["slc_pfp_track_mcs_max_scatter_ratio"], slcCounter, pfpCounter, maxScatter / sumScatter);
 }
@@ -1355,7 +1393,33 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
         }
     }
 
+  std::cout << _n_multi_slice_candidates << std::endl;
+  std::vector<std::vector<double>> msc_pzc_cos_com;
+  GetVar(mscVars["msc_pzc_cos_com"], msc_pzc_cos_com);
+
+  std::cout << "Grand Size: " << msc_pzc_cos_com.size() << std::endl;
+
+  for(auto&& [i, vec] : enumerate(msc_pzc_cos_com))
+    {
+      std::cout << "\t Subsize " << i << ": " << vec.size() << std::endl;
+
+      for(auto&& [j, v] : enumerate(vec))
+        std::cout << "\t Value " << j << ": " << v << std::endl;
+    }
+
   ResizeVectors(mscVars, _n_multi_slice_candidates);
+
+  GetVar(mscVars["msc_pzc_cos_com"], msc_pzc_cos_com);
+
+  std::cout << "Grand Size: " << msc_pzc_cos_com.size() << std::endl;
+
+  for(auto&& [i, vec] : enumerate(msc_pzc_cos_com))
+    {
+      std::cout << "\t Subsize " << i << ": " << vec.size() << std::endl;
+
+      for(auto&& [j, v] : enumerate(vec))
+        std::cout << "\t Value " << j << ": " << v << std::endl;
+    }
 
   int mscCounter = 0;
 
@@ -1446,9 +1510,108 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
           FillElement(mscVars["msc_same_tpc"], mscCounter, same_tpc);
           FillElement(mscVars["msc_sum_opt0_frac"], mscCounter, sum_opt0_frac);
 
+          ProducePiZeroCandidates(mscVars, "msc", mscCounter, { i, j });
+
           ++mscCounter;
         }
     }
+}
+
+void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,
+                                                     const int counter, const std::vector<int> slc_ids)
+{
+  std::vector<int> n_razzled_photons(slc_ids.size(), 0);
+  for(auto&& [i, slc_id] : enumerate(slc_ids))
+    AccessElement(slcVars["slc_n_razzled_photons"], slc_id, n_razzled_photons[i]);
+
+  const int n_photons = std::reduce(n_razzled_photons.begin(), n_razzled_photons.end());
+
+  const size_t n_pzcs = (n_photons * (n_photons - 1)) / 2;
+
+  FillElement(vars[prefix + "_n_pzcs"], counter, n_pzcs);
+
+  ResizeSubVectors(vars, prefix + "_pzc", counter, n_pzcs);
+
+  if(n_pzcs == 0)
+    return;
+
+  std::vector<int> slc_n_primary_daughters;
+  std::vector<std::vector<int>> slc_pfp_razzled_pdg;
+  std::vector<std::vector<double>> slc_pfp_shower_dir_x, slc_pfp_shower_dir_y, slc_pfp_shower_dir_z,
+    slc_pfp_shower_energy;
+
+  GetVar(slcVars["slc_n_primary_daughters"], slc_n_primary_daughters);
+  GetVar(slcVars["slc_pfp_razzled_pdg"], slc_pfp_razzled_pdg);
+  GetVar(slcVars["slc_pfp_shower_dir_x"], slc_pfp_shower_dir_x);
+  GetVar(slcVars["slc_pfp_shower_dir_y"], slc_pfp_shower_dir_y);
+  GetVar(slcVars["slc_pfp_shower_dir_z"], slc_pfp_shower_dir_z);
+  GetVar(slcVars["slc_pfp_shower_energy"], slc_pfp_shower_energy);
+
+  int pzcCounter = 0;
+
+  for(auto&& [i, slc_id_a] : enumerate(slc_ids))
+    {
+      const int n_primary_daughters_a = slc_n_primary_daughters.at(slc_id_a);
+
+      for(int ii = 0; ii < n_primary_daughters_a; ++ii)
+        {
+          if(slc_pfp_razzled_pdg.at(slc_id_a).at(ii) != 22)
+            continue;
+
+          for(auto&& [j, slc_id_b] : enumerate(slc_ids))
+            {
+              const int n_primary_daughters_b = slc_n_primary_daughters.at(slc_id_b);
+
+              for(int jj = 0; jj < n_primary_daughters_b; ++jj)
+                {
+                  if(slc_pfp_razzled_pdg.at(slc_id_b).at(jj) != 22)
+                    continue;
+
+                  if(slc_id_a == slc_id_b && ii == jj)
+                    continue;
+
+                  if(slc_ids.size() > 1)
+                    {
+                      FillElement(vars[prefix + "_pzc_photon_0_slc_id"], counter, pzcCounter, slc_id_a);
+                      FillElement(vars[prefix + "_pzc_photon_1_slc_id"], counter, pzcCounter, slc_id_b);
+                    }
+
+                  FillElement(vars[prefix + "_pzc_photon_0_id"], counter, pzcCounter, ii);
+                  FillElement(vars[prefix + "_pzc_photon_1_id"], counter, pzcCounter, jj);
+
+                  const TVector3 dir0(slc_pfp_shower_dir_x.at(slc_id_a).at(ii), slc_pfp_shower_dir_y.at(slc_id_a).at(ii), slc_pfp_shower_dir_z.at(slc_id_a).at(ii));
+                  const TVector3 dir1(slc_pfp_shower_dir_x.at(slc_id_b).at(jj), slc_pfp_shower_dir_y.at(slc_id_b).at(jj), slc_pfp_shower_dir_z.at(slc_id_b).at(jj));
+
+                  const double en0 = slc_pfp_shower_energy.at(slc_id_a).at(ii);
+                  const double en1 = slc_pfp_shower_energy.at(slc_id_b).at(jj);
+
+                  ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, dir0, dir1, en0, en1);
+
+                  ++pzcCounter;
+                }
+            }
+        }
+    }
+}
+
+void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
+                                                    const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1)
+{
+  const bool goodKinematics = !(dir0.X() == -999 || dir1.X() == -999 || en0 < 0 || en1 < 0);
+
+  const double cosineThetaGammaGamma = dir0.Dot(dir1) / (dir0.Mag() * dir1.Mag());
+  const TVector3 pizeroDir           = (en0 * dir0) + (en1 * dir1);
+
+  const double invariantMass  = sqrt(2 * en0 * en1 * (1 - cosineThetaGammaGamma));
+  const double pizeroMom      = pizeroDir.Mag();
+  const double pizeroCosTheta = pizeroDir.Z() / pizeroMom;
+  const double cosCOM         = std::abs(en0 - en1) / pizeroMom;
+
+  FillElement(vars[prefix + "_pzc_good_kinematics"], counter, pzcCounter, goodKinematics);
+  FillElement(vars[prefix + "_pzc_invariant_mass"], counter, pzcCounter, invariantMass);
+  FillElement(vars[prefix + "_pzc_pizero_mom"], counter, pzcCounter, pizeroMom);
+  FillElement(vars[prefix + "_pzc_cos_theta_pizero"], counter, pzcCounter, pizeroCosTheta);
+  FillElement(vars[prefix + "_pzc_cos_com"], counter, pzcCounter, cosCOM);
 }
 
 float sbnd::NCPiZeroAnalysis::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)
@@ -1501,6 +1664,10 @@ void sbnd::NCPiZeroAnalysis::ResetEventVars()
   _run = -1; _subrun = -1; _event  = -1;
 
   _n_nu = 0; _n_slc  = 0;
+
+  ClearVectors(nuVars);
+  ClearVectors(slcVars);
+  ClearVectors(mscVars);
 }
 
 int sbnd::NCPiZeroAnalysis::GetTotalGenEvents(const art::Event &e)
@@ -1518,6 +1685,12 @@ int sbnd::NCPiZeroAnalysis::GetTotalGenEvents(const art::Event &e)
   }
 
   return nGenEvt;
+}
+
+void sbnd::NCPiZeroAnalysis::ClearVectors(VecVarMap &map)
+{
+  for(auto const& [name, var] : map)
+    var->Clear();
 }
 
 void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
@@ -1564,6 +1737,8 @@ void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
               dynamic_cast<InhVecVecVar<float>*>(var)->Resize(size);
               break;
             case kDouble:
+              std::cout << dynamic_cast<InhVecVecVar<double>*>(var)->Name() << " "
+                        << dynamic_cast<InhVecVecVar<double>*>(var)->Var().size() << std::endl;
               dynamic_cast<InhVecVecVar<double>*>(var)->Resize(size);
               break;
             case kUnknownVar:
@@ -1573,12 +1748,13 @@ void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
     }
 }
 
-void sbnd::NCPiZeroAnalysis::ResizeSubVectors(VecVarMap &map, const int pos, const int size)
+void sbnd::NCPiZeroAnalysis::ResizeSubVectors(VecVarMap &map, const std::string &subname, const int pos, const int size)
 {
   for(auto const& [name, var] : map)
     {
-      if(var->IdentifyVec() == kTwoD)
+      if(var->IdentifyVec() == kTwoD && var->Name().find(subname) != std::string::npos)
         {
+          std::cout << name << " " << subname << " " << pos << " " << size << std::endl;
           switch(var->IdentifyVar())
             {
             case kBool:
@@ -1640,6 +1816,12 @@ template<typename T>
 void sbnd::NCPiZeroAnalysis::GetVar(VecVar *vec, std::vector<T> &var)
 {
   var = dynamic_cast<InhVecVar<T>*>(vec)->Var();
+}
+
+template<typename T>
+void sbnd::NCPiZeroAnalysis::GetVar(VecVar *vec, std::vector<std::vector<T>> &var)
+{
+  var = dynamic_cast<InhVecVecVar<T>*>(vec)->Var();
 }
 
 DEFINE_ART_MODULE(sbnd::NCPiZeroAnalysis)

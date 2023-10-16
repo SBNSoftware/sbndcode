@@ -43,6 +43,8 @@ class VecVar
     return name;
   }
 
+  virtual void Clear() {}
+
   virtual VarType IdentifyVar() const
   {
     return kUnknownVar;
@@ -93,6 +95,12 @@ class InhVecVar : public VecVar
   std::vector<T>& Var()
   {
     return var;
+  }
+
+  void Clear()
+  {
+    std::cout << "\tClearing" << std::endl;
+    var.clear();
   }
 
   virtual VarType IdentifyVar() const;
@@ -167,6 +175,12 @@ class InhVecVecVar : public VecVar
   std::vector<std::vector<T>>& Var()
   {
     return var;
+  }
+
+  void Clear()
+  {
+    std::cout << "\tClearing2D" << std::endl;
+    var.clear();
   }
 
   virtual VarType IdentifyVar() const;
