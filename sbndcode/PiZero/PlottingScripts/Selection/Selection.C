@@ -8,7 +8,7 @@ const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
 const double goalSpills  = goalPOT / potPerSpill;
 
-void Selection(const TString saveDirExt = "tmp", std::vector<Cut> &cuts = razzled_cuts,
+void Selection(const TString productionVersion, const TString saveDirExt = "tmp", std::vector<Cut> &cuts = razzled_cuts,
                const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots);
 
 double GetPOT(TChain *subruns);
@@ -20,18 +20,18 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
 
 void RunMultiSelection()
 {
-  Selection("razzled_muons_razzle_photons_cuts", razzled_muons_razzle_photons_cuts);
-  Selection("razzled_cuts", razzled_cuts);
+  Selection("NCPiZeroAv3", "razzled_muons_razzle_photons_cuts", razzled_muons_razzle_photons_cuts);
+  Selection("NCPiZeroAv3", "razzled_cuts", razzled_cuts);
 }
 
-void Selection(const TString saveDirExt, std::vector<Cut> &cuts, const std::vector<Cut> &categories,
+void Selection(const TString productionVersion, const TString saveDirExt, std::vector<Cut> &cuts, const std::vector<Cut> &categories,
                std::vector<Plot> &plots)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv3/selection/" + saveDirExt;
+  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/selection/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv3/NCPiZeroAv3_rockbox.root";
-  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv3/NCPiZeroAv3_intime.root";
+  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
