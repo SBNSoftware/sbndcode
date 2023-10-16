@@ -354,6 +354,7 @@ private:
     { "slc_pzc_pizero_mom", new InhVecVecVar<double>("slc_pzc_pizero_mom") },
     { "slc_pzc_cos_theta_pizero", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero") },
     { "slc_pzc_cos_com", new InhVecVecVar<double>("slc_pzc_cos_com") },
+    { "slc_pzc_decay_asymmetry", new InhVecVecVar<double>("slc_pzc_decay_asymmetry") },
     { "slc_sel1", new InhVecVar<bool>("slc_sel1") },
     { "slc_sel2", new InhVecVar<bool>("slc_sel2") },
   };
@@ -1567,12 +1568,14 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   const double pizeroMom      = pizeroDir.Mag();
   const double pizeroCosTheta = pizeroDir.Z() / pizeroMom;
   const double cosCOM         = std::abs(en0 - en1) / pizeroMom;
+  const double decayAsym      = (en0 - en1) / (en0 + en1);
 
   FillElement(vars[prefix + "_pzc_good_kinematics"], counter, pzcCounter, goodKinematics);
   FillElement(vars[prefix + "_pzc_invariant_mass"], counter, pzcCounter, invariantMass);
   FillElement(vars[prefix + "_pzc_pizero_mom"], counter, pzcCounter, pizeroMom);
   FillElement(vars[prefix + "_pzc_cos_theta_pizero"], counter, pzcCounter, pizeroCosTheta);
   FillElement(vars[prefix + "_pzc_cos_com"], counter, pzcCounter, cosCOM);
+  FillElement(vars[prefix + "_pzc_decay_asymmetry"], counter, pzcCounter, decayAsym);
 }
 
 float sbnd::NCPiZeroAnalysis::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)
