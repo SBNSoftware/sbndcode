@@ -39,6 +39,7 @@
 #include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "lardataobj/RecoBase/MCSFitResult.h"
+#include "lardataobj/RecoBase/SpacePoint.h"
 
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
@@ -131,7 +132,8 @@ public:
 
   void SelectSlice(const int counter);
 
-  void ProduceMultiSliceCandidates();
+  void ProduceMultiSliceCandidates(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+                                   const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
 
   void ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,
                                const int counter, const std::vector<int> slc_ids);
@@ -141,6 +143,8 @@ public:
 
   float Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
   float Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
+  double DCA(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+             const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const size_t key0, const size_t key1);
 
   bool VolumeCheck(const geo::Point_t &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
   bool VolumeCheck(const TVector3 &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
@@ -170,7 +174,8 @@ private:
     fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel,
     fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
     fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
-    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel, fRazzledModuleLabel;
+    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel, fRazzledModuleLabel,
+    fSpacePointModuleLabel;
   bool fDebug, fBeamOff;
 
   std::map<int, int> fHitsMap;
@@ -207,7 +212,7 @@ private:
     { "nu_n_charged_pions", new InhVecVar<int>("nu_n_charged_pions") },
     { "nu_n_neutral_pions", new InhVecVar<int>("nu_n_neutral_pions") },
     { "nu_n_photons", new InhVecVar<int>("nu_n_photons") },
-    { "nu_n_others", new InhVecVar<int>("nu_n_others") },
+    { "nu_n_other", new InhVecVar<int>("nu_n_other") },
     { "nu_w", new InhVecVar<double>("nu_w") },
     { "nu_x", new InhVecVar<double>("nu_x") },
     { "nu_y", new InhVecVar<double>("nu_y") },
@@ -223,6 +228,7 @@ private:
   int _n_slc;
 
   VecVarMap slcVars = {
+    { "slc_key", new InhVecVar<size_t>("slc_key") },
     { "slc_n_pfps", new InhVecVar<size_t>("slc_n_pfps") },
     { "slc_primary_pfp_id", new InhVecVar<size_t>("slc_primary_pfp_id") },
     { "slc_primary_pfp_pdg", new InhVecVar<int>("slc_primary_pfp_pdg") },
@@ -261,7 +267,7 @@ private:
     { "slc_true_n_charged_pions", new InhVecVar<int>("slc_true_n_charged_pions") },
     { "slc_true_n_neutral_pions", new InhVecVar<int>("slc_true_n_neutral_pions") },
     { "slc_true_n_photons", new InhVecVar<int>("slc_true_n_photons") },
-    { "slc_true_n_others", new InhVecVar<int>("slc_true_n_others") },
+    { "slc_true_n_other", new InhVecVar<int>("slc_true_n_other") },
     { "slc_true_w", new InhVecVar<double>("slc_true_w") },
     { "slc_true_x", new InhVecVar<double>("slc_true_x") },
     { "slc_true_y", new InhVecVar<double>("slc_true_y") },
@@ -376,6 +382,13 @@ private:
     { "msc_0_good_opt0", new InhVecVar<bool>("msc_0_good_opt0") },
     { "msc_0_opt0_frac", new InhVecVar<double>("msc_0_opt0_frac") },
     { "msc_0_n_pfps", new InhVecVar<size_t>("msc_0_n_pfps") },
+    { "msc_0_n_razzle_electrons", new InhVecVar<int>("msc_0_n_razzle_electrons") },
+    { "msc_0_n_razzle_photons", new InhVecVar<int>("msc_0_n_razzle_photons") },
+    { "msc_0_n_razzle_other", new InhVecVar<int>("msc_0_n_razzle_other") },
+    { "msc_0_n_dazzle_muons", new InhVecVar<int>("msc_0_n_dazzle_muons") },
+    { "msc_0_n_dazzle_pions", new InhVecVar<int>("msc_0_n_dazzle_pions") },
+    { "msc_0_n_dazzle_protons", new InhVecVar<int>("msc_0_n_dazzle_protons") },
+    { "msc_0_n_dazzle_other", new InhVecVar<int>("msc_0_n_dazzle_other") },
     { "msc_0_n_razzled_electrons", new InhVecVar<int>("msc_0_n_razzled_electrons") },
     { "msc_0_n_razzled_muons", new InhVecVar<int>("msc_0_n_razzled_muons") },
     { "msc_0_n_razzled_photons", new InhVecVar<int>("msc_0_n_razzled_photons") },
@@ -395,6 +408,13 @@ private:
     { "msc_1_good_opt0", new InhVecVar<bool>("msc_1_good_opt0") },
     { "msc_1_opt0_frac", new InhVecVar<double>("msc_1_opt0_frac") },
     { "msc_1_n_pfps", new InhVecVar<size_t>("msc_1_n_pfps") },
+    { "msc_1_n_razzle_electrons", new InhVecVar<int>("msc_1_n_razzle_electrons") },
+    { "msc_1_n_razzle_photons", new InhVecVar<int>("msc_1_n_razzle_photons") },
+    { "msc_1_n_razzle_other", new InhVecVar<int>("msc_1_n_razzle_other") },
+    { "msc_1_n_dazzle_muons", new InhVecVar<int>("msc_1_n_dazzle_muons") },
+    { "msc_1_n_dazzle_pions", new InhVecVar<int>("msc_1_n_dazzle_pions") },
+    { "msc_1_n_dazzle_protons", new InhVecVar<int>("msc_1_n_dazzle_protons") },
+    { "msc_1_n_dazzle_other", new InhVecVar<int>("msc_1_n_dazzle_other") },
     { "msc_1_n_razzled_electrons", new InhVecVar<int>("msc_1_n_razzled_electrons") },
     { "msc_1_n_razzled_muons", new InhVecVar<int>("msc_1_n_razzled_muons") },
     { "msc_1_n_razzled_photons", new InhVecVar<int>("msc_1_n_razzled_photons") },
@@ -405,6 +425,7 @@ private:
     { "msc_matching_flash_pe", new InhVecVar<bool>("msc_matching_flash_pe") },
     { "msc_same_tpc", new InhVecVar<bool>("msc_same_tpc") },
     { "msc_sum_opt0_frac", new InhVecVar<double>("msc_sum_opt0_frac") },
+    { "msc_dca", new InhVecVar<double>("msc_dca") },
     { "msc_n_pzcs", new InhVecVar<size_t>("msc_n_pzcs") },
     { "msc_pzc_photon_0_id", new InhVecVecVar<int>("msc_pzc_photon_0_id") },
     { "msc_pzc_photon_1_id", new InhVecVecVar<int>("msc_pzc_photon_1_id") },
@@ -445,6 +466,7 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fPOTModuleLabel              = p.get<art::InputTag>("POTModuleLabel", "generator");
     fOpT0ModuleLabel             = p.get<art::InputTag>("OpT0ModuleLabel", "opt0finder");
     fRazzledModuleLabel          = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
+    fSpacePointModuleLabel       = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
     fDebug                       = p.get<bool>("Debug", false);
     fBeamOff                     = p.get<bool>("BeamOff", false);
 
@@ -611,6 +633,7 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
   SetupMaps(e, hitHandle, pfpHandle);
   AnalyseNeutrinos(e, MCTruthHandles);
   AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
+  ProduceMultiSliceCandidates(e, sliceHandle, pfpHandle);
 
   // Fill the Tree
   fEventTree->Fill();
@@ -709,7 +732,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
   art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
   const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
 
-  int protons = 0, neutrons = 0, charged_pions = 0, neutral_pions = 0, photons = 0, others = 0;
+  int protons = 0, neutrons = 0, charged_pions = 0, neutral_pions = 0, photons = 0, other = 0;
   float trueEnDep = 0.;
 
   for(auto const& mcp : MCParticleVec)
@@ -736,7 +759,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
               ++photons;
               break;
             default:
-              ++others;
+              ++other;
               break;
             }
         }
@@ -784,7 +807,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
   FillElement(vars[prefix + "_n_charged_pions"], counter, charged_pions);
   FillElement(vars[prefix + "_n_neutral_pions"], counter, neutral_pions);
   FillElement(vars[prefix + "_n_photons"], counter, photons);
-  FillElement(vars[prefix + "_n_others"], counter, others);
+  FillElement(vars[prefix + "_n_other"], counter, other);
   FillElement(vars[prefix + "_w"], counter, mcn.W());
   FillElement(vars[prefix + "_x"], counter, mcn.X());
   FillElement(vars[prefix + "_y"], counter, mcn.Y());
@@ -815,6 +838,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
   for (auto&& [slcCounter, slc] : enumerate(sliceVec))
     {
+      FillElement(slcVars["slc_key"], slcCounter, slc.key());
+
       const std::vector<art::Ptr<recob::PFParticle>> pfps = slicesToPFPs.at(slc.key());
       FillElement(slcVars["slc_n_pfps"], slcCounter, pfps.size());
 
@@ -881,8 +906,6 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
       AnalyseSliceTruth(e, slc, slcCounter, sliceHandle);
     }
-
-  ProduceMultiSliceCandidates();
 }
 
 void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
@@ -1373,7 +1396,8 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   FillElement(slcVars["slc_sel2"], counter, sel2);
 }
 
-void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
+void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+                                                         const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
 {
   std::vector<bool> slc_is_clear_cosmic;
   GetVar(slcVars["slc_is_clear_cosmic"], slc_is_clear_cosmic);
@@ -1398,13 +1422,16 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
 
   int mscCounter = 0;
 
-  std::vector<size_t> slc_true_mctruth_id, slc_n_pfps;
-  std::vector<int> slc_true_event_type, slc_n_razzled_electrons, slc_n_razzled_muons,
+  std::vector<size_t> slc_key, slc_true_mctruth_id, slc_n_pfps;
+  std::vector<int> slc_true_event_type, slc_n_razzle_electrons, slc_n_razzle_photons,
+    slc_n_razzle_other, slc_n_dazzle_muons, slc_n_dazzle_pions, slc_n_dazzle_protons,
+    slc_n_dazzle_other, slc_n_razzled_electrons, slc_n_razzled_muons,
     slc_n_razzled_photons, slc_n_razzled_pions, slc_n_razzled_protons;
   std::vector<float> slc_comp, slc_pur, slc_crumbs_score;
   std::vector<double> slc_vtx_x, slc_vtx_y, slc_vtx_z,
     slc_opt0_measPE, slc_opt0_hypPE;
 
+  GetVar(slcVars["slc_key"], slc_key);
   GetVar(slcVars["slc_true_mctruth_id"], slc_true_mctruth_id);
   GetVar(slcVars["slc_true_event_type"], slc_true_event_type);
   GetVar(slcVars["slc_comp"], slc_comp);
@@ -1416,6 +1443,13 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
   GetVar(slcVars["slc_opt0_hypPE"], slc_opt0_hypPE);
   GetVar(slcVars["slc_crumbs_score"], slc_crumbs_score);
   GetVar(slcVars["slc_n_pfps"], slc_n_pfps);
+  GetVar(slcVars["slc_n_razzle_electrons"], slc_n_razzle_electrons);
+  GetVar(slcVars["slc_n_razzle_photons"], slc_n_razzle_photons);
+  GetVar(slcVars["slc_n_razzle_other"], slc_n_razzle_other);
+  GetVar(slcVars["slc_n_dazzle_muons"], slc_n_dazzle_muons);
+  GetVar(slcVars["slc_n_dazzle_pions"], slc_n_dazzle_pions);
+  GetVar(slcVars["slc_n_dazzle_protons"], slc_n_dazzle_protons);
+  GetVar(slcVars["slc_n_dazzle_other"], slc_n_dazzle_other);
   GetVar(slcVars["slc_n_razzled_electrons"], slc_n_razzled_electrons);
   GetVar(slcVars["slc_n_razzled_muons"], slc_n_razzled_muons);
   GetVar(slcVars["slc_n_razzled_photons"], slc_n_razzled_photons);
@@ -1446,6 +1480,13 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
               FillElement(vars[prefix + "_opt0_hypPE"], counter, slc_opt0_hypPE.at(index));
               FillElement(vars[prefix + "_crumbs_score"], counter, slc_crumbs_score.at(index));
               FillElement(vars[prefix + "_n_pfps"], counter, slc_n_pfps.at(index));
+              FillElement(vars[prefix + "_n_razzle_electrons"], counter, slc_n_razzle_electrons.at(index));
+              FillElement(vars[prefix + "_n_razzle_photons"], counter, slc_n_razzle_photons.at(index));
+              FillElement(vars[prefix + "_n_razzle_other"], counter, slc_n_razzle_other.at(index));
+              FillElement(vars[prefix + "_n_dazzle_muons"], counter, slc_n_dazzle_muons.at(index));
+              FillElement(vars[prefix + "_n_dazzle_pions"], counter, slc_n_dazzle_pions.at(index));
+              FillElement(vars[prefix + "_n_dazzle_protons"], counter, slc_n_dazzle_protons.at(index));
+              FillElement(vars[prefix + "_n_dazzle_other"], counter, slc_n_dazzle_other.at(index));
               FillElement(vars[prefix + "_n_razzled_electrons"], counter, slc_n_razzled_electrons.at(index));
               FillElement(vars[prefix + "_n_razzled_muons"], counter, slc_n_razzled_muons.at(index));
               FillElement(vars[prefix + "_n_razzled_photons"], counter, slc_n_razzled_photons.at(index));
@@ -1484,6 +1525,9 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
           FillElement(mscVars["msc_matching_flash_pe"], mscCounter, matching_flash_pe);
           FillElement(mscVars["msc_same_tpc"], mscCounter, same_tpc);
           FillElement(mscVars["msc_sum_opt0_frac"], mscCounter, sum_opt0_frac);
+
+          const double dca = DCA(e, sliceHandle, pfpHandle, slc_key.at(i), slc_key.at(j));
+          FillElement(mscVars["msc_dca"], mscCounter, dca);
 
           ProducePiZeroCandidates(mscVars, "msc", mscCounter, { i, j });
 
@@ -1616,6 +1660,53 @@ float sbnd::NCPiZeroAnalysis::Completeness(const art::Event &e, const std::vecto
 
   return (fHitsMap[trackID] == 0) ? def_float : objectHitsMap[trackID]/static_cast<float>(fHitsMap[trackID]);
 }
+
+double sbnd::NCPiZeroAnalysis::DCA(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+                                   const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const size_t key0, const size_t key1)
+{
+  art::FindManyP<recob::PFParticle> slicesToPFPs(sliceHandle, e, fPFParticleModuleLabel);
+  art::FindManyP<recob::SpacePoint> pfpsToSpacePoints(pfpHandle, e, fSpacePointModuleLabel);
+
+  const std::vector<art::Ptr<recob::PFParticle>> pfps0 = slicesToPFPs.at(key0);
+  const std::vector<art::Ptr<recob::PFParticle>> pfps1 = slicesToPFPs.at(key1);
+
+  std::vector<art::Ptr<recob::SpacePoint>> spacepoints0;
+  std::vector<art::Ptr<recob::SpacePoint>> spacepoints1;
+
+  for(auto const& pfp : pfps0)
+    {
+      const std::vector<art::Ptr<recob::SpacePoint>> spacepoints = pfpsToSpacePoints.at(pfp.key());
+      spacepoints0.insert(spacepoints0.end(), spacepoints.begin(), spacepoints.end());
+    }
+
+  for(auto const& pfp : pfps1)
+    {
+      const std::vector<art::Ptr<recob::SpacePoint>> spacepoints = pfpsToSpacePoints.at(pfp.key());
+      spacepoints1.insert(spacepoints1.end(), spacepoints.begin(), spacepoints.end());
+    }
+
+  double dca = std::numeric_limits<double>::max();
+
+  for(auto const& sp0 : spacepoints0)
+    {
+      const geo::Point_t pos0 = sp0->position();
+
+      for(auto const& sp1 : spacepoints1)
+        {
+          const geo::Point_t pos1 = sp1->position();
+
+          const double dist = TMath::Sqrt(TMath::Power(pos1.X() - pos0.X(), 2) +
+                                          TMath::Power(pos1.Y() - pos0.Y(), 2) +
+                                          TMath::Power(pos1.Z() - pos0.Z(), 2));
+
+          if(dist < dca)
+            dca = dist;
+        }
+    }
+
+  return dca;
+}
+
 
 bool sbnd::NCPiZeroAnalysis::VolumeCheck(const geo::Point_t &pos, const double &walls, const double &cath, const double &front, const double &back)
 {
