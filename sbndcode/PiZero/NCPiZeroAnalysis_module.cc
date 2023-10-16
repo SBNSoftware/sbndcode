@@ -405,6 +405,17 @@ private:
     { "msc_matching_flash_pe", new InhVecVar<bool>("msc_matching_flash_pe") },
     { "msc_same_tpc", new InhVecVar<bool>("msc_same_tpc") },
     { "msc_sum_opt0_frac", new InhVecVar<double>("msc_sum_opt0_frac") },
+    { "msc_n_pzcs", new InhVecVar<size_t>("msc_n_pzcs") },
+    { "msc_pzc_photon_0_id", new InhVecVecVar<int>("msc_pzc_photon_0_id") },
+    { "msc_pzc_photon_1_id", new InhVecVecVar<int>("msc_pzc_photon_1_id") },
+    { "msc_pzc_photon_0_slc_id", new InhVecVecVar<int>("msc_pzc_photon_0_slc_id") },
+    { "msc_pzc_photon_1_slc_id", new InhVecVecVar<int>("msc_pzc_photon_1_slc_id") },
+    { "msc_pzc_good_kinematics", new InhVecVecVar<bool>("msc_pzc_good_kinematics") },
+    { "msc_pzc_invariant_mass", new InhVecVecVar<double>("msc_pzc_invariant_mass") },
+    { "msc_pzc_pizero_mom", new InhVecVecVar<double>("msc_pzc_pizero_mom") },
+    { "msc_pzc_cos_theta_pizero", new InhVecVecVar<double>("msc_pzc_cos_theta_pizero") },
+    { "msc_pzc_cos_com", new InhVecVecVar<double>("msc_pzc_cos_com") },
+    { "msc_pzc_decay_asymmetry", new InhVecVecVar<double>("msc_pzc_decay_asymmetry") },
   };
 };
 
@@ -1474,6 +1485,8 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
           FillElement(mscVars["msc_same_tpc"], mscCounter, same_tpc);
           FillElement(mscVars["msc_sum_opt0_frac"], mscCounter, sum_opt0_frac);
 
+          ProducePiZeroCandidates(mscVars, "msc", mscCounter, { i, j });
+
           ++mscCounter;
         }
     }
@@ -1529,7 +1542,9 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
                   if(slc_pfp_razzled_pdg.at(slc_id_b).at(jj) != 22)
                     continue;
 
-                  if(slc_id_a == slc_id_b && ii == jj)
+                  if((slc_id_a == slc_id_b && ii == jj)
+                     || j < i
+                     || (i == j && jj < ii))
                     continue;
 
                   if(slc_ids.size() > 1)
