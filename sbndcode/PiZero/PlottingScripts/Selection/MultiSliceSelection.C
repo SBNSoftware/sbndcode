@@ -2,10 +2,10 @@
 #include "LatexHeaders.h"
 
 const std::vector<Cut> categories = {
-  { "Signal", "signal_cand && matching_flash_pe", "Signal (x100)", kMagenta+2, 100 },
-  { "SignalDiffFlash", "signal_cand && !matching_flash_pe", "Signal (Diff Flash) (x100)", kMagenta-7, 100 },
-  { "Background", "!signal_cand && matching_flash_pe", "Background", kRed+1 },
-  { "BackgroundDiffFlash", "!signal_cand && !matching_flash_pe", "Background (Diff Flash)", kRed-7 },
+  { "Signal", "msc_signal && msc_matching_flash_pe", "Signal (x100)", kMagenta+2, 100 },
+  { "SignalDiffFlash", "msc_signal && !msc_matching_flash_pe", "Signal (Diff Flash) (x100)", kMagenta-7, 100 },
+  { "Background", "!msc_signal && msc_matching_flash_pe", "Background", kRed+1 },
+  { "BackgroundDiffFlash", "!msc_signal && !msc_matching_flash_pe", "Background (Diff Flash)", kRed-7 },
 };
 
 /*
@@ -19,42 +19,54 @@ const std::vector<Cut> categories = {
 
 std::vector<Cut> cuts = {
   { "no_cut", "", "No Cut" },
-  { "good_opT0s_cut", "goodOpT00 && goodOpT01", "Good OpT0s" },
-  { "opT0Frac0_cut", "opT0Frac0<0", "OpT0Frac0 \\textless 0" },
-  { "opT0Frac1_cut", "opT0Frac1<0", "OpT0Frac1 \\textless 0" },
-  { "sumOpT0Frac_cut", "!matching_flash_pe || (sumOpT0Frac<0.2 && sumOpT0Frac>-0.6)", "-0.6 \\textless sumOpT0Frac \\textless 0.2" },
-  //  { "either_opT0Frac_cut", "matching_flash_pe || (opT0Frac0>-0.6 && opT0Frac1>-0.6)", "-0.6 \\textless OpT0Frac0,1 \\textless 0" },
-  { "sep_cut", "sep<200", "Separation \\textless 200cm" },
-  { "crumbs_cut", "crumbs0>-0.2 || crumbs1>-0.2", "Higher CRUMBS Score \\textgreater -0.2"},
+  { "good_opt0s_cut", "msc_0_good_opt0 && msc_1_good_opt0", "Good OpT0s" },
+  { "opt0_frac_0_cut", "msc_0_opt0_frac<0", "OpT0Frac0 \\textless 0" },
+  { "opt0_frac_1_cut", "msc_1_opt0_frac<0", "OpT0Frac1 \\textless 0" },
+  { "sum_opt0_frac_cut", "!msc_matching_flash_pe || (msc_sum_opt0_frac<0.2 && msc_sum_opt0_frac>-0.6)", "-0.6 \\textless sumOpT0Frac \\textless 0.2" },
+  { "sep_cut", "msc_sep<200", "Separation \\textless 200cm" },
+  { "crumbs_cut", "msc_0_crumbs_score>-0.2 || msc_1_crumbs_score>-0.2", "Higher CRUMBS Score \\textgreater -0.2"},
+  { "razzled_muons_cut", "msc_0_n_razzled_muons==0 && msc_1_n_razzled_muons==0", "No Razzled Muons" },
+  { "razzled_photons_cut", "(msc_0_n_razzled_photons + msc_1_n_razzled_photons) > 1", "Has Two Razzled Photons" },
+  { "razzled_photons_exact_cut", "(msc_0_n_razzled_photons + msc_1_n_razzled_photons) == 2", "Has Exactly Two Razzled Photons" },
 };
 
 std::vector<Plot> plots = {
-  { "opT0Frac0", "opT0Frac0", ";OpT0Frac0;Candidates",
+  { "msc_0_opt0_frac", "msc_0_opt0_frac", ";OpT0Frac0;Candidates",
     100, -2, 8 },
-  { "opT0Frac0_close", "opT0Frac0", ";OpT0Frac0;Candidates",
+  { "msc_0_opt0_frac_close", "msc_0_opt0_frac", ";OpT0Frac0;Candidates",
     48, -1.2, 1 },
-  { "opT0Frac1", "opT0Frac1", ";OpT0Frac1;Candidates",
+  { "msc_1_opt0_frac", "msc_1_opt0_frac", ";OpT0Frac1;Candidates",
     100, -2, 8 },
-  { "opT0Frac1_close", "opT0Frac1", ";OpT0Frac1;Candidates",
+  { "msc_1_opt0_frac_close", "msc_1_opt0_frac", ";OpT0Frac1;Candidates",
     48, -1.2, 1 },
-  { "sumOpT0Frac", "sumOpT0Frac", ";SumOpT0Frac;Candidates",
+  { "msc_sum_opt0_frac", "msc_sum_opt0_frac", ";SumOpT0Frac;Candidates",
     100, -2, 8 },
-  { "sumOpT0Frac_close", "sumOpT0Frac", ";SumOpT0Frac;Candidates",
+  { "msc_sum_opt0_frac_close", "msc_sum_opt0_frac", ";SumOpT0Frac;Candidates",
     48, -1.2, 1 },
-  { "sep", "sep", ";Separation (cm);Candidates",
+  { "msc_sep", "msc_sep", ";Separation (cm);Candidates",
     50, 0, 600 },
-  { "matching_flash", "matching_flash_pe", ";Same Flash?;Candidates",
+  { "msc_matching_flash", "msc_matching_flash_pe", ";Same Flash?;Candidates",
     2, -0.5, 1.5, kBlack, false, "", true, { "No", "Yes" } },
-  { "max_crumbs", "max(crumbs0, crumbs1)", ";Higher CRUMBS Score;Candidates",
+  { "msc_max_crumbs_score", "max(msc_0_crumbs_score, msc_1_crumbs_score)", ";Higher CRUMBS Score;Candidates",
     28, -0.8, 0.6 },
-  { "crumbs0", "crumbs0", ";CRUMBS Score 0;Candidates",
+  { "msc_0_crumbs_score", "msc_0_crumbs_score", ";CRUMBS Score 0;Candidates",
     28, -0.8, 0.6 },
-  { "crumbs1", "crumbs1", ";CRUMBS Score 1;Candidates",
+  { "msc_1_crumbs_score", "msc_1_crumbs_score", ";CRUMBS Score 1;Candidates",
     28, -0.8, 0.6 },
-  { "same_tpcs", "(vtx_x0 > 0 && vtx_x1 > 0) + (vtx_x0 < 0 && vtx_x1 < 0)", ";Same TPC?;Candidates",
+  { "msc_same_tpc", "msc_same_tpc", ";Same TPC?;Candidates",
     2, -0.5, 1.5, kBlack, false, "", true, { "No", "Yes" } },
-  { "good_opT0s", "goodOpT00 && goodOpT01", ";Good OpT0 Matches?;Candidates",
+  { "msc_good_opt0s", "msc_0_good_opt0 && msc_1_good_opt0", ";Good OpT0 Matches?;Candidates",
     2, -0.5, 1.5, kBlack, false, "", true, { "No", "Yes" } },
+  { "msc_0_n_razzled_muons", "msc_0_n_razzled_muons", ";N Razzled Muons 0;Candidate",
+    5, -0.5, 4.5 },
+  { "msc_1_n_razzled_muons", "msc_1_n_razzled_muons", ";N Razzled Muons 1;Candidate",
+    5, -0.5, 4.5 },
+  { "msc_0_n_razzled_photons", "msc_0_n_razzled_photons", ";N Razzled Photons 0;Candidate",
+    5, -0.5, 4.5 },
+  { "msc_1_n_razzled_photons", "msc_1_n_razzled_photons", ";N Razzled Photons 1;Candidate",
+    5, -0.5, 4.5 },
+  { "msc_n_razzled_photons", "msc_0_n_razzled_photons + msc_1_n_razzled_photons", ";#Sigma N Razzled Photons;Candidate",
+    5, -0.5, 4.5 },
 };
 
 template<class T>
@@ -62,15 +74,15 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples);
 
 void MultiSliceSelection()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/split_slice_selection/selection";
+  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv3/split_slice_selection/selection";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = "/sbnd/data/users/hlay/ncpizero/split_slice_selection/NCPiZeroAv2_rockbox_multislice_tree.root";
+  const TString file = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv3/NCPiZeroAv3_rockbox.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *events = new TChain("events");
+  TChain *events = new TChain("ncpizeroana/events");
   events->Add(file);
 
   std::vector<Sample<TChain>> samples = { { "all", events, 1. }
@@ -115,15 +127,13 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples)
 
   for(auto const& sample : samples)
     {
-      totalSignal           += sample.tree->Draw("", "signal");
-      totalSignalCandidates += sample.tree->Draw("", "signal_cand");
-      totalBackCandidates   += sample.tree->Draw("", "!signal_cand");
+      totalSignalCandidates += sample.tree->Draw("", "msc_signal");
+      totalBackCandidates   += sample.tree->Draw("", "!msc_signal");
     }
 
   texFile << docStart;
 
   texFile << '\n'
-          << "Total Signal: " << totalSignal << "\\\\ \n"
           << "Total Signal Candidates: " << totalSignalCandidates << "\\\\ \n"
           << "Total Background Candidates: " << totalBackCandidates << "\\\\ \n"
           << std::endl;
@@ -154,7 +164,7 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples)
             }
         }
 
-      const double eff         = sigCandidates * 100. / totalSignal;
+      const double eff         = sigCandidates * 100. / totalSignalCandidates;
       const double pur         = sigCandidates * 100./ (sigCandidates + backCandidates);
       const double backRej     = 100. - 100. * backCandidates / totalBackCandidates;
 
