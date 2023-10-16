@@ -99,7 +99,6 @@ class InhVecVar : public VecVar
 
   void Clear()
   {
-    std::cout << "\tClearing" << std::endl;
     var.clear();
   }
 
@@ -179,7 +178,6 @@ class InhVecVecVar : public VecVar
 
   void Clear()
   {
-    std::cout << "\tClearing2D" << std::endl;
     var.clear();
   }
 

@@ -86,7 +86,6 @@ public:
   void ResetSubRunVars();
   void ResetEventVars();
   void ClearMaps();
-  void ClearVectors(VecVarMap &map);
 
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
                  const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
@@ -405,16 +404,6 @@ private:
     { "msc_matching_flash_pe", new InhVecVar<bool>("msc_matching_flash_pe") },
     { "msc_same_tpc", new InhVecVar<bool>("msc_same_tpc") },
     { "msc_sum_opt0_frac", new InhVecVar<double>("msc_sum_opt0_frac") },
-    { "msc_n_pzcs", new InhVecVar<size_t>("msc_n_pzcs") },
-    { "msc_pzc_photon_0_id", new InhVecVecVar<int>("msc_pzc_photon_0_id") },
-    { "msc_pzc_photon_1_id", new InhVecVecVar<int>("msc_pzc_photon_1_id") },
-    { "msc_pzc_photon_0_slc_id", new InhVecVecVar<int>("msc_pzc_photon_0_slc_id") },
-    { "msc_pzc_photon_1_slc_id", new InhVecVecVar<int>("msc_pzc_photon_1_slc_id") },
-    { "msc_pzc_good_kinematics", new InhVecVecVar<bool>("msc_pzc_good_kinematics") },
-    { "msc_pzc_invariant_mass", new InhVecVecVar<double>("msc_pzc_invariant_mass") },
-    { "msc_pzc_cos_theta_pizero", new InhVecVecVar<double>("msc_pzc_cos_theta_pizero") },
-    { "msc_pzc_pizero_mom", new InhVecVecVar<double>("msc_pzc_pizero_mom") },
-    { "msc_pzc_cos_com", new InhVecVecVar<double>("msc_pzc_cos_com") },
   };
 };
 
@@ -1393,33 +1382,7 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
         }
     }
 
-  std::cout << _n_multi_slice_candidates << std::endl;
-  std::vector<std::vector<double>> msc_pzc_cos_com;
-  GetVar(mscVars["msc_pzc_cos_com"], msc_pzc_cos_com);
-
-  std::cout << "Grand Size: " << msc_pzc_cos_com.size() << std::endl;
-
-  for(auto&& [i, vec] : enumerate(msc_pzc_cos_com))
-    {
-      std::cout << "\t Subsize " << i << ": " << vec.size() << std::endl;
-
-      for(auto&& [j, v] : enumerate(vec))
-        std::cout << "\t Value " << j << ": " << v << std::endl;
-    }
-
   ResizeVectors(mscVars, _n_multi_slice_candidates);
-
-  GetVar(mscVars["msc_pzc_cos_com"], msc_pzc_cos_com);
-
-  std::cout << "Grand Size: " << msc_pzc_cos_com.size() << std::endl;
-
-  for(auto&& [i, vec] : enumerate(msc_pzc_cos_com))
-    {
-      std::cout << "\t Subsize " << i << ": " << vec.size() << std::endl;
-
-      for(auto&& [j, v] : enumerate(vec))
-        std::cout << "\t Value " << j << ": " << v << std::endl;
-    }
 
   int mscCounter = 0;
 
@@ -1509,8 +1472,6 @@ void sbnd::NCPiZeroAnalysis::ProduceMultiSliceCandidates()
           FillElement(mscVars["msc_matching_flash_pe"], mscCounter, matching_flash_pe);
           FillElement(mscVars["msc_same_tpc"], mscCounter, same_tpc);
           FillElement(mscVars["msc_sum_opt0_frac"], mscCounter, sum_opt0_frac);
-
-          ProducePiZeroCandidates(mscVars, "msc", mscCounter, { i, j });
 
           ++mscCounter;
         }
@@ -1664,10 +1625,6 @@ void sbnd::NCPiZeroAnalysis::ResetEventVars()
   _run = -1; _subrun = -1; _event  = -1;
 
   _n_nu = 0; _n_slc  = 0;
-
-  ClearVectors(nuVars);
-  ClearVectors(slcVars);
-  ClearVectors(mscVars);
 }
 
 int sbnd::NCPiZeroAnalysis::GetTotalGenEvents(const art::Event &e)
@@ -1685,12 +1642,6 @@ int sbnd::NCPiZeroAnalysis::GetTotalGenEvents(const art::Event &e)
   }
 
   return nGenEvt;
-}
-
-void sbnd::NCPiZeroAnalysis::ClearVectors(VecVarMap &map)
-{
-  for(auto const& [name, var] : map)
-    var->Clear();
 }
 
 void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
@@ -1737,8 +1688,6 @@ void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
               dynamic_cast<InhVecVecVar<float>*>(var)->Resize(size);
               break;
             case kDouble:
-              std::cout << dynamic_cast<InhVecVecVar<double>*>(var)->Name() << " "
-                        << dynamic_cast<InhVecVecVar<double>*>(var)->Var().size() << std::endl;
               dynamic_cast<InhVecVecVar<double>*>(var)->Resize(size);
               break;
             case kUnknownVar:
@@ -1754,7 +1703,6 @@ void sbnd::NCPiZeroAnalysis::ResizeSubVectors(VecVarMap &map, const std::string 
     {
       if(var->IdentifyVec() == kTwoD && var->Name().find(subname) != std::string::npos)
         {
-          std::cout << name << " " << subname << " " << pos << " " << size << std::endl;
           switch(var->IdentifyVar())
             {
             case kBool:
