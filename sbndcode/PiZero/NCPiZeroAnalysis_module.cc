@@ -223,6 +223,13 @@ private:
     { "nu_vtx_x", new InhVecVar<double>("nu_vtx_x") },
     { "nu_vtx_y", new InhVecVar<double>("nu_vtx_y") },
     { "nu_vtx_z", new InhVecVar<double>("nu_vtx_z") },
+    { "nu_n_pzs", new InhVecVar<size_t>("nu_n_pzs") },
+    { "nu_pz_invariant_mass", new InhVecVecVar<double>("nu_pz_invariant_mass") },
+    { "nu_pz_pizero_mom", new InhVecVecVar<double>("nu_pz_pizero_mom") },
+    { "nu_pz_cos_theta_pizero", new InhVecVecVar<double>("nu_pz_cos_theta_pizero") },
+    { "nu_pz_cos_com", new InhVecVecVar<double>("nu_pz_cos_com") },
+    { "nu_pz_decay_asymmetry", new InhVecVecVar<double>("nu_pz_decay_asymmetry") },
+    { "nu_pz_two_gamma_decay", new InhVecVecVar<bool>("nu_pz_two_gamma_decay") },
   };
 
   int _n_slc;
@@ -278,6 +285,13 @@ private:
     { "slc_true_vtx_x", new InhVecVar<double>("slc_true_vtx_x") },
     { "slc_true_vtx_y", new InhVecVar<double>("slc_true_vtx_y") },
     { "slc_true_vtx_z", new InhVecVar<double>("slc_true_vtx_z") },
+    { "slc_true_n_pzs", new InhVecVar<size_t>("slc_true_n_pzs") },
+    { "slc_true_pz_invariant_mass", new InhVecVecVar<double>("slc_true_pz_invariant_mass") },
+    { "slc_true_pz_pizero_mom", new InhVecVecVar<double>("slc_true_pz_pizero_mom") },
+    { "slc_true_pz_cos_theta_pizero", new InhVecVecVar<double>("slc_true_pz_cos_theta_pizero") },
+    { "slc_true_pz_cos_com", new InhVecVecVar<double>("slc_true_pz_cos_com") },
+    { "slc_true_pz_decay_asymmetry", new InhVecVecVar<double>("slc_true_pz_decay_asymmetry") },
+    { "slc_true_pz_two_gamma_decay", new InhVecVecVar<bool>("slc_true_pz_two_gamma_decay") },
     { "slc_vtx_x", new InhVecVar<double>("slc_vtx_x") },
     { "slc_vtx_y", new InhVecVar<double>("slc_vtx_y") },
     { "slc_vtx_z", new InhVecVar<double>("slc_vtx_z") },
@@ -818,6 +832,52 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
   FillElement(vars[prefix + "_vtx_x"], counter, nu.Vx());
   FillElement(vars[prefix + "_vtx_y"], counter, nu.Vy());
   FillElement(vars[prefix + "_vtx_z"], counter, nu.Vz());
+
+  FillElement(vars[prefix + "_n_pzs"], counter, (size_t) neutral_pions);
+  ResizeSubVectors(vars, prefix + "_pz", counter, neutral_pions);
+
+  int pzCounter = 0;
+
+  for(auto const& mcp : MCParticleVec)
+    {
+      if(mcp->Process() == "primary" && mcp->StatusCode() == 1)
+        {
+          if(abs(mcp->PdgCode()) == 111)
+            {
+	      FillElement(vars[prefix + "_pz_invariant_mass"], counter, pzCounter, mcp->Mass());
+	      FillElement(vars[prefix + "_pz_pizero_mom"], counter, pzCounter, mcp->P());
+	      FillElement(vars[prefix + "_pz_cos_theta_pizero"], counter, pzCounter, mcp->Pz() / mcp->P());
+
+	      bool two_gamma_decay = mcp->NumberDaughters() == 2;
+	      if(!two_gamma_decay)
+		{
+		  FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
+		  ++pzCounter;
+		  continue;
+		}
+
+	      const simb::MCParticle* gamma0 = particleInv->TrackIdToParticle_P(mcp->Daughter(0));
+	      const simb::MCParticle* gamma1 = particleInv->TrackIdToParticle_P(mcp->Daughter(1));
+
+	      two_gamma_decay &= (gamma0->PdgCode() == 22 && gamma1->PdgCode() == 22);
+	      if(!two_gamma_decay)
+		{
+		  FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
+		  ++pzCounter;
+		  continue;
+		}
+
+	      const double en0 = gamma0->E();
+	      const double en1 = gamma1->E();
+
+	      FillElement(vars[prefix + "_pz_cos_com"], counter, pzCounter, std::abs(en0 - en1) / mcp->P());
+	      FillElement(vars[prefix + "_pz_decay_asymmetry"], counter, pzCounter, std::abs(en0 - en1) / (en0 + en1));
+	      FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
+
+	      ++pzCounter;
+	    }
+	}
+    }
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
@@ -1627,7 +1687,7 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   const double pizeroMom      = pizeroDir.Mag();
   const double pizeroCosTheta = pizeroDir.Z() / pizeroMom;
   const double cosCOM         = std::abs(en0 - en1) / pizeroMom;
-  const double decayAsym      = (en0 - en1) / (en0 + en1);
+  const double decayAsym      = std::abs(en0 - en1) / (en0 + en1);
 
   FillElement(vars[prefix + "_pzc_good_kinematics"], counter, pzcCounter, goodKinematics);
   FillElement(vars[prefix + "_pzc_invariant_mass"], counter, pzcCounter, invariantMass);
