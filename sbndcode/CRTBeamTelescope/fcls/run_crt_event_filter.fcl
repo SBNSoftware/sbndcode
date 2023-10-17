@@ -1,9 +1,8 @@
 #include "simulationservices_sbnd.fcl"
-#include "dirt_filter_config.fcl"
 #include "rootoutput_sbnd.fcl"
-#include "config_dirt_filter.fcl"
+#include "config_event_filter.fcl"
 
-process_name: CRTDirtFilter
+process_name: CRTEventFilter
 
 services:
 {
@@ -28,12 +27,12 @@ physics:
 
  filters:
  {
-  crtdirtfilter: @local::sbnd_crtdirtfilter
+  crteventfilter: @local::sbnd_crteventfilter
  }
 
  #define the producer and filter modules for this path, order matters,
  #filters reject all following items.  see lines starting physics.producers below
- simulate: [ crtdirtfilter ]
+ simulate: [ crteventfilter ]
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
 

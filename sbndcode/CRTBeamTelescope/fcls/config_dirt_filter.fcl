@@ -1,9 +1,0 @@
-BEGIN_PROLOG
-
-sbnd_crtdirtfilter:
-{
-    module_type:    "CRTDirtFilter" 
-    AuxDetIDELabel: "crtsim"
-}
-
-END_PROLOG

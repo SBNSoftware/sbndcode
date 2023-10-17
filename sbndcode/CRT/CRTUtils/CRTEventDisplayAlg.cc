@@ -32,7 +32,7 @@ void CRTEventDisplayAlg::reconfigure(const Config& config){
   fDrawFEBs         = config.DrawFEBs();
   fDrawStrips       = config.DrawStrips();
   fDrawAuxDetIDEs   = config.DrawAuxDetIDEs();
-  fDrawAuxDetHits  = config.DrawAuxDetHits();
+  fDrawAuxDetHits   = config.DrawAuxDetHits();
   fDrawCrtHits      = config.DrawCrtHits();
   fDrawCrtTracks    = config.DrawCrtTracks();
   fDrawTrueTracks   = config.DrawTrueTracks();

@@ -105,7 +105,6 @@ sbn::crt::CRTTrack CRTTrackRecoAlg::FillCrtTrack(sbn::crt::CRTHit hit1, sbn::crt
   newtr.complete      = complete;
 
   return(newtr);
-
 } // CRTTrackRecoAlg::FillCrtTrack()
 
 
@@ -169,7 +168,6 @@ std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> CRTTrackRecoAlg::Aver
         first = false;
       }
       // If distance from average < limit then add to average
-//std::cout<<"(pos-middle).Mag(): "<<(pos-middle).Mag()<<" fAverageHitDistance: "<<fAverageHitDistance<<std::endl;
       if((pos-middle).Mag() < fAverageHitDistance){
         aveHits.push_back(hits[i]);
       }
@@ -321,24 +319,20 @@ std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::Cr
     if(candidate.size() < 2) continue; // Minimun requirement of 2 hits to form a track. 
     sbn::crt::CRTHit ihit = hits[candidate[0]].first;
     sbn::crt::CRTHit jhit = hits[candidate[1]].first;
-    std::cout<<"candidate.size(): "<<candidate.size()<<std::endl;
-    std::cout<<"CRT hit, ihit (candidate[0]): ("<<ihit.x_pos<<", "<<ihit.y_pos<<", "<<ihit.z_pos<<")"<<std::endl;
-    std::cout<<"CRT hit, jhit (candidate[1]): ("<<jhit.x_pos<<", "<<jhit.y_pos<<", "<<jhit.z_pos<<")"<<std::endl;
     sbn::crt::CRTTrack crtTrack = FillCrtTrack(ihit, jhit, candidate.size());
 
     std::vector<int> ids;
     //TODO: Add charge matching for ambiguous cases
-    // If nhits > 2 then record used hits
+    // If nhits > 2 then record used hits ???? --Jiaoyang's comment. 
     for(size_t i = 0; i < candidate.size(); i++){
       ids.insert(ids.end(), hits[candidate[i]].second.begin(), hits[candidate[i]].second.end());
 
       if(candidate.size()>2) { //temporialy not saveing the used hit bc of we might have double hits.  
-        usedHits.push_back(candidate[i]);
+        //usedHits.push_back(candidate[i]);
       }
     }
 
     returnTracks.push_back(std::make_pair(crtTrack, ids));
-    std::cout<<"returnTracks.size() "<<returnTracks.size()<<std::endl;
   }
 
   return returnTracks;

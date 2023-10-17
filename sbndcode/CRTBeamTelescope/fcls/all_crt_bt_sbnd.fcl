@@ -55,7 +55,7 @@ physics:
     crtsim: @local::sbnd_crtsim
 
     # CRT Slimmer
-    crt: @local::sbnd_crtslimmer
+    #crt: @local::sbnd_crtslimmer
 
     # CRT Hits
     crthit: @local::standard_crthitproducer
@@ -76,7 +76,7 @@ physics:
             , largeant
             , genericcrt
             , crtsim
-            , crt
+            # , crt
             , crthit
             , crttrack
           ]

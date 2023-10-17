@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       CRTDirtFilter
+// Class:       CRTEventFilter
 // Plugin Type: filter (Unknown Unknown)
-// File:        CRTDirtFilter_module.cc
+// File:        CRTEventFilter_module.cc
 //
 // Generated at Mon Oct  2 08:44:27 2023 by Jiaoyang Li using cetskelgen
 // from  version .
@@ -20,20 +20,20 @@
 
 #include <memory>
 
-class CRTDirtFilter;
+class CRTEventFilter;
 
 
-class CRTDirtFilter : public art::EDFilter {
+class CRTEventFilter : public art::EDFilter {
 public:
-  explicit CRTDirtFilter(fhicl::ParameterSet const& p);
+  explicit CRTEventFilter(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
   // Plugins should not be copied or assigned.
-  CRTDirtFilter(CRTDirtFilter const&) = delete;
-  CRTDirtFilter(CRTDirtFilter&&) = delete;
-  CRTDirtFilter& operator=(CRTDirtFilter const&) = delete;
-  CRTDirtFilter& operator=(CRTDirtFilter&&) = delete;
+  CRTEventFilter(CRTEventFilter const&) = delete;
+  CRTEventFilter(CRTEventFilter&&) = delete;
+  CRTEventFilter& operator=(CRTEventFilter const&) = delete;
+  CRTEventFilter& operator=(CRTEventFilter&&) = delete;
 
   // Required functions.
   bool filter(art::Event& e) override;
@@ -46,14 +46,14 @@ private:
 };
 
 
-CRTDirtFilter::CRTDirtFilter(fhicl::ParameterSet const& p)
+CRTEventFilter::CRTEventFilter(fhicl::ParameterSet const& p)
   : EDFilter{p}  // ,
   // More initializers here.
 {
   fAuxDetIDELabel = p.get<art::InputTag>("AuxDetIDELabel");
 }
 
-bool CRTDirtFilter::filter(art::Event& e)
+bool CRTEventFilter::filter(art::Event& e)
 {
   auto AuxIDEHandle = e.getValidHandle<std::vector<sim::AuxDetIDE>>(fAuxDetIDELabel);
   bool isEventPassedBeamTele = false;
@@ -65,4 +65,4 @@ bool CRTDirtFilter::filter(art::Event& e)
   return isEventPassedBeamTele;
 }
 
-DEFINE_ART_MODULE(CRTDirtFilter)
+DEFINE_ART_MODULE(CRTEventFilter)

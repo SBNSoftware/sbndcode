@@ -1,3 +1,4 @@
 #include "ana_crt_bt_sbnd.fcl"
 
-physics.analyzers.crtana.SaveMCParticle: false
+physics.analyzers.crtana.SaveMCParticle: true
+physics.analyzers.crtana.KeepMCPFromADH: true

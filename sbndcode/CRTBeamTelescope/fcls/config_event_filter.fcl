@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+sbnd_crteventfilter:
+{
+    module_type:    "CRTEventFilter" 
+    AuxDetIDELabel: "crtsim"
+}
+
+END_PROLOG

@@ -7,7 +7,7 @@ crteventdisplayalg_sbnd:
 {
     SimLabel:         "largeant"
     AuxDetIDEsLabel:  "genericcrt" 
-    AuxDetHitsLabel:  "largeant;LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN" 
+    AuxDetHitsLabel:  "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN" 
     CRTHitLabel:      "crthit"
     CRTTrackLabel:    "crttrack"
     #ClockSpeedCRT:    @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT
