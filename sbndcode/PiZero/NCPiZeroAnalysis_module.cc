@@ -756,14 +756,14 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
           switch(abs(mcp->PdgCode()))
             {
             case 2212:
-              if(mcp->P() > 300)
+              if(mcp->P() > .25)
                 ++protons;
               break;
             case 2112:
               ++neutrons;
               break;
             case 211:
-              if(mcp->P() > 100)
+              if(mcp->P() > .1)
                 ++charged_pions;
               break;
             case 111:
