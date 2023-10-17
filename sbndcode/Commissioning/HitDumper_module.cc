@@ -42,9 +42,14 @@
 #include "larcoreobj/SummaryData/POTSummary.h"
 
 // SBN/SBND includes
-#include "sbnobj/SBND/CRT/CRTData.hh"
-#include "sbnobj/Common/CRT/CRTHit.hh"
-#include "sbnobj/Common/CRT/CRTTrack.hh"
+//#include "sbnobj/SBND/CRT/CRTData.hh"
+//#include "sbnobj/Common/CRT/CRTHit.hh"
+//#include "sbnobj/Common/CRT/CRTTrack.hh"
+#include "sbnobj/SBND/CRT/classes.h" 
+#include "sbnobj/SBND/CRT/CRTStripHit.hh"
+#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+#include "sbnobj/SBND/CRT/CRTTrack.hh"
+//
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
@@ -519,11 +524,10 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // CRT strips
   //
+  if(fkeepCRTstrips){
   int _nstr = 0;
   art::Handle<std::vector<sbnd::crt::CRTData> > crtStripListHandle;
   std::vector<art::Ptr<sbnd::crt::CRTData> > striplist;
-  // art::Handle< std::vector<sbnd::crt::CRTData> > crtStripListHandle;
-  // std::vector< art::Ptr<sbnd::crt::CRTData> > striplist;
   if (evt.getByLabel(fCRTStripModuleLabel, crtStripListHandle))  {
     art::fill_ptr_vector(striplist, crtStripListHandle);
     _nstr = striplist.size();
@@ -587,163 +591,14 @@ void Hitdumper::analyze(const art::Event& evt)
   }
   _nstrips = ns;
 
-
-
-  //
-  // CRT Custom Tracks
-  //
-  ResetCRTCustomTracksVars(_nstrips);
-  _nctrks = 0;
-  if (fmakeCRTtracks) {
-    int ntr = 0;
-    int iflag[1000] = {0};
-    for (int i = 0; i < (ns - 1); ++i) {
-      if (iflag[i] == 0) {
-        iflag[i] = 1;
-        float plane1x = 0, plane2x = 0;
-        float plane1y = 0, plane2y = 0;
-        float plane1tx = 0, plane2tx = 0;
-        float plane1ty = 0, plane2ty = 0;
-        float plane1xm = -1, plane2xm = -1;
-        float plane1ym = -1, plane2ym = -1;
-        int  nh1x = 0, nh2x = 0;
-        int  nh1y = 0, nh2y = 0;
-        float adc1x = 0, adc2x = 0;
-        float adc1y = 0, adc2y = 0;
-        if (_crt_plane[i] == sbnd::crt::kSouthTagger) { // 1
-          if (_crt_orient[i] == kCRTVertical && _crt_adc[i] > 500) { // < 500 hardcoded
-            if (nh1x == 0 || (_crt_module[i] == plane1xm)) {
-              nh1x++;
-              if (_crt_adc[i] > adc1x) {
-                plane1tx = _crt_time[i];
-                adc1x += _crt_adc[i];
-                plane1x = _crt_pos_x[i];
-                plane1xm = _crt_module[i];
-              }
-            }
-          }
-          else if (_crt_orient[i]==kCRTHorizontal && _crt_adc[i]>500) { // < 500 hardcoded
-            if (nh1y==0 || (_crt_module[i]==plane1ym)) {
-              nh1y++;
-              if (_crt_adc[i]>adc1y) {
-                plane1ty=_crt_time[i];
-                adc1y+=_crt_adc[i];
-                plane1y=_crt_pos_y[i];
-                plane1ym=_crt_module[i];
-              }
-            }
-          }
-        }
-        else {
-          if (_crt_orient[i]==kCRTVertical && _crt_adc[i]>500) { // < 500 hardcoded
-            if (nh2x==0 ||  (_crt_module[i]==plane2xm)) {
-              nh2x++;
-              if (_crt_adc[i]>adc2x) {
-                plane2tx=_crt_time[i];
-                adc2x+=_crt_adc[i];
-                plane2x=_crt_pos_x[i];
-                plane2xm=_crt_module[i];
-              }
-            }
-          }
-          else if (_crt_orient[i]==kCRTHorizontal && _crt_adc[i]>500) { // < 500 hardcoded
-            if (nh2y==0 ||  (_crt_module[i]==plane2ym)) {
-              nh2y++;
-              if (_crt_adc[i]>adc2y) {
-                plane2ty=_crt_time[i];
-                adc2y+=_crt_adc[i];
-                plane2y=_crt_pos_y[i];
-                plane2ym=_crt_module[i];
-              }
-            }
-          }
-        }
-        for (int j=i+1;j<ns;++j) {
-          float tdiff = fabs(_crt_time[i]-_crt_time[j]);
-          if (tdiff<0.1) {
-            iflag[j]=1;
-            if (_crt_plane[j]==sbnd::crt::kSouthTagger) {
-              if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
-                if (nh1x==0 ||  (_crt_module[j]==plane1xm)) {
-                  nh1x++;
-                  if (_crt_adc[j]>adc1x) {
-                    plane1tx=_crt_time[j];
-                    adc1x+=_crt_adc[j];
-                    plane1x=_crt_pos_x[j];
-                    plane1xm=_crt_module[j];
-                  }
-                }
-              }
-              else if (_crt_orient[j]==kCRTHorizontal && _crt_adc[j]>1000) {
-                if (nh1y==0 ||  (_crt_module[j]==plane1ym)) {
-                  nh1y++;
-                  if (_crt_adc[j]>adc1y) {
-                    plane1ty=_crt_time[j];
-                    adc1y+=_crt_adc[j];
-                    plane1y=_crt_pos_y[j];
-                    plane1ym=_crt_module[j];
-                  }
-                }
-              }
-            }
-            else {
-              if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
-                if (nh2x==0 ||  (_crt_module[j]==plane2xm)) {
-                  nh2x++;
-                  if (_crt_adc[j]>adc2x) {
-                    plane2tx=_crt_time[j];
-                    adc2x+=_crt_adc[j];
-                    plane2x=_crt_pos_x[j];
-                    plane2xm=_crt_module[j];
-                  }
-                }
-              }
-              else if (_crt_orient[j]==kCRTHorizontal && _crt_adc[j]>1000) {
-                if (nh2y==0 ||  (_crt_module[j]==plane2ym)) {
-                  nh2y++;
-                  if (_crt_adc[j]>adc2y) {
-                    plane2ty=_crt_time[j];
-                    adc2y+=_crt_adc[j];
-                    plane2y=_crt_pos_y[j];
-                    plane2ym=_crt_module[j];
-                  }
-                }
-              }
-            }
-          }
-	      } // look for hits at the same time as hit i
-	      if (nh1x>0 && nh1y>0 && nh2x>0 && nh2y>0 && adc1x<9000 && adc1y<9000 && adc2x<9000 && adc2y<9000) {
-	      // make a track!
-          _ctrk_x1.push_back(plane1x);
-          _ctrk_y1.push_back(plane1y);
-          _ctrk_z1.push_back(-239.95);
-          _ctrk_t1.push_back(0.5*(plane1tx+plane1ty));
-          _ctrk_adc1.push_back(adc1x+adc1y);
-          _ctrk_mod1x.push_back(plane1xm);
-          _ctrk_x2.push_back(plane2x);
-          _ctrk_y2.push_back(plane2y);
-          _ctrk_z2.push_back(656.25);
-          _ctrk_t2.push_back(0.5*(plane2tx+plane2ty));
-          _ctrk_adc2.push_back(adc2x+adc2y);
-          _ctrk_mod2x.push_back(plane2xm);
-          ntr++;
-	        // std::cout << "track " << ntr << std::endl;
-	        // std::cout <<  "x y t adc: plane 1 " << plane1x << " " << plane1y << " " <<
-	        //   0.5*(plane1tx+plane1ty) << " " << adc1x << " " << adc1y << std::endl;
-	        // std::cout <<  "         : plane 2 " << plane2x << " " << plane2y << " " <<
-	        //   0.5*(plane2tx+plane2ty) << " " << adc2x << " " << adc2y << std::endl;
-        }
-      } // i is the first hit with this time
-    } // loop over hits
-    _nctrks = ntr;
-  }  // end if make tracks
+  }
 
   //
   // CRT hits
   //
   if (fkeepCRThits) {
-    art::Handle<std::vector<sbn::crt::CRTHit> > crtHitListHandle;
-    std::vector<art::Ptr<sbn::crt::CRTHit> > chitlist;
+    art::Handle<std::vector<sbnd::crt::CRTSpacePoint> > crtHitListHandle;
+    std::vector<art::Ptr<sbnd::crt::CRTSpacePoint> > chitlist;
     // art::Handle< std::vector<sbnd::crt::CRTData> > crtStripListHandle;
     // std::vector< art::Ptr<sbnd::crt::CRTData> > striplist;
     if (evt.getByLabel(fCRTHitModuleLabel, crtHitListHandle))  {
@@ -751,14 +606,14 @@ void Hitdumper::analyze(const art::Event& evt)
       _nchits = chitlist.size();
     }
     else {
-      std::cout << "Failed to get sbn::crt::CRTHit data product." << std::endl;
+      std::cout << "Failed to get sbnd::crt::CRTSpacePoint data product." << std::endl;
       _nchits = 0;
     }
 
     if (_nchits > _max_chits) {
-      std::cout << "Available CRT hits are " << _nchits
+      std::cout << "Available CRTSpacePoints are " << _nchits
                 << ", which is above the maximum number allowed to store." << std::endl;
-      std::cout << "Will only store " << _max_chits << "CRT hits." << std::endl;
+      std::cout << "Will only store " << _max_chits << "CRT space points." << std::endl;
       _nchits = _max_chits;
     }
 
@@ -766,17 +621,16 @@ void Hitdumper::analyze(const art::Event& evt)
 
     for (int i = 0; i < _nchits; ++i){
       // int ip = kNotDefined;
-      sbnd::crt::CRTTagger ip = sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
+      //sbnd::crt::CRTTagger ip = sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
 
-      _chit_time[i]=chitlist[i]->ts1_ns*0.001;
-      if (chitlist[i]->ts1_ns > MAX_INT) {
-        _chit_time[i] = 0.001 * (chitlist[i]->ts1_ns - TIME_CORRECTION);
+      _chit_time[i]=chitlist[i]->Time()*0.001;
+      if (chitlist[i]->ts1_ns > MAX_INT) { //double check if this still applies
+        _chit_time[i] = 0.001 * (chitlist[i]->Time() - TIME_CORRECTION);
       }
-
-      _chit_x[i] = chitlist[i]->x_pos;
-      _chit_y[i] = chitlist[i]->y_pos;
-      _chit_z[i] = chitlist[i]->z_pos;
-      _chit_plane[i] = ip;
+      _chit_x[i] = chitlist[i]->X();
+      _chit_y[i] = chitlist[i]->Y();
+      _chit_z[i] = chitlist[i]->Z();
+      //_chit_plane[i] = ip; //This doesn't seem to exist
     }
   }
 
@@ -785,30 +639,38 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   _ncts = 0;
   if (freadCRTtracks) {
-    art::Handle<std::vector<sbn::crt::CRTTrack> > crtTrackListHandle;
-    std::vector<art::Ptr<sbn::crt::CRTTrack> > ctrklist;
+    //changing sbn::crt::CRTTrack to sbnd::crt::CRTTrack
+    art::Handle<std::vector<sbnd::crt::CRTTrack> > crtTrackListHandle;
+    std::vector<art::Ptr<sbnd::crt::CRTTrack> > ctrklist;
     if (evt.getByLabel(fCRTTrackModuleLabel, crtTrackListHandle))  {
       art::fill_ptr_vector(ctrklist, crtTrackListHandle);
       _ncts = ctrklist.size();
       if (_ncts > _max_nctrks) _ncts = _max_nctrks;
 
+
       ResetCRTTracksVars(_ncts);
 
       for (int i = 0; i < _ncts; ++i){
-        _ct_pes[i] = ctrklist[i]->peshit;
-        _ct_time[i] = ctrklist[i]->ts1_ns*0.001;
-        if (ctrklist[i]->ts1_ns > MAX_INT) {
-          _ct_time[i] = 0.001 * (ctrklist[i]->ts1_ns - TIME_CORRECTION);
-        }
-        _ct_x1[i] = ctrklist[i]->x1_pos;
-        _ct_y1[i] = ctrklist[i]->y1_pos;
-        _ct_z1[i] = ctrklist[i]->z1_pos;
-        _ct_x2[i] = ctrklist[i]->x2_pos;
-        _ct_y2[i] = ctrklist[i]->y2_pos;
-        _ct_z2[i] = ctrklist[i]->z2_pos;
+	art::Ptr<sbnd::crt::CRTTrack> ictrk=ctrklist[i];
+        _ct_pes[i] = ictrk->PE();//ctrklist[i]->peshit;
+        _ct_time[i] = ictrk->Time()*0.001;
+        //if (ctrklist[i]->ts1_ns > MAX_INT) {
+        //  _ct_time[i] = 0.001 * (ctrklist[i]->ts1_ns - TIME_CORRECTION);
+        //}
+
+	std::vector<geo::Point_t> points=ictrk->Points();
+	//This is throwing out info about if theres a third point from the two top layers, need to do something differently if want to keep that
+	geo::Point_t start=points[0];
+	geo::Point_t end=points[points.size()-1];
+	_ct_x1[i] = start.X();
+        _ct_y1[i] = start.Y();
+        _ct_z1[i] = start.Z();
+        _ct_x2[i] = end.X();
+        _ct_y2[i] = end.Y();
+        _ct_z2[i] = end.Z();
       }
     } else {
-      std::cout << "Failed to get sbn::crt::CRTTrack data product." << std::endl;
+      std::cout << "Failed to get sbnd::crt::CRTTrack data product." << std::endl;
     }
   }
 
