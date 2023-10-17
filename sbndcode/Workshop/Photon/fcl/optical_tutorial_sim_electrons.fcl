@@ -1,0 +1,133 @@
+# services
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+# modules
+#include "singles_sbnd.fcl"
+#include "larg4_sbnd.fcl"
+#include "ionandscint_sbnd.fcl"
+#include "PDFastSim_sbnd.fcl"
+#include "simdrift_sbnd.fcl"
+#include "mcreco_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+# analyzer
+#include "OpDetAnalyzer.fcl" 
+
+process_name: G4
+
+
+services:
+{
+  TFileService: { fileName: "sim_electrons_%p_hist.root" }
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  @table::sbnd_g4_services
+}
+
+source:
+{
+  module_type:     EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:      10          # Number of events to create
+  firstRun:        1          # Run number to use for this file
+  firstEvent:      1          # number of first event in the file
+}
+
+
+physics:
+{
+
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+
+    # Generation
+    generator: @local::sbnd_singlep
+
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
+
+    # The geant4 step
+    largeant: @local::sbnd_larg4
+
+    # Creation of ionization electrons and scintillation photons, inside the active volume
+    ionandscint: @local::sbnd_ionandscint
+
+    # Creation of ionization electrons and scintillation photons, outside the active volume
+    ionandscintout: @local::sbnd_ionandscint_out
+
+    # Light propagation inside the active volume, semi-analytic model
+    pdfastsim: @local::sbnd_pdfastsim_par
+
+    # Light propagation outside the active volume, photon library
+    pdfastsimout: @local::sbnd_pdfastsim_pvs
+
+    # Electron propogation
+    simdrift: @local::sbnd_simdrift
+
+    # Truth-level reconstruction
+    mcreco: @local::sbnd_mcreco
+
+  }
+
+  analyzers:
+  {
+    # Analyzer to count number of photons arriving on photo-detectors
+    opanalyzer: @local::OpDetAnalyzer
+  }
+
+
+  # All producers and filters modules for this path, order matters
+  simulate: [ rns
+            , generator
+            , loader
+            , largeant
+            , ionandscint
+            , ionandscintout
+            , pdfastsim
+            , pdfastsimout
+            , simdrift
+            , mcreco
+          ]
+
+  # Analyzers
+  analyze: [ opanalyzer ]
+
+  # The output stream, there could be more than one if using filters
+  stream1: [ out1 ]
+
+  # Contains the paths that modify the art::event
+  trigger_paths: [ simulate ]
+
+  # Contains the paths that do not modify the art::Event
+  end_paths: [ stream1, analyze ]
+}
+
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    fileName: "sim_electrons_%p.root" #default file name, can override from command line with -o or --output
+    dataTier: "simulated"  
+  }
+}
+
+
+# generator parameters
+physics.producers.generator.PadOutVectors: true
+physics.producers.generator.PDG: [11]
+physics.producers.generator.P0: [0.05] # GeV
+physics.producers.generator.SigmaP: [0]
+physics.producers.generator.PDist: 0
+physics.producers.generator.X0: [100]
+physics.producers.generator.Y0: [0]
+physics.producers.generator.SigmaY: [200]
+physics.producers.generator.Z0: [250]
+physics.producers.generator.SigmaZ: [250]
+physics.producers.generator.T0: [0]
+physics.producers.generator.Theta0XZ: [0]
+physics.producers.generator.Theta0YZ: [0]
+physics.producers.generator.SigmaThetaXZ: [0]
+physics.producers.generator.SigmaThetaYZ: [0]
