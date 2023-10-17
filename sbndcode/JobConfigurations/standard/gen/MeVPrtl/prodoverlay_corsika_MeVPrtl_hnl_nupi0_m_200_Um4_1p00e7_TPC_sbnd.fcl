@@ -22,7 +22,3 @@ physics.producers.generator.Decay.Decays: ["nu_pi0"]
                                                                       
 ###----------Set geometry ----------###
 #include "set_MeVPrtl_GeoTPC.fcl"
-
-###-----------DeWeight--------------###
-physics.producers.generator.Deweight: true
-
