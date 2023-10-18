@@ -1,5 +1,3 @@
-add_subdirectory(Analyzer)
-
 art_make( BASENAME_ONLY MODULE_LIBRARIES
   larcore_Geometry_Geometry_service
   larcorealg_Geometry
