@@ -1,0 +1,31 @@
+#include "simulationservices_sbnd.fcl"
+#include "FullGeoAna.fcl"
+
+process_name: FullGeoAna
+
+services:
+{
+  @table::sbnd_services
+  TFileService:          { fileName: "%ifb_ana.root" }
+  TimeTracker:           { }
+  MemoryTracker:         { }
+  RandomNumberGenerator: { } # ART native random number generator
+  FileCatalogMetadata:   @local::art_file_catalog_mc
+}
+
+physics:
+{
+  analyzers:
+  {
+    fullgeoana: @local::standard_FullGeoAna
+  }
+
+  ana:       [ fullgeoana ]
+  end_paths: [ ana ]
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
