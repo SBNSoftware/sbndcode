@@ -2,10 +2,12 @@
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
+#include "larfft_sbnd.fcl"
 
 ###Reconstruction modules
-#include "ophit_finder_sbnd.fcl"
-#include "sbnd_flashfinder.fcl"
+#include "opdeconvolution_sbnd.fcl"
+#include "sbnd_ophitfinder_deco.fcl"
+#include "sbnd_flashfinder_deco.fcl"
 
 ###Analyzer modules
 #include "hitdumpermodule.fcl"
@@ -24,6 +26,7 @@ services:
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                              @table::sbnd_services              # from services_sbnd.fcl
                              @table::sbnd_g4_services
+  LArFFT:                    @local::sbnd_larfft
 }
 
 
@@ -59,9 +62,15 @@ physics:
   #Reconstruction @OpFlash level, TPC0 and TPC1
   producers:
   {
-    ophitpmt:      @local::sbnd_ophit_finder_pmt
-    opflashtpc0:   @local::SBNDSimpleFlashTPC0
-    opflashtpc1:   @local::SBNDSimpleFlashTPC1
+    ### optical deconvolution
+    opdecopmt:          @local::SBNDOpDeconvolutionPMT
+
+    ### optical hit finders
+    ophitpmt:            @local::SBNDDecoOpHitFinderPMT
+
+    ### flash finders
+    opflashtpc0:         @local::SBNDDecoSimpleFlashTPC0
+    opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1
   }
 
   #Load analyzers
@@ -77,11 +86,12 @@ physics:
 
   #define the producer and filter modules for this path, order matters,
   #filters reject all following items.  see lines starting physics.producers below
-  reco: [
-    ophitpmt,
-    opflashtpc0,
-    opflashtpc1
-  ]
+  reco: [ 
+          opdecopmt,
+          ophitpmt,
+          opflashtpc0,
+          opflashtpc1
+        ]
 
   ana: [oprecoanatpc0, oprecoanatpc1, hitdumpertree]
 
