@@ -9,23 +9,34 @@ const double potPerSpill = 5e12;
 const double goalSpills  = goalPOT / potPerSpill;
 
 void Selection(const TString productionVersion, const TString saveDirExt = "tmp", std::vector<Cut> &cuts = razzled_cuts,
-               const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots);
+               const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots,
+               const TCut &trueCategory = "");
 
 double GetPOT(TChain *subruns);
 int GetGenEvents(TChain *subruns);
 
 template<class T>
 void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, std::vector<Cut> &cuts,
-                     const std::vector<Cut> &categories);
+                     const std::vector<Cut> &categories, const TCut &trueCategory);
 
 void RunMultiSelection()
 {
-  Selection("NCPiZeroAv3", "razzled_muons_razzle_photons_cuts", razzled_muons_razzle_photons_cuts);
-  Selection("NCPiZeroAv3", "razzled_cuts", razzled_cuts);
+  /*
+  Selection("NCPiZeroAv4_1", "ncpizero_dazzle", ncpizero_cuts, ncpizero_categories, no_plots, true_ncpizero_cut);
+  Selection("NCPiZeroAv4_1", "ncpizero_0p0pi_dazzle", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, no_plots, true_ncpizero_0p0pi_cut);
+  Selection("NCPiZeroAv4_1", "ncpizero_1p0pi_dazzle", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, no_plots, true_ncpizero_1p0pi_cut);
+  Selection("NCPiZeroAv4_1", "ncpizero_Np0pi_dazzle", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, no_plots, true_ncpizero_Np0pi_cut);
+  Selection("NCPiZeroAv4_1", "ncpizero_0pXpi_dazzle", ncpizero_0pXpi_cuts, ncpizero_0pXpi_categories, no_plots, true_ncpizero_0pXpi_cut);
+  Selection("NCPiZeroAv4_1", "ncpizero_1pXpi_dazzle", ncpizero_1pXpi_cuts, ncpizero_1pXpi_categories, no_plots, true_ncpizero_1pXpi_cut);
+  Selection("NCPiZeroAv4_1", "ncpizero_NpXpi_dazzle", ncpizero_NpXpi_cuts, ncpizero_NpXpi_categories, no_plots, true_ncpizero_NpXpi_cut);
+  Selection("NCPiZeroAv4_1", "ccpizero_dazzle", ccpizero_cuts, ccpizero_categories, no_plots, true_ccpizero_cut);
+  Selection("NCPiZeroAv4_1", "ccpizero", ccpizero_cuts, ccpizero_categories, no_plots, true_ccpizero_cut);
+  */
+  Selection("NCPiZeroAv4_1", "ncpizero_Np0pi_dazzle_tmp", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, no_plots, true_ncpizero_Np0pi_cut);
 }
 
 void Selection(const TString productionVersion, const TString saveDirExt, std::vector<Cut> &cuts, const std::vector<Cut> &categories,
-               std::vector<Plot> &plots)
+               std::vector<Plot> &plots, const TCut &trueCategory)
 {
   const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/selection/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
@@ -62,7 +73,7 @@ void Selection(const TString productionVersion, const TString saveDirExt, std::v
                                           { "intime", intimeEvents, intimeScaling }
   };
 
-  ProduceCutTable(saveDir, samples, cuts, categories);
+  ProduceCutTable(saveDir, samples, cuts, categories, trueCategory);
 
   TCut currentCut = "";
 
@@ -70,8 +81,9 @@ void Selection(const TString productionVersion, const TString saveDirExt, std::v
     {
       currentCut += cut.cut;
       cut.cut = currentCut;
-
-      gSystem->Exec("mkdir -p " + saveDir + "/" + cut.name);
+      
+      if(plots.size() != 0)
+        gSystem->Exec("mkdir -p " + saveDir + "/" + cut.name);
 
       for(auto plot : plots)
         {
@@ -125,7 +137,7 @@ int GetGenEvents(TChain *subruns)
 
 template<class T>
 void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, std::vector<Cut> &cuts,
-                     const std::vector<Cut> &categories)
+                     const std::vector<Cut> &categories, const TCut &trueCategory)
 {
   ofstream texFile;
   texFile.open(saveDir + "/cut_table.tex");
@@ -134,10 +146,9 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
 
   for(auto const& sample : samples)
     {
-      totalSignal         += sample.tree->Draw("", "nu_signal");
-      totalSignalSlices   += sample.tree->Draw("", "slc_true_signal && slc_comp>.5");
-      totalBackSlices     += sample.tree->Draw("", "!slc_true_signal");
-      totalNuFVBackSlices += sample.tree->Draw("", "!slc_true_signal && slc_true_event_type!=4 && slc_true_event_type!=5 && slc_true_event_type!=6");
+      totalSignal         += sample.tree->Draw("", trueCategory);
+      totalSignalSlices   += sample.tree->Draw("", categories[0].cut);
+      totalBackSlices     += sample.tree->Draw("", !categories[0].cut);
     }
 
   texFile << docStart;
@@ -145,12 +156,11 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
   texFile << '\n'
           << "Total Signal: " << totalSignal << "\\\\ \n"
           << "Total Signal Slices: " << totalSignalSlices << "\\\\ \n"
-          << "Total Background Slices: " << totalBackSlices << "\\\\ \n"
-          << "Total Nu FV Background Slices: " << totalNuFVBackSlices << "\\\\ \n" << std::endl;
+          << "Total Background Slices: " << totalBackSlices << "\\\\ \n" << std::endl;
 
   texFile << tableStart 
           << "\\hline\n"
-          << "Cut Name & $\\epsilon$ (\\%) & $\\rho$ (\\%) & $\\epsilon\\rho$ & Selection $\\epsilon$ (\\%) & BR (\\%) & FV $\\nu$ BR (\\%)\\\\ \\hline" 
+          << "Cut Name & $\\epsilon$ (\\%) & $\\rho$ (\\%) & $\\epsilon\\rho$ & Selection $\\epsilon$ (\\%) & Selection $\\epsilon\\rho$ & BR (\\%) \\\\ \\hline" 
           << std::endl;
 
   TCut currentCut = "";
@@ -161,30 +171,27 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
       currentCut += cut.cut;
       cut.cut = currentCut;
 
-      double sigSlices = 0., nuFVBackSlices = 0., otherBackSlices = 0.;
+      double sigSlices = 0., backSlices = 0.;
       for(unsigned j = 0; j < categories.size(); ++j)
         {
           for(auto const& sample : samples)
             {
               if(j == 0)
                 sigSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
-              else if(j==4 || j == 5 || j == 6)
-                otherBackSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
               else
-                nuFVBackSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
+                backSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
             }
         }
 
-      const double eff         = sigSlices * 100. / totalSignal;
-      const double selEff      = sigSlices * 100. / totalSignalSlices;
-      const double pur         = sigSlices * 100./ (sigSlices + nuFVBackSlices + otherBackSlices);
-      const double backRej     = 100. - 100. * ((nuFVBackSlices + otherBackSlices) / totalBackSlices);
-      const double nuFVBackRej = 100. - 100. * (nuFVBackSlices / totalNuFVBackSlices);
-
+      const double eff     = sigSlices * 100. / totalSignal;
+      const double selEff  = sigSlices * 100. / totalSignalSlices;
+      const double pur     = sigSlices * 100./ (sigSlices + backSlices);
+      const double backRej = 100. - 100. * (backSlices / totalBackSlices);
+      
       texFile << cut.printed_name << " & " << Form("%.2f", eff) << " & " << Form("%.2f", pur)
               << " & " << Form("%.2f", (eff * pur) / 100.)
-              << " & " << Form("%.2f", selEff) << " & " << Form("%.2f", backRej)
-              << " & " << Form("%.2f", nuFVBackRej) << "\\\\ \\hline" << std::endl;
+              << " & " << Form("%.2f", selEff) << " & " << Form("%.2f", (selEff * pur) / 100.)
+              << " & " << Form("%.2f", backRej) << "\\\\ \\hline" << std::endl;
     }
 
   texFile << tableEnd << docEnd;

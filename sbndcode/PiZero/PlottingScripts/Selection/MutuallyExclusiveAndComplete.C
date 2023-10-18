@@ -5,8 +5,8 @@
 
 void MutuallyExclusiveAndComplete(std::vector<Cut> categories)
 {
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv3/NCPiZeroAv3_rockbox.root";
-  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv3/NCPiZeroAv3_intime.root";
+  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv4_1/NCPiZeroAv4_1_rockbox.root";
+  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv4_1/NCPiZeroAv4_1_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -50,6 +50,5 @@ void MutuallyExclusiveAndComplete(std::vector<Cut> categories)
     {
       std::cout << "Some slices not accounted for..." << std::endl;
       std::cout << events->Draw("slc_true_e", !totalcuts) << std::endl;
-      events->Scan("slc_true_event_type:slc_n_pfps:slc_is_clear_cosmic:slc_comp:slc_pur:slc_true_mctruth_id", !totalcuts);
     }
 }

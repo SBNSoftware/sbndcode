@@ -23,7 +23,8 @@ std::vector<Cut> cuts = {
   { "opt0_frac_0_cut", "msc_0_opt0_frac<0", "OpT0Frac0 \\textless 0" },
   { "opt0_frac_1_cut", "msc_1_opt0_frac<0", "OpT0Frac1 \\textless 0" },
   { "sum_opt0_frac_cut", "!msc_matching_flash_pe || (msc_sum_opt0_frac<0.2 && msc_sum_opt0_frac>-0.6)", "-0.6 \\textless sumOpT0Frac \\textless 0.2" },
-  { "sep_cut", "msc_sep<200", "Separation \\textless 200cm" },
+  //  { "sep_cut", "msc_sep<200", "Separation \\textless 200cm" },
+  { "dca_cut", "msc_dca<80", "DCA \\textless 80cm" },
   { "crumbs_cut", "msc_0_crumbs_score>-0.2 || msc_1_crumbs_score>-0.2", "Higher CRUMBS Score \\textgreater -0.2"},
   { "razzled_muons_cut", "msc_0_n_razzled_muons==0 && msc_1_n_razzled_muons==0", "No Razzled Muons" },
   { "razzled_photons_cut", "(msc_0_n_razzled_photons + msc_1_n_razzled_photons) > 1", "Has Two Razzled Photons" },
@@ -44,6 +45,8 @@ std::vector<Plot> plots = {
   { "msc_sum_opt0_frac_close", "msc_sum_opt0_frac", ";SumOpT0Frac;Candidates",
     48, -1.2, 1 },
   { "msc_sep", "msc_sep", ";Separation (cm);Candidates",
+    50, 0, 600 },
+  { "msc_dca", "msc_dca", ";DCA (cm);Candidates",
     50, 0, 600 },
   { "msc_matching_flash", "msc_matching_flash_pe", ";Same Flash?;Candidates",
     2, -0.5, 1.5, kBlack, false, "", true, { "No", "Yes" } },
@@ -74,10 +77,10 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples);
 
 void MultiSliceSelection()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv3/split_slice_selection/selection";
+  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv4/split_slice_selection/selection";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv3/NCPiZeroAv3_rockbox.root";
+  const TString file = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv4/NCPiZeroAv4_rockbox.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
