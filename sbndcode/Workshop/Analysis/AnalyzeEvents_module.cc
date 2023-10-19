@@ -124,8 +124,6 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
   int nuID = -1;
   int nuSliceKey = -1;
 
-  std::cout << "NEW EVENT" << std::endl;
-
   for (const art::Ptr<recob::Slice> &slice : sliceVector)
   {
       std::vector<art::Ptr<recob::PFParticle>> slicePFPs(slicePFPAssoc.at(slice.key()));
@@ -164,8 +162,10 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
   }
 
   // Now let's look at our tracks
-  art::ValidHandle<std::vector<recob::PFParticle>> pfpHandle = e.getValidHandle<std::vector<recob::PFParticle>>(fPFParticleLabel);
-  art::ValidHandle<std::vector<recob::Track>> trackHandle = e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
+  art::ValidHandle<std::vector<recob::PFParticle>> pfpHandle =
+    e.getValidHandle<std::vector<recob::PFParticle>>(fPFParticleLabel);
+  art::ValidHandle<std::vector<recob::Track>> trackHandle =
+    e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
 
   art::FindManyP<recob::Track> pfpTrackAssoc(pfpHandle, e, fTrackLabel);
   art::FindManyP<anab::Calorimetry> trackCaloAssoc(trackHandle, e, fCalorimetryLabel);
