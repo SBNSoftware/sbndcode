@@ -299,6 +299,7 @@ private:
     { "slc_crumbs_score", new InhVecVar<float>("slc_crumbs_score") },
     { "slc_crumbs_nc_score", new InhVecVar<float>("slc_crumbs_nc_score") },
     { "slc_crumbs_ccnue_score", new InhVecVar<float>("slc_crumbs_ccnue_score") },
+    { "slc_crumbs_ccnumu_score", new InhVecVar<float>("slc_crumbs_ccnumu_score") },
     { "slc_opt0_time", new InhVecVar<double>("slc_opt0_time") },
     { "slc_opt0_score", new InhVecVar<double>("slc_opt0_score") },
     { "slc_opt0_measPE", new InhVecVar<double>("slc_opt0_measPE") },
@@ -938,6 +939,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement(slcVars["slc_crumbs_score"], slcCounter, crumbs->score);
           FillElement(slcVars["slc_crumbs_nc_score"], slcCounter, crumbs->ncscore);
           FillElement(slcVars["slc_crumbs_ccnue_score"], slcCounter, crumbs->ccnuescore);
+          FillElement(slcVars["slc_crumbs_ccnumu_score"], slcCounter, crumbs->ccnumuscore);
         }
 
       std::vector<art::Ptr<sbn::OpT0Finder>> opT0Vec = slicesToOpT0.at(slc.key());
