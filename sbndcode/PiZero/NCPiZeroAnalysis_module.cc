@@ -141,6 +141,8 @@ public:
   void ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
                               const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1);
 
+  void ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter);
+
   float Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
   float Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
   double DCA(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
@@ -376,6 +378,12 @@ private:
     { "slc_pzc_cos_theta_pizero", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero") },
     { "slc_pzc_cos_com", new InhVecVecVar<double>("slc_pzc_cos_com") },
     { "slc_pzc_decay_asymmetry", new InhVecVecVar<double>("slc_pzc_decay_asymmetry") },
+    { "slc_best_pzc_good_kinematics", new InhVecVar<bool>("slc_best_pzc_good_kinematics") },
+    { "slc_best_pzc_invariant_mass", new InhVecVar<double>("slc_best_pzc_invariant_mass") },
+    { "slc_best_pzc_pizero_mom", new InhVecVar<double>("slc_best_pzc_pizero_mom") },
+    { "slc_best_pzc_cos_theta_pizero", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero") },
+    { "slc_best_pzc_cos_com", new InhVecVar<double>("slc_best_pzc_cos_com") },
+    { "slc_best_pzc_decay_asymmetry", new InhVecVar<double>("slc_best_pzc_decay_asymmetry") },
     { "slc_sel1", new InhVecVar<bool>("slc_sel1") },
     { "slc_sel2", new InhVecVar<bool>("slc_sel2") },
   };
@@ -452,6 +460,12 @@ private:
     { "msc_pzc_cos_theta_pizero", new InhVecVecVar<double>("msc_pzc_cos_theta_pizero") },
     { "msc_pzc_cos_com", new InhVecVecVar<double>("msc_pzc_cos_com") },
     { "msc_pzc_decay_asymmetry", new InhVecVecVar<double>("msc_pzc_decay_asymmetry") },
+    { "msc_best_pzc_good_kinematics", new InhVecVar<bool>("msc_best_pzc_good_kinematics") },
+    { "msc_best_pzc_invariant_mass", new InhVecVar<double>("msc_best_pzc_invariant_mass") },
+    { "msc_best_pzc_pizero_mom", new InhVecVar<double>("msc_best_pzc_pizero_mom") },
+    { "msc_best_pzc_cos_theta_pizero", new InhVecVar<double>("msc_best_pzc_cos_theta_pizero") },
+    { "msc_best_pzc_cos_com", new InhVecVar<double>("msc_best_pzc_cos_com") },
+    { "msc_best_pzc_decay_asymmetry", new InhVecVar<double>("msc_best_pzc_decay_asymmetry") },
   };
 };
 
@@ -845,39 +859,39 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
         {
           if(abs(mcp->PdgCode()) == 111)
             {
-	      FillElement(vars[prefix + "_pz_invariant_mass"], counter, pzCounter, mcp->Mass());
-	      FillElement(vars[prefix + "_pz_pizero_mom"], counter, pzCounter, mcp->P());
-	      FillElement(vars[prefix + "_pz_cos_theta_pizero"], counter, pzCounter, mcp->Pz() / mcp->P());
+              FillElement(vars[prefix + "_pz_invariant_mass"], counter, pzCounter, mcp->Mass());
+              FillElement(vars[prefix + "_pz_pizero_mom"], counter, pzCounter, mcp->P());
+              FillElement(vars[prefix + "_pz_cos_theta_pizero"], counter, pzCounter, mcp->Pz() / mcp->P());
 
-	      bool two_gamma_decay = mcp->NumberDaughters() == 2;
-	      if(!two_gamma_decay)
-		{
-		  FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
-		  ++pzCounter;
-		  continue;
-		}
+              bool two_gamma_decay = mcp->NumberDaughters() == 2;
+              if(!two_gamma_decay)
+                {
+                  FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
+                  ++pzCounter;
+                  continue;
+                }
 
-	      const simb::MCParticle* gamma0 = particleInv->TrackIdToParticle_P(mcp->Daughter(0));
-	      const simb::MCParticle* gamma1 = particleInv->TrackIdToParticle_P(mcp->Daughter(1));
+              const simb::MCParticle* gamma0 = particleInv->TrackIdToParticle_P(mcp->Daughter(0));
+              const simb::MCParticle* gamma1 = particleInv->TrackIdToParticle_P(mcp->Daughter(1));
 
-	      two_gamma_decay &= (gamma0->PdgCode() == 22 && gamma1->PdgCode() == 22);
-	      if(!two_gamma_decay)
-		{
-		  FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
-		  ++pzCounter;
-		  continue;
-		}
+              two_gamma_decay &= (gamma0->PdgCode() == 22 && gamma1->PdgCode() == 22);
+              if(!two_gamma_decay)
+                {
+                  FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
+                  ++pzCounter;
+                  continue;
+                }
 
-	      const double en0 = gamma0->E();
-	      const double en1 = gamma1->E();
+              const double en0 = gamma0->E();
+              const double en1 = gamma1->E();
 
-	      FillElement(vars[prefix + "_pz_cos_com"], counter, pzCounter, std::abs(en0 - en1) / mcp->P());
-	      FillElement(vars[prefix + "_pz_decay_asymmetry"], counter, pzCounter, std::abs(en0 - en1) / (en0 + en1));
-	      FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
+              FillElement(vars[prefix + "_pz_cos_com"], counter, pzCounter, std::abs(en0 - en1) / mcp->P());
+              FillElement(vars[prefix + "_pz_decay_asymmetry"], counter, pzCounter, std::abs(en0 - en1) / (en0 + en1));
+              FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
 
-	      ++pzCounter;
-	    }
-	}
+              ++pzCounter;
+            }
+        }
     }
 }
 
@@ -1675,6 +1689,8 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
             }
         }
     }
+
+  ChoseBestPiZeroCandidate(vars, prefix, counter);
 }
 
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
@@ -1697,6 +1713,42 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   FillElement(vars[prefix + "_pzc_cos_theta_pizero"], counter, pzcCounter, pizeroCosTheta);
   FillElement(vars[prefix + "_pzc_cos_com"], counter, pzcCounter, cosCOM);
   FillElement(vars[prefix + "_pzc_decay_asymmetry"], counter, pzcCounter, decayAsym);
+}
+
+void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter)
+{
+  std::vector<std::vector<bool>> pzc_good_kinematics;
+  std::vector<std::vector<double>> pzc_invariant_mass, pzc_pizero_mom, pzc_cos_theta_pizero,
+    pzc_cos_com, pzc_decay_asymmetry;
+
+  GetVar(vars[prefix + "_pzc_good_kinematics"], pzc_good_kinematics);
+  GetVar(vars[prefix + "_pzc_invariant_mass"], pzc_invariant_mass);
+  GetVar(vars[prefix + "_pzc_pizero_mom"], pzc_pizero_mom);
+  GetVar(vars[prefix + "_pzc_cos_theta_pizero"], pzc_cos_theta_pizero);
+  GetVar(vars[prefix + "_pzc_cos_com"], pzc_cos_com);
+  GetVar(vars[prefix + "_pzc_decay_asymmetry"], pzc_decay_asymmetry);
+
+  double bestInvMass = std::numeric_limits<double>::max();
+  size_t bestID = std::numeric_limits<size_t>::max();
+
+  for(size_t i = 0; i < pzc_good_kinematics.at(counter).size(); ++i)
+    {
+      if(abs(134.9769 - pzc_invariant_mass.at(counter).at(i)) < bestInvMass)
+        {
+          bestInvMass = abs(134.9769 - pzc_invariant_mass.at(counter).at(i));
+          bestID = i;
+        }
+    }
+
+  if(bestID != std::numeric_limits<size_t>::max())
+    {
+      FillElement(vars[prefix + "_best_pzc_good_kinematics"], counter, (bool) pzc_good_kinematics.at(counter).at(bestID));
+      FillElement(vars[prefix + "_best_pzc_invariant_mass"], counter, pzc_invariant_mass.at(counter).at(bestID));
+      FillElement(vars[prefix + "_best_pzc_pizero_mom"], counter, pzc_pizero_mom.at(counter).at(bestID));
+      FillElement(vars[prefix + "_best_pzc_cos_theta_pizero"], counter, pzc_cos_theta_pizero.at(counter).at(bestID));
+      FillElement(vars[prefix + "_best_pzc_cos_com"], counter, pzc_cos_com.at(counter).at(bestID));
+      FillElement(vars[prefix + "_best_pzc_decay_asymmetry"], counter, pzc_decay_asymmetry.at(counter).at(bestID));
+    }
 }
 
 float sbnd::NCPiZeroAnalysis::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID)
