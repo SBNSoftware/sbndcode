@@ -70,5 +70,3 @@ physics.producers.generator.Theta0YZ: [  0, 10 ] #angle in YZ plane (degrees)
 physics.producers.generator.SigmaThetaXZ: [ 0., 0. ] #in degrees
 physics.producers.generator.SigmaThetaYZ: [ 0., 0. ] #in degrees
 physics.producers.generator.AngleDist: 0 # 0 - uniform, 1 - gaussian
-
-c
