@@ -81,15 +81,15 @@ private:
 };
 
 test::AnalyzeEvents::AnalyzeEvents(fhicl::ParameterSet const& p)
-    : EDAnalyzer{p},
-    fSliceLabel(p.get<std::string>("SliceLabel")),
-    fPFParticleLabel(p.get<std::string>("PFParticleLabel")),
-    fTrackLabel(p.get<std::string>("TrackLabel")),
-    fCalorimetryLabel(p.get<std::string>("CalorimetryLabel")),
-    fOpT0FinderLabel(p.get<std::string>("OpT0FinderLabel"))
-{
-  // Call appropriate consumes<>() for any products to be retrieved by this module.
-}
+  : EDAnalyzer{p},
+  fSliceLabel(p.get<std::string>("SliceLabel")),
+  fPFParticleLabel(p.get<std::string>("PFParticleLabel")),
+  fTrackLabel(p.get<std::string>("TrackLabel")),
+  fCalorimetryLabel(p.get<std::string>("CalorimetryLabel")),
+  fOpT0FinderLabel(p.get<std::string>("OpT0FinderLabel"))
+  {
+    // Call appropriate consumes<>() for any products to be retrieved by this module.
+  }
 
 void test::AnalyzeEvents::analyze(art::Event const& e)
 {
@@ -110,7 +110,7 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
   std::vector<art::Ptr<recob::Slice>> sliceVector;
 
   if (sliceHandle.isValid())
-      art::fill_ptr_vector(sliceVector, sliceHandle);
+    art::fill_ptr_vector(sliceVector, sliceHandle);
 
   // Get associations between slices and pfparticles & opt0 results
   art::FindManyP<recob::PFParticle> slicePFPAssoc(sliceHandle, e, fSliceLabel);
@@ -121,16 +121,16 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
   int nuSliceKey = -1;
 
   for (const art::Ptr<recob::Slice> &slice : sliceVector)
-  {
+    {
       std::vector<art::Ptr<recob::PFParticle>> slicePFPs(slicePFPAssoc.at(slice.key()));
 
       for (const art::Ptr<recob::PFParticle> &slicePFP : slicePFPs)
-      {
+        {
           const bool isPrimary(slicePFP->IsPrimary());
           const bool isNeutrino((std::abs(slicePFP->PdgCode()) == 12) || (std::abs(slicePFP->PdgCode()) == 14));
 
           if (!(isPrimary && isNeutrino))
-              continue;
+            continue;
 
           // We have found our neutrino!
           nuSliceKey = slice.key();
@@ -138,24 +138,24 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
           fNPFParticles = slicePFPs.size();
           fNPrimaryChildren = slicePFP->NumDaughters();
 
-	  // Get any OpT0Finder results associated with our slice
-	  std::vector<art::Ptr<sbn::OpT0Finder>> opT0s = sliceOpT0Assoc.at(nuSliceKey);
+          // Get any OpT0Finder results associated with our slice
+          std::vector<art::Ptr<sbn::OpT0Finder>> opT0s = sliceOpT0Assoc.at(nuSliceKey);
 
-	  // Occasionally there may be multiple results, let's use the one with the best score
-	  std::sort(opT0s.begin(), opT0s.end(),
-		    [](auto const& a, auto const& b)
-		    { return a->score > b->score; });
+          // Occasionally there may be multiple results, let's use the one with the best score
+          std::sort(opT0s.begin(), opT0s.end(),
+                    [](auto const& a, auto const& b)
+                    { return a->score > b->score; });
 
-	  // The best score will now be at the front of the vector (if there were any)
-	  if (opT0s.size() != 0)
-	    fOpT0 = opT0s[0]->time;
+          // The best score will now be at the front of the vector (if there were any)
+          if (opT0s.size() != 0)
+            fOpT0 = opT0s[0]->time;
 
           break;
-      }
+        }
 
       if (nuID >= 0)
-          break;
-  }
+        break;
+    }
 
   // Now let's look at our tracks
   art::ValidHandle<std::vector<recob::PFParticle>> pfpHandle =
@@ -176,40 +176,40 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
     {
       // We are only interested in neutrino children particles
       if (nuSlicePFP->Parent() != static_cast<long unsigned int>(nuID))
-          continue;
+        continue;
 
       // Get tracks associated with this PFParticle
       std::vector<art::Ptr<recob::Track>> tracks = pfpTrackAssoc.at(nuSlicePFP.key());
 
       // There should only be 0 or 1 tracks associated with a PFP
       if (tracks.size() != 1)
-          continue;
+        continue;
 
       // Get the track
       art::Ptr<recob::Track> track = tracks.at(0);
 
       // Check if this track is longer than the current longest
       if(track->Length() > longestLength)
-	{
-	  // If yes, then overwrite the variables to reflect the new longest track
-	  longestID = track->ID();
-	  longestLength = track->Length();
-	}
+        {
+          // If yes, then overwrite the variables to reflect the new longest track
+          longestID = track->ID();
+          longestLength = track->Length();
+        }
     }
 
   // Now loop through the PFPs again to fill the track variables for the tree
   for (const art::Ptr<recob::PFParticle> &nuSlicePFP : nuSlicePFPs)
-  {
+    {
       // We are only interested in neutrino children particles
       if (nuSlicePFP->Parent() != static_cast<long unsigned int>(nuID))
-          continue;
+        continue;
 
       // Get tracks associated with this PFParticle
       std::vector<art::Ptr<recob::Track>> tracks = pfpTrackAssoc.at(nuSlicePFP.key());
 
       // There should only be 0 or 1 tracks associated with a PFP
       if (tracks.size() != 1)
-          continue;
+        continue;
 
       // Get the track
       art::Ptr<recob::Track> track = tracks.at(0);
@@ -223,17 +223,17 @@ void test::AnalyzeEvents::analyze(art::Event const& e)
       std::vector<art::Ptr<anab::Calorimetry>> calos = trackCaloAssoc.at(track.key());
 
       for(auto const& calo : calos)
-	{
-	  const int plane = calo->PlaneID().Plane;
+        {
+          const int plane = calo->PlaneID().Plane;
 
-	  // Only interested in the collection plane (2)
-	  if(plane != 2)
-	    continue;
+          // Only interested in the collection plane (2)
+          if(plane != 2)
+            continue;
 
-	  fChildTrackdEdx.push_back(calo->dEdx());
-	  fChildTrackResRange.push_back(calo->ResidualRange());
-	}
-  }
+          fChildTrackdEdx.push_back(calo->dEdx());
+          fChildTrackResRange.push_back(calo->ResidualRange());
+        }
+    }
 
   // Fill tree
   fTree->Fill();
