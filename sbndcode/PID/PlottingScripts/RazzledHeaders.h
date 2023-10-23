@@ -37,6 +37,10 @@ const std::vector<PIDTraining> dazzle_trainings = { { "nominal_dazzle", "/cvmfs/
                                                     { "razzled", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Razzled", kViolet-5 },
 };
 
+const std::vector<PIDTraining> razzled_trainings = { { "razzled", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Nominal", kViolet-5 },
+                                                     { "razzled_lower_track_length_threshold", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled_lower_track_length_threshold/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Lower Thresholds", kTeal+6 }
+};
+
 const std::vector<TString> razzleAxisLabels  = { "", "e^{#pm}", "#gamma", "Track", "Other" };
 const std::vector<TString> dazzleAxisLabels  = { "", "#mu^{#pm}", "#pi^{#pm}", "p", "Shower", "Other" };
 const std::vector<TString> razzledAxisLabels  = { "", "e^{#pm}", "#mu^{#pm}", "#gamma", "#pi^{#pm}", "p" };

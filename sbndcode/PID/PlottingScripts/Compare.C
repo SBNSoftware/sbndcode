@@ -1,27 +1,29 @@
 #include "RazzledHeaders.h"
 
 void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_suffix,
-             const int pdg, const double purThresh = 0.5, const double compThresh = 0.5);
+             const int pdg, const int motherPDG = -1, const double purThresh = 0.5, const double compThresh = 0.5);
 
 void Compare()
 {
-  Compare(razzle_trainings, "electron", 11);
-  Compare(dazzle_trainings, "muon", 13);
-  Compare(razzle_trainings, "photon", 22);
-  Compare(dazzle_trainings, "pion", 211);
-  Compare(dazzle_trainings, "proton", 2212);
+  Compare(razzled_trainings, "electron", 11);
+  Compare(razzled_trainings, "muon", 13);
+  Compare(razzled_trainings, "photon", 22);
+  Compare(razzled_trainings, "pizero_photon", 22, 111);
+  Compare(razzled_trainings, "pion", 211);
+  Compare(razzled_trainings, "proton", 2212);
 
-  Compare(razzle_trainings, "electron_high_quality", 11, 0.8, 0.8);
-  Compare(dazzle_trainings, "muon_high_quality", 13, 0.8, 0.8);
-  Compare(razzle_trainings, "photon_high_quality", 22, 0.8, 0.8);
-  Compare(dazzle_trainings, "pion_high_quality", 211, 0.8, 0.8);
-  Compare(dazzle_trainings, "proton_high_quality", 2212, 0.8, 0.8);
+  Compare(razzled_trainings, "electron_high_quality", 11, -1, 0.8, 0.8);
+  Compare(razzled_trainings, "muon_high_quality", 13, -1, 0.8, 0.8);
+  Compare(razzled_trainings, "photon_high_quality", 22, -1, 0.8, 0.8);
+  Compare(razzled_trainings, "pizero_photon_high_quality", 22, 111, 0.8, 0.8);
+  Compare(razzled_trainings, "pion_high_quality", 211, -1, 0.8, 0.8);
+  Compare(razzled_trainings, "proton_high_quality", 2212, -1, 0.8, 0.8);
 }
 
 void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_suffix,
-             const int pdg, const double purThresh, const double compThresh)
+             const int pdg, const int motherPDG, const double purThresh, const double compThresh)
 {
-  const TString save_dir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/comparisons";
+  const TString save_dir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled_lower_track_length_threshold/comparisons";
   gSystem->Exec("mkdir -p " + save_dir);
   gSystem->Exec("mkdir -p " + save_dir + "/sep");
 
@@ -33,7 +35,7 @@ void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_
   pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intrnue.root");
   pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root");
 
-  int truePDG, recoPDG;
+  int truePDG, trueMotherPDG, recoPDG;
   float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ,
     showerStartX, showerStartY, showerStartZ, showerEnergy;
   bool recoPrimary, unambiguousSlice, trackContained, showerContained;
@@ -65,6 +67,7 @@ void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_
   pfps->SetBranchAddress("shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
 
   pfps->SetBranchAddress("truePDG", &truePDG);
+  pfps->SetBranchAddress("trueMotherPDG", &trueMotherPDG);
   pfps->SetBranchAddress("energyComp", &energyComp);
   pfps->SetBranchAddress("energyPurity", &energyPurity);
   pfps->SetBranchAddress("recoPrimary", &recoPrimary);
@@ -174,7 +177,7 @@ void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_
           if((training.razzle && recoPDG!=11) || (training.dazzle && recoPDG!=13))
             bdtscore = -.05;
 
-          if(truePDG == pdg && energyPurity > purThresh && energyComp > compThresh)
+          if(truePDG == pdg && (motherPDG == -1 || trueMotherPDG == motherPDG) && energyPurity > purThresh && energyComp > compThresh)
             hSignalPFP->Fill(bdtscore);
           else if(truePDG != pdg)
             hBackgroundPFP->Fill(bdtscore); 

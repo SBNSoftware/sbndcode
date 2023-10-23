@@ -9,27 +9,11 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode = t
 
 void ConfusionMatrix()
 {
-  ConfusionMatrix(razzle_trainings[0], true, false);
-  ConfusionMatrix(razzle_trainings[0], false, true);
-  ConfusionMatrix(razzle_trainings[1], true, false);
-  ConfusionMatrix(razzle_trainings[1], false, true);
-  ConfusionMatrix(razzle_trainings[2], true, false);
-  ConfusionMatrix(razzle_trainings[2], false, true);
-  ConfusionMatrix(dazzle_trainings[0], true, false);
-  ConfusionMatrix(dazzle_trainings[0], false, true);
-  ConfusionMatrix(dazzle_trainings[1], true, false);
-  ConfusionMatrix(dazzle_trainings[1], false, true);
+  ConfusionMatrix(razzled_lower_track_length_threshold, true, false);
+  ConfusionMatrix(razzled_lower_track_length_threshold, false, true);
 
-  ConfusionMatrix(razzle_trainings[0], true, false, 0.8, 0.8);
-  ConfusionMatrix(razzle_trainings[0], false, true, 0.8, 0.8);
-  ConfusionMatrix(razzle_trainings[1], true, false, 0.8, 0.8);
-  ConfusionMatrix(razzle_trainings[1], false, true, 0.8, 0.8);
-  ConfusionMatrix(razzle_trainings[2], true, false, 0.8, 0.8);
-  ConfusionMatrix(razzle_trainings[2], false, true, 0.8, 0.8);
-  ConfusionMatrix(dazzle_trainings[0], true, false, 0.8, 0.8);
-  ConfusionMatrix(dazzle_trainings[0], false, true, 0.8, 0.8);
-  ConfusionMatrix(dazzle_trainings[1], true, false, 0.8, 0.8);
-  ConfusionMatrix(dazzle_trainings[1], false, true, 0.8, 0.8);
+  ConfusionMatrix(razzled_lower_track_length_threshold, true, false, 0.8, 0.8);
+  ConfusionMatrix(razzled_lower_track_length_threshold, false, true, 0.8, 0.8);
 }
 
 void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
@@ -42,7 +26,7 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
       return;
     }
 
-  TString save_dir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/confusionmatrices_rockbox_only";
+  TString save_dir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled_lower_track_length_threshold/confusionmatrices";
   gSystem->Exec("mkdir -p " + save_dir);
   
   gROOT->SetStyle("henrySBND");
