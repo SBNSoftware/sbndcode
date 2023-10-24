@@ -21,6 +21,7 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
 
 void RunMultiSelection()
 {
+  Selection("NCPiZeroAv4_1", "ncpizero", ncpizero_cuts, ncpizero_categories, selection_plots, true_ncpizero_cut);
   /*
   Selection("NCPiZeroAv4_1", "ncpizero_dazzle", ncpizero_cuts, ncpizero_categories, no_plots, true_ncpizero_cut);
   Selection("NCPiZeroAv4_1", "ncpizero_0p0pi_dazzle", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, no_plots, true_ncpizero_0p0pi_cut);
@@ -32,7 +33,6 @@ void RunMultiSelection()
   Selection("NCPiZeroAv4_1", "ccpizero_dazzle", ccpizero_cuts, ccpizero_categories, no_plots, true_ccpizero_cut);
   Selection("NCPiZeroAv4_1", "ccpizero", ccpizero_cuts, ccpizero_categories, no_plots, true_ccpizero_cut);
   */
-  Selection("NCPiZeroAv4_1", "ncpizero_Np0pi_dazzle_tmp", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, no_plots, true_ncpizero_Np0pi_cut);
 }
 
 void Selection(const TString productionVersion, const TString saveDirExt, std::vector<Cut> &cuts, const std::vector<Cut> &categories,

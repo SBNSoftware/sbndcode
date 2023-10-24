@@ -19,6 +19,8 @@ std::vector<Plot> selection_plots = {
     5, -0.5, 4.5 },
   { "slc_n_razzled_photons", "slc_n_razzled_photons", ";N Razzled Photons;Slices",
     5, -0.5, 4.5 },
+  { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
+    100, -2, 8 },
 };
 
 std::vector<Plot> old_plots = {
