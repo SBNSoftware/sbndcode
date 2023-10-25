@@ -30,7 +30,8 @@ physics.reco2_sensible: [ rns,
   pandoraShowerCosmicDist,
   pandoraShowerSelectionVars,
   razzle,
-  razzled
+  razzled,
+  fluxweight
 ]
 
 physics.ana: [ ncpizeroana ]
@@ -74,3 +75,5 @@ physics.producers.crumbs.MVAFileName:       "CRUMBS_Inclusive_NCPiZeroAv2.weight
 physics.producers.crumbs.CCNuMuMVAFileName: "CRUMBS_CCNuMu_NCPiZeroAv2.weights.xml"
 physics.producers.crumbs.CCNuEMVAFileName:  "CRUMBS_CCNuE_NCPiZeroAv2.weights.xml"
 physics.producers.crumbs.NCMVAFileName:     "CRUMBS_NC_NCPiZeroAv2.weights.xml"
+
+physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux

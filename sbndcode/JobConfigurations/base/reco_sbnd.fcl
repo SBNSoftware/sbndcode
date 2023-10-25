@@ -60,6 +60,7 @@
 #include "trackstoppingchi2fitter.fcl"
 #include "showercosmicdistanceproducer.fcl"
 #include "showerselectionvarsproducer.fcl"
+#include "eventweight_flux_sbn.fcl"
 
 process_name: Reco
 
@@ -203,6 +204,7 @@ physics:
   pandoraShowerSelectionVars:  @local::showerSelectionVars_sbn
   razzle:                      @local::razzle_sbnd
   razzled:                     @local::razzled_sbnd
+  fluxweight:                  @local::sbn_eventweight_flux
  }
 
  #define the producer and filter modules for this path, order matters,
