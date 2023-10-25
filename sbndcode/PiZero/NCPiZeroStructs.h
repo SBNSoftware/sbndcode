@@ -63,6 +63,9 @@ class VecVar
   template<typename T>
   void SetVal(const int pos, const T val) {}
 
+  template<typename T>
+  void SetVal(const int pos, const std::vector<T> &val) {}
+
   virtual void Resize(const int pos, const int size) = 0;
 
   template<typename T>
@@ -133,6 +136,8 @@ class InhVecVar : public VecVar
 
   void Assign(const int pos, const int size, const T val) {}
 
+  void SetVal(const int pos, const std::vector<T> value) {}
+
   void SetVal(const int posA, const int posB, const T val) {}
 };
 
@@ -201,6 +206,11 @@ class InhVecVecVar : public VecVar
   void Assign(const int pos, const int size, const T value)
   {
     var[pos].assign(size, value);
+  }
+
+  void SetVal(const int pos, const std::vector<T> value)
+  {
+    var[pos] = value;
   }
 
   void SetVal(const int posA, const int posB, const T value)

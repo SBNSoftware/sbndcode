@@ -53,6 +53,7 @@
 #include "sbnobj/Common/Reco/StoppingChi2Fit.h"
 #include "sbnobj/Common/Reco/ShowerSelectionVars.h"
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
+#include "sbnobj/Common/SBNEventWeight/EventWeightMap.h"
 
 #include "NCPiZeroStructs.h"
 
@@ -159,6 +160,8 @@ public:
   void FillElement(VecVar *vec, const int pos, const T value);
   template<typename T>
   void FillElement(VecVar *vec, const int posA, const int posB, const T value);
+  template<typename T>
+  void FillElement(VecVar *vec, const int pos, const std::vector<T> &value);
 
   art::Ptr<recob::PFParticle> GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfps);
 
@@ -185,7 +188,7 @@ private:
     fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
     fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
     fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel, fRazzledModuleLabel,
-    fSpacePointModuleLabel;
+    fSpacePointModuleLabel, fFluxWeightModuleLabel;
   bool fDebug, fBeamOff;
 
   std::map<int, int> fHitsMap;
@@ -512,6 +515,21 @@ private:
     { "msc_best_pzc_cos_com", new InhVecVar<double>("msc_best_pzc_cos_com") },
     { "msc_best_pzc_decay_asymmetry", new InhVecVar<double>("msc_best_pzc_decay_asymmetry") },
   };
+
+  const std::vector<std::string> flux_weight_names = { "expskin_Flux",
+                                                       "horncurrent_Flux",
+                                                       "kminus_Flux",
+                                                       "kplus_Flux",
+                                                       "kzero_Flux",
+                                                       "nucleoninexsec_Flux",
+                                                       "nucleonqexsec_Flux",
+                                                       "nucleontotxsec_Flux",
+                                                       "piminus_Flux",
+                                                       "pioninexsec_Flux",
+                                                       "pionqexsec_Flux",
+                                                       "piontotxsec_Flux",
+                                                       "piplus_Flux"
+  };
 };
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
@@ -541,8 +559,15 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fOpT0ModuleLabel             = p.get<art::InputTag>("OpT0ModuleLabel", "opt0finder");
     fRazzledModuleLabel          = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
     fSpacePointModuleLabel       = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
+    fFluxWeightModuleLabel       = p.get<art::InputTag>("FluxWeightModuleLabel", "fluxweight");
     fDebug                       = p.get<bool>("Debug", false);
     fBeamOff                     = p.get<bool>("BeamOff", false);
+
+    for(auto const& name : flux_weight_names)
+      {
+        nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
+        slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
+      }
 
     art::ServiceHandle<art::TFileService> fs;
 
@@ -806,6 +831,17 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
 
   art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
   const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
+
+  art::FindManyP<sbn::evwgh::EventWeightMap> MCTruthToFluxWeights( { mct }, e, fFluxWeightModuleLabel);
+  const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToFluxWeights.at(0);
+
+  for(auto const& evm : ewms)
+    {
+      for(auto const& [ name, weights ] : *evm)
+        {
+          FillElement(vars[prefix + "_weight_" + name], counter, weights);
+        }
+    }
 
   int protons = 0, neutrons = 0, charged_pions = 0, neutral_pions = 0, photons = 0, other = 0;
   float trueEnDep = 0.;
@@ -2142,6 +2178,12 @@ template<typename T>
 void sbnd::NCPiZeroAnalysis::FillElement(VecVar *vec, const int pos, const T value)
 {
   dynamic_cast<InhVecVar<T>*>(vec)->SetVal(pos, value);
+}
+
+template<typename T>
+void sbnd::NCPiZeroAnalysis::FillElement(VecVar *vec, const int pos, const std::vector<T> &value)
+{
+  dynamic_cast<InhVecVecVar<T>*>(vec)->SetVal(pos, value);
 }
 
 template<typename T>
