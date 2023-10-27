@@ -188,7 +188,8 @@ private:
     fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
     fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
     fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel, fRazzledModuleLabel,
-    fSpacePointModuleLabel, fFluxWeightModuleLabel;
+    fSpacePointModuleLabel;
+  std::vector<art::InputTag> fEventWeightModuleLabels;
   bool fDebug, fBeamOff;
 
   std::map<int, int> fHitsMap;
@@ -530,6 +531,125 @@ private:
                                                        "piontotxsec_Flux",
                                                        "piplus_Flux"
   };
+
+  const std::vector<std::string> genie_weight_names = { "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_np_CC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_3Pi",
+                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nu",
+                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nubar",
+                                                        "MiscInteractionSysts_SBND_v1_SPPLowQ2Suppression",
+                                                        "MiscInteractionSysts_SBND_v1_nuenuebar_xsec_ratio",
+                                                        "MiscInteractionSysts_SBND_v1_nuenumu_xsec_ratio",
+                                                        "MINERvAq0q3Weighting_SBND_v1_Mnv2p2hGaussEnhancement",
+                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nu",
+                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nubar",
+                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nu",
+                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nubar",
+                                                        "GENIEReWeight_SBND_v1_multisim_AhtBY",
+                                                        "GENIEReWeight_SBND_v1_multisim_BhtBY",
+                                                        "GENIEReWeight_SBND_v1_multisim_CCQEPauliSupViaKF",
+                                                        "GENIEReWeight_SBND_v1_multisim_CV1uBY",
+                                                        "GENIEReWeight_SBND_v1_multisim_CV2uBY",
+                                                        "GENIEReWeight_SBND_v1_multisim_EtaNCEL",
+                                                        "GENIEReWeight_SBND_v1_multisim_FormZone",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_MFP_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_MFP_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_MaCCQE",
+                                                        "GENIEReWeight_SBND_v1_multisim_MaCCRES",
+                                                        "GENIEReWeight_SBND_v1_multisim_MaNCEL",
+                                                        "GENIEReWeight_SBND_v1_multisim_MaNCRES",
+                                                        "GENIEReWeight_SBND_v1_multisim_MvCCRES",
+                                                        "GENIEReWeight_SBND_v1_multisim_MvNCRES",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1eta",
+                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1gamma",
+                                                        "GENIEReWeight_SBND_v1_multisigma_AhtBY",
+                                                        "GENIEReWeight_SBND_v1_multisigma_BhtBY",
+                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEMomDistroFGtoSF",
+                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEPauliSupViaKF",
+                                                        "GENIEReWeight_SBND_v1_multisigma_CV1uBY",
+                                                        "GENIEReWeight_SBND_v1_multisigma_CV2uBY",
+                                                        "GENIEReWeight_SBND_v1_multisigma_EtaNCEL",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FormZone",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCQE",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCRES",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCEL",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCRES",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MvCCRES",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MvNCRES",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1eta",
+                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1gamma",
+                                                        "GENIEReWeight_SBND_v1_multisigma_Theta_Delta2Npi",
+  };
 };
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
@@ -559,11 +679,17 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     fOpT0ModuleLabel             = p.get<art::InputTag>("OpT0ModuleLabel", "opt0finder");
     fRazzledModuleLabel          = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
     fSpacePointModuleLabel       = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
-    fFluxWeightModuleLabel       = p.get<art::InputTag>("FluxWeightModuleLabel", "fluxweight");
+    fEventWeightModuleLabels     = p.get<std::vector<art::InputTag>>("EventWeightModuleLabels", {"fluxweight", "systtools"});
     fDebug                       = p.get<bool>("Debug", false);
     fBeamOff                     = p.get<bool>("BeamOff", false);
 
     for(auto const& name : flux_weight_names)
+      {
+        nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
+        slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
+      }
+
+    for(auto const& name : genie_weight_names)
       {
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
@@ -832,14 +958,17 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
   art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
   const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
 
-  art::FindManyP<sbn::evwgh::EventWeightMap> MCTruthToFluxWeights( { mct }, e, fFluxWeightModuleLabel);
-  const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToFluxWeights.at(0);
-
-  for(auto const& evm : ewms)
+  for(auto const& weightModuleLabel : fEventWeightModuleLabels)
     {
-      for(auto const& [ name, weights ] : *evm)
+      art::FindManyP<sbn::evwgh::EventWeightMap> MCTruthToWeights( { mct }, e, weightModuleLabel);
+      const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToWeights.at(0);
+
+      for(auto const& ewm : ewms)
         {
-          FillElement(vars[prefix + "_weight_" + name], counter, weights);
+          for(auto const& [ name, weights ] : *ewm)
+            {
+              FillElement(vars[prefix + "_weight_" + name], counter, weights);
+            }
         }
     }
 
