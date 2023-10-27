@@ -30,7 +30,10 @@ physics.reco2_sensible: [ rns,
   pandoraShowerCosmicDist,
   pandoraShowerSelectionVars,
   razzle,
-  razzled,
+  razzled
+]
+
+physics.weight_paths: [
   fluxweight,
   systtools
 ]

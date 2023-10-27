@@ -8,3 +8,5 @@ physics.producers.razzle.MakeTree:                     true
 physics.producers.razzle.MinShowerEnergy:              0
 physics.producers.razzled.MakeTree:                    true
 physics.producers.razzled.RunMVA:                      true
+
+physics.trigger_paths: [ reco2_sensible, weight_paths ]
