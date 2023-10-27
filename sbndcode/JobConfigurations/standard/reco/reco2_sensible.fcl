@@ -31,7 +31,8 @@ physics.reco2_sensible: [ rns,
   pandoraShowerSelectionVars,
   razzle,
   razzled,
-  fluxweight
+  fluxweight,
+  systtools
 ]
 
 physics.ana: [ ncpizeroana ]

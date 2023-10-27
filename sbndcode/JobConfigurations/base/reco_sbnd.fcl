@@ -61,6 +61,7 @@
 #include "showercosmicdistanceproducer.fcl"
 #include "showerselectionvarsproducer.fcl"
 #include "eventweight_flux_sbn.fcl"
+#include "eventweight_genie_systtools_sbnd.fcl"
 
 process_name: Reco
 
@@ -205,6 +206,7 @@ physics:
   razzle:                      @local::razzle_sbnd
   razzled:                     @local::razzled_sbnd
   fluxweight:                  @local::sbn_eventweight_flux
+  systtools:                   @local::sbn_systtools
  }
 
  #define the producer and filter modules for this path, order matters,
