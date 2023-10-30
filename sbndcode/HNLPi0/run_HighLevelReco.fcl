@@ -1,0 +1,69 @@
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "hnlpizero_producers.fcl"
+
+process_name: HighLevelReco
+
+services:
+{
+	TFileService: { fileName: "hist_highlevelreco_%p-%tc.root"}
+	@table::sbnd_services
+	ParticleInventoryService: @local::sbnd_particleinventoryservice
+	BackTrackerService: @local::sbnd_backtrackerservice
+	TimeTracker: {}
+	RandomNumberGenerator: {} #ART native random number generator
+	AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
+    	ExptGeoHelperInterface:    @local::sbnd_geometry_helper
+      	GeometryConfigurationWriter: {}
+        Geometry:                  @local::sbnd_geo
+	AuxDetGeometry:            @local::sbnd_auxdetgeo
+	LArPropertiesService:      @local::standard_properties
+	DetectorClocksService:     @local::sbnd_services.DetectorClocksService
+        DetectorPropertiesService: @local::sbnd_detproperties
+	ParticleInventoryService:  @local::standard_particleinventoryservice
+	BackTrackerService:        @local::standard_backtrackerservice
+	SpaceCharge:               @local::sbnd_spacecharge
+	NuRandomService: 
+	{
+		policy: perEvent
+	}
+}
+
+source:
+{
+	module_type: RootInput
+}
+
+outputs:
+{
+  out1:
+  {
+    	@table::sbnd_rootoutput
+	fileName: "highlevelreco_%p-%tc.root" # default file name, can override from command line with -o or --output
+  	dataTier: "full-reconstructed"
+  }
+}
+
+physics:
+{
+	producers:
+	{
+		@table::hnlpizero_producers 
+	}
+
+	prods: [crumbs, 		
+		pandoraTrackMCS, pandoraTrackRange, 
+		pandoraTrackClosestApproach,pandoraTrackStoppingChi2, 
+		pandoraShowerCosmicDist, pandoraShowerSelectionVars,
+		dazzle, razzle,
+		vertexCharge, vertexStub //,cnnid 
+		]
+
+	trigger_paths: [prods]
+
+	stream1:  [out1]
+	
+	end_paths: [stream1]
+}
+
+services.BackTrackerService.BackTrack.SimChannelModuleLabel: "simtpc2d:simpleSC"

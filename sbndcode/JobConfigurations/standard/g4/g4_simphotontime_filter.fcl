@@ -21,12 +21,12 @@ physics.producers.simdriftouttime: @local::sbnd_simdrift
 physics.producers.genericcrtouttime: @local::sbnd_genericCRT
 
 # Set the appropriate input labels, to run geant4 only on the outtime cosmics
-physics.producers.simdriftintime.SimulationLabel: "ionandscintintime:priorSCE"
+physics.producers.simdriftintime.SimulationLabel: "ionandscintintime"
 physics.producers.genericcrtintime.LArG4Label: "larg4intime"
 physics.producers.larg4outtime.inputCollections: [ "GenInTimeSorter:outtime" ]
 physics.producers.ionandscintouttime.InputModuleLabels: ["larg4outtime"]
-physics.producers.pdfastsimouttime.SimulationLabel: "ionandscintouttime:priorSCE"
-physics.producers.simdriftouttime.SimulationLabel: "ionandscintouttime:priorSCE"
+physics.producers.pdfastsimouttime.SimulationLabel: "ionandscintouttime"
+physics.producers.simdriftouttime.SimulationLabel: "ionandscintouttime"
 physics.producers.genericcrtouttime.LArG4Label: "larg4outtime"
 
 # Add processes for light simulation outside the active volume (AV) for the intimes

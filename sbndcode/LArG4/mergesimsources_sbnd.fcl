@@ -12,6 +12,21 @@ sbnd_merge_sim_sources : {
   InputSourcesLabels:          [ "larg4intime", "larg4outtime"]
   TrackIDOffsets:              [ 10000000, 20000000 ]
   StoreReflected:              true
+  EnergyDepositInstanceLabels: [ "" ]
+  AuxDetHitsInstanceLabels:    [ "" ]
+}
+
+sbnd_merge_sim_sources_priorSCE : {
+  module_type: "MergeSimSources"
+  FillMCParticles:             false
+  FillSimPhotons:              false
+  FillSimChannels:             false
+  FillAuxDetSimChannels:       false
+  FillSimEnergyDeposits:       false
+  FillAuxDetHits:              false
+  InputSourcesLabels:          [ "larg4intime", "larg4outtime"]
+  TrackIDOffsets:              [ 10000000, 20000000 ]
+  StoreReflected:              true
   EnergyDepositInstanceLabels: [ "priorSCE" ]
   AuxDetHitsInstanceLabels:    [ "" ]
 }

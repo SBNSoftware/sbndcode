@@ -24,5 +24,4 @@ physics.producers.generator.Decay.Decays: ["nu_e_e"]
 #include "set_MeVPrtl_GeoTPC.fcl"
 
 ###-----------DeWeight--------------###
-physics.producers.generator.Deweight: true
-
+physics.producers.generator.Deweight: false
