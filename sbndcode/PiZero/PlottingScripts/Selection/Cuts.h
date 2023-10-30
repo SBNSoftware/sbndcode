@@ -77,9 +77,9 @@ std::vector<Cut> ncpizero_0p0pi_cuts = {
   { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },
   { "fv", "slc_is_fv", "FV" },
   { "crumbs", "slc_crumbs_score>-0.125", "CRUMBS Cut" },
-  { "no_dazzle_muons", "slc_n_dazzle_muons==0", "No Dazzle Muons" },
-  { "no_dazzle_pions", "slc_n_dazzle_pions==0", "No Dazzle Pions" },
-  { "no_dazzle_protons", "slc_n_dazzle_protons==0", "No Dazzle Protons" },
+  { "no_razzled_muons", "slc_n_razzled_muons==0", "No Razzled Muons" },
+  { "no_razzled_pions", "slc_n_razzled_pions==0", "No Razzled Pions" },
+  { "no_razzled_protons", "slc_n_razzled_protons==0", "No Razzled Protons" },
   { "has_two_pfps", "slc_n_pfps>1", "Has Two PFPs" },
   { "has_two_razzled_photons", "slc_n_razzled_photons>1", "Has Two Razzled Photons" },
 };
@@ -89,10 +89,10 @@ std::vector<Cut> ncpizero_1p0pi_cuts = {
   { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },
   { "fv", "slc_is_fv", "FV" },
   { "crumbs", "slc_crumbs_score>0", "CRUMBS Cut" },
-  { "no_dazzle_muons", "slc_n_dazzle_muons==0", "No Dazzle Muons" },
-  { "no_dazzle_pions", "slc_n_dazzle_pions==0", "No Dazzle Pions" },
-  { "one_dazzle_proton", "slc_n_dazzle_protons==1", "One Dazzle Proton" },
-  { "has_two_pfps", "slc_n_pfps>1", "Has Two PFPs" },
+  { "no_razzled_muons", "slc_n_razzled_muons==0", "No Razzled Muons" },
+  { "no_razzled_pions", "slc_n_razzled_pions==0", "No Razzled Pions" },
+  { "one_razzled_proton", "slc_n_razzled_protons==1", "One Razzled Proton" },
+  { "has_three_pfps", "slc_n_pfps>2", "Has Three PFPs" },
   { "has_two_razzled_photons", "slc_n_razzled_photons>1", "Has Two Razzled Photons" },
 };
 
@@ -101,10 +101,9 @@ std::vector<Cut> ncpizero_Np0pi_cuts = {
   { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },
   { "fv", "slc_is_fv", "FV" },
   { "crumbs", "slc_crumbs_score>0", "CRUMBS Cut" },
-  { "no_dazzle_muons", "slc_n_dazzle_muons==0", "No Dazzle Muons" },
-  { "no_dazzle_pions", "slc_n_dazzle_pions==0", "No Dazzle Pions" },
-  //  { "has_one_dazzle_proton", "slc_n_dazzle_protons>0", "Has One Dazzle Proton" },
-  //  { "has_two_pfps", "slc_n_pfps>1", "Has Two PFPs" },
+  { "no_razzled_muons", "slc_n_razzled_muons==0", "No Razzled Muons" },
+  { "no_razzled_pions", "slc_n_razzled_pions==0", "No Razzled Pions" },
+  { "has_one_razzled_proton", "slc_n_razzled_protons>0", "Has One Razzled Proton" },
   { "has_three_pfps", "slc_n_pfps>2", "Has Three PFPs" },
   { "has_two_razzled_photons", "slc_n_razzled_photons>1", "Has Two Razzled Photons" },
 };
@@ -114,8 +113,8 @@ std::vector<Cut> ncpizero_0pXpi_cuts = {
   { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },
   { "fv", "slc_is_fv", "FV" },
   { "crumbs", "slc_crumbs_score>-0.125", "CRUMBS Cut" },
-  { "no_dazzle_muons", "slc_n_dazzle_muons==0", "No Dazzle Muons" },
-  { "no_dazzle_protons", "slc_n_dazzle_protons==0", "No Dazzle Protons" },
+  { "no_razzled_muons", "slc_n_razzled_muons==0", "No Razzled Muons" },
+  { "no_razzled_protons", "slc_n_razzled_protons==0", "No Razzled Protons" },
   { "has_two_pfps", "slc_n_pfps>1", "Has Two PFPs" },
   { "has_two_razzled_photons", "slc_n_razzled_photons>1", "Has Two Razzled Photons" },
 };
@@ -125,9 +124,9 @@ std::vector<Cut> ncpizero_1pXpi_cuts = {
   { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },
   { "fv", "slc_is_fv", "FV" },
   { "crumbs", "slc_crumbs_score>0", "CRUMBS Cut" },
-  { "no_dazzle_muons", "slc_n_dazzle_muons==0", "No Dazzle Muons" },
-  { "one_dazzle_proton", "slc_n_dazzle_protons==1", "One Dazzle Proton" },
-  { "has_two_pfps", "slc_n_pfps>1", "Has Two PFPs" },
+  { "no_razzled_muons", "slc_n_razzled_muons==0", "No Razzled Muons" },
+  { "one_razzled_proton", "slc_n_razzled_protons==1", "One Razzled Proton" },
+  { "has_three_pfps", "slc_n_pfps>2", "Has Three PFPs" },
   { "has_two_razzled_photons", "slc_n_razzled_photons>1", "Has Two Razzled Photons" },
 };
 
@@ -136,9 +135,9 @@ std::vector<Cut> ncpizero_NpXpi_cuts = {
   { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },
   { "fv", "slc_is_fv", "FV" },
   { "crumbs", "slc_crumbs_score>0", "CRUMBS Cut" },
-  { "no_dazzle_muons", "slc_n_dazzle_muons==0", "No Dazzle Muons" },
-  { "has_one_dazzle_proton", "slc_n_dazzle_protons>0", "Has One Dazzle Proton" },
-  { "has_two_pfps", "slc_n_pfps>1", "Has Two PFPs" },
+  { "no_razzled_muons", "slc_n_razzled_muons==0", "No Razzled Muons" },
+  { "has_one_razzled_proton", "slc_n_razzled_protons>0", "Has One Razzled Proton" },
+  { "has_three_pfps", "slc_n_pfps>2", "Has Three PFPs" },
   { "has_two_razzled_photons", "slc_n_razzled_photons>1", "Has Two Razzled Photons" },
 };
 
@@ -148,6 +147,6 @@ std::vector<Cut> ccpizero_cuts = {
   { "fv", "slc_is_fv", "FV" },
   { "crumbs", "slc_crumbs_score>0.325", "CRUMBS Cut" },
   { "has_one_razzled_muon", "slc_n_razzled_muons>0", "Has One Razzled Muon" },
-  { "has_two_pfps", "slc_n_pfps>1", "Has Two PFPs" },
+  { "has_three_pfps", "slc_n_pfps>2", "Has Three PFPs" },
   { "has_two_razzled_photons", "slc_n_razzled_photons>1", "Has Two Razzled Photons" },
 };

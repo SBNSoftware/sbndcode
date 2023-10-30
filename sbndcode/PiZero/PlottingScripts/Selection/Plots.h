@@ -54,16 +54,16 @@ std::vector<Plot> true_observables = {
 };
 
 std::vector<Plot> observables = {
-  { "slc_pzc_invariant_mass", "slc_pzc_invariant_mass[0]", ";M_{#gamma#gamma} (MeV/c^{2});Events",
-    25, 0, 500 },
-  { "slc_pzc_pizero_mom", "slc_pzc_pizero_mom[0]", ";p_{#pi^{0}} (GeV/c);Events",
-    25, 0, 2 },
-  { "slc_pzc_cos_theta_pizero", "slc_pzc_cos_theta_pizero[0]", ";cos(#theta_{#pi^{0}});Events",
-    25, -1, 1 },
-  { "slc_pzc_cos_com", "slc_pzc_cos_com[0]", ";cos(#theta_{CoM});Events",
-    25, 0, 1 },
-  { "slc_pzc_decay_asymmetry", "slc_pzc_decay_asymmetry[0]", ";Decay Asymmetry;Events",
-    25, 0, 1 },
+  { "slc_best_pzc_invariant_mass", "slc_best_pzc_invariant_mass", ";M_{#gamma#gamma} (MeV/c^{2});Events",
+    50, 0, 500 },
+  { "slc_best_pzc_pizero_mom", "slc_best_pzc_pizero_mom", ";p_{#pi^{0}} (GeV/c);Events",
+    50, 0, 1000 },
+  { "slc_best_pzc_cos_theta_pizero", "slc_best_pzc_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Events",
+    50, -1, 1 },
+  { "slc_best_pzc_cos_com", "slc_best_pzc_cos_com", ";cos(#theta_{CoM});Events",
+    50, 0, 1 },
+  { "slc_best_pzc_decay_asymmetry", "slc_best_pzc_decay_asymmetry", ";Decay Asymmetry;Events",
+    50, 0, 1 },
 };
 
 std::vector<Plot> no_plots = {};
