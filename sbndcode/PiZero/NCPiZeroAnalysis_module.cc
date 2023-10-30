@@ -1734,9 +1734,9 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   AccessElement(slcVars["slc_crumbs_score"], counter, crumbs);
   const bool passes_crumbs = crumbs > -0.025;
 
-  int ndazzlemuons;
-  AccessElement(slcVars["slc_n_dazzle_muons"], counter, ndazzlemuons);
-  const bool passes_dazzle = ndazzlemuons == 0;
+  int nrazzledmuons;
+  AccessElement(slcVars["slc_n_razzled_muons"], counter, nrazzledmuons);
+  const bool passes_razzled_muons = nrazzledmuons == 0;
 
   size_t npfps;
   AccessElement(slcVars["slc_n_pfps"], counter, npfps);
@@ -1744,9 +1744,9 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 
   int nrazzledphotons;
   AccessElement(slcVars["slc_n_razzled_photons"], counter, nrazzledphotons);
-  const bool passes_razzled = nrazzledphotons > 1;
+  const bool passes_razzled_photons = nrazzledphotons > 1;
 
-  const bool sel = is_clear_cosmic && is_fv && passes_crumbs && passes_dazzle && passes_pfps && passes_razzled;
+  const bool sel = !is_clear_cosmic && is_fv && passes_crumbs && passes_razzled_muons && passes_pfps && passes_razzled_photons;
   FillElement(slcVars["slc_sel"], counter, sel);
 }
 
