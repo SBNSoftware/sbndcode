@@ -70,6 +70,7 @@ std::vector<Cut> ncpizero_cuts = {
   { "no_razzled_muons", "slc_n_razzled_muons==0", "No Razzled Muons" },
   { "has_two_pfps", "slc_n_pfps>1", "Has Two PFPs" },
   { "has_two_razzled_photons", "slc_n_razzled_photons>1", "Has Two Razzled Photons" },
+  { "good_pizero_kinematics", "slc_best_pzc_good_kinematics", "Good PiZero Kinematics" },
 };
 
 std::vector<Cut> ncpizero_0p0pi_cuts = {
