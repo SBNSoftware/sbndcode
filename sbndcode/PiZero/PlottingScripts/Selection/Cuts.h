@@ -73,6 +73,17 @@ std::vector<Cut> ncpizero_cuts = {
   { "good_pizero_kinematics", "slc_best_pzc_good_kinematics", "Good PiZero Kinematics" },
 };
 
+std::vector<Cut> ncpizero_cuts_dazzle_muons = {
+  { "no_cut", "", "No Cut" },
+  { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },
+  { "fv", "slc_is_fv", "FV" },
+  { "crumbs", "slc_crumbs_score>-0.025", "CRUMBS Cut" },
+  { "no_dazzle_muons", "slc_n_dazzle_muons==0", "No Dazzle Muons" },
+  { "has_two_pfps", "slc_n_pfps>1", "Has Two PFPs" },
+  { "has_two_razzled_photons", "slc_n_razzled_photons>1", "Has Two Razzled Photons" },
+  { "good_pizero_kinematics", "slc_best_pzc_good_kinematics", "Good PiZero Kinematics" },
+};
+
 std::vector<Cut> ncpizero_0p0pi_cuts = {
   { "no_cut", "", "No Cut" },
   { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },

@@ -18,7 +18,7 @@ int GetGenEvents(TChain *subruns);
 
 void RunMultiObservables()
 {
-  Observables("NCPiZeroAv5", "ncpizero", ncpizero_cuts, ncpizero_categories, observables);
+  Observables("NCPiZeroAv6", "ncpizero", ncpizero_cuts, ncpizero_categories, observables);
 }
 
 void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const std::vector<Cut> cuts = ncpizero_cuts,
