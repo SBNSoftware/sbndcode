@@ -59,6 +59,7 @@ void MakeXSecTrees(const TString productionVersion, const TString sampleName)
 
   int sliceID, category;
   double pzc_pizero_mom;
+  bool selected;
   std::vector<double> flux_weights;
 
   outslices->Branch("run", &run);
@@ -68,6 +69,7 @@ void MakeXSecTrees(const TString productionVersion, const TString sampleName)
   outslices->Branch("category", &category);
   outslices->Branch("pzc_pizero_mom", &pzc_pizero_mom);
   outslices->Branch("flux_weights", &flux_weights);
+  outslices->Branch("selected", &selected);
 
   const int N = events->GetEntries();
 
@@ -80,28 +82,31 @@ void MakeXSecTrees(const TString productionVersion, const TString sampleName)
       for(int j = 0; j < slc_is_clear_cosmic->size(); ++j)
         {
           flux_weights.resize(1000, 1);
-          if(!slc_is_clear_cosmic->at(j) && slc_is_fv->at(j) && slc_crumbs_score->at(j) > -0.025
-             && slc_n_razzled_muons->at(j) == 0 && slc_n_pfps->at(j) > 1 && slc_n_razzled_photons->at(j) > 1)
+
+          sliceID = j;
+
+          if(slc_true_event_type->at(j) == 6 || slc_true_event_type->at(j) == 7)
+            category = 6;
+          else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 1 && slc_true_n_neutral_pions->at(j) > 0 && slc_comp->at(j) > .5)
+            category = 0;
+          else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 1 && slc_true_n_neutral_pions->at(j) == 0)
+            category = 1;
+          else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 0 && abs(slc_true_pdg->at(j)) == 14)
+            category = 2;
+          else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 0 && abs(slc_true_pdg->at(j)) == 12)
+            category = 3;
+          else if(!slc_true_fv->at(j) && !slc_true_av->at(j))
+            category = 4;
+          else if(!slc_true_fv->at(j) && slc_true_av->at(j))
+            category = 5;
+          else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 1 && slc_true_n_neutral_pions->at(j) > 0)
+            category = 7;
+
+          selected = !slc_is_clear_cosmic->at(j) && slc_is_fv->at(j) && slc_crumbs_score->at(j) > -0.025
+            && slc_n_razzled_muons->at(j) == 0 && slc_n_pfps->at(j) > 1 && slc_n_razzled_photons->at(j) > 1;
+
+          if(category == 1 || selected)
             {
-              sliceID = j;
-
-              if(slc_true_event_type->at(j) == 6 || slc_true_event_type->at(j) == 7)
-                category = 6;
-              else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 1 && slc_true_n_neutral_pions->at(j) > 0 && slc_comp->at(j) > .5)
-                category = 0;
-              else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 1 && slc_true_n_neutral_pions->at(j) == 0)
-                category = 1;
-              else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 0 && abs(slc_true_pdg->at(j)) == 14)
-                category = 2;
-              else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 0 && abs(slc_true_pdg->at(j)) == 12)
-                category = 3;
-              else if(!slc_true_fv->at(j) && !slc_true_av->at(j))
-                category = 4;
-              else if(!slc_true_fv->at(j) && slc_true_av->at(j))
-                category = 5;
-              else if(slc_true_fv->at(j) && slc_true_ccnc->at(j) == 1 && slc_true_n_neutral_pions->at(j) > 0)
-                category = 7;
-
               pzc_pizero_mom = slc_best_pzc_pizero_mom->at(j);
 
               if(category != 6)
