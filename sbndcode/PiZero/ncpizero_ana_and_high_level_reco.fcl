@@ -1,4 +1,5 @@
 #include "simulationservices_sbnd.fcl"
+#include "ncpizero_producers.fcl"
 
 process_name: NCPiZeroAnalyzer
 
@@ -17,6 +18,11 @@ source:
 
 physics:
 {
+  producers:
+  {
+    @table::ncpizero_producers
+  }
+
   analyzers:
   {
     ncpizeroana:
@@ -24,6 +30,12 @@ physics:
       module_type:       "NCPiZeroAnalysis"
     }
   }
+
+  prods:         [ crumbs, pandoraTrackMCS, pandoraTrackRange,
+                   pandoraTrackClosestApproach, pandoraTrackStoppingChi2,
+                   dazzle, pandoraShowerCosmicDist, pandoraShowerSelectionVars,
+                   razzle ]
+  trigger_paths: [ prods ]
 
   ana:       [ ncpizeroana ]
   end_paths: [ ana ]
