@@ -56,21 +56,21 @@ void XSec(const TString productionVersion, const TString saveDirExt)
   NormaliseEntriesByBinWidth(hNominalPiZeroMomentum);
 
   std::vector<TH1F*> hFluxUniversesPiZeroMomentum;
-  for(int i = 0; i < n_flux_univs; ++i)
+  for(int univ = 0; univ < n_flux_univs; ++univ)
     {
-      TH1F *hFluxUniversesPiZeroMomentumRockbox = new TH1F(Form("hFluxUniverse%iPiZeroMomentumRockbox", i), ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
-      TH1F *hFluxUniversesPiZeroMomentumIntime = new TH1F(Form("hFluxUniverse%iPiZeroMomentumIntime", i), ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
-      rockboxslices->Draw(Form("pzc_pizero_mom>>hFluxUniverse%iPiZeroMomentumRockbox", i), Form("flux_weights[%i]",i));
-      intimeslices->Draw(Form("pzc_pizero_mom>>hFluxUniverse%iPiZeroMomentumIntime", i), Form("flux_weights[%i]",i));
+      TH1F *hFluxUniversesPiZeroMomentumRockbox = new TH1F(Form("hFluxUniverse%iPiZeroMomentumRockbox", univ), ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
+      TH1F *hFluxUniversesPiZeroMomentumIntime = new TH1F(Form("hFluxUniverse%iPiZeroMomentumIntime", univ), ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
+      rockboxslices->Draw(Form("pzc_pizero_mom>>hFluxUniverse%iPiZeroMomentumRockbox", univ), Form("flux_weights[%i]",univ));
+      intimeslices->Draw(Form("pzc_pizero_mom>>hFluxUniverse%iPiZeroMomentumIntime", univ), Form("flux_weights[%i]",univ));
       hFluxUniversesPiZeroMomentumRockbox->Scale(rockboxScaling);
       hFluxUniversesPiZeroMomentumIntime->Scale(intimeScaling);
       TH1F *hFluxUniversesPiZeroMomentumCombined = (TH1F*) hFluxUniversesPiZeroMomentumRockbox->Clone("hFluxUniversesPiZeroMomentum");
       hFluxUniversesPiZeroMomentumCombined->Add(hFluxUniversesPiZeroMomentumIntime);
 
       hFluxUniversesPiZeroMomentum.push_back(hFluxUniversesPiZeroMomentumCombined);
-      hFluxUniversesPiZeroMomentum[i]->SetLineColor(kMagenta-10);
-      hFluxUniversesPiZeroMomentum[i]->SetLineWidth(1);
-      NormaliseEntriesByBinWidth(hFluxUniversesPiZeroMomentum[i]);
+      hFluxUniversesPiZeroMomentum[univ]->SetLineColor(kMagenta-10);
+      hFluxUniversesPiZeroMomentum[univ]->SetLineWidth(1);
+      NormaliseEntriesByBinWidth(hFluxUniversesPiZeroMomentum[univ]);
     }
 
   TCanvas *cFluxUniversesPiZeroMomentum = new TCanvas("cFluxUniversesPiZeroMomentum", "cFluxUniversesPiZeroMomentum");
@@ -79,8 +79,8 @@ void XSec(const TString productionVersion, const TString saveDirExt)
   hNominalPiZeroMomentum->SetMaximum(1.4*hNominalPiZeroMomentum->GetMaximum());
   hNominalPiZeroMomentum->Draw("hist");
 
-  for(int i = 0; i < n_flux_univs; ++i)
-    hFluxUniversesPiZeroMomentum[i]->Draw("histsame");
+  for(int univ = 0; univ < n_flux_univs; ++univ)
+    hFluxUniversesPiZeroMomentum[univ]->Draw("histsame");
   
   cFluxUniversesPiZeroMomentum->Modified();
   hNominalPiZeroMomentum->Draw("histsame");
@@ -94,52 +94,78 @@ void XSec(const TString productionVersion, const TString saveDirExt)
   cFluxUniversesPiZeroMomentum->SaveAs(saveDir + "/pizero_momentum_flux_universes.pdf");
 
   std::vector<TH1F*> hFluxUniversesPiZeroMomentumPerBin;
-  TH1F *hCVPiZeroMomentum = new TH1F("hCVPiZeroMomentum", ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
+  TH1F *hFluxCVPiZeroMomentum = new TH1F("hFluxCVPiZeroMomentum", ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
 
-  for(int j = 0; j < hNominalPiZeroMomentum->GetNbinsX(); ++j)
+  for(int bin = 0; bin < hNominalPiZeroMomentum->GetNbinsX(); ++bin)
     {
-      hFluxUniversesPiZeroMomentumPerBin.push_back(new TH1F(Form("hFluxUniversesPiZeroMomentumBin%i",j+1),
-                                                            Form(";%.0f < p_{#pi^{0}} (MeV/c) < %.0f;Universes", hNominalPiZeroMomentum->GetBinLowEdge(j+1),
-                                                                 hNominalPiZeroMomentum->GetBinLowEdge(j+1) + hNominalPiZeroMomentum->GetBinWidth(j+1)),
-                                                            25, .75 * hNominalPiZeroMomentum->GetBinContent(j+1), 1.25 * hNominalPiZeroMomentum->GetBinContent(j+1)));
+      hFluxUniversesPiZeroMomentumPerBin.push_back(new TH1F(Form("hFluxUniversesPiZeroMomentumBin%i",bin+1),
+                                                            Form(";%.0f < p_{#pi^{0}} (MeV/c) < %.0f;Universes", hNominalPiZeroMomentum->GetBinLowEdge(bin+1),
+                                                                 hNominalPiZeroMomentum->GetBinLowEdge(bin+1) + hNominalPiZeroMomentum->GetBinWidth(bin+1)),
+                                                            25, .75 * hNominalPiZeroMomentum->GetBinContent(bin+1), 1.25 * hNominalPiZeroMomentum->GetBinContent(bin+1)));
       
-      for(int i = 0; i < n_flux_univs; ++i)
-        hFluxUniversesPiZeroMomentumPerBin[j]->Fill(hFluxUniversesPiZeroMomentum[i]->GetBinContent(j+1));
+      for(int univ = 0; univ < n_flux_univs; ++univ)
+        hFluxUniversesPiZeroMomentumPerBin[bin]->Fill(hFluxUniversesPiZeroMomentum[univ]->GetBinContent(bin+1));
 
-      TCanvas *cFluxUniversesPiZeroMomentumPerBin = new TCanvas(Form("cFluxUniversesPiZeroMomentumBin%i", j+1), Form("cFluxUniversesPiZeroMomentumBin%i", j+1));
+      TCanvas *cFluxUniversesPiZeroMomentumPerBin = new TCanvas(Form("cFluxUniversesPiZeroMomentumBin%i", bin+1), Form("cFluxUniversesPiZeroMomentumBin%i", bin+1));
       cFluxUniversesPiZeroMomentumPerBin->cd();
 
-      hFluxUniversesPiZeroMomentumPerBin[j]->SetLineColor(kBlue+2);
+      hFluxUniversesPiZeroMomentumPerBin[bin]->SetLineColor(kBlue+2);
 
-      TF1 *fGaus = new TF1("fGaus", "gaus", .75 * hNominalPiZeroMomentum->GetBinContent(j+1), 1.25 * hNominalPiZeroMomentum->GetBinContent(j+1));
-      hFluxUniversesPiZeroMomentumPerBin[j]->Fit(fGaus);
+      TF1 *fGaus = new TF1("fGaus", "gaus", .75 * hNominalPiZeroMomentum->GetBinContent(bin+1), 1.25 * hNominalPiZeroMomentum->GetBinContent(bin+1));
+      hFluxUniversesPiZeroMomentumPerBin[bin]->Fit(fGaus);
       fGaus->SetLineColor(kRed+2);
 
-      hFluxUniversesPiZeroMomentumPerBin[j]->Draw("hist");
+      hFluxUniversesPiZeroMomentumPerBin[bin]->Draw("hist");
       fGaus->Draw("same");
 
-      cFluxUniversesPiZeroMomentumPerBin->SaveAs(saveDir + Form("/pizero_momentum_bin%i_flux_variations.png", j+1));
-      cFluxUniversesPiZeroMomentumPerBin->SaveAs(saveDir + Form("/pizero_momentum_bin%i_flux_variations.pdf", j+1));
+      cFluxUniversesPiZeroMomentumPerBin->SaveAs(saveDir + Form("/pizero_momentum_bin%i_flux_variations.png", bin+1));
+      cFluxUniversesPiZeroMomentumPerBin->SaveAs(saveDir + Form("/pizero_momentum_bin%i_flux_variations.pdf", bin+1));
 
-      hCVPiZeroMomentum->SetBinContent(j+1, fGaus->GetParameter("Mean"));
-      hCVPiZeroMomentum->SetBinError(j+1, fGaus->GetParameter("Sigma"));
+      hFluxCVPiZeroMomentum->SetBinContent(bin+1, fGaus->GetParameter("Mean"));
+      hFluxCVPiZeroMomentum->SetBinError(bin+1, fGaus->GetParameter("Sigma"));
     }
 
   TCanvas *cFluxOneSigmaPiZeroMomentum = new TCanvas("cFluxOneSigmaPiZeroMomentum", "cFluxOneSigmaPiZeroMomentum");
   cFluxOneSigmaPiZeroMomentum->cd();
 
   hNominalPiZeroMomentum->Draw("hist");
-  hCVPiZeroMomentum->SetLineColor(kViolet-6);
-  hCVPiZeroMomentum->Draw("histesame");
+  hFluxCVPiZeroMomentum->SetLineColor(kViolet-6);
+  hFluxCVPiZeroMomentum->Draw("histesame");
 
   TLegend *lFluxOneSigmaPiZeroMomentum = new TLegend(.5, .65, .7, .8);
   lFluxOneSigmaPiZeroMomentum->AddEntry(hNominalPiZeroMomentum, "Nominal", "l");
-  lFluxOneSigmaPiZeroMomentum->AddEntry(hCVPiZeroMomentum, "CV #pm 1 #sigma", "l");
+  lFluxOneSigmaPiZeroMomentum->AddEntry(hFluxCVPiZeroMomentum, "CV #pm 1 #sigma", "l");
   lFluxOneSigmaPiZeroMomentum->Draw();
 
   cFluxOneSigmaPiZeroMomentum->SaveAs(saveDir + "/pizero_momentum_flux_one_sigma.png");
   cFluxOneSigmaPiZeroMomentum->SaveAs(saveDir + "/pizero_momentum_flux_one_sigma.pdf");
+
+  TH2F *hFluxCovariancePiZeroMomentum = new TH2F("hFluxCovariancePiZeroMomentum", ";Reco Bin Index;Reco Bin Index", 14, 0.5, 14.5, 14, 0.5, 14.5);
+
+  for(int binX = 1; binX <= hFluxCovariancePiZeroMomentum->GetNbinsX(); ++binX)
+    {
+      for(int binY = 1; binY <= hFluxCovariancePiZeroMomentum->GetNbinsY(); ++binY)
+        {
+          double covXY = 0.;
+
+          for(int univ = 0; univ < n_flux_univs; ++univ)
+            covXY += (hFluxUniversesPiZeroMomentum[univ]->GetBinContent(binX) - hNominalPiZeroMomentum->GetBinContent(binX))
+              * (hFluxUniversesPiZeroMomentum[univ]->GetBinContent(binY) - hNominalPiZeroMomentum->GetBinContent(binY));
+
+          covXY /= n_flux_univs;
+
+          hFluxCovariancePiZeroMomentum->SetBinContent(binX, binY, covXY);
+        }
+    }
+
+  TCanvas *cFluxConvariancePiZeroMomentum = new TCanvas("cFluxConvariancePiZeroMomentum", "cFluxConvariancePiZeroMomentum");
+  cFluxConvariancePiZeroMomentum->cd();
+  cFluxConvariancePiZeroMomentum->SetRightMargin(.2);
+
+  hFluxCovariancePiZeroMomentum->Draw("colz");
   
+  cFluxConvariancePiZeroMomentum->SaveAs(saveDir + "/pizero_momentum_flux_covariance.png");
+  cFluxConvariancePiZeroMomentum->SaveAs(saveDir + "/pizero_momentum_flux_covariance.pdf");
 }
 
 double GetPOT(TChain *subruns)
