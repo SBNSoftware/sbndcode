@@ -105,7 +105,7 @@ void MakeXSecTrees(const TString productionVersion, const TString sampleName)
           selected = !slc_is_clear_cosmic->at(j) && slc_is_fv->at(j) && slc_crumbs_score->at(j) > -0.025
             && slc_n_razzled_muons->at(j) == 0 && slc_n_pfps->at(j) > 1 && slc_n_razzled_photons->at(j) > 1;
 
-          if(category == 1 || selected)
+          if(category == 0 || selected)
             {
               pzc_pizero_mom = slc_best_pzc_pizero_mom->at(j);
 
