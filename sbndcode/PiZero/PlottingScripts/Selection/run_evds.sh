@@ -1,11 +1,18 @@
-h#!/bin/bash
-
-mkdir tmp
-cd tmp
-
-export DISPLAY=localhost:1
+#!/bin/bash
 
 FILE_LIST=/pnfs/sbnd/scratch/users/hlay/ncpizero/NCPiZeroAv6/rockbox/reco2/files.list
+
+SAVEDIR=${1%"_40.list"}
+
+SAMPLE=`echo $SAVEDIR | cut -d '/' -f 10`
+echo $SAMPLE
+
+mkdir tmp_$SAMPLE
+cd tmp_$SAMPLE
+
+echo "#include \"event_display_and_dump.fcl\"" > evd.fcl
+echo "" >> evd.fcl
+echo "physics.analyzers.eventdisp.SaveDir: \"$SAVEDIR\"" >> evd.fcl
 
 while read LINE;
 do
@@ -36,7 +43,7 @@ do
 
                     if [[ $FILE_RUN_NUM -eq $RUN_NUM && $FILE_SUBRUN_NUM -eq $SUBRUN_NUM ]];
                     then
-                        lar -c event_display_and_dump.fcl -s $FILE -n 1 -e $RUN_NUM:$SUBRUN_NUM:$EV_NUM
+                        lar -c evd.fcl -s $FILE -n 1 -e $RUN_NUM:$SUBRUN_NUM:$EV_NUM
                         break 3
                     fi
                 done
