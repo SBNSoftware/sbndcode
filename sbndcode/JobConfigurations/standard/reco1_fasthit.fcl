@@ -1,0 +1,62 @@
+#-------------------------------------------------------------------
+#
+# Name: reco1_fasthit.fcl
+#
+# Purpose: fasthit version of reco1_sce_lite_wc2d.fcl, 
+#          *** takes WireCell 2D drift sim raw::RawDigits as input, i.e. 2D sim + no deconvolution *** 
+#          *** runs fasthit module *** 
+#
+#
+#-------------------------------------------------------------------
+
+#include "reco1_sce_lite.fcl"
+
+physics.reco1: [ rns
+         #, opdecopmt
+         #, opdecoxarapuca
+         , ophitpmt
+         , ophitxarapuca
+         , opflashtpc0
+         , opflashtpc1
+         , opflashtpc0xarapuca
+         , opflashtpc1xarapuca
+         #, caldata
+         #, gaushit
+         , fasthit
+         #, linecluster
+         , gaushitTruthMatch
+         #, rffhit
+         #, corner
+         #, fuzzycluster
+ ]
+
+physics.producers.gaushit.CalDataModuleLabel: "simtpc2d:gauss"
+
+
+physics.producers.ophitpmt: @local::sbnd_ophit_finder_pmt
+physics.producers.ophitxarapuca: @local::sbnd_ophit_finder_arapuca
+physics.producers.ophitpmt.PedAlgoPset.PedRangeMax: 14749
+physics.producers.ophitpmt.PedAlgoPset.PedRangeMin: 14741
+physics.producers.ophitpmt.SPEArea: 158.57
+
+physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
+physics.producers.fasthit.CalDataModuleLabel: "simtpc2d:gauss"
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+physics.producers.fasthit.ColMinWidth: 6
+physics.producers.fasthit.MinSigCol: 10
+physics.producers.fasthit.MinSigInd: 14
+
+physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel: "fasthit"
+physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabelVec: [ "fasthit" ]
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+			       "drop raw::OpDetWaveforms_*_*_*",
+         		       "drop *raw::RawDigits*_*_*_*",
+         		       "drop sim::OpDetBacktrackerRecords_*_*_*",
+         		       "drop *_linecluster_*_*",
+         		       #"drop *_fasthit_*_*",
+         		       "drop sim::OpDetBacktrackerRecords_*_*_*",
+         		       "drop sim::SimPhotonsLites_*_*_*",
+         		       "drop sim::SimPhotons_*_*_*",
+         		       "drop raw::RawDigits_*_*_*",
+         		       "drop raw::OpDetWaveforms_*_*_*" ]			     

@@ -1,0 +1,31 @@
+# File:    reco2_fasthit_calib.fcl
+# Purpose: Version of SBND reco2 fcl that uses fasthits as input to Pandora, runs reco2 (with SCE), and makes calibration ntuples
+#
+# job configuration
+
+#include "reco_sbnd.fcl"
+
+process_name: Reco2
+
+physics.reco2_sce: [@sequence::physics.reco2,
+            pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECalo, pandoraSCEPid, crthitt0SCE, crttrackt0SCE, fmatchSCE, opt0finderSCE]
+
+physics.trigger_paths: [ reco2_sce ]
+
+physics.end_paths: [ stream1, caloskimana ]
+
+# turn on space charge service
+#include "enable_spacecharge_services_sbnd.fcl"
+
+
+physics.producers.pandora.SimChannelModuleLabel: "simtpc2d:simpleSC"
+physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+physics.producers.pandora.HitFinderModuleLabel: "fasthit"
+physics.analyzers.caloskim.HITproducer: "fasthit"
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+         		       "drop raw::OpDetWaveforms_*_*_*",
+         		       "drop *raw::RawDigits*_*_*_*",
+         		       "drop sim::OpDetBacktrackerRecords_*_*_*",
+         		       "drop *_linecluster_*_*" ]
