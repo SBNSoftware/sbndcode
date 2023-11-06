@@ -1911,7 +1911,8 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
   std::vector<int> slc_n_primary_daughters;
   std::vector<std::vector<int>> slc_pfp_razzled_pdg;
   std::vector<std::vector<double>> slc_pfp_shower_dir_x, slc_pfp_shower_dir_y, slc_pfp_shower_dir_z,
-    slc_pfp_shower_energy;
+    slc_pfp_shower_energy, slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
+  std::vector<std::vector<float>> slc_pfp_track_ke;
 
   GetVar(slcVars["slc_n_primary_daughters"], slc_n_primary_daughters);
   GetVar(slcVars["slc_pfp_razzled_pdg"], slc_pfp_razzled_pdg);
@@ -1919,6 +1920,10 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
   GetVar(slcVars["slc_pfp_shower_dir_y"], slc_pfp_shower_dir_y);
   GetVar(slcVars["slc_pfp_shower_dir_z"], slc_pfp_shower_dir_z);
   GetVar(slcVars["slc_pfp_shower_energy"], slc_pfp_shower_energy);
+  GetVar(slcVars["slc_pfp_track_dir_x"], slc_pfp_track_dir_x);
+  GetVar(slcVars["slc_pfp_track_dir_y"], slc_pfp_track_dir_y);
+  GetVar(slcVars["slc_pfp_track_dir_z"], slc_pfp_track_dir_z);
+  GetVar(slcVars["slc_pfp_track_ke"], slc_pfp_track_ke);
 
   int pzcCounter = 0;
 
@@ -1954,13 +1959,24 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
                   FillElement(vars[prefix + "_pzc_photon_0_id"], counter, pzcCounter, ii);
                   FillElement(vars[prefix + "_pzc_photon_1_id"], counter, pzcCounter, jj);
 
-                  const TVector3 dir0(slc_pfp_shower_dir_x.at(slc_id_a).at(ii), slc_pfp_shower_dir_y.at(slc_id_a).at(ii), slc_pfp_shower_dir_z.at(slc_id_a).at(ii));
-                  const TVector3 dir1(slc_pfp_shower_dir_x.at(slc_id_b).at(jj), slc_pfp_shower_dir_y.at(slc_id_b).at(jj), slc_pfp_shower_dir_z.at(slc_id_b).at(jj));
+                  const TVector3 shwDir0(slc_pfp_shower_dir_x.at(slc_id_a).at(ii), slc_pfp_shower_dir_y.at(slc_id_a).at(ii), slc_pfp_shower_dir_z.at(slc_id_a).at(ii));
+                  const TVector3 shwDir1(slc_pfp_shower_dir_x.at(slc_id_b).at(jj), slc_pfp_shower_dir_y.at(slc_id_b).at(jj), slc_pfp_shower_dir_z.at(slc_id_b).at(jj));
 
-                  const double en0 = slc_pfp_shower_energy.at(slc_id_a).at(ii);
-                  const double en1 = slc_pfp_shower_energy.at(slc_id_b).at(jj);
+                  const TVector3 trkDir0(slc_pfp_track_dir_x.at(slc_id_a).at(ii), slc_pfp_track_dir_y.at(slc_id_a).at(ii), slc_pfp_track_dir_z.at(slc_id_a).at(ii));
+                  const TVector3 trkDir1(slc_pfp_track_dir_x.at(slc_id_b).at(jj), slc_pfp_track_dir_y.at(slc_id_b).at(jj), slc_pfp_track_dir_z.at(slc_id_b).at(jj));
 
-                  ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, dir0, dir1, en0, en1);
+                  const double shwEn0 = slc_pfp_shower_energy.at(slc_id_a).at(ii);
+                  const double shwEn1 = slc_pfp_shower_energy.at(slc_id_b).at(jj);
+
+                  const double trkEn0 = slc_pfp_track_ke.at(slc_id_a).at(ii);
+                  const double trkEn1 = slc_pfp_track_ke.at(slc_id_b).at(jj);
+
+                  if(!(shwDir0.X() == -999 || shwDir1.X() == -999 || shwEn0 < 0 || shwEn1 < 0))
+                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1);
+                  else if(!(trkDir0.X() == -999 || trkDir1.X() == -999 || trkEn0 < 0 || trkEn1 < 0))
+                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, trkDir0, trkDir1, trkEn0, trkEn1);
+                  else
+                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1);
 
                   ++pzcCounter;
                 }
