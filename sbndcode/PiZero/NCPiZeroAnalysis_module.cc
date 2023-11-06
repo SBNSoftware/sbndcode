@@ -1277,26 +1277,27 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
       if(track.isNonnull())
         AnalyseTrack(e, track, slcCounter, pfpCounter, trackHandle);
 
-      double pfpenergy;
+      double pfpenergy = def_double;
 
       if(pfp->PdgCode() == 13)
         {
           int dazzlepdg;
           AccessElement(slcVars["slc_pfp_track_dazzle_pdg"], slcCounter, pfpCounter, dazzlepdg);
-
-          AccessElement(slcVars["slc_pfp_track_ke"], slcCounter, pfpCounter, pfpenergy);
+          float trkenergy;
+          AccessElement(slcVars["slc_pfp_track_ke"], slcCounter, pfpCounter, trkenergy);
+          pfpenergy = trkenergy;
 
           if(dazzlepdg == 13)
             ++ndazzlemuons;
-          else if(dazzlepdg == 211)
+          if(dazzlepdg == 211)
             ++ndazzlepions;
-          else if(dazzlepdg == 211 && pfpenergy > 32.1)
+          if(dazzlepdg == 211 && pfpenergy > 32.1)
             ++ndazzlepionsthresh;
-          else if(dazzlepdg == 2212)
+          if(dazzlepdg == 2212)
             ++ndazzleprotons;
-          else if(dazzlepdg == 2212 && pfpenergy > 32.7)
+          if(dazzlepdg == 2212 && pfpenergy > 32.7)
             ++ndazzleprotonsthresh;
-          else if(dazzlepdg == 0)
+          if(dazzlepdg == 0)
             ++ndazzleother;
         }
 
@@ -1312,9 +1313,9 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
 
           if(razzlepdg == 11)
             ++nrazzleelectrons;
-          else if(razzlepdg == 22)
+          if(razzlepdg == 22)
             ++nrazzlephotons;
-          else if(razzlepdg == 0)
+          if(razzlepdg == 0)
             ++nrazzleother;
         }
 
@@ -1323,17 +1324,17 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
 
       if(razzledpdg == 11)
         ++nrazzledelectrons;
-      else if(razzledpdg == 13)
+      if(razzledpdg == 13)
         ++nrazzledmuons;
-      else if(razzledpdg == 22)
+      if(razzledpdg == 22)
         ++nrazzledphotons;
-      else if(razzledpdg == 211)
+      if(razzledpdg == 211)
         ++nrazzledpions;
-      else if(razzledpdg == 211 && pfpenergy > 32.1)
+      if(razzledpdg == 211 && pfpenergy > 32.1)
         ++nrazzledpionsthresh;
-      else if(razzledpdg == 2212)
+      if(razzledpdg == 2212)
         ++nrazzledprotons;
-      else if(razzledpdg == 2212 && pfpenergy > 32.7)
+      if(razzledpdg == 2212 && pfpenergy > 32.7)
         ++nrazzledprotonsthresh;
     }
 
