@@ -163,6 +163,8 @@ public:
   void TransferElement(VecVar *var, VecVarMap &vars, const std::string prefixA, const std::string prefixB, const int posA, const int posB);
   void TransferElement(VecVar *var, VecVarMap &vars, const std::string prefixA, const std::string prefixB,
                        const int posA0, const int posA1, const int posB0, const int posB1);
+  void TransferElement(VecVar *var, VecVarMap &vars, const std::string prefixA, const std::string prefixB,
+                       const int posA, const int posB0, const int posB1);
 
   template<typename T>
   void AccessElement(VecVar *vec, const int pos, T &value);
@@ -431,12 +433,30 @@ private:
     { "slc_pzc_cos_theta_pizero", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero") },
     { "slc_pzc_cos_com", new InhVecVecVar<double>("slc_pzc_cos_com") },
     { "slc_pzc_decay_asymmetry", new InhVecVecVar<double>("slc_pzc_decay_asymmetry") },
+    { "slc_pzc_photon_0_true_trackid", new InhVecVecVar<int>("slc_pzc_photon_0_true_trackid") },
+    { "slc_pzc_photon_0_true_pdg", new InhVecVecVar<int>("slc_pzc_photon_0_true_pdg") },
+    { "slc_pzc_photon_0_comp", new InhVecVecVar<float>("slc_pzc_photon_0_comp") },
+    { "slc_pzc_photon_0_pur", new InhVecVecVar<float>("slc_pzc_photon_0_pur") },
+    { "slc_pzc_photon_1_true_trackid", new InhVecVecVar<int>("slc_pzc_photon_1_true_trackid") },
+    { "slc_pzc_photon_1_true_pdg", new InhVecVecVar<int>("slc_pzc_photon_1_true_pdg") },
+    { "slc_pzc_photon_1_comp", new InhVecVecVar<float>("slc_pzc_photon_1_comp") },
+    { "slc_pzc_photon_1_pur", new InhVecVecVar<float>("slc_pzc_photon_1_pur") },
+    { "slc_best_pzc_photon_0_id", new InhVecVar<int>("slc_best_pzc_photon_0_id") },
+    { "slc_best_pzc_photon_1_id", new InhVecVar<int>("slc_best_pzc_photon_1_id") },
     { "slc_best_pzc_good_kinematics", new InhVecVar<bool>("slc_best_pzc_good_kinematics") },
     { "slc_best_pzc_invariant_mass", new InhVecVar<double>("slc_best_pzc_invariant_mass") },
     { "slc_best_pzc_pizero_mom", new InhVecVar<double>("slc_best_pzc_pizero_mom") },
     { "slc_best_pzc_cos_theta_pizero", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero") },
     { "slc_best_pzc_cos_com", new InhVecVar<double>("slc_best_pzc_cos_com") },
     { "slc_best_pzc_decay_asymmetry", new InhVecVar<double>("slc_best_pzc_decay_asymmetry") },
+    { "slc_best_pzc_photon_0_true_trackid", new InhVecVar<int>("slc_best_pzc_photon_0_true_trackid") },
+    { "slc_best_pzc_photon_0_true_pdg", new InhVecVar<int>("slc_best_pzc_photon_0_true_pdg") },
+    { "slc_best_pzc_photon_0_comp", new InhVecVar<float>("slc_best_pzc_photon_0_comp") },
+    { "slc_best_pzc_photon_0_pur", new InhVecVar<float>("slc_best_pzc_photon_0_pur") },
+    { "slc_best_pzc_photon_1_true_trackid", new InhVecVar<int>("slc_best_pzc_photon_1_true_trackid") },
+    { "slc_best_pzc_photon_1_true_pdg", new InhVecVar<int>("slc_best_pzc_photon_1_true_pdg") },
+    { "slc_best_pzc_photon_1_comp", new InhVecVar<float>("slc_best_pzc_photon_1_comp") },
+    { "slc_best_pzc_photon_1_pur", new InhVecVar<float>("slc_best_pzc_photon_1_pur") },
     { "slc_sel", new InhVecVar<bool>("slc_sel") },
   };
 
@@ -1741,6 +1761,15 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
                   FillElement(vars[prefix + "_pzc_photon_0_id"], counter, pzcCounter, ii);
                   FillElement(vars[prefix + "_pzc_photon_1_id"], counter, pzcCounter, jj);
 
+                  TransferElement(slcVars[prefix + "_pzc_photon_0_true_trackid"], vars, prefix + "_pzc_photon_0", prefix + "_pfp", counter, pzcCounter, slc_id_a, ii);
+                  TransferElement(slcVars[prefix + "_pzc_photon_0_true_pdg"], vars, prefix + "_pzc_photon_0", prefix + "_pfp", counter, pzcCounter, slc_id_a, ii);
+                  TransferElement(slcVars[prefix + "_pzc_photon_0_comp"], vars, prefix + "_pzc_photon_0", prefix + "_pfp", counter, pzcCounter, slc_id_a, ii);
+                  TransferElement(slcVars[prefix + "_pzc_photon_0_pur"], vars, prefix + "_pzc_photon_0", prefix + "_pfp", counter, pzcCounter, slc_id_a, ii);
+                  TransferElement(slcVars[prefix + "_pzc_photon_1_true_trackid"], vars, prefix + "_pzc_photon_1", prefix + "_pfp", counter, pzcCounter, slc_id_b, jj);
+                  TransferElement(slcVars[prefix + "_pzc_photon_1_true_pdg"], vars, prefix + "_pzc_photon_1", prefix + "_pfp", counter, pzcCounter, slc_id_b, jj);
+                  TransferElement(slcVars[prefix + "_pzc_photon_1_comp"], vars, prefix + "_pzc_photon_1", prefix + "_pfp", counter, pzcCounter, slc_id_b, jj);
+                  TransferElement(slcVars[prefix + "_pzc_photon_1_pur"], vars, prefix + "_pzc_photon_1", prefix + "_pfp", counter, pzcCounter, slc_id_b, jj);
+
                   const TVector3 shwDir0(slc_pfp_shower_dir_x.at(slc_id_a).at(ii), slc_pfp_shower_dir_y.at(slc_id_a).at(ii), slc_pfp_shower_dir_z.at(slc_id_a).at(ii));
                   const TVector3 shwDir1(slc_pfp_shower_dir_x.at(slc_id_b).at(jj), slc_pfp_shower_dir_y.at(slc_id_b).at(jj), slc_pfp_shower_dir_z.at(slc_id_b).at(jj));
 
@@ -1793,21 +1822,14 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
 
 void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter)
 {
-  std::vector<std::vector<bool>> pzc_good_kinematics;
-  std::vector<std::vector<double>> pzc_invariant_mass, pzc_pizero_mom, pzc_cos_theta_pizero,
-    pzc_cos_com, pzc_decay_asymmetry;
+  std::vector<std::vector<double>> pzc_invariant_mass;
 
-  GetVar(vars[prefix + "_pzc_good_kinematics"], pzc_good_kinematics);
   GetVar(vars[prefix + "_pzc_invariant_mass"], pzc_invariant_mass);
-  GetVar(vars[prefix + "_pzc_pizero_mom"], pzc_pizero_mom);
-  GetVar(vars[prefix + "_pzc_cos_theta_pizero"], pzc_cos_theta_pizero);
-  GetVar(vars[prefix + "_pzc_cos_com"], pzc_cos_com);
-  GetVar(vars[prefix + "_pzc_decay_asymmetry"], pzc_decay_asymmetry);
 
   double bestInvMass = std::numeric_limits<double>::max();
   size_t bestID = std::numeric_limits<size_t>::max();
 
-  for(size_t i = 0; i < pzc_good_kinematics.at(counter).size(); ++i)
+  for(size_t i = 0; i < pzc_invariant_mass.at(counter).size(); ++i)
     {
       if(abs(134.9769 - pzc_invariant_mass.at(counter).at(i)) < bestInvMass)
         {
@@ -1818,12 +1840,11 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
 
   if(bestID != std::numeric_limits<size_t>::max())
     {
-      FillElement(vars[prefix + "_best_pzc_good_kinematics"], counter, (bool) pzc_good_kinematics.at(counter).at(bestID));
-      FillElement(vars[prefix + "_best_pzc_invariant_mass"], counter, pzc_invariant_mass.at(counter).at(bestID));
-      FillElement(vars[prefix + "_best_pzc_pizero_mom"], counter, pzc_pizero_mom.at(counter).at(bestID));
-      FillElement(vars[prefix + "_best_pzc_cos_theta_pizero"], counter, pzc_cos_theta_pizero.at(counter).at(bestID));
-      FillElement(vars[prefix + "_best_pzc_cos_com"], counter, pzc_cos_com.at(counter).at(bestID));
-      FillElement(vars[prefix + "_best_pzc_decay_asymmetry"], counter, pzc_decay_asymmetry.at(counter).at(bestID));
+      for(auto& [varName, var] : vars)
+        {
+          if(varName.find(prefix + "_best_pzc") != std::string::npos)
+            TransferElement(var, slcVars, prefix + "_best_pzc", prefix + "_pzc", counter, counter, bestID);
+        }
     }
 }
 
@@ -2048,6 +2069,44 @@ void sbnd::NCPiZeroAnalysis::TransferElement(VecVar *var, VecVarMap &vars, const
       double double_val;
       AccessElement(vars[prefixB + name], posB0, posB1, double_val);
       FillElement(var, posA0, posA1, double_val);
+      break;
+    case kUnknownVar:
+      break;
+    }
+}
+
+void sbnd::NCPiZeroAnalysis::TransferElement(VecVar *var, VecVarMap &vars, const std::string prefixA, const std::string prefixB,
+                                             const int posA, const int posB0, const int posB1)
+{
+  std::string name = var->Name();
+  name.erase(name.find(prefixA), prefixA.size());
+
+  switch(var->IdentifyVar())
+    {
+    case kBool:
+      bool bool_val;
+      AccessElement(vars[prefixB + name], posB0, posB1, bool_val);
+      FillElement(var, posA, bool_val);
+      break;
+    case kInt:
+      int int_val;
+      AccessElement(vars[prefixB + name], posB0, posB1, int_val);
+      FillElement(var, posA, int_val);
+      break;
+    case kUInt:
+      size_t uint_val;
+      AccessElement(vars[prefixB + name], posB0, posB1, uint_val);
+      FillElement(var, posA, uint_val);
+      break;
+    case kFloat:
+      float float_val;
+      AccessElement(vars[prefixB + name], posB0, posB1, float_val);
+      FillElement(var, posA, float_val);
+      break;
+    case kDouble:
+      double double_val;
+      AccessElement(vars[prefixB + name], posB0, posB1, double_val);
+      FillElement(var, posA, double_val);
       break;
     case kUnknownVar:
       break;
