@@ -243,7 +243,9 @@ private:
     { "nu_pz_decay_asymmetry", new InhVecVecVar<double>("nu_pz_decay_asymmetry") },
     { "nu_pz_two_gamma_decay", new InhVecVecVar<bool>("nu_pz_two_gamma_decay") },
     { "nu_pz_gamma0_trackid", new InhVecVecVar<int>("nu_pz_gamma0_trackid") },
+    { "nu_pz_gamma0_n_hits", new InhVecVecVar<int>("nu_pz_gamma0_n_hits") },
     { "nu_pz_gamma1_trackid", new InhVecVecVar<int>("nu_pz_gamma1_trackid") },
+    { "nu_pz_gamma1_n_hits", new InhVecVecVar<int>("nu_pz_gamma1_n_hits") },
     { "nu_pz_gamma0_best_pfp_comp", new InhVecVecVar<float>("nu_pz_gamma0_best_pfp_comp") },
     { "nu_pz_gamma0_best_pfp_pur", new InhVecVecVar<float>("nu_pz_gamma0_best_pfp_pur") },
     { "nu_pz_gamma0_best_pfp_pdg", new InhVecVecVar<int>("nu_pz_gamma0_best_pfp_pdg") },
@@ -348,7 +350,9 @@ private:
     { "slc_true_pz_decay_asymmetry", new InhVecVecVar<double>("slc_true_pz_decay_asymmetry") },
     { "slc_true_pz_two_gamma_decay", new InhVecVecVar<bool>("slc_true_pz_two_gamma_decay") },
     { "slc_true_pz_gamma0_trackid", new InhVecVecVar<int>("slc_true_pz_gamma0_trackid") },
+    { "slc_true_pz_gamma0_n_hits", new InhVecVecVar<int>("slc_true_pz_gamma0_n_hits") },
     { "slc_true_pz_gamma1_trackid", new InhVecVecVar<int>("slc_true_pz_gamma1_trackid") },
+    { "slc_true_pz_gamma1_n_hits", new InhVecVecVar<int>("slc_true_pz_gamma1_n_hits") },
     { "slc_vtx_x", new InhVecVar<double>("slc_vtx_x") },
     { "slc_vtx_y", new InhVecVar<double>("slc_vtx_y") },
     { "slc_vtx_z", new InhVecVar<double>("slc_vtx_z") },
@@ -1036,7 +1040,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
               FillElement(vars[prefix + "_pz_decay_asymmetry"], counter, pzCounter, std::abs(en0 - en1) / (en0 + en1));
               FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
               FillElement(vars[prefix + "_pz_gamma0_trackid"], counter, pzCounter, gamma0->TrackId());
+              FillElement(vars[prefix + "_pz_gamma0_n_hits"], counter, pzCounter, fHitsMap[gamma0->TrackId()]);
               FillElement(vars[prefix + "_pz_gamma1_trackid"], counter, pzCounter, gamma1->TrackId());
+              FillElement(vars[prefix + "_pz_gamma1_n_hits"], counter, pzCounter, fHitsMap[gamma1->TrackId()]);
 
               if(prefix.find("nu") != std::string::npos)
                 {
