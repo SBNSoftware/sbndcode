@@ -292,7 +292,7 @@ private:
     { "slc_primary_pfp_id", new InhVecVar<size_t>("slc_primary_pfp_id") },
     { "slc_primary_pfp_pdg", new InhVecVar<int>("slc_primary_pfp_pdg") },
     { "slc_is_clear_cosmic", new InhVecVar<bool>("slc_is_clear_cosmic") },
-    { "slc_n_primary_daughters", new InhVecVar<int>("slc_n_primary_daughters") },
+    { "slc_n_primary_children", new InhVecVar<int>("slc_n_primary_children") },
     { "slc_n_trks", new InhVecVar<int>("slc_n_trks") },
     { "slc_n_shws", new InhVecVar<int>("slc_n_shws") },
     { "slc_n_dazzle_muons", new InhVecVar<int>("slc_n_dazzle_muons") },
@@ -364,6 +364,7 @@ private:
     { "slc_pfp_id", new InhVecVecVar<size_t>("slc_pfp_id") },
     { "slc_pfp_pdg", new InhVecVecVar<int>("slc_pfp_pdg") },
     { "slc_pfp_track_score", new InhVecVecVar<float>("slc_pfp_track_score") },
+    { "slc_pfp_n_children", new InhVecVecVar<int>("slc_pfp_n_children") },
     { "slc_pfp_good_track", new InhVecVecVar<bool>("slc_pfp_good_track") },
     { "slc_pfp_good_shower", new InhVecVecVar<bool>("slc_pfp_good_shower") },
     { "slc_pfp_true_trackid", new InhVecVecVar<int>("slc_pfp_true_trackid") },
@@ -1150,7 +1151,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
       FillElement(slcVars["slc_primary_pfp_id"], slcCounter, prim->Self());
       FillElement(slcVars["slc_primary_pfp_pdg"], slcCounter, prim->PdgCode());
-      FillElement(slcVars["slc_n_primary_daughters"], slcCounter, prim->NumDaughters());
+      FillElement(slcVars["slc_n_primary_children"], slcCounter, prim->NumDaughters());
 
       if(abs(prim->PdgCode()) == 13 || abs(prim->PdgCode()) == 11)
         FillElement(slcVars["slc_is_clear_cosmic"], slcCounter, true);
@@ -1224,6 +1225,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
       const art::Ptr<recob::PFParticle> pfp = fPFPMap[id];
       FillElement(slcVars["slc_pfp_id"], slcCounter, pfpCounter, id);
       FillElement(slcVars["slc_pfp_pdg"], slcCounter, pfpCounter, pfp->PdgCode());
+      FillElement(slcVars["slc_pfp_n_children"], slcCounter, pfpCounter, pfp->NumDaughters());
 
       if(abs(pfp->PdgCode()) == 11)
         ++nshws;
@@ -1710,13 +1712,13 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
   if(n_pzcs == 0)
     return;
 
-  std::vector<int> slc_n_primary_daughters;
+  std::vector<int> slc_n_primary_children;
   std::vector<std::vector<int>> slc_pfp_razzled_pdg;
   std::vector<std::vector<double>> slc_pfp_shower_dir_x, slc_pfp_shower_dir_y, slc_pfp_shower_dir_z,
     slc_pfp_shower_energy, slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
   std::vector<std::vector<float>> slc_pfp_track_ke;
 
-  GetVar(slcVars["slc_n_primary_daughters"], slc_n_primary_daughters);
+  GetVar(slcVars["slc_n_primary_children"], slc_n_primary_children);
   GetVar(slcVars["slc_pfp_razzled_pdg"], slc_pfp_razzled_pdg);
   GetVar(slcVars["slc_pfp_shower_dir_x"], slc_pfp_shower_dir_x);
   GetVar(slcVars["slc_pfp_shower_dir_y"], slc_pfp_shower_dir_y);
@@ -1731,18 +1733,18 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
 
   for(auto&& [i, slc_id_a] : enumerate(slc_ids))
     {
-      const int n_primary_daughters_a = slc_n_primary_daughters.at(slc_id_a);
+      const int n_primary_children_a = slc_n_primary_children.at(slc_id_a);
 
-      for(int ii = 0; ii < n_primary_daughters_a; ++ii)
+      for(int ii = 0; ii < n_primary_children_a; ++ii)
         {
           if(slc_pfp_razzled_pdg.at(slc_id_a).at(ii) != 22)
             continue;
 
           for(auto&& [j, slc_id_b] : enumerate(slc_ids))
             {
-              const int n_primary_daughters_b = slc_n_primary_daughters.at(slc_id_b);
+              const int n_primary_children_b = slc_n_primary_children.at(slc_id_b);
 
-              for(int jj = 0; jj < n_primary_daughters_b; ++jj)
+              for(int jj = 0; jj < n_primary_children_b; ++jj)
                 {
                   if(slc_pfp_razzled_pdg.at(slc_id_b).at(jj) != 22)
                     continue;
