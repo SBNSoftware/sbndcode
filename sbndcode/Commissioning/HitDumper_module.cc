@@ -624,7 +624,7 @@ void Hitdumper::analyze(const art::Event& evt)
       //sbnd::crt::CRTTagger ip = sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
 
       _chit_time[i]=chitlist[i]->Time()*0.001;
-      if (chitlist[i]->ts1_ns > MAX_INT) { //double check if this still applies
+      if (chitlist[i]->Time() > MAX_INT) { //double check if this still applies
         _chit_time[i] = 0.001 * (chitlist[i]->Time() - TIME_CORRECTION);
       }
       _chit_x[i] = chitlist[i]->X();
