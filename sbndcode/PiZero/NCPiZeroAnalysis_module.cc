@@ -225,6 +225,7 @@ private:
     { "nu_n_neutrons", new InhVecVar<int>("nu_n_neutrons") },
     { "nu_n_charged_pions", new InhVecVar<int>("nu_n_charged_pions") },
     { "nu_n_neutral_pions", new InhVecVar<int>("nu_n_neutral_pions") },
+    { "nu_n_dalitz_neutral_pions", new InhVecVar<int>("nu_n_dalitz_neutral_pions") },
     { "nu_n_photons", new InhVecVar<int>("nu_n_photons") },
     { "nu_n_other", new InhVecVar<int>("nu_n_other") },
     { "nu_w", new InhVecVar<double>("nu_w") },
@@ -323,6 +324,7 @@ private:
     { "slc_true_n_neutrons", new InhVecVar<int>("slc_true_n_neutrons") },
     { "slc_true_n_charged_pions", new InhVecVar<int>("slc_true_n_charged_pions") },
     { "slc_true_n_neutral_pions", new InhVecVar<int>("slc_true_n_neutral_pions") },
+    { "slc_true_n_dalitz_neutral_pions", new InhVecVar<int>("slc_true_n_dalitz_neutral_pions") },
     { "slc_true_n_photons", new InhVecVar<int>("slc_true_n_photons") },
     { "slc_true_n_other", new InhVecVar<int>("slc_true_n_other") },
     { "slc_true_w", new InhVecVar<double>("slc_true_w") },
@@ -972,7 +974,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
         }
     }
 
-  int protons = 0, neutrons = 0, charged_pions = 0, neutral_pions = 0, photons = 0, other = 0;
+  int protons = 0, neutrons = 0, charged_pions = 0, neutral_pions = 0, dalitz_neutral_pions = 0, photons = 0, other = 0;
   float trueEnDep = 0.;
 
   for(auto const& mcp : MCParticleVec)
@@ -993,7 +995,10 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
                 ++charged_pions;
               break;
             case 111:
-              ++neutral_pions;
+              if(mcp->NumberDaughters() == 2)
+                ++neutral_pions;
+              else
+                ++dalitz_neutral_pions;
               break;
             case 22:
               ++photons;
@@ -1046,6 +1051,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
   FillElement(vars[prefix + "_n_neutrons"], counter, neutrons);
   FillElement(vars[prefix + "_n_charged_pions"], counter, charged_pions);
   FillElement(vars[prefix + "_n_neutral_pions"], counter, neutral_pions);
+  FillElement(vars[prefix + "_n_dalitz_neutral_pions"], counter, dalitz_neutral_pions);
   FillElement(vars[prefix + "_n_photons"], counter, photons);
   FillElement(vars[prefix + "_n_other"], counter, other);
   FillElement(vars[prefix + "_w"], counter, mcn.W());
@@ -1068,24 +1074,16 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
     {
       if(mcp->Process() == "primary" && mcp->StatusCode() == 1)
         {
-          if(abs(mcp->PdgCode()) == 111)
+          if(abs(mcp->PdgCode()) == 111 && mcp->NumberDaughters() == 2)
             {
               FillElement(vars[prefix + "_pz_invariant_mass"], counter, pzCounter, mcp->Mass());
               FillElement(vars[prefix + "_pz_pizero_mom"], counter, pzCounter, mcp->P());
               FillElement(vars[prefix + "_pz_cos_theta_pizero"], counter, pzCounter, mcp->Pz() / mcp->P());
 
-              bool two_gamma_decay = mcp->NumberDaughters() == 2;
-              if(!two_gamma_decay)
-                {
-                  FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
-                  ++pzCounter;
-                  continue;
-                }
-
               const simb::MCParticle* gamma0 = particleInv->TrackIdToParticle_P(mcp->Daughter(0));
               const simb::MCParticle* gamma1 = particleInv->TrackIdToParticle_P(mcp->Daughter(1));
 
-              two_gamma_decay &= (gamma0->PdgCode() == 22 && gamma1->PdgCode() == 22);
+              const bool two_gamma_decay = (gamma0->PdgCode() == 22 && gamma1->PdgCode() == 22);
               if(!two_gamma_decay)
                 {
                   FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
