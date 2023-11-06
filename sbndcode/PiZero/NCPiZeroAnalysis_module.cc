@@ -261,7 +261,9 @@ private:
     { "nu_best_slc_n_pfps", new InhVecVar<size_t>("nu_best_slc_n_pfps") },
     { "nu_best_slc_n_dazzle_muons", new InhVecVar<int>("nu_best_slc_n_dazzle_muons") },
     { "nu_best_slc_n_dazzle_pions", new InhVecVar<int>("nu_best_slc_n_dazzle_pions") },
+    { "nu_best_slc_n_dazzle_pions_thresh", new InhVecVar<int>("nu_best_slc_n_dazzle_pions_thresh") },
     { "nu_best_slc_n_dazzle_protons", new InhVecVar<int>("nu_best_slc_n_dazzle_protons") },
+    { "nu_best_slc_n_dazzle_protons_thresh", new InhVecVar<int>("nu_best_slc_n_dazzle_protons_thresh") },
     { "nu_best_slc_n_dazzle_other", new InhVecVar<int>("nu_best_slc_n_dazzle_other") },
     { "nu_best_slc_n_razzle_electrons", new InhVecVar<int>("nu_best_slc_n_razzle_electrons") },
     { "nu_best_slc_n_razzle_photons", new InhVecVar<int>("nu_best_slc_n_razzle_photons") },
@@ -270,7 +272,9 @@ private:
     { "nu_best_slc_n_razzled_muons", new InhVecVar<int>("nu_best_slc_n_razzled_muons") },
     { "nu_best_slc_n_razzled_photons", new InhVecVar<int>("nu_best_slc_n_razzled_photons") },
     { "nu_best_slc_n_razzled_pions", new InhVecVar<int>("nu_best_slc_n_razzled_pions") },
+    { "nu_best_slc_n_razzled_pions_thresh", new InhVecVar<int>("nu_best_slc_n_razzled_pions_thresh") },
     { "nu_best_slc_n_razzled_protons", new InhVecVar<int>("nu_best_slc_n_razzled_protons") },
+    { "nu_best_slc_n_razzled_protons_thresh", new InhVecVar<int>("nu_best_slc_n_razzled_protons_thresh") },
     { "nu_best_slc_is_fv", new InhVecVar<bool>("nu_best_slc_is_fv") },
     { "nu_best_slc_crumbs_score", new InhVecVar<float>("nu_best_slc_crumbs_score") },
     { "nu_best_slc_crumbs_nc_score", new InhVecVar<float>("nu_best_slc_crumbs_nc_score") },
@@ -295,19 +299,21 @@ private:
     { "slc_n_trks", new InhVecVar<int>("slc_n_trks") },
     { "slc_n_shws", new InhVecVar<int>("slc_n_shws") },
     { "slc_n_dazzle_muons", new InhVecVar<int>("slc_n_dazzle_muons") },
-    { "slc_n_dazzle_muons_cut_based", new InhVecVar<int>("slc_n_dazzle_muons_cut_based") },
     { "slc_n_dazzle_pions", new InhVecVar<int>("slc_n_dazzle_pions") },
+    { "slc_n_dazzle_pions_thresh", new InhVecVar<int>("slc_n_dazzle_pions_thresh") },
     { "slc_n_dazzle_protons", new InhVecVar<int>("slc_n_dazzle_protons") },
+    { "slc_n_dazzle_protons_thresh", new InhVecVar<int>("slc_n_dazzle_protons_thresh") },
     { "slc_n_dazzle_other", new InhVecVar<int>("slc_n_dazzle_other") },
     { "slc_n_razzle_electrons", new InhVecVar<int>("slc_n_razzle_electrons") },
     { "slc_n_razzle_photons", new InhVecVar<int>("slc_n_razzle_photons") },
-    { "slc_n_razzle_photons_cut_based", new InhVecVar<int>("slc_n_razzle_photons_cut_based") },
     { "slc_n_razzle_other", new InhVecVar<int>("slc_n_razzle_other") },
     { "slc_n_razzled_electrons", new InhVecVar<int>("slc_n_razzled_electrons") },
     { "slc_n_razzled_muons", new InhVecVar<int>("slc_n_razzled_muons") },
     { "slc_n_razzled_photons", new InhVecVar<int>("slc_n_razzled_photons") },
     { "slc_n_razzled_pions", new InhVecVar<int>("slc_n_razzled_pions") },
+    { "slc_n_razzled_pions_thresh", new InhVecVar<int>("slc_n_razzled_pions_thresh") },
     { "slc_n_razzled_protons", new InhVecVar<int>("slc_n_razzled_protons") },
+    { "slc_n_razzled_protons_thresh", new InhVecVar<int>("slc_n_razzled_protons_thresh") },
     { "slc_true_mctruth_id", new InhVecVar<size_t>("slc_true_mctruth_id") },
     { "slc_true_event_type", new InhVecVar<int>("slc_true_event_type") },
     { "slc_true_signal", new InhVecVar<bool>("slc_true_signal") },
@@ -1277,9 +1283,10 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
   art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
   art::FindOneP<sbn::MVAPID>                       pfpsToRazzled(pfpHandle, e, fRazzledModuleLabel);
 
-  int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzleprotons = 0, ndazzleother = 0,
-    nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0, ndazzlemuonscut = 0, nrazzlephotonscut = 0,
-    nrazzledelectrons = 0, nrazzledmuons = 0, nrazzledphotons = 0, nrazzledpions = 0, nrazzledprotons = 0;
+  int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzlepionsthresh = 0, ndazzleprotons = 0,
+    ndazzleprotonsthresh = 0, ndazzleother = 0, nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0,
+    nrazzledelectrons = 0, nrazzledmuons = 0, nrazzledphotons = 0, nrazzledpions = 0, nrazzledpionsthresh = 0,
+    nrazzledprotons = 0, nrazzledprotonsthresh = 0;
 
   for(auto&& [pfpCounter, id] : enumerate(prim->Daughters()))
     {
@@ -1331,24 +1338,27 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
       if(track.isNonnull())
         AnalyseTrack(e, track, slcCounter, pfpCounter, trackHandle);
 
+      double pfpenergy;
+
       if(pfp->PdgCode() == 13)
         {
           int dazzlepdg;
           AccessElement(slcVars["slc_pfp_track_dazzle_pdg"], slcCounter, pfpCounter, dazzlepdg);
 
+          AccessElement(slcVars["slc_pfp_track_ke"], slcCounter, pfpCounter, pfpenergy);
+
           if(dazzlepdg == 13)
             ++ndazzlemuons;
           else if(dazzlepdg == 211)
             ++ndazzlepions;
+          else if(dazzlepdg == 211 && pfpenergy > 32.1)
+            ++ndazzlepionsthresh;
           else if(dazzlepdg == 2212)
             ++ndazzleprotons;
+          else if(dazzlepdg == 2212 && pfpenergy > 32.7)
+            ++ndazzleprotonsthresh;
           else if(dazzlepdg == 0)
             ++ndazzleother;
-
-          float dazzlemuonscore;
-          AccessElement(slcVars["slc_pfp_track_dazzle_muon_score"], slcCounter, pfpCounter, dazzlemuonscore);
-          if(dazzlemuonscore > 0.0125)
-            ++ndazzlemuonscut;
         }
 
       if(shower.isNonnull())
@@ -1359,17 +1369,14 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
           int razzlepdg;
           AccessElement(slcVars["slc_pfp_shower_razzle_pdg"], slcCounter, pfpCounter, razzlepdg);
 
+          AccessElement(slcVars["slc_pfp_shower_energy"], slcCounter, pfpCounter, pfpenergy);
+
           if(razzlepdg == 11)
             ++nrazzleelectrons;
           else if(razzlepdg == 22)
             ++nrazzlephotons;
           else if(razzlepdg == 0)
             ++nrazzleother;
-
-          float razzlephotonscore;
-          AccessElement(slcVars["slc_pfp_shower_razzle_photon_score"], slcCounter, pfpCounter, razzlephotonscore);
-          if(razzlephotonscore > 0.05)
-            ++nrazzlephotonscut;
         }
 
       int razzledpdg;
@@ -1383,26 +1390,32 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
         ++nrazzledphotons;
       else if(razzledpdg == 211)
         ++nrazzledpions;
+      else if(razzledpdg == 211 && pfpenergy > 32.1)
+        ++nrazzledpionsthresh;
       else if(razzledpdg == 2212)
         ++nrazzledprotons;
+      else if(razzledpdg == 2212 && pfpenergy > 32.7)
+        ++nrazzledprotonsthresh;
     }
 
   FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
   FillElement(slcVars["slc_n_shws"], slcCounter, nshws);
   FillElement(slcVars["slc_n_dazzle_muons"], slcCounter, ndazzlemuons);
-  FillElement(slcVars["slc_n_dazzle_muons_cut_based"], slcCounter, ndazzlemuonscut);
   FillElement(slcVars["slc_n_dazzle_pions"], slcCounter, ndazzlepions);
+  FillElement(slcVars["slc_n_dazzle_pions_thresh"], slcCounter, ndazzlepionsthresh);
   FillElement(slcVars["slc_n_dazzle_protons"], slcCounter, ndazzleprotons);
+  FillElement(slcVars["slc_n_dazzle_protons_thresh"], slcCounter, ndazzleprotonsthresh);
   FillElement(slcVars["slc_n_dazzle_other"], slcCounter, ndazzleother);
   FillElement(slcVars["slc_n_razzle_electrons"], slcCounter, nrazzleelectrons);
   FillElement(slcVars["slc_n_razzle_photons"], slcCounter, nrazzlephotons);
-  FillElement(slcVars["slc_n_razzle_photons_cut_based"], slcCounter, nrazzlephotonscut);
   FillElement(slcVars["slc_n_razzle_other"], slcCounter, nrazzleother);
   FillElement(slcVars["slc_n_razzled_electrons"], slcCounter, nrazzledelectrons);
   FillElement(slcVars["slc_n_razzled_muons"], slcCounter, nrazzledmuons);
   FillElement(slcVars["slc_n_razzled_photons"], slcCounter, nrazzledphotons);
   FillElement(slcVars["slc_n_razzled_pions"], slcCounter, nrazzledpions);
+  FillElement(slcVars["slc_n_razzled_pions_thresh"], slcCounter, nrazzledpionsthresh);
   FillElement(slcVars["slc_n_razzled_protons"], slcCounter, nrazzledprotons);
+  FillElement(slcVars["slc_n_razzled_protons_thresh"], slcCounter, nrazzledprotonsthresh);
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
