@@ -69,12 +69,15 @@
 
 // ROOT includes
 #include "TTree.h"
+#include "TBranch.h"
 #include "TTimeStamp.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TLorentzVector.h"
 #include "TVector3.h"
 #include "TGeoManager.h"
+#include "TInterpreter.h"
+
 
 // C++ Includes
 #include <map>
@@ -186,6 +189,18 @@ private:
   int                 _adc_count;               ///<Used for plotting waveforms
   std::vector<int>    _waveform_integral;       ///<Used to see progression of the waveform integral
   std::vector<int>    _adc_count_in_waveform;   ///<Used to view all waveforms on a hitplane together
+  std::vector< TH1D * > TPC_histos;               ///< Used to store waveform
+  std::vector< long unsigned int> wire_id;      ///< Used to store wire ID
+  std::vector< std::vector<double> > rawadcs;    ///< Used to store waveform in form of ADC per tick
+  //std::vector< std::vector<int> > * rawadcs_ptr = &rawadcs;
+  std::vector< double > min_ranges;                ///< Used to store waveform info
+  std::vector< double > max_ranges;                ///< Used to store waveform info
+
+  //generate dictionaries necessary to store complex objects in a branch
+  //gInterpreter->GenerateDictionary("vector<vector<short> >", "vector");
+  //gInterpreter->GenerateDictionary("vector<vector<TH1D*> >", "histogram");
+  //TInterpreter::Instance()->GenerateDictionary("vector<vector<short> >", "vector");
+  //TInterpreter::Instance()->GenerateDictionary("vector<vector<TH1D*> >", "histogram");
 
 
   // CRT strip variables
@@ -373,6 +388,7 @@ private:
   bool freadcrtSoftTrigger;///< Add crt software trigger info to output (to be set via fcl)
   bool fsavePOTInfo;       ///< Add POT info to output (to be set via fcl)
   bool fcheckTransparency; ///< Checks for wire transprency (to be set via fcl)
+  bool fcheckWires; ///< Set to true to save waveforms (to be set via fcl)
   bool fUncompressWithPed; ///< Uncompresses the waveforms if true (to be set via fcl)
   int fWindow;
   bool fSkipInd;           ///< If true, induction planes are not saved (to be set via fcl)
@@ -847,6 +863,92 @@ void Hitdumper::analyze(const art::Event& evt)
     }
   }
 
+  std::cout << "--------------You are about to enter the wire transparency section of the code i.e. the fcheckWires if --------------------" << std::endl;
+  std::cout << "-------------- fcheckWires = " << fcheckWires <<  "--------------------" << std::endl;
+
+  if (fcheckWires==true) 
+    {
+
+      std::cout << "--------------Congratualtions! you are in the wire transparency section of the code i.e. the fcheckWires if --------------------" << std::endl;
+
+
+      _waveform_number.resize(_max_hits*_max_samples, -9999.);
+      _adc_on_wire.resize(_max_hits*_max_samples, -9999.);
+      _time_for_waveform.resize(_max_hits*_max_samples, -9999.);
+      _waveform_integral.resize(_max_hits*_max_samples, -9999.);
+      _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
+      
+      art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
+      
+      bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
+      if(retVal == true) 
+	{
+	  mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
+	} 
+      else {
+        mf::LogWarning("HitDumper") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
+      }
+      
+      //int waveform_number_tracker = 0;
+      // int adc_counter = 1;
+      _adc_count = _nhits * (fWindow * 2 + 1);
+      
+      // loop over waveforms
+      for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) 
+	{
+	  
+	  //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
+	  art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
+	  int channel   = digitVec->Channel();
+	  auto fDataSize = digitVec->Samples();
+	  std::vector<short> rawadc_short;      //UNCOMPRESSED ADC VALUES.
+	  rawadc_short.resize(fDataSize);
+	  // see if there is a hit on this channel
+	  for (int ihit = 0; ihit < _nhits; ++ihit) 
+	    {
+	      if (_hit_channel[ihit] == channel) 
+		{
+		  int pedestal = (int)digitVec->GetPedestal();
+		  //UNCOMPRESS THE DATA.
+		  if (fUncompressWithPed) 
+		    {
+		      raw::Uncompress(digitVec->ADCs(), rawadc_short, pedestal, digitVec->Compression());
+		    }
+		  else {
+		    raw::Uncompress(digitVec->ADCs(), rawadc_short, digitVec->Compression());
+		  }
+		  
+		}
+
+	    }
+	  std::vector<double> rawadc(rawadc_short.begin(), rawadc_short.end());
+
+	  int min_range = (int)*std::min_element(rawadc.begin(), rawadc.end());
+	  min_ranges.push_back(min_range);
+	  int max_range = (int)*std::max_element(rawadc.begin(), rawadc.end());
+	  max_ranges.push_back(max_range);
+
+	  //store waveform info
+	  //std::cout << "-------------- about to pushback the vector of raw adc counts for this wire"  << std::endl;
+	  rawadcs.push_back( rawadc );
+	  //std::cout << "--------------Successfully pushbacked the vector of raw adc counts for this wire"  << std::endl;
+
+	  wire_id.push_back(rdIter);
+	  
+	  //declare histogram needed to store waveform
+	  //TH1D* histo { new TH1D("waveform_histo", "waveform_histo", 10000, min_range, max_range)};
+	  
+	  //fill waveform histogram
+	  //for(int iter : rawadc)
+	  //  {
+	  //    histo->Fill(iter);
+	  //  }  
+	  //TPC_histos.push_back( histo ) ;
+	  
+	}
+    }
+      
+
   if (fcheckTransparency) {
 
     _waveform_number.resize(_max_hits*_max_samples, -9999.);
@@ -1093,6 +1195,15 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("adc_on_wire", &_adc_on_wire);
     fTree->Branch("waveform_integral", &_waveform_integral);
     fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
+  }
+
+if (fcheckWires) {
+    fTree->Branch("TPC_histos","std::vector< TH1D * >", &TPC_histos);
+    fTree->Branch("wire_id",&wire_id);
+    fTree->Branch("rawadcs","std::vector<std::vector<double>>", &rawadcs);
+    fTree->Branch("min_ranges",&min_ranges);
+    fTree->Branch("max_ranges",&max_ranges);
+
   }
 
   if (fkeepCRTstrips) {
