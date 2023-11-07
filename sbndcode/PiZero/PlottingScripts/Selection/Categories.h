@@ -14,8 +14,12 @@ const TCut true_ccnumu_base = true_nu_base + "nu_fv && nu_ccnc==0 && abs(nu_pdg)
 
 const TCut ncpizero_cut = nc_base + "slc_true_n_neutral_pions>=1";
 const TCut true_ncpizero_cut = true_nc_base + "nu_n_neutral_pions>=1";
+const TCut nconepizero_cut = nc_base + "slc_true_n_neutral_pions==1";
+const TCut true_nconepizero_cut = true_nc_base + "nu_n_neutral_pions==1";
 const TCut ncpizero_0p0pi_cut = ncpizero_cut + "slc_true_n_neutral_pions==1 && slc_true_n_protons==0 && slc_true_n_charged_pions==0";
 const TCut true_ncpizero_0p0pi_cut = true_ncpizero_cut + "nu_n_neutral_pions==1 && nu_n_protons==0 && nu_n_charged_pions==0";
+const TCut ncpizero_Xp0pi_cut = ncpizero_cut + "slc_true_n_neutral_pions==1 && slc_true_n_charged_pions==0";
+const TCut true_ncpizero_Xp0pi_cut = true_ncpizero_cut + "nu_n_neutral_pions==1 && nu_n_charged_pions==0";
 const TCut ncpizero_1p0pi_cut = ncpizero_cut + "slc_true_n_neutral_pions==1 && slc_true_n_protons==1 && slc_true_n_charged_pions==0";
 const TCut true_ncpizero_1p0pi_cut = true_ncpizero_cut + "nu_n_neutral_pions==1 && nu_n_protons==1 && nu_n_charged_pions==0";
 const TCut ncpizero_Np0pi_cut = ncpizero_cut + "slc_true_n_neutral_pions==1 && slc_true_n_protons>0 && slc_true_n_charged_pions==0";
@@ -29,6 +33,14 @@ const TCut true_ncpizero_NpXpi_cut = true_ncpizero_cut + "nu_n_neutral_pions==1 
 
 const TCut ccpizero_cut = ccnumu_base + "slc_true_n_neutral_pions>=1";
 const TCut true_ccpizero_cut = true_ccnumu_base + "nu_n_neutral_pions>=1";
+
+const std::vector<Cut> true_categories = {
+  { "ncpizero", true_ncpizero_cut, "", kBlack },
+  { "nconepizero", true_nconepizero_cut, "", kBlack },
+  { "ncpizero_0p0pi", true_ncpizero_0p0pi_cut, "", kBlack },
+  { "ncpizero_Xp0pi", true_ncpizero_Xp0pi_cut, "", kBlack },
+  { "ncpizero_Np0pi", true_ncpizero_Np0pi_cut, "", kBlack },
+};
 
 const std::vector<Cut> ncpizero_categories = {
   { "Signal", ncpizero_cut + "slc_comp>.5", "Signal (NC #pi^{0})", kMagenta+2 },
