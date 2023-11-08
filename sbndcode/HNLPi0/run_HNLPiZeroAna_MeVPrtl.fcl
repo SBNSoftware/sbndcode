@@ -1,0 +1,4 @@
+#include "run_HNLPiZeroAna.fcl"
+
+physics.analyzers.hnlpizeroana.MeVPrtl: true
+physics.analyzers.hnlpizeroana.Debug: false

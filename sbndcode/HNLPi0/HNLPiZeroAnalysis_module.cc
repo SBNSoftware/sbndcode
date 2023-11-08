@@ -88,7 +88,7 @@ template <typename T,
 
 enum EventType
 {
-  kHNLPiZero,
+  kHNL,
   kHNLNonFV,
   kHNLDirt,
   kNCPiZero,
@@ -197,6 +197,7 @@ private:
 	  fRazzleModuleLabel, fCosmicDistModuleLabel, fShowerDensityFitModuleLabel,
 	  fShowerTrackFitModuleLabel, fCNNScoreModuleLabel;
   bool fBeamOff; 
+  bool fMeVPrtl;
   bool fDebug;
 
   // Map
@@ -272,6 +273,7 @@ private:
   
   // Event Tree: Slice -> PFP -> Track -- 2D vector
   std::vector<std::vector<double>>	slc_pfp_track_start_x, slc_pfp_track_start_y, slc_pfp_track_start_z;
+  std::vector<std::vector<double>>	slc_pfp_track_end_x, slc_pfp_track_end_y, slc_pfp_track_end_z;
   std::vector<std::vector<double>> 	slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
   std::vector<std::vector<double>> 	slc_pfp_track_length;
   std::vector<std::vector<float>>   	slc_pfp_track_dazzle_muon_score, slc_pfp_track_dazzle_pion_score, slc_pfp_track_dazzle_proton_score, slc_pfp_track_dazzle_other_score;
@@ -286,6 +288,7 @@ private:
   
   // Event Tree: Slice -> PFP -> Shower -- 2D vector
   std::vector<std::vector<double>>	slc_pfp_shower_start_x, slc_pfp_shower_start_y, slc_pfp_shower_start_z;
+  std::vector<std::vector<double>>	slc_pfp_shower_end_x, slc_pfp_shower_end_y, slc_pfp_shower_end_z;
   std::vector<std::vector<double>>	slc_pfp_shower_conv_gap;
   std::vector<std::vector<double>>	slc_pfp_shower_dir_x, slc_pfp_shower_dir_y, slc_pfp_shower_dir_z;
   std::vector<std::vector<double>>	slc_pfp_shower_length;
@@ -334,6 +337,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fShowerDensityFitModuleLabel 	= p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
   fCNNScoreModuleLabel        	= p.get<art::InputTag>("CNNScoreModuleLabel", "cnnid");
   fBeamOff			= p.get<bool>("BeamOff", false);
+  fMeVPrtl			= p.get<bool>("MeVPrtl", false);
   fDebug			= p.get<bool>("Debug", false);
 
   art::ServiceHandle<art::TFileService> tfs;
@@ -462,6 +466,9 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_pfp_track_start_x", &slc_pfp_track_start_x);
   fEventTree->Branch("slc_pfp_track_start_y", &slc_pfp_track_start_y);
   fEventTree->Branch("slc_pfp_track_start_z", &slc_pfp_track_start_z);
+  fEventTree->Branch("slc_pfp_track_end_x", &slc_pfp_track_end_x);
+  fEventTree->Branch("slc_pfp_track_end_y", &slc_pfp_track_end_y);
+  fEventTree->Branch("slc_pfp_track_end_z", &slc_pfp_track_end_z);
   fEventTree->Branch("slc_pfp_track_dir_x", &slc_pfp_track_dir_x);
   fEventTree->Branch("slc_pfp_track_dir_y", &slc_pfp_track_dir_y);
   fEventTree->Branch("slc_pfp_track_dir_z", &slc_pfp_track_dir_z);
@@ -489,6 +496,9 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_pfp_shower_start_x", &slc_pfp_shower_start_x);
   fEventTree->Branch("slc_pfp_shower_start_y", &slc_pfp_shower_start_y);
   fEventTree->Branch("slc_pfp_shower_start_z", &slc_pfp_shower_start_z);
+  fEventTree->Branch("slc_pfp_shower_end_x", &slc_pfp_shower_end_x);
+  fEventTree->Branch("slc_pfp_shower_end_y", &slc_pfp_shower_end_y);
+  fEventTree->Branch("slc_pfp_shower_end_z", &slc_pfp_shower_end_z);
   fEventTree->Branch("slc_pfp_shower_conv_gap", &slc_pfp_shower_conv_gap);
   fEventTree->Branch("slc_pfp_shower_dir_x", &slc_pfp_shower_dir_x);
   fEventTree->Branch("slc_pfp_shower_dir_y", &slc_pfp_shower_dir_y);
@@ -701,6 +711,9 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_track_start_x.clear();
   slc_pfp_track_start_y.clear();
   slc_pfp_track_start_z.clear();
+  slc_pfp_track_end_x.clear();
+  slc_pfp_track_end_y.clear();
+  slc_pfp_track_end_z.clear();
   slc_pfp_track_dir_x.clear();
   slc_pfp_track_dir_y.clear();
   slc_pfp_track_dir_z.clear();
@@ -727,6 +740,9 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_shower_start_x.clear();
   slc_pfp_shower_start_y.clear();
   slc_pfp_shower_start_z.clear();
+  slc_pfp_shower_end_x.clear();
+  slc_pfp_shower_end_y.clear();
+  slc_pfp_shower_end_z.clear();
   slc_pfp_shower_conv_gap.clear();
   slc_pfp_shower_dir_x.clear();
   slc_pfp_shower_dir_y.clear();
@@ -897,8 +913,15 @@ void sbnd::HNLPiZeroAnalysis::AnalyseMCTruthHandle(const art::Event &e, const st
     
     for(auto const& mct : MCTruthVec)
     {
-      if(mct->Origin() == 2) continue;
-      ++_n_mctruth;
+      if (fMeVPrtl){
+        if(mct->Origin() == 2) continue;
+        ++_n_mctruth;
+      }
+      if (!fMeVPrtl){
+	if(mct->Origin() != 1) continue;
+        ++_n_mctruth;
+      }
+	
     }
   }
 
@@ -913,9 +936,15 @@ void sbnd::HNLPiZeroAnalysis::AnalyseMCTruthHandle(const art::Event &e, const st
     
     for(auto const& mct : MCTruthVec)
     {
-      if(mct->Origin() == 2) continue;
-      AnalyseMCTruth(e, mct, mctCounter);
-      ++mctCounter;
+      if (fMeVPrtl){
+        if(mct->Origin() == 2) continue;
+      	AnalyseMCTruth(e, mct, mctCounter);
+      	++mctCounter;
+      }
+      if (!fMeVPrtl){
+	if(mct->Origin() != 1) continue;
+      	AnalyseMCTruth(e, mct, mctCounter);
+      }
     }
   }
 }
@@ -977,18 +1006,19 @@ void sbnd::HNLPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, const art::Ptr
   }
   
   const bool pizero = neutral_pions > 0;
-  const bool _is_hnl = mct->Origin() == 0? 1:0;
+  const bool _is_hnl = mct->Origin() == 0 && _n_hnl > 0; //MeVPrtl check always run before truth matching so n_hnl == 1 if running on HNL sample
   const bool _is_nu = mct->Origin() == 1? 1:0;
   const bool _is_cosmic = mct->Origin() == 2? 1:0;
   
   // Event Classification
-  if (_is_hnl && pizero && fv)
+  if (_is_hnl && fv)
   {
-    nu_event_type[mctCounter] = (int) kHNLPiZero;
+    nu_event_type[mctCounter] = (int) kHNL;
     nu_signal[mctCounter] = true;
   }else
   {
     nu_signal[mctCounter] = false;
+
     if(_is_hnl && !fv && av)
       nu_event_type[mctCounter] = (int) kHNLNonFV;
     else if(_is_hnl && !av)
@@ -1101,6 +1131,9 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
    slc_pfp_track_start_x.resize(row); 
    slc_pfp_track_start_y.resize(row); 
    slc_pfp_track_start_z.resize(row); 
+   slc_pfp_track_end_x.resize(row); 
+   slc_pfp_track_end_y.resize(row); 
+   slc_pfp_track_end_z.resize(row); 
    slc_pfp_track_dir_x.resize(row); 
    slc_pfp_track_dir_y.resize(row); 
    slc_pfp_track_dir_z.resize(row); 
@@ -1128,6 +1161,9 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
    slc_pfp_shower_start_x.resize(row);
    slc_pfp_shower_start_y.resize(row);
    slc_pfp_shower_start_z.resize(row);
+   slc_pfp_shower_end_x.resize(row);
+   slc_pfp_shower_end_y.resize(row);
+   slc_pfp_shower_end_z.resize(row);
    slc_pfp_shower_conv_gap.resize(row);
    slc_pfp_shower_dir_x.resize(row);
    slc_pfp_shower_dir_y.resize(row);
@@ -1169,6 +1205,9 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_track_start_x[row].resize(col); 
    slc_pfp_track_start_y[row].resize(col); 
    slc_pfp_track_start_z[row].resize(col); 
+   slc_pfp_track_end_x[row].resize(col); 
+   slc_pfp_track_end_y[row].resize(col); 
+   slc_pfp_track_end_z[row].resize(col); 
    slc_pfp_track_dir_x[row].resize(col); 
    slc_pfp_track_dir_y[row].resize(col); 
    slc_pfp_track_dir_z[row].resize(col); 
@@ -1196,6 +1235,9 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_shower_start_x[row].resize(col);
    slc_pfp_shower_start_y[row].resize(col);
    slc_pfp_shower_start_z[row].resize(col);
+   slc_pfp_shower_end_x[row].resize(col);
+   slc_pfp_shower_end_y[row].resize(col);
+   slc_pfp_shower_end_z[row].resize(col);
    slc_pfp_shower_conv_gap[row].resize(col);
    slc_pfp_shower_dir_x[row].resize(col);
    slc_pfp_shower_dir_y[row].resize(col);
@@ -1471,6 +1513,11 @@ void sbnd::HNLPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<r
   slc_pfp_track_start_y[slcCounter][pfpCounter] = start.Y();
   slc_pfp_track_start_z[slcCounter][pfpCounter] = start.Z();
 
+  geo::Point_t end = track->End();
+  slc_pfp_track_end_x[slcCounter][pfpCounter] = end.X();
+  slc_pfp_track_end_y[slcCounter][pfpCounter] = end.Y();
+  slc_pfp_track_end_z[slcCounter][pfpCounter] = end.Z();
+  
   geo::Vector_t dir = track->StartDirection();
   slc_pfp_track_dir_x[slcCounter][pfpCounter] = dir.X();
   slc_pfp_track_dir_y[slcCounter][pfpCounter] = dir.Y();
@@ -1632,6 +1679,14 @@ void sbnd::HNLPiZeroAnalysis::AnalyseShower(const art::Event &e, const art::Ptr<
   slc_pfp_shower_start_x[slcCounter][pfpCounter] = start.X();
   slc_pfp_shower_start_y[slcCounter][pfpCounter] = start.Y();
   slc_pfp_shower_start_z[slcCounter][pfpCounter] = start.Z();
+  
+
+  if (shower->Direction().Z()>-990 && shower->ShowerStart().Z()>-990 && shower->Length()>0) {
+      auto end = shower->ShowerStart() + (shower->Length() * shower->Direction());
+      slc_pfp_shower_end_x[slcCounter][pfpCounter] = end.X();
+      slc_pfp_shower_end_y[slcCounter][pfpCounter] = end.Y();
+      slc_pfp_shower_end_z[slcCounter][pfpCounter] = end.Z();
+  }
 
   double convGap = vtx.isNonnull() ? (start - vtx->position()).R() : def_double;
   slc_pfp_shower_conv_gap[slcCounter][pfpCounter] = convGap;
@@ -1811,13 +1866,13 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
   }
   
   const bool pizero = neutral_pions > 0;
-  const bool _is_hnl = mct->Origin() == 0? 1:0;
+  const bool _is_hnl = mct->Origin() == 0 && _n_hnl > 0; //MeVPrtl check always run before truth matching so n_hnl == 1 if running on HNL sample
   const bool _is_nu = mct->Origin() == 1? 1:0;
   
   // Event Classification
-  if (_is_hnl && pizero && fv)
+  if (_is_hnl && fv)
   {
-    slc_true_event_type[slcCounter] = (int) kHNLPiZero;
+    slc_true_event_type[slcCounter] = (int) kHNL;
     nu_signal[slcCounter] = true;
   }else
   {

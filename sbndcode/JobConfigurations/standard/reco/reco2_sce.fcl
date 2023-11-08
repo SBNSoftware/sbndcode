@@ -17,7 +17,8 @@ physics.reco2_sce: [@sequence::physics.reco2,
 
 physics.trigger_paths: [ reco2_sce ]
 
-physics.end_paths: [stream1, caloskimana]
+physics.end_paths: [stream1]
 
 # turn on space charge service
 #include "enable_spacecharge_services_sbnd.fcl"
+services.BackTrackerService.BackTrack.SimChannelModuleLabel: "simtpc2d:simpleSC"
