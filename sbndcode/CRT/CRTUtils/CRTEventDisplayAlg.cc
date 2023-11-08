@@ -93,10 +93,10 @@ void CRTEventDisplayAlg::SetPrint(bool tf){
   fPrint = tf;
 }
 
-void CRTEventDisplayAlg::SetTrueId(int id){
+/*void CRTEventDisplayAlg::SetTrueId(int id){
   fUseTrueID = true;
   fTrueID = id;
-}
+}*/
 
 bool CRTEventDisplayAlg::IsVisible(const simb::MCParticle& particle){
   int pdg = std::abs(particle.PdgCode());
@@ -376,9 +376,12 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
       // Skip if particle isn't visible
       if(!IsVisible(part) && !fDrawInvisibleTracks) continue;
       
-      if(fUseTrueID && part.TrackId() != fTrueID) continue;
-      // Skip if particle doesn't cross the boundary enclosed by the CRTs
-      //      if(!fCrtGeo.EntersVolume(part)) continue;
+      //if(fUseTrueID && part.TrackId() != fTrueID) 
+      if (fUseTrueID){
+        if (!(std::find(fTrueID.begin(), fTrueID.end(), part.TrackId())!=fTrueID.end()))  continue;
+        //std::cout<<part.TrackId()<<", "<<fTrueID[0]<<", "<<fTrueID[3]<<std::endl; 
+      }
+
 
       size_t npts = part.NumberTrajectoryPoints();
       TPolyLine3D *line = new TPolyLine3D(npts);

@@ -1,0 +1,3 @@
+setupRequired(sbncode v09_59_00 -q +e20:+prof)
+setupOptional(sbnd_data v01_14_00)
+setupOptional(sbndutil v09_59_00 -q +e20:+prof)

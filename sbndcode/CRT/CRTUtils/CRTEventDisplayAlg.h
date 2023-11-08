@@ -30,6 +30,7 @@ namespace detinfo { class DetectorClocksData; }
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/Sequence.h"
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/Common/CRT/CRTHit.hh"
@@ -140,8 +141,9 @@ namespace sbnd{
       fhicl::Atom<bool> UseTrueID {
         Name("UseTrueID")
       };
-      fhicl::Atom<int> TrueID {
-        Name("TrueID")
+      fhicl::Sequence<int> TrueID{
+        Name("TrueID"),
+        {1}
       };
 
       fhicl::Atom<bool> Print {
@@ -190,7 +192,7 @@ namespace sbnd{
     void SetDrawTrueTracks(bool tf);
     void SetPrint(bool tf);
 
-    void SetTrueId(int id);
+    //void SetTrueId(int id);
 
     bool IsVisible(const simb::MCParticle& particle);
 
@@ -231,7 +233,7 @@ namespace sbnd{
     int fTrueTrackColour;
 
     bool fUseTrueID;
-    int fTrueID;
+    std::vector<int> fTrueID;
 
     bool fPrint;
 

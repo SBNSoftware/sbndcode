@@ -1,0 +1,8 @@
+#include "ana_crt_bt_sbnd.fcl"
+
+physics.analyzers.crtana.KeepMCPFromADH: true
+physics.analyzers.crtana.SaveTruthInfoOnly: true
+physics.analyzers.crtana.SaveMcTruth: true
+physics.analyzers.crtana.SaveMCParticle: true
+physics.analyzers.crtana.Debug: false
+physics.analyzers.crtana.SignalMode: true

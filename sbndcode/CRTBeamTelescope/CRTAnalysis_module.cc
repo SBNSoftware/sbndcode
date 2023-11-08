@@ -15,6 +15,7 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
+#include "art/Framework/Core/FileBlock.h"
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -55,6 +56,7 @@ public:
   // Required functions.
   void analyze(art::Event const& e) override;
   virtual void beginSubRun(art::SubRun const& sr) override;
+  virtual void respondToOpenInputFile(const art::FileBlock& fb) override;
 
 private:
   sbnd::CRTBackTracker _crt_back_tracker;
@@ -64,6 +66,7 @@ private:
   std::string _mctruth_label;
   std::string _g4_label;
   std::string _auxdethit_label;
+  std::string _auxdetide_label;
   // std::string _crtdata_label;
   std::string _crthit_label;
   std::string _crttrack_label;
@@ -77,10 +80,14 @@ private:
   bool _data_mode; 
   bool _save_truth_info_only;
   bool _signal_mode;
+  bool _save_input_file_name;
 
   TTree* _tree;
 
   int _run, _subrun, _event;
+  std::string _file_name;
+  char _file_name_char[500];
+  
 
   /*float _nu_e; ///< Neutrino energy
   int _nu_pdg; ///< Neutrino PDG code
@@ -121,6 +128,7 @@ private:
   std::vector<int>    _mcp_trackid; ///< G4 MCParticle, track ID
   std::vector<int>    _mcp_makes_adh; ///< G4 MCParticle, true if this MCP deposits energy in CRT
 
+  // geant 4
   std::vector<double> _adh_t;          ///< AuxDetHit time
   std::vector<double> _adh_deposite_e; ///< AuxDetHit deposited energy
   std::vector<double> _adh_x;          ///< AuxDetHit X
@@ -135,6 +143,30 @@ private:
   std::vector<double> _adh_true_endx;  ///< AuxDetHit true endpoint x
   std::vector<double> _adh_true_endy;  ///< AuxDetHit true endpoint y
   std::vector<double> _adh_true_endz;  ///< AuxDetHit true endpoint z
+  std::vector<int> _adh_true_statuscode;         ///< AuxDetHit MCParticle StatusCode()
+  std::vector<std::string> _adh_true_process;        ///< AuxDetHit MCParticle process
+  std::vector<std::string> _adh_true_end_process;    ///< AuxDetHit MCParticle process
+  std::vector<std::string> _adh_true_mother_trackID; ///< AuxDetHit MCParticle mother track id.
+  
+
+  // detsim IDE.
+  std::vector<double> _adi_t;          ///< AuxDetIDE time
+  std::vector<double> _adi_deposite_e; ///< AuxDetIDE deposited energy
+  std::vector<double> _adi_x;          ///< AuxDetIDE X
+  std::vector<double> _adi_y;          ///< AuxDetIDE Y
+  std::vector<double> _adi_z;          ///< AuxDetIDE Z
+  std::vector<double> _adi_p_exit;     ///< AuxDetIDE exit momentum
+  std::vector<int>    _adi_trackid;    ///< AuxDetIDE trackID of MCParticle
+  std::vector<int>    _adi_pdg;        ///< AuxDetIDE PDG of MCParticle
+  std::vector<double> _adi_true_px;    ///< AuxDetIDE momentum x
+  std::vector<double> _adi_true_py;    ///< AuxDetIDE momentum y
+  std::vector<double> _adi_true_pz;    ///< AuxDetIDE momentum z
+  std::vector<double> _adi_true_endx;  ///< AuxDetIDE true endpoint x
+  std::vector<double> _adi_true_endy;  ///< AuxDetIDE true endpoint y
+  std::vector<double> _adi_true_endz;  ///< AuxDetIDE true endpoint z
+  std::vector<int> _adi_true_statuscode;         ///< AuxDetHit MCParticle StatusCode()
+  std::vector<std::string> _adi_true_process;        ///< AuxDetHit MCParticle process
+  std::vector<std::string> _adi_true_end_process;    ///< AuxDetHit MCParticle process
 
   std::vector<double> _chit_x; ///< CRT hit x
   std::vector<double> _chit_y; ///< CRT hit y
@@ -242,20 +274,22 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _mctruth_label     = p.get<std::string>("MCTruthLabel", "generator");
   _g4_label          = p.get<std::string>("G4Label", "largeant");
   _auxdethit_label   = p.get<std::string>("AuxDetHitLabel", "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN");
+  _auxdetide_label   = p.get<std::string>("AuxDetIDELabel", "crtsim");
   _febdata_label     = p.get<std::string>("FEBDataLabel", "crtsim");
   _crthit_label      = p.get<std::string>("CRTHitLabel", "crthit");
   _crttrack_label    = p.get<std::string>("CRTTrackLabel", "crttrack");
   _pot_label         = p.get<std::string>("POTLabel", "generator");
 
   _debug                = p.get<bool>("Debug", false);
-  _save_mctruth         = p.get<bool>("SaveMcTruth", false);
-  _save_mcparticle      = p.get<bool>("SaveMCParticle", false);
-  _keep_mcp_from_adh    = p.get<bool>("KeepMCPFromADH", false);
+  _save_mctruth         = p.get<bool>("SaveMcTruth", true);
+  _signal_mode          = p.get<bool>("SignalMode", false);
+  _save_mcparticle      = p.get<bool>("SaveMCParticle", true);
+  _keep_mcp_from_adh    = p.get<bool>("KeepMCPFromADH", true);
   _data_mode            = p.get<bool>("DataMode", false);
   _save_truth_info_only = p.get<bool>("SaveTruthInfoOnly", false);
-  _signal_mode          = p.get<bool>("SignalMode", false);
 
-  _crt_back_tracker  = p.get<fhicl::ParameterSet>("CRTBackTracker", fhicl::ParameterSet());
+  _crt_back_tracker     = p.get<fhicl::ParameterSet>("CRTBackTracker", fhicl::ParameterSet());
+  _save_input_file_name = p.get<bool>("SaveInputFileName", false);
 
   art::ServiceHandle<art::TFileService> fs;
 
@@ -264,8 +298,10 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("subrun", &_subrun, "subrun/I");
   _tree->Branch("event", &_event, "event/I");
 
-  if(!_data_mode)
-  { 
+  if(_save_input_file_name) _tree->Branch("file_name", &_file_name_char, "file_name/C");
+
+  if(!_data_mode){
+
     if (_save_mctruth){
       /*_tree->Branch("nu_e", &_nu_e, "nu_e/F");
       _tree->Branch("nu_pdg", &_nu_pdg, "nu_pdg/I");
@@ -289,8 +325,10 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       _tree->Branch("mct_sp_vy", "std::vector<float>", &_mct_sp_vy);
       _tree->Branch("mct_sp_vz", "std::vector<float>", &_mct_sp_vz);
 
-      _tree->Branch("mct_darkNeutrino_e", &_mct_darkNeutrino_e, "mct_darkNeutrino_e/F");
-      _tree->Branch("weight", &_weight, "weight/F");
+      if (_signal_mode){
+        _tree->Branch("mct_darkNeutrino_e", &_mct_darkNeutrino_e, "mct_darkNeutrino_e/F");
+        _tree->Branch("weight", &_weight, "weight/F");
+      }
     }
 
     // MCParticle truth info. Jiaoyang: temporily disable mcp info as in it makes file too huge. 
@@ -325,7 +363,29 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     _tree->Branch("adh_true_endx", "std::vector<double>", &_adh_true_endx);
     _tree->Branch("adh_true_endy", "std::vector<double>", &_adh_true_endy);
     _tree->Branch("adh_true_endz", "std::vector<double>", &_adh_true_endz);
+    _tree->Branch("adh_true_statuscode", "std::vector<int>", &_adh_true_statuscode);
+    _tree->Branch("adh_true_process", "std::vector<std::string>", &_adh_true_process);
+    _tree->Branch("adh_true_end_process", "std::vector<std::string>", &_adh_true_end_process);
+    _tree->Branch("adh_true_mother_trackID", "std::vector<std::string>", &_adh_true_mother_trackID);
 
+    // detsim IDE. 
+    _tree->Branch("adi_t", "std::vector<double>", &_adi_t);
+    _tree->Branch("adi_deposite_e", "std::vector<double>", &_adi_deposite_e);
+    _tree->Branch("adi_x", "std::vector<double>", &_adi_x);
+    _tree->Branch("adi_y", "std::vector<double>", &_adi_y);
+    _tree->Branch("adi_z", "std::vector<double>", &_adi_z);
+    _tree->Branch("adi_p_exit", "std::vector<double>", &_adi_p_exit);
+    _tree->Branch("adi_trackid", "std::vector<int>", &_adi_trackid);
+    _tree->Branch("adi_pdg", "std::vector<int>", &_adi_pdg);
+    _tree->Branch("adi_true_px", "std::vector<double>", &_adi_true_px);
+    _tree->Branch("adi_true_py", "std::vector<double>", &_adi_true_py);
+    _tree->Branch("adi_true_pz", "std::vector<double>", &_adi_true_pz);
+    _tree->Branch("adi_true_endx", "std::vector<double>", &_adi_true_endx);
+    _tree->Branch("adi_true_endy", "std::vector<double>", &_adi_true_endy);
+    _tree->Branch("adi_true_endz", "std::vector<double>", &_adi_true_endz);
+    _tree->Branch("adi_true_end_statuscode", "std::vector<int>", &_adi_true_statuscode);
+    _tree->Branch("adi_true_process", "std::vector<std::string>", &_adi_true_process);
+    _tree->Branch("adi_true_end_process", "std::vector<std::string>", &_adi_true_end_process);
   }
 
   if (!_save_truth_info_only){
@@ -433,12 +493,16 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
 void CRTAnalysis::analyze(art::Event const& e)
 { 
-
   if (!_data_mode) _crt_back_tracker.Initialize(e); // Initialise the backtrack alg. 
 
   _run    = e.id().run();
   _subrun = e.id().subRun();
   _event  = e.id().event();
+
+  if (_save_input_file_name){
+    const char* cstring = _file_name.c_str();
+    strcpy(_file_name_char, cstring);
+  }
 
   if(_debug) std::cout << "This is event " << _event << std::endl;
 
@@ -447,8 +511,10 @@ void CRTAnalysis::analyze(art::Event const& e)
   art::Handle<std::vector<simb::MCParticle>> mcp_h;
   std::vector<art::Ptr<simb::MCParticle>> mcp_v;
   std::map<int, simb::MCParticle> trackid_to_mcp;
-  art::Handle<std::vector<sim::AuxDetHit>> adh_h;
+  art::Handle<std::vector<sim::AuxDetHit>> adh_h; // geant4
   std::vector<art::Ptr<sim::AuxDetHit>> adh_v;
+  art::Handle<std::vector<sim::AuxDetIDE>> adi_h; // detsim
+  std::vector<art::Ptr<sim::AuxDetIDE>> adi_v;
 
   //
   // Get the MCTruth
@@ -484,6 +550,16 @@ void CRTAnalysis::analyze(art::Event const& e)
       throw std::exception();
     }
     art::fill_ptr_vector(adh_v, adh_h);
+
+    //
+    // Get the AuxDetIDE from Detsim.
+    //
+    e.getByLabel(_auxdetide_label, adi_h);
+    if(!adi_h.isValid()){
+      std::cout << "AuxDetIDE product " << _auxdetide_label << " not found..." << std::endl;
+      throw std::exception();
+    }
+    art::fill_ptr_vector(adi_v, adi_h);
   }
 
   //
@@ -613,6 +689,8 @@ void CRTAnalysis::analyze(art::Event const& e)
     _adh_trackid.resize(n_adh); _adh_pdg.resize(n_adh);
     _adh_true_px.resize(n_adh); _adh_true_py.resize(n_adh); _adh_true_pz.resize(n_adh);
     _adh_true_endx.resize(n_adh); _adh_true_endy.resize(n_adh); _adh_true_endz.resize(n_adh);
+    _adh_true_statuscode.resize(n_adh); _adh_true_process.resize(n_adh); _adh_true_end_process.resize(n_adh);
+    _adh_true_mother_trackID.resize(n_adh);
 
     std::set<unsigned int> trackids_from_adh;
     for (size_t iadh = 0; iadh < n_adh; iadh++) {
@@ -640,9 +718,62 @@ void CRTAnalysis::analyze(art::Event const& e)
           _adh_true_endx[iadh]  = particle->EndX();
           _adh_true_endy[iadh]  = particle->EndY();
           _adh_true_endz[iadh]  = particle->EndZ();
+          _adh_true_statuscode[iadh] = particle->StatusCode();
+          _adh_true_process[iadh] = particle->Process();
+          _adh_true_end_process[iadh] = particle->EndProcess();
+          _adh_true_mother_trackID[iadh] = particle->Mother();
+          
         }
       }
       if (_debug) std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
+    }
+
+    //
+    // Fill the AuxDetIDE in the tree, detsim. 
+    //
+    size_t n_adi = adi_v.size();
+    if (_debug) std::cout << "n_adi " << n_adi << std::endl;
+    _adi_t.resize(n_adi);
+    _adi_deposite_e.resize(n_adi);
+    _adi_x.resize(n_adi); _adi_y.resize(n_adi); _adi_z.resize(n_adi);
+    _adi_p_exit.resize(n_adi);
+    _adi_trackid.resize(n_adi); _adi_pdg.resize(n_adi);
+    _adi_true_px.resize(n_adi); _adi_true_py.resize(n_adi); _adi_true_pz.resize(n_adi);
+    _adi_true_endx.resize(n_adi); _adi_true_endy.resize(n_adi); _adi_true_endz.resize(n_adi);
+    _adi_true_statuscode.resize(n_adi); _adi_true_process.resize(n_adi); _adi_true_end_process.resize(n_adi);
+
+    std::set<unsigned int> trackids_from_adi;
+    for (size_t iadi = 0; iadi < n_adi; iadi++) {
+      auto auxdetide = adi_v[iadi];
+      _adi_t[iadi] = 0.5 * (auxdetide->entryT + auxdetide->exitT);
+      _adi_deposite_e[iadi] = auxdetide->energyDeposited;
+      _adi_x[iadi] = 0.5 * (auxdetide->entryX + auxdetide->exitX);
+      _adi_y[iadi] = 0.5 * (auxdetide->entryY + auxdetide->exitY);
+      _adi_z[iadi] = 0.5 * (auxdetide->entryZ + auxdetide->exitZ);
+      _adi_p_exit[iadi] = std::sqrt(auxdetide->exitMomentumX*auxdetide->exitMomentumX +
+                                    auxdetide->exitMomentumY*auxdetide->exitMomentumY +
+                                    auxdetide->exitMomentumZ*auxdetide->exitMomentumZ);
+      _adi_trackid[iadi] = auxdetide->trackID;
+      trackids_from_adi.insert(auxdetide->trackID);
+      for (size_t ipar = 0; ipar < mcp_v.size(); ipar++) { // loop through MCParticle to find the pdg number. 
+        auto particle = mcp_v[ipar];
+        if (particle->StatusCode() != 1) continue; // Exclude particles that are not propagated
+        if (particle->TrackId() == (int)auxdetide->trackID){
+          _adi_pdg[iadi] = particle->PdgCode();
+          _adi_true_px[iadi]  = particle->Px();
+          _adi_true_py[iadi]  = particle->Py();
+          _adi_true_pz[iadi]  = particle->Pz();
+
+          _adi_true_endx[iadi]  = particle->EndX();
+          _adi_true_endy[iadi]  = particle->EndY();
+          _adi_true_endz[iadi]  = particle->EndZ();
+          _adi_true_statuscode[iadi] = particle->StatusCode();
+          _adi_true_process[iadi] = particle->Process();
+          _adi_true_end_process[iadi] = particle->EndProcess();
+        }
+      }
+      //if (_debug) 
+      std::cout << "Adding adh with track ID " << auxdetide->trackID << std::endl;
     }
 
 
@@ -1060,4 +1191,7 @@ void CRTAnalysis::beginSubRun(art::SubRun const& sr) {
 
 }
 
+void CRTAnalysis::respondToOpenInputFile(const art::FileBlock& fb){
+    _file_name = fb.fileName();
+}
 DEFINE_ART_MODULE(CRTAnalysis)

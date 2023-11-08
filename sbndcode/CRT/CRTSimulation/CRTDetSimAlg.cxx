@@ -503,6 +503,7 @@ namespace crt {
                 << "CRT HIT in adid/adsid " << adid << "/" << adsid << "\n"
                 << "MAC5 " << mac5 << "\n"
                 << "TRUE TIME  " << tTrue << "\n"
+                << "TRUE TIME in uint32_t: " << static_cast<uint32_t>(tTrue) << "\n"
                 << "TRACK ID  " << ide.trackID << "\n"
                 << "CRT HIT POS " << x << " " << y << " " << z << "\n"
                 << "CRT STRIP POS " << (strip.minX + strip.maxX) / 2. << " " << (strip.minY + strip.maxY) / 2. << " " << (strip.minZ + strip.maxZ) / 2. << "\n"
@@ -593,6 +594,7 @@ namespace crt {
 
         mf::LogInfo("CRTSetSimAlg")
             << "CRT TIMING: t0 = " << t0 << " (true G4 time)"
+            << ", time_int = " << static_cast<uint32_t>(t0) << " (true G4 time in uint32_t) "
             << ", tDelayMean = " << tDelayMean
             << ", tDelayRMS = " << tDelayRMS
             << ", tDelay = " << tDelay
@@ -607,7 +609,6 @@ namespace crt {
 
     void CRTDetSimAlg::ClearTaggers()
     {
-
         fTaggers.clear();
         fData.clear();
         fAuxData.clear();

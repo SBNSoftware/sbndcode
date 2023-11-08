@@ -16,7 +16,7 @@ physics.producers.pdfastsimout: @erase
 physics.producers.simdrift: @erase
 physics.producers.mcreco: @erase
 
-services.ParticleListAction.keepEMShowerDaughters: false
+services.ParticleListAction.keepEMShowerDaughters: true
 
 #include "use_crt_beam_tele_geometry_g4_services.fcl"
 

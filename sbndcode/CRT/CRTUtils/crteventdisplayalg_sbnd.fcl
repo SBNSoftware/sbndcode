@@ -34,7 +34,7 @@ crteventdisplayalg_sbnd:
     AuxDetHitsColour:  4
 
     UseTrueID:        false
-    TrueID:           341
+    TrueID:           [341]
 
     Print:                 true
     VolumeSizeOffset:      300.
