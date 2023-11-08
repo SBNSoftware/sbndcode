@@ -82,12 +82,14 @@ std::vector<Plot> no_plots = {};
 
 std::vector<TwoDPlotSet> true_observables_twod_sets = {
   { "pizero_momentum_and_cos_theta", "1e3 * nu_pz_pizero_mom", "nu_pz_cos_theta_pizero",
-    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, "p_{#pi^{0}} (MeV/c)", "MeV/c", 1.,
+    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, "p_{#pi^{0}} (MeV/c)", "60 MeV/c", 60.,
     9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, "cos(#theta_{#pi^{0}} )" },
-  { "cos_com_and_cos_theta", "nu_pz_cos_com", "nu_pz_cos_theta_pizero",
+  /*
+    { "cos_com_and_cos_theta", "nu_pz_cos_com", "nu_pz_cos_theta_pizero",
     10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, "cos(#theta_{CoM} )", "0.1", 0.1,
     9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, "cos(#theta_{#pi^{0}} )" },
-  { "cos_theta_and_pizero_momentum", "nu_pz_cos_theta_pizero", "1e3 * nu_pz_pizero_mom",
+    { "cos_theta_and_pizero_momentum", "nu_pz_cos_theta_pizero", "1e3 * nu_pz_pizero_mom",
     8, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 1. }, "cos(#theta_{#pi^{0}} )", "0.2", 0.2,
     9, { 0., 60., 120., 180., 240., 300., 400., 500., 600., 1000. }, "p_{#pi^{0}} (MeV/c)" },
+  */
 };

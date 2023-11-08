@@ -38,6 +38,7 @@ const std::vector<Cut> true_categories = {
   { "ncpizero", true_ncpizero_cut, "", kBlack },
   { "nconepizero", true_nconepizero_cut, "", kBlack },
   { "ncpizero_0p0pi", true_ncpizero_0p0pi_cut, "", kBlack },
+  { "ncpizero_1p0pi", true_ncpizero_1p0pi_cut, "", kBlack },
   { "ncpizero_Xp0pi", true_ncpizero_Xp0pi_cut, "", kBlack },
   { "ncpizero_Np0pi", true_ncpizero_Np0pi_cut, "", kBlack },
 };
