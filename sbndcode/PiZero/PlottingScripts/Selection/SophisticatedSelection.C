@@ -18,6 +18,7 @@ std::vector<size_t> *slc_n_pfps = 0;
 std::vector<float> *slc_comp = 0, *slc_pur = 0, *slc_crumbs_score = 0;
 
 std::vector<std::vector<double>> *slc_pfp_shower_length = 0;
+std::vector<std::vector<bool>> *slc_pzc_good_kinematics = 0;
 
 std::vector<float> true_signal(6, 0);
 
@@ -81,6 +82,7 @@ void SophisticatedSelection(const TString productionVersion, const TString saveD
   ProcessTree(intimeEvents, intimeScaling / rockboxScaling);
   
   std::cout << "Total POT: " << rockboxPOT << " (" << Form("%.2f times smaller than 1e21)", rockboxScaling) << '\n'
+            << "...also " << intimeEvents->GetEntries() << " intime cosmic triggers (" << Form("%.2f times smaller than 1e21)", intimeScaling) << '\n'
             << "NCPiZero events: " << true_signal[0] << '\n'
             << "\t 1pi0: " << true_signal[1] << '\n'
             << "\t\t 0p0pi: " << true_signal[2] << '\n'
@@ -149,6 +151,7 @@ void InitialiseTree(TChain *tree)
   tree->SetBranchAddress("slc_best_pzc_photon_0_id", &slc_best_pzc_photon_0_id);
   tree->SetBranchAddress("slc_best_pzc_photon_1_id", &slc_best_pzc_photon_1_id);
   tree->SetBranchAddress("slc_pfp_shower_length", &slc_pfp_shower_length);
+  tree->SetBranchAddress("slc_pzc_good_kinematics", &slc_pzc_good_kinematics);
 }
 
 double GetPOT(TChain *subruns)
@@ -225,7 +228,11 @@ void ProcessTree(TChain* chain, const float weight)
               Categorise(slc_true_event_type->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                          slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), presel_slc, weight);
 
-              if(slc_n_razzled_photons->at(slc_i) > 1 && slc_best_pzc_good_kinematics->at(slc_i))
+              bool anygood = false;
+              for(auto const& good : slc_pzc_good_kinematics->at(slc_i))
+                anygood |= good;
+
+              if(slc_n_razzled_photons->at(slc_i) > 1 && anygood)
                 {
                   Categorise(slc_true_event_type->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                              slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), photonsel_slc, weight);
