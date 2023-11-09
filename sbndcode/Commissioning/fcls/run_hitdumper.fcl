@@ -74,7 +74,7 @@ physics:
     # gaushit:             @local::sbnd_gaushitfinder
     fasthit:             @local::standard_fasthitfinder
     ophitpmt:            @local::sbnd_ophit_finder_pmt
-    ophitarapuca:        @local::sbnd_ophit_finder_arapuca
+    ophitxarapuca:        @local::sbnd_ophit_finder_arapuca
     MuonTrackProducer:        @local::MuonTrackProducer
 
   }
@@ -92,9 +92,9 @@ physics:
   reco2: [
     fasthit
     , ophitpmt
-    , ophitarapuca
-    #, MuonTrackProducer 
-    #, MuonTrackFilter
+    , ophitxarapuca
+    , MuonTrackProducer 
+    , MuonTrackFilter
   ]
 
   ana: [hitdumper]
@@ -120,7 +120,7 @@ physics.analyzers.hitdumper.crtSoftTriggerModuleLabel: "softmetric"
 physics.analyzers.hitdumper.HitsModuleLabel: "fasthit"
 physics.analyzers.hitdumper.keepCRThits: true
 physics.analyzers.hitdumper.keepCRTstrips: true
-physics.analyzers.hitdumper.makeCRTtracks: true
+physics.analyzers.hitdumper.makeCRTtracks: false
 physics.analyzers.hitdumper.readCRTtracks: true
 physics.analyzers.hitdumper.readcrtSoftTrigger: true
 
@@ -136,4 +136,9 @@ physics.producers.fasthit.IncludeMoreTail: 3.0
 physics.producers.fasthit.ColMinWidth: 100.0
 physics.producers.fasthit.UncompressWithPed: false
 
-#services.DetectorClocksService.TriggerOffsetTPC: 100
+physics.analyzers.hitdumper.readTruth: false
+physics.analyzers.hitdumper.readMCParticle: true
+physics.analyzers.hitdumper.readpmtSoftTrigger: false
+physics.analyzers.hitdumper.readpmtTrigger: false
+physics.analyzers.hitdumper.MaxOpHits: 1000000
+physics.analyzers.hitdumper.readMuonTracks: true
