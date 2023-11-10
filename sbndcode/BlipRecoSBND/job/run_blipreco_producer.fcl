@@ -1,0 +1,88 @@
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+#include "services_microboone.fcl"
+#include "calorimetry_microboone.fcl"
+#include "triggeralgo_service.fcl"
+#include "blipreco_configs.fcl"
+
+process_name: BlipReco
+
+services: 
+{
+  scheduler:               { defaultExceptions: false }
+  TFileService:            { fileName: "hist_%p_%tc.root" }
+  ParticleInventoryService: @local::standard_particleinventoryservice
+                            @table::microboone_services_reco
+  BackTrackerService:       @local::microboone_backtrackerservice
+  DetectorProperties:       @local::microboone_detproperties
+  DetectorClocksService:    @local::microboone_detectorclocks
+  Geometry:                 @local::microboone_geo
+  LArProperties:            @local::microboone_properties
+}
+
+# Enable BackTracker to work on overlay MC
+services.BackTrackerService.BackTracker.OverrideRealData: true
+services.BackTrackerService.BackTracker.G4ModuleLabel: "driftWC:simpleSC" # default is "largeant"
+
+# Suppress common warning messages
+services.message.destinations.STDCOUT: {
+  categories: {
+    SIOVChannelStatusProvider: { limit: 0 reportEvery: 0 }
+    DetPedestalRetrievalAlg: { limit: 0 reportEvery: 0 }
+    BackTrackerService: { limit: 0 reportEvery: 0 }
+  }
+  threshold: "WARNING"
+  type: "cout"
+}
+
+# The following overrides are necessary to handle the truncation of 
+# RawDigits from 9600 ticks to 6400 ticks (which happens at reco1).
+services.DetectorPropertiesService.NumberTimeSamples:        6400
+services.DetectorPropertiesService.ReadOutWindowSize:        6400
+services.DetectorPropertiesService.InheritNumberTimeSamples: false
+services.DetectorClocksService.InheritClockConfig:           false
+services.DetectorClocksService.TriggerOffsetTPC:             -400
+
+# Source is an art-ROOT file
+source: {
+  module_type: RootInput
+}
+
+# Define and schedule filter/producer/analyzers
+physics:
+{
+
+  producers: {
+    blipreco: {
+      module_type: "BlipRecoProducer"
+      BlipAlg:     @local::microboone_blipalg
+    }
+  }
+  
+  #analyzers:{
+    #blipana:          @local::microboone_blipana
+  #}
+  
+  reco:           [ blipreco ]
+  #ana:            [ blipana ]
+  trigger_paths:  [ reco ] 
+  stream1:        [ out1 ] 
+  end_paths:      [ stream1 ]
+
+} # physics
+
+
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "%ifb_blipreco.root"
+    dataTier:    "reconstructed"
+    fastCloning: false
+    compressionLevel: 1
+    #SelectEvents: [reco]
+  }
+}
+

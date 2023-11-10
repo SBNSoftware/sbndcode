@@ -45,7 +45,8 @@ namespace blip {
           std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<fGeom.Nwires(planeid)<<" wires\n";
           std::cout<<"  XTicksOffset (from detProp): "<<offset<<"\n";
          
-          kXTicksOffsets[cstat][tpc][pl] = fTimeOffset[pl];
+          kXTicksOffsets[cstat][tpc][pl] = 0;
+
           if( fApplyXTicksOffset ) {
             
             //kXTicksOffsets[cstat][tpc][pl] = offset;
@@ -63,10 +64,25 @@ namespace blip {
             float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
             std::cout<<"  After geometric correction: "<<offset - goofy_offset<<"\n";
 
-            kXTicksOffsets[cstat][tpc][pl] += offset - goofy_offset;
+            kXTicksOffsets[cstat][tpc][pl] = offset - goofy_offset;
+          
+          } else {
+          
+            // for the case of 2D wirecell workflow, the plane-to-plane
+            // offsets are corrected upstream at the waveform level, so we 
+            // don't want to use the 'GetXTicksOffset()' call in detprop or
+            // the times between planes will be off and matching won't work.
+            //
+            // we still want to correct for global trigger offset though:
+            kXTicksOffsets[cstat][tpc][pl] = clockData.TriggerTime()/kTickPeriod;
+
           }
+          
+          // additional ad-hoc corrections supplied by user
+          kXTicksOffsets[cstat][tpc][pl] = fTimeOffset[pl];
+            
 
-
+          
         }
       }
     }

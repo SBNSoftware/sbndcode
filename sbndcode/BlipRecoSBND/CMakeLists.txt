@@ -41,6 +41,7 @@ cet_build_plugin(BlipAna art::Module SOURCE BlipAna_module.cc LIBRARIES ${MODULE
 
 add_subdirectory(Utils)
 add_subdirectory(Alg)
+add_subdirectory(job)
 
 install_headers()
 install_fhicl()
