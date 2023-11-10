@@ -21,7 +21,7 @@ void MakeXSecTrees(const TString productionVersion, const TString sampleName)
   std::vector<bool> *slc_true_fv = 0, *slc_true_av = 0, *slc_is_clear_cosmic = 0, *slc_is_fv = 0;
   std::vector<float> *slc_comp = 0, *slc_crumbs_score = 0;
   std::vector<size_t> *slc_n_pfps = 0;
-  std::vector<double> *slc_best_pzc_pizero_mom = 0;
+  std::vector<double> *slc_best_pzc_pizero_mom = 0, *slc_best_pzc_cos_theta_pizero = 0;
   std::vector<std::vector<std::vector<double>>*> flux_parameter_weights(flux_weight_names.size(), 0);
 
   events->SetBranchStatus("*", 0);
@@ -38,6 +38,7 @@ void MakeXSecTrees(const TString productionVersion, const TString sampleName)
   events->SetBranchAddress("slc_true_n_neutral_pions", &slc_true_n_neutral_pions);
   events->SetBranchAddress("slc_comp", &slc_comp);
   events->SetBranchAddress("slc_best_pzc_pizero_mom", &slc_best_pzc_pizero_mom);
+  events->SetBranchAddress("slc_best_pzc_cos_theta_pizero", &slc_best_pzc_cos_theta_pizero);
 
   events->SetBranchAddress("slc_is_clear_cosmic", &slc_is_clear_cosmic);
   events->SetBranchAddress("slc_is_fv", &slc_is_fv);
@@ -57,19 +58,28 @@ void MakeXSecTrees(const TString productionVersion, const TString sampleName)
   TTree *outslices = new TTree("slices","slices");
   TTree *outsubruns = (TTree*) subruns->Clone("subruns");
 
-  int sliceID, category;
-  double pzc_pizero_mom;
-  bool selected;
+  int sliceID, category_incl, category_0p0pi, category_1p0pi, category_Np0pi, category_Xp0pi;
+  double pzc_pizero_mom, pzc_cos_theta_pizero;
+  bool selected_incl, selected_0p0pi, selected_1p0pi, selected_Np0pi, selected_Xp0pi;
   std::vector<double> flux_weights;
 
   outslices->Branch("run", &run);
   outslices->Branch("subrun", &subrun);
   outslices->Branch("event", &event);
   outslices->Branch("sliceID", &sliceID);
-  outslices->Branch("category", &category);
+  outslices->Branch("category_incl", &category_incl);
+  outslices->Branch("category_0p0pi", &category_0p0pi);
+  outslices->Branch("category_1p0pi", &category_1p0pi);
+  outslices->Branch("category_Np0pi", &category_Np0pi);
+  outslices->Branch("category_Xp0pi", &category_Xp0pi);
   outslices->Branch("pzc_pizero_mom", &pzc_pizero_mom);
+  outslices->Branch("pzc_cos_theta_pizero", &pzc_cos_theta_pizero);
   outslices->Branch("flux_weights", &flux_weights);
-  outslices->Branch("selected", &selected);
+  outslices->Branch("selected_incl", &selected_incl);
+  outslices->Branch("selected_0p0pi", &selected_0p0pi);
+  outslices->Branch("selected_1p0pi", &selected_1p0pi);
+  outslices->Branch("selected_Np0pi", &selected_Np0pi);
+  outslices->Branch("selected_Xp0pi", &selected_Xp0pi);
 
   const int N = events->GetEntries();
 
@@ -108,6 +118,7 @@ void MakeXSecTrees(const TString productionVersion, const TString sampleName)
           if(category == 0 || selected)
             {
               pzc_pizero_mom = slc_best_pzc_pizero_mom->at(j);
+              pzc_cos_theta_pizero = slc_best_pzc_cos_theta_pizero->at(j);
 
               if(category != 6)
                 {
