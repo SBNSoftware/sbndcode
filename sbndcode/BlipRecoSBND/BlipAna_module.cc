@@ -28,6 +28,7 @@
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "larevt/SpaceChargeServices/SpaceChargeService.h"
 #include "cetlib/search_path.h"

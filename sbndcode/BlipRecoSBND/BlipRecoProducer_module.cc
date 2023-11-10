@@ -9,50 +9,45 @@
 
 // Framework includes
 #include "art/Framework/Core/EDProducer.h"
+#include "art_root_io/TFileService.h"
+#include "art_root_io/TFileDirectory.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Principal/View.h"
-#include "canvas/Persistency/Common/FindMany.h"
-#include "canvas/Persistency/Common/FindManyP.h"
-#include "canvas/Persistency/Common/FindOneP.h"
-#include "canvas/Utilities/InputTag.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 // LArSoft includes
-#include "larcore/Geometry/Geometry.h"
-#include "lardata/Utilities/AssociationUtil.h"
-#include "lardata/Utilities/GeometryUtilities.h"
-#include "lardata/DetectorInfoServices/DetectorClocksService.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardata/DetectorInfoServices/LArPropertiesService.h"
-#include "lardataobj/Simulation/SimChannel.h"
-#include "lardataobj/Simulation/SimEnergyDeposit.h"
-#include "lardataobj/Simulation/AuxDetSimChannel.h"
-#include "lardataobj/AnalysisBase/Calorimetry.h"
-#include "lardataobj/AnalysisBase/ParticleID.h"
-#include "lardataobj/AnalysisBase/CosmicTag.h"
-#include "lardataobj/AnalysisBase/BackTrackerMatchingData.h"
-#include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RecoBase/Track.h"
-#include "lardataobj/RecoBase/Shower.h"
-#include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Hit.h"
-#include "lardataobj/RecoBase/EndPoint2D.h"
-#include "lardataobj/RecoBase/Vertex.h"
-#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
-#include "larreco/Calorimetry/CalorimetryAlg.h"
-#include "larsim/MCCheater/BackTrackerService.h"
-#include "larsim/MCCheater/ParticleInventoryService.h"
+#include "lardataobj/AnalysisBase/Calorimetry.h"
+#include "larevt/SpaceChargeServices/SpaceChargeService.h"
 #include "cetlib/search_path.h"
 
-// MicroBooNE-specific includes
-#include "ubevt/Database/UbooneElectronLifetimeProvider.h"
-#include "ubevt/Database/UbooneElectronLifetimeService.h"
-#include "ubreco/BlipReco/Alg/BlipRecoAlg.h"
+// SBND-specific includes
+#include "sbndcode/BlipRecoSBND/Alg/BlipRecoAlg.h"
+
+// C++ includes
+#include <cstring>
+#include <utility>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+#include <typeinfo>
+#include <cmath>
+
+// ROOT includes
+#include "TFile.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TF1.h"
+
 
 class BlipRecoProducer;
 

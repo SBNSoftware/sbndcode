@@ -1,28 +1,49 @@
+
+#
+# service configuration
+#
+#include "simulationservices_sbnd.fcl"
 #include "backtrackerservice.fcl"
 #include "particleinventoryservice.fcl"
-#include "services_microboone.fcl"
-#include "calorimetry_microboone.fcl"
-#include "triggeralgo_service.fcl"
+#include "calorimetry_sbnd.fcl"
+
+#
+# algorithm configuration
+#
 #include "blipreco_configs.fcl"
+#include "rootoutput_sbnd.fcl"
 
 process_name: BlipReco
 
 services: 
 {
-  scheduler:               { defaultExceptions: false }
-  TFileService:            { fileName: "hist_%p_%tc.root" }
+  FileCatalogMetadata:      @local::sbnd_file_catalog_mc
+  TFileService:            { fileName: "hist_%p.root" }
   ParticleInventoryService: @local::standard_particleinventoryservice
-                            @table::microboone_services_reco
-  BackTrackerService:       @local::microboone_backtrackerservice
-  DetectorProperties:       @local::microboone_detproperties
-  DetectorClocksService:    @local::microboone_detectorclocks
-  Geometry:                 @local::microboone_geo
-  LArProperties:            @local::microboone_properties
+                            @table::sbnd_services
 }
 
 # Enable BackTracker to work on overlay MC
-services.BackTrackerService.BackTracker.OverrideRealData: true
-services.BackTrackerService.BackTracker.G4ModuleLabel: "driftWC:simpleSC" # default is "largeant"
+#services.BackTrackerService: @local::microboone_backtrackerservice
+#services.BackTrackerService.BackTracker.OverrideRealData:             true
+#services.ParticleInventoryService: @local::standard_particleinventoryservice
+#services.ParticleInventoryService.ParticleInventory.OverrideRealData: true
+# (note: in uboonecode v08_00_00_64 and earlier, 'OverrideRealData' does not
+# work for ParticleInventoryService; instead the service must be initialized
+# per event:
+#     art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
+#     pi_serv->Rebuild(evt);
+#     pi_serv->provider()->PrepParticleList(evt);
+
+# Don't retrieve lifetime from DB; this should only be enabled for Runs 4 and 5
+#services.UBElectronLifetimeService.ElectronLifetimeProvider.UseDB: false
+#services.UBElectronLifetimeService.ElectronLifetimeProvider.DefaultLifetime: 1000 # ms
+
+# Enable SCE service; corrections to blip calorimetry enabled by 
+# switch in BlipRecoAlg ("SCECorrection", turned off by default)
+services.SpaceCharge.EnableCorrSCE:       true
+services.SpaceCharge.EnableCalEfieldSCE:  true
+services.SpaceCharge.EnableCalSpatialSCE: true
 
 # Suppress common warning messages
 services.message.destinations.STDCOUT: {
@@ -34,14 +55,6 @@ services.message.destinations.STDCOUT: {
   threshold: "WARNING"
   type: "cout"
 }
-
-# The following overrides are necessary to handle the truncation of 
-# RawDigits from 9600 ticks to 6400 ticks (which happens at reco1).
-services.DetectorPropertiesService.NumberTimeSamples:        6400
-services.DetectorPropertiesService.ReadOutWindowSize:        6400
-services.DetectorPropertiesService.InheritNumberTimeSamples: false
-services.DetectorClocksService.InheritClockConfig:           false
-services.DetectorClocksService.TriggerOffsetTPC:             -400
 
 # Source is an art-ROOT file
 source: {
@@ -55,13 +68,13 @@ physics:
   producers: {
     blipreco: {
       module_type: "BlipRecoProducer"
-      BlipAlg:     @local::microboone_blipalg
+      BlipAlg:     @local::sbnd_blipalg
     }
   }
   
-  #analyzers:{
-    #blipana:          @local::microboone_blipana
-  #}
+  analyzers:{
+    blipana:          @local::sbnd_blipana
+  }
   
   reco:           [ blipreco ]
   #ana:            [ blipana ]
