@@ -1,6 +1,7 @@
 enum EventType
   {
-    kNCPiZero,
+    kSignalNCPiZero,
+    kOtherNCPiZero,
     kOtherNC,
     kCCNuMu,
     kCCNuE,
