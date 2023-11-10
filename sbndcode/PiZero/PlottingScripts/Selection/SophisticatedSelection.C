@@ -37,10 +37,10 @@ int GetGenEvents(TChain *subruns);
 
 void ProcessTree(TChain* chain, const float weight);
 
-void Categorise(int slc_true_event_type, int slc_true_n_neutral_pions, int slc_true_n_charged_pions,
+void Categorise(int slc_true_event_type, bool slc_true_fv, int slc_true_n_neutral_pions, int slc_true_n_charged_pions,
                 int slc_true_n_protons, float slc_comp, std::vector<std::vector<float>> &counts, const float weight);
 
-void Evaluate(const TString name, std::vector<float> &counts, const float total_signal);
+void Evaluate(const TString name, std::vector<float> &counts, const float total_signal, const float total_true_signal);
 
 void SophisticatedSelection(const TString productionVersion, const TString saveDirExt)
 {
@@ -90,12 +90,12 @@ void SophisticatedSelection(const TString productionVersion, const TString saveD
             << "\t\t Np0pi: " << true_signal[4] << '\n'
             << "\t\t 1p0pi: " << true_signal[5] << '\n' << std::endl;
 
-  Evaluate("Signal Inclusive - No Sel", total_slc[0], total_slc[0][0]);  
-  Evaluate("Signal One PiZero", photonsel_slc[1], total_slc[1][0]);  
-  Evaluate("Signal Xp0pi", pionsel_slc[3], total_slc[3][0]);
-  Evaluate("Signal 0p0pi", protonantisel_slc[2], total_slc[2][0]);
-  Evaluate("Signal Np0pi", protonsel_slc[4], total_slc[4][0]);
-  Evaluate("Signal 1p0pi", oneprotonsel_slc[5], total_slc[5][0]);
+  Evaluate("Signal One PiZero - No Sel", total_slc[1], total_slc[1][0], true_signal[1]);
+  Evaluate("Signal One PiZero", photonsel_slc[1], total_slc[1][0], true_signal[1]);
+  Evaluate("Signal Xp0pi", pionsel_slc[3], total_slc[3][0], true_signal[3]);
+  Evaluate("Signal 0p0pi", protonantisel_slc[2], total_slc[2][0], true_signal[2]);
+  Evaluate("Signal Np0pi", protonsel_slc[4], total_slc[4][0], true_signal[4]);
+  Evaluate("Signal 1p0pi", oneprotonsel_slc[5], total_slc[5][0], true_signal[5]);
 }
 
 void InitialiseTree(TChain *tree)
@@ -220,12 +220,12 @@ void ProcessTree(TChain* chain, const float weight)
 
       for(int slc_i = 0; slc_i < slc_true_event_type->size(); ++slc_i)
         {
-          Categorise(slc_true_event_type->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+          Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                      slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), total_slc, weight);
 
           if(!slc_is_clear_cosmic->at(slc_i) && slc_is_fv->at(slc_i) && slc_crumbs_score->at(slc_i) > -0.025 && slc_n_razzled_muons->at(slc_i) == 0)
             {
-              Categorise(slc_true_event_type->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+              Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                          slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), presel_slc, weight);
 
               bool anygood = false;
@@ -234,28 +234,28 @@ void ProcessTree(TChain* chain, const float weight)
 
               if(slc_n_razzled_photons->at(slc_i) > 1 && anygood)
                 {
-                  Categorise(slc_true_event_type->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+                  Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                              slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), photonsel_slc, weight);
 
                   if(slc_n_razzled_pions_thresh->at(slc_i) == 0)
                     {
-                      Categorise(slc_true_event_type->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+                      Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                                  slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), pionsel_slc, weight);
 
                       if(slc_n_razzled_protons_thresh->at(slc_i) > 0)
                         {
-                          Categorise(slc_true_event_type->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+                          Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                                      slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), protonsel_slc, weight);
                         }
                       else
                         {
-                          Categorise(slc_true_event_type->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+                          Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                                      slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), protonantisel_slc, weight);
                         }
 
                       if(slc_n_razzled_protons_thresh->at(slc_i) == 1)
                         {
-                          Categorise(slc_true_event_type->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+                          Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                                      slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), oneprotonsel_slc, weight);
                         }
 
@@ -266,10 +266,10 @@ void ProcessTree(TChain* chain, const float weight)
     }
 }
 
-void Categorise(int slc_true_event_type, int slc_true_n_neutral_pions, int slc_true_n_charged_pions,
+void Categorise(int slc_true_event_type, bool slc_true_fv, int slc_true_n_neutral_pions, int slc_true_n_charged_pions,
                 int slc_true_n_protons, float slc_comp, std::vector<std::vector<float>> &counts, const float weight)
 {
-  if(slc_true_event_type == 0)
+  if(slc_true_event_type == 0 && slc_true_fv)
     {
       if(slc_comp > .5)
         counts[0][0] += weight;
@@ -345,7 +345,7 @@ void Categorise(int slc_true_event_type, int slc_true_n_neutral_pions, int slc_t
       counts[i][slc_true_event_type] += weight;
 }
 
-void Evaluate(const TString name, std::vector<float> &counts, const float total_signal)
+void Evaluate(const TString name, std::vector<float> &counts, const float total_signal, const float total_signal_events)
 {
   const float total = std::accumulate(counts.begin(), counts.end(), 0);
 
@@ -360,7 +360,9 @@ void Evaluate(const TString name, std::vector<float> &counts, const float total_
             << "Cosmic:          " << counts[6] << Form(" (%.2f%%)", 100. * counts[6] / total) << '\n'
             << "No Truth Match:  " << counts[7] << Form(" (%.2f%%)", 100. * counts[7] / total) << '\n'
             << "Bad Reco Signal: " << counts[8] << Form(" (%.2f%%)", 100. * counts[8] / total) << '\n'
-            << "EFF:             " << Form("%.2f%%", 100. * counts[0] / total_signal) << '\n'
-            << "EFF * PUR:       " << Form("%.2f%%", 100. * counts[0] / total * counts[0] / total_signal) << '\n'
+            << "EFF:             " << Form("%.2f%%", 100. * counts[0] / total_signal_events) << '\n'
+            << "EFF * PUR:       " << Form("%.2f%%", 100. * counts[0] / total * counts[0] / total_signal_events) << '\n'
+            << "SELEFF:          " << Form("%.2f%%", 100. * counts[0] / total_signal) << '\n'
+            << "SELEFF * PUR:    " << Form("%.2f%%", 100. * counts[0] / total * counts[0] / total_signal) << '\n'
             << std::endl;
 }
