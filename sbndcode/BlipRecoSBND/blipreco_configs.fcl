@@ -7,7 +7,6 @@ sbnd_blipalg:
   TrkProducer:          "pandora"       #// input recob::Tracks to use for blip reconstruction
   GeantProducer:        "largeant"      #// input sim::MCParticles (getting true particle info)
   SimEDepProducer:      "ionandscint"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
-  #SimChanProducer:      "simtpc2d:simpleSC" #// label for sim::SimChannels (getting drifted charge; optional)
   SimChanProducer:      "simdrift"      #// label for sim::SimChannels (getting drifted charge; optional)
   MaxHitTrkLength:      5.0             #// hits in trks > this length will be vetoed [cm]
   DoHitFiltering:       false           #// filter hits based on amp, width, RMS

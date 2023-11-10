@@ -736,7 +736,7 @@ class BlipAna : public art::EDAnalyzer
     h_blip_qcomp   = dir_truth.make<TH1D>("blip_qcomp","Fraction of true charge (at anode) reconstructed into 3D blips",202,0,1.01);
     h_blip_reszy   = dir_truth.make<TH2D>("blip_res_zy","Blip position resolution;Z_{reco} - Z_{true} [cm];Y_{reco} - Y_{true} [cm]",150,-15,15,150,-15,15);
       h_blip_reszy ->SetOption("colz");
-    h_blip_resx    = dir_truth.make<TH1D>("blip_res_x","Blip position resolution;X_{reco} - X_{true} [cm]",150,-15,15);
+    h_blip_resx    = dir_truth.make<TH1D>("blip_res_x","Blip position resolution;X_{reco} - X_{true} [cm]",200,-10,10);
     h_blip_resE   = dir_truth.make<TH1D>("blip_res_E","Blip energy resolution;(E_{reco} - E_{true})/E_{true} [cm]",200,-1.,1.);
     h_blip_E_vs_resE    = dir_truth.make<TH2D>("blip_res_energy","Energy resolution of 3D blips;Energy [MeV];#deltaE/E_{true}",100,0,5,200,-1.,1.);
         h_blip_E_vs_resE ->SetOption("colz");

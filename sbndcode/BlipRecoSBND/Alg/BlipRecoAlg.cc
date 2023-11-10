@@ -40,26 +40,31 @@ namespace blip {
         // Loop planes in TPC 'tpc'
         for(size_t pl=0; pl<fGeom.Nplanes(tpcid); pl++){
           auto const& planeid = geo::PlaneID(cstat,tpc,pl);
-          
+            
           float offset = detProp.GetXTicksOffset(pl,tpc,cstat);
           std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<fGeom.Nwires(planeid)<<" wires\n";
           std::cout<<"  XTicksOffset (from detProp): "<<offset<<"\n";
-          
-          
-          // subtract out the geometric time offset added to account for the 
-          // distance between plane0 and X=0. This is based on code in
-          // lardataalg/DetectorInfo/DetectorPropertiesStandard.cxx 
-          // (as of lardataalg v9_15_01)
-          auto const& cryostat  = fGeom.Cryostat(geo::CryostatID(cstat));
-          auto const& tpcgeom   = cryostat.TPC(tpc);
-          auto const xyz        = tpcgeom.Plane(0).GetCenter();
-          const double dir((tpcgeom.DriftDirection() == geo::kNegX) ? +1.0 : -1.0);
-          float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
-          
-          float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
-          std::cout<<"  After geometric correction: "<<offset - goofy_offset<<"\n";
+         
+          kXTicksOffsets[cstat][tpc][pl] = fTimeOffset[pl];
+          if( fApplyXTicksOffset ) {
+            
+            //kXTicksOffsets[cstat][tpc][pl] = offset;
 
-          kXTicksOffsets[cstat][tpc][pl] = offset - goofy_offset;
+            // subtract out the geometric time offset added to account for the 
+            // distance between plane0 and X=0. This is based on code in
+            // lardataalg/DetectorInfo/DetectorPropertiesStandard.cxx 
+            // (as of lardataalg v9_15_01)
+            auto const& cryostat  = fGeom.Cryostat(geo::CryostatID(cstat));
+            auto const& tpcgeom   = cryostat.TPC(tpc);
+            auto const xyz        = tpcgeom.Plane(0).GetCenter();
+            const double dir((tpcgeom.DriftDirection() == geo::kNegX) ? +1.0 : -1.0);
+            float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
+            
+            float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
+            std::cout<<"  After geometric correction: "<<offset - goofy_offset<<"\n";
+
+            kXTicksOffsets[cstat][tpc][pl] += offset - goofy_offset;
+          }
 
 
         }
@@ -74,7 +79,6 @@ namespace blip {
     std::cout<<"XticksOffset, Plane 1: "<<detProp.GetXTicksOffset(1,0,0)<<"\n";
     std::cout<<"XticksOffset, Plane 2: "<<detProp.GetXTicksOffset(2,0,0)<<"\n";
     */
-
     
     /*
     // initialize channel list
@@ -236,8 +240,9 @@ namespace blip {
     fMaxClusterSpan     = pset.get<float>         ("MaxClusterSpan",    30);
     fMinClusterCharge   = pset.get<float>         ("MinClusterCharge",  300);
     fMaxClusterCharge   = pset.get<float>         ("MaxClusterCharge",  12e6);
-
-    //fTimeOffsets        = pset.get<std::vector<float>>("TimeOffsets", {0.,0.,0.});
+    
+    fApplyXTicksOffset  = pset.get<bool>          ("ApplyXTicksOffset", true);
+    fTimeOffset         = pset.get<std::vector<float>>("TimeOffset", {0.,0.,0.});
     fMatchMinOverlap    = pset.get<float>         ("ClustMatchMinOverlap",  0.5 );
     fMatchSigmaFact     = pset.get<float>         ("ClustMatchSigmaFact",   1.0);
     fMatchMaxTicks      = pset.get<float>         ("ClustMatchMaxTicks",    5.0 );
@@ -542,10 +547,10 @@ namespace blip {
       hitinfo[i].sigmaintegral = thisHit->SigmaIntegral();
       hitinfo[i].sumADC       = thisHit->SummedADC();
       hitinfo[i].charge       = fCaloAlg->ElectronsFromADCArea(thisHit->Integral(),plane);
+      hitinfo[i].gof          = thisHit->GoodnessOfFit() / thisHit->DegreesOfFreedom();
       hitinfo[i].peakTime     = thisHit->PeakTime();
       hitinfo[i].driftTime    = thisHit->PeakTime()-kXTicksOffsets[cstat][tpc][plane]; //detProp.GetXTicksOffset(wireid);
-      hitinfo[i].gof          = thisHit->GoodnessOfFit() / thisHit->DegreesOfFreedom();
-      
+
       //h_hit_times->Fill(thisHit->PeakTime());
       //h_hit_chanstatus->Fill( chanFilt.Status(chan) );
 
@@ -1113,8 +1118,7 @@ namespace blip {
       // ================================================================================
       // Calculate blip energy assuming T = T_beam (eventually can do more complex stuff
       // like associating blip with some nearby track/shower and using its tagged T0)
-      //    Method 1: Assume a dE/dx = 2 MeV/cm for electrons, use that + local E-field
-      //              calculate recombination.
+      //    Method 1: Assume a dE/dx for electrons, use that + local E-field to get recomb.
       //    Method 2: ESTAR lookup table method ala ArgoNeuT
       // ================================================================================
       float depEl   = std::max(0.0,(double)blip.Charge);
@@ -1124,7 +1128,6 @@ namespace blip {
       // Ddisabled by default. Without knowing real T0 of a blip, attempting to 
       // apply this correction can do more harm than good! Note lifetime is in
       // units of 'ms', not microseconds, hence the 1E-3 conversion factor.
-      //if( fLifetimeCorr && blip.Time>0 ) depEl *= exp( 1e-3*blip.Time/lifetime_provider.Lifetime() );
       if( fLifetimeCorr && blip.Time>0 ) depEl *= exp( 1e-3*blip.Time/detProp.ElectronLifetime());
       
       // --- SCE corrections ---
@@ -1147,8 +1150,8 @@ namespace blip {
         //     is used in the simulation, and the latter in reconstruction (??).
         //   - The SpaceCharge service must have 'EnableCorSCE' and 'EnableCalEfieldSCE'
         //     enabled in order to use GetCalEfieldOffsets
-        //   - Blips can have negative 'X' if the T0 correction isn't applied. Obviously 
-        //     the SCE map will return (0,0,0) for these points.
+        //   - Blips may appear to be outside the active volume if T0-corrections aren't 
+        //     applied to the reconstructed 'X'. SCE map should return (0,0,0) in this case.
         if( SCE_provider->EnableCalEfieldSCE() ) {
           auto const field_offset = SCE_provider->GetCalEfieldOffsets(point,blip.TPC); 
           Efield = detProp.Efield()*std::hypot(1+field_offset.X(),field_offset.Y(),field_offset.Z());;
@@ -1156,7 +1159,6 @@ namespace blip {
 
       }
       
-      //std::cout<<"Final energy calculation\n";
       // METHOD 1
       float recomb  = ModBoxRecomb(fCalodEdx,Efield);
       blip.Energy   = depEl * (1./recomb) * kWion;
@@ -1168,16 +1170,15 @@ namespace blip {
       
       // ================================================
       // Save the true blip into the object;
-      // each cluster must match to the same energy dep
+      // at least one cluster needs to match.
       // ================================================
       std::set<int> set_edepids;
-      bool badmatch = false;
       for(auto& hc : blip.clusters ) {
-        if( !hc.isValid ) continue; 
-        if( hc.EdepID < 0 ) break;
+        if( !hc.isValid )   continue; 
+        if( hc.EdepID < 0 ) continue;
         set_edepids.insert( hc.EdepID );
       }
-      if( !badmatch && set_edepids.size() == 1 ) 
+      if( set_edepids.size() == 1 ) 
         blip.truth = trueblips[*set_edepids.begin()];
     
     }//endloop over blip vector
