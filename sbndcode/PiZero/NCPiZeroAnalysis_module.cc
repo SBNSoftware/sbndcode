@@ -471,7 +471,11 @@ private:
     { "slc_best_pzc_photon_1_true_pdg", new InhVecVar<int>("slc_best_pzc_photon_1_true_pdg") },
     { "slc_best_pzc_photon_1_comp", new InhVecVar<float>("slc_best_pzc_photon_1_comp") },
     { "slc_best_pzc_photon_1_pur", new InhVecVar<float>("slc_best_pzc_photon_1_pur") },
-    { "slc_sel", new InhVecVar<bool>("slc_sel") },
+    { "slc_sel_incl", new InhVecVar<bool>("slc_sel_incl") },
+    { "slc_sel_0p0pi", new InhVecVar<bool>("slc_sel_0p0pi") },
+    { "slc_sel_1p0pi", new InhVecVar<bool>("slc_sel_1p0pi") },
+    { "slc_sel_Np0pi", new InhVecVar<bool>("slc_sel_Np0pi") },
+    { "slc_sel_Xp0pi", new InhVecVar<bool>("slc_sel_Xp0pi") },
   };
 
   const std::vector<std::string> flux_weight_names = { "expskin_Flux",
@@ -1793,8 +1797,27 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   AccessElement(slcVars["slc_n_razzled_photons"], counter, nrazzledphotons);
   const bool passes_razzled_photons = nrazzledphotons > 1;
 
-  const bool sel = !is_clear_cosmic && is_fv && passes_crumbs && passes_razzled_muons && passes_pfps && passes_razzled_photons;
-  FillElement(slcVars["slc_sel"], counter, sel);
+  int nrazzledpions;
+  AccessElement(slcVars["slc_n_razzled_pions_thresh"], counter, nrazzledpions);
+  const bool passes_razzled_pions = nrazzledpions == 0;
+
+  int nrazzledprotons;
+  AccessElement(slcVars["slc_n_razzled_protons_thresh"], counter, nrazzledprotons);
+
+  const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs && passes_razzled_muons && passes_pfps && passes_razzled_photons;
+  FillElement(slcVars["slc_sel_incl"], counter, sel_incl);
+
+  const bool sel_0p0pi = sel_incl && passes_razzled_pions && nrazzledprotons == 0;
+  FillElement(slcVars["slc_sel_0p0pi"], counter, sel_0p0pi);
+
+  const bool sel_1p0pi = sel_incl && passes_razzled_pions && nrazzledprotons == 1;
+  FillElement(slcVars["slc_sel_1p0pi"], counter, sel_1p0pi);
+
+  const bool sel_Np0pi = sel_incl && passes_razzled_pions && nrazzledprotons > 0;
+  FillElement(slcVars["slc_sel_Np0pi"], counter, sel_Np0pi);
+
+  const bool sel_Xp0pi = sel_incl && passes_razzled_pions;
+  FillElement(slcVars["slc_sel_Xp0pi"], counter, sel_Xp0pi);
 }
 
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,
