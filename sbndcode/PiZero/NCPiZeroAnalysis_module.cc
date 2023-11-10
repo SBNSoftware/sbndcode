@@ -375,6 +375,7 @@ private:
     { "slc_pfp_true_pdg", new InhVecVecVar<int>("slc_pfp_true_pdg") },
     { "slc_pfp_comp", new InhVecVecVar<float>("slc_pfp_comp") },
     { "slc_pfp_pur", new InhVecVecVar<float>("slc_pfp_pur") },
+    { "slc_pfp_n_sps", new InhVecVecVar<size_t>("slc_pfp_n_sps") },
     { "slc_pfp_track_start_x", new InhVecVecVar<double>("slc_pfp_track_start_x") },
     { "slc_pfp_track_start_y", new InhVecVecVar<double>("slc_pfp_track_start_y") },
     { "slc_pfp_track_start_z", new InhVecVecVar<double>("slc_pfp_track_start_z") },
@@ -1219,7 +1220,8 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
   art::FindOneP<larpandoraobj::PFParticleMetadata> pfpToMeta(pfpHandle, e, fPFParticleModuleLabel);
   art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
-  art::FindOneP<sbn::MVAPID>                       pfpsToRazzled(pfpHandle, e, fRazzledModuleLabel);
+  art::FindOneP<sbn::MVAPID>                       pfpToRazzled(pfpHandle, e, fRazzledModuleLabel);
+  art::FindManyP<recob::SpacePoint>                pfpToSpacePoints(pfpHandle, e, fSpacePointModuleLabel);
 
   int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzlepionsthresh = 0, ndazzleprotons = 0,
     ndazzleprotonsthresh = 0, ndazzleother = 0, nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0,
@@ -1256,7 +1258,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
       FillElement(slcVars["slc_pfp_good_track"], slcCounter, pfpCounter, track.isNonnull());
       FillElement(slcVars["slc_pfp_good_shower"], slcCounter, pfpCounter, shower.isNonnull());
 
-      const art::Ptr<sbn::MVAPID> razzled = pfpsToRazzled.at(pfp.key());
+      const art::Ptr<sbn::MVAPID> razzled = pfpToRazzled.at(pfp.key());
       if(razzled.isNonnull())
         ExtractRazzled(razzled, slcCounter, pfpCounter);
 
@@ -1266,6 +1268,9 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
       FillElement(slcVars["slc_pfp_true_trackid"], slcCounter, pfpCounter, trackID);
       FillElement(slcVars["slc_pfp_comp"], slcCounter, pfpCounter, Completeness(e, hits, trackID));
       FillElement(slcVars["slc_pfp_pur"], slcCounter, pfpCounter, Purity(e, hits, trackID));
+
+      const std::vector<art::Ptr<recob::SpacePoint>> spacepoints = pfpToSpacePoints.at(pfp.key());
+      FillElement(slcVars["slc_pfp_n_sps"], slcCounter, pfpCounter, spacepoints.size());
 
       if(trackID != def_int)
         {
