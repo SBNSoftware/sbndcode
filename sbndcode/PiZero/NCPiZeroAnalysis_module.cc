@@ -294,6 +294,7 @@ private:
 
   VecVarMap slcVars = {
     { "slc_key", new InhVecVar<size_t>("slc_key") },
+    { "slc_n_hits", new InhVecVar<size_t>("slc_n_hits") },
     { "slc_n_pfps", new InhVecVar<size_t>("slc_n_pfps") },
     { "slc_primary_pfp_id", new InhVecVar<size_t>("slc_primary_pfp_id") },
     { "slc_primary_pfp_pdg", new InhVecVar<int>("slc_primary_pfp_pdg") },
@@ -1221,6 +1222,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
   art::FindOneP<recob::Vertex>      pfpToVertices(pfpHandle, e, fVertexModuleLabel);
   art::FindOneP<sbn::CRUMBSResult>  slicesToCRUMBS(sliceHandle, e, fCRUMBSModuleLabel);
   art::FindManyP<sbn::OpT0Finder>   slicesToOpT0(sliceHandle, e, fOpT0ModuleLabel);
+  art::FindManyP<recob::Hit>        slicesToHits(sliceHandle, e, fSliceModuleLabel);
 
   for (auto&& [slcCounter, slc] : enumerate(sliceVec))
     {
@@ -1228,6 +1230,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
       const std::vector<art::Ptr<recob::PFParticle>> pfps = slicesToPFPs.at(slc.key());
       FillElement(slcVars["slc_n_pfps"], slcCounter, pfps.size());
+
+      const std::vector<art::Ptr<recob::Hit>> hits = slicesToHits.at(slc.key());
+      FillElement(slcVars["slc_n_hits"], slcCounter, hits.size());
 
       if(pfps.size() == 0)
         {
