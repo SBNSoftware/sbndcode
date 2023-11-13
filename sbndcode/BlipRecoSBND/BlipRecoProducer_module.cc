@@ -7,46 +7,46 @@
 // May 2022
 ////////////////////////////////////////////////////////////////////////
 
-// Framework includes
+// Framework includes 
 #include "art/Framework/Core/EDProducer.h"
-#include "art_root_io/TFileService.h"
-#include "art_root_io/TFileDirectory.h"
-#include "art/Framework/Core/ModuleMacros.h"
-#include "art/Framework/Principal/Event.h"
-#include "art/Framework/Principal/SubRun.h"
-#include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "art/Framework/Core/ModuleMacros.h" 
+#include "art/Framework/Principal/Event.h" 
 #include "fhiclcpp/ParameterSet.h"
+#include "art/Framework/Principal/Handle.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/PtrVector.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
-// LArSoft includes
-#include "lardataobj/RecoBase/Track.h"
-#include "lardataobj/RecoBase/SpacePoint.h"
+// LArSoft includes 
+#include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
+#include "larcorealg/Geometry/PlaneGeo.h"
+#include "larcorealg/Geometry/WireGeo.h"
 #include "lardataobj/RecoBase/Hit.h"
-#include "lardataobj/AnalysisBase/Calorimetry.h"
-#include "larevt/SpaceChargeServices/SpaceChargeService.h"
-#include "cetlib/search_path.h"
+#include "lardataobj/RecoBase/SpacePoint.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
+#include "larcorealg/Geometry/GeometryCore.h"
+#include "lardataobj/Simulation/AuxDetSimChannel.h"
+#include "larcore/Geometry/AuxDetGeometry.h"
+#include "lardataobj/RawData/RawDigit.h"
+#include "lardataobj/RawData/raw.h"
+#include "lardata/Utilities/AssociationUtil.h"
+
+// C++ includes
+#include <vector>
+#include <algorithm>
+#include <stdlib.h>
+#include <math.h>
+#include <vector>
+#include <iostream>
+#include <cmath>
+#include <bitset>
+#include <memory>
 
 // SBND-specific includes
 #include "sbndcode/BlipRecoSBND/Alg/BlipRecoAlg.h"
-
-// C++ includes
-#include <cstring>
-#include <utility>
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <iostream>
-#include <algorithm>
-#include <typeinfo>
-#include <cmath>
-
-// ROOT includes
-#include "TFile.h"
-#include "TTree.h"
-#include "TH1D.h"
-#include "TH2D.h"
-#include "TF1.h"
 
 
 class BlipRecoProducer;
@@ -75,6 +75,7 @@ class BlipRecoProducer : public art::EDProducer
 //  BlipRecoProducer constructor and destructor
 //###################################################
 BlipRecoProducer::BlipRecoProducer(fhicl::ParameterSet const & pset)
+   : EDProducer(pset)
 {
   // Read in fcl parameters for blip reco alg
   fhicl::ParameterSet pset_blipalg = pset.get<fhicl::ParameterSet>("BlipAlg");
