@@ -1950,8 +1950,10 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
 
 void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter)
 {
+  std::vector<std::vector<bool>> pzc_good_kinematics;
   std::vector<std::vector<double>> pzc_invariant_mass;
 
+  GetVar(vars[prefix + "_pzc_good_kinematics"], pzc_good_kinematics);
   GetVar(vars[prefix + "_pzc_invariant_mass"], pzc_invariant_mass);
 
   double bestInvMass = std::numeric_limits<double>::max();
@@ -1959,7 +1961,7 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
 
   for(size_t i = 0; i < pzc_invariant_mass.at(counter).size(); ++i)
     {
-      if(abs(134.9769 - pzc_invariant_mass.at(counter).at(i)) < bestInvMass)
+      if(pzc_good_kinematics.at(counter).at(i) && abs(134.9769 - pzc_invariant_mass.at(counter).at(i)) < bestInvMass)
         {
           bestInvMass = abs(134.9769 - pzc_invariant_mass.at(counter).at(i));
           bestID = i;
@@ -1973,6 +1975,10 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
           if(varName.find(prefix + "_best_pzc") != std::string::npos)
             TransferElement(var, slcVars, prefix + "_best_pzc", prefix + "_pzc", counter, counter, bestID);
         }
+    }
+  else
+    {
+      FillElement(vars[prefix + "_best_pzc_good_kinematics"], counter, false);
     }
 }
 
