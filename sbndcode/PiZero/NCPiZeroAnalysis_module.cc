@@ -113,9 +113,9 @@ public:
                      const art::Handle<std::vector<recob::Track>> &trackHandle,
                      const art::Handle<std::vector<recob::Shower>> &showerHandle);
 
-  void AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
-                   const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const art::Handle<std::vector<recob::Track>> &trackHandle,
-                   const art::Handle<std::vector<recob::Shower>> &showerHandle);
+  void AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const std::vector<art::Ptr<recob::PFParticle>> &pfps,
+                   const art::Ptr<recob::Vertex> &vtx, const int slcCounter, const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
+                   const art::Handle<std::vector<recob::Track>> &trackHandle, const art::Handle<std::vector<recob::Shower>> &showerHandle);
   void AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
                     const art::Handle<std::vector<recob::Track>> &trackHandle);
   void AnalyseShower(const art::Event &e, const art::Ptr<recob::Shower> &shower, const int slcCounter, const int pfpCounter,
@@ -298,6 +298,7 @@ private:
   VecVarMap slcVars = {
     { "slc_key", new InhVecVar<size_t>("slc_key") },
     { "slc_n_hits", new InhVecVar<size_t>("slc_n_hits") },
+    { "slc_n_used_hits", new InhVecVar<size_t>("slc_n_used_hits") },
     { "slc_n_pfps", new InhVecVar<size_t>("slc_n_pfps") },
     { "slc_primary_pfp_id", new InhVecVar<size_t>("slc_primary_pfp_id") },
     { "slc_primary_pfp_pdg", new InhVecVar<int>("slc_primary_pfp_pdg") },
@@ -321,6 +322,24 @@ private:
     { "slc_n_razzled_pions_thresh", new InhVecVar<int>("slc_n_razzled_pions_thresh") },
     { "slc_n_razzled_protons", new InhVecVar<int>("slc_n_razzled_protons") },
     { "slc_n_razzled_protons_thresh", new InhVecVar<int>("slc_n_razzled_protons_thresh") },
+    { "slc_n_primary_trks", new InhVecVar<int>("slc_n_primary_trks") },
+    { "slc_n_primary_shws", new InhVecVar<int>("slc_n_primary_shws") },
+    { "slc_n_primary_dazzle_muons", new InhVecVar<int>("slc_n_primary_dazzle_muons") },
+    { "slc_n_primary_dazzle_pions", new InhVecVar<int>("slc_n_primary_dazzle_pions") },
+    { "slc_n_primary_dazzle_pions_thresh", new InhVecVar<int>("slc_n_primary_dazzle_pions_thresh") },
+    { "slc_n_primary_dazzle_protons", new InhVecVar<int>("slc_n_primary_dazzle_protons") },
+    { "slc_n_primary_dazzle_protons_thresh", new InhVecVar<int>("slc_n_primary_dazzle_protons_thresh") },
+    { "slc_n_primary_dazzle_other", new InhVecVar<int>("slc_n_primary_dazzle_other") },
+    { "slc_n_primary_razzle_electrons", new InhVecVar<int>("slc_n_primary_razzle_electrons") },
+    { "slc_n_primary_razzle_photons", new InhVecVar<int>("slc_n_primary_razzle_photons") },
+    { "slc_n_primary_razzle_other", new InhVecVar<int>("slc_n_primary_razzle_other") },
+    { "slc_n_primary_razzled_electrons", new InhVecVar<int>("slc_n_primary_razzled_electrons") },
+    { "slc_n_primary_razzled_muons", new InhVecVar<int>("slc_n_primary_razzled_muons") },
+    { "slc_n_primary_razzled_photons", new InhVecVar<int>("slc_n_primary_razzled_photons") },
+    { "slc_n_primary_razzled_pions", new InhVecVar<int>("slc_n_primary_razzled_pions") },
+    { "slc_n_primary_razzled_pions_thresh", new InhVecVar<int>("slc_n_primary_razzled_pions_thresh") },
+    { "slc_n_primary_razzled_protons", new InhVecVar<int>("slc_n_primary_razzled_protons") },
+    { "slc_n_primary_razzled_protons_thresh", new InhVecVar<int>("slc_n_primary_razzled_protons_thresh") },
     { "slc_true_mctruth_id", new InhVecVar<size_t>("slc_true_mctruth_id") },
     { "slc_true_event_type_incl", new InhVecVar<int>("slc_true_event_type_incl") },
     { "slc_true_event_type_0p0pi", new InhVecVar<int>("slc_true_event_type_0p0pi") },
@@ -378,6 +397,8 @@ private:
     { "slc_opt0_measPE", new InhVecVar<double>("slc_opt0_measPE") },
     { "slc_opt0_hypPE", new InhVecVar<double>("slc_opt0_hypPE") },
     { "slc_pfp_id", new InhVecVecVar<size_t>("slc_pfp_id") },
+    { "slc_pfp_primary", new InhVecVecVar<bool>("slc_pfp_primary") },
+    { "slc_pfp_primary_child", new InhVecVecVar<bool>("slc_pfp_primary_child") },
     { "slc_pfp_pdg", new InhVecVecVar<int>("slc_pfp_pdg") },
     { "slc_pfp_track_score", new InhVecVecVar<float>("slc_pfp_track_score") },
     { "slc_pfp_n_children", new InhVecVecVar<int>("slc_pfp_n_children") },
@@ -385,9 +406,14 @@ private:
     { "slc_pfp_good_shower", new InhVecVecVar<bool>("slc_pfp_good_shower") },
     { "slc_pfp_true_trackid", new InhVecVecVar<int>("slc_pfp_true_trackid") },
     { "slc_pfp_true_pdg", new InhVecVecVar<int>("slc_pfp_true_pdg") },
+    { "slc_pfp_true_energy", new InhVecVecVar<double>("slc_pfp_true_energy") },
+    { "slc_pfp_true_p_x", new InhVecVecVar<double>("slc_pfp_true_p_x") },
+    { "slc_pfp_true_p_y", new InhVecVecVar<double>("slc_pfp_true_p_y") },
+    { "slc_pfp_true_p_z", new InhVecVecVar<double>("slc_pfp_true_p_z") },
     { "slc_pfp_comp", new InhVecVecVar<float>("slc_pfp_comp") },
     { "slc_pfp_pur", new InhVecVecVar<float>("slc_pfp_pur") },
     { "slc_pfp_n_sps", new InhVecVecVar<size_t>("slc_pfp_n_sps") },
+    { "slc_pfp_n_hits", new InhVecVecVar<size_t>("slc_pfp_n_hits") },
     { "slc_pfp_track_start_x", new InhVecVecVar<double>("slc_pfp_track_start_x") },
     { "slc_pfp_track_start_y", new InhVecVecVar<double>("slc_pfp_track_start_y") },
     { "slc_pfp_track_start_z", new InhVecVecVar<double>("slc_pfp_track_start_z") },
@@ -1288,9 +1314,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement(slcVars["slc_opt0_hypPE"], slcCounter, opT0Vec[0]->hypoPE);
         }
 
-      ResizeSubVectors(slcVars, "slc_pfp", slcCounter, prim->NumDaughters());
+      ResizeSubVectors(slcVars, "slc_pfp", slcCounter, pfps.size());
 
-      AnalysePFPs(e, prim, vtx, slcCounter, pfpHandle, trackHandle, showerHandle);
+      AnalysePFPs(e, prim, pfps, vtx, slcCounter, pfpHandle, trackHandle, showerHandle);
 
       if(abs(prim->PdgCode()) == 13 || abs(prim->PdgCode()) == 11)
         ResizeSubVectors(slcVars, "slc_pzc", slcCounter, 0);
@@ -1303,9 +1329,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
     }
 }
 
-void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
-                                         const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const art::Handle<std::vector<recob::Track>> &trackHandle,
-                                         const art::Handle<std::vector<recob::Shower>> &showerHandle)
+void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const std::vector<art::Ptr<recob::PFParticle>> &pfps,
+                                         const art::Ptr<recob::Vertex> &vtx, const int slcCounter, const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
+                                         const art::Handle<std::vector<recob::Track>> &trackHandle, const art::Handle<std::vector<recob::Shower>> &showerHandle)
 {
   art::FindOneP<recob::Track>                      pfpToTrack(pfpHandle, e, fTrackModuleLabel);
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
@@ -1319,21 +1345,38 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
     nrazzledelectrons = 0, nrazzledmuons = 0, nrazzledphotons = 0, nrazzledpions = 0, nrazzledpionsthresh = 0,
     nrazzledprotons = 0, nrazzledprotonsthresh = 0;
 
-  for(auto&& [pfpCounter, id] : enumerate(prim->Daughters()))
+  int nprimtrks = 0, nprimshws = 0, nprimdazzlemuons = 0, nprimdazzlepions = 0, nprimdazzlepionsthresh = 0, nprimdazzleprotons = 0,
+    nprimdazzleprotonsthresh = 0, nprimdazzleother = 0, nprimrazzleelectrons = 0, nprimrazzlephotons = 0, nprimrazzleother = 0,
+    nprimrazzledelectrons = 0, nprimrazzledmuons = 0, nprimrazzledphotons = 0, nprimrazzledpions = 0, nprimrazzledpionsthresh = 0,
+    nprimrazzledprotons = 0, nprimrazzledprotonsthresh = 0;
+
+  size_t n_used_hits = 0;
+
+  for(auto&& [pfpCounter, pfp] : enumerate(pfps))
     {
-      const art::Ptr<recob::PFParticle> pfp = fPFPMap[id];
-      FillElement(slcVars["slc_pfp_id"], slcCounter, pfpCounter, id);
+      FillElement(slcVars["slc_pfp_id"], slcCounter, pfpCounter, pfp->Self());
       FillElement(slcVars["slc_pfp_pdg"], slcCounter, pfpCounter, pfp->PdgCode());
       FillElement(slcVars["slc_pfp_n_children"], slcCounter, pfpCounter, pfp->NumDaughters());
 
+      const bool primary_child = prim->Self() == pfp->Parent();
+      FillElement(slcVars["slc_pfp_primary"], slcCounter, pfpCounter, pfp->IsPrimary());
+      FillElement(slcVars["slc_pfp_primary_child"], slcCounter, pfpCounter, primary_child);
+
       if(abs(pfp->PdgCode()) == 11)
-        ++nshws;
+        {
+          ++nshws;
+          if(primary_child)
+            ++nprimshws;
+        }
       else if(abs(pfp->PdgCode()) == 13)
-        ++ntrks;
+        {
+          ++ntrks;
+          if(primary_child)
+            ++nprimtrks;
+        }
       else
         {
-          std::cout << "PFP with PDG: " << pfp->PdgCode() << std::endl;
-          throw std::exception();
+          continue;
         }
 
       const art::Ptr<larpandoraobj::PFParticleMetadata> meta         = pfpToMeta.at(pfp.key());
@@ -1355,6 +1398,10 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
 
       const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
       const std::vector<art::Ptr<recob::Hit>> hits = showersToHits.at(shower.key());
+
+      FillElement(slcVars["slc_pfp_n_hits"], slcCounter, pfpCounter, hits.size());
+      n_used_hits += hits.size();
+
       const int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, true);
       FillElement(slcVars["slc_pfp_true_trackid"], slcCounter, pfpCounter, trackID);
       FillElement(slcVars["slc_pfp_comp"], slcCounter, pfpCounter, Completeness(e, hits, trackID));
@@ -1367,7 +1414,13 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
         {
           const simb::MCParticle* mcp = particleInv->TrackIdToParticle_P(trackID);
           if(mcp != NULL)
-            FillElement(slcVars["slc_pfp_true_pdg"], slcCounter, pfpCounter, mcp->PdgCode());
+            {
+              FillElement(slcVars["slc_pfp_true_pdg"], slcCounter, pfpCounter, mcp->PdgCode());
+              FillElement(slcVars["slc_pfp_true_energy"], slcCounter, pfpCounter, mcp->E());
+              FillElement(slcVars["slc_pfp_true_p_x"], slcCounter, pfpCounter, mcp->Px());
+              FillElement(slcVars["slc_pfp_true_p_y"], slcCounter, pfpCounter, mcp->Py());
+              FillElement(slcVars["slc_pfp_true_p_z"], slcCounter, pfpCounter, mcp->Pz());
+            }
         }
 
       if(track.isNonnull())
@@ -1395,6 +1448,22 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             ++ndazzleprotonsthresh;
           if(dazzlepdg == 0)
             ++ndazzleother;
+
+          if(primary_child)
+            {
+              if(dazzlepdg == 13)
+                ++nprimdazzlemuons;
+              if(dazzlepdg == 211)
+                ++nprimdazzlepions;
+              if(dazzlepdg == 211 && pfpenergy > 32.1)
+                ++nprimdazzlepionsthresh;
+              if(dazzlepdg == 2212)
+                ++nprimdazzleprotons;
+              if(dazzlepdg == 2212 && pfpenergy > 32.7)
+                ++nprimdazzleprotonsthresh;
+              if(dazzlepdg == 0)
+                ++nprimdazzleother;
+            }
         }
 
       if(shower.isNonnull())
@@ -1413,6 +1482,16 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             ++nrazzlephotons;
           if(razzlepdg == 0)
             ++nrazzleother;
+
+          if(primary_child)
+            {
+              if(razzlepdg == 11)
+                ++nprimrazzleelectrons;
+              if(razzlepdg == 22)
+                ++nprimrazzlephotons;
+              if(razzlepdg == 0)
+                ++nprimrazzleother;
+            }
         }
 
       int razzledpdg;
@@ -1432,6 +1511,24 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
         ++nrazzledprotons;
       if(razzledpdg == 2212 && pfpenergy > 32.7)
         ++nrazzledprotonsthresh;
+
+      if(primary_child)
+        {
+          if(razzledpdg == 11)
+            ++nprimrazzledelectrons;
+          if(razzledpdg == 13)
+            ++nprimrazzledmuons;
+          if(razzledpdg == 22)
+            ++nprimrazzledphotons;
+          if(razzledpdg == 211)
+            ++nprimrazzledpions;
+          if(razzledpdg == 211 && pfpenergy > 32.1)
+            ++nprimrazzledpionsthresh;
+          if(razzledpdg == 2212)
+            ++nprimrazzledprotons;
+          if(razzledpdg == 2212 && pfpenergy > 32.7)
+            ++nprimrazzledprotonsthresh;
+        }
     }
 
   FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
@@ -1452,6 +1549,27 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
   FillElement(slcVars["slc_n_razzled_pions_thresh"], slcCounter, nrazzledpionsthresh);
   FillElement(slcVars["slc_n_razzled_protons"], slcCounter, nrazzledprotons);
   FillElement(slcVars["slc_n_razzled_protons_thresh"], slcCounter, nrazzledprotonsthresh);
+
+  FillElement(slcVars["slc_n_primary_trks"], slcCounter, nprimtrks);
+  FillElement(slcVars["slc_n_primary_shws"], slcCounter, nprimshws);
+  FillElement(slcVars["slc_n_primary_dazzle_muons"], slcCounter, nprimdazzlemuons);
+  FillElement(slcVars["slc_n_primary_dazzle_pions"], slcCounter, nprimdazzlepions);
+  FillElement(slcVars["slc_n_primary_dazzle_pions_thresh"], slcCounter, nprimdazzlepionsthresh);
+  FillElement(slcVars["slc_n_primary_dazzle_protons"], slcCounter, nprimdazzleprotons);
+  FillElement(slcVars["slc_n_primary_dazzle_protons_thresh"], slcCounter, nprimdazzleprotonsthresh);
+  FillElement(slcVars["slc_n_primary_dazzle_other"], slcCounter, nprimdazzleother);
+  FillElement(slcVars["slc_n_primary_razzle_electrons"], slcCounter, nprimrazzleelectrons);
+  FillElement(slcVars["slc_n_primary_razzle_photons"], slcCounter, nprimrazzlephotons);
+  FillElement(slcVars["slc_n_primary_razzle_other"], slcCounter, nprimrazzleother);
+  FillElement(slcVars["slc_n_primary_razzled_electrons"], slcCounter, nprimrazzledelectrons);
+  FillElement(slcVars["slc_n_primary_razzled_muons"], slcCounter, nprimrazzledmuons);
+  FillElement(slcVars["slc_n_primary_razzled_photons"], slcCounter, nprimrazzledphotons);
+  FillElement(slcVars["slc_n_primary_razzled_pions"], slcCounter, nprimrazzledpions);
+  FillElement(slcVars["slc_n_primary_razzled_pions_thresh"], slcCounter, nprimrazzledpionsthresh);
+  FillElement(slcVars["slc_n_primary_razzled_protons"], slcCounter, nprimrazzledprotons);
+  FillElement(slcVars["slc_n_primary_razzled_protons_thresh"], slcCounter, nprimrazzledprotonsthresh);
+
+  FillElement(slcVars["slc_n_used_hits"], slcCounter, n_used_hits);
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
