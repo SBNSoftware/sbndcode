@@ -1180,15 +1180,15 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice1DVector(const int col){
   slc_n_razzle_photons_cut_based.resize(col);
   slc_n_razzle_other.resize(col);
   
-  slc_comp.resize(col);
-  slc_pur.resize(col);
-  slc_true_mctruth_id.resize(col);
-  slc_true_event_type.resize(col);
-  slc_true_en_dep.resize(col);
-  slc_true_vtx_x.resize(col);
-  slc_true_vtx_y.resize(col);
-  slc_true_vtx_z.resize(col);
-  slc_true_vtx_t.resize(col);
+  slc_comp.resize(col, -999);
+  slc_pur.resize(col, -999);
+  slc_true_mctruth_id.resize(col, -999);
+  slc_true_event_type.resize(col, -1);
+  slc_true_en_dep.resize(col, -999);
+  slc_true_vtx_x.resize(col, -999);
+  slc_true_vtx_y.resize(col, -999);
+  slc_true_vtx_z.resize(col, -999);
+  slc_true_vtx_t.resize(col, -999);
 }
 
 void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
@@ -1871,20 +1871,30 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
   const std::vector<art::Ptr<recob::Hit>> sliceHits = slicesToHits.at(slc.key());
 
+  //Get map of Track Id - nhits matched to slice
   std::map<int, int> objectHitMap;
   for(auto const &hit : sliceHits)
     objectHitMap[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
 
+  int maxHits  = def_int;
+  int bestTrackID = def_int;
+
+  //Get map of MCTruth - nhits matched to slice
   std::map<const art::Ptr<simb::MCTruth>, int> mcTruthHitMap;
   for(auto const& [trackID, nhits] : objectHitMap)
   {
     const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
     mcTruthHitMap[mct] += nhits;
-  }
 
-  int maxHits  = def_int;
+    if(nhits > maxHits){
+      bestTrackID = trackID; 
+    }
+  }
+  
+  maxHits  = def_int;
   art::Ptr<simb::MCTruth> bestMCT = art::Ptr<simb::MCTruth>();
 
+  //Get MCTruth that deposits the most hits
   for(auto const& [mct, nhits] : mcTruthHitMap)
   {
     if(nhits > maxHits)
@@ -1901,8 +1911,21 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
   slc_pur[slcCounter] = pur;
 
   if(bestMCT.isNonnull())
-  {
-    AnalyseSliceMCTruth(e, bestMCT, slcCounter);
+  { 
+    //if MCTruth is a cosmics, MCTruth is not filled --> get the MCParticle that deposit the most hits
+    if(bestMCT->Origin() == 2){
+      auto const mcp = particleInv->TrackIdToParticle_P(bestTrackID);
+
+      slc_true_event_type[slcCounter] = (int) kCosmic;
+      slc_true_vtx_x[slcCounter] = mcp->Vx();
+      slc_true_vtx_y[slcCounter] = mcp->Vy();
+      slc_true_vtx_z[slcCounter] = mcp->Vz();
+      slc_true_vtx_t[slcCounter] = mcp->T();
+    }
+    // if MCTruth is not a cosmics, fill the vector as usual
+    else{
+      AnalyseSliceMCTruth(e, bestMCT, slcCounter);
+    }
   }
 }
 
@@ -1910,13 +1933,6 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 {
   if(fDebug){
     std::cout << "Analysing Slice MCTruth ...";
-  }
-
-  if(mct->Origin() == 2){
-    
-    slc_true_event_type[slcCounter] = (int) kCosmic;
-
-    return;
   }
 
   const simb::MCNeutrino mcn = mct->GetNeutrino();
@@ -1929,12 +1945,20 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
   art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
   const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
   
-  float trueEnDep = 0.;
   int neutral_pions = 0;
-
+  float trueEnDep = 0.;
+  
   for(auto const& mcp : MCParticleVec)
   {
-
+    if(mcp->Process() == "primary" && mcp->StatusCode() == 1)
+    {
+      switch(abs(mcp->PdgCode()))
+      { 
+        case 111:
+          ++neutral_pions;
+          break;
+      }
+    }
     std::vector<const sim::IDE*> ides = backTracker->TrackIdToSimIDEs_Ps(mcp->TrackId());
     for(auto const& ide : ides)
       trueEnDep += ide->energy / 1000.;
@@ -1969,8 +1993,6 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
     else
       slc_true_event_type[slcCounter] = (int) kUnknownEv;
   }
-
-  //std::cout << "slc mct #" << slcCounter << " is event type " << slc_true_event_type[slcCounter] << std::endl;
 
   slc_true_mctruth_id[slcCounter] = mct.key();
   slc_true_en_dep[slcCounter] = trueEnDep;
