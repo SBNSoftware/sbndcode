@@ -56,6 +56,7 @@
 #include "sbnobj/Common/SBNEventWeight/EventWeightMap.h"
 
 #include "NCPiZeroStructs.h"
+#include "SecondShower/SecondShowerFinderAlg.h"
 
 #include <numeric>
 
@@ -176,6 +177,8 @@ public:
   void GetVar(VecVar *vec, std::vector<std::vector<T>> &var);
 
 private:
+
+  SecondShowerFinderAlg fSecondShowerFinderAlg;
 
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
