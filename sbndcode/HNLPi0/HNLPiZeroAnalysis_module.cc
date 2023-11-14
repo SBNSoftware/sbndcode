@@ -45,6 +45,8 @@
 #include "lardataobj/RecoBase/MCSFitResult.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
+#include "lardataobj/RecoBase/OpFlash.h"
+#include "lardataobj/RecoBase/OpHit.h"
 
 #include "larcoreobj/SummaryData/POTSummary.h"
 
@@ -196,6 +198,8 @@ private:
 	  fRangeModuleLabel, fClosestApproachModuleLabel, fStoppingChi2ModuleLabel,
 	  fRazzleModuleLabel, fCosmicDistModuleLabel, fShowerDensityFitModuleLabel,
 	  fShowerTrackFitModuleLabel, fCNNScoreModuleLabel;
+    std::vector<std::string> fOpFlashesModuleLabel;
+ 
   bool fBeamOff; 
   bool fMeVPrtl;
   bool fDebug;
@@ -302,7 +306,17 @@ private:
   std::vector<std::vector<double>>	slc_pfp_shower_track_length, slc_pfp_shower_track_width;
   std::vector<std::vector<double>>	slc_pfp_shower_density_grad, slc_pfp_shower_density_pow;
   
-  
+  // Event Tree: OpFlashes
+  std::vector<int> _flash_id;
+  std::vector<double> _flash_time;
+  std::vector<double> _flash_total_pe;
+  std::vector<std::vector<double>> _flash_pe_v;
+  std::vector<double> _flash_y;
+  std::vector<double> _flash_yerr ;
+  std::vector<double> _flash_z;
+  std::vector<double> _flash_zerr;
+  std::vector<int> _flash_tpc;
+
   //Sub Run Tree
   TTree *fSubRunTree;
   double _pot;
@@ -322,6 +336,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fSliceModuleLabel 		= p.get<art::InputTag>("SlideModuleLabel", "pandoraSCE");
   fTrackModuleLabel		= p.get<art::InputTag>("TrackModuleLabel", "pandoraSCETrack");
   fShowerModuleLabel 		= p.get<art::InputTag>("ShowerModuleLabel", "pandoraSCEShower");
+  fOpFlashesModuleLabel = p.get<std::vector<std::string>>("OpFlashesModuleLabel",   {"opflashtpc0", "opflashtpc1"});
   fVertexModuleLabel 		= p.get<art::InputTag>("VertexModuleLabel", "pandoraSCE");
   fCRUMBSModuleLabel 		= p.get<art::InputTag>("CRUMBSModuleLabelr", "crumbs");
   fOpT0ModuleLabel 		= p.get<art::InputTag>("OpT0ModuleLabel", "opt0finderSCE");
@@ -523,6 +538,17 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_pfp_shower_track_width", &slc_pfp_shower_track_width);
   fEventTree->Branch("slc_pfp_shower_density_grad", &slc_pfp_shower_density_grad);
   fEventTree->Branch("slc_pfp_shower_density_pow", &slc_pfp_shower_density_pow);
+
+  // Event Tree: OpFlashes
+  fEventTree->Branch("flash_time","std::vector<double>", &_flash_time);
+  fEventTree->Branch("flash_total_pe", "std::vector<double>", &_flash_total_pe);
+  fEventTree->Branch("flash_pe_v","std::vector<std::vector<double>>", &_flash_pe_v);
+  fEventTree->Branch("flash_tpc", "std::vector<int>", &_flash_tpc);
+  fEventTree->Branch("flash_y","std::vector<double>", &_flash_y);
+  fEventTree->Branch("flash_yerr", "std::vector<double>", &_flash_yerr);
+  fEventTree->Branch("flash_z","std::vector<double>", &_flash_z);
+  fEventTree->Branch("flash_zerr", "std::vector<double>", &_flash_zerr);
+
 }
 
 void sbnd::HNLPiZeroAnalysis::analyze(art::Event const& e)
@@ -587,6 +613,47 @@ void sbnd::HNLPiZeroAnalysis::analyze(art::Event const& e)
     std::cout << "Shower product " << fShowerModuleLabel << " not found..." << std::endl;
     throw std::exception();
   }
+
+  // Get OpFlashes
+  art::Handle<std::vector<recob::OpFlash>> opflashListHandle; // 2 opflashes objects, one for each TPC
+
+  std::cout<<"Saving OpFlashes..."<<std::endl;
+  _flash_id.clear();
+  _flash_time.clear();
+  _flash_total_pe.clear();
+  _flash_pe_v.clear();
+  _flash_tpc.clear();
+  _flash_y.clear();
+  _flash_yerr.clear();
+  _flash_z.clear();
+  _flash_zerr.clear();
+    for (size_t s = 0; s < fOpFlashesModuleLabel.size(); s++) 
+    {
+      std::cout<<"  --OpFlash Module Label:"<<fOpFlashesModuleLabel[s]<<std::endl;
+      e.getByLabel(fOpFlashesModuleLabel[s], opflashListHandle);
+      if(!opflashListHandle.isValid())
+      {
+        std::cout<<"Did not find any OpFlash for label "<<fOpFlashesModuleLabel[s]<<std::endl;
+      }
+      else
+      {
+        for (unsigned int i = 0; i < opflashListHandle->size(); ++i) 
+        {
+          // Get OpFlash
+          art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
+          recob::OpFlash Flash = *FlashPtr;
+          _flash_time.push_back( Flash.AbsTime() );
+          _flash_total_pe.push_back( Flash.TotalPE() );
+          _flash_pe_v.push_back( Flash.PEs() );
+          _flash_tpc.push_back( s );
+          _flash_y.push_back( Flash.YCenter() );
+          _flash_yerr.push_back( Flash.YWidth() );
+          _flash_z.push_back( Flash.ZCenter() );
+          _flash_zerr.push_back( Flash.ZWidth() );
+        }
+      }
+    }
+
 
   SetupMaps(e, hitHandle, pfpHandle);
   AnalyseMeVPrtlTruth(e, mevptHandle);
