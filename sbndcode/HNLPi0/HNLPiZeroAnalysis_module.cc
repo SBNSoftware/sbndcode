@@ -258,6 +258,7 @@ private:
   std::vector<size_t> 	slc_true_mctruth_id;
   std::vector<int> 	slc_true_event_type;
   std::vector<float> 	slc_true_en_dep;
+  std::vector<float> 	slc_true_vtx_x, slc_true_vtx_y, slc_true_vtx_z, slc_true_vtx_t;
   
   // Event Tree: Slice -> PFP -- 2D vector
   std::vector<std::vector<size_t>>	slc_pfp_id;
@@ -445,6 +446,10 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_true_mctruth_id", &slc_true_mctruth_id);
   fEventTree->Branch("slc_true_event_type", &slc_true_event_type);
   fEventTree->Branch("slc_true_en_dep", &slc_true_en_dep);
+  fEventTree->Branch("slc_true_vtx_x", &slc_true_vtx_x);
+  fEventTree->Branch("slc_true_vtx_y", &slc_true_vtx_y);
+  fEventTree->Branch("slc_true_vtx_z", &slc_true_vtx_z);
+  fEventTree->Branch("slc_true_vtx_t", &slc_true_vtx_t);
 
   // Event Tree: Slice -> PFP
   fEventTree->Branch("slc_pfp_id", &slc_pfp_id);
@@ -692,6 +697,10 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_true_mctruth_id.clear();
   slc_true_event_type.clear();
   slc_true_en_dep.clear();
+  slc_true_vtx_x.clear();
+  slc_true_vtx_y.clear();
+  slc_true_vtx_z.clear();
+  slc_true_vtx_t.clear();
 
   slc_pfp_id.clear();
   slc_pfp_pdg.clear();
@@ -1109,6 +1118,10 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice1DVector(const int col){
   slc_true_mctruth_id.resize(col);
   slc_true_event_type.resize(col);
   slc_true_en_dep.resize(col);
+  slc_true_vtx_x.resize(col);
+  slc_true_vtx_y.resize(col);
+  slc_true_vtx_z.resize(col);
+  slc_true_vtx_t.resize(col);
 }
 
 void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
@@ -1833,8 +1846,9 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
   }
 
   if(mct->Origin() == 2){
+    
     slc_true_event_type[slcCounter] = (int) kCosmic;
-    //std::cout << "slc mct #" << slcCounter << " is event type " << slc_true_event_type[slcCounter] << std::endl;
+
     return;
   }
 
@@ -1853,12 +1867,6 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 
   for(auto const& mcp : MCParticleVec)
   {
-    switch(abs(mcp->PdgCode()))
-    { 
-      case 111:
-        ++neutral_pions;
-        break;
-    }
 
     std::vector<const sim::IDE*> ides = backTracker->TrackIdToSimIDEs_Ps(mcp->TrackId());
     for(auto const& ide : ides)
@@ -1873,10 +1881,8 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
   if (_is_hnl && fv)
   {
     slc_true_event_type[slcCounter] = (int) kHNL;
-    nu_signal[slcCounter] = true;
   }else
   {
-    nu_signal[slcCounter] = false;
     if(_is_hnl && !fv && av)
       slc_true_event_type[slcCounter] = (int) kHNLNonFV;
     else if(_is_hnl && !av)
@@ -1901,6 +1907,10 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 
   slc_true_mctruth_id[slcCounter] = mct.key();
   slc_true_en_dep[slcCounter] = trueEnDep;
+  slc_true_vtx_x[slcCounter] = nu.Vx();
+  slc_true_vtx_y[slcCounter] = nu.Vy();
+  slc_true_vtx_z[slcCounter] = nu.Vz();
+  slc_true_vtx_t[slcCounter] = nu.T();
 }
 
 DEFINE_ART_MODULE(sbnd::HNLPiZeroAnalysis)
