@@ -15,3 +15,4 @@ art_make(
 )
 
 install_fhicl()
+add_subdirectory(TPC)
