@@ -2,6 +2,7 @@
 // Class:       SBNDPMTDecoder
 // Plugin Type: producer (Unknown Unknown)
 // File:        SBNDPMTDecoder_module.cc
+// Author:      Lynn Tung (lynnt@uchicago.edu)
 //
 // Generated at Wed Aug 23 12:28:48 2023 by Lynn Tung using cetskelgen
 // from  version .
@@ -23,7 +24,7 @@
 #include "artdaq-core/Data/ContainerFragment.hh"
 
 #include "art_root_io/TFileService.h"
-#include "TH1F.h"
+#include "TH1D.h"
 #include "TNtuple.h"
 
 #include "lardataobj/RawData/OpDetWaveform.h"
@@ -92,7 +93,6 @@ public:
     void produce(art::Event& e) override;
     bool check_fragments(std::vector<artdaq::Fragment> frag_v, uint32_t& trig_ttt, uint32_t& trig_len);
     void get_waveforms(artdaq::Fragment & frag, std::vector<std::vector<short>> & wvfm_v);
-    void analyze_caen_fragment(artdaq::Fragment &frag);
     
     std::vector<raw::OpDetWaveform> fWaveforms;
     std::vector<raw::OpDetWaveform> fTriggerWaveforms;
@@ -106,6 +106,11 @@ private:
     bool fverbose;
     std::string fch_instance_name;
     std::string ftr_instance_name;
+
+    // histogram info  
+    std::stringstream histname; //raw waveform hist name
+    art::ServiceHandle<art::TFileService> tfs;
+    uint evt_counter = 0;
 };
 
 
@@ -128,9 +133,10 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     std::unique_ptr< std::vector< raw::OpDetWaveform > > wvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
     std::unique_ptr< std::vector< raw::OpDetWaveform > > twvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
 
-
     std::vector<art::Handle<artdaq::Fragments>> fragmentHandles;
     fragmentHandles = evt.getMany<std::vector<artdaq::Fragment>>();
+
+    evt_counter++;
 
     trig_frag_v.clear(); 
     // ! make the max number of flashes configurable?
@@ -140,6 +146,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
 
     fWaveforms.clear();
     fTriggerWaveforms.clear();
+    uint ncont = 0; // counter for number of containers
 
     for (auto handle : fragmentHandles){
         if (!handle.isValid() || handle->size() == 0){
@@ -150,7 +157,13 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             //  Pull mode!
             for (auto cont : *handle){
                 artdaq::ContainerFragment contf(cont);
+                ncont++;
+
                 if (contf.fragment_type() == sbndaq::detail::FragmentType::CAENV1730){
+                    if (ncont==1){ 
+                        // use the size of the first container to re-initialize 
+                        trig_frag_v.resize(contf.block_count());
+                    }
                     for (size_t ii = 0; ii < contf.block_count(); ++ii){
                         auto frag = *contf[ii].get();
                         trig_frag_v[ii].push_back(frag);                        
@@ -161,17 +174,17 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         else{
             if (handle->front().type() == sbndaq::detail::FragmentType::CAENV1730){
                 //  Push mode! 
-                // std::cout << "Found normal CAEN fragments." << std::endl;
                 for (auto frag : *handle){
                         if (frag.fragmentID() == 19) // ! hardcoded for now!
                             continue;
-                    // analyze_caen_fragment(frag);
                 }
             }
         }
     }
-    std::vector<uint32_t> trig_ttt_v;
-    std::vector<uint32_t> trig_len_v;
+    auto ntrig = trig_frag_v.size();
+
+    std::vector<uint32_t> trig_ttt_v(ntrig,0);
+    std::vector<uint32_t> trig_len_v(ntrig,0);
 
     for (size_t i=0; i < trig_frag_v.size(); i++){
         // frag_v contains all fragments for a single trigger 
@@ -183,13 +196,15 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         bool pass_check = check_fragments(frag_v, trig_ttt, trig_len);        
         if (pass_check == false)
             continue;
-        trig_ttt_v.push_back(trig_ttt);
-        trig_len_v.push_back(trig_len);
+        // TODO: once we get the event trigger from other timing subystems,
+        //       we can pass trigger based on the event trigger time
+        //       instead of passing all triggers
+        trig_ttt_v.at(i) = trig_ttt;
+        trig_len_v.at(i) = trig_len;
         auto nfrag = frag_v.size();
         std::cout << "Trigger " << i << " has TTT=" << trig_ttt << " ns and nentries=" << trig_len  << " ticks in " << nfrag << " fragments." << std::endl;
     }
 
-    auto ntrig = trig_ttt_v.size();
     for (size_t itrig=0; itrig < ntrig; itrig++){
 
         auto ittt = trig_ttt_v.at(itrig);
@@ -200,11 +215,13 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
 
         // if this waveform is short, skip it 
         if (ilen < fwaveform_length) continue;
+
         std::vector<std::vector<short>> iwvfm_v;
         for (size_t idx=0; idx<ifrag_v.size(); idx++){
             auto frag = ifrag_v.at(idx);
             get_waveforms(frag, iwvfm_v);
             fragid_v.at(idx) = frag.fragmentID();
+            std::cout << "frag ID is: " <<  frag.fragmentID() << std::endl;
         }
         for (size_t jtrig=itrig+1; jtrig < ntrig; jtrig++){
             bool pass_checks = true;
@@ -219,13 +236,13 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 for (size_t idx=0; idx<jfrag_v.size(); idx++){
                     auto frag = jfrag_v.at(idx);
                     if (fragid_v.at(idx) != frag.fragmentID()){
+                        // check that the two fragments originated from the same board
                         std::cout << "Error: fragment IDs do not match between triggers " << itrig << " and " << jtrig << std::endl;
                         pass_checks=false;
                         break;
                     }
                     get_waveforms(frag, jwvfm_v);
                 }
-                // perform checks!
                 // check that the number of waveforms are the same 
                 if (jwvfm_v.size() != iwvfm_v.size()){
                     std::cout << "Error: number of channels in extended fragment " << jtrig << " does not match number of channels in original fragment " << itrig << std::endl;
@@ -244,6 +261,21 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         std::cout << "Obtained waveforms for TTT at " << ittt << "\n" 
                     << "\tNumber of channels: " << iwvfm_v.size() << "\n"
                     << "\tNumber of entries: " << iwvfm_v.at(0).size() << std::endl;
+
+        // histo: save waveforms section for combined waveforms
+        // only save from the first event in every file
+        if (evt_counter==1){
+            for (size_t i = 0; i < iwvfm_v.size(); i++){
+                auto combined_wvfm = iwvfm_v[i];
+                histname.str(std::string());
+                histname << "evt_" << evt.event() << "_ch_" << i << "_combined_wvfm";
+
+                TH1D *wvfmHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), combined_wvfm.size(), 0, combined_wvfm.size());
+                wvfmHist->GetXaxis()->SetTitle("ticks");
+                for(unsigned int n = 0; n < combined_wvfm.size(); n++) 
+                    wvfmHist->SetBinContent(n + 1, (double)combined_wvfm[n]);
+            }
+        } // histo section 
     } // loop over triggers 
 
 
@@ -336,62 +368,6 @@ void sbndaq::SBNDPMTDecoder::get_waveforms(artdaq::Fragment & frag, std::vector<
         }
         wvfm_v.push_back(wvfm);
     }
-}
-
-void sbndaq::SBNDPMTDecoder::analyze_caen_fragment(artdaq::Fragment & frag)  {
-
-
-    CAENV1730Fragment bb(frag);
-    auto const* md = bb.Metadata();
-    CAENV1730Event const* event_ptr = bb.Event();
-    CAENV1730EventHeader header = event_ptr->Header;
-    
-    auto fragID = static_cast<int>(frag.fragmentID()); 
-    auto boardID = header.boardID;
-
-    std::cout << "\tFrom header, event counter is "  << header.eventCounter   << "\n";
-    std::cout << "\tFrom header, board id is "     << boardID << "\n";
-    std::cout << "\tFrom fragment, fragment id is "  << fragID << "\n";
-
-    uint32_t ttt = header.triggerTimeTag*8; // downsampled trigger time tag; TTT points to end of wvfm w.r.t. pps
-    std::cout << "From header, downsampled TTT is " << ttt << "\n";
-
-    auto nch = md->nChannels;    
-    uint32_t ev_size_quad_bytes = header.eventSize;
-    uint32_t evt_header_size_quad_bytes = sizeof(CAENV1730EventHeader)/sizeof(uint32_t);
-    uint32_t data_size_double_bytes = 2*(ev_size_quad_bytes - evt_header_size_quad_bytes);
-    uint32_t wvfm_length = data_size_double_bytes/nch;
-    std::cout << "\tChannel waveform length = " << wvfm_length << "\n";
-
-    // auto trigger_position = ttt - fttt_post_percent*wvfm_length; // ticks, position of trigger in waveform
-    // auto trigger_time = trigger_position*2*0.001; // (2 ns per tick) * (1 us per 1000 ns)
-    // std::cout << "\tTrigger time is " << trigger_time << " us" << std::endl; 
-
-    // // --store the tick value for each acquisition 
-    // const uint16_t* data_begin = reinterpret_cast<const uint16_t*>(frag.dataBeginBytes() 
-	// 							   + sizeof(CAENV1730EventHeader));
-    // const uint16_t* value_ptr =  data_begin;
-    // uint16_t value = 0;
-    // size_t ch_offset = 0;
-    // //--loop over channels
-    // for (size_t i_ch=0; i_ch<nch; ++i_ch){
-    //     raw::OpDetWaveform wvfm;
-    //     wvfm.Waveform() = std::vector<short>(wvfm_length,0);
-    //     wvfm.SetChannelNumber(boardID*100 + (uint)i_ch); // dummy channel number: boardID*100 + channel number
-    //     wvfm.SetTimeStamp(trigger_time);
-    //     ch_offset = (size_t)(i_ch * wvfm_length);      
-    //     //--loop over waveform samples
-    //     for(size_t i_t=0; i_t<wvfm_length; ++i_t){ 
-    //         value_ptr = data_begin + ch_offset + i_t; /*pointer arithmetic*/
-    //         value = *(value_ptr);
-
-    //         wvfm.at(i_t) = value;
-    //     }
-    //     if (i_ch == 15)
-    //         fTriggerWaveforms.push_back(wvfm);
-    //     else
-    //     fWaveforms.push_back(wvfm);
-    // }
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDPMTDecoder)
