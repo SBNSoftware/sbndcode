@@ -1,0 +1,13 @@
+BEGIN_PROLOG 
+
+pmtdecoder: 
+{
+    module_type: "SBNDPMTDecoder"
+
+    Verbose: true
+    pmtInstanceName: "PMTChannels"
+    ftrigInstanceName: "FTrigChannels"
+
+}
+
+END_PROLOG

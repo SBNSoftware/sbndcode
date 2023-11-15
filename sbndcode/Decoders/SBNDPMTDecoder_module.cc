@@ -46,40 +46,7 @@ namespace sbndaq {
 
 class sbndaq::SBNDPMTDecoder : public art::EDProducer {
 public:
-    struct Config {
-        fhicl::Atom<double> ttt_post_percent {
-            fhicl::Name("ttt_post_percent"),
-            fhicl::Comment("the percent of the waveform kept after the trigger"),
-            0.9
-        };
-        fhicl::Atom<int> ttt_downsample {
-            fhicl::Name("ttt_downsample"),
-            fhicl::Comment("the downsampling factor from clock counts to ticks, default=4"),
-            8
-        };
-        fhicl::Atom<uint> waveform_length {
-            fhicl::Name("waveform_length"),
-            fhicl::Comment("the expected length of the waveform, default=5000 ticks. Used to differentiate shortened waveforms"),
-            5000
-        };
-        fhicl::Atom<bool> verbose {
-            fhicl::Name("verbose"),
-            fhicl::Comment("toggle for additional text printout"),
-            true
-        };
-        fhicl::Atom<std::string> ch_instance_name {
-            fhicl::Name("ch_instance_name"),
-            fhicl::Comment("instance name for pmt channel wvfm data product"),
-            "PMTChannels"
-        };
-        fhicl::Atom<std::string> tr_instance_name {
-            fhicl::Name("tr_instance_name"),
-            fhicl::Comment("instance name for trigger channels wvfm data product"),
-            "TriggerChannels"
-        };
-    };
-    using Parameters = art::EDProducer::Table<Config>;
-    explicit SBNDPMTDecoder(Parameters const& config);
+    explicit SBNDPMTDecoder(fhicl::ParameterSet const& p);
     // The compiler-generated destructor is fine for non-base
     // classes without bare pointers or other resource use.
 
@@ -100,9 +67,6 @@ public:
     std::vector<std::vector<artdaq::Fragment>>  trig_frag_v; // every entry should correspond to 1 [flash] trigger 
 
 private:
-    double fttt_post_percent;
-    int fttt_downsample;
-    uint fwaveform_length;
     bool fverbose;
     std::string fch_instance_name;
     std::string ftr_instance_name;
@@ -114,15 +78,12 @@ private:
 };
 
 
-sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(Parameters const& config)
-    : EDProducer{config}  // ,
+sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
+    : EDProducer{p}  // ,
 {
-    fttt_post_percent = config().ttt_post_percent();
-    fttt_downsample = config().ttt_downsample();
-    fwaveform_length = config().waveform_length();
-    fverbose = config().verbose();
-    fch_instance_name = config().ch_instance_name();
-    ftr_instance_name = config().tr_instance_name();
+    fverbose          = p.get<bool>("Verbose",true);
+    fch_instance_name = p.get<std::string>("pmtInstanceName","PMTChannels");
+    ftr_instance_name = p.get<std::string>("ftrigInstanceName","FTrigChannels");
 
     produces< std::vector< raw::OpDetWaveform > >(fch_instance_name); 
     produces< std::vector< raw::OpDetWaveform > >(ftr_instance_name);
@@ -214,14 +175,14 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         std::vector<int> fragid_v(ifrag_v.size(),0);
 
         // if this waveform is short, skip it 
-        if (ilen < fwaveform_length) continue;
+        // TODO: REPLACE 5000 WITH VARIABLE SET TO NSAMPLES FROM THE METADATA
+        if (ilen < 5000) continue;
 
         std::vector<std::vector<short>> iwvfm_v;
         for (size_t idx=0; idx<ifrag_v.size(); idx++){
             auto frag = ifrag_v.at(idx);
             get_waveforms(frag, iwvfm_v);
             fragid_v.at(idx) = frag.fragmentID();
-            std::cout << "frag ID is: " <<  frag.fragmentID() << std::endl;
         }
         for (size_t jtrig=itrig+1; jtrig < ntrig; jtrig++){
             bool pass_checks = true;
