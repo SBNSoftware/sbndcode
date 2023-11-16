@@ -945,7 +945,7 @@ std::vector<int> SBNDOpT0Finder::PDNamesToList(std::vector<std::string> pd_names
 bool SBNDOpT0Finder::UseArapucas(std::vector<std::string> pd_names){
   bool found_ara = false;
   for (auto name : pd_names){
-    if ((name == "xarapuca_vis") | ( name =="xarapuca_vis")){
+    if ((name == "xarapuca_vis") || ( name =="xarapuca_vis")){
       found_ara = true;
       break;
     }
@@ -956,9 +956,9 @@ bool SBNDOpT0Finder::UseArapucas(std::vector<std::string> pd_names){
 std::vector<int> SBNDOpT0Finder::GetChannelTypes(int nopdets){
   std::vector<int> out_v(nopdets,-1); 
   for (size_t ch = 0; ch < out_v.size(); ch ++){
-    if (_pds_map.isPDType(ch, "pmt_uncoated") | _pds_map.isPDType(ch, "pmt_coated"))
+    if (_pds_map.isPDType(ch, "pmt_uncoated") || _pds_map.isPDType(ch, "pmt_coated"))
       out_v.at(ch) = 0;
-    else if (_pds_map.isPDType(ch, "xarapuca_vis") | _pds_map.isPDType(ch, "xarapuca_vuv"))
+    else if (_pds_map.isPDType(ch, "xarapuca_vis") || _pds_map.isPDType(ch, "xarapuca_vuv"))
       out_v.at(ch) = 1;
   }
   return out_v;
