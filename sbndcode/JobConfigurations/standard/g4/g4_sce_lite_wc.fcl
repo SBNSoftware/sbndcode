@@ -1,4 +1,4 @@
-#include "g4_sce_simphotontime_filter_lite.fcl"
+#include "g4_sce_lite.fcl"
 
 outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
                                "keep *_ionandscint_*_*",
@@ -7,18 +7,10 @@ outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
 
 physics.simulate: [
   rns,
-  genericcrtintime,
   loader,
-  larg4outtime,
-  ionandscintouttime,
-  pdfastsimouttime,
-  genericcrtouttime,
-  ionandscintoutintime,
-  pdfastsimoutintime,
-  ionandscintoutouttime,
-  pdfastsimoutouttime,
   largeant,
   ionandscint,
+  ionandscintout,
   pdfastsim,
   pdfastsimout,
   genericcrt
