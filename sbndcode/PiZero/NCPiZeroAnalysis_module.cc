@@ -114,8 +114,9 @@ public:
                      const art::Handle<std::vector<recob::Shower>> &showerHandle);
 
   void AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const std::vector<art::Ptr<recob::PFParticle>> &pfps,
-                   const art::Ptr<recob::Vertex> &vtx, const int slcCounter, const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
-                   const art::Handle<std::vector<recob::Track>> &trackHandle, const art::Handle<std::vector<recob::Shower>> &showerHandle);
+                   const std::vector<art::Ptr<recob::Hit>> &sliceHits, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
+                   const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const art::Handle<std::vector<recob::Track>> &trackHandle,
+                   const art::Handle<std::vector<recob::Shower>> &showerHandle);
   void AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
                     const art::Handle<std::vector<recob::Track>> &trackHandle);
   void AnalyseShower(const art::Event &e, const art::Ptr<recob::Shower> &shower, const int slcCounter, const int pfpCounter,
@@ -1316,7 +1317,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
       ResizeSubVectors(slcVars, "slc_pfp", slcCounter, pfps.size());
 
-      AnalysePFPs(e, prim, pfps, vtx, slcCounter, pfpHandle, trackHandle, showerHandle);
+      AnalysePFPs(e, prim, pfps, hits, vtx, slcCounter, pfpHandle, trackHandle, showerHandle);
 
       if(abs(prim->PdgCode()) == 13 || abs(prim->PdgCode()) == 11)
         ResizeSubVectors(slcVars, "slc_pzc", slcCounter, 0);
@@ -1330,8 +1331,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 }
 
 void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const std::vector<art::Ptr<recob::PFParticle>> &pfps,
-                                         const art::Ptr<recob::Vertex> &vtx, const int slcCounter, const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
-                                         const art::Handle<std::vector<recob::Track>> &trackHandle, const art::Handle<std::vector<recob::Shower>> &showerHandle)
+                                         const std::vector<art::Ptr<recob::Hit>> &sliceHits, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
+                                         const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const art::Handle<std::vector<recob::Track>> &trackHandle,
+                                         const art::Handle<std::vector<recob::Shower>> &showerHandle)
 {
   art::FindOneP<recob::Track>                      pfpToTrack(pfpHandle, e, fTrackModuleLabel);
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
@@ -1350,7 +1352,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
     nprimrazzledelectrons = 0, nprimrazzledmuons = 0, nprimrazzledphotons = 0, nprimrazzledpions = 0, nprimrazzledpionsthresh = 0,
     nprimrazzledprotons = 0, nprimrazzledprotonsthresh = 0;
 
-  size_t n_used_hits = 0;
+  std::vector<art::Ptr<recob::Hit>> used_hits;
 
   for(auto&& [pfpCounter, pfp] : enumerate(pfps))
     {
@@ -1400,7 +1402,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
       const std::vector<art::Ptr<recob::Hit>> hits = showersToHits.at(shower.key());
 
       FillElement(slcVars["slc_pfp_n_hits"], slcCounter, pfpCounter, hits.size());
-      n_used_hits += hits.size();
+      used_hits.insert(used_hits.end(), hits.begin(), hits.end());
 
       const int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, true);
       FillElement(slcVars["slc_pfp_true_trackid"], slcCounter, pfpCounter, trackID);
@@ -1569,7 +1571,22 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
   FillElement(slcVars["slc_n_primary_razzled_protons"], slcCounter, nprimrazzledprotons);
   FillElement(slcVars["slc_n_primary_razzled_protons_thresh"], slcCounter, nprimrazzledprotonsthresh);
 
-  FillElement(slcVars["slc_n_used_hits"], slcCounter, n_used_hits);
+  FillElement(slcVars["slc_n_used_hits"], slcCounter, used_hits.size());
+
+  if(prim->PdgCode() == 12 || prim->PdgCode() == 14)
+    {
+      std::vector<art::Ptr<recob::Hit>> unused_hits;
+
+      for(auto const& hit : sliceHits)
+        {
+          if(std::find(used_hits.begin(), used_hits.end(), hit) == used_hits.end())
+            unused_hits.push_back(hit);
+        }
+
+      std::cout << prim->PdgCode() << std::endl;
+
+      fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, nprimrazzledphotons==1);
+    }
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
