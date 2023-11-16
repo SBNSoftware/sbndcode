@@ -1,3 +1,6 @@
+#ifndef NCPIZEROSTRUCTS_H_SEEN
+#define NCPIZEROSTRUCTS_H_SEEN
+
 enum EventType
   {
     kSignalNCPiZero,
@@ -268,3 +271,5 @@ template <typename T,
   };
   return iterable_wrapper{ std::forward<T>(iterable) };
 }
+
+#endif
