@@ -70,106 +70,41 @@ SecondShowerFinderAlg::SecondShowerFinderAlg(fhicl::ParameterSet const& p)
 
 bool SecondShowerFinderAlg::FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw)
 {
-  HitVec u_hits, v_hits, w_hits;
-  HitVec u_usedHits, v_usedHits, w_usedHits;
+  ClusterObj u_hits, v_hits, w_hits;
+  ClusterObj u_usedHits, v_usedHits, w_usedHits;
 
-  for(auto const& hit : hits)
-    {
-      switch(hit->View())
-        {
-        case geo::kU:
-          u_hits.push_back(hit);
-          break;
-        case geo::kV:
-          v_hits.push_back(hit);
-          break;
-        case geo::kW:
-          w_hits.push_back(hit);
-          break;
-        default:
-          std::cout << "Holy shit SBND, you got new planes" << std::endl;
-          break;
-        }
-    }
+  SeparateViews(e, hits, u_hits, v_hits, w_hits);
+  SeparateViews(e, usedHits, u_usedHits, v_usedHits, w_usedHits);
 
-  for(auto const& hit : usedHits)
-    {
-      switch(hit->View())
-        {
-        case geo::kU:
-          u_usedHits.push_back(hit);
-          break;
-        case geo::kV:
-          v_usedHits.push_back(hit);
-          break;
-        case geo::kW:
-          w_usedHits.push_back(hit);
-          break;
-        default:
-          std::cout << "Holy shit SBND, you got new planes" << std::endl;
-          break;
-        }
-    }
+  if(draw)
+    std::cout << "Extra Hits: " << hits.size()
+              << "\tU: " << u_hits.size()
+              << "\tV: " << v_hits.size()
+              << "\tW: " << w_hits.size() << std::endl;
 
-  std::cout << "Extra Hits: " << hits.size()
-            << "\tU: " << u_hits.size()
-            << "\tV: " << v_hits.size()
-            << "\tW: " << w_hits.size() << std::endl;
+  const bool u_yes = AnalyseViewHits(u_hits, u_usedHits, "U view", draw);
+  const bool v_yes = AnalyseViewHits(v_hits, v_usedHits, "V view", draw);
+  const bool w_yes = AnalyseViewHits(w_hits, w_usedHits, "W view", draw);
 
-  bool u_yes = AnalyseViewHits(e, u_hits, u_usedHits, "U view", draw);
-  bool v_yes = AnalyseViewHits(e, v_hits, v_usedHits, "V view", draw);
-  bool w_yes = AnalyseViewHits(e, w_hits, w_usedHits, "W view", draw);
-
-  if(u_yes && v_yes && w_yes)
-    std::cout << "YES!- GOOD JOB" << std::endl;
-
-  return false;
+  return u_yes && v_yes && w_yes;
 }
 
-bool SecondShowerFinderAlg::AnalyseViewHits(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const TString &name, const bool draw)
+bool SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw)
 {
-  art::ServiceHandle<geo::Geometry const> geom;
-  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
-
-  ClusterObj allHits;
   std::vector<ClusterObj> clusters;
 
   if(draw)
-    DrawView(hits, usedHits, clusters, name);
-
-  for(auto const& hit : hits)
     {
-      const geo::WireID wireID = hit->WireID();
-      const double x = detProp.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
-
-      auto const xyz = geom->Wire(wireID).GetCenter();
-      double wire_pos = std::numeric_limits<double>::lowest();
-
-      switch(hit->View())
-        {
-        case geo::kU:
-          wire_pos = YZtoU(xyz.Y(), xyz.Z());
-          break;
-        case geo::kV:
-          wire_pos = YZtoV(xyz.Y(), xyz.Z());
-          break;
-        case geo::kW:
-          wire_pos = YZtoW(xyz.Y(), xyz.Z());
-          break;
-        default:
-          std::cout << "Holy shit SBND, you got new planes" << std::endl;
-          break;
-        }
-
-      allHits.push_back(new HitObj({hit, false, x, wire_pos}));
+      std::cout << "Drawing " << name << " pre-clustering... (" << hits.size() << " unused hits)" << std::endl;
+      DrawView(hits, usedHits, clusters, name);
     }
 
-  for(auto const& hitObjA : allHits)
+  for(auto const& hitObjA : hits)
     {
       if(hitObjA->used)
         continue;
 
-      for(auto const& hitObjB : allHits)
+      for(auto const& hitObjB : hits)
         {
           if(hitObjA->hit == hitObjB->hit)
             continue;
@@ -193,32 +128,7 @@ bool SecondShowerFinderAlg::AnalyseViewHits(const art::Event &e, const HitVec &h
         }
     }
 
-  int total = 0;
-
-  if(draw)
-    {
-      for(auto const& cluster : clusters)
-        total += cluster.size();
-
-      std::cout << allHits.size() << " " << clusters.size() << " (" << total << ")\n\t";
-      for(auto const& cluster : clusters)
-        std::cout << cluster.size() << " ";
-      std::cout << std::endl;
-    }
-
   MergeClusters(clusters);
-
-  if(draw)
-    {
-      total = 0;
-      for(auto const& cluster : clusters)
-        total += cluster.size();
-
-      std::cout << allHits.size() << " " << clusters.size() << " (" << total << ")\n\t";
-      for(auto const& cluster : clusters)
-        std::cout << cluster.size() << " ";
-      std::cout << std::endl;
-    }
 
   std::vector<ClusterObj>::iterator it = clusters.begin();
   while(it != clusters.end())
@@ -233,22 +143,14 @@ bool SecondShowerFinderAlg::AnalyseViewHits(const art::Event &e, const HitVec &h
 
   if(draw)
     {
-      total = 0;
-      for(auto const& cluster : clusters)
-        total += cluster.size();
-
-      std::cout << allHits.size() << " " << clusters.size() << " (" << total << ")\n\t";
-      for(auto const& cluster : clusters)
-        std::cout << cluster.size() << " ";
-      std::cout << std::endl;
-
+      std::cout << "Drawing " << name << " clustered... (" << clusters.size() << " extra clusters)" << std::endl;
       DrawView(hits, usedHits, clusters, name);
     }
 
   return clusters.size();
 }
 
-void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits, const std::vector<ClusterObj> clusters, const TString &name)
+void SecondShowerFinderAlg::DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name)
 {
   TCanvas *c = new TCanvas("c", "", 2100, 1400);
   c->cd();
@@ -303,24 +205,24 @@ void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits,
   std::vector<TGraph*> g0Clusters;
   std::vector<TGraph*> g1Clusters;
 
-  for(auto const& hit : hits)
+  for(auto const& hitObj : hits)
     {
-      const int tpc = hit->WireID().asTPCID().deepestIndex();
+      const int tpc = hitObj->hit->WireID().asTPCID().deepestIndex();
 
       if(tpc == 0)
-        g0->SetPoint(g0->GetN(), hit->WireID().deepestIndex(), hit->PeakTime());
+        g0->SetPoint(g0->GetN(), hitObj->hit->WireID().deepestIndex(), hitObj->hit->PeakTime());
       else if(tpc == 1)
-        g1->SetPoint(g1->GetN(), hit->WireID().deepestIndex(), 3400 - hit->PeakTime());
+        g1->SetPoint(g1->GetN(), hitObj->hit->WireID().deepestIndex(), 3400 - hitObj->hit->PeakTime());
     }
 
-  for(auto const& hit : usedHits)
+  for(auto const& hitObj : usedHits)
     {
-      const int tpc = hit->WireID().asTPCID().deepestIndex();
+      const int tpc = hitObj->hit->WireID().asTPCID().deepestIndex();
 
       if(tpc == 0)
-        g0Used->SetPoint(g0Used->GetN(), hit->WireID().deepestIndex(), hit->PeakTime());
+        g0Used->SetPoint(g0Used->GetN(), hitObj->hit->WireID().deepestIndex(), hitObj->hit->PeakTime());
       else if(tpc == 1)
-        g1Used->SetPoint(g1Used->GetN(), hit->WireID().deepestIndex(), 3400 - hit->PeakTime());
+        g1Used->SetPoint(g1Used->GetN(), hitObj->hit->WireID().deepestIndex(), 3400 - hitObj->hit->PeakTime());
     }
 
   if(g1->GetN())
@@ -341,6 +243,7 @@ void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits,
 
   for(auto&& [i, cluster] : enumerate(clusters))
     {
+      std::cout << "\tCluster " << i << " of " << cluster.size() << " hits" << std::endl;
       g0Clusters.push_back(new TGraph());
       g1Clusters.push_back(new TGraph());
 
@@ -422,5 +325,47 @@ void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
             ++itB;
         }
       ++itA;
+    }
+}
+
+void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits)
+{
+  art::ServiceHandle<geo::Geometry const> geom;
+  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
+
+  for(auto const& hit : hits)
+    {
+      const geo::WireID wireID = hit->WireID();
+      const double x = detProp.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
+
+      auto const xyz = geom->Wire(wireID).GetCenter();
+
+      switch(hit->View())
+        {
+        case geo::kU:
+          {
+            double wire_pos = YZtoU(xyz.Y(), xyz.Z());
+            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
+            u_hits.push_back(hitObj);
+            break;
+          }
+        case geo::kV:
+          {
+            double wire_pos = YZtoV(xyz.Y(), xyz.Z());
+            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
+            v_hits.push_back(hitObj);
+            break;
+          }
+        case geo::kW:
+          {
+            double wire_pos = YZtoW(xyz.Y(), xyz.Z());
+            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
+            w_hits.push_back(hitObj);
+            break;
+          }
+        default:
+          std::cout << "Holy shit SBND, you got new planes" << std::endl;
+          break;
+        }
     }
 }

@@ -58,9 +58,9 @@ class SecondShowerFinderAlg
 
   bool FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw);
 
-  bool AnalyseViewHits(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const TString &name, const bool draw);
+  bool AnalyseViewHits(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw);
 
-  void DrawView(const HitVec &hits, const HitVec &usedHits, const std::vector<ClusterObj> clusters, const TString &name);
+  void DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name);
 
   double YZtoU(const double y, const double z);
 
@@ -69,6 +69,8 @@ class SecondShowerFinderAlg
   double YZtoW(const double y, const double z);
 
   void MergeClusters(std::vector<ClusterObj> &clusters);
+
+  void SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits);
 
  private:
   const double wireAngleU = 1.04719758034;
