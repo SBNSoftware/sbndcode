@@ -334,12 +334,12 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fHitModuleLabel 		= p.get<art::InputTag>("HitModuleLabel", "gaushit");
   fPFParticleModuleLabel 	= p.get<art::InputTag>("PFParticleModuleLabel", "pandoraSCE");
   fSliceModuleLabel 		= p.get<art::InputTag>("SlideModuleLabel", "pandoraSCE");
-  fTrackModuleLabel		= p.get<art::InputTag>("TrackModuleLabel", "pandoraSCETrack");
-  fShowerModuleLabel 		= p.get<art::InputTag>("ShowerModuleLabel", "pandoraSCEShower");
+  fTrackModuleLabel		= p.get<art::InputTag>("TrackModuleLabel", "pandoraTrack");
+  fShowerModuleLabel 		= p.get<art::InputTag>("ShowerModuleLabel", "pandoraShowerSBN");
   fOpFlashesModuleLabel = p.get<std::vector<std::string>>("OpFlashesModuleLabel",   {"opflashtpc0", "opflashtpc1"});
   fVertexModuleLabel 		= p.get<art::InputTag>("VertexModuleLabel", "pandoraSCE");
   fCRUMBSModuleLabel 		= p.get<art::InputTag>("CRUMBSModuleLabelr", "crumbs");
-  fOpT0ModuleLabel 		= p.get<art::InputTag>("OpT0ModuleLabel", "opt0finderSCE");
+  fOpT0ModuleLabel 		= p.get<art::InputTag>("OpT0ModuleLabel", "opt0finder");
   fDazzleModuleLabel 		= p.get<art::InputTag>("DazzleModuleLabel", "dazzle");
   fCaloModuleLabel 		= p.get<art::InputTag>("CaloModuleLabel", "pandoraCalo");
   fMCSModuleLabel 		= p.get<art::InputTag>("MCSModuleLabel", "pandoraTrackMCS:muon");
