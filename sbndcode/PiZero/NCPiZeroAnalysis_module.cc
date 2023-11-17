@@ -252,16 +252,25 @@ private:
     { "nu_pz_two_gamma_decay", new InhVecVecVar<bool>("nu_pz_two_gamma_decay") },
     { "nu_pz_gamma0_trackid", new InhVecVecVar<int>("nu_pz_gamma0_trackid") },
     { "nu_pz_gamma0_n_hits", new InhVecVecVar<int>("nu_pz_gamma0_n_hits") },
-    { "nu_pz_gamma1_trackid", new InhVecVecVar<int>("nu_pz_gamma1_trackid") },
-    { "nu_pz_gamma1_n_hits", new InhVecVecVar<int>("nu_pz_gamma1_n_hits") },
+    { "nu_pz_gamma0_energy", new InhVecVecVar<double>("nu_pz_gamma0_energy") },
+    { "nu_pz_gamma0_dir_x", new InhVecVecVar<double>("nu_pz_gamma0_dir_x") },
+    { "nu_pz_gamma0_dir_y", new InhVecVecVar<double>("nu_pz_gamma0_dir_y") },
+    { "nu_pz_gamma0_dir_z", new InhVecVecVar<double>("nu_pz_gamma0_dir_z") },
     { "nu_pz_gamma0_best_pfp_comp", new InhVecVecVar<float>("nu_pz_gamma0_best_pfp_comp") },
     { "nu_pz_gamma0_best_pfp_pur", new InhVecVecVar<float>("nu_pz_gamma0_best_pfp_pur") },
     { "nu_pz_gamma0_best_pfp_pdg", new InhVecVecVar<int>("nu_pz_gamma0_best_pfp_pdg") },
     { "nu_pz_gamma0_best_pfp_razzled_pdg", new InhVecVecVar<int>("nu_pz_gamma0_best_pfp_razzled_pdg") },
+    { "nu_pz_gamma1_trackid", new InhVecVecVar<int>("nu_pz_gamma1_trackid") },
+    { "nu_pz_gamma1_n_hits", new InhVecVecVar<int>("nu_pz_gamma1_n_hits") },
+    { "nu_pz_gamma1_energy", new InhVecVecVar<double>("nu_pz_gamma1_energy") },
+    { "nu_pz_gamma1_dir_x", new InhVecVecVar<double>("nu_pz_gamma1_dir_x") },
+    { "nu_pz_gamma1_dir_y", new InhVecVecVar<double>("nu_pz_gamma1_dir_y") },
+    { "nu_pz_gamma1_dir_z", new InhVecVecVar<double>("nu_pz_gamma1_dir_z") },
     { "nu_pz_gamma1_best_pfp_comp", new InhVecVecVar<float>("nu_pz_gamma1_best_pfp_comp") },
     { "nu_pz_gamma1_best_pfp_pur", new InhVecVecVar<float>("nu_pz_gamma1_best_pfp_pur") },
     { "nu_pz_gamma1_best_pfp_pdg", new InhVecVecVar<int>("nu_pz_gamma1_best_pfp_pdg") },
     { "nu_pz_gamma1_best_pfp_razzled_pdg", new InhVecVecVar<int>("nu_pz_gamma1_best_pfp_razzled_pdg") },
+    { "nu_pz_open_angle", new InhVecVecVar<double>("nu_pz_open_angle")},
     { "nu_best_slc_comp", new InhVecVar<float>("nu_best_slc_comp") },
     { "nu_best_slc_pur", new InhVecVar<float>("nu_best_slc_pur") },
     { "nu_best_slc_is_clear_cosmic", new InhVecVar<bool>("nu_best_slc_is_clear_cosmic") },
@@ -383,8 +392,17 @@ private:
     { "slc_true_pz_two_gamma_decay", new InhVecVecVar<bool>("slc_true_pz_two_gamma_decay") },
     { "slc_true_pz_gamma0_trackid", new InhVecVecVar<int>("slc_true_pz_gamma0_trackid") },
     { "slc_true_pz_gamma0_n_hits", new InhVecVecVar<int>("slc_true_pz_gamma0_n_hits") },
+    { "slc_true_pz_gamma0_energy", new InhVecVecVar<double>("slc_true_pz_gamma0_energy") },
+    { "slc_true_pz_gamma0_dir_x", new InhVecVecVar<double>("slc_true_pz_gamma0_dir_x") },
+    { "slc_true_pz_gamma0_dir_y", new InhVecVecVar<double>("slc_true_pz_gamma0_dir_y") },
+    { "slc_true_pz_gamma0_dir_z", new InhVecVecVar<double>("slc_true_pz_gamma0_dir_z") },
     { "slc_true_pz_gamma1_trackid", new InhVecVecVar<int>("slc_true_pz_gamma1_trackid") },
     { "slc_true_pz_gamma1_n_hits", new InhVecVecVar<int>("slc_true_pz_gamma1_n_hits") },
+    { "slc_true_pz_gamma1_energy", new InhVecVecVar<double>("slc_true_pz_gamma1_energy") },
+    { "slc_true_pz_gamma1_dir_x", new InhVecVecVar<double>("slc_true_pz_gamma1_dir_x") },
+    { "slc_true_pz_gamma1_dir_y", new InhVecVecVar<double>("slc_true_pz_gamma1_dir_y") },
+    { "slc_true_pz_gamma1_dir_z", new InhVecVecVar<double>("slc_true_pz_gamma1_dir_z") },
+    { "slc_true_pz_open_angle", new InhVecVecVar<double>("slc_true_pz_open_angle")},
     { "slc_vtx_x", new InhVecVar<double>("slc_vtx_x") },
     { "slc_vtx_y", new InhVecVar<double>("slc_vtx_y") },
     { "slc_vtx_z", new InhVecVar<double>("slc_vtx_z") },
@@ -1156,8 +1174,17 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
               FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
               FillElement(vars[prefix + "_pz_gamma0_trackid"], counter, pzCounter, gamma0->TrackId());
               FillElement(vars[prefix + "_pz_gamma0_n_hits"], counter, pzCounter, fHitsMap[gamma0->TrackId()]);
+              FillElement(vars[prefix + "_pz_gamma0_energy"], counter, pzCounter, en0);
+              FillElement(vars[prefix + "_pz_gamma0_dir_x"], counter, pzCounter, gamma0->Px() / gamma0->P());
+              FillElement(vars[prefix + "_pz_gamma0_dir_y"], counter, pzCounter, gamma0->Py() / gamma0->P());
+              FillElement(vars[prefix + "_pz_gamma0_dir_z"], counter, pzCounter, gamma0->Pz() / gamma0->P());
               FillElement(vars[prefix + "_pz_gamma1_trackid"], counter, pzCounter, gamma1->TrackId());
               FillElement(vars[prefix + "_pz_gamma1_n_hits"], counter, pzCounter, fHitsMap[gamma1->TrackId()]);
+              FillElement(vars[prefix + "_pz_gamma1_energy"], counter, pzCounter, en1);
+              FillElement(vars[prefix + "_pz_gamma1_dir_x"], counter, pzCounter, gamma1->Px() / gamma1->P());
+              FillElement(vars[prefix + "_pz_gamma1_dir_y"], counter, pzCounter, gamma1->Py() / gamma1->P());
+              FillElement(vars[prefix + "_pz_gamma1_dir_z"], counter, pzCounter, gamma1->Pz() / gamma1->P());
+              FillElement(vars[prefix + "_pz_open_angle"], counter, pzCounter, TMath::RadToDeg() * gamma0->Momentum().Vect().Angle(gamma1->Momentum().Vect()));
 
               if(prefix.find("nu") != std::string::npos)
                 {
