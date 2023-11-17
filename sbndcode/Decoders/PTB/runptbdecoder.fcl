@@ -4,12 +4,12 @@ physics:
 {
   producers:
   {
-    daq: @local::SBNDPTBDecoderDefaults
+    ptbdecoder: @local::SBNDPTBDecoderDefaults
   }
 
   analyzers: {}
 
-  my_producer_modules: [daq]
+  my_producer_modules: [ptbdecoder]
   trigger_paths: [my_producer_modules]
   a: [rootout]
   end_paths: [a]

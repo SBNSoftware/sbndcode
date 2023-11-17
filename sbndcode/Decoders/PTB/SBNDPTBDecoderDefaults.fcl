@@ -5,7 +5,7 @@ SBNDPTBDecoderDefaults: {
       InputLabel: "daq"
       InputContainerInstance: "ContainerPTB"
       InputNonContainerInstance: "PTB"
-      OutputLabel: "PTBDecoder"
+      OutputInstance: ""
 }
 
 END_PROLOG

@@ -46,7 +46,7 @@ private:
   std::string fInputLabel;
   std::string fInputContainerInstance;
   std::string fInputNonContainerInstance;
-  std::string fOutputLabel;
+  std::string fOutputInstance;
 
   typedef struct ptbsv
   {
@@ -69,9 +69,9 @@ SBNDPTBDecoder::SBNDPTBDecoder(fhicl::ParameterSet const & p)
   fInputLabel = p.get<std::string>("InputLabel");
   fInputContainerInstance = p.get<std::string>("InputContainerInstance");
   fInputNonContainerInstance = p.get<std::string>("InputNonContainerInstance");
-  fOutputLabel = p.get<std::string>("OutputLabel");
+  fOutputInstance = p.get<std::string>("OutputInstance");
 
-  produces<std::vector<raw::ptb::sbndptb> >(fOutputLabel);
+  produces<std::vector<raw::ptb::sbndptb> >(fOutputInstance);
 }
 
 void SBNDPTBDecoder::produce(art::Event & evt)
@@ -109,7 +109,7 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 
   raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
   sbndptbs.push_back(ptbdp);  // just one for now
-  evt.put(std::make_unique<std::vector<raw::ptb::sbndptb>>(std::move(sbndptbs)),fOutputLabel);
+  evt.put(std::make_unique<std::vector<raw::ptb::sbndptb>>(std::move(sbndptbs)),fOutputInstance);
 }
 
 void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sout)
