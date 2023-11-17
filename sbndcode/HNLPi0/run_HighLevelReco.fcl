@@ -66,4 +66,4 @@ physics:
 	end_paths: [stream1]
 }
 
-services.BackTrackerService.BackTrack.SimChannelModuleLabel: "simtpc2d:simpleSC"
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

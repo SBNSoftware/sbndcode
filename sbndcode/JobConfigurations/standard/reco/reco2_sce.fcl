@@ -21,4 +21,4 @@ physics.end_paths: [stream1]
 
 # turn on space charge service
 #include "enable_spacecharge_services_sbnd.fcl"
-services.BackTrackerService.BackTrack.SimChannelModuleLabel: "simtpc2d:simpleSC"
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

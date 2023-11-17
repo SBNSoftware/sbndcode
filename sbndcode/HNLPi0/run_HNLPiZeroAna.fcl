@@ -31,4 +31,4 @@ physics:
 	end_paths: [ana]
 }
 
-services.BackTrackerService.BackTrack.SimChannelModuleLabel: "simtpc2d:simpleSC"
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
