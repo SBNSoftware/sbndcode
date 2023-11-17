@@ -188,6 +188,7 @@ bool SecondShowerFinderAlg::AnalyseViewHits(const art::Event &e, const HitVec &h
 
               hitObjA->used = true;
               hitObjB->used = true;
+              break;
             }
         }
     }
@@ -299,8 +300,8 @@ void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits,
   TGraph *g1Used = new TGraph();
   g1Used->SetMarkerColor(kRed+2);
 
-  std::vector<TGraph*> g0Clusters(clusters.size(), new TGraph());
-  std::vector<TGraph*> g1Clusters(clusters.size(), new TGraph());
+  std::vector<TGraph*> g0Clusters;
+  std::vector<TGraph*> g1Clusters;
 
   for(auto const& hit : hits)
     {
@@ -335,12 +336,17 @@ void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits,
   if(g0Used->GetN())
     g0Used->Draw("Psame");
 
-  int color = 6;
+  while(clusters.size() > fColours.size())
+    fColours.insert(fColours.end(), fColours.begin(), fColours.end());
 
   for(auto&& [i, cluster] : enumerate(clusters))
     {
-      g0Clusters[i]->SetMarkerColor(color);
-      g1Clusters[i]->SetMarkerColor(color);
+      g0Clusters.push_back(new TGraph());
+      g1Clusters.push_back(new TGraph());
+
+      const int colour = fColours[i];
+      g0Clusters[i]->SetMarkerColor(colour);
+      g1Clusters[i]->SetMarkerColor(colour);
 
       for(auto const& hitObj : cluster)
         {
@@ -358,10 +364,6 @@ void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits,
       bottom->cd();
       if(g0Clusters[i]->GetN())
         g0Clusters[i]->Draw("Psame");
-
-      std::cout << i << " - color: " << color << std::endl;
-
-      ++color;
     }
 
   c->Update();
@@ -393,16 +395,10 @@ void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
 
   while(itA != clusters.end())
     {
-      std::vector<ClusterObj>::iterator itB = clusters.begin();
+      std::vector<ClusterObj>::iterator itB = std::next(itA);
 
       while(itB != clusters.end())
         {
-          if(itA == itB)
-            {
-              ++itB;
-              continue;
-            }
-
           bool merge = false;
 
           for(auto const& hitObjA : *itA)

@@ -1585,7 +1585,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
 
       std::cout << prim->PdgCode() << std::endl;
 
-      fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, nprimrazzledphotons==1);
+      fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, nprimrazzledphotons==1 || nprimrazzledelectrons==1);
     }
 }
 

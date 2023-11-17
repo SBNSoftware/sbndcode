@@ -49,6 +49,8 @@ class SecondShowerFinderAlg
 
   typedef std::vector<HitObj*> ClusterObj;
 
+  std::vector<int> fColours = { kGreen+2, kMagenta+2, kCyan+2, kYellow+2, kAzure+1, kSpring+9, kPink+9, kTeal+9, kOrange+2, kViolet-8 };
+
  public:
   SecondShowerFinderAlg();
 
