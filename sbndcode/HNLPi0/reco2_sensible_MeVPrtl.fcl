@@ -2,7 +2,8 @@
 
 process_name: Reco2
 
-//physics.analyzers.ncpizeroana:
+//TODO: Uncomment for future to run analyzer with reco2
+//physics.analyzers.hnlana:
 //{
 //  module_type: "HNLPiZeroAnalysis"
 //}
@@ -35,12 +36,14 @@ physics.reco2_sensible: [ rns,
   vertexStub
 ]
 
+//TODO: Enable weight_paths on trigger_path when for future
 physics.weight_paths: [
   fluxweight,
   systtools
 ]
 
-physics.ana: [ ncpizeroana ]
+//TODO: Uncomment for future to run analyzer with reco2
+//physics.ana: [ hnlana ]
 
 physics.trigger_paths: [ reco2_sensible ]
 
