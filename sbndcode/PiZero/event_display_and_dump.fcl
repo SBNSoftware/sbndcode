@@ -1,0 +1,33 @@
+#include "simulationservices_sbnd.fcl"
+
+process_name: EventDisplayAndDump
+
+services:
+{
+  @table::sbnd_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    eventdisp:
+    { 
+      module_type: "EventDisplayAndDump"
+      SaveDir:     "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv6/selection_evd_analysis/signal_have_razzled_muon"
+      SliceMode:   false
+    }
+  }
+
+  ana:       [ eventdisp ]
+  end_paths: [ ana ]
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

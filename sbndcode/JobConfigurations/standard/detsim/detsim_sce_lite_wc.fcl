@@ -6,5 +6,3 @@
 #include "detsim_sce_lite.fcl"
 
 physics.simulate: [rns, crtsim, opdaq] 
-# removes the "daq" producer
-# remove the "crt" producer for Henry's crt updates 

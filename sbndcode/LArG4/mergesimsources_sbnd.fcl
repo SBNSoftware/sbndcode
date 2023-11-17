@@ -9,6 +9,7 @@ sbnd_merge_sim_sources : {
   FillAuxDetSimChannels:       false
   FillSimEnergyDeposits:       false
   FillAuxDetHits:              false
+  FillParticleAncestryMaps:    false
   InputSourcesLabels:          [ "larg4intime", "larg4outtime"]
   TrackIDOffsets:              [ 10000000, 20000000 ]
   StoreReflected:              true

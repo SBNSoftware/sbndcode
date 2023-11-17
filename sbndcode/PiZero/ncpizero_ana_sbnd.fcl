@@ -1,0 +1,32 @@
+#include "simulationservices_sbnd.fcl"
+
+process_name: NCPiZeroAnalyzer
+
+services:
+{
+  TFileService: { fileName: "ncpizeroana_sbnd.root" }
+  @table::sbnd_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    ncpizeroana:
+    { 
+      module_type:       "NCPiZeroAnalysis"
+    }
+  }
+
+  ana:       [ ncpizeroana ]
+  end_paths: [ ana ]
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

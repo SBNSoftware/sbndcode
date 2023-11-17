@@ -1,12 +1,14 @@
-#include "g4_sce_dirt_filter_lite.fcl"
+#include "g4_sce_lite.fcl"
 
 outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
                                "keep *_ionandscint_*_*",
                                "drop *_ionandscint_priorSCE_*"
                              ]
 
-physics.simulate: [ 
+physics.simulate: [
   rns,
+  loader,
+  largeant,
   ionandscint,
   ionandscintout,
   pdfastsim,
