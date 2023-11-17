@@ -32,3 +32,8 @@ physics:
 }
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+physics.analyzers.hnlpizeroana.SlideModuleLabel: "pandoraSCE"
+physics.analyzers.hnlpizeroana.TrackModuleLabel: "pandoraTrack"
+physics.analyzers.hnlpizeroana.ShowerModuleLabel: "pandoraShowerSBN"
+physics.analyzers.hnlpizeroana.OpT0ModuleLabel: "opt0finder"
