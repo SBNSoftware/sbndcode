@@ -60,6 +60,7 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
                   hTemp->SetFillColorAlpha(category.colour, 0.4);
                   hTemp->SetLineColor(category.colour);
                   hTemp->SetLineWidth(2);
+                  hTemp->SetMarkerStyle(1);
 
                   if(i == 0)
                     lEventModes->AddEntry(hTemp, category.name, "f");
@@ -79,7 +80,8 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
             {
               canvas->cd(i+1);
               gPad->SetTopMargin(0.15);
-              stacks[i]->Draw("hist");
+              stacks[i]->SetMaximum(1.2 * stacks[i]->GetMaximum());
+              stacks[i]->Draw("histe");
               stacks[i]->GetYaxis()->SetTitleOffset(1.3);
               if(i==0)
                 lEventModes->Draw();

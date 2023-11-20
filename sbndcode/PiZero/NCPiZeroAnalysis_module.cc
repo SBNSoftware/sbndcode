@@ -56,6 +56,7 @@
 #include "sbnobj/Common/SBNEventWeight/EventWeightMap.h"
 
 #include "NCPiZeroStructs.h"
+#include "SecondShower/SecondShowerFinderAlg.h"
 
 #include <numeric>
 
@@ -112,7 +113,8 @@ public:
                      const art::Handle<std::vector<recob::Track>> &trackHandle,
                      const art::Handle<std::vector<recob::Shower>> &showerHandle);
 
-  void AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
+  void AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const std::vector<art::Ptr<recob::PFParticle>> &pfps,
+                   const std::vector<art::Ptr<recob::Hit>> &sliceHits, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
                    const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const art::Handle<std::vector<recob::Track>> &trackHandle,
                    const art::Handle<std::vector<recob::Shower>> &showerHandle);
   void AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
@@ -177,6 +179,8 @@ public:
 
 private:
 
+  SecondShowerFinderAlg fSecondShowerFinderAlg;
+
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
@@ -209,7 +213,11 @@ private:
 
   VecVarMap nuVars = {
     { "nu_mctruth_id", new InhVecVar<size_t>("nu_mctruth_id") },
-    { "nu_event_type", new InhVecVar<int>("nu_event_type") },
+    { "nu_event_type_incl", new InhVecVar<int>("nu_event_type_incl") },
+    { "nu_event_type_0p0pi", new InhVecVar<int>("nu_event_type_0p0pi") },
+    { "nu_event_type_1p0pi", new InhVecVar<int>("nu_event_type_1p0pi") },
+    { "nu_event_type_Np0pi", new InhVecVar<int>("nu_event_type_Np0pi") },
+    { "nu_event_type_Xp0pi", new InhVecVar<int>("nu_event_type_Xp0pi") },
     { "nu_signal", new InhVecVar<bool>("nu_signal") },
     { "nu_en_dep", new InhVecVar<float>("nu_en_dep") },
     { "nu_pdg", new InhVecVar<int>("nu_pdg") },
@@ -290,6 +298,8 @@ private:
 
   VecVarMap slcVars = {
     { "slc_key", new InhVecVar<size_t>("slc_key") },
+    { "slc_n_hits", new InhVecVar<size_t>("slc_n_hits") },
+    { "slc_n_used_hits", new InhVecVar<size_t>("slc_n_used_hits") },
     { "slc_n_pfps", new InhVecVar<size_t>("slc_n_pfps") },
     { "slc_primary_pfp_id", new InhVecVar<size_t>("slc_primary_pfp_id") },
     { "slc_primary_pfp_pdg", new InhVecVar<int>("slc_primary_pfp_pdg") },
@@ -313,8 +323,30 @@ private:
     { "slc_n_razzled_pions_thresh", new InhVecVar<int>("slc_n_razzled_pions_thresh") },
     { "slc_n_razzled_protons", new InhVecVar<int>("slc_n_razzled_protons") },
     { "slc_n_razzled_protons_thresh", new InhVecVar<int>("slc_n_razzled_protons_thresh") },
+    { "slc_n_primary_trks", new InhVecVar<int>("slc_n_primary_trks") },
+    { "slc_n_primary_shws", new InhVecVar<int>("slc_n_primary_shws") },
+    { "slc_n_primary_dazzle_muons", new InhVecVar<int>("slc_n_primary_dazzle_muons") },
+    { "slc_n_primary_dazzle_pions", new InhVecVar<int>("slc_n_primary_dazzle_pions") },
+    { "slc_n_primary_dazzle_pions_thresh", new InhVecVar<int>("slc_n_primary_dazzle_pions_thresh") },
+    { "slc_n_primary_dazzle_protons", new InhVecVar<int>("slc_n_primary_dazzle_protons") },
+    { "slc_n_primary_dazzle_protons_thresh", new InhVecVar<int>("slc_n_primary_dazzle_protons_thresh") },
+    { "slc_n_primary_dazzle_other", new InhVecVar<int>("slc_n_primary_dazzle_other") },
+    { "slc_n_primary_razzle_electrons", new InhVecVar<int>("slc_n_primary_razzle_electrons") },
+    { "slc_n_primary_razzle_photons", new InhVecVar<int>("slc_n_primary_razzle_photons") },
+    { "slc_n_primary_razzle_other", new InhVecVar<int>("slc_n_primary_razzle_other") },
+    { "slc_n_primary_razzled_electrons", new InhVecVar<int>("slc_n_primary_razzled_electrons") },
+    { "slc_n_primary_razzled_muons", new InhVecVar<int>("slc_n_primary_razzled_muons") },
+    { "slc_n_primary_razzled_photons", new InhVecVar<int>("slc_n_primary_razzled_photons") },
+    { "slc_n_primary_razzled_pions", new InhVecVar<int>("slc_n_primary_razzled_pions") },
+    { "slc_n_primary_razzled_pions_thresh", new InhVecVar<int>("slc_n_primary_razzled_pions_thresh") },
+    { "slc_n_primary_razzled_protons", new InhVecVar<int>("slc_n_primary_razzled_protons") },
+    { "slc_n_primary_razzled_protons_thresh", new InhVecVar<int>("slc_n_primary_razzled_protons_thresh") },
     { "slc_true_mctruth_id", new InhVecVar<size_t>("slc_true_mctruth_id") },
-    { "slc_true_event_type", new InhVecVar<int>("slc_true_event_type") },
+    { "slc_true_event_type_incl", new InhVecVar<int>("slc_true_event_type_incl") },
+    { "slc_true_event_type_0p0pi", new InhVecVar<int>("slc_true_event_type_0p0pi") },
+    { "slc_true_event_type_1p0pi", new InhVecVar<int>("slc_true_event_type_1p0pi") },
+    { "slc_true_event_type_Np0pi", new InhVecVar<int>("slc_true_event_type_Np0pi") },
+    { "slc_true_event_type_Xp0pi", new InhVecVar<int>("slc_true_event_type_Xp0pi") },
     { "slc_true_signal", new InhVecVar<bool>("slc_true_signal") },
     { "slc_comp", new InhVecVar<float>("slc_comp") },
     { "slc_pur", new InhVecVar<float>("slc_pur") },
@@ -366,6 +398,8 @@ private:
     { "slc_opt0_measPE", new InhVecVar<double>("slc_opt0_measPE") },
     { "slc_opt0_hypPE", new InhVecVar<double>("slc_opt0_hypPE") },
     { "slc_pfp_id", new InhVecVecVar<size_t>("slc_pfp_id") },
+    { "slc_pfp_primary", new InhVecVecVar<bool>("slc_pfp_primary") },
+    { "slc_pfp_primary_child", new InhVecVecVar<bool>("slc_pfp_primary_child") },
     { "slc_pfp_pdg", new InhVecVecVar<int>("slc_pfp_pdg") },
     { "slc_pfp_track_score", new InhVecVecVar<float>("slc_pfp_track_score") },
     { "slc_pfp_n_children", new InhVecVecVar<int>("slc_pfp_n_children") },
@@ -373,8 +407,14 @@ private:
     { "slc_pfp_good_shower", new InhVecVecVar<bool>("slc_pfp_good_shower") },
     { "slc_pfp_true_trackid", new InhVecVecVar<int>("slc_pfp_true_trackid") },
     { "slc_pfp_true_pdg", new InhVecVecVar<int>("slc_pfp_true_pdg") },
+    { "slc_pfp_true_energy", new InhVecVecVar<double>("slc_pfp_true_energy") },
+    { "slc_pfp_true_p_x", new InhVecVecVar<double>("slc_pfp_true_p_x") },
+    { "slc_pfp_true_p_y", new InhVecVecVar<double>("slc_pfp_true_p_y") },
+    { "slc_pfp_true_p_z", new InhVecVecVar<double>("slc_pfp_true_p_z") },
     { "slc_pfp_comp", new InhVecVecVar<float>("slc_pfp_comp") },
     { "slc_pfp_pur", new InhVecVecVar<float>("slc_pfp_pur") },
+    { "slc_pfp_n_sps", new InhVecVecVar<size_t>("slc_pfp_n_sps") },
+    { "slc_pfp_n_hits", new InhVecVecVar<size_t>("slc_pfp_n_hits") },
     { "slc_pfp_track_start_x", new InhVecVecVar<double>("slc_pfp_track_start_x") },
     { "slc_pfp_track_start_y", new InhVecVecVar<double>("slc_pfp_track_start_y") },
     { "slc_pfp_track_start_z", new InhVecVecVar<double>("slc_pfp_track_start_z") },
@@ -462,7 +502,11 @@ private:
     { "slc_best_pzc_photon_1_true_pdg", new InhVecVar<int>("slc_best_pzc_photon_1_true_pdg") },
     { "slc_best_pzc_photon_1_comp", new InhVecVar<float>("slc_best_pzc_photon_1_comp") },
     { "slc_best_pzc_photon_1_pur", new InhVecVar<float>("slc_best_pzc_photon_1_pur") },
-    { "slc_sel", new InhVecVar<bool>("slc_sel") },
+    { "slc_sel_incl", new InhVecVar<bool>("slc_sel_incl") },
+    { "slc_sel_0p0pi", new InhVecVar<bool>("slc_sel_0p0pi") },
+    { "slc_sel_1p0pi", new InhVecVar<bool>("slc_sel_1p0pi") },
+    { "slc_sel_Np0pi", new InhVecVar<bool>("slc_sel_Np0pi") },
+    { "slc_sel_Xp0pi", new InhVecVar<bool>("slc_sel_Xp0pi") },
   };
 
   const std::vector<std::string> flux_weight_names = { "expskin_Flux",
@@ -881,12 +925,20 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
 {
   if(mct->Origin() == 2)
     {
-      FillElement(vars[prefix + "_event_type"], counter, (int) kCosmic);
+      FillElement(vars[prefix + "_event_type_incl"], counter, (int) kCosmic);
+      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kCosmic);
+      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kCosmic);
+      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kCosmic);
+      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kCosmic);
       return;
     }
   else if(mct->Origin() != 1)
     {
-      FillElement(vars[prefix + "_event_type"], counter, (int) kUnknownEv);
+      FillElement(vars[prefix + "_event_type_incl"], counter, (int) kUnknownEv);
+      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kUnknownEv);
+      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kUnknownEv);
+      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kUnknownEv);
+      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kUnknownEv);
       return;
     }
 
@@ -957,29 +1009,92 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
         trueEnDep += ide->energy / 1000.;
     }
 
-  const bool pizero = neutral_pions > 0;
+  const bool pizero = neutral_pions == 1;
 
   if(nc && fv && pizero)
     {
-      FillElement(vars[prefix + "_event_type"], counter, (int) kNCPiZero);
+      FillElement(vars[prefix + "_event_type_incl"], counter, (int) kSignalNCPiZero);
       FillElement(vars[prefix + "_signal"], counter, true);
+
+      if(charged_pions == 0)
+        {
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kSignalNCPiZero);
+
+          if(protons == 0)
+            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kSignalNCPiZero);
+          else
+            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kOtherNCPiZero);
+
+          if(protons == 1)
+            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kSignalNCPiZero);
+          else
+            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kOtherNCPiZero);
+
+          if(protons > 0)
+            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kSignalNCPiZero);
+          else
+            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kOtherNCPiZero);
+        }
+      else
+        {
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kOtherNCPiZero);
+        }
     }
   else
     {
       FillElement(vars[prefix + "_signal"], counter, false);
 
       if(nc && fv)
-        FillElement(vars[prefix + "_event_type"], counter, (int) kOtherNC);
+        {
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kOtherNC);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kOtherNC);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kOtherNC);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kOtherNC);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kOtherNC);
+        }
       else if(abs(nu.PdgCode()) == 14 && !nc && fv)
-        FillElement(vars[prefix + "_event_type"], counter, (int) kCCNuMu);
+        {
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kCCNuMu);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kCCNuMu);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kCCNuMu);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kCCNuMu);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kCCNuMu);
+        }
       else if(abs(nu.PdgCode()) == 12 && !nc && fv)
-        FillElement(vars[prefix + "_event_type"], counter, (int) kCCNuE);
+        {
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kCCNuE);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kCCNuE);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kCCNuE);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kCCNuE);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kCCNuE);
+        }
       else if(!fv && av)
-        FillElement(vars[prefix + "_event_type"], counter, (int) kNonFV);
+        {
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kNonFV);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kNonFV);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kNonFV);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kNonFV);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kNonFV);
+        }
       else if(!av)
-        FillElement(vars[prefix + "_event_type"], counter, (int) kDirt);
+        {
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kDirt);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kDirt);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kDirt);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kDirt);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kDirt);
+        }
       else
-        FillElement(vars[prefix + "_event_type"], counter, (int) kUnknownEv);
+        {
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kUnknownEv);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kUnknownEv);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kUnknownEv);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kUnknownEv);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kUnknownEv);
+        }
     }
 
   FillElement(vars[prefix + "_en_dep"], counter, trueEnDep);
@@ -1137,6 +1252,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
   art::FindOneP<recob::Vertex>      pfpToVertices(pfpHandle, e, fVertexModuleLabel);
   art::FindOneP<sbn::CRUMBSResult>  slicesToCRUMBS(sliceHandle, e, fCRUMBSModuleLabel);
   art::FindManyP<sbn::OpT0Finder>   slicesToOpT0(sliceHandle, e, fOpT0ModuleLabel);
+  art::FindManyP<recob::Hit>        slicesToHits(sliceHandle, e, fSliceModuleLabel);
 
   for (auto&& [slcCounter, slc] : enumerate(sliceVec))
     {
@@ -1144,6 +1260,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
       const std::vector<art::Ptr<recob::PFParticle>> pfps = slicesToPFPs.at(slc.key());
       FillElement(slcVars["slc_n_pfps"], slcCounter, pfps.size());
+
+      const std::vector<art::Ptr<recob::Hit>> hits = slicesToHits.at(slc.key());
+      FillElement(slcVars["slc_n_hits"], slcCounter, hits.size());
 
       if(pfps.size() == 0)
         {
@@ -1196,9 +1315,9 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement(slcVars["slc_opt0_hypPE"], slcCounter, opT0Vec[0]->hypoPE);
         }
 
-      ResizeSubVectors(slcVars, "slc_pfp", slcCounter, prim->NumDaughters());
+      ResizeSubVectors(slcVars, "slc_pfp", slcCounter, pfps.size());
 
-      AnalysePFPs(e, prim, vtx, slcCounter, pfpHandle, trackHandle, showerHandle);
+      AnalysePFPs(e, prim, pfps, hits, vtx, slcCounter, pfpHandle, trackHandle, showerHandle);
 
       if(abs(prim->PdgCode()) == 13 || abs(prim->PdgCode()) == 11)
         ResizeSubVectors(slcVars, "slc_pzc", slcCounter, 0);
@@ -1211,7 +1330,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
     }
 }
 
-void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
+void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const std::vector<art::Ptr<recob::PFParticle>> &pfps,
+                                         const std::vector<art::Ptr<recob::Hit>> &sliceHits, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
                                          const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, const art::Handle<std::vector<recob::Track>> &trackHandle,
                                          const art::Handle<std::vector<recob::Shower>> &showerHandle)
 {
@@ -1219,28 +1339,46 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
   art::FindOneP<larpandoraobj::PFParticleMetadata> pfpToMeta(pfpHandle, e, fPFParticleModuleLabel);
   art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
-  art::FindOneP<sbn::MVAPID>                       pfpsToRazzled(pfpHandle, e, fRazzledModuleLabel);
+  art::FindOneP<sbn::MVAPID>                       pfpToRazzled(pfpHandle, e, fRazzledModuleLabel);
+  art::FindManyP<recob::SpacePoint>                pfpToSpacePoints(pfpHandle, e, fSpacePointModuleLabel);
 
   int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzlepionsthresh = 0, ndazzleprotons = 0,
     ndazzleprotonsthresh = 0, ndazzleother = 0, nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0,
     nrazzledelectrons = 0, nrazzledmuons = 0, nrazzledphotons = 0, nrazzledpions = 0, nrazzledpionsthresh = 0,
     nrazzledprotons = 0, nrazzledprotonsthresh = 0;
 
-  for(auto&& [pfpCounter, id] : enumerate(prim->Daughters()))
+  int nprimtrks = 0, nprimshws = 0, nprimdazzlemuons = 0, nprimdazzlepions = 0, nprimdazzlepionsthresh = 0, nprimdazzleprotons = 0,
+    nprimdazzleprotonsthresh = 0, nprimdazzleother = 0, nprimrazzleelectrons = 0, nprimrazzlephotons = 0, nprimrazzleother = 0,
+    nprimrazzledelectrons = 0, nprimrazzledmuons = 0, nprimrazzledphotons = 0, nprimrazzledpions = 0, nprimrazzledpionsthresh = 0,
+    nprimrazzledprotons = 0, nprimrazzledprotonsthresh = 0;
+
+  std::vector<art::Ptr<recob::Hit>> used_hits;
+
+  for(auto&& [pfpCounter, pfp] : enumerate(pfps))
     {
-      const art::Ptr<recob::PFParticle> pfp = fPFPMap[id];
-      FillElement(slcVars["slc_pfp_id"], slcCounter, pfpCounter, id);
+      FillElement(slcVars["slc_pfp_id"], slcCounter, pfpCounter, pfp->Self());
       FillElement(slcVars["slc_pfp_pdg"], slcCounter, pfpCounter, pfp->PdgCode());
       FillElement(slcVars["slc_pfp_n_children"], slcCounter, pfpCounter, pfp->NumDaughters());
 
+      const bool primary_child = prim->Self() == pfp->Parent();
+      FillElement(slcVars["slc_pfp_primary"], slcCounter, pfpCounter, pfp->IsPrimary());
+      FillElement(slcVars["slc_pfp_primary_child"], slcCounter, pfpCounter, primary_child);
+
       if(abs(pfp->PdgCode()) == 11)
-        ++nshws;
+        {
+          ++nshws;
+          if(primary_child)
+            ++nprimshws;
+        }
       else if(abs(pfp->PdgCode()) == 13)
-        ++ntrks;
+        {
+          ++ntrks;
+          if(primary_child)
+            ++nprimtrks;
+        }
       else
         {
-          std::cout << "PFP with PDG: " << pfp->PdgCode() << std::endl;
-          throw std::exception();
+          continue;
         }
 
       const art::Ptr<larpandoraobj::PFParticleMetadata> meta         = pfpToMeta.at(pfp.key());
@@ -1256,22 +1394,35 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
       FillElement(slcVars["slc_pfp_good_track"], slcCounter, pfpCounter, track.isNonnull());
       FillElement(slcVars["slc_pfp_good_shower"], slcCounter, pfpCounter, shower.isNonnull());
 
-      const art::Ptr<sbn::MVAPID> razzled = pfpsToRazzled.at(pfp.key());
+      const art::Ptr<sbn::MVAPID> razzled = pfpToRazzled.at(pfp.key());
       if(razzled.isNonnull())
         ExtractRazzled(razzled, slcCounter, pfpCounter);
 
       const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
       const std::vector<art::Ptr<recob::Hit>> hits = showersToHits.at(shower.key());
+
+      FillElement(slcVars["slc_pfp_n_hits"], slcCounter, pfpCounter, hits.size());
+      used_hits.insert(used_hits.end(), hits.begin(), hits.end());
+
       const int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, true);
       FillElement(slcVars["slc_pfp_true_trackid"], slcCounter, pfpCounter, trackID);
       FillElement(slcVars["slc_pfp_comp"], slcCounter, pfpCounter, Completeness(e, hits, trackID));
       FillElement(slcVars["slc_pfp_pur"], slcCounter, pfpCounter, Purity(e, hits, trackID));
 
+      const std::vector<art::Ptr<recob::SpacePoint>> spacepoints = pfpToSpacePoints.at(pfp.key());
+      FillElement(slcVars["slc_pfp_n_sps"], slcCounter, pfpCounter, spacepoints.size());
+
       if(trackID != def_int)
         {
           const simb::MCParticle* mcp = particleInv->TrackIdToParticle_P(trackID);
           if(mcp != NULL)
-            FillElement(slcVars["slc_pfp_true_pdg"], slcCounter, pfpCounter, mcp->PdgCode());
+            {
+              FillElement(slcVars["slc_pfp_true_pdg"], slcCounter, pfpCounter, mcp->PdgCode());
+              FillElement(slcVars["slc_pfp_true_energy"], slcCounter, pfpCounter, mcp->E());
+              FillElement(slcVars["slc_pfp_true_p_x"], slcCounter, pfpCounter, mcp->Px());
+              FillElement(slcVars["slc_pfp_true_p_y"], slcCounter, pfpCounter, mcp->Py());
+              FillElement(slcVars["slc_pfp_true_p_z"], slcCounter, pfpCounter, mcp->Pz());
+            }
         }
 
       if(track.isNonnull())
@@ -1299,6 +1450,22 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             ++ndazzleprotonsthresh;
           if(dazzlepdg == 0)
             ++ndazzleother;
+
+          if(primary_child)
+            {
+              if(dazzlepdg == 13)
+                ++nprimdazzlemuons;
+              if(dazzlepdg == 211)
+                ++nprimdazzlepions;
+              if(dazzlepdg == 211 && pfpenergy > 32.1)
+                ++nprimdazzlepionsthresh;
+              if(dazzlepdg == 2212)
+                ++nprimdazzleprotons;
+              if(dazzlepdg == 2212 && pfpenergy > 32.7)
+                ++nprimdazzleprotonsthresh;
+              if(dazzlepdg == 0)
+                ++nprimdazzleother;
+            }
         }
 
       if(shower.isNonnull())
@@ -1317,6 +1484,16 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             ++nrazzlephotons;
           if(razzlepdg == 0)
             ++nrazzleother;
+
+          if(primary_child)
+            {
+              if(razzlepdg == 11)
+                ++nprimrazzleelectrons;
+              if(razzlepdg == 22)
+                ++nprimrazzlephotons;
+              if(razzlepdg == 0)
+                ++nprimrazzleother;
+            }
         }
 
       int razzledpdg;
@@ -1336,6 +1513,24 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
         ++nrazzledprotons;
       if(razzledpdg == 2212 && pfpenergy > 32.7)
         ++nrazzledprotonsthresh;
+
+      if(primary_child)
+        {
+          if(razzledpdg == 11)
+            ++nprimrazzledelectrons;
+          if(razzledpdg == 13)
+            ++nprimrazzledmuons;
+          if(razzledpdg == 22)
+            ++nprimrazzledphotons;
+          if(razzledpdg == 211)
+            ++nprimrazzledpions;
+          if(razzledpdg == 211 && pfpenergy > 32.1)
+            ++nprimrazzledpionsthresh;
+          if(razzledpdg == 2212)
+            ++nprimrazzledprotons;
+          if(razzledpdg == 2212 && pfpenergy > 32.7)
+            ++nprimrazzledprotonsthresh;
+        }
     }
 
   FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
@@ -1356,6 +1551,42 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
   FillElement(slcVars["slc_n_razzled_pions_thresh"], slcCounter, nrazzledpionsthresh);
   FillElement(slcVars["slc_n_razzled_protons"], slcCounter, nrazzledprotons);
   FillElement(slcVars["slc_n_razzled_protons_thresh"], slcCounter, nrazzledprotonsthresh);
+
+  FillElement(slcVars["slc_n_primary_trks"], slcCounter, nprimtrks);
+  FillElement(slcVars["slc_n_primary_shws"], slcCounter, nprimshws);
+  FillElement(slcVars["slc_n_primary_dazzle_muons"], slcCounter, nprimdazzlemuons);
+  FillElement(slcVars["slc_n_primary_dazzle_pions"], slcCounter, nprimdazzlepions);
+  FillElement(slcVars["slc_n_primary_dazzle_pions_thresh"], slcCounter, nprimdazzlepionsthresh);
+  FillElement(slcVars["slc_n_primary_dazzle_protons"], slcCounter, nprimdazzleprotons);
+  FillElement(slcVars["slc_n_primary_dazzle_protons_thresh"], slcCounter, nprimdazzleprotonsthresh);
+  FillElement(slcVars["slc_n_primary_dazzle_other"], slcCounter, nprimdazzleother);
+  FillElement(slcVars["slc_n_primary_razzle_electrons"], slcCounter, nprimrazzleelectrons);
+  FillElement(slcVars["slc_n_primary_razzle_photons"], slcCounter, nprimrazzlephotons);
+  FillElement(slcVars["slc_n_primary_razzle_other"], slcCounter, nprimrazzleother);
+  FillElement(slcVars["slc_n_primary_razzled_electrons"], slcCounter, nprimrazzledelectrons);
+  FillElement(slcVars["slc_n_primary_razzled_muons"], slcCounter, nprimrazzledmuons);
+  FillElement(slcVars["slc_n_primary_razzled_photons"], slcCounter, nprimrazzledphotons);
+  FillElement(slcVars["slc_n_primary_razzled_pions"], slcCounter, nprimrazzledpions);
+  FillElement(slcVars["slc_n_primary_razzled_pions_thresh"], slcCounter, nprimrazzledpionsthresh);
+  FillElement(slcVars["slc_n_primary_razzled_protons"], slcCounter, nprimrazzledprotons);
+  FillElement(slcVars["slc_n_primary_razzled_protons_thresh"], slcCounter, nprimrazzledprotonsthresh);
+
+  FillElement(slcVars["slc_n_used_hits"], slcCounter, used_hits.size());
+
+  if(prim->PdgCode() == 12 || prim->PdgCode() == 14)
+    {
+      std::vector<art::Ptr<recob::Hit>> unused_hits;
+
+      for(auto const& hit : sliceHits)
+        {
+          if(std::find(used_hits.begin(), used_hits.end(), hit) == used_hits.end())
+            unused_hits.push_back(hit);
+        }
+
+      std::cout << prim->PdgCode() << std::endl;
+
+      fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, nprimrazzledphotons==1);
+    }
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<recob::Track> &track, const int slcCounter, const int pfpCounter,
@@ -1666,11 +1897,23 @@ void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::P
   FillElement(slcVars["slc_pur"], slcCounter, pur);
 
   if(fBeamOff)
-    FillElement(slcVars["slc_true_event_type"], slcCounter, (int) kCosmic);
+    {
+      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) kCosmic);
+      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) kCosmic);
+      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) kCosmic);
+      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) kCosmic);
+      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) kCosmic);
+    }
   else if(bestMCT.isNonnull())
     AnalyseMCTruth(e, slcVars, bestMCT, slcCounter, "slc_true");
   else
-    FillElement(slcVars["slc_true_event_type"], slcCounter, (int) kFailedTruthMatch);
+    {
+      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) kFailedTruthMatch);
+    }
 }
 
 void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
@@ -1697,8 +1940,27 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   AccessElement(slcVars["slc_n_razzled_photons"], counter, nrazzledphotons);
   const bool passes_razzled_photons = nrazzledphotons > 1;
 
-  const bool sel = !is_clear_cosmic && is_fv && passes_crumbs && passes_razzled_muons && passes_pfps && passes_razzled_photons;
-  FillElement(slcVars["slc_sel"], counter, sel);
+  int nrazzledpions;
+  AccessElement(slcVars["slc_n_razzled_pions_thresh"], counter, nrazzledpions);
+  const bool passes_razzled_pions = nrazzledpions == 0;
+
+  int nrazzledprotons;
+  AccessElement(slcVars["slc_n_razzled_protons_thresh"], counter, nrazzledprotons);
+
+  const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs && passes_razzled_muons && passes_pfps && passes_razzled_photons;
+  FillElement(slcVars["slc_sel_incl"], counter, sel_incl);
+
+  const bool sel_0p0pi = sel_incl && passes_razzled_pions && nrazzledprotons == 0;
+  FillElement(slcVars["slc_sel_0p0pi"], counter, sel_0p0pi);
+
+  const bool sel_1p0pi = sel_incl && passes_razzled_pions && nrazzledprotons == 1;
+  FillElement(slcVars["slc_sel_1p0pi"], counter, sel_1p0pi);
+
+  const bool sel_Np0pi = sel_incl && passes_razzled_pions && nrazzledprotons > 0;
+  FillElement(slcVars["slc_sel_Np0pi"], counter, sel_Np0pi);
+
+  const bool sel_Xp0pi = sel_incl && passes_razzled_pions;
+  FillElement(slcVars["slc_sel_Xp0pi"], counter, sel_Xp0pi);
 }
 
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,
@@ -1831,8 +2093,10 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
 
 void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter)
 {
+  std::vector<std::vector<bool>> pzc_good_kinematics;
   std::vector<std::vector<double>> pzc_invariant_mass;
 
+  GetVar(vars[prefix + "_pzc_good_kinematics"], pzc_good_kinematics);
   GetVar(vars[prefix + "_pzc_invariant_mass"], pzc_invariant_mass);
 
   double bestInvMass = std::numeric_limits<double>::max();
@@ -1840,7 +2104,7 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
 
   for(size_t i = 0; i < pzc_invariant_mass.at(counter).size(); ++i)
     {
-      if(abs(134.9769 - pzc_invariant_mass.at(counter).at(i)) < bestInvMass)
+      if(pzc_good_kinematics.at(counter).at(i) && abs(134.9769 - pzc_invariant_mass.at(counter).at(i)) < bestInvMass)
         {
           bestInvMass = abs(134.9769 - pzc_invariant_mass.at(counter).at(i));
           bestID = i;
@@ -1854,6 +2118,10 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
           if(varName.find(prefix + "_best_pzc") != std::string::npos)
             TransferElement(var, slcVars, prefix + "_best_pzc", prefix + "_pzc", counter, counter, bestID);
         }
+    }
+  else
+    {
+      FillElement(vars[prefix + "_best_pzc_good_kinematics"], counter, false);
     }
 }
 

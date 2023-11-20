@@ -12,6 +12,9 @@ art_make(
          lardataobj::RecoBase
          lardata::Utilities
          sbnobj::Common_Reco
+         sbndcode_PiZero_SecondShower
 )
 
 install_fhicl()
+
+add_subdirectory(SecondShower)

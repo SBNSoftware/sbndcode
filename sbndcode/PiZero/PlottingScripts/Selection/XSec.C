@@ -47,21 +47,21 @@ void XSec(const TString productionVersion, const TString saveDirExt)
 
   TH1F *hNominalPiZeroMomentumRockbox = new TH1F("hNominalPiZeroMomentumRockbox", ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
   TH1F *hNominalPiZeroMomentumIntime = new TH1F("hNominalPiZeroMomentumIntime", ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
-  rockboxslices->Draw("pzc_pizero_mom>>hNominalPiZeroMomentumRockbox");
-  intimeslices->Draw("pzc_pizero_mom>>hNominalPiZeroMomentumIntime");
+  rockboxslices->Draw("pzc_pizero_mom>>hNominalPiZeroMomentumRockbox", "selected");
+  intimeslices->Draw("pzc_pizero_mom>>hNominalPiZeroMomentumIntime", "selected");
   hNominalPiZeroMomentumRockbox->Scale(rockboxScaling);
   hNominalPiZeroMomentumIntime->Scale(intimeScaling);
   TH1F* hNominalPiZeroMomentum = (TH1F*) hNominalPiZeroMomentumRockbox->Clone("hNominalPiZeroMomentum");
   hNominalPiZeroMomentum->Add(hNominalPiZeroMomentumIntime);
-  NormaliseEntriesByBinWidth(hNominalPiZeroMomentum);
+  NormaliseEntriesByBinWidth(hNominalPiZeroMomentum, .1);
 
   std::vector<TH1F*> hFluxUniversesPiZeroMomentum;
   for(int univ = 0; univ < n_flux_univs; ++univ)
     {
       TH1F *hFluxUniversesPiZeroMomentumRockbox = new TH1F(Form("hFluxUniverse%iPiZeroMomentumRockbox", univ), ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
       TH1F *hFluxUniversesPiZeroMomentumIntime = new TH1F(Form("hFluxUniverse%iPiZeroMomentumIntime", univ), ";p_{#pi^{0}} (MeV/c);Slices / MeV/c", 14, pizero_momentum_bins);
-      rockboxslices->Draw(Form("pzc_pizero_mom>>hFluxUniverse%iPiZeroMomentumRockbox", univ), Form("flux_weights[%i]",univ));
-      intimeslices->Draw(Form("pzc_pizero_mom>>hFluxUniverse%iPiZeroMomentumIntime", univ), Form("flux_weights[%i]",univ));
+      rockboxslices->Draw(Form("pzc_pizero_mom>>hFluxUniverse%iPiZeroMomentumRockbox", univ), Form("flux_weights[%i] * selected",univ));
+      intimeslices->Draw(Form("pzc_pizero_mom>>hFluxUniverse%iPiZeroMomentumIntime", univ), Form("flux_weights[%i] * selected",univ));
       hFluxUniversesPiZeroMomentumRockbox->Scale(rockboxScaling);
       hFluxUniversesPiZeroMomentumIntime->Scale(intimeScaling);
       TH1F *hFluxUniversesPiZeroMomentumCombined = (TH1F*) hFluxUniversesPiZeroMomentumRockbox->Clone("hFluxUniversesPiZeroMomentum");
@@ -70,7 +70,7 @@ void XSec(const TString productionVersion, const TString saveDirExt)
       hFluxUniversesPiZeroMomentum.push_back(hFluxUniversesPiZeroMomentumCombined);
       hFluxUniversesPiZeroMomentum[univ]->SetLineColor(kMagenta-10);
       hFluxUniversesPiZeroMomentum[univ]->SetLineWidth(1);
-      NormaliseEntriesByBinWidth(hFluxUniversesPiZeroMomentum[univ]);
+      NormaliseEntriesByBinWidth(hFluxUniversesPiZeroMomentum[univ], .1);
     }
 
   TCanvas *cFluxUniversesPiZeroMomentum = new TCanvas("cFluxUniversesPiZeroMomentum", "cFluxUniversesPiZeroMomentum");

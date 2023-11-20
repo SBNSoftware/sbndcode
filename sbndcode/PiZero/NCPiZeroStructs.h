@@ -1,6 +1,10 @@
+#ifndef NCPIZEROSTRUCTS_H_SEEN
+#define NCPIZEROSTRUCTS_H_SEEN
+
 enum EventType
   {
-    kNCPiZero,
+    kSignalNCPiZero,
+    kOtherNCPiZero,
     kOtherNC,
     kCCNuMu,
     kCCNuE,
@@ -267,3 +271,5 @@ template <typename T,
   };
   return iterable_wrapper{ std::forward<T>(iterable) };
 }
+
+#endif

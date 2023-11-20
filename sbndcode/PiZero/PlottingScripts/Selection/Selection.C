@@ -8,7 +8,7 @@ const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
 const double goalSpills  = goalPOT / potPerSpill;
 
-void Selection(const TString productionVersion, const TString saveDirExt = "tmp", std::vector<Cut> &cuts = razzled_cuts,
+void Selection(const TString productionVersion, const TString saveDirExt = "tmp", std::vector<Cut> &cuts = ncpizero_cuts,
                const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots,
                const TCut &trueCategory = "");
 
@@ -21,17 +21,11 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
 
 void RunMultiSelection()
 {
-  Selection("NCPiZeroAv6", "ncpizero_dazzle_muons", ncpizero_cuts_dazzle_muons, ncpizero_categories, no_plots, true_ncpizero_cut);
-  /*
-  Selection("NCPiZeroAv6", "ncpizero", ncpizero_cuts, ncpizero_categories, selection_plots, true_ncpizero_cut);
-  Selection("NCPiZeroAv6", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, no_plots, true_ncpizero_0p0pi_cut);
-  Selection("NCPiZeroAv6", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, no_plots, true_ncpizero_1p0pi_cut);
-  Selection("NCPiZeroAv6", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, no_plots, true_ncpizero_Np0pi_cut);
-  Selection("NCPiZeroAv6", "ncpizero_0pXpi", ncpizero_0pXpi_cuts, ncpizero_0pXpi_categories, no_plots, true_ncpizero_0pXpi_cut);
-  Selection("NCPiZeroAv6", "ncpizero_1pXpi", ncpizero_1pXpi_cuts, ncpizero_1pXpi_categories, no_plots, true_ncpizero_1pXpi_cut);
-  Selection("NCPiZeroAv6", "ncpizero_NpXpi", ncpizero_NpXpi_cuts, ncpizero_NpXpi_categories, no_plots, true_ncpizero_NpXpi_cut);
-  Selection("NCPiZeroAv6", "ccpizero", ccpizero_cuts, ccpizero_categories, no_plots, true_ccpizero_cut);
-  */
+  Selection("NCPiZeroAv7", "ncpizero", ncpizero_cuts, ncpizero_categories, selection_plots, true_ncpizero_cut);
+  Selection("NCPiZeroAv7", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, selection_plots, true_ncpizero_0p0pi_cut);
+  Selection("NCPiZeroAv7", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, selection_plots, true_ncpizero_1p0pi_cut);
+  Selection("NCPiZeroAv7", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, selection_plots, true_ncpizero_Np0pi_cut);
+  Selection("NCPiZeroAv7", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, selection_plots, true_ncpizero_Xp0pi_cut);
 }
 
 void Selection(const TString productionVersion, const TString saveDirExt, std::vector<Cut> &cuts, const std::vector<Cut> &categories,
@@ -83,7 +77,6 @@ void Selection(const TString productionVersion, const TString saveDirExt, std::v
       
       if(plots.size() != 0)
         gSystem->Exec("mkdir -p " + saveDir + "/" + cut.name);
-
       for(auto plot : plots)
         {
           TCanvas *canvas = new TCanvas("c_" + plot.name + "_" + cut.name,
@@ -145,9 +138,9 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
 
   for(auto const& sample : samples)
     {
-      totalSignal         += sample.tree->Draw("", trueCategory);
-      totalSignalSlices   += sample.tree->Draw("", categories[0].cut);
-      totalBackSlices     += sample.tree->Draw("", !categories[0].cut);
+      totalSignal         += sample.scaling * sample.tree->Draw("", trueCategory);
+      totalSignalSlices   += sample.scaling * sample.tree->Draw("", categories[0].cut);
+      totalBackSlices     += sample.scaling * sample.tree->Draw("", !categories[0].cut);
     }
 
   texFile << docStart;
@@ -176,9 +169,9 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
           for(auto const& sample : samples)
             {
               if(j == 0)
-                sigSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
+                sigSlices += sample.scaling * sample.tree->Draw("", cut.cut + categories[j].cut);
               else
-                backSlices += sample.tree->Draw("", cut.cut + categories[j].cut);
+                backSlices += sample.scaling * sample.tree->Draw("", cut.cut + categories[j].cut);
             }
         }
 
