@@ -40,6 +40,17 @@ typedef std::vector<art::Ptr<recob::Hit>> HitVec;
 
 class SecondShowerFinderAlg
 {
+  const double wireAngleU = 1.04719758034;
+  const double wireAngleV = -1.04719758034;
+  const double wireAngleW = 0;
+
+  const double cosU = TMath::Cos(wireAngleU);
+  const double sinU = TMath::Sin(wireAngleU);
+  const double cosV = TMath::Cos(wireAngleV);
+  const double sinV = TMath::Sin(wireAngleV);
+  const double cosW = TMath::Cos(wireAngleW);
+  const double sinW = TMath::Sin(wireAngleW);
+
   struct HitObj {
     art::Ptr<recob::Hit> hit;
     bool used;
@@ -51,14 +62,13 @@ class SecondShowerFinderAlg
 
   std::vector<int> fColours = { kGreen+2, kMagenta+2, kCyan+2, kYellow+2, kAzure+1, kSpring+9, kPink+9, kTeal+9, kOrange+2, kViolet-8 };
 
- public:
-  SecondShowerFinderAlg();
+  std::vector<size_t> AnalyseViewHits(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw);
 
-  SecondShowerFinderAlg(fhicl::ParameterSet const& p);
+  void SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits);
 
-  bool FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw);
+  void InitialPairings(const ClusterObj &hits, std::vector<ClusterObj> &clusters);
 
-  bool AnalyseViewHits(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw);
+  void MergeClusters(std::vector<ClusterObj> &clusters);
 
   void DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name);
 
@@ -68,21 +78,13 @@ class SecondShowerFinderAlg
 
   double YZtoW(const double y, const double z);
 
-  void MergeClusters(std::vector<ClusterObj> &clusters);
 
-  void SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits);
+ public:
+  SecondShowerFinderAlg();
 
- private:
-  const double wireAngleU = 1.04719758034;
-  const double wireAngleV = -1.04719758034;
-  const double wireAngleW = 0;
+  SecondShowerFinderAlg(fhicl::ParameterSet const& p);
 
-  const double cosU = TMath::Cos(wireAngleU);
-  const double sinU = TMath::Sin(wireAngleU);
-  const double cosV = TMath::Cos(wireAngleV);
-  const double sinV = TMath::Sin(wireAngleV);
-  const double cosW = TMath::Cos(wireAngleW);
-  const double sinW = TMath::Sin(wireAngleW);
+  std::vector<std::vector<size_t>> FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw);
 };
 
 #endif

@@ -68,7 +68,7 @@ SecondShowerFinderAlg::SecondShowerFinderAlg(fhicl::ParameterSet const& p)
   SecondShowerFinderAlg();
 }
 
-bool SecondShowerFinderAlg::FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw)
+std::vector<std::vector<size_t>> SecondShowerFinderAlg::FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw)
 {
   ClusterObj u_hits, v_hits, w_hits;
   ClusterObj u_usedHits, v_usedHits, w_usedHits;
@@ -82,14 +82,16 @@ bool SecondShowerFinderAlg::FindSecondShower(const art::Event &e, const HitVec &
               << "\tV: " << v_hits.size()
               << "\tW: " << w_hits.size() << std::endl;
 
-  const bool u_yes = AnalyseViewHits(u_hits, u_usedHits, "U view", draw);
-  const bool v_yes = AnalyseViewHits(v_hits, v_usedHits, "V view", draw);
-  const bool w_yes = AnalyseViewHits(w_hits, w_usedHits, "W view", draw);
+  std::vector<std::vector<size_t>> clusterSizes(3, std::vector<size_t>());
 
-  return u_yes && v_yes && w_yes;
+  clusterSizes[0] = AnalyseViewHits(u_hits, u_usedHits, "U view", draw);
+  clusterSizes[1] = AnalyseViewHits(v_hits, v_usedHits, "V view", draw);
+  clusterSizes[2] = AnalyseViewHits(w_hits, w_usedHits, "W view", draw);
+
+  return clusterSizes;
 }
 
-bool SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw)
+std::vector<size_t> SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw)
 {
   std::vector<ClusterObj> clusters;
 
@@ -99,6 +101,78 @@ bool SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hits, const Cluste
       DrawView(hits, usedHits, clusters, name);
     }
 
+  InitialPairings(hits, clusters);
+
+  MergeClusters(clusters);
+
+  std::vector<ClusterObj>::iterator it = clusters.begin();
+  while(it != clusters.end())
+    {
+      if(it->size() < 10)
+        it = clusters.erase(it);
+      else
+        {
+          ++it;
+        }
+    }
+
+  if(draw)
+    {
+      std::cout << "Drawing " << name << " clustered... (" << clusters.size() << " extra clusters)" << std::endl;
+      DrawView(hits, usedHits, clusters, name);
+    }
+
+  std::vector<size_t> clusterSizes(clusters.size(), 0);
+  for(auto&& [i, cluster] : enumerate(clusters))
+    clusterSizes[i] = cluster.size();
+
+  return clusterSizes;
+}
+
+void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits)
+{
+  art::ServiceHandle<geo::Geometry const> geom;
+  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
+
+  for(auto const& hit : hits)
+    {
+      const geo::WireID wireID = hit->WireID();
+      const double x = detProp.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
+
+      auto const xyz = geom->Wire(wireID).GetCenter();
+
+      switch(hit->View())
+        {
+        case geo::kU:
+          {
+            double wire_pos = YZtoU(xyz.Y(), xyz.Z());
+            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
+            u_hits.push_back(hitObj);
+            break;
+          }
+        case geo::kV:
+          {
+            double wire_pos = YZtoV(xyz.Y(), xyz.Z());
+            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
+            v_hits.push_back(hitObj);
+            break;
+          }
+        case geo::kW:
+          {
+            double wire_pos = YZtoW(xyz.Y(), xyz.Z());
+            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
+            w_hits.push_back(hitObj);
+            break;
+          }
+        default:
+          std::cout << "Holy shit SBND, you got new planes" << std::endl;
+          break;
+        }
+    }
+}
+
+void SecondShowerFinderAlg::InitialPairings(const ClusterObj &hits, std::vector<ClusterObj> &clusters)
+{
   for(auto const& hitObjA : hits)
     {
       if(hitObjA->used)
@@ -127,27 +201,42 @@ bool SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hits, const Cluste
             }
         }
     }
+}
 
-  MergeClusters(clusters);
+void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
+{
+  std::vector<ClusterObj>::iterator itA = clusters.begin();
 
-  std::vector<ClusterObj>::iterator it = clusters.begin();
-  while(it != clusters.end())
+  while(itA != clusters.end())
     {
-      if(it->size() < 10)
-        it = clusters.erase(it);
-      else
+      std::vector<ClusterObj>::iterator itB = std::next(itA);
+
+      while(itB != clusters.end())
         {
-          ++it;
+          bool merge = false;
+
+          for(auto const& hitObjA : *itA)
+            {
+              for(auto const& hitObjB : *itB)
+                {
+                  double dist = sqrt( (hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
+                                      (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
+
+                  if(dist < 0.9)
+                    merge = true;
+                }
+            }
+
+          if(merge)
+            {
+              itA->insert(itA->end(), itB->begin(), itB->end());
+              itB = clusters.erase(itB);
+            }
+          else
+            ++itB;
         }
+      ++itA;
     }
-
-  if(draw)
-    {
-      std::cout << "Drawing " << name << " clustered... (" << clusters.size() << " extra clusters)" << std::endl;
-      DrawView(hits, usedHits, clusters, name);
-    }
-
-  return clusters.size();
 }
 
 void SecondShowerFinderAlg::DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name)
@@ -290,82 +379,4 @@ double SecondShowerFinderAlg::YZtoV(const double y, const double z)
 double SecondShowerFinderAlg::YZtoW(const double y, const double z)
 {
   return z * cosW - y * sinW;
-}
-
-void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
-{
-  std::vector<ClusterObj>::iterator itA = clusters.begin();
-
-  while(itA != clusters.end())
-    {
-      std::vector<ClusterObj>::iterator itB = std::next(itA);
-
-      while(itB != clusters.end())
-        {
-          bool merge = false;
-
-          for(auto const& hitObjA : *itA)
-            {
-              for(auto const& hitObjB : *itB)
-                {
-                  double dist = sqrt( (hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
-                                      (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
-
-                  if(dist < 0.9)
-                    merge = true;
-                }
-            }
-
-          if(merge)
-            {
-              itA->insert(itA->end(), itB->begin(), itB->end());
-              itB = clusters.erase(itB);
-            }
-          else
-            ++itB;
-        }
-      ++itA;
-    }
-}
-
-void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits)
-{
-  art::ServiceHandle<geo::Geometry const> geom;
-  auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
-
-  for(auto const& hit : hits)
-    {
-      const geo::WireID wireID = hit->WireID();
-      const double x = detProp.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
-
-      auto const xyz = geom->Wire(wireID).GetCenter();
-
-      switch(hit->View())
-        {
-        case geo::kU:
-          {
-            double wire_pos = YZtoU(xyz.Y(), xyz.Z());
-            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
-            u_hits.push_back(hitObj);
-            break;
-          }
-        case geo::kV:
-          {
-            double wire_pos = YZtoV(xyz.Y(), xyz.Z());
-            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
-            v_hits.push_back(hitObj);
-            break;
-          }
-        case geo::kW:
-          {
-            double wire_pos = YZtoW(xyz.Y(), xyz.Z());
-            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
-            w_hits.push_back(hitObj);
-            break;
-          }
-        default:
-          std::cout << "Holy shit SBND, you got new planes" << std::endl;
-          break;
-        }
-    }
 }

@@ -520,6 +520,12 @@ private:
     { "slc_best_pzc_photon_1_true_pdg", new InhVecVar<int>("slc_best_pzc_photon_1_true_pdg") },
     { "slc_best_pzc_photon_1_comp", new InhVecVar<float>("slc_best_pzc_photon_1_comp") },
     { "slc_best_pzc_photon_1_pur", new InhVecVar<float>("slc_best_pzc_photon_1_pur") },
+    { "slc_ssss_n_u_clusters", new InhVecVar<size_t>("slc_ssss_n_u_clusters") },
+    { "slc_ssss_u_cluster_n_hits", new InhVecVecVar<size_t>("slc_ssss_u_cluster_n_hits") },
+    { "slc_ssss_n_v_clusters", new InhVecVar<size_t>("slc_ssss_n_v_clusters") },
+    { "slc_ssss_v_cluster_n_hits", new InhVecVecVar<size_t>("slc_ssss_v_cluster_n_hits") },
+    { "slc_ssss_n_w_clusters", new InhVecVar<size_t>("slc_ssss_n_w_clusters") },
+    { "slc_ssss_w_cluster_n_hits", new InhVecVecVar<size_t>("slc_ssss_w_cluster_n_hits") },
     { "slc_sel_incl", new InhVecVar<bool>("slc_sel_incl") },
     { "slc_sel_0p0pi", new InhVecVar<bool>("slc_sel_0p0pi") },
     { "slc_sel_1p0pi", new InhVecVar<bool>("slc_sel_1p0pi") },
@@ -1600,7 +1606,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
 
   FillElement(slcVars["slc_n_used_hits"], slcCounter, used_hits.size());
 
-  if(prim->PdgCode() == 12 || prim->PdgCode() == 14)
+  if((prim->PdgCode() == 12 || prim->PdgCode() == 14) && nprimrazzledmuons == 0 && (nprimrazzledphotons==1 || nprimrazzledelectrons==1))
     {
       std::vector<art::Ptr<recob::Hit>> unused_hits;
 
@@ -1610,9 +1616,22 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             unused_hits.push_back(hit);
         }
 
-      std::cout << prim->PdgCode() << std::endl;
+      const std::vector<std::vector<size_t>> ssss_clusters = fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, false);
 
-      fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, nprimrazzledphotons==1 || nprimrazzledelectrons==1);
+      FillElement(slcVars["slc_ssss_n_u_clusters"], slcCounter, ssss_clusters[0].size());
+      ResizeSubVectors(slcVars, "slc_ssss_u", slcCounter, ssss_clusters[0].size());
+      for(auto&& [clCounter, n_hits] : enumerate(ssss_clusters[0]))
+        FillElement(slcVars["slc_ssss_u_cluster_n_hits"], slcCounter, clCounter, n_hits);
+
+      FillElement(slcVars["slc_ssss_n_v_clusters"], slcCounter, ssss_clusters[1].size());
+      ResizeSubVectors(slcVars, "slc_ssss_v", slcCounter, ssss_clusters[1].size());
+      for(auto&& [clCounter, n_hits] : enumerate(ssss_clusters[1]))
+        FillElement(slcVars["slc_ssss_v_cluster_n_hits"], slcCounter, clCounter, n_hits);
+
+      FillElement(slcVars["slc_ssss_n_w_clusters"], slcCounter, ssss_clusters[2].size());
+      ResizeSubVectors(slcVars, "slc_ssss_w", slcCounter, ssss_clusters[2].size());
+      for(auto&& [clCounter, n_hits] : enumerate(ssss_clusters[2]))
+        FillElement(slcVars["slc_ssss_w_cluster_n_hits"], slcCounter, clCounter, n_hits);
     }
 }
 
