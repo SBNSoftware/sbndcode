@@ -255,7 +255,7 @@ private:
   std::vector<double>	slc_vtx_x, slc_vtx_y, slc_vtx_z;
   std::vector<bool>	slc_is_fv;
   std::vector<float> 	slc_crumbs_score, slc_crumbs_nc_score, slc_crumbs_ccnue_score;
-  std::vector<double>	slc_opt0_time, slc_opt0_score, slc_opt0_measPE, slc_opt0_hypoPE;
+  std::vector<double>	slc_opt0_time, slc_opt0_score, slc_opt0_measPE, slc_opt0_hypoPE,slc_opt0_time_corrected_Z_pandora;
   std::vector<int>	slc_n_trks, slc_n_shws;
   std::vector<int> 	slc_n_primary_trks, slc_n_primary_shws;
   std::vector<int>	slc_n_dazzle_muons, slc_n_dazzle_pions, slc_n_dazzle_pions_thresh, slc_n_dazzle_protons, slc_n_dazzle_protons_thresh, slc_n_dazzle_other;
@@ -464,6 +464,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_crumbs_nc_score", &slc_crumbs_nc_score);
   fEventTree->Branch("slc_crumbs_ccnue_score", &slc_crumbs_ccnue_score);
   fEventTree->Branch("slc_opt0_time", &slc_opt0_time);
+  fEventTree->Branch("slc_opt0_time_corrected_Z_pandora", &slc_opt0_time_corrected_Z_pandora);
   fEventTree->Branch("slc_opt0_score", &slc_opt0_score);
   fEventTree->Branch("slc_opt0_measPE", &slc_opt0_measPE);
   fEventTree->Branch("slc_opt0_hypoPE", &slc_opt0_hypoPE);
@@ -814,6 +815,7 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_crumbs_nc_score.clear();
   slc_crumbs_ccnue_score.clear();
   slc_opt0_time.clear();
+  slc_opt0_time_corrected_Z_pandora.clear();
   slc_opt0_score.clear();
   slc_opt0_measPE.clear();
   slc_opt0_hypoPE.clear();
@@ -1241,6 +1243,7 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice1DVector(const int col){
   slc_crumbs_nc_score.resize(col);
   slc_crumbs_ccnue_score.resize(col);
   slc_opt0_time.resize(col);
+  slc_opt0_time_corrected_Z_pandora.resize(col);
   slc_opt0_score.resize(col);
   slc_opt0_measPE.resize(col);
   slc_opt0_hypoPE.resize(col);
@@ -1552,6 +1555,10 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
       slc_opt0_score[slcCounter] = opT0Vec[0]->score;
       slc_opt0_measPE[slcCounter] = opT0Vec[0]->measPE;
       slc_opt0_hypoPE[slcCounter] = opT0Vec[0]->hypoPE;
+
+      // Add corrected Z vertex variable
+      double light_speed = 29.9792458; // cm/ns
+      slc_opt0_time_corrected_Z_pandora [slcCounter] = slc_opt0_time[slcCounter] - slc_vtx_z[slcCounter]/light_speed;
     }
 
     ResizeSlice2DVectorCol(slcCounter, prim->Daughters().size());
