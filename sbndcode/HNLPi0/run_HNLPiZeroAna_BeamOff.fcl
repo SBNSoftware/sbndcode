@@ -1,4 +1,6 @@
 #include "run_HNLPiZeroAna.fcl"
 
 physics.analyzers.hnlpizeroana.BeamOff: true
+physics.analyzers.hnlpizeroana.Genie: false
+physics.analyzers.hnlpizeroana.MeVPrtl: false
 physics.analyzers.hnlpizeroana.Debug: false
