@@ -205,6 +205,7 @@ private:
  
   bool fBeamOff; 
   bool fMeVPrtl;
+  bool fGenie;
   bool fDebug;
 
   // Map
@@ -374,8 +375,9 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fShowerTrackFitModuleLabel 	= p.get<art::InputTag>("ShowerTrackFitModuleLabel", "pandoraShowerSelectionVars");
   fShowerDensityFitModuleLabel 	= p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
   fCNNScoreModuleLabel        	= p.get<art::InputTag>("CNNScoreModuleLabel", "cnnid");
-  fRazzledModuleLabel          = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
-  fSpacePointModuleLabel       = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
+  fRazzledModuleLabel           = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
+  fSpacePointModuleLabel        = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
+  fGenie 			= p.get<bool>("Genie", true);
   fBeamOff			= p.get<bool>("BeamOff", false);
   fMeVPrtl			= p.get<bool>("MeVPrtl", false);
   fDebug			= p.get<bool>("Debug", false);
@@ -821,6 +823,41 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_opt0_hypoPE.clear();
   slc_n_trks.clear();
   slc_n_shws.clear();
+  slc_n_primary_trks.clear(); 
+  slc_n_primary_shws.clear(); 
+  slc_n_dazzle_muons.clear(); 
+  slc_n_dazzle_pions.clear(); 
+  slc_n_dazzle_pions_thresh.clear();
+  slc_n_dazzle_protons.clear();
+  slc_n_dazzle_protons_thresh.clear();
+  slc_n_dazzle_other.clear();
+  slc_n_primary_dazzle_muons.clear();
+  slc_n_primary_dazzle_pions.clear();
+  slc_n_primary_dazzle_pions_thresh.clear(); 
+  slc_n_primary_dazzle_protons.clear();
+  slc_n_primary_dazzle_protons_thresh.clear(); 
+  slc_n_primary_dazzle_other.clear();
+  slc_n_razzle_electrons.clear();
+  slc_n_razzle_photons.clear();
+  slc_n_razzle_other.clear();
+  slc_n_primary_razzle_electrons.clear(); 
+  slc_n_primary_razzle_photons.clear();
+  slc_n_primary_razzle_other.clear();
+  slc_n_razzled_electrons.clear();
+  slc_n_razzled_muons.clear();
+  slc_n_razzled_photons.clear();
+  slc_n_razzled_pions.clear();
+  slc_n_razzled_pions_thresh.clear();
+  slc_n_razzled_protons.clear();
+  slc_n_razzled_protons_thresh.clear();
+  slc_n_primary_razzled_electrons.clear(); 
+  slc_n_primary_razzled_muons.clear();
+  slc_n_primary_razzled_photons.clear();
+  slc_n_primary_razzled_pions.clear();
+  slc_n_primary_razzled_pions_thresh.clear(); 
+  slc_n_primary_razzled_protons.clear();
+  slc_n_primary_razzled_protons_thresh.clear(); 
+
   slc_comp.clear();
   slc_pur.clear();
   slc_true_mctruth_id.clear();
@@ -1072,7 +1109,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseMCTruthHandle(const art::Event &e, const st
         if(mct->Origin() == 2) continue;
         ++_n_mctruth;
       }
-      if (!fMeVPrtl){
+      if (fBeamOff | fGenie){
 	if(mct->Origin() != 1) continue;
         ++_n_mctruth;
       }
@@ -1096,7 +1133,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseMCTruthHandle(const art::Event &e, const st
       	AnalyseMCTruth(e, mct, mctCounter);
       	++mctCounter;
       }
-      if (!fMeVPrtl){
+      if (fBeamOff | fGenie){
 	if(mct->Origin() != 1) continue;
       	AnalyseMCTruth(e, mct, mctCounter);
       }
@@ -2199,22 +2236,50 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
   slc_pur[slcCounter] = pur;
 
   if(bestMCT.isNonnull())
-  { 
-    //if MCTruth is a cosmics, MCTruth is not filled --> get the MCParticle that deposit the most hits
-    if(bestMCT->Origin() == 2){
-      auto const mcp = particleInv->TrackIdToParticle_P(bestTrackID);
+  {
+    if (fGenie){
+      if(bestMCT->Origin() == 2){
+        auto const mcp = particleInv->TrackIdToParticle_P(bestTrackID);
 
-      slc_true_event_type[slcCounter] = (int) kCosmic;
-      slc_true_vtx_x[slcCounter] = mcp->Vx();
-      slc_true_vtx_y[slcCounter] = mcp->Vy();
-      slc_true_vtx_z[slcCounter] = mcp->Vz();
-      slc_true_vtx_t[slcCounter] = mcp->T();
+        slc_true_event_type[slcCounter] = (int) kCosmic;
+        slc_true_vtx_x[slcCounter] = mcp->Vx();
+        slc_true_vtx_y[slcCounter] = mcp->Vy();
+        slc_true_vtx_z[slcCounter] = mcp->Vz();
+        slc_true_vtx_t[slcCounter] = mcp->T();
+      }else if(bestMCT->Origin() == 0){
+        slc_true_event_type[slcCounter] = (int) kUnknownEv;
+      }else{
+        AnalyseSliceMCTruth(e, bestMCT, slcCounter);
+      }
     }
-    // if MCTruth is not a cosmics, fill the vector as usual
-    else{
-      AnalyseSliceMCTruth(e, bestMCT, slcCounter);
+    else if (fMeVPrtl){
+      if(bestMCT->Origin() == 2){
+        auto const mcp = particleInv->TrackIdToParticle_P(bestTrackID);
+
+        slc_true_event_type[slcCounter] = (int) kCosmic;
+        slc_true_vtx_x[slcCounter] = mcp->Vx();
+        slc_true_vtx_y[slcCounter] = mcp->Vy();
+        slc_true_vtx_z[slcCounter] = mcp->Vz();
+        slc_true_vtx_t[slcCounter] = mcp->T();
+      }else{
+        AnalyseSliceMCTruth(e, bestMCT, slcCounter);
+      }
+
     }
-  }
+    else if (fBeamOff){
+      if(bestMCT->Origin() == 2){
+        auto const mcp = particleInv->TrackIdToParticle_P(bestTrackID);
+
+        slc_true_event_type[slcCounter] = (int) kCosmic;
+        slc_true_vtx_x[slcCounter] = mcp->Vx();
+        slc_true_vtx_y[slcCounter] = mcp->Vy();
+        slc_true_vtx_z[slcCounter] = mcp->Vz();
+        slc_true_vtx_t[slcCounter] = mcp->T();
+      }else{
+        slc_true_event_type[slcCounter] = (int) kUnknownEv;
+      }
+    } 
+  } //End of best MCT
 }
 
 void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art::Ptr<simb::MCTruth> &mct, const int slcCounter)
