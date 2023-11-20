@@ -103,6 +103,8 @@ std::vector<size_t> SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hit
 
   InitialPairings(hits, clusters);
 
+  AddSingleHits(hits, clusters);
+
   MergeClusters(clusters);
 
   std::vector<ClusterObj>::iterator it = clusters.begin();
@@ -199,6 +201,39 @@ void SecondShowerFinderAlg::InitialPairings(const ClusterObj &hits, std::vector<
               hitObjB->used = true;
               break;
             }
+        }
+    }
+}
+
+void SecondShowerFinderAlg::AddSingleHits(const ClusterObj &hits, std::vector<ClusterObj> &clusters)
+{
+  for(auto const& hitObjA : hits)
+    {
+      if(hitObjA->used)
+        continue;
+
+      std::vector<ClusterObj>::iterator it = clusters.begin();
+
+      while(it != clusters.end())
+        {
+          bool add = false;
+
+          for(auto const& hitObjB : *it)
+            {
+              double dist = sqrt( (hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
+                                  (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
+
+              if(dist < 0.9)
+                add = true;
+            }
+
+          if(add)
+            {
+              it->push_back(hitObjA);
+              hitObjA->used = true;
+            }
+
+          ++it;
         }
     }
 }

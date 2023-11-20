@@ -68,6 +68,8 @@ class SecondShowerFinderAlg
 
   void InitialPairings(const ClusterObj &hits, std::vector<ClusterObj> &clusters);
 
+  void AddSingleHits(const ClusterObj &hits, std::vector<ClusterObj> &clusters);
+
   void MergeClusters(std::vector<ClusterObj> &clusters);
 
   void DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name);
