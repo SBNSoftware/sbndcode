@@ -175,6 +175,7 @@ public:
   float Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
   float Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID);
 
+  void ExtractRazzled(const art::Ptr<sbn::MVAPID> &razzled, const int slcCounter, const int pfpCounter); 
   void ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, const int slcCounter, const int pfpCounter);
   void ExtractCalo(const art::Ptr<anab::Calorimetry> &calo, const int slcCounter, const int pfpCounter);
   void ExtractChi2PID(const art::Ptr<anab::ParticleID> &chi2pid, const int slcCounter, const int pfpCounter);
@@ -197,8 +198,10 @@ private:
 	  fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, 
 	  fRangeModuleLabel, fClosestApproachModuleLabel, fStoppingChi2ModuleLabel,
 	  fRazzleModuleLabel, fCosmicDistModuleLabel, fShowerDensityFitModuleLabel,
-	  fShowerTrackFitModuleLabel, fCNNScoreModuleLabel;
-    std::vector<std::string> fOpFlashesModuleLabel;
+	  fShowerTrackFitModuleLabel, fCNNScoreModuleLabel, fRazzledModuleLabel,
+	  fSpacePointModuleLabel;
+
+  std::vector<std::string> fOpFlashesModuleLabel;
  
   bool fBeamOff; 
   bool fMeVPrtl;
@@ -254,8 +257,13 @@ private:
   std::vector<float> 	slc_crumbs_score, slc_crumbs_nc_score, slc_crumbs_ccnue_score;
   std::vector<double>	slc_opt0_time, slc_opt0_score, slc_opt0_measPE, slc_opt0_hypoPE;
   std::vector<int>	slc_n_trks, slc_n_shws;
-  std::vector<int>      slc_n_dazzle_muons, slc_n_dazzle_muons_cut_based, slc_n_dazzle_pions, slc_n_dazzle_protons, slc_n_dazzle_other;
-  std::vector<int>      slc_n_razzle_electrons, slc_n_razzle_photons, slc_n_razzle_photons_cut_based, slc_n_razzle_other;
+  std::vector<int> 	slc_n_primary_trks, slc_n_primary_shws;
+  std::vector<int>	slc_n_dazzle_muons, slc_n_dazzle_pions, slc_n_dazzle_pions_thresh, slc_n_dazzle_protons, slc_n_dazzle_protons_thresh, slc_n_dazzle_other;
+  std::vector<int>	slc_n_primary_dazzle_muons, slc_n_primary_dazzle_pions, slc_n_primary_dazzle_pions_thresh, slc_n_primary_dazzle_protons, slc_n_primary_dazzle_protons_thresh, slc_n_primary_dazzle_other;
+  std::vector<int>	slc_n_razzle_electrons, slc_n_razzle_photons, slc_n_razzle_other;
+  std::vector<int>	slc_n_razzled_electrons, slc_n_razzled_muons, slc_n_razzled_photons, slc_n_razzled_pions, slc_n_razzled_pions_thresh, slc_n_razzled_protons, slc_n_razzled_protons_thresh;
+  std::vector<int>	slc_n_primary_razzle_electrons, slc_n_primary_razzle_photons, slc_n_primary_razzle_other;
+  std::vector<int>	slc_n_primary_razzled_electrons, slc_n_primary_razzled_muons, slc_n_primary_razzled_photons, slc_n_primary_razzled_pions, slc_n_primary_razzled_pions_thresh, slc_n_primary_razzled_protons, slc_n_primary_razzled_protons_thresh;
  
   // Event Tree: Slice Truth
   std::vector<float> 	slc_comp, slc_pur;
@@ -267,15 +275,29 @@ private:
   // Event Tree: Slice -> PFP -- 2D vector
   std::vector<std::vector<size_t>>	slc_pfp_id;
   std::vector<std::vector<int>> 	slc_pfp_pdg;
+  std::vector<std::vector<int>>  	slc_pfp_n_children;
+  std::vector<std::vector<bool>>	slc_pfp_primary;
+  std::vector<std::vector<bool>>	slc_pfp_primary_child;
+  std::vector<std::vector<size_t>>	slc_pfp_n_hits;
+  std::vector<std::vector<size_t>>	slc_pfp_n_sps;
   std::vector<std::vector<float>> 	slc_pfp_track_score;
   std::vector<std::vector<bool>> 	slc_pfp_good_track;
   std::vector<std::vector<bool>> 	slc_pfp_good_shower;
-  std::vector<std::vector<int>>		slc_pfp_true_trackid;
   std::vector<std::vector<float>>	slc_pfp_comp;
   std::vector<std::vector<float>>	slc_pfp_pur;
   std::vector<std::vector<float>> 	slc_pfp_cnnscore_track, slc_pfp_cnnscore_shower, slc_pfp_cnnscore_noise, slc_pfp_cnnscore_michel, slc_pfp_cnnscore_endmichel;
   std::vector<std::vector<int>>		slc_pfp_cnnscore_nclusters;
+  std::vector<std::vector<float>>	slc_pfp_razzled_electron_score, slc_pfp_razzled_muon_score, slc_pfp_razzled_photon_score, slc_pfp_razzled_pion_score, slc_pfp_razzled_proton_score;
+  std::vector<std::vector<int>> 	slc_pfp_razzled_pdg;
   
+  // Event Tree: Slice -> PFP -> True MCParticle -- 2D vector
+  std::vector<std::vector<int>>		slc_pfp_true_trackid;
+  std::vector<std::vector<int>>        	slc_pfp_true_pdg;
+  std::vector<std::vector<float>>      	slc_pfp_true_energy;
+  std::vector<std::vector<float>>      	slc_pfp_true_p_x;
+  std::vector<std::vector<float>>      	slc_pfp_true_p_y;
+  std::vector<std::vector<float>>      	slc_pfp_true_p_z;
+
   // Event Tree: Slice -> PFP -> Track -- 2D vector
   std::vector<std::vector<double>>	slc_pfp_track_start_x, slc_pfp_track_start_y, slc_pfp_track_start_z;
   std::vector<std::vector<double>>	slc_pfp_track_end_x, slc_pfp_track_end_y, slc_pfp_track_end_z;
@@ -352,6 +374,8 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fShowerTrackFitModuleLabel 	= p.get<art::InputTag>("ShowerTrackFitModuleLabel", "pandoraShowerSelectionVars");
   fShowerDensityFitModuleLabel 	= p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
   fCNNScoreModuleLabel        	= p.get<art::InputTag>("CNNScoreModuleLabel", "cnnid");
+  fRazzledModuleLabel          = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
+  fSpacePointModuleLabel       = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
   fBeamOff			= p.get<bool>("BeamOff", false);
   fMeVPrtl			= p.get<bool>("MeVPrtl", false);
   fDebug			= p.get<bool>("Debug", false);
@@ -445,15 +469,41 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_opt0_hypoPE", &slc_opt0_hypoPE);
   fEventTree->Branch("slc_n_trks", &slc_n_trks);
   fEventTree->Branch("slc_n_shws", &slc_n_shws);
+  fEventTree->Branch("slc_n_primary_trks", &slc_n_primary_trks);
+  fEventTree->Branch("slc_n_primary_shws", &slc_n_primary_shws);
   fEventTree->Branch("slc_n_dazzle_muons", &slc_n_dazzle_muons);
-  fEventTree->Branch("slc_n_dazzle_muons_cut_based", &slc_n_dazzle_muons_cut_based);
   fEventTree->Branch("slc_n_dazzle_pions", &slc_n_dazzle_pions);
+  fEventTree->Branch("slc_n_dazzle_pions_thresh", &slc_n_dazzle_pions_thresh);
   fEventTree->Branch("slc_n_dazzle_protons", &slc_n_dazzle_protons);
+  fEventTree->Branch("slc_n_dazzle_protons_thresh", &slc_n_dazzle_protons_thresh);
   fEventTree->Branch("slc_n_dazzle_other", &slc_n_dazzle_other);
+  fEventTree->Branch("slc_n_primary_dazzle_muons", &slc_n_primary_dazzle_muons);
+  fEventTree->Branch("slc_n_primary_dazzle_pions", &slc_n_primary_dazzle_pions);
+  fEventTree->Branch("slc_n_primary_dazzle_pions_thresh", &slc_n_primary_dazzle_pions_thresh);
+  fEventTree->Branch("slc_n_primary_dazzle_protons", &slc_n_primary_dazzle_protons);
+  fEventTree->Branch("slc_n_primary_dazzle_protons_thresh", &slc_n_primary_dazzle_protons_thresh);
+  fEventTree->Branch("slc_n_primary_dazzle_other", &slc_n_primary_dazzle_other);
   fEventTree->Branch("slc_n_razzle_electrons", &slc_n_razzle_electrons);
   fEventTree->Branch("slc_n_razzle_photons", &slc_n_razzle_photons);
-  fEventTree->Branch("slc_n_razzle_photons_cut_based", &slc_n_razzle_photons_cut_based);
   fEventTree->Branch("slc_n_razzle_other", &slc_n_razzle_other);
+  fEventTree->Branch("slc_n_primary_razzle_electrons", &slc_n_primary_razzle_electrons);
+  fEventTree->Branch("slc_n_primary_razzle_photons", &slc_n_primary_razzle_photons);
+  fEventTree->Branch("slc_n_primary_razzle_other", &slc_n_primary_razzle_other);
+  fEventTree->Branch("slc_n_razzled_electrons", &slc_n_razzled_electrons);
+  fEventTree->Branch("slc_n_razzled_muons", &slc_n_razzled_muons);
+  fEventTree->Branch("slc_n_razzled_photons", &slc_n_razzled_photons);
+  fEventTree->Branch("slc_n_razzled_pions", &slc_n_razzled_pions);
+  fEventTree->Branch("slc_n_razzled_pions_thresh", &slc_n_razzled_pions_thresh);
+  fEventTree->Branch("slc_n_razzled_protons", &slc_n_razzled_protons);
+  fEventTree->Branch("slc_n_razzled_protons_thresh", &slc_n_razzled_protons_thresh);
+  fEventTree->Branch("slc_n_primary_razzled_electrons", &slc_n_primary_razzled_electrons);
+  fEventTree->Branch("slc_n_primary_razzled_muons", &slc_n_primary_razzled_muons);
+  fEventTree->Branch("slc_n_primary_razzled_photons", &slc_n_primary_razzled_photons);
+  fEventTree->Branch("slc_n_primary_razzled_pions", &slc_n_primary_razzled_pions);
+  fEventTree->Branch("slc_n_primary_razzled_pions_thresh", &slc_n_primary_razzled_pions_thresh);
+  fEventTree->Branch("slc_n_primary_razzled_protons", &slc_n_primary_razzled_protons);
+  fEventTree->Branch("slc_n_primary_razzled_protons_thresh", &slc_n_primary_razzled_protons_thresh);
+  
   
   //Event Tree: Slice Truth
   fEventTree->Branch("slc_comp" , &slc_comp);
@@ -469,6 +519,11 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   // Event Tree: Slice -> PFP
   fEventTree->Branch("slc_pfp_id", &slc_pfp_id);
   fEventTree->Branch("slc_pfp_pdg", &slc_pfp_pdg);
+  fEventTree->Branch("slc_pfp_n_children", &slc_pfp_n_children);
+  fEventTree->Branch("slc_pfp_primary", &slc_pfp_primary);
+  fEventTree->Branch("slc_pfp_primary_child", &slc_pfp_primary_child);
+  fEventTree->Branch("slc_pfp_n_hits", &slc_pfp_n_hits);
+  fEventTree->Branch("slc_pfp_n_sps", &slc_pfp_n_sps);
   fEventTree->Branch("slc_pfp_track_score", &slc_pfp_track_score);
   fEventTree->Branch("slc_pfp_good_track", &slc_pfp_good_track);
   fEventTree->Branch("slc_pfp_good_shower", &slc_pfp_good_shower);
@@ -481,6 +536,20 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
 //  fEventTree->Branch("slc_pfp_cnnscore_michel", &slc_pfp_cnnscore_michel);
 //  fEventTree->Branch("slc_pfp_cnnscore_endmichel", &slc_pfp_cnnscore_endmichel);
 //  fEventTree->Branch("slc_pfp_cnnscore_nclusters", &slc_pfp_cnnscore_nclusters);
+  fEventTree->Branch("slc_pfp_razzled_electron_score", &slc_pfp_razzled_electron_score);
+  fEventTree->Branch("slc_pfp_razzled_muon_score", &slc_pfp_razzled_muon_score);
+  fEventTree->Branch("slc_pfp_razzled_photon_score", &slc_pfp_razzled_photon_score);
+  fEventTree->Branch("slc_pfp_razzled_pion_score", &slc_pfp_razzled_pion_score);
+  fEventTree->Branch("slc_pfp_razzled_proton_score", &slc_pfp_razzled_proton_score);
+  fEventTree->Branch("slc_pfp_razzled_pdg", &slc_pfp_razzled_pdg);
+  
+  // Event Tree: Slice -> PFP -> MCParticle
+  fEventTree->Branch("slc_pfp_true_trackid", &slc_pfp_true_trackid);
+  fEventTree->Branch("slc_pfp_true_pdg", &slc_pfp_true_pdg);
+  fEventTree->Branch("slc_pfp_true_energy", &slc_pfp_true_energy);
+  fEventTree->Branch("slc_pfp_true_p_x", &slc_pfp_true_p_x);
+  fEventTree->Branch("slc_pfp_true_p_y", &slc_pfp_true_p_y);
+  fEventTree->Branch("slc_pfp_true_p_z", &slc_pfp_true_p_z);
 
   // Event Tree: Slice -> PFP -> Track
   fEventTree->Branch("slc_pfp_track_start_x", &slc_pfp_track_start_x);
@@ -750,15 +819,6 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_opt0_hypoPE.clear();
   slc_n_trks.clear();
   slc_n_shws.clear();
-  slc_n_dazzle_muons.clear();
-  slc_n_dazzle_muons_cut_based.clear();
-  slc_n_dazzle_pions.clear();
-  slc_n_dazzle_protons.clear();
-  slc_n_dazzle_other.clear();
-  slc_n_razzle_electrons.clear();
-  slc_n_razzle_photons.clear();
-  slc_n_razzle_photons_cut_based.clear();
-  slc_n_razzle_other.clear();
   slc_comp.clear();
   slc_pur.clear();
   slc_true_mctruth_id.clear();
@@ -771,10 +831,14 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
 
   slc_pfp_id.clear();
   slc_pfp_pdg.clear();
+  slc_pfp_n_children.clear();
+  slc_pfp_primary.clear();
+  slc_pfp_primary_child.clear();
+  slc_pfp_n_hits.clear();
+  slc_pfp_n_sps.clear();
   slc_pfp_track_score.clear();
   slc_pfp_good_track.clear();
   slc_pfp_good_shower.clear();
-  slc_pfp_true_trackid.clear();
   slc_pfp_comp.clear();
   slc_pfp_pur.clear();
   slc_pfp_cnnscore_track.clear();
@@ -783,7 +847,20 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_cnnscore_michel.clear();
   slc_pfp_cnnscore_endmichel.clear();
   slc_pfp_cnnscore_nclusters.clear();
+  slc_pfp_razzled_electron_score.clear();
+  slc_pfp_razzled_muon_score.clear();
+  slc_pfp_razzled_photon_score.clear();
+  slc_pfp_razzled_pion_score.clear();
+  slc_pfp_razzled_proton_score.clear();
+  slc_pfp_razzled_pdg.clear();
 
+  slc_pfp_true_trackid.clear();
+  slc_pfp_true_pdg.clear();
+  slc_pfp_true_energy.clear();
+  slc_pfp_true_p_x.clear();
+  slc_pfp_true_p_y.clear();
+  slc_pfp_true_p_z.clear();
+  
   slc_pfp_track_start_x.clear();
   slc_pfp_track_start_y.clear();
   slc_pfp_track_start_z.clear();
@@ -1170,15 +1247,40 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice1DVector(const int col){
 
   slc_n_trks.resize(col);
   slc_n_shws.resize(col);
+  slc_n_primary_trks.resize(col);
+  slc_n_primary_shws.resize(col);
   slc_n_dazzle_muons.resize(col);
-  slc_n_dazzle_muons_cut_based.resize(col);
   slc_n_dazzle_pions.resize(col);
+  slc_n_dazzle_pions_thresh.resize(col);
   slc_n_dazzle_protons.resize(col);
+  slc_n_dazzle_protons_thresh.resize(col);
   slc_n_dazzle_other.resize(col);
+  slc_n_primary_dazzle_muons.resize(col);
+  slc_n_primary_dazzle_pions.resize(col);
+  slc_n_primary_dazzle_pions_thresh.resize(col);
+  slc_n_primary_dazzle_protons.resize(col);
+  slc_n_primary_dazzle_protons_thresh.resize(col);
+  slc_n_primary_dazzle_other.resize(col);
   slc_n_razzle_electrons.resize(col);
   slc_n_razzle_photons.resize(col);
-  slc_n_razzle_photons_cut_based.resize(col);
   slc_n_razzle_other.resize(col);
+  slc_n_razzled_electrons.resize(col);
+  slc_n_razzled_muons.resize(col);
+  slc_n_razzled_photons.resize(col);
+  slc_n_razzled_pions.resize(col);
+  slc_n_razzled_pions_thresh.resize(col);
+  slc_n_razzled_protons.resize(col);
+  slc_n_razzled_protons_thresh.resize(col);
+  slc_n_primary_razzle_electrons.resize(col);
+  slc_n_primary_razzle_photons.resize(col);
+  slc_n_primary_razzle_other.resize(col);
+  slc_n_primary_razzled_electrons.resize(col);
+  slc_n_primary_razzled_muons.resize(col);
+  slc_n_primary_razzled_photons.resize(col);
+  slc_n_primary_razzled_pions.resize(col);
+  slc_n_primary_razzled_pions_thresh.resize(col);
+  slc_n_primary_razzled_protons.resize(col);
+  slc_n_primary_razzled_protons_thresh.resize(col);
   
   slc_comp.resize(col, -999);
   slc_pur.resize(col, -999);
@@ -1195,10 +1297,14 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
 
    slc_pfp_id.resize(row); 
    slc_pfp_pdg.resize(row);
+   slc_pfp_n_children.resize(row);
+   slc_pfp_primary.resize(row);
+   slc_pfp_primary_child.resize(row);
+   slc_pfp_n_hits.resize(row);
+   slc_pfp_n_sps.resize(row);
    slc_pfp_track_score.resize(row); 
    slc_pfp_good_track.resize(row); 
    slc_pfp_good_shower.resize(row);
-   slc_pfp_true_trackid.resize(row);
    slc_pfp_comp.resize(row);
    slc_pfp_pur.resize(row);
    slc_pfp_cnnscore_track.resize(row);
@@ -1207,6 +1313,19 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
    slc_pfp_cnnscore_michel.resize(row);
    slc_pfp_cnnscore_endmichel.resize(row);
    slc_pfp_cnnscore_nclusters.resize(row);
+   slc_pfp_razzled_electron_score.resize(row);
+   slc_pfp_razzled_muon_score.resize(row);
+   slc_pfp_razzled_photon_score.resize(row);
+   slc_pfp_razzled_pion_score.resize(row);
+   slc_pfp_razzled_proton_score.resize(row);
+   slc_pfp_razzled_pdg.resize(row);
+
+   slc_pfp_true_trackid.resize(row);
+   slc_pfp_true_pdg.resize(row);
+   slc_pfp_true_energy.resize(row);
+   slc_pfp_true_p_x.resize(row);
+   slc_pfp_true_p_y.resize(row);
+   slc_pfp_true_p_z.resize(row);
 
    slc_pfp_track_start_x.resize(row); 
    slc_pfp_track_start_y.resize(row); 
@@ -1269,10 +1388,14 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
 
    slc_pfp_id[row].resize(col); 
    slc_pfp_pdg[row].resize(col);
+   slc_pfp_n_children[row].resize(col);
+   slc_pfp_primary[row].resize(col);
+   slc_pfp_primary_child[row].resize(col);
+   slc_pfp_n_hits[row].resize(col);
+   slc_pfp_n_sps[row].resize(col);
    slc_pfp_track_score[row].resize(col); 
    slc_pfp_good_track[row].resize(col); 
    slc_pfp_good_shower[row].resize(col);
-   slc_pfp_true_trackid[row].resize(col);
    slc_pfp_comp[row].resize(col);
    slc_pfp_pur[row].resize(col);
    slc_pfp_cnnscore_track[row].resize(col);
@@ -1281,6 +1404,19 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_cnnscore_michel[row].resize(col);
    slc_pfp_cnnscore_endmichel[row].resize(col);
    slc_pfp_cnnscore_nclusters[row].resize(col);
+   slc_pfp_razzled_electron_score[row].resize(col);
+   slc_pfp_razzled_muon_score[row].resize(col);
+   slc_pfp_razzled_photon_score[row].resize(col);
+   slc_pfp_razzled_pion_score[row].resize(col);
+   slc_pfp_razzled_proton_score[row].resize(col);
+   slc_pfp_razzled_pdg[row].resize(col);
+
+   slc_pfp_true_trackid[row].resize(col);
+   slc_pfp_true_pdg[row].resize(col);
+   slc_pfp_true_energy[row].resize(col);
+   slc_pfp_true_p_x[row].resize(col);
+   slc_pfp_true_p_y[row].resize(col);
+   slc_pfp_true_p_z[row].resize(col);
 
    slc_pfp_track_start_x[row].resize(col); 
    slc_pfp_track_start_y[row].resize(col); 
@@ -1441,10 +1577,19 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
   art::FindOneP<larpandoraobj::PFParticleMetadata> pfpToMeta(pfpHandle, e, fPFParticleModuleLabel);
   art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
-  art::FindOneP<sbn::PFPCNNScore> 		   pfpToCNNScore(pfpHandle, e, fCNNScoreModuleLabel);
+  //art::FindOneP<sbn::PFPCNNScore> 		   pfpToCNNScore(pfpHandle, e, fCNNScoreModuleLabel);
+  art::FindOneP<sbn::MVAPID>                       pfpToRazzled(pfpHandle, e, fRazzledModuleLabel);
+  art::FindManyP<recob::SpacePoint>                pfpToSpacePoints(pfpHandle, e, fSpacePointModuleLabel);
 
-  int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzleprotons = 0, ndazzleother = 0,
-    nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0, ndazzlemuonscut = 0, nrazzlephotonscut = 0;
+  int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzlepionsthresh = 0, ndazzleprotons = 0,
+    ndazzleprotonsthresh = 0, ndazzleother = 0, nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0,
+    nrazzledelectrons = 0, nrazzledmuons = 0, nrazzledphotons = 0, nrazzledpions = 0, nrazzledpionsthresh = 0,
+    nrazzledprotons = 0, nrazzledprotonsthresh = 0;
+
+  int nprimtrks = 0, nprimshws = 0, nprimdazzlemuons = 0, nprimdazzlepions = 0, nprimdazzlepionsthresh = 0, nprimdazzleprotons = 0,
+    nprimdazzleprotonsthresh = 0, nprimdazzleother = 0, nprimrazzleelectrons = 0, nprimrazzlephotons = 0, nprimrazzleother = 0,
+    nprimrazzledelectrons = 0, nprimrazzledmuons = 0, nprimrazzledphotons = 0, nprimrazzledpions = 0, nprimrazzledpionsthresh = 0,
+    nprimrazzledprotons = 0, nprimrazzledprotonsthresh = 0;
 
   for(auto&& [pfpCounter, id]: enumerate(prim->Daughters()))
   {
@@ -1454,16 +1599,28 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
     const art::Ptr<recob::PFParticle> pfp = fPFPMap[id];
     slc_pfp_id[slcCounter][pfpCounter] = id;
     slc_pfp_pdg[slcCounter][pfpCounter] = pfp->PdgCode(); 
+    slc_pfp_n_children[slcCounter][pfpCounter] = pfp->NumDaughters();
+
+    const bool primary_child = prim->Self() == pfp->Parent();
+    slc_pfp_primary[slcCounter][pfpCounter] = pfp->IsPrimary();
+    slc_pfp_primary_child[slcCounter][pfpCounter] = primary_child;
 
     if(abs(pfp->PdgCode()) == 11)
+      {
         ++nshws;
+        if(primary_child)
+          ++nprimshws;
+      }
     else if(abs(pfp->PdgCode()) == 13)
+      {
         ++ntrks;
+        if(primary_child)
+          ++nprimtrks;
+      }
     else
-    {
-      std::cout << "PFP with PDG: " << pfp->PdgCode() << std::endl;
-      throw std::exception();
-    }
+      {
+        continue;
+      }
 
     const art::Ptr<larpandoraobj::PFParticleMetadata> meta         = pfpToMeta.at(pfp.key());
     const larpandoraobj::PFParticleMetadata::PropertiesMap metaMap = meta->GetPropertiesMap();
@@ -1478,8 +1635,15 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
     slc_pfp_good_track[slcCounter][pfpCounter] = track.isNonnull();
     slc_pfp_good_shower[slcCounter][pfpCounter] = shower.isNonnull();
 
+    const art::Ptr<sbn::MVAPID> razzled = pfpToRazzled.at(pfp.key());
+    if(razzled.isNonnull())
+      ExtractRazzled(razzled, slcCounter, pfpCounter);
+
     const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
     const std::vector<art::Ptr<recob::Hit>> hits = showersToHits.at(shower.key());
+
+    slc_pfp_n_hits[slcCounter][pfpCounter] = hits.size();
+
     const int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, hits, true);
 
     slc_pfp_true_trackid[slcCounter][pfpCounter] = trackID;
@@ -1494,60 +1658,177 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
     //  ExtractCNNScores(cnnscore, slcCounter, pfpCounter);
     //}
 
+    const std::vector<art::Ptr<recob::SpacePoint>> spacepoints = pfpToSpacePoints.at(pfp.key());
+    slc_pfp_n_sps[slcCounter][pfpCounter] = spacepoints.size();
+    
+    if(trackID != def_int)
+    {
+      const simb::MCParticle* mcp = particleInv->TrackIdToParticle_P(trackID);
+      if(mcp != NULL)
+        {
+          slc_pfp_true_pdg[slcCounter][pfpCounter] = mcp->PdgCode();
+          slc_pfp_true_energy[slcCounter][pfpCounter] = mcp->E();
+          slc_pfp_true_p_x[slcCounter][pfpCounter] = mcp->Px();
+          slc_pfp_true_p_y[slcCounter][pfpCounter] = mcp->Py();
+          slc_pfp_true_p_z[slcCounter][pfpCounter] = mcp->Pz();
+        }
+    }
+
     if(track.isNonnull())
       AnalyseTrack(e, track, slcCounter, pfpCounter, trackHandle);
 
-    if(shower.isNonnull())
-      AnalyseShower(e, shower, slcCounter, pfpCounter, showerHandle, vtx, hits);
-
+    double pfpenergy = def_double;
+    
     if(pfp->PdgCode() == 13)
     {
       int dazzlepdg = slc_pfp_track_dazzle_pdg[slcCounter][pfpCounter];
+      float trkenergy = slc_pfp_track_ke[slcCounter][pfpCounter];
+      pfpenergy = trkenergy;
 
       if(dazzlepdg == 13)
         ++ndazzlemuons;
-      else if(dazzlepdg == 211)
+      if(dazzlepdg == 211)
         ++ndazzlepions;
-      else if(dazzlepdg == 2212)
+      if(dazzlepdg == 211 && pfpenergy > 32.1)
+        ++ndazzlepionsthresh;
+      if(dazzlepdg == 2212)
         ++ndazzleprotons;
-      else if(dazzlepdg == 0)
+      if(dazzlepdg == 2212 && pfpenergy > 32.7)
+        ++ndazzleprotonsthresh;
+      if(dazzlepdg == 0)
         ++ndazzleother;
 
-      float dazzlemuonscore = slc_pfp_track_dazzle_muon_score[slcCounter][pfpCounter];
-      if(dazzlemuonscore > 0.0125)
-        ++ndazzlemuonscut;
-    }
+      if(primary_child)
+        {
+          if(dazzlepdg == 13)
+            ++nprimdazzlemuons;
+          if(dazzlepdg == 211)
+            ++nprimdazzlepions;
+          if(dazzlepdg == 211 && pfpenergy > 32.1)
+            ++nprimdazzlepionsthresh;
+          if(dazzlepdg == 2212)
+            ++nprimdazzleprotons;
+          if(dazzlepdg == 2212 && pfpenergy > 32.7)
+            ++nprimdazzleprotonsthresh;
+          if(dazzlepdg == 0)
+            ++nprimdazzleother;
+        }
+     }
 
-    if(pfp->PdgCode() == 11)
-    {
-      int razzlepdg = slc_pfp_shower_razzle_pdg[slcCounter][pfpCounter];
+     if(shower.isNonnull())
+       AnalyseShower(e, shower, slcCounter, pfpCounter, showerHandle, vtx, hits);
 
-      if(razzlepdg == 11)
-        ++nrazzleelectrons;
-      else if(razzlepdg == 22)
-        ++nrazzlephotons;
-      else if(razzlepdg == 0)
-        ++nrazzleother;
+     if(pfp->PdgCode() == 11)
+     {
+        int razzlepdg = slc_pfp_shower_razzle_pdg[slcCounter][pfpCounter];
+        pfpenergy = slc_pfp_shower_energy[slcCounter][pfpCounter];
 
-      float razzlephotonscore = slc_pfp_shower_razzle_photon_score[slcCounter][pfpCounter];
-      if(razzlephotonscore > 0.05)
-        ++nrazzlephotonscut;
-    }
+        if(razzlepdg == 11)
+          ++nrazzleelectrons;
+        if(razzlepdg == 22)
+          ++nrazzlephotons;
+        if(razzlepdg == 0)
+          ++nrazzleother;
 
+        if(primary_child)
+        {
+          if(razzlepdg == 11)
+            ++nprimrazzleelectrons;
+          if(razzlepdg == 22)
+            ++nprimrazzlephotons;
+          if(razzlepdg == 0)
+            ++nprimrazzleother;
+        }
+     }
+
+     int razzledpdg = slc_pfp_razzled_pdg[slcCounter][pfpCounter];
+
+     if(razzledpdg == 11)
+       ++nrazzledelectrons;
+     if(razzledpdg == 13)
+       ++nrazzledmuons;
+     if(razzledpdg == 22)
+       ++nrazzledphotons;
+     if(razzledpdg == 211)
+       ++nrazzledpions;
+     if(razzledpdg == 211 && pfpenergy > 32.1)
+       ++nrazzledpionsthresh;
+     if(razzledpdg == 2212)
+       ++nrazzledprotons;
+     if(razzledpdg == 2212 && pfpenergy > 32.7)
+       ++nrazzledprotonsthresh;
+
+     if(primary_child)
+       {
+         if(razzledpdg == 11)
+           ++nprimrazzledelectrons;
+         if(razzledpdg == 13)
+           ++nprimrazzledmuons;
+         if(razzledpdg == 22)
+           ++nprimrazzledphotons;
+         if(razzledpdg == 211)
+           ++nprimrazzledpions;
+         if(razzledpdg == 211 && pfpenergy > 32.1)
+           ++nprimrazzledpionsthresh;
+         if(razzledpdg == 2212)
+           ++nprimrazzledprotons;
+         if(razzledpdg == 2212 && pfpenergy > 32.7)
+           ++nprimrazzledprotonsthresh;
+       }
   } // End of loop pfp daughters
 
-  slc_n_trks[slcCounter] 			= ntrks;
-  slc_n_shws[slcCounter] 			= nshws;
-  slc_n_dazzle_muons[slcCounter] 		= ndazzlemuons;
-  slc_n_dazzle_muons_cut_based[slcCounter]	= ndazzlemuonscut;
-  slc_n_dazzle_pions[slcCounter] 		= ndazzlepions;
-  slc_n_dazzle_protons[slcCounter] 		= ndazzleprotons;
-  slc_n_dazzle_other[slcCounter] 		= ndazzleother;
-  slc_n_razzle_electrons[slcCounter] 		= nrazzleelectrons;
-  slc_n_razzle_photons[slcCounter] 		= nrazzlephotons;
-  slc_n_razzle_photons_cut_based[slcCounter] 	= nrazzlephotonscut;
-  slc_n_razzle_other[slcCounter] 		= nrazzleother;
+  slc_n_trks[slcCounter] = ntrks;
+  slc_n_shws[slcCounter] = nshws;
+  slc_n_dazzle_muons[slcCounter] = ndazzlemuons;
+  slc_n_dazzle_pions[slcCounter] = ndazzlepions;
+  slc_n_dazzle_pions_thresh[slcCounter] = ndazzlepionsthresh;
+  slc_n_dazzle_protons[slcCounter] = ndazzleprotons;
+  slc_n_dazzle_protons_thresh[slcCounter] = ndazzleprotonsthresh;
+  slc_n_dazzle_other[slcCounter] = ndazzleother;
+  slc_n_razzle_electrons[slcCounter] = nrazzleelectrons;
+  slc_n_razzle_photons[slcCounter] = nrazzlephotons;
+  slc_n_razzle_other[slcCounter] = nrazzleother;
+  slc_n_razzled_electrons[slcCounter] = nrazzledelectrons;
+  slc_n_razzled_muons[slcCounter] = nrazzledmuons;
+  slc_n_razzled_photons[slcCounter] = nrazzledphotons;
+  slc_n_razzled_pions[slcCounter] = nrazzledpions;
+  slc_n_razzled_pions_thresh[slcCounter] = nrazzledpionsthresh;
+  slc_n_razzled_protons[slcCounter] = nrazzledprotons;
+  slc_n_razzled_protons_thresh[slcCounter] = nrazzledprotonsthresh;
+
+  slc_n_primary_trks[slcCounter] = nprimtrks;
+  slc_n_primary_shws[slcCounter] = nprimshws;
+  slc_n_primary_dazzle_muons[slcCounter] = nprimdazzlemuons;
+  slc_n_primary_dazzle_pions[slcCounter] = nprimdazzlepions;
+  slc_n_primary_dazzle_pions_thresh[slcCounter] = nprimdazzlepionsthresh;
+  slc_n_primary_dazzle_protons[slcCounter] = nprimdazzleprotons;
+  slc_n_primary_dazzle_protons_thresh[slcCounter] = nprimdazzleprotonsthresh;
+  slc_n_primary_dazzle_other[slcCounter] = nprimdazzleother;
+  slc_n_primary_razzle_electrons[slcCounter] = nprimrazzleelectrons;
+  slc_n_primary_razzle_photons[slcCounter] = nprimrazzlephotons;
+  slc_n_primary_razzle_other[slcCounter] = nprimrazzleother;
+  slc_n_primary_razzled_electrons[slcCounter] = nprimrazzledelectrons;
+  slc_n_primary_razzled_muons[slcCounter] = nprimrazzledmuons;
+  slc_n_primary_razzled_photons[slcCounter] = nprimrazzledphotons;
+  slc_n_primary_razzled_pions[slcCounter] = nprimrazzledpions;
+  slc_n_primary_razzled_pions_thresh[slcCounter] = nprimrazzledpionsthresh;
+  slc_n_primary_razzled_protons[slcCounter] = nprimrazzledprotons;
+  slc_n_primary_razzled_protons_thresh[slcCounter] = nprimrazzledprotonsthresh;
+
 }
+
+void sbnd::HNLPiZeroAnalysis::ExtractRazzled(const art::Ptr<sbn::MVAPID> &razzled, const int slcCounter, const int pfpCounter)
+{
+  const std::map<int, float> map = razzled->mvaScoreMap;
+
+  slc_pfp_razzled_electron_score[slcCounter][pfpCounter] = map.at(11);
+  slc_pfp_razzled_muon_score[slcCounter][pfpCounter] = map.at(13);
+  slc_pfp_razzled_photon_score[slcCounter][pfpCounter] = map.at(22);
+  slc_pfp_razzled_pion_score[slcCounter][pfpCounter] = map.at(211);
+  slc_pfp_razzled_proton_score[slcCounter][pfpCounter] = map.at(2212);
+  slc_pfp_razzled_pdg[slcCounter][pfpCounter] = razzled->BestPDG();
+}
+
 
 float sbnd::HNLPiZeroAnalysis::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int trackID){
 
