@@ -80,6 +80,10 @@ class SecondShowerFinderAlg
 
   double YZtoW(const double y, const double z);
 
+  double Dist(const HitObj *hitObjA, const HitObj *hitObjB);
+
+  size_t fMinClusterHits;
+  double fMaxHitSeparation;
 
  public:
   SecondShowerFinderAlg();

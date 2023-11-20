@@ -1,11 +1,9 @@
+#include "ncpizeroana.fcl"
 #include "reco_sbnd.fcl"
 
 process_name: Reco2
 
-physics.analyzers.ncpizeroana:
-{
-  module_type: "NCPiZeroAnalysis"
-}
+physics.analyzers.ncpizeroana: @local::ncpizeroana
 
 physics.reco2_sensible: [ rns,
   pandora,

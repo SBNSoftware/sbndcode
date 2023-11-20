@@ -66,6 +66,9 @@ SecondShowerFinderAlg::SecondShowerFinderAlg()
 SecondShowerFinderAlg::SecondShowerFinderAlg(fhicl::ParameterSet const& p)
 {
   SecondShowerFinderAlg();
+
+  fMinClusterHits   = p.get<size_t>("MinClusterHits");
+  fMaxHitSeparation = p.get<double>("MaxHitSeparation");
 }
 
 std::vector<std::vector<size_t>> SecondShowerFinderAlg::FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw)
@@ -110,7 +113,7 @@ std::vector<size_t> SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hit
   std::vector<ClusterObj>::iterator it = clusters.begin();
   while(it != clusters.end())
     {
-      if(it->size() < 10)
+      if(it->size() < fMinClusterHits)
         it = clusters.erase(it);
       else
         {
@@ -188,10 +191,9 @@ void SecondShowerFinderAlg::InitialPairings(const ClusterObj &hits, std::vector<
           if(hitObjB->used)
             continue;
 
-          double dist = sqrt( (hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
-                              (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
+          double dist = Dist(hitObjA, hitObjB);
 
-          if(dist < 0.9)
+          if(dist < fMaxHitSeparation)
             {
               clusters.push_back(ClusterObj());
               clusters.back().push_back(hitObjA);
@@ -220,10 +222,9 @@ void SecondShowerFinderAlg::AddSingleHits(const ClusterObj &hits, std::vector<Cl
 
           for(auto const& hitObjB : *it)
             {
-              double dist = sqrt( (hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
-                                  (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
+              double dist = Dist(hitObjA, hitObjB);
 
-              if(dist < 0.9)
+              if(dist < fMaxHitSeparation)
                 add = true;
             }
 
@@ -254,10 +255,9 @@ void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
             {
               for(auto const& hitObjB : *itB)
                 {
-                  double dist = sqrt( (hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
-                                      (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
+                  double dist = Dist(hitObjA, hitObjB);
 
-                  if(dist < 0.9)
+                  if(dist < fMaxHitSeparation)
                     merge = true;
                 }
             }
@@ -414,4 +414,10 @@ double SecondShowerFinderAlg::YZtoV(const double y, const double z)
 double SecondShowerFinderAlg::YZtoW(const double y, const double z)
 {
   return z * cosW - y * sinW;
+}
+
+double SecondShowerFinderAlg::Dist(const HitObj *hitObjA, const HitObj *hitObjB)
+{
+  return sqrt((hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
+              (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
 }

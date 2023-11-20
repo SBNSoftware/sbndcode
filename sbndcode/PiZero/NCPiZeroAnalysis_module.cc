@@ -179,8 +179,6 @@ public:
 
 private:
 
-  SecondShowerFinderAlg fSecondShowerFinderAlg;
-
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
@@ -192,6 +190,9 @@ private:
     fSpacePointModuleLabel;
   std::vector<art::InputTag> fEventWeightModuleLabels;
   bool fDebug, fBeamOff;
+  fhicl::ParameterSet fSecondShowerFinderAlgParams;
+
+  SecondShowerFinderAlg fSecondShowerFinderAlg;
 
   std::map<int, int> fHitsMap;
   std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap;
@@ -670,34 +671,37 @@ private:
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
+  , fMCParticleModuleLabel      (p.get<art::InputTag>("MCParticleModuleLabel"))
+  , fSliceModuleLabel           (p.get<art::InputTag>("SliceModuleLabel"))
+  , fPFParticleModuleLabel      (p.get<art::InputTag>("PFParticleModuleLabel"))
+  , fVertexModuleLabel          (p.get<art::InputTag>("VertexModuleLabel"))
+  , fHitModuleLabel             (p.get<art::InputTag>("HitModuleLabel"))
+  , fTrackModuleLabel           (p.get<art::InputTag>("TrackModuleLabel"))
+  , fShowerModuleLabel          (p.get<art::InputTag>("ShowerModuleLabel"))
+  , fTrackCalorimetryModuleLabel(p.get<art::InputTag>("TrackCalorimetryModuleLabel"))
+  , fCRUMBSModuleLabel          (p.get<art::InputTag>("CRUMBSModuleLabel"))
+  , fDazzleModuleLabel          (p.get<art::InputTag>("DazzleModuleLabel"))
+  , fCaloModuleLabel            (p.get<art::InputTag>("CaloModuleLabel"))
+  , fMCSModuleLabel             (p.get<art::InputTag>("MCSModuleLabel"))
+  , fChi2ModuleLabel            (p.get<art::InputTag>("Chi2ModuleLabel"))
+  , fRangeModuleLabel           (p.get<art::InputTag>("RangeModuleLabel"))
+  , fClosestApproachModuleLabel (p.get<art::InputTag>("ClosestApproachModuleLabel"))
+  , fStoppingChi2ModuleLabel    (p.get<art::InputTag>("StoppingChi2ModuleLabel"))
+  , fRazzleModuleLabel          (p.get<art::InputTag>("RazzleModuleLabel"))
+  , fCosmicDistModuleLabel      (p.get<art::InputTag>("CosmicDistModuleLabel"))
+  , fShowerTrackFitModuleLabel  (p.get<art::InputTag>("ShowerTrackFitModuleLabel"))
+  , fShowerDensityFitModuleLabel(p.get<art::InputTag>("ShowerDensityFitModuleLabel"))
+  , fPOTModuleLabel             (p.get<art::InputTag>("POTModuleLabel"))
+  , fOpT0ModuleLabel            (p.get<art::InputTag>("OpT0ModuleLabel"))
+  , fRazzledModuleLabel         (p.get<art::InputTag>("RazzledModuleLabel"))
+  , fSpacePointModuleLabel      (p.get<art::InputTag>("SpacePointModuleLabel"))
+  , fEventWeightModuleLabels    (p.get<std::vector<art::InputTag>>("EventWeightModuleLabels"))
+  , fDebug                      (p.get<bool>("Debug", false))
+  , fBeamOff                    (p.get<bool>("BeamOff", false))
+  , fSecondShowerFinderAlgParams(p.get<fhicl::ParameterSet>("SecondShowerFinderAlg"))
+
+  , fSecondShowerFinderAlg(fSecondShowerFinderAlgParams)
   {
-    fMCParticleModuleLabel       = p.get<art::InputTag>("MCParticleModuleLabel", "largeant");
-    fSliceModuleLabel            = p.get<art::InputTag>("SliceModuleLabel", "pandoraSCE");
-    fPFParticleModuleLabel       = p.get<art::InputTag>("PFParticleModuleLabel", "pandoraSCE");
-    fVertexModuleLabel           = p.get<art::InputTag>("VertexModuleLabel", "pandoraSCE");
-    fHitModuleLabel              = p.get<art::InputTag>("HitModuleLabel", "gaushit");
-    fTrackModuleLabel            = p.get<art::InputTag>("TrackModuleLabel", "pandoraTrack");
-    fShowerModuleLabel           = p.get<art::InputTag>("ShowerModuleLabel", "pandoraShowerSBN");
-    fTrackCalorimetryModuleLabel = p.get<art::InputTag>("TrackCalorimetryModuleLabel", "pandoraCalo");
-    fCRUMBSModuleLabel           = p.get<art::InputTag>("CRUMBSModuleLabel", "crumbs");
-    fDazzleModuleLabel           = p.get<art::InputTag>("DazzleModuleLabel", "dazzle");
-    fCaloModuleLabel             = p.get<art::InputTag>("CaloModuleLabel", "pandoraCalo");
-    fMCSModuleLabel              = p.get<art::InputTag>("MCSModuleLabel", "pandoraTrackMCS:muon");
-    fChi2ModuleLabel             = p.get<art::InputTag>("Chi2ModuleLabel", "pandoraPid");
-    fRangeModuleLabel            = p.get<art::InputTag>("RangeModuleLabel", "pandoraTrackRange:muon");
-    fClosestApproachModuleLabel  = p.get<art::InputTag>("ClosestApproachModuleLabel", "pandoraTrackClosestApproach");
-    fStoppingChi2ModuleLabel     = p.get<art::InputTag>("StoppingChi2ModuleLabel", "pandoraTrackStoppingChi2");
-    fRazzleModuleLabel           = p.get<art::InputTag>("RazzleModuleLabel", "razzle");
-    fCosmicDistModuleLabel       = p.get<art::InputTag>("CosmicDistModuleLabel", "pandoraShowerCosmicDist");
-    fShowerTrackFitModuleLabel   = p.get<art::InputTag>("ShowerTrackFitModuleLabel", "pandoraShowerSelectionVars");
-    fShowerDensityFitModuleLabel = p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
-    fPOTModuleLabel              = p.get<art::InputTag>("POTModuleLabel", "generator");
-    fOpT0ModuleLabel             = p.get<art::InputTag>("OpT0ModuleLabel", "opt0finder");
-    fRazzledModuleLabel          = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
-    fSpacePointModuleLabel       = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
-    fEventWeightModuleLabels     = p.get<std::vector<art::InputTag>>("EventWeightModuleLabels", {"fluxweight", "systtools"});
-    fDebug                       = p.get<bool>("Debug", false);
-    fBeamOff                     = p.get<bool>("BeamOff", false);
 
     for(auto const& name : flux_weight_names)
       {
