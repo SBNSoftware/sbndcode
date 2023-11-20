@@ -68,7 +68,7 @@ function FATAL() {
   local -i Code="$1"
   shift
   STDERR 'bright red' "FATAL (${Code}): $*"
-  exit $Code
+  return $Code
 } # FATAL()
 function LASTFATAL() {
   local -i res="$?"
@@ -377,13 +377,13 @@ DebugTest
 
 if [[ $DoHelp == 1 ]]; then
   printHelp
-  exit
+  return
 fi
 
 if [[ $DoListTests == 1 ]]; then
   echo "Supported tests are:"
   printTests
-  exit
+  return
 fi
 
 #
@@ -418,10 +418,10 @@ if [[ "${#Errors[@]}" -gt 0 ]]; then
   for Failed in "${!Errors[@]}" ; do
     STDERR 'bright red' "- '${Failed}' (code: ${Errors[$Failed]})"
   done
-  exit 1
+  return 1
 else
   SUCCESS "All tested files passed the verification."
-  exit 0
+  return 0
 fi
 
 ################################################################################

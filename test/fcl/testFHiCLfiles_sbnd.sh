@@ -7,7 +7,7 @@ SCRIPTDIR="$(dirname "$0")"
 #
 if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
   echo "This test script requires BASH 4.0 or newer." >&2
-  exit # the test is declared a success
+  return # the test is declared a success
 fi
 
 #
@@ -22,7 +22,7 @@ TestScript="$(which "$TestScriptName" 2> /dev/null)"
 
 if [[ ! -r "$TestScript" ]]; then
   echo "FATAL: test script '${TestScriptName}' not found!" >&2
-  exit 2
+  return 2
 fi
 
 #
@@ -56,7 +56,7 @@ fi
 
 if [[ "${#TestDirs[@]}]" == 0 ]]; then
   echo "FATAL: no suitable FHiCL directory found to be tested!" >&2
-  exit 1
+  return 1
 fi
 
 #
