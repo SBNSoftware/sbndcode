@@ -65,7 +65,9 @@ constexpr int def_int       = std::numeric_limits<int>::min();
 constexpr size_t def_size   = std::numeric_limits<size_t>::max();
 constexpr float def_float   = -std::numeric_limits<float>::max();
 constexpr double def_double = -std::numeric_limits<double>::max();
-
+constexpr double light_speed_cm_ns = 29.9792458; // cm/ns
+constexpr double light_speed_cm_us = 29979.2458; // cm/ns
+					   
 template <typename T,
   typename TIter = decltype(std::begin(std::declval<T>())),
   typename = decltype(std::end(std::declval<T>()))>
@@ -271,7 +273,7 @@ private:
   std::vector<size_t> 	slc_true_mctruth_id;
   std::vector<int> 	slc_true_event_type;
   std::vector<float> 	slc_true_en_dep;
-  std::vector<float> 	slc_true_vtx_x, slc_true_vtx_y, slc_true_vtx_z, slc_true_vtx_t;
+  std::vector<float> 	slc_true_vtx_x, slc_true_vtx_y, slc_true_vtx_z, slc_true_vtx_t, slc_true_vtx_t_corrected_Z;
   
   // Event Tree: Slice -> PFP -- 2D vector
   std::vector<std::vector<size_t>>	slc_pfp_id;
@@ -518,6 +520,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_true_vtx_y", &slc_true_vtx_y);
   fEventTree->Branch("slc_true_vtx_z", &slc_true_vtx_z);
   fEventTree->Branch("slc_true_vtx_t", &slc_true_vtx_t);
+  fEventTree->Branch("slc_true_vtx_t_corrected_Z", &slc_true_vtx_t_corrected_Z);
 
   // Event Tree: Slice -> PFP
   fEventTree->Branch("slc_pfp_id", &slc_pfp_id);
@@ -867,6 +870,7 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_true_vtx_y.clear();
   slc_true_vtx_z.clear();
   slc_true_vtx_t.clear();
+  slc_true_vtx_t_corrected_Z.clear();
 
   slc_pfp_id.clear();
   slc_pfp_pdg.clear();
@@ -1331,6 +1335,7 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice1DVector(const int col){
   slc_true_vtx_y.resize(col, -999);
   slc_true_vtx_z.resize(col, -999);
   slc_true_vtx_t.resize(col, -999);
+  slc_true_vtx_t_corrected_Z.resize(col, -999);
 }
 
 void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
@@ -1594,8 +1599,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
       slc_opt0_hypoPE[slcCounter] = opT0Vec[0]->hypoPE;
 
       // Add corrected Z vertex variable
-      double light_speed = 29.9792458; // cm/ns
-      slc_opt0_time_corrected_Z_pandora [slcCounter] = slc_opt0_time[slcCounter] - slc_vtx_z[slcCounter]/light_speed;
+      slc_opt0_time_corrected_Z_pandora [slcCounter] = slc_opt0_time[slcCounter] - slc_vtx_z[slcCounter]/light_speed_cm_us;
     }
 
     ResizeSlice2DVectorCol(slcCounter, prim->Daughters().size());
@@ -2246,6 +2250,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
         slc_true_vtx_y[slcCounter] = mcp->Vy();
         slc_true_vtx_z[slcCounter] = mcp->Vz();
         slc_true_vtx_t[slcCounter] = mcp->T();
+  	slc_true_vtx_t_corrected_Z[slcCounter] = slc_true_vtx_t[slcCounter] - slc_true_vtx_z[slcCounter]/light_speed_cm_ns;
       }else if(bestMCT->Origin() == 0){
         slc_true_event_type[slcCounter] = (int) kUnknownEv;
       }else{
@@ -2261,6 +2266,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
         slc_true_vtx_y[slcCounter] = mcp->Vy();
         slc_true_vtx_z[slcCounter] = mcp->Vz();
         slc_true_vtx_t[slcCounter] = mcp->T();
+  	slc_true_vtx_t_corrected_Z[slcCounter] = slc_true_vtx_t[slcCounter] - slc_true_vtx_z[slcCounter]/light_speed_cm_ns;
       }else{
         AnalyseSliceMCTruth(e, bestMCT, slcCounter);
       }
@@ -2275,6 +2281,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
         slc_true_vtx_y[slcCounter] = mcp->Vy();
         slc_true_vtx_z[slcCounter] = mcp->Vz();
         slc_true_vtx_t[slcCounter] = mcp->T();
+  	slc_true_vtx_t_corrected_Z[slcCounter] = slc_true_vtx_t[slcCounter] - slc_true_vtx_z[slcCounter]/light_speed_cm_ns;
       }else{
         slc_true_event_type[slcCounter] = (int) kUnknownEv;
       }
@@ -2349,10 +2356,11 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 
   slc_true_mctruth_id[slcCounter] = mct.key();
   slc_true_en_dep[slcCounter] = trueEnDep;
-  slc_true_vtx_x[slcCounter] = nu.Vx();
-  slc_true_vtx_y[slcCounter] = nu.Vy();
-  slc_true_vtx_z[slcCounter] = nu.Vz();
-  slc_true_vtx_t[slcCounter] = nu.T();
+  slc_true_vtx_x[slcCounter] = nu.Vx(); //cm
+  slc_true_vtx_y[slcCounter] = nu.Vy(); //cm
+  slc_true_vtx_z[slcCounter] = nu.Vz(); //cm 
+  slc_true_vtx_t[slcCounter] = nu.T(); //ns ?
+  slc_true_vtx_t_corrected_Z[slcCounter] = slc_true_vtx_t[slcCounter] - slc_true_vtx_z[slcCounter]/light_speed_cm_ns;
 }
 
 DEFINE_ART_MODULE(sbnd::HNLPiZeroAnalysis)
