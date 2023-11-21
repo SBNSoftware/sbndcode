@@ -47,15 +47,16 @@ private:
   std::string fInputContainerInstance;
   std::string fInputNonContainerInstance;
   std::string fOutputInstance;
-
+  int fDebugLevel;
+  
   typedef struct ptbsv
   {
-     std::vector<raw::ptb::Trigger> HLTrigs;
-     std::vector<raw::ptb::Trigger> LLTrigs;
-     std::vector<raw::ptb::ChStatus> ChStats;
-     std::vector<raw::ptb::Feedback> Feedbacks;
-     std::vector<raw::ptb::Misc> Miscs;
-     std::vector<raw::ptb::WordIndex> WordIndexes; 
+    std::vector<raw::ptb::Trigger> HLTrigs;
+    std::vector<raw::ptb::Trigger> LLTrigs;
+    std::vector<raw::ptb::ChStatus> ChStats;
+    std::vector<raw::ptb::Feedback> Feedbacks;
+    std::vector<raw::ptb::Misc> Miscs;
+    std::vector<raw::ptb::WordIndex> WordIndexes; 
   } ptbsv_t;
   
   void _process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sout);
@@ -64,13 +65,14 @@ private:
 
 SBNDPTBDecoder::SBNDPTBDecoder(fhicl::ParameterSet const & p)
   : EDProducer{p}
-// Initialize member data here.
+    // Initialize member data here.
 {
   fInputLabel = p.get<std::string>("InputLabel");
   fInputContainerInstance = p.get<std::string>("InputContainerInstance");
   fInputNonContainerInstance = p.get<std::string>("InputNonContainerInstance");
   fOutputInstance = p.get<std::string>("OutputInstance");
-
+  fDebugLevel = p.get<int>("DebugLevel",0);
+  
   produces<std::vector<raw::ptb::sbndptb> >(fOutputInstance);
 }
 
@@ -118,9 +120,17 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 
   // use the same logic in sbndaq-artdaq-core/Overlays/SBND/PTBFragment.cc: operator<<
   // but separate out the HLTs and LLTs
+  if (fDebugLevel > 0)
+    {
+      std::cout << "SBNDPTBDecoder_module: got into aux" << std::endl;
+    }
   
   for (size_t iword = 0; iword < ctbfrag.NWords(); ++iword)
     {
+      if (fDebugLevel > 0)
+        {
+          std::cout << "SBNDPTBDecoder_module: start processing word: " << iword << std::endl;
+	}
       size_t ix=0;
       uint32_t wt = 0;
       if (ctbfrag.Trigger(iword))
@@ -134,11 +144,19 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	    {
 	      ix = sout.HLTrigs.size();
 	      sout.HLTrigs.push_back(tstruct);
+	      if (fDebugLevel > 0)
+		{
+		  std::cout << "SBNDPTBDecoder_module: found HLT: " << wt << " " << ix << std::endl;
+		}
 	    }
 	  else if (ctbfrag.Trigger(iword)->IsLLT())
 	    {
 	      ix = sout.LLTrigs.size();
 	      sout.LLTrigs.push_back(tstruct);
+	      if (fDebugLevel > 0)
+		{
+		  std::cout << "SBNDPTBDecoder_module: found LLT: " << wt << " " << ix << std::endl;
+		}
 	    }
 	}
       else if (ctbfrag.ChStatus(iword))
@@ -155,6 +173,10 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  wt = cstruct.word_type;
 	  ix = sout.ChStats.size();
 	  sout.ChStats.push_back(cstruct);
+	  if (fDebugLevel > 0)
+	    {
+	      std::cout << "SBNDPTBDecoder_module: found CHStat: " << wt << " " << ix << std::endl;
+	    }
 	}
       else if (ctbfrag.Feedback(iword))
 	{
@@ -167,6 +189,10 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  wt = fstruct.word_type;
 	  ix = sout.Feedbacks.size();
 	  sout.Feedbacks.push_back(fstruct);
+	  if (fDebugLevel > 0)
+	    {
+	      std::cout << "SBNDPTBDecoder_module: found Feedback: " << wt << " " << ix << std::endl;
+	    }
 	}
       else
 	{
@@ -175,16 +201,22 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  mstruct.payload = ctbfrag.Word(iword)->payload;
 	  mstruct.word_type = ctbfrag.Word(iword)->word_type;
 	  wt = mstruct.word_type;
-	  
 	  ix = sout.Miscs.size();
 	  sout.Miscs.push_back(mstruct);
+	  if (fDebugLevel > 0)
+	    {
+	      std::cout << "SBNDPTBDecoder_module: found Misc: " << wt << " " << ix << std::endl;
+	    }
 	}
 
       raw::ptb::WordIndex wstruct;
       wstruct.word_type = wt;
       wstruct.index = ix;
       sout.WordIndexes.push_back(wstruct);
-
+      if (fDebugLevel > 0)
+	{
+	  std::cout << "SBNDPTBDecoder_module: index calc: " << wt << " " << ix << std::endl;
+	}
     }
 }
 

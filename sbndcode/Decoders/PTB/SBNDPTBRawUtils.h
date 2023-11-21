@@ -6,7 +6,7 @@
 #ifndef  SBNDPTBRawUtils_H
 #define  SBNDPTBRawUtils_H
 
-#include "sbndptb.h"
+#include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndaq-artdaq-core/Overlays/SBND/PTB_content.h"
 
 namespace raw {

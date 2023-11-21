@@ -6,6 +6,7 @@ SBNDPTBDecoderDefaults: {
       InputContainerInstance: "ContainerPTB"
       InputNonContainerInstance: "PTB"
       OutputInstance: ""
+      DebugLevel: 0
 }
 
 END_PROLOG
