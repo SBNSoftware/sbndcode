@@ -134,13 +134,13 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
   ofstream texFile;
   texFile.open(saveDir + "/cut_table.tex");
 
-  double totalSignal = 0, totalSignalSlices = 0, totalBackSlices = 0, totalNuFVBackSlices = 0;
+  double totalSignal = 0, totalSignalSlices = 0, totalBackSlices = 0;
 
   for(auto const& sample : samples)
     {
-      totalSignal         += sample.scaling * sample.tree->Draw("", trueCategory);
-      totalSignalSlices   += sample.scaling * sample.tree->Draw("", categories[0].cut);
-      totalBackSlices     += sample.scaling * sample.tree->Draw("", !categories[0].cut);
+      totalSignal       += sample.scaling * sample.tree->Draw("", trueCategory);
+      totalSignalSlices += sample.scaling * sample.tree->Draw("", categories[0].cut);
+      totalBackSlices   += sample.scaling * sample.tree->Draw("", !categories[0].cut);
     }
 
   texFile << docStart;
