@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "LatexHeaders.h"
 #include "Cuts.h"
 #include "Categories.h"
@@ -8,8 +8,8 @@ const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
 const double goalSpills  = goalPOT / potPerSpill;
 
-void Selection(const TString productionVersion, const TString saveDirExt = "tmp", std::vector<Cut> &cuts = ncpizero_cuts,
-               const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots,
+void Selection(const TString productionVersion, const TString saveDirExt = "tmp", std::vector<Cut> &cuts = ncpizero_incl_cuts,
+               const std::vector<Cut> &categories = ncpizero_incl_categories, std::vector<Plot> &plots = selection_plots,
                const TCut &trueCategory = "");
 
 double GetPOT(TChain *subruns);
@@ -21,17 +21,17 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
 
 void RunMultiSelection()
 {
-  Selection("NCPiZeroAv7", "ncpizero", ncpizero_cuts, ncpizero_categories, selection_plots, true_ncpizero_cut);
-  Selection("NCPiZeroAv7", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, selection_plots, true_ncpizero_0p0pi_cut);
-  Selection("NCPiZeroAv7", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, selection_plots, true_ncpizero_1p0pi_cut);
-  Selection("NCPiZeroAv7", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, selection_plots, true_ncpizero_Np0pi_cut);
-  Selection("NCPiZeroAv7", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, selection_plots, true_ncpizero_Xp0pi_cut);
+  Selection("NCPiZeroAv8", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, no_plots, true_ncpizero_incl_cut);
+  Selection("NCPiZeroAv8", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, no_plots, true_ncpizero_0p0pi_cut);
+  Selection("NCPiZeroAv8", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, no_plots, true_ncpizero_1p0pi_cut);
+  Selection("NCPiZeroAv8", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, no_plots, true_ncpizero_Np0pi_cut);
+  Selection("NCPiZeroAv8", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, no_plots, true_ncpizero_Xp0pi_cut);
 }
 
 void Selection(const TString productionVersion, const TString saveDirExt, std::vector<Cut> &cuts, const std::vector<Cut> &categories,
                std::vector<Plot> &plots, const TCut &trueCategory)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/selection/" + saveDirExt;
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/selection/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
