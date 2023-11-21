@@ -7,7 +7,7 @@
 
 namespace raw {
   namespace ptb {
-    const std::vector<raw::ptb::ChStatus>  GetChStatusBeforeHLTs(raw::ptb::sbndptb &pdata)
+    const std::vector<raw::ptb::ChStatus>  GetChStatusBeforeHLTs(const raw::ptb::sbndptb &pdata)
     {
       std::vector<raw::ptb::ChStatus> chs;
       raw::ptb::ChStatus emptychstat;

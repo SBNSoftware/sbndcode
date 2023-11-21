@@ -79,7 +79,6 @@ SBNDPTBDecoder::SBNDPTBDecoder(fhicl::ParameterSet const & p)
 void SBNDPTBDecoder::produce(art::Event & evt)
 {
 
-  ptbsv_t sout;  // output structures
 
   // look first for container fragments and then non-container fragments
 
@@ -94,7 +93,10 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 	  artdaq::ContainerFragment cont_frag(cont);
 	  for (size_t ii = 0; ii < cont_frag.block_count(); ++ii)
 	    {
+              ptbsv_t sout;  // output structures
 	      _process_PTB_AUX(*cont_frag[ii], sout);
+              raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
+              sbndptbs.push_back(ptbdp);
 	    }
 	}
     }
@@ -105,12 +107,13 @@ void SBNDPTBDecoder::produce(art::Event & evt)
     {
       for(auto const& frag: *frags)
 	{
+          ptbsv_t sout;  // output structures
 	  _process_PTB_AUX(frag, sout);
+          raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
+          sbndptbs.push_back(ptbdp);
 	}
     }
 
-  raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
-  sbndptbs.push_back(ptbdp);  // just one for now
   evt.put(std::make_unique<std::vector<raw::ptb::sbndptb>>(std::move(sbndptbs)),fOutputInstance);
 }
 
