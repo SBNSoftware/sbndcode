@@ -1,6 +1,6 @@
 void ObservablesResolution(const TString productionVersion)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/observables/" + saveDirExt;
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/observables/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";

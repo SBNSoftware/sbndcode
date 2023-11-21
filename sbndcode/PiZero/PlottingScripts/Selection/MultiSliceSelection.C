@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "LatexHeaders.h"
 
 const std::vector<Cut> categories = {
@@ -77,7 +77,7 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples);
 
 void MultiSliceSelection()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv4/split_slice_selection/selection";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv4/split_slice_selection/selection";
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString file = "/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv4/NCPiZeroAv4_rockbox.root";

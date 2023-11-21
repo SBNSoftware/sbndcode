@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
 
 const double goalPOT = 10e20;
 
@@ -6,10 +6,10 @@ double GetPOT(TChain *subruns);
 
 void IntegratedFlux(const TString productionVersion)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/integrated_flux";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/integrated_flux";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = "/sbnd/data/users/hlay/ncpizero/production/NCPiZeroAv7/tmpflux/flux_hist.root";
+  const TString file = "/exp/sbnd/data/users/hlay/ncpizero/production/NCPiZeroAv7/tmpflux/flux_hist.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();

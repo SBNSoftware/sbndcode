@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
 #include "Categories.h"
 #include "Plots.h"
 
@@ -9,7 +9,7 @@ int GetGenEvents(TChain *subruns);
 
 void TrueEventMode2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets, const std::vector<Cut> &signals)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/true_event_modes_two_d";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/true_event_modes_two_d";
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";

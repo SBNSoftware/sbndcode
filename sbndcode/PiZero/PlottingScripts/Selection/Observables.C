@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "Cuts.h"
 #include "Categories.h"
 #include "Plots.h"
@@ -36,7 +36,7 @@ void Observables(const TString productionVersion, const TString saveDirExt = "tm
 void Observables(const TString productionVersion, const TString saveDirExt, const Cut &selection,
                  const std::vector<Cut> &categories, std::vector<Plot> &plots)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/observables/" + saveDirExt;
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/observables/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";

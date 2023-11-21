@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "Cuts.h"
 #include "Categories.h"
 #include "Plots.h"
@@ -26,7 +26,7 @@ void RunMultiOptimiseCut()
 
 void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/cut_optimisation/" + saveDirExt;
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/cut_optimisation/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";

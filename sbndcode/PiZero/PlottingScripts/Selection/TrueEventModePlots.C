@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "LatexHeaders.h"
 #include "Categories.h"
 #include "Plots.h"
@@ -24,7 +24,7 @@ void RunMulti()
 void TrueEventModePlots(const TString productionVersion, const TString saveDirExt, const std::vector<Cut> &categories,
                         std::vector<Plot> &plots, const Cut &cut)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/true_event_modes/" + saveDirExt;
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/true_event_modes/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";

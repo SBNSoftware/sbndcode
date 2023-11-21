@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
 #include "Categories.h"
 #include "Plots.h"
 #include "Cuts.h"
@@ -39,7 +39,7 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
 void Observables2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets, const std::vector<Cut> &categories,
                         const Cut &cut)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/observables_twod";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/observables_twod";
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
