@@ -11,6 +11,7 @@
 
 #include "RtypesCore.h"
 #include <stdint.h>
+#include <vector>
 
 namespace raw {
 
@@ -60,7 +61,8 @@ namespace raw {
       sbndptb() {}; // Constructor of an emtpy data product
 
       // constructor with all of the vectors set
-    sbndptb(std::vector<raw::ptb::Trigger> &HLtrigs,
+
+      sbndptb(std::vector<raw::ptb::Trigger> &HLtrigs,
 	    std::vector<raw::ptb::Trigger> &LLtrigs,
 	    std::vector<raw::ptb::ChStatus> &chstats,
 	    std::vector<raw::ptb::Feedback> &fbs,
@@ -73,15 +75,12 @@ namespace raw {
       fMiscs(m),
       fIndexes(wordindexes) {};
 
-
       const std::vector<raw::ptb::Trigger>&     GetHLTriggers() const;   
       const std::vector<raw::ptb::Trigger>&     GetLLTriggers() const;   
       const std::vector<raw::ptb::ChStatus>&    GetChStatuses() const; 
       const std::vector<raw::ptb::Feedback>&    GetFeedbacks() const;  
       const std::vector<raw::ptb::Misc>&        GetMiscs() const;
       const std::vector<raw::ptb::WordIndex>&   GetIndexes() const;
-
-      const std::vector<raw::ptb::ChStatus>            GetChStatusBeforeHLTs() const;
 
       size_t  GetNTriggers() const;   
       size_t  GetNHLTriggers() const;   
@@ -106,10 +105,7 @@ namespace raw {
       std::vector<raw::ptb::Feedback> fFeedbacks;
       std::vector<raw::ptb::Misc> fMiscs;
       std::vector<raw::ptb::WordIndex> fIndexes;
-
     };
-
-
   } // namespace ptb
 } // namespace raw
 
@@ -121,62 +117,6 @@ const std::vector<raw::ptb::ChStatus>&      raw::ptb::sbndptb::GetChStatuses() c
 const std::vector<raw::ptb::Feedback>&      raw::ptb::sbndptb::GetFeedbacks()  const { return fFeedbacks; }
 const std::vector<raw::ptb::Misc>&          raw::ptb::sbndptb::GetMiscs()      const { return fMiscs; }
 const std::vector<raw::ptb::WordIndex>&     raw::ptb::sbndptb::GetIndexes()    const { return fIndexes; }
-
-// for each HLT, find previous ChStatus
-
-const std::vector<raw::ptb::ChStatus>     raw::ptb::sbndptb::GetChStatusBeforeHLTs() const
-{
-  std::vector<raw::ptb::ChStatus> chs;
-  raw::ptb::ChStatus emptychstat;
-  emptychstat.timestamp = 0;
-  emptychstat.beam = 0;
-  emptychstat.crt = 0;
-  emptychstat.pds = 0;
-  emptychstat.mtca = 0;
-  emptychstat.nim = 0;
-  emptychstat.auxpds = 0;
-  emptychstat.word_type = 0;
-
-  // Find the last CHStatus before each HLT
-
-  for (size_t i=0; i<fHLTriggers.size(); ++i)
-    {
-      for (size_t j=0; j<fIndexes.size(); ++j)
-	{
-	  if (fIndexes.at(j).word_type == 2 && fIndexes.at(j).index == i)
-	    {
-	      size_t kstatindex = j;
-	      if (kstatindex > 0)
-		{
-		  kstatindex --;  // it's the word before the HLT that has the chstat
-		  if (fIndexes.at(kstatindex).word_type == 3)
-		    {
-		      size_t kstat = fIndexes.at(kstatindex).index;
-		      
-		      if (kstat < fChStatuses.size())
-			{
-			  chs.push_back(fChStatuses.at(kstat));
-			}
-		      else
-			{
-			  chs.push_back(emptychstat);
-			}
-		    }
-		  else
-		    {
-		      chs.push_back(emptychstat);
-		    }
-		}
-	      else
-		{
-		  chs.push_back(emptychstat);
-		}
-	    }
-	}
-    }
-  
-  return chs;
-}
 
 size_t  raw::ptb::sbndptb::GetNTriggers()   const { return fHLTriggers.size() + fLLTriggers.size(); }
 size_t  raw::ptb::sbndptb::GetNHLTriggers()   const { return fHLTriggers.size(); }
@@ -192,6 +132,5 @@ const raw::ptb::ChStatus&    raw::ptb::sbndptb::GetChStatuse(size_t i) const { r
 const raw::ptb::Feedback&    raw::ptb::sbndptb::GetFeedback(size_t i)  const { return fFeedbacks.at(i); }
 const raw::ptb::Misc&        raw::ptb::sbndptb::GetMisc(size_t i)      const { return fMiscs.at(i); }
 const raw::ptb::WordIndex&   raw::ptb::sbndptb::GetIndex(size_t i)     const { return fIndexes.at(i); }
-
 
 #endif // sbndptb_H

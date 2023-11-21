@@ -1,5 +1,5 @@
 //File: classes.h
-//Brief: Include directives needed to generate header(s) for the raw::ctb::pdspctb data product.
+//Brief: Include directives needed to generate header(s) for the raw::ptb::sbndptb data product.
 //Author: Tom Junk
 
 //ART includes

@@ -16,6 +16,13 @@ cet_build_plugin( SBNDPTBDecoder art::module
   ROOT::Core
 )
 
+cet_make_library(SOURCE
+  SBNDPTBRawUtils.cxx
+  LIBRARIES
+  sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND
+  ROOT::Core
+)
+
 install_headers()
 install_fhicl()
 install_source()
