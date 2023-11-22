@@ -72,7 +72,13 @@ class SecondShowerFinderAlg
 
     HitObjVec& Hits() { return hits; }
 
-    size_t Size() { return hits.size(); }
+    const HitObjVec& ConstHits() const { return hits; }
+
+    size_t Size() const { return hits.size(); }
+
+    double MinX() const { return min_x; }
+
+    double MaxX() const { return max_x; }
   };
 
   typedef std::vector<ClusterObj*> ClusterObjVec;
@@ -102,6 +108,8 @@ class SecondShowerFinderAlg
   double YZtoW(const double y, const double z);
 
   double Dist(const HitObj *hitObjA, const HitObj *hitObjB);
+
+  double GetInterpolatedHitWirePos(const ClusterObj *cluster, const double &x);
 
   size_t fMinClusterHits;
   double fMaxHitSeparation;

@@ -303,7 +303,29 @@ void SecondShowerFinderAlg::RemoveClusterBelowLimit(ClusterObjVec &clusters, con
 
 void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<ClusterObjVec> &clusters)
 {
+  for(auto const& clusterU : clusters[0])
+    {
+      for(auto const& clusterV : clusters[1])
+        {
+          for(auto const& clusterW : clusters[2])
+            {
+              double startX = std::max({clusterU->MinX(), clusterV->MinX(), clusterW->MinX()});
+              double endX   = std::min({clusterU->MaxX(), clusterV->MaxX(), clusterW->MaxX()});
 
+              if(startX > endX)
+                continue;
+
+              double startU = GetInterpolatedHitWirePos(clusterU, startX);
+              double endU   = GetInterpolatedHitWirePos(clusterU, endX);
+
+              double startV = GetInterpolatedHitWirePos(clusterV, startX);
+              double endV   = GetInterpolatedHitWirePos(clusterV, endX);
+
+              double startW = GetInterpolatedHitWirePos(clusterW, startX);
+              double endW   = GetInterpolatedHitWirePos(clusterW, endX);
+            }
+        }
+    }
 }
 
 void SecondShowerFinderAlg::DrawView(const HitObjVec &hits, const HitObjVec &usedHits, const ClusterObjVec clusters, const TString &name)
@@ -452,4 +474,50 @@ double SecondShowerFinderAlg::Dist(const HitObj *hitObjA, const HitObj *hitObjB)
 {
   return sqrt((hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
               (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
+}
+
+double SecondShowerFinderAlg::GetInterpolatedHitWirePos(const ClusterObj *cluster, const double &x)
+{
+  if(x < cluster->MinX() || x > cluster->MaxX())
+    return std::numeric_limits<double>::lowest();
+
+  double closestLowerXDiff     = std::numeric_limits<double>::max();
+  double closestLowerXWirePos  = std::numeric_limits<double>::lowest();
+  double closestHigherXDiff    = std::numeric_limits<double>::max();
+  double closestHigherXWirePos = std::numeric_limits<double>::lowest();
+
+  bool foundLower = false, foundHigher = false;
+
+  for(auto const& hitObj : cluster->ConstHits())
+    {
+      if(hitObj->x <= x && std::abs(x - hitObj->x) < closestLowerXDiff)
+        {
+          closestLowerXDiff    = std::abs(x - hitObj->x);
+          closestLowerXWirePos = hitObj->wire_pos;
+          foundLower = true;
+        }
+
+      if(hitObj->x >= x && std::abs(x - hitObj->x) < closestHigherXDiff)
+        {
+          closestHigherXDiff    = std::abs(x - hitObj->x);
+          closestHigherXWirePos = hitObj->wire_pos;
+          foundHigher = true;
+        }
+    }
+
+  if(foundLower && foundHigher)
+    {
+      double fractionalDistance = closestLowerXDiff + closestHigherXDiff < std::numeric_limits<double>::epsilon() ? 0 :
+        closestLowerXDiff / (closestLowerXDiff + closestHigherXDiff);
+
+      return closestLowerXWirePos + fractionalDistance * (closestHigherXWirePos - closestLowerXWirePos);
+    }
+  else if(foundLower)
+    std::cout << "Just lower....!" << std::endl;
+  else if(foundHigher)
+    std::cout << "Just higher....!" << std::endl;
+  else
+    std::cout << "Found neither...!" << std::endl;
+
+  return std::numeric_limits<double>::lowest();
 }
