@@ -1627,7 +1627,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
             double flash_charge = Flash.TotalPE();
             double flash_z = Flash.ZCenter();
             // Check if the flash is the matched by opt0  // TODO: do it properly someday with the assn between opt0 and flashes/slices, don't be that lazy @rodrigoa
-            if (((flash_time-slc_opt0_time[slcCounter])<1e-3) && ((flash_charge-slc_opt0_measPE[slcCounter])<1e-3)) 
+            if ((abs(flash_time-slc_opt0_time[slcCounter])<1e-3) && (abs(flash_charge-slc_opt0_measPE[slcCounter])<1e-3)) 
             {
               slc_opt0_time_corrected_Z_flash [slcCounter] = slc_opt0_time[slcCounter] - flash_z/light_speed_cm_us;
             }
