@@ -62,7 +62,7 @@ class SecondShowerFinderAlg
 
   std::vector<int> fColours = { kGreen+2, kMagenta+2, kCyan+2, kYellow+2, kAzure+1, kSpring+9, kPink+9, kTeal+9, kOrange+2, kViolet-8 };
 
-  std::vector<size_t> AnalyseViewHits(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw);
+  std::vector<ClusterObj> ClusterInView(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw);
 
   void SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits);
 
@@ -73,6 +73,8 @@ class SecondShowerFinderAlg
   void MergeClusters(std::vector<ClusterObj> &clusters);
 
   void RemoveClusterBelowLimit(std::vector<ClusterObj> &clusters, const size_t limit);
+
+  void TwoDToThreeDMatching(std::vector<std::vector<ClusterObj>> &clusters);
 
   void DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name);
 

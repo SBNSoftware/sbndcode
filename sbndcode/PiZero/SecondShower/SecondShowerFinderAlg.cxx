@@ -85,16 +85,20 @@ std::vector<std::vector<size_t>> SecondShowerFinderAlg::FindSecondShower(const a
               << "\tV: " << v_hits.size()
               << "\tW: " << w_hits.size() << std::endl;
 
-  std::vector<std::vector<size_t>> clusterSizes(3, std::vector<size_t>());
+  std::vector<std::vector<ClusterObj>> clusters(3, std::vector<ClusterObj>());
 
-  clusterSizes[0] = AnalyseViewHits(u_hits, u_usedHits, "U view", draw);
-  clusterSizes[1] = AnalyseViewHits(v_hits, v_usedHits, "V view", draw);
-  clusterSizes[2] = AnalyseViewHits(w_hits, w_usedHits, "W view", draw);
+  clusters[0] = ClusterInView(u_hits, u_usedHits, "U view", draw);
+  clusters[1] = ClusterInView(v_hits, v_usedHits, "V view", draw);
+  clusters[2] = ClusterInView(w_hits, w_usedHits, "W view", draw);
+
+  TwoDToThreeDMatching(clusters);
+
+  std::vector<std::vector<size_t>> clusterSizes(3, std::vector<size_t>());
 
   return clusterSizes;
 }
 
-std::vector<size_t> SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw)
+std::vector<SecondShowerFinderAlg::ClusterObj> SecondShowerFinderAlg::ClusterInView(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw)
 {
   std::vector<ClusterObj> clusters;
 
@@ -115,11 +119,7 @@ std::vector<size_t> SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hit
       DrawView(hits, usedHits, clusters, name);
     }
 
-  std::vector<size_t> clusterSizes(clusters.size(), 0);
-  for(auto&& [i, cluster] : enumerate(clusters))
-    clusterSizes[i] = cluster.size();
-
-  return clusterSizes;
+  return clusters;
 }
 
 void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits)
@@ -274,6 +274,11 @@ void SecondShowerFinderAlg::RemoveClusterBelowLimit(std::vector<ClusterObj> &clu
           ++it;
         }
     }
+}
+
+void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<std::vector<ClusterObj>> &clusters)
+{
+
 }
 
 void SecondShowerFinderAlg::DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name)
