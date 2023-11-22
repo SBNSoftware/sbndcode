@@ -58,25 +58,42 @@ class SecondShowerFinderAlg
     double wire_pos;
   };
 
-  typedef std::vector<HitObj*> ClusterObj;
+  typedef std::vector<HitObj*> HitObjVec;
+
+  class ClusterObj {
+
+    HitObjVec hits;
+    bool used;
+    double min_x;
+    double max_x;
+
+  public:
+    ClusterObj(HitObjVec hitObjVec);
+
+    HitObjVec& Hits() { return hits; }
+
+    size_t Size() { return hits.size(); }
+  };
+
+  typedef std::vector<ClusterObj*> ClusterObjVec;
 
   std::vector<int> fColours = { kGreen+2, kMagenta+2, kCyan+2, kYellow+2, kAzure+1, kSpring+9, kPink+9, kTeal+9, kOrange+2, kViolet-8 };
 
-  std::vector<ClusterObj> ClusterInView(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw);
+  ClusterObjVec ClusterInView(const HitObjVec &hits, const HitObjVec &usedHits, const TString &name, const bool draw);
 
-  void SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits);
+  void SeparateViews(const art::Event &e, const HitVec &hits, HitObjVec &u_hits, HitObjVec &v_hits, HitObjVec &w_hits);
 
-  void InitialPairings(const ClusterObj &hits, std::vector<ClusterObj> &clusters);
+  void InitialPairings(const HitObjVec &hits, std::vector<HitObjVec> &hitCollections);
 
-  void AddSingleHits(const ClusterObj &hits, std::vector<ClusterObj> &clusters);
+  void AddSingleHits(const HitObjVec &hits, std::vector<HitObjVec> &hitCollections);
 
-  void MergeClusters(std::vector<ClusterObj> &clusters);
+  void MergeHitCollections(std::vector<HitObjVec> &hitCollections);
 
-  void RemoveClusterBelowLimit(std::vector<ClusterObj> &clusters, const size_t limit);
+  void RemoveClusterBelowLimit(ClusterObjVec &clusters, const size_t limit);
 
-  void TwoDToThreeDMatching(std::vector<std::vector<ClusterObj>> &clusters);
+  void TwoDToThreeDMatching(std::vector<ClusterObjVec> &clusters);
 
-  void DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name);
+  void DrawView(const HitObjVec &hits, const HitObjVec &usedHits, const ClusterObjVec clusters, const TString &name);
 
   double YZtoU(const double y, const double z);
 

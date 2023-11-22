@@ -1,5 +1,23 @@
 #include "SecondShowerFinderAlg.h"
 
+SecondShowerFinderAlg::ClusterObj::ClusterObj(HitObjVec hitObjVec)
+{
+  hits = hitObjVec;
+  used = false;
+
+  min_x = std::numeric_limits<double>::max();
+  max_x = std::numeric_limits<double>::lowest();
+
+  for(auto const& hitObj : hitObjVec)
+    {
+      if(hitObj->x < min_x)
+        min_x = hitObj->x;
+
+      if(hitObj->x > max_x)
+        max_x = hitObj->x;
+    }
+}
+
 SecondShowerFinderAlg::SecondShowerFinderAlg()
 {
   gROOT->SetBatch(false);
@@ -73,8 +91,8 @@ SecondShowerFinderAlg::SecondShowerFinderAlg(fhicl::ParameterSet const& p)
 
 std::vector<std::vector<size_t>> SecondShowerFinderAlg::FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw)
 {
-  ClusterObj u_hits, v_hits, w_hits;
-  ClusterObj u_usedHits, v_usedHits, w_usedHits;
+  HitObjVec u_hits, v_hits, w_hits;
+  HitObjVec u_usedHits, v_usedHits, w_usedHits;
 
   SeparateViews(e, hits, u_hits, v_hits, w_hits);
   SeparateViews(e, usedHits, u_usedHits, v_usedHits, w_usedHits);
@@ -85,7 +103,7 @@ std::vector<std::vector<size_t>> SecondShowerFinderAlg::FindSecondShower(const a
               << "\tV: " << v_hits.size()
               << "\tW: " << w_hits.size() << std::endl;
 
-  std::vector<std::vector<ClusterObj>> clusters(3, std::vector<ClusterObj>());
+  std::vector<ClusterObjVec> clusters(3, ClusterObjVec());
 
   clusters[0] = ClusterInView(u_hits, u_usedHits, "U view", draw);
   clusters[1] = ClusterInView(v_hits, v_usedHits, "V view", draw);
@@ -98,19 +116,26 @@ std::vector<std::vector<size_t>> SecondShowerFinderAlg::FindSecondShower(const a
   return clusterSizes;
 }
 
-std::vector<SecondShowerFinderAlg::ClusterObj> SecondShowerFinderAlg::ClusterInView(const ClusterObj &hits, const ClusterObj &usedHits, const TString &name, const bool draw)
+SecondShowerFinderAlg::ClusterObjVec SecondShowerFinderAlg::ClusterInView(const HitObjVec &hits, const HitObjVec &usedHits, const TString &name, const bool draw)
 {
-  std::vector<ClusterObj> clusters;
-
   if(draw)
     {
+      ClusterObjVec tmpClusters;
       std::cout << "Drawing " << name << " pre-clustering... (" << hits.size() << " unused hits)" << std::endl;
-      DrawView(hits, usedHits, clusters, name);
+      DrawView(hits, usedHits, tmpClusters, name);
     }
 
-  InitialPairings(hits, clusters);
-  AddSingleHits(hits, clusters);
-  MergeClusters(clusters);
+  std::vector<HitObjVec> hitCollections;
+
+  InitialPairings(hits, hitCollections);
+  AddSingleHits(hits, hitCollections);
+  MergeHitCollections(hitCollections);
+
+  ClusterObjVec clusters;
+
+  for(auto const& hitCollection : hitCollections)
+    clusters.push_back(new ClusterObj(hitCollection));
+
   RemoveClusterBelowLimit(clusters, fMinClusterHits);
 
   if(draw)
@@ -122,7 +147,7 @@ std::vector<SecondShowerFinderAlg::ClusterObj> SecondShowerFinderAlg::ClusterInV
   return clusters;
 }
 
-void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hits, ClusterObj &u_hits, ClusterObj &v_hits, ClusterObj &w_hits)
+void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hits, HitObjVec &u_hits, HitObjVec &v_hits, HitObjVec &w_hits)
 {
   art::ServiceHandle<geo::Geometry const> geom;
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
@@ -164,7 +189,7 @@ void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hit
     }
 }
 
-void SecondShowerFinderAlg::InitialPairings(const ClusterObj &hits, std::vector<ClusterObj> &clusters)
+void SecondShowerFinderAlg::InitialPairings(const HitObjVec &hits, std::vector<HitObjVec> &hitCollections)
 {
   for(auto const& hitObjA : hits)
     {
@@ -183,9 +208,9 @@ void SecondShowerFinderAlg::InitialPairings(const ClusterObj &hits, std::vector<
 
           if(dist < fMaxHitSeparation)
             {
-              clusters.push_back(ClusterObj());
-              clusters.back().push_back(hitObjA);
-              clusters.back().push_back(hitObjB);
+              hitCollections.push_back(HitObjVec());
+              hitCollections.back().push_back(hitObjA);
+              hitCollections.back().push_back(hitObjB);
 
               hitObjA->used = true;
               hitObjB->used = true;
@@ -195,16 +220,16 @@ void SecondShowerFinderAlg::InitialPairings(const ClusterObj &hits, std::vector<
     }
 }
 
-void SecondShowerFinderAlg::AddSingleHits(const ClusterObj &hits, std::vector<ClusterObj> &clusters)
+void SecondShowerFinderAlg::AddSingleHits(const HitObjVec &hits, std::vector<HitObjVec> &hitCollections)
 {
   for(auto const& hitObjA : hits)
     {
       if(hitObjA->used)
         continue;
 
-      std::vector<ClusterObj>::iterator it = clusters.begin();
+      std::vector<HitObjVec>::iterator it = hitCollections.begin();
 
-      while(it != clusters.end())
+      while(it != hitCollections.end())
         {
           bool add = false;
 
@@ -227,15 +252,15 @@ void SecondShowerFinderAlg::AddSingleHits(const ClusterObj &hits, std::vector<Cl
     }
 }
 
-void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
+void SecondShowerFinderAlg::MergeHitCollections(std::vector<HitObjVec> &hitCollections)
 {
-  std::vector<ClusterObj>::iterator itA = clusters.begin();
+  std::vector<HitObjVec>::iterator itA = hitCollections.begin();
 
-  while(itA != clusters.end())
+  while(itA != hitCollections.end())
     {
-      std::vector<ClusterObj>::iterator itB = std::next(itA);
+      std::vector<HitObjVec>::iterator itB = std::next(itA);
 
-      while(itB != clusters.end())
+      while(itB != hitCollections.end())
         {
           bool merge = false;
 
@@ -253,7 +278,7 @@ void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
           if(merge)
             {
               itA->insert(itA->end(), itB->begin(), itB->end());
-              itB = clusters.erase(itB);
+              itB = hitCollections.erase(itB);
             }
           else
             ++itB;
@@ -262,12 +287,12 @@ void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
     }
 }
 
-void SecondShowerFinderAlg::RemoveClusterBelowLimit(std::vector<ClusterObj> &clusters, const size_t limit)
+void SecondShowerFinderAlg::RemoveClusterBelowLimit(ClusterObjVec &clusters, const size_t limit)
 {
-  std::vector<ClusterObj>::iterator it = clusters.begin();
+  ClusterObjVec::iterator it = clusters.begin();
   while(it != clusters.end())
     {
-      if(it->size() < limit)
+      if((*it)->Size() < limit)
         it = clusters.erase(it);
       else
         {
@@ -276,12 +301,12 @@ void SecondShowerFinderAlg::RemoveClusterBelowLimit(std::vector<ClusterObj> &clu
     }
 }
 
-void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<std::vector<ClusterObj>> &clusters)
+void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<ClusterObjVec> &clusters)
 {
 
 }
 
-void SecondShowerFinderAlg::DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name)
+void SecondShowerFinderAlg::DrawView(const HitObjVec &hits, const HitObjVec &usedHits, const ClusterObjVec clusters, const TString &name)
 {
   TCanvas *c = new TCanvas("c", "", 2100, 1400);
   c->cd();
@@ -374,7 +399,7 @@ void SecondShowerFinderAlg::DrawView(const ClusterObj &hits, const ClusterObj &u
 
   for(auto&& [i, cluster] : enumerate(clusters))
     {
-      std::cout << "\tCluster " << i << " of " << cluster.size() << " hits" << std::endl;
+      std::cout << "\tCluster " << i << " of " << cluster->Size() << " hits" << std::endl;
       g0Clusters.push_back(new TGraph());
       g1Clusters.push_back(new TGraph());
 
@@ -382,7 +407,7 @@ void SecondShowerFinderAlg::DrawView(const ClusterObj &hits, const ClusterObj &u
       g0Clusters[i]->SetMarkerColor(colour);
       g1Clusters[i]->SetMarkerColor(colour);
 
-      for(auto const& hitObj : cluster)
+      for(auto const& hitObj : cluster->Hits())
         {
           const int tpc = hitObj->hit->WireID().asTPCID().deepestIndex();
 
