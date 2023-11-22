@@ -72,6 +72,8 @@ class SecondShowerFinderAlg
 
   void MergeClusters(std::vector<ClusterObj> &clusters);
 
+  void RemoveClusterBelowLimit(std::vector<ClusterObj> &clusters, const size_t limit);
+
   void DrawView(const ClusterObj &hits, const ClusterObj &usedHits, const std::vector<ClusterObj> clusters, const TString &name);
 
   double YZtoU(const double y, const double z);

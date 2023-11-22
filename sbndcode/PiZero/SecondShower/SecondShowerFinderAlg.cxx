@@ -105,21 +105,9 @@ std::vector<size_t> SecondShowerFinderAlg::AnalyseViewHits(const ClusterObj &hit
     }
 
   InitialPairings(hits, clusters);
-
   AddSingleHits(hits, clusters);
-
   MergeClusters(clusters);
-
-  std::vector<ClusterObj>::iterator it = clusters.begin();
-  while(it != clusters.end())
-    {
-      if(it->size() < fMinClusterHits)
-        it = clusters.erase(it);
-      else
-        {
-          ++it;
-        }
-    }
+  RemoveClusterBelowLimit(clusters, fMinClusterHits);
 
   if(draw)
     {
@@ -271,6 +259,20 @@ void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
             ++itB;
         }
       ++itA;
+    }
+}
+
+void SecondShowerFinderAlg::RemoveClusterBelowLimit(std::vector<ClusterObj> &clusters, const size_t limit)
+{
+  std::vector<ClusterObj>::iterator it = clusters.begin();
+  while(it != clusters.end())
+    {
+      if(it->size() < limit)
+        it = clusters.erase(it);
+      else
+        {
+          ++it;
+        }
     }
 }
 
