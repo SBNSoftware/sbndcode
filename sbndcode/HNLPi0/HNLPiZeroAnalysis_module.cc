@@ -6,6 +6,7 @@
 // Generated at Thu Sep 28 09:58:07 2023 by Vu Chi Lan Nguyen using cetskelgen
 // from  version .
 // This code was heavily stolen from Henry Lay ;)
+// And then poorly modified by Rodrigo Alvarez too.
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDAnalyzer.h"
