@@ -152,18 +152,30 @@ void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hit
   art::ServiceHandle<geo::Geometry const> geom;
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
+  lar_pandora::LArPandoraDetectorType* detType(lar_pandora::detector_functions::GetDetectorType());
+
   for(auto const& hit : hits)
     {
       const geo::WireID wireID = hit->WireID();
       const double x = detProp.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
 
       auto const xyz = geom->Wire(wireID).GetCenter();
+      const double thetaZ = geom->Wire(wireID).ThetaZ(true);
+
+      std::cout << "View: " << hit->View() << " TPC: " << wireID.asTPCID().deepestIndex() << " Plane: " << wireID.Plane
+                << "\n\tPos: " << xyz
+                << "\n\tAngle: " << thetaZ << std::endl;
+
+      std::cout << detType->TargetViewU(wireID.TPC, wireID.Cryostat) << std::endl;
+      std::cout << detType->TargetViewV(wireID.TPC, wireID.Cryostat) << std::endl;
+      std::cout << detType->TargetViewW(wireID.TPC, wireID.Cryostat) << std::endl;
 
       switch(hit->View())
         {
         case geo::kU:
           {
             double wire_pos = YZtoU(xyz.Y(), xyz.Z());
+            std::cout << wire_pos << std::endl;
             HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
             u_hits.push_back(hitObj);
             break;
@@ -171,6 +183,7 @@ void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hit
         case geo::kV:
           {
             double wire_pos = YZtoV(xyz.Y(), xyz.Z());
+            std::cout << wire_pos << std::endl;
             HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
             v_hits.push_back(hitObj);
             break;
@@ -178,6 +191,7 @@ void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hit
         case geo::kW:
           {
             double wire_pos = YZtoW(xyz.Y(), xyz.Z());
+            std::cout << wire_pos << std::endl;
             HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
             w_hits.push_back(hitObj);
             break;
@@ -323,6 +337,15 @@ void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<ClusterObjVec> &clu
 
               double startW = GetInterpolatedHitWirePos(clusterW, startX);
               double endW   = GetInterpolatedHitWirePos(clusterW, endX);
+
+              std::cout << UVtoW(startU, startV) << " " << startW << std::endl;
+              std::cout << UVtoW(endU, endV) << " " << endW << std::endl;
+
+              std::cout << VWtoU(startV, startW) << " " << startU << std::endl;
+              std::cout << VWtoU(endV, endW) << " " << endU << std::endl;
+
+              std::cout << WUtoV(startW, startU) << " " << startV << std::endl;
+              std::cout << WUtoV(endW, endU) << " " << endV << std::endl;
             }
         }
     }
@@ -457,17 +480,35 @@ void SecondShowerFinderAlg::DrawView(const HitObjVec &hits, const HitObjVec &use
 
 double SecondShowerFinderAlg::YZtoU(const double y, const double z)
 {
+  std::cout << z << " " << cosU << " " << y << " " << sinU << std::endl;
   return z * cosU - y * sinU;
 }
 
 double SecondShowerFinderAlg::YZtoV(const double y, const double z)
 {
+  std::cout << z << " " << cosV << " " << y << " " << sinV << std::endl;
   return z * cosV - y * sinV;
 }
 
 double SecondShowerFinderAlg::YZtoW(const double y, const double z)
 {
+  std::cout << z << " " << cosW << " " << y << " " << sinW << std::endl;
   return z * cosW - y * sinW;
+}
+
+double SecondShowerFinderAlg::UVtoW(const double u, const double v)
+{
+  return -1. * (u * sinWminusV + v * sinUminusW) / sinVminusU;
+}
+
+double SecondShowerFinderAlg::VWtoU(const double v, const double w)
+{
+  return -1. * (v * sinUminusW + w * sinVminusU) / sinWminusV;
+}
+
+double SecondShowerFinderAlg::WUtoV(const double w, const double u)
+{
+  return -1. * (u * sinWminusV + w * sinVminusU) / sinUminusW;
 }
 
 double SecondShowerFinderAlg::Dist(const HitObj *hitObjA, const HitObj *hitObjB)
@@ -488,8 +529,12 @@ double SecondShowerFinderAlg::GetInterpolatedHitWirePos(const ClusterObj *cluste
 
   bool foundLower = false, foundHigher = false;
 
+  std::cout << "\nNEW CLUSTER\n" << std::endl;
+
   for(auto const& hitObj : cluster->ConstHits())
     {
+      std::cout << hitObj->x << " " << hitObj->wire_pos << std::endl;
+
       if(hitObj->x <= x && std::abs(x - hitObj->x) < closestLowerXDiff)
         {
           closestLowerXDiff    = std::abs(x - hitObj->x);
@@ -504,6 +549,8 @@ double SecondShowerFinderAlg::GetInterpolatedHitWirePos(const ClusterObj *cluste
           foundHigher = true;
         }
     }
+
+  std::cout << std::endl;
 
   if(foundLower && foundHigher)
     {

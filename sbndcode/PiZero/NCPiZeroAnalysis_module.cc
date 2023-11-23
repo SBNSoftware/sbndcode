@@ -1620,7 +1620,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             unused_hits.push_back(hit);
         }
 
-      const std::vector<std::vector<size_t>> ssss_clusters = fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, true);
+      const std::vector<std::vector<size_t>> ssss_clusters = fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, false);
 
       FillElement(slcVars["slc_ssss_n_u_clusters"], slcCounter, ssss_clusters[0].size());
       ResizeSubVectors(slcVars, "slc_ssss_u", slcCounter, ssss_clusters[0].size());

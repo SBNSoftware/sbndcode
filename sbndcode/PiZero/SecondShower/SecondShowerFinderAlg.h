@@ -26,6 +26,9 @@
 #include "larcore/Geometry/Geometry.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
+#include "larpandora/LArPandoraInterface/Detectors/GetDetectorType.h"
+#include "larpandora/LArPandoraInterface/Detectors/LArPandoraDetectorType.h"
+
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TSystem.h"
@@ -50,6 +53,10 @@ class SecondShowerFinderAlg
   const double sinV = TMath::Sin(wireAngleV);
   const double cosW = TMath::Cos(wireAngleW);
   const double sinW = TMath::Sin(wireAngleW);
+
+  const double sinVminusU = TMath::Sin(wireAngleV - wireAngleU);
+  const double sinWminusV = TMath::Sin(wireAngleW - wireAngleV);
+  const double sinUminusW = TMath::Sin(wireAngleU - wireAngleW);
 
   struct HitObj {
     art::Ptr<recob::Hit> hit;
@@ -106,6 +113,12 @@ class SecondShowerFinderAlg
   double YZtoV(const double y, const double z);
 
   double YZtoW(const double y, const double z);
+
+  double UVtoW(const double u, const double v);
+
+  double VWtoU(const double v, const double w);
+
+  double WUtoV(const double w, const double u);
 
   double Dist(const HitObj *hitObjA, const HitObj *hitObjB);
 
