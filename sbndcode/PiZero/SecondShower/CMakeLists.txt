@@ -6,8 +6,6 @@ art_make_library(
                  lardata::DetectorPropertiesService
                  larcore::Geometry_Geometry_service
                  lardataobj::RecoBase
-                 larpandora::GetDetectorType
-                 larpandora::LArPandoraInterface_Detectors
 )
 
 install_fhicl()

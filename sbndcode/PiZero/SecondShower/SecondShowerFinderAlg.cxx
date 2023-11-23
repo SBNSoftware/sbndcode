@@ -8,6 +8,11 @@ SecondShowerFinderAlg::ClusterObj::ClusterObj(HitObjVec hitObjVec)
   min_x = std::numeric_limits<double>::max();
   max_x = std::numeric_limits<double>::lowest();
 
+  min_wire_pos = std::numeric_limits<double>::max();
+  max_wire_pos = std::numeric_limits<double>::lowest();
+
+  std::set<int> tpcs;
+
   for(auto const& hitObj : hitObjVec)
     {
       if(hitObj->x < min_x)
@@ -15,6 +20,24 @@ SecondShowerFinderAlg::ClusterObj::ClusterObj(HitObjVec hitObjVec)
 
       if(hitObj->x > max_x)
         max_x = hitObj->x;
+
+      if(hitObj->wire_pos < min_wire_pos)
+        min_wire_pos = hitObj->wire_pos;
+
+      if(hitObj->wire_pos > max_wire_pos)
+        max_wire_pos = hitObj->wire_pos;
+
+      tpcs.insert(hitObj->hit->WireID().asTPCID().deepestIndex());
+    }
+
+  if(tpcs.size() == 1)
+    tpc = *tpcs.begin();
+  else if(tpcs.size() == 2)
+    tpc = 2;
+  else
+    {
+      std::cout << "Uh oh... we have: " << tpcs.size() << " TPCs" << std::endl;
+      tpc = -1;
     }
 }
 
@@ -109,7 +132,7 @@ std::vector<std::vector<size_t>> SecondShowerFinderAlg::FindSecondShower(const a
   clusters[1] = ClusterInView(v_hits, v_usedHits, "V view", draw);
   clusters[2] = ClusterInView(w_hits, w_usedHits, "W view", draw);
 
-  TwoDToThreeDMatching(clusters);
+  TwoDToThreeDMatching(clusters, draw);
 
   std::vector<std::vector<size_t>> clusterSizes(3, std::vector<size_t>());
 
@@ -152,46 +175,33 @@ void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hit
   art::ServiceHandle<geo::Geometry const> geom;
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
-  lar_pandora::LArPandoraDetectorType* detType(lar_pandora::detector_functions::GetDetectorType());
-
   for(auto const& hit : hits)
     {
       const geo::WireID wireID = hit->WireID();
       const double x = detProp.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
 
-      auto const xyz = geom->Wire(wireID).GetCenter();
-      const double thetaZ = geom->Wire(wireID).ThetaZ(true);
-
-      std::cout << "View: " << hit->View() << " TPC: " << wireID.asTPCID().deepestIndex() << " Plane: " << wireID.Plane
-                << "\n\tPos: " << xyz
-                << "\n\tAngle: " << thetaZ << std::endl;
-
-      std::cout << detType->TargetViewU(wireID.TPC, wireID.Cryostat) << std::endl;
-      std::cout << detType->TargetViewV(wireID.TPC, wireID.Cryostat) << std::endl;
-      std::cout << detType->TargetViewW(wireID.TPC, wireID.Cryostat) << std::endl;
+      const geo::Point_t wireCentre = geom->Wire(wireID).GetCenter();
+      const int tpc = wireID.asTPCID().deepestIndex();
 
       switch(hit->View())
         {
         case geo::kU:
           {
-            double wire_pos = YZtoU(xyz.Y(), xyz.Z());
-            std::cout << wire_pos << std::endl;
+            double wire_pos = YZtoU(wireCentre.Y(), wireCentre.Z(), tpc);
             HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
             u_hits.push_back(hitObj);
             break;
           }
         case geo::kV:
           {
-            double wire_pos = YZtoV(xyz.Y(), xyz.Z());
-            std::cout << wire_pos << std::endl;
+            double wire_pos = YZtoV(wireCentre.Y(), wireCentre.Z(), tpc);
             HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
             v_hits.push_back(hitObj);
             break;
           }
         case geo::kW:
           {
-            double wire_pos = YZtoW(xyz.Y(), xyz.Z());
-            std::cout << wire_pos << std::endl;
+            double wire_pos = YZtoW(wireCentre.Y(), wireCentre.Z(), tpc);
             HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
             w_hits.push_back(hitObj);
             break;
@@ -315,7 +325,7 @@ void SecondShowerFinderAlg::RemoveClusterBelowLimit(ClusterObjVec &clusters, con
     }
 }
 
-void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<ClusterObjVec> &clusters)
+void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<ClusterObjVec> &clusters, const bool draw)
 {
   for(auto const& clusterU : clusters[0])
     {
@@ -338,14 +348,20 @@ void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<ClusterObjVec> &clu
               double startW = GetInterpolatedHitWirePos(clusterW, startX);
               double endW   = GetInterpolatedHitWirePos(clusterW, endX);
 
-              std::cout << UVtoW(startU, startV) << " " << startW << std::endl;
-              std::cout << UVtoW(endU, endV) << " " << endW << std::endl;
+              if(draw)
+                {
+                  std::cout << "Drawing attempt to match cluster set" << std::endl;
+                  DrawClusterMatching(clusterU, clusterV, clusterW, startX, endX);
+                }
 
-              std::cout << VWtoU(startV, startW) << " " << startU << std::endl;
-              std::cout << VWtoU(endV, endW) << " " << endU << std::endl;
+              std::cout << UVtoW(startU, startV, startX>0) << " " << startW << std::endl;
+              std::cout << UVtoW(endU, endV, endX>0) << " " << endW << std::endl;
 
-              std::cout << WUtoV(startW, startU) << " " << startV << std::endl;
-              std::cout << WUtoV(endW, endU) << " " << endV << std::endl;
+              std::cout << VWtoU(startV, startW, startX>0) << " " << startU << std::endl;
+              std::cout << VWtoU(endV, endW, endX>0) << " " << endU << std::endl;
+
+              std::cout << WUtoV(startW, startU, startX>0) << " " << startV << std::endl;
+              std::cout << WUtoV(endW, endU, endX>0) << " " << endV << std::endl;
             }
         }
     }
@@ -478,37 +494,150 @@ void SecondShowerFinderAlg::DrawView(const HitObjVec &hits, const HitObjVec &use
   delete c;
 }
 
-double SecondShowerFinderAlg::YZtoU(const double y, const double z)
+void SecondShowerFinderAlg::DrawClusterMatching(const ClusterObj *clusterU, const ClusterObj *clusterV, const ClusterObj *clusterW, const double startX, const double endX)
 {
-  std::cout << z << " " << cosU << " " << y << " " << sinU << std::endl;
-  return z * cosU - y * sinU;
+  TCanvas *c = new TCanvas("c", "", 2100, 2100);
+  c->cd();
+
+  const double padPadding = 0.05;
+  const double padWidth   = (1 - 4 * padPadding) / 3.;
+
+  TPad *padU = new TPad("padU", "", padPadding, padPadding, padPadding + padWidth, 1 - padPadding);
+  TPad *padV = new TPad("padV", "", 2 * padPadding + padWidth, padPadding, 2 * padPadding + 2 * padWidth, 1 - padPadding);
+  TPad *padW = new TPad("padW", "", 3 * padPadding + 2 * padWidth, padPadding, 3 * padPadding + 3 * padWidth, 1 - padPadding);
+
+  padU->SetBottomMargin(0.002);
+  padU->SetTopMargin(0.002);
+  padV->SetBottomMargin(0.002);
+  padV->SetTopMargin(0.002);
+  padW->SetBottomMargin(0.002);
+  padW->SetTopMargin(0.002);
+
+  padU->Draw();
+  padV->Draw();
+  padW->Draw();
+
+  double minX = std::min({clusterU->MinX(), clusterV->MinX(), clusterW->MinX()});
+  double maxX = std::max({clusterU->MaxX(), clusterV->MaxX(), clusterW->MaxX()});
+
+  if(minX > maxX)
+    std::swap(minX, maxX);
+
+  const double rangeU = clusterU->MaxWirePos() - clusterU->MinWirePos();
+  const double rangeV = clusterV->MaxWirePos() - clusterV->MinWirePos();
+  const double rangeW = clusterW->MaxWirePos() - clusterW->MinWirePos();
+
+  const double rangeWirePos = 1.2 * std::max({rangeU, rangeV, rangeW});
+
+  padU->cd();
+  DrawClusterMatchingView(clusterU, rangeWirePos, rangeU, minX, maxX, startX, endX, "U View");
+  padV->cd();
+  DrawClusterMatchingView(clusterV, rangeWirePos, rangeV, minX, maxX, startX, endX, "V view");
+  padW->cd();
+  DrawClusterMatchingView(clusterW, rangeWirePos, rangeW, minX, maxX, startX, endX, "W View");
+
+  c->Update();
+  gSystem->ProcessEvents();
+
+  std::cin.get();
+
+  delete c;
 }
 
-double SecondShowerFinderAlg::YZtoV(const double y, const double z)
+void SecondShowerFinderAlg::DrawClusterMatchingView(const ClusterObj *cluster, const double maxRangeWirePos, const double rangeWirePos,
+                                                    const double minX, const double maxX, const double startX, const double endX, const TString &name)
 {
-  std::cout << z << " " << cosV << " " << y << " " << sinV << std::endl;
-  return z * cosV - y * sinV;
+  TPaveText *t = new TPaveText(.9, .92, .98, .97, "NB NDC");
+  t->SetTextAlign(32);
+  t->SetTextSize(0.065);
+  t->SetTextColor(kBlack);
+  t->SetFillStyle(4000);
+  t->AddText(name);
+
+  const double rangeX = maxX - minX;
+
+  TH1F* base_hist = new TH1F("base_hist", "", 10, cluster->MinWirePos() - 0.5 * (maxRangeWirePos - rangeWirePos), cluster->MaxWirePos() + 0.5 * (maxRangeWirePos - rangeWirePos));
+  base_hist->SetMinimum(minX - 0.1 * rangeX);
+  base_hist->SetMaximum(maxX + 0.1 * rangeX);
+  base_hist->Draw();
+
+  TLine *startLine = new TLine();
+  startLine->SetLineColor(kGreen+2);
+  startLine->SetLineWidth(5);
+  startLine->DrawLine(cluster->MinWirePos() - 0.5 * (maxRangeWirePos - rangeWirePos), startX, cluster->MaxWirePos() + 0.5 * (maxRangeWirePos - rangeWirePos), startX);
+
+  TLine *endLine = new TLine();
+  endLine->SetLineColor(kRed+2);
+  endLine->SetLineWidth(5);
+  endLine->DrawLine(cluster->MinWirePos() - 0.5 * (maxRangeWirePos - rangeWirePos), endX, cluster->MaxWirePos() + 0.5 * (maxRangeWirePos - rangeWirePos), endX);
+
+  TGraph *g = new TGraph();
+  g->SetMarkerColor(kMagenta+2);
+  g->SetMarkerSize(1.);
+
+  for(auto const& hitObj : cluster->ConstHits())
+    g->SetPoint(g->GetN(), hitObj->wire_pos, hitObj->x);
+
+  g->Draw("Psame");
+  t->Draw();
 }
 
-double SecondShowerFinderAlg::YZtoW(const double y, const double z)
+// Note the use of 'V' angles in TPC0 is due to the fact that view is defined w.r.t. drift direction
+// whereas this conversion is working in detector coordinates in which x is pointing the same direction
+// regardless of which TPC you're in. The same is true for YZtoV, W doesn't care.
+double SecondShowerFinderAlg::YZtoU(const double y, const double z, const int tpc)
 {
-  std::cout << z << " " << cosW << " " << y << " " << sinW << std::endl;
+  if(tpc == 0)
+    return z * cosU - y * sinU;
+  else if(tpc == 1)
+    return z * cosV - y * sinV;
+
+  return std::numeric_limits<double>::lowest();
+}
+
+double SecondShowerFinderAlg::YZtoV(const double y, const double z, const int tpc)
+{
+  if(tpc == 0)
+    return z * cosV - y * sinV;
+  else if(tpc == 1)
+    return z * cosU - y * sinU;
+
+  return std::numeric_limits<double>::lowest();
+}
+
+double SecondShowerFinderAlg::YZtoW(const double y, const double z, const int /*tpc*/)
+{
   return z * cosW - y * sinW;
 }
 
-double SecondShowerFinderAlg::UVtoW(const double u, const double v)
+double SecondShowerFinderAlg::UVtoW(const double u, const double v, const int tpc)
 {
-  return -1. * (u * sinWminusV + v * sinUminusW) / sinVminusU;
+  if(tpc == 0)
+    return -1. * (u * sinWminusV + v * sinUminusW) / sinVminusU;
+  else if(tpc == 1)
+    return -1. * (v * sinWminusV + u * sinUminusW) / sinVminusU;
+
+  return std::numeric_limits<double>::lowest();
 }
 
-double SecondShowerFinderAlg::VWtoU(const double v, const double w)
+double SecondShowerFinderAlg::VWtoU(const double v, const double w, const int tpc)
 {
-  return -1. * (v * sinUminusW + w * sinVminusU) / sinWminusV;
+  if(tpc == 0)
+    return -1. * (v * sinUminusW + w * sinVminusU) / sinWminusV;
+  else if(tpc == 1)
+    return -1. * (v * sinWminusV + w * sinVminusU) / sinUminusW;
+
+  return std::numeric_limits<double>::lowest();
 }
 
-double SecondShowerFinderAlg::WUtoV(const double w, const double u)
+double SecondShowerFinderAlg::WUtoV(const double w, const double u, const int tpc)
 {
-  return -1. * (u * sinWminusV + w * sinVminusU) / sinUminusW;
+  if(tpc == 0)
+    return -1. * (u * sinWminusV + w * sinVminusU) / sinUminusW;
+  else if(tpc == 1)
+    return -1. * (u * sinUminusW + w * sinVminusU) / sinWminusV;
+
+  return std::numeric_limits<double>::lowest();
 }
 
 double SecondShowerFinderAlg::Dist(const HitObj *hitObjA, const HitObj *hitObjB)
@@ -529,12 +658,8 @@ double SecondShowerFinderAlg::GetInterpolatedHitWirePos(const ClusterObj *cluste
 
   bool foundLower = false, foundHigher = false;
 
-  std::cout << "\nNEW CLUSTER\n" << std::endl;
-
   for(auto const& hitObj : cluster->ConstHits())
     {
-      std::cout << hitObj->x << " " << hitObj->wire_pos << std::endl;
-
       if(hitObj->x <= x && std::abs(x - hitObj->x) < closestLowerXDiff)
         {
           closestLowerXDiff    = std::abs(x - hitObj->x);
@@ -549,8 +674,6 @@ double SecondShowerFinderAlg::GetInterpolatedHitWirePos(const ClusterObj *cluste
           foundHigher = true;
         }
     }
-
-  std::cout << std::endl;
 
   if(foundLower && foundHigher)
     {

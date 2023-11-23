@@ -26,9 +26,6 @@
 #include "larcore/Geometry/Geometry.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
-#include "larpandora/LArPandoraInterface/Detectors/GetDetectorType.h"
-#include "larpandora/LArPandoraInterface/Detectors/LArPandoraDetectorType.h"
-
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TSystem.h"
@@ -36,6 +33,7 @@
 #include "TPaveText.h"
 #include "TH1F.h"
 #include "TGraph.h"
+#include "TLine.h"
 
 #include "sbndcode/PiZero/NCPiZeroStructs.h"
 
@@ -73,6 +71,9 @@ class SecondShowerFinderAlg
     bool used;
     double min_x;
     double max_x;
+    double min_wire_pos;
+    double max_wire_pos;
+    int tpc;
 
   public:
     ClusterObj(HitObjVec hitObjVec);
@@ -86,6 +87,12 @@ class SecondShowerFinderAlg
     double MinX() const { return min_x; }
 
     double MaxX() const { return max_x; }
+
+    double MinWirePos() const { return min_wire_pos; }
+
+    double MaxWirePos() const { return max_wire_pos; }
+
+    int TPC() const { return tpc; }
   };
 
   typedef std::vector<ClusterObj*> ClusterObjVec;
@@ -104,21 +111,26 @@ class SecondShowerFinderAlg
 
   void RemoveClusterBelowLimit(ClusterObjVec &clusters, const size_t limit);
 
-  void TwoDToThreeDMatching(std::vector<ClusterObjVec> &clusters);
+  void TwoDToThreeDMatching(std::vector<ClusterObjVec> &clusters, const bool draw);
 
   void DrawView(const HitObjVec &hits, const HitObjVec &usedHits, const ClusterObjVec clusters, const TString &name);
 
-  double YZtoU(const double y, const double z);
+  void DrawClusterMatching(const ClusterObj *clusterU, const ClusterObj *clusterV, const ClusterObj *clusterW, const double startX, const double endX);
 
-  double YZtoV(const double y, const double z);
+  void DrawClusterMatchingView(const ClusterObj *cluster, const double maxRangeWirePos, const double rangeWirePos,
+                               const double minX, const double maxX, const double startX, const double endX, const TString &name);
 
-  double YZtoW(const double y, const double z);
+  double YZtoU(const double y, const double z, const int tpc);
 
-  double UVtoW(const double u, const double v);
+  double YZtoV(const double y, const double z, const int tpc);
 
-  double VWtoU(const double v, const double w);
+  double YZtoW(const double y, const double z, const int tpc);
 
-  double WUtoV(const double w, const double u);
+  double UVtoW(const double u, const double v, const int tpc);
+
+  double VWtoU(const double v, const double w, const int tpc);
+
+  double WUtoV(const double w, const double u, const int tpc);
 
   double Dist(const HitObj *hitObjA, const HitObj *hitObjB);
 
