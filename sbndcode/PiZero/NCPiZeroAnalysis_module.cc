@@ -1979,7 +1979,7 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   const bool passes_crumbs = crumbs > -0.025;
 
   int nrazzledmuons;
-  AccessElement(slcVars["slc_n_razzled_muons"], counter, nrazzledmuons);
+  AccessElement(slcVars["slc_n_primary_razzled_muons"], counter, nrazzledmuons);
   const bool passes_razzled_muons = nrazzledmuons == 0;
 
   size_t npfps;
@@ -1987,17 +1987,20 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   const bool passes_pfps = npfps > 1;
 
   int nrazzledphotons;
-  AccessElement(slcVars["slc_n_razzled_photons"], counter, nrazzledphotons);
+  AccessElement(slcVars["slc_n_primary_razzled_photons"], counter, nrazzledphotons);
   const bool passes_razzled_photons = nrazzledphotons > 1;
 
+  bool bestpzcgoodkinematics;
+  AccessElement(slcVars["slc_best_pzc_good_kinematics"], counter, bestpzcgoodkinematics);
+
   int nrazzledpions;
-  AccessElement(slcVars["slc_n_razzled_pions_thresh"], counter, nrazzledpions);
+  AccessElement(slcVars["slc_n_primary_razzled_pions_thresh"], counter, nrazzledpions);
   const bool passes_razzled_pions = nrazzledpions == 0;
 
   int nrazzledprotons;
-  AccessElement(slcVars["slc_n_razzled_protons_thresh"], counter, nrazzledprotons);
+  AccessElement(slcVars["slc_n_primary_razzled_protons_thresh"], counter, nrazzledprotons);
 
-  const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs && passes_razzled_muons && passes_pfps && passes_razzled_photons;
+  const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs && passes_razzled_muons && passes_pfps && passes_razzled_photons && bestpzcgoodkinematics;
   FillElement(slcVars["slc_sel_incl"], counter, sel_incl);
 
   const bool sel_0p0pi = sel_incl && passes_razzled_pions && nrazzledprotons == 0;
@@ -2016,11 +2019,11 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,
                                                      const int counter, const std::vector<int> slc_ids)
 {
-  std::vector<int> n_razzled_photons(slc_ids.size(), 0);
+  std::vector<int> n_primary_razzled_photons(slc_ids.size(), 0);
   for(auto&& [i, slc_id] : enumerate(slc_ids))
-    AccessElement(slcVars["slc_n_razzled_photons"], slc_id, n_razzled_photons[i]);
+    AccessElement(slcVars["slc_n_primary_razzled_photons"], slc_id, n_primary_razzled_photons[i]);
 
-  const int n_photons = std::reduce(n_razzled_photons.begin(), n_razzled_photons.end());
+  const int n_photons = std::reduce(n_primary_razzled_photons.begin(), n_primary_razzled_photons.end());
 
   const size_t n_pzcs = (n_photons * (n_photons - 1)) / 2;
 
