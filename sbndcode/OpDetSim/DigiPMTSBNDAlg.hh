@@ -66,6 +66,8 @@ namespace opdet {
       double PMTCoatedVISEff; //PMT (coated) efficiency for reflected (VIS) light
       double PMTUncoatedEff; //PMT (uncoated) efficiency
       std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
+      double PMTGain;
+      double PMTNominalGain;
       bool PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
       fhicl::ParameterSet GainFluctuationsParams;
@@ -132,6 +134,8 @@ namespace opdet {
     double fPMTUncoatedEff;
     bool fPositivePolarity;
     int fADCSaturation;
+    double fPMTGain;
+    double fPMTNominalGain;
 
     double sigma1;
     double sigma2;
@@ -276,6 +280,16 @@ namespace opdet {
       fhicl::Atom<double> pmtuncoatedEff {
         Name("PMTUncoatedEff"),
         Comment("PMT (uncoated) detection efficiency")
+      };
+
+      fhicl::Atom<double> pmtGain {
+        Name("PMTGain"),
+        Comment("PMT gain")
+      };
+
+      fhicl::Atom<double> pmtNominalGain {
+        Name("PMTNominalGain"),
+        Comment("PMT nominal gain in SER template")
       };
 
       fhicl::Atom<bool> PMTsinglePEmodel {

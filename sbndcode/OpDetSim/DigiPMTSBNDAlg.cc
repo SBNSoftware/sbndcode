@@ -13,6 +13,8 @@ namespace opdet {
     , fPMTCoatedVUVEff(fParams.PMTCoatedVUVEff / fParams.larProp->ScintPreScale())
     , fPMTCoatedVISEff(fParams.PMTCoatedVISEff / fParams.larProp->ScintPreScale())
     , fPMTUncoatedEff(fParams.PMTUncoatedEff/ fParams.larProp->ScintPreScale())
+    , fPMTGain(fParams.PMTGain)
+    , fPMTNominalGain(fParams.PMTNominalGain)
       //  , fSinglePEmodel(fParams.SinglePEmodel)
     , fEngine(fParams.engine)
     , fFlatGen(*fEngine)
@@ -49,6 +51,9 @@ namespace opdet {
     fTimeTPB = std::make_unique<CLHEP::RandGeneral>
       (*fEngine, timeTPB_p->data(), timeTPB_p->size());
 
+    std::cout<<" Gains: "<<fPMTGain<<" "<<fPMTNominalGain<<std::endl;
+    double gainRescaling = fPMTGain/fPMTNominalGain;
+    std::cout<<" PMT GAIN RESCALING: "<<gainRescaling<<std::endl;
     //shape of single pulse
     if (fParams.PMTSinglePEmodel) {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
@@ -56,6 +61,16 @@ namespace opdet {
       file->GetObject("SinglePEVec_HD", SinglePEVec_p);
       fSinglePEWave = *SinglePEVec_p;
 
+
+      // effectively modify the gain
+      for (size_t i = 0; i < fSinglePEWave.size(); ++i) {
+        fSinglePEWave[i] *= gainRescaling;
+      }
+
+      std::cout<<"SER after gain:\n";
+      std::cout<<"MinADC: "<<*std::min_element(fSinglePEWave.begin(), fSinglePEWave.end())<<std::endl;
+      std::cout<<"MaxADC: "<<*std::max_element(fSinglePEWave.begin(), fSinglePEWave.end())<<std::endl; 
+     
       // Prepare HD waveforms
       fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
       fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD,fSinglePEWave);
@@ -588,6 +603,8 @@ namespace opdet {
     fBaseConfig.TTS                      = config.tts();
     fBaseConfig.CableTime                = config.cableTime();
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
+    fBaseConfig.PMTGain                  = config.pmtGain();
+    fBaseConfig.PMTNominalGain                  = config.pmtNominalGain();
     fBaseConfig.MakeGainFluctuations = config.gainFluctuationsParams.get_if_present(fBaseConfig.GainFluctuationsParams);
     fBaseConfig.SimulateNonLinearity = config.nonLinearityParams.get_if_present(fBaseConfig.NonLinearityParams);
     config.hdOpticalWaveformParams.get_if_present(fBaseConfig.HDOpticalWaveformParams);
