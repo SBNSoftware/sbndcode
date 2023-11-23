@@ -339,29 +339,11 @@ void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<ClusterObjVec> &clu
               if(startX > endX)
                 continue;
 
-              double startU = GetInterpolatedHitWirePos(clusterU, startX);
-              double endU   = GetInterpolatedHitWirePos(clusterU, endX);
-
-              double startV = GetInterpolatedHitWirePos(clusterV, startX);
-              double endV   = GetInterpolatedHitWirePos(clusterV, endX);
-
-              double startW = GetInterpolatedHitWirePos(clusterW, startX);
-              double endW   = GetInterpolatedHitWirePos(clusterW, endX);
-
               if(draw)
                 {
                   std::cout << "Drawing attempt to match cluster set" << std::endl;
                   DrawClusterMatching(clusterU, clusterV, clusterW, startX, endX);
                 }
-
-              std::cout << UVtoW(startU, startV, startX>0) << " " << startW << std::endl;
-              std::cout << UVtoW(endU, endV, endX>0) << " " << endW << std::endl;
-
-              std::cout << VWtoU(startV, startW, startX>0) << " " << startU << std::endl;
-              std::cout << VWtoU(endV, endW, endX>0) << " " << endU << std::endl;
-
-              std::cout << WUtoV(startW, startU, startX>0) << " " << startV << std::endl;
-              std::cout << WUtoV(endW, endU, endX>0) << " " << endV << std::endl;
             }
         }
     }
