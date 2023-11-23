@@ -27,7 +27,7 @@ std::vector<float> true_signal(6, 0);
 std::vector<std::vector<float>> total_slc(6, std::vector<float>(9,0));
 std::vector<std::vector<float>> presel_slc(6, std::vector<float>(9,0));
 std::vector<std::vector<float>> photonsel_slc(6, std::vector<float>(9,0));
-std::vector<std::vector<float>> invmasssel_slc(6, std::vector<float>(9,0));
+std::vector<std::vector<float>> elecrej_slc(6, std::vector<float>(9,0));
 std::vector<std::vector<float>> pionsel_slc(6, std::vector<float>(9,0));
 std::vector<std::vector<float>> protonsel_slc(6, std::vector<float>(9,0));
 std::vector<std::vector<float>> protonantisel_slc(6, std::vector<float>(9,0));
@@ -91,13 +91,13 @@ void SophisticatedSelection(const TString productionVersion)
             << "\t\t 1p0pi: " << true_signal[5] << '\n' << std::endl;
 
   Evaluate("Signal One PiZero - No Sel", total_slc[1], total_slc[1][0], true_signal[1]);
-  Evaluate("Signal One PiZero", invmasssel_slc[1], total_slc[1][0], true_signal[1]);
-  /*
-    Evaluate("Signal Xp0pi", pionsel_slc[3], total_slc[3][0], true_signal[3]);
-    Evaluate("Signal 0p0pi", protonantisel_slc[2], total_slc[2][0], true_signal[2]);
-    Evaluate("Signal Np0pi", protonsel_slc[4], total_slc[4][0], true_signal[4]);
-    Evaluate("Signal 1p0pi", oneprotonsel_slc[5], total_slc[5][0], true_signal[5]);
-  */
+  Evaluate("Signal One PiZero", photonsel_slc[1], total_slc[1][0], true_signal[1]);
+  Evaluate("Signal One PiZero", elecrej_slc[1], total_slc[1][0], true_signal[1]);
+  Evaluate("Signal Xp0pi", pionsel_slc[3], total_slc[3][0], true_signal[3]);
+  Evaluate("Signal 0p0pi", protonantisel_slc[2], total_slc[2][0], true_signal[2]);
+  Evaluate("Signal Np0pi", protonsel_slc[4], total_slc[4][0], true_signal[4]);
+  Evaluate("Signal 1p0pi", oneprotonsel_slc[5], total_slc[5][0], true_signal[5]);
+
 }
 
 void InitialiseTree(TChain *tree)
@@ -239,70 +239,39 @@ void ProcessTree(TChain* chain, const float weight)
               for(auto const& good : slc_pzc_good_kinematics->at(slc_i))
                 anygood |= good;
 
-              if(slc_n_razzled_photons->at(slc_i) > 0 && slc_n_pfps->at(slc_i) > 1)//&& anygood)
+              if((slc_n_razzled_electrons->at(slc_i) + slc_n_razzled_photons->at(slc_i)) > 1 && slc_n_razzled_photons->at(slc_i) > 0)
+                {
+                  Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+                             slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), elecrej_slc, weight);
+                }
+
+              if(slc_n_razzled_photons->at(slc_i) > 1 && anygood)
                 {
                   Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
                              slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), photonsel_slc, weight);
 
-                  double bestInvMassDiff = std::numeric_limits<double>::max();
-                  int best_i = -1, best_j = -1;
-
-                  for(int pfp_i = 0; pfp_i < slc_pfp_razzled_pdg->at(slc_i).size(); ++pfp_i)
-                    {
-                      if(slc_pfp_razzled_pdg->at(slc_i).at(pfp_i) != 22)
-                        continue;
-
-                      double e1 = slc_pfp_shower_energy->at(slc_i).at(pfp_i);
-                      TVector3 dir1(slc_pfp_shower_dir_x->at(slc_i).at(pfp_i), slc_pfp_shower_dir_y->at(slc_i).at(pfp_i), slc_pfp_shower_dir_z->at(slc_i).at(pfp_i));
-
-                      for(int pfp_j = 0; pfp_j < slc_pfp_razzled_pdg->at(slc_i).size(); ++pfp_j)
-                        {
-                          if(pfp_i == pfp_j)
-                            continue;
-
-                          double e2 = slc_pfp_shower_energy->at(slc_i).at(pfp_j);
-                          TVector3 dir2(slc_pfp_shower_dir_x->at(slc_i).at(pfp_j), slc_pfp_shower_dir_y->at(slc_i).at(pfp_j), slc_pfp_shower_dir_z->at(slc_i).at(pfp_j));
-
-                          const double costheta = dir1.Dot(dir2) / (dir1.Mag() * dir2.Mag());
-                          const double invMass = sqrt(2 * e1 * e2 * (1 - costheta));
-
-                          if(abs(134.9769 - invMass) < bestInvMassDiff)
-                            {
-                              bestInvMassDiff = abs(134.9769 - invMass);
-                              best_i = pfp_i;
-                              best_j = pfp_j;
-                            }
-                        }
-                    }
-
-                  if(best_i != -1 && best_j != -1 && bestInvMassDiff < 50.)
+                  if(slc_n_razzled_pions_thresh->at(slc_i) == 0)
                     {
                       Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
-                                 slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), invmasssel_slc, weight);
+                                 slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), pionsel_slc, weight);
 
-                      if(slc_n_razzled_pions_thresh->at(slc_i) == 0)
+                      if(slc_n_razzled_protons_thresh->at(slc_i) > 0)
                         {
                           Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
-                                     slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), pionsel_slc, weight);
-
-                          if(slc_n_razzled_protons_thresh->at(slc_i) > 0)
-                            {
-                              Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
-                                         slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), protonsel_slc, weight);
-                            }
-                          else
-                            {
-                              Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
-                                         slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), protonantisel_slc, weight);
-                            }
-
-                          if(slc_n_razzled_protons_thresh->at(slc_i) == 1)
-                            {
-                              Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
-                                         slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), oneprotonsel_slc, weight);
-                            }
-
+                                     slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), protonsel_slc, weight);
                         }
+                      else
+                        {
+                          Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+                                     slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), protonantisel_slc, weight);
+                        }
+
+                      if(slc_n_razzled_protons_thresh->at(slc_i) == 1)
+                        {
+                          Categorise(slc_true_event_type->at(slc_i), slc_true_fv->at(slc_i), slc_true_n_neutral_pions->at(slc_i), slc_true_n_charged_pions->at(slc_i),
+                                     slc_true_n_protons->at(slc_i), slc_comp->at(slc_i), oneprotonsel_slc, weight);
+                        }
+
                     }
                 }
             }
