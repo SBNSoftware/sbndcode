@@ -22,6 +22,7 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindMany.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Utilities/InputTag.h"
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
@@ -61,6 +62,8 @@
 #include "nusimdata/SimulationBase/MCFlux.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
+#include "lardataobj/MCBase/MCTrack.h"
+#include "lardataobj/MCBase/MCShower.h"
 
 // ROOT includes
 #include "TTree.h"
@@ -154,6 +157,10 @@ private:
   void ResizeGenie(int nPrimaries);
   /// Resize the data structure for MCParticles
   void ResizeMCParticle(int nParticles);
+  /// Resize the data structure for MCTracks
+  void ResizeMCTrack(int nTracks);
+  /// Resize the data structure for MCShowers
+  void ResizeMCShower(int nShowers);
 
   opdet::sbndPDMapAlg _pd_map;
 
@@ -353,6 +360,19 @@ private:
   std::vector<Int_t>    mcpart_TrackId;
   std::vector<Int_t>    mcpart_Mother;
 
+  //MCTrack info
+  size_t MaxMCTracks = 0;
+  Int_t mctrack_no_primaries;
+  std::vector<Int_t>    mctrack_pdg;                      
+  std::vector<Int_t>    mctrack_TrackId;
+
+  //MCShower info
+  size_t MaxMCShowers = 0;
+  Int_t mcshower_no_primaries;
+  std::vector<Int_t>    mcshower_pdg;                       
+  std::vector<Int_t>    mcshower_TrackId;
+
+
   TTree* _sr_tree; ///< A tree filled per subrun (for POT accounting)
   int _sr_run, _sr_subrun;
   double _sr_begintime, _sr_endtime;
@@ -377,6 +397,8 @@ private:
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
   std::string fMCParticleModuleLabel; ///< Label for MCParticle dataproduct (to be set via fcl)
+  std::string fMCTrackModuleLabel; ///< Label for MCTrack dataproduct (to be set via fcl)
+  std::string fMCShowerModuleLabel; ///< Label for MCShower dataproduct (to be set via fcl)
   std::vector<std::string> fOpHitsModuleLabels; ///< Labels for OpHit dataproducts (to be set via fcl)
 
   // double fSelectedPDG;
@@ -450,6 +472,8 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
   fMCParticleModuleLabel    = p.get<std::string>("MCParticleModuleLabel ", "largeant");
+  fMCTrackModuleLabel    = p.get<std::string>("MCTrackModuleLabel ", "mcreco");
+  fMCShowerModuleLabel    = p.get<std::string>("MCShowerModuleLabel ", "mcreco");
 
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
   fkeepCRTstrips     = p.get<bool>("keepCRTstrips",false);
@@ -1102,7 +1126,6 @@ void Hitdumper::analyze(const art::Event& evt)
       art::fill_ptr_vector(MCParticleList,MCParticleListHandle);
       mcpart_no_primaries = MCParticleList.size();
       ResizeMCParticle(MCParticleList.size()); //Set vectors
-      //for(auto const & pPart : MCParticleList){
       for (size_t iMCPart = 0; iMCPart < MCParticleList.size(); iMCPart++){
         art::Ptr<simb::MCParticle> pPart = MCParticleList[iMCPart]; //get particle pointer
         //Geant info
@@ -1133,6 +1156,40 @@ void Hitdumper::analyze(const art::Event& evt)
     else {
       std::cout << "Failed to get MCParticle data product." << std::endl;
     }
+    //MCTracks
+    art::Handle<std::vector<sim::MCTrack>> MCTrackListHandle;
+    std::vector<art::Ptr<sim::MCTrack>> MCTrackList;
+    if (evt.getByLabel(fMCTrackModuleLabel,MCTrackListHandle)){
+      art::fill_ptr_vector(MCTrackList,MCTrackListHandle);
+      mctrack_no_primaries = MCTrackList.size();
+      ResizeMCTrack(MCTrackList.size());
+      for (size_t iMCTrack = 0; iMCTrack < MCTrackList.size(); iMCTrack++){
+        art::Ptr<sim::MCTrack> pTrack = MCTrackList[iMCTrack]; //get particle pointer
+        mctrack_pdg[iMCTrack] = pTrack->PdgCode();
+        mctrack_TrackId[iMCTrack] = pTrack->TrackID();
+      }
+    }
+    else{
+      std::cout << "Failed to get MCTrack data product." << std::endl;
+    }
+
+    //MCShowers
+    art::Handle<std::vector<sim::MCShower>> MCShowerListHandle;
+    std::vector<art::Ptr<sim::MCShower>> MCShowerList;
+    if (evt.getByLabel(fMCShowerModuleLabel,MCShowerListHandle)){
+      art::fill_ptr_vector(MCShowerList,MCShowerListHandle);
+      mcshower_no_primaries = MCShowerList.size();
+      ResizeMCShower(MCShowerList.size());
+      for (size_t iMCShower = 0; iMCShower < MCShowerList.size(); iMCShower++){
+        art::Ptr<sim::MCShower> pShower = MCShowerList[iMCShower]; //get particle pointer
+        mcshower_pdg[iMCShower] = pShower->PdgCode();
+        mcshower_TrackId[iMCShower] = pShower->TrackID();
+      }
+    }
+    else{
+      std::cout << "Failed to get MCShower data product." << std::endl;
+    }
+
   } // end read mcparticle
   if (freadTruth){
     //Genie
@@ -1474,6 +1531,16 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("mcpart_NumberDaughters",&mcpart_NumberDaughters);
     fTree->Branch("mcpart_TrackId",&mcpart_TrackId);
     fTree->Branch("mcpart_Mother",&mcpart_Mother);
+
+    //MCTrack info
+    fTree->Branch("mctrack_no_primaries",&mctrack_no_primaries);
+    fTree->Branch("mctrack_pdg",&mctrack_pdg);                        
+    fTree->Branch("mctrack_TrackId",&mctrack_TrackId);
+
+    //MCShower info
+    fTree->Branch("mcshower_no_primaries",&mcshower_no_primaries);
+    fTree->Branch("mcshower_pdg",&mcshower_pdg);                        
+    fTree->Branch("mcshower_TrackId",&mcshower_TrackId);
   }
 
   if (fsavePOTInfo) {
@@ -1726,6 +1793,20 @@ void Hitdumper::ResizeMCParticle(int nParticles) {
   mcpart_TrackId.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_Mother.assign(MaxMCParticles,DEFAULT_VALUE);
 
+}
+
+void Hitdumper::ResizeMCTrack(int nTracks) {
+  MaxMCTracks = (size_t) std::max(nTracks,1);
+
+  mctrack_pdg.assign(MaxMCTracks,DEFAULT_VALUE);
+  mctrack_TrackId.assign(MaxMCTracks,DEFAULT_VALUE);
+}
+
+void Hitdumper::ResizeMCShower(int nShowers) {
+  MaxMCShowers = (size_t) std::max(nShowers,1);
+
+  mcshower_pdg.assign(MaxMCShowers,DEFAULT_VALUE);
+  mcshower_TrackId.assign(MaxMCShowers,DEFAULT_VALUE);
 }
 
 
