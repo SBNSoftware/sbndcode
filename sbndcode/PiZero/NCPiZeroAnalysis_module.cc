@@ -440,6 +440,7 @@ private:
     { "slc_pfp_track_dir_x", new InhVecVecVar<double>("slc_pfp_track_dir_x") },
     { "slc_pfp_track_dir_y", new InhVecVecVar<double>("slc_pfp_track_dir_y") },
     { "slc_pfp_track_dir_z", new InhVecVecVar<double>("slc_pfp_track_dir_z") },
+    { "slc_pfp_track_contained", new InhVecVecVar<bool>("slc_pfp_track_contained") },
     { "slc_pfp_track_length", new InhVecVecVar<double>("slc_pfp_track_length") },
     { "slc_pfp_track_dazzle_muon_score", new InhVecVecVar<float>("slc_pfp_track_dazzle_muon_score") },
     { "slc_pfp_track_dazzle_pion_score", new InhVecVecVar<float>("slc_pfp_track_dazzle_pion_score") },
@@ -467,6 +468,7 @@ private:
     { "slc_pfp_shower_dir_x", new InhVecVecVar<double>("slc_pfp_shower_dir_x") },
     { "slc_pfp_shower_dir_y", new InhVecVecVar<double>("slc_pfp_shower_dir_y") },
     { "slc_pfp_shower_dir_z", new InhVecVecVar<double>("slc_pfp_shower_dir_z") },
+    { "slc_pfp_shower_contained", new InhVecVecVar<bool>("slc_pfp_shower_contained") },
     { "slc_pfp_shower_length", new InhVecVecVar<double>("slc_pfp_shower_length") },
     { "slc_pfp_shower_open_angle", new InhVecVecVar<double>("slc_pfp_shower_open_angle") },
     { "slc_pfp_shower_energy", new InhVecVecVar<double>("slc_pfp_shower_energy") },
@@ -1660,6 +1662,10 @@ void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<re
   FillElement(slcVars["slc_pfp_track_dir_y"], slcCounter, pfpCounter, dir.Y());
   FillElement(slcVars["slc_pfp_track_dir_z"], slcCounter, pfpCounter, dir.Z());
 
+  geo::Point_t end = track->End();
+  const bool contained = VolumeCheck(start, 10, 0, 10, 10) && VolumeCheck(end, 10, 0, 10, 10);
+  FillElement(slcVars["slc_pfp_track_contained"], slcCounter, pfpCounter, contained);
+
   FillElement(slcVars["slc_pfp_track_length"], slcCounter, pfpCounter, track->Length());
 
   const art::Ptr<sbn::MVAPID> dazzle = tracksToDazzle.at(track.key());
@@ -1825,6 +1831,10 @@ void sbnd::NCPiZeroAnalysis::AnalyseShower(const art::Event &e, const art::Ptr<r
 
   FillElement(slcVars["slc_pfp_shower_length"], slcCounter, pfpCounter, shower->Length());
   FillElement(slcVars["slc_pfp_shower_open_angle"], slcCounter, pfpCounter, shower->OpenAngle());
+
+  geo::Point_t end = start + shower->Length() * dir;
+  const bool contained = VolumeCheck(start, 10, 0, 10, 10) && VolumeCheck(end, 10, 0, 10, 10);
+  FillElement(slcVars["slc_pfp_shower_contained"], slcCounter, pfpCounter, contained);
 
   ExtractCalo(shower, slcCounter, pfpCounter, hits);
 
