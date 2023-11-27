@@ -2034,13 +2034,13 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
   if(n_pzcs == 0)
     return;
 
-  std::vector<std::vector<bool>> slc_pfp_primary;
+  std::vector<std::vector<bool>> slc_pfp_primary_child;
   std::vector<std::vector<int>> slc_pfp_razzled_pdg;
   std::vector<std::vector<double>> slc_pfp_shower_dir_x, slc_pfp_shower_dir_y, slc_pfp_shower_dir_z,
     slc_pfp_shower_energy, slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
   std::vector<std::vector<float>> slc_pfp_track_ke;
 
-  GetVar(slcVars["slc_pfp_primary"], slc_pfp_primary);
+  GetVar(slcVars["slc_pfp_primary_child"], slc_pfp_primary_child);
   GetVar(slcVars["slc_pfp_razzled_pdg"], slc_pfp_razzled_pdg);
   GetVar(slcVars["slc_pfp_shower_dir_x"], slc_pfp_shower_dir_x);
   GetVar(slcVars["slc_pfp_shower_dir_y"], slc_pfp_shower_dir_y);
@@ -2055,20 +2055,20 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
 
   for(auto&& [i, slc_id_a] : enumerate(slc_ids))
     {
-      const int n_children_a = slc_pfp_primary.at(slc_id_a).size();
+      const int n_children_a = slc_pfp_primary_child.at(slc_id_a).size();
 
       for(int ii = 0; ii < n_children_a; ++ii)
         {
-          if(slc_pfp_razzled_pdg.at(slc_id_a).at(ii) != 22 || !slc_pfp_primary.at(slc_id_a).at(ii))
+          if(slc_pfp_razzled_pdg.at(slc_id_a).at(ii) != 22 || !slc_pfp_primary_child.at(slc_id_a).at(ii))
             continue;
 
           for(auto&& [j, slc_id_b] : enumerate(slc_ids))
             {
-              const int n_children_b = slc_pfp_primary.at(slc_id_b).size();
+              const int n_children_b = slc_pfp_primary_child.at(slc_id_b).size();
 
               for(int jj = 0; jj < n_children_b; ++jj)
                 {
-                  if(slc_pfp_razzled_pdg.at(slc_id_b).at(jj) != 22 || !slc_pfp_primary.at(slc_id_b).at(jj))
+                  if(slc_pfp_razzled_pdg.at(slc_id_b).at(jj) != 22 || !slc_pfp_primary_child.at(slc_id_b).at(jj))
                     continue;
 
                   if((slc_id_a == slc_id_b && ii == jj)
