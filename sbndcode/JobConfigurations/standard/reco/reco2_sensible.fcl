@@ -1,4 +1,4 @@
-#include "ncpizeroana.fcl"
+#include "ncpizero_modules.fcl"
 #include "reco_sbnd.fcl"
 
 process_name: Reco2

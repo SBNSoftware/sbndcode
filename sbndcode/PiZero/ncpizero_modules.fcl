@@ -37,4 +37,11 @@ ncpizeroana:
   module_type: NCPiZeroAnalysis
 }
 
+ncpizerofilter:
+{
+  MCTruthModuleLabel: "generator"
+
+  module_type:        NCPiZeroFilter
+}
+
 END_PROLOG
