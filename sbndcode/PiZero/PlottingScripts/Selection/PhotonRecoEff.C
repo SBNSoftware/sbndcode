@@ -38,15 +38,15 @@ void PhotonRecoEff(const TString productionVersion)
   cGamma0Energy->cd();
 
   TH1F *hGamma0Energy = new TH1F("hGamma0Energy", ";E_{#gamma} (MeV);", 10, gammaEnergyBins);
-  rockboxEvents->Draw("nu_pz_gamma0_energy*1e3>>hGamma0Energy", base_cut);
+  const int gamma0Total = rockboxEvents->Draw("nu_pz_gamma0_energy*1e3>>hGamma0Energy", base_cut);
   NormaliseEntriesByBinWidth(hGamma0Energy);
 
   TH1F *hGamma0EnergyReco = new TH1F("hGamma0EnergyReco", ";E_{#gamma} (MeV);", 10, gammaEnergyBins);
-  rockboxEvents->Draw("nu_pz_gamma0_energy*1e3>>hGamma0EnergyReco", gamma0_reco_cut);
+  const int gamma0Reco = rockboxEvents->Draw("nu_pz_gamma0_energy*1e3>>hGamma0EnergyReco", gamma0_reco_cut);
   NormaliseEntriesByBinWidth(hGamma0EnergyReco);
 
   TH1F *hGamma0EnergyGoodReco = new TH1F("hGamma0EnergyGoodReco", ";E_{#gamma} (MeV);", 10, gammaEnergyBins);
-  rockboxEvents->Draw("nu_pz_gamma0_energy*1e3>>hGamma0EnergyGoodReco", gamma0_good_reco_cut);
+  const int gamma0GoodReco = rockboxEvents->Draw("nu_pz_gamma0_energy*1e3>>hGamma0EnergyGoodReco", gamma0_good_reco_cut);
   NormaliseEntriesByBinWidth(hGamma0EnergyGoodReco);
 
   MakePlotMultiEff(cGamma0Energy, hGamma0Energy, { hGamma0EnergyReco, hGamma0EnergyGoodReco }, ";E_{#gamma_{0}} (MeV);Efficiency", colours, names, legend_position, ncolumns);
@@ -58,15 +58,15 @@ void PhotonRecoEff(const TString productionVersion)
   cGamma1Energy->cd();
 
   TH1F *hGamma1Energy = new TH1F("hGamma1Energy", ";E_{#gamma} (MeV);", 10, gammaEnergyBins);
-  rockboxEvents->Draw("nu_pz_gamma1_energy*1e3>>hGamma1Energy", base_cut);
+  const int gamma1Total = rockboxEvents->Draw("nu_pz_gamma1_energy*1e3>>hGamma1Energy", base_cut);
   NormaliseEntriesByBinWidth(hGamma1Energy);
 
   TH1F *hGamma1EnergyReco = new TH1F("hGamma1EnergyReco", ";E_{#gamma} (MeV);", 10, gammaEnergyBins);
-  rockboxEvents->Draw("nu_pz_gamma1_energy*1e3>>hGamma1EnergyReco", gamma1_reco_cut);
+  const int gamma1Reco = rockboxEvents->Draw("nu_pz_gamma1_energy*1e3>>hGamma1EnergyReco", gamma1_reco_cut);
   NormaliseEntriesByBinWidth(hGamma1EnergyReco);
 
   TH1F *hGamma1EnergyGoodReco = new TH1F("hGamma1EnergyGoodReco", ";E_{#gamma} (MeV);", 10, gammaEnergyBins);
-  rockboxEvents->Draw("nu_pz_gamma1_energy*1e3>>hGamma1EnergyGoodReco", gamma1_good_reco_cut);
+  const int gamma1GoodReco = rockboxEvents->Draw("nu_pz_gamma1_energy*1e3>>hGamma1EnergyGoodReco", gamma1_good_reco_cut);
   NormaliseEntriesByBinWidth(hGamma1EnergyGoodReco);
 
   MakePlotMultiEff(cGamma1Energy, hGamma1Energy, { hGamma1EnergyReco, hGamma1EnergyGoodReco}, ";E_{#gamma_{1}} (MeV);Efficiency", colours, names, legend_position, ncolumns);
@@ -78,17 +78,17 @@ void PhotonRecoEff(const TString productionVersion)
   cPiZeroDecayAsym->cd();
 
   TH1F *hPiZeroDecayAsym = new TH1F("hPiZeroDecayAsym", ";Decay Asymmetry;", 10, 0, 1);
-  rockboxEvents->Draw("nu_pz_decay_asymmetry>>hPiZeroDecayAsym", base_cut);
+  const int pizeroTotal = rockboxEvents->Draw("nu_pz_decay_asymmetry>>hPiZeroDecayAsym", base_cut);
   NormaliseEntriesByBinWidth(hPiZeroDecayAsym);
 
   TH1F *hPiZeroDecayAsymReco = new TH1F("hPiZeroDecayAsymReco", ";Decay Asymmetry;", 10, 0, 1);
-  rockboxEvents->Draw("nu_pz_decay_asymmetry>>hPiZeroDecayAsymReco",
-                      pizero_reco_cut);
+  const int pizeroReco = rockboxEvents->Draw("nu_pz_decay_asymmetry>>hPiZeroDecayAsymReco",
+                                             pizero_reco_cut);
   NormaliseEntriesByBinWidth(hPiZeroDecayAsymReco);
 
   TH1F *hPiZeroDecayAsymGoodReco = new TH1F("hPiZeroDecayAsymGoodReco", ";Decay Asymmetry;", 10, 0, 1);
-  rockboxEvents->Draw("nu_pz_decay_asymmetry>>hPiZeroDecayAsymGoodReco",
-                      pizero_good_reco_cut);
+  const int pizeroGoodReco = rockboxEvents->Draw("nu_pz_decay_asymmetry>>hPiZeroDecayAsymGoodReco",
+                                                 pizero_good_reco_cut);
   NormaliseEntriesByBinWidth(hPiZeroDecayAsymGoodReco);
 
   MakePlotMultiEff(cPiZeroDecayAsym, hPiZeroDecayAsym, { hPiZeroDecayAsymReco, hPiZeroDecayAsymGoodReco}, ";Decay Asymmetry;Efficiency", colours, names, legend_position, ncolumns);
@@ -161,4 +161,10 @@ void PhotonRecoEff(const TString productionVersion)
 
   cPiZeroCosTheta->SaveAs(saveDir + "/cos_theta_pizero_reco_eff.png");
   cPiZeroCosTheta->SaveAs(saveDir + "/cos_theta_pizero_reco_eff.pdf");
+
+  std::cout << "\n"
+            << Form("Gamma0 Eff: %.2f%% Good Eff: %.2f%%\n", gamma0Reco * 100. / gamma0Total, gamma0GoodReco * 100. / gamma0Total)
+            << Form("Gamma1 Eff: %.2f%% Good Eff: %.2f%%\n", gamma1Reco * 100. / gamma1Total, gamma1GoodReco * 100. / gamma1Total)
+            << Form("PiZero Eff: %.2f%% Good Eff: %.2f%%\n", pizeroReco * 100. / pizeroTotal, pizeroGoodReco * 100. / pizeroTotal)
+            << std::endl;
 }
