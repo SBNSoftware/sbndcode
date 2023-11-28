@@ -9,7 +9,7 @@ void IntegratedFlux(const TString productionVersion)
   const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/integrated_flux";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = "/exp/sbnd/data/users/hlay/ncpizero/production/NCPiZeroAv7/tmpflux/flux_hist.root";
+  const TString file = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_flux_configI.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
