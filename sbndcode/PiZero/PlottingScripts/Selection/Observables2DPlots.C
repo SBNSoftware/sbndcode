@@ -16,11 +16,11 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
 
 void RunMultiObservables2DPlots()
 {
-  Observables2DPlots("NCPiZeroAv7", observables_twod_sets, ncpizero_categories, ncpizero_cuts, "ncpizero");
-  Observables2DPlots("NCPiZeroAv7", observables_twod_sets, ncpizero_0p0pi_categories, ncpizero_0p0pi_cuts, "ncpizero_0p0pi");
-  Observables2DPlots("NCPiZeroAv7", observables_twod_sets, ncpizero_1p0pi_categories, ncpizero_1p0pi_cuts, "ncpizero_1p0pi");
-  Observables2DPlots("NCPiZeroAv7", observables_twod_sets, ncpizero_Np0pi_categories, ncpizero_Np0pi_cuts, "ncpizero_Np0pi");
-  Observables2DPlots("NCPiZeroAv7", observables_twod_sets, ncpizero_Xp0pi_categories, ncpizero_Xp0pi_cuts, "ncpizero_Xp0pi");
+  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_incl_categories, ncpizero_incl_cuts, "ncpizero_incl");
+  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_0p0pi_categories, ncpizero_0p0pi_cuts, "ncpizero_0p0pi");
+  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_1p0pi_categories, ncpizero_1p0pi_cuts, "ncpizero_1p0pi");
+  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_Np0pi_categories, ncpizero_Np0pi_cuts, "ncpizero_Np0pi");
+  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_Xp0pi_categories, ncpizero_Xp0pi_cuts, "ncpizero_Xp0pi");
 }
 
 void Observables2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets,

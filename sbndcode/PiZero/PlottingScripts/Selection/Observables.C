@@ -7,22 +7,26 @@ const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
 const double goalSpills  = goalPOT / potPerSpill;
 
-void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const std::vector<Cut> cuts = ncpizero_cuts,
-                 const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots);
+void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const std::vector<Cut> cuts = ncpizero_incl_cuts,
+                 const std::vector<Cut> &categories = ncpizero_incl_categories, std::vector<Plot> &plots = observables);
 
-void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const Cut &selection = ncpizero_cuts[0],
-                 const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots);
+void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const Cut &selection = ncpizero_incl_cuts[0],
+                 const std::vector<Cut> &categories = ncpizero_incl_categories, std::vector<Plot> &plots = observables);
 
 double GetPOT(TChain *subruns);
 int GetGenEvents(TChain *subruns);
 
 void RunMultiObservables()
 {
-  Observables("NCPiZeroAv6", "ncpizero", ncpizero_cuts, ncpizero_categories, observables);
+  Observables("NCPiZeroAv10", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, observables);
+  Observables("NCPiZeroAv10", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, observables);
+  Observables("NCPiZeroAv10", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, observables);
+  Observables("NCPiZeroAv10", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, observables);
+  Observables("NCPiZeroAv10", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, observables);
 }
 
-void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const std::vector<Cut> cuts = ncpizero_cuts,
-                 const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots)
+void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const std::vector<Cut> cuts,
+                 const std::vector<Cut> &categories, std::vector<Plot> &plots)
 {
   TCut totalCut = "";
 
