@@ -342,6 +342,10 @@ void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<ClusterObjVec> &clu
               if(draw)
                 {
                   std::cout << "Drawing attempt to match cluster set" << std::endl;
+                  std::cout << "U: " << clusterU->MinX() << " " << clusterU->MaxX() << "\n"
+                            << "V: " << clusterV->MinX() << " " << clusterV->MaxX() << "\n"
+                            << "W: " << clusterW->MinX() << " " << clusterW->MaxX() << std::endl;
+                  std::cout << "Overlap: " << startX << " to " << endX << std::endl;
                   DrawClusterMatching(clusterU, clusterV, clusterW, startX, endX);
                 }
             }
