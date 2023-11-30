@@ -79,5 +79,3 @@ physics.producers.crumbs.CCNuEMVAFileName:  "CRUMBS_CCNuE_NCPiZeroAv2.weights.xm
 physics.producers.crumbs.NCMVAFileName:     "CRUMBS_NC_NCPiZeroAv2.weights.xml"
 
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
-
-services.DetectorPropertiesService.IncludeInterPlanePitchInXTickOffsets: false
