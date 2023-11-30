@@ -10,15 +10,15 @@ recoeff:
   HitsModuleLabel:       "gaushit"
 
   ## Fiducial volume cuts from edges
-  XEdgeCut:         15
-  YEdgeCut:         15
-  ZFrontCut:        30
-  ZBackCut:         65
-  XEdgeCutShowers:  25
-  YEdgeCutShower:   25
-  ZFrontCutShowers: 30
+  XEdgeCut:         20
+  YEdgeCut:         20
+  ZFrontCut:        10
+  ZBackCut:         50
+  XEdgeCutShowers:  20
+  YEdgeCutShower:   20
+  ZFrontCutShowers: 10
   ZBackCutShowers:  50
-  CathodeXCut:      1.5
+  CathodeXCut:      5
 
   module_type: RecoEff
 }

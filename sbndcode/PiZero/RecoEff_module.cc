@@ -319,7 +319,7 @@ void RecoEff::TruthProcessor(art::Event const &e)
     std::vector<art::Ptr<simb::MCParticle> > particles = nuParticleAssn.at(truthNeutrino.key());
 
     for(auto particle : particles){
-      if(particle->Mother() != 0 || particle->StatusCode() != 1) continue;
+      if((particle->Mother() != 0 && particle->Mother() != 10000000) || particle->StatusCode() != 1) continue;
 
       ResetData();
 
