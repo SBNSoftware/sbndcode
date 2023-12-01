@@ -39,6 +39,7 @@
 //LArSoft
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
 
 //Root
 #include "art_root_io/TFileService.h"
@@ -70,18 +71,21 @@ private:
   void SetupMaps(art::Event const &e);
   void ReconstructionProcessor(art::Event const &e);
   void TruthProcessor(art::Event const &e);
+  void FillTrueParticle(const simb::MCParticle *particle, const bool pionDaughter);
 
   std::vector<art::Ptr<recob::PFParticle> > GetPrimaryPFPs(art::Event const &e);
   art::Ptr<recob::PFParticle> GetPFP(art::Event const &e, long unsigned int const &id);
 
   float Purity(std::vector< art::Ptr<recob::Hit> > const &objectHits, int const &trackID);
   float Completeness(std::vector< art::Ptr<recob::Hit> > const &objectHits, int const &trackID);
-  float TrueTrackLength(art::Ptr<simb::MCParticle> const &particle);
+  float TrueTrackLength(const simb::MCParticle *particle);
 
 
   detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
 
   sbnd::TPCGeoAlg fTPCGeo;
+
+  art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   
   std::string fNuGenModuleLabel, fLArGeantModuleLabel, fPFParticleModuleLabel,
     fTrackModuleLabel, fShowerModuleLabel, fHitsModuleLabel;
@@ -340,57 +344,77 @@ void RecoEff::TruthProcessor(art::Event const &e)
           if((particle->Mother() != 0 && particle->Mother() != 10000000) || particle->StatusCode() != 1)
             continue;
 
-          ResetData();
-
-          fMC_trackID = particle->TrackId();
-          fMC_PDG = particle->PdgCode();
-          fMC_x0 = particle->Vx();
-          fMC_y0 = particle->Vy();
-          fMC_z0 = particle->Vz();
-
-          if(std::abs(fMC_PDG) == 11 || std::abs(fMC_PDG) == 22)
+          if(particle->PdgCode() == 111)
             {
-              if(TMath::Abs(fMC_x0) > fXOutEdgeShowers || TMath::Abs(fMC_x0) < fXCathodeEdge ||
-                 TMath::Abs(fMC_y0) > fYEdgeShowers || fMC_z0 < fZFrontEdgeShowers || fMC_z0 > fZBackEdgeShowers)
-                continue;
+              for(int child_i = 0; child_i < particle->NumberDaughters(); ++child_i)
+                {
+                  const int childTrackID = particle->Daughter(child_i);
+                  const simb::MCParticle* child = particleInv->TrackIdToParticle_P(childTrackID);
+                  FillTrueParticle(child, true);
+                }
             }
-          else if(TMath::Abs(fMC_x0) > fXOutEdge || TMath::Abs(fMC_x0) < fXCathodeEdge ||
-                  TMath::Abs(fMC_y0) > fYEdge || fMC_z0 < fZFrontEdge || fMC_z0 > fZBackEdge)
-            continue;
 
-          fMC_xEnd = particle->EndX();
-          fMC_yEnd = particle->EndY();
-          fMC_zEnd = particle->EndZ();
-          fMC_pX0 = particle->Px();
-          fMC_pY0 = particle->Py();
-          fMC_pZ0 = particle->Pz();
-          fMC_energy0 = particle->E();
-          fMC_momentum = particle->P();
-          fMC_pXEnd = particle->EndPx();
-          fMC_pYEnd = particle->EndPy();
-          fMC_pZEnd = particle->EndPz();
-          fMC_energyEnd = particle->EndE();
-          fMC_mass = particle->Mass();
-          fMC_theta_xy = TMath::RadToDeg() * TMath::ATan(fMC_pX0/fMC_pY0);
-          fMC_theta_yz = TMath::RadToDeg() * TMath::ATan(fMC_pY0/fMC_pZ0);
-          fMC_theta_xz = TMath::RadToDeg() * TMath::ATan(fMC_pX0/fMC_pZ0);
-          fMC_length = TrueTrackLength(particle);
-
-          if(fNTracksMap[fMC_trackID] > 0 || fNShowersMap[fMC_trackID] > 0)
-            fReco_isReconstructed = true;
-
-          fReco_nTracks = fNTracksMap[fMC_trackID];
-          fReco_nShowers = fNShowersMap[fMC_trackID];
-          fReco_showerPurity = fShowerPurMap[fMC_trackID];
-          fReco_showerCompleteness = fShowerCompMap[fMC_trackID];
-          fReco_trackPurity = fTrackPurMap[fMC_trackID];
-          fReco_trackCompleteness = fTrackCompMap[fMC_trackID];
-          fReco_trackLength = fTrackLengthMap[fMC_trackID];
-          fReco_showerdEdx = fShowerdEdxMap[fMC_trackID];
-
-          fParticleTree->Fill();
+          FillTrueParticle(particle.get(), false);
         }
     }
+}
+
+void RecoEff::FillTrueParticle(const simb::MCParticle *particle, const bool pionDaughter)
+{
+  ResetData();
+
+  fMC_trackID = particle->TrackId();
+
+  if(pionDaughter)
+    fMC_PDG = 111e6 + particle->PdgCode();
+  else
+    fMC_PDG = particle->PdgCode();
+
+  fMC_x0 = particle->Vx();
+  fMC_y0 = particle->Vy();
+  fMC_z0 = particle->Vz();
+
+  if(std::abs(fMC_PDG) == 11 || std::abs(fMC_PDG) == 22)
+    {
+      if(TMath::Abs(fMC_x0) > fXOutEdgeShowers || TMath::Abs(fMC_x0) < fXCathodeEdge ||
+         TMath::Abs(fMC_y0) > fYEdgeShowers || fMC_z0 < fZFrontEdgeShowers || fMC_z0 > fZBackEdgeShowers)
+        return;
+    }
+  else if(TMath::Abs(fMC_x0) > fXOutEdge || TMath::Abs(fMC_x0) < fXCathodeEdge ||
+          TMath::Abs(fMC_y0) > fYEdge || fMC_z0 < fZFrontEdge || fMC_z0 > fZBackEdge)
+    return;
+
+  fMC_xEnd = particle->EndX();
+  fMC_yEnd = particle->EndY();
+  fMC_zEnd = particle->EndZ();
+  fMC_pX0 = particle->Px();
+  fMC_pY0 = particle->Py();
+  fMC_pZ0 = particle->Pz();
+  fMC_energy0 = particle->E();
+  fMC_momentum = particle->P();
+  fMC_pXEnd = particle->EndPx();
+  fMC_pYEnd = particle->EndPy();
+  fMC_pZEnd = particle->EndPz();
+  fMC_energyEnd = particle->EndE();
+  fMC_mass = particle->Mass();
+  fMC_theta_xy = TMath::RadToDeg() * TMath::ATan(fMC_pX0/fMC_pY0);
+  fMC_theta_yz = TMath::RadToDeg() * TMath::ATan(fMC_pY0/fMC_pZ0);
+  fMC_theta_xz = TMath::RadToDeg() * TMath::ATan(fMC_pX0/fMC_pZ0);
+  fMC_length = TrueTrackLength(particle);
+
+  if(fNTracksMap[fMC_trackID] > 0 || fNShowersMap[fMC_trackID] > 0)
+    fReco_isReconstructed = true;
+
+  fReco_nTracks = fNTracksMap[fMC_trackID];
+  fReco_nShowers = fNShowersMap[fMC_trackID];
+  fReco_showerPurity = fShowerPurMap[fMC_trackID];
+  fReco_showerCompleteness = fShowerCompMap[fMC_trackID];
+  fReco_trackPurity = fTrackPurMap[fMC_trackID];
+  fReco_trackCompleteness = fTrackCompMap[fMC_trackID];
+  fReco_trackLength = fTrackLengthMap[fMC_trackID];
+  fReco_showerdEdx = fShowerdEdxMap[fMC_trackID];
+
+  fParticleTree->Fill();
 }
 
 std::vector<art::Ptr<recob::PFParticle> > RecoEff::GetPrimaryPFPs(art::Event const &e)
@@ -448,7 +472,7 @@ float RecoEff::Completeness(std::vector< art::Ptr<recob::Hit> > const &objectHit
   return (fHitsMap[trackID] == 0) ? def_float : objectHitsMap[trackID]/static_cast<float>(fHitsMap[trackID]);
 }
 
-float RecoEff::TrueTrackLength(art::Ptr<simb::MCParticle> const &particle)
+float RecoEff::TrueTrackLength(const simb::MCParticle *particle)
 {
   float length = 0;
   unsigned int nTrajPoints = particle->NumberTrajectoryPoints();
