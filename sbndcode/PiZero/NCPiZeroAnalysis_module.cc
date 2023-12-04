@@ -429,6 +429,7 @@ private:
     { "slc_pfp_true_trackid", new InhVecVecVar<int>("slc_pfp_true_trackid") },
     { "slc_pfp_true_pdg", new InhVecVecVar<int>("slc_pfp_true_pdg") },
     { "slc_pfp_true_energy", new InhVecVecVar<double>("slc_pfp_true_energy") },
+    { "slc_pfp_true_ke", new InhVecVecVar<double>("slc_pfp_true_ke") },
     { "slc_pfp_true_p_x", new InhVecVecVar<double>("slc_pfp_true_p_x") },
     { "slc_pfp_true_p_y", new InhVecVecVar<double>("slc_pfp_true_p_y") },
     { "slc_pfp_true_p_z", new InhVecVecVar<double>("slc_pfp_true_p_z") },
@@ -1460,6 +1461,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             {
               FillElement(slcVars["slc_pfp_true_pdg"], slcCounter, pfpCounter, mcp->PdgCode());
               FillElement(slcVars["slc_pfp_true_energy"], slcCounter, pfpCounter, mcp->E());
+              FillElement(slcVars["slc_pfp_true_ke"], slcCounter, pfpCounter, mcp->E() - mcp->Mass());
               FillElement(slcVars["slc_pfp_true_p_x"], slcCounter, pfpCounter, mcp->Px());
               FillElement(slcVars["slc_pfp_true_p_y"], slcCounter, pfpCounter, mcp->Py());
               FillElement(slcVars["slc_pfp_true_p_z"], slcCounter, pfpCounter, mcp->Pz());
