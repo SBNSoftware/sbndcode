@@ -19,7 +19,6 @@ add_subdirectory(CosmicId)
 add_subdirectory(ShowerAna)
 add_subdirectory(Commissioning)
 add_subdirectory(Trigger)
-add_subdirectory(Decoders)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
