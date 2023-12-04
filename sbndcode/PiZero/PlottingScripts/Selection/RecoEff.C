@@ -24,8 +24,6 @@ void RecoEff(const TString productionVersion)
   TChain *particleTree = new TChain("recoeff/ParticleTree");
   particleTree->Add(rockboxFile);
 
-  
-
   for(auto const& particle : particles)
     {
       TCanvas *canvas = new TCanvas("canvas" + particle.name, "canvas" + particle.name);
