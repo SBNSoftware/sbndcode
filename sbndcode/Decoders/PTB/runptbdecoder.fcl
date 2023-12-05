@@ -25,5 +25,5 @@ outputs: {
 }
 
 
-process_name: TPCDECODER
+process_name: PTBDECODER
 
