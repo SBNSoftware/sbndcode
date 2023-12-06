@@ -1011,14 +1011,14 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
           switch(abs(mcp->PdgCode()))
             {
             case 2212:
-              if(mcp->P() > .25)
+              if(mcp->P() > .4)
                 ++protons;
               break;
             case 2112:
               ++neutrons;
               break;
             case 211:
-              if(mcp->P() > .1)
+              if(mcp->P() > .15)
                 ++charged_pions;
               break;
             case 111:
@@ -1485,11 +1485,11 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             ++ndazzlemuons;
           if(dazzlepdg == 211)
             ++ndazzlepions;
-          if(dazzlepdg == 211 && pfpenergy > 32.1)
+          if(dazzlepdg == 211 && pfpenergy > 65.3)
             ++ndazzlepionsthresh;
           if(dazzlepdg == 2212)
             ++ndazzleprotons;
-          if(dazzlepdg == 2212 && pfpenergy > 32.7)
+          if(dazzlepdg == 2212 && pfpenergy > 81.7)
             ++ndazzleprotonsthresh;
           if(dazzlepdg == 0)
             ++ndazzleother;
