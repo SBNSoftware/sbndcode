@@ -38,6 +38,17 @@ std::vector<Plot> true_observables = {
     25, 0, 1 },
 };
 
+std::vector<VarBinPlot> true_slc_observables = {
+  { "slc_true_pz_pizero_mom", "slc_true_pz_pizero_mom*1e3", ";p_{#pi^{0}} (MeV/c);Events",
+    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. } },
+  { "slc_true_pz_cos_theta_pizero", "slc_true_pz_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Events",
+    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. } },
+  { "slc_true_pz_cos_com", "slc_true_pz_cos_com", ";cos(#theta_{CoM});Events",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. } },
+  { "slc_true_pz_decay_asymmetry", "slc_true_pz_decay_asymmetry", ";Decay Asymmetry;Events",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. } },
+};
+
 std::vector<Plot> observables = {
   { "slc_best_pzc_invariant_mass", "slc_best_pzc_invariant_mass", ";M_{#gamma#gamma} (MeV/c^{2});Events",
     25, 0, 500 },

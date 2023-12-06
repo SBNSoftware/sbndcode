@@ -11,6 +11,13 @@ std::vector<Cut> ncpizero_incl_cuts = {
   { "good_pizero_kinematics", "slc_best_pzc_good_kinematics", "Good PiZero Kinematics" },
 };
 
+std::vector<Cut> ncpizero_incl_broad_cuts = {
+  { "presel", "!slc_is_clear_cosmic && slc_is_fv", "Pre-Selection", kOrange-2 },
+  { "crumbs", "slc_crumbs_score>-0.025", "CRUMBS", kGreen+1 },
+  { "muon_rejection", "slc_n_primary_razzled_muons==0", "Muon Rejection", kRed-9 },
+  { "photons_selection", "slc_n_pfps>1 && slc_n_primary_razzled_photons>1 && slc_best_pzc_good_kinematics", "Photon Selection", kBlue-9 },
+};
+
 std::vector<Cut> ncpizero_0p0pi_cuts = {
   { "no_cut", "", "No Cut" },
   { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" },
