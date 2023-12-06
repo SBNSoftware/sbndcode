@@ -1,6 +1,7 @@
 #include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
 #include "Particles.h"
+#include "Plots.h"
 
 void RecoEff(const TString productionVersion)
 {
@@ -26,30 +27,40 @@ void RecoEff(const TString productionVersion)
 
   for(auto const& particle : particles)
     {
-      TCanvas *canvas = new TCanvas("canvas" + particle.name, "canvas" + particle.name);
-      canvas->cd();
+      for(auto const& plot : reco_eff_plots)
+        {
+          TCanvas *canvas = new TCanvas("canvas" + particle.name, "canvas" + particle.name);
+          canvas->cd();
 
-      const TCut base_cut = Form("abs(mc_PDG)==%d", particle.pdg);
+          const TCut base_cut = Form("abs(mc_PDG)==%d", particle.pdg);
 
-      double bins[particle.energybins.size()];
-      for(int i = 0; i < particle.energybins.size(); ++i)
-        bins[i] = particle.energybins[i];
+          std::vector<float> binsVec;
 
-      TH1F *trueHist = new TH1F("trueHist" + particle.name, ";E (MeV);" + particle.latex_name, particle.energybins.size() - 1, bins);
-      particleTree->Draw("mc_energy0 * 1e3>>trueHist" + particle.name, base_cut);
-      NormaliseEntriesByBinWidth(trueHist);
+          if(plot.name == "energy")
+            binsVec = particle.energybins;
+          else if(plot.name == "momentum")
+            binsVec= particle.momentumbins;
 
-      TH1F *recoHist = new TH1F("recoHist" + particle.name, ";E (MeV);" + particle.latex_name, particle.energybins.size() - 1, bins);
-      particleTree->Draw("mc_energy0 * 1e3>>recoHist" + particle.name, base_cut + reco_cut);
-      NormaliseEntriesByBinWidth(recoHist);
+          double bins[binsVec.size()];
+          for(int i = 0; i < binsVec.size(); ++i)
+            bins[i] = binsVec[i];
 
-      TH1F *goodRecoHist = new TH1F("goodRecoHist" + particle.name, ";E (MeV);" + particle.latex_name, particle.energybins.size() - 1, bins);
-      particleTree->Draw("mc_energy0 * 1e3>>goodRecoHist" + particle.name, base_cut + good_reco_cut);
-      NormaliseEntriesByBinWidth(goodRecoHist);  
+          TH1F *trueHist = new TH1F("trueHist" + particle.name, plot.axes_labels + particle.latex_name, particle.energybins.size() - 1, bins);
+          particleTree->Draw(plot.var + ">>trueHist" + particle.name, base_cut);
+          NormaliseEntriesByBinWidth(trueHist);
 
-      MakePlotMultiEff(canvas, trueHist, { recoHist, goodRecoHist }, ";E (MeV);" + particle.latex_name, colours, names, legend_position, ncolumns);
+          TH1F *recoHist = new TH1F("recoHist" + particle.name, plot.axes_labels + particle.latex_name, particle.energybins.size() - 1, bins);
+          particleTree->Draw(plot.var + ">>recoHist" + particle.name, base_cut + reco_cut);
+          NormaliseEntriesByBinWidth(recoHist);
 
-      canvas->SaveAs(saveDir + "/" + particle.name + "_energy_reco_eff.png");
-      canvas->SaveAs(saveDir + "/" + particle.name + "_energy_reco_eff.pdf");
+          TH1F *goodRecoHist = new TH1F("goodRecoHist" + particle.name, plot.axes_labels + particle.latex_name, particle.energybins.size() - 1, bins);
+          particleTree->Draw(plot.var + ">>goodRecoHist" + particle.name, base_cut + good_reco_cut);
+          NormaliseEntriesByBinWidth(goodRecoHist);
+
+          MakePlotMultiEff(canvas, trueHist, { recoHist, goodRecoHist }, plot.axes_labels + particle.latex_name, colours, names, legend_position, ncolumns);
+
+          canvas->SaveAs(saveDir + "/" + particle.name + "_" + plot.name + "_reco_eff.png");
+          canvas->SaveAs(saveDir + "/" + particle.name + "_" + plot.name + "_reco_eff.pdf");
+        }
     }
 }

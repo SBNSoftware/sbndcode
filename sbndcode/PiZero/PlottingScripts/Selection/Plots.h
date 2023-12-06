@@ -70,3 +70,8 @@ std::vector<TwoDPlotSet> observables_twod_sets = {
     8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, "p_{#pi^{0}} (MeV/c)", "60 MeV/c", 60.,
     9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, "cos(#theta_{#pi^{0}} )" },
 };
+
+std::vector<Plot> reco_eff_plots = {
+  { "energy", "mc_energy0*1e3", ";E (MeV);", 0, 0, 0 },
+  { "momentum", "mc_momentum*1e3", ";p (MeV/c);", 0, 0, 0 },
+};
