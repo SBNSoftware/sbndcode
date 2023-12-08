@@ -17,7 +17,7 @@ void ObservablesResolution(const TString productionVersion)
   TCanvas *cPiZeroMomFractionalResolution = new TCanvas("cPiZeroMomFractionalResolution", "cPiZeroMomFractionalResolution");
   cPiZeroMomFractionalResolution->cd();
 
-  TH1F *hPiZeroMomFractionalResolution = new TH1F("hPiZeroMomFractionalResolution", ";p_{#pi^{0}} (#frac{Reco - True}{True});#pi^{0}", 40, -1, 1);
+  TH1F *hPiZeroMomFractionalResolution = new TH1F("hPiZeroMomFractionalResolution", ";p_{#pi^{0}} (#frac{Reco - True}{True});#pi^{0}", 25, -1, 1);
   ncpizeroEvents->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3)/(slc_true_pz_pizero_mom*1e3)>>hPiZeroMomFractionalResolution",
                        "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
@@ -30,7 +30,7 @@ void ObservablesResolution(const TString productionVersion)
   TCanvas *cPiZeroMomResolution = new TCanvas("cPiZeroMomResolution", "cPiZeroMomResolution");
   cPiZeroMomResolution->cd();
 
-  TH1F *hPiZeroMomResolution = new TH1F("hPiZeroMomResolution", ";p_{#pi^{0}} (MeV) (Reco - True);#pi^{0}", 50, -300, 200);
+  TH1F *hPiZeroMomResolution = new TH1F("hPiZeroMomResolution", ";p_{#pi^{0}} (MeV) (Reco - True);#pi^{0}", 25, -300, 200);
   ncpizeroEvents->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3)>>hPiZeroMomResolution",
                        "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
@@ -44,7 +44,7 @@ void ObservablesResolution(const TString productionVersion)
   cPiZeroMom2DFractionalResolution->cd();
   cPiZeroMom2DFractionalResolution->SetRightMargin(.2);
 
-  TH2F *hPiZeroMom2DFractionalResolution = new TH2F("hPiZeroMom2DFractionalResolution", ";p_{#pi^{0}} (MeV);p_{#pi^{0}} (#frac{Reco - True}{True});#pi^{0}", 8, pizeroMomBins, 40, -1, 1);
+  TH2F *hPiZeroMom2DFractionalResolution = new TH2F("hPiZeroMom2DFractionalResolution", ";p_{#pi^{0}} (MeV);p_{#pi^{0}} (#frac{Reco - True}{True});#pi^{0}", 8, pizeroMomBins, 25, -1, 1);
   ncpizeroEvents->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3)/(slc_true_pz_pizero_mom*1e3):slc_true_pz_pizero_mom*1e3>>hPiZeroMom2DFractionalResolution",
                        "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
@@ -58,7 +58,7 @@ void ObservablesResolution(const TString productionVersion)
   cPiZeroMom2DResolution->cd();
   cPiZeroMom2DResolution->SetRightMargin(.2);
 
-  TH2F *hPiZeroMom2DResolution = new TH2F("hPiZeroMom2DResolution", ";p_{#pi^{0}} (MeV);p_{#pi^{0}} (MeV) (Reco - True);#pi^{0}", 8, pizeroMomBins, 50, -300, 200);
+  TH2F *hPiZeroMom2DResolution = new TH2F("hPiZeroMom2DResolution", ";p_{#pi^{0}} (MeV);p_{#pi^{0}} (MeV) (Reco - True);#pi^{0}", 8, pizeroMomBins, 25, -300, 200);
   ncpizeroEvents->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3):slc_true_pz_pizero_mom*1e3>>hPiZeroMom2DResolution",
                        "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
