@@ -78,7 +78,7 @@ std::vector<TwoDPlotSet> true_observables_twod_sets = {
 
 std::vector<TwoDPlotSet> observables_twod_sets = {
   { "pizero_momentum_and_cos_theta", "slc_best_pzc_pizero_mom", "slc_best_pzc_cos_theta_pizero",
-    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, "p_{#pi^{0}} (MeV/c)", "60 MeV/c", 60.,
+    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, "p_{#pi^{0}} (MeV/c)", " MeV/c", 1.,
     9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, "cos(#theta_{#pi^{0}} )" },
 };
 
