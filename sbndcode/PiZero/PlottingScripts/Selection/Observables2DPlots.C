@@ -4,6 +4,8 @@
 #include "Cuts.h"
 
 const double goalPOT = 10e20;
+const double potPerSpill = 5e12;
+const double goalSpills  = goalPOT / potPerSpill;
 
 double GetPOT(TChain *subruns);
 int GetGenEvents(TChain *subruns);
@@ -16,11 +18,11 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
 
 void RunMultiObservables2DPlots()
 {
-  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_incl_categories, ncpizero_incl_cuts, "ncpizero_incl");
-  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_0p0pi_categories, ncpizero_0p0pi_cuts, "ncpizero_0p0pi");
-  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_1p0pi_categories, ncpizero_1p0pi_cuts, "ncpizero_1p0pi");
-  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_Np0pi_categories, ncpizero_Np0pi_cuts, "ncpizero_Np0pi");
-  Observables2DPlots("NCPiZeroAv10", observables_twod_sets, ncpizero_Xp0pi_categories, ncpizero_Xp0pi_cuts, "ncpizero_Xp0pi");
+  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_incl_categories, ncpizero_incl_cuts, "ncpizero_incl");
+  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_0p0pi_categories, ncpizero_0p0pi_cuts, "ncpizero_0p0pi");
+  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_1p0pi_categories, ncpizero_1p0pi_cuts, "ncpizero_1p0pi");
+  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_Np0pi_categories, ncpizero_Np0pi_cuts, "ncpizero_Np0pi");
+  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_Xp0pi_categories, ncpizero_Xp0pi_cuts, "ncpizero_Xp0pi");
 }
 
 void Observables2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets,
@@ -43,6 +45,7 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -53,12 +56,23 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
   TChain *rockboxsubruns = new TChain("ncpizeroana/subruns");
   rockboxsubruns->Add(rockboxFile);
 
+  TChain *intimeevents = new TChain("ncpizeroana/events");
+  intimeevents->Add(intimeFile);
+
+  TChain *intimesubruns = new TChain("ncpizeroana/subruns");
+  intimesubruns->Add(intimeFile);
+
   TString potString = Form(" (%g POT)", goalPOT);
   potString.ReplaceAll("e+","x10^{");
   potString.ReplaceAll(" POT","} POT");
 
   const double rockboxPOT = GetPOT(rockboxsubruns);
-  const double rockboxScaling = goalPOT / rockboxPOT;
+  const int rockboxSpills = GetGenEvents(rockboxsubruns);
+  const int intimeSpills  = GetGenEvents(intimesubruns);
+
+  const double rockboxScaling      = goalPOT / rockboxPOT;
+  const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
+  const double intimeScaling       = (goalSpills - scaledRockboxSpills) / intimeSpills;
 
   for(auto const& plotSet : plotSets)
     {
@@ -83,7 +97,14 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
               rockboxevents->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
                                   Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + cut.cut);
 
+              TH1F *hTempIntime = new TH1F(Form("hIntime%s%s%i%s", plotSet.name.Data(), cut.name.Data(), i, category.name.Data()), "", plotSet.nbins1, bins1);
+
+              intimeevents->Draw(Form("%s>>hIntime%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
+                                 Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + cut.cut);
+
               hTemp->Scale(rockboxScaling);
+              hTempIntime->Scale(intimeScaling);
+              hTemp->Add(hTempIntime);
               NormaliseEntriesByBinWidth(hTemp, plotSet.scale);
               hTemp->SetFillColorAlpha(category.colour, 0.4);
               hTemp->SetLineColor(category.colour);

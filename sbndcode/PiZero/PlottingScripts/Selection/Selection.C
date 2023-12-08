@@ -21,17 +21,19 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
 
 void RunMultiSelection()
 {
-  Selection("NCPiZeroAv10", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, no_plots, true_ncpizero_incl_cut);
-  Selection("NCPiZeroAv10", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, no_plots, true_ncpizero_0p0pi_cut);
-  Selection("NCPiZeroAv10", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, no_plots, true_ncpizero_1p0pi_cut);
-  Selection("NCPiZeroAv10", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, no_plots, true_ncpizero_Np0pi_cut);
-  Selection("NCPiZeroAv10", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, no_plots, true_ncpizero_Xp0pi_cut);
+  Selection("NCPiZeroAv11", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, no_plots, true_ncpizero_incl_cut);
+  Selection("NCPiZeroAv11", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, no_plots, true_ncpizero_0p0pi_cut);
+  Selection("NCPiZeroAv11", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, no_plots, true_ncpizero_1p0pi_cut);
+  Selection("NCPiZeroAv11", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, no_plots, true_ncpizero_Np0pi_cut);
+  Selection("NCPiZeroAv11", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, no_plots, true_ncpizero_Xp0pi_cut);
 
-  Selection("NCPiZeroAv10", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, selection_plots, true_ncpizero_incl_cut);
-  Selection("NCPiZeroAv10", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, selection_plots, true_ncpizero_0p0pi_cut);
-  Selection("NCPiZeroAv10", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, selection_plots, true_ncpizero_1p0pi_cut);
-  Selection("NCPiZeroAv10", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, selection_plots, true_ncpizero_Np0pi_cut);
-  Selection("NCPiZeroAv10", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, selection_plots, true_ncpizero_Xp0pi_cut);
+  /*
+  Selection("NCPiZeroAv11", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, selection_plots, true_ncpizero_incl_cut);
+  Selection("NCPiZeroAv11", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, selection_plots, true_ncpizero_0p0pi_cut);
+  Selection("NCPiZeroAv11", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, selection_plots, true_ncpizero_1p0pi_cut);
+  Selection("NCPiZeroAv11", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, selection_plots, true_ncpizero_Np0pi_cut);
+  Selection("NCPiZeroAv11", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, selection_plots, true_ncpizero_Xp0pi_cut);
+  */
 }
 
 void Selection(const TString productionVersion, const TString saveDirExt, std::vector<Cut> &cuts, const std::vector<Cut> &categories,

@@ -17,7 +17,7 @@ void RecoEff(const TString productionVersion)
   const TCut reco_cut      = "(reco_nTracks>0 || reco_nShowers>0) && ((reco_track_purity>.5 && reco_track_completeness>.5) || (reco_shower_purity>.5 && reco_shower_completeness>.5))";
   const TCut good_reco_cut = "(reco_nTracks>0 || reco_nShowers>0) && ((reco_track_purity>.8 && reco_track_completeness>.8) || (reco_shower_purity>.8 && reco_shower_completeness>.8))";
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox_recoeff.root";
+  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();

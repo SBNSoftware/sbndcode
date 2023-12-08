@@ -18,11 +18,11 @@ int GetGenEvents(TChain *subruns);
 
 void RunMultiObservables()
 {
-  Observables("NCPiZeroAv10", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, observables);
-  Observables("NCPiZeroAv10", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, observables);
-  Observables("NCPiZeroAv10", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, observables);
-  Observables("NCPiZeroAv10", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, observables);
-  Observables("NCPiZeroAv10", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, observables);
+  Observables("NCPiZeroAv11", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, observables);
+  Observables("NCPiZeroAv11", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, observables);
+  Observables("NCPiZeroAv11", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, observables);
+  Observables("NCPiZeroAv11", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, observables);
+  Observables("NCPiZeroAv11", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, observables);
 }
 
 void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const std::vector<Cut> cuts,
