@@ -1,3 +1,5 @@
+#pragma once
+
 #include "/exp/sbnd/app/users/hlay/plotting_utils/Structs.h"
 
 const TCut true_ncpizero_incl_cut = "nu_event_type_incl==0";

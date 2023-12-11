@@ -1,3 +1,5 @@
+#pragma once
+
 #include "/exp/sbnd/app/users/hlay/plotting_utils/Structs.h"
 
 const TString baseSaveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots";

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "/exp/sbnd/app/users/hlay/plotting_utils/Structs.h"
 
 std::vector<Particle> particles = {
