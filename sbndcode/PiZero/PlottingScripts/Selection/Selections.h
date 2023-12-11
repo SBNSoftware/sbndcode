@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Cuts.h"
 #include "Categories.h"
 
@@ -20,4 +22,9 @@ SelectionParams ncpizero_Np0pi = { "ncpizero_Np0pi",
                                    ncpizero_Np0pi_broad_cuts,
                                    ncpizero_Np0pi_categories,
                                    true_ncpizero_Np0pi_cut
+};
+
+std::vector<SelectionParams> selections = { ncpizero_incl,
+                                            ncpizero_0p0pi,
+                                            ncpizero_Np0pi
 };
