@@ -1,45 +1,15 @@
 #include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "LatexHeaders.h"
-#include "Cuts.h"
-#include "Categories.h"
+#include "Selections.h"
 #include "Plots.h"
-
-const double goalPOT     = 10e20;
-const double potPerSpill = 5e12;
-const double goalSpills  = goalPOT / potPerSpill;
-
-void Selection(const TString productionVersion, const TString saveDirExt = "tmp", std::vector<Cut> &cuts = ncpizero_incl_cuts,
-               const std::vector<Cut> &categories = ncpizero_incl_categories, std::vector<Plot> &plots = selection_plots,
-               const TCut &trueCategory = "");
-
-double GetPOT(TChain *subruns);
-int GetGenEvents(TChain *subruns);
+#include "Common.C"
 
 template<class T>
-void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, std::vector<Cut> &cuts,
-                     const std::vector<Cut> &categories, const TCut &trueCategory);
+void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, const SelectionParams &selectionParams);
 
-void RunMultiSelection()
+void Selection(const TString productionVersion, const SelectionParams &selectionParams, std::vector<Plot> &plots)
 {
-  Selection("NCPiZeroAv11", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, no_plots, true_ncpizero_incl_cut);
-  Selection("NCPiZeroAv11", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, no_plots, true_ncpizero_0p0pi_cut);
-  Selection("NCPiZeroAv11", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, no_plots, true_ncpizero_1p0pi_cut);
-  Selection("NCPiZeroAv11", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, no_plots, true_ncpizero_Np0pi_cut);
-  Selection("NCPiZeroAv11", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, no_plots, true_ncpizero_Xp0pi_cut);
-
-  /*
-  Selection("NCPiZeroAv11", "ncpizero_incl", ncpizero_incl_cuts, ncpizero_incl_categories, selection_plots, true_ncpizero_incl_cut);
-  Selection("NCPiZeroAv11", "ncpizero_0p0pi", ncpizero_0p0pi_cuts, ncpizero_0p0pi_categories, selection_plots, true_ncpizero_0p0pi_cut);
-  Selection("NCPiZeroAv11", "ncpizero_1p0pi", ncpizero_1p0pi_cuts, ncpizero_1p0pi_categories, selection_plots, true_ncpizero_1p0pi_cut);
-  Selection("NCPiZeroAv11", "ncpizero_Np0pi", ncpizero_Np0pi_cuts, ncpizero_Np0pi_categories, selection_plots, true_ncpizero_Np0pi_cut);
-  Selection("NCPiZeroAv11", "ncpizero_Xp0pi", ncpizero_Xp0pi_cuts, ncpizero_Xp0pi_categories, selection_plots, true_ncpizero_Xp0pi_cut);
-  */
-}
-
-void Selection(const TString productionVersion, const TString saveDirExt, std::vector<Cut> &cuts, const std::vector<Cut> &categories,
-               std::vector<Plot> &plots, const TCut &trueCategory)
-{
-  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/selection/" + saveDirExt;
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/selection/" + selectionParams.name;
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
@@ -58,27 +28,18 @@ void Selection(const TString productionVersion, const TString saveDirExt, std::v
   TChain *intimesubruns = new TChain("ncpizeroana/subruns");
   intimesubruns->Add(intimeFile);
 
-  TString potString = Form(" (%g POT)", goalPOT);
-  potString.ReplaceAll("e+","x10^{");
-  potString.ReplaceAll(" POT","} POT");
-
-  const double rockboxPOT = GetPOT(rockboxsubruns);
-  const int rockboxSpills = GetGenEvents(rockboxsubruns);
-  const int intimeSpills  = GetGenEvents(intimesubruns);
-
-  const double rockboxScaling      = goalPOT / rockboxPOT;
-  const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
-  const double intimeScaling       = (goalSpills - scaledRockboxSpills) / intimeSpills;
+  double rockboxScaling, intimeScaling;
+  GetScaling(rockboxsubruns, intimesubruns, rockboxScaling, intimeScaling);
 
   std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling },
                                           { "intime", intimeEvents, intimeScaling }
   };
 
-  ProduceCutTable(saveDir, samples, cuts, categories, trueCategory);
+  ProduceCutTable(saveDir, samples, selectionParams);
 
   TCut currentCut = "";
 
-  for(auto cut : cuts)
+  for(auto cut : selectionParams.cuts)
     {
       currentCut += cut.cut;
       cut.cut = currentCut;
@@ -91,9 +52,9 @@ void Selection(const TString productionVersion, const TString saveDirExt, std::v
                                         "c_" + plot.name + "_" + cut.name);
           canvas->cd();
 
-          plot.axes_labels += potString;
+          plot.axes_labels += POTString();
 
-          MakeStackedPlot(canvas, samples, plot, cut, categories, {.25, .8, .8, .87}, 4);
+          MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {.25, .8, .8, .87}, 4);
 
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".png");
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".pdf");
@@ -105,39 +66,8 @@ void Selection(const TString productionVersion, const TString saveDirExt, std::v
   gSystem->Exec("pdflatex -output-directory " + saveDir + " " + saveDir + "/cut_table.tex");
 }
 
-double GetPOT(TChain *subruns)
-{
-  double sum = 0., pot = 0;
-
-  subruns->SetBranchAddress("pot", &pot);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += pot;
-    }
-
-  return sum;
-}
-
-int GetGenEvents(TChain *subruns)
-{
-  int sum = 0., ngenevts = 0;
-
-  subruns->SetBranchAddress("ngenevts", &ngenevts);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += ngenevts;
-    }
-
-  return sum;
-}
-
 template<class T>
-void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, std::vector<Cut> &cuts,
-                     const std::vector<Cut> &categories, const TCut &trueCategory)
+void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, const SelectionParams &selectionParams)
 {
   ofstream texFile;
   texFile.open(saveDir + "/cut_table.tex");
@@ -146,9 +76,9 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
 
   for(auto const& sample : samples)
     {
-      totalSignal       += sample.scaling * sample.tree->Draw("", trueCategory);
-      totalSignalSlices += sample.scaling * sample.tree->Draw("", categories[0].cut);
-      totalBackSlices   += sample.scaling * sample.tree->Draw("", !categories[0].cut);
+      totalSignal       += sample.scaling * sample.tree->Draw("", selectionParams.true_category);
+      totalSignalSlices += sample.scaling * sample.tree->Draw("", selectionParams.categories[0].cut);
+      totalBackSlices   += sample.scaling * sample.tree->Draw("", !(selectionParams.categories[0].cut));
     }
 
   texFile << docStart;
@@ -165,21 +95,21 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, st
 
   TCut currentCut = "";
 
-  for(unsigned i = 0; i < cuts.size(); ++i)
+  for(unsigned i = 0; i < selectionParams.cuts.size(); ++i)
     {
-      Cut cut = cuts[i];
+      Cut cut = selectionParams.cuts[i];
       currentCut += cut.cut;
       cut.cut = currentCut;
 
       double sigSlices = 0., backSlices = 0.;
-      for(unsigned j = 0; j < categories.size(); ++j)
+      for(unsigned j = 0; j < selectionParams.categories.size(); ++j)
         {
           for(auto const& sample : samples)
             {
               if(j == 0)
-                sigSlices += sample.scaling * sample.tree->Draw("", cut.cut + categories[j].cut);
+                sigSlices += sample.scaling * sample.tree->Draw("", cut.cut + selectionParams.categories[j].cut);
               else
-                backSlices += sample.scaling * sample.tree->Draw("", cut.cut + categories[j].cut);
+                backSlices += sample.scaling * sample.tree->Draw("", cut.cut + selectionParams.categories[j].cut);
             }
         }
 
