@@ -1,67 +1,34 @@
 #include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
-#include "Categories.h"
 #include "Plots.h"
-#include "Cuts.h"
+#include "Selections.h"
+#include "Common.C"
 
-const double goalPOT = 10e20;
-const double potPerSpill = 5e12;
-const double goalSpills  = goalPOT / potPerSpill;
-
-double GetPOT(TChain *subruns);
-int GetGenEvents(TChain *subruns);
-
-void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, const std::vector<Cut> &categories,
-                 const Cut &cut, const TCut trueCategory);
-
-void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, const std::vector<Cut> &categories,
-                 const std::vector<Cut> cuts, const TCut trueCategory, const TString name)
+void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, const SelectionParams &selectionParams)
 {
-  TCut totalCut = "";
-
-  for(auto const& cut : cuts)
-    totalCut += cut.cut;
-
-  Cut cut = { name, totalCut, "Full Selection" };
-
-  XSec2DPlots(productionVersion, plotSet, categories, cut, trueCategory);
-}
-
-void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, const std::vector<Cut> &categories,
-                 const Cut &cut, const TCut trueCategory)
-{
-  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/xsec_twod";
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/xsec_twod";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString intimeFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *rockboxevents = new TChain("ncpizeroana/events");
-  rockboxevents->Add(rockboxFile);
-  TChain *intimeevents = new TChain("ncpizeroana/events");
-  intimeevents->Add(intimeFile);
+  TChain *rockboxEvents = new TChain("ncpizeroana/events");
+  rockboxEvents->Add(rockboxFile);
+  TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
+  rockboxSubruns->Add(rockboxFile);
 
-  TChain *rockboxsubruns = new TChain("ncpizeroana/subruns");
-  rockboxsubruns->Add(rockboxFile);
-  TChain *intimesubruns = new TChain("ncpizeroana/subruns");
-  intimesubruns->Add(intimeFile);
+  TChain *intimeEvents = new TChain("ncpizeroana/events");
+  intimeEvents->Add(intimeFile);
+  TChain *intimeSubruns = new TChain("ncpizeroana/subruns");
+  intimeSubruns->Add(intimeFile);
 
-  TString potString = Form(" (%g POT)", goalPOT);
-  potString.ReplaceAll("e+","x10^{");
-  potString.ReplaceAll(" POT","} POT");
+  double rockboxScaling, intimeScaling;
+  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
 
-  const double rockboxPOT = GetPOT(rockboxsubruns);
-  const int rockboxSpills = GetGenEvents(rockboxsubruns);
-  const int intimeSpills  = GetGenEvents(intimesubruns);
+  Cut cut = TotalCut(selectionParams.cuts);
 
-  const double rockboxScaling      = goalPOT / rockboxPOT;
-  const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
-  const double intimeScaling       = (goalSpills - scaledRockboxSpills) / intimeSpills;
-
-  const double nTargets = 4.36e31;
-  const double intFlux  = 1.73e13;
   const double nonBinnedFactor = 1 / (nTargets * intFlux);
 
   double bins1[plotSet.nbins1 + 1];
@@ -91,8 +58,8 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
                                                 plotSet.normalisationUnit.Data()),
                                            plotSet.nbins1, bins1);
 
-      rockboxevents->Draw(Form("%s*1e3>>tmpRockboxTrueUnSel%i", trueUnSelVar1.Data(), i),
-                          Form("%s>%f && %s<%f", trueUnSelVar2.Data(), plotSet.bins2[i], trueUnSelVar2.Data(), plotSet.bins2[i+1]) + trueCategory);
+      rockboxEvents->Draw(Form("%s*1e3>>tmpRockboxTrueUnSel%i", trueUnSelVar1.Data(), i),
+                          Form("%s>%f && %s<%f", trueUnSelVar2.Data(), plotSet.bins2[i], trueUnSelVar2.Data(), plotSet.bins2[i+1]) + selectionParams.true_category);
       
       trueHistsUnselected.push_back(tmpRockboxTrueUnSel);
 
@@ -102,8 +69,8 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
                                               plotSet.normalisationUnit.Data()),
                                          plotSet.nbins1, bins1);
 
-      rockboxevents->Draw(Form("%s*1e3>>tmpRockboxTrueSel%i", trueSelVar1.Data(), i),
-                          Form("%s>%f && %s<%f", trueSelVar2.Data(), plotSet.bins2[i], trueSelVar2.Data(), plotSet.bins2[i+1]) + trueCategory + cut.cut);
+      rockboxEvents->Draw(Form("%s*1e3>>tmpRockboxTrueSel%i", trueSelVar1.Data(), i),
+                          Form("%s>%f && %s<%f", trueSelVar2.Data(), plotSet.bins2[i], trueSelVar2.Data(), plotSet.bins2[i+1]) + selectionParams.true_category + cut.cut);
       
       trueHistsSelected.push_back(tmpRockboxTrueSel);
 
@@ -113,8 +80,8 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
                                               plotSet.normalisationUnit.Data()),
                                          plotSet.nbins1, bins1);
 
-      rockboxevents->Draw(Form("%s>>tmpRockboxRecoSig%i", plotSet.var1.Data(), i),
-                          Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + categories[0].cut + cut.cut);
+      rockboxEvents->Draw(Form("%s>>tmpRockboxRecoSig%i", plotSet.var1.Data(), i),
+                          Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + selectionParams.categories[0].cut + cut.cut);
       
       tmpRockboxRecoSig->Scale(rockboxScaling);
       NormaliseEntriesByBinWidth(tmpRockboxRecoSig, plotSet.scale);
@@ -131,10 +98,10 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
                                               plotSet.normalisationUnit.Data()),
                                          plotSet.nbins1, bins1);
 
-      rockboxevents->Draw(Form("%s>>tmpRockboxRecoBack%i", plotSet.var1.Data(), i),
-                          Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + !categories[0].cut + cut.cut);
-      intimeevents->Draw(Form("%s>>tmpIntimeRecoBack%i", plotSet.var1.Data(), i),
-                         Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + !categories[0].cut + cut.cut);
+      rockboxEvents->Draw(Form("%s>>tmpRockboxRecoBack%i", plotSet.var1.Data(), i),
+                          Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + !(selectionParams.categories[0].cut) + cut.cut);
+      intimeEvents->Draw(Form("%s>>tmpIntimeRecoBack%i", plotSet.var1.Data(), i),
+                         Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + !(selectionParams.categories[0].cut) + cut.cut);
       
       tmpRockboxRecoBack->Scale(rockboxScaling);
       NormaliseEntriesByBinWidth(tmpRockboxRecoBack, plotSet.scale);
@@ -175,36 +142,6 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
       recoHistsSig[i]->GetYaxis()->SetTitle("#frac{d#sigma}{dp_{#pi^{0}}dcos(#theta_{#pi^{0}})} (#frac{cm^{2}}{MeV/c})");
     }
 
-  canvas->SaveAs(saveDir + "/" + plotSet.name + "_" + cut.name + "_xsec.png");
-  canvas->SaveAs(saveDir + "/" + plotSet.name + "_" + cut.name + "_xsec.pdf");
-}
-
-double GetPOT(TChain *subruns)
-{
-  double sum = 0., pot = 0;
-
-  subruns->SetBranchAddress("pot", &pot);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += pot;
-    }
-
-  return sum;
-}
-
-int GetGenEvents(TChain *subruns)
-{
-  int sum = 0., ngenevts = 0;
-
-  subruns->SetBranchAddress("ngenevts", &ngenevts);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += ngenevts;
-    }
-
-  return sum;
+  canvas->SaveAs(saveDir + "/" + plotSet.name + "_" + selectionParams.name + "_xsec.png");
+  canvas->SaveAs(saveDir + "/" + plotSet.name + "_" + selectionParams.name + "_xsec.pdf");
 }

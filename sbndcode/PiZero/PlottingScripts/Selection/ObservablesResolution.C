@@ -1,9 +1,11 @@
+#include "Common.C"
+
 void ObservablesResolution(const TString productionVersion)
 {
-  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/observables_resolution";
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_resolution";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString ncpizeroFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -176,5 +178,4 @@ void ObservablesResolution(const TString productionVersion)
 
   cShowerEnergy2DResolution->SaveAs(saveDir + "/shower_energy_twod_resolution.pdf");
   cShowerEnergy2DResolution->SaveAs(saveDir + "/shower_energy_twod_resolution.png");
-
 }

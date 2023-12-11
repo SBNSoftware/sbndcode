@@ -1,6 +1,4 @@
-const double goalPOT     = 10e20;
-const double potPerSpill = 5e12;
-const double goalSpills  = goalPOT / potPerSpill;
+#include "Common.C"
 
 std::vector<int> *nu_event_type_incl = 0, *nu_event_type_0p0pi, *nu_event_type_Xp0pi = 0, *nu_event_type_1p0pi = 0,
   *nu_event_type_Np0pi = 0, *nu_pdg = 0, *nu_ccnc = 0, *nu_mode = 0, *nu_n_protons, *nu_n_charged_pions = 0,
@@ -37,9 +35,6 @@ std::vector<std::vector<float>> oneprotonsel_slc(5, std::vector<float>(10,0));
 
 void InitialiseTree(TChain *tree);
 
-double GetPOT(TChain *subruns);
-int GetGenEvents(TChain *subruns);
-
 void ProcessTree(TChain* chain, const float weight);
 
 void Categorise(int slc_true_event_type_incl, int slc_true_event_type_0p0pi, int slc_true_event_type_Xp0pi, int slc_true_event_type_1p0pi,
@@ -51,8 +46,8 @@ void Evaluate(const TString name, std::vector<float> &counts, const float total_
 
 void SophisticatedSelection(const TString productionVersion)
 {
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString intimeFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -62,22 +57,15 @@ void SophisticatedSelection(const TString productionVersion)
   TChain *intimeEvents = new TChain("ncpizeroana/events");
   intimeEvents->Add(intimeFile);
 
-  TChain *rockboxsubruns = new TChain("ncpizeroana/subruns");
-  rockboxsubruns->Add(rockboxFile);
-  TChain *intimesubruns = new TChain("ncpizeroana/subruns");
-  intimesubruns->Add(intimeFile);
+  TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
+  rockboxSubruns->Add(rockboxFile);
+  TChain *intimeSubruns = new TChain("ncpizeroana/subruns");
+  intimeSubruns->Add(intimeFile);
 
-  TString potString = Form(" (%g POT)", goalPOT);
-  potString.ReplaceAll("e+","x10^{");
-  potString.ReplaceAll(" POT","} POT");
+  const double rockboxPOT = GetPOT(rockboxSubruns);
 
-  const double rockboxPOT = GetPOT(rockboxsubruns);
-  const int rockboxSpills = GetGenEvents(rockboxsubruns);
-  const int intimeSpills  = GetGenEvents(intimesubruns);
-
-  const double rockboxScaling      = goalPOT / rockboxPOT;
-  const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
-  const double intimeScaling       = (goalSpills - scaledRockboxSpills) / intimeSpills;
+  double rockboxScaling, intimeScaling;
+  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
 
   InitialiseTree(rockboxEvents);
   ProcessTree(rockboxEvents, 1.);
@@ -171,36 +159,6 @@ void InitialiseTree(TChain *tree)
   tree->SetBranchAddress("slc_pfp_shower_dir_x", &slc_pfp_shower_dir_x);
   tree->SetBranchAddress("slc_pfp_shower_dir_y", &slc_pfp_shower_dir_y);
   tree->SetBranchAddress("slc_pfp_shower_dir_z", &slc_pfp_shower_dir_z);
-}
-
-double GetPOT(TChain *subruns)
-{
-  double sum = 0., pot = 0;
-
-  subruns->SetBranchAddress("pot", &pot);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += pot;
-    }
-
-  return sum;
-}
-
-int GetGenEvents(TChain *subruns)
-{
-  int sum = 0., ngenevts = 0;
-
-  subruns->SetBranchAddress("ngenevts", &ngenevts);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += ngenevts;
-    }
-
-  return sum;
 }
 
 void ProcessTree(TChain* chain, const float weight)

@@ -13,14 +13,14 @@ const Cut noRazzledProtons         = { "no_razzled_protons", "slc_n_primary_razz
 const Cut oneRazzledProton         = { "one_razzled_proton", "slc_n_primary_razzled_protons_thresh==1", "One Razzled Proton" };
 const Cut atLeastOneRazzledProton  = { "at_least_one_razzled_proton", "slc_n_primary_razzled_protons_thresh>0", "At Least One Razzled Proton" };
 
-const Cut preSel              = { "presel", "!slc_is_clear_cosmic && slc_is_fv", "Pre-Selection", kOrange-2 };
-const Cut cosmicRej           = { "cosmic_rejection", "slc_crumbs_score>-0.025", "Cosmic Rejection", kGreen+1 };
-const Cut muonRej             = { "muon_rejection", "slc_n_primary_razzled_muons ==0", "Muon Rejection", kRed-9 };
-const Cut photonSel           = { "photons_selection", "slc_n_pfps>1 && slc_n_primary_razzled_photons>1 && slc_best_pzc_good_kinematics", "Photon Selection", kBlue-9 };
-const Cut pionRej             = { "pion_rejection", "slc_n_primary_razzled_pions_thresh==0", "Pion Rejection" };
-const Cut protonRej           = { "proton_rejection", "slc_n_primary_razzled_protons_thresh==0", "Proton Rejection" };
-const Cut oneProtonSel        = { "proton_selection", "slc_n_primary_razzled_protons_thresh==1", "Proton Selection" };
-const Cut atLeastOneProtonSel = { "proton_selection", "slc_n_primary_razzled_protons_thresh>0", "Proton Selection" };
+const Cut preSel              = { "presel", "!slc_is_clear_cosmic && slc_is_fv", "Pre-Sel", kOrange-2 };
+const Cut cosmicRej           = { "cosmic_rejection", "slc_crumbs_score>-0.025", "Cosmic Rej", kGreen+1 };
+const Cut muonRej             = { "muon_rejection", "slc_n_primary_razzled_muons ==0", "Muon Rej", kRed-9 };
+const Cut photonSel           = { "photons_selection", "slc_n_pfps>1 && slc_n_primary_razzled_photons>1 && slc_best_pzc_good_kinematics", "Photon Sel", kBlue-9 };
+const Cut pionRej             = { "pion_rejection", "slc_n_primary_razzled_pions_thresh==0", "Pion Rej", kViolet - 5 };
+const Cut protonRej           = { "proton_rejection", "slc_n_primary_razzled_protons_thresh==0", "Proton Rej", kViolet - 6 };
+const Cut oneProtonSel        = { "proton_selection", "slc_n_primary_razzled_protons_thresh==1", "Proton Sel", kViolet - 6 };
+const Cut atLeastOneProtonSel = { "proton_selection", "slc_n_primary_razzled_protons_thresh>0", "Proton Sel", kViolet - 6 };
 
 const std::vector<Cut> ncpizero_incl_cuts = {
   noCut,

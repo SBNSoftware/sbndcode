@@ -2,10 +2,11 @@
 #include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
 #include "Particles.h"
 #include "Plots.h"
+#include "Common.C"
 
 void RecoEff(const TString productionVersion)
 {
-  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/reco_eff";
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/reco_eff";
   gSystem->Exec("mkdir -p " + saveDir);
 
   const std::vector<int> colours             = { kMagenta + 2, kRed - 4 };
@@ -17,7 +18,7 @@ void RecoEff(const TString productionVersion)
   const TCut reco_cut      = "(reco_nTracks>0 || reco_nShowers>0) && ((reco_track_purity>.5 && reco_track_completeness>.5) || (reco_shower_purity>.5 && reco_shower_completeness>.5))";
   const TCut good_reco_cut = "(reco_nTracks>0 || reco_nShowers>0) && ((reco_track_purity>.8 && reco_track_completeness>.8) || (reco_shower_purity>.8 && reco_shower_completeness>.8))";
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();

@@ -52,7 +52,7 @@ std::vector<VarBinPlot> true_slc_observables = {
 std::vector<Plot> observables = {
   { "slc_best_pzc_invariant_mass", "slc_best_pzc_invariant_mass", ";M_{#gamma#gamma} (MeV/c^{2});Events",
     25, 0, 500 },
-  { "slc_best_pzc_pizero_mom", "slc_best_pzc_pizero_mom", ";p_{#pi^{0}} (GeV/c);Events",
+  { "slc_best_pzc_pizero_mom", "slc_best_pzc_pizero_mom", ";p_{#pi^{0}} (MeV/c);Events",
     25, 0, 1000 },
   { "slc_best_pzc_cos_theta_pizero", "slc_best_pzc_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Events",
     25, -1, 1 },

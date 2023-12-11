@@ -1,9 +1,10 @@
 #include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "Common.C"
 
 void PhotonRecoEff(const TString productionVersion)
 {
-  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/photon_reco_eff";
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/photon_reco_eff";
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TCut base_cut = "nu_event_type_incl == 0";
@@ -21,7 +22,7 @@ void PhotonRecoEff(const TString productionVersion)
   const std::array<float, 4> legend_position = { .25, .86, .87, .91 };
   const int ncolumns                         = 3;
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
