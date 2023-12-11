@@ -1,78 +1,33 @@
 #include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
-#include "Categories.h"
 #include "Plots.h"
-#include "Cuts.h"
+#include "Selections.h"
+#include "Common.C"
 
-const double goalPOT = 10e20;
-const double potPerSpill = 5e12;
-const double goalSpills  = goalPOT / potPerSpill;
-
-double GetPOT(TChain *subruns);
-int GetGenEvents(TChain *subruns);
-
-void Observables2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets, const std::vector<Cut> &categories,
-                        const Cut &cut);
-
-void Observables2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets,
-                        const std::vector<Cut> &categories, const std::vector<Cut> cuts, const TString name);
-
-void RunMultiObservables2DPlots()
+void Observables2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets, const SelectionParams &selectionParams)
 {
-  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_incl_categories, ncpizero_incl_cuts, "ncpizero_incl");
-  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_0p0pi_categories, ncpizero_0p0pi_cuts, "ncpizero_0p0pi");
-  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_1p0pi_categories, ncpizero_1p0pi_cuts, "ncpizero_1p0pi");
-  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_Np0pi_categories, ncpizero_Np0pi_cuts, "ncpizero_Np0pi");
-  Observables2DPlots("NCPiZeroAv11", observables_twod_sets, ncpizero_Xp0pi_categories, ncpizero_Xp0pi_cuts, "ncpizero_Xp0pi");
-}
-
-void Observables2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets,
-                        const std::vector<Cut> &categories, const std::vector<Cut> cuts, const TString name)
-{
-  TCut totalCut = "";
-
-  for(auto const& cut : cuts)
-    totalCut += cut.cut;
-
-  Cut cut = { name, totalCut, "Full Selection" };
-
-  Observables2DPlots(productionVersion, plotSets, categories, cut);
-}
-
-void Observables2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets, const std::vector<Cut> &categories,
-                        const Cut &cut)
-{
-  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/observables_twod";
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_twod";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString intimeFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *rockboxevents = new TChain("ncpizeroana/events");
-  rockboxevents->Add(rockboxFile);
+  TChain *rockboxEvents = new TChain("ncpizeroana/events");
+  rockboxEvents->Add(rockboxFile);
+  TChain *intimeEvents = new TChain("ncpizeroana/events");
+  intimeEvents->Add(intimeFile);
 
-  TChain *rockboxsubruns = new TChain("ncpizeroana/subruns");
-  rockboxsubruns->Add(rockboxFile);
+  TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
+  rockboxSubruns->Add(rockboxFile);
+  TChain *intimeSubruns = new TChain("ncpizeroana/subruns");
+  intimeSubruns->Add(intimeFile);
 
-  TChain *intimeevents = new TChain("ncpizeroana/events");
-  intimeevents->Add(intimeFile);
+  double rockboxScaling, intimeScaling;
+  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
 
-  TChain *intimesubruns = new TChain("ncpizeroana/subruns");
-  intimesubruns->Add(intimeFile);
-
-  TString potString = Form(" (%g POT)", goalPOT);
-  potString.ReplaceAll("e+","x10^{");
-  potString.ReplaceAll(" POT","} POT");
-
-  const double rockboxPOT = GetPOT(rockboxsubruns);
-  const int rockboxSpills = GetGenEvents(rockboxsubruns);
-  const int intimeSpills  = GetGenEvents(intimesubruns);
-
-  const double rockboxScaling      = goalPOT / rockboxPOT;
-  const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
-  const double intimeScaling       = (goalSpills - scaledRockboxSpills) / intimeSpills;
+  Cut cut = TotalCut(selectionParams.cuts);
 
   for(auto const& plotSet : plotSets)
     {
@@ -88,18 +43,18 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
 
       TLegend *lSelCategories = new TLegend(.55, .28, .9, .8);
 
-      for(auto const& category : categories)
+      for(auto const& category : selectionParams.categories)
         {
           for(int i = 0; i < plotSet.nbins2; ++i)
             {
               TH1F *hTemp = new TH1F(Form("h%s%s%i%s", plotSet.name.Data(), cut.name.Data(), i, category.name.Data()), "", plotSet.nbins1, bins1);
 
-              rockboxevents->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
+              rockboxEvents->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
                                   Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + cut.cut);
 
               TH1F *hTempIntime = new TH1F(Form("hIntime%s%s%i%s", plotSet.name.Data(), cut.name.Data(), i, category.name.Data()), "", plotSet.nbins1, bins1);
 
-              intimeevents->Draw(Form("%s>>hIntime%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
+              intimeEvents->Draw(Form("%s>>hIntime%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
                                  Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + cut.cut);
 
               hTemp->Scale(rockboxScaling);
@@ -136,39 +91,9 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
             lSelCategories->Draw();
         }
 
-      canvas->SaveAs(saveDir + "/" + plotSet.name + "_" + cut.name + "_by_event_mode.png");
-      canvas->SaveAs(saveDir + "/" + plotSet.name + "_" + cut.name + "_by_event_mode.pdf");
+      canvas->SaveAs(saveDir + "/" + plotSet.name + "_" + selectionParams.name + "_by_event_mode.png");
+      canvas->SaveAs(saveDir + "/" + plotSet.name + "_" + selectionParams.name + "_by_event_mode.pdf");
 
       delete canvas;
     }
-}
-
-double GetPOT(TChain *subruns)
-{
-  double sum = 0., pot = 0;
-
-  subruns->SetBranchAddress("pot", &pot);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += pot;
-    }
-
-  return sum;
-}
-
-int GetGenEvents(TChain *subruns)
-{
-  int sum = 0., ngenevts = 0;
-
-  subruns->SetBranchAddress("ngenevts", &ngenevts);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += ngenevts;
-    }
-
-  return sum;
 }

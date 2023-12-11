@@ -1,3 +1,8 @@
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Structs.h"
+
+const TString baseSaveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots";
+const TString baseFileDir = "/pnfs/sbnd/persistent/users/hlay/ncpizero";
+
 const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
 const double goalSpills  = goalPOT / potPerSpill;
@@ -52,4 +57,16 @@ TString POTString()
   potString.ReplaceAll(" POT", "} POT");
 
   return potString;
+}
+
+Cut TotalCut(const std::vector<Cut> &cuts)
+{
+  TCut totalCut = "";
+
+  for(auto const& cut : cuts)
+    totalCut += cut.cut;
+
+  Cut cut = { "full_selection", totalCut, "Full Selection" };
+
+  return cut;
 }

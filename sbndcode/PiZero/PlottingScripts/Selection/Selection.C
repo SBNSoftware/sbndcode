@@ -9,11 +9,11 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, co
 
 void Selection(const TString productionVersion, const SelectionParams &selectionParams, std::vector<Plot> &plots)
 {
-  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/selection/" + selectionParams.name;
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/selection/" + selectionParams.name;
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString intimeFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -23,13 +23,13 @@ void Selection(const TString productionVersion, const SelectionParams &selection
   TChain *intimeEvents = new TChain("ncpizeroana/events");
   intimeEvents->Add(intimeFile);
 
-  TChain *rockboxsubruns = new TChain("ncpizeroana/subruns");
-  rockboxsubruns->Add(rockboxFile);
-  TChain *intimesubruns = new TChain("ncpizeroana/subruns");
-  intimesubruns->Add(intimeFile);
+  TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
+  rockboxSubruns->Add(rockboxFile);
+  TChain *intimeSubruns = new TChain("ncpizeroana/subruns");
+  intimeSubruns->Add(intimeFile);
 
   double rockboxScaling, intimeScaling;
-  GetScaling(rockboxsubruns, intimesubruns, rockboxScaling, intimeScaling);
+  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
 
   std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling },
                                           { "intime", intimeEvents, intimeScaling }

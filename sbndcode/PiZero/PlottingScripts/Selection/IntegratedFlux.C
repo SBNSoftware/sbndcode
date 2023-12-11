@@ -1,15 +1,12 @@
 #include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
-
-const double goalPOT = 10e20;
-
-double GetPOT(TChain *subruns);
+#include "Common.C"
 
 void IntegratedFlux(const TString productionVersion)
 {
-  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/integrated_flux";
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/integrated_flux";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_flux_configI.root";
+  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configI.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -135,19 +132,3 @@ void IntegratedFlux(const TString productionVersion)
   cNuEnergyFluxUniverses->SaveAs(saveDir + "/nu_energy_flux_universes.png");
   cNuEnergyFluxUniverses->SaveAs(saveDir + "/nu_energy_flux_universes.pdf");
 }
-
-double GetPOT(TChain *subruns)
-{
-  double sum = 0., pot = 0;
-
-  subruns->SetBranchAddress("pot", &pot);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += pot;
-    }
-
-  return sum;
-}
-
