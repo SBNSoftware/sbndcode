@@ -27,6 +27,7 @@
 #include "nusimdata/SimulationBase/MCTruth.h"
 
 //Reco Base
+#include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Shower.h"
@@ -71,9 +72,9 @@ private:
   void SetupMaps(art::Event const &e);
   void ReconstructionProcessor(art::Event const &e);
   void TruthProcessor(art::Event const &e);
-  void FillTrueParticle(const simb::MCParticle *particle, const bool pionDaughter);
+  void FillTrueParticle(const simb::MCParticle *particle, const bool pionChild);
 
-  std::vector<art::Ptr<recob::PFParticle> > GetPrimaryPFPs(art::Event const &e);
+  art::Ptr<recob::PFParticle> GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfpVec);
   art::Ptr<recob::PFParticle> GetPFP(art::Event const &e, long unsigned int const &id);
 
   float Purity(std::vector< art::Ptr<recob::Hit> > const &objectHits, int const &trackID);
@@ -87,8 +88,8 @@ private:
 
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   
-  std::string fNuGenModuleLabel, fLArGeantModuleLabel, fPFParticleModuleLabel,
-    fTrackModuleLabel, fShowerModuleLabel, fHitsModuleLabel;
+  std::string fNuGenModuleLabel, fLArGeantModuleLabel, fSliceModuleLabel,
+    fPFParticleModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fHitsModuleLabel;
 
   float fXEdgeCut, fYEdgeCut, fZFrontCut, fZBackCut,
     fXEdgeCutShowers, fYEdgeCutShowers, fZFrontCutShowers, fZBackCutShowers,
@@ -100,17 +101,21 @@ private:
 
   TTree *fParticleTree;
 
-  int fMC_trackID, fMC_PDG, fReco_nTracks, fReco_nShowers;
+  int fMC_trackID, fMC_PDG, fReco_nTracks, fReco_nShowers, fReco_primary_nTracks, fReco_primary_nShowers;
   float fMC_x0, fMC_y0, fMC_z0, fMC_xEnd, fMC_yEnd, fMC_zEnd, fMC_pX0,
     fMC_pY0, fMC_pZ0, fMC_energy0, fMC_momentum, fMC_pXEnd, fMC_pYEnd, fMC_pZEnd,
     fMC_energyEnd, fMC_mass, fMC_theta_xy, fMC_theta_yz, fMC_theta_xz, fMC_length, 
     fReco_showerPurity, fReco_showerCompleteness, fReco_trackPurity, 
-    fReco_trackCompleteness, fReco_trackLength, fReco_showerdEdx;
-  bool fReco_isReconstructed;
+    fReco_trackCompleteness, fReco_trackLength, fReco_showerdEdx,
+    fReco_primary_showerPurity, fReco_primary_showerCompleteness, fReco_primary_trackPurity,
+    fReco_primary_trackCompleteness, fReco_primary_trackLength, fReco_primary_showerdEdx;
+  bool fReco_isReconstructed, fReco_primary_isReconstructed;
 
-  std::map<int,int> fNShowersMap, fNTracksMap;
+  std::map<int,int> fNShowersMap, fNTracksMap, fNPrimaryShowersMap, fNPrimaryTracksMap;
   std::map<int,float> fShowerCompMap, fShowerPurMap, fTrackCompMap,
-    fTrackPurMap, fTrackLengthMap, fShowerdEdxMap;
+    fTrackPurMap, fTrackLengthMap, fShowerdEdxMap, fPrimaryShowerCompMap,
+    fPrimaryShowerPurMap, fPrimaryTrackCompMap, fPrimaryTrackPurMap,
+    fPrimaryTrackLengthMap, fPrimaryShowerdEdxMap;
   std::map<int,int> fHitsMap;
 };
 
@@ -119,6 +124,7 @@ RecoEff::RecoEff(fhicl::ParameterSet const &pset)
   : EDAnalyzer{pset},
   fNuGenModuleLabel (pset.get<std::string>("NuGenModuleLabel")),
   fLArGeantModuleLabel (pset.get<std::string>("LArGeantModuleLabel")),
+  fSliceModuleLabel (pset.get<std::string>("SliceModuleLabel")),
   fPFParticleModuleLabel (pset.get<std::string>("PFParticleModuleLabel")),
   fTrackModuleLabel (pset.get<std::string>("TrackModuleLabel")),
   fShowerModuleLabel (pset.get<std::string>("ShowerModuleLabel")),
@@ -168,6 +174,15 @@ RecoEff::RecoEff(fhicl::ParameterSet const &pset)
     fParticleTree->Branch("reco_shower_completeness",&fReco_showerCompleteness);
     fParticleTree->Branch("reco_track_length",&fReco_trackLength);
     fParticleTree->Branch("reco_shower_dEdx",&fReco_showerdEdx);
+    fParticleTree->Branch("reco_primary_isReconstructed",&fReco_primary_isReconstructed);
+    fParticleTree->Branch("reco_primary_nTracks",&fReco_primary_nTracks);
+    fParticleTree->Branch("reco_primary_nShowers",&fReco_primary_nShowers);
+    fParticleTree->Branch("reco_primary_track_purity",&fReco_primary_trackPurity);
+    fParticleTree->Branch("reco_primary_track_completeness",&fReco_primary_trackCompleteness);
+    fParticleTree->Branch("reco_primary_shower_purity",&fReco_primary_showerPurity);
+    fParticleTree->Branch("reco_primary_shower_completeness",&fReco_primary_showerCompleteness);
+    fParticleTree->Branch("reco_primary_track_length",&fReco_primary_trackLength);
+    fParticleTree->Branch("reco_primary_shower_dEdx",&fReco_primary_showerdEdx);
 
 
     fXOutEdge   = fTPCGeo.MaxX() - fXEdgeCut;
@@ -208,6 +223,13 @@ void RecoEff::ResetData()
   fReco_trackCompleteness = def_float; fReco_trackLength = def_float; fReco_showerdEdx = def_float; 
 
   fReco_isReconstructed = false;
+
+  fReco_primary_nTracks = def_int; fReco_primary_nShowers = def_int;
+
+  fReco_primary_showerPurity = def_float; fReco_primary_showerCompleteness = def_float; fReco_primary_trackPurity = def_float;
+  fReco_primary_trackCompleteness = def_float; fReco_primary_trackLength = def_float; fReco_primary_showerdEdx = def_float;
+
+  fReco_primary_isReconstructed = false;
 }
 
 void RecoEff::SetupMaps(art::Event const &e)
@@ -224,33 +246,37 @@ void RecoEff::SetupMaps(art::Event const &e)
 
 void RecoEff::ReconstructionProcessor(art::Event const &e)
 {
+  art::Handle<std::vector<recob::Slice> > handleSlices;
   art::Handle<std::vector<recob::PFParticle> > handlePFPs;
   art::Handle<std::vector<recob::Track> > handleTracks;
   art::Handle<std::vector<recob::Shower> > handleShowers;
+  e.getByLabel(fSliceModuleLabel,handleSlices);
   e.getByLabel(fPFParticleModuleLabel,handlePFPs);
   e.getByLabel(fTrackModuleLabel,handleTracks);
   e.getByLabel(fShowerModuleLabel,handleShowers);
 
+  art::FindManyP<recob::PFParticle> slicePFPAssn(handleSlices,e,fPFParticleModuleLabel);
   art::FindManyP<recob::Track> pfpTrackAssn(handlePFPs,e,fTrackModuleLabel);
   art::FindManyP<recob::Shower> pfpShowerAssn(handlePFPs,e,fShowerModuleLabel);
   art::FindManyP<recob::Hit> trackHitAssn(handleTracks,e,fTrackModuleLabel);
   art::FindManyP<recob::Hit> showerHitAssn(handleShowers,e,fShowerModuleLabel);
 
-  const std::vector<art::Ptr<recob::PFParticle> > primaries = GetPrimaryPFPs(e);
+  std::vector<art::Ptr<recob::Slice>> sliceVec;
+  art::fill_ptr_vector(sliceVec, handleSlices);
 
-  for(auto primary : primaries)
+  for(auto const &slc : sliceVec)
     {
-      const std::vector<long unsigned int> daughterIDs = primary->Daughters();
+      const std::vector<art::Ptr<recob::PFParticle> > pfpVec = slicePFPAssn.at(slc.key());
 
-      for(auto id: daughterIDs)
+      const art::Ptr<recob::PFParticle> primary = GetPrimaryPFP(pfpVec);
+
+      for(auto const &pfp : pfpVec)
         {
-          const art::Ptr<recob::PFParticle> daughter = GetPFP(e,id);
-          if(daughter.isNull())
-            continue;
+          const bool primaryChild = (primary->PdgCode() == 12 || primary->PdgCode() != 14) && pfp->Parent() == pfp->Self();
 
-          if(daughter->PdgCode() == 13)
+          if(pfp->PdgCode() == 13)
             {
-              const std::vector<art::Ptr<recob::Track> > tracksVec = pfpTrackAssn.at(daughter.key());
+              const std::vector<art::Ptr<recob::Track> > tracksVec = pfpTrackAssn.at(pfp.key());
               if(tracksVec.size() != 1)
                 continue;
               const art::Ptr<recob::Track> track = tracksVec[0];
@@ -281,10 +307,28 @@ void RecoEff::ReconstructionProcessor(art::Event const &e)
                 }
 
               fNTracksMap[trackID]++;
+
+              if(primaryChild)
+                {
+                  if(fNPrimaryTracksMap[trackID] == 0)
+                    {
+                      fPrimaryTrackCompMap[trackID] = comp;
+                      fPrimaryTrackPurMap[trackID] = pur;
+                      fPrimaryTrackLengthMap[trackID] = length;
+                    }
+                  else if(comp > fPrimaryTrackCompMap[trackID])
+                    {
+                      fPrimaryTrackCompMap[trackID] = comp;
+                      fPrimaryTrackPurMap[trackID] = pur;
+                      fPrimaryTrackLengthMap[trackID] = length;
+                    }
+
+                  fNPrimaryTracksMap[trackID]++;
+                }
             }
-          else if(daughter->PdgCode() == 11)
+          else if(pfp->PdgCode() == 11)
             {
-              const std::vector<art::Ptr<recob::Shower> > showersVec = pfpShowerAssn.at(daughter.key());
+              const std::vector<art::Ptr<recob::Shower> > showersVec = pfpShowerAssn.at(pfp.key());
               if(showersVec.size() != 1)
                 continue;
               const art::Ptr<recob::Shower> shower = showersVec[0];
@@ -320,6 +364,24 @@ void RecoEff::ReconstructionProcessor(art::Event const &e)
                 }
 
               fNShowersMap[trackID]++;
+
+              if(primaryChild)
+                {
+                  if(fNPrimaryShowersMap[trackID] == 0)
+                    {
+                      fPrimaryShowerCompMap[trackID] = comp;
+                      fPrimaryShowerPurMap[trackID] = pur;
+                      fPrimaryShowerdEdxMap[trackID] = dEdx;
+                    }
+                  else if(comp > fPrimaryShowerCompMap[trackID])
+                    {
+                      fPrimaryShowerCompMap[trackID] = comp;
+                      fPrimaryShowerPurMap[trackID] = pur;
+                      fPrimaryShowerdEdxMap[trackID] = dEdx;
+                    }
+
+                  fNPrimaryShowersMap[trackID]++;
+                }
             }
         }
     }
@@ -359,13 +421,13 @@ void RecoEff::TruthProcessor(art::Event const &e)
     }
 }
 
-void RecoEff::FillTrueParticle(const simb::MCParticle *particle, const bool pionDaughter)
+void RecoEff::FillTrueParticle(const simb::MCParticle *particle, const bool pionChild)
 {
   ResetData();
 
   fMC_trackID = particle->TrackId();
 
-  if(pionDaughter)
+  if(pionChild)
     fMC_PDG = 111e6 + particle->PdgCode();
   else
     fMC_PDG = particle->PdgCode();
@@ -414,26 +476,31 @@ void RecoEff::FillTrueParticle(const simb::MCParticle *particle, const bool pion
   fReco_trackLength = fTrackLengthMap[fMC_trackID];
   fReco_showerdEdx = fShowerdEdxMap[fMC_trackID];
 
+  if(fNPrimaryTracksMap[fMC_trackID] > 0 || fNPrimaryShowersMap[fMC_trackID] > 0)
+    fReco_primary_isReconstructed = true;
+
+  fReco_primary_nTracks = fNPrimaryTracksMap[fMC_trackID];
+  fReco_primary_nShowers = fNPrimaryShowersMap[fMC_trackID];
+  fReco_primary_showerPurity = fPrimaryShowerPurMap[fMC_trackID];
+  fReco_primary_showerCompleteness = fPrimaryShowerCompMap[fMC_trackID];
+  fReco_primary_trackPurity = fPrimaryTrackPurMap[fMC_trackID];
+  fReco_primary_trackCompleteness = fPrimaryTrackCompMap[fMC_trackID];
+  fReco_primary_trackLength = fPrimaryTrackLengthMap[fMC_trackID];
+  fReco_primary_showerdEdx = fPrimaryShowerdEdxMap[fMC_trackID];
+
   fParticleTree->Fill();
 }
 
-std::vector<art::Ptr<recob::PFParticle> > RecoEff::GetPrimaryPFPs(art::Event const &e)
+art::Ptr<recob::PFParticle> RecoEff::GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfpVec)
 {
-  art::Handle<std::vector<recob::PFParticle> > handlePFPs;
-  e.getByLabel(fPFParticleModuleLabel,handlePFPs);
-
-  std::vector<art::Ptr<recob::PFParticle> > primaries;
-
-  for(unsigned int pfp_i = 0; pfp_i < handlePFPs->size(); ++pfp_i)
+  for(auto const& pfp : pfpVec)
     {
-      const art::Ptr<recob::PFParticle> pfp(handlePFPs,pfp_i);
       if(pfp->IsPrimary())
-        {
-          if(std::abs(pfp->PdgCode()) == 12 || std::abs(pfp->PdgCode()) == 14)
-            primaries.push_back(pfp);
-        }
+        return pfp;
     }
-  return primaries;
+
+  const art::Ptr<recob::PFParticle> nullReturn;
+  return nullReturn;
 }
 
 art::Ptr<recob::PFParticle> RecoEff::GetPFP(art::Event const &e, long unsigned int const &id)
@@ -449,6 +516,7 @@ art::Ptr<recob::PFParticle> RecoEff::GetPFP(art::Event const &e, long unsigned i
       if(pfp->Self() == id)
         return pfp;
     }
+
   return nullReturn;
 }
 
