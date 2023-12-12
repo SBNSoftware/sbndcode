@@ -47,21 +47,26 @@ void RecoEff(const TString productionVersion)
             bins[i] = binsVec[i];
 
           TH1F *trueHist = new TH1F("trueHist" + particle.name, plot.axes_labels + particle.latex_name, particle.energybins.size() - 1, bins);
-          particleTree->Draw(plot.var + ">>trueHist" + particle.name, base_cut);
+          const int total = particleTree->Draw(plot.var + ">>trueHist" + particle.name, base_cut);
           NormaliseEntriesByBinWidth(trueHist);
 
           TH1F *recoHist = new TH1F("recoHist" + particle.name, plot.axes_labels + particle.latex_name, particle.energybins.size() - 1, bins);
-          particleTree->Draw(plot.var + ">>recoHist" + particle.name, base_cut + reco_cut);
+          const int reco = particleTree->Draw(plot.var + ">>recoHist" + particle.name, base_cut + reco_cut);
           NormaliseEntriesByBinWidth(recoHist);
 
           TH1F *goodRecoHist = new TH1F("goodRecoHist" + particle.name, plot.axes_labels + particle.latex_name, particle.energybins.size() - 1, bins);
-          particleTree->Draw(plot.var + ">>goodRecoHist" + particle.name, base_cut + good_reco_cut);
+          const int goodReco = particleTree->Draw(plot.var + ">>goodRecoHist" + particle.name, base_cut + good_reco_cut);
           NormaliseEntriesByBinWidth(goodRecoHist);
 
           MakePlotMultiEff(canvas, trueHist, { recoHist, goodRecoHist }, plot.axes_labels + particle.latex_name, colours, names, legend_position, ncolumns);
 
           canvas->SaveAs(saveDir + "/" + particle.name + "_" + plot.name + "_reco_eff.png");
           canvas->SaveAs(saveDir + "/" + particle.name + "_" + plot.name + "_reco_eff.pdf");
+
+          std::cout << "\n"
+                    << Form("%s Eff: %.2f%% Good Eff: %.2f%%\n", particle.name.Data(), reco * 100. / total, goodReco * 100. / total) << '\n'
+                    << std::endl;
+
         }
     }
 }
