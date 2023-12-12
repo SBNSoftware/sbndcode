@@ -50,8 +50,6 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
 
   TH1F* hBack = (TH1F*) hBackNu->Clone();
   hBack->Add(hBackCos);
-  std::cout << signal_def.name << std::endl;
-  std::cout << base_cut.name << std::endl;
 
   const double totalSignal = rockboxScaling * rockboxEvents->Draw("", signal_def.cut);
   const double initSignal  = rockboxScaling * rockboxEvents->Draw("", signal_def.cut + base_cut.cut);
@@ -84,9 +82,6 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
       const float pur = (accumSignal / (accumSignal + accumBack)) * 100;
       const float ep  = eff * pur / 100;
       const float cut = rej_cut ? hSig->GetBinLowEdge(i) : hSig->GetBinLowEdge(i) + hSig->GetBinWidth(i);
-
-      // std::cout << "Cut: " << cut << " Signal: " << accumSignal << " Back: " << accumBack << std::endl;
-      // std::cout << "\tEff: " << eff << " Pur: " << pur << " Eff*Pur: " << ep << std::endl;
 
       if(ep > maxEP)
         {
@@ -145,6 +140,10 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   pt->Draw();
   leg->Draw();
 
-  c->SaveAs(saveDir + "/" + plot.name + ".png");
-  c->SaveAs(saveDir + "/" + plot.name + ".pdf");
+  TString name = plot.name;
+  if(rej_cut)
+    name += "_reverse";
+
+  c->SaveAs(saveDir + "/" + name + ".png");
+  c->SaveAs(saveDir + "/" + name + ".pdf");
 }
