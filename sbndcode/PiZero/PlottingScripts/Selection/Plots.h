@@ -23,10 +23,25 @@ std::vector<Plot> selection_plots = {
     5, -0.5, 4.5 },
   { "slc_n_razzled_photons", "slc_n_razzled_photons", ";N Razzled Photons;Slices",
     5, -0.5, 4.5 },
-  { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
-    100, -2, 8 },
   { "slc_best_pzc_good_kinematics", "slc_best_pzc_good_kinematics", ";Best #pi^{0} Candidates Good Kinematics?;Slice",
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
+  { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
+    100, -2, 8 },
+  { "slc_opt0_score", "slc_opt0_score", ";OpT0 Score;Slices",
+    100, 0, 2e5 },
+};
+
+std::vector<Plot> extension_plots = {
+  { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
+    100, -2, 8 },
+  { "slc_opt0_frac_log", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
+    100, -2, 8, kBlack, true },
+  { "slc_opt0_frac_log_narrow", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
+    100, -2, 2, kBlack, true },
+  { "slc_opt0_score", "slc_opt0_score", ";OpT0 Score;Slices",
+    100, 0, 2e5 },
+  { "slc_opt0_score_narrow", "slc_opt0_score", ";OpT0 Score;Slices",
+    100, 0, 5e3 },
 };
 
 std::vector<Plot> true_observables = {
