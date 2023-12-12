@@ -6,26 +6,35 @@ std::vector<int> *nu_event_type_incl = 0, *nu_event_type_0p0pi, *nu_event_type_X
   *slc_n_dazzle_pions = 0, *slc_n_dazzle_pions_thresh = 0, *slc_n_dazzle_protons = 0, *slc_n_dazzle_protons_thresh = 0,
   *slc_n_dazzle_other = 0, *slc_n_razzle_electrons = 0, *slc_n_razzle_photons = 0, *slc_n_razzle_other = 0,
   *slc_n_razzled_electrons = 0, *slc_n_razzled_muons = 0, *slc_n_razzled_photons = 0, *slc_n_razzled_pions = 0,
-  *slc_n_razzled_pions_thresh = 0, *slc_n_razzled_protons = 0, *slc_n_razzled_protons_thresh = 0, *slc_true_event_type_incl = 0,
-  *slc_true_event_type_0p0pi = 0, *slc_true_event_type_Xp0pi = 0, *slc_true_event_type_1p0pi = 0, *slc_true_event_type_Np0pi = 0,
-  *slc_true_pdg = 0, *slc_true_ccnc = 0, *slc_true_mode = 0, *slc_true_n_protons = 0, *slc_true_n_charged_pions = 0, 
-  *slc_true_n_neutral_pions = 0, *slc_true_n_dalitz_neutral_pions = 0, *slc_best_pzc_photon_0_id = 0, *slc_best_pzc_photon_1_id = 0;
+  *slc_n_razzled_pions_thresh = 0, *slc_n_razzled_protons = 0, *slc_n_razzled_protons_thresh = 0, *slc_n_primary_trks = 0, 
+  *slc_n_primary_shws = 0, *slc_n_primary_dazzle_muons = 0, *slc_n_primary_dazzle_pions = 0, *slc_n_primary_dazzle_pions_thresh = 0,
+  *slc_n_primary_dazzle_protons = 0, *slc_n_primary_dazzle_protons_thresh = 0, *slc_n_primary_dazzle_other = 0,
+  *slc_n_primary_razzle_electrons = 0, *slc_n_primary_razzle_photons = 0, *slc_n_primary_razzle_other = 0,
+  *slc_n_primary_razzled_electrons = 0, *slc_n_primary_razzled_muons = 0, *slc_n_primary_razzled_photons = 0,
+  *slc_n_primary_razzled_pions = 0, *slc_n_primary_razzled_pions_thresh = 0, *slc_n_primary_razzled_protons = 0,
+  *slc_n_primary_razzled_protons_thresh = 0, *slc_true_event_type_incl = 0, *slc_true_event_type_0p0pi = 0,
+  *slc_true_event_type_Xp0pi = 0, *slc_true_event_type_1p0pi = 0, *slc_true_event_type_Np0pi = 0, *slc_true_pdg = 0,
+  *slc_true_ccnc = 0, *slc_true_mode = 0, *slc_true_n_protons = 0, *slc_true_n_charged_pions = 0, *slc_true_n_neutral_pions = 0,
+  *slc_true_n_dalitz_neutral_pions = 0, *slc_best_pzc_photon_0_id = 0, *slc_best_pzc_photon_1_id = 0;
 
 std::vector<bool> *nu_signal = 0, *nu_av  = 0, *nu_fv = 0, *slc_is_clear_cosmic = 0, *slc_true_signal = 0,
   *slc_true_av = 0, *slc_true_fv = 0, *slc_is_fv = 0, *slc_best_pzc_good_kinematics = 0;
 std::vector<size_t> *slc_n_pfps = 0;
 std::vector<float> *slc_comp = 0, *slc_pur = 0, *slc_crumbs_score = 0;
+std::vector<double> *slc_opt0_measPE = 0, *slc_opt0_hypPE = 0, *slc_opt0_score = 0;
 
 std::vector<std::vector<double>> *slc_pfp_shower_length = 0, *slc_pfp_shower_energy = 0, *slc_pfp_shower_dir_x = 0, *slc_pfp_shower_dir_y = 0,
   *slc_pfp_shower_dir_z = 0;
 std::vector<std::vector<int>> *slc_pfp_razzled_pdg = 0;
-std::vector<std::vector<bool>> *slc_pzc_good_kinematics = 0;
+std::vector<std::vector<bool>> *slc_pzc_good_kinematics = 0, *slc_pfp_track_contained = 0, *slc_pfp_shower_contained = 0, *slc_pfp_primary_child = 0;
 
 std::vector<float> true_signal(5, 0);
 
 std::vector<std::vector<float>> total_slc(5, std::vector<float>(10,0));
 std::vector<std::vector<float>> presel_slc(5, std::vector<float>(10,0));
 std::vector<std::vector<float>> photonsel_slc(5, std::vector<float>(10,0));
+std::vector<std::vector<float>> opt0sel_slc(5, std::vector<float>(10,0));
+std::vector<std::vector<float>> contsel_slc(5, std::vector<float>(10,0));
 std::vector<std::vector<float>> elecsel_slc(5, std::vector<float>(10,0));
 std::vector<std::vector<float>> invmasssel_slc(5, std::vector<float>(10,0));
 std::vector<std::vector<float>> pionsel_slc(5, std::vector<float>(10,0));
@@ -83,11 +92,11 @@ void SophisticatedSelection(const TString productionVersion)
 
   Evaluate("Signal One PiZero - No Sel", total_slc[0], total_slc[0][0], true_signal[0]);
   Evaluate("Signal One PiZero - Standard", photonsel_slc[0], total_slc[0][0], true_signal[0]);
-  Evaluate("Signal One PiZero - Allow Electron", elecsel_slc[0], total_slc[0][0], true_signal[0]);
-  Evaluate("Signal One PiZero - InvMass", invmasssel_slc[0], total_slc[0][0], true_signal[0]);
+  Evaluate("Signal One PiZero - OpT0", opt0sel_slc[0], total_slc[0][0], true_signal[0]);
+  Evaluate("Signal One PiZero - Containment", contsel_slc[0], total_slc[0][0], true_signal[0]);
   Evaluate("Signal 0p0pi", protonantisel_slc[1], total_slc[1][0], true_signal[1]);
-  Evaluate("Signal Xp0pi", pionsel_slc[2], total_slc[2][0], true_signal[2]);
-  Evaluate("Signal 1p0pi", oneprotonsel_slc[3], total_slc[3][0], true_signal[3]);
+  // Evaluate("Signal Xp0pi", pionsel_slc[2], total_slc[2][0], true_signal[2]);
+  // Evaluate("Signal 1p0pi", oneprotonsel_slc[3], total_slc[3][0], true_signal[3]);
   Evaluate("Signal Np0pi", protonsel_slc[4], total_slc[4][0], true_signal[4]);
 
 }
@@ -128,6 +137,23 @@ void InitialiseTree(TChain *tree)
   tree->SetBranchAddress("slc_n_razzled_pions_thresh", &slc_n_razzled_pions_thresh);
   tree->SetBranchAddress("slc_n_razzled_protons", &slc_n_razzled_protons);
   tree->SetBranchAddress("slc_n_razzled_protons_thresh", &slc_n_razzled_protons_thresh);
+  tree->SetBranchAddress("slc_n_primary_trks", &slc_n_primary_trks);
+  tree->SetBranchAddress("slc_n_primary_shws", &slc_n_primary_shws);
+  tree->SetBranchAddress("slc_n_primary_dazzle_muons", &slc_n_primary_dazzle_muons);
+  tree->SetBranchAddress("slc_n_primary_dazzle_pions", &slc_n_primary_dazzle_pions);
+  tree->SetBranchAddress("slc_n_primary_dazzle_pions_thresh", &slc_n_primary_dazzle_pions_thresh);
+  tree->SetBranchAddress("slc_n_primary_dazzle_protons", &slc_n_primary_dazzle_protons);
+  tree->SetBranchAddress("slc_n_primary_dazzle_protons_thresh", &slc_n_primary_dazzle_protons_thresh);
+  tree->SetBranchAddress("slc_n_primary_razzle_electrons", &slc_n_primary_razzle_electrons);
+  tree->SetBranchAddress("slc_n_primary_razzle_photons", &slc_n_primary_razzle_photons);
+  tree->SetBranchAddress("slc_n_primary_razzle_other", &slc_n_primary_razzle_other);
+  tree->SetBranchAddress("slc_n_primary_razzled_electrons", &slc_n_primary_razzled_electrons);
+  tree->SetBranchAddress("slc_n_primary_razzled_muons", &slc_n_primary_razzled_muons);
+  tree->SetBranchAddress("slc_n_primary_razzled_photons", &slc_n_primary_razzled_photons);
+  tree->SetBranchAddress("slc_n_primary_razzled_pions", &slc_n_primary_razzled_pions);
+  tree->SetBranchAddress("slc_n_primary_razzled_pions_thresh", &slc_n_primary_razzled_pions_thresh);
+  tree->SetBranchAddress("slc_n_primary_razzled_protons", &slc_n_primary_razzled_protons);
+  tree->SetBranchAddress("slc_n_primary_razzled_protons_thresh", &slc_n_primary_razzled_protons_thresh);
   tree->SetBranchAddress("slc_true_event_type_incl", &slc_true_event_type_incl);
   tree->SetBranchAddress("slc_true_event_type_0p0pi", &slc_true_event_type_0p0pi);
   tree->SetBranchAddress("slc_true_event_type_Xp0pi", &slc_true_event_type_Xp0pi);
@@ -159,6 +185,12 @@ void InitialiseTree(TChain *tree)
   tree->SetBranchAddress("slc_pfp_shower_dir_x", &slc_pfp_shower_dir_x);
   tree->SetBranchAddress("slc_pfp_shower_dir_y", &slc_pfp_shower_dir_y);
   tree->SetBranchAddress("slc_pfp_shower_dir_z", &slc_pfp_shower_dir_z);
+  tree->SetBranchAddress("slc_opt0_measPE", &slc_opt0_measPE);
+  tree->SetBranchAddress("slc_opt0_hypPE", &slc_opt0_hypPE);
+  tree->SetBranchAddress("slc_opt0_score", &slc_opt0_score);
+  tree->SetBranchAddress("slc_pfp_track_contained", &slc_pfp_track_contained);
+  tree->SetBranchAddress("slc_pfp_shower_contained", &slc_pfp_shower_contained);
+  tree->SetBranchAddress("slc_pfp_primary_child", &slc_pfp_primary_child);
 }
 
 void ProcessTree(TChain* chain, const float weight)
@@ -188,12 +220,12 @@ void ProcessTree(TChain* chain, const float weight)
           Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
                      slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), total_slc, weight);
 
-          if(!slc_is_clear_cosmic->at(slc_i) && slc_is_fv->at(slc_i) && slc_crumbs_score->at(slc_i) > -0.025 && slc_n_razzled_muons->at(slc_i) == 0)
+          if(!slc_is_clear_cosmic->at(slc_i) && slc_is_fv->at(slc_i) && slc_crumbs_score->at(slc_i) > -0.005 && slc_n_primary_razzled_muons->at(slc_i) == 0)
             {
               Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
                          slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), presel_slc, weight);
 
-              if((slc_n_razzled_electrons->at(slc_i) + slc_n_razzled_photons->at(slc_i)) > 1 && slc_n_razzled_photons->at(slc_i) > 0)
+              if((slc_n_primary_razzled_electrons->at(slc_i) + slc_n_primary_razzled_photons->at(slc_i)) > 1 && slc_n_primary_razzled_photons->at(slc_i) > 0)
                 {
                   Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
                              slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), elecsel_slc, weight);
@@ -244,33 +276,58 @@ void ProcessTree(TChain* chain, const float weight)
               for(auto const& good : slc_pzc_good_kinematics->at(slc_i))
                 anygood |= good;
 
-              if(slc_n_razzled_photons->at(slc_i) > 1 && anygood)
+              if(slc_n_primary_razzled_photons->at(slc_i) > 1 && anygood)
                 {
                   Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
                              slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), photonsel_slc, weight);
 
-                  if(slc_n_razzled_pions_thresh->at(slc_i) == 0)
+                  const double opt0Frac = (slc_opt0_hypPE->at(slc_i) - slc_opt0_measPE->at(slc_i)) / slc_opt0_measPE->at(slc_i);
+
+                  if(opt0Frac < 0.756 && opt0Frac > -0.7 && slc_opt0_score->at(slc_i) > 30.)
                     {
                       Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
-                                 slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), pionsel_slc, weight);
+                                 slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), opt0sel_slc, weight);
 
-                      if(slc_n_razzled_protons_thresh->at(slc_i) > 0)
-                        {
-                          Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
-                                     slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), protonsel_slc, weight);
-                        }
-                      else
-                        {
-                          Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
-                                     slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), protonantisel_slc, weight);
-                        }
+                      bool allContained = true;
 
-                      if(slc_n_razzled_protons_thresh->at(slc_i) == 1)
+                      for(int pfp_i = 0; pfp_i < slc_pfp_track_contained->at(slc_i).size(); ++pfp_i)
                         {
-                          Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
-                                     slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), oneprotonsel_slc, weight);
+                          if(pfp_i == slc_best_pzc_photon_0_id->at(slc_i) || pfp_i == slc_best_pzc_photon_1_id->at(slc_i))
+                            continue;
+
+                          if(slc_pfp_primary_child->at(slc_i).at(pfp_i))
+                            allContained &= (slc_pfp_track_contained->at(slc_i).at(pfp_i) && slc_pfp_shower_contained->at(slc_i).at(pfp_i));
                         }
 
+                      if(allContained)
+                        {
+                          Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
+                                     slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), contsel_slc, weight);
+
+                          if(slc_n_primary_razzled_pions_thresh->at(slc_i) == 0)
+                            {
+                              Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
+                                         slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), pionsel_slc, weight);
+
+                              if(slc_n_primary_razzled_protons_thresh->at(slc_i) > 0)
+                                {
+                                  Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
+                                             slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), protonsel_slc, weight);
+                                }
+                              else
+                                {
+                                  Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
+                                             slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), protonantisel_slc, weight);
+                                }
+
+                              if(slc_n_primary_razzled_protons_thresh->at(slc_i) == 1)
+                                {
+                                  Categorise(slc_true_event_type_incl->at(slc_i), slc_true_event_type_0p0pi->at(slc_i), slc_true_event_type_Xp0pi->at(slc_i), slc_true_event_type_1p0pi->at(slc_i),
+                                             slc_true_event_type_Np0pi->at(slc_i), slc_comp->at(slc_i), oneprotonsel_slc, weight);
+                                }
+
+                            }
+                        }
                     }
                 }
             }
@@ -301,7 +358,7 @@ void Categorise(int slc_true_event_type, float slc_comp, std::vector<std::vector
 
 void Evaluate(const TString name, std::vector<float> &counts, const float total_signal, const float total_signal_events)
 {
-  const float total = std::accumulate(counts.begin(), counts.end(), 0);
+  const float total = std::accumulate(counts.begin(), counts.end(), 0.);
 
   std::cout << "\nEvaluating... " << name << '\n'
             << "TOTAL:           " << total << '\n'
