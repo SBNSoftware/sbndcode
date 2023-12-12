@@ -63,6 +63,7 @@
 #include "eventweight_flux_sbn.fcl"
 #include "eventweight_genie_systtools_sbnd.fcl"
 #include "sbn_stub.fcl"
+#include "sbn_cnnid.fcl"
 
 process_name: Reco
 
@@ -79,6 +80,7 @@ services:
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
   BackTrackerService: @local::sbnd_backtrackerservice
   ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  ChannelStatusService:      @local::sbnd_channelstatus
 }
 
 #source is now a root file
@@ -197,6 +199,7 @@ physics:
 
   ### Analysis Producers
   crumbs:                      @local::crumbs_sbnd
+  cnnid: 		       @local::cnnid_sbnd
   pandoraTrackMCS:             @local::mcs_sbn
   pandoraTrackRange:           @local::range_sbn
   pandoraTrackClosestApproach: @local::trackscatterclosestapproach_sbn

@@ -33,7 +33,8 @@ physics.reco2_sensible: [ rns,
   razzle,
   razzled,
   vertexCharge,
-  vertexStub
+  vertexStub,
+  cnnid
 ]
 
 //TODO: Enable weight_paths on trigger_path when for future
@@ -69,6 +70,8 @@ physics.producers.razzled.ClusterLabel:                    "pandoraSCE"
 physics.producers.razzled.DazzleLabel:                     "dazzle"
 physics.producers.razzled.RazzleLabel:                     "razzle"
 physics.producers.razzled.PFPLabel:                        "pandoraSCE"
+physics.producers.cnnid.ClusterModuleLabel:                "pandoraSCE" 
+physics.producers.cnnid.PFParticleModuleLabel:             "pandoraSCE" 
 
 physics.producers.pandora.SimChannelModuleLabel: "simtpc2d:simpleSC"
 physics.producers.dazzle.SimChannelLabel:        "simtpc2d:simpleSC"
@@ -76,6 +79,8 @@ physics.producers.razzle.SimChannelLabel:        "simtpc2d:simpleSC"
 physics.producers.razzled.SimChannelLabel:       "simtpc2d:simpleSC"
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
 
 physics.producers.razzle.WeightFile:        "Razzle_BDTG_NCPiZeroAv2.weights.xml"
 physics.producers.dazzle.WeightFile:        "Dazzle_BDTG_NCPiZeroAv2.weights.xml"

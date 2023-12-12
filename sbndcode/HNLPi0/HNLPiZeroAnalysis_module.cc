@@ -59,6 +59,7 @@
 #include "sbnobj/Common/Reco/ShowerSelectionVars.h"
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
 #include "sbnobj/Common/Reco/CNNScore.h"
+#include "sbnobj/Common/Reco/Stub.h"
 
 #include <numeric>
 constexpr int def_int       = std::numeric_limits<int>::min();
@@ -201,7 +202,7 @@ private:
 	  fRangeModuleLabel, fClosestApproachModuleLabel, fStoppingChi2ModuleLabel,
 	  fRazzleModuleLabel, fCosmicDistModuleLabel, fShowerDensityFitModuleLabel,
 	  fShowerTrackFitModuleLabel, fCNNScoreModuleLabel, fRazzledModuleLabel,
-	  fSpacePointModuleLabel;
+	  fSpacePointModuleLabel, fStubModuleLabel;
 
   std::vector<std::string> fOpFlashesModuleLabel;
  
@@ -267,6 +268,7 @@ private:
   std::vector<int>	slc_n_razzled_electrons, slc_n_razzled_muons, slc_n_razzled_photons, slc_n_razzled_pions, slc_n_razzled_pions_thresh, slc_n_razzled_protons, slc_n_razzled_protons_thresh;
   std::vector<int>	slc_n_primary_razzle_electrons, slc_n_primary_razzle_photons, slc_n_primary_razzle_other;
   std::vector<int>	slc_n_primary_razzled_electrons, slc_n_primary_razzled_muons, slc_n_primary_razzled_photons, slc_n_primary_razzled_pions, slc_n_primary_razzled_pions_thresh, slc_n_primary_razzled_protons, slc_n_primary_razzled_protons_thresh;
+  std::vector<int>	slc_n_stub;
  
   // Event Tree: Slice Truth
   std::vector<float> 	slc_comp, slc_pur;
@@ -292,7 +294,7 @@ private:
   std::vector<std::vector<int>>		slc_pfp_cnnscore_nclusters;
   std::vector<std::vector<float>>	slc_pfp_razzled_electron_score, slc_pfp_razzled_muon_score, slc_pfp_razzled_photon_score, slc_pfp_razzled_pion_score, slc_pfp_razzled_proton_score;
   std::vector<std::vector<int>> 	slc_pfp_razzled_pdg;
-  
+
   // Event Tree: Slice -> PFP -> True MCParticle -- 2D vector
   std::vector<std::vector<int>>		slc_pfp_true_trackid;
   std::vector<std::vector<int>>        	slc_pfp_true_pdg;
@@ -377,6 +379,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fShowerTrackFitModuleLabel 	= p.get<art::InputTag>("ShowerTrackFitModuleLabel", "pandoraShowerSelectionVars");
   fShowerDensityFitModuleLabel 	= p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
   fCNNScoreModuleLabel        	= p.get<art::InputTag>("CNNScoreModuleLabel", "cnnid");
+  fStubModuleLabel 		= p.get<art::InputTag>("StubModuleLabel", "vertexStub");
   fRazzledModuleLabel           = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
   fSpacePointModuleLabel        = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
   fGenie 			= p.get<bool>("Genie", true);
@@ -508,6 +511,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_n_primary_razzled_pions_thresh", &slc_n_primary_razzled_pions_thresh);
   fEventTree->Branch("slc_n_primary_razzled_protons", &slc_n_primary_razzled_protons);
   fEventTree->Branch("slc_n_primary_razzled_protons_thresh", &slc_n_primary_razzled_protons_thresh);
+  fEventTree->Branch("slc_n_stub", &slc_n_stub);
   
   
   //Event Tree: Slice Truth
@@ -692,7 +696,7 @@ void sbnd::HNLPiZeroAnalysis::analyze(art::Event const& e)
   // Get OpFlashes
   art::Handle<std::vector<recob::OpFlash>> opflashListHandle; // 2 opflashes objects, one for each TPC
 
-  std::cout<<"Saving OpFlashes..."<<std::endl;
+  if (fDebug) std::cout<<"Saving OpFlashes..."<<std::endl;
   _flash_id.clear();
   _flash_time.clear();
   _flash_total_pe.clear();
@@ -702,33 +706,33 @@ void sbnd::HNLPiZeroAnalysis::analyze(art::Event const& e)
   _flash_yerr.clear();
   _flash_z.clear();
   _flash_zerr.clear();
-    for (size_t s = 0; s < fOpFlashesModuleLabel.size(); s++) 
+
+  for (size_t s = 0; s < fOpFlashesModuleLabel.size(); s++) 
+  {
+    if (fDebug) std::cout<<"  --OpFlash Module Label:"<<fOpFlashesModuleLabel[s]<<std::endl;
+    e.getByLabel(fOpFlashesModuleLabel[s], opflashListHandle);
+    if(!opflashListHandle.isValid())
     {
-      std::cout<<"  --OpFlash Module Label:"<<fOpFlashesModuleLabel[s]<<std::endl;
-      e.getByLabel(fOpFlashesModuleLabel[s], opflashListHandle);
-      if(!opflashListHandle.isValid())
+      if (fDebug) std::cout<<"Did not find any OpFlash for label "<<fOpFlashesModuleLabel[s]<<std::endl;
+    }
+    else
+    {
+      for (unsigned int i = 0; i < opflashListHandle->size(); ++i) 
       {
-        std::cout<<"Did not find any OpFlash for label "<<fOpFlashesModuleLabel[s]<<std::endl;
-      }
-      else
-      {
-        for (unsigned int i = 0; i < opflashListHandle->size(); ++i) 
-        {
-          // Get OpFlash
-          art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
-          recob::OpFlash Flash = *FlashPtr;
-          _flash_time.push_back( Flash.AbsTime() );
-          _flash_total_pe.push_back( Flash.TotalPE() );
-          _flash_pe_v.push_back( Flash.PEs() );
-          _flash_tpc.push_back( s );
-          _flash_y.push_back( Flash.YCenter() );
-          _flash_yerr.push_back( Flash.YWidth() );
-          _flash_z.push_back( Flash.ZCenter() );
-          _flash_zerr.push_back( Flash.ZWidth() );
-        }
+        // Get OpFlash
+        art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
+        recob::OpFlash Flash = *FlashPtr;
+        _flash_time.push_back( Flash.AbsTime() );
+        _flash_total_pe.push_back( Flash.TotalPE() );
+        _flash_pe_v.push_back( Flash.PEs() );
+        _flash_tpc.push_back( s );
+        _flash_y.push_back( Flash.YCenter() );
+        _flash_yerr.push_back( Flash.YWidth() );
+        _flash_z.push_back( Flash.ZCenter() );
+        _flash_zerr.push_back( Flash.ZWidth() );
       }
     }
-
+  }
 
   SetupMaps(e, hitHandle, pfpHandle);
   AnalyseMeVPrtlTruth(e, mevptHandle);
@@ -860,6 +864,7 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_n_primary_razzled_pions_thresh.clear(); 
   slc_n_primary_razzled_protons.clear();
   slc_n_primary_razzled_protons_thresh.clear(); 
+  slc_n_stub.clear();
 
   slc_comp.clear();
   slc_pur.clear();
@@ -1325,7 +1330,8 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice1DVector(const int col){
   slc_n_primary_razzled_pions_thresh.resize(col);
   slc_n_primary_razzled_protons.resize(col);
   slc_n_primary_razzled_protons_thresh.resize(col);
-  
+  slc_n_stub.resize(col);
+
   slc_comp.resize(col, -999);
   slc_pur.resize(col, -999);
   slc_true_mctruth_id.resize(col, -999);
@@ -1541,8 +1547,9 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
   art::FindManyP<recob::PFParticle> slicesToPFPs(sliceHandle, e, fPFParticleModuleLabel);
   art::FindOneP<recob::Vertex>      pfpToVertices(pfpHandle, e, fVertexModuleLabel);
   art::FindOneP<sbn::CRUMBSResult>  slicesToCRUMBS(sliceHandle, e, fCRUMBSModuleLabel);
-  art::FindManyP<sbn::OpT0Finder>  slicesToOpT0(sliceHandle, e, fOpT0ModuleLabel);
-
+  art::FindManyP<sbn::OpT0Finder>   slicesToOpT0(sliceHandle, e, fOpT0ModuleLabel);
+  art::FindManyP<sbn::Stub> 	    slicesToStubs(sliceHandle, e, fStubModuleLabel);
+  
   for (auto&& [slcCounter, slc] : enumerate(sliceVec))
   {
     const std::vector<art::Ptr<recob::PFParticle>> pfps = slicesToPFPs.at(slc.key());
@@ -1587,6 +1594,32 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
       slc_crumbs_ccnue_score[slcCounter] = crumbs->ccnuescore;  
     }
 
+    std::vector<art::Ptr<sbn::Stub>> stubsVec;
+    if (slicesToStubs.isValid()) {
+      stubsVec = slicesToStubs.at(0);
+    } 
+
+    // Lookup stubs to overlaid PFP
+    art::FindManyP<recob::PFParticle> stubsToPFPs(stubsVec, e, fStubModuleLabel);
+
+    int nstub = 0;
+
+    for (size_t iStub = 0; iStub < stubsVec.size(); iStub++) {
+
+      //const sbn::Stub &thisStub = *stubsVec[iStub];
+
+      art::Ptr<recob::PFParticle> thisStubPFP;
+      if (!stubsToPFPs.at(iStub).empty()) thisStubPFP = stubsToPFPs.at(iStub).at(0);
+
+      for(auto&& [pfpCounter, id]: enumerate(prim->Daughters())){
+	if (thisStubPFP->Self() == id) {
+	  nstub++;
+	  break;
+	}
+      }
+    }
+    slc_n_stub[slcCounter] = nstub;
+
     std::vector<art::Ptr<sbn::OpT0Finder>> opT0Vec = slicesToOpT0.at(slc.key());
     if(opT0Vec.size() > 0)
     {
@@ -1613,7 +1646,8 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
 					const art::Ptr<recob::Vertex> &vtx, 
 					const art::Handle<std::vector<recob::PFParticle>> &pfpHandle, 
 					const art::Handle<std::vector<recob::Track>> &trackHandle,
-                                        const art::Handle<std::vector<recob::Shower>> &showerHandle)
+                                        const art::Handle<std::vector<recob::Shower>> &showerHandle
+					)
 {
 
   if(fDebug){
@@ -1625,9 +1659,10 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
   art::FindOneP<larpandoraobj::PFParticleMetadata> pfpToMeta(pfpHandle, e, fPFParticleModuleLabel);
   art::FindManyP<recob::Hit>                       showersToHits(showerHandle, e, fShowerModuleLabel);
-  //art::FindOneP<sbn::PFPCNNScore> 		   pfpToCNNScore(pfpHandle, e, fCNNScoreModuleLabel);
   art::FindOneP<sbn::MVAPID>                       pfpToRazzled(pfpHandle, e, fRazzledModuleLabel);
   art::FindManyP<recob::SpacePoint>                pfpToSpacePoints(pfpHandle, e, fSpacePointModuleLabel);
+  art::FindOneP<sbn::PFPCNNScore> 		   pfpToCNNScore(pfpHandle, e, fCNNScoreModuleLabel);
+  art::FindManyP<sbn::Stub> 			   pfpToStub(pfpHandle, e, fStubModuleLabel);
 
   int ntrks = 0, nshws = 0, ndazzlemuons = 0, ndazzlepions = 0, ndazzlepionsthresh = 0, ndazzleprotons = 0,
     ndazzleprotonsthresh = 0, ndazzleother = 0, nrazzleelectrons = 0, nrazzlephotons = 0, nrazzleother = 0,
@@ -1698,9 +1733,8 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
     slc_pfp_comp[slcCounter][pfpCounter] = Completeness(e, hits, trackID);
     slc_pfp_pur[slcCounter][pfpCounter] = Purity(e, hits, trackID);
 
-    //std::cout << "slice clear cosmics? = " << slc_is_clear_cosmics[slcCounter] << std::endl;
-    //std::cout << "pfp2cnn valid? = " << pfpToCNNScore.isValid() << std::endl;
     // TODO: Why Seg Fault?
+    //std::cout << "pfp2cnn valid? = " << pfpToCNNScore.isValid() << std::endl;
     //if(pfpToCNNScore.isValid() && !slc_is_clear_cosmics[slcCounter]){
     //  const sbn::PFPCNNScore *cnnscore = pfpToCNNScore.at(id).get();
     //  ExtractCNNScores(cnnscore, slcCounter, pfpCounter);
