@@ -19,3 +19,4 @@ art_make(
 install_fhicl()
 
 add_subdirectory(SecondShower)
+add_subdirectory(ShowerEnergyCorrection)
