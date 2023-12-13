@@ -21,6 +21,8 @@
 #include "canvas/Persistency/Provenance/ProcessHistory.h"
 
 #include "TTree.h"
+#include "TProfile.h"
+#include "TFile.h"
 
 #include "nusimdata/SimulationBase/MCParticle.h"
 
@@ -93,8 +95,6 @@ public:
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
                  const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
 
-  int GetTotalGenEvents(const art::Event &e);
-
   void SetupBranches(VecVarMap &map);
 
   void ResizeVectors(VecVarMap &map, const int size);
@@ -143,7 +143,8 @@ public:
                                const int counter, const std::vector<int> slc_ids);
 
   void ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
-                              const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1);
+                              const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1,
+                              const double &en0Corr, const double &en1Corr);
 
   void ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter);
 
@@ -153,14 +154,18 @@ public:
   bool VolumeCheck(const geo::Point_t &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
   bool VolumeCheck(const TVector3 &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
 
+  int GetTotalGenEvents(const art::Event &e);
+
+  art::Ptr<recob::PFParticle> GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfps);
+
+  double CorrectEnergy(const double &energy);
+
   template<typename T>
   void FillElement(VecVar *vec, const int pos, const T value);
   template<typename T>
   void FillElement(VecVar *vec, const int posA, const int posB, const T value);
   template<typename T>
   void FillElement(VecVar *vec, const int pos, const std::vector<T> &value);
-
-  art::Ptr<recob::PFParticle> GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfps);
 
   void TransferElement(VecVar *var, VecVarMap &vars, const std::string prefixA, const std::string prefixB, const int posA, const int posB);
   void TransferElement(VecVar *var, VecVarMap &vars, const std::string prefixA, const std::string prefixB,
@@ -193,6 +198,9 @@ private:
   fhicl::ParameterSet fSecondShowerFinderAlgParams;
 
   SecondShowerFinderAlg fSecondShowerFinderAlg;
+
+  std::string fShowerEnergyCorrectionFileName;
+  TProfile* fShowerEnergyCorrectionHist;
 
   std::map<int, int> fHitsMap;
   std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap;
@@ -304,6 +312,21 @@ private:
     { "nu_best_slc_best_pzc_cos_theta_pizero", new InhVecVar<double>("nu_best_slc_best_pzc_cos_theta_pizero") },
     { "nu_best_slc_best_pzc_cos_com", new InhVecVar<double>("nu_best_slc_best_pzc_cos_com") },
     { "nu_best_slc_best_pzc_decay_asymmetry", new InhVecVar<double>("nu_best_slc_best_pzc_decay_asymmetry") },
+    { "nu_best_slc_best_pzc_invariant_mass_corr", new InhVecVar<double>("nu_best_slc_best_pzc_invariant_mass_corr") },
+    { "nu_best_slc_best_pzc_pizero_mom_corr", new InhVecVar<double>("nu_best_slc_best_pzc_pizero_mom_corr") },
+    { "nu_best_slc_best_pzc_cos_theta_pizero_corr", new InhVecVar<double>("nu_best_slc_best_pzc_cos_theta_pizero_corr") },
+    { "nu_best_slc_best_pzc_cos_com_corr", new InhVecVar<double>("nu_best_slc_best_pzc_cos_com_corr") },
+    { "nu_best_slc_best_pzc_decay_asymmetry_corr", new InhVecVar<double>("nu_best_slc_best_pzc_decay_asymmetry_corr") },
+    { "nu_best_slc_best_corr_pzc_invariant_mass", new InhVecVar<double>("nu_best_slc_best_corr_pzc_invariant_mass") },
+    { "nu_best_slc_best_corr_pzc_pizero_mom", new InhVecVar<double>("nu_best_slc_best_corr_pzc_pizero_mom") },
+    { "nu_best_slc_best_corr_pzc_cos_theta_pizero", new InhVecVar<double>("nu_best_slc_best_corr_pzc_cos_theta_pizero") },
+    { "nu_best_slc_best_corr_pzc_cos_com", new InhVecVar<double>("nu_best_slc_best_corr_pzc_cos_com") },
+    { "nu_best_slc_best_corr_pzc_decay_asymmetry", new InhVecVar<double>("nu_best_slc_best_corr_pzc_decay_asymmetry") },
+    { "nu_best_slc_best_corr_pzc_invariant_mass_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_invariant_mass_corr") },
+    { "nu_best_slc_best_corr_pzc_pizero_mom_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_pizero_mom_corr") },
+    { "nu_best_slc_best_corr_pzc_cos_theta_pizero_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_cos_theta_pizero_corr") },
+    { "nu_best_slc_best_corr_pzc_cos_com_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_cos_com_corr") },
+    { "nu_best_slc_best_corr_pzc_decay_asymmetry_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_decay_asymmetry_corr") },
   };
 
   int _n_slc;
@@ -475,6 +498,7 @@ private:
     { "slc_pfp_shower_length", new InhVecVecVar<double>("slc_pfp_shower_length") },
     { "slc_pfp_shower_open_angle", new InhVecVecVar<double>("slc_pfp_shower_open_angle") },
     { "slc_pfp_shower_energy", new InhVecVecVar<double>("slc_pfp_shower_energy") },
+    { "slc_pfp_shower_energy_corr", new InhVecVecVar<double>("slc_pfp_shower_energy_corr") },
     { "slc_pfp_shower_dedx", new InhVecVecVar<double>("slc_pfp_shower_dedx") },
     { "slc_pfp_shower_sqrt_energy_density", new InhVecVecVar<double>("slc_pfp_shower_sqrt_energy_density") },
     { "slc_pfp_shower_modified_hit_density", new InhVecVecVar<double>("slc_pfp_shower_modified_hit_density") },
@@ -502,6 +526,11 @@ private:
     { "slc_pzc_cos_theta_pizero", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero") },
     { "slc_pzc_cos_com", new InhVecVecVar<double>("slc_pzc_cos_com") },
     { "slc_pzc_decay_asymmetry", new InhVecVecVar<double>("slc_pzc_decay_asymmetry") },
+    { "slc_pzc_invariant_mass_corr", new InhVecVecVar<double>("slc_pzc_invariant_mass_corr") },
+    { "slc_pzc_pizero_mom_corr", new InhVecVecVar<double>("slc_pzc_pizero_mom_corr") },
+    { "slc_pzc_cos_theta_pizero_corr", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero_corr") },
+    { "slc_pzc_cos_com_corr", new InhVecVecVar<double>("slc_pzc_cos_com_corr") },
+    { "slc_pzc_decay_asymmetry_corr", new InhVecVecVar<double>("slc_pzc_decay_asymmetry_corr") },
     { "slc_pzc_photon_0_true_trackid", new InhVecVecVar<int>("slc_pzc_photon_0_true_trackid") },
     { "slc_pzc_photon_0_true_pdg", new InhVecVecVar<int>("slc_pzc_photon_0_true_pdg") },
     { "slc_pzc_photon_0_comp", new InhVecVecVar<float>("slc_pzc_photon_0_comp") },
@@ -518,6 +547,22 @@ private:
     { "slc_best_pzc_cos_theta_pizero", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero") },
     { "slc_best_pzc_cos_com", new InhVecVar<double>("slc_best_pzc_cos_com") },
     { "slc_best_pzc_decay_asymmetry", new InhVecVar<double>("slc_best_pzc_decay_asymmetry") },
+    { "slc_best_pzc_invariant_mass_corr", new InhVecVar<double>("slc_best_pzc_invariant_mass_corr") },
+    { "slc_best_pzc_pizero_mom_corr", new InhVecVar<double>("slc_best_pzc_pizero_mom_corr") },
+    { "slc_best_pzc_cos_theta_pizero_corr", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero_corr") },
+    { "slc_best_pzc_cos_com_corr", new InhVecVar<double>("slc_best_pzc_cos_com_corr") },
+    { "slc_best_pzc_decay_asymmetry_corr", new InhVecVar<double>("slc_best_pzc_decay_asymmetry_corr") },
+    { "slc_best_corr_pzc_good_kinematics", new InhVecVar<bool>("slc_best_corr_pzc_good_kinematics") },
+    { "slc_best_corr_pzc_invariant_mass", new InhVecVar<double>("slc_best_corr_pzc_invariant_mass") },
+    { "slc_best_corr_pzc_pizero_mom", new InhVecVar<double>("slc_best_corr_pzc_pizero_mom") },
+    { "slc_best_corr_pzc_cos_theta_pizero", new InhVecVar<double>("slc_best_corr_pzc_cos_theta_pizero") },
+    { "slc_best_corr_pzc_cos_com", new InhVecVar<double>("slc_best_corr_pzc_cos_com") },
+    { "slc_best_corr_pzc_decay_asymmetry", new InhVecVar<double>("slc_best_corr_pzc_decay_asymmetry") },
+    { "slc_best_corr_pzc_invariant_mass_corr", new InhVecVar<double>("slc_best_corr_pzc_invariant_mass_corr") },
+    { "slc_best_corr_pzc_pizero_mom_corr", new InhVecVar<double>("slc_best_corr_pzc_pizero_mom_corr") },
+    { "slc_best_corr_pzc_cos_theta_pizero_corr", new InhVecVar<double>("slc_best_corr_pzc_cos_theta_pizero_corr") },
+    { "slc_best_corr_pzc_cos_com_corr", new InhVecVar<double>("slc_best_corr_pzc_cos_com_corr") },
+    { "slc_best_corr_pzc_decay_asymmetry_corr", new InhVecVar<double>("slc_best_corr_pzc_decay_asymmetry_corr") },
     { "slc_best_pzc_photon_0_true_trackid", new InhVecVar<int>("slc_best_pzc_photon_0_true_trackid") },
     { "slc_best_pzc_photon_0_true_pdg", new InhVecVar<int>("slc_best_pzc_photon_0_true_pdg") },
     { "slc_best_pzc_photon_0_comp", new InhVecVar<float>("slc_best_pzc_photon_0_comp") },
@@ -676,38 +721,37 @@ private:
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
-  , fMCParticleModuleLabel      (p.get<art::InputTag>("MCParticleModuleLabel"))
-  , fSliceModuleLabel           (p.get<art::InputTag>("SliceModuleLabel"))
-  , fPFParticleModuleLabel      (p.get<art::InputTag>("PFParticleModuleLabel"))
-  , fVertexModuleLabel          (p.get<art::InputTag>("VertexModuleLabel"))
-  , fHitModuleLabel             (p.get<art::InputTag>("HitModuleLabel"))
-  , fTrackModuleLabel           (p.get<art::InputTag>("TrackModuleLabel"))
-  , fShowerModuleLabel          (p.get<art::InputTag>("ShowerModuleLabel"))
-  , fTrackCalorimetryModuleLabel(p.get<art::InputTag>("TrackCalorimetryModuleLabel"))
-  , fCRUMBSModuleLabel          (p.get<art::InputTag>("CRUMBSModuleLabel"))
-  , fDazzleModuleLabel          (p.get<art::InputTag>("DazzleModuleLabel"))
-  , fCaloModuleLabel            (p.get<art::InputTag>("CaloModuleLabel"))
-  , fMCSModuleLabel             (p.get<art::InputTag>("MCSModuleLabel"))
-  , fChi2ModuleLabel            (p.get<art::InputTag>("Chi2ModuleLabel"))
-  , fRangeModuleLabel           (p.get<art::InputTag>("RangeModuleLabel"))
-  , fClosestApproachModuleLabel (p.get<art::InputTag>("ClosestApproachModuleLabel"))
-  , fStoppingChi2ModuleLabel    (p.get<art::InputTag>("StoppingChi2ModuleLabel"))
-  , fRazzleModuleLabel          (p.get<art::InputTag>("RazzleModuleLabel"))
-  , fCosmicDistModuleLabel      (p.get<art::InputTag>("CosmicDistModuleLabel"))
-  , fShowerTrackFitModuleLabel  (p.get<art::InputTag>("ShowerTrackFitModuleLabel"))
-  , fShowerDensityFitModuleLabel(p.get<art::InputTag>("ShowerDensityFitModuleLabel"))
-  , fPOTModuleLabel             (p.get<art::InputTag>("POTModuleLabel"))
-  , fOpT0ModuleLabel            (p.get<art::InputTag>("OpT0ModuleLabel"))
-  , fRazzledModuleLabel         (p.get<art::InputTag>("RazzledModuleLabel"))
-  , fSpacePointModuleLabel      (p.get<art::InputTag>("SpacePointModuleLabel"))
-  , fEventWeightModuleLabels    (p.get<std::vector<art::InputTag>>("EventWeightModuleLabels"))
-  , fDebug                      (p.get<bool>("Debug", false))
-  , fBeamOff                    (p.get<bool>("BeamOff", false))
-  , fSecondShowerFinderAlgParams(p.get<fhicl::ParameterSet>("SecondShowerFinderAlg"))
-
-  , fSecondShowerFinderAlg(fSecondShowerFinderAlgParams)
+  , fMCParticleModuleLabel          (p.get<art::InputTag>("MCParticleModuleLabel"))
+  , fSliceModuleLabel               (p.get<art::InputTag>("SliceModuleLabel"))
+  , fPFParticleModuleLabel          (p.get<art::InputTag>("PFParticleModuleLabel"))
+  , fVertexModuleLabel              (p.get<art::InputTag>("VertexModuleLabel"))
+  , fHitModuleLabel                 (p.get<art::InputTag>("HitModuleLabel"))
+  , fTrackModuleLabel               (p.get<art::InputTag>("TrackModuleLabel"))
+  , fShowerModuleLabel              (p.get<art::InputTag>("ShowerModuleLabel"))
+  , fTrackCalorimetryModuleLabel    (p.get<art::InputTag>("TrackCalorimetryModuleLabel"))
+  , fCRUMBSModuleLabel              (p.get<art::InputTag>("CRUMBSModuleLabel"))
+  , fDazzleModuleLabel              (p.get<art::InputTag>("DazzleModuleLabel"))
+  , fCaloModuleLabel                (p.get<art::InputTag>("CaloModuleLabel"))
+  , fMCSModuleLabel                 (p.get<art::InputTag>("MCSModuleLabel"))
+  , fChi2ModuleLabel                (p.get<art::InputTag>("Chi2ModuleLabel"))
+  , fRangeModuleLabel               (p.get<art::InputTag>("RangeModuleLabel"))
+  , fClosestApproachModuleLabel     (p.get<art::InputTag>("ClosestApproachModuleLabel"))
+  , fStoppingChi2ModuleLabel        (p.get<art::InputTag>("StoppingChi2ModuleLabel"))
+  , fRazzleModuleLabel              (p.get<art::InputTag>("RazzleModuleLabel"))
+  , fCosmicDistModuleLabel          (p.get<art::InputTag>("CosmicDistModuleLabel"))
+  , fShowerTrackFitModuleLabel      (p.get<art::InputTag>("ShowerTrackFitModuleLabel"))
+  , fShowerDensityFitModuleLabel    (p.get<art::InputTag>("ShowerDensityFitModuleLabel"))
+  , fPOTModuleLabel                 (p.get<art::InputTag>("POTModuleLabel"))
+  , fOpT0ModuleLabel                (p.get<art::InputTag>("OpT0ModuleLabel"))
+  , fRazzledModuleLabel             (p.get<art::InputTag>("RazzledModuleLabel"))
+  , fSpacePointModuleLabel          (p.get<art::InputTag>("SpacePointModuleLabel"))
+  , fEventWeightModuleLabels        (p.get<std::vector<art::InputTag>>("EventWeightModuleLabels"))
+  , fDebug                          (p.get<bool>("Debug", false))
+  , fBeamOff                        (p.get<bool>("BeamOff", false))
+  , fSecondShowerFinderAlgParams    (p.get<fhicl::ParameterSet>("SecondShowerFinderAlg"))
+  , fSecondShowerFinderAlg          (fSecondShowerFinderAlgParams)
+  , fShowerEnergyCorrectionFileName (p.get<std::string>("ShowerEnergyCorrectionFileName"))
   {
-
     for(auto const& name : flux_weight_names)
       {
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
@@ -719,6 +763,16 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
       }
+
+
+    cet::search_path sp("FW_SEARCH_PATH");
+    std::string showerEnergyCorrectionFileFullPath;
+    if (!sp.find_file(fShowerEnergyCorrectionFileName, showerEnergyCorrectionFileFullPath))
+      throw cet::exception("NCPiZeroAnalysis") << "Could not find shower energy correction file: \n"
+                                               << fShowerEnergyCorrectionFileName;
+
+    TFile* file = TFile::Open(showerEnergyCorrectionFileFullPath.c_str());
+    fShowerEnergyCorrectionHist = (TProfile*) file->Get("hShowerEnergy2DRecoFractionalResolution_pfx");
 
     art::ServiceHandle<art::TFileService> fs;
 
@@ -1897,6 +1951,7 @@ void sbnd::NCPiZeroAnalysis::ExtractCalo(const art::Ptr<recob::Shower> &shower, 
   int bestPlane = shower->best_plane();
 
   FillElement(slcVars["slc_pfp_shower_energy"], slcCounter, pfpCounter, shower->Energy()[bestPlane]);
+  FillElement(slcVars["slc_pfp_shower_energy_corr"], slcCounter, pfpCounter, CorrectEnergy(shower->Energy()[bestPlane]));
   FillElement(slcVars["slc_pfp_shower_dedx"], slcCounter, pfpCounter, shower->dEdx()[bestPlane]);
 
   const double length      = shower->Length();
@@ -2051,7 +2106,7 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
   std::vector<std::vector<bool>> slc_pfp_primary_child;
   std::vector<std::vector<int>> slc_pfp_razzled_pdg;
   std::vector<std::vector<double>> slc_pfp_shower_dir_x, slc_pfp_shower_dir_y, slc_pfp_shower_dir_z,
-    slc_pfp_shower_energy, slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
+    slc_pfp_shower_energy, slc_pfp_shower_energy_corr, slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
   std::vector<std::vector<float>> slc_pfp_track_ke;
 
   GetVar(slcVars["slc_pfp_primary_child"], slc_pfp_primary_child);
@@ -2060,6 +2115,7 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
   GetVar(slcVars["slc_pfp_shower_dir_y"], slc_pfp_shower_dir_y);
   GetVar(slcVars["slc_pfp_shower_dir_z"], slc_pfp_shower_dir_z);
   GetVar(slcVars["slc_pfp_shower_energy"], slc_pfp_shower_energy);
+  GetVar(slcVars["slc_pfp_shower_energy_corr"], slc_pfp_shower_energy_corr);
   GetVar(slcVars["slc_pfp_track_dir_x"], slc_pfp_track_dir_x);
   GetVar(slcVars["slc_pfp_track_dir_y"], slc_pfp_track_dir_y);
   GetVar(slcVars["slc_pfp_track_dir_z"], slc_pfp_track_dir_z);
@@ -2117,15 +2173,18 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
                   const double shwEn0 = slc_pfp_shower_energy.at(slc_id_a).at(ii);
                   const double shwEn1 = slc_pfp_shower_energy.at(slc_id_b).at(jj);
 
+                  const double shwEn0Corr = slc_pfp_shower_energy_corr.at(slc_id_a).at(ii);
+                  const double shwEn1Corr = slc_pfp_shower_energy_corr.at(slc_id_b).at(jj);
+
                   const double trkEn0 = slc_pfp_track_ke.at(slc_id_a).at(ii);
                   const double trkEn1 = slc_pfp_track_ke.at(slc_id_b).at(jj);
 
                   if(!(shwDir0.X() == -999 || shwDir1.X() == -999 || shwEn0 < 0 || shwEn1 < 0))
-                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1);
+                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1, shwEn0Corr, shwEn1Corr);
                   else if(!(trkDir0.X() == -999 || trkDir1.X() == -999 || trkEn0 < 0 || trkEn1 < 0))
-                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, trkDir0, trkDir1, trkEn0, trkEn1);
+                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, trkDir0, trkDir1, trkEn0, trkEn1, trkEn0, trkEn1);
                   else
-                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1);
+                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1, shwEn0Corr, shwEn1Corr);
 
                   ++pzcCounter;
                 }
@@ -2137,7 +2196,8 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
 }
 
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
-                                                    const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1)
+                                                    const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1,
+                                                    const double &en0Corr, const double &en1Corr)
 {
   const bool goodKinematics = !(dir0.X() == -999 || dir1.X() == -999 || en0 < 0 || en1 < 0);
 
@@ -2150,24 +2210,42 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   const double cosCOM         = std::abs(en0 - en1) / pizeroMom;
   const double decayAsym      = std::abs(en0 - en1) / (en0 + en1);
 
+  const TVector3 pizeroDirCorr       = (en0Corr * dir0) + (en1Corr * dir1);
+
+  const double invariantMassCorr  = sqrt(2 * en0Corr * en1Corr * (1 - cosineThetaGammaGamma));
+  const double pizeroMomCorr      = pizeroDirCorr.Mag();
+  const double pizeroCosThetaCorr = pizeroDirCorr.Z() / pizeroMomCorr;
+  const double cosCOMCorr         = std::abs(en0Corr - en1Corr) / pizeroMomCorr;
+  const double decayAsymCorr      = std::abs(en0Corr - en1Corr) / (en0Corr + en1Corr);
+
   FillElement(vars[prefix + "_pzc_good_kinematics"], counter, pzcCounter, goodKinematics);
   FillElement(vars[prefix + "_pzc_invariant_mass"], counter, pzcCounter, invariantMass);
   FillElement(vars[prefix + "_pzc_pizero_mom"], counter, pzcCounter, pizeroMom);
   FillElement(vars[prefix + "_pzc_cos_theta_pizero"], counter, pzcCounter, pizeroCosTheta);
   FillElement(vars[prefix + "_pzc_cos_com"], counter, pzcCounter, cosCOM);
   FillElement(vars[prefix + "_pzc_decay_asymmetry"], counter, pzcCounter, decayAsym);
+  FillElement(vars[prefix + "_pzc_invariant_mass_corr"], counter, pzcCounter, invariantMassCorr);
+  FillElement(vars[prefix + "_pzc_pizero_mom_corr"], counter, pzcCounter, pizeroMomCorr);
+  FillElement(vars[prefix + "_pzc_cos_theta_pizero_corr"], counter, pzcCounter, pizeroCosThetaCorr);
+  FillElement(vars[prefix + "_pzc_cos_com_corr"], counter, pzcCounter, cosCOMCorr);
+  FillElement(vars[prefix + "_pzc_decay_asymmetry_corr"], counter, pzcCounter, decayAsymCorr);
 }
 
 void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter)
 {
   std::vector<std::vector<bool>> pzc_good_kinematics;
   std::vector<std::vector<double>> pzc_invariant_mass;
+  std::vector<std::vector<double>> pzc_invariant_mass_corr;
 
   GetVar(vars[prefix + "_pzc_good_kinematics"], pzc_good_kinematics);
   GetVar(vars[prefix + "_pzc_invariant_mass"], pzc_invariant_mass);
+  GetVar(vars[prefix + "_pzc_invariant_mass_corr"], pzc_invariant_mass_corr);
 
   double bestInvMass = std::numeric_limits<double>::max();
   size_t bestID = std::numeric_limits<size_t>::max();
+
+  double bestInvMassCorr = std::numeric_limits<double>::max();
+  size_t bestIDCorr = std::numeric_limits<size_t>::max();
 
   for(size_t i = 0; i < pzc_invariant_mass.at(counter).size(); ++i)
     {
@@ -2175,6 +2253,12 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
         {
           bestInvMass = abs(134.9769 - pzc_invariant_mass.at(counter).at(i));
           bestID = i;
+        }
+
+      if(pzc_good_kinematics.at(counter).at(i) && abs(134.9769 - pzc_invariant_mass_corr.at(counter).at(i)) < bestInvMassCorr)
+        {
+          bestInvMassCorr = abs(134.9769 - pzc_invariant_mass_corr.at(counter).at(i));
+          bestIDCorr = i;
         }
     }
 
@@ -2189,6 +2273,19 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
   else
     {
       FillElement(vars[prefix + "_best_pzc_good_kinematics"], counter, false);
+    }
+
+  if(bestIDCorr != std::numeric_limits<size_t>::max())
+    {
+      for(auto& [varName, var] : vars)
+        {
+          if(varName.find(prefix + "_best_corr_pzc") != std::string::npos)
+            TransferElement(var, slcVars, prefix + "_best_corr_pzc", prefix + "_pzc", counter, counter, bestIDCorr);
+        }
+    }
+  else
+    {
+      FillElement(vars[prefix + "_best_corr_pzc_good_kinematics"], counter, false);
     }
 }
 
@@ -2259,6 +2356,22 @@ int sbnd::NCPiZeroAnalysis::GetTotalGenEvents(const art::Event &e)
   }
 
   return nGenEvt;
+}
+
+art::Ptr<recob::PFParticle> sbnd::NCPiZeroAnalysis::GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfps)
+{
+  for(auto pfp : pfps)
+    if(pfp->IsPrimary())
+      return pfp;
+
+  return art::Ptr<recob::PFParticle>();
+}
+
+double sbnd::NCPiZeroAnalysis::CorrectEnergy(const double &energy)
+{
+  const int bin = fShowerEnergyCorrectionHist->FindBin(energy);
+
+  return energy * (1 - fShowerEnergyCorrectionHist->GetBinContent(bin));
 }
 
 void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
@@ -2473,15 +2586,6 @@ template<typename T>
 void sbnd::NCPiZeroAnalysis::FillElement(VecVar *vec, const int posA, const int posB, const T value)
 {
   dynamic_cast<InhVecVecVar<T>*>(vec)->SetVal(posA, posB, value);
-}
-
-art::Ptr<recob::PFParticle> sbnd::NCPiZeroAnalysis::GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfps)
-{
-  for(auto pfp : pfps)
-    if(pfp->IsPrimary())
-      return pfp;
-
-  return art::Ptr<recob::PFParticle>();
 }
 
 template<typename T>
