@@ -403,7 +403,7 @@ void RecoEff::TruthProcessor(art::Event const &e)
 
       for(auto particle : particles)
         {
-          if((particle->Mother() != 0 && particle->Mother() != 10000000) || particle->StatusCode() != 1)
+          if(particle->Process() != "primary" || particle->StatusCode() != 1)
             continue;
 
           if(particle->PdgCode() == 111)
