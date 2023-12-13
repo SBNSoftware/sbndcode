@@ -195,6 +195,9 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergy2DRecoFractionalResolutionProfile->cd();
   cShowerEnergy2DRecoFractionalResolutionProfile->SetRightMargin(.2);
 
+  const TString outFileName = saveDir + "/shower_energy_correction_hist.root";
+  TFile *outFile = new TFile(outFileName, "recreate");
+
   TH1F *hShowerEnergy2DRecoFractionalResolutionProfile = (TH1F*) hShowerEnergy2DRecoFractionalResolution->ProfileX();
 
   hShowerEnergy2DRecoFractionalResolutionProfile->SetLineColor(kMagenta+2);
@@ -202,6 +205,8 @@ void ObservablesResolution(const TString productionVersion)
 
   cShowerEnergy2DRecoFractionalResolutionProfile->SaveAs(saveDir + "/shower_energy_twod_reco_fractional_resolution_profile.pdf");
   cShowerEnergy2DRecoFractionalResolutionProfile->SaveAs(saveDir + "/shower_energy_twod_reco_fractional_resolution_profile.png");
+
+  hShowerEnergy2DRecoFractionalResolutionProfile->Write();
 
   TCanvas *cShowerEnergy2DResolution = new TCanvas("cShowerEnergy2DResolution", "cShowerEnergy2DResolution");
   cShowerEnergy2DResolution->cd();
