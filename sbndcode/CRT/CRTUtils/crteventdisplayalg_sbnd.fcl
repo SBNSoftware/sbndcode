@@ -18,10 +18,10 @@ crteventdisplayalg_sbnd:
     DrawStrips:           true
     DrawCrtHits:          true
     DrawCrtTracks:        true
-    DrawAuxDetHits:       false
-    DrawAuxDetIDEs:       true
+    DrawAuxDetHits:       true
+    DrawAuxDetIDEs:       false
     DrawIncompleteTracks: false
-    DrawInvisibleTracks:  false
+    DrawInvisibleTracks:  true
     DrawTrueTracks:       true
 
     TaggerColour:      1
@@ -30,14 +30,14 @@ crteventdisplayalg_sbnd:
     CrtHitColour:      2
     CrtTrackColour:    2
     TrueTrackColour:   8
-    AuxDetIDEsColour:  8
-    AuxDetHitsColour:  4
+    AuxDetHitsColour:  8
+    AuxDetIDEsColour:  4
 
     UseTrueID:        false
     TrueID:           [341]
 
-    Print:                 true
-    VolumeSizeOffset:      300.
+    Print:                 false
+    VolumeSizeOffset:      500.
     LineWidth:             2.
     IncompleteTrackLength: 500.
     MinTime:               0. #-1276.

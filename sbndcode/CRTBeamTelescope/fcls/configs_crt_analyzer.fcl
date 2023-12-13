@@ -1,0 +1,27 @@
+BEGIN_PROLOG
+
+sbnd_crtana:
+{
+    module_type:    "CRTAnalysis" 
+    POTLabel:       "generator"
+    CRTBackTracker: @local::standard_crtbacktracker
+    SaveMCParticle: true
+    SaveInputFileName: true
+}
+
+sbnd_crtselectionana:
+{
+    module_type:       "SelectionAna" 
+    POTLabel:          "generator"
+    CRTBackTracker:    @local::standard_crtbacktracker
+    SaveInputFileName: true
+    InteractionMode:   0
+}
+
+sbnd_crteventfilter:
+{
+    module_type:    "CRTEventFilter" 
+    AuxDetIDELabel: "crtsim"
+}
+
+END_PROLOG

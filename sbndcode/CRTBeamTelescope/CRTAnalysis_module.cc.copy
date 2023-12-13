@@ -86,20 +86,20 @@ private:
 
   int _run, _subrun, _event;
   std::string _file_name;
-  //char _file_name_char[500];
+  char _file_name_char[500];
   
 
-  std::vector<float> _nu_e; ///< Neutrino energy
-  std::vector<int> _nu_pdg; ///< Neutrino PDG code
-  std::vector<int> _nu_ccnc; ///< 0: CC, 1: NC
-  std::vector<int> _nu_mode; ///< Neutrino interaction mode
-  std::vector<int> _nu_int_type; ///< Neutrino interaction type
-  std::vector<float> _nu_vtx_x; ///< Neutrino vertex X
-  std::vector<float> _nu_vtx_y; ///< Neutrino vertex Y
-  std::vector<float> _nu_vtx_z; ///< Neutrino vertex Z
-  std::vector<float> _nu_px; ///< Neutrino momentum along X
-  std::vector<float> _nu_py; ///< Neutrino momentum along Y
-  std::vector<float> _nu_pz; ///< Neutrino momentum along Z
+  /*float _nu_e; ///< Neutrino energy
+  int _nu_pdg; ///< Neutrino PDG code
+  int _nu_ccnc; ///< 0: CC, 1: NC
+  int _nu_mode; ///< Neutrino interaction mode
+  int _nu_int_type; ///< Neutrino interaction type
+  float _nu_vtx_x; ///< Neutrino vertex X
+  float _nu_vtx_y; ///< Neutrino vertex Y
+  float _nu_vtx_z; ///< Neutrino vertex Z
+  float _nu_px; ///< Neutrino momentum along X
+  float _nu_py; ///< Neutrino momentum along Y
+  float _nu_pz; ///< Neutrino momentum along Z*/
 
   std::vector<int>   _mct_sp_pdg; ///< MCtruth: particle PDG
   std::vector<float> _mct_sp_e;   ///< MCtruth: particle energy
@@ -130,17 +130,10 @@ private:
 
   // geant 4
   std::vector<double> _adh_t;          ///< AuxDetHit time
-  std::vector<double> _adh_t_diff;     ///< AuxDetHit time difference between two hits
   std::vector<double> _adh_deposite_e; ///< AuxDetHit deposited energy
   std::vector<double> _adh_x;          ///< AuxDetHit X
   std::vector<double> _adh_y;          ///< AuxDetHit Y
   std::vector<double> _adh_z;          ///< AuxDetHit Z
-  std::vector<double> _adh_entryX;     ///< AuxDetHit entry X
-  std::vector<double> _adh_entryY;     ///< AuxDetHit entry Y
-  std::vector<double> _adh_entryZ;     ///< AuxDetHit entry Z
-  std::vector<double> _adh_exitX;      ///< AuxDetHit exit X
-  std::vector<double> _adh_exitY;      ///< AuxDetHit exit Y
-  std::vector<double> _adh_exitZ;      ///< AuxDetHit exit Z
   std::vector<double> _adh_p_exit;     ///< AuxDetHit exit momentum
   std::vector<int>    _adh_trackid;    ///< AuxDetHit trackID of MCParticle
   std::vector<int>    _adh_pdg;        ///< AuxDetHit PDG of MCParticle
@@ -304,23 +297,24 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   _tree->Branch("run", &_run, "run/I");
   _tree->Branch("subrun", &_subrun, "subrun/I");
   _tree->Branch("event", &_event, "event/I");
-  if(_save_input_file_name) _tree->Branch("file_name", &_file_name);
+
+  if(_save_input_file_name) _tree->Branch("file_name", &_file_name_char, "file_name/C");
 
   if(!_data_mode){
 
     if (_save_mctruth){
-      _tree->Branch("nu_e", "std::vector<float>", &_nu_e);
-      _tree->Branch("nu_pdg", "std::vector<int>", &_nu_pdg);
-      _tree->Branch("nu_ccnc", "std::vector<int>", &_nu_ccnc);
-      _tree->Branch("nu_mode", "std::vector<int>", &_nu_mode);
-      _tree->Branch("nu_int_type", "std::vector<int>", &_nu_int_type);
-      _tree->Branch("nu_vtx_x", "std::vector<float>", &_nu_vtx_x);
-      _tree->Branch("nu_vtx_y", "std::vector<float>", &_nu_vtx_y);
-      _tree->Branch("nu_vtx_z", "std::vector<float>", &_nu_vtx_z);
-      _tree->Branch("nu_px", "std::vector<float>", &_nu_px);
-      _tree->Branch("nu_py", "std::vector<float>", &_nu_py);
-      _tree->Branch("nu_pz", "std::vector<float>", &_nu_pz);
-      
+      /*_tree->Branch("nu_e", &_nu_e, "nu_e/F");
+      _tree->Branch("nu_pdg", &_nu_pdg, "nu_pdg/I");
+      _tree->Branch("nu_ccnc", &_nu_ccnc, "nu_ccnc/I");
+      _tree->Branch("nu_mode", &_nu_mode, "nu_mode/I");
+      _tree->Branch("nu_int_type", &_nu_int_type, "nu_int_type/I");
+      _tree->Branch("nu_vtx_x", &_nu_vtx_x, "nu_vtx_x/F");
+      _tree->Branch("nu_vtx_y", &_nu_vtx_y, "nu_vtx_y/F");
+      _tree->Branch("nu_vtx_z", &_nu_vtx_z, "nu_vtx_z/F");
+      _tree->Branch("nu_px", &_nu_px, "nu_px/F");
+      _tree->Branch("nu_py", &_nu_py, "nu_py/F");
+      _tree->Branch("nu_pz", &_nu_pz, "nu_pz/F");*/
+
       // MCTruth info for the signal (dark neutrino)
       _tree->Branch("mct_sp_pdg", "std::vector<int>",  &_mct_sp_pdg);
       _tree->Branch("mct_sp_e",  "std::vector<float>", &_mct_sp_e);
@@ -356,18 +350,10 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     }
 
     _tree->Branch("adh_t", "std::vector<double>", &_adh_t);
-    _tree->Branch("adh_t_diff", "std::vector<double>", &_adh_t_diff);
     _tree->Branch("adh_deposite_e", "std::vector<double>", &_adh_deposite_e);
     _tree->Branch("adh_x", "std::vector<double>", &_adh_x);
     _tree->Branch("adh_y", "std::vector<double>", &_adh_y);
     _tree->Branch("adh_z", "std::vector<double>", &_adh_z);
-    _tree->Branch("adh_entryX", "std::vector<double>", &_adh_entryX);
-    _tree->Branch("adh_entryY", "std::vector<double>", &_adh_entryY);
-    _tree->Branch("adh_entryZ", "std::vector<double>", &_adh_entryZ);
-    _tree->Branch("adh_exitX", "std::vector<double>", &_adh_exitX);
-    _tree->Branch("adh_exitY", "std::vector<double>", &_adh_exitY);
-    _tree->Branch("adh_exitZ", "std::vector<double>", &_adh_exitZ);
-    
     _tree->Branch("adh_p_exit", "std::vector<double>", &_adh_p_exit);
     _tree->Branch("adh_trackid", "std::vector<int>", &_adh_trackid);
     _tree->Branch("adh_pdg", "std::vector<int>", &_adh_pdg);
@@ -513,10 +499,10 @@ void CRTAnalysis::analyze(art::Event const& e)
   _subrun = e.id().subRun();
   _event  = e.id().event();
 
-  /*if (_save_input_file_name){
+  if (_save_input_file_name){
     const char* cstring = _file_name.c_str();
     strcpy(_file_name_char, cstring);
-  }*/
+  }
 
   if(_debug) std::cout << "This is event " << _event << std::endl;
 
@@ -630,18 +616,16 @@ void CRTAnalysis::analyze(art::Event const& e)
     _mct_sp_pdg.clear(); _mct_sp_e.clear();
     _mct_sp_px.clear(); _mct_sp_py.clear(); _mct_sp_pz.clear();
     _mct_sp_vx.clear(); _mct_sp_vy.clear(); _mct_sp_vz.clear();
-    _nu_e.clear(); _nu_pdg.clear(); _nu_ccnc.clear(); _nu_mode.clear(); _nu_int_type.clear();
-    _nu_vtx_x.clear(); _nu_vtx_y.clear(); _nu_vtx_z.clear();
-    _nu_px.clear(); _nu_py.clear(); _nu_pz.clear();
     if (_debug) std::cout << "We have " << mct_v.size() << " mctruth events." << std::endl;
 
     for (size_t imct=0; imct< mct_v.size(); imct++){
       auto mct = mct_v[imct];
 
-      std::cout << "We have " << mct->NParticles() << " particles." << std::endl;
+      if (_debug) std::cout << "We have " << mct->NParticles() << " particles." << std::endl;
       for (int ipar = 0; ipar < mct->NParticles(); ipar++) {
         auto particle = mct->GetParticle(ipar);
         if (_signal_mode){ // dark Neutrino .
+          //if (mct->NParticles() > 3) continue;
           assert(mct->NParticles() <= 3); // die if we have more than 3 particles in truth.
           if (ipar<2){
             _mct_sp_pdg.push_back(particle.PdgCode());
@@ -653,14 +637,11 @@ void CRTAnalysis::analyze(art::Event const& e)
             _mct_sp_vy.push_back(particle.Vy());
             _mct_sp_vz.push_back(particle.Vz());
           }else{ // the third particle is used to save dark neutrino info. 
-            std::cout<<"Dark neutrino energy: "<<particle.E()<<std::endl;
             _mct_darkNeutrino_e = particle.E();
             _weight = particle.Vx();
           }
         }else{
           //if (std::abs(particle.PdgCode()) == 13 || std::abs(particle.PdgCode()) == 11) {
-          std::cout<<imct<<"! "<<particle.PdgCode()<<", energy: "<<particle.E()<<", ("<<particle.Vx()<<", "<<particle.Vy()<<", "<<particle.Vz()<<"); momentum: ("<<particle.Px()<<", "<<particle.Py()<<", "<<particle.Pz()<<"); Process: "<<particle.Process()<<"; Status: "<<particle.StatusCode()<<std::endl;
-
           _mct_sp_pdg.push_back(particle.PdgCode());
           _mct_sp_e.push_back(particle.E());
           _mct_sp_px.push_back(particle.Px());
@@ -676,35 +657,34 @@ void CRTAnalysis::analyze(art::Event const& e)
                               << ", y = " << particle.Vy()
                               << ", z = " << particle.Vz() << std::endl;
       }
-      //mct = mct_v[0];
+      /*auto mct = mct_v[0];
       if (mct->Origin() == simb::kBeamNeutrino){
-        _nu_e.push_back(mct->GetNeutrino().Nu().E());
-        _nu_pdg.push_back(mct->GetNeutrino().Nu().PdgCode());
-        _nu_ccnc.push_back(mct->GetNeutrino().CCNC());
-        _nu_mode.push_back(mct->GetNeutrino().Mode());
-        _nu_int_type.push_back(mct->GetNeutrino().InteractionType());
-        _nu_vtx_x.push_back(mct->GetNeutrino().Nu().Vx());
-        _nu_vtx_y.push_back(mct->GetNeutrino().Nu().Vy());
-        _nu_vtx_z.push_back(mct->GetNeutrino().Nu().Vz());
-        _nu_px.push_back(mct->GetNeutrino().Nu().Px());
-        _nu_py.push_back(mct->GetNeutrino().Nu().Py());
-        _nu_pz.push_back(mct->GetNeutrino().Nu().Pz());
-
-        //std::cout<<"Neutrino info! "<<mct->GetNeutrino().Nu().PdgCode()<<"; neutrino energy: "<<mct->GetNeutrino().Nu().E()<<"; position:("<<mct->GetNeutrino().Nu().Vx()<<", "<<mct->GetNeutrino().Nu().Vy()<<", "<<mct->GetNeutrino().Nu().Vz()<<"); momentum: ("<<mct->GetNeutrino().Nu().Px()<<", "<<mct->GetNeutrino().Nu().Py()<<", "<<mct->GetNeutrino().Nu().Pz()<<"); interaction type: "<<mct->GetNeutrino().InteractionType()<<"; interaction mode: "<<mct->GetNeutrino().Mode()<<std::endl;
-      }
+        
+        _nu_e = mct->GetNeutrino().Nu().E();
+        _nu_pdg = mct->GetNeutrino().Nu().PdgCode();
+        _nu_ccnc = mct->GetNeutrino().CCNC();
+        _nu_mode = mct->GetNeutrino().Mode();
+        _nu_int_type = mct->GetNeutrino().InteractionType();
+        _nu_vtx_x = mct->GetNeutrino().Nu().Vx();
+        _nu_vtx_y = mct->GetNeutrino().Nu().Vy();
+        _nu_vtx_z = mct->GetNeutrino().Nu().Vz();
+        _nu_px = mct->GetNeutrino().Nu().Px();
+        _nu_py = mct->GetNeutrino().Nu().Py();
+        _nu_pz = mct->GetNeutrino().Nu().Pz();
+      }*/
     }
 
+
+    
 
     //
     // Fill the AuxDetHits in the tree
     //
     size_t n_adh = adh_v.size();
     if (_debug) std::cout << "n_adh " << n_adh << std::endl;
-    _adh_t.resize(n_adh); _adh_t_diff.resize(n_adh);
+    _adh_t.resize(n_adh);
     _adh_deposite_e.resize(n_adh);
     _adh_x.resize(n_adh); _adh_y.resize(n_adh); _adh_z.resize(n_adh);
-    _adh_entryX.resize(n_adh); _adh_entryY.resize(n_adh); _adh_entryZ.resize(n_adh);
-    _adh_exitX.resize(n_adh);  _adh_exitY.resize(n_adh);  _adh_exitZ.resize(n_adh);
     _adh_p_exit.resize(n_adh);
     _adh_trackid.resize(n_adh); _adh_pdg.resize(n_adh);
     _adh_true_px.resize(n_adh); _adh_true_py.resize(n_adh); _adh_true_pz.resize(n_adh);
@@ -717,21 +697,15 @@ void CRTAnalysis::analyze(art::Event const& e)
       auto auxdethit = adh_v[iadh];
       // if (0.5 * (auxdethit->GetEntryZ() + auxdethit->GetExitZ()) > -164) continue;
       _adh_t[iadh] = 0.5 * (auxdethit->GetEntryT() + auxdethit->GetExitT());
-      _adh_t_diff[iadh] = auxdethit->GetExitT() - auxdethit->GetEntryT();
       _adh_deposite_e[iadh] = auxdethit->GetEnergyDeposited();
       _adh_x[iadh] = 0.5 * (auxdethit->GetEntryX() + auxdethit->GetExitX());
       _adh_y[iadh] = 0.5 * (auxdethit->GetEntryY() + auxdethit->GetExitY());
       _adh_z[iadh] = 0.5 * (auxdethit->GetEntryZ() + auxdethit->GetExitZ());
-      _adh_entryX[iadh]  = auxdethit->GetEntryX(); _adh_entryY[iadh]  = auxdethit->GetEntryY(); _adh_entryZ[iadh]  = auxdethit->GetEntryZ();
-      _adh_exitX[iadh]   = auxdethit->GetExitX();  _adh_exitY[iadh]   = auxdethit->GetExitY();  _adh_exitZ[iadh]   = auxdethit->GetExitZ();
       _adh_p_exit[iadh] = std::sqrt(auxdethit->GetExitMomentumX()*auxdethit->GetExitMomentumX() +
                                     auxdethit->GetExitMomentumY()*auxdethit->GetExitMomentumY() +
                                     auxdethit->GetExitMomentumZ()*auxdethit->GetExitMomentumZ());
       _adh_trackid[iadh] = auxdethit->GetTrackID();
       trackids_from_adh.insert(auxdethit->GetTrackID());
-
-      std::cout<<iadh<<", _adh_t[iadh]: "<<_adh_t[iadh]<<", ("<<_adh_x[iadh]<<", "<<_adh_y[iadh]<<", "<<_adh_z[iadh]<<")"<<std::endl;
-
       for (size_t ipar = 0; ipar < mcp_v.size(); ipar++) { // loop through MCParticle to find the pdg number. 
         auto particle = mcp_v[ipar];
         if (particle->StatusCode() != 1) continue; // Exclude particles that are not propagated
@@ -749,7 +723,6 @@ void CRTAnalysis::analyze(art::Event const& e)
           _adh_true_end_process[iadh] = particle->EndProcess();
           _adh_true_mother_trackID[iadh] = particle->Mother();
           
-          //std::cout<<"ADH! "<<iadh<<", "<<particle->PdgCode()<<", energy: "<<particle->E()<<", ("<<particle->Vx()<<", "<<particle->Vy()<<", "<<particle->Vz()<<"); momentum: ("<<particle->Px()<<", "<<particle->Py()<<", "<<particle->Pz()<<")"<<std::endl;
         }
       }
       if (_debug) std::cout << "Adding adh with track ID " << auxdethit->GetTrackID() << std::endl;
@@ -799,7 +772,8 @@ void CRTAnalysis::analyze(art::Event const& e)
           _adi_true_end_process[iadi] = particle->EndProcess();
         }
       }
-      if (_debug) std::cout << "Adding adh with track ID " << auxdetide->trackID << std::endl;
+      //if (_debug) 
+      std::cout << "Adding adh with track ID " << auxdetide->trackID << std::endl;
     }
 
 
@@ -940,9 +914,6 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_unix_s[i] = hit->ts0_s;
     _chit_pes[i] = hit->peshit;
 
-    std::cout<<i<<"; CRT hit: hit->ts1_ns: "<<hit->ts1_ns-1.7e6<<", hit->ts0_ns_corr: "<<hit->ts0_ns_corr<<std::endl;
-    std::cout<<i<<"; CRT hit: ("<<hit->x_pos<<", "<<hit->y_pos<<", "<<hit->z_pos<<")"<<std::endl;
-    
     if (hit->tagger == "volTaggerNorth_0") {
       _chit_plane[i] = 0; // upstream
     } else {
@@ -1223,5 +1194,4 @@ void CRTAnalysis::beginSubRun(art::SubRun const& sr) {
 void CRTAnalysis::respondToOpenInputFile(const art::FileBlock& fb){
     _file_name = fb.fileName();
 }
-
 DEFINE_ART_MODULE(CRTAnalysis)

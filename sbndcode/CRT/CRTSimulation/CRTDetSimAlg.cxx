@@ -151,6 +151,7 @@ namespace crt {
 
                 mac_to_ides[strip.mac5] = std::vector<AuxDetIDE>();
                 mac_to_sipmids[strip.mac5] = std::vector<int>();
+                mf::LogInfo("CRTDetSimAlg") << "strip.sipm0.t1: " << strip.sipm0.t1 << std::endl;
             }
             // ... all the other times we encounter this FEB
             else
@@ -158,6 +159,7 @@ namespace crt {
                 // We want to save the earliest t1 and t0 for each FEB.
                 if (strip.sipm0.t1 < mac_to_febdata[strip.mac5].Ts1())
                 {
+                    mf::LogInfo("CRTDetSimAlg") << "strip.sipm0.t1: " << strip.sipm0.t1 << std::endl;
                     mac_to_febdata[strip.mac5].SetFlags(strip.flags);
                     mac_to_febdata[strip.mac5].SetTs1(strip.sipm0.t1);
                     mac_to_febdata[strip.mac5].SetTs0(strip.sipm0.t0);
@@ -165,6 +167,7 @@ namespace crt {
                     mac_to_febdata[strip.mac5].SetCoinc(strip.sipm0.sipmID);
                 }
             }
+            mf::LogInfo("CRTDetSimAlg") << "strip.mac5: " << strip.mac5 << "; t1: " << mac_to_febdata[strip.mac5].Ts1() << std::endl;
         }
 
 
@@ -564,21 +567,24 @@ namespace crt {
           fParams.TDelayNorm() *
             exp(-0.5 * pow((npeMean - fParams.TDelayShift()) / fParams.TDelaySigma(), 2)) +
           fParams.TDelayOffset();
-
         double tDelayRMS =
           fParams.TDelayRMSGausNorm() *
             exp(-pow(npeMean - fParams.TDelayRMSGausShift(), 2) / fParams.TDelayRMSGausSigma()) +
           fParams.TDelayRMSExpNorm() *
             exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale());
 
+        mf::LogInfo("CRTSetSimAlg")<<"npeMean: "<<npeMean<< ", tDelayMean: "<<tDelayMean <<", tDelayRMS: "<<tDelayRMS<<std::endl;
+
         double tDelay = CLHEP::RandGauss::shoot(&fEngine, tDelayMean, tDelayRMS);
 
+        mf::LogInfo("CRTSetSimAlg")<<"tDelay before interpolator: "<< tDelay <<std::endl;
         // Time resolution of the interpolator
         tDelay += CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator());
 
+        mf::LogInfo("CRTSetSimAlg")<<"CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator()): "<<CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator())<<"; after interpolator: "<< tDelay <<std::endl;
+
         // Propagation time
         double tProp = CLHEP::RandGauss::shoot(fParams.PropDelay(), fParams.PropDelayError()) * r;
-
         double t = t0 + tProp + tDelay;
 
         // Get clock ticks
@@ -601,7 +607,10 @@ namespace crt {
             << ", tProp = " << tProp
             << ", t = " << t
             << ", time = " << time
-            << ", time_int = " << time_int << " (time in uint32_t)" << std::endl;
+            << ", time_int = " << time_int << " (time in uint32_t)" 
+            << ", distance to readout = " << r
+            << ", tProp/r = " << tProp/r
+            << std::endl;
 
         return time_int; // clock.Ticks();
     }

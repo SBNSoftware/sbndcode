@@ -1,0 +1,4 @@
+#include "run_selectrion_ana_140_bt_sbnd.fcl"
+
+physics.analyzers.sbnd_crtselectionana.InteractionMode: 1
+#include "use_crt_beam_tele_geometry_g4_services.fcl"

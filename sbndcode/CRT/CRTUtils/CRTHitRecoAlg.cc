@@ -46,37 +46,35 @@ namespace sbnd{
         // Iterate via strip (2 SiPMs per strip)
         const auto &sipm_adcs = FEBdata->ADC();
         for(unsigned adc_i = 0; adc_i < 32; adc_i+=2)
+        {
+          // Add an offset for the SiPM channel number
+          uint16_t channel = mac5 * 32 + adc_i;
+
+          CRTStripGeo strip = fCRTGeoAlg.GetStrip(channel);
+          CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
+          CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
+
+
+          // Subtract channel pedestals
+          uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i] ? sipm_adcs[adc_i]   - sipm1.pedestal : 0;
+          uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1]   - sipm2.pedestal : 0;
+
+          // Keep hit if both SiPMs above threshold
+          if(adc1 > fADCThreshold && adc2 > fADCThreshold)
           {
-            // Add an offset for the SiPM channel number
-            uint16_t channel = mac5 * 32 + adc_i;
+            // Access width of strip from the geometry algorithm
+            // === TO-DO === //
+            // AMEND THE CODE AND IMPROVE CALCULATION
+            double width = strip.width;
+            double x     = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
+            double ex    = 2.5;
 
-            CRTStripGeo strip = fCRTGeoAlg.GetStrip(channel);
-            CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
-            CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
-
-
-            // Subtract channel pedestals
-            uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i] ? sipm_adcs[adc_i]   - sipm1.pedestal : 0;
-            uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1]   - sipm2.pedestal : 0;
-
-            // Keep hit if both SiPMs above threshold
-            if(adc1 > fADCThreshold && adc2 > fADCThreshold)
-              {
-mf::LogInfo("CRTHitRecoAlg")<<"diff: adc_i: "<<adc_i<<", adc1: "<<adc1<<", adc2: "<<adc2<<", fADCThreshold: "<<fADCThreshold<<"; t1: "<<t1<<std::endl;
-                // Access width of strip from the geometry algorithm
-                // === TO-DO === //
-                // AMEND THE CODE AND IMPROVE CALCULATION
-                double width = strip.width;
-                double x     = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
-                double ex    = 2.5;
-
-                // Create hit
-                count++;
-                stripHits[module.taggerName][module.orientation].emplace_back(channel, t0, t1, unixs, x, ex, adc1, adc2, feb_i);
-              }
+            // Create hit
+            count++;
+            stripHits[module.taggerName][module.orientation].emplace_back(channel, t0, t1, unixs, x, ex, adc1, adc2, feb_i);
           }
+        }
       }
-mf::LogInfo("CRTHitRecoAlg")<<": strip hits number in total: "<<count<<std::endl;
     return stripHits;
   }
 
@@ -85,38 +83,38 @@ mf::LogInfo("CRTHitRecoAlg")<<": strip hits number in total: "<<count<<std::endl
     std::vector<sbn::crt::CRTHit> crtHits;
 
     for(auto const &[tagger, stripHitsVec] : taggerStripHits)
-      {
-        if(stripHitsVec.size() != 2) {
-          std::cout << "=== ERROR: Strip hits vector does not have size 2" << std::endl;
-          continue;
-        }
-
-        // Split hits by orientation, we want to look for coincidences between strips in 
-        // opposite orientations
-        std::vector<CRTStripHit> hitsOrien0 = stripHitsVec[0];
-        std::vector<CRTStripHit> hitsOrien1 = stripHitsVec[1];
-
-        // Get all possible combinations of strips that could make coincident hits
-        std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> candidates = ProduceCRTHitCandidates(tagger, hitsOrien0, hitsOrien1);
-
-        // Order by the hits with the largest reconstructed PE, should be better than random?
-        std::sort(candidates.begin(), candidates.end(), 
-                  [](const std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit> &a, std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit> &b) 
-                  {
-                    return a.second.peshit > b.second.peshit;
-                  });
-
-        std::set<unsigned> used_i, used_j;
-        for(auto const &cand : candidates)
-          {
-            if(used_i.find(cand.first.first) != used_i.end() || used_j.find(cand.first.second) != used_j.end())
-              continue;
-
-            crtHits.push_back(cand.second);
-            //used_i.insert(cand.first.first);
-            //used_j.insert(cand.first.second);
-          }
+    {
+      if(stripHitsVec.size() != 2) {
+        std::cout << "=== ERROR: Strip hits vector does not have size 2" << std::endl;
+        continue;
       }
+
+      // Split hits by orientation, we want to look for coincidences between strips in 
+      // opposite orientations
+      std::vector<CRTStripHit> hitsOrien0 = stripHitsVec[0];
+      std::vector<CRTStripHit> hitsOrien1 = stripHitsVec[1];
+
+      // Get all possible combinations of strips that could make coincident hits
+      std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> candidates = ProduceCRTHitCandidates(tagger, hitsOrien0, hitsOrien1);
+
+      // Order by the hits with the largest reconstructed PE, should be better than random?
+      std::sort(candidates.begin(), candidates.end(), 
+                [](const std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit> &a, std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit> &b) 
+                {
+                  return a.second.peshit > b.second.peshit;
+                });
+
+      std::set<unsigned> used_i, used_j;
+      for(auto const &cand : candidates)
+      {
+        if(used_i.find(cand.first.first) != used_i.end() || used_j.find(cand.first.second) != used_j.end())
+          continue;
+
+        crtHits.push_back(cand.second);
+        //used_i.insert(cand.first.first);
+        //used_j.insert(cand.first.second);
+      }
+    }
 
     return crtHits;
   }
@@ -124,7 +122,7 @@ mf::LogInfo("CRTHitRecoAlg")<<": strip hits number in total: "<<count<<std::endl
   std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> CRTHitRecoAlg::ProduceCRTHitCandidates(const std::string &tagger, const std::vector<CRTStripHit> &hitsOrien0, const std::vector<CRTStripHit> &hitsOrien1)
   {
     std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> candidates;
-mf::LogInfo("CRTHitRecoAlg")<<": hitsOrien0.size(): "<<hitsOrien0.size()<<"; hitsOrien1.size():"<<hitsOrien1.size()<<std::endl;
+    mf::LogInfo("CRTHitRecoAlg") << "hitsOrien0.size(): " << hitsOrien0.size() << ", hitsOrien1.size(): " << hitsOrien1.size() << std::endl;
     for(unsigned i = 0; i < hitsOrien0.size(); ++i)
       {
         const CRTStripHit hit0   = hitsOrien0[i];
@@ -164,12 +162,13 @@ mf::LogInfo("CRTHitRecoAlg")<<": hitsOrien0.size(): "<<hitsOrien0.size()<<"; hit
 
             // Correct timings to find how coincident the hits were
             uint32_t t0, t1;
-            uint32_t diff;
+            double diff;
             CorrectTimings(pos, hit0, hit1, pe0, pe1, t0, t1, diff);
-
-mf::LogInfo("CRTHitRecoAlg")<<"diff: "<<diff<<"; fHitCoincidenceRequirement: "<<fHitCoincidenceRequirement<< "; at position: " << pos.X() << ", "<< pos.Y() << ", " << pos.Z() << "cm\n"<<std::endl;
-
-            if(diff > fHitCoincidenceRequirement) continue;
+            mf::LogInfo("CRTHitRecoAlg") << "at position: " << pos.X() << ", " 
+                                         << pos.Y() << ", " << pos.Z() << "cm\n"
+                                         << "diff: " << diff 
+                                         << std::endl;
+            if(std::abs(diff) > fHitCoincidenceRequirement) continue;
             //if(abs((int)hit0.s - (int)hit1.s) > 1) continue;
             const uint64_t unixs = std::min(hit0.s, hit1.s);
             sbn::crt::CRTHit crtHit({(uint8_t)hit0.febdataindex, (uint8_t)hit1.febdataindex},
@@ -270,7 +269,7 @@ mf::LogInfo("CRTHitRecoAlg")<<"diff: "<<diff<<"; fHitCoincidenceRequirement: "<<
 
   void CRTHitRecoAlg::CorrectTimings(const TVector3 &pos, const CRTStripHit &hit0, 
                                      const CRTStripHit &hit1, const double &pe0, const double &pe1,
-                                     uint32_t &t0, uint32_t &t1, uint32_t &diff)
+                                     uint32_t &t0, uint32_t &t1, double &diff)
   {
     const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0.channel);
     const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1.channel);
@@ -281,12 +280,12 @@ mf::LogInfo("CRTHitRecoAlg")<<"diff: "<<diff<<"; fHitCoincidenceRequirement: "<<
     t0 = (hit0.t0 - corr0 + hit1.t0 - corr1) / 2.;
     t1 = (hit0.t1 - corr0 + hit1.t1 - corr1) / 2.;
 
+    mf::LogInfo("CRTHitRecoAlg") <<" strip 0: before corr0: "<<(double)hit0.t1 - 1.7e6<<" after corr0: "<<(double)(hit0.t1 - corr0) - 1.7e6 <<std::endl;
+    mf::LogInfo("CRTHitRecoAlg") <<" strip 1: before corr1: "<<(double)hit1.t1 - 1.7e6<<" after corr1: "<<(double)(hit1.t1 - corr1) - 1.7e6 <<std::endl;
 
-    uint32_t diff1 = (hit0.t1 >= hit1.t1) ? hit0.t1 - hit1.t1 : hit1.t1 - hit0.t1;
+    diff = (double)(hit0.t1 - corr0) - (double)(hit1.t1 - corr1);
 
-    diff = (((hit0.t1 - corr0) >= (hit1.t1 - corr1)) ? (hit0.t1 - corr0)-(hit1.t1 - corr1) : (hit1.t1 - corr1)-(hit0.t1 - corr0));
-
-mf::LogInfo("CRTHitRecoAlg")<<" hit0.t1: "<<hit0.t1<<", corr0: "<<corr0<<", after correction, hit0.t1: "<<hit0.t1 - corr0<<", hit1.t1: "<<hit1.t1<<", corr1: "<<corr1<<", after correction, hit1.t1: "<<hit1.t1 - corr1<<": diff, before correction: "<<diff1<<"; after correction: "<<diff<<std::endl;
+    mf::LogInfo("CRTHitRecoAlg") <<"strip: t1: "<<t1-1.7e6<<", diff: "<<diff<<std::endl;
   }
 
   uint32_t CRTHitRecoAlg::TimingCorrectionOffset(const double &dist, const double &pe)
@@ -295,6 +294,13 @@ mf::LogInfo("CRTHitRecoAlg")<<" hit0.t1: "<<hit0.t1<<", corr0: "<<corr0<<", afte
     //    - the propagation delay (dependent on the distance the light needs
     //          to travel along the fibre)
     //    - the time walk effect (dependent on the size of the pulse)
-    return dist * fPropDelay + fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset;
+    double t_TimeWalk = fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset; 
+
+    mf::LogInfo("CRTHitRecoAlg") << "distance to readout: "<< dist << ", fPropDelay: " << fPropDelay << "TProp: " << dist * fPropDelay << ", walkTime: " << t_TimeWalk << ", pe: " << pe << std::endl;
+    if (t_TimeWalk>0.){
+      return (uint32_t)(dist * fPropDelay + t_TimeWalk);
+    }else {
+      return (uint32_t)(dist * fPropDelay);
+    }
   } 
 }

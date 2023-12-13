@@ -1,6 +1,6 @@
 #include "simulationservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-#include "config_event_filter.fcl"
+#include "configs_crt_analyzer.fcl"
 
 process_name: CRTEventFilter
 

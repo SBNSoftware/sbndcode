@@ -72,7 +72,7 @@ namespace sbnd{
 
     void CorrectTimings(const TVector3 &pos, const CRTStripHit &hit0,
                         const CRTStripHit &hit1, const double &pe0, const double &pe1,
-                        uint32_t &t0, uint32_t &t1, uint32_t &diff);
+                        uint32_t &t0, uint32_t &t1, double &diff);
 
     uint32_t TimingCorrectionOffset(const double &dist, const double &pe);
 

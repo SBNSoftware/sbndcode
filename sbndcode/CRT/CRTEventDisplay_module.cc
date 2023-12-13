@@ -56,46 +56,20 @@ public:
   CRTEventDisplay& operator=(CRTEventDisplay&&) = delete;
 
   void analyze(art::Event const& e) override;
-  void beginRun(art::Run const& run) override;
-  void beginSubRun(art::SubRun const& sr) override;
 
 private:
   sbnd::CRTEventDisplayAlg fCRTEventDisplayAlg;
-  bool fSetEventManually;
-  std::vector<int> frun_subrun_event;
 };
 
 
 CRTEventDisplay::CRTEventDisplay(Parameters const& config)
   : EDAnalyzer{config}
   , fCRTEventDisplayAlg(config().EventDisplayConfig())
-  , fSetEventManually(config().SetEventManually())
-  , frun_subrun_event(config().Run_SubRun_Event())
 {
-}
-
-void CRTEventDisplay::beginRun(art::Run const& run)
-{
-  if(fSetEventManually) {
-    if (run.id().run() != static_cast<art::RunNumber_t>(frun_subrun_event.at(0))) return;
-  }
-}
-
-void CRTEventDisplay::beginSubRun(art::SubRun const& sr) 
-{
-  if (fSetEventManually){
-    if (sr.id().subRun() != static_cast<art::SubRunNumber_t>(frun_subrun_event.at(1))) return;
-  }
 }
 
 void CRTEventDisplay::analyze(art::Event const& e)
 { 
-  if(fSetEventManually){
-    if (e.event() != static_cast<art::EventNumber_t>(frun_subrun_event.at(2))) return;
-    else {
-      std::cout<<"Run:subrun:event: "<<frun_subrun_event.at(0)<<":"<<frun_subrun_event.at(1)<<":"<<e.event()<<", "<<static_cast<art::EventNumber_t>(frun_subrun_event.at(2))<<std::endl;
-    }
-  }
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
   fCRTEventDisplayAlg.Draw(clockData, e);
   

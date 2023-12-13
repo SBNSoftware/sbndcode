@@ -6,8 +6,6 @@ crteventdisplay_sbnd:
 {
    EventDisplayConfig:   @local::crteventdisplayalg_sbnd
    module_type:	       "sbndcode/CRT/CRTEventDisplay"
-   SetEventManually:     false
-   Run_SubRun_Event:     [1,1,1]
 }
 
 END_PROLOG

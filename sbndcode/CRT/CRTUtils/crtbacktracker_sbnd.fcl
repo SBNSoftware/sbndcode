@@ -2,12 +2,13 @@ BEGIN_PROLOG
 
 standard_crtbacktracker:
 {
-    CRTDataLabel:     "crt"
-    FEBDataLabel:     "crtsim"
-    CRTHitLabel:      "crthit"
-    CRTTrackLabel:    "crttrack"
-    SimModuleLabel:   "largeant"
-    RollupUnsavedIds: true
+    CRTDataLabel:         "crt"
+    FEBDataLabel:         "crtsim"
+    CRTHitLabel:          "crthit"
+    CRTTrackLabel:        "crttrack"
+    SimModuleLabel:       "largeant"
+    RollupUnsavedIds:     true
+    SearchDistanceRadius: 10.
 }
 
 END_PROLOG

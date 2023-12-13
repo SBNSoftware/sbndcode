@@ -274,7 +274,6 @@ std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> CRTTrackRecoAlg::Cr
 
     // Loop over all unique pairs
     for(size_t j = i+1; j < hits.size(); j++){      
-      //std::cout<<"CRT hit "<<i<<", ts1_ns: "<<hits[i].first.ts1_ns<<"; ts0_ns: "<<hits[i].first.ts0_ns<<"; ts0_ns_corr:"<<hits[i].first.ts0_ns_corr<<"; ( "<<hits[i].first.x_pos<<", "<<hits[i].first.y_pos<<", "<<hits[i].first.z_pos<<") "<<std::endl;
 
       if(hits[i].first.tagger == hits[j].first.tagger || std::abs(hits[i].first.ts1_ns - hits[j].first.ts1_ns) > fCoincidenceTimeRequirement )  continue;
 

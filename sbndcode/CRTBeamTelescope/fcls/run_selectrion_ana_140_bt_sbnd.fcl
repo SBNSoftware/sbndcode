@@ -8,7 +8,7 @@ services:
 {
   scheduler:    { defaultExceptions: false }    # Make all uncaught exceptions fatal.
   # Load the service that manages root files for histograms.
-  TFileService: { fileName: "crtana_sbnd.root" }
+  TFileService: { fileName: "crtselectrionana_sbnd.root" }
   # TimeTracker:         {}
   # MemoryTracker:       {} # default is one
   # RandomNumberGenerator: {} #ART native random number generator
@@ -34,7 +34,7 @@ physics:
 
  analyzers:
  {
-  crtana: @local::sbnd_crtana
+  crtana: @local::sbnd_crtselectionana
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -67,6 +67,5 @@ outputs:
    compressionLevel: 1
  }
 }
-
-
+physics.analyzers.sbnd_crtselectionana.InteractionMode: 0
 #include "use_crt_beam_tele_geometry_g4_services.fcl"

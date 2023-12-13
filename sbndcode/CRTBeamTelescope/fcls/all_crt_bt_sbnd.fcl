@@ -13,7 +13,8 @@
 #include "crthitproducer_sbnd.fcl"
 #include "crttrackproducer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-#include "config_crt_analyzer.fcl"
+#include "configs_crt_analyzer.fcl"
+#include "crtbacktracker_sbnd.fcl"
 
 
 

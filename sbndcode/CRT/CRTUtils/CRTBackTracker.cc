@@ -20,13 +20,14 @@ CRTBackTracker::~CRTBackTracker(){
 
 void CRTBackTracker::reconfigure(const Config& config){
 
-  fFEBDataLabel   = config.FEBDataLabel();
-  fCRTDataLabel   = config.CRTDataLabel();
-  fCRTHitLabel    = config.CRTHitLabel();
-  fCRTTrackLabel  = config.CRTTrackLabel();
-  fSimModuleLabel = config.SimModuleLabel();
+  fFEBDataLabel         = config.FEBDataLabel();
+  fCRTDataLabel         = config.CRTDataLabel();
+  fCRTHitLabel          = config.CRTHitLabel();
+  fCRTTrackLabel        = config.CRTTrackLabel();
+  fSimModuleLabel       = config.SimModuleLabel();
 
-  fRollupUnsavedIds = config.RollupUnsavedIds();
+  fRollupUnsavedIds     = config.RollupUnsavedIds();
+  fSearchDistanceRadius = config.SearchDistanceRadius();
 
   return;
 
@@ -529,41 +530,37 @@ CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(con
   art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febdata_to_ides(febDataHandle, event, fFEBDataLabel);
 
   std::map<int, double> idToEnergyMap;
+  std::map<int, double> idToDistanceMap;
   double totalEnergy = 0.;
 
   // Get the FEB data associated to that hit and the data associate to the hits
-    std::vector<art::Ptr<sbnd::crt::FEBData>> FEBdataVec = findManyFEBData.at(crtHit.key());
+  std::vector<art::Ptr<sbnd::crt::FEBData>> FEBdataVec = findManyFEBData.at(crtHit.key());
+  for(auto const FEBdata : FEBdataVec){
+    std::vector<art::Ptr<sim::AuxDetIDE>> ides = febdata_to_ides.at(FEBdata.key());
+    //std::cout<<"For FEBdata.key() == "<<FEBdata.key()<<std::endl;
+    for(size_t ide_i = 0; ide_i < ides.size(); ide_i++){
+      const sbnd::crt::FEBTruthInfo *fti = febdata_to_ides.data(FEBdata.key())[ide_i]; // use .data() to access the metadata/third-layer data
+      if ( fti->GetChannel()== (int)(crtHit->channel0 % 32) || fti->GetChannel()==(int)(crtHit->channel1 % 32) ){ 
+        
+        int id = ides[ide_i]->trackID;
+        if(fRollupUnsavedIds) { id = RollUpID(id);} //id = std::abs(id); 
 
-    std::cout<<"For crtHit.key() =="<<crtHit.key()<<", **CRT crtHit** positions: ("<<crtHit->x_pos<<", "<<crtHit->y_pos<<", "<<crtHit->z_pos<<"). "<<std::endl;
-    std::cout<<"For this CRT hit, associated FEBdataVector has "<<FEBdataVec.size()<<" Elements"<<std::endl;
-    for(auto const FEBdata : FEBdataVec){
-      std::vector<art::Ptr<sim::AuxDetIDE>> ides = febdata_to_ides.at(FEBdata.key());
-      //std::cout<<"For FEBdata.key() == "<<FEBdata.key()<<std::endl;
-      for(size_t ide_i = 0; ide_i < ides.size(); ide_i++){
-        const sbnd::crt::FEBTruthInfo *fti = febdata_to_ides.data(FEBdata.key())[ide_i]; // use .data() to access the metadata/third-layer data
-        if ( fti->GetChannel()== (int)(crtHit->channel0 % 32) || fti->GetChannel()==(int)(crtHit->channel1 % 32) ){ 
-          int id = ides[ide_i]->trackID;
-          if(fRollupUnsavedIds) { id = RollUpID(id);} //id = std::abs(id); 
+        // check if the ide position is close enough to the reco crt hit. 
+        double ide_distance_from_crthit_2d = std::hypot(crtHit->x_pos-ides[ide_i]->entryX, crtHit->y_pos-ides[ide_i]->entryY);
+        if( ide_distance_from_crthit_2d < fSearchDistanceRadius){
           idToEnergyMap[id]       += ides[ide_i]->energyDeposited;
           totalEnergy             += ides[ide_i]->energyDeposited;
-
-          double particle_energy = 0.; int pdg = -1; double time = -1.;
-          TrueParticlePDGEnergyTime(id, pdg, particle_energy, time);
-
-          std::cout<<std::endl<<"After the comparisons. fti->GetChannel(): "<<fti->GetChannel()<<", crtHit->channel0%32: "<<(crtHit->channel0)%32<<", crtHit->channel1% 32: "<<(crtHit->channel1)%32<<std::endl;
-          std::cout<<"IDE: "<<ide_i<<", track id from IDE: "<<ides[ide_i]->trackID<<", pdg: "<<pdg<<", ides[ide_i]->energyDeposited: "<<ides[ide_i]->energyDeposited<<std::endl;    
         }
       }
     }
+  }
 
   // Find the true ID that contributed the most energy
   double bestPur = 0., comp = 0.;
   int trackid_true = -99999;
   double particle_energy = 0.; int pdg = -1; double deposited_energy_track = 0.; double time = -1.;
-
   for(auto const [id, en] : idToEnergyMap){
     double pur = en / totalEnergy;
-    //if(id.second > maxEnergy){
     if(pur > bestPur){
       trackid_true = id;
       TrueParticlePDGEnergyTime(trackid_true, pdg, particle_energy, time);
@@ -577,7 +574,6 @@ CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(con
 }
 
 
-
 // Get the true particle ID that contributed the most energy to the CRT track
 CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(const art::Event& event, const art::Ptr<sbn::crt::CRTTrack> &crtTrack){
 
@@ -585,41 +581,33 @@ CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(con
   auto crtTrackHandle = event.getValidHandle<std::vector<sbn::crt::CRTTrack>>(fCRTTrackLabel);
   auto crtHitHandle   = event.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel); 
   auto febDataHandle  = event.getValidHandle<std::vector<sbnd::crt::FEBData>>(fFEBDataLabel); 
-  std::cout<<"crtTrackHandle->size(): "<<crtTrackHandle->size()<<", crtHitHandle->size(): "<<crtHitHandle->size()<<", febDataHandle->size(): "<<febDataHandle->size()<<std::endl;
   
   art::FindManyP<sbn::crt::CRTHit> findManyHits(crtTrackHandle, event, fCRTTrackLabel);
   art::FindManyP<sbnd::crt::FEBData> findManyFEBData(crtHitHandle, event, fCRTHitLabel);
   art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> febdata_to_ides(febDataHandle, event, fFEBDataLabel);
 
   std::map<int, double> idToEnergyMap;
+  std::map<int, double> idToTimeMap;
   double totalEnergy = 0.;
 
   // Get the crt hits associated to that hit and the data associate to the hits
   std::vector<art::Ptr<sbn::crt::CRTHit>> crtHitVec = findManyHits.at(crtTrack.key());
-  
-  std::cout<<std::endl<<"crtTrack.key(): "<<crtTrack.key()<<". Associate with this CRT track, we have "<<crtHitVec.size()<<" in the CRTHitsVector. "<<std::endl;
-
   for(auto const crtHit : crtHitVec){
     std::vector<art::Ptr<sbnd::crt::FEBData>> FEBdataVec = findManyFEBData.at(crtHit.key());
-
-    std::cout<<"For crtHit.key() =="<<crtHit.key()<<", **CRT crtHit** positions: ("<<crtHit->x_pos<<", "<<crtHit->y_pos<<", "<<crtHit->z_pos<<"). "<<std::endl;
-    std::cout<<"For this CRT hit, associated FEBdataVector has "<<FEBdataVec.size()<<" Elements"<<std::endl;
     for(auto const FEBdata : FEBdataVec){
       std::vector<art::Ptr<sim::AuxDetIDE>> ides = febdata_to_ides.at(FEBdata.key());
-      //std::cout<<"For FEBdata.key() == "<<FEBdata.key()<<std::endl;
       for(size_t ide_i = 0; ide_i < ides.size(); ide_i++){
         const sbnd::crt::FEBTruthInfo *fti = febdata_to_ides.data(FEBdata.key())[ide_i]; // use .data() to access the metadata/third-layer data
         if ( fti->GetChannel()== (int)(crtHit->channel0 % 32) || fti->GetChannel()==(int)(crtHit->channel1 % 32) ){ 
           int id = ides[ide_i]->trackID;
           if(fRollupUnsavedIds) { id = RollUpID(id);} //id = std::abs(id); 
-          idToEnergyMap[id]       += ides[ide_i]->energyDeposited;
-          totalEnergy             += ides[ide_i]->energyDeposited;
 
-          double particle_energy = 0.; int pdg = -1; double time = -1.;
-          TrueParticlePDGEnergyTime(id, pdg, particle_energy, time);
-
-          std::cout<<std::endl<<"After the comparisons. fti->GetChannel(): "<<fti->GetChannel()<<", crtHit->channel0%32: "<<(crtHit->channel0)%32<<", crtHit->channel1% 32: "<<(crtHit->channel1)%32<<std::endl;
-          std::cout<<"IDE: "<<ide_i<<", track id from IDE: "<<ides[ide_i]->trackID<<", pdg: "<<pdg<<", ides[ide_i]->energyDeposited: "<<ides[ide_i]->energyDeposited<<std::endl;    
+          double ide_distance_from_crthit_2d = std::hypot(crtHit->x_pos-ides[ide_i]->entryX, crtHit->y_pos-ides[ide_i]->entryY);
+          if( ide_distance_from_crthit_2d < fSearchDistanceRadius){
+            idToEnergyMap[id]       += ides[ide_i]->energyDeposited;
+            totalEnergy             += ides[ide_i]->energyDeposited;
+            idToTimeMap[id]         += 0.5 * (ides[ide_i]->entryT + ides[ide_i]->exitT);
+          }
         }
       }
     }
@@ -628,14 +616,15 @@ CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(con
   // Find the true ID that contributed the most energy
   double bestPur = 0., comp = 0.;
   int trackid_true = -99999;
-  double particle_energy = 0.; int pdg = -1; double deposited_energy_track = 0.; double time = -1.;
+  double particle_energy = -99999.; int pdg = -99999; double deposited_energy_track = -99999.; double time = -99999.;
 
   for(auto const [id, en] : idToEnergyMap){
     double pur = en / totalEnergy;
-    //if(id.second > maxEnergy){
+    double depositedE_time = idToTimeMap[id];
     if(pur > bestPur){
       trackid_true = id;
       TrueParticlePDGEnergyTime(trackid_true, pdg, particle_energy, time);
+      std::cout<<"mcparticle time: "<<time<<"; energy deposition time: "<<depositedE_time<<std::endl;
       deposited_energy_track = en;
       bestPur = pur;
       comp    = en / particle_energy; 

@@ -2,4 +2,3 @@
 
 physics.analyzers.crtana.SaveMCParticle: true
 physics.analyzers.crtana.KeepMCPFromADH: true
-physics.analyzers.crtana.SaveInputFileName: true

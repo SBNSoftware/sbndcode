@@ -70,6 +70,10 @@ namespace sbnd{
       fhicl::Atom<art::InputTag> SimModuleLabel {
         Name("SimModuleLabel")
       };
+      fhicl::Atom<double> SearchDistanceRadius {
+        Name("SearchDistanceRadius"),
+        50.0
+      };
 
     };
 
@@ -167,13 +171,13 @@ namespace sbnd{
     art::InputTag fSimModuleLabel;
 
     bool fRollupUnsavedIds;
+    double fSearchDistanceRadius;
 
     std::map<int, std::map<int, double>> fCRTDataTrueIds;
     std::map<int, std::map<int, double>> fFEBDataTrueIds;
     std::map<int, std::map<int, double>> fHitTrueIds;
     std::map<int, std::map<int, double>> fTrackTrueIds;
     std::map<int, int>                   fTrackIDMotherMap;
-
 
   };
 
