@@ -441,6 +441,7 @@ private:
     { "slc_opt0_score", new InhVecVar<double>("slc_opt0_score") },
     { "slc_opt0_measPE", new InhVecVar<double>("slc_opt0_measPE") },
     { "slc_opt0_hypPE", new InhVecVar<double>("slc_opt0_hypPE") },
+    { "slc_opt0_fracPE", new InhVecVar<double>("slc_opt0_fracPE") },
     { "slc_pfp_id", new InhVecVecVar<size_t>("slc_pfp_id") },
     { "slc_pfp_primary", new InhVecVecVar<bool>("slc_pfp_primary") },
     { "slc_pfp_primary_child", new InhVecVecVar<bool>("slc_pfp_primary_child") },
@@ -1409,6 +1410,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement(slcVars["slc_opt0_score"], slcCounter, opT0Vec[0]->score);
           FillElement(slcVars["slc_opt0_measPE"], slcCounter, opT0Vec[0]->measPE);
           FillElement(slcVars["slc_opt0_hypPE"], slcCounter, opT0Vec[0]->hypoPE);
+          FillElement(slcVars["slc_opt0_fracPE"], slcCounter, (opT0Vec[0]->hypoPE - opT0Vec[0]->measPE) / opT0Vec[0]->measPE);
         }
 
       ResizeSubVectors(slcVars, "slc_pfp", slcCounter, pfps.size());
@@ -2045,7 +2047,9 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 
   float crumbs;
   AccessElement(slcVars["slc_crumbs_score"], counter, crumbs);
-  const bool passes_crumbs = crumbs > -0.025;
+  const bool passes_crumbs_incl  = crumbs > -0.1;
+  const bool passes_crumbs_0p0pi = crumbs > -0.145;
+  const bool passes_crumbs_Np0pi = crumbs > -0.085;
 
   int nrazzledmuons;
   AccessElement(slcVars["slc_n_primary_razzled_muons"], counter, nrazzledmuons);
@@ -2062,6 +2066,18 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   bool bestpzcgoodkinematics;
   AccessElement(slcVars["slc_best_pzc_good_kinematics"], counter, bestpzcgoodkinematics);
 
+  double opt0frac;
+  AccessElement(slcVars["slc_opt0_fracPE"], counter, opt0frac);
+  const bool passes_opt0frac_incl  = opt0frac < 0.756 && opt0frac > -0.7;
+  const bool passes_opt0frac_0p0pi = opt0frac < 0.408 && opt0frac > -0.704;
+  const bool passes_opt0frac_Np0pi = opt0frac < 0.792 && opt0frac > -0.424;
+
+  double opt0score;
+  AccessElement(slcVars["slc_opt0_score"], counter, opt0score);
+  const bool passes_opt0score_incl  = opt0score > 70;
+  const bool passes_opt0score_0p0pi = opt0score > 145;
+  const bool passes_opt0score_Np0pi = opt0score > 175;
+
   int nrazzledpions;
   AccessElement(slcVars["slc_n_primary_razzled_pions_thresh"], counter, nrazzledpions);
   const bool passes_razzled_pions = nrazzledpions == 0;
@@ -2069,17 +2085,22 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   int nrazzledprotons;
   AccessElement(slcVars["slc_n_primary_razzled_protons_thresh"], counter, nrazzledprotons);
 
-  const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs && passes_razzled_muons && passes_pfps && passes_razzled_photons && bestpzcgoodkinematics;
+  const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs_incl && passes_razzled_muons && passes_pfps
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_incl && passes_opt0score_incl;
   FillElement(slcVars["slc_sel_incl"], counter, sel_incl);
 
-  const bool sel_0p0pi = sel_incl && passes_razzled_pions && nrazzledprotons == 0;
+  const bool sel_0p0pi = !is_clear_cosmic && is_fv && passes_crumbs_0p0pi && passes_razzled_muons && passes_pfps
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_0p0pi && passes_opt0score_0p0pi
+    && passes_razzled_pions && nrazzledprotons == 0;
   FillElement(slcVars["slc_sel_0p0pi"], counter, sel_0p0pi);
+
+  const bool sel_Np0pi = !is_clear_cosmic && is_fv && passes_crumbs_Np0pi && passes_razzled_muons && passes_pfps
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_Np0pi && passes_opt0score_Np0pi
+    && passes_razzled_pions && nrazzledprotons > 0;
+  FillElement(slcVars["slc_sel_Np0pi"], counter, sel_Np0pi);
 
   const bool sel_1p0pi = sel_incl && passes_razzled_pions && nrazzledprotons == 1;
   FillElement(slcVars["slc_sel_1p0pi"], counter, sel_1p0pi);
-
-  const bool sel_Np0pi = sel_incl && passes_razzled_pions && nrazzledprotons > 0;
-  FillElement(slcVars["slc_sel_Np0pi"], counter, sel_Np0pi);
 
   const bool sel_Xp0pi = sel_incl && passes_razzled_pions;
   FillElement(slcVars["slc_sel_Xp0pi"], counter, sel_Xp0pi);
