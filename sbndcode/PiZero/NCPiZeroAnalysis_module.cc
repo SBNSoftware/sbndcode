@@ -342,6 +342,8 @@ private:
     { "slc_n_primary_children", new InhVecVar<int>("slc_n_primary_children") },
     { "slc_n_trks", new InhVecVar<int>("slc_n_trks") },
     { "slc_n_shws", new InhVecVar<int>("slc_n_shws") },
+    { "slc_all_trks_contained", new InhVecVar<bool>("slc_all_trks_contained") },
+    { "slc_all_shws_contained", new InhVecVar<bool>("slc_all_shws_contained") },
     { "slc_n_dazzle_muons", new InhVecVar<int>("slc_n_dazzle_muons") },
     { "slc_n_dazzle_pions", new InhVecVar<int>("slc_n_dazzle_pions") },
     { "slc_n_dazzle_pions_thresh", new InhVecVar<int>("slc_n_dazzle_pions_thresh") },
@@ -360,6 +362,8 @@ private:
     { "slc_n_razzled_protons_thresh", new InhVecVar<int>("slc_n_razzled_protons_thresh") },
     { "slc_n_primary_trks", new InhVecVar<int>("slc_n_primary_trks") },
     { "slc_n_primary_shws", new InhVecVar<int>("slc_n_primary_shws") },
+    { "slc_all_primary_trks_contained", new InhVecVar<bool>("slc_all_primary_trks_contained") },
+    { "slc_all_primary_shws_contained", new InhVecVar<bool>("slc_all_primary_shws_contained") },
     { "slc_n_primary_dazzle_muons", new InhVecVar<int>("slc_n_primary_dazzle_muons") },
     { "slc_n_primary_dazzle_pions", new InhVecVar<int>("slc_n_primary_dazzle_pions") },
     { "slc_n_primary_dazzle_pions_thresh", new InhVecVar<int>("slc_n_primary_dazzle_pions_thresh") },
@@ -1445,10 +1449,14 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
     nrazzledelectrons = 0, nrazzledmuons = 0, nrazzledphotons = 0, nrazzledpions = 0, nrazzledpionsthresh = 0,
     nrazzledprotons = 0, nrazzledprotonsthresh = 0;
 
+  bool alltrkscontained = true, allshwscontained = true;
+
   int nprimtrks = 0, nprimshws = 0, nprimdazzlemuons = 0, nprimdazzlepions = 0, nprimdazzlepionsthresh = 0, nprimdazzleprotons = 0,
     nprimdazzleprotonsthresh = 0, nprimdazzleother = 0, nprimrazzleelectrons = 0, nprimrazzlephotons = 0, nprimrazzleother = 0,
     nprimrazzledelectrons = 0, nprimrazzledmuons = 0, nprimrazzledphotons = 0, nprimrazzledpions = 0, nprimrazzledpionsthresh = 0,
     nprimrazzledprotons = 0, nprimrazzledprotonsthresh = 0;
+
+  bool allprimtrkscontained = true, allprimshwscontained = true;
 
   std::vector<art::Ptr<recob::Hit>> used_hits;
 
@@ -1533,9 +1541,16 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
         {
           int dazzlepdg;
           AccessElement(slcVars["slc_pfp_track_dazzle_pdg"], slcCounter, pfpCounter, dazzlepdg);
+
           float trkenergy;
           AccessElement(slcVars["slc_pfp_track_ke"], slcCounter, pfpCounter, trkenergy);
           pfpenergy = trkenergy;
+
+          bool contained;
+          AccessElement(slcVars["slc_pfp_track_contained"], slcCounter, pfpCounter, contained);
+          alltrkscontained &= contained;
+          if(primary_child)
+            allprimtrkscontained &= contained;
 
           if(dazzlepdg == 13)
             ++ndazzlemuons;
@@ -1576,6 +1591,12 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
           AccessElement(slcVars["slc_pfp_shower_razzle_pdg"], slcCounter, pfpCounter, razzlepdg);
 
           AccessElement(slcVars["slc_pfp_shower_energy"], slcCounter, pfpCounter, pfpenergy);
+
+          bool contained;
+          AccessElement(slcVars["slc_pfp_shower_contained"], slcCounter, pfpCounter, contained);
+          allshwscontained &= contained;
+          if(primary_child)
+            allprimshwscontained &= contained;
 
           if(razzlepdg == 11)
             ++nrazzleelectrons;
@@ -1634,6 +1655,8 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
 
   FillElement(slcVars["slc_n_trks"], slcCounter, ntrks);
   FillElement(slcVars["slc_n_shws"], slcCounter, nshws);
+  FillElement(slcVars["slc_all_trks_contained"], slcCounter, alltrkscontained);
+  FillElement(slcVars["slc_all_shws_contained"], slcCounter, allshwscontained);
   FillElement(slcVars["slc_n_dazzle_muons"], slcCounter, ndazzlemuons);
   FillElement(slcVars["slc_n_dazzle_pions"], slcCounter, ndazzlepions);
   FillElement(slcVars["slc_n_dazzle_pions_thresh"], slcCounter, ndazzlepionsthresh);
@@ -1653,6 +1676,8 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
 
   FillElement(slcVars["slc_n_primary_trks"], slcCounter, nprimtrks);
   FillElement(slcVars["slc_n_primary_shws"], slcCounter, nprimshws);
+  FillElement(slcVars["slc_all_primary_trks_contained"], slcCounter, allprimtrkscontained);
+  FillElement(slcVars["slc_all_primary_shws_contained"], slcCounter, allprimshwscontained);
   FillElement(slcVars["slc_n_primary_dazzle_muons"], slcCounter, nprimdazzlemuons);
   FillElement(slcVars["slc_n_primary_dazzle_pions"], slcCounter, nprimdazzlepions);
   FillElement(slcVars["slc_n_primary_dazzle_pions_thresh"], slcCounter, nprimdazzlepionsthresh);
