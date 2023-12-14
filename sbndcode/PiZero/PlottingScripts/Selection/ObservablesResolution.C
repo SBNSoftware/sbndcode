@@ -124,6 +124,34 @@ void ObservablesResolution(const TString productionVersion)
   cCosineThetaPiZero2DResolution->SaveAs(saveDir + "/cosine_theta_pizero_twod_resolution.pdf");
   cCosineThetaPiZero2DResolution->SaveAs(saveDir + "/cosine_theta_pizero_twod_resolution.png");
 
+  TCanvas *cShowerEnergy = new TCanvas("cShowerEnergy", "cShowerEnergy");
+  cShowerEnergy->cd();
+
+  TH1F *hShowerEnergy = new TH1F("hShowerEnergy", ";True E (MeV));#gamma", 8, pizeroMomBins);
+  ncpizeroEvents->Draw("1e3*slc_pfp_true_energy>>hShowerEnergy",
+                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+
+  hShowerEnergy->SetLineColor(kMagenta+2);
+  hShowerEnergy->GetYaxis()->SetTitleOffset(1.25);
+  hShowerEnergy->Draw();
+
+  cShowerEnergy->SaveAs(saveDir + "/shower_energy.pdf");
+  cShowerEnergy->SaveAs(saveDir + "/shower_energy.png");
+
+  TCanvas *cShowerEnergyReco = new TCanvas("cShowerEnergyReco", "cShowerEnergyReco");
+  cShowerEnergyReco->cd();
+
+  TH1F *hShowerEnergyReco = new TH1F("hShowerEnergyReco", ";Reco E (MeV));#gamma", 8, pizeroMomBins);
+  ncpizeroEvents->Draw("slc_pfp_shower_energy>>hShowerEnergyReco",
+                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+
+  hShowerEnergyReco->SetLineColor(kMagenta+2);
+  hShowerEnergyReco->GetYaxis()->SetTitleOffset(1.25);
+  hShowerEnergyReco->Draw();
+
+  cShowerEnergyReco->SaveAs(saveDir + "/shower_energy_reco.pdf");
+  cShowerEnergyReco->SaveAs(saveDir + "/shower_energy_reco.png");
+
   TCanvas *cShowerEnergyFractionalResolution = new TCanvas("cShowerEnergyFractionalResolution", "cShowerEnergyFractionalResolution");
   cShowerEnergyFractionalResolution->cd();
 

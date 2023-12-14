@@ -40,8 +40,10 @@ std::vector<Plot> extension_plots = {
     100, -2, 2, kBlack, true },
   { "slc_opt0_score", "slc_opt0_score", ";OpT0 Score;Slices",
     100, 0, 2e5 },
+  { "slc_opt0_score_log", "slc_opt0_score", ";OpT0 Score;Slices",
+    100, 0, 2e5, kBlack, true },
   { "slc_opt0_score_narrow", "slc_opt0_score", ";OpT0 Score;Slices",
-    100, 0, 5e3 },
+    100, 0, 2e3 },
 };
 
 std::vector<Plot> true_observables = {
