@@ -249,4 +249,85 @@ void ObservablesResolution(const TString productionVersion)
 
   cShowerEnergy2DResolution->SaveAs(saveDir + "/shower_energy_twod_resolution.pdf");
   cShowerEnergy2DResolution->SaveAs(saveDir + "/shower_energy_twod_resolution.png");
+
+  TCanvas *cPhotonShowerDirectionResolution = new TCanvas("cPhotonShowerDirectionResolution", "cPhotonShowerDirectionResolution");
+  cPhotonShowerDirectionResolution->cd();
+
+  TString dotProductShw = "(slc_pfp_shower_dir_x * slc_pfp_true_p_x + slc_pfp_shower_dir_y * slc_pfp_true_p_y + slc_pfp_shower_dir_z * slc_pfp_true_p_z)";
+  TString dotProductTrk = "(slc_pfp_track_dir_x * slc_pfp_true_p_x + slc_pfp_track_dir_y * slc_pfp_true_p_y + slc_pfp_track_dir_z * slc_pfp_true_p_z)";
+  TString magRecoShw    = "sqrt(slc_pfp_shower_dir_x * slc_pfp_shower_dir_x + slc_pfp_shower_dir_y * slc_pfp_shower_dir_y + slc_pfp_shower_dir_z * slc_pfp_shower_dir_z)";
+  TString magRecoTrk    = "sqrt(slc_pfp_track_dir_x * slc_pfp_track_dir_x + slc_pfp_track_dir_y * slc_pfp_track_dir_y + slc_pfp_track_dir_z * slc_pfp_track_dir_z)";
+  TString magTrue       = "sqrt(slc_pfp_true_p_x * slc_pfp_true_p_x + slc_pfp_true_p_y * slc_pfp_true_p_y + slc_pfp_true_p_z * slc_pfp_true_p_z)";
+  TString angleShw      = "acos(" + dotProductShw + "/(" + magRecoShw + "*" + magTrue + ")) * TMath::RadToDeg()";
+  TString angleTrk      = "acos(" + dotProductTrk + "/(" + magRecoTrk + "*" + magTrue + ")) * TMath::RadToDeg()";
+
+  TH1F *hPhotonShowerDirectionResolution = new TH1F("hPhotonShowerDirectionResolution", ";#theta_{True Reco} (#circ);#gamma", 36, 0, 180);
+  ncpizeroEvents->Draw(angleShw + ">>hPhotonShowerDirectionResolution",
+                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+
+  TH1F *hPhotonTrackDirectionResolution = new TH1F("hPhotonTrackDirectionResolution", ";#theta_{True Reco} (#circ);#gamma", 36, 0, 180);
+  ncpizeroEvents->Draw(angleTrk + ">>hPhotonTrackDirectionResolution",
+                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+
+  hPhotonShowerDirectionResolution->SetLineColor(kMagenta+2);
+  hPhotonTrackDirectionResolution->SetLineColor(kCyan+2);
+  hPhotonTrackDirectionResolution->Draw();
+  hPhotonShowerDirectionResolution->Draw("same");
+
+  TLegend *lPhotonShowerDirectionResolution = new TLegend(.55, .4, .85, .55);
+  lPhotonShowerDirectionResolution->AddEntry(hPhotonShowerDirectionResolution, "Shower Characterisation", "l");
+  lPhotonShowerDirectionResolution->AddEntry(hPhotonTrackDirectionResolution, "Track Characterisation", "l");
+  lPhotonShowerDirectionResolution->Draw();
+
+  cPhotonShowerDirectionResolution->SaveAs(saveDir + "/photon_shower_direction_resolution.pdf");
+  cPhotonShowerDirectionResolution->SaveAs(saveDir + "/photon_shower_direction_resolution.png");
+
+  TCanvas *cPhotonShowerDirectionResolutionCumulative = new TCanvas("cPhotonShowerDirectionResolutionCumulative", "cPhotonShowerDirectionResolutionCumulative");
+  cPhotonShowerDirectionResolutionCumulative->cd();
+
+  TH1 *hPhotonTrackDirectionResolutionCumulative = hPhotonTrackDirectionResolution->GetCumulative();
+  hPhotonTrackDirectionResolutionCumulative->Scale(100./hPhotonTrackDirectionResolution->GetEntries());
+  hPhotonTrackDirectionResolutionCumulative->SetMinimum(0);
+  hPhotonTrackDirectionResolutionCumulative->GetYaxis()->SetTitle("Cumulative Proportion (%)");
+  hPhotonTrackDirectionResolutionCumulative->SetLineColor(kCyan+2);
+  hPhotonTrackDirectionResolutionCumulative->Draw();
+
+  TH1 *hPhotonShowerDirectionResolutionCumulative = hPhotonShowerDirectionResolution->GetCumulative();
+  hPhotonShowerDirectionResolutionCumulative->Scale(100./hPhotonShowerDirectionResolution->GetEntries());
+  hPhotonShowerDirectionResolutionCumulative->SetMinimum(0);
+  hPhotonShowerDirectionResolutionCumulative->SetLineColor(kMagenta+2);
+  hPhotonShowerDirectionResolutionCumulative->Draw("same");
+
+  lPhotonShowerDirectionResolution->Draw();
+
+  cPhotonShowerDirectionResolutionCumulative->SaveAs(saveDir + "/photon_shower_direction_resolution_cumulative.pdf");
+  cPhotonShowerDirectionResolutionCumulative->SaveAs(saveDir + "/photon_shower_direction_resolution_cumulative.png");
+
+  TCanvas *cPhotonShowerDirection2DResolution = new TCanvas("cPhotonShowerDirection2DResolution", "cPhotonShowerDirection2DResolution");
+  cPhotonShowerDirection2DResolution->cd();
+  cPhotonShowerDirection2DResolution->SetRightMargin(.2);
+
+  TH2F *hPhotonShowerDirection2DResolution = new TH2F("hPhotonShowerDirection2DResolution", ";True E (MeV);#theta_{True Reco} (#circ);#gamma", 8, pizeroMomBins, 36, 0, 180);
+  ncpizeroEvents->Draw(angleShw + ":slc_pfp_true_energy*1e3>>hPhotonShowerDirection2DResolution",
+                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+
+  hPhotonShowerDirection2DResolution->Draw("colz");
+  hPhotonShowerDirection2DResolution->GetYaxis()->SetTitleOffset(1.25);
+
+  cPhotonShowerDirection2DResolution->SaveAs(saveDir + "/photon_shower_direction_twod_resolution.pdf");
+  cPhotonShowerDirection2DResolution->SaveAs(saveDir + "/photon_shower_direction_twod_resolution.png");
+
+  TCanvas *cPhotonTrackDirection2DResolution = new TCanvas("cPhotonTrackDirection2DResolution", "cPhotonTrackDirection2DResolution");
+  cPhotonTrackDirection2DResolution->cd();
+  cPhotonTrackDirection2DResolution->SetRightMargin(.2);
+
+  TH2F *hPhotonTrackDirection2DResolution = new TH2F("hPhotonTrackDirection2DResolution", ";True E (MeV);#theta_{True Reco} (#circ);#gamma", 8, pizeroMomBins, 36, 0, 180);
+  ncpizeroEvents->Draw(angleTrk + ":slc_pfp_true_energy*1e3>>hPhotonTrackDirection2DResolution",
+                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+
+  hPhotonTrackDirection2DResolution->Draw("colz");
+  hPhotonTrackDirection2DResolution->GetYaxis()->SetTitleOffset(1.25);
+
+  cPhotonTrackDirection2DResolution->SaveAs(saveDir + "/photon_track_direction_twod_resolution.pdf");
+  cPhotonTrackDirection2DResolution->SaveAs(saveDir + "/photon_track_direction_twod_resolution.png");
 }
