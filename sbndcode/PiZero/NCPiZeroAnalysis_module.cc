@@ -145,8 +145,8 @@ public:
                                const int counter, const std::vector<int> slc_ids);
 
   void ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
-                              const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1,
-                              const double &en0Corr, const double &en1Corr);
+                              const TVector3 &shwDir0, const TVector3 &shwDir1, const TVector3 &trkDir0, const TVector3 &trkDir1,
+                              const double &en0, const double &en1, const double &en0Corr, const double &en1Corr);
 
   void ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter);
 
@@ -537,6 +537,7 @@ private:
     { "slc_pzc_cos_theta_pizero", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero") },
     { "slc_pzc_cos_com", new InhVecVecVar<double>("slc_pzc_cos_com") },
     { "slc_pzc_decay_asymmetry", new InhVecVecVar<double>("slc_pzc_decay_asymmetry") },
+    { "slc_pzc_good_kinematics_corr", new InhVecVecVar<bool>("slc_pzc_good_kinematics_corr") },
     { "slc_pzc_invariant_mass_corr", new InhVecVecVar<double>("slc_pzc_invariant_mass_corr") },
     { "slc_pzc_pizero_mom_corr", new InhVecVecVar<double>("slc_pzc_pizero_mom_corr") },
     { "slc_pzc_cos_theta_pizero_corr", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero_corr") },
@@ -558,6 +559,7 @@ private:
     { "slc_best_pzc_cos_theta_pizero", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero") },
     { "slc_best_pzc_cos_com", new InhVecVar<double>("slc_best_pzc_cos_com") },
     { "slc_best_pzc_decay_asymmetry", new InhVecVar<double>("slc_best_pzc_decay_asymmetry") },
+    { "slc_best_pzc_good_kinematics_corr", new InhVecVar<bool>("slc_best_pzc_good_kinematics_corr") },
     { "slc_best_pzc_invariant_mass_corr", new InhVecVar<double>("slc_best_pzc_invariant_mass_corr") },
     { "slc_best_pzc_pizero_mom_corr", new InhVecVar<double>("slc_best_pzc_pizero_mom_corr") },
     { "slc_best_pzc_cos_theta_pizero_corr", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero_corr") },
@@ -569,6 +571,7 @@ private:
     { "slc_best_corr_pzc_cos_theta_pizero", new InhVecVar<double>("slc_best_corr_pzc_cos_theta_pizero") },
     { "slc_best_corr_pzc_cos_com", new InhVecVar<double>("slc_best_corr_pzc_cos_com") },
     { "slc_best_corr_pzc_decay_asymmetry", new InhVecVar<double>("slc_best_corr_pzc_decay_asymmetry") },
+    { "slc_best_corr_pzc_good_kinematics_corr", new InhVecVar<bool>("slc_best_corr_pzc_good_kinematics_corr") },
     { "slc_best_corr_pzc_invariant_mass_corr", new InhVecVar<double>("slc_best_corr_pzc_invariant_mass_corr") },
     { "slc_best_corr_pzc_pizero_mom_corr", new InhVecVar<double>("slc_best_corr_pzc_pizero_mom_corr") },
     { "slc_best_corr_pzc_cos_theta_pizero_corr", new InhVecVar<double>("slc_best_corr_pzc_cos_theta_pizero_corr") },
@@ -2275,15 +2278,7 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
                   const double shwEn0Corr = slc_pfp_shower_energy_corr.at(slc_id_a).at(ii);
                   const double shwEn1Corr = slc_pfp_shower_energy_corr.at(slc_id_b).at(jj);
 
-                  const double trkEn0 = slc_pfp_track_ke.at(slc_id_a).at(ii);
-                  const double trkEn1 = slc_pfp_track_ke.at(slc_id_b).at(jj);
-
-                  if(!(shwDir0.X() == -999 || shwDir1.X() == -999 || shwEn0 < 0 || shwEn1 < 0))
-                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1, shwEn0Corr, shwEn1Corr);
-                  else if(!(trkDir0.X() == -999 || trkDir1.X() == -999 || trkEn0 < 0 || trkEn1 < 0))
-                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, trkDir0, trkDir1, trkEn0, trkEn1, trkEn0, trkEn1);
-                  else
-                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1, shwEn0Corr, shwEn1Corr);
+                  ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, trkDir0, trkDir1, shwEn0, shwEn1, shwEn0Corr, shwEn1Corr);
 
                   ++pzcCounter;
                 }
@@ -2295,13 +2290,14 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
 }
 
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
-                                                    const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1,
-                                                    const double &en0Corr, const double &en1Corr)
+                                                    const TVector3 &shwDir0, const TVector3 &shwDir1, const TVector3 &trkDir0, const TVector3 &trkDir1,
+                                                    const double &en0, const double &en1, const double &en0Corr, const double &en1Corr)
 {
-  const bool goodKinematics = !(dir0.X() == -999 || dir1.X() == -999 || en0 < 0 || en1 < 0);
+  const bool goodKinematics     = !(shwDir0.X() == -999 || shwDir1.X() == -999 || en0 < 0 || en1 < 0);
+  const bool goodKinematicsCorr = !(trkDir0.X() == -999 || trkDir1.X() == -999 || en0Corr < 0 || en1Corr < 0);
 
-  const double cosineThetaGammaGamma = dir0.Dot(dir1) / (dir0.Mag() * dir1.Mag());
-  const TVector3 pizeroDir           = (en0 * dir0) + (en1 * dir1);
+  const double cosineThetaGammaGamma = shwDir0.Dot(shwDir1) / (shwDir0.Mag() * shwDir1.Mag());
+  const TVector3 pizeroDir           = (en0 * shwDir0) + (en1 * shwDir1);
 
   const double invariantMass  = sqrt(2 * en0 * en1 * (1 - cosineThetaGammaGamma));
   const double pizeroMom      = pizeroDir.Mag();
@@ -2309,9 +2305,10 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   const double cosCOM         = std::abs(en0 - en1) / pizeroMom;
   const double decayAsym      = std::abs(en0 - en1) / (en0 + en1);
 
-  const TVector3 pizeroDirCorr       = (en0Corr * dir0) + (en1Corr * dir1);
+  const double cosineThetaGammaGammaCorr = trkDir0.Dot(trkDir1) / (trkDir0.Mag() * trkDir1.Mag());
+  const TVector3 pizeroDirCorr           = (en0Corr * trkDir0) + (en1Corr * trkDir1);
 
-  const double invariantMassCorr  = sqrt(2 * en0Corr * en1Corr * (1 - cosineThetaGammaGamma));
+  const double invariantMassCorr  = sqrt(2 * en0Corr * en1Corr * (1 - cosineThetaGammaGammaCorr));
   const double pizeroMomCorr      = pizeroDirCorr.Mag();
   const double pizeroCosThetaCorr = pizeroDirCorr.Z() / pizeroMomCorr;
   const double cosCOMCorr         = std::abs(en0Corr - en1Corr) / pizeroMomCorr;
@@ -2323,6 +2320,7 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   FillElement(vars[prefix + "_pzc_cos_theta_pizero"], counter, pzcCounter, pizeroCosTheta);
   FillElement(vars[prefix + "_pzc_cos_com"], counter, pzcCounter, cosCOM);
   FillElement(vars[prefix + "_pzc_decay_asymmetry"], counter, pzcCounter, decayAsym);
+  FillElement(vars[prefix + "_pzc_good_kinematics_corr"], counter, pzcCounter, goodKinematicsCorr);
   FillElement(vars[prefix + "_pzc_invariant_mass_corr"], counter, pzcCounter, invariantMassCorr);
   FillElement(vars[prefix + "_pzc_pizero_mom_corr"], counter, pzcCounter, pizeroMomCorr);
   FillElement(vars[prefix + "_pzc_cos_theta_pizero_corr"], counter, pzcCounter, pizeroCosThetaCorr);
