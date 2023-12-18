@@ -1967,7 +1967,14 @@ void sbnd::NCPiZeroAnalysis::ExtractCalo(const art::Ptr<recob::Shower> &shower, 
       showerPlanePitches[plane.ID().Plane] = plane.WirePitch() / cosgamma;
     }
 
-  int bestPlane = shower->best_plane();
+  int bestPlane = -1;
+
+  if(showerPlaneHits[2] >= showerPlaneHits[1] && showerPlaneHits[2] >= showerPlaneHits[0])
+    bestPlane = 2;
+  else if(showerPlaneHits[0] >= showerPlaneHits[1])
+    bestPlane = 0;
+  else
+    bestPlane = 1;
 
   FillElement(slcVars["slc_pfp_shower_energy"], slcCounter, pfpCounter, shower->Energy()[bestPlane]);
   FillElement(slcVars["slc_pfp_shower_energy_coll"], slcCounter, pfpCounter, shower->Energy()[2]);
