@@ -509,6 +509,7 @@ private:
     { "slc_pfp_shower_length", new InhVecVecVar<double>("slc_pfp_shower_length") },
     { "slc_pfp_shower_open_angle", new InhVecVecVar<double>("slc_pfp_shower_open_angle") },
     { "slc_pfp_shower_energy", new InhVecVecVar<double>("slc_pfp_shower_energy") },
+    { "slc_pfp_shower_energy_coll", new InhVecVecVar<double>("slc_pfp_shower_energy_coll") },
     { "slc_pfp_shower_energy_corr", new InhVecVecVar<double>("slc_pfp_shower_energy_corr") },
     { "slc_pfp_shower_dedx", new InhVecVecVar<double>("slc_pfp_shower_dedx") },
     { "slc_pfp_shower_sqrt_energy_density", new InhVecVecVar<double>("slc_pfp_shower_sqrt_energy_density") },
@@ -1969,6 +1970,7 @@ void sbnd::NCPiZeroAnalysis::ExtractCalo(const art::Ptr<recob::Shower> &shower, 
   int bestPlane = shower->best_plane();
 
   FillElement(slcVars["slc_pfp_shower_energy"], slcCounter, pfpCounter, shower->Energy()[bestPlane]);
+  FillElement(slcVars["slc_pfp_shower_energy_coll"], slcCounter, pfpCounter, shower->Energy()[2]);
   FillElement(slcVars["slc_pfp_shower_energy_corr"], slcCounter, pfpCounter, CorrectEnergy(shower->Energy()[bestPlane]));
   FillElement(slcVars["slc_pfp_shower_dedx"], slcCounter, pfpCounter, shower->dEdx()[bestPlane]);
 
