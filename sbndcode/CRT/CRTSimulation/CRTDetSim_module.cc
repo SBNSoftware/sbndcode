@@ -36,7 +36,7 @@
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "sbnobj/SBND/CRT/FEBTruthInfo.hh"
-#include "sbndcode/CRT/CRTDetSim.h"
+#include "sbndcode/CRT/CRTSimulation/CRTDetSim.h"
 
 #include <cmath>
 #include <memory>
@@ -58,9 +58,9 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
 {
   this->reconfigure(p);
 
-  produces<std::vector<sbnd::crt::FEBData> >();
+  produces<std::vector<FEBData> >();
   produces<std::vector<sim::AuxDetIDE> >();
-  produces<art::Assns<sbnd::crt::FEBData , sim::AuxDetIDE , sbnd::crt::FEBTruthInfo>>();
+  produces<art::Assns<FEBData , sim::AuxDetIDE , FEBTruthInfo>>();
 
   consumes<std::vector<sim::AuxDetSimChannel>>(fG4ModuleLabel);
 }
@@ -69,14 +69,14 @@ CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
 
 void CRTDetSim::produce(art::Event & e) {
 
-  std::unique_ptr<std::vector<sbnd::crt::FEBData> > FEBDataOut(new std::vector<sbnd::crt::FEBData>);
-  art::PtrMaker<sbnd::crt::FEBData> makeDataPtr(e);
+  std::unique_ptr<std::vector<FEBData> > FEBDataOut(new std::vector<FEBData>);
+  art::PtrMaker<FEBData> makeDataPtr(e);
 
   std::unique_ptr<std::vector<sim::AuxDetIDE> > auxDetIdes(new std::vector<sim::AuxDetIDE>);
   art::PtrMaker<sim::AuxDetIDE> makeIdePtr(e);
 
-  std::unique_ptr<art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>> Dataassn
-    (new art::Assns<sbnd::crt::FEBData, sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>);
+  std::unique_ptr<art::Assns<FEBData, sim::AuxDetIDE, FEBTruthInfo>> Dataassn
+    (new art::Assns<FEBData, sim::AuxDetIDE, FEBTruthInfo>);
 
   // Handle for (truth) AuxDetSimChannels
   art::Handle<std::vector<sim::AuxDetSimChannel> > channels;
@@ -110,11 +110,11 @@ void CRTDetSim::produce(art::Event & e) {
 
 
   //
-  // Step 1: Apply Coincidence, deadtime, etc.
+  // Step 2: Apply Coincidence, deadtime, etc.
   //
 
   fDetAlg.CreateData();
-  std::vector<std::pair<sbnd::crt::FEBData, std::vector<sim::AuxDetIDE>>> data = fDetAlg.GetData();
+  std::vector<std::pair<FEBData, std::vector<sim::AuxDetIDE>>> data = fDetAlg.GetData();
   std::vector<std::vector<int>> auxdata = fDetAlg.GetAuxData();
 
   //
