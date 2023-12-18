@@ -7,11 +7,13 @@ process_name: Reco2
 physics.analyzers.ncpizeroana: @local::ncpizeroana
 physics.analyzers.recoeff:     @local::recoeff
 
+physics.producers.pandoraShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
+
 physics.reco2_sensible: [ rns,
   pandora,
   pandoraSCE,
   pandoraTrack,
-  pandoraShowerSBN,
+  pandoraShower,
   pandoraCalo,
   pandoraPid,
   crtclustering,
@@ -53,15 +55,20 @@ physics.producers.dazzle.PFPLabel:                         "pandoraSCE"
 physics.producers.fmatch.PandoraProducer:                  "pandoraSCE"
 physics.producers.fmatch.SpacePointProducer:               "pandoraSCE"
 physics.producers.opt0finder.SliceProducer:                "pandoraSCE"
+physics.producers.opt0finder.ShowerProducer:               "pandoraShower"
 physics.producers.pandoraShowerCosmicDist.PandoraLabel:    "pandoraSCE"
-physics.producers.pandoraShowerSBN.PFParticleLabel:        "pandoraSCE"
+physics.producers.pandoraShowerCosmicDist.ShowerLabel:     "pandoraShower"
+physics.producers.pandoraShower.PFParticleLabel:           "pandoraSCE"
 physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
+physics.producers.pandoraShowerSelectionVars.ShowerLabel:  "pandoraShower"
 physics.producers.pandoraTrack.PFParticleLabel:            "pandoraSCE"
 physics.producers.razzle.PFPLabel:                         "pandoraSCE"
+physics.producers.razzle.ShowerLabel:                      "pandoraShower"
 physics.producers.razzled.ClusterLabel:                    "pandoraSCE"
 physics.producers.razzled.DazzleLabel:                     "dazzle"
 physics.producers.razzled.RazzleLabel:                     "razzle"
 physics.producers.razzled.PFPLabel:                        "pandoraSCE"
+physics.producers.razzled.ShowerLabel:                     "pandoraShower"
 
 physics.producers.pandora.SimChannelModuleLabel: "simtpc2d:simpleSC"
 physics.producers.dazzle.SimChannelLabel:        "simtpc2d:simpleSC"

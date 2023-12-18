@@ -5,7 +5,7 @@ recoeff:
   NuGenModuleLabel:      "generator"
   LArGeantModuleLabel:   "largeant"
   TrackModuleLabel:      "pandoraTrack"
-  ShowerModuleLabel:     "pandoraShowerSBN"
+  ShowerModuleLabel:     "pandoraShower"
   PFParticleModuleLabel: "pandoraSCE"
   SliceModuleLabel:      "pandoraSCE"
   HitsModuleLabel:       "gaushit"

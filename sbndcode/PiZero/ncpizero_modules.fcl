@@ -8,7 +8,7 @@ ncpizeroana:
   VertexModuleLabel:           "pandoraSCE"
   HitModuleLabel:              "gaushit"
   TrackModuleLabel:            "pandoraTrack"
-  ShowerModuleLabel:           "pandoraShowerSBN"
+  ShowerModuleLabel:           "pandoraShower"
   TrackCalorimetryModuleLabel: "pandoraCalo"
   CRUMBSModuleLabel:           "crumbs"
   DazzleModuleLabel:           "dazzle"
