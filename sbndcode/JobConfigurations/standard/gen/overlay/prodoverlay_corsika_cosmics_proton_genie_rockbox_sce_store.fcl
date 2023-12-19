@@ -1,0 +1,34 @@
+#include "prodoverlay_corsika_cosmics_proton_genie_rockbox_sce.fcl"
+
+
+
+#Now do the merging and stuff
+physics.simulatetpc:  [ rns, generator, loader, largeantnu, tpcfilter, corsika, largeantcosmic, largeant, largeantdropped ]
+physics.simulatedirt: [ rns, generator, loader, largeantnu, "!tpcfilter", dirtfilter, corsika, largeantcosmic, largeant, largeantdropped] 
+
+
+#Merge dropped MCParticle collections
+physics.producers.largeantdropped: @local::sbnd_merge_sim_sources
+physics.producers.largeantdropped.module_type: "MergeSimSourcesSBN"
+physics.producers.largeantdropped.InputSourcesLabels: ["largeantnu:droppedMCParticles","largeantcosmic:droppedMCParticles"]
+physics.producers.largeantdropped.FillMCParticles: true
+physics.producers.largeantdropped.FillMCParticlesLite: false
+physics.producers.largeantdropped.FillMCParticlesAssociated: false
+
+#
+# LArGEANT configuration
+#
+
+physics.producers.largeantnu.StoreDroppedMCParticles: true
+physics.producers.largeantnu.FillSimEnergyDeposits: true #fill sim energy deposits to be merged
+physics.producers.largeantnu.EnergyDepositInstanceLabels: ["LArG4DetectorServicevolTPCActive"] #sed instance label
+
+physics.producers.largeantcosmic.StoreDroppedMCParticles: true
+physics.producers.largeantcosmic.FillSimEnergyDeposits: true #fill sim energy deposits to be merged
+physics.producers.largeantcosmic.EnergyDepositInstanceLabels: ["LArG4DetectorServicevolTPCActive"] #sed instance label
+
+#
+# Services
+#
+
+services.ParticleListAction.KeepDroppedParticlesInVolumes: ["volTPCActive"] #keep tpc particles for em shower daughters
