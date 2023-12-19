@@ -1,0 +1,3 @@
+#include "prodmarley_sbnd_1event_legacy_largeant.fcl"
+
+physics.simulate: [rns, generator ]

@@ -1,6 +1,6 @@
 #include "simulationservices_sbnd.fcl"
 #include "singles_sbnd.fcl"
-#include "largeantmodules_sbnd.fcl"
+#include "legacy_largeantmodules_sbnd.fcl"
 #include "detsimmodules_sbnd.fcl"
 #include "mccheatermodules.fcl"
 #include "opticaldetectormodules_sbnd.fcl"
@@ -19,7 +19,7 @@ services:
 #user:         @local::sbnd_opsimulation_services	
   user:         @local::sbnd_simulation_services
 }
-services.user.PhotonVisibilityService: @local::sbnd_photonvisibilityservice 
+services.user.PhotonVisibilityService: @local::sbnd_Library_photonvisibilityservice
 services.user.OpDigiProperties:        @local::sbnd_opdigiproperties			
 
 services.user.PhotonVisibilityService.LibraryFile: "photonlibrary_temp.root" 

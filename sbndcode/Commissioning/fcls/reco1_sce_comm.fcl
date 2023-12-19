@@ -1,5 +1,5 @@
 #include "hitdumpermodule.fcl"
-#include "reco1_sce.fcl"
+#include "standard_reco1_sbnd.fcl"
 
 process_name: Reco1Comm
 

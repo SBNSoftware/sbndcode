@@ -1,4 +1,4 @@
-#include "anatree_prodoverlay_corsika_genie"
+#include "anatree_prodoverlay_corsika_genie.fcl"
 
 # setup services parameters for 3 drift windows
 #include "3drift_services_sbnd.fcl"

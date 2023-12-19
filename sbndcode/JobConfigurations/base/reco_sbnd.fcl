@@ -166,7 +166,7 @@ physics:
 
  reco2_no_opt0finder: [
           rns
-          , pandora,
+          , pandora
           , pandoraSCE
           , pandoraSCETrack
           , pandoraSCEShower
@@ -183,7 +183,7 @@ physics:
 
  reco2_no_sce_no_opt0finder: [
           rns
-          , pandora,
+          , pandora
           , pandoraTrack
           , pandoraShower
           , pandoraShowerSBN

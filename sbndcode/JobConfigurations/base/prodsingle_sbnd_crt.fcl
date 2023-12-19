@@ -14,8 +14,8 @@
 # 20170202 (mastbaum@uchicago.edu)
 #   - Initial version
 
-#include "prodsingle_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
+#include "prodsingle_sbnd.fcl"
 
 services.AuxDetGeometry: {
  @table::sbnd_geo_source
