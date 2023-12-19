@@ -1,0 +1,3 @@
+#include "g4_sbnd.fcl"
+
+physics.trigger_paths [ simulate_1d_drift ]

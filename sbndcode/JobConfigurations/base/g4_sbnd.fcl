@@ -1,0 +1,123 @@
+#
+# services
+#
+#include "simulationservices_sbnd.fcl"
+
+#
+# modules
+#
+#include "larg4_sbnd.fcl"
+#include "ionandscint_sbnd.fcl"
+#include "PDFastSim_sbnd.fcl"
+#include "simdrift_sbnd.fcl"
+#include "mcreco_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "config_genericCRT.fcl"
+
+
+process_name: G4
+
+
+services:
+{
+  TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  @table::sbnd_g4_services
+}
+
+
+source:
+{
+  module_type: RootInput
+}
+
+
+physics:
+{
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
+
+    # The geant4 step
+    largeant: @local::sbnd_larg4
+
+    # Creation of ionization electrons and scintillation photons, inside the active volume
+    ionandscint: @local::sbnd_ionandscint
+
+    # Creation of ionization electrons and scintillation photons, outside the active volume
+    ionandscintout: @local::sbnd_ionandscint_out
+
+    # Light propogation inside the active volume
+    pdfastsim: @local::sbnd_pdfastsim_par
+
+    # Light propogation outside the active volume
+    pdfastsimout: @local::sbnd_pdfastsim_pvs
+
+    # Electron propogation
+    simdrift: @local::sbnd_simdrift
+
+    # Truth-level reconstruction
+    mcreco: @local::sbnd_mcreco
+
+    # Generic CRT
+    genericcrt: @local::sbnd_genericCRT
+
+  }
+
+  # All producers and filters modules for this path, order matters
+  core_simulate: [ ionandscint
+                 , ionandscintout,
+                 , pdfastsim
+                 , pdfastsimout
+                 , genericcrt
+                 ]
+ 
+  
+  core_simulate_1d_drift: [ core_simulate
+                          , simdrift
+                          , mcreco
+                          ]
+
+  simulate: [ rns
+            , loader
+            , largeant
+            , core_simulate
+            ]
+
+  simulate_1d_drift: [ rns
+                     , loader
+                     , largeant
+                     , core_simulate_1d_drift
+                     ]
+
+  simulate_no_largeant: [ rns
+                        , core_simulate
+                        ]
+ 
+  simulate_1d_drift_no_largeant: [ rns
+                                 , core_simulate_1d_drift
+                                 ]
+
+  # The output stream, there could be more than one if using filters
+  stream1: [ out1 ]
+
+  # Contains the paths that modify the art::event
+  trigger_paths: [ simulate ]
+
+  # Contains the paths that do not modify the art::Event
+  end_paths: [ stream1 ]
+}
+
+
+outputs:
+{
+  out1:
+  {
+                    @table::sbnd_rootoutput
+    dataTier:       "simulated"
+    outputCommands: [ "keep *_*_*_*" ]
+  }
+}
