@@ -1,14 +1,6 @@
 #include "CAFMaker.fcl"
 
-#include "services_sbnd.fcl"
-#include "geometry_sbnd.fcl"
-
-#include "larproperties.fcl"
-#include "backtrackerservice.fcl"
-#include "detectorproperties_sbnd.fcl"
-#include "particleinventoryservice.fcl"
-#include "photonbacktrackerservice.fcl"
-#include "mccheatermodules.fcl"
+#include "simulationservices_sbnd.fcl"
 
 #include "calorimetry_sbnd.fcl"
 
@@ -18,12 +10,6 @@
 #include "showercosmicdistanceproducer.fcl"
 #include "sbn_pid.fcl"
 #include "sbn_crumbs_producer.fcl"
-
-#include "crthitconverter_producer.fcl"
-#include "crtmatch_producer.fcl"
-#include "pmtflashtrigger_producer.fcl"
-
-#include "flashmatch_sbnd.fcl"
 #include "sbn_stub.fcl"
 
 #include "cafmaker_common_defs.fcl"
@@ -47,11 +33,11 @@ services:
   GeometryConfigurationWriter: {}
   Geometry:                  @local::sbnd_geo
   AuxDetGeometry:            @local::sbnd_auxdetgeo
-  LArPropertiesService:      @local::standard_properties
+  LArPropertiesService:      @local::sbnd_properties
   DetectorClocksService:     @local::sbnd_services.DetectorClocksService
   DetectorPropertiesService: @local::sbnd_detproperties
-  ParticleInventoryService:  @local::standard_particleinventoryservice
-  BackTrackerService:        @local::standard_backtrackerservice
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  BackTrackerService:        @local::sbnd_backtrackerservice
   SpaceCharge:               @local::sbnd_spacecharge
   NuRandomService: {
     policy: perEvent
@@ -80,8 +66,6 @@ physics:
    # Includes: pandoraTrackMCS, pandoraTrackRange, rns, genieweight, fluxweight
    @table::cafmaker_common_producers
 
-   flashtrig: @local::pmtflashtrigmaker_sbnd
-   crtconvhit:            @local::crthitconverter_sbnd
    pandoraTrackCRTHit:          @local::crthitmatch_sbnd
    pandoraTrackCRTTrack:  @local::crttrackmatch_sbnd
 
@@ -97,9 +81,6 @@ physics:
    pandoraShowerCosmicDist: @local::showerCosmicDist_sbn
    pandoraShowerRazzle:         @local::razzle_sbnd
 }
-  filters:{
-    flashtrigfilter: @local::pmtflashtrigfilter_sbnd
-  }
   analyzers:
   {
 #    metadata: @local::standard_metadata            #prod
@@ -131,5 +112,3 @@ physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxwei
 
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []
-
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"

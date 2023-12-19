@@ -271,5 +271,3 @@ physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
 physics.producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
 
 physics.producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "gaushit"
-
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"

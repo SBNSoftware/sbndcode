@@ -31,8 +31,8 @@ FileCatalogMetadata: @local::sbnd_file_catalog_mc
   # DBrailsf 09/03/18 Use the standard outputfile naming for anatree
   TFileService: { fileName: @local::sbnd_rootoutput.fileName }
                 @table::sbnd_services
-  ParticleInventoryService: @local::standard_particleinventoryservice
-  BackTrackerService:  @local::standard_backtrackerservice
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:  @local::sbnd_backtrackerservice
 }
 
 source: {

@@ -56,12 +56,16 @@ sbnd_largeantparameters_noopticalsim.TransverseDiffusion: 8.8e-9 #in cm^2/ns (wa
 
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
 
-sbnd_backtrackerservice:          @local::standard_backtrackerservice        # from backtrackerservice.fcl
+sbnd_backtrackerservice: @local::standard_backtrackerservice        # from backtrackerservice.fcl
 
 sbnd_backtrackerservice.BackTracker.G4ModuleLabel: "largeant"
-sbnd_backtrackerservice.BackTracker.SimChannelModuleLabel: "simdrift"
+sbnd_backtrackerservice.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
 sbnd_backtrackerservice.BackTracker.MinimumHitEnergyFraction: 1e-1
 sbnd_backtrackerservice.BackTracker.OverrideRealData: true
+
+sbnd_backtrackerservice_1d_drift_sim: @local::sbnd_backtrackerservice
+
+sbnd_backtrackerservice_1d_drift_sim.SimChannelModuleLabel: "simdrift"
 
 sbnd_particleinventoryservice:  @local::standard_particleinventoryservice
 
