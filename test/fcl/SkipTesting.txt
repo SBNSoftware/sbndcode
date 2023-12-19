@@ -7,8 +7,17 @@
 # Configurations that are intentionally incomplete
 # (e.g. designed to be included at the end of another one to modify it)
 #
-
-
+enable_spacecharge_services_sbnd.fcl
+disable_spacecharge_services_sbnd.fcl
+set_flux_config_b.fcl
+set_flux_config_c.fcl
+set_flux_config_d.fcl
+set_flux_config_e.fcl
+set_flux_config_f.fcl
+set_flux_config_g.fcl
+set_flux_config_h.fcl
+set_genie_rotatedbuckets.fcl
+set_genie_filter_ccpi0.fcl
 
 ################################################################################
 # broken, won't fix
@@ -29,29 +38,5 @@
 #
 
 ANA.fcl
-anatree_prodoverlay_corsika_genie_3drift_windows.fcl
-detsimmodules_sbnd.fcl
-g4_noophybrid_sbnd.fcl
-legacy_g4_5ms_electron_lifetime.fcl
-legacy_g4_enable_doublespacecharge.fcl
-prodgenie_sbnd_proj.fcl
-prodmarley_nue_fermidirac.fcl
-prodmarley_sbnd_1event.fcl
-prodoverlay_corsika_cosmics_proton_genie_rockbox_intrnue_sbnd.fcl
-prodsingle_fastoptical2.fcl
-prodsingle_fastoptical_sbnd.fcl
-prodsingle_sbnd_crt.fcl
-reco_calorimetry_workshop2020_sbnd.fcl
-sbnd_buildopticallibrary.fcl
-set_flux_config_b.fcl
-set_flux_config_c.fcl
-set_flux_config_d.fcl
-set_flux_config_e.fcl
-set_flux_config_f.fcl
-set_flux_config_g.fcl
-set_flux_config_h.fcl
-set_genie_filter_ccpi0.fcl
-set_genie_rotatedbuckets.fcl
 spacepoint_sbnd.fcl
-standard_reco_sbnd.fcl
 trackfinderalgorithms_sbnd.fcl
