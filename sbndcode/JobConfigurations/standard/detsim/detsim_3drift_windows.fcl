@@ -1,4 +1,4 @@
-#include "detsim_no_sce.fcl
+#include "detsim_no_sce.fcl"
 
 # setup services parameters for 3 drift windows
 #include "3drift_services_sbnd.fcl"

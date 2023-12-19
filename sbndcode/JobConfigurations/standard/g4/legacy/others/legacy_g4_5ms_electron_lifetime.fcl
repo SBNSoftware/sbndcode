@@ -1,4 +1,4 @@
-#include "egacy_g4_sbnd.fcl"
+#include "legacy_g4_sbnd.fcl"
 
 services.DetectorPropertiesService.Electronlifetime:  5e3 #microseconds
 

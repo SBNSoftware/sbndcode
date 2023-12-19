@@ -4,6 +4,6 @@
 # Author:  Andrew Scarff (a.scarff@sheffield.ac.uk)
 # Date:    7th August 2019
 
-#include "detsim_no_sce.fcl
+#include "detsim_no_sce.fcl"
 
 services.NoiseModel: @local::sbnd_thermalnoiseserviceinfreq

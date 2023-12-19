@@ -1,4 +1,4 @@
-#include "legacy_g4_sbnd.fcl
+#include "legacy_g4_sbnd.fcl"
 
 # Use anti-correlated ionization/scintillation (LegacyLArG4)
 services.LArG4Parameters.IonAndScintCalculator: "Correlated" # default: "Separate"

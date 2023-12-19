@@ -11,7 +11,7 @@
 #-------------------------------------------------------------------
 
 #include "g4_drops.fcl"
-#include "standard_g4_sbnd.fcl
+#include "standard_g4_sbnd.fcl"
 
 # Drop truth data products.
 

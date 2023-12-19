@@ -1,4 +1,4 @@
-#include "egacy_g4_sbnd.fcl"
+#include "legacy_g4_sbnd.fcl"
 
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE: true
