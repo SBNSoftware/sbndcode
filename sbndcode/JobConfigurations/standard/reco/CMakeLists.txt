@@ -1,4 +1,4 @@
-add_subdirectory(deprecated)
+#add_subdirectory(deprecated)
 
 install_fhicl()
 
