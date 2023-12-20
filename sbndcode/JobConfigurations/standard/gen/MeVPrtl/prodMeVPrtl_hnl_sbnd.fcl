@@ -1,0 +1,53 @@
+#include "hnl_config.fcl"
+
+# service configuration
+#include "simulationservices_sbnd.fcl"
+
+
+process_name: Gen
+
+services:
+{
+  @table::sbnd_simulation_services
+  TFileService: { fileName: "hists_prodMeVPrtl_HNL_sbnd_%p-%tc.root" }
+  IFDH: {}
+}
+
+source: {
+  module_type: "EmptyEvent"
+  firstEvent: 1
+  firstRun: 1
+  timestampPlugin: {
+    plugin_type: "GeneratedEventTimestamp"
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    rns:       { module_type: "RandomNumberSaver" }
+    generator: @local::hnl_gen
+  }
+ 
+  simulate:  [ rns, generator ]
+  stream: [ out ]
+
+  trigger_paths: [ simulate ]
+  end_paths:     [ stream ] 
+  
+} # physics
+
+outputs: 
+{
+  out:
+  {
+    module_type: RootOutput
+    fileName: "prodMeVPrtl_HNL_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
+    dataTier: "simulated"
+    compressionLevel: 1
+    saveMemoryObjectThreshold: 0
+  }
+}
+
+services.NuRandomService.policy: "random"
