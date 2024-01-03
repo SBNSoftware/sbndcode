@@ -34,7 +34,7 @@ ncpizeroana:
     MaxHitSeparation: 0.9
   }
 
-  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroAv11.root"
+  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroAv12.root"
 
   module_type: NCPiZeroAnalysis
 }
