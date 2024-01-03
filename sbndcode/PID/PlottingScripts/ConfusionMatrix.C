@@ -1,5 +1,5 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
-#include "/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
 
 #include "RazzledHeaders.h"
 
@@ -9,11 +9,11 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode = t
 
 void ConfusionMatrix()
 {
-  ConfusionMatrix(razzled_lower_track_length_threshold, true, false);
-  ConfusionMatrix(razzled_lower_track_length_threshold, false, true);
+  ConfusionMatrix(razzled_v12, true, false);
+  ConfusionMatrix(razzled_v12, false, true);
 
-  ConfusionMatrix(razzled_lower_track_length_threshold, true, false, 0.8, 0.8);
-  ConfusionMatrix(razzled_lower_track_length_threshold, false, true, 0.8, 0.8);
+  ConfusionMatrix(razzled_v12, true, false, 0.8, 0.8);
+  ConfusionMatrix(razzled_v12, false, true, 0.8, 0.8);
 }
 
 void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
@@ -26,16 +26,14 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
       return;
     }
 
-  TString save_dir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled_lower_track_length_threshold/confusionmatrices";
+  TString save_dir = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzled/confusionmatrices";
   gSystem->Exec("mkdir -p " + save_dir);
   
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
   TChain *pfps = new TChain("razzled/pfpTree");
-  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_rockbox.root");
-  // pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intrnue.root");
-  // pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root");
+  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_rockbox.root");
 
   int truePDG, recoPDG;
   float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ,
@@ -109,7 +107,7 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
       reader->AddVariable("shw_convGap", &shw_convGap);
       reader->AddVariable("shw_openAngle", &shw_openAngle);
       reader->AddVariable("shw_modHitDensity", &shw_modHitDensity);
-      reader->AddVariable("shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
+      reader->AddVariable("shw_sqrtEnergyDensity>2.5?2.5:shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
     }
   else if(training.razzle)
     {
