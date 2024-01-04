@@ -74,8 +74,8 @@ physics:
   end_paths: [ stream ]
 
 }
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
 
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
 physics.producers.mypandora.ConfigFile: "PandoraSettings_Master_SBND_ReClusterTest.xml"
 physics.producers.mypandora.ShouldRunAllHitsCosmicReco:                            false
 physics.producers.mypandora.ShouldRunStitching:                                    false
