@@ -12,7 +12,7 @@ physics.reco2_sensible: [ rns,
   pandora,
   pandoraSCE,
   pandoraTrack,
-  pandoraShowerSBN,
+  pandoraShower,
   pandoraCalo,
   pandoraPid,
   crtclustering,
@@ -62,7 +62,7 @@ physics.producers.fmatch.PandoraProducer:                  "pandoraSCE"
 physics.producers.fmatch.SpacePointProducer:               "pandoraSCE"
 physics.producers.opt0finder.SliceProducer:                "pandoraSCE"
 physics.producers.pandoraShowerCosmicDist.PandoraLabel:    "pandoraSCE"
-physics.producers.pandoraShowerSBN.PFParticleLabel:        "pandoraSCE"
+physics.producers.pandoraShower.PFParticleLabel:           "pandoraSCE"
 physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
 physics.producers.pandoraTrack.PFParticleLabel:            "pandoraSCE"
 physics.producers.razzle.PFPLabel:                         "pandoraSCE"
@@ -77,6 +77,12 @@ physics.producers.pandora.SimChannelModuleLabel: "simtpc2d:simpleSC"
 physics.producers.dazzle.SimChannelLabel:        "simtpc2d:simpleSC"
 physics.producers.razzle.SimChannelLabel:        "simtpc2d:simpleSC"
 physics.producers.razzled.SimChannelLabel:       "simtpc2d:simpleSC"
+
+physics.producers.opt0finder.ShowerProducer:              "pandoraShower"
+physics.producers.pandoraShowerCosmicDist.ShowerLabel:    "pandoraShower"
+physics.producers.pandoraShowerSelectionVars.ShowerLabel: "pandoraShower"
+physics.producers.razzle.ShowerLabel:        		  "pandoraShower"
+physics.producers.razzled.ShowerLabel:       		  "pandoraShower"
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
 
