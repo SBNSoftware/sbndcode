@@ -1,3 +1,5 @@
+#pragma once
+
 std::string docStart = "\\documentclass{article}\n"
   "\\usepackage{graphicx}\n"
   "\\usepackage[a4paper, landscape, margin=.5in]{geometry}\n"

@@ -1,15 +1,12 @@
-#include "/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
-
-const double goalPOT = 10e20;
-
-double GetPOT(TChain *subruns);
+#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "Common.C"
 
 void IntegratedFlux(const TString productionVersion)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/integrated_flux";
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/integrated_flux";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = "/sbnd/data/users/hlay/ncpizero/production/NCPiZeroAv7/tmpflux/flux_hist.root";
+  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configI.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -23,10 +20,6 @@ void IntegratedFlux(const TString productionVersion)
   const double nuPOT = GetPOT(pot);
   const double scaling = goalPOT / nuPOT;
   const double fv_face_area = 175 * 360 * 2.;
-
-  TString potString = Form(" %g POT", goalPOT);
-  potString.ReplaceAll("e+","x10^{");
-  potString.ReplaceAll(" POT","} POT");
 
   const int N = nus->GetEntries();
 
@@ -44,11 +37,11 @@ void IntegratedFlux(const TString productionVersion)
   std::vector<TH1F*> hNuEnergyFluxUniverses;
   std::vector<float> counts(1000, 0.);
 
-  TH1F *hNuEnergyNominal = new TH1F("hNuEnergyNominal", ";True E_{#nu} (GeV);#nu s", 14, true_nu_e_bins);
+  TH1F *hNuEnergyNominal = new TH1F("hNuEnergyNominal", ";True E_{#nu} (GeV);#nu", 14, true_nu_e_bins);
   float nominalCount = 0.;
 
   for(int j = 0; j < 1000; ++j)
-    hNuEnergyFluxUniverses.push_back(new TH1F(Form("hNuEnergyFluxUniverses%d", j), ";True E_{#nu} (GeV);#nu s", 14, true_nu_e_bins));
+    hNuEnergyFluxUniverses.push_back(new TH1F(Form("hNuEnergyFluxUniverses%d", j), ";True E_{#nu} (GeV);#nu", 14, true_nu_e_bins));
 
   for(int i = 0; i < N; ++i)
     {
@@ -89,7 +82,7 @@ void IntegratedFlux(const TString productionVersion)
   nominalLine->SetLineWidth(5);
   nominalLine->DrawLine(nominalFlux, 0., nominalFlux, 1.12 * hFluxUniverses->GetMaximum());
 
-  TLatex *potLatex = new TLatex(hFluxUniverses->GetBinLowEdge(22), 1.14 * hFluxUniverses->GetMaximum(), potString);
+  TLatex *potLatex = new TLatex(hFluxUniverses->GetBinLowEdge(22), 1.14 * hFluxUniverses->GetMaximum(), POTString());
   potLatex->SetTextColor(kGray+2);
   potLatex->SetTextSize(0.035);
   potLatex->Draw();
@@ -113,7 +106,7 @@ void IntegratedFlux(const TString productionVersion)
 
   NormaliseEntriesByBinWidth(hNuEnergyNominal, .1);
   hNuEnergyNominal->Scale(scaling);
-  hNuEnergyNominal->SetMaximum(1.4 * hNuEnergyNominal->GetMaximum());
+  hNuEnergyNominal->SetMaximum(1.5 * hNuEnergyNominal->GetMaximum());
   hNuEnergyNominal->Draw("hist");
 
   for(int j = 0; j < 1000; ++j)
@@ -134,20 +127,109 @@ void IntegratedFlux(const TString productionVersion)
 
   cNuEnergyFluxUniverses->SaveAs(saveDir + "/nu_energy_flux_universes.png");
   cNuEnergyFluxUniverses->SaveAs(saveDir + "/nu_energy_flux_universes.pdf");
-}
 
-double GetPOT(TChain *subruns)
-{
-  double sum = 0., pot = 0;
+  std::vector<TH1F*> hNuEnergyFluxUniversesPerBin;
+  TH1F* hNuEnergyFluxUniversesCV = new TH1F("hNuEnergyFluxUniversesCV", ";True E_{#nu} (GeV);#nu", 14, true_nu_e_bins);
 
-  subruns->SetBranchAddress("pot", &pot);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
+  for(int bin = 0; bin < hNuEnergyNominal->GetNbinsX(); ++bin)
     {
-      subruns->GetEntry(i);
-      sum += pot;
+      hNuEnergyFluxUniversesPerBin.push_back(new TH1F(Form("hNuEnergyFluxUniversesBin%i", bin+1),
+                                                      Form(";%.1f < True E_{#nu} (GeV) < %.1f;Universes", hNuEnergyNominal->GetBinLowEdge(bin+1),
+                                                           hNuEnergyNominal->GetBinLowEdge(bin+1) + hNuEnergyNominal->GetBinWidth(bin+1)),
+                                                      25, .5 * hNuEnergyNominal->GetBinContent(bin+1), 1.5 * hNuEnergyNominal->GetBinContent(bin+1)));
+
+      for(int j = 0; j < 1000; ++j)
+        hNuEnergyFluxUniversesPerBin[bin]->Fill(hNuEnergyFluxUniverses[j]->GetBinContent(bin+1));
+
+      TCanvas *cNuEnergyFluxUniversesPerBin = new TCanvas(Form("cNuEnergyFluxUniversesBin%i", bin+1), Form("cNuEnergyFluxUniversesBin%i", bin+1));
+      cNuEnergyFluxUniversesPerBin->cd();
+
+      hNuEnergyFluxUniversesPerBin[bin]->SetLineColor(kBlue+2);
+
+      TF1 *fGaus = new TF1("fGaus", "gaus", .5 * hNuEnergyNominal->GetBinContent(bin+1), 1.5 * hNuEnergyNominal->GetBinContent(bin+1));
+      hNuEnergyFluxUniversesPerBin[bin]->Fit(fGaus);
+      fGaus->SetLineColor(kRed+2);
+
+      hNuEnergyFluxUniversesPerBin[bin]->Draw("hist");
+      fGaus->Draw("same");
+
+      cNuEnergyFluxUniversesPerBin->SaveAs(saveDir + Form("/nu_energy_bin%i_flux_variations.png", bin+1));
+      cNuEnergyFluxUniversesPerBin->SaveAs(saveDir + Form("/nu_energy_bin%i_flux_variations.pdf", bin+1));
+
+      hNuEnergyFluxUniversesCV->SetBinContent(bin+1, fGaus->GetParameter("Mean"));
+      hNuEnergyFluxUniversesCV->SetBinError(bin+1, fGaus->GetParameter("Sigma"));
     }
 
-  return sum;
-}
+  TCanvas *cNuEnergyFluxUniversesOneSigma = new TCanvas("cNuEnergyFluxUniversesOneSigma", "cNuEnergyFluxUniversesOneSigma");
+  cNuEnergyFluxUniversesOneSigma->cd();
+  cNuEnergyFluxUniversesOneSigma->SetTopMargin(.1);
 
+  hNuEnergyNominal->Draw("hist");
+  hNuEnergyFluxUniversesCV->SetLineColor(kViolet-6);
+  hNuEnergyFluxUniversesCV->Draw("histesame");
+
+  TLegend *lNuEnergyFluxUniversesOneSigma = new TLegend(.5, .65, .7, .8);
+  lNuEnergyFluxUniversesOneSigma->AddEntry(hNuEnergyNominal, "Nominal", "l");
+  lNuEnergyFluxUniversesOneSigma->AddEntry(hNuEnergyFluxUniversesCV, "CV #pm 1 #sigma", "l");
+  lNuEnergyFluxUniversesOneSigma->Draw();
+
+  potLatex->Draw();
+
+  cNuEnergyFluxUniversesOneSigma->SaveAs(saveDir + "/nu_energy_flux_universes_one_sigma.png");
+  cNuEnergyFluxUniversesOneSigma->SaveAs(saveDir + "/nu_energy_flux_universes_one_sigma.pdf");
+
+  TH2F *hNuEnergyFluxUniversesCovariance = new TH2F("hNuEnergyFluxUniversesCovariance", ";Reco Bin Index;Reco Bin Index",
+                                                    14, 0.5, 14.5, 14, 0.5, 14.5);
+
+  TH2F *hNuEnergyFluxUniversesCorrelation = new TH2F("hNuEnergyFluxUniversesCorrelation", ";Reco Bin Index;Reco Bin Index",
+                                                     14, 0.5, 14.5, 14, 0.5, 14.5);
+
+  for(int binX = 1; binX <= hNuEnergyFluxUniversesCovariance->GetNbinsX(); ++binX)
+    {
+      for(int binY = 1; binY <= hNuEnergyFluxUniversesCovariance->GetNbinsY(); ++binY)
+        {
+          double covXY = 0.;
+          double covXX = 0.;
+          double covYY = 0.;
+
+          for(int univ = 0; univ < 1000; ++univ)
+            {
+              covXY += (hNuEnergyFluxUniverses[univ]->GetBinContent(binX) - hNuEnergyNominal->GetBinContent(binX))
+                * (hNuEnergyFluxUniverses[univ]->GetBinContent(binY) - hNuEnergyNominal->GetBinContent(binY));
+
+              covXX += (hNuEnergyFluxUniverses[univ]->GetBinContent(binX) - hNuEnergyNominal->GetBinContent(binX))
+                * (hNuEnergyFluxUniverses[univ]->GetBinContent(binX) - hNuEnergyNominal->GetBinContent(binX));
+
+              covYY += (hNuEnergyFluxUniverses[univ]->GetBinContent(binY) - hNuEnergyNominal->GetBinContent(binY))
+                * (hNuEnergyFluxUniverses[univ]->GetBinContent(binY) - hNuEnergyNominal->GetBinContent(binY));
+            }
+
+          covXY /= 1000;
+          covXX /= 1000;
+          covYY /= 1000;
+
+          const double corrXY = covXY / (TMath::Sqrt(covXX) * TMath::Sqrt(covYY));
+
+          hNuEnergyFluxUniversesCovariance->SetBinContent(binX, binY, covXY);
+          hNuEnergyFluxUniversesCorrelation->SetBinContent(binX, binY, corrXY);
+        }
+    }
+
+  TCanvas *cNuEnergyFluxUniversesCovariance = new TCanvas("cNuEnergyFluxUniversesCovariance", "cNuEnergyFluxUniversesCovariance");
+  cNuEnergyFluxUniversesCovariance->cd();
+  cNuEnergyFluxUniversesCovariance->SetRightMargin(.2);
+
+  hNuEnergyFluxUniversesCovariance->Draw("colz");
+
+  cNuEnergyFluxUniversesCovariance->SaveAs(saveDir + "/nu_energy_flux_covariance.png");
+  cNuEnergyFluxUniversesCovariance->SaveAs(saveDir + "/nu_energy_flux_covariance.pdf");
+
+  TCanvas *cNuEnergyFluxUniversesCorrelation = new TCanvas("cNuEnergyFluxUniversesCorrelation", "cNuEnergyFluxUniversesCorrelation");
+  cNuEnergyFluxUniversesCorrelation->cd();
+  cNuEnergyFluxUniversesCorrelation->SetRightMargin(.2);
+
+  hNuEnergyFluxUniversesCorrelation->Draw("colz");
+
+  cNuEnergyFluxUniversesCorrelation->SaveAs(saveDir + "/nu_energy_flux_correlation.png");
+  cNuEnergyFluxUniversesCorrelation->SaveAs(saveDir + "/nu_energy_flux_correlation.pdf");
+}

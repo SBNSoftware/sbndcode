@@ -1,3 +1,5 @@
+#pragma once
+
 const std::vector<std::string> flux_weight_names = { "expskin_Flux",
                                                      "horncurrent_Flux",
                                                      "kminus_Flux",

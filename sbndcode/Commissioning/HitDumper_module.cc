@@ -23,6 +23,7 @@
 #include "canvas/Persistency/Common/FindMany.h"
 #include "canvas/Utilities/InputTag.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Utilities/InputTag.h"
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"

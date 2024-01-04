@@ -1,0 +1,40 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "recoeff.fcl"
+
+process_name: RecoEff
+
+services:
+{
+  @table::sbnd_services
+
+  TFileService:
+  {
+    fileName: "recoEffHists.root"
+  }
+
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source: 
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    recoeff: @local::recoeff
+  }
+
+  ana:       [ recoeff ]
+  end_paths: [ ana ]
+}
+
+#include "enable_spacecharge_services_sbnd.fcl"
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

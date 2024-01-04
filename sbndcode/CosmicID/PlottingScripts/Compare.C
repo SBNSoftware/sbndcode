@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Structs.h"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Structs.h"
 
 #include "TSystem.h"
 #include "TROOT.h"
@@ -35,36 +35,53 @@ const std::vector<CRUMBSTraining> nc_trainings = { { "Nominal", "/cvmfs/sbnd.ope
                                                    { "OpT0", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/crumbs/training/OpT0Finder/CRUMBS_NC/weights/CrumbsTMVAClassification_BDT.weights.xml", true, false, true, "OpT0", kViolet-5 },
 };
 
+const std::vector<CRUMBSTraining> inclusive_v12_trainings = { { "Nominal", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/crumbs/training/OpT0Finder/CRUMBS_Inclusive/weights/CrumbsTMVAClassification_BDT.weights.xml", true, false, true, "Nominal", kTeal+6 },
+                                                              { "CRUMBS Av12", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/crumbs/training/OpT0Finder/CRUMBS_Inclusive/weights/CrumbsTMVAClassification_BDT.weights.xml", true, false, true, "CRUMBS Av12", kPink+3 },
+};
+
+const std::vector<CRUMBSTraining> ccnumu_v12_trainings = { { "Nominal", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/crumbs/training/OpT0Finder/CRUMBS_CCNuMu/weights/CrumbsTMVAClassification_BDT.weights.xml", true, false, true, "Nominal", kTeal+6 },
+                                                           { "CRUMBS Av12", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/crumbs/training/OpT0Finder/CRUMBS_CCNuMu/weights/CrumbsTMVAClassification_BDT.weights.xml", true, false, true, "CRUMBS Av12", kPink+3 },
+};
+
+const std::vector<CRUMBSTraining> ccnue_v12_trainings = { { "Nominal", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/crumbs/training/OpT0Finder/CRUMBS_CCNuE/weights/CrumbsTMVAClassification_BDT.weights.xml", true, false, true, "Nominal", kTeal+6 },
+                                                          { "CRUMBS Av12", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/crumbs/training/OpT0Finder/CRUMBS_CCNuE/weights/CrumbsTMVAClassification_BDT.weights.xml", true, false, true, "CRUMBS Av12", kPink+3 },
+};
+
+const std::vector<CRUMBSTraining> nc_v12_trainings = { { "Nominal", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/crumbs/training/OpT0Finder/CRUMBS_NC/weights/CrumbsTMVAClassification_BDT.weights.xml", true, false, true, "Nominal", kTeal+6 },
+                                                       { "CRUMBS Av12", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/crumbs/training/OpT0Finder/CRUMBS_NC/weights/CrumbsTMVAClassification_BDT.weights.xml", true, false, true, "CRUMBS Av12", kPink+3 },
+};
+
+
 void Compare(const std::vector<CRUMBSTraining> &trainings, const TString save_file_suffix,
              const std::set<int> set_ccnc, const std::set<int> set_nutype,
              const double purThresh = 0.5, const double compThresh = 0.5);
 
 void Compare()
 {
-  Compare(inclusive_trainings, "inclusive", {0, 1}, {12, 14});
-  Compare(ccnumu_trainings, "ccnumu", {0}, {14});
-  Compare(ccnue_trainings, "ccnue", {0}, {12});
-  Compare(nc_trainings, "nc", {1}, {12, 14});
-  Compare(inclusive_trainings, "inclusive_high_quality", {0, 1}, {12, 14}, 0.8, 0.8);
-  Compare(ccnumu_trainings, "ccnumu_high_quality", {0}, {14}, 0.8, 0.8);
-  Compare(ccnue_trainings, "ccnue_high_quality", {0}, {12}, 0.8, 0.8);
-  Compare(nc_trainings, "nc_high_quality", {1}, {12, 14}, 0.8, 0.8);
+  Compare(inclusive_v12_trainings, "inclusive", {0, 1}, {12, 14});
+  Compare(ccnumu_v12_trainings, "ccnumu", {0}, {14});
+  Compare(ccnue_v12_trainings, "ccnue", {0}, {12});
+  Compare(nc_v12_trainings, "nc", {1}, {12, 14});
+  Compare(inclusive_v12_trainings, "inclusive_high_quality", {0, 1}, {12, 14}, 0.8, 0.8);
+  Compare(ccnumu_v12_trainings, "ccnumu_high_quality", {0}, {14}, 0.8, 0.8);
+  Compare(ccnue_v12_trainings, "ccnue_high_quality", {0}, {12}, 0.8, 0.8);
+  Compare(nc_v12_trainings, "nc_high_quality", {1}, {12, 14}, 0.8, 0.8);
 }
 
 void Compare(const std::vector<CRUMBSTraining> &trainings, const TString save_file_suffix,
              const std::set<int> set_ccnc, const std::set<int> set_nutype,
              const double purThresh, const double compThresh)
 {
-  const TString save_dir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/crumbs/training/comparisons";
+  const TString save_dir = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/crumbs/training/comparisons";
   gSystem->Exec("mkdir -p " + save_dir);
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
   TChain *slices = new TChain("crumbs/SliceTree");
-  slices->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_rockbox.root");
-  slices->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intrnue.root");
-  slices->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root");
+  slices->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_rockbox.root");
+  slices->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_intrnue.root");
+  slices->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_intime.root");
 
   float reader_tpc_CRFracHitsInLongestTrack, reader_tpc_CRLongestTrackDeflection,
     reader_tpc_CRLongestTrackDirY, reader_tpc_CRNHitsMax,

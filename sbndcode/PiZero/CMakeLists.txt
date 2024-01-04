@@ -13,8 +13,10 @@ art_make(
          lardata::Utilities
          sbnobj::Common_Reco
          sbndcode_PiZero_SecondShower
+         sbndcode::GeoWrappers
 )
 
 install_fhicl()
 
 add_subdirectory(SecondShower)
+add_subdirectory(ShowerEnergyCorrection)

@@ -1,0 +1,72 @@
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "Particles.h"
+#include "Plots.h"
+#include "Common.C"
+
+void RecoEff(const TString productionVersion)
+{
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/reco_eff";
+  gSystem->Exec("mkdir -p " + saveDir);
+
+  const std::vector<int> colours             = { kMagenta + 2, kRed - 4 };
+  const std::vector<TString> names           = { "Reco Eff", "Good Reco Eff" };
+  const std::array<float, 4> legend_position = { .25, .86, .87, .91 };
+  const int ncolumns                         = 3;
+  const double energyBins[14]                = { 0., 50, 100, 150, 200, 250, 300, 400, 500, 750, 1e3, 1.25e3, 1.5e3, 2e3 };
+
+  const TCut reco_cut      = "(reco_nTracks>0 || reco_nShowers>0) && ((reco_track_purity>.5 && reco_track_completeness>.5) || (reco_shower_purity>.5 && reco_shower_completeness>.5))";
+  const TCut good_reco_cut = "(reco_nTracks>0 || reco_nShowers>0) && ((reco_track_purity>.8 && reco_track_completeness>.8) || (reco_shower_purity>.8 && reco_shower_completeness>.8))";
+
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+
+  gROOT->SetStyle("henrySBND");
+  gROOT->ForceStyle();
+
+  TChain *particleTree = new TChain("recoeff/ParticleTree");
+  particleTree->Add(rockboxFile);
+
+  for(auto const& particle : particles)
+    {
+      for(auto const& plot : reco_eff_plots)
+        {
+          TCanvas *canvas = new TCanvas("canvas" + particle.name, "canvas" + particle.name);
+          canvas->cd();
+
+          const TCut base_cut = Form("abs(mc_PDG)==%d", particle.pdg);
+
+          std::vector<float> binsVec;
+
+          if(plot.name == "energy")
+            binsVec = particle.energybins;
+          else if(plot.name == "momentum")
+            binsVec= particle.momentumbins;
+
+          double bins[binsVec.size()];
+          for(int i = 0; i < binsVec.size(); ++i)
+            bins[i] = binsVec[i];
+
+          TH1F *trueHist = new TH1F("trueHist" + particle.name, plot.axes_labels + particle.latex_name, particle.energybins.size() - 1, bins);
+          const int total = particleTree->Draw(plot.var + ">>trueHist" + particle.name, base_cut);
+          NormaliseEntriesByBinWidth(trueHist);
+
+          TH1F *recoHist = new TH1F("recoHist" + particle.name, plot.axes_labels + particle.latex_name, particle.energybins.size() - 1, bins);
+          const int reco = particleTree->Draw(plot.var + ">>recoHist" + particle.name, base_cut + reco_cut);
+          NormaliseEntriesByBinWidth(recoHist);
+
+          TH1F *goodRecoHist = new TH1F("goodRecoHist" + particle.name, plot.axes_labels + particle.latex_name, particle.energybins.size() - 1, bins);
+          const int goodReco = particleTree->Draw(plot.var + ">>goodRecoHist" + particle.name, base_cut + good_reco_cut);
+          NormaliseEntriesByBinWidth(goodRecoHist);
+
+          MakePlotMultiEff(canvas, trueHist, { recoHist, goodRecoHist }, plot.axes_labels + particle.latex_name, colours, names, legend_position, ncolumns);
+
+          canvas->SaveAs(saveDir + "/" + particle.name + "_" + plot.name + "_reco_eff.png");
+          canvas->SaveAs(saveDir + "/" + particle.name + "_" + plot.name + "_reco_eff.pdf");
+
+          std::cout << "\n"
+                    << Form("%s Eff: %.2f%% Good Eff: %.2f%%\n", particle.name.Data(), reco * 100. / total, goodReco * 100. / total) << '\n'
+                    << std::endl;
+
+        }
+    }
+}

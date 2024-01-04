@@ -1,7 +1,8 @@
 #include "ncpizero_modules.fcl"
 #include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
 
-process_name: NCPiZeroAnalyzer
+process_name: NCPiZero
 
 services:
 {
@@ -18,13 +19,30 @@ source:
 
 physics:
 {
+  filters:
+  {
+    ncpizerofilter: @local::ncpizerofilter
+  }
+
   analyzers:
   {
     ncpizeroana: @local::ncpizeroana
   }
 
+  filter:        [ ncpizerofilter ]
+
+  stream1:   [ out1 ]
   ana:       [ ncpizeroana ]
-  end_paths: [ ana ]
+  end_paths: [ stream1, ana ]
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    SelectEvents: [ filter ]
+  }
 }
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

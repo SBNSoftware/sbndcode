@@ -1,0 +1,7 @@
+#include "ncpizero_modules.fcl"
+#include "prodoverlay_corsika_cosmics_proton_genie_rockbox_sce.fcl"
+
+physics.filters.ncpizerofilter: @local::ncpizerofilter
+
+physics.simulatetpc:  [ rns, generator, ncpizerofilter, loader, largeantnu, tpcfilter, corsika, largeantcosmic, largeant ]
+physics.simulatedirt: [ rns, generator, ncpizerofilter, loader, largeantnu, "!tpcfilter", dirtfilter, corsika, largeantcosmic, largeant ]

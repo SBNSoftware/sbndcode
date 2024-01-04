@@ -1,0 +1,3 @@
+#include "ncpizero_ana_sbnd.fcl"
+
+physics.analyzers.ncpizeroana.BeamOff: true

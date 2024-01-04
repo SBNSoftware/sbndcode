@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
 
 const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
@@ -11,7 +11,7 @@ int GetGenEvents(TChain *subruns);
 
 void XSec(const TString productionVersion, const TString saveDirExt)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/xsec/" + saveDirExt;
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/xsec/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/xsec_trees/" + productionVersion + "_rockbox_xsec_trees.root";

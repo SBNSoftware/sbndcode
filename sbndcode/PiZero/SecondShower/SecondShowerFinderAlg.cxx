@@ -1,5 +1,46 @@
 #include "SecondShowerFinderAlg.h"
 
+SecondShowerFinderAlg::ClusterObj::ClusterObj(HitObjVec hitObjVec)
+{
+  hits = hitObjVec;
+  used = false;
+
+  min_x = std::numeric_limits<double>::max();
+  max_x = std::numeric_limits<double>::lowest();
+
+  min_wire_pos = std::numeric_limits<double>::max();
+  max_wire_pos = std::numeric_limits<double>::lowest();
+
+  std::set<int> tpcs;
+
+  for(auto const& hitObj : hitObjVec)
+    {
+      if(hitObj->x < min_x)
+        min_x = hitObj->x;
+
+      if(hitObj->x > max_x)
+        max_x = hitObj->x;
+
+      if(hitObj->wire_pos < min_wire_pos)
+        min_wire_pos = hitObj->wire_pos;
+
+      if(hitObj->wire_pos > max_wire_pos)
+        max_wire_pos = hitObj->wire_pos;
+
+      tpcs.insert(hitObj->hit->WireID().asTPCID().deepestIndex());
+    }
+
+  if(tpcs.size() == 1)
+    tpc = *tpcs.begin();
+  else if(tpcs.size() == 2)
+    tpc = 2;
+  else
+    {
+      std::cout << "Uh oh... we have: " << tpcs.size() << " TPCs" << std::endl;
+      tpc = -1;
+    }
+}
+
 SecondShowerFinderAlg::SecondShowerFinderAlg()
 {
   gROOT->SetBatch(false);
@@ -66,110 +107,120 @@ SecondShowerFinderAlg::SecondShowerFinderAlg()
 SecondShowerFinderAlg::SecondShowerFinderAlg(fhicl::ParameterSet const& p)
 {
   SecondShowerFinderAlg();
+
+  fMinClusterHits   = p.get<size_t>("MinClusterHits");
+  fMaxHitSeparation = p.get<double>("MaxHitSeparation");
 }
 
-bool SecondShowerFinderAlg::FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw)
+std::vector<std::vector<size_t>> SecondShowerFinderAlg::FindSecondShower(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const bool draw)
 {
-  HitVec u_hits, v_hits, w_hits;
-  HitVec u_usedHits, v_usedHits, w_usedHits;
+  HitObjVec u_hits, v_hits, w_hits;
+  HitObjVec u_usedHits, v_usedHits, w_usedHits;
 
-  for(auto const& hit : hits)
-    {
-      switch(hit->View())
-        {
-        case geo::kU:
-          u_hits.push_back(hit);
-          break;
-        case geo::kV:
-          v_hits.push_back(hit);
-          break;
-        case geo::kW:
-          w_hits.push_back(hit);
-          break;
-        default:
-          std::cout << "Holy shit SBND, you got new planes" << std::endl;
-          break;
-        }
-    }
+  SeparateViews(e, hits, u_hits, v_hits, w_hits);
+  SeparateViews(e, usedHits, u_usedHits, v_usedHits, w_usedHits);
 
-  for(auto const& hit : usedHits)
-    {
-      switch(hit->View())
-        {
-        case geo::kU:
-          u_usedHits.push_back(hit);
-          break;
-        case geo::kV:
-          v_usedHits.push_back(hit);
-          break;
-        case geo::kW:
-          w_usedHits.push_back(hit);
-          break;
-        default:
-          std::cout << "Holy shit SBND, you got new planes" << std::endl;
-          break;
-        }
-    }
+  if(draw)
+    std::cout << "Extra Hits: " << hits.size()
+              << "\tU: " << u_hits.size()
+              << "\tV: " << v_hits.size()
+              << "\tW: " << w_hits.size() << std::endl;
 
-  std::cout << "Extra Hits: " << hits.size()
-            << "\tU: " << u_hits.size()
-            << "\tV: " << v_hits.size()
-            << "\tW: " << w_hits.size() << std::endl;
+  std::vector<ClusterObjVec> clusters(3, ClusterObjVec());
 
-  bool u_yes = AnalyseViewHits(e, u_hits, u_usedHits, "U view", draw);
-  bool v_yes = AnalyseViewHits(e, v_hits, v_usedHits, "V view", draw);
-  bool w_yes = AnalyseViewHits(e, w_hits, w_usedHits, "W view", draw);
+  clusters[0] = ClusterInView(u_hits, u_usedHits, "U view", draw);
+  clusters[1] = ClusterInView(v_hits, v_usedHits, "V view", draw);
+  clusters[2] = ClusterInView(w_hits, w_usedHits, "W view", draw);
 
-  if(u_yes && v_yes && w_yes)
-    std::cout << "YES!- GOOD JOB" << std::endl;
+  TwoDToThreeDMatching(clusters, draw);
 
-  return false;
+  std::vector<std::vector<size_t>> clusterSizes(3, std::vector<size_t>());
+
+  return clusterSizes;
 }
 
-bool SecondShowerFinderAlg::AnalyseViewHits(const art::Event &e, const HitVec &hits, const HitVec &usedHits, const TString &name, const bool draw)
+SecondShowerFinderAlg::ClusterObjVec SecondShowerFinderAlg::ClusterInView(const HitObjVec &hits, const HitObjVec &usedHits, const TString &name, const bool draw)
+{
+  if(draw)
+    {
+      ClusterObjVec tmpClusters;
+      std::cout << "Drawing " << name << " pre-clustering... (" << hits.size() << " unused hits)" << std::endl;
+      DrawView(hits, usedHits, tmpClusters, name);
+    }
+
+  std::vector<HitObjVec> hitCollections;
+
+  InitialPairings(hits, hitCollections);
+  AddSingleHits(hits, hitCollections);
+  MergeHitCollections(hitCollections);
+
+  ClusterObjVec clusters;
+
+  for(auto const& hitCollection : hitCollections)
+    clusters.push_back(new ClusterObj(hitCollection));
+
+  RemoveClusterBelowLimit(clusters, fMinClusterHits);
+
+  if(draw)
+    {
+      std::cout << "Drawing " << name << " clustered... (" << clusters.size() << " extra clusters)" << std::endl;
+      DrawView(hits, usedHits, clusters, name);
+    }
+
+  return clusters;
+}
+
+void SecondShowerFinderAlg::SeparateViews(const art::Event &e, const HitVec &hits, HitObjVec &u_hits, HitObjVec &v_hits, HitObjVec &w_hits)
 {
   art::ServiceHandle<geo::Geometry const> geom;
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
-
-  ClusterObj allHits;
-  std::vector<ClusterObj> clusters;
-
-  if(draw)
-    DrawView(hits, usedHits, clusters, name);
 
   for(auto const& hit : hits)
     {
       const geo::WireID wireID = hit->WireID();
       const double x = detProp.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
 
-      auto const xyz = geom->Wire(wireID).GetCenter();
-      double wire_pos = std::numeric_limits<double>::lowest();
+      const geo::Point_t wireCentre = geom->Wire(wireID).GetCenter();
+      const int tpc = wireID.asTPCID().deepestIndex();
 
       switch(hit->View())
         {
         case geo::kU:
-          wire_pos = YZtoU(xyz.Y(), xyz.Z());
-          break;
+          {
+            double wire_pos = YZtoU(wireCentre.Y(), wireCentre.Z(), tpc);
+            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
+            u_hits.push_back(hitObj);
+            break;
+          }
         case geo::kV:
-          wire_pos = YZtoV(xyz.Y(), xyz.Z());
-          break;
+          {
+            double wire_pos = YZtoV(wireCentre.Y(), wireCentre.Z(), tpc);
+            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
+            v_hits.push_back(hitObj);
+            break;
+          }
         case geo::kW:
-          wire_pos = YZtoW(xyz.Y(), xyz.Z());
-          break;
+          {
+            double wire_pos = YZtoW(wireCentre.Y(), wireCentre.Z(), tpc);
+            HitObj *hitObj = new HitObj({hit, false, x, wire_pos});
+            w_hits.push_back(hitObj);
+            break;
+          }
         default:
           std::cout << "Holy shit SBND, you got new planes" << std::endl;
           break;
         }
-
-      allHits.push_back(new HitObj({hit, false, x, wire_pos}));
     }
+}
 
-  for(auto const& hitObjA : allHits)
+void SecondShowerFinderAlg::InitialPairings(const HitObjVec &hits, std::vector<HitObjVec> &hitCollections)
+{
+  for(auto const& hitObjA : hits)
     {
       if(hitObjA->used)
         continue;
 
-      for(auto const& hitObjB : allHits)
+      for(auto const& hitObjB : hits)
         {
           if(hitObjA->hit == hitObjB->hit)
             continue;
@@ -177,77 +228,132 @@ bool SecondShowerFinderAlg::AnalyseViewHits(const art::Event &e, const HitVec &h
           if(hitObjB->used)
             continue;
 
-          double dist = sqrt( (hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
-                              (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
+          double dist = Dist(hitObjA, hitObjB);
 
-          if(dist < 0.9)
+          if(dist < fMaxHitSeparation)
             {
-              clusters.push_back(ClusterObj());
-              clusters.back().push_back(hitObjA);
-              clusters.back().push_back(hitObjB);
+              hitCollections.push_back(HitObjVec());
+              hitCollections.back().push_back(hitObjA);
+              hitCollections.back().push_back(hitObjB);
 
               hitObjA->used = true;
               hitObjB->used = true;
+              break;
             }
         }
     }
+}
 
-  int total = 0;
-
-  if(draw)
+void SecondShowerFinderAlg::AddSingleHits(const HitObjVec &hits, std::vector<HitObjVec> &hitCollections)
+{
+  for(auto const& hitObjA : hits)
     {
-      for(auto const& cluster : clusters)
-        total += cluster.size();
+      if(hitObjA->used)
+        continue;
 
-      std::cout << allHits.size() << " " << clusters.size() << " (" << total << ")\n\t";
-      for(auto const& cluster : clusters)
-        std::cout << cluster.size() << " ";
-      std::cout << std::endl;
+      std::vector<HitObjVec>::iterator it = hitCollections.begin();
+
+      while(it != hitCollections.end())
+        {
+          bool add = false;
+
+          for(auto const& hitObjB : *it)
+            {
+              double dist = Dist(hitObjA, hitObjB);
+
+              if(dist < fMaxHitSeparation)
+                add = true;
+            }
+
+          if(add)
+            {
+              it->push_back(hitObjA);
+              hitObjA->used = true;
+            }
+
+          ++it;
+        }
     }
+}
 
-  MergeClusters(clusters);
+void SecondShowerFinderAlg::MergeHitCollections(std::vector<HitObjVec> &hitCollections)
+{
+  std::vector<HitObjVec>::iterator itA = hitCollections.begin();
 
-  if(draw)
+  while(itA != hitCollections.end())
     {
-      total = 0;
-      for(auto const& cluster : clusters)
-        total += cluster.size();
+      std::vector<HitObjVec>::iterator itB = std::next(itA);
 
-      std::cout << allHits.size() << " " << clusters.size() << " (" << total << ")\n\t";
-      for(auto const& cluster : clusters)
-        std::cout << cluster.size() << " ";
-      std::cout << std::endl;
+      while(itB != hitCollections.end())
+        {
+          bool merge = false;
+
+          for(auto const& hitObjA : *itA)
+            {
+              for(auto const& hitObjB : *itB)
+                {
+                  double dist = Dist(hitObjA, hitObjB);
+
+                  if(dist < fMaxHitSeparation)
+                    merge = true;
+                }
+            }
+
+          if(merge)
+            {
+              itA->insert(itA->end(), itB->begin(), itB->end());
+              itB = hitCollections.erase(itB);
+            }
+          else
+            ++itB;
+        }
+      ++itA;
     }
+}
 
-  std::vector<ClusterObj>::iterator it = clusters.begin();
+void SecondShowerFinderAlg::RemoveClusterBelowLimit(ClusterObjVec &clusters, const size_t limit)
+{
+  ClusterObjVec::iterator it = clusters.begin();
   while(it != clusters.end())
     {
-      if(it->size() < 10)
+      if((*it)->Size() < limit)
         it = clusters.erase(it);
       else
         {
           ++it;
         }
     }
-
-  if(draw)
-    {
-      total = 0;
-      for(auto const& cluster : clusters)
-        total += cluster.size();
-
-      std::cout << allHits.size() << " " << clusters.size() << " (" << total << ")\n\t";
-      for(auto const& cluster : clusters)
-        std::cout << cluster.size() << " ";
-      std::cout << std::endl;
-
-      DrawView(hits, usedHits, clusters, name);
-    }
-
-  return clusters.size();
 }
 
-void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits, const std::vector<ClusterObj> clusters, const TString &name)
+void SecondShowerFinderAlg::TwoDToThreeDMatching(std::vector<ClusterObjVec> &clusters, const bool draw)
+{
+  for(auto const& clusterU : clusters[0])
+    {
+      for(auto const& clusterV : clusters[1])
+        {
+          for(auto const& clusterW : clusters[2])
+            {
+              double startX = std::max({clusterU->MinX(), clusterV->MinX(), clusterW->MinX()});
+              double endX   = std::min({clusterU->MaxX(), clusterV->MaxX(), clusterW->MaxX()});
+
+              if(startX > endX)
+                continue;
+
+              if(draw)
+                {
+                  std::cout << "Drawing attempt to match cluster set" << std::endl;
+                  std::cout << "U: " << clusterU->MinX() << " " << clusterU->MaxX() << "\n"
+                            << "V: " << clusterV->MinX() << " " << clusterV->MaxX() << "\n"
+                            << "W: " << clusterW->MinX() << " " << clusterW->MaxX() << std::endl;
+                  std::cout << "Overlap: " << startX << " to " << endX << std::endl;
+                  DrawClusterMatching(clusterU, clusterV, clusterW, startX, endX);
+                }
+            }
+        }
+    }
+}
+
+void SecondShowerFinderAlg::DrawView(const HitObjVec &hits, const HitObjVec &usedHits, const ClusterObjVec clusters, const TString &name)
 {
   TCanvas *c = new TCanvas("c", "", 2100, 1400);
   c->cd();
@@ -299,27 +405,27 @@ void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits,
   TGraph *g1Used = new TGraph();
   g1Used->SetMarkerColor(kRed+2);
 
-  std::vector<TGraph*> g0Clusters(clusters.size(), new TGraph());
-  std::vector<TGraph*> g1Clusters(clusters.size(), new TGraph());
+  std::vector<TGraph*> g0Clusters;
+  std::vector<TGraph*> g1Clusters;
 
-  for(auto const& hit : hits)
+  for(auto const& hitObj : hits)
     {
-      const int tpc = hit->WireID().asTPCID().deepestIndex();
+      const int tpc = hitObj->hit->WireID().asTPCID().deepestIndex();
 
       if(tpc == 0)
-        g0->SetPoint(g0->GetN(), hit->WireID().deepestIndex(), hit->PeakTime());
+        g0->SetPoint(g0->GetN(), hitObj->hit->WireID().deepestIndex(), hitObj->hit->PeakTime());
       else if(tpc == 1)
-        g1->SetPoint(g1->GetN(), hit->WireID().deepestIndex(), 3400 - hit->PeakTime());
+        g1->SetPoint(g1->GetN(), hitObj->hit->WireID().deepestIndex(), 3400 - hitObj->hit->PeakTime());
     }
 
-  for(auto const& hit : usedHits)
+  for(auto const& hitObj : usedHits)
     {
-      const int tpc = hit->WireID().asTPCID().deepestIndex();
+      const int tpc = hitObj->hit->WireID().asTPCID().deepestIndex();
 
       if(tpc == 0)
-        g0Used->SetPoint(g0Used->GetN(), hit->WireID().deepestIndex(), hit->PeakTime());
+        g0Used->SetPoint(g0Used->GetN(), hitObj->hit->WireID().deepestIndex(), hitObj->hit->PeakTime());
       else if(tpc == 1)
-        g1Used->SetPoint(g1Used->GetN(), hit->WireID().deepestIndex(), 3400 - hit->PeakTime());
+        g1Used->SetPoint(g1Used->GetN(), hitObj->hit->WireID().deepestIndex(), 3400 - hitObj->hit->PeakTime());
     }
 
   if(g1->GetN())
@@ -335,14 +441,20 @@ void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits,
   if(g0Used->GetN())
     g0Used->Draw("Psame");
 
-  int color = 6;
+  while(clusters.size() > fColours.size())
+    fColours.insert(fColours.end(), fColours.begin(), fColours.end());
 
   for(auto&& [i, cluster] : enumerate(clusters))
     {
-      g0Clusters[i]->SetMarkerColor(color);
-      g1Clusters[i]->SetMarkerColor(color);
+      std::cout << "\tCluster " << i << " of " << cluster->Size() << " hits" << std::endl;
+      g0Clusters.push_back(new TGraph());
+      g1Clusters.push_back(new TGraph());
 
-      for(auto const& hitObj : cluster)
+      const int colour = fColours[i];
+      g0Clusters[i]->SetMarkerColor(colour);
+      g1Clusters[i]->SetMarkerColor(colour);
+
+      for(auto const& hitObj : cluster->Hits())
         {
           const int tpc = hitObj->hit->WireID().asTPCID().deepestIndex();
 
@@ -358,10 +470,6 @@ void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits,
       bottom->cd();
       if(g0Clusters[i]->GetN())
         g0Clusters[i]->Draw("Psame");
-
-      std::cout << i << " - color: " << color << std::endl;
-
-      ++color;
     }
 
   c->Update();
@@ -372,59 +480,200 @@ void SecondShowerFinderAlg::DrawView(const HitVec &hits, const HitVec &usedHits,
   delete c;
 }
 
-double SecondShowerFinderAlg::YZtoU(const double y, const double z)
+void SecondShowerFinderAlg::DrawClusterMatching(const ClusterObj *clusterU, const ClusterObj *clusterV, const ClusterObj *clusterW, const double startX, const double endX)
 {
-  return z * cosU - y * sinU;
+  TCanvas *c = new TCanvas("c", "", 2100, 2100);
+  c->cd();
+
+  const double padPadding = 0.05;
+  const double padWidth   = (1 - 4 * padPadding) / 3.;
+
+  TPad *padU = new TPad("padU", "", padPadding, padPadding, padPadding + padWidth, 1 - padPadding);
+  TPad *padV = new TPad("padV", "", 2 * padPadding + padWidth, padPadding, 2 * padPadding + 2 * padWidth, 1 - padPadding);
+  TPad *padW = new TPad("padW", "", 3 * padPadding + 2 * padWidth, padPadding, 3 * padPadding + 3 * padWidth, 1 - padPadding);
+
+  padU->SetBottomMargin(0.002);
+  padU->SetTopMargin(0.002);
+  padV->SetBottomMargin(0.002);
+  padV->SetTopMargin(0.002);
+  padW->SetBottomMargin(0.002);
+  padW->SetTopMargin(0.002);
+
+  padU->Draw();
+  padV->Draw();
+  padW->Draw();
+
+  double minX = std::min({clusterU->MinX(), clusterV->MinX(), clusterW->MinX()});
+  double maxX = std::max({clusterU->MaxX(), clusterV->MaxX(), clusterW->MaxX()});
+
+  if(minX > maxX)
+    std::swap(minX, maxX);
+
+  const double rangeU = clusterU->MaxWirePos() - clusterU->MinWirePos();
+  const double rangeV = clusterV->MaxWirePos() - clusterV->MinWirePos();
+  const double rangeW = clusterW->MaxWirePos() - clusterW->MinWirePos();
+
+  const double rangeWirePos = 1.2 * std::max({rangeU, rangeV, rangeW});
+
+  padU->cd();
+  DrawClusterMatchingView(clusterU, rangeWirePos, rangeU, minX, maxX, startX, endX, "U View");
+  padV->cd();
+  DrawClusterMatchingView(clusterV, rangeWirePos, rangeV, minX, maxX, startX, endX, "V view");
+  padW->cd();
+  DrawClusterMatchingView(clusterW, rangeWirePos, rangeW, minX, maxX, startX, endX, "W View");
+
+  c->Update();
+  gSystem->ProcessEvents();
+
+  std::cin.get();
+
+  delete c;
 }
 
-double SecondShowerFinderAlg::YZtoV(const double y, const double z)
+void SecondShowerFinderAlg::DrawClusterMatchingView(const ClusterObj *cluster, const double maxRangeWirePos, const double rangeWirePos,
+                                                    const double minX, const double maxX, const double startX, const double endX, const TString &name)
 {
-  return z * cosV - y * sinV;
+  TPaveText *t = new TPaveText(.9, .92, .98, .97, "NB NDC");
+  t->SetTextAlign(32);
+  t->SetTextSize(0.065);
+  t->SetTextColor(kBlack);
+  t->SetFillStyle(4000);
+  t->AddText(name);
+
+  const double rangeX = maxX - minX;
+
+  TH1F* base_hist = new TH1F("base_hist", "", 10, cluster->MinWirePos() - 0.5 * (maxRangeWirePos - rangeWirePos), cluster->MaxWirePos() + 0.5 * (maxRangeWirePos - rangeWirePos));
+  base_hist->SetMinimum(minX - 0.1 * rangeX);
+  base_hist->SetMaximum(maxX + 0.1 * rangeX);
+  base_hist->Draw();
+
+  TLine *startLine = new TLine();
+  startLine->SetLineColor(kGreen+2);
+  startLine->SetLineWidth(5);
+  startLine->DrawLine(cluster->MinWirePos() - 0.5 * (maxRangeWirePos - rangeWirePos), startX, cluster->MaxWirePos() + 0.5 * (maxRangeWirePos - rangeWirePos), startX);
+
+  TLine *endLine = new TLine();
+  endLine->SetLineColor(kRed+2);
+  endLine->SetLineWidth(5);
+  endLine->DrawLine(cluster->MinWirePos() - 0.5 * (maxRangeWirePos - rangeWirePos), endX, cluster->MaxWirePos() + 0.5 * (maxRangeWirePos - rangeWirePos), endX);
+
+  TGraph *g = new TGraph();
+  g->SetMarkerColor(kMagenta+2);
+  g->SetMarkerSize(1.);
+
+  for(auto const& hitObj : cluster->ConstHits())
+    g->SetPoint(g->GetN(), hitObj->wire_pos, hitObj->x);
+
+  g->Draw("Psame");
+  t->Draw();
 }
 
-double SecondShowerFinderAlg::YZtoW(const double y, const double z)
+// Note the use of 'V' angles in TPC0 is due to the fact that view is defined w.r.t. drift direction
+// whereas this conversion is working in detector coordinates in which x is pointing the same direction
+// regardless of which TPC you're in. The same is true for YZtoV, W doesn't care.
+double SecondShowerFinderAlg::YZtoU(const double y, const double z, const int tpc)
+{
+  if(tpc == 0)
+    return z * cosU - y * sinU;
+  else if(tpc == 1)
+    return z * cosV - y * sinV;
+
+  return std::numeric_limits<double>::lowest();
+}
+
+double SecondShowerFinderAlg::YZtoV(const double y, const double z, const int tpc)
+{
+  if(tpc == 0)
+    return z * cosV - y * sinV;
+  else if(tpc == 1)
+    return z * cosU - y * sinU;
+
+  return std::numeric_limits<double>::lowest();
+}
+
+double SecondShowerFinderAlg::YZtoW(const double y, const double z, const int /*tpc*/)
 {
   return z * cosW - y * sinW;
 }
 
-void SecondShowerFinderAlg::MergeClusters(std::vector<ClusterObj> &clusters)
+double SecondShowerFinderAlg::UVtoW(const double u, const double v, const int tpc)
 {
-  std::vector<ClusterObj>::iterator itA = clusters.begin();
+  if(tpc == 0)
+    return -1. * (u * sinWminusV + v * sinUminusW) / sinVminusU;
+  else if(tpc == 1)
+    return -1. * (v * sinWminusV + u * sinUminusW) / sinVminusU;
 
-  while(itA != clusters.end())
+  return std::numeric_limits<double>::lowest();
+}
+
+double SecondShowerFinderAlg::VWtoU(const double v, const double w, const int tpc)
+{
+  if(tpc == 0)
+    return -1. * (v * sinUminusW + w * sinVminusU) / sinWminusV;
+  else if(tpc == 1)
+    return -1. * (v * sinWminusV + w * sinVminusU) / sinUminusW;
+
+  return std::numeric_limits<double>::lowest();
+}
+
+double SecondShowerFinderAlg::WUtoV(const double w, const double u, const int tpc)
+{
+  if(tpc == 0)
+    return -1. * (u * sinWminusV + w * sinVminusU) / sinUminusW;
+  else if(tpc == 1)
+    return -1. * (u * sinUminusW + w * sinVminusU) / sinWminusV;
+
+  return std::numeric_limits<double>::lowest();
+}
+
+double SecondShowerFinderAlg::Dist(const HitObj *hitObjA, const HitObj *hitObjB)
+{
+  return sqrt((hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
+              (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
+}
+
+double SecondShowerFinderAlg::GetInterpolatedHitWirePos(const ClusterObj *cluster, const double &x)
+{
+  if(x < cluster->MinX() || x > cluster->MaxX())
+    return std::numeric_limits<double>::lowest();
+
+  double closestLowerXDiff     = std::numeric_limits<double>::max();
+  double closestLowerXWirePos  = std::numeric_limits<double>::lowest();
+  double closestHigherXDiff    = std::numeric_limits<double>::max();
+  double closestHigherXWirePos = std::numeric_limits<double>::lowest();
+
+  bool foundLower = false, foundHigher = false;
+
+  for(auto const& hitObj : cluster->ConstHits())
     {
-      std::vector<ClusterObj>::iterator itB = clusters.begin();
-
-      while(itB != clusters.end())
+      if(hitObj->x <= x && std::abs(x - hitObj->x) < closestLowerXDiff)
         {
-          if(itA == itB)
-            {
-              ++itB;
-              continue;
-            }
-
-          bool merge = false;
-
-          for(auto const& hitObjA : *itA)
-            {
-              for(auto const& hitObjB : *itB)
-                {
-                  double dist = sqrt( (hitObjA->x - hitObjB->x) * (hitObjA->x - hitObjB->x) +
-                                      (hitObjA->wire_pos - hitObjB->wire_pos) * (hitObjA->wire_pos - hitObjB->wire_pos));
-
-                  if(dist < 0.9)
-                    merge = true;
-                }
-            }
-
-          if(merge)
-            {
-              itA->insert(itA->end(), itB->begin(), itB->end());
-              itB = clusters.erase(itB);
-            }
-          else
-            ++itB;
+          closestLowerXDiff    = std::abs(x - hitObj->x);
+          closestLowerXWirePos = hitObj->wire_pos;
+          foundLower = true;
         }
-      ++itA;
+
+      if(hitObj->x >= x && std::abs(x - hitObj->x) < closestHigherXDiff)
+        {
+          closestHigherXDiff    = std::abs(x - hitObj->x);
+          closestHigherXWirePos = hitObj->wire_pos;
+          foundHigher = true;
+        }
     }
+
+  if(foundLower && foundHigher)
+    {
+      double fractionalDistance = closestLowerXDiff + closestHigherXDiff < std::numeric_limits<double>::epsilon() ? 0 :
+        closestLowerXDiff / (closestLowerXDiff + closestHigherXDiff);
+
+      return closestLowerXWirePos + fractionalDistance * (closestHigherXWirePos - closestLowerXWirePos);
+    }
+  else if(foundLower)
+    std::cout << "Just lower....!" << std::endl;
+  else if(foundHigher)
+    std::cout << "Just higher....!" << std::endl;
+  else
+    std::cout << "Found neither...!" << std::endl;
+
+  return std::numeric_limits<double>::lowest();
 }
