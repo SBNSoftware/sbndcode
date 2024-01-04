@@ -3,11 +3,23 @@ BEGIN_PROLOG
 pmtdecoder: 
 {
     module_type: "SBNDPMTDecoder"
-
     Verbose: true
+    
+    # configure the output data product instance names
     pmtInstanceName: "PMTChannels"
     ftrigInstanceName: "FTrigChannels"
 
+    # configure CAEN inputs 
+    caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
+    ignore_boards: []     # boards to ignore for testing purposes
+    nominal_length: 5000     # expected waveform length 
+
+    # configure SPEC TDC inputs 
+    spectdc_product_name: "tdcdecoder"
+    spectdc_fragment_name: [ "TDCTIMESTAMP", "ContainerTDCTIMESTAMP" ]
+    spectdc_ftrig_ch: 3 # this should be the channel number of the spec tdc that stores the flash trigger 
+
+    # configure output options
 }
 
 END_PROLOG

@@ -1,3 +1,3 @@
 add_subdirectory(TPC)
-add_subdirectory(Timing)
+add_subdirectory(SPECTDC)
 add_subdirectory(PMT)
