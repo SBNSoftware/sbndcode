@@ -26,9 +26,9 @@ std::vector<Plot> selection_plots = {
   { "slc_best_pzc_good_kinematics", "slc_best_pzc_good_kinematics", ";Best #pi^{0} Candidates Good Kinematics?;Slice",
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
   { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
-    100, -2, 8 },
+    100, -2, 8 }, // 100, -2, 2 for cut optimisation
   { "slc_opt0_score", "slc_opt0_score", ";OpT0 Score;Slices",
-    100, 0, 2e5 },
+    100, 0, 2e5 }, // 100, 0, 5e3 for cut optimisation
 };
 
 std::vector<Plot> extension_plots = {

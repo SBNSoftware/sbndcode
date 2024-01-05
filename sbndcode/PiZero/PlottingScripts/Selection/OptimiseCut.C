@@ -106,6 +106,8 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
         ++i;
     }
 
+  std::cout << "Optimal Cut: " << optimal_cut << " (Eff x Pur: " << maxEP << ")" << std::endl;
+
   TLine *line = new TLine(optimal_cut, 0, optimal_cut, 110);
   line->SetLineStyle(9);
   line->SetLineWidth(3);
