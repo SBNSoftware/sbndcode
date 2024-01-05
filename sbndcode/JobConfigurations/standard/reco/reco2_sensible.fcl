@@ -7,7 +7,7 @@ process_name: Reco2
 physics.analyzers.ncpizeroana: @local::ncpizeroana
 physics.analyzers.recoeff:     @local::recoeff
 
-physics.producers.pandoraShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
+physics.producers.pandoraShower: @local::sbnd_sce_sbn_pandoraModularShowerCreation
 
 physics.reco2_sensible: [ rns,
   pandora,
