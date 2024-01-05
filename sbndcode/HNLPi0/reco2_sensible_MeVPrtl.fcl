@@ -81,6 +81,7 @@ physics.producers.razzled.SimChannelLabel:       "simtpc2d:simpleSC"
 physics.producers.opt0finder.ShowerProducer:              "pandoraShower"
 physics.producers.pandoraShowerCosmicDist.ShowerLabel:    "pandoraShower"
 physics.producers.pandoraShowerSelectionVars.ShowerLabel: "pandoraShower"
+physics.producers.dazzle.ShowerLabel:        		  "pandoraShower"
 physics.producers.razzle.ShowerLabel:        		  "pandoraShower"
 physics.producers.razzled.ShowerLabel:       		  "pandoraShower"
 
@@ -91,7 +92,6 @@ physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
 physics.producers.razzle.WeightFile:        "Razzle_BDTG_NCPiZeroAv12.weights.xml"
 physics.producers.dazzle.WeightFile:        "Dazzle_BDTG_NCPiZeroAv12.weights.xml"
 physics.producers.razzled.WeightFile:       "Razzled_BDTG_NCPiZeroAv12.weights.xml"
-physics.producers.razzled.RunMVA:	    true
 
 physics.producers.crumbs.UseSimpleFlash:    false
 physics.producers.crumbs.UseOpT0Finder:     true

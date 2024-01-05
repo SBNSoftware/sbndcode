@@ -62,6 +62,9 @@
 #include "sbnobj/Common/Reco/Stub.h"
 
 #include <numeric>
+#include <fstream>
+#include <iostream>
+
 constexpr int def_int       = std::numeric_limits<int>::min();
 constexpr size_t def_size   = std::numeric_limits<size_t>::max();
 constexpr float def_float   = -std::numeric_limits<float>::max();
@@ -193,6 +196,8 @@ public:
   void ExtractCNNScores(const sbn::PFPCNNScore *cnnscore, const int slcCounter, const int pfpCounter);
 private:
 
+  void WriteTrainingCSV();
+  
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
@@ -214,6 +219,7 @@ private:
   bool fGenie;
   bool fDebug;
   bool fPiZeroAna;
+  bool fTraining;
 
   // Map
   std::map<int, int> fHitsMap; //track ID , nHits
@@ -273,6 +279,7 @@ private:
   std::vector<int>	slc_n_primary_razzle_electrons, slc_n_primary_razzle_photons, slc_n_primary_razzle_other;
   std::vector<int>	slc_n_primary_razzled_electrons, slc_n_primary_razzled_muons, slc_n_primary_razzled_photons, slc_n_primary_razzled_pions, slc_n_primary_razzled_pions_thresh, slc_n_primary_razzled_protons, slc_n_primary_razzled_protons_thresh;
   std::vector<int>	slc_n_stub;
+  std::vector<float>	slc_total_shower_E, slc_total_track_E;
  
   // Event Tree: Slice Truth
   std::vector<float> 	slc_comp, slc_pur;
@@ -315,6 +322,8 @@ private:
   std::vector<std::vector<double>>	slc_pfp_track_end_x, slc_pfp_track_end_y, slc_pfp_track_end_z;
   std::vector<std::vector<double>> 	slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
   std::vector<std::vector<double>> 	slc_pfp_track_length;
+  std::vector<std::vector<double>> 	slc_pfp_track_angle_to_beam;
+  std::vector<std::vector<bool>> 	slc_pfp_track_contained;
   std::vector<std::vector<float>>   	slc_pfp_track_dazzle_muon_score, slc_pfp_track_dazzle_pion_score, slc_pfp_track_dazzle_proton_score, slc_pfp_track_dazzle_other_score;
   std::vector<std::vector<int>>		slc_pfp_track_dazzle_pdg;
   std::vector<std::vector<float>>	slc_pfp_track_ke, slc_pfp_track_charge;
@@ -340,6 +349,7 @@ private:
   std::vector<std::vector<double>>	slc_pfp_shower_track_length, slc_pfp_shower_track_width;
   std::vector<std::vector<double>>	slc_pfp_shower_density_grad, slc_pfp_shower_density_pow;
   std::vector<std::vector<float>> 	slc_pfp_shower_angle_to_beam;
+  std::vector<std::vector<bool>> 	slc_pfp_shower_contained;
 
   // Event Tree: OpFlashes
   std::vector<int> _flash_id;
@@ -354,8 +364,10 @@ private:
 
   // Event Tree: Pizero Variables
   std::vector<bool> slc_pizero_good;
+  std::vector<int> slc_photon0_pfp_id;
   std::vector<int> slc_photon1_pfp_id;
   std::vector<int> slc_photon2_pfp_id;
+  std::vector<float> slc_photon0_energy;
   std::vector<float> slc_photon1_energy;
   std::vector<float> slc_photon2_energy;
   std::vector<float> slc_pizero_open_angle;
@@ -367,6 +379,9 @@ private:
   TTree *fSubRunTree;
   double _pot;
   int _spills, _ngenevts;
+
+  //CSV File
+  std::ofstream outputFile;
 };
 
 sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
@@ -381,7 +396,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fPFParticleModuleLabel 	= p.get<art::InputTag>("PFParticleModuleLabel", "pandoraSCE");
   fSliceModuleLabel 		= p.get<art::InputTag>("SlideModuleLabel", "pandoraSCE");
   fTrackModuleLabel		= p.get<art::InputTag>("TrackModuleLabel", "pandoraTrack");
-  fShowerModuleLabel 		= p.get<art::InputTag>("ShowerModuleLabel", "pandoraShowerSBN");
+  fShowerModuleLabel 		= p.get<art::InputTag>("ShowerModuleLabel", "pandoraShower");
   fOpFlashesModuleLabel = p.get<std::vector<std::string>>("OpFlashesModuleLabel",   {"opflashtpc0", "opflashtpc1"});
   fVertexModuleLabel 		= p.get<art::InputTag>("VertexModuleLabel", "pandoraSCE");
   fCRUMBSModuleLabel 		= p.get<art::InputTag>("CRUMBSModuleLabelr", "crumbs");
@@ -406,6 +421,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fMeVPrtl			= p.get<bool>("MeVPrtl", false);
   fDebug			= p.get<bool>("Debug", false);
   fPiZeroAna			= p.get<bool>("PiZeroAna", false);
+  fTraining			= p.get<bool>("Training", true);
 
   art::ServiceHandle<art::TFileService> tfs;
 
@@ -533,7 +549,8 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_n_primary_razzled_protons", &slc_n_primary_razzled_protons);
   fEventTree->Branch("slc_n_primary_razzled_protons_thresh", &slc_n_primary_razzled_protons_thresh);
   fEventTree->Branch("slc_n_stub", &slc_n_stub);
-  
+  fEventTree->Branch("slc_total_track_E", &slc_total_track_E); 
+  fEventTree->Branch("slc_total_shower_E", &slc_total_shower_E); 
   
   //Event Tree: Slice Truth
   fEventTree->Branch("slc_comp" , &slc_comp);
@@ -593,6 +610,8 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_pfp_track_dir_y", &slc_pfp_track_dir_y);
   fEventTree->Branch("slc_pfp_track_dir_z", &slc_pfp_track_dir_z);
   fEventTree->Branch("slc_pfp_track_length", &slc_pfp_track_length);
+  fEventTree->Branch("slc_pfp_track_angle_to_beam", &slc_pfp_track_angle_to_beam);
+  fEventTree->Branch("slc_pfp_track_contained", &slc_pfp_track_contained);
   fEventTree->Branch("slc_pfp_track_dazzle_muon_score", &slc_pfp_track_dazzle_muon_score);
   fEventTree->Branch("slc_pfp_track_dazzle_pion_score", &slc_pfp_track_dazzle_pion_score);
   fEventTree->Branch("slc_pfp_track_dazzle_proton_score", &slc_pfp_track_dazzle_proton_score);
@@ -625,6 +644,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_pfp_shower_dir_z", &slc_pfp_shower_dir_z);
   fEventTree->Branch("slc_pfp_shower_length", &slc_pfp_shower_length);
   fEventTree->Branch("slc_pfp_shower_open_angle", &slc_pfp_shower_open_angle);
+  fEventTree->Branch("slc_pfp_shower_contained", &slc_pfp_shower_contained);
   fEventTree->Branch("slc_pfp_shower_energy", &slc_pfp_shower_energy);
   fEventTree->Branch("slc_pfp_shower_dedx", &slc_pfp_shower_dedx);
   fEventTree->Branch("slc_pfp_shower_sqrt_energy_density", &slc_pfp_shower_sqrt_energy_density);
@@ -652,8 +672,10 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
 
   if (fPiZeroAna){
     fEventTree->Branch("slc_pizero_good", &slc_pizero_good);
+    fEventTree->Branch("slc_photon0_pfp_id", &slc_photon0_pfp_id);
     fEventTree->Branch("slc_photon1_pfp_id", &slc_photon1_pfp_id);
     fEventTree->Branch("slc_photon2_pfp_id", &slc_photon2_pfp_id);
+    fEventTree->Branch("slc_photon0_energy", &slc_photon0_energy);
     fEventTree->Branch("slc_photon1_energy", &slc_photon1_energy);
     fEventTree->Branch("slc_photon2_energy", &slc_photon2_energy);
     fEventTree->Branch("slc_pizero_open_angle", &slc_pizero_open_angle);
@@ -665,6 +687,10 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
     fEventTree->Branch("slc_true_pizero_cosThetaZ", &slc_true_pizero_cosThetaZ);
 
   }
+
+  if(fTraining) std::ofstream outputFile("training.csv"); // create a new output file or overwrite an existing one
+ 
+
 }
 
 void sbnd::HNLPiZeroAnalysis::analyze(art::Event const& e)
@@ -776,9 +802,10 @@ void sbnd::HNLPiZeroAnalysis::analyze(art::Event const& e)
   AnalyseMCTruthHandle(e, MCTruthHandles);
   AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
 
-
   // Fill Tree
   fEventTree->Fill();
+
+  if(fTraining) WriteTrainingCSV();
 }
 
 void sbnd::HNLPiZeroAnalysis::beginSubRun(const art::SubRun &sr)
@@ -905,6 +932,8 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_n_primary_razzled_protons.clear();
   slc_n_primary_razzled_protons_thresh.clear(); 
   slc_n_stub.clear();
+  slc_total_track_E.clear();
+  slc_total_shower_E.clear();
 
   slc_comp.clear();
   slc_pur.clear();
@@ -959,6 +988,8 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_track_dir_y.clear();
   slc_pfp_track_dir_z.clear();
   slc_pfp_track_length.clear();
+  slc_pfp_track_angle_to_beam.clear();
+  slc_pfp_track_contained.clear();
   slc_pfp_track_dazzle_muon_score.clear();
   slc_pfp_track_dazzle_pion_score.clear();
   slc_pfp_track_dazzle_proton_score.clear();
@@ -1004,11 +1035,14 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_shower_density_grad.clear();
   slc_pfp_shower_density_pow.clear();
   slc_pfp_shower_angle_to_beam.clear();
+  slc_pfp_shower_contained.clear();
 
   if (fPiZeroAna){
     slc_pizero_good.clear();
+    slc_photon0_pfp_id.clear();
     slc_photon1_pfp_id.clear();
     slc_photon2_pfp_id.clear();
+    slc_photon0_energy.clear();
     slc_photon1_energy.clear();
     slc_photon2_energy.clear();
     slc_pizero_open_angle.clear();
@@ -1388,6 +1422,8 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice1DVector(const int col){
   slc_n_primary_razzled_protons.resize(col, -99999);
   slc_n_primary_razzled_protons_thresh.resize(col, -99999);
   slc_n_stub.resize(col, -99999);
+  slc_total_track_E.resize(col, -99999);
+  slc_total_shower_E.resize(col, -99999);
 
   slc_comp.resize(col, -99999);
   slc_pur.resize(col, -99999);
@@ -1402,8 +1438,10 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice1DVector(const int col){
 
   if (fPiZeroAna){
     slc_pizero_good.resize(col, 0);
+    slc_photon0_pfp_id.resize(col, -99999);
     slc_photon1_pfp_id.resize(col, -99999);
     slc_photon2_pfp_id.resize(col, -99999);
+    slc_photon0_energy.resize(col, -99999);
     slc_photon1_energy.resize(col, -99999);
     slc_photon2_energy.resize(col, -99999);
     slc_pizero_open_angle.resize(col, -99999);
@@ -1462,6 +1500,8 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
    slc_pfp_track_dir_z.resize(row); 
 
    slc_pfp_track_length.resize(row);
+   slc_pfp_track_angle_to_beam.resize(row);
+   slc_pfp_track_contained.resize(row);
    slc_pfp_track_dazzle_muon_score.resize(row);
    slc_pfp_track_dazzle_pion_score.resize(row);
    slc_pfp_track_dazzle_proton_score.resize(row);
@@ -1507,7 +1547,7 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
    slc_pfp_shower_density_grad.resize(row);
    slc_pfp_shower_density_pow.resize(row);
    slc_pfp_shower_angle_to_beam.resize(row);
-
+   slc_pfp_shower_contained.resize(row);
 }
 
 void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int col){
@@ -1555,6 +1595,8 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_track_dir_z[row].resize(col, -99999); 
 
    slc_pfp_track_length[row].resize(col, -99999);
+   slc_pfp_track_angle_to_beam[row].resize(col, -99999); 
+   slc_pfp_track_contained[row].resize(col, 0); 
    slc_pfp_track_dazzle_muon_score[row].resize(col, -99999);
    slc_pfp_track_dazzle_pion_score[row].resize(col, -99999);
    slc_pfp_track_dazzle_proton_score[row].resize(col, -99999);
@@ -1600,6 +1642,7 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_shower_density_grad[row].resize(col, -99999);
    slc_pfp_shower_density_pow[row].resize(col, -99999);
    slc_pfp_shower_angle_to_beam[row].resize(col, -99999);
+   slc_pfp_shower_contained[row].resize(col, 0);
 }
 void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                                            const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
@@ -1631,10 +1674,10 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
     const std::vector<art::Ptr<recob::PFParticle>> pfps = slicesToPFPs.at(slc.key());
     slc_n_pfps[slcCounter] = pfps.size();
 
-    //if(fDebug){
-    //  std::cout << std::endl << "Slice #" << slcCounter << std::endl;
-    //  std::cout << "Found " << pfps.size() << " pfp(s) with this slice..." << std::endl;
-    //}
+    if(fDebug){
+      std::cout << std::endl << "Slice #" << slcCounter << std::endl;
+      std::cout << "Found " << pfps.size() << " pfp(s) with this slice..." << std::endl;
+    }
 
     if(pfps.size() == 0)
     {
@@ -1643,6 +1686,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
     }
 
     const art::Ptr<recob::PFParticle> prim = GetPrimaryPFP(pfps);
+
     if(prim.isNull())
       continue;
 
@@ -1682,18 +1726,24 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
 
     for (size_t iStub = 0; iStub < stubsVec.size(); iStub++) {
 
-      //const sbn::Stub &thisStub = *stubsVec[iStub];
-
       art::Ptr<recob::PFParticle> thisStubPFP;
-      if (!stubsToPFPs.at(iStub).empty()) thisStubPFP = stubsToPFPs.at(iStub).at(0);
 
-      for(auto&& [pfpCounter, id]: enumerate(prim->Daughters())){
-	if (thisStubPFP->Self() == id) {
-	  nstub++;
-	  break;
-	}
-      }
+      if (!stubsToPFPs.at(iStub).empty()){
+
+        thisStubPFP = stubsToPFPs.at(iStub).at(0);
+
+        for(auto&& [pfpCounter, id]: enumerate(prim->Daughters())){
+          if (thisStubPFP->Self() == id) {
+            nstub++;
+            break;
+          }
+        }
+      } 
+
+      //std::cout << "primary pfp id = " << prim->Self() << std::endl;
+      //
     }
+
     slc_n_stub[slcCounter] = nstub;
 
     std::vector<art::Ptr<sbn::OpT0Finder>> opT0Vec = slicesToOpT0.at(slc.key());
@@ -1711,6 +1761,23 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
 
       // Add corrected Z vertex variable
       slc_opt0_time_corrected_Z_pandora [slcCounter] = slc_opt0_time[slcCounter] - slc_vtx_z[slcCounter]/light_speed_cm_us;
+
+      float totalShowerE = 0;
+      float totalTrackE = 0;
+
+      if(slc_n_shws[slcCounter] > 0){
+        for (int pfpCounter=0; pfpCounter < (int)slc_n_pfps[slcCounter]; pfpCounter++){
+          if(slc_pfp_shower_energy[slcCounter][pfpCounter] > 0) totalShowerE += slc_pfp_shower_energy[slcCounter][pfpCounter];
+        }
+      }
+      if(slc_n_trks[slcCounter] > 0){
+        for (int pfpCounter=0; pfpCounter < (int)slc_n_pfps[slcCounter]; pfpCounter++){
+          if(slc_pfp_track_ke[slcCounter][pfpCounter] > 0) totalTrackE += slc_pfp_track_ke[slcCounter][pfpCounter];
+	}
+      }
+
+      slc_total_shower_E[slcCounter] = totalShowerE;
+      slc_total_track_E[slcCounter] = totalTrackE;
     }
 
     ResizeSlice2DVectorCol(slcCounter, prim->Daughters().size());
@@ -1732,10 +1799,10 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
 					)
 {
 
-  //if(fDebug){
-  //  std::cout << std::endl << "Analysing Primary PFP..." << std::endl;
-  //  std::cout << "Found " << prim->Daughters().size() << " pfp daughters..."<< std::endl;
-  //}
+  if(fDebug){
+    std::cout << std::endl << "Analysing Primary PFP..." << std::endl;
+    std::cout << "Found " << prim->Daughters().size() << " pfp daughters..."<< std::endl;
+  }
   
   art::FindOneP<recob::Track>                      pfpToTrack(pfpHandle, e, fTrackModuleLabel);
   art::FindOneP<recob::Shower>                     pfpToShower(pfpHandle, e, fShowerModuleLabel);
@@ -2042,11 +2109,20 @@ void sbnd::HNLPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<r
   slc_pfp_track_end_x[slcCounter][pfpCounter] = end.X();
   slc_pfp_track_end_y[slcCounter][pfpCounter] = end.Y();
   slc_pfp_track_end_z[slcCounter][pfpCounter] = end.Z();
-  
+ 
   geo::Vector_t dir = track->StartDirection();
   slc_pfp_track_dir_x[slcCounter][pfpCounter] = dir.X();
   slc_pfp_track_dir_y[slcCounter][pfpCounter] = dir.Y();
   slc_pfp_track_dir_z[slcCounter][pfpCounter] = dir.Z();
+
+  bool isContained = false;
+  if( VolumeCheck(start, 5.0, 5.0, 5.0, 5.0) & VolumeCheck(end, 5.0, 5.0, 5.0, 5.0) ) isContained = true;
+  slc_pfp_track_contained[slcCounter][pfpCounter] = isContained;
+
+  const TVector3 beam(0,0,1);
+  const TVector3 vecDir(dir.X(), dir.Y(), dir.Z());
+  float angle2beam = TMath::ACos(vecDir.Dot(beam) / ( vecDir.Mag() * beam.Mag()) ) * 180 / TMath::Pi(); //degree
+  slc_pfp_track_angle_to_beam[slcCounter][pfpCounter] = angle2beam;
 
   slc_pfp_track_length[slcCounter][pfpCounter] = track->Length();
 
@@ -2205,12 +2281,19 @@ void sbnd::HNLPiZeroAnalysis::AnalyseShower(const art::Event &e, const art::Ptr<
   slc_pfp_shower_start_y[slcCounter][pfpCounter] = start.Y();
   slc_pfp_shower_start_z[slcCounter][pfpCounter] = start.Z();
   
+  bool isContained = false;
+
   if (shower->Direction().Z()>-990 && shower->ShowerStart().Z()>-990 && shower->Length()>0) {
-      auto end = shower->ShowerStart() + (shower->Length() * shower->Direction());
-      slc_pfp_shower_end_x[slcCounter][pfpCounter] = end.X();
-      slc_pfp_shower_end_y[slcCounter][pfpCounter] = end.Y();
-      slc_pfp_shower_end_z[slcCounter][pfpCounter] = end.Z();
+    auto end = shower->ShowerStart() + (shower->Length() * shower->Direction());
+    slc_pfp_shower_end_x[slcCounter][pfpCounter] = end.X();
+    slc_pfp_shower_end_y[slcCounter][pfpCounter] = end.Y();
+    slc_pfp_shower_end_z[slcCounter][pfpCounter] = end.Z();
+    
+    geo::Point_t start(shower->ShowerStart().X(), shower->ShowerStart().Y(), shower->ShowerStart().Z());
+    if( VolumeCheck(start, 5.0, 5.0, 5.0, 5.0) & VolumeCheck(end, 5.0, 5.0, 5.0, 5.0) ) isContained = true;
   }
+
+  slc_pfp_shower_contained[slcCounter][pfpCounter] = isContained;
 
   if (shower->Direction().Z()>-990 && shower->ShowerStart().Z()>-990 && shower->Length()>0) {
     const TVector3 beam(0,0,1);
@@ -2381,7 +2464,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
     }
     else if (fMeVPrtl){
       if(bestMCT->Origin() == 2){
-	std::cout << "This slice cosmics " << std::endl;
+	//std::cout << "This slice cosmics " << std::endl;
         auto const mcp = particleInv->TrackIdToParticle_P(bestTrackID);
 
         slc_true_event_type[slcCounter] = (int) kCosmic;
@@ -2391,7 +2474,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
         slc_true_vtx_t[slcCounter] = mcp->T();
   	slc_true_vtx_t_corrected_Z[slcCounter] = slc_true_vtx_t[slcCounter] - slc_true_vtx_z[slcCounter]/light_speed_cm_ns;
       }else{
-	std::cout << "This slice hnl " << std::endl;
+	//std::cout << "This slice hnl " << std::endl;
         AnalyseSliceMCTruth(e, bestMCT, slcCounter);
       }
 
@@ -2519,6 +2602,8 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 }
 
 void sbnd::HNLPiZeroAnalysis::AnalysePiZero(const int slcCounter){
+  
+  if(slc_is_clear_cosmics[slcCounter] ==1) return;
 
   //Need >= 1 showers
   if (slc_n_shws[slcCounter] < 0 ) return;
@@ -2542,16 +2627,6 @@ void sbnd::HNLPiZeroAnalysis::AnalysePiZero(const int slcCounter){
       E_best = slc_pfp_shower_energy[slcCounter][pfpCounter];
       pfp0 = pfpCounter;
     }
-  }
-  if (E_best > -999){
-    std::cout << "====================================" << std::endl;
-    std::cout << "Event " << _event << " Slice " << slcCounter << "  One Shower Candidate" << std::endl;
-    std::cout << "------------------------------------" << std::endl;
-    std::cout << "pfp id " << slc_pfp_id[slcCounter][pfp0] << std::endl;
-    std::cout << "razzled photon score " << slc_pfp_razzled_photon_score[slcCounter][pfp0] << std::endl;
-    std::cout << "shower energy " << slc_pfp_shower_energy[slcCounter][pfp0] << std::endl;
-    std::cout << "dEdx " << slc_pfp_shower_dedx[slcCounter][pfp0] << std::endl;
-    std::cout << "====================================" << std::endl;
   }
 
   //Need >= 2 showers
@@ -2611,7 +2686,23 @@ void sbnd::HNLPiZeroAnalysis::AnalysePiZero(const int slcCounter){
  
   bool goodPiZero = false;
 
-  if ( m_best > 0 ) {
+  if (E_best > -999){
+    
+    slc_pizero_good[slcCounter] = goodPiZero;
+    slc_photon0_pfp_id[slcCounter] = pfp0;
+    slc_photon0_energy[slcCounter] = E_best;
+    
+    std::cout << "====================================" << std::endl;
+    std::cout << "Event " << _event << " Slice " << slcCounter << "  One Shower Candidate" << std::endl;
+    std::cout << "------------------------------------" << std::endl;
+    std::cout << "pfp id " << slc_pfp_id[slcCounter][pfp0] << std::endl;
+    std::cout << "razzled photon score " << slc_pfp_razzled_photon_score[slcCounter][pfp0] << std::endl;
+    std::cout << "shower energy " << slc_pfp_shower_energy[slcCounter][pfp0] << std::endl;
+    std::cout << "dEdx " << slc_pfp_shower_dedx[slcCounter][pfp0] << std::endl;
+    std::cout << "angle to beam " << slc_pfp_shower_angle_to_beam[slcCounter][pfp0] << std::endl;
+    std::cout << "====================================" << std::endl;
+  }
+  else if ( m_best > 0 ) {
  
     goodPiZero = true;
 
@@ -2637,11 +2728,13 @@ void sbnd::HNLPiZeroAnalysis::AnalysePiZero(const int slcCounter){
       std::cout << "razzled photon score " << slc_pfp_razzled_photon_score[slcCounter][pfp1] << std::endl;
       std::cout << "shower energy " << slc_pfp_shower_energy[slcCounter][pfp1] << std::endl;
       std::cout << "dEdx " << slc_pfp_shower_dedx[slcCounter][pfp1] << std::endl;
+      std::cout << "angle to beam " << slc_pfp_shower_angle_to_beam[slcCounter][pfp1] << std::endl;
       std::cout << "------------------------------------" << std::endl;
       std::cout << "pfp id " << slc_pfp_id[slcCounter][pfp2] << std::endl;
       std::cout << "razzled photon score " << slc_pfp_razzled_photon_score[slcCounter][pfp2] << std::endl;
       std::cout << "shower energy " << slc_pfp_shower_energy[slcCounter][pfp2] << std::endl;
       std::cout << "dEdx " << slc_pfp_shower_dedx[slcCounter][pfp2] << std::endl;
+      std::cout << "angle to beam " << slc_pfp_shower_angle_to_beam[slcCounter][pfp2] << std::endl;
       std::cout << "------------------------------------" << std::endl;
       std::cout << "OpenAngle = " << TMath::ACos(cosTheta) * 180 / TMath::Pi() << std::endl;
       std::cout << "mass = " << pizeroMass << std::endl;
@@ -2668,6 +2761,104 @@ void sbnd::HNLPiZeroAnalysis::AnalysePiZero(const int slcCounter){
   else{
     slc_pizero_good[slcCounter] = goodPiZero;
   }
+}
+
+void sbnd::HNLPiZeroAnalysis::WriteTrainingCSV(){
+
+  std::ofstream outputFile("training.csv", std::ios_base::app);
+  
+  if (outputFile.is_open()) { // check if the file was opened successfully
+		
+    for ( int slcCounter = 0; slcCounter < (int)_n_slc; slcCounter++){
+
+      if (slc_is_clear_cosmics[slcCounter] == 1) continue;
+      if (slc_n_shws[slcCounter] < 0 ) continue;
+      if (slc_n_trks[slcCounter] < 0 ) continue;
+
+      float bestE = -999;
+      int bestPFP = -999;
+
+      //Chose best shower candidate for the slice: most deposited energy for now
+      for (int pfpCounter = 0; pfpCounter < (int)slc_n_pfps[slcCounter]; pfpCounter++){
+        
+        //Check if shower 1 is good
+        if ( (slc_pfp_shower_energy[slcCounter][pfpCounter] < 0 )
+             || (slc_pfp_shower_start_z[slcCounter][pfpCounter] < -990)
+             || (slc_pfp_shower_dir_z[slcCounter][pfpCounter] < -990)
+             || (slc_pfp_shower_length[slcCounter][pfpCounter] < 0)
+             || (slc_pfp_shower_dedx[slcCounter][pfpCounter] < -990) ){
+          continue;
+        }
+
+
+	if(slc_pfp_shower_energy[slcCounter][pfpCounter] > bestE){
+          bestE = slc_pfp_shower_energy[slcCounter][pfpCounter];
+          bestPFP = pfpCounter;
+        }
+      }
+
+      // Signal or Background?
+      bool isSignal = false;
+      if (slc_true_event_type[slcCounter] == (int) kHNL || slc_true_event_type[slcCounter] == (int) kHNLNonFV){
+        isSignal = true;
+      }
+    
+      //Write to CSV
+      outputFile << isSignal;
+      // Slice variables 
+      outputFile << "," << slc_crumbs_score[slcCounter];
+      outputFile << "," << slc_vtx_x[slcCounter];
+      outputFile << "," << slc_vtx_y[slcCounter];
+      outputFile << "," << slc_vtx_z[slcCounter];
+      outputFile << "," << slc_opt0_score[slcCounter];
+      outputFile << "," << slc_opt0_time_corrected_Z_pandora[slcCounter];
+      outputFile << "," << slc_opt0_frac[slcCounter];
+      outputFile << "," << slc_n_stub[slcCounter];
+      outputFile << "," << slc_n_razzled_muons[slcCounter];
+      outputFile << "," << slc_n_razzled_protons_thresh[slcCounter];
+      outputFile << "," << slc_n_razzled_pions_thresh[slcCounter];
+      outputFile << "," << slc_n_razzled_electrons[slcCounter];
+      outputFile << "," << slc_n_razzled_photons[slcCounter];
+      outputFile << "," << slc_total_shower_E[slcCounter];
+      outputFile << "," << slc_total_track_E[slcCounter];
+ 
+      //PFP Variables
+      outputFile << "," << slc_pfp_n_hits[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_track_score[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_razzled_pdg[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_razzled_muon_score[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_razzled_proton_score[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_razzled_pion_score[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_razzled_electron_score[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_razzled_photon_score[slcCounter][bestPFP];
+
+      //Shower Variables
+      outputFile << "," << slc_pfp_shower_length[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_shower_energy[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_shower_dedx[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_shower_conv_gap[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_shower_open_angle[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_shower_angle_to_beam[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_shower_contained[slcCounter][bestPFP];
+
+      //Track Varibles
+      outputFile << "," << slc_pfp_track_length[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_track_ke[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_track_angle_to_beam[slcCounter][bestPFP];
+      outputFile << "," << slc_pfp_track_contained[slcCounter][bestPFP];
+
+      outputFile << "\n";
+ 
+    }
+
+    outputFile.close(); // close the file when done
+			
+    std::cout << "Training data was written to training.csv\n";
+  }
+  else {
+    std::cout << "Error opening file\n";
+  }
+
 }
 
 DEFINE_ART_MODULE(sbnd::HNLPiZeroAnalysis)
