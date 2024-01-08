@@ -34,6 +34,8 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
 
   TChain *pfps = new TChain("razzled/pfpTree");
   pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_rockbox.root");
+  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_intrnue.root");
+  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_intime.root");
 
   int truePDG, recoPDG;
   float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ,
@@ -174,6 +176,9 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
       if(abs(trackStartX) > 180 || abs(trackStartY) > 180 || trackStartZ < 10 || trackStartZ > 450 ||
          abs(showerStartX) > 180 || abs(showerStartY) > 180 || showerStartZ < 10 || showerStartZ > 450)
         continue;
+
+      if(trk_length < 3 && showerEnergy<10)
+	continue;
 
       const std::vector<float> bdtScores = reader->EvaluateMulticlass("BDTG Method");
 
