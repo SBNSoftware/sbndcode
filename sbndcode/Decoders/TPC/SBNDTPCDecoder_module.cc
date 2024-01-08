@@ -46,7 +46,7 @@ tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(art::Event 
   const sbndaq::NevisTPCHeader *raw_header = fragment.header();
   tpcAnalysis::TPCDecodeAna ret;
 
-  ret.crate = raw_header->getFEMID();
+  ret.crate = (frag.fragmentID() >> 8) & 0xF;  
   ret.slot = raw_header->getSlot();
   ret.event_number = raw_header->getEventNum();
   // ret.frame_number = raw_header->getFrameNum();
@@ -158,10 +158,12 @@ void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Frag
     header_collection->push_back(header_data);
   }
 
+  unsigned int FEMCrate = (frag.fragmentID() >> 8) & 0xF;
+  unsigned int FEMSlot = fragment.header()->getSlot()-_config.min_slot_no + 1;
+  
   for (auto waveform: waveform_map) {
-    auto chanInfo = channelMap->GetChanInfoFromFEMElements(
-							   fragment.header()->getFEMID(), // FEM crate
-							   fragment.header()->getSlot()-_config.min_slot_no + 1, // FEM slot
+    auto chanInfo = channelMap->GetChanInfoFromFEMElements(FEMCrate,
+							   FEMSlot,
 							   waveform.first); // nevis_channel_id    
     if (!chanInfo.valid) continue;
 
