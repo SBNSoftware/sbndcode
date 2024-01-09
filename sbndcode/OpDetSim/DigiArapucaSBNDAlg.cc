@@ -58,8 +58,7 @@ namespace opdet {
   
     if(fParams.ArapucaSinglePEmodel) {
       mf::LogDebug("DigiArapucaSBNDAlg") << " using testbench pe response";
-      // TFile* file =  TFile::Open(fname.c_str(), "READ");
-      TFile* file =  TFile::Open("/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/PDS_PAPER/new_digi_arapuca_sbnd.root", "READ");
+      TFile* file =  TFile::Open(fname.c_str(), "READ");
       std::vector<double>* SinglePEVec_40ftCable_Daphne;
       std::vector<double>* SinglePEVec_40ftCable_Apsaia;
       file->GetObject("SinglePEVec_40ftCable_Apsaia", SinglePEVec_40ftCable_Apsaia);
