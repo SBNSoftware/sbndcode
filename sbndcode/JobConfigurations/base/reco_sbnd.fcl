@@ -331,7 +331,10 @@ physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
-physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
+physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
+physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
+physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
+physics.producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
 
 physics.producers.crthitt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
 physics.producers.crthitt0SCE.T0Alg.TPCTrackLabel: "pandoraSCETrack"

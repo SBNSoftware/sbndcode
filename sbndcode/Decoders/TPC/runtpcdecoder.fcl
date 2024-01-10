@@ -1,0 +1,33 @@
+#include "TPCChannelMapService.fcl"
+#include "SBNDTPCDecoderDefaults.fcl"
+
+services.TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
+
+physics:
+{
+  // now also have something produce the digits and headers
+  producers:
+  {
+    daq: @local::SBNDTPCDecoderDefaults
+  }
+
+  analyzers: {}
+
+  my_producer_modules: [daq]
+  trigger_paths: [my_producer_modules]
+  a: [rootout]
+  end_paths: [a]
+}
+
+source: {}
+
+outputs: {
+  rootout: {
+    module_type: "RootOutput"
+    fileName: "digits.root"
+  }
+}
+
+
+process_name: TPCDECODER
+
