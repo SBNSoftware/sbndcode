@@ -143,11 +143,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   TFile* file = TFile::Open(fname.c_str(), "READ");
   std::vector<double>* SinglePEVec_p;
   file->GetObject("SinglePEVec", SinglePEVec_p);
-  if (fElectronics=="Daphne") 
-  {
-    TFile* file =  TFile::Open("/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/rodrigoa/PDS_PAPER/new_digi_arapuca_sbnd.root", "READ");
-    file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
-  }
+  if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
   fSinglePEWave = *SinglePEVec_p;
 
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
