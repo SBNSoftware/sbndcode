@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+crtbacktrackeralg_sbnd:
+{
+   SimModuleLabel:         "largeant"
+   SimDepositModuleLabel:  "genericcrt"
+   FEBDataModuleLabel:     "crtsim"
+   StripHitModuleLabel:    "crtstrips"
+   ClusterModuleLabel:     "crtclustering"
+   SpacePointModuleLabel:  "crtspacepoints"
+   TrackModuleLabel:       "crttracks"
+}
+
+END_PROLOG

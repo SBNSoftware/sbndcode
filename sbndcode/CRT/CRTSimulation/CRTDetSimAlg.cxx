@@ -56,7 +56,7 @@ namespace crt {
         }
     }
 
-    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> CRTDetSimAlg::GetData()
+    std::vector<std::pair<FEBData, std::vector<AuxDetIDE>>> CRTDetSimAlg::GetData()
     {
         return fData;
     }
@@ -101,7 +101,7 @@ namespace crt {
     }
 
 
-    void CRTDetSimAlg::AddADC(sbnd::crt::FEBData & feb_data,
+    void CRTDetSimAlg::AddADC(FEBData & feb_data,
                               const int & sipmID, const uint16_t & adc)
     {
         uint16_t original_adc = feb_data.ADC(sipmID);
@@ -127,7 +127,7 @@ namespace crt {
 
     void CRTDetSimAlg::ProcessStrips(const std::vector<StripData> & strips)
     {
-        std::map<uint16_t, sbnd::crt::FEBData> mac_to_febdata;
+        std::map<uint16_t, FEBData> mac_to_febdata;
         std::map<uint16_t, std::vector<AuxDetIDE>> mac_to_ides;
         std::map<uint16_t, std::vector<int>> mac_to_sipmids;
 
@@ -141,11 +141,13 @@ namespace crt {
             if (!mac_to_febdata.count(strip.mac5))
             {
                 // Construct a new FEBData object with only pedestal values (will be filled later)
-                mac_to_febdata[strip.mac5] = sbnd::crt::FEBData(strip.mac5,          // FEB ID
-                                                                strip.sipm0.t0,      // Ts0
-                                                                strip.sipm0.t1,      // Ts1
-                                                                adc_pedestal,        // ADCs
-                                                                strip.sipm0.sipmID); // Coinc
+                mac_to_febdata[strip.mac5] = FEBData(strip.mac5,          // FEB ID
+                                                     strip.flags,         // Flags
+                                                     strip.sipm0.t0,      // Ts0
+                                                     strip.sipm0.t1,      // Ts1
+                                                     strip.unixs,         // UnixS
+                                                     adc_pedestal,        // ADCs
+                                                     strip.sipm0.sipmID); // Coinc
 
                 mac_to_ides[strip.mac5] = std::vector<AuxDetIDE>();
                 mac_to_sipmids[strip.mac5] = std::vector<int>();
@@ -156,8 +158,10 @@ namespace crt {
                 // We want to save the earliest t1 and t0 for each FEB.
                 if (strip.sipm0.t1 < mac_to_febdata[strip.mac5].Ts1())
                 {
+                    mac_to_febdata[strip.mac5].SetFlags(strip.flags);
                     mac_to_febdata[strip.mac5].SetTs1(strip.sipm0.t1);
                     mac_to_febdata[strip.mac5].SetTs0(strip.sipm0.t0);
+                    mac_to_febdata[strip.mac5].SetUnixS(strip.unixs);
                     mac_to_febdata[strip.mac5].SetCoinc(strip.sipm0.sipmID);
                 }
             }
@@ -233,12 +237,12 @@ namespace crt {
                 _mac5s.insert(strip.mac5);
 
                 if (strip.sipm_coinc) {
-                    if (strip.planeID == 0) _planeX = true;
-                    if (strip.planeID == 1) _planeY = true;
+                    if (strip.orientation == 0) _planeX = true;
+                    if (strip.orientation == 1) _planeY = true;
                 }
 
                 if(_debug) std::cout << "\tAdded strip with mac " << strip.mac5
-                                     << " on plane " << strip.planeID
+                                     << " on plane " << strip.orientation
                                      << ", with time " << strip.sipm0.t1 << std::endl;
             }
 
@@ -258,14 +262,14 @@ namespace crt {
 
             void print_no_coinc(StripData strip) {
                 if (_debug) std::cout << "\tStrip with mac " << strip.mac5
-                                     << " on plane " << strip.planeID
+                                     << " on plane " << strip.orientation
                                      << ", with time " << strip.sipm0.t1
                                      << " -> didn't have SiPMs coincidence" << std::endl;
             }
 
             void print_dead_time(StripData strip) {
                 if (_debug) std::cout << "\tStrip with mac " << strip.mac5
-                                     << " on plane " << strip.planeID
+                                     << " on plane " << strip.orientation
                                      << ", with time " << strip.sipm0.t1
                                      << " -> happened during dead time." << std::endl;
             }
@@ -361,67 +365,21 @@ namespace crt {
     void CRTDetSimAlg::FillTaggers(const uint32_t adid, const uint32_t adsid,
                                    vector<sim::AuxDetIDE> ides) {
 
-        art::ServiceHandle<geo::Geometry> geoService;
-
-        const geo::AuxDetGeo& adGeo = geoService->AuxDet(adid);
-        const geo::AuxDetSensitiveGeo& adsGeo = adGeo.SensitiveVolume(adsid);
-
         // Return the vector of IDEs
         std::sort(ides.begin(), ides.end(),
                   [](const sim::AuxDetIDE & a, const sim::AuxDetIDE & b) -> bool{
                     return ((a.entryT + a.exitT)/2) < ((b.entryT + b.exitT)/2);
                   });
 
-        // std::set<std::string> volNames = { adsGeo.TotalVolume()->GetName() };
-        std::set<std::string> volNames = { adGeo.TotalVolume()->GetName() };
-        std::vector<std::vector<TGeoNode const*> > paths =
-          geoService->FindAllVolumePaths(volNames);
-
-        std::string path = "";
-        for (size_t inode=0; inode<paths.at(0).size(); inode++) {
-          path += paths.at(0).at(inode)->GetName();
-          if (inode < paths.at(0).size() - 1) {
-            path += "/";
-          }
-        }
-
-        TGeoManager* manager = geoService->ROOTGeoManager();
-        manager->cd(path.c_str());
-
-        // We get the array of strips first, which is the AuxDet,
-        // then from the AuxDet, we get the strip by picking the
-        // daughter with the ID of the AuxDetSensitive, and finally
-        // from the AuxDet, we go up and pick the module and tagger
-        TGeoNode* nodeArray = manager->GetCurrentNode();
-        TGeoNode* nodeStrip = nodeArray->GetDaughter(adsid);
-        TGeoNode* nodeModule = manager->GetMother(1);
-        TGeoNode* nodeTagger = manager->GetMother(2);
-
-        std::string volumeName = nodeStrip->GetVolume()->GetName();
-
-        mf::LogDebug("CRTDetSimAlg") << "Strip name: " << nodeStrip->GetName()
-                                     << ", number = " << nodeStrip->GetNumber()
-                                     << "\n Array name: " << nodeArray->GetName()
-                                     << ", number = " << nodeArray->GetNumber()
-                                     << "\n Module name: " << nodeModule->GetName()
-                                     << ", number = " << nodeModule->GetNumber()
-                                     << "\n Tagger name: " << nodeTagger->GetName()
-                                     << ", number = " << nodeTagger->GetNumber()
-                                     << "\n Strip volume name: " << volumeName << std::endl;
-
+        const CRTStripGeo strip   = fCRTGeoAlg.GetStripByAuxDetIndices(adid, adsid);
+        const CRTModuleGeo module = fCRTGeoAlg.GetModule(strip.moduleName);
+	
+	if(module.minos)
+	  return;
+        
         // Retrive the ID of this CRT module
-        uint16_t mac5 = static_cast<uint16_t>(nodeModule->GetNumber());
-
-        // Module position in parent (tagger) frame
-        double origin[3] = {0, 0, 0};
-        double modulePosMother[3];
-        nodeModule->LocalToMaster(origin, modulePosMother);
-
-        // Determine plane ID (1 for z > 0, 0 for z < 0 in local coordinates)
-        unsigned planeID = (modulePosMother[2] > 0);
-
-        // Determine module orientation: which way is the top (readout end)?
-        bool top = (planeID == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+        const uint16_t mac5 = adid;
+        const uint16_t orientation = module.orientation;
 
         // Simulate the CRT response for each hit
         mf::LogInfo("CRTDetSimAlg") << "We have " << ides.size() << " IDE for this SimChannel." << std::endl;
@@ -448,21 +406,15 @@ namespace crt {
                     << "TimeOffset: " << fTimeOffset << std::endl;
             }
 
-            geo::Point_t const world{x, y, z};
-            auto const svHitPosLocal = adsGeo.toLocalCoords(world);
+            const std::vector<double> localpos = fCRTGeoAlg.StripWorldToLocalPos(strip, x, y, z);
 
             // Calculate distance to the readout
-            double distToReadout;
-            if (top) {
-                distToReadout = abs( adsGeo.HalfWidth1() - svHitPosLocal.X());
-            }
-            else {
-                distToReadout = abs(-adsGeo.HalfWidth1() - svHitPosLocal.X());
-            }
+            const geo::Point_t worldpos(x, y, z);
+            const double distToReadout = fCRTGeoAlg.DistanceDownStrip(worldpos, strip.channel0);
 
             // Calculate distance to fibers
-            double d0 = abs(-adsGeo.HalfHeight() - svHitPosLocal.Y());  // L
-            double d1 = abs( adsGeo.HalfHeight() - svHitPosLocal.Y());  // R
+            const double d0 = std::abs(-strip.width - localpos[1]);
+            const double d1 = std::abs( strip.width - localpos[1]);
 
             // Simulate time response
             // Waveform emulation is added later, because
@@ -474,10 +426,8 @@ namespace crt {
 
             // Time relative to trigger, accounting for propagation delay and 'walk'
             // for the fixed-threshold discriminator
-            uint32_t ts1_ch0 =
-              getChannelTriggerTicks(/*trigClock,*/ tTrue, npe0, distToReadout);
-            uint32_t ts1_ch1 =
-              getChannelTriggerTicks(/*trigClock,*/ tTrue, npe1, distToReadout);
+            uint32_t ts1_ch0 = getChannelTriggerTicks(tTrue, npe0, distToReadout);
+            uint32_t ts1_ch1 = getChannelTriggerTicks(tTrue, npe1, distToReadout);
 
             if (fParams.EqualizeSiPMTimes()) {
                 mf::LogWarning("CRTDetSimAlg") << "EqualizeSiPMTimes is on." << std::endl;
@@ -485,8 +435,7 @@ namespace crt {
             }
 
             // Time relative to PPS: Random for now! (FIXME)
-            uint32_t ppsTicks =
-              CLHEP::RandFlat::shootInt(&fEngine, /*trigClock.Frequency()*/ fParams.ClockSpeedCRT() * 1e6);
+            uint32_t ppsTicks = CLHEP::RandFlat::shootInt(&fEngine, fParams.ClockSpeedCRT() * 1e6);
 
             // Adjacent channels on a strip are numbered sequentially.
             //
@@ -494,18 +443,22 @@ namespace crt {
             // AuxDet name (retrievable given the hit AuxDet ID) which specifies a
             // module, and a channel number from 0 to 32.
             // uint32_t moduleID = adid;
-            uint32_t moduleID = mac5;
+            // uint32_t moduleID = mac5;
             uint32_t stripID = adsid;
-            uint32_t channel0ID = 32 * moduleID + 2 * stripID + 0;
-            uint32_t channel1ID = 32 * moduleID + 2 * stripID + 1;
+            uint32_t channel0ID = strip.channel0;
+            uint32_t channel1ID = strip.channel1;
             uint32_t sipm0ID = stripID * 2 + 0;
             uint32_t sipm1ID = stripID * 2 + 1;
-
-            if (volumeName.find("MINOS") != std::string::npos) {continue;} // Ignoring MINOS modules for now.
 
             // Apply ADC threshold and strip-level coincidence (both fibers fire)
             double threshold = static_cast<double>(fParams.QThreshold());
             bool sipm_coinc = false;
+
+            // Give the flags parameter values 3 as all should be "data events"
+            const uint16_t flags = 3;
+
+            // Use the current server time to give us a unix timestamp
+            const uint32_t unixs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
             if (q0 > threshold &&
                 q1 > threshold &&
@@ -535,41 +488,34 @@ namespace crt {
                                       q1);
 
             StripData strip_data = StripData(mac5,
-                                             planeID,
+                                             flags,
+                                             orientation,
                                              sipm0,
                                              sipm1,
+                                             unixs,
                                              sipm_coinc,
                                              ide);
 
             // Retrive the Tagger object
-            Tagger& tagger = fTaggers[nodeTagger->GetName()];
+            Tagger& tagger = fTaggers[module.taggerName];
             tagger.data.push_back(strip_data);
 
-            auto const poss = adsGeo.GetCenter();
             mf::LogInfo("CRTDetSimAlg")
                 << "CRT HIT in adid/adsid " << adid << "/" << adsid << "\n"
                 << "MAC5 " << mac5 << "\n"
                 << "TRUE TIME  " << tTrue << "\n"
                 << "TRACK ID  " << ide.trackID << "\n"
                 << "CRT HIT POS " << x << " " << y << " " << z << "\n"
-                << "CRT STRIP POS " << poss.X() << " " << poss.Y() << " " << poss.Z() << "\n"
-                << "CRT MODULE POS " << modulePosMother[0] << " "
-                                     << modulePosMother[1] << " "
-                                     << modulePosMother[2] << " "
-                                    << "\n"
-                << "CRT PATH: " << path << "\n"
-                << "CRT level 0 (strip): " << nodeStrip->GetName() << "\n"
-                << "CRT level 1 (array): " << nodeArray->GetName() << "\n"
-                << "CRT level 2 (module): " << nodeModule->GetName() << "\n"
-                << "CRT level 3 (tagger): " << nodeTagger->GetName() << "\n"
-                << "CRT PLANE ID: " << planeID << "\n"
-                << "CRT distToReadout: " << distToReadout << " " << (top ? "top" : "bot") << "\n"
-                << "CRT Q SiPM 0: " << q0 << ", SiPM 1: " << q1
-                << "CRT Ts1 SiPM 0: " << ts1_ch0 << " SiPM 1: " << ts1_ch1 << "\n";
+                << "CRT STRIP POS " << (strip.minX + strip.maxX) / 2. << " " << (strip.minY + strip.maxY) / 2. << " " << (strip.minZ + strip.maxZ) / 2. << "\n"
+                << "CRT MODULE POS " << (module.minX + module.maxX) / 2. << " " << (module.minY + module.maxY) / 2. << " " << (module.minZ + module.maxZ) / 2. << "\n"
+                << "CRT PLANE ID: " << orientation << "\n"
+                << "CRT distToReadout: " << distToReadout << " " << (module.top ? "top" : "bot") << "\n"
+                << "CRT Q SiPM 0: " << q0 << ", SiPM 1: " << q1 << '\n'
+                << "CRT Ts1 SiPM 0: " << ts1_ch0 << " SiPM 1: " << ts1_ch1 << "\n";         
         }
     } //end FillTaggers
-
-
+  
+  
     void CRTDetSimAlg::ChargeResponse(double eDep, double d0, double d1, double distToReadout, // input
                                       long & npe0, long & npe1, double & q0, double &q1) // output
     {
@@ -598,10 +544,10 @@ namespace crt {
         q1 = CLHEP::RandGauss::shoot(&fEngine, /*fQPed + */fParams.QSlope() * npe1,
                                      fParams.QRMS() * sqrt(npe1));
 
-        // Apply saturation
-        double saturation = static_cast<double>(fParams.AdcSaturation());
-        if (q0 > saturation) q0 = saturation;
-        if (q1 > saturation) q1 = saturation;
+        // Catch rare negative values from random sample
+        // Do not apply ADC threshold here, this is done after trigger simulation effects
+        if (q0 < 0.) q0 = 0.;
+        if (q1 < 0.) q1 = 0.;
 
         mf::LogInfo("CRTSetSimAlg")
             << "CRT CHARGE RESPONSE: eDep = " << eDep
