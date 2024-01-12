@@ -32,3 +32,9 @@ add_subdirectory(FlashMatch)
 
 add_subdirectory(Filters)
 add_subdirectory(ToFStudies)
+
+# for wirecell
+add_subdirectory(WireCell)
+
+add_subdirectory(Decoders)
+add_subdirectory(ChannelMaps)

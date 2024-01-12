@@ -8,7 +8,6 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include "fhiclcpp/ParameterSet.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
 #include "art/Utilities/ToolMacros.h"
 #include "art/Utilities/make_tool.h"
 #include "art/Utilities/ToolConfigTable.h"

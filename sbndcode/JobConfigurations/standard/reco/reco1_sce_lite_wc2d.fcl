@@ -1,0 +1,35 @@
+#-------------------------------------------------------------------
+#
+# Name: reco1_sce_lite_wc2d.fcl
+#
+# Purpose: Lite version of reco1_sce.fcl, 
+#          *** takes wirecell 2DSIM as input, 2d sim + 2D deconvolution *** 
+#          *** DOES NOT RUN fasthit MODULE *** 
+#
+#
+#-------------------------------------------------------------------
+
+#include "reco1_sce_lite.fcl"
+
+physics.reco1: [ rns
+         , opdecopmt
+         , opdecoxarapuca
+         , ophitpmt
+         , ophitxarapuca
+         , opflashtpc0
+         , opflashtpc1
+         , opflashtpc0xarapuca
+         , opflashtpc1xarapuca
+        #  , caldata
+         , gaushit
+        #  , fasthit
+        #  , linecluster
+         , gaushitTruthMatch
+   #      , rffhit
+   #      , corner
+   #      , fuzzycluster
+ ]
+
+physics.producers.gaushit.CalDataModuleLabel: "simtpc2d:gauss"
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

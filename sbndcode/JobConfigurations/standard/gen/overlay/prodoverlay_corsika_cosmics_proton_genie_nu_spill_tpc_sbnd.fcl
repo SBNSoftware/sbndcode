@@ -5,4 +5,4 @@
 # CORSIKA cosmics are generated using the
 # "proton" model. 
 
-#include "prodoverlay_corsika_cosmics_proton_genie_nu_spill_gsimple-configh-v1_tpc.fcl"
+#include "prodoverlay_corsika_cosmics_proton_genie_nu_spill_gsimple-configk-v1_tpc.fcl"

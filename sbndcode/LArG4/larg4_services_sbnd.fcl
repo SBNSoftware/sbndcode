@@ -8,7 +8,7 @@ BEGIN_PROLOG
 #
 sbnd_physics_list_fastoptical:
 {
-  PhysicsListName: "SBND_QGSP_BERT_NNC"
+  PhysicsListName: "SBN_QGSP_BERT_NNC"
   DumpList: true
   enableNeutronLimit: false
   NeutronTimeLimit: 0.0

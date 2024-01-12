@@ -324,7 +324,10 @@ physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
-physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
+physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
+physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
+physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
+physics.producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
 
 #physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"

@@ -21,6 +21,7 @@
 #include "databaseutil_sbnd.fcl"
 #include "vertexfindermodules.fcl"
 #include "hitdumpermodule.fcl"
+#include "muontrackmodule.fcl"
 #include "ophit_finder_sbnd.fcl"
 
 process_name: HitDumper
@@ -74,7 +75,12 @@ physics:
     fasthit:             @local::standard_fasthitfinder
     ophitpmt:            @local::sbnd_ophit_finder_pmt
     ophitarapuca:        @local::sbnd_ophit_finder_arapuca
+    MuonTrackProducer:        @local::MuonTrackProducer
 
+  }
+  filters:
+  {
+    MuonTrackFilter:          @local::MuonTrackFilter
   }
   analyzers:
   {
@@ -84,9 +90,11 @@ physics:
   #define the producer and filter modules for this path, order matters,
   #filters reject all following items.  see lines starting physics.producers below
   reco2: [
-    fasthit,
-    ophitpmt,
-    ophitarapuca
+    fasthit
+    , ophitpmt
+    , ophitarapuca
+    #, MuonTrackProducer 
+    #, MuonTrackFilter
   ]
 
   ana: [hitdumper]
@@ -107,13 +115,13 @@ physics:
 }
 
 
-physics.analyzers.hitdumper.pmtSoftTriggerModuleLabel: "softmetric"
+#physics.analyzers.hitdumper.pmtSoftTriggerModuleLabel: "softmetric"
 physics.analyzers.hitdumper.crtSoftTriggerModuleLabel: "softmetric"
 physics.analyzers.hitdumper.HitsModuleLabel: "fasthit"
-physics.analyzers.hitdumper.keepCRThits: false
+physics.analyzers.hitdumper.keepCRThits: true
 physics.analyzers.hitdumper.keepCRTstrips: true
 physics.analyzers.hitdumper.makeCRTtracks: true
-physics.analyzers.hitdumper.readCRTtracks: false
+physics.analyzers.hitdumper.readCRTtracks: true
 physics.analyzers.hitdumper.readcrtSoftTrigger: true
 
 # set thresholds

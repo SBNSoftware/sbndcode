@@ -45,6 +45,8 @@ namespace lightana{
 
     unsigned int fWeightExp;
 
+    static constexpr double fDefCenterValue = -999.;
+
   };
 
 
@@ -60,8 +62,8 @@ namespace lightana{
   {
 
     // Reset variables
-    Ycenter = Zcenter = 0.;
-    Ywidth  = Zwidth  = -999.;
+    Ycenter = Zcenter = fDefCenterValue;
+    Ywidth  = Zwidth  = fDefCenterValue;
     double totalPE = 0.;
     double sumy = 0., sumz = 0., sumy2 = 0., sumz2 = 0.;
     double weight =1.;

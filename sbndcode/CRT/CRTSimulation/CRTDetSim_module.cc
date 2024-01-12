@@ -52,7 +52,8 @@ void CRTDetSim::reconfigure(fhicl::ParameterSet const & p) {
 
 CRTDetSim::CRTDetSim(fhicl::ParameterSet const & p)
   : EDProducer{p}
-  , fEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "crt", p, "Seed"))
+  , fEngine(art::ServiceHandle<rndm::NuRandomService>{}->registerAndSeedEngine(
+              createEngine(0, "HepJamesRandom", "crt"), "HepJamesRandom", "crt", p, "Seed"))
   , fG4RefTime(art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob().G4ToElecTime(0) * 1e3) // ns
   , fDetAlg(p.get<fhicl::ParameterSet>("DetSimParams"), fEngine, fG4RefTime)
 {

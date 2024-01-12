@@ -1,0 +1,6 @@
+#include "standard_reco1_sbnd.fcl"
+
+outputs.out1.outputCommands: [
+         "keep *_*_*_*",
+         "drop *raw::RawDigits*_*_*_*"
+]
