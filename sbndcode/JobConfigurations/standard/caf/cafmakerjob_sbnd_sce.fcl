@@ -11,10 +11,12 @@ physics.producers.cafmaker.TrackCaloLabel: "pandoraSCECalo"
 physics.producers.cafmaker.TrackChi2PidLabel:  "pandoraSCEPid"
 physics.producers.cafmaker.CRTHitMatchLabel: "pandoraSCETrackCRTHit"
 physics.producers.cafmaker.CRTTrackMatchLabel: "pandoraSCETrackCRTTrack"
-physics.producers.cafmaker.FlashMatchLabel:  "fmatchSCE"
 
 physics.producers.pandoraTrackMCS.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
+
+physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
+physics.producers.cafmaker.FlashMatchSCECryoSuffixes: ["SCE"]
 
 physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
 physics.producers.pandoraShowerSelectionVars.ShowerLabel:  "pandoraSCEShowerSBN"
@@ -43,6 +45,9 @@ physics.producers.pandoraTrackDazzle.CaloLabel: "pandoraSCECalo"
 physics.producers.pandoraTrackDazzle.Chi2Label: "pandoraSCEPid"
 
 physics.producers.fmatchSCE: @local::transfer_flashmatch_sce_sbnd
+physics.producers.fmatchopSCE: @local::transfer_flashmatch_sce_sbnd
+physics.producers.fmatcharaSCE: @local::transfer_flashmatch_sce_sbnd
+physics.producers.fmatchoparaSCE: @local::transfer_flashmatch_sce_sbnd
 
 physics.producers.crumbs.PFParticleModuleLabel:    "pandoraSCE"
 physics.producers.crumbs.TrackModuleLabel: 	   "pandoraSCETrack"
