@@ -773,12 +773,17 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
       }
 
+    nuVars["nu_weight_all_flux"] = new InhVecVecVar<float>("nu_weight_all_flux");
+    slcVars["slc_true_weight_all_flux"] = new InhVecVecVar<float>("slc_true_weight_all_flux");
+
     for(auto const& name : genie_weight_names)
       {
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
       }
 
+    nuVars["nu_weight_all_genie_multisim"] = new InhVecVecVar<float>("nu_weight_all_genie_multisim");
+    slcVars["slc_true_weight_all_genie_multisim"] = new InhVecVecVar<float>("slc_true_weight_all_genie_multisim");
 
     cet::search_path sp("FW_SEARCH_PATH");
     std::string showerEnergyCorrectionFileFullPath;
@@ -1061,13 +1066,32 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
       art::FindManyP<sbn::evwgh::EventWeightMap> MCTruthToWeights( { mct }, e, weightModuleLabel);
       const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToWeights.at(0);
 
+      int n_univs = 0;
+      if(weightModuleLabel == "fluxweight")
+        n_univs = 1000;
+      else if(weightModuleLabel == "systtools")
+        n_univs = 100;
+
+      std::vector<float> all(n_univs, 1.);
+
       for(auto const& ewm : ewms)
         {
           for(auto const& [ name, weights ] : *ewm)
             {
               FillElement(vars[prefix + "_weight_" + name], counter, weights);
+
+              if((weightModuleLabel == "fluxweight") || (weightModuleLabel == "systtools" && name.find("multisim") != std::string::npos))
+                {
+                  for(int univ = 0; univ < n_univs; ++univ)
+                    all[univ] *= weights[univ];
+                }
             }
         }
+
+      if(weightModuleLabel == "fluxweight")
+        FillElement(vars[prefix + "_weight_all_flux" ], counter, all);
+      else if(weightModuleLabel == "systtools")
+        FillElement(vars[prefix + "_weight_all_genie_multisim" ], counter, all);
     }
 
   int protons = 0, neutrons = 0, charged_pions = 0, neutral_pions = 0, dalitz_neutral_pions = 0, photons = 0, other = 0;
