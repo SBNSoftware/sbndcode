@@ -1,3 +1,5 @@
+#include "crtbacktracker_sbnd.fcl"
+
 BEGIN_PROLOG
 
 sbnd_crtana:

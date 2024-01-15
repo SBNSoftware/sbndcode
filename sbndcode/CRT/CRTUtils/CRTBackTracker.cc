@@ -620,11 +620,11 @@ CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(con
 
   for(auto const [id, en] : idToEnergyMap){
     double pur = en / totalEnergy;
-    double depositedE_time = idToTimeMap[id];
+    //double depositedE_time = idToTimeMap[id];
     if(pur > bestPur){
       trackid_true = id;
       TrueParticlePDGEnergyTime(trackid_true, pdg, particle_energy, time);
-      std::cout<<"mcparticle time: "<<time<<"; energy deposition time: "<<depositedE_time<<std::endl;
+      //std::cout<<"mcparticle time: "<<time<<"; energy deposition time: "<<depositedE_time<<std::endl;
       deposited_energy_track = en;
       bestPur = pur;
       comp    = en / particle_energy; 

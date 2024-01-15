@@ -8,7 +8,7 @@ standard_crtbacktracker:
     CRTTrackLabel:        "crttrack"
     SimModuleLabel:       "largeant"
     RollupUnsavedIds:     true
-    SearchDistanceRadius: 10.
+    SearchDistanceRadius: 6.
 }
 
 END_PROLOG

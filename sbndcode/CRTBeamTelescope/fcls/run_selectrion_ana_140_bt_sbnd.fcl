@@ -2,7 +2,7 @@
 #include "crtbacktracker_sbnd.fcl"
 #include "configs_crt_analyzer.fcl"
 
-process_name: CRTAnalyzer
+process_name: CRTSelectionAnalyzer
 
 services:
 {
@@ -67,5 +67,5 @@ outputs:
    compressionLevel: 1
  }
 }
-physics.analyzers.sbnd_crtselectionana.InteractionMode: 0
+physics.analyzers.crtana.InteractionMode: 0
 #include "use_crt_beam_tele_geometry_g4_services.fcl"

@@ -64,7 +64,7 @@ private:
   bool _debug;
   bool _save_input_file_name;
   bool _data_mode; 
-  int _interationMode; // 0 -- dark neutrino 140 MeV; 1 -- dark neutrino 400 MeV; 2 -- dirt; 3 -- cosmic; 
+  int  _interationMode; // 0 -- dark neutrino 140 MeV; 1 -- dark neutrino 400 MeV; 2 -- dirt; 3 -- cosmic; 
 
   TTree* _tree;
   int _run, _subrun, _event;
@@ -77,9 +77,9 @@ private:
   double _chit_pes_mean;                         ///< Mean of the CRT hit PE for one event. 
   double _chit_pes_sample_std;                   ///< Sample standard deviation of the CRT hit PE for one event.
   
-  std::vector<double> _chit_t1_diff;            ///< CRT hit difference between the two 1D hit t1s
-  double _chit_t1_diff_mean;                    ///< Mean of t1 difference between the two closest CRT hit times for one event.
-  double _chit_t1_diff_sample_std;              ///< Sample standard deviation of t1 difference between the two closest CRT hit times for one event.
+  std::vector<double> _chit_strip_t1_diff;            ///< CRT hit difference between the two 1D hit t1s
+  double _chit_strip_t1_diff_mean;                    ///< Mean of t1 difference between the two closest CRT hit times for one event.
+  double _chit_strip_t1_diff_sample_std;              ///< Sample standard deviation of t1 difference between the two closest CRT hit times for one event.
   
   std::vector<double> _distance_between_hits_downstream;     ///< Distance between any two hits. 
   double _distance_between_hits_downstream_mean;             ///< Mean of the distance between any two hits for one event.
@@ -89,16 +89,16 @@ private:
   double _smallest_distance_between_hits_downstream_mean;    ///< Mean of the distance between any two hits for one event.
   double _smallest_distance_between_hits_downstream_diff;    ///< Mean of the distance between any two hits for one event.
 
-  std::vector<double> _t1_between_hits_downstream;     ///< Distance between any two hits. 
-  double _t1_between_hits_downstream_mean;             ///< Mean of the t1 between any two hits for one event.
-  double _t1_between_hits_downstream_sample_std;       ///< Sample standard deviation of the t1 between any two hits for one event.
-  double _biggest_distance_t1_between_hits_downstream_mean;     ///< Mean of the t1 between any two hits for one event.
-  double _biggest_distance_t1_between_hits_downstream_diff;     ///< Mean of the t1 between any two hits for one event.
-  double _smallest_distance_t1_between_hits_downstream_mean;    ///< Mean of the t1 between any two hits for one event.
-  double _smallest_distance_t1_between_hits_downstream_diff;    ///< Mean of the t1 between any two hits for one event.
+  std::vector<double> _t1_diff_between_hits_downstream;     ///< Distance between any two hits. 
+  double _t1_diff_between_hits_downstream_mean;             ///< Mean of the t1 between any two hits for one event.
+  double _t1_diff_between_hits_downstream_sample_std;       ///< Sample standard deviation of the t1 between any two hits for one event.
+  double _biggest_distance_t1_diff_between_hits_downstream_mean;     ///< Mean of the t1 between any two hits for one event.
+  double _biggest_distance_t1_diff_between_hits_downstream_diff;     ///< Mean of the t1 between any two hits for one event.
+  double _smallest_distance_t1_diff_between_hits_downstream_mean;    ///< Mean of the t1 between any two hits for one event.
+  double _smallest_distance_t1_diff_between_hits_downstream_diff;    ///< Mean of the t1 between any two hits for one event.
 
   std::vector<double> _chit_t0;     ///< CRT hit t0
-  std::vector<double> _chit_t1;     ///< CRT hit t1
+  std::vector<double> _chit_strip_t1;     ///< CRT hit t1
   std::vector<float>  _chit_true_t; ///< CRT hit true time (from sim energy dep)
 
   // truth info for crt_hit
@@ -137,6 +137,7 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
   _tree->Branch("run", &_run, "run/I");
   _tree->Branch("subrun", &_subrun, "subrun/I");
   _tree->Branch("event", &_event, "event/I");
+  _tree->Branch("InteractionMode", &_interationMode, "InteractionMode/I");
   if (_save_input_file_name) _tree->Branch("file_name", &_file_name);
   if (!_data_mode) _tree->Branch("weight", &_weight, "weight/F");
   _tree->Branch("n_chits_upstream", &_n_chits_upstream, "n_chits_upstream/I");
@@ -147,9 +148,9 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
   _tree->Branch("chit_pes_mean", &_chit_pes_mean, "chit_pes_mean/D");
   _tree->Branch("chit_pes_sample_std", &_chit_pes_sample_std, "chit_pes_sample_std/D");
 
-  _tree->Branch("chit_t1_diff", &_chit_t1_diff);
-  _tree->Branch("chit_t1_diff_mean", &_chit_t1_diff_mean, "chit_t1_diff_mean/D");
-  _tree->Branch("chit_t1_diff_sample_std", &_chit_t1_diff_sample_std, "chit_t1_diff_sample_std/D");
+  _tree->Branch("chit_strip_t1_diff", &_chit_strip_t1_diff);
+  _tree->Branch("chit_strip_t1_diff_mean", &_chit_strip_t1_diff_mean, "chit_strip_t1_diff_mean/D");
+  _tree->Branch("chit_strip_t1_diff_sample_std", &_chit_strip_t1_diff_sample_std, "chit_strip_t1_diff_sample_std/D");
 
   _tree->Branch("distance_between_hits", &_distance_between_hits_downstream);
   _tree->Branch("distance_between_hits_mean", &_distance_between_hits_downstream_mean, "distance_between_hits_mean/D");
@@ -161,17 +162,23 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
   _tree->Branch("smallest_distance_between_hits_mean", &_smallest_distance_between_hits_downstream_mean, "smallest_distance_between_hits_mean/D");
   _tree->Branch("smallest_distance_between_hits_diff", &_smallest_distance_between_hits_downstream_diff, "smallest_distance_between_hits_diff/D");
 
-  _tree->Branch("t1_between_hits", &_t1_between_hits_downstream);
-  _tree->Branch("t1_between_hits_mean", &_t1_between_hits_downstream_mean, "t1_between_hits_mean/D");
-  _tree->Branch("t1_between_hits_sample_std", &_t1_between_hits_downstream_sample_std, "t1_between_hits_sample_std/D");
+  _tree->Branch("t1_diff_between_hits", &_t1_diff_between_hits_downstream);
+  _tree->Branch("t1_diff_between_hits_mean", &_t1_diff_between_hits_downstream_mean, "t1_diff_between_hits_mean/D");
+  _tree->Branch("t1_diff_between_hits_sample_std", &_t1_diff_between_hits_downstream_sample_std, "t1_diff_between_hits_sample_std/D");
 
-  _tree->Branch("biggest_distance_t1_between_hits_mean", &_biggest_distance_t1_between_hits_downstream_mean, "biggest_distance_t1_between_hits_mean/D");
-  _tree->Branch("biggest_distance_t1_between_hits_diff", &_biggest_distance_t1_between_hits_downstream_diff, "biggest_distance_t1_between_hits_diff/D");
+  _tree->Branch("biggest_distance_t1_diff_between_hits_mean", &_biggest_distance_t1_diff_between_hits_downstream_mean, "biggest_distance_t1_diff_between_hits_mean/D");
+  _tree->Branch("biggest_distance_t1_diff_between_hits_diff", &_biggest_distance_t1_diff_between_hits_downstream_diff, "biggest_distance_t1_diff_between_hits_diff/D");
 
-  _tree->Branch("smallest_distance_t1_between_hits_mean", &_smallest_distance_t1_between_hits_downstream_mean, "smallest_distance_t1_between_hits_mean/D");
-  _tree->Branch("smallest_distance_t1_between_hits_diff", &_smallest_distance_t1_between_hits_downstream_diff, "smallest_distance_t1_between_hits_diff/D");
+  _tree->Branch("smallest_distance_t1_diff_between_hits_mean", &_smallest_distance_t1_diff_between_hits_downstream_mean, "smallest_distance_t1_diff_between_hits_mean/D");
+  _tree->Branch("smallest_distance_t1_diff_between_hits_diff", &_smallest_distance_t1_diff_between_hits_downstream_diff, "smallest_distance_t1_diff_between_hits_diff/D");
+  
+  //_tree->Branch("biggest_distance_PE_diff_between_hits_mean", &_biggest_distance_PE_diff_between_hits_downstream_mean, "biggest_distance_PE_diff_between_hits_mean/D");
+  //_tree->Branch("biggest_distance_PE_diff_between_hits_diff", &_biggest_distance_PE_diff_between_hits_downstream_diff, "biggest_distance_PE_diff_between_hits_diff/D");
 
-  _tree->Branch("chit_t1", &_chit_t1);
+  //_tree->Branch("smallest_distance_PE_diff_between_hits_mean", &_smallest_distance_PE_diff_between_hits_downstream_mean, "smallest_distance_PE_diff_between_hits_mean/D");
+  //_tree->Branch("smallest_distance_PE_diff_between_hits_diff", &_smallest_distance_PE_diff_between_hits_downstream_diff, "smallest_distance_PE_diff_between_hits_diff/D");
+
+  _tree->Branch("chit_strip_t1", &_chit_strip_t1);
 
   if (!_data_mode){
     _tree->Branch("chit_true_t", &_chit_true_t);
@@ -192,7 +199,12 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
 }
 
 void SelectionAna::analyze(art::Event const& e)
-{
+{ 
+  // clear all declared vectors;
+  _chit_pes.clear(); _chit_strip_t1_diff.clear(); _chit_strip_t1.clear(); _chit_true_t.clear();
+  _chit_backtrack_pdg.clear(); _chit_backtrack_energy.clear(); _chit_backtrack_deposited_energy.clear(); _chit_backtrack_purity.clear(); _chit_backtrack_trackID.clear();
+  _distance_between_hits_downstream.clear(); _t1_diff_between_hits_downstream.clear();
+
   // Implementation of required member function here.
   if (!_data_mode) _crt_back_tracker.Initialize(e); // Initialise the backtrack alg. 
 
@@ -243,8 +255,8 @@ void SelectionAna::analyze(art::Event const& e)
 
   size_t n_hits = crt_hit_v.size();
   _chit_t0.resize(n_hits);
-  _chit_t1.resize(n_hits);
-  _chit_t1_diff.resize(n_hits);
+  _chit_strip_t1.resize(n_hits);
+  _chit_strip_t1_diff.resize(n_hits);
   _chit_pes.resize(n_hits);
   if(!_data_mode){
     _chit_true_t.resize(n_hits);
@@ -254,21 +266,21 @@ void SelectionAna::analyze(art::Event const& e)
     _chit_backtrack_purity.resize(n_hits);
     _chit_backtrack_trackID.resize(n_hits);
   }
-  std::vector<double> chit_x_downstream, chit_y_downstream, chit_t1_downstream;
-  chit_x_downstream.clear(); chit_y_downstream.clear(); chit_t1_downstream.clear();
+  std::vector<double> chit_x_downstream, chit_y_downstream, chit_strip_t1_downstream;
+  chit_x_downstream.clear(); chit_y_downstream.clear(); chit_strip_t1_downstream.clear();
   _n_chits_upstream = 0; _n_chits_downstream = 0;
   for (size_t ihit = 0; ihit < n_hits; ihit++) {
     auto hit = crt_hit_v[ihit];
 
-    _chit_t0[ihit]      = hit->ts0_ns;
-    _chit_t1[ihit]      = hit->ts1_ns;
-    _chit_pes[ihit]     = hit->peshit;
-    _chit_t1_diff[ihit] = hit->ts0_ns_corr; // the variable is old and just a placeholder for diff
+    _chit_t0[ihit]       = hit->ts0_ns;
+    _chit_strip_t1[ihit] = hit->ts1_ns;
+    _chit_pes[ihit]      = hit->peshit;
+    _chit_strip_t1_diff[ihit] = hit->ts0_ns_corr; // the variable is old and just a placeholder for diff
 
     if (hit->tagger == "volTaggerNorth_0") { // downstream
       _n_chits_downstream++; 
       chit_x_downstream.push_back(hit->x_pos); chit_y_downstream.push_back(hit->y_pos); 
-      chit_t1_downstream.push_back(hit->ts1_ns);
+      chit_strip_t1_downstream.push_back(hit->ts1_ns);
     } else {  // upstream
       _n_chits_upstream++;
     }
@@ -286,11 +298,10 @@ void SelectionAna::analyze(art::Event const& e)
   for (size_t i=0; i<chit_x_downstream.size(); i++){
     for (size_t j=i+1; j<chit_x_downstream.size(); j++){
       double distance = std::hypot(chit_x_downstream[i]-chit_x_downstream[j], chit_y_downstream[i]-chit_y_downstream[j]);
-      _distance_between_hits_downstream.push_back(distance);
-
-      double t1_diff_between_hits = std::abs(chit_t1_downstream[i]-chit_t1_downstream[j]);
-      _t1_between_hits_downstream.push_back(t1_diff_between_hits);
+      double t1_diff_between_hits = std::abs(chit_strip_t1_downstream[i]-chit_strip_t1_downstream[j]);
       
+      _distance_between_hits_downstream.push_back(distance);
+      _t1_diff_between_hits_downstream.push_back(t1_diff_between_hits);
       distance_to_t1_diff_map[distance].push_back(t1_diff_between_hits);
     }
   }
@@ -302,64 +313,97 @@ void SelectionAna::analyze(art::Event const& e)
   calculateMeanStd(_distance_between_hits_downstream, _distance_between_hits_downstream_mean, _distance_between_hits_downstream_sample_std);
 
   // Calculate the mean and std of the t1 between any two hits.
-  calculateMeanStd(_t1_between_hits_downstream, _t1_between_hits_downstream_mean, _t1_between_hits_downstream_sample_std);
+  calculateMeanStd(_t1_diff_between_hits_downstream, _t1_diff_between_hits_downstream_mean, _t1_diff_between_hits_downstream_sample_std);
 
-  size_t counter=0; 
-  _smallest_distance_between_hits_downstream_mean=0;    _biggest_distance_between_hits_downstream_mean=0;
-  _smallest_distance_t1_between_hits_downstream_diff=0; _biggest_distance_t1_between_hits_downstream_diff=0;
-  _smallest_distance_between_hits_downstream_diff=0;    _biggest_distance_between_hits_downstream_diff=0;
-  _smallest_distance_t1_between_hits_downstream_diff=0; _biggest_distance_t1_between_hits_downstream_diff=0;
-  size_t counter_smallest=0, counter_biggest=0;
+  // Calculate the mean and std of the distance between the biggest/smallest distance between any two hits.
+  _smallest_distance_between_hits_downstream_mean=0;         _biggest_distance_between_hits_downstream_mean=0;
+  _smallest_distance_between_hits_downstream_diff=0;         _biggest_distance_between_hits_downstream_diff=0;
+
+  _smallest_distance_t1_diff_between_hits_downstream_mean=0; _biggest_distance_t1_diff_between_hits_downstream_mean=0;
+  _smallest_distance_t1_diff_between_hits_downstream_diff=0; _biggest_distance_t1_diff_between_hits_downstream_diff=0;
+
+  size_t distance_counter=0, counter_smallest=0, counter_biggest=0;
   for (auto & [distance, t1_vec] : distance_to_t1_diff_map){
-    if (counter==0){
-        for(size_t ipair=0; ipair<t1_vec.size(); ipair++){
-            counter_smallest++;
-            _smallest_distance_between_hits_downstream_mean    += distance;
-            _smallest_distance_t1_between_hits_downstream_diff += t1_vec[ipair];
+    if (distance_counter==0){
+      for(size_t ipair=0; ipair<t1_vec.size(); ipair++){
+        counter_smallest++;
 
-            if (ipair==0){
-                _smallest_distance_between_hits_downstream_diff    = distance;
-                _smallest_distance_t1_between_hits_downstream_diff = t1_vec[ipair];
-            }else{
-                _smallest_distance_between_hits_downstream_diff    -= distance;
-                _smallest_distance_t1_between_hits_downstream_diff -= t1_vec[ipair];
+        _smallest_distance_between_hits_downstream_mean         += distance;
+        _smallest_distance_t1_diff_between_hits_downstream_mean += t1_vec[ipair];
 
-                _smallest_distance_between_hits_downstream_diff    = std::abs(_smallest_distance_between_hits_downstream_diff);
-                _smallest_distance_t1_between_hits_downstream_diff = std::abs(_smallest_distance_t1_between_hits_downstream_diff);
-            }
+        if (ipair==0){
+          _smallest_distance_between_hits_downstream_diff         = distance;
+          _smallest_distance_t1_diff_between_hits_downstream_diff = t1_vec[ipair];
+        }else{
+          _smallest_distance_between_hits_downstream_diff         -= distance;
+          _smallest_distance_t1_diff_between_hits_downstream_diff -= t1_vec[ipair];
+          if (ipair==t1_vec.size()-1){  
+            _smallest_distance_between_hits_downstream_diff         = std::abs(_smallest_distance_between_hits_downstream_diff);
+            _smallest_distance_t1_diff_between_hits_downstream_diff = std::abs(_smallest_distance_t1_diff_between_hits_downstream_diff);
+          }
         }
+      }
     }
-    if (counter==distance_to_t1_diff_map.size()-1){ // the maximum distance should belongs to the diagonal hits.
+    if (distance_counter==distance_to_t1_diff_map.size()-1){ // the maximum distance should belongs to the diagonal hits.
+      for(size_t ipair=0; ipair<t1_vec.size(); ipair++){
         counter_biggest++;
-        for(size_t ipair=0; ipair<t1_vec.size(); ipair++){
-            _biggest_distance_between_hits_downstream_mean    += distance;
-            _biggest_distance_t1_between_hits_downstream_diff += t1_vec[ipair];
-            
-            if (ipair==0){
-                _biggest_distance_between_hits_downstream_diff    = distance;
-                _biggest_distance_t1_between_hits_downstream_diff = t1_vec[ipair];
-            }else{
-                _biggest_distance_between_hits_downstream_diff    -= distance;
-                _biggest_distance_t1_between_hits_downstream_diff -= t1_vec[ipair];
-
-                _biggest_distance_between_hits_downstream_diff    = std::abs(_biggest_distance_between_hits_downstream_diff);
-                _biggest_distance_t1_between_hits_downstream_diff = std::abs(_biggest_distance_t1_between_hits_downstream_diff);
-            }
+        _biggest_distance_between_hits_downstream_mean         += distance;
+        _biggest_distance_t1_diff_between_hits_downstream_mean += t1_vec[ipair];
+        
+        if (ipair==0){
+          _biggest_distance_between_hits_downstream_diff         = distance;
+          _biggest_distance_t1_diff_between_hits_downstream_diff = t1_vec[ipair];
+        }else{
+          _biggest_distance_between_hits_downstream_diff         -= distance;
+          _biggest_distance_t1_diff_between_hits_downstream_diff -= t1_vec[ipair];
+          
+          if (ipair==t1_vec.size()-1){  
+            _biggest_distance_between_hits_downstream_diff         = std::abs(_biggest_distance_between_hits_downstream_diff);
+            _biggest_distance_t1_diff_between_hits_downstream_diff = std::abs(_biggest_distance_t1_diff_between_hits_downstream_diff);
+          }
         }
+      }
     }
-    counter++;
+    distance_counter++;
   }
-  _biggest_distance_between_hits_downstream_mean  = _biggest_distance_between_hits_downstream_mean/counter_biggest;
-  _biggest_distance_t1_between_hits_downstream_diff  = _biggest_distance_t1_between_hits_downstream_diff/counter_biggest;
 
-  _smallest_distance_between_hits_downstream_mean = _smallest_distance_between_hits_downstream_mean/counter_smallest;
-  _smallest_distance_t1_between_hits_downstream_diff = _smallest_distance_t1_between_hits_downstream_diff/counter_smallest;
+  if (counter_smallest!=0){
+    _smallest_distance_between_hits_downstream_mean = _smallest_distance_between_hits_downstream_mean/counter_smallest;
+    _smallest_distance_between_hits_downstream_diff = _smallest_distance_between_hits_downstream_diff/counter_smallest;
+
+    _smallest_distance_t1_diff_between_hits_downstream_mean = _smallest_distance_t1_diff_between_hits_downstream_mean/counter_smallest;
+    _smallest_distance_t1_diff_between_hits_downstream_diff = _smallest_distance_t1_diff_between_hits_downstream_diff/counter_smallest;
+  }else{
+    // set everything to be -1000. 
+    _smallest_distance_between_hits_downstream_mean = -1000.;
+    _smallest_distance_between_hits_downstream_diff = -1000.;
+
+    _smallest_distance_t1_diff_between_hits_downstream_mean = -1000.;
+    _smallest_distance_t1_diff_between_hits_downstream_diff = -1000.;
+  }
+
+
+  if (counter_biggest!=0){
+    _biggest_distance_between_hits_downstream_mean  = _biggest_distance_between_hits_downstream_mean/counter_biggest;
+    _biggest_distance_between_hits_downstream_diff  = _biggest_distance_between_hits_downstream_diff/counter_biggest;
+
+    _biggest_distance_t1_diff_between_hits_downstream_mean  = _biggest_distance_t1_diff_between_hits_downstream_mean/counter_biggest;
+    _biggest_distance_t1_diff_between_hits_downstream_diff  = _biggest_distance_t1_diff_between_hits_downstream_diff/counter_biggest;
+  }else{
+    // set everything to be -1000. 
+    if (_n_chits_downstream>1) std::cout<<_n_chits_downstream<<" biggest!"<<std::endl;
+    _biggest_distance_between_hits_downstream_mean = -1000.;
+    _biggest_distance_between_hits_downstream_diff = -1000.;
+
+    _biggest_distance_t1_diff_between_hits_downstream_mean = -1000.;
+    _biggest_distance_t1_diff_between_hits_downstream_diff = -1000.;
+  }
 
   // Calculate the mean and std of the CRT hit PE.
   calculateMeanStd(_chit_pes, _chit_pes_mean, _chit_pes_sample_std);
 
   // Calculate the mean and std of the CRT hit t1 difference.
-  calculateMeanStd(_chit_t1_diff, _chit_t1_diff_mean, _chit_t1_diff_sample_std);
+  calculateMeanStd(_chit_strip_t1_diff, _chit_strip_t1_diff_mean, _chit_strip_t1_diff_sample_std);
 
   _tree->Fill();
 }
@@ -388,7 +432,7 @@ void SelectionAna::beginSubRun(art::SubRun const& sr)
 
 void SelectionAna::respondToOpenInputFile(const art::FileBlock& fb)
 {
-    _file_name = fb.fileName();
+  _file_name = fb.fileName();
 }
 
 void SelectionAna::calculateMeanStd(std::vector<double> vec, double &mean, double &std){
@@ -401,19 +445,19 @@ void SelectionAna::calculateMeanStd(std::vector<double> vec, double &mean, doubl
 }
 
 bool SelectionAna::canFormSquare(std::vector<double> distances) {
-    if (distances.size() != 6) {
-        return false; // Need exactly 4 points to form a square
-    }
+  if (distances.size() != 6) {
+    return false; // Need exactly 4 points to form a square
+  }
 
-    // Sort the distances in non-decreasing order
-    std::sort(distances.begin(), distances.end());
+  // Sort the distances in non-decreasing order
+  std::sort(distances.begin(), distances.end());
 
-    // Check if the distances satisfy square properties
-    return distances[0] > 0 &&                    // Nonzero distance
-       distances[0] == distances[1] &&            // Opposite sides equal
-       distances[2] == distances[3] &&
-       distances[4] == distances[5] &&           // Diagonals may or may not be equal
-       distances[4] == std::sqrt(distances[0]*distances[0] + distances[2]*distances[2]);
+  // Check if the distances satisfy square properties
+  return distances[0] > 0 &&                    // Nonzero distance
+    distances[0] == distances[1] &&             // Opposite sides equal
+    distances[2] == distances[3] &&
+    distances[4] == distances[5] &&             // Diagonals may or may not be equal
+    distances[4] == std::sqrt(distances[0]*distances[0] + distances[2]*distances[2]);
 }
 
 DEFINE_ART_MODULE(SelectionAna)

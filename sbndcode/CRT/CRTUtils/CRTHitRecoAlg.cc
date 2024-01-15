@@ -122,7 +122,6 @@ namespace sbnd{
   std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> CRTHitRecoAlg::ProduceCRTHitCandidates(const std::string &tagger, const std::vector<CRTStripHit> &hitsOrien0, const std::vector<CRTStripHit> &hitsOrien1)
   {
     std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> candidates;
-    mf::LogInfo("CRTHitRecoAlg") << "hitsOrien0.size(): " << hitsOrien0.size() << ", hitsOrien1.size(): " << hitsOrien1.size() << std::endl;
     for(unsigned i = 0; i < hitsOrien0.size(); ++i)
       {
         const CRTStripHit hit0   = hitsOrien0[i];
@@ -138,8 +137,7 @@ namespace sbnd{
             const CRTSiPMGeo  hit1sipm1 = fCRTGeoAlg.GetSiPM(strip1.channel1);
 
             // Check whether the two strips responsible for these hits overlap.
-            if(!fCRTGeoAlg.CheckOverlap(strip0, strip1))
-              continue;
+            if(!fCRTGeoAlg.CheckOverlap(strip0, strip1)) continue;
 
             // Find overlap region between two strip hits
             std::vector<double> overlap = FindOverlap(hit0, hit1, strip0, strip1);
@@ -239,11 +237,16 @@ namespace sbnd{
 
     pe0 = ReconstructPE(dist0, hit0);
     pe1 = ReconstructPE(dist1, hit1);
+
+ 
   }
 
   double CRTHitRecoAlg::ReconstructPE(const double &dist, const CRTStripHit &hit)
   {
     const double stripPE = ADCtoPE(hit.adc1 + hit.adc2);
+
+    std::cout<<"PEEEE "<<stripPE<<" "<<stripPE * std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2)<<" "<<std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2)<<" "<<(stripPE * std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2))/stripPE <<" "<<dist<<std::endl;
+    
     return stripPE * std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2);
   }
 
@@ -296,7 +299,7 @@ namespace sbnd{
     //    - the time walk effect (dependent on the size of the pulse)
     double t_TimeWalk = fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset; 
 
-    mf::LogInfo("CRTHitRecoAlg") << "distance to readout: "<< dist << ", fPropDelay: " << fPropDelay << "TProp: " << dist * fPropDelay << ", walkTime: " << t_TimeWalk << ", pe: " << pe << std::endl;
+    mf::LogInfo("CRTHitRecoAlg") << "distance to readout: "<< ASFUG << ", fPropDelay: " << fPropDelay << "TProp: " << dist * fPropDelay << ", walkTime: " << t_TimeWalk << ", pe: " << pe << std::endl;
     if (t_TimeWalk>0.){
       return (uint32_t)(dist * fPropDelay + t_TimeWalk);
     }else {
