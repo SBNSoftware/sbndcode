@@ -11,48 +11,86 @@ namespace crt {
     , fEngine(engine)
     , fG4RefTime(g4RefTime)
     {
+      std::cout << "1" << std::endl;
         ConfigureWaveform();
+      std::cout << "2" << std::endl;
         ConfigureTimeOffset();
+      std::cout << "3" << std::endl;
 
         fTaggers.clear();
         fData.clear();
         fAuxData.clear();
+      std::cout << "4" << std::endl;
+    }
+
+  CRTDetSimAlg::CRTDetSimAlg(const Parameters & params, CLHEP::HepRandomEngine& engine, double g4RefTime,
+			     fhicl::ParameterSet const &auxDetGeoParamSet)
+    : fParams(params())
+    , fEngine(engine)
+    , fG4RefTime(g4RefTime)
+    , fCRTGeoAlg(fhicl::ParameterSet(), auxDetGeoParamSet)
+    {
+      std::cout << "1" << std::endl;
+        ConfigureWaveform();
+      std::cout << "2" << std::endl;
+        ConfigureTimeOffset();
+      std::cout << "3" << std::endl;
+
+        fTaggers.clear();
+        fData.clear();
+        fAuxData.clear();
+      std::cout << "4" << std::endl;
     }
 
 
     void CRTDetSimAlg::ConfigureWaveform() {
+      std::cout << "a" << std::endl;
 
         std::vector<double> wvf_x = fParams.WaveformX();
         std::vector<double> wvf_y = fParams.WaveformY();
+      std::cout << "b" << std::endl;
 
         // Normalize the waveform
         float max_y = *std::max_element(std::begin(wvf_y), std::end(wvf_y));
         for (auto & y : wvf_y) y /= max_y;
+      std::cout << "c" << std::endl;
 
         // Reverse the waveform, as we are only interested to use it to
         // estimate its effect on time delays.
         std::reverse(wvf_y.begin(),wvf_y.end());
+      std::cout << "d" << std::endl;
 
         fInterpolator = std::make_unique<ROOT::Math::Interpolator>
             (wvf_y.size(), ROOT::Math::Interpolation::kLINEAR);
+      std::cout << "e" << std::endl;
 
         fInterpolator->SetData(wvf_x, wvf_y);
+      std::cout << "f" << std::endl;
 
     }
 
     void CRTDetSimAlg::ConfigureTimeOffset()
     {
+      std::cout << "a" << std::endl;
         if (fParams.UseG4RefTimeOffset())
         {
+	  std::cout << "b1" << std::endl;
+
             fTimeOffset = fG4RefTime;
             mf::LogInfo("CRTDetSimAlg") << "Configured to use G4 ref time as time offset: "
                                         << fTimeOffset << " ns." << std::endl;
+	    std::cout << "c1" << std::endl;
+
         }
         else
         {
+	  std::cout << "b2" << std::endl;
+
             fTimeOffset = fParams.GlobalT0Offset();
             mf::LogInfo("CRTDetSimAlg") << "Configured to use GlobalT0Offset as time offset: "
                                         << fTimeOffset << " ns." << std::endl;
+	    std::cout << "c2" << std::endl;
+
         }
     }
 

@@ -16,7 +16,8 @@
 #include "art/Framework/Principal/Handle.h" 
 #include "canvas/Persistency/Common/Ptr.h" 
 #include "canvas/Persistency/Common/PtrVector.h" 
-#include "art/Framework/Services/Registry/ServiceHandle.h" 
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "art/Framework/Services/Registry/ActivityRegistry.h"
 #include "messagefacility/MessageLogger/MessageLogger.h" 
 
 // LArSoft
@@ -262,6 +263,8 @@ namespace sbnd::crt {
               geo::AuxDetGeometryCore const *auxdet_geometry);
 
     CRTGeoAlg(fhicl::ParameterSet const &p = fhicl::ParameterSet());
+
+    CRTGeoAlg(fhicl::ParameterSet const &p, fhicl::ParameterSet const &auxDetGeoParamSet);
 
     ~CRTGeoAlg();
 

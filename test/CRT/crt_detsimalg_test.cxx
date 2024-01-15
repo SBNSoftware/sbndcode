@@ -59,16 +59,23 @@ int main(int argc, char const** argv) {
     //
     Parameters detsim_params = get_parameters(argc, argv);
 
-
+    std::cout << "Got parameters" << std::endl;
     //
     // Create DetSimAlg class
     //
     CLHEP::HepJamesRandom engine(SEED);
+    std::cout << "Random seeded" << std::endl;
+
+    fhicl::ParameterSet auxdetgeocore_params;
+    auxdetgeocore_params.put("GDML", "sbnd_v02_00.gdml");
+    auxdetgeocore_params.put("Name", "sbndv2");
+    auxdetgeocore_params.put("ROOT", "sbnd_v02_00.gdml");
 
     sbnd::crt::CRTDetSimAlg detsim_alg(detsim_params,
                                        engine,
-                                       0.);
-
+                                       0.,
+				       auxdetgeocore_params);
+    std::cout << "Set up alg" << std::endl;
     //
     // Time response
     //

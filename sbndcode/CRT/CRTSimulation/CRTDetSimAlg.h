@@ -129,6 +129,7 @@ public:
 
     using Parameters = fhicl::Table<CRTDetSimParams>;
     CRTDetSimAlg(const Parameters & p, CLHEP::HepRandomEngine& fRandEngine, double g4RefTime);
+    CRTDetSimAlg(const Parameters & p, CLHEP::HepRandomEngine& fRandEngine, double g4RefTime, fhicl::ParameterSet const &auxDetGeoPSet);
 
     /**
      * Function to clear member data at beginning of each art::event

@@ -2,6 +2,7 @@ art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
                 SOURCE CRTGeoAlg.cc  TPCGeoAlg.cc
              LIBRARIES     larcorealg::Geometry
                            larcore::Geometry_Geometry_service
+                           larcore::Geometry_AuxDetGeometry_service
                            larsim::Simulation
                            lardataobj::Simulation
                            larsim::MCCheater_BackTrackerService_service

@@ -7,6 +7,17 @@ namespace sbnd::crt {
               ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr())
   {}
 
+  CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, fhicl::ParameterSet const &auxDetGeoParamSet)
+  {
+    art::ActivityRegistry reg;
+    std::cout << "Gotcha" << std::endl;
+    const geo::AuxDetGeometry auxdet_geometry(auxDetGeoParamSet, reg);
+    std::cout << "Gotcha2" << std::endl;
+    const geo::AuxDetGeometryCore *auxdet_geometry_core = auxdet_geometry.GetProviderPtr();
+    std::cout << "Gotcha3" << std::endl;
+    CRTGeoAlg(p, lar::providerFrom<geo::Geometry>(), auxdet_geometry_core);
+  }
+
   CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry,
                        geo::AuxDetGeometryCore const *auxdet_geometry)
     : fT0CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T0CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
@@ -17,10 +28,12 @@ namespace sbnd::crt {
     , fSiPMGainsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMGains", std::vector<std::pair<unsigned, double>>()))
     , fChannelInversionVector(p.get<std::vector<std::pair<unsigned, bool>>>("InvertedChannelOrder", std::vector<std::pair<unsigned, bool>>()))
   {
+    std::cout << "Trying..." << std::endl;
     fGeometryService = geometry;
     fAuxDetGeoCore   = auxdet_geometry;
+    std::cout << "Was it here?" << std::endl;
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
-
+    std::cout << "Nah" << std::endl;
     fT0CableLengthCorrections = std::map<unsigned, double>(fT0CableLengthCorrectionsVector.begin(),
                                                            fT0CableLengthCorrectionsVector.end());
     fT1CableLengthCorrections = std::map<unsigned, double>(fT1CableLengthCorrectionsVector.begin(),
