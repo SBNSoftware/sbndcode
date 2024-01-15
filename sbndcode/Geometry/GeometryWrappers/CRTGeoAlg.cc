@@ -532,7 +532,7 @@ namespace sbnd::crt {
 
   enum CRTTagger CRTGeoAlg::WhichTagger(const double &x, const double &y, const double &z, const double &buffer)
   {
-    for(auto const [name, tagger] : fTaggers)
+    for(auto const& [name, tagger] : fTaggers)
       {
         if(x > tagger.minX - buffer &&
            x < tagger.maxX + buffer &&
