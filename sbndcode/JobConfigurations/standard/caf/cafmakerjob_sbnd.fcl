@@ -125,6 +125,10 @@ physics.producers.cafmaker.CosmicGenLabel: "corsika"
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false
 
+# Include Simple/OpFlashes for PMT/XARAPUCA
+physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
+physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
+
 # Overwrite weight_functions label:
 physics.producers.genieweight.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
