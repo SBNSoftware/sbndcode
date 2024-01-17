@@ -2,23 +2,25 @@ BEGIN_PROLOG #comment to run generate_simple_weighted_template.py
 
 sbnd_simple_flashmatch:{
   module_type: FlashPredict
+  IsSimple: true
+  FlashType: "simpleflash_pmt"
+  UseOldMetrics: false
   PandoraProducer: "pandora"
   SpacePointProducer: "pandora"
   OpHitProducer: "ophitpmt"
-  OpHitARAProducer: "ophitarapuca"
-  BeamSpillTimeStart:       0.15 # us, with some tolerance # TODO: update this when time gets zeroed
+  OpFlashProducer: ["opflashtpc0", "opflashtpc1"]
+  OpFlashHitProducer: ["opflashtpc0", "opflashtpc1"]
+  BeamSpillTimeStart:       0.1 # us, with some tolerance # TODO: update this when time gets zeroed
   BeamSpillTimeEnd:         1.8  # us, with some tolerance # TODO: update this when time gets zeroed
   FlashFindingTimeStart: -100.   # us # TODO: tune
   FlashFindingTimeEnd:    100.   # us # TODO: tune
   FlashStart:              -0.02 # us, wrt flash time
   FlashEnd:                 0.08 # us, wrt flash time
-  OnlyCollectionWires: false
   ForceConcurrence: true
   CorrectDriftDistance: true
-  UseARAPUCAS: false # TODO: use arapucas when their clock gets fixed
   InputFileName: "FlashMatch/fm_metrics_sbnd.root"
   NoAvailableMetrics: false
-  SelectNeutrino: true # it's too buggy to set 'false'
+  SelectNeutrino: false # it's too buggy to set 'false'
   MakeTree: false
   StoreMCInfo: false
   # TODO: tune below
@@ -32,6 +34,7 @@ sbnd_simple_flashmatch:{
   MinOpHPE: 0.
   MinFlashPE: 10.
   FlashPEFraction: 0.8
+  PlaneList: [0, 1, 2]  # Choose which wire planes to use (0, 1, 2 = U, V, W)
   ChargeToNPhotonsShower: 1.0
   ChargeToNPhotonsTrack: 1.0
   # TODO: tune above
@@ -113,5 +116,63 @@ sbnd_simple_flashmatch_sce.PandoraProducer: "pandoraSCE"
 sbnd_simple_flashmatch_sce.TrackProducer: "pandoraSCETrack"
 sbnd_simple_flashmatch_sce.CaloProducer: "pandoraSCECalo"
 sbnd_simple_flashmatch_sce.SpacePointProducer: "pandoraSCE"
+
+sbnd_simple_flashmatch_ara: @local::sbnd_simple_flashmatch
+sbnd_simple_flashmatch_ara.FlashType: "simpleflash_ara"
+sbnd_simple_flashmatch_ara.OpHitProducer: "ophitxarapuca"
+sbnd_simple_flashmatch_ara.OpFlashProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+sbnd_simple_flashmatch_ara.OpFlashHitProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+sbnd_simple_flashmatch_ara.BeamSpillTimeStart: 0.
+sbnd_simple_flashmatch_ara.BeamSpillTimeEnd: 1.8
+
+sbnd_simple_flashmatch_ara_sce: @local::sbnd_simple_flashmatch
+sbnd_simple_flashmatch_ara_sce.FlashType: "simpleflash_ara"
+sbnd_simple_flashmatch_ara_sce.PandoraProducer: "pandoraSCE"
+sbnd_simple_flashmatch_ara_sce.TrackProducer: "pandoraSCETrack"
+sbnd_simple_flashmatch_ara_sce.CaloProducer: "pandoraSCECalo"
+sbnd_simple_flashmatch_ara_sce.SpacePointProducer: "pandoraSCE"
+sbnd_simple_flashmatch_ara_ace.OpHitProducer: "ophitxarapuca"
+sbnd_simple_flashmatch_ara_sce.OpFlashProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+sbnd_simple_flashmatch_ara_sce.OpFlashHitProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+sbnd_simple_flashmatch_ara_sce.BeamSpillTimeStart: 0.
+sbnd_simple_flashmatch_ara_sce.BeamSpillTimeEnd: 1.8
+
+sbnd_simple_flashmatch_op: @local::sbnd_simple_flashmatch
+sbnd_simple_flashmatch_op.IsSimple: false
+sbnd_simple_flashmatch_op.FlashType: "opflash_pmt"
+sbnd_simple_flashmatch_op.BeamSpillTimeStart: 0.
+sbnd_simple_flashmatch_op.BeamSpillTimeEnd: 1.65
+
+sbnd_simple_flashmatch_op_sce: @local::sbnd_simple_flashmatch
+sbnd_simple_flashmatch_op_sce.IsSimple: false
+sbnd_simple_flashmatch_op_sce.FlashType: "opflash_pmt"
+sbnd_simple_flashmatch_op_sce.PandoraProducer: "pandoraSCE"
+sbnd_simple_flashmatch_op_sce.TrackProducer: "pandoraSCETrack"
+sbnd_simple_flashmatch_op_sce.CaloProducer: "pandoraSCECalo"
+sbnd_simple_flashmatch_op_sce.SpacePointProducer: "pandoraSCE"
+sbnd_simple_flashmatch_op_sce.BeamSpillTimeStart: 0.
+sbnd_simple_flashmatch_op_sce.BeamSpillTimeEnd: 1.65
+
+sbnd_simple_flashmatch_opara: @local::sbnd_simple_flashmatch
+sbnd_simple_flashmatch_opara.IsSimple: false
+sbnd_simple_flashmatch_opara.FlashType: "opflash_ara"
+sbnd_simple_flashmatch_opara.OpHitProducer: "ophitxarapuca"
+sbnd_simple_flashmatch_opara.OpFlashProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+sbnd_simple_flashmatch_opara.OpFlashHitProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+sbnd_simple_flashmatch_opara.BeamSpillTimeStart: 0.
+sbnd_simple_flashmatch_opara.BeamSpillTimeEnd: 1.65
+
+sbnd_simple_flashmatch_opara_sce: @local::sbnd_simple_flashmatch
+sbnd_simple_flashmatch_opara_sce.IsSimple: false
+sbnd_simple_flashmatch_opara_sce.FlashType: "opflash_ara"
+sbnd_simple_flashmatch_opara_sce.PandoraProducer: "pandoraSCE"
+sbnd_simple_flashmatch_opara_sce.TrackProducer: "pandoraSCETrack"
+sbnd_simple_flashmatch_opara_sce.CaloProducer: "pandoraSCECalo"
+sbnd_simple_flashmatch_opara_sce.SpacePointProducer: "pandoraSCE"
+sbnd_simple_flashmatch_opara_sce.OpHitProducer: "ophitxarapuca"
+sbnd_simple_flashmatch_opara_sce.OpFlashProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+sbnd_simple_flashmatch_opara_sce.OpFlashHitProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+sbnd_simple_flashmatch_opara_sce.BeamSpillTimeStart: 0.
+sbnd_simple_flashmatch_opara_sce.BeamSpillTimeEnd: 1.65
 
 END_PROLOG #comment to run generate_simple_weighted_template.py
