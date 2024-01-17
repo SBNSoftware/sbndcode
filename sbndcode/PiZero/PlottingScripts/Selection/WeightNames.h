@@ -1,5 +1,7 @@
 #pragma once
 
+const std::vector<std::string> tmp_flux_weight_names = { "expskin_Flux" };
+
 const std::vector<std::string> flux_weight_names = { "expskin_Flux",
                                                      "horncurrent_Flux",
                                                      "kminus_Flux",
@@ -133,6 +135,8 @@ const std::vector<std::string> genie_weight_names = { "NOvAStyleNonResPionNorm_S
                                                       "GENIEReWeight_SBND_v1_multisigma_RDecBR1gamma",
                                                       "GENIEReWeight_SBND_v1_multisigma_Theta_Delta2Npi",
 };
+
+const std::vector<std::string> tmp_genie_multisim_weight_names = { "GENIEReWeight_SBND_v1_multisim_AhtBY" };
 
 const std::vector<std::string> genie_multisim_weight_names = { "GENIEReWeight_SBND_v1_multisim_AhtBY",
                                                                "GENIEReWeight_SBND_v1_multisim_BhtBY",
