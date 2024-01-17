@@ -93,8 +93,8 @@ physics:
     fasthit
     , ophitpmt
     , ophitxarapuca
-    , MuonTrackProducer 
-    , MuonTrackFilter
+    #, MuonTrackProducer 
+    #, MuonTrackFilter
   ]
 
   ana: [hitdumper]
@@ -136,9 +136,4 @@ physics.producers.fasthit.IncludeMoreTail: 3.0
 physics.producers.fasthit.ColMinWidth: 100.0
 physics.producers.fasthit.UncompressWithPed: false
 
-physics.analyzers.hitdumper.readTruth: false
-physics.analyzers.hitdumper.readMCParticle: true
-physics.analyzers.hitdumper.readpmtSoftTrigger: false
-physics.analyzers.hitdumper.readpmtTrigger: false
-physics.analyzers.hitdumper.MaxOpHits: 1000000
-physics.analyzers.hitdumper.readMuonTracks: true
+#services.DetectorClocksService.TriggerOffsetTPC: 100
