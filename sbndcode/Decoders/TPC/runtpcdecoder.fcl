@@ -24,7 +24,7 @@ source: {}
 outputs: {
   rootout: {
     module_type: "RootOutput"
-    fileName: "digits.root"
+    fileName: "%ifb_tpcdecode.root"
   }
 }
 
