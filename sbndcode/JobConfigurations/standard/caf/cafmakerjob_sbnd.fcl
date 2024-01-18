@@ -96,6 +96,8 @@ physics:
    pandoraShowerSelectionVars:  @local::showerSelectionVars_sbn
    pandoraShowerCosmicDist: @local::showerCosmicDist_sbn
    pandoraShowerRazzle:         @local::razzle_sbnd
+
+   pandoraRazzled: @local::razzled_sbnd
 }
   filters:{
     flashtrigfilter: @local::pmtflashtrigfilter_sbnd
@@ -107,7 +109,7 @@ physics:
  runprod: [ pandoraTrackMCS, pandoraTrackRange, pandoraShowerSelectionVars,
             pandoraTrackCRTHit, pandoraTrackCRTTrack, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
+            pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs,
             cafmaker ]
 # makecaf: [cafmaker] #list the modules for this path, order matters, filters reject all following items
 # stream1: [metadata]

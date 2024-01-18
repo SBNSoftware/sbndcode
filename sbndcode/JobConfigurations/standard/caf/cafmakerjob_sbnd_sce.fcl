@@ -28,6 +28,8 @@ physics.producers.pandoraShowerRazzle.ShowerLabel: "pandoraSCEShowerSBN"
 physics.producers.pandoraSCETrackCRTHit: @local::transfer_crthitt0_sce_sbnd
 physics.producers.pandoraSCETrackCRTTrack: @local::transfer_crttrackt0_sce_sbnd
 
+physics.producers.pandoraRazzled: @local::razzled_sbnd_sce
+
 physics.producers.pandoraTrackClosestApproach.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackStoppingChi2.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackStoppingChi2.CaloLabel: "pandoraSCECalo"
@@ -64,7 +66,7 @@ physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
             pandoraTrackCRTHit, pandoraTrackCRTTrack,
             pandoraSCETrackCRTHit, pandoraSCETrackCRTTrack, fmatchSCE, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
+            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs,
             cafmaker ]
 
 # Enable the Space-Charge service
