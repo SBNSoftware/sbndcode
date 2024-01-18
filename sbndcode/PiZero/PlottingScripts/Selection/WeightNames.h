@@ -136,7 +136,7 @@ const std::vector<std::string> genie_weight_names = { "NOvAStyleNonResPionNorm_S
                                                       "GENIEReWeight_SBND_v1_multisigma_Theta_Delta2Npi",
 };
 
-const std::vector<std::string> tmp_genie_multisim_weight_names = { "GENIEReWeight_SBND_v1_multisim_AhtBY" };
+const std::vector<std::string> tmp_genie_multisim_weight_names = { "GENIEReWeight_SBND_v1_multisim_FormZone" };
 
 const std::vector<std::string> genie_multisim_weight_names = { "GENIEReWeight_SBND_v1_multisim_AhtBY",
                                                                "GENIEReWeight_SBND_v1_multisim_BhtBY",

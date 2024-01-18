@@ -127,6 +127,9 @@ void TrueEventModePlotsSystWeights(const TString productionVersion, const TStrin
                     {
                       for(int univ_i = 0; univ_i < n_univs; ++univ_i)
                         {
+                          if(parameter_weights[weight_i]->at(j)[univ_i] > 1e2)
+                            parameter_weights[weight_i]->at(j)[univ_i] = 1.;
+
                           univMomHists[signal_i][weight_i][univ_i]->Fill(1e3 * nu_pz_pizero_mom->at(j).at(0), parameter_weights[weight_i]->at(j)[univ_i]);
                           univCosThetaHists[signal_i][weight_i][univ_i]->Fill(nu_pz_cos_theta_pizero->at(j).at(0), parameter_weights[weight_i]->at(j)[univ_i]);
                           all_parameter_weights[univ_i] *= parameter_weights[weight_i]->at(j)[univ_i];
