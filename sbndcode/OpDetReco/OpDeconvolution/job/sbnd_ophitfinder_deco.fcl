@@ -37,13 +37,17 @@ SBNDDecoOpHitFinderXArapuca.InputModule:   "opdecoxarapuca"
 SBNDDecoOpHitFinderXArapuca.Electronics:   "Daphne"
 SBNDDecoOpHitFinderXArapuca.PD:            ["xarapuca_vis","xarapuca_vuv"]
 SBNDDecoOpHitFinderXArapuca.SPEArea: 500
+SBNDDecoOpHitFinderXArapuca.RiseTimeCalculator:   @local::sbnd_opreco_risetimegaussfit
+SBNDDecoOpHitFinderXArapuca.RiseTimeCalculator.Nbins:      2
+SBNDDecoOpHitFinderXArapuca.RiseTimeCalculator.InitSigma:  5
+SBNDDecoOpHitFinderXArapuca.RiseTimeCalculator.MinAmp:    20
 
 #HitAlgoPset
-SBNDDecoOpHitFinderXArapuca.HitAlgoPset.ADCThreshold: 8
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.ADCThreshold: 20
 SBNDDecoOpHitFinderXArapuca.HitAlgoPset.NSigmaThreshold: 3
-SBNDDecoOpHitFinderXArapuca.HitAlgoPset.EndADCThreshold: 8
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.EndADCThreshold: 20
 SBNDDecoOpHitFinderXArapuca.HitAlgoPset.EndNSigmaThreshold: 0.2
-SBNDDecoOpHitFinderXArapuca.HitAlgoPset.MinPulseWidth: 1
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.MinPulseWidth: 3
 SBNDDecoOpHitFinderXArapuca.HitAlgoPset.Name: "SlidingWindow"
 SBNDDecoOpHitFinderXArapuca.HitAlgoPset.NumPreSample:  3
 SBNDDecoOpHitFinderXArapuca.HitAlgoPset.NumPostSample: 6
@@ -55,8 +59,8 @@ SBNDDecoOpHitFinderXArapuca.HitAlgoPset.Verbosity: false
 #BaselinePset
 SBNDDecoOpHitFinderXArapuca.PedAlgoPset.Name:"Edges"
 SBNDDecoOpHitFinderXArapuca.PedAlgoPset.NumSampleFront:50
-SBNDDecoOpHitFinderXArapuca.PedAlgoPset.NumSampleTail:500
-SBNDDecoOpHitFinderXArapuca.PedAlgoPset.Method:0
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.NumSampleTail: 50
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.Method:2
 
 
 END_PROLOG
