@@ -100,7 +100,10 @@ daq::SBNDTPCDecoder::Config::Config(fhicl::ParameterSet const & param) {
 
 void daq::SBNDTPCDecoder::produce(art::Event & event)
 {
-  auto const& daq_handle = event.getValidHandle<artdaq::Fragments>(_tag);
+  auto daq_handle = event.getHandle<artdaq::Fragments>(_tag);
+  if ( !daq_handle.isValid() ) {
+    throw cet::exception("SBNDTPCDecoder_module ") << " invalid fragment handle";
+  }
 
   RDPmkr rdpm(event);
   TSPmkr tspm(event);
@@ -122,6 +125,12 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   if (_config.produce_header) {
     event.put(std::move(header_collection));
   }
+
+  // remove TPC fragments from the art event cache.  They can be re-read from the file
+  // by downstream processes if need be, but we are
+  // done with them here
+
+  daq_handle.removeProduct();
 }
 
 

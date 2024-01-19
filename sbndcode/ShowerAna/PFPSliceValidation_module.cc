@@ -266,14 +266,14 @@ void ana::PFPSliceValidation::analyze(art::Event const &evt) {
   std::map<std::string, std::map<art::Ptr<simb::MCTruth>, SliceMatch>> pfpTruthSliceMatchMap;
 
   // Initialise the counters in the maps
-  for (auto const fPFParticleLabel : fPFParticleLabels) {
+  for (auto const &fPFParticleLabel : fPFParticleLabels) {
     for (auto const &truth : truthVec) {
       pfpTruthNuCounterMap[fPFParticleLabel][truth]    = 0;
       pfpTruthSliceCounterMap[fPFParticleLabel][truth] = 0;
     } // truth: truthVec
   } // fPFParticleLabel: fPFParticleLabels
 
-  for (auto const fPFParticleLabel : fPFParticleLabels) {
+  for (auto const &fPFParticleLabel : fPFParticleLabels) {
 
     if (fVerbose) {
       std::cout << "On PFParticleLabel: " << fPFParticleLabel << std::endl;
@@ -465,7 +465,7 @@ void ana::PFPSliceValidation::analyze(art::Event const &evt) {
       std::cout << "\nTruth: " << truth << std::endl;
     } // fVerbose
 
-    for (auto const fPFParticleLabel : fPFParticleLabels) {
+    for (auto const &fPFParticleLabel : fPFParticleLabels) {
 
       // Check we actually match a slice to the truth
       if (pfpTruthSliceCounterMap[fPFParticleLabel].at(truth)) {
@@ -616,7 +616,7 @@ void ana::PFPSliceValidation::ClearTrueTree() {
   trueVertexY = -999;
   trueVertexZ = -999;
 
-  for (auto const fPFParticleLabel : fPFParticleLabels) {
+  for (auto const &fPFParticleLabel : fPFParticleLabels) {
 
     nuMatchNeutrino[fPFParticleLabel] = false;
     nuSlices[fPFParticleLabel]        = -99999;
@@ -639,7 +639,7 @@ void ana::PFPSliceValidation::ClearTrueTree() {
 
 void ana::PFPSliceValidation::ClearEventTree() {
   eventTrueNeutrinos = -999;
-  for (auto const fPFParticleLabel : fPFParticleLabels) {
+  for (auto const &fPFParticleLabel : fPFParticleLabels) {
     eventPFPNeutrinos[fPFParticleLabel] = -999;
     eventPFPSlices[fPFParticleLabel]    = -999;
     eventCosmicScores[fPFParticleLabel].clear();
