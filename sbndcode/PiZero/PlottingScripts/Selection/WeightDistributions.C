@@ -23,7 +23,7 @@ void WeightDistributions(const TString productionVersion, const TString saveDirE
       canvas->cd();
       canvas->SetTopMargin(0.12);
 
-      rockboxEvents->Draw(Form("nu_weight_%s", weight.c_str()));
+      rockboxEvents->Draw(Form("nu_weight_%s", weight.c_str())); //, Form("nu_weight_%s<1e2", weight.c_str()));
       TH1D *hist = new TH1D(*((TH1D*) gPad->GetPrimitive("htemp")));
       hist->SetName(Form("hist%lu", weight_i));
       hist->SetTitle(Form("%s;Weight;#nus x Univs (A.U.)", weight.c_str()));
@@ -73,7 +73,7 @@ void WeightDistributions(const TString productionVersion, const TString saveDirE
       leg->AddEntry(hist, "All", "l");
       leg->AddEntry(histIncl, "NC#pi^{0}", "l");
       leg->AddEntry(hist0p0pi, "NC#pi^{0}0p0#pi^{#pm}", "l");
-      leg->AddEntry(histNp0pi, "NC#pi^{0}1p0#pi^{#pm}", "l");
+      leg->AddEntry(histNp0pi, "NC#pi^{0}Np0#pi^{#pm}", "l");
 
       leg->Draw();
 
