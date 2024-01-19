@@ -1,4 +1,4 @@
-#include "syst_params_sbnd_v1.fcl"
+#include "syst_params_sbnd_v3.fcl"
 
 BEGIN_PROLOG
 
