@@ -54,6 +54,7 @@ physics.producers.crumbs.FlashMatchModuleLabel:    "fmatchSCE"
 physics.producers.crumbs.CalorimetryModuleLabel:   "pandoraSCECalo"
 physics.producers.crumbs.CRTSPMatchModuleLabel:    "crtspacepointmatchingSCE"
 physics.producers.crumbs.CRTTrackMatchModuleLabel: "crttrackmatchingSCE"
+physics.producers.crumbs.OpT0ModuleLabel:          "opt0finderSCE"
 
 physics.producers.crumbs.Chi2FitParams.TrackLabel: "pandoraSCETrack"
 physics.producers.crumbs.Chi2FitParams.CaloLabel:  "pandoraSCECalo"
