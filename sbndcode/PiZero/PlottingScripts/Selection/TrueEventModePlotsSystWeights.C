@@ -189,6 +189,7 @@ void TrueEventModePlotsSystWeights(const TString productionVersion, const TStrin
         {
           TCanvas *momCanvas = new TCanvas("momCanvas","momCanvas");
           momCanvas->cd();
+          momCanvas->SetTopMargin(.08);
 
           nominalMomHists[signal_i]->Draw("histe");
           nominalMomHists[signal_i]->GetYaxis()->SetTitleOffset(1.3);
@@ -208,6 +209,12 @@ void TrueEventModePlotsSystWeights(const TString productionVersion, const TStrin
 
           nominalMomHists[signal_i]->Draw("histsame");
 
+          TLegend *univsLeg = new TLegend(0.38, 0.8, 0.7, 0.9);
+          univsLeg->SetNColumns(2);
+          univsLeg->AddEntry(nominalMomHists[signal_i], "Nominal", "l");
+          univsLeg->AddEntry(univMomHists[signal_i][weight_i][0], "Universes", "l");
+          univsLeg->Draw();
+
           momCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_mom_%s_%s_univs.png", signal.name.Data(), weight.c_str()));
           momCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_mom_%s_%s_univs.pdf", signal.name.Data(), weight.c_str()));
 
@@ -219,6 +226,8 @@ void TrueEventModePlotsSystWeights(const TString productionVersion, const TStrin
           nominalMomHists[signal_i]->GetYaxis()->SetTitleOffset(1.3);
 
           TH1D* cvErrMomHist = new TH1D(Form("cvErrMomHist_%s_%s", signal.name.Data(), weight.c_str()), "",  plotSet.nbins1, bins1);
+          TH1D* biasMomHist = new TH1D(Form("biasMomHist_%s_%s", signal.name.Data(), weight.c_str()), "",  plotSet.nbins1, bins1);
+          TH1D* resMomHist = new TH1D(Form("resMomHist_%s_%s", signal.name.Data(), weight.c_str()), Form(";%s;Fractional Error", plotSet.axis1.Data()),  plotSet.nbins1, bins1);
 
           for(int bin_i = 1; bin_i <= plotSet.nbins1; ++bin_i)
             {
@@ -277,6 +286,9 @@ void TrueEventModePlotsSystWeights(const TString productionVersion, const TStrin
 
                   logFile << "Mom, Bin %i, No Variation - Error Set to 0";
                 }
+
+              biasMomHist->SetBinContent(bin_i, (cvErrMomHist->GetBinContent(bin_i) - nominalMomHists[signal_i]->GetBinContent(bin_i)) / nominalMomHists[signal_i]->GetBinContent(bin_i));
+              resMomHist->SetBinContent(bin_i, cvErrMomHist->GetBinError(bin_i) / nominalMomHists[signal_i]->GetBinContent(bin_i));
             }
 
           momCanvas->cd();
@@ -285,13 +297,74 @@ void TrueEventModePlotsSystWeights(const TString productionVersion, const TStrin
           cvErrMomHist->SetLineColor(kBlue+2);
           cvErrMomHist->Draw("histesame");
 
+          TLegend *cvLeg = new TLegend(0.38, 0.82, 0.7, 0.9);
+          cvLeg->SetNColumns(2);
+          cvLeg->AddEntry(nominalMomHists[signal_i], "Nominal", "l");
+          cvLeg->AddEntry(cvErrMomHist, "CV #pm 1#sigma", "l");
+          cvLeg->Draw();
+
           momCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_mom_%s_%s_cv_err.png", signal.name.Data(), weight.c_str()));
           momCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_mom_%s_%s_cv_err.pdf", signal.name.Data(), weight.c_str()));
 
+          TCanvas *momSplitCanvas = new TCanvas("momSplitCanvas","momSplitCanvas");
+          momSplitCanvas->cd();
+          TPad *topMomPad = new TPad("topMomPad","",0.005, 0.3, 0.995, 0.995);
+          TPad* bottomMomPad = new TPad("bottomMomPad","", 0.005, 0.005, 0.995, 0.295);
+          topMomPad->SetBottomMargin(0.03);
+          topMomPad->SetTopMargin(0.08);
+          bottomMomPad->SetBottomMargin(0.35);
+          bottomMomPad->SetTopMargin(0.05);
+          bottomMomPad->SetGridy();
+          topMomPad->Draw();
+          bottomMomPad->Draw();
+          topMomPad->cd();
+
+          TH1D* nominalMomHistClone = (TH1D*) nominalMomHists[signal_i]->Clone(Form("nominalMomHistClone_%s", signal.name.Data()));
+          nominalMomHistClone->GetXaxis()->SetLabelOffset(999);
+          nominalMomHistClone->GetXaxis()->SetLabelSize(0);
+
+          nominalMomHistClone->Draw("hist");
+          cvErrMomHist->Draw("histesame");
+
+          cvLeg->SetTextSize(.05);
+          cvLeg->SetTextAlign(12);
+          cvLeg->Draw();
+
+          bottomMomPad->cd();
+
+          biasMomHist->SetLineColor(kOrange+2);
+          resMomHist->SetLineColor(kTeal-8);
+
+          float splitMin = 1.2 * std::min(resMomHist->GetMinimum(), biasMomHist->GetMinimum());
+          float splitMax = 1.5 * std::max(resMomHist->GetMaximum(), biasMomHist->GetMaximum());
+
+          resMomHist->SetMaximum(splitMax);
+          resMomHist->SetMinimum(splitMin);
+          resMomHist->GetXaxis()->SetLabelSize(0.15);
+          resMomHist->GetXaxis()->SetTitleSize(0.15);
+          resMomHist->GetXaxis()->SetTitleOffset(1.1);
+          resMomHist->GetYaxis()->SetTitleSize(0.08);
+          resMomHist->GetYaxis()->SetTitleOffset(.4);
+
+          resMomHist->Draw("hist][");
+          biasMomHist->Draw("histsame][");
+
+          TLegend *splitLeg = new TLegend(0.25, 0.78, 0.45, 0.9);
+          splitLeg->SetNColumns(2);
+          splitLeg->SetTextSize(.08);
+          splitLeg->AddEntry(resMomHist, "Resolution", "l");
+          splitLeg->AddEntry(biasMomHist, "Bias", "l");
+          splitLeg->Draw();
+
+          momSplitCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_mom_%s_%s_cv_err_fracs.png", signal.name.Data(), weight.c_str()));
+          momSplitCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_mom_%s_%s_cv_err_fracs.pdf", signal.name.Data(), weight.c_str()));
+
           delete momCanvas;
+          delete momSplitCanvas;
 
           TCanvas *cosThetaCanvas = new TCanvas("cosThetaCanvas","cosThetaCanvas");
           cosThetaCanvas->cd();
+          cosThetaCanvas->SetTopMargin(.08);
 
           nominalCosThetaHists[signal_i]->Draw("histe");
           nominalCosThetaHists[signal_i]->GetYaxis()->SetTitleOffset(1.3);
@@ -320,6 +393,8 @@ void TrueEventModePlotsSystWeights(const TString productionVersion, const TStrin
           nominalCosThetaHists[signal_i]->GetYaxis()->SetTitleOffset(1.3);
 
           TH1D* cvErrCosThetaHist = new TH1D(Form("cvErrCosThetaHist_%s_%s", signal.name.Data(), weight.c_str()), "",  plotSet.nbins2, bins2);
+          TH1D* biasCosThetaHist = new TH1D(Form("biasCosThetaHist_%s_%s", signal.name.Data(), weight.c_str()), "",  plotSet.nbins2, bins2);
+          TH1D* resCosThetaHist = new TH1D(Form("resCosThetaHist_%s_%s", signal.name.Data(), weight.c_str()), Form(";%s;Fractional Error", plotSet.axis2.Data()),  plotSet.nbins2, bins2);
 
           for(int bin_i = 1; bin_i <= plotSet.nbins2; ++bin_i)
             {
@@ -378,6 +453,9 @@ void TrueEventModePlotsSystWeights(const TString productionVersion, const TStrin
 
                   logFile << "CosTheta, Bin %i, No Variation - Error Set to 0";
                 }
+
+              biasCosThetaHist->SetBinContent(bin_i, (cvErrCosThetaHist->GetBinContent(bin_i) - nominalCosThetaHists[signal_i]->GetBinContent(bin_i)) / nominalCosThetaHists[signal_i]->GetBinContent(bin_i));
+              resCosThetaHist->SetBinContent(bin_i, cvErrCosThetaHist->GetBinError(bin_i) / nominalCosThetaHists[signal_i]->GetBinContent(bin_i));
             }
 
           cosThetaCanvas->cd();
@@ -389,7 +467,57 @@ void TrueEventModePlotsSystWeights(const TString productionVersion, const TStrin
           cosThetaCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_cos_theta_%s_%s_cv_err.png", signal.name.Data(), weight.c_str()));
           cosThetaCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_cos_theta_%s_%s_cv_err.pdf", signal.name.Data(), weight.c_str()));
 
+          TCanvas *cosThetaSplitCanvas = new TCanvas("cosThetaSplitCanvas","cosThetaSplitCanvas");
+          cosThetaSplitCanvas->cd();
+          TPad *topCosThetaPad = new TPad("topCosThetaPad","",0.005, 0.3, 0.995, 0.995);
+          TPad* bottomCosThetaPad = new TPad("bottomCosThetaPad","", 0.005, 0.005, 0.995, 0.295);
+          topCosThetaPad->SetBottomMargin(0.03);
+          topCosThetaPad->SetTopMargin(0.08);
+          bottomCosThetaPad->SetBottomMargin(0.35);
+          bottomCosThetaPad->SetTopMargin(0.05);
+          bottomCosThetaPad->SetGridy();
+          topCosThetaPad->Draw();
+          bottomCosThetaPad->Draw();
+          topCosThetaPad->cd();
+
+          TH1D* nominalCosThetaHistClone = (TH1D*) nominalCosThetaHists[signal_i]->Clone(Form("nominalCosThetaHistClone_%s", signal.name.Data()));
+          nominalCosThetaHistClone->GetXaxis()->SetLabelOffset(999);
+          nominalCosThetaHistClone->GetXaxis()->SetLabelSize(0);
+
+          nominalCosThetaHistClone->Draw("hist");
+          cvErrCosThetaHist->Draw("histesame");
+
+          cvLeg->SetTextSize(.05);
+          cvLeg->SetTextAlign(12);
+          cvLeg->Draw();
+
+          bottomCosThetaPad->cd();
+
+          biasCosThetaHist->SetLineColor(kOrange+2);
+          resCosThetaHist->SetLineColor(kTeal-8);
+
+          splitMin = 1.2 * std::min(resCosThetaHist->GetMinimum(), biasCosThetaHist->GetMinimum());
+          splitMax = 1.5 * std::max(resCosThetaHist->GetMaximum(), biasCosThetaHist->GetMaximum());
+
+          resCosThetaHist->SetMaximum(splitMax);
+          resCosThetaHist->SetMinimum(splitMin);
+          resCosThetaHist->GetXaxis()->SetLabelSize(0.15);
+          resCosThetaHist->GetXaxis()->SetTitleSize(0.15);
+          resCosThetaHist->GetXaxis()->SetTitleOffset(1.1);
+          resCosThetaHist->GetYaxis()->SetTitleSize(0.08);
+          resCosThetaHist->GetYaxis()->SetTitleOffset(.4);
+
+          resCosThetaHist->Draw("hist][");
+          biasCosThetaHist->Draw("histsame][");
+
+          splitLeg->Draw();
+
+          cosThetaSplitCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_cos_theta_%s_%s_cv_err_fracs.png", signal.name.Data(), weight.c_str()));
+          cosThetaSplitCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_cos_theta_%s_%s_cv_err_fracs.pdf", signal.name.Data(), weight.c_str()));
+
           delete cosThetaCanvas;
+          delete cosThetaSplitCanvas;
+
         }
     }
 }
