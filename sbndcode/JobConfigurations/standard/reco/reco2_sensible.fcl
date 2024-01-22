@@ -38,6 +38,7 @@ physics.reco2_sensible: [ rns,
 physics.weight_paths: [
   fluxweight,
   systtools
+#  geant4weight
 ]
 
 physics.ana: [ ncpizeroana, recoeff ]
