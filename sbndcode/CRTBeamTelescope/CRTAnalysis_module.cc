@@ -730,8 +730,6 @@ void CRTAnalysis::analyze(art::Event const& e)
       _adh_trackid[iadh] = auxdethit->GetTrackID();
       trackids_from_adh.insert(auxdethit->GetTrackID());
 
-      std::cout<<iadh<<", _adh_t[iadh]: "<<_adh_t[iadh]<<", ("<<_adh_x[iadh]<<", "<<_adh_y[iadh]<<", "<<_adh_z[iadh]<<")"<<std::endl;
-
       for (size_t ipar = 0; ipar < mcp_v.size(); ipar++) { // loop through MCParticle to find the pdg number. 
         auto particle = mcp_v[ipar];
         if (particle->StatusCode() != 1) continue; // Exclude particles that are not propagated

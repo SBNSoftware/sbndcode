@@ -20,6 +20,15 @@ sbnd_crtselectionana:
     InteractionMode:   0
 }
 
+sbnd_crtselectionanatruth:
+{
+    module_type:       "SelectionAnaTruth" 
+    POTLabel:          "generator"
+    CRTBackTracker:    @local::standard_crtbacktracker
+    SaveInputFileName: true
+    InteractionMode:   0
+}
+
 sbnd_crteventfilter:
 {
     module_type:    "CRTEventFilter" 

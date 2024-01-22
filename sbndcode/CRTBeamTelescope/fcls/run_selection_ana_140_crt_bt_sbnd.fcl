@@ -8,7 +8,7 @@ services:
 {
   scheduler:    { defaultExceptions: false }    # Make all uncaught exceptions fatal.
   # Load the service that manages root files for histograms.
-  TFileService: { fileName: "crtselectrionana_sbnd.root" }
+  TFileService: { fileName: "crtSelectionAna_sbnd.root" }
   # TimeTracker:         {}
   # MemoryTracker:       {} # default is one
   # RandomNumberGenerator: {} #ART native random number generator
