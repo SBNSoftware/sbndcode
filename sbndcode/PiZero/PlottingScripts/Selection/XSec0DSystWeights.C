@@ -241,7 +241,7 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
 
           if(diff > 1e-44)
             {
-              TH1D* fitHist = new TH1D(Form("fitHist_%lu_%lu", signal_i, weight_i), "", 25, minVal - 0.05 * diff, maxVal + 0.05 * diff);
+              TH1D* fitHist = new TH1D(Form("fitHist_%lu_%lu", signal_i, weight_i), "", 10, minVal - 0.05 * diff, maxVal + 0.05 * diff);
 
               for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
                 fitHist->Fill(univXSecHists[signal_i][weight_i][univ_i]->GetBinContent(1));
