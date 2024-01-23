@@ -5,10 +5,10 @@
 #include "WeightNames.h"
 #include "Enumerate.h"
 
-void TrueEventModePlotsSystWeights(const TString productionVersion, const TString saveDirExt, const std::vector<Cut> &signals,
-                                   std::vector<std::string> weight_names, const int n_univs, const bool combine)
+void TrueObservablesSystWeights(const TString productionVersion, const TString saveDirExt, const std::vector<Cut> &signals,
+                                std::vector<std::string> weight_names, const int n_univs, const bool combine)
 {
-  const TString saveDir = baseSaveDir + "/" + productionVersion + "/true_event_modes_syst_weights/" + saveDirExt;
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/true_observables_syst_weights/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";

@@ -5,10 +5,10 @@
 #include "WeightNames.h"
 #include "Enumerate.h"
 
-void TrueEventMode2DPlotsSystWeights(const TString productionVersion, const TString saveDirExt, const std::vector<Cut> &signals,
-				     std::vector<std::string> weight_names, const int n_univs, const bool combine)
+void TrueObservables2DSystWeights(const TString productionVersion, const TString saveDirExt, const std::vector<Cut> &signals,
+                                  std::vector<std::string> weight_names, const int n_univs, const bool combine)
 {
-  const TString saveDir = baseSaveDir + "/" + productionVersion + "/true_event_modes_two_d_syst_weights/" + saveDirExt;
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/true_observables_two_d_syst_weights/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
@@ -92,7 +92,7 @@ void TrueEventMode2DPlotsSystWeights(const TString productionVersion, const TStr
                                                                           Form(";%s;%s;Events", plotSet.axis1.Data(), plotSet.axis2.Data()),
                                                                           plotSet.nbins1, bins1, plotSet.nbins2, bins2));
             }
-	}
+        }
     }
 
   for(int i = 0; i < N; ++i)
@@ -202,9 +202,9 @@ void TrueEventMode2DPlotsSystWeights(const TString productionVersion, const TStr
           canvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_mom_cos_theta_%s_%s_univs.png", signal.name.Data(), weight.c_str()));
           canvas->SaveAs(saveDir + "/" + weight.c_str() + "/" + Form("pizero_mom_cos_theta_%s_%s_univs.pdf", signal.name.Data(), weight.c_str()));
 
-	  ofstream logFile;
-	  logFile.open(saveDir + "/" + weight.c_str() + "/" + signal.name.Data() + "_log.txt");
-	  logFile << weight << "\n\n";
+          ofstream logFile;
+          logFile.open(saveDir + "/" + weight.c_str() + "/" + signal.name.Data() + "_log.txt");
+          logFile << weight << "\n\n";
 
           for(int frame_i = 0; frame_i < plotSet.nbins2; ++frame_i)
             {
@@ -233,25 +233,25 @@ void TrueEventMode2DPlotsSystWeights(const TString productionVersion, const TStr
                   TF1* fGaus = new TF1("fGaus", "gaus", .75 * nominalHists[signal_i]->GetBinContent(bin_i, frame_i+1),
                                        1.25 * nominalHists[signal_i]->GetBinContent(bin_i, frame_i+1));
 
-		  fGaus->SetLineColor(kRed+2);
+                  fGaus->SetLineColor(kRed+2);
 
                   TFitResultPtr fitResult = binHist->Fit(fGaus, "S");
 
                   cvErrHist->SetBinContent(bin_i, fGaus->GetParameter("Mean"));
                   cvErrHist->SetBinError(bin_i, fGaus->GetParameter("Sigma"));
 
-		  logFile << Form("Frame %i, Bin %i, Sucess? ", frame_i, bin_i);
-		  if(fitResult->IsValid())
-		    logFile << Form("Yes, Mean %f, Sigma %f\n", fGaus->GetParameter("Mean"), fGaus->GetParameter("Sigma"));
-		  else
-		    logFile << "No\n";
+                  logFile << Form("Frame %i, Bin %i, Sucess? ", frame_i, bin_i);
+                  if(fitResult->IsValid())
+                    logFile << Form("Yes, Mean %f, Sigma %f\n", fGaus->GetParameter("Mean"), fGaus->GetParameter("Sigma"));
+                  else
+                    logFile << "No\n";
 
-		  if(!fitResult->IsValid() || fGaus->GetParameter("Sigma") > 500.)
-		    {
-		      gSystem->Exec("mkdir -p " + saveDir + "/" + weight.c_str() + "/bad_fits");
-		      binCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/bad_fits/" + Form("frame%i_bin%i_%s_%s_cv_err.png", frame_i, bin_i, signal.name.Data(), weight.c_str()));
-		      binCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/bad_fits/" + Form("frame%i_bin%i_%s_%s_cv_err.pdf", frame_i, bin_i, signal.name.Data(), weight.c_str()));
-		    }
+                  if(!fitResult->IsValid() || fGaus->GetParameter("Sigma") > 500.)
+                    {
+                      gSystem->Exec("mkdir -p " + saveDir + "/" + weight.c_str() + "/bad_fits");
+                      binCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/bad_fits/" + Form("frame%i_bin%i_%s_%s_cv_err.png", frame_i, bin_i, signal.name.Data(), weight.c_str()));
+                      binCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/bad_fits/" + Form("frame%i_bin%i_%s_%s_cv_err.pdf", frame_i, bin_i, signal.name.Data(), weight.c_str()));
+                    }
                 }
 
               canvas->cd(frame_i+1);
