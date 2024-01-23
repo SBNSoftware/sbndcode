@@ -176,6 +176,12 @@ physics:
   ### flash-matching
   fmatch:              @local::sbnd_simple_flashmatch
   fmatchSCE:           @local::sbnd_simple_flashmatch_sce
+  fmatchop:            @local::sbnd_simple_flashmatch_op
+  fmatchopSCE:         @local::sbnd_simple_flashmatch_op_sce
+  fmatchara:           @local::sbnd_simple_flashmatch_ara
+  fmatcharaSCE:        @local::sbnd_simple_flashmatch_ara_sce
+  fmatchopara:         @local::sbnd_simple_flashmatch_opara
+  fmatchoparaSCE:      @local::sbnd_simple_flashmatch_opara_sce
   opt0finder:          @local::sbnd_opt0_finder_one_to_many
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
 
@@ -226,6 +232,9 @@ physics:
          , crthitt0
          , crttrackt0
          , fmatch
+         , fmatchop
+         , fmatchara
+         , fmatchopara
 	 , caloskimCalorimetry
  ]
 
@@ -322,7 +331,10 @@ physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
-physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
+physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
+physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
+physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
+physics.producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
 
 physics.producers.crthitt0SCE.TpcTrackModuleLabel: "pandoraSCETrack"
 physics.producers.crthitt0SCE.T0Alg.TPCTrackLabel: "pandoraSCETrack"

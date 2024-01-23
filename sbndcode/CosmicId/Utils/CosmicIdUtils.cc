@@ -18,7 +18,7 @@ namespace sbnd{
     //double driftTimeMuS = fTpcGeo.MaxX()/fDetectorProperties->DriftVelocity(); // [us]
 
     // Loop over all true particles
-    for (auto const particle: particles){
+    for (auto const &particle: particles){
 
       // Get particle info
       int pdg = std::abs(particle.PdgCode());
