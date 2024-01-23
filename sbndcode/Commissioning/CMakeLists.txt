@@ -18,8 +18,8 @@ set(
         lardata::RecoObjects
         larpandora::LArPandoraInterface
         sbndcode_CRTUtils
-        sbndcode_CRT
         sbnobj::Common_CRT
+        sbnobj::SBND_CRT
         nusimdata::SimulationBase
         art::Framework_Core
         art::Framework_Principal
@@ -37,6 +37,7 @@ set(
         ROOT::Gdml
         sbndcode_RecoUtils
         sbndcode_OpDetSim
+        sbndcode_GeoWrappers
 )
 
 

@@ -1,0 +1,38 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "crtrecoproducers_sbnd.fcl"
+
+process_name: CRTStripHitReco
+
+services:
+{
+  @table::sbnd_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    crtstrips: @local::crtstriphitproducer_sbnd
+  }
+
+  reco:    [ crtstrips ]
+  stream1: [ out1 ]
+
+  trigger_paths: [ reco ]
+  end_paths:     [ stream1 ]
+}
