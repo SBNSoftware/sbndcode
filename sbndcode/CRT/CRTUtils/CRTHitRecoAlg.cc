@@ -59,6 +59,7 @@ namespace sbnd{
           uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i] ? sipm_adcs[adc_i]   - sipm1.pedestal : 0;
           uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1]   - sipm2.pedestal : 0;
 
+
           // Keep hit if both SiPMs above threshold
           if(adc1 > fADCThreshold && adc2 > fADCThreshold)
           {
@@ -146,7 +147,9 @@ namespace sbnd{
             CentralPosition(overlap, pos, err);             
             // Reconstruct the number of photoelectrons from the ADC values
             double pe0, pe1;
-            ReconstructPE(pos, hit0, hit1, pe0, pe1);
+            double uncorrected_pe0, uncorrected_pe1;
+            double distance0, distance1;
+            ReconstructPE(pos, hit0, hit1, pe0, pe1, uncorrected_pe0, uncorrected_pe1, distance0, distance1);
 
             // Just perform the correction to the ADC values, no PE reconstruction
             const std::array<uint16_t, 4> adc = {hit0.adc1, hit0.adc2, hit1.adc1, hit1.adc2};
@@ -182,7 +185,12 @@ namespace sbnd{
                                     hit1.channel,
                                     raw_adc,
                                     adc,
-                                    corr_adc);
+                                    corr_adc,
+                                    {(float)distance0, (float)uncorrected_pe0, (float)pe0},
+                                    {(float)distance1, (float)uncorrected_pe1, (float)pe1});
+
+            std::cout<<"PEEEE "<<uncorrected_pe0<<" "<<pe0<<" "<<pe0/uncorrected_pe0<<" "<<distance0<<std::endl;
+            std::cout<<"PEEEE "<<uncorrected_pe1<<" "<<pe1<<" "<<pe1/uncorrected_pe1<<" "<<distance1<<std::endl;
 
             mf::LogInfo("CRTHitRecoAlg") << "\nCreating CRTHit "
                                          << "from FEBs: " << (unsigned) crtHit.feb_id[0] 
@@ -230,22 +238,28 @@ namespace sbnd{
   }
 
   void CRTHitRecoAlg::ReconstructPE(const TVector3 &pos, const CRTStripHit &hit0, 
-                                    const CRTStripHit &hit1, double &pe0, double &pe1)
+                                    const CRTStripHit &hit1, double &pe0, double &pe1, double &uncorrected_pe0, 
+                                    double &uncorrected_pe1, double &dist0, double &dist1)
   {
-    const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0.channel);
-    const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1.channel);
+    //const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0.channel);
+    //const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1.channel);
 
-    pe0 = ReconstructPE(dist0, hit0);
-    pe1 = ReconstructPE(dist1, hit1);
+    dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0.channel);
+    dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1.channel);
+
+    pe0 = ReconstructPE(dist0, hit0, uncorrected_pe0);
+    pe1 = ReconstructPE(dist1, hit1, uncorrected_pe1);
 
  
   }
 
-  double CRTHitRecoAlg::ReconstructPE(const double &dist, const CRTStripHit &hit)
+  double CRTHitRecoAlg::ReconstructPE(const double &dist, const CRTStripHit &hit, double &uncorrected_pe)
   {
     const double stripPE = ADCtoPE(hit.adc1 + hit.adc2);
-
-    std::cout<<"PEEEE "<<stripPE<<" "<<stripPE * std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2)<<" "<<std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2)<<" "<<(stripPE * std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2))/stripPE <<" "<<dist<<std::endl;
+    
+    mf::LogInfo("CRTHitRecoAlg") << "hit.adc1: "<<hit.adc1<<", hit.adc2: "<<hit.adc2<<", stripPE: "<<stripPE<<", corrected PE: "<<stripPE * std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2)<<std::endl;
+    
+    uncorrected_pe = stripPE;
     
     return stripPE * std::pow(dist - fPEAttenuation, 2) / std::pow(fPEAttenuation, 2);
   }
@@ -263,6 +277,7 @@ namespace sbnd{
     corr_adc[1] = hit0.adc2 * corr0;
     corr_adc[2] = hit1.adc1 * corr1;
     corr_adc[3] = hit1.adc2 * corr1;
+
   }
 
   double CRTHitRecoAlg::ADCtoPE(const uint16_t &adc)

@@ -529,6 +529,9 @@ namespace crt {
         double npeExpected =
             fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;
 
+        double npeProduced = 
+            fParams.NpeScaleNorm() / pow(fParams.NpeScaleShift(), 2) * qr;
+
         // Put PE on channels weighted by transverse distance across the strip,
         // using an exponential model
 
@@ -551,6 +554,8 @@ namespace crt {
         // Do not apply ADC threshold here, this is done after trigger simulation effects
         if (q0 < 0.) q0 = 0.;
         if (q1 < 0.) q1 = 0.;
+        
+        std::cout<<"GENNNNNN "<<npeExpected<<" "<<npeProduced<<" "<<npeProduced/npeExpected<<" "<<distToReadout<<std::endl;
 
         mf::LogInfo("CRTSetSimAlg")
             << "CRT CHARGE RESPONSE: eDep = " << eDep

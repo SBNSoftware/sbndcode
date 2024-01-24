@@ -60,10 +60,13 @@ namespace sbnd{
 
     void CentralPosition(const std::vector<double> overlap, TVector3 &pos, TVector3 &err);
 
-    void ReconstructPE(const TVector3 &pos, const CRTStripHit &hit0,
-                       const CRTStripHit &hit1, double &pe0, double &pe1);
+    //void ReconstructPE(const TVector3 &pos, const CRTStripHit &hit0,
+                       //const CRTStripHit &hit1, double &pe0, double &pe1);
+    void ReconstructPE(const TVector3 &pos, const CRTStripHit &hit0, 
+                      const CRTStripHit &hit1, double &pe0, double &pe1, double &uncorrected_pe, double &uncorrected_pe1, double &dist0, double &dist1);
 
-    double ReconstructPE(const double &dist, const CRTStripHit &hit);
+    //double ReconstructPE(const double &dist, const CRTStripHit &hit);
+    double ReconstructPE(const double &dist, const CRTStripHit &hit, double &uncorrected_pe);
 
     double ADCtoPE(const uint16_t &adc);
 
