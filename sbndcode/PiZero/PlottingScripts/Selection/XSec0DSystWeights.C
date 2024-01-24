@@ -21,8 +21,8 @@ void InitialiseTree(TChain *tree, std::vector<std::string> &weight_names);
 
 void EvaluateTree(TChain *tree, const double &scaling, std::vector<TH1D*> &nominalSelectedHists, std::vector<TH1D*> &nominalTrueSignalHists,
                   std::vector<TH1D*> &nominalSelectedBackgroundHists, std::vector<std::vector<std::vector<TH1D*>>> &univTrueSignalHists,
-                  std::vector<std::vector<std::vector<TH1D*>>> &univSelectedBackgroundHists, const std::vector<Cut> &signals,
-                  std::vector<std::string> weight_names, const uint n_univs, const bool combine);
+                  std::vector<std::vector<std::vector<TH1D*>>> &univSelectedBackgroundHists, std::vector<std::vector<std::vector<TH1D*>>> &univSelectedSignalHists,
+                  const std::vector<Cut> &signals, std::vector<std::string> weight_names, const uint n_univs, const bool combine);
 
 void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt, const std::vector<Cut> &signals,
                        std::vector<std::string> weight_names, const uint n_univs, const bool combine)
@@ -53,7 +53,7 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
   GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
 
   std::vector<TH1D*> nominalSelectedHists, nominalTrueSignalHists, nominalSelectedBackgroundHists, nominalXSecHists;
-  std::vector<std::vector<std::vector<TH1D*>>> univTrueSignalHists, univSelectedBackgroundHists, univXSecHists;
+  std::vector<std::vector<std::vector<TH1D*>>> univTrueSignalHists, univSelectedBackgroundHists, univSelectedSignalHists, univXSecHists;
 
   for(auto&& [signal_i, signal] : enumerate(signals))
     {
@@ -64,18 +64,21 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
       
       univTrueSignalHists.push_back(std::vector<std::vector<TH1D*>>());
       univSelectedBackgroundHists.push_back(std::vector<std::vector<TH1D*>>());
+      univSelectedSignalHists.push_back(std::vector<std::vector<TH1D*>>());
       univXSecHists.push_back(std::vector<std::vector<TH1D*>>());
 
       for(auto&& [weight_i, weight] : enumerate(weight_names))
         {
           univTrueSignalHists[signal_i].push_back(std::vector<TH1D*>());
           univSelectedBackgroundHists[signal_i].push_back(std::vector<TH1D*>());
+          univSelectedSignalHists[signal_i].push_back(std::vector<TH1D*>());
           univXSecHists[signal_i].push_back(std::vector<TH1D*>());
 
           for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
             {
               univTrueSignalHists[signal_i][weight_i].push_back(new TH1D(Form("univTrueSignalHist_%lu_%lu_%u", signal_i, weight_i, univ_i), "", 1, 0, 1));
               univSelectedBackgroundHists[signal_i][weight_i].push_back(new TH1D(Form("univSelectedBackgroundHist_%lu_%lu_%u", signal_i, weight_i, univ_i), "", 1, 0, 1));
+              univSelectedSignalHists[signal_i][weight_i].push_back(new TH1D(Form("univSelectedSignalHist_%lu_%lu_%u", signal_i, weight_i, univ_i), "", 1, 0, 1));
               univXSecHists[signal_i][weight_i].push_back(new TH1D(Form("univXSecHist_%lu_%lu_%u", signal_i, weight_i, univ_i), "", 1, 0, 1));
             }
         }
@@ -84,12 +87,14 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
         {
           univTrueSignalHists[signal_i].push_back(std::vector<TH1D*>());
           univSelectedBackgroundHists[signal_i].push_back(std::vector<TH1D*>());
+          univSelectedSignalHists[signal_i].push_back(std::vector<TH1D*>());
           univXSecHists[signal_i].push_back(std::vector<TH1D*>());
 
           for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
             {
               univTrueSignalHists[signal_i][weight_names.size()].push_back(new TH1D(Form("univTrueSignalHist_%lu_%lu_%u", signal_i, weight_names.size(), univ_i), "", 1, 0, 1));
               univSelectedBackgroundHists[signal_i][weight_names.size()].push_back(new TH1D(Form("univSelectedBackgroundHist_%lu_%lu_%u", signal_i, weight_names.size(), univ_i), "", 1, 0, 1));
+              univSelectedSignalHists[signal_i][weight_names.size()].push_back(new TH1D(Form("univSelectedSignalHist_%lu_%lu_%u", signal_i, weight_names.size(), univ_i), "", 1, 0, 1));
               univXSecHists[signal_i][weight_names.size()].push_back(new TH1D(Form("univXSecHist_%lu_%lu_%u", signal_i, weight_names.size(), univ_i), "", 1, 0, 1));
             }
         }
@@ -98,11 +103,11 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
 
   InitialiseTree(rockboxEvents, weight_names);
   EvaluateTree(rockboxEvents, rockboxScaling, nominalSelectedHists, nominalTrueSignalHists, nominalSelectedBackgroundHists,
-               univTrueSignalHists, univSelectedBackgroundHists, signals, weight_names, n_univs, combine);
+               univTrueSignalHists, univSelectedBackgroundHists, univSelectedSignalHists, signals, weight_names, n_univs, combine);
 
   InitialiseTree(intimeEvents, weight_names);
   EvaluateTree(intimeEvents, intimeScaling, nominalSelectedHists, nominalTrueSignalHists, nominalSelectedBackgroundHists,
-               univTrueSignalHists, univSelectedBackgroundHists, signals, weight_names, n_univs, combine);
+               univTrueSignalHists, univSelectedBackgroundHists, univSelectedSignalHists, signals, weight_names, n_univs, combine);
 
 
   if(combine)
@@ -180,8 +185,15 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
 
           for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
             {
-              const double univSig  = nominalSelectedHists[signal_i]->GetBinContent(1) - univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1);
-              const double univEff  = univSig / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+              // Option to use either background subtraction (commented out) or purity correction (currently in use) to calculate the xsec
+              //              const double univSig  = nominalSelectedHists[signal_i]->GetBinContent(1) - univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+              //              const double univEff  = univSig / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+
+              const double univPur  = univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) /
+                (univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) + univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1));
+              const double univSig  = nominalSelectedHists[signal_i]->GetBinContent(1) * univPur;
+              const double univEff  = univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+
               const double flux     = saveDirExt == "flux" ? univsIntegratedFluxMap.at(univ_i) : intFlux;
               const double univXSec = univSig / (univEff * nTargets * flux);
 
@@ -241,7 +253,7 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
 
           if(diff > 1e-44)
             {
-              TH1D* fitHist = new TH1D(Form("fitHist_%lu_%lu", signal_i, weight_i), "", 10, minVal - 0.05 * diff, maxVal + 0.05 * diff);
+              TH1D* fitHist = new TH1D(Form("fitHist_%lu_%lu", signal_i, weight_i), ";#sigma (cm^{2}/nucleon);Universes", 10, minVal - 0.05 * diff, maxVal + 0.05 * diff);
 
               for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
                 fitHist->Fill(univXSecHists[signal_i][weight_i][univ_i]->GetBinContent(1));
@@ -254,11 +266,17 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
               cvErrHist->SetBinContent(1, fGaus->GetParameter("Mean"));
               cvErrHist->SetBinError(1, fGaus->GetParameter("Sigma"));
 
-              if(!fitResult->IsValid() || fGaus->GetParameter("Sigma") > 20000.)
+              if(!fitResult->IsValid())
                 {
                   gSystem->Exec("mkdir -p " + saveDir + "/" + weight.c_str() + "/bad_fits");
                   fitCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/bad_fits/" + Form("%s.png", signal.name.Data()));
                   fitCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/bad_fits/" + Form("%s.pdf", signal.name.Data()));
+                }
+              else
+                {
+                  gSystem->Exec("mkdir -p " + saveDir + "/" + weight.c_str() + "/fits");
+                  fitCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/fits/" + Form("%s.png", signal.name.Data()));
+                  fitCanvas->SaveAs(saveDir + "/" + weight.c_str() + "/fits/" + Form("%s.pdf", signal.name.Data()));
                 }
             }
           else
@@ -334,8 +352,8 @@ void InitialiseTree(TChain *tree, std::vector<std::string> &weight_names)
 
 void EvaluateTree(TChain *tree, const double &scaling, std::vector<TH1D*> &nominalSelectedHists, std::vector<TH1D*> &nominalTrueSignalHists,
                   std::vector<TH1D*> &nominalSelectedBackgroundHists, std::vector<std::vector<std::vector<TH1D*>>> &univTrueSignalHists,
-                  std::vector<std::vector<std::vector<TH1D*>>> &univSelectedBackgroundHists, const std::vector<Cut> &signals,
-                  std::vector<std::string> weight_names, const uint n_univs, const bool combine)
+                  std::vector<std::vector<std::vector<TH1D*>>> &univSelectedBackgroundHists, std::vector<std::vector<std::vector<TH1D*>>> &univSelectedSignalHists,
+                  const std::vector<Cut> &signals, std::vector<std::string> weight_names, const uint n_univs, const bool combine)
 {
   const uint N = tree->GetEntries();
 
@@ -422,6 +440,27 @@ void EvaluateTree(TChain *tree, const double &scaling, std::vector<TH1D*> &nomin
                         {
                           for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
                             univSelectedBackgroundHists[signal_i][weight_names.size()][univ_i]->Fill(0.5, scaling * all_parameter_weights[univ_i]);
+                        }
+                    }
+                  else
+                    {
+                      std::vector<float> all_parameter_weights(n_univs, 1.);
+
+                      for(auto&& [ weight_i, weight ] : enumerate(weight_names))
+                        {
+                          for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
+                            {
+                              const double w = slc_true_event_type_incl->at(j) > 5 ? 1. : slc_parameter_weights[weight_i]->at(j)[univ_i];
+
+                              univSelectedSignalHists[signal_i][weight_i][univ_i]->Fill(0.5, scaling * w);
+                              all_parameter_weights[univ_i] *= w;
+                            }
+                        }
+
+                      if(combine)
+                        {
+                          for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
+                            univSelectedSignalHists[signal_i][weight_names.size()][univ_i]->Fill(0.5, scaling * all_parameter_weights[univ_i]);
                         }
                     }
                 }
