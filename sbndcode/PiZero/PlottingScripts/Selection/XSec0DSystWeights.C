@@ -24,11 +24,15 @@ void EvaluateTree(TChain *tree, const double &scaling, std::vector<TH1D*> &nomin
                   std::vector<std::vector<std::vector<TH1D*>>> &univSelectedBackgroundHists, std::vector<std::vector<std::vector<TH1D*>>> &univSelectedSignalHists,
                   const std::vector<Cut> &signals, std::vector<std::string> weight_names, const uint n_univs, const bool combine);
 
-void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt, const std::vector<Cut> &signals,
-                       std::vector<std::string> weight_names, const uint n_univs, const bool combine)
+void XSec0DSystWeights(const TString productionVersion, TString saveDirExt, const std::vector<Cut> &signals,
+                       std::vector<std::string> weight_names, const uint n_univs, const bool combine, const bool purityMethod)
 {
   nu_parameter_weights.resize(weight_names.size(), 0);
   slc_parameter_weights.resize(weight_names.size(), 0);
+
+  const int nFitBins = saveDirExt == "flux" ? 20 : saveDirExt == "genie" ? 10 : 1;
+
+  saveDirExt += purityMethod ? "/purity_correction" : "/background_subtraction";
 
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/xsec_zero_d_syst_weights/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
@@ -142,6 +146,7 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
 
           const double nomSig  = nominalSelectedHists[signal_i]->GetBinContent(1) - nominalSelectedBackgroundHists[signal_i]->GetBinContent(1);
           const double nomEff  = nomSig / nominalTrueSignalHists[signal_i]->GetBinContent(1);
+          const double nomPur  = nomSig / nominalSelectedHists[signal_i]->GetBinContent(1);
           const double nomXSec = nomSig / (nomEff * nTargets * intFlux);
 
           const double selEntries  = nominalSelectedHists[signal_i]->GetEntries();
@@ -172,6 +177,11 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
 
       for(auto&& [ signal_i, signal ] : enumerate(signals))
         {
+          const double nomSig  = nominalSelectedHists[signal_i]->GetBinContent(1) - nominalSelectedBackgroundHists[signal_i]->GetBinContent(1);
+          const double nomEff  = nomSig / nominalTrueSignalHists[signal_i]->GetBinContent(1);
+          const double nomPur  = nomSig / nominalSelectedHists[signal_i]->GetBinContent(1);
+          const double nomBack = nominalSelectedBackgroundHists[signal_i]->GetBinContent(1);
+
           canvas->cd(signal_i + 1);
           nominalXSecHists[signal_i]->Draw("hist][");
           gPad->Update();
@@ -183,16 +193,32 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
           gPad->Modified();
           gPad->Update();
 
+          TH1D *purityHist = new TH1D(Form("purityHist%lu",signal_i), ";Purity (%);Universes", 2 * nFitBins, nomPur - 0.05, nomPur + 0.05);
+          TH1D *effHist = new TH1D(Form("effHist%lu",signal_i), ";Efficiency (%);Universes", 2 * nFitBins, nomEff - 0.05, nomEff + 0.05);
+          TH1D *backHist = new TH1D(Form("backHist%lu",signal_i), ";Background Count;Universes", 4 * nFitBins,
+                                    0.5 * nominalSelectedBackgroundHists[signal_i]->GetBinContent(1),
+                                    1.5 * nominalSelectedBackgroundHists[signal_i]->GetBinContent(1));
+
           for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
             {
-              // Option to use either background subtraction (commented out) or purity correction (currently in use) to calculate the xsec
-              //              const double univSig  = nominalSelectedHists[signal_i]->GetBinContent(1) - univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1);
-              //              const double univEff  = univSig / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+              double univSig, univEff;
 
-              const double univPur  = univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) /
-                (univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) + univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1));
-              const double univSig  = nominalSelectedHists[signal_i]->GetBinContent(1) * univPur;
-              const double univEff  = univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+              if(purityMethod)
+                {
+                  const double univPur  = univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) /
+                    (univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) + univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1));
+                  univSig  = nominalSelectedHists[signal_i]->GetBinContent(1) * univPur;
+                  univEff  = univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+                  purityHist->Fill(univPur);
+                  effHist->Fill(univEff);
+                }
+              else
+                {
+                  univSig  = nominalSelectedHists[signal_i]->GetBinContent(1) - univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+                  univEff  = univSig / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+                  backHist->Fill(univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1));
+                  effHist->Fill(univEff);
+                }
 
               const double flux     = saveDirExt == "flux" ? univsIntegratedFluxMap.at(univ_i) : intFlux;
               const double univXSec = univSig / (univEff * nTargets * flux);
@@ -205,6 +231,59 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
             }
 
           nominalXSecHists[signal_i]->Draw("hist][same");
+
+          if(purityMethod)
+            {
+              TCanvas *purityCanvas = new TCanvas(Form("purityCanvas%lu", signal_i), Form("purityCanvas%lu", signal_i));
+              purityCanvas->cd();
+
+              purityCanvas->SetRightMargin(0.15);
+              purityHist->SetLineColor(kBlue-3);
+
+              purityHist->Draw("histe");
+
+              TLine *nominalPurLine = new TLine();
+              nominalPurLine->SetLineColor(kMagenta+2);
+              nominalPurLine->SetLineWidth(5);
+              nominalPurLine->DrawLine(nomPur, 0., nomPur, 1.1 * purityHist->GetMaximum());
+
+              purityCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/pur_%s.png", signal.name.Data()));
+              purityCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/pur_%s.pdf", signal.name.Data()));
+            }
+          else
+            {
+              TCanvas *backCanvas = new TCanvas(Form("backCanvas%lu", signal_i), Form("backCanvas%lu", signal_i));
+              backCanvas->cd();
+
+              backCanvas->SetRightMargin(0.15);
+              backHist->SetLineColor(kBlue-3);
+
+              backHist->Draw("histe");
+
+              TLine *nominalBackLine = new TLine();
+              nominalBackLine->SetLineColor(kMagenta+2);
+              nominalBackLine->SetLineWidth(5);
+              nominalBackLine->DrawLine(nomBack, 0., nomBack, 1.1 * backHist->GetMaximum());
+
+              backCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/back_%s.png", signal.name.Data()));
+              backCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/back_%s.pdf", signal.name.Data()));
+            }
+
+          TCanvas *effCanvas = new TCanvas(Form("effCanvas%lu", signal_i), Form("effCanvas%lu", signal_i));
+          effCanvas->cd();
+
+          effCanvas->SetRightMargin(0.15);
+          effHist->SetLineColor(kBlue-3);
+
+          effHist->Draw("histe");
+
+          TLine *nominalEffLine = new TLine();
+          nominalEffLine->SetLineColor(kMagenta+2);
+          nominalEffLine->SetLineWidth(5);
+          nominalEffLine->DrawLine(nomEff, 0., nomEff, 1.1 * effHist->GetMaximum());
+
+          effCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/eff_%s.png", signal.name.Data()));
+          effCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/eff_%s.pdf", signal.name.Data()));
         }
 
       canvas->cd(1);
@@ -253,7 +332,8 @@ void XSec0DSystWeights(const TString productionVersion, const TString saveDirExt
 
           if(diff > 1e-44)
             {
-              TH1D* fitHist = new TH1D(Form("fitHist_%lu_%lu", signal_i, weight_i), ";#sigma (cm^{2}/nucleon);Universes", 10, minVal - 0.05 * diff, maxVal + 0.05 * diff);
+
+              TH1D* fitHist = new TH1D(Form("fitHist_%lu_%lu", signal_i, weight_i), ";#sigma (cm^{2}/nucleon);Universes", nFitBins, minVal - 0.05 * diff, maxVal + 0.05 * diff);
 
               for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
                 fitHist->Fill(univXSecHists[signal_i][weight_i][univ_i]->GetBinContent(1));
