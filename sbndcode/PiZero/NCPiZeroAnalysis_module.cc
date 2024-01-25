@@ -645,6 +645,9 @@ private:
                                                         "GENIEReWeight_SBND_v3_multisim_RPA_CCQE",
                                                         "GENIEReWeight_SBND_v3_multisim_ZExpAVariationResponse",
   };
+
+  const std::vector<std::string> geant4_weight_names = { "reinteractions_Geant4",
+  };
 };
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
@@ -690,6 +693,12 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
     slcVars["slc_true_weight_all_flux"] = new InhVecVecVar<float>("slc_true_weight_all_flux");
 
     for(auto const& name : genie_weight_names)
+      {
+        nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
+        slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
+      }
+
+    for(auto const& name : geant4_weight_names)
       {
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
@@ -2074,9 +2083,9 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 
   float crumbs;
   AccessElement(slcVars["slc_crumbs_score"], counter, crumbs);
-  const bool passes_crumbs_incl  = crumbs > -0.1;
-  const bool passes_crumbs_0p0pi = crumbs > -0.145;
-  const bool passes_crumbs_Np0pi = crumbs > -0.085;
+  const bool passes_crumbs_incl  = crumbs > -0.195;
+  const bool passes_crumbs_0p0pi = crumbs > -0.195;
+  const bool passes_crumbs_Np0pi = crumbs > -0.16;
 
   int nrazzledmuons;
   AccessElement(slcVars["slc_n_primary_razzled_muons"], counter, nrazzledmuons);
@@ -2096,14 +2105,14 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   double opt0frac;
   AccessElement(slcVars["slc_opt0_fracPE"], counter, opt0frac);
   const bool passes_opt0frac_incl  = opt0frac < 0.756 && opt0frac > -0.7;
-  const bool passes_opt0frac_0p0pi = opt0frac < 0.408 && opt0frac > -0.704;
-  const bool passes_opt0frac_Np0pi = opt0frac < 0.792 && opt0frac > -0.424;
+  const bool passes_opt0frac_0p0pi = opt0frac < 0.408 && opt0frac > -0.7;
+  const bool passes_opt0frac_Np0pi = opt0frac < 0.836 && opt0frac > -0.376;
 
   double opt0score;
   AccessElement(slcVars["slc_opt0_score"], counter, opt0score);
-  const bool passes_opt0score_incl  = opt0score > 70;
-  const bool passes_opt0score_0p0pi = opt0score > 145;
-  const bool passes_opt0score_Np0pi = opt0score > 175;
+  const bool passes_opt0score_incl  = opt0score > 150;
+  const bool passes_opt0score_0p0pi = opt0score > 150;
+  const bool passes_opt0score_Np0pi = opt0score > 210;
 
   int nrazzledpions;
   AccessElement(slcVars["slc_n_primary_razzled_pions_thresh"], counter, nrazzledpions);
@@ -2112,8 +2121,12 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   int nrazzledprotons;
   AccessElement(slcVars["slc_n_primary_razzled_protons_thresh"], counter, nrazzledprotons);
 
+  bool allothertrkscontained;
+  AccessElement(slcVars["slc_all_other_trks_contained"], counter, allothertrkscontained);
+
   const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs_incl && passes_razzled_muons && passes_pfps
-    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_incl && passes_opt0score_incl;
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_incl && passes_opt0score_incl
+    && allothertrkscontained;
   FillElement(slcVars["slc_sel_incl"], counter, sel_incl);
 
   const bool sel_0p0pi = !is_clear_cosmic && is_fv && passes_crumbs_0p0pi && passes_razzled_muons && passes_pfps
