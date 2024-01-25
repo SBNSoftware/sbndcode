@@ -14,12 +14,25 @@ pmtdecoder:
     ignore_boards: []     # boards to ignore for testing purposes
     nominal_length: 5000     # expected waveform length 
 
+    # configure which systems to use
+    # jitter_config: [1, 0, 0, 0] # CAEN-only, SPEC TDC, PTB, NTB  
+    # timing_config: [1, 0, 0, 0] # CAEN-only, SPEC TDC, PTB, NTB
+
     # configure SPEC TDC inputs 
-    spectdc_product_name: "tdcdecoder"
-    spectdc_fragment_name: [ "TDCTIMESTAMP", "ContainerTDCTIMESTAMP" ]
+    spectdc_product_name: "tdcdecoder" # used if the tdc decoder has been run 
     spectdc_ftrig_ch: 3 # this should be the channel number of the spec tdc that stores the flash trigger 
+    spectdc_etrig_ch: 4
+
+    # configure PTB inputs 
+    ptb_product_name: "ptbdecoder"
 
     # configure output options
+
+    # more detailed configurables
+    n_maxflashes:    30 # maximum number of flashes anticipated, this is used for memory allocation
+    n_caenboards:    8  # number of caen boards; this is used for memory allocation
+    threshold_ftrig: 16350 # the threshold for the flash trigger channel
+    hist_evt:        1  # the # of the event used to generate the histograms, 1st event by default 
 }
 
 END_PROLOG
