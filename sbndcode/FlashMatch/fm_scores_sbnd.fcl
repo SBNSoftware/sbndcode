@@ -24,12 +24,15 @@ source:{
 
 physics: {
   producers: {
-    fmatch: @local::sbnd_simple_flashmatch
+    fmatch: @local::sbnd_simple_flashmatch		# For PMT SimpleFlashes
+    fmatchara: @local::sbnd_simple_flashmatch_ara	# For XARAPUCA SimpleFlashes
+    fmatchop: @local::sbnd_simple_flashmatch_op       # For PMT OpFlashes
+    fmatchopara: @local::sbnd_simple_flashmatch_opara       # For XARAPUCA OpFlashes
   }
 
-  reco: [fmatch]
-  stream: [out]
-  end_paths: [stream]
+  reco: [fmatch, fmatchop, fmatchara, fmatchopara]
+  stream: [out, out, out, out]
+  end_paths: ['0:stream', '0:stream', '0:stream', '0:stream']
 }
 
 outputs: {

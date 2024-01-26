@@ -21,6 +21,7 @@
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindMany.h"
+#include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Utilities/InputTag.h"
 
 // LArSoft includes
@@ -46,7 +47,7 @@
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
@@ -427,7 +428,7 @@ private:
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
-  sbnd::CRTHitRecoAlg hitAlg;
+  sbnd::crt::CRTGeoAlg fCRTGeoAlg;
 
   geo::GeometryCore const* fGeometryService;
   // detinfo::ElecClock fTrigClock;
@@ -438,7 +439,8 @@ private:
 
 
 Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
-: EDAnalyzer(pset)
+  : EDAnalyzer(pset)
+  , fCRTGeoAlg(pset.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
 {
 
   fGeometryService = lar::providerFrom<geo::Geometry>();
@@ -595,9 +597,8 @@ void Hitdumper::analyze(const art::Event& evt)
   for (int i = 0; i < _nstr; i += 2){
     uint32_t chan = striplist[i]->Channel();
 
-    //    std::pair<std::string,unsigned> tagger = CRTHitRecoAlg::ChannelToTagger(chan);
-    std::pair<std::string,unsigned> tagger = hitAlg.ChannelToTagger(chan);
-    sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(tagger.first);
+    std::string taggerName  = fCRTGeoAlg.ChannelToTaggerName(chan);
+    sbnd::crt::CRTTagger ip = fCRTGeoAlg.ChannelToTaggerEnum(chan);
 
     bool keep_tagger = false;
     for (auto t : fKeepTaggerTypes) {
@@ -605,9 +606,9 @@ void Hitdumper::analyze(const art::Event& evt)
         keep_tagger = true;
       }
     }
-    // std::cout << "Tagger name " << tagger.first << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
+    //std::cout << "Tagger name " << tagger.first << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
 
-    if (ip != sbnd::kCRTNotDefined && keep_tagger) {
+    if (ip != sbnd::crt::kUndefinedTagger && keep_tagger) {
 
       uint32_t ttime = striplist[i]->T0();
       float ctime = (int)ttime * 0.001; // convert form ns to us
@@ -625,10 +626,12 @@ void Hitdumper::analyze(const art::Event& evt)
         //
         std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
         auto const center = fAuxDetGeoCore->AuxDetChannelToPosition(name, 2*strip);
+	size_t orien = fCRTGeoAlg.ChannelToOrientation(chan);
+
         _crt_plane.push_back(ip);
         _crt_module.push_back(module);
         _crt_strip.push_back(strip);
-        _crt_orient.push_back(tagger.second);
+        _crt_orient.push_back(orien);
         _crt_time.push_back(ctime);
         _crt_adc.push_back(adc1 + adc2 - 127.2); // -127.2/131.9 correct for gain and 2*ped to get pe
         _crt_pos_x.push_back(center.X());
@@ -648,6 +651,7 @@ void Hitdumper::analyze(const art::Event& evt)
   ResetCRTCustomTracksVars(_nstrips);
   _nctrks = 0;
   if (fmakeCRTtracks) {
+    std::cout<<"Making tracks, number of strips = "<< ns<<std::endl;
     int ntr = 0;
     int iflag[1000] = {0};
     for (int i = 0; i < (ns - 1); ++i) {
@@ -663,7 +667,7 @@ void Hitdumper::analyze(const art::Event& evt)
         int  nh1y = 0, nh2y = 0;
         float adc1x = 0, adc2x = 0;
         float adc1y = 0, adc2y = 0;
-        if (_crt_plane[i] == sbnd::kCRTFaceSouth) { // 1
+        if (_crt_plane[i] == sbnd::crt::kSouthTagger) { // 1
           if (_crt_orient[i] == kCRTVertical && _crt_adc[i] > 500) { // < 500 hardcoded
             if (nh1x == 0 || (_crt_module[i] == plane1xm)) {
               nh1x++;
@@ -715,7 +719,7 @@ void Hitdumper::analyze(const art::Event& evt)
           float tdiff = fabs(_crt_time[i]-_crt_time[j]);
           if (tdiff<0.1) {
             iflag[j]=1;
-            if (_crt_plane[j]==sbnd::kCRTFaceSouth) {
+            if (_crt_plane[j]==sbnd::crt::kSouthTagger) {
               if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
                 if (nh1x==0 ||  (_crt_module[j]==plane1xm)) {
                   nh1x++;
@@ -819,7 +823,7 @@ void Hitdumper::analyze(const art::Event& evt)
 
     for (int i = 0; i < _nchits; ++i){
       // int ip = kNotDefined;
-      sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(chitlist[i]->tagger);
+      sbnd::crt::CRTTagger ip = sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
 
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
       if (chitlist[i]->ts1_ns > MAX_INT) {
@@ -883,7 +887,7 @@ void Hitdumper::analyze(const art::Event& evt)
         _nophits += ophitlist.size();
       }
       else {
-        std::cout << "Failed to get recob::OpHit data product." << std::endl;
+        std::cout << "Failed to get recob::OpHit data product: " << ophit_label << std::endl;
       }
 
       if (_nophits > _max_ophits) {
@@ -913,8 +917,13 @@ void Hitdumper::analyze(const art::Event& evt)
         if (pd_type == "pmt_coated") {_ophit_opdet_type[index] = kPMTCoated;}
         else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[index] = kPMTUnCoated;}
         else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[index] = kXArapucaVis;}
-        else if (pd_type == "xarapuca_vuv") {_ophit_opdet_type[index] = kXArapucaVuv;}
-        else {_ophit_opdet_type[index] = kPDNotDefined;}
+        else if (pd_type == "xarapuca_vuv") {
+          _ophit_opdet_type[index] = kXArapucaVuv;
+          //std::cout<<"XA VUV: "<< pd_type <<std::endl;
+        }
+        else {
+          _ophit_opdet_type[index] = kPDNotDefined;
+        }
       }
       previous_nophits = _nophits;
     }
