@@ -2,10 +2,12 @@ art_make(
          MODULE_LIBRARIES
          ROOT::Tree
          ROOT::Graf3d
+         CLHEP::Random
          art_root_io::TFileService_service
          art::Persistency_Common
          art::Persistency_Provenance
          nusimdata::SimulationBase
+         nurandom::RandomUtils_NuRandomService_service
          larsim::MCCheater_ParticleInventoryService_service
          larsim::MCCheater_BackTrackerService_service
          larsim::Utils

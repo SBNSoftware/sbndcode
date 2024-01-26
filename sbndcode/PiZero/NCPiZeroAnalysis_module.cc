@@ -25,6 +25,7 @@
 #include "TFile.h"
 
 #include "nusimdata/SimulationBase/MCParticle.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
@@ -61,6 +62,9 @@
 #include "SecondShower/SecondShowerFinderAlg.h"
 
 #include <numeric>
+
+#include "CLHEP/Random/RandEngine.h"
+#include "CLHEP/Random/RandGauss.h"
 
 constexpr int def_int       = std::numeric_limits<int>::min();
 constexpr size_t def_size   = std::numeric_limits<size_t>::max();
@@ -185,6 +189,8 @@ public:
   void GetVar(VecVar *vec, std::vector<std::vector<T>> &var);
 
 private:
+
+  CLHEP::HepRandomEngine& fRandomEngine;
 
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
@@ -614,44 +620,52 @@ private:
                                                        "piplus_Flux"
   };
 
-  const std::vector<std::string> genie_weight_names = { "GENIEReWeight_SBND_v3_multisim_CCRESVariationResponse",
-                                                        "GENIEReWeight_SBND_v3_multisim_COHVariationResponse",
-                                                        "GENIEReWeight_SBND_v3_multisim_CoulombCCQE",
-                                                        "GENIEReWeight_SBND_v3_multisim_DISBYVariationResponse",
-                                                        "GENIEReWeight_SBND_v3_multisim_FSI_N_VariationResponse",
-                                                        "GENIEReWeight_SBND_v3_multisim_FSI_pi_VariationResponse",
-                                                        "GENIEReWeight_SBND_v3_multisim_NCELVariationResponse",
-                                                        "GENIEReWeight_SBND_v3_multisim_NCRESVariationResponse",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvbarnCC1pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvbarnCC2pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvbarnNC1pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvbarnNC2pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvbarpCC1pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvbarpCC2pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvbarpNC1pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvbarpNC2pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvnCC1pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvnCC2pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvnNC1pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvnNC2pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvpCC1pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvpCC2pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvpNC1pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NonRESBGvpNC2pi",
-                                                        "GENIEReWeight_SBND_v3_multisim_NormCCMEC",
-                                                        "GENIEReWeight_SBND_v3_multisim_NormNCMEC",
-                                                        "GENIEReWeight_SBND_v3_multisim_RDecBR1eta",
-                                                        "GENIEReWeight_SBND_v3_multisim_RDecBR1gamma",
-                                                        "GENIEReWeight_SBND_v3_multisim_RPA_CCQE",
-                                                        "GENIEReWeight_SBND_v3_multisim_ZExpAVariationResponse",
+  const std::vector<std::string> genie_weight_names = { "GENIEReWeight_SBND_v4_multisigma_CoulombCCQE",
+                                                        "GENIEReWeight_SBND_v4_multisigma_DecayAngMEC",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NormCCMEC",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NormNCMEC",
+                                                        "GENIEReWeight_SBND_v4_multisigma_RDecBR1eta",
+                                                        "GENIEReWeight_SBND_v4_multisigma_RDecBR1gamma",
+                                                        "GENIEReWeight_SBND_v4_multisigma_RPA_CCQE",
+                                                        "GENIEReWeight_SBND_v4_multisigma_ThetaDelta2NRad",
+                                                        "GENIEReWeight_SBND_v4_multisigma_Theta_Delta2Npi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_VecFFCCQEshape",
+                                                        "GENIEReWeight_SBND_v4_multisim_CCRESVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_COHVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_DISBYVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_FSI_N_VariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_FSI_pi_VariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_NCELVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_NCRESVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_ZExpAVariationResponse"
   };
 
   const std::vector<std::string> geant4_weight_names = { "reinteractions_Geant4",
   };
+
+  std::map<std::string, std::map<int, double>> genie_multisigma_universe_weights;
 };
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
+  , fRandomEngine(art::ServiceHandle<rndm::NuRandomService>()->registerAndSeedEngine(createEngine(0, "HepJamesRandom", "SystematicWeightThrows"),
+                                                                                     "HepJamesRandom", "SystematicWeightThrows", 101))
   , fMCParticleModuleLabel          (p.get<art::InputTag>("MCParticleModuleLabel"))
   , fSliceModuleLabel               (p.get<art::InputTag>("SliceModuleLabel"))
   , fPFParticleModuleLabel          (p.get<art::InputTag>("PFParticleModuleLabel"))
@@ -734,6 +748,19 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
 
     fEventTree->Branch("n_slc", &_n_slc);
     SetupBranches(slcVars);
+
+    CLHEP::RandGauss randGauss(fRandomEngine, 0., 1.);
+
+    for(auto const& name : genie_weight_names)
+      {
+        if(name.find("multisigma") != std::string::npos)
+          {
+            genie_multisigma_universe_weights[name] = std::map<int, double>();
+
+            for(int univ = 0; univ < 500; ++univ)
+              genie_multisigma_universe_weights[name][univ] = randGauss.fire();
+          }
+      }
   }
 
 void sbnd::NCPiZeroAnalysis::SetupBranches(VecVarMap &map)
@@ -992,7 +1019,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
       if(weightModuleLabel == "fluxweight")
         n_univs = 1000;
       else if(weightModuleLabel == "systtools")
-        n_univs = 100;
+        n_univs = 500;
 
       std::vector<float> all(n_univs, 1.);
 
@@ -1000,12 +1027,37 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
         {
           for(auto const& [ name, weights ] : *ewm)
             {
-              FillElement(vars[prefix + "_weight_" + name], counter, weights);
-
               if((weightModuleLabel == "fluxweight") || (weightModuleLabel == "systtools" && name.find("multisim") != std::string::npos))
                 {
+                  FillElement(vars[prefix + "_weight_" + name], counter, weights);
+
                   for(int univ = 0; univ < n_univs; ++univ)
                     all[univ] *= weights[univ];
+                }
+              else if(weightModuleLabel == "systtools" && name.find("multisigma") != std::string::npos)
+                {
+                  std::vector<float> thrown_weights(n_univs, 1.);
+
+                  if(weights.size() == 6)
+                    {
+                      for(int univ = 0; univ < n_univs; ++univ)
+                        {
+                          thrown_weights[univ] = 1 + (weights[1] - 1) * genie_multisigma_universe_weights[name][univ];
+                          all[univ] *= weights[univ];
+                        }
+                    }
+                  else if(weights.size() == 1)
+                    {
+                      for(int univ = 0; univ < n_univs; ++univ)
+                        {
+                          thrown_weights[univ] = 1 + (weights[0] - 1) * 2 * genie_multisigma_universe_weights[name][univ];
+                          all[univ] *= weights[univ];
+                        }
+                    }
+                  else
+                    std::cout << "Whoaaaaaaaaaa, multisigma of size " << weights.size() << std::endl;
+
+                  FillElement(vars[prefix + "_weight_" + name], counter, thrown_weights);
                 }
             }
         }
