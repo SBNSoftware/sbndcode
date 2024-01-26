@@ -83,7 +83,7 @@ private:
     std::vector<std::string>  fcaen_fragment_name;
     std::string               fcaen_module_label;
 
-    std::vector<uint32_t>     fignore_boards;
+    std::vector<uint32_t>     fignore_fragid;
     uint32_t                  fnominal_length; 
 
     std::string               fspectdc_product_name;
@@ -99,6 +99,7 @@ private:
     int fn_caenboards;
     uint16_t fthreshold_ftrig;
     uint fhist_evt;
+    std::vector<uint> fch_map;
 
     // histogram info  
     std::stringstream histname; //raw waveform hist name
@@ -115,7 +116,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fcaen_fragment_name = p.get<std::vector<std::string>>("caen_fragment_name");
     fcaen_module_label  = p.get<std::string>("caen_module_label","daq");
 
-    fignore_boards = p.get<std::vector<uint32_t>>("ignore_boards",{});
+    fignore_fragid = p.get<std::vector<uint32_t>>("ignore_fragid",{});
     fnominal_length = p.get<uint32_t>("nominal_length",5000);
 
     fspectdc_product_name = p.get<std::string>("spectdc_product_name","tdcdecoder");
@@ -131,6 +132,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fn_caenboards = p.get<int>("n_caenboards",8);
     fthreshold_ftrig = p.get<uint16_t>("threshold_ftrig",16350);
     fhist_evt     = p.get<int>("hist_evt",1);
+    fch_map       = p.get<std::vector<uint>>("ch_map",{});
 
     produces< std::vector< raw::OpDetWaveform > >(fch_instance_name); 
     produces< std::vector< raw::OpDetWaveform > >(ftr_instance_name);
@@ -180,13 +182,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     }
                     for (size_t ii = 0; ii < contf.block_count(); ++ii){
                         auto frag = *contf[ii].get();                        
-                        CAENV1730Fragment bb(frag);
-                        CAENV1730Event const* event_ptr = bb.Event();
-                        CAENV1730EventHeader header = event_ptr->Header;
-                        auto boardID = header.boardID;                        
-                    
+                        auto fragid = frag.fragmentID() - 40960;
                         // ignore boards that are not in the list of boards to ignore
-                        if (std::find(fignore_boards.begin(), fignore_boards.end(), boardID) != fignore_boards.end())
+                        if (std::find(fignore_fragid.begin(), fignore_fragid.end(), fragid) != fignore_fragid.end())
                             continue;
                         if (int(ii) >= fn_maxflashes){
                             std::cout << "Warning: more than " << fn_maxflashes << " flash triggers found, update the fcl! Skipping the rest." << std::endl;
@@ -313,8 +311,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         auto ilen = trig_len_v.at(itrig);
         auto ifrag_v = trig_frag_v.at(itrig);
 
-        std::vector<int> fragid_v(ifrag_v.size(),0);
-        std::vector<uint32_t> id_board_v(ifrag_v.size(),0);
+        std::vector<uint> fragid_v(ifrag_v.size(),0);
 
         // if this waveform is short, skip it 
         
@@ -330,8 +327,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         for (size_t idx=0; idx<ifrag_v.size(); idx++){
             auto frag = ifrag_v.at(idx);
             get_waveforms(frag, iwvfm_v);
-            fragid_v.at(idx) = frag.fragmentID();
-            id_board_v.at(idx) = get_boardid(frag);
+            fragid_v.at(idx) = frag.fragmentID() - 40960;
             iwvfm_start_v.at(idx) = get_ttt(frag) - 2*(get_length(frag));
 
             uint32_t frag_ttt = 0; 
@@ -341,8 +337,8 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             get_timing(frag, frag_ttt, frag_len, frag_tick);
             int frag_ts = frag_ttt - 2*(frag_len - frag_tick); // ns
             auto length = get_length(frag);
-            std::cout << "      Board ID: " << get_boardid(frag)
-                      << ", Frag ID: " << frag.fragmentID()
+            std::cout // << "      Board ID: " << get_boardid(frag)
+                      << "      Frag ID: " << frag.fragmentID() - 40960
                       << ", ttt: " << frag_ttt
                       << ", tick: " << frag_tick
                       << ", trig ts: " << frag_ts
@@ -364,7 +360,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     std::vector<std::vector<uint16_t>> jwvfm_v;
                     for (size_t idx=0; idx<jfrag_v.size(); idx++){
                         auto frag = jfrag_v.at(idx);
-                        if (fragid_v.at(idx) != frag.fragmentID()){
+                        if (fragid_v.at(idx) != (uint)(frag.fragmentID() - 40960)){
                             // check that the two fragments originated from the same board
                             std::cout << "Error: fragment IDs do not match between triggers " << itrig << " and " << jtrig << std::endl;
                             pass_checks=false;
@@ -403,7 +399,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             if (evt_counter==fhist_evt){
             // histo: save waveforms section for combined waveforms
                 histname.str(std::string());
-                histname << "evt" << evt.event() << "_board" << id_board_v.at(board_idx) << "_ch" << i%16 << "_combined_wvfm";
+                histname << "evt" << evt.event() << "_frag" << fragid_v.at(board_idx) << "_ch" << i%16 << "_combined_wvfm";
 
                 TH1D *wvfmHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), combined_wvfm.size(), 0, combined_wvfm.size());
                 wvfmHist->GetXaxis()->SetTitle("ticks");
@@ -411,7 +407,13 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     wvfmHist->SetBinContent(n + 1, (double)combined_wvfm[n]);
             }
             int time_diff = int(event_trigger_time) - int(iwvfm_start_v.at(board_idx));
-            raw::OpDetWaveform waveform(time_diff, i%16, combined_wvfm);
+            uint ch;
+            if (i%16 == 15)
+                ch = fragid_v.at(board_idx);
+            else
+                ch = fch_map.at(fragid_v.at(board_idx)*15 + i%16);
+            
+            raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
 
             if (i%16 == 15)
                 twvfmVec->push_back(waveform);
