@@ -30,7 +30,7 @@ void XSec0DSystWeights(const TString productionVersion, TString saveDirExt, cons
   nu_parameter_weights.resize(weight_names.size(), 0);
   slc_parameter_weights.resize(weight_names.size(), 0);
 
-  const int nFitBins = saveDirExt == "flux" ? 20 : saveDirExt == "genie" ? 10 : 1;
+  const int nFitBins = saveDirExt.Contains("flux") ? 20 : saveDirExt == "genie" ? 10 : 1;
 
   saveDirExt += purityMethod ? "/purity_correction" : "/background_subtraction";
 
@@ -193,11 +193,9 @@ void XSec0DSystWeights(const TString productionVersion, TString saveDirExt, cons
           gPad->Modified();
           gPad->Update();
 
-          TH1D *purityHist = new TH1D(Form("purityHist%lu",signal_i), ";Purity (%);Universes", 2 * nFitBins, nomPur - 0.05, nomPur + 0.05);
-          TH1D *effHist = new TH1D(Form("effHist%lu",signal_i), ";Efficiency (%);Universes", 2 * nFitBins, nomEff - 0.05, nomEff + 0.05);
-          TH1D *backHist = new TH1D(Form("backHist%lu",signal_i), ";Background Count;Universes", 4 * nFitBins,
-                                    0.5 * nominalSelectedBackgroundHists[signal_i]->GetBinContent(1),
-                                    1.5 * nominalSelectedBackgroundHists[signal_i]->GetBinContent(1));
+          TH1D *purityHist = new TH1D(Form("purityHist%lu",signal_i), ";Purity (%);Universes", 2 * nFitBins, 2, 1);
+          TH1D *effHist = new TH1D(Form("effHist%lu",signal_i), ";Efficiency (%);Universes", 2 * nFitBins, 2, 1);
+          TH1D *backHist = new TH1D(Form("backHist%lu",signal_i), ";Background Count;Universes", 2 * nFitBins, 2, 1);
 
           for(uint univ_i = 0; univ_i < n_univs; ++univ_i)
             {
@@ -215,12 +213,13 @@ void XSec0DSystWeights(const TString productionVersion, TString saveDirExt, cons
               else
                 {
                   univSig  = nominalSelectedHists[signal_i]->GetBinContent(1) - univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1);
-                  univEff  = univSig / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+                  //                  univEff  = univSig / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
+                  univEff  = univSelectedSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1) / univTrueSignalHists[signal_i][weight_i][univ_i]->GetBinContent(1);
                   backHist->Fill(univSelectedBackgroundHists[signal_i][weight_i][univ_i]->GetBinContent(1));
                   effHist->Fill(univEff);
                 }
 
-              const double flux     = saveDirExt == "flux" ? univsIntegratedFluxMap.at(univ_i) : intFlux;
+              const double flux     = saveDirExt.Contains("flux") ? univsIntegratedFluxMap.at(univ_i) : intFlux;
               const double univXSec = univSig / (univEff * nTargets * flux);
 
               univXSecHists[signal_i][weight_i][univ_i]->SetBinContent(1, univXSec);
@@ -245,7 +244,7 @@ void XSec0DSystWeights(const TString productionVersion, TString saveDirExt, cons
               TLine *nominalPurLine = new TLine();
               nominalPurLine->SetLineColor(kMagenta+2);
               nominalPurLine->SetLineWidth(5);
-              nominalPurLine->DrawLine(nomPur, 0., nomPur, 1.1 * purityHist->GetMaximum());
+              nominalPurLine->DrawLine(nomPur, 0., nomPur, 1.1 * (purityHist->GetBinContent(purityHist->GetMaximumBin()) + purityHist->GetBinError(purityHist->GetMaximumBin())));
 
               purityCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/pur_%s.png", signal.name.Data()));
               purityCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/pur_%s.pdf", signal.name.Data()));
@@ -263,7 +262,7 @@ void XSec0DSystWeights(const TString productionVersion, TString saveDirExt, cons
               TLine *nominalBackLine = new TLine();
               nominalBackLine->SetLineColor(kMagenta+2);
               nominalBackLine->SetLineWidth(5);
-              nominalBackLine->DrawLine(nomBack, 0., nomBack, 1.1 * backHist->GetMaximum());
+              nominalBackLine->DrawLine(nomBack, 0., nomBack, 1.1 * (backHist->GetBinContent(backHist->GetMaximumBin()) + backHist->GetBinError(backHist->GetMaximumBin())));
 
               backCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/back_%s.png", signal.name.Data()));
               backCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/back_%s.pdf", signal.name.Data()));
@@ -280,7 +279,7 @@ void XSec0DSystWeights(const TString productionVersion, TString saveDirExt, cons
           TLine *nominalEffLine = new TLine();
           nominalEffLine->SetLineColor(kMagenta+2);
           nominalEffLine->SetLineWidth(5);
-          nominalEffLine->DrawLine(nomEff, 0., nomEff, 1.1 * effHist->GetMaximum());
+          nominalEffLine->DrawLine(nomEff, 0., nomEff, 1.1 * (effHist->GetBinContent(effHist->GetMaximumBin()) + effHist->GetBinError(effHist->GetMaximumBin())));
 
           effCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/eff_%s.png", signal.name.Data()));
           effCanvas->SaveAs(saveDir + "/" + weight.c_str() + Form("/eff_%s.pdf", signal.name.Data()));
