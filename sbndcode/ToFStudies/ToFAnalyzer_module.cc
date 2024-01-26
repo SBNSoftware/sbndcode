@@ -65,12 +65,10 @@
 #include "lardataobj/MCBase/MCShower.h"
 
 // sbndcode includes
-#include "sbnobj/Common/CRT/CRTHit.hh"
-#include "sbnobj/Common/CRT/CRTTrack.hh"
-#include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
-#include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
+#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+#include "sbnobj/SBND/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
+#include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 
 #include "lardataobj/RecoBase/OpHit.h"
 
@@ -112,7 +110,7 @@ namespace sbnd{
 
 class ToFAnalyzer : public art::EDAnalyzer {
 public:
-  using CRTHit = sbn::crt::CRTHit;
+  using CRTSpacePoint = sbnd::crt::CRTSpacePoint;
   explicit ToFAnalyzer(fhicl::ParameterSet const& p);
   ToFAnalyzer(ToFAnalyzer const&) = delete;
   ToFAnalyzer(ToFAnalyzer&&) = delete;
@@ -121,7 +119,7 @@ public:
 
   void beginJob() override;
   void analyze(art::Event const& evt) override;
-  bool HitCompare(const art::Ptr<CRTHit>& h1, const art::Ptr<CRTHit>& h2);
+  bool SpacePointCompare(const art::Ptr<CRTSpacePoint>& sp1, const art::Ptr<CRTSpacePoint>& sp2);
   void ClearVecs();
   double length(const simb::MCParticle& part, TVector3& start, TVector3& end);
 
@@ -133,12 +131,12 @@ private:
   art::InputTag fOpHitModuleLabel;
   art::InputTag fOpFlashModuleLabel0;
   art::InputTag fOpFlashModuleLabel1;
-  art::InputTag fCrtHitModuleLabel;
+  art::InputTag fCrtSpacePointModuleLabel;
   art::InputTag fCrtTrackModuleLabel;
 
   double fCoinWindow;
   double fOpDelay;
-  double fCRThitThresh;
+  double fCRTSpacePointThresh;
   double fFlashPeThresh;
   double fHitPeThresh;
   double fBeamLow;
@@ -156,7 +154,7 @@ private:
   bool fkeeponlytracks;
   bool fSaveTrueToFInfo;
   
-  CRTBackTracker* bt;
+  sbnd::crt::CRTBackTrackerAlg* bt;
   map<int,art::InputTag> fFlashLabels;
   geo::GeometryCore const* fGeometryService;
   
@@ -202,15 +200,15 @@ private:
   vector<double> fLhit_tof_vec;
   vector<bool> fLhit_frmtrk_vec;
   vector<bool> fLhit_frmhit_vec;
-  vector<int> fLhit_crthitkey_vec;
+  vector<int> fLhit_crtspkey_vec;
   vector<int> fLhit_crttrkkey_vec;
   vector<double> fLhit_crttime_t1_vec;
-  vector<double> fLhit_crttime_t0_vec;
+  //  vector<double> fLhit_crttime_t0_vec;
   vector<double> fLhit_crtpos_X_vec;
   vector<double> fLhit_crtpos_Y_vec;
   vector<double> fLhit_crtpos_Z_vec;
   vector<double> fLhit_crtpe_vec;
-  vector<std::string> fLhit_crttgr_vec;
+  vector<sbnd::crt::CRTTagger> fLhit_crttgr_vec;
   vector<int> fLhit_pmthitkey_vec;
   vector<double> fLhit_pmthitT_vec;
   vector<double> fLhit_pmthitX_vec;
@@ -221,15 +219,15 @@ private:
   vector<double> fChit_tof_vec;
   vector<bool> fChit_frmtrk_vec;
   vector<bool> fChit_frmhit_vec;
-  vector<int> fChit_crthitkey_vec;
+  vector<int> fChit_crtspkey_vec;
   vector<int> fChit_crttrkkey_vec;
   vector<double> fChit_crttime_t1_vec;
-  vector<double> fChit_crttime_t0_vec;
+  //  vector<double> fChit_crttime_t0_vec;
   vector<double> fChit_crtpos_X_vec;
   vector<double> fChit_crtpos_Y_vec;
   vector<double> fChit_crtpos_Z_vec;
   vector<double> fChit_crtpe_vec;
-  vector<std::string> fChit_crttgr_vec;
+  vector<sbnd::crt::CRTTagger> fChit_crttgr_vec;
   vector<int> fChit_pmthitkey_vec;
   vector<double> fChit_pmthitT_vec;
   vector<double> fChit_pmthitX_vec;
@@ -240,15 +238,15 @@ private:
   vector<double> fLflsh_tof_vec;
   vector<bool> fLflsh_frmtrk_vec;
   vector<bool> fLflsh_frmhit_vec;
-  vector<int> fLflsh_crthitkey_vec;
+  vector<int> fLflsh_crtspkey_vec;
   vector<int> fLflsh_crttrkkey_vec;
   vector<double> fLflsh_crttime_t1_vec;
-  vector<double> fLflsh_crttime_t0_vec;
+  //  vector<double> fLflsh_crttime_t0_vec;
   vector<double> fLflsh_crtpos_X_vec;
   vector<double> fLflsh_crtpos_Y_vec;
   vector<double> fLflsh_crtpos_Z_vec;
   vector<double> fLflsh_crtpe_vec;
-  vector<std::string> fLflsh_crttgr_vec;
+  vector<sbnd::crt::CRTTagger> fLflsh_crttgr_vec;
   vector<int> fLflsh_pmtflshtpcID_vec;
   vector<int> fLflsh_pmtflshkey_vec;
   vector<double> fLflsh_pmtflshT_vec;
@@ -259,15 +257,15 @@ private:
   vector<double> fCflsh_tof_vec;
   vector<bool> fCflsh_frmtrk_vec;
   vector<bool> fCflsh_frmhit_vec;
-  vector<int> fCflsh_crthitkey_vec;
+  vector<int> fCflsh_crtspkey_vec;
   vector<int> fCflsh_crttrkkey_vec;
   vector<double> fCflsh_crttime_t1_vec;
-  vector<double> fCflsh_crttime_t0_vec;
+  //  vector<double> fCflsh_crttime_t0_vec;
   vector<double> fCflsh_crtpos_X_vec;
   vector<double> fCflsh_crtpos_Y_vec;
   vector<double> fCflsh_crtpos_Z_vec;
   vector<double> fCflsh_crtpe_vec;
-  vector<std::string> fCflsh_crttgr_vec;
+  vector<sbnd::crt::CRTTagger> fCflsh_crttgr_vec;
   vector<int> fCflsh_pmtflshtpcID_vec;
   vector<int> fCflsh_pmtflshkey_vec;
   vector<double> fCflsh_pmtflshT_vec;
@@ -278,15 +276,15 @@ private:
   vector<double> fLflshhit_tof_vec;
   vector<bool> fLflshhit_frmtrk_vec;
   vector<bool> fLflshhit_frmhit_vec;
-  vector<int> fLflshhit_crthitkey_vec;
+  vector<int> fLflshhit_crtspkey_vec;
   vector<int> fLflshhit_crttrkkey_vec;
   vector<double> fLflshhit_crttime_t1_vec;
-  vector<double> fLflshhit_crttime_t0_vec;
+  //  vector<double> fLflshhit_crttime_t0_vec;
   vector<double> fLflshhit_crtpos_X_vec;
   vector<double> fLflshhit_crtpos_Y_vec;
   vector<double> fLflshhit_crtpos_Z_vec;
   vector<double> fLflshhit_crtpe_vec;
-  vector<std::string> fLflshhit_crttgr_vec;
+  vector<sbnd::crt::CRTTagger> fLflshhit_crttgr_vec;
   vector<int> fLflshhit_pmtflshtpcID_vec;
   vector<int> fLflshhit_pmtflshkey_vec;
   vector<int> fLflshhit_pmtkey_vec;
@@ -299,15 +297,15 @@ private:
   vector<double> fCflshhit_tof_vec;
   vector<bool> fCflshhit_frmtrk_vec;
   vector<bool> fCflshhit_frmhit_vec;
-  vector<int> fCflshhit_crthitkey_vec;
+  vector<int> fCflshhit_crtspkey_vec;
   vector<int> fCflshhit_crttrkkey_vec;
   vector<double> fCflshhit_crttime_t1_vec;
-  vector<double> fCflshhit_crttime_t0_vec;
+  //  vector<double> fCflshhit_crttime_t0_vec;
   vector<double> fCflshhit_crtpos_X_vec;
   vector<double> fCflshhit_crtpos_Y_vec;
   vector<double> fCflshhit_crtpos_Z_vec;
   vector<double> fCflshhit_crtpe_vec;
-  vector<std::string> fCflshhit_crttgr_vec;
+  vector<sbnd::crt::CRTTagger> fCflshhit_crttgr_vec;
   vector<int> fCflshhit_pmtflshtpcID_vec;
   vector<int> fCflshhit_pmtflshkey_vec;
   vector<int> fCflshhit_pmtkey_vec;
@@ -337,11 +335,11 @@ fSimLabel(pset.get<art::InputTag>("SimLabel")),
 fOpHitModuleLabel(pset.get<art::InputTag>("OpHitModuleLabel")),				
 fOpFlashModuleLabel0(pset.get<art::InputTag>("OpFlashModuleLabel0")),
 fOpFlashModuleLabel1(pset.get<art::InputTag>("OpFlashModuleLabel1")),
-fCrtHitModuleLabel(pset.get<art::InputTag>("CrtHitModuleLabel")),
+fCrtSpacePointModuleLabel(pset.get<art::InputTag>("CrtSpacePointModuleLabel")),
 fCrtTrackModuleLabel(pset.get<art::InputTag>("CrtTrackModuleLabel")),
 fCoinWindow(pset.get<double>("CoincidenceWindow")),
 fOpDelay(pset.get<double>("OpDelay")), // the cable time delay (135 ns) + PMTTransit Time delay (55 ns) + average TPB emission time delay (~4.5 ns)
-fCRThitThresh(pset.get<double>("CRThitThresh")),
+fCRTSpacePointThresh(pset.get<double>("CRTSpacePointThresh")),
 fFlashPeThresh(pset.get<int>("FlashPeThresh")),
 fHitPeThresh(pset.get<int>("HitPeThresh")),
 fBeamLow(pset.get<double>("BeamLow")),
@@ -358,7 +356,7 @@ fG4timeUp(pset.get<double>("G4timeUp")),
 fG4timeLow(pset.get<double>("G4timeLow")),
 fkeeponlytracks(pset.get<bool>("keeponlytracks")),
 fSaveTrueToFInfo(pset.get<bool>("SaveTrueToFInfo")),
-bt(new CRTBackTracker(pset.get<fhicl::ParameterSet>("CRTBackTrack")))
+  bt(new sbnd::crt::CRTBackTrackerAlg(pset.get<fhicl::ParameterSet>("CRTBackTrackerAlg")))
 {
 fFlashLabels[0] = fOpFlashModuleLabel0;
 fFlashLabels[1] = fOpFlashModuleLabel1; 
@@ -371,7 +369,7 @@ void ToFAnalyzer::beginJob(){
   fGeometryService = lar::providerFrom<geo::Geometry>();  
   
   art::ServiceHandle<art::TFileService> tfs;
-  fMatchTree = tfs->make<TTree>("matchTree","CRTHit - OpHit/Flash matching analysis");
+  fMatchTree = tfs->make<TTree>("matchTree","CRTSpacePoint - OpHit/Flash matching analysis");
   
   fMatchTree->Branch("run", &frun, "run/I");
   fMatchTree->Branch("subrun", &fsubrun, "subrun/I");
@@ -413,10 +411,10 @@ void ToFAnalyzer::beginJob(){
   fMatchTree->Branch("Lhit_tof_vec", &fLhit_tof_vec);
   fMatchTree->Branch("Lhit_frmtrk_vec", &fLhit_frmtrk_vec);
   fMatchTree->Branch("Lhit_frmhit_vec", &fLhit_frmhit_vec);
-  fMatchTree->Branch("Lhit_crthitkey_vec", &fLhit_crthitkey_vec);
+  fMatchTree->Branch("Lhit_crtspkey_vec", &fLhit_crtspkey_vec);
   fMatchTree->Branch("Lhit_crttrkkey_vec", &fLhit_crttrkkey_vec);
   fMatchTree->Branch("Lhit_crttime_t1_vec", &fLhit_crttime_t1_vec);
-  fMatchTree->Branch("Lhit_crttime_t0_vec", &fLhit_crttime_t0_vec);
+  //  fMatchTree->Branch("Lhit_crttime_t0_vec", &fLhit_crttime_t0_vec);
   fMatchTree->Branch("Lhit_crtpos_X_vec", &fLhit_crtpos_X_vec);
   fMatchTree->Branch("Lhit_crtpos_Y_vec", &fLhit_crtpos_Y_vec);
   fMatchTree->Branch("Lhit_crtpos_Z_vec", &fLhit_crtpos_Z_vec);
@@ -432,10 +430,10 @@ void ToFAnalyzer::beginJob(){
   fMatchTree->Branch("Chit_tof_vec", &fChit_tof_vec);
   fMatchTree->Branch("Chit_frmtrk_vec", &fChit_frmtrk_vec);
   fMatchTree->Branch("Chit_frmhit_vec", &fChit_frmhit_vec);
-  fMatchTree->Branch("Chit_crthitkey_vec", &fChit_crthitkey_vec);
+  fMatchTree->Branch("Chit_crtspkey_vec", &fChit_crtspkey_vec);
   fMatchTree->Branch("Chit_crttrkkey_vec", &fChit_crttrkkey_vec);
   fMatchTree->Branch("Chit_crttime_t1_vec", &fChit_crttime_t1_vec);
-  fMatchTree->Branch("Chit_crttime_t0_vec", &fChit_crttime_t0_vec);
+  //  fMatchTree->Branch("Chit_crttime_t0_vec", &fChit_crttime_t0_vec);
   fMatchTree->Branch("Chit_crtpos_X_vec", &fChit_crtpos_X_vec);
   fMatchTree->Branch("Chit_crtpos_Y_vec", &fChit_crtpos_Y_vec);
   fMatchTree->Branch("Chit_crtpos_Z_vec", &fChit_crtpos_Z_vec);
@@ -451,10 +449,10 @@ void ToFAnalyzer::beginJob(){
   fMatchTree->Branch("Lflsh_tof_vec", &fLflsh_tof_vec);
   fMatchTree->Branch("Lflsh_frmtrk_vec", &fLflsh_frmtrk_vec);
   fMatchTree->Branch("Lflsh_frmhit_vec", &fLflsh_frmhit_vec);
-  fMatchTree->Branch("Lflsh_crthitkey_vec", &fLflsh_crthitkey_vec);
+  fMatchTree->Branch("Lflsh_crtspkey_vec", &fLflsh_crtspkey_vec);
   fMatchTree->Branch("Lflsh_crttrkkey_vec", &fLflsh_crttrkkey_vec);
   fMatchTree->Branch("Lflsh_crttime_t1_vec", &fLflsh_crttime_t1_vec);
-  fMatchTree->Branch("Lflsh_crttime_t0_vec", &fLflsh_crttime_t0_vec);
+  //  fMatchTree->Branch("Lflsh_crttime_t0_vec", &fLflsh_crttime_t0_vec);
   fMatchTree->Branch("Lflsh_crtpos_X_vec", &fLflsh_crtpos_X_vec);
   fMatchTree->Branch("Lflsh_crtpos_Y_vec", &fLflsh_crtpos_Y_vec);
   fMatchTree->Branch("Lflsh_crtpos_Z_vec", &fLflsh_crtpos_Z_vec);
@@ -470,10 +468,10 @@ void ToFAnalyzer::beginJob(){
   fMatchTree->Branch("Cflsh_tof_vec", &fCflsh_tof_vec);
   fMatchTree->Branch("Cflsh_frmtrk_vec", &fCflsh_frmtrk_vec);
   fMatchTree->Branch("Cflsh_frmhit_vec", &fCflsh_frmhit_vec);
-  fMatchTree->Branch("Cflsh_crthitkey_vec", &fCflsh_crthitkey_vec);
+  fMatchTree->Branch("Cflsh_crtspkey_vec", &fCflsh_crtspkey_vec);
   fMatchTree->Branch("Cflsh_crttrkkey_vec", &fCflsh_crttrkkey_vec);
   fMatchTree->Branch("Cflsh_crttime_t1_vec", &fCflsh_crttime_t1_vec);
-  fMatchTree->Branch("Cflsh_crttime_t0_vec", &fCflsh_crttime_t0_vec);
+  //  fMatchTree->Branch("Cflsh_crttime_t0_vec", &fCflsh_crttime_t0_vec);
   fMatchTree->Branch("Cflsh_crtpos_X_vec", &fCflsh_crtpos_X_vec);
   fMatchTree->Branch("Cflsh_crtpos_Y_vec", &fCflsh_crtpos_Y_vec);
   fMatchTree->Branch("Cflsh_crtpos_Z_vec", &fCflsh_crtpos_Z_vec);
@@ -489,10 +487,10 @@ void ToFAnalyzer::beginJob(){
   fMatchTree->Branch("Lflshhit_tof_vec", &fLflshhit_tof_vec);
   fMatchTree->Branch("Lflshhit_frmtrk_vec", &fLflshhit_frmtrk_vec);
   fMatchTree->Branch("Lflshhit_frmhit_vec", &fLflshhit_frmhit_vec);
-  fMatchTree->Branch("Lflshhit_crthitkey_vec", &fLflshhit_crthitkey_vec);
+  fMatchTree->Branch("Lflshhit_crtspkey_vec", &fLflshhit_crtspkey_vec);
   fMatchTree->Branch("Lflshhit_crttrkkey_vec", &fLflshhit_crttrkkey_vec);
   fMatchTree->Branch("Lflshhit_crttime_t1_vec", &fLflshhit_crttime_t1_vec);
-  fMatchTree->Branch("Lflshhit_crttime_t0_vec", &fLflshhit_crttime_t0_vec);
+  //  fMatchTree->Branch("Lflshhit_crttime_t0_vec", &fLflshhit_crttime_t0_vec);
   fMatchTree->Branch("Lflshhit_crtpos_X_vec", &fLflshhit_crtpos_X_vec);
   fMatchTree->Branch("Lflshhit_crtpos_Y_vec", &fLflshhit_crtpos_Y_vec);
   fMatchTree->Branch("Lflshhit_crtpos_Z_vec", &fLflshhit_crtpos_Z_vec);
@@ -510,10 +508,10 @@ void ToFAnalyzer::beginJob(){
   fMatchTree->Branch("Cflshhit_tof_vec", &fCflshhit_tof_vec);
   fMatchTree->Branch("Cflshhit_frmtrk_vec", &fCflshhit_frmtrk_vec);
   fMatchTree->Branch("Cflshhit_frmhit_vec", &fCflshhit_frmhit_vec);
-  fMatchTree->Branch("Cflshhit_crthitkey_vec", &fCflshhit_crthitkey_vec);
+  fMatchTree->Branch("Cflshhit_crtspkey_vec", &fCflshhit_crtspkey_vec);
   fMatchTree->Branch("Cflshhit_crttrkkey_vec", &fCflshhit_crttrkkey_vec);
   fMatchTree->Branch("Cflshhit_crttime_t1_vec", &fCflshhit_crttime_t1_vec);
-  fMatchTree->Branch("Cflshhit_crttime_t0_vec", &fCflshhit_crttime_t0_vec);
+  //  fMatchTree->Branch("Cflshhit_crttime_t0_vec", &fCflshhit_crttime_t0_vec);
   fMatchTree->Branch("Cflshhit_crtpos_X_vec", &fCflshhit_crtpos_X_vec);
   fMatchTree->Branch("Cflshhit_crtpos_Y_vec", &fCflshhit_crtpos_Y_vec);
   fMatchTree->Branch("Cflshhit_crtpos_Z_vec", &fCflshhit_crtpos_Z_vec);
@@ -659,70 +657,75 @@ void ToFAnalyzer::analyze(art::Event const& evt)
  
  //==================================================================
  
- art::Handle< std::vector<sbn::crt::CRTTrack> > crtTrackListHandle;
- std::vector< art::Ptr<sbn::crt::CRTTrack> >    crtTrackList;
+ art::Handle< std::vector<sbnd::crt::CRTTrack> > crtTrackListHandle;
+ std::vector< art::Ptr<sbnd::crt::CRTTrack> >    crtTrackList;
  if( evt.getByLabel(fCrtTrackModuleLabel,crtTrackListHandle))
      art::fill_ptr_vector(crtTrackList, crtTrackListHandle);
  
- art::FindManyP<sbn::crt::CRTHit> findManyHits(crtTrackListHandle, evt, fCrtTrackModuleLabel); 
- std::vector<std::vector<art::Ptr<CRTHit>>> trackhits;
+ art::FindManyP<CRTSpacePoint> findManySPs(crtTrackListHandle, evt, fCrtTrackModuleLabel); 
+ std::vector<std::vector<art::Ptr<CRTSpacePoint>>> tracksps;
  
  //================================================================
  
  for(size_t itrk=0; itrk<crtTrackList.size(); itrk++){
-     std::vector<art::Ptr<CRTHit>> trkhits = findManyHits.at(itrk);
-     std::sort(trkhits.begin(),trkhits.end(),
-     [](const art::Ptr<CRTHit>& a, const art::Ptr<CRTHit>& b)->bool
+     std::vector<art::Ptr<CRTSpacePoint>> trksps = findManySPs.at(itrk);
+     std::sort(trksps.begin(),trksps.end(),
+     [](const art::Ptr<CRTSpacePoint>& a, const art::Ptr<CRTSpacePoint>& b)->bool
      { 
-        return a->ts1_ns < b->ts1_ns; 
+       return a->Time() < b->Time(); 
      });
-     trackhits.push_back(trkhits);
- } // Crt hits coming from are ordered on ascending order by looking into ts1_ns variable
+     tracksps.push_back(trksps);
+ } // Crt space points coming from are ordered on ascending order by looking into ts1_ns variable
  
  //==================================================================
  
- art::Handle< std::vector<sbn::crt::CRTHit> > crtHitListHandle;
- std::vector< art::Ptr<sbn::crt::CRTHit> >    crtHitList;
- if( evt.getByLabel(fCrtHitModuleLabel,crtHitListHandle))
-     art::fill_ptr_vector(crtHitList, crtHitListHandle);
+ art::Handle< std::vector<CRTSpacePoint> > crtSPListHandle;
+ std::vector< art::Ptr<CRTSpacePoint> >    crtSPList;
+ if( evt.getByLabel(fCrtSpacePointModuleLabel,crtSPListHandle))
+     art::fill_ptr_vector(crtSPList, crtSPListHandle);
+
+ art::FindOneP<sbnd::crt::CRTCluster> spToCluster(crtSPListHandle, evt, fCrtSpacePointModuleLabel);
  
- map<int, std::vector<art::Ptr<CRTHit>> > Lhit_tof_crt_hits;
+ map<int, std::vector<art::Ptr<CRTSpacePoint>> > Lhit_tof_crt_sps;
  map<int, std::vector<art::Ptr<recob::OpHit>> > Lhit_tof_op_hits;
  
- map<int, std::vector<art::Ptr<CRTHit>> > Chit_tof_crt_hits;
+ map<int, std::vector<art::Ptr<CRTSpacePoint>> > Chit_tof_crt_sps;
  map<int, std::vector<art::Ptr<recob::OpHit>> > Chit_tof_op_hits;
  
- map<int, std::vector<art::Ptr<CRTHit>> > Lflsh_tof_crt_hits;
+ map<int, std::vector<art::Ptr<CRTSpacePoint>> > Lflsh_tof_crt_sps;
  map<int, std::vector<art::Ptr<recob::OpFlash>> > Lflsh_tof_op_flashes;
  map<int, std::vector<int>> Lflsh_tof_op_tpc;
  
- map<int, std::vector<art::Ptr<CRTHit>> > Cflsh_tof_crt_hits;
+ map<int, std::vector<art::Ptr<CRTSpacePoint>> > Cflsh_tof_crt_sps;
  map<int, std::vector<art::Ptr<recob::OpFlash>> > Cflsh_tof_op_flashes;
  map<int, std::vector<int>> Cflsh_tof_op_tpc;
  
- map<int, std::vector<art::Ptr<CRTHit>> > Lflshhit_tof_crt_hits;
+ map<int, std::vector<art::Ptr<CRTSpacePoint>> > Lflshhit_tof_crt_sps;
  map<int, std::vector<art::Ptr<recob::OpHit>> > Lflshhit_tof_op_hits;
  map<int, std::vector<art::Ptr<recob::OpFlash>> > Lflshhit_tof_op_flashes;
  map<int, std::vector<int>> Lflshhit_tof_op_tpc;
  
- map<int, std::vector<art::Ptr<CRTHit>> > Cflshhit_tof_crt_hits;
+ map<int, std::vector<art::Ptr<CRTSpacePoint>> > Cflshhit_tof_crt_sps;
  map<int, std::vector<art::Ptr<recob::OpHit>> > Cflshhit_tof_op_hits;
  map<int, std::vector<art::Ptr<recob::OpFlash>> > Cflshhit_tof_op_flashes;
  map<int, std::vector<int>> Cflshhit_tof_op_tpc;
  
- map<int, std::vector<art::Ptr<CRTHit>> > True_tof_crt_hits;
+ map<int, std::vector<art::Ptr<CRTSpacePoint>> > True_tof_crt_sps;
  map<int,std::vector<const simb::MCParticle*>> True_tof_sim_particles;
  
- for(auto const& crt : crtHitList){
-     if(!(crt->ts1_ns >= fBeamLow &&  crt->ts1_ns<= fBeamUp)) continue;
-     if(crt->peshit < fCRThitThresh) continue;
+ for(auto const& crt : crtSPList){
+
+   art::Ptr<sbnd::crt::CRTCluster> cluster = spToCluster.at(crt.key());
+
+     if(!(crt->Time() >= fBeamLow &&  crt->Time()<= fBeamUp)) continue;
+     if(crt->PE() < fCRTSpacePointThresh) continue;
      
      bool frm_trk=false;
      int index=0;
      
-     for(auto const& trkhits: trackhits){
-	 for(size_t ihit=0; ihit<trkhits.size(); ihit++){
-	     if(HitCompare(trkhits[ihit],crt)){
+     for(auto const& trksps: tracksps){
+	 for(size_t isp=0; isp<trksps.size(); isp++){
+	     if(SpacePointCompare(trksps[isp],crt)){
 		frm_trk=true;
 		break;
 	     }
@@ -735,14 +738,16 @@ void ToFAnalyzer::analyze(art::Event const& evt)
      
      if(fSaveTrueToFInfo){
 	const cheat::ParticleInventory *inventory_service=lar::providerFrom<cheat::ParticleInventoryService>();
-        int trackID=bt->TrueIdFromTotalEnergy(evt,*crt);
+	sbnd::crt::CRTBackTrackerAlg::TruthMatchMetrics truthMatch=bt->TruthMatching(evt, cluster);
+	int trackID = truthMatch.trackid;
+
 	auto const& simparticles = *evt.getValidHandle<vector<simb::MCParticle>>(fSimLabel);
         map<int,const simb::MCParticle*> particleMap;
 	for(auto const& particle : simparticles) particleMap[particle.TrackId()] = &particle;
 	
 	if(particleMap.find(abs(trackID))!=particleMap.end()){
 	   if(frm_trk){
-	      True_tof_crt_hits[index].push_back(crt);
+	      True_tof_crt_sps[index].push_back(crt);
 	      True_tof_sim_particles[index].push_back(particleMap[abs(trackID)]);
 	   }
 	   else{
@@ -755,7 +760,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                      auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
                      double dprop=(opDetPos - point).R();
 		     double tprop=pos.T() + dprop*LAR_PROP_DELAY;
-		     fTrue_TOF.push_back(crt->ts1_ns-tprop);
+		     fTrue_TOF.push_back(crt->Time()-tprop);
 		     fTrue_TOF_hit.push_back(true);
 		     fTrue_TOF_pdg.push_back(particle->PdgCode());
 		     fTrue_TOF_part_ID.push_back(particle->TrackId());
@@ -781,7 +786,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                         auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
                         double dprop=(opDetPos - point).R();
 		         double tprop=pos.T() + dprop*LAR_PROP_DELAY;
-		         fTrue_TOF.push_back(crt->ts1_ns-tprop);
+		         fTrue_TOF.push_back(crt->Time()-tprop);
 		         fTrue_TOF_hit.push_back(true);
 		         fTrue_TOF_pdg.push_back(particle->PdgCode());
 		         fTrue_TOF_part_ID.push_back(particle->TrackId());
@@ -822,7 +827,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    if(hit->PE()<fHitPeThresh) continue;
 	    double thit = hit->PeakTime()*1e3-fOpDelay;
 	    
-	    if(abs(crt->ts1_ns-thit)<fCoinWindow && hit->PE()>pehit_max){
+	    if(abs(crt->Time()-thit)<fCoinWindow && hit->PE()>pehit_max){
 	       pehit_max = hit->PE();
 	       ophit_index = hit.key();
 	       found_tof = true;
@@ -831,23 +836,23 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	
 	if(found_tof){
 	   if(frm_trk){
-	      Lhit_tof_crt_hits[index].push_back(crt);
+	      Lhit_tof_crt_sps[index].push_back(crt);
 	      Lhit_tof_op_hits[index].push_back(opHitList[ophit_index]);
 	   }
 	   
 	   else{
-	       fLhit_tof_vec.push_back(crt->ts1_ns - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
+               fLhit_tof_vec.push_back(crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
 	       fLhit_frmtrk_vec.push_back(false);
 	       fLhit_frmhit_vec.push_back(true);
-	       fLhit_crthitkey_vec.push_back(crt.key());
+	       fLhit_crtspkey_vec.push_back(crt.key());
 	       fLhit_crttrkkey_vec.push_back(-9999);
-	       fLhit_crttime_t1_vec.push_back(crt->ts1_ns);
-	       fLhit_crttime_t0_vec.push_back(crt->ts0_ns);
-	       fLhit_crtpos_X_vec.push_back(crt->x_pos);
-	       fLhit_crtpos_Y_vec.push_back(crt->y_pos);
-	       fLhit_crtpos_Z_vec.push_back(crt->z_pos);
-	       fLhit_crtpe_vec.push_back(crt->peshit);
-	       fLhit_crttgr_vec.push_back(crt->tagger);
+	       fLhit_crttime_t1_vec.push_back(crt->Time());
+	       //	       fLhit_crttime_t0_vec.push_back(crt->ts0_ns);
+	       fLhit_crtpos_X_vec.push_back(crt->X());
+	       fLhit_crtpos_Y_vec.push_back(crt->Y());
+	       fLhit_crtpos_Z_vec.push_back(crt->Z());
+	       fLhit_crtpe_vec.push_back(crt->PE());
+	       fLhit_crttgr_vec.push_back(cluster->Tagger());
 	       fLhit_pmthitkey_vec.push_back(ophit_index);
 	       fLhit_pmthitT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
                auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
@@ -855,7 +860,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                fLhit_pmthitY_vec.push_back(pos.Y());
                fLhit_pmthitZ_vec.push_back(pos.Z());
 	       fLhit_pmthitpe_vec.push_back(opHitList[ophit_index]->PE());
-	       //std::cout << "CRT time : " << crt->ts1_ns << "  CRT PE : " << crt->peshit << "   CRT Tagger : " << crt->tagger << "\n"; 
+	       //std::cout << "CRT time : " << crt->ts1_ns << "  CRT PE : " << crt->peshit << "   CRT Tagger : " << cluster->Tagger() << "\n"; 
 	   }
 	}
      }
@@ -878,8 +883,8 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    if(hit->PE()<fHitPeThresh) continue;
 	    double thit = hit->PeakTime()*1e3-fOpDelay;
 	    
-	    if(abs(crt->ts1_ns-thit)<fCoinWindow && abs(crt->ts1_ns-thit)<ophit_minTOF){
-	       ophit_minTOF = abs(crt->ts1_ns-thit);
+	    if(abs(crt->Time()-thit)<fCoinWindow && abs(crt->Time()-thit)<ophit_minTOF){
+	       ophit_minTOF = abs(crt->Time()-thit);
 	       ophit_index = hit.key();
 	       found_tof = true;
 	    }
@@ -887,23 +892,23 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	
 	if(found_tof){
 	   if(frm_trk){
-	      Chit_tof_crt_hits[index].push_back(crt);
+	      Chit_tof_crt_sps[index].push_back(crt);
 	      Chit_tof_op_hits[index].push_back(opHitList[ophit_index]);
 	   }
 	   
 	   else{
-	       fChit_tof_vec.push_back(crt->ts1_ns - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
+	       fChit_tof_vec.push_back(crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
 	       fChit_frmtrk_vec.push_back(false);
 	       fChit_frmhit_vec.push_back(true);
-	       fChit_crthitkey_vec.push_back(crt.key());
+	       fChit_crtspkey_vec.push_back(crt.key());
 	       fChit_crttrkkey_vec.push_back(-9999);
-	       fChit_crttime_t1_vec.push_back(crt->ts1_ns);
-	       fChit_crttime_t0_vec.push_back(crt->ts0_ns);
-	       fChit_crtpos_X_vec.push_back(crt->x_pos);
-	       fChit_crtpos_Y_vec.push_back(crt->y_pos);
-	       fChit_crtpos_Z_vec.push_back(crt->z_pos);
-	       fChit_crtpe_vec.push_back(crt->peshit);
-	       fChit_crttgr_vec.push_back(crt->tagger);
+	       fChit_crttime_t1_vec.push_back(crt->Time());
+	       //	       fChit_crttime_t0_vec.push_back(crt->ts0_ns);
+	       fChit_crtpos_X_vec.push_back(crt->X());
+	       fChit_crtpos_Y_vec.push_back(crt->Y());
+	       fChit_crtpos_Z_vec.push_back(crt->Z());
+	       fChit_crtpe_vec.push_back(crt->PE());
+	       fChit_crttgr_vec.push_back(cluster->Tagger());
 	       fChit_pmthitkey_vec.push_back(ophit_index);
 	       fChit_pmthitT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
                auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
@@ -938,7 +943,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->AbsTime()*1e3-fOpDelay;
-		if(abs(crt->ts1_ns-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
+		if(abs(crt->Time()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
 		   peflash_max=flash->TotalPE();
 		   opflash_index = flash.key();	
 		   found_tof = true;
@@ -949,23 +954,23 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	
 	if(found_tof){
 	   if(frm_trk){
-	      Lflsh_tof_crt_hits[index].push_back(crt);
+	      Lflsh_tof_crt_sps[index].push_back(crt);
 	      Lflsh_tof_op_flashes[index].push_back(opFlashLists[flash_tpc][opflash_index]);
 	      Lflsh_tof_op_tpc[index].push_back(flash_tpc);
 	   }
 	   else{
-	       fLflsh_tof_vec.push_back(crt->ts1_ns - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay));
+	       fLflsh_tof_vec.push_back(crt->Time() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay));
 	       fLflsh_frmtrk_vec.push_back(false);
 	       fLflsh_frmhit_vec.push_back(true);
-	       fLflsh_crthitkey_vec.push_back(crt.key());
+	       fLflsh_crtspkey_vec.push_back(crt.key());
 	       fLflsh_crttrkkey_vec.push_back(-9999);
-	       fLflsh_crttime_t1_vec.push_back(crt->ts1_ns);
-	       fLflsh_crttime_t0_vec.push_back(crt->ts0_ns);
-	       fLflsh_crtpos_X_vec.push_back(crt->x_pos);
-	       fLflsh_crtpos_Y_vec.push_back(crt->y_pos);
-	       fLflsh_crtpos_Z_vec.push_back(crt->z_pos);
-	       fLflsh_crtpe_vec.push_back(crt->peshit);
-	       fLflsh_crttgr_vec.push_back(crt->tagger);
+	       fLflsh_crttime_t1_vec.push_back(crt->Time());
+	       //	       fLflsh_crttime_t0_vec.push_back(crt->ts0_ns);
+	       fLflsh_crtpos_X_vec.push_back(crt->X());
+	       fLflsh_crtpos_Y_vec.push_back(crt->Y());
+	       fLflsh_crtpos_Z_vec.push_back(crt->Z());
+	       fLflsh_crtpe_vec.push_back(crt->PE());
+	       fLflsh_crttgr_vec.push_back(cluster->Tagger());
 	       fLflsh_pmtflshtpcID_vec.push_back(flash_tpc);
 	       fLflsh_pmtflshkey_vec.push_back(opflash_index);
 	       fLflsh_pmtflshT_vec.push_back(opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
@@ -999,8 +1004,8 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->Time()*1e3-fOpDelay;
-		if(abs(crt->ts1_ns-tflash)<fCoinWindow && abs(crt->ts1_ns-tflash)<flash_minTOF){
-		   flash_minTOF= abs(crt->ts1_ns-tflash);
+		if(abs(crt->Time()-tflash)<fCoinWindow && abs(crt->Time()-tflash)<flash_minTOF){
+		   flash_minTOF= abs(crt->Time()-tflash);
 		   opflash_index = flash.key();	
 		   found_tof = true;
 		   flash_tpc = flashList.first;
@@ -1010,23 +1015,23 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	
 	if(found_tof){
 	   if(frm_trk){
-	      Cflsh_tof_crt_hits[index].push_back(crt);
+	      Cflsh_tof_crt_sps[index].push_back(crt);
 	      Cflsh_tof_op_flashes[index].push_back(opFlashLists[flash_tpc][opflash_index]);
 	      Cflsh_tof_op_tpc[index].push_back(flash_tpc);
 	   }
 	   else{
-	       fCflsh_tof_vec.push_back(crt->ts1_ns - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay));
+	       fCflsh_tof_vec.push_back(crt->Time() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay));
 	       fCflsh_frmtrk_vec.push_back(false);
 	       fCflsh_frmhit_vec.push_back(true);
-	       fCflsh_crthitkey_vec.push_back(crt.key());
+	       fCflsh_crtspkey_vec.push_back(crt.key());
 	       fCflsh_crttrkkey_vec.push_back(-9999);
-	       fCflsh_crttime_t1_vec.push_back(crt->ts1_ns);
-	       fCflsh_crttime_t0_vec.push_back(crt->ts0_ns);
-	       fCflsh_crtpos_X_vec.push_back(crt->x_pos);
-	       fCflsh_crtpos_Y_vec.push_back(crt->y_pos);
-	       fCflsh_crtpos_Z_vec.push_back(crt->z_pos);
-	       fCflsh_crtpe_vec.push_back(crt->peshit);
-	       fCflsh_crttgr_vec.push_back(crt->tagger);
+	       fCflsh_crttime_t1_vec.push_back(crt->Time());
+	       //	       fCflsh_crttime_t0_vec.push_back(crt->ts0_ns);
+	       fCflsh_crtpos_X_vec.push_back(crt->X());
+	       fCflsh_crtpos_Y_vec.push_back(crt->Y());
+	       fCflsh_crtpos_Z_vec.push_back(crt->Z());
+	       fCflsh_crtpe_vec.push_back(crt->PE());
+	       fCflsh_crttgr_vec.push_back(cluster->Tagger());
 	       fCflsh_pmtflshtpcID_vec.push_back(flash_tpc);
 	       fCflsh_pmtflshkey_vec.push_back(opflash_index);
 	       fCflsh_pmtflshT_vec.push_back(opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
@@ -1067,7 +1072,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->AbsTime()*1e3-fOpDelay;
-		if(abs(crt->ts1_ns-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
+		if(abs(crt->Time()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
 		   peflash_max=flash->TotalPE();
 		   opflash_index = flash.key();	
 		   found_tof = true;
@@ -1087,25 +1092,25 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	
 	if(found_tof){
 	   if(frm_trk){	    
-	       Lflshhit_tof_crt_hits[index].push_back(crt);
+	       Lflshhit_tof_crt_sps[index].push_back(crt);
 	       Lflshhit_tof_op_flashes[index].push_back(opFlashLists[flash_tpc][opflash_index]);
 	       Lflshhit_tof_op_tpc[index].push_back(flash_tpc);
 	       Lflshhit_tof_op_hits[index].push_back(opHitList[ophit_index]);
 	    }
 	    
 	    else{
-	         fLflshhit_tof_vec.push_back(crt->ts1_ns - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
+	         fLflshhit_tof_vec.push_back(crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
 		 fLflshhit_frmtrk_vec.push_back(false);
                  fLflshhit_frmhit_vec.push_back(true);   
-		 fLflshhit_crthitkey_vec.push_back(crt.key());
+		 fLflshhit_crtspkey_vec.push_back(crt.key());
                  fLflshhit_crttrkkey_vec.push_back(-9999);
-                 fLflshhit_crttime_t1_vec.push_back(crt->ts1_ns);
-                 fLflshhit_crttime_t0_vec.push_back(crt->ts0_ns);
-                 fLflshhit_crtpos_X_vec.push_back(crt->x_pos);
-                 fLflshhit_crtpos_Y_vec.push_back(crt->y_pos);
-                 fLflshhit_crtpos_Z_vec.push_back(crt->z_pos);
-                 fLflshhit_crtpe_vec.push_back(crt->peshit);
-                 fLflshhit_crttgr_vec.push_back(crt->tagger);
+                 fLflshhit_crttime_t1_vec.push_back(crt->Time());
+		 //                 fLflshhit_crttime_t0_vec.push_back(crt->ts0_ns);
+                 fLflshhit_crtpos_X_vec.push_back(crt->X());
+                 fLflshhit_crtpos_Y_vec.push_back(crt->Y());
+                 fLflshhit_crtpos_Z_vec.push_back(crt->Z());
+                 fLflshhit_crtpe_vec.push_back(crt->PE());
+		 fLflshhit_crttgr_vec.push_back(cluster->Tagger());
 		 fLflshhit_pmtflshtpcID_vec.push_back(flash_tpc);
                  fLflshhit_pmtflshkey_vec.push_back(opflash_index);
                  fLflshhit_pmtkey_vec.push_back(ophit_index);
@@ -1149,8 +1154,8 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->AbsTime()*1e3-fOpDelay;
-		if(abs(crt->ts1_ns-tflash)<fCoinWindow && abs(crt->ts1_ns-tflash)<flash_minTOF){
-		   flash_minTOF= abs(crt->ts1_ns-tflash);
+		if(abs(crt->Time()-tflash)<fCoinWindow && abs(crt->Time()-tflash)<flash_minTOF){
+		   flash_minTOF= abs(crt->Time()-tflash);
 		   opflash_index = flash.key();	
 		   found_tof = true;
 		   flash_tpc = flashList.first;
@@ -1169,25 +1174,25 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	
 	if(found_tof){
 	   if(frm_trk){	    
-	       Cflshhit_tof_crt_hits[index].push_back(crt);
+	       Cflshhit_tof_crt_sps[index].push_back(crt);
 	       Cflshhit_tof_op_flashes[index].push_back(opFlashLists[flash_tpc][opflash_index]);
 	       Cflshhit_tof_op_tpc[index].push_back(flash_tpc);
 	       Cflshhit_tof_op_hits[index].push_back(opHitList[ophit_index]);
 	    }
 	    
 	    else{
-	         fCflshhit_tof_vec.push_back(crt->ts1_ns - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
+	         fCflshhit_tof_vec.push_back(crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
 		 fCflshhit_frmtrk_vec.push_back(false);
                  fCflshhit_frmhit_vec.push_back(true);   
-		 fCflshhit_crthitkey_vec.push_back(crt.key());
+		 fCflshhit_crtspkey_vec.push_back(crt.key());
                  fCflshhit_crttrkkey_vec.push_back(-9999);
-                 fCflshhit_crttime_t1_vec.push_back(crt->ts1_ns);
-                 fCflshhit_crttime_t0_vec.push_back(crt->ts0_ns);
-                 fCflshhit_crtpos_X_vec.push_back(crt->x_pos);
-                 fCflshhit_crtpos_Y_vec.push_back(crt->y_pos);
-                 fCflshhit_crtpos_Z_vec.push_back(crt->z_pos);
-                 fCflshhit_crtpe_vec.push_back(crt->peshit);
-                 fCflshhit_crttgr_vec.push_back(crt->tagger);
+                 fCflshhit_crttime_t1_vec.push_back(crt->Time());
+		 //                 fCflshhit_crttime_t0_vec.push_back(crt->ts0_ns);
+                 fCflshhit_crtpos_X_vec.push_back(crt->X());
+                 fCflshhit_crtpos_Y_vec.push_back(crt->Y());
+                 fCflshhit_crtpos_Z_vec.push_back(crt->Z());
+                 fCflshhit_crtpe_vec.push_back(crt->PE());
+		 fCflshhit_crttgr_vec.push_back(cluster->Tagger());
 		 fCflshhit_pmtflshtpcID_vec.push_back(flash_tpc);
                  fCflshhit_pmtflshkey_vec.push_back(opflash_index);
                  fCflshhit_pmtkey_vec.push_back(ophit_index);
@@ -1209,31 +1214,32 @@ void ToFAnalyzer::analyze(art::Event const& evt)
  //============================== Calculating ToF using largest optical hit =========================
  
  if(fLhit){
-    if(!Lhit_tof_crt_hits.empty()){
-       for (auto& ele: Lhit_tof_crt_hits){
+    if(!Lhit_tof_crt_sps.empty()){
+       for (auto& ele: Lhit_tof_crt_sps){
 	    double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
             for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    } 
 	    
-	    fLhit_tof_vec.push_back(trackhits[ele.first].front()->ts1_ns - (Lhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
+	    fLhit_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Lhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
 	    fLhit_frmtrk_vec.push_back(true);
 	    fLhit_frmhit_vec.push_back(false);
-	    fLhit_crthitkey_vec.push_back(trackhits[ele.first].front().key());
+	    fLhit_crtspkey_vec.push_back(tracksps[ele.first].front().key());
 	    fLhit_crttrkkey_vec.push_back(ele.first);
-	    fLhit_crttime_t1_vec.push_back(trackhits[ele.first].front()->ts1_ns);
-	    fLhit_crttime_t0_vec.push_back(trackhits[ele.first].front()->ts0_ns);
-	    fLhit_crtpos_X_vec.push_back(trackhits[ele.first].front()->x_pos);
-	    fLhit_crtpos_Y_vec.push_back(trackhits[ele.first].front()->y_pos);
-	    fLhit_crtpos_Z_vec.push_back(trackhits[ele.first].front()->z_pos);
-	    fLhit_crtpe_vec.push_back(trackhits[ele.first].front()->peshit);
-	    fLhit_crttgr_vec.push_back(trackhits[ele.first].front()->tagger);
+	    fLhit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    //	    fLhit_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
+	    fLhit_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
+	    fLhit_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
+	    fLhit_crtpos_Z_vec.push_back(tracksps[ele.first].front()->Z());
+	    fLhit_crtpe_vec.push_back(tracksps[ele.first].front()->PE());
+	    const art::Ptr<sbnd::crt::CRTCluster> clstr = spToCluster.at(tracksps[ele.first].front().key());
+	    fLhit_crttgr_vec.push_back(clstr->Tagger());
 	    fLhit_pmthitkey_vec.push_back(Lhit_tof_op_hits[ele.first][min_index].key());
 	    fLhit_pmthitT_vec.push_back(Lhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
             auto const pos = fGeometryService->OpDetGeoFromOpChannel(Lhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
@@ -1250,31 +1256,32 @@ void ToFAnalyzer::analyze(art::Event const& evt)
  //============================== Calculating ToF using closest optical hit =========================
  
  if(fChit){
-    if(!Chit_tof_crt_hits.empty()){
-       for (auto& ele: Chit_tof_crt_hits){
+    if(!Chit_tof_crt_sps.empty()){
+       for (auto& ele: Chit_tof_crt_sps){
 	    double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
             for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    } 
 	    
-	    fChit_tof_vec.push_back(trackhits[ele.first].front()->ts1_ns - (Chit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
+	    fChit_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Chit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
 	    fChit_frmtrk_vec.push_back(true);
 	    fChit_frmhit_vec.push_back(false);
-	    fChit_crthitkey_vec.push_back(trackhits[ele.first].front().key());
+	    fChit_crtspkey_vec.push_back(tracksps[ele.first].front().key());
 	    fChit_crttrkkey_vec.push_back(ele.first);
-	    fChit_crttime_t1_vec.push_back(trackhits[ele.first].front()->ts1_ns);
-	    fChit_crttime_t0_vec.push_back(trackhits[ele.first].front()->ts0_ns);
-	    fChit_crtpos_X_vec.push_back(trackhits[ele.first].front()->x_pos);
-	    fChit_crtpos_Y_vec.push_back(trackhits[ele.first].front()->y_pos);
-	    fChit_crtpos_Z_vec.push_back(trackhits[ele.first].front()->z_pos);
-	    fChit_crtpe_vec.push_back(trackhits[ele.first].front()->peshit);
-	    fChit_crttgr_vec.push_back(trackhits[ele.first].front()->tagger);
+	    fChit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    //	    fChit_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
+	    fChit_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
+	    fChit_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
+	    fChit_crtpos_Z_vec.push_back(tracksps[ele.first].front()->Z());
+	    fChit_crtpe_vec.push_back(tracksps[ele.first].front()->PE());
+	    const art::Ptr<sbnd::crt::CRTCluster> clstr = spToCluster.at(tracksps[ele.first].front().key());
+	    fChit_crttgr_vec.push_back(clstr->Tagger());
 	    fChit_pmthitkey_vec.push_back(Chit_tof_op_hits[ele.first][min_index].key());
 	    fChit_pmthitT_vec.push_back(Chit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
             auto const pos = fGeometryService->OpDetGeoFromOpChannel(Chit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
@@ -1291,31 +1298,32 @@ void ToFAnalyzer::analyze(art::Event const& evt)
  //============================== Calculating ToF using largest optical flash =======================
  
  if(fLFlash){
-    if(!Lflsh_tof_crt_hits.empty()){
-       for (auto& ele: Lflsh_tof_crt_hits){
+    if(!Lflsh_tof_crt_sps.empty()){
+       for (auto& ele: Lflsh_tof_crt_sps){
             double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
-	    fLflsh_tof_vec.push_back(trackhits[ele.first].front()->ts1_ns - (Lflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay));
+	    fLflsh_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Lflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay));
 	    fLflsh_frmtrk_vec.push_back(true);
 	    fLflsh_frmhit_vec.push_back(false);
-	    fLflsh_crthitkey_vec.push_back(trackhits[ele.first].front().key());
+	    fLflsh_crtspkey_vec.push_back(tracksps[ele.first].front().key());
 	    fLflsh_crttrkkey_vec.push_back(ele.first);
-	    fLflsh_crttime_t1_vec.push_back(trackhits[ele.first].front()->ts1_ns);
-	    fLflsh_crttime_t0_vec.push_back(trackhits[ele.first].front()->ts0_ns);
-	    fLflsh_crtpos_X_vec.push_back(trackhits[ele.first].front()->x_pos);
-	    fLflsh_crtpos_Y_vec.push_back(trackhits[ele.first].front()->y_pos);
-	    fLflsh_crtpos_Z_vec.push_back(trackhits[ele.first].front()->z_pos);
-	    fLflsh_crtpe_vec.push_back(trackhits[ele.first].front()->peshit);
-	    fLflsh_crttgr_vec.push_back(trackhits[ele.first].front()->tagger);
+	    fLflsh_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    //	    fLflsh_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
+	    fLflsh_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
+	    fLflsh_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
+	    fLflsh_crtpos_Z_vec.push_back(tracksps[ele.first].front()->Z());
+	    fLflsh_crtpe_vec.push_back(tracksps[ele.first].front()->PE());
+	    const art::Ptr<sbnd::crt::CRTCluster> clstr = spToCluster.at(tracksps[ele.first].front().key());
+	    fLflsh_crttgr_vec.push_back(clstr->Tagger());
 	    fLflsh_pmtflshtpcID_vec.push_back(Lflsh_tof_op_tpc[ele.first][min_index]);
 	    fLflsh_pmtflshkey_vec.push_back(Lflsh_tof_op_flashes[ele.first][min_index].key());
 	    fLflsh_pmtflshT_vec.push_back(Lflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay);
@@ -1331,31 +1339,32 @@ void ToFAnalyzer::analyze(art::Event const& evt)
  //============================== Calculating ToF using closest optical flash =======================
  
  if(fCFlash){
-    if(!Cflsh_tof_crt_hits.empty()){
-       for (auto& ele: Cflsh_tof_crt_hits){
+    if(!Cflsh_tof_crt_sps.empty()){
+       for (auto& ele: Cflsh_tof_crt_sps){
             double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
-	    fCflsh_tof_vec.push_back(trackhits[ele.first].front()->ts1_ns - (Cflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay));
+	    fCflsh_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Cflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay));
 	    fCflsh_frmtrk_vec.push_back(true);
 	    fCflsh_frmhit_vec.push_back(false);
-	    fCflsh_crthitkey_vec.push_back(trackhits[ele.first].front().key());
+	    fCflsh_crtspkey_vec.push_back(tracksps[ele.first].front().key());
 	    fCflsh_crttrkkey_vec.push_back(ele.first);
-	    fCflsh_crttime_t1_vec.push_back(trackhits[ele.first].front()->ts1_ns);
-	    fCflsh_crttime_t0_vec.push_back(trackhits[ele.first].front()->ts0_ns);
-	    fCflsh_crtpos_X_vec.push_back(trackhits[ele.first].front()->x_pos);
-	    fCflsh_crtpos_Y_vec.push_back(trackhits[ele.first].front()->y_pos);
-	    fCflsh_crtpos_Z_vec.push_back(trackhits[ele.first].front()->z_pos);
-	    fCflsh_crtpe_vec.push_back(trackhits[ele.first].front()->peshit);
-	    fCflsh_crttgr_vec.push_back(trackhits[ele.first].front()->tagger);
+	    fCflsh_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    //	    fCflsh_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
+	    fCflsh_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
+	    fCflsh_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
+	    fCflsh_crtpos_Z_vec.push_back(tracksps[ele.first].front()->Z());
+	    fCflsh_crtpe_vec.push_back(tracksps[ele.first].front()->PE());
+	    const art::Ptr<sbnd::crt::CRTCluster> clstr = spToCluster.at(tracksps[ele.first].front().key());
+	    fCflsh_crttgr_vec.push_back(clstr->Tagger());
 	    fCflsh_pmtflshtpcID_vec.push_back(Cflsh_tof_op_tpc[ele.first][min_index]);
 	    fCflsh_pmtflshkey_vec.push_back(Cflsh_tof_op_flashes[ele.first][min_index].key());
 	    fCflsh_pmtflshT_vec.push_back(Cflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay);
@@ -1371,31 +1380,32 @@ void ToFAnalyzer::analyze(art::Event const& evt)
  //=============Calculation ToF values using Earliest hit of the Largest flash =====================
  
  if(fLFlash_hit){
-    if(!Lflshhit_tof_crt_hits.empty()){
-       for (auto& ele: Lflshhit_tof_crt_hits){
+    if(!Lflshhit_tof_crt_sps.empty()){
+       for (auto& ele: Lflshhit_tof_crt_sps){
             double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
-	    fLflshhit_tof_vec.push_back(trackhits[ele.first].front()->ts1_ns - (Lflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
+	    fLflshhit_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Lflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
             fLflshhit_frmtrk_vec.push_back(true);
             fLflshhit_frmhit_vec.push_back(false);   
-            fLflshhit_crthitkey_vec.push_back(trackhits[ele.first].front().key());
+            fLflshhit_crtspkey_vec.push_back(tracksps[ele.first].front().key());
             fLflshhit_crttrkkey_vec.push_back(ele.first);
-            fLflshhit_crttime_t1_vec.push_back(trackhits[ele.first].front()->ts1_ns);
-            fLflshhit_crttime_t0_vec.push_back(trackhits[ele.first].front()->ts0_ns);
-            fLflshhit_crtpos_X_vec.push_back(trackhits[ele.first].front()->x_pos);
-            fLflshhit_crtpos_Y_vec.push_back(trackhits[ele.first].front()->y_pos);
-            fLflshhit_crtpos_Z_vec.push_back(trackhits[ele.first].front()->z_pos);
-            fLflshhit_crtpe_vec.push_back(trackhits[ele.first].front()->peshit);
-            fLflshhit_crttgr_vec.push_back(trackhits[ele.first].front()->tagger);
+	    fLflshhit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    //            fLflshhit_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
+            fLflshhit_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
+            fLflshhit_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
+            fLflshhit_crtpos_Z_vec.push_back(tracksps[ele.first].front()->Z());
+            fLflshhit_crtpe_vec.push_back(tracksps[ele.first].front()->PE());
+	    const art::Ptr<sbnd::crt::CRTCluster> clstr = spToCluster.at(tracksps[ele.first].front().key());
+	    fLflshhit_crttgr_vec.push_back(clstr->Tagger());
             fLflshhit_pmtflshtpcID_vec.push_back(Lflshhit_tof_op_tpc[ele.first][min_index]);
             fLflshhit_pmtflshkey_vec.push_back(Lflshhit_tof_op_flashes[ele.first][min_index].key());
             fLflshhit_pmtkey_vec.push_back(Lflshhit_tof_op_hits[ele.first][min_index].key());
@@ -1414,31 +1424,32 @@ void ToFAnalyzer::analyze(art::Event const& evt)
  //=============Calculation ToF values using Earliest hit of the Closest flash =======================
  
  if(fCFlash_hit){
-    if(!Cflshhit_tof_crt_hits.empty()){
-       for (auto& ele: Cflshhit_tof_crt_hits){
+    if(!Cflshhit_tof_crt_sps.empty()){
+       for (auto& ele: Cflshhit_tof_crt_sps){
             double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
-	    fCflshhit_tof_vec.push_back(trackhits[ele.first].front()->ts1_ns - (Cflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
+	    fCflshhit_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Cflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
             fCflshhit_frmtrk_vec.push_back(true);
             fCflshhit_frmhit_vec.push_back(false);   
-            fCflshhit_crthitkey_vec.push_back(trackhits[ele.first].front().key());
+            fCflshhit_crtspkey_vec.push_back(tracksps[ele.first].front().key());
             fCflshhit_crttrkkey_vec.push_back(ele.first);
-            fCflshhit_crttime_t1_vec.push_back(trackhits[ele.first].front()->ts1_ns);
-            fCflshhit_crttime_t0_vec.push_back(trackhits[ele.first].front()->ts0_ns);
-            fCflshhit_crtpos_X_vec.push_back(trackhits[ele.first].front()->x_pos);
-            fCflshhit_crtpos_Y_vec.push_back(trackhits[ele.first].front()->y_pos);
-            fCflshhit_crtpos_Z_vec.push_back(trackhits[ele.first].front()->z_pos);
-            fCflshhit_crtpe_vec.push_back(trackhits[ele.first].front()->peshit);
-            fCflshhit_crttgr_vec.push_back(trackhits[ele.first].front()->tagger);
+            fCflshhit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    //            fCflshhit_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
+            fCflshhit_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
+            fCflshhit_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
+            fCflshhit_crtpos_Z_vec.push_back(tracksps[ele.first].front()->Z());
+            fCflshhit_crtpe_vec.push_back(tracksps[ele.first].front()->PE());
+	    const art::Ptr<sbnd::crt::CRTCluster> clstr = spToCluster.at(tracksps[ele.first].front().key());
+	    fCflshhit_crttgr_vec.push_back(clstr->Tagger());
             fCflshhit_pmtflshtpcID_vec.push_back(Cflshhit_tof_op_tpc[ele.first][min_index]);
             fCflshhit_pmtflshkey_vec.push_back(Cflshhit_tof_op_flashes[ele.first][min_index].key());
             fCflshhit_pmtkey_vec.push_back(Cflshhit_tof_op_hits[ele.first][min_index].key());
@@ -1457,15 +1468,15 @@ void ToFAnalyzer::analyze(art::Event const& evt)
  //=============Calculation ToF values uisng truth level information ================================
  
  if(fSaveTrueToFInfo){
-    if(!True_tof_crt_hits.empty()){
+    if(!True_tof_crt_sps.empty()){
        const cheat::ParticleInventory *inventory_service=lar::providerFrom<cheat::ParticleInventoryService>();
-       for (auto& ele: True_tof_crt_hits){
+       for (auto& ele: True_tof_crt_sps){
             double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
@@ -1479,7 +1490,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                    auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
                    double dprop=(opDetPos - point).R();
 		   double tprop=pos.T() + dprop*LAR_PROP_DELAY;
-		   fTrue_TOF.push_back(trackhits[ele.first].front()->ts1_ns-tprop);
+		   fTrue_TOF.push_back(tracksps[ele.first].front()->Time()-tprop);
 		   fTrue_TOF_hit.push_back(false);
 		   fTrue_TOF_pdg.push_back(True_tof_sim_particles[ele.first][min_index]->PdgCode());
 		   fTrue_TOF_part_ID.push_back(True_tof_sim_particles[ele.first][min_index]->TrackId());
@@ -1505,7 +1516,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                          auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
                          double dprop=(opDetPos - point).R();
 		         double tprop=pos.T() + dprop*LAR_PROP_DELAY;
-		         fTrue_TOF.push_back(trackhits[ele.first].front()->ts1_ns-tprop);
+		         fTrue_TOF.push_back(tracksps[ele.first].front()->Time()-tprop);
 		         fTrue_TOF_hit.push_back(false);
 		         fTrue_TOF_pdg.push_back(True_tof_sim_particles[ele.first][min_index]->PdgCode());
 		         fTrue_TOF_part_ID.push_back(True_tof_sim_particles[ele.first][min_index]->TrackId());
@@ -1532,16 +1543,14 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 } // End of Analyze function
 
 //==========================================================================================
-bool ToFAnalyzer::HitCompare(const art::Ptr<CRTHit>& hit1, const art::Ptr<CRTHit>& hit2) {
-     if(hit1->ts1_ns != hit2->ts1_ns) return false;
-     if(hit1->plane  != hit2->plane) return false;
-     if(hit1->x_pos  != hit2->x_pos) return false;
-     if(hit1->y_pos  != hit2->y_pos) return false;
-     if(hit1->z_pos  != hit2->z_pos) return false;
-     if(hit1->x_err  != hit2->x_err) return false;
-     if(hit1->y_err  != hit2->y_err) return false;
-     if(hit1->z_err  != hit2->z_err) return false;
-     if(hit1->tagger != hit2->tagger) return false;
+bool ToFAnalyzer::SpacePointCompare(const art::Ptr<CRTSpacePoint>& sp1, const art::Ptr<CRTSpacePoint>& sp2) {
+     if(sp1->Time()     != sp2->Time())     return false;
+     if(sp1->Pos()      != sp2->Pos())      return false;
+     if(sp1->Err()      != sp2->Err())      return false;
+     if(sp1->PE()       != sp2->PE())       return false;
+     if(sp1->TimeErr()  != sp2->TimeErr())  return false;
+     if(sp1->Complete() != sp2->Complete()) return false;
+
      return true;
 }
 //===========================================================================================
@@ -1628,10 +1637,10 @@ void ToFAnalyzer::ClearVecs()
    fLhit_tof_vec.clear();
    fLhit_frmtrk_vec.clear();
    fLhit_frmhit_vec.clear();
-   fLhit_crthitkey_vec.clear();
+   fLhit_crtspkey_vec.clear();
    fLhit_crttrkkey_vec.clear();
    fLhit_crttime_t1_vec.clear();
-   fLhit_crttime_t0_vec.clear();
+   //   fLhit_crttime_t0_vec.clear();
    fLhit_crtpos_X_vec.clear();
    fLhit_crtpos_Y_vec.clear();
    fLhit_crtpos_Z_vec.clear();
@@ -1647,10 +1656,10 @@ void ToFAnalyzer::ClearVecs()
    fChit_tof_vec.clear();
    fChit_frmtrk_vec.clear();
    fChit_frmhit_vec.clear();
-   fChit_crthitkey_vec.clear();
+   fChit_crtspkey_vec.clear();
    fChit_crttrkkey_vec.clear();
    fChit_crttime_t1_vec.clear();
-   fChit_crttime_t0_vec.clear();
+   //   fChit_crttime_t0_vec.clear();
    fChit_crtpos_X_vec.clear();
    fChit_crtpos_Y_vec.clear();
    fChit_crtpos_Z_vec.clear();
@@ -1666,10 +1675,10 @@ void ToFAnalyzer::ClearVecs()
    fLflsh_tof_vec.clear();
    fLflsh_frmtrk_vec.clear();
    fLflsh_frmhit_vec.clear();
-   fLflsh_crthitkey_vec.clear();
+   fLflsh_crtspkey_vec.clear();
    fLflsh_crttrkkey_vec.clear();
    fLflsh_crttime_t1_vec.clear();
-   fLflsh_crttime_t0_vec.clear();
+   //   fLflsh_crttime_t0_vec.clear();
    fLflsh_crtpos_X_vec.clear();
    fLflsh_crtpos_Y_vec.clear();
    fLflsh_crtpos_Z_vec.clear();
@@ -1685,10 +1694,10 @@ void ToFAnalyzer::ClearVecs()
    fCflsh_tof_vec.clear();
    fCflsh_frmtrk_vec.clear();
    fCflsh_frmhit_vec.clear();
-   fCflsh_crthitkey_vec.clear();
+   fCflsh_crtspkey_vec.clear();
    fCflsh_crttrkkey_vec.clear();
    fCflsh_crttime_t1_vec.clear();
-   fCflsh_crttime_t0_vec.clear();
+   //   fCflsh_crttime_t0_vec.clear();
    fCflsh_crtpos_X_vec.clear();
    fCflsh_crtpos_Y_vec.clear();
    fCflsh_crtpos_Z_vec.clear();
@@ -1704,10 +1713,10 @@ void ToFAnalyzer::ClearVecs()
    fLflshhit_tof_vec.clear();
    fLflshhit_frmtrk_vec.clear();
    fLflshhit_frmhit_vec.clear();
-   fLflshhit_crthitkey_vec.clear();
+   fLflshhit_crtspkey_vec.clear();
    fLflshhit_crttrkkey_vec.clear();
    fLflshhit_crttime_t1_vec.clear();
-   fLflshhit_crttime_t0_vec.clear();
+   //   fLflshhit_crttime_t0_vec.clear();
    fLflshhit_crtpos_X_vec.clear();
    fLflshhit_crtpos_Y_vec.clear();
    fLflshhit_crtpos_Z_vec.clear();
@@ -1725,10 +1734,10 @@ void ToFAnalyzer::ClearVecs()
    fCflshhit_tof_vec.clear();
    fCflshhit_frmtrk_vec.clear();
    fCflshhit_frmhit_vec.clear();
-   fCflshhit_crthitkey_vec.clear();
+   fCflshhit_crtspkey_vec.clear();
    fCflshhit_crttrkkey_vec.clear();
    fCflshhit_crttime_t1_vec.clear();
-   fCflshhit_crttime_t0_vec.clear();
+   //   fCflshhit_crttime_t0_vec.clear();
    fCflshhit_crtpos_X_vec.clear();
    fCflshhit_crtpos_Y_vec.clear();
    fCflshhit_crtpos_Z_vec.clear();
