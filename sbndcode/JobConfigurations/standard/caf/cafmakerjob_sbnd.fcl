@@ -12,6 +12,9 @@
 
 #include "calorimetry_sbnd.fcl"
 
+# WARNING: CNN module only built for e26 compiler
+#include "sbn_cnnid.fcl"
+
 #include "trackscatterclosestapproach.fcl"
 #include "trackstoppingchi2fitter.fcl"
 #include "showerselectionvarsproducer.fcl"
@@ -48,6 +51,7 @@ services:
   LArPropertiesService:      @local::standard_properties
   DetectorClocksService:     @local::sbnd_services.DetectorClocksService
   DetectorPropertiesService: @local::sbnd_detproperties
+  ChannelStatusService:      @local::sbnd_channelstatus
   ParticleInventoryService:  @local::standard_particleinventoryservice
   BackTrackerService:        @local::standard_backtrackerservice
   SpaceCharge:               @local::sbnd_spacecharge
@@ -84,6 +88,8 @@ physics:
    vertexStub: @local::vertex_stub_sbnd
    crumbs: @local::crumbs_sbnd
 
+   cnnid: @local::cnnid_sbnd
+
    pandoraTrackClosestApproach:          @local::trackscatterclosestapproach_sbn
    pandoraTrackStoppingChi2: @local::trackstoppingchi2fitter_sbn
    pandoraTrackDazzle:       @local::dazzle_sbnd
@@ -104,7 +110,7 @@ physics:
  runprod: [ pandoraTrackMCS, pandoraTrackRange, pandoraShowerSelectionVars,
             vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs,
+            pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs, cnnid,
             cafmaker ]
 # makecaf: [cafmaker] #list the modules for this path, order matters, filters reject all following items
 # stream1: [metadata]
