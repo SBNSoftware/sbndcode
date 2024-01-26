@@ -19,8 +19,6 @@
 #include "sbn_pid.fcl"
 #include "sbn_crumbs_producer.fcl"
 
-#include "crthitconverter_producer.fcl"
-#include "crtmatch_producer.fcl"
 #include "pmtflashtrigger_producer.fcl"
 
 #include "flashmatch_sbnd.fcl"
@@ -81,9 +79,6 @@ physics:
    @table::cafmaker_common_producers
 
    flashtrig: @local::pmtflashtrigmaker_sbnd
-   crtconvhit:            @local::crthitconverter_sbnd
-   pandoraTrackCRTHit:          @local::crthitmatch_sbnd
-   pandoraTrackCRTTrack:  @local::crttrackmatch_sbnd
 
    vertexCharge: @local::vertex_charge_sbnd
    vertexStub: @local::vertex_stub_sbnd
@@ -107,7 +102,7 @@ physics:
 #    metadata: @local::standard_metadata            #prod
   }
  runprod: [ pandoraTrackMCS, pandoraTrackRange, pandoraShowerSelectionVars,
-            pandoraTrackCRTHit, pandoraTrackCRTTrack, vertexCharge, vertexStub,
+            vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
             pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs,
             cafmaker ]

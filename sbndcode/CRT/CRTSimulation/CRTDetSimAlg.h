@@ -39,6 +39,7 @@
 #include <string>
 #include <utility>
 #include <algorithm>
+#include <chrono>
 
 // ROOT includes
 #include "TGeoManager.h"
@@ -49,6 +50,8 @@
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "CRTDetSimParams.h"
+
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
 using std::vector;
 using std::pair;
@@ -88,20 +91,24 @@ struct sbnd::crt::SiPMData {
 /** A struct to temporarily store information on a single CRT Strip.
  */
 struct sbnd::crt::StripData {
-    StripData(uint16_t _mac5, unsigned _planeID, SiPMData _sipm0, SiPMData _sipm1,
-              bool _sipm_coinc, sim::AuxDetIDE _ide) :
+    StripData(uint16_t _mac5, uint16_t _flags, unsigned _orientation, SiPMData _sipm0, SiPMData _sipm1,
+              uint32_t _unixs, bool _sipm_coinc, sim::AuxDetIDE _ide) :
         mac5(_mac5)
-      , planeID(_planeID)
+      , flags(_flags)
+      , orientation(_orientation)
       , sipm0(_sipm0)
       , sipm1(_sipm1)
+      , unixs(_unixs)
       , sipm_coinc(_sipm_coinc)
       , ide(_ide)
     {};
 
     uint16_t mac5; ///< The FEB number this strip is in
-    unsigned planeID; ///< The plane ID (0 or 1 for horizontal or vertical)
+    uint16_t flags; ///< The flags given by the data of this strip
+    unsigned orientation; ///< The orientation of the module (0 or 1 for horizontal or vertical)
     SiPMData sipm0; ///< One SiPM (the one that sees signal first)
     SiPMData sipm1; ///< One SiPM
+    uint32_t unixs; ///< The unix time of the readout
     bool sipm_coinc; ///< Stores the ID of the SiPM that sees signal first (0-31)
     sim::AuxDetIDE ide; ///< The AuxDetIDE associated with this strip
 };
@@ -162,7 +169,7 @@ public:
      *
      * @return Vector of pairs (FEBData, vector of AuxDetIDE)
      */
-    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> GetData();
+    std::vector<std::pair<FEBData, std::vector<AuxDetIDE>>> GetData();
 
     /**
      * Returns the indeces of SiPMs associated to the AuxDetIDEs
@@ -236,9 +243,11 @@ private:
 
     std::map<std::string, Tagger> fTaggers; //!< A list of hit taggers, before any coincidence requirement (name -> tagger)
 
-    std::vector<std::pair<sbnd::crt::FEBData, std::vector<AuxDetIDE>>> fData; //!< This member stores the final FEBData for the CRT simulation
+    std::vector<std::pair<FEBData, std::vector<AuxDetIDE>>> fData; //!< This member stores the final FEBData for the CRT simulation
 
     std::vector<std::vector<int>> fAuxData; //!< This member stores the indeces of SiPM per AuxDetIDE
+
+    CRTGeoAlg fCRTGeoAlg;
 
     /**
      * Configures the waveform by reading waveform points from configuration and
@@ -268,7 +277,7 @@ private:
      * @param sipmID The SiPM index (0-31).
      * @param adc ADC value to be added.
      */
-    void AddADC(sbnd::crt::FEBData & feb_data, const int & sipmID, const uint16_t & adc);
+    void AddADC(FEBData & feb_data, const int & sipmID, const uint16_t & adc);
 
 };
 
