@@ -12,6 +12,7 @@
 
 #include "calorimetry_sbnd.fcl"
 
+# WARNING: CNN module only built for e26 compiler
 #include "sbn_cnnid.fcl"
 
 #include "trackscatterclosestapproach.fcl"
