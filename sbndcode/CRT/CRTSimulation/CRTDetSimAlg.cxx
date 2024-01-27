@@ -590,7 +590,8 @@ namespace crt {
 
         // Propagation time
         double tProp = CLHEP::RandGauss::shoot(fParams.PropDelay(), fParams.PropDelayError()) * r;
-        double t = t0 + tProp + tDelay;
+        //double t = t0 + tProp + tDelay;
+        double t = t0 + tDelay ;//+ tProp;
 
         // Get clock ticks
         // FIXME no clock available for CRTs, have to do it by hand

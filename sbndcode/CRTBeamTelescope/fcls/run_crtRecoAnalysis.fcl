@@ -5,7 +5,7 @@ BEGIN_PROLOG
 
 sbnd_crtPERecoAna:
 {
-    module_type:    "CRTPERecoAnalysis" 
+    module_type:    "CRTRecoAnalysis" 
     CRTHitLabel:     "crthit"
     CRTBackTracker: @local::standard_crtbacktracker
 }
