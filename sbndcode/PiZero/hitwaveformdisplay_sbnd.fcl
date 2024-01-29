@@ -21,9 +21,11 @@ physics:
     hitwaveformdisplay:
     { 
       module_type: "HitWaveformDisplay"
-      SaveDir:     "/sbnd/data/users/hlay/MCP2023B/slice_completeness/23B/waveformanalysis/"
+      SaveDir:     "/exp/sbnd/data/users/hlay/thesis/waveformanalysis/"
       BadHitMode:  false
-      SliceID:     0
+      LineMode:    false
+      SliceID:     -1
+      ChannelIDs:  [ 932, 933, 934, 935, 955, 956, 957, 958, 959, 960, 961, 962, 963, 964, 965, 967, 968, 1001 ]
     }
   }
 
