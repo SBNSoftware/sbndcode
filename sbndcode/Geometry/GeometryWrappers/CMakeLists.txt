@@ -28,6 +28,10 @@ art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
                            ROOT::Geom
                            ROOT::XMLIO
                            ROOT::Gdml
+                           ${ROOT_BASIC_LIB_LIST}
+
+                           sbndcode_CRTUtils
+                           sbnobj::SBND_CRT
                            ROOT::Core
         )
 
