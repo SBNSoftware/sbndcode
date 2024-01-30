@@ -7,7 +7,7 @@ art_make(
          lardataobj::Simulation
          larcore::Geometry_Geometry_service
          nusimdata::SimulationBase
-         sbnobj_SBND_CRT
+         sbnobj::SBND_CRT
 )
 
 install_headers()
