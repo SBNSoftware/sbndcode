@@ -410,6 +410,7 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
 
       canvas->SaveAs(saveLoc + fileName + ".png");
       canvas->SaveAs(saveLoc + fileName + ".pdf");
+      canvas->SaveAs(saveLoc + fileName + ".C");
 
       delete canvas;
     }
