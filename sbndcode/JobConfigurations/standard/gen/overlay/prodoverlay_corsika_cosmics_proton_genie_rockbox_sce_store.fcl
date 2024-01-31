@@ -19,11 +19,9 @@ physics.producers.largeantdropped.FillMCParticlesAssociated: false
 # LArGEANT configuration
 #
 
-physics.producers.largeantnu.StoreDroppedMCParticles: true
 physics.producers.largeantnu.FillSimEnergyDeposits: true #fill sim energy deposits to be merged
 physics.producers.largeantnu.EnergyDepositInstanceLabels: ["LArG4DetectorServicevolTPCActive"] #sed instance label
 
-physics.producers.largeantcosmic.StoreDroppedMCParticles: true
 physics.producers.largeantcosmic.FillSimEnergyDeposits: true #fill sim energy deposits to be merged
 physics.producers.largeantcosmic.EnergyDepositInstanceLabels: ["LArG4DetectorServicevolTPCActive"] #sed instance label
 
