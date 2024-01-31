@@ -115,7 +115,8 @@ public:
   void AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                      const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
                      const art::Handle<std::vector<recob::Track>> &trackHandle,
-                     const art::Handle<std::vector<recob::Shower>> &showerHandle);
+                     const art::Handle<std::vector<recob::Shower>> &showerHandle,
+                     const art::Handle<std::vector<recob::Hit>> &hitHandle);
 
   void AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const std::vector<art::Ptr<recob::PFParticle>> &pfps,
                    const std::vector<art::Ptr<recob::Hit>> &sliceHits, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
@@ -127,7 +128,8 @@ public:
                      const art::Handle<std::vector<recob::Shower>> &showerHandle, const art::Ptr<recob::Vertex> &vtx,
                      const std::vector<art::Ptr<recob::Hit>> &hits);
   void AnalyseSliceTruth(const art::Event &e, const art::Ptr<recob::Slice> &slc, const int slcCounter,
-                         const art::Handle<std::vector<recob::Slice>> &sliceHandle);
+                         const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+                         const art::Handle<std::vector<recob::Hit>> &hitHandle);
 
   void ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, const int slcCounter, const int pfpCounter);
   void ExtractCalo(const art::Ptr<anab::Calorimetry> &calo, const int slcCounter, const int pfpCounter);
@@ -211,7 +213,7 @@ private:
   TProfile* fShowerEnergyCorrectionHist;
 
   std::map<int, int> fHitsMap;
-  std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap;
+  std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap, fNuHitsMapSP;
   std::map<int, art::Ptr<recob::PFParticle>> fPFPMap;
   std::map<int, std::set<art::Ptr<recob::PFParticle>>> fRecoPFPMap;
 
@@ -400,7 +402,9 @@ private:
     { "slc_true_event_type_Xp0pi", new InhVecVar<int>("slc_true_event_type_Xp0pi") },
     { "slc_true_signal", new InhVecVar<bool>("slc_true_signal") },
     { "slc_comp", new InhVecVar<float>("slc_comp") },
+    { "slc_comp_sp_only", new InhVecVar<float>("slc_comp_sp_only") },
     { "slc_pur", new InhVecVar<float>("slc_pur") },
+    { "slc_pur_sp_only", new InhVecVar<float>("slc_pur_sp_only") },
     { "slc_true_en_dep", new InhVecVar<float>("slc_true_en_dep") },
     { "slc_true_pdg", new InhVecVar<int>("slc_true_pdg") },
     { "slc_true_ccnc", new InhVecVar<int>("slc_true_ccnc") },
@@ -901,7 +905,7 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
   }
 
   SetupMaps(e, hitHandle, pfpHandle);
-  AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
+  AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle, hitHandle);
   AnalyseNeutrinos(e, MCTruthHandles);
 
   // Fill the Tree
@@ -912,6 +916,7 @@ void sbnd::NCPiZeroAnalysis::ClearMaps()
 {
   fHitsMap.clear();
   fNuHitsMap.clear();
+  fNuHitsMapSP.clear();
   fPFPMap.clear();
   fRecoPFPMap.clear();
 }
@@ -920,6 +925,8 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
                                        const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
 {
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+  art::FindOneP<recob::SpacePoint> hitsToSPs(hitHandle, e, fSpacePointModuleLabel);
 
   std::vector<art::Ptr<recob::Hit>> hitVec;
   art::fill_ptr_vector(hitVec, hitHandle);
@@ -930,6 +937,10 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
       fHitsMap[trackID]++;
       const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
       fNuHitsMap[mct]++;
+
+      const art::Ptr<recob::SpacePoint> spacepoint = hitsToSPs.at(hit.key());
+      if(spacepoint.isNonnull())
+        fNuHitsMapSP[mct]++;
     }
 
   std::vector<art::Ptr<recob::PFParticle>> pfpVec;
@@ -1349,7 +1360,8 @@ void sbnd::NCPiZeroAnalysis::AnalysePhotonReco(const std::string name, const int
 void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                                            const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
                                            const art::Handle<std::vector<recob::Track>> &trackHandle,
-                                           const art::Handle<std::vector<recob::Shower>> &showerHandle)
+                                           const art::Handle<std::vector<recob::Shower>> &showerHandle,
+                                           const art::Handle<std::vector<recob::Hit>> &hitHandle)
 {
   std::vector<art::Ptr<recob::Slice>> sliceVec;
   art::fill_ptr_vector(sliceVec, sliceHandle);
@@ -1438,7 +1450,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
       SelectSlice(slcCounter);
 
-      AnalyseSliceTruth(e, slc, slcCounter, sliceHandle);
+      AnalyseSliceTruth(e, slc, slcCounter, sliceHandle, hitHandle);
     }
 }
 
@@ -2004,41 +2016,72 @@ void sbnd::NCPiZeroAnalysis::ExtractRazzled(const art::Ptr<sbn::MVAPID> &razzled
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::Ptr<recob::Slice> &slc, const int slcCounter,
-                                               const art::Handle<std::vector<recob::Slice>> &sliceHandle)
+                                               const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+                                               const art::Handle<std::vector<recob::Hit>> &hitHandle)
 {
   art::FindManyP<recob::Hit> slicesToHits(sliceHandle, e, fSliceModuleLabel);
+  art::FindOneP<recob::SpacePoint> hitsToSPs(hitHandle, e, fSpacePointModuleLabel);
 
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
   const std::vector<art::Ptr<recob::Hit>> sliceHits = slicesToHits.at(slc.key());
 
-  std::map<int, int> objectHitMap;
+  int nSPHits = 0;
+  std::map<int, int> objectHitMap, objectHitMapSP;
   for(auto const &hit : sliceHits)
-    objectHitMap[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+    {
+      const art::Ptr<recob::SpacePoint> spacepoint = hitsToSPs.at(hit.key());
+      if(spacepoint.isNonnull())
+        {
+          objectHitMapSP[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+          ++nSPHits;
+        }
 
-  std::map<const art::Ptr<simb::MCTruth>, int> mcTruthHitMap;
+      objectHitMap[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+    }
+
+  std::map<const art::Ptr<simb::MCTruth>, int> mcTruthHitMap, mcTruthHitMapSP;
   for(auto const& [trackID, nhits] : objectHitMap)
     {
       const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
       mcTruthHitMap[mct] += nhits;
     }
+  for(auto const& [trackID, nhits] : objectHitMapSP)
+    {
+      const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
+      mcTruthHitMapSP[mct] += nhits;
+    }
 
-  int maxHits = def_int;
-  art::Ptr<simb::MCTruth> bestMCT = art::Ptr<simb::MCTruth>();
+  int maxHits = def_int, maxHitsSP = def_int;
+  art::Ptr<simb::MCTruth> bestMCT = art::Ptr<simb::MCTruth>(), bestMCTSP = art::Ptr<simb::MCTruth>();
 
   for(auto const& [mct, nhits] : mcTruthHitMap)
     {
       if(nhits > maxHits)
         {
           maxHits = nhits;
-          bestMCT  = mct;
+          bestMCT = mct;
+        }
+    }
+
+  for(auto const& [mct, nhits] : mcTruthHitMapSP)
+    {
+      if(nhits > maxHitsSP)
+        {
+          maxHitsSP = nhits;
+          bestMCTSP = mct;
         }
     }
 
   const float comp = fNuHitsMap[bestMCT] == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(fNuHitsMap[bestMCT]);
   const float pur  = sliceHits.size() == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(sliceHits.size());
 
+  const float compSP = fNuHitsMapSP[bestMCTSP] == 0 ? def_float : mcTruthHitMapSP[bestMCTSP] / static_cast<float>(fNuHitsMapSP[bestMCTSP]);
+  const float purSP  = nSPHits == 0 ? def_float : mcTruthHitMapSP[bestMCTSP] / static_cast<float>(nSPHits);
+
   FillElement(slcVars["slc_comp"], slcCounter, comp);
   FillElement(slcVars["slc_pur"], slcCounter, pur);
+  FillElement(slcVars["slc_comp_sp_only"], slcCounter, compSP);
+  FillElement(slcVars["slc_pur_sp_only"], slcCounter, purSP);
 
   if(fBeamOff)
     {
