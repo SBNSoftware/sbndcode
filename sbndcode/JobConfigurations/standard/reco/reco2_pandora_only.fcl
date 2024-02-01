@@ -4,11 +4,36 @@
 process_name: Reco2
 
 physics.analyzers.vertexana: @local::vertex_ana_sbnd
+physics.analyzers.vertexananorefinement: @local::vertex_ana_sbnd
+physics.analyzers.vertexanacorrectedrefinement: @local::vertex_ana_sbnd
+physics.analyzers.vertexananoweights: @local::vertex_ana_sbnd
+physics.analyzers.vertexanasmootherweights: @local::vertex_ana_sbnd
 
 physics.trigger_paths: [ reco2_pandora_only ]
 
-physics.ana: [ vertexana ]
+physics.ana: [ vertexana,
+               vertexananorefinement,
+               vertexanacorrectedrefinement,
+               vertexananoweights,
+               vertexanasmootherweights
+]
 
 physics.end_paths: [ stream1, ana ]
+
+physics.analyzers.vertexananorefinement.SliceLabel:  "pandoraSCENoRefinement"
+physics.analyzers.vertexananorefinement.PFPLabel:    "pandoraSCENoRefinement"
+physics.analyzers.vertexananorefinement.VertexLabel: "pandoraSCENoRefinement"
+
+physics.analyzers.vertexanacorrectedrefinement.SliceLabel:  "pandoraSCECorrectedRefinement"
+physics.analyzers.vertexanacorrectedrefinement.PFPLabel:    "pandoraSCECorrectedRefinement"
+physics.analyzers.vertexanacorrectedrefinement.VertexLabel: "pandoraSCECorrectedRefinement"
+
+physics.analyzers.vertexananoweights.SliceLabel:  "pandoraSCENoWeights"
+physics.analyzers.vertexananoweights.PFPLabel:    "pandoraSCENoWeights"
+physics.analyzers.vertexananoweights.VertexLabel: "pandoraSCENoWeights"
+
+physics.analyzers.vertexanasmootherweights.SliceLabel:  "pandoraSCESmootherWeights"
+physics.analyzers.vertexanasmootherweights.PFPLabel:    "pandoraSCESmootherWeights"
+physics.analyzers.vertexanasmootherweights.VertexLabel: "pandoraSCESmootherWeights"
 
 #include "enable_spacecharge_services_sbnd.fcl"
