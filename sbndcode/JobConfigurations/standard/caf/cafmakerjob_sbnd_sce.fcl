@@ -13,6 +13,9 @@ physics.producers.cafmaker.SBNDCRTTrackMatchLabel: "crttrackmatchingSCE"
 physics.producers.cafmaker.CRTHitMatchLabel: "pandoraSCETrackCRTHit"
 physics.producers.cafmaker.CRTTrackMatchLabel: "pandoraSCETrackCRTTrack"
 
+physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
+physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"
+
 physics.producers.pandoraTrackMCS.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
 
@@ -25,6 +28,8 @@ physics.producers.pandoraShowerCosmicDist.PandoraLabel: "pandoraSCE"
 physics.producers.pandoraShowerCosmicDist.ShowerLabel:  "pandoraSCEShowerSBN"
 physics.producers.pandoraShowerRazzle.PFPLabel: "pandoraSCE"
 physics.producers.pandoraShowerRazzle.ShowerLabel: "pandoraSCEShowerSBN"
+
+physics.producers.pandoraRazzled: @local::razzled_sbnd_sce
 
 physics.producers.pandoraTrackClosestApproach.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackStoppingChi2.TrackLabel: "pandoraSCETrack"
@@ -54,6 +59,7 @@ physics.producers.crumbs.FlashMatchModuleLabel:    "fmatchSCE"
 physics.producers.crumbs.CalorimetryModuleLabel:   "pandoraSCECalo"
 physics.producers.crumbs.CRTSPMatchModuleLabel:    "crtspacepointmatchingSCE"
 physics.producers.crumbs.CRTTrackMatchModuleLabel: "crttrackmatchingSCE"
+physics.producers.crumbs.OpT0ModuleLabel:          "opt0finderSCE"
 
 physics.producers.crumbs.Chi2FitParams.TrackLabel: "pandoraSCETrack"
 physics.producers.crumbs.Chi2FitParams.CaloLabel:  "pandoraSCECalo"
@@ -61,7 +67,7 @@ physics.producers.crumbs.Chi2FitParams.CaloLabel:  "pandoraSCECalo"
 physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
             fmatchSCE, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
+            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs, cnnid,
             cafmaker ]
 
 # Enable the Space-Charge service

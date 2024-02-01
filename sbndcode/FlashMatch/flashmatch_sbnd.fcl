@@ -10,6 +10,7 @@ sbnd_simple_flashmatch:{
   OpHitProducer: "ophitpmt"
   OpFlashProducer: ["opflashtpc0", "opflashtpc1"]
   OpFlashHitProducer: ["opflashtpc0", "opflashtpc1"]
+  Verbose: false
   BeamSpillTimeStart:       0.1 # us, with some tolerance # TODO: update this when time gets zeroed
   BeamSpillTimeEnd:         1.8  # us, with some tolerance # TODO: update this when time gets zeroed
   FlashFindingTimeStart: -100.   # us # TODO: tune
