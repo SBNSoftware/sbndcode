@@ -4,6 +4,6 @@ BEGIN_PROLOG
 
 sbnd_mcreco: @local::standard_mcreco
 sbnd_mcreco.MCParticleLabel: "largeant"
-sbnd_mcreco.SimChannelLabel: "simdrift"
+sbnd_mcreco.SimChannelLabel: "simtpc2d:simpleSC"
 
 END_PROLOG

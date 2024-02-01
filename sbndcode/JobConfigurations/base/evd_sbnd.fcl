@@ -42,4 +42,4 @@ physics:
 
 
 services.RawDrawingOptions.MinimumSignal:              10.
-services.SimulationDrawingOptions.SimChannelLabel:     "simdrift"
+services.SimulationDrawingOptions.SimChannelLabel:     "simtpc2d:simpleSC"
