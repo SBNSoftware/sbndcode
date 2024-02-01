@@ -240,6 +240,8 @@ physics:
 	        , caloskimCalorimetry
 ]
 
+ reco2_pandora_only: [ rns, pandora, pandoraSCE, pandoraSCETrack, pandoraSCEShower ]
+
 
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
 
@@ -391,4 +393,6 @@ physics.producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSC
 physics.producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandoraSCE"
 physics.producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
 
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"

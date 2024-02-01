@@ -1,0 +1,20 @@
+#include "vertex_ana.fcl"
+#include "reco_sbnd.fcl"
+
+process_name: Reco2
+
+physics.analyzers.vertexana: @local::vertex_ana_sbnd
+
+physics.trigger_paths: [ reco2_pandora_only ]
+
+physics.ana: [ vertexana ]
+
+physics.end_paths: [ stream1, ana ]
+
+physics.producers.pandora.EnableMCParticles:        true
+physics.producers.pandora.SimChannelModuleLabel:    "simtpc2d:simpleSC"
+physics.producers.pandoraSCEShower:                 @local::sbnd_sce_incremental_pandoraModularShowerCreation
+physics.producers.pandoraSCEShower.PFParticleLabel: "pandoraSCE"
+
+
+#include "enable_spacecharge_services_sbnd.fcl"
