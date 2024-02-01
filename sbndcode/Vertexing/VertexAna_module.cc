@@ -67,7 +67,7 @@ private:
 
   int run, subrun, event, slice_id;
   float vtx_x, vtx_y, vtx_z, true_vtx_x, true_vtx_y, true_vtx_z,
-    x_correction, comp, pur, dr;
+    x_correction, comp, pur, dr, dr_x_corr;
   bool is_fv;
 };
 
@@ -96,6 +96,7 @@ sbnd::VertexAna::VertexAna(fhicl::ParameterSet const& p)
     fSliceTree->Branch("comp", &comp);
     fSliceTree->Branch("pur", &pur);
     fSliceTree->Branch("dr", &dr);
+    fSliceTree->Branch("dr_x_corr", &dr_x_corr);
     fSliceTree->Branch("is_fv", &is_fv);
   }
 
@@ -220,6 +221,10 @@ void sbnd::VertexAna::analyze(art::Event const& e)
                        + TMath::Power(vtx_y - true_vtx_y, 2)
                        + TMath::Power(vtx_z - true_vtx_z, 2));
 
+      dr_x_corr = TMath::Sqrt(TMath::Power((vtx_x + x_correction) - true_vtx_x, 2)
+                              + TMath::Power(vtx_y - true_vtx_y, 2)
+                              + TMath::Power(vtx_z - true_vtx_z, 2));
+
       fSliceTree->Fill();
       ++slice_id;
     }
@@ -240,7 +245,8 @@ void sbnd::VertexAna::ClearVars()
   comp = def_float;
   pur  = def_float;
   
-  dr = def_float;
+  dr        = def_float;
+  dr_x_corr = def_float;
 
   is_fv = false;
 }
