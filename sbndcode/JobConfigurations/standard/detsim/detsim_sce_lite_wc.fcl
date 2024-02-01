@@ -5,4 +5,4 @@
 
 #include "detsim_sce_lite.fcl"
 
-physics.simulate: [rns, crtsim, crt, opdaq] # removes the "daq" producer
+physics.simulate: [rns, crtsim, opdaq] # removes the "daq" producer

@@ -28,6 +28,7 @@ physics.reco1: [ rns
    #      , rffhit
    #      , corner
    #      , fuzzycluster
+         , crtstrips
  ]
 
 physics.producers.gaushit.CalDataModuleLabel: "simtpc2d:gauss"
