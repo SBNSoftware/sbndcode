@@ -240,7 +240,7 @@ physics:
 	        , caloskimCalorimetry
 ]
 
- reco2_pandora_only: [ rns, pandora, pandoraSCE, pandoraSCETrack, pandoraSCEShower ]
+ reco2_pandora_only: [ rns, pandora, pandoraSCE ]
 
 
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain

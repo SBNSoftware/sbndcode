@@ -11,10 +11,4 @@ physics.ana: [ vertexana ]
 
 physics.end_paths: [ stream1, ana ]
 
-physics.producers.pandora.EnableMCParticles:        true
-physics.producers.pandora.SimChannelModuleLabel:    "simtpc2d:simpleSC"
-physics.producers.pandoraSCEShower:                 @local::sbnd_sce_incremental_pandoraModularShowerCreation
-physics.producers.pandoraSCEShower.PFParticleLabel: "pandoraSCE"
-
-
 #include "enable_spacecharge_services_sbnd.fcl"

@@ -2,19 +2,10 @@ BEGIN_PROLOG
 
 vertex_ana_sbnd:
 {
-  NuGenModuleLabel:      "generator"
-  CosmicGenModuleLabel:  "corsika"
-  LArGeantModuleLabel:   "largeant"
-  PFParticleModuleLabel: "pandoraSCE"
-  TrackModuleLabel:      "pandoraSCETrack"
-  ShowerModuleLabel:     "pandoraSCEShower"
-  VertexModuleLabel:     "pandoraSCE"
-  HitsModuleLabel:       "gaushit"
-  ClusterModuleLabel:    "pandoraSCE"
-  SpacePointModuleLabel: "pandoraSCE"
-  SliceModuleLabel:      "pandoraSCE"
-  SimChannelModuleLabel: "simtpc2d:simpleSC"
-  ProcessCosmics:        true
+  SliceLabel:  "pandoraSCE"
+  PFPLabel:    "pandoraSCE"
+  VertexLabel: "pandoraSCE"
+  HitLabel:    "gaushit"
 
   module_type: VertexAna
 }
