@@ -555,11 +555,12 @@ namespace crt {
         if (q0 < 0.) q0 = 0.;
         if (q1 < 0.) q1 = 0.;
         
-        std::cout<<"GENNNNNN "<<npeExpected<<" "<<npeProduced<<" "<<npeProduced/npeExpected<<" "<<distToReadout<<std::endl;
+        //std::cout<<"GENNNNNN "<<npeExpected<<" "<<npeProduced<<" "<<npeProduced/npeExpected<<" "<<distToReadout<<std::endl;
 
         mf::LogInfo("CRTSetSimAlg")
             << "CRT CHARGE RESPONSE: eDep = " << eDep
             << ", npeExpected = " << npeExpected
+            << ", npeProduced = " << npeProduced
             << ", npe0 = " << npe0 << " -> q0 = " << q0
             << ", npe1 = " << npe1 << " -> q1 = " << q1 << std::endl;
     }
@@ -568,10 +569,12 @@ namespace crt {
                                              float t0, float npeMean, float r)
     {
         // Hit timing, with smearing and NPE dependence
-        double tDelayMean =
-          fParams.TDelayNorm() *
+        double tDelayMean = 
+            fParams.TDelayNorm() * exp(-fParams.TDelayShift()*npeMean);
+          /*fParams.TDelayNorm() *
             exp(-0.5 * pow((npeMean - fParams.TDelayShift()) / fParams.TDelaySigma(), 2)) +
           fParams.TDelayOffset();
+          */
         double tDelayRMS =
           fParams.TDelayRMSGausNorm() *
             exp(-pow(npeMean - fParams.TDelayRMSGausShift(), 2) / fParams.TDelayRMSGausSigma()) +
@@ -584,25 +587,25 @@ namespace crt {
 
         mf::LogInfo("CRTSetSimAlg")<<"tDelay before interpolator: "<< tDelay <<std::endl;
         // Time resolution of the interpolator
-        tDelay += CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator());
+        // tDelay += CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator());
 
         mf::LogInfo("CRTSetSimAlg")<<"CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator()): "<<CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator())<<"; after interpolator: "<< tDelay <<std::endl;
 
         // Propagation time
         double tProp = CLHEP::RandGauss::shoot(fParams.PropDelay(), fParams.PropDelayError()) * r;
         //double t = t0 + tProp + tDelay;
-        double t = t0 + tDelay ;//+ tProp;
+        double t = t0 + tDelay + tProp;
 
         // Get clock ticks
         // FIXME no clock available for CRTs, have to do it by hand
         //clock.SetTime(t / 1e3);  // SetTime takes microseconds
-        float time = (t / 1e3) * fParams.ClockSpeedCRT();
+        //float time = (t / 1e3) * fParams.ClockSpeedCRT();
 
-        if (time < 0) {
+        if (t < 0) {
           mf::LogWarning("CRTSetSimAlg") << "Time is negative. Check the time offset used." << std::endl;
         }
 
-        uint32_t time_int = static_cast<uint32_t>(time);
+        uint32_t time_int = static_cast<uint32_t>(t);
 
         mf::LogInfo("CRTSetSimAlg")
             << "CRT TIMING: t0 = " << t0 << " (true G4 time)"
@@ -612,7 +615,7 @@ namespace crt {
             << ", tDelay = " << tDelay
             << ", tProp = " << tProp
             << ", t = " << t
-            << ", time = " << time
+            //<< ", time = " << time
             << ", time_int = " << time_int << " (time in uint32_t)" 
             << ", distance to readout = " << r
             << ", tProp/r = " << tProp/r

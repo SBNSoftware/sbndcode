@@ -7,8 +7,8 @@ standard_sbnd_crtsimparams: {
   UseG4RefTimeOffset: true
 
   # Shape parameters for mean time delay vs. Npe
-  TDelayNorm: 4125.74
-  TDelayShift: -300.31
+  TDelayNorm: 15.455 #4125.74
+  TDelayShift: 0.055 #-300.31
   TDelaySigma: 90.392
   TDelayOffset: -1.525
 

@@ -312,9 +312,13 @@ namespace sbnd{
     //    - the propagation delay (dependent on the distance the light needs
     //          to travel along the fibre)
     //    - the time walk effect (dependent on the size of the pulse)
-    double t_TimeWalk = fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset; 
     
-    return (uint32_t)(t_TimeWalk);
+    double t_TimeWalk = fTimeWalkNorm * std::exp(- fTimeWalkShift * pe);
+    //fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset; 
+    //if (t_TimeWalk<0) t_TimeWalk=0;
+    return (uint32_t)(dist * fPropDelay + t_TimeWalk);
+    
+    //return (uint32_t)(t_TimeWalk);
     /*
     mf::LogInfo("CRTHitRecoAlg") << "distance to readout: "<< dist << ", fPropDelay: " << fPropDelay << "TProp: " << dist * fPropDelay << ", walkTime: " << t_TimeWalk << ", pe: " << pe << std::endl;
     if (t_TimeWalk>0.){

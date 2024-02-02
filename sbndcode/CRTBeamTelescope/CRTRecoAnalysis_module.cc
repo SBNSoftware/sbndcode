@@ -48,6 +48,7 @@ private:
   // Declare member data here.
   sbnd::CRTBackTracker _crt_back_tracker;
   std::string _crthit_label;
+  std::string _febdata_label;
   
   bool _debug;
   bool _data_mode;
@@ -70,6 +71,7 @@ private:
   std::vector<double> _chit_y; ///< CRT hit, y position of the hit
   std::vector<double> _chit_z; ///< CRT hit, z position of the hit
   std::vector<double> _chit_t1; ///< CRT hit, time of the hit
+  std::vector<double> _chit_true_t1; ///< CRT hit, time of the hit
 };
 
 
@@ -82,6 +84,7 @@ CRTRecoAnalysis::CRTRecoAnalysis(fhicl::ParameterSet const& p)
   _debug             = p.get<bool>("Debug", false);
   _data_mode         = p.get<bool>("DataMode", false);
   _crt_back_tracker  = p.get<fhicl::ParameterSet>("CRTBackTracker", fhicl::ParameterSet());
+  _febdata_label     = p.get<std::string>("FEBDataLabel", "crtsim");
 
   art::ServiceHandle<art::TFileService> tfs;
   _tree = tfs->make<TTree>("PERecoAnaTree","CRT PE reco analysis tree");
@@ -101,6 +104,7 @@ CRTRecoAnalysis::CRTRecoAnalysis(fhicl::ParameterSet const& p)
     _tree->Branch("chit_backtrack_energy",&_chit_backtrack_energy);
     _tree->Branch("chit_backtrack_deposited_energy",&_chit_backtrack_deposited_energy);
     _tree->Branch("chit_backtrack_purity",&_chit_backtrack_purity);
+    _tree->Branch("chit_true_t1",&_chit_true_t1);
   }
 }
 
@@ -124,6 +128,22 @@ void CRTRecoAnalysis::analyze(art::Event const& e)
   }
   std::vector<art::Ptr<sbn::crt::CRTHit> > crt_hit_v;
   art::fill_ptr_vector(crt_hit_v, crt_hit_h);
+  art::FindManyP<sbnd::crt::FEBData> crt_hit_to_feb_data(crt_hit_h, e, _crthit_label);
+
+  //
+  // Get the FEB Data
+  //
+  art::Handle<std::vector<sbnd::crt::FEBData>> feb_data_h;
+  e.getByLabel(_febdata_label, feb_data_h);
+  if(!feb_data_h.isValid()){
+    std::cout << "FEBData product " << _febdata_label << " not found..." << std::endl;
+    throw std::exception();
+  }
+  art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> *febdata_to_ides;
+  if(!_data_mode) {
+    febdata_to_ides = new art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>(feb_data_h, e, _febdata_label);
+  }
+
   size_t n_crt_hit = crt_hit_v.size();
   if (_debug) std::cout << "CRTRecoAnalysis::analyze: number of CRT hits: " << n_crt_hit << std::endl;
 
@@ -140,6 +160,7 @@ void CRTRecoAnalysis::analyze(art::Event const& e)
     _chit_backtrack_energy.resize(n_crt_hit);
     _chit_backtrack_deposited_energy.resize(n_crt_hit);
     _chit_backtrack_purity.resize(n_crt_hit);
+    _chit_true_t1.resize(n_crt_hit);
   }
 
   for (size_t ihit=0; ihit<n_crt_hit; ++ihit){
@@ -162,6 +183,24 @@ void CRTRecoAnalysis::analyze(art::Event const& e)
     _chit_y[ihit] = crt_hit->y_pos;
     _chit_z[ihit] = crt_hit->z_pos;
     _chit_t1[ihit] = crt_hit->ts1_ns;
+
+    // CRTHit matches to AuxDetIDE.  **To-do** need to find the correct channel for CRT Hits. 
+    auto feb_datas = crt_hit_to_feb_data.at(crt_hit.key()); // Use the Assn to find the AuxDetIDE from FEBData. 
+    if(feb_datas.size() != 2) std::cout << "ERROR: CRTHit associated to " << feb_datas.size() << " FEBDatas" << std::endl;
+
+    if(!_data_mode) {
+      _chit_true_t1[ihit] = 0;
+      size_t n_ides = 0;
+      for (auto feb_data : feb_datas) {
+        auto ide_v = febdata_to_ides->at(feb_data.key());
+        for (auto ide : ide_v) {
+          _chit_true_t1[ihit] += 0.5 * (ide->entryT + ide->exitT);
+          n_ides++;
+        }
+      }
+      _chit_true_t1[ihit] /= n_ides;
+      if (_debug) std::cout << "CRTRecoAnalysis::analyze: true hit time: " << _chit_true_t1[ihit] << "; reco hit time: " << _chit_t1[ihit] - 1.7e6 << std::endl;
+    }
 
     if (!_data_mode){
       const sbnd::CRTBackTracker::TruthMatchMetrics truthMatch = _crt_back_tracker.TruthMatrixFromTotalEnergy(e, crt_hit);
