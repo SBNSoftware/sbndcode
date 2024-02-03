@@ -8,6 +8,7 @@ physics.analyzers.vertexananorefinement: @local::vertex_ana_sbnd
 physics.analyzers.vertexanacorrectedrefinement: @local::vertex_ana_sbnd
 physics.analyzers.vertexananoweights: @local::vertex_ana_sbnd
 physics.analyzers.vertexanasmootherweights: @local::vertex_ana_sbnd
+physics.analyzers.vertexanacentroidpos: @local::vertex_ana_sbnd
 
 physics.trigger_paths: [ reco2_pandora_only ]
 
@@ -15,7 +16,8 @@ physics.ana: [ vertexana,
                vertexananorefinement,
                vertexanacorrectedrefinement,
                vertexananoweights,
-               vertexanasmootherweights
+               vertexanasmootherweights,
+               vertexanacentroidpos
 ]
 
 physics.end_paths: [ stream1, ana ]
@@ -35,5 +37,9 @@ physics.analyzers.vertexananoweights.VertexLabel: "pandoraSCENoWeights"
 physics.analyzers.vertexanasmootherweights.SliceLabel:  "pandoraSCESmootherWeights"
 physics.analyzers.vertexanasmootherweights.PFPLabel:    "pandoraSCESmootherWeights"
 physics.analyzers.vertexanasmootherweights.VertexLabel: "pandoraSCESmootherWeights"
+
+physics.analyzers.vertexanacentroidpos.SliceLabel:  "pandoraSCECentroidPos"
+physics.analyzers.vertexanacentroidpos.PFPLabel:    "pandoraSCECentroidPos"
+physics.analyzers.vertexanacentroidpos.VertexLabel: "pandoraSCECentroidPos"
 
 #include "enable_spacecharge_services_sbnd.fcl"
