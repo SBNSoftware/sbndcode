@@ -68,7 +68,7 @@ private:
   int run, subrun, event, slice_id;
   float vtx_x, vtx_y, vtx_z, true_vtx_x, true_vtx_y, true_vtx_z,
     x_correction, comp, pur, dr, dr_x_corr;
-  bool is_fv;
+  bool is_fv, cc, nc, numu, nue;
 };
 
 
@@ -98,6 +98,10 @@ sbnd::VertexAna::VertexAna(fhicl::ParameterSet const& p)
     fSliceTree->Branch("dr", &dr);
     fSliceTree->Branch("dr_x_corr", &dr_x_corr);
     fSliceTree->Branch("is_fv", &is_fv);
+    fSliceTree->Branch("cc", &cc);
+    fSliceTree->Branch("nc", &nc);
+    fSliceTree->Branch("numu", &numu);
+    fSliceTree->Branch("nue", &nue);
   }
 
 void sbnd::VertexAna::analyze(art::Event const& e)
@@ -190,7 +194,8 @@ void sbnd::VertexAna::analyze(art::Event const& e)
           continue;
         }
 
-      const simb::MCParticle nu = bestMCT->GetNeutrino().Nu();
+      const simb::MCNeutrino mcn = bestMCT->GetNeutrino();
+      const simb::MCParticle nu  = mcn.Nu();
       true_vtx_x = nu.Vx();
       true_vtx_y = nu.Vy();
       true_vtx_z = nu.Vz();
@@ -202,6 +207,11 @@ void sbnd::VertexAna::analyze(art::Event const& e)
 
       if(true_vtx_x < 0)
         x_correction *= -1.;
+
+      cc   = mcn.CCNC() == 0;
+      nc   = !cc;
+      numu = abs(nu.PdgCode()) == 14;
+      nue  = abs(nu.PdgCode()) == 12;
 
       const std::vector<art::Ptr<recob::PFParticle>> slicePFPs = slicesToPFPs.at(slice.key());
 
@@ -249,6 +259,11 @@ void sbnd::VertexAna::ClearVars()
   dr_x_corr = def_float;
 
   is_fv = false;
+
+  cc   = false;
+  nc   = false;
+  numu = false;
+  nue  = false;
 }
 
 DEFINE_ART_MODULE(sbnd::VertexAna)
