@@ -175,15 +175,15 @@ namespace sbnd::crt {
               {
                 const std::array<double, 6> febPos = fCRTGeoAlg.FEBWorldPos(module);
                 
-                double rmin[3] = {febPos[0],
-                                  febPos[2],
-                                  febPos[4]};
+                double rminFEB[3] = {febPos[0],
+                                     febPos[2],
+                                     febPos[4]};
 
-                double rmax[3] = {febPos[1],
-                                  febPos[3],
-                                  febPos[5]};
+                double rmaxFEB[3] = {febPos[1],
+                                     febPos[3],
+                                     febPos[5]};
 
-                DrawCube(c1, rmin, rmax, fFEBColour);
+                DrawCube(c1, rminFEB, rmaxFEB, fFEBColour);
 
                 if(fDrawFEBEnds)
                   {
