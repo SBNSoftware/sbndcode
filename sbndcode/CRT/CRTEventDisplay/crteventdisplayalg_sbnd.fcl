@@ -74,5 +74,6 @@ crteventdisplayalg_sbnd_feb_layout_debug.DrawSimDeposits:  false
 crteventdisplayalg_sbnd_feb_layout_debug.DrawStripHits:    false
 crteventdisplayalg_sbnd_feb_layout_debug.DrawClusters:     false
 crteventdisplayalg_sbnd_feb_layout_debug.DrawSpacePoints:  false
+crteventdisplayalg_sbnd_feb_layout_debug.DrawTracks:       false
 
 END_PROLOG
