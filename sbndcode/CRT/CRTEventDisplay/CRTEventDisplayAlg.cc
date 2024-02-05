@@ -39,7 +39,11 @@ namespace sbnd::crt {
     fChoseTaggers = config.ChoseTaggers();
     fChosenTaggers = config.ChosenTaggers();
 
+    fHighlightModules = config.HighlightModules();
+    fHighlightedModules = config.HighlightedModules();
+
     fTaggerColour = config.TaggerColour();
+    fHighlightColour = config.HighlightColour();
     fFEBColour = config.FEBColour();
     fFEBEndColour = config.FEBEndColour();
     fTpcColour = config.TpcColour();
@@ -136,7 +140,6 @@ namespace sbnd::crt {
     crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
     crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
 
-
     // Draw the CRT taggers
     if(fDrawTaggers)
       {
@@ -151,6 +154,7 @@ namespace sbnd::crt {
             double rmax[3] = {tagger.maxX, 
                               tagger.maxY, 
                               tagger.maxZ};
+
             DrawCube(c1, rmin, rmax, fTaggerColour);
           }
       }
@@ -169,7 +173,13 @@ namespace sbnd::crt {
             double rmax[3] = {module.maxX, 
                               module.maxY, 
                               module.maxZ};
-            DrawCube(c1, rmin, rmax, fTaggerColour);
+
+            if(fHighlightModules && std::find(fHighlightedModules.begin(), fHighlightedModules.end(), module.adID) == fHighlightedModules.end())
+              continue;
+            else if(fHighlightModules)
+              DrawCube(c1, rmin, rmax, fHighlightColour);
+            else
+              DrawCube(c1, rmin, rmax, fTaggerColour);
 
             if(fDrawFEBs)
               {
@@ -217,6 +227,7 @@ namespace sbnd::crt {
             double rmax[3] = {strip.maxX, 
                               strip.maxY, 
                               strip.maxZ};
+
             DrawCube(c1, rmin, rmax, fTaggerColour);
           }
       }
@@ -237,6 +248,7 @@ namespace sbnd::crt {
         double rmax2[3] = {fTPCGeoAlg.MaxX(), 
                            fTPCGeoAlg.MaxY(), 
                            fTPCGeoAlg.MaxZ()};
+
         DrawCube(c1, rmin2, rmax2, fTpcColour);
       }
     
@@ -489,6 +501,66 @@ namespace sbnd::crt {
       }
 
     c1->SaveAs(Form("crtEventDisplayEvent%d.root", event.event()));
+
+    TView3D *view = (TView3D*) TView::CreateView(1);
+    view->SetRange(-500, -500, -200, 500, 500, 800);
+    view->ToggleRulers();
+    TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
+    axis->GetXaxis()->SetTitle("X (W)");
+    axis->GetYaxis()->SetTitle("Y (Up)");
+    axis->GetZaxis()->SetTitle("Z (S)");
+    axis->GetXaxis()->SetAxisColor(kBlack);
+    axis->GetYaxis()->SetAxisColor(kBlack);
+    axis->GetZaxis()->SetAxisColor(kBlack);
+    axis->GetXaxis()->SetLabelColor(kBlack);
+    axis->GetYaxis()->SetLabelColor(kBlack);
+    axis->GetZaxis()->SetLabelColor(kBlack);
+    axis->GetXaxis()->SetLabelSize(0.024);
+    axis->GetYaxis()->SetLabelSize(0.024);
+    axis->GetZaxis()->SetLabelSize(0.024);
+
+    double c[3] = { 0, 0, 250 };
+    double s[3] = { 800, -800, 800 };
+
+    view->DefineViewDirection(s, c,
+                              0, 1,
+                              1, 0,
+                              1, 0,
+                              view->GetTnorm(),
+                              view->GetTback());
+
+    axis->GetXaxis()->SetTitleOffset(2);
+    axis->GetYaxis()->SetTitleOffset(-1.7);
+    axis->GetXaxis()->SetLabelOffset(-0.065);
+    axis->GetYaxis()->SetLabelOffset(-0.2);
+    c1->SaveAs(Form("crtEventDisplayEvent%d_front.png", event.event()));
+
+    view->DefineViewDirection(s, c,
+                              0, 1,
+                              0, 1,
+                              1, 0,
+                              view->GetTnorm(),
+                              view->GetTback());
+
+    axis->GetXaxis()->SetTitleOffset(2);
+    axis->GetZaxis()->SetTitleOffset(-1.7);
+    axis->GetXaxis()->SetLabelOffset(-0.065);
+    axis->GetZaxis()->SetLabelOffset(-0.2);
+    c1->SaveAs(Form("crtEventDisplayEvent%d_top.png", event.event()));
+
+    view->DefineViewDirection(s, c,
+                              1, 0,
+                              0, 1,
+                              0, 1,
+                              view->GetTnorm(),
+                              view->GetTback());
+
+    axis->GetYaxis()->SetTitleOffset(-2);
+    axis->GetZaxis()->SetTitleOffset(-1.7);
+    axis->GetYaxis()->SetLabelOffset(0.005);
+    axis->GetZaxis()->SetLabelOffset(0.005);
+    c1->SaveAs(Form("crtEventDisplayEvent%d_side.png", event.event()));
+
     delete c1;
   }
 

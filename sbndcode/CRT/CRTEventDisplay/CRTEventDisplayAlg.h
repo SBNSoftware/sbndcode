@@ -41,6 +41,8 @@
 // ROOT
 #include "TPolyLine3D.h"
 #include "TCanvas.h"
+#include "TView3D.h"
+#include "TAxis3D.h"
 
 namespace detinfo { class DetectorClocksData; }
 
@@ -131,8 +133,18 @@ namespace sbnd::crt {
         Name("ChosenTaggers")
           };
 
+      fhicl::Atom<bool> HighlightModules {
+        Name("HighlightModules")
+          };
+      fhicl::Sequence<int> HighlightedModules {
+        Name("HighlightedModules")
+          };
+
       fhicl::Atom<int> TaggerColour {
         Name("TaggerColour")
+          };
+      fhicl::Atom<int> HighlightColour {
+        Name("HighlightColour")
           };
       fhicl::Atom<int> FEBColour {
         Name("FEBColour")
@@ -243,7 +255,11 @@ namespace sbnd::crt {
     bool             fChoseTaggers;
     std::vector<int> fChosenTaggers;
 
+    bool             fHighlightModules;
+    std::vector<int> fHighlightedModules;
+
     int fTaggerColour;
+    int fHighlightColour;
     int fFEBColour;
     int fFEBEndColour;
     int fTpcColour;
