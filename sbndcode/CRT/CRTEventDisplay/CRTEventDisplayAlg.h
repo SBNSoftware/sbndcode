@@ -83,6 +83,10 @@ namespace sbnd::crt {
         Name("TrackLabel")
           };
 
+      fhicl::Atom<bool> DataMode {
+	Name("DataMode"),
+        false
+      };
       fhicl::Atom<bool> DrawTaggers {
         Name("DrawTaggers")
           };
@@ -208,7 +212,7 @@ namespace sbnd::crt {
     bool IsPointInsideBox(const std::vector<double> &lims, const geo::Point_t &p);
 
   private:
-    
+
     TPCGeoAlg         fTPCGeoAlg;
     CRTGeoAlg         fCRTGeoAlg;
     CRTBackTrackerAlg fCRTBackTrackerAlg;
@@ -222,6 +226,7 @@ namespace sbnd::crt {
     art::InputTag fSpacePointLabel;
     art::InputTag fTrackLabel;
 
+    bool fDataMode;
     bool fDrawTaggers;
     bool fDrawModules;
     bool fDrawFEBs;
