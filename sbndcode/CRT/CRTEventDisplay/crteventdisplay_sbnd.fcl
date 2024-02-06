@@ -8,10 +8,10 @@ crteventdisplay_sbnd:
    module_type:        "CRTEventDisplay"
 }
 
-crteventdisplay_sbnd_feb_layout_debug:
+crteventdisplay_sbnd_channel_mapping:
 {
-   EventDisplayConfig: @local::crteventdisplayalg_sbnd_feb_layout_debug
-   module_type:        "CRTEventDisplay"
+   EventDisplayConfig: @local::crteventdisplayalg_sbnd_channel_mapping
+   module_type:        "CRTChannelMappingEventDisplay"
 }
 
 END_PROLOG

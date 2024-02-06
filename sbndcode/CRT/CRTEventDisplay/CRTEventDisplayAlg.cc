@@ -103,7 +103,12 @@ namespace sbnd::crt {
     fPrint = tf;
   }
 
-  void CRTEventDisplayAlg::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour)
+  void CRTEventDisplayAlg::SetHighlightedModules(std::vector<int> hm)
+  {
+    fHighlightedModules = hm;
+  }
+
+  void CRTEventDisplayAlg::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour, int lineWidth)
   {
     c1->cd();
     TList *outline = new TList;
@@ -112,7 +117,12 @@ namespace sbnd::crt {
     TPolyLine3D *p3 = new TPolyLine3D(4);
     TPolyLine3D *p4 = new TPolyLine3D(4);
     p1->SetLineColor(colour);
-    p1->SetLineWidth(fLineWidth);
+
+    if(lineWidth == -1)
+      p1->SetLineWidth(fLineWidth);
+    else
+      p1->SetLineWidth(lineWidth);
+
     p1->Copy(*p2);
     p1->Copy(*p3);
     p1->Copy(*p4);
@@ -178,7 +188,10 @@ namespace sbnd::crt {
                               module.maxZ};
 
             if(fHighlightModules && std::find(fHighlightedModules.begin(), fHighlightedModules.end(), module.adID) == fHighlightedModules.end())
-              continue;
+              {
+                DrawCube(c1, rmin, rmax, kGray, 1);
+                continue;
+              }
             else if(fHighlightModules)
               DrawCube(c1, rmin, rmax, fHighlightColour);
             else
@@ -509,7 +522,21 @@ namespace sbnd::crt {
     if(fSaveViews)
       {
         TView3D *view = (TView3D*) TView::CreateView(1);
-        view->SetRange(-500, -500, -200, 500, 500, 800);
+
+        double c[3] = { 0, 0, 250 };
+        double s[3] = { 800, -800, 800 };
+
+        if(std::find(fChosenTaggers.begin(), fChosenTaggers.end(), 5) != fChosenTaggers.end()
+           || std::find(fChosenTaggers.begin(), fChosenTaggers.end(), 6) != fChosenTaggers.end())
+          {
+            view->SetRange(-750, -500, -450, 750, 1000, 1050);
+            s[0] = 1200;
+            s[1] = -1200;
+            s[2] = 1200;
+          }
+        else
+          view->SetRange(-600, -600, -300, 600, 600, 900);
+
         view->ToggleRulers();
 
         TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
@@ -525,9 +552,6 @@ namespace sbnd::crt {
         axis->GetXaxis()->SetLabelSize(0.024);
         axis->GetYaxis()->SetLabelSize(0.024);
         axis->GetZaxis()->SetLabelSize(0.024);
-
-        double c[3] = { 0, 0, 250 };
-        double s[3] = { 800, -800, 800 };
 
         view->DefineViewDirection(s, c,
                                   0, 1,

@@ -223,7 +223,9 @@ namespace sbnd::crt {
 
     void SetPrint(bool tf);
 
-    void DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour);
+    void SetHighlightedModules(std::vector<int> hm);
+
+    void DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour, int lineWidth = -1);
 
     void Draw(detinfo::DetectorClocksData const& clockData, const art::Event& event,
               const TString& saveName);
