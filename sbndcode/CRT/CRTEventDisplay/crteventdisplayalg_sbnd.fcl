@@ -97,4 +97,28 @@ crteventdisplayalg_sbnd_data.UseTs0:          true
 crteventdisplayalg_sbnd_data.MinTime:         -1.5e6
 crteventdisplayalg_sbnd_data.MaxTime:         1.5e6
 
+crteventdisplayalg_sbnd_channel_mapping: @local::crteventdisplayalg_sbnd
+
+crteventdisplayalg_sbnd_channel_mapping.DataMode:         true
+crteventdisplayalg_sbnd_channel_mapping.SaveRoot:         false
+crteventdisplayalg_sbnd_channel_mapping.SaveViews:        true
+
+crteventdisplayalg_sbnd_channel_mapping.ChoseTaggers:     true
+crteventdisplayalg_sbnd_channel_mapping.HighlightModules: true
+
+crteventdisplayalg_sbnd_channel_mapping.DrawTaggers:      true
+crteventdisplayalg_sbnd_channel_mapping.DrawModules:      true
+crteventdisplayalg_sbnd_channel_mapping.DrawFEBs:         true
+crteventdisplayalg_sbnd_channel_mapping.DrawFEBEnds:      true
+crteventdisplayalg_sbnd_channel_mapping.DrawStrips:       false
+crteventdisplayalg_sbnd_channel_mapping.DrawTPC:          true
+crteventdisplayalg_sbnd_channel_mapping.DrawTrueTracks:   false
+crteventdisplayalg_sbnd_channel_mapping.DrawSimDeposits:  false
+crteventdisplayalg_sbnd_channel_mapping.DrawStripHits:    false
+crteventdisplayalg_sbnd_channel_mapping.DrawClusters:     false
+crteventdisplayalg_sbnd_channel_mapping.DrawSpacePoints:  false
+crteventdisplayalg_sbnd_channel_mapping.DrawTracks:       false
+
+crteventdisplayalg_sbnd_channel_mapping.Print:            false
+
 END_PROLOG
