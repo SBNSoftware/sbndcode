@@ -542,7 +542,7 @@ namespace sbnd::crt {
         TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
         axis->GetXaxis()->SetTitle("X (W)");
         axis->GetYaxis()->SetTitle("Y (Up)");
-        axis->GetZaxis()->SetTitle("Z (S)");
+        axis->GetZaxis()->SetTitle("Z (N)");
         axis->GetXaxis()->SetAxisColor(kBlack);
         axis->GetYaxis()->SetAxisColor(kBlack);
         axis->GetZaxis()->SetAxisColor(kBlack);

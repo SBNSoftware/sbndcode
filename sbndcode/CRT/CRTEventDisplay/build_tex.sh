@@ -43,7 +43,7 @@ echo "\begin{document}
 \tableofcontents
 \newpage
 \section{Explanation}
-This document contains a series of illustrations created using the \texttt{CRTEventDisplay} tool originally written by Tom Brooks \& heavily developed by myself. It shows the position of the various CRT modules according to the gdml file used in SBND simulation and reconstruction. The document is split into sections for the different tagger walls. For each module three illustrations are provided: front, top and side views. The axes show detector coordinates (X, Y and Z) and \`\`building coordinates\" (South, West and Up). The relevant module is shown in green. The TPCs are shown in grey in the centre for reference. The black outer is the full tagger wall. The thin grey are other modules in the wall. The red is the FEB position and the blue corresponds to the end of the FEB with channel 0 (the ethernet ports).
+This document contains a series of illustrations created using the \texttt{CRTEventDisplay} tool originally written by Tom Brooks \& heavily developed by myself. It shows the position of the various CRT modules according to the gdml file used in SBND simulation and reconstruction. The document is split into sections for the different tagger walls. For each module three illustrations are provided: front, top and side views. The axes show detector coordinates (X, Y and Z) and \`\`building coordinates\" (North, West and Up). The relevant module is shown in green. The TPCs are shown in grey in the centre for reference. The black outer is the full tagger wall. The thin grey are other modules in the wall. The red is the FEB position and the blue corresponds to the end of the FEB with channel 0 (the ethernet ports).
 " >> crt_channel_mapping_evds.tex
 
 for i in "${!walls[@]}"
