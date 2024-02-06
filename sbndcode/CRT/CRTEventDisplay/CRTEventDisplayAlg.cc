@@ -23,6 +23,9 @@ namespace sbnd::crt {
     fTrackLabel = config.TrackLabel();
 
     fDataMode = config.DataMode();
+    fSaveRoot = config.SaveRoot();
+    fSaveViews = config.SaveViews();
+
     fDrawTaggers = config.DrawTaggers();
     fDrawModules = config.DrawModules();
     fDrawFEBs = config.DrawFEBs();
@@ -125,7 +128,7 @@ namespace sbnd::crt {
   }
 
   void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
-                                const art::Event& event)
+                                const art::Event& event, const TString& saveName)
   {
     if(!fDataMode)
       fCRTBackTrackerAlg.SetupMaps(event);
@@ -500,66 +503,74 @@ namespace sbnd::crt {
           }
       }
 
-    c1->SaveAs(Form("crtEventDisplayEvent%d.root", event.event()));
+    if(fSaveRoot)
+      c1->SaveAs(Form("%s.root", saveName.Data()));
 
-    TView3D *view = (TView3D*) TView::CreateView(1);
-    view->SetRange(-500, -500, -200, 500, 500, 800);
-    view->ToggleRulers();
-    TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
-    axis->GetXaxis()->SetTitle("X (W)");
-    axis->GetYaxis()->SetTitle("Y (Up)");
-    axis->GetZaxis()->SetTitle("Z (S)");
-    axis->GetXaxis()->SetAxisColor(kBlack);
-    axis->GetYaxis()->SetAxisColor(kBlack);
-    axis->GetZaxis()->SetAxisColor(kBlack);
-    axis->GetXaxis()->SetLabelColor(kBlack);
-    axis->GetYaxis()->SetLabelColor(kBlack);
-    axis->GetZaxis()->SetLabelColor(kBlack);
-    axis->GetXaxis()->SetLabelSize(0.024);
-    axis->GetYaxis()->SetLabelSize(0.024);
-    axis->GetZaxis()->SetLabelSize(0.024);
+    if(fSaveViews)
+      {
+        TView3D *view = (TView3D*) TView::CreateView(1);
+        view->SetRange(-500, -500, -200, 500, 500, 800);
+        view->ToggleRulers();
 
-    double c[3] = { 0, 0, 250 };
-    double s[3] = { 800, -800, 800 };
+        TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
+        axis->GetXaxis()->SetTitle("X (W)");
+        axis->GetYaxis()->SetTitle("Y (Up)");
+        axis->GetZaxis()->SetTitle("Z (S)");
+        axis->GetXaxis()->SetAxisColor(kBlack);
+        axis->GetYaxis()->SetAxisColor(kBlack);
+        axis->GetZaxis()->SetAxisColor(kBlack);
+        axis->GetXaxis()->SetLabelColor(kBlack);
+        axis->GetYaxis()->SetLabelColor(kBlack);
+        axis->GetZaxis()->SetLabelColor(kBlack);
+        axis->GetXaxis()->SetLabelSize(0.024);
+        axis->GetYaxis()->SetLabelSize(0.024);
+        axis->GetZaxis()->SetLabelSize(0.024);
 
-    view->DefineViewDirection(s, c,
-                              0, 1,
-                              1, 0,
-                              1, 0,
-                              view->GetTnorm(),
-                              view->GetTback());
+        double c[3] = { 0, 0, 250 };
+        double s[3] = { 800, -800, 800 };
 
-    axis->GetXaxis()->SetTitleOffset(2);
-    axis->GetYaxis()->SetTitleOffset(-1.7);
-    axis->GetXaxis()->SetLabelOffset(-0.065);
-    axis->GetYaxis()->SetLabelOffset(-0.2);
-    c1->SaveAs(Form("crtEventDisplayEvent%d_front.png", event.event()));
+        view->DefineViewDirection(s, c,
+                                  0, 1,
+                                  1, 0,
+                                  1, 0,
+                                  view->GetTnorm(),
+                                  view->GetTback());
 
-    view->DefineViewDirection(s, c,
-                              0, 1,
-                              0, 1,
-                              1, 0,
-                              view->GetTnorm(),
-                              view->GetTback());
+        axis->GetXaxis()->SetTitleOffset(2);
+        axis->GetYaxis()->SetTitleOffset(-1.7);
+        axis->GetXaxis()->SetLabelOffset(-0.065);
+        axis->GetYaxis()->SetLabelOffset(-0.2);
+        c1->SaveAs(Form("%s_front.png", saveName.Data()));
+        c1->SaveAs(Form("%s_front.pdf", saveName.Data()));
 
-    axis->GetXaxis()->SetTitleOffset(2);
-    axis->GetZaxis()->SetTitleOffset(-1.7);
-    axis->GetXaxis()->SetLabelOffset(-0.065);
-    axis->GetZaxis()->SetLabelOffset(-0.2);
-    c1->SaveAs(Form("crtEventDisplayEvent%d_top.png", event.event()));
+        view->DefineViewDirection(s, c,
+                                  0, 1,
+                                  0, 1,
+                                  1, 0,
+                                  view->GetTnorm(),
+                                  view->GetTback());
 
-    view->DefineViewDirection(s, c,
-                              1, 0,
-                              0, 1,
-                              0, 1,
-                              view->GetTnorm(),
-                              view->GetTback());
+        axis->GetXaxis()->SetTitleOffset(2);
+        axis->GetZaxis()->SetTitleOffset(-1.7);
+        axis->GetXaxis()->SetLabelOffset(-0.065);
+        axis->GetZaxis()->SetLabelOffset(-0.2);
+        c1->SaveAs(Form("%s_top.png", saveName.Data()));
+        c1->SaveAs(Form("%s_top.pdf", saveName.Data()));
 
-    axis->GetYaxis()->SetTitleOffset(-2);
-    axis->GetZaxis()->SetTitleOffset(-1.7);
-    axis->GetYaxis()->SetLabelOffset(0.005);
-    axis->GetZaxis()->SetLabelOffset(0.005);
-    c1->SaveAs(Form("crtEventDisplayEvent%d_side.png", event.event()));
+        view->DefineViewDirection(s, c,
+                                  1, 0,
+                                  0, 1,
+                                  0, 1,
+                                  view->GetTnorm(),
+                                  view->GetTback());
+
+        axis->GetYaxis()->SetTitleOffset(-2);
+        axis->GetZaxis()->SetTitleOffset(-1.7);
+        axis->GetYaxis()->SetLabelOffset(0.005);
+        axis->GetZaxis()->SetLabelOffset(0.005);
+        c1->SaveAs(Form("%s_side.png", saveName.Data()));
+        c1->SaveAs(Form("%s_side.pdf", saveName.Data()));
+      }
 
     delete c1;
   }

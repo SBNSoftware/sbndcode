@@ -87,8 +87,14 @@ namespace sbnd::crt {
 
       fhicl::Atom<bool> DataMode {
 	Name("DataMode"),
-        false
       };
+      fhicl::Atom<bool> SaveRoot {
+	Name("SaveRoot"),
+      };
+      fhicl::Atom<bool> SaveViews {
+	Name("SaveViews"),
+      };
+
       fhicl::Atom<bool> DrawTaggers {
         Name("DrawTaggers")
           };
@@ -219,7 +225,8 @@ namespace sbnd::crt {
 
     void DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour);
 
-    void Draw(detinfo::DetectorClocksData const& clockData, const art::Event& event);
+    void Draw(detinfo::DetectorClocksData const& clockData, const art::Event& event,
+              const TString& saveName);
 
     bool IsPointInsideBox(const std::vector<double> &lims, const geo::Point_t &p);
 
@@ -239,6 +246,9 @@ namespace sbnd::crt {
     art::InputTag fTrackLabel;
 
     bool fDataMode;
+    bool fSaveRoot;
+    bool fSaveViews;
+
     bool fDrawTaggers;
     bool fDrawModules;
     bool fDrawFEBs;

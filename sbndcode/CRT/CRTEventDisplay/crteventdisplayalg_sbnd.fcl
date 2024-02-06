@@ -14,6 +14,10 @@ crteventdisplayalg_sbnd:
    SpacePointLabel:  "crtspacepoints"
    TrackLabel:       "crttracks"
 
+   DataMode:         false
+   SaveRoot:         true
+   SaveViews:        false
+
    DrawTaggers:      true
    DrawModules:      false
    DrawFEBs:         false
