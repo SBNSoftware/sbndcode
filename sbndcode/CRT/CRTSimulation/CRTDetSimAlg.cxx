@@ -578,8 +578,7 @@ namespace crt {
         double tDelayRMS =
           fParams.TDelayRMSGausNorm() *
             exp(-pow(npeMean - fParams.TDelayRMSGausShift(), 2) / fParams.TDelayRMSGausSigma()) +
-          fParams.TDelayRMSExpNorm() *
-            exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale());
+            exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale()) + fParams.TDelayRMSOffSetSlope()*r+ fParams.TDelayRMSOffSet();
 
         mf::LogInfo("CRTSetSimAlg")<<"npeMean: "<<npeMean<< ", tDelayMean: "<<tDelayMean <<", tDelayRMS: "<<tDelayRMS<<std::endl;
 

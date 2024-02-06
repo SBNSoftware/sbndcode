@@ -59,7 +59,6 @@ namespace sbnd{
           uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i] ? sipm_adcs[adc_i]   - sipm1.pedestal : 0;
           uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1]   - sipm2.pedestal : 0;
 
-
           // Keep hit if both SiPMs above threshold
           if(adc1 > fADCThreshold && adc2 > fADCThreshold)
           {
@@ -312,7 +311,7 @@ namespace sbnd{
     //    - the propagation delay (dependent on the distance the light needs
     //          to travel along the fibre)
     //    - the time walk effect (dependent on the size of the pulse)
-    
+
     double t_TimeWalk = fTimeWalkNorm * std::exp(- fTimeWalkShift * pe);
     //fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset; 
     //if (t_TimeWalk<0) t_TimeWalk=0;

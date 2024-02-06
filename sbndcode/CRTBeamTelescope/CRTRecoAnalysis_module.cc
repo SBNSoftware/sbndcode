@@ -134,13 +134,13 @@ void CRTRecoAnalysis::analyze(art::Event const& e)
   // Get the FEB Data
   //
   art::Handle<std::vector<sbnd::crt::FEBData>> feb_data_h;
-  e.getByLabel(_febdata_label, feb_data_h);
-  if(!feb_data_h.isValid()){
-    std::cout << "FEBData product " << _febdata_label << " not found..." << std::endl;
-    throw std::exception();
-  }
   art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo> *febdata_to_ides;
-  if(!_data_mode) {
+  if (!_data_mode){
+    e.getByLabel(_febdata_label, feb_data_h);
+    if(!feb_data_h.isValid()){
+      std::cout << "FEBData product " << _febdata_label << " not found..." << std::endl;
+      throw std::exception();
+    }
     febdata_to_ides = new art::FindManyP<sim::AuxDetIDE, sbnd::crt::FEBTruthInfo>(feb_data_h, e, _febdata_label);
   }
 

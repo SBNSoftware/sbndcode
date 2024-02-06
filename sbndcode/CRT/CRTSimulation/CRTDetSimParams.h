@@ -60,10 +60,10 @@ namespace crt
       fhicl::Name("TDelayRMSGausSigma"),
       fhicl::Comment("Time delay fit: Gaussian width"),
     };
-    fhicl::Atom<double> TDelayRMSExpNorm {
+    /*fhicl::Atom<double> TDelayRMSExpNorm {
       fhicl::Name("TDelayRMSExpNorm"),
       fhicl::Comment("Time delay RMS fit: Exponential normalization"),
-    };
+    };*/
     fhicl::Atom<double> TDelayRMSExpShift {
       fhicl::Name("TDelayRMSExpShift"),
       fhicl::Comment("Time delay RMS fit: Exponential x shift"),
@@ -71,6 +71,14 @@ namespace crt
     fhicl::Atom<double> TDelayRMSExpScale {
       fhicl::Name("TDelayRMSExpScale"),
       fhicl::Comment("Time delay RMS fit: Exponential scale"),
+    };
+    fhicl::Atom<double> TDelayRMSOffSetSlope {
+      fhicl::Name("TDelayRMSOffSetSlope"),
+      fhicl::Comment("Time delay RMS fit: Offset slope"),
+    };
+    fhicl::Atom<double> TDelayRMSOffSet {
+      fhicl::Name("TDelayRMSOffSet"),
+      fhicl::Comment("Time delay RMS fit: Offset"),
     };
     fhicl::Atom<uint32_t> TriggerDelay {
       fhicl::Name("TriggerDelay"),
