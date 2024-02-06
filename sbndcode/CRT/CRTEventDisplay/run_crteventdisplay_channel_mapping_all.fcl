@@ -1,0 +1,49 @@
+#include "run_crteventdisplay_channel_mapping.fcl"
+
+process_name: CRTEventDisplay
+
+services:
+{
+  @table::sbnd_services
+  ParticleInventoryService: @local::standard_particleinventoryservice
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1 
+
+}
+
+physics:
+{
+  analyzers:
+  {
+    crtevdbot:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdsou:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdnor:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdwes:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdeas:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdtpl:   @local::crteventdisplay_sbnd_channel_mapping
+    crtevdtph:   @local::crteventdisplay_sbnd_channel_mapping
+  }
+
+  ana: [ crtevdbot, crtevdsou, crtevdnor, crtevdwes, crtevdeas, crtevdtpl, crtevdtph ]
+
+  end_paths: [ ana ]
+}
+
+physics.analyzers.crtevdbot.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/bottom_wall"
+physics.analyzers.crtevdbot.EventDisplayConfig.ChosenTaggers: [ 0 ]
+physics.analyzers.crtevdsou.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/south_wall"
+physics.analyzers.crtevdsou.EventDisplayConfig.ChosenTaggers: [ 1 ]
+physics.analyzers.crtevdnor.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/north_wall"
+physics.analyzers.crtevdnor.EventDisplayConfig.ChosenTaggers: [ 2 ]
+physics.analyzers.crtevdwes.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/west_wall"
+physics.analyzers.crtevdwes.EventDisplayConfig.ChosenTaggers: [ 3 ]
+physics.analyzers.crtevdeas.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/east_wall"
+physics.analyzers.crtevdeas.EventDisplayConfig.ChosenTaggers: [ 4 ]
+physics.analyzers.crtevdtpl.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/toplow_wall"
+physics.analyzers.crtevdtpl.EventDisplayConfig.ChosenTaggers: [ 5 ]
+physics.analyzers.crtevdtph.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/tophigh_wall"
+physics.analyzers.crtevdtph.EventDisplayConfig.ChosenTaggers: [ 6 ]
