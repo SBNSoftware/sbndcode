@@ -151,7 +151,7 @@ void XSec0DSystWeights(const TString productionVersion, TString saveDirExt, cons
 
           const double selEntries  = nominalSelectedHists[signal_i]->GetEntries();
           const double backEntries = nominalSelectedBackgroundHists[signal_i]->GetEntries();
-          const double statError   = ((std::sqrt(selEntries) + std::sqrt(backEntries)) / (selEntries - backEntries)) * nomXSec;
+          const double statError   = ((std::sqrt(selEntries + backEntries)) / (selEntries - backEntries)) * nomXSec;
 
           nominalXSecHists[signal_i]->SetBinContent(1, nomXSec);
           nominalXSecHists[signal_i]->SetBinError(1, statError);
