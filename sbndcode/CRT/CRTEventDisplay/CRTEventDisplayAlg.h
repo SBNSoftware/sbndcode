@@ -110,8 +110,8 @@ namespace sbnd::crt {
       fhicl::Atom<bool> DrawStrips {
         Name("DrawStrips")
           };
-      fhicl::Atom<bool> DrawTpc {
-        Name("DrawTpc")
+      fhicl::Atom<bool> DrawTPC {
+        Name("DrawTPC")
           };
       fhicl::Atom<bool> DrawTrueTracks {
         Name("DrawTrueTracks")
@@ -158,8 +158,8 @@ namespace sbnd::crt {
       fhicl::Atom<int> FEBEndColour {
         Name("FEBEndColour")
           };
-      fhicl::Atom<int> TpcColour {
-        Name("TpcColour")
+      fhicl::Atom<int> TPCColour {
+        Name("TPCColour")
           };
       fhicl::Atom<int> TrueTrackColour {
         Name("TrueTrackColour")
@@ -215,7 +215,7 @@ namespace sbnd::crt {
     void reconfigure(const Config& config);
 
     void SetDrawTaggers(bool tf);
-    void SetDrawTpc(bool tf);
+    void SetDrawTPC(bool tf);
     void SetDrawTrueTracks(bool tf);
     void SetDrawSimDeposits(bool tf);
     void SetDrawStripHits(bool tf);
@@ -254,7 +254,7 @@ namespace sbnd::crt {
     bool fDrawFEBs;
     bool fDrawFEBEnds;
     bool fDrawStrips;
-    bool fDrawTpc;
+    bool fDrawTPC;
     bool fDrawTrueTracks;
     bool fDrawSimDeposits;
     bool fDrawStripHits;
@@ -272,7 +272,7 @@ namespace sbnd::crt {
     int fHighlightColour;
     int fFEBColour;
     int fFEBEndColour;
-    int fTpcColour;
+    int fTPCColour;
     int fTrueTrackColour;
     int fSimDepositColour;
     int fStripHitColour;

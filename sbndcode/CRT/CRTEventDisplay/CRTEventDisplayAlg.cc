@@ -31,7 +31,7 @@ namespace sbnd::crt {
     fDrawFEBs = config.DrawFEBs();
     fDrawFEBEnds = config.DrawFEBEnds();
     fDrawStrips = config.DrawStrips();
-    fDrawTpc = config.DrawTpc();
+    fDrawTPC = config.DrawTPC();
     fDrawTrueTracks = config.DrawTrueTracks();
     fDrawSimDeposits = config.DrawSimDeposits();
     fDrawStripHits = config.DrawStripHits();
@@ -49,7 +49,7 @@ namespace sbnd::crt {
     fHighlightColour = config.HighlightColour();
     fFEBColour = config.FEBColour();
     fFEBEndColour = config.FEBEndColour();
-    fTpcColour = config.TpcColour();
+    fTPCColour = config.TPCColour();
     fTrueTrackColour = config.TrueTrackColour();
     fSimDepositColour = config.SimDepositColour();
     fStripHitColour = config.StripHitColour();
@@ -73,9 +73,9 @@ namespace sbnd::crt {
     fDrawTaggers = tf;
   }
 
-  void CRTEventDisplayAlg::SetDrawTpc(bool tf)
+  void CRTEventDisplayAlg::SetDrawTPC(bool tf)
   {
-    fDrawTpc = tf;
+    fDrawTPC = tf;
   }
 
   void CRTEventDisplayAlg::SetDrawTrueTracks(bool tf)
@@ -236,7 +236,7 @@ namespace sbnd::crt {
       }
     
     // Draw the TPC with central cathode
-    if(fDrawTpc)
+    if(fDrawTPC)
       {
         double rmin[3] = {fTPCGeoAlg.MinX(), 
                           fTPCGeoAlg.MinY(), 
@@ -244,7 +244,7 @@ namespace sbnd::crt {
         double rmax[3] = {-fTPCGeoAlg.CpaWidth(), 
                           fTPCGeoAlg.MaxY(), 
                           fTPCGeoAlg.MaxZ()};
-        DrawCube(c1, rmin, rmax, fTpcColour);
+        DrawCube(c1, rmin, rmax, fTPCColour);
         double rmin2[3] = {fTPCGeoAlg.CpaWidth(), 
                            fTPCGeoAlg.MinY(), 
                            fTPCGeoAlg.MinZ()};
@@ -252,7 +252,7 @@ namespace sbnd::crt {
                            fTPCGeoAlg.MaxY(), 
                            fTPCGeoAlg.MaxZ()};
 
-        DrawCube(c1, rmin2, rmax2, fTpcColour);
+        DrawCube(c1, rmin2, rmax2, fTPCColour);
       }
     
     // Draw true track trajectories for visible particles that cross the CRT
