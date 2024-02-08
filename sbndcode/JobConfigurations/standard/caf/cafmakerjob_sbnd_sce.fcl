@@ -1,3 +1,4 @@
+#include "eventweight_genie_systtools.fcl"
 #include "transfer_flashmatch_producer.fcl"
 #include "cafmakerjob_sbnd.fcl"
 
@@ -64,11 +65,13 @@ physics.producers.crumbs.OpT0ModuleLabel:          "opt0finderSCE"
 physics.producers.crumbs.Chi2FitParams.TrackLabel: "pandoraSCETrack"
 physics.producers.crumbs.Chi2FitParams.CaloLabel:  "pandoraSCECalo"
 
+physics.producers.systtools: @local::sbn_systtools
+
 physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
             fmatchSCE, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
             pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs, cnnid,
-            cafmaker ]
+            systtools, cafmaker ]
 
 # Enable the Space-Charge service
 #include "enable_spacecharge_services_sbnd.fcl"

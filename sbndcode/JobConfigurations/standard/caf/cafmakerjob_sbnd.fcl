@@ -79,7 +79,7 @@ physics:
 #  cosmictrack:          @local::standard_cosmictrack         #reco
 #  windowtrack:          @local::window_cosmictrack           #reco
 
-   # Includes: pandoraTrackMCS, pandoraTrackRange, rns, genieweight, fluxweight
+   # Includes: pandoraTrackMCS, pandoraTrackRange, rns, systtools, fluxweight
    @table::cafmaker_common_producers
 
    flashtrig: @local::pmtflashtrigmaker_sbnd
@@ -137,6 +137,6 @@ physics.producers.genieweight.weight_functions: @local::physics.producers.geniew
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
 
 # input art file.
-physics.producers.cafmaker.SystWeightLabels: []
+physics.producers.cafmaker.SystWeightLabels: ["systtools"]
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
