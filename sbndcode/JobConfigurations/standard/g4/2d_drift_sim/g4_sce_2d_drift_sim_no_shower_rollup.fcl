@@ -1,0 +1,9 @@
+# File:    g4_sce_2d_drift_sim_no_shower_rollup.fcl
+# Purpose: Same as g4_sce_2d_drift_sim.fcl, but saves all EM shower daughter particles.
+#
+# This runs the new, refactored, LArG4 simulation.
+
+
+#include "g4_sce_2d_drift_sim.fcl"
+
+services.ParticleListAction.keepEMShowerDaughters: true

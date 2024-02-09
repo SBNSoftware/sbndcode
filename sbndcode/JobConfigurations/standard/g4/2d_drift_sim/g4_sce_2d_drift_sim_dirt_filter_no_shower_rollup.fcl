@@ -1,0 +1,3 @@
+#include "g4_sce_2d_drift_sim_dirt_filter.fcl"
+
+services.ParticleListAction.keepEMShowerDaughters: true

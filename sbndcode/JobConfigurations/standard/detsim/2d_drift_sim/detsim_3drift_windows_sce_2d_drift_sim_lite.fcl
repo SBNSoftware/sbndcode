@@ -1,0 +1,19 @@
+#-------------------------------------------------------------------
+#
+# Name: detsim_3drift_windows_sce_2d_drift_sim_lite.fcl
+#
+# Purpose: Lite version of detsim_3drift_windows_sce_2d_drift_sim.fcl
+#
+# Created: 01-Apr-2022  H. Greenlee
+#
+# Automatically generated.
+#
+#-------------------------------------------------------------------
+
+#include "detsim_drops.fcl"
+#include "detsim_3drift_windows_sce_2d_drift_sim.fcl"
+
+# Drop truth data products.
+
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                               @sequence::detsim_drops ]
