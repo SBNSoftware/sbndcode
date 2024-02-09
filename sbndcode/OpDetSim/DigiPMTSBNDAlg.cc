@@ -15,6 +15,7 @@ namespace opdet {
     , fPMTUncoatedEff(fParams.PMTUncoatedEff/ fParams.larProp->ScintPreScale())
     , fPMTGain(fParams.PMTGain)
     , fPMTNominalGain(fParams.PMTNominalGain)
+    , fPMTChannelGain(fParams.PMTChannelGain)
       //  , fSinglePEmodel(fParams.SinglePEmodel)
     , fEngine(fParams.engine)
     , fFlatGen(*fEngine)
@@ -36,6 +37,8 @@ namespace opdet {
         << "pre scale applied at simulation time.\n"
         << "Please check this number (ScintPreScale): "
         << fParams.larProp->ScintPreScale();
+
+    opdet::sbndPDMapAlg pds_map;
 
     fSampling = fSampling / 1000.0; //in GHz, to cancel with ns
     fSamplingPeriod = 1./fSampling;
@@ -105,6 +108,14 @@ namespace opdet {
     // currently assumes all dynamic range for PE (no overshoot)
     fADCSaturation = (fPositivePolarity ? fParams.PMTBaseline + fParams.PMTADCDynamicRange : fParams.PMTBaseline - fParams.PMTADCDynamicRange);
 
+    // store the gain variation in map to channnel number 
+    uint pmt_counter=0;
+    for (int opch=0; opch<312; opch++){
+      if ((pds_map.isPDType(opch, "pmt_coated")) || (pds_map.isPDType(opch, "pmt_uncoated"))){
+        fPMTChannelGainMap.insert(std::make_pair(opch, fPMTChannelGain.at(pmt_counter)));
+        pmt_counter++;
+      }
+    }
 
     file->Close();
   } // end constructor
@@ -179,6 +190,8 @@ namespace opdet {
     double ttsTime = 0;
     double tphoton;
     double ttpb=0;
+    double gain_factor = 1.0;
+    if (fPMTChannelGainMap.find(ch) != fPMTChannelGainMap.end()) gain_factor = fPMTChannelGainMap.at(ch);
 
     // we want to keep the 1 ns SimPhotonLite resolution
     // digitizer sampling period is 2 ns
@@ -201,10 +214,10 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v), gain_factor );
         }
         else{
-          AddSPE(t, wave, nPE_v[t]);
+          AddSPE(t, wave, nPE_v[t], gain_factor);
         }
       }
     }
@@ -226,6 +239,8 @@ namespace opdet {
     double ttsTime = 0;
     double tphoton;
     double ttpb=0;
+    double gain_factor = 1.0;
+    if (fPMTChannelGainMap.find(ch) != fPMTChannelGainMap.end()) gain_factor = fPMTChannelGainMap.at(ch);
     sim::SimPhotons auxphotons;
 
     // we want to keep the 1 ns SimPhotonLite resolution
@@ -268,10 +283,10 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v), gain_factor);
         }
         else{
-          AddSPE(t, wave, nPE_v[t]);
+          AddSPE(t, wave, nPE_v[t], gain_factor);
         }
       }
     }
@@ -295,6 +310,8 @@ namespace opdet {
     double ttsTime = 0;
     double tphoton;
     double ttpb=0;
+    double gain_factor = 1.0;
+    if (fPMTChannelGainMap.find(ch) != fPMTChannelGainMap.end()) gain_factor = fPMTChannelGainMap.at(ch);
 
     // we want to keep the 1 ns SimPhotonLite resolution
     // digitizer sampling period is 2 ns
@@ -323,10 +340,10 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v), gain_factor);
         }
         else{
-          AddSPE(t, wave, nPE_v[t]);
+          AddSPE(t, wave, nPE_v[t], gain_factor);
         }
       }
     }
@@ -350,6 +367,8 @@ namespace opdet {
     double ttsTime = 0;
     double tphoton;
     double ttpb;
+    double gain_factor = 1.0;
+    if (fPMTChannelGainMap.find(ch) != fPMTChannelGainMap.end()) gain_factor = fPMTChannelGainMap.at(ch);
 
     // we want to keep the 1 ns SimPhotonLite resolution
     // digitizer sampling period is 2 ns
@@ -399,10 +418,10 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v), gain_factor);
         }
         else{
-          AddSPE(t, wave, nPE_v[t]);
+          AddSPE(t, wave, nPE_v[t], gain_factor);
         }
       }
     }
@@ -439,7 +458,7 @@ namespace opdet {
   }
 
 
-  void DigiPMTSBNDAlg::AddSPE(size_t time, std::vector<double>& wave, double npe)
+  void DigiPMTSBNDAlg::AddSPE(size_t time, std::vector<double>& wave, double npe, double gain_factor)
   {
     // time bin HD (double precision)
     // used to gert the time-shifted SER
@@ -460,7 +479,7 @@ namespace opdet {
     // add SER to the waveform
     std::transform(min_it, max_it,
                      fSinglePEWave_HD[wvf_shift].begin(), min_it,
-                     [npe_anode](auto a, auto b) { return a+npe_anode*b; });
+                     [npe_anode, gain_factor](auto a, auto b) { return a+npe_anode*b*gain_factor; });
   }
 
 
@@ -605,6 +624,7 @@ namespace opdet {
     fBaseConfig.PMTDataFile              = config.pmtDataFile();
     fBaseConfig.PMTGain                  = config.pmtGain();
     fBaseConfig.PMTNominalGain                  = config.pmtNominalGain();
+    fBaseConfig.PMTChannelGain           = config.pmtChannelGain();
     fBaseConfig.MakeGainFluctuations = config.gainFluctuationsParams.get_if_present(fBaseConfig.GainFluctuationsParams);
     fBaseConfig.SimulateNonLinearity = config.nonLinearityParams.get_if_present(fBaseConfig.NonLinearityParams);
     config.hdOpticalWaveformParams.get_if_present(fBaseConfig.HDOpticalWaveformParams);
