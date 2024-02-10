@@ -25,36 +25,11 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
-
+#include "AverageWaveform.h"
 
 namespace callos {
   class CALLOS;
 }
-
-class AverageWaveform {
-public:
-  AverageWaveform(int size) : size_(size){
-    array_ = new float[size_];
-    wvf_count_ = 1;
-  }
-
-  ~AverageWaveform() {
-    delete[] array_;
-  }
-
-  void addToAverage(float* inputArray) {
-    for (int i = 0; i < size_; i++) {
-      // divide by wvf_count_ to avoid overflow, maybe for large number of waveforms is better to stack a bunch and divide after
-      array_[i] += inputArray[i]/wvf_count_;
-    }
-    wvf_count_++;
-  }
-
-private:
-  float* array_;
-  int size_;
-  int wvf_count_;
-};
 
 
 
@@ -80,7 +55,7 @@ public:
   
   // void endSubRun(art::SubRun& sr) override ;
   // void endRun(art::Run& run) override ;
-  // void endJob(art::SubRun& sr) override ;
+  void endJob(art::SubRun& sr) override ;
 
   // Tools shall be initialized here 
 private:
