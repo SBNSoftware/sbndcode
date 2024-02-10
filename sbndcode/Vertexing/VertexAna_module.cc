@@ -220,6 +220,10 @@ void sbnd::VertexAna::analyze(art::Event const& e)
           if(pfp->IsPrimary())
             {
               const art::Ptr<recob::Vertex> vtx = pfpsToVertices.at(pfp.key());
+
+              if(vtx.isNull())
+                break;
+
               vtx_x = vtx->position().X();
               vtx_y = vtx->position().Y();
               vtx_z = vtx->position().Z();
