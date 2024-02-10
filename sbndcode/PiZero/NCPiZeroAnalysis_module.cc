@@ -1027,7 +1027,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
       const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToWeights.at(0);
 
       int n_univs = 0;
-      if(weightModuleLabel == "fluxweight")
+      if(weightModuleLabel == "fluxweight" || weightModuleLabel == "geant4weight")
         n_univs = 1000;
       else if(weightModuleLabel == "systtools")
         n_univs = 500;
@@ -1038,7 +1038,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
         {
           for(auto const& [ name, weights ] : *ewm)
             {
-              if((weightModuleLabel == "fluxweight") || (weightModuleLabel == "systtools" && name.find("multisim") != std::string::npos))
+              if((weightModuleLabel == "fluxweight") || (weightModuleLabel == "geant4weight") || (weightModuleLabel == "systtools" && name.find("multisim") != std::string::npos))
                 {
                   FillElement(vars[prefix + "_weight_" + name], counter, weights);
 
