@@ -21,6 +21,9 @@
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "lardataobj/RawData/OpDetWaveform.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+
 
 namespace callos {
   class CALLOS;
@@ -43,24 +46,26 @@ public:
   void analyze(art::Event const& e) override;
 
   // placeholders
-  void beginJob(art::Run& run) override ;
-  void beginRun(art::Run& run) override ;
-  void beginSubRun(art::Run& run) override ;
+  // void beginJob(art::Run& run) override ;
+  // void beginRun(art::Run& run) override ;
+  // void beginSubRun(art::Run& run) override ;
   
-  void endSubRun(art::SubRun& sr) override ;
-  void endRun(art::Run& run) override ;
-  void endJob(art::SubRun& sr) override ;
+  // void endSubRun(art::SubRun& sr) override ;
+  // void endRun(art::Run& run) override ;
+  // void endJob(art::SubRun& sr) override ;
 
 
 private:
 
   // Declare member data here.
 
+  std::string fInputLabel;
+
   // Size of the Region of Interest(ROI) of each signal, must be smaller than RawWaveforms size
-  int ROI_samples
+  int ROI_samples;
 
   // Number of samples from start of the ROI to peak. 
-  int start_to_peak
+  int start_to_peak;
 
 };
 
