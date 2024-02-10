@@ -1,3 +1,6 @@
+add_subdirectory(Tools)
+add_subdirectory(config)
+
 set(
 MODULE_LIBRARIES
   art::Framework_Principal
