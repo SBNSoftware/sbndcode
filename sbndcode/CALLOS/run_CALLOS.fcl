@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+OpDetAnalyzer:
+{
+ module_type: "CALLOS"
+#all the fhicl params will eventually go here
+}
+
+END_PROLOG
