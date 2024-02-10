@@ -1,6 +1,6 @@
 void MatchingPerformance()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/large_samples/combined/matchingperformance";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/plots/rockbox/matchingperformance";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,11 +9,13 @@ void MatchingPerformance()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/production/ana/crtana_sbnd.root");
+  tree->Add("/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/production/ana/crtana_sbnd.root");
 
   std::vector<double> *tpc_truth_energy = 0, *tpc_length = 0, *tpc_sp_score = 0, *tpc_tr_score = 0;
   std::vector<bool> *tpc_sp_matchable = 0, *tpc_sp_matched = 0, *tpc_sp_good_match = 0;
   std::vector<bool> *tpc_tr_matchable = 0, *tpc_tr_matched = 0, *tpc_tr_good_match = 0;
+
+  tree->SetBranchStatus("*", 0);
 
   tree->SetBranchAddress("tpc_truth_energy", &tpc_truth_energy);
   tree->SetBranchAddress("tpc_length", &tpc_length);
@@ -54,28 +56,32 @@ void MatchingPerformance()
   TH1F *hSPMatchableMatchedEnergy = new TH1F("hSPMatchableMatchedEnergy", ";True energy (GeV);TPC Tracks", 16, bins_energy);
   TH1F *hTRMatchableEnergy = new TH1F("hTRMatchableEnergy", ";True energy (GeV);TPC Tracks", 16, bins_energy);
   TH1F *hTRMatchableMatchedEnergy = new TH1F("hTRMatchableMatchedEnergy", ";True energy (GeV);TPC Tracks", 16, bins_energy);
+  TH1F *hSPMatchableEnergyLengthCut = new TH1F("hSPMatchableEnergyLengthCut", ";True energy (GeV);TPC Tracks", 16, bins_energy);
+  TH1F *hSPMatchableMatchedEnergyLengthCut = new TH1F("hSPMatchableMatchedEnergyLengthCut", ";True energy (GeV);TPC Tracks", 16, bins_energy);
+  TH1F *hTRMatchableEnergyLengthCut = new TH1F("hTRMatchableEnergyLengthCut", ";True energy (GeV);TPC Tracks", 16, bins_energy);
+  TH1F *hTRMatchableMatchedEnergyLengthCut = new TH1F("hTRMatchableMatchedEnergyLengthCut", ";True energy (GeV);TPC Tracks", 16, bins_energy);
   TH1F *hSPMatchedEnergy = new TH1F("hSPMatchedEnergy", ";True energy (GeV);TPC Tracks", 16, bins_energy);
   TH1F *hSPWellMatchedEnergy = new TH1F("hSPWellMatchedEnergy", ";True energy (GeV);TPC Tracks", 16, bins_energy);
   TH1F *hTRMatchedEnergy = new TH1F("hTRMatchedEnergy", ";True energy (GeV);TPC Tracks", 16, bins_energy);
   TH1F *hTRWellMatchedEnergy = new TH1F("hTRWellMatchedEnergy", ";True energy (GeV);TPC Tracks", 16, bins_energy);
 
-  TH1F *hSPMatchableLength = new TH1F("hSPMatchableLength", ";Track length (cm);TPC Tracks", 20, bins_length);
-  TH1F *hSPMatchableMatchedLength = new TH1F("hSPMatchableMatchedLength", ";Track length (cm);TPC Tracks", 20, bins_length);
-  TH1F *hTRMatchableLength = new TH1F("hTRMatchableLength", ";Track length (cm);TPC Tracks", 20, bins_length);
-  TH1F *hTRMatchableMatchedLength = new TH1F("hTRMatchableMatchedLength", ";Track length (cm);TPC Tracks", 20, bins_length);
-  TH1F *hSPMatchedLength = new TH1F("hSPMatchedLength", ";Track length (cm);TPC Tracks", 20, bins_length);
-  TH1F *hSPWellMatchedLength = new TH1F("hSPWellMatchedLength", ";Track length (cm);TPC Tracks", 20, bins_length);
-  TH1F *hTRMatchedLength = new TH1F("hTRMatchedLength", ";Track length (cm);TPC Tracks", 20, bins_length);
-  TH1F *hTRWellMatchedLength = new TH1F("hTRWellMatchedLength", ";Track length (cm);TPC Tracks", 20, bins_length);
+  TH1F *hSPMatchableLength = new TH1F("hSPMatchableLength", ";TPC track length (cm);TPC Tracks", 20, bins_length);
+  TH1F *hSPMatchableMatchedLength = new TH1F("hSPMatchableMatchedLength", ";TPC track length (cm);TPC Tracks", 20, bins_length);
+  TH1F *hTRMatchableLength = new TH1F("hTRMatchableLength", ";TPC track length (cm);TPC Tracks", 20, bins_length);
+  TH1F *hTRMatchableMatchedLength = new TH1F("hTRMatchableMatchedLength", ";TPC track length (cm);TPC Tracks", 20, bins_length);
+  TH1F *hSPMatchedLength = new TH1F("hSPMatchedLength", ";TPC track length (cm);TPC Tracks", 20, bins_length);
+  TH1F *hSPWellMatchedLength = new TH1F("hSPWellMatchedLength", ";TPC track length (cm);TPC Tracks", 20, bins_length);
+  TH1F *hTRMatchedLength = new TH1F("hTRMatchedLength", ";TPC track length (cm);TPC Tracks", 20, bins_length);
+  TH1F *hTRWellMatchedLength = new TH1F("hTRWellMatchedLength", ";TPC track length (cm);TPC Tracks", 20, bins_length);
 
-  TH1F *hSPMatchableShortLength = new TH1F("hSPMatchableShortLength", ";Track length (cm);TPC Tracks", 100, 0, 100);
-  TH1F *hSPMatchableMatchedShortLength = new TH1F("hSPMatchableMatchedShortLength", ";Track length (cm);TPC Tracks", 100, 0, 100);
-  TH1F *hTRMatchableShortLength = new TH1F("hTRMatchableShortLength", ";Track length (cm);TPC Tracks", 100, 0, 100);
-  TH1F *hTRMatchableMatchedShortLength = new TH1F("hTRMatchableMatchedShortLength", ";Track length (cm);TPC Tracks", 100, 0, 100);
-  TH1F *hSPMatchedShortLength = new TH1F("hSPMatchedShortLength", ";Track length (cm);TPC Tracks", 100, 0, 100);
-  TH1F *hSPWellMatchedShortLength = new TH1F("hSPWellMatchedShortLength", ";Track length (cm);TPC Tracks", 100, 0, 100);
-  TH1F *hTRMatchedShortLength = new TH1F("hTRMatchedShortLength", ";Track length (cm);TPC Tracks", 100, 0, 100);
-  TH1F *hTRWellMatchedShortLength = new TH1F("hTRWellMatchedShortLength", ";Track length (cm);TPC Tracks", 100, 0, 100);
+  TH1F *hSPMatchableShortLength = new TH1F("hSPMatchableShortLength", ";TPC track length (cm);TPC Tracks", 100, 0, 100);
+  TH1F *hSPMatchableMatchedShortLength = new TH1F("hSPMatchableMatchedShortLength", ";TPC track length (cm);TPC Tracks", 100, 0, 100);
+  TH1F *hTRMatchableShortLength = new TH1F("hTRMatchableShortLength", ";TPC track length (cm);TPC Tracks", 100, 0, 100);
+  TH1F *hTRMatchableMatchedShortLength = new TH1F("hTRMatchableMatchedShortLength", ";TPC track length (cm);TPC Tracks", 100, 0, 100);
+  TH1F *hSPMatchedShortLength = new TH1F("hSPMatchedShortLength", ";TPC track length (cm);TPC Tracks", 100, 0, 100);
+  TH1F *hSPWellMatchedShortLength = new TH1F("hSPWellMatchedShortLength", ";TPC track length (cm);TPC Tracks", 100, 0, 100);
+  TH1F *hTRMatchedShortLength = new TH1F("hTRMatchedShortLength", ";TPC track length (cm);TPC Tracks", 100, 0, 100);
+  TH1F *hTRWellMatchedShortLength = new TH1F("hTRWellMatchedShortLength", ";TPC track length (cm);TPC Tracks", 100, 0, 100);
 
   TH1F *hSPMatchedScore = new TH1F("hSPMatchedScore", ";DCA (cm);TPC Tracks", 50, 0, 200);
   TH1F *hSPWellMatchedScore = new TH1F("hSPWellMatchedScore", ";DCA (cm);TPC Tracks", 50, 0, 200);
@@ -95,11 +101,18 @@ void MatchingPerformance()
               hSPMatchableEnergy->Fill(tpc_truth_energy->at(ii));
               hSPMatchableLength->Fill(tpc_length->at(ii));
               hSPMatchableShortLength->Fill(tpc_length->at(ii));
+
+              if(tpc_length->at(ii) > 20)
+		hSPMatchableEnergyLengthCut->Fill(tpc_truth_energy->at(ii));
+
               if(tpc_sp_matched->at(ii))
                 {
                   hSPMatchableMatchedEnergy->Fill(tpc_truth_energy->at(ii));
                   hSPMatchableMatchedLength->Fill(tpc_length->at(ii));
                   hSPMatchableMatchedShortLength->Fill(tpc_length->at(ii));
+
+		  if(tpc_length->at(ii) > 20)
+		    hSPMatchableMatchedEnergyLengthCut->Fill(tpc_truth_energy->at(ii));
                 }
             }
 
@@ -123,12 +136,20 @@ void MatchingPerformance()
               hTRMatchableEnergy->Fill(tpc_truth_energy->at(ii));
               hTRMatchableLength->Fill(tpc_length->at(ii));
               hTRMatchableShortLength->Fill(tpc_length->at(ii));
+
+              if(tpc_length->at(ii) > 20)
+		hTRMatchableEnergyLengthCut->Fill(tpc_truth_energy->at(ii));
+
               if(tpc_tr_matched->at(ii))
                 {
                   hTRMatchableMatchedEnergy->Fill(tpc_truth_energy->at(ii));
                   hTRMatchableMatchedLength->Fill(tpc_length->at(ii));
                   hTRMatchableMatchedShortLength->Fill(tpc_length->at(ii));
+
+		  if(tpc_length->at(ii) > 20)
+		    hTRMatchableMatchedEnergyLengthCut->Fill(tpc_truth_energy->at(ii));
                 }
+
             }
 
           if(tpc_tr_matched->at(ii))
@@ -152,10 +173,14 @@ void MatchingPerformance()
     {
       hSPMatchableEnergy->SetBinContent(i, hSPMatchableEnergy->GetBinContent(i) / hSPMatchableEnergy->GetBinWidth(i));
       hSPMatchableMatchedEnergy->SetBinContent(i, hSPMatchableMatchedEnergy->GetBinContent(i) / hSPMatchableMatchedEnergy->GetBinWidth(i));
+      hSPMatchableEnergyLengthCut->SetBinContent(i, hSPMatchableEnergyLengthCut->GetBinContent(i) / hSPMatchableEnergyLengthCut->GetBinWidth(i));
+      hSPMatchableMatchedEnergyLengthCut->SetBinContent(i, hSPMatchableMatchedEnergyLengthCut->GetBinContent(i) / hSPMatchableMatchedEnergyLengthCut->GetBinWidth(i));
       hSPMatchedEnergy->SetBinContent(i, hSPMatchedEnergy->GetBinContent(i) / hSPMatchedEnergy->GetBinWidth(i));
       hSPWellMatchedEnergy->SetBinContent(i, hSPWellMatchedEnergy->GetBinContent(i) / hSPWellMatchedEnergy->GetBinWidth(i));
       hTRMatchableEnergy->SetBinContent(i, hTRMatchableEnergy->GetBinContent(i) / hTRMatchableEnergy->GetBinWidth(i));
       hTRMatchableMatchedEnergy->SetBinContent(i, hTRMatchableMatchedEnergy->GetBinContent(i) / hTRMatchableMatchedEnergy->GetBinWidth(i));
+      hTRMatchableEnergyLengthCut->SetBinContent(i, hTRMatchableEnergyLengthCut->GetBinContent(i) / hTRMatchableEnergyLengthCut->GetBinWidth(i));
+      hTRMatchableMatchedEnergyLengthCut->SetBinContent(i, hTRMatchableMatchedEnergyLengthCut->GetBinContent(i) / hTRMatchableMatchedEnergyLengthCut->GetBinWidth(i));
       hTRMatchedEnergy->SetBinContent(i, hTRMatchedEnergy->GetBinContent(i) / hTRMatchedEnergy->GetBinWidth(i));
       hTRWellMatchedEnergy->SetBinContent(i, hTRWellMatchedEnergy->GetBinContent(i) / hTRWellMatchedEnergy->GetBinWidth(i));
     }
@@ -214,6 +239,36 @@ void MatchingPerformance()
       cSPMatchEffEnergy->SaveAs(saveDir + "/space_point_matching_efficiency_energy.pdf");
     }
 
+  TCanvas *cSPMatchEffEnergyLengthCut = new TCanvas("cSPMatchEffEnergyLengthCut", "cSPMatchEffEnergyLengthCut");
+  cSPMatchEffEnergyLengthCut->cd();
+
+  TH1F *hSPMatchableEnergyLengthCutClone = (TH1F*) hSPMatchableEnergyLengthCut->Clone("hSPMatchableEnergyLengthCut");
+  hSPMatchableEnergyLengthCutClone->Scale(1 / hSPMatchableEnergyLengthCutClone->GetMaximum());
+  hSPMatchableEnergyLengthCutClone->SetLineColor(kGray+2);
+
+  TEfficiency *eSPMatchEffEnergyLengthCut = new TEfficiency(*hSPMatchableMatchedEnergyLengthCut, *hSPMatchableEnergyLengthCut);
+  eSPMatchEffEnergyLengthCut->SetTitle(";True energy (GeV);Efficiency");
+  eSPMatchEffEnergyLengthCut->SetLineColor(kRed+2);
+  eSPMatchEffEnergyLengthCut->SetMarkerColor(kRed+2);
+  eSPMatchEffEnergyLengthCut->SetLineWidth(2);
+
+  eSPMatchEffEnergyLengthCut->Draw();
+  gPad->Update();
+  eSPMatchEffEnergyLengthCut->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
+  hSPMatchableEnergyLengthCutClone->Draw("samehist");
+
+  TLegend *lSPMatchEffEnergyLengthCut = new TLegend(.6,.45,.85,.55);
+  lSPMatchEffEnergyLengthCut->SetBorderSize(0);
+  lSPMatchEffEnergyLengthCut->AddEntry(eSPMatchEffEnergyLengthCut, "Efficiency","ple");
+  lSPMatchEffEnergyLengthCut->AddEntry(hSPMatchableEnergyLengthCutClone, "True Distribution","l");
+  lSPMatchEffEnergyLengthCut->Draw();
+
+  if(save)
+    {
+      cSPMatchEffEnergyLengthCut->SaveAs(saveDir + "/space_point_matching_efficiency_energy_length_cut_20cm.png");
+      cSPMatchEffEnergyLengthCut->SaveAs(saveDir + "/space_point_matching_efficiency_energy_length_cut_20cm.pdf");
+    }
+
   TCanvas *cTRMatchEffEnergy = new TCanvas("cTRMatchEffEnergy", "cTRMatchEffEnergy");
   cTRMatchEffEnergy->cd();
 
@@ -244,6 +299,36 @@ void MatchingPerformance()
       cTRMatchEffEnergy->SaveAs(saveDir + "/track_matching_efficiency_energy.pdf");
     }
 
+  TCanvas *cTRMatchEffEnergyLengthCut = new TCanvas("cTRMatchEffEnergyLengthCut", "cTRMatchEffEnergyLengthCut");
+  cTRMatchEffEnergyLengthCut->cd();
+
+  TH1F *hTRMatchableEnergyLengthCutClone = (TH1F*) hTRMatchableEnergyLengthCut->Clone("hTRMatchableEnergyLengthCut");
+  hTRMatchableEnergyLengthCutClone->Scale(1 / hTRMatchableEnergyLengthCutClone->GetMaximum());
+  hTRMatchableEnergyLengthCutClone->SetLineColor(kGray+2);
+
+  TEfficiency *eTRMatchEffEnergyLengthCut = new TEfficiency(*hTRMatchableMatchedEnergyLengthCut, *hTRMatchableEnergyLengthCut);
+  eTRMatchEffEnergyLengthCut->SetTitle(";True energy (GeV);Efficiency");
+  eTRMatchEffEnergyLengthCut->SetLineColor(kRed+2);
+  eTRMatchEffEnergyLengthCut->SetMarkerColor(kRed+2);
+  eTRMatchEffEnergyLengthCut->SetLineWidth(2);
+
+  eTRMatchEffEnergyLengthCut->Draw();
+  gPad->Update();
+  eTRMatchEffEnergyLengthCut->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
+  hTRMatchableEnergyLengthCutClone->Draw("samehist");
+
+  TLegend *lTRMatchEffEnergyLengthCut = new TLegend(.6,.45,.85,.55);
+  lTRMatchEffEnergyLengthCut->SetBorderSize(0);
+  lTRMatchEffEnergyLengthCut->AddEntry(eTRMatchEffEnergyLengthCut, "Efficiency","ple");
+  lTRMatchEffEnergyLengthCut->AddEntry(hTRMatchableEnergyLengthCutClone, "True Distribution","l");
+  lTRMatchEffEnergyLengthCut->Draw();
+
+  if(save)
+    {
+      cTRMatchEffEnergyLengthCut->SaveAs(saveDir + "/track_matching_efficiency_energy_length_cut_20cm.png");
+      cTRMatchEffEnergyLengthCut->SaveAs(saveDir + "/track_matching_efficiency_energy_length_cut_20cm.pdf");
+    }
+
   TCanvas *cSPMatchEffLength = new TCanvas("cSPMatchEffLength", "cSPMatchEffLength");
   cSPMatchEffLength->cd();
 
@@ -252,7 +337,7 @@ void MatchingPerformance()
   hSPMatchableLengthClone->SetLineColor(kGray+2);
 
   TEfficiency *eSPMatchEffLength = new TEfficiency(*hSPMatchableMatchedLength, *hSPMatchableLength);
-  eSPMatchEffLength->SetTitle(";Track length (cm);Efficiency");
+  eSPMatchEffLength->SetTitle(";TPC track length (cm);Efficiency");
   eSPMatchEffLength->SetLineColor(kRed+2);
   eSPMatchEffLength->SetMarkerColor(kRed+2);
   eSPMatchEffLength->SetLineWidth(2);
@@ -282,7 +367,7 @@ void MatchingPerformance()
   hTRMatchableLengthClone->SetLineColor(kGray+2);
 
   TEfficiency *eTRMatchEffLength = new TEfficiency(*hTRMatchableMatchedLength, *hTRMatchableLength);
-  eTRMatchEffLength->SetTitle(";Track length (cm);Efficiency");
+  eTRMatchEffLength->SetTitle(";TPC track length (cm);Efficiency");
   eTRMatchEffLength->SetLineColor(kRed+2);
   eTRMatchEffLength->SetMarkerColor(kRed+2);
   eTRMatchEffLength->SetLineWidth(2);
@@ -312,7 +397,7 @@ void MatchingPerformance()
   hSPMatchableShortLengthClone->SetLineColor(kGray+2);
 
   TEfficiency *eSPMatchEffShortLength = new TEfficiency(*hSPMatchableMatchedShortLength, *hSPMatchableShortLength);
-  eSPMatchEffShortLength->SetTitle(";Track length (cm);Efficiency");
+  eSPMatchEffShortLength->SetTitle(";TPC track length (cm);Efficiency");
   eSPMatchEffShortLength->SetLineColor(kRed+2);
   eSPMatchEffShortLength->SetMarkerColor(kRed+2);
   eSPMatchEffShortLength->SetLineWidth(2);
@@ -342,7 +427,7 @@ void MatchingPerformance()
   hTRMatchableShortLengthClone->SetLineColor(kGray+2);
 
   TEfficiency *eTRMatchEffShortLength = new TEfficiency(*hTRMatchableMatchedShortLength, *hTRMatchableShortLength);
-  eTRMatchEffShortLength->SetTitle(";Track length (cm);Efficiency");
+  eTRMatchEffShortLength->SetTitle(";TPC track length (cm);Efficiency");
   eTRMatchEffShortLength->SetLineColor(kRed+2);
   eTRMatchEffShortLength->SetMarkerColor(kRed+2);
   eTRMatchEffShortLength->SetLineWidth(2);
@@ -412,7 +497,7 @@ void MatchingPerformance()
   eTRMatchQualEnergy->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
   hTRMatchedEnergyClone->Draw("samehist");
 
-  TLegend *lTRMatchQualEnergy = new TLegend(.6,.45,.85,.55);
+  TLegend *lTRMatchQualEnergy = new TLegend(.4,.45,.62,.55);
   lTRMatchQualEnergy->SetBorderSize(0);
   lTRMatchQualEnergy->AddEntry(eTRMatchQualEnergy, "Quality","ple");
   lTRMatchQualEnergy->AddEntry(hTRMatchedEnergyClone, "True Distribution","l");
@@ -432,7 +517,7 @@ void MatchingPerformance()
   hSPMatchedLengthClone->SetLineColor(kGray+2);
 
   TEfficiency *eSPMatchQualLength = new TEfficiency(*hSPWellMatchedLength, *hSPMatchedLength);
-  eSPMatchQualLength->SetTitle(";Track length (cm);Quality");
+  eSPMatchQualLength->SetTitle(";TPC track length (cm);Quality");
   eSPMatchQualLength->SetLineColor(kRed+2);
   eSPMatchQualLength->SetMarkerColor(kRed+2);
   eSPMatchQualLength->SetLineWidth(2);
@@ -442,7 +527,7 @@ void MatchingPerformance()
   eSPMatchQualLength->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
   hSPMatchedLengthClone->Draw("samehist");
 
-  TLegend *lSPMatchQualLength = new TLegend(.6,.45,.85,.55);
+  TLegend *lSPMatchQualLength = new TLegend(.6,.6,.85,.7);
   lSPMatchQualLength->SetBorderSize(0);
   lSPMatchQualLength->AddEntry(eSPMatchQualLength, "Quality","ple");
   lSPMatchQualLength->AddEntry(hSPMatchedLengthClone, "True Distribution","l");
@@ -462,7 +547,7 @@ void MatchingPerformance()
   hTRMatchedLengthClone->SetLineColor(kGray+2);
 
   TEfficiency *eTRMatchQualLength = new TEfficiency(*hTRWellMatchedLength, *hTRMatchedLength);
-  eTRMatchQualLength->SetTitle(";Track length (cm);Quality");
+  eTRMatchQualLength->SetTitle(";TPC track length (cm);Quality");
   eTRMatchQualLength->SetLineColor(kRed+2);
   eTRMatchQualLength->SetMarkerColor(kRed+2);
   eTRMatchQualLength->SetLineWidth(2);
@@ -472,7 +557,7 @@ void MatchingPerformance()
   eTRMatchQualLength->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
   hTRMatchedLengthClone->Draw("samehist");
 
-  TLegend *lTRMatchQualLength = new TLegend(.6,.45,.85,.55);
+  TLegend *lTRMatchQualLength = new TLegend(.4,.45,.62,.55);
   lTRMatchQualLength->SetBorderSize(0);
   lTRMatchQualLength->AddEntry(eTRMatchQualLength, "Quality","ple");
   lTRMatchQualLength->AddEntry(hTRMatchedLengthClone, "True Distribution","l");
@@ -492,7 +577,7 @@ void MatchingPerformance()
   hSPMatchedShortLengthClone->SetLineColor(kGray+2);
 
   TEfficiency *eSPMatchQualShortLength = new TEfficiency(*hSPWellMatchedShortLength, *hSPMatchedShortLength);
-  eSPMatchQualShortLength->SetTitle(";Track length (cm);Quality");
+  eSPMatchQualShortLength->SetTitle(";TPC track length (cm);Quality");
   eSPMatchQualShortLength->SetLineColor(kRed+2);
   eSPMatchQualShortLength->SetMarkerColor(kRed+2);
   eSPMatchQualShortLength->SetLineWidth(2);
@@ -522,7 +607,7 @@ void MatchingPerformance()
   hTRMatchedShortLengthClone->SetLineColor(kGray+2);
 
   TEfficiency *eTRMatchQualShortLength = new TEfficiency(*hTRWellMatchedShortLength, *hTRMatchedShortLength);
-  eTRMatchQualShortLength->SetTitle(";Track length (cm);Quality");
+  eTRMatchQualShortLength->SetTitle(";TPC track length (cm);Quality");
   eTRMatchQualShortLength->SetLineColor(kRed+2);
   eTRMatchQualShortLength->SetMarkerColor(kRed+2);
   eTRMatchQualShortLength->SetLineWidth(2);
@@ -562,7 +647,7 @@ void MatchingPerformance()
   eSPMatchQualScore->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
   hSPMatchedScoreClone->Draw("samehist");
 
-  TLegend *lSPMatchQualScore = new TLegend(.6,.45,.85,.55);
+  TLegend *lSPMatchQualScore = new TLegend(.6,.7,.85,.8);
   lSPMatchQualScore->SetBorderSize(0);
   lSPMatchQualScore->AddEntry(eSPMatchQualScore, "Quality","ple");
   lSPMatchQualScore->AddEntry(hSPMatchedScoreClone, "True Distribution","l");
@@ -592,7 +677,7 @@ void MatchingPerformance()
   eTRMatchQualScore->GetPaintedGraph()->GetYaxis()->SetRangeUser(0, 1.2);
   hTRMatchedScoreClone->Draw("samehist");
 
-  TLegend *lTRMatchQualScore = new TLegend(.6,.45,.85,.55);
+  TLegend *lTRMatchQualScore = new TLegend(.4,.45,.62,.55);
   lTRMatchQualScore->SetBorderSize(0);
   lTRMatchQualScore->AddEntry(eTRMatchQualScore, "Quality","ple");
   lTRMatchQualScore->AddEntry(hTRMatchedScoreClone, "True Distribution","l");

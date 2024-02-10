@@ -1,6 +1,6 @@
 void ReconstructionEfficiency()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/crt/clustering/plots/large_samples/combined/reconstructionefficiency";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/plots/rockbox/reconstructionefficiency";
   gSystem->Exec("mkdir -p " + saveDir);
   const bool save = true;
 
@@ -9,7 +9,7 @@ void ReconstructionEfficiency()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("crtana/tree");
-  tree->Add("/sbnd/data/users/hlay/crt/clustering/production/ana/crtana_sbnd.root");
+  tree->Add("/exp/sbnd/data/users/hlay/crt/clustering/merge_checks_jan2024/production/ana/crtana_sbnd.root");
 
   std::vector<double> *td_tag_energy = 0;
   std::vector<bool> *td_tag_reco_status = 0;
