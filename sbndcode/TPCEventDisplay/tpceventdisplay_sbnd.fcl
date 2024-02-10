@@ -1,0 +1,12 @@
+#include "tpceventdisplayalg_sbnd.fcl"
+
+BEGIN_PROLOG
+
+tpceventdisplay_sbnd:
+{
+  EventDisplayConfig: @local::tpceventdisplayalg_sbnd
+  SaveDir:            "/exp/sbnd/data/users/hlay/thesis/sliceevds2"
+  module_type:        "TPCEventDisplay"
+}
+
+END_PROLOG

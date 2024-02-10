@@ -1,0 +1,28 @@
+#include "services_sbnd.fcl"
+#include "tpceventdisplay_sbnd.fcl"
+
+process_name: TPCEventDisplay
+
+services:
+{
+  @table::sbnd_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1 
+
+}
+
+physics:
+{
+  analyzers:
+  {
+    tpcevd:   @local::tpceventdisplay_sbnd
+  }
+
+  ana: [ tpcevd ]
+
+  end_paths: [ ana ]
+}

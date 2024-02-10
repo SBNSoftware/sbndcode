@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+tpceventdisplayalg_sbnd:
+{
+  SliceLabel: "pandoraSCE"
+
+  DrawTPC:    true
+  DrawSlices: true
+
+  TPCColour:           15
+  SliceStartingColour: 800
+  SliceColourInterval: 20
+
+  LineWidth: 3.
+}
+
+END_PROLOG
