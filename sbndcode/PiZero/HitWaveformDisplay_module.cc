@@ -299,8 +299,8 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
           wireAxis->SetLineWidth(1);
           wireAxis->SetLabelSize(0.05);
           wireAxis->SetTitleSize(0.05);
-          wireAxis->SetTitleOffset(1);
-          wireAxis->SetTitle("e^{-}");
+          wireAxis->SetTitleOffset(1.15);
+          wireAxis->SetTitle("Deconvolved e^{-}");
           wireAxis->Draw();
 
           legend->AddEntry(wireHist, "Deconv. Waveform", "l");
@@ -445,7 +445,7 @@ void sbnd::HitWaveformDisplay::SetStyle()
   gStyle->SetTitleFont(62,"xyz");
 
   gStyle->SetTitleOffset(1.07,"x");
-  gStyle->SetTitleOffset(1.12,"y");
+  gStyle->SetTitleOffset(.88,"y");
   gStyle->SetTitleOffset(1,"z");
 
   gStyle->SetMarkerStyle(20);
