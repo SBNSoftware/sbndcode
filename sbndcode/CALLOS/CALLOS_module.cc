@@ -55,7 +55,7 @@ public:
   
   // void endSubRun(art::SubRun& sr) override ;
   // void endRun(art::Run& run) override ;
-  void endJob(art::SubRun& sr) override ;
+  // void endJob(art::SubRun& sr) override ;
 
   // Tools shall be initialized here 
 private:
@@ -65,10 +65,10 @@ private:
   std::string fInputLabel;
 
   // Size of the Region of Interest(ROI) of each signal, must be smaller than RawWaveforms size
-  const int ROI_samples;
+  int ROI_samples;
 
   // Number of samples from start of the ROI to peak. 
-  const int start_to_peak;
+  int start_to_peak;
 
 };
 
