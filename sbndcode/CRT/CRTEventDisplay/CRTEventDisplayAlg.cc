@@ -328,6 +328,11 @@ namespace sbnd::crt {
                 if(t < fMinTime || t > fMaxTime)
                   continue;
 
+                CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z, 1.);
+
+                if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
+                  continue;
+
                 double ex = std::abs(ide.entryX - ide.exitX) / 2.;
                 double ey = std::abs(ide.entryY - ide.exitY) / 2.;
                 double ez = std::abs(ide.entryZ - ide.exitZ) / 2.;
@@ -361,6 +366,10 @@ namespace sbnd::crt {
               continue;
 
             CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
+            CRTTagger tagger  = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
+              continue;
 
             double rmin[3] = {strip.minX, strip.minY, strip.minZ};
             double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
@@ -400,6 +409,9 @@ namespace sbnd::crt {
         for(auto const cluster : clustersVec)
           {
             if(cluster->Ts1() - G4RefTime < fMinTime || cluster->Ts1() - G4RefTime > fMaxTime)
+              continue;
+
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), cluster->Tagger()) == fChosenTaggers.end())
               continue;
 
             auto stripHitVec   = clustersToStripHits.at(cluster.key());
@@ -473,6 +485,18 @@ namespace sbnd::crt {
         for(auto track : tracksVec)
           {
             if(track->Time() - G4RefTime < fMinTime || track->Time() - G4RefTime > fMaxTime)
+              continue;
+
+            std::set<CRTTagger> taggers = track->Taggers();
+
+            bool none = true;
+            for(auto const& tagger : taggers)
+              {
+                if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) != fChosenTaggers.end())
+                  none = false;
+              }
+
+            if(none)
               continue;
 
             const geo::Point_t start = track->Start();
