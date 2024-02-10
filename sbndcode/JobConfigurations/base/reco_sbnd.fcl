@@ -154,6 +154,10 @@ physics:
   pandoraSCESmootherWeights:     @local::scecorrection
   pandoraCentroidPos:            @local::sbnd_pandora
   pandoraSCECentroidPos:         @local::scecorrection
+  pandoraOldBDTs:                @local::sbnd_pandora
+  pandoraSCEOldBDTs:             @local::scecorrection
+  pandoraOldVertexBDTs:          @local::sbnd_pandora
+  pandoraSCEOldVertexBDTs:       @local::scecorrection
 
   ### track-finder producers
   #trackkalmanhit:      @local::sbnd_track3Dkalmanhit
@@ -258,6 +262,12 @@ physics:
                        pandoraNoWeights, pandoraSCENoWeights,
                        pandoraSmootherWeights, pandoraSCESmootherWeights,
                        pandoraCentroidPos, pandoraSCECentroidPos
+ ]
+
+ reco2_pandora_only_bdts: [ rns,
+                            pandora, pandoraSCE,
+                            pandoraOldBDTs, pandoraSCEOldBDTs,
+                            pandoraOldVertexBDTs, pandoraSCEOldVertexBDTs
  ]
 
 
@@ -440,8 +450,20 @@ physics.producers.pandoraSCECentroidPos.T0Labels: []
 physics.producers.pandoraSCECentroidPos.T0LabelsCorrectT0: []
 physics.producers.pandoraSCECentroidPos.CorrectNoT0Tag: true
 
+physics.producers.pandoraSCEOldBDTs.PFPLabel: "pandoraOldBDTs"
+physics.producers.pandoraSCEOldBDTs.T0Labels: []
+physics.producers.pandoraSCEOldBDTs.T0LabelsCorrectT0: []
+physics.producers.pandoraSCEOldBDTs.CorrectNoT0Tag: true
+
+physics.producers.pandoraSCEOldVertexBDTs.PFPLabel: "pandoraOldVertexBDTs"
+physics.producers.pandoraSCEOldVertexBDTs.T0Labels: []
+physics.producers.pandoraSCEOldVertexBDTs.T0LabelsCorrectT0: []
+physics.producers.pandoraSCEOldVertexBDTs.CorrectNoT0Tag: true
+
 physics.producers.pandoraNoRefinement.ConfigFile:        "PandoraSettings_Master_SBND_no_refinement.xml"
 physics.producers.pandoraCorrectedRefinement.ConfigFile: "PandoraSettings_Master_SBND_corrected_refinement.xml"
 physics.producers.pandoraNoWeights.ConfigFile:           "PandoraSettings_Master_SBND_no_weights.xml"
 physics.producers.pandoraSmootherWeights.ConfigFile:     "PandoraSettings_Master_SBND_smoother_weights.xml"
 physics.producers.pandoraCentroidPos.ConfigFile:         "PandoraSettings_Master_SBND_centroid_pos.xml"
+physics.producers.pandoraOldBDTs.ConfigFile:             "PandoraSettings_Master_SBND_old_bdts.xml"
+physics.producers.pandoraOldVertexBDTs.ConfigFile:       "PandoraSettings_Master_SBND_old_vertexing_bdts.xml"

@@ -1,0 +1,27 @@
+#include "vertex_ana.fcl"
+#include "reco_sbnd.fcl"
+
+process_name: Reco2
+
+physics.analyzers.vertexana: @local::vertex_ana_sbnd
+physics.analyzers.vertexanaoldbdts: @local::vertex_ana_sbnd
+physics.analyzers.vertexanaoldvertexbdts: @local::vertex_ana_sbnd
+
+physics.trigger_paths: [ reco2_pandora_only_bdts ]
+
+physics.ana: [ vertexana,
+               vertexanaoldbdts,
+               vertexanaoldvertexbdts
+]
+
+physics.end_paths: [ stream1, ana ]
+
+physics.analyzers.vertexanaoldbdts.SliceLabel:  "pandoraSCEOldBDTs"
+physics.analyzers.vertexanaoldbdts.PFPLabel:    "pandoraSCEOldBDTs"
+physics.analyzers.vertexanaoldbdts.VertexLabel: "pandoraSCEOldBDTs"
+
+physics.analyzers.vertexanaoldvertexbdts.SliceLabel:  "pandoraSCEOldVertexBDTs"
+physics.analyzers.vertexanaoldvertexbdts.PFPLabel:    "pandoraSCEOldVertexBDTs"
+physics.analyzers.vertexanaoldvertexbdts.VertexLabel: "pandoraSCEOldVertexBDTs"
+
+#include "enable_spacecharge_services_sbnd.fcl"
