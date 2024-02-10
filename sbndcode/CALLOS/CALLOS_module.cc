@@ -5,6 +5,11 @@
 //
 // Generated at Fri Feb  9 19:47:11 2024 by Rodrigo Alvarez Garrote using cetskelgen
 // from  version .
+// 
+// This module is a Calibration Analyzer for Low Light Optical Signals
+// CALLOS is made to read raw waveforms from raw and deconvolved stages and 
+// compute the charges and average waveform for each optical channel selected.
+// The resulting histograms and NTuples are saved as output.
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -37,9 +42,25 @@ public:
   // Required functions.
   void analyze(art::Event const& e) override;
 
+  // placeholders
+  void beginJob(art::Run& run) override ;
+  void beginRun(art::Run& run) override ;
+  void beginSubRun(art::Run& run) override ;
+  
+  void endSubRun(art::SubRun& sr) override ;
+  void endRun(art::Run& run) override ;
+  void endJob(art::SubRun& sr) override ;
+
+
 private:
 
   // Declare member data here.
+
+  // Size of the Region of Interest(ROI) of each signal, must be smaller than RawWaveforms size
+  int ROI_samples
+
+  // Number of samples from start of the ROI to peak. 
+  int start_to_peak
 
 };
 
@@ -54,6 +75,24 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
 void callos::CALLOS::analyze(art::Event const& e)
 {
   // Implementation of required member function here.
+
+  // Load the waveforms
+  art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
+  e.getByLabel(fInputLabel, wfHandle);
+
+  // Map waveforms to channels
+
+  // select only relevant channels (this allows to sepparate diferent XAs, PMTs, etc based on PDS map stored in json format)
+  // also prevents checking wvf by wvf
+
+  // Call the ROI(peak/rise...) finder tool for selected channels
+
+  // Compute charges and average waveforms.
+
+  // Store then in job containers.
+
+  // Clean variables needed for next event.
+
 }
 
 DEFINE_ART_MODULE(callos::CALLOS)
