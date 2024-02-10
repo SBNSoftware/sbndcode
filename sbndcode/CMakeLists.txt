@@ -38,3 +38,5 @@ add_subdirectory(WireCell)
 
 add_subdirectory(Decoders)
 add_subdirectory(ChannelMaps)
+
+add_subdirectory(CALLOS)
