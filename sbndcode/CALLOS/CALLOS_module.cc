@@ -11,10 +11,11 @@
 // compute the charges and average waveform for each optical channel selected.
 // The resulting histograms and NTuples are saved as output.
 // A SPE and a vector of charges is produced for each channel and for ALL events processed.
-// The aim of this module is to be fast, hence the conscious decision of not using 
-// if checks when possible. Specially for analyze() function(run on each event).
 // ROI tools and PEAK finders are defined as Tools with templates to allow for
 // different implementations to be used. 
+// 
+// The aim of this module is to be as fast as possible, hence the conscious decision of not using 
+// if checks when possible. Specially for analyze() function(run on each event).
 // 
 // Note: the module assumes raw::waveform channels go from 0 to NChannels-1. 
 // If needed, change from std::vector to std::map.
@@ -87,8 +88,9 @@ private:
   // Total number of channels
   int fNPDSChannels= pdsmap.size();
   
-  // Filter for the loop
+  // Filter for the loop and mapping
   std::vector<bool> fPDSchannelStatus;
+  std::vector<int>  fPDSchannelMap;
 
   // Selected channels
   std::vector<int> fSelectedChannels;
@@ -103,6 +105,9 @@ private:
 
   // Average Waveforms container.
   std::vector<AverageWaveform> AverageWaveform_SelectedChannels;
+  //Charge container
+  std::vector<std::vector<float>> Charge_SelectedChannels;
+
   // Tool pointers
   // std::unique_ptr<callos::ROIFINDERALG> fROIFinderAlgPtr;
 };
@@ -118,12 +123,19 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
   fROISamples = p.get<int>("ROI_samples", 1000);
   fStartToPeak = p.get<int>("StartToPeak",200);
 
+  // get map info
   std::vector<int> fSelectedChannels = pdsmap.getChannelsOfType(fPDType);
-  fNSelectedChannels = fPDType.size();
+  fNSelectedChannels = fSelectedChannels.size();
+  std::cout<<"CALLOS: Selected "<<fNSelectedChannels<<" channels of selected type"<<std::endl;
 
-  // Prepare the filter
+  // Prepare the filter and map
   fPDSchannelStatus.resize(fNPDSChannels);
-  for (int i=0; i<fNSelectedChannels; i++){ fPDSchannelStatus[fSelectedChannels[i]] = true; }
+  fPDSchannelMap   .resize(fNPDSChannels);
+  for (int i=0; i<fNSelectedChannels; i++)
+  { 
+    fPDSchannelStatus[fSelectedChannels[i]] = true; 
+    fPDSchannelMap   [fSelectedChannels[i]] = i;
+  }
 
   // Initialize the average waveforms container
   AverageWaveform_SelectedChannels.reserve(fNSelectedChannels);
@@ -147,31 +159,34 @@ void callos::CALLOS::analyze(art::Event const& e)
    throw cet::exception("SBNDCALLOS") << "Input waveforms with input label " << fInputLabel << " not found\n";
   }
   
+  std::cout<<"CALLOS: Event "<<e.id().event()<<" has      "<<NWvf<<" waveforms"<<std::endl;
   // Get the Raw waveforms
   auto NWvf = wfHandle->size();
-  std::cout<<"CALLOS: Event "<<e.id().event()<<" has "<<NWvf<<" waveforms"<<std::endl;
   int iWvf=0;
     for(auto const& wf : *wfHandle)
     {
       // Get raw wvf info
       int wfChannel = wf.ChannelNumber();
 
-      // move to float
-      size_t wfsize=wf.Waveform().size();
-      std::vector<float> wave;
-      wave.reserve(wfsize);
-      wave.assign(wf.Waveform().begin(), wf.Waveform().end());
 
       // select only relevant channels (this allows to sepparate diferent XAs, PMTs, etc based on PDS map)
       if (fPDSchannelStatus[wfChannel]) // faster than checking if the channel is in the list of selected channels
       {
-        iWvf++;
+
+        // move to float
+        size_t wfsize=wf.Waveform().size();
+        std::vector<float> wave;
+        wave.reserve(wfsize);
+        wave.assign(wf.Waveform().begin(), wf.Waveform().end());
+
+        AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(wave);
         // Call the ROI(peak/rise...) finder tool for selected channels
         // fROIFinderAlgPtr->FindROI(wvf, fROISamples, fStartToPeak);
         // Compute charges and average waveforms(maybe in the ROI/peakfinder).
+        iWvf++;
       }
     }
-  std::cout<<"CALLOS: Event "<<e.id().event()<<" ana "<<iWvf<<" waveforms"<<std::endl;
+  std::cout<<"CALLOS: Event "<<e.id().event()<<" analized "<<iWvf<<" waveforms"<<std::endl;
   // Store info in containers.
 
   // Clean variables needed for next event.
