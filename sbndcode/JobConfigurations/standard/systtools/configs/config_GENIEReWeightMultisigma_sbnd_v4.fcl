@@ -1,0 +1,143 @@
+GENIEReWeight_Multisigma_Tool_Config: {
+
+    tool_type: "GENIEReWeight"
+
+    instance_name: "SBND_v4_multisigma"
+
+    # Keep one GENIEReWeight instance per discrete dial tweak in memory
+    # Requires no reconfigures within the event loop
+    UseFullHERG: true
+
+    ignore_parameter_dependence: true
+
+    ################################## CCQE Parameters
+
+    # Assesses a shape-only variation of the CCQE cross section by
+    # switching the parameterization of the vector form factors
+    # from BBBA07 (default for the AR23_20i_00_000 model set) to
+    # a dipole (VecFFCCQEshape = 1).
+    #
+    VecFFCCQEshape_central_value: 0
+    VecFFCCQEshape_variation_descriptor: "[1.0]"
+
+    # This dial varies the strength of the RPA corrections that are applied in
+    # the Valencia CCQE model. The implementation was contributed to GENIE by
+    # MicroBooNE and is documented in Phys. Rev. D 105, 072001 (2022).
+    RPA_CCQE_central_value: 0
+    RPA_CCQE_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # This dial varies the strength of the electromagnetic potential used by
+    # the Valencia CCQE model to apply Coulomb corrections to the cross
+    # section. The implementation was contributed to GENIE by MicroBooNE and is
+    # documented in Phys. Rev. D 105, 072001 (2022).
+    CoulombCCQE_central_value: 0
+    CoulombCCQE_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    ################################## MEC Parameters
+
+    # Constant scaling factor for the CCMEC total cross section
+    NormCCMEC_central_value: 0
+    NormCCMEC_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # Constant scaling factor for the NCMEC total cross section
+    NormNCMEC_central_value: 0
+    NormNCMEC_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # Adjusts the angular distribution when decaying a two-nucleon cluster
+    # into two final-state nucleons.
+    # DecayAngMEC = 0 gives the default isotropic angular distribution
+    # DecayAngMEC = 1 gives an alternative distribution proportional to
+    # cos^2(theta). See also Phys. Rev. D 105, 072001 (2022).
+    DecayAngMEC_central_value: 0
+    DecayAngMEC_variation_descriptor: "[1.0]"
+
+    ################# Non-RES
+
+    # nu+p, CC
+
+    NonRESBGvpCC1pi_central_value: 0
+    NonRESBGvpCC1pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    NonRESBGvpCC2pi_central_value: 0
+    NonRESBGvpCC2pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # nu+p, NC
+
+    NonRESBGvpNC1pi_central_value: 0
+    NonRESBGvpNC1pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    NonRESBGvpNC2pi_central_value: 0
+    NonRESBGvpNC2pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # nu+n, CC
+
+    NonRESBGvnCC1pi_central_value: 0
+    NonRESBGvnCC1pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    NonRESBGvnCC2pi_central_value: 0
+    NonRESBGvnCC2pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # nu+n, NC
+
+    NonRESBGvnNC1pi_central_value: 0
+    NonRESBGvnNC1pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    NonRESBGvnNC2pi_central_value: 0
+    NonRESBGvnNC2pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # nubar+p, CC
+
+    NonRESBGvbarpCC1pi_central_value: 0
+    NonRESBGvbarpCC1pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    NonRESBGvbarpCC2pi_central_value: 0
+    NonRESBGvbarpCC2pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # nubar+p, NC
+
+    NonRESBGvbarpNC1pi_central_value: 0
+    NonRESBGvbarpNC1pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    NonRESBGvbarpNC2pi_central_value: 0
+    NonRESBGvbarpNC2pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # nubar+n, CC
+
+    NonRESBGvbarnCC1pi_central_value: 0
+    NonRESBGvbarnCC1pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    NonRESBGvbarnCC2pi_central_value: 0
+    NonRESBGvbarnCC2pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # nubar+n, NC
+
+    NonRESBGvbarnNC1pi_central_value: 0
+    NonRESBGvbarnNC1pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    NonRESBGvbarnNC2pi_central_value: 0
+    NonRESBGvbarnNC2pi_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    ################# Other
+
+    RDecBR1gamma_central_value: 0
+    RDecBR1gamma_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    RDecBR1eta_central_value: 0
+    RDecBR1eta_variation_descriptor: "[-1,+1,-2,+2,-3,+3]"
+
+    # Pion angular distibution in Delta -> pi N decays
+    # Theta_Delta2Npi = 0 gives the Rein-Sehgal angular distribution
+    # Theta_Delta2Npi = 1 gives an isotropic angular distribution
+    Theta_Delta2Npi_central_value: 0
+    Theta_Delta2Npi_variation_descriptor: "[1.0]"
+
+    # Photon angular distribution in Delta -> photon N decays
+    # ThetaDelta2NRad = 0 gives the default isotropic angular distribution
+    # ThetaDelta2NRad = 1 gives an alternative distribution proportional to
+    # cos^2(theta). See also Phys. Rev. D 105, 072001 (2022).
+    ThetaDelta2NRad_central_value: 0
+    ThetaDelta2NRad_variation_descriptor: "[1.0]"
+
+}
+
+syst_providers: [GENIEReWeight_Multisigma_Tool_Config]

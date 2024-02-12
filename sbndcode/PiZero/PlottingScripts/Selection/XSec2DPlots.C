@@ -55,7 +55,7 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
       TH1D *tmpRockboxTrueUnSel = new TH1D(Form("tmpRockboxTrueUnSel%i", i),
                                            Form("%.2f < %s < %.2f;%s;Events / %s", plotSet.bins2[i],
                                                 plotSet.axis2.Data(), plotSet.bins2[i+1], plotSet.axis1.Data(),
-                                                plotSet.normalisationUnit.Data()),
+                                                plotSet.normalisationUnit1.Data()),
                                            plotSet.nbins1, bins1);
 
       rockboxEvents->Draw(Form("%s*1e3>>tmpRockboxTrueUnSel%i", trueUnSelVar1.Data(), i),
@@ -66,7 +66,7 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
       TH1D *tmpRockboxTrueSel = new TH1D(Form("tmpRockboxTrueSel%i", i),
                                          Form("%.2f < %s < %.2f;%s;Events / %s", plotSet.bins2[i],
                                               plotSet.axis2.Data(), plotSet.bins2[i+1], plotSet.axis1.Data(),
-                                              plotSet.normalisationUnit.Data()),
+                                              plotSet.normalisationUnit1.Data()),
                                          plotSet.nbins1, bins1);
 
       rockboxEvents->Draw(Form("%s*1e3>>tmpRockboxTrueSel%i", trueSelVar1.Data(), i),
@@ -77,25 +77,25 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
       TH1D *tmpRockboxRecoSig = new TH1D(Form("tmpRockboxRecoSig%i", i),
                                          Form("%.2f < %s < %.2f;%s;Events / %s", plotSet.bins2[i],
                                               plotSet.axis2.Data(), plotSet.bins2[i+1], plotSet.axis1.Data(),
-                                              plotSet.normalisationUnit.Data()),
+                                              plotSet.normalisationUnit1.Data()),
                                          plotSet.nbins1, bins1);
 
       rockboxEvents->Draw(Form("%s>>tmpRockboxRecoSig%i", plotSet.var1.Data(), i),
                           Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + selectionParams.categories[0].cut + cut.cut);
       
       tmpRockboxRecoSig->Scale(rockboxScaling);
-      NormaliseEntriesByBinWidth(tmpRockboxRecoSig, plotSet.scale);
+      NormaliseEntriesByBinWidth(tmpRockboxRecoSig, plotSet.scale1);
       recoHistsSig.push_back(tmpRockboxRecoSig);
 
       TH1D *tmpRockboxRecoBack = new TH1D(Form("tmpRockboxRecoBack%i", i),
                                           Form("%.2f < %s < %.2f;%s;Events / %s", plotSet.bins2[i],
                                                plotSet.axis2.Data(), plotSet.bins2[i+1], plotSet.axis1.Data(),
-                                               plotSet.normalisationUnit.Data()),
+                                               plotSet.normalisationUnit1.Data()),
                                           plotSet.nbins1, bins1);
       TH1D *tmpIntimeRecoBack = new TH1D(Form("tmpIntimeRecoBack%i", i),
                                          Form("%.2f < %s < %.2f;%s;Events / %s", plotSet.bins2[i],
                                               plotSet.axis2.Data(), plotSet.bins2[i+1], plotSet.axis1.Data(),
-                                              plotSet.normalisationUnit.Data()),
+                                              plotSet.normalisationUnit1.Data()),
                                          plotSet.nbins1, bins1);
 
       rockboxEvents->Draw(Form("%s>>tmpRockboxRecoBack%i", plotSet.var1.Data(), i),
@@ -104,8 +104,8 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
                          Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + !(selectionParams.categories[0].cut) + cut.cut);
       
       tmpRockboxRecoBack->Scale(rockboxScaling);
-      NormaliseEntriesByBinWidth(tmpRockboxRecoBack, plotSet.scale);
-      NormaliseEntriesByBinWidth(tmpIntimeRecoBack, plotSet.scale);
+      NormaliseEntriesByBinWidth(tmpRockboxRecoBack, plotSet.scale1);
+      NormaliseEntriesByBinWidth(tmpIntimeRecoBack, plotSet.scale1);
       tmpIntimeRecoBack->Scale(intimeScaling);
 
       TH1D *hRecoBackClone = (TH1D*) tmpRockboxRecoBack->Clone();

@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 
 #include "TChain.h"
 #include "TROOT.h"
@@ -7,7 +7,7 @@
 
 void InputVars()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/inputvars";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv14/razzled/training/inputvars";
   gSystem->Exec("mkdir -p " + saveDir);
 
   using namespace std;
@@ -15,9 +15,9 @@ void InputVars()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("razzled/pfpTree");
-  tree->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_rockbox.root");
-  tree->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intrnue.root");
-  tree->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root");
+  tree->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv14/NCPiZeroAv14_rockbox.root");
+  tree->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv14/NCPiZeroAv14_intrnue.root");
+  tree->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv14/NCPiZeroAv14_intime.root");
 
   std::vector<Cut> particles = { {"electron", "abs(truePDG)==11 && !unambiguousSlice", "e^{#pm}", kMagenta+2},
                                  {"muon", "abs(truePDG)==13 && !unambiguousSlice", "#mu^{#pm}", kRed+2},
@@ -104,6 +104,10 @@ void InputVars()
                                60, -20, 100},
                               {"trk_chi2PIDMuon_filled", "trk_chi2PIDMuon", ";Track #chi^{2} PID Muon;PFPs",
                                52, -4, 100},
+                              {"trk_chi2PIDPion", "trackChi2PIDPion", ";Track #chi^{2} PID Pion;PFPs",
+                               60, -20, 100},
+                              {"trk_chi2PIDKaon", "trackChi2PIDKaon", ";Track #chi^{2} PID Kaon;PFPs",
+                               60, -20, 100},
                               {"trk_chi2PIDProton", "trk_chi2PIDProton", ";Track #chi^{2} PID Proton;PFPs",
                                84, -20, 400},
                               {"trk_chi2PIDProton_filled", "trk_chi2PIDProton", ";Track #chi^{2} PID Proton;PFPs",

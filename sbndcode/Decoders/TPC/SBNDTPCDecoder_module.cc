@@ -104,7 +104,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   if ( !daq_handle.isValid() ) {
     throw cet::exception("SBNDTPCDecoder_module ") << " invalid fragment handle";
   }
-  
+
   RDPmkr rdpm(event);
   TSPmkr tspm(event);
 

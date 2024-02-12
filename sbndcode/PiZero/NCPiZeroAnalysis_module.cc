@@ -25,6 +25,7 @@
 #include "TFile.h"
 
 #include "nusimdata/SimulationBase/MCParticle.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
@@ -61,6 +62,9 @@
 #include "SecondShower/SecondShowerFinderAlg.h"
 
 #include <numeric>
+
+#include "CLHEP/Random/RandEngine.h"
+#include "CLHEP/Random/RandGauss.h"
 
 constexpr int def_int       = std::numeric_limits<int>::min();
 constexpr size_t def_size   = std::numeric_limits<size_t>::max();
@@ -111,7 +115,8 @@ public:
   void AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                      const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
                      const art::Handle<std::vector<recob::Track>> &trackHandle,
-                     const art::Handle<std::vector<recob::Shower>> &showerHandle);
+                     const art::Handle<std::vector<recob::Shower>> &showerHandle,
+                     const art::Handle<std::vector<recob::Hit>> &hitHandle);
 
   void AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const std::vector<art::Ptr<recob::PFParticle>> &pfps,
                    const std::vector<art::Ptr<recob::Hit>> &sliceHits, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
@@ -123,7 +128,8 @@ public:
                      const art::Handle<std::vector<recob::Shower>> &showerHandle, const art::Ptr<recob::Vertex> &vtx,
                      const std::vector<art::Ptr<recob::Hit>> &hits);
   void AnalyseSliceTruth(const art::Event &e, const art::Ptr<recob::Slice> &slc, const int slcCounter,
-                         const art::Handle<std::vector<recob::Slice>> &sliceHandle);
+                         const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+                         const art::Handle<std::vector<recob::Hit>> &hitHandle);
 
   void ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, const int slcCounter, const int pfpCounter);
   void ExtractCalo(const art::Ptr<anab::Calorimetry> &calo, const int slcCounter, const int pfpCounter);
@@ -186,6 +192,8 @@ public:
 
 private:
 
+  CLHEP::HepRandomEngine& fRandomEngine;
+
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
@@ -205,7 +213,7 @@ private:
   TProfile* fShowerEnergyCorrectionHist;
 
   std::map<int, int> fHitsMap;
-  std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap;
+  std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap, fNuHitsMapSP;
   std::map<int, art::Ptr<recob::PFParticle>> fPFPMap;
   std::map<int, std::set<art::Ptr<recob::PFParticle>>> fRecoPFPMap;
 
@@ -394,7 +402,9 @@ private:
     { "slc_true_event_type_Xp0pi", new InhVecVar<int>("slc_true_event_type_Xp0pi") },
     { "slc_true_signal", new InhVecVar<bool>("slc_true_signal") },
     { "slc_comp", new InhVecVar<float>("slc_comp") },
+    { "slc_comp_sp_only", new InhVecVar<float>("slc_comp_sp_only") },
     { "slc_pur", new InhVecVar<float>("slc_pur") },
+    { "slc_pur_sp_only", new InhVecVar<float>("slc_pur_sp_only") },
     { "slc_true_en_dep", new InhVecVar<float>("slc_true_en_dep") },
     { "slc_true_pdg", new InhVecVar<int>("slc_true_pdg") },
     { "slc_true_ccnc", new InhVecVar<int>("slc_true_ccnc") },
@@ -614,128 +624,52 @@ private:
                                                        "piplus_Flux"
   };
 
-  const std::vector<std::string> genie_weight_names = { "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_np_CC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_3Pi",
-                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nu",
-                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nubar",
-                                                        "MiscInteractionSysts_SBND_v1_SPPLowQ2Suppression",
-                                                        "MiscInteractionSysts_SBND_v1_nuenuebar_xsec_ratio",
-                                                        "MiscInteractionSysts_SBND_v1_nuenumu_xsec_ratio",
-                                                        "MINERvAq0q3Weighting_SBND_v1_Mnv2p2hGaussEnhancement",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nu",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nubar",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nu",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nubar",
-                                                        "GENIEReWeight_SBND_v1_multisim_AhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_BhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_CCQEPauliSupViaKF",
-                                                        "GENIEReWeight_SBND_v1_multisim_CV1uBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_CV2uBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_EtaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisim_FormZone",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_MFP_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_MFP_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaCCQE",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_MvCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_MvNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1eta",
-                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1gamma",
-                                                        "GENIEReWeight_SBND_v1_multisigma_AhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_BhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEMomDistroFGtoSF",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEPauliSupViaKF",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CV1uBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CV2uBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_EtaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FormZone",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCQE",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MvCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MvNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1eta",
-                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1gamma",
-                                                        "GENIEReWeight_SBND_v1_multisigma_Theta_Delta2Npi",
+  const std::vector<std::string> genie_weight_names = { "GENIEReWeight_SBND_v4_multisigma_CoulombCCQE",
+                                                        "GENIEReWeight_SBND_v4_multisigma_DecayAngMEC",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NormCCMEC",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NormNCMEC",
+                                                        "GENIEReWeight_SBND_v4_multisigma_RDecBR1eta",
+                                                        "GENIEReWeight_SBND_v4_multisigma_RDecBR1gamma",
+                                                        "GENIEReWeight_SBND_v4_multisigma_RPA_CCQE",
+                                                        "GENIEReWeight_SBND_v4_multisigma_ThetaDelta2NRad",
+                                                        "GENIEReWeight_SBND_v4_multisigma_Theta_Delta2Npi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_VecFFCCQEshape",
+                                                        "GENIEReWeight_SBND_v4_multisim_CCRESVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_COHVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_DISBYVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_FSI_N_VariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_FSI_pi_VariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_NCELVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_NCRESVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_ZExpAVariationResponse"
   };
+
+  const std::vector<std::string> geant4_weight_names = { "reinteractions_Geant4",
+  };
+
+  std::map<std::string, std::map<int, double>> genie_multisigma_universe_weights;
 };
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
+  , fRandomEngine(art::ServiceHandle<rndm::NuRandomService>()->registerAndSeedEngine(createEngine(0, "HepJamesRandom", "SystematicWeightThrows"),
+                                                                                     "HepJamesRandom", "SystematicWeightThrows", 101))
   , fMCParticleModuleLabel          (p.get<art::InputTag>("MCParticleModuleLabel"))
   , fSliceModuleLabel               (p.get<art::InputTag>("SliceModuleLabel"))
   , fPFParticleModuleLabel          (p.get<art::InputTag>("PFParticleModuleLabel"))
@@ -773,12 +707,23 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
       }
 
+    nuVars["nu_weight_all_flux"] = new InhVecVecVar<float>("nu_weight_all_flux");
+    slcVars["slc_true_weight_all_flux"] = new InhVecVecVar<float>("slc_true_weight_all_flux");
+
     for(auto const& name : genie_weight_names)
       {
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
       }
 
+    for(auto const& name : geant4_weight_names)
+      {
+        nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
+        slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
+      }
+
+    nuVars["nu_weight_all_genie_multisim"] = new InhVecVecVar<float>("nu_weight_all_genie_multisim");
+    slcVars["slc_true_weight_all_genie_multisim"] = new InhVecVecVar<float>("slc_true_weight_all_genie_multisim");
 
     cet::search_path sp("FW_SEARCH_PATH");
     std::string showerEnergyCorrectionFileFullPath;
@@ -807,6 +752,19 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
 
     fEventTree->Branch("n_slc", &_n_slc);
     SetupBranches(slcVars);
+
+    CLHEP::RandGauss randGauss(fRandomEngine, 0., 1.);
+
+    for(auto const& name : genie_weight_names)
+      {
+        if(name.find("multisigma") != std::string::npos)
+          {
+            genie_multisigma_universe_weights[name] = std::map<int, double>();
+
+            for(int univ = 0; univ < 500; ++univ)
+              genie_multisigma_universe_weights[name][univ] = randGauss.fire();
+          }
+      }
   }
 
 void sbnd::NCPiZeroAnalysis::SetupBranches(VecVarMap &map)
@@ -947,7 +905,7 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
   }
 
   SetupMaps(e, hitHandle, pfpHandle);
-  AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
+  AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle, hitHandle);
   AnalyseNeutrinos(e, MCTruthHandles);
 
   // Fill the Tree
@@ -958,6 +916,7 @@ void sbnd::NCPiZeroAnalysis::ClearMaps()
 {
   fHitsMap.clear();
   fNuHitsMap.clear();
+  fNuHitsMapSP.clear();
   fPFPMap.clear();
   fRecoPFPMap.clear();
 }
@@ -966,6 +925,8 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
                                        const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
 {
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+  art::FindOneP<recob::SpacePoint> hitsToSPs(hitHandle, e, fSpacePointModuleLabel);
 
   std::vector<art::Ptr<recob::Hit>> hitVec;
   art::fill_ptr_vector(hitVec, hitHandle);
@@ -976,6 +937,10 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
       fHitsMap[trackID]++;
       const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
       fNuHitsMap[mct]++;
+
+      const art::Ptr<recob::SpacePoint> spacepoint = hitsToSPs.at(hit.key());
+      if(spacepoint.isNonnull())
+        fNuHitsMapSP[mct]++;
     }
 
   std::vector<art::Ptr<recob::PFParticle>> pfpVec;
@@ -1061,13 +1026,57 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
       art::FindManyP<sbn::evwgh::EventWeightMap> MCTruthToWeights( { mct }, e, weightModuleLabel);
       const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToWeights.at(0);
 
+      int n_univs = 0;
+      if(weightModuleLabel == "fluxweight" || weightModuleLabel == "geant4weight")
+        n_univs = 1000;
+      else if(weightModuleLabel == "systtools")
+        n_univs = 500;
+
+      std::vector<float> all(n_univs, 1.);
+
       for(auto const& ewm : ewms)
         {
           for(auto const& [ name, weights ] : *ewm)
             {
-              FillElement(vars[prefix + "_weight_" + name], counter, weights);
+              if((weightModuleLabel == "fluxweight") || (weightModuleLabel == "geant4weight") || (weightModuleLabel == "systtools" && name.find("multisim") != std::string::npos))
+                {
+                  FillElement(vars[prefix + "_weight_" + name], counter, weights);
+
+                  for(int univ = 0; univ < n_univs; ++univ)
+                    all[univ] *= weights[univ];
+                }
+              else if(weightModuleLabel == "systtools" && name.find("multisigma") != std::string::npos)
+                {
+                  std::vector<float> thrown_weights(n_univs, 1.);
+
+                  if(weights.size() == 6)
+                    {
+                      for(int univ = 0; univ < n_univs; ++univ)
+                        {
+                          thrown_weights[univ] = 1 + (weights[1] - 1) * genie_multisigma_universe_weights[name][univ];
+                          all[univ] *= weights[univ];
+                        }
+                    }
+                  else if(weights.size() == 1)
+                    {
+                      for(int univ = 0; univ < n_univs; ++univ)
+                        {
+                          thrown_weights[univ] = 1 + (weights[0] - 1) * 2 * genie_multisigma_universe_weights[name][univ];
+                          all[univ] *= weights[univ];
+                        }
+                    }
+                  else
+                    std::cout << "Whoaaaaaaaaaa, multisigma of size " << weights.size() << std::endl;
+
+                  FillElement(vars[prefix + "_weight_" + name], counter, thrown_weights);
+                }
             }
         }
+
+      if(weightModuleLabel == "fluxweight")
+        FillElement(vars[prefix + "_weight_all_flux" ], counter, all);
+      else if(weightModuleLabel == "systtools")
+        FillElement(vars[prefix + "_weight_all_genie_multisim" ], counter, all);
     }
 
   int protons = 0, neutrons = 0, charged_pions = 0, neutral_pions = 0, dalitz_neutral_pions = 0, photons = 0, other = 0;
@@ -1351,7 +1360,8 @@ void sbnd::NCPiZeroAnalysis::AnalysePhotonReco(const std::string name, const int
 void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                                            const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
                                            const art::Handle<std::vector<recob::Track>> &trackHandle,
-                                           const art::Handle<std::vector<recob::Shower>> &showerHandle)
+                                           const art::Handle<std::vector<recob::Shower>> &showerHandle,
+                                           const art::Handle<std::vector<recob::Hit>> &hitHandle)
 {
   std::vector<art::Ptr<recob::Slice>> sliceVec;
   art::fill_ptr_vector(sliceVec, sliceHandle);
@@ -1440,7 +1450,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
 
       SelectSlice(slcCounter);
 
-      AnalyseSliceTruth(e, slc, slcCounter, sliceHandle);
+      AnalyseSliceTruth(e, slc, slcCounter, sliceHandle, hitHandle);
     }
 }
 
@@ -2006,41 +2016,72 @@ void sbnd::NCPiZeroAnalysis::ExtractRazzled(const art::Ptr<sbn::MVAPID> &razzled
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::Ptr<recob::Slice> &slc, const int slcCounter,
-                                               const art::Handle<std::vector<recob::Slice>> &sliceHandle)
+                                               const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+                                               const art::Handle<std::vector<recob::Hit>> &hitHandle)
 {
   art::FindManyP<recob::Hit> slicesToHits(sliceHandle, e, fSliceModuleLabel);
+  art::FindOneP<recob::SpacePoint> hitsToSPs(hitHandle, e, fSpacePointModuleLabel);
 
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
   const std::vector<art::Ptr<recob::Hit>> sliceHits = slicesToHits.at(slc.key());
 
-  std::map<int, int> objectHitMap;
+  int nSPHits = 0;
+  std::map<int, int> objectHitMap, objectHitMapSP;
   for(auto const &hit : sliceHits)
-    objectHitMap[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+    {
+      const art::Ptr<recob::SpacePoint> spacepoint = hitsToSPs.at(hit.key());
+      if(spacepoint.isNonnull())
+        {
+          objectHitMapSP[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+          ++nSPHits;
+        }
 
-  std::map<const art::Ptr<simb::MCTruth>, int> mcTruthHitMap;
+      objectHitMap[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+    }
+
+  std::map<const art::Ptr<simb::MCTruth>, int> mcTruthHitMap, mcTruthHitMapSP;
   for(auto const& [trackID, nhits] : objectHitMap)
     {
       const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
       mcTruthHitMap[mct] += nhits;
     }
+  for(auto const& [trackID, nhits] : objectHitMapSP)
+    {
+      const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
+      mcTruthHitMapSP[mct] += nhits;
+    }
 
-  int maxHits = def_int;
-  art::Ptr<simb::MCTruth> bestMCT = art::Ptr<simb::MCTruth>();
+  int maxHits = def_int, maxHitsSP = def_int;
+  art::Ptr<simb::MCTruth> bestMCT = art::Ptr<simb::MCTruth>(), bestMCTSP = art::Ptr<simb::MCTruth>();
 
   for(auto const& [mct, nhits] : mcTruthHitMap)
     {
       if(nhits > maxHits)
         {
           maxHits = nhits;
-          bestMCT  = mct;
+          bestMCT = mct;
+        }
+    }
+
+  for(auto const& [mct, nhits] : mcTruthHitMapSP)
+    {
+      if(nhits > maxHitsSP)
+        {
+          maxHitsSP = nhits;
+          bestMCTSP = mct;
         }
     }
 
   const float comp = fNuHitsMap[bestMCT] == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(fNuHitsMap[bestMCT]);
   const float pur  = sliceHits.size() == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(sliceHits.size());
 
+  const float compSP = fNuHitsMapSP[bestMCTSP] == 0 ? def_float : mcTruthHitMapSP[bestMCTSP] / static_cast<float>(fNuHitsMapSP[bestMCTSP]);
+  const float purSP  = nSPHits == 0 ? def_float : mcTruthHitMapSP[bestMCTSP] / static_cast<float>(nSPHits);
+
   FillElement(slcVars["slc_comp"], slcCounter, comp);
   FillElement(slcVars["slc_pur"], slcCounter, pur);
+  FillElement(slcVars["slc_comp_sp_only"], slcCounter, compSP);
+  FillElement(slcVars["slc_pur_sp_only"], slcCounter, purSP);
 
   if(fBeamOff)
     {
@@ -2137,9 +2178,9 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 
   float crumbs;
   AccessElement(slcVars["slc_crumbs_score"], counter, crumbs);
-  const bool passes_crumbs_incl  = crumbs > -0.1;
-  const bool passes_crumbs_0p0pi = crumbs > -0.145;
-  const bool passes_crumbs_Np0pi = crumbs > -0.085;
+  const bool passes_crumbs_incl  = crumbs > -0.195;
+  const bool passes_crumbs_0p0pi = crumbs > -0.195;
+  const bool passes_crumbs_Np0pi = crumbs > -0.16;
 
   int nrazzledmuons;
   AccessElement(slcVars["slc_n_primary_razzled_muons"], counter, nrazzledmuons);
@@ -2159,14 +2200,14 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   double opt0frac;
   AccessElement(slcVars["slc_opt0_fracPE"], counter, opt0frac);
   const bool passes_opt0frac_incl  = opt0frac < 0.756 && opt0frac > -0.7;
-  const bool passes_opt0frac_0p0pi = opt0frac < 0.408 && opt0frac > -0.704;
-  const bool passes_opt0frac_Np0pi = opt0frac < 0.792 && opt0frac > -0.424;
+  const bool passes_opt0frac_0p0pi = opt0frac < 0.408 && opt0frac > -0.7;
+  const bool passes_opt0frac_Np0pi = opt0frac < 0.836 && opt0frac > -0.376;
 
   double opt0score;
   AccessElement(slcVars["slc_opt0_score"], counter, opt0score);
-  const bool passes_opt0score_incl  = opt0score > 70;
-  const bool passes_opt0score_0p0pi = opt0score > 145;
-  const bool passes_opt0score_Np0pi = opt0score > 175;
+  const bool passes_opt0score_incl  = opt0score > 150;
+  const bool passes_opt0score_0p0pi = opt0score > 150;
+  const bool passes_opt0score_Np0pi = opt0score > 210;
 
   int nrazzledpions;
   AccessElement(slcVars["slc_n_primary_razzled_pions_thresh"], counter, nrazzledpions);
@@ -2175,8 +2216,12 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   int nrazzledprotons;
   AccessElement(slcVars["slc_n_primary_razzled_protons_thresh"], counter, nrazzledprotons);
 
+  bool allothertrkscontained;
+  AccessElement(slcVars["slc_all_other_trks_contained"], counter, allothertrkscontained);
+
   const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs_incl && passes_razzled_muons && passes_pfps
-    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_incl && passes_opt0score_incl;
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_incl && passes_opt0score_incl
+    && allothertrkscontained;
   FillElement(slcVars["slc_sel_incl"], counter, sel_incl);
 
   const bool sel_0p0pi = !is_clear_cosmic && is_fv && passes_crumbs_0p0pi && passes_razzled_muons && passes_pfps

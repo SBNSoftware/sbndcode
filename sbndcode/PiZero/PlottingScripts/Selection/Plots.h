@@ -26,9 +26,9 @@ std::vector<Plot> selection_plots = {
   { "slc_best_pzc_good_kinematics", "slc_best_pzc_good_kinematics", ";Best #pi^{0} Candidates Good Kinematics?;Slice",
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
   { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
-    100, -2, 8 },
+    100, -2, 8 }, // 100, -2, 2 for cut optimisation
   { "slc_opt0_score", "slc_opt0_score", ";OpT0 Score;Slices",
-    100, 0, 2e5 },
+    100, 0, 2e5 }, // 100, 0, 5e3 for cut optimisation
 };
 
 std::vector<Plot> extension_plots = {
@@ -86,13 +86,13 @@ std::vector<Plot> no_plots = {};
 std::vector<TwoDPlotSet> true_observables_twod_sets = {
   { "pizero_momentum_and_cos_theta", "1e3 * nu_pz_pizero_mom", "nu_pz_cos_theta_pizero",
     8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, "p_{#pi^{0}} (MeV/c)", "60 MeV/c", 60.,
-    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, "cos(#theta_{#pi^{0}} )" },
+    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, "cos(#theta_{#pi^{0}} )", "0.2", 0.2 },
   { "cos_com_and_cos_theta", "nu_pz_cos_com", "nu_pz_cos_theta_pizero",
     10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, "cos(#theta_{CoM} )", "0.1", 0.1,
-    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, "cos(#theta_{#pi^{0}} )" },
+    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, "cos(#theta_{#pi^{0}} )", "0.2", 0.2 },
   { "cos_theta_and_pizero_momentum", "nu_pz_cos_theta_pizero", "1e3 * nu_pz_pizero_mom",
     8, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 1. }, "cos(#theta_{#pi^{0}} )", "0.2", 0.2,
-    9, { 0., 60., 120., 180., 240., 300., 400., 500., 600., 1000. }, "p_{#pi^{0}} (MeV/c)" },
+    9, { 0., 60., 120., 180., 240., 300., 400., 500., 600., 1000. }, "p_{#pi^{0}} (MeV/c)", "60 MeV/c", 60. },
 };
 
 const TwoDPlotSet observable_set = { "pizero_momentum_and_cos_theta", "slc_best_pzc_pizero_mom", "slc_best_pzc_cos_theta_pizero",

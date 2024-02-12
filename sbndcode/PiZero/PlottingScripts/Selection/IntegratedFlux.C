@@ -40,6 +40,10 @@ void IntegratedFlux(const TString productionVersion)
   TH1F *hNuEnergyNominal = new TH1F("hNuEnergyNominal", ";True E_{#nu} (GeV);#nu", 14, true_nu_e_bins);
   float nominalCount = 0.;
 
+  ofstream outFile;
+  outFile.open(saveDir + "/FluxMap.h");
+  outFile << "const std::map<int, float> univsIntegratedFluxMap = {" << std::endl;
+
   for(int j = 0; j < 1000; ++j)
     hNuEnergyFluxUniverses.push_back(new TH1F(Form("hNuEnergyFluxUniverses%d", j), ";True E_{#nu} (GeV);#nu", 14, true_nu_e_bins));
 
@@ -68,7 +72,12 @@ void IntegratedFlux(const TString productionVersion)
       float flux = counts[j] * scaling / fv_face_area;
 
       hFluxUniverses->Fill(flux);
+
+      outFile << Form("{ %i, %f },", j, flux) << std::endl;
     }
+
+  outFile << "};";
+  outFile.close();
 
   TCanvas *cFluxUniverses = new TCanvas("cFluxUniverses", "cFluxUniverses");
   cFluxUniverses->cd();

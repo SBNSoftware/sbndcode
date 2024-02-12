@@ -34,7 +34,7 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
             stacks.push_back(new THStack(Form("stack%i", i),
                                          Form("%.2f < %s < %.2f;%s;Events / %s", plotSet.bins2[i],
                                               plotSet.axis2.Data(), plotSet.bins2[i+1], plotSet.axis1.Data(),
-                                              plotSet.normalisationUnit.Data())));
+                                              plotSet.normalisationUnit1.Data())));
 
           TLegend *lEventModes = new TLegend(.55, .28, .9, .8);
 
@@ -48,7 +48,7 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
                                        Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + signal.cut);
 
                   hTemp->Scale(ncpizeroScaling);
-                  NormaliseEntriesByBinWidth(hTemp, plotSet.scale);
+                  NormaliseEntriesByBinWidth(hTemp, plotSet.scale1);
                   hTemp->SetFillColorAlpha(category.colour, 0.4);
                   hTemp->SetLineColor(category.colour);
                   hTemp->SetLineWidth(2);

@@ -9,11 +9,9 @@ const TCut true_ncpizero_Np0pi_cut = "nu_event_type_Np0pi==0";
 const TCut true_ncpizero_Xp0pi_cut = "nu_event_type_Xp0pi==0";
 
 const std::vector<Cut> true_categories = {
-  { "ncpizero_incl", true_ncpizero_incl_cut, "", kBlack },
-  { "ncpizero_0p0pi", true_ncpizero_0p0pi_cut, "", kBlack },
-  { "ncpizero_1p0pi", true_ncpizero_1p0pi_cut, "", kBlack },
-  { "ncpizero_Xp0pi", true_ncpizero_Xp0pi_cut, "", kBlack },
-  { "ncpizero_Np0pi", true_ncpizero_Np0pi_cut, "", kBlack },
+  { "ncpizero_incl", true_ncpizero_incl_cut, "NC1#pi^{0}", kBlack },
+  { "ncpizero_0p0pi", true_ncpizero_0p0pi_cut, "NC1#pi^{0}0p0#pi^{#pm}", kBlack },
+  { "ncpizero_Np0pi", true_ncpizero_Np0pi_cut, "NC1#pi^{0}Np0#pi^{#pm}", kBlack },
 };
 
 const std::vector<Cut> ncpizero_incl_categories = {

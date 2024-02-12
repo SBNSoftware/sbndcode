@@ -250,8 +250,8 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergy2DResolution->SaveAs(saveDir + "/shower_energy_twod_resolution.pdf");
   cShowerEnergy2DResolution->SaveAs(saveDir + "/shower_energy_twod_resolution.png");
 
-  TCanvas *cPhotonShowerDirectionResolution = new TCanvas("cPhotonShowerDirectionResolution", "cPhotonShowerDirectionResolution");
-  cPhotonShowerDirectionResolution->cd();
+  TCanvas *cPhotonShowerTrackDirectionResolution = new TCanvas("cPhotonShowerTrackDirectionResolution", "cPhotonShowerTrackDirectionResolution");
+  cPhotonShowerTrackDirectionResolution->cd();
 
   TString dotProductShw = "(slc_pfp_shower_dir_x * slc_pfp_true_p_x + slc_pfp_shower_dir_y * slc_pfp_true_p_y + slc_pfp_shower_dir_z * slc_pfp_true_p_z)";
   TString dotProductTrk = "(slc_pfp_track_dir_x * slc_pfp_true_p_x + slc_pfp_track_dir_y * slc_pfp_true_p_y + slc_pfp_track_dir_z * slc_pfp_true_p_z)";
@@ -279,11 +279,11 @@ void ObservablesResolution(const TString productionVersion)
   lPhotonShowerDirectionResolution->AddEntry(hPhotonTrackDirectionResolution, "Track Characterisation", "l");
   lPhotonShowerDirectionResolution->Draw();
 
-  cPhotonShowerDirectionResolution->SaveAs(saveDir + "/photon_shower_direction_resolution.pdf");
-  cPhotonShowerDirectionResolution->SaveAs(saveDir + "/photon_shower_direction_resolution.png");
+  cPhotonShowerTrackDirectionResolution->SaveAs(saveDir + "/photon_shower_track_direction_resolution.pdf");
+  cPhotonShowerTrackDirectionResolution->SaveAs(saveDir + "/photon_shower_track_direction_resolution.png");
 
-  TCanvas *cPhotonShowerDirectionResolutionCumulative = new TCanvas("cPhotonShowerDirectionResolutionCumulative", "cPhotonShowerDirectionResolutionCumulative");
-  cPhotonShowerDirectionResolutionCumulative->cd();
+  TCanvas *cPhotonShowerTrackDirectionResolutionCumulative = new TCanvas("cPhotonShowerTrackDirectionResolutionCumulative", "cPhotonShowerTrackDirectionResolutionCumulative");
+  cPhotonShowerTrackDirectionResolutionCumulative->cd();
 
   TH1 *hPhotonTrackDirectionResolutionCumulative = hPhotonTrackDirectionResolution->GetCumulative();
   hPhotonTrackDirectionResolutionCumulative->Scale(100./hPhotonTrackDirectionResolution->GetEntries());
@@ -300,6 +300,18 @@ void ObservablesResolution(const TString productionVersion)
 
   lPhotonShowerDirectionResolution->Draw();
 
+  cPhotonShowerTrackDirectionResolutionCumulative->SaveAs(saveDir + "/photon_shower_track_direction_resolution_cumulative.pdf");
+  cPhotonShowerTrackDirectionResolutionCumulative->SaveAs(saveDir + "/photon_shower_track_direction_resolution_cumulative.png");
+
+  TCanvas *cPhotonShowerDirectionResolution = new TCanvas("cPhotonShowerDirectionResolution", "cPhotonShowerDirectionResolution");
+  cPhotonShowerDirectionResolution->cd();
+  hPhotonShowerDirectionResolution->Draw();
+  cPhotonShowerDirectionResolution->SaveAs(saveDir + "/photon_shower_direction_resolution.pdf");
+  cPhotonShowerDirectionResolution->SaveAs(saveDir + "/photon_shower_direction_resolution.png");
+
+  TCanvas *cPhotonShowerDirectionResolutionCumulative = new TCanvas("cPhotonShowerDirectionResolutionCumulative", "cPhotonShowerDirectionResolutionCumulative");
+  cPhotonShowerDirectionResolutionCumulative->cd();
+  hPhotonShowerDirectionResolutionCumulative->Draw();
   cPhotonShowerDirectionResolutionCumulative->SaveAs(saveDir + "/photon_shower_direction_resolution_cumulative.pdf");
   cPhotonShowerDirectionResolutionCumulative->SaveAs(saveDir + "/photon_shower_direction_resolution_cumulative.png");
 
