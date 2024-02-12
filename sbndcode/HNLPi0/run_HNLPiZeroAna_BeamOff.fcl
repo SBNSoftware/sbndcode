@@ -1,5 +1,6 @@
 #include "run_HNLPiZeroAna.fcl"
 
+physics.analyzers.hnlpizeroana.EventWeightModuleLabels: []
 physics.analyzers.hnlpizeroana.PiZeroAna: true
 physics.analyzers.hnlpizeroana.BeamOff: true
 physics.analyzers.hnlpizeroana.Genie: false

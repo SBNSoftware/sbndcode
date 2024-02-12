@@ -33,25 +33,26 @@ physics.reco2_sensible: [ rns,
   razzle,
   razzled,
   vertexCharge,
-  vertexStub,
-  cnnid
+  vertexStub
+//  cnnid
 ]
 
 //TODO: Enable weight_paths on trigger_path when for future
 physics.weight_paths: [
-  fluxweight,
-  systtools
+  fluxweight
 ]
 
 //TODO: Uncomment for future to run analyzer with reco2
 //physics.ana: [ hnlana ]
 
-physics.trigger_paths: [ reco2_sensible ]
+physics.trigger_paths: [ reco2_sensible, weight_paths ]
 
 //physics.end_paths: [ stream1, ana ]
 physics.end_paths: [ stream1 ]
 
 #include "enable_spacecharge_services_sbnd.fcl"
+
+physics.producers.pandoraShower: @local::sbnd_sce_incremental_pandoraModularShowerCreation
 
 physics.producers.crtspacepointmatching.PFPModuleLabel:    "pandoraSCE"
 physics.producers.crttrackmatching.PFPModuleLabel:         "pandoraSCE"

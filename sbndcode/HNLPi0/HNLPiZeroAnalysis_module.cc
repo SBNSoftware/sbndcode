@@ -60,6 +60,7 @@
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
 #include "sbnobj/Common/Reco/CNNScore.h"
 #include "sbnobj/Common/Reco/Stub.h"
+#include "sbnobj/Common/SBNEventWeight/EventWeightMap.h"
 
 #include <numeric>
 #include <fstream>
@@ -140,6 +141,8 @@ public:
   void ResizeSlice1DVector(const int col);
   void ResizeSlice2DVectorRow(const int row);
   void ResizeSlice2DVectorCol(const int row, const int col);
+  void ResizeFluxW2DVectorRow(const int row);
+  void ResizeFluxW2DVectorCol(const int row, const int col);
 
   void ClearMaps();
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
@@ -194,9 +197,8 @@ public:
   void ExtractCalo(const art::Ptr<recob::Shower> &shower, const int slcCounter, const int pfpCounter,
                    const std::vector<art::Ptr<recob::Hit>> &hits);  
   void ExtractCNNScores(const sbn::PFPCNNScore *cnnscore, const int slcCounter, const int pfpCounter);
-private:
 
-  void WriteTrainingCSV();
+private:
   
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
@@ -211,7 +213,8 @@ private:
 	  fRazzleModuleLabel, fCosmicDistModuleLabel, fShowerDensityFitModuleLabel,
 	  fShowerTrackFitModuleLabel, fCNNScoreModuleLabel, fRazzledModuleLabel,
 	  fSpacePointModuleLabel, fStubModuleLabel;
-
+  
+  std::vector<art::InputTag> fEventWeightModuleLabels;
   std::vector<std::string> fOpFlashesModuleLabel;
  
   bool fBeamOff; 
@@ -219,7 +222,140 @@ private:
   bool fGenie;
   bool fDebug;
   bool fPiZeroAna;
-  bool fTraining;
+
+  const std::vector<std::string> flux_weight_names = { "expskin_Flux",
+                                                       "horncurrent_Flux",
+                                                       "kminus_Flux",
+                                                       "kplus_Flux",
+                                                       "kzero_Flux",
+                                                       "nucleoninexsec_Flux",
+                                                       "nucleonqexsec_Flux",
+                                                       "nucleontotxsec_Flux",
+                                                       "piminus_Flux",
+                                                       "pioninexsec_Flux",
+                                                       "pionqexsec_Flux",
+                                                       "piontotxsec_Flux",
+                                                       "piplus_Flux"
+  };
+
+  const std::vector<std::string> genie_weight_names = { "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_np_CC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_3Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_1Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_2Pi",
+                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_3Pi",
+                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nu",
+                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nubar",
+                                                        "MiscInteractionSysts_SBND_v1_SPPLowQ2Suppression",
+                                                        "MiscInteractionSysts_SBND_v1_nuenuebar_xsec_ratio",
+                                                        "MiscInteractionSysts_SBND_v1_nuenumu_xsec_ratio",
+                                                        "MINERvAq0q3Weighting_SBND_v1_Mnv2p2hGaussEnhancement",
+                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nu",
+                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nubar",
+                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nu",
+                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nubar",
+                                                        "GENIEReWeight_SBND_v1_multisim_AhtBY",
+                                                        "GENIEReWeight_SBND_v1_multisim_BhtBY",
+                                                        "GENIEReWeight_SBND_v1_multisim_CCQEPauliSupViaKF",
+                                                        "GENIEReWeight_SBND_v1_multisim_CV1uBY",
+                                                        "GENIEReWeight_SBND_v1_multisim_CV2uBY",
+                                                        "GENIEReWeight_SBND_v1_multisim_EtaNCEL",
+                                                        "GENIEReWeight_SBND_v1_multisim_FormZone",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_MFP_N",
+                                                        "GENIEReWeight_SBND_v1_multisim_MFP_pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_MaCCQE",
+                                                        "GENIEReWeight_SBND_v1_multisim_MaCCRES",
+                                                        "GENIEReWeight_SBND_v1_multisim_MaNCEL",
+                                                        "GENIEReWeight_SBND_v1_multisim_MaNCRES",
+                                                        "GENIEReWeight_SBND_v1_multisim_MvCCRES",
+                                                        "GENIEReWeight_SBND_v1_multisim_MvNCRES",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1eta",
+                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1gamma",
+                                                        "GENIEReWeight_SBND_v1_multisigma_AhtBY",
+                                                        "GENIEReWeight_SBND_v1_multisigma_BhtBY",
+                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEMomDistroFGtoSF",
+                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEPauliSupViaKF",
+                                                        "GENIEReWeight_SBND_v1_multisigma_CV1uBY",
+                                                        "GENIEReWeight_SBND_v1_multisigma_CV2uBY",
+                                                        "GENIEReWeight_SBND_v1_multisigma_EtaNCEL",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FormZone",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_N",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCQE",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCRES",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCEL",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCRES",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MvCCRES",
+                                                        "GENIEReWeight_SBND_v1_multisigma_MvNCRES",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC1pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC2pi",
+                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1eta",
+                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1gamma",
+                                                        "GENIEReWeight_SBND_v1_multisigma_Theta_Delta2Npi",
+  };
 
   // Map
   std::map<int, int> fHitsMap; //track ID , nHits
@@ -322,7 +458,6 @@ private:
   std::vector<std::vector<double>>	slc_pfp_track_end_x, slc_pfp_track_end_y, slc_pfp_track_end_z;
   std::vector<std::vector<double>> 	slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
   std::vector<std::vector<double>> 	slc_pfp_track_length;
-  std::vector<std::vector<double>> 	slc_pfp_track_angle_to_beam;
   std::vector<std::vector<bool>> 	slc_pfp_track_contained;
   std::vector<std::vector<float>>   	slc_pfp_track_dazzle_muon_score, slc_pfp_track_dazzle_pion_score, slc_pfp_track_dazzle_proton_score, slc_pfp_track_dazzle_other_score;
   std::vector<std::vector<int>>		slc_pfp_track_dazzle_pdg;
@@ -333,7 +468,8 @@ private:
   std::vector<std::vector<float>> 	slc_pfp_track_range_p;
   std::vector<std::vector<float>>	slc_pfp_track_closest_approach_mean_dca;
   std::vector<std::vector<float>>	slc_pfp_track_stopping_dedx_chi2_ratio, slc_pfp_track_stopping_dedx_pol0_fit;
-  
+  std::vector<std::vector<float>> 	slc_pfp_track_theta, slc_pfp_track_phi;
+
   // Event Tree: Slice -> PFP -> Shower -- 2D vector
   std::vector<std::vector<double>>	slc_pfp_shower_start_x, slc_pfp_shower_start_y, slc_pfp_shower_start_z;
   std::vector<std::vector<double>>	slc_pfp_shower_end_x, slc_pfp_shower_end_y, slc_pfp_shower_end_z;
@@ -348,8 +484,8 @@ private:
   std::vector<std::vector<float>>	slc_pfp_shower_cosmic_dist;
   std::vector<std::vector<double>>	slc_pfp_shower_track_length, slc_pfp_shower_track_width;
   std::vector<std::vector<double>>	slc_pfp_shower_density_grad, slc_pfp_shower_density_pow;
-  std::vector<std::vector<float>> 	slc_pfp_shower_angle_to_beam;
   std::vector<std::vector<bool>> 	slc_pfp_shower_contained;
+  std::vector<std::vector<float>> 	slc_pfp_shower_theta, slc_pfp_shower_phi;
 
   // Event Tree: OpFlashes
   std::vector<int> _flash_id;
@@ -375,6 +511,12 @@ private:
   std::vector<float> slc_pizero_mom;
   std::vector<float> slc_pizero_CosThetaZ;
 
+  //Event Tree: Flux Weight
+  std::vector<std::vector<float>> slc_flux_weight_expskin, slc_flux_weight_horncurrent, slc_flux_weight_kminus,
+	  			  slc_flux_weight_kplus, slc_flux_weight_kzero, slc_flux_weight_nucleoninexsec,
+				  slc_flux_weight_nucleonqexsec, slc_flux_weight_nucleontotxsec, slc_flux_weight_piminus,
+				  slc_flux_weight_pioninexsex, slc_flux_weight_pionqexsec, slc_flux_weight_piontotxsec,
+				  slc_flux_weight_piplus;
   //Sub Run Tree
   TTree *fSubRunTree;
   double _pot;
@@ -416,12 +558,12 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fStubModuleLabel 		= p.get<art::InputTag>("StubModuleLabel", "vertexStub");
   fRazzledModuleLabel           = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
   fSpacePointModuleLabel        = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
+  fEventWeightModuleLabels 	= p.get<std::vector<art::InputTag>>("EventWeightModuleLabels");
   fGenie 			= p.get<bool>("Genie", true);
   fBeamOff			= p.get<bool>("BeamOff", false);
   fMeVPrtl			= p.get<bool>("MeVPrtl", false);
   fDebug			= p.get<bool>("Debug", false);
   fPiZeroAna			= p.get<bool>("PiZeroAna", false);
-  fTraining			= p.get<bool>("Training", true);
 
   art::ServiceHandle<art::TFileService> tfs;
 
@@ -610,7 +752,6 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_pfp_track_dir_y", &slc_pfp_track_dir_y);
   fEventTree->Branch("slc_pfp_track_dir_z", &slc_pfp_track_dir_z);
   fEventTree->Branch("slc_pfp_track_length", &slc_pfp_track_length);
-  fEventTree->Branch("slc_pfp_track_angle_to_beam", &slc_pfp_track_angle_to_beam);
   fEventTree->Branch("slc_pfp_track_contained", &slc_pfp_track_contained);
   fEventTree->Branch("slc_pfp_track_dazzle_muon_score", &slc_pfp_track_dazzle_muon_score);
   fEventTree->Branch("slc_pfp_track_dazzle_pion_score", &slc_pfp_track_dazzle_pion_score);
@@ -630,7 +771,9 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_pfp_track_closest_approach_mean_dca", &slc_pfp_track_closest_approach_mean_dca);
   fEventTree->Branch("slc_pfp_track_stopping_dedx_chi2_ratio", &slc_pfp_track_stopping_dedx_chi2_ratio);
   fEventTree->Branch("slc_pfp_track_stopping_dedx_pol0_fit", &slc_pfp_track_stopping_dedx_pol0_fit);
-  
+  fEventTree->Branch("slc_pfp_track_theta", &slc_pfp_track_theta); 
+  fEventTree->Branch("slc_pfp_track_phi", &slc_pfp_track_phi); 
+
   // Event Tree: Slice -> PFP -> Shower -- 2D vector
   fEventTree->Branch("slc_pfp_shower_start_x", &slc_pfp_shower_start_x);
   fEventTree->Branch("slc_pfp_shower_start_y", &slc_pfp_shower_start_y);
@@ -658,7 +801,8 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_pfp_shower_track_width", &slc_pfp_shower_track_width);
   fEventTree->Branch("slc_pfp_shower_density_grad", &slc_pfp_shower_density_grad);
   fEventTree->Branch("slc_pfp_shower_density_pow", &slc_pfp_shower_density_pow);
-  fEventTree->Branch("slc_pfp_shower_angle_to_beam", &slc_pfp_shower_angle_to_beam);
+  fEventTree->Branch("slc_pfp_shower_theta", &slc_pfp_shower_theta); 
+  fEventTree->Branch("slc_pfp_shower_phi", &slc_pfp_shower_phi); 
 
   // Event Tree: OpFlashes
   fEventTree->Branch("flash_time","std::vector<double>", &_flash_time);
@@ -669,6 +813,21 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("flash_yerr", "std::vector<double>", &_flash_yerr);
   fEventTree->Branch("flash_z","std::vector<double>", &_flash_z);
   fEventTree->Branch("flash_zerr", "std::vector<double>", &_flash_zerr);
+
+  // Event Tree: Flux Weight
+  fEventTree->Branch("slc_flux_weight_expskin", &slc_flux_weight_expskin);
+  fEventTree->Branch("slc_flux_weight_horncurrent", &slc_flux_weight_horncurrent);
+  fEventTree->Branch("slc_flux_weight_kminus", &slc_flux_weight_kminus);
+  fEventTree->Branch("slc_flux_weight_kplus", &slc_flux_weight_kplus);
+  fEventTree->Branch("slc_flux_weight_kzero", &slc_flux_weight_kzero);
+  fEventTree->Branch("slc_flux_weight_nucleoninexsec", &slc_flux_weight_nucleoninexsec);
+  fEventTree->Branch("slc_flux_weight_nucleonqexsec", &slc_flux_weight_nucleonqexsec);
+  fEventTree->Branch("slc_flux_weight_nucleontotxsec", &slc_flux_weight_nucleontotxsec);
+  fEventTree->Branch("slc_flux_weight_piminus", &slc_flux_weight_piminus);
+  fEventTree->Branch("slc_flux_weight_pioninexsex", &slc_flux_weight_pioninexsex);
+  fEventTree->Branch("slc_flux_weight_pionqexsec", &slc_flux_weight_pionqexsec);
+  fEventTree->Branch("slc_flux_weight_piontotxsec", &slc_flux_weight_piontotxsec);
+  fEventTree->Branch("slc_flux_weight_piplus", &slc_flux_weight_piplus);
 
   if (fPiZeroAna){
     fEventTree->Branch("slc_pizero_good", &slc_pizero_good);
@@ -687,9 +846,6 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
     fEventTree->Branch("slc_true_pizero_cosThetaZ", &slc_true_pizero_cosThetaZ);
 
   }
-
-  if(fTraining) std::ofstream outputFile("training.csv"); // create a new output file or overwrite an existing one
- 
 
 }
 
@@ -805,7 +961,6 @@ void sbnd::HNLPiZeroAnalysis::analyze(art::Event const& e)
   // Fill Tree
   fEventTree->Fill();
 
-  if(fTraining) WriteTrainingCSV();
 }
 
 void sbnd::HNLPiZeroAnalysis::beginSubRun(const art::SubRun &sr)
@@ -988,7 +1143,6 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_track_dir_y.clear();
   slc_pfp_track_dir_z.clear();
   slc_pfp_track_length.clear();
-  slc_pfp_track_angle_to_beam.clear();
   slc_pfp_track_contained.clear();
   slc_pfp_track_dazzle_muon_score.clear();
   slc_pfp_track_dazzle_pion_score.clear();
@@ -1008,6 +1162,8 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_track_closest_approach_mean_dca.clear();
   slc_pfp_track_stopping_dedx_chi2_ratio.clear();
   slc_pfp_track_stopping_dedx_pol0_fit.clear();
+  slc_pfp_track_theta.clear();
+  slc_pfp_track_phi.clear();
 
   slc_pfp_shower_start_x.clear();
   slc_pfp_shower_start_y.clear();
@@ -1034,8 +1190,23 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_shower_track_width.clear();
   slc_pfp_shower_density_grad.clear();
   slc_pfp_shower_density_pow.clear();
-  slc_pfp_shower_angle_to_beam.clear();
   slc_pfp_shower_contained.clear();
+  slc_pfp_shower_theta.clear();
+  slc_pfp_shower_phi.clear();
+
+  slc_flux_weight_expskin.clear();
+  slc_flux_weight_horncurrent.clear();
+  slc_flux_weight_kminus.clear();
+  slc_flux_weight_kplus.clear();
+  slc_flux_weight_kzero.clear();
+  slc_flux_weight_nucleoninexsec.clear();
+  slc_flux_weight_nucleonqexsec.clear();
+  slc_flux_weight_nucleontotxsec.clear();
+  slc_flux_weight_piminus.clear();
+  slc_flux_weight_pioninexsex.clear();
+  slc_flux_weight_pionqexsec.clear();
+  slc_flux_weight_piontotxsec.clear();
+  slc_flux_weight_piplus.clear();
 
   if (fPiZeroAna){
     slc_pizero_good.clear();
@@ -1500,7 +1671,6 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
    slc_pfp_track_dir_z.resize(row); 
 
    slc_pfp_track_length.resize(row);
-   slc_pfp_track_angle_to_beam.resize(row);
    slc_pfp_track_contained.resize(row);
    slc_pfp_track_dazzle_muon_score.resize(row);
    slc_pfp_track_dazzle_pion_score.resize(row);
@@ -1520,6 +1690,8 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
    slc_pfp_track_closest_approach_mean_dca.resize(row);
    slc_pfp_track_stopping_dedx_chi2_ratio.resize(row);
    slc_pfp_track_stopping_dedx_pol0_fit.resize(row);
+   slc_pfp_track_theta.resize(row);
+   slc_pfp_track_phi.resize(row);
 
    slc_pfp_shower_start_x.resize(row);
    slc_pfp_shower_start_y.resize(row);
@@ -1546,8 +1718,9 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorRow(const int row){
    slc_pfp_shower_track_width.resize(row);
    slc_pfp_shower_density_grad.resize(row);
    slc_pfp_shower_density_pow.resize(row);
-   slc_pfp_shower_angle_to_beam.resize(row);
    slc_pfp_shower_contained.resize(row);
+   slc_pfp_shower_theta.resize(row);
+   slc_pfp_shower_phi.resize(row);
 }
 
 void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int col){
@@ -1557,7 +1730,7 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_n_children[row].resize(col, -99999);
    slc_pfp_primary[row].resize(col, -99999);
    slc_pfp_primary_child[row].resize(col, -99999);
-   slc_pfp_n_hits[row].resize(col, -99999);
+   slc_pfp_n_hits[row].resize(col, 0);
    slc_pfp_n_sps[row].resize(col, -99999);
    slc_pfp_track_score[row].resize(col, -99999); 
    slc_pfp_good_track[row].resize(col, -99999); 
@@ -1595,7 +1768,6 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_track_dir_z[row].resize(col, -99999); 
 
    slc_pfp_track_length[row].resize(col, -99999);
-   slc_pfp_track_angle_to_beam[row].resize(col, -99999); 
    slc_pfp_track_contained[row].resize(col, 0); 
    slc_pfp_track_dazzle_muon_score[row].resize(col, -99999);
    slc_pfp_track_dazzle_pion_score[row].resize(col, -99999);
@@ -1615,6 +1787,8 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_track_closest_approach_mean_dca[row].resize(col, -99999);
    slc_pfp_track_stopping_dedx_chi2_ratio[row].resize(col, -99999);
    slc_pfp_track_stopping_dedx_pol0_fit[row].resize(col, -99999);
+   slc_pfp_track_theta[row].resize(col, -99999);
+   slc_pfp_track_phi[row].resize(col, -99999);
 
    slc_pfp_shower_start_x[row].resize(col, -99999);
    slc_pfp_shower_start_y[row].resize(col, -99999);
@@ -1641,9 +1815,43 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_shower_track_width[row].resize(col, -99999);
    slc_pfp_shower_density_grad[row].resize(col, -99999);
    slc_pfp_shower_density_pow[row].resize(col, -99999);
-   slc_pfp_shower_angle_to_beam[row].resize(col, -99999);
    slc_pfp_shower_contained[row].resize(col, 0);
+   slc_pfp_shower_theta[row].resize(col, -99999);
+   slc_pfp_shower_phi[row].resize(col, -99999);
 }
+
+void sbnd::HNLPiZeroAnalysis::ResizeFluxW2DVectorRow(const int row){
+  slc_flux_weight_expskin.resize(row);
+  slc_flux_weight_horncurrent.resize(row);
+  slc_flux_weight_kminus.resize(row);
+  slc_flux_weight_kplus.resize(row);
+  slc_flux_weight_kzero.resize(row);
+  slc_flux_weight_nucleoninexsec.resize(row);
+  slc_flux_weight_nucleonqexsec.resize(row);
+  slc_flux_weight_nucleontotxsec.resize(row);
+  slc_flux_weight_piminus.resize(row);
+  slc_flux_weight_pioninexsex.resize(row);
+  slc_flux_weight_pionqexsec.resize(row);
+  slc_flux_weight_piontotxsec.resize(row);
+  slc_flux_weight_piplus.resize(row);
+}
+
+void sbnd::HNLPiZeroAnalysis::ResizeFluxW2DVectorCol(const int row, const int col){
+  slc_flux_weight_expskin[row].resize(col,-1);
+  slc_flux_weight_horncurrent[row].resize(col,-1);
+  slc_flux_weight_kminus[row].resize(col,-1);
+  slc_flux_weight_kplus[row].resize(col,-1);
+  slc_flux_weight_kzero[row].resize(col,-1);
+  slc_flux_weight_nucleoninexsec[row].resize(col,-1);
+  slc_flux_weight_nucleonqexsec[row].resize(col,-1);
+  slc_flux_weight_nucleontotxsec[row].resize(col,-1);
+  slc_flux_weight_piminus[row].resize(col,-1);
+  slc_flux_weight_pioninexsex[row].resize(col,-1);
+  slc_flux_weight_pionqexsec[row].resize(col,-1);
+  slc_flux_weight_piontotxsec[row].resize(col,-1);
+  slc_flux_weight_piplus[row].resize(col,-1);
+}
+
 void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                                            const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
                                            const art::Handle<std::vector<recob::Track>> &trackHandle,
@@ -1662,6 +1870,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
 
   ResizeSlice1DVector(_n_slc);
   ResizeSlice2DVectorRow(_n_slc);
+  ResizeFluxW2DVectorRow(_n_slc); //Flux weight default has 1000 universes
 
   art::FindManyP<recob::PFParticle> slicesToPFPs(sliceHandle, e, fPFParticleModuleLabel);
   art::FindOneP<recob::Vertex>      pfpToVertices(pfpHandle, e, fVertexModuleLabel);
@@ -1762,22 +1971,6 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
       // Add corrected Z vertex variable
       slc_opt0_time_corrected_Z_pandora [slcCounter] = slc_opt0_time[slcCounter] - slc_vtx_z[slcCounter]/light_speed_cm_us;
 
-      float totalShowerE = 0;
-      float totalTrackE = 0;
-
-      if(slc_n_shws[slcCounter] > 0){
-        for (int pfpCounter=0; pfpCounter < (int)slc_n_pfps[slcCounter]; pfpCounter++){
-          if(slc_pfp_shower_energy[slcCounter][pfpCounter] > 0) totalShowerE += slc_pfp_shower_energy[slcCounter][pfpCounter];
-        }
-      }
-      if(slc_n_trks[slcCounter] > 0){
-        for (int pfpCounter=0; pfpCounter < (int)slc_n_pfps[slcCounter]; pfpCounter++){
-          if(slc_pfp_track_ke[slcCounter][pfpCounter] > 0) totalTrackE += slc_pfp_track_ke[slcCounter][pfpCounter];
-	}
-      }
-
-      slc_total_shower_E[slcCounter] = totalShowerE;
-      slc_total_track_E[slcCounter] = totalTrackE;
     }
 
     ResizeSlice2DVectorCol(slcCounter, prim->Daughters().size());
@@ -2007,7 +2200,7 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
            ++nprimrazzledprotonsthresh;
        }
   } // End of loop pfp daughters
-
+    
   slc_n_trks[slcCounter] = ntrks;
   slc_n_shws[slcCounter] = nshws;
   slc_n_dazzle_muons[slcCounter] = ndazzlemuons;
@@ -2045,6 +2238,25 @@ void sbnd::HNLPiZeroAnalysis::AnalysePFPs(const art::Event &e, const int slcCoun
   slc_n_primary_razzled_pions_thresh[slcCounter] = nprimrazzledpionsthresh;
   slc_n_primary_razzled_protons[slcCounter] = nprimrazzledprotons;
   slc_n_primary_razzled_protons_thresh[slcCounter] = nprimrazzledprotonsthresh;
+
+  float totalShowerE = 0;
+  float totalTrackE = 0;
+
+  if(slc_n_shws[slcCounter] > 0){
+    for (int pfpCounter=0; pfpCounter < (int)slc_n_pfps[slcCounter]; pfpCounter++){
+      if((slc_pfp_shower_energy[slcCounter][pfpCounter] > 0) & (slc_pfp_shower_energy[slcCounter][pfpCounter] < 1e9)) totalShowerE += slc_pfp_shower_energy[slcCounter][pfpCounter];
+    } 
+  }
+
+  if(slc_n_trks[slcCounter] > 0){
+    for (int pfpCounter=0; pfpCounter < (int)slc_n_pfps[slcCounter]; pfpCounter++){
+      if((slc_pfp_track_ke[slcCounter][pfpCounter] > 0) & (slc_pfp_track_ke[slcCounter][pfpCounter] < 1e9)) totalTrackE += slc_pfp_track_ke[slcCounter][pfpCounter];
+    }
+  }
+
+  slc_total_shower_E[slcCounter] = totalShowerE;
+  slc_total_track_E[slcCounter] = totalTrackE;
+
 
 }
 
@@ -2119,11 +2331,8 @@ void sbnd::HNLPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<r
   if( VolumeCheck(start, 5.0, 5.0, 5.0, 5.0) & VolumeCheck(end, 5.0, 5.0, 5.0, 5.0) ) isContained = true;
   slc_pfp_track_contained[slcCounter][pfpCounter] = isContained;
 
-  const TVector3 beam(0,0,1);
-  const TVector3 vecDir(dir.X(), dir.Y(), dir.Z());
-  float angle2beam = TMath::ACos(vecDir.Dot(beam) / ( vecDir.Mag() * beam.Mag()) ) * 180 / TMath::Pi(); //degree
-  slc_pfp_track_angle_to_beam[slcCounter][pfpCounter] = angle2beam;
-
+  slc_pfp_track_theta[slcCounter][pfpCounter] = track->Theta() * 180 / TMath::Pi();
+  slc_pfp_track_phi[slcCounter][pfpCounter] = track->Phi() * 180 / TMath::Pi();
   slc_pfp_track_length[slcCounter][pfpCounter] = track->Length();
 
   const art::Ptr<sbn::MVAPID> dazzle = tracksToDazzle.at(track.key());
@@ -2296,10 +2505,11 @@ void sbnd::HNLPiZeroAnalysis::AnalyseShower(const art::Event &e, const art::Ptr<
   slc_pfp_shower_contained[slcCounter][pfpCounter] = isContained;
 
   if (shower->Direction().Z()>-990 && shower->ShowerStart().Z()>-990 && shower->Length()>0) {
-    const TVector3 beam(0,0,1);
     const TVector3 dir(shower->Direction().X(), shower->Direction().Y(), shower->Direction().Z());
-    float angle2beam = TMath::ACos(dir.Dot(beam) / ( dir.Mag() * beam.Mag()) ) * 180 / TMath::Pi(); //degree
-    slc_pfp_shower_angle_to_beam[slcCounter][pfpCounter] = angle2beam;
+
+    slc_pfp_shower_theta[slcCounter][pfpCounter] = dir.Theta() * 180 / TMath::Pi();
+    slc_pfp_shower_phi[slcCounter][pfpCounter] = dir.Phi() * 180 / TMath::Pi();
+
   }
 
   double convGap = vtx.isNonnull() ? (start - vtx->position()).R() : def_double;
@@ -2498,9 +2708,9 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::
 
 void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art::Ptr<simb::MCTruth> &mct, const int slcCounter)
 {
-  //if(fDebug){
-  //  std::cout << "Analysing Slice MCTruth ..." << std::endl;
-  //}
+  if(fDebug){
+    std::cout << "Analysing Slice MCTruth ..." << std::endl;
+  }
 
   const simb::MCNeutrino mcn = mct->GetNeutrino();
   const simb::MCParticle nu  = mcn.Nu();
@@ -2508,7 +2718,43 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
   const bool nc = mcn.CCNC() == 1;
   const bool av = VolumeCheck(nu.Position().Vect());
   const bool fv = VolumeCheck(nu.Position().Vect(), 20., 5., 10., 50.);
-  
+ 
+  // Only save flux weights for now
+  ResizeFluxW2DVectorCol(slcCounter, 1000); //Vector is initialised for 1000 columns
+
+  for(auto const& weightModuleLabel : fEventWeightModuleLabels)
+  {
+    art::FindManyP<sbn::evwgh::EventWeightMap> MCTruthToWeights( { mct }, e, weightModuleLabel);
+    const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToWeights.at(0);
+
+    for(auto const& ewm : ewms)
+    {
+      for(auto const& [ name, weights ] : *ewm)
+      {
+
+	std::cout << "Weight name " << name << " size " << weights.size() << std::endl;
+
+	unsigned int wCounter = 0;  //Flux weight size = 1000    
+	for(auto const w: weights){
+	  if (name == "expskin_Flux") slc_flux_weight_expskin[slcCounter][wCounter] = w;
+	  if (name == "horncurrent_Flux") slc_flux_weight_horncurrent[slcCounter][wCounter] = w;
+	  if (name == "kminus_Flux") slc_flux_weight_kminus[slcCounter][wCounter] = w;
+	  if (name == "kplus_Flux") slc_flux_weight_kplus[slcCounter][wCounter] = w;
+	  if (name == "kzero_Flux") slc_flux_weight_kzero[slcCounter][wCounter] = w;
+	  if (name == "nucleoninexsec_Flux") slc_flux_weight_nucleoninexsec[slcCounter][wCounter] = w;
+	  if (name == "nucleonqexsec_Flux") slc_flux_weight_nucleonqexsec[slcCounter][wCounter] = w;
+	  if (name == "nucleontotxsec_Flux") slc_flux_weight_nucleontotxsec[slcCounter][wCounter] = w;
+	  if (name == "piminus_Flux") slc_flux_weight_piminus[slcCounter][wCounter] = w;
+	  if (name == "pioninexsec_Flux") slc_flux_weight_pioninexsex[slcCounter][wCounter] = w;
+	  if (name == "pionqexsec_Flux") slc_flux_weight_pionqexsec[slcCounter][wCounter] = w;
+	  if (name == "piontotxsec_Flux") slc_flux_weight_piontotxsec[slcCounter][wCounter] = w;
+	  if (name == "piplus_Flux") slc_flux_weight_piplus[slcCounter][wCounter] = w;
+	  wCounter++;
+        }
+      } //Loop over weight names
+    } 
+  } //Loop over weight labels
+
   art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
   const std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
   
@@ -2561,6 +2807,8 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
       slc_true_event_type[slcCounter] = (int) kUnknownEv;
   }
 
+  if (fDebug) std::cout << "This is event type = " << slc_true_event_type[slcCounter] << std::endl;
+
   slc_true_mctruth_id[slcCounter] = mct.key();
   slc_true_en_dep[slcCounter] = trueEnDep;
   slc_true_vtx_x[slcCounter] = nu.Vx(); //cm
@@ -2591,13 +2839,13 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
     slc_true_pizero_mom[slcCounter] = pizeroMom;
     slc_true_pizero_cosThetaZ[slcCounter] = pizeroCosTheta;
 
-    if(fDebug){
-      std::cout << "====================================" << std::endl;
-      std::cout << "Event " << _event << " Slice " << slcCounter << " has " << slc_n_shws[slcCounter] << " showers" << std::endl;
-      std::cout << "mom = " << pizeroMom << std::endl;
-      std::cout << "CosThetaZ = " << pizeroCosTheta << std::endl;
-      std::cout << "====================================" << std::endl;
-    } 
+    //if(fDebug){
+    //  std::cout << "====================================" << std::endl;
+    //  std::cout << "Event " << _event << " Slice " << slcCounter << " has " << slc_n_shws[slcCounter] << " showers" << std::endl;
+    //  std::cout << "mom = " << pizeroMom << std::endl;
+    //  std::cout << "CosThetaZ = " << pizeroCosTheta << std::endl;
+    //  std::cout << "====================================" << std::endl;
+    //} 
   }
 }
 
@@ -2692,15 +2940,16 @@ void sbnd::HNLPiZeroAnalysis::AnalysePiZero(const int slcCounter){
     slc_photon0_pfp_id[slcCounter] = pfp0;
     slc_photon0_energy[slcCounter] = E_best;
     
-    std::cout << "====================================" << std::endl;
-    std::cout << "Event " << _event << " Slice " << slcCounter << "  One Shower Candidate" << std::endl;
-    std::cout << "------------------------------------" << std::endl;
-    std::cout << "pfp id " << slc_pfp_id[slcCounter][pfp0] << std::endl;
-    std::cout << "razzled photon score " << slc_pfp_razzled_photon_score[slcCounter][pfp0] << std::endl;
-    std::cout << "shower energy " << slc_pfp_shower_energy[slcCounter][pfp0] << std::endl;
-    std::cout << "dEdx " << slc_pfp_shower_dedx[slcCounter][pfp0] << std::endl;
-    std::cout << "angle to beam " << slc_pfp_shower_angle_to_beam[slcCounter][pfp0] << std::endl;
-    std::cout << "====================================" << std::endl;
+    //if (fDebug){
+    //  std::cout << "====================================" << std::endl;
+    //  std::cout << "Event " << _event << " Slice " << slcCounter << "  One Shower Candidate" << std::endl;
+    //  std::cout << "------------------------------------" << std::endl;
+    //  std::cout << "pfp id " << slc_pfp_id[slcCounter][pfp0] << std::endl;
+    //  std::cout << "razzled photon score " << slc_pfp_razzled_photon_score[slcCounter][pfp0] << std::endl;
+    //  std::cout << "shower energy " << slc_pfp_shower_energy[slcCounter][pfp0] << std::endl;
+    //  std::cout << "dEdx " << slc_pfp_shower_dedx[slcCounter][pfp0] << std::endl;
+    //  std::cout << "====================================" << std::endl;
+    //}
   }
   else if ( m_best > 0 ) {
  
@@ -2717,6 +2966,7 @@ void sbnd::HNLPiZeroAnalysis::AnalysePiZero(const int slcCounter){
     const float pizeroMass = sqrt (2 * E1 * E2 * (1 - cosTheta ));
   
     const TVector3 pizeroDir = (E1 * dir1) + (E2 * dir2);
+
     const float pizeroMom = pizeroDir.Mag();
     const float pizeroCosTheta = pizeroDir.Z() / pizeroMom;
  
@@ -2728,13 +2978,11 @@ void sbnd::HNLPiZeroAnalysis::AnalysePiZero(const int slcCounter){
       std::cout << "razzled photon score " << slc_pfp_razzled_photon_score[slcCounter][pfp1] << std::endl;
       std::cout << "shower energy " << slc_pfp_shower_energy[slcCounter][pfp1] << std::endl;
       std::cout << "dEdx " << slc_pfp_shower_dedx[slcCounter][pfp1] << std::endl;
-      std::cout << "angle to beam " << slc_pfp_shower_angle_to_beam[slcCounter][pfp1] << std::endl;
       std::cout << "------------------------------------" << std::endl;
       std::cout << "pfp id " << slc_pfp_id[slcCounter][pfp2] << std::endl;
       std::cout << "razzled photon score " << slc_pfp_razzled_photon_score[slcCounter][pfp2] << std::endl;
       std::cout << "shower energy " << slc_pfp_shower_energy[slcCounter][pfp2] << std::endl;
       std::cout << "dEdx " << slc_pfp_shower_dedx[slcCounter][pfp2] << std::endl;
-      std::cout << "angle to beam " << slc_pfp_shower_angle_to_beam[slcCounter][pfp2] << std::endl;
       std::cout << "------------------------------------" << std::endl;
       std::cout << "OpenAngle = " << TMath::ACos(cosTheta) * 180 / TMath::Pi() << std::endl;
       std::cout << "mass = " << pizeroMass << std::endl;
@@ -2761,104 +3009,6 @@ void sbnd::HNLPiZeroAnalysis::AnalysePiZero(const int slcCounter){
   else{
     slc_pizero_good[slcCounter] = goodPiZero;
   }
-}
-
-void sbnd::HNLPiZeroAnalysis::WriteTrainingCSV(){
-
-  std::ofstream outputFile("training.csv", std::ios_base::app);
-  
-  if (outputFile.is_open()) { // check if the file was opened successfully
-		
-    for ( int slcCounter = 0; slcCounter < (int)_n_slc; slcCounter++){
-
-      if (slc_is_clear_cosmics[slcCounter] == 1) continue;
-      if (slc_n_shws[slcCounter] < 0 ) continue;
-      if (slc_n_trks[slcCounter] < 0 ) continue;
-
-      float bestE = -999;
-      int bestPFP = -999;
-
-      //Chose best shower candidate for the slice: most deposited energy for now
-      for (int pfpCounter = 0; pfpCounter < (int)slc_n_pfps[slcCounter]; pfpCounter++){
-        
-        //Check if shower 1 is good
-        if ( (slc_pfp_shower_energy[slcCounter][pfpCounter] < 0 )
-             || (slc_pfp_shower_start_z[slcCounter][pfpCounter] < -990)
-             || (slc_pfp_shower_dir_z[slcCounter][pfpCounter] < -990)
-             || (slc_pfp_shower_length[slcCounter][pfpCounter] < 0)
-             || (slc_pfp_shower_dedx[slcCounter][pfpCounter] < -990) ){
-          continue;
-        }
-
-
-	if(slc_pfp_shower_energy[slcCounter][pfpCounter] > bestE){
-          bestE = slc_pfp_shower_energy[slcCounter][pfpCounter];
-          bestPFP = pfpCounter;
-        }
-      }
-
-      // Signal or Background?
-      bool isSignal = false;
-      if (slc_true_event_type[slcCounter] == (int) kHNL || slc_true_event_type[slcCounter] == (int) kHNLNonFV){
-        isSignal = true;
-      }
-    
-      //Write to CSV
-      outputFile << isSignal;
-      // Slice variables 
-      outputFile << "," << slc_crumbs_score[slcCounter];
-      outputFile << "," << slc_vtx_x[slcCounter];
-      outputFile << "," << slc_vtx_y[slcCounter];
-      outputFile << "," << slc_vtx_z[slcCounter];
-      outputFile << "," << slc_opt0_score[slcCounter];
-      outputFile << "," << slc_opt0_time_corrected_Z_pandora[slcCounter];
-      outputFile << "," << slc_opt0_frac[slcCounter];
-      outputFile << "," << slc_n_stub[slcCounter];
-      outputFile << "," << slc_n_razzled_muons[slcCounter];
-      outputFile << "," << slc_n_razzled_protons_thresh[slcCounter];
-      outputFile << "," << slc_n_razzled_pions_thresh[slcCounter];
-      outputFile << "," << slc_n_razzled_electrons[slcCounter];
-      outputFile << "," << slc_n_razzled_photons[slcCounter];
-      outputFile << "," << slc_total_shower_E[slcCounter];
-      outputFile << "," << slc_total_track_E[slcCounter];
- 
-      //PFP Variables
-      outputFile << "," << slc_pfp_n_hits[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_track_score[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_razzled_pdg[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_razzled_muon_score[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_razzled_proton_score[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_razzled_pion_score[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_razzled_electron_score[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_razzled_photon_score[slcCounter][bestPFP];
-
-      //Shower Variables
-      outputFile << "," << slc_pfp_shower_length[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_shower_energy[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_shower_dedx[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_shower_conv_gap[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_shower_open_angle[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_shower_angle_to_beam[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_shower_contained[slcCounter][bestPFP];
-
-      //Track Varibles
-      outputFile << "," << slc_pfp_track_length[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_track_ke[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_track_angle_to_beam[slcCounter][bestPFP];
-      outputFile << "," << slc_pfp_track_contained[slcCounter][bestPFP];
-
-      outputFile << "\n";
- 
-    }
-
-    outputFile.close(); // close the file when done
-			
-    std::cout << "Training data was written to training.csv\n";
-  }
-  else {
-    std::cout << "Error opening file\n";
-  }
-
 }
 
 DEFINE_ART_MODULE(sbnd::HNLPiZeroAnalysis)

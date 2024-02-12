@@ -1,0 +1,6 @@
+#include "reco2_sensible_MeVPrtl.fcl"
+
+physics.weight_paths: [
+  fluxweight
+  ,systtools
+]
