@@ -1,6 +1,6 @@
 #include "cafmakerjob_sbnd.fcl"
 
-physics.runprod: [rns, systtools fluxweight, @sequence::physics.runprod]
+physics.runprod: [rns, systtools, fluxweight, @sequence::physics.runprod]
 physics.producers.cafmaker.SystWeightLabels: ["fluxweight"]
 # apapadop, not sure if we need the line below
-#physics.producers.cafmaker.SystWeightLabels: ["systtools"]
+physics.producers.cafmaker.SystWeightLabels: ["systtools"]
