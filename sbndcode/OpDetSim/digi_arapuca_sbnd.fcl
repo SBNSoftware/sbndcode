@@ -7,22 +7,21 @@ sbnd_digiarapuca_alg:
 {
   # module_type:        "DigiArapucaSBNDAlg"
   #Assume 25v bias with sensl c series SiPM. Values should be changed if SiPMs are to be ganged and/or of different manufacturer
-  #Values of MaxAmplitude, BackTime and VoltageToADC to be confirmed
+  #Values of MaxAmplitude and BackTime to be confirmed
 
-  ArapucaVoltageToADC:       151.5   #mV to ADC   
-  ArapucaBaselineRMS:        2.6     #in ADC counts (underestimate?)
+  ArapucaBaselineRMS:        0.65     # 2.6/4 as PMTs with 14bits ADC have 4 ADC counts and most XA channels will be 12 bits
   ArapucaDarkNoiseRate:      10.0    #in Hz
   CrossTalk:                 0.2     #20% probability
-  ArapucaBaseline:           1500    #ADC counts
+  ArapucaBaseline:           700     #supposing a 12-bits ADC and 20% overshoot, 4069/6 ~700 
   ArapucaPulseLength:        4000.0  #ns
   ArapucaPeakTime:           260.0   #ns
-  ArapucaMeanAmplitude:      0.12    #mV 
+  ArapucaMeanAmplitude:      18      #ADC counts 
   ArapucaRiseTime:           9.0     #ns
   ArapucaFallTime:	         476.0   #ns
-  ArapucaSaturation:         300     #in number of p.e. to see saturation effects in the signal
-  ArapucaVUVEff:             0.014   #Arapuca VUV efficiency (taking into account 70% mesh transparency 0.02*0.7)
-  ArapucaVISEff:             0.0189  #Arapuca VIS efficiency (taking into account 70% mesh transparency 0.027*0.7)
-  XArapucaVUVEff:            0.021   #XArapuca VUV efficiency (taking into account 70% mesh transparency 0.03*0.7)
+  ArapucaSaturationHigh:     4095    #ADC saturation for 12 bit ADCs, high limit (2**12-1, ADC starts at 0)
+  ArapucaSaturationLow:      0.      #ADC saturation for 12 bit ADCs, low limit
+  XArapucaVUVEffVUV:         0.021   #VUV XArapuca efficiency to VUV light
+  XArapucaVUVEffVis:         0.007   #VUV XArapuca efficiency to vis light (half the visible efficiency)
   XArapucaVISEff:            0.014   #XArapuca VIS efficiency (taking into account 70% mesh transparency 0.02*0.7)
   DecayTXArapucaVIS:         8.5     # decay time of EJ280 in ns
   ArapucaDataFile:           "OpDetSim/digi_arapuca_sbnd.root" # located in sbnd_data

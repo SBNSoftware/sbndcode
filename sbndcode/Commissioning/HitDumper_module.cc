@@ -21,7 +21,6 @@
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindMany.h"
-#include "canvas/Utilities/InputTag.h"
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Utilities/InputTag.h"
 
@@ -607,8 +606,8 @@ void Hitdumper::analyze(const art::Event& evt)
         keep_tagger = true;
       }
     }
+    //std::cout << "Tagger name " << tagger.first << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
 
-    // std::cout << "Tagger name " << taggerName << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
     if (ip != sbnd::crt::kUndefinedTagger && keep_tagger) {
 
       uint32_t ttime = striplist[i]->T0();
@@ -652,6 +651,7 @@ void Hitdumper::analyze(const art::Event& evt)
   ResetCRTCustomTracksVars(_nstrips);
   _nctrks = 0;
   if (fmakeCRTtracks) {
+    std::cout<<"Making tracks, number of strips = "<< ns<<std::endl;
     int ntr = 0;
     int iflag[1000] = {0};
     for (int i = 0; i < (ns - 1); ++i) {
@@ -887,7 +887,7 @@ void Hitdumper::analyze(const art::Event& evt)
         _nophits += ophitlist.size();
       }
       else {
-        std::cout << "Failed to get recob::OpHit data product." << std::endl;
+        std::cout << "Failed to get recob::OpHit data product: " << ophit_label << std::endl;
       }
 
       if (_nophits > _max_ophits) {
@@ -917,8 +917,13 @@ void Hitdumper::analyze(const art::Event& evt)
         if (pd_type == "pmt_coated") {_ophit_opdet_type[index] = kPMTCoated;}
         else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[index] = kPMTUnCoated;}
         else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[index] = kXArapucaVis;}
-        else if (pd_type == "xarapuca_vuv") {_ophit_opdet_type[index] = kXArapucaVuv;}
-        else {_ophit_opdet_type[index] = kPDNotDefined;}
+        else if (pd_type == "xarapuca_vuv") {
+          _ophit_opdet_type[index] = kXArapucaVuv;
+          //std::cout<<"XA VUV: "<< pd_type <<std::endl;
+        }
+        else {
+          _ophit_opdet_type[index] = kPDNotDefined;
+        }
       }
       previous_nophits = _nophits;
     }

@@ -22,6 +22,9 @@ physics.reco1: [ rns
          , opflashtpc1xarapuca
          , gaushit
          , gaushitTruthMatch
+   #      , rffhit
+   #      , corner
+   #      , fuzzycluster
          , crtstrips
  ]
 
