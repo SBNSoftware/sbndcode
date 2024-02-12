@@ -159,9 +159,9 @@ void callos::CALLOS::analyze(art::Event const& e)
    throw cet::exception("SBNDCALLOS") << "Input waveforms with input label " << fInputLabel << " not found\n";
   }
   
-  std::cout<<"CALLOS: Event "<<e.id().event()<<" has      "<<NWvf<<" waveforms"<<std::endl;
   // Get the Raw waveforms
   auto NWvf = wfHandle->size();
+  std::cout<<"CALLOS: Event "<<e.id().event()<<" has      "<<NWvf<<" waveforms"<<std::endl;
   int iWvf=0;
     for(auto const& wf : *wfHandle)
     {
@@ -173,16 +173,21 @@ void callos::CALLOS::analyze(art::Event const& e)
       if (fPDSchannelStatus[wfChannel]) // faster than checking if the channel is in the list of selected channels
       {
 
-        // move to float
+        // move Raw wvf to float
         size_t wfsize=wf.Waveform().size();
         std::vector<float> wave;
         wave.reserve(wfsize);
         wave.assign(wf.Waveform().begin(), wf.Waveform().end());
+        //Prepare ROI container and initialize to 0s
+        std::vector<float> ROI;
+        ROI.resize(fROISamples,0);
 
-        AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(wave);
-        // Call the ROI(peak/rise...) finder tool for selected channels
-        // fROIFinderAlgPtr->FindROI(wvf, fROISamples, fStartToPeak);
-        // Compute charges and average waveforms(maybe in the ROI/peakfinder).
+        // Call the tool for selected channels
+        // fROIFinderAlgPtr->ProcessWaveform(wave, ROI, Charge_SelectedChannels[fPDSchannelMap[wfChannel]]);
+        
+        // Update the Average wvf of the channel.
+        AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(ROI);
+
         iWvf++;
       }
     }
@@ -200,7 +205,7 @@ void callos::CALLOS::endJob()
   // Close the output file
 
   std::cout<<"CALLOS: End of Job"<<std::endl;
-  // free the memory
+  // free the memory?
 }
 
 
