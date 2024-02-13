@@ -1,4 +1,7 @@
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
 #include "resourcemonitorservices_sbnd.fcl"
+#include "sam_sbnd.fcl"
 
 #include "pmtsoftwaretriggerproducer.fcl"
 
@@ -6,9 +9,12 @@ process_name: pmtSoftwareTriggerProducer
 
 services:
 {
-    TFileService: { fileName: "test_hist.root" }
+    TFileService: { fileName: "softtrig_hist.root" }
     @table::sbnd_resourcemonitorservices
     RandomNumberGenerator: {} #ART native random number generator
+    message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+    FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+
 }
 
 #source is now a root file
@@ -23,7 +29,8 @@ outputs:
  out1:
  {
    module_type: RootOutput
-   fileName:    "test.root" #default file name, can override from command line with -o or --output
+   dataTier: "reconstructed"
+   fileName:    "softtrig-art.root" #default file name, can override from command line with -o or --output
    fastCloning: true
  }
 }
@@ -46,4 +53,4 @@ physics:
 
 }
 
-physics.producers.pmtSoftwareTrigger.BeamWindowLength: 1.8
+physics.producers.pmtSoftwareTrigger.WindowLength: 1.8

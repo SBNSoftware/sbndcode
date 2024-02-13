@@ -5,21 +5,28 @@ pmtSoftwareTriggerProducer:
   module_type: "pmtSoftwareTriggerProducer"
   is_persistable: true
   TriggerTimeOffset: 0.5    # seconds, defined by fragment producer
-  BeamWindowLength: 1.8     # us, extended by 0.2us to account for delayed signals
+  WindowLength: 1.8     # us, extended by 0.2us to account for delayed signals
   WvfmLength: 5120
-  Verbose: true
-  SaveHists: false          # save 10 us waveform histograms
+  Verbose: 1
+  SaveSumHist: true          # save 10 us **summed** (flash) histogram 
+  SavePMTHists: false        # save 10 us individual PMT histograms (120 per event!)
 
   # turn on/off various metric calculations 
   CalculateBaseline:  true   # if true, will calculate baseline, if false, will use provided InputBaseline parameters below! 
   CountPMTs:          true   # if true, will count number of PMTS above threshold in the beam window
-  CalculatePEMetrics: true   # if true, will calculate prompt/preliminary PE 
-  FindPulses:         false  # if true, will use crude pulse finding algorithm 
+  CalculatePEMetrics: true   # if true, will calculate PE metrics (prompt, prelim)
+  FindFlashInfo:      true   # if true, will find flash time and flash peak PE by summming all wvfms and finding the peak
+  FindPulses:         false  # if true, will use crude pulse finding algorithm. You probably want this set to false!
 
   # metric input parameters 
-  InputBaseline: [8000.0, 2.0] # in ADC, used if CalculateBaseline is FALSE // first entry is baseline, second entry is baseline error 
-  ADCThreshold:  7960          # in ADC, corresponds to ~5 PE in ideal response, used for CountPMTs (above threshold)  
-  PEArea:        66.33         # conversion factor from ADCxns area to PE count **not tuned** 
+  InputBaseline:  [14750.0, 2.0] # in ADC, used if CalculateBaseline is FALSE // first entry is baseline, second entry is baseline error/sigma
+  # BaselineWindow: 0.5           # in us; window used to calculate basline
+  
+  PromptWindow:   0.5           # in us; window to calculate prompt light (after the trigger)
+  PrelimWindow:   0.5           # in us; window to calculate prelim PE (before the trigger)
+  
+  ADCThreshold:   14700         # in ADC, corresponds to ~5 PE in ideal response, used for CountPMTs (above threshold)  
+  ADCtoPE:        8.0           # conversion factor from ADC to PE count (for a single bin) **not tuned**
+  PEArea:         66.33         # conversion factor from ADCxns area to PE count **not tuned** }
 }
-
 END_PROLOG
