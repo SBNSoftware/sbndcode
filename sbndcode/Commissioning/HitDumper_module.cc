@@ -895,7 +895,7 @@ void Hitdumper::analyze(const art::Event& evt)
 
       auto pmtSoftTriggerMetrics = pmtsofttriggerlist[0];
       _pmtSoftTrigger_foundBeamTrigger = pmtSoftTriggerMetrics->foundBeamTrigger;
-      _pmtSoftTrigger_tts = pmtSoftTriggerMetrics->triggerTimestamp;
+      _pmtSoftTrigger_tts = pmtSoftTriggerMetrics->trig_ts;
       _pmtSoftTrigger_promptPE = pmtSoftTriggerMetrics->promptPE;
       _pmtSoftTrigger_prelimPE = pmtSoftTriggerMetrics->prelimPE;
       _pmtSoftTrigger_nAboveThreshold = pmtSoftTriggerMetrics->nAboveThreshold;
