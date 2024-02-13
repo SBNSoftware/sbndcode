@@ -21,6 +21,8 @@
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindMany.h"
+#include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Utilities/InputTag.h"
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
@@ -45,7 +47,7 @@
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
@@ -60,6 +62,8 @@
 #include "nusimdata/SimulationBase/MCFlux.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
+#include "lardataobj/MCBase/MCTrack.h"
+#include "lardataobj/MCBase/MCShower.h"
 
 // ROOT includes
 #include "TTree.h"
@@ -151,6 +155,12 @@ private:
   void ResizeMCNeutrino(int nNeutrinos);
   /// Resize the data structure for Genie primaries
   void ResizeGenie(int nPrimaries);
+  /// Resize the data structure for MCParticles
+  void ResizeMCParticle(int nParticles);
+  /// Resize the data structure for MCTracks
+  void ResizeMCTrack(int nTracks);
+  /// Resize the data structure for MCShowers
+  void ResizeMCShower(int nShowers);
 
   opdet::sbndPDMapAlg _pd_map;
 
@@ -232,7 +242,9 @@ private:
   int _nophits;                               ///< Number of Optical Hits
   std::vector<int> _ophit_opch;               ///< OpChannel of the optical hit
   std::vector<int> _ophit_opdet;              ///< OpDet of the optical hit
-  std::vector<double> _ophit_peakT;           ///< Peak time of the optical hit
+  std::vector<double> _ophit_peakT;           ///< Peak time of the optical hit [us]
+  std::vector<double> _ophit_startT;          ///< Start time of the optical hit [us]
+  std::vector<double> _ophit_riseT;           ///< Rise time of the optical hit [ns]
   std::vector<double> _ophit_width;           ///< Width of the optical hit
   std::vector<double> _ophit_area;            ///< Area of the optical hit
   std::vector<double> _ophit_amplitude;       ///< Amplitude of the optical hit
@@ -324,6 +336,46 @@ private:
   std::vector<Int_t>     genie_ND;
   std::vector<Int_t>     genie_mother;
 
+  //MCParticle Info
+  size_t MaxMCParticles = 0;
+  Int_t     mcpart_no_primaries;                 
+  std::vector<Int_t>    mcpart_pdg;              
+  std::vector<Int_t>    mcpart_status;           
+  std::vector<std::string>    mcpart_process;
+  std::vector<std::string>    mcpart_endprocess;
+  std::vector<Float_t>  mcpart_Eng;              
+  std::vector<Float_t>  mcpart_EndE;
+  std::vector<Float_t>  mcpart_Mass;
+  std::vector<Float_t>  mcpart_Px;
+  std::vector<Float_t>  mcpart_Py;
+  std::vector<Float_t>  mcpart_Pz;
+  std::vector<Float_t>  mcpart_P;
+  std::vector<Float_t>  mcpart_StartPointx;
+  std::vector<Float_t>  mcpart_StartPointy;
+  std::vector<Float_t>  mcpart_StartPointz;
+  std::vector<Float_t>  mcpart_StartT;  
+  std::vector<Float_t>  mcpart_EndT;          
+  std::vector<Float_t>  mcpart_EndPointx;
+  std::vector<Float_t>  mcpart_EndPointy;
+  std::vector<Float_t>  mcpart_EndPointz;
+  std::vector<Float_t>  mcpart_theta_xz;    
+  std::vector<Float_t>  mcpart_theta_yz;    
+  std::vector<Int_t>    mcpart_NumberDaughters;
+  std::vector<Int_t>    mcpart_TrackId;
+  std::vector<Int_t>    mcpart_Mother;
+
+  //MCTrack info
+  size_t MaxMCTracks = 0;
+  Int_t mctrack_no_primaries;
+  std::vector<Int_t>    mctrack_pdg;                      
+  std::vector<Int_t>    mctrack_TrackId;
+
+  //MCShower info
+  size_t MaxMCShowers = 0;
+  Int_t mcshower_no_primaries;
+  std::vector<Int_t>    mcshower_pdg;                       
+  std::vector<Int_t>    mcshower_TrackId;
+
 
   TTree* _sr_tree; ///< A tree filled per subrun (for POT accounting)
   int _sr_run, _sr_subrun;
@@ -348,6 +400,9 @@ private:
   std::string fMuonTrackModuleLabel;  ///< Label for MuonTrack dataproduct (to be set via fcl)
   std::string fDigitModuleLabel;    ///< Label for digitizer (to be set via fcl)
   std::string fGenieGenModuleLabel; ///< Label for Genie dataproduct (to be set via fcl)
+  std::string fMCParticleModuleLabel; ///< Label for MCParticle dataproduct (to be set via fcl)
+  std::string fMCTrackModuleLabel; ///< Label for MCTrack dataproduct (to be set via fcl)
+  std::string fMCShowerModuleLabel; ///< Label for MCShower dataproduct (to be set via fcl)
   std::vector<std::string> fOpHitsModuleLabels; ///< Labels for OpHit dataproducts (to be set via fcl)
 
   // double fSelectedPDG;
@@ -360,6 +415,7 @@ private:
   bool freadMuonTracks;    ///< Add MuonTracks to output (to be set via fcl)
   bool freadMuonHits;      ///< Add MuonTrack hits to output(to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
+  bool freadMCParticle;    ///< Add MCParticle info to output (to be set via fcl)
   bool freadpmtTrigger;    ///< Add pmt hardware trigger info to output (to be set via fcl)
   bool freadpmtSoftTrigger;///< Add pmt software trigger info to output (to be set via fcl)
   bool freadcrtSoftTrigger;///< Add crt software trigger info to output (to be set via fcl)
@@ -372,7 +428,7 @@ private:
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
-  sbnd::CRTHitRecoAlg hitAlg;
+  sbnd::crt::CRTGeoAlg fCRTGeoAlg;
 
   geo::GeometryCore const* fGeometryService;
   // detinfo::ElecClock fTrigClock;
@@ -383,7 +439,8 @@ private:
 
 
 Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
-: EDAnalyzer(pset)
+  : EDAnalyzer(pset)
+  , fCRTGeoAlg(pset.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
 {
 
   fGeometryService = lar::providerFrom<geo::Geometry>();
@@ -418,6 +475,9 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fcrtSoftTriggerModuleLabel = p.get<std::string>("crtSoftTriggerModuleLabel", "MetricProducer");
   fMuonTrackModuleLabel  = p.get<std::string>("MuonTrackModuleLabel", "MuonTrackProducer");
   fGenieGenModuleLabel = p.get<std::string>("GenieGenModuleLabel", "generator");
+  fMCParticleModuleLabel    = p.get<std::string>("MCParticleModuleLabel ", "largeant");
+  fMCTrackModuleLabel    = p.get<std::string>("MCTrackModuleLabel ", "mcreco");
+  fMCShowerModuleLabel    = p.get<std::string>("MCShowerModuleLabel ", "mcreco");
 
   fkeepCRThits       = p.get<bool>("keepCRThits",true);
   fkeepCRTstrips     = p.get<bool>("keepCRTstrips",false);
@@ -431,6 +491,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadMuonHits      = p.get<bool>("readMuonHits",false);
   fcheckTransparency = p.get<bool>("checkTransparency",false);
   freadTruth         = p.get<bool>("readTruth",true);
+  freadMCParticle    = p.get<bool>("readMCParticle",false);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
 
@@ -536,9 +597,8 @@ void Hitdumper::analyze(const art::Event& evt)
   for (int i = 0; i < _nstr; i += 2){
     uint32_t chan = striplist[i]->Channel();
 
-    //    std::pair<std::string,unsigned> tagger = CRTHitRecoAlg::ChannelToTagger(chan);
-    std::pair<std::string,unsigned> tagger = hitAlg.ChannelToTagger(chan);
-    sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(tagger.first);
+    std::string taggerName  = fCRTGeoAlg.ChannelToTaggerName(chan);
+    sbnd::crt::CRTTagger ip = fCRTGeoAlg.ChannelToTaggerEnum(chan);
 
     bool keep_tagger = false;
     for (auto t : fKeepTaggerTypes) {
@@ -546,9 +606,9 @@ void Hitdumper::analyze(const art::Event& evt)
         keep_tagger = true;
       }
     }
-    // std::cout << "Tagger name " << tagger.first << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
+    //std::cout << "Tagger name " << tagger.first << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
 
-    if (ip != sbnd::kCRTNotDefined && keep_tagger) {
+    if (ip != sbnd::crt::kUndefinedTagger && keep_tagger) {
 
       uint32_t ttime = striplist[i]->T0();
       float ctime = (int)ttime * 0.001; // convert form ns to us
@@ -566,10 +626,12 @@ void Hitdumper::analyze(const art::Event& evt)
         //
         std::string name = fGeometryService->AuxDet(module).TotalVolume()->GetName();
         auto const center = fAuxDetGeoCore->AuxDetChannelToPosition(name, 2*strip);
+	size_t orien = fCRTGeoAlg.ChannelToOrientation(chan);
+
         _crt_plane.push_back(ip);
         _crt_module.push_back(module);
         _crt_strip.push_back(strip);
-        _crt_orient.push_back(tagger.second);
+        _crt_orient.push_back(orien);
         _crt_time.push_back(ctime);
         _crt_adc.push_back(adc1 + adc2 - 127.2); // -127.2/131.9 correct for gain and 2*ped to get pe
         _crt_pos_x.push_back(center.X());
@@ -589,6 +651,7 @@ void Hitdumper::analyze(const art::Event& evt)
   ResetCRTCustomTracksVars(_nstrips);
   _nctrks = 0;
   if (fmakeCRTtracks) {
+    std::cout<<"Making tracks, number of strips = "<< ns<<std::endl;
     int ntr = 0;
     int iflag[1000] = {0};
     for (int i = 0; i < (ns - 1); ++i) {
@@ -604,7 +667,7 @@ void Hitdumper::analyze(const art::Event& evt)
         int  nh1y = 0, nh2y = 0;
         float adc1x = 0, adc2x = 0;
         float adc1y = 0, adc2y = 0;
-        if (_crt_plane[i] == sbnd::kCRTFaceSouth) { // 1
+        if (_crt_plane[i] == sbnd::crt::kSouthTagger) { // 1
           if (_crt_orient[i] == kCRTVertical && _crt_adc[i] > 500) { // < 500 hardcoded
             if (nh1x == 0 || (_crt_module[i] == plane1xm)) {
               nh1x++;
@@ -656,7 +719,7 @@ void Hitdumper::analyze(const art::Event& evt)
           float tdiff = fabs(_crt_time[i]-_crt_time[j]);
           if (tdiff<0.1) {
             iflag[j]=1;
-            if (_crt_plane[j]==sbnd::kCRTFaceSouth) {
+            if (_crt_plane[j]==sbnd::crt::kSouthTagger) {
               if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
                 if (nh1x==0 ||  (_crt_module[j]==plane1xm)) {
                   nh1x++;
@@ -760,7 +823,7 @@ void Hitdumper::analyze(const art::Event& evt)
 
     for (int i = 0; i < _nchits; ++i){
       // int ip = kNotDefined;
-      sbnd::CRTPlane ip = sbnd::CRTCommonUtils::GetPlaneIndex(chitlist[i]->tagger);
+      sbnd::crt::CRTTagger ip = sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
 
       _chit_time[i]=chitlist[i]->ts1_ns*0.001;
       if (chitlist[i]->ts1_ns > MAX_INT) {
@@ -824,7 +887,7 @@ void Hitdumper::analyze(const art::Event& evt)
         _nophits += ophitlist.size();
       }
       else {
-        std::cout << "Failed to get recob::OpHit data product." << std::endl;
+        std::cout << "Failed to get recob::OpHit data product: " << ophit_label << std::endl;
       }
 
       if (_nophits > _max_ophits) {
@@ -840,6 +903,8 @@ void Hitdumper::analyze(const art::Event& evt)
         _ophit_opch[index] = ophitlist.at(i)->OpChannel();
         _ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
         _ophit_peakT[index] = ophitlist.at(i)->PeakTime();
+        _ophit_startT[index] = ophitlist.at(i)->StartTime();
+        _ophit_riseT[index] = ophitlist.at(i)->RiseTime();
         _ophit_width[index] = ophitlist.at(i)->Width();
         _ophit_area[index] = ophitlist.at(i)->Area();
         _ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
@@ -852,8 +917,13 @@ void Hitdumper::analyze(const art::Event& evt)
         if (pd_type == "pmt_coated") {_ophit_opdet_type[index] = kPMTCoated;}
         else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[index] = kPMTUnCoated;}
         else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[index] = kXArapucaVis;}
-        else if (pd_type == "xarapuca_vuv") {_ophit_opdet_type[index] = kXArapucaVuv;}
-        else {_ophit_opdet_type[index] = kPDNotDefined;}
+        else if (pd_type == "xarapuca_vuv") {
+          _ophit_opdet_type[index] = kXArapucaVuv;
+          //std::cout<<"XA VUV: "<< pd_type <<std::endl;
+        }
+        else {
+          _ophit_opdet_type[index] = kPDNotDefined;
+        }
       }
       previous_nophits = _nophits;
     }
@@ -1060,7 +1130,83 @@ void Hitdumper::analyze(const art::Event& evt)
   }// end if fCheckTrasparency
 
 
+  if (freadMCParticle){
+    //MCParticle
+    art::Handle<std::vector<simb::MCParticle>> MCParticleListHandle;
+    std::vector<art::Ptr<simb::MCParticle>> MCParticleList;
+    if (evt.getByLabel(fMCParticleModuleLabel,MCParticleListHandle)){
+      art::fill_ptr_vector(MCParticleList,MCParticleListHandle);
+      mcpart_no_primaries = MCParticleList.size();
+      ResizeMCParticle(MCParticleList.size()); //Set vectors
+      for (size_t iMCPart = 0; iMCPart < MCParticleList.size(); iMCPart++){
+        art::Ptr<simb::MCParticle> pPart = MCParticleList[iMCPart]; //get particle pointer
+        //Geant info
+        mcpart_Mother[iMCPart] = pPart->Mother();
+        mcpart_TrackId[iMCPart] = pPart->TrackId();
+        mcpart_pdg[iMCPart] = pPart->PdgCode();
+        mcpart_status[iMCPart] =  pPart->StatusCode();
+        mcpart_process[iMCPart] =  pPart->Process();
+        mcpart_endprocess[iMCPart] =  pPart->EndProcess();
+        mcpart_Eng[iMCPart] = pPart->E();
+        mcpart_EndE[iMCPart] = pPart->EndE();
+        mcpart_Mass[iMCPart] = pPart->Mass();
+        mcpart_Px[iMCPart] = pPart->Px();
+        mcpart_Py[iMCPart] = pPart->Py();
+        mcpart_Pz[iMCPart] = pPart->Pz();
+        mcpart_P[iMCPart] = pPart->Momentum().Vect().Mag();
+        mcpart_StartPointx[iMCPart] = pPart->Vx();
+        mcpart_StartPointy[iMCPart] = pPart->Vy();
+        mcpart_StartPointz[iMCPart] = pPart->Vz();
+        mcpart_StartT[iMCPart] = pPart->T();
+        mcpart_EndPointx[iMCPart] = pPart->EndPosition()[0];
+        mcpart_EndPointy[iMCPart] = pPart->EndPosition()[1];
+        mcpart_EndPointz[iMCPart] = pPart->EndPosition()[2];
+        mcpart_EndT[iMCPart] = pPart->EndT();
+        mcpart_theta_xz[iMCPart] =  std::atan2(pPart->Px(), pPart->Pz());
+        mcpart_theta_yz[iMCPart] =  std::atan2(pPart->Py(), pPart->Pz());
+        mcpart_NumberDaughters[iMCPart] = pPart->NumberDaughters();
+      }
+    }//endif get label
+    else {
+      std::cout << "Failed to get MCParticle data product." << std::endl;
+    }
+    //MCTracks
+    art::Handle<std::vector<sim::MCTrack>> MCTrackListHandle;
+    std::vector<art::Ptr<sim::MCTrack>> MCTrackList;
+    if (evt.getByLabel(fMCTrackModuleLabel,MCTrackListHandle)){
+      art::fill_ptr_vector(MCTrackList,MCTrackListHandle);
+      mctrack_no_primaries = MCTrackList.size();
+      ResizeMCTrack(MCTrackList.size());
+      for (size_t iMCTrack = 0; iMCTrack < MCTrackList.size(); iMCTrack++){
+        art::Ptr<sim::MCTrack> pTrack = MCTrackList[iMCTrack]; //get particle pointer
+        mctrack_pdg[iMCTrack] = pTrack->PdgCode();
+        mctrack_TrackId[iMCTrack] = pTrack->TrackID();
+      }
+    }
+    else{
+      std::cout << "Failed to get MCTrack data product." << std::endl;
+    }
+
+    //MCShowers
+    art::Handle<std::vector<sim::MCShower>> MCShowerListHandle;
+    std::vector<art::Ptr<sim::MCShower>> MCShowerList;
+    if (evt.getByLabel(fMCShowerModuleLabel,MCShowerListHandle)){
+      art::fill_ptr_vector(MCShowerList,MCShowerListHandle);
+      mcshower_no_primaries = MCShowerList.size();
+      ResizeMCShower(MCShowerList.size());
+      for (size_t iMCShower = 0; iMCShower < MCShowerList.size(); iMCShower++){
+        art::Ptr<sim::MCShower> pShower = MCShowerList[iMCShower]; //get particle pointer
+        mcshower_pdg[iMCShower] = pShower->PdgCode();
+        mcshower_TrackId[iMCShower] = pShower->TrackID();
+      }
+    }
+    else{
+      std::cout << "Failed to get MCShower data product." << std::endl;
+    }
+
+  } // end read mcparticle
   if (freadTruth){
+    //Genie
     int nGeniePrimaries = 0, nMCNeutrinos = 0;
     art::Handle< std::vector<simb::MCTruth> > mctruthListHandle;
     std::vector<art::Ptr<simb::MCTruth> > mclist;
@@ -1186,6 +1332,9 @@ void Hitdumper::analyze(const art::Event& evt)
         } // for particle
       } //if neutrino set
     }//if (mcevts_truth)
+
+
+
   }//if (fReadTruth){
 
 
@@ -1279,6 +1428,8 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ophit_opch", &_ophit_opch);
     fTree->Branch("ophit_opdet", &_ophit_opdet);
     fTree->Branch("ophit_peakT", &_ophit_peakT);
+    fTree->Branch("ophit_startT", &_ophit_startT);
+    fTree->Branch("ophit_riseT", &_ophit_riseT);
     fTree->Branch("ophit_width", &_ophit_width);
     fTree->Branch("ophit_area", &_ophit_area);
     fTree->Branch("ophit_amplitude", &_ophit_amplitude);
@@ -1371,6 +1522,43 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("genie_trackID",&genie_trackID);
     fTree->Branch("genie_ND",&genie_ND);
     fTree->Branch("genie_mother",&genie_mother);
+  }
+  if (freadMCParticle){
+    //MCParticle
+    fTree->Branch("mcpart_pdg",&mcpart_pdg);
+    fTree->Branch("mcpart_status",&mcpart_status);    
+    fTree->Branch("mcpart_process",&mcpart_process);  
+    fTree->Branch("mcpart_endprocess",&mcpart_endprocess);  
+    fTree->Branch("mcpart_Eng",&mcpart_Eng);
+    fTree->Branch("mcpart_EndE",&mcpart_EndE);
+    fTree->Branch("mcpart_Mass",&mcpart_Mass);
+    fTree->Branch("mcpart_Px",&mcpart_Px);
+    fTree->Branch("mcpart_Py",&mcpart_Py);
+    fTree->Branch("mcpart_Pz",&mcpart_Pz);
+    fTree->Branch("mcpart_P",&mcpart_P);
+    fTree->Branch("mcpart_StartPointx",&mcpart_StartPointx);
+    fTree->Branch("mcpart_StartPointy",&mcpart_StartPointy);
+    fTree->Branch("mcpart_StartPointz",&mcpart_StartPointz);
+    fTree->Branch("mcpart_StartT",&mcpart_StartT);
+    fTree->Branch("mcpart_EndT",&mcpart_EndT);
+    fTree->Branch("mcpart_EndPointx",&mcpart_EndPointx);
+    fTree->Branch("mcpart_EndPointy",&mcpart_EndPointy);
+    fTree->Branch("mcpart_EndPointz",&mcpart_EndPointz);         
+    fTree->Branch("mcpart_theta_xz",&mcpart_theta_xz);
+    fTree->Branch("mcpart_theta_yz",&mcpart_theta_yz);   
+    fTree->Branch("mcpart_NumberDaughters",&mcpart_NumberDaughters);
+    fTree->Branch("mcpart_TrackId",&mcpart_TrackId);
+    fTree->Branch("mcpart_Mother",&mcpart_Mother);
+
+    //MCTrack info
+    fTree->Branch("mctrack_no_primaries",&mctrack_no_primaries);
+    fTree->Branch("mctrack_pdg",&mctrack_pdg);                        
+    fTree->Branch("mctrack_TrackId",&mctrack_TrackId);
+
+    //MCShower info
+    fTree->Branch("mcshower_no_primaries",&mcshower_no_primaries);
+    fTree->Branch("mcshower_pdg",&mcshower_pdg);                        
+    fTree->Branch("mcshower_TrackId",&mcshower_TrackId);
   }
 
   if (fsavePOTInfo) {
@@ -1471,6 +1659,8 @@ void Hitdumper::ResetOpHitsVars(int n) {
   _ophit_opch.resize(n, DEFAULT_VALUE);
   _ophit_opdet.resize(n, DEFAULT_VALUE);
   _ophit_peakT.resize(n, DEFAULT_VALUE);
+  _ophit_startT.resize(n, DEFAULT_VALUE);
+  _ophit_riseT.resize(n, DEFAULT_VALUE);
   _ophit_width.resize(n, DEFAULT_VALUE);
   _ophit_area.resize(n, DEFAULT_VALUE);
   _ophit_amplitude.resize(n, DEFAULT_VALUE);
@@ -1541,6 +1731,10 @@ void Hitdumper::ResetVars() {
 
   mcevts_truth = 0;
   genie_no_primaries = 0;
+  mcpart_no_primaries = 0;
+  mctrack_no_primaries = 0;
+  mcshower_no_primaries = 0;
+
 }
 
 void Hitdumper::ResizeMCNeutrino(int nNeutrinos) {
@@ -1592,6 +1786,52 @@ void Hitdumper::ResizeGenie(int nPrimaries) {
   genie_ND.assign(MaxGeniePrimaries, DEFAULT_VALUE);
   genie_mother.assign(MaxGeniePrimaries, DEFAULT_VALUE);
 
+}
+
+void Hitdumper::ResizeMCParticle(int nParticles) {
+
+  // minimum size is 1, so that we always have an address
+  MaxMCParticles = (size_t) std::max(nParticles, 1);
+              
+  mcpart_pdg.assign(MaxMCParticles,DEFAULT_VALUE);              
+  mcpart_status.assign(MaxMCParticles,DEFAULT_VALUE); 
+  mcpart_process.assign(MaxMCParticles,"Dummy"); 
+  mcpart_endprocess.assign(MaxMCParticles,"Dummy");           
+  mcpart_Eng.assign(MaxMCParticles,DEFAULT_VALUE);              
+  mcpart_EndE.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_Mass.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_Px.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_Py.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_Pz.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_P.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_StartPointx.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_StartPointy.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_StartPointz.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_StartT.assign(MaxMCParticles,DEFAULT_VALUE);  
+  mcpart_EndT.assign(MaxMCParticles,DEFAULT_VALUE);          
+  mcpart_EndPointx.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_EndPointy.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_EndPointz.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_theta_xz.assign(MaxMCParticles,DEFAULT_VALUE);    
+  mcpart_theta_yz.assign(MaxMCParticles,DEFAULT_VALUE);    
+  mcpart_NumberDaughters.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_TrackId.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_Mother.assign(MaxMCParticles,DEFAULT_VALUE);
+
+}
+
+void Hitdumper::ResizeMCTrack(int nTracks) {
+  MaxMCTracks = (size_t) std::max(nTracks,1);
+
+  mctrack_pdg.assign(MaxMCTracks,DEFAULT_VALUE);
+  mctrack_TrackId.assign(MaxMCTracks,DEFAULT_VALUE);
+}
+
+void Hitdumper::ResizeMCShower(int nShowers) {
+  MaxMCShowers = (size_t) std::max(nShowers,1);
+
+  mcshower_pdg.assign(MaxMCShowers,DEFAULT_VALUE);
+  mcshower_TrackId.assign(MaxMCShowers,DEFAULT_VALUE);
 }
 
 

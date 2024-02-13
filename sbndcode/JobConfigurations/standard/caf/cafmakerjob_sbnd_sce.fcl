@@ -1,4 +1,3 @@
-#include "transfer_crtt0_producer.fcl"
 #include "transfer_flashmatch_producer.fcl"
 #include "cafmakerjob_sbnd.fcl"
 
@@ -9,12 +8,19 @@ physics.producers.cafmaker.RecoShowerLabel: "pandoraSCEShowerSBN"
 physics.producers.cafmaker.RecoTrackLabel: "pandoraSCETrack"
 physics.producers.cafmaker.TrackCaloLabel: "pandoraSCECalo"
 physics.producers.cafmaker.TrackChi2PidLabel:  "pandoraSCEPid"
+physics.producers.cafmaker.CRTSpacePointMatchLabel: "crtspacepointmatchingSCE"
+physics.producers.cafmaker.SBNDCRTTrackMatchLabel: "crttrackmatchingSCE"
 physics.producers.cafmaker.CRTHitMatchLabel: "pandoraSCETrackCRTHit"
 physics.producers.cafmaker.CRTTrackMatchLabel: "pandoraSCETrackCRTTrack"
-physics.producers.cafmaker.FlashMatchLabel:  "fmatchSCE"
+
+physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
+physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"
 
 physics.producers.pandoraTrackMCS.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
+
+physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
+physics.producers.cafmaker.FlashMatchSCECryoSuffixes: ["SCE"]
 
 physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
 physics.producers.pandoraShowerSelectionVars.ShowerLabel:  "pandoraSCEShowerSBN"
@@ -23,8 +29,7 @@ physics.producers.pandoraShowerCosmicDist.ShowerLabel:  "pandoraSCEShowerSBN"
 physics.producers.pandoraShowerRazzle.PFPLabel: "pandoraSCE"
 physics.producers.pandoraShowerRazzle.ShowerLabel: "pandoraSCEShowerSBN"
 
-physics.producers.pandoraSCETrackCRTHit: @local::transfer_crthitt0_sce_sbnd
-physics.producers.pandoraSCETrackCRTTrack: @local::transfer_crttrackt0_sce_sbnd
+physics.producers.pandoraRazzled: @local::razzled_sbnd_sce
 
 physics.producers.pandoraTrackClosestApproach.TrackLabel: "pandoraSCETrack"
 physics.producers.pandoraTrackStoppingChi2.TrackLabel: "pandoraSCETrack"
@@ -43,23 +48,26 @@ physics.producers.pandoraTrackDazzle.CaloLabel: "pandoraSCECalo"
 physics.producers.pandoraTrackDazzle.Chi2Label: "pandoraSCEPid"
 
 physics.producers.fmatchSCE: @local::transfer_flashmatch_sce_sbnd
+physics.producers.fmatchopSCE: @local::transfer_flashmatch_sce_sbnd
+physics.producers.fmatcharaSCE: @local::transfer_flashmatch_sce_sbnd
+physics.producers.fmatchoparaSCE: @local::transfer_flashmatch_sce_sbnd
 
 physics.producers.crumbs.PFParticleModuleLabel:    "pandoraSCE"
 physics.producers.crumbs.TrackModuleLabel: 	   "pandoraSCETrack"
 physics.producers.crumbs.SliceModuleLabel:	   "pandoraSCE"
 physics.producers.crumbs.FlashMatchModuleLabel:    "fmatchSCE"
 physics.producers.crumbs.CalorimetryModuleLabel:   "pandoraSCECalo"
-physics.producers.crumbs.CRTHitMatchModuleLabel:   "crthitt0SCE"
-physics.producers.crumbs.CRTTrackMatchModuleLabel: "crttrackt0SCE"
+physics.producers.crumbs.CRTSPMatchModuleLabel:    "crtspacepointmatchingSCE"
+physics.producers.crumbs.CRTTrackMatchModuleLabel: "crttrackmatchingSCE"
+physics.producers.crumbs.OpT0ModuleLabel:          "opt0finderSCE"
 
 physics.producers.crumbs.Chi2FitParams.TrackLabel: "pandoraSCETrack"
 physics.producers.crumbs.Chi2FitParams.CaloLabel:  "pandoraSCECalo"
 
 physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
-            pandoraTrackCRTHit, pandoraTrackCRTTrack,
-            pandoraSCETrackCRTHit, pandoraSCETrackCRTTrack, fmatchSCE, vertexCharge, vertexStub,
+            fmatchSCE, vertexCharge, vertexStub,
             pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle,
-            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, crumbs,
+            pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs, cnnid,
             cafmaker ]
 
 # Enable the Space-Charge service

@@ -145,7 +145,7 @@ private:
 
   TTree* _pulse_tree;
   int _npulses; 
-  // std::vector<int> _ch_npulses; // number of pulses per channel
+  std::vector<int> _ch_npulses; // number of pulses per channel
   
   std::vector<int> _pulse_ch; // ch number for each pulse 
   std::vector<double> _pulse_t_start; // t_start for each pulse 
@@ -225,7 +225,7 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   _pulse_tree->Branch("run",       &_run,       "run/I");
   _pulse_tree->Branch("sub",       &_sub,       "sub/I");
   _pulse_tree->Branch("evt",       &_evt,       "evt/I");
-  // _pulse_tree->Branch("pulse_npulses", "std::vector<int>",                 &_pulse_npulses); 
+  _pulse_tree->Branch("ch_npulses", "std::vector<int>",&_ch_npulses); 
   _pulse_tree->Branch("npulses",   &_npulses,   "npulses/I");
   _pulse_tree->Branch("pulse_ch",      "std::vector<int>",    &_pulse_ch);
   _pulse_tree->Branch("pulse_t_start", "std::vector<double>", &_pulse_t_start);
@@ -233,6 +233,7 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   _pulse_tree->Branch("pulse_t_peak",  "std::vector<double>", &_pulse_t_peak);
   _pulse_tree->Branch("pulse_peak",    "std::vector<double>", &_pulse_peak);
   _pulse_tree->Branch("pulse_area",    "std::vector<double>", &_pulse_area);
+
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
@@ -334,6 +335,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     auto prelim_offset = (beamStartBin - fPrelimWindow*us_to_ticks) < 0 ? 0 : beamStartBin - fPrelimWindow*us_to_ticks;
     std::cout << "prelim offset" << prelim_offset << std::endl;
     for (int i_ch = 0; i_ch < 120; ++i_ch){
+      ch_ID[i_ch] = channelList.at(i_ch);
       auto &pmtInfo = fpmtInfoVec.at(i_ch);
       auto wvfm = fWvfmsVec[i_ch];
 
@@ -344,10 +346,18 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       if (fCountPMTs){
         for (int bin = beamStartBin; bin < beamEndBin; ++bin){
           auto adc = wvfm[bin];
-          if (adc < fADCThreshold){ nAboveThreshold++; break; } 
+          if (adc < fADCThreshold){ 
+            ch_AboveThreshold[i_ch] = 1;
+            nAboveThreshold++; 
+            continue; 
+          } 
+          else{
+              ch_AboveThreshold[i_ch] = 0;
+            continue;
+          }
         }
       }
-      else nAboveThreshold=-9999;
+      else {nAboveThreshold=-9999;ch_AboveThreshold[i_ch] = -9999;}
 
       // quick estimate prompt and preliminary light, assuming sampling rate of 500 MHz (2 ns per bin)
       if (fCalculatePEMetrics){
@@ -452,7 +462,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     trig_metrics.peaktime = -9999;
 
 
-    // tree variables 
+    // tree variables - TTree which is only part of root 
     _npmt = nAboveThreshold;
 
     if (fVerbose>=1 && fCountPMTs) std::cout << "nPMTs Above Threshold: " << nAboveThreshold << std::endl;
@@ -642,6 +652,9 @@ double sbnd::trigger::pmtSoftwareTriggerProducer::estimateBaseline(std::vector<u
     return median;
 }
 
+/*
+PE threshold algorithm
+*/
 void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){
   auto wvfm = fWvfmsVec[i_ch];
   auto &pmtInfo = fpmtInfoVec[i_ch]; 
