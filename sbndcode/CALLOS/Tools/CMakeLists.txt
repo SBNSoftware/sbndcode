@@ -20,6 +20,8 @@ set(
          cetlib_except::cetlib_except
 )
 
+cet_build_plugin(SimpleROIAlg art::tool SOURCE SimpleROIAlg_tool.cc LIBRARIES ${TOOL_LIBRARIES})
+
 install_headers()
 install_fhicl()
 install_source()

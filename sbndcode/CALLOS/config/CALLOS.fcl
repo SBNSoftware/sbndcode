@@ -1,0 +1,13 @@
+#include "simpleROI_alg.fcl"
+
+
+BEGIN_PROLOG
+
+SBNDCALLOS:
+{
+  module_type:	"CALLOS"
+  InputLabel: "opdaq"
+  ROIFinderAlg: @local::simpleROIAlg
+}
+
+END_PROLOG

@@ -109,7 +109,7 @@ private:
   std::vector<std::vector<float>> Charge_SelectedChannels;
 
   // Tool pointers
-  // std::unique_ptr<callos::ROIFINDERALG> fROIFinderAlgPtr;
+  std::unique_ptr<callos::ROIFINDERALG> fROIFinderAlgPtr;
 };
 
 
@@ -140,9 +140,9 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
   // Initialize the average waveforms container
   AverageWaveform_SelectedChannels.reserve(fNSelectedChannels);
   for (int i=0; i<fNSelectedChannels; i++){ AverageWaveform_SelectedChannels.push_back(AverageWaveform(fROISamples));}
-
+  Charge_SelectedChannels.reserve(fNSelectedChannels);
   // Initialize the ROIFinderAlg tool
-  // fROIFinderAlgPtr = art::make_tool<callos::ROIFINDERALG>(p.get<fhicl::ParameterSet>("ROIFinderAlg"));
+  fROIFinderAlgPtr = art::make_tool<callos::ROIFINDERALG>(p.get<fhicl::ParameterSet>("ROIFinderAlg"));
 }
 
 void callos::CALLOS::analyze(art::Event const& e)
@@ -183,7 +183,7 @@ void callos::CALLOS::analyze(art::Event const& e)
         ROI.resize(fROISamples,0);
 
         // Call the tool for selected channels
-        // fROIFinderAlgPtr->ProcessWaveform(wave, ROI, Charge_SelectedChannels[fPDSchannelMap[wfChannel]]);
+        fROIFinderAlgPtr->ProcessWaveform(wave, ROI, Charge_SelectedChannels[fPDSchannelMap[wfChannel]]);
         
         // Update the Average wvf of the channel.
         AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(ROI);

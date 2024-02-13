@@ -5,18 +5,9 @@
 # #include "simulationservices_sbnd.fcl"
 
 #include "rootoutput_sbnd.fcl"
+#include "CALLOS.fcl"
 
 process_name: CALLOS
-
-callos_ana:
-{
- module_type: "CALLOS"
-#all the fhicl params will eventually go here
-
-}
-
-
-process_name: callos
 
 services:
 {
@@ -53,7 +44,7 @@ physics:
 {  
   analyzers:
   {
-    callosana: @local::callos_ana
+    callosana: @local::SBNDCALLOS
   }
 
   # define the producer and filter modules for this path, order matters,

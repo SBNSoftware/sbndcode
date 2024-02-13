@@ -10,7 +10,7 @@
 #include "art/Utilities/ToolMacros.h"
 #include "art/Utilities/make_tool.h"
 #include <cmath>
-
+#include <vector>
 
 namespace callos {
   class ROIFINDERALG;
@@ -23,7 +23,7 @@ public:
   virtual ~ROIFINDERALG() noexcept = default;
 
   // Required functions.
-  // virtual std::vector<std::vector<std::float>> FindROIS(std::vector<short> const& wfHandle);
+  virtual bool ProcessWaveform(std::vector<float> const& wvf ,std::vector<float> & ROI, std::vector<float> & charges)=0;
 };
 
 #endif
