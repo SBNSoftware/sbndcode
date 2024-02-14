@@ -1,5 +1,5 @@
-#include "config_GENIEReWeightMultisigma_sbnd_v1.fcl"
-#include "config_GENIEReWeightMultisim_sbnd_v1.fcl"
+#include "config_GENIEReWeightMultisigma_sbnd_v2.fcl"
+#include "config_GENIEReWeightMultisim_sbnd_v2.fcl"
 #include "config_MINERvA_E2p2h_sbnd_v1.fcl"
 #include "config_MINERvAq0q3Tune_sbnd_v1.fcl"
 #include "config_MiscInteractionSysts_sbnd_v1.fcl"

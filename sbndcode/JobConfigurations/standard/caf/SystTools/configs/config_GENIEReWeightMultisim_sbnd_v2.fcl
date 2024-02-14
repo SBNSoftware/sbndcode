@@ -1,28 +1,80 @@
 GENIEReWeight_Multisim_Tool_Config: {
+
     tool_type: "GENIEReWeight"
-    instance_name: "ICARUS_v1_multisim"
+
+    # Updated 25 July 2023 by S. Gardiner
+    instance_name: "ICARUS_v2_multisim"
 
     # Keep one GENIEReWeight instance per discrete dial tweak in memory
     # Requires no reconfigures within the event loop
     UseFullHERG: true
 
-    ignore_parameter_dependence: true
+    ignore_parameter_dependence: false
 
     ################################## CCQE Parameters
 
-    MaCCQEIsShapeOnly: false
+    # Adjust coefficients in the z-expansion parameterization
+    # of the CCQE axial-vector form factor
 
-    MaCCQE_central_value: 0
-    MaCCQE_nthrows: 100
-    MaCCQE_random_distribution: "gaussian"
-    MaCCQE_variation_descriptor: "{-1,1}"
+    ZExpA1CCQE_central_value: 0
+    ZExpA1CCQE_nthrows: 100
+    ZExpA1CCQE_random_distribution: "gaussian"
+    ZExpA1CCQE_variation_descriptor: "{-1,1}"
 
-    # Mirrored responses for CAFana
-    # KF variation; 1sigma = +-35%
-    CCQEPauliSupViaKF_central_value: 0
-    CCQEPauliSupViaKF_nthrows: 100
-    CCQEPauliSupViaKF_random_distribution: "gaussian"
-    CCQEPauliSupViaKF_variation_descriptor: "{-1,1}"
+    ZExpA2CCQE_central_value: 0
+    ZExpA2CCQE_nthrows: 100
+    ZExpA2CCQE_random_distribution: "gaussian"
+    ZExpA2CCQE_variation_descriptor: "{-1,1}"
+
+    ZExpA3CCQE_central_value: 0
+    ZExpA3CCQE_nthrows: 100
+    ZExpA3CCQE_random_distribution: "gaussian"
+    ZExpA3CCQE_variation_descriptor: "{-1,1}"
+
+    ZExpA4CCQE_central_value: 0
+    ZExpA4CCQE_nthrows: 100
+    ZExpA4CCQE_random_distribution: "gaussian"
+    ZExpA4CCQE_variation_descriptor: "{-1,1}"
+
+    # This dial provides the ability to scale the CCQE cross section
+    # normalization by a constant factor while using the z-expansion
+    # for the axial-vector form factor. However, since varying the
+    # coefficients for the individual terms (as is done above) also
+    # impacts the normalization, this one is left out for now.
+    #
+    #ZNormCCQE_central_value: 0
+    #ZNormCCQE_nthrows: 100
+    #ZNormCCQE_random_distribution: "gaussian"
+    #ZNormCCQE_variation_descriptor: "{-1,1}"
+
+    # The weight calculator for adjusting the Fermi momentum kF has always
+    # been a bit of a hack. You can zero out some events by increasing
+    # kF, but you can't create new ones by reducing kF. I'd recommend
+    # revisiting these nuclear model uncertainties in light of the
+    # spectral-function-like version of the correlated Fermi gas model
+    # that we're using in AR23_20i_00_000. I will therefore exclude this
+    # dial for now.
+    #CCQEPauliSupViaKF_central_value: 0
+    #CCQEPauliSupViaKF_nthrows: 100
+    #CCQEPauliSupViaKF_random_distribution: "gaussian"
+    #CCQEPauliSupViaKF_variation_descriptor: "{-1,1}"
+
+    # This dial varies the strength of the RPA corrections that are applied in
+    # the Valencia CCQE model. The implementation was contributed to GENIE by
+    # MicroBooNE and is documented in Phys. Rev. D 105, 072001 (2022).
+    RPA_CCQE_central_value: 0
+    RPA_CCQE_nthrows: 100
+    RPA_CCQE_random_distribution: "gaussian"
+    RPA_CCQE_variation_descriptor: "{-1,1}"
+
+    # This dial varies the strength of the electromagnetic potential used by
+    # the Valencia CCQE model to apply Coulomb corrections to the cross
+    # section. The implementation was contributed to GENIE by MicroBooNE and is
+    # documented in Phys. Rev. D 105, 072001 (2022).
+    CoulombCCQE_central_value: 0
+    CoulombCCQE_nthrows: 100
+    CoulombCCQE_random_distribution: "gaussian"
+    CoulombCCQE_variation_descriptor: "{-1,1}"
 
     ################################## NCEl Parameters
 
@@ -35,6 +87,39 @@ GENIEReWeight_Multisim_Tool_Config: {
     EtaNCEL_nthrows: 100
     EtaNCEL_random_distribution: "gaussian"
     EtaNCEL_variation_descriptor: "{-1,1}"
+
+    ################################## MEC Parameters
+
+    # Constant scaling factor for the CCMEC total cross section
+    NormCCMEC_central_value: 0
+    NormCCMEC_nthrows: 100
+    NormCCMEC_random_distribution: "gaussian"
+    NormCCMEC_variation_descriptor: "{-1,1}"
+
+    # Constant scaling factor for the NCMEC total cross section
+    NormNCMEC_central_value: 0
+    NormNCMEC_nthrows: 100
+    NormNCMEC_random_distribution: "gaussian"
+    NormNCMEC_variation_descriptor: "{-1,1}"
+
+    # Adjusts the fractional contribution of initial-state pn pairs to the
+    # total CCMEC cross section. This weight calculator is not yet compatible
+    # with the SuSAv2 CCMEC model used in AR23_20i_00_000, so I disable
+    # it for now.
+    #FracPN_CCMEC_central_value: 0
+    #FracPN_CCMEC_nthrows: 100
+    #FracPN_CCMEC_random_distribution: "gaussian"
+    #FracPN_CCMEC_variation_descriptor: "{-1,1}"
+
+    # Adjusts the fractional contribution of diagrams involving an internal
+    # Delta line to the total CCMEC cross section. The Valencia CCMEC model
+    # includes information to calculate this contribution, but SuSAv2 does not.
+    # Since we use SuSAv2 as the CCMEC model in AR23_20i_00_000, I disable this
+    # dial for now.
+    #FracDelta_CCMEC_central_value: 0
+    #FracDelta_CCMEC_nthrows: 100
+    #FracDelta_CCMEC_random_distribution: "gaussian"
+    #FracDelta_CCMEC_variation_descriptor: "{-1,1}"
 
     ################################## RES Parameters
     ################# CCRES
@@ -177,17 +262,31 @@ GENIEReWeight_Multisim_Tool_Config: {
 
     ################################## COH Parameters
 
-    # Disabled as they produce an odd response and CCCoh isn't a significant
-    # signal/background in the TDR sensitivity studies.
+    # The MaCOHpi and R0COHpi weight calculators are not compatible with the
+    # Berger-Sehgal coherent pion production model used in our AR23_20i_00_000
+    # GENIE model set. I disable them here and add simple normalization scaling
+    # factors used by MicroBooNE. Systematics on this channel are likely worth
+    # revisiting at some point.
+
     # MaCOHpi_central_value: 0
     # MaCOHpi_nthrows: 100
-    # MaCOHpi_random_distribution:: "gaussian"
+    # MaCOHpi_random_distribution: "gaussian"
     # MaCOHpi_variation_descriptor: "{-1,1}"
 
     # R0COHpi_central_value: 0
     # R0COHpi_nthrows: 100
-    # R0COHpi_random_distribution:: "gaussian"
+    # R0COHpi_random_distribution: "gaussian"
     # R0COHpi_variation_descriptor: "{-1,1}"
+
+    NormCCCOH_central_value: 0
+    NormCCCOH_nthrows: 100
+    NormCCCOH_random_distribution: "gaussian"
+    NormCCCOH_variation_descriptor: "{-1,1}"
+
+    NormNCCOH_central_value: 0
+    NormNCCOH_nthrows: 100
+    NormNCCOH_random_distribution: "gaussian"
+    NormNCCOH_variation_descriptor: "{-1,1}"
 
     ################################## DIS BY Parameters
 
@@ -226,10 +325,12 @@ GENIEReWeight_Multisim_Tool_Config: {
 
     ################################## FZone Parameters
 
-    FormZone_central_value: 0
-    FormZone_nthrows: 100
-    FormZone_random_distribution: "gaussian"
-    FormZone_variation_descriptor: "{-1,1}"
+    # The formation zone weight calculator is broken in GENIE v3 and
+    # still needs to be fixed. I exclude it for now.
+    #FormZone_central_value: 0
+    #FormZone_nthrows: 100
+    #FormZone_random_distribution: "gaussian"
+    #FormZone_variation_descriptor: "{-1,1}"
 
     ################################## FSI Parameters
 
@@ -238,15 +339,19 @@ GENIEReWeight_Multisim_Tool_Config: {
     MFP_pi_random_distribution: "gaussian"
     MFP_pi_variation_descriptor: "{-1,1}"
 
-    FrCEx_pi_central_value: 0
-    FrCEx_pi_nthrows: 100
-    FrCEx_pi_random_distribution: "gaussian"
-    FrCEx_pi_variation_descriptor: "{-1,1}"
+    # The charge-exchange FSI fate is excluded to act as the "cushion"
+    # term for reweighting
+    #FrCEx_pi_central_value: 0
+    #FrCEx_pi_nthrows: 100
+    #FrCEx_pi_random_distribution: "gaussian"
+    #FrCEx_pi_variation_descriptor: "{-1,1}"
 
-    FrElas_pi_central_value: 0
-    FrElas_pi_nthrows: 100
-    FrElas_pi_random_distribution: "gaussian"
-    FrElas_pi_variation_descriptor: "{-1,1}"
+    # The elastic FSI fate was removed in hA2018, so I disable the
+    # associated weight calculators
+    #FrElas_pi_central_value: 0
+    #FrElas_pi_nthrows: 100
+    #FrElas_pi_random_distribution: "gaussian"
+    #FrElas_pi_variation_descriptor: "{-1,1}"
 
     FrInel_pi_central_value: 0
     FrInel_pi_nthrows: 100
@@ -268,15 +373,19 @@ GENIEReWeight_Multisim_Tool_Config: {
     MFP_N_random_distribution: "gaussian"
     MFP_N_variation_descriptor: "{-1,1}"
 
-    FrCEx_N_central_value: 0
-    FrCEx_N_nthrows: 100
-    FrCEx_N_random_distribution: "gaussian"
-    FrCEx_N_variation_descriptor: "{-1,1}"
+    # The charge-exchange FSI fate is excluded to act as the "cushion"
+    # term for reweighting
+    #FrCEx_N_central_value: 0
+    #FrCEx_N_nthrows: 100
+    #FrCEx_N_random_distribution: "gaussian"
+    #FrCEx_N_variation_descriptor: "{-1,1}"
 
-    FrElas_N_central_value: 0
-    FrElas_N_nthrows: 100
-    FrElas_N_random_distribution: "gaussian"
-    FrElas_N_variation_descriptor: "{-1,1}"
+    # The elastic FSI fate was removed in hA2018, so I disable the
+    # associated weight calculators
+    #FrElas_N_central_value: 0
+    #FrElas_N_nthrows: 100
+    #FrElas_N_random_distribution: "gaussian"
+    #FrElas_N_variation_descriptor: "{-1,1}"
 
     FrInel_N_central_value: 0
     FrInel_N_nthrows: 100
