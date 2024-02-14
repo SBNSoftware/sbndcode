@@ -2,5 +2,6 @@
 
 physics.weight_paths: [
   fluxweight
-  ,systtools
+  , geant4weight
+  , systtools
 ]

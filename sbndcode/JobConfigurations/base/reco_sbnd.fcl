@@ -218,12 +218,9 @@ physics:
   razzled:                     @local::razzled_sbnd
   fluxweight:                  @local::sbn_eventweight_flux
   systtools:                   @local::sbn_systtools
-<<<<<<< HEAD
   vertexCharge:		       @local::vertex_charge_sbnd_sce
   vertexStub:		       @local::vertex_stub_sbnd_sce
-=======
   geant4weight:                @local::sbn_eventweight_geant4
->>>>>>> 26057063f6494f9515d486acfa4ff2a3cee49a5e
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -268,7 +265,6 @@ physics:
           , crttracks
           , crtspacepointmatching
           , crttrackmatching
-<<<<<<< HEAD
           #, fmatch
           , crumbs
           , pandoraTrackMCS
@@ -280,9 +276,7 @@ physics:
           , pandoraShowerSelectionVars
           , razzle
           , razzled
-=======
           , fmatch
->>>>>>> 26057063f6494f9515d486acfa4ff2a3cee49a5e
           , fmatchop
           , fmatchara
           , fmatchopara

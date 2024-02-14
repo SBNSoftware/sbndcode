@@ -40,6 +40,7 @@ physics.reco2_sensible: [ rns,
 //TODO: Enable weight_paths on trigger_path when for future
 physics.weight_paths: [
   fluxweight
+  , geant4weight
 ]
 
 //TODO: Uncomment for future to run analyzer with reco2

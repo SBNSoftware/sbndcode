@@ -141,8 +141,8 @@ public:
   void ResizeSlice1DVector(const int col);
   void ResizeSlice2DVectorRow(const int row);
   void ResizeSlice2DVectorCol(const int row, const int col);
-  void ResizeFluxW2DVectorRow(const int row);
-  void ResizeFluxW2DVectorCol(const int row, const int col);
+  void ResizeWeight2DVectorRow(const int row);
+  void ResizeWeight2DVectorCol(const int row);
 
   void ClearMaps();
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
@@ -238,123 +238,41 @@ private:
                                                        "piplus_Flux"
   };
 
-  const std::vector<std::string> genie_weight_names = { "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_np_CC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_3Pi",
-                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nu",
-                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nubar",
-                                                        "MiscInteractionSysts_SBND_v1_SPPLowQ2Suppression",
-                                                        "MiscInteractionSysts_SBND_v1_nuenuebar_xsec_ratio",
-                                                        "MiscInteractionSysts_SBND_v1_nuenumu_xsec_ratio",
-                                                        "MINERvAq0q3Weighting_SBND_v1_Mnv2p2hGaussEnhancement",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nu",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nubar",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nu",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nubar",
-                                                        "GENIEReWeight_SBND_v1_multisim_AhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_BhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_CCQEPauliSupViaKF",
-                                                        "GENIEReWeight_SBND_v1_multisim_CV1uBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_CV2uBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_EtaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisim_FormZone",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_MFP_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_MFP_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaCCQE",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_MvCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_MvNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1eta",
-                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1gamma",
-                                                        "GENIEReWeight_SBND_v1_multisigma_AhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_BhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEMomDistroFGtoSF",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEPauliSupViaKF",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CV1uBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CV2uBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_EtaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FormZone",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCQE",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MvCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MvNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1eta",
-                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1gamma",
-                                                        "GENIEReWeight_SBND_v1_multisigma_Theta_Delta2Npi",
+  const std::vector<std::string> genie_weight_names = {
+	  						"GENIEReWeight_SBND_v4_multisigma_CoulombCCQE"
+							, "GENIEReWeight_SBND_v4_multisigma_DecayAngMEC"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC1pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC2pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC1pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC2pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC1pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC2pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC1pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC2pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC1pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC2pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC1pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC2pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC1pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC2pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC1pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC2pi"
+							, "GENIEReWeight_SBND_v4_multisigma_NormCCMEC"
+							, "GENIEReWeight_SBND_v4_multisigma_NormNCMEC"
+							, "GENIEReWeight_SBND_v4_multisigma_RDecBR1eta"
+							, "GENIEReWeight_SBND_v4_multisigma_RDecBR1gamma"
+							, "GENIEReWeight_SBND_v4_multisigma_RPA_CCQE"
+							, "GENIEReWeight_SBND_v4_multisigma_ThetaDelta2NRad"
+							, "GENIEReWeight_SBND_v4_multisigma_Theta_Delta2Npi"
+							, "GENIEReWeight_SBND_v4_multisigma_VecFFCCQEshape"
+							, "GENIEReWeight_SBND_v4_multisim_CCRESVariationResponse"
+							, "GENIEReWeight_SBND_v4_multisim_COHVariationResponse"
+							, "GENIEReWeight_SBND_v4_multisim_DISBYVariationResponse"
+							, "GENIEReWeight_SBND_v4_multisim_FSI_N_VariationResponse"
+							, "GENIEReWeight_SBND_v4_multisim_FSI_pi_VariationResponse"
+							, "GENIEReWeight_SBND_v4_multisim_NCELVariationResponse"
+							, "GENIEReWeight_SBND_v4_multisim_NCRESVariationResponse"
+							, "GENIEReWeight_SBND_v4_multisim_ZExpAVariationResponse"
   };
 
   // Map
@@ -512,11 +430,42 @@ private:
   std::vector<float> slc_pizero_CosThetaZ;
 
   //Event Tree: Flux Weight
-  std::vector<std::vector<float>> slc_flux_weight_expskin, slc_flux_weight_horncurrent, slc_flux_weight_kminus,
-	  			  slc_flux_weight_kplus, slc_flux_weight_kzero, slc_flux_weight_nucleoninexsec,
-				  slc_flux_weight_nucleonqexsec, slc_flux_weight_nucleontotxsec, slc_flux_weight_piminus,
-				  slc_flux_weight_pioninexsex, slc_flux_weight_pionqexsec, slc_flux_weight_piontotxsec,
-				  slc_flux_weight_piplus;
+  //std::vector<std::vector<float>> slc_flux_weight_expskin, slc_flux_weight_horncurrent, slc_flux_weight_kminus,
+  //	  			  slc_flux_weight_kplus, slc_flux_weight_kzero, slc_flux_weight_nucleoninexsec,
+  //				  slc_flux_weight_nucleonqexsec, slc_flux_weight_nucleontotxsec, slc_flux_weight_piminus,
+  //				  slc_flux_weight_pioninexsex, slc_flux_weight_pionqexsec, slc_flux_weight_piontotxsec,
+  //				  slc_flux_weight_piplus;
+  std::vector<std::vector<float>> slc_flux_weight_total; //store multiplicative of all the flux weights
+
+  //Event Tree: xsection
+  std::vector<std::vector<float>> slc_xsec_unisim_DecayAngMEC, 
+	  			  slc_xsec_unisim_ThetaDelta2NRad, 
+	  			  slc_xsec_unisim_Theta_Delta2Npi, 
+				  slc_xsec_unisim_VecFFCCQEshape,
+                                  slc_xsec_multisigma_CoulombCCQE,
+                                  slc_xsec_multisigma_NonRESBGvbarnCC1pi,
+                                  slc_xsec_multisigma_NonRESBGvbarnCC2pi,
+                                  slc_xsec_multisigma_NonRESBGvbarnNC1pi,
+                                  slc_xsec_multisigma_NonRESBGvbarnNC2pi,
+                                  slc_xsec_multisigma_NonRESBGvbarpCC1pi,
+                                  slc_xsec_multisigma_NonRESBGvbarpCC2pi,
+                                  slc_xsec_multisigma_NonRESBGvbarpNC1pi,
+                                  slc_xsec_multisigma_NonRESBGvbarpNC2pi,
+                                  slc_xsec_multisigma_NonRESBGvnCC1pi,
+                                  slc_xsec_multisigma_NonRESBGvnCC2pi,
+                                  slc_xsec_multisigma_NonRESBGvnNC1pi,
+                                  slc_xsec_multisigma_NonRESBGvnNC2pi,
+                                  slc_xsec_multisigma_NonRESBGvpCC1pi,
+                                  slc_xsec_multisigma_NonRESBGvpCC2pi,
+                                  slc_xsec_multisigma_NonRESBGvpNC1pi,
+                                  slc_xsec_multisigma_NonRESBGvpNC2pi,
+                                  slc_xsec_multisigma_NormCCMEC,
+                                  slc_xsec_multisigma_NormNCMEC,
+                                  slc_xsec_multisigma_RDecBR1eta,
+                                  slc_xsec_multisigma_RDecBR1gamma,
+                                  slc_xsec_multisigma_RPA_CCQE,
+  				  slc_xsec_multisim_total;
+
   //Sub Run Tree
   TTree *fSubRunTree;
   double _pot;
@@ -815,19 +764,51 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("flash_zerr", "std::vector<double>", &_flash_zerr);
 
   // Event Tree: Flux Weight
-  fEventTree->Branch("slc_flux_weight_expskin", &slc_flux_weight_expskin);
-  fEventTree->Branch("slc_flux_weight_horncurrent", &slc_flux_weight_horncurrent);
-  fEventTree->Branch("slc_flux_weight_kminus", &slc_flux_weight_kminus);
-  fEventTree->Branch("slc_flux_weight_kplus", &slc_flux_weight_kplus);
-  fEventTree->Branch("slc_flux_weight_kzero", &slc_flux_weight_kzero);
-  fEventTree->Branch("slc_flux_weight_nucleoninexsec", &slc_flux_weight_nucleoninexsec);
-  fEventTree->Branch("slc_flux_weight_nucleonqexsec", &slc_flux_weight_nucleonqexsec);
-  fEventTree->Branch("slc_flux_weight_nucleontotxsec", &slc_flux_weight_nucleontotxsec);
-  fEventTree->Branch("slc_flux_weight_piminus", &slc_flux_weight_piminus);
-  fEventTree->Branch("slc_flux_weight_pioninexsex", &slc_flux_weight_pioninexsex);
-  fEventTree->Branch("slc_flux_weight_pionqexsec", &slc_flux_weight_pionqexsec);
-  fEventTree->Branch("slc_flux_weight_piontotxsec", &slc_flux_weight_piontotxsec);
-  fEventTree->Branch("slc_flux_weight_piplus", &slc_flux_weight_piplus);
+  //fEventTree->Branch("slc_flux_weight_expskin", &slc_flux_weight_expskin);
+  //fEventTree->Branch("slc_flux_weight_horncurrent", &slc_flux_weight_horncurrent);
+  //fEventTree->Branch("slc_flux_weight_kminus", &slc_flux_weight_kminus);
+  //fEventTree->Branch("slc_flux_weight_kplus", &slc_flux_weight_kplus);
+  //fEventTree->Branch("slc_flux_weight_kzero", &slc_flux_weight_kzero);
+  //fEventTree->Branch("slc_flux_weight_nucleoninexsec", &slc_flux_weight_nucleoninexsec);
+  //fEventTree->Branch("slc_flux_weight_nucleonqexsec", &slc_flux_weight_nucleonqexsec);
+  //fEventTree->Branch("slc_flux_weight_nucleontotxsec", &slc_flux_weight_nucleontotxsec);
+  //fEventTree->Branch("slc_flux_weight_piminus", &slc_flux_weight_piminus);
+  //fEventTree->Branch("slc_flux_weight_pioninexsex", &slc_flux_weight_pioninexsex);
+  //fEventTree->Branch("slc_flux_weight_pionqexsec", &slc_flux_weight_pionqexsec);
+  //fEventTree->Branch("slc_flux_weight_piontotxsec", &slc_flux_weight_piontotxsec);
+  //fEventTree->Branch("slc_flux_weight_piplus", &slc_flux_weight_piplus);
+  fEventTree->Branch("slc_flux_weight_total", &slc_flux_weight_total);
+
+  // Event Tree: XSection Weight
+  fEventTree->Branch("slc_xsec_unisim_DecayAngMEC", &slc_xsec_unisim_DecayAngMEC);
+  fEventTree->Branch("slc_xsec_unisim_ThetaDelta2NRad", &slc_xsec_unisim_ThetaDelta2NRad); 
+  fEventTree->Branch("slc_xsec_unisim_Theta_Delta2Npi", &slc_xsec_unisim_Theta_Delta2Npi);
+  fEventTree->Branch("slc_xsec_unisim_VecFFCCQEshape", &slc_xsec_unisim_VecFFCCQEshape);
+
+  fEventTree->Branch("slc_xsec_multisigma_CoulombCCQE", &slc_xsec_multisigma_CoulombCCQE);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvbarnCC1pi", &slc_xsec_multisigma_NonRESBGvbarnCC1pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvbarnCC2pi", &slc_xsec_multisigma_NonRESBGvbarnCC2pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvbarnNC1pi", &slc_xsec_multisigma_NonRESBGvbarnNC1pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvbarnNC2pi", &slc_xsec_multisigma_NonRESBGvbarnNC2pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvbarpCC1pi", &slc_xsec_multisigma_NonRESBGvbarpCC1pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvbarpCC2pi", &slc_xsec_multisigma_NonRESBGvbarpCC2pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvbarpNC1pi", &slc_xsec_multisigma_NonRESBGvbarpNC1pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvbarpNC2pi", &slc_xsec_multisigma_NonRESBGvbarpNC2pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvnCC1pi", &slc_xsec_multisigma_NonRESBGvnCC1pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvnCC2pi", &slc_xsec_multisigma_NonRESBGvnCC2pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvnNC1pi", &slc_xsec_multisigma_NonRESBGvnNC1pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvnNC2pi", &slc_xsec_multisigma_NonRESBGvnNC2pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvpCC1pi", &slc_xsec_multisigma_NonRESBGvpCC1pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvpCC2pi", &slc_xsec_multisigma_NonRESBGvpCC2pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvpNC1pi", &slc_xsec_multisigma_NonRESBGvpNC1pi);
+  fEventTree->Branch("slc_xsec_multisigma_NonRESBGvpNC2pi", &slc_xsec_multisigma_NonRESBGvpNC2pi);
+  fEventTree->Branch("slc_xsec_multisigma_NormCCMEC", &slc_xsec_multisigma_NormCCMEC);
+  fEventTree->Branch("slc_xsec_multisigma_NormNCMEC", &slc_xsec_multisigma_NormNCMEC);
+  fEventTree->Branch("slc_xsec_multisigma_RDecBR1eta", &slc_xsec_multisigma_RDecBR1eta);
+  fEventTree->Branch("slc_xsec_multisigma_RDecBR1gamma", &slc_xsec_multisigma_RDecBR1gamma);
+  fEventTree->Branch("slc_xsec_multisigma_RPA_CCQE", &slc_xsec_multisigma_RPA_CCQE);
+
+  fEventTree->Branch("slc_xsec_multisim_total", &slc_xsec_multisim_total);
 
   if (fPiZeroAna){
     fEventTree->Branch("slc_pizero_good", &slc_pizero_good);
@@ -1194,19 +1175,50 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_shower_theta.clear();
   slc_pfp_shower_phi.clear();
 
-  slc_flux_weight_expskin.clear();
-  slc_flux_weight_horncurrent.clear();
-  slc_flux_weight_kminus.clear();
-  slc_flux_weight_kplus.clear();
-  slc_flux_weight_kzero.clear();
-  slc_flux_weight_nucleoninexsec.clear();
-  slc_flux_weight_nucleonqexsec.clear();
-  slc_flux_weight_nucleontotxsec.clear();
-  slc_flux_weight_piminus.clear();
-  slc_flux_weight_pioninexsex.clear();
-  slc_flux_weight_pionqexsec.clear();
-  slc_flux_weight_piontotxsec.clear();
-  slc_flux_weight_piplus.clear();
+  //slc_flux_weight_expskin.clear();
+  //slc_flux_weight_horncurrent.clear();
+  //slc_flux_weight_kminus.clear();
+  //slc_flux_weight_kplus.clear();
+  //slc_flux_weight_kzero.clear();
+  //slc_flux_weight_nucleoninexsec.clear();
+  //slc_flux_weight_nucleonqexsec.clear();
+  //slc_flux_weight_nucleontotxsec.clear();
+  //slc_flux_weight_piminus.clear();
+  //slc_flux_weight_pioninexsex.clear();
+  //slc_flux_weight_pionqexsec.clear();
+  //slc_flux_weight_piontotxsec.clear();
+  //slc_flux_weight_piplus.clear();
+  slc_flux_weight_total.clear();
+
+  slc_xsec_unisim_DecayAngMEC.clear();
+  slc_xsec_unisim_ThetaDelta2NRad.clear(); 
+  slc_xsec_unisim_Theta_Delta2Npi.clear();
+  slc_xsec_unisim_VecFFCCQEshape.clear();
+  
+  slc_xsec_multisigma_CoulombCCQE.clear();
+  slc_xsec_multisigma_NonRESBGvbarnCC1pi.clear();
+  slc_xsec_multisigma_NonRESBGvbarnCC2pi.clear();
+  slc_xsec_multisigma_NonRESBGvbarnNC1pi.clear();
+  slc_xsec_multisigma_NonRESBGvbarnNC2pi.clear();
+  slc_xsec_multisigma_NonRESBGvbarpCC1pi.clear();
+  slc_xsec_multisigma_NonRESBGvbarpCC2pi.clear();
+  slc_xsec_multisigma_NonRESBGvbarpNC1pi.clear();
+  slc_xsec_multisigma_NonRESBGvbarpNC2pi.clear();
+  slc_xsec_multisigma_NonRESBGvnCC1pi.clear();
+  slc_xsec_multisigma_NonRESBGvnCC2pi.clear();
+  slc_xsec_multisigma_NonRESBGvnNC1pi.clear();
+  slc_xsec_multisigma_NonRESBGvnNC2pi.clear();
+  slc_xsec_multisigma_NonRESBGvpCC1pi.clear();
+  slc_xsec_multisigma_NonRESBGvpCC2pi.clear();
+  slc_xsec_multisigma_NonRESBGvpNC1pi.clear();
+  slc_xsec_multisigma_NonRESBGvpNC2pi.clear();
+  slc_xsec_multisigma_NormCCMEC.clear();
+  slc_xsec_multisigma_NormNCMEC.clear();
+  slc_xsec_multisigma_RDecBR1eta.clear();
+  slc_xsec_multisigma_RDecBR1gamma.clear();
+  slc_xsec_multisigma_RPA_CCQE.clear();
+
+  slc_xsec_multisim_total.clear();
 
   if (fPiZeroAna){
     slc_pizero_good.clear();
@@ -1820,36 +1832,101 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
    slc_pfp_shower_phi[row].resize(col, -99999);
 }
 
-void sbnd::HNLPiZeroAnalysis::ResizeFluxW2DVectorRow(const int row){
-  slc_flux_weight_expskin.resize(row);
-  slc_flux_weight_horncurrent.resize(row);
-  slc_flux_weight_kminus.resize(row);
-  slc_flux_weight_kplus.resize(row);
-  slc_flux_weight_kzero.resize(row);
-  slc_flux_weight_nucleoninexsec.resize(row);
-  slc_flux_weight_nucleonqexsec.resize(row);
-  slc_flux_weight_nucleontotxsec.resize(row);
-  slc_flux_weight_piminus.resize(row);
-  slc_flux_weight_pioninexsex.resize(row);
-  slc_flux_weight_pionqexsec.resize(row);
-  slc_flux_weight_piontotxsec.resize(row);
-  slc_flux_weight_piplus.resize(row);
+void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorRow(const int row){
+  //slc_flux_weight_expskin.resize(row);
+  //slc_flux_weight_horncurrent.resize(row);
+  //slc_flux_weight_kminus.resize(row);
+  //slc_flux_weight_kplus.resize(row);
+  //slc_flux_weight_kzero.resize(row);
+  //slc_flux_weight_nucleoninexsec.resize(row);
+  //slc_flux_weight_nucleonqexsec.resize(row);
+  //slc_flux_weight_nucleontotxsec.resize(row);
+  //slc_flux_weight_piminus.resize(row);
+  //slc_flux_weight_pioninexsex.resize(row);
+  //slc_flux_weight_pionqexsec.resize(row);
+  //slc_flux_weight_piontotxsec.resize(row);
+  //slc_flux_weight_piplus.resize(row);
+  slc_flux_weight_total.resize(row);
+
+  slc_xsec_unisim_DecayAngMEC.resize(row);
+  slc_xsec_unisim_ThetaDelta2NRad.resize(row); 
+  slc_xsec_unisim_Theta_Delta2Npi.resize(row);
+  slc_xsec_unisim_VecFFCCQEshape.resize(row);
+
+  slc_xsec_multisigma_CoulombCCQE.resize(row);
+  slc_xsec_multisigma_NonRESBGvbarnCC1pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvbarnCC2pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvbarnNC1pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvbarnNC2pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvbarpCC1pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvbarpCC2pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvbarpNC1pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvbarpNC2pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvnCC1pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvnCC2pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvnNC1pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvnNC2pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvpCC1pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvpCC2pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvpNC1pi.resize(row);
+  slc_xsec_multisigma_NonRESBGvpNC2pi.resize(row);
+  slc_xsec_multisigma_NormCCMEC.resize(row);
+  slc_xsec_multisigma_NormNCMEC.resize(row);
+  slc_xsec_multisigma_RDecBR1eta.resize(row);
+  slc_xsec_multisigma_RDecBR1gamma.resize(row);
+  slc_xsec_multisigma_RPA_CCQE.resize(row);
+
+  slc_xsec_multisim_total.resize(row);
 }
 
-void sbnd::HNLPiZeroAnalysis::ResizeFluxW2DVectorCol(const int row, const int col){
-  slc_flux_weight_expskin[row].resize(col,-1);
-  slc_flux_weight_horncurrent[row].resize(col,-1);
-  slc_flux_weight_kminus[row].resize(col,-1);
-  slc_flux_weight_kplus[row].resize(col,-1);
-  slc_flux_weight_kzero[row].resize(col,-1);
-  slc_flux_weight_nucleoninexsec[row].resize(col,-1);
-  slc_flux_weight_nucleonqexsec[row].resize(col,-1);
-  slc_flux_weight_nucleontotxsec[row].resize(col,-1);
-  slc_flux_weight_piminus[row].resize(col,-1);
-  slc_flux_weight_pioninexsex[row].resize(col,-1);
-  slc_flux_weight_pionqexsec[row].resize(col,-1);
-  slc_flux_weight_piontotxsec[row].resize(col,-1);
-  slc_flux_weight_piplus[row].resize(col,-1);
+void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorCol(const int row){
+  //flux weight multi-sim 1000 universes
+  //slc_flux_weight_expskin[row].resize(1000,1);
+  //slc_flux_weight_horncurrent[row].resize(1000,1);
+  //slc_flux_weight_kminus[row].resize(1000,1);
+  //slc_flux_weight_kplus[row].resize(1000,1);
+  //slc_flux_weight_kzero[row].resize(1000,1);
+  //slc_flux_weight_nucleoninexsec[row].resize(1000,1);
+  //slc_flux_weight_nucleonqexsec[row].resize(1000,1);
+  //slc_flux_weight_nucleontotxsec[row].resize(1000,1);
+  //slc_flux_weight_piminus[row].resize(1000,1);
+  //slc_flux_weight_pioninexsex[row].resize(1000,1);
+  //slc_flux_weight_pionqexsec[row].resize(1000,1);
+  //slc_flux_weight_piontotxsec[row].resize(1000,1);
+  //slc_flux_weight_piplus[row].resize(1000,1);
+  slc_flux_weight_total[row].resize(1000, 1);
+
+  //xsection unisim 1 direction variation
+  slc_xsec_unisim_DecayAngMEC[row].resize(1, -9999);
+  slc_xsec_unisim_ThetaDelta2NRad[row].resize(1, -9999); 
+  slc_xsec_unisim_Theta_Delta2Npi[row].resize(1, -9999);
+  slc_xsec_unisim_VecFFCCQEshape[row].resize(1, -9999);
+
+  //xsection multisigmal +/- 1 sigma
+  slc_xsec_multisigma_CoulombCCQE[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvbarnCC1pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvbarnCC2pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvbarnNC1pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvbarnNC2pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvbarpCC1pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvbarpCC2pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvbarpNC1pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvbarpNC2pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvnCC1pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvnCC2pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvnNC1pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvnNC2pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvpCC1pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvpCC2pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvpNC1pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NonRESBGvpNC2pi[row].resize(2, -9999);
+  slc_xsec_multisigma_NormCCMEC[row].resize(2, -9999);
+  slc_xsec_multisigma_NormNCMEC[row].resize(2, -9999);
+  slc_xsec_multisigma_RDecBR1eta[row].resize(2, -9999);
+  slc_xsec_multisigma_RDecBR1gamma[row].resize(2, -9999);
+  slc_xsec_multisigma_RPA_CCQE[row].resize(2, -9999);
+            
+  slc_xsec_multisim_total[row].resize(500, 1);
 }
 
 void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
@@ -1870,7 +1947,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
 
   ResizeSlice1DVector(_n_slc);
   ResizeSlice2DVectorRow(_n_slc);
-  ResizeFluxW2DVectorRow(_n_slc); //Flux weight default has 1000 universes
+  ResizeWeight2DVectorRow(_n_slc); //Flux weight default has 1000 universes
 
   art::FindManyP<recob::PFParticle> slicesToPFPs(sliceHandle, e, fPFParticleModuleLabel);
   art::FindOneP<recob::Vertex>      pfpToVertices(pfpHandle, e, fVertexModuleLabel);
@@ -2720,7 +2797,7 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
   const bool fv = VolumeCheck(nu.Position().Vect(), 20., 5., 10., 50.);
  
   // Only save flux weights for now
-  ResizeFluxW2DVectorCol(slcCounter, 1000); //Vector is initialised for 1000 columns
+  ResizeWeight2DVectorCol(slcCounter); //Vector is initialised for 1000 columns
 
   for(auto const& weightModuleLabel : fEventWeightModuleLabels)
   {
@@ -2732,25 +2809,106 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
       for(auto const& [ name, weights ] : *ewm)
       {
 
-	std::cout << "Weight name " << name << " size " << weights.size() << std::endl;
+	// Multi-Sigma Cross Section
+	if (name.find("multisigma") != std::string::npos){
+	  //uni-sim only has one varible
+	  if (weights.size() == 1){
+	    for(auto const w: weights){
+	      if(name == "GENIEReWeight_SBND_v4_multisigma_DecayAngMEC")
+	  	    slc_xsec_unisim_DecayAngMEC[slcCounter][0] = w;
+	      if(name == "GENIEReWeight_SBND_v4_multisigma_ThetaDelta2NRad")
+	  	    slc_xsec_unisim_ThetaDelta2NRad[slcCounter][0] = w;
+              if(name == "GENIEReWeight_SBND_v4_multisigma_Theta_Delta2Npi")
+	  	    slc_xsec_unisim_Theta_Delta2Npi[slcCounter][0] = w;
+              if(name == "GENIEReWeight_SBND_v4_multisigma_VecFFCCQEshape")
+	  	    slc_xsec_unisim_VecFFCCQEshape[slcCounter][0] = w;
+	    }
+	  }
+	  //multi-sigma has 6 variables  -1, +1, -2, +2, -3, +3 sigma
+	  else if (weights.size() == 6){
+	    unsigned int wCounter = 0;  //only need to save index 0 and 1 for -/+1 sigma    
+	    for(auto const w: weights){
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_CoulombCCQE")
+		      slc_xsec_multisigma_CoulombCCQE[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC1pi")
+		      slc_xsec_multisigma_NonRESBGvbarnCC1pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC2pi")
+		      slc_xsec_multisigma_NonRESBGvbarnCC2pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC1pi")
+		      slc_xsec_multisigma_NonRESBGvbarnNC1pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC2pi")
+		      slc_xsec_multisigma_NonRESBGvbarnNC2pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC1pi")
+		      slc_xsec_multisigma_NonRESBGvbarpCC1pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC2pi")
+		      slc_xsec_multisigma_NonRESBGvbarpCC2pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC1pi")
+		      slc_xsec_multisigma_NonRESBGvbarpNC1pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC2pi")
+		      slc_xsec_multisigma_NonRESBGvbarpNC2pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC1pi")
+		      slc_xsec_multisigma_NonRESBGvnCC1pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC2pi")
+		      slc_xsec_multisigma_NonRESBGvnCC2pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC1pi")
+		      slc_xsec_multisigma_NonRESBGvnNC1pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC2pi")
+		      slc_xsec_multisigma_NonRESBGvnNC2pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC1pi")
+		      slc_xsec_multisigma_NonRESBGvpCC1pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC2pi")
+		      slc_xsec_multisigma_NonRESBGvpCC2pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC1pi")
+		      slc_xsec_multisigma_NonRESBGvpNC1pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC2pi")
+		      slc_xsec_multisigma_NonRESBGvpNC2pi[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NormCCMEC")
+		      slc_xsec_multisigma_NormCCMEC[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NormNCMEC")
+		      slc_xsec_multisigma_NormNCMEC[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_RDecBR1eta")
+		      slc_xsec_multisigma_RDecBR1eta[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_RDecBR1gamma")
+		      slc_xsec_multisigma_RDecBR1gamma[slcCounter][wCounter] = w;
+ 	      if(name == "GENIEReWeight_SBND_v4_multisigma_RPA_CCQE")
+		      slc_xsec_multisigma_RPA_CCQE[slcCounter][wCounter] = w;
 
-	unsigned int wCounter = 0;  //Flux weight size = 1000    
-	for(auto const w: weights){
-	  if (name == "expskin_Flux") slc_flux_weight_expskin[slcCounter][wCounter] = w;
-	  if (name == "horncurrent_Flux") slc_flux_weight_horncurrent[slcCounter][wCounter] = w;
-	  if (name == "kminus_Flux") slc_flux_weight_kminus[slcCounter][wCounter] = w;
-	  if (name == "kplus_Flux") slc_flux_weight_kplus[slcCounter][wCounter] = w;
-	  if (name == "kzero_Flux") slc_flux_weight_kzero[slcCounter][wCounter] = w;
-	  if (name == "nucleoninexsec_Flux") slc_flux_weight_nucleoninexsec[slcCounter][wCounter] = w;
-	  if (name == "nucleonqexsec_Flux") slc_flux_weight_nucleonqexsec[slcCounter][wCounter] = w;
-	  if (name == "nucleontotxsec_Flux") slc_flux_weight_nucleontotxsec[slcCounter][wCounter] = w;
-	  if (name == "piminus_Flux") slc_flux_weight_piminus[slcCounter][wCounter] = w;
-	  if (name == "pioninexsec_Flux") slc_flux_weight_pioninexsex[slcCounter][wCounter] = w;
-	  if (name == "pionqexsec_Flux") slc_flux_weight_pionqexsec[slcCounter][wCounter] = w;
-	  if (name == "piontotxsec_Flux") slc_flux_weight_piontotxsec[slcCounter][wCounter] = w;
-	  if (name == "piplus_Flux") slc_flux_weight_piplus[slcCounter][wCounter] = w;
-	  wCounter++;
-        }
+	      wCounter++;
+	      if(wCounter == 2) break;
+	    }
+	  }
+	  
+	}
+	//Multi-Sim xsection weight
+	else if (name.find("multisim") != std::string::npos){
+	  unsigned int wCounter = 0; //Multisim xsection size = 500
+	  for (auto const w: weights){
+            slc_xsec_multisim_total[slcCounter][wCounter] *= w;
+	    wCounter++;
+	  }
+	}
+	// Multi-Sim Flux Weights
+	else if (name.find("_Flux") != std::string::npos){
+	  unsigned int wCounter = 0;  //Flux weight size = 1000    
+	  for(auto const w: weights){
+	    //if (name == "expskin_Flux") slc_flux_weight_expskin[slcCounter][wCounter] = w;
+	    //if (name == "horncurrent_Flux") slc_flux_weight_horncurrent[slcCounter][wCounter] = w;
+	    //if (name == "kminus_Flux") slc_flux_weight_kminus[slcCounter][wCounter] = w;
+	    //if (name == "kplus_Flux") slc_flux_weight_kplus[slcCounter][wCounter] = w;
+	    //if (name == "kzero_Flux") slc_flux_weight_kzero[slcCounter][wCounter] = w;
+	    //if (name == "nucleoninexsec_Flux") slc_flux_weight_nucleoninexsec[slcCounter][wCounter] = w;
+	    //if (name == "nucleonqexsec_Flux") slc_flux_weight_nucleonqexsec[slcCounter][wCounter] = w;
+	    //if (name == "nucleontotxsec_Flux") slc_flux_weight_nucleontotxsec[slcCounter][wCounter] = w;
+	    //if (name == "piminus_Flux") slc_flux_weight_piminus[slcCounter][wCounter] = w;
+	    //if (name == "pioninexsec_Flux") slc_flux_weight_pioninexsex[slcCounter][wCounter] = w;
+	    //if (name == "pionqexsec_Flux") slc_flux_weight_pionqexsec[slcCounter][wCounter] = w;
+	    //if (name == "piontotxsec_Flux") slc_flux_weight_piontotxsec[slcCounter][wCounter] = w;
+	    //if (name == "piplus_Flux") slc_flux_weight_piplus[slcCounter][wCounter] = w;
+	    
+	    slc_flux_weight_total[slcCounter][wCounter] *= w;
+	    wCounter++;
+          }
+	}
       } //Loop over weight names
     } 
   } //Loop over weight labels
