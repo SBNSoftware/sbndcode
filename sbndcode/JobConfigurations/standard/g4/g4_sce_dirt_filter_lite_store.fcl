@@ -1,9 +1,10 @@
-#include "g4inforeducer.fcl"
+#include "mlreco_sbnd.fcl"
 #include "g4_sce_dirt_filter_lite.fcl"
 
 process_name: G4
 
-physics.producers.sedlite: @local::sbn_largeant_info_reducer
+physics.producers.sedlite: @local::mlreco_sedlite
+physics.producers.mcreco: @local::mlreco_mcreco_sbnd_overlay
 
 physics.simulate: [ rns
                   , ionandscint
@@ -15,20 +16,3 @@ physics.simulate: [ rns
                   , mcreco
                   , genericcrt
                   ]
-
-#
-# MCRECO configuration - what MC information do we record?
-#
-
-physics.producers.mcreco.SimChannelLabel: "sedlite"
-physics.producers.mcreco.MCParticleLabel: "largeant"
-physics.producers.mcreco.UseSimEnergyDepositLite: true
-physics.producers.mcreco.UseSimEnergyDeposit: false
-physics.producers.mcreco.MCRecoPart.SavePathPDGList: [13,-13,211,-211,111,311,310,130,321,-321,2212,2112,2224,2214,2114,1114,3122,1000010020,1000010030,1000020030,1000020040]
-
-#
-# SED Lite
-#
-
-physics.producers.sedlite.SimEnergyDepositLabel: "largeant:LArG4DetectorServicevolTPCActive"
-physics.producers.sedlite.useOrigTrackID: true #needed since origTrackID not filled for sedlite in SBND - it may be filled when merging sim sources
