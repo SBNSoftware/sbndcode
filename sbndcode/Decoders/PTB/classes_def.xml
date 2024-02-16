@@ -1,0 +1,38 @@
+<!-- 
+  File: classes_def.xml
+  Brief: Data product definitions for  raw::ptb::sbndptb data product.
+  Author: Tom Junk
+-->
+
+<lcgdict>
+  <class name="raw::ptb::Trigger" ClassVersion="10">
+   <version ClassVersion="10" checksum="983962440"/>
+  </class>
+  <class name="raw::ptb::ChStatus" ClassVersion="10">
+   <version ClassVersion="10" checksum="2716777827"/>
+  </class>
+  <class name="raw::ptb::Feedback" ClassVersion="10">
+   <version ClassVersion="10" checksum="404427229"/>
+  </class>
+  <class name="raw::ptb::Misc" ClassVersion="10">
+   <version ClassVersion="10" checksum="1110799137"/>
+  </class>
+  <class name="raw::ptb::WordIndex" ClassVersion="10">
+   <version ClassVersion="10" checksum="349367213"/>
+  </class>
+  <class name="raw::ptb::sbndptb" ClassVersion="10">
+   <version ClassVersion="10" checksum="1692414973"/>
+  </class>
+  <class name="std::vector<raw::ptb::sbndptb>"/>
+  <class name="std::vector<raw::ptb::Trigger>"/>
+  <class name="std::vector<raw::ptb::ChStatus>"/>
+  <class name="std::vector<raw::ptb::Feedback>"/>
+  <class name="std::vector<raw::ptb::Misc>"/>
+  <class name="std::vector<raw::ptb::WordIndex>"/>
+  
+  <class name="art::Wrapper<raw::ptb::sbndptb>"/>
+  <class name="art::Wrapper<std::vector<raw::ptb::sbndptb>>"/>
+  <class name="art::TypeID"/>
+  <class name="art::Wrapper<art::TypeID>"/>
+  
+</lcgdict>
