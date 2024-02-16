@@ -9,10 +9,12 @@
 declare -ar TestNames=(
     'prodsingle_electron_bnblike_newflux'
     'g4_sce'
-    'detsim_sce'
-    'reco1_sce'
+    'wirecell_sim_sp_sbnd'
+    'detsim_sce_lite_wc'
+    'reco1_sce_lite_wc2d'
     'reco2_sce'
 )
+
 #############################################################################
 
 function ExecBase() {
