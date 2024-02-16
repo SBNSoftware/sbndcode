@@ -291,7 +291,7 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
       // store timestamp of trigger, relative to beam window start
       double triggerTimeStamp = fTriggerTime - beamWindowStart;
       pmt_metrics.foundBeamTrigger = true;
-      pmt_metrics.trig_ts = triggerTimeStamp;
+      pmt_metrics.triggerTimestamp = triggerTimeStamp;
 
       _pmt_beam_trig = true;
       _pmt_time_trig = triggerTimeStamp;
@@ -369,7 +369,7 @@ void sbndaq::MetricProducer::produce(art::Event& evt)
     else{
       if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
       pmt_metrics.foundBeamTrigger = false;
-      pmt_metrics.trig_ts = -9999;
+      pmt_metrics.triggerTimestamp = -9999;
       pmt_metrics.nAboveThreshold = -9999;
       pmt_metrics.promptPE = -9999;
       pmt_metrics.prelimPE = -9999;

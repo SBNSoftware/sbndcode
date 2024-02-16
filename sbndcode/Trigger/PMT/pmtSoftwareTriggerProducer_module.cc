@@ -145,7 +145,6 @@ private:
 
   TTree* _pulse_tree;
   int _npulses; 
-  std::vector<int> _ch_npulses; // number of pulses per channel
   
   std::vector<int> _pulse_ch; // ch number for each pulse 
   std::vector<double> _pulse_t_start; // t_start for each pulse 
@@ -188,10 +187,10 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   beamWindowStart = fTriggerTimeOffset*1e9;
   beamWindowEnd = beamWindowStart + fWindowLength*1000;
 
-  std::cout << "beam window start: " << beamWindowStart << std::endl;
-  std::cout << "beam window end: " << beamWindowEnd << std::endl;
-  std::cout << "trigger time offset: " << fTriggerTimeOffset << std::endl;
-  std::cout << "window length: " << fWindowLength << std::endl;
+  // std::cout << "beam window start: " << beamWindowStart << std::endl;
+  // std::cout << "beam window end: " << beamWindowEnd << std::endl;
+  // std::cout << "trigger time offset: " << fTriggerTimeOffset << std::endl;
+  std::cout << "PMT Software Trigger Window length: " << fWindowLength << " us " << std::endl;
 
   us_to_ticks = 500.; // ticks per us 
   ticks_to_us = 1/us_to_ticks; // us per ticks
@@ -225,7 +224,6 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   _pulse_tree->Branch("run",       &_run,       "run/I");
   _pulse_tree->Branch("sub",       &_sub,       "sub/I");
   _pulse_tree->Branch("evt",       &_evt,       "evt/I");
-  _pulse_tree->Branch("ch_npulses", "std::vector<int>",&_ch_npulses); 
   _pulse_tree->Branch("npulses",   &_npulses,   "npulses/I");
   _pulse_tree->Branch("pulse_ch",      "std::vector<int>",    &_pulse_ch);
   _pulse_tree->Branch("pulse_t_start", "std::vector<double>", &_pulse_t_start);
@@ -305,9 +303,10 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
 
     // store timestamp of trigger, relative to beam window start
     double trig_ts = fTriggerTime - beamWindowStart;
-    trig_metrics.trig_ts = trig_ts;
+    trig_metrics.triggerTimestamp = trig_ts;
+    // trig_metrics.trig_ts = trig_ts;
     _time_trig = trig_ts;
-    if (fVerbose>=1) std::cout << "Saving trigger timestamp: " << trig_metrics.trig_ts << " ns" << std::endl;
+    if (fVerbose>=1) std::cout << "Saving trigger timestamp: " << trig_ts << " ns" << std::endl;
 
     _beam_promptPE = 0; _beam_prelimPE = 0; _beam_peakPE = 0;
     _trig_promptPE = 0; _trig_prelimPE = 0; _trig_peakPE = 0;
@@ -333,9 +332,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
 
     std::vector<uint32_t> wvfm_sum(fWvfmLength, 0);
     auto prelim_offset = (beamStartBin - fPrelimWindow*us_to_ticks) < 0 ? 0 : beamStartBin - fPrelimWindow*us_to_ticks;
-    std::cout << "prelim offset" << prelim_offset << std::endl;
     for (int i_ch = 0; i_ch < 120; ++i_ch){
-      ch_ID[i_ch] = channelList.at(i_ch);
       auto &pmtInfo = fpmtInfoVec.at(i_ch);
       auto wvfm = fWvfmsVec[i_ch];
 
@@ -347,17 +344,12 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
         for (int bin = beamStartBin; bin < beamEndBin; ++bin){
           auto adc = wvfm[bin];
           if (adc < fADCThreshold){ 
-            ch_AboveThreshold[i_ch] = 1;
             nAboveThreshold++; 
-            continue; 
-          } 
-          else{
-              ch_AboveThreshold[i_ch] = 0;
-            continue;
+            break;
           }
         }
       }
-      else {nAboveThreshold=-9999;ch_AboveThreshold[i_ch] = -9999;}
+      else {nAboveThreshold=-9999;}
 
       // quick estimate prompt and preliminary light, assuming sampling rate of 500 MHz (2 ns per bin)
       if (fCalculatePEMetrics){
@@ -451,15 +443,16 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
     // ! need to add fcl parameters for how we want to fill these data product entries: beam vs. trigger vs. flash
     trig_metrics.promptPE = _flash_peakPE;
     trig_metrics.prelimPE = _flash_prelimPE;
-    trig_metrics.peakPE   = _flash_peakPE;
-    trig_metrics.peaktime = _flash_peaktime;
+    // trig_metrics.peakPE   = _flash_peakPE;
+    // trig_metrics.peaktime = _flash_peaktime;
     trig_metrics.foundBeamTrigger = false;
-    trig_metrics.trig_ts = -9999;
+    trig_metrics.triggerTimestamp = trig_ts;
+    // trig_metrics.trig_ts = -9999;
     trig_metrics.nAboveThreshold = -9999;
     trig_metrics.promptPE = -9999;
     trig_metrics.prelimPE = -9999;
-    trig_metrics.peakPE = -9999;
-    trig_metrics.peaktime = -9999;
+    // trig_metrics.peakPE = -9999;
+    // trig_metrics.peaktime = -9999;
 
 
     // tree variables - TTree which is only part of root 
@@ -517,12 +510,13 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   else{
     if (fVerbose>=1) std::cout << "Beam and wvfms not found" << std::endl;
     trig_metrics.foundBeamTrigger = false;
-    trig_metrics.trig_ts = -9999;
+    // trig_metrics.trig_ts = -9999;
+    trig_metrics.triggerTimestamp = -9999;
     trig_metrics.nAboveThreshold = -9999;
     trig_metrics.promptPE = -9999;
     trig_metrics.prelimPE = -9999;
-    trig_metrics.peakPE = -9999;
-    trig_metrics.peaktime = -9999;
+    // trig_metrics.peakPE = -9999;
+    // trig_metrics.peaktime = -9999;
   }
   
   trig_metrics_v->push_back(trig_metrics);
@@ -551,9 +545,6 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::checkCAEN1730FragmentTimeStamp(c
 
   value_ptr = data_begin + ch_offset + tr_offset; // pointer arithmetic 
   value = *(value_ptr);
-  if (value == 1 ){
-    std::cout << "timestamp " <<  timestamp << std::endl;
-  }
 
   if (value == 1 && timestamp >= beamWindowStart && timestamp <= beamWindowEnd) {
     foundBeamTrigger = true;
@@ -636,12 +627,9 @@ std::vector<uint32_t> sbnd::trigger::pmtSoftwareTriggerProducer::sumWvfms(const 
 // }
 
 double sbnd::trigger::pmtSoftwareTriggerProducer::estimateBaseline(std::vector<uint32_t> wvfm){
-    std::cout << "entry at halfway: " << wvfm.at(wvfm.size() / 2) << std::endl;
-
     const auto median_it = wvfm.begin() + wvfm.size() / 2;
     std::nth_element(wvfm.begin(), median_it , wvfm.end());
     auto median = *median_it;
-    std::cout << "median: " << median << std::endl; 
     return median;
 }
 
