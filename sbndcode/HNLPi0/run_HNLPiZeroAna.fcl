@@ -21,13 +21,13 @@ physics:
 {
 	analyzers:
 	{
-		hnlpizeroana: 
+		hnlana: 
 		{
 			module_type: "HNLPiZeroAnalysis"
 		}
 	}
 
-	ana: [hnlpizeroana]
+	ana: [hnlana]
 	
 	end_paths: [ana]
 }

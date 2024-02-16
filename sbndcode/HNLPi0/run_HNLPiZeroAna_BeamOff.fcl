@@ -1,8 +1,8 @@
 #include "run_HNLPiZeroAna.fcl"
 
-physics.analyzers.hnlpizeroana.EventWeightModuleLabels: []
-physics.analyzers.hnlpizeroana.PiZeroAna: false
-physics.analyzers.hnlpizeroana.BeamOff: true
-physics.analyzers.hnlpizeroana.Genie: false
-physics.analyzers.hnlpizeroana.MeVPrtl: false
-physics.analyzers.hnlpizeroana.Debug: false
+physics.analyzers.hnlana.EventWeightModuleLabels: []
+physics.analyzers.hnlana.PiZeroAna: false
+physics.analyzers.hnlana.BeamOff: true
+physics.analyzers.hnlana.Genie: false
+physics.analyzers.hnlana.MeVPrtl: false
+physics.analyzers.hnlana.Debug: false

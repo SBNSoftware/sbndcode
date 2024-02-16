@@ -1,7 +1,12 @@
-#include "reco2_sensible_MeVPrtl.fcl"
+#include "reco2_sensible_HNLPiZeroAna.fcl"
 
 physics.weight_paths: [
   fluxweight
   , geant4weight
   , systtools
 ]
+
+physics.analyzers.hnlana.EventWeightModuleLabels: ["fluxweight", "systtools", "geant4weight"]
+physics.analyzers.hnlana.Genie: true
+physics.analyzers.hnlana.BeamOff: false
+physics.analyzers.hnlana.MeVPrtl: false

@@ -464,7 +464,11 @@ private:
                                   slc_xsec_multisigma_RDecBR1eta,
                                   slc_xsec_multisigma_RDecBR1gamma,
                                   slc_xsec_multisigma_RPA_CCQE,
-  				  slc_xsec_multisim_total;
+				  slc_xsec_multisigma_NormNCCOH,
+				  slc_xsec_multisigma_NormCCCOH;
+  std::vector<std::vector<float>> slc_xsec_multisim_total;
+  
+  std::vector<std::vector<float>> slc_geant4_multisim_reinteractions;
 
   //Sub Run Tree
   TTree *fSubRunTree;
@@ -807,8 +811,12 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_xsec_multisigma_RDecBR1eta", &slc_xsec_multisigma_RDecBR1eta);
   fEventTree->Branch("slc_xsec_multisigma_RDecBR1gamma", &slc_xsec_multisigma_RDecBR1gamma);
   fEventTree->Branch("slc_xsec_multisigma_RPA_CCQE", &slc_xsec_multisigma_RPA_CCQE);
+  fEventTree->Branch("slc_xsec_multisigma_NormNCCOH", &slc_xsec_multisigma_NormNCCOH);
+  fEventTree->Branch("slc_xsec_multisigma_NormCCCOH", &slc_xsec_multisigma_NormCCCOH);
 
   fEventTree->Branch("slc_xsec_multisim_total", &slc_xsec_multisim_total);
+  
+  fEventTree->Branch("slc_geant4_multisim_reinteractions", &slc_geant4_multisim_reinteractions);
 
   if (fPiZeroAna){
     fEventTree->Branch("slc_pizero_good", &slc_pizero_good);
@@ -1217,8 +1225,12 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_xsec_multisigma_RDecBR1eta.clear();
   slc_xsec_multisigma_RDecBR1gamma.clear();
   slc_xsec_multisigma_RPA_CCQE.clear();
+  slc_xsec_multisigma_NormNCCOH.clear();
+  slc_xsec_multisigma_NormCCCOH.clear();
 
   slc_xsec_multisim_total.clear();
+  
+  slc_geant4_multisim_reinteractions.clear();
 
   if (fPiZeroAna){
     slc_pizero_good.clear();
@@ -1875,8 +1887,12 @@ void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorRow(const int row){
   slc_xsec_multisigma_RDecBR1eta.resize(row);
   slc_xsec_multisigma_RDecBR1gamma.resize(row);
   slc_xsec_multisigma_RPA_CCQE.resize(row);
+  slc_xsec_multisigma_NormCCCOH.resize(row);        
+  slc_xsec_multisigma_NormNCCOH.resize(row);        
 
   slc_xsec_multisim_total.resize(row);
+  
+  slc_geant4_multisim_reinteractions.resize(row);
 }
 
 void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorCol(const int row){
@@ -1925,8 +1941,12 @@ void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorCol(const int row){
   slc_xsec_multisigma_RDecBR1eta[row].resize(2, -9999);
   slc_xsec_multisigma_RDecBR1gamma[row].resize(2, -9999);
   slc_xsec_multisigma_RPA_CCQE[row].resize(2, -9999);
-            
+  slc_xsec_multisigma_NormCCCOH[row].resize(2, -9999);        
+  slc_xsec_multisigma_NormNCCOH[row].resize(2, -9999);        
+
   slc_xsec_multisim_total[row].resize(500, 1);
+            
+  slc_geant4_multisim_reinteractions[row].resize(1000, -9999);
 }
 
 void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
@@ -2806,9 +2826,9 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 
     for(auto const& ewm : ewms)
     {
+      
       for(auto const& [ name, weights ] : *ewm)
       {
-
 	// Multi-Sigma Cross Section
 	if (name.find("multisigma") != std::string::npos){
 	  //uni-sim only has one varible
@@ -2828,50 +2848,54 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 	  else if (weights.size() == 6){
 	    unsigned int wCounter = 0;  //only need to save index 0 and 1 for -/+1 sigma    
 	    for(auto const w: weights){
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_CoulombCCQE")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_CoulombCCQE")
 		      slc_xsec_multisigma_CoulombCCQE[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC1pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnCC1pi")
 		      slc_xsec_multisigma_NonRESBGvbarnCC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC2pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnCC2pi")
 		      slc_xsec_multisigma_NonRESBGvbarnCC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC1pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnNC1pi")
 		      slc_xsec_multisigma_NonRESBGvbarnNC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC2pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnNC2pi")
 		      slc_xsec_multisigma_NonRESBGvbarnNC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC1pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpCC1pi")
 		      slc_xsec_multisigma_NonRESBGvbarpCC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC2pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpCC2pi")
 		      slc_xsec_multisigma_NonRESBGvbarpCC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC1pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpNC1pi")
 		      slc_xsec_multisigma_NonRESBGvbarpNC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC2pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpNC2pi")
 		      slc_xsec_multisigma_NonRESBGvbarpNC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC1pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnCC1pi")
 		      slc_xsec_multisigma_NonRESBGvnCC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC2pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnCC2pi")
 		      slc_xsec_multisigma_NonRESBGvnCC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC1pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnNC1pi")
 		      slc_xsec_multisigma_NonRESBGvnNC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC2pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnNC2pi")
 		      slc_xsec_multisigma_NonRESBGvnNC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC1pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpCC1pi")
 		      slc_xsec_multisigma_NonRESBGvpCC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC2pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpCC2pi")
 		      slc_xsec_multisigma_NonRESBGvpCC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC1pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpNC1pi")
 		      slc_xsec_multisigma_NonRESBGvpNC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC2pi")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpNC2pi")
 		      slc_xsec_multisigma_NonRESBGvpNC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NormCCMEC")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NormCCMEC")
 		      slc_xsec_multisigma_NormCCMEC[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_NormNCMEC")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NormNCMEC")
 		      slc_xsec_multisigma_NormNCMEC[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_RDecBR1eta")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_RDecBR1eta")
 		      slc_xsec_multisigma_RDecBR1eta[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_RDecBR1gamma")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_RDecBR1gamma")
 		      slc_xsec_multisigma_RDecBR1gamma[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v4_multisigma_RPA_CCQE")
+ 	      if(name == "GENIEReWeight_SBND_v5_multisigma_RPA_CCQE")
 		      slc_xsec_multisigma_RPA_CCQE[slcCounter][wCounter] = w;
+	      if(name == "GENIEReWeight_SBND_v5_multisigma_NormCCCOH")
+		      slc_xsec_multisigma_NormCCCOH[slcCounter][wCounter] = w;
+	      if(name == "GENIEReWeight_SBND_v5_multisigma_NormNCCOH")
+		      slc_xsec_multisigma_NormNCCOH[slcCounter][wCounter] = w;
 
 	      wCounter++;
 	      if(wCounter == 2) break;
@@ -2908,6 +2932,14 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 	    slc_flux_weight_total[slcCounter][wCounter] *= w;
 	    wCounter++;
           }
+	}
+	// Geant4 weight
+	else if (name.find("Geant4") != std::string::npos){
+	  unsigned int wCounter = 0; //Multisim geant4 size = 1000
+	  for (auto const w: weights){
+            slc_geant4_multisim_reinteractions[slcCounter][wCounter] = w;
+	    wCounter++;
+	  }
 	}
       } //Loop over weight names
     } 
