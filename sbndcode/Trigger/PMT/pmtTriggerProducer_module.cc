@@ -161,6 +161,7 @@ pmtTriggerProducer::pmtTriggerProducer(fhicl::ParameterSet const & p)
    auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
    fSampling = clockData.OpticalClock().Frequency(); // MHz
    this->reconfigure(p);
+   std::cout << "PMT Hardware Trigger Window Length: " << fWindowEnd-fWindowStart << " us" << std::endl;
 }
 
 // Constructor
