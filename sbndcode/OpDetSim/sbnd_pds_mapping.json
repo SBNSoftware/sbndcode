@@ -6,7 +6,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 1,
@@ -15,7 +16,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 2,
@@ -24,7 +26,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 3,
@@ -33,7 +36,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 4,
@@ -42,7 +46,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 5,
@@ -51,7 +56,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 6,
@@ -60,7 +66,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 7,
@@ -69,7 +76,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 8,
@@ -78,7 +86,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 9,
@@ -87,7 +96,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 10,
@@ -96,7 +106,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 11,
@@ -105,7 +116,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 12,
@@ -114,7 +126,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 13,
@@ -123,7 +136,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 14,
@@ -132,7 +146,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 15,
@@ -141,7 +156,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 16,
@@ -150,7 +166,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 17,
@@ -159,7 +176,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 18,
@@ -168,7 +186,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 19,
@@ -177,7 +196,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 20,
@@ -186,7 +206,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 21,
@@ -195,7 +216,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 22,
@@ -204,7 +226,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 23,
@@ -213,7 +236,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 24,
@@ -222,7 +246,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 25,
@@ -231,7 +256,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 26,
@@ -240,7 +266,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 27,
@@ -249,7 +276,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 28,
@@ -258,7 +286,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 29,
@@ -267,7 +296,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 30,
@@ -276,7 +306,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 31,
@@ -285,7 +316,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 32,
@@ -294,7 +326,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 33,
@@ -303,7 +336,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 34,
@@ -312,7 +346,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 35,
@@ -321,7 +356,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 36,
@@ -330,7 +366,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 37,
@@ -339,7 +376,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 38,
@@ -348,7 +386,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 39,
@@ -357,7 +396,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 40,
@@ -366,7 +406,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 41,
@@ -375,7 +416,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 42,
@@ -384,7 +426,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 43,
@@ -393,7 +436,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 44,
@@ -402,7 +446,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 45,
@@ -411,7 +456,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 46,
@@ -420,7 +466,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 47,
@@ -429,7 +476,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 48,
@@ -438,7 +486,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 49,
@@ -447,7 +496,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 50,
@@ -456,7 +506,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 51,
@@ -465,7 +516,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 52,
@@ -474,7 +526,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 53,
@@ -483,7 +536,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 54,
@@ -492,7 +546,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 55,
@@ -501,7 +556,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 56,
@@ -510,7 +566,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 57,
@@ -519,7 +576,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 58,
@@ -528,7 +586,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 59,
@@ -537,7 +596,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 60,
@@ -546,7 +606,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 61,
@@ -555,7 +616,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 62,
@@ -564,7 +626,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 63,
@@ -573,7 +636,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 64,
@@ -582,7 +646,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 65,
@@ -591,7 +656,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 66,
@@ -600,7 +666,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 67,
@@ -609,7 +676,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 68,
@@ -618,7 +686,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 69,
@@ -627,7 +696,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 70,
@@ -636,7 +706,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 71,
@@ -645,7 +716,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 72,
@@ -654,7 +726,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 73,
@@ -663,7 +736,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 74,
@@ -672,7 +746,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 75,
@@ -681,7 +756,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 76,
@@ -690,7 +766,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 77,
@@ -699,7 +776,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 78,
@@ -708,7 +786,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 79,
@@ -717,7 +796,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 80,
@@ -726,7 +806,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 81,
@@ -735,7 +816,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 82,
@@ -744,7 +826,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 83,
@@ -753,7 +836,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 84,
@@ -762,7 +846,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 85,
@@ -771,7 +856,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 86,
@@ -780,7 +866,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 87,
@@ -789,7 +876,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 88,
@@ -798,7 +886,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 89,
@@ -807,7 +896,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 90,
@@ -816,7 +906,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 91,
@@ -825,7 +916,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 92,
@@ -834,7 +926,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 93,
@@ -843,7 +936,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 94,
@@ -852,7 +946,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 95,
@@ -861,7 +956,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 96,
@@ -870,7 +966,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 97,
@@ -879,7 +976,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 98,
@@ -888,7 +986,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 99,
@@ -897,7 +996,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 100,
@@ -906,7 +1006,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 101,
@@ -915,7 +1016,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 102,
@@ -924,7 +1026,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 103,
@@ -933,7 +1036,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 104,
@@ -942,7 +1046,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 105,
@@ -951,7 +1056,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 106,
@@ -960,7 +1066,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 107,
@@ -969,7 +1076,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 108,
@@ -978,7 +1086,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 109,
@@ -987,7 +1096,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 110,
@@ -996,7 +1106,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 111,
@@ -1005,7 +1116,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 112,
@@ -1014,7 +1126,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 113,
@@ -1023,7 +1136,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 114,
@@ -1032,7 +1146,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 115,
@@ -1041,7 +1156,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 116,
@@ -1050,7 +1166,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 117,
@@ -1059,7 +1176,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 118,
@@ -1068,7 +1186,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 119,
@@ -1077,7 +1196,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 120,
@@ -1086,7 +1206,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 121,
@@ -1095,7 +1216,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 122,
@@ -1104,7 +1226,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 123,
@@ -1113,7 +1236,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 124,
@@ -1122,7 +1246,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 125,
@@ -1131,7 +1256,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 126,
@@ -1140,7 +1266,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 127,
@@ -1149,7 +1276,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 128,
@@ -1158,7 +1286,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 129,
@@ -1167,7 +1296,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 130,
@@ -1176,7 +1306,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 131,
@@ -1185,7 +1316,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 132,
@@ -1194,7 +1326,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 133,
@@ -1203,7 +1336,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 134,
@@ -1212,7 +1346,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 135,
@@ -1221,7 +1356,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 136,
@@ -1230,7 +1366,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 137,
@@ -1239,7 +1376,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 138,
@@ -1248,7 +1386,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 139,
@@ -1257,7 +1396,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 140,
@@ -1266,7 +1406,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 141,
@@ -1275,7 +1416,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 142,
@@ -1284,7 +1426,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 143,
@@ -1293,7 +1436,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 144,
@@ -1302,7 +1446,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 145,
@@ -1311,7 +1456,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 146,
@@ -1320,7 +1466,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 147,
@@ -1329,7 +1476,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 148,
@@ -1338,7 +1486,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 149,
@@ -1347,7 +1496,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 150,
@@ -1356,7 +1506,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 151,
@@ -1365,7 +1516,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 152,
@@ -1374,7 +1526,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 153,
@@ -1383,7 +1536,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 154,
@@ -1392,7 +1546,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 155,
@@ -1401,7 +1556,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 156,
@@ -1410,7 +1566,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 157,
@@ -1419,7 +1576,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 158,
@@ -1428,7 +1586,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 159,
@@ -1437,7 +1596,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 160,
@@ -1446,7 +1606,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 161,
@@ -1455,7 +1616,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 162,
@@ -1464,7 +1626,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 163,
@@ -1473,7 +1636,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 164,
@@ -1482,7 +1646,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 165,
@@ -1491,7 +1656,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 166,
@@ -1500,7 +1666,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 167,
@@ -1509,7 +1676,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 168,
@@ -1518,7 +1686,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 169,
@@ -1527,7 +1696,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 170,
@@ -1536,7 +1706,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 171,
@@ -1545,7 +1716,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 172,
@@ -1554,7 +1726,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 173,
@@ -1563,7 +1736,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 174,
@@ -1572,7 +1746,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 175,
@@ -1581,7 +1756,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 176,
@@ -1590,7 +1766,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 177,
@@ -1599,7 +1776,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 178,
@@ -1608,7 +1786,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 179,
@@ -1617,7 +1796,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 180,
@@ -1626,7 +1806,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 181,
@@ -1635,7 +1816,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 182,
@@ -1644,7 +1826,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 183,
@@ -1653,7 +1836,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 184,
@@ -1662,7 +1846,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 185,
@@ -1671,7 +1856,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 186,
@@ -1680,7 +1866,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 187,
@@ -1689,7 +1876,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 188,
@@ -1698,7 +1886,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 189,
@@ -1707,7 +1896,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 190,
@@ -1716,7 +1906,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 191,
@@ -1725,7 +1916,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 192,
@@ -1734,7 +1926,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 193,
@@ -1743,7 +1936,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 194,
@@ -1752,7 +1946,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 195,
@@ -1761,7 +1956,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 196,
@@ -1770,7 +1966,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 197,
@@ -1779,7 +1976,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 198,
@@ -1788,7 +1986,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 199,
@@ -1797,7 +1996,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 200,
@@ -1806,7 +2006,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 201,
@@ -1815,7 +2016,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 202,
@@ -1824,7 +2026,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 203,
@@ -1833,7 +2036,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 204,
@@ -1842,7 +2046,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 205,
@@ -1851,7 +2056,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 206,
@@ -1860,7 +2066,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 207,
@@ -1869,7 +2076,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 208,
@@ -1878,7 +2086,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 209,
@@ -1887,7 +2096,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 210,
@@ -1896,7 +2106,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 211,
@@ -1905,7 +2116,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 212,
@@ -1914,7 +2126,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 213,
@@ -1923,7 +2136,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 214,
@@ -1932,7 +2146,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 215,
@@ -1941,7 +2156,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 216,
@@ -1950,7 +2166,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 217,
@@ -1959,7 +2176,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 218,
@@ -1968,7 +2186,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 219,
@@ -1977,7 +2196,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 220,
@@ -1986,7 +2206,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 221,
@@ -1995,7 +2216,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 222,
@@ -2004,7 +2226,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 223,
@@ -2013,7 +2236,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 224,
@@ -2022,7 +2246,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 225,
@@ -2031,7 +2256,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 226,
@@ -2040,7 +2266,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 227,
@@ -2049,7 +2276,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 228,
@@ -2058,7 +2286,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 229,
@@ -2067,7 +2296,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 230,
@@ -2076,7 +2306,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 231,
@@ -2085,7 +2316,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 232,
@@ -2094,7 +2326,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 233,
@@ -2103,7 +2336,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 234,
@@ -2112,7 +2346,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 235,
@@ -2121,7 +2356,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 236,
@@ -2130,7 +2366,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 237,
@@ -2139,7 +2376,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 238,
@@ -2148,7 +2386,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 239,
@@ -2157,7 +2396,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 240,
@@ -2166,7 +2406,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 241,
@@ -2175,7 +2416,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 242,
@@ -2184,7 +2426,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 243,
@@ -2193,7 +2436,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 244,
@@ -2202,7 +2446,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 245,
@@ -2211,7 +2456,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 246,
@@ -2220,7 +2466,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 247,
@@ -2229,7 +2476,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 248,
@@ -2238,7 +2486,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 249,
@@ -2247,7 +2496,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 250,
@@ -2256,7 +2506,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 251,
@@ -2265,7 +2516,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 252,
@@ -2274,7 +2526,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 253,
@@ -2283,7 +2536,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 254,
@@ -2292,7 +2546,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 255,
@@ -2301,7 +2556,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 256,
@@ -2310,7 +2566,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 257,
@@ -2319,7 +2576,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 258,
@@ -2328,7 +2586,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 259,
@@ -2337,7 +2596,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 260,
@@ -2346,7 +2606,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 261,
@@ -2355,7 +2616,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 262,
@@ -2364,7 +2626,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 263,
@@ -2373,7 +2636,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 264,
@@ -2382,7 +2646,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 265,
@@ -2391,7 +2656,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 266,
@@ -2400,7 +2666,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 267,
@@ -2409,7 +2676,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 268,
@@ -2418,7 +2686,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 269,
@@ -2427,7 +2696,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 270,
@@ -2436,7 +2706,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 271,
@@ -2445,7 +2716,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 272,
@@ -2454,7 +2726,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 273,
@@ -2463,7 +2736,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 274,
@@ -2472,7 +2746,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 275,
@@ -2481,7 +2756,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 276,
@@ -2490,7 +2766,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 277,
@@ -2499,7 +2776,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 278,
@@ -2508,7 +2786,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 279,
@@ -2517,7 +2796,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 280,
@@ -2526,7 +2806,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 281,
@@ -2535,7 +2816,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 282,
@@ -2544,7 +2826,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 283,
@@ -2553,7 +2836,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 284,
@@ -2562,7 +2846,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 285,
@@ -2571,7 +2856,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 286,
@@ -2580,7 +2866,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 287,
@@ -2589,7 +2876,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 288,
@@ -2598,7 +2886,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 289,
@@ -2607,7 +2896,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 290,
@@ -2616,7 +2906,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 291,
@@ -2625,7 +2916,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 292,
@@ -2634,7 +2926,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 293,
@@ -2643,7 +2936,8 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 294,
@@ -2652,7 +2946,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 295,
@@ -2661,7 +2956,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 296,
@@ -2670,7 +2966,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 297,
@@ -2679,7 +2976,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 298,
@@ -2688,7 +2986,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 299,
@@ -2697,7 +2996,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 300,
@@ -2706,7 +3006,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 301,
@@ -2715,7 +3016,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 302,
@@ -2724,7 +3026,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 303,
@@ -2733,7 +3036,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 304,
@@ -2742,7 +3046,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 305,
@@ -2751,7 +3056,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": ""
+    "electronics": "",
+    "gain": 5e6
   },
   {
     "channel": 306,
@@ -2760,7 +3066,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 307,
@@ -2769,7 +3076,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 308,
@@ -2778,7 +3086,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 309,
@@ -2787,7 +3096,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 310,
@@ -2796,7 +3106,8 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   },
   {
     "channel": 311,
@@ -2805,6 +3116,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "daphne",
+    "gain": 5e6
   }
 ]
