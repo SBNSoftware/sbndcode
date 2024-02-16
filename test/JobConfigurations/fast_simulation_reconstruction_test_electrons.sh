@@ -17,6 +17,10 @@ declare -ar TestNames=(
 
 #############################################################################
 
+# Set WireCell env vars
+export WIRECELL_PATH=${SBNDCODE_DIR}/sbndcode/WireCell/cfg/:${SBND_DATA_DIR}/WireCell
+
+
 function ExecBase() {
 	local LogFile="$1"
 	shift
