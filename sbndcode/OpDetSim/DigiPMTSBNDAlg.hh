@@ -41,6 +41,7 @@
 #include "sbndcode/OpDetSim/PMTAlg/PMTGainFluctuations.hh"
 #include "sbndcode/OpDetSim/PMTAlg/PMTNonLinearity.hh"
 #include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 #include "TFile.h"
 
@@ -66,6 +67,9 @@ namespace opdet {
       double PMTCoatedVISEff; //PMT (coated) efficiency for reflected (VIS) light
       double PMTUncoatedEff; //PMT (uncoated) efficiency
       std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
+      double PMTGain;
+      double PMTNominalGain;
+      std::vector<double> PMTChannelGain;
       bool PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
       fhicl::ParameterSet GainFluctuationsParams;
@@ -132,6 +136,9 @@ namespace opdet {
     double fPMTUncoatedEff;
     bool fPositivePolarity;
     int fADCSaturation;
+    double fPMTGain;
+    double fPMTNominalGain;
+    std::vector<double> fPMTChannelGain;
 
     double sigma1;
     double sigma2;
@@ -153,7 +160,7 @@ namespace opdet {
     //PMTNonLinearity
     std::unique_ptr<opdet::PMTNonLinearity> fPMTNonLinearityPtr;
 
-    void AddSPE(size_t time, std::vector<double>& wave, double npe = 1); // add single pulse to auxiliary waveform
+    void AddSPE(size_t time, std::vector<double>& wave, double npe = 1, double gain_factor = 1.0); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
@@ -161,6 +168,7 @@ namespace opdet {
     std::vector<std::vector<double>> fSinglePEWave_HD; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
+    std::unordered_map<int, double> fPMTChannelGainMap;
 
     void CreatePDWaveformUncoatedPMT(
       sim::SimPhotons const& SimPhotons,
@@ -276,6 +284,21 @@ namespace opdet {
       fhicl::Atom<double> pmtuncoatedEff {
         Name("PMTUncoatedEff"),
         Comment("PMT (uncoated) detection efficiency")
+      };
+
+      fhicl::Atom<double> pmtGain {
+        Name("PMTGain"),
+        Comment("PMT gain")
+      };
+
+      fhicl::Atom<double> pmtNominalGain {
+        Name("PMTNominalGain"),
+        Comment("PMT nominal gain in SER template")
+      };
+
+      fhicl::Sequence<double> pmtChannelGain {
+        Name("PMTChannelGain"),
+        Comment("PMT Gain Variations per channel (% away from nominal)")
       };
 
       fhicl::Atom<bool> PMTsinglePEmodel {
