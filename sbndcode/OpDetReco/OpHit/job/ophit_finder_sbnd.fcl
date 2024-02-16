@@ -45,7 +45,7 @@ sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 7
 sbnd_ophit_finder_arapuca: @local::sbnd_ophit_finder
 sbnd_ophit_finder_arapuca.PD: ["xarapuca_vis", "xarapuca_vuv"]
 sbnd_ophit_finder_arapuca.Electronics: "Daphne"
-sbnd_ophit_finder_arapuca.SPEArea: 217.928. # rodrigoa: Sum of bins at 8ADC, 62.5 MHz/16ns and dipolar/realistic SER
+sbnd_ophit_finder_arapuca.SPEArea: 136.47 # rodrigoa: Sum of bins at 8ADC, 62.5 MHz/16ns and dipolar/realistic SER
 sbnd_ophit_finder_arapuca.PedAlgoPset.PedRangeMax:  1520
 sbnd_ophit_finder_arapuca.PedAlgoPset.PedRangeMin:  1480
 sbnd_ophit_finder_arapuca.PedAlgoPset.Threshold:    5
@@ -59,5 +59,6 @@ sbnd_ophit_finder_arapuca.HitAlgoPset.NumPostSample: 0 # rodrigoa: prevent sum t
 sbnd_ophit_finder_arapuca.HitAlgoPset.NumPreSample: 5
 sbnd_ophit_finder_arapuca.HitAlgoPset.TailADCThreshold: 2
 sbnd_ophit_finder_arapuca.HitAlgoPset.TailNSigmaThreshold: 2
+sbnd_ophit_finder_arapuca.HitAlgoPset.PositivePolarity: true
 
 END_PROLOG
