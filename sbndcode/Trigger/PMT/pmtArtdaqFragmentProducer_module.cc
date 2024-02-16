@@ -140,7 +140,8 @@ sbnd::trigger::pmtArtdaqFragmentProducer::pmtArtdaqFragmentProducer(fhicl::Param
   for(auto const& i:pmtMap){
     channelList.push_back(i["channel"]);
   }
-   
+  
+  std::cout << "PMT ArtDaq Fragment Producer Window length: " << fBeamWindowLength << " us " << std::endl;
 }
 
 void sbnd::trigger::pmtArtdaqFragmentProducer::produce(art::Event& e)

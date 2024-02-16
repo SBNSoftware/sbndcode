@@ -1,5 +1,6 @@
 #include "services_sbnd.fcl"
 #include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
 
 #include "simulationservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
@@ -13,6 +14,9 @@ services:
     @table::sbnd_detsim_services
     TFileService: { fileName: "test_hist.root" }
     RandomNumberGenerator: {} #ART native random number generator 
+    message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+    FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+
 } 
 
 #source is now a root file                                                                                         
@@ -28,6 +32,8 @@ outputs:
  {
    @table::sbnd_rootoutput
    fastCloning: true
+   dataTier: "reconstructed"
+
  }
 }
 
