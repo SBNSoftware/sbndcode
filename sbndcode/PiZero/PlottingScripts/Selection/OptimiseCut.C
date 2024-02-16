@@ -3,16 +3,61 @@
 #include "Common.C"
 #include "Selections.h"
 
-void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut);
+void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut, const bool optimiseEPP);
 
-void OptimiseCut(const TString productionVersion, const SelectionParams &selectionParams, Plot plot, const bool rej_cut)
+void OptimiseCut(const TString productionVersion, const SelectionParams &selectionParams, const int excludingCut, Plot plot, const bool rej_cut, const bool optimiseEPP = false)
 {
-  Cut cut = TotalCut(selectionParams.cuts);
+  Cut cut = TotalCutExcluding(selectionParams.cuts, excludingCut);
 
-  OptimiseCut(productionVersion, selectionParams.name, plot, selectionParams.categories[0], cut, rej_cut);
+  OptimiseCut(productionVersion, selectionParams.name, plot, selectionParams.categories[0], cut, rej_cut, optimiseEPP);
 }
 
-void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut)
+void OptimiseCut(const TString productionVersion)
+{
+  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[0], false);
+  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[1], false);
+  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[4], false);
+  OptimiseCut(productionVersion, ncpizero_incl, 8, optimisation_plots[2], true);
+  OptimiseCut(productionVersion, ncpizero_incl, 9, optimisation_plots[2], false);
+  OptimiseCut(productionVersion, ncpizero_incl, 10, optimisation_plots[3], false);
+
+  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[0], false, true);
+  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[1], false, true);
+  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[4], false, true);
+  OptimiseCut(productionVersion, ncpizero_incl, 8, optimisation_plots[2], true, true);
+  OptimiseCut(productionVersion, ncpizero_incl, 9, optimisation_plots[2], false, true);
+  OptimiseCut(productionVersion, ncpizero_incl, 10, optimisation_plots[3], false, true);
+
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[0], false);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[1], false);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[4], false);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 10, optimisation_plots[2], true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 11, optimisation_plots[2], false);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 12, optimisation_plots[3], false);
+
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[0], false, true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[1], false, true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[4], false, true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 10, optimisation_plots[2], true, true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 11, optimisation_plots[2], false, true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 12, optimisation_plots[3], false, true);
+
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[0], false);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[1], false);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[4], false);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 10, optimisation_plots[2], true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 11, optimisation_plots[2], false);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 12, optimisation_plots[3], false);
+
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[0], false, true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[1], false, true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[4], false, true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 10, optimisation_plots[2], true, true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 11, optimisation_plots[2], false, true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 12, optimisation_plots[3], false, true);
+}
+
+void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut, const bool optimiseEPP)
 {
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/cut_optimisation/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
@@ -61,10 +106,17 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   gPur->SetMarkerColor(kBlue+2);
   TGraph *gEP  = new TGraph();
   gEP->SetMarkerColor(kMagenta+2);
+  TGraph *gEPP = new TGraph();
+  gEPP->SetMarkerColor(kGreen+2);
 
   gSelEff->SetTitle(TString(hSig->GetXaxis()->GetTitle()) + ";Cut Value;Fraction");
 
-  float accumSignal = initSignal, accumBack = initBack, maxEP = -std::numeric_limits<float>::max(), optimal_cut = -std::numeric_limits<float>::max(),
+  float accumSignal = initSignal, accumBack = initBack,
+    maxEP = -std::numeric_limits<float>::max(),
+    maxEPP = -std::numeric_limits<float>::max(),
+    maxE = -std::numeric_limits<float>::max(),
+    maxP = -std::numeric_limits<float>::max(),
+    optimal_cut = -std::numeric_limits<float>::max(),
     max = -std::numeric_limits<float>::max();
 
   int i = rej_cut ? hSig->GetNbinsX()+1 : 0;
@@ -81,11 +133,16 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
       const float eff = (accumSignal / totalSignal) * 100;
       const float pur = (accumSignal / (accumSignal + accumBack)) * 100;
       const float ep  = eff * pur / 100;
+      const float epp = eff * pur * pur / 10000;
       const float cut = rej_cut ? hSig->GetBinLowEdge(i) : hSig->GetBinLowEdge(i) + hSig->GetBinWidth(i);
 
-      if(ep > maxEP)
+      if((!optimiseEPP && ep > maxEP) || (optimiseEPP && epp > maxEPP))
         {
-          maxEP = ep;
+          maxEP  = ep;
+          maxEPP = epp;
+          maxE   = eff;
+          maxP   = pur;
+
           optimal_cut = cut;
         }
 
@@ -99,6 +156,7 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
       gSelEff->SetPoint(i, cut, eff);
       gPur->SetPoint(i, cut, pur);
       gEP->SetPoint(i, cut, eff * pur / 100);
+      gEPP->SetPoint(i, cut, eff * pur * pur / 10000);
 
       if(rej_cut)
         --i;
@@ -112,9 +170,13 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   line->SetLineStyle(9);
   line->SetLineWidth(3);
 
-  TPaveText *pt = new TPaveText(.25, .68, .5, .75, "NDC");
+  TPaveText *pt = new TPaveText(.25, .62, .5, .75, "NDC");
   pt->AddText(Form("Optimal Cut: %.4f", optimal_cut));
   pt->AddText(Form("Efficiency x Purity: %.2f %%", maxEP));
+  if(optimiseEPP)
+    pt->AddText(Form("Efficiency x Purity^2: %.2f %%", maxEPP));
+  pt->AddText(Form("Efficiency: %.2f %%", maxE));
+  pt->AddText(Form("Purity: %.2f %%", maxP));
   pt->SetTextColor(kBlack);
   pt->SetTextSize(0.03);
   pt->SetFillColor(kWhite);
@@ -126,7 +188,10 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   leg->AddEntry(gSelEff, "Efficiency", "p");
   leg->AddEntry(gPur, "Purity", "p");
   leg->AddEntry(gEP, "Efficiency x Purity", "p");
-  leg->SetNColumns(3);
+  if(optimiseEPP)
+    leg->AddEntry(gEPP, "Efficiency x Purity^2", "p");
+  leg->SetNColumns(4);
+  leg->SetTextSize(0.03);
 
   TCanvas *c = new TCanvas("c", "c");
   c->SetTopMargin(.15);
@@ -138,6 +203,8 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
     gSelEff->SetMaximum(110);
   gPur->Draw("Psame");
   gEP->Draw("Psame");
+  if(optimiseEPP)
+    gEPP->Draw("Psame");
   line->Draw();
   pt->Draw();
   leg->Draw();
@@ -145,6 +212,9 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   TString name = plot.name;
   if(rej_cut)
     name += "_reverse";
+
+  if(optimiseEPP)
+    name += "_max_epp";
 
   c->SaveAs(saveDir + "/" + name + ".png");
   c->SaveAs(saveDir + "/" + name + ".pdf");

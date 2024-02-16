@@ -31,6 +31,18 @@ std::vector<Plot> selection_plots = {
     100, 0, 2e5 }, // 100, 0, 5e3 for cut optimisation
 };
 
+std::vector<Plot> optimisation_plots = {
+  { "slc_crumbs_score", "slc_crumbs_score", ";CRUMBS Score;Slices",
+    50, -1.5, 1. },
+  { "slc_crumbs_nc_score", "slc_crumbs_nc_score", ";CRUMBS NC Score;Slices",
+    50, -1.5, 1. },
+  { "slc_crumbs_ccnue_score", "slc_crumbs_ccnue_score", ";CRUMBS CCNuE Score;Slices",
+    50, -1.5, 1. },
+  { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
+    100, -2, 2 },
+  { "slc_opt0_score", "slc_opt0_score", ";OpT0 Score;Slices",
+    100, 0, 5e3 },
+};
 std::vector<Plot> extension_plots = {
   { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
     100, -2, 8 },

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "/exp/sbnd/app/users/hlay/plotting_utils/Structs.h"
+#include "Enumerate.h"
 
 const TString baseSaveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots";
 const TString baseFileDir = "/pnfs/sbnd/persistent/users/hlay/ncpizero";
@@ -70,6 +71,21 @@ Cut TotalCut(const std::vector<Cut> &cuts)
 
   for(auto const& cut : cuts)
     totalCut += cut.cut;
+
+  Cut cut = { "full_selection", totalCut, "Full Selection" };
+
+  return cut;
+}
+
+Cut TotalCutExcluding(const std::vector<Cut> &cuts, const int excludingCut)
+{
+  TCut totalCut = "";
+
+  for(auto&& [ cut_i, cut ] : enumerate(cuts))
+    {
+      if(cut_i != excludingCut)
+        totalCut += cut.cut;
+    }
 
   Cut cut = { "full_selection", totalCut, "Full Selection" };
 
