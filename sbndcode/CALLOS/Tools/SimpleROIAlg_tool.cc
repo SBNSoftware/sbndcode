@@ -54,7 +54,9 @@ void callos::SimpleROIAlg::SubtractBaseline(std::vector<double> &wf, double base
 
 bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> const& wvf ,std::vector<float> & ROI, std::vector<float> & charges)
 {
- if (fDebug) std::cout << "SimpleROIAlg::ProcessWaveform"<<std::endl;
+  // pending real implementation
+  
+  //  if (fDebug) std::cout << "SimpleROIAlg::ProcessWaveform"<<std::endl;
   return true;
 
 }
