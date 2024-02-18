@@ -5,9 +5,9 @@
 const Cut noCut                    = { "no_cut", "", "No Cut" };
 const Cut notClearCosmic           = { "not_clear_cosmic", "!slc_is_clear_cosmic", "Not Clear Cosmic" };
 const Cut fv                       = { "fv", "slc_is_fv", "FV" };
-const Cut crumbsIncl               = { "crumbs", "slc_crumbs_score>-0.195", "CRUMBS Cut" };
-const Cut crumbs0p0pi              = { "crumbs", "slc_crumbs_score>-0.195", "CRUMBS Cut" };
-const Cut crumbsNp0pi              = { "crumbs", "slc_crumbs_score>-0.16", "CRUMBS Cut" };
+const Cut crumbsIncl               = { "crumbs", "slc_crumbs_nc_score>-0.005", "CRUMBS Cut" };
+const Cut crumbs0p0pi              = { "crumbs", "slc_crumbs_nc_score>-0.005", "CRUMBS Cut" };
+const Cut crumbsNp0pi              = { "crumbs", "slc_crumbs_nc_score>0.075", "CRUMBS Cut" };
 const Cut noRazzledMuons           = { "no_razzled_muons", "slc_n_primary_razzled_muons==0", "No Razzled Muons" };
 const Cut atLeastTwoPFPs           = { "at_least_two_pfps", "slc_n_pfps>1", "At Least Two PFPs" };
 const Cut atLeastTwoRazzledPhotons = { "has_two_razzled_photons", "slc_n_primary_razzled_photons>1", "Has Two Razzled Photons" };
@@ -16,13 +16,13 @@ const Cut noRazzledPions           = { "no_razzled_pions", "slc_n_primary_razzle
 const Cut noRazzledProtons         = { "no_razzled_protons", "slc_n_primary_razzled_protons_thresh==0", "No Razzled Protons" };
 const Cut atLeastOneRazzledProton  = { "at_least_one_razzled_proton", "slc_n_primary_razzled_protons_thresh>0", "At Least One Razzled Proton" };
 const Cut goodOpT0FracHighIncl     = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.756", "Good OpT0 Frac High" };
-const Cut goodOpT0FracHigh0p0pi    = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.408", "Good OpT0 Frac High" };
+const Cut goodOpT0FracHigh0p0pi    = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.844", "Good OpT0 Frac High" };
 const Cut goodOpT0FracHighNp0pi    = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.836", "Good OpT0 Frac High" };
 const Cut goodOpT0FracLowIncl      = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.7", "Good OpT0 Frac Low" };
 const Cut goodOpT0FracLow0p0pi     = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.7", "Good OpT0 Frac Low" };
 const Cut goodOpT0FracLowNp0pi     = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.376", "Good OpT0 Frac Low" };
-const Cut opT0ScoreIncl            = { "opt0_score", "slc_opt0_score>150", "OpT0 Score" };
-const Cut opT0Score0p0pi           = { "opt0_score", "slc_opt0_score>150", "OpT0 Score" };
+const Cut opT0ScoreIncl            = { "opt0_score", "slc_opt0_score>5", "OpT0 Score" };
+const Cut opT0Score0p0pi           = { "opt0_score", "slc_opt0_score>125", "OpT0 Score" };
 const Cut opT0ScoreNp0pi           = { "opt0_score", "slc_opt0_score>210", "OpT0 Score" };
 const Cut allOtherTrksContained    = { "all_other_trks_contained", "slc_all_other_trks_contained", "All Other Tracks Contained" };
 

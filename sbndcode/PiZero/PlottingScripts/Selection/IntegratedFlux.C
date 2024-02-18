@@ -87,7 +87,7 @@ void IntegratedFlux(const TString productionVersion)
       TH1F *hFluxUniverses = new TH1F(Form("hFluxUniverses%s", name.c_str()), ";Integrated #nu Flux (cm^{-2});Universes", 26, 1.2e13, 2.5e13);
       const float nominalFlux  = nominalCount * scaling / fv_face_area;
 
-      outFile << Form("{ %s, {", name.c_str()) << std::endl;
+      outFile << Form("{ \"%s\", {", name.c_str()) << std::endl;
 
       for(int j = 0; j < 1000; ++j)
         {
