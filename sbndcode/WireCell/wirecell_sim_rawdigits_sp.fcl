@@ -30,6 +30,11 @@
 #include "detsimmodules_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
+#
+# MC reco
+#
+#include "mcreco_sbnd.fcl"
+
 
 process_name: WCLS
 
@@ -37,6 +42,7 @@ services:
 {
   TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
   #@table::sbnd_detsim_services
+  @table::sbnd_g4_services
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   #AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
   #AuxDetGeometry: { @table::sbnd_geo_source }
@@ -133,6 +139,8 @@ physics:
        }
     }
 
+    # Truth-level reconstruction
+    mcreco: @local::sbnd_mcreco
 
     #crt:       @local::sbnd_crtsim
     #opdaq:     @local::sbnd_opdetdigitizer
@@ -141,7 +149,7 @@ physics:
   #define the producer and filter modules for this path, order matters,
   #simulate:  [ rns, daq, crt, opdaq] #default 
   #simulate:  [ rns, daq, simtpc2d, crt, opdaq] #default (daq) plus wirecell drift simulation (simtpc2d)
-  simulate:  [ simtpc2d] #added wctsp Ewerton 2023-05-16
+  simulate:  [ simtpc2d, mcreco] #added wctsp Ewerton 2023-05-16
 
   trigger_paths : [ simulate ]
 
