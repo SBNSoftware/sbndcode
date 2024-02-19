@@ -28,6 +28,7 @@
 #include "sbn_stub.fcl"
 
 #include "cafmaker_common_defs.fcl"
+#include "eventweight_genie_systtools.fcl"
 
 process_name: CAFmaker
 
@@ -136,7 +137,7 @@ physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 physics.producers.genieweight.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
 
-# input art file.
-physics.producers.cafmaker.SystWeightLabels: ["systtools"]
+physics.producers.systtools: @local::sbn_systtools
 
+# input art files
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
