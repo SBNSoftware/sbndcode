@@ -20,9 +20,9 @@ sbnd_digiarapuca_alg:
   ArapucaFallTime:	         476.0   #ns
   ArapucaSaturationHigh:     4095    #ADC saturation for 12 bit ADCs, high limit (2**12-1, ADC starts at 0)
   ArapucaSaturationLow:      0.      #ADC saturation for 12 bit ADCs, low limit
-  XArapucaVUVEffVUV:         0.0218   #VUV XArapuca efficiency to VUV light
-  XArapucaVUVEffVis:         0.0039   #VUV XArapuca efficiency to vis light (half the visible efficiency)
-  XArapucaVISEff:            0.014   #XArapuca VIS efficiency (taking into account 70% mesh transparency 0.02*0.7)
+  XArapucaVUVEffVUV:         0.01744  # 2.18% x 0.8(APA mesh transparency not simulated in G4) VUV XArapuca efficiency to VUV light
+  XArapucaVUVEffVis:         0.00271  # 0.43% x 0.8 x 0.79 (APA mesh transparency + CPA  TPB area factor): VUV XArapuca efficiency to vis light (half the visible efficiency)
+  XArapucaVISEff:            0.01264  # 2.00% x 0.8 x 0.79 (APA mesh transparency + CPA  TPB area factor): XArapuca VIS efficiency (taking into account 70% mesh transparency 0.02*0.7)
   DecayTXArapucaVIS:         8.5     # decay time of EJ280 in ns
   ArapucaDataFile:           "OpDetSim/digi_arapuca_sbnd.root" # located in sbnd_data
   ArapucaSinglePEmodel:      true    # false for ideal response true for response from XTDBoard cold tests
