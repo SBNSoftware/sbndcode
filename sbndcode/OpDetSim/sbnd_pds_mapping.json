@@ -6,7 +6,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 1,
@@ -15,7 +15,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 2,
@@ -24,7 +24,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 3,
@@ -33,7 +33,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 4,
@@ -42,7 +42,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 5,
@@ -51,7 +51,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 6,
@@ -168,7 +168,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 19,
@@ -177,7 +177,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 20,
@@ -186,7 +186,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 21,
@@ -195,7 +195,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 22,
@@ -204,7 +204,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 23,
@@ -213,7 +213,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 24,
@@ -222,7 +222,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 25,
@@ -231,7 +231,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 26,
@@ -240,7 +240,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 27,
@@ -249,7 +249,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 28,
@@ -258,7 +258,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 29,
@@ -267,7 +267,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 30,
@@ -276,7 +276,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 31,
@@ -285,7 +285,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 32,
@@ -294,7 +294,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 33,
@@ -303,7 +303,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 34,
@@ -312,7 +312,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 35,
@@ -321,7 +321,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 36,
@@ -384,7 +384,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 43,
@@ -393,7 +393,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 44,
@@ -402,7 +402,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 45,
@@ -411,7 +411,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 46,
@@ -420,7 +420,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 47,
@@ -429,7 +429,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 48,
@@ -438,7 +438,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 49,
@@ -447,7 +447,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 50,
@@ -456,7 +456,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 51,
@@ -465,7 +465,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 52,
@@ -474,7 +474,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 53,
@@ -483,7 +483,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 54,
@@ -492,7 +492,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 55,
@@ -501,7 +501,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 56,
@@ -510,7 +510,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 57,
@@ -519,7 +519,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 58,
@@ -528,7 +528,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 59,
@@ -537,7 +537,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 60,
@@ -654,7 +654,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 73,
@@ -663,7 +663,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 74,
@@ -672,7 +672,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 75,
@@ -681,7 +681,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 76,
@@ -690,7 +690,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 77,
@@ -699,7 +699,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 78,
@@ -708,7 +708,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 79,
@@ -717,7 +717,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 80,
@@ -726,7 +726,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 81,
@@ -735,7 +735,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 82,
@@ -744,7 +744,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 83,
@@ -753,7 +753,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 84,
@@ -870,7 +870,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 97,
@@ -879,7 +879,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 98,
@@ -888,7 +888,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 99,
@@ -897,7 +897,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 100,
@@ -906,7 +906,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 101,
@@ -915,7 +915,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 102,
@@ -924,7 +924,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 103,
@@ -933,7 +933,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 104,
@@ -942,7 +942,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 105,
@@ -951,7 +951,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 106,
@@ -960,7 +960,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 107,
@@ -969,7 +969,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 108,
@@ -978,7 +978,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 109,
@@ -987,7 +987,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 110,
@@ -996,7 +996,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 111,
@@ -1005,7 +1005,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 112,
@@ -1014,7 +1014,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 113,
@@ -1023,7 +1023,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 114,
@@ -1086,7 +1086,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 121,
@@ -1095,7 +1095,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 122,
@@ -1104,7 +1104,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 123,
@@ -1113,7 +1113,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 124,
@@ -1122,7 +1122,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 125,
@@ -1131,7 +1131,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 126,
@@ -1140,7 +1140,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 127,
@@ -1149,7 +1149,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 128,
@@ -1158,7 +1158,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 129,
@@ -1167,7 +1167,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 130,
@@ -1176,7 +1176,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 131,
@@ -1185,7 +1185,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 132,
@@ -1194,7 +1194,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 133,
@@ -1203,7 +1203,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 134,
@@ -1212,7 +1212,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 135,
@@ -1221,7 +1221,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 136,
@@ -1230,7 +1230,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 137,
@@ -1239,7 +1239,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 138,
@@ -1356,7 +1356,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 151,
@@ -1365,7 +1365,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 152,
@@ -1374,7 +1374,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 153,
@@ -1383,7 +1383,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 154,
@@ -1392,7 +1392,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 155,
@@ -1401,7 +1401,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 156,
@@ -1410,7 +1410,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 157,
@@ -1419,7 +1419,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 158,
@@ -1428,7 +1428,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 159,
@@ -1437,7 +1437,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 160,
@@ -1446,7 +1446,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 161,
@@ -1455,7 +1455,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 162,
@@ -1572,7 +1572,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 175,
@@ -1581,7 +1581,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 176,
@@ -1590,7 +1590,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 177,
@@ -1599,7 +1599,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 178,
@@ -1608,7 +1608,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 179,
@@ -1617,7 +1617,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 180,
@@ -1626,7 +1626,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 181,
@@ -1635,7 +1635,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 182,
@@ -1644,7 +1644,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 183,
@@ -1653,7 +1653,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 184,
@@ -1662,7 +1662,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 185,
@@ -1671,7 +1671,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 186,
@@ -1680,7 +1680,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 187,
@@ -1689,7 +1689,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 188,
@@ -1698,7 +1698,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 189,
@@ -1707,7 +1707,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 190,
@@ -1716,7 +1716,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 191,
@@ -1725,7 +1725,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 192,
@@ -1788,7 +1788,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 199,
@@ -1797,7 +1797,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 200,
@@ -1806,7 +1806,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 201,
@@ -1815,7 +1815,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 202,
@@ -1824,7 +1824,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 203,
@@ -1833,7 +1833,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 204,
@@ -1842,7 +1842,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 205,
@@ -1851,7 +1851,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 206,
@@ -1860,7 +1860,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 207,
@@ -1869,7 +1869,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 208,
@@ -1878,7 +1878,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 209,
@@ -1887,7 +1887,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 210,
@@ -1896,7 +1896,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 211,
@@ -1905,7 +1905,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 212,
@@ -1914,7 +1914,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 213,
@@ -1923,7 +1923,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 214,
@@ -1932,7 +1932,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 215,
@@ -1941,7 +1941,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 216,
@@ -2058,7 +2058,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 229,
@@ -2067,7 +2067,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 230,
@@ -2076,7 +2076,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 231,
@@ -2085,7 +2085,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 232,
@@ -2094,7 +2094,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 233,
@@ -2103,7 +2103,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 234,
@@ -2112,7 +2112,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 235,
@@ -2121,7 +2121,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 236,
@@ -2130,7 +2130,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 237,
@@ -2139,7 +2139,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 238,
@@ -2148,7 +2148,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 239,
@@ -2157,7 +2157,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 240,
@@ -2274,7 +2274,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 253,
@@ -2283,7 +2283,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 254,
@@ -2292,7 +2292,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 255,
@@ -2301,7 +2301,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 256,
@@ -2310,7 +2310,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 257,
@@ -2319,7 +2319,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 258,
@@ -2328,7 +2328,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 259,
@@ -2337,7 +2337,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 260,
@@ -2346,7 +2346,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 261,
@@ -2355,7 +2355,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 262,
@@ -2364,7 +2364,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 263,
@@ -2373,7 +2373,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 264,
@@ -2382,7 +2382,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 265,
@@ -2391,7 +2391,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 266,
@@ -2400,7 +2400,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 267,
@@ -2409,7 +2409,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 268,
@@ -2418,7 +2418,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 269,
@@ -2427,7 +2427,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 270,
@@ -2490,7 +2490,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 277,
@@ -2499,7 +2499,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 278,
@@ -2508,7 +2508,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 279,
@@ -2517,7 +2517,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 280,
@@ -2526,7 +2526,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 281,
@@ -2535,7 +2535,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 282,
@@ -2544,7 +2544,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 283,
@@ -2553,7 +2553,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 284,
@@ -2562,7 +2562,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 285,
@@ -2571,7 +2571,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 286,
@@ -2580,7 +2580,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 287,
@@ -2589,7 +2589,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 288,
@@ -2598,7 +2598,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 289,
@@ -2607,7 +2607,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 290,
@@ -2616,7 +2616,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 291,
@@ -2625,7 +2625,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 292,
@@ -2634,7 +2634,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 293,
@@ -2643,7 +2643,7 @@
     "sensible_to_vuv": false,
     "sensible_to_vis": true,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 294,
@@ -2760,7 +2760,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 307,
@@ -2769,7 +2769,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 308,
@@ -2778,7 +2778,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 309,
@@ -2787,7 +2787,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 310,
@@ -2796,7 +2796,7 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 0,
-    "electronics": "daphne"
+    "electronics": "arara"
   },
   {
     "channel": 311,
@@ -2805,6 +2805,6 @@
     "sensible_to_vuv": true,
     "sensible_to_vis": false,
     "tpc": 1,
-    "electronics": "daphne"
+    "electronics": "arara"
   }
 ]
