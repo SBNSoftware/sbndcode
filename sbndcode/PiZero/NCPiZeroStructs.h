@@ -1,7 +1,8 @@
 #ifndef NCPIZEROSTRUCTS_H_SEEN
 #define NCPIZEROSTRUCTS_H_SEEN
 
-enum EventType
+namespace NC {
+  enum EventType
   {
     kSignalNCPiZero,
     kOtherNCPiZero,
@@ -14,6 +15,23 @@ enum EventType
     kFailedTruthMatch,
     kUnknownEv = -1
   };
+}
+
+namespace CC {
+  enum EventType
+  {
+    kSignalCCPiZero,
+    kOtherCCPiZero,
+    kNC,
+    kOtherCCNuMu,
+    kCCNuE,
+    kDirt,
+    kNonFV,
+    kCosmic,
+    kFailedTruthMatch,
+    kUnknownEv = -1
+  };
+}
 
 enum VarType
   {

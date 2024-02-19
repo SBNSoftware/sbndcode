@@ -237,6 +237,7 @@ private:
     { "nu_event_type_1p0pi", new InhVecVar<int>("nu_event_type_1p0pi") },
     { "nu_event_type_Np0pi", new InhVecVar<int>("nu_event_type_Np0pi") },
     { "nu_event_type_Xp0pi", new InhVecVar<int>("nu_event_type_Xp0pi") },
+    { "nu_event_type_cc", new InhVecVar<int>("nu_event_type_cc") },
     { "nu_signal", new InhVecVar<bool>("nu_signal") },
     { "nu_en_dep", new InhVecVar<float>("nu_en_dep") },
     { "nu_pdg", new InhVecVar<int>("nu_pdg") },
@@ -400,6 +401,7 @@ private:
     { "slc_true_event_type_1p0pi", new InhVecVar<int>("slc_true_event_type_1p0pi") },
     { "slc_true_event_type_Np0pi", new InhVecVar<int>("slc_true_event_type_Np0pi") },
     { "slc_true_event_type_Xp0pi", new InhVecVar<int>("slc_true_event_type_Xp0pi") },
+    { "slc_true_event_type_cc", new InhVecVar<int>("slc_true_event_type_cc") },
     { "slc_true_signal", new InhVecVar<bool>("slc_true_signal") },
     { "slc_comp", new InhVecVar<float>("slc_comp") },
     { "slc_comp_sp_only", new InhVecVar<float>("slc_comp_sp_only") },
@@ -607,6 +609,7 @@ private:
     { "slc_sel_1p0pi", new InhVecVar<bool>("slc_sel_1p0pi") },
     { "slc_sel_Np0pi", new InhVecVar<bool>("slc_sel_Np0pi") },
     { "slc_sel_Xp0pi", new InhVecVar<bool>("slc_sel_Xp0pi") },
+    { "slc_sel_cc", new InhVecVar<bool>("slc_sel_cc") },
   };
 
   const std::vector<std::string> flux_weight_names = { "expskin_Flux",
@@ -993,20 +996,22 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
 {
   if(mct->Origin() == 2)
     {
-      FillElement(vars[prefix + "_event_type_incl"], counter, (int) kCosmic);
-      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kCosmic);
-      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kCosmic);
-      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kCosmic);
-      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kCosmic);
+      FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kCosmic);
       return;
     }
   else if(mct->Origin() != 1)
     {
-      FillElement(vars[prefix + "_event_type_incl"], counter, (int) kUnknownEv);
-      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kUnknownEv);
-      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kUnknownEv);
-      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kUnknownEv);
-      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kUnknownEv);
+      FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kUnknownEv);
       return;
     }
 
@@ -1125,35 +1130,37 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
 
   if(nc && fv && pizero)
     {
-      FillElement(vars[prefix + "_event_type_incl"], counter, (int) kSignalNCPiZero);
+      FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kSignalNCPiZero);
       FillElement(vars[prefix + "_signal"], counter, true);
 
       if(charged_pions == 0)
         {
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kSignalNCPiZero);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kSignalNCPiZero);
 
           if(protons == 0)
-            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kSignalNCPiZero);
+            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kSignalNCPiZero);
           else
-            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kOtherNCPiZero);
+            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kOtherNCPiZero);
 
           if(protons == 1)
-            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kSignalNCPiZero);
+            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kSignalNCPiZero);
           else
-            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kOtherNCPiZero);
+            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kOtherNCPiZero);
 
           if(protons > 0)
-            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kSignalNCPiZero);
+            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kSignalNCPiZero);
           else
-            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kOtherNCPiZero);
+            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kOtherNCPiZero);
         }
       else
         {
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kOtherNCPiZero);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kOtherNCPiZero);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kOtherNCPiZero);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kOtherNCPiZero);
         }
+
+      FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kNC);
     }
   else
     {
@@ -1161,51 +1168,61 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
 
       if(nc && fv)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kOtherNC);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kOtherNC);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kOtherNC);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kOtherNC);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kOtherNC);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kNC);
         }
       else if(abs(nu.PdgCode()) == 14 && !nc && fv)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kCCNuMu);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kCCNuMu);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kCCNuMu);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kCCNuMu);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kCCNuMu);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kCCNuMu);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kCCNuMu);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kCCNuMu);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kCCNuMu);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kCCNuMu);
+          if(pizero)
+            FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kSignalCCPiZero);
+          else
+            FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kOtherCCNuMu);
+
         }
       else if(abs(nu.PdgCode()) == 12 && !nc && fv)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kCCNuE);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kCCNuE);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kCCNuE);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kCCNuE);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kCCNuE);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kCCNuE);
         }
       else if(!fv && av)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kNonFV);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kNonFV);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kNonFV);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kNonFV);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kNonFV);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kNonFV);
         }
       else if(!av)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kDirt);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kDirt);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kDirt);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kDirt);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kDirt);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kDirt);
         }
       else
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kUnknownEv);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kUnknownEv);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kUnknownEv);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kUnknownEv);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kUnknownEv);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kUnknownEv);
         }
     }
 
@@ -2086,21 +2103,23 @@ void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::P
 
   if(fBeamOff)
     {
-      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) kCosmic);
-      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) kCosmic);
-      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) kCosmic);
-      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) kCosmic);
-      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) kCosmic);
+      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_cc"], slcCounter, (int) CC::kCosmic);
     }
   else if(bestMCT.isNonnull())
     AnalyseMCTruth(e, slcVars, bestMCT, slcCounter, "slc_true");
   else
     {
-      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) kFailedTruthMatch);
-      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) kFailedTruthMatch);
-      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) kFailedTruthMatch);
-      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) kFailedTruthMatch);
-      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_cc"], slcCounter, (int) CC::kFailedTruthMatch);
     }
 }
 
@@ -2183,9 +2202,14 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   const bool passes_crumbs_0p0pi = crumbs > -0.005;
   const bool passes_crumbs_Np0pi = crumbs > 0.075;
 
+  float crumbs_ccnumu;
+  AccessElement(slcVars["slc_crumbs_ccnumu_score"], counter, crumbs_ccnumu);
+  const bool passes_crumbs_cc = crumbs_ccnumu > 0;
+
   int nrazzledmuons;
   AccessElement(slcVars["slc_n_primary_razzled_muons"], counter, nrazzledmuons);
-  const bool passes_razzled_muons = nrazzledmuons == 0;
+  const bool passes_razzled_muons    = nrazzledmuons == 0;
+  const bool passes_razzled_muons_cc = nrazzledmuons == 1;
 
   size_t npfps;
   AccessElement(slcVars["slc_n_pfps"], counter, npfps);
@@ -2203,12 +2227,14 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   const bool passes_opt0frac_incl  = opt0frac < 0.756 && opt0frac > -0.7;
   const bool passes_opt0frac_0p0pi = opt0frac < 0.844 && opt0frac > -0.7;
   const bool passes_opt0frac_Np0pi = opt0frac < 0.836 && opt0frac > -0.376;
+  const bool passes_opt0frac_cc    = opt0frac < 0.836 && opt0frac > -0.376;
 
   double opt0score;
   AccessElement(slcVars["slc_opt0_score"], counter, opt0score);
   const bool passes_opt0score_incl  = opt0score > 5;
   const bool passes_opt0score_0p0pi = opt0score > 125;
   const bool passes_opt0score_Np0pi = opt0score > 210;
+  const bool passes_opt0score_cc    = opt0score > 210;
 
   int nrazzledpions;
   AccessElement(slcVars["slc_n_primary_razzled_pions_thresh"], counter, nrazzledpions);
@@ -2240,6 +2266,10 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 
   const bool sel_Xp0pi = sel_incl && passes_razzled_pions;
   FillElement(slcVars["slc_sel_Xp0pi"], counter, sel_Xp0pi);
+
+  const bool sel_cc = !is_clear_cosmic && is_fv && passes_crumbs_cc && passes_razzled_muons_cc && passes_pfps
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_cc && passes_opt0score_cc;
+  FillElement(slcVars["slc_sel_cc"], counter, sel_cc);
 }
 
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,
