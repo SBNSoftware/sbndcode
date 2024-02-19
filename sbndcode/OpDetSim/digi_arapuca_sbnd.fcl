@@ -11,7 +11,7 @@ sbnd_digiarapuca_alg:
 
   ArapucaBaselineRMS:        0.65     # 2.6/4 as PMTs with 14bits ADC have 4 ADC counts and most XA channels will be 12 bits
   ArapucaDarkNoiseRate:      10.0    #in Hz
-  CrossTalk:                 0.2     #20% probability
+  CrossTalk:                 0.424   #from measures at CIEMAT, SensL SiPMs at 6 OV
   ArapucaBaseline:           700     #supposing a 12-bits ADC and 20% overshoot, 4069/6 ~700 
   ArapucaPulseLength:        4000.0  #ns
   ArapucaPeakTime:           260.0   #ns
