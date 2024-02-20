@@ -1,4 +1,4 @@
-#include "g4_sce_dirt_filter_lite_wc.fcl"
+#include "g4_sce_dirt_filter_lite.fcl"
 
 process_name: G4Var
 
