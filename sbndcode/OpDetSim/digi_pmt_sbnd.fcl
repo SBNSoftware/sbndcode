@@ -36,7 +36,7 @@ sbnd_digipmt_alg:
   PMTUncoatedEff:        0.19       #PMT uncoated detection efficiency
 
   # PMT gain
-  PMTGain:               5e6        # Updated on Feb 9, 2024 
+  PMTGain:               5e6        # Updated on Feb 9, 2024 for commissioning studies
   PMTNominalGain:        1e7
 
   # PMT Channel-by-Channel Gain Variations 

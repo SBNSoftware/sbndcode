@@ -15,7 +15,8 @@ FirstDynodeGainFluctuations:
   #TODO: SBND PMTs base circuit is different to the one specified in the datasheet
   #TODO: Customize these values for the SBND configuration
   VoltageDistribution:    [ 17.4, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
-  Gain:                   1e7            # total typical PMT gain
+  # Gain:                   1e7            # total typical PMT gain
+  Gain:                     5e6            # updated on Feb 9, 2024 for commissioning studies
 }
 
 END_PROLOG
