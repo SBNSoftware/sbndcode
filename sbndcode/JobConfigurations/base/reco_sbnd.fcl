@@ -204,8 +204,8 @@ physics:
          , opflashtpc1xarapuca
         #  , caldata
          , gaushit
-         , fasthit
-   #         , linecluster
+        # , fasthit
+        # , linecluster
          , gaushitTruthMatch
    #      , rffhit
    #      , corner
