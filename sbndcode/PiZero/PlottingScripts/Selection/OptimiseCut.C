@@ -17,44 +17,44 @@ void OptimiseCut(const TString productionVersion)
   OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[0], false);
   OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[1], false);
   OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[4], false);
-  OptimiseCut(productionVersion, ncpizero_incl, 8, optimisation_plots[2], true);
-  OptimiseCut(productionVersion, ncpizero_incl, 9, optimisation_plots[2], false);
-  OptimiseCut(productionVersion, ncpizero_incl, 10, optimisation_plots[3], false);
+  OptimiseCut(productionVersion, ncpizero_incl, 7, optimisation_plots[2], true);
+  OptimiseCut(productionVersion, ncpizero_incl, 8, optimisation_plots[2], false);
+  OptimiseCut(productionVersion, ncpizero_incl, 9, optimisation_plots[3], false);
 
   OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[0], false, true);
   OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[1], false, true);
   OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[4], false, true);
-  OptimiseCut(productionVersion, ncpizero_incl, 8, optimisation_plots[2], true, true);
-  OptimiseCut(productionVersion, ncpizero_incl, 9, optimisation_plots[2], false, true);
-  OptimiseCut(productionVersion, ncpizero_incl, 10, optimisation_plots[3], false, true);
+  OptimiseCut(productionVersion, ncpizero_incl, 7, optimisation_plots[2], true, true);
+  OptimiseCut(productionVersion, ncpizero_incl, 8, optimisation_plots[2], false, true);
+  OptimiseCut(productionVersion, ncpizero_incl, 9, optimisation_plots[3], false, true);
 
   OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[0], false);
   OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[1], false);
   OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[4], false);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 10, optimisation_plots[2], true);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 11, optimisation_plots[2], false);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 12, optimisation_plots[3], false);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 9, optimisation_plots[2], true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 10, optimisation_plots[2], false);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 11, optimisation_plots[3], false);
 
   OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[0], false, true);
   OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[1], false, true);
   OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[4], false, true);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 10, optimisation_plots[2], true, true);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 11, optimisation_plots[2], false, true);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 12, optimisation_plots[3], false, true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 9, optimisation_plots[2], true, true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 10, optimisation_plots[2], false, true);
+  OptimiseCut(productionVersion, ncpizero_0p0pi, 11, optimisation_plots[3], false, true);
 
   OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[0], false);
   OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[1], false);
   OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[4], false);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 10, optimisation_plots[2], true);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 11, optimisation_plots[2], false);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 12, optimisation_plots[3], false);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 9, optimisation_plots[2], true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 10, optimisation_plots[2], false);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 11, optimisation_plots[3], false);
 
   OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[0], false, true);
   OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[1], false, true);
   OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[4], false, true);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 10, optimisation_plots[2], true, true);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 11, optimisation_plots[2], false, true);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 12, optimisation_plots[3], false, true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 9, optimisation_plots[2], true, true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 10, optimisation_plots[2], false, true);
+  OptimiseCut(productionVersion, ncpizero_Np0pi, 11, optimisation_plots[3], false, true);
 }
 
 void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut, const bool optimiseEPP)

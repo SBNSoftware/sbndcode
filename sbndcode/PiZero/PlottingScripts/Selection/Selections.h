@@ -24,6 +24,13 @@ SelectionParams ncpizero_Np0pi = { "ncpizero_Np0pi",
                                    true_ncpizero_Np0pi_cut
 };
 
+SelectionParams ccpizero = { "ccpizero",
+                             ccpizero_cuts,
+                             ccpizero_broad_cuts,
+                             ccpizero_categories,
+                             true_ccpizero_cut
+};
+
 std::vector<SelectionParams> selections = { ncpizero_incl,
                                             ncpizero_0p0pi,
                                             ncpizero_Np0pi
