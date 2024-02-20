@@ -62,7 +62,7 @@ namespace opdet {
       std::vector<double>* SinglePEVec_40ftCable_arara;
       std::vector<double>* SinglePEVec_40ftCable_Apsaia;
       file->GetObject("SinglePEVec_40ftCable_Apsaia", SinglePEVec_40ftCable_Apsaia);
-      file->GetObject("SinglePEVec_40ftCable_arara_HD", SinglePEVec_40ftCable_arara);
+      file->GetObject("SinglePEVec_40ftCable_Daphne_HD", SinglePEVec_40ftCable_arara);
       fWaveformSP = *SinglePEVec_40ftCable_Apsaia;
       fWaveformSP_arara = *SinglePEVec_40ftCable_arara;
 
