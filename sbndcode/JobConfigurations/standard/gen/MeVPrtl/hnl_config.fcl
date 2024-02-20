@@ -1,4 +1,4 @@
-#include "bnb_kaon_common.fcl"
+#include "bnb_kaon_sbnd.fcl"
 BEGIN_PROLOG
 
 hnlM: 0.265
