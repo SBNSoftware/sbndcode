@@ -1,0 +1,172 @@
+GENIEReWeight_Multisim_Tool_Config: {
+
+    tool_type: "GENIEReWeight"
+
+    instance_name: "SBND_v5_multisim"
+
+    # Keep one GENIEReWeight instance per discrete dial tweak in memory
+    # Requires no reconfigures within the event loop
+    UseFullHERG: true
+
+    ignore_parameter_dependence: false
+
+    ################################## CCQE Parameters
+
+    # Adjust coefficients in the z-expansion parameterization
+    # of the CCQE axial-vector form factor
+
+    ZExpA1CCQE_central_value: 0
+    ZExpA1CCQE_nthrows: 10
+    ZExpA1CCQE_random_distribution: "gaussian"
+    ZExpA1CCQE_variation_descriptor: "{-1,1}"
+
+    ZExpA2CCQE_central_value: 0
+    ZExpA2CCQE_nthrows: 10
+    ZExpA2CCQE_random_distribution: "gaussian"
+    ZExpA2CCQE_variation_descriptor: "{-1,1}"
+
+    ZExpA3CCQE_central_value: 0
+    ZExpA3CCQE_nthrows: 10
+    ZExpA3CCQE_random_distribution: "gaussian"
+    ZExpA3CCQE_variation_descriptor: "{-1,1}"
+
+    ZExpA4CCQE_central_value: 0
+    ZExpA4CCQE_nthrows: 10
+    ZExpA4CCQE_random_distribution: "gaussian"
+    ZExpA4CCQE_variation_descriptor: "{-1,1}"
+
+    ################################## NCEl Parameters
+
+    MaNCEL_central_value: 0
+    MaNCEL_nthrows: 10
+    MaNCEL_random_distribution: "gaussian"
+    MaNCEL_variation_descriptor: "{-1,1}"
+
+    EtaNCEL_central_value: 0
+    EtaNCEL_nthrows: 10
+    EtaNCEL_random_distribution: "gaussian"
+    EtaNCEL_variation_descriptor: "{-1,1}"
+
+    ################################## RES Parameters
+    ################# CCRES
+
+    CCRESIsShapeOnly: false
+
+    MaCCRES_central_value: 0
+    MaCCRES_nthrows: 10
+    MaCCRES_random_distribution: "gaussian"
+    MaCCRES_variation_descriptor: "{-1,1}"
+
+    MvCCRES_central_value: 0
+    MvCCRES_nthrows: 10
+    MvCCRES_random_distribution: "gaussian"
+    MvCCRES_variation_descriptor: "{-1,1}"
+
+    ################# NCRES
+
+    NCRESIsShapeOnly: false
+
+    MaNCRES_central_value: 0
+    MaNCRES_nthrows: 10
+    MaNCRES_random_distribution: "gaussian"
+    MaNCRES_variation_descriptor: "{-1,1}"
+
+    MvNCRES_central_value: 0
+    MvNCRES_nthrows: 10
+    MvNCRES_random_distribution: "gaussian"
+    MvNCRES_variation_descriptor: "{-1,1}"
+
+    ################################## DIS BY Parameters
+
+    AhtBY_central_value: 0
+    AhtBY_nthrows: 10
+    AhtBY_random_distribution: "gaussian"
+    AhtBY_variation_descriptor: "{-1,1}"
+
+    BhtBY_central_value: 0
+    BhtBY_nthrows: 10
+    BhtBY_random_distribution: "gaussian"
+    BhtBY_variation_descriptor: "{-1,1}"
+
+    CV1uBY_central_value: 0
+    CV1uBY_nthrows: 10
+    CV1uBY_random_distribution: "gaussian"
+    CV1uBY_variation_descriptor: "{-1,1}"
+
+    CV2uBY_central_value: 0
+    CV2uBY_nthrows: 10
+    CV2uBY_random_distribution: "gaussian"
+    CV2uBY_variation_descriptor: "{-1,1}"
+
+    ################################## FSI Parameters
+
+    MFP_pi_central_value: 0
+    MFP_pi_nthrows: 10
+    MFP_pi_random_distribution: "gaussian"
+    MFP_pi_variation_descriptor: "{-1,1}"
+
+    # The charge-exchange FSI fate is excluded to act as the "cushion"
+    # term for reweighting
+    #FrCEx_pi_central_value: 0
+    #FrCEx_pi_nthrows: 10
+    #FrCEx_pi_random_distribution: "gaussian"
+    #FrCEx_pi_variation_descriptor: "{-1,1}"
+
+    # The elastic FSI fate was removed in hA2018, so I disable the
+    # associated weight calculators
+    #FrElas_pi_central_value: 0
+    #FrElas_pi_nthrows: 10
+    #FrElas_pi_random_distribution: "gaussian"
+    #FrElas_pi_variation_descriptor: "{-1,1}"
+
+    FrInel_pi_central_value: 0
+    FrInel_pi_nthrows: 10
+    FrInel_pi_random_distribution: "gaussian"
+    FrInel_pi_variation_descriptor: "{-1,1}"
+
+    FrAbs_pi_central_value: 0
+    FrAbs_pi_nthrows: 10
+    FrAbs_pi_random_distribution: "gaussian"
+    FrAbs_pi_variation_descriptor: "{-1,1}"
+
+    FrPiProd_pi_central_value: 0
+    FrPiProd_pi_nthrows: 10
+    FrPiProd_pi_random_distribution: "gaussian"
+    FrPiProd_pi_variation_descriptor: "{-1,1}"
+
+    MFP_N_central_value: 0
+    MFP_N_nthrows: 10
+    MFP_N_random_distribution: "gaussian"
+    MFP_N_variation_descriptor: "{-1,1}"
+
+    # The charge-exchange FSI fate is excluded to act as the "cushion"
+    # term for reweighting
+    #FrCEx_N_central_value: 0
+    #FrCEx_N_nthrows: 10
+    #FrCEx_N_random_distribution: "gaussian"
+    #FrCEx_N_variation_descriptor: "{-1,1}"
+
+    # The elastic FSI fate was removed in hA2018, so I disable the
+    # associated weight calculators
+    #FrElas_N_central_value: 0
+    #FrElas_N_nthrows: 10
+    #FrElas_N_random_distribution: "gaussian"
+    #FrElas_N_variation_descriptor: "{-1,1}"
+
+    FrInel_N_central_value: 0
+    FrInel_N_nthrows: 10
+    FrInel_N_random_distribution: "gaussian"
+    FrInel_N_variation_descriptor: "{-1,1}"
+
+    FrAbs_N_central_value: 0
+    FrAbs_N_nthrows: 10
+    FrAbs_N_random_distribution: "gaussian"
+    FrAbs_N_variation_descriptor: "{-1,1}"
+
+    FrPiProd_N_central_value: 0
+    FrPiProd_N_nthrows: 10
+    FrPiProd_N_random_distribution: "gaussian"
+    FrPiProd_N_variation_descriptor: "{-1,1}"
+}
+
+syst_providers: [GENIEReWeight_Multisim_Tool_Config]
