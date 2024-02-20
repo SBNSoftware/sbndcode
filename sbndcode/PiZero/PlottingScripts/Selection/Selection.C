@@ -63,14 +63,22 @@ void Selection(const TString productionVersion, const SelectionParams &selection
         }
     }
 
-  gSystem->Exec("pdflatex -output-directory " + saveDir + " " + saveDir + "/cut_table.tex");
+  gSystem->Exec("pdflatex -output-directory " + saveDir + " " + saveDir + "/eff_pur_table.tex");
+  gSystem->Exec("pdflatex -output-directory " + saveDir + " " + saveDir + "/raw_table.tex");
+  gSystem->Exec("pdflatex -output-directory " + saveDir + " " + saveDir + "/scaled_table.tex");
 }
 
 template<class T>
 void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, const SelectionParams &selectionParams)
 {
-  ofstream texFile;
-  texFile.open(saveDir + "/cut_table.tex");
+  ofstream effPurFile;
+  effPurFile.open(saveDir + "/eff_pur_table.tex");
+
+  ofstream rawFile;
+  rawFile.open(saveDir + "/raw_table.tex");
+
+  ofstream scaledFile;
+  scaledFile.open(saveDir + "/scaled_table.tex");
 
   double totalSignal = 0, totalSignalSlices = 0, totalBackSlices = 0;
 
@@ -81,17 +89,65 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, co
       totalBackSlices   += sample.scaling * sample.tree->Draw("", !(selectionParams.categories[0].cut));
     }
 
-  texFile << docStart;
+  effPurFile << docStart;
 
-  texFile << '\n'
-          << "Total Signal: " << totalSignal << "\\\\ \n"
-          << "Total Signal Slices: " << totalSignalSlices << "\\\\ \n"
-          << "Total Background Slices: " << totalBackSlices << "\\\\ \n" << std::endl;
+  effPurFile << '\n'
+             << "Total Signal: " << totalSignal << "\\\\ \n"
+             << "Total Signal Slices: " << totalSignalSlices << "\\\\ \n"
+             << "Total Background Slices: " << totalBackSlices << "\\\\ \n" << std::endl;
 
-  texFile << tableStart 
+  effPurFile << tableStart
+             << "\\hline\n"
+             << "Cut Name & $\\epsilon$ (\\%) & $\\rho$ (\\%) & $\\epsilon\\rho$ & Selection $\\epsilon$ (\\%) & Selection $\\epsilon\\rho$ & BR (\\%) \\\\ \\hline"
+             << std::endl;
+
+  rawFile << docStart
+          << "\\begin{table}\n"
+          << "\\centering\n"
+          << "\\begin{tabular}{|$c|";
+
+  for(unsigned i = 0; i < selectionParams.categories.size(); ++i)
+    rawFile << "^c|";
+
+  rawFile << "}\n"
           << "\\hline\n"
-          << "Cut Name & $\\epsilon$ (\\%) & $\\rho$ (\\%) & $\\epsilon\\rho$ & Selection $\\epsilon$ (\\%) & Selection $\\epsilon\\rho$ & BR (\\%) \\\\ \\hline" 
+          << "Cut Name";
+
+  for(unsigned i = 0; i < selectionParams.categories.size(); ++i)
+    {
+      TString name = selectionParams.categories[i].latex_name;
+      if(name == "")
+        name = selectionParams.categories[i].printed_name;
+
+      rawFile << " & " << name;
+    }
+
+  rawFile << "\\\\ \\hline"
           << std::endl;
+
+  scaledFile << docStart
+             << "\\begin{table}\n"
+             << "\\centering\n"
+             << "\\begin{tabular}{|$c|";
+
+  for(unsigned i = 0; i < selectionParams.categories.size(); ++i)
+    scaledFile << "^c|";
+
+  scaledFile << "}\n"
+             << "\\hline\n"
+             << "Cut Name";
+
+  for(unsigned i = 0; i < selectionParams.categories.size(); ++i)
+    {
+      TString name = selectionParams.categories[i].latex_name;
+      if(name == "")
+        name = selectionParams.categories[i].printed_name;
+
+      scaledFile << " & " << name;
+    }
+
+  scaledFile << "\\\\ \\hline"
+             << std::endl;
 
   TCut currentCut = "";
 
@@ -101,16 +157,29 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, co
       currentCut += cut.cut;
       cut.cut = currentCut;
 
+      rawFile << cut.printed_name;
+      scaledFile << cut.printed_name;
+
       double sigSlices = 0., backSlices = 0.;
       for(unsigned j = 0; j < selectionParams.categories.size(); ++j)
         {
+          int rawCategorySlices = 0, scaledCategorySlices = 0;
+
           for(auto const& sample : samples)
             {
+              int slices = sample.tree->Draw("", cut.cut + selectionParams.categories[j].cut);
+
+              rawCategorySlices    += slices * (sample.scaling / samples[0].scaling);
+              scaledCategorySlices += slices * sample.scaling;
+
               if(j == 0)
-                sigSlices += sample.scaling * sample.tree->Draw("", cut.cut + selectionParams.categories[j].cut);
+                sigSlices += sample.scaling * slices;
               else
-                backSlices += sample.scaling * sample.tree->Draw("", cut.cut + selectionParams.categories[j].cut);
+                backSlices += sample.scaling * slices;
             }
+
+          rawFile << " & " << rawCategorySlices;
+          scaledFile << " & " << scaledCategorySlices;
         }
 
       const double eff     = sigSlices * 100. / totalSignal;
@@ -118,11 +187,16 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, co
       const double pur     = sigSlices * 100./ (sigSlices + backSlices);
       const double backRej = 100. - 100. * (backSlices / totalBackSlices);
       
-      texFile << cut.printed_name << " & " << Form("%.2f", eff) << " & " << Form("%.2f", pur)
-              << " & " << Form("%.2f", (eff * pur) / 100.)
-              << " & " << Form("%.2f", selEff) << " & " << Form("%.2f", (selEff * pur) / 100.)
-              << " & " << Form("%.2f", backRej) << "\\\\ \\hline" << std::endl;
+      effPurFile << cut.printed_name << " & " << Form("%.2f", eff) << " & " << Form("%.2f", pur)
+                 << " & " << Form("%.2f", (eff * pur) / 100.)
+                 << " & " << Form("%.2f", selEff) << " & " << Form("%.2f", (selEff * pur) / 100.)
+                 << " & " << Form("%.2f", backRej) << "\\\\ \\hline" << std::endl;
+
+      rawFile << "\\\\ \\hline" << std::endl;
+      scaledFile << "\\\\ \\hline" << std::endl;
     }
 
-  texFile << tableEnd << docEnd;
+  effPurFile << tableEnd << docEnd;
+  rawFile << tableEnd << docEnd;
+  scaledFile << tableEnd << docEnd;
 }
