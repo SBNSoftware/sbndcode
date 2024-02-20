@@ -3,7 +3,7 @@
 # Purpose: 2D Simulation of readout response to induced and collected charge and performs 2D signal processing
 # Authors: Ewerton Belchior and Lynn Tung (lynnt@uchicago.edu)
 #
-# This configuration runs Wire-Cell TPC Simulation and Signal Processing and MCReco
+# This configuration runs Wire-Cell TPC Simulation and Signal Processing
 #
 # Input:
 # - std::vector<sim::SimEnergyDeposit> with label `ionandscint`
