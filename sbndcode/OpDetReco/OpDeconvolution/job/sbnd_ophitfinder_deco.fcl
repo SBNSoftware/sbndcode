@@ -34,7 +34,7 @@ SBNDDecoOpHitFinderPMT.PedAlgoPset.Method:2
 #####OpHit finder for XArapuca deconvolved waveforms#####
 SBNDDecoOpHitFinderXArapuca:               @local::SBNDDecoOpHitFinderPMT
 SBNDDecoOpHitFinderXArapuca.InputModule:   "opdecoxarapuca"
-SBNDDecoOpHitFinderXArapuca.Electronics:   "Daphne"
+SBNDDecoOpHitFinderXArapuca.Electronics:   "arara"
 SBNDDecoOpHitFinderXArapuca.PD:            ["xarapuca_vis","xarapuca_vuv"]
 SBNDDecoOpHitFinderXArapuca.SPEArea: 500
 SBNDDecoOpHitFinderXArapuca.RiseTimeCalculator:   @local::sbnd_opreco_risetimegaussfit

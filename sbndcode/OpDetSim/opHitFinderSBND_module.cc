@@ -73,7 +73,7 @@ namespace opdet {
     std::string fInputModuleName;
     //  art::ServiceHandle<cheat::PhotonBackTracker> pbt;
     double fSampling; //in MHz
-    double fSampling_Daphne; //Daphne electronics's readout sampling frequency, in MHz
+    double fSampling_arara; //arara electronics's readout sampling frequency, in MHz
     double fBaselineSample; //in ticks
     double fPulsePolarityPMT;
     double fPulsePolarityArapuca;
@@ -121,7 +121,7 @@ namespace opdet {
 
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     fSampling = clockData.OpticalClock().Frequency(); // MHz
-    fSampling_Daphne = p.get<double>("DaphneFrequency"); 
+    fSampling_arara = p.get<double>("araraFrequency"); 
 
     // Call appropriate produces<>() functions here.
     produces<std::vector<recob::OpHit>>();
@@ -194,7 +194,7 @@ namespace opdet {
 
       // TODO: pass rms to this function once that's sorted. ~icaza
       while(findAndSuppressPeak(fwaveform, timebin, Area, amplitude, threshold, opdetType, electronicsType)){
-        if(electronicsType == "daphne") time = wvf.TimeStamp() + (double)timebin / fSampling_Daphne;
+        if(electronicsType == "arara") time = wvf.TimeStamp() + (double)timebin / fSampling_arara;
         else time = wvf.TimeStamp() + (double)timebin / fSampling;
 
         if(opdetType == "pmt_coated" || opdetType == "pmt_uncoated") {
@@ -226,7 +226,7 @@ namespace opdet {
     rms = 0.0;
     int cnt = 0;
     double NBins=fBaselineSample;
-    if (electronicsType=="daphne") NBins/=(fSampling/fSampling_Daphne);//correct the number of bins to the sampling frecuency. TODO: use a fixed time interval instead, then use the channel frequency to get the number of bins ~rodrigoa
+    if (electronicsType=="arara") NBins/=(fSampling/fSampling_arara);//correct the number of bins to the sampling frecuency. TODO: use a fixed time interval instead, then use the channel frequency to get the number of bins ~rodrigoa
     // TODO: this is broken it assumes that the beginning of the
     // waveform is only noise, which is not always the case. ~icaza.
     // TODO: use std::accumulate instead of this loop. ~icaza.
@@ -284,8 +284,8 @@ namespace opdet {
     // we convert it to GHz here so as to
     // have an area in ADC*ns.
     Area = std::accumulate(it_s, it_e, 0.0);
-    if (electronicsType == "daphne"){
-    Area = Area / (fSampling_Daphne / 1000.);}
+    if (electronicsType == "arara"){
+    Area = Area / (fSampling_arara / 1000.);}
     else{
     Area = Area / (fSampling / 1000.);};
 

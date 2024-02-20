@@ -75,7 +75,7 @@ namespace opdet {
     size_t fEvNumber;
     size_t fChNumber;
     double fSampling;
-    double fSampling_Daphne;
+    double fSampling_arara;
     double fStartTime;
     double fEndTime;
     //TTree *fWaveformTree;
@@ -99,7 +99,7 @@ namespace opdet {
 
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     fSampling = clockData.OpticalClock().Frequency(); // MHz
-    fSampling_Daphne = p.get<double>("DaphneFrequency" );
+    fSampling_arara = p.get<double>("araraFrequency" );
   }
 
   void wvfAna::beginJob()
@@ -164,8 +164,8 @@ namespace opdet {
                << "_" << hist_id;
 
       fStartTime = wvf.TimeStamp(); //in us
-      if (opdetElectronics == "daphne"){
-				fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;
+      if (opdetElectronics == "arara"){
+				fEndTime = double(wvf.size()) / fSampling_arara + fStartTime;
 			} //in us
 			else{
         fEndTime = double(wvf.size()) / fSampling + fStartTime;

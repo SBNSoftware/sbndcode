@@ -22,9 +22,9 @@ SBNDOpDeconvolutionPMT.OpDecoAlg.DecoWaveformPrecision: 0.005
 
 SBNDOpDeconvolutionXARAPUCA: @local::SBNDOpDeconvolution
 SBNDOpDeconvolutionXARAPUCA.PDTypes: ["xarapuca_vuv", "xarapuca_vis"]
-SBNDOpDeconvolutionXARAPUCA.Electronics: ["daphne"]
+SBNDOpDeconvolutionXARAPUCA.Electronics: ["arara"]
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_arapuca_sbnd.root"
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Electronics: "Daphne"
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Electronics: "arara"
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.UseParamFilter: true
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0;
 SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.FilterParams: [0.003193, 2] #Freq in GHz

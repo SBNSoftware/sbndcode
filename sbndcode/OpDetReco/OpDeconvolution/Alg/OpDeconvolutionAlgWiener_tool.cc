@@ -70,7 +70,7 @@ private:
 
   double fNormUnAvSmooth;
   double fSamplingFreq;
-  double fDaphne_Freq;
+  double farara_Freq;
   size_t MaxBinsFFT;
   unsigned int NDecoWf;
 
@@ -121,7 +121,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fOpDetDataFile = p.get< std::string >("OpDetDataFile");
   fFilter = p.get< std::string >("Filter");
   fElectronics = p.get< std::string >("Electronics");
-  fDaphne_Freq  = p.get< double >("DaphneFreq");
+  farara_Freq  = p.get< double >("araraFreq");
   fScaleHypoSignal = p.get< bool >("ScaleHypoSignal");
   fUseParamFilter = p.get< bool >("UseParamFilter");
   fFilterParams = p.get< std::vector<double> >("FilterParams");
@@ -132,7 +132,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
 
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
   fSamplingFreq=clockData.OpticalClock().Frequency()/1000.;//in GHz
-  if (fElectronics=="Daphne") fSamplingFreq=fDaphne_Freq/1000.;//in GHz
+  if (fElectronics=="arara") fSamplingFreq=farara_Freq/1000.;//in GHz
   auto const* lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
 
 
@@ -143,7 +143,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   TFile* file = TFile::Open(fname.c_str(), "READ");
   std::vector<double>* SinglePEVec_p;
   file->GetObject("SinglePEVec", SinglePEVec_p);
-  if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
+  if (fElectronics=="arara") file->GetObject("SinglePEVec_40ftCable_arara", SinglePEVec_p);
   fSinglePEWave = *SinglePEVec_p;
 
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;

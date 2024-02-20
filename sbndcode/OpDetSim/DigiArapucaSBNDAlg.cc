@@ -9,7 +9,7 @@ namespace opdet {
   DigiArapucaSBNDAlg::DigiArapucaSBNDAlg(ConfigurationParameters_t const& config)
     : fParams{config}
     , fSampling(fParams.frequency/ 1000.) //in GHz to cancel with ns
-    , fSampling_Daphne(fParams.frequency_Daphne/ 1000.) //in GHz to cancel with ns
+    , fSampling_arara(fParams.frequency_arara/ 1000.) //in GHz to cancel with ns
     , fXArapucaVUVEffVis(fParams.XArapucaVUVEffVis / fParams.larProp->ScintPreScale())
     , fXArapucaVUVEffVUV(fParams.XArapucaVUVEffVUV / fParams.larProp->ScintPreScale())
     , fXArapucaVISEff(fParams.XArapucaVISEff / fParams.larProp->ScintPreScale())
@@ -53,28 +53,28 @@ namespace opdet {
     size_t pulseSize = fParams.PulseLength * fSampling;
     fWaveformSP.resize(pulseSize);
 
-    size_t pulseSize_Daphne = fParams.PulseLength * fSampling_Daphne;
-    fWaveformSP_Daphne.resize(pulseSize_Daphne);
+    size_t pulseSize_arara = fParams.PulseLength * fSampling_arara;
+    fWaveformSP_arara.resize(pulseSize_arara);
   
     if(fParams.ArapucaSinglePEmodel) {
       mf::LogDebug("DigiArapucaSBNDAlg") << " using testbench pe response";
       TFile* file =  TFile::Open(fname.c_str(), "READ");
-      std::vector<double>* SinglePEVec_40ftCable_Daphne;
+      std::vector<double>* SinglePEVec_40ftCable_arara;
       std::vector<double>* SinglePEVec_40ftCable_Apsaia;
       file->GetObject("SinglePEVec_40ftCable_Apsaia", SinglePEVec_40ftCable_Apsaia);
-      file->GetObject("SinglePEVec_40ftCable_Daphne_HD", SinglePEVec_40ftCable_Daphne);
+      file->GetObject("SinglePEVec_40ftCable_arara_HD", SinglePEVec_40ftCable_arara);
       fWaveformSP = *SinglePEVec_40ftCable_Apsaia;
-      fWaveformSP_Daphne = *SinglePEVec_40ftCable_Daphne;
+      fWaveformSP_arara = *SinglePEVec_40ftCable_arara;
 
       // Prepare HD waveforms
       fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
-      fPMTHDOpticalWaveformsPtr->produceSER_HD(fWaveformSP_Daphne_HD,fWaveformSP_Daphne);
-      mf::LogDebug("DigiArapucaSBNDAlg")<<"HD wvfs size: "<<fWaveformSP_Daphne_HD[0].size();
+      fPMTHDOpticalWaveformsPtr->produceSER_HD(fWaveformSP_arara_HD,fWaveformSP_arara);
+      mf::LogDebug("DigiArapucaSBNDAlg")<<"HD wvfs size: "<<fWaveformSP_arara_HD[0].size();
     }
     else{
       mf::LogDebug("DigiArapucaSBNDAlg") << " using ideal pe response";
       Pulse1PE(fWaveformSP,fSampling);
-      Pulse1PE(fWaveformSP_Daphne,fSampling_Daphne);
+      Pulse1PE(fWaveformSP_arara,fSampling_arara);
     }
     file->Close();
   } // end constructor
@@ -87,12 +87,12 @@ namespace opdet {
     sim::SimPhotons const& simphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
-    bool is_daphne,
+    bool is_arara,
     double start_time,
     unsigned n_samples)
   {
     std::vector<double> waves(n_samples, fParams.Baseline);
-    CreatePDWaveform(simphotons, start_time, waves, pdtype,is_daphne);
+    CreatePDWaveform(simphotons, start_time, waves, pdtype,is_arara);
     waveform = std::vector<short unsigned int> (waves.begin(), waves.end());
   }
 
@@ -106,7 +106,7 @@ namespace opdet {
     unsigned n_samples)
   {
     sim::SimPhotons auxphotons;
-    bool is_daphne = true; // for now ~rodrigoa
+    bool is_arara = true; // for now ~rodrigoa
     int nCT = 1;
     std::vector<double> wave(n_samples, fParams.Baseline);
         //direct light
@@ -119,13 +119,13 @@ namespace opdet {
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t timeBin = (is_arara) ? std::floor(tphoton * fSampling_arara) : std::floor(tphoton * fSampling);
+          double timeBin_HD = (is_arara) ? ( tphoton * fSampling_arara) : (tphoton * fSampling);//get decimals info
           size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
-            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            if (!is_arara) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_Daphne_HD[wvf_shift]), nCT);}
+            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_arara_HD[wvf_shift]), nCT);}
           }
         }
     }
@@ -139,19 +139,19 @@ namespace opdet {
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t timeBin = (is_arara) ? std::floor(tphoton * fSampling_arara) : std::floor(tphoton * fSampling);
+          double timeBin_HD = (is_arara) ? ( tphoton * fSampling_arara) : (tphoton * fSampling);//get decimals info
           size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
-            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            if (!is_arara) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_Daphne_HD[wvf_shift]), nCT);}
+            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_arara_HD[wvf_shift]), nCT);}
           }
         }
     }
 
-    if (!is_daphne) AddDarkNoise(wave,fWaveformSP);
-    else            AddDarkNoise(wave,fWaveformSP_Daphne_HD[0]);
+    if (!is_arara) AddDarkNoise(wave,fWaveformSP);
+    else            AddDarkNoise(wave,fWaveformSP_arara_HD[0]);
     CreateSaturation(wave);
 
     waveform = std::vector<short unsigned int> (wave.begin(), wave.end());
@@ -163,13 +163,13 @@ namespace opdet {
     sim::SimPhotonsLite const& litesimphotons,
     std::vector<short unsigned int>& waveform,
     std::string pdtype,
-    bool is_daphne,
+    bool is_arara,
     double start_time,
     unsigned n_samples)
   {
     std::vector<double> waves(n_samples, fParams.Baseline);
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
-    CreatePDWaveformLite(photonMap, start_time, waves, pdtype,is_daphne);
+    CreatePDWaveformLite(photonMap, start_time, waves, pdtype,is_arara);
     // std::ofstream ofs("True_PE.log",std::ofstream::out | std::ofstream::app);
     // ofs<<ch<<"\t"<<P_truth<<std::endl;
     // ofs.close();
@@ -183,7 +183,7 @@ namespace opdet {
     double t_min,
     std::vector<double>& wave,
     std::string pdtype,
-    bool is_daphne)
+    bool is_arara)
   {
     int nCT = 1;
     if(pdtype == "xarapuca_vuv") {
@@ -193,13 +193,13 @@ namespace opdet {
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t timeBin = (is_arara) ? std::floor(tphoton * fSampling_arara) : std::floor(tphoton * fSampling);
+          double timeBin_HD = (is_arara) ? ( tphoton * fSampling_arara) : (tphoton * fSampling);//get decimals info
           size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
-            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            if (!is_arara) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_Daphne_HD[wvf_shift]), nCT);}
+            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_arara_HD[wvf_shift]), nCT);}
           }
         }
       }
@@ -211,13 +211,13 @@ namespace opdet {
           if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
           if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
           else nCT = 1;
-          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t timeBin = (is_arara) ? std::floor(tphoton * fSampling_arara) : std::floor(tphoton * fSampling);
+          double timeBin_HD = (is_arara) ? ( tphoton * fSampling_arara) : (tphoton * fSampling);//get decimals info
           size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
-            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            if (!is_arara) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_Daphne_HD[wvf_shift]), nCT);
+            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_arara_HD[wvf_shift]), nCT);
             }
           }
         }
@@ -229,8 +229,8 @@ namespace opdet {
     if(fParams.BaselineRMS > 0.0) AddLineNoise(wave);
     if(fParams.DarkNoiseRate > 0.0)
     {
-      if (!is_daphne) AddDarkNoise(wave,fWaveformSP);
-      else            AddDarkNoise(wave,fWaveformSP_Daphne_HD[0]);
+      if (!is_arara) AddDarkNoise(wave,fWaveformSP);
+      else            AddDarkNoise(wave,fWaveformSP_arara_HD[0]);
     } 
     CreateSaturation(wave);
   }
@@ -241,15 +241,15 @@ namespace opdet {
     double t_min,
     std::vector<double>& wave,
     std::string pdtype,
-    bool is_daphne)
+    bool is_arara)
   {
     if(pdtype == "xarapuca_vuv"){
-      SinglePDWaveformCreatorLite(fXArapucaVUVEffVUV, fTimeXArapucaVUV, wave, photonMap, t_min,is_daphne);
+      SinglePDWaveformCreatorLite(fXArapucaVUVEffVUV, fTimeXArapucaVUV, wave, photonMap, t_min,is_arara);
     }
     else if(pdtype == "xarapuca_vis"){
       // creating the waveforms for xarapuca_vis is different than the rest
       // so there's an overload for that which lacks the timeHisto
-      SinglePDWaveformCreatorLite(fXArapucaVISEff, wave, photonMap, t_min,is_daphne);
+      SinglePDWaveformCreatorLite(fXArapucaVISEff, wave, photonMap, t_min,is_arara);
     }
     else{
       throw cet::exception("DigiARAPUCASBNDAlg") << "Wrong pdtype: " << pdtype << std::endl;
@@ -257,8 +257,8 @@ namespace opdet {
     if(fParams.BaselineRMS > 0.0) AddLineNoise(wave);
     if(fParams.DarkNoiseRate > 0.0)
     {
-      if (!is_daphne) AddDarkNoise(wave,fWaveformSP);
-      else            AddDarkNoise(wave,fWaveformSP_Daphne_HD[0]);
+      if (!is_arara) AddDarkNoise(wave,fWaveformSP);
+      else            AddDarkNoise(wave,fWaveformSP_arara_HD[0]);
     } 
 
     CreateSaturation(wave);
@@ -277,7 +277,7 @@ namespace opdet {
     double meanPhotons;
     size_t acceptedPhotons;
     double tphoton;
-    bool is_daphne = true; //quick fix
+    bool is_arara = true; //quick fix
 
     // direct light
     if ( auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) ){
@@ -292,14 +292,14 @@ namespace opdet {
           int nCT=1;
           if(fParams.CrossTalk > 0.0 &&
               fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
-            size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-            double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+            size_t timeBin = (is_arara) ? std::floor(tphoton * fSampling_arara) : std::floor(tphoton * fSampling);
+            double timeBin_HD = (is_arara) ? ( tphoton * fSampling_arara) : (tphoton * fSampling);//get decimals info
             size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
             if(timeBin < wave.size()) {
               // P_truth=P_truth+nCT;
-              if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+              if (!is_arara) {AddSPE(timeBin, wave, fWaveformSP, nCT);
               }
-              else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_Daphne_HD[wvf_shift]), nCT);}
+              else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_arara_HD[wvf_shift]), nCT);}
             }
           }
         }
@@ -317,14 +317,14 @@ namespace opdet {
           int nCT=1;
           if(fParams.CrossTalk > 0.0 &&
               fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
-            size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-            double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+            size_t timeBin = (is_arara) ? std::floor(tphoton * fSampling_arara) : std::floor(tphoton * fSampling);
+            double timeBin_HD = (is_arara) ? ( tphoton * fSampling_arara) : (tphoton * fSampling);//get decimals info
             size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
             if(timeBin < wave.size()) {
               // P_truth=P_truth+nCT;
-              if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+              if (!is_arara) {AddSPE(timeBin, wave, fWaveformSP, nCT);
               }
-              else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_Daphne_HD[wvf_shift]), nCT);}
+              else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_arara_HD[wvf_shift]), nCT);}
             }
           }
       }
@@ -332,7 +332,7 @@ namespace opdet {
     
 
     if(fParams.BaselineRMS > 0.0) AddLineNoise(wave);
-    if(fParams.DarkNoiseRate > 0.0) AddDarkNoise(wave,fWaveformSP_Daphne_HD[0]);
+    if(fParams.DarkNoiseRate > 0.0) AddDarkNoise(wave,fWaveformSP_arara_HD[0]);
     CreateSaturation(wave);
     waveform = std::vector<short unsigned int> (wave.begin(), wave.end());
 
@@ -344,7 +344,7 @@ namespace opdet {
     std::vector<double>& wave,
     std::map<int, int> const& photonMap,
     double const& t_min,
-    bool is_daphne
+    bool is_arara
     )
   {
     // TODO: check that this new approach of not using the last
@@ -364,14 +364,14 @@ namespace opdet {
         int nCT=1;
         if(fParams.CrossTalk > 0.0 &&
            fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
-          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t timeBin = (is_arara) ? std::floor(tphoton * fSampling_arara) : std::floor(tphoton * fSampling);
+          double timeBin_HD = (is_arara) ? ( tphoton * fSampling_arara) : (tphoton * fSampling);//get decimals info
           size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
             // P_truth=P_truth+nCT;
-            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            if (!is_arara) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_Daphne_HD[wvf_shift]), nCT);}
+            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_arara_HD[wvf_shift]), nCT);}
           }
       }
     }
@@ -383,7 +383,7 @@ namespace opdet {
     std::vector<double>& wave,
     std::map<int, int> const& photonMap,
     double const& t_min,
-    bool is_daphne
+    bool is_arara
     )
   {
     double meanPhotons;
@@ -401,14 +401,14 @@ namespace opdet {
         if(tphoton < 0.) continue; // discard if it didn't made it to the acquisition
         if(fParams.CrossTalk > 0.0 && fFlatGen.fire(1.0) < fParams.CrossTalk) nCT = 2;
         else nCT = 1;
-          size_t timeBin = (is_daphne) ? std::floor(tphoton * fSampling_Daphne) : std::floor(tphoton * fSampling);
-          double timeBin_HD = (is_daphne) ? ( tphoton * fSampling_Daphne) : (tphoton * fSampling);//get decimals info
+          size_t timeBin = (is_arara) ? std::floor(tphoton * fSampling_arara) : std::floor(tphoton * fSampling);
+          double timeBin_HD = (is_arara) ? ( tphoton * fSampling_arara) : (tphoton * fSampling);//get decimals info
           size_t wvf_shift  = fPMTHDOpticalWaveformsPtr->TimeBinShift(timeBin_HD);
           if(timeBin < wave.size()) {
             // P_truth=P_truth+nCT;
-            if (!is_daphne) {AddSPE(timeBin, wave, fWaveformSP, nCT);
+            if (!is_arara) {AddSPE(timeBin, wave, fWaveformSP, nCT);
             }
-            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_Daphne_HD[wvf_shift]), nCT);}
+            else{ AddSPE(timeBin, wave, (std::vector<double>) (fWaveformSP_arara_HD[wvf_shift]), nCT);}
           }
       }
     }
@@ -536,7 +536,7 @@ namespace opdet {
     fBaseConfig.DecayTXArapucaVIS     = config.decayTXArapucaVIS();
     fBaseConfig.ArapucaDataFile       = config.arapucaDataFile();
     fBaseConfig.ArapucaSinglePEmodel  = config.ArapucasinglePEmodel();
-    fBaseConfig.frequency_Daphne      = config.DaphneFrequency();
+    fBaseConfig.frequency_arara      = config.araraFrequency();
     fBaseConfig.MakeAmpFluctuations   = config.makeAmpFluctuations();
     fBaseConfig.AmpFluctuation        = config.ampFluctuation();
     config.hdOpticalWaveformParams.get_if_present(fBaseConfig.HDOpticalWaveformParams);
@@ -554,7 +554,7 @@ namespace opdet {
     // set up parameters
     params.larProp = &larProp;
     params.frequency = clockData.OpticalClock().Frequency();
-    params.frequency_Daphne = fBaseConfig.frequency_Daphne; //Mhz
+    params.frequency_arara = fBaseConfig.frequency_arara; //Mhz
     params.engine = engine;
 
     return std::make_unique<DigiArapucaSBNDAlg>(params);

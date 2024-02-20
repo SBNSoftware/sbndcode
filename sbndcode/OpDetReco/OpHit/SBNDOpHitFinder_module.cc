@@ -89,14 +89,14 @@ namespace opdet {
     std::vector< std::string > fInputLabels;
     std::set< unsigned int > fChannelMasks;
     std::vector<std::string> _pd_to_use; ///< PDS to use (ex: "pmt", "barepmt")
-    std::string fElectronics; ///< PDS readouts to use (ex: "CAEN", "Daphne")
+    std::string fElectronics; ///< PDS readouts to use (ex: "CAEN", "arara")
     std::vector<int> _opch_to_use; ///< List of of opch (will be infered from _pd_to_use)
 
     pmtana::PulseRecoManager  fPulseRecoMgr;
     pmtana::PMTPulseRecoBase* fThreshAlg;
     pmtana::PMTPedestalBase*  fPedAlg;
 
-    Float_t  fHitThreshold,fDaphne_Freq;
+    Float_t  fHitThreshold,farara_Freq;
     unsigned int fMaxOpChannel;
 
     calib::IPhotonCalibrator const* fCalib = nullptr;
@@ -131,7 +131,7 @@ namespace opdet {
     fElectronics = pset.get< std::string >("Electronics");
     _opch_to_use = this->PDNamesToList(_pd_to_use);
 
-    fDaphne_Freq  = pset.get< float >("DaphneFreq");
+    farara_Freq  = pset.get< float >("araraFreq");
     fHitThreshold = pset.get< float >("HitThreshold");
     bool useCalibrator = pset.get< bool > ("UseCalibrator", false);
 
@@ -235,19 +235,19 @@ namespace opdet {
     auto const& geometry(*lar::providerFrom< geo::Geometry >());
     auto const clockData_CAEN = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(evt);
     auto const& calibrator(*fCalib);
-    detinfo::ElecClock const optical_clock_daphne = detinfo::ElecClock(clockData_CAEN.OpticalClock().Time(),
+    detinfo::ElecClock const optical_clock_arara = detinfo::ElecClock(clockData_CAEN.OpticalClock().Time(),
                                                                        clockData_CAEN.OpticalClock().FramePeriod(),
-                                                                       fDaphne_Freq);
-    detinfo::DetectorClocksData const& clockData_Daphne = detinfo::DetectorClocksData(-clockData_CAEN.G4ToElecTime(0),
+                                                                       farara_Freq);
+    detinfo::DetectorClocksData const& clockData_arara = detinfo::DetectorClocksData(-clockData_CAEN.G4ToElecTime(0),
                                                                                        clockData_CAEN.TriggerOffsetTPC(),
                                                                                        clockData_CAEN.TriggerTime(),
                                                                                        clockData_CAEN.BeamGateTime(),
                                                                                        clockData_CAEN.TPCClock(),
-                                                                                       optical_clock_daphne,
+                                                                                       optical_clock_arara,
                                                                                        clockData_CAEN.TriggerClock(),
                                                                                        clockData_CAEN.ExternalClock());
-    detinfo::DetectorClocksData const& clockData = (fElectronics=="Daphne") ?  clockData_Daphne : clockData_CAEN;
-    // std::cout<<"@rodrigoa debug: frecuencies "<<clockData_Daphne.OpticalClock().Frequency()<<"  "<<clockData.OpticalClock().Frequency()<<std::endl;
+    detinfo::DetectorClocksData const& clockData = (fElectronics=="arara") ?  clockData_arara : clockData_CAEN;
+    // std::cout<<"@rodrigoa debug: frecuencies "<<clockData_arara.OpticalClock().Frequency()<<"  "<<clockData.OpticalClock().Frequency()<<std::endl;
     //
     // Get the pulses from the event
     //
@@ -343,9 +343,9 @@ namespace opdet {
       std::vector<int> ch_v;
       // std::cout<<"@rodrigoa debug: Electronics="<<fElectronics<<std::endl;
 
-      if (fElectronics=="Daphne"){
-        //take only daphne xarapuca channels (62.5 Mhz) for now ~rodrigoa
-        ch_v = _pds_map.getChannelsOfType(name, "daphne");
+      if (fElectronics=="arara"){
+        //take only arara xarapuca channels (62.5 Mhz) for now ~rodrigoa
+        ch_v = _pds_map.getChannelsOfType(name, "arara");
       }else{
         ch_v = _pds_map.getChannelsOfType(name);
       }

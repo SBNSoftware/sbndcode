@@ -72,7 +72,7 @@ namespace opdet {
 
       detinfo::LArProperties const* larProp = nullptr; ///< LarProperties service provider.
       double frequency; ///< Optical-clock frequency
-      double frequency_Daphne; ///< Optical-clock frequency for daphne readouts	
+      double frequency_arara; ///< Optical-clock frequency for arara readouts	
 
       CLHEP::HepRandomEngine* engine = nullptr;
       fhicl::ParameterSet HDOpticalWaveformParams;
@@ -92,7 +92,7 @@ namespace opdet {
                            sim::SimPhotons const& simphotons,
                            std::vector<short unsigned int>& waveform,
                            std::string pdtype,
-                           bool is_daphne,
+                           bool is_arara,
                            double start_time,
                            unsigned n_samples);
     void ConstructWaveformVUVXA(int ch,
@@ -105,7 +105,7 @@ namespace opdet {
                                sim::SimPhotonsLite const& litesimphotons,
                                std::vector<short unsigned int>& waveform,
                                std::string pdtype,
-                               bool is_daphne,
+                               bool is_arara,
                                double start_time,
                                unsigned n_samples);
     void ConstructWaveformLiteVUVXA(int ch,
@@ -121,7 +121,7 @@ namespace opdet {
     const ConfigurationParameters_t fParams;
 
     const double fSampling;        //wave sampling frequency (GHz)
-    const double fSampling_Daphne;        //wave sampling frequency (GHz)
+    const double fSampling_arara;        //wave sampling frequency (GHz)
     const double fXArapucaVUVEffVis; //VUV XArapuca efficiency to visible light
     const double fXArapucaVUVEffVUV; //VUV XArapuca efficiency to VUV light
     const double fXArapucaVISEff;
@@ -137,8 +137,8 @@ namespace opdet {
     std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for visible (x)arapucas
 
     std::vector<double> fWaveformSP; //single photon pulse vector
-    std::vector<double> fWaveformSP_Daphne; //single photon pulse vector
-    std::vector<std::vector<double>> fWaveformSP_Daphne_HD; //single photon pulse vector
+    std::vector<double> fWaveformSP_arara; //single photon pulse vector
+    std::vector<std::vector<double>> fWaveformSP_arara_HD; //single photon pulse vector
     
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
@@ -150,23 +150,23 @@ namespace opdet {
                           double t_min,
                           std::vector<double>& wave,
                           std::string pdtype,
-                          bool is_daphne);
+                          bool is_arara);
     void CreatePDWaveformLite(std::map<int, int> const& photonMap,
                               double t_min,
                               std::vector<double>& wave,
                               std::string pdtype,
-                              bool is_daphne);
+                              bool is_arara);
     void SinglePDWaveformCreatorLite(double effT,
                                      std::unique_ptr<CLHEP::RandGeneral>& timeHisto,
                                      std::vector<double>& wave,
                                      std::map<int, int> const& photonMap,
                                      double const& t_min,
-                                     bool is_daphne);
+                                     bool is_arara);
     void SinglePDWaveformCreatorLite(double effT,
                                      std::vector<double>& wave,
                                      std::map<int, int> const& photonMap,
                                      double const& t_min,
-                                     bool is_daphne);
+                                     bool is_arara);
     void AddSPE(size_t time_bin, std::vector<double>& wave, const std::vector<double>& fWaveformSP, int nphotons); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave,const double sampling);
     // void produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER);
@@ -269,9 +269,9 @@ namespace opdet {
         Comment("Model used for single PE response of PMT. =0 is ideal, =1 is from X-TDBoard data (with overshoot)")
       };
 
-      fhicl::Atom<double> DaphneFrequency {
-        Name("DaphneFrequency"),
-        Comment("Sampling Frequency of the XArapucas with Daphne readouts (SBND Light detection system has 2 readout frequencies). Apsaia readouts read the frec value from LArSoft.")
+      fhicl::Atom<double> araraFrequency {
+        Name("araraFrequency"),
+        Comment("Sampling Frequency of the XArapucas with arara readouts (SBND Light detection system has 2 readout frequencies). Apsaia readouts read the frec value from LArSoft.")
       };
 
       fhicl::Atom<bool> makeAmpFluctuations {

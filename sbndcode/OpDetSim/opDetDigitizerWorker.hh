@@ -42,9 +42,9 @@ namespace opdet {
 
       std::array<double, 2> EnableWindow;
       double Sampling;       //wave sampling frequency (GHz)
-      double Sampling_Daphne;
+      double Sampling_arara;
       unsigned int Nsamples; //Samples per waveform
-      unsigned int Nsamples_Daphne; //Samples per waveform
+      unsigned int Nsamples_arara; //Samples per waveform
 
       Config(const opdet::DigiPMTSBNDAlgMaker::Config &pmt_config, const opdet::DigiArapucaSBNDAlgMaker::Config &arapuca_config);
     };

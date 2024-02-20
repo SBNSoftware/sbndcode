@@ -30,7 +30,7 @@ namespace opdet {
 
   bool sbndPDMapAlg::isElectronics(size_t ch, std::string pdname) const
   {
-    if(PDmap.at(ch)["electronics"] == std::string(pdname)) return true; // TODO: add number of electronics, daphne01, daphne02, .... ~rodrigoa
+    if(PDmap.at(ch)["electronics"] == std::string(pdname)) return true; // TODO: add number of electronics, arara01, arara02, .... ~rodrigoa
     return false;
   }
 

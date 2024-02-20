@@ -17,7 +17,7 @@
 // sensible_to_vis: true or false
 // sensible_to_vuv: true or false
 // tpc: 0, 1
-// sampling: apsaia, daphne
+// sampling: apsaia, arara
 ////////////////////////////////////////////////////////////////////////
 
 #ifndef SBND_OPDETSIM_SBNDPDMAPALG_HH
