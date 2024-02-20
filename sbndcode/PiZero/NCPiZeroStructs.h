@@ -1,6 +1,10 @@
 #ifndef NCPIZEROSTRUCTS_H_SEEN
 #define NCPIZEROSTRUCTS_H_SEEN
 
+constexpr int n_fluxweight_univs   = 1000;
+constexpr int n_genieweight_univs  = 500;
+constexpr int n_geant4weight_univs = 1000;
+
 namespace NC {
   enum EventType
   {

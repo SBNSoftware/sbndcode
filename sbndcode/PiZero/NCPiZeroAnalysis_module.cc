@@ -198,11 +198,10 @@ private:
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
   art::InputTag fMCParticleModuleLabel, fSliceModuleLabel, fPFParticleModuleLabel, fVertexModuleLabel,
-    fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel,
-    fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
-    fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
-    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel, fRazzledModuleLabel,
-    fSpacePointModuleLabel;
+    fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fCRUMBSModuleLabel, fDazzleModuleLabel,
+    fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel, fClosestApproachModuleLabel,
+    fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel, fShowerTrackFitModuleLabel,
+    fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel, fRazzledModuleLabel, fSpacePointModuleLabel;
   std::vector<art::InputTag> fEventWeightModuleLabels;
   bool fDebug, fBeamOff;
   fhicl::ParameterSet fSecondShowerFinderAlgParams;
@@ -681,7 +680,6 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   , fHitModuleLabel                 (p.get<art::InputTag>("HitModuleLabel"))
   , fTrackModuleLabel               (p.get<art::InputTag>("TrackModuleLabel"))
   , fShowerModuleLabel              (p.get<art::InputTag>("ShowerModuleLabel"))
-  , fTrackCalorimetryModuleLabel    (p.get<art::InputTag>("TrackCalorimetryModuleLabel"))
   , fCRUMBSModuleLabel              (p.get<art::InputTag>("CRUMBSModuleLabel"))
   , fDazzleModuleLabel              (p.get<art::InputTag>("DazzleModuleLabel"))
   , fCaloModuleLabel                (p.get<art::InputTag>("CaloModuleLabel"))
@@ -765,7 +763,7 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
           {
             genie_multisigma_universe_weights[name] = std::map<int, double>();
 
-            for(int univ = 0; univ < 500; ++univ)
+            for(int univ = 0; univ < n_genieweight_univs; ++univ)
               genie_multisigma_universe_weights[name][univ] = randGauss.fire();
           }
       }
@@ -1033,10 +1031,12 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
       const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToWeights.at(0);
 
       int n_univs = 0;
-      if(weightModuleLabel == "fluxweight" || weightModuleLabel == "geant4weight")
-        n_univs = 1000;
+      if(weightModuleLabel == "fluxweight")
+        n_univs = n_fluxweight_univs;
       else if(weightModuleLabel == "systtools")
-        n_univs = 500;
+        n_univs = n_genieweight_univs;
+      else if(weightModuleLabel == "geant4weight")
+        n_univs = n_geant4weight_univs;
 
       std::vector<float> all(n_univs, 1.);
 
