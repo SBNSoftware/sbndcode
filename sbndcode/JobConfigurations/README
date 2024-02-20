@@ -1,17 +1,19 @@
-The intended operation of the fcl workflows is that the `standard-*` fcls run the standard workflow. This isn't currently true and should be acknowledged here. Diversions due to space charge effect workflows and the implentation of the 2D drift simulation & signal processing (WireCell) have resulted in an explosion in the number of fcls and a confusing naming system.
+# SBND Core FHiCL Files
+
+The intended operation of the fcl workflows is that the `standard-*` fcls run the standard workflow. This isn't currently true and should be acknowledged here. The WireCell 2D TPC simulation/signal processing workflow has now been implemented into the `standard-*` fcls, and the 1D simulation is now deprecated. The main deviation of the *core* workflow (described below) from the `standard-*` fcls is the inclusion of the space charge simulation. The *core* workflow also includes the dropping of some heavy data products (hence the `lite` suffix).
 
 At the time of writing, the core workflow (for BNB + Dirt + Cosmics) is the following:
-- prodoverlay_corsika_cosmics_proton_genie_rockbox_sce.fcl
-- g4_sce_dirt_filter_lite_wc.fcl
-- wirecell_sim_sp_sbnd.fcl
-- detsim_sce_lite_wc.fcl
-- reco1_sce_lite_wc2d.fcl
-- reco2_sce.fcl
+
+- `prodoverlay_corsika_cosmics_proton_genie_rockbox_sce.fcl`
+- `g4_sce_dirt_filter_lite.fcl` (does not include TPC electron drift simulation)
+- `detsim_sce_lite.fcl` (includes TPC drift simulation, TPC electronics simulation, and signal processing)
+- `reco1_sce_lite.fcl`
+- `reco2_sce.fcl`
 
 This may well change over the coming months, and this README should be updated to reflect this.
 
-* ALERT * 
-Due to changes implemented in sbndcode PRs #408 and #409 the 1D simulation fcls will not work out of the box, they will need editing by experts!
-Hopefully this is a relatively temporary state of affairs!
+** ALERT **
 
-Henry Lay - 15th Feb 2024
+Due to changes implemented in sbndcode PRs #408 and #409 the 1D simulation fcls will not work out of the box, they will need editing by experts!
+
+Henry Lay & Lynn Tung - Feb 2024
