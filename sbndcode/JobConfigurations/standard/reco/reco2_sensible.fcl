@@ -4,8 +4,9 @@
 
 process_name: Reco2
 
-physics.analyzers.ncpizeroana: @local::ncpizeroana
-physics.analyzers.recoeff:     @local::recoeff
+physics.analyzers.ncpizeroana:       @local::ncpizeroana
+physics.analyzers.ncpizeroxsectrees: @local::ncpizeroxsectrees
+physics.analyzers.recoeff:           @local::recoeff
 
 physics.producers.pandoraShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
 
@@ -41,7 +42,7 @@ physics.weight_paths: [
   geant4weight
 ]
 
-physics.ana: [ ncpizeroana, recoeff ]
+physics.ana: [ ncpizeroana, ncpizeroxsectrees, recoeff ]
 
 physics.trigger_paths: [ reco2_sensible ]
 physics.end_paths: [ stream1, ana ]
