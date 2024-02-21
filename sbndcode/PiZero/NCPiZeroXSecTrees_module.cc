@@ -277,6 +277,13 @@ sbnd::NCPiZeroXSecTrees::NCPiZeroXSecTrees(fhicl::ParameterSet const& p)
         _genie_weights[name] = std::vector<float>();
         fNuTree->Branch(name.c_str(), &_genie_weights[name]);
         fSliceTree->Branch(name.c_str(), &_genie_weights[name]);
+
+        if(name.find("multisigma") != std::string::npos)
+          {
+            _genie_weights[name + "_multisim"] = std::vector<float>();
+            fNuTree->Branch((name + "_multisim").c_str(), &_genie_weights[name + "_multisim"]);
+            fSliceTree->Branch((name + "_multisim").c_str(), &_genie_weights[name + "_multisim"]);
+          }
       }
 
     _genie_weights["genie_weights_all"] = std::vector<float>();
@@ -620,6 +627,8 @@ void sbnd::NCPiZeroXSecTrees::AnalyseMCTruth(const art::Event &e, const art::Ptr
                 }
               else if(weightModuleLabel == "systtools" && name.find("multisigma") != std::string::npos)
                 {
+                  _genie_weights[name] = weights;
+
                   std::vector<float> thrown_weights(n_univs, 1.);
 
                   if(weights.size() == 6)
@@ -627,7 +636,7 @@ void sbnd::NCPiZeroXSecTrees::AnalyseMCTruth(const art::Event &e, const art::Ptr
                       for(int univ = 0; univ < n_univs; ++univ)
                         {
                           thrown_weights[univ] = 1 + (weights[1] - 1) * genie_multisigma_universe_weights[name][univ];
-                          all[univ] *= weights[univ];
+                          all[univ] *= thrown_weights[univ];
                         }
                     }
                   else if(weights.size() == 1)
@@ -635,11 +644,11 @@ void sbnd::NCPiZeroXSecTrees::AnalyseMCTruth(const art::Event &e, const art::Ptr
                       for(int univ = 0; univ < n_univs; ++univ)
                         {
                           thrown_weights[univ] = 1 + (weights[0] - 1) * 2 * genie_multisigma_universe_weights[name][univ];
-                          all[univ] *= weights[univ];
+                          all[univ] *= thrown_weights[univ];
                         }
                     }
 
-                  _genie_weights[name] = thrown_weights;
+                  _genie_weights[name + "_multisim"] = thrown_weights;
                 }
             }
         }
@@ -817,9 +826,9 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
 
           if(goodKinematics && abs(134.9769 - invariantMass) < bestInvMass)
             {
-              _reco_pizero_mom          = 1e3 * pizeroMom;
+              _reco_pizero_mom          = pizeroMom;
               _reco_cos_theta_pizero    = pizeroCosTheta;
-              _reco_invariant_mass      = 1e3 * invariantMass;
+              _reco_invariant_mass      = invariantMass;
               _best_pzc_good_kinematics = true;
               best_candidate_0          = phot_0.index;
               best_candidate_1          = phot_1.index;

@@ -661,6 +661,12 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
       {
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
+
+        if(name.find("multisigma") != std::string::npos)
+          {
+            nuVars["nu_weight_" + name + "_multisim"] = new InhVecVecVar<float>("nu_weight_" + name + "_multisim");
+            slcVars["slc_true_weight_" + name + "_multisim" ] = new InhVecVecVar<float>("slc_true_weight_" + name + "_multisim");
+          }
       }
 
     for(auto const& name : geant4_weight_names)
@@ -998,6 +1004,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
                 }
               else if(weightModuleLabel == "systtools" && name.find("multisigma") != std::string::npos)
                 {
+                  FillElement(vars[prefix + "_weight_" + name], counter, weights);
+
                   std::vector<float> thrown_weights(n_univs, 1.);
 
                   if(weights.size() == 6)
@@ -1005,7 +1013,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
                       for(int univ = 0; univ < n_univs; ++univ)
                         {
                           thrown_weights[univ] = 1 + (weights[1] - 1) * genie_multisigma_universe_weights[name][univ];
-                          all[univ] *= weights[univ];
+                          all[univ] *= thrown_weights[univ];
                         }
                     }
                   else if(weights.size() == 1)
@@ -1013,13 +1021,13 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
                       for(int univ = 0; univ < n_univs; ++univ)
                         {
                           thrown_weights[univ] = 1 + (weights[0] - 1) * 2 * genie_multisigma_universe_weights[name][univ];
-                          all[univ] *= weights[univ];
+                          all[univ] *= thrown_weights[univ];
                         }
                     }
                   else
                     std::cout << "Whoaaaaaaaaaa, multisigma of size " << weights.size() << std::endl;
 
-                  FillElement(vars[prefix + "_weight_" + name], counter, thrown_weights);
+                  FillElement(vars[prefix + "_weight_" + name + "_multisim"], counter, thrown_weights);
                 }
             }
         }
