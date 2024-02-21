@@ -50,6 +50,7 @@ class Bin {
               << "Purity: " << _purity << '\n'
               << "Efficiency: " << _efficiency << '\n'
               << "Bin Width: " << _binWidth << '\n'
+              << "Frac Stat Err: " << _fracStatErr << '\n'
               << "--------------------------------------\n"
               << "XSec: " << _xsec << '\n'
               <<"======================================\n" << std::endl;

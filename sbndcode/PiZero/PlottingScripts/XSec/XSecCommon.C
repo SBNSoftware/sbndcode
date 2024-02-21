@@ -24,12 +24,15 @@ void CalculateNominalBin(XSecSamples samples, Bin *bin, const Selection selectio
   double purity     = (rawCount - bkgdCount) / rawCount;
   double efficiency = sigCount / trueSig;
 
+  double fracStatErr = std::sqrt(rawCount) / rawCount;
+
   bin->SetRawCount(rawCount);
   bin->SetScaledCount(scaledCount);
   bin->SetBackgroundCount(bkgdCount);
   bin->SetScaledBackgroundCount(scaledBkgdCount);
   bin->SetPurity(purity);
   bin->SetEfficiency(efficiency);
+  bin->SetFracStatErr(fracStatErr);
 }
 
 void CalculateNominal(XSecSamples samples, const Selection selection)
@@ -39,5 +42,15 @@ void CalculateNominal(XSecSamples samples, const Selection selection)
   for(Bin* bin : plot->GetBins())
     {
       CalculateNominalBin(samples, bin, selection);
+    }
+}
+
+void CalculateNominalXSecPurity(const Selection selection, const double nTargets, const double intFlux)
+{
+  XSecPlot *plot = selection.plot;
+
+  for(Bin* bin : plot->GetBins())
+    {
+      bin->CalculateXSecPurity(nTargets, intFlux);
     }
 }

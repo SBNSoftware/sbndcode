@@ -52,4 +52,19 @@ class XSecPlot {
     {
       return _bins;
     }
+
+  TH1F* GetNominalHist(const bool statErr = true)
+  {
+    TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(), 1, 0, 1);
+    hist->SetBinContent(1, _bins[0]->GetXSec());
+
+    if(statErr)
+      {
+        hist->SetBinError(1, _bins[0]->GetFracStatErr() * _bins[0]->GetXSec());
+      }
+
+    hist->SetLineColor(kBlack);
+
+    return hist;
+  }
 };
