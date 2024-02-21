@@ -98,7 +98,7 @@ void IntegratedFlux(const TString productionVersion)
           outFile << Form("{ %i, %f },", j, flux) << std::endl;
         }
 
-      outFile << "}," << std::endl;
+      outFile << "}}," << std::endl;
 
       TCanvas *cFluxUniverses = new TCanvas(Form("cFluxUniverses%s", name.c_str()), Form("cFluxUniverses%s", name.c_str()));
       cFluxUniverses->cd();
