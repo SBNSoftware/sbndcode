@@ -334,6 +334,8 @@ physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
+physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
+
 physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
 physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
 physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
