@@ -1,4 +1,4 @@
-#include "XSecPlot.h"
+#include "XSecCommon.C"
 #include "Common.C"
 
 void XSec0D(const TString productionVersion, const TString saveDirExt)
@@ -26,32 +26,17 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
   double rockboxScaling, intimeScaling;
   GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
 
+  XSecSamples samples = { { rockboxNus, rockboxSlices, rockboxScaling },
+                          { intimeNus, intimeSlices, intimeScaling }
+  };
+
+  Selection incl = { "ncpizero_incl", "sel_incl", "event_type_incl==0" };
+
   XSecPlot *inclPlot = new XSecPlot("incl0D", "#sigma (cm^{2}/nucleon)", 1);
 
-  int rockboxTrueSig      = rockboxNus->GetEntries("event_type_incl==0");
-  int rockboxSelSlices    = rockboxSlices->GetEntries("sel_incl");
-  int intimeSelSlices     = intimeSlices->GetEntries("sel_incl");
-  int rockboxSelSigSlices = rockboxSlices->GetEntries("sel_incl && event_type_incl==0 && comp>.5");
-
-  double rawCount    = rockboxSelSlices + intimeSelSlices * (intimeScaling / rockboxScaling);
-  double scaledCount = rawCount * rockboxScaling;
-
-  double bkgdCount       = (rockboxSelSlices - rockboxSelSigSlices)
-    + intimeSelSlices * (intimeScaling / rockboxScaling);
-  double scaledBkgdCount = bkgdCount * rockboxScaling;
-
-  double purity     = (rawCount - bkgdCount) / rawCount;
-  double efficiency = rockboxSelSigSlices / rockboxTrueSig;
+  CalculateNominalBin(samples, inclPlot, 0, incl);
 
   Bin& bin = inclPlot->GetBin(0);
-
-  bin.SetRawCount(rawCount);
-  bin.SetScaledCount(scaledCount);
-  bin.SetBackgroundCount(bkgdCount);
-  bin.SetScaledBackgroundCount(scaledBkgdCount);
-  bin.SetPurity(purity);
-  bin.SetEfficiency(efficiency);
   bin.CalculateXSecPurity(nTargets, intFlux);
-
   bin.Print();
 }
