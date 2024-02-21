@@ -1,173 +1,175 @@
 #pragma once
 
-constexpr int def_int       = std::numeric_limits<int>::min();
-constexpr double def_double = std::numeric_limits<double>::lowest();
+#include "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv16/integrated_flux/FluxMapTmp.h"
+#include "UniverseBin.h"
 
 class Bin {
 
  private:
-  int                           _index;
-  double                        _xsec;
-  double                        _rawCount;
-  double                        _scaledCount;
-  double                        _bkgdCount;
-  double                        _scaledBkgdCount;
-  double                        _purity;
-  double                        _efficiency;
-  double                        _binWidth;
-  double                        _fracStatErr;
-  std::map<std::string, double> _fracSystErr;
+  int                                                        _index;
+  UniverseBin                                               *_nominalBin;
+  std::map<std::string, std::vector<UniverseBin*>>          *_universeBins;
+  std::map<std::string, std::tuple<double, double, double>> *_systFracErrors;
 
  public:
   
-  Bin()
+  Bin(const int index, const double binWidth, const double nTargets, const double intFlux)
     {
-      _index           = def_int;
-      _xsec            = def_double;
-      _rawCount        = def_double;
-      _scaledCount     = def_double;
-      _bkgdCount       = def_double;
-      _scaledBkgdCount = def_double;
-      _purity          = def_double;
-      _efficiency      = def_double;
-      _binWidth        = 1.;
-      _fracStatErr     = def_double;
-      _fracSystErr     = std::map<std::string, double>();
-    }
-
- Bin(const int index)
-   : Bin()
-    {
-      _index = index;
+      _index          = index;
+      _nominalBin     = new UniverseBin(binWidth, nTargets, intFlux);
+      _universeBins   = new std::map<std::string, std::vector<UniverseBin*>>();
+      _systFracErrors = new std::map<std::string, std::tuple<double, double, double>>();
     }
 
   void Print()
   {
     std::cout << "\n======================================\n"
-              << "Bin Index: " << _index << '\n'
-              << "Count: " << _rawCount << " (" << _scaledCount << ")\n"
-              << "Background Count: " << _bkgdCount << " (" << _scaledBkgdCount << ")\n"
-              << "Purity: " << _purity << '\n'
-              << "Efficiency: " << _efficiency << '\n'
-              << "Bin Width: " << _binWidth << '\n'
-              << "Frac Stat Err: " << _fracStatErr << '\n'
-              << "--------------------------------------\n"
-              << "XSec: " << _xsec << '\n'
-              <<"======================================\n" << std::endl;
+              << "Bin Index: " << _index << '\n';
+
+    _nominalBin->Print();
+
+    std::cout <<"======================================\n" << std::endl;
   }
 
-  void SetIndex(const int index)
+  void Print(const std::string weightName, const int univ)
   {
-    _index = index;
+    std::cout << "\n======================================\n"
+              << "Bin Index: " << _index << '\n';
+
+    _nominalBin->Print();
+    _universeBins->at(weightName).at(univ)->Print();
+
+    std::cout <<"======================================\n" << std::endl;
   }
 
-  void SetRawCount(const double rawCount)
+  void Update()
   {
-    _rawCount = rawCount;
+    _nominalBin->Update();
+    
+    for(auto&& [ name, univBins ] : *_universeBins)
+      {
+        for(UniverseBin* bin : univBins)
+          bin->Update();
+      }
   }
 
-  void SetScaledCount(const double scaledCount)
+  void CalculateXSecPurity()
   {
-    _scaledCount = scaledCount;
+    _nominalBin->CalculateXSecPurity();
+    
+    for(auto&& [ name, univBins ] : *_universeBins)
+      {
+        for(UniverseBin* bin : univBins)
+          bin->CalculateXSecPurity();
+      }
   }
 
-  void SetBackgroundCount(const double bkgdCount)
+  void SetScaleFactor(const double &scaleFactor)
   {
-    _bkgdCount = bkgdCount;
+    _nominalBin->SetScaleFactor(scaleFactor);
+
+    for(auto&& [ name, univBins ] : *_universeBins)
+      {
+        for(UniverseBin* bin : univBins)
+          bin->SetScaleFactor(scaleFactor);
+      }
   }
 
-  void SetScaledBackgroundCount(const double scaledBkgdCount)
+  double GetNominalXSec()
   {
-    _scaledBkgdCount = scaledBkgdCount;
+    return _nominalBin->GetXSec();
   }
 
-  void SetPurity(const double purity)
+  double GetNominalFracStatErr()
   {
-    _purity = purity;
+    return _nominalBin->GetFracStatErr();
   }
 
-  void SetEfficiency(const double efficiency)
+  void AddWeight(const std::string weightName, const int nunivs)
   {
-    _efficiency = efficiency;
+    const double binWidth = _nominalBin->GetBinWidth();
+    const double nTargets = _nominalBin->GetNTargets();
+    double intFlux  = _nominalBin->GetIntFlux();
+
+    _universeBins->insert({weightName, std::vector<UniverseBin*>()});
+
+    for(int univ = 0; univ < nunivs; ++univ)
+      {
+        if(univsIntegratedFluxMap.find(weightName) !=univsIntegratedFluxMap.end() &&
+           univ < univsIntegratedFluxMap.at(weightName).size())
+          intFlux = univsIntegratedFluxMap.at(weightName).at(univ);
+      
+        _universeBins->at(weightName).push_back(new UniverseBin(binWidth, nTargets, intFlux));
+      }
   }
 
-  void SetBinWidth(const double binWidth)
+  double GetUniverseXSec(const std::string &weightName, const int univ)
   {
-    _binWidth = binWidth;
+    return _universeBins->at(weightName).at(univ)->GetXSec();
   }
 
-  void SetFracStatErr(const double fracStatErr)
+  void IncrementNominalBinCount(const double &increment)
   {
-    _fracStatErr = fracStatErr;
+    _nominalBin->IncrementCount(increment);
   }
 
-  void InsertFracSystErr(const std::string name, const double error)
+  void IncrementNominalBinBkgdCount(const double &increment)
   {
-    _fracSystErr[name] = error;
+    _nominalBin->IncrementBkgdCount(increment);
   }
 
-  int GetIndex() const
+  void IncrementNominalBinTrueSignal(const double &increment)
   {
-    return _index;
+    _nominalBin->IncrementTrueSignal(increment);
   }
 
-  double GetXSec() const
+  void IncrementUniverseBinCount(const std::string &weightName, const int univ, 
+                                 const double &increment)
   {
-    return _xsec;
+    _universeBins->at(weightName).at(univ)->IncrementCount(increment);
   }
 
-  double GetRawCount() const
+  void IncrementUniverseBinBkgdCount(const std::string &weightName, const int univ, 
+                                     const double &increment)
   {
-    return _rawCount;
+    _universeBins->at(weightName).at(univ)->IncrementBkgdCount(increment);
   }
 
-  double GetScaledCount() const
+  void IncrementUniverseBinTrueSignal(const std::string &weightName, const int univ,
+                                      const double &increment)
   {
-    return _scaledCount;
+    _universeBins->at(weightName).at(univ)->IncrementTrueSignal(increment);
   }
 
-  double GetBackgroundCount() const
+  void CalculateSystFracErrors()
   {
-    return _bkgdCount;
+    for(auto&& [ name, univBins ] : *_universeBins)
+      {
+        std::vector<double> xsecs;
+
+        for(UniverseBin* bin : univBins)
+          xsecs.push_back(bin->GetXSec());
+
+        std::sort(xsecs.begin(), xsecs.end());
+
+        const int n         = univBins.size();
+        const double cv_n   = n * (1/2.);
+        const double low_n  = n * (1/3.);
+        const double high_n = n * (2/3.);
+
+        double cv   = (xsecs[std::floor(cv_n)] + xsecs[std::ceil(cv_n)]) / 2.;
+        double low  = (xsecs[std::floor(low_n)] + xsecs[std::ceil(low_n)]) / 2.;
+        double high = (xsecs[std::floor(high_n)] + xsecs[std::ceil(high_n)]) / 2.;
+
+        low  = std::abs(low - cv);
+        high = std::abs(high - cv);
+
+        _systFracErrors->insert({ name, { low, cv, high }});
+      }
   }
 
-  double GetScaledBackgroundCount() const
+  std::tuple<double, double, double> GetSystFracErrors(const std::string &weightName)
   {
-    return _scaledBkgdCount;
-  }
-
-  double GetPurity() const
-  {
-    return _purity;
-  }
-
-  double GetEfficiency() const
-  {
-    return _efficiency;
-  }
-
-  double GetBinWidth() const
-  {
-    return _binWidth;
-  }
-
-  double GetFracStatErr() const
-  {
-    return _fracStatErr;
-  }
-
-  double GetFracSystErr(const std::string &name) const
-  {
-    return _fracSystErr.at(name);
-  }
-
-  void CalculateXSecPurity(const double &nTargets, const double &intFlux)
-  {
-    _xsec = (_scaledCount * _purity) / (_efficiency * nTargets * intFlux * _binWidth);
-  }
-
-  void CalculateXSecBackgroundSubtraction(const double &nTargets, const double &intFlux)
-  {
-    _xsec = (_scaledCount - _scaledBkgdCount) / (_efficiency * nTargets * intFlux * _binWidth);
+    return _systFracErrors->at(weightName);
   }
 };

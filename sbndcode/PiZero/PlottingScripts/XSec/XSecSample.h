@@ -1,4 +1,5 @@
 struct XSecSample {
+  TString name;
   TChain *nutree;
   TChain *slicetree;
   double  scaling;
