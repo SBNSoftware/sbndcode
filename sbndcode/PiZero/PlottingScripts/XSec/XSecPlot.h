@@ -5,9 +5,9 @@
 class XSecPlot {
 
  private:
-  std::string      _name;
-  std::string      _axes_labels;
-  std::vector<Bin> _bins;
+  std::string       _name;
+  std::string       _axes_labels;
+  std::vector<Bin*> _bins;
 
  public:
 
@@ -17,7 +17,7 @@ class XSecPlot {
       _axes_labels = axes_labels;
 
       for(int i = 0; i < n; ++i)
-        _bins.emplace_back(i);
+        _bins.emplace_back(new Bin(i));
     }
 
   void SetName(const std::string name)
@@ -40,11 +40,16 @@ class XSecPlot {
       return _axes_labels;
     }
 
-  Bin& GetBin(const int i)
-    {
-      if(i >= _bins.size())
-        throw std::runtime_error("Asking for non-existent bin");
+  Bin* GetBin(const int i)
+  {
+    if(i >= _bins.size())
+      throw std::runtime_error("Asking for non-existent bin");
 
-      return _bins[i];
+    return _bins[i];
+  }
+
+  std::vector<Bin*> GetBins()
+    {
+      return _bins;
     }
 };

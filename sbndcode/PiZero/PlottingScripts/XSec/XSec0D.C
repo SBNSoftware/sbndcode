@@ -30,13 +30,22 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
                           { intimeNus, intimeSlices, intimeScaling }
   };
 
-  Selection incl = { "ncpizero_incl", "sel_incl", "event_type_incl==0" };
+  XSecPlot *xsec_incl  = new XSecPlot("xsec_incl", "#sigma (cm^{2}/nucleon)", 1);
+  XSecPlot *xsec_0p0pi = new XSecPlot("xsec_0p0pi", "#sigma (cm^{2}/nucleon)", 1);
+  XSecPlot *xsec_Np0pi = new XSecPlot("xsec_Np0pi", "#sigma (cm^{2}/nucleon)", 1);
 
-  XSecPlot *inclPlot = new XSecPlot("incl0D", "#sigma (cm^{2}/nucleon)", 1);
+  Selection ncpizero_incl  = { "ncpizero_incl", "sel_incl", "event_type_incl==0", xsec_incl };
+  Selection ncpizero_0p0pi = { "ncpizero_0p0pi", "sel_0p0pi", "event_type_0p0pi==0", xsec_0p0pi };
+  Selection ncpizero_Np0pi = { "ncpizero_Np0pi", "sel_Np0pi", "event_type_Np0pi==0", xsec_Np0pi };
 
-  CalculateNominalBin(samples, inclPlot, 0, incl);
+  Selections selections = { ncpizero_incl, ncpizero_0p0pi, ncpizero_Np0pi };
 
-  Bin& bin = inclPlot->GetBin(0);
-  bin.CalculateXSecPurity(nTargets, intFlux);
-  bin.Print();
+  for(auto const& selection : selections)
+    {
+      CalculateNominal(samples, selection);
+
+      Bin *bin = selection.plot->GetBin(0);
+      bin->CalculateXSecPurity(nTargets, intFlux);
+      bin->Print();
+    }
 }

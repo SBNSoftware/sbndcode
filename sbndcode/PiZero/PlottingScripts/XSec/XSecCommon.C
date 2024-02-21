@@ -2,7 +2,7 @@
 #include "XSecSample.h"
 #include "Selection.h"
 
-void CalculateNominalBin(XSecSamples samples, XSecPlot *xsecPlot, const int binNum, const Selection selection)
+void CalculateNominalBin(XSecSamples samples, Bin *bin, const Selection selection)
 {
   double trueSig = 0., rawCount = 0., sigCount = 0.;
 
@@ -24,12 +24,20 @@ void CalculateNominalBin(XSecSamples samples, XSecPlot *xsecPlot, const int binN
   double purity     = (rawCount - bkgdCount) / rawCount;
   double efficiency = sigCount / trueSig;
 
-  Bin& bin = xsecPlot->GetBin(binNum);
+  bin->SetRawCount(rawCount);
+  bin->SetScaledCount(scaledCount);
+  bin->SetBackgroundCount(bkgdCount);
+  bin->SetScaledBackgroundCount(scaledBkgdCount);
+  bin->SetPurity(purity);
+  bin->SetEfficiency(efficiency);
+}
 
-  bin.SetRawCount(rawCount);
-  bin.SetScaledCount(scaledCount);
-  bin.SetBackgroundCount(bkgdCount);
-  bin.SetScaledBackgroundCount(scaledBkgdCount);
-  bin.SetPurity(purity);
-  bin.SetEfficiency(efficiency);
+void CalculateNominal(XSecSamples samples, const Selection selection)
+{
+  XSecPlot *plot = selection.plot;
+
+  for(Bin* bin : plot->GetBins())
+    {
+      CalculateNominalBin(samples, bin, selection);
+    }
 }
