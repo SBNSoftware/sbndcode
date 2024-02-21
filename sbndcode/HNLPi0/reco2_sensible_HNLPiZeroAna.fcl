@@ -1,0 +1,109 @@
+#include "reco_sbnd.fcl"
+
+process_name: Reco2
+
+physics.analyzers.hnlana:
+{
+  module_type: "HNLPiZeroAnalysis"
+}
+
+physics.reco2_sensible: [ rns,
+  pandora,
+  pandoraSCE,
+  pandoraTrack,
+  pandoraShower,
+  pandoraCalo,
+  pandoraPid,
+  crtclustering,
+  crtspacepoints,
+  crttracks,
+  crtspacepointmatching,
+  crttrackmatching,
+  fmatch,
+  opt0finder,
+  crumbs,
+  pandoraTrackMCS,
+  pandoraTrackRange,
+  pandoraTrackClosestApproach,
+  pandoraTrackStoppingChi2,
+  dazzle,
+  pandoraShowerCosmicDist,
+  pandoraShowerSelectionVars,
+  razzle,
+  razzled,
+  vertexCharge,
+  vertexStub
+//  cnnid
+]
+
+physics.weight_paths: [
+  fluxweight
+  , geant4weight
+]
+
+physics.ana: [ hnlana ]
+
+physics.trigger_paths: [ reco2_sensible, weight_paths ]
+
+physics.end_paths: [ ana, stream1 ]
+
+#include "enable_spacecharge_services_sbnd.fcl"
+
+physics.producers.pandoraShower: @local::sbnd_sce_incremental_pandoraModularShowerCreation
+
+physics.producers.crtspacepointmatching.PFPModuleLabel:    "pandoraSCE"
+physics.producers.crttrackmatching.PFPModuleLabel:         "pandoraSCE"
+physics.producers.crumbs.PFParticleModuleLabel:            "pandoraSCE"
+physics.producers.crumbs.SliceModuleLabel:                 "pandoraSCE"
+physics.producers.dazzle.PFPLabel:                         "pandoraSCE"
+physics.producers.fmatch.PandoraProducer:                  "pandoraSCE"
+physics.producers.fmatch.SpacePointProducer:               "pandoraSCE"
+physics.producers.opt0finder.SliceProducer:                "pandoraSCE"
+physics.producers.pandoraShowerCosmicDist.PandoraLabel:    "pandoraSCE"
+physics.producers.pandoraShower.PFParticleLabel:           "pandoraSCE"
+physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
+physics.producers.pandoraTrack.PFParticleLabel:            "pandoraSCE"
+physics.producers.razzle.PFPLabel:                         "pandoraSCE"
+physics.producers.razzled.ClusterLabel:                    "pandoraSCE"
+physics.producers.razzled.DazzleLabel:                     "dazzle"
+physics.producers.razzled.RazzleLabel:                     "razzle"
+physics.producers.razzled.PFPLabel:                        "pandoraSCE"
+physics.producers.cnnid.ClusterModuleLabel:                "pandoraSCE" 
+physics.producers.cnnid.PFParticleModuleLabel:             "pandoraSCE" 
+
+physics.producers.pandora.SimChannelModuleLabel: "simtpc2d:simpleSC"
+physics.producers.dazzle.SimChannelLabel:        "simtpc2d:simpleSC"
+physics.producers.razzle.SimChannelLabel:        "simtpc2d:simpleSC"
+physics.producers.razzled.SimChannelLabel:       "simtpc2d:simpleSC"
+
+physics.producers.opt0finder.ShowerProducer:              "pandoraShower"
+physics.producers.pandoraShowerCosmicDist.ShowerLabel:    "pandoraShower"
+physics.producers.pandoraShowerSelectionVars.ShowerLabel: "pandoraShower"
+physics.producers.dazzle.ShowerLabel:        		  "pandoraShower"
+physics.producers.razzle.ShowerLabel:        		  "pandoraShower"
+physics.producers.razzled.ShowerLabel:       		  "pandoraShower"
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
+
+physics.producers.razzle.WeightFile:        "Razzle_BDTG_NCPiZeroAv12.weights.xml"
+physics.producers.dazzle.WeightFile:        "Dazzle_BDTG_NCPiZeroAv12.weights.xml"
+physics.producers.razzled.WeightFile:       "Razzled_BDTG_NCPiZeroAv12.weights.xml"
+
+physics.producers.crumbs.UseSimpleFlash:    false
+physics.producers.crumbs.UseOpT0Finder:     true
+physics.producers.crumbs.MVAFileName:       "CRUMBS_Inclusive_NCPiZeroAv12.weights.xml"
+physics.producers.crumbs.CCNuMuMVAFileName: "CRUMBS_CCNuMu_NCPiZeroAv12.weights.xml"
+physics.producers.crumbs.CCNuEMVAFileName:  "CRUMBS_CCNuE_NCPiZeroAv12.weights.xml"
+physics.producers.crumbs.NCMVAFileName:     "CRUMBS_NC_NCPiZeroAv12.weights.xml"
+
+physics.producers.vertexCharge.PFPLabel:	"pandoraSCE"
+physics.producers.vertexCharge.TrackLabel:	"pandoraTrack"
+physics.producers.vertexCharge.CaloAlg:		@local::sbnd_calorimetryalgmc
+
+physics.producers.vertexStub.PFPLabel:		"pandoraSCE"
+physics.producers.vertexStub.TrackLabel:	"pandoraTrack"
+physics.producers.vertexStub.CaloAlg:		@local::sbnd_calorimetryalgmc
+
+physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux

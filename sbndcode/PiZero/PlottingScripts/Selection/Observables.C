@@ -1,46 +1,15 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
-#include "Cuts.h"
-#include "Categories.h"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "Plots.h"
+#include "Selections.h"
+#include "Common.C"
 
-const double goalPOT     = 10e20;
-const double potPerSpill = 5e12;
-const double goalSpills  = goalPOT / potPerSpill;
-
-void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const std::vector<Cut> cuts = ncpizero_cuts,
-                 const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots);
-
-void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const Cut &selection = ncpizero_cuts[0],
-                 const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots);
-
-double GetPOT(TChain *subruns);
-int GetGenEvents(TChain *subruns);
-
-void RunMultiObservables()
+void Observables(const TString productionVersion, const SelectionParams &selectionParams, std::vector<Plot> &plots)
 {
-  Observables("NCPiZeroAv6", "ncpizero", ncpizero_cuts, ncpizero_categories, observables);
-}
-
-void Observables(const TString productionVersion, const TString saveDirExt = "tmp", const std::vector<Cut> cuts = ncpizero_cuts,
-                 const std::vector<Cut> &categories = selection_categories, std::vector<Plot> &plots = selection_plots)
-{
-  TCut totalCut = "";
-
-  for(auto const& cut : cuts)
-    totalCut += cut.cut;
-
-  Cut cut = { "full_selection", totalCut, "Full Selection" };
-
-  Observables(productionVersion, saveDirExt, cut, categories, plots);
-}
-void Observables(const TString productionVersion, const TString saveDirExt, const Cut &selection,
-                 const std::vector<Cut> &categories, std::vector<Plot> &plots)
-{
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/observables/" + saveDirExt;
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables/" + selectionParams.name;
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString intimeFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -50,69 +19,32 @@ void Observables(const TString productionVersion, const TString saveDirExt, cons
   TChain *intimeEvents = new TChain("ncpizeroana/events");
   intimeEvents->Add(intimeFile);
 
-  TChain *rockboxsubruns = new TChain("ncpizeroana/subruns");
-  rockboxsubruns->Add(rockboxFile);
-  TChain *intimesubruns = new TChain("ncpizeroana/subruns");
-  intimesubruns->Add(intimeFile);
+  TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
+  rockboxSubruns->Add(rockboxFile);
+  TChain *intimeSubruns = new TChain("ncpizeroana/subruns");
+  intimeSubruns->Add(intimeFile);
 
-  TString potString = Form(" (%g POT)", goalPOT);
-  potString.ReplaceAll("e+","x10^{");
-  potString.ReplaceAll(" POT","} POT");
-
-  const double rockboxPOT = GetPOT(rockboxsubruns);
-  const int rockboxSpills = GetGenEvents(rockboxsubruns);
-  const int intimeSpills  = GetGenEvents(intimesubruns);
-
-  const double rockboxScaling      = goalPOT / rockboxPOT;
-  const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
-  const double intimeScaling       = (goalSpills - scaledRockboxSpills) / intimeSpills;
+  double rockboxScaling, intimeScaling;
+  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
 
   std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling },
                                           { "intime", intimeEvents, intimeScaling }
   };
+
+  Cut cut = TotalCut(selectionParams.cuts);
 
   for(auto plot : plots)
     {
       TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
       canvas->cd();
 
-      plot.axes_labels += potString;
+      plot.axes_labels += POTString();
 
-      MakeStackedPlot(canvas, samples, plot, selection, categories, {.25, .8, .8, .87}, 4);
+      MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {.25, .8, .8, .87}, 4);
 
       canvas->SaveAs(saveDir + "/" + plot.name + ".png");
       canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
 
       delete canvas;
     }
-}
-
-double GetPOT(TChain *subruns)
-{
-  double sum = 0., pot = 0;
-
-  subruns->SetBranchAddress("pot", &pot);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += pot;
-    }
-
-  return sum;
-}
-
-int GetGenEvents(TChain *subruns)
-{
-  int sum = 0., ngenevts = 0;
-
-  subruns->SetBranchAddress("ngenevts", &ngenevts);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += ngenevts;
-    }
-
-  return sum;
 }

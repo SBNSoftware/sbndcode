@@ -22,6 +22,7 @@ add_subdirectory(Trigger)
 add_subdirectory(PiZero)
 add_subdirectory(PID)
 add_subdirectory(CosmicID)
+add_subdirectory(Geant4Reweight)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
@@ -41,5 +42,4 @@ add_subdirectory(WireCell)
 
 add_subdirectory(Decoders)
 add_subdirectory(ChannelMaps)
-
 add_subdirectory(HNLPi0)

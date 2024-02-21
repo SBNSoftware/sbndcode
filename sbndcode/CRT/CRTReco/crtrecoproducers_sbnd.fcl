@@ -20,6 +20,7 @@ crtclusterproducer_sbnd:
 
 crtclustercharacterisationalg_sbnd:
 {
+   UseT1:          true
    TimeOffset:     -1.7e6 # Sim parameter
    OverlapBuffer:  1.
    PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift

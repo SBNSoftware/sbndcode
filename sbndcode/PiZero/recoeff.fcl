@@ -1,0 +1,27 @@
+BEGIN_PROLOG
+
+recoeff:
+{
+  NuGenModuleLabel:      "generator"
+  LArGeantModuleLabel:   "largeant"
+  TrackModuleLabel:      "pandoraTrack"
+  ShowerModuleLabel:     "pandoraShower"
+  PFParticleModuleLabel: "pandoraSCE"
+  SliceModuleLabel:      "pandoraSCE"
+  HitsModuleLabel:       "gaushit"
+
+  ## Fiducial volume cuts from edges
+  XEdgeCut:         20
+  YEdgeCut:         20
+  ZFrontCut:        10
+  ZBackCut:         50
+  XEdgeCutShowers:  20
+  YEdgeCutShower:   20
+  ZFrontCutShowers: 10
+  ZBackCutShowers:  50
+  CathodeXCut:      5
+
+  module_type: RecoEff
+}
+
+END_PROLOG

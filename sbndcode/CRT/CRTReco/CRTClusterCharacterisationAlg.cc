@@ -4,7 +4,7 @@ namespace sbnd::crt {
   
   CRTClusterCharacterisationAlg::CRTClusterCharacterisationAlg(const fhicl::ParameterSet& pset)
     : fCRTGeoAlg(pset.get<fhicl::ParameterSet>("GeoAlg", fhicl::ParameterSet()))
-    , fUseT1(pset.get<bool>("UseT1", true))
+    , fUseT1(pset.get<bool>("UseT1"))
     , fTimeOffset(pset.get<double>("TimeOffset"))
     , fOverlapBuffer(pset.get<double>("OverlapBuffer"))
     , fPEAttenuation(pset.get<double>("PEAttenuation"))

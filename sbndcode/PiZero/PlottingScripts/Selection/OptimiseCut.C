@@ -1,36 +1,24 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
-#include "Cuts.h"
-#include "Categories.h"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "Plots.h"
-
-const double goalPOT     = 10e20;
-const double potPerSpill = 5e12;
-const double goalSpills  = goalPOT / potPerSpill;
+#include "Common.C"
+#include "Selections.h"
 
 void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut);
 
-double GetPOT(TChain *subruns);
-int GetGenEvents(TChain *subruns);
-
-void RunMultiOptimiseCut()
+void OptimiseCut(const TString productionVersion, const SelectionParams &selectionParams, Plot plot, const bool rej_cut)
 {
-  OptimiseCut("NCPiZeroAv4_1", "ncpizero", selection_plots[2], ncpizero_categories[0], ncpizero_cuts[2], false);
-  OptimiseCut("NCPiZeroAv4_1", "ncpizero_0p0pi", selection_plots[2], ncpizero_0p0pi_categories[0], ncpizero_0p0pi_cuts[2], false);
-  OptimiseCut("NCPiZeroAv4_1", "ncpizero_1p0pi", selection_plots[2], ncpizero_1p0pi_categories[0], ncpizero_1p0pi_cuts[2], false);
-  OptimiseCut("NCPiZeroAv4_1", "ncpizero_Np0pi", selection_plots[2], ncpizero_Np0pi_categories[0], ncpizero_Np0pi_cuts[2], false);
-  OptimiseCut("NCPiZeroAv4_1", "ncpizero_0pXpi", selection_plots[2], ncpizero_0pXpi_categories[0], ncpizero_0pXpi_cuts[2], false);
-  OptimiseCut("NCPiZeroAv4_1", "ncpizero_1pXpi", selection_plots[2], ncpizero_1pXpi_categories[0], ncpizero_1pXpi_cuts[2], false);
-  OptimiseCut("NCPiZeroAv4_1", "ncpizero_NpXpi", selection_plots[2], ncpizero_NpXpi_categories[0], ncpizero_NpXpi_cuts[2], false);
-  OptimiseCut("NCPiZeroAv4_1", "ccpizero", selection_plots[2], ccpizero_categories[0], ccpizero_cuts[2], false);
+  Cut cut = TotalCut(selectionParams.cuts);
+
+  OptimiseCut(productionVersion, selectionParams.name, plot, selectionParams.categories[0], cut, rej_cut);
 }
 
 void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/cut_optimisation/" + saveDirExt;
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/cut_optimisation/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString intimeFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -40,22 +28,17 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   TChain *intimeEvents = new TChain("ncpizeroana/events");
   intimeEvents->Add(intimeFile);
 
-  TChain *rockboxsubruns = new TChain("ncpizeroana/subruns");
-  rockboxsubruns->Add(rockboxFile);
-  TChain *intimesubruns = new TChain("ncpizeroana/subruns");
-  intimesubruns->Add(intimeFile);
+  TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
+  rockboxSubruns->Add(rockboxFile);
+  TChain *intimeSubruns = new TChain("ncpizeroana/subruns");
+  intimeSubruns->Add(intimeFile);
 
-  const double rockboxPOT = GetPOT(rockboxsubruns);
-  const int rockboxSpills = GetGenEvents(rockboxsubruns);
-  const int intimeSpills  = GetGenEvents(intimesubruns);
+  double rockboxScaling, intimeScaling;
+  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
 
-  const double rockboxScaling      = goalPOT / rockboxPOT;
-  const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
-  const double intimeScaling       = (goalSpills - scaledRockboxSpills) / intimeSpills;
-
-  TH1F* hSig     = new TH1F("Sig", plot.axes_labels, plot.nbins * 2, plot.xlow, plot.xhigh);
-  TH1F* hBackNu  = new TH1F("BackNu", plot.axes_labels, plot.nbins * 2, plot.xlow, plot.xhigh);
-  TH1F* hBackCos = new TH1F("BackCos", plot.axes_labels, plot.nbins * 2, plot.xlow, plot.xhigh);
+  TH1F* hSig     = new TH1F("Sig", plot.axes_labels, plot.nbins * 10, plot.xlow, plot.xhigh);
+  TH1F* hBackNu  = new TH1F("BackNu", plot.axes_labels, plot.nbins * 10, plot.xlow, plot.xhigh);
+  TH1F* hBackCos = new TH1F("BackCos", plot.axes_labels, plot.nbins * 10, plot.xlow, plot.xhigh);
 
   rockboxEvents->Draw(plot.var + ">>Sig", signal_def.cut + base_cut.cut);
   rockboxEvents->Draw(plot.var + ">>BackNu", !signal_def.cut + base_cut.cut);
@@ -67,8 +50,6 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
 
   TH1F* hBack = (TH1F*) hBackNu->Clone();
   hBack->Add(hBackCos);
-  std::cout << signal_def.name << std::endl;
-  std::cout << base_cut.name << std::endl;
 
   const double totalSignal = rockboxScaling * rockboxEvents->Draw("", signal_def.cut);
   const double initSignal  = rockboxScaling * rockboxEvents->Draw("", signal_def.cut + base_cut.cut);
@@ -102,9 +83,6 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
       const float ep  = eff * pur / 100;
       const float cut = rej_cut ? hSig->GetBinLowEdge(i) : hSig->GetBinLowEdge(i) + hSig->GetBinWidth(i);
 
-      std::cout << "Cut: " << cut << " Signal: " << accumSignal << " Back: " << accumBack << std::endl;
-      std::cout << "\tEff: " << eff << " Pur: " << pur << " Eff*Pur: " << ep << std::endl;
-
       if(ep > maxEP)
         {
           maxEP = ep;
@@ -128,11 +106,13 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
         ++i;
     }
 
+  std::cout << "Optimal Cut: " << optimal_cut << " (Eff x Pur: " << maxEP << ")" << std::endl;
+
   TLine *line = new TLine(optimal_cut, 0, optimal_cut, 110);
   line->SetLineStyle(9);
   line->SetLineWidth(3);
 
-  TPaveText *pt = new TPaveText(.26, .38, .5, .43, "NDC");
+  TPaveText *pt = new TPaveText(.25, .68, .5, .75, "NDC");
   pt->AddText(Form("Optimal Cut: %.4f", optimal_cut));
   pt->AddText(Form("Efficiency x Purity: %.2f %%", maxEP));
   pt->SetTextColor(kBlack);
@@ -142,52 +122,30 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   pt->SetLineWidth(0);
   pt->SetTextAlign(11);
 
-  TLegend *leg = new TLegend(.23, .45, .5, .55);
+  TLegend *leg = new TLegend(.25, .77, .85, .82);
   leg->AddEntry(gSelEff, "Efficiency", "p");
   leg->AddEntry(gPur, "Purity", "p");
   leg->AddEntry(gEP, "Efficiency x Purity", "p");
+  leg->SetNColumns(3);
 
   TCanvas *c = new TCanvas("c", "c");
   c->SetTopMargin(.15);
   gSelEff->Draw("AP");
   gSelEff->SetMinimum(0);
-  gSelEff->SetMaximum(110);
+  if(max>80)
+    gSelEff->SetMaximum(130);
+  else
+    gSelEff->SetMaximum(110);
   gPur->Draw("Psame");
   gEP->Draw("Psame");
   line->Draw();
   pt->Draw();
   leg->Draw();
 
-  c->SaveAs(saveDir + "/" + plot.name + ".png");
-  c->SaveAs(saveDir + "/" + plot.name + ".pdf");
-}
+  TString name = plot.name;
+  if(rej_cut)
+    name += "_reverse";
 
-double GetPOT(TChain *subruns)
-{
-  double sum = 0., pot = 0;
-
-  subruns->SetBranchAddress("pot", &pot);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += pot;
-    }
-
-  return sum;
-}
-
-int GetGenEvents(TChain *subruns)
-{
-  int sum = 0., ngenevts = 0;
-
-  subruns->SetBranchAddress("ngenevts", &ngenevts);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += ngenevts;
-    }
-
-  return sum;
+  c->SaveAs(saveDir + "/" + name + ".png");
+  c->SaveAs(saveDir + "/" + name + ".pdf");
 }

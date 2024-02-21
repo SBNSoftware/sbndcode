@@ -5,25 +5,25 @@ void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_
 
 void Compare()
 {
-  Compare(razzled_trainings, "electron", 11);
-  Compare(razzled_trainings, "muon", 13);
-  Compare(razzled_trainings, "photon", 22);
-  Compare(razzled_trainings, "pizero_photon", 22, 111);
-  Compare(razzled_trainings, "pion", 211);
-  Compare(razzled_trainings, "proton", 2212);
+  Compare(razzled_v12_trainings, "electron", 11);
+  Compare(razzled_v12_trainings, "muon", 13);
+  Compare(razzled_v12_trainings, "photon", 22);
+  Compare(razzled_v12_trainings, "pizero_photon", 22, 111);
+  Compare(razzled_v12_trainings, "pion", 211);
+  Compare(razzled_v12_trainings, "proton", 2212);
 
-  Compare(razzled_trainings, "electron_high_quality", 11, -1, 0.8, 0.8);
-  Compare(razzled_trainings, "muon_high_quality", 13, -1, 0.8, 0.8);
-  Compare(razzled_trainings, "photon_high_quality", 22, -1, 0.8, 0.8);
-  Compare(razzled_trainings, "pizero_photon_high_quality", 22, 111, 0.8, 0.8);
-  Compare(razzled_trainings, "pion_high_quality", 211, -1, 0.8, 0.8);
-  Compare(razzled_trainings, "proton_high_quality", 2212, -1, 0.8, 0.8);
+  Compare(razzled_v12_trainings, "electron_high_quality", 11, -1, 0.8, 0.8);
+  Compare(razzled_v12_trainings, "muon_high_quality", 13, -1, 0.8, 0.8);
+  Compare(razzled_v12_trainings, "photon_high_quality", 22, -1, 0.8, 0.8);
+  Compare(razzled_v12_trainings, "pizero_photon_high_quality", 22, 111, 0.8, 0.8);
+  Compare(razzled_v12_trainings, "pion_high_quality", 211, -1, 0.8, 0.8);
+  Compare(razzled_v12_trainings, "proton_high_quality", 2212, -1, 0.8, 0.8);
 }
 
 void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_suffix,
              const int pdg, const int motherPDG, const double purThresh, const double compThresh)
 {
-  const TString save_dir = "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled_lower_track_length_threshold/comparisons";
+  const TString save_dir = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzled/comparisons";
   gSystem->Exec("mkdir -p " + save_dir);
   gSystem->Exec("mkdir -p " + save_dir + "/sep");
 
@@ -31,9 +31,9 @@ void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_
   gROOT->ForceStyle();
 
   TChain *pfps = new TChain("razzled/pfpTree");
-  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_rockbox.root");
-  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intrnue.root");
-  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv2/NCPiZeroAv2_intime.root");
+  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_rockbox.root");
+  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_intrnue.root");
+  pfps->Add("/pnfs/sbnd/persistent/users/hlay/ncpizero/NCPiZeroAv12/NCPiZeroAv12_intime.root");
 
   int truePDG, trueMotherPDG, recoPDG;
   float energyComp, energyPurity, trackStartX, trackStartY, trackStartZ,
@@ -112,7 +112,10 @@ void Compare(const std::vector<PIDTraining> &trainings, const TString save_file_
           reader->AddVariable("shw_convGap", &shw_convGap);
           reader->AddVariable("shw_openAngle", &shw_openAngle);
           reader->AddVariable("shw_modHitDensity", &shw_modHitDensity);
-          reader->AddVariable("shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
+          if(training.name == "razzled_v12")
+            reader->AddVariable("shw_sqrtEnergyDensity>2.5?2.5:shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
+          else
+            reader->AddVariable("shw_sqrtEnergyDensity", &shw_sqrtEnergyDensity);
         }
       else if(training.razzle)
         {

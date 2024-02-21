@@ -1,5 +1,6 @@
 #include "simulationservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
+#include "reco_sbnd.fcl"
 
 process_name: HNLPiZeroAnalyzer
 
@@ -20,13 +21,13 @@ physics:
 {
 	analyzers:
 	{
-		hnlpizeroana: 
+		hnlana: 
 		{
 			module_type: "HNLPiZeroAnalysis"
 		}
 	}
 
-	ana: [hnlpizeroana]
+	ana: [hnlana]
 	
 	end_paths: [ana]
 }

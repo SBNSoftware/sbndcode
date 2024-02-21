@@ -1,0 +1,8 @@
+#include "reco2_sensible_HNLPiZeroAna.fcl"
+
+physics.weight_paths: []
+
+physics.analyzers.hnlana.EventWeightModuleLabels: []
+physics.analyzers.hnlana.Genie: false 
+physics.analyzers.hnlana.BeamOff: true
+physics.analyzers.hnlana.MeVPrtl: false

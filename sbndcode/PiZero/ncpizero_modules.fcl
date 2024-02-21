@@ -1,0 +1,49 @@
+BEGIN_PROLOG
+
+ncpizeroana:
+{
+  MCParticleModuleLabel:       "largeant"
+  SliceModuleLabel:            "pandoraSCE"
+  PFParticleModuleLabel:       "pandoraSCE"
+  VertexModuleLabel:           "pandoraSCE"
+  HitModuleLabel:              "gaushit"
+  TrackModuleLabel:            "pandoraTrack"
+  ShowerModuleLabel:           "pandoraShower"
+  TrackCalorimetryModuleLabel: "pandoraCalo"
+  CRUMBSModuleLabel:           "crumbs"
+  DazzleModuleLabel:           "dazzle"
+  CaloModuleLabel:             "pandoraCalo"
+  MCSModuleLabel:              "pandoraTrackMCS:muon"
+  Chi2ModuleLabel:             "pandoraPid"
+  RangeModuleLabel:            "pandoraTrackRange:muon"
+  ClosestApproachModuleLabel:  "pandoraTrackClosestApproach"
+  StoppingChi2ModuleLabel:     "pandoraTrackStoppingChi2"
+  RazzleModuleLabel:           "razzle"
+  CosmicDistModuleLabel:       "pandoraShowerCosmicDist"
+  ShowerTrackFitModuleLabel:   "pandoraShowerSelectionVars"
+  ShowerDensityFitModuleLabel: "pandoraShowerSelectionVars"
+  POTModuleLabel:              "generator"
+  OpT0ModuleLabel:             "opt0finder"
+  RazzledModuleLabel:          "razzled"
+  SpacePointModuleLabel:       "pandoraSCE"
+  EventWeightModuleLabels:     [ "fluxweight", "systtools", "geant4weight" ]
+
+  SecondShowerFinderAlg:
+  {
+    MinClusterHits:   10
+    MaxHitSeparation: 0.9
+  }
+
+  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroAv12.root"
+
+  module_type: NCPiZeroAnalysis
+}
+
+ncpizerofilter:
+{
+  MCTruthModuleLabel: "generator"
+
+  module_type:        NCPiZeroFilter
+}
+
+END_PROLOG

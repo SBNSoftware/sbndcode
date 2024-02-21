@@ -21,8 +21,11 @@
 #include "canvas/Persistency/Provenance/ProcessHistory.h"
 
 #include "TTree.h"
+#include "TProfile.h"
+#include "TFile.h"
 
 #include "nusimdata/SimulationBase/MCParticle.h"
+#include "nurandom/RandomUtils/NuRandomService.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
@@ -60,6 +63,9 @@
 
 #include <numeric>
 
+#include "CLHEP/Random/RandEngine.h"
+#include "CLHEP/Random/RandGauss.h"
+
 constexpr int def_int       = std::numeric_limits<int>::min();
 constexpr size_t def_size   = std::numeric_limits<size_t>::max();
 constexpr float def_float   = -std::numeric_limits<float>::max();
@@ -93,8 +99,6 @@ public:
   void SetupMaps(const art::Event &e, const art::Handle<std::vector<recob::Hit>> &hitHandle,
                  const art::Handle<std::vector<recob::PFParticle>> &pfpHandle);
 
-  int GetTotalGenEvents(const art::Event &e);
-
   void SetupBranches(VecVarMap &map);
 
   void ResizeVectors(VecVarMap &map, const int size);
@@ -111,7 +115,8 @@ public:
   void AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                      const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
                      const art::Handle<std::vector<recob::Track>> &trackHandle,
-                     const art::Handle<std::vector<recob::Shower>> &showerHandle);
+                     const art::Handle<std::vector<recob::Shower>> &showerHandle,
+                     const art::Handle<std::vector<recob::Hit>> &hitHandle);
 
   void AnalysePFPs(const art::Event &e, const art::Ptr<recob::PFParticle> &prim, const std::vector<art::Ptr<recob::PFParticle>> &pfps,
                    const std::vector<art::Ptr<recob::Hit>> &sliceHits, const art::Ptr<recob::Vertex> &vtx, const int slcCounter,
@@ -123,7 +128,8 @@ public:
                      const art::Handle<std::vector<recob::Shower>> &showerHandle, const art::Ptr<recob::Vertex> &vtx,
                      const std::vector<art::Ptr<recob::Hit>> &hits);
   void AnalyseSliceTruth(const art::Event &e, const art::Ptr<recob::Slice> &slc, const int slcCounter,
-                         const art::Handle<std::vector<recob::Slice>> &sliceHandle);
+                         const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+                         const art::Handle<std::vector<recob::Hit>> &hitHandle);
 
   void ExtractDazzle(const art::Ptr<sbn::MVAPID> &dazzle, const int slcCounter, const int pfpCounter);
   void ExtractCalo(const art::Ptr<anab::Calorimetry> &calo, const int slcCounter, const int pfpCounter);
@@ -137,13 +143,16 @@ public:
 
   void ExtractRazzled(const art::Ptr<sbn::MVAPID> &razzled, const int slcCounter, const int pfpCounter);
 
+  void SliceContainment(const int slcCounter);
+
   void SelectSlice(const int counter);
 
   void ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,
                                const int counter, const std::vector<int> slc_ids);
 
   void ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
-                              const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1);
+                              const TVector3 &shwDir0, const TVector3 &shwDir1, const TVector3 &trkDir0, const TVector3 &trkDir1,
+                              const double &en0, const double &en1, const double &en0Corr, const double &en1Corr);
 
   void ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter);
 
@@ -153,14 +162,18 @@ public:
   bool VolumeCheck(const geo::Point_t &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
   bool VolumeCheck(const TVector3 &pos, const double &walls = 0., const double &cath = 0., const double &front = 0., const double &back = 0.);
 
+  int GetTotalGenEvents(const art::Event &e);
+
+  art::Ptr<recob::PFParticle> GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfps);
+
+  double CorrectEnergy(const double &energy);
+
   template<typename T>
   void FillElement(VecVar *vec, const int pos, const T value);
   template<typename T>
   void FillElement(VecVar *vec, const int posA, const int posB, const T value);
   template<typename T>
   void FillElement(VecVar *vec, const int pos, const std::vector<T> &value);
-
-  art::Ptr<recob::PFParticle> GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfps);
 
   void TransferElement(VecVar *var, VecVarMap &vars, const std::string prefixA, const std::string prefixB, const int posA, const int posB);
   void TransferElement(VecVar *var, VecVarMap &vars, const std::string prefixA, const std::string prefixB,
@@ -179,7 +192,7 @@ public:
 
 private:
 
-  SecondShowerFinderAlg fSecondShowerFinderAlg;
+  CLHEP::HepRandomEngine& fRandomEngine;
 
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
@@ -192,9 +205,15 @@ private:
     fSpacePointModuleLabel;
   std::vector<art::InputTag> fEventWeightModuleLabels;
   bool fDebug, fBeamOff;
+  fhicl::ParameterSet fSecondShowerFinderAlgParams;
+
+  SecondShowerFinderAlg fSecondShowerFinderAlg;
+
+  std::string fShowerEnergyCorrectionFileName;
+  TProfile* fShowerEnergyCorrectionHist;
 
   std::map<int, int> fHitsMap;
-  std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap;
+  std::map<const art::Ptr<simb::MCTruth>, int> fNuHitsMap, fNuHitsMapSP;
   std::map<int, art::Ptr<recob::PFParticle>> fPFPMap;
   std::map<int, std::set<art::Ptr<recob::PFParticle>>> fRecoPFPMap;
 
@@ -252,16 +271,27 @@ private:
     { "nu_pz_two_gamma_decay", new InhVecVecVar<bool>("nu_pz_two_gamma_decay") },
     { "nu_pz_gamma0_trackid", new InhVecVecVar<int>("nu_pz_gamma0_trackid") },
     { "nu_pz_gamma0_n_hits", new InhVecVecVar<int>("nu_pz_gamma0_n_hits") },
-    { "nu_pz_gamma1_trackid", new InhVecVecVar<int>("nu_pz_gamma1_trackid") },
-    { "nu_pz_gamma1_n_hits", new InhVecVecVar<int>("nu_pz_gamma1_n_hits") },
+    { "nu_pz_gamma0_energy", new InhVecVecVar<double>("nu_pz_gamma0_energy") },
+    { "nu_pz_gamma0_dir_x", new InhVecVecVar<double>("nu_pz_gamma0_dir_x") },
+    { "nu_pz_gamma0_dir_y", new InhVecVecVar<double>("nu_pz_gamma0_dir_y") },
+    { "nu_pz_gamma0_dir_z", new InhVecVecVar<double>("nu_pz_gamma0_dir_z") },
     { "nu_pz_gamma0_best_pfp_comp", new InhVecVecVar<float>("nu_pz_gamma0_best_pfp_comp") },
     { "nu_pz_gamma0_best_pfp_pur", new InhVecVecVar<float>("nu_pz_gamma0_best_pfp_pur") },
     { "nu_pz_gamma0_best_pfp_pdg", new InhVecVecVar<int>("nu_pz_gamma0_best_pfp_pdg") },
+    { "nu_pz_gamma0_best_pfp_shower_razzle_pdg", new InhVecVecVar<int>("nu_pz_gamma0_best_pfp_shower_razzle_pdg") },
     { "nu_pz_gamma0_best_pfp_razzled_pdg", new InhVecVecVar<int>("nu_pz_gamma0_best_pfp_razzled_pdg") },
+    { "nu_pz_gamma1_trackid", new InhVecVecVar<int>("nu_pz_gamma1_trackid") },
+    { "nu_pz_gamma1_n_hits", new InhVecVecVar<int>("nu_pz_gamma1_n_hits") },
+    { "nu_pz_gamma1_energy", new InhVecVecVar<double>("nu_pz_gamma1_energy") },
+    { "nu_pz_gamma1_dir_x", new InhVecVecVar<double>("nu_pz_gamma1_dir_x") },
+    { "nu_pz_gamma1_dir_y", new InhVecVecVar<double>("nu_pz_gamma1_dir_y") },
+    { "nu_pz_gamma1_dir_z", new InhVecVecVar<double>("nu_pz_gamma1_dir_z") },
     { "nu_pz_gamma1_best_pfp_comp", new InhVecVecVar<float>("nu_pz_gamma1_best_pfp_comp") },
     { "nu_pz_gamma1_best_pfp_pur", new InhVecVecVar<float>("nu_pz_gamma1_best_pfp_pur") },
     { "nu_pz_gamma1_best_pfp_pdg", new InhVecVecVar<int>("nu_pz_gamma1_best_pfp_pdg") },
+    { "nu_pz_gamma1_best_pfp_shower_razzle_pdg", new InhVecVecVar<int>("nu_pz_gamma1_best_pfp_shower_razzle_pdg") },
     { "nu_pz_gamma1_best_pfp_razzled_pdg", new InhVecVecVar<int>("nu_pz_gamma1_best_pfp_razzled_pdg") },
+    { "nu_pz_open_angle", new InhVecVecVar<double>("nu_pz_open_angle")},
     { "nu_best_slc_comp", new InhVecVar<float>("nu_best_slc_comp") },
     { "nu_best_slc_pur", new InhVecVar<float>("nu_best_slc_pur") },
     { "nu_best_slc_is_clear_cosmic", new InhVecVar<bool>("nu_best_slc_is_clear_cosmic") },
@@ -292,6 +322,21 @@ private:
     { "nu_best_slc_best_pzc_cos_theta_pizero", new InhVecVar<double>("nu_best_slc_best_pzc_cos_theta_pizero") },
     { "nu_best_slc_best_pzc_cos_com", new InhVecVar<double>("nu_best_slc_best_pzc_cos_com") },
     { "nu_best_slc_best_pzc_decay_asymmetry", new InhVecVar<double>("nu_best_slc_best_pzc_decay_asymmetry") },
+    { "nu_best_slc_best_pzc_invariant_mass_corr", new InhVecVar<double>("nu_best_slc_best_pzc_invariant_mass_corr") },
+    { "nu_best_slc_best_pzc_pizero_mom_corr", new InhVecVar<double>("nu_best_slc_best_pzc_pizero_mom_corr") },
+    { "nu_best_slc_best_pzc_cos_theta_pizero_corr", new InhVecVar<double>("nu_best_slc_best_pzc_cos_theta_pizero_corr") },
+    { "nu_best_slc_best_pzc_cos_com_corr", new InhVecVar<double>("nu_best_slc_best_pzc_cos_com_corr") },
+    { "nu_best_slc_best_pzc_decay_asymmetry_corr", new InhVecVar<double>("nu_best_slc_best_pzc_decay_asymmetry_corr") },
+    { "nu_best_slc_best_corr_pzc_invariant_mass", new InhVecVar<double>("nu_best_slc_best_corr_pzc_invariant_mass") },
+    { "nu_best_slc_best_corr_pzc_pizero_mom", new InhVecVar<double>("nu_best_slc_best_corr_pzc_pizero_mom") },
+    { "nu_best_slc_best_corr_pzc_cos_theta_pizero", new InhVecVar<double>("nu_best_slc_best_corr_pzc_cos_theta_pizero") },
+    { "nu_best_slc_best_corr_pzc_cos_com", new InhVecVar<double>("nu_best_slc_best_corr_pzc_cos_com") },
+    { "nu_best_slc_best_corr_pzc_decay_asymmetry", new InhVecVar<double>("nu_best_slc_best_corr_pzc_decay_asymmetry") },
+    { "nu_best_slc_best_corr_pzc_invariant_mass_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_invariant_mass_corr") },
+    { "nu_best_slc_best_corr_pzc_pizero_mom_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_pizero_mom_corr") },
+    { "nu_best_slc_best_corr_pzc_cos_theta_pizero_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_cos_theta_pizero_corr") },
+    { "nu_best_slc_best_corr_pzc_cos_com_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_cos_com_corr") },
+    { "nu_best_slc_best_corr_pzc_decay_asymmetry_corr", new InhVecVar<double>("nu_best_slc_best_corr_pzc_decay_asymmetry_corr") },
   };
 
   int _n_slc;
@@ -307,6 +352,10 @@ private:
     { "slc_n_primary_children", new InhVecVar<int>("slc_n_primary_children") },
     { "slc_n_trks", new InhVecVar<int>("slc_n_trks") },
     { "slc_n_shws", new InhVecVar<int>("slc_n_shws") },
+    { "slc_all_trks_contained", new InhVecVar<bool>("slc_all_trks_contained") },
+    { "slc_all_shws_contained", new InhVecVar<bool>("slc_all_shws_contained") },
+    { "slc_all_other_trks_contained", new InhVecVar<bool>("slc_all_other_trks_contained") },
+    { "slc_all_other_shws_contained", new InhVecVar<bool>("slc_all_other_shws_contained") },
     { "slc_n_dazzle_muons", new InhVecVar<int>("slc_n_dazzle_muons") },
     { "slc_n_dazzle_pions", new InhVecVar<int>("slc_n_dazzle_pions") },
     { "slc_n_dazzle_pions_thresh", new InhVecVar<int>("slc_n_dazzle_pions_thresh") },
@@ -325,6 +374,10 @@ private:
     { "slc_n_razzled_protons_thresh", new InhVecVar<int>("slc_n_razzled_protons_thresh") },
     { "slc_n_primary_trks", new InhVecVar<int>("slc_n_primary_trks") },
     { "slc_n_primary_shws", new InhVecVar<int>("slc_n_primary_shws") },
+    { "slc_all_primary_trks_contained", new InhVecVar<bool>("slc_all_primary_trks_contained") },
+    { "slc_all_primary_shws_contained", new InhVecVar<bool>("slc_all_primary_shws_contained") },
+    { "slc_all_other_primary_trks_contained", new InhVecVar<bool>("slc_all_other_primary_trks_contained") },
+    { "slc_all_other_primary_shws_contained", new InhVecVar<bool>("slc_all_other_primary_shws_contained") },
     { "slc_n_primary_dazzle_muons", new InhVecVar<int>("slc_n_primary_dazzle_muons") },
     { "slc_n_primary_dazzle_pions", new InhVecVar<int>("slc_n_primary_dazzle_pions") },
     { "slc_n_primary_dazzle_pions_thresh", new InhVecVar<int>("slc_n_primary_dazzle_pions_thresh") },
@@ -349,7 +402,9 @@ private:
     { "slc_true_event_type_Xp0pi", new InhVecVar<int>("slc_true_event_type_Xp0pi") },
     { "slc_true_signal", new InhVecVar<bool>("slc_true_signal") },
     { "slc_comp", new InhVecVar<float>("slc_comp") },
+    { "slc_comp_sp_only", new InhVecVar<float>("slc_comp_sp_only") },
     { "slc_pur", new InhVecVar<float>("slc_pur") },
+    { "slc_pur_sp_only", new InhVecVar<float>("slc_pur_sp_only") },
     { "slc_true_en_dep", new InhVecVar<float>("slc_true_en_dep") },
     { "slc_true_pdg", new InhVecVar<int>("slc_true_pdg") },
     { "slc_true_ccnc", new InhVecVar<int>("slc_true_ccnc") },
@@ -383,8 +438,17 @@ private:
     { "slc_true_pz_two_gamma_decay", new InhVecVecVar<bool>("slc_true_pz_two_gamma_decay") },
     { "slc_true_pz_gamma0_trackid", new InhVecVecVar<int>("slc_true_pz_gamma0_trackid") },
     { "slc_true_pz_gamma0_n_hits", new InhVecVecVar<int>("slc_true_pz_gamma0_n_hits") },
+    { "slc_true_pz_gamma0_energy", new InhVecVecVar<double>("slc_true_pz_gamma0_energy") },
+    { "slc_true_pz_gamma0_dir_x", new InhVecVecVar<double>("slc_true_pz_gamma0_dir_x") },
+    { "slc_true_pz_gamma0_dir_y", new InhVecVecVar<double>("slc_true_pz_gamma0_dir_y") },
+    { "slc_true_pz_gamma0_dir_z", new InhVecVecVar<double>("slc_true_pz_gamma0_dir_z") },
     { "slc_true_pz_gamma1_trackid", new InhVecVecVar<int>("slc_true_pz_gamma1_trackid") },
     { "slc_true_pz_gamma1_n_hits", new InhVecVecVar<int>("slc_true_pz_gamma1_n_hits") },
+    { "slc_true_pz_gamma1_energy", new InhVecVecVar<double>("slc_true_pz_gamma1_energy") },
+    { "slc_true_pz_gamma1_dir_x", new InhVecVecVar<double>("slc_true_pz_gamma1_dir_x") },
+    { "slc_true_pz_gamma1_dir_y", new InhVecVecVar<double>("slc_true_pz_gamma1_dir_y") },
+    { "slc_true_pz_gamma1_dir_z", new InhVecVecVar<double>("slc_true_pz_gamma1_dir_z") },
+    { "slc_true_pz_open_angle", new InhVecVecVar<double>("slc_true_pz_open_angle")},
     { "slc_vtx_x", new InhVecVar<double>("slc_vtx_x") },
     { "slc_vtx_y", new InhVecVar<double>("slc_vtx_y") },
     { "slc_vtx_z", new InhVecVar<double>("slc_vtx_z") },
@@ -397,6 +461,7 @@ private:
     { "slc_opt0_score", new InhVecVar<double>("slc_opt0_score") },
     { "slc_opt0_measPE", new InhVecVar<double>("slc_opt0_measPE") },
     { "slc_opt0_hypPE", new InhVecVar<double>("slc_opt0_hypPE") },
+    { "slc_opt0_fracPE", new InhVecVar<double>("slc_opt0_fracPE") },
     { "slc_pfp_id", new InhVecVecVar<size_t>("slc_pfp_id") },
     { "slc_pfp_primary", new InhVecVecVar<bool>("slc_pfp_primary") },
     { "slc_pfp_primary_child", new InhVecVecVar<bool>("slc_pfp_primary_child") },
@@ -408,6 +473,7 @@ private:
     { "slc_pfp_true_trackid", new InhVecVecVar<int>("slc_pfp_true_trackid") },
     { "slc_pfp_true_pdg", new InhVecVecVar<int>("slc_pfp_true_pdg") },
     { "slc_pfp_true_energy", new InhVecVecVar<double>("slc_pfp_true_energy") },
+    { "slc_pfp_true_ke", new InhVecVecVar<double>("slc_pfp_true_ke") },
     { "slc_pfp_true_p_x", new InhVecVecVar<double>("slc_pfp_true_p_x") },
     { "slc_pfp_true_p_y", new InhVecVecVar<double>("slc_pfp_true_p_y") },
     { "slc_pfp_true_p_z", new InhVecVecVar<double>("slc_pfp_true_p_z") },
@@ -421,6 +487,7 @@ private:
     { "slc_pfp_track_dir_x", new InhVecVecVar<double>("slc_pfp_track_dir_x") },
     { "slc_pfp_track_dir_y", new InhVecVecVar<double>("slc_pfp_track_dir_y") },
     { "slc_pfp_track_dir_z", new InhVecVecVar<double>("slc_pfp_track_dir_z") },
+    { "slc_pfp_track_contained", new InhVecVecVar<bool>("slc_pfp_track_contained") },
     { "slc_pfp_track_length", new InhVecVecVar<double>("slc_pfp_track_length") },
     { "slc_pfp_track_dazzle_muon_score", new InhVecVecVar<float>("slc_pfp_track_dazzle_muon_score") },
     { "slc_pfp_track_dazzle_pion_score", new InhVecVecVar<float>("slc_pfp_track_dazzle_pion_score") },
@@ -448,9 +515,12 @@ private:
     { "slc_pfp_shower_dir_x", new InhVecVecVar<double>("slc_pfp_shower_dir_x") },
     { "slc_pfp_shower_dir_y", new InhVecVecVar<double>("slc_pfp_shower_dir_y") },
     { "slc_pfp_shower_dir_z", new InhVecVecVar<double>("slc_pfp_shower_dir_z") },
+    { "slc_pfp_shower_contained", new InhVecVecVar<bool>("slc_pfp_shower_contained") },
     { "slc_pfp_shower_length", new InhVecVecVar<double>("slc_pfp_shower_length") },
     { "slc_pfp_shower_open_angle", new InhVecVecVar<double>("slc_pfp_shower_open_angle") },
     { "slc_pfp_shower_energy", new InhVecVecVar<double>("slc_pfp_shower_energy") },
+    { "slc_pfp_shower_energy_coll", new InhVecVecVar<double>("slc_pfp_shower_energy_coll") },
+    { "slc_pfp_shower_energy_corr", new InhVecVecVar<double>("slc_pfp_shower_energy_corr") },
     { "slc_pfp_shower_dedx", new InhVecVecVar<double>("slc_pfp_shower_dedx") },
     { "slc_pfp_shower_sqrt_energy_density", new InhVecVecVar<double>("slc_pfp_shower_sqrt_energy_density") },
     { "slc_pfp_shower_modified_hit_density", new InhVecVecVar<double>("slc_pfp_shower_modified_hit_density") },
@@ -470,14 +540,20 @@ private:
     { "slc_pfp_razzled_proton_score", new InhVecVecVar<float>("slc_pfp_razzled_proton_score") },
     { "slc_pfp_razzled_pdg", new InhVecVecVar<int>("slc_pfp_razzled_pdg") },
     { "slc_n_pzcs", new InhVecVar<size_t>("slc_n_pzcs") },
-    { "slc_pzc_photon_0_id", new InhVecVecVar<int>("slc_pzc_photon_0_id") },
-    { "slc_pzc_photon_1_id", new InhVecVecVar<int>("slc_pzc_photon_1_id") },
+    { "slc_pzc_photon_0_id", new InhVecVecVar<size_t>("slc_pzc_photon_0_id") },
+    { "slc_pzc_photon_1_id", new InhVecVecVar<size_t>("slc_pzc_photon_1_id") },
     { "slc_pzc_good_kinematics", new InhVecVecVar<bool>("slc_pzc_good_kinematics") },
     { "slc_pzc_invariant_mass", new InhVecVecVar<double>("slc_pzc_invariant_mass") },
     { "slc_pzc_pizero_mom", new InhVecVecVar<double>("slc_pzc_pizero_mom") },
     { "slc_pzc_cos_theta_pizero", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero") },
     { "slc_pzc_cos_com", new InhVecVecVar<double>("slc_pzc_cos_com") },
     { "slc_pzc_decay_asymmetry", new InhVecVecVar<double>("slc_pzc_decay_asymmetry") },
+    { "slc_pzc_good_kinematics_corr", new InhVecVecVar<bool>("slc_pzc_good_kinematics_corr") },
+    { "slc_pzc_invariant_mass_corr", new InhVecVecVar<double>("slc_pzc_invariant_mass_corr") },
+    { "slc_pzc_pizero_mom_corr", new InhVecVecVar<double>("slc_pzc_pizero_mom_corr") },
+    { "slc_pzc_cos_theta_pizero_corr", new InhVecVecVar<double>("slc_pzc_cos_theta_pizero_corr") },
+    { "slc_pzc_cos_com_corr", new InhVecVecVar<double>("slc_pzc_cos_com_corr") },
+    { "slc_pzc_decay_asymmetry_corr", new InhVecVecVar<double>("slc_pzc_decay_asymmetry_corr") },
     { "slc_pzc_photon_0_true_trackid", new InhVecVecVar<int>("slc_pzc_photon_0_true_trackid") },
     { "slc_pzc_photon_0_true_pdg", new InhVecVecVar<int>("slc_pzc_photon_0_true_pdg") },
     { "slc_pzc_photon_0_comp", new InhVecVecVar<float>("slc_pzc_photon_0_comp") },
@@ -486,14 +562,32 @@ private:
     { "slc_pzc_photon_1_true_pdg", new InhVecVecVar<int>("slc_pzc_photon_1_true_pdg") },
     { "slc_pzc_photon_1_comp", new InhVecVecVar<float>("slc_pzc_photon_1_comp") },
     { "slc_pzc_photon_1_pur", new InhVecVecVar<float>("slc_pzc_photon_1_pur") },
-    { "slc_best_pzc_photon_0_id", new InhVecVar<int>("slc_best_pzc_photon_0_id") },
-    { "slc_best_pzc_photon_1_id", new InhVecVar<int>("slc_best_pzc_photon_1_id") },
+    { "slc_best_pzc_photon_0_id", new InhVecVar<size_t>("slc_best_pzc_photon_0_id") },
+    { "slc_best_pzc_photon_1_id", new InhVecVar<size_t>("slc_best_pzc_photon_1_id") },
     { "slc_best_pzc_good_kinematics", new InhVecVar<bool>("slc_best_pzc_good_kinematics") },
     { "slc_best_pzc_invariant_mass", new InhVecVar<double>("slc_best_pzc_invariant_mass") },
     { "slc_best_pzc_pizero_mom", new InhVecVar<double>("slc_best_pzc_pizero_mom") },
     { "slc_best_pzc_cos_theta_pizero", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero") },
     { "slc_best_pzc_cos_com", new InhVecVar<double>("slc_best_pzc_cos_com") },
     { "slc_best_pzc_decay_asymmetry", new InhVecVar<double>("slc_best_pzc_decay_asymmetry") },
+    { "slc_best_pzc_good_kinematics_corr", new InhVecVar<bool>("slc_best_pzc_good_kinematics_corr") },
+    { "slc_best_pzc_invariant_mass_corr", new InhVecVar<double>("slc_best_pzc_invariant_mass_corr") },
+    { "slc_best_pzc_pizero_mom_corr", new InhVecVar<double>("slc_best_pzc_pizero_mom_corr") },
+    { "slc_best_pzc_cos_theta_pizero_corr", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero_corr") },
+    { "slc_best_pzc_cos_com_corr", new InhVecVar<double>("slc_best_pzc_cos_com_corr") },
+    { "slc_best_pzc_decay_asymmetry_corr", new InhVecVar<double>("slc_best_pzc_decay_asymmetry_corr") },
+    { "slc_best_corr_pzc_good_kinematics", new InhVecVar<bool>("slc_best_corr_pzc_good_kinematics") },
+    { "slc_best_corr_pzc_invariant_mass", new InhVecVar<double>("slc_best_corr_pzc_invariant_mass") },
+    { "slc_best_corr_pzc_pizero_mom", new InhVecVar<double>("slc_best_corr_pzc_pizero_mom") },
+    { "slc_best_corr_pzc_cos_theta_pizero", new InhVecVar<double>("slc_best_corr_pzc_cos_theta_pizero") },
+    { "slc_best_corr_pzc_cos_com", new InhVecVar<double>("slc_best_corr_pzc_cos_com") },
+    { "slc_best_corr_pzc_decay_asymmetry", new InhVecVar<double>("slc_best_corr_pzc_decay_asymmetry") },
+    { "slc_best_corr_pzc_good_kinematics_corr", new InhVecVar<bool>("slc_best_corr_pzc_good_kinematics_corr") },
+    { "slc_best_corr_pzc_invariant_mass_corr", new InhVecVar<double>("slc_best_corr_pzc_invariant_mass_corr") },
+    { "slc_best_corr_pzc_pizero_mom_corr", new InhVecVar<double>("slc_best_corr_pzc_pizero_mom_corr") },
+    { "slc_best_corr_pzc_cos_theta_pizero_corr", new InhVecVar<double>("slc_best_corr_pzc_cos_theta_pizero_corr") },
+    { "slc_best_corr_pzc_cos_com_corr", new InhVecVar<double>("slc_best_corr_pzc_cos_com_corr") },
+    { "slc_best_corr_pzc_decay_asymmetry_corr", new InhVecVar<double>("slc_best_corr_pzc_decay_asymmetry_corr") },
     { "slc_best_pzc_photon_0_true_trackid", new InhVecVar<int>("slc_best_pzc_photon_0_true_trackid") },
     { "slc_best_pzc_photon_0_true_pdg", new InhVecVar<int>("slc_best_pzc_photon_0_true_pdg") },
     { "slc_best_pzc_photon_0_comp", new InhVecVar<float>("slc_best_pzc_photon_0_comp") },
@@ -502,6 +596,12 @@ private:
     { "slc_best_pzc_photon_1_true_pdg", new InhVecVar<int>("slc_best_pzc_photon_1_true_pdg") },
     { "slc_best_pzc_photon_1_comp", new InhVecVar<float>("slc_best_pzc_photon_1_comp") },
     { "slc_best_pzc_photon_1_pur", new InhVecVar<float>("slc_best_pzc_photon_1_pur") },
+    { "slc_ssss_n_u_clusters", new InhVecVar<size_t>("slc_ssss_n_u_clusters") },
+    { "slc_ssss_u_cluster_n_hits", new InhVecVecVar<size_t>("slc_ssss_u_cluster_n_hits") },
+    { "slc_ssss_n_v_clusters", new InhVecVar<size_t>("slc_ssss_n_v_clusters") },
+    { "slc_ssss_v_cluster_n_hits", new InhVecVecVar<size_t>("slc_ssss_v_cluster_n_hits") },
+    { "slc_ssss_n_w_clusters", new InhVecVar<size_t>("slc_ssss_n_w_clusters") },
+    { "slc_ssss_w_cluster_n_hits", new InhVecVecVar<size_t>("slc_ssss_w_cluster_n_hits") },
     { "slc_sel_incl", new InhVecVar<bool>("slc_sel_incl") },
     { "slc_sel_0p0pi", new InhVecVar<bool>("slc_sel_0p0pi") },
     { "slc_sel_1p0pi", new InhVecVar<bool>("slc_sel_1p0pi") },
@@ -524,168 +624,115 @@ private:
                                                        "piplus_Flux"
   };
 
-  const std::vector<std::string> genie_weight_names = { "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_n_NC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_np_CC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nu_p_NC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_n_NC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_CC_3Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_1Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_2Pi",
-                                                        "NOvAStyleNonResPionNorm_SBND_v1_NR_nubar_p_NC_3Pi",
-                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nu",
-                                                        "MiscInteractionSysts_SBND_v1_C12ToAr40_2p2hScaling_nubar",
-                                                        "MiscInteractionSysts_SBND_v1_SPPLowQ2Suppression",
-                                                        "MiscInteractionSysts_SBND_v1_nuenuebar_xsec_ratio",
-                                                        "MiscInteractionSysts_SBND_v1_nuenumu_xsec_ratio",
-                                                        "MINERvAq0q3Weighting_SBND_v1_Mnv2p2hGaussEnhancement",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nu",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_A_nubar",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nu",
-                                                        "MINERvAE2p2h_ICARUS_v1_E2p2h_B_nubar",
-                                                        "GENIEReWeight_SBND_v1_multisim_AhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_BhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_CCQEPauliSupViaKF",
-                                                        "GENIEReWeight_SBND_v1_multisim_CV1uBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_CV2uBY",
-                                                        "GENIEReWeight_SBND_v1_multisim_EtaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisim_FormZone",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrAbs_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrCEx_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrInel_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_FrPiProd_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_MFP_N",
-                                                        "GENIEReWeight_SBND_v1_multisim_MFP_pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaCCQE",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisim_MaNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_MvCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_MvNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvbarpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_NonRESBGvpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1eta",
-                                                        "GENIEReWeight_SBND_v1_multisim_RDecBR1gamma",
-                                                        "GENIEReWeight_SBND_v1_multisigma_AhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_BhtBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEMomDistroFGtoSF",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CCQEPauliSupViaKF",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CV1uBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_CV2uBY",
-                                                        "GENIEReWeight_SBND_v1_multisigma_EtaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FormZone",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrAbs_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrCEx_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrInel_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_FrPiProd_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_N",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MFP_pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCQE",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCEL",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MaNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MvCCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_MvNCRES",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvbarpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvnNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpCC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC1pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_NonRESBGvpNC2pi",
-                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1eta",
-                                                        "GENIEReWeight_SBND_v1_multisigma_RDecBR1gamma",
-                                                        "GENIEReWeight_SBND_v1_multisigma_Theta_Delta2Npi",
+  const std::vector<std::string> genie_weight_names = { "GENIEReWeight_SBND_v4_multisigma_CoulombCCQE",
+                                                        "GENIEReWeight_SBND_v4_multisigma_DecayAngMEC",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC1pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC2pi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NormCCMEC",
+                                                        "GENIEReWeight_SBND_v4_multisigma_NormNCMEC",
+                                                        "GENIEReWeight_SBND_v4_multisigma_RDecBR1eta",
+                                                        "GENIEReWeight_SBND_v4_multisigma_RDecBR1gamma",
+                                                        "GENIEReWeight_SBND_v4_multisigma_RPA_CCQE",
+                                                        "GENIEReWeight_SBND_v4_multisigma_ThetaDelta2NRad",
+                                                        "GENIEReWeight_SBND_v4_multisigma_Theta_Delta2Npi",
+                                                        "GENIEReWeight_SBND_v4_multisigma_VecFFCCQEshape",
+                                                        "GENIEReWeight_SBND_v4_multisim_CCRESVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_COHVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_DISBYVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_FSI_N_VariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_FSI_pi_VariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_NCELVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_NCRESVariationResponse",
+                                                        "GENIEReWeight_SBND_v4_multisim_ZExpAVariationResponse"
   };
+
+  const std::vector<std::string> geant4_weight_names = { "reinteractions_Geant4",
+  };
+
+  std::map<std::string, std::map<int, double>> genie_multisigma_universe_weights;
 };
 
 sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
+  , fRandomEngine(art::ServiceHandle<rndm::NuRandomService>()->registerAndSeedEngine(createEngine(0, "HepJamesRandom", "SystematicWeightThrows"),
+                                                                                     "HepJamesRandom", "SystematicWeightThrows", 101))
+  , fMCParticleModuleLabel          (p.get<art::InputTag>("MCParticleModuleLabel"))
+  , fSliceModuleLabel               (p.get<art::InputTag>("SliceModuleLabel"))
+  , fPFParticleModuleLabel          (p.get<art::InputTag>("PFParticleModuleLabel"))
+  , fVertexModuleLabel              (p.get<art::InputTag>("VertexModuleLabel"))
+  , fHitModuleLabel                 (p.get<art::InputTag>("HitModuleLabel"))
+  , fTrackModuleLabel               (p.get<art::InputTag>("TrackModuleLabel"))
+  , fShowerModuleLabel              (p.get<art::InputTag>("ShowerModuleLabel"))
+  , fTrackCalorimetryModuleLabel    (p.get<art::InputTag>("TrackCalorimetryModuleLabel"))
+  , fCRUMBSModuleLabel              (p.get<art::InputTag>("CRUMBSModuleLabel"))
+  , fDazzleModuleLabel              (p.get<art::InputTag>("DazzleModuleLabel"))
+  , fCaloModuleLabel                (p.get<art::InputTag>("CaloModuleLabel"))
+  , fMCSModuleLabel                 (p.get<art::InputTag>("MCSModuleLabel"))
+  , fChi2ModuleLabel                (p.get<art::InputTag>("Chi2ModuleLabel"))
+  , fRangeModuleLabel               (p.get<art::InputTag>("RangeModuleLabel"))
+  , fClosestApproachModuleLabel     (p.get<art::InputTag>("ClosestApproachModuleLabel"))
+  , fStoppingChi2ModuleLabel        (p.get<art::InputTag>("StoppingChi2ModuleLabel"))
+  , fRazzleModuleLabel              (p.get<art::InputTag>("RazzleModuleLabel"))
+  , fCosmicDistModuleLabel          (p.get<art::InputTag>("CosmicDistModuleLabel"))
+  , fShowerTrackFitModuleLabel      (p.get<art::InputTag>("ShowerTrackFitModuleLabel"))
+  , fShowerDensityFitModuleLabel    (p.get<art::InputTag>("ShowerDensityFitModuleLabel"))
+  , fPOTModuleLabel                 (p.get<art::InputTag>("POTModuleLabel"))
+  , fOpT0ModuleLabel                (p.get<art::InputTag>("OpT0ModuleLabel"))
+  , fRazzledModuleLabel             (p.get<art::InputTag>("RazzledModuleLabel"))
+  , fSpacePointModuleLabel          (p.get<art::InputTag>("SpacePointModuleLabel"))
+  , fEventWeightModuleLabels        (p.get<std::vector<art::InputTag>>("EventWeightModuleLabels"))
+  , fDebug                          (p.get<bool>("Debug", false))
+  , fBeamOff                        (p.get<bool>("BeamOff", false))
+  , fSecondShowerFinderAlgParams    (p.get<fhicl::ParameterSet>("SecondShowerFinderAlg"))
+  , fSecondShowerFinderAlg          (fSecondShowerFinderAlgParams)
+  , fShowerEnergyCorrectionFileName (p.get<std::string>("ShowerEnergyCorrectionFileName"))
   {
-    fMCParticleModuleLabel       = p.get<art::InputTag>("MCParticleModuleLabel", "largeant");
-    fSliceModuleLabel            = p.get<art::InputTag>("SliceModuleLabel", "pandoraSCE");
-    fPFParticleModuleLabel       = p.get<art::InputTag>("PFParticleModuleLabel", "pandoraSCE");
-    fVertexModuleLabel           = p.get<art::InputTag>("VertexModuleLabel", "pandoraSCE");
-    fHitModuleLabel              = p.get<art::InputTag>("HitModuleLabel", "gaushit");
-    fTrackModuleLabel            = p.get<art::InputTag>("TrackModuleLabel", "pandoraTrack");
-    fShowerModuleLabel           = p.get<art::InputTag>("ShowerModuleLabel", "pandoraShowerSBN");
-    fTrackCalorimetryModuleLabel = p.get<art::InputTag>("TrackCalorimetryModuleLabel", "pandoraCalo");
-    fCRUMBSModuleLabel           = p.get<art::InputTag>("CRUMBSModuleLabel", "crumbs");
-    fDazzleModuleLabel           = p.get<art::InputTag>("DazzleModuleLabel", "dazzle");
-    fCaloModuleLabel             = p.get<art::InputTag>("CaloModuleLabel", "pandoraCalo");
-    fMCSModuleLabel              = p.get<art::InputTag>("MCSModuleLabel", "pandoraTrackMCS:muon");
-    fChi2ModuleLabel             = p.get<art::InputTag>("Chi2ModuleLabel", "pandoraPid");
-    fRangeModuleLabel            = p.get<art::InputTag>("RangeModuleLabel", "pandoraTrackRange:muon");
-    fClosestApproachModuleLabel  = p.get<art::InputTag>("ClosestApproachModuleLabel", "pandoraTrackClosestApproach");
-    fStoppingChi2ModuleLabel     = p.get<art::InputTag>("StoppingChi2ModuleLabel", "pandoraTrackStoppingChi2");
-    fRazzleModuleLabel           = p.get<art::InputTag>("RazzleModuleLabel", "razzle");
-    fCosmicDistModuleLabel       = p.get<art::InputTag>("CosmicDistModuleLabel", "pandoraShowerCosmicDist");
-    fShowerTrackFitModuleLabel   = p.get<art::InputTag>("ShowerTrackFitModuleLabel", "pandoraShowerSelectionVars");
-    fShowerDensityFitModuleLabel = p.get<art::InputTag>("ShowerDensityFitModuleLabel", "pandoraShowerSelectionVars");
-    fPOTModuleLabel              = p.get<art::InputTag>("POTModuleLabel", "generator");
-    fOpT0ModuleLabel             = p.get<art::InputTag>("OpT0ModuleLabel", "opt0finder");
-    fRazzledModuleLabel          = p.get<art::InputTag>("RazzledModuleLabel", "razzled");
-    fSpacePointModuleLabel       = p.get<art::InputTag>("SpacePointModuleLabel", "pandoraSCE");
-    fEventWeightModuleLabels     = p.get<std::vector<art::InputTag>>("EventWeightModuleLabels", {"fluxweight", "systtools"});
-    fDebug                       = p.get<bool>("Debug", false);
-    fBeamOff                     = p.get<bool>("BeamOff", false);
-
     for(auto const& name : flux_weight_names)
       {
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
       }
 
+    nuVars["nu_weight_all_flux"] = new InhVecVecVar<float>("nu_weight_all_flux");
+    slcVars["slc_true_weight_all_flux"] = new InhVecVecVar<float>("slc_true_weight_all_flux");
+
     for(auto const& name : genie_weight_names)
       {
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
       }
+
+    for(auto const& name : geant4_weight_names)
+      {
+        nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
+        slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
+      }
+
+    nuVars["nu_weight_all_genie_multisim"] = new InhVecVecVar<float>("nu_weight_all_genie_multisim");
+    slcVars["slc_true_weight_all_genie_multisim"] = new InhVecVecVar<float>("slc_true_weight_all_genie_multisim");
+
+    cet::search_path sp("FW_SEARCH_PATH");
+    std::string showerEnergyCorrectionFileFullPath;
+    if (!sp.find_file(fShowerEnergyCorrectionFileName, showerEnergyCorrectionFileFullPath))
+      throw cet::exception("NCPiZeroAnalysis") << "Could not find shower energy correction file: \n"
+                                               << fShowerEnergyCorrectionFileName;
+
+    TFile* file = TFile::Open(showerEnergyCorrectionFileFullPath.c_str());
+    fShowerEnergyCorrectionHist = (TProfile*) file->Get("hShowerEnergy2DRecoFractionalResolution_pfx");
 
     art::ServiceHandle<art::TFileService> fs;
 
@@ -705,6 +752,19 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
 
     fEventTree->Branch("n_slc", &_n_slc);
     SetupBranches(slcVars);
+
+    CLHEP::RandGauss randGauss(fRandomEngine, 0., 1.);
+
+    for(auto const& name : genie_weight_names)
+      {
+        if(name.find("multisigma") != std::string::npos)
+          {
+            genie_multisigma_universe_weights[name] = std::map<int, double>();
+
+            for(int univ = 0; univ < 500; ++univ)
+              genie_multisigma_universe_weights[name][univ] = randGauss.fire();
+          }
+      }
   }
 
 void sbnd::NCPiZeroAnalysis::SetupBranches(VecVarMap &map)
@@ -845,7 +905,7 @@ void sbnd::NCPiZeroAnalysis::analyze(const art::Event &e)
   }
 
   SetupMaps(e, hitHandle, pfpHandle);
-  AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle);
+  AnalyseSlices(e, sliceHandle, pfpHandle, trackHandle, showerHandle, hitHandle);
   AnalyseNeutrinos(e, MCTruthHandles);
 
   // Fill the Tree
@@ -856,6 +916,7 @@ void sbnd::NCPiZeroAnalysis::ClearMaps()
 {
   fHitsMap.clear();
   fNuHitsMap.clear();
+  fNuHitsMapSP.clear();
   fPFPMap.clear();
   fRecoPFPMap.clear();
 }
@@ -864,6 +925,8 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
                                        const art::Handle<std::vector<recob::PFParticle>> &pfpHandle)
 {
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+  art::FindOneP<recob::SpacePoint> hitsToSPs(hitHandle, e, fSpacePointModuleLabel);
 
   std::vector<art::Ptr<recob::Hit>> hitVec;
   art::fill_ptr_vector(hitVec, hitHandle);
@@ -874,6 +937,10 @@ void sbnd::NCPiZeroAnalysis::SetupMaps(const art::Event &e, const art::Handle<st
       fHitsMap[trackID]++;
       const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
       fNuHitsMap[mct]++;
+
+      const art::Ptr<recob::SpacePoint> spacepoint = hitsToSPs.at(hit.key());
+      if(spacepoint.isNonnull())
+        fNuHitsMapSP[mct]++;
     }
 
   std::vector<art::Ptr<recob::PFParticle>> pfpVec;
@@ -959,13 +1026,57 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
       art::FindManyP<sbn::evwgh::EventWeightMap> MCTruthToWeights( { mct }, e, weightModuleLabel);
       const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToWeights.at(0);
 
+      int n_univs = 0;
+      if(weightModuleLabel == "fluxweight" || weightModuleLabel == "geant4weight")
+        n_univs = 1000;
+      else if(weightModuleLabel == "systtools")
+        n_univs = 500;
+
+      std::vector<float> all(n_univs, 1.);
+
       for(auto const& ewm : ewms)
         {
           for(auto const& [ name, weights ] : *ewm)
             {
-              FillElement(vars[prefix + "_weight_" + name], counter, weights);
+              if((weightModuleLabel == "fluxweight") || (weightModuleLabel == "geant4weight") || (weightModuleLabel == "systtools" && name.find("multisim") != std::string::npos))
+                {
+                  FillElement(vars[prefix + "_weight_" + name], counter, weights);
+
+                  for(int univ = 0; univ < n_univs; ++univ)
+                    all[univ] *= weights[univ];
+                }
+              else if(weightModuleLabel == "systtools" && name.find("multisigma") != std::string::npos)
+                {
+                  std::vector<float> thrown_weights(n_univs, 1.);
+
+                  if(weights.size() == 6)
+                    {
+                      for(int univ = 0; univ < n_univs; ++univ)
+                        {
+                          thrown_weights[univ] = 1 + (weights[1] - 1) * genie_multisigma_universe_weights[name][univ];
+                          all[univ] *= weights[univ];
+                        }
+                    }
+                  else if(weights.size() == 1)
+                    {
+                      for(int univ = 0; univ < n_univs; ++univ)
+                        {
+                          thrown_weights[univ] = 1 + (weights[0] - 1) * 2 * genie_multisigma_universe_weights[name][univ];
+                          all[univ] *= weights[univ];
+                        }
+                    }
+                  else
+                    std::cout << "Whoaaaaaaaaaa, multisigma of size " << weights.size() << std::endl;
+
+                  FillElement(vars[prefix + "_weight_" + name], counter, thrown_weights);
+                }
             }
         }
+
+      if(weightModuleLabel == "fluxweight")
+        FillElement(vars[prefix + "_weight_all_flux" ], counter, all);
+      else if(weightModuleLabel == "systtools")
+        FillElement(vars[prefix + "_weight_all_genie_multisim" ], counter, all);
     }
 
   int protons = 0, neutrons = 0, charged_pions = 0, neutral_pions = 0, dalitz_neutral_pions = 0, photons = 0, other = 0;
@@ -978,14 +1089,14 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
           switch(abs(mcp->PdgCode()))
             {
             case 2212:
-              if(mcp->P() > .25)
+              if(mcp->P() > .4)
                 ++protons;
               break;
             case 2112:
               ++neutrons;
               break;
             case 211:
-              if(mcp->P() > .1)
+              if(mcp->P() > .15)
                 ++charged_pions;
               break;
             case 111:
@@ -1156,8 +1267,17 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
               FillElement(vars[prefix + "_pz_two_gamma_decay"], counter, pzCounter, two_gamma_decay);
               FillElement(vars[prefix + "_pz_gamma0_trackid"], counter, pzCounter, gamma0->TrackId());
               FillElement(vars[prefix + "_pz_gamma0_n_hits"], counter, pzCounter, fHitsMap[gamma0->TrackId()]);
+              FillElement(vars[prefix + "_pz_gamma0_energy"], counter, pzCounter, en0);
+              FillElement(vars[prefix + "_pz_gamma0_dir_x"], counter, pzCounter, gamma0->Px() / gamma0->P());
+              FillElement(vars[prefix + "_pz_gamma0_dir_y"], counter, pzCounter, gamma0->Py() / gamma0->P());
+              FillElement(vars[prefix + "_pz_gamma0_dir_z"], counter, pzCounter, gamma0->Pz() / gamma0->P());
               FillElement(vars[prefix + "_pz_gamma1_trackid"], counter, pzCounter, gamma1->TrackId());
               FillElement(vars[prefix + "_pz_gamma1_n_hits"], counter, pzCounter, fHitsMap[gamma1->TrackId()]);
+              FillElement(vars[prefix + "_pz_gamma1_energy"], counter, pzCounter, en1);
+              FillElement(vars[prefix + "_pz_gamma1_dir_x"], counter, pzCounter, gamma1->Px() / gamma1->P());
+              FillElement(vars[prefix + "_pz_gamma1_dir_y"], counter, pzCounter, gamma1->Py() / gamma1->P());
+              FillElement(vars[prefix + "_pz_gamma1_dir_z"], counter, pzCounter, gamma1->Pz() / gamma1->P());
+              FillElement(vars[prefix + "_pz_open_angle"], counter, pzCounter, TMath::RadToDeg() * gamma0->Momentum().Vect().Angle(gamma1->Momentum().Vect()));
 
               if(prefix.find("nu") != std::string::npos)
                 {
@@ -1240,7 +1360,8 @@ void sbnd::NCPiZeroAnalysis::AnalysePhotonReco(const std::string name, const int
 void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handle<std::vector<recob::Slice>> &sliceHandle,
                                            const art::Handle<std::vector<recob::PFParticle>> &pfpHandle,
                                            const art::Handle<std::vector<recob::Track>> &trackHandle,
-                                           const art::Handle<std::vector<recob::Shower>> &showerHandle)
+                                           const art::Handle<std::vector<recob::Shower>> &showerHandle,
+                                           const art::Handle<std::vector<recob::Hit>> &hitHandle)
 {
   std::vector<art::Ptr<recob::Slice>> sliceVec;
   art::fill_ptr_vector(sliceVec, sliceHandle);
@@ -1313,6 +1434,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
           FillElement(slcVars["slc_opt0_score"], slcCounter, opT0Vec[0]->score);
           FillElement(slcVars["slc_opt0_measPE"], slcCounter, opT0Vec[0]->measPE);
           FillElement(slcVars["slc_opt0_hypPE"], slcCounter, opT0Vec[0]->hypoPE);
+          FillElement(slcVars["slc_opt0_fracPE"], slcCounter, (opT0Vec[0]->hypoPE - opT0Vec[0]->measPE) / opT0Vec[0]->measPE);
         }
 
       ResizeSubVectors(slcVars, "slc_pfp", slcCounter, pfps.size());
@@ -1324,9 +1446,11 @@ void sbnd::NCPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Handl
       else
         ProducePiZeroCandidates(slcVars, "slc", slcCounter, { (int) slcCounter });
 
+      SliceContainment(slcCounter);
+
       SelectSlice(slcCounter);
 
-      AnalyseSliceTruth(e, slc, slcCounter, sliceHandle);
+      AnalyseSliceTruth(e, slc, slcCounter, sliceHandle, hitHandle);
     }
 }
 
@@ -1419,6 +1543,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             {
               FillElement(slcVars["slc_pfp_true_pdg"], slcCounter, pfpCounter, mcp->PdgCode());
               FillElement(slcVars["slc_pfp_true_energy"], slcCounter, pfpCounter, mcp->E());
+              FillElement(slcVars["slc_pfp_true_ke"], slcCounter, pfpCounter, mcp->E() - mcp->Mass());
               FillElement(slcVars["slc_pfp_true_p_x"], slcCounter, pfpCounter, mcp->Px());
               FillElement(slcVars["slc_pfp_true_p_y"], slcCounter, pfpCounter, mcp->Py());
               FillElement(slcVars["slc_pfp_true_p_z"], slcCounter, pfpCounter, mcp->Pz());
@@ -1434,6 +1559,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
         {
           int dazzlepdg;
           AccessElement(slcVars["slc_pfp_track_dazzle_pdg"], slcCounter, pfpCounter, dazzlepdg);
+
           float trkenergy;
           AccessElement(slcVars["slc_pfp_track_ke"], slcCounter, pfpCounter, trkenergy);
           pfpenergy = trkenergy;
@@ -1442,11 +1568,11 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             ++ndazzlemuons;
           if(dazzlepdg == 211)
             ++ndazzlepions;
-          if(dazzlepdg == 211 && pfpenergy > 32.1)
+          if(dazzlepdg == 211 && pfpenergy > 65.3)
             ++ndazzlepionsthresh;
           if(dazzlepdg == 2212)
             ++ndazzleprotons;
-          if(dazzlepdg == 2212 && pfpenergy > 32.7)
+          if(dazzlepdg == 2212 && pfpenergy > 81.7)
             ++ndazzleprotonsthresh;
           if(dazzlepdg == 0)
             ++ndazzleother;
@@ -1573,7 +1699,7 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
 
   FillElement(slcVars["slc_n_used_hits"], slcCounter, used_hits.size());
 
-  if(prim->PdgCode() == 12 || prim->PdgCode() == 14)
+  if((prim->PdgCode() == 12 || prim->PdgCode() == 14) && nprimrazzledmuons == 0 && (nprimrazzledphotons==1 || nprimrazzledelectrons==1))
     {
       std::vector<art::Ptr<recob::Hit>> unused_hits;
 
@@ -1583,9 +1709,22 @@ void sbnd::NCPiZeroAnalysis::AnalysePFPs(const art::Event &e, const art::Ptr<rec
             unused_hits.push_back(hit);
         }
 
-      std::cout << prim->PdgCode() << std::endl;
+      const std::vector<std::vector<size_t>> ssss_clusters = fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, false);
 
-      fSecondShowerFinderAlg.FindSecondShower(e, unused_hits, used_hits, nprimrazzledphotons==1);
+      FillElement(slcVars["slc_ssss_n_u_clusters"], slcCounter, ssss_clusters[0].size());
+      ResizeSubVectors(slcVars, "slc_ssss_u", slcCounter, ssss_clusters[0].size());
+      for(auto&& [clCounter, n_hits] : enumerate(ssss_clusters[0]))
+        FillElement(slcVars["slc_ssss_u_cluster_n_hits"], slcCounter, clCounter, n_hits);
+
+      FillElement(slcVars["slc_ssss_n_v_clusters"], slcCounter, ssss_clusters[1].size());
+      ResizeSubVectors(slcVars, "slc_ssss_v", slcCounter, ssss_clusters[1].size());
+      for(auto&& [clCounter, n_hits] : enumerate(ssss_clusters[1]))
+        FillElement(slcVars["slc_ssss_v_cluster_n_hits"], slcCounter, clCounter, n_hits);
+
+      FillElement(slcVars["slc_ssss_n_w_clusters"], slcCounter, ssss_clusters[2].size());
+      ResizeSubVectors(slcVars, "slc_ssss_w", slcCounter, ssss_clusters[2].size());
+      for(auto&& [clCounter, n_hits] : enumerate(ssss_clusters[2]))
+        FillElement(slcVars["slc_ssss_w_cluster_n_hits"], slcCounter, clCounter, n_hits);
     }
 }
 
@@ -1609,6 +1748,10 @@ void sbnd::NCPiZeroAnalysis::AnalyseTrack(const art::Event &e, const art::Ptr<re
   FillElement(slcVars["slc_pfp_track_dir_x"], slcCounter, pfpCounter, dir.X());
   FillElement(slcVars["slc_pfp_track_dir_y"], slcCounter, pfpCounter, dir.Y());
   FillElement(slcVars["slc_pfp_track_dir_z"], slcCounter, pfpCounter, dir.Z());
+
+  geo::Point_t end = track->End();
+  const bool contained = VolumeCheck(start, 10, 0, 10, 10) && VolumeCheck(end, 10, 0, 10, 10);
+  FillElement(slcVars["slc_pfp_track_contained"], slcCounter, pfpCounter, contained);
 
   FillElement(slcVars["slc_pfp_track_length"], slcCounter, pfpCounter, track->Length());
 
@@ -1776,6 +1919,10 @@ void sbnd::NCPiZeroAnalysis::AnalyseShower(const art::Event &e, const art::Ptr<r
   FillElement(slcVars["slc_pfp_shower_length"], slcCounter, pfpCounter, shower->Length());
   FillElement(slcVars["slc_pfp_shower_open_angle"], slcCounter, pfpCounter, shower->OpenAngle());
 
+  geo::Point_t end = start + shower->Length() * dir;
+  const bool contained = VolumeCheck(start, 10, 0, 10, 10) && VolumeCheck(end, 10, 0, 10, 10);
+  FillElement(slcVars["slc_pfp_shower_contained"], slcCounter, pfpCounter, contained);
+
   ExtractCalo(shower, slcCounter, pfpCounter, hits);
 
   const art::Ptr<sbn::MVAPID> razzle = showersToRazzle.at(shower.key());
@@ -1830,9 +1977,18 @@ void sbnd::NCPiZeroAnalysis::ExtractCalo(const art::Ptr<recob::Shower> &shower, 
       showerPlanePitches[plane.ID().Plane] = plane.WirePitch() / cosgamma;
     }
 
-  int bestPlane = shower->best_plane();
+  int bestPlane = -1;
+
+  if(showerPlaneHits[2] >= showerPlaneHits[1] && showerPlaneHits[2] >= showerPlaneHits[0])
+    bestPlane = 2;
+  else if(showerPlaneHits[0] >= showerPlaneHits[1])
+    bestPlane = 0;
+  else
+    bestPlane = 1;
 
   FillElement(slcVars["slc_pfp_shower_energy"], slcCounter, pfpCounter, shower->Energy()[bestPlane]);
+  FillElement(slcVars["slc_pfp_shower_energy_coll"], slcCounter, pfpCounter, shower->Energy()[2]);
+  FillElement(slcVars["slc_pfp_shower_energy_corr"], slcCounter, pfpCounter, CorrectEnergy(shower->Energy()[bestPlane]));
   FillElement(slcVars["slc_pfp_shower_dedx"], slcCounter, pfpCounter, shower->dEdx()[bestPlane]);
 
   const double length      = shower->Length();
@@ -1860,41 +2016,72 @@ void sbnd::NCPiZeroAnalysis::ExtractRazzled(const art::Ptr<sbn::MVAPID> &razzled
 }
 
 void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::Ptr<recob::Slice> &slc, const int slcCounter,
-                                               const art::Handle<std::vector<recob::Slice>> &sliceHandle)
+                                               const art::Handle<std::vector<recob::Slice>> &sliceHandle,
+                                               const art::Handle<std::vector<recob::Hit>> &hitHandle)
 {
   art::FindManyP<recob::Hit> slicesToHits(sliceHandle, e, fSliceModuleLabel);
+  art::FindOneP<recob::SpacePoint> hitsToSPs(hitHandle, e, fSpacePointModuleLabel);
 
   const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
   const std::vector<art::Ptr<recob::Hit>> sliceHits = slicesToHits.at(slc.key());
 
-  std::map<int, int> objectHitMap;
+  int nSPHits = 0;
+  std::map<int, int> objectHitMap, objectHitMapSP;
   for(auto const &hit : sliceHits)
-    objectHitMap[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+    {
+      const art::Ptr<recob::SpacePoint> spacepoint = hitsToSPs.at(hit.key());
+      if(spacepoint.isNonnull())
+        {
+          objectHitMapSP[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+          ++nSPHits;
+        }
 
-  std::map<const art::Ptr<simb::MCTruth>, int> mcTruthHitMap;
+      objectHitMap[TruthMatchUtils::TrueParticleID(clockData, hit, true)]++;
+    }
+
+  std::map<const art::Ptr<simb::MCTruth>, int> mcTruthHitMap, mcTruthHitMapSP;
   for(auto const& [trackID, nhits] : objectHitMap)
     {
       const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
       mcTruthHitMap[mct] += nhits;
     }
+  for(auto const& [trackID, nhits] : objectHitMapSP)
+    {
+      const art::Ptr<simb::MCTruth> mct = trackID == def_int ? art::Ptr<simb::MCTruth>() : particleInv->TrackIdToMCTruth_P(trackID);
+      mcTruthHitMapSP[mct] += nhits;
+    }
 
-  int maxHits = def_int;
-  art::Ptr<simb::MCTruth> bestMCT = art::Ptr<simb::MCTruth>();
+  int maxHits = def_int, maxHitsSP = def_int;
+  art::Ptr<simb::MCTruth> bestMCT = art::Ptr<simb::MCTruth>(), bestMCTSP = art::Ptr<simb::MCTruth>();
 
   for(auto const& [mct, nhits] : mcTruthHitMap)
     {
       if(nhits > maxHits)
         {
           maxHits = nhits;
-          bestMCT  = mct;
+          bestMCT = mct;
+        }
+    }
+
+  for(auto const& [mct, nhits] : mcTruthHitMapSP)
+    {
+      if(nhits > maxHitsSP)
+        {
+          maxHitsSP = nhits;
+          bestMCTSP = mct;
         }
     }
 
   const float comp = fNuHitsMap[bestMCT] == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(fNuHitsMap[bestMCT]);
   const float pur  = sliceHits.size() == 0 ? def_float : mcTruthHitMap[bestMCT] / static_cast<float>(sliceHits.size());
 
+  const float compSP = fNuHitsMapSP[bestMCTSP] == 0 ? def_float : mcTruthHitMapSP[bestMCTSP] / static_cast<float>(fNuHitsMapSP[bestMCTSP]);
+  const float purSP  = nSPHits == 0 ? def_float : mcTruthHitMapSP[bestMCTSP] / static_cast<float>(nSPHits);
+
   FillElement(slcVars["slc_comp"], slcCounter, comp);
   FillElement(slcVars["slc_pur"], slcCounter, pur);
+  FillElement(slcVars["slc_comp_sp_only"], slcCounter, compSP);
+  FillElement(slcVars["slc_pur_sp_only"], slcCounter, purSP);
 
   if(fBeamOff)
     {
@@ -1916,6 +2103,71 @@ void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::P
     }
 }
 
+void sbnd::NCPiZeroAnalysis::SliceContainment(const int slcCounter)
+{
+  std::vector<std::vector<bool>> slc_pfp_primary, slc_pfp_primary_child,
+    slc_pfp_track_contained, slc_pfp_shower_contained;
+
+  std::vector<std::vector<int>> slc_pfp_pdg;
+
+  std::vector<size_t> slc_best_pzc_photon_0_id, slc_best_pzc_photon_1_id;
+
+  GetVar(slcVars["slc_pfp_primary"], slc_pfp_primary);
+  GetVar(slcVars["slc_pfp_pdg"], slc_pfp_pdg);
+  GetVar(slcVars["slc_pfp_primary_child"], slc_pfp_primary_child);
+  GetVar(slcVars["slc_pfp_track_contained"], slc_pfp_track_contained);
+  GetVar(slcVars["slc_pfp_shower_contained"], slc_pfp_shower_contained);
+  GetVar(slcVars["slc_best_pzc_photon_0_id"], slc_best_pzc_photon_0_id);
+  GetVar(slcVars["slc_best_pzc_photon_1_id"], slc_best_pzc_photon_1_id);
+
+  bool alltrkscontained = true, allshwscontained = true, allprimtrkscontained = true, allprimshwscontained = true,
+    allothertrkscontained = true, allothershwscontained = true, allotherprimtrkscontained = true, allotherprimshwscontained = true;
+
+  for(size_t pfp_i = 0; pfp_i < slc_pfp_primary.at(slcCounter).size(); ++pfp_i)
+    {
+      if(slc_pfp_pdg.at(slcCounter).at(pfp_i) == 13)
+        {
+          alltrkscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
+
+          if(slc_pfp_primary.at(slcCounter).at(pfp_i) || slc_pfp_primary_child.at(slcCounter).at(pfp_i))
+            allprimtrkscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
+
+          if(pfp_i != slc_best_pzc_photon_0_id.at(slcCounter) && pfp_i != slc_best_pzc_photon_1_id.at(slcCounter))
+            {
+              allothertrkscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
+
+              if(slc_pfp_primary.at(slcCounter).at(pfp_i) || slc_pfp_primary_child.at(slcCounter).at(pfp_i))
+                allotherprimtrkscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
+            }
+        }
+
+      if(slc_pfp_pdg.at(slcCounter).at(pfp_i) == 11)
+        {
+          allshwscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
+
+          if(slc_pfp_primary.at(slcCounter).at(pfp_i) || slc_pfp_primary_child.at(slcCounter).at(pfp_i))
+            allprimshwscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
+
+          if(pfp_i != slc_best_pzc_photon_0_id.at(slcCounter) && pfp_i != slc_best_pzc_photon_1_id.at(slcCounter))
+            {
+              allothershwscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
+
+              if(slc_pfp_primary.at(slcCounter).at(pfp_i) || slc_pfp_primary_child.at(slcCounter).at(pfp_i))
+                allotherprimshwscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
+            }
+        }
+    }
+
+  FillElement(slcVars["slc_all_trks_contained"], slcCounter, alltrkscontained);
+  FillElement(slcVars["slc_all_shws_contained"], slcCounter, allshwscontained);
+  FillElement(slcVars["slc_all_primary_trks_contained"], slcCounter, allprimtrkscontained);
+  FillElement(slcVars["slc_all_primary_shws_contained"], slcCounter, allprimshwscontained);
+  FillElement(slcVars["slc_all_other_trks_contained"], slcCounter, allothertrkscontained);
+  FillElement(slcVars["slc_all_other_shws_contained"], slcCounter, allothershwscontained);
+  FillElement(slcVars["slc_all_other_primary_trks_contained"], slcCounter, allotherprimtrkscontained);
+  FillElement(slcVars["slc_all_other_primary_shws_contained"], slcCounter, allotherprimshwscontained);
+}
+
 void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 {
   bool is_clear_cosmic;
@@ -1926,10 +2178,12 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 
   float crumbs;
   AccessElement(slcVars["slc_crumbs_score"], counter, crumbs);
-  const bool passes_crumbs = crumbs > -0.025;
+  const bool passes_crumbs_incl  = crumbs > -0.195;
+  const bool passes_crumbs_0p0pi = crumbs > -0.195;
+  const bool passes_crumbs_Np0pi = crumbs > -0.16;
 
   int nrazzledmuons;
-  AccessElement(slcVars["slc_n_razzled_muons"], counter, nrazzledmuons);
+  AccessElement(slcVars["slc_n_primary_razzled_muons"], counter, nrazzledmuons);
   const bool passes_razzled_muons = nrazzledmuons == 0;
 
   size_t npfps;
@@ -1937,27 +2191,51 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   const bool passes_pfps = npfps > 1;
 
   int nrazzledphotons;
-  AccessElement(slcVars["slc_n_razzled_photons"], counter, nrazzledphotons);
+  AccessElement(slcVars["slc_n_primary_razzled_photons"], counter, nrazzledphotons);
   const bool passes_razzled_photons = nrazzledphotons > 1;
 
+  bool bestpzcgoodkinematics;
+  AccessElement(slcVars["slc_best_pzc_good_kinematics"], counter, bestpzcgoodkinematics);
+
+  double opt0frac;
+  AccessElement(slcVars["slc_opt0_fracPE"], counter, opt0frac);
+  const bool passes_opt0frac_incl  = opt0frac < 0.756 && opt0frac > -0.7;
+  const bool passes_opt0frac_0p0pi = opt0frac < 0.408 && opt0frac > -0.7;
+  const bool passes_opt0frac_Np0pi = opt0frac < 0.836 && opt0frac > -0.376;
+
+  double opt0score;
+  AccessElement(slcVars["slc_opt0_score"], counter, opt0score);
+  const bool passes_opt0score_incl  = opt0score > 150;
+  const bool passes_opt0score_0p0pi = opt0score > 150;
+  const bool passes_opt0score_Np0pi = opt0score > 210;
+
   int nrazzledpions;
-  AccessElement(slcVars["slc_n_razzled_pions_thresh"], counter, nrazzledpions);
+  AccessElement(slcVars["slc_n_primary_razzled_pions_thresh"], counter, nrazzledpions);
   const bool passes_razzled_pions = nrazzledpions == 0;
 
   int nrazzledprotons;
-  AccessElement(slcVars["slc_n_razzled_protons_thresh"], counter, nrazzledprotons);
+  AccessElement(slcVars["slc_n_primary_razzled_protons_thresh"], counter, nrazzledprotons);
 
-  const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs && passes_razzled_muons && passes_pfps && passes_razzled_photons;
+  bool allothertrkscontained;
+  AccessElement(slcVars["slc_all_other_trks_contained"], counter, allothertrkscontained);
+
+  const bool sel_incl = !is_clear_cosmic && is_fv && passes_crumbs_incl && passes_razzled_muons && passes_pfps
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_incl && passes_opt0score_incl
+    && allothertrkscontained;
   FillElement(slcVars["slc_sel_incl"], counter, sel_incl);
 
-  const bool sel_0p0pi = sel_incl && passes_razzled_pions && nrazzledprotons == 0;
+  const bool sel_0p0pi = !is_clear_cosmic && is_fv && passes_crumbs_0p0pi && passes_razzled_muons && passes_pfps
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_0p0pi && passes_opt0score_0p0pi
+    && passes_razzled_pions && nrazzledprotons == 0;
   FillElement(slcVars["slc_sel_0p0pi"], counter, sel_0p0pi);
+
+  const bool sel_Np0pi = !is_clear_cosmic && is_fv && passes_crumbs_Np0pi && passes_razzled_muons && passes_pfps
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_Np0pi && passes_opt0score_Np0pi
+    && passes_razzled_pions && nrazzledprotons > 0;
+  FillElement(slcVars["slc_sel_Np0pi"], counter, sel_Np0pi);
 
   const bool sel_1p0pi = sel_incl && passes_razzled_pions && nrazzledprotons == 1;
   FillElement(slcVars["slc_sel_1p0pi"], counter, sel_1p0pi);
-
-  const bool sel_Np0pi = sel_incl && passes_razzled_pions && nrazzledprotons > 0;
-  FillElement(slcVars["slc_sel_Np0pi"], counter, sel_Np0pi);
 
   const bool sel_Xp0pi = sel_incl && passes_razzled_pions;
   FillElement(slcVars["slc_sel_Xp0pi"], counter, sel_Xp0pi);
@@ -1966,11 +2244,11 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,
                                                      const int counter, const std::vector<int> slc_ids)
 {
-  std::vector<int> n_razzled_photons(slc_ids.size(), 0);
+  std::vector<int> n_primary_razzled_photons(slc_ids.size(), 0);
   for(auto&& [i, slc_id] : enumerate(slc_ids))
-    AccessElement(slcVars["slc_n_razzled_photons"], slc_id, n_razzled_photons[i]);
+    AccessElement(slcVars["slc_n_primary_razzled_photons"], slc_id, n_primary_razzled_photons[i]);
 
-  const int n_photons = std::reduce(n_razzled_photons.begin(), n_razzled_photons.end());
+  const int n_photons = std::reduce(n_primary_razzled_photons.begin(), n_primary_razzled_photons.end());
 
   const size_t n_pzcs = (n_photons * (n_photons - 1)) / 2;
 
@@ -1981,18 +2259,19 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
   if(n_pzcs == 0)
     return;
 
-  std::vector<int> slc_n_primary_children;
+  std::vector<std::vector<bool>> slc_pfp_primary_child;
   std::vector<std::vector<int>> slc_pfp_razzled_pdg;
   std::vector<std::vector<double>> slc_pfp_shower_dir_x, slc_pfp_shower_dir_y, slc_pfp_shower_dir_z,
-    slc_pfp_shower_energy, slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
+    slc_pfp_shower_energy, slc_pfp_shower_energy_corr, slc_pfp_track_dir_x, slc_pfp_track_dir_y, slc_pfp_track_dir_z;
   std::vector<std::vector<float>> slc_pfp_track_ke;
 
-  GetVar(slcVars["slc_n_primary_children"], slc_n_primary_children);
+  GetVar(slcVars["slc_pfp_primary_child"], slc_pfp_primary_child);
   GetVar(slcVars["slc_pfp_razzled_pdg"], slc_pfp_razzled_pdg);
   GetVar(slcVars["slc_pfp_shower_dir_x"], slc_pfp_shower_dir_x);
   GetVar(slcVars["slc_pfp_shower_dir_y"], slc_pfp_shower_dir_y);
   GetVar(slcVars["slc_pfp_shower_dir_z"], slc_pfp_shower_dir_z);
   GetVar(slcVars["slc_pfp_shower_energy"], slc_pfp_shower_energy);
+  GetVar(slcVars["slc_pfp_shower_energy_corr"], slc_pfp_shower_energy_corr);
   GetVar(slcVars["slc_pfp_track_dir_x"], slc_pfp_track_dir_x);
   GetVar(slcVars["slc_pfp_track_dir_y"], slc_pfp_track_dir_y);
   GetVar(slcVars["slc_pfp_track_dir_z"], slc_pfp_track_dir_z);
@@ -2002,20 +2281,20 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
 
   for(auto&& [i, slc_id_a] : enumerate(slc_ids))
     {
-      const int n_primary_children_a = slc_n_primary_children.at(slc_id_a);
+      const size_t n_children_a = slc_pfp_primary_child.at(slc_id_a).size();
 
-      for(int ii = 0; ii < n_primary_children_a; ++ii)
+      for(size_t ii = 0; ii < n_children_a; ++ii)
         {
-          if(slc_pfp_razzled_pdg.at(slc_id_a).at(ii) != 22)
+          if(slc_pfp_razzled_pdg.at(slc_id_a).at(ii) != 22 || !slc_pfp_primary_child.at(slc_id_a).at(ii))
             continue;
 
           for(auto&& [j, slc_id_b] : enumerate(slc_ids))
             {
-              const int n_primary_children_b = slc_n_primary_children.at(slc_id_b);
+              const size_t n_children_b = slc_pfp_primary_child.at(slc_id_b).size();
 
-              for(int jj = 0; jj < n_primary_children_b; ++jj)
+              for(size_t jj = 0; jj < n_children_b; ++jj)
                 {
-                  if(slc_pfp_razzled_pdg.at(slc_id_b).at(jj) != 22)
+                  if(slc_pfp_razzled_pdg.at(slc_id_b).at(jj) != 22 || !slc_pfp_primary_child.at(slc_id_b).at(jj))
                     continue;
 
                   if((slc_id_a == slc_id_b && ii == jj)
@@ -2050,15 +2329,10 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
                   const double shwEn0 = slc_pfp_shower_energy.at(slc_id_a).at(ii);
                   const double shwEn1 = slc_pfp_shower_energy.at(slc_id_b).at(jj);
 
-                  const double trkEn0 = slc_pfp_track_ke.at(slc_id_a).at(ii);
-                  const double trkEn1 = slc_pfp_track_ke.at(slc_id_b).at(jj);
+                  const double shwEn0Corr = slc_pfp_shower_energy_corr.at(slc_id_a).at(ii);
+                  const double shwEn1Corr = slc_pfp_shower_energy_corr.at(slc_id_b).at(jj);
 
-                  if(!(shwDir0.X() == -999 || shwDir1.X() == -999 || shwEn0 < 0 || shwEn1 < 0))
-                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1);
-                  else if(!(trkDir0.X() == -999 || trkDir1.X() == -999 || trkEn0 < 0 || trkEn1 < 0))
-                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, trkDir0, trkDir1, trkEn0, trkEn1);
-                  else
-                    ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, shwEn0, shwEn1);
+                  ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, trkDir0, trkDir1, shwEn0, shwEn1, shwEn0Corr, shwEn1Corr);
 
                   ++pzcCounter;
                 }
@@ -2070,12 +2344,14 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
 }
 
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter, const int pzcCounter,
-                                                    const TVector3 &dir0, const TVector3 &dir1, const double &en0, const double &en1)
+                                                    const TVector3 &shwDir0, const TVector3 &shwDir1, const TVector3 &trkDir0, const TVector3 &trkDir1,
+                                                    const double &en0, const double &en1, const double &en0Corr, const double &en1Corr)
 {
-  const bool goodKinematics = !(dir0.X() == -999 || dir1.X() == -999 || en0 < 0 || en1 < 0);
+  const bool goodKinematics     = !(shwDir0.X() == -999 || shwDir1.X() == -999 || en0 < 0 || en1 < 0);
+  const bool goodKinematicsCorr = !(trkDir0.X() == -999 || trkDir1.X() == -999 || en0Corr < 0 || en1Corr < 0);
 
-  const double cosineThetaGammaGamma = dir0.Dot(dir1) / (dir0.Mag() * dir1.Mag());
-  const TVector3 pizeroDir           = (en0 * dir0) + (en1 * dir1);
+  const double cosineThetaGammaGamma = shwDir0.Dot(shwDir1) / (shwDir0.Mag() * shwDir1.Mag());
+  const TVector3 pizeroDir           = (en0 * shwDir0) + (en1 * shwDir1);
 
   const double invariantMass  = sqrt(2 * en0 * en1 * (1 - cosineThetaGammaGamma));
   const double pizeroMom      = pizeroDir.Mag();
@@ -2083,24 +2359,44 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   const double cosCOM         = std::abs(en0 - en1) / pizeroMom;
   const double decayAsym      = std::abs(en0 - en1) / (en0 + en1);
 
+  const double cosineThetaGammaGammaCorr = trkDir0.Dot(trkDir1) / (trkDir0.Mag() * trkDir1.Mag());
+  const TVector3 pizeroDirCorr           = (en0Corr * trkDir0) + (en1Corr * trkDir1);
+
+  const double invariantMassCorr  = sqrt(2 * en0Corr * en1Corr * (1 - cosineThetaGammaGammaCorr));
+  const double pizeroMomCorr      = pizeroDirCorr.Mag();
+  const double pizeroCosThetaCorr = pizeroDirCorr.Z() / pizeroMomCorr;
+  const double cosCOMCorr         = std::abs(en0Corr - en1Corr) / pizeroMomCorr;
+  const double decayAsymCorr      = std::abs(en0Corr - en1Corr) / (en0Corr + en1Corr);
+
   FillElement(vars[prefix + "_pzc_good_kinematics"], counter, pzcCounter, goodKinematics);
   FillElement(vars[prefix + "_pzc_invariant_mass"], counter, pzcCounter, invariantMass);
   FillElement(vars[prefix + "_pzc_pizero_mom"], counter, pzcCounter, pizeroMom);
   FillElement(vars[prefix + "_pzc_cos_theta_pizero"], counter, pzcCounter, pizeroCosTheta);
   FillElement(vars[prefix + "_pzc_cos_com"], counter, pzcCounter, cosCOM);
   FillElement(vars[prefix + "_pzc_decay_asymmetry"], counter, pzcCounter, decayAsym);
+  FillElement(vars[prefix + "_pzc_good_kinematics_corr"], counter, pzcCounter, goodKinematicsCorr);
+  FillElement(vars[prefix + "_pzc_invariant_mass_corr"], counter, pzcCounter, invariantMassCorr);
+  FillElement(vars[prefix + "_pzc_pizero_mom_corr"], counter, pzcCounter, pizeroMomCorr);
+  FillElement(vars[prefix + "_pzc_cos_theta_pizero_corr"], counter, pzcCounter, pizeroCosThetaCorr);
+  FillElement(vars[prefix + "_pzc_cos_com_corr"], counter, pzcCounter, cosCOMCorr);
+  FillElement(vars[prefix + "_pzc_decay_asymmetry_corr"], counter, pzcCounter, decayAsymCorr);
 }
 
 void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter)
 {
   std::vector<std::vector<bool>> pzc_good_kinematics;
   std::vector<std::vector<double>> pzc_invariant_mass;
+  std::vector<std::vector<double>> pzc_invariant_mass_corr;
 
   GetVar(vars[prefix + "_pzc_good_kinematics"], pzc_good_kinematics);
   GetVar(vars[prefix + "_pzc_invariant_mass"], pzc_invariant_mass);
+  GetVar(vars[prefix + "_pzc_invariant_mass_corr"], pzc_invariant_mass_corr);
 
   double bestInvMass = std::numeric_limits<double>::max();
   size_t bestID = std::numeric_limits<size_t>::max();
+
+  double bestInvMassCorr = std::numeric_limits<double>::max();
+  size_t bestIDCorr = std::numeric_limits<size_t>::max();
 
   for(size_t i = 0; i < pzc_invariant_mass.at(counter).size(); ++i)
     {
@@ -2108,6 +2404,12 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
         {
           bestInvMass = abs(134.9769 - pzc_invariant_mass.at(counter).at(i));
           bestID = i;
+        }
+
+      if(pzc_good_kinematics.at(counter).at(i) && abs(134.9769 - pzc_invariant_mass_corr.at(counter).at(i)) < bestInvMassCorr)
+        {
+          bestInvMassCorr = abs(134.9769 - pzc_invariant_mass_corr.at(counter).at(i));
+          bestIDCorr = i;
         }
     }
 
@@ -2122,6 +2424,19 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
   else
     {
       FillElement(vars[prefix + "_best_pzc_good_kinematics"], counter, false);
+    }
+
+  if(bestIDCorr != std::numeric_limits<size_t>::max())
+    {
+      for(auto& [varName, var] : vars)
+        {
+          if(varName.find(prefix + "_best_corr_pzc") != std::string::npos)
+            TransferElement(var, slcVars, prefix + "_best_corr_pzc", prefix + "_pzc", counter, counter, bestIDCorr);
+        }
+    }
+  else
+    {
+      FillElement(vars[prefix + "_best_corr_pzc_good_kinematics"], counter, false);
     }
 }
 
@@ -2192,6 +2507,22 @@ int sbnd::NCPiZeroAnalysis::GetTotalGenEvents(const art::Event &e)
   }
 
   return nGenEvt;
+}
+
+art::Ptr<recob::PFParticle> sbnd::NCPiZeroAnalysis::GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfps)
+{
+  for(auto pfp : pfps)
+    if(pfp->IsPrimary())
+      return pfp;
+
+  return art::Ptr<recob::PFParticle>();
+}
+
+double sbnd::NCPiZeroAnalysis::CorrectEnergy(const double &energy)
+{
+  const int bin = fShowerEnergyCorrectionHist->FindBin(energy);
+
+  return energy * (1 - fShowerEnergyCorrectionHist->GetBinContent(bin));
 }
 
 void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)
@@ -2406,15 +2737,6 @@ template<typename T>
 void sbnd::NCPiZeroAnalysis::FillElement(VecVar *vec, const int posA, const int posB, const T value)
 {
   dynamic_cast<InhVecVecVar<T>*>(vec)->SetVal(posA, posB, value);
-}
-
-art::Ptr<recob::PFParticle> sbnd::NCPiZeroAnalysis::GetPrimaryPFP(const std::vector<art::Ptr<recob::PFParticle>> &pfps)
-{
-  for(auto pfp : pfps)
-    if(pfp->IsPrimary())
-      return pfp;
-
-  return art::Ptr<recob::PFParticle>();
 }
 
 template<typename T>

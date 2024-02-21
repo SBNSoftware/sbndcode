@@ -1,34 +1,26 @@
-#include "/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
-#include "Categories.h"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
 #include "Plots.h"
-
-const double goalPOT = 10e20;
-
-double GetPOT(TChain *subruns);
-int GetGenEvents(TChain *subruns);
+#include "Selections.h"
+#include "Common.C"
 
 void TrueEventMode2DPlots(const TString productionVersion, const std::vector<TwoDPlotSet> &plotSets, const std::vector<Cut> &signals)
 {
-  const TString saveDir = "/sbnd/data/users/hlay/ncpizero/plots/" + productionVersion + "/true_event_modes_two_d";
+  const TString saveDir = baseSaveDir + "/" + productionVersion + "/true_event_modes_two_d";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = "/pnfs/sbnd/persistent/users/hlay/ncpizero/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *rockboxevents = new TChain("ncpizeroana/events");
-  rockboxevents->Add(rockboxFile);
+  TChain *ncpizeroEvents = new TChain("ncpizeroana/events");
+  ncpizeroEvents->Add(ncpizeroFile);
 
-  TChain *rockboxsubruns = new TChain("ncpizeroana/subruns");
-  rockboxsubruns->Add(rockboxFile);
+  TChain *ncpizeroSubruns = new TChain("ncpizeroana/subruns");
+  ncpizeroSubruns->Add(ncpizeroFile);
 
-  TString potString = Form(" (%g POT)", goalPOT);
-  potString.ReplaceAll("e+","x10^{");
-  potString.ReplaceAll(" POT","} POT");
-
-  const double rockboxPOT = GetPOT(rockboxsubruns);
-  const double rockboxScaling = goalPOT / rockboxPOT;
+  const double ncpizeroPOT     = GetPOT(ncpizeroSubruns);
+  const double ncpizeroScaling = goalPOT / ncpizeroPOT;
 
   for(auto const& signal : signals)
     {
@@ -42,7 +34,7 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
             stacks.push_back(new THStack(Form("stack%i", i),
                                          Form("%.2f < %s < %.2f;%s;Events / %s", plotSet.bins2[i],
                                               plotSet.axis2.Data(), plotSet.bins2[i+1], plotSet.axis1.Data(),
-                                              plotSet.normalisationUnit.Data())));
+                                              plotSet.normalisationUnit1.Data())));
 
           TLegend *lEventModes = new TLegend(.55, .28, .9, .8);
 
@@ -52,11 +44,11 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
                 {
                   TH1F *hTemp = new TH1F(Form("h%s%s%i%s", plotSet.name.Data(), signal.name.Data(), i, category.name.Data()), "", plotSet.nbins1, bins1);
 
-                  rockboxevents->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), signal.name.Data(), i, category.name.Data()),
-                                      Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + signal.cut);
+                  ncpizeroEvents->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), signal.name.Data(), i, category.name.Data()),
+                                       Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + signal.cut);
 
-                  hTemp->Scale(rockboxScaling);
-                  NormaliseEntriesByBinWidth(hTemp, plotSet.scale);
+                  hTemp->Scale(ncpizeroScaling);
+                  NormaliseEntriesByBinWidth(hTemp, plotSet.scale1);
                   hTemp->SetFillColorAlpha(category.colour, 0.4);
                   hTemp->SetLineColor(category.colour);
                   hTemp->SetLineWidth(2);
@@ -93,34 +85,4 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
           delete canvas;
         }
     }
-}
-
-double GetPOT(TChain *subruns)
-{
-  double sum = 0., pot = 0;
-
-  subruns->SetBranchAddress("pot", &pot);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += pot;
-    }
-
-  return sum;
-}
-
-int GetGenEvents(TChain *subruns)
-{
-  int sum = 0., ngenevts = 0;
-
-  subruns->SetBranchAddress("ngenevts", &ngenevts);
-
-  for(size_t i = 0; i < subruns->GetEntries(); ++i)
-    {
-      subruns->GetEntry(i);
-      sum += ngenevts;
-    }
-
-  return sum;
 }

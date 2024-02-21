@@ -23,6 +23,7 @@
 #include "TGaxis.h"
 #include "TSystem.h"
 #include "TText.h"
+#include "TF1.h"
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "larsim/MCCheater/BackTrackerService.h"
@@ -61,9 +62,11 @@ private:
 
   std::string fSaveDir;
 
-  bool fBadHitMode, fROIOnly;
+  bool fBadHitMode, fROIOnly, fLineMode;
 
   int fSliceID;
+
+  std::vector<unsigned int> fChannelIDs;
 };
 
 sbnd::HitWaveformDisplay::HitWaveformDisplay(fhicl::ParameterSet const& p)
@@ -75,7 +78,9 @@ sbnd::HitWaveformDisplay::HitWaveformDisplay(fhicl::ParameterSet const& p)
     fSaveDir          = p.get<std::string>("SaveDir", ".");
     fBadHitMode       = p.get<bool>("BadHitMode", true);
     fROIOnly          = p.get<bool>("ROIOnly", true);
+    fLineMode         = p.get<bool>("LineMode", true);
     fSliceID          = p.get<int>("SliceID", -1);
+    fChannelIDs       = p.get<std::vector<unsigned int>>("ChannelIDs", {});
   }
 
 void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
@@ -127,6 +132,9 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
   for(auto const& hit : hitVec)
     {
       if(usedHits.count(hit.key()) != 0)
+        continue;
+
+      if(!fChannelIDs.empty() && std::count(fChannelIDs.begin(), fChannelIDs.end(), hit->Channel()) == 0)
         continue;
 
       const int trackID = TruthMatchUtils::TrueParticleID(clockData, hit, true);
@@ -187,13 +195,13 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
             }
         }
 
-      std::vector<std::tuple<unsigned long, unsigned short, unsigned short>> goodHits;
-      std::vector<std::tuple<unsigned long, unsigned short, unsigned short>> badHits;
+      std::vector<std::tuple<unsigned long, unsigned short, unsigned short, float>> goodHits;
+      std::vector<std::tuple<unsigned long, unsigned short, unsigned short, float>> badHits;
 
       if(trackID == def_int)
-        badHits.emplace_back(hit.key(), hitStartTDC, hitEndTDC);
+        badHits.emplace_back(hit.key(), hitStartTDC, hitEndTDC, hit->PeakAmplitude());
       else
-        goodHits.emplace_back(hit.key(), hitStartTDC, hitEndTDC);
+        goodHits.emplace_back(hit.key(), hitStartTDC, hitEndTDC, hit->PeakAmplitude());
 
       usedHits.insert(hit.key());
 
@@ -221,9 +229,9 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
 
           const int otherTrackID = TruthMatchUtils::TrueParticleID(clockData, otherHit, true);
           if(otherTrackID == def_int)
-            badHits.emplace_back(otherHit.key(), otherHitStartTDC, otherHitEndTDC);
+            badHits.emplace_back(otherHit.key(), otherHitStartTDC, otherHitEndTDC, otherHit->PeakAmplitude());
           else
-            goodHits.emplace_back(otherHit.key(), otherHitStartTDC, otherHitEndTDC);
+            goodHits.emplace_back(otherHit.key(), otherHitStartTDC, otherHitEndTDC, otherHit->PeakAmplitude());
 
           usedHits.insert(otherHit.key());
         }
@@ -256,70 +264,10 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
       legend->SetNColumns(2);
       legend->AddEntry(simHist, "Sim Deposits", "l");
 
-      int hitN = 0;
-      for(auto const& [hitKey, startTDC, endTDC] : goodHits)
-        {
-          TLine *startLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
-          startLine->SetLineColor(kOrange);
-          startLine->SetLineWidth(4);
-          TLine *endLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
-          endLine->SetLineColor(kOrange);
-          endLine->SetLineWidth(4);
-
-          TText *startText = new TText(startTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
-          startText->SetTextAngle(270);
-          startText->SetTextSize(0.02);
-          startText->SetTextColor(kOrange);
-
-          TText *endText = new TText(endTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
-          endText->SetTextAngle(270);
-          endText->SetTextSize(0.02);
-          endText->SetTextColor(kOrange);
-
-          startLine->Draw();
-          startText->Draw();
-          endLine->Draw();
-          endText->Draw();
-
-          if(hitN == 0)
-            legend->AddEntry(startLine, "#pm1#sigma good hit", "l");
-
-          ++hitN;
-        }
-
-      hitN = 0;
-      for(auto const& [hitKey, startTDC, endTDC] : badHits)
-        {
-          TLine *startLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
-          startLine->SetLineColor(kRed);
-          startLine->SetLineWidth(4);
-          TLine *endLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
-          endLine->SetLineColor(kRed);
-          endLine->SetLineWidth(4);
-
-          TText *startText = new TText(startTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
-          startText->SetTextAngle(270);
-          startText->SetTextSize(0.02);
-          startText->SetTextColor(kRed);
-
-          TText *endText = new TText(endTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
-          endText->SetTextAngle(270);
-          endText->SetTextSize(0.02);
-          endText->SetTextColor(kRed);
-
-          startLine->Draw();
-          startText->Draw();
-          endLine->Draw();
-          endText->Draw();
-
-          if(hitN == 0)
-            legend->AddEntry(startLine, "#pm1#sigma ghost hit", "l");
-
-          ++hitN;
-        }
-
       simHist->Draw("histsame");
       TH1D *wireHist = new TH1D("wireHist", Form("Channel %d;Tick (TDC);N Electrons", hit->Channel()), nBins, xLow, xHigh);
+
+      double wireMax = 1.;
 
       for(auto const &wire : wireVec)
         {
@@ -341,21 +289,117 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
                 }
             }
 
-          const double wireMax = wireHist->GetMaximum();
+          wireMax = wireHist->GetMaximum();
           wireHist->Scale(max / wireMax);
           wireHist->Draw("same hist");
-          wireHist->SetLineColor(kMagenta);
+          wireHist->SetLineColor(kMagenta+1);
 
           TGaxis *wireAxis = new TGaxis(xHigh, 0, xHigh, 1.5*max,
                                         0, 1.5*wireMax, 507, "+L");
           wireAxis->SetLineWidth(1);
           wireAxis->SetLabelSize(0.05);
           wireAxis->SetTitleSize(0.05);
-          wireAxis->SetTitleOffset(1);
-          wireAxis->SetTitle("e^{-}");
+          wireAxis->SetTitleOffset(1.15);
+          wireAxis->SetTitle("Deconvolved e^{-}");
           wireAxis->Draw();
 
           legend->AddEntry(wireHist, "Deconv. Waveform", "l");
+        }
+
+      int hitN = 0;
+      for(auto const& [hitKey, startTDC, endTDC, peak] : goodHits)
+        {
+          if(fLineMode)
+            {
+              TLine *startLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
+              startLine->SetLineColor(kOrange);
+              startLine->SetLineWidth(4);
+              TLine *endLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
+              endLine->SetLineColor(kOrange);
+              endLine->SetLineWidth(4);
+
+              TText *startText = new TText(startTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
+              startText->SetTextAngle(270);
+              startText->SetTextSize(0.02);
+              startText->SetTextColor(kOrange);
+
+              TText *endText = new TText(endTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
+              endText->SetTextAngle(270);
+              endText->SetTextSize(0.02);
+              endText->SetTextColor(kOrange);
+
+              startLine->Draw();
+              startText->Draw();
+              endLine->Draw();
+              endText->Draw();
+
+              if(hitN == 0)
+                legend->AddEntry(startLine, "#pm1#sigma good hit", "l");
+            }
+          else
+            {
+              const double tdcWidth = 0.5 * (endTDC - startTDC);
+              const double tdcMean  = startTDC + tdcWidth;
+
+              TF1 *gausHit = new TF1("gausHit", "gaus", tdcMean - 3 * tdcWidth, tdcMean + 3 * tdcWidth);
+              gausHit->SetParameters(peak * 50 * (max / wireMax), tdcMean, tdcWidth);
+              gausHit->SetLineColor(kSpring-1);
+              gausHit->SetLineWidth(4);
+              gausHit->Draw("same");
+
+              if(hitN == 0)
+                legend->AddEntry(gausHit, "Gaussian Hit", "l");
+            }
+
+          ++hitN;
+        }
+
+      hitN = 0;
+      for(auto const& [hitKey, startTDC, endTDC, peak] : badHits)
+        {
+          if(fLineMode)
+            {
+              TLine *startLine = new TLine(startTDC, 0, startTDC, 1.2 * max);
+              startLine->SetLineColor(kRed);
+              startLine->SetLineWidth(4);
+              TLine *endLine = new TLine(endTDC, 0, endTDC, 1.2 * max);
+              endLine->SetLineColor(kRed);
+              endLine->SetLineWidth(4);
+
+              TText *startText = new TText(startTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
+              startText->SetTextAngle(270);
+              startText->SetTextSize(0.02);
+              startText->SetTextColor(kRed);
+
+              TText *endText = new TText(endTDC + 0.005 * nBins, 1.18 * max, Form("Hit%lu", hitKey));
+              endText->SetTextAngle(270);
+              endText->SetTextSize(0.02);
+              endText->SetTextColor(kRed);
+
+              startLine->Draw();
+              startText->Draw();
+              endLine->Draw();
+              endText->Draw();
+
+              if(hitN == 0)
+                legend->AddEntry(startLine, "#pm1#sigma ghost hit", "l");
+            }
+          else
+            {
+              const double tdcWidth = 0.5 * (endTDC - startTDC);
+              const double tdcMean  = startTDC + tdcWidth;
+
+              TF1 *gausHit = new TF1("gausHit", "gaus", tdcMean - 3 * tdcWidth, tdcMean + 3 * tdcWidth);
+              gausHit->SetParameters(peak * 50 * (max / wireMax), tdcMean, tdcWidth);
+              gausHit->SetLineColor(kRed+2);
+              gausHit->SetLineWidth(4);
+              gausHit->Draw("same");
+
+              if(hitN == 0)
+                legend->AddEntry(gausHit, "Ghost Gaussian Hit", "l");
+            }
+
+          ++hitN;
         }
 
       legend->Draw();
@@ -366,6 +410,7 @@ void sbnd::HitWaveformDisplay::analyze(const art::Event &e)
 
       canvas->SaveAs(saveLoc + fileName + ".png");
       canvas->SaveAs(saveLoc + fileName + ".pdf");
+      canvas->SaveAs(saveLoc + fileName + ".C");
 
       delete canvas;
     }
@@ -400,7 +445,7 @@ void sbnd::HitWaveformDisplay::SetStyle()
   gStyle->SetTitleFont(62,"xyz");
 
   gStyle->SetTitleOffset(1.07,"x");
-  gStyle->SetTitleOffset(1.12,"y");
+  gStyle->SetTitleOffset(.88,"y");
   gStyle->SetTitleOffset(1,"z");
 
   gStyle->SetMarkerStyle(20);

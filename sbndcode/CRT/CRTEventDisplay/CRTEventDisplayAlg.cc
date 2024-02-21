@@ -286,9 +286,9 @@ namespace sbnd::crt {
       {
         auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetSimChannel>>(fSimDepositLabel);
 
-        for(auto const simDep : *simDepositsHandle)
+        for(auto const& simDep : *simDepositsHandle)
           {
-            for(auto const ide : simDep.AuxDetIDEs())
+            for(auto const& ide : simDep.AuxDetIDEs())
               {
                 double x = (ide.entryX + ide.exitX) / 2.;
                 double y = (ide.entryY + ide.exitY) / 2.;

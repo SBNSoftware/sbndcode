@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Structs.h"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Structs.h"
 
 const std::map<int, int> razzledMap = { { 11, 0 },
                                         { 13, 1 },
@@ -39,6 +39,16 @@ const std::vector<PIDTraining> dazzle_trainings = { { "nominal_dazzle", "/cvmfs/
 
 const std::vector<PIDTraining> razzled_trainings = { { "razzled", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Nominal", kViolet-5 },
                                                      { "razzled_lower_track_length_threshold", "/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled_lower_track_length_threshold/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Lower Thresholds", kTeal+6 }
+};
+
+const PIDTraining razzled_v2  = { "razzled", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Razzled Av2", kViolet-5 };
+
+const PIDTraining razzled_v12 = { "razzled_v12", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Razzled Av12", kPink+3 };
+
+const PIDTraining razzled_v14 = { "razzled_v14", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv14/razzled/training/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Razzled Av14", kPink+3 };
+
+const std::vector<PIDTraining> razzled_v12_trainings = { { "razzled", "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv2/razzled_lower_track_length_threshold/Razzled/weights/Razzled_BDTG.weights.xml", true, false, false, "Nominal", kTeal+6 },
+                                                         razzled_v12
 };
 
 const std::vector<TString> razzleAxisLabels  = { "", "e^{#pm}", "#gamma", "Track", "Other" };

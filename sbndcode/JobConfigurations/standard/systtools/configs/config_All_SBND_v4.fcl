@@ -1,0 +1,6 @@
+#include "config_GENIEReWeightMultisim_sbnd_v4.fcl"
+#include "config_GENIEReWeightMultisigma_sbnd_v4.fcl"
+
+syst_providers: [ GENIEReWeight_Multisim_Tool_Config,
+                  GENIEReWeight_Multisigma_Tool_Config
+]

@@ -63,6 +63,8 @@
 #include "eventweight_flux_sbn.fcl"
 #include "eventweight_genie_systtools_sbnd.fcl"
 #include "sbn_stub.fcl"
+#include "sbn_cnnid.fcl"
+#include "eventweight_geant4_sbn.fcl"
 
 process_name: Reco
 
@@ -79,6 +81,7 @@ services:
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
   BackTrackerService: @local::sbnd_backtrackerservice
   ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  ChannelStatusService:      @local::sbnd_channelstatus
 }
 
 #source is now a root file
@@ -189,6 +192,12 @@ physics:
   ### flash-matching
   fmatch:              @local::sbnd_simple_flashmatch
   fmatchSCE:           @local::sbnd_simple_flashmatch_sce
+  fmatchop:            @local::sbnd_simple_flashmatch_op
+  fmatchopSCE:         @local::sbnd_simple_flashmatch_op_sce
+  fmatchara:           @local::sbnd_simple_flashmatch_ara
+  fmatcharaSCE:        @local::sbnd_simple_flashmatch_ara_sce
+  fmatchopara:         @local::sbnd_simple_flashmatch_opara
+  fmatchoparaSCE:      @local::sbnd_simple_flashmatch_opara_sce
   opt0finder:          @local::sbnd_opt0_finder_one_to_many
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
 
@@ -197,6 +206,7 @@ physics:
 
   ### Analysis Producers
   crumbs:                      @local::crumbs_sbnd
+  cnnid: 		       @local::cnnid_sbnd
   pandoraTrackMCS:             @local::mcs_sbn
   pandoraTrackRange:           @local::range_sbn
   pandoraTrackClosestApproach: @local::trackscatterclosestapproach_sbn
@@ -210,6 +220,7 @@ physics:
   systtools:                   @local::sbn_systtools
   vertexCharge:		       @local::vertex_charge_sbnd_sce
   vertexStub:		       @local::vertex_stub_sbnd_sce
+  geant4weight:                @local::sbn_eventweight_geant4
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -254,8 +265,7 @@ physics:
           , crttracks
           , crtspacepointmatching
           , crttrackmatching
-          , fmatch
-          , caloskimCalorimetry
+          #, fmatch
           , crumbs
           , pandoraTrackMCS
           , pandoraTrackRange
@@ -266,7 +276,12 @@ physics:
           , pandoraShowerSelectionVars
           , razzle
           , razzled
- ]
+          , fmatch
+          , fmatchop
+          , fmatchara
+          , fmatchopara
+          , caloskimCalorimetry
+]
 
 
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain

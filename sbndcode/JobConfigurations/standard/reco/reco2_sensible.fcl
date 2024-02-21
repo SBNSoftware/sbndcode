@@ -1,17 +1,19 @@
+#include "ncpizero_modules.fcl"
+#include "recoeff.fcl"
 #include "reco_sbnd.fcl"
 
 process_name: Reco2
 
-physics.analyzers.ncpizeroana:
-{
-  module_type: "NCPiZeroAnalysis"
-}
+physics.analyzers.ncpizeroana: @local::ncpizeroana
+physics.analyzers.recoeff:     @local::recoeff
+
+physics.producers.pandoraShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
 
 physics.reco2_sensible: [ rns,
   pandora,
   pandoraSCE,
   pandoraTrack,
-  pandoraShowerSBN,
+  pandoraShower,
   pandoraCalo,
   pandoraPid,
   crtclustering,
@@ -35,10 +37,11 @@ physics.reco2_sensible: [ rns,
 
 physics.weight_paths: [
   fluxweight,
-  systtools
+  systtools,
+  geant4weight
 ]
 
-physics.ana: [ ncpizeroana ]
+physics.ana: [ ncpizeroana, recoeff ]
 
 physics.trigger_paths: [ reco2_sensible ]
 physics.end_paths: [ stream1, ana ]
@@ -53,15 +56,20 @@ physics.producers.dazzle.PFPLabel:                         "pandoraSCE"
 physics.producers.fmatch.PandoraProducer:                  "pandoraSCE"
 physics.producers.fmatch.SpacePointProducer:               "pandoraSCE"
 physics.producers.opt0finder.SliceProducer:                "pandoraSCE"
+physics.producers.opt0finder.ShowerProducer:               "pandoraShower"
 physics.producers.pandoraShowerCosmicDist.PandoraLabel:    "pandoraSCE"
-physics.producers.pandoraShowerSBN.PFParticleLabel:        "pandoraSCE"
+physics.producers.pandoraShowerCosmicDist.ShowerLabel:     "pandoraShower"
+physics.producers.pandoraShower.PFParticleLabel:           "pandoraSCE"
 physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
+physics.producers.pandoraShowerSelectionVars.ShowerLabel:  "pandoraShower"
 physics.producers.pandoraTrack.PFParticleLabel:            "pandoraSCE"
 physics.producers.razzle.PFPLabel:                         "pandoraSCE"
+physics.producers.razzle.ShowerLabel:                      "pandoraShower"
 physics.producers.razzled.ClusterLabel:                    "pandoraSCE"
 physics.producers.razzled.DazzleLabel:                     "dazzle"
 physics.producers.razzled.RazzleLabel:                     "razzle"
 physics.producers.razzled.PFPLabel:                        "pandoraSCE"
+physics.producers.razzled.ShowerLabel:                     "pandoraShower"
 
 physics.producers.pandora.SimChannelModuleLabel: "simtpc2d:simpleSC"
 physics.producers.dazzle.SimChannelLabel:        "simtpc2d:simpleSC"
@@ -70,14 +78,14 @@ physics.producers.razzled.SimChannelLabel:       "simtpc2d:simpleSC"
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
 
-physics.producers.razzle.WeightFile:        "Razzle_BDTG_NCPiZeroAv2.weights.xml"
-physics.producers.dazzle.WeightFile:        "Dazzle_BDTG_NCPiZeroAv2.weights.xml"
-physics.producers.razzled.WeightFile:       "Razzled_BDTG_NCPiZeroAv2_lower_track_length_threshold.weights.xml"
+physics.producers.razzle.WeightFile:        "Razzle_BDTG_NCPiZeroAv12.weights.xml"
+physics.producers.dazzle.WeightFile:        "Dazzle_BDTG_NCPiZeroAv12.weights.xml"
+physics.producers.razzled.WeightFile:       "Razzled_BDTG_NCPiZeroAv12.weights.xml"
 physics.producers.crumbs.UseSimpleFlash:    false
 physics.producers.crumbs.UseOpT0Finder:     true
-physics.producers.crumbs.MVAFileName:       "CRUMBS_Inclusive_NCPiZeroAv2.weights.xml"
-physics.producers.crumbs.CCNuMuMVAFileName: "CRUMBS_CCNuMu_NCPiZeroAv2.weights.xml"
-physics.producers.crumbs.CCNuEMVAFileName:  "CRUMBS_CCNuE_NCPiZeroAv2.weights.xml"
-physics.producers.crumbs.NCMVAFileName:     "CRUMBS_NC_NCPiZeroAv2.weights.xml"
+physics.producers.crumbs.MVAFileName:       "CRUMBS_Inclusive_NCPiZeroAv12.weights.xml"
+physics.producers.crumbs.CCNuMuMVAFileName: "CRUMBS_CCNuMu_NCPiZeroAv12.weights.xml"
+physics.producers.crumbs.CCNuEMVAFileName:  "CRUMBS_CCNuE_NCPiZeroAv12.weights.xml"
+physics.producers.crumbs.NCMVAFileName:     "CRUMBS_NC_NCPiZeroAv12.weights.xml"
 
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
