@@ -817,7 +817,8 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
           const TVector3 dir_0 = phot_0.trkDir;
           const TVector3 dir_1 = phot_1.trkDir;
 
-          const bool goodKinematics       = !(dir_0.X() == -999 || dir_1.X() == -999 || energy_0 < 0 || energy_1 < 0);
+          const bool goodKinematics       = !(dir_0.X() == -999 || dir_1.X() == -999 || dir_0.X() == def_float || dir_1.X() == def_float
+					      || energy_0 < 0 || energy_1 < 0);
           const double cosThetaGammaGamma = dir_0.Dot(dir_1) / (dir_0.Mag() * dir_1.Mag());
           const TVector3 pizeroDir        = (energy_0 * dir_0) + (energy_1 * dir_1);
           const double invariantMass      = sqrt(2 * energy_0 * energy_1 * (1 - cosThetaGammaGamma));
