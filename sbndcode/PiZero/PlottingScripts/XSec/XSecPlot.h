@@ -5,20 +5,47 @@
 class XSecPlot {
 
  private:
-  std::string       _name;
-  std::string       _axes_labels;
-  std::vector<Bin*> _bins;
+  std::string         _name;
+  std::string         _axes_labels;
+  std::vector<Bin*>   _bins;
+  std::vector<double> _var0Bins;
+  std::vector<double> _var1Bins;
+  std::string         _var0;
+  std::string         _var1;
 
  public:
 
-  XSecPlot(const std::string name, const std::string axes_labels, const int n,
+  XSecPlot(const std::string name, const std::string axes_labels, const int N,
+           const std::vector<double> var0Bins, const std::vector<double> var1Bins,
+           const std::string var0, const std::string var1,
            const double nTargets, const double intFlux)
     {
       _name        = name;
       _axes_labels = axes_labels;
+      _var0Bins    = var0Bins;
+      _var1Bins    = var1Bins;
+      _var0        = var0;
+      _var1        = var1;
 
-      for(int i = 0; i < n; ++i)
-        _bins.emplace_back(new Bin(i, 1., nTargets, intFlux));
+      if((var0Bins.size() - 1) * (var1Bins.size() - 1) != N ||
+         var0Bins.size() < 2 || var1Bins.size() < 2)
+        throw std::runtime_error("Bin Sizes Messed Up");
+
+      int n = 0;
+
+      for(int i = 1; i < var0Bins.size(); ++i)
+        {
+          const double width0 = var0Bins.size() == 2 ? 1. : var0Bins[i] - var0Bins[i-1];
+
+          for(int j = 1; j < var1Bins.size(); ++j)
+            {
+              const double width1 = var1Bins.size() == 2 ? 1. : var1Bins[j] - var1Bins[j-1];
+              _bins.emplace_back(new Bin(n, width0 * width1, nTargets, intFlux,
+                                         var0Bins[i-1], var0Bins[i], var1Bins[j-1], var1Bins[j]));
+
+              ++n;
+            }
+        }
     }
 
   void SetName(const std::string name)
@@ -52,6 +79,16 @@ class XSecPlot {
   std::vector<Bin*> GetBins()
     {
       return _bins;
+    }
+
+  std::string GetVar0()
+    {
+      return _var0;
+    }
+
+  std::string GetVar1()
+    {
+      return _var1;
     }
 
   TH1F* GetNominalHist(const bool statErr = true)

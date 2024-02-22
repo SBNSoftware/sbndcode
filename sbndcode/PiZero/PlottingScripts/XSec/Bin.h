@@ -10,15 +10,24 @@ class Bin {
   UniverseBin                                               *_nominalBin;
   std::map<std::string, std::vector<UniverseBin*>>          *_universeBins;
   std::map<std::string, std::tuple<double, double, double>> *_systFracErrors;
+  double                                                     _var0Low;
+  double                                                     _var0High;
+  double                                                     _var1Low;
+  double                                                     _var1High;
 
  public:
   
-  Bin(const int index, const double binWidth, const double nTargets, const double intFlux)
+  Bin(const int index, const double binWidth, const double nTargets, const double intFlux,
+      const double var0Low, const double var0High, const double var1Low, const double var1High)
     {
       _index          = index;
       _nominalBin     = new UniverseBin(binWidth, nTargets, intFlux);
       _universeBins   = new std::map<std::string, std::vector<UniverseBin*>>();
       _systFracErrors = new std::map<std::string, std::tuple<double, double, double>>();
+      _var0Low        = var0Low;
+      _var0High       = var0High;
+      _var1Low        = var1Low;
+      _var1High       = var1High;
     }
 
   void Print()
@@ -171,5 +180,10 @@ class Bin {
   std::tuple<double, double, double> GetSystFracErrors(const std::string &weightName)
   {
     return _systFracErrors->at(weightName);
+  }
+
+  bool InBin(const double &val0, const double &val1)
+  {
+    return val0 > _var0Low && val0 < _var0High && val1 > _var1Low && val1 < _var1High;
   }
 };

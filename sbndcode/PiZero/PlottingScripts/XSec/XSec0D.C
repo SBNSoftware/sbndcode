@@ -37,9 +37,19 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
                           { "Intime", intimeNus, intimeSlices, intimeScaling }
   };
 
-  XSecPlot *xsec_incl  = new XSecPlot("xsec_incl", "NC 1#pi^{0};;#sigma (cm^{2}/nucleon)", 1, nTargets, intFlux);
-  XSecPlot *xsec_0p0pi = new XSecPlot("xsec_0p0pi", "NC 1#pi^{0}0p0#pi^{#pm};;#sigma (cm^{2}/nucleon)", 1, nTargets, intFlux);
-  XSecPlot *xsec_Np0pi = new XSecPlot("xsec_Np0pi", "NC 1#pi^{0}Np0#pi^{#pm};;#sigma (cm^{2}/nucleon)", 1, nTargets, intFlux);
+  std::vector<double> piZeroMomBins      = { def_double, def_double_high };
+  std::vector<double> cosThetaPiZeroBins = { def_double, def_double_high };
+
+  XSecPlot *xsec_incl  = new XSecPlot("xsec_incl", "NC 1#pi^{0};;#sigma (cm^{2}/nucleon)",
+                                      1, piZeroMomBins, cosThetaPiZeroBins,
+                                      "pizero_mom", "cos_theta_pizero", nTargets, intFlux);
+  XSecPlot *xsec_0p0pi = new XSecPlot("xsec_0p0pi", "NC 1#pi^{0}0p0#pi^{#pm};;#sigma (cm^{2}/nucleon)",
+                                      1, piZeroMomBins, cosThetaPiZeroBins,
+                                      "pizero_mom", "cos_theta_pizero", nTargets, intFlux);
+
+  XSecPlot *xsec_Np0pi = new XSecPlot("xsec_Np0pi", "NC 1#pi^{0}Np0#pi^{#pm};;#sigma (cm^{2}/nucleon)",
+                                      1, piZeroMomBins, cosThetaPiZeroBins,
+                                      "pizero_mom", "cos_theta_pizero", nTargets, intFlux);
 
   Selection ncpizero_incl  = { "ncpizero_incl", "sel_incl", "event_type_incl", xsec_incl };
   Selection ncpizero_0p0pi = { "ncpizero_0p0pi", "sel_0p0pi", "event_type_0p0pi", xsec_0p0pi };
@@ -47,7 +57,10 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
 
   Selections selections = { ncpizero_incl, ncpizero_0p0pi, ncpizero_Np0pi };
 
-  WeightSets weightSets = { { "flux", tmp_flux_weight_names, 10 } };
+  WeightSets weightSets = { { "flux", flux_weight_names, 1000 },
+                            { "genie", genie_weight_names, 500 },
+                            { "geant4", geant4_weight_names, 1000 },
+  };
 
   FillPlots(samples, selections, weightSets);
 

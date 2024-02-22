@@ -37,10 +37,11 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
       std::vector<int>                 event_type(selections.size(), -1);
       std::vector<std::vector<float>*> weights;
       float                            comp;
-
+      double                           val0;
+      double                           val1;
 
       for(int w = 0; w < nweights; ++w)
-        weights.push_back(new std::vector<float>);
+        weights.push_back(new std::vector<float>());
 
       sample.nutree->SetBranchStatus("*", 0);
 
@@ -48,17 +49,23 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
         {
           XSecPlot *plot = selection.plot;
 
+          const std::string var0 = plot->GetVar0();
+          const std::string var1 = plot->GetVar1();
+
           sample.nutree->SetBranchAddress(selection.signal, &event_type[selection_i]);
+          sample.nutree->SetBranchAddress(var0.c_str(), &val0);
+          sample.nutree->SetBranchAddress(var1.c_str(), &val1);
 
           for(Bin* bin : plot->GetBins())
             {
+              int weight_i = 0;
+
               for(auto&& [ weightSet_i, weightSet ] : enumerate(weightSets))
                 {
                   for(auto&& [ name_i, name ] : enumerate(weightSet.list))
                     {
-                      int weight_i = weightSet_i * weightSets.size() + name_i;
-
                       sample.nutree->SetBranchAddress(name.c_str(), &weights[weight_i]);
+                      ++weight_i;
                     }
                 }
             }
@@ -84,19 +91,24 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
 
                   for(Bin* bin : plot->GetBins())
                     {
+                      if(!bin->InBin(val0, val1))
+                        continue;
+
                       bin->IncrementNominalBinTrueSignal(scaling);
+
+                      int weight_i = 0;
 
                       for(auto&& [ weightSet_i, weightSet ] : enumerate(weightSets))
                         {
                           for(auto&& [ name_i, name ] : enumerate(weightSet.list))
                             {
-                              int weight_i = weightSet_i * weightSets.size() + name_i;
-
                               if(event_type[selection_i] == 7 || event_type[selection_i] == 8)
                                 *weights[weight_i] = std::vector<float>(weightSet.nunivs, 1.);
 
                               for(int univ = 0; univ < weightSet.nunivs; ++univ)
                                 bin->IncrementUniverseBinTrueSignal(name, univ, scaling * weights[weight_i]->at(univ));
+
+                              ++weight_i;
                             }
                         }
                     }
@@ -111,18 +123,24 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
         {
           XSecPlot *plot = selection.plot;
 
+          const std::string var0 = plot->GetVar0();
+          const std::string var1 = plot->GetVar1();
+
           sample.slicetree->SetBranchAddress(selection.signal, &event_type[selection_i]);
           sample.slicetree->SetBranchAddress(selection.cut, &sel[selection_i]);
+          sample.slicetree->SetBranchAddress(("reco_" + var0).c_str(), &val0);
+          sample.slicetree->SetBranchAddress(("reco_" + var1).c_str(), &val1);
 
           for(Bin* bin : plot->GetBins())
             {
+              int weight_i = 0;
+
               for(auto&& [ weightSet_i, weightSet ] : enumerate(weightSets))
                 {
                   for(auto&& [ name_i, name ] : enumerate(weightSet.list))
                     {
-                      int weight_i = weightSet_i * weightSets.size() + name_i;
-
                       sample.slicetree->SetBranchAddress(name.c_str(), &weights[weight_i]);
+                      ++weight_i;
                     }
                 }
             }
@@ -148,17 +166,20 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
 
                   for(Bin* bin : plot->GetBins())
                     {
+                      if(!bin->InBin(val0, val1))
+                        continue;
+
                       bin->IncrementNominalBinCount(scaling);
 
                       if(!(event_type[selection_i] == 0 && comp > .5))
                         bin->IncrementNominalBinBkgdCount(scaling);
 
+                      int weight_i = 0;
+
                       for(auto&& [ weightSet_i, weightSet ] : enumerate(weightSets))
                         {
                           for(auto&& [ name_i, name ] : enumerate(weightSet.list))
                             {
-                              int weight_i = weightSet_i * weightSets.size() + name_i;
-
                               if(event_type[selection_i] == 7 || event_type[selection_i] == 8)
                                 *weights[weight_i] = std::vector<float>(weightSet.nunivs, 1.);
 
@@ -169,6 +190,7 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
                                   if(!(event_type[selection_i] == 0 && comp > .5))
                                     bin->IncrementUniverseBinBkgdCount(name, univ, scaling * weights[weight_i]->at(univ));
                                 }
+                              ++weight_i;
                             }
                         }
                     }

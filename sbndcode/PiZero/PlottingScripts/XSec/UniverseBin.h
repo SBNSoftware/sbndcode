@@ -1,7 +1,8 @@
 #pragma once
 
-constexpr int def_int       = std::numeric_limits<int>::min();
-constexpr double def_double = std::numeric_limits<double>::lowest();
+constexpr int def_int            = std::numeric_limits<int>::min();
+constexpr double def_double      = std::numeric_limits<double>::lowest();
+constexpr double def_double_high = std::numeric_limits<double>::max();
 
 class UniverseBin {
 
