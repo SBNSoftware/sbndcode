@@ -69,7 +69,7 @@ class Bin {
     for(auto&& [ name, univBins ] : *_universeBins)
       {
         for(UniverseBin* bin : univBins)
-          bin->CalculateXSecPurity();
+          bin->CalculateXSecPurity(_nominalBin->GetCount());
       }
   }
 

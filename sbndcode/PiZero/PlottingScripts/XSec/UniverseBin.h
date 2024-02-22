@@ -67,6 +67,11 @@ class UniverseBin {
     _xsec = (_count * _scaleFactor * _purity) / (_efficiency * _nTargets * _intFlux * _binWidth);
   }
 
+  void CalculateXSecPurity(const double alternativeCount)
+  {
+    _xsec = (alternativeCount * _scaleFactor * _purity) / (_efficiency * _nTargets * _intFlux * _binWidth);
+  }
+
   void CalculateXSecBackgroundSubtraction()
   {
     _xsec = ((_count - _bkgdCount) * _scaleFactor) / (_efficiency * _nTargets * _intFlux * _binWidth);
@@ -95,6 +100,11 @@ class UniverseBin {
   double GetIntFlux()
   {
     return _intFlux;
+  }
+
+  double GetCount()
+  {
+    return _count;
   }
 
   void IncrementCount(const double &increment)
