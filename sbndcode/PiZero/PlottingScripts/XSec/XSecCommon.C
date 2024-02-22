@@ -3,6 +3,36 @@
 #include "Selection.h"
 #include "WeightSet.h"
 #include "Enumerate.h"
+#include "Common.C"
+
+XSecSamples SetupSamples(const TString productionVersion)
+{
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString intimeFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
+
+  TChain *rockboxNus = new TChain("ncpizeroxsectrees/neutrinos");
+  rockboxNus->Add(rockboxFile);
+  TChain *rockboxSlices = new TChain("ncpizeroxsectrees/slices");
+  rockboxSlices->Add(rockboxFile);
+  TChain *rockboxSubruns = new TChain("ncpizeroxsectrees/subruns");
+  rockboxSubruns->Add(rockboxFile);
+
+  TChain *intimeNus = new TChain("ncpizeroxsectrees/neutrinos");
+  intimeNus->Add(intimeFile);
+  TChain *intimeSlices = new TChain("ncpizeroxsectrees/slices");
+  intimeSlices->Add(intimeFile);
+  TChain *intimeSubruns = new TChain("ncpizeroxsectrees/subruns");
+  intimeSubruns->Add(intimeFile);
+
+  double rockboxScaling, intimeScaling;
+  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
+
+  XSecSamples samples = { { "Rockbox", rockboxNus, rockboxSlices, rockboxScaling },
+                          { "Intime", intimeNus, intimeSlices, intimeScaling }
+  };
+
+  return samples;
+}
 
 void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightSets)
 {

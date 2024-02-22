@@ -1,6 +1,4 @@
 #include "XSecCommon.C"
-#include "Common.C"
-#include "WeightNames.h"
 
 void MakePlot(const int type, const Selections selections, const TString saveDir,
               const std::string weightName = "", const int nunivs = 0);
@@ -13,29 +11,7 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/xsec_zero_d/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
-
-  TChain *rockboxNus = new TChain("ncpizeroxsectrees/neutrinos");
-  rockboxNus->Add(rockboxFile);
-  TChain *rockboxSlices = new TChain("ncpizeroxsectrees/slices");
-  rockboxSlices->Add(rockboxFile);
-  TChain *rockboxSubruns = new TChain("ncpizeroxsectrees/subruns");
-  rockboxSubruns->Add(rockboxFile);
-
-  TChain *intimeNus = new TChain("ncpizeroxsectrees/neutrinos");
-  intimeNus->Add(intimeFile);
-  TChain *intimeSlices = new TChain("ncpizeroxsectrees/slices");
-  intimeSlices->Add(intimeFile);
-  TChain *intimeSubruns = new TChain("ncpizeroxsectrees/subruns");
-  intimeSubruns->Add(intimeFile);
-
-  double rockboxScaling, intimeScaling;
-  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
-
-  XSecSamples samples = { { "Rockbox", rockboxNus, rockboxSlices, rockboxScaling },
-                          { "Intime", intimeNus, intimeSlices, intimeScaling }
-  };
+  XSecSamples samples = SetupSamples(productionVersion);
 
   std::vector<double> piZeroMomBins      = { def_double, def_double_high };
   std::vector<double> cosThetaPiZeroBins = { def_double, def_double_high };
@@ -51,16 +27,9 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
                                       1, piZeroMomBins, cosThetaPiZeroBins,
                                       "pizero_mom", "cos_theta_pizero", nTargets, intFlux);
 
-  Selection ncpizero_incl  = { "ncpizero_incl", "sel_incl", "event_type_incl", xsec_incl };
-  Selection ncpizero_0p0pi = { "ncpizero_0p0pi", "sel_0p0pi", "event_type_0p0pi", xsec_0p0pi };
-  Selection ncpizero_Np0pi = { "ncpizero_Np0pi", "sel_Np0pi", "event_type_Np0pi", xsec_Np0pi };
-
-  Selections selections = { ncpizero_incl, ncpizero_0p0pi, ncpizero_Np0pi };
-
-  WeightSets weightSets = { { "flux", flux_weight_names, 1000 },
-                            { "genie", genie_weight_names, 500 },
-                            { "geant4", geant4_weight_names, 1000 },
-  };
+  selections[0].plot = xsec_incl;
+  selections[1].plot = xsec_0p0pi;
+  selections[2].plot = xsec_Np0pi;
 
   FillPlots(samples, selections, weightSets);
 
