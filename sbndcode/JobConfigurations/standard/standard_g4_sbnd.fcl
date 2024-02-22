@@ -102,7 +102,7 @@ physics:
             , pdfastsim
             , pdfastsimout
             , simdrift
-            , mcreco
+            #, mcreco ## mcreco now run after WireCell sim
             , genericcrt
           ]
 
