@@ -604,9 +604,9 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_crumbs_ccnue_score", &slc_crumbs_ccnue_score);
   fEventTree->Branch("slc_opt0_time", &slc_opt0_time);
   fEventTree->Branch("slc_opt0_time_corrected_Z_pandora", &slc_opt0_time_corrected_Z_pandora);
-  fEventTree->Branch("slc_opt0_time_corrected_Z_flash", &slc_opt0_time_corrected_Z_flash);
+  // fEventTree->Branch("slc_opt0_time_corrected_Z_flash", &slc_opt0_time_corrected_Z_flash);
   fEventTree->Branch("slc_opt0_score", &slc_opt0_score);
-  fEventTree->Branch("slc_opt0_measPE", &slc_opt0_measPE);
+  fEventTree->Branch("slc_opt0_measPE", &slc_opt0_measPE);  
   fEventTree->Branch("slc_opt0_hypoPE", &slc_opt0_hypoPE);
   fEventTree->Branch("slc_opt0_frac", &slc_opt0_frac);
   fEventTree->Branch("slc_n_trks", &slc_n_trks);
@@ -1037,7 +1037,7 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_crumbs_ccnue_score.clear();
   slc_opt0_time.clear();
   slc_opt0_time_corrected_Z_pandora.clear();
-  slc_opt0_time_corrected_Z_flash.clear();
+  // slc_opt0_time_corrected_Z_flash.clear();
   slc_opt0_score.clear();
   slc_opt0_measPE.clear();
   slc_opt0_hypoPE.clear();
