@@ -137,4 +137,22 @@ class XSecPlot {
 
     return graph;
   }
+
+  TGraphAsymmErrors* GetCVErrGraph(const std::vector<std::string> &weightNames)
+  {
+    TGraphAsymmErrors* graph = new TGraphAsymmErrors(1);
+
+    const double nom  = _bins[0]->GetNominalXSec();
+    const double bias = _bins[0]->GetFracSystBiasQuadSum(weightNames);
+    const double res  = _bins[0]->GetFracSystResAveQuadSum(weightNames);
+
+    graph->SetPoint(0, 0.5, nom * (1 - bias));
+    graph->SetPointError(0, 0.48, 0.48, nom * res, nom * res);
+
+    graph->SetMarkerStyle(1);
+    graph->SetLineColor(kBlue+2);
+    graph->SetLineWidth(5);
+
+    return graph;
+  }
 };

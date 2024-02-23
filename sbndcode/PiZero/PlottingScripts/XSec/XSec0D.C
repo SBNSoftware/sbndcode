@@ -1,7 +1,11 @@
 #include "XSecCommon.C"
+#include "LatexHeaders.h"
 
 void MakePlot(const int type, const Selections selections, const TString saveDir,
-              const std::string weightName = "", const int nunivs = 0);
+              const std::string weightName = "", const int nunivs = 0,
+              const std::vector<std::string> weightNames = std::vector<std::string>());
+
+void MakeTables(Selections &selections, WeightSets &weightSets, const TString saveDir);
 
 void XSec0D(const TString productionVersion, const TString saveDirExt)
 {
@@ -35,18 +39,32 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
 
   MakePlot(0, selections, saveDir);
 
+  std::vector<std::string> all_weights;
+
   for(WeightSet &weightSet : weightSets)
     {
+      all_weights.insert(all_weights.end(), weightSet.list.begin(), weightSet.list.end());
+
       for(std::string &name : weightSet.list)
         {
           MakePlot(1, selections, saveDir, name, weightSet.nunivs);
           MakePlot(2, selections, saveDir, name, weightSet.nunivs);
         }
+
+      MakePlot(3, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
     }
+
+  MakePlot(3, selections, saveDir, "all", 0, all_weights);
+
+  MakeTables(selections, weightSets, saveDir);
+
+  WeightSets allSet = {{ "all", all_weights, 0  }};
+  MakeTables(selections, allSet, saveDir);
 }
 
 void MakePlot(const int type, const Selections selections, const TString saveDir,
-              const std::string weightName = "", const int nunivs = 0)
+              const std::string weightName = "", const int nunivs = 0,
+              const std::vector<std::string> weightNames = std::vector<std::string>())
 {
   TCanvas *canvas = new TCanvas("canvas", "canvas");
   canvas->cd();
@@ -86,6 +104,12 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
           graph->Draw("PEsame");
         }
 
+      if(type == 3)
+        {
+          TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightNames);
+          graph->Draw("PEsame");
+        }
+
       TPaveText* title = (TPaveText*)gPad->FindObject("title");
       title->SetY1NDC(0.92);
       title->SetY2NDC(1);
@@ -109,5 +133,59 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
     {
       canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.png");
       canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.pdf");
+    }
+  else if(type == 3)
+    {
+      canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.png");
+      canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.pdf");
+    }
+}
+
+void MakeTables(Selections &selections, WeightSets &weightSets, const TString saveDir)
+{
+  for(WeightSet &weightSet : weightSets)
+    {
+      ofstream texFile;
+      texFile.open(saveDir + "/" + weightSet.name.c_str() + "_systematic_fractional_errors.tex");
+      texFile << docStart
+              << tableStart
+              << "\\hline\n"
+              << "Systematic & \\multicolumn{2}{|c|}{NC1$\\pi^{0}$} & \\multicolumn{2}{|c|}{NC1$\\pi^{0}$0p0$\\pi^{\\p\
+m}$} & \\multicolumn{2}{|c|}{NC1$\\pi^{0}$Np0$\\pi^{\\pm}$} \\\\ \\hline"
+              << "& Resolution (\\%) & Bias (\\%) & Resolution (\\%) & Bias (\\%) & Resolution (\\%) & Bias (\\%)"
+              << "\\\\ \\hline" << std::endl;
+
+      for(std::string &name : weightSet.list)
+        {
+          texFile << "\\url{" << name << "}";
+
+          for(Selection &selection : selections)
+            {
+              XSecPlot *plot = selection.plot;
+              Bin *bin = plot->GetBins()[0];
+
+              texFile << Form(" & %.2f & %.2f", 100. * bin->GetFracSystResAve(name),
+                              100. * bin->GetFracSystBias(name));
+            }
+
+          texFile << "\\\\ \\hline" << std::endl;
+        }
+
+      texFile << "all";
+
+      for(Selection &selection : selections)
+        {
+          XSecPlot *plot = selection.plot;
+          Bin *bin = plot->GetBins()[0];
+
+          texFile << Form(" & %.2f & %.2f", 100. * bin->GetFracSystResAveQuadSum(weightSet.list),
+                          100. * bin->GetFracSystBiasQuadSum(weightSet.list));
+        }
+
+      texFile << "\\\\ \\hline";
+
+      texFile << tableEnd << docEnd;
+      texFile.close();
+      gSystem->Exec("pdflatex -output-directory " + saveDir + " " + saveDir + "/" + weightSet.name.c_str() + "_systematic_fractional_errors.tex");
     }
 }

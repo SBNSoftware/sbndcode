@@ -163,8 +163,8 @@ class Bin {
 
         const int n         = univBins.size();
         const double cv_n   = n * (1/2.);
-        const double low_n  = n * (1/3.);
-        const double high_n = n * (2/3.);
+        const double low_n  = n * (1/6.);
+        const double high_n = n * (5/6.);
 
         double cv   = (xsecs[std::floor(cv_n)] + xsecs[std::ceil(cv_n)]) / 2.;
         double low  = (xsecs[std::floor(low_n)] + xsecs[std::ceil(low_n)]) / 2.;
@@ -185,5 +185,44 @@ class Bin {
   bool InBin(const double &val0, const double &val1)
   {
     return val0 > _var0Low && val0 < _var0High && val1 > _var1Low && val1 < _var1High;
+  }
+
+  double GetFracSystResAve(const std::string &weightName)
+  {
+    double low, cv, high;
+
+    std::tie(low, cv, high) = GetSystFracErrors(weightName);
+
+    const double nom = _nominalBin->GetXSec();
+
+    return (low + high) / (2. * nom);
+  }
+
+  double GetFracSystBias(const std::string &weightName)
+  {
+    double low, cv, high;
+
+    std::tie(low, cv, high) = GetSystFracErrors(weightName);
+
+    const double nom = _nominalBin->GetXSec();
+    return (cv - nom) / nom;
+  }
+
+  double GetFracSystResAveQuadSum(const std::vector<std::string> &weightNames)
+  {
+    double quadSum = 0.;
+    for(auto const& weightName : weightNames)
+      quadSum += TMath::Power(GetFracSystResAve(weightName), 2);
+
+    return TMath::Sqrt(quadSum);
+  }
+
+  double GetFracSystBiasQuadSum(const std::vector<std::string> &weightNames)
+  {
+    double quadSum = 0.;
+    for(auto const& weightName : weightNames)
+      quadSum += TMath::Power(GetFracSystBias(weightName), 2);
+
+    return TMath::Sqrt(quadSum);
   }
 };
