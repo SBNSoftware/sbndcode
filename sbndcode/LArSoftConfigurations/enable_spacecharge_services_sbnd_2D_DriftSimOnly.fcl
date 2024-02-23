@@ -7,5 +7,7 @@ services.SpaceCharge.EnableCalSpatialSCE: false
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE: true
 services.SpaceCharge.EnableCalEfieldSCE: false
+services.SpaceCharge.is2DdriftSimHack: true
 
-services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_voxelTH3_2DSigSimHack.root"
+services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_voxelTH3.root"
+
