@@ -1,2 +1,0 @@
-#include "standard_g4_sbnd.fcl"
-source.maxEvents:  -1
