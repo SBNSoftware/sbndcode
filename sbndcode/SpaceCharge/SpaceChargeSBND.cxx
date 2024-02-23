@@ -28,6 +28,7 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
     //fEnableCorrSCE = pset.get<bool>("EnableCorrSCE");
     fEnableCalSpatialSCE = pset.get<bool>("EnableCalSpatialSCE");
     fEnableCalEfieldSCE = pset.get<bool>("EnableCalEfieldSCE");
+    f_2D_drift_sim_hack = pset.get<bool>("is2DdriftSimHack","false");
 
     if((fEnableSimSpatialSCE == true) || (fEnableSimEfieldSCE == true))
         {
@@ -213,7 +214,15 @@ geo::Vector_t spacecharge::SpaceChargeSBND::GetPosOffsets(geo::Point_t const& po
       else if(zz>499.999){zz=499.999;}
       //larsim requires negative sign in TPC 0
       int corr = 1;
-      if (xx < 0) { corr = -1; }
+
+      if(f_2D_drift_sim_hack == true)
+	corr = -1; 
+
+      if (xx < 0) { 
+	corr = -1; 
+      }
+
+            
       double offset_x=0., offset_y=0., offset_z=0.;
       offset_x = corr*SCEhistograms.at(0)->Interpolate(xx,yy,zz);
       offset_y = SCEhistograms.at(1)->Interpolate(xx,yy,zz);
