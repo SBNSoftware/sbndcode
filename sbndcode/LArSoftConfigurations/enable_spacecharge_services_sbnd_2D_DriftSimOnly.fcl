@@ -3,6 +3,11 @@
 # to be turned "ON"
 # It will modify all services parameters necessary.
 
+# NOTE: 
+# This fcl is only to be called when applying the 2D SCE effects to gen (with larg4), g4, and detsim stages in a worfklow with WireCell 2d sim
+# All other downstream fcls (reco1, reco2, cafmaker) should use the original space charge service, even if they inherit from WireCell drift sim.
+# Joseph Zennamo, Diana Mendez, Lynn Tung - February 2024 
+
 services.SpaceCharge.EnableCalSpatialSCE: false
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE: true
