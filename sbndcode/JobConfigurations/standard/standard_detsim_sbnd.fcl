@@ -5,12 +5,15 @@
 # This configuration runs the detector simulation
 #
 # Input:
-# - output of OpticalFastSimulation and ElectronDrift modules
+# - output of OpticalFastSimulation
+# - output of Ionization and Scintillation
 #
 # Output:
-# - daq: RawDigit collection with simulated TPC readout response as waveforms
-# - includes the whole input data
-#
+# - recob::Wire (TPC signals per channel)
+# - sim::SimChannel (Simulated electrons per channel)
+# - OpDetWaveforms (optical waveforms)
+# - MCReco -> MCTrack, MCShower: deposited energy from each MCParticle (needs SimChannels)
+
 #
 # Dependencies:
 # - uses the bundle of SBND simulation services for readout simulation
@@ -27,10 +30,10 @@
 # modules
 #
 
-#include "detsimmodules_sbnd.fcl"
+#include "wcsimsp_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
-#include "crtslimmer_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
+#include "mcreco_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 
@@ -61,15 +64,14 @@ physics:
   producers:
   {
     rns:       { module_type: "RandomNumberSaver" }
-    daq:       @local::sbnd_simwire
+    simtpc2d:  @local::sbnd_wcls_simsp 
     crtsim:    @local::sbnd_crtsim
-    crt:       @local::sbnd_crtslimmer
     opdaq:     @local::sbnd_opdetdigitizer
+    mcreco:    @local::sbnd_mcreco
   }
 
   #define the producer and filter modules for this path, order matters,
-  simulate:  [ rns, daq, crtsim, crt, opdaq]
-
+  simulate: [rns, simtpc2d, crtsim, opdaq, mcreco]
 
   #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
@@ -90,6 +92,3 @@ outputs:
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
   }
 }
-
-
-

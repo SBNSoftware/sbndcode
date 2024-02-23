@@ -1,0 +1,23 @@
+#-------------------------------------------------------------------
+#
+# Name: detsim_sce_lite.fcl
+#
+# Purpose: Lite version of detsim_sce.fcl
+#
+# Created: 01-Apr-2022  H. Greenlee
+#
+# Automatically generated.
+#
+#-------------------------------------------------------------------
+
+#include "detsim_drops.fcl"
+#include "mlreco_sbnd.fcl"
+#include "detsim_sce.fcl"
+
+#Account for track ID offsets in overlay samples by setting mother ID to 0.
+physics.producers.mcreco: @local::sbnd_mlreco_mcreco_overlay 
+
+# Drop truth data products.
+
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                               @sequence::detsim_drops ]
