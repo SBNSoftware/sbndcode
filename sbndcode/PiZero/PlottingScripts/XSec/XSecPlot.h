@@ -129,7 +129,7 @@ class XSecPlot {
     std::tie(low, cv, high) = _bins[0]->GetSystFracErrors(weightName);
 
     graph->SetPoint(0, 0.5, cv);
-    graph->SetPointError(0, 0.48, 0.48, low, high);
+    graph->SetPointError(0, 0.48, 0.48, low * cv, high * cv);
 
     graph->SetMarkerStyle(1);
     graph->SetLineColor(kBlue+2);

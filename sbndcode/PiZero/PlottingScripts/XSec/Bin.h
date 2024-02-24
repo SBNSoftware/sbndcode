@@ -150,7 +150,7 @@ class Bin {
     _universeBins->at(weightName).at(univ)->IncrementTrueSignal(increment);
   }
 
-  void CalculateSystFracErrors()
+  void CalculateSystFracErrorsMedianPercentiles()
   {
     for(auto&& [ name, univBins ] : *_universeBins)
       {
@@ -170,10 +170,30 @@ class Bin {
         double low  = (xsecs[std::floor(low_n)] + xsecs[std::ceil(low_n)]) / 2.;
         double high = (xsecs[std::floor(high_n)] + xsecs[std::ceil(high_n)]) / 2.;
 
-        low  = std::abs(low - cv);
-        high = std::abs(high - cv);
+        low  = std::abs(low - cv) / cv;
+        high = std::abs(high - cv) / cv;
 
         _systFracErrors->insert({ name, { low, cv, high }});
+      }
+  }
+
+  void CalculateSystFracErrorsNominalSD()
+  {
+    for(auto&& [ name, univBins ] : *_universeBins)
+      {
+        const double nom = GetNominalXSec();
+
+        double sum = 0.;
+
+        for(UniverseBin* bin : univBins)
+          sum += TMath::Power((bin->GetXSec() - nom), 2);
+
+        sum /= univBins.size();
+
+        const double sd     = TMath::Sqrt(sum);
+        const double fracsd = sd / nom;
+
+        _systFracErrors->insert({ name, { fracsd, nom, fracsd }});
       }
   }
 
@@ -195,7 +215,7 @@ class Bin {
 
     const double nom = _nominalBin->GetXSec();
 
-    return (low + high) / (2. * nom);
+    return (low + high) / 2.;
   }
 
   double GetFracSystBias(const std::string &weightName)
