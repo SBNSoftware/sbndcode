@@ -215,13 +215,19 @@ geo::Vector_t spacecharge::SpaceChargeSBND::GetPosOffsets(geo::Point_t const& po
       //larsim requires negative sign in TPC 0
       int corr = 1;
 
+      // ========================================================
+      // This hack is to account for a known issue with the 
+      // space charge implementation for the 2D simulation.
+      // See https://cdcvs.fnal.gov/redmine/issues/28099
+      // This should be removed once the appropriate upgrades
+      // have been implemented.
+      // ========================================================
       if(f_2D_drift_sim_hack == true)
 	corr = -1; 
 
-      if (xx < 0) { 
+      if (xx < 0) {
 	corr = -1; 
       }
-
             
       double offset_x=0., offset_y=0., offset_z=0.;
       offset_x = corr*SCEhistograms.at(0)->Interpolate(xx,yy,zz);
