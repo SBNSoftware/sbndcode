@@ -28,7 +28,7 @@ function(params, anode, field, n, rms_cuts=[])
 
 
     // Externally determined "bad" channels.
-    bad: [],
+    bad: [100,200,1000,5000],
 
     // Overide defaults for specific channels.  If an info is
     // mentioned for a particular channel in multiple objects in this

@@ -163,7 +163,7 @@ local multipass2 = [
   g.pipeline([
                sn_pipes[n],
                //sinks.orig_pipe[n],
-               //  nf_pipes[n],        
+                nf_pipes[n], // NEEDS TO BE INCLUDED FOR CHANNELMASKMAPS       
                //sinks.raw_pipe[n], 
                sp_pipes[n],
                //sinks.decon_pipe[n],
@@ -240,7 +240,7 @@ local wcls_output_sp = {
       summary_tags: ['wiener'],
       summary_operator: {threshold: 'set'},
       summary_scale: [0.02], # summary scale should be the same as frame_scale
-      // chanmaskmaps: ['bad'],
+      chanmaskmaps: ['bad'],
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 

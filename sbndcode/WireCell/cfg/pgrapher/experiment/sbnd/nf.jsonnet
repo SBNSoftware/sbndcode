@@ -64,14 +64,14 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
 
         // channel bin ranges are ignored
         // only when the channelmask is merged to `bad`
-        maskmap: {sticky: "bad", ledge: "bad", noisy: "bad"},
+       maskmap: {chirp: "bad" , sticky: "bad" , ledge: "bad" , noisy: "bad" },
         channel_filters: [
           // wc.tn(sticky),
           wc.tn(single),
           // wc.tn(gaincalib),
         ],
         grouped_filters: [
-          wc.tn(grouped),
+          // wc.tn(grouped),
         ],
         channel_status_filters: [
         ],
@@ -79,8 +79,8 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
         intraces: 'orig%d' % n,  // frame tag get all traces
         outtraces: 'raw%d' % n,
       },
-    }, uses=[chndbobj, anode, sticky, single, grouped, gaincalib], nin=1, nout=1),
-    //}, uses=[chndbobj, anode, sticky, single, gaincalib], nin=1, nout=1),
+    // }, uses=[chndbobj, anode, sticky, single, grouped, gaincalib], nin=1, nout=1),
+    }, uses=[chndbobj, anode, sticky, single, gaincalib], nin=1, nout=1),
 
     pipe: g.pipeline([obnf], name=name),
   }.pipe

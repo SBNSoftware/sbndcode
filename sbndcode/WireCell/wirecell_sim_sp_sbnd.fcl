@@ -76,5 +76,5 @@ physics:
 
 outputs.out1.outputCommands: [ 
                       "keep *_*_*_*" ,
-                      "drop *_ionandscint_*_*",
+                      "drop *_ionandscint_*_*"
                     ]
