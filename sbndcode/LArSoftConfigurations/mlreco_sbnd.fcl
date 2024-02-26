@@ -5,35 +5,9 @@
 
 BEGIN_PROLOG
 
-#mcreco
-# sbnd_mlreco_mcreco : @local::sbnd_mcreco
-# sbnd_mlreco_mcreco.SimChannelLabel: "sedlite"
-# sbnd_mlreco_mcreco.UseSimEnergyDepositLite: true
-# sbnd_mlreco_mcreco.UseSimEnergyDeposit: false
-# sbnd_mlreco_mcreco.MCRecoPart.SavePathPDGList: [13,-13,211,-211,111,311,310,130,321,-321,2212,2112,2224,2214,2114,1114,3122,1000010020,1000010030,1000020030,1000020040]
-
-#mcreco with overlay
-sbnd_mlreco_mcreco_overlay : @local::sbnd_mcreco
-sbnd_mlreco_mcreco_overlay.MCRecoPart.TrackIDOffsets: [10000000,20000000] #Account for track ID offsets in labeling primaries
-
-#larg4 fill sim energy deposits
-#mlreco_larg4_sed: @local::sbnd_larg4
-#mlreco_larg4_sed.FillSimEnergyDeposits: true #fill sim energy deposits to be merged
-#mlreco_larg4_sed.EnergyDepositInstanceLabels: ["LArG4DetectorServicevolTPCActive"] #sed instance label
-
-#info reducer
+#info reducer - produces lite version of sim energy deposit
 sbnd_sedlite: @local::sbn_largeant_info_reducer
 sbnd_sedlite.SimEnergyDepositLabel: "largeant:LArG4DetectorServicevolTPCActive"
 sbnd_sedlite.useOrigTrackID: true #needed since TrackID overwritten by SBND modules
-
-sbnd_merge_sim_sources_overlay: 
-{
-    @table::sbnd_merge_sim_sources
-    module_type: "MergeSimSourcesSBN"
-    InputSourcesLabels: ["largeantnu:droppedMCParticles","largeantcosmic:droppedMCParticles"]
-    FillMCParticles: true
-    FillMCParticlesLite: false
-    FillMCParticlesAssociated: false
-}
 
 END_PROLOG
