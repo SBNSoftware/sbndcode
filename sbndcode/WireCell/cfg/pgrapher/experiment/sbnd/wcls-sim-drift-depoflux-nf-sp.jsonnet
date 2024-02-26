@@ -44,21 +44,7 @@ local anode_iota = std.range(0, nanodes - 1);
 local wcls_maker = import "pgrapher/ui/wcls/nodes.jsonnet";
 local wcls = wcls_maker(params, tools);
 
-local mega_anode = {
-  type: 'MegaAnodePlane',
-  name: 'meganodes',
-  data: {
-    anodes_tn: [wc.tn(anode) for anode in tools.anodes],
-  },
-};
-
-//===============================SIM============================================
-
-// Collect all the wc/ls output converters for use below.  Note the
-// "name" MUST match what is used in theh "outputers" parameter in the
-// FHiCL that loads this file.
-
-// input converter for (ionandscint) SimEnergyDeposits to WireCell Depos
+// added Ewerton 2023-03-14
 local wcls_input_sim = {
     depos: wcls.input.depos(name="", art_tag=std.extVar('inputTag')),
     deposet: g.pnode({
@@ -85,9 +71,11 @@ local setdrifter = g.pnode({
         }, nin=1, nout=1,
         uses=[drifter]);
 
+// signal plus noise pipelines
+local sn_pipes = sim.splusn_pipelines;
 
-// output converter for WireCell to SimChannel
-local wcls_output_simchannel = g.pnode({
+local rng = tools.random;
+local wcls_depoflux_writer = g.pnode({
   type: 'wclsDepoFluxWriter',
   name: 'postdrift',
   data: {
@@ -101,33 +89,12 @@ local wcls_output_simchannel = g.pnode({
     reference_time: -1700 * wc.us,
 
     energy: 1, # equivalent to use_energy = true
-    simchan_label: 'simpleSC', // label for saving in art
+    simchan_label: 'simpleSC',
     sed_label: if (savetid == 'true') then 'ionandscint' else '',
-    sparse: false, // false means save all channels, instead of only channels with energy deposits
+    sparse: false,
   },
 }, nin=1, nout=1, uses=tools.anodes + [tools.field]);
 
-// output converter for WireCell to RawDigits
-local wcls_output_sim = {
-  // ADC output from simulation, aka raw::RawDigits
-  sim_digits: g.pnode({
-    type: 'wclsFrameSaver',
-    name: 'simdigits',
-    data: {
-      anode: wc.tn(mega_anode),
-      digitize: true,  // true means save as RawDigit, else recob::Wire
-      frame_tags: ['daq'], // this is the **instance** name that will be associated with the data product 
-      nticks: params.daq.nticks,
-      pedestal_mean: 'native',
-    },
-  }, nin=1, nout=1, uses=[mega_anode]),
-};
-
-// signal plus noise pipelines
-local sn_pipes = sim.splusn_pipelines;
-local rng = tools.random;
-
-// configuration for OmnibusSigProc
 local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
 local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
 local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
@@ -147,7 +114,6 @@ local chndb = [{
   uses: [tools.anodes[n], tools.field, tools.dft],
 } for n in anode_iota];
 
-// configuration for OmnibusNoiseFilter
 local nf_maker = import 'pgrapher/experiment/sbnd/nf.jsonnet';
 local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in anode_iota];
 
@@ -216,7 +182,7 @@ local wcls_output_sp = {
     data: {
       anode: wc.tn(mega_anode),
       digitize: true,  // true means save as RawDigit, else recob::Wire
-      frame_tags: ['raw'], // not actually raw! this is the noise filtered waveforms
+      frame_tags: ['raw'],
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 
@@ -237,10 +203,13 @@ local wcls_output_sp = {
       // for SBND, this scale is about ~50. Frame scale needed when using LArSoft producers reading in recob::Wire.
       frame_scale: [0.02, 0.02],
       nticks: params.daq.nticks,
-      summary_tags: ['wiener'],
-      summary_operator: {threshold: 'set'},
-      summary_scale: [0.02], # summary scale should be the same as frame_scale
-      chanmaskmaps: ['bad'],
+      chanmaskmaps: [],
+
+      // uncomment the below configs to save summaries and cmm
+      // summary_tags: ['wiener'],
+      // summary_operator: {threshold: 'set'},
+      // summary_scale: [0.02], # summary scale should be the same as frame_scale
+      // chanmaskmaps: ['bad'],
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 
@@ -301,7 +270,7 @@ local sink_sp = g.pnode({ type: 'DumpFrames' }, nin=1, nout=0);
 local graph1 = g.pipeline([
 wcls_input_sim.deposet,         //sim
 setdrifter,                     //sim
-wcls_output_simchannel,         //sim
+wcls_depoflux_writer,           //sim
 bi_manifold1,                   //sim
 retagger_sim,                   //sim
 wcls_output_sim.sim_digits,     //sim
@@ -315,7 +284,7 @@ sink_sp                         //sp
 local graph2 = g.pipeline([
 wcls_input_sim.deposet,         //sim
 setdrifter,                     //sim
-wcls_output_simchannel,         //sim
+wcls_depoflux_writer,           //sim
 bi_manifold2,                   //sim
 retagger_sp,                    //sp
 wcls_output_sp.sp_signals,      //sp

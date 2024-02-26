@@ -18,7 +18,7 @@ sbnd_wcls_simsp: {
         inputers: ["wclsSimDepoSetSource:"] 
 
         outputers: [
-            "wclsDepoSetSimChannelSink:postdrift",
+            "wclsDepoFluxWriter:postdrift",
             # "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
             "wclsFrameSaver:spsaver"
         ]
@@ -26,12 +26,12 @@ sbnd_wcls_simsp: {
         ## This sets the "main" Jsonnet file which provides the 
         ## configuration for the Wire-Cell Toolkit components.  It is
         ## take as relative to entries in WIRECELL_PATH.
-        configs: ["pgrapher/experiment/sbnd/wcls-sim-drift-simchannel-nf-sp.jsonnet"]
+        configs: ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp.jsonnet"]
 
 
         ## Set the "external variables" required by the Jsonnet.
         params : {
-            ## This locates the input raw::RawDigit collection in the art::Event 
+            ## This locates the input SimEnergyDeposits in the art::Event
             inputTag: "ionandscint:"
 
             ## Set "data" vs. "sim".  The epoch below probably should follow suit.
@@ -51,10 +51,13 @@ sbnd_wcls_simsp: {
 
             ## If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
             ## If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
-            save_simdigits: "false"
+            ## this is whether or not to save raw digits!!! 
+            save_simdigits: "false" 
 
             ## Set the waveform sample length, eg, 6000, 15000, "auto"
             # nsample: 6000
+
+            save_track_id: "true"
 
         }
 
