@@ -49,6 +49,14 @@ class XSecPlot {
         }
     }
 
+  void Print()
+  {
+    for(Bin* bin : _bins)
+      {
+        bin->Print();
+      }
+  }
+
   void SetName(const std::string name)
   {
     _name = name;
@@ -99,14 +107,14 @@ class XSecPlot {
     double var1Bins[_var1Bins.size()];
     GetVar1BinsArray(var1Bins);
 
-    TH2F* hist = new TH2F(_name.c_str(), _axes_labels.c_str(),
+    TH2F* hist = new TH2F(Form("General%s", _name.c_str()), _axes_labels.c_str(),
                           _var0Bins.size() - 1, var0Bins,
                           _var1Bins.size() - 1, var1Bins);
 
     for(int i = 0; i < _bins.size(); ++i)
       {
-        const int binIndex0 = i / _var0Bins.size() + 1;
-        const int binIndex1 = i % _var0Bins.size() + 1;
+        const int binIndex0 = i % (_var0Bins.size() -1) + 1;
+        const int binIndex1 = i / (_var0Bins.size() -1) + 1;
 
         hist->SetBinContent(binIndex0, binIndex1, _bins[i]->GetNominalXSec());
 
@@ -129,13 +137,15 @@ class XSecPlot {
 
     TH2F* full_hist = GetNominalHist(statErr);
 
-    TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
+    TH1F* hist = new TH1F(Form("ZeroD%s", _name.c_str()), _axes_labels.c_str(),
                           _var0Bins.size() - 1, var0Bins);
 
+    hist->SetMarkerStyle(0);
     hist->SetBinContent(1, full_hist->GetBinContent(1, 1));
     hist->SetBinError(1, full_hist->GetBinError(1, 1));
     hist->SetLineColor(kBlack);
 
+    delete full_hist;
     return hist;
   }
 
@@ -151,16 +161,19 @@ class XSecPlot {
         double var1Bins[_var1Bins.size()];
         GetVar1BinsArray(var1Bins);
 
-        TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
+        TH1F* hist = new TH1F(Form("OneD%s", _name.c_str()), _axes_labels.c_str(),
                               _var1Bins.size() - 1, var1Bins);
 
         for(auto&& [ binEdge_i, binEdge ] : enumerate(_var1Bins))
           {
             hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(1, binEdge_i + 1));
             hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(1, binEdge_i + 1));
-            hist->SetLineColor(kBlack);
           }
 
+        hist->SetMarkerStyle(0);
+        hist->SetLineColor(kBlack);
+
+        delete full_hist;
         return hist;
       }
 
@@ -169,16 +182,19 @@ class XSecPlot {
         double var0Bins[_var0Bins.size()];
         GetVar0BinsArray(var0Bins);
 
-        TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
+        TH1F* hist = new TH1F(Form("OneD%s", _name.c_str()), _axes_labels.c_str(),
                               _var0Bins.size() - 1, var0Bins);
 
         for(auto&& [ binEdge_i, binEdge ] : enumerate(_var0Bins))
           {
             hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(binEdge_i + 1, 1));
             hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(binEdge_i + 1, 1));
-            hist->SetLineColor(kBlack);
           }
 
+        hist->SetMarkerStyle(0);
+        hist->SetLineColor(kBlack);
+
+        delete full_hist;
         return hist;
       }
 
@@ -199,8 +215,8 @@ class XSecPlot {
 
     for(int i = 0; i < _bins.size(); ++i)
       {
-        const int binIndex0 = i / _var0Bins.size() + 1;
-        const int binIndex1 = i % _var0Bins.size() + 1;
+        const int binIndex0 = i % (_var0Bins.size() -1) + 1;
+        const int binIndex1 = i / (_var0Bins.size() -1) + 1;
 
         hist->SetBinContent(binIndex0, binIndex1, _bins[i]->GetUniverseXSec(weightName, univ));
         hist->SetBinError(binIndex0, binIndex1, 0);
@@ -219,7 +235,7 @@ class XSecPlot {
 
     TH2F* full_hist = GetUniverseHist(weightName, univ);
 
-    TH1F* hist = new TH1F(Form("OneD%s%s%i",_name.c_str(), weightName.c_str(), univ),
+    TH1F* hist = new TH1F(Form("ZeroD%s%s%i",_name.c_str(), weightName.c_str(), univ),
                           _axes_labels.c_str(),
                           _var0Bins.size() - 1, var0Bins);
 
@@ -230,6 +246,7 @@ class XSecPlot {
     hist->SetLineColor(kMagenta-10);
     hist->SetLineWidth(1);
 
+    delete full_hist;
     return hist;
   }
 
@@ -245,16 +262,20 @@ class XSecPlot {
         double var1Bins[_var1Bins.size()];
         GetVar1BinsArray(var1Bins);
 
-        TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
-                              _var1Bins.size() - 1, var1Bins);
+        TH1F* hist = new TH1F(Form("OneD%s%s%i",_name.c_str(), weightName.c_str(), univ),
+                              _axes_labels.c_str(), _var1Bins.size() - 1, var1Bins);
 
         for(auto&& [ binEdge_i, binEdge ] : enumerate(_var1Bins))
           {
             hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(1, binEdge_i + 1));
             hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(1, binEdge_i + 1));
-            hist->SetLineColor(kBlack);
           }
 
+        hist->SetMarkerStyle(0);
+        hist->SetLineColor(kMagenta-10);
+        hist->SetLineWidth(1);
+
+        delete full_hist;
         return hist;
       }
 
@@ -263,16 +284,20 @@ class XSecPlot {
         double var0Bins[_var0Bins.size()];
         GetVar0BinsArray(var0Bins);
 
-        TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
-                              _var0Bins.size() - 1, var0Bins);
+        TH1F* hist = new TH1F(Form("OneD%s%s%i",_name.c_str(), weightName.c_str(), univ),
+                              _axes_labels.c_str(), _var0Bins.size() - 1, var0Bins);
 
         for(auto&& [ binEdge_i, binEdge ] : enumerate(_var0Bins))
           {
             hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(binEdge_i + 1, 1));
             hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(binEdge_i + 1, 1));
-            hist->SetLineColor(kBlack);
           }
 
+        hist->SetMarkerStyle(0);
+        hist->SetLineColor(kMagenta-10);
+        hist->SetLineWidth(1);
+
+        delete full_hist;
         return hist;
       }
 
@@ -288,9 +313,21 @@ class XSecPlot {
         double low, cv, high;
         std::tie(low, cv, high) = bin->GetSystFracErrors(weightName);
 
-        graph->SetPoint(bin_i, bin->GetVar0Center(), cv);
-        graph->SetPointError(0, 0.49 * bin->GetVar0Width(),
-                             0.49 * bin->GetVar0Width(), low * cv, high * cv);
+        double centre, width;
+
+        if(_var0Bins.size() == 2)
+          {
+            centre = bin->GetVar1Center();
+            width  = bin->GetVar1Width();
+          }
+        else if(_var1Bins.size() == 2)
+          {
+            centre = bin->GetVar0Center();
+            width  = bin->GetVar0Width();
+          }
+
+        graph->SetPoint(bin_i, centre, cv);
+        graph->SetPointError(bin_i, 0.49 * width, 0.49 * width, low * cv, high * cv);
 
         graph->SetMarkerStyle(1);
         graph->SetLineColor(kBlue+2);
@@ -310,9 +347,21 @@ class XSecPlot {
         const double bias = bin->GetFracSystBiasQuadSum(weightNames);
         const double res  = bin->GetFracSystResAveQuadSum(weightNames);
 
-        graph->SetPoint(bin_i, bin->GetVar0Center(), nom * (1 - bias));
-        graph->SetPointError(bin_i, 0.49 * bin->GetVar0Width(),
-                             0.49 * bin->GetVar0Width(), nom * res, nom * res);
+        double centre, width;
+
+        if(_var0Bins.size() == 2)
+          {
+            centre = bin->GetVar1Center();
+            width  = bin->GetVar1Width();
+          }
+        else if(_var1Bins.size() == 2)
+          {
+            centre = bin->GetVar0Center();
+            width  = bin->GetVar0Width();
+          }
+
+        graph->SetPoint(bin_i, centre, nom * (1 - bias));
+        graph->SetPointError(bin_i, 0.49 * width, 0.49 * width, nom * res, nom * res);
 
         graph->SetMarkerStyle(1);
         graph->SetLineColor(kBlue+2);

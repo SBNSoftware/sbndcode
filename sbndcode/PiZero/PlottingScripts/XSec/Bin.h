@@ -33,7 +33,9 @@ class Bin {
   void Print()
   {
     std::cout << "\n======================================\n"
-              << "Bin Index: " << _index << '\n';
+              << "Bin Index: " << _index << '\n'
+              << "Var0: " << _var0Low << " --> " << _var0High  << '\n'
+              << "Var1: " << _var1Low << " --> " << _var1High  << '\n';
 
     _nominalBin->Print();
 
@@ -43,7 +45,9 @@ class Bin {
   void Print(const std::string weightName, const int univ)
   {
     std::cout << "\n======================================\n"
-              << "Bin Index: " << _index << '\n';
+              << "Bin Index: " << _index << " (" << weightName << ", " << univ << ")" << '\n'
+              << "Var0: " << _var0Low << " --> " << _var0High  << '\n'
+              << "Var1: " << _var1Low << " --> " << _var1High  << '\n';
 
     _nominalBin->Print();
     _universeBins->at(weightName).at(univ)->Print();
@@ -254,5 +258,15 @@ class Bin {
   double GetVar0Width()
   {
     return _var0High - _var0Low;
+  }
+
+  double GetVar1Center()
+  {
+    return (_var1Low + _var1High) / 2.;
+  }
+
+  double GetVar1Width()
+  {
+    return _var1High - _var1Low;
   }
 };

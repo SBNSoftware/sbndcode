@@ -86,17 +86,14 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
           sample.nutree->SetBranchAddress(var0.c_str(), &val0);
           sample.nutree->SetBranchAddress(var1.c_str(), &val1);
 
-          for(Bin* bin : plot->GetBins())
-            {
-              int weight_i = 0;
+          int weight_i = 0;
 
-              for(auto&& [ weightSet_i, weightSet ] : enumerate(weightSets))
+          for(auto&& [ weightSet_i, weightSet ] : enumerate(weightSets))
+            {
+              for(auto&& [ name_i, name ] : enumerate(weightSet.list))
                 {
-                  for(auto&& [ name_i, name ] : enumerate(weightSet.list))
-                    {
-                      sample.nutree->SetBranchAddress(name.c_str(), &weights[weight_i]);
-                      ++weight_i;
-                    }
+                  sample.nutree->SetBranchAddress(name.c_str(), &weights[weight_i]);
+                  ++weight_i;
                 }
             }
         }
@@ -161,17 +158,14 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
           sample.slicetree->SetBranchAddress(("reco_" + var0).c_str(), &val0);
           sample.slicetree->SetBranchAddress(("reco_" + var1).c_str(), &val1);
 
-          for(Bin* bin : plot->GetBins())
-            {
-              int weight_i = 0;
+          int weight_i = 0;
 
-              for(auto&& [ weightSet_i, weightSet ] : enumerate(weightSets))
+          for(auto&& [ weightSet_i, weightSet ] : enumerate(weightSets))
+            {
+              for(auto&& [ name_i, name ] : enumerate(weightSet.list))
                 {
-                  for(auto&& [ name_i, name ] : enumerate(weightSet.list))
-                    {
-                      sample.slicetree->SetBranchAddress(name.c_str(), &weights[weight_i]);
-                      ++weight_i;
-                    }
+                  sample.slicetree->SetBranchAddress(name.c_str(), &weights[weight_i]);
+                  ++weight_i;
                 }
             }
         }
@@ -238,8 +232,8 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
           bin->SetScaleFactor(samples[0].scaling);
           bin->Update();
           bin->CalculateXSecPurity();
-          bin->CalculateSystFracErrorsMedianPercentiles();
-          //          bin->CalculateSystFracErrorsNominalSD();
+          //          bin->CalculateSystFracErrorsMedianPercentiles();
+          bin->CalculateSystFracErrorsNominalSD();
         }
     }
 }
