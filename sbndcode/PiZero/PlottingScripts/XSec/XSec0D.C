@@ -129,12 +129,7 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
       canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_univs.png");
       canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_univs.pdf");
     }
-  else if(type == 2)
-    {
-      canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.png");
-      canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.pdf");
-    }
-  else if(type == 3)
+  else if(type == 2 || type == 3)
     {
       canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.png");
       canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.pdf");
