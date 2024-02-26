@@ -245,4 +245,14 @@ class Bin {
 
     return TMath::Sqrt(quadSum);
   }
+
+  double GetVar0Center()
+  {
+    return (_var0Low + _var0High) / 2.;
+  }
+
+  double GetVar0Width()
+  {
+    return _var0High - _var0Low;
+  }
 };

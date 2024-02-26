@@ -17,8 +17,8 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
 
   XSecSamples samples = SetupSamples(productionVersion);
 
-  std::vector<double> piZeroMomBins      = { def_double, def_double_high };
-  std::vector<double> cosThetaPiZeroBins = { def_double, def_double_high };
+  std::vector<double> piZeroMomBins      = { -10., 1e10 };
+  std::vector<double> cosThetaPiZeroBins = { -2., 2. };
 
   XSecPlot *xsec_incl  = new XSecPlot("xsec_incl", "NC 1#pi^{0};;#sigma (cm^{2}/nucleon)",
                                       1, piZeroMomBins, cosThetaPiZeroBins,
@@ -78,7 +78,7 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
       gPad->SetLeftMargin(0.25);
       gPad->SetRightMargin(0.05);
 
-      TH1F *hist = selection.plot->GetNominalHist(type == 0);
+      TH1F *hist = selection.plot->GetNominalHist0D(type == 0);
       hist->GetYaxis()->SetTitleOffset(1.9);
       hist->GetXaxis()->SetLabelSize(0);
       hist->GetXaxis()->SetLabelOffset(999);
@@ -91,7 +91,7 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
         {
           for(int univ = 0; univ < nunivs; ++univ)
             {
-              TH1F *unihist = selection.plot->GetUniverseHist(weightName, univ);
+              TH1F *unihist = selection.plot->GetUniverseHist0D(weightName, univ);
               unihist->Draw("hist][same");
             }
 

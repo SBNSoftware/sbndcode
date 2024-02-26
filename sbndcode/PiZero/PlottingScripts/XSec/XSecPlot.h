@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Bin.h"
+#include "Enumerate.h"
 
 class XSecPlot {
 
@@ -91,27 +92,139 @@ class XSecPlot {
       return _var1;
     }
 
-  TH1F* GetNominalHist(const bool statErr = true)
+  TH2F* GetNominalHist(const bool statErr = true)
   {
-    TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(), 1, 0, 1);
-    hist->SetBinContent(1, _bins[0]->GetNominalXSec());
+    double var0Bins[_var0Bins.size()];
+    GetVar0BinsArray(var0Bins);
+    double var1Bins[_var1Bins.size()];
+    GetVar1BinsArray(var1Bins);
 
-    if(statErr)
-      hist->SetBinError(1, _bins[0]->GetNominalFracStatErr() * _bins[0]->GetNominalXSec());
-    else
-      hist->SetBinError(1, 0);
+    TH2F* hist = new TH2F(_name.c_str(), _axes_labels.c_str(),
+                          _var0Bins.size() - 1, var0Bins,
+                          _var1Bins.size() - 1, var1Bins);
 
+    for(int i = 0; i < _bins.size(); ++i)
+      {
+        const int binIndex0 = i / _var0Bins.size() + 1;
+        const int binIndex1 = i % _var0Bins.size() + 1;
+
+        hist->SetBinContent(binIndex0, binIndex1, _bins[i]->GetNominalXSec());
+
+        if(statErr)
+          hist->SetBinError(binIndex0, binIndex1, _bins[i]->GetNominalFracStatErr() * _bins[i]->GetNominalXSec());
+        else
+          hist->SetBinError(binIndex0, binIndex1, 0);
+      }
+
+    return hist;
+  }
+
+  TH1F* GetNominalHist0D(const bool statErr = true)
+  {
+    double var0Bins[_var0Bins.size()];
+    GetVar0BinsArray(var0Bins);
+
+    if(_bins.size() != 1)
+      throw std::runtime_error("Asking for 0D hist but numbers of bins is not 1");
+
+    TH2F* full_hist = GetNominalHist(statErr);
+
+    TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
+                          _var0Bins.size() - 1, var0Bins);
+
+    hist->SetBinContent(1, full_hist->GetBinContent(1, 1));
+    hist->SetBinError(1, full_hist->GetBinError(1, 1));
     hist->SetLineColor(kBlack);
 
     return hist;
   }
 
-  TH1F* GetUniverseHist(const std::string &weightName, const int univ)
+  TH1F* GetNominalHist1D(const bool statErr = true)
   {
-    TH1F* hist = new TH1F(Form("%s%s%i",_name.c_str(), weightName.c_str(), univ),
-                          _axes_labels.c_str(), 1, 0, 1);
-    hist->SetBinContent(1, _bins[0]->GetUniverseXSec(weightName, univ));
-    hist->SetBinError(1, 0);
+    if(_var0Bins.size() != 2 && _var1Bins.size() != 2)
+      throw std::runtime_error("Asking for 1D hist but neither set has 1 bin");
+
+    TH2F* full_hist = GetNominalHist(statErr);
+
+    if(_var0Bins.size() == 2)
+      {
+        double var1Bins[_var1Bins.size()];
+        GetVar1BinsArray(var1Bins);
+
+        TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
+                              _var1Bins.size() - 1, var1Bins);
+
+        for(auto&& [ binEdge_i, binEdge ] : enumerate(_var1Bins))
+          {
+            hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(1, binEdge_i + 1));
+            hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(1, binEdge_i + 1));
+            hist->SetLineColor(kBlack);
+          }
+
+        return hist;
+      }
+
+    if(_var1Bins.size() == 2)
+      {
+        double var0Bins[_var0Bins.size()];
+        GetVar0BinsArray(var0Bins);
+
+        TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
+                              _var0Bins.size() - 1, var0Bins);
+
+        for(auto&& [ binEdge_i, binEdge ] : enumerate(_var0Bins))
+          {
+            hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(binEdge_i + 1, 1));
+            hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(binEdge_i + 1, 1));
+            hist->SetLineColor(kBlack);
+          }
+
+        return hist;
+      }
+
+    return NULL;
+  }
+
+  TH2F* GetUniverseHist(const std::string &weightName, const int univ)
+  {
+    double var0Bins[_var0Bins.size()];
+    GetVar0BinsArray(var0Bins);
+    double var1Bins[_var1Bins.size()];
+    GetVar1BinsArray(var1Bins);
+
+    TH2F* hist = new TH2F(Form("General%s%s%i",_name.c_str(), weightName.c_str(), univ),
+                          _axes_labels.c_str(),
+                          _var0Bins.size() - 1, var0Bins,
+                          _var1Bins.size() - 1, var1Bins);
+
+    for(int i = 0; i < _bins.size(); ++i)
+      {
+        const int binIndex0 = i / _var0Bins.size() + 1;
+        const int binIndex1 = i % _var0Bins.size() + 1;
+
+        hist->SetBinContent(binIndex0, binIndex1, _bins[i]->GetUniverseXSec(weightName, univ));
+        hist->SetBinError(binIndex0, binIndex1, 0);
+      }
+
+    return hist;
+  }
+
+  TH1F* GetUniverseHist0D(const std::string &weightName, const int univ)
+  {
+    double var0Bins[_var0Bins.size()];
+    GetVar0BinsArray(var0Bins);
+
+    if(_bins.size() != 1)
+      throw std::runtime_error("Asking for 0D hist but numbers of bins is not 1");
+
+    TH2F* full_hist = GetUniverseHist(weightName, univ);
+
+    TH1F* hist = new TH1F(Form("OneD%s%s%i",_name.c_str(), weightName.c_str(), univ),
+                          _axes_labels.c_str(),
+                          _var0Bins.size() - 1, var0Bins);
+
+    hist->SetBinContent(1, full_hist->GetBinContent(1, 1));
+    hist->SetBinError(1, full_hist->GetBinError(1, 1));
 
     hist->SetMarkerStyle(0);
     hist->SetLineColor(kMagenta-10);
@@ -120,20 +233,69 @@ class XSecPlot {
     return hist;
   }
 
+  TH1F* GetUniverseHist1D(const std::string &weightName, const int univ)
+  {
+    if(_var0Bins.size() != 2 && _var1Bins.size() != 2)
+      throw std::runtime_error("Asking for 1D hist but neither set has 1 bin");
+
+    TH2F* full_hist = GetUniverseHist(weightName, univ);
+
+    if(_var0Bins.size() == 2)
+      {
+        double var1Bins[_var1Bins.size()];
+        GetVar1BinsArray(var1Bins);
+
+        TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
+                              _var1Bins.size() - 1, var1Bins);
+
+        for(auto&& [ binEdge_i, binEdge ] : enumerate(_var1Bins))
+          {
+            hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(1, binEdge_i + 1));
+            hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(1, binEdge_i + 1));
+            hist->SetLineColor(kBlack);
+          }
+
+        return hist;
+      }
+
+    if(_var1Bins.size() == 2)
+      {
+        double var0Bins[_var0Bins.size()];
+        GetVar0BinsArray(var0Bins);
+
+        TH1F* hist = new TH1F(_name.c_str(), _axes_labels.c_str(),
+                              _var0Bins.size() - 1, var0Bins);
+
+        for(auto&& [ binEdge_i, binEdge ] : enumerate(_var0Bins))
+          {
+            hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(binEdge_i + 1, 1));
+            hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(binEdge_i + 1, 1));
+            hist->SetLineColor(kBlack);
+          }
+
+        return hist;
+      }
+
+    return NULL;
+  }
+
   TGraphAsymmErrors* GetCVErrGraph(const std::string &weightName)
   {
     TGraphAsymmErrors* graph = new TGraphAsymmErrors(1);
 
-    double low, cv, high;
+    for(auto&& [ bin_i, bin ] : enumerate(_bins))
+      {
+        double low, cv, high;
+        std::tie(low, cv, high) = bin->GetSystFracErrors(weightName);
 
-    std::tie(low, cv, high) = _bins[0]->GetSystFracErrors(weightName);
+        graph->SetPoint(bin_i, bin->GetVar0Center(), cv);
+        graph->SetPointError(0, 0.49 * bin->GetVar0Width(),
+                             0.49 * bin->GetVar0Width(), low * cv, high * cv);
 
-    graph->SetPoint(0, 0.5, cv);
-    graph->SetPointError(0, 0.48, 0.48, low * cv, high * cv);
-
-    graph->SetMarkerStyle(1);
-    graph->SetLineColor(kBlue+2);
-    graph->SetLineWidth(5);
+        graph->SetMarkerStyle(1);
+        graph->SetLineColor(kBlue+2);
+        graph->SetLineWidth(5);
+      }
 
     return graph;
   }
@@ -142,17 +304,33 @@ class XSecPlot {
   {
     TGraphAsymmErrors* graph = new TGraphAsymmErrors(1);
 
-    const double nom  = _bins[0]->GetNominalXSec();
-    const double bias = _bins[0]->GetFracSystBiasQuadSum(weightNames);
-    const double res  = _bins[0]->GetFracSystResAveQuadSum(weightNames);
+    for(auto&& [ bin_i, bin ] : enumerate(_bins))
+      {
+        const double nom  = bin->GetNominalXSec();
+        const double bias = bin->GetFracSystBiasQuadSum(weightNames);
+        const double res  = bin->GetFracSystResAveQuadSum(weightNames);
 
-    graph->SetPoint(0, 0.5, nom * (1 - bias));
-    graph->SetPointError(0, 0.48, 0.48, nom * res, nom * res);
+        graph->SetPoint(bin_i, bin->GetVar0Center(), nom * (1 - bias));
+        graph->SetPointError(bin_i, 0.49 * bin->GetVar0Width(),
+                             0.49 * bin->GetVar0Width(), nom * res, nom * res);
 
-    graph->SetMarkerStyle(1);
-    graph->SetLineColor(kBlue+2);
-    graph->SetLineWidth(5);
+        graph->SetMarkerStyle(1);
+        graph->SetLineColor(kBlue+2);
+        graph->SetLineWidth(5);
+      }
 
     return graph;
+  }
+
+  void GetVar0BinsArray(double var0Bins[])
+  {
+    for(auto&& [ binEdge_i, binEdge ] : enumerate(_var0Bins))
+      var0Bins[binEdge_i] = binEdge;
+  }
+
+  void GetVar1BinsArray(double var1Bins[])
+  {
+    for(auto&& [ binEdge_i, binEdge ] : enumerate(_var1Bins))
+      var1Bins[binEdge_i] = binEdge;
   }
 };
