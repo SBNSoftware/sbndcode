@@ -64,17 +64,26 @@ class UniverseBin {
 
   void CalculateXSecPurity()
   {
-    _xsec = (_count * _scaleFactor * _purity) / (_efficiency * _nTargets * _intFlux * _binWidth);
+    if(_efficiency == 0 || isnan(_purity) || isnan(_efficiency))
+      _xsec = 0.;
+    else
+      _xsec = (_count * _scaleFactor * _purity) / (_efficiency * _nTargets * _intFlux * _binWidth);
   }
 
   void CalculateXSecPurity(const double alternativeCount)
   {
-    _xsec = (alternativeCount * _scaleFactor * _purity) / (_efficiency * _nTargets * _intFlux * _binWidth);
+    if(_efficiency == 0 || isnan(_purity) || isnan(_efficiency))
+      _xsec = 0.;
+    else
+      _xsec = (alternativeCount * _scaleFactor * _purity) / (_efficiency * _nTargets * _intFlux * _binWidth);
   }
 
   void CalculateXSecBackgroundSubtraction()
   {
-    _xsec = ((_count - _bkgdCount) * _scaleFactor) / (_efficiency * _nTargets * _intFlux * _binWidth);
+    if(_efficiency == 0 || isnan(_purity) || isnan(_efficiency))
+      _xsec = 0.;
+    else
+      _xsec = ((_count - _bkgdCount) * _scaleFactor) / (_efficiency * _nTargets * _intFlux * _binWidth);
   }
 
   double GetXSec()
