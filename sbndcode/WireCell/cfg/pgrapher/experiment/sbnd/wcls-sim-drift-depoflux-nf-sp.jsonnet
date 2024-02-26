@@ -170,6 +170,13 @@ local sink_sim = sim.frame_sink;
 // Collect all the wc/ls output converters for use below.  Note the
 // "name" MUST match what is used in theh "outputers" parameter in the
 // FHiCL that loads this file.
+local mega_anode = {
+  type: 'MegaAnodePlane',
+  name: 'meganodes',
+  data: {
+    anodes_tn: [wc.tn(anode) for anode in tools.anodes],
+  },
+};
 
 local wcls_output_sp = {
   // The noise filtered "ADC" values.  These are truncated for
@@ -203,13 +210,15 @@ local wcls_output_sp = {
       // for SBND, this scale is about ~50. Frame scale needed when using LArSoft producers reading in recob::Wire.
       frame_scale: [0.02, 0.02],
       nticks: params.daq.nticks,
-      chanmaskmaps: [],
+
+      // use this if you do not want to save cmm
+      // chanmaskmaps: [],
 
       // uncomment the below configs to save summaries and cmm
-      // summary_tags: ['wiener'],
-      // summary_operator: {threshold: 'set'},
-      // summary_scale: [0.02], # summary scale should be the same as frame_scale
-      // chanmaskmaps: ['bad'],
+      summary_tags: ['wiener'],
+      summary_operator: {threshold: 'set'},
+      summary_scale: [0.02], # summary scale should be the same as frame_scale
+      chanmaskmaps: ['bad'],
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 
@@ -273,7 +282,7 @@ setdrifter,                     //sim
 wcls_depoflux_writer,           //sim
 bi_manifold1,                   //sim
 retagger_sim,                   //sim
-wcls_output_sim.sim_digits,     //sim
+wcls_depoflux_writer.sim_digits,//sim
 fanpipe,                        //sp
 retagger_sp,                    //sp
 wcls_output_sp.sp_signals,      //sp
