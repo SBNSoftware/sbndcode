@@ -1,3 +1,6 @@
 #include "g4_simphotontime_filter.fcl"
 
 #include "enable_spacecharge_services_sbnd_2D_DriftSimOnly.fcl"
+
+# specify that we want to save the non-priorSCE instance of SimEnergyDeposits from ionandscint
+physics.producers.ionandscint.EnergyDepositInstanceLabels: [""]
