@@ -12,12 +12,14 @@ set(
         larevt::Filters
         lardataobj::RawData
         lardataobj::RecoBase
+        lardataobj::MCBase
+        lardataobj::Simulation
         larreco::RecoAlg
         lardata::RecoObjects
         larpandora::LArPandoraInterface
         sbndcode_CRTUtils
-        sbndcode_CRT
         sbnobj::Common_CRT
+        sbnobj::SBND_CRT
         nusimdata::SimulationBase
         art::Framework_Core
         art::Framework_Principal
@@ -35,6 +37,7 @@ set(
         ROOT::Gdml
         sbndcode_RecoUtils
         sbndcode_OpDetSim
+        sbndcode_GeoWrappers
 )
 
 

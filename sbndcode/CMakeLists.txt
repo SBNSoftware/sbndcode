@@ -15,7 +15,7 @@ add_subdirectory(OpDetSim)
 add_subdirectory(OpDetReco)
 add_subdirectory(OpDetAnalyzer)
 add_subdirectory(OpT0Finder)
-add_subdirectory(CosmicId)
+#add_subdirectory(CosmicId)
 add_subdirectory(ShowerAna)
 add_subdirectory(Commissioning)
 add_subdirectory(Trigger)
@@ -32,4 +32,12 @@ add_subdirectory(FlashMatch)
 
 add_subdirectory(Filters)
 add_subdirectory(ToFStudies)
+
+# for wirecell
+add_subdirectory(WireCell)
+
+add_subdirectory(Decoders)
+add_subdirectory(ChannelMaps)
+
 add_subdirectory(CosmicTagger)
+

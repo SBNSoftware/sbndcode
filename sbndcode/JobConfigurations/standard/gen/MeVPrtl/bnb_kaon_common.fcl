@@ -86,7 +86,6 @@ kaon_pdg: 321 #K+
 
 ray_trace_box: {
   tool_type: RayTraceBox
-  # Volume: volCryostat
   Box: @local::sbnd_detector_box
   Verbose: false
 }

@@ -1,0 +1,15 @@
+#-------------------------------------------------------------------
+#
+# Name: reco1_sce_lite_wc1d.fcl
+#
+# Purpose: Lite version of reco1_sce.fcl, 
+#          *** takes wirecell 2DSIM as input, performs 1D deconvolution *** 
+#
+#
+#-------------------------------------------------------------------
+
+#include "reco1_sce_lite.fcl"
+
+physics.producers.caldata.DigitModuleLabel: "simtpc2d:daq"
+physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq" 
+physics.producers.gaushit.CalDataModuleLabel: "caldata:daq"

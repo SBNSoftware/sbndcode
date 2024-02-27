@@ -1,5 +1,3 @@
-
-
 #include "art/Framework/Core/EDFilter.h" 
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Principal/Event.h" 
@@ -97,14 +95,8 @@
 
     //    uint64 planeUpSt,planeDownSt;
 
-    int nstr=0;
-    art::Handle<std::vector<sbnd::crt::CRTData> > crtStripListHandle;
-    std::vector<art::Ptr<sbnd::crt::CRTData> > striplist;
-    if (e.getByLabel(fCRTStripModuleLabel, crtStripListHandle))  {
-      //    if (e.getByLabel("crt", crtStripListHandle))  {
-      art::fill_ptr_vector(striplist, crtStripListHandle);
-      nstr = striplist.size();
-    }
+    auto const& striplist = e.getProduct<std::vector<sbnd::crt::CRTData>>(fCRTStripModuleLabel);
+    int nstr = striplist.size();
     //    std::cout << "number of crt strips " << nstr << std::endl;
     
     bool trigKeep = false;   
@@ -124,11 +116,11 @@
     float rwcuthigh = 1500.00 + rwcut;
 
     for (int i = 0; i<nstr-2; i+=2){
-      if ((striplist[i]->ADC()+striplist[i+1]->ADC())>fADCthresh) { 
-	uint32_t chan1 = striplist[i]->Channel();
+      if ((striplist[i].ADC()+striplist[i+1].ADC())>fADCthresh) {
+        uint32_t chan1 = striplist[i].Channel();
 	int strip1 = (chan1 >> 1) & 15;
 	int module1 = (chan1>> 5);
-	uint32_t ttime1 = striplist[i]->T0();
+        uint32_t ttime1 = striplist[i].T0();
 	float ctime1 = ttime1/16.;
 	if (ttime1 > 2147483648) {
 	  ctime1 = ((ttime1-4294967296)/16.);
@@ -136,13 +128,13 @@
 
 	//
 	for (int j = i+2; j<nstr; j+=2){
-	  if ((striplist[j]->ADC()+striplist[j+1]->ADC())>fADCthresh) { 	
+          if ((striplist[j].ADC()+striplist[j+1].ADC())>fADCthresh) {
 	  bool match = false;
-	  uint32_t chan2 = striplist[j]->Channel();
+          uint32_t chan2 = striplist[j].Channel();
 	  int strip2 = (chan2 >> 1) & 15;
 	  int module2 = (chan2>> 5);
 	  //
-	  uint32_t ttime2 = striplist[j]->T0();
+          uint32_t ttime2 = striplist[j].T0();
 	  //  T0 in units of ticks, but clock frequency (16 ticks = 1 us) is wrong.
 	  // ints were stored as uints, need to patch this up
 	  float ctime2 = ttime2/16.;
@@ -254,5 +246,3 @@
 
   // A macro required for a JobControl module.
   DEFINE_ART_MODULE(CRTTrigFilter)
-
-

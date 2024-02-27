@@ -44,6 +44,17 @@ namespace opdet {
     return PDmap.at(ch)["electronics"]; 
   }
 
+  int sbndPDMapAlg::pdBox(size_t ch) const
+  {
+    return PDmap.at(ch)["pds_box"];
+  }
+
+
+  int sbndPDMapAlg::pdTPC(size_t ch) const
+  {
+    return PDmap.at(ch)["tpc"];
+  }
+
   std::vector<int> sbndPDMapAlg::getChannelsOfType(std::string pdname) const
   {
     std::vector<int> out_ch_v;

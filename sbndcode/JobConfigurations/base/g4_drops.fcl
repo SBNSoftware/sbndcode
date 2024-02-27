@@ -19,8 +19,7 @@
 
 BEGIN_PROLOG
 
-g4_drops: [ "drop sim::SimEnergyDeposits_*_*_*",
-            "drop sim::OpDetBacktrackerRecords_*_*_*" ]
+g4_drops: [ "drop sim::OpDetBacktrackerRecords_*_*_*" ]
 
 END_PROLOG
 

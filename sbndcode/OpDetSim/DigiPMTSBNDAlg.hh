@@ -10,6 +10,7 @@
 #define SBND_OPDETSIM_DIGIPMTSBNDALG_HH
 
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/Sequence.h"
 #include "fhiclcpp/types/DelegatedParameter.h"
 #include "fhiclcpp/types/OptionalDelegatedParameter.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -38,6 +39,8 @@
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 
 #include "sbndcode/OpDetSim/PMTAlg/PMTGainFluctuations.hh"
+#include "sbndcode/OpDetSim/PMTAlg/PMTNonLinearity.hh"
+#include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
 
 #include "TFile.h"
 
@@ -58,13 +61,18 @@ namespace opdet {
       double PMTMeanAmplitude; //mean amplitude for single pe in pC
       double PMTBaselineRMS; //Pedestal RMS in ADC counts
       double PMTDarkNoiseRate; //in Hz
-      double PMTSaturation; //in number of p.e.
-      double QEDirect; //PMT quantum efficiency for direct (VUV) light
-      double QERefl; //PMT quantum efficiency for reflected (TPB converted) light
+      double PMTADCDynamicRange; //ADC dynbamic range
+      double PMTCoatedVUVEff; //PMT (coated) efficiency for direct (VUV) light
+      double PMTCoatedVISEff; //PMT (coated) efficiency for reflected (VIS) light
+      double PMTUncoatedEff; //PMT (uncoated) efficiency
       std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
       bool PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
       fhicl::ParameterSet GainFluctuationsParams;
+      bool SimulateNonLinearity; //Fluctuate PMT gain
+      fhicl::ParameterSet NonLinearityParams;
+      
+      fhicl::ParameterSet HDOpticalWaveformParams;
 
       detinfo::LArProperties const* larProp = nullptr; //< LarProperties service provider.
       double frequency;       //wave sampling frequency (GHz)
@@ -76,7 +84,7 @@ namespace opdet {
     //Default destructor
     ~DigiPMTSBNDAlg();
 
-    void ConstructWaveform(
+    void ConstructWaveformUncoatedPMT(
       int ch,
       sim::SimPhotons const& simphotons,
       std::vector<short unsigned int>& waveform,
@@ -92,7 +100,7 @@ namespace opdet {
       double start_time,
       unsigned n_sample);
 
-    void ConstructWaveformLite(
+    void ConstructWaveformLiteUncoatedPMT(
       int ch,
       sim::SimPhotonsLite const& litesimphotons,
       std::vector<short unsigned int>& waveform,
@@ -118,14 +126,17 @@ namespace opdet {
     ConfigurationParameters_t fParams;
     // Declare member data here.
     double fSampling;       //wave sampling frequency (GHz)
-    double fQEDirect;
-    double fQERefl;
-    //int fSinglePEmodel;
+    double fSamplingPeriod; //wave sampling period (ns)
+    double fPMTCoatedVUVEff;
+    double fPMTCoatedVISEff;
+    double fPMTUncoatedEff;
+    bool fPositivePolarity;
+    int fADCSaturation;
+
     double sigma1;
     double sigma2;
 
     const double transitTimeSpread_frac = 2.0 * std::sqrt(2.0 * std::log(2.0));
-    double saturation;
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
     CLHEP::RandFlat fFlatGen;
@@ -134,19 +145,24 @@ namespace opdet {
     CLHEP::RandExponential fExponentialGen;
     std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for coated PMTs
 
-
     //PMTFluctuationsAlg
     std::unique_ptr<opdet::PMTGainFluctuations> fPMTGainFluctuationsPtr;
+    //HDWaveforms
+    std::unique_ptr<opdet::HDOpticalWaveform> fPMTHDOpticalWaveformsPtr;
 
-    void AddSPE(size_t time_bin, std::vector<double>& wave); // add single pulse to auxiliary waveform
+    //PMTNonLinearity
+    std::unique_ptr<opdet::PMTNonLinearity> fPMTNonLinearityPtr;
+
+    void AddSPE(size_t time, std::vector<double>& wave, double npe = 1); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
     std::vector<double> fSinglePEWave; // single photon pulse vector
+    std::vector<std::vector<double>> fSinglePEWave_HD; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
-    void CreatePDWaveform(
+    void CreatePDWaveformUncoatedPMT(
       sim::SimPhotons const& SimPhotons,
       double t_min,
       std::vector<double>& wave,
@@ -158,7 +174,7 @@ namespace opdet {
       std::vector<double>& wave,
       std::unordered_map<int, sim::SimPhotons>& DirectPhotonsMap,
       std::unordered_map<int, sim::SimPhotons>& ReflectedPhotonsMap);
-    void CreatePDWaveformLite(
+    void CreatePDWaveformLiteUncoatedPMT(
       sim::SimPhotonsLite const& litesimphotons,
       double t_min,
       std::vector<double>& wave,
@@ -170,7 +186,7 @@ namespace opdet {
       std::vector<double>& wave,
       std::unordered_map<int, sim::SimPhotonsLite>& DirectPhotonsMap,
       std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap);
-    void CreateSaturation(std::vector<double>& wave);//Including saturation effects
+    void CreateSaturation(std::vector<double>& wave);//Including saturation effects (dynamic range)
     void AddLineNoise(std::vector<double>& wave); //add noise to baseline
     void AddDarkNoise(std::vector<double>& wave); //add dark noise
     double FindMinimumTime(
@@ -242,19 +258,24 @@ namespace opdet {
         Comment("Dark noise rate in Hz")
       };
 
-      fhicl::Atom<double> pmtsaturation {
-        Name("PMTSaturation"),
-        Comment("Saturation in number of p.e.")
+      fhicl::Atom<double> pmtADCDynamicRange {
+        Name("PMTADCDynamicRange"),
+        Comment("Saturation in number of ADCs")
       };
 
-      fhicl::Atom<double> qEDirect {
-        Name("QEDirect"),
-        Comment("PMT quantum efficiency for direct (VUV) light")
+      fhicl::Atom<double> pmtcoatedVUVEff {
+        Name("PMTCoatedVUVEff"),
+        Comment("PMT (coated) detection efficiency for direct (VUV) light")
       };
 
-      fhicl::Atom<double> qERefl {
-        Name("QERefl"),
-        Comment("PMT quantum efficiency for reflected (TPB emitted)light")
+      fhicl::Atom<double> pmtcoatedVISEff {
+        Name("PMTCoatedVISEff"),
+        Comment("PMT (coated) detection efficiency for reflected (VIS) light")
+      };
+
+      fhicl::Atom<double> pmtuncoatedEff {
+        Name("PMTUncoatedEff"),
+        Comment("PMT (uncoated) detection efficiency")
       };
 
       fhicl::Atom<bool> PMTsinglePEmodel {
@@ -267,14 +288,19 @@ namespace opdet {
         Comment("File containing timing emission distribution for TPB and single pe pulse from data")
       };
 
-      fhicl::Atom<bool> makeGainFluctuations {
-        Name("MakeGainFluctuations"),
-        Comment("Option to fluctuate PMT gain")
-      };
-
       fhicl::OptionalDelegatedParameter gainFluctuationsParams {
         Name("GainFluctuationsParams"),
         Comment("Parameters used for SinglePE response fluctuations")
+      };
+
+      fhicl::OptionalDelegatedParameter nonLinearityParams {
+        Name("NonLinearityParams"),
+        Comment("Parameters used for simulating PMT non linear effects")
+      };
+      
+      fhicl::OptionalDelegatedParameter hdOpticalWaveformParams {
+        Name("HDOpticalWaveformParamsPMT"),
+        Comment("Parameters used for high definition waveform")
       };
 
     };    //struct Config

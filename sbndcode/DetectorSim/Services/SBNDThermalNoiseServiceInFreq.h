@@ -81,9 +81,10 @@ private:
   CLHEP::HepRandomEngine* fNoiseEngine;
 
   // Function to allow use of noise engine in ChannelNoiseService setup.
-  void InitialiseProducerDeps(art::EDProducer * EDProdPointer, fhicl::ParameterSet const& pset) override{    
+  void InitialiseProducerDeps(EngineCreator createEngine, fhicl::ParameterSet const& pset) override{
     
-    CLHEP::HepRandomEngine& NoiseEngine((art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*EDProdPointer,"HepJamesRandom","noise",pset,"Seed")));
+    CLHEP::HepRandomEngine& NoiseEngine(art::ServiceHandle<rndm::NuRandomService>{}->registerAndSeedEngine(
+                                          createEngine("HepJamesRandom","noise"), "HepJamesRandom","noise",pset,"Seed"));
     fNoiseEngine = &NoiseEngine;
     return; 
   } 

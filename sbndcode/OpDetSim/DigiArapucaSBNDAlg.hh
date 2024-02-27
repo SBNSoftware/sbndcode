@@ -10,6 +10,9 @@
 #define SBND_OPDETSIM_DIGIARAPUCASBNDALG_HH
 
 #include "fhiclcpp/types/Atom.h"
+#include "fhiclcpp/types/DelegatedParameter.h"
+#include "fhiclcpp/types/OptionalDelegatedParameter.h"
+
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
 #include "CLHEP/Random/RandFlat.h"
@@ -17,6 +20,7 @@
 #include "CLHEP/Random/RandGeneral.h"
 #include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandExponential.h"
+#include "art/Utilities/make_tool.h"
 
 #include <algorithm>
 #include <memory>
@@ -33,6 +37,8 @@
 #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
+
+#include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
 
 #include "TFile.h"
 
@@ -53,8 +59,10 @@ namespace opdet {
       double BaselineRMS;    //Pedestal RMS in ADC counts
       double DarkNoiseRate;  //in Hz
       double CrossTalk;      //probability for producing a signal of 2 PE in response to 1 photon
-      double Saturation;     //Saturation in number of p.e.
-      double XArapucaVUVEff;    //XArapucaVUV efficiency (optical window + cavity)
+      double SaturationHigh;     //Saturation in number of p.e.
+      double SaturationLow;     //Saturation in number of p.e.
+      double XArapucaVUVEffVis;    //XArapucaVUV efficiency to visible light
+      double XArapucaVUVEffVUV;    //XArapucaVUV efficiency to VUV light
       double XArapucaVISEff;    //XArapucaVIS efficiency (optical window + cavity)
       double DecayTXArapucaVIS;// Decay time of EJ280 in ns
       std::string ArapucaDataFile; //File containing timing structure for arapucas
@@ -67,6 +75,7 @@ namespace opdet {
       double frequency_Daphne; ///< Optical-clock frequency for daphne readouts	
 
       CLHEP::HepRandomEngine* engine = nullptr;
+      fhicl::ParameterSet HDOpticalWaveformParams;
     };// ConfigurationParameters_t
 
     //Default constructor
@@ -86,6 +95,12 @@ namespace opdet {
                            bool is_daphne,
                            double start_time,
                            unsigned n_samples);
+    void ConstructWaveformVUVXA(int ch,
+                                    std::vector<short unsigned int>& waveform,
+                                    std::unordered_map<int, sim::SimPhotons>& DirectPhotonsMap,
+                                    std::unordered_map<int, sim::SimPhotons>& ReflectedPhotonsMap,
+                                    double start_time,
+                                    unsigned n_samples);
     void ConstructWaveformLite(int ch,
                                sim::SimPhotonsLite const& litesimphotons,
                                std::vector<short unsigned int>& waveform,
@@ -93,7 +108,12 @@ namespace opdet {
                                bool is_daphne,
                                double start_time,
                                unsigned n_samples);
-  // double P_truth=0;
+    void ConstructWaveformLiteVUVXA(int ch,
+                                    std::vector<short unsigned int>& waveform,
+                                    std::unordered_map<int, sim::SimPhotonsLite>& DirectPhotonsMap,
+                                    std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap,
+                                    double start_time,
+                                    unsigned n_samples);
 
   private:
 
@@ -102,9 +122,11 @@ namespace opdet {
 
     const double fSampling;        //wave sampling frequency (GHz)
     const double fSampling_Daphne;        //wave sampling frequency (GHz)
-    const double fXArapucaVUVEff;
+    const double fXArapucaVUVEffVis; //VUV XArapuca efficiency to visible light
+    const double fXArapucaVUVEffVUV; //VUV XArapuca efficiency to VUV light
     const double fXArapucaVISEff;
-    const double fADCSaturation;
+    const double fADCSaturationHigh;
+    const double fADCSaturationLow;
 
     CLHEP::HepRandomEngine* fEngine; //!< Reference to art-managed random-number engine
     CLHEP::RandFlat fFlatGen;
@@ -116,7 +138,13 @@ namespace opdet {
 
     std::vector<double> fWaveformSP; //single photon pulse vector
     std::vector<double> fWaveformSP_Daphne; //single photon pulse vector
+    std::vector<std::vector<double>> fWaveformSP_Daphne_HD; //single photon pulse vector
+    
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
+
+    //HDWaveforms
+    std::unique_ptr<opdet::HDOpticalWaveform> fPMTHDOpticalWaveformsPtr;
+
 
     void CreatePDWaveform(sim::SimPhotons const& SimPhotons,
                           double t_min,
@@ -141,6 +169,7 @@ namespace opdet {
                                      bool is_daphne);
     void AddSPE(size_t time_bin, std::vector<double>& wave, const std::vector<double>& fWaveformSP, int nphotons); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave,const double sampling);
+    // void produceSER_HD(std::vector<double> *SER_HD, std::vector<double>& SER);
     void AddLineNoise(std::vector<double>& wave);
     void AddDarkNoise(std::vector<double>& wave , std::vector<double>& WaveformSP);
     double FindMinimumTime(sim::SimPhotons const& simphotons);
@@ -180,11 +209,6 @@ namespace opdet {
         Comment("Single pe: Pulse decay time constant (exponential), from 0.1 to 0.9 of maximum amplitude")
       };
 
-      fhicl::Atom<double> voltageToADC {
-        Name("ArapucaVoltageToADC"),
-        Comment("Voltage to ADC convertion factor")
-      };
-
       fhicl::Atom<double> baseline {
         Name("ArapucaBaseline"),
         Comment("Waveform baseline in ADC")
@@ -205,23 +229,23 @@ namespace opdet {
         Comment("Probability for producing a signal of 2 PE in response to 1 photon")
       };
 
-      fhicl::Atom<double> saturation {
-        Name("ArapucaSaturation"),
-        Comment("Saturation in number of p.e.")
+      fhicl::Atom<double> saturationHigh {
+        Name("ArapucaSaturationHigh"),
+        Comment("Saturation in number of ADC counts")
       };
 
-      fhicl::Atom<double> arapucaVUVEff {
-        Name("ArapucaVUVEff"),
-        Comment("Arapuca VUV efficiency (optical window + cavity)")
+      fhicl::Atom<double> saturationLow {
+        Name("ArapucaSaturationLow"),
+        Comment("Saturation in number of ADC counts")
       };
 
-      fhicl::Atom<double> arapucaVISEff {
-        Name("ArapucaVISEff"),
-        Comment("Arapuca VIS efficiency (optical window + cavity)")
+      fhicl::Atom<double> xArapucaVUVEffVis {
+        Name("XArapucaVUVEffVis"),
+        Comment("XArapuca VUV efficiency (optical window + cavity)")
       };
 
-      fhicl::Atom<double> xArapucaVUVEff {
-        Name("XArapucaVUVEff"),
+      fhicl::Atom<double> xArapucaVUVEffVUV {
+        Name("XArapucaVUVEffVUV"),
         Comment("XArapuca VUV efficiency (optical window + cavity)")
       };
 
@@ -258,6 +282,11 @@ namespace opdet {
       fhicl::Atom<double> ampFluctuation {
         Name("AmpFluctuation"),
         Comment("Std of the gaussian fit (from data) to the 1PE distribution. Relative units i.e.: AmpFluctuation=0.1-> Amp(1PE)= 18+-1.8 ADC counts")
+      };
+
+      fhicl::OptionalDelegatedParameter hdOpticalWaveformParams {
+        Name("HDOpticalWaveformParamsXARAPUCA"),
+        Comment("Parameters used for high definition waveform")
       };
 
 

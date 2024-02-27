@@ -114,7 +114,8 @@ SimWireSBND::SimWireSBND(fhicl::ParameterSet const& pset)
   // create a default random engine; obtain the random seed from NuRandomService,
   // unless overridden in configuration with key "Seed" and "SeedPedestal"
   //  , fNoiseEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "noise", pset, "Seed"))
-  , fPedestalEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "pedestal", pset, "SeedPedestal"))
+  , fPedestalEngine(art::ServiceHandle<rndm::NuRandomService>{}->registerAndSeedEngine(
+                      createEngine(0, "HepJamesRandom", "pedestal"), "HepJamesRandom", "pedestal", pset, "SeedPedestal"))
 {
   this->reconfigure(pset);
 
@@ -175,8 +176,10 @@ void SimWireSBND::reconfigure(fhicl::ParameterSet const& p)
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
   fNTimeSamples  = detProp.NumberTimeSamples();
 
-  noiseserv->InitialiseProducerDeps(this, p);  
-
+  noiseserv->InitialiseProducerDeps([this](std::string const& type, std::string const& instance) -> auto& {
+                                      return createEngine(0, type, instance);
+                                    },
+                                    p);
 
   return;
 }

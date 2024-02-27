@@ -1,0 +1,24 @@
+#include "prodMeVPrtl_hnl_sbnd.fcl"
+
+###----------Set mass of HNL [GeV]----------###
+hnlM: 0.200
+physics.producers.generator.Flux.M: @local::hnlM
+physics.producers.generator.RayTrace.ReferencePrtlMass: @local::hnlM
+physics.producers.generator.Decay.ReferenceHNLMass: @local::hnlM
+
+###----------Set mixing angle of HNL ----------###
+Ume4: 0
+Umu4: 1.00e-7
+Umt4: 0
+physics.producers.generator.Flux.MagUe4: @local::Ume4
+physics.producers.generator.Flux.MagUm4: @local::Umu4
+physics.producers.generator.Decay.ReferenceUE4: @local::Ume4
+physics.producers.generator.Decay.ReferenceUM4: @local::Umu4
+physics.producers.generator.Decay.ReferenceUT4: @local::Umt4
+physics.producers.generator.Decay.Decays: ["nu_pi0"]
+
+###-----------Verbose--------------###
+#include "set_MeVPrtl_Verbose.fcl" 
+                                                                      
+###----------Set geometry ----------###
+#include "set_MeVPrtl_GeoTPC.fcl"

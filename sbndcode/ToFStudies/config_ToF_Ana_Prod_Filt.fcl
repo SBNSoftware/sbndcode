@@ -1,4 +1,4 @@
-#include "crtbacktracker_sbnd.fcl"
+#include "crtbacktrackeralg_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -12,11 +12,11 @@ SimLabel: "largeant"
 OpHitModuleLabel: "ophitpmt"
 OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
-CrtHitModuleLabel: "crthit"
-CrtTrackModuleLabel: "crttrack"
+CrtSpacePointModuleLabel: "crtspacepoints"
+CrtTrackModuleLabel: "crttracks"
 CoincidenceWindow: 200.0
 OpDelay: 194.5
-CRThitThresh: 0.0
+CRTSpacePointThresh: 0.0
 FlashPeThresh: 0.0
 HitPeThresh: 0.0
 BeamLow: -200
@@ -33,7 +33,7 @@ G4timeUp: 1800
 G4timeLow: -9999
 keeponlytracks: true
 SaveTrueToFInfo: true
-CRTBackTrack: @local::standard_crtbacktracker
+CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 }
 
 #################### Configuration to run Producer module (calculate ToF metric using largest optical hit inside coincidence window) ###############################
@@ -44,11 +44,11 @@ module_type: "ToFProducer"
 OpHitModuleLabel: "ophitpmt"
 OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
-CrtHitModuleLabel: "crthit"
-CrtTrackModuleLabel: "crttrack"
+CrtSpacePointModuleLabel: "crtspacepoints"
+CrtTrackModuleLabel: "crttracks"
 CoincidenceWindow: 50.0
 OpDelay: 194.5
-CRThitThresh: 100.0
+CRTSpacePointThresh: 100.0
 FlashPeThresh: 500.0
 HitPeThresh: 50.0
 BeamLow: -200.0
@@ -59,7 +59,7 @@ CFlash: false
 CFlash_hit: false
 Lhit: true
 Chit: false
-CRTBackTrack: @local::standard_crtbacktracker
+CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 }
 
 #################### Configuration to run Producer module (calculate ToF metric using closest optical hit inside coincidence window) #################################
@@ -70,11 +70,11 @@ module_type: "ToFProducer"
 OpHitModuleLabel: "ophitpmt"
 OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
-CrtHitModuleLabel: "crthit"
-CrtTrackModuleLabel: "crttrack"
+CrtSpacePointModuleLabel: "crtspacepoints"
+CrtTrackModuleLabel: "crttracks"
 CoincidenceWindow: 50.0
 OpDelay: 194.5
-CRThitThresh: 100.0
+CRTSpacePointThresh: 100.0
 FlashPeThresh: 500.0
 HitPeThresh: 25.0
 BeamLow: -200.0
@@ -85,7 +85,7 @@ CFlash: false
 CFlash_hit: false
 Lhit: false
 Chit: true
-CRTBackTrack: @local::standard_crtbacktracker
+CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 }
 
 #################### Configuration to run Producer module (calculate ToF metric using largest optical flash inside coincidence window) #################################
@@ -96,11 +96,11 @@ module_type: "ToFProducer"
 OpHitModuleLabel: "ophitpmt"
 OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
-CrtHitModuleLabel: "crthit"
-CrtTrackModuleLabel: "crttrack"
+CrtSpacePointModuleLabel: "crtspacepoints"
+CrtTrackModuleLabel: "crttracks"
 CoincidenceWindow: 50.0
 OpDelay: 194.5
-CRThitThresh: 100.0
+CRTSpacePointThresh: 100.0
 FlashPeThresh: 500.0
 HitPeThresh: 50.0
 BeamLow: -200.0
@@ -111,7 +111,7 @@ CFlash: false
 CFlash_hit: false
 Lhit: false
 Chit: false
-CRTBackTrack: @local::standard_crtbacktracker
+CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 }
 
 #################### Configuration to run Producer module (calculate ToF metric using closest optical flash inside coincidence window) ##################################
@@ -122,11 +122,11 @@ module_type: "ToFProducer"
 OpHitModuleLabel: "ophitpmt"
 OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
-CrtHitModuleLabel: "crthit"
-CrtTrackModuleLabel: "crttrack"
+CrtSpacePointModuleLabel: "crtspacepoints"
+CrtTrackModuleLabel: "crttracks"
 CoincidenceWindow: 50.0
 OpDelay: 194.5
-CRThitThresh: 100.0
+CRTSpacePointThresh: 100.0
 FlashPeThresh: 500.0
 HitPeThresh: 50.0
 BeamLow: -200.0
@@ -137,7 +137,7 @@ CFlash: true
 CFlash_hit: false
 Lhit: false
 Chit: false
-CRTBackTrack: @local::standard_crtbacktracker
+CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 }
 
 ############ Configuration to run Producer module (calculate ToF metric using earliest optical hit of the largest optical flash inside coincidence window) ###############
@@ -148,11 +148,11 @@ module_type: "ToFProducer"
 OpHitModuleLabel: "ophitpmt"
 OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
-CrtHitModuleLabel: "crthit"
-CrtTrackModuleLabel: "crttrack"
+CrtSpacePointModuleLabel: "crtspacepoints"
+CrtTrackModuleLabel: "crttracks"
 CoincidenceWindow: 50.0
 OpDelay: 194.5
-CRThitThresh: 100.0
+CRTSpacePointThresh: 100.0
 FlashPeThresh: 500.0
 HitPeThresh: 50.0
 BeamLow: -200.0
@@ -163,7 +163,7 @@ CFlash: false
 CFlash_hit: false
 Lhit: false
 Chit: false
-CRTBackTrack: @local::standard_crtbacktracker
+CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 }
 
 ############ Configuration to run Producer module (calculate ToF metric using earliest optical hit of the closest optical flash inside coincidence window) ###############
@@ -174,11 +174,11 @@ module_type: "ToFProducer"
 OpHitModuleLabel: "ophitpmt"
 OpFlashModuleLabel0: "opflashtpc0"
 OpFlashModuleLabel1: "opflashtpc1"
-CrtHitModuleLabel: "crthit"
-CrtTrackModuleLabel: "crttrack"
+CrtSpacePointModuleLabel: "crtspacepoints"
+CrtTrackModuleLabel: "crttracks"
 CoincidenceWindow: 50.0
 OpDelay: 194.5
-CRThitThresh: 100.0
+CRTSpacePointThresh: 100.0
 FlashPeThresh: 500.0
 HitPeThresh: 50.0
 BeamLow: -200.0
@@ -189,7 +189,7 @@ CFlash: false
 CFlash_hit: true
 Lhit: false
 Chit: false
-CRTBackTrack: @local::standard_crtbacktracker
+CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 }
 
 #################### Configuration to run Filter module (remove cosmic like events by looking at ToF values calculated using largest optical hit methode) #################

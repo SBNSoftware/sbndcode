@@ -1,0 +1,3 @@
+#include "wirecell_sim_sp_sbnd.fcl"
+
+process_name: WCLSDetVar

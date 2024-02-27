@@ -3,8 +3,6 @@
 
 
 #include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "art/Framework/Principal/Event.h"
-#include "art/Framework/Principal/Handle.h"
 #include "larcore/Geometry/Geometry.h"
 
 #include "nusimdata/SimulationBase/MCParticle.h"
@@ -41,11 +39,11 @@ namespace sbnd{
                            // std::vector<float>&,
                            // int);
 
-    void calcWeight(        art::Ptr<simb::MCTruth>,
-                            art::Ptr<simb::GTruth >,
+    void calcWeight(        simb::MCTruth const&,
+                            simb::GTruth const&,
                             std::vector<std::vector<float>>& );
 
-    void packFluxWeight(    art::Ptr<simb::MCFlux >  flux,
+    void packFluxWeight(    simb::MCFlux const& flux,
                             std::vector<std::vector<float>>&);
 
     unsigned int prepareSigmas(int, unsigned int,
@@ -68,7 +66,7 @@ namespace sbnd{
                             std::vector<float>& vertex);
 
     // Pack up the flux info:
-    void packFluxInfo(art::Ptr<simb::MCFlux >  flux,
+    void packFluxInfo(      simb::MCFlux const& flux,
                             int& ptype, int& tptype, int& ndecay,
                             std::vector<float>& neutVertexInWindow,
                             std::vector<float>& ParentVertex,
@@ -77,7 +75,7 @@ namespace sbnd{
                             std::vector<float>& nuParentMomTargetExit);
 
     // Pack up the genie info:
-    void packGenieInfo(art::Ptr<simb::MCTruth>  truth,
+    void packGenieInfo(     simb::MCTruth const& truth,
                             std::vector<int> & GeniePDG,
                             std::vector<std::vector<float>>& GenieMomentum,
                             std::vector<std::string>& GenieProc,
@@ -85,7 +83,7 @@ namespace sbnd{
                             int& NGamma,
                             int& NChargedPions);
 
-    void packLarg4Info(art::Handle< std::vector<simb::MCParticle> > mclarg4, int, int, int, int,
+    void packLarg4Info(std::vector<simb::MCParticle> const& mclarg4, int, int, int, int,
                             std::vector<std::vector<float> > & leptonPos,
                             std::vector<std::vector<float> > & leptonMom,
                             std::vector<std::vector<float> > & p1PhotonConversionPos,
@@ -102,17 +100,17 @@ namespace sbnd{
 
   private:
 
-    art::Ptr<simb::MCParticle> getParticleByID(
-            art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int ) const;
-    art::Ptr<simb::MCParticle> getParticleByPDG(
-            art::Handle< std::vector<simb::MCParticle> > & mclistLARG4, int ) const;
+    simb::MCParticle const* getParticleByID(
+            std::vector<simb::MCParticle> const& mclistLARG4, int ) const;
+    simb::MCParticle const& getParticleByIDStrict(
+            std::vector<simb::MCParticle> const& mclistLARG4, int ) const;
 
 
     void pack4Vector(const TLorentzVector& input, std::vector<float>& output) const;
     void pack3Vector(const TVector3& input, std::vector<float>& output) const;
 
     bool isInTPC(const TVector3 &) const;
-    void GetPhotonConversionInfo( art::Ptr<simb::MCParticle> photon,
+    void GetPhotonConversionInfo( simb::MCParticle const& photon,
                                   TLorentzVector& ConversionPos,
                                   TLorentzVector& ConversionMom);
     // The reweighting utility class:

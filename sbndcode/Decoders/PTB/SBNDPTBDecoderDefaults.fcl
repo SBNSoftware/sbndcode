@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+SBNDPTBDecoderDefaults: {
+      module_type: SBNDPTBDecoder
+      InputLabel: "daq"
+      InputContainerInstance: "ContainerPTB"
+      InputNonContainerInstance: "PTB"
+      OutputInstance: ""
+      DebugLevel: 0
+}
+
+END_PROLOG
+
