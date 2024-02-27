@@ -1,0 +1,10 @@
+#include "g4inforeducer.fcl"
+
+BEGIN_PROLOG
+
+#info reducer - produces lite version of sim energy deposit
+sbnd_sedlite: @local::sbn_largeant_info_reducer
+sbnd_sedlite.SimEnergyDepositLabel: "largeant:LArG4DetectorServicevolTPCActive"
+sbnd_sedlite.useOrigTrackID: true #needed since TrackID overwritten by SBND modules
+
+END_PROLOG
