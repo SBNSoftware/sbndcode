@@ -2,6 +2,7 @@
 
 #include "services_sbnd.fcl"
 #include "geometry_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 
 #include "larproperties.fcl"
 #include "backtrackerservice.fcl"
@@ -52,8 +53,8 @@ services:
   DetectorClocksService:     @local::sbnd_services.DetectorClocksService
   DetectorPropertiesService: @local::sbnd_detproperties
   ChannelStatusService:      @local::sbnd_channelstatus
-  ParticleInventoryService:  @local::standard_particleinventoryservice
-  BackTrackerService:        @local::standard_backtrackerservice
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  BackTrackerService:        @local::sbnd_backtrackerservice
   SpaceCharge:               @local::sbnd_spacecharge
   NuRandomService: {
     policy: perEvent
@@ -119,6 +120,11 @@ physics:
   end_paths:     [ stream1 ]
 }
 
+# change tools in sbn to have 2D TPC sim/sp input
+physics.producers.pandoraShowerRazzle.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.pandoraTrackDazzle.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
+
 physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
 
@@ -139,4 +145,3 @@ physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxwei
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []
 
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"

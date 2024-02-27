@@ -18,6 +18,7 @@ services:
 physics.simulate: [ rns
                   , loader
                   , largeant
+                  , sedlite
                   , ionandscint
                   , pdfastsim
                   , simdrift

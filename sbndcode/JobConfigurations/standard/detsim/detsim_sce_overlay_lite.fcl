@@ -1,0 +1,15 @@
+#-------------------------------------------------------------------
+#
+# Name: detsim_sce_overlay_lite.fcl
+#
+# Purpose: Accounts for overlay samples in truth products by setting 
+#          mother ID to 0.
+#
+# Created: 26-Feb-2024 B. Carlson
+#
+#-------------------------------------------------------------------
+
+#include "detsim_sce_lite.fcl"
+
+#Account for track ID offsets in overlay samples by setting mother ID to 0.
+physics.producers.mcreco: @local::sbnd_mcreco_overlay
