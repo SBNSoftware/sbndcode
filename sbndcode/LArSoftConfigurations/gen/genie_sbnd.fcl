@@ -274,13 +274,13 @@ sbnd_flux_numi_dirt: {
 # https://inspirehep.net/files/610a942fd8632bbbca2c8ad90da86670
 
 sbnd_fluxbucket_bnb: {
-  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936., sigma=1.308"
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
 }
 
 # Booster Neutrino Beam, rotated bucket
 #
 sbnd_fluxbucket_bnb_rotated: {
-  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936., sigma=1.308"
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
 }
 
 ################################################################################
