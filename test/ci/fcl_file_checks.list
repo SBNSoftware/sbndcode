@@ -7,7 +7,10 @@ prodcorsika_proton_intime_filter_sce.fcl
 prodsingle_sbnd_proj.fcl
 g4_sce.fcl
 g4_sce_dirt_filter.fcl
+g4_sce_dirt_filter_lite.fcl
 detsim_sce.fcl
+detsim_sce_lite.fcl
 reco1_sce.fcl
+reco1_sce_lite.fcl
 reco2_sce.fcl
 cafmakerjob_sbnd_sce_genie_and_fluxwgt.fcl

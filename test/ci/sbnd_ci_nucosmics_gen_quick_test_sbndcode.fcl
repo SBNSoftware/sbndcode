@@ -1,5 +1,5 @@
 #include "messages_sbnd.fcl"
-#include "prodgenie_bnb_nu_cosmic_sbnd.fcl"
+#include "prodoverlay_corsika_cosmics_proton_genie_rockbox_sce.fcl"
 
 # non-interactive output settings, but keep them verbose
 services.message: @local::sbnd_message_services_prod_debug
