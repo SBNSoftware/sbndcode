@@ -47,11 +47,13 @@ void XSec2D(const TString productionVersion, const TString saveDirExt)
     {
       all_weights.insert(all_weights.end(), weightSet.list.begin(), weightSet.list.end());
 
-      for(std::string &name : weightSet.list)
+      /*
+        for(std::string &name : weightSet.list)
         {
-          MakePlot(1, selections, saveDir, name, weightSet.nunivs);
-          MakePlot(2, selections, saveDir, name, weightSet.nunivs);
+        MakePlot(1, selections, saveDir, name, weightSet.nunivs);
+        MakePlot(2, selections, saveDir, name, weightSet.nunivs);
         }
+      */
 
       MakePlot(3, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
     }
