@@ -11,7 +11,7 @@ sbnd_digiarapuca_alg:
 
   ArapucaBaselineRMS:        0.65     # 2.6/4 as PMTs with 14bits ADC have 4 ADC counts and most XA channels will be 12 bits
   ArapucaDarkNoiseRate:      10.0    #in Hz
-  CrossTalk:                 0.424   #from measures at CIEMAT, SensL SiPMs at 6 OV
+  CrossTalk:                 0.424   #from measures at CIEMAT, SensL SiPMs at 5.75 OV
   ArapucaBaseline:           700     #supposing a 12-bits ADC and 20% overshoot, 4069/6 ~700 
   ArapucaPulseLength:        4000.0  #ns
   ArapucaPeakTime:           260.0   #ns
@@ -21,7 +21,7 @@ sbnd_digiarapuca_alg:
   ArapucaSaturationHigh:     4095    #ADC saturation for 12 bit ADCs, high limit (2**12-1, ADC starts at 0)
   ArapucaSaturationLow:      0.      #ADC saturation for 12 bit ADCs, low limit
   XArapucaVUVEffVUV:         0.01752  # 2.19% x 0.8(APA mesh transparency not simulated in G4) VUV XArapuca efficiency to VUV light
-  XArapucaVUVEffVis:         0.00271  # 0.43% x 0.8 x 0.79 (APA mesh transparency + CPA  TPB area factor): VUV XArapuca efficiency to vis light (half the visible efficiency)
+  XArapucaVUVEffVis:         0.00271  # 0.43% x 0.8 x 0.79 (APA mesh transparency + CPA  TPB area factor): VUV XArapuca efficiency to vis light
   XArapucaVISEff:            0.01264  # 2.00% x 0.8 x 0.79 (APA mesh transparency + CPA  TPB area factor): XArapuca VIS efficiency (taking into account 70% mesh transparency 0.02*0.7)
   DecayTXArapucaVIS:         8.5     # decay time of EJ280 in ns
   ArapucaDataFile:           "OpDetSim/digi_arapuca_sbnd.root" # located in sbnd_data
