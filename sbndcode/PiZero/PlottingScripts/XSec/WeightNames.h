@@ -17,6 +17,9 @@ const std::vector<std::string> flux_weight_names = { "expskin_Flux",
                                                      "piplus_Flux"
 };
 
+
+const std::vector<std::string> flux_weight_names_simple = { "flux_weights_all" };
+
 const std::vector<std::string> tmp_genie_weight_names = { "GENIEReWeight_SBND_v5_multisim_CCRESVariationResponse" };
 
 const std::vector<std::string> genie_weight_names = { "GENIEReWeight_SBND_v5_multisigma_CoulombCCQE_multisim",
