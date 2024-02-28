@@ -352,7 +352,7 @@ class XSecPlot {
     return hist;
   }
 
-  TGraphAsymmErrors* GetCVErrGraph(const std::string &weightName, const int var1Bin = 1)
+  TGraphAsymmErrors* GetCVErrGraph(const std::string &weightName, const int var1Bin = -1)
   {
     TGraphAsymmErrors* graph = new TGraphAsymmErrors();
     int bin_count = 0;
@@ -361,7 +361,7 @@ class XSecPlot {
       {
         const int binIndex1 = bin_i / (_var0Bins.size() - 1) + 1;
 
-        if(var1Bin != binIndex1)
+        if(var1Bin != -1 && var1Bin != binIndex1)
           continue;
 
         double low, cv, high;
@@ -396,7 +396,7 @@ class XSecPlot {
     return graph;
   }
 
-  TGraphAsymmErrors* GetCVErrGraph(const std::vector<std::string> &weightNames, const int var1Bin = 1)
+  TGraphAsymmErrors* GetCVErrGraph(const std::vector<std::string> &weightNames, const int var1Bin = -1)
   {
     TGraphAsymmErrors* graph = new TGraphAsymmErrors();
     int bin_count = 0;
@@ -405,7 +405,7 @@ class XSecPlot {
       {
         const int binIndex1 = bin_i / (_var0Bins.size() - 1) + 1;
 
-        if(var1Bin != binIndex1)
+        if(var1Bin != -1 && var1Bin != binIndex1)
           continue;
 
         const double nom  = bin->GetNominalXSec();
@@ -458,4 +458,86 @@ class XSecPlot {
     {
       return Form("%.2f < %s < %.2f", _var1Bins[var1Bin-1], var.c_str(), _var1Bins[var1Bin]);
     }
+
+  TH2D* CreateFractionalCovarianceMatrix(const std::string weightName)
+  {
+    TH2D *matrix = new TH2D(Form("FracCovMat%s", weightName.c_str()), ";Bin;Bin",
+                            _bins.size(), 0.5, _bins.size() + 0.5,
+                            _bins.size(), 0.5, _bins.size() + 0.5);
+
+    for(auto&& [ binIndex_i, bin_i ] : enumerate(_bins))
+      {
+        const double xsec_nom_i = bin_i->GetNominalXSec();
+
+        for(auto&& [ binIndex_j, bin_j ] : enumerate(_bins))
+          {
+            const int nunivs = bin_i->GetNUniverses(weightName);
+
+            const double xsec_nom_j = bin_j->GetNominalXSec();
+
+            double sum = 0.;
+
+            for(int univ = 0; univ < nunivs; ++univ)
+              {
+                const double xsec_i = bin_i->GetUniverseXSec(weightName, univ);
+                const double xsec_j = bin_j->GetUniverseXSec(weightName, univ);
+
+                sum += (xsec_i - xsec_nom_i) * (xsec_j - xsec_nom_j);
+              }
+
+            matrix->SetBinContent(binIndex_i + 1, binIndex_j + 1, sum / (nunivs * xsec_nom_i * xsec_nom_j));
+          }
+      }
+
+    return matrix;
+  }
+
+  TH2D* CreateCorrelationMatrix(const std::string weightName)
+  {
+    const double compfactor = 1;
+
+    TH2D *cov_matrix = new TH2D(Form("CovMat%s", weightName.c_str()), ";Bin;Bin",
+                                _bins.size(), 0.5, _bins.size() + 0.5,
+                                _bins.size(), 0.5, _bins.size() + 0.5);
+
+    for(auto&& [ binIndex_i, bin_i ] : enumerate(_bins))
+      {
+        const double xsec_nom_i = bin_i->GetNominalXSec();
+
+        for(auto&& [ binIndex_j, bin_j ] : enumerate(_bins))
+          {
+            const int nunivs = bin_i->GetNUniverses(weightName);
+
+            const double xsec_nom_j = bin_j->GetNominalXSec();
+
+            double sum = 0.;
+
+            for(int univ = 0; univ < nunivs; ++univ)
+              {
+                const double xsec_i = bin_i->GetUniverseXSec(weightName, univ);
+                const double xsec_j = bin_j->GetUniverseXSec(weightName, univ);
+
+                sum += (xsec_i - xsec_nom_i) * (xsec_j - xsec_nom_j);
+              }
+
+            cov_matrix->SetBinContent(binIndex_i + 1, binIndex_j + 1, (sum * compfactor) / nunivs);
+          }
+      }
+
+    TH2D *corr_matrix = new TH2D(Form("CorrMat%s", weightName.c_str()), ";Bin;Bin",
+                                 _bins.size(), 0.5, _bins.size() + 0.5,
+                                 _bins.size(), 0.5, _bins.size() + 0.5);
+
+    for(auto&& [ binIndex_i, bin_i ] : enumerate(_bins))
+      {
+        for(auto&& [ binIndex_j, bin_j ] : enumerate(_bins))
+          {
+            const double norm = TMath::Sqrt(cov_matrix->GetBinContent(binIndex_i + 1, binIndex_i + 1) * cov_matrix->GetBinContent(binIndex_j + 1, binIndex_j + 1));
+
+            corr_matrix->SetBinContent(binIndex_i + 1, binIndex_j + 1, cov_matrix->GetBinContent(binIndex_i + 1, binIndex_j + 1) / norm);
+          }
+      }
+
+    return corr_matrix;
+  }
 };

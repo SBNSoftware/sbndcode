@@ -5,9 +5,12 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
               const std::string weightName = "", const int nunivs = 0,
               const std::vector<std::string> weightNames = std::vector<std::string>());
 
+void MakeCorrelationMatrix(const Selections selections, const TString saveDir, const std::string weightName = "");
+
 void XSec1D(const TString productionVersion, const TString saveDirExt, const int var)
 {
   gROOT->SetStyle("henrySBND");
+  gStyle->SetPaintTextFormat("1.2g");
   gROOT->ForceStyle();
 
   TString saveDir = baseSaveDir + "/" + productionVersion + "/xsec_one_d/" + saveDirExt;
@@ -72,6 +75,8 @@ void XSec1D(const TString productionVersion, const TString saveDirExt, const int
         {
           MakePlot(1, selections, saveDir, name, weightSet.nunivs);
           MakePlot(2, selections, saveDir, name, weightSet.nunivs);
+
+          MakeCorrelationMatrix(selections, saveDir, name);
         }
 
       MakePlot(3, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
@@ -154,5 +159,37 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
 
       delete hist;
       delete canvas;
+    }
+}
+
+void MakeCorrelationMatrix(const Selections selections, const TString saveDir, const std::string weightName = "")
+{
+  for(auto&& [ selection_i, selection ] : enumerate(selections))
+    {
+      TCanvas *canvas = new TCanvas(Form("matrix_canvas%s", selection.name.Data()),
+                                    Form("matrix_canvas%s", selection.name.Data()));
+      canvas->cd();
+
+      const TString saveSubDir = saveDir + "/" + selection.name + "/correlation_matrices";
+      gSystem->Exec("mkdir -p " + saveSubDir);
+
+      gPad->SetTopMargin(0.12);
+      gPad->SetRightMargin(0.2);
+
+      TH2D *frac_cov_matrix = selection.plot->CreateFractionalCovarianceMatrix(weightName);
+      frac_cov_matrix->Draw("colztext");
+
+      canvas->SaveAs(saveSubDir + "/" + selection.name + "_" + weightName.c_str() + "_frac_cov_matrix.png");
+      canvas->SaveAs(saveSubDir + "/" + selection.name + "_" + weightName.c_str() + "_frac_cov_matrix.pdf");
+
+      delete frac_cov_matrix;
+
+      TH2D *corr_matrix = selection.plot->CreateCorrelationMatrix(weightName);
+      corr_matrix->Draw("colztext");
+
+      canvas->SaveAs(saveSubDir + "/" + selection.name + "_" + weightName.c_str() + "_corr_matrix.png");
+      canvas->SaveAs(saveSubDir + "/" + selection.name + "_" + weightName.c_str() + "_corr_matrix.pdf");
+
+      delete corr_matrix;
     }
 }

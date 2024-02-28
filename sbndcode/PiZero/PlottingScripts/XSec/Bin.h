@@ -121,6 +121,11 @@ class Bin {
     return _universeBins->at(weightName).at(univ)->GetXSec();
   }
 
+  double GetNUniverses(const std::string &weightName)
+  {
+    return _universeBins->at(weightName).size();
+  }
+
   void IncrementNominalBinCount(const double &increment)
   {
     _nominalBin->IncrementCount(increment);
