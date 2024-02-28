@@ -6,8 +6,16 @@ At the time of writing, the core workflow (for BNB + Dirt + Cosmics) is the foll
 
 - `prodoverlay_corsika_cosmics_proton_genie_rockbox_sce.fcl`
 - `g4_sce_dirt_filter_lite.fcl` (does not include TPC electron drift simulation)
-- `detsim_sce_lite.fcl` (includes TPC drift simulation, TPC electronics simulation, and signal processing)
+- `detsim_sce_overlay_lite.fcl` (includes TPC drift simulation, TPC electronics simulation, and signal processing)
 - `reco1_sce_lite.fcl`
+- `reco2_sce.fcl`
+
+For single generator workflows (like intrinsic neutrino samples) the workflow is the follow:
+
+- `<your-gen>.fcl`
+- `g4_sce_lite.fcl`
+- `detsim_sce_lite.fcl`
+- `reco1_sce_no_overlay_lite.fcl`
 - `reco2_sce.fcl`
 
 This may well change over the coming months, and this README should be updated to reflect this.
@@ -16,4 +24,4 @@ This may well change over the coming months, and this README should be updated t
 
 Due to changes implemented in sbndcode PRs #408 and #409 the 1D simulation fcls will not work out of the box, they will need editing by experts!
 
-Henry Lay & Lynn Tung - Feb 2024
+Henry Lay, Lynn Tung, Bear Carlson - Feb 2024

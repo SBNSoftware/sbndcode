@@ -7,4 +7,24 @@ sbnd_sedlite: @local::sbn_largeant_info_reducer
 sbnd_sedlite.SimEnergyDepositLabel: "largeant:LArG4DetectorServicevolTPCActive"
 sbnd_sedlite.useOrigTrackID: true #needed since TrackID overwritten by SBND modules
 
+#supera for mpvmpr
+sbnd_supera_mpvmpr: {
+    module_type:     "LArSoftSuperaDriver"
+    supera_params:   "supera_sbnd_mpvmpr.fcl"
+    out_filename:    "larcv.root"
+    unique_filename: false
+    stream:          "mc"
+    StrictDataLoading: false
+}
+
+#supera for everything else
+sbnd_supera: {
+    module_type:     "LArSoftSuperaDriver"
+    supera_params:   "supera_sbnd_corsika.fcl"
+    out_filename:    "larcv.root"
+    unique_filename: false
+    stream:          "mc"
+    StrictDataLoading: false
+}
+
 END_PROLOG

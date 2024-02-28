@@ -48,6 +48,10 @@
 #include "scecorrections.fcl"
 #include "flashmatch_sbnd.fcl"
 
+#include "simplemerge.fcl" 
+#include "mlreco_sbnd.fcl"
+
+
 ###include "hitparticleassociations.fcl"
 
 #include "sbnd_trackcalo_skimmer.fcl"
@@ -189,6 +193,10 @@ physics:
   ### Uncalibrated calorimetry producer for calibration caloskimmer
   caloskimCalorimetry: @local::caloskim_calorimetry
 
+  #ML Reco
+  cluster3d: @local::standard_cluster3d
+  simplemerge: @local::simplemerge
+
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -211,6 +219,8 @@ physics:
    #      , corner
    #      , fuzzycluster
          , crtstrips
+         , simplemerge #merges dropped particle collections into nominal
+         , cluster3d  
  ]
 
  reco2_no_opt0finder: [
@@ -245,9 +255,11 @@ physics:
 
  analyzers:{
   caloskim: @local::caloskim_nodigits_goldentracks
+  supera: @local::sbnd_supera
  }
 
  caloskimana: [ caloskim ]
+ superaana: [ supera ] #outputs larcv.root for use in mlreco
 
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
@@ -276,7 +288,9 @@ outputs:
          #"drop sim::SimChannels_*_*_*",
          "drop sim::OpDetBacktrackerRecords_*_*_*",
          "drop *_linecluster_*_*",
-         "drop *_fasthit_*_*"
+         "drop *_fasthit_*_*",
+         "drop *_cluster3d_*_*", #drop all mlreco output
+         "drop *_simplemerge_*_*" #drop all mlreco output
      ]
 
 
