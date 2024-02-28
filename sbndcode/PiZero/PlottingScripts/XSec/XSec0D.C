@@ -18,7 +18,7 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
   XSecSamples samples = SetupSamples(productionVersion);
 
   std::vector<double> piZeroMomBins      = { -10., 1e10 };
-  std::vector<double> cosThetaPiZeroBins = { -2., 2. };
+  std::vector<double> cosThetaPiZeroBins = { -10., 1e10 };
 
   XSecPlot *xsec_incl  = new XSecPlot("xsec_incl", "NC 1#pi^{0};;#sigma (cm^{2}/nucleon)",
                                       1, piZeroMomBins, cosThetaPiZeroBins,
