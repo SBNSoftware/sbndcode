@@ -1,0 +1,49 @@
+#include "crtsimmodules_sbnd.fcl"
+
+BEGIN_PROLOG
+
+crtstriphitproducer_sbnd:
+{
+   FEBDataModuleLabel: "crtsim"
+   ADCThreshold:       60
+   ErrorCoeff:         [ 0.26, -0.27, 0.025 ]
+   module_type:        "CRTStripHitProducer"
+}
+
+crtclusterproducer_sbnd:
+{
+   CRTStripHitModuleLabel:     "crtstrips"
+   CoincidenceTimeRequirement: 50
+   OverlapBuffer:              1.
+   module_type:                "CRTClusterProducer"
+}
+
+crtclustercharacterisationalg_sbnd:
+{
+   UseT1:          true
+   TimeOffset:     -1.7e6 # Sim parameter
+   OverlapBuffer:  1.
+   PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift
+   PropDelay:      @local::sbnd_crtsim.DetSimParams.PropDelay
+   TimeWalkNorm:   @local::sbnd_crtsim.DetSimParams.TDelayNorm
+   TimeWalkShift:  @local::sbnd_crtsim.DetSimParams.TDelayShift
+   TimeWalkSigma:  @local::sbnd_crtsim.DetSimParams.TDelaySigma
+   TimeWalkOffset: @local::sbnd_crtsim.DetSimParams.TDelayOffset
+}
+
+crtspacepointproducer_sbnd:
+{
+   ClusterCharacterisationAlg: @local::crtclustercharacterisationalg_sbnd
+   ClusterModuleLabel:         "crtclustering"
+   module_type:                "CRTSpacePointProducer"
+}
+
+crttrackproducer_sbnd:
+{
+   CRTSpacePointModuleLabel:   "crtspacepoints"
+   CoincidenceTimeRequirement: 100.
+   ThirdSpacePointMaximumDCA:  50.
+   module_type:                "CRTTrackProducer"
+}
+
+END_PROLOG
