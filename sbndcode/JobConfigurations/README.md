@@ -6,7 +6,7 @@ At the time of writing, the core workflow (for BNB + Dirt + Cosmics) is the foll
 
 - `prodoverlay_corsika_cosmics_proton_genie_rockbox_sce.fcl`
 - `g4_sce_dirt_filter_lite.fcl` (does not include TPC electron drift simulation)
-- `detsim_sce_overlay_lite.fcl` (includes TPC drift simulation, TPC electronics simulation, and signal processing)
+- `detsim_sce_lite.fcl` (includes TPC drift simulation, TPC electronics simulation, and signal processing)
 - `reco1_sce_lite.fcl`
 - `reco2_sce.fcl`
 
