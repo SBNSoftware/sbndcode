@@ -24,11 +24,6 @@
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-#include "canvas/Persistency/Common/Ptr.h"
-#include "canvas/Persistency/Common/PtrVector.h"
-#include "canvas/Persistency/Common/FindMany.h"
-#include "canvas/Persistency/Common/FindManyP.h"
-#include "canvas/Persistency/Common/FindOneP.h"
 
 #include "canvas/Utilities/Exception.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
@@ -91,9 +86,6 @@ namespace opdet {
     std::stringstream histname;
     std::string opdetType;
     std::string opdetElectronics;
-
-    TH1D *fTimestampHist;
-
   };
 
 
@@ -112,22 +104,19 @@ namespace opdet {
 
   void wvfAna::beginJob()
   {
-    art::ServiceHandle<art::TFileService> tfs;
-    fTimestampHist = tfs->make<TH1D>("Timestamps", ";time (us)", 20, 0, 1e6);
 
   }
 
   void wvfAna::analyze(art::Event const & e)
   {
     // Implementation of required member function here.
-    // std::cout << "My module on event #" << e.id().event() << std::endl;
+    std::cout << "My module on event #" << e.id().event() << std::endl;
 
+    art::ServiceHandle<art::TFileService> tfs;
     fEvNumber = e.id().event();
 
     art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
-    std::vector<art::Ptr<raw::OpDetWaveform> > wavePtrList;
-    if (e.getByLabel(fInputModuleName, waveHandle))
-      art::fill_ptr_vector(wavePtrList, waveHandle);
+    e.getByLabel(fInputModuleName, waveHandle);
 
     if(!waveHandle.isValid()) {
       std::cout << Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
@@ -156,40 +145,38 @@ namespace opdet {
     //   std::cout << "e:\t" << e << "\n";
     // }
 
-    std::cout << "Number of waveforms: " << wavePtrList.size() << std::endl;
+    std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
 
-    // std::cout << "fOpDetsToPlot:\t";
-    // for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
-    // std::cout << std::endl;
+    std::cout << "fOpDetsToPlot:\t";
+    for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
+    std::cout << std::endl;
 
     int hist_id = 0;
-    for(auto const& wvf : (wavePtrList)) {
-      fChNumber = wvf->ChannelNumber();
-      // opdetType = pdMap.pdType(fChNumber);
-      // opdetElectronics = pdMap.electronicsType(fChNumber);
-      // if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
+    for(auto const& wvf : (*waveHandle)) {
+      fChNumber = wvf.ChannelNumber();
+      opdetType = pdMap.pdType(fChNumber);
+      opdetElectronics = pdMap.electronicsType(fChNumber);
+      if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
       histname.str(std::string());
       histname << "event_" << fEvNumber
                << "_opchannel_" << fChNumber
-              //  << "_" << opdetType
+               << "_" << opdetType
                << "_" << hist_id;
 
-      fStartTime = wvf->TimeStamp(); //in us
-      fTimestampHist->Fill(fStartTime);
-      std::cout << "time stamp start: " << fStartTime << std::endl;
-      // if (opdetElectronics == "daphne"){
-			// 	fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;
-			// } //in us
-			// else{
-      //   fEndTime = double(wvf.size()) / fSampling + fStartTime;
-      // } //in us
-      fEndTime = wvf->size()*0.002  + fStartTime;
+      fStartTime = wvf.TimeStamp(); //in us
+      if (opdetElectronics == "daphne"){
+				fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;
+			} //in us
+			else{
+        fEndTime = double(wvf.size()) / fSampling + fStartTime;
+      } //in us
+
       //Create a new histogram
-      // TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), fStartTime, fEndTime);
-      // for(unsigned int i = 0; i < wvf.size(); i++) {
-      //   wvfHist->SetBinContent(i + 1, (double)wvf[i]);
-      // }
-      // hist_id++;
+      TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), fStartTime, fEndTime);
+      for(unsigned int i = 0; i < wvf.size(); i++) {
+        wvfHist->SetBinContent(i + 1, (double)wvf[i]);
+      }
+      hist_id++;
     }
   }
 
