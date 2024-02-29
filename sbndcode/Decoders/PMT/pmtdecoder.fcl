@@ -30,6 +30,7 @@ pmtdecoder:
     # configure the output data product instance names
     pmtInstanceName: "PMTChannels"
     ftrigInstanceName: "FTrigChannels"
+    output_ftrig_wvfm: true # whether or not to output the ftrig as an opdetwaveform (artroot data product)
 
     # more detailed configurables
     n_maxflashes:    30 # maximum number of flashes anticipated, this is used for memory allocation

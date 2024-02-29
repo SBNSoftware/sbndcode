@@ -92,6 +92,7 @@ private:
 
     std::string fch_instance_name;
     std::string ftr_instance_name;
+    bool foutput_ftrig_wvfm;
 
     int fn_maxflashes;
     int fn_caenboards;
@@ -132,6 +133,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
 
     fch_instance_name = p.get<std::string>("pmtInstanceName","PMTChannels");
     ftr_instance_name = p.get<std::string>("ftrigInstanceName","FTrigChannels");
+    foutput_ftrig_wvfm = p.get<bool>("output_ftrig_wvfm",true);
 
     fn_maxflashes    = p.get<int>("n_maxflashes",30);
     fn_caenboards    = p.get<int>("n_caenboards",8);
@@ -436,9 +438,10 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             
             raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
 
-            if (i%fnch == 15)
-                twvfmVec->push_back(waveform);
-            else
+            if (i%fnch == 15){
+                if (foutput_ftrig_wvfm) twvfmVec->push_back(waveform);
+            }
+            else 
                 wvfmVec->push_back(waveform);
         }
 
