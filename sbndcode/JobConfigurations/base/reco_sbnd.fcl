@@ -202,10 +202,10 @@ physics:
          , opflashtpc1
          , opflashtpc0xarapuca
          , opflashtpc1xarapuca
-         , caldata
+        #  , caldata
          , gaushit
-         , fasthit
-   #         , linecluster
+        # , fasthit
+        # , linecluster
          , gaushitTruthMatch
    #      , rffhit
    #      , corner
@@ -301,10 +301,11 @@ physics.trigger_paths: [ fullreco ]
 #physics.producers.opflash.InputModule:                          "optreadout"
 #physics.producers.opflash.GenModule:                            "generator"
 
-physics.producers.caldata.DigitModuleLabel:                     "daq"
+# physics.producers.caldata.DigitModuleLabel:                     "daq"
 
-physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
-physics.producers.fasthit.DigitModuleLabel:                     "daq"
+# physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
+physics.producers.gaushit.CalDataModuleLabel:                   "simtpc2d:gauss"
+physics.producers.fasthit.DigitModuleLabel:                     "simtpc2d:daq"
 #physics.producers.rffhit.CalDataModuleLabel:                    "caldata"
 
 #physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"
@@ -332,6 +333,8 @@ physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
 physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
+
+physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
 physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
 physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
@@ -390,5 +393,3 @@ physics.producers.crtspacepointmatchingSCE.MatchingAlg.TPCTrackLabel: "pandoraSC
 physics.producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSCETrack"
 physics.producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandoraSCE"
 physics.producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
-
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"

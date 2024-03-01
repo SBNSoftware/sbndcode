@@ -124,6 +124,11 @@ physics:
   end_paths:     [ stream1 ]
 }
 
+# change tools in sbn to have 2D TPC sim/sp input
+physics.producers.pandoraShowerRazzle.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.pandoraTrackDazzle.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
+
 physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
 
