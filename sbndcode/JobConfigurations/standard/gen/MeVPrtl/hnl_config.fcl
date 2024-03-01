@@ -1,4 +1,4 @@
-#include "bnb_kaon_common.fcl"
+#include "bnb_kaon_sbnd.fcl"
 BEGIN_PROLOG
 
 hnlM: 0.265
@@ -17,8 +17,11 @@ kaon2hnl: {
   BeamOrigin: @local::sbnd_bnb_beam_origin
 
   // timing config
-  SpillTimeConfig: "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=1.308"
-  //SpilTimeConfig: "" #"evgb::EvtTimeFlat 10000 0" // 10us duration, no offset  
+  # Bunch sigma taken from 
+  # https://beamdocs.fnal.gov/AD/DocDB/0050/005000/001/bunchLength_1st_draft.pdf
+  # Bunch spacing taken from
+  # https://inspirehep.net/files/610a942fd8632bbbca2c8ad90da86670
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
   GlobalTimeOffset: 0
   Verbose: false
 }
