@@ -194,7 +194,6 @@ physics:
 
   #ML Reco
   cluster3d: @local::standard_cluster3d
-  simplemerge: @local::simplemerge
 
  }
 
