@@ -253,7 +253,7 @@ wpdir   product_dir     wire-cell-cfg
 #
 ####################################
 product		version		qual	flags		<table_format=2>
-sbncode		v09_83_01       -
+sbncode		v09_83_01_01   -
 cetmodules	v3_21_01	-	only_for_build
 sbnd_data	v01_23_00	-	optional
 sbndutil	v09_83_01	-	optional
