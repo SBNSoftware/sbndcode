@@ -12,6 +12,10 @@ physics.producers.ionandscintpriorSCE.FillSimEnergyDeposits: true
 physics.producers.ionandscintpriorSCE.InputSourcesLabels: [ "ionandscintintime", "ionandscintouttime"]
 physics.producers.ionandscintpriorSCE.EnergyDepositInstanceLabels: ["priorSCE"]
 
+#Merge dropped MCParticle collections
+physics.producers.largeantdropped: @local::sbnd_merge_dropped_mcpart_overlay
+physics.producers.largeantdropped.InputSourcesLabels: [ "larg4intime:droppedMCParticles", "larg4outtime:droppedMCParticles"]
+
 # Change input sources of simplemerge since we're doing an overlay sample
 physics.producers.simplemerge.InputSourcesLabels: ["largeant", "largeantdropped"]
 
@@ -31,6 +35,7 @@ physics.simulate: [ rns
                   , pdfastsimoutouttime
                   ### Merge the intime and outtime paths
                   , largeant
+                  , largeantdropped
                   , simplemerge
                   , sedlite
                   , ionandscint
