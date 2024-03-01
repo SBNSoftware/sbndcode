@@ -2,6 +2,7 @@
 
 #include "services_sbnd.fcl"
 #include "geometry_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 
 #include "larproperties.fcl"
 #include "backtrackerservice.fcl"
@@ -29,6 +30,8 @@
 
 #include "cafmaker_common_defs.fcl"
 
+#include "eventweight_genie_systtools.fcl"
+
 process_name: CAFmaker
 
 services:
@@ -52,8 +55,8 @@ services:
   DetectorClocksService:     @local::sbnd_services.DetectorClocksService
   DetectorPropertiesService: @local::sbnd_detproperties
   ChannelStatusService:      @local::sbnd_channelstatus
-  ParticleInventoryService:  @local::standard_particleinventoryservice
-  BackTrackerService:        @local::standard_backtrackerservice
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  BackTrackerService:        @local::sbnd_backtrackerservice
   SpaceCharge:               @local::sbnd_spacecharge
   NuRandomService: {
     policy: perEvent
@@ -79,7 +82,7 @@ physics:
 #  cosmictrack:          @local::standard_cosmictrack         #reco
 #  windowtrack:          @local::window_cosmictrack           #reco
 
-   # Includes: pandoraTrackMCS, pandoraTrackRange, rns, genieweight, fluxweight
+   # Includes: pandoraTrackMCS, pandoraTrackRange, rns, fluxweight
    @table::cafmaker_common_producers
 
    flashtrig: @local::pmtflashtrigmaker_sbnd
@@ -99,6 +102,8 @@ physics:
    pandoraShowerRazzle:         @local::razzle_sbnd
 
    pandoraRazzled: @local::razzled_sbnd
+
+   systtools: @local::sbn_systtools
 }
   filters:{
     flashtrigfilter: @local::pmtflashtrigfilter_sbnd
@@ -119,6 +124,11 @@ physics:
   end_paths:     [ stream1 ]
 }
 
+# change tools in sbn to have 2D TPC sim/sp input
+physics.producers.pandoraShowerRazzle.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.pandoraTrackDazzle.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
+
 physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
 
@@ -133,10 +143,8 @@ physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 
 # Overwrite weight_functions label:
-physics.producers.genieweight.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
 
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []
 
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
