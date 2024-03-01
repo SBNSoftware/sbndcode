@@ -12,6 +12,9 @@ physics.producers.ionandscintpriorSCE.FillSimEnergyDeposits: true
 physics.producers.ionandscintpriorSCE.InputSourcesLabels: [ "ionandscintintime", "ionandscintouttime"]
 physics.producers.ionandscintpriorSCE.EnergyDepositInstanceLabels: ["priorSCE"]
 
+# Change input sources of simplemerge since we're doing an overlay sample
+physics.producers.simplemerge.InputSourcesLabels: ["largeant", "largeantdropped"]
+
 physics.simulate: [ rns
                   ### Complete intime drift simulation and generic CRT
                   , genericcrtintime
