@@ -15,7 +15,7 @@ For single generator workflows (like intrinsic neutrino samples) the workflow is
 - `<your-gen>.fcl`
 - `g4_sce_lite.fcl`
 - `detsim_sce_lite.fcl`
-- `reco1_sce_no_overlay_lite.fcl`
+- `reco1_sce_lite.fcl`
 - `reco2_sce.fcl`
 
 This may well change over the coming months, and this README should be updated to reflect this.
