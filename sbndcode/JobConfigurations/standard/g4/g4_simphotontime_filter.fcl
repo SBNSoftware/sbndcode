@@ -78,6 +78,9 @@ physics.producers.pdfastsimout.InputSourcesLabels: [ "pdfastsimoutintime", "pdfa
 physics.producers.largeantdropped: @local::sbnd_merge_dropped_mcpart_overlay
 physics.producers.largeantdropped.InputSourcesLabels: [ "larg4intime:droppedMCParticles", "larg4outtime:droppedMCParticles"]
 
+# Change simple merge inputs since we're using an overlay sample
+physics.producers.simplemerge.InputSourcesLabels: ["largeant", "largeantdropped"]
+
 # Add all these new modules to the simulate path
 physics.simulate: [ rns
                   ### Complete intime drift simulation and generic CRT
@@ -98,6 +101,7 @@ physics.simulate: [ rns
                   ### Merge the intime and outtime paths
                   , largeant
                   , largeantdropped
+                  , simplemerge
                   , sedlite
                   , ionandscint
                 #   , simdrift
