@@ -48,7 +48,6 @@
 #include "scecorrections.fcl"
 #include "flashmatch_sbnd.fcl"
 
-#include "simplemerge.fcl" 
 #include "mlreco_sbnd.fcl"
 
 
@@ -219,7 +218,6 @@ physics:
    #      , corner
    #      , fuzzycluster
          , crtstrips
-         , simplemerge #merges dropped particle collections into nominal
          , cluster3d  
  ]
 
