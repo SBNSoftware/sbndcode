@@ -10,8 +10,8 @@ const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
 const double goalSpills  = goalPOT / potPerSpill;
 
-const double nTargets = 4.36e31;
-const double intFlux  = 1.73e13;
+const double nTargets = 4.68e31;
+const double intFlux  = 1.73962e+13;
 
 double GetPOT(TChain *subruns)
 {
