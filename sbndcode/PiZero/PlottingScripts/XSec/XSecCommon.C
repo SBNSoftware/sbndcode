@@ -1,9 +1,9 @@
+#include "Common.C"
 #include "XSecPlot.h"
 #include "XSecSample.h"
 #include "Selection.h"
 #include "WeightSet.h"
 #include "Enumerate.h"
-#include "Common.C"
 
 XSecSamples SetupSamples(const TString productionVersion)
 {
@@ -112,6 +112,9 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
 
           for(auto&& [ selection_i, selection ] : enumerate(selections))
             {
+              if(selection_i == 0 && event_type[selection_i] == 1)
+                event_type[selection_i] = 0;
+
               if(event_type[selection_i] == 0)
                 {
                   XSecPlot *plot = selection.plot;
@@ -184,6 +187,9 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
 
           for(auto&& [ selection_i, selection ] : enumerate(selections))
             {
+              if(selection_i == 0 && event_type[selection_i] == 1)
+                event_type[selection_i] = 0;
+
               if(sel[selection_i])
                 {
                   XSecPlot *plot = selection.plot;
