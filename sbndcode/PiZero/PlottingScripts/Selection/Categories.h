@@ -13,7 +13,7 @@ const std::vector<Cut> true_categories = {
   { "ncpizero_incl", true_ncpizero_incl_cut, "NC1#pi^{0}", kBlack },
   { "ncpizero_0p0pi", true_ncpizero_0p0pi_cut, "NC1#pi^{0}0p0#pi^{#pm}", kBlack },
   { "ncpizero_Np0pi", true_ncpizero_Np0pi_cut, "NC1#pi^{0}Np0#pi^{#pm}", kBlack },
-  { "ccpizero", true_ccpizero_cut, "CC1#pi^{0}", kBlack },
+  //  { "ccpizero", true_ccpizero_cut, "CC1#pi^{0}", kBlack },
 };
 
 const std::vector<Cut> ncpizero_incl_categories = {

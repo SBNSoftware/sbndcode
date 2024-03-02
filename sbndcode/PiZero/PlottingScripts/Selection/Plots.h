@@ -7,7 +7,7 @@ std::vector<Plot> selection_plots = {
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
   { "slc_is_fv", "slc_is_fv", ";IsFV?;Slice",
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
-  { "slc_crumbs_score", "slc_crumbs_score", ";CRUMBS Score;Slices",
+  { "slc_crumbs_nc_score", "slc_crumbs_nc_score", ";CRUMBS NC Score;Slices",
     50, -1.5, 1. },
   { "slc_n_razzled_muons", "slc_n_razzled_muons", ";N Razzled Muons;Slices",
     5, -0.5, 4.5 },

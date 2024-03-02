@@ -54,7 +54,9 @@ void Selection(const TString productionVersion, const SelectionParams &selection
 
           plot.axes_labels += POTString();
 
-          MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {.25, .8, .8, .87}, 4);
+          const int ncolumns = selectionParams.name == "ncpizero_incl" ? 4 : 3;
+          const float ylow   = selectionParams.name == "ncpizero_incl" ? .8 : .78;
+          MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {.25, ylow, .8, .87}, ncolumns);
 
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".png");
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".pdf");
