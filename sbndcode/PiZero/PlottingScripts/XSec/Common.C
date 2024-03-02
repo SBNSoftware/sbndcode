@@ -10,8 +10,8 @@ const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
 const double goalSpills  = goalPOT / potPerSpill;
 
-const double nTargets = 4.36e31;
-const double intFlux  = 1.73e13;
+const double nTargets = 4.68e31;
+const double intFlux  = 1.73962e+13;
 
 double GetPOT(TChain *subruns)
 {
@@ -90,4 +90,27 @@ Cut TotalCutExcluding(const std::vector<Cut> &cuts, const int excludingCut)
   Cut cut = { "full_selection", totalCut, "Full Selection" };
 
   return cut;
+}
+
+TH1F* Fold(const TH1F* hist, const TH2D* matrix)
+{
+  TH1F* folded_hist = (TH1F*) hist->Clone(Form("%s_folded", hist->GetName()));
+
+  for(int i = 0; i < hist->GetNbinsX() + 2; ++i)
+    {
+      double sum = 0;
+
+      for(int j = 0; j < hist->GetNbinsX() + 2; ++j)
+        {
+          if(isnan(matrix->GetBinContent(j + 1, i + 1)))
+            continue;
+          std::cout << i << " " << j << " " << hist->GetBinContent(j) << " " << matrix->GetBinContent(j + 1, i + 1) << " "
+                    <<  hist->GetBinContent(j) * matrix->GetBinContent(j + 1, i + 1) << std::endl;
+          sum += hist->GetBinContent(j) * matrix->GetBinContent(j + 1, i + 1);
+        }
+      std::cout << "\t" << sum << '\n' << std::endl;
+      folded_hist->SetBinContent(i, sum);
+    }
+
+  return folded_hist;
 }

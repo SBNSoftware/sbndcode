@@ -3,6 +3,11 @@
 #include "Bin.h"
 #include "Enumerate.h"
 
+constexpr double numufluxscale  = 0.92341993;
+constexpr double anumufluxscale = 0.070391454;
+constexpr double nuefluxscale   = 0.0055868623;
+constexpr double anuefluxscale  = 0.00060175334;
+
 class XSecPlot {
 
  private:
@@ -539,5 +544,76 @@ class XSecPlot {
       }
 
     return corr_matrix;
+  }
+
+  TH1F* GetPredictedHist0D(const TString selName, const TString genName, /*const TString flavour, */const float scale = 1.)
+  {
+    //    TFile* xsecFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_" + flavour + ".root", "READ");
+    TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv17/forwardfoldingmatrices/forwardfoldingmatrices.root", "READ");
+
+    TFile* xsecFileNuMu  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_numu.root", "READ");
+    TFile* xsecFileANuMu = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anumu.root", "READ");
+    TFile* xsecFileNuE   = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_nue.root", "READ");
+    TFile* xsecFileANuE  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anue.root", "READ");
+
+    //	TH1F* hist          = (TH1F*) xsecFile->Get(Form("%s_%s_%s", var.c_str(), selName.Data(), flavour.Data()));
+    TH1F* histNuMu      = (TH1F*) xsecFileNuMu->Get(Form("%s_numu", selName.Data()));
+    TH1F* histANuMu     = (TH1F*) xsecFileANuMu->Get(Form("%s_anumu", selName.Data()));
+    TH1F* histNuE       = (TH1F*) xsecFileNuE->Get(Form("%s_nue", selName.Data()));
+    TH1F* histANuE      = (TH1F*) xsecFileANuE->Get(Form("%s_anue", selName.Data()));
+
+    histNuMu->Scale(numufluxscale);
+    histANuMu->Scale(anumufluxscale);
+    histNuE->Scale(nuefluxscale);
+    histANuE->Scale(anuefluxscale);
+
+    histNuMu->Add(histANuMu);
+    histNuMu->Add(histNuE);
+    histNuMu->Add(histANuE);
+
+    histNuMu->Scale(scale);
+    return histNuMu;
+  }
+
+  TH1F* GetPredictedHist1D(const TString selName, const TString genName, /*const TString flavour, */const float scale = 1.)
+  {
+    //    TFile* xsecFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_" + flavour + ".root", "READ");
+    TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv17/forwardfoldingmatrices/forwardfoldingmatrices.root", "READ");
+
+    TFile* xsecFileNuMu  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_numu.root", "READ");
+    TFile* xsecFileANuMu = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anumu.root", "READ");
+    TFile* xsecFileNuE   = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_nue.root", "READ");
+    TFile* xsecFileANuE  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anue.root", "READ");
+
+    std::string var;
+
+    if(_var0Bins.size() == 2)
+      var = _var1;
+    else if(_var1Bins.size() == 2)
+      var = _var0;
+    else
+      throw std::runtime_error("This is not a 1D setup");
+
+    //	TH1F* hist          = (TH1F*) xsecFile->Get(Form("%s_%s_%s", var.c_str(), selName.Data(), flavour.Data()));
+    TH1F* histNuMu      = (TH1F*) xsecFileNuMu->Get(Form("%s_%s_numu", var.c_str(), selName.Data()));
+    TH1F* histANuMu     = (TH1F*) xsecFileANuMu->Get(Form("%s_%s_anumu", var.c_str(), selName.Data()));
+    TH1F* histNuE       = (TH1F*) xsecFileNuE->Get(Form("%s_%s_nue", var.c_str(), selName.Data()));
+    TH1F* histANuE      = (TH1F*) xsecFileANuE->Get(Form("%s_%s_anue", var.c_str(), selName.Data()));
+    TH2D* foldingmatrix = (TH2D*) foldFile->Get(Form("hForwardFold_%s_%s", var.c_str(), selName.Data()));
+
+    histNuMu->Scale(numufluxscale);
+    histANuMu->Scale(anumufluxscale);
+    histNuE->Scale(nuefluxscale);
+    histANuE->Scale(anuefluxscale);
+
+    histNuMu->Add(histANuMu);
+    histNuMu->Add(histNuE);
+    histNuMu->Add(histANuE);
+
+    TH1F* foldedHist = Fold(histNuMu, foldingmatrix);
+
+    //TH1F* foldedHist = histNuMu;
+    foldedHist->Scale(scale);
+    return foldedHist;
   }
 };

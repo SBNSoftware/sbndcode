@@ -7,6 +7,8 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
 
 void MakeCorrelationMatrix(const Selections selections, const TString saveDir, const std::string weightName = "");
 
+void MakeSummaryPlot(const int type, const Selections selections, const TString saveDir);
+
 void XSec1D(const TString productionVersion, const TString saveDirExt, const int var)
 {
   gROOT->SetStyle("henrySBND");
@@ -61,9 +63,12 @@ void XSec1D(const TString productionVersion, const TString saveDirExt, const int
   selections[1].plot = xsec_0p0pi;
   selections[2].plot = xsec_Np0pi;
 
+  weightSets = {};
+
   FillPlots(samples, selections, weightSets);
 
   MakePlot(0, selections, saveDir);
+  MakeSummaryPlot(0, selections, saveDir);
 
   std::vector<std::string> all_weights;
 
@@ -191,5 +196,51 @@ void MakeCorrelationMatrix(const Selections selections, const TString saveDir, c
       canvas->SaveAs(saveSubDir + "/" + selection.name + "_" + weightName.c_str() + "_corr_matrix.pdf");
 
       delete corr_matrix;
+    }
+}
+
+void MakeSummaryPlot(const int type, const Selections selections, const TString saveDir)
+{
+  for(auto&& [ selection_i, selection ] : enumerate(selections))
+    {
+      TCanvas *canvas = new TCanvas(Form("canvas%s", selection.name.Data()),
+                                    Form("canvas%s", selection.name.Data()));
+      canvas->cd();
+
+      const TString saveSubDir = saveDir + "/" + selection.name;
+      gSystem->Exec("mkdir -p " + saveSubDir);
+
+      gPad->SetTopMargin(0.12);
+      gPad->SetLeftMargin(0.2);
+      gPad->SetRightMargin(0.1);
+
+      TH1F *hist = selection.plot->GetNominalHist1D(type == 0);
+      hist->GetYaxis()->SetTitleOffset(1.5);
+      hist->GetYaxis()->SetTitleSize(0.05);
+      hist->Draw("histe][");
+      hist->SetMinimum(0);
+      hist->SetMaximum(1.25 * hist->GetMaximum());
+      gPad->Update();
+
+      TH1F *geniePred = selection.plot->GetPredictedHist1D(selection.name, "genie", 1e-38);
+      geniePred->SetLineColor(kOrange+2);
+      geniePred->Draw("histsame");
+
+      TPaveText* title = (TPaveText*)gPad->FindObject("title");
+      title->SetY1NDC(0.92);
+      title->SetY2NDC(1);
+      title->SetX1NDC(0.45);
+      title->SetX2NDC(.8);
+      gPad->Modified();
+      gPad->Update();
+
+      if(type == 0)
+        {
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_genie_compare.png");
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_genie_compare.pdf");
+        }
+
+      delete hist;
+      delete canvas;
     }
 }

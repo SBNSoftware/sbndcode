@@ -7,6 +7,8 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
 
 void MakeTables(Selections &selections, WeightSets &weightSets, const TString saveDir);
 
+void MakeSummaryPlot(const int type, const Selections selections, const TString saveDir);
+
 void XSec0D(const TString productionVersion, const TString saveDirExt)
 {
   gROOT->SetStyle("henrySBND");
@@ -35,9 +37,12 @@ void XSec0D(const TString productionVersion, const TString saveDirExt)
   selections[1].plot = xsec_0p0pi;
   selections[2].plot = xsec_Np0pi;
 
+  weightSets = {};
+
   FillPlots(samples, selections, weightSets);
 
   MakePlot(0, selections, saveDir);
+  MakeSummaryPlot(0, selections, saveDir);
 
   std::vector<std::string> all_weights;
 
@@ -183,4 +188,44 @@ m}$} & \\multicolumn{2}{|c|}{NC1$\\pi^{0}$Np0$\\pi^{\\pm}$} \\\\ \\hline"
       texFile.close();
       gSystem->Exec("pdflatex -output-directory " + saveDir + " " + saveDir + "/" + weightSet.name.c_str() + "_systematic_fractional_errors.tex");
     }
+}
+
+void MakeSummaryPlot(const int type, const Selections selections, const TString saveDir)
+{
+  TCanvas *canvas = new TCanvas("canvas", "canvas");
+  canvas->cd();
+  canvas->Divide(3, 1);
+
+  for(auto&& [ selection_i, selection ] : enumerate(selections))
+    {
+      canvas->cd(selection_i + 1);
+      gPad->SetBottomMargin(0.05);
+      gPad->SetTopMargin(0.1);
+      gPad->SetLeftMargin(0.25);
+      gPad->SetRightMargin(0.05);
+
+      TH1F *hist = selection.plot->GetNominalHist0D(type == 0);
+      hist->GetYaxis()->SetTitleOffset(1.9);
+      hist->GetXaxis()->SetLabelSize(0);
+      hist->GetXaxis()->SetLabelOffset(999);
+      hist->Draw("histe][");
+      hist->SetMinimum(0);
+      hist->SetMaximum(5e-40);
+      gPad->Update();
+
+      TH1F *geniePred = selection.plot->GetPredictedHist0D(selection.name, "genie", 1e-38);
+      geniePred->SetLineColor(kOrange+2);
+      geniePred->Draw("hist][same");
+
+      TPaveText* title = (TPaveText*)gPad->FindObject("title");
+      title->SetY1NDC(0.92);
+      title->SetY2NDC(1);
+      title->SetX1NDC(0.45);
+      title->SetX2NDC(.8);
+      gPad->Modified();
+      gPad->Update();
+    }
+
+  canvas->SaveAs(saveDir + "/nominal_genie_compare.png");
+  canvas->SaveAs(saveDir + "/nominal_genie_compare.pdf");
 }
