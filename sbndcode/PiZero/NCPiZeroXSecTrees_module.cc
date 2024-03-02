@@ -531,7 +531,6 @@ void sbnd::NCPiZeroXSecTrees::AnalyseMCTruth(const art::Event &e, const art::Ptr
         }
       else
         {
-          _event_type_incl  = NC::kOtherNCPiZero;
           _event_type_0p0pi = NC::kOtherNCPiZero;
           _event_type_Np0pi = NC::kOtherNCPiZero;
         }
