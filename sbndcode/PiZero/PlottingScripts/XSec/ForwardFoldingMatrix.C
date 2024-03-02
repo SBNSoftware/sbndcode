@@ -12,31 +12,29 @@ void ForwardFoldingMatrix(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/forwardfoldingmatrices";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
 
-  TChain *ncpizeroSlices = new TChain("ncpizeroxsectrees/slices");
-  ncpizeroSlices->Add(ncpizeroFile);
+  TChain *rockboxSlices = new TChain("ncpizeroxsectrees/slices");
+  rockboxSlices->Add(rockboxFile);
 
   std::deque<bool> sel(selections.size(), false);
   std::vector<int> event_type(selections.size(), -1);
   double pizero_mom, cos_theta_pizero, reco_pizero_mom, reco_cos_theta_pizero;
 
-  ncpizeroSlices->SetBranchStatus("*", 0);
-
-  ncpizeroSlices->SetBranchAddress("pizero_mom", &pizero_mom);
-  ncpizeroSlices->SetBranchAddress("cos_theta_pizero", &cos_theta_pizero);
-  ncpizeroSlices->SetBranchAddress("reco_pizero_mom", &reco_pizero_mom);
-  ncpizeroSlices->SetBranchAddress("reco_cos_theta_pizero", &reco_cos_theta_pizero);
+  rockboxSlices->SetBranchAddress("pizero_mom", &pizero_mom);
+  rockboxSlices->SetBranchAddress("cos_theta_pizero", &cos_theta_pizero);
+  rockboxSlices->SetBranchAddress("reco_pizero_mom", &reco_pizero_mom);
+  rockboxSlices->SetBranchAddress("reco_cos_theta_pizero", &reco_cos_theta_pizero);
 
   for(auto&& [ selection_i, selection ] : enumerate(selections))
     {
-      ncpizeroSlices->SetBranchAddress(selection.signal, &event_type[selection_i]);
-      ncpizeroSlices->SetBranchAddress(selection.cut, &sel[selection_i]);
+      rockboxSlices->SetBranchAddress(selection.signal, &event_type[selection_i]);
+      rockboxSlices->SetBranchAddress(selection.cut, &sel[selection_i]);
     }
 
   TFile *outfile = new TFile(saveDir + "/forwardfoldingmatrices.root", "RECREATE");
 
-  const int N = ncpizeroSlices->GetEntries();
+  const int N = rockboxSlices->GetEntries();
 
   const double piZeroMomBins[9]       = { 0., 60., 120., 180., 240., 300., 400., 600., 1000. };
   const double cosThetaPiZeroBins[10] = { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. };
@@ -51,7 +49,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
 
       for(int slc = 0; slc < N; ++slc)
         {
-          ncpizeroSlices->GetEntry(slc);
+          rockboxSlices->GetEntry(slc);
 
           if(sel[selection_i] && event_type[selection_i] == 0)
             {
@@ -86,7 +84,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
         }
 
       hForwardFoldPiZeroMom->Draw("colztext");
-      hForwardFoldPiZeroMom->Write("hForwardFoldPiZeroMom_" + selection.name);
+      hForwardFoldPiZeroMom->Write("hForwardFold_pizero_mom_" + selection.name);
 
       piZeroMomCanvas->SaveAs(saveDir + "/" + selection.name + "_pizero_mom.png");
       piZeroMomCanvas->SaveAs(saveDir + "/" + selection.name + "_pizero_mom.pdf");
@@ -111,7 +109,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
         }
 
       hForwardFoldCosThetaPiZero->Draw("colztext");
-      hForwardFoldCosThetaPiZero->Write("hForwardFoldCosThetaPiZero_" + selection.name);
+      hForwardFoldCosThetaPiZero->Write("hForwardFold_cos_theta_pizero_" + selection.name);
 
       cosThetaPiZeroCanvas->SaveAs(saveDir + "/" + selection.name + "_cos_theta_pizero.png");
       cosThetaPiZeroCanvas->SaveAs(saveDir + "/" + selection.name + "_cos_theta_pizero.pdf");
