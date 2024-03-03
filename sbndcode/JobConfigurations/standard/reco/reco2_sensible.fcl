@@ -45,7 +45,7 @@ physics.weight_paths: [
 physics.ana: [ ncpizeroana, ncpizeroxsectrees, recoeff ]
 
 physics.trigger_paths: [ reco2_sensible ]
-physics.end_paths: [ stream1, ana ]
+physics.end_paths:     [ stream1 ]
 
 #include "enable_spacecharge_services_sbnd.fcl"
 
