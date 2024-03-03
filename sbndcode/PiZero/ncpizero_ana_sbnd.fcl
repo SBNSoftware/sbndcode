@@ -1,4 +1,6 @@
 #include "ncpizero_modules.fcl"
+#include "recoeff.fcl"
+#include "reco2_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 
 process_name: NCPiZeroAnalyzer
@@ -20,11 +22,18 @@ physics:
 {
   analyzers:
   {
-    ncpizeroana: @local::ncpizeroana
+    ncpizeroana:       @local::ncpizeroana
+    ncpizeroxsectrees: @local::ncpizeroxsectrees
+    recoeff:           @local::recoeff
   }
 
-  ana:       [ ncpizeroana ]
+  weight_paths:  [ fluxweight, systtools, geant4weight ]
+  trigger_paths: [ weight_paths ]
+
+  ana:       [ ncpizeroana, ncpizeroxsectrees, recoeff ]
   end_paths: [ ana ]
 }
 
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux

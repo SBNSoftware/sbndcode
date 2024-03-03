@@ -1,3 +1,7 @@
 #include "ncpizero_ana_sbnd.fcl"
 
-physics.analyzers.ncpizeroana.BeamOff: true
+physics.analyzers.ncpizeroana.BeamOff:       true
+physics.analyzers.ncpizeroxsectrees.BeamOff: true
+
+physics.trigger_paths: [ ]
+physics.ana:           [ ncpizeroana, ncpizeroxsectrees ]
