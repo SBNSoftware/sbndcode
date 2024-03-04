@@ -7,7 +7,7 @@ std::vector<Plot> selection_plots = {
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
   { "slc_is_fv", "slc_is_fv", ";IsFV?;Slice",
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
-  { "slc_crumbs_score", "slc_crumbs_score", ";CRUMBS Score;Slices",
+  { "slc_crumbs_nc_score", "slc_crumbs_nc_score", ";CRUMBS NC Score;Slices",
     50, -1.5, 1. },
   { "slc_n_razzled_muons", "slc_n_razzled_muons", ";N Razzled Muons;Slices",
     5, -0.5, 4.5 },
@@ -25,18 +25,32 @@ std::vector<Plot> selection_plots = {
     5, -0.5, 4.5 },
   { "slc_best_pzc_good_kinematics", "slc_best_pzc_good_kinematics", ";Best #pi^{0} Candidates Good Kinematics?;Slice",
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
-  { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
-    100, -2, 8 }, // 100, -2, 2 for cut optimisation
+  { "slc_opt0_fracPE", "slc_opt0_fracPE", ";OpT0 Fraction;Slices",
+    100, -2, 8 },
+  { "slc_opt0_fracPE_log", "slc_opt0_fracPE", ";OpT0 Fraction;Slices",
+    100, -2, 8, kBlack, true },
   { "slc_opt0_score", "slc_opt0_score", ";OpT0 Score;Slices",
     100, 0, 2e5 }, // 100, 0, 5e3 for cut optimisation
 };
 
+std::vector<Plot> optimisation_plots = {
+  { "slc_crumbs_score", "slc_crumbs_score", ";CRUMBS Score;Slices",
+    50, -1.5, 1. },
+  { "slc_crumbs_nc_score", "slc_crumbs_nc_score", ";CRUMBS NC Score;Slices",
+    50, -1.5, 1. },
+  { "slc_opt0_fracPE", "slc_opt0_fracPE", ";OpT0 Fraction;Slices",
+    100, -2, 2 },
+  { "slc_opt0_score", "slc_opt0_score", ";OpT0 Score;Slices",
+    100, 0, 5e3 },
+  { "slc_crumbs_ccnue_score", "slc_crumbs_ccnue_score", ";CRUMBS CCNuE Score;Slices",
+    50, -1.5, 1. },
+};
 std::vector<Plot> extension_plots = {
-  { "slc_opt0_frac", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
+  { "slc_opt0_fracPE", "slc_opt0_fracPE", ";OpT0 Fraction;Slices",
     100, -2, 8 },
-  { "slc_opt0_frac_log", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
+  { "slc_opt0_fracPE_log", "slc_opt0_fracPE", ";OpT0 Fraction;Slices",
     100, -2, 8, kBlack, true },
-  { "slc_opt0_frac_log_narrow", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE", ";OpT0 Fraction;Slices",
+  { "slc_opt0_fracPE_log_narrow", "slc_opt0_fracPE", ";OpT0 Fraction;Slices",
     100, -2, 2, kBlack, true },
   { "slc_opt0_score", "slc_opt0_score", ";OpT0 Score;Slices",
     100, 0, 2e5 },

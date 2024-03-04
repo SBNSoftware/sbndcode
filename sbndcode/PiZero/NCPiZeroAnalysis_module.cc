@@ -198,11 +198,10 @@ private:
   art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
   art::InputTag fMCParticleModuleLabel, fSliceModuleLabel, fPFParticleModuleLabel, fVertexModuleLabel,
-    fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fTrackCalorimetryModuleLabel,
-    fCRUMBSModuleLabel, fDazzleModuleLabel, fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel,
-    fClosestApproachModuleLabel, fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel,
-    fShowerTrackFitModuleLabel, fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel, fRazzledModuleLabel,
-    fSpacePointModuleLabel;
+    fHitModuleLabel, fTrackModuleLabel, fShowerModuleLabel, fCRUMBSModuleLabel, fDazzleModuleLabel,
+    fCaloModuleLabel, fMCSModuleLabel, fChi2ModuleLabel, fRangeModuleLabel, fClosestApproachModuleLabel,
+    fStoppingChi2ModuleLabel, fRazzleModuleLabel, fCosmicDistModuleLabel, fShowerTrackFitModuleLabel,
+    fShowerDensityFitModuleLabel, fPOTModuleLabel, fOpT0ModuleLabel, fRazzledModuleLabel, fSpacePointModuleLabel;
   std::vector<art::InputTag> fEventWeightModuleLabels;
   bool fDebug, fBeamOff;
   fhicl::ParameterSet fSecondShowerFinderAlgParams;
@@ -237,6 +236,7 @@ private:
     { "nu_event_type_1p0pi", new InhVecVar<int>("nu_event_type_1p0pi") },
     { "nu_event_type_Np0pi", new InhVecVar<int>("nu_event_type_Np0pi") },
     { "nu_event_type_Xp0pi", new InhVecVar<int>("nu_event_type_Xp0pi") },
+    { "nu_event_type_cc", new InhVecVar<int>("nu_event_type_cc") },
     { "nu_signal", new InhVecVar<bool>("nu_signal") },
     { "nu_en_dep", new InhVecVar<float>("nu_en_dep") },
     { "nu_pdg", new InhVecVar<int>("nu_pdg") },
@@ -400,6 +400,7 @@ private:
     { "slc_true_event_type_1p0pi", new InhVecVar<int>("slc_true_event_type_1p0pi") },
     { "slc_true_event_type_Np0pi", new InhVecVar<int>("slc_true_event_type_Np0pi") },
     { "slc_true_event_type_Xp0pi", new InhVecVar<int>("slc_true_event_type_Xp0pi") },
+    { "slc_true_event_type_cc", new InhVecVar<int>("slc_true_event_type_cc") },
     { "slc_true_signal", new InhVecVar<bool>("slc_true_signal") },
     { "slc_comp", new InhVecVar<float>("slc_comp") },
     { "slc_comp_sp_only", new InhVecVar<float>("slc_comp_sp_only") },
@@ -607,60 +608,7 @@ private:
     { "slc_sel_1p0pi", new InhVecVar<bool>("slc_sel_1p0pi") },
     { "slc_sel_Np0pi", new InhVecVar<bool>("slc_sel_Np0pi") },
     { "slc_sel_Xp0pi", new InhVecVar<bool>("slc_sel_Xp0pi") },
-  };
-
-  const std::vector<std::string> flux_weight_names = { "expskin_Flux",
-                                                       "horncurrent_Flux",
-                                                       "kminus_Flux",
-                                                       "kplus_Flux",
-                                                       "kzero_Flux",
-                                                       "nucleoninexsec_Flux",
-                                                       "nucleonqexsec_Flux",
-                                                       "nucleontotxsec_Flux",
-                                                       "piminus_Flux",
-                                                       "pioninexsec_Flux",
-                                                       "pionqexsec_Flux",
-                                                       "piontotxsec_Flux",
-                                                       "piplus_Flux"
-  };
-
-  const std::vector<std::string> genie_weight_names = { "GENIEReWeight_SBND_v4_multisigma_CoulombCCQE",
-                                                        "GENIEReWeight_SBND_v4_multisigma_DecayAngMEC",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC1pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC2pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC1pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC2pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC1pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC2pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC1pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC2pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC1pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC2pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC1pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC2pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC1pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC2pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC1pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC2pi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NormCCMEC",
-                                                        "GENIEReWeight_SBND_v4_multisigma_NormNCMEC",
-                                                        "GENIEReWeight_SBND_v4_multisigma_RDecBR1eta",
-                                                        "GENIEReWeight_SBND_v4_multisigma_RDecBR1gamma",
-                                                        "GENIEReWeight_SBND_v4_multisigma_RPA_CCQE",
-                                                        "GENIEReWeight_SBND_v4_multisigma_ThetaDelta2NRad",
-                                                        "GENIEReWeight_SBND_v4_multisigma_Theta_Delta2Npi",
-                                                        "GENIEReWeight_SBND_v4_multisigma_VecFFCCQEshape",
-                                                        "GENIEReWeight_SBND_v4_multisim_CCRESVariationResponse",
-                                                        "GENIEReWeight_SBND_v4_multisim_COHVariationResponse",
-                                                        "GENIEReWeight_SBND_v4_multisim_DISBYVariationResponse",
-                                                        "GENIEReWeight_SBND_v4_multisim_FSI_N_VariationResponse",
-                                                        "GENIEReWeight_SBND_v4_multisim_FSI_pi_VariationResponse",
-                                                        "GENIEReWeight_SBND_v4_multisim_NCELVariationResponse",
-                                                        "GENIEReWeight_SBND_v4_multisim_NCRESVariationResponse",
-                                                        "GENIEReWeight_SBND_v4_multisim_ZExpAVariationResponse"
-  };
-
-  const std::vector<std::string> geant4_weight_names = { "reinteractions_Geant4",
+    { "slc_sel_cc", new InhVecVar<bool>("slc_sel_cc") },
   };
 
   std::map<std::string, std::map<int, double>> genie_multisigma_universe_weights;
@@ -677,7 +625,6 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
   , fHitModuleLabel                 (p.get<art::InputTag>("HitModuleLabel"))
   , fTrackModuleLabel               (p.get<art::InputTag>("TrackModuleLabel"))
   , fShowerModuleLabel              (p.get<art::InputTag>("ShowerModuleLabel"))
-  , fTrackCalorimetryModuleLabel    (p.get<art::InputTag>("TrackCalorimetryModuleLabel"))
   , fCRUMBSModuleLabel              (p.get<art::InputTag>("CRUMBSModuleLabel"))
   , fDazzleModuleLabel              (p.get<art::InputTag>("DazzleModuleLabel"))
   , fCaloModuleLabel                (p.get<art::InputTag>("CaloModuleLabel"))
@@ -714,6 +661,12 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
       {
         nuVars["nu_weight_" + name ] = new InhVecVecVar<float>("nu_weight_" + name);
         slcVars["slc_true_weight_" + name ] = new InhVecVecVar<float>("slc_true_weight_" + name);
+
+        if(name.find("multisigma") != std::string::npos)
+          {
+            nuVars["nu_weight_" + name + "_multisim"] = new InhVecVecVar<float>("nu_weight_" + name + "_multisim");
+            slcVars["slc_true_weight_" + name + "_multisim" ] = new InhVecVecVar<float>("slc_true_weight_" + name + "_multisim");
+          }
       }
 
     for(auto const& name : geant4_weight_names)
@@ -761,7 +714,7 @@ sbnd::NCPiZeroAnalysis::NCPiZeroAnalysis(fhicl::ParameterSet const& p)
           {
             genie_multisigma_universe_weights[name] = std::map<int, double>();
 
-            for(int univ = 0; univ < 500; ++univ)
+            for(int univ = 0; univ < n_genieweight_univs; ++univ)
               genie_multisigma_universe_weights[name][univ] = randGauss.fire();
           }
       }
@@ -992,20 +945,22 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
 {
   if(mct->Origin() == 2)
     {
-      FillElement(vars[prefix + "_event_type_incl"], counter, (int) kCosmic);
-      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kCosmic);
-      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kCosmic);
-      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kCosmic);
-      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kCosmic);
+      FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kCosmic);
+      FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kCosmic);
       return;
     }
   else if(mct->Origin() != 1)
     {
-      FillElement(vars[prefix + "_event_type_incl"], counter, (int) kUnknownEv);
-      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kUnknownEv);
-      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kUnknownEv);
-      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kUnknownEv);
-      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kUnknownEv);
+      FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kUnknownEv);
+      FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kUnknownEv);
       return;
     }
 
@@ -1027,10 +982,12 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
       const std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> ewms = MCTruthToWeights.at(0);
 
       int n_univs = 0;
-      if(weightModuleLabel == "fluxweight" || weightModuleLabel == "geant4weight")
-        n_univs = 1000;
+      if(weightModuleLabel == "fluxweight")
+        n_univs = n_fluxweight_univs;
       else if(weightModuleLabel == "systtools")
-        n_univs = 500;
+        n_univs = n_genieweight_univs;
+      else if(weightModuleLabel == "geant4weight")
+        n_univs = n_geant4weight_univs;
 
       std::vector<float> all(n_univs, 1.);
 
@@ -1047,6 +1004,8 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
                 }
               else if(weightModuleLabel == "systtools" && name.find("multisigma") != std::string::npos)
                 {
+                  FillElement(vars[prefix + "_weight_" + name], counter, weights);
+
                   std::vector<float> thrown_weights(n_univs, 1.);
 
                   if(weights.size() == 6)
@@ -1054,7 +1013,7 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
                       for(int univ = 0; univ < n_univs; ++univ)
                         {
                           thrown_weights[univ] = 1 + (weights[1] - 1) * genie_multisigma_universe_weights[name][univ];
-                          all[univ] *= weights[univ];
+                          all[univ] *= thrown_weights[univ];
                         }
                     }
                   else if(weights.size() == 1)
@@ -1062,13 +1021,13 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
                       for(int univ = 0; univ < n_univs; ++univ)
                         {
                           thrown_weights[univ] = 1 + (weights[0] - 1) * 2 * genie_multisigma_universe_weights[name][univ];
-                          all[univ] *= weights[univ];
+                          all[univ] *= thrown_weights[univ];
                         }
                     }
                   else
                     std::cout << "Whoaaaaaaaaaa, multisigma of size " << weights.size() << std::endl;
 
-                  FillElement(vars[prefix + "_weight_" + name], counter, thrown_weights);
+                  FillElement(vars[prefix + "_weight_" + name + "_multisim"], counter, thrown_weights);
                 }
             }
         }
@@ -1124,35 +1083,37 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
 
   if(nc && fv && pizero)
     {
-      FillElement(vars[prefix + "_event_type_incl"], counter, (int) kSignalNCPiZero);
+      FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kSignalNCPiZero);
       FillElement(vars[prefix + "_signal"], counter, true);
 
       if(charged_pions == 0)
         {
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kSignalNCPiZero);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kSignalNCPiZero);
 
           if(protons == 0)
-            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kSignalNCPiZero);
+            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kSignalNCPiZero);
           else
-            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kOtherNCPiZero);
+            FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kOtherNCPiZero);
 
           if(protons == 1)
-            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kSignalNCPiZero);
+            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kSignalNCPiZero);
           else
-            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kOtherNCPiZero);
+            FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kOtherNCPiZero);
 
           if(protons > 0)
-            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kSignalNCPiZero);
+            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kSignalNCPiZero);
           else
-            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kOtherNCPiZero);
+            FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kOtherNCPiZero);
         }
       else
         {
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kOtherNCPiZero);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kOtherNCPiZero);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kOtherNCPiZero);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kOtherNCPiZero);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kOtherNCPiZero);
         }
+
+      FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kNC);
     }
   else
     {
@@ -1160,51 +1121,61 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
 
       if(nc && fv)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kOtherNC);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kOtherNC);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kOtherNC);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kOtherNC);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kOtherNC);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kOtherNC);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kNC);
         }
       else if(abs(nu.PdgCode()) == 14 && !nc && fv)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kCCNuMu);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kCCNuMu);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kCCNuMu);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kCCNuMu);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kCCNuMu);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kCCNuMu);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kCCNuMu);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kCCNuMu);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kCCNuMu);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kCCNuMu);
+          if(pizero)
+            FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kSignalCCPiZero);
+          else
+            FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kOtherCCNuMu);
+
         }
       else if(abs(nu.PdgCode()) == 12 && !nc && fv)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kCCNuE);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kCCNuE);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kCCNuE);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kCCNuE);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kCCNuE);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kCCNuE);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kCCNuE);
         }
       else if(!fv && av)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kNonFV);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kNonFV);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kNonFV);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kNonFV);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kNonFV);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kNonFV);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kNonFV);
         }
       else if(!av)
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kDirt);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kDirt);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kDirt);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kDirt);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kDirt);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kDirt);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kDirt);
         }
       else
         {
-          FillElement(vars[prefix + "_event_type_incl"], counter, (int) kUnknownEv);
-          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) kUnknownEv);
-          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) kUnknownEv);
-          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) kUnknownEv);
-          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) kUnknownEv);
+          FillElement(vars[prefix + "_event_type_incl"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_0p0pi"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_1p0pi"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_Np0pi"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_Xp0pi"], counter, (int) NC::kUnknownEv);
+          FillElement(vars[prefix + "_event_type_cc"], counter, (int) CC::kUnknownEv);
         }
     }
 
@@ -2085,21 +2056,23 @@ void sbnd::NCPiZeroAnalysis::AnalyseSliceTruth(const art::Event &e, const art::P
 
   if(fBeamOff)
     {
-      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) kCosmic);
-      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) kCosmic);
-      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) kCosmic);
-      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) kCosmic);
-      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) kCosmic);
+      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) NC::kCosmic);
+      FillElement(slcVars["slc_true_event_type_cc"], slcCounter, (int) CC::kCosmic);
     }
   else if(bestMCT.isNonnull())
     AnalyseMCTruth(e, slcVars, bestMCT, slcCounter, "slc_true");
   else
     {
-      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) kFailedTruthMatch);
-      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) kFailedTruthMatch);
-      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) kFailedTruthMatch);
-      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) kFailedTruthMatch);
-      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_incl"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_0p0pi"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_1p0pi"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_Np0pi"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_Xp0pi"], slcCounter, (int) NC::kFailedTruthMatch);
+      FillElement(slcVars["slc_true_event_type_cc"], slcCounter, (int) CC::kFailedTruthMatch);
     }
 }
 
@@ -2177,14 +2150,19 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   AccessElement(slcVars["slc_is_fv"], counter, is_fv);
 
   float crumbs;
-  AccessElement(slcVars["slc_crumbs_score"], counter, crumbs);
-  const bool passes_crumbs_incl  = crumbs > -0.195;
-  const bool passes_crumbs_0p0pi = crumbs > -0.195;
-  const bool passes_crumbs_Np0pi = crumbs > -0.16;
+  AccessElement(slcVars["slc_crumbs_nc_score"], counter, crumbs);
+  const bool passes_crumbs_incl  = crumbs > -0.005;
+  const bool passes_crumbs_0p0pi = crumbs > -0.005;
+  const bool passes_crumbs_Np0pi = crumbs > 0.075;
+
+  float crumbs_ccnumu;
+  AccessElement(slcVars["slc_crumbs_ccnumu_score"], counter, crumbs_ccnumu);
+  const bool passes_crumbs_cc = crumbs_ccnumu > 0;
 
   int nrazzledmuons;
   AccessElement(slcVars["slc_n_primary_razzled_muons"], counter, nrazzledmuons);
-  const bool passes_razzled_muons = nrazzledmuons == 0;
+  const bool passes_razzled_muons    = nrazzledmuons == 0;
+  const bool passes_razzled_muons_cc = nrazzledmuons == 1;
 
   size_t npfps;
   AccessElement(slcVars["slc_n_pfps"], counter, npfps);
@@ -2200,14 +2178,16 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   double opt0frac;
   AccessElement(slcVars["slc_opt0_fracPE"], counter, opt0frac);
   const bool passes_opt0frac_incl  = opt0frac < 0.756 && opt0frac > -0.7;
-  const bool passes_opt0frac_0p0pi = opt0frac < 0.408 && opt0frac > -0.7;
+  const bool passes_opt0frac_0p0pi = opt0frac < 0.844 && opt0frac > -0.7;
   const bool passes_opt0frac_Np0pi = opt0frac < 0.836 && opt0frac > -0.376;
+  const bool passes_opt0frac_cc    = opt0frac < 0.836 && opt0frac > -0.376;
 
   double opt0score;
   AccessElement(slcVars["slc_opt0_score"], counter, opt0score);
-  const bool passes_opt0score_incl  = opt0score > 150;
-  const bool passes_opt0score_0p0pi = opt0score > 150;
+  const bool passes_opt0score_incl  = opt0score > 5;
+  const bool passes_opt0score_0p0pi = opt0score > 125;
   const bool passes_opt0score_Np0pi = opt0score > 210;
+  const bool passes_opt0score_cc    = opt0score > 210;
 
   int nrazzledpions;
   AccessElement(slcVars["slc_n_primary_razzled_pions_thresh"], counter, nrazzledpions);
@@ -2239,6 +2219,10 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 
   const bool sel_Xp0pi = sel_incl && passes_razzled_pions;
   FillElement(slcVars["slc_sel_Xp0pi"], counter, sel_Xp0pi);
+
+  const bool sel_cc = !is_clear_cosmic && is_fv && passes_crumbs_cc && passes_razzled_muons_cc && passes_pfps
+    && passes_razzled_photons && bestpzcgoodkinematics && passes_opt0frac_cc && passes_opt0score_cc;
+  FillElement(slcVars["slc_sel_cc"], counter, sel_cc);
 }
 
 void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std::string &prefix,

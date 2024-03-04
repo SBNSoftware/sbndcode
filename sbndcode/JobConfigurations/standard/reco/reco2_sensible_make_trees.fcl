@@ -10,3 +10,4 @@ physics.producers.razzled.MakeTree:                    true
 physics.producers.razzled.RunMVA:                      true
 
 physics.trigger_paths: [ reco2_sensible, weight_paths ]
+physics.end_paths:     [ stream1, ana ]

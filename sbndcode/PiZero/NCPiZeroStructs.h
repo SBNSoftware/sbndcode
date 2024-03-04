@@ -1,7 +1,67 @@
 #ifndef NCPIZEROSTRUCTS_H_SEEN
 #define NCPIZEROSTRUCTS_H_SEEN
 
-enum EventType
+constexpr int n_fluxweight_univs   = 1000;
+constexpr int n_genieweight_univs  = 500;
+constexpr int n_geant4weight_univs = 1000;
+
+const std::vector<std::string> flux_weight_names = { "expskin_Flux",
+                                                     "horncurrent_Flux",
+                                                     "kminus_Flux",
+                                                     "kplus_Flux",
+                                                     "kzero_Flux",
+                                                     "nucleoninexsec_Flux",
+                                                     "nucleonqexsec_Flux",
+                                                     "nucleontotxsec_Flux",
+                                                     "piminus_Flux",
+                                                     "pioninexsec_Flux",
+                                                     "pionqexsec_Flux",
+                                                     "piontotxsec_Flux",
+                                                     "piplus_Flux"
+};
+
+const std::vector<std::string> genie_weight_names = { "GENIEReWeight_SBND_v5_multisigma_CoulombCCQE",
+                                                      "GENIEReWeight_SBND_v5_multisigma_DecayAngMEC",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnCC1pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnCC2pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnNC1pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnNC2pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpCC1pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpCC2pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpNC1pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpNC2pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnCC1pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnCC2pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnNC1pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnNC2pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpCC1pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpCC2pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpNC1pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpNC2pi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NormCCMEC",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NormNCMEC",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NormCCCOH",
+                                                      "GENIEReWeight_SBND_v5_multisigma_NormNCCOH",
+                                                      "GENIEReWeight_SBND_v5_multisigma_RDecBR1eta",
+                                                      "GENIEReWeight_SBND_v5_multisigma_RDecBR1gamma",
+                                                      "GENIEReWeight_SBND_v5_multisigma_RPA_CCQE",
+                                                      "GENIEReWeight_SBND_v5_multisigma_ThetaDelta2NRad",
+                                                      "GENIEReWeight_SBND_v5_multisigma_Theta_Delta2Npi",
+                                                      "GENIEReWeight_SBND_v5_multisigma_VecFFCCQEshape",
+                                                      "GENIEReWeight_SBND_v5_multisim_CCRESVariationResponse",
+                                                      "GENIEReWeight_SBND_v5_multisim_DISBYVariationResponse",
+                                                      "GENIEReWeight_SBND_v5_multisim_FSI_N_VariationResponse",
+                                                      "GENIEReWeight_SBND_v5_multisim_FSI_pi_VariationResponse",
+                                                      "GENIEReWeight_SBND_v5_multisim_NCELVariationResponse",
+                                                      "GENIEReWeight_SBND_v5_multisim_NCRESVariationResponse",
+                                                      "GENIEReWeight_SBND_v5_multisim_ZExpAVariationResponse"
+};
+
+const std::vector<std::string> geant4_weight_names = { "reinteractions_Geant4",
+};
+
+namespace NC {
+  enum EventType
   {
     kSignalNCPiZero,
     kOtherNCPiZero,
@@ -14,6 +74,23 @@ enum EventType
     kFailedTruthMatch,
     kUnknownEv = -1
   };
+}
+
+namespace CC {
+  enum EventType
+  {
+    kSignalCCPiZero,
+    kOtherCCPiZero,
+    kNC,
+    kOtherCCNuMu,
+    kCCNuE,
+    kDirt,
+    kNonFV,
+    kCosmic,
+    kFailedTruthMatch,
+    kUnknownEv = -1
+  };
+}
 
 enum VarType
   {

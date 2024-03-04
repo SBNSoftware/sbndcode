@@ -4,8 +4,9 @@
 
 process_name: Reco2
 
-physics.analyzers.ncpizeroana: @local::ncpizeroana
-physics.analyzers.recoeff:     @local::recoeff
+physics.analyzers.ncpizeroana:       @local::ncpizeroana
+physics.analyzers.ncpizeroxsectrees: @local::ncpizeroxsectrees
+physics.analyzers.recoeff:           @local::recoeff
 
 physics.producers.pandoraShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
 
@@ -32,7 +33,9 @@ physics.reco2_sensible: [ rns,
   pandoraShowerCosmicDist,
   pandoraShowerSelectionVars,
   razzle,
-  razzled
+  razzled,
+  vertexCharge,
+  vertexStub
 ]
 
 physics.weight_paths: [
@@ -41,10 +44,10 @@ physics.weight_paths: [
   geant4weight
 ]
 
-physics.ana: [ ncpizeroana, recoeff ]
+physics.ana: [ ncpizeroana, ncpizeroxsectrees, recoeff ]
 
 physics.trigger_paths: [ reco2_sensible ]
-physics.end_paths: [ stream1, ana ]
+physics.end_paths:     [ stream1 ]
 
 #include "enable_spacecharge_services_sbnd.fcl"
 
@@ -87,5 +90,12 @@ physics.producers.crumbs.MVAFileName:       "CRUMBS_Inclusive_NCPiZeroAv12.weigh
 physics.producers.crumbs.CCNuMuMVAFileName: "CRUMBS_CCNuMu_NCPiZeroAv12.weights.xml"
 physics.producers.crumbs.CCNuEMVAFileName:  "CRUMBS_CCNuE_NCPiZeroAv12.weights.xml"
 physics.producers.crumbs.NCMVAFileName:     "CRUMBS_NC_NCPiZeroAv12.weights.xml"
+
+physics.producers.vertexCharge.PFPLabel:   "pandoraSCE"
+physics.producers.vertexCharge.TrackLabel: "pandoraTrack"
+physics.producers.vertexCharge.CaloAlg:    @local::sbnd_calorimetryalgmc
+physics.producers.vertexStub.PFPLabel:     "pandoraSCE"
+physics.producers.vertexStub.TrackLabel:   "pandoraTrack"
+physics.producers.vertexStub.CaloAlg:      @local::sbnd_calorimetryalgmc
 
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux

@@ -284,14 +284,17 @@ sbnd_flux_numi_dirt: {
 #
 # Bunch sigma taken from 
 # https://beamdocs.fnal.gov/AD/DocDB/0050/005000/001/bunchLength_1st_draft.pdf
+# Bunch spacing taken from
+# https://inspirehep.net/files/610a942fd8632bbbca2c8ad90da86670
+
 sbnd_fluxbucket_bnb: {
-  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=1.308"
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
 }
 
 # Booster Neutrino Beam, rotated bucket
 #
 sbnd_fluxbucket_bnb_rotated: {
-  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=1.308"
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
 }
 
 ################################################################################

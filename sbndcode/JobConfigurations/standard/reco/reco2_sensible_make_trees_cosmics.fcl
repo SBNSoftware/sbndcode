@@ -1,7 +1,8 @@
 #include "reco2_sensible_make_trees.fcl"
 
 physics.trigger_paths: [ reco2_sensible ]
-physics.ana:           [ ncpizeroana ]
+physics.ana:           [ ncpizeroana, ncpizeroxsectrees ]
 
-physics.producers.crumbs.ProcessNeutrinos: false
-physics.analyzers.ncpizeroana.BeamOff:     true
+physics.producers.crumbs.ProcessNeutrinos:   false
+physics.analyzers.ncpizeroana.BeamOff:       true
+physics.analyzers.ncpizeroxsectrees.BeamOff: true

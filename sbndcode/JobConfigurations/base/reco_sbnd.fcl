@@ -65,6 +65,7 @@
 #include "sbn_stub.fcl"
 #include "sbn_cnnid.fcl"
 #include "eventweight_geant4_sbn.fcl"
+#include "sbn_stub.fcl"
 
 process_name: Reco
 
@@ -221,6 +222,8 @@ physics:
   vertexCharge:		       @local::vertex_charge_sbnd_sce
   vertexStub:		       @local::vertex_stub_sbnd_sce
   geant4weight:                @local::sbn_eventweight_geant4
+  vertexCharge:                @local::vertex_charge_sbnd_sce
+  vertexStub:                  @local::vertex_stub_sbnd_sce
  }
 
  #define the producer and filter modules for this path, order matters,

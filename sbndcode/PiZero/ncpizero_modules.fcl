@@ -9,7 +9,6 @@ ncpizeroana:
   HitModuleLabel:              "gaushit"
   TrackModuleLabel:            "pandoraTrack"
   ShowerModuleLabel:           "pandoraShower"
-  TrackCalorimetryModuleLabel: "pandoraCalo"
   CRUMBSModuleLabel:           "crumbs"
   DazzleModuleLabel:           "dazzle"
   CaloModuleLabel:             "pandoraCalo"
@@ -44,6 +43,27 @@ ncpizerofilter:
   MCTruthModuleLabel: "generator"
 
   module_type:        NCPiZeroFilter
+}
+
+ncpizeroxsectrees:
+{
+  MCParticleModuleLabel:   "largeant"
+  SliceModuleLabel:        "pandoraSCE"
+  PFParticleModuleLabel:   "pandoraSCE"
+  VertexModuleLabel:       "pandoraSCE"
+  HitModuleLabel:          "gaushit"
+  TrackModuleLabel:        "pandoraTrack"
+  CaloModuleLabel:         "pandoraCalo"
+  ShowerModuleLabel:       "pandoraShower"
+  CRUMBSModuleLabel:       "crumbs"
+  POTModuleLabel:          "generator"
+  OpT0ModuleLabel:         "opt0finder"
+  RazzledModuleLabel:      "razzled"
+  EventWeightModuleLabels: [ "fluxweight", "systtools", "geant4weight" ]
+
+  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroAv12.root"
+
+  module_type: NCPiZeroXSecTrees
 }
 
 END_PROLOG
