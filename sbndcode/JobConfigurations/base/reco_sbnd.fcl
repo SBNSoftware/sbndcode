@@ -63,6 +63,7 @@
 #include "eventweight_flux_sbn.fcl"
 #include "eventweight_genie_systtools_sbnd.fcl"
 #include "eventweight_geant4_sbn.fcl"
+#include "sbn_stub.fcl"
 
 process_name: Reco
 
@@ -215,6 +216,8 @@ physics:
   fluxweight:                  @local::sbn_eventweight_flux
   systtools:                   @local::sbn_systtools
   geant4weight:                @local::sbn_eventweight_geant4
+  vertexCharge:                @local::vertex_charge_sbnd_sce
+  vertexStub:                  @local::vertex_stub_sbnd_sce
  }
 
  #define the producer and filter modules for this path, order matters,

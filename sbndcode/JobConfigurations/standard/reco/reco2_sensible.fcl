@@ -33,7 +33,9 @@ physics.reco2_sensible: [ rns,
   pandoraShowerCosmicDist,
   pandoraShowerSelectionVars,
   razzle,
-  razzled
+  razzled,
+  vertexCharge,
+  vertexStub
 ]
 
 physics.weight_paths: [
@@ -88,5 +90,12 @@ physics.producers.crumbs.MVAFileName:       "CRUMBS_Inclusive_NCPiZeroAv12.weigh
 physics.producers.crumbs.CCNuMuMVAFileName: "CRUMBS_CCNuMu_NCPiZeroAv12.weights.xml"
 physics.producers.crumbs.CCNuEMVAFileName:  "CRUMBS_CCNuE_NCPiZeroAv12.weights.xml"
 physics.producers.crumbs.NCMVAFileName:     "CRUMBS_NC_NCPiZeroAv12.weights.xml"
+
+physics.producers.vertexCharge.PFPLabel:   "pandoraSCE"
+physics.producers.vertexCharge.TrackLabel: "pandoraTrack"
+physics.producers.vertexCharge.CaloAlg:    @local::sbnd_calorimetryalgmc
+physics.producers.vertexStub.PFPLabel:     "pandoraSCE"
+physics.producers.vertexStub.TrackLabel:   "pandoraTrack"
+physics.producers.vertexStub.CaloAlg:      @local::sbnd_calorimetryalgmc
 
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
