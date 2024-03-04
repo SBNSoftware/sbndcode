@@ -1,0 +1,35 @@
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "reco_sbnd.fcl"
+
+process_name: HNLPiZeroAnalyzer
+
+services:
+{
+	TFileService: { fileName: "hnlpizero_ana_%p-%tc.root"}
+	@table::sbnd_services
+	ParticleInventoryService: @local::sbnd_particleinventoryservice
+	BackTrackerService: @local::sbnd_backtrackerservice
+}
+
+source:
+{
+	module_type: RootInput
+}
+
+physics:
+{
+	analyzers:
+	{
+		hnlana: 
+		{
+			module_type: "HNLPiZeroAnalysis"
+		}
+	}
+
+	ana: [hnlana]
+	
+	end_paths: [ana]
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
