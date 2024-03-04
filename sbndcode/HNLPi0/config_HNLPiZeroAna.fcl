@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+hnlana:
+{
+	module_type: HNLPiZeroAnalysis
+}
+
+ncpizerofilter:
+{ 
+ 	MCTruthModuleLabel: "generator"
+        module_type:        NCPiZeroFilter
+}
+END_PROLOG
