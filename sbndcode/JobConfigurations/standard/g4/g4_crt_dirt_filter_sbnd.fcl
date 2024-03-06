@@ -1,0 +1,19 @@
+#include "standard_g4_sbnd.fcl"
+
+process_name: G4CRT
+
+physics.simulate: [ rns
+                    , genericcrt
+                  ]
+
+# Remove unnecesary processes
+physics.producers.ionandscint:    @erase
+physics.producers.ionandscintout: @erase
+physics.producers.pdfastsim:      @erase
+physics.producers.pdfastsimout:   @erase
+physics.producers.simdrift:       @erase
+physics.producers.mcreco:         @erase
+physics.producers.loader:         @erase
+physics.producers.largeant:       @erase
+
+outputs.out1.outputCommands: [ "keep *_*_*_*" ]

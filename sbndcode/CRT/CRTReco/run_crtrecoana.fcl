@@ -1,0 +1,55 @@
+#include "services_sbnd.fcl"
+#include "particleinventoryservice.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "crtrecoproducers_sbnd.fcl"
+#include "crtbacktrackeralg_sbnd.fcl"
+
+process_name: CRTRecoAna
+
+services:
+{
+  TFileService: { fileName: "crtana_sbnd.root" }
+  @table::sbnd_basic_services
+  ParticleInventoryService: @local::standard_particleinventoryservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    crtstrips:      @local::crtstriphitproducer_sbnd
+    crtclustering:  @local::crtclusterproducer_sbnd
+    crtspacepoints: @local::crtspacepointproducer_sbnd
+    crttracks:      @local::crttrackproducer_sbnd
+  }
+
+  analyzers:
+  {
+    crtana:
+    {
+      module_type:       "CRTAnalysis"
+      CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
+    }
+  }
+
+  reco:    [ crtstrips, crtclustering, crtspacepoints, crttracks ]
+  ana:     [ crtana ]
+  stream1: [ out1 ]
+
+  trigger_paths: [ reco ]
+  end_paths:     [ ana, stream1 ]
+}

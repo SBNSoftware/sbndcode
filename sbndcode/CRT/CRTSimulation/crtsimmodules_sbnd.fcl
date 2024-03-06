@@ -1,0 +1,79 @@
+BEGIN_PROLOG
+
+standard_sbnd_crtsimparams: {
+  # Global timing offset [ns]
+  # For Corsika cosmics, use 2.76e6 (see corsika_sbnd.fcl)
+  GlobalT0Offset: 0.0
+  UseG4RefTimeOffset: true
+
+  # Shape parameters for mean time delay vs. Npe
+  TDelayNorm: 4125.74
+  TDelayShift: -300.31
+  TDelaySigma: 90.392
+  TDelayOffset: -1.525
+
+  # Shape parameters for time delay RMS vs. Npe
+  TDelayRMSGausNorm: 2.09138
+  TDelayRMSGausShift: 7.23993
+  TDelayRMSGausSigma: 170.027
+  TDelayRMSExpNorm: 1.6544
+  TDelayRMSExpShift: 75.6183
+  TDelayRMSExpScale: 79.3543
+
+  TriggerDelay: 10 # ns
+
+  # Clock speed of the CRT system [MHz] (1 ns = 1 tick @ 1000 MHz)
+  # (was 16 MHz for files before v08_25_00)
+  ClockSpeedCRT: 1000.
+
+  # Propagation delay [ns/cm]
+  PropDelay: 0.061
+  PropDelayError: 0.007
+
+  # Interpolator time resolution [ns]
+  TResInterpolator: 1.268
+
+  # Model parameters for Npe vs. distance along strip
+  NpeScaleNorm: 8.023e7 #5.261e7
+  NpeScaleShift: -1085.0
+
+  # Mean deposited charge for mips [GeV]
+  UseEdep: true
+  Q0: 1.75e-3
+
+  # ADC model: Pedestal offset [ADC], slope [ADC/photon], RMS [ADC]
+  QPed: 0.0 #63.6
+  QSlope: 40.0 #131.9
+  QRMS: 80.0 #15.0
+  QThreshold: 60.0 #100
+
+  # Coincidence window for two fibers on a strip [ticks = ns]
+  StripCoincidenceWindow: 100.0 #30.0
+
+  # Coincidence for hits in a tagger [ticks = ns]
+  TaggerPlaneCoincidenceWindow: 150.0 #5
+
+  # Effective absorption length (for transverse response) [cm]
+  AbsLenEff: 8.5
+
+  # Minimum time between energy deposits that SiPMs can resolve [ns]
+  SipmTimeResponse: 2.0
+
+  AdcSaturation: 4095
+
+  DeadTime: 22000
+
+  WaveformX: [0., 11.83, 18.59, 28.72,  41.40,  51.53,  62.51, 75.]
+  WaveformY: [0., 3.412, 12.08, 34.138, 65.646, 84.554, 101.1, 108.3]
+  DoWaveformEmulation: true
+
+  DebugTrigger: false
+}
+
+sbnd_crtsim: {
+  module_type:   "CRTDetSim"
+  G4ModuleLabel: "genericcrt"
+  DetSimParams:  @local::standard_sbnd_crtsimparams
+}
+
+END_PROLOG

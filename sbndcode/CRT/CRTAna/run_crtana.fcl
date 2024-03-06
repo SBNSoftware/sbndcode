@@ -1,0 +1,33 @@
+#include "simulationservices_sbnd.fcl"
+#include "crtbacktrackeralg_sbnd.fcl"
+
+process_name: CRTAnalyzer
+
+services:
+{
+  TFileService: { fileName: "crtana_sbnd.root" }
+  @table::sbnd_basic_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+  DetectorClocksService:    @local::sbnd_detectorclocks
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    crtana: 
+    { 
+      module_type:       "CRTAnalysis"
+      CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
+    }
+  }
+
+  ana:       [ crtana ]
+  end_paths: [ ana ]
+}

@@ -11,3 +11,9 @@
 
 # Do not apply optical triggers (done to save the full waveform)
 physics.producers.opdaq.ApplyTriggers: false
+
+## need both of the below lines to save rawdigits! 
+physics.producers.simtpc2d.wcls_main.outputers: [ "wclsDepoFluxWriter:postdrift",
+                                                  "wclsFrameSaver:simdigits" , # adding this line asks wcls to save raw digits
+                                                  "wclsFrameSaver:spsaver"]
+physics.producers.simtpc2d.wcls_main.params.save_simdigits: "true" # needs to be a string!!

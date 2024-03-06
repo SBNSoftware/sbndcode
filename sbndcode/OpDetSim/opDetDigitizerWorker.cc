@@ -177,6 +177,11 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     std::unordered_map<int, sim::SimPhotonsLite> DirectPhotonsMap;
     std::unordered_map<int, sim::SimPhotonsLite> ReflectedPhotonsMap;
     std::unordered_set<short unsigned int> coatedpmts_todigitize;
+    // XARAPUCAs
+    std::unordered_map<int, sim::SimPhotonsLite> XADirectPhotonsMap;
+    std::unordered_map<int, sim::SimPhotonsLite> XAReflectedPhotonsMap;
+    std::unordered_set<short unsigned int>   vuvxarapucas_todigitize; //sensible to both VUV and visible light
+
 
     const unsigned start = StartChannelToProcess(fConfig.nChannels);
     const unsigned n = NChannelsToProcess(fConfig.nChannels);
@@ -204,6 +209,14 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
 
           coatedpmts_todigitize.insert(ch);
         }
+        else if( pdtype == "xarapuca_vuv" ){
+          if(Reflected)
+            XAReflectedPhotonsMap.insert(std::make_pair(ch, litesimphotons));
+          else
+            XADirectPhotonsMap.insert(std::make_pair(ch, litesimphotons));
+
+          vuvxarapucas_todigitize.insert(ch);
+        }
         else if( (Reflected) && (pdtype == "pmt_uncoated") ) { //Uncoated PMT channels
           pmtDigitizer->ConstructWaveformLiteUncoatedPMT(ch,
                                               litesimphotons,
@@ -217,8 +230,7 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                                   waveform);
       	}
         // getting only xarapuca channels with appropriate type of light
-        else if((pdtype == "xarapuca_vuv" && !Reflected) ||
-                (pdtype == "xarapuca_vis" && Reflected) ) {
+        else if( (pdtype == "xarapuca_vis" && Reflected) ) {
           const bool is_daphne= fConfig.pdsMap.isElectronics(ch,"daphne");
           if(is_daphne){
             arapucaDigitizer->ConstructWaveformLite(ch,
@@ -259,6 +271,15 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                               (unsigned int)ch,
                                               waveform);
     }
+    //VUV XAs, sensible to VUV and visible light
+    for(auto ch : vuvxarapucas_todigitize){
+      std::vector<short unsigned int> waveform;
+      waveform.reserve(fConfig.Nsamples_Daphne);
+      arapucaDigitizer->ConstructWaveformLiteVUVXA(ch, waveform, XADirectPhotonsMap, XAReflectedPhotonsMap, startTime, fConfig.Nsamples_Daphne);
+      fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
+                                              (unsigned int)ch,
+                                              waveform);
+    }
   }
   else { // for SimPhotons
     const std::vector<art::Handle<std::vector<sim::SimPhotons>>> &photon_handles = *fPhotonHandles;
@@ -294,6 +315,10 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
     std::unordered_map<int, sim::SimPhotons> DirectPhotonsMap;
     std::unordered_map<int, sim::SimPhotons> ReflectedPhotonsMap;
     std::unordered_set<short unsigned int> coatedpmts_todigitize;
+    // XARAPUCAs
+    std::unordered_map<int, sim::SimPhotons> XADirectPhotonsMap;
+    std::unordered_map<int, sim::SimPhotons> XAReflectedPhotonsMap;
+    std::unordered_set<short unsigned int>   vuvxarapucas_todigitize; //sensible to both VUV and visible light
 
     const double startTime = fConfig.EnableWindow[0] * 1000. /*ns for digitizer*/;
 
@@ -334,9 +359,16 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                                   (unsigned int)ch,
                                                   waveform);
         }
+        if( pdtype == "xarapuca_vuv" ){
+          if(Reflected)
+            XAReflectedPhotonsMap.insert(std::make_pair(ch, simphotons));
+          else
+            XADirectPhotonsMap.insert(std::make_pair(ch, simphotons));
+
+          vuvxarapucas_todigitize.insert(ch);
+        }
         // getting only xarapuca channels with appropriate type of light
-        if((pdtype == "xarapuca_vuv" && !Reflected) ||
-           (pdtype == "xarapuca_vis" && Reflected)) {
+        if((pdtype == "xarapuca_vis" && Reflected)) {
           if(is_daphne){
           arapucaDigitizer->ConstructWaveform(ch,
                                               simphotons,
@@ -345,32 +377,40 @@ void opdet::opDetDigitizerWorker::MakeWaveforms(opdet::DigiPMTSBNDAlg *pmtDigiti
                                               is_daphne,
                                               startTime,
                                               fConfig.Nsamples_Daphne);
-          // including pre trigger window and transit time
-          fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
-                                                  (unsigned int)ch,
+            // including pre trigger window and transit time
+            fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
+                                                    (unsigned int)ch,
                                                   waveform);
-        }
-        else{
-        arapucaDigitizer->ConstructWaveform(ch,
+            }
+            else{
+              arapucaDigitizer->ConstructWaveform(ch,
                                               simphotons,
                                               waveform,
                                               pdtype,
                                               is_daphne,
                                               startTime,
                                               fConfig.Nsamples);
-          // including pre trigger window and transit time
-          fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
+              // including pre trigger window and transit time
+              fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                                   (unsigned int)ch,
                                                   waveform);
-        }
+          }
         }
       }//optical channel loop
     }//type of light loop
-    //Constructing Waveforms for hybrid OpChannels (coated pmts)
+    //Constructing Waveforms for hybrid OpChannels (coated pmts and VUV XAs)
     for(auto ch : coatedpmts_todigitize){
       std::vector<short unsigned int> waveform;
       waveform.reserve(fConfig.Nsamples);
       pmtDigitizer->ConstructWaveformCoatedPMT(ch, waveform, DirectPhotonsMap, ReflectedPhotonsMap, startTime, fConfig.Nsamples);
+      fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
+                                              (unsigned int)ch,
+                                              waveform);
+    }
+    for(auto ch : vuvxarapucas_todigitize){
+      std::vector<short unsigned int> waveform;
+      waveform.reserve(fConfig.Nsamples_Daphne);
+      arapucaDigitizer->ConstructWaveformVUVXA(ch, waveform, XADirectPhotonsMap, XAReflectedPhotonsMap, startTime, fConfig.Nsamples_Daphne);
       fWaveforms->at(ch) = raw::OpDetWaveform(fConfig.EnableWindow[0],
                                               (unsigned int)ch,
                                               waveform);

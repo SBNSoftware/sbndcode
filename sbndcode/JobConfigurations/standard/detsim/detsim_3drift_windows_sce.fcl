@@ -1,4 +1,4 @@
 #include "standard_detsim_sbnd.fcl"
 
 #include "3drift_services_sbnd.fcl"
-#include "enable_spacecharge_services_sbnd.fcl"
+#include "enable_spacecharge_services_sbnd_2D_DriftSimOnly.fcl"

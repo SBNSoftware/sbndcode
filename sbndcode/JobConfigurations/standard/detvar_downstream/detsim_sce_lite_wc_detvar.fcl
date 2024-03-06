@@ -1,3 +1,0 @@
-#include "detsim_sce_lite_wc.fcl"
-
-process_name: DetSimVar

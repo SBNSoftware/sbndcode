@@ -7,8 +7,8 @@ physics.simulate: [ rns
                   , ionandscintout
                   , pdfastsim
                   , pdfastsimout
-                  , simdrift
-                  , mcreco
+                  # , simdrift ## 1D TPC simulation no longer run
+                  #, mcreco ## mcreco now run after WireCell sim
                   , genericcrt
                   ]
 

@@ -1,0 +1,38 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "crttpcmatchingproducers_sbnd.fcl"
+
+process_name: CRTSpacePointMatching
+
+services:
+{
+  @table::sbnd_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    crtspacepointmatching: @local::crtspacepointmatchproducer_sbnd
+  }
+
+  reco:    [ crtspacepointmatching ]
+  stream1: [ out1 ]
+
+  trigger_paths: [ reco ]
+  end_paths:     [ stream1 ]
+}

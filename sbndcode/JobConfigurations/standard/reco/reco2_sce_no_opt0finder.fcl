@@ -13,12 +13,9 @@
 process_name: Reco2
 
 physics.reco2_sce: [@sequence::physics.reco2_no_opt0finder,
-                    pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCECalo, pandoraSCEPid]
+                    pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCECalo, pandoraSCEPid, crtspacepointmatchingSCE, crttrackmatchingSCE, fmatchSCE]
 
 physics.trigger_paths: [ reco2_sce ]
 
 # turn on space charge service
-services.SpaceCharge.EnableCalSpatialSCE: true
-services.SpaceCharge.EnableSimSpatialSCE: true
-services.SpaceCharge.EnableSimEfieldSCE: true
-services.SpaceCharge.EnableCalEfieldSCE: true
+#include "enable_spacecharge_services_sbnd.fcl"

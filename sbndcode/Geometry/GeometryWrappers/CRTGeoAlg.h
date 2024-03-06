@@ -1,12 +1,12 @@
 #ifndef CRTGEOALG_H_SEEN
 #define CRTGEOALG_H_SEEN
 
-
 ///////////////////////////////////////////////
 // CRTGeoAlg.h
 //
 // Wrapper for some awkward CRT geometry things
 // T Brooks (tbrooks@fnal.gov), November 2018
+// Edited heavily - Henry Lay, November 2022
 ///////////////////////////////////////////////
 
 // framework
@@ -32,183 +32,342 @@
 #include <vector>
 
 // ROOT
-#include "TVector3.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 #include "TGeoManager.h"
 
-namespace sbnd{
+// sbndcode
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
-  struct CRTSipmGeo{
-    uint32_t channel;
-    double x;
-    double y;
-    double z;
-    std::string strip;
-    bool null;
+namespace sbnd::crt {
+
+  struct CRTSiPMGeo{
+    CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const geo::Point_t location,
+               const uint32_t _pedestal, const double _gain)
+    {
+      stripName = _stripName;
+      channel   = _channel;
+      x         = location.X();
+      y         = location.Y();
+      z         = location.Z();
+      pedestal  = _pedestal;
+      gain      = _gain;
+      null      = false;
+    }
+    std::string stripName;
+    uint16_t    channel;
+    double      x;
+    double      y;
+    double      z;
+    bool        null;
+    uint32_t    pedestal;
+    double      gain;
   };
 
   // CRT strip geometry struct contains dimensions and mother module
   struct CRTStripGeo{
+    CRTStripGeo(const TGeoNode *stripNode, const geo::AuxDetSensitiveGeo &auxDetSensitive, 
+                const uint16_t _adsID, const std::string &_moduleName,
+                const uint16_t _channel0, const uint16_t _channel1)
+    {
+      name       = stripNode->GetName();
+      moduleName = _moduleName;
+      channel0   = _channel0;
+      channel1   = _channel1;
+
+      // Strip Dimensions
+      double halfWidth  = auxDetSensitive.HalfWidth1();
+      double halfHeight = auxDetSensitive.HalfHeight();
+      double halfLength = auxDetSensitive.Length()/2.;
+
+      // Find world coordinates for edges
+      geo::AuxDetSensitiveGeo::LocalPoint_t const limits{halfWidth, halfHeight, halfLength};
+      geo::AuxDetSensitiveGeo::LocalPoint_t const limits2{-halfWidth, -halfHeight, -halfLength};
+
+      auto const limitsWorld  = auxDetSensitive.toWorldCoords(limits);
+      auto const limitsWorld2 = auxDetSensitive.toWorldCoords(limits2);
+
+      // Fill edges & width
+      minX  = std::min(limitsWorld.X(), limitsWorld2.X());
+      maxX  = std::max(limitsWorld.X(), limitsWorld2.X());
+      minY  = std::min(limitsWorld.Y(), limitsWorld2.Y());
+      maxY  = std::max(limitsWorld.Y(), limitsWorld2.Y());
+      minZ  = std::min(limitsWorld.Z(), limitsWorld2.Z());
+      maxZ  = std::max(limitsWorld.Z(), limitsWorld2.Z());
+      width = halfHeight * 2.;
+
+      adsID = _adsID;
+      null  = false;
+
+      std::string volumeName = stripNode->GetVolume()->GetName();
+    }
     std::string name;
-    int sensitiveVolumeID;
-    double minX;
-    double maxX;
-    double minY;
-    double maxY;
-    double minZ;
-    double maxZ;
-    geo::Vector_t normal;
-    double width;
-    std::string module;
-    std::pair<int, int> sipms;
-    bool null;
+    std::string moduleName;
+    uint16_t    channel0;
+    uint16_t    channel1;
+    double      minX;
+    double      maxX;
+    double      minY;
+    double      maxY;
+    double      minZ;
+    double      maxZ;
+    double      width;
+    uint16_t    adsID;
+    bool        null;
   };
 
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
   struct CRTModuleGeo{
-    std::string name;
-    int auxDetID;
-    double minX;
-    double maxX;
-    double minY;
-    double maxY;
-    double minZ;
-    double maxZ;
-    geo::Vector_t normal;
-    size_t planeID;
-    bool top;
-    std::string tagger;
-    std::map<std::string, CRTStripGeo> strips;
-    bool null;
+    CRTModuleGeo()
+    : name("")
+    , taggerName("")
+    , minX(-std::numeric_limits<double>::max())
+    , maxX(std::numeric_limits<double>::max())
+    , minY(-std::numeric_limits<double>::max())
+    , maxY(std::numeric_limits<double>::max())
+    , minZ(-std::numeric_limits<double>::max())
+    , maxZ(std::numeric_limits<double>::max())
+    , orientation(0)
+    , top(false)
+    , adID(std::numeric_limits<uint16_t>::max())
+    , t0CableDelayCorrection(0)
+    , t1CableDelayCorrection(0)
+    , invertedOrdering(false)
+    , minos(false)
+    , null(false)
+    {}
+
+    CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet,
+                 const uint16_t _adID, const std::string &_taggerName,
+                 const int32_t _t0CableDelayCorrection,
+                 const int32_t _t1CableDelayCorrection,
+                 const bool _invertedOrdering,
+                 const bool _minos)
+    {
+      name       = moduleNode->GetName();
+      taggerName = _taggerName;
+
+      // Module Dimensions
+      double halfWidth  = auxDet.HalfWidth1();
+      double halfHeight = auxDet.HalfHeight();
+      double halfLength = auxDet.Length()/2;
+
+      // Find world coordinates for edges
+      geo::AuxDetGeo::LocalPoint_t const limits{halfWidth, halfHeight, halfLength};
+      geo::AuxDetGeo::LocalPoint_t const limits2{-halfWidth, -halfHeight, -halfLength};
+
+      auto const limitsWorld  = auxDet.toWorldCoords(limits);
+      auto const limitsWorld2 = auxDet.toWorldCoords(limits2);
+
+      // Which plane within the tagger
+      double origin[3] = {0, 0, 0};
+      double modulePosMother[3];
+      moduleNode->LocalToMaster(origin, modulePosMother);
+
+      if(_minos)
+        orientation = (modulePosMother[2] < 0);
+      else
+        orientation = (modulePosMother[2] > 0);
+
+      // Location of SiPMs
+      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger)
+        top = (orientation == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+      else
+        top = (orientation == 0) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+
+      // Fill edges
+      minX = std::min(limitsWorld.X(), limitsWorld2.X());
+      maxX = std::max(limitsWorld.X(), limitsWorld2.X());
+      minY = std::min(limitsWorld.Y(), limitsWorld2.Y());
+      maxY = std::max(limitsWorld.Y(), limitsWorld2.Y());
+      minZ = std::min(limitsWorld.Z(), limitsWorld2.Z());
+      maxZ = std::max(limitsWorld.Z(), limitsWorld2.Z());
+
+      t0CableDelayCorrection = _t0CableDelayCorrection;
+      t1CableDelayCorrection = _t1CableDelayCorrection;
+
+      invertedOrdering = _invertedOrdering;
+      adID = _adID;
+      minos = _minos;
+
+      null = false;
+    }
+    std::string   name;
+    std::string   taggerName;
+    double        minX;
+    double        maxX;
+    double        minY;
+    double        maxY;
+    double        minZ;
+    double        maxZ;
+    uint16_t      orientation;
+    bool          top;
+    uint16_t      adID;
+    int32_t       t0CableDelayCorrection;
+    int32_t       t1CableDelayCorrection;
+    bool          invertedOrdering;
+    bool          minos;
+    bool          null;
   };
 
   // CRT tagger geometry struct contains dimensions and daughter modules
   struct CRTTaggerGeo{
+    CRTTaggerGeo(const TGeoNode *taggerNode, const TGeoNode *detNode)
+    {
+      // Fill name
+      name = taggerNode->GetName();
+
+      // Tagger Dimensions
+      double halfWidth  = ((TGeoBBox*)taggerNode->GetVolume()->GetShape())->GetDX();
+      double halfHeight = ((TGeoBBox*)taggerNode->GetVolume()->GetShape())->GetDY();
+      double halfLength = ((TGeoBBox*)taggerNode->GetVolume()->GetShape())->GetDZ()/2;
+
+      // Find world coordinates for edges
+      double limits[3] = {halfWidth, halfHeight, halfLength};
+      double limitsDet[3];
+      taggerNode->LocalToMaster(limits, limitsDet);
+      double limitsWorld[3];
+      detNode->LocalToMaster(limitsDet, limitsWorld);
+
+      double limits2[3] = {-halfWidth, -halfHeight, -halfLength};
+      double limitsDet2[3];
+      taggerNode->LocalToMaster(limits2, limitsDet2);
+      double limitsWorld2[3];
+      detNode->LocalToMaster(limitsDet2, limitsWorld2);
+
+      // Fill edges
+      minX = std::min(limitsWorld[0], limitsWorld2[0]);
+      maxX = std::max(limitsWorld[0], limitsWorld2[0]);
+      minY = std::min(limitsWorld[1], limitsWorld2[1]);
+      maxY = std::max(limitsWorld[1], limitsWorld2[1]);
+      minZ = std::min(limitsWorld[2], limitsWorld2[2]);
+      maxZ = std::max(limitsWorld[2], limitsWorld2[2]);
+
+      null = false;
+    }
     std::string name;
-    double minX;
-    double maxX;
-    double minY;
-    double maxY;
-    double minZ;
-    double maxZ;
-    // change to ref?
-    std::map<std::string, CRTModuleGeo> modules;
-    bool null;
+    double      minX;
+    double      maxX;
+    double      minY;
+    double      maxY;
+    double      minZ;
+    double      maxZ;
+    bool        null;
   };
 
 
   class CRTGeoAlg {
   public:
 
-    CRTGeoAlg(geo::GeometryCore const *geometry, geo::AuxDetGeometryCore const *auxdet_geometry);
-    CRTGeoAlg();
+    CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry,
+              geo::AuxDetGeometryCore const *auxdet_geometry);
+
+    CRTGeoAlg(fhicl::ParameterSet const &p = fhicl::ParameterSet());
 
     ~CRTGeoAlg();
 
-    // Return the volume enclosed by the whole CRT system
     std::vector<double> CRTLimits() const;
 
-    // Get the number of taggers in the geometry
     size_t NumTaggers() const;
 
-    // Get the total number of modules in the geometry
     size_t NumModules() const;
 
-    // Get the total number of strips in the geometry
     size_t NumStrips() const;
 
-    // Get the tagger geometry object by name
-    CRTTaggerGeo GetTagger(std::string taggerName) const;
-    // Get the tagger geometry object by index
-    CRTTaggerGeo GetTagger(size_t tagger_i) const;
+    size_t NumSiPMs() const;
 
-    // Get the module geometry object by name
-    CRTModuleGeo GetModule(std::string moduleName) const;
-    // Get the module geometry object by global index
-    CRTModuleGeo GetModule(size_t module_i) const;
+    std::map<std::string, CRTTaggerGeo> GetTaggers() const;
 
-    // Get the strip geometry object by name
-    CRTStripGeo GetStrip(std::string stripName) const;
-    // Get the strip geometry object by global index
-    CRTStripGeo GetStrip(size_t strip_i) const;
+    std::map<std::string, CRTModuleGeo> GetModules() const;
 
-    // Get tagger name from strip or module name
-    std::string GetTaggerName(std::string name) const;
+    std::map<std::string, CRTStripGeo> GetStrips() const;
 
-    // Get the name of the strip from the SiPM channel ID
-    std::string ChannelToStripName(size_t channel) const;
+    std::map<uint16_t, CRTSiPMGeo> GetSiPMs() const;
 
-    // Get the world position of Sipm from the channel ID
-    geo::Point_t ChannelToSipmPosition(size_t channel) const;
-    
-    // Get the sipm channels on a strip
-    std::pair<int, int> GetStripSipmChannels(std::string stripName) const;
+    CRTTaggerGeo GetTagger(const std::string taggerName) const;
 
-    // Recalculate strip limits including charge sharing
-    std::vector<double> StripLimitsWithChargeSharing(std::string stripName, double x, double ex);
+    CRTModuleGeo GetModule(const std::string moduleName) const;
 
-    // Return the distance to a sipm in the plane of the sipms
-    double DistanceBetweenSipms(geo::Point_t position, size_t channel) const;
-    // Returns max distance from sipms in strip
-    double DistanceBetweenSipms(geo::Point_t position, std::string stripName) const;
-    // Return the distance along the strip (from sipm end)
-    double DistanceDownStrip(geo::Point_t position, std::string stripName) const;
+    CRTModuleGeo GetModule(const uint16_t channel) const;
 
-    // Determine if a point is inside CRT volume
-    bool IsInsideCRT(TVector3 point);
-    bool IsInsideCRT(geo::Point_t point);
-    // Determine if a point is inside a tagger by name
-    bool IsInsideTagger(const CRTTaggerGeo& tagger, geo::Point_t point);
-    // Determine if a point is inside a module by name
-    bool IsInsideModule(const CRTModuleGeo& module, geo::Point_t point);
-    // Determine if a point is inside a strip by name
-    bool IsInsideStrip(const CRTStripGeo& strip, geo::Point_t point);
+    CRTModuleGeo GetModuleByAuxDetIndex(const unsigned ad_i) const;
 
-    // Check if two modules overlap in 2D
-    bool CheckOverlap(const CRTModuleGeo& module1, const CRTModuleGeo& module2);
-    // Check is a module overlaps with a perpendicual module in the same tagger
-    bool HasOverlap(const CRTModuleGeo& module);
-    bool StripHasOverlap(std::string stripName);
+    CRTStripGeo GetStrip(const std::string stripName) const;
 
-    // Find the average of the tagger entry and exit points of a true particle trajectory
-    geo::Point_t TaggerCrossingPoint(std::string taggerName, const simb::MCParticle& particle);
-    geo::Point_t TaggerCrossingPoint(const CRTTaggerGeo& tagger, const simb::MCParticle& particle);
-    bool CrossesTagger(const CRTTaggerGeo& tagger, const simb::MCParticle& particle);
-    // Find the average of the module entry and exit points of a true particle trajectory
-    geo::Point_t ModuleCrossingPoint(std::string moduleName, const simb::MCParticle& particle);
-    geo::Point_t ModuleCrossingPoint(const CRTModuleGeo& module, const simb::MCParticle& particle);
-    bool CrossesModule(const CRTModuleGeo& module, const simb::MCParticle& particle);
-    // Find the average of the strip entry and exit points of a true particle trajectory
-    geo::Point_t StripCrossingPoint(std::string stripName, const simb::MCParticle& particle);
-    geo::Point_t StripCrossingPoint(const CRTStripGeo& strip, const simb::MCParticle& particle);
-    bool CrossesStrip(const CRTStripGeo& strip, const simb::MCParticle& particle);
+    CRTStripGeo GetStrip(const uint16_t channel) const;
 
-    // Work out which strips the true particle crosses
-    std::vector<std::string> CrossesStrips(const simb::MCParticle& particle);
+    CRTStripGeo GetStripByAuxDetIndices(const unsigned ad_i, const unsigned ads_i) const;
 
-    // Find the angle of true particle trajectory to tagger
-    double AngleToTagger(std::string taggerName, const simb::MCParticle& particle);
+    CRTSiPMGeo GetSiPM(const uint16_t channel) const;
 
-    // Check if a particle enters the CRT volume
-    bool EntersVolume(const simb::MCParticle& particle);
-    // Check if a particle crosses the CRT volume
-    bool CrossesVolume(const simb::MCParticle& particle);
+    std::string GetTaggerName(const std::string name) const;
 
-    // Determine if a particle would be able to produce a hit in a tagger
-    bool ValidCrossingPoint(std::string taggerName, const simb::MCParticle& particle);
+    std::string ChannelToStripName(const uint16_t channel) const;
 
+    std::string ChannelToTaggerName(const uint16_t channel) const;
+
+    enum CRTTagger ChannelToTaggerEnum(const uint16_t channel) const;
+
+    size_t ChannelToOrientation(const uint16_t channel) const;
+
+    std::array<double, 6> StripHit3DPos(const uint16_t channel, const double x, const double ex);
+
+    std::vector<double> StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
+                                             const double y, const double z);
+
+    std::vector<double> StripWorldToLocalPos(const uint16_t channel, const double x,
+                                             const double y, const double z);
+
+    std::array<double, 6> FEBWorldPos(const CRTModuleGeo &module);
+
+    std::array<double, 6> FEBChannel0WorldPos(const CRTModuleGeo &module);
+
+    geo::Point_t ChannelToSipmPosition(const uint16_t channel) const;
+
+    std::pair<int, int> GetStripSipmChannels(const std::string stripName) const;
+
+    double DistanceDownStrip(const geo::Point_t position, const std::string stripName) const;
+
+    double DistanceDownStrip(const geo::Point_t position, const uint16_t channel) const;
+
+    bool CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer = 0.);
+
+    bool CheckOverlap(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer = 0.);
+
+    bool AdjacentStrips(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer = 0.1);
+
+    bool AdjacentStrips(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer = 0.1);
+
+    bool DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2);
+
+    enum CRTTagger WhichTagger(const double &x, const double &y, const double &z, const double &buffer = 1);
+
+    enum CoordSet GlobalConstrainedCoordinates(const uint16_t channel);
+
+    bool IsPointInsideCRTLimits(const geo::Point_t &point);
 
   private:
 
     std::map<std::string, CRTTaggerGeo> fTaggers;
     std::map<std::string, CRTModuleGeo> fModules;
-    std::map<std::string, CRTStripGeo> fStrips;
-    std::map<int, CRTSipmGeo> fSipms;
+    std::map<std::string, CRTStripGeo>  fStrips;
+    std::map<uint16_t, CRTSiPMGeo>      fSiPMs;
 
-    geo::GeometryCore const* fGeometryService;
-    const geo::AuxDetGeometryCore* fAuxDetGeoCore;
+    geo::GeometryCore const       *fGeometryService;
+    const geo::AuxDetGeometryCore *fAuxDetGeoCore;
 
+    std::vector<std::pair<unsigned, double>> fT0CableLengthCorrectionsVector;
+    std::map<unsigned, double>               fT0CableLengthCorrections;
+    std::vector<std::pair<unsigned, double>> fT1CableLengthCorrectionsVector;
+    std::map<unsigned, double>               fT1CableLengthCorrections;
+    double                                   fDefaultPedestal;
+    std::vector<std::pair<unsigned, double>> fSiPMPedestalsVector;
+    std::map<unsigned, double>               fSiPMPedestals;
+    double                                   fDefaultGain;
+    std::vector<std::pair<unsigned, double>> fSiPMGainsVector;
+    std::map<unsigned, double>               fSiPMGains;
+    std::vector<std::pair<unsigned, bool>>   fChannelInversionVector;
+    std::map<unsigned, bool>                 fChannelInversion;
   };
-
 }
 
 #endif

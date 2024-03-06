@@ -9,9 +9,9 @@ physics.simulate: [ rns
                   , ionandscintout
                   , pdfastsim
                   , pdfastsimout
-                  , simdrift
+                  # , simdrift #1D drift sim no longer run
                   , filter # Adding filter
-                  , mcreco
+                  # , mcreco #mc reco added to detsim
                 ]
 
 

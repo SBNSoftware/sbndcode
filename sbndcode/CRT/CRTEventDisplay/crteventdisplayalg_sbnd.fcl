@@ -1,0 +1,78 @@
+#include "crtsimmodules_sbnd.fcl"
+#include "crtbacktrackeralg_sbnd.fcl"
+
+BEGIN_PROLOG
+
+crteventdisplayalg_sbnd:
+{
+   CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
+
+   SimLabel:         "largeant"
+   SimDepositLabel:  "genericcrt"
+   StripHitLabel:    "crtstrips"
+   ClusterLabel:     "crtclustering"
+   SpacePointLabel:  "crtspacepoints"
+   TrackLabel:       "crttracks"
+
+   DrawTaggers:      true
+   DrawModules:      false
+   DrawFEBs:         false
+   DrawFEBEnds:      false
+   DrawStrips:       false
+   DrawTpc:          true
+   DrawTrueTracks:   true
+   DrawSimDeposits:  false
+   DrawStripHits:    true
+   DrawClusters:     true
+   DrawSpacePoints:  true
+   DrawTracks:       true
+
+   ## If chose taggers is set to true then the vector ChosenTaggers
+   ## is used to determine which taggers are drawn. The integer values
+   ## represent taggers as they are numbered in the enum CRTTagger.
+   ## (see sbnobj/SBND/CRT/CRTEnums.h)
+   ## 0 - Bottom
+   ## 1 - South (upstream)
+   ## 2 - North (downstream)
+   ## 3 - West (beam right)
+   ## 4 - East (beam left)
+   ## 5 - Top Low
+   ## 6 - Top High
+   ChoseTaggers:  false
+   ChosenTaggers: [ 0, 1, 2, 3, 4, 5, 6 ]
+   
+   TaggerColour:             1
+   FEBColour:                2
+   FEBEndColour:             4
+   TpcColour:                15
+   TrueTrackColour:          2
+   SimDepositColour:         8
+   StripHitColour:           4
+   ClusterStartingColour:    800
+   ClusterColourInterval:    20
+   SpacePointColour:         6
+   TrackColour:              9
+
+   MinTime: -200000
+   MaxTime: -150000
+
+   Print:            true
+
+   LineWidth:        3.
+}
+
+crteventdisplayalg_sbnd_feb_layout_debug: @local::crteventdisplayalg_sbnd
+
+crteventdisplayalg_sbnd_feb_layout_debug.DrawTaggers:      false
+crteventdisplayalg_sbnd_feb_layout_debug.DrawModules:      true
+crteventdisplayalg_sbnd_feb_layout_debug.DrawFEBs:         true
+crteventdisplayalg_sbnd_feb_layout_debug.DrawFEBEnds:      true
+crteventdisplayalg_sbnd_feb_layout_debug.DrawStrips:       false
+crteventdisplayalg_sbnd_feb_layout_debug.DrawTpc:          false
+crteventdisplayalg_sbnd_feb_layout_debug.DrawTrueTracks:   false
+crteventdisplayalg_sbnd_feb_layout_debug.DrawSimDeposits:  false
+crteventdisplayalg_sbnd_feb_layout_debug.DrawStripHits:    false
+crteventdisplayalg_sbnd_feb_layout_debug.DrawClusters:     false
+crteventdisplayalg_sbnd_feb_layout_debug.DrawSpacePoints:  false
+
+END_PROLOG

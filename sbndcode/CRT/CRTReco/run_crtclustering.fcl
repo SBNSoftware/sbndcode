@@ -1,0 +1,38 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "crtrecoproducers_sbnd.fcl"
+
+process_name: CRTClustering
+
+services:
+{
+  @table::sbnd_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    crtclustering: @local::crtclusterproducer_sbnd
+  }
+
+  reco:    [ crtclustering ]
+  stream1: [ out1 ]
+
+  trigger_paths: [ reco ]
+  end_paths:     [ stream1 ]
+}

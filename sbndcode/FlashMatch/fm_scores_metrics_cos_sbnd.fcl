@@ -1,0 +1,37 @@
+#include "fm_scores_sbnd.fcl"
+
+physics.producers.fmatch.MakeTree:       true
+physics.producers.fmatch.StoreMCInfo:    true
+physics.producers.fmatch.SelectNeutrino: false
+physics.producers.fmatch.CorrectDriftDistance: false
+physics.producers.fmatch.MinInTimeFlashes:     1 
+# physics.producers.fmatch.MaxFlashes:     1
+# physics.producers.fmatch.FlashFindingTimeStart: @local::sbnd_simple_flashmatch.BeamSpillTimeStart
+# physics.producers.fmatch.FlashFindingTimeEnd:   @local::sbnd_simple_flashmatch.BeamSpillTimeEnd
+
+physics.producers.fmatchara.MakeTree:       true
+physics.producers.fmatchara.StoreMCInfo:    true
+physics.producers.fmatchara.SelectNeutrino: false
+physics.producers.fmatchara.CorrectDriftDistance: false
+physics.producers.fmatchara.MinInTimeFlashes:     1
+# physics.producers.fmatchara.MaxFlashes:     1
+# physics.producers.fmatchara.FlashFindingTimeStart: @local::sbnd_simple_flashmatch.BeamSpillTimeStart
+# physics.producers.fmatchara.FlashFindingTimeEnd:   @local::sbnd_simple_flashmatch.BeamSpillTimeEnd
+
+physics.producers.fmatchop.MakeTree:       true
+physics.producers.fmatchop.StoreMCInfo:    true
+physics.producers.fmatchop.SelectNeutrino: false
+physics.producers.fmatchop.CorrectDriftDistance: false
+physics.producers.fmatchop.MinInTimeFlashes:     1
+# physics.producers.fmatchop.MaxFlashes:     1
+# physics.producers.fmatchop.FlashFindingTimeStart: @local::sbnd_simple_flashmatch.BeamSpillTimeStart
+# physics.producers.fmatchop.FlashFindingTimeEnd:   @local::sbnd_simple_flashmatch.BeamSpillTimeEnd
+
+physics.producers.fmatchopara.MakeTree:       true
+physics.producers.fmatchopara.StoreMCInfo:    true
+physics.producers.fmatchopara.SelectNeutrino: false
+physics.producers.fmatchopara.CorrectDriftDistance: false
+physics.producers.fmatchopara.MinInTimeFlashes:     1
+# physics.producers.fmatchopara.MaxFlashes:     1
+# physics.producers.fmatchopara.FlashFindingTimeStart: @local::sbnd_simple_flashmatch.BeamSpillTimeStart
+# physics.producers.fmatchopara.FlashFindingTimeEnd:   @local::sbnd_simple_flashmatch.BeamSpillTimeEnd

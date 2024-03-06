@@ -1,4 +1,0 @@
-23rd September 2020
-'standard' contains the fcl files for processing g4, detsim, reco and anatree through the usual workflow
-'base' various groups of fcls which should all produce output.  It includes runnable fcls that the 'standard' fcls inherit from.  It also contains developer-level fcls (such as optical library production)
-If you're unsure which fcls you need, you most likely want the fcls in the 'standard' directory

@@ -1,3 +1,0 @@
-#include "g4_sce_dirt_filter_lite_wc.fcl"
-
-process_name: G4Var

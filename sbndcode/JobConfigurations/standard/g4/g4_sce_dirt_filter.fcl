@@ -1,4 +1,4 @@
 # Runs standard g4 fcl without largeant designed for use with gen stage fcls that run a largeant dirt filter with sce
 #include "g4_dirt_filter.fcl"
 
-#include "enable_spacecharge_services_sbnd.fcl"
+#include "enable_spacecharge_services_sbnd_2D_DriftSimOnly.fcl"

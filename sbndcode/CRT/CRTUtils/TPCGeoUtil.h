@@ -1,14 +1,7 @@
 #ifndef CRT_TPCGEOUTIL_H_
 #define CRT_TPCGEOUTIL_H_
 // framework
-#include "art/Framework/Principal/Event.h"
-#include "art/Framework/Core/ModuleMacros.h"
-#include "fhiclcpp/ParameterSet.h" 
-#include "art/Framework/Principal/Handle.h" 
-#include "canvas/Persistency/Common/Ptr.h" 
-#include "canvas/Persistency/Common/PtrVector.h" 
-#include "art/Framework/Services/Registry/ServiceHandle.h" 
-#include "messagefacility/MessageLogger/MessageLogger.h" 
+#include "canvas/Persistency/Common/Ptr.h"
 
 // LArSoft
 #include "larcorealg/Geometry/fwd.h"
@@ -19,8 +12,7 @@
 // c++
 #include <vector>
 
-namespace sbnd {
-namespace TPCGeoUtil {
+namespace sbnd::TPCGeoUtil {
   int DetectedInTPC(std::vector<art::Ptr<recob::Hit>> const& hits);
   // Work out the drift limits for a collection of hits
   std::pair<double, double> XLimitsFromHits(const geo::GeometryCore *GeometryService,
@@ -29,6 +21,5 @@ namespace TPCGeoUtil {
   bool InsideTPC(geo::Point_t point, const geo::TPCGeo& tpc, double buffer);
   int DriftDirectionFromHits(const geo::GeometryCore *GeometryService,
                              std::vector<art::Ptr<recob::Hit>> const& hits);
-} // namespace TPCGeoUtil
-} // namespace sbnd
+} // namespace sbnd::TPCGeoUtil
 #endif

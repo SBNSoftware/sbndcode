@@ -1,0 +1,17 @@
+#include "crteventdisplayalg_sbnd.fcl"
+
+BEGIN_PROLOG
+
+crteventdisplay_sbnd:
+{
+   EventDisplayConfig: @local::crteventdisplayalg_sbnd
+   module_type:        "CRTEventDisplay"
+}
+
+crteventdisplay_sbnd_feb_layout_debug:
+{
+   EventDisplayConfig: @local::crteventdisplayalg_sbnd_feb_layout_debug
+   module_type:        "CRTEventDisplay"
+}
+
+END_PROLOG
