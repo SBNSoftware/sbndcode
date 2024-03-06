@@ -23,6 +23,7 @@
 #include "canvas/Persistency/Common/FindMany.h"
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Utilities/InputTag.h"
+#include "sbnobj/Common/EventGen/MeVPrtl/MeVPrtlTruth.h"
 
 // LArSoft includes
 #include "larcore/Geometry/Geometry.h"
@@ -336,6 +337,22 @@ private:
   std::vector<Int_t>     genie_ND;
   std::vector<Int_t>     genie_mother;
 
+  // Event Tree: MeVPrtl Truth
+  int n_hnl;
+  std::vector<double> mevprtl_decay_pos_x, mevprtl_decay_pos_y, mevprtl_decay_pos_z, mevprtl_decay_pos_t;
+  std::vector<double> mevprtl_mom_x, mevprtl_mom_y, mevprtl_mom_z, mevprtl_mom_e;
+  std::vector<double> mevprtl_mass;
+  // Event Tree: MC Truth info (HNL only)
+  std::vector<double> truth_decay_pos_x, 
+                      truth_decay_pos_y, 
+                      truth_decay_pos_z, 
+                      truth_decay_pos_t;
+  std::vector<double> truth_mom_x, 
+                      truth_mom_y, 
+                      truth_mom_z, 
+                      truth_mom_e;
+  std::vector<double> truth_pdg; 
+  
   //MCParticle Info
   size_t MaxMCParticles = 0;
   Int_t     mcpart_no_primaries;                 
@@ -415,6 +432,7 @@ private:
   bool freadMuonTracks;    ///< Add MuonTracks to output (to be set via fcl)
   bool freadMuonHits;      ///< Add MuonTrack hits to output(to be set via fcl)
   bool freadTruth;         ///< Add Truth info to output (to be set via fcl)
+  bool fReadMeVPrtl;       ///< Add MeVPrtl info to output (to be set via fcl)
   bool freadMCParticle;    ///< Add MCParticle info to output (to be set via fcl)
   bool freadpmtTrigger;    ///< Add pmt hardware trigger info to output (to be set via fcl)
   bool freadpmtSoftTrigger;///< Add pmt software trigger info to output (to be set via fcl)
@@ -494,6 +512,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadMCParticle    = p.get<bool>("readMCParticle",false);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
+  fReadMeVPrtl       = p.get<bool>("ReadMeVPrtl",false);;
 
   fWindow            = p.get<int>("window",100);
   fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
@@ -1337,6 +1356,106 @@ void Hitdumper::analyze(const art::Event& evt)
 
   }//if (fReadTruth){
 
+  if (fReadMeVPrtl)
+  {
+
+    // Clean up vectors before filling
+    mevprtl_decay_pos_x.clear();
+    mevprtl_decay_pos_y.clear();
+    mevprtl_decay_pos_z.clear();
+    mevprtl_decay_pos_t.clear();
+    mevprtl_mom_x.clear();
+    mevprtl_mom_y.clear();
+    mevprtl_mom_z.clear();
+    mevprtl_mom_e.clear();
+    mevprtl_mass.clear();
+    truth_decay_pos_x.clear();
+    truth_decay_pos_y.clear();
+    truth_decay_pos_z.clear();
+    truth_decay_pos_t.clear();
+    truth_mom_x.clear();
+    truth_mom_y.clear();
+    truth_mom_z.clear();
+    truth_mom_e.clear();
+    truth_pdg.clear();
+    n_hnl = 0;
+
+    // Get MeVPrtl (HNL)
+    art::Handle<std::vector<evgen::ldm::MeVPrtlTruth>> mevptHandle;
+    std::string fMeVPrtlTruthModuleLabel="generator";
+    evt.getByLabel(fMeVPrtlTruthModuleLabel, mevptHandle);
+    std::vector<art::Ptr<evgen::ldm::MeVPrtlTruth>> mevptVec;
+    if (mevptHandle.isValid()) art::fill_ptr_vector(mevptVec, mevptHandle);
+    std::cout<<"MeVPrtl: "<<mevptVec.size()<<std::endl;
+    std::cout<<"MeVPrtl: "<<mevptHandle.isValid()<<std::endl;
+    std::cout<<"MeVPrtl: here!"<<std::endl;
+    for (auto const &mevpt: mevptVec)
+      {
+        std::cout<<"MeVPrtl: "<<mevpt->mass<<std::endl;
+        mevprtl_decay_pos_x.push_back(mevpt->decay_pos.X()); 
+        mevprtl_decay_pos_y.push_back(mevpt->decay_pos.Y()); 
+        mevprtl_decay_pos_z.push_back(mevpt->decay_pos.Z()); 
+        mevprtl_decay_pos_t.push_back(mevpt->decay_pos.T());
+
+        mevprtl_mom_x.push_back(mevpt->mevprtl_mom.X());
+        mevprtl_mom_y.push_back(mevpt->mevprtl_mom.Y());
+        mevprtl_mom_z.push_back(mevpt->mevprtl_mom.Z());
+        mevprtl_mom_e.push_back(mevpt->mevprtl_mom.E());
+        mevprtl_mass.push_back(mevpt->mass);
+        n_hnl++;
+      }
+      
+    // Get All MCTruth handles
+    std::vector<art::Handle<std::vector<simb::MCTruth>>> MCTruthHandles = evt.getMany<std::vector<simb::MCTruth>>();
+
+      //Loop over handles
+    for(auto const& MCTruthHandle : MCTruthHandles)
+      {
+        std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
+        art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
+
+        //Loop over MCTruths in handle
+        for(auto const& truth : MCTruthVec)
+        {
+          const bool _is_hnl = truth->Origin() == 0; // 0: HNL, everything else: cosmics
+          if (!_is_hnl) continue;
+          
+          int N = truth->NParticles();
+        
+          for (int i = 0; i < N; ++i) // Loop over particles in simb::MCtruth
+          {
+            const simb::MCParticle &nu = truth->GetParticle(i);
+            float E = nu.E();
+            const int pdg = nu.PdgCode();
+
+            const TLorentzVector &v4_f = nu.EndPosition();
+            const TLorentzVector &p4_f = nu.EndMomentum();
+
+            auto x_f = v4_f.X();
+            auto y_f = v4_f.Y();
+            auto z_f = v4_f.Z();
+            auto t_f = v4_f.T();
+
+            auto px_f = p4_f.X();
+            auto py_f = p4_f.Y();
+            auto pz_f = p4_f.Z();
+
+            truth_decay_pos_x.push_back(x_f);
+            truth_decay_pos_y.push_back(y_f);
+            truth_decay_pos_z.push_back(z_f);
+            truth_decay_pos_t.push_back(t_f);
+            truth_mom_x      .push_back(px_f);
+            truth_mom_y      .push_back(py_f);
+            truth_mom_z      .push_back(pz_f);
+            truth_mom_e      .push_back(E);
+            truth_pdg        .push_back(pdg);
+            
+          }
+        }
+
+      }
+  }
+
 
 
   fTree->Fill();
@@ -1522,6 +1641,27 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("genie_trackID",&genie_trackID);
     fTree->Branch("genie_ND",&genie_ND);
     fTree->Branch("genie_mother",&genie_mother);
+  }
+  if (fReadMeVPrtl)
+  {
+    fTree->Branch("n_hnl",&n_hnl,"n_hnl/I");
+    fTree->Branch("mevprtl_decay_pos_x",&mevprtl_decay_pos_x);
+    fTree->Branch("mevprtl_decay_pos_y",&mevprtl_decay_pos_y);
+    fTree->Branch("mevprtl_decay_pos_z",&mevprtl_decay_pos_z);
+    fTree->Branch("mevprtl_decay_pos_t",&mevprtl_decay_pos_t);
+    fTree->Branch("mevprtl_mom_x",&mevprtl_mom_x);
+    fTree->Branch("mevprtl_mom_y",&mevprtl_mom_y);
+    fTree->Branch("mevprtl_mom_z",&mevprtl_mom_z);
+    fTree->Branch("mevprtl_mom_e",&mevprtl_mom_e);
+    fTree->Branch("truth_decay_pos_x",&truth_decay_pos_x);
+    fTree->Branch("truth_decay_pos_y",&truth_decay_pos_y);
+    fTree->Branch("truth_decay_pos_z",&truth_decay_pos_z);
+    fTree->Branch("truth_decay_pos_t",&truth_decay_pos_t);
+    fTree->Branch("truth_mom_x",&truth_mom_x);
+    fTree->Branch("truth_mom_y",&truth_mom_y);
+    fTree->Branch("truth_mom_z",&truth_mom_z);
+    fTree->Branch("truth_mom_e",&truth_mom_e);
+    fTree->Branch("truth_pdg",&truth_pdg);
   }
   if (freadMCParticle){
     //MCParticle
