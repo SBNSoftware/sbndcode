@@ -1,15 +1,8 @@
-#include "config_HNLPiZeroAna.fcl"
-#include "reco_sbnd.fcl"
+#include "run_HNLPiZeroAna.fcl"
 
-process_name: HNLAna
-
-physics.analyzers.hnlana:       @local::hnlana
-
-physics.weight_paths: [ fluxweight ]
-physics.ana: [ hnlana ]
+physics.weight_paths: [ rns, fluxweight ]
 
 physics.trigger_paths: [ weight_paths ]
-physics.end_paths:     [ ana ]
 
 physics.analyzers.hnlana.EventWeightModuleLabels: ["fluxweight"]
 physics.analyzers.hnlana.PiZeroAna: false

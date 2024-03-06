@@ -1,0 +1,67 @@
+#include "rootoutput_sbnd.fcl"
+#include "services_sbnd.fcl"
+#include "geometry_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+
+#include "larproperties.fcl"
+#include "backtrackerservice.fcl"
+#include "detectorproperties_sbnd.fcl"
+#include "particleinventoryservice.fcl"
+#include "photonbacktrackerservice.fcl"
+#include "mccheatermodules.fcl"
+
+#include "reco_sbnd.fcl"
+
+process_name: HNLPiZeroAnalyzer
+
+services:
+{
+	TFileService: { fileName: "hnlpizero_ana_%p-%tc.root"}
+	@table::sbnd_services
+	ParticleInventoryService: @local::sbnd_particleinventoryservice
+	BackTrackerService: @local::sbnd_backtrackerservice
+  	# Load the service that manages root files for histograms.
+      	message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+        FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+	@table::sbnd_services              # from services_sbnd.fcl
+	@table::sbnd_random_services       # from services_sbnd.fcl; required by fuzzyCluster
+	@table::sbnd_g4_services           # from simulationservices_sbnd.fcl; required by opt0finder
+	LArFFT:                    @local::sbnd_larfft
+	SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+        ChannelStatusService:      @local::sbnd_channelstatus
+}
+
+source:
+{
+	module_type: RootInput
+}
+
+physics:
+{
+
+	producers:
+	{
+	    	rns:                 
+		{ 
+			module_type: RandomNumberSaver 
+		}
+
+		fluxweight:                  @local::sbn_eventweight_flux
+		systtools:                   @local::sbn_systtools
+		geant4weight:                @local::sbn_eventweight_geant4
+
+	}
+	analyzers:
+	{
+		hnlana: 
+		{
+			module_type: HNLPiZeroAnalysis
+		}
+	}
+
+	ana: [ hnlana ]
+	
+	end_paths: [ ana ]
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
