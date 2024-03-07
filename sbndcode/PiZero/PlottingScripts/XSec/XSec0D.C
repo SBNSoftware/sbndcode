@@ -224,6 +224,14 @@ void MakeSummaryPlot(const int type, const Selections selections, const TString 
       title->SetX2NDC(.8);
       gPad->Modified();
       gPad->Update();
+
+      if(selection_i == selections.size() - 1)
+        {
+          TLegend *leg = new TLegend(.35, .6, .7, .8);
+          leg->AddEntry(hist, "Nominal + Stat", "le");
+          leg->AddEntry(geniePred, "GENIEv3 AR23_20i_00_000", "l");
+          leg->Draw();
+        }
     }
 
   canvas->SaveAs(saveDir + "/nominal_genie_compare.png");
