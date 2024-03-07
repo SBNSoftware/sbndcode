@@ -9,6 +9,7 @@ std::vector<double> *slc_best_pzc_pizero_mom = 0, *slc_best_pzc_invariant_mass =
 
 std::vector<size_t> *slc_best_pzc_photon_0_id = 0, *slc_best_pzc_photon_1_id = 0;
 std::vector<int> *slc_best_pzc_photon_0_true_trackid = 0, *slc_best_pzc_photon_1_true_trackid = 0;
+std::vector<float> *slc_best_pzc_photon_0_comp = 0, *slc_best_pzc_photon_1_comp = 0, *slc_best_pzc_photon_0_pur = 0, *slc_best_pzc_photon_1_pur = 0;
 
 std::vector<std::vector<double>> *slc_true_pz_pizero_mom = 0, *slc_true_pz_cos_theta_pizero = 0, *slc_pfp_shower_dir_x = 0,
   *slc_pfp_shower_dir_y = 0, *slc_pfp_shower_dir_z = 0, *slc_pfp_track_dir_x = 0, *slc_pfp_track_dir_y = 0, *slc_pfp_track_dir_z = 0,
@@ -322,10 +323,12 @@ std::vector<double> GetCovMatrix(const TString productionVersion, const bool dia
 
           if(signal && slc_sel_incl->at(slc_i))
             {
-              const bool goodReco = (slc_best_pzc_photon_0_true_trackid->at(slc_i) == slc_true_pz_gamma0_trackid->at(slc_i).at(0) &&
-                                     slc_best_pzc_photon_1_true_trackid->at(slc_i) == slc_true_pz_gamma1_trackid->at(slc_i).at(0)) ||
-                (slc_best_pzc_photon_0_true_trackid->at(slc_i) == slc_true_pz_gamma1_trackid->at(slc_i).at(0) &&
-                 slc_best_pzc_photon_1_true_trackid->at(slc_i) == slc_true_pz_gamma0_trackid->at(slc_i).at(0));
+              const bool goodReco = ((slc_best_pzc_photon_0_true_trackid->at(slc_i) == slc_true_pz_gamma0_trackid->at(slc_i).at(0) &&
+                                      slc_best_pzc_photon_1_true_trackid->at(slc_i) == slc_true_pz_gamma1_trackid->at(slc_i).at(0)) ||
+                                     (slc_best_pzc_photon_0_true_trackid->at(slc_i) == slc_true_pz_gamma1_trackid->at(slc_i).at(0) &&
+                                      slc_best_pzc_photon_1_true_trackid->at(slc_i) == slc_true_pz_gamma0_trackid->at(slc_i).at(0)))
+                && slc_best_pzc_photon_0_comp->at(slc_i) > .8 && slc_best_pzc_photon_1_comp->at(slc_i) > .8
+                && slc_best_pzc_photon_0_pur->at(slc_i) > .8 && slc_best_pzc_photon_1_pur->at(slc_i) > .8;
 
               /*
                 if(!goodReco)
@@ -418,6 +421,10 @@ void InitialiseTree(TChain *tree)
   tree->SetBranchAddress("slc_best_pzc_photon_1_id", &slc_best_pzc_photon_1_id);
   tree->SetBranchAddress("slc_best_pzc_photon_0_true_trackid", &slc_best_pzc_photon_0_true_trackid);
   tree->SetBranchAddress("slc_best_pzc_photon_1_true_trackid", &slc_best_pzc_photon_1_true_trackid);
+  tree->SetBranchAddress("slc_best_pzc_photon_0_comp", &slc_best_pzc_photon_0_comp);
+  tree->SetBranchAddress("slc_best_pzc_photon_1_comp", &slc_best_pzc_photon_1_comp);
+  tree->SetBranchAddress("slc_best_pzc_photon_0_pur", &slc_best_pzc_photon_0_pur);
+  tree->SetBranchAddress("slc_best_pzc_photon_1_pur", &slc_best_pzc_photon_1_pur);
   tree->SetBranchAddress("slc_true_pz_pizero_mom", &slc_true_pz_pizero_mom);
   tree->SetBranchAddress("slc_true_pz_cos_theta_pizero", &slc_true_pz_cos_theta_pizero);
   tree->SetBranchAddress("slc_pfp_shower_dir_x", &slc_pfp_shower_dir_x);

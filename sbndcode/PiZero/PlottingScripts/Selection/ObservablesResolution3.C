@@ -23,19 +23,16 @@ void ObservablesResolution3(const TString productionVersion)
   const double cosThetaBins[10] = { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. };
 
   TH1F *hInvariantMass = new TH1F("hInvariantMass", ";M_{#gamma#gamma} (MeV/c^{2});#pi^{0}", 50, 0, 500);
+  TH1F *hInvariantMassCorr = new TH1F("hInvariantMassCorr", ";M_{#gamma#gamma} (MeV/c^{2});#pi^{0}", 50, 0, 500);
   TH1F *hInvariantMassFitted = new TH1F("hInvariantMassFitted", ";M_{#gamma#gamma} (MeV/c^{2});#pi^{0}", 50, 0, 500);
 
   TH1F *hPiZeroMom = new TH1F("hPiZeroMom", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
+  TH1F *hPiZeroMomCorr = new TH1F("hPiZeroMomCorr", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
   TH1F *hPiZeroMomFitted = new TH1F("hPiZeroMomFitted", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
 
-  TH1F *hPiZeroMomResolution = new TH1F("hPiZeroMomResolution", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
-  TH1F *hPiZeroMomResolutionFitted = new TH1F("hPiZeroMomResolutionFitted", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
-
-  TH1F *hCosThetaPiZero = new TH1F("hCosThetaPiZero", ";cos(#theta_{#pi^{0}});#pi^{0}", 9, cosThetaBins);
-  TH1F *hCosThetaPiZeroFitted = new TH1F("hCosThetaPiZeroFitted", ";cos(#theta_{#pi^{0}});#pi^{0}", 9, cosThetaBins);
-
-  TH1F *hCosThetaPiZeroResolution = new TH1F("hCosThetaPiZeroResolution", ";cos(#theta_{#pi^{0}}) (Reco - True);#pi^{0}", 50, -2, 3);
-  TH1F *hCosThetaPiZeroResolutionFitted = new TH1F("hCosThetaPiZeroResolutionFitted", ";cos(#theta_{#pi^{0}}) (Reco - True);#pi^{0}", 50, -2, 3);
+  TH1F *hPiZeroMomResolution = new TH1F("hPiZeroMomResolution", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -310, 390);
+  TH1F *hPiZeroMomResolutionCorr = new TH1F("hPiZeroMomResolutionCorr", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -310, 390);
+  TH1F *hPiZeroMomResolutionFitted = new TH1F("hPiZeroMomResolutionFitted", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -310, 390);
 
   const int N = ncpizeroEvents->GetEntries();
 
@@ -49,6 +46,18 @@ void ObservablesResolution3(const TString productionVersion)
         {
           if(slc_true_event_type_incl->at(slc_i) == 0 && slc_comp->at(slc_i) > .5 && slc_sel_incl->at(slc_i))
             {
+              const bool goodReco = ((slc_best_pzc_photon_0_true_trackid->at(slc_i) == slc_true_pz_gamma0_trackid->at(slc_i).at(0) &&
+                                      slc_best_pzc_photon_1_true_trackid->at(slc_i) == slc_true_pz_gamma1_trackid->at(slc_i).at(0)) ||
+                                     (slc_best_pzc_photon_0_true_trackid->at(slc_i) == slc_true_pz_gamma1_trackid->at(slc_i).at(0) &&
+                                      slc_best_pzc_photon_1_true_trackid->at(slc_i) == slc_true_pz_gamma0_trackid->at(slc_i).at(0)))
+                && slc_best_pzc_photon_0_comp->at(slc_i) > .8 && slc_best_pzc_photon_1_comp->at(slc_i) > .8
+                && slc_best_pzc_photon_0_pur->at(slc_i) > .8 && slc_best_pzc_photon_1_pur->at(slc_i) > .8;
+
+              /*
+                if(!goodReco)
+                continue;
+              */
+
               ++nsig;
 
               const double en0 = slc_pfp_shower_energy->at(slc_i).at(slc_best_pzc_photon_0_id->at(slc_i));
@@ -82,20 +91,17 @@ void ObservablesResolution3(const TString productionVersion)
               const double invariantMassFitted = TMath::Sqrt(2 * updated[0] * updated[1] * (1 - cos(updated[2])));
               const double pizeroMomFitted     = TMath::Sqrt(TMath::Power(updated[0] + updated[1], 2) - TMath::Power(kPiZeroMass, 2));
 
-              hInvariantMass->Fill(invariantMass);
+              hInvariantMass->Fill(slc_best_pzc_invariant_mass->at(slc_i));
+              hInvariantMassCorr->Fill(invariantMass);
               hInvariantMassFitted->Fill(invariantMassFitted);
 
-              hPiZeroMom->Fill(pizeroMom.Mag());
+              hPiZeroMom->Fill(slc_best_pzc_pizero_mom->at(slc_i));
+              hPiZeroMomCorr->Fill(pizeroMom.Mag());
               hPiZeroMomFitted->Fill(pizeroMomFitted);
 
-              hPiZeroMomResolution->Fill(pizeroMom.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
+              hPiZeroMomResolution->Fill(slc_best_pzc_pizero_mom->at(slc_i) - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
+              hPiZeroMomResolutionCorr->Fill(pizeroMom.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
               hPiZeroMomResolutionFitted->Fill(pizeroMomFitted - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
-
-              hCosThetaPiZero->Fill(cos(pizeroMom.Angle(zaxis)));
-              //              hCosThetaPiZeroFitted->Fill();
-
-              hCosThetaPiZeroResolution->Fill(cos(pizeroMom.Angle(zaxis)) - slc_true_pz_cos_theta_pizero->at(slc_i).at(0));
-              //              hCosThetaPiZeroResolutionFitted->Fill();
             }
         }
     }
@@ -106,18 +112,21 @@ void ObservablesResolution3(const TString productionVersion)
   cInvariantMass->cd();
 
   hInvariantMass->SetLineColor(kMagenta+2);
+  hInvariantMassCorr->SetLineColor(kOrange+2);
   hInvariantMassFitted->SetLineColor(kCyan+2);
 
   hInvariantMassFitted->Draw();
+  hInvariantMassCorr->Draw("same");
   hInvariantMass->Draw("same");
 
   TLine *nominalLine = new TLine();
   nominalLine->SetLineColor(kRed+2);
   nominalLine->SetLineWidth(5);
-  nominalLine->DrawLine(134.9769, 0., 134.9769, 1.05 * hInvariantMass->GetMaximum());
+  nominalLine->DrawLine(134.9769, 0., 134.9769, 1.05 * hInvariantMassFitted->GetMaximum());
 
   TLegend *lInvariantMass = new TLegend(.6, .4, .85, .6);
-  lInvariantMass->AddEntry(hInvariantMass, "Corrections", "l");
+  lInvariantMass->AddEntry(hInvariantMass, "Original", "l");
+  lInvariantMass->AddEntry(hInvariantMassCorr, "Corrected", "l");
   lInvariantMass->AddEntry(hInvariantMassFitted, "Kinematic Fitting", "l");
   lInvariantMass->Draw();
 
@@ -128,13 +137,16 @@ void ObservablesResolution3(const TString productionVersion)
   cPiZeroMom->cd();
 
   NormaliseEntriesByBinWidth(hPiZeroMom);
+  NormaliseEntriesByBinWidth(hPiZeroMomCorr);
   NormaliseEntriesByBinWidth(hPiZeroMomFitted);
 
   hPiZeroMom->SetLineColor(kMagenta+2);
+  hPiZeroMomCorr->SetLineColor(kOrange+2);
   hPiZeroMomFitted->SetLineColor(kCyan+2);
 
-  hPiZeroMomFitted->Draw("hist");
-  hPiZeroMom->Draw("histsame");
+  hPiZeroMom->Draw("hist");
+  hPiZeroMomCorr->Draw("histsame");
+  hPiZeroMomFitted->Draw("histsame");
 
   lInvariantMass->Draw();
 
@@ -145,47 +157,35 @@ void ObservablesResolution3(const TString productionVersion)
   cPiZeroMomResolution->cd();
 
   hPiZeroMomResolution->SetLineColor(kMagenta+2);
+  hPiZeroMomResolutionCorr->SetLineColor(kOrange+2);
   hPiZeroMomResolutionFitted->SetLineColor(kCyan+2);
 
-  std::cout << "\nStandard === Mean: " << hPiZeroMomResolution->GetMean() << " SD: " << hPiZeroMomResolution->GetStdDev() << std::endl;
-  std::cout << "Fitted   === Mean: " << hPiZeroMomResolutionFitted->GetMean() << " SD: " << hPiZeroMomResolutionFitted->GetStdDev() << '\n' << std::endl;
-
-  hPiZeroMomResolutionFitted->Draw("hist");
+  hPiZeroMomResolutionCorr->Draw("histsame");
   hPiZeroMomResolution->Draw("histsame");
+  hPiZeroMomResolutionFitted->Draw("histsame");
+
+  TPaveText *text = new TPaveText(.6, .65, .68, .75, "NDC");
+  text->AddText("Standard");
+  text->AddText("Corrected");
+  text->AddText("Fitted");
+  text->SetTextAlign(12);
+  text->SetTextSize(0.02);
+  text->SetBorderSize(0);
+  text->SetFillColor(kWhite);
+  text->Draw();
+
+  TPaveText *text2 = new TPaveText(.68, .65, .85, .75, "NDC");
+  text2->AddText(Form("Mean: %.2f MeV/c #sigma: %.2f MeV/c", hPiZeroMomResolution->GetMean(), hPiZeroMomResolution->GetStdDev()));
+  text2->AddText(Form("Mean: %.2f MeV/c #sigma: %.2f MeV/c", hPiZeroMomResolutionCorr->GetMean(), hPiZeroMomResolutionCorr->GetStdDev()));
+  text2->AddText(Form("Mean: %.2f MeV/c #sigma: %.2f MeV/c", hPiZeroMomResolutionFitted->GetMean(), hPiZeroMomResolutionFitted->GetStdDev()));
+  text2->SetTextAlign(12);
+  text2->SetTextSize(0.02);
+  text2->SetBorderSize(0);
+  text2->SetFillColor(kWhite);
+  text2->Draw();
 
   lInvariantMass->Draw();
 
   cPiZeroMomResolution->SaveAs(saveDir + "/pizero_mom_resolution.png");
   cPiZeroMomResolution->SaveAs(saveDir + "/pizero_mom_resolution.pdf");
-
-  TCanvas *cCosThetaPiZero = new TCanvas("cCosThetaPiZero", "cCosThetaPiZero");
-  cCosThetaPiZero->cd();
-
-  NormaliseEntriesByBinWidth(hCosThetaPiZero);
-  NormaliseEntriesByBinWidth(hCosThetaPiZeroFitted);
-
-  hCosThetaPiZero->SetLineColor(kMagenta+2);
-  hCosThetaPiZeroFitted->SetLineColor(kCyan+2);
-
-  hCosThetaPiZeroFitted->Draw("hist");
-  hCosThetaPiZero->Draw("histsame");
-
-  lInvariantMass->Draw();
-
-  cCosThetaPiZero->SaveAs(saveDir + "/cos_theta_pizero.png");
-  cCosThetaPiZero->SaveAs(saveDir + "/cos_theta_pizero.pdf");
-
-  TCanvas *cCosThetaPiZeroResolution = new TCanvas("cCosThetaPiZeroResolution", "cCosThetaPiZeroResolution");
-  cCosThetaPiZeroResolution->cd();
-
-  hCosThetaPiZeroResolution->SetLineColor(kMagenta+2);
-  hCosThetaPiZeroResolutionFitted->SetLineColor(kCyan+2);
-
-  hCosThetaPiZeroResolutionFitted->Draw("hist");
-  hCosThetaPiZeroResolution->Draw("histsame");
-
-  lInvariantMass->Draw();
-
-  cCosThetaPiZeroResolution->SaveAs(saveDir + "/cos_theta_pizero_resolution.png");
-  cCosThetaPiZeroResolution->SaveAs(saveDir + "/cos_theta_pizero_resolution.pdf");
 }
