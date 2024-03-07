@@ -8,15 +8,8 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDAnalyzer.h"
-#include "art/Framework/Core/ModuleMacros.h"
-#include "art/Framework/Principal/Event.h"
-#include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Principal/Run.h"
-#include "art/Framework/Principal/SubRun.h"
-#include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
-#include "larcore/Geometry/Geometry.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
+#include "larcore/Geometry/WireReadout.h"
 
 #include "sbndcode/ChannelMaps/TPC/TPCChannelMapService.h"
 
@@ -41,22 +34,16 @@ public:
   SBNDGeoHelper& operator=(SBNDGeoHelper const&) = delete;
   SBNDGeoHelper& operator=(SBNDGeoHelper&&) = delete;
 
-  // Required functions.
-  void analyze(art::Event const& e) override;
-
 private:
-
-  // Declare member data here.
-
+  void analyze(art::Event const& e) override {}
 };
 
 
 util::SBNDGeoHelper::SBNDGeoHelper(fhicl::ParameterSet const& p)
-  : EDAnalyzer{p}  // ,
-  // More initializers here.
+  : EDAnalyzer{p}
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
-  art::ServiceHandle<geo::Geometry> geo;
+  art::ServiceHandle<geo::WireReadout> wireReadout;
   art::ServiceHandle<SBND::TPCChannelMapService> channelMap;
 
   int input = -1;
@@ -75,7 +62,7 @@ util::SBNDGeoHelper::SBNDGeoHelper(fhicl::ParameterSet const& p)
       cout<<"Wire number: ";
       cin>>wire;
       geo::WireID wireid(0,tpc,plane,wire);
-      auto const & channel = geo->PlaneWireToChannel(wireid);
+      auto const & channel = wireReadout->Get().PlaneWireToChannel(wireid);
       auto const & chaninfo = channelMap->GetChanInfoFromOfflChan(channel);
       cout<<"##############################"<<endl;
       cout<<"TPC             = "<<tpc<<endl;
@@ -92,11 +79,6 @@ util::SBNDGeoHelper::SBNDGeoHelper(fhicl::ParameterSet const& p)
     }
   }
 
-}
-
-void util::SBNDGeoHelper::analyze(art::Event const& e)
-{
-  // Implementation of required member function here.
 }
 
 DEFINE_ART_MODULE(util::SBNDGeoHelper)
