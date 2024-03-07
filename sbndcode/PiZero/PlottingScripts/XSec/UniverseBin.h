@@ -59,7 +59,7 @@ class UniverseBin {
   {
     _purity      = (_count - _bkgdCount) / _count;
     _efficiency  = (_count - _bkgdCount) / _trueSignal;
-    _fracStatErr = std::sqrt(_count + _bkgdCount) / (_count - _bkgdCount);
+    _fracStatErr = std::sqrt(_count - _bkgdCount) / (_count - _bkgdCount);
   }
 
   void CalculateXSecPurity()
