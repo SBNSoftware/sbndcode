@@ -10,4 +10,4 @@ g4_sce_dirt_filter.fcl
 detsim_sce.fcl
 reco1_sce.fcl
 reco2_sce.fcl
-cafmakerjob_sbnd_sce_genie_and_fluxwgt.fcl
+cafmakerjob_sbnd_sce_systtools_and_fluxwgt.fcl

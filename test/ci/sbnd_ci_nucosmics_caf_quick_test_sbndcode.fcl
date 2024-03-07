@@ -1,13 +1,14 @@
-#include "cafmakerjob_sbnd_sce_genie_and_fluxwgt.fcl"
+#include "eventweight_genie_systtools_test.fcl"
+#include "cafmakerjob_sbnd_sce_systtools_and_fluxwgt.fcl"
 
 services.NuRandomService.policy: "perEvent"
 
 # Have to specify the caf name to match what the CI expects,
 # currently no way of controlling this from the command line
 
-physics.producers.cafmaker.CAFFilename: "nucosmics_caf_test_sbndcode_Current.caf.root"
+physics.producers.systtools: @local::sbn_systtools_test
 
-physics.producers.genieweight.multisim.number_of_multisims: 5
+physics.producers.cafmaker.CAFFilename: "nucosmics_caf_test_sbndcode_Current.caf.root"
 
 physics.producers.fluxweight.horncurrent.number_of_multisims: 5
 physics.producers.fluxweight.expskin.number_of_multisims: 5
