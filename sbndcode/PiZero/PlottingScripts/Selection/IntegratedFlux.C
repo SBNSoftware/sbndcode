@@ -2,12 +2,24 @@
 #include "Common.C"
 #include "WeightNames.h"
 
+void IntegratedFlux(const TString productionVersion, const bool back);
+
 void IntegratedFlux(const TString productionVersion)
 {
-  const TString saveDir = baseSaveDir + "/" + productionVersion + "/integrated_flux";
+  IntegratedFlux(productionVersion, false);
+  IntegratedFlux(productionVersion, true);
+}
+
+void IntegratedFlux(const TString productionVersion, const bool back)
+{
+  TString saveDir = baseSaveDir + "/" + productionVersion + "/integrated_flux";
+
+  if(back)
+    saveDir += "_back_face";
+
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configI.root";
+  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -30,8 +42,17 @@ void IntegratedFlux(const TString productionVersion)
   float nu_x, nu_y, nu_e;
   std::vector<std::vector<float>*> weights = std::vector<std::vector<float>*>(n_weights, 0);
 
-  nus->SetBranchAddress("nu_x", &nu_x);
-  nus->SetBranchAddress("nu_y", &nu_y);
+  if(back)
+    {
+      nus->SetBranchAddress("nu_other_x", &nu_x);
+      nus->SetBranchAddress("nu_other_y", &nu_y);
+    }
+  else
+    {
+      nus->SetBranchAddress("nu_x", &nu_x);
+      nus->SetBranchAddress("nu_y", &nu_y);
+    }
+
   nus->SetBranchAddress("nu_e", &nu_e);
 
   for(auto&& [ weight_i, name ] : enumerate(weight_names))
@@ -39,7 +60,7 @@ void IntegratedFlux(const TString productionVersion)
 
   nus->SetBranchAddress("evtwgt_flux_oneweight", &weights[weight_names.size()]);
 
-  weight_names.push_back("all");
+  weight_names.push_back("flux_weights_all");
 
   const double true_nu_e_bins[15] = { 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1., 1.2,
                                       1.5, 2., 3., 5. };
