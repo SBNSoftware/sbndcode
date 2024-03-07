@@ -29,7 +29,7 @@ public:
   {
     if(npar != fNpar - 1)
       {
-        //      printf("npar mismatch! %d %d\n", npar, fNpar);
+        printf("npar mismatch! %d %d\n", npar, fNpar);
         exit(1);
       }
 
@@ -51,10 +51,9 @@ public:
 
   static void IniCoreMIN(TMinuit * mnt, const double inputl)
   {
-    mnt->DefineParameter(0, "lambda", inputl, 1e-2, -1e6, 1e6);//overwrite lambda from input
-    mnt->FixParameter(0);  // Fix Lambda
+    mnt->DefineParameter(0, "lambda", inputl, 1e-2, -1e6, 1e6);
+    mnt->FixParameter(0);
 
-    //user previous fit result as initial values
     mnt->DefineParameter(1, "en0", fOptEn0, 50, 0.8 * fOptEn0, 1500);
     mnt->DefineParameter(2, "en1", fOptEn1, 50, 0.8 * fOptEn1, 1200);
 
@@ -67,14 +66,8 @@ public:
 
   static bool IsConstraintGood()
   {
-    // This is a loose constraint, can be set to 1e-4
     const double eps = 10;
     return (TMath::Abs(Constraint())<eps);
-  }
-
-  static void Print(const TString tag)
-  {
-    printf("%20s lambda %10.6e En0 %10.6e En1 %10.6e, core %20.6e constraint %20.6e full %20.6e\n", tag.Data(), fLambda, fOptEn0, fOptEn1, CoreLikelihood(), Constraint(), FullLikelihood());
   }
 
   static double GetOptEn0() { return fOptEn0; }
@@ -136,8 +129,7 @@ private:
 
   static double CoreLikelihood()
   {
-    TMatrixD CovMatrixtmp = fCovMatrix;
-    // Note Invert() will change the original matrix, need to use a copy
+    TMatrixD CovMatrixtmp     = fCovMatrix;
     TMatrixD CovMatrixInverse = CovMatrixtmp.Invert();
 
     int nparameters = fNpar-1;
@@ -151,8 +143,10 @@ private:
     DiffT.Transpose(Diff);
 
     TMatrixD Chi2 = (DiffT*CovMatrixInverse*Diff);
+
     if(Chi2[0][0]<0)
       throw std::runtime_error("Get out");
+
     return Chi2[0][0];
   }
 };
@@ -180,8 +174,6 @@ void CoreFCN(int &npars, double *grad, double &value, double *par, int flag)
 
 void LambdaFCN(int &npars, double *grad, double &value, double *par, int flag)
 {
-  //KinFit::Print("CoreMIN before fit");
-
   TMinuit * CoreMIN = new TMinuit(3);
   CoreMIN->SetPrintLevel(-1);
 
@@ -190,29 +182,23 @@ void LambdaFCN(int &npars, double *grad, double &value, double *par, int flag)
   KinFit::IniCoreMIN(CoreMIN, par[0]);
 
   int flagL = CoreMIN->Command("MIGRAD");
-  //KinFit::Print("CoreMIN after fit");
 
   int irun = 1;
-  const int maxnrun = 2;//no need to try many times, fail always if lambda is bad
+  const int maxnrun = 2;
 
   while(flagL!=0)
     {
-      //      printf("CoreMIN bad fit! %d ---- run once more [%d]\n", flagL, irun++);
       ++irun;
       flagL = CoreMIN->Command("MIGRAD");
-      //KinFit::Print("CoreMIN after fit");
-      if(irun>=maxnrun){
+
+      if(irun>=maxnrun)
         break;
-      }
     }
 
   if(flagL==0)
     value = TMath::Abs(KinFit::Constraint());
   else
-    {
-      //      printf("CoreMIN giving up now... %d\n", flagL);
-      value = 1E50;//must be large enough wrt possible FullLagrangian when fit fail
-    }
+    value = 1E50;
 
   delete CoreMIN;
 }
@@ -234,8 +220,6 @@ void SetIniValues(const vector<double> iniVar, const vector<double> CVM)
 
 bool DoubleMin(const double iniLambda, const double lmin, const double lmax, vector<double> iniVar, vector<double> CVM)
 {
-  //KinFit::Print("DoubleMin before fit");
-  // Set the value of measured quantities and CVM (optimised values are not set yet)
   SetIniValues(iniVar, CVM);
 
   TMinuit * LambdaMIN = new TMinuit(1);
@@ -246,40 +230,28 @@ bool DoubleMin(const double iniLambda, const double lmin, const double lmax, vec
   LambdaMIN->DefineParameter(0, "lambda", iniLambda, 0.1 * iniLambda, lmin, lmax);
 
   int flag = LambdaMIN->Command("MIGRAD");
-  //KinFit::Print("LambdaMIN after fit");
 
   int irun = 1;
-  const int maxnrun=20; //if time permits, the larger the better
-  std::srand(std::time(nullptr)); // Seed the time
+  const int maxnrun=20;
+  std::srand(std::time(nullptr));
 
   while(flag != 0 || ! KinFit::IsConstraintGood())
     {
-      //      printf("LambdaMIN bad fit! %d %e ------- run once more! [%d]\n", flag, KinFit::Constraint(), irun++);
       irun++;
       KinFit::SetOptVars(KinFit::GetEn0(), KinFit::GetEn1(), KinFit::GetTheta());
 
       flag = LambdaMIN->Command("MIGRAD");
-      //KinFit::Print("LambdaMIN after fit");
 
-      if(irun>=maxnrun){
+      if(irun>=maxnrun)
         break;
-      }
     }
 
   delete LambdaMIN;
 
   if(flag==0 && KinFit::IsConstraintGood())
-    {
-      //      printf("DoubleMin finishes: it works for %f %f %f\n", KinFit::GetLambda(), lmin, lmax);
-      //      KinFit::Print("DoubleMin Outputs (successful)");
-      return true;
-    }
+    return true;
   else
-    {
-      //      printf("DoubleMin finishes: giving up now... %d %f for  %f %f %f\n", flag, KinFit::Constraint(), KinFit::GetLambda(), lmin, lmax);
-      //      KinFit::Print("DoubleMin Outputs (failed)");
-      return false;
-    }
+    return false;
 }
 
 vector<double> DoKF(const double &LdShowerEnergyRaw, const double &SlShowerEnergyRaw, const double &OpenAngle, vector<double> CVM, bool &GoodFit)
@@ -327,8 +299,6 @@ std::vector<double> GetCovMatrix(const TString productionVersion, const bool dia
   InitialiseTree(ncpizeroEvents);
 
   const int N = ncpizeroEvents->GetEntries();
-
-  //  TH2F *covMatrix = new TH2F("covMatrix", "", 3, 0, 3, 3, 0, 3);
 
   struct PiZero
   {
@@ -422,42 +392,6 @@ std::vector<double> GetCovMatrix(const TString productionVersion, const bool dia
   varEn1En1     /= npizeros;
   varEn1Theta   /= npizeros;
   varThetaTheta /= npizeros;
-  /*
-    covMatrix->SetBinContent(1, 1, varEn0En0);
-    covMatrix->SetBinContent(1, 2, varEn0En1);
-    covMatrix->SetBinContent(1, 3, varEn0Theta);
-    covMatrix->SetBinContent(2, 1, varEn0En1);
-    covMatrix->SetBinContent(2, 2, varEn1En1);
-    covMatrix->SetBinContent(2, 3, varEn1Theta);
-    covMatrix->SetBinContent(3, 1, varEn0Theta);
-    covMatrix->SetBinContent(3, 2, varEn1Theta);
-    covMatrix->SetBinContent(3, 3, varThetaTheta);
-
-    TCanvas *cCovMatrix = new TCanvas("cCovMatrix", "cCovMatrix");
-    cCovMatrix->cd();
-
-    cCovMatrix->SetRightMargin(.15);
-    covMatrix->Draw("colztext");
-
-    TCanvas *cCorrMatrix = new TCanvas("cCorrMatrix", "cCorrMatrix");
-    cCorrMatrix->cd();
-
-    TH2F *corrMatrix = (TH2F*) covMatrix->Clone("corrMatrix");
-  
-    for(int i = 1; i < 4; ++i)
-    {
-    for(int j = 1; j < 4; ++j)
-    {
-    const double sigma_i = TMath::Sqrt(covMatrix->GetBinContent(i, i));
-    const double sigma_j = TMath::Sqrt(covMatrix->GetBinContent(j, j));
-
-    corrMatrix->SetBinContent(i, j, covMatrix->GetBinContent(i, j)/(sigma_i * sigma_j));
-    }
-    }
-
-    cCorrMatrix->SetRightMargin(.15);
-    corrMatrix->Draw("colztext");
-  */
 
   std::vector<double> covVec = { varEn0En0,   varEn0En1,   varEn0Theta,
                                  varEn0En1,   varEn1En1,   varEn1Theta,
@@ -469,38 +403,6 @@ std::vector<double> GetCovMatrix(const TString productionVersion, const bool dia
 
   return diag ? diagCovVec : covVec;
 }
-/*
-  int goodSuccess = 0;
-  int success = 0;
-
-  for(const PiZero pizero : pizeros)
-  {
-  double initialDiff = abs(pizero.en0 - pizero.trueEn0)/pizero.trueEn0 + abs(pizero.en1 - pizero.trueEn1)/pizero.trueEn1 + abs(pizero.theta - pizero.trueTheta)/pizero.trueTheta;
-
-  bool good;
-  std::vector<double> updated = DoKF(pizero.en0, pizero.en1, pizero.theta, covVec, good);
-
-  double finalDiff = abs(updated[0] - pizero.trueEn0)/pizero.trueEn0 + abs(updated[1] - pizero.trueEn1)/pizero.trueEn1 + abs(updated[2] - pizero.trueTheta)/pizero.trueTheta;
-
-  if(good)
-  ++success;
-
-  if(good && finalDiff < initialDiff)
-  ++goodSuccess;
-  else if(good)
-  {
-  std::cout << "True:         " << pizero.trueEn0 << " " << pizero.trueEn1 << " " << pizero.trueTheta << std::endl;
-  std::cout << "Started with: " << pizero.en0 << " " << pizero.en1 << " " << pizero.theta << std::endl;
-  std::cout << "Ended with:   " << updated[0] << " " << updated[1] << " " << updated[2] << std::endl;
-
-  std::cout << good << " " << initialDiff << " " << finalDiff << '\n' << std::endl;
-  }
-  }
-
-  std::cout << success << " / " << pizeros.size() << " (" << (100. * success) / pizeros.size() << "%)" << std::endl;
-  std::cout << goodSuccess << " / " << pizeros.size() << " (" << (100. * goodSuccess) / pizeros.size() << "%)" << std::endl;
-  }
-*/
 
 void InitialiseTree(TChain *tree)
 {
