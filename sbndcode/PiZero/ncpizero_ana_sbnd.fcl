@@ -1,7 +1,7 @@
 #include "ncpizero_modules.fcl"
 #include "recoeff.fcl"
-#include "reco2_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
+#include "reco2_sensible.fcl"
 
 process_name: NCPiZeroAnalyzer
 
@@ -11,6 +11,7 @@ services:
   @table::sbnd_services
   ParticleInventoryService: @local::sbnd_particleinventoryservice
   BackTrackerService:       @local::sbnd_backtrackerservice
+  @table::sbnd_random_services
 }
 
 source:
@@ -27,6 +28,13 @@ physics:
     recoeff:           @local::recoeff
   }
 
+  producers:
+  {
+    fluxweight:   @local::sbn_eventweight_flux
+    systtools:    @local::sbn_systtools
+    geant4weight: @local::sbn_eventweight_geant4
+  }
+
   weight_paths:  [ fluxweight, systtools, geant4weight ]
   trigger_paths: [ weight_paths ]
 
@@ -37,3 +45,5 @@ physics:
 services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
 
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
+
+#include "enable_spacecharge_services_sbnd.fcl"
