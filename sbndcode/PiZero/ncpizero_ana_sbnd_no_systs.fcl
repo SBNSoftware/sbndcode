@@ -1,0 +1,6 @@
+#include "ncpizero_ana_sbnd.fcl"
+
+physics.trigger_paths: []
+
+physics.analyzers.ncpizeroana.EventWeightModuleLabels:       []
+physics.analyzers.ncpizeroxsectrees.EventWeightModuleLabels: []
