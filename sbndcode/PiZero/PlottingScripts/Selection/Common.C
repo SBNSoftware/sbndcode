@@ -13,6 +13,8 @@ const double goalSpills  = goalPOT / potPerSpill;
 const double nTargets = 4.6468e31;
 const double intFlux  = 1.73962e+13;
 
+const double effbaseline = 11227.8; // For both flux configs
+
 double GetPOT(TChain *subruns)
 {
   double sum = 0., pot = 0;

@@ -2,20 +2,34 @@
 #include "Common.C"
 #include "WeightNames.h"
 
-void IntegratedFlux(const TString productionVersion, const bool back);
+void Extrapolate(float &nu_x, float &nu_y, const float nu_z, const float &nu_other_x,
+                 const float &nu_other_y, const float nu_other_z, const float extrap_z);
+
+void IntegratedFlux(const TString productionVersion, const bool back, const bool fv_centre, const bool eff_z);
 
 void IntegratedFlux(const TString productionVersion)
 {
-  IntegratedFlux(productionVersion, false);
-  IntegratedFlux(productionVersion, true);
+  IntegratedFlux(productionVersion, false, false, false);
+  IntegratedFlux(productionVersion, true, false, false);
+  IntegratedFlux(productionVersion, false, true, false);
+  IntegratedFlux(productionVersion, false, false, true);
 }
 
-void IntegratedFlux(const TString productionVersion, const bool back)
+void IntegratedFlux(const TString productionVersion, const bool back, const bool fv_centre, const bool eff_z)
 {
+  if(back + fv_centre + eff_z > 1)
+    throw std::runtime_error("Poorly configured, cannot consider back face & FV centre simultaneously");
+
   TString saveDir = baseSaveDir + "/" + productionVersion + "/integrated_flux";
 
   if(back)
     saveDir += "_back_face";
+
+  if(fv_centre)
+    saveDir += "_fv_centre";
+
+  if(eff_z)
+    saveDir += "_eff_z";
 
   gSystem->Exec("mkdir -p " + saveDir);
 
@@ -39,21 +53,15 @@ void IntegratedFlux(const TString productionVersion, const bool back)
   std::vector<std::string> weight_names = flux_weight_names;
   const int n_weights = weight_names.size() + 1;
 
-  float nu_x, nu_y, nu_e;
+  float nu_x, nu_y, nu_other_x, nu_other_y, nu_e;
+  nus->SetBranchAddress("nu_x", &nu_x);
+  nus->SetBranchAddress("nu_y", &nu_y);
+  nus->SetBranchAddress("nu_other_x", &nu_other_x);
+  nus->SetBranchAddress("nu_other_y", &nu_other_y);
+  nus->SetBranchAddress("nu_e", &nu_e);
+
   std::vector<std::vector<float>*> weights = std::vector<std::vector<float>*>(n_weights, 0);
 
-  if(back)
-    {
-      nus->SetBranchAddress("nu_other_x", &nu_x);
-      nus->SetBranchAddress("nu_other_y", &nu_y);
-    }
-  else
-    {
-      nus->SetBranchAddress("nu_x", &nu_x);
-      nus->SetBranchAddress("nu_y", &nu_y);
-    }
-
-  nus->SetBranchAddress("nu_e", &nu_e);
 
   for(auto&& [ weight_i, name ] : enumerate(weight_names))
     nus->SetBranchAddress(Form("evtwgt_flux_weight_%s", name.c_str()), &weights[weight_i]);
@@ -84,6 +92,18 @@ void IntegratedFlux(const TString productionVersion, const bool back)
   for(int i = 0; i < N; ++i)
     {
       nus->GetEntry(i);
+
+      if(back)
+        {
+          nu_x = nu_other_x;
+          nu_y = nu_other_y;
+        }
+
+      if(fv_centre)
+        Extrapolate(nu_x, nu_y, 0, nu_other_x, nu_other_y, 500, 230);
+
+      if(eff_z)
+        Extrapolate(nu_x, nu_y, 0, nu_other_x, nu_other_y, 500, effbaseline - 11000);
 
       if(abs(nu_x) > 180 || abs(nu_x) < 5 || abs(nu_y) > 180)
         continue;
@@ -290,4 +310,20 @@ void IntegratedFlux(const TString productionVersion, const bool back)
 
   outFile << "};";
   outFile.close();
+
+  std::cout << nominalCount * scaling / fv_face_area << std::endl;
+}
+
+void Extrapolate(float &nu_x, float &nu_y, const float nu_z, const float &nu_other_x,
+                 const float &nu_other_y, const float nu_other_z, const float extrap_z)
+{
+  const TVector3 start(nu_x, nu_y, nu_z);
+  const TVector3 end(nu_other_x, nu_other_y, nu_other_z);
+
+  const float k = extrap_z / (nu_other_z - nu_z);
+
+  const TVector3 extrap = start + k * (end - start);
+
+  nu_x = extrap.X();
+  nu_y = extrap.Y();
 }
