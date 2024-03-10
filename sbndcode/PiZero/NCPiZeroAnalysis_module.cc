@@ -23,6 +23,7 @@
 #include "TTree.h"
 #include "TProfile.h"
 #include "TFile.h"
+#include "TSpline.h"
 
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
@@ -1010,9 +1011,14 @@ void sbnd::NCPiZeroAnalysis::AnalyseMCTruth(const art::Event &e, VecVarMap &vars
 
                   if(weights.size() == 6)
                     {
+                      double multisigma_sigmas[6] = { -1, 1, -2, 2, -3, 3 };
+                      double multisigma_vals[6]   = { weights[0], weights[1], weights[2], weights[3], weights[4], weights[5] };
+
+                      TSpline3 *spline = new TSpline3(Form("%s_spline", name.c_str()), multisigma_sigmas, multisigma_vals, 6);
+
                       for(int univ = 0; univ < n_univs; ++univ)
                         {
-                          thrown_weights[univ] = 1 + (weights[1] - 1) * genie_multisigma_universe_weights[name][univ];
+                          thrown_weights[univ] = spline->Eval(genie_multisigma_universe_weights[name][univ]);
                           all[univ] *= thrown_weights[univ];
                         }
                     }

@@ -23,6 +23,7 @@
 #include "TTree.h"
 #include "TProfile.h"
 #include "TFile.h"
+#include "TSpline.h"
 
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nurandom/RandomUtils/NuRandomService.h"
@@ -632,9 +633,14 @@ void sbnd::NCPiZeroXSecTrees::AnalyseMCTruth(const art::Event &e, const art::Ptr
 
                   if(weights.size() == 6)
                     {
+                      double multisigma_sigmas[6] = { -1, 1, -2, 2, -3, 3 };
+                      double multisigma_vals[6]   = { weights[0], weights[1], weights[2], weights[3], weights[4], weights[5] };
+
+                      TSpline3 *spline = new TSpline3(Form("%s_spline", name.c_str()), multisigma_sigmas, multisigma_vals, 6);
+
                       for(int univ = 0; univ < n_univs; ++univ)
                         {
-                          thrown_weights[univ] = 1 + (weights[1] - 1) * genie_multisigma_universe_weights[name][univ];
+                          thrown_weights[univ] = spline->Eval(genie_multisigma_universe_weights[name][univ]);
                           all[univ] *= thrown_weights[univ];
                         }
                     }
@@ -817,7 +823,7 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
           const TVector3 dir_1 = phot_1.trkDir;
 
           const bool goodKinematics       = !(dir_0.X() == -999 || dir_1.X() == -999 || dir_0.X() == def_float || dir_1.X() == def_float
-					      || energy_0 < 0 || energy_1 < 0);
+                                              || energy_0 < 0 || energy_1 < 0);
           const double cosThetaGammaGamma = dir_0.Dot(dir_1) / (dir_0.Mag() * dir_1.Mag());
           const TVector3 pizeroDir        = (energy_0 * dir_0) + (energy_1 * dir_1);
           const double invariantMass      = sqrt(2 * energy_0 * energy_1 * (1 - cosThetaGammaGamma));
