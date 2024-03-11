@@ -5,6 +5,10 @@ simpleROIAlg:
 {
   tool_type: "SimpleROIAlg"
   Debug: true
+  ConstantBaseline: 700
+  ThresholdLow: 4
+  ThresholdHigh: 17
+  BinsBefore:5
 }
 
 END_PROLOG

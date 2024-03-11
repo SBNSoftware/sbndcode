@@ -3,6 +3,8 @@
 
 
 #include <vector>
+#include "lardataobj/RawData/OpDetWaveform.h"
+
 
 class AverageWaveform {
 public:
@@ -25,4 +27,28 @@ private:
   std::vector<float> array_;
   int size_;
   int wvf_count_;
+};
+
+//ROI finder class placeholder, we need floats as we'll be subtracting baselines
+class SimpleROI :  public std::vector<float> 
+{
+  public:
+    SimpleROI(int size, int channel) : fROISamples(size), fChannel(channel) 
+    {
+      this->resize(size, 0);
+    }
+    void SetCharge(double charge) {fCharge = charge;}
+    double Charge() {return fCharge;}
+
+    // Functions included for backwards compatability with previous data types
+    std::vector<float>& Waveform() { return *this; }
+
+    // Functions included for backwards compatability with previous data types
+    std::vector<float> const& Waveform() const { return *this; }
+
+private:
+  int fROISamples;
+  unsigned int fChannel;
+  double fCharge;
+
 };

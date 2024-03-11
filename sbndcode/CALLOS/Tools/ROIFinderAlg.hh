@@ -11,6 +11,7 @@
 #include "art/Utilities/make_tool.h"
 #include <cmath>
 #include <vector>
+#include "sbndcode/CALLOS/AverageWaveform.h"
 
 namespace callos {
   class ROIFINDERALG;
@@ -23,7 +24,7 @@ public:
   virtual ~ROIFINDERALG() noexcept = default;
 
   // Required functions.
-  virtual bool ProcessWaveform(std::vector<float> const& wvf ,std::vector<float> & ROI, std::vector<float> & charges)=0;
+  virtual bool ProcessWaveform(std::vector<float> const& wvf ,std::vector<SimpleROI> & ROI)=0;
 };
 
 #endif

@@ -32,15 +32,16 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
-#include "AverageWaveform.h"
 
-#include <memory>
 #include "art_root_io/TFileService.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
+#include "art_root_io/TFileDirectory.h"
 #include "art/Utilities/make_tool.h"
+#include <memory>
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include "TTree.h"
 
 #include "Tools/ROIFinderAlg.hh"
 
@@ -103,6 +104,9 @@ private:
   // Number of samples from start of the ROI to peak. rodrigoa: maybe should be a tool parameter
   int fStartToPeak;
 
+  // Specific channels to be analyzed (only used if not empty)
+  std::vector<int> fSpecificChannels;
+
   // Average Waveforms container.
   std::vector<AverageWaveform> AverageWaveform_SelectedChannels;
   //Charge container
@@ -110,6 +114,9 @@ private:
 
   // Tool pointers
   std::unique_ptr<callos::ROIFINDERALG> fROIFinderAlgPtr;
+
+  // le  tree
+  TTree *fTree;
 };
 
 
@@ -122,14 +129,16 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
   fPDType = p.get<std::string>("PDType","xarapuca_vuv");
   fROISamples = p.get<int>("ROI_samples", 1000);
   fStartToPeak = p.get<int>("StartToPeak",200);
-
+  fSpecificChannels = p.get<std::vector<int>>("SpecificChannels", {});
   // get map info
   std::vector<int> fSelectedChannels = pdsmap.getChannelsOfType(fPDType);
+  if (fSpecificChannels.size()>0) fSelectedChannels = fSpecificChannels;
+  
   fNSelectedChannels = fSelectedChannels.size();
   std::cout<<"CALLOS: Selected "<<fNSelectedChannels<<" channels of selected type"<<std::endl;
 
   // Prepare the filter and map
-  fPDSchannelStatus.resize(fNPDSChannels);
+  fPDSchannelStatus.resize(fNPDSChannels, false);
   fPDSchannelMap   .resize(fNPDSChannels);
   for (int i=0; i<fNSelectedChannels; i++)
   { 
@@ -143,6 +152,16 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
   Charge_SelectedChannels.reserve(fNSelectedChannels);
   // Initialize the ROIFinderAlg tool
   fROIFinderAlgPtr = art::make_tool<callos::ROIFINDERALG>(p.get<fhicl::ParameterSet>("ROIFinderAlg"));
+
+  // Now that we know the number of selected channels, we can create the tree
+  art::ServiceHandle<art::TFileService> tfs;
+  fTree = tfs->make<TTree>("callos","callos");
+
+  for (int i=0; i<fNSelectedChannels; i++)
+  {
+    // fTree->Branch(("AverageWaveform_"+std::to_string(i)).c_str(), &AverageWaveform_SelectedChannels[i]); //  this should go as either hitograms or raw vectors,  no need for a tree
+    fTree->Branch(("Charge_ch_"+std::to_string(fSelectedChannels[i])).c_str(),"std::vector<float>", &Charge_SelectedChannels[i]);
+  }
 }
 
 void callos::CALLOS::analyze(art::Event const& e)
@@ -152,6 +171,8 @@ void callos::CALLOS::analyze(art::Event const& e)
   // Load the waveforms
   art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
   e.getByLabel(fInputLabel, wfHandle);
+
+  for (int i=0; i<fNSelectedChannels; i++)  Charge_SelectedChannels[i]={}; // Clear the charge container
 
   if (!wfHandle.isValid()) 
   {
@@ -166,7 +187,7 @@ void callos::CALLOS::analyze(art::Event const& e)
     for(auto const& wf : *wfHandle)
     {
       // Get raw wvf info
-      int wfChannel = wf.ChannelNumber();
+      const int wfChannel = wf.ChannelNumber();
 
 
       // select only relevant channels (this allows to sepparate diferent XAs, PMTs, etc based on PDS map)
@@ -174,37 +195,52 @@ void callos::CALLOS::analyze(art::Event const& e)
       {
 
         // move Raw wvf to float
-        size_t wfsize=wf.Waveform().size();
+        const size_t wfsize=wf.Waveform().size();
         std::vector<float> wave;
         wave.reserve(wfsize);
         wave.assign(wf.Waveform().begin(), wf.Waveform().end());
-        //Prepare ROI container and initialize to 0s
-        std::vector<float> ROI;
-        ROI.resize(fROISamples,0);
+        //Prepare ROI container
+        std::vector<SimpleROI> ROIs;
 
         // Call the tool for selected channels
-        fROIFinderAlgPtr->ProcessWaveform(wave, ROI, Charge_SelectedChannels[fPDSchannelMap[wfChannel]]);
+        fROIFinderAlgPtr->ProcessWaveform(wave, ROIs);
         
-        // Update the Average wvf of the channel.
-        AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(ROI);
+        // Loop over found ROIs
+
+        std::cout<<"CALLOS: Event "<<e.id().event()<<" found "<<ROIs.size()<<" ROIs in channel "<<wfChannel<<" number in the map:"<<fPDSchannelMap[wfChannel]<<std::endl;
+        for (unsigned int i=0; i<ROIs.size(); i++)
+        {
+          std::vector<float> roi;
+          roi.reserve(wfsize);
+          roi.assign(ROIs[i].Waveform().begin(), ROIs[i].Waveform().end());
+          float charge = ROIs[i].Charge();
+          
+          std::cout<<"CALLOS: Event "<<e.id().event()<<" found ROI with charge "<<charge<<" in channel "<<wfChannel<<" number in the map:"<<fPDSchannelMap[wfChannel]<<std::endl;
+          std::cout<< Charge_SelectedChannels[fPDSchannelMap[wfChannel]].size()<<std::endl;
+          // Update containers
+          AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(roi);
+          Charge_SelectedChannels[fPDSchannelMap[wfChannel]].push_back(charge);
+        }
+        // AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(ROI);
 
         iWvf++;
       }
     }
   std::cout<<"CALLOS: Event "<<e.id().event()<<" analized "<<iWvf<<" waveforms"<<std::endl;
   // Store info in containers.
+  fTree->Fill();
 
   // Clean variables needed for next event.
-
+  for (int i=0; i<fNSelectedChannels; i++)  Charge_SelectedChannels[i].clear();
 }
 
 void callos::CALLOS::endJob() 
 {
   // Pending real implementation
   // Save the histograms and NTuples to the output file.
-  // Close the output file
-
+  std::cout<<"CALLOS: Filling the tree..."<<std::endl;
   std::cout<<"CALLOS: End of Job"<<std::endl;
+  // Close the output file
   // free the memory?
 }
 

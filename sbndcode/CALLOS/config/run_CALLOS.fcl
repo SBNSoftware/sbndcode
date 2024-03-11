@@ -12,7 +12,8 @@ process_name: CALLOS
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService:              { fileName: "test_callos_.root" }
+  # TFileService:              { fileName: "hists_%ifb_%p-%tc.root" } #uncomment for fancy schemancy name  %ifb is the input file base name, %p is the process name, %tc is the time created
+  TFileService:              { fileName: "callos_ana_sbnd.root" } #simple name
 
   # message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   # FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
