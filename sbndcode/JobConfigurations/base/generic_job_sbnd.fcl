@@ -49,6 +49,7 @@ source:
 }
 
 #block to define where the output goesoutputs:
+outputs
 {
     out1:
     {
