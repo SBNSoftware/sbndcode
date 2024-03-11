@@ -4,7 +4,7 @@ BEGIN_PROLOG
 simpleROIAlg:
 {
   tool_type: "SimpleROIAlg"
-  Debug: true
+  Debug: false
   ConstantBaseline: 699
   ThresholdLow: 4
   ThresholdHigh: 17

@@ -135,7 +135,7 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
   if (fSpecificChannels.size()>0) fSelectedChannels = fSpecificChannels;
   
   fNSelectedChannels = fSelectedChannels.size();
-  std::cout<<"CALLOS: Selected "<<fNSelectedChannels<<" channels of selected type"<<std::endl;
+  // std::cout<<"CALLOS: Selected "<<fNSelectedChannels<<" channels of selected type"<<std::endl;
 
   // Prepare the filter and map
   fPDSchannelStatus.resize(fNPDSChannels, false);
@@ -149,7 +149,7 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
   // Initialize the average waveforms container
   AverageWaveform_SelectedChannels.reserve(fNSelectedChannels);
   for (int i=0; i<fNSelectedChannels; i++){ AverageWaveform_SelectedChannels.push_back(AverageWaveform(fROISamples));}
-  Charge_SelectedChannels.reserve(fNSelectedChannels);
+  Charge_SelectedChannels.resize(fNSelectedChannels);
   // Initialize the ROIFinderAlg tool
   fROIFinderAlgPtr = art::make_tool<callos::ROIFINDERALG>(p.get<fhicl::ParameterSet>("ROIFinderAlg"));
 
@@ -181,8 +181,6 @@ void callos::CALLOS::analyze(art::Event const& e)
   }
   
   // Get the Raw waveforms
-  auto NWvf = wfHandle->size();
-  std::cout<<"CALLOS: Event "<<e.id().event()<<" has      "<<NWvf<<" waveforms"<<std::endl;
   int iWvf=0;
     for(auto const& wf : *wfHandle)
     {
@@ -207,7 +205,6 @@ void callos::CALLOS::analyze(art::Event const& e)
         if (!found_smt) continue;
         
         // Loop over found ROIs
-        std::cout<<"CALLOS: Event "<<e.id().event()<<" found "<<ROIs.size()<<" ROIs in channel "<<wfChannel<<" number in the map:"<<fPDSchannelMap[wfChannel]<<std::endl;
         for (unsigned int i=0; i<ROIs.size(); i++)
         {
           std::vector<float> roi;
@@ -215,8 +212,6 @@ void callos::CALLOS::analyze(art::Event const& e)
           roi.assign(ROIs[i].Waveform().begin(), ROIs[i].Waveform().end());
           float charge = ROIs[i].Charge();
           
-          std::cout<<"CALLOS: Event "<<e.id().event()<<" found ROI with charge "<<charge<<" in channel "<<wfChannel<<" number in the map:"<<fPDSchannelMap[wfChannel]<<std::endl;
-          std::cout<< Charge_SelectedChannels[fPDSchannelMap[wfChannel]].size()<<std::endl;
           // Update containers
           AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(roi);
           Charge_SelectedChannels[fPDSchannelMap[wfChannel]].push_back(charge);
@@ -238,8 +233,8 @@ void callos::CALLOS::endJob()
 {
   // Pending real implementation
   // Save the histograms and NTuples to the output file.
-  std::cout<<"CALLOS: Filling the tree..."<<std::endl;
-  std::cout<<"CALLOS: End of Job"<<std::endl;
+  // std::cout<<"CALLOS: Filling the tree..."<<std::endl;
+  // std::cout<<"CALLOS: End of Job"<<std::endl;
   // Close the output file
   // free the memory?
 }
