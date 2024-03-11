@@ -30,7 +30,7 @@
 #include "lardata/ArtDataHelper/WireCreator.h"
 
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
-#include "sbndcode/Calibration/IROIFinder.h"
+#include "sbndcode/TPC1DSignalProcessing/IROIFinder.h"
 #include "larcore/Geometry/Geometry.h"
 //#include "Filters/ChannelFilter.h"
 
