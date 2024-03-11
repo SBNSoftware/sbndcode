@@ -93,9 +93,8 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> const& wvf ,std::v
   auto wvf_min = *std::min_element(wave.begin(), wave.end());
 
   // std::cout << "SimpleROIAlg::ProcessWaveform: max of the waveform is "<<wvf_max<<std::endl;
-  //check max of the waveform is below ThresholdHigh
-  if (wvf_max > fThresholdHigh ) return false;
-  if (wvf_min < fThresholdUndershoot ) return false;
+  //check max of the waveform is below ThresholdHigh and above ThresholdLow, else there is no signal
+  if ((wvf_max > fThresholdHigh ) || (wvf_max<fThresholdLow) || (wvf_min < fThresholdUndershoot)) return false;
 
   // if (fDebug) std::cout << "SimpleROIAlg::ProcessWaveform: passed max threshold requisite"<<std::endl;
   // Signal could be empty or contain single PEs. Read the wvf, look for  peaks above a threshold,
@@ -125,7 +124,7 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> const& wvf ,std::v
           aux_charge += wave[i-k];
         }
       }
-      if (fDebug) std::cout << "SimpleROIAlg::ProcessWaveform: found a peak at "<<i<<" with charge "<<aux_charge<<std::endl;
+      // if (fDebug) std::cout << "SimpleROIAlg::ProcessWaveform: found a peak at "<<i<<" with charge "<<aux_charge<<std::endl;
       roi.SetCharge(aux_charge);
       ROI.push_back(roi);
       i = j;//skip the waveform, find the next peak

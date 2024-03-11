@@ -181,7 +181,7 @@ void callos::CALLOS::analyze(art::Event const& e)
   }
   
   // Get the Raw waveforms
-  int iWvf=0;
+  // int iWvf=0;
     for(auto const& wf : *wfHandle)
     {
       // Get raw wvf info
@@ -201,8 +201,8 @@ void callos::CALLOS::analyze(art::Event const& e)
         std::vector<SimpleROI> ROIs;
 
         // Call the tool for selected channels
-        bool found_smt = fROIFinderAlgPtr->ProcessWaveform(wave, ROIs);
-        if (!found_smt) continue;
+        // bool found_smt = fROIFinderAlgPtr->ProcessWaveform(wave, ROIs);
+        // if (!found_smt) continue;
         
         // Loop over found ROIs
         for (unsigned int i=0; i<ROIs.size(); i++)
@@ -218,10 +218,10 @@ void callos::CALLOS::analyze(art::Event const& e)
         }
         // AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(ROI);
 
-        iWvf++;
+        // iWvf++;
       }
     }
-  std::cout<<"CALLOS: Event "<<e.id().event()<<" analized "<<iWvf<<" waveforms"<<std::endl;
+  // std::cout<<"CALLOS: Event "<<e.id().event()<<" analized "<<iWvf<<" waveforms \n";
   // Store info in containers.
   fTree->Fill();
 
