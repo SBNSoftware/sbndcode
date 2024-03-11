@@ -23,7 +23,6 @@
 
 services:
 {
-    d
     # Load the service that manages root files for histograms.
     TFileService:              { fileName: @local::sbnd_tfileoutput.fileName }
     message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
