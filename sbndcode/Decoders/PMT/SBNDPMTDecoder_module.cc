@@ -221,13 +221,16 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         return;
     }
     
+    // create a timing type per event so the default doesn't get overwritten
+    auto timing_type = ftiming_type; 
+
     // get spec tdc product
-    if (ftiming_type==0){
+    if (timing_type==0){
         art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
         evt.getByLabel(fspectdc_product_name,tdcHandle);
         if (!tdcHandle.isValid() || tdcHandle->size() == 0){
             if (fdebug>0) std::cout << "No SPECTDC products found." << std::endl;
-            ftiming_type++;
+            timing_type++;
         }
         else{
             if (fdebug>1) std::cout << "SPECTDC (decoded) products found: " << std::endl;
@@ -254,13 +257,13 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             }
         }
     }
-    if (ftiming_type==1){
+    if (timing_type==1){
         // get ptb product
         art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
         evt.getByLabel(fptb_product_name,ptbHandle);
         if ((!ptbHandle.isValid() || ptbHandle->size() == 0)){
             if (fdebug>0) std::cout << "No PTB products found." << std::endl;
-            ftiming_type++;
+            timing_type++;
         }
         else{
             const std::vector<raw::ptb::sbndptb> ptb_v(*ptbHandle);
@@ -285,11 +288,11 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                         }
                     } 
                 } // end hlt check 
-                else ftiming_type++;
+                else timing_type++;
             } // end of loop over ptb products
         } // end handle validity check
     } // end of timing type 1
-    if (ftiming_type==2){
+    if (timing_type==2){
         // CAEN only configuration
         // if neither PTB or SPEC products are found, the timestamp will be equal to
         // the start of the waveform (according to CAEN TTT and wvfm length)
