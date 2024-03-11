@@ -1,0 +1,76 @@
+#
+# File:    workflow_reco1.fcl
+# Purpose: Defines the list of producers and the sequences for configuring reco1 jobs
+# Version: 1.0
+#
+# Changes:
+# 20240311 (d.brailsford@lancster.ac.uk) [v1.0]
+#   Initial definition
+#
+
+#
+# module configuration
+#
+
+#include "caldata_sbnd.fcl"
+#include "hitfindermodules_sbnd.fcl"
+#include "opdeconvolution_sbnd.fcl"
+#include "sbnd_ophitfinder_deco.fcl"
+#include "sbnd_flashfinder_deco.fcl"
+#include "crtrecoproducers_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_reco1_producers:{
+    ### random number saver
+    rns:                 { module_type: RandomNumberSaver }
+
+    ### optical deconvolution
+    opdecopmt:          @local::SBNDOpDeconvolutionPMT
+    opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
+
+    ### optical hit finders
+    # ophit:               @local::sbnd_hit_finder
+    ophitpmt:            @local::SBNDDecoOpHitFinderPMT
+    ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
+
+    ### flash finders
+    # opflash:             @local::sbnd_opflash
+    opflashtpc0:         @local::SBNDDecoSimpleFlashTPC0
+    opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1
+
+    # opflash(arapucas):             @local::sbnd_opflash
+    opflashtpc0xarapuca:         @local::SBNDDecoSimpleFlashTPC0Arapuca
+    opflashtpc1xarapuca:         @local::SBNDDecoSimpleFlashTPC1Arapuca
+
+    ### calwire producers
+    caldata:             @local::sbnd_calwire
+
+    ### hit-finder producers
+    gaushit:             @local::sbnd_gaushitfinder
+    fasthit:             @local::sbnd_fasthitfinder
+
+    ### Truth-matich for hits
+    gaushitTruthMatch:   @local::standard_mcparticlehitmatching
+
+    ### CRT reconstruction
+    crtstrips:      @local::crtstriphitproducer_sbnd
+}
+
+sbnd_reco1_sequence: [  
+    rns
+  , opdecopmt
+  , opdecoxarapuca
+  , ophitpmt
+  , ophitxarapuca
+  , opflashtpc0
+  , opflashtpc1
+  , opflashtpc0xarapuca
+  , opflashtpc1xarapuca
+  , gaushit
+  , gaushitTruthMatch
+  , crtstrips
+ ]
+
+END_PROLOG
+
