@@ -2,6 +2,7 @@ BEGIN_PROLOG
 
 crtbacktrackeralg_sbnd:
 {
+   module_type:       "CRTCalibAna"
    SimModuleLabel:         "largeant"
    SimDepositModuleLabel:  "genericcrt"
    FEBDataModuleLabel:     "crtsim"

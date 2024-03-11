@@ -245,9 +245,11 @@ physics:
 
  analyzers:{
   caloskim: @local::caloskim_nodigits_goldentracks
+  , crtskim: @local::crtbacktrackeralg_sbnd
+  , pmtskim: @local::pmtskim_sbnd
  }
 
- caloskimana: [ caloskim ]
+ caloskimana: [ caloskim, crtskim, pmtskim ]
 
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
