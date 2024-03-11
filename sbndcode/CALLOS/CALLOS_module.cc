@@ -203,10 +203,10 @@ void callos::CALLOS::analyze(art::Event const& e)
         std::vector<SimpleROI> ROIs;
 
         // Call the tool for selected channels
-        fROIFinderAlgPtr->ProcessWaveform(wave, ROIs);
+        bool found_smt = fROIFinderAlgPtr->ProcessWaveform(wave, ROIs);
+        if (!found_smt) continue;
         
         // Loop over found ROIs
-
         std::cout<<"CALLOS: Event "<<e.id().event()<<" found "<<ROIs.size()<<" ROIs in channel "<<wfChannel<<" number in the map:"<<fPDSchannelMap[wfChannel]<<std::endl;
         for (unsigned int i=0; i<ROIs.size(); i++)
         {

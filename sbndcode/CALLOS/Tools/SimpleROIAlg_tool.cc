@@ -34,6 +34,7 @@ private:
   float fConstantBaseline;
   float fThresholdLow;
   float fThresholdHigh;
+  float fThresholdUndershoot;
   int fBinsBefore;
 
   // Declare member functions
@@ -54,6 +55,7 @@ callos::SimpleROIAlg::SimpleROIAlg(fhicl::ParameterSet const& p)
   fThresholdLow = p.get< float >( "ThresholdLow", 0.0);
   fThresholdHigh = p.get< float >( "ThresholdHigh", 0.0);
   fBinsBefore = p.get< int >( "BinsBefore", 0);
+  fThresholdUndershoot = p.get< float >( "ThresholdUndershoot", -4);
 
   if (fDebug) 
   {
@@ -88,10 +90,12 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> const& wvf ,std::v
 
   SubtractBaseline(wave,fConstantBaseline);
   auto wvf_max = *std::max_element(wave.begin(), wave.end());
+  auto wvf_min = *std::min_element(wave.begin(), wave.end());
 
   // std::cout << "SimpleROIAlg::ProcessWaveform: max of the waveform is "<<wvf_max<<std::endl;
   //check max of the waveform is below ThresholdHigh
   if (wvf_max > fThresholdHigh ) return false;
+  if (wvf_min < fThresholdUndershoot ) return false;
 
   // if (fDebug) std::cout << "SimpleROIAlg::ProcessWaveform: passed max threshold requisite"<<std::endl;
   // Signal could be empty or contain single PEs. Read the wvf, look for  peaks above a threshold,
@@ -107,7 +111,7 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> const& wvf ,std::v
       float aux_charge = 0;
       int j = i;
       // Add the bins after the threshold until the waveform crosses the baseline
-      while ( (wave[j] > fThresholdLow) && (j< (int) wave.size()) ) {
+      while ( (wave[j] > 0) && (j< (int) wave.size()) ) {
         // roi[j-i] = wave[j];
         aux_charge += wave[j];
         j++;
@@ -116,7 +120,7 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> const& wvf ,std::v
       for (int k = 0; k < fBinsBefore; k++) {
         if ((i-k) < 0) break;
 
-        if (wave[i-k] > fThresholdLow) {
+        if (wave[i-k] > fConstantBaseline) {
           // roi[j-i+k] = wave[i-k];
           aux_charge += wave[i-k];
         }
