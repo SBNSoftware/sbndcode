@@ -2,6 +2,7 @@
 add_subdirectory(JobConfigurations)
 add_subdirectory(LArSoftConfigurations)
 add_subdirectory(Utilities)
+add_subdirectory(Calibration)
 add_subdirectory(Geometry)
 add_subdirectory(LArG4)
 add_subdirectory(TPC1DSignalProcessing)
