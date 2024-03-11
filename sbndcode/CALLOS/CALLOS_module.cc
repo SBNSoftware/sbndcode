@@ -80,7 +80,7 @@ private:
 
   // fhicl parameters
   std::string fInputLabel;
-  std::string fPDType;
+  std::vector<std::string> fPDTypes;
   // std::vector<std::string> fElectronics; //Not needed for now
 
   //PDS map
@@ -126,14 +126,22 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   fInputLabel = p.get<std::string>("InputLabel","opdaq");
-  fPDType = p.get<std::string>("PDType","xarapuca_vuv");
+  fPDTypes = p.get<std::vector<std::string>>("PDTypes",{"xarapuca_vuv"});
   fROISamples = p.get<int>("ROI_samples", 1000);
   fStartToPeak = p.get<int>("StartToPeak",200);
   fSpecificChannels = p.get<std::vector<int>>("SpecificChannels", {});
   // get map info
-  std::vector<int> fSelectedChannels = pdsmap.getChannelsOfType(fPDType);
+  // for each pdtype in fPDTypes, get the channels and add them to the list of selected channels
+  std::vector<int> fSelectedChannels={};//
+  for (auto pdtype : fPDTypes)
+  {
+    std::vector<int> pdtype_channels = pdsmap.getChannelsOfType(pdtype);
+    fSelectedChannels.insert(fSelectedChannels.end(), pdtype_channels.begin(), pdtype_channels.end());
+  }
+
   if (fSpecificChannels.size()>0) fSelectedChannels = fSpecificChannels;
-  
+  //short the vector
+  std::sort(fSelectedChannels.begin(), fSelectedChannels.end());
   fNSelectedChannels = fSelectedChannels.size();
   // std::cout<<"CALLOS: Selected "<<fNSelectedChannels<<" channels of selected type"<<std::endl;
 
@@ -198,11 +206,10 @@ void callos::CALLOS::analyze(art::Event const& e)
         wave.reserve(wfsize);
         wave.assign(wf.Waveform().begin(), wf.Waveform().end());
         //Prepare ROI container
-        std::vector<SimpleROI> ROIs;
+        std::vector<SimpleROI> ROIs={};
 
         // Call the tool for selected channels
-        // bool found_smt = fROIFinderAlgPtr->ProcessWaveform(wave, ROIs);
-        // if (!found_smt) continue;
+        fROIFinderAlgPtr->ProcessWaveform(wave, ROIs);
         
         // Loop over found ROIs
         for (unsigned int i=0; i<ROIs.size(); i++)

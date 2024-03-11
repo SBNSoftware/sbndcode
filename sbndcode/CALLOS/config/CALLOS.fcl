@@ -8,7 +8,7 @@ SBNDCALLOS:
   module_type:	"CALLOS"
   InputLabel: "opdaq"
   ROIFinderAlg: @local::simpleROIAlg
-  PDType: "xarapuca_vuv"
+  PDTypes: ["xarapuca_vuv", "xarapuca_vis"]
   ROI_samples: 1000
   StartToPeak: 200
 }
