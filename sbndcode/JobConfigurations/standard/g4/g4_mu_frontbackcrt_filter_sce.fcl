@@ -1,4 +1,4 @@
 #include "g4_mu_frontbackcrt_filter.fcl"
 
-#include "enable_spacecharge_services_sbnd.fcl"
+#include "enable_spacecharge_services_sbnd_2D_DriftSimOnly.fcl"
 
