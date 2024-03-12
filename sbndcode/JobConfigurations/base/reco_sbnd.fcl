@@ -69,6 +69,7 @@ services:
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
   BackTrackerService: @local::sbnd_backtrackerservice
   ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  DetectorClocksService: @local::sbnd_detectorclocks
 }
 
 #source is now a root file

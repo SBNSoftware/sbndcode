@@ -13,8 +13,8 @@
 
 process_name: Reco2
 
-services.ParticleInventoryService: @local::sbnd_particleinventoryservice
-services.BackTrackerService: @local::sbnd_backtrackerservice
+#services.ParticleInventoryService: @local::sbnd_particleinventoryservice
+#services.BackTrackerService: @local::sbnd_backtrackerservice
 services.DetectorClocksService: @local::sbnd_detectorclocks
 
 physics.reco2_sce: [@sequence::physics.reco2,
