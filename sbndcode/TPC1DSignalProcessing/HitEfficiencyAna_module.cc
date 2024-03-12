@@ -43,7 +43,7 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "cetlib_except/exception.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
-#include "sbndcode/Calibration/tools/IHitEfficiencyHistogramTool.h"
+#include "sbndcode/TPC1DSignalProcessing/tools/IHitEfficiencyHistogramTool.h"
 #include "TTree.h"
 // C++ Includes
 #include <map>
