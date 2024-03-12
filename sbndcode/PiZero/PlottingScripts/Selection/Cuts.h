@@ -7,7 +7,7 @@ const Cut notClearCosmic           = { "not_clear_cosmic", "!slc_is_clear_cosmic
 const Cut fv                       = { "fv", "slc_is_fv", "FV" };
 const Cut crumbsIncl               = { "crumbs", "slc_crumbs_nc_score>-0.005", "CRUMBS Cut" };
 const Cut crumbs0p0pi              = { "crumbs", "slc_crumbs_nc_score>-0.005", "CRUMBS Cut" };
-const Cut crumbsNp0pi              = { "crumbs", "slc_crumbs_nc_score>0.075", "CRUMBS Cut" };
+const Cut crumbsNp0pi              = { "crumbs", "slc_crumbs_nc_score>0.235", "CRUMBS Cut" };
 const Cut crumbsCC                 = { "crumbs", "slc_crumbs_ccnumu_score>0", "CRUMBS Cut" };
 const Cut noRazzledMuons           = { "no_razzled_muons", "slc_n_primary_razzled_muons==0", "No Razzled Muons" };
 const Cut oneRazzledMuon           = { "one_razzled_muon", "slc_n_primary_razzled_muons==1", "One Razzled Muon" };
@@ -16,17 +16,17 @@ const Cut goodPiZeroKinematics     = { "good_pizero_kinematics", "slc_best_pzc_g
 const Cut noRazzledPions           = { "no_razzled_pions", "slc_n_primary_razzled_pions_thresh==0", "No Razzled Pions" };
 const Cut noRazzledProtons         = { "no_razzled_protons", "slc_n_primary_razzled_protons_thresh==0", "No Razzled Protons" };
 const Cut atLeastOneRazzledProton  = { "at_least_one_razzled_proton", "slc_n_primary_razzled_protons_thresh>0", "At Least One Razzled Proton" };
-const Cut goodOpT0FracHighIncl     = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.756", "Good OpT0 Frac High" };
-const Cut goodOpT0FracHigh0p0pi    = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.844", "Good OpT0 Frac High" };
-const Cut goodOpT0FracHighNp0pi    = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.836", "Good OpT0 Frac High" };
+const Cut goodOpT0FracHighIncl     = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.512", "Good OpT0 Frac High" };
+const Cut goodOpT0FracHigh0p0pi    = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.4", "Good OpT0 Frac High" };
+const Cut goodOpT0FracHighNp0pi    = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.512", "Good OpT0 Frac High" };
 const Cut goodOpT0FracHighCC       = { "good_opt0_frac_high", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE<0.836", "Good OpT0 Frac High" };
-const Cut goodOpT0FracLowIncl      = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.7", "Good OpT0 Frac Low" };
-const Cut goodOpT0FracLow0p0pi     = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.7", "Good OpT0 Frac Low" };
-const Cut goodOpT0FracLowNp0pi     = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.376", "Good OpT0 Frac Low" };
+const Cut goodOpT0FracLowIncl      = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.676", "Good OpT0 Frac Low" };
+const Cut goodOpT0FracLow0p0pi     = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.676", "Good OpT0 Frac Low" };
+const Cut goodOpT0FracLowNp0pi     = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.44", "Good OpT0 Frac Low" };
 const Cut goodOpT0FracLowCC        = { "good_opt0_frac_low", "(slc_opt0_hypPE - slc_opt0_measPE)/slc_opt0_measPE>-0.376", "Good OpT0 Frac Low" };
-const Cut opT0ScoreIncl            = { "opt0_score", "slc_opt0_score>5", "OpT0 Score" };
-const Cut opT0Score0p0pi           = { "opt0_score", "slc_opt0_score>125", "OpT0 Score" };
-const Cut opT0ScoreNp0pi           = { "opt0_score", "slc_opt0_score>210", "OpT0 Score" };
+const Cut opT0ScoreIncl            = { "opt0_score", "slc_opt0_score>45", "OpT0 Score" };
+const Cut opT0Score0p0pi           = { "opt0_score", "slc_opt0_score>110", "OpT0 Score" };
+const Cut opT0ScoreNp0pi           = { "opt0_score", "slc_opt0_score>80", "OpT0 Score" };
 const Cut opT0ScoreCC              = { "opt0_score", "slc_opt0_score>200", "OpT0 Score" };
 const Cut allOtherTrksContained    = { "all_other_trks_contained", "slc_all_other_trks_contained", "All Other Tracks Contained" };
 

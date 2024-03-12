@@ -14,47 +14,20 @@ void OptimiseCut(const TString productionVersion, const SelectionParams &selecti
 
 void OptimiseCut(const TString productionVersion)
 {
-  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[0], false);
   OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[1], false);
-  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[4], false);
   OptimiseCut(productionVersion, ncpizero_incl, 7, optimisation_plots[2], true);
   OptimiseCut(productionVersion, ncpizero_incl, 8, optimisation_plots[2], false);
   OptimiseCut(productionVersion, ncpizero_incl, 9, optimisation_plots[3], false);
 
-  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[0], false, true);
-  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[1], false, true);
-  OptimiseCut(productionVersion, ncpizero_incl, 3, optimisation_plots[4], false, true);
-  OptimiseCut(productionVersion, ncpizero_incl, 7, optimisation_plots[2], true, true);
-  OptimiseCut(productionVersion, ncpizero_incl, 8, optimisation_plots[2], false, true);
-  OptimiseCut(productionVersion, ncpizero_incl, 9, optimisation_plots[3], false, true);
-
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[0], false);
   OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[1], false);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[4], false);
   OptimiseCut(productionVersion, ncpizero_0p0pi, 9, optimisation_plots[2], true);
   OptimiseCut(productionVersion, ncpizero_0p0pi, 10, optimisation_plots[2], false);
   OptimiseCut(productionVersion, ncpizero_0p0pi, 11, optimisation_plots[3], false);
 
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[0], false, true);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[1], false, true);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 3, optimisation_plots[4], false, true);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 9, optimisation_plots[2], true, true);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 10, optimisation_plots[2], false, true);
-  OptimiseCut(productionVersion, ncpizero_0p0pi, 11, optimisation_plots[3], false, true);
-
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[0], false);
   OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[1], false);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[4], false);
   OptimiseCut(productionVersion, ncpizero_Np0pi, 9, optimisation_plots[2], true);
   OptimiseCut(productionVersion, ncpizero_Np0pi, 10, optimisation_plots[2], false);
   OptimiseCut(productionVersion, ncpizero_Np0pi, 11, optimisation_plots[3], false);
-
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[0], false, true);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[1], false, true);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 3, optimisation_plots[4], false, true);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 9, optimisation_plots[2], true, true);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 10, optimisation_plots[2], false, true);
-  OptimiseCut(productionVersion, ncpizero_Np0pi, 11, optimisation_plots[3], false, true);
 }
 
 void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot plot, const Cut signal_def, const Cut base_cut, const bool rej_cut, const bool optimiseEPP)
@@ -81,13 +54,13 @@ void OptimiseCut(const TString productionVersion, const TString saveDirExt, Plot
   double rockboxScaling, intimeScaling;
   GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
 
-  TH1F* hSig     = new TH1F("Sig", plot.axes_labels, plot.nbins * 10, plot.xlow, plot.xhigh);
-  TH1F* hBackNu  = new TH1F("BackNu", plot.axes_labels, plot.nbins * 10, plot.xlow, plot.xhigh);
-  TH1F* hBackCos = new TH1F("BackCos", plot.axes_labels, plot.nbins * 10, plot.xlow, plot.xhigh);
+  TH1F* hSig     = new TH1F(Form("Sig_%s_%s", plot.name.Data(), saveDirExt.Data()), plot.axes_labels, plot.nbins * 10, plot.xlow, plot.xhigh);
+  TH1F* hBackNu  = new TH1F(Form("BackNu_%s_%s", plot.name.Data(), saveDirExt.Data()), plot.axes_labels, plot.nbins * 10, plot.xlow, plot.xhigh);
+  TH1F* hBackCos = new TH1F(Form("BackCos_%s_%s", plot.name.Data(), saveDirExt.Data()), plot.axes_labels, plot.nbins * 10, plot.xlow, plot.xhigh);
 
-  rockboxEvents->Draw(plot.var + ">>Sig", signal_def.cut + base_cut.cut);
-  rockboxEvents->Draw(plot.var + ">>BackNu", !signal_def.cut + base_cut.cut);
-  intimeEvents->Draw(plot.var + ">>BackCos", !signal_def.cut + base_cut.cut);
+  rockboxEvents->Draw(Form(plot.var + ">>Sig_%s_%s", plot.name.Data(), saveDirExt.Data()), signal_def.cut + base_cut.cut);
+  rockboxEvents->Draw(Form(plot.var + ">>BackNu_%s_%s", plot.name.Data(), saveDirExt.Data()), !signal_def.cut + base_cut.cut);
+  intimeEvents->Draw(Form(plot.var + ">>BackCos_%s_%s", plot.name.Data(), saveDirExt.Data()), !signal_def.cut + base_cut.cut);
 
   hSig->Scale(rockboxScaling);
   hBackNu->Scale(rockboxScaling);
