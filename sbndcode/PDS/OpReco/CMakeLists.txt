@@ -36,3 +36,4 @@ cet_build_plugin(SBNDFlashAssAna art::module LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_source()
+install_fhicl()
