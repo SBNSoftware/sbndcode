@@ -24,7 +24,6 @@
 
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
-#include "cluster_sbnd.fcl"
 #include "trackfindermodules_sbnd.fcl"
 #include "calorimetry_sbnd.fcl"
 #include "showerfindermodules_sbnd.fcl"
@@ -48,13 +47,13 @@
 #include "scecorrections.fcl"
 #include "flashmatch_sbnd.fcl"
 
-#include "simplemerge.fcl" 
 #include "mlreco_sbnd.fcl"
 
 
 ###include "hitparticleassociations.fcl"
 
 #include "sbnd_trackcalo_skimmer.fcl"
+#include "cluster_sbnd.fcl"
 
 process_name: Reco
 
@@ -125,10 +124,10 @@ physics:
 
   ### cluster-finder producers
   #fuzzycluster:        @local::sbnd_fuzzycluster
-  linecluster:         @local::sbnd_linecluster
+  #linecluster:         @local::sbnd_linecluster
   #cccluster:           @local::sbnd_clustercrawler
   #spacepts:            @local::sbnd_spacepts
-  blurredcluster:      @local::sbnd_blurredcluster
+  #blurredcluster:      @local::sbnd_blurredcluster
 
   ### pandora
   pandora:             @local::sbnd_pandora
@@ -194,8 +193,7 @@ physics:
   caloskimCalorimetry: @local::caloskim_calorimetry
 
   #ML Reco
-  cluster3d: @local::standard_cluster3d
-  simplemerge: @local::simplemerge
+  cluster3d: @local::sbnd_cluster3d
 
  }
 
@@ -219,7 +217,6 @@ physics:
    #      , corner
    #      , fuzzycluster
          , crtstrips
-         , simplemerge #merges dropped particle collections into nominal
          , cluster3d  
  ]
 
@@ -287,7 +284,7 @@ outputs:
          "drop *raw::RawDigits*_*_*_*",
          #"drop sim::SimChannels_*_*_*",
          "drop sim::OpDetBacktrackerRecords_*_*_*",
-         "drop *_linecluster_*_*",
+         #"drop *_linecluster_*_*",
          "drop *_fasthit_*_*",
          "drop *_cluster3d_*_*", #drop all mlreco output
          "drop *_simplemerge_*_*" #drop all mlreco output
@@ -325,7 +322,7 @@ physics.producers.fasthit.DigitModuleLabel:                     "simtpc2d:daq"
 #physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"
 #physics.producers.corner.CornerAlgParamSet.CalDataModuleLabel:  "caldata"
 #
-physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
+#physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 
 #physics.producers.fuzzycluster.HitsModuleLabel:                 "gaushit"
 #physics.producers.fuzzycluster.CalDataModuleLabel:              "caldata"
