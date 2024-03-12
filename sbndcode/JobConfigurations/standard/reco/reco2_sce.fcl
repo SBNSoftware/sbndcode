@@ -8,7 +8,6 @@
 #
 # job configuration
 
-#include "simulationservices_sbnd.fcl"
 #include "reco_sbnd.fcl"
 
 process_name: Reco2
