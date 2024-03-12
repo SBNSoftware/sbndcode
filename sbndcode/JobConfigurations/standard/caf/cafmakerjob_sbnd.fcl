@@ -30,6 +30,8 @@
 
 #include "cafmaker_common_defs.fcl"
 
+#include "eventweight_genie_systtools.fcl"
+
 process_name: CAFmaker
 
 services:
@@ -80,7 +82,7 @@ physics:
 #  cosmictrack:          @local::standard_cosmictrack         #reco
 #  windowtrack:          @local::window_cosmictrack           #reco
 
-   # Includes: pandoraTrackMCS, pandoraTrackRange, rns, genieweight, fluxweight
+   # Includes: pandoraTrackMCS, pandoraTrackRange, rns, fluxweight
    @table::cafmaker_common_producers
 
    flashtrig: @local::pmtflashtrigmaker_sbnd
@@ -100,6 +102,8 @@ physics:
    pandoraShowerRazzle:         @local::razzle_sbnd
 
    pandoraRazzled: @local::razzled_sbnd
+
+   systtools: @local::sbn_systtools
 }
   filters:{
     flashtrigfilter: @local::pmtflashtrigfilter_sbnd
@@ -139,7 +143,6 @@ physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 
 # Overwrite weight_functions label:
-physics.producers.genieweight.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
 
 # input art file.

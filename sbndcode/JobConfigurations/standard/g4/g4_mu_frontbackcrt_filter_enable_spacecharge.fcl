@@ -7,7 +7,6 @@ services.SpaceCharge.EnableSimEfieldSCE: true
 physics.simulate: [ rns
                   , loader
                   , largeant
-                  , sedlite
                   , ionandscint
                   # , ionandscintout
                   , pdfastsim

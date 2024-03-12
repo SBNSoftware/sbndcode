@@ -91,12 +91,15 @@ physics:
     # Generic CRT
     genericcrt: @local::sbnd_genericCRT
 
+    # Merges dropped and nominal MCParticle into separate vector
+    simplemerge: @local::sbnd_simplemerge
   }
 
   # All producers and filters modules for this path, order matters
   simulate: [ rns
             , loader
             , largeant
+            , simplemerge
             , sedlite
             , ionandscint
             , ionandscintout

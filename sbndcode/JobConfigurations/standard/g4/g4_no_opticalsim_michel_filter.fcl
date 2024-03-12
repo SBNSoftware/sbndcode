@@ -13,6 +13,7 @@
 physics.simulate: [ rns
                   , loader
                   , largeant
+                  , simplemerge
                   , sedlite
                   , ionandscint
                   , simdrift

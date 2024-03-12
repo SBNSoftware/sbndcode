@@ -28,6 +28,8 @@ physics.simulate: [ rns
                   , pdfastsimoutouttime
                   ### Merge the intime and outtime paths
                   , largeant
+                  , largeantdropped
+                  , simplemerge
                   , sedlite
                   , ionandscint
                   , ionandscintpriorSCE

@@ -1,4 +1,5 @@
 #include "g4inforeducer.fcl"
+#include "simplemerge.fcl"
 
 BEGIN_PROLOG
 
@@ -6,6 +7,10 @@ BEGIN_PROLOG
 sbnd_sedlite: @local::sbn_largeant_info_reducer
 sbnd_sedlite.SimEnergyDepositLabel: "largeant:LArG4DetectorServicevolTPCActive"
 sbnd_sedlite.useOrigTrackID: true #needed since TrackID overwritten by SBND modules
+
+#simple merge - merges nominal and dropped mcparticles into separate list
+sbnd_simplemerge: @local::simplemerge
+sbnd_simplemerge.InputSourcesLabels: ["largeant","largeant:droppedMCParticles"]
 
 #supera for mpvmpr
 sbnd_supera_mpvmpr: {
