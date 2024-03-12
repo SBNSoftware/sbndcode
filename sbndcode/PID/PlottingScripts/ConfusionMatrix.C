@@ -11,24 +11,20 @@ void ConfusionMatrix()
 {
   ConfusionMatrix(razzled_v12, true, false);
   ConfusionMatrix(razzled_v12, false, true);
+  ConfusionMatrix(razzled_v12, true, true);
 
   ConfusionMatrix(razzled_v12, true, false, 0.8, 0.8);
   ConfusionMatrix(razzled_v12, false, true, 0.8, 0.8);
+  ConfusionMatrix(razzled_v12, true, true, 0.8, 0.8);
 }
 
 void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
                      const bool purity_mode, const double comp_thresh,
                      const double pur_thresh)
 {
-  if(efficiency_mode && purity_mode)
-    {
-      std::cout << "Cannot run both efficiency and purity mode" << std::endl;
-      return;
-    }
-
   TString save_dir = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv12/razzled/confusionmatrices";
   gSystem->Exec("mkdir -p " + save_dir);
-  
+
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
@@ -178,7 +174,7 @@ void ConfusionMatrix(const PIDTraining &training, const bool efficiency_mode,
         continue;
 
       if(trk_length < 3 && showerEnergy<10)
-	continue;
+        continue;
 
       const std::vector<float> bdtScores = reader->EvaluateMulticlass("BDTG Method");
 
