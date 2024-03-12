@@ -254,7 +254,6 @@ physics:
   pmtskim: @local::pmtskim_sbnd
  }
 
-# caloskimana: [ caloskim, pmtskim ]
 caloskimana: [ caloskim, crtskim, pmtskim ]
 
  #define the output stream, there could be more than one if using filters
