@@ -1,0 +1,49 @@
+BEGIN_PROLOG 
+
+pmtdecoder: 
+{
+    module_type: "SBNDPMTDecoder"
+    debug: 0 # 0=no output, 1=standard, 2=verbose
+
+    # output timing system configuration
+    ## priority system
+    ## SPEC TDC ETT [0] -> PTB ETT [1] -> CAEN-only [2]
+    timing_type: 0 # default is SPEC TDC ETT
+
+
+    # configure CAEN inputs 
+    caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
+    ignore_fragid: [8]     # boards to ignore for testing purposes, fragid==8 is the timing board 
+    nominal_length: 5000     # expected waveform length
+
+    # configure SPEC TDC inputs 
+    spectdc_product_name: "tdcdecoder" # used if the tdc decoder has been run 
+    spectdc_ftrig_ch: 3 # this should be the channel number of the spec tdc that stores the flash trigger 
+    spectdc_etrig_ch: 4 # this should be the channel number of the spec tdc that stores the event trigger
+
+    # configure PTB inputs 
+    ptb_product_name: "ptbdecoder"
+    ptb_etrig_trigword: 0x0000000000000000
+    ptb_etrig_wordtype: 2
+
+    # configure output options
+    # configure the output data product instance names
+    pmtInstanceName: "PMTChannels"
+    ftrigInstanceName: "FTrigChannels"
+    output_ftrig_wvfm: true # whether or not to output the ftrig as an opdetwaveform (artroot data product)
+
+    # more detailed configurables
+    n_maxflashes:    30 # maximum number of flashes anticipated, this is used for memory allocation
+    n_caenboards:    8  # number of caen boards; this is used for memory allocation
+    threshold_ftrig: 16350 # the threshold for the flash trigger channel
+
+    fragid_offset:   40960 # the offset to subtract to get single digit fragids 
+    hist_evt:        1  # the # of the event used to generate the histograms, 1st event by default 
+
+    # ordered in sets of 15 by increasing fragID
+    # the PMT_to_Digitizers.txt file in the same directory is the reference for this
+    # text file is obtained from docdb 33668-v6
+    ch_map: [17, 71, 41, 15, 69, 13, 67, 65, 16, 70, 40, 14, 68, 12, 66, 39, 11, 9, 63, 37, 7, 61, 64, 38, 10, 8, 62, 46, 6, 60, 95, 149, 119, 93, 147, 91, 145, 143, 94, 148, 118, 92, 146, 90, 144, 117, 89, 87, 141, 115, 85, 139, 142, 116, 88, 86, 140, 114, 84, 138, 173, 227, 197, 171, 225, 169, 223, 221, 172, 226, 196, 170, 224, 168, 222, 195, 167, 165, 19, 193, 163, 217, 220, 194, 166, 164, 218, 192, 162, 216, 251, 305, 275, 249, 303, 247, 301, 299, 250, 304, 274, 248, 302, 247, 300, 273, 245, 243, 297, 271, 241, 295, 298, 272, 244, 242, 296, 70, 240, 294]
+}
+
+END_PROLOG
