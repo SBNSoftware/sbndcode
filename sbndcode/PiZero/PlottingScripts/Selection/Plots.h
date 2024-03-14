@@ -61,37 +61,39 @@ std::vector<Plot> extension_plots = {
 };
 
 std::vector<Plot> true_observables = {
-  { "nu_pz_pizero_mom", "nu_pz_pizero_mom", ";p_{#pi^{0}} (GeV/c);Events",
+  { "nu_pz_pizero_mom", "nu_pz_pizero_mom", ";p_{#pi^{0}} (GeV/c);Slices",
     25, 0, 2 },
-  { "nu_pz_cos_theta_pizero", "nu_pz_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Events",
+  { "nu_pz_cos_theta_pizero", "nu_pz_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Slices",
     25, -1, 1 },
-  { "nu_pz_cos_com", "nu_pz_cos_com", ";cos(#theta_{CoM});Events",
+  { "nu_pz_cos_com", "nu_pz_cos_com", ";cos(#theta_{CoM});Slices",
     25, 0, 1 },
-  { "nu_pz_decay_asymmetry", "nu_pz_decay_asymmetry", ";Decay Asymmetry;Events",
+  { "nu_pz_decay_asymmetry", "nu_pz_decay_asymmetry", ";Decay Asymmetry;Slices",
     25, 0, 1 },
 };
 
 std::vector<VarBinPlot> true_slc_observables = {
-  { "slc_true_pz_pizero_mom", "slc_true_pz_pizero_mom*1e3", ";p_{#pi^{0}} (MeV/c);Events",
+  { "slc_true_pz_pizero_mom", "slc_true_pz_pizero_mom*1e3", ";p_{#pi^{0}} (MeV/c);Slices",
     8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. } },
-  { "slc_true_pz_cos_theta_pizero", "slc_true_pz_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Events",
+  { "slc_true_pz_cos_theta_pizero", "slc_true_pz_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Slices",
     9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. } },
-  { "slc_true_pz_cos_com", "slc_true_pz_cos_com", ";cos(#theta_{CoM});Events",
+  { "slc_true_pz_cos_com", "slc_true_pz_cos_com", ";cos(#theta_{CoM});Slices",
     10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. } },
-  { "slc_true_pz_decay_asymmetry", "slc_true_pz_decay_asymmetry", ";Decay Asymmetry;Events",
+  { "slc_true_pz_decay_asymmetry", "slc_true_pz_decay_asymmetry", ";|E_{#gamma_{1}} - E_{#gamma_{2}}| / E_{#gamma_{1}} + E_{#gamma_{2}};Slices",
     10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. } },
+  { "slc_true_pz_open_angle", "slc_true_pz_open_angle", ";#theta_{#gamma#gamma} (#circ);Slices",
+    8, { 0., 20., 40., 60., 80., 100., 120., 140., 180. } },
 };
 
 std::vector<Plot> observables = {
-  { "slc_best_pzc_invariant_mass", "slc_best_pzc_invariant_mass", ";M_{#gamma#gamma} (MeV/c^{2});Events",
+  { "slc_best_pzc_invariant_mass", "slc_best_pzc_invariant_mass", ";M_{#gamma#gamma} (MeV/c^{2});Slices",
     25, 0, 500 },
-  { "slc_best_pzc_pizero_mom", "slc_best_pzc_pizero_mom", ";p_{#pi^{0}} (MeV/c);Events",
+  { "slc_best_pzc_pizero_mom", "slc_best_pzc_pizero_mom", ";p_{#pi^{0}} (MeV/c);Slices",
     25, 0, 1000 },
-  { "slc_best_pzc_cos_theta_pizero", "slc_best_pzc_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Events",
+  { "slc_best_pzc_cos_theta_pizero", "slc_best_pzc_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Slices",
     25, -1, 1 },
-  { "slc_best_pzc_cos_com", "slc_best_pzc_cos_com", ";cos(#theta_{CoM});Events",
+  { "slc_best_pzc_cos_com", "slc_best_pzc_cos_com", ";cos(#theta_{CoM});Slices",
     25, 0, 1 },
-  { "slc_best_pzc_decay_asymmetry", "slc_best_pzc_decay_asymmetry", ";Decay Asymmetry;Events",
+  { "slc_best_pzc_decay_asymmetry", "slc_best_pzc_decay_asymmetry", ";Decay Asymmetry;Slices",
     25, 0, 1 },
 };
 
