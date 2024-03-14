@@ -35,9 +35,10 @@ local data_params = import 'params.jsonnet';
 local simu_params = import 'simparams.jsonnet';
 local params = if reality == 'data' then data_params else simu_params;
 
-
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 local tools = tools_maker(params);
+local nanodes = std.length(tools.anodes);
+local anode_iota = std.range(0, nanodes - 1);
 
 local wcls_maker = import 'pgrapher/ui/wcls/nodes.jsonnet';
 local wcls = wcls_maker(params, tools);
@@ -99,16 +100,14 @@ local wcls_output = {
     type: 'wclsFrameSaver',
     name: 'spsaver',
     data: {
-      // anode: wc.tn(tools.anode),
       anode: wc.tn(mega_anode),
       digitize: false,  // true means save as RawDigit, else recob::Wire
       frame_tags: ['gauss', 'wiener'],
 
       // this may be needed to convert the decon charge [units:e-] to be consistent with the LArSoft default ?unit? e.g. decon charge * 0.005 --> "charge value" to GaussHitFinder
       frame_scale: [0.02, 0.02],
-       nticks: params.daq.nticks,
+      nticks: params.daq.nticks,
       chanmaskmaps: [],
-      //nticks: ,
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 };
@@ -123,7 +122,7 @@ local chndb = [{
   data: perfect(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   // data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   uses: [tools.anodes[n], tools.field, tools.dft],
-} for n in std.range(0, std.length(tools.anodes) - 1)];
+} for n in anode_iota];
 
 
 local nf_maker = import 'pgrapher/experiment/sbnd/nf.jsonnet';

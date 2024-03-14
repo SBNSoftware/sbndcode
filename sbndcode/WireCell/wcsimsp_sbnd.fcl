@@ -1,3 +1,4 @@
+# this fcl configures wirecell to perform **simulation and signal processing** 
 BEGIN_PROLOG
 
 sbnd_wcls_simsp: {

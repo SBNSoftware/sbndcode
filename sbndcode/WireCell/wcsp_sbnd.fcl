@@ -1,0 +1,51 @@
+# this fcl configures wirecell to perform **signal processing** ONLY 
+
+sbnd_wcls_sp: {
+    module_type : WireCellToolkit
+    wcls_main: {
+        tool_type: "WCLS"
+        apps: ["TbbFlow"] 
+
+        ## Uncomment the following lines for debugging
+        # loglevels: ["debug", "pgraph:info"]
+        # logsinks: ["stdout"]
+
+        ## Libraries in which to look for WCT components
+        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft","WireCellTbb"]
+
+        inputers: ["wclsRawFrameSource"
+               # To use wclsMultiChannelNoiseDB you must also put epoch:dynamic below
+               # and you must have geo::Geometry service in your environment.
+               # ,"wclsMultiChannelNoiseDB"  
+        ]
+
+        outputers: ["wclsFrameSaver:spsaver"]
+
+
+        ## This sets the "main" Jsonnet file which provides the 
+        ## configuration for the Wire-Cell Toolkit components.  It is
+        ## take as relative to entries in WIRECELL_PATH.
+        configs: ["pgrapher/experiment/sbnd/wcls-nf-sp.jsonnet"]
+
+
+        ## Set the "external variables" required by the Jsonnet.
+        params : {
+            # This locates the input raw::RawDigit collection in the art::Event 
+            raw_input_label: "daq"
+
+            # Set "data" vs. "sim".  The epoch below probably should follow suit.
+            #reality: "data"
+            reality: "sim"
+
+            # if epoch is "dynamic" you MUST add
+            # "wclsMultiChannelNoiseDB" to "inputers" and must NOT
+            # add it if not "dynamic"
+            # epoch: "dynamic"
+            epoch: "perfect"
+            #epoch: "after"
+
+            # Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
+            signal_output_form: "sparse"
+        }
+    }
+}
