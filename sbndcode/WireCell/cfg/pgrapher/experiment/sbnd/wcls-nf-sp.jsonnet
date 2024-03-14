@@ -23,28 +23,31 @@
 local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
 local reality = std.extVar('reality');
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
-
-
-local wc = import 'wirecell.jsonnet';
-local g = import 'pgraph.jsonnet';
-
 local raw_input_label = std.extVar('raw_input_label');  // eg "daq"
 
+local g = import 'pgraph.jsonnet';
+local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
+local wc = import 'wirecell.jsonnet';
+local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
 local data_params = import 'params.jsonnet';
 local simu_params = import 'simparams.jsonnet';
 local params = if reality == 'data' then data_params else simu_params;
 
-local tools_maker = import 'pgrapher/common/tools.jsonnet';
 local tools = tools_maker(params);
 local nanodes = std.length(tools.anodes);
 local anode_iota = std.range(0, nanodes - 1);
 
+local mega_anode = {
+  type: 'MegaAnodePlane',
+  name: 'meganodes',
+  data: {
+    anodes_tn: [wc.tn(anode) for anode in tools.anodes],
+  },
+};
+
 local wcls_maker = import 'pgrapher/ui/wcls/nodes.jsonnet';
 local wcls = wcls_maker(params, tools);
-
-local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
-
 
 // Collect the WC/LS input converters for use below.  Make sure the
 // "name" argument matches what is used in the FHiCL that loads this
@@ -66,13 +69,7 @@ local wcls_input = {
 // Collect all the wc/ls output converters for use below.  Note the
 // "name" MUST match what is used in theh "outputers" parameter in the
 // FHiCL that loads this file.
-local mega_anode = {
-  type: 'MegaAnodePlane',
-  name: 'meganodes',
-  data: {
-    anodes_tn: [wc.tn(anode) for anode in tools.anodes],
-  },
-};
+
 local wcls_output = {
   // The noise filtered "ADC" values.  These are truncated for
   // art::Event but left as floats for the WCT SP.  Note, the tag
@@ -112,9 +109,8 @@ local wcls_output = {
   }, nin=1, nout=1, uses=[mega_anode]),
 };
 
-
 local perfect = import 'pgrapher/experiment/sbnd/chndb-perfect.jsonnet';
-//local base = import 'chndb-base_sbnd.jsonnet';
+//local base = import 'pgrapher/experiment/sbnd/chndb-base_sbnd.jsonnet';
 
 local chndb = [{
   type: 'OmniChannelNoiseDB',
@@ -123,13 +119,6 @@ local chndb = [{
   // data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   uses: [tools.anodes[n], tools.field, tools.dft],
 } for n in anode_iota];
-
-
-local nf_maker = import 'pgrapher/experiment/sbnd/nf.jsonnet';
-local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
-
-local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
-local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
 local chsel_pipes = [
   g.pnode({
@@ -142,6 +131,13 @@ local chsel_pipes = [
   }, nin=1, nout=1)
   for n in std.range(0, std.length(tools.anodes) - 1)
 ];
+
+local nf_maker = import 'pgrapher/experiment/sbnd/nf.jsonnet';
+local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
+
+local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
+local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
+local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
 local magoutput = 'sbnd-data-check.root';
 local magnify = import 'pgrapher/experiment/sbnd/magnify-sinks.jsonnet';
@@ -164,7 +160,6 @@ local nfsp_pipes = [
   for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local fanpipe = f.fanpipe('FrameFanout', nfsp_pipes, 'FrameFanin', 'sn_mag_nf');
 
 local retagger = g.pnode({
