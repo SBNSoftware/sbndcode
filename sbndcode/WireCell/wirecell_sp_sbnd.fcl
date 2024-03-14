@@ -1,3 +1,16 @@
+#
+# File:    wirecell_sp_sbnd.fcl
+# Purpose: Performs 2D signal processing on RawDigits
+# Authors: Ewerton Belchior and Lynn Tung (lynnt@uchicago.edu)
+#
+# This configuration runs Wire-Cell TPC Signal Processing ONLY
+#
+# Input:
+# - std::vector<raw::RawDigit> with label `daq`
+#
+# Output:
+# - std::vector<recob::Wire> with labels `sptpc2d:gauss, `sptpc2d:wiener`
+
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
@@ -38,5 +51,3 @@ physics :{
    o1 : [ out1 ]
    end_paths: [ o1 ]
 }
-
-
