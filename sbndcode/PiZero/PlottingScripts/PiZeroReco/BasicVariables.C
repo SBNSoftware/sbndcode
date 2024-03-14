@@ -1,4 +1,4 @@
-#include "/sbnd/app/users/hlay/plotting_utils/Plotting.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 
 #include "TChain.h"
 #include "TROOT.h"
@@ -7,7 +7,7 @@
 
 void BasicVariables()
 {
-  const TString saveDir = "/sbnd/data/users/hlay/pizero/plots/pizeroreco/basicvariables/tmp";
+  const TString saveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots/pizeroreco/basicvariables/tmp";
   const bool save = true;
 
   using namespace std;
@@ -15,7 +15,7 @@ void BasicVariables()
   gROOT->ForceStyle();
 
   TChain *tree = new TChain("pizeroana/pizeros");
-  tree->Add("/sbnd/data/users/hlay/pizero/pizeroana_sbnd.root");
+  tree->Add("/exp/sbnd/data/users/hlay/ncpizero/pizeroana_sbnd.root");
 
   std::vector<Cut> cuts = { {"all", "", "", kMagenta+2},
                             {"neutrino", "mct_origin==1", "", kGreen+2},
@@ -95,8 +95,11 @@ void BasicVariables()
   
   std::vector<TwoDPlot> twodplots = {
     {"pizero_energy_versus_decay_open_angle", "mc_ve:mc_open_angle",
-     ";#theta_{#gamma#gamma} (#circ);E (GeV);#pi^{0}s",
-     45, 0, 180, 100, 0, 2.5},
+     ";#theta_{#gamma#gamma} (#circ);E_{#pi^{0}} (GeV);#pi^{0}s",
+     45, 0, 180, 100, 0, 2.5, false, "mc_gamma1_pdg==22 && mc_gamma2_pdg==22" },
+    {"pizero_energy_versus_decay_open_angle_log", "mc_ve:mc_open_angle",
+     ";#theta_{#gamma#gamma} (#circ);E_{#pi^{0}} (GeV);#pi^{0}s",
+     45, 0, 180, 100, 0, 2.5, true, "mc_gamma1_pdg==22 && mc_gamma2_pdg==22" },
   };
   
   for(auto const & cut : cuts)
