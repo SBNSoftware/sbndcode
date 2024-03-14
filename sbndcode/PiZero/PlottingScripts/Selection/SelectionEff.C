@@ -55,7 +55,10 @@ void SelectionEff(const TString productionVersion, const SelectionParams &select
           names.push_back(cut.printed_name);
         }
 
-      MakePlotMultiEff(canvas, trueHist, recoHists, plot.axes_labels, colours, names, legend_position, ncolumns);
+      TString axes_labels = plot.axes_labels;
+      axes_labels.ReplaceAll("Slices", "Efficiency (%)");
+
+      MakePlotMultiEff(canvas, trueHist, recoHists, axes_labels, colours, names, legend_position, ncolumns);
 
       canvas->SaveAs(saveDir + "/selection_efficiency_" + plot.name + ".png");
       canvas->SaveAs(saveDir + "/selection_efficiency_" + plot.name + ".pdf");
