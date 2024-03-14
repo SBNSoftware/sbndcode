@@ -1,6 +1,6 @@
 #pragma once
 
-#include "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv16/integrated_flux/FluxMap.h"
+#include "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv1/integrated_flux/FluxMap.h"
 #include "UniverseBin.h"
 
 class Bin {
@@ -209,6 +209,11 @@ class Bin {
   std::tuple<double, double, double> GetSystFracErrors(const std::string &weightName)
   {
     return _systFracErrors->at(weightName);
+  }
+
+  void InsertSystFracError(const std::string &name, const double &centre, const double &frac)
+  {
+    _systFracErrors->insert({ name, { frac, centre, frac }});
   }
 
   bool InBin(const double &val0, const double &val1)
