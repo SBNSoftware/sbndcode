@@ -28,7 +28,7 @@ const std::vector<Cut> ncpizero_incl_categories = {
 };
 
 const std::vector<Cut> ncpizero_0p0pi_categories = {
-  { "Signal", "slc_true_event_type_0p0pi==0 && slc_comp>.5", "Signal (NC 1#pi^{0}0p0#pi^{#pm})", kMagenta+2, 1., "Signal (NC 1$\\pi^{0}0\\textrm{p}\\pi^{\\pm}$)" },
+  { "Signal", "slc_true_event_type_0p0pi==0 && slc_comp>.5", "Signal (NC 1#pi^{0}0p0#pi^{#pm})", kMagenta+2, 1., "Signal (NC 1$\\pi^{0}0\\textrm{p}0\\pi^{\\pm}$)" },
   { "NCPiZero", "slc_true_event_type_0p0pi==1", "Other NC 1#pi^{0}", kMagenta-9, 1., "Other NC 1$\\pi^{0}$" },
   { "NC", "slc_true_event_type_0p0pi==2", "Other NC", kOrange+2 },
   { "CCNuMu", "slc_true_event_type_0p0pi==3", "CC #nu_{#mu}", kGreen+2, 1., "CC $\\nu_{\\mu}$" },
@@ -52,7 +52,7 @@ const std::vector<Cut> ncpizero_1p0pi_categories = {
 };
 
 const std::vector<Cut> ncpizero_Np0pi_categories = {
-  { "Signal", "slc_true_event_type_Np0pi==0 && slc_comp>.5", "Signal (NC 1#pi^{0}Np0#pi^{#pm})", kMagenta+2, 1., "Signal (NC 1$\\pi^{0}N\\textrm{p}\\pi^{\\pm}$)" },
+  { "Signal", "slc_true_event_type_Np0pi==0 && slc_comp>.5", "Signal (NC 1#pi^{0}Np0#pi^{#pm})", kMagenta+2, 1., "Signal (NC 1$\\pi^{0}N\\textrm{p}0\\pi^{\\pm}$)" },
   { "NCPiZero", "slc_true_event_type_Np0pi==1", "Other NC 1#pi^{0}", kMagenta-9, 1., "Other NC 1$\\pi^{0}$" },
   { "NC", "slc_true_event_type_Np0pi==2", "Other NC", kOrange+2 },
   { "CCNuMu", "slc_true_event_type_Np0pi==3", "CC #nu_{#mu}", kGreen+2, 1., "CC $\\nu_{\\mu}$" },
