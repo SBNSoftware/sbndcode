@@ -41,10 +41,10 @@ const Cut photonSel           = { "photons_selection", "slc_n_primary_razzled_ph
 const Cut pionRej             = { "pion_rejection", "slc_n_primary_razzled_pions_thresh==0", "Pion Rej", kViolet - 5 };
 const Cut protonRej           = { "proton_rejection", "slc_n_primary_razzled_protons_thresh==0", "Proton Rej", kViolet - 6 };
 const Cut atLeastOneProtonSel = { "proton_selection", "slc_n_primary_razzled_protons_thresh>0", "Proton Sel", kViolet - 6 };
-const Cut opT0CutsIncl        = { "opt0_cuts", goodOpT0FracHighIncl.cut + goodOpT0FracLowIncl.cut + opT0ScoreIncl.cut, "OpT0 Cuts" };
-const Cut opT0Cuts0p0pi       = { "opt0_cuts", goodOpT0FracHigh0p0pi.cut + goodOpT0FracLow0p0pi.cut + opT0Score0p0pi.cut, "OpT0 Cuts" };
-const Cut opT0CutsNp0pi       = { "opt0_cuts", goodOpT0FracHighNp0pi.cut + goodOpT0FracLowNp0pi.cut + opT0ScoreNp0pi.cut, "OpT0 Cuts" };
-const Cut opT0CutsCC          = { "opt0_cuts", goodOpT0FracHighCC.cut + goodOpT0FracLowCC.cut + opT0ScoreCC.cut, "OpT0 Cuts" };
+const Cut opT0CutsIncl        = { "opt0_cuts", goodOpT0FracHighIncl.cut + goodOpT0FracLowIncl.cut + opT0ScoreIncl.cut, "OpT0 Cuts", kSpring+9 };
+const Cut opT0Cuts0p0pi       = { "opt0_cuts", goodOpT0FracHigh0p0pi.cut + goodOpT0FracLow0p0pi.cut + opT0Score0p0pi.cut, "OpT0 Cuts", kSpring+9 };
+const Cut opT0CutsNp0pi       = { "opt0_cuts", goodOpT0FracHighNp0pi.cut + goodOpT0FracLowNp0pi.cut + opT0ScoreNp0pi.cut, "OpT0 Cuts", kSpring+9 };
+const Cut opT0CutsCC          = { "opt0_cuts", goodOpT0FracHighCC.cut + goodOpT0FracLowCC.cut + opT0ScoreCC.cut, "OpT0 Cuts", kSpring+9 };
 const Cut containmentIncl     = { "containment_req", allOtherTrksContained.cut, "Containment Requirement", kMagenta-9 };
 
 const std::vector<Cut> ncpizero_incl_cuts = {
