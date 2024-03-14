@@ -13,11 +13,11 @@ const double goalSpills  = goalPOT / potPerSpill;
 const double nTargets = 4.6468e31;
 //const double intFlux  = 1.73962e+13;
 
-// Flux Config L
-//const double intFlux = 1.66396e+13;
-
 // Flux Config I
-const double intFlux  = 1.66163e+13;
+//const double intFlux  = 1.66163e+13;
+
+// Flux Config L
+const double intFlux = 1.66396e+13;
 
 const double effbaseline = 11227.8; // For both flux configs
 
