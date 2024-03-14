@@ -3,22 +3,22 @@
 constexpr float BF    = 0.98823; // PDG branching fraction for pi0 -> gamma gamma
 constexpr float units = 1e38;    // TO have cross section in 10^-38 cm^-2
 
-void NuisanceXSecExtract(const TString flavour);
+void NuisanceXSecExtract(const TString productionVersion, const TString flavour);
 
-void NuisanceXSecExtract()
+void NuisanceXSecExtract(const TString productionVersion)
 {
-  NuisanceXSecExtract("numu");
-  NuisanceXSecExtract("anumu");
-  NuisanceXSecExtract("nue");
-  NuisanceXSecExtract("anue");
+  NuisanceXSecExtract(productionVersion, "numu");
+  NuisanceXSecExtract(productionVersion, "anumu");
+  NuisanceXSecExtract(productionVersion, "nue");
+  NuisanceXSecExtract(productionVersion, "anue");
 }
 
-void NuisanceXSecExtract(const TString flavour)
+void NuisanceXSecExtract(const TString productionVersion, const TString flavour)
 {
   const TString baseDir = "/exp/sbnd/data/users/hlay/ncpizero/generators";
 
   TChain* events = new TChain("FlatTree_VARS");
-  events->Add(baseDir + "/genie/genie_" + flavour + "_prep.flat.root");
+  events->Add(baseDir + "/genie/" + productionVersion + "/genie_" + flavour + "_prep.flat.root");
 
   Char_t cc;
   Int_t  PDGnu, nfsp;
