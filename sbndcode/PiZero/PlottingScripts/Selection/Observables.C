@@ -40,7 +40,12 @@ void Observables(const TString productionVersion, const SelectionParams &selecti
 
       plot.axes_labels += POTString();
 
-      MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {.25, .8, .8, .87}, 4);
+      const int ncolumns = selectionParams.name == "ncpizero_incl" ? 4 : 3;
+      const float xlow   = selectionParams.name == "ncpizero_incl" ? .25 : .24;
+      const float xhigh  = selectionParams.name == "ncpizero_incl" ? .8 : .83;
+      const float ylow   = selectionParams.name == "ncpizero_incl" ? .8 : .78;
+
+      MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, .87}, ncolumns);
 
       canvas->SaveAs(saveDir + "/" + plot.name + ".png");
       canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
