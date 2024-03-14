@@ -3,10 +3,27 @@
 #include "Bin.h"
 #include "Enumerate.h"
 
+// Flux Config I Front Face
+/*
 constexpr double numufluxscale  = 0.92341993;
 constexpr double anumufluxscale = 0.070391454;
 constexpr double nuefluxscale   = 0.0055868623;
 constexpr double anuefluxscale  = 0.00060175334;
+*/
+
+// Flux Config I Effective Z (11227.8cm)
+/*
+constexpr double numufluxscale  = 0.92379188;
+constexpr double anumufluxscale = 0.070015689;
+constexpr double nuefluxscale   = 0.0055930597;
+constexpr double anuefluxscale  = 0.00059937579;
+*/
+
+// Flux Config L Effective Z (11227.8cm)
+constexpr double numufluxscale  = 0.92364301;
+constexpr double anumufluxscale = 0.070125432;
+constexpr double nuefluxscale   = 0.0056067340;
+constexpr double anuefluxscale  = 0.00062482531;
 
 class XSecPlot {
 
@@ -104,6 +121,15 @@ class XSecPlot {
     {
       return _var1;
     }
+
+  void InsertSystFracFlatError(const std::string &name, const double &frac)
+  {
+    for(int i = 0; i < _bins.size(); ++i)
+      {
+        const double nom = _bins[i]->GetNominalXSec();
+        _bins[i]->InsertSystFracError(name, nom, frac);
+      }
+  }
 
   TH2F* GetNominalHist(const bool statErr = true)
   {
@@ -401,50 +427,17 @@ class XSecPlot {
     return graph;
   }
 
-  TGraphAsymmErrors* GetCVErrGraph(const std::vector<std::string> &weightNames, const int var1Bin = -1)
+  void CombineErrorsInQuaderature(const std::vector<std::string> &weightNames, const std::string &weightName)
   {
-    TGraphAsymmErrors* graph = new TGraphAsymmErrors();
-    int bin_count = 0;
-
-    for(auto&& [ bin_i, bin ] : enumerate(_bins))
+    for(auto const&  bin : _bins)
       {
-        const int binIndex1 = bin_i / (_var0Bins.size() - 1) + 1;
-
-        if(var1Bin != -1 && var1Bin != binIndex1)
-          continue;
-
-        const double nom  = bin->GetNominalXSec();
-
-        if(nom == 0.)
-          continue;
+        const double nom = bin->GetNominalXSec();
 
         const double bias = bin->GetFracSystBiasQuadSum(weightNames);
         const double res  = bin->GetFracSystResAveQuadSum(weightNames);
 
-        double centre, width;
-
-        if(_var0Bins.size() == 2)
-          {
-            centre = bin->GetVar1Center();
-            width  = bin->GetVar1Width();
-          }
-        else
-          {
-            centre = bin->GetVar0Center();
-            width  = bin->GetVar0Width();
-          }
-
-        graph->SetPoint(bin_count, centre, nom * (1 - bias));
-        graph->SetPointError(bin_count, 0.49 * width, 0.49 * width, nom * res, nom * res);
-
-        graph->SetMarkerStyle(1);
-        graph->SetLineColor(kBlue+2);
-        graph->SetLineWidth(5);
-
-        ++bin_count;
+        bin->InsertSystFracError(weightName, (1 + bias) * nom, res);
       }
-
-    return graph;
   }
 
   void GetVar0BinsArray(double var0Bins[])
@@ -556,7 +549,7 @@ class XSecPlot {
     TFile* xsecFileNuE   = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_nue.root", "READ");
     TFile* xsecFileANuE  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anue.root", "READ");
 
-    //	TH1F* hist          = (TH1F*) xsecFile->Get(Form("%s_%s_%s", var.c_str(), selName.Data(), flavour.Data()));
+    //  TH1F* hist          = (TH1F*) xsecFile->Get(Form("%s_%s_%s", var.c_str(), selName.Data(), flavour.Data()));
     TH1F* histNuMu      = (TH1F*) xsecFileNuMu->Get(Form("%s_numu", selName.Data()));
     TH1F* histANuMu     = (TH1F*) xsecFileANuMu->Get(Form("%s_anumu", selName.Data()));
     TH1F* histNuE       = (TH1F*) xsecFileNuE->Get(Form("%s_nue", selName.Data()));
@@ -594,7 +587,7 @@ class XSecPlot {
     else
       throw std::runtime_error("This is not a 1D setup");
 
-    //	TH1F* hist          = (TH1F*) xsecFile->Get(Form("%s_%s_%s", var.c_str(), selName.Data(), flavour.Data()));
+    //  TH1F* hist          = (TH1F*) xsecFile->Get(Form("%s_%s_%s", var.c_str(), selName.Data(), flavour.Data()));
     TH1F* histNuMu      = (TH1F*) xsecFileNuMu->Get(Form("%s_%s_numu", var.c_str(), selName.Data()));
     TH1F* histANuMu     = (TH1F*) xsecFileANuMu->Get(Form("%s_%s_anumu", var.c_str(), selName.Data()));
     TH1F* histNuE       = (TH1F*) xsecFileNuE->Get(Form("%s_%s_nue", var.c_str(), selName.Data()));
@@ -610,10 +603,71 @@ class XSecPlot {
     histNuMu->Add(histNuE);
     histNuMu->Add(histANuE);
 
-    TH1F* foldedHist = Fold(histNuMu, foldingmatrix);
+    //TH1F* foldedHist = Fold(histNuMu, foldingmatrix);
 
-    //TH1F* foldedHist = histNuMu;
+    TH1F* foldedHist = histNuMu;
     foldedHist->Scale(scale);
     return foldedHist;
+  }
+
+  TH1F* GetFracErrorHist0D(const std::string &name)
+  {
+    double var0Bins[_var0Bins.size()];
+    GetVar0BinsArray(var0Bins);
+
+    TH1F* hist = new TH1F(Form("ZeroD_%s_frac_error_%s", _name.c_str(), name.c_str()), _axes_labels.c_str(),
+                          _var0Bins.size() - 1, var0Bins);
+
+    hist->SetBinContent(1, _bins[0]->GetFracSystResAve(name));
+
+    return hist;
+  }
+
+  TH1F* GetFracErrorHist1D(const std::string &name)
+  {
+    if(_var0Bins.size() != 2 && _var1Bins.size() != 2)
+      throw std::runtime_error("Asking for 1D hist but neither set has 1 bin");
+
+    if(_var0Bins.size() == 2)
+      {
+        double var1Bins[_var1Bins.size()];
+        GetVar1BinsArray(var1Bins);
+
+        TH1F* hist = new TH1F(Form("OneD_%s_%s", _name.c_str(), name.c_str()), _axes_labels.c_str(),
+                              _var1Bins.size() - 1, var1Bins);
+
+        for(auto&& [ bin_i, bin ] : enumerate(_bins))
+          {
+            hist->SetBinContent(bin_i + 1, bin->GetFracSystResAve(name));
+            hist->SetBinError(bin_i + 1, 0);
+          }
+
+        hist->SetMarkerStyle(0);
+        hist->SetLineColor(kBlack);
+
+        return hist;
+      }
+
+    if(_var1Bins.size() == 2)
+      {
+        double var0Bins[_var0Bins.size()];
+        GetVar0BinsArray(var0Bins);
+
+        TH1F* hist = new TH1F(Form("OneD_%s_%s", _name.c_str(), name.c_str()), _axes_labels.c_str(),
+                              _var0Bins.size() - 1, var0Bins);
+
+        for(auto&& [ bin_i, bin ] : enumerate(_bins))
+          {
+            hist->SetBinContent(bin_i + 1, bin->GetFracSystResAve(name));
+            hist->SetBinError(bin_i + 1, 0);
+          }
+
+        hist->SetMarkerStyle(0);
+        hist->SetLineColor(kBlack);
+
+        return hist;
+      }
+
+    return NULL;
   }
 };

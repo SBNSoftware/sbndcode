@@ -1,15 +1,18 @@
 #include "XSecCommon.C"
 #include "LatexHeaders.h"
 
-void MakePlot(const int type, const Selections selections, const TString saveDir,
-              const std::string weightName = "", const int nunivs = 0,
-              const std::vector<std::string> weightNames = std::vector<std::string>());
+void MakePlot(const int type, const Selections &selections, const TString &saveDir,
+              const std::string &weightName = "", const int &nunivs = 0,
+              const std::vector<std::string> &weightNames = std::vector<std::string>());
 
-void MakeCorrelationMatrix(const Selections selections, const TString saveDir, const std::string weightName = "");
+void MakeCorrelationMatrix(const Selections &selections, const TString &saveDir, const std::string &weightName = "");
 
-void MakeSummaryPlot(const int type, const Selections selections, const TString saveDir);
+void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir);
 
-void XSec1D(const TString productionVersion, const TString saveDirExt, const int var)
+void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, const std::string &weightName,
+                         const std::vector<Syst> &systs);
+
+void XSec1D(const TString &productionVersion, const TString &saveDirExt, const int var)
 {
   gROOT->SetStyle("henrySBND");
   gStyle->SetPaintTextFormat("1.2g");
@@ -36,7 +39,7 @@ void XSec1D(const TString productionVersion, const TString saveDirExt, const int
     {
       piZeroMomBins      = { 0., 60., 120., 180., 240., 300., 400., 600., 1000. };
       cosThetaPiZeroBins = { def_double, def_double_high };
-      varAxis            = "p_{#pi^{0}};#frac{d#sigma}{dp_{#pi^{0}}} (#frac{cm^{2}}{MeV/c nucleon})";
+      varAxis            = "p_{#pi^{0}} (MeV/c);#frac{d#sigma}{dp_{#pi^{0}}} (#frac{cm^{2}}{MeV/c nucleon})";
     }
   else if(var == 1)
     {
@@ -63,19 +66,13 @@ void XSec1D(const TString productionVersion, const TString saveDirExt, const int
   selections[1].plot = xsec_0p0pi;
   selections[2].plot = xsec_Np0pi;
 
-  weightSets = {};
-
   FillPlots(samples, selections, weightSets);
 
   MakePlot(0, selections, saveDir);
   MakeSummaryPlot(0, selections, saveDir);
 
-  std::vector<std::string> all_weights;
-
   for(WeightSet &weightSet : weightSets)
     {
-      all_weights.insert(all_weights.end(), weightSet.list.begin(), weightSet.list.end());
-
       for(std::string &name : weightSet.list)
         {
           MakePlot(1, selections, saveDir, name, weightSet.nunivs);
@@ -84,15 +81,19 @@ void XSec1D(const TString productionVersion, const TString saveDirExt, const int
           MakeCorrelationMatrix(selections, saveDir, name);
         }
 
-      MakePlot(3, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
+      if(weightSet.name == "genie")
+        MakePlot(3, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
     }
 
-  MakePlot(3, selections, saveDir, "all", 0, all_weights);
+  const std::vector<std::string> all_systs_list = SystSetToWeightList(all_systs);
+
+  MakePlot(3, selections, saveDir, "all", 0, all_systs_list);
+  MakeSystSummaryPlot(selections, saveDir, "all", all_systs);
+
 }
 
-void MakePlot(const int type, const Selections selections, const TString saveDir,
-              const std::string weightName = "", const int nunivs = 0,
-              const std::vector<std::string> weightNames = std::vector<std::string>())
+void MakePlot(const int type, const Selections &selections, const TString &saveDir,
+              const std::string &weightName, const int &nunivs, const std::vector<std::string> &weightNames)
 {
   for(auto&& [ selection_i, selection ] : enumerate(selections))
     {
@@ -134,7 +135,8 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
 
       if(type == 3)
         {
-          TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightNames);
+          selection.plot->CombineErrorsInQuaderature(weightNames, weightName);
+          TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightName);
           graph->Draw("PEsame");
         }
 
@@ -167,7 +169,7 @@ void MakePlot(const int type, const Selections selections, const TString saveDir
     }
 }
 
-void MakeCorrelationMatrix(const Selections selections, const TString saveDir, const std::string weightName = "")
+void MakeCorrelationMatrix(const Selections &selections, const TString &saveDir, const std::string &weightName)
 {
   for(auto&& [ selection_i, selection ] : enumerate(selections))
     {
@@ -199,7 +201,7 @@ void MakeCorrelationMatrix(const Selections selections, const TString saveDir, c
     }
 }
 
-void MakeSummaryPlot(const int type, const Selections selections, const TString saveDir)
+void MakeSummaryPlot(const int type, const Selections &selections, const TString &saveDir)
 {
   for(auto&& [ selection_i, selection ] : enumerate(selections))
     {
@@ -239,6 +241,97 @@ void MakeSummaryPlot(const int type, const Selections selections, const TString 
           canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_genie_compare.png");
           canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_genie_compare.pdf");
         }
+
+      delete hist;
+      delete canvas;
+    }
+}
+
+void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, const std::string &weightName,
+                         const std::vector<Syst> &systs)
+{
+  for(auto&& [ selection_i, selection ] : enumerate(selections))
+    {
+      TCanvas *canvas = new TCanvas(Form("canvas%s", selection.name.Data()),
+                                    Form("canvas%s", selection.name.Data()));
+      canvas->cd();
+
+      TLegend *leg = new TLegend(.6, .65, .8, .85);
+      leg->SetTextSize(0.02);
+
+      const TString saveSubDir = saveDir + "/" + selection.name;
+      gSystem->Exec("mkdir -p " + saveSubDir);
+
+      TPad *p1 = new TPad(Form("p1%s", selection.name.Data()), Form("p1%s", selection.name.Data()),
+                          0., .3, 1., 1.);
+      p1->Draw();
+      p1->SetLeftMargin(.2);
+      p1->SetBottomMargin(0.05);
+      p1->SetTopMargin(0.12);
+      p1->SetRightMargin(0.05);
+      p1->cd();
+
+      TH1F *hist = selection.plot->GetNominalHist1D();
+      hist->GetYaxis()->SetTitleOffset(1.5);
+      hist->GetYaxis()->SetTitleSize(0.05);
+      hist->GetXaxis()->SetLabelSize(0);
+      hist->GetXaxis()->SetLabelOffset(999);
+      hist->Draw("histe][");
+      hist->SetMinimum(0);
+      hist->SetMaximum(1.25 * hist->GetMaximum());
+      gPad->Update();
+
+      const std::vector<std::string> systs_list = SystSetToWeightList(systs);
+      selection.plot->CombineErrorsInQuaderature(systs_list, weightName);
+      TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightName);
+      graph->Draw("PEsame");
+
+      leg->AddEntry(graph, "#splitline{MC XSec +}{Combined Systematics}", "le");
+
+      TPaveText* title = (TPaveText*)gPad->FindObject("title");
+      title->SetY1NDC(0.92);
+      title->SetY2NDC(1);
+      title->SetX1NDC(0.45);
+      title->SetX2NDC(.8);
+      gPad->Modified();
+      gPad->Update();
+
+      canvas->cd(0);
+
+      TPad *p2 = new TPad(Form("p2%s", selection.name.Data()), Form("p2%s", selection.name.Data()),
+                          0., 0., 1., .31);
+      p2->Draw();
+      p2->SetLeftMargin(.2);
+      p2->SetBottomMargin(0.25);
+      p2->SetTopMargin(0.04);
+      p2->SetRightMargin(0.05);
+      p2->cd();
+
+      for(auto const& syst : systs)
+        {
+          TH1F *systHist = selection.plot->GetFracErrorHist1D(syst.name);
+          systHist->SetBit(TH1::kNoTitle);
+          systHist->GetYaxis()->SetTitle("#splitline{Fractional}{Uncertainty}");
+          systHist->GetYaxis()->SetTitleOffset(0.5);
+          systHist->GetYaxis()->SetTitleSize(0.1);
+          systHist->GetYaxis()->SetLabelSize(0.09);
+          systHist->GetXaxis()->SetLabelSize(0.11);
+          systHist->GetXaxis()->SetTitleOffset(1);
+          systHist->GetXaxis()->SetTitleSize(0.11);
+          systHist->SetLineColor(syst.colour);
+          systHist->Draw("hist][same");
+          systHist->SetMinimum(0);
+          systHist->SetMaximum(0.28);
+          gPad->Update();
+
+          leg->AddEntry(systHist, syst.printName.c_str(), "l");
+        }
+
+      canvas->cd(0);
+      leg->Draw();
+
+      canvas->SaveAs(saveSubDir + "/" + selection.name + "_all_systs.png");
+      canvas->SaveAs(saveSubDir + "/" + selection.name + "_all_systs.pdf");
 
       delete hist;
       delete canvas;

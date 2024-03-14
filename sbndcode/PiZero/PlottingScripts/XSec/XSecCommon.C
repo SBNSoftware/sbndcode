@@ -4,6 +4,7 @@
 #include "Selection.h"
 #include "WeightSet.h"
 #include "Enumerate.h"
+#include "SystNames.h"
 
 XSecSamples SetupSamples(const TString productionVersion)
 {
@@ -241,5 +242,18 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
           //          bin->CalculateSystFracErrorsMedianPercentiles();
           bin->CalculateSystFracErrorsNominalSD();
         }
+
+      plot->InsertSystFracFlatError("ntargets", 0.01);
+      plot->InsertSystFracFlatError("pot", 0.02);
     }
+}
+
+std::vector<std::string> SystSetToWeightList(const std::vector<Syst> &systs)
+{
+  std::vector<std::string> list;
+
+  for(auto const& syst : systs)
+    list.push_back(syst.name);
+
+  return list;
 }
