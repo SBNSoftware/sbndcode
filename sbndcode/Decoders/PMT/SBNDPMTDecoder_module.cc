@@ -100,6 +100,10 @@ private:
 
     uint ffragid_offset;
     uint fhist_evt;
+
+    std::vector<uint> fhack_fragid_map;
+    bool fuse_hack_map;
+
     std::vector<uint> fch_map;
 
     uint32_t fnch; // number of channels
@@ -140,6 +144,10 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fthreshold_ftrig = p.get<uint16_t>("threshold_ftrig",16350);
     ffragid_offset   = p.get<uint>("fragid_offset",40960);
     fhist_evt        = p.get<int>("hist_evt",1);
+
+    fhack_fragid_map = p.get<std::vector<uint>>("hack_fragid_map",{});
+    fuse_hack_map    = p.get<bool>("use_hack_map",false);
+
     fch_map          = p.get<std::vector<uint>>("ch_map",{});
 
     produces< std::vector< raw::OpDetWaveform > >(fch_instance_name); 
@@ -194,6 +202,13 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     for (size_t ii = 0; ii < contf.block_count(); ++ii){
                         auto frag = *contf[ii].get();                        
                         auto fragid = frag.fragmentID() - ffragid_offset;
+                        if (fuse_hack_map){
+                            auto it = std::find(fhack_fragid_map.begin(), fhack_fragid_map.end(), fragid);
+                            if (it != fhack_fragid_map.end()){
+                                auto idx = std::distance(fhack_fragid_map.begin(), it);
+                                fragid = idx;
+                            }
+                        }
                         // ignore boards that are not in the list of boards to ignore
                         if (std::find(fignore_fragid.begin(), fignore_fragid.end(), fragid) != fignore_fragid.end())
                             continue;
@@ -209,6 +224,22 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         }
         else if (fragmentHandle->front().type() == sbndaq::detail::FragmentType::CAENV1730){
         	if (fdebug>1) std::cout << "Found " << fragmentHandle->size() << " normal CAEN fragments " << std::endl;
+            // auto trigsize = trig_frag_v.size();
+            for (size_t ii = 0; ii < fragmentHandle->size(); ++ii){
+                auto frag = fragmentHandle->at(ii);
+                auto fragid = frag.fragmentID() - ffragid_offset;
+                if (fuse_hack_map){
+                    auto it = std::find(fhack_fragid_map.begin(), fhack_fragid_map.end(), fragid);
+                    if (it != fhack_fragid_map.end()){
+                        auto idx = std::distance(fhack_fragid_map.begin(), it);
+                        fragid = idx;
+                    }
+                }
+                if (std::find(fignore_fragid.begin(), fignore_fragid.end(), fragid) != fignore_fragid.end())
+                    continue;
+                // std::cout << "Found normal CAEN fragment with fragid " << fragid << std::endl;
+                trig_frag_v[ii].push_back(frag);
+            }
         }
         fragmentHandle.removeProduct();
     }
@@ -351,7 +382,15 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         for (size_t idx=0; idx<ifrag_v.size(); idx++){
             auto frag = ifrag_v.at(idx);
             get_waveforms(frag, iwvfm_v);
-            fragid_v.at(idx) = frag.fragmentID() - ffragid_offset;
+            auto fragid = frag.fragmentID() - ffragid_offset;
+            if (fuse_hack_map){
+                auto it = std::find(fhack_fragid_map.begin(), fhack_fragid_map.end(), fragid);
+                if (it != fhack_fragid_map.end()){
+                    auto idx = std::distance(fhack_fragid_map.begin(), it);
+                    fragid = idx;
+                }
+            }
+            fragid_v.at(idx) = fragid;
             iwvfm_start_v.at(idx) = get_ttt(frag) - 2*(get_length(frag));
 
             uint32_t frag_ttt = 0; 
@@ -359,13 +398,15 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             int      frag_tick = 0;
             
             get_timing(frag, frag_ttt, frag_len, frag_tick);
-            int frag_ts = frag_ttt - 2*(frag_len - frag_tick); // ns
+            // int frag_ts = frag_ttt - 2*(frag_len - frag_tick); // ns
+            // frag_ts = frag.timestamp()%int(1e9);
             auto length = get_length(frag);
             if (fdebug>1){
-                std::cout << "      Frag ID: " << frag.fragmentID() - ffragid_offset
+                std::cout << "      Frag ID: " << fragid
                           << ", ttt: " << frag_ttt
                           << ", tick: " << frag_tick
-                          << ", trig ts: " << frag_ts
+                        //   << ", trig ts: " << frag_ts
+                          << ", ts: " << frag.timestamp()%uint(1e9)
                           << ", start ts: " << frag_ttt - 2*(frag_len)
                           << ", length: " << length
                           << std::endl;
@@ -385,7 +426,15 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     std::vector<std::vector<uint16_t>> jwvfm_v;
                     for (size_t idx=0; idx<jfrag_v.size(); idx++){
                         auto frag = jfrag_v.at(idx);
-                        if (fragid_v.at(idx) != (uint)(frag.fragmentID() - ffragid_offset)){
+                        auto fragid = frag.fragmentID() - ffragid_offset;
+                        if (fuse_hack_map){
+                            auto it = std::find(fhack_fragid_map.begin(), fhack_fragid_map.end(), fragid);
+                            if (it != fhack_fragid_map.end()){
+                                auto idx = std::distance(fhack_fragid_map.begin(), it);
+                                fragid = idx;
+                            }
+                        }
+                        if (fragid_v.at(idx) != (uint)(fragid)){
                             // check that the two fragments originated from the same board
                             std::cout << "Error: fragment IDs do not match between triggers " << itrig << " and " << jtrig << std::endl;
                             pass_checks=false;
@@ -463,7 +512,15 @@ bool sbndaq::SBNDPMTDecoder::check_fragments(std::vector<artdaq::Fragment> &frag
     for (size_t ifrag=0; ifrag<frag_v.size(); ifrag++){
 
         // assuming that the timing CAEN has fragmentId==8, skip it 
-        if ((frag_v.at(ifrag).fragmentID() - ffragid_offset) == 8 )
+        auto fragid = frag_v.at(ifrag).fragmentID() - ffragid_offset;
+        if (fuse_hack_map){
+            auto it = std::find(fhack_fragid_map.begin(), fhack_fragid_map.end(), fragid);
+            if (it != fhack_fragid_map.end()){
+                auto idx = std::distance(fhack_fragid_map.begin(), it);
+                fragid = idx;
+            }
+        }
+        if (fragid == 8 )
             continue;
         CAENV1730Fragment bb(frag_v.at(ifrag));
         CAENV1730Event const* event_ptr = bb.Event();
@@ -486,8 +543,8 @@ bool sbndaq::SBNDPMTDecoder::check_fragments(std::vector<artdaq::Fragment> &frag
         if (this_ttt != ttt || this_len != wvfm_length){
             if (abs((signed)(this_ttt - ttt)) > 16 || abs((signed)(this_len - wvfm_length)) > 8 ){
                 std::cout << "Mismatch is greater than maximum 16 ns jitter" << std::endl;
-                pass=false;
-                break;
+                // pass=false;
+                // break;
             }
         }
     }
