@@ -10,7 +10,7 @@ hitdumper:
     MaxCRTHits: 5000
     MaxCRTTracks: 10
 
-    DigitModuleLabel:         "daq"
+    DigitModuleLabel:         "simtpc2d:daq"
     HitsModuleLabel:          "fasthit"
     OpHitsModuleLabel:        ["ophitpmt", "ophitxarapuca"]
     CRTHitModuleLabel:        "crthit"
@@ -35,7 +35,7 @@ hitdumper:
     readcrtSoftTrigger:	      false
     readMuonTracks:           false
     readMuonHits:             false
-    readTruth:                true
+    readTruth:                false
     readMCParticle:           false
     savePOTinfo:              true
     checkTransparency:        false

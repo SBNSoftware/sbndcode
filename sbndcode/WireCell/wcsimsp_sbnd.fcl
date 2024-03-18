@@ -33,7 +33,7 @@ sbnd_wcls_simsp: @local::sbnd_wcls
 sbnd_wcls_simsp.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp.jsonnet"]
 sbnd_wcls_simsp.wcls_main.inputers: ["wclsSimDepoSetSource:"]
 sbnd_wcls_simsp.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
-                                     # "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+                                     "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
                                      "wclsFrameSaver:spsaver"
                                     ]
 sbnd_wcls_simsp.wcls_main.params:   {
@@ -54,7 +54,7 @@ sbnd_wcls_simsp.wcls_main.params:   {
                                      ## If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
                                      ## If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
                                      ## this is whether or not to save raw digits!!! 
-                                     save_simdigits: "false"
+                                     save_simdigits: "true"
           
                                      save_track_id: "true"
                                     }
