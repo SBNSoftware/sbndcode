@@ -33,6 +33,7 @@ public:
 
   typedef struct ChanInfo {
     std::string  Wall;        // "East", "North", "Bottom"
+    unsigned int Swap;           // same=0, swapped=1
     unsigned int MAC5;           // MAC5
     unsigned int offlchan;        // in gdml and channel sorting convention
     bool valid;          // true if valid, false if not

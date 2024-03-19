@@ -48,7 +48,8 @@ SBND::CRTChannelMapService::CRTChannelMapService(fhicl::ParameterSet const& pset
       linestream 
 	>> c.offlchan
 	>> c.Wall
-	>> c.MAC5;
+	>> c.MAC5
+	>> c.Swap;
 
       c.valid = true;
 
