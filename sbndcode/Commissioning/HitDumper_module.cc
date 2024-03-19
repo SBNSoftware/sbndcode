@@ -512,7 +512,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   freadMCParticle    = p.get<bool>("readMCParticle",false);
   fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
   fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
-  fReadMeVPrtl       = p.get<bool>("ReadMeVPrtl",false);;
+  fReadMeVPrtl       = p.get<bool>("ReadMeVPrtl",true);;
 
   fWindow            = p.get<int>("window",100);
   fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
