@@ -52,6 +52,7 @@ SBND::CRTChannelMapService::CRTChannelMapService(fhicl::ParameterSet const& pset
 	>> c.Swap;
 
       c.valid = true;
+		if (c.offlchan < 0 || c.MAC5 < 0) c.valid = false;
 
       fChanInfoFromMAC5[c.MAC5] = c;
       fChanInfoFromOfflChan[c.offlchan] = c;
