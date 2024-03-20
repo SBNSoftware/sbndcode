@@ -32,7 +32,7 @@ sbnd_crtselectionanatruth:
 sbnd_crteventfilter:
 {
     module_type:    "CRTEventFilter" 
-    AuxDetIDELabel: "crtsim"
+    CRTHitLabel:    "crthit"
 }
 
 END_PROLOG

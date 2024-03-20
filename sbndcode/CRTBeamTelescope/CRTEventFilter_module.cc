@@ -18,6 +18,8 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
 
+#include "sbnobj/Common/CRT/CRTHit.hh"
+
 #include <memory>
 
 class CRTEventFilter;
@@ -41,7 +43,7 @@ public:
 private:
 
   // Declare member data here.
-  art::InputTag fAuxDetIDELabel;
+  art::InputTag fCRTHitLabel;
 
 };
 
@@ -50,15 +52,15 @@ CRTEventFilter::CRTEventFilter(fhicl::ParameterSet const& p)
   : EDFilter{p}  // ,
   // More initializers here.
 {
-  fAuxDetIDELabel = p.get<art::InputTag>("AuxDetIDELabel");
+  fCRTHitLabel = p.get<art::InputTag>("CRTHitLabel");
 }
 
 bool CRTEventFilter::filter(art::Event& e)
 {
-  auto AuxIDEHandle = e.getValidHandle<std::vector<sim::AuxDetIDE>>(fAuxDetIDELabel);
+  auto CRTHitHandle = e.getValidHandle<std::vector<sbn::crt::CRTHit>>(fCRTHitLabel);
   bool isEventPassedBeamTele = false;
 
-  if (AuxIDEHandle->size()>0){
+  if (CRTHitHandle->size()>0){
     isEventPassedBeamTele = true;
   }
 

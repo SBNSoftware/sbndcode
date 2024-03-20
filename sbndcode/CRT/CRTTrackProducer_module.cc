@@ -166,48 +166,49 @@ void CRTTrackProducer::produce(art::Event & evt)
     std::vector<art::Ptr<sbn::crt::CRTHit> > hitlist;
     if (evt.getByLabel(fDataLabelHits, rawHandle))
       art::fill_ptr_vector(hitlist, rawHandle);
-
-    std::map<art::Ptr<sbn::crt::CRTHit>, int> hitIds;
-    for(size_t i = 0; i<hitlist.size(); i++){
-      hitIds[hitlist[i]] = i;
-    }
-
-    std::vector<std::vector<art::Ptr<sbn::crt::CRTHit>>> CRTTzeroVect = trackAlg.CreateCRTTzeros(hitlist);
-
-    // Loop over tzeros
-    for(size_t i = 0; i<CRTTzeroVect.size(); i++){
-
-      //loop over hits for this tzero, sort by tagger
-      std::map<std::string, std::vector<art::Ptr<sbn::crt::CRTHit>>> hits;
-      for (size_t ah = 0; ah< CRTTzeroVect[i].size(); ++ah){        
-        std::string ip = CRTTzeroVect[i][ah]->tagger;
-      	if(ip == "volTaggerSouthOne_0" || ip == "volTaggerSouthTwo_0" || ip == "volTaggerSouthThree_0") { ip = "volTaggerSouth_0"; }
-        hits[ip].push_back(CRTTzeroVect[i][ah]);
-      } // loop over hits
-      
-      //loop over planes and calculate average hits
-      std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> allHits;
-      for (auto &keyVal : hits){
-        std::string ip = keyVal.first;
-        std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> ahits = trackAlg.AverageHits(hits[ip], hitIds);
-        allHits.insert(allHits.end(), ahits.begin(), ahits.end());
+    
+    if (hitlist.size()<50.) { // only do CRT track reconstruction if there are less than 50. hits
+      std::map<art::Ptr<sbn::crt::CRTHit>, int> hitIds;
+      for(size_t i = 0; i<hitlist.size(); i++){
+        hitIds[hitlist[i]] = i;
       }
 
-      //Create tracks with hits at the same tzero
-      std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> trackCandidates = trackAlg.CreateTracks(allHits);
-      nTrack += trackCandidates.size();
-      for(size_t j = 0; j < trackCandidates.size(); j++){
-        CRTTrackCol->emplace_back(trackCandidates[j].first);
+      std::vector<std::vector<art::Ptr<sbn::crt::CRTHit>>> CRTTzeroVect = trackAlg.CreateCRTTzeros(hitlist);
 
-        art::Ptr<sbn::crt::CRTTrack> trackPtr = makeTrackPtr(CRTTrackCol->size()-1);
+      // Loop over tzeros
+      for(size_t i = 0; i<CRTTzeroVect.size(); i++){
+
+        //loop over hits for this tzero, sort by tagger
+        std::map<std::string, std::vector<art::Ptr<sbn::crt::CRTHit>>> hits;
         for (size_t ah = 0; ah< CRTTzeroVect[i].size(); ++ah){        
-          Trackassn->addSingle(trackPtr, CRTTzeroVect[i][ah]);
+          std::string ip = CRTTzeroVect[i][ah]->tagger;
+          if(ip == "volTaggerSouthOne_0" || ip == "volTaggerSouthTwo_0" || ip == "volTaggerSouthThree_0") { ip = "volTaggerSouth_0"; }
+          hits[ip].push_back(CRTTzeroVect[i][ah]);
+        } // loop over hits
+        
+        //loop over planes and calculate average hits
+        std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> allHits;
+        for (auto &keyVal : hits){
+          std::string ip = keyVal.first;
+          std::vector<std::pair<sbn::crt::CRTHit, std::vector<int>>> ahits = trackAlg.AverageHits(hits[ip], hitIds);
+          allHits.insert(allHits.end(), ahits.begin(), ahits.end());
         }
-        if(trackCandidates[j].first.complete) nCompTrack++;
-        else nIncTrack++;
+
+        //Create tracks with hits at the same tzero
+        std::vector<std::pair<sbn::crt::CRTTrack, std::vector<int>>> trackCandidates = trackAlg.CreateTracks(allHits);
+        nTrack += trackCandidates.size();
+        for(size_t j = 0; j < trackCandidates.size(); j++){
+          CRTTrackCol->emplace_back(trackCandidates[j].first);
+
+          art::Ptr<sbn::crt::CRTTrack> trackPtr = makeTrackPtr(CRTTrackCol->size()-1);
+          for (size_t ah = 0; ah< CRTTzeroVect[i].size(); ++ah){        
+            Trackassn->addSingle(trackPtr, CRTTzeroVect[i][ah]);
+          }
+          if(trackCandidates[j].first.complete) nCompTrack++;
+          else nIncTrack++;
+        }
       }
     }
-
   //Older track reconstruction methods from MicroBooNE
   }else{
     //Get list of tzeros             
@@ -350,6 +351,10 @@ void CRTTrackProducer::produce(art::Event & evt)
     <<"Number of complete tracks   = "<<CRTTrackCol->size()-nIncTrack<<"\n"
     <<"Number of incomplete tracks = "<<nIncTrack;
 
+  std::cout<<"Number of tracks            = "<<CRTTrackCol->size()<<"\n"
+           <<"Number of complete tracks   = "<<CRTTrackCol->size()-nIncTrack<<"\n"
+           <<"Number of incomplete tracks = "<<nIncTrack<<std::endl;
+  std::cout << "Run:SubRun:Event " << evt.run() << ":" << evt.subRun() << ":" << evt.event() << std::endl;
   //store track collection into event
   if(fStoreTrack == 1){
     evt.put(std::move(CRTTrackCol));

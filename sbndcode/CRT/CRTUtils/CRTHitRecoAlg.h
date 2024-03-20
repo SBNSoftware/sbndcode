@@ -14,7 +14,8 @@ namespace sbnd{
 
   struct CRTStripHit {
      CRTStripHit(uint32_t _channel, uint32_t _t0, uint32_t _t1, uint32_t _s, double _x,
-                 double _ex, uint16_t _adc1, uint16_t _adc2, uint8_t _febdataindex) 
+                 double _ex, uint16_t _adc1, uint16_t _adc2, uint8_t _febdataindex 
+                 /*,std::array<float, 2> _channels_below_threshold*/) 
      : channel      (_channel)
      , t0           (_t0)
      , t1           (_t1)
@@ -24,6 +25,7 @@ namespace sbnd{
      , adc1         (_adc1)
      , adc2         (_adc2)
      , febdataindex (_febdataindex)
+     //, channels_below_threshold (_channels_below_threshold)
     {};
 
     uint32_t channel;      // Channel ID for 1st SiPM
@@ -35,6 +37,7 @@ namespace sbnd{
     uint16_t adc1;         // ADC 1st SiPM
     uint16_t adc2;         // ADC 2nd SiPM
     uint8_t  febdataindex; // Index of FEBData used to make strip hit
+    //std::array<float, 2> channels_below_threshold; /*format [total # strips, total # of ADC]*/
   };
 
 

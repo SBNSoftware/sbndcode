@@ -1,0 +1,7 @@
+#include "genie_sbnd.fcl"
+
+#include "prodgenie_bnb_nu_cosmic_sbnd.fcl"
+
+physics.producers.generator: @local::sbnd_genie_simple_dirt
+
+#include "use_crt_beam_tele_geometry.fcl"

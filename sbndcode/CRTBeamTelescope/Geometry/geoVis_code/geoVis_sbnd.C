@@ -79,6 +79,7 @@ drawopt optsbnd[] = {
 	{"volDewarInsulation", kRed, 0},
 	{"volDewarFluidLAr", kBlue+1, 0},
 	{"volDewarFluidLN2", kBlue+2, 0},
+	{"boxDetectorEnclosure_Pit", kBlack}
 	{0, 0}
 };
 

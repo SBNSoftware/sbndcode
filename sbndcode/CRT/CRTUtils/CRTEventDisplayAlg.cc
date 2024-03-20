@@ -60,7 +60,8 @@ void CRTEventDisplayAlg::reconfigure(const Config& config){
   fMinTime               = config.MinTime();
   fMaxTime               = config.MaxTime();
   
-  fCrtBackTrack          = config.CrtBackTrack();
+  //fCrtBackTrack          = config.CrtBackTrack();
+  fDataMode              = config.DataMode();
 
   return;
 }
@@ -241,7 +242,7 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
   }
 
   // Draw DrawAuxDetIDEs (detsim) in the event
-  if(fDrawAuxDetIDEs){
+  if(!fDataMode && fDrawAuxDetIDEs){
     auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetSimChannel>>(fAuxDetIDEsLabel);
     //auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetIDE>>(fAuxDetIDEsLabel);
     
@@ -279,7 +280,7 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
   }
 
   // Draw the AuxDetHits (from g4) in the event
-  if(fDrawAuxDetHits){
+  if(!fDataMode && fDrawAuxDetHits){
     auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetHit>>(fAuxDetHitsLabel); 
     for(auto const simDep : *simDepositsHandle){
       double x = (simDep.GetEntryX() + simDep.GetExitX()) / 2.;
@@ -366,7 +367,7 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
   }
 
   // Draw true track trajectories for visible particles that cross the CRT
-  if(fDrawTrueTracks){
+  if(!fDataMode && fDrawTrueTracks){
 
     if(fPrint) std::cout<<std::endl<<"True tracks in event:"<<std::endl;
 

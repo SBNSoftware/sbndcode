@@ -393,9 +393,8 @@ namespace crt {
             double y = (ide.entryY + ide.exitY) / 2;
             double z = (ide.entryZ + ide.exitZ) / 2;
 
-            double tTrue = (ide.entryT + ide.exitT) / 2 + fTimeOffset; // ns
+            double tTrue = (ide.entryT + ide.exitT) / 2 + fTimeOffset; // ns fTimeOffset:1.7e6
             double eDep = ide.energyDeposited;
-
             mf::LogInfo("CRTDetSimAlg") << "True IDE with time " << tTrue
                                       << ", energy " << eDep << std::endl;
 

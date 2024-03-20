@@ -1,4 +1,4 @@
-#include "crtbacktracker_sbnd.fcl"
+##include "crtbacktracker_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
 
 BEGIN_PROLOG
@@ -23,6 +23,7 @@ crteventdisplayalg_sbnd:
     DrawIncompleteTracks: false
     DrawInvisibleTracks:  true
     DrawTrueTracks:       true
+    DataMode:             false
 
     TaggerColour:      1
     FEBEndColour:      16
@@ -43,7 +44,7 @@ crteventdisplayalg_sbnd:
     MinTime:               0. #-1276.
     MaxTime:               0. #1300.
 
-    CrtBackTrack:  @local::standard_crtbacktracker
+    #CrtBackTrack:  @local::standard_crtbacktracker
 }
 
 END_PROLOG

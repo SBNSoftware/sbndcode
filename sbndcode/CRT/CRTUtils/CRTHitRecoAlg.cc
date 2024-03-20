@@ -72,6 +72,15 @@ namespace sbnd{
             // Create hit
             count++;
             stripHits[module.taggerName][module.orientation].emplace_back(channel, t0, t1, unixs, x, ex, adc1, adc2, feb_i);
+          }else{
+            /*if (adc1>0) {
+              stripHits[module.taggerName][module.orientation].back().channels_below_threshold[0]++;
+              stripHits[module.taggerName][module.orientation].back().channels_below_threshold[1]+=adc1;
+            }
+            if (adc2>0) {
+              stripHits[module.taggerName][module.orientation].back().channels_below_threshold[0]++;
+              stripHits[module.taggerName][module.orientation].back().channels_below_threshold[1]+=adc2;
+            }*/
           }
         }
       }
@@ -115,13 +124,13 @@ namespace sbnd{
         //used_j.insert(cand.first.second);
       }
     }
-
     return crtHits;
   }
 
   std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> CRTHitRecoAlg::ProduceCRTHitCandidates(const std::string &tagger, const std::vector<CRTStripHit> &hitsOrien0, const std::vector<CRTStripHit> &hitsOrien1)
   {
     std::vector<std::pair<std::pair<unsigned, unsigned>, sbn::crt::CRTHit>> candidates;
+    std::cout<<"hitsOrien0.size(): "<<hitsOrien0.size()<<", hitsOrien1.size(): "<<hitsOrien1.size()<<std::endl;
     for(unsigned i = 0; i < hitsOrien0.size(); ++i)
       {
         const CRTStripHit hit0   = hitsOrien0[i];
@@ -168,7 +177,9 @@ namespace sbnd{
                                          << pos.Y() << ", " << pos.Z() << "cm\n"
                                          << "diff: " << diff 
                                          << std::endl;
-            if(std::abs(diff) > fHitCoincidenceRequirement) continue;
+            if(std::abs(diff) > fHitCoincidenceRequirement) {
+              continue;
+            }
             //if(abs((int)hit0.s - (int)hit1.s) > 1) continue;
             const uint64_t unixs = std::min(hit0.s, hit1.s);
             sbn::crt::CRTHit crtHit({(uint8_t)hit0.febdataindex, (uint8_t)hit1.febdataindex},
@@ -188,10 +199,10 @@ namespace sbnd{
                                     {(float)distance0, (float)uncorrected_pe0, (float)pe0},
                                     {(float)distance1, (float)uncorrected_pe1, (float)pe1});
 
-            std::cout<<"PEEEE "<<uncorrected_pe0<<" "<<pe0<<" "<<pe0/uncorrected_pe0<<" "<<distance0<<std::endl;
-            std::cout<<"PEEEE "<<uncorrected_pe1<<" "<<pe1<<" "<<pe1/uncorrected_pe1<<" "<<distance1<<std::endl;
-
-            mf::LogInfo("CRTHitRecoAlg") << "\nCreating CRTHit "
+            //std::cout<<"PEEEE "<<uncorrected_pe0<<" "<<pe0<<" "<<pe0/uncorrected_pe0<<" "<<distance0<<std::endl;
+            //std::cout<<"PEEEE "<<uncorrected_pe1<<" "<<pe1<<" "<<pe1/uncorrected_pe1<<" "<<distance1<<std::endl;
+            //mf::LogInfo("CRTHitRecoAlg")
+            std::cout << "\nCreating CRTHit "
                                          << "from FEBs: " << (unsigned) crtHit.feb_id[0] 
                                          << " & " << (unsigned) crtHit.feb_id[1] << '\n'
                                          << "at position: " << pos.X() << ", " 
@@ -204,7 +215,6 @@ namespace sbnd{
             candidates.push_back({{i, j}, crtHit});
           }
       }
-
     return candidates;
   }
 

@@ -1,0 +1,3 @@
+#include "g4_detsim_reco_crt_bt_sbnd.fcl"
+
+services.ParticleListAction.keepEMShowerDaughters: false

@@ -63,6 +63,7 @@ sbnd::CRTHitProducer::CRTHitProducer(fhicl::ParameterSet const& p)
 
 void sbnd::CRTHitProducer::produce(art::Event& e)
 { 
+  // print out run, subrun, event
   auto crtHitVec      = std::make_unique<std::vector<sbn::crt::CRTHit>>();
   auto crtHitDataAssn = std::make_unique<art::Assns<sbnd::crt::FEBData, sbn::crt::CRTHit>>();
   
@@ -85,7 +86,7 @@ void sbnd::CRTHitProducer::produce(art::Event& e)
       for(auto const &feb_id : hit.feb_id)
         util::CreateAssn(*this, e, *crtHitVec, FEBDataVec[feb_id], *crtHitDataAssn);
     }
-
+  std::cout<<"Number of CRT hits: "<<crtHitVec->size()<<std::endl;
   e.put(std::move(crtHitVec));
   e.put(std::move(crtHitDataAssn));
 }

@@ -40,7 +40,10 @@ namespace crt {
                   art::SubRunPrincipal* const &inSR,
                   art::RunPrincipal* &outR,
                   art::SubRunPrincipal* &outSR,
-                  art::EventPrincipal* &outE);
+                  art::EventPrincipal* &outE);  
+    uint64_t dateToUnixEpochNs(const std::string &dateStr);
+    void convertFileNameToDateTimeRunSubRun(const std::string& fileName, std::string& dateTimeStr, art::RunNumber_t & runNumber, int& subrunNumber);
+    std::string unixEpochNanosecondsToDateTime(uint64_t unixEpochNanoseconds);
 
   private:
     art::SourceHelper const      &fSourceHelper;
@@ -61,6 +64,7 @@ namespace crt {
     unsigned fT1Offset;
 
     TFile*                        fCRTInputFile;
+    std::string                   fCRTInputFileName;
 
     art::TypeLabel                fTLfebdata;
 

@@ -195,27 +195,19 @@
 		<constant name="coordMembrane_at_Enclosure_X" value="0" />
 		<constant name="coordMembrane_at_Enclosure_Y" value="0" />
 		<constant name="coordMembrane_at_Enclosure_Z" value="-474.7" />
-		<!--Jiaoyang's modification --> 
-		<!-- becasue we increase the height of the orgin of volDetEnclousure, so we need to bring everything back --> 
-		<constant name="Membrane_at_Enclosure_Ypos" value="-(300.0*_ft_)/4.0" />  
-		
+
 		<!-- Detector Enclosure = Cryostat + CRTs -->
 		<constant name="dimDetEnclosure_X" value="dimDetectorHall_X_mm-_eD_" />
-		<constant name="dimDetEnclosure_Y" value="(366.6*_ft_)/2.0" />
+		<constant name="dimDetEnclosure_Y" value="1733.3*_ft_" />
 		<constant name="dimDetEnclosure_Z" value="dimDetectorHall_Z_mm-_eD_" />
 		<constant name="dimTopCRTEnclosure_Y" value="buildingInternalSpace_Y" />
 
-		<!-- Jiaoyang modification -->
-		<constant name="cryostat_offset_y" value="30000.0-(300.0*_ft_)/4.0" /> 
-		<!-- end of modification -->
 
 		<!-- Position of Enclosure (mm) -->
 		<constant name="whereEnclosure_X" 	value="-coordMembrane_at_Enclosure_X-coordTPC_at_Membrane_X"/>
 		<constant name="whereEnclosure_Y" 	value="-coordMembrane_at_Enclosure_Y-coordTPC_at_Membrane_Y"/>
 		<constant name="whereEnclosure_Z" 	value="theTPC_Z/2.0-coordMembrane_at_Enclosure_Z-coordTPC_at_Membrane_Z"/>
 
-		<!-- Jiaoyang's modification --> 
-		<constant name="Enclosure_Y_pos" 	value="(300.0*_ft_)/4.0"/>
 
 		<!-- Position of TPC inside the Membrane (mm) -->
 		<constant name="whereTPC_X" value="coordTPC_at_Membrane_X"/>
@@ -485,7 +477,11 @@
 		<constant name="whereShielding_X" value="0"/>
 		<constant name="whereShielding_Y" value="5215+my_dimSystem_Z_mm+dimBuildingBaseWidth_mm/2+shielding_thickness/2"/>
 		<constant name="whereShielding_Z" value="0"/>
-
+		
+		<!-- Jiaoyang's modification --> 
+		<!-- (0,0,0) corresponds to the middle of y in the old dimDetEnclosure_Y 33.3*_ft_-->
+		<!--constant name="Enclosure_Y_pos" 	value="(1733.3-33.3)*_ft_/2.0"/-->
+		<constant name="Enclosure_Y_pos" 	value="(dimDetEnclosure_Y-whereShielding_Y)/2"/>
 		<!-- Racks -->
 		<!-- Smaller (blue/yellow) racks -->
 		<variable name="small_rack_i" value="0.0"/>
@@ -6497,24 +6493,24 @@
 
 	<!-- ========== Detector Enclosure ========== -->
 	<define>
-		<!-- Jiaoyang's modifications --> 
+
 		<!-- Membrane Cryostat Position w.r.t. Detector Enclosure System -->
 		<constant name="whereMembrane_X" value="coordMembrane_at_Enclosure_X"/>
-		<constant name="whereMembrane_Y" value="Membrane_at_Enclosure_Ypos"/>
+		<constant name="whereMembrane_Y" value="-dimDetEnclosure_Y/2"/>
 		<constant name="whereMembrane_Z" value="coordMembrane_at_Enclosure_Z"/>
-		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="cryostat_offset_y" z="whereMembrane_Z" />
+		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+50000." z="whereMembrane_Z" />
 		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
 		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopLow" z="whereMembrane_Z"/>
-
-		<position name="posCRT_North" unit="mm" x="whereMembrane_X+250" y="whereMembrane_Y-2400" z="CRT_North_pos"/>
-		<position name="posCRT_SouthOne" unit="mm" x="whereMembrane_X+3200" y="whereMembrane_Y-2400" z="CRT_South_pos"/>
-		<position name="posCRT_SouthTwo" unit="mm" x="whereMembrane_X+250" y="whereMembrane_Y-2400" z="CRT_South_pos"/>
-		<position name="posCRT_SouthThree" unit="mm" x="whereMembrane_X-2700" y="whereMembrane_Y-2400" z="CRT_South_pos"/>
+		<!-- CRT tagger north/south y-dimension size: 3073.9999999999998-->
+		<position name="posCRT_North" unit="mm" x="whereMembrane_X+250" y="whereMembrane_Y+3073.9999999999998/2" z="CRT_North_pos"/>
+		<position name="posCRT_SouthOne" unit="mm" x="whereMembrane_X+3200" y="whereMembrane_Y+3073.9999999999998/2" z="CRT_South_pos"/>
+		<position name="posCRT_SouthTwo" unit="mm" x="whereMembrane_X+250" y="whereMembrane_Y+3073.9999999999998/2" z="CRT_South_pos"/>
+		<position name="posCRT_SouthThree" unit="mm" x="whereMembrane_X-2700" y="whereMembrane_Y+3073.9999999999998/2" z="CRT_South_pos"/>
 
 		<position name="posCRT_East" unit="mm" x="whereMembrane_X+CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
 		<position name="postCRT_West" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
 		<position name="posCRT_Bottom" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-CRT_DY_Bottom" z="whereMembrane_Z"/>
-		<position name="posCryoPlywood" unit="mm" x="whereMembrane_X" y="cryostat_offset_y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
+		<position name="posCryoPlywood" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+50000.-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
 		<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
 	</define>
 
@@ -6534,7 +6530,7 @@
 			<first ref="boxDetectorEnclosure_0"/>
 			<second ref="boxShielding"/>
 			<position name="posShield" unit="mm" x="0" y="whereShielding_Y" z="0"/>
-		</union-->
+		</union-->	
 
 		<box name="boxDetectorEnclosure" lunit="mm" x="dimDetEnclosure_X" y="dimDetEnclosure_Y" z="dimDetEnclosure_Z"/>
 
@@ -6655,7 +6651,7 @@
 					<positionref ref="posCRT_TopLow"/>
 					<rotationref ref="rotateP90X"/>
 			</physvol>
-			-->
+			
 			<physvol>
 					<volumeref ref="volTaggerNorth"/>
 					<positionref ref="posCRT_North"/>

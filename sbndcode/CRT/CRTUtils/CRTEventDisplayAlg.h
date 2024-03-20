@@ -112,6 +112,9 @@ namespace sbnd{
       fhicl::Atom<bool> DrawTrueTracks {
         Name("DrawTrueTracks")
       };
+      fhicl::Atom<bool> DataMode {
+        Name("DataMode")
+      };
 
       fhicl::Atom<int> TaggerColour {
         Name("TaggerColour")
@@ -165,9 +168,9 @@ namespace sbnd{
         Name("MaxTime")
       };
 
-      fhicl::Table<CRTBackTracker::Config> CrtBackTrack {
+      /*fhicl::Table<CRTBackTracker::Config> CrtBackTrack {
         Name("CrtBackTrack"),
-      };
+      };*/
 
     };
 
@@ -203,7 +206,7 @@ namespace sbnd{
   private:
     CRTGeoAlg fCrtGeo;
 
-    CRTBackTracker fCrtBackTrack;
+    //CRTBackTracker fCrtBackTrack;
 
     art::InputTag fSimLabel;
     art::InputTag fAuxDetHitsLabel;
@@ -222,6 +225,7 @@ namespace sbnd{
     bool fDrawIncompleteTracks;
     bool fDrawInvisibleTracks;
     bool fDrawTrueTracks;
+    bool fDataMode;
 
     int fTaggerColour;
     int fStripColour;
