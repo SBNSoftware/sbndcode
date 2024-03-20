@@ -32,7 +32,7 @@ sbnd_digipmt_alg:
   
   # Detection efficiencies
   PMTCoatedVUVEff:       0.096      #PMT coated detection efficiency for direct (VUV) light
-  PMTCoatedVISEff:       0.105      #PMT coated detection efficiency for reflected (VIS) light
+  PMTCoatedVISEff:       0.104      #PMT coated detection efficiency for reflected (VIS) light
   PMTUncoatedEff:        0.152      #PMT uncoated detection efficiency
 
   # Simulate gain fluctuations
