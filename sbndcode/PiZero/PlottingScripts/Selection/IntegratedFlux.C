@@ -33,7 +33,7 @@ void IntegratedFlux(const TString productionVersion, const bool back, const bool
 
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL.root";
+  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL_*.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -62,7 +62,6 @@ void IntegratedFlux(const TString productionVersion, const bool back, const bool
 
   std::vector<std::vector<float>*> weights = std::vector<std::vector<float>*>(n_weights, 0);
 
-
   for(auto&& [ weight_i, name ] : enumerate(weight_names))
     nus->SetBranchAddress(Form("evtwgt_flux_weight_%s", name.c_str()), &weights[weight_i]);
 
@@ -74,14 +73,14 @@ void IntegratedFlux(const TString productionVersion, const bool back, const bool
                                       1.5, 2., 3., 5. };
 
   std::vector<std::vector<TH1F*>> hNuEnergyFluxUniverses = std::vector<std::vector<TH1F*>>(n_weights, std::vector<TH1F*>());
-  std::vector<std::vector<float>> counts(n_weights, std::vector<float>(1000, 0.));
+  std::vector<std::vector<double>> counts(n_weights, std::vector<double>(1000, 0.));
 
   TH1F *hNuEnergyNominal = new TH1F("hNuEnergyNominal", ";True E_{#nu} (GeV);#nu", 14, true_nu_e_bins);
-  float nominalCount = 0.;
+  double nominalCount = 0.;
 
   ofstream outFile;
   outFile.open(saveDir + "/FluxMap.h");
-  outFile << "const std::map<std::string, std::map<int, float>> univsIntegratedFluxMap = {" << std::endl;
+  outFile << "const std::map<std::string, std::map<int, double>> univsIntegratedFluxMap = {" << std::endl;
 
   for(auto&& [ weight_i, name ] : enumerate(weight_names))
     {
@@ -91,6 +90,9 @@ void IntegratedFlux(const TString productionVersion, const bool back, const bool
 
   for(int i = 0; i < N; ++i)
     {
+      if(!(i%1000000))
+        std::cout << i << " / " << N << " (" << (100. * i) / N << "%)" << std::endl;
+
       nus->GetEntry(i);
 
       if(back)
@@ -126,13 +128,13 @@ void IntegratedFlux(const TString productionVersion, const bool back, const bool
       gSystem->Exec("mkdir -p " + saveDir + Form("/%s", name.c_str()));
 
       TH1F *hFluxUniverses = new TH1F(Form("hFluxUniverses%s", name.c_str()), ";Integrated #nu Flux (cm^{-2});Universes", 26, 1.2e13, 2.5e13);
-      const float nominalFlux  = nominalCount * scaling / fv_face_area;
+      const double nominalFlux  = nominalCount * scaling / fv_face_area;
 
       outFile << Form("{ \"%s\", {", name.c_str()) << std::endl;
 
       for(int j = 0; j < 1000; ++j)
         {
-          float flux = counts[weight_i][j] * scaling / fv_face_area;
+          double flux = counts[weight_i][j] * scaling / fv_face_area;
 
           hFluxUniverses->Fill(flux);
 

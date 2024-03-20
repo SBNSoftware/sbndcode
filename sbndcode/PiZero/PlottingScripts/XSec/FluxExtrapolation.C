@@ -9,8 +9,7 @@ void FluxExtrapolation(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/flux_extrapolation";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL.root";
-  //const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configI.root";
+  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL_*.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -29,6 +28,7 @@ void FluxExtrapolation(const TString productionVersion)
 
   int nu_pdg;
   float nu_x, nu_y, nu_other_x, nu_other_y, nu_e;
+  double ray_fv_length;
 
   nus->SetBranchStatus("*", 0);
   nus->SetBranchStatus("nu_x", 1);
@@ -37,6 +37,7 @@ void FluxExtrapolation(const TString productionVersion)
   nus->SetBranchStatus("nu_other_y", 1);
   nus->SetBranchStatus("nu_pdg", 1);
   nus->SetBranchStatus("nu_e", 1);
+  nus->SetBranchStatus("ray_fv_length", 1);
 
   nus->SetBranchAddress("nu_x", &nu_x);
   nus->SetBranchAddress("nu_y", &nu_y);
@@ -44,10 +45,13 @@ void FluxExtrapolation(const TString productionVersion)
   nus->SetBranchAddress("nu_other_y", &nu_other_y);
   nus->SetBranchAddress("nu_pdg", &nu_pdg);
   nus->SetBranchAddress("nu_e", &nu_e);
+  nus->SetBranchAddress("ray_fv_length", &ray_fv_length);
 
   const int n_samples = 101;
-  float baseline[n_samples], flux[n_samples];
-  float ebaseline[n_samples], eflux[n_samples];
+  double baseline[n_samples], flux[n_samples];
+  double ebaseline[n_samples], eflux[n_samples];
+
+  double ray_traced_flux = 0;
 
   for(int s = 0; s < n_samples; ++s)
     {
@@ -58,7 +62,13 @@ void FluxExtrapolation(const TString productionVersion)
 
   for(int i = 0; i < N; ++i)
     {
+      if(!(i%1000000))
+        std::cout << i << " / " << N << " (" << (100. * i) / N << "%)" << std::endl;
+
       nus->GetEntry(i);
+
+      if(ray_fv_length > 0)
+        ray_traced_flux += (ray_fv_length / 440);
 
       const float orig_x = nu_x;
       const float orig_y = nu_y;
@@ -69,7 +79,6 @@ void FluxExtrapolation(const TString productionVersion)
           nu_y = orig_y;
 
           Extrapolate(nu_x, nu_y, 0, nu_other_x, nu_other_y, 500, baseline[s] - 11000);
-          //Extrapolate(nu_x, nu_y, 0, nu_other_x, nu_other_y, 10, baseline[s] - 11000);
 
           if(abs(nu_x) > 180 || abs(nu_x) < 5 || abs(nu_y) > 180)
             continue;
@@ -85,6 +94,8 @@ void FluxExtrapolation(const TString productionVersion)
       eflux[s] *= flux[s];
     }
 
+  ray_traced_flux *= (scaling / fv_face_area);
+
   TCanvas *c = new TCanvas("c", "c");
   c->SetTopMargin(.1);
   c->cd();
@@ -99,6 +110,8 @@ void FluxExtrapolation(const TString productionVersion)
   c->SaveAs(saveDir + "/integrated_flux_baseline_dependence.pdf");
 
   TF1 *fLin = new TF1("lin", "[0] + [1] * x", baseline[0], baseline[100]);
+  fLin->SetParameter(0, 5e13);
+  fLin->SetParameter(1, -3e9);
   fLin->SetLineColor(kRed+2);
 
   TF1 *fRSq = new TF1("rSq", "[0] + [1] / (x * x)", baseline[0], baseline[100]);
@@ -193,9 +206,11 @@ void FluxExtrapolation(const TString productionVersion)
   text2->SetFillColor(kWhite);
   text2->Draw();
 
-  std::cout << expectation << std::endl;
-  std::cout << effbaseline << std::endl;
-  std::cout << fRSq->Eval(11230) << std::endl;
+  std::cout << "Average from curve: " << expectation << std::endl;
+  std::cout << "Effective baseline: " << effbaseline << std::endl;
+  std::cout << "Curve evaluated at 1/2 FV: " << fRSq->Eval(11230) << std::endl;
+  std::cout << "Ray-traced flux: " << ray_traced_flux << std::endl;
+
   c->SaveAs(saveDir + "/integrated_flux_baseline_dependence_expectation.png");
   c->SaveAs(saveDir + "/integrated_flux_baseline_dependence_expectation.pdf");
 }

@@ -3,10 +3,11 @@
 
 void FluxHistDiffs(const TString productionVersion)
 {
-  const TString baseDir  = baseSaveDir + "/" + productionVersion + "/flux_hists";
-  const TString frontDir = baseDir;
-  const TString backDir  = baseDir + "_back_face";
-  const TString effZDir  = baseDir + "_eff_z";
+  const TString baseDir     = baseSaveDir + "/" + productionVersion + "/flux_hists";
+  const TString frontDir    = baseDir;
+  const TString backDir     = baseDir + "_back_face";
+  const TString effZDir     = baseDir + "_eff_z";
+  const TString rayTraceDir = baseDir + "_ray_trace";
 
   const TString saveDir = baseDir + "_comparisons";
   gSystem->Exec("mkdir -p " + saveDir);
@@ -14,6 +15,7 @@ void FluxHistDiffs(const TString productionVersion)
   TFile *frontFile = new TFile(frontDir + "/sbnd_flux.root", "READ");
   TFile *backFile = new TFile(backDir + "/sbnd_flux.root", "READ");
   TFile *effZFile = new TFile(effZDir + "/sbnd_flux.root", "READ");
+  TFile *rayTraceFile = new TFile(rayTraceDir + "/sbnd_flux.root", "READ");
 
   const std::vector<TString> flavours = { "numu", "anumu", "nue", "anue" };
 
@@ -30,25 +32,29 @@ void FluxHistDiffs(const TString productionVersion)
       p1->SetBottomMargin(.04);
       p1->cd();
 
-      TH1F* front = (TH1F*) frontFile->Get("flux_sbnd_" + flavour);
-      TH1F* back  = (TH1F*) backFile->Get("flux_sbnd_" + flavour);
-      TH1F* effZ  = (TH1F*) effZFile->Get("flux_sbnd_" + flavour);
+      TH1F* front    = (TH1F*) frontFile->Get("flux_sbnd_" + flavour);
+      TH1F* back     = (TH1F*) backFile->Get("flux_sbnd_" + flavour);
+      TH1F* effZ     = (TH1F*) effZFile->Get("flux_sbnd_" + flavour);
+      TH1F* rayTrace = (TH1F*) rayTraceFile->Get("flux_sbnd_" + flavour);
 
       front->SetLineColor(kAzure-8);
       back->SetLineColor(kViolet-6);
       effZ->SetLineColor(kOrange+7);
+      rayTrace->SetLineColor(kOrange+7);
 
       front->GetXaxis()->SetLabelSize(0);
       front->GetXaxis()->SetLabelOffset(999);
 
       front->Draw("hist][");
       back->Draw("histsame][");
-      effZ->Draw("histsame][");
+      //      effZ->Draw("histsame][");
+      rayTrace->Draw("histsame][");
 
       TLegend *leg1 = new TLegend(.55, .65, .8, .8);
       leg1->AddEntry(front, "Front Face (z = 0cm)", "l");
       leg1->AddEntry(back, "Back Face (z = 500cm)", "l");
-      leg1->AddEntry(effZ, "Effective Z (z = 227.8cm)", "l");
+      //      leg1->AddEntry(effZ, "Effective Z (z = 227.8cm)", "l");
+      leg1->AddEntry(rayTrace, "Ray Traced Average", "l");
       leg1->Draw();
 
       c->cd();
@@ -80,11 +86,17 @@ void FluxHistDiffs(const TString productionVersion)
       TH1F* frontEffZ = (TH1F*) effZ->Clone();
       frontEffZ->Divide(front);
       frontEffZ->SetLineColor(kPink-6);
-      frontEffZ->Draw("histsame][");
+      //      frontEffZ->Draw("histsame][");
+
+      TH1F* frontRayTrace = (TH1F*) rayTrace->Clone();
+      frontRayTrace->Divide(front);
+      frontRayTrace->SetLineColor(kPink-6);
+      frontRayTrace->Draw("histsame][");
 
       TLegend *leg2 = new TLegend(.73, .5, .89, .8);
       leg2->AddEntry(frontBack, "Back / Front", "l");
-      leg2->AddEntry(frontEffZ, "Eff Z / Front", "l");
+      //      leg2->AddEntry(frontEffZ, "Eff Z / Front", "l");
+      leg2->AddEntry(frontRayTrace, "Ray Trace / Front", "l");
       leg2->Draw();
 
       c->SaveAs(saveDir + "/flux_z_dependence_" + flavour + ".pdf");

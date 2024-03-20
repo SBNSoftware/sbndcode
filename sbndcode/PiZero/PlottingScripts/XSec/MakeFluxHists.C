@@ -32,8 +32,7 @@ void MakeFluxHists(const TString productionVersion, const bool back, const bool 
 
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL.root";
-  //const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configI.root";
+  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL_*.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -62,12 +61,15 @@ void MakeFluxHists(const TString productionVersion, const bool back, const bool 
   nus->SetBranchAddress("nu_e", &nu_e);
 
   TH1F *hNuEnergyNuMu  = new TH1F("hNuEnergyNuMu", ";True E_{#nu} (GeV);#nu_{#mu}", 200, 0, 10);
-  TH1F *hNuEnergyANuMu = new TH1F("hNuEnergyANuMu", ";True E_{#nu} (GeV);#bar{#nu_{#mu}}", 100, 0, 10);
-  TH1F *hNuEnergyNuE   = new TH1F("hNuEnergyNuE", ";True E_{#nu} (GeV);#nu_{e}", 50, 0, 10);
-  TH1F *hNuEnergyANuE  = new TH1F("hNuEnergyANuE", ";True E_{#nu} (GeV);#bar{#nu_{e}}", 25, 0, 10);
+  TH1F *hNuEnergyANuMu = new TH1F("hNuEnergyANuMu", ";True E_{#nu} (GeV);#bar{#nu_{#mu}}", 200, 0, 10);
+  TH1F *hNuEnergyNuE   = new TH1F("hNuEnergyNuE", ";True E_{#nu} (GeV);#nu_{e}", 200, 0, 10);
+  TH1F *hNuEnergyANuE  = new TH1F("hNuEnergyANuE", ";True E_{#nu} (GeV);#bar{#nu_{e}}", 200, 0, 10);
 
   for(int i = 0; i < N; ++i)
     {
+      if(!(i%1000000))
+        std::cout << i << " / " << N << " (" << (100. * i) / N << "%)" << std::endl;
+
       nus->GetEntry(i);
 
       if(back)
