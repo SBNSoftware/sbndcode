@@ -408,9 +408,8 @@ namespace sbnd::crt {
                     if(fPrint)
                       std::cout << "Space Point: (" 
                                 << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
-                                << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = "
-                                << spacepoint->Time() << " (" << spacepoint->Time() - G4RefTime << ")"
-                                << " with PE " << spacepoint->PE()
+                                << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at time = "
+                                << spacepoint->Time() << " with PE " << spacepoint->PE()
                                 << std::endl;
                   }
                 else if(spacePointVec.size() != 0)
@@ -427,7 +426,7 @@ namespace sbnd::crt {
 
         for(auto track : tracksVec)
           {
-            if(track->Time() - G4RefTime < fMinTime || track->Time() - G4RefTime > fMaxTime)
+            if(track->Time() < fMinTime || track->Time() > fMaxTime)
               continue;
 
             const geo::Point_t start = track->Start();
@@ -465,7 +464,7 @@ namespace sbnd::crt {
                         << "\twith direction (" << dir.X() << ", " << dir.Y() << ", " << dir.Z() << ")\n"
                         << "\tdrawn between (" << a.X() << ", " << a.Y() << ", " << a.Z() << ")\n"
                         << "\tand (" << b.X() << ", " << b.Y() << ", " << b.Z() << ")\n"
-                        << "\tat time " << track->Time() << " (" << track->Time() - G4RefTime << ")\n"
+                        << "\tat time " << track->Time() << "\n"
                         << "\tfrom three hits? " << track->Triple() << std::endl;
 
           }
