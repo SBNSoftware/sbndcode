@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       CRTAnalysis
+// Class:       CRTCalibAna
 // Plugin Type: analyzer
-// File:        CRTAnalysis_module.cc
-// Author:      Henry Lay (h.lay@lancaster.ac.uk)
+// File:        CRTCalibAna_module.cc
+// Author:      Sungbin Oh based on Henry Lay (h.lay@lancaster.ac.uk) CRTCalibAna_module.cc
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -39,20 +39,20 @@
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
 namespace sbnd::crt {
-  class CRTAnalysis;
+  class CRTCalibAna;
 }
 
-class sbnd::crt::CRTAnalysis : public art::EDAnalyzer {
+class sbnd::crt::CRTCalibAna : public art::EDAnalyzer {
 public:
-  explicit CRTAnalysis(fhicl::ParameterSet const& p);
+  explicit CRTCalibAna(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
   // Plugins should not be copied or assigned.
-  CRTAnalysis(CRTAnalysis const&) = delete;
-  CRTAnalysis(CRTAnalysis&&) = delete;
-  CRTAnalysis& operator=(CRTAnalysis const&) = delete;
-  CRTAnalysis& operator=(CRTAnalysis&&) = delete;
+  CRTCalibAna(CRTCalibAna const&) = delete;
+  CRTCalibAna(CRTCalibAna&&) = delete;
+  CRTCalibAna& operator=(CRTCalibAna const&) = delete;
+  CRTCalibAna& operator=(CRTCalibAna&&) = delete;
 
   // Required functions.
   void analyze(art::Event const& e) override;
@@ -88,6 +88,8 @@ private:
     fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel, fPFPModuleLabel;
   bool fDebug;
 
+  TTree* fDAQNtuple;
+  TTree* fHitNtuple;
   TTree* fTree;
 
   // Tree variables
@@ -96,7 +98,6 @@ private:
   int _subrun;
   int _event;
 
-  //mc truth
   std::vector<int16_t>              _mc_trackid;
   std::vector<int16_t>              _mc_pdg;
   std::vector<int16_t>              _mc_status;
@@ -119,7 +120,6 @@ private:
   std::vector<double>               _mc_endpz;
   std::vector<double>               _mc_ende;
 
-  //G4 detector id
   std::vector<int16_t> _ide_trackid;
   std::vector<float>   _ide_e;
   std::vector<float>   _ide_entryx;
@@ -131,7 +131,7 @@ private:
   std::vector<float>   _ide_exitz;
   std::vector<float>   _ide_exitt;
 
-  //front end mother board
+  int _feb_NMaxCh;
   std::vector<uint16_t>              _feb_mac5;
   std::vector<uint16_t>              _feb_flags;
   std::vector<uint32_t>              _feb_ts0;
@@ -140,7 +140,6 @@ private:
   std::vector<std::vector<uint16_t>> _feb_adc;
   std::vector<uint32_t>              _feb_coinc;
 
-  //strip hit to select the strip which has ADC above threshold
   std::vector<uint32_t> _sh_channel;
   std::vector<uint32_t> _sh_ts0;
   std::vector<uint32_t> _sh_ts1;
@@ -158,7 +157,6 @@ private:
   std::vector<double>   _sh_truth_energy;
   std::vector<double>   _sh_truth_time;
 
-  //cluster from x-y coincidence for CRTSpacePoint , this is what we normally call a CRT hit
   std::vector<uint32_t> _cl_ts0;
   std::vector<uint32_t> _cl_ts1;
   std::vector<uint32_t> _cl_unixs;
@@ -193,7 +191,6 @@ private:
   std::vector<double>   _cl_sp_etime;
   std::vector<bool>     _cl_sp_complete;
 
-  //backtrack truth information from reco level
   std::vector<int>     _td_tag_trackid;
   std::vector<int>     _td_tag_pdg;
   std::vector<int16_t> _td_tag_tagger;
@@ -212,7 +209,6 @@ private:
   std::vector<bool>    _td_reco_status;
   std::vector<bool>    _td_reco_triple;
 
-  //track level information
   std::vector<double>              _tr_start_x;
   std::vector<double>              _tr_start_y;
   std::vector<double>              _tr_start_z;
@@ -279,7 +275,7 @@ private:
   std::vector<double> _tpc_tr_score;
 };
 
-sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
+sbnd::crt::CRTCalibAna::CRTCalibAna(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
   , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
@@ -299,7 +295,63 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
     art::ServiceHandle<art::TFileService> fs;
 
-    fTree = fs->make<TTree>("tree","");
+    fDAQNtuple        = fs->make<TTree>("DAQTree",          "MyCRTDAQ");
+    fHitNtuple        = fs->make<TTree>("HitTree",          "MyCRTHit");
+    fTree             = fs->make<TTree>("CRTAna",           "MyCRTAna");
+
+    // Define the branches of our DetSim n-tuple 
+    fDAQNtuple->Branch("run",                   &_run);
+    fDAQNtuple->Branch("subrun",                &_subrun);
+    fDAQNtuple->Branch("event",                 &_event);
+    //fDAQNtuple->Branch("nChan",                 &fNChan,             "nChan/I");
+    fDAQNtuple->Branch("t0",                    "std::vector<uint32_t>", &_feb_ts0);
+    fDAQNtuple->Branch("t1",                    "std::vector<uint32_t>", &_feb_ts1);
+    fDAQNtuple->Branch("flags",                 "std::vector<uint16_t>", &_feb_flags);
+    fDAQNtuple->Branch("nmaxch",                &_feb_NMaxCh); // == Just 32
+    fDAQNtuple->Branch("adc",                   "std::vector<std::vector<uint16_t>>", &_feb_adc);
+    //fDAQNtuple->Branch("pe",                    fPE,                "pe[nmaxch]/F");
+    //fDAQNtuple->Branch("entry",                 &fEntry,             "entry/I");
+    fDAQNtuple->Branch("mac5",                  "std::vector<uint16_t>", &_feb_mac5);
+    //fDAQNtuple->Branch("region",                &fFEBReg,            "region/I");
+    //fDAQNtuple->Branch("subSys",                &fDetSubSys,         "subSys/I");
+    //fDAQNtuple->Branch("gate_type", &m_gate_type, "gate_type/b"); // Trigger related from "ExtraTriggerInfo.h"
+    //fDAQNtuple->Branch("gate_start_timestamp", &m_gate_start_timestamp, "gate_start_timestamp/l");// Define the branches of our DetSim n-tuple 
+
+    // Define the branches of our SimHit n-tuple
+    fHitNtuple->Branch("run",         &_run);
+    fHitNtuple->Branch("subrun",      &_subrun);
+    fHitNtuple->Branch("event",       &_event);
+    fHitNtuple->Branch("nHit",        "std::vector<uint16_t>", &_cl_nhits);
+    fHitNtuple->Branch("x",           "std::vector<double>",   &_cl_sp_x);
+    fHitNtuple->Branch("y",           "std::vector<double>",   &_cl_sp_y);
+    fHitNtuple->Branch("z",           "std::vector<double>",   &_cl_sp_z);
+    fHitNtuple->Branch("xErr",        "std::vector<double>",   &_cl_sp_ex);
+    fHitNtuple->Branch("yErr",        "std::vector<double>",   &_cl_sp_ey);
+    fHitNtuple->Branch("zErr",        "std::vector<double>",   &_cl_sp_ez);
+    fHitNtuple->Branch("t",           "std::vector<double>",   &_cl_sp_time);
+    fHitNtuple->Branch("tErr",        "std::vector<double>",   &_cl_sp_etime);
+    fHitNtuple->Branch("t0",          "std::vector<uint32_t>", &_cl_ts0);
+    fHitNtuple->Branch("t1",          "std::vector<uint32_t>", &_cl_ts1);
+    //fHitNtuple->Branch("NChan",       &fHitNChan,       "nChan/I");
+    fHitNtuple->Branch("PEs",         "std::vector<double>", &_cl_sp_pe);
+    //fHitNtuple->Branch("Macs",        &fHitMac,      "Mac[32]/I");
+    //fHitNtuple->Branch("Chans",       &fHitChan,     "Chans[32]/I");
+    //fHitNtuple->Branch("region",      &fHitReg,      "region/I");  
+    //fHitNtuple->Branch("tagger",      &ftagger,      "tagger/C");  
+    //fHitNtuple->Branch("subSys",      &fHitSubSys,   "subSys/I");
+    //fHitNtuple->Branch("modID",       &fHitMod,      "modID/I");
+    //fHitNtuple->Branch("stripID",     &fHitStrip,    "stripID/I");
+    //fHitNtuple->Branch("nFeb",        &fNHitFeb,     "nFeb/I");
+    //fHitNtuple->Branch("totPe",       &fHitTotPe,    "totPe/F");
+    //fHitNtuple->Branch("gate_type", &m_gate_type, "gate_type/b");
+    //fHitNtuple->Branch("gate_name", &m_gate_name);
+    //fHitNtuple->Branch("trigger_timestamp", &m_trigger_timestamp, "trigger_timestamp/l");
+    //fHitNtuple->Branch("gate_start_timestamp", &m_gate_start_timestamp, "gate_start_timestamp/l");
+    //fHitNtuple->Branch("trigger_gate_diff", &m_trigger_gate_diff, "trigger_gate_diff/l");
+    //fHitNtuple->Branch("gate_crt_diff",&m_gate_crt_diff, "gate_crt_diff/l");
+    //fHitNtuple->Branch("crt_global_trigger",&m_crt_global_trigger,"crt_global_trigger/l");
+    //fHitNtuple->Branch("crtGT_trig_diff",&m_crtGT_trig_diff,"crtGT_trig_diff/L");
+
     fTree->Branch("run", &_run);
     fTree->Branch("subrun", &_subrun);
     fTree->Branch("event", &_event);
@@ -512,7 +564,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       }
   }
 
-void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
+void sbnd::crt::CRTCalibAna::analyze(art::Event const& e)
 {
   fCRTBackTrackerAlg.SetupMaps(e);
   fCRTBackTrackerAlg.RunSpacePointRecoStatusChecks(e);
@@ -645,10 +697,12 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   AnalyseTPCMatching(e, TPCTrackHandle, CRTSpacePointHandle, PFPHandle, spacePointRecoStatusMap, trackRecoStatusMap);
 
   // Fill the Tree
+  fDAQNtuple->Fill();
+  fHitNtuple->Fill();
   fTree->Fill();
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseMCParticles(std::vector<art::Ptr<simb::MCParticle>> &MCParticleVec)
+void sbnd::crt::CRTCalibAna::AnalyseMCParticles(std::vector<art::Ptr<simb::MCParticle>> &MCParticleVec)
 {
   const unsigned nMCParticles = MCParticleVec.size();
 
@@ -706,7 +760,7 @@ void sbnd::crt::CRTAnalysis::AnalyseMCParticles(std::vector<art::Ptr<simb::MCPar
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseSimDeposits(std::vector<art::Ptr<sim::AuxDetSimChannel>> &SimDepositVec)
+void sbnd::crt::CRTCalibAna::AnalyseSimDeposits(std::vector<art::Ptr<sim::AuxDetSimChannel>> &SimDepositVec)
 {
   const unsigned nAuxDetSimChannels = SimDepositVec.size();
   unsigned nIDEs = 0;
@@ -755,7 +809,7 @@ void sbnd::crt::CRTAnalysis::AnalyseSimDeposits(std::vector<art::Ptr<sim::AuxDet
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<FEBData>> &FEBDataVec)
+void sbnd::crt::CRTCalibAna::AnalyseFEBDatas(std::vector<art::Ptr<FEBData>> &FEBDataVec)
 {
   const unsigned nFEBData = FEBDataVec.size();
 
@@ -767,6 +821,7 @@ void sbnd::crt::CRTAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<FEBData>> &FEB
   _feb_adc.resize(nFEBData, std::vector<uint16_t>(32));
   _feb_coinc.resize(nFEBData);
 
+  _feb_NMaxCh = 32;
   for(unsigned i = 0; i < nFEBData; ++i)
     {
       const auto data = FEBDataVec[i];
@@ -783,7 +838,7 @@ void sbnd::crt::CRTAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<FEBData>> &FEB
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std::vector<art::Ptr<CRTStripHit>> &CRTStripHitVec)
+void sbnd::crt::CRTCalibAna::AnalyseCRTStripHits(const art::Event &e, const std::vector<art::Ptr<CRTStripHit>> &CRTStripHitVec)
 {
   const unsigned nStripHits = CRTStripHitVec.size();
   
@@ -832,7 +887,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints)
+void sbnd::crt::CRTCalibAna::AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints)
 {
   const unsigned nClusters = CRTClusterVec.size();
 
@@ -933,7 +988,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseTrueDepositsPerTagger(const std::map<CRTBackTrackerAlg::Category, bool> &recoStatusMap)
+void sbnd::crt::CRTCalibAna::AnalyseTrueDepositsPerTagger(const std::map<CRTBackTrackerAlg::Category, bool> &recoStatusMap)
 {
   const unsigned nTrueDeposits = recoStatusMap.size();
 
@@ -966,7 +1021,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDepositsPerTagger(const std::map<CRTBack
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, std::pair<bool, bool>> &recoStatusMap)
+void sbnd::crt::CRTCalibAna::AnalyseTrueDeposits(const std::map<int, std::pair<bool, bool>> &recoStatusMap)
 {
   const unsigned nTrueDeposits = recoStatusMap.size();
 
@@ -995,7 +1050,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, std::pair<b
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec)
+void sbnd::crt::CRTCalibAna::AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec)
 {
   const unsigned nTracks = CRTTrackVec.size();
 
@@ -1100,7 +1155,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
+void sbnd::crt::CRTCalibAna::AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
                                                 const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointHandle, const art::Handle<std::vector<recob::PFParticle>> &PFPHandle,
                                                 const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap, const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap)
 {
@@ -1273,4 +1328,4 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_tr_score.resize(nActualTracks);
 }
 
-DEFINE_ART_MODULE(sbnd::crt::CRTAnalysis)
+DEFINE_ART_MODULE(sbnd::crt::CRTCalibAna)

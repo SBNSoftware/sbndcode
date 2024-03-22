@@ -48,12 +48,12 @@
 #include "flashmatch_sbnd.fcl"
 
 #include "mlreco_sbnd.fcl"
-
-
-###include "hitparticleassociations.fcl"
+#include "cluster_sbnd.fcl"
 
 #include "sbnd_trackcalo_skimmer.fcl"
-#include "cluster_sbnd.fcl"
+#include "crtskim_sbnd.fcl"
+#include "pmtskim_sbnd.fcl"
+
 
 process_name: Reco
 
@@ -70,6 +70,7 @@ services:
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
   BackTrackerService: @local::sbnd_backtrackerservice
   ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  DetectorClocksService: @local::sbnd_detectorclocks
 }
 
 #source is now a root file
@@ -252,10 +253,12 @@ physics:
 
  analyzers:{
   caloskim: @local::caloskim_nodigits_goldentracks
+  crtskim: @local::crtskim_sbnd
+  pmtskim: @local::pmtskim_sbnd
   supera: @local::sbnd_supera
  }
 
- caloskimana: [ caloskim ]
+ caloskimana: [ caloskim, crtskim, pmtskim ]
  superaana: [ supera ] #outputs larcv.root for use in mlreco
 
  #define the output stream, there could be more than one if using filters

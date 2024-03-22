@@ -4,7 +4,7 @@
 /// Ported from ICARUS to SBND by A. Scarff
 ////////////////////////////////////////////////////////////////////////
 #include <cmath>
-#include "sbndcode/Calibration/IROIFinder.h"
+#include "sbndcode/TPC1DSignalProcessing/IROIFinder.h"
 #include "art/Utilities/ToolMacros.h"
 #include "art_root_io/TFileService.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
