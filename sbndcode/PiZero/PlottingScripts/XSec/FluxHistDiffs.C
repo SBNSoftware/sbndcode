@@ -3,6 +3,9 @@
 
 void FluxHistDiffs(const TString productionVersion)
 {
+  gROOT->SetStyle("henrySBND");
+  gROOT->ForceStyle();
+
   const TString baseDir     = baseSaveDir + "/" + productionVersion + "/flux_hists";
   const TString frontDir    = baseDir;
   const TString backDir     = baseDir + "_back_face";
@@ -30,6 +33,7 @@ void FluxHistDiffs(const TString productionVersion)
       p1->Draw();
       p1->SetLeftMargin(.15);
       p1->SetBottomMargin(.04);
+      p1->SetTopMargin(.1);
       p1->cd();
 
       TH1F* front    = (TH1F*) frontFile->Get("flux_sbnd_" + flavour);
@@ -54,7 +58,7 @@ void FluxHistDiffs(const TString productionVersion)
       leg1->AddEntry(front, "Front Face (z = 0cm)", "l");
       leg1->AddEntry(back, "Back Face (z = 500cm)", "l");
       //      leg1->AddEntry(effZ, "Effective Z (z = 227.8cm)", "l");
-      leg1->AddEntry(rayTrace, "Ray Traced Average", "l");
+      leg1->AddEntry(rayTrace, "Ray Traced FV Average", "l");
       leg1->Draw();
 
       c->cd();
@@ -72,12 +76,12 @@ void FluxHistDiffs(const TString productionVersion)
       frontBack->SetLineColor(kGreen+3);
       frontBack->GetXaxis()->SetTitleSize(0.16);
       frontBack->GetYaxis()->SetTitleSize(0.13);
-      frontBack->GetXaxis()->SetTitleOffset(0.65);
+      frontBack->GetXaxis()->SetTitleOffset(0.8);
       frontBack->GetYaxis()->SetTitleOffset(0.4);
       frontBack->GetXaxis()->SetLabelSize(0.14);
-      frontBack->GetYaxis()->SetLabelSize(0.12);
-      frontBack->GetXaxis()->SetLabelOffset(0);
-      frontBack->GetYaxis()->SetLabelOffset(0);
+      frontBack->GetYaxis()->SetLabelSize(0.11);
+      frontBack->GetXaxis()->SetLabelOffset(0.01);
+      frontBack->GetYaxis()->SetLabelOffset(0.01);
       frontBack->SetTitle(";E_{#nu} (GeV);Ratio");
       frontBack->SetMinimum(0.82);
       frontBack->SetMaximum(1.08);
@@ -97,6 +101,7 @@ void FluxHistDiffs(const TString productionVersion)
       leg2->AddEntry(frontBack, "Back / Front", "l");
       //      leg2->AddEntry(frontEffZ, "Eff Z / Front", "l");
       leg2->AddEntry(frontRayTrace, "Ray Trace / Front", "l");
+      leg2->SetTextSize(.09);
       leg2->Draw();
 
       c->SaveAs(saveDir + "/flux_z_dependence_" + flavour + ".pdf");

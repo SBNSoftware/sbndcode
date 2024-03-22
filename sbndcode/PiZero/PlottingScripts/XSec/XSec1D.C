@@ -89,7 +89,6 @@ void XSec1D(const TString &productionVersion, const TString &saveDirExt, const i
 
   MakePlot(3, selections, saveDir, "all", 0, all_systs_list);
   MakeSystSummaryPlot(selections, saveDir, "all", all_systs);
-
 }
 
 void MakePlot(const int type, const Selections &selections, const TString &saveDir,
@@ -148,6 +147,8 @@ void MakePlot(const int type, const Selections &selections, const TString &saveD
       gPad->Modified();
       gPad->Update();
     
+      AddText(canvas, wip, kGray+2, {.8, .895, .91, .905}, 0.025, 32);
+
       if(type == 0)
         {
           canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal.png");
@@ -235,6 +236,8 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       title->SetX2NDC(.8);
       gPad->Modified();
       gPad->Update();
+
+      AddText(canvas, wip, kGray+2, {.8, .895, .91, .905}, 0.025, 32);
 
       if(type == 0)
         {

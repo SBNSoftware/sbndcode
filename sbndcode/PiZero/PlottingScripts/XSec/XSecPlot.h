@@ -19,11 +19,19 @@ constexpr double nuefluxscale   = 0.0055930597;
 constexpr double anuefluxscale  = 0.00059937579;
 */
 
-// Flux Config L Effective Z (11227.8cm)
+// Flux Config L Effective Z (11227.8cm) - Subset
+/*
 constexpr double numufluxscale  = 0.92364301;
 constexpr double anumufluxscale = 0.070125432;
 constexpr double nuefluxscale   = 0.0056067340;
 constexpr double anuefluxscale  = 0.00062482531;
+*/
+
+// Flux Config L Ray-traced
+constexpr double numufluxscale  = 0.92536980;
+constexpr double anumufluxscale = 0.068619804;
+constexpr double nuefluxscale   = 0.0054254241;
+constexpr double anuefluxscale  = 0.00058497585;
 
 class XSecPlot {
 

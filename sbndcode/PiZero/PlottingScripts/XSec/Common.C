@@ -1,10 +1,12 @@
 #pragma once
 
-#include "/exp/sbnd/app/users/hlay/plotting_utils/Structs.h"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "Enumerate.h"
 
 const TString baseSaveDir = "/exp/sbnd/data/users/hlay/ncpizero/plots";
 const TString baseFileDir = "/pnfs/sbnd/persistent/users/hlay/ncpizero";
+
+const TString wip = "SBND Work-in-progress";
 
 const double goalPOT     = 10e20;
 const double potPerSpill = 5e12;
@@ -17,7 +19,9 @@ const double nTargets = 4.6468e31;
 //const double intFlux  = 1.66163e+13;
 
 // Flux Config L
-const double intFlux = 1.66396e+13;
+//const double intFlux = 1.66396e+13; // Subset
+//const double intFlux = 1.65947e+13; // Averaged from curve
+const double intFlux = 1.65974e+13; // Ray-traced value
 
 const double effbaseline = 11227.8; // For both flux configs
 
