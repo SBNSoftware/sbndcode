@@ -47,6 +47,9 @@ void Observables(const TString productionVersion, const SelectionParams &selecti
 
       MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, .87}, ncolumns);
 
+      const TString wip = "SBND Work-in-progress";
+      AddText(canvas, wip, kGray+2, {.8, .92, .9, .93}, 0.025, 32);
+
       canvas->SaveAs(saveDir + "/" + plot.name + ".png");
       canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
 

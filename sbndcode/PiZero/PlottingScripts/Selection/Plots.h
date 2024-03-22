@@ -71,6 +71,19 @@ std::vector<Plot> true_observables = {
     25, 0, 1 },
 };
 
+std::vector<VarBinPlot> true_observables_var_bin = {
+  { "nu_pz_pizero_mom", "nu_pz_pizero_mom*1e3", ";True p_{#pi^{0}} (MeV/c);Events / 60 MeV/c",
+    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, 60. },
+  { "nu_pz_cos_theta_pizero", "nu_pz_cos_theta_pizero", ";True cos(#theta_{#pi^{0}});Events / 0.1",
+    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, 0.1 },
+  { "nu_pz_cos_com", "nu_pz_cos_com", ";True cos(#theta_{CoM});Events / 0.1",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, 0.1 },
+  { "nu_pz_decay_asymmetry", "nu_pz_decay_asymmetry", ";True |E_{#gamma_{1}} - E_{#gamma_{2}}| / E_{#gamma_{1}} + E_{#gamma_{2}};Events / 0.1",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, 0.1 },
+  { "nu_pz_open_angle", "nu_pz_open_angle", ";True #theta_{#gamma#gamma} (#circ);Events / 20#circ",
+    8, { 0., 20., 40., 60., 80., 100., 120., 140., 180. }, 20. },
+};
+
 std::vector<VarBinPlot> true_slc_observables = {
   { "slc_true_pz_pizero_mom", "slc_true_pz_pizero_mom*1e3", ";p_{#pi^{0}} (MeV/c);Slices",
     8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. } },
@@ -94,6 +107,19 @@ std::vector<Plot> observables = {
   { "slc_best_pzc_cos_com", "slc_best_pzc_cos_com", ";cos(#theta_{CoM});Slices",
     25, 0, 1 },
   { "slc_best_pzc_decay_asymmetry", "slc_best_pzc_decay_asymmetry", ";Decay Asymmetry;Slices",
+    25, 0, 1 },
+};
+
+std::vector<Plot> observables_corr = {
+  { "slc_best_corr_pzc_invariant_mass_corr", "slc_best_corr_pzc_invariant_mass_corr", ";M_{#gamma#gamma} (MeV/c^{2});Slices",
+    25, 0, 500 },
+  { "slc_best_corr_pzc_pizero_mom_corr", "slc_best_corr_pzc_pizero_mom_corr", ";p_{#pi^{0}} (MeV/c);Slices",
+    25, 0, 1000 },
+  { "slc_best_corr_pzc_cos_theta_pizero_corr", "slc_best_corr_pzc_cos_theta_pizero_corr", ";cos(#theta_{#pi^{0}});Slices",
+    25, -1, 1 },
+  { "slc_best_corr_pzc_cos_com_corr", "slc_best_corr_pzc_cos_com_corr", ";cos(#theta_{CoM});Slices",
+    25, 0, 1 },
+  { "slc_best_corr_pzc_decay_asymmetry_corr", "slc_best_corr_pzc_decay_asymmetry_corr", ";Decay Asymmetry;Slices",
     25, 0, 1 },
 };
 

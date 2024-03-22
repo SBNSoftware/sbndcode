@@ -17,6 +17,8 @@ void Selection(const TString productionVersion, const SelectionParams &selection
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
+  gStyle->SetLabelSize(0.06, "x");
+  gStyle->SetLabelSize(0.06, "y");
 
   TChain *rockboxEvents = new TChain("ncpizeroana/events");
   rockboxEvents->Add(rockboxFile);
@@ -60,6 +62,9 @@ void Selection(const TString productionVersion, const SelectionParams &selection
           const float ylow   = selectionParams.name == "ncpizero_incl" ? .8 : .78;
 
           MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, .87}, ncolumns);
+
+          const TString wip = "SBND Work-in-progress";
+          AddText(canvas, wip, kGray+2, {.8, .92, .9, .93}, 0.025, 32);
 
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".png");
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".pdf");

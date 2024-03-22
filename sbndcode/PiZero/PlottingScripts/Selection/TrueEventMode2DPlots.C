@@ -1,4 +1,4 @@
-#include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "/exp/sbnd/app/users/hlay/plotting_utils/Plotting.C"
 #include "Plots.h"
 #include "Selections.h"
 #include "Common.C"
@@ -66,15 +66,33 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
           TCanvas *canvas = new TCanvas("canvas","canvas");
           canvas->cd();
           canvas->Draw();
-          canvas->Divide(3, 3); // note this hardcodes for 9 bins or less for var2
+
+          const TString wip = "SBND Work-in-progress";
+          AddText(canvas, wip, kGray+2, {0., .97, .2, .99}, 0.025, 12);
+          const TString potString = POTString(false);
+          AddText(canvas, potString, kGray+2, {.8, .97, 1., .99}, 0.025, 32);
 
           for(int i = 0; i < plotSet.nbins2; ++i)
             {
-              canvas->cd(i+1);
-              gPad->SetTopMargin(0.15);
+              canvas->cd();
+              int x = i % 3;
+              int y = i / 3;
+
+              TPad *pad = new TPad(Form("pad%i", i), "",
+                                   0.01 + x * 0.33,
+                                   0.97 - (y+1) * 0.32,
+                                   (x+1) * 0.33,
+                                   0.96 - y * 0.32);
+
+              pad->Draw();
+              pad->cd();
+              pad->SetTopMargin(0.15);
+
               stacks[i]->SetMaximum(1.2 * stacks[i]->GetMaximum());
-              stacks[i]->Draw("histe");
-              stacks[i]->GetYaxis()->SetTitleOffset(1.3);
+              stacks[i]->Draw("hist");
+              stacks[i]->GetYaxis()->SetTitleOffset(1.4);
+              stacks[i]->GetYaxis()->SetNdivisions(405);
+
               if(i==0)
                 lEventModes->Draw();
             }

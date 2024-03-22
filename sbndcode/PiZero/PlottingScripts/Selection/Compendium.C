@@ -18,6 +18,7 @@ void Compendium(const TString &productionVersion)
       SelectionEff(productionVersion, selection, true_slc_observables);
       Observables2DPlots(productionVersion, observables_twod_sets, selection);
       Observables(productionVersion, selection, observables);
+      Observables(productionVersion, selection, observables_corr);
     }
 
   ObservablesResolution(productionVersion);
