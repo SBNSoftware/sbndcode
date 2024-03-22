@@ -3,7 +3,7 @@ art_make_library(
                  SOURCE       CRTTrackMatchAlg.cc
                               CRTSpacePointMatchAlg.cc
                  LIBRARIES
-                        sbnobj_SBND_CRT
+                        sbnobj::SBND_CRT
                         sbndcode_GeoWrappers
 )
 

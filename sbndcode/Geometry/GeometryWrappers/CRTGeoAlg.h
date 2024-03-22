@@ -94,10 +94,9 @@ namespace sbnd::crt {
       minZ  = std::min(limitsWorld.Z(), limitsWorld2.Z());
       maxZ  = std::max(limitsWorld.Z(), limitsWorld2.Z());
       width = halfHeight * 2.;
-      
       adsID = _adsID;
       null  = false;
-      
+
       std::string volumeName = stripNode->GetVolume()->GetName();
     }
     std::string name;
@@ -136,9 +135,9 @@ namespace sbnd::crt {
     , null(false)
     {}
 
-    CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet, 
+    CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet,
                  const uint16_t _adID, const std::string &_taggerName,
-                 const int32_t _t0CableDelayCorrection, 
+                 const int32_t _t0CableDelayCorrection,
                  const int32_t _t1CableDelayCorrection,
                  const bool _invertedOrdering,
                  const bool _minos)
@@ -258,7 +257,7 @@ namespace sbnd::crt {
   class CRTGeoAlg {
   public:
 
-    CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry, 
+    CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry,
               geo::AuxDetGeometryCore const *auxdet_geometry);
 
     CRTGeoAlg(fhicl::ParameterSet const &p = fhicl::ParameterSet());

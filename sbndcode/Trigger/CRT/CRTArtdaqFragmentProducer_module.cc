@@ -10,7 +10,6 @@
 ////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-//#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
@@ -19,7 +18,6 @@
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-//#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 
 
 // LArSoft includes
@@ -63,6 +61,7 @@
 #include "TString.h"
 
 // C++ includes
+#include <bitset>
 #include <map>
 #include <vector>
 #include <string>

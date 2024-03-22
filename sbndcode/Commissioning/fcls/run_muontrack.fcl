@@ -111,6 +111,7 @@ physics.analyzers.hitdumper.readMuonHits:  true
 physics.analyzers.hitdumper.SelectEvents:  [reco] 
 
 # set thresholds 
+physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
 physics.producers.fasthit.MinSigInd: 15.0
 physics.producers.fasthit.MinSigCol: 15.0
 physics.producers.fasthit.SkipInd: false

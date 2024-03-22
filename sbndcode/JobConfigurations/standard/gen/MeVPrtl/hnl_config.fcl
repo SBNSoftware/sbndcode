@@ -1,4 +1,4 @@
-#include "bnb_kaon_common.fcl"
+#include "bnb_kaon_sbnd.fcl"
 BEGIN_PROLOG
 
 hnlM: 0.265
@@ -17,8 +17,11 @@ kaon2hnl: {
   BeamOrigin: @local::sbnd_bnb_beam_origin
 
   // timing config
-  SpillTimeConfig: "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=1.308"
-  //SpilTimeConfig: "" #"evgb::EvtTimeFlat 10000 0" // 10us duration, no offset  
+  # Bunch sigma taken from 
+  # https://beamdocs.fnal.gov/AD/DocDB/0050/005000/001/bunchLength_1st_draft.pdf
+  # Bunch spacing taken from
+  # https://inspirehep.net/files/610a942fd8632bbbca2c8ad90da86670
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
   GlobalTimeOffset: 0
   Verbose: false
 }
@@ -43,6 +46,7 @@ decay_hnl: {
   tool_type: HNLMakeDecay
   Decays: ["mu_pi"]
   Majorana: true
+  DecayIsThreeBodyAnisotropic: false
   ReferenceUE4: 0
   ReferenceUT4: 0
   ReferenceUM4: 1e-7
@@ -50,7 +54,7 @@ decay_hnl: {
   ReferenceRayLength: 7.549834e2 # sqrt(57) = 7.549834 = diagonal length of detector
   ReferenceRayDistance: 110e2 #110m = distance from beam target to detector
   ReferenceHNLEnergyFromKaonEnergy: @local::kaon_energy
-  WidthDecays: ["mu_pi", "e_pi", "nu_mu_mu", "nu_e_e", "nu_nu_nu", "nu_pi0", "nu_eta", "nu_etap", "nu_rho0"]
+  WidthDecays: ["mu_pi", "e_pi", "nu_mu_mu", "nu_e_e", "nu_nu_nu", "nu_pi0", "nu_eta", "nu_etap", "nu_rho0", "nu_mu_e"]
   Verbose: false
 }
 
@@ -76,12 +80,8 @@ hnl_gen: {
   MesonGen: @local::bnb_kaon
   Flux: @local::kaon2hnl
   RayTrace: @local::mxdraytrace
-//  RayTrace: @local::wgtraytrace
   Decay: @local::decay_hnl
 }
-hnl_gen.RayTrace.Volume: "volCryostat" #Use Geometry Service instead 
-hnl_gen.RayTrace.Box: @erase
-hnl_gen.RayTrace.ReferenceLabSolidAngle: @local::sbnd_bnb_solid_angle_cryostat
 
 hnl_gen_kdar: {
   module_type: MeVPrtlGen

@@ -10,7 +10,6 @@
 ////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-//#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
@@ -19,7 +18,6 @@
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-//#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
 
@@ -177,7 +175,8 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
   fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)),
   nChannelsFrag(p.get<double>("nChannelsFrag", 15)),
   wfm_length(p.get<double>("WfmLength", 5120)),
-  fTriggerTimeEngine(art::ServiceHandle<rndm::NuRandomService>{}->createEngine(*this, "HepJamesRandom", "trigger", p, "SeedTriggerTime"))
+    fTriggerTimeEngine(art::ServiceHandle<rndm::NuRandomService>{}->registerAndSeedEngine(
+                         createEngine(0, "HepJamesRandom", "trigger"), "HepJamesRandom", "trigger", p, "SeedTriggerTime"))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.

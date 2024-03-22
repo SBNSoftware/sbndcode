@@ -55,7 +55,7 @@ namespace sbnd::crt {
 
     return kUndefinedSet;
   }
-  
+
   enum CoordSet CRTCommonUtils::GetStripWidthGlobalCoordinate(const CRTTagger tagger, const uint16_t orientation)
   {
     if((tagger == kBottomTagger && orientation == 1) ||

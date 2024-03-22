@@ -12,6 +12,8 @@ set(
         larevt::Filters
         lardataobj::RawData
         lardataobj::RecoBase
+        lardataobj::MCBase
+        lardataobj::Simulation
         larreco::RecoAlg
         lardata::RecoObjects
         larpandora::LArPandoraInterface

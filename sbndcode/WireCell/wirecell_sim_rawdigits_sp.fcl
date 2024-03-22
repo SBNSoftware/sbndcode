@@ -1,0 +1,22 @@
+#
+# File:    wirecell_sim_rawdigits_sp.fcl
+# Purpose: 2D Simulation of readout response to induced and collected charge and performs 2D signal processing
+# Authors: Ewerton Belchior and Lynn Tung (lynnt@uchicago.edu)
+#
+# This configuration runs Wire-Cell TPC Simulation and Signal Processing
+#
+# Input:
+# - std::vector<sim::SimEnergyDeposit> with label `ionandscint`
+#
+# Output:
+# - std::vector<recob::Wire> with labels `simtpc2d:gauss, `simtpc2d:wiener`
+# - std::vector<sim::SimChannel> with label `simtpc2d:simpleSC`
+# - std::vector<raw::RawDigit> with label `simtpc2d:daq`
+
+#include "wirecell_sim_sp_sbnd.fcl"
+
+## need both of the below lines to save rawdigits! 
+physics.producers.simtpc2d.wcls_main.outputers: [ "wclsDepoFluxWriter:postdrift",
+                                                  "wclsFrameSaver:simdigits" , # adding this line asks wcls to save raw digits
+                                                  "wclsFrameSaver:spsaver"]
+physics.producers.simtpc2d.wcls_main.params.save_simdigits: "true" # needs to be a string!!

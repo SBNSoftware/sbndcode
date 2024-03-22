@@ -344,7 +344,7 @@ namespace opdet {
       // std::cout<<"@rodrigoa debug: Electronics="<<fElectronics<<std::endl;
 
       if (fElectronics=="Daphne"){
-        //take only daphne xarapuca channels (80 Mhz) for now ~rodrigoa
+        //take only daphne xarapuca channels (62.5 Mhz) for now ~rodrigoa
         ch_v = _pds_map.getChannelsOfType(name, "daphne");
       }else{
         ch_v = _pds_map.getChannelsOfType(name);

@@ -3,11 +3,11 @@
 namespace sbnd::crt {
 
   CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p) :
-    CRTGeoAlg(p, lar::providerFrom<geo::Geometry>(), 
+    CRTGeoAlg(p, lar::providerFrom<geo::Geometry>(),
               ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr())
   {}
 
-  CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry, 
+  CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry,
                        geo::AuxDetGeometryCore const *auxdet_geometry)
     : fT0CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T0CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
     , fT1CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T1CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
@@ -21,15 +21,15 @@ namespace sbnd::crt {
     fAuxDetGeoCore   = auxdet_geometry;
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
 
-    fT0CableLengthCorrections = std::map<unsigned, double>(fT0CableLengthCorrectionsVector.begin(), 
+    fT0CableLengthCorrections = std::map<unsigned, double>(fT0CableLengthCorrectionsVector.begin(),
                                                            fT0CableLengthCorrectionsVector.end());
-    fT1CableLengthCorrections = std::map<unsigned, double>(fT1CableLengthCorrectionsVector.begin(), 
+    fT1CableLengthCorrections = std::map<unsigned, double>(fT1CableLengthCorrectionsVector.begin(),
                                                            fT1CableLengthCorrectionsVector.end());
-    fSiPMPedestals            = std::map<unsigned, double>(fSiPMPedestalsVector.begin(), 
+    fSiPMPedestals            = std::map<unsigned, double>(fSiPMPedestalsVector.begin(),
                                                            fSiPMPedestalsVector.end());
-    fSiPMGains                = std::map<unsigned, double>(fSiPMGainsVector.begin(), 
+    fSiPMGains                = std::map<unsigned, double>(fSiPMGainsVector.begin(),
                                                            fSiPMGainsVector.end());
-    fChannelInversion         = std::map<unsigned, bool>(fChannelInversionVector.begin(), 
+    fChannelInversion         = std::map<unsigned, bool>(fChannelInversionVector.begin(),
                                                          fChannelInversionVector.end());
 
     // Record used objects
@@ -85,9 +85,9 @@ namespace sbnd::crt {
             const bool invert = fChannelInversion.size() ? fChannelInversion.at(ad_i) : false;
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-                const int32_t t0CableDelayCorrection = fT0CableLengthCorrections.size() ? 
+                const int32_t t0CableDelayCorrection = fT0CableLengthCorrections.size() ?
                   fT0CableLengthCorrections.at(ad_i) : 0;
-                const int32_t t1CableDelayCorrection = fT1CableLengthCorrections.size() ? 
+                const int32_t t1CableDelayCorrection = fT1CableLengthCorrections.size() ?
                   fT1CableLengthCorrections.at(ad_i) : 0;
 
                 const std::string stripName = nodeStrip->GetVolume()->GetName();
@@ -253,9 +253,9 @@ namespace sbnd::crt {
   CRTStripGeo CRTGeoAlg::GetStripByAuxDetIndices(const unsigned ad_i, const unsigned ads_i) const
   {
     const CRTModuleGeo module = GetModule(ad_i);
-    const uint16_t channel = 
+    const uint16_t channel =
       module.invertedOrdering ? 32 * ad_i + (31 -2 *ads_i) : 32 * ad_i + 2 * ads_i;
-    
+
     return GetStrip(channel);
   }
 
@@ -294,7 +294,7 @@ namespace sbnd::crt {
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).orientation;
   }
 
-  std::array<double, 6> CRTGeoAlg::StripHit3DPos(const uint16_t channel, const double x, 
+  std::array<double, 6> CRTGeoAlg::StripHit3DPos(const uint16_t channel, const double x,
                                                  const double ex)
   {
     const CRTStripGeo &strip = GetStrip(channel);
@@ -335,7 +335,7 @@ namespace sbnd::crt {
     return localvec;
   }
 
-  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const uint16_t channel, const double x, 
+  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const uint16_t channel, const double x,
                                                       const double y, const double z)
   {
     const CRTStripGeo strip = GetStrip(channel);
@@ -433,11 +433,11 @@ namespace sbnd::crt {
     const double xdiff = std::abs(strip.maxX-strip.minX);
     const double ydiff = std::abs(strip.maxY-strip.minY);
     const double zdiff = std::abs(strip.maxZ-strip.minZ);
-  
+
     if(xdiff > ydiff && xdiff > zdiff) distance = position.X() - pos.X();
     else if(ydiff > xdiff && ydiff > zdiff) distance = position.Y() - pos.Y();
     else if(zdiff > xdiff && zdiff > ydiff) distance = position.Z() - pos.Z();
-  
+
     return std::abs(distance);
   }
 
@@ -532,7 +532,7 @@ namespace sbnd::crt {
 
   enum CRTTagger CRTGeoAlg::WhichTagger(const double &x, const double &y, const double &z, const double &buffer)
   {
-    for(auto const [name, tagger] : fTaggers)
+    for(auto const& [name, tagger] : fTaggers)
       {
         if(x > tagger.minX - buffer &&
            x < tagger.maxX + buffer &&

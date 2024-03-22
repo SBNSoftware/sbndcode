@@ -15,7 +15,7 @@ SBNDSimpleFlash:
   OpFlashProducer : "opflash"
   PECalib         : @local::NoCalib
   OpHitInputTime  : "PeakTime"
-  FlashGeoConfig  : @local::FlashGeoBarycenter
+  FlashGeoConfig  : @local::FlashGeoThreshold
   UseT0Tool       : false
   FlashT0Config   : @local::FlashT0SelectedChannels
   ReadoutDelay    : 0. //in us

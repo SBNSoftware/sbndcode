@@ -177,6 +177,12 @@ physics:
   ### flash-matching
   fmatch:              @local::sbnd_simple_flashmatch
   fmatchSCE:           @local::sbnd_simple_flashmatch_sce
+  fmatchop:            @local::sbnd_simple_flashmatch_op
+  fmatchopSCE:         @local::sbnd_simple_flashmatch_op_sce
+  fmatchara:           @local::sbnd_simple_flashmatch_ara
+  fmatcharaSCE:        @local::sbnd_simple_flashmatch_ara_sce
+  fmatchopara:         @local::sbnd_simple_flashmatch_opara
+  fmatchoparaSCE:      @local::sbnd_simple_flashmatch_opara_sce
   opt0finder:          @local::sbnd_opt0_finder_one_to_many
   opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
 
@@ -196,15 +202,15 @@ physics:
          , opflashtpc1
          , opflashtpc0xarapuca
          , opflashtpc1xarapuca
-         , caldata
+        #  , caldata
          , gaushit
-         , fasthit
-   #         , linecluster
+        # , fasthit
+        # , linecluster
          , gaushitTruthMatch
    #      , rffhit
    #      , corner
    #      , fuzzycluster
-   	 , crtstrips
+         , crtstrips
  ]
 
  reco2_no_opt0finder: [
@@ -222,14 +228,17 @@ physics:
   #       , pmatrackcalo
   #       , pmatrackpid
   #        , emshower
-         , crtclustering
-	 , crtspacepoints
-	 , crttracks
-	 , crtspacepointmatching
-	 , crttrackmatching
-         , fmatch
-	 , caloskimCalorimetry
- ]
+          , crtclustering
+          , crtspacepoints
+          , crttracks
+          , crtspacepointmatching
+          , crttrackmatching
+          , fmatch
+          , fmatchop
+          , fmatchara
+          , fmatchopara
+	  , caloskimCalorimetry
+]
 
 
  # Run caloskimmer to produce ntuples for calibration as part of reco2 chain
@@ -292,10 +301,11 @@ physics.trigger_paths: [ fullreco ]
 #physics.producers.opflash.InputModule:                          "optreadout"
 #physics.producers.opflash.GenModule:                            "generator"
 
-physics.producers.caldata.DigitModuleLabel:                     "daq"
+# physics.producers.caldata.DigitModuleLabel:                     "daq"
 
-physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
-physics.producers.fasthit.DigitModuleLabel:                     "daq"
+# physics.producers.gaushit.CalDataModuleLabel:                   "caldata"
+physics.producers.gaushit.CalDataModuleLabel:                   "simtpc2d:gauss"
+physics.producers.fasthit.DigitModuleLabel:                     "simtpc2d:daq"
 #physics.producers.rffhit.CalDataModuleLabel:                    "caldata"
 
 #physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"
@@ -324,7 +334,12 @@ physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
-physics.producers.opt0finderSCE.SliceProducer: "pandoraSCE"
+physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
+
+physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
+physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
+physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
+physics.producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
 
 #physics.producers.trackkalmanhit.HitModuleLabel:   "gaushit"
 #physics.producers.trackkalmanhit.ClusterModuleLabel:   "fuzzycluster"
