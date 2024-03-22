@@ -58,9 +58,16 @@ void GetScaling(TChain *rockboxSubruns, TChain *intimeSubruns, double &rockboxSc
   intimeScaling = (goalSpills - scaledRockboxSpills) / intimeSpills;
 }
 
-TString POTString()
+TString POTString(const bool brackets = true)
 {
-  TString potString = Form(" (%g POT)", goalPOT);
+  TString potString = Form("%g POT", goalPOT);
+
+  if(brackets)
+    {
+      potString.Prepend(" (");
+      potString.Append(")");
+    }
+
   potString.ReplaceAll("e+", "x10^{");
   potString.ReplaceAll(" POT", "} POT");
 
