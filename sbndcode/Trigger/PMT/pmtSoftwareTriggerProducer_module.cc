@@ -32,7 +32,8 @@
 #include "artdaq-core/Data/ContainerFragment.hh"
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
-#include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
+// #include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
+#include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
 
 // ROOT includes
 #include "TH1D.h"
@@ -270,9 +271,9 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
 
     // store timestamp of trigger, relative to beam window start
     double triggerTimeStamp = fTriggerTime - beamWindowStart;
-    trig_metrics.triggerTimestamp = triggerTimeStamp;
+    trig_metrics.trig_ts = triggerTimeStamp;
     _time_trig = triggerTimeStamp;
-    if (fVerbose) std::cout << "Saving trigger timestamp: " << trig_metrics.triggerTimestamp << " ns" << std::endl;
+    if (fVerbose) std::cout << "Saving trigger timestamp: " << trig_metrics.trig_ts << " ns" << std::endl;
 
     double promptPE = 0;
     double prelimPE = 0; 
@@ -430,7 +431,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   else{
     if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
     trig_metrics.foundBeamTrigger = false;
-    trig_metrics.triggerTimestamp = -9999;
+    trig_metrics.trig_ts = -9999;
     trig_metrics.nAboveThreshold = -9999;
     trig_metrics.promptPE = -9999;
     trig_metrics.prelimPE = -9999;
