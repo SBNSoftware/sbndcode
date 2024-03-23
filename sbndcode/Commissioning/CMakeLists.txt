@@ -20,6 +20,7 @@ set(
         sbndcode_CRTUtils
         sbnobj::Common_CRT
         sbnobj::SBND_CRT
+        sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
         nusimdata::SimulationBase
         art::Framework_Core
         art::Framework_Principal
