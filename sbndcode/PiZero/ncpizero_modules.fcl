@@ -33,7 +33,7 @@ ncpizeroana:
     MaxHitSeparation: 0.9
   }
 
-  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroAv12.root"
+  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroBv2.root"
 
   module_type: NCPiZeroAnalysis
 }
@@ -61,7 +61,7 @@ ncpizeroxsectrees:
   RazzledModuleLabel:      "razzled"
   EventWeightModuleLabels: [ "fluxweight", "systtools", "geant4weight" ]
 
-  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroAv12.root"
+  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroBv2.root"
 
   module_type: NCPiZeroXSecTrees
 }
