@@ -36,13 +36,13 @@ void XSec2DPlots(const TString productionVersion, const TwoDPlotSet &plotSet, co
 
   TString trueUnSelVar1 = plotSet.var1;
   TString trueUnSelVar2 = plotSet.var2;
-  trueUnSelVar1.ReplaceAll("slc_best_pzc", "nu_pz");
-  trueUnSelVar2.ReplaceAll("slc_best_pzc", "nu_pz");
+  trueUnSelVar1.ReplaceAll("slc_best_corr_pzc", "nu_pz");
+  trueUnSelVar2.ReplaceAll("slc_best_corr_pzc", "nu_pz");
 
   TString trueSelVar1 = plotSet.var1;
   TString trueSelVar2 = plotSet.var2;
-  trueSelVar1.ReplaceAll("slc_best_pzc", "slc_true_pz");
-  trueSelVar2.ReplaceAll("slc_best_pzc", "slc_true_pz");
+  trueSelVar1.ReplaceAll("slc_best_corr_pzc", "slc_true_pz");
+  trueSelVar2.ReplaceAll("slc_best_corr_pzc", "slc_true_pz");
 
   std::vector<TH1*> trueHistsUnselected;
   std::vector<TH1*> trueHistsSelected;

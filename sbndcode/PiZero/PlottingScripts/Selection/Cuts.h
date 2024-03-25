@@ -12,7 +12,7 @@ const Cut crumbsCC                 = { "crumbs", "slc_crumbs_ccnumu_score>0", "C
 const Cut noRazzledMuons           = { "no_razzled_muons", "slc_n_primary_razzled_muons==0", "No Razzled Muons" };
 const Cut oneRazzledMuon           = { "one_razzled_muon", "slc_n_primary_razzled_muons==1", "One Razzled Muon" };
 const Cut atLeastTwoRazzledPhotons = { "has_two_razzled_photons", "slc_n_primary_razzled_photons>1", "Has Two Razzled Photons" };
-const Cut goodPiZeroKinematics     = { "good_pizero_kinematics", "slc_best_pzc_good_kinematics", "Good PiZero Kinematics" };
+const Cut goodPiZeroKinematics     = { "good_pizero_kinematics", "slc_best_corr_pzc_good_kinematics", "Good PiZero Kinematics" };
 const Cut noRazzledPions           = { "no_razzled_pions", "slc_n_primary_razzled_pions_thresh==0", "No Razzled Pions" };
 const Cut noRazzledProtons         = { "no_razzled_protons", "slc_n_primary_razzled_protons_thresh==0", "No Razzled Protons" };
 const Cut atLeastOneRazzledProton  = { "at_least_one_razzled_proton", "slc_n_primary_razzled_protons_thresh>0", "At Least One Razzled Proton" };
@@ -37,7 +37,7 @@ const Cut cosmicRejNp0pi      = { "cosmic_rejection", crumbsNp0pi.cut, "Cosmic R
 const Cut cosmicRejCC         = { "cosmic_rejection", crumbsCC.cut, "Cosmic Rej", kGreen+1 };
 const Cut muonRej             = { "muon_rejection", "slc_n_primary_razzled_muons == 0", "Muon Rej", kRed-9 };
 const Cut muonSel             = { "muon_selection", "slc_n_primary_razzled_muons == 1", "Muon Sel", kRed-9 };
-const Cut photonSel           = { "photons_selection", "slc_n_primary_razzled_photons>1 && slc_best_pzc_good_kinematics", "Photon Sel", kBlue-9 };
+const Cut photonSel           = { "photons_selection", "slc_n_primary_razzled_photons>1 && slc_best_corr_pzc_good_kinematics", "Photon Sel", kBlue-9 };
 const Cut pionRej             = { "pion_rejection", "slc_n_primary_razzled_pions_thresh==0", "Pion Rej", kViolet - 5 };
 const Cut protonRej           = { "proton_rejection", "slc_n_primary_razzled_protons_thresh==0", "Proton Rej", kViolet - 6 };
 const Cut atLeastOneProtonSel = { "proton_selection", "slc_n_primary_razzled_protons_thresh>0", "Proton Sel", kViolet - 6 };

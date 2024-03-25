@@ -578,6 +578,8 @@ private:
     { "slc_best_pzc_cos_theta_pizero_corr", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero_corr") },
     { "slc_best_pzc_cos_com_corr", new InhVecVar<double>("slc_best_pzc_cos_com_corr") },
     { "slc_best_pzc_decay_asymmetry_corr", new InhVecVar<double>("slc_best_pzc_decay_asymmetry_corr") },
+    { "slc_best_corr_pzc_photon_0_id", new InhVecVar<size_t>("slc_best_corr_pzc_photon_0_id") },
+    { "slc_best_corr_pzc_photon_1_id", new InhVecVar<size_t>("slc_best_corr_pzc_photon_1_id") },
     { "slc_best_corr_pzc_good_kinematics", new InhVecVar<bool>("slc_best_corr_pzc_good_kinematics") },
     { "slc_best_corr_pzc_invariant_mass", new InhVecVar<double>("slc_best_corr_pzc_invariant_mass") },
     { "slc_best_corr_pzc_pizero_mom", new InhVecVar<double>("slc_best_corr_pzc_pizero_mom") },
@@ -2089,15 +2091,15 @@ void sbnd::NCPiZeroAnalysis::SliceContainment(const int slcCounter)
 
   std::vector<std::vector<int>> slc_pfp_pdg;
 
-  std::vector<size_t> slc_best_pzc_photon_0_id, slc_best_pzc_photon_1_id;
+  std::vector<size_t> slc_best_corr_pzc_photon_0_id, slc_best_corr_pzc_photon_1_id;
 
   GetVar(slcVars["slc_pfp_primary"], slc_pfp_primary);
   GetVar(slcVars["slc_pfp_pdg"], slc_pfp_pdg);
   GetVar(slcVars["slc_pfp_primary_child"], slc_pfp_primary_child);
   GetVar(slcVars["slc_pfp_track_contained"], slc_pfp_track_contained);
   GetVar(slcVars["slc_pfp_shower_contained"], slc_pfp_shower_contained);
-  GetVar(slcVars["slc_best_pzc_photon_0_id"], slc_best_pzc_photon_0_id);
-  GetVar(slcVars["slc_best_pzc_photon_1_id"], slc_best_pzc_photon_1_id);
+  GetVar(slcVars["slc_best_corr_pzc_photon_0_id"], slc_best_corr_pzc_photon_0_id);
+  GetVar(slcVars["slc_best_corr_pzc_photon_1_id"], slc_best_corr_pzc_photon_1_id);
 
   bool alltrkscontained = true, allshwscontained = true, allprimtrkscontained = true, allprimshwscontained = true,
     allothertrkscontained = true, allothershwscontained = true, allotherprimtrkscontained = true, allotherprimshwscontained = true;
@@ -2111,7 +2113,7 @@ void sbnd::NCPiZeroAnalysis::SliceContainment(const int slcCounter)
           if(slc_pfp_primary.at(slcCounter).at(pfp_i) || slc_pfp_primary_child.at(slcCounter).at(pfp_i))
             allprimtrkscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
 
-          if(pfp_i != slc_best_pzc_photon_0_id.at(slcCounter) && pfp_i != slc_best_pzc_photon_1_id.at(slcCounter))
+          if(pfp_i != slc_best_corr_pzc_photon_0_id.at(slcCounter) && pfp_i != slc_best_corr_pzc_photon_1_id.at(slcCounter))
             {
               allothertrkscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
 
@@ -2127,7 +2129,7 @@ void sbnd::NCPiZeroAnalysis::SliceContainment(const int slcCounter)
           if(slc_pfp_primary.at(slcCounter).at(pfp_i) || slc_pfp_primary_child.at(slcCounter).at(pfp_i))
             allprimshwscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
 
-          if(pfp_i != slc_best_pzc_photon_0_id.at(slcCounter) && pfp_i != slc_best_pzc_photon_1_id.at(slcCounter))
+          if(pfp_i != slc_best_corr_pzc_photon_0_id.at(slcCounter) && pfp_i != slc_best_corr_pzc_photon_1_id.at(slcCounter))
             {
               allothershwscontained &= slc_pfp_track_contained.at(slcCounter).at(pfp_i);
 
@@ -2179,7 +2181,7 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   const bool passes_razzled_photons = nrazzledphotons > 1;
 
   bool bestpzcgoodkinematics;
-  AccessElement(slcVars["slc_best_pzc_good_kinematics"], counter, bestpzcgoodkinematics);
+  AccessElement(slcVars["slc_best_corr_pzc_good_kinematics"], counter, bestpzcgoodkinematics);
 
   double opt0frac;
   AccessElement(slcVars["slc_opt0_fracPE"], counter, opt0frac);

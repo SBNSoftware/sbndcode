@@ -23,7 +23,7 @@ std::vector<Plot> selection_plots = {
     5, -0.5, 4.5 },
   { "slc_n_razzled_photons", "slc_n_razzled_photons", ";N Razzled Photons;Slices",
     5, -0.5, 4.5 },
-  { "slc_best_pzc_good_kinematics", "slc_best_pzc_good_kinematics", ";Best #pi^{0} Candidates Good Kinematics?;Slice",
+  { "slc_best_corr_pzc_good_kinematics", "slc_best_corr_pzc_good_kinematics", ";Best #pi^{0} Candidates Good Kinematics?;Slice",
     2, -0.5, 1.5, kBlack, false, "", true, {"No", "Yes"} },
   { "slc_opt0_fracPE", "slc_opt0_fracPE", ";OpT0 Fractional PE Difference;Slices",
     100, -2, 8 },
@@ -98,15 +98,15 @@ std::vector<VarBinPlot> true_slc_observables = {
 };
 
 std::vector<Plot> observables = {
-  { "slc_best_pzc_invariant_mass", "slc_best_pzc_invariant_mass", ";M_{#gamma#gamma} (MeV/c^{2});Slices",
+  { "slc_best_corr_pzc_invariant_mass", "slc_best_corr_pzc_invariant_mass", ";M_{#gamma#gamma} (MeV/c^{2});Slices",
     25, 0, 500 },
-  { "slc_best_pzc_pizero_mom", "slc_best_pzc_pizero_mom", ";p_{#pi^{0}} (MeV/c);Slices",
+  { "slc_best_corr_pzc_pizero_mom", "slc_best_corr_pzc_pizero_mom", ";p_{#pi^{0}} (MeV/c);Slices",
     25, 0, 1000 },
-  { "slc_best_pzc_cos_theta_pizero", "slc_best_pzc_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Slices",
+  { "slc_best_corr_pzc_cos_theta_pizero", "slc_best_corr_pzc_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Slices",
     25, -1, 1 },
-  { "slc_best_pzc_cos_com", "slc_best_pzc_cos_com", ";cos(#theta_{CoM});Slices",
+  { "slc_best_corr_pzc_cos_com", "slc_best_corr_pzc_cos_com", ";cos(#theta_{CoM});Slices",
     25, 0, 1 },
-  { "slc_best_pzc_decay_asymmetry", "slc_best_pzc_decay_asymmetry", ";Decay Asymmetry;Slices",
+  { "slc_best_corr_pzc_decay_asymmetry", "slc_best_corr_pzc_decay_asymmetry", ";Decay Asymmetry;Slices",
     25, 0, 1 },
 };
 
@@ -137,7 +137,7 @@ std::vector<TwoDPlotSet> true_observables_twod_sets = {
     9, { 0., 60., 120., 180., 240., 300., 400., 500., 600., 1000. }, "p_{#pi^{0}} (MeV/c)", "60 MeV/c", 60. },
 };
 
-const TwoDPlotSet observable_set = { "pizero_momentum_and_cos_theta", "slc_best_pzc_pizero_mom", "slc_best_pzc_cos_theta_pizero",
+const TwoDPlotSet observable_set = { "pizero_momentum_and_cos_theta", "slc_best_corr_pzc_pizero_mom", "slc_best_corr_pzc_cos_theta_pizero",
                                      8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, "p_{#pi^{0}} (MeV/c)", " MeV/c", 1.,
                                      9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, "cos(#theta_{#pi^{0}} )" };
 
