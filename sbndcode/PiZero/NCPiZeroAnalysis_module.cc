@@ -2159,7 +2159,7 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
   AccessElement(slcVars["slc_crumbs_nc_score"], counter, crumbs);
   const bool passes_crumbs_incl  = crumbs > -0.005;
   const bool passes_crumbs_0p0pi = crumbs > -0.005;
-  const bool passes_crumbs_Np0pi = crumbs > 0.075;
+  const bool passes_crumbs_Np0pi = crumbs > 0.235;
 
   float crumbs_ccnumu;
   AccessElement(slcVars["slc_crumbs_ccnumu_score"], counter, crumbs_ccnumu);
@@ -2183,16 +2183,16 @@ void sbnd::NCPiZeroAnalysis::SelectSlice(const int counter)
 
   double opt0frac;
   AccessElement(slcVars["slc_opt0_fracPE"], counter, opt0frac);
-  const bool passes_opt0frac_incl  = opt0frac < 0.756 && opt0frac > -0.7;
-  const bool passes_opt0frac_0p0pi = opt0frac < 0.844 && opt0frac > -0.7;
-  const bool passes_opt0frac_Np0pi = opt0frac < 0.836 && opt0frac > -0.376;
+  const bool passes_opt0frac_incl  = opt0frac < 0.512 && opt0frac > -0.676;
+  const bool passes_opt0frac_0p0pi = opt0frac < 0.4 && opt0frac > -0.676;
+  const bool passes_opt0frac_Np0pi = opt0frac < 0.512 && opt0frac > -0.44;
   const bool passes_opt0frac_cc    = opt0frac < 0.836 && opt0frac > -0.376;
 
   double opt0score;
   AccessElement(slcVars["slc_opt0_score"], counter, opt0score);
-  const bool passes_opt0score_incl  = opt0score > 5;
-  const bool passes_opt0score_0p0pi = opt0score > 125;
-  const bool passes_opt0score_Np0pi = opt0score > 210;
+  const bool passes_opt0score_incl  = opt0score > 45;
+  const bool passes_opt0score_0p0pi = opt0score > 110;
+  const bool passes_opt0score_Np0pi = opt0score > 80;
   const bool passes_opt0score_cc    = opt0score > 210;
 
   int nrazzledpions;

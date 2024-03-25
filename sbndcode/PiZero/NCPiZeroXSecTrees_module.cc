@@ -731,14 +731,14 @@ void sbnd::NCPiZeroXSecTrees::AnalyseSlices(const art::Event &e, const art::Hand
       const bool common_sel = !_is_clear_cosmic && _is_fv && _n_primary_razzled_photons > 1 && _best_pzc_good_kinematics;
 
       _sel_incl = common_sel && _crumbs_nc > -0.005 && _n_primary_razzled_muons == 0
-        && _opt0_fracPE < 0.756 && _opt0_fracPE > -0.7 && _opt0_score > 5 && _all_other_trks_contained;
+        && _opt0_fracPE < 0.512 && _opt0_fracPE > -0.676 && _opt0_score > 45 && _all_other_trks_contained;
 
       _sel_0p0pi = common_sel && _crumbs_nc > -0.005 && _n_primary_razzled_muons == 0
-        && _opt0_fracPE < 0.844 && _opt0_fracPE > -0.7 && _opt0_score > 125 && _n_primary_razzled_pions_thresh == 0
+        && _opt0_fracPE < 0.4 && _opt0_fracPE > -0.676 && _opt0_score > 110 && _n_primary_razzled_pions_thresh == 0
         && _n_primary_razzled_protons_thresh == 0;
 
-      _sel_Np0pi = common_sel && _crumbs_nc > -0.005 && _n_primary_razzled_muons == 0
-        && _opt0_fracPE < 0.836 && _opt0_fracPE > -0.376 && _opt0_score > 210 && _n_primary_razzled_pions_thresh == 0
+      _sel_Np0pi = common_sel && _crumbs_nc > -0.235 && _n_primary_razzled_muons == 0
+        && _opt0_fracPE < 0.836 && _opt0_fracPE > -0.44 && _opt0_score > 200 && _n_primary_razzled_pions_thresh == 0
         && _n_primary_razzled_protons_thresh > 0;
 
       _sel_cc = common_sel && _crumbs_ccnumu > 0 && _n_primary_razzled_muons == 1
