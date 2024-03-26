@@ -1,5 +1,4 @@
 art_make_library(
-		 LIBRARY_NAME sbndcode_CRT_CRTEventDisplay
 		 SOURCE	      CRTEventDisplayAlg.cc
 		 LIBRARIES
 			larsim::Utils
