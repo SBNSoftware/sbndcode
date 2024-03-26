@@ -9,9 +9,8 @@
 declare -ar TestNames=(
     'prodsingle_mu_bnblike_newflux'
     'g4_sce'
-    'wirecell_sim_sp_sbnd'
-    'detsim_sce_lite_wc'
-    'reco1_sce_lite_wc2d'
+    'detsim_sce_lite'
+    'reco1_sce_lite'
     'reco2_sce'
 )
 
