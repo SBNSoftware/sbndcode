@@ -1,4 +1,8 @@
 #include "cluster_sbn.fcl"
 
+BEGIN_PROLOG
+
 sbnd_cluster3d: @local::sbn_cluster3d
 sbnd_cluster3d.Hit3DBuilderAlg.SaveMythicalPoints: false
+
+END_PROLOG
