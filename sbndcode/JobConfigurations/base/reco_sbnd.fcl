@@ -398,5 +398,3 @@ physics.producers.crtspacepointmatchingSCE.MatchingAlg.TPCTrackLabel: "pandoraSC
 physics.producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSCETrack"
 physics.producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandoraSCE"
 physics.producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
-
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
