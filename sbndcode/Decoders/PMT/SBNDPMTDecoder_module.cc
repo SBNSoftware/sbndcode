@@ -405,8 +405,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 }
                 int time_diff = int(iwvfm_start) - int(event_trigger_time);
                 uint ch;
-                if (i%fnch == 15)
+                if (i%fnch == 15){
                     ch = fragid;
+                }
                 else
                     ch = fch_map.at(fragid + i%fnch);
                 
