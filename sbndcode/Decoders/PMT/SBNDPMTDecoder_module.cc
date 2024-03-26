@@ -311,17 +311,25 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         event_trigger_time = 0;
     }
 
-    // check to see if there are any extended triggers in this event 
     bool extended_flag = false;
 
-    for (size_t itrig=0; itrig < board_frag_v.at(0).size(); itrig++){
-        auto frag = board_frag_v.at(0).at(itrig);
-        auto length = get_length(frag);
-        if (length < fnominal_length){
-            extended_flag = true;
-            break;
+    for (size_t iboard=0; iboard < board_frag_v.size(); iboard++){
+        // check to see if there are any extended triggers in this event 
+        if (extended_flag==false){
+            for (size_t itrig=0; itrig < board_frag_v.at(iboard).size(); itrig++){
+                auto frag = board_frag_v.at(0).at(itrig);
+                auto length = get_length(frag);
+                if (length < fnominal_length){
+                    extended_flag = true;
+                    break;
+                }
+            }
         }
+        if (std::find(fignore_fragid.begin(), fignore_fragid.end(), iboard) != fignore_fragid.end())
+            continue;
+        std::cout << "Board " << iboard << " has " << board_frag_v.at(iboard).size() << " trigger(s) || " ;
     }
+    std::cout << std::endl;
 
     // store the waveform itself
     // store the waveform start time (for OpDetWaveform timestamp)
@@ -373,7 +381,13 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                         } // end ch loop 
                     } // end if extension condition
                     iwvfm_end = jttt;
-                } // end jtrig loop 
+                } // end jtrig loop
+                if (fdebug>2){
+                    std::cout << "      Frag ID: " << fragid
+                              << " -> start time: " << int(iwvfm_start) - int(event_trigger_time)
+                              << " , wvfm length: " << iwvfm_v.at(0).size()
+                              << std::endl; 
+                }
             } // end extended flag         
             for (size_t i = 0; i < iwvfm_v.size(); i++){
                 auto combined_wvfm = iwvfm_v[i];
@@ -398,8 +412,8 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 
                 raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
 
-                if (i%fnch == 15)
-                    if (foutput_ftrig_wvfm) twvfmVec->push_back(waveform);
+                if ((i%fnch == 15) && (foutput_ftrig_wvfm))
+                    twvfmVec->push_back(waveform);
                 else 
                     wvfmVec->push_back(waveform);
             }

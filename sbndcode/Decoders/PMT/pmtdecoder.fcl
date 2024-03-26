@@ -37,7 +37,7 @@ pmtdecoder:
     n_caenboards:    8  # number of caen boards; this is used for memory allocation
     threshold_ftrig: 16350 # the threshold for the flash trigger channel
 
-    fragid_offset:   40960 # the offset to subtract to get single digit fragids; if use_hack_map is true, should set this to 0
+    fragid_offset:   40960 # the offset to subtract to get single digit fragids; if use_hardcoded_map is true, should set this to 0
     hist_evt:        1  # the # of the event used to generate the histograms, 1st event by default 
 
     # for when the fragIDs are mapped to the old configuration...
