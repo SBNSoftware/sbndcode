@@ -44,9 +44,6 @@
 
 // SBN/SBND includes
 #include "sbnobj/SBND/CRT/classes.h" 
-#include "sbnobj/SBND/CRT/CRTStripHit.hh"
-#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
-#include "sbnobj/SBND/CRT/CRTTrack.hh"
 //
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
