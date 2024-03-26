@@ -3,6 +3,7 @@
 #include "standard_g4_sbnd.fcl"
 
 physics.simulate: [ rns
+                  , sedlite #SEDLite reduces info from SED
                   , ionandscint
                   , ionandscintout
                   , pdfastsim

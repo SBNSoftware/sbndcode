@@ -24,7 +24,6 @@
 
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
-#include "cluster_sbnd.fcl"
 #include "trackfindermodules_sbnd.fcl"
 #include "calorimetry_sbnd.fcl"
 #include "showerfindermodules_sbnd.fcl"
@@ -48,9 +47,13 @@
 #include "scecorrections.fcl"
 #include "flashmatch_sbnd.fcl"
 
-###include "hitparticleassociations.fcl"
-
 #include "sbnd_trackcalo_skimmer.fcl"
+#include "crtskim_sbnd.fcl"
+#include "pmtskim_sbnd.fcl"
+
+#include "mlreco_sbnd.fcl"
+#include "cluster_sbnd.fcl"
+
 
 process_name: Reco
 
@@ -67,6 +70,7 @@ services:
   SignalShapingServiceSBND: @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
   BackTrackerService: @local::sbnd_backtrackerservice
   ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  DetectorClocksService: @local::sbnd_detectorclocks
 }
 
 #source is now a root file
@@ -121,10 +125,10 @@ physics:
 
   ### cluster-finder producers
   #fuzzycluster:        @local::sbnd_fuzzycluster
-  linecluster:         @local::sbnd_linecluster
+  #linecluster:         @local::sbnd_linecluster
   #cccluster:           @local::sbnd_clustercrawler
   #spacepts:            @local::sbnd_spacepts
-  blurredcluster:      @local::sbnd_blurredcluster
+  #blurredcluster:      @local::sbnd_blurredcluster
 
   ### pandora
   pandora:             @local::sbnd_pandora
@@ -189,6 +193,9 @@ physics:
   ### Uncalibrated calorimetry producer for calibration caloskimmer
   caloskimCalorimetry: @local::caloskim_calorimetry
 
+  #ML Reco
+  cluster3d: @local::sbnd_cluster3d
+
  }
 
  #define the producer and filter modules for this path, order matters,
@@ -211,6 +218,7 @@ physics:
    #      , corner
    #      , fuzzycluster
          , crtstrips
+         , cluster3d  
  ]
 
  reco2_no_opt0finder: [
@@ -245,9 +253,13 @@ physics:
 
  analyzers:{
   caloskim: @local::caloskim_nodigits_goldentracks
+  crtskim: @local::crtskim_sbnd
+  pmtskim: @local::pmtskim_sbnd
+  supera: @local::sbnd_supera
  }
 
- caloskimana: [ caloskim ]
+ caloskimana: [ caloskim, crtskim, pmtskim ]
+ superaana: [ supera ] #outputs larcv.root for use in mlreco
 
  #define the output stream, there could be more than one if using filters
  stream1:  [ out1 ]
@@ -275,8 +287,10 @@ outputs:
          "drop *raw::RawDigits*_*_*_*",
          #"drop sim::SimChannels_*_*_*",
          "drop sim::OpDetBacktrackerRecords_*_*_*",
-         "drop *_linecluster_*_*",
-         "drop *_fasthit_*_*"
+         #"drop *_linecluster_*_*",
+         "drop *_fasthit_*_*",
+         "drop *_cluster3d_*_*", #drop all mlreco output
+         "drop *_simplemerge_*_*" #drop all mlreco output
      ]
 
 
@@ -311,7 +325,7 @@ physics.producers.fasthit.DigitModuleLabel:                     "simtpc2d:daq"
 #physics.producers.corner.CornerAlgParamSet.RawDataModuleLabel:  "daq"
 #physics.producers.corner.CornerAlgParamSet.CalDataModuleLabel:  "caldata"
 #
-physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
+#physics.producers.linecluster.HitFinderModuleLabel:              "gaushit"
 
 #physics.producers.fuzzycluster.HitsModuleLabel:                 "gaushit"
 #physics.producers.fuzzycluster.CalDataModuleLabel:              "caldata"

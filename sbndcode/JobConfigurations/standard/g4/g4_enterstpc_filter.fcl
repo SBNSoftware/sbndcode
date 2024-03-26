@@ -5,6 +5,8 @@
 physics.simulate: [ rns
                   , loader
                   , largeant
+                  , simplemerge #merges dropped and nominal MCParticle
+                  , sedlite
                   , ionandscint
                   , ionandscintout
                   , pdfastsim
