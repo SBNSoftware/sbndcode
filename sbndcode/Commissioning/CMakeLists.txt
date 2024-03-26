@@ -18,7 +18,6 @@ set(
         lardata::RecoObjects
         larpandora::LArPandoraInterface
         sbndcode_CRTUtils
-#        sbndcode_CRT
         sbnobj::Common_CRT
 	sbnobj::SBND_CRT
         nusimdata::SimulationBase
