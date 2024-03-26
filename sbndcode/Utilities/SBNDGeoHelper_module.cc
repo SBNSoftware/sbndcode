@@ -63,6 +63,7 @@ util::SBNDGeoHelper::SBNDGeoHelper(fhicl::ParameterSet const& p)
   while (input!=0){
     cout<<"0: quit"<<endl;
     cout<<"1: convert tpc/plane/wire to offline channel number"<<endl;
+    cout<<"2: find intersection of two wires"<<endl;
     cout<<"Type a number: ";
     cin >> input;
     if (input == 1){
@@ -89,6 +90,35 @@ util::SBNDGeoHelper::SBNDGeoHelper(fhicl::ParameterSet const& p)
       cout<<"FEMCrate (1-11) = "<<chaninfo.FEMCrate<<endl;
       cout<<"FEM      (1-16) = "<<chaninfo.FEM<<endl;
       cout<<"FEMCh (0-63)    = "<<chaninfo.FEMCh<<endl;
+    }
+    else if (input == 2){
+      cout<<"Find wire intersection of two wires"<<endl;
+      int tpc1, plane1, wire1, tpc2, plane2, wire2;
+      cout<<"TPC1 number: ";
+      cin>>tpc1;
+      cout<<"Plane1 number: ";
+      cin>>plane1;
+      cout<<"Wire1 number: ";
+      cin>>wire1;
+      cout<<"TPC2 number: ";
+      cin>>tpc2;
+      cout<<"Plane2 number: ";
+      cin>>plane2;
+      cout<<"Wire2 number: ";
+      cin>>wire2;
+      geo::WireID wid1(0,tpc1,plane1,wire1);
+      geo::WireID wid2(0,tpc2,plane2,wire2);
+      double y,z;
+      bool intersect = geo->IntersectionPoint(wid1,wid2,y,z);
+      cout<<"WireID 1:"<<wid1.toString()<<endl;
+      cout<<"WireID 2:"<<wid2.toString()<<endl;
+      cout<<"The intersection point is ("<<y<<","<<z<<")."<<endl;
+      if (intersect){
+        cout<<"It is inside the detector."<<endl;
+      }
+      else{
+        cout<<"It is outside the detector."<<endl;
+      }
     }
   }
 

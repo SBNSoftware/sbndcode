@@ -12,4 +12,12 @@ art_make(SERVICE_LIBRARIES
                            art::Persistency_Provenance
                            messagefacility::MF_MessageLogger
                            ROOT::Core
+         MODULE_LIBRARIES
+                           art_root_io::TFileService_service
+                           lardataobj::RawData
+                           larcore::Geometry_Geometry_service
+                           sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
+                           ROOT::Tree
 )
+
+
