@@ -2,7 +2,7 @@ art_make_library(
                  LIBRARY_NAME sbndcode_CRT_CRTReco
                  SOURCE       CRTClusterCharacterisationAlg.cc
                  LIBRARIES
-                        sbnobj_SBND_CRT
+                        sbnobj::SBND_CRT
                         sbndcode_GeoWrappers
 )
 
