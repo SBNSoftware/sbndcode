@@ -737,8 +737,8 @@ void sbnd::NCPiZeroXSecTrees::AnalyseSlices(const art::Event &e, const art::Hand
         && _opt0_fracPE < 0.4 && _opt0_fracPE > -0.676 && _opt0_score > 110 && _n_primary_razzled_pions_thresh == 0
         && _n_primary_razzled_protons_thresh == 0;
 
-      _sel_Np0pi = common_sel && _crumbs_nc > -0.235 && _n_primary_razzled_muons == 0
-        && _opt0_fracPE < 0.836 && _opt0_fracPE > -0.44 && _opt0_score > 200 && _n_primary_razzled_pions_thresh == 0
+      _sel_Np0pi = common_sel && _crumbs_nc > 0.235 && _n_primary_razzled_muons == 0
+        && _opt0_fracPE < 0.512 && _opt0_fracPE > -0.44 && _opt0_score > 80 && _n_primary_razzled_pions_thresh == 0
         && _n_primary_razzled_protons_thresh > 0;
 
       _sel_cc = common_sel && _crumbs_ccnumu > 0 && _n_primary_razzled_muons == 1
@@ -830,7 +830,7 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
           const double pizeroMom          = pizeroDir.Mag();
           const double pizeroCosTheta     = pizeroDir.Z() / pizeroMom;
 
-          if(goodKinematics && abs(134.9769 - invariantMass) < bestInvMass)
+          if(goodKinematics && abs(kPiZeroMass - invariantMass) < bestInvMass)
             {
               _reco_pizero_mom          = pizeroMom;
               _reco_cos_theta_pizero    = pizeroCosTheta;

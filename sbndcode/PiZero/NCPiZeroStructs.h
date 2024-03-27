@@ -1,6 +1,10 @@
 #ifndef NCPIZEROSTRUCTS_H_SEEN
 #define NCPIZEROSTRUCTS_H_SEEN
 
+constexpr double kPiZeroMass = 134.9769;
+
+std::vector<double> kKFCovMatrix = {11964.3, 0, 0, 0, 3179.01, 0, 0, 0, 0.315488};
+
 constexpr int n_fluxweight_univs   = 1000;
 constexpr int n_genieweight_univs  = 500;
 constexpr int n_geant4weight_univs = 1000;

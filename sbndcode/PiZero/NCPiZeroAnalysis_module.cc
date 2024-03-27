@@ -60,6 +60,7 @@
 #include "sbnobj/Common/SBNEventWeight/EventWeightMap.h"
 
 #include "NCPiZeroStructs.h"
+#include "KinFit.h"
 #include "SecondShower/SecondShowerFinderAlg.h"
 
 #include <numeric>
@@ -564,6 +565,11 @@ private:
     { "slc_pzc_photon_1_true_pdg", new InhVecVecVar<int>("slc_pzc_photon_1_true_pdg") },
     { "slc_pzc_photon_1_comp", new InhVecVecVar<float>("slc_pzc_photon_1_comp") },
     { "slc_pzc_photon_1_pur", new InhVecVecVar<float>("slc_pzc_photon_1_pur") },
+    { "slc_pzc_invariant_mass_fit", new InhVecVecVar<double>("slc_pzc_invariant_mass_fit") },
+    { "slc_pzc_pizero_mom_fit", new InhVecVecVar<double>("slc_pzc_pizero_mom_fit") },
+    { "slc_pzc_gamma0_energy_fit", new InhVecVecVar<double>("slc_pzc_gamma0_energy_fit") },
+    { "slc_pzc_gamma1_energy_fit", new InhVecVecVar<double>("slc_pzc_gamma1_energy_fit") },
+    { "slc_pzc_open_angle_fit", new InhVecVecVar<double>("slc_pzc_open_angle_fit") },
     { "slc_best_pzc_photon_0_id", new InhVecVar<size_t>("slc_best_pzc_photon_0_id") },
     { "slc_best_pzc_photon_1_id", new InhVecVar<size_t>("slc_best_pzc_photon_1_id") },
     { "slc_best_pzc_good_kinematics", new InhVecVar<bool>("slc_best_pzc_good_kinematics") },
@@ -578,6 +584,11 @@ private:
     { "slc_best_pzc_cos_theta_pizero_corr", new InhVecVar<double>("slc_best_pzc_cos_theta_pizero_corr") },
     { "slc_best_pzc_cos_com_corr", new InhVecVar<double>("slc_best_pzc_cos_com_corr") },
     { "slc_best_pzc_decay_asymmetry_corr", new InhVecVar<double>("slc_best_pzc_decay_asymmetry_corr") },
+    { "slc_best_pzc_invariant_mass_fit", new InhVecVar<double>("slc_best_pzc_invariant_mass_fit") },
+    { "slc_best_pzc_pizero_mom_fit", new InhVecVar<double>("slc_best_pzc_pizero_mom_fit") },
+    { "slc_best_pzc_gamma0_energy_fit", new InhVecVar<double>("slc_best_pzc_gamma0_energy_fit") },
+    { "slc_best_pzc_gamma1_energy_fit", new InhVecVar<double>("slc_best_pzc_gamma1_energy_fit") },
+    { "slc_best_pzc_open_angle_fit", new InhVecVar<double>("slc_best_pzc_open_angle_fit") },
     { "slc_best_corr_pzc_photon_0_id", new InhVecVar<size_t>("slc_best_corr_pzc_photon_0_id") },
     { "slc_best_corr_pzc_photon_1_id", new InhVecVar<size_t>("slc_best_corr_pzc_photon_1_id") },
     { "slc_best_corr_pzc_good_kinematics", new InhVecVar<bool>("slc_best_corr_pzc_good_kinematics") },
@@ -592,6 +603,11 @@ private:
     { "slc_best_corr_pzc_cos_theta_pizero_corr", new InhVecVar<double>("slc_best_corr_pzc_cos_theta_pizero_corr") },
     { "slc_best_corr_pzc_cos_com_corr", new InhVecVar<double>("slc_best_corr_pzc_cos_com_corr") },
     { "slc_best_corr_pzc_decay_asymmetry_corr", new InhVecVar<double>("slc_best_corr_pzc_decay_asymmetry_corr") },
+    { "slc_best_corr_pzc_invariant_mass_fit", new InhVecVar<double>("slc_best_corr_pzc_invariant_mass_fit") },
+    { "slc_best_corr_pzc_pizero_mom_fit", new InhVecVar<double>("slc_best_corr_pzc_pizero_mom_fit") },
+    { "slc_best_corr_pzc_gamma0_energy_fit", new InhVecVar<double>("slc_best_corr_pzc_gamma0_energy_fit") },
+    { "slc_best_corr_pzc_gamma1_energy_fit", new InhVecVar<double>("slc_best_corr_pzc_gamma1_energy_fit") },
+    { "slc_best_corr_pzc_open_angle_fit", new InhVecVar<double>("slc_best_corr_pzc_open_angle_fit") },
     { "slc_best_pzc_photon_0_true_trackid", new InhVecVar<int>("slc_best_pzc_photon_0_true_trackid") },
     { "slc_best_pzc_photon_0_true_pdg", new InhVecVar<int>("slc_best_pzc_photon_0_true_pdg") },
     { "slc_best_pzc_photon_0_comp", new InhVecVar<float>("slc_best_pzc_photon_0_comp") },
@@ -2352,6 +2368,8 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   const double decayAsym      = std::abs(en0 - en1) / (en0 + en1);
 
   const double cosineThetaGammaGammaCorr = trkDir0.Dot(trkDir1) / (trkDir0.Mag() * trkDir1.Mag());
+  const double thetaGammaGammaCorr       = acos(cosineThetaGammaGammaCorr);
+
   const TVector3 pizeroDirCorr           = (en0Corr * trkDir0) + (en1Corr * trkDir1);
 
   const double invariantMassCorr  = sqrt(2 * en0Corr * en1Corr * (1 - cosineThetaGammaGammaCorr));
@@ -2359,6 +2377,24 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   const double pizeroCosThetaCorr = pizeroDirCorr.Z() / pizeroMomCorr;
   const double cosCOMCorr         = std::abs(en0Corr - en1Corr) / pizeroMomCorr;
   const double decayAsymCorr      = std::abs(en0Corr - en1Corr) / (en0Corr + en1Corr);
+
+  bool good = false;
+  const std::vector<double> updated = DoKF(en0Corr, en1Corr, thetaGammaGammaCorr, kKFCovMatrix, good);
+
+  double gamma0EnergyFit    = en0Corr;
+  double gamma1EnergyFit    = en1Corr;
+  double thetaGammaGammaFit = thetaGammaGammaCorr;
+  double invariantMassFit   = invariantMassCorr;
+  double pizeroMomFit       = pizeroMomCorr;
+
+  if(good)
+    {
+      gamma0EnergyFit    = updated[0];
+      gamma1EnergyFit    = updated[1];
+      thetaGammaGammaFit = updated[2];
+      invariantMassFit   = TMath::Sqrt(2 * gamma0EnergyFit * gamma1EnergyFit * 1 - cos(thetaGammaGammaFit));
+      pizeroMomFit       = TMath::Sqrt(TMath::Power(gamma0EnergyFit + gamma1EnergyFit, 2) - TMath::Power(kPiZeroMass, 2));
+    }
 
   FillElement(vars[prefix + "_pzc_good_kinematics"], counter, pzcCounter, goodKinematics);
   FillElement(vars[prefix + "_pzc_invariant_mass"], counter, pzcCounter, invariantMass);
@@ -2372,6 +2408,11 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   FillElement(vars[prefix + "_pzc_cos_theta_pizero_corr"], counter, pzcCounter, pizeroCosThetaCorr);
   FillElement(vars[prefix + "_pzc_cos_com_corr"], counter, pzcCounter, cosCOMCorr);
   FillElement(vars[prefix + "_pzc_decay_asymmetry_corr"], counter, pzcCounter, decayAsymCorr);
+  FillElement(vars[prefix + "_pzc_invariant_mass_fit"], counter, pzcCounter, invariantMassFit);
+  FillElement(vars[prefix + "_pzc_pizero_mom_fit"], counter, pzcCounter, pizeroMomFit);
+  FillElement(vars[prefix + "_pzc_gamma0_energy_fit"], counter, pzcCounter, gamma0EnergyFit);
+  FillElement(vars[prefix + "_pzc_gamma1_energy_fit"], counter, pzcCounter, gamma1EnergyFit);
+  FillElement(vars[prefix + "_pzc_open_angle_fit"], counter, pzcCounter, thetaGammaGammaFit);
 }
 
 void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std::string &prefix, const int counter)
@@ -2392,15 +2433,15 @@ void sbnd::NCPiZeroAnalysis::ChoseBestPiZeroCandidate(VecVarMap &vars, const std
 
   for(size_t i = 0; i < pzc_invariant_mass.at(counter).size(); ++i)
     {
-      if(pzc_good_kinematics.at(counter).at(i) && abs(134.9769 - pzc_invariant_mass.at(counter).at(i)) < bestInvMass)
+      if(pzc_good_kinematics.at(counter).at(i) && abs(kPiZeroMass - pzc_invariant_mass.at(counter).at(i)) < bestInvMass)
         {
-          bestInvMass = abs(134.9769 - pzc_invariant_mass.at(counter).at(i));
+          bestInvMass = abs(kPiZeroMass - pzc_invariant_mass.at(counter).at(i));
           bestID = i;
         }
 
-      if(pzc_good_kinematics.at(counter).at(i) && abs(134.9769 - pzc_invariant_mass_corr.at(counter).at(i)) < bestInvMassCorr)
+      if(pzc_good_kinematics.at(counter).at(i) && abs(kPiZeroMass - pzc_invariant_mass_corr.at(counter).at(i)) < bestInvMassCorr)
         {
-          bestInvMassCorr = abs(134.9769 - pzc_invariant_mass_corr.at(counter).at(i));
+          bestInvMassCorr = abs(kPiZeroMass - pzc_invariant_mass_corr.at(counter).at(i));
           bestIDCorr = i;
         }
     }

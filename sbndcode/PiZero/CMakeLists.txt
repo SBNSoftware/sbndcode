@@ -2,6 +2,7 @@ art_make(
          MODULE_LIBRARIES
          ROOT::Tree
          ROOT::Graf3d
+         ROOT::Minuit
          CLHEP::Random
          art_root_io::TFileService_service
          art::Persistency_Common
