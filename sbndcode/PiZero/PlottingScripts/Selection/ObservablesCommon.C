@@ -15,7 +15,8 @@ std::vector<float> *slc_best_pzc_photon_0_comp = 0, *slc_best_pzc_photon_1_comp 
 
 std::vector<std::vector<double>> *slc_true_pz_pizero_mom = 0, *slc_true_pz_cos_theta_pizero = 0, *slc_pfp_shower_dir_x = 0,
   *slc_pfp_shower_dir_y = 0, *slc_pfp_shower_dir_z = 0, *slc_pfp_track_dir_x = 0, *slc_pfp_track_dir_y = 0, *slc_pfp_track_dir_z = 0,
-  *slc_pfp_shower_energy = 0, *slc_pfp_true_energy = 0, *slc_true_pz_open_angle = 0, *slc_true_pz_gamma0_energy = 0, *slc_true_pz_gamma1_energy = 0;
+  *slc_pfp_shower_energy = 0, *slc_pfp_true_energy = 0, *slc_true_pz_open_angle = 0, *slc_true_pz_gamma0_energy = 0, *slc_true_pz_gamma1_energy = 0,
+  *slc_pfp_true_p_x = 0, *slc_pfp_true_p_y = 0, *slc_pfp_true_p_z = 0;
 std::vector<std::vector<int>> *slc_true_pz_gamma0_trackid = 0, *slc_true_pz_gamma1_trackid = 0;
 
 TFile* file = TFile::Open("/exp/sbnd/app/users/hlay/ncpizero/srcs/sbndcode/sbndcode/PiZero/ShowerEnergyCorrection/shower_energy_correction_hist_NCPiZeroBv2.root");
@@ -51,6 +52,9 @@ void InitialiseTree(TChain *tree)
   tree->SetBranchAddress("slc_pfp_track_dir_x", &slc_pfp_track_dir_x);
   tree->SetBranchAddress("slc_pfp_track_dir_y", &slc_pfp_track_dir_y);
   tree->SetBranchAddress("slc_pfp_track_dir_z", &slc_pfp_track_dir_z);
+  tree->SetBranchAddress("slc_pfp_true_p_x", &slc_pfp_true_p_x);
+  tree->SetBranchAddress("slc_pfp_true_p_y", &slc_pfp_true_p_y);
+  tree->SetBranchAddress("slc_pfp_true_p_z", &slc_pfp_true_p_z);
   tree->SetBranchAddress("slc_pfp_shower_energy", &slc_pfp_shower_energy);
   tree->SetBranchAddress("slc_pfp_true_energy", &slc_pfp_true_energy);
   tree->SetBranchAddress("slc_true_pz_open_angle", &slc_true_pz_open_angle);

@@ -7,7 +7,8 @@ void ObservablesResolution2(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_resolution_2";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  //  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -98,13 +99,13 @@ void ObservablesResolution2(const TString productionVersion)
               const TVector3 pizeroMomEnergyCorr = corrEn0 * shwDir0 + corrEn1 * shwDir1;
               const TVector3 pizeroMomBoth       = corrEn0 * trkDir0 + corrEn1 * trkDir1;
 
-              const double corrEn0Constr = TMath::Power(134.9769, 2) / (2 * shwEn1 * (1 - cosineThetaGammaGammaTrk));
-              const double corrEn1Constr = TMath::Power(134.9769, 2) / (2 * shwEn0 * (1 - cosineThetaGammaGammaTrk));
+              const double corrEn0Constr = TMath::Power(kPiZeroMass, 2) / (2 * shwEn1 * (1 - cosineThetaGammaGammaTrk));
+              const double corrEn1Constr = TMath::Power(kPiZeroMass, 2) / (2 * shwEn0 * (1 - cosineThetaGammaGammaTrk));
 
               /*
                 const double pizeroMomSimp = corrEn0 + corrEn1;
                 const double alpha         = std::abs(corrEn0 - corrEn1) / (corrEn0 + corrEn1);
-                const double pizeroMomUB   = 134.9769 * TMath::Sqrt(2 / ((1 - TMath::Power(alpha, 2)) * (1 - cosineThetaGammaGammaTrk)));
+                const double pizeroMomUB   = kPiZeroMass * TMath::Sqrt(2 / ((1 - TMath::Power(alpha, 2)) * (1 - cosineThetaGammaGammaTrk)));
               */
 
               const TVector3 pizeroMomEn0Constr  = corrEn0Constr * trkDir0 + corrEn1 * trkDir1;
@@ -168,7 +169,7 @@ void ObservablesResolution2(const TString productionVersion)
   TLine *nominalLine = new TLine();
   nominalLine->SetLineColor(kRed+2);
   nominalLine->SetLineWidth(5);
-  nominalLine->DrawLine(134.9769, 0., 134.9769, 1.05 * hInvariantMass->GetMaximum());
+  nominalLine->DrawLine(kPiZeroMass, 0., kPiZeroMass, 1.05 * hInvariantMass->GetMaximum());
 
   TLegend *lInvariantMass = new TLegend(.6, .4, .85, .6);
   lInvariantMass->AddEntry(hInvariantMass, "Standard", "l");

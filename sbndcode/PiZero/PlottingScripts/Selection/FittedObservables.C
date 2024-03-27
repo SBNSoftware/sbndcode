@@ -266,7 +266,8 @@ std::vector<double> GetCovMatrix(const TString productionVersion, const bool dia
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_resolution_2";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  //  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
