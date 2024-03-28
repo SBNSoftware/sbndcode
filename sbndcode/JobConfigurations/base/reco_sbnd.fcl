@@ -289,8 +289,8 @@ outputs:
          "drop sim::OpDetBacktrackerRecords_*_*_*",
          #"drop *_linecluster_*_*",
          "drop *_fasthit_*_*",
-         "drop *_cluster3d_*_*", #drop all mlreco output
-         "drop *_simplemerge_*_*" #drop all mlreco output
+         "drop *_cluster3d_*_*" #drop all mlreco output
+         #"drop *_simplemerge_*_*" #drop all mlreco output
      ]
 
 
