@@ -179,7 +179,7 @@ void LambdaFCN(int &npars, double *grad, double &value, double *par, int flag)
   else
     value = 1E50;
 
-  //  delete CoreMIN;
+  delete CoreMIN;
 }
 
 void SetIniValues(const std::vector<double> iniVar, const std::vector<double> CVM)
@@ -225,7 +225,7 @@ bool DoubleMin(const double iniLambda, const double lmin, const double lmax, std
         break;
     }
 
-  //  delete LambdaMIN;
+  delete LambdaMIN;
 
   if(flag==0 && KinFit::IsConstraintGood())
     return true;

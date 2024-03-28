@@ -50,6 +50,7 @@
 #include "sbnobj/Common/SBNEventWeight/EventWeightMap.h"
 
 #include "NCPiZeroStructs.h"
+#include "KinFit.h"
 
 #include <numeric>
 
@@ -156,7 +157,7 @@ private:
     _n_primary_razzled_pions_thresh, _n_primary_razzled_protons_thresh;
 
   double _pizero_mom, _cos_theta_pizero, _reco_pizero_mom, _reco_cos_theta_pizero,
-    _reco_invariant_mass;
+    _reco_invariant_mass, _reco_pizero_mom_fit, _reco_invariant_mass_fit;
 
   bool _sel_incl, _sel_0p0pi, _sel_Np0pi, _sel_cc, _is_clear_cosmic, _is_fv,
     _best_pzc_good_kinematics, _all_other_trks_contained;
@@ -242,8 +243,10 @@ sbnd::NCPiZeroXSecTrees::NCPiZeroXSecTrees(fhicl::ParameterSet const& p)
     fSliceTree->Branch("pizero_mom", &_pizero_mom);
     fSliceTree->Branch("cos_theta_pizero", &_cos_theta_pizero);
     fSliceTree->Branch("reco_pizero_mom", &_reco_pizero_mom);
+    fSliceTree->Branch("reco_pizero_mom_fit", &_reco_pizero_mom_fit);
     fSliceTree->Branch("reco_cos_theta_pizero", &_reco_cos_theta_pizero);
     fSliceTree->Branch("reco_invariant_mass", &_reco_invariant_mass);
+    fSliceTree->Branch("reco_invariant_mass_fit", &_reco_invariant_mass_fit);
     fSliceTree->Branch("sel_incl", &_sel_incl);
     fSliceTree->Branch("sel_0p0pi", &_sel_0p0pi);
     fSliceTree->Branch("sel_Np0pi", &_sel_Np0pi);
@@ -816,15 +819,22 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
           if(j <= i)
             continue;
 
-          const double energy_0 = CorrectEnergy(phot_0.shwEnergy);
-          const double energy_1 = CorrectEnergy(phot_1.shwEnergy);
+          double energy_0 = CorrectEnergy(phot_0.shwEnergy);
+          double energy_1 = CorrectEnergy(phot_1.shwEnergy);
 
-          const TVector3 dir_0 = phot_0.trkDir;
-          const TVector3 dir_1 = phot_1.trkDir;
+          TVector3 dir_0 = phot_0.trkDir;
+          TVector3 dir_1 = phot_1.trkDir;
+
+          if(phot_0.shwEnergy < phot_1.shwEnergy)
+            {
+              std::swap(energy_0, energy_1);
+              std::swap(dir_0, dir_1);
+            }
 
           const bool goodKinematics       = !(dir_0.X() == -999 || dir_1.X() == -999 || dir_0.X() == def_float || dir_1.X() == def_float
                                               || energy_0 < 0 || energy_1 < 0);
           const double cosThetaGammaGamma = dir_0.Dot(dir_1) / (dir_0.Mag() * dir_1.Mag());
+          const double thetaGammaGamma    = acos(cosThetaGammaGamma);
           const TVector3 pizeroDir        = (energy_0 * dir_0) + (energy_1 * dir_1);
           const double invariantMass      = sqrt(2 * energy_0 * energy_1 * (1 - cosThetaGammaGamma));
           const double pizeroMom          = pizeroDir.Mag();
@@ -832,6 +842,8 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
 
           if(goodKinematics && abs(kPiZeroMass - invariantMass) < bestInvMass)
             {
+              bestInvMass = abs(kPiZeroMass - invariantMass);
+
               _reco_pizero_mom          = pizeroMom;
               _reco_cos_theta_pizero    = pizeroCosTheta;
               _reco_invariant_mass      = invariantMass;
@@ -839,10 +851,21 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
               best_candidate_0          = phot_0.index;
               best_candidate_1          = phot_1.index;
 
+              bool good = false;
+              const std::vector<double> updated = DoKF(energy_0, energy_1, thetaGammaGamma, kKFCovMatrix, good);
 
-              _reco_mom_bin       = MomBin(_reco_pizero_mom);
+              _reco_pizero_mom_fit     = pizeroMom;
+              _reco_invariant_mass_fit = invariantMass;
+
+              if(good)
+                {
+                  _reco_pizero_mom_fit     = TMath::Sqrt(TMath::Power(updated[0] + updated[1], 2) - TMath::Power(kPiZeroMass, 2));
+                  _reco_invariant_mass_fit = TMath::Sqrt(2 * updated[0] * updated[1] * (1 - cos(updated[2])));
+                }
+
+              _reco_mom_bin       = MomBin(_reco_pizero_mom_fit);
               _reco_cos_theta_bin = CosThetaBin(_reco_cos_theta_pizero);
-              _reco_twod_bin      = TwoDBins(_reco_pizero_mom, _reco_cos_theta_pizero);
+              _reco_twod_bin      = TwoDBins(_reco_pizero_mom_fit, _reco_cos_theta_pizero);
             }
         }
     }
@@ -977,8 +1000,9 @@ void sbnd::NCPiZeroXSecTrees::ResetSliceVars()
   _n_primary_razzled_photons        = -1; _n_primary_razzled_pions_thresh = -1;
   _n_primary_razzled_protons_thresh = -1;
 
-  _reco_pizero_mom     = def_double; _reco_cos_theta_pizero = def_double;
-  _reco_invariant_mass = def_double;
+  _reco_pizero_mom         = def_double; _reco_cos_theta_pizero = def_double;
+  _reco_invariant_mass     = def_double; _reco_pizero_mom_fit   = def_double;
+  _reco_invariant_mass_fit = def_double;
 
   _sel_incl                 = false; _sel_0p0pi                = false;
   _sel_Np0pi                = false; _sel_cc                   = false;

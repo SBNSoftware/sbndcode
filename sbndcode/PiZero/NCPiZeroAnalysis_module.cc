@@ -2328,17 +2328,25 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidates(VecVarMap &vars, const std:
                   TransferElement(slcVars[prefix + "_pzc_photon_1_comp"], vars, prefix + "_pzc_photon_1", prefix + "_pfp", counter, pzcCounter, slc_id_b, jj);
                   TransferElement(slcVars[prefix + "_pzc_photon_1_pur"], vars, prefix + "_pzc_photon_1", prefix + "_pfp", counter, pzcCounter, slc_id_b, jj);
 
-                  const TVector3 shwDir0(slc_pfp_shower_dir_x.at(slc_id_a).at(ii), slc_pfp_shower_dir_y.at(slc_id_a).at(ii), slc_pfp_shower_dir_z.at(slc_id_a).at(ii));
-                  const TVector3 shwDir1(slc_pfp_shower_dir_x.at(slc_id_b).at(jj), slc_pfp_shower_dir_y.at(slc_id_b).at(jj), slc_pfp_shower_dir_z.at(slc_id_b).at(jj));
+                  TVector3 shwDir0(slc_pfp_shower_dir_x.at(slc_id_a).at(ii), slc_pfp_shower_dir_y.at(slc_id_a).at(ii), slc_pfp_shower_dir_z.at(slc_id_a).at(ii));
+                  TVector3 shwDir1(slc_pfp_shower_dir_x.at(slc_id_b).at(jj), slc_pfp_shower_dir_y.at(slc_id_b).at(jj), slc_pfp_shower_dir_z.at(slc_id_b).at(jj));
 
-                  const TVector3 trkDir0(slc_pfp_track_dir_x.at(slc_id_a).at(ii), slc_pfp_track_dir_y.at(slc_id_a).at(ii), slc_pfp_track_dir_z.at(slc_id_a).at(ii));
-                  const TVector3 trkDir1(slc_pfp_track_dir_x.at(slc_id_b).at(jj), slc_pfp_track_dir_y.at(slc_id_b).at(jj), slc_pfp_track_dir_z.at(slc_id_b).at(jj));
+                  TVector3 trkDir0(slc_pfp_track_dir_x.at(slc_id_a).at(ii), slc_pfp_track_dir_y.at(slc_id_a).at(ii), slc_pfp_track_dir_z.at(slc_id_a).at(ii));
+                  TVector3 trkDir1(slc_pfp_track_dir_x.at(slc_id_b).at(jj), slc_pfp_track_dir_y.at(slc_id_b).at(jj), slc_pfp_track_dir_z.at(slc_id_b).at(jj));
 
-                  const double shwEn0 = slc_pfp_shower_energy.at(slc_id_a).at(ii);
-                  const double shwEn1 = slc_pfp_shower_energy.at(slc_id_b).at(jj);
+                  double shwEn0 = slc_pfp_shower_energy.at(slc_id_a).at(ii);
+                  double shwEn1 = slc_pfp_shower_energy.at(slc_id_b).at(jj);
 
-                  const double shwEn0Corr = slc_pfp_shower_energy_corr.at(slc_id_a).at(ii);
-                  const double shwEn1Corr = slc_pfp_shower_energy_corr.at(slc_id_b).at(jj);
+                  double shwEn0Corr = slc_pfp_shower_energy_corr.at(slc_id_a).at(ii);
+                  double shwEn1Corr = slc_pfp_shower_energy_corr.at(slc_id_b).at(jj);
+
+                  if(shwEn0 < shwEn1)
+                    {
+                      std::swap(shwDir0, shwDir1);
+                      std::swap(trkDir0, trkDir1);
+                      std::swap(shwEn0, shwEn1);
+                      std::swap(shwEn0Corr, shwEn1Corr);
+                    }
 
                   ProducePiZeroCandidate(vars, prefix, counter, pzcCounter, shwDir0, shwDir1, trkDir0, trkDir1, shwEn0, shwEn1, shwEn0Corr, shwEn1Corr);
 
@@ -2355,8 +2363,8 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
                                                     const TVector3 &shwDir0, const TVector3 &shwDir1, const TVector3 &trkDir0, const TVector3 &trkDir1,
                                                     const double &en0, const double &en1, const double &en0Corr, const double &en1Corr)
 {
-  const bool goodKinematics     = !(shwDir0.X() == -999 || shwDir1.X() == -999 || en0 < 0 || en1 < 0);
-  const bool goodKinematicsCorr = !(trkDir0.X() == -999 || trkDir1.X() == -999 || en0Corr < 0 || en1Corr < 0);
+  const bool goodKinematics     = !(shwDir0.X() == -999 || shwDir1.X() == -999 || shwDir0.X() == def_float || shwDir1.X() == def_float || en0 < 0 || en1 < 0);
+  const bool goodKinematicsCorr = !(trkDir0.X() == -999 || trkDir1.X() == -999 || trkDir0.X() == def_float || trkDir1.X() == def_float || en0Corr < 0 || en1Corr < 0);
 
   const double cosineThetaGammaGamma = shwDir0.Dot(shwDir1) / (shwDir0.Mag() * shwDir1.Mag());
   const TVector3 pizeroDir           = (en0 * shwDir0) + (en1 * shwDir1);
@@ -2392,7 +2400,7 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
       gamma0EnergyFit    = updated[0];
       gamma1EnergyFit    = updated[1];
       thetaGammaGammaFit = updated[2];
-      invariantMassFit   = TMath::Sqrt(2 * gamma0EnergyFit * gamma1EnergyFit * 1 - cos(thetaGammaGammaFit));
+      invariantMassFit   = TMath::Sqrt(2 * gamma0EnergyFit * gamma1EnergyFit * (1 - cos(thetaGammaGammaFit)));
       pizeroMomFit       = TMath::Sqrt(TMath::Power(gamma0EnergyFit + gamma1EnergyFit, 2) - TMath::Power(kPiZeroMass, 2));
     }
 
