@@ -1,0 +1,26 @@
+#-------------------------------------------------------------------
+#
+# Name: g4_sce_dirt_filter_lite.fcl
+#
+# Purpose: Lite version of g4_sce_dirt_filter.fcl
+#
+# Created: 01-Apr-2022  H. Greenlee
+#
+# Automatically generated.
+#
+#-------------------------------------------------------------------
+
+#include "g4_drops.fcl"
+#include "g4_sce_dirt_filter.fcl"
+
+process_name: G4Var
+
+# Drop truth data products.
+
+outputs.out1.outputCommands: [ @sequence::outputs.out1.outputCommands,
+                               @sequence::g4_drops ]
+
+# Remove diffusion
+services.LArG4Parameters.TransverseDiffusion: 1e-15 #in cm^2/ns
+services.LArG4Parameters.LongitudinalDiffusion: 1e-15 #in cm^2/ns
+
