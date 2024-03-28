@@ -14,12 +14,7 @@
 #
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
-#include "cluster_sbnd.fcl"
-#include "trackfindermodules_sbnd.fcl"
-#include "calorimetry_sbnd.fcl"
-#include "showerfindermodules.fcl"
 #include "databaseutil_sbnd.fcl"
-#include "vertexfindermodules.fcl"
 #include "hitdumpermodule.fcl"
 #include "muontrackmodule.fcl"
 #include "ophit_finder_sbnd.fcl"

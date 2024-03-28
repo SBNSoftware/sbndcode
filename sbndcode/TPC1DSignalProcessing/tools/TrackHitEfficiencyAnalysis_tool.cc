@@ -1,4 +1,4 @@
-#include "sbndcode/Calibration/tools/IHitEfficiencyHistogramTool.h"
+#include "sbndcode/TPC1DSignalProcessing/tools/IHitEfficiencyHistogramTool.h"
 
 #include "fhiclcpp/ParameterSet.h"
 #include "art/Utilities/ToolMacros.h"

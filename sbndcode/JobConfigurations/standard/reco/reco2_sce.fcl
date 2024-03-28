@@ -12,6 +12,7 @@
 
 process_name: Reco2
 
+
 physics.reco2_sce: [@sequence::physics.reco2,
             pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECalo, pandoraSCEPid, crtspacepointmatchingSCE, crttrackmatchingSCE,
             fmatchSCE, fmatchopSCE, fmatcharaSCE, fmatchoparaSCE, opt0finderSCE]
