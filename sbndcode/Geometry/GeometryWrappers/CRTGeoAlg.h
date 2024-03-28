@@ -94,7 +94,6 @@ namespace sbnd::crt {
       minZ  = std::min(limitsWorld.Z(), limitsWorld2.Z());
       maxZ  = std::max(limitsWorld.Z(), limitsWorld2.Z());
       width = halfHeight * 2.;
-
       adsID = _adsID;
       null  = false;
 

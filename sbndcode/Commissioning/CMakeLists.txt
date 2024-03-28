@@ -38,7 +38,7 @@ set(
         ROOT::Gdml
         sbndcode_RecoUtils
         sbndcode_OpDetSim
-        sbndcode_GeoWrappers
+	sbndcode_GeoWrappers
 )
 
 

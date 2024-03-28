@@ -301,13 +301,13 @@ namespace sbnd::crt {
 
     const uint16_t adsID = strip.adsID;
     const uint16_t adID  = fModules.at(strip.moduleName).adID;
-
+  
     const geo::AuxDetSensitiveGeo &auxDetSensitive = fAuxDetGeoCore->AuxDetGeoVec()[adID].SensitiveVolume(adsID);
 
     double halfWidth  = auxDetSensitive.HalfWidth1();
     double halfHeight = auxDetSensitive.HalfHeight();
     double halfLength = auxDetSensitive.Length()/2.;
-
+  
     geo::AuxDetSensitiveGeo::LocalPoint_t l1{halfWidth, -halfHeight + x + ex, halfLength};
     auto const w1 = auxDetSensitive.toWorldCoords(l1);
 
@@ -325,7 +325,7 @@ namespace sbnd::crt {
   {
     const uint16_t adsID = strip.adsID;
     const uint16_t adID  = fModules.at(strip.moduleName).adID;
-
+  
     const geo::AuxDetSensitiveGeo &auxDetSensitive = fAuxDetGeoCore->AuxDetGeoVec()[adID].SensitiveVolume(adsID);
 
     geo::Point_t const worldpos{x, y, z};
@@ -386,7 +386,7 @@ namespace sbnd::crt {
         limits.SetX(-limits.X());
         limits.SetX(-limits2.X());
       }
-
+    
     if(module.invertedOrdering)
       {
         limits.SetY(-limits.Y());
@@ -444,7 +444,7 @@ namespace sbnd::crt {
   double CRTGeoAlg::DistanceDownStrip(const geo::Point_t position, const uint16_t channel) const
   {
     const CRTSiPMGeo sipm = fSiPMs.at(channel);
-
+   
     return DistanceDownStrip(position, sipm.stripName);
   }
 

@@ -11,9 +11,7 @@
 #
 # module configuration
 #
-#include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
-#include "databaseutil_sbnd.fcl"
 
 #include "muontrackmodule.fcl"
 #include "hitdumpermodule.fcl"
@@ -92,21 +90,15 @@ physics:
 
 # override hitdumper defaults 
 physics.analyzers.hitdumper.keepCRThits:   true
-physics.analyzers.hitdumper.keepCRstrips:  true
 physics.analyzers.hitdumper.makeCRTtracks: false
 physics.analyzers.hitdumper.readCRTtracks: true
 physics.analyzers.hitdumper.readOpHits:    false
-physics.analyzers.hitdumper.readpmtTrigger: false
-physics.analyzers.hitdumper.readpmtSoftTrigger: false
-physics.analyzers.hitdumper.readcrtSoftTrigger: false
 physics.analyzers.hitdumper.readTruth:     false
 physics.analyzers.hitdumper.savePOTinfo:   false
-physics.analyzers.hitdumper.readMuonTracks: true
 physics.analyzers.hitdumper.readMuonHits:  true
 physics.analyzers.hitdumper.SelectEvents:  [reco] 
 
 # set thresholds 
-physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
 physics.producers.fasthit.MinSigInd: 15.0
 physics.producers.fasthit.MinSigCol: 15.0
 physics.producers.fasthit.SkipInd: false
@@ -117,7 +109,3 @@ physics.producers.fasthit.SkipInd: false
 physics.producers.fasthit.IncludeMoreTail: 3.0
 physics.producers.fasthit.ColMinWidth: 100.0
 physics.producers.fasthit.UncompressWithPed: false
-
-# override track producer defaults
-physics.producers.MuonTrackProducer.SaveColMuonHits: true
-physics.producers.MuonTrackProducer.SaveIndMuonHits: true

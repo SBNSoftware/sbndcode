@@ -74,7 +74,7 @@ private:
    void Hough(vector<vector<int>> coords, vector<int> param, bool save_hits, int nentry, 
               vector<vector<int>>& lines, vector<vector<int>>& hit_idx);
    // Finds t0, stores them in a vector<vector<double>>     
-   void FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, vector<vector<int>>& hit_idx, 
+   void FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, vector<vector<int>>& hit_idx_col, vector<vector<int>>& hit_idx_ind, 
                       int range, vector<art::Ptr<recob::Hit>> hitlist, 
                       vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>>& muon_hitpeakT, vector<vector<int>>& muon_hit_idx); 
    // Fixes endpoints, returns true if conditions are fulfilled 
@@ -94,7 +94,8 @@ private:
 
    vector<vector<int>> hit_02, hit_12;
    vector<vector<int>> lines_02, lines_12;
-   vector<vector<int>> hit_idx_02, hit_idx_12; 
+   vector<vector<int>> hit_idx_02, hit_idx_12;
+   vector<vector<int>> hit_idx_00, hit_idx_10, hit_idx_01, hit_idx_11;
 
    vector<vector<int>> hit_00, hit_01, hit_10, hit_11;
    vector<vector<int>> lines_00, lines_01, lines_10, lines_11;
@@ -115,6 +116,8 @@ private:
    int fEndpointRange;   // range between expected value and given value for hit_peakT matching in 3D endpoint function 
    std::vector<int> fKeepMuonTypes = {0, 1, 2, 3, 4, 5}; 
    // [ac crossing, anode, cathode, top-bottom, up-downstream, other], define in fcl
+   bool fSaveColMuonHits;
+   bool fSaveIndMuonHits;
 
    int fLineCount;       // number of estimated hit lines/muon tracks 
 
@@ -150,6 +153,8 @@ void MuonTrackProducer::reconfigure(fhicl::ParameterSet const & p)
    // Muon function parameters 
    fEndpointRange       = p.get<int>("EndpointRange",30);
    fKeepMuonTypes       = p.get<std::vector<int>>("KeepMuonTypes");
+   fSaveColMuonHits     = p.get<bool>("SaveColMuonHits",true);
+   fSaveIndMuonHits     = p.get<bool>("SaveIndMuonHits",false);
 
    // Reset function parameters 
    fLineCount            = p.get<int>("LineCount",20);
@@ -192,7 +197,7 @@ void MuonTrackProducer::produce(art::Event & evt)
    hit_02.shrink_to_fit(); hit_12.shrink_to_fit(); 
 
    // perform hough transform
-   bool save_col_hits = true;
+   bool save_col_hits = fSaveColMuonHits;
    vector<int> HoughParam{fHoughThreshold, fHoughMaxGap, fHoughRange, fHoughMinLength, fHoughMuonLength};
    Hough(hit_02, HoughParam, save_col_hits, event, lines_02, hit_idx_02);
    Hough(hit_12, HoughParam, save_col_hits, event, lines_12, hit_idx_12);
@@ -222,21 +227,20 @@ void MuonTrackProducer::produce(art::Event & evt)
                hit_11.push_back(v);
          } 
       }
-      bool save_ind_hits = false;
-      vector<vector<int>> ind_empty; // placeholder empty vector 
+      bool save_ind_hits = fSaveIndMuonHits;
       if (muon_in_tpc0){
-         Hough(hit_00, HoughParam, save_ind_hits, event, lines_00, ind_empty);
-         Hough(hit_01, HoughParam, save_ind_hits, event, lines_01, ind_empty);
+         Hough(hit_00, HoughParam, save_ind_hits, event, lines_00, hit_idx_00);
+         Hough(hit_01, HoughParam, save_ind_hits, event, lines_01, hit_idx_01);
 
-         FindEndpoints(lines_02, lines_00, hit_idx_02, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
-         FindEndpoints(lines_02, lines_01, hit_idx_02, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
+         FindEndpoints(lines_02, lines_00, hit_idx_02, hit_idx_00, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
+         FindEndpoints(lines_02, lines_01, hit_idx_02, hit_idx_01, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
       }
       if (muon_in_tpc1){
-         Hough(hit_10, HoughParam, save_ind_hits, event, lines_10, ind_empty);
-         Hough(hit_11, HoughParam, save_ind_hits, event, lines_11, ind_empty);
+         Hough(hit_10, HoughParam, save_ind_hits, event, lines_10, hit_idx_10);
+         Hough(hit_11, HoughParam, save_ind_hits, event, lines_11, hit_idx_11);
 
-         FindEndpoints(lines_12, lines_10, hit_idx_12, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
-         FindEndpoints(lines_12, lines_11, hit_idx_12, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
+         FindEndpoints(lines_12, lines_10, hit_idx_12, hit_idx_10, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
+         FindEndpoints(lines_12, lines_11, hit_idx_12, hit_idx_11, fEndpointRange, hitlist, muon_endpoints, muon_hitpeakT, muon_hit_idx);
       }
       if (muon_endpoints.empty() == false){
          SortEndpoints(muon_endpoints, muon_hitpeakT, muon_type);
@@ -488,6 +492,10 @@ void MuonTrackProducer::ResetCollectionHitVectors(int n) {
    lines_12.clear(); 
    hit_idx_02.clear();
    hit_idx_12.clear();
+   hit_idx_00.clear();
+   hit_idx_10.clear();
+   hit_idx_01.clear();
+   hit_idx_11.clear();
 
    hit_02.reserve(3000); 
    hit_12.reserve(3000); 
@@ -495,6 +503,10 @@ void MuonTrackProducer::ResetCollectionHitVectors(int n) {
    lines_12.reserve(n); 
    hit_idx_02.reserve(3000);
    hit_idx_12.reserve(3000);
+   hit_idx_00.reserve(5000);
+   hit_idx_10.reserve(5000);
+   hit_idx_01.reserve(5000);
+   hit_idx_11.reserve(5000);
 }
 
 void MuonTrackProducer::ResetInductionHitVectors(int n){
@@ -537,7 +549,7 @@ void MuonTrackProducer::ResetMuonVariables(int n){
 
 }
 
-void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, vector<vector<int>>& hit_idx, 
+void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vector<int>>& lines_ind, vector<vector<int>>& hit_idx_col, vector<vector<int>>& hit_idx_ind, 
                                       int range, vector<art::Ptr<recob::Hit>> hitlist, 
                                       vector<vector<geo::Point_t>>& muon_endpoints, vector<vector<int>>& muon_hitpeakT, vector<vector<int>>& muon_hit_idx){
    if (lines_ind.empty() == false){
@@ -591,7 +603,9 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vec
                   muon_endpoints.push_back(pair);
 
                   vector<int> v{peakT0_col, peakT1_col};
-                  vector<int> indices = hit_idx.at(i);
+		  vector<int> indices;
+		  indices.insert(indices.end(), hit_idx_col.at(i).begin(), hit_idx_col.at(i).end());
+		  indices.insert(indices.end(), hit_idx_ind.at(j).begin(), hit_idx_ind.at(j).end());
 
                   muon_hitpeakT.push_back(v);
                   muon_hit_idx.push_back(indices); 

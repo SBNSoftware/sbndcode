@@ -43,9 +43,8 @@
 #include "larcoreobj/SummaryData/POTSummary.h"
 
 // SBN/SBND includes
-#include "sbnobj/SBND/CRT/CRTData.hh"
-#include "sbnobj/Common/CRT/CRTHit.hh"
-#include "sbnobj/Common/CRT/CRTTrack.hh"
+#include "sbnobj/SBND/CRT/classes.h" 
+//
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
@@ -181,7 +180,7 @@ private:
   std::vector<int>    _hit_channel;             ///< Channel where the hit belongs to
   std::vector<double> _hit_peakT;               ///< Hit peak time
   std::vector<double> _hit_charge;              ///< Hit charge
-  std::vector<double> _hit_ph;                  ///< Hit ph?
+  std::vector<double> _hit_ph;                  ///< Hit pulse height (amplitude)
   std::vector<double> _hit_width;               ///< Hit width
   std::vector<double> _hit_full_integral;       ///< Hit charge integral
   std::vector<int>    _waveform_number;         ///< Number for each waveform, to allow for searching
@@ -239,6 +238,7 @@ private:
   std::vector<double> _ct_y2;           ///< CRT track y2
   std::vector<double> _ct_z2;           ///< CRT track z2
 
+  // Optical hit variables
   int _nophits;                               ///< Number of Optical Hits
   std::vector<int> _ophit_opch;               ///< OpChannel of the optical hit
   std::vector<int> _ophit_opdet;              ///< OpDet of the optical hit
@@ -254,7 +254,7 @@ private:
   std::vector<double> _ophit_opdet_z;         ///< OpDet Z coordinate of the optical hit
   std::vector<int> _ophit_opdet_type;         ///< OpDet tyoe of the optical hit
 
-  //pmt hardware trigger variables
+  // PMT hardware trigger variables
   std::vector<int> _pmtTrigger_npmtshigh;    ///< number of pmt pairs above threshold, index = time during trigger window (usually beam spill)
   int _pmtTrigger_maxpassed;    ///< maximum number of pmt pairs above threshold during trigger window (usually beam spill)
 
@@ -287,6 +287,7 @@ private:
   int                 _nmhits;               ///< Number of muon collection hits per track
   std::vector<int>    _mhit_trk;             ///< Track number that the hit belongs to
   std::vector<int>    _mhit_tpc;             ///< TPC where the hit belongs to
+  std::vector<int>    _mhit_plane;           ///< Wire plane where the hit belongs to
   std::vector<int>    _mhit_wire;            ///< Wire where the hit belongs to
   std::vector<int>    _mhit_channel;         ///< Channel where the hit belongs to
   std::vector<double> _mhit_peakT;           ///< Hit peak time
@@ -576,11 +577,10 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // CRT strips
   //
+  if(fkeepCRTstrips){
   int _nstr = 0;
   art::Handle<std::vector<sbnd::crt::CRTData> > crtStripListHandle;
   std::vector<art::Ptr<sbnd::crt::CRTData> > striplist;
-  // art::Handle< std::vector<sbnd::crt::CRTData> > crtStripListHandle;
-  // std::vector< art::Ptr<sbnd::crt::CRTData> > striplist;
   if (evt.getByLabel(fCRTStripModuleLabel, crtStripListHandle))  {
     art::fill_ptr_vector(striplist, crtStripListHandle);
     _nstr = striplist.size();
@@ -606,6 +606,7 @@ void Hitdumper::analyze(const art::Event& evt)
         keep_tagger = true;
       }
     }
+    
     //std::cout << "Tagger name " << tagger.first << ", ip " << ip << ", kept? " << (keep_tagger ? "yes" : "no") << std::endl;
 
     if (ip != sbnd::crt::kUndefinedTagger && keep_tagger) {
@@ -642,8 +643,6 @@ void Hitdumper::analyze(const art::Event& evt)
     }
   }
   _nstrips = ns;
-
-
 
   //
   // CRT Custom Tracks
@@ -799,8 +798,8 @@ void Hitdumper::analyze(const art::Event& evt)
   // CRT hits
   //
   if (fkeepCRThits) {
-    art::Handle<std::vector<sbn::crt::CRTHit> > crtHitListHandle;
-    std::vector<art::Ptr<sbn::crt::CRTHit> > chitlist;
+    art::Handle<std::vector<sbnd::crt::CRTSpacePoint> > crtHitListHandle;
+    std::vector<art::Ptr<sbnd::crt::CRTSpacePoint> > chitlist;
     // art::Handle< std::vector<sbnd::crt::CRTData> > crtStripListHandle;
     // std::vector< art::Ptr<sbnd::crt::CRTData> > striplist;
     if (evt.getByLabel(fCRTHitModuleLabel, crtHitListHandle))  {
@@ -808,14 +807,14 @@ void Hitdumper::analyze(const art::Event& evt)
       _nchits = chitlist.size();
     }
     else {
-      std::cout << "Failed to get sbn::crt::CRTHit data product." << std::endl;
+      std::cout << "Failed to get sbnd::crt::CRTSpacePoint data product." << std::endl;
       _nchits = 0;
     }
 
     if (_nchits > _max_chits) {
-      std::cout << "Available CRT hits are " << _nchits
+      std::cout << "Available CRTSpacePoints are " << _nchits
                 << ", which is above the maximum number allowed to store." << std::endl;
-      std::cout << "Will only store " << _max_chits << "CRT hits." << std::endl;
+      std::cout << "Will only store " << _max_chits << "CRT space points." << std::endl;
       _nchits = _max_chits;
     }
 
@@ -825,15 +824,14 @@ void Hitdumper::analyze(const art::Event& evt)
       // int ip = kNotDefined;
       sbnd::crt::CRTTagger ip = sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
 
-      _chit_time[i]=chitlist[i]->ts1_ns*0.001;
-      if (chitlist[i]->ts1_ns > MAX_INT) {
-        _chit_time[i] = 0.001 * (chitlist[i]->ts1_ns - TIME_CORRECTION);
+      _chit_time[i]=chitlist[i]->Time()*0.001;
+      if (chitlist[i]->Time() > MAX_INT) { //double check if this still applies
+        _chit_time[i] = 0.001 * (chitlist[i]->Time() - TIME_CORRECTION);
       }
-
-      _chit_x[i] = chitlist[i]->x_pos;
-      _chit_y[i] = chitlist[i]->y_pos;
-      _chit_z[i] = chitlist[i]->z_pos;
-      _chit_plane[i] = ip;
+      _chit_x[i] = chitlist[i]->X();
+      _chit_y[i] = chitlist[i]->Y();
+      _chit_z[i] = chitlist[i]->Z();
+      //_chit_plane[i] = ip; //This doesn't seem to exist
     }
   }
 
@@ -842,30 +840,38 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   _ncts = 0;
   if (freadCRTtracks) {
-    art::Handle<std::vector<sbn::crt::CRTTrack> > crtTrackListHandle;
-    std::vector<art::Ptr<sbn::crt::CRTTrack> > ctrklist;
+    //changing sbn::crt::CRTTrack to sbnd::crt::CRTTrack
+    art::Handle<std::vector<sbnd::crt::CRTTrack> > crtTrackListHandle;
+    std::vector<art::Ptr<sbnd::crt::CRTTrack> > ctrklist;
     if (evt.getByLabel(fCRTTrackModuleLabel, crtTrackListHandle))  {
       art::fill_ptr_vector(ctrklist, crtTrackListHandle);
       _ncts = ctrklist.size();
       if (_ncts > _max_nctrks) _ncts = _max_nctrks;
 
+
       ResetCRTTracksVars(_ncts);
 
       for (int i = 0; i < _ncts; ++i){
-        _ct_pes[i] = ctrklist[i]->peshit;
-        _ct_time[i] = ctrklist[i]->ts1_ns*0.001;
-        if (ctrklist[i]->ts1_ns > MAX_INT) {
-          _ct_time[i] = 0.001 * (ctrklist[i]->ts1_ns - TIME_CORRECTION);
-        }
-        _ct_x1[i] = ctrklist[i]->x1_pos;
-        _ct_y1[i] = ctrklist[i]->y1_pos;
-        _ct_z1[i] = ctrklist[i]->z1_pos;
-        _ct_x2[i] = ctrklist[i]->x2_pos;
-        _ct_y2[i] = ctrklist[i]->y2_pos;
-        _ct_z2[i] = ctrklist[i]->z2_pos;
+	art::Ptr<sbnd::crt::CRTTrack> ictrk=ctrklist[i];
+        _ct_pes[i] = ictrk->PE();//ctrklist[i]->peshit;
+        _ct_time[i] = ictrk->Time()*0.001;
+        //if (ctrklist[i]->ts1_ns > MAX_INT) {
+        //  _ct_time[i] = 0.001 * (ctrklist[i]->ts1_ns - TIME_CORRECTION);
+        //}
+
+	std::vector<geo::Point_t> points=ictrk->Points();
+	//This is throwing out info about if theres a third point from the two top layers, need to do something differently if want to keep that
+	geo::Point_t start=points[0];
+	geo::Point_t end=points[points.size()-1];
+	_ct_x1[i] = start.X();
+        _ct_y1[i] = start.Y();
+        _ct_z1[i] = start.Z();
+        _ct_x2[i] = end.X();
+        _ct_y2[i] = end.Y();
+        _ct_z2[i] = end.Z();
       }
     } else {
-      std::cout << "Failed to get sbn::crt::CRTTrack data product." << std::endl;
+      std::cout << "Failed to get sbnd::crt::CRTTrack data product." << std::endl;
     }
   }
 
@@ -1036,6 +1042,7 @@ void Hitdumper::analyze(const art::Event& evt)
             geo::WireID wireid = muonhit->WireID();
             _mhit_trk.push_back(i);
             _mhit_tpc.push_back(wireid.TPC);
+	    _mhit_plane.push_back(wireid.Plane);
             _mhit_wire.push_back(wireid.Wire);
             _mhit_channel.push_back(muonhit->Channel());
             _mhit_peakT.push_back(muonhit->PeakTime());
@@ -1477,6 +1484,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("nmhits", &_nmhits, "nmhits/I");
     fTree->Branch("mhit_trk", &_mhit_trk);
     fTree->Branch("mhit_tpc", &_mhit_tpc);
+    fTree->Branch("mhit_plane", &_mhit_plane);
     fTree->Branch("mhit_wire", &_mhit_wire); 
     fTree->Branch("mhit_channel", &_mhit_channel);
     fTree->Branch("mhit_peakT", &_mhit_peakT);
@@ -1707,6 +1715,7 @@ void Hitdumper::ResetMuonTracksVars(int n){
 void Hitdumper::ResetMuonHitVars(int n){
   _mhit_trk.clear(); 
   _mhit_tpc.clear();
+  _mhit_plane.clear();
   _mhit_wire.clear();
   _mhit_channel.clear();
   _mhit_peakT.clear();
@@ -1714,6 +1723,7 @@ void Hitdumper::ResetMuonHitVars(int n){
 
   _mhit_trk.reserve(n);
   _mhit_tpc.reserve(n);
+  _mhit_plane.reserve(n);
   _mhit_wire.reserve(n);
   _mhit_channel.reserve(n);
   _mhit_peakT.reserve(n);

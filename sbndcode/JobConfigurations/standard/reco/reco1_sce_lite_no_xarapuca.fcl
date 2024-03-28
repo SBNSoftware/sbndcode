@@ -1,0 +1,14 @@
+#include "reco1_sce_lite.fcl"
+
+physics.reco1: [ "rns",
+	       	 "opdecopmt",
+		 "opdecoxarapuca",
+		 "ophitpmt",
+		 "opflashtpc0",
+		 "opflashtpc1",
+		 "caldata",
+		 "gaushit",
+		 "fasthit",
+		 "gaushitTruthMatch",
+		 "crtstrips"
+]

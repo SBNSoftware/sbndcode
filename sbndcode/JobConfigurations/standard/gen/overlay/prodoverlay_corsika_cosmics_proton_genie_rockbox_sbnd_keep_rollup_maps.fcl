@@ -1,0 +1,17 @@
+#include "prodoverlay_corsika_cosmics_proton_genie_rockbox_sbnd.fcl"
+
+outputs.out1.outputCommands: [ 
+			       "keep *_*_*_*",
+			       "drop sim::AuxDetHits_largeantnu_*_*",
+			       "drop sim::SimEnergyDeposits_largeantnu_*_*",
+			       "drop simb::MCParticles_largeantnu_*_*",
+			       "drop artg4tk::PhotonHits_largeantnu_*_*",
+			       "drop sim::GeneratedParticleInfos_largeantnu_*_*",
+			       "drop simb::MCTruths_largeantnu_*_*",
+			       "drop sim::AuxDetHits_largeantcosmic_*_*",
+			       "drop sim::SimEnergyDeposits_largeantcosmic_*_*",
+			       "drop simb::MCParticles_largeantcosmic_*_*",
+			       "drop artg4tk::PhotonHits_largeantcosmic_*_*",
+			       "drop sim::GeneratedParticleInfos_largeantcosmic_*_*",
+			       "drop simb::MCTruths_largeantcosmic_*_*"
+			     ]

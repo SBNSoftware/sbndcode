@@ -86,7 +86,7 @@ find_package( hep_concurrency REQUIRED )
 find_package( Eigen3 REQUIRED )
 find_package( Geant4 REQUIRED )
 find_package( Boost COMPONENTS system REQUIRED )
-find_package( ROOT REQUIRED )
+find_package( ROOT REQUIRED)
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
