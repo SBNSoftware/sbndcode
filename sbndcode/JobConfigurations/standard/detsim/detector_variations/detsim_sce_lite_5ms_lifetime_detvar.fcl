@@ -1,0 +1,4 @@
+#include "detsim_sce_lite_detvar.fcl"
+
+#set lifetime at 5ms
+physics.producers.simtpc2d.wcls_main.structs.lifetime: 5.0
