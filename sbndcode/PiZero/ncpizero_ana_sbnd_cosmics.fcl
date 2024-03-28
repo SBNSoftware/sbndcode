@@ -1,7 +1,9 @@
 #include "ncpizero_ana_sbnd.fcl"
 
+physics.producers.crumbstrees.ProcessNeutrinos: false
+
 physics.analyzers.ncpizeroana.BeamOff:       true
 physics.analyzers.ncpizeroxsectrees.BeamOff: true
 
-physics.trigger_paths: [ ]
+physics.trigger_paths: [ mvatrees ]
 physics.ana:           [ ncpizeroana, ncpizeroxsectrees ]
