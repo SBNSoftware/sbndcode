@@ -168,7 +168,6 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     // get CAEN fragments 
     for (const std::string &caen_name : fcaen_fragment_name){
         art::Handle<std::vector<artdaq::Fragment>> fragmentHandle;
-        if (fdebug>0) std::cout << "Looking for CAEN V1730 fragments with label " << caen_name << "..." << std::endl;
         evt.getByLabel(fcaen_module_label, caen_name, fragmentHandle);
 
         if (!fragmentHandle.isValid() || fragmentHandle->size() == 0){
@@ -317,7 +316,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         // check to see if there are any extended triggers in this event 
         if (extended_flag==false){
             for (size_t itrig=0; itrig < board_frag_v.at(iboard).size(); itrig++){
-                auto frag = board_frag_v.at(0).at(itrig);
+                auto frag = board_frag_v.at(iboard).at(itrig);
                 auto length = get_length(frag);
                 if (length < fnominal_length){
                     extended_flag = true;
@@ -340,6 +339,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             continue;
         if (frag_v.empty()) continue;
         auto fragid = iboard;
+        auto trig_counter = 0;
 
         for (size_t itrig=0; itrig < frag_v.size(); itrig++){
             std::vector<std::vector<uint16_t>> iwvfm_v;
@@ -391,10 +391,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             } // end extended flag         
             for (size_t i = 0; i < iwvfm_v.size(); i++){
                 auto combined_wvfm = iwvfm_v[i];
-                if (evt_counter==fhist_evt){
-                    int trig_counter = int(i)/fnch; 
-                    if (fdebug>2) std::cout << "Creating histograms for event " << evt_counter << std::endl;
-                    // histo: save waveforms section for combined waveforms
+                if (evt_counter==fhist_evt){                    // histo: save waveforms section for combined waveforms
                     histname.str(std::string());
                     histname << "evt" << evt.event() << "_trig" << trig_counter << "_frag" << fragid << "_ch" << i%fnch << "_combined_wvfm";
 
@@ -418,6 +415,8 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 else 
                     wvfmVec->push_back(waveform);
             }
+            trig_counter++;
+
         } // end itrig loop 
     } // end board loop
     board_frag_v.clear();
