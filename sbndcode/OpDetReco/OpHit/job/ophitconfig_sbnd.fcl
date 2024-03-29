@@ -9,7 +9,7 @@ BEGIN_PROLOG
 sbnd_opreco_pedestal_edges: @local::standard_algo_pedestal_edges
 sbnd_opreco_pedestal_edges.NumSampleFront:  3
 sbnd_opreco_pedestal_edges.NumSampleTail:   3
-sbnd_opreco_pedestal_edges.NumSampleMethod: 2
+sbnd_opreco_pedestal_edges.Method:          2
 
 sbnd_opreco_pedestal_rollingmean: @local::standard_algo_pedestal_rollingmean
 sbnd_opreco_pedestal_rollingmean.SampleSize:  20
@@ -69,5 +69,7 @@ sbnd_opreco_hit_cfd.EndThresh:   1.5
 #
 sbnd_opreco_risetimecalculator: @local::RiseTimeThreshold
 sbnd_opreco_risetimecalculator.PeakRatio: 0.15
+
+sbnd_opreco_risetimegaussfit: @local::RiseTimeGaussFit
 
 END_PROLOG
