@@ -223,58 +223,6 @@ private:
   bool fDebug;
   bool fPiZeroAna;
 
-  const std::vector<std::string> flux_weight_names = { "expskin_Flux",
-                                                       "horncurrent_Flux",
-                                                       "kminus_Flux",
-                                                       "kplus_Flux",
-                                                       "kzero_Flux",
-                                                       "nucleoninexsec_Flux",
-                                                       "nucleonqexsec_Flux",
-                                                       "nucleontotxsec_Flux",
-                                                       "piminus_Flux",
-                                                       "pioninexsec_Flux",
-                                                       "pionqexsec_Flux",
-                                                       "piontotxsec_Flux",
-                                                       "piplus_Flux"
-  };
-
-  const std::vector<std::string> genie_weight_names = {
-	  						"GENIEReWeight_SBND_v4_multisigma_CoulombCCQE"
-							, "GENIEReWeight_SBND_v4_multisigma_DecayAngMEC"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC1pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnCC2pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC1pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarnNC2pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC1pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpCC2pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC1pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvbarpNC2pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC1pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnCC2pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC1pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvnNC2pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC1pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpCC2pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC1pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NonRESBGvpNC2pi"
-							, "GENIEReWeight_SBND_v4_multisigma_NormCCMEC"
-							, "GENIEReWeight_SBND_v4_multisigma_NormNCMEC"
-							, "GENIEReWeight_SBND_v4_multisigma_RDecBR1eta"
-							, "GENIEReWeight_SBND_v4_multisigma_RDecBR1gamma"
-							, "GENIEReWeight_SBND_v4_multisigma_RPA_CCQE"
-							, "GENIEReWeight_SBND_v4_multisigma_ThetaDelta2NRad"
-							, "GENIEReWeight_SBND_v4_multisigma_Theta_Delta2Npi"
-							, "GENIEReWeight_SBND_v4_multisigma_VecFFCCQEshape"
-							, "GENIEReWeight_SBND_v4_multisim_CCRESVariationResponse"
-							, "GENIEReWeight_SBND_v4_multisim_COHVariationResponse"
-							, "GENIEReWeight_SBND_v4_multisim_DISBYVariationResponse"
-							, "GENIEReWeight_SBND_v4_multisim_FSI_N_VariationResponse"
-							, "GENIEReWeight_SBND_v4_multisim_FSI_pi_VariationResponse"
-							, "GENIEReWeight_SBND_v4_multisim_NCELVariationResponse"
-							, "GENIEReWeight_SBND_v4_multisim_NCRESVariationResponse"
-							, "GENIEReWeight_SBND_v4_multisim_ZExpAVariationResponse"
-  };
-
   // Map
   std::map<int, int> fHitsMap; //track ID , nHits
   std::map<const art::Ptr<simb::MCTruth>, int> fMCTruthHitsMap; //mctruth id, nHits 
@@ -315,6 +263,7 @@ private:
 
   // Event Tree: Slice -- 1D vector
   int _n_slc;
+  std::vector<int> 	slc_id;
   std::vector<size_t> 	slc_n_pfps;
   std::vector<bool> 	slc_is_clear_cosmics;
   std::vector<size_t>  	slc_primary_pfp_id;
@@ -430,11 +379,11 @@ private:
   std::vector<float> slc_pizero_CosThetaZ;
 
   //Event Tree: Flux Weight
-  //std::vector<std::vector<float>> slc_flux_weight_expskin, slc_flux_weight_horncurrent, slc_flux_weight_kminus,
-  //	  			  slc_flux_weight_kplus, slc_flux_weight_kzero, slc_flux_weight_nucleoninexsec,
-  //				  slc_flux_weight_nucleonqexsec, slc_flux_weight_nucleontotxsec, slc_flux_weight_piminus,
-  //				  slc_flux_weight_pioninexsex, slc_flux_weight_pionqexsec, slc_flux_weight_piontotxsec,
-  //				  slc_flux_weight_piplus;
+  std::vector<std::vector<float>> slc_flux_weight_expskin, slc_flux_weight_horncurrent, slc_flux_weight_kminus,
+  	  			  slc_flux_weight_kplus, slc_flux_weight_kzero, slc_flux_weight_nucleoninexsec,
+  				  slc_flux_weight_nucleonqexsec, slc_flux_weight_nucleontotxsec, slc_flux_weight_piminus,
+  				  slc_flux_weight_pioninexsex, slc_flux_weight_pionqexsec, slc_flux_weight_piontotxsec,
+  				  slc_flux_weight_piplus;
   std::vector<std::vector<float>> slc_flux_weight_total; //store multiplicative of all the flux weights
 
   //Event Tree: xsection
@@ -466,6 +415,13 @@ private:
                                   slc_xsec_multisigma_RPA_CCQE,
 				  slc_xsec_multisigma_NormNCCOH,
 				  slc_xsec_multisigma_NormCCCOH;
+  std::vector<std::vector<float>> slc_xsec_multisim_ZExpA,
+	     			  slc_xsec_multisim_NCEL,
+	      			  slc_xsec_multisim_CCRES,
+	      			  slc_xsec_multisim_NCRES,
+	      			  slc_xsec_multisim_DISBY,
+	      			  slc_xsec_multisim_FSI_pi, 
+	      			  slc_xsec_multisim_FSI_N; 
   std::vector<std::vector<float>> slc_xsec_multisim_total;
   
   std::vector<std::vector<float>> slc_geant4_multisim_reinteractions;
@@ -588,6 +544,7 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("nu_n_others", &nu_n_others); 
   
   //Event Tree: Slice
+  fEventTree->Branch("slc_id", &slc_id);
   fEventTree->Branch("n_slc", &_n_slc);
   fEventTree->Branch("slc_n_pfps", &slc_n_pfps);
   fEventTree->Branch("slc_is_clear_cosmics", &slc_is_clear_cosmics);
@@ -768,19 +725,19 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("flash_zerr", "std::vector<double>", &_flash_zerr);
 
   // Event Tree: Flux Weight
-  //fEventTree->Branch("slc_flux_weight_expskin", &slc_flux_weight_expskin);
-  //fEventTree->Branch("slc_flux_weight_horncurrent", &slc_flux_weight_horncurrent);
-  //fEventTree->Branch("slc_flux_weight_kminus", &slc_flux_weight_kminus);
-  //fEventTree->Branch("slc_flux_weight_kplus", &slc_flux_weight_kplus);
-  //fEventTree->Branch("slc_flux_weight_kzero", &slc_flux_weight_kzero);
-  //fEventTree->Branch("slc_flux_weight_nucleoninexsec", &slc_flux_weight_nucleoninexsec);
-  //fEventTree->Branch("slc_flux_weight_nucleonqexsec", &slc_flux_weight_nucleonqexsec);
-  //fEventTree->Branch("slc_flux_weight_nucleontotxsec", &slc_flux_weight_nucleontotxsec);
-  //fEventTree->Branch("slc_flux_weight_piminus", &slc_flux_weight_piminus);
-  //fEventTree->Branch("slc_flux_weight_pioninexsex", &slc_flux_weight_pioninexsex);
-  //fEventTree->Branch("slc_flux_weight_pionqexsec", &slc_flux_weight_pionqexsec);
-  //fEventTree->Branch("slc_flux_weight_piontotxsec", &slc_flux_weight_piontotxsec);
-  //fEventTree->Branch("slc_flux_weight_piplus", &slc_flux_weight_piplus);
+  fEventTree->Branch("slc_flux_weight_expskin", &slc_flux_weight_expskin);
+  fEventTree->Branch("slc_flux_weight_horncurrent", &slc_flux_weight_horncurrent);
+  fEventTree->Branch("slc_flux_weight_kminus", &slc_flux_weight_kminus);
+  fEventTree->Branch("slc_flux_weight_kplus", &slc_flux_weight_kplus);
+  fEventTree->Branch("slc_flux_weight_kzero", &slc_flux_weight_kzero);
+  fEventTree->Branch("slc_flux_weight_nucleoninexsec", &slc_flux_weight_nucleoninexsec);
+  fEventTree->Branch("slc_flux_weight_nucleonqexsec", &slc_flux_weight_nucleonqexsec);
+  fEventTree->Branch("slc_flux_weight_nucleontotxsec", &slc_flux_weight_nucleontotxsec);
+  fEventTree->Branch("slc_flux_weight_piminus", &slc_flux_weight_piminus);
+  fEventTree->Branch("slc_flux_weight_pioninexsex", &slc_flux_weight_pioninexsex);
+  fEventTree->Branch("slc_flux_weight_pionqexsec", &slc_flux_weight_pionqexsec);
+  fEventTree->Branch("slc_flux_weight_piontotxsec", &slc_flux_weight_piontotxsec);
+  fEventTree->Branch("slc_flux_weight_piplus", &slc_flux_weight_piplus);
   fEventTree->Branch("slc_flux_weight_total", &slc_flux_weight_total);
 
   // Event Tree: XSection Weight
@@ -813,7 +770,13 @@ sbnd::HNLPiZeroAnalysis::HNLPiZeroAnalysis(fhicl::ParameterSet const& p)
   fEventTree->Branch("slc_xsec_multisigma_RPA_CCQE", &slc_xsec_multisigma_RPA_CCQE);
   fEventTree->Branch("slc_xsec_multisigma_NormNCCOH", &slc_xsec_multisigma_NormNCCOH);
   fEventTree->Branch("slc_xsec_multisigma_NormCCCOH", &slc_xsec_multisigma_NormCCCOH);
-
+  fEventTree->Branch("slc_xsec_multisim_ZExpA", &slc_xsec_multisim_ZExpA);
+  fEventTree->Branch("slc_xsec_multisim_NCEL", &slc_xsec_multisim_NCEL);
+  fEventTree->Branch("slc_xsec_multisim_CCRES", &slc_xsec_multisim_CCRES);
+  fEventTree->Branch("slc_xsec_multisim_NCRES", &slc_xsec_multisim_NCRES);
+  fEventTree->Branch("slc_xsec_multisim_DISBY", &slc_xsec_multisim_DISBY);
+  fEventTree->Branch("slc_xsec_multisim_FSI_pi", &slc_xsec_multisim_FSI_pi);
+  fEventTree->Branch("slc_xsec_multisim_FSI_N", &slc_xsec_multisim_FSI_N);
   fEventTree->Branch("slc_xsec_multisim_total", &slc_xsec_multisim_total);
   
   fEventTree->Branch("slc_geant4_multisim_reinteractions", &slc_geant4_multisim_reinteractions);
@@ -1021,6 +984,7 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   nu_n_photons.clear();
   nu_n_others.clear();
 
+  slc_id.clear();
   slc_n_pfps.clear();
   slc_is_clear_cosmics.clear();
   slc_primary_pfp_id.clear();
@@ -1183,19 +1147,19 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_pfp_shower_theta.clear();
   slc_pfp_shower_phi.clear();
 
-  //slc_flux_weight_expskin.clear();
-  //slc_flux_weight_horncurrent.clear();
-  //slc_flux_weight_kminus.clear();
-  //slc_flux_weight_kplus.clear();
-  //slc_flux_weight_kzero.clear();
-  //slc_flux_weight_nucleoninexsec.clear();
-  //slc_flux_weight_nucleonqexsec.clear();
-  //slc_flux_weight_nucleontotxsec.clear();
-  //slc_flux_weight_piminus.clear();
-  //slc_flux_weight_pioninexsex.clear();
-  //slc_flux_weight_pionqexsec.clear();
-  //slc_flux_weight_piontotxsec.clear();
-  //slc_flux_weight_piplus.clear();
+  slc_flux_weight_expskin.clear();
+  slc_flux_weight_horncurrent.clear();
+  slc_flux_weight_kminus.clear();
+  slc_flux_weight_kplus.clear();
+  slc_flux_weight_kzero.clear();
+  slc_flux_weight_nucleoninexsec.clear();
+  slc_flux_weight_nucleonqexsec.clear();
+  slc_flux_weight_nucleontotxsec.clear();
+  slc_flux_weight_piminus.clear();
+  slc_flux_weight_pioninexsex.clear();
+  slc_flux_weight_pionqexsec.clear();
+  slc_flux_weight_piontotxsec.clear();
+  slc_flux_weight_piplus.clear();
   slc_flux_weight_total.clear();
 
   slc_xsec_unisim_DecayAngMEC.clear();
@@ -1228,6 +1192,13 @@ void sbnd::HNLPiZeroAnalysis::ResetEventVars()
   slc_xsec_multisigma_NormNCCOH.clear();
   slc_xsec_multisigma_NormCCCOH.clear();
 
+  slc_xsec_multisim_ZExpA.clear();
+  slc_xsec_multisim_NCEL.clear();
+  slc_xsec_multisim_CCRES.clear();
+  slc_xsec_multisim_NCRES.clear();
+  slc_xsec_multisim_DISBY.clear();
+  slc_xsec_multisim_FSI_pi.clear();
+  slc_xsec_multisim_FSI_N.clear();
   slc_xsec_multisim_total.clear();
   
   slc_geant4_multisim_reinteractions.clear();
@@ -1561,6 +1532,8 @@ art::Ptr<recob::PFParticle> sbnd::HNLPiZeroAnalysis::GetPrimaryPFP(const std::ve
 }
 
 void sbnd::HNLPiZeroAnalysis::ResizeSlice1DVector(const int col){
+
+  slc_id.resize(col, -99999);
   slc_n_pfps.resize(col, -99999);
   slc_is_clear_cosmics.resize(col, -99999);
   slc_primary_pfp_id.resize(col, -99999);
@@ -1845,19 +1818,19 @@ void sbnd::HNLPiZeroAnalysis::ResizeSlice2DVectorCol(const int row, const int co
 }
 
 void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorRow(const int row){
-  //slc_flux_weight_expskin.resize(row);
-  //slc_flux_weight_horncurrent.resize(row);
-  //slc_flux_weight_kminus.resize(row);
-  //slc_flux_weight_kplus.resize(row);
-  //slc_flux_weight_kzero.resize(row);
-  //slc_flux_weight_nucleoninexsec.resize(row);
-  //slc_flux_weight_nucleonqexsec.resize(row);
-  //slc_flux_weight_nucleontotxsec.resize(row);
-  //slc_flux_weight_piminus.resize(row);
-  //slc_flux_weight_pioninexsex.resize(row);
-  //slc_flux_weight_pionqexsec.resize(row);
-  //slc_flux_weight_piontotxsec.resize(row);
-  //slc_flux_weight_piplus.resize(row);
+  slc_flux_weight_expskin.resize(row);
+  slc_flux_weight_horncurrent.resize(row);
+  slc_flux_weight_kminus.resize(row);
+  slc_flux_weight_kplus.resize(row);
+  slc_flux_weight_kzero.resize(row);
+  slc_flux_weight_nucleoninexsec.resize(row);
+  slc_flux_weight_nucleonqexsec.resize(row);
+  slc_flux_weight_nucleontotxsec.resize(row);
+  slc_flux_weight_piminus.resize(row);
+  slc_flux_weight_pioninexsex.resize(row);
+  slc_flux_weight_pionqexsec.resize(row);
+  slc_flux_weight_piontotxsec.resize(row);
+  slc_flux_weight_piplus.resize(row);
   slc_flux_weight_total.resize(row);
 
   slc_xsec_unisim_DecayAngMEC.resize(row);
@@ -1890,6 +1863,13 @@ void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorRow(const int row){
   slc_xsec_multisigma_NormCCCOH.resize(row);        
   slc_xsec_multisigma_NormNCCOH.resize(row);        
 
+  slc_xsec_multisim_ZExpA.resize(row);
+  slc_xsec_multisim_NCEL.resize(row);
+  slc_xsec_multisim_CCRES.resize(row);
+  slc_xsec_multisim_NCRES.resize(row);
+  slc_xsec_multisim_DISBY.resize(row);
+  slc_xsec_multisim_FSI_pi.resize(row);
+  slc_xsec_multisim_FSI_N.resize(row);
   slc_xsec_multisim_total.resize(row);
   
   slc_geant4_multisim_reinteractions.resize(row);
@@ -1897,19 +1877,20 @@ void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorRow(const int row){
 
 void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorCol(const int row){
   //flux weight multi-sim 1000 universes
-  //slc_flux_weight_expskin[row].resize(1000,1);
-  //slc_flux_weight_horncurrent[row].resize(1000,1);
-  //slc_flux_weight_kminus[row].resize(1000,1);
-  //slc_flux_weight_kplus[row].resize(1000,1);
-  //slc_flux_weight_kzero[row].resize(1000,1);
-  //slc_flux_weight_nucleoninexsec[row].resize(1000,1);
-  //slc_flux_weight_nucleonqexsec[row].resize(1000,1);
-  //slc_flux_weight_nucleontotxsec[row].resize(1000,1);
-  //slc_flux_weight_piminus[row].resize(1000,1);
-  //slc_flux_weight_pioninexsex[row].resize(1000,1);
-  //slc_flux_weight_pionqexsec[row].resize(1000,1);
-  //slc_flux_weight_piontotxsec[row].resize(1000,1);
-  //slc_flux_weight_piplus[row].resize(1000,1);
+  slc_flux_weight_expskin[row].resize(1000,-9999);
+  slc_flux_weight_horncurrent[row].resize(1000,-9999);
+  slc_flux_weight_kminus[row].resize(1000,-9999);
+  slc_flux_weight_kplus[row].resize(1000,-9999);
+  slc_flux_weight_kzero[row].resize(1000,-9999);
+  slc_flux_weight_nucleoninexsec[row].resize(1000,-9999);
+  slc_flux_weight_nucleonqexsec[row].resize(1000,-9999);
+  slc_flux_weight_nucleontotxsec[row].resize(1000,-9999);
+  slc_flux_weight_piminus[row].resize(1000,-9999);
+  slc_flux_weight_pioninexsex[row].resize(1000,-9999);
+  slc_flux_weight_pionqexsec[row].resize(1000,-9999);
+  slc_flux_weight_piontotxsec[row].resize(1000,-9999);
+  slc_flux_weight_piplus[row].resize(1000,-9999);
+
   slc_flux_weight_total[row].resize(1000, 1);
 
   //xsection unisim 1 direction variation
@@ -1919,30 +1900,39 @@ void sbnd::HNLPiZeroAnalysis::ResizeWeight2DVectorCol(const int row){
   slc_xsec_unisim_VecFFCCQEshape[row].resize(1, -9999);
 
   //xsection multisigmal +/- 1 sigma
-  slc_xsec_multisigma_CoulombCCQE[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvbarnCC1pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvbarnCC2pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvbarnNC1pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvbarnNC2pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvbarpCC1pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvbarpCC2pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvbarpNC1pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvbarpNC2pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvnCC1pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvnCC2pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvnNC1pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvnNC2pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvpCC1pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvpCC2pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvpNC1pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NonRESBGvpNC2pi[row].resize(2, -9999);
-  slc_xsec_multisigma_NormCCMEC[row].resize(2, -9999);
-  slc_xsec_multisigma_NormNCMEC[row].resize(2, -9999);
-  slc_xsec_multisigma_RDecBR1eta[row].resize(2, -9999);
-  slc_xsec_multisigma_RDecBR1gamma[row].resize(2, -9999);
-  slc_xsec_multisigma_RPA_CCQE[row].resize(2, -9999);
-  slc_xsec_multisigma_NormCCCOH[row].resize(2, -9999);        
-  slc_xsec_multisigma_NormNCCOH[row].resize(2, -9999);        
+  slc_xsec_multisigma_CoulombCCQE[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvbarnCC1pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvbarnCC2pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvbarnNC1pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvbarnNC2pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvbarpCC1pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvbarpCC2pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvbarpNC1pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvbarpNC2pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvnCC1pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvnCC2pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvnNC1pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvnNC2pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvpCC1pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvpCC2pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvpNC1pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NonRESBGvpNC2pi[row].resize(6, -9999);
+  slc_xsec_multisigma_NormCCMEC[row].resize(6, -9999);
+  slc_xsec_multisigma_NormNCMEC[row].resize(6, -9999);
+  slc_xsec_multisigma_RDecBR1eta[row].resize(6, -9999);
+  slc_xsec_multisigma_RDecBR1gamma[row].resize(6, -9999);
+  slc_xsec_multisigma_RPA_CCQE[row].resize(6, -9999);
+  slc_xsec_multisigma_NormCCCOH[row].resize(6, -9999);        
+  slc_xsec_multisigma_NormNCCOH[row].resize(6, -9999);        
+
+  //xsec 500 universe
+  slc_xsec_multisim_ZExpA[row].resize(500,-9999);
+  slc_xsec_multisim_NCEL[row].resize(500,-9999);
+  slc_xsec_multisim_CCRES[row].resize(500,-9999);
+  slc_xsec_multisim_NCRES[row].resize(500,-9999);
+  slc_xsec_multisim_DISBY[row].resize(500,-9999);
+  slc_xsec_multisim_FSI_pi[row].resize(500,-9999);
+  slc_xsec_multisim_FSI_N[row].resize(500,-9999);
 
   slc_xsec_multisim_total[row].resize(500, 1);
             
@@ -1984,6 +1974,8 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSlices(const art::Event &e, const art::Hand
       std::cout << std::endl << "Slice #" << slcCounter << std::endl;
       std::cout << "Found " << pfps.size() << " pfp(s) with this slice..." << std::endl;
     }
+
+    slc_id[slcCounter] = slcCounter;
 
     if(pfps.size() == 0)
     {
@@ -2834,13 +2826,13 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 	  //uni-sim only has one varible
 	  if (weights.size() == 1){
 	    for(auto const w: weights){
-	      if(name == "GENIEReWeight_SBND_v4_multisigma_DecayAngMEC")
+	      if(name.find("DecayAngMEC") != std::string::npos )
 	  	    slc_xsec_unisim_DecayAngMEC[slcCounter][0] = w;
-	      if(name == "GENIEReWeight_SBND_v4_multisigma_ThetaDelta2NRad")
+	      if(name.find("ThetaDelta2NRad") != std::string::npos )
 	  	    slc_xsec_unisim_ThetaDelta2NRad[slcCounter][0] = w;
-              if(name == "GENIEReWeight_SBND_v4_multisigma_Theta_Delta2Npi")
+              if(name.find("Theta_Delta2Npi") != std::string::npos )
 	  	    slc_xsec_unisim_Theta_Delta2Npi[slcCounter][0] = w;
-              if(name == "GENIEReWeight_SBND_v4_multisigma_VecFFCCQEshape")
+              if(name.find("VecFFCCQEshape") != std::string::npos )
 	  	    slc_xsec_unisim_VecFFCCQEshape[slcCounter][0] = w;
 	    }
 	  }
@@ -2848,57 +2840,56 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 	  else if (weights.size() == 6){
 	    unsigned int wCounter = 0;  //only need to save index 0 and 1 for -/+1 sigma    
 	    for(auto const w: weights){
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_CoulombCCQE")
+ 	      if(name.find("CoulombCCQE") != std::string::npos )
 		      slc_xsec_multisigma_CoulombCCQE[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnCC1pi")
+ 	      if(name.find("NonRESBGvbarnCC1pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvbarnCC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnCC2pi")
+ 	      if(name.find("NonRESBGvbarnCC2pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvbarnCC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnNC1pi")
+ 	      if(name.find("NonRESBGvbarnNC1pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvbarnNC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarnNC2pi")
+ 	      if(name.find("NonRESBGvbarnNC2pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvbarnNC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpCC1pi")
+ 	      if(name.find("NonRESBGvbarpCC1pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvbarpCC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpCC2pi")
+ 	      if(name.find("NonRESBGvbarpCC2pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvbarpCC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpNC1pi")
+ 	      if(name.find("NonRESBGvbarpNC1pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvbarpNC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvbarpNC2pi")
+ 	      if(name.find("NonRESBGvbarpNC2pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvbarpNC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnCC1pi")
+ 	      if(name.find("NonRESBGvnCC1pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvnCC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnCC2pi")
+ 	      if(name.find("NonRESBGvnCC2pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvnCC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnNC1pi")
+ 	      if(name.find("NonRESBGvnNC1pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvnNC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvnNC2pi")
+ 	      if(name.find("NonRESBGvnNC2pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvnNC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpCC1pi")
+ 	      if(name.find("NonRESBGvpCC1pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvpCC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpCC2pi")
+ 	      if(name.find("NonRESBGvpCC2pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvpCC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpNC1pi")
+ 	      if(name.find("NonRESBGvpNC1pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvpNC1pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NonRESBGvpNC2pi")
+ 	      if(name.find("NonRESBGvpNC2pi") != std::string::npos )
 		      slc_xsec_multisigma_NonRESBGvpNC2pi[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NormCCMEC")
+ 	      if(name.find("NormCCMEC") != std::string::npos )
 		      slc_xsec_multisigma_NormCCMEC[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_NormNCMEC")
+ 	      if(name.find("NormNCMEC") != std::string::npos )
 		      slc_xsec_multisigma_NormNCMEC[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_RDecBR1eta")
+ 	      if(name.find("RDecBR1eta") != std::string::npos )
 		      slc_xsec_multisigma_RDecBR1eta[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_RDecBR1gamma")
+ 	      if(name.find("RDecBR1gamma") != std::string::npos )
 		      slc_xsec_multisigma_RDecBR1gamma[slcCounter][wCounter] = w;
- 	      if(name == "GENIEReWeight_SBND_v5_multisigma_RPA_CCQE")
+ 	      if(name.find("RPA_CCQE") != std::string::npos )
 		      slc_xsec_multisigma_RPA_CCQE[slcCounter][wCounter] = w;
-	      if(name == "GENIEReWeight_SBND_v5_multisigma_NormCCCOH")
+	      if(name.find("NormCCCOH") != std::string::npos )
 		      slc_xsec_multisigma_NormCCCOH[slcCounter][wCounter] = w;
-	      if(name == "GENIEReWeight_SBND_v5_multisigma_NormNCCOH")
+	      if(name.find("NormNCCOH") != std::string::npos )
 		      slc_xsec_multisigma_NormNCCOH[slcCounter][wCounter] = w;
 
 	      wCounter++;
-	      if(wCounter == 2) break;
 	    }
 	  }
 	  
@@ -2907,27 +2898,36 @@ void sbnd::HNLPiZeroAnalysis::AnalyseSliceMCTruth(const art::Event &e, const art
 	else if (name.find("multisim") != std::string::npos){
 	  unsigned int wCounter = 0; //Multisim xsection size = 500
 	  for (auto const w: weights){
+	    if (name.find("ZExpA") != std::string::npos )  slc_xsec_multisim_ZExpA[slcCounter][wCounter] = w;
+	    if (name.find("NCEL") != std::string::npos )  slc_xsec_multisim_NCEL[slcCounter][wCounter] = w;
+	    if (name.find("CCRES") != std::string::npos )  slc_xsec_multisim_CCRES[slcCounter][wCounter] = w;
+	    if (name.find("NCRES") != std::string::npos )  slc_xsec_multisim_NCRES[slcCounter][wCounter] = w;
+	    if (name.find("DISBY") != std::string::npos )  slc_xsec_multisim_DISBY[slcCounter][wCounter] = w;
+	    if (name.find("FSI_pi") != std::string::npos )  slc_xsec_multisim_FSI_pi[slcCounter][wCounter] = w;
+	    if (name.find("FSI_N") != std::string::npos )  slc_xsec_multisim_FSI_N[slcCounter][wCounter] = w;
+
             slc_xsec_multisim_total[slcCounter][wCounter] *= w;
 	    wCounter++;
 	  }
 	}
+
 	// Multi-Sim Flux Weights
 	else if (name.find("_Flux") != std::string::npos){
 	  unsigned int wCounter = 0;  //Flux weight size = 1000    
 	  for(auto const w: weights){
-	    //if (name == "expskin_Flux") slc_flux_weight_expskin[slcCounter][wCounter] = w;
-	    //if (name == "horncurrent_Flux") slc_flux_weight_horncurrent[slcCounter][wCounter] = w;
-	    //if (name == "kminus_Flux") slc_flux_weight_kminus[slcCounter][wCounter] = w;
-	    //if (name == "kplus_Flux") slc_flux_weight_kplus[slcCounter][wCounter] = w;
-	    //if (name == "kzero_Flux") slc_flux_weight_kzero[slcCounter][wCounter] = w;
-	    //if (name == "nucleoninexsec_Flux") slc_flux_weight_nucleoninexsec[slcCounter][wCounter] = w;
-	    //if (name == "nucleonqexsec_Flux") slc_flux_weight_nucleonqexsec[slcCounter][wCounter] = w;
-	    //if (name == "nucleontotxsec_Flux") slc_flux_weight_nucleontotxsec[slcCounter][wCounter] = w;
-	    //if (name == "piminus_Flux") slc_flux_weight_piminus[slcCounter][wCounter] = w;
-	    //if (name == "pioninexsec_Flux") slc_flux_weight_pioninexsex[slcCounter][wCounter] = w;
-	    //if (name == "pionqexsec_Flux") slc_flux_weight_pionqexsec[slcCounter][wCounter] = w;
-	    //if (name == "piontotxsec_Flux") slc_flux_weight_piontotxsec[slcCounter][wCounter] = w;
-	    //if (name == "piplus_Flux") slc_flux_weight_piplus[slcCounter][wCounter] = w;
+	    if (name == "expskin_Flux") slc_flux_weight_expskin[slcCounter][wCounter] = w;
+	    if (name == "horncurrent_Flux") slc_flux_weight_horncurrent[slcCounter][wCounter] = w;
+	    if (name == "kminus_Flux") slc_flux_weight_kminus[slcCounter][wCounter] = w;
+	    if (name == "kplus_Flux") slc_flux_weight_kplus[slcCounter][wCounter] = w;
+	    if (name == "kzero_Flux") slc_flux_weight_kzero[slcCounter][wCounter] = w;
+	    if (name == "nucleoninexsec_Flux") slc_flux_weight_nucleoninexsec[slcCounter][wCounter] = w;
+	    if (name == "nucleonqexsec_Flux") slc_flux_weight_nucleonqexsec[slcCounter][wCounter] = w;
+	    if (name == "nucleontotxsec_Flux") slc_flux_weight_nucleontotxsec[slcCounter][wCounter] = w;
+	    if (name == "piminus_Flux") slc_flux_weight_piminus[slcCounter][wCounter] = w;
+	    if (name == "pioninexsec_Flux") slc_flux_weight_pioninexsex[slcCounter][wCounter] = w;
+	    if (name == "pionqexsec_Flux") slc_flux_weight_pionqexsec[slcCounter][wCounter] = w;
+	    if (name == "piontotxsec_Flux") slc_flux_weight_piontotxsec[slcCounter][wCounter] = w;
+	    if (name == "piplus_Flux") slc_flux_weight_piplus[slcCounter][wCounter] = w;
 	    
 	    slc_flux_weight_total[slcCounter][wCounter] *= w;
 	    wCounter++;

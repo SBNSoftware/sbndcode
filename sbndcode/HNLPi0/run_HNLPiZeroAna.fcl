@@ -36,6 +36,15 @@ source:
 	module_type: RootInput
 }
 
+outputs:
+{
+ 	out:
+  	{
+       		@table::sbnd_rootoutput
+            	dataTier:    "reconstructed"
+	}
+}
+
 physics:
 {
 
@@ -49,8 +58,8 @@ physics:
 		fluxweight:                  @local::sbn_eventweight_flux
 		systtools:                   @local::sbn_systtools
 		geant4weight:                @local::sbn_eventweight_geant4
-
 	}
+
 	analyzers:
 	{
 		hnlana: 
@@ -60,6 +69,7 @@ physics:
 	}
 
 	ana: [ hnlana ]
+	stream: [ out ]
 	
 	end_paths: [ ana ]
 }
