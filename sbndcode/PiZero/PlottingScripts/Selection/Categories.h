@@ -24,7 +24,7 @@ const std::vector<Cut> ncpizero_incl_categories = {
   { "Dirt", "slc_true_event_type_incl==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_incl==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
   { "Cosmic", "slc_true_event_type_incl==7 || slc_true_event_type_incl==8", "Cosmic", kRed+1 },
-  { "BadRecoSignal", "slc_true_event_type_incl==0 && slc_comp<=.5", "Bad Reco Signal", kBlack }
+  { "MisRecoSignal", "slc_true_event_type_incl==0 && slc_comp<=.5", "Mis-Reco Signal", kBlack }
 };
 
 const std::vector<Cut> ncpizero_0p0pi_categories = {
@@ -36,7 +36,7 @@ const std::vector<Cut> ncpizero_0p0pi_categories = {
   { "Dirt", "slc_true_event_type_0p0pi==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_0p0pi==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
   { "Cosmic", "slc_true_event_type_0p0pi==7 || slc_true_event_type_0p0pi==8", "Cosmic", kRed+1 },
-  { "BadRecoSignal", "slc_true_event_type_0p0pi==0 && slc_comp<=.5", "Bad Reco Signal", kBlack }
+  { "MisRecoSignal", "slc_true_event_type_0p0pi==0 && slc_comp<=.5", "Mis-Reco Signal", kBlack }
 };
 
 const std::vector<Cut> ncpizero_1p0pi_categories = {
@@ -48,7 +48,7 @@ const std::vector<Cut> ncpizero_1p0pi_categories = {
   { "Dirt", "slc_true_event_type_1p0pi==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_1p0pi==6", "Non-FV #nu", kGray+2 },
   { "Cosmic", "slc_true_event_type_1p0pi==7 || slc_true_event_type_1p0pi==8", "Cosmic", kRed+1 },
-  { "BadRecoSignal", "slc_true_event_type_1p0pi==0 && slc_comp<=.5", "Bad Reco Signal", kBlack }
+  { "MisRecoSignal", "slc_true_event_type_1p0pi==0 && slc_comp<=.5", "Mis-Reco Signal", kBlack }
 };
 
 const std::vector<Cut> ncpizero_Np0pi_categories = {
@@ -60,7 +60,7 @@ const std::vector<Cut> ncpizero_Np0pi_categories = {
   { "Dirt", "slc_true_event_type_Np0pi==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_Np0pi==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
   { "Cosmic", "slc_true_event_type_Np0pi==7 || slc_true_event_type_Np0pi==8", "Cosmic", kRed+1 },
-  { "BadRecoSignal", "slc_true_event_type_Np0pi==0 && slc_comp<=.5", "Bad Reco Signal", kBlack }
+  { "MisRecoSignal", "slc_true_event_type_Np0pi==0 && slc_comp<=.5", "Mis-Reco Signal", kBlack }
 };
 
 const std::vector<Cut> ncpizero_Xp0pi_categories = {
@@ -72,7 +72,7 @@ const std::vector<Cut> ncpizero_Xp0pi_categories = {
   { "Dirt", "slc_true_event_type_Xp0pi==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_Xp0pi==6", "Non-FV #nu", kGray+2 },
   { "Cosmic", "slc_true_event_type_Xp0pi==7 || slc_true_event_type_Xp0pi==8", "Cosmic", kRed+1 },
-  { "BadRecoSignal", "slc_true_event_type_Xp0pi==0 && slc_comp<=.5", "Bad Reco Signal", kBlack }
+  { "MisRecoSignal", "slc_true_event_type_Xp0pi==0 && slc_comp<=.5", "Mis-Reco Signal", kBlack }
 };
 
 const std::vector<Cut> ccpizero_categories = {
@@ -83,7 +83,7 @@ const std::vector<Cut> ccpizero_categories = {
   { "Dirt", "slc_true_event_type_cc==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_cc==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
   { "Cosmic", "slc_true_event_type_cc==7 || slc_true_event_type_cc==8", "Cosmic", kRed+1 },
-  { "BadRecoSignal", "slc_true_event_type_cc==0 && slc_comp<=.5", "Bad Reco Signal", kBlack }
+  { "MisRecoSignal", "slc_true_event_type_cc==0 && slc_comp<=.5", "Mis-Reco Signal", kBlack }
 };
 
 const std::vector<Cut> event_modes = {
