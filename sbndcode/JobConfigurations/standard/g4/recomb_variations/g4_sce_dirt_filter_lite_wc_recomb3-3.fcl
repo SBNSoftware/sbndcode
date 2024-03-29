@@ -1,6 +1,0 @@
-#include "g4_sce_dirt_filter_lite_wc.fcl"
-
-process_name: G4Var
-
-services.LArG4Parameters.ModBoxA: 0.999
-services.LArG4Parameters.ModBoxB: 0.206

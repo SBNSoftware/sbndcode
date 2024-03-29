@@ -16,5 +16,11 @@ sbnd_detproperties.InheritNumberTimeSamples: false
 sbnd_detproperties.NumberTimeSamples: 3400
 sbnd_detproperties.ReadOutWindowSize: 3400 
 
+# WireCell corrects for the interplane drift in its signal processing. This is
+# not something traditional 1D approaches do. Setting this flag to false
+# ensures that we don't 'double correct' at the start of pandora. This
+# should be set to true when using 1D signal processing.
+# Henry Lay - Nov 2023
+sbnd_detproperties.IncludeInterPlanePitchInXTickOffsets: false
 
 END_PROLOG

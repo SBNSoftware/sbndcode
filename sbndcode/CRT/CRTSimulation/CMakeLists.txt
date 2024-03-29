@@ -5,7 +5,7 @@ art_make_library(
                         fhiclcpp::fhiclcpp
                         art::Persistency_Provenance
                         canvas::canvas
-                        sbnobj_SBND_CRT
+                        sbnobj::SBND_CRT
                         sbndcode_GeoWrappers
 )
 

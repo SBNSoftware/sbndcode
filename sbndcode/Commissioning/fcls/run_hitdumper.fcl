@@ -14,12 +14,7 @@
 #
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
-#include "cluster_sbnd.fcl"
-#include "trackfindermodules_sbnd.fcl"
-#include "calorimetry_sbnd.fcl"
-#include "showerfindermodules.fcl"
 #include "databaseutil_sbnd.fcl"
-#include "vertexfindermodules.fcl"
 #include "hitdumpermodule.fcl"
 #include "muontrackmodule.fcl"
 #include "ophit_finder_sbnd.fcl"
@@ -132,6 +127,7 @@ physics.producers.fasthit.SkipInd: false
 #  this many widths to each side.   Original window is above threshold.
 #  Both thresh and larger window in this file are appropriate only when
 #  noise is turned off.
+physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
 physics.producers.fasthit.IncludeMoreTail: 3.0
 physics.producers.fasthit.ColMinWidth: 100.0
 physics.producers.fasthit.UncompressWithPed: false

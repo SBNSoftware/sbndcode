@@ -96,6 +96,7 @@ private:
   int _subrun;
   int _event;
 
+  //mc truth
   std::vector<int16_t>              _mc_trackid;
   std::vector<int16_t>              _mc_pdg;
   std::vector<int16_t>              _mc_status;
@@ -118,6 +119,7 @@ private:
   std::vector<double>               _mc_endpz;
   std::vector<double>               _mc_ende;
 
+  //G4 detector id
   std::vector<int16_t> _ide_trackid;
   std::vector<float>   _ide_e;
   std::vector<float>   _ide_entryx;
@@ -129,6 +131,7 @@ private:
   std::vector<float>   _ide_exitz;
   std::vector<float>   _ide_exitt;
 
+  //front end mother board
   std::vector<uint16_t>              _feb_mac5;
   std::vector<uint16_t>              _feb_flags;
   std::vector<uint32_t>              _feb_ts0;
@@ -137,6 +140,7 @@ private:
   std::vector<std::vector<uint16_t>> _feb_adc;
   std::vector<uint32_t>              _feb_coinc;
 
+  //strip hit to select the strip which has ADC above threshold
   std::vector<uint32_t> _sh_channel;
   std::vector<uint32_t> _sh_ts0;
   std::vector<uint32_t> _sh_ts1;
@@ -154,6 +158,7 @@ private:
   std::vector<double>   _sh_truth_energy;
   std::vector<double>   _sh_truth_time;
 
+  //cluster from x-y coincidence for CRTSpacePoint , this is what we normally call a CRT hit
   std::vector<uint32_t> _cl_ts0;
   std::vector<uint32_t> _cl_ts1;
   std::vector<uint32_t> _cl_unixs;
@@ -188,6 +193,7 @@ private:
   std::vector<double>   _cl_sp_etime;
   std::vector<bool>     _cl_sp_complete;
 
+  //backtrack truth information from reco level
   std::vector<int>     _td_tag_trackid;
   std::vector<int>     _td_tag_pdg;
   std::vector<int16_t> _td_tag_tagger;
@@ -206,6 +212,7 @@ private:
   std::vector<bool>    _td_reco_status;
   std::vector<bool>    _td_reco_triple;
 
+  //track level information
   std::vector<double>              _tr_start_x;
   std::vector<double>              _tr_start_y;
   std::vector<double>              _tr_start_z;
