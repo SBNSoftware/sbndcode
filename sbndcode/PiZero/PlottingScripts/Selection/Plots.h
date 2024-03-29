@@ -85,45 +85,45 @@ std::vector<VarBinPlot> true_observables_var_bin = {
 };
 
 std::vector<VarBinPlot> true_slc_observables = {
-  { "slc_true_pz_pizero_mom", "slc_true_pz_pizero_mom*1e3", ";p_{#pi^{0}} (MeV/c);Slices",
-    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. } },
-  { "slc_true_pz_cos_theta_pizero", "slc_true_pz_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Slices",
-    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. } },
-  { "slc_true_pz_cos_com", "slc_true_pz_cos_com", ";cos(#theta_{CoM});Slices",
-    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. } },
-  { "slc_true_pz_decay_asymmetry", "slc_true_pz_decay_asymmetry", ";|E_{#gamma_{1}} - E_{#gamma_{2}}| / E_{#gamma_{1}} + E_{#gamma_{2}};Slices",
-    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. } },
-  { "slc_true_pz_open_angle", "slc_true_pz_open_angle", ";#theta_{#gamma#gamma} (#circ);Slices",
-    8, { 0., 20., 40., 60., 80., 100., 120., 140., 180. } },
+  { "slc_true_pz_pizero_mom", "slc_true_pz_pizero_mom*1e3", ";p_{#pi^{0}} (MeV/c);Slices / 60 MeV/c",
+    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, 60. },
+  { "slc_true_pz_cos_theta_pizero", "slc_true_pz_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Slices / 0.1",
+    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, 0.1 },
+  { "slc_true_pz_cos_com", "slc_true_pz_cos_com", ";cos(#theta_{CoM});Slices / 0.1",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, 0.1 },
+  { "slc_true_pz_decay_asymmetry", "slc_true_pz_decay_asymmetry", ";|E_{#gamma_{1}} - E_{#gamma_{2}}| / E_{#gamma_{1}} + E_{#gamma_{2}};Slices / 0.1",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, 0.1 },
+  { "slc_true_pz_open_angle", "slc_true_pz_open_angle", ";#theta_{#gamma#gamma} (#circ);Slices / 20#circ",
+    8, { 0., 20., 40., 60., 80., 100., 120., 140., 180. }, 20. },
 };
 
-std::vector<Plot> observables = {
-  { "slc_best_corr_pzc_invariant_mass", "slc_best_corr_pzc_invariant_mass", ";M_{#gamma#gamma} (MeV/c^{2});Slices",
-    25, 0, 500 },
-  { "slc_best_corr_pzc_pizero_mom", "slc_best_corr_pzc_pizero_mom", ";p_{#pi^{0}} (MeV/c);Slices",
-    25, 0, 1000 },
-  { "slc_best_corr_pzc_cos_theta_pizero", "slc_best_corr_pzc_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Slices",
-    25, -1, 1 },
-  { "slc_best_corr_pzc_cos_com", "slc_best_corr_pzc_cos_com", ";cos(#theta_{CoM});Slices",
-    25, 0, 1 },
-  { "slc_best_corr_pzc_decay_asymmetry", "slc_best_corr_pzc_decay_asymmetry", ";Decay Asymmetry;Slices",
-    25, 0, 1 },
+std::vector<VarBinPlot> observables = {
+  { "slc_best_corr_pzc_invariant_mass", "slc_best_corr_pzc_invariant_mass", ";M_{#gamma#gamma} (MeV/c^{2});Slices / 10 MeV/c^{2}",
+    16, { 0, 40, 60, 80, 90, 100, 110, 120, 130, 140, 150, 160, 180, 200, 250, 350, 500 }, 10 },
+  { "slc_best_corr_pzc_pizero_mom", "slc_best_corr_pzc_pizero_mom", ";p_{#pi^{0}} (MeV/c);Slices / 60 MeV/c",
+    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, 60. },
+  { "slc_best_corr_pzc_cos_theta_pizero", "slc_best_corr_pzc_cos_theta_pizero", ";cos(#theta_{#pi^{0}});Slices / 0.1",
+    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, 0.1 },
+  { "slc_best_corr_pzc_cos_com", "slc_best_corr_pzc_cos_com", ";cos(#theta_{CoM});Slices / 0.1",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, 0.1 },
+  { "slc_best_corr_pzc_decay_asymmetry", "slc_best_corr_pzc_decay_asymmetry", ";Decay Asymmetry;Slices / 0.1",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, 0.1 },
 };
 
-std::vector<Plot> observables_corr = {
-  { "slc_best_corr_pzc_invariant_mass_corr", "slc_best_corr_pzc_invariant_mass_corr", ";M_{#gamma#gamma} (MeV/c^{2});Slices",
-    25, 0, 500 },
-  { "slc_best_corr_pzc_pizero_mom_corr", "slc_best_corr_pzc_pizero_mom_corr", ";p_{#pi^{0}} (MeV/c);Slices",
-    25, 0, 1000 },
-  { "slc_best_corr_pzc_cos_theta_pizero_corr", "slc_best_corr_pzc_cos_theta_pizero_corr", ";cos(#theta_{#pi^{0}});Slices",
-    25, -1, 1 },
-  { "slc_best_corr_pzc_cos_com_corr", "slc_best_corr_pzc_cos_com_corr", ";cos(#theta_{CoM});Slices",
-    25, 0, 1 },
-  { "slc_best_corr_pzc_decay_asymmetry_corr", "slc_best_corr_pzc_decay_asymmetry_corr", ";Decay Asymmetry;Slices",
-    25, 0, 1 },
+std::vector<VarBinPlot> observables_corr = {
+  { "slc_best_corr_pzc_invariant_mass_corr", "slc_best_corr_pzc_invariant_mass_corr", ";M_{#gamma#gamma} (MeV/c^{2});Slices / 10 MeV/c^{2}",
+    16, { 0, 40, 60, 80, 90, 100, 110, 120, 130, 140, 150, 160, 180, 200, 250, 350, 500 }, 10 },
+  { "slc_best_corr_pzc_pizero_mom_corr", "slc_best_corr_pzc_pizero_mom_corr", ";p_{#pi^{0}} (MeV/c);Slices / 60 MeV/c",
+    8, { 0., 60., 120., 180., 240., 300., 400., 600., 1000. }, 60. },
+  { "slc_best_corr_pzc_cos_theta_pizero_corr", "slc_best_corr_pzc_cos_theta_pizero_corr", ";cos(#theta_{#pi^{0}});Slices / 0.1",
+    9, { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. }, 0.1 },
+  { "slc_best_corr_pzc_cos_com_corr", "slc_best_corr_pzc_cos_com_corr", ";cos(#theta_{CoM});Slices / 0.1",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, 0.1 },
+  { "slc_best_corr_pzc_decay_asymmetry_corr", "slc_best_corr_pzc_decay_asymmetry_corr", ";Decay Asymmetry;Slices / 0.1",
+    10, { 0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1. }, 0.1 },
 };
 
-std::vector<Plot> no_plots = {};
+std::vector<VarBinPlot> no_plots = {};
 
 std::vector<TwoDPlotSet> true_observables_twod_sets = {
   { "pizero_momentum_and_cos_theta", "1e3 * nu_pz_pizero_mom", "nu_pz_cos_theta_pizero",

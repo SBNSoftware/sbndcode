@@ -3,7 +3,7 @@
 #include "Selections.h"
 #include "Common.C"
 
-void Observables(const TString productionVersion, const SelectionParams &selectionParams, std::vector<Plot> &plots)
+void Observables(const TString productionVersion, const SelectionParams &selectionParams, std::vector<VarBinPlot> &plots)
 {
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables/" + selectionParams.name;
   gSystem->Exec("mkdir -p " + saveDir);
@@ -38,8 +38,6 @@ void Observables(const TString productionVersion, const SelectionParams &selecti
       TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
       canvas->cd();
 
-      plot.axes_labels += POTString();
-
       const int ncolumns = selectionParams.name == "ncpizero_incl" ? 4 : 3;
       const float xlow   = selectionParams.name == "ncpizero_incl" ? .25 : .24;
       const float xhigh  = selectionParams.name == "ncpizero_incl" ? .8 : .83;
@@ -48,7 +46,11 @@ void Observables(const TString productionVersion, const SelectionParams &selecti
       MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, .87}, ncolumns);
 
       const TString wip = "SBND Work-in-progress";
-      AddText(canvas, wip, kGray+2, {.8, .92, .9, .93}, 0.025, 32);
+      AddText(canvas, wip, kGray+2, {.2, .92, .25, .93}, 0.025, 12);
+      const TString sim = "SBND Simulation";
+      AddText(canvas, sim, kGray+2, {.2, .95, .25, .96}, 0.025, 12);
+      const TString potString = POTString(false);
+      AddText(canvas, potString, kGray+2, {.8, .92, .9, .93}, 0.03, 32);
 
       canvas->SaveAs(saveDir + "/" + plot.name + ".png");
       canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");
