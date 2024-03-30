@@ -393,7 +393,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 auto combined_wvfm = iwvfm_v[i];
                 if (evt_counter==fhist_evt){                    // histo: save waveforms section for combined waveforms
                     histname.str(std::string());
-                    histname << "evt" << evt.event() << "_trig" << trig_counter << "_frag" << fragid << "_ch" << i%fnch << "_combined_wvfm";
+                    histname << "evt" << evt.event() << "_trig" << trig_counter << "_frag" << fragid << "_ch" << i << "_combined_wvfm";
 
                     TH1D *wvfmHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), combined_wvfm.size(), 0, combined_wvfm.size());
                     wvfmHist->GetXaxis()->SetTitle("ticks");
@@ -402,15 +402,15 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 }
                 int time_diff = int(iwvfm_start) - int(event_trigger_time);
                 uint ch;
-                if (i%fnch == 15){
+                if (i == 15){
                     ch = fragid;
                 }
                 else
-                    ch = fch_map.at(fragid + i%fnch);
+                    ch = fch_map.at(fragid*15 + i);
                 
                 raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
 
-                if ((i%fnch == 15) && (foutput_ftrig_wvfm))
+                if ((i == 15) && (foutput_ftrig_wvfm))
                     twvfmVec->push_back(waveform);
                 else 
                     wvfmVec->push_back(waveform);
