@@ -793,7 +793,7 @@ void Hitdumper::analyze(const art::Event& evt)
     } // loop over hits
     _nctrks = ntr;
   }  // end if make tracks
-
+  }
   //
   // CRT hits
   //
@@ -821,8 +821,7 @@ void Hitdumper::analyze(const art::Event& evt)
     ResetCRTHitsVars(_nchits);
 
     for (int i = 0; i < _nchits; ++i){
-      // int ip = kNotDefined;
-      sbnd::crt::CRTTagger ip = sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
+      sbnd::crt::CRTTagger ip = sbnd::crt::kUndefinedTagger;//sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
 
       _chit_time[i]=chitlist[i]->Time()*0.001;
       if (chitlist[i]->Time() > MAX_INT) { //double check if this still applies
@@ -831,7 +830,7 @@ void Hitdumper::analyze(const art::Event& evt)
       _chit_x[i] = chitlist[i]->X();
       _chit_y[i] = chitlist[i]->Y();
       _chit_z[i] = chitlist[i]->Z();
-      //_chit_plane[i] = ip; //This doesn't seem to exist
+      _chit_plane[i] = ip; //This doesn't seem to exist
     }
   }
 
@@ -1347,8 +1346,8 @@ void Hitdumper::analyze(const art::Event& evt)
 
 
   fTree->Fill();
-
-}
+  
+  }
 
  void Hitdumper::beginJob()
  {
