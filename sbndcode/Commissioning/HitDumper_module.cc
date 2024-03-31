@@ -22,6 +22,7 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindMany.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/FindOneP.h"
 #include "canvas/Utilities/InputTag.h"
 
 // LArSoft includes
@@ -224,8 +225,8 @@ private:
   std::vector<double> _csp_y;           ///< CRT sp y
   std::vector<double> _csp_z;           ///< CRT sp z
   std::vector<double> _csp_time;        ///< CRT sp time
-  // std::vector<double> _csp_adc;         ///< CRT sp adc
-  std::vector<int> _csp_plane;          ///< CRT sp plane
+  std::vector<int> _csp_tagger;         ///< CRT sp tagger
+  std::vector<int> _csp_nhits;          ///< CRT sp nhits
 
   // CRT track variables
   int _ncts;                            ///< Number of CRT tracks
@@ -816,11 +817,11 @@ void Hitdumper::analyze(const art::Event& evt)
       _ncsps = _max_csps;
     }
 
+    art::FindOneP<sbnd::crt::CRTCluster> crtSpacePointToCluster(crtSpacePointListHandle, evt, fCRTSpacePointModuleLabel);
+
     ResetCRTSpacePointVars(_ncsps);
 
     for (int i = 0; i < _ncsps; ++i){
-      sbnd::crt::CRTTagger ip = sbnd::crt::kUndefinedTagger;//sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
-
       _csp_time[i]=crtSpacePointList[i]->Time()*0.001;
       if (crtSpacePointList[i]->Time() > MAX_INT) { //double check if this still applies
         _csp_time[i] = 0.001 * (crtSpacePointList[i]->Time() - TIME_CORRECTION);
@@ -828,7 +829,14 @@ void Hitdumper::analyze(const art::Event& evt)
       _csp_x[i] = crtSpacePointList[i]->X();
       _csp_y[i] = crtSpacePointList[i]->Y();
       _csp_z[i] = crtSpacePointList[i]->Z();
-      _csp_plane[i] = ip; //This doesn't seem to exist
+
+      const art::Ptr<sbnd::crt::CRTCluster> cluster = crtSpacePointToCluster.at(crtSpacePointList[i].key());
+
+      if(cluster.isNonnull())
+	{
+	  _csp_tagger[i] = cluster->Tagger();
+	  _csp_nhits[i]  = cluster->NHits();
+	}
     }
   }
 
@@ -1413,7 +1421,8 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("csp_y", &_csp_y);
     fTree->Branch("csp_z", &_csp_z);
     fTree->Branch("csp_time", &_csp_time);
-    fTree->Branch("csp_plane", &_csp_plane);
+    fTree->Branch("csp_tagger", &_csp_tagger);
+    fTree->Branch("csp_nhits", &_csp_nhits);
   }
   if (freadCRTtracks) {
     fTree->Branch("ncts", &_ncts, "ncts/I");
@@ -1653,11 +1662,12 @@ void Hitdumper::ResetCRTTracksVars(int n) {
 }
 
 void Hitdumper::ResetCRTSpacePointVars(int n) {
-  _csp_plane.assign(n, DEFAULT_VALUE);
   _csp_time.assign(n, DEFAULT_VALUE);
   _csp_x.assign(n, DEFAULT_VALUE);
   _csp_y.assign(n, DEFAULT_VALUE);
   _csp_z.assign(n, DEFAULT_VALUE);
+  _csp_tagger.assign(n, DEFAULT_VALUE);
+  _csp_nhits.assign(n, DEFAULT_VALUE);
 }
 
 void Hitdumper::ResetOpHitsVars(int n) {
