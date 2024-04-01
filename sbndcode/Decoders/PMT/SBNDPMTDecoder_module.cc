@@ -407,11 +407,11 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 }
                 else
                     ch = fch_map.at(fragid*15 + i);
-                
                 raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
 
-                if ((i == 15) && (foutput_ftrig_wvfm))
-                    twvfmVec->push_back(waveform);
+                if (i == 15){
+                    if (foutput_ftrig_wvfm) twvfmVec->push_back(waveform);
+                }
                 else 
                     wvfmVec->push_back(waveform);
             }
