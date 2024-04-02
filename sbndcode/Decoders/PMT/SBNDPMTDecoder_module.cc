@@ -62,6 +62,7 @@ public:
 
     // Required functions.
     void produce(art::Event& e) override;
+    void get_fragments(artdaq::Fragment & frag, std::vector<std::vector<artdaq::Fragment>> & board_frag_v);
     void get_waveforms(artdaq::Fragment & frag, std::vector<std::vector<uint16_t>> & wvfm_v);
 
     uint32_t get_length(artdaq::Fragment & frag);
@@ -93,14 +94,15 @@ private:
     bool foutput_ftrig_wvfm;
 
     int fn_maxflashes;
-    int fn_caenboards;
+    uint fn_caenboards;
     uint16_t fthreshold_ftrig;
 
     uint ffragid_offset;
     uint fhist_evt;
 
-    std::vector<uint> fhardcoded_fragid_map;
-    bool fuse_hardcoded_map;
+    std::vector<uint> fset_fragid_map;
+    bool fuse_set_map;
+
 
     std::vector<uint> fch_map;
 
@@ -138,13 +140,13 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     foutput_ftrig_wvfm = p.get<bool>("output_ftrig_wvfm",true);
 
     fn_maxflashes    = p.get<int>("n_maxflashes",30);
-    fn_caenboards    = p.get<int>("n_caenboards",8);
+    fn_caenboards    = p.get<uint>("n_caenboards",8);
     fthreshold_ftrig = p.get<uint16_t>("threshold_ftrig",16350);
     ffragid_offset   = p.get<uint>("fragid_offset",40960);
     fhist_evt        = p.get<int>("hist_evt",1);
 
-    fhardcoded_fragid_map = p.get<std::vector<uint>>("hardcoded_fragid_map",{});
-    fuse_hardcoded_map    = p.get<bool>("use_hardcoded_map",false);
+    fset_fragid_map = p.get<std::vector<uint>>("set_fragid_map",{});
+    fuse_set_map    = p.get<bool>("use_set_map",false);
 
     fch_map          = p.get<std::vector<uint>>("ch_map",{});
 
@@ -183,25 +185,10 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 ncont++;
 
                 if (contf.fragment_type() == sbndaq::detail::FragmentType::CAENV1730){
-                    if (ncont==1){ 
-                        if (fdebug>1) std::cout << "Found " << contf.block_count() << " CAEN fragments (flash triggers) inside the container." << std::endl;
-                    }
-
-                    for (size_t ii = 0; ii < contf.block_count(); ++ii){
-                        auto frag = *contf[ii].get();                        
-                        auto fragid = frag.fragmentID() - ffragid_offset;
-                        if (fuse_hardcoded_map){
-                            auto it = std::find(fhardcoded_fragid_map.begin(), fhardcoded_fragid_map.end(), fragid);
-                            if (it != fhardcoded_fragid_map.end()){
-                                auto idx = std::distance(fhardcoded_fragid_map.begin(), it);
-                                fragid = idx;
-                            }
-                        }
-                        // ignore boards that are not in the list of boards to ignore
-                        if (std::find(fignore_fragid.begin(), fignore_fragid.end(), fragid) != fignore_fragid.end())
-                            continue;
-                        board_frag_v.at(fragid).push_back(frag);
-                    }
+                    if (ncont==1 && fdebug>1)
+                        std::cout << "Found " << contf.block_count() << " CAEN fragments (flash triggers) inside the container." << std::endl;
+                    for (size_t ii = 0; ii < contf.block_count(); ++ii)
+                        get_fragments(*contf[ii].get(),board_frag_v);
                 }
             }
         }
@@ -209,17 +196,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         	if (fdebug>1) std::cout << "Found " << fragmentHandle->size() << " normal CAEN fragments " << std::endl;
             for (size_t ii = 0; ii < fragmentHandle->size(); ++ii){
                 auto frag = fragmentHandle->at(ii);
-                auto fragid = frag.fragmentID() - ffragid_offset;
-                if (fuse_hardcoded_map){
-                    auto it = std::find(fhardcoded_fragid_map.begin(), fhardcoded_fragid_map.end(), fragid);
-                    if (it != fhardcoded_fragid_map.end()){
-                        auto idx = std::distance(fhardcoded_fragid_map.begin(), it);
-                        fragid = idx;
-                    }
-                }
-                if (std::find(fignore_fragid.begin(), fignore_fragid.end(), fragid) != fignore_fragid.end())
-                    continue;
-                board_frag_v.at(fragid).push_back(frag);
+                get_fragments(frag,board_frag_v);
             }
         }
         fragmentHandle.removeProduct();
@@ -326,9 +303,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         }
         if (std::find(fignore_fragid.begin(), fignore_fragid.end(), iboard) != fignore_fragid.end())
             continue;
-        std::cout << "Board " << iboard << " has " << board_frag_v.at(iboard).size() << " trigger(s) || " ;
+        if (fdebug>1) std::cout << "Board " << iboard << " has " << board_frag_v.at(iboard).size() << " trigger(s) || " ;
     }
-    std::cout << std::endl;
+    if (fdebug>1) std::cout << std::endl;
 
     // store the waveform itself
     // store the waveform start time (for OpDetWaveform timestamp)
@@ -423,6 +400,26 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
 
     evt.put(std::move(wvfmVec),fch_instance_name);  
     evt.put(std::move(twvfmVec),ftr_instance_name);
+}
+
+void sbndaq::SBNDPMTDecoder::get_fragments(artdaq::Fragment & frag, std::vector<std::vector<artdaq::Fragment>> & board_frag_v){
+    auto fragid = frag.fragmentID() - ffragid_offset;
+    if (fuse_set_map){
+        auto it = std::find(fset_fragid_map.begin(), fset_fragid_map.end(), fragid);
+        if (it != fset_fragid_map.end()){
+            auto idx = std::distance(fset_fragid_map.begin(), it);
+            fragid = idx;
+        }
+    }
+    // ignore boards that are not in the list of boards to ignore
+    if (std::find(fignore_fragid.begin(), fignore_fragid.end(), fragid) != fignore_fragid.end())
+        return;
+    // check our fragid, is it reasonable?
+    if (fragid<0 || fragid >= fn_caenboards){
+        std::cout << "Fragment ID " << fragid << " is out of range. FragID offset/FragID map may be misconfigured, or this FragID is not attributed to a PMT Digitizer. Skipping this fragment..." << std::endl;
+        return;
+    }
+    board_frag_v.at(fragid).push_back(frag);
 }
 
 void sbndaq::SBNDPMTDecoder::get_waveforms(artdaq::Fragment & frag, std::vector<std::vector<uint16_t>> & wvfm_v){
