@@ -6,8 +6,7 @@ void ObservablesResolution(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_resolution";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  //  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
-  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
