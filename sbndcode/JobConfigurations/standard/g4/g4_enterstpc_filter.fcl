@@ -13,7 +13,7 @@ physics.simulate: [ rns
                   , pdfastsimout
                   # , simdrift #1D drift sim no longer run
                   , filter # Adding filter
-                  # , mcreco #mc reco added to detsim
+                  , mcreco
                 ]
 
 
