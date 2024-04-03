@@ -38,19 +38,20 @@ void Observables(const TString productionVersion, const SelectionParams &selecti
       TCanvas *canvas = new TCanvas("c_" + plot.name, "c_" + plot.name);
       canvas->cd();
 
-      const int ncolumns = selectionParams.name == "ncpizero_incl" ? 4 : 3;
-      const float xlow   = selectionParams.name == "ncpizero_incl" ? .25 : .24;
-      const float xhigh  = selectionParams.name == "ncpizero_incl" ? .8 : .83;
-      const float ylow   = selectionParams.name == "ncpizero_incl" ? .8 : .78;
+      const int ncolumns = 3;
+      const float xlow   = .24;
+      const float xhigh  = .83;
+      const float ylow   = .78;
+      const float yhigh  = .87;
 
-      MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, .87}, ncolumns);
+      MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, yhigh}, ncolumns);
 
       const TString wip = "SBND Work-in-progress";
-      AddText(canvas, wip, kGray+2, {.2, .92, .25, .93}, 0.025, 12);
+      AddText(canvas, wip, kGray+2, {.2, .92, .25, .93}, 0.035, 12);
       const TString sim = "SBND Simulation";
-      AddText(canvas, sim, kGray+2, {.2, .95, .25, .96}, 0.025, 12);
+      AddText(canvas, sim, kGray+2, {.2, .96, .25, .97}, 0.035, 12);
       const TString potString = POTString(false);
-      AddText(canvas, potString, kGray+2, {.8, .92, .9, .93}, 0.03, 32);
+      AddText(canvas, potString, kGray+2, {.8, .92, .9, .93}, 0.035, 32);
 
       canvas->SaveAs(saveDir + "/" + plot.name + ".png");
       canvas->SaveAs(saveDir + "/" + plot.name + ".pdf");

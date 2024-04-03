@@ -56,15 +56,18 @@ void Selection(const TString productionVersion, const SelectionParams &selection
 
           plot.axes_labels += POTString();
 
-          const int ncolumns = selectionParams.name == "ncpizero_incl" ? 4 : 3;
-          const float xlow   = selectionParams.name == "ncpizero_incl" ? .25 : .24;
-          const float xhigh  = selectionParams.name == "ncpizero_incl" ? .8 : .83;
-          const float ylow   = selectionParams.name == "ncpizero_incl" ? .8 : .78;
+          const int ncolumns = 3;
+          const float xlow   = .24;
+          const float xhigh  = .83;
+          const float ylow   = .78;
+          const float yhigh  = .87;
 
-          MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, .87}, ncolumns);
+          MakeStackedPlot(canvas, samples, plot, cut, selectionParams.categories, {xlow, ylow, xhigh, yhigh}, ncolumns);
 
           const TString wip = "SBND Work-in-progress";
-          AddText(canvas, wip, kGray+2, {.8, .92, .9, .93}, 0.025, 32);
+          AddText(canvas, wip, kGray+2, {.8, .92, .9, .93}, 0.035, 32);
+          const TString sim = "SBND Simulation";
+          AddText(canvas, sim, kGray+2, {.8, .96, .9, .97}, 0.035, 32);
 
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".png");
           canvas->SaveAs(saveDir + "/" + cut.name + "/" + plot.name + "_" + cut.name + ".pdf");

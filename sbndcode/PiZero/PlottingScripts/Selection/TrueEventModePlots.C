@@ -37,10 +37,12 @@ void TrueEventModePlots(const TString productionVersion, const std::vector<VarBi
           gStyle->SetLabelSize(0.06, "x");
           gStyle->SetTitleSize(0.06, "x");
 
-          MakeStackedPlot(canvas, samples, plot, signal, event_modes, {.25, .8, .8, .87}, 5);
+          MakeStackedPlot(canvas, samples, plot, signal, event_modes_simple, {.25, .8, .8, .87}, 4);
 
           const TString wip = "SBND Work-in-progress";
           AddText(canvas, wip, kGray+2, {.2, .92, .25, .93}, 0.03, 12);
+          const TString sim = "SBND Simulation";
+          AddText(canvas, sim, kGray+2, {.2, .95, .25, .96}, 0.03, 12);
           const TString potString = POTString(false);
           AddText(canvas, potString, kGray+2, {.8, .92, .9, .93}, 0.03, 32);
 

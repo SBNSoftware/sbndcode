@@ -38,7 +38,7 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
 
           TLegend *lEventModes = new TLegend(.55, .28, .9, .8);
 
-          for(auto const& category : event_modes)
+          for(auto const& category : event_modes_simple)
             {
               for(int i = 0; i < plotSet.nbins2; ++i)
                 {
@@ -61,28 +61,30 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
                 }
             }
 
-          gStyle->SetPaperSize(45,80);
+          gStyle->SetPaperSize(30,80);
 
-          TCanvas *canvas = new TCanvas("canvas","canvas");
+          TCanvas *canvas = new TCanvas("canvas","canvas", 933, 1000);
           canvas->cd();
           canvas->Draw();
 
           const TString wip = "SBND Work-in-progress";
-          AddText(canvas, wip, kGray+2, {0., .97, .2, .99}, 0.025, 12);
+          AddText(canvas, wip, kGray+2, {0., .945, .2, .965}, 0.025, 12);
+          const TString sim = "SBND Simulation";
+          AddText(canvas, sim, kGray+2, {0, .97, .2, .99}, 0.025, 12);
           const TString potString = POTString(false);
           AddText(canvas, potString, kGray+2, {.8, .97, 1., .99}, 0.025, 32);
 
           for(int i = 0; i < plotSet.nbins2; ++i)
             {
               canvas->cd();
-              int x = i % 3;
-              int y = i / 3;
+              int x = i % 2;
+              int y = i / 2;
 
               TPad *pad = new TPad(Form("pad%i", i), "",
-                                   0.01 + x * 0.33,
-                                   0.97 - (y+1) * 0.32,
-                                   (x+1) * 0.33,
-                                   0.96 - y * 0.32);
+                                   0.01 + x * 0.485,
+                                   0.94 - (y+1) * 0.31,
+                                   (x+1) * 0.485,
+                                   0.93 - y * 0.31);
 
               pad->Draw();
               pad->cd();
@@ -90,8 +92,18 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
 
               stacks[i]->SetMaximum(1.2 * stacks[i]->GetMaximum());
               stacks[i]->Draw("hist");
+              stacks[i]->GetXaxis()->SetTitleOffset(1.15);
               stacks[i]->GetYaxis()->SetTitleOffset(1.4);
               stacks[i]->GetYaxis()->SetNdivisions(405);
+
+              TPaveText* title = (TPaveText*)gPad->FindObject("title");
+              title->SetY1NDC(0.89);
+              title->SetY2NDC(0.97);
+              title->SetX1NDC(0.2);
+              title->SetX2NDC(.9);
+              title->SetTextAlign(22);
+              gPad->Modified();
+              gPad->Update();
 
               if(i==0)
                 lEventModes->Draw();

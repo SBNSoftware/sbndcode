@@ -19,7 +19,8 @@ const std::vector<Cut> true_categories = {
 const std::vector<Cut> ncpizero_incl_categories = {
   { "Signal", "slc_true_event_type_incl==0 && slc_comp>.5", "Signal (NC 1#pi^{0})", kMagenta+2, 1., "Signal (NC 1$\\pi^{0}$)" },
   { "NC", "slc_true_event_type_incl==2", "Other NC", kOrange+2, },
-  { "CCNuMu", "slc_true_event_type_incl==3", "CC #nu_{#mu}", kGreen+2, 1., "CC $\\nu_{\\mu}$" },
+  { "CCNuMuPiZero", "slc_true_event_type_incl==3 && slc_true_n_neutral_pions > 0", "CC #nu_{#mu} #pi^{0}", kGreen+2, 1., "CC $\\nu_{\\mu} \\pi^{0}$" },
+  { "OtherCCNuMu", "slc_true_event_type_incl==3 && slc_true_n_neutral_pions == 0", "Other CC #nu_{#mu}", kSpring+2, 1., "Other CC $\\nu_{\\mu}$" },
   { "CCNuE", "slc_true_event_type_incl==4", "CC #nu_{e}", kCyan+2, 1., "CC $\\nu_{e}$" },
   { "Dirt", "slc_true_event_type_incl==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_incl==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
@@ -92,4 +93,11 @@ const std::vector<Cut> event_modes = {
   { "MEC", "nu_mode==10", "MEC", kMagenta+2 },
   { "Resonant", "nu_mode==1", "Resonant", kGreen+1 },
   { "DIS", "nu_mode==2", "DIS", kOrange+2 }
+};
+
+const std::vector<Cut> event_modes_simple = {
+  { "Coherent", "nu_mode==3", "Coherent", kRed },
+  { "Resonant", "nu_mode==1", "Resonant", kGreen+1 },
+  { "DIS", "nu_mode==2", "DIS", kOrange+2 },
+  { "Other", "nu_mode==0 || nu_mode==10", "Other", kBlue },
 };

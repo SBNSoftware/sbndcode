@@ -31,6 +31,7 @@ void IOP_ROCs(const std::vector<PIDTraining> &trainings, const TString save_file
   gROOT->ForceStyle();
 
   const TString wip = "SBND Work-in-progress";
+  const TString sim = "SBND Simulation";
 
   const int pdgKey = motherPDG == -1 ? pdg : motherPDG * 1e6 + pdg;
 
@@ -213,6 +214,7 @@ void IOP_ROCs(const std::vector<PIDTraining> &trainings, const TString save_file
       TCanvas *cSep = new TCanvas("cSep", "cSep");
       cSep->cd();
       cSep->SetLogy();
+      cSep->SetTopMargin(.08);
 
       hSignalPFP->SetLineColor(kBlue+2);
       hBackgroundPFP->SetLineColor(kRed+2);
@@ -228,13 +230,14 @@ void IOP_ROCs(const std::vector<PIDTraining> &trainings, const TString save_file
       hBackgroundPFP->DrawNormalized("][hist");
       hSignalPFP->DrawNormalized("][histsame");
 
-      TLegend* sepLeg = new TLegend(.3, .85, .85, .92);
+      TLegend* sepLeg = new TLegend(.3, .83, .85, .9);
       sepLeg->SetNColumns(2);
       sepLeg->AddEntry(hSignalPFP, pdgStrings.at(pdgKey), "f");
       sepLeg->AddEntry(hBackgroundPFP, "Other", "f");
       sepLeg->Draw();
 
-      AddText(cSep, wip, kGray+2, {.8, .95, .95, .96}, 0.025, 32);
+      AddText(cSep, wip, kGray+2, {.8, .94, .95, .95}, 0.035, 32);
+      AddText(cSep, sim, kGray+2, {.8, .975, .95, .985}, 0.035, 32);
 
       cSep->SaveAs(save_dir + "/sep/sep_" + save_file_suffix + "_" + training.name + ".png");
       cSep->SaveAs(save_dir + "/sep/sep_" + save_file_suffix + "_" + training.name + ".pdf");
@@ -246,6 +249,7 @@ void IOP_ROCs(const std::vector<PIDTraining> &trainings, const TString save_file
   TCanvas *cROC = new TCanvas("cROC","cROC");
   cROC->SetGrid();
   cROC->cd();
+  cROC->SetTopMargin(.08);
 
   gStyle->SetLabelSize(0.06,"xy");
 
@@ -255,7 +259,8 @@ void IOP_ROCs(const std::vector<PIDTraining> &trainings, const TString save_file
   multi->GetYaxis()->SetNdivisions(20);
   //  rocLeg->Draw();
 
-  AddText(cROC, wip, kGray+2, {.8, .95, .95, .96}, 0.025, 32);
+  AddText(cROC, wip, kGray+2, {.8, .94, .95, .95}, 0.035, 32);
+  AddText(cROC, sim, kGray+2, {.8, .975, .95, .985}, 0.035, 32);
 
   cROC->SaveAs(save_dir + "/roc_" + save_file_suffix + ".png");
   cROC->SaveAs(save_dir + "/roc_" + save_file_suffix + ".pdf");

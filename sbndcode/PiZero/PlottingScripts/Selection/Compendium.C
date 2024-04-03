@@ -27,5 +27,5 @@ void Compendium(const TString &productionVersion)
   PhotonRecoEff(productionVersion);
   RecoEff(productionVersion);
   TrueEventMode2DPlots(productionVersion, true_observables_twod_sets, true_categories);
-  TrueEventModePlots(productionVersion, true_observables, true_categories);
+  TrueEventModePlots(productionVersion, true_observables_var_bin, true_categories);
 }
