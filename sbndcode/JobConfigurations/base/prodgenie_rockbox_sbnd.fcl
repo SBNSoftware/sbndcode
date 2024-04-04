@@ -33,6 +33,7 @@
 
 #include "genie_sbnd.fcl"
 #include "larg4_sbnd.fcl"
+#include "mlreco_sbnd.fcl"
 
 
 process_name: GenieGen
@@ -84,11 +85,14 @@ physics:
 
     # The geant4 step
     largeant: @local::sbnd_larg4
+
+    # Merge dropped and nominal MCParticle into separate list
+    simplemerge: @local::sbnd_simplemerge
   }
 
   #define the producer and filter modules for this path, order matters,
-  simulatetpc:  [ rns, generator, loader, largeant, tpcfilter ]
-  simulatedirt: [ rns, generator, loader, largeant, "!tpcfilter", dirtfilter ]
+  simulatetpc:  [ rns, generator, loader, largeant, simplemerge, tpcfilter ]
+  simulatedirt: [ rns, generator, loader, largeant, simplemerge, "!tpcfilter", dirtfilter ]
 
   #define the output stream, there could be more than one if using filters
   # By deault Keep everything in one file:
