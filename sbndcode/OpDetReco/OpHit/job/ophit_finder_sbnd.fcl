@@ -37,7 +37,7 @@ sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMax:  14749 #bear: update to 14k basel
 sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMin:  14741 #bear: update to 14k baseline
 sbnd_ophit_finder_pmt.PedAlgoPset.Threshold:    1.7
 sbnd_ophit_finder_pmt.PedAlgoPset.MaxSigma:     1.7
-sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 7
+sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 13 #bear: update to 14k baseline (noise is larger too)
 
 #
 # OpHit for XArapuca - Configuration
