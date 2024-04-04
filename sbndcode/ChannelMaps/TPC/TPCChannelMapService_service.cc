@@ -75,6 +75,7 @@ SBND::TPCChannelMapService::TPCChannelMapService(fhicl::ParameterSet const& pset
       if (planestr == "Y") c.plane = 2;
       if (c.plane == 10) c.valid = false;
       c.WIBQFSP = atoi(qfspstr.substr(3,1).c_str());
+      c.asicchan = c.FEMBCh % 16;
 
       fChanInfoFromFEMInfo[c.FEMCrate][c.FEM][c.FEMCh] = c;
       fChanInfoFromOfflChan[c.offlchan] = c;
