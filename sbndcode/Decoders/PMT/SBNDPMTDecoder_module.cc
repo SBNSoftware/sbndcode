@@ -106,7 +106,6 @@ private:
 
     std::vector<uint> fch_map;
 
-    uint32_t fnch; // number of channels
     // histogram info  
     std::stringstream histname; //raw waveform hist name
     art::ServiceHandle<art::TFileService> tfs;
