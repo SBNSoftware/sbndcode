@@ -28,6 +28,7 @@
 # modules
 #
 #include "larg4_sbnd.fcl"
+#include "mlreco_sbnd.fcl"
 #include "ionandscint_sbnd.fcl"
 #include "PDFastSim_sbnd.fcl"
 # include "simdrift_sbnd.fcl"
@@ -66,6 +67,9 @@ physics:
     # The geant4 step
     largeant: @local::sbnd_larg4
 
+    # Create sim enegy deposit lite from geant4 sed
+    sedlite: @local::sbnd_sedlite
+
     # Creation of ionization electrons and scintillation photons, inside the active volume
     ionandscint: @local::sbnd_ionandscint
 
@@ -87,12 +91,16 @@ physics:
     # Generic CRT
     genericcrt: @local::sbnd_genericCRT
 
+    # Merges dropped and nominal MCParticle into separate vector
+    simplemerge: @local::sbnd_simplemerge
   }
 
   # All producers and filters modules for this path, order matters
   simulate: [ rns
             , loader
             , largeant
+            , simplemerge
+            , sedlite
             , ionandscint
             , ionandscintout
             , pdfastsim

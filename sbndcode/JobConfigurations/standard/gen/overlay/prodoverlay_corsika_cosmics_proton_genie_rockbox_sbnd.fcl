@@ -22,9 +22,15 @@ physics.producers.largeant: @local::sbnd_merge_overlay_sim_sources
 # Tell the dirt filter to use the new largeant for neutrinos only
 physics.filters.dirtfilter.SimEnergyDepModuleName: "largeantnu:LArG4DetectorServicevolTPCActive"
 
+#Merge dropped MCParticle collections
+physics.producers.largeantdropped: @local::sbnd_merge_dropped_mcpart_overlay
+
+# Change simple merge inputs since we're using an overlay sample
+physics.producers.simplemerge.InputSourcesLabels: ["largeant", "largeantdropped"]
+
 // Change the name of largeant->largeantnu and add corsika and largeant merging
-physics.simulatetpc:  [ rns, generator, loader, largeantnu, tpcfilter, corsika, largeantcosmic, largeant ]
-physics.simulatedirt: [ rns, generator, loader, largeantnu, "!tpcfilter", dirtfilter, corsika, largeantcosmic, largeant ]
+physics.simulatetpc:  [ rns, generator, loader, largeantnu, tpcfilter, corsika, largeantcosmic, largeant, largeantdropped, simplemerge ]
+physics.simulatedirt: [ rns, generator, loader, largeantnu, "!tpcfilter", dirtfilter, corsika, largeantcosmic, largeant, largeantdropped, simplemerge ]
 
 # Drop the GENIE and CORSIKA specific largeant instances and keep the merged output
 outputs.out1.outputCommands: [ "keep *_*_*_*"

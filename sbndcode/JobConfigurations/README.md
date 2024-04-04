@@ -10,10 +10,26 @@ At the time of writing, the core workflow (for BNB + Dirt + Cosmics) is the foll
 - `reco1_sce_lite.fcl`
 - `reco2_sce.fcl`
 
+The intime workflow is as follows:
+
+- `prodcorsika_proton_intime_filter_sce.fcl`
+- `g4_sce_simphotontime_filter_lite.fcl`
+- `detsim_sce_lite.fcl`
+- `reco1_sce_lite.fcl`
+- `reco2_sce.fcl`
+
+For single generator workflows (like intrinsic neutrino samples) the workflow is the following:
+
+- `<your-gen>.fcl`
+- `g4_sce_lite.fcl`
+- `detsim_sce_lite.fcl`
+- `reco1_sce_lite.fcl`
+- `reco2_sce.fcl`
+
 This may well change over the coming months, and this README should be updated to reflect this.
 
 ** ALERT **
 
 Due to changes implemented in sbndcode PRs #408 and #409 the 1D simulation fcls will not work out of the box, they will need editing by experts!
 
-Henry Lay & Lynn Tung - Feb 2024
+Henry Lay, Lynn Tung, Bear Carlson - Feb 2024
