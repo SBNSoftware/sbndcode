@@ -25,6 +25,7 @@ outputs: {
   rootout: {
     module_type: "RootOutput"
     fileName: "%ifb_tpcdecode.root"
+    dataTier: "decoded-raw"
   }
 }
 
