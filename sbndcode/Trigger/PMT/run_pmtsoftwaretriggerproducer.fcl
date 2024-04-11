@@ -22,8 +22,8 @@ outputs:
 {
  out1:
  {
-   module_type: RootOutput
-   fileName:    "test.root" #default file name, can override from command line with -o or --output
+   @table::sbnd_rootoutput
+   #fileName:    "test.root" #default file name, can override from command line with -o or --output
    fastCloning: true
  }
 }
