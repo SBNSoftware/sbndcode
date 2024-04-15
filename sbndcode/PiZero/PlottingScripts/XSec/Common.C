@@ -110,18 +110,29 @@ TH1F* Fold(const TH1F* hist, const TH2D* matrix)
 
   for(int i = 0; i < hist->GetNbinsX() + 2; ++i)
     {
-      double sum = 0;
+      double sum     = 0;
+      double quaderr = 0.;
 
       for(int j = 0; j < hist->GetNbinsX() + 2; ++j)
         {
           if(isnan(matrix->GetBinContent(j + 1, i + 1)))
             continue;
-          std::cout << i << " " << j << " " << hist->GetBinContent(j) << " " << matrix->GetBinContent(j + 1, i + 1) << " "
-                    <<  hist->GetBinContent(j) * matrix->GetBinContent(j + 1, i + 1) << std::endl;
-          sum += hist->GetBinContent(j) * matrix->GetBinContent(j + 1, i + 1);
+
+	  const double value = hist->GetBinContent(j) * matrix->GetBinContent(j + 1, i + 1) * (hist->GetBinWidth(j) / hist->GetBinWidth(i));
+	  sum += value;
+
+	  double localError = 0.;
+	  if(hist->GetBinContent(j) > 0)
+	    localError += TMath::Power(hist->GetBinError(j) / hist->GetBinContent(j), 2);
+	  if(matrix->GetBinContent(j + 1, i + 1) > 0)
+	    localError += TMath::Power(matrix->GetBinError(j + 1, i + 1) / matrix->GetBinContent(j + 1, i + 1), 2);
+
+	  localError = TMath::Sqrt(localError);
+
+	  quaderr += TMath::Power(localError * value, 2);
         }
-      std::cout << "\t" << sum << '\n' << std::endl;
       folded_hist->SetBinContent(i, sum);
+      folded_hist->SetBinError(i, TMath::Sqrt(quaderr));
     }
 
   return folded_hist;
