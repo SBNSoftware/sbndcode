@@ -118,18 +118,18 @@ TH1F* Fold(const TH1F* hist, const TH2D* matrix)
           if(isnan(matrix->GetBinContent(j + 1, i + 1)))
             continue;
 
-	  const double value = hist->GetBinContent(j) * matrix->GetBinContent(j + 1, i + 1) * (hist->GetBinWidth(j) / hist->GetBinWidth(i));
-	  sum += value;
+          const double value = hist->GetBinContent(j) * matrix->GetBinContent(j + 1, i + 1) * (hist->GetBinWidth(j) / hist->GetBinWidth(i));
+          sum += value;
 
-	  double localError = 0.;
-	  if(hist->GetBinContent(j) > 0)
-	    localError += TMath::Power(hist->GetBinError(j) / hist->GetBinContent(j), 2);
-	  if(matrix->GetBinContent(j + 1, i + 1) > 0)
-	    localError += TMath::Power(matrix->GetBinError(j + 1, i + 1) / matrix->GetBinContent(j + 1, i + 1), 2);
+          double localError = 0.;
+          if(hist->GetBinContent(j) > 0)
+            localError += TMath::Power(hist->GetBinError(j) / hist->GetBinContent(j), 2);
+          if(matrix->GetBinContent(j + 1, i + 1) > 0)
+            localError += TMath::Power(matrix->GetBinError(j + 1, i + 1) / matrix->GetBinContent(j + 1, i + 1), 2);
 
-	  localError = TMath::Sqrt(localError);
+          localError = TMath::Sqrt(localError);
 
-	  quaderr += TMath::Power(localError * value, 2);
+          quaderr += TMath::Power(localError * value, 2);
         }
       folded_hist->SetBinContent(i, sum);
       folded_hist->SetBinError(i, TMath::Sqrt(quaderr));
