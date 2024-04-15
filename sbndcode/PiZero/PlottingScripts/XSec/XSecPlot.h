@@ -550,7 +550,7 @@ class XSecPlot {
   TH1F* GetPredictedHist0D(const TString selName, const TString genName, /*const TString flavour, */const float scale = 1.)
   {
     //    TFile* xsecFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_" + flavour + ".root", "READ");
-    TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv17/forwardfoldingmatrices/forwardfoldingmatrices.root", "READ");
+    TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/forwardfoldingmatrices/forwardfoldingmatrices.root", "READ");
 
     TFile* xsecFileNuMu  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_numu.root", "READ");
     TFile* xsecFileANuMu = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anumu.root", "READ");
@@ -579,7 +579,7 @@ class XSecPlot {
   TH1F* GetPredictedHist1D(const TString selName, const TString genName, /*const TString flavour, */const float scale = 1.)
   {
     //    TFile* xsecFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_" + flavour + ".root", "READ");
-    TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroAv17/forwardfoldingmatrices/forwardfoldingmatrices.root", "READ");
+    TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/forwardfoldingmatrices/forwardfoldingmatrices.root", "READ");
 
     TFile* xsecFileNuMu  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_numu.root", "READ");
     TFile* xsecFileANuMu = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anumu.root", "READ");
@@ -611,9 +611,9 @@ class XSecPlot {
     histNuMu->Add(histNuE);
     histNuMu->Add(histANuE);
 
-    //TH1F* foldedHist = Fold(histNuMu, foldingmatrix);
+    TH1F* foldedHist = Fold(histNuMu, foldingmatrix);
 
-    TH1F* foldedHist = histNuMu;
+    //TH1F* foldedHist = histNuMu;
     foldedHist->Scale(scale);
     return foldedHist;
   }
