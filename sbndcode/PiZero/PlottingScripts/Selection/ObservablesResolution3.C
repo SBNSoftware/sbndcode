@@ -19,15 +19,17 @@ void ObservablesResolution3(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_resolution_3";
   gSystem->Exec("mkdir -p " + saveDir);
 
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *ncpizeroEvents = new TChain("ncpizeroana/events");
-  ncpizeroEvents->Add(ncpizeroFile);
+  TChain *events = new TChain("ncpizeroana/events");
+  events->Add(rockboxFile);
+  events->Add(ncpizeroFile);
 
-  InitialiseTree(ncpizeroEvents);
+  InitialiseTree(events);
 
   const double pizeroMomBins[9] = { 0., 60., 120., 180., 240., 300., 400., 600., 1000. };
   const double showerEnBins[13] = { 0., 30., 60., 90., 120., 150., 180., 220., 260., 300., 400., 600., 1000. };
@@ -81,13 +83,13 @@ void ObservablesResolution3(const TString productionVersion)
   TH1F *hPiZeroOpenAngleResolutionCorr = new TH1F("hPiZeroOpenAngleResolutionCorr", ";#theta_{#gamma_{1}#gamma_{2}} (Reco - True) (#circ);#pi^{0}", 33, -150, 180);
   TH1F *hPiZeroOpenAngleResolutionFitted = new TH1F("hPiZeroOpenAngleResolutionFitted", ";#theta_{#gamma_{1}#gamma_{2}} (Reco - True) (#circ);#pi^{0}", 33, -150, 180);
 
-  const int N = ncpizeroEvents->GetEntries();
+  const int N = events->GetEntries();
 
   int nsig = 0, nsigGood = 0;
   
   for(int ev_i = 0; ev_i < N; ++ev_i)
     {
-      ncpizeroEvents->GetEntry(ev_i);
+      events->GetEntry(ev_i);
       
       for(int slc_i = 0; slc_i < slc_true_event_type_incl->size(); ++slc_i)
         {

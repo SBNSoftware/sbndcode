@@ -13,13 +13,15 @@ void SelectionEff(const TString productionVersion, const SelectionParams &select
   const std::array<float, 4> legend_position = { .23, .82, .87, .91 };
   const int ncolumns                         = 3;
 
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *rockboxEvents = new TChain("ncpizeroana/events");
-  rockboxEvents->Add(rockboxFile);
+  TChain *events = new TChain("ncpizeroana/events");
+  events->Add(rockboxFile);
+  events->Add(ncpizeroFile);
 
   for(auto const &plot : plots)
     {
@@ -34,7 +36,7 @@ void SelectionEff(const TString productionVersion, const SelectionParams &select
         bins[i] = plot.bins[i];
 
       TH1F *trueHist = new TH1F("trueHist" + plot.name, plot.axes_labels, plot.nbins, bins);
-      rockboxEvents->Draw(trueVarName + ">>trueHist" + plot.name, selectionParams.true_category);
+      events->Draw(trueVarName + ">>trueHist" + plot.name, selectionParams.true_category);
       NormaliseEntriesByBinWidth(trueHist);
 
       TCut currentCut = "";
@@ -48,7 +50,7 @@ void SelectionEff(const TString productionVersion, const SelectionParams &select
           currentCut += cut.cut;
 
           recoHists.emplace_back(new TH1F("recoHist" + plot.name + cut.name, plot.axes_labels, plot.nbins, bins));
-          rockboxEvents->Draw(plot.var + ">>recoHist" + plot.name + cut.name, selectionParams.categories[0].cut + currentCut);
+          events->Draw(plot.var + ">>recoHist" + plot.name + cut.name, selectionParams.categories[0].cut + currentCut);
           NormaliseEntriesByBinWidth(recoHists.back());
 
           colours.push_back(cut.colour);

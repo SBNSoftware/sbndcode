@@ -7,15 +7,17 @@ void ObservablesResolution2(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_resolution_2";
   gSystem->Exec("mkdir -p " + saveDir);
 
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *ncpizeroEvents = new TChain("ncpizeroana/events");
-  ncpizeroEvents->Add(ncpizeroFile);
+  TChain *events = new TChain("ncpizeroana/events");
+  events->Add(rockboxFile);
+  events->Add(ncpizeroFile);
 
-  InitialiseTree(ncpizeroEvents);
+  InitialiseTree(events);
 
   const double pizeroMomBins[9] = { 0., 60., 120., 180., 240., 300., 400., 600., 1000. };
   const double cosThetaBins[10] = { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. };
@@ -53,11 +55,11 @@ void ObservablesResolution2(const TString productionVersion)
   TH1F *hCosThetaPiZeroResolutionEnergyCorr = new TH1F("hCosThetaPiZeroResolutionEnergyCorr", ";cos(#theta_{#pi^{0}}) (Reco - True);#pi^{0}", 50, -2, 3);
   TH1F *hCosThetaPiZeroResolutionBoth = new TH1F("hCosThetaPiZeroResolutionBoth", ";cos(#theta_{#pi^{0}}) (Reco - True);#pi^{0}", 50, -2, 3);
 
-  const int N = ncpizeroEvents->GetEntries();
+  const int N = events->GetEntries();
   
   for(int ev_i = 0; ev_i < N; ++ev_i)
     {
-      ncpizeroEvents->GetEntry(ev_i);
+      events->GetEntry(ev_i);
       
       for(int slc_i = 0; slc_i < slc_true_event_type_incl->size(); ++slc_i)
         {

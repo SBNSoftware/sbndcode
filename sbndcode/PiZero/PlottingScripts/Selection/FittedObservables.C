@@ -266,17 +266,19 @@ std::vector<double> GetCovMatrix(const TString productionVersion, const bool dia
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_resolution_2";
   gSystem->Exec("mkdir -p " + saveDir);
 
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *ncpizeroEvents = new TChain("ncpizeroana/events");
-  ncpizeroEvents->Add(ncpizeroFile);
+  TChain *events = new TChain("ncpizeroana/events");
+  events->Add(rockboxFile);
+  events->Add(ncpizeroFile);
 
-  InitialiseTree(ncpizeroEvents);
+  InitialiseTree(events);
 
-  const int N = ncpizeroEvents->GetEntries();
+  const int N = events->GetEntries();
 
   struct PiZero
   {
@@ -292,7 +294,7 @@ std::vector<double> GetCovMatrix(const TString productionVersion, const bool dia
 
   for(int ev_i = 0; ev_i < N; ++ev_i)
     {
-      ncpizeroEvents->GetEntry(ev_i);
+      events->GetEntry(ev_i);
 
       for(int slc_i = 0; slc_i < slc_true_event_type_incl->size(); ++slc_i)
         {

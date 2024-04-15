@@ -6,13 +6,15 @@ void ObservablesResolution(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_resolution";
   gSystem->Exec("mkdir -p " + saveDir);
 
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *ncpizeroEvents = new TChain("ncpizeroana/events");
-  ncpizeroEvents->Add(ncpizeroFile);
+  TChain *events = new TChain("ncpizeroana/events");
+  events->Add(rockboxFile);
+  events->Add(ncpizeroFile);
 
   const double pizeroMomBins[9] = { 0., 60., 120., 180., 240., 300., 400., 600., 1000. };
   const double showerEnBins[13] = { 0., 30., 60., 90., 120., 150., 180., 220., 260., 300., 400., 600., 1000. };
@@ -22,8 +24,8 @@ void ObservablesResolution(const TString productionVersion)
   cPiZeroMomFractionalResolution->cd();
 
   TH1F *hPiZeroMomFractionalResolution = new TH1F("hPiZeroMomFractionalResolution", ";p_{#pi^{0}} (#frac{Reco - True}{True});#pi^{0}", 25, -1, 1);
-  ncpizeroEvents->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3)/(slc_true_pz_pizero_mom*1e3)>>hPiZeroMomFractionalResolution",
-                       "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
+  events->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3)/(slc_true_pz_pizero_mom*1e3)>>hPiZeroMomFractionalResolution",
+               "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
   hPiZeroMomFractionalResolution->SetLineColor(kMagenta+2);
   hPiZeroMomFractionalResolution->Draw();
@@ -35,8 +37,8 @@ void ObservablesResolution(const TString productionVersion)
   cPiZeroMomResolution->cd();
 
   TH1F *hPiZeroMomResolution = new TH1F("hPiZeroMomResolution", ";p_{#pi^{0}} (MeV) (Reco - True);#pi^{0}", 25, -300, 200);
-  ncpizeroEvents->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3)>>hPiZeroMomResolution",
-                       "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
+  events->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3)>>hPiZeroMomResolution",
+               "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
   hPiZeroMomResolution->SetLineColor(kMagenta+2);
   hPiZeroMomResolution->Draw();
@@ -49,8 +51,8 @@ void ObservablesResolution(const TString productionVersion)
   cPiZeroMom2DFractionalResolution->SetRightMargin(.2);
 
   TH2F *hPiZeroMom2DFractionalResolution = new TH2F("hPiZeroMom2DFractionalResolution", ";True p_{#pi^{0}} (MeV);p_{#pi^{0}} (#frac{Reco - True}{True});#pi^{0}", 8, pizeroMomBins, 25, -1, 1);
-  ncpizeroEvents->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3)/(slc_true_pz_pizero_mom*1e3):slc_true_pz_pizero_mom*1e3>>hPiZeroMom2DFractionalResolution",
-                       "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
+  events->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3)/(slc_true_pz_pizero_mom*1e3):slc_true_pz_pizero_mom*1e3>>hPiZeroMom2DFractionalResolution",
+               "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
   hPiZeroMom2DFractionalResolution->Draw("colz");
   hPiZeroMom2DFractionalResolution->GetYaxis()->SetTitleOffset(1.25);
@@ -63,8 +65,8 @@ void ObservablesResolution(const TString productionVersion)
   cPiZeroMom2DResolution->SetRightMargin(.2);
 
   TH2F *hPiZeroMom2DResolution = new TH2F("hPiZeroMom2DResolution", ";True p_{#pi^{0}} (MeV);p_{#pi^{0}} (MeV) (Reco - True);#pi^{0}", 8, pizeroMomBins, 25, -300, 200);
-  ncpizeroEvents->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3):slc_true_pz_pizero_mom*1e3>>hPiZeroMom2DResolution",
-                       "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
+  events->Draw("(slc_best_pzc_pizero_mom-slc_true_pz_pizero_mom*1e3):slc_true_pz_pizero_mom*1e3>>hPiZeroMom2DResolution",
+               "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
   hPiZeroMom2DResolution->Draw("colz");
   hPiZeroMom2DResolution->GetYaxis()->SetTitleOffset(1.25);
@@ -76,8 +78,8 @@ void ObservablesResolution(const TString productionVersion)
   cCosineThetaPiZeroFractionalResolution->cd();
 
   TH1F *hCosineThetaPiZeroFractionalResolution = new TH1F("hCosineThetaPiZeroFractionalResolution", ";cos(#theta_{#pi^{0}}) (#frac{Reco - True}{True});#pi^{0}", 40, -1, 1);
-  ncpizeroEvents->Draw("(slc_best_pzc_cos_theta_pizero-slc_true_pz_cos_theta_pizero)/slc_true_pz_cos_theta_pizero>>hCosineThetaPiZeroFractionalResolution",
-                       "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
+  events->Draw("(slc_best_pzc_cos_theta_pizero-slc_true_pz_cos_theta_pizero)/slc_true_pz_cos_theta_pizero>>hCosineThetaPiZeroFractionalResolution",
+               "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
   hCosineThetaPiZeroFractionalResolution->SetLineColor(kMagenta+2);
   hCosineThetaPiZeroFractionalResolution->Draw();
@@ -89,8 +91,8 @@ void ObservablesResolution(const TString productionVersion)
   cCosineThetaPiZeroResolution->cd();
 
   TH1F *hCosineThetaPiZeroResolution = new TH1F("hCosineThetaPiZeroResolution", ";cos(#theta_{#pi^{0}}) (Reco - True);#pi^{0}", 40, -2, 2);
-  ncpizeroEvents->Draw("(slc_best_pzc_cos_theta_pizero-slc_true_pz_cos_theta_pizero)>>hCosineThetaPiZeroResolution",
-                       "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
+  events->Draw("(slc_best_pzc_cos_theta_pizero-slc_true_pz_cos_theta_pizero)>>hCosineThetaPiZeroResolution",
+               "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
   hCosineThetaPiZeroResolution->SetLineColor(kMagenta+2);
   hCosineThetaPiZeroResolution->Draw();
@@ -103,8 +105,8 @@ void ObservablesResolution(const TString productionVersion)
   cCosineThetaPiZero2DFractionalResolution->SetRightMargin(.2);
 
   TH2F *hCosineThetaPiZero2DFractionalResolution = new TH2F("hCosineThetaPiZero2DFractionalResolution", ";True cos(#theta_{#pi^{0}});cos(#theta_{#pi^{0}}) (#frac{Reco - True}{True});#pi^{0}", 9, cosThetaBins, 40, -1, 1);
-  ncpizeroEvents->Draw("(slc_best_pzc_cos_theta_pizero-slc_true_pz_cos_theta_pizero)/(slc_true_pz_cos_theta_pizero):slc_true_pz_cos_theta_pizero>>hCosineThetaPiZero2DFractionalResolution",
-                       "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
+  events->Draw("(slc_best_pzc_cos_theta_pizero-slc_true_pz_cos_theta_pizero)/(slc_true_pz_cos_theta_pizero):slc_true_pz_cos_theta_pizero>>hCosineThetaPiZero2DFractionalResolution",
+               "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
   hCosineThetaPiZero2DFractionalResolution->Draw("colz");
   hCosineThetaPiZero2DFractionalResolution->GetYaxis()->SetTitleOffset(1.25);
@@ -117,8 +119,8 @@ void ObservablesResolution(const TString productionVersion)
   cCosineThetaPiZero2DResolution->SetRightMargin(.2);
 
   TH2F *hCosineThetaPiZero2DResolution = new TH2F("hCosineThetaPiZero2DResolution", ";True cos(#theta_{#pi^{0}});cos(#theta_{#pi^{0}}) (Reco - True);#pi^{0}", 9, cosThetaBins, 40, -2, 2);
-  ncpizeroEvents->Draw("(slc_best_pzc_cos_theta_pizero-slc_true_pz_cos_theta_pizero):slc_true_pz_cos_theta_pizero>>hCosineThetaPiZero2DResolution",
-                       "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
+  events->Draw("(slc_best_pzc_cos_theta_pizero-slc_true_pz_cos_theta_pizero):slc_true_pz_cos_theta_pizero>>hCosineThetaPiZero2DResolution",
+               "slc_sel_incl && slc_true_event_type_incl==0 && slc_comp>.5");
 
   hCosineThetaPiZero2DResolution->Draw("colz");
   hCosineThetaPiZero2DResolution->GetYaxis()->SetTitleOffset(1.25);
@@ -130,8 +132,8 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergy->cd();
 
   TH1F *hShowerEnergy = new TH1F("hShowerEnergy", ";True E (MeV));#gamma/ 30 MeV", 12, showerEnBins);
-  ncpizeroEvents->Draw("1e3*slc_pfp_true_energy>>hShowerEnergy",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw("1e3*slc_pfp_true_energy>>hShowerEnergy",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   NormaliseEntriesByBinWidth(hShowerEnergy, 30);
   hShowerEnergy->SetLineColor(kMagenta+2);
@@ -145,8 +147,8 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergyReco->cd();
 
   TH1F *hShowerEnergyReco = new TH1F("hShowerEnergyReco", ";Reco E (MeV));#gamma / 30 MeV", 12, showerEnBins);
-  ncpizeroEvents->Draw("slc_pfp_shower_energy>>hShowerEnergyReco",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw("slc_pfp_shower_energy>>hShowerEnergyReco",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   NormaliseEntriesByBinWidth(hShowerEnergyReco, 30);
   hShowerEnergyReco->SetLineColor(kMagenta+2);
@@ -160,8 +162,8 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergyFractionalResolution->cd();
 
   TH1F *hShowerEnergyFractionalResolution = new TH1F("hShowerEnergyFractionalResolution", ";E (#frac{Reco - True}{True});#gamma", 40, -1, 1);
-  ncpizeroEvents->Draw("(slc_pfp_shower_energy-1e3*slc_pfp_true_energy)/(1e3*slc_pfp_true_energy)>>hShowerEnergyFractionalResolution",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw("(slc_pfp_shower_energy-1e3*slc_pfp_true_energy)/(1e3*slc_pfp_true_energy)>>hShowerEnergyFractionalResolution",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   hShowerEnergyFractionalResolution->SetLineColor(kMagenta+2);
   hShowerEnergyFractionalResolution->GetYaxis()->SetTitleOffset(1.25);
@@ -174,8 +176,8 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergyResolution->cd();
 
   TH1F *hShowerEnergyResolution = new TH1F("hShowerEnergyResolution", ";E (MeV) (Reco - True);#gamma", 50, -300, 200);
-  ncpizeroEvents->Draw("(slc_pfp_shower_energy-slc_pfp_true_energy*1e3)>>hShowerEnergyResolution",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw("(slc_pfp_shower_energy-slc_pfp_true_energy*1e3)>>hShowerEnergyResolution",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   hShowerEnergyResolution->SetLineColor(kMagenta+2);
   hShowerEnergyResolution->Draw();
@@ -188,8 +190,8 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergy2DFractionalResolution->SetRightMargin(.2);
 
   TH2F *hShowerEnergy2DFractionalResolution = new TH2F("hShowerEnergy2DFractionalResolution", ";True E (MeV);E (#frac{Reco - True}{True});#gamma", 12, showerEnBins, 40, -1, 1);
-  ncpizeroEvents->Draw("(slc_pfp_shower_energy-slc_pfp_true_energy*1e3)/(slc_pfp_true_energy*1e3):slc_pfp_true_energy*1e3>>hShowerEnergy2DFractionalResolution",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw("(slc_pfp_shower_energy-slc_pfp_true_energy*1e3)/(slc_pfp_true_energy*1e3):slc_pfp_true_energy*1e3>>hShowerEnergy2DFractionalResolution",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   hShowerEnergy2DFractionalResolution->Draw("colz");
   hShowerEnergy2DFractionalResolution->GetYaxis()->SetTitleOffset(1.25);
@@ -215,8 +217,8 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergy2DRecoFractionalResolution->SetRightMargin(.2);
 
   TH2F *hShowerEnergy2DRecoFractionalResolution = new TH2F("hShowerEnergy2DRecoFractionalResolution", ";Reco E (MeV);E (#frac{Reco - True}{True});#gamma", 12, showerEnBins, 40, -1, 1);
-  ncpizeroEvents->Draw("(slc_pfp_shower_energy-slc_pfp_true_energy*1e3)/(slc_pfp_true_energy*1e3):slc_pfp_shower_energy>>hShowerEnergy2DRecoFractionalResolution",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw("(slc_pfp_shower_energy-slc_pfp_true_energy*1e3)/(slc_pfp_true_energy*1e3):slc_pfp_shower_energy>>hShowerEnergy2DRecoFractionalResolution",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   hShowerEnergy2DRecoFractionalResolution->Draw("colz");
   hShowerEnergy2DRecoFractionalResolution->GetYaxis()->SetTitleOffset(1.25);
@@ -247,8 +249,8 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergy2DResolution->SetRightMargin(.2);
 
   TH2F *hShowerEnergy2DResolution = new TH2F("hShowerEnergy2DResolution", ";True E (MeV);E (MeV) (Reco - True);#gamma", 12, showerEnBins, 50, -300, 200);
-  ncpizeroEvents->Draw("(slc_pfp_shower_energy-slc_pfp_true_energy*1e3):slc_pfp_true_energy*1e3>>hShowerEnergy2DResolution",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw("(slc_pfp_shower_energy-slc_pfp_true_energy*1e3):slc_pfp_true_energy*1e3>>hShowerEnergy2DResolution",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   hShowerEnergy2DResolution->Draw("colz");
   hShowerEnergy2DResolution->GetYaxis()->SetTitleOffset(1.25);
@@ -268,12 +270,12 @@ void ObservablesResolution(const TString productionVersion)
   TString angleTrk      = "acos(" + dotProductTrk + "/(" + magRecoTrk + "*" + magTrue + ")) * TMath::RadToDeg()";
 
   TH1F *hPhotonShowerDirectionResolution = new TH1F("hPhotonShowerDirectionResolution", ";#theta_{True Reco} (#circ);#gamma", 36, 0, 180);
-  ncpizeroEvents->Draw(angleShw + ">>hPhotonShowerDirectionResolution",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw(angleShw + ">>hPhotonShowerDirectionResolution",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   TH1F *hPhotonTrackDirectionResolution = new TH1F("hPhotonTrackDirectionResolution", ";#theta_{True Reco} (#circ);#gamma", 36, 0, 180);
-  ncpizeroEvents->Draw(angleTrk + ">>hPhotonTrackDirectionResolution",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw(angleTrk + ">>hPhotonTrackDirectionResolution",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   hPhotonShowerDirectionResolution->SetLineColor(kMagenta+2);
   hPhotonTrackDirectionResolution->SetLineColor(kCyan+2);
@@ -326,8 +328,8 @@ void ObservablesResolution(const TString productionVersion)
   cPhotonShowerDirection2DResolution->SetRightMargin(.2);
 
   TH2F *hPhotonShowerDirection2DResolution = new TH2F("hPhotonShowerDirection2DResolution", ";True E (MeV);#theta_{True Reco} (#circ);#gamma", 12, showerEnBins, 36, 0, 180);
-  ncpizeroEvents->Draw(angleShw + ":slc_pfp_true_energy*1e3>>hPhotonShowerDirection2DResolution",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw(angleShw + ":slc_pfp_true_energy*1e3>>hPhotonShowerDirection2DResolution",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   hPhotonShowerDirection2DResolution->Draw("colz");
   hPhotonShowerDirection2DResolution->GetYaxis()->SetTitleOffset(1.25);
@@ -340,8 +342,8 @@ void ObservablesResolution(const TString productionVersion)
   cPhotonTrackDirection2DResolution->SetRightMargin(.2);
 
   TH2F *hPhotonTrackDirection2DResolution = new TH2F("hPhotonTrackDirection2DResolution", ";True E (MeV);#theta_{True Reco} (#circ);#gamma", 12, showerEnBins, 36, 0, 180);
-  ncpizeroEvents->Draw(angleTrk + ":slc_pfp_true_energy*1e3>>hPhotonTrackDirection2DResolution",
-                       "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
+  events->Draw(angleTrk + ":slc_pfp_true_energy*1e3>>hPhotonTrackDirection2DResolution",
+               "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
   hPhotonTrackDirection2DResolution->Draw("colz");
   hPhotonTrackDirection2DResolution->GetYaxis()->SetTitleOffset(1.25);

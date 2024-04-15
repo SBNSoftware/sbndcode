@@ -8,19 +8,22 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/true_event_modes_two_d";
   gSystem->Exec("mkdir -p " + saveDir);
 
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *ncpizeroEvents = new TChain("ncpizeroana/events");
-  ncpizeroEvents->Add(ncpizeroFile);
+  TChain *events = new TChain("ncpizeroana/events");
+  events->Add(rockboxFile);
+  events->Add(ncpizeroFile);
 
-  TChain *ncpizeroSubruns = new TChain("ncpizeroana/subruns");
-  ncpizeroSubruns->Add(ncpizeroFile);
+  TChain *subruns = new TChain("ncpizeroana/subruns");
+  subruns->Add(rockboxFile);
+  subruns->Add(ncpizeroFile);
 
-  const double ncpizeroPOT     = GetPOT(ncpizeroSubruns);
-  const double ncpizeroScaling = goalPOT / ncpizeroPOT;
+  const double pot     = GetPOT(subruns);
+  const double scaling = goalPOT / pot;
 
   for(auto const& signal : signals)
     {
@@ -44,10 +47,10 @@ void TrueEventMode2DPlots(const TString productionVersion, const std::vector<Two
                 {
                   TH1F *hTemp = new TH1F(Form("h%s%s%i%s", plotSet.name.Data(), signal.name.Data(), i, category.name.Data()), "", plotSet.nbins1, bins1);
 
-                  ncpizeroEvents->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), signal.name.Data(), i, category.name.Data()),
-                                       Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + signal.cut);
+                  events->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), signal.name.Data(), i, category.name.Data()),
+                               Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + signal.cut);
 
-                  hTemp->Scale(ncpizeroScaling);
+                  hTemp->Scale(scaling);
                   NormaliseEntriesByBinWidth(hTemp, plotSet.scale1);
                   hTemp->SetFillColorAlpha(category.colour, 0.4);
                   hTemp->SetLineColor(category.colour);

@@ -8,20 +8,23 @@ void TrueEventModePlots(const TString productionVersion, const std::vector<VarBi
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/true_event_modes";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
-  TChain *rockboxEvents = new TChain("ncpizeroana/events");
-  rockboxEvents->Add(rockboxFile);
-  TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
-  rockboxSubruns->Add(rockboxFile);
+  TChain *events = new TChain("ncpizeroana/events");
+  events->Add(rockboxFile);
+  events->Add(ncpizeroFile);
+  TChain *subruns = new TChain("ncpizeroana/subruns");
+  subruns->Add(rockboxFile);
+  subruns->Add(ncpizeroFile);
 
-  const double rockboxPOT     = GetPOT(rockboxSubruns);
-  const double rockboxScaling = goalPOT / rockboxPOT;
+  const double pot     = GetPOT(subruns);
+  const double scaling = goalPOT / pot;
 
-  std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling } };
+  std::vector<Sample<TChain>> samples = { { "rockbox", events, scaling } };
 
   for(auto const& signal : signals)
     {
