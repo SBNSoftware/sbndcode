@@ -1,7 +1,7 @@
 #include "/exp/sbnd/app/users/hlay/plotting_utils/HistUtils.C"
+#include "Common.C"
 #include "XSecPlot.h"
 #include "Selection.h"
-#include "Common.C"
 
 void ForwardFoldingMatrix(const TString productionVersion)
 {
@@ -12,7 +12,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/forwardfoldingmatrices";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   TChain *rockboxSlices = new TChain("ncpizeroxsectrees/slices");
   rockboxSlices->Add(rockboxFile);
@@ -21,13 +21,23 @@ void ForwardFoldingMatrix(const TString productionVersion)
   std::vector<int> event_type(selections.size(), -1);
   double pizero_mom, cos_theta_pizero, reco_pizero_mom, reco_cos_theta_pizero;
 
+  rockboxSlices->SetBranchStatus("*", 0);
+  rockboxSlices->SetBranchStatus("pizero_mom", 1);
+  rockboxSlices->SetBranchStatus("cos_theta_pizero", 1);
+  rockboxSlices->SetBranchStatus("reco_pizero_mom_fit", 1);
+  rockboxSlices->SetBranchStatus("reco_cos_theta_pizero", 1);
+
   rockboxSlices->SetBranchAddress("pizero_mom", &pizero_mom);
   rockboxSlices->SetBranchAddress("cos_theta_pizero", &cos_theta_pizero);
-  rockboxSlices->SetBranchAddress("reco_pizero_mom", &reco_pizero_mom);
+  rockboxSlices->SetBranchAddress("reco_pizero_mom_fit", &reco_pizero_mom);
   rockboxSlices->SetBranchAddress("reco_cos_theta_pizero", &reco_cos_theta_pizero);
+
 
   for(auto&& [ selection_i, selection ] : enumerate(selections))
     {
+      rockboxSlices->SetBranchStatus(selection.signal, 1);
+      rockboxSlices->SetBranchStatus(selection.cut, 1);
+
       rockboxSlices->SetBranchAddress(selection.signal, &event_type[selection_i]);
       rockboxSlices->SetBranchAddress(selection.cut, &sel[selection_i]);
     }
@@ -83,7 +93,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
           hForwardFoldPiZeroMom->GetYaxis()->SetBinLabel(i, std::to_string(i-1).c_str());
         }
 
-      hForwardFoldPiZeroMom->Draw("colztext");
+      hForwardFoldPiZeroMom->Draw("colzetext");
       hForwardFoldPiZeroMom->Write("hForwardFold_pizero_mom_" + selection.name);
 
       piZeroMomCanvas->SaveAs(saveDir + "/" + selection.name + "_pizero_mom.png");
@@ -108,7 +118,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
           hForwardFoldCosThetaPiZero->GetYaxis()->SetBinLabel(i, std::to_string(i-1).c_str());
         }
 
-      hForwardFoldCosThetaPiZero->Draw("colztext");
+      hForwardFoldCosThetaPiZero->Draw("colzetext");
       hForwardFoldCosThetaPiZero->Write("hForwardFold_cos_theta_pizero_" + selection.name);
 
       cosThetaPiZeroCanvas->SaveAs(saveDir + "/" + selection.name + "_cos_theta_pizero.png");
