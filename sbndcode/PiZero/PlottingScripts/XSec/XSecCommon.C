@@ -70,6 +70,8 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
       float                            comp;
       double                           val0;
       double                           val1;
+      double                           trueVal0;
+      double                           trueVal1;
 
       for(int w = 0; w < nweights; ++w)
         weights.push_back(new std::vector<float>());
@@ -154,11 +156,21 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
         {
           XSecPlot *plot = selection.plot;
 
-          const std::string var0 = plot->GetVar0();
-          const std::string var1 = plot->GetVar1();
+          std::string var0 = plot->GetVar0();
+          std::string var1 = plot->GetVar1();
+
+          sample.slicetree->SetBranchAddress(var0.c_str(), &trueVal0);
+          sample.slicetree->SetBranchAddress(var1.c_str(), &trueVal1);
+
+          if(var0 == "pizero_mom")
+            var0 += "_fit";
+
+          if(var1 == "pizero_mom")
+            var1 += "_fit";
 
           sample.slicetree->SetBranchAddress(selection.signal, &event_type[selection_i]);
           sample.slicetree->SetBranchAddress(selection.cut, &sel[selection_i]);
+
           sample.slicetree->SetBranchAddress(("reco_" + var0).c_str(), &val0);
           sample.slicetree->SetBranchAddress(("reco_" + var1).c_str(), &val1);
 
@@ -197,13 +209,19 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
 
                   for(Bin* bin : plot->GetBins())
                     {
-                      if(!bin->InBin(val0, val1))
+                      if(!bin->InBin(val0, val1) && !bin->InBin(trueVal0, trueVal1))
                         continue;
 
-                      bin->IncrementNominalBinCount(scaling);
+                      if(bin->InBin(trueVal0, trueVal1) && (event_type[selection_i] == 0 && comp > .5))
+                        bin->IncrementNominalBinSelSignalTrueBin(scaling);
 
-                      if(!(event_type[selection_i] == 0 && comp > .5))
-                        bin->IncrementNominalBinBkgdCount(scaling);
+                      if(bin->InBin(val0, val1))
+                        {
+                          bin->IncrementNominalBinCount(scaling);
+
+                          if(!(event_type[selection_i] == 0 && comp > .5))
+                            bin->IncrementNominalBinBkgdCount(scaling);
+                        }
 
                       int weight_i = 0;
 
@@ -216,10 +234,16 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
 
                               for(int univ = 0; univ < weightSet.nunivs; ++univ)
                                 {
-                                  bin->IncrementUniverseBinCount(name, univ, scaling * weights[weight_i]->at(univ));
+                                  if(bin->InBin(trueVal0, trueVal1) && (event_type[selection_i] == 0 && comp > .5))
+                                    bin->IncrementUniverseBinSelSignalTrueBin(name, univ, scaling * weights[weight_i]->at(univ));
 
-                                  if(!(event_type[selection_i] == 0 && comp > .5))
-                                    bin->IncrementUniverseBinBkgdCount(name, univ, scaling * weights[weight_i]->at(univ));
+                                  if(bin->InBin(val0, val1))
+                                    {
+                                      bin->IncrementUniverseBinCount(name, univ, scaling * weights[weight_i]->at(univ));
+
+                                      if(!(event_type[selection_i] == 0 && comp > .5))
+                                        bin->IncrementUniverseBinBkgdCount(name, univ, scaling * weights[weight_i]->at(univ));
+                                    }
                                 }
                               ++weight_i;
                             }

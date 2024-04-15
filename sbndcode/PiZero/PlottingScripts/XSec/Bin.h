@@ -141,6 +141,11 @@ class Bin {
     _nominalBin->IncrementTrueSignal(increment);
   }
 
+  void IncrementNominalBinSelSignalTrueBin(const double &increment)
+  {
+    _nominalBin->IncrementSelSignalTrueBin(increment);
+  }
+
   void IncrementUniverseBinCount(const std::string &weightName, const int univ, 
                                  const double &increment)
   {
@@ -157,6 +162,12 @@ class Bin {
                                       const double &increment)
   {
     _universeBins->at(weightName).at(univ)->IncrementTrueSignal(increment);
+  }
+
+  void IncrementUniverseBinSelSignalTrueBin(const std::string &weightName, const int univ,
+                                            const double &increment)
+  {
+    _universeBins->at(weightName).at(univ)->IncrementSelSignalTrueBin(increment);
   }
 
   void CalculateSystFracErrorsMedianPercentiles()

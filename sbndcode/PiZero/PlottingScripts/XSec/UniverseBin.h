@@ -11,6 +11,7 @@ class UniverseBin {
   double _count;
   double _bkgdCount;
   double _trueSignal;
+  double _selSignalTrueBin;
   double _scaleFactor;
   double _efficiency;
   double _purity;
@@ -23,17 +24,18 @@ class UniverseBin {
   
   UniverseBin(const double binWidth, const double nTargets, const double intFlux)
     {
-      _xsec        = def_double;
-      _count       = 0.;
-      _bkgdCount   = 0.;
-      _trueSignal  = 0.;
-      _scaleFactor = def_double;
-      _purity      = def_double;
-      _efficiency  = def_double;
-      _fracStatErr = def_double;
-      _binWidth    = binWidth;
-      _nTargets    = nTargets;
-      _intFlux     = intFlux;
+      _xsec             = def_double;
+      _count            = 0.;
+      _bkgdCount        = 0.;
+      _trueSignal       = 0.;
+      _selSignalTrueBin = 0.;
+      _scaleFactor      = def_double;
+      _purity           = def_double;
+      _efficiency       = def_double;
+      _fracStatErr      = def_double;
+      _binWidth         = binWidth;
+      _nTargets         = nTargets;
+      _intFlux          = intFlux;
     }
 
   void Print()
@@ -58,7 +60,7 @@ class UniverseBin {
   void Update()
   {
     _purity      = (_count - _bkgdCount) / _count;
-    _efficiency  = (_count - _bkgdCount) / _trueSignal;
+    _efficiency  = _selSignalTrueBin / _trueSignal;
     _fracStatErr = std::sqrt(_count - _bkgdCount) / (_count - _bkgdCount);
   }
 
@@ -129,5 +131,10 @@ class UniverseBin {
   void IncrementTrueSignal(const double &increment)
   {
     _trueSignal += increment;
+  }
+
+  void IncrementSelSignalTrueBin(const double &increment)
+  {
+    _selSignalTrueBin += increment;
   }
 };
