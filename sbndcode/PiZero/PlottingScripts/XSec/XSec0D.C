@@ -213,7 +213,8 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
 
       TH1F *geniePred = selection.plot->GetPredictedHist0D(selection.name, "genie", 1e-38);
       geniePred->SetLineColor(kOrange+2);
-      geniePred->Draw("hist][same");
+      geniePred->SetMarkerStyle(1);
+      geniePred->Draw("histe][same");
 
       TPaveText* title = (TPaveText*)gPad->FindObject("title");
       title->SetY1NDC(0.92);
