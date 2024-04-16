@@ -8,24 +8,29 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_twod";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString intimeFile   = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
   TChain *rockboxEvents = new TChain("ncpizeroana/events");
   rockboxEvents->Add(rockboxFile);
+  TChain *ncpizeroEvents = new TChain("ncpizeroana/events");
+  ncpizeroEvents->Add(ncpizeroFile);
   TChain *intimeEvents = new TChain("ncpizeroana/events");
   intimeEvents->Add(intimeFile);
 
   TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
   rockboxSubruns->Add(rockboxFile);
+  TChain *ncpizeroSubruns = new TChain("ncpizeroana/subruns");
+  ncpizeroSubruns->Add(ncpizeroFile);
   TChain *intimeSubruns = new TChain("ncpizeroana/subruns");
   intimeSubruns->Add(intimeFile);
 
-  double rockboxScaling, intimeScaling;
-  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
+  double rockboxScaling, ncpizeroScaling, intimeScaling;
+  GetScaling(rockboxSubruns, ncpizeroSubruns, intimeSubruns, rockboxScaling, ncpizeroScaling, intimeScaling);
 
   Cut cut = TotalCut(selectionParams.cuts);
 
@@ -43,21 +48,36 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
 
       TLegend *lSelCategories = new TLegend(.55, .28, .9, .8);
 
+      int category_i = 0;
+
       for(auto const& category : selectionParams.categories)
         {
           for(int i = 0; i < plotSet.nbins2; ++i)
             {
               TH1F *hTemp = new TH1F(Form("h%s%s%i%s", plotSet.name.Data(), cut.name.Data(), i, category.name.Data()), "", plotSet.nbins1, bins1);
 
-              rockboxEvents->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
-                                  Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + cut.cut);
+              if(selectionParams.rockbox_mask.count(category_i) == 0)
+                {
+                  rockboxEvents->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
+                                      Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + cut.cut);
+
+                  hTemp->Scale(rockboxScaling);
+                }
+              else if(selectionParams.ncpizero_mask.count(category_i) == 0)
+                {
+                  ncpizeroEvents->Draw(Form("%s>>h%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
+                                       Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + cut.cut);
+
+                  hTemp->Scale(ncpizeroScaling);
+                }
+              else
+                std::cout << "What? " << category_i << std::endl;
 
               TH1F *hTempIntime = new TH1F(Form("hIntime%s%s%i%s", plotSet.name.Data(), cut.name.Data(), i, category.name.Data()), "", plotSet.nbins1, bins1);
 
               intimeEvents->Draw(Form("%s>>hIntime%s%s%i%s", plotSet.var1.Data(), plotSet.name.Data(), cut.name.Data(), i, category.name.Data()),
                                  Form("%s>%f && %s<%f", plotSet.var2.Data(), plotSet.bins2[i], plotSet.var2.Data(), plotSet.bins2[i+1]) + category.cut + cut.cut);
 
-              hTemp->Scale(rockboxScaling);
               hTempIntime->Scale(intimeScaling);
               hTemp->Add(hTempIntime);
               NormaliseEntriesByBinWidth(hTemp, plotSet.scale1);
@@ -71,6 +91,8 @@ void Observables2DPlots(const TString productionVersion, const std::vector<TwoDP
 
               stacks[i]->Add(hTemp);
             }
+
+          ++category_i;
         }
 
       gStyle->SetPaperSize(45,80);

@@ -13,14 +13,12 @@ void SelectionEff(const TString productionVersion, const SelectionParams &select
   const std::array<float, 4> legend_position = { .23, .82, .87, .91 };
   const int ncolumns                         = 3;
 
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
   TChain *events = new TChain("ncpizeroana/events");
-  events->Add(rockboxFile);
   events->Add(ncpizeroFile);
 
   for(auto const &plot : plots)

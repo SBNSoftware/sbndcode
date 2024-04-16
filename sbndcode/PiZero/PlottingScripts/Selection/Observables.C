@@ -8,26 +8,32 @@ void Observables(const TString productionVersion, const SelectionParams &selecti
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables/" + selectionParams.name;
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString intimeFile   = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
   TChain *rockboxEvents = new TChain("ncpizeroana/events");
   rockboxEvents->Add(rockboxFile);
+  TChain *ncpizeroEvents = new TChain("ncpizeroana/events");
+  ncpizeroEvents->Add(ncpizeroFile);
   TChain *intimeEvents = new TChain("ncpizeroana/events");
   intimeEvents->Add(intimeFile);
 
   TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
   rockboxSubruns->Add(rockboxFile);
+  TChain *ncpizeroSubruns = new TChain("ncpizeroana/subruns");
+  ncpizeroSubruns->Add(ncpizeroFile);
   TChain *intimeSubruns = new TChain("ncpizeroana/subruns");
   intimeSubruns->Add(intimeFile);
 
-  double rockboxScaling, intimeScaling;
-  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
+  double rockboxScaling, ncpizeroScaling, intimeScaling;
+  GetScaling(rockboxSubruns, ncpizeroSubruns, intimeSubruns, rockboxScaling, ncpizeroScaling, intimeScaling);
 
-  std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling },
+  std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling, selectionParams.rockbox_mask },
+                                          { "ncpizero", ncpizeroEvents, ncpizeroScaling, selectionParams.ncpizero_mask },
                                           { "intime", intimeEvents, intimeScaling }
   };
 

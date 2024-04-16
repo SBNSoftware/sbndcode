@@ -9,7 +9,7 @@ SelectionParams ncpizero_incl = { "ncpizero_incl",
                                   ncpizero_incl_categories,
                                   true_ncpizero_incl_cut,
                                   { 0, 8 },
-                                  { 1, 2, 3, 4, 6, 7 }
+                                  { 1, 2, 3, 4, 5, 6, 7 }
 };
 
 SelectionParams ncpizero_0p0pi = { "ncpizero_0p0pi",
