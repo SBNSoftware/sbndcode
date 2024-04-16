@@ -12,39 +12,40 @@ void ForwardFoldingMatrix(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/forwardfoldingmatrices";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
-  TChain *rockboxSlices = new TChain("ncpizeroxsectrees/slices");
-  rockboxSlices->Add(rockboxFile);
+  TChain *slices = new TChain("ncpizeroxsectrees/slices");
+  slices->Add(rockboxFile);
 
   std::deque<bool> sel(selections.size(), false);
   std::vector<int> event_type(selections.size(), -1);
   double pizero_mom, cos_theta_pizero, reco_pizero_mom, reco_cos_theta_pizero;
 
-  rockboxSlices->SetBranchStatus("*", 0);
-  rockboxSlices->SetBranchStatus("pizero_mom", 1);
-  rockboxSlices->SetBranchStatus("cos_theta_pizero", 1);
-  rockboxSlices->SetBranchStatus("reco_pizero_mom_fit", 1);
-  rockboxSlices->SetBranchStatus("reco_cos_theta_pizero", 1);
+  slices->SetBranchStatus("*", 0);
+  slices->SetBranchStatus("pizero_mom", 1);
+  slices->SetBranchStatus("cos_theta_pizero", 1);
+  slices->SetBranchStatus("reco_pizero_mom_fit", 1);
+  slices->SetBranchStatus("reco_cos_theta_pizero", 1);
 
-  rockboxSlices->SetBranchAddress("pizero_mom", &pizero_mom);
-  rockboxSlices->SetBranchAddress("cos_theta_pizero", &cos_theta_pizero);
-  rockboxSlices->SetBranchAddress("reco_pizero_mom_fit", &reco_pizero_mom);
-  rockboxSlices->SetBranchAddress("reco_cos_theta_pizero", &reco_cos_theta_pizero);
+  slices->SetBranchAddress("pizero_mom", &pizero_mom);
+  slices->SetBranchAddress("cos_theta_pizero", &cos_theta_pizero);
+  slices->SetBranchAddress("reco_pizero_mom_fit", &reco_pizero_mom);
+  slices->SetBranchAddress("reco_cos_theta_pizero", &reco_cos_theta_pizero);
 
 
   for(auto&& [ selection_i, selection ] : enumerate(selections))
     {
-      rockboxSlices->SetBranchStatus(selection.signal, 1);
-      rockboxSlices->SetBranchStatus(selection.cut, 1);
+      slices->SetBranchStatus(selection.signal, 1);
+      slices->SetBranchStatus(selection.cut, 1);
 
-      rockboxSlices->SetBranchAddress(selection.signal, &event_type[selection_i]);
-      rockboxSlices->SetBranchAddress(selection.cut, &sel[selection_i]);
+      slices->SetBranchAddress(selection.signal, &event_type[selection_i]);
+      slices->SetBranchAddress(selection.cut, &sel[selection_i]);
     }
 
   TFile *outfile = new TFile(saveDir + "/forwardfoldingmatrices.root", "RECREATE");
 
-  const int N = rockboxSlices->GetEntries();
+  const int N = slices->GetEntries();
 
   const double piZeroMomBins[9]       = { 0., 60., 120., 180., 240., 300., 400., 600., 1000. };
   const double cosThetaPiZeroBins[10] = { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. };
@@ -59,7 +60,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
 
       for(int slc = 0; slc < N; ++slc)
         {
-          rockboxSlices->GetEntry(slc);
+          slices->GetEntry(slc);
 
           if(sel[selection_i] && event_type[selection_i] == 0)
             {
