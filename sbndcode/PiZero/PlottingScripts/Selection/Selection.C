@@ -12,8 +12,9 @@ void Selection(const TString productionVersion, const SelectionParams &selection
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/selection/" + selectionParams.name;
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString intimeFile   = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -22,18 +23,23 @@ void Selection(const TString productionVersion, const SelectionParams &selection
 
   TChain *rockboxEvents = new TChain("ncpizeroana/events");
   rockboxEvents->Add(rockboxFile);
+  TChain *ncpizeroEvents = new TChain("ncpizeroana/events");
+  ncpizeroEvents->Add(ncpizeroFile);
   TChain *intimeEvents = new TChain("ncpizeroana/events");
   intimeEvents->Add(intimeFile);
 
   TChain *rockboxSubruns = new TChain("ncpizeroana/subruns");
   rockboxSubruns->Add(rockboxFile);
+  TChain *ncpizeroSubruns = new TChain("ncpizeroana/subruns");
+  ncpizeroSubruns->Add(ncpizeroFile);
   TChain *intimeSubruns = new TChain("ncpizeroana/subruns");
   intimeSubruns->Add(intimeFile);
 
-  double rockboxScaling, intimeScaling;
-  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
+  double rockboxScaling, ncpizeroScaling, intimeScaling;
+  GetScaling(rockboxSubruns, ncpizeroSubruns, intimeSubruns, rockboxScaling, ncpizeroScaling, intimeScaling);
 
-  std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling },
+  std::vector<Sample<TChain>> samples = { { "rockbox", rockboxEvents, rockboxScaling, selectionParams.rockbox_mask },
+                                          { "ncpizero", ncpizeroEvents, ncpizeroScaling, selectionParams.ncpizero_mask },
                                           { "intime", intimeEvents, intimeScaling }
   };
 
@@ -48,6 +54,7 @@ void Selection(const TString productionVersion, const SelectionParams &selection
       
       if(plots.size() != 0)
         gSystem->Exec("mkdir -p " + saveDir + "/" + cut.name);
+
       for(auto plot : plots)
         {
           TCanvas *canvas = new TCanvas("c_" + plot.name + "_" + cut.name,
@@ -97,9 +104,13 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, co
 
   for(auto const& sample : samples)
     {
-      totalSignal       += sample.scaling * sample.tree->Draw("", selectionParams.true_category);
-      totalSignalSlices += sample.scaling * sample.tree->Draw("", selectionParams.categories[0].cut);
-      totalBackSlices   += sample.scaling * sample.tree->Draw("", !(selectionParams.categories[0].cut));
+      if(sample.name == "ncpizero")
+        {
+          totalSignal       += sample.scaling * sample.tree->Draw("", selectionParams.true_category);
+          totalSignalSlices += sample.scaling * sample.tree->Draw("", selectionParams.categories[0].cut);
+        }
+
+      totalBackSlices += sample.scaling * sample.tree->Draw("", !(selectionParams.categories[0].cut));
     }
 
   effPurFile << docStart;
@@ -180,6 +191,9 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, co
 
           for(auto const& sample : samples)
             {
+              if(sample.mask.count(j) != 0)
+                continue;
+
               int slices = sample.tree->Draw("", cut.cut + selectionParams.categories[j].cut);
 
               rawCategorySlices    += slices * (sample.scaling / samples[0].scaling);

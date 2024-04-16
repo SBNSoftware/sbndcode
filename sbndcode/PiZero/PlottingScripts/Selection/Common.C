@@ -58,6 +58,22 @@ void GetScaling(TChain *rockboxSubruns, TChain *intimeSubruns, double &rockboxSc
   intimeScaling = (goalSpills - scaledRockboxSpills) / intimeSpills;
 }
 
+void GetScaling(TChain *rockboxSubruns, TChain *ncpizeroSubruns, TChain *intimeSubruns,
+                double &rockboxScaling, double &ncpizeroScaling, double &intimeScaling)
+{
+  const double rockboxPOT  = GetPOT(rockboxSubruns);
+  const double ncpizeroPOT = GetPOT(ncpizeroSubruns);
+  const int rockboxSpills  = GetGenEvents(rockboxSubruns);
+  const int intimeSpills   = GetGenEvents(intimeSubruns);
+
+  rockboxScaling  = goalPOT / rockboxPOT;
+  ncpizeroScaling = goalPOT / ncpizeroPOT;
+
+  const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
+
+  intimeScaling = (goalSpills - scaledRockboxSpills) / intimeSpills;
+}
+
 TString POTString(const bool brackets = true)
 {
   TString potString = Form("%g POT", goalPOT);
