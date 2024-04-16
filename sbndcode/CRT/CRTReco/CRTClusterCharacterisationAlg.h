@@ -83,9 +83,7 @@ namespace sbnd::crt {
     double fPEAttenuation;
     double fPropDelay;
     double fTimeWalkNorm;
-    double fTimeWalkShift;
-    double fTimeWalkSigma;
-    double fTimeWalkOffset;
+    double fTimeWalkScale;
   };
 }
 
