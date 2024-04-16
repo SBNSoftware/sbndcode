@@ -7,18 +7,17 @@ standard_sbnd_crtsimparams: {
   UseG4RefTimeOffset: true
 
   # Shape parameters for mean time delay vs. Npe
-  TDelayNorm: 4125.74
-  TDelayShift: -300.31
-  TDelaySigma: 90.392
-  TDelayOffset: -1.525
+  TDelayNorm: 15.455
+  TDelayScale: 0.055
 
   # Shape parameters for time delay RMS vs. Npe
-  TDelayRMSGausNorm: 2.09138
-  TDelayRMSGausShift: 7.23993
-  TDelayRMSGausSigma: 170.027
-  TDelayRMSExpNorm: 1.6544
-  TDelayRMSExpShift: 75.6183
-  TDelayRMSExpScale: 79.3543
+  TDelayRMSGausNorm: 2.01522  
+  TDelayRMSGausShift: 10.3433 
+  TDelayRMSGausSigma: 68.8702
+  TDelayRMSExpShift: 1137.51
+  TDelayRMSExpScale: 416.158 
+  TDelayRMSOffSetSlope: 1.37e-3 
+  TDelayRMSOffSet: -11.7338
 
   TriggerDelay: 10 # ns
 
@@ -39,7 +38,7 @@ standard_sbnd_crtsimparams: {
 
   # Mean deposited charge for mips [GeV]
   UseEdep: true
-  Q0: 1.75e-3
+  Q0: 1.53e-3
 
   # ADC model: Pedestal offset [ADC], slope [ADC/photon], RMS [ADC]
   QPed: 0.0 #63.6
