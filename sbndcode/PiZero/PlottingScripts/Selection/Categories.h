@@ -17,11 +17,11 @@ const std::vector<Cut> true_categories = {
 };
 
 const std::vector<Cut> ncpizero_incl_categories = {
-  { "Signal", "slc_true_event_type_incl==0 && slc_comp>.5", "Signal (NC 1#pi^{0})", kMagenta+2, 1., "Signal (NC 1$\\pi^{0}$)" },
+  { "Signal", "slc_true_event_type_incl==0 && slc_comp>.5", "Signal (NC 1#pi^{0})", kMagenta+2, 1., "Signal (NC\\,1$\\pi^{0}$)" },
   { "NC", "slc_true_event_type_incl==2", "Other NC", kOrange+2, },
-  { "CCNuMuPiZero", "slc_true_event_type_incl==3 && slc_true_n_neutral_pions > 0", "CC #nu_{#mu} #pi^{0}", kGreen+2, 1., "CC $\\nu_{\\mu} \\pi^{0}$" },
-  { "OtherCCNuMu", "slc_true_event_type_incl==3 && slc_true_n_neutral_pions == 0", "Other CC #nu_{#mu}", kSpring+2, 1., "Other CC $\\nu_{\\mu}$" },
-  { "CCNuE", "slc_true_event_type_incl==4", "CC #nu_{e}", kCyan+2, 1., "CC $\\nu_{e}$" },
+  { "CCNuMuPiZero", "slc_true_event_type_incl==3 && slc_true_n_neutral_pions > 0", "CC #nu_{#mu} #pi^{0}", kGreen+2, 1., "CC\\,$\\nu_{\\mu} \\pi^{0}$" },
+  { "OtherCCNuMu", "slc_true_event_type_incl==3 && slc_true_n_neutral_pions == 0", "Other CC #nu_{#mu}", kSpring+2, 1., "Other CC\\,$\\nu_{\\mu}$" },
+  { "CCNuE", "slc_true_event_type_incl==4", "CC #nu_{e}", kCyan+2, 1., "CC\\,$\\nu_{e}$" },
   { "Dirt", "slc_true_event_type_incl==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_incl==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
   { "Cosmic", "slc_true_event_type_incl==7 || slc_true_event_type_incl==8", "Cosmic", kRed+1 },
@@ -29,11 +29,11 @@ const std::vector<Cut> ncpizero_incl_categories = {
 };
 
 const std::vector<Cut> ncpizero_0p0pi_categories = {
-  { "Signal", "slc_true_event_type_0p0pi==0 && slc_comp>.5", "Signal (NC 1#pi^{0}0p0#pi^{#pm})", kMagenta+2, 1., "Signal (NC 1$\\pi^{0}0\\textrm{p}0\\pi^{\\pm}$)" },
-  { "NCPiZero", "slc_true_event_type_0p0pi==1", "Other NC 1#pi^{0}", kMagenta-9, 1., "Other NC 1$\\pi^{0}$" },
+  { "Signal", "slc_true_event_type_0p0pi==0 && slc_comp>.5", "Signal (NC 1#pi^{0}0p0#pi^{#pm})", kMagenta+2, 1., "Signal (NC\\,1$\\pi^{0}0\\textrm{p}0\\pi^{\\pm}$)" },
+  { "NCPiZero", "slc_true_event_type_0p0pi==1", "Other NC 1#pi^{0}", kMagenta-9, 1., "Other NC\\,1$\\pi^{0}$" },
   { "NC", "slc_true_event_type_0p0pi==2", "Other NC", kOrange+2 },
-  { "CCNuMu", "slc_true_event_type_0p0pi==3", "CC #nu_{#mu}", kGreen+2, 1., "CC $\\nu_{\\mu}$" },
-  { "CCNuE", "slc_true_event_type_0p0pi==4", "CC #nu_{e}", kCyan+2, 1., "CC $\\nu_{e}$" },
+  { "CCNuMu", "slc_true_event_type_0p0pi==3", "CC #nu_{#mu}", kGreen+2, 1., "CC\\,$\\nu_{\\mu}$" },
+  { "CCNuE", "slc_true_event_type_0p0pi==4", "CC #nu_{e}", kCyan+2, 1., "CC\\,$\\nu_{e}$" },
   { "Dirt", "slc_true_event_type_0p0pi==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_0p0pi==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
   { "Cosmic", "slc_true_event_type_0p0pi==7 || slc_true_event_type_0p0pi==8", "Cosmic", kRed+1 },
@@ -53,11 +53,11 @@ const std::vector<Cut> ncpizero_1p0pi_categories = {
 };
 
 const std::vector<Cut> ncpizero_Np0pi_categories = {
-  { "Signal", "slc_true_event_type_Np0pi==0 && slc_comp>.5", "Signal (NC 1#pi^{0}Np0#pi^{#pm})", kMagenta+2, 1., "Signal (NC 1$\\pi^{0}N\\textrm{p}0\\pi^{\\pm}$)" },
-  { "NCPiZero", "slc_true_event_type_Np0pi==1", "Other NC 1#pi^{0}", kMagenta-9, 1., "Other NC 1$\\pi^{0}$" },
+  { "Signal", "slc_true_event_type_Np0pi==0 && slc_comp>.5", "Signal (NC 1#pi^{0}Np0#pi^{#pm})", kMagenta+2, 1., "Signal (NC\\,1$\\pi^{0}N\\textrm{p}0\\pi^{\\pm}$)" },
+  { "NCPiZero", "slc_true_event_type_Np0pi==1", "Other NC 1#pi^{0}", kMagenta-9, 1., "Other NC\\,1$\\pi^{0}$" },
   { "NC", "slc_true_event_type_Np0pi==2", "Other NC", kOrange+2 },
-  { "CCNuMu", "slc_true_event_type_Np0pi==3", "CC #nu_{#mu}", kGreen+2, 1., "CC $\\nu_{\\mu}$" },
-  { "CCNuE", "slc_true_event_type_Np0pi==4", "CC #nu_{e}", kCyan+2, 1., "CC $\\nu_{e}$" },
+  { "CCNuMu", "slc_true_event_type_Np0pi==3", "CC #nu_{#mu}", kGreen+2, 1., "CC\\,$\\nu_{\\mu}$" },
+  { "CCNuE", "slc_true_event_type_Np0pi==4", "CC #nu_{e}", kCyan+2, 1., "CC\\,$\\nu_{e}$" },
   { "Dirt", "slc_true_event_type_Np0pi==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_Np0pi==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
   { "Cosmic", "slc_true_event_type_Np0pi==7 || slc_true_event_type_Np0pi==8", "Cosmic", kRed+1 },
@@ -77,10 +77,10 @@ const std::vector<Cut> ncpizero_Xp0pi_categories = {
 };
 
 const std::vector<Cut> ccpizero_categories = {
-  { "Signal", "slc_true_event_type_cc==0 && slc_comp>.5", "Signal (CC #nu_{#mu} 1#pi^{0})", kMagenta+2, 1., "Signal (CC $\\nu_{\\mu} 1\\pi^{0}$)" },
+  { "Signal", "slc_true_event_type_cc==0 && slc_comp>.5", "Signal (CC #nu_{#mu} 1#pi^{0})", kMagenta+2, 1., "Signal (CC\\,$\\nu_{\\mu} 1\\pi^{0}$)" },
   { "NC", "slc_true_event_type_cc==2", "NC", kOrange+2 },
-  { "Other CCNuMu", "slc_true_event_type_cc==3", "Other CC #nu_{#mu}", kGreen+2, 1., "Other CC $\\nu_{\\mu}$" },
-  { "CCNuE", "slc_true_event_type_cc==4", "CC #nu_{e}", kCyan+2, 1., "CC $\\nu_{e}$" },
+  { "Other CCNuMu", "slc_true_event_type_cc==3", "Other CC #nu_{#mu}", kGreen+2, 1., "Other CC\\,$\\nu_{\\mu}$" },
+  { "CCNuE", "slc_true_event_type_cc==4", "CC #nu_{e}", kCyan+2, 1., "CC\\,$\\nu_{e}$" },
   { "Dirt", "slc_true_event_type_cc==5", "Dirt", kOrange+3 },
   { "NonFVNu", "slc_true_event_type_cc==6", "Non-FV #nu", kGray+2, 1., "Non-FV $\\nu$" },
   { "Cosmic", "slc_true_event_type_cc==7 || slc_true_event_type_cc==8", "Cosmic", kRed+1 },
