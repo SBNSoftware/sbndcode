@@ -110,7 +110,11 @@ void ProduceCutTable(const TString &saveDir, std::vector<Sample<T>> &samples, co
           totalSignalSlices += sample.scaling * sample.tree->Draw("", selectionParams.categories[0].cut);
         }
 
-      totalBackSlices += sample.scaling * sample.tree->Draw("", !(selectionParams.categories[0].cut));
+      for(int category_i = 1; category_i < selectionParams.categories.size(); ++category_i)
+        {
+          if(sample.mask.count(category_i) == 0)
+            totalBackSlices += sample.scaling * sample.tree->Draw("", selectionParams.categories[category_i].cut);
+        }
     }
 
   effPurFile << docStart;
