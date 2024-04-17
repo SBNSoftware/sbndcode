@@ -66,4 +66,11 @@ ncpizeroxsectrees:
   module_type: NCPiZeroXSecTrees
 }
 
+ncpizerowhere:
+{
+  MCParticleModuleLabel: "largeant"
+
+  module_type: NCPiZeroWhere
+}
+
 END_PROLOG

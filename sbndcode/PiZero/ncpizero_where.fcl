@@ -1,0 +1,25 @@
+#include "ncpizero_modules.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: NCPiZeroAnalyzer
+
+services:
+{
+  @table::sbnd_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    ncpizerowhere: @local::ncpizerowhere
+  }
+
+  ana:       [ ncpizerowhere ]
+  end_paths: [ ana ]
+}
