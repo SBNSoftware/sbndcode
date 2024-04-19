@@ -45,7 +45,7 @@ physics.end_paths:      [ @sequence::physics.end_paths, ana ]
 
 #outputs table overrides
 outputs.out1.dataTier:       "reconstructed"
-outputs.out1.outputCommands: @local::sbnd_reco1_drops
+outputs.out1.outputCommands:  [@sequence::outputs.out1.outputCommands, @sequence::sbnd_reco1_drops]
 
 #FIXME permanently enable SCE in a service rather than override specific params in this way...
 #include "enable_spacecharge_services_sbnd.fcl"
