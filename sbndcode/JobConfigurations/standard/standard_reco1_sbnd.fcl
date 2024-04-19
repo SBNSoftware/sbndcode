@@ -14,10 +14,10 @@
 # job configuration
 #
 
-#include "generic_job_sbnd.fcl"
 #include "workflow_reco1.fcl"
+#include "generic_job_sbnd.fcl"
 #include "drops_reco1.fcl"
-
+#
 process_name: Reco1
 
 #services overrides
