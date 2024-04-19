@@ -45,6 +45,8 @@ physics.producers.pdfastsimoutouttime.SimulationLabel: "ionandscintoutouttime"
 # Add a process that merges the MCParticles
 physics.producers.largeant: @local::sbnd_merge_sim_sources
 physics.producers.largeant.FillMCParticles: true
+physics.producers.largeant.FillSimEnergyDeposits: true
+physics.producers.largeant.EnergyDepositInstanceLabels: @local::largeant_volumes
 physics.producers.largeant.InputSourcesLabels: [ "larg4intime", "larg4outtime"]
 
 # Add a process that merges the SimEnergyDeposits
@@ -72,6 +74,13 @@ physics.producers.pdfastsimout: @local::sbnd_merge_sim_sources
 physics.producers.pdfastsimout.FillSimPhotons: true
 physics.producers.pdfastsimout.InputSourcesLabels: [ "pdfastsimoutintime", "pdfastsimoutouttime"]
 
+#Merge dropped MCParticle collections
+physics.producers.largeantdropped: @local::sbnd_merge_dropped_mcpart_overlay
+physics.producers.largeantdropped.InputSourcesLabels: [ "larg4intime:droppedMCParticles", "larg4outtime:droppedMCParticles"]
+
+# Change simple merge inputs since we're using an overlay sample
+physics.producers.simplemerge.InputSourcesLabels: ["largeant", "largeantdropped"]
+
 # Add all these new modules to the simulate path
 physics.simulate: [ rns
                   ### Complete intime drift simulation and generic CRT
@@ -91,6 +100,9 @@ physics.simulate: [ rns
                   , pdfastsimoutouttime
                   ### Merge the intime and outtime paths
                   , largeant
+                  , largeantdropped
+                  , simplemerge
+                  , sedlite
                   , ionandscint
                 #   , simdrift
                   , pdfastsim

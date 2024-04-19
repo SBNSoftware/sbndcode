@@ -18,6 +18,7 @@
 #include "sbnd_ophitfinder_deco.fcl"
 #include "sbnd_flashfinder_deco.fcl"
 #include "crtrecoproducers_sbnd.fcl"
+#include "mlreco_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -57,7 +58,7 @@ sbnd_reco1_producers:{
     crtstrips:      @local::crtstriphitproducer_sbnd
 }
 
-sbnd_reco1_sequence: [  
+sbnd_reco1_producer_sequence: [  
     rns
   , opdecopmt
   , opdecoxarapuca
@@ -75,6 +76,15 @@ sbnd_reco1_sequence: [
 #FIXME override the producer labels.  This should really happen in the module's config fcl
 sbnd_reco1_producers.gaushit.CalDataModuleLabel:                   "simtpc2d:gauss"
 sbnd_reco1_producers.fasthit.DigitModuleLabel:                     "simtpc2d:daq"
+
+sbnd_reco1_analyzers: {
+    #supera for ML reco
+    supera: @local::sbnd_supera
+}
+
+sbnd_reco1_analyzer_sequence: [
+    supera
+]
 
 END_PROLOG
 

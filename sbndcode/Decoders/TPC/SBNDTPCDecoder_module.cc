@@ -101,9 +101,6 @@ daq::SBNDTPCDecoder::Config::Config(fhicl::ParameterSet const & param) {
 void daq::SBNDTPCDecoder::produce(art::Event & event)
 {
   auto daq_handle = event.getHandle<artdaq::Fragments>(_tag);
-  if ( !daq_handle.isValid() ) {
-    throw cet::exception("SBNDTPCDecoder_module ") << " invalid fragment handle";
-  }
   
   RDPmkr rdpm(event);
   TSPmkr tspm(event);
@@ -114,10 +111,17 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   std::unique_ptr<RDTsAssocs> rdtsassoc_collection(new RDTsAssocs);
   std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> header_collection(new std::vector<tpcAnalysis::TPCDecodeAna>);
 
-  for (auto const &rawfrag: *daq_handle) {
-    process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
+  if ( daq_handle.isValid() ) {
+    for (auto const &rawfrag: *daq_handle) {
+      process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
+    }
   }
+  else
+    {
+      mf::LogWarning("SBNDTPCDecoder_module") <<  " Invalid fragment handle: Skipping TPC digit decoding";
+    }
 
+  
   event.put(std::move(rawdigit_collection));
   event.put(std::move(rdts_collection));
   event.put(std::move(rdtsassoc_collection));

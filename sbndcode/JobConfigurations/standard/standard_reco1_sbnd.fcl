@@ -8,6 +8,9 @@
 # 20200923 (d.brailsford@lancster.ac.uk) [v1.0]
 #   Initial definition
 #
+# Changes:
+# 20240228 (bcarlson1@ufl.edu) [v1.1]
+#    Add supera output using an analyzer end path
 # job configuration
 #
 
@@ -31,8 +34,12 @@ services:
 }
 
 #physics table overrides
-physics.producers: @table::sbnd_reco1_producers
-physics.reco1: @sequence::sbnd_reco1_sequence
+#producers
+physics.producers:      @table::sbnd_reco1_producers
+physics.trigger_paths:  [ @sequence::sbnd_reco1_producer_sequence ]
+#analysers
+physics.analyzers:      @table::sbnd_reco1_analyzers
+physics.end_paths:      [ @sequence::physics.end_paths, @sequence::sbnd_reco_analyser_sequence ]
 
 #outputs table overrides
 outputs.out1.dataTier:       "reconstructed"

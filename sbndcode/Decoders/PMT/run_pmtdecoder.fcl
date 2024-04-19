@@ -1,0 +1,54 @@
+#include "pmtdecoder.fcl"
+#include "spectdc_decoder_sbnd.fcl"
+#include "SBNDPTBDecoderDefaults.fcl"
+
+process_name: PMTDecoder
+
+services: {
+  TFileService : {fileName: "decoder_hist.root"}
+}
+
+#source is a root file
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "pmtdecoder-art.root"
+ }
+}
+
+physics:
+{
+
+ producers:{
+  tdcdecoder: @local::spec_tdc_decoder_sbnd
+  pmtdecoder: @local::pmtdecoder
+  ptbdecoder: @local::SBNDPTBDecoderDefaults
+ }
+
+ filters:{}
+
+ analyzers:{}
+
+
+  reco: [tdcdecoder, ptbdecoder, pmtdecoder]
+
+
+  # define the output stream, there could be more than one if using filters
+  stream1: [out1]
+
+  # trigger_paths is a keyword and contains the paths that modify the art::event,
+  # ie filters and producers
+  trigger_paths: [reco]
+
+  # end_paths is a keyword and contains the paths that do not modify the art::Event,
+  # ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
