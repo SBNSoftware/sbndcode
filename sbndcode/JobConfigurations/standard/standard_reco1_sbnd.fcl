@@ -16,6 +16,7 @@
 
 #include "workflow_reco1.fcl"
 #include "drops_reco1.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "generic_job_sbnd.fcl"
 #
 process_name: Reco1
