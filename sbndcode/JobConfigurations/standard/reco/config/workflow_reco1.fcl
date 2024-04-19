@@ -19,6 +19,7 @@
 #include "sbnd_flashfinder_deco.fcl"
 #include "crtrecoproducers_sbnd.fcl"
 #include "mlreco_sbnd.fcl"
+#include "mctrutht0matching.fcl"
 
 BEGIN_PROLOG
 
