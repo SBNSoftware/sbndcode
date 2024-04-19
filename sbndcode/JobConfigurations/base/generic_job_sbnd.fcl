@@ -47,7 +47,7 @@ source:
     maxEvents:  -1        # Number of events to create
 }
 
-#block to define where the output goesoutputs:
+#block to define where the output goes:
 outputs:
 {
     out1:
