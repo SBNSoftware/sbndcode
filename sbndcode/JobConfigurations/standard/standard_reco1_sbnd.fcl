@@ -40,7 +40,7 @@ physics.producers:      @local::sbnd_reco1_producers
 physics.trigger_paths:  [ @sequence::sbnd_reco1_producer_sequence ]
 #analysers
 physics.analyzers:      @local::sbnd_reco1_analyzers
-physics.end_paths:      [ @sequence::physics.end_paths, @sequence::sbnd_reco_analyser_sequence ]
+physics.end_paths:      [ @sequence::physics.end_paths, @sequence::sbnd_reco1_analyzer_sequence ]
 
 #outputs table overrides
 outputs.out1.dataTier:       "reconstructed"
