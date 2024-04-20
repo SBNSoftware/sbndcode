@@ -8,8 +8,9 @@
 
 XSecSamples SetupSamples(const TString productionVersion)
 {
-  const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString intimeFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
+  const TString rockboxFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString intimeFile   = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   TChain *rockboxNus = new TChain("ncpizeroxsectrees/neutrinos");
   rockboxNus->Add(rockboxFile);
@@ -18,6 +19,13 @@ XSecSamples SetupSamples(const TString productionVersion)
   TChain *rockboxSubruns = new TChain("ncpizeroxsectrees/subruns");
   rockboxSubruns->Add(rockboxFile);
 
+  TChain *ncpizeroNus = new TChain("ncpizeroxsectrees/neutrinos");
+  ncpizeroNus->Add(ncpizeroFile);
+  TChain *ncpizeroSlices = new TChain("ncpizeroxsectrees/slices");
+  ncpizeroSlices->Add(ncpizeroFile);
+  TChain *ncpizeroSubruns = new TChain("ncpizeroxsectrees/subruns");
+  ncpizeroSubruns->Add(ncpizeroFile);
+
   TChain *intimeNus = new TChain("ncpizeroxsectrees/neutrinos");
   intimeNus->Add(intimeFile);
   TChain *intimeSlices = new TChain("ncpizeroxsectrees/slices");
@@ -25,11 +33,12 @@ XSecSamples SetupSamples(const TString productionVersion)
   TChain *intimeSubruns = new TChain("ncpizeroxsectrees/subruns");
   intimeSubruns->Add(intimeFile);
 
-  double rockboxScaling, intimeScaling;
-  GetScaling(rockboxSubruns, intimeSubruns, rockboxScaling, intimeScaling);
+  double rockboxScaling, ncpizeroScaling, intimeScaling;
+  GetScaling(rockboxSubruns, ncpizeroSubruns, intimeSubruns, rockboxScaling, ncpizeroScaling, intimeScaling);
 
-  XSecSamples samples = { { "Rockbox", rockboxNus, rockboxSlices, rockboxScaling },
-                          { "Intime", intimeNus, intimeSlices, intimeScaling }
+  XSecSamples samples = { { "rockbox", rockboxNus, rockboxSlices, rockboxScaling, { 0, 1 } },
+                          { "ncpizero", ncpizeroNus, ncpizeroSlices, ncpizeroScaling, { 2, 3, 4, 5, 6, 7, 8 } },
+                          { "intime", intimeNus, intimeSlices, intimeScaling }
   };
 
   return samples;
@@ -115,8 +124,14 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
 
           for(auto&& [ selection_i, selection ] : enumerate(selections))
             {
+              if(sample.mask.count(event_type[selection_i]) != 0)
+                continue;
+
               if(selection_i == 0 && event_type[selection_i] == 1)
-                event_type[selection_i] = 0;
+                {
+                  std::cout << "Why is this happening?" << std::endl;
+                  event_type[selection_i] = 0;
+                }
 
               if(event_type[selection_i] == 0)
                 {
@@ -200,8 +215,14 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
 
           for(auto&& [ selection_i, selection ] : enumerate(selections))
             {
+              if(sample.mask.count(event_type[selection_i]) != 0)
+                continue;
+
               if(selection_i == 0 && event_type[selection_i] == 1)
-                event_type[selection_i] = 0;
+                {
+                  std::cout << "Why is this happening?" << std::endl;
+                  event_type[selection_i] = 0;
+                }
 
               if(sel[selection_i])
                 {

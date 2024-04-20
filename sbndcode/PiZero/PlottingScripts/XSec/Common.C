@@ -55,16 +55,20 @@ int GetGenEvents(TChain *subruns)
   return sum;
 }
 
-void GetScaling(TChain *rockboxSubruns, TChain *intimeSubruns, double &rockboxScaling, double &intimeScaling)
+void GetScaling(TChain *rockboxSubruns, TChain *ncpizeroSubruns, TChain *intimeSubruns,
+                double &rockboxScaling, double &ncpizeroScaling, double &intimeScaling)
 {
-  const double rockboxPOT = GetPOT(rockboxSubruns);
-  const int rockboxSpills = GetGenEvents(rockboxSubruns);
-  const int intimeSpills  = GetGenEvents(intimeSubruns);
+  const double rockboxPOT  = GetPOT(rockboxSubruns);
+  const double ncpizeroPOT = GetPOT(ncpizeroSubruns);
+  const int rockboxSpills  = GetGenEvents(rockboxSubruns);
+  const int ncpizeroSpills = GetGenEvents(ncpizeroSubruns);
+  const int intimeSpills   = GetGenEvents(intimeSubruns);
 
-  rockboxScaling = goalPOT / rockboxPOT;
+  rockboxScaling  = goalPOT / rockboxPOT;
+  ncpizeroScaling = goalPOT / ncpizeroPOT;
 
   const double scaledRockboxSpills = rockboxScaling * rockboxSpills;
-  
+
   intimeScaling = (goalSpills - scaledRockboxSpills) / intimeSpills;
 }
 
