@@ -1,6 +1,6 @@
 #pragma once
 
-#include "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv1/integrated_flux/FluxMap.h"
+#include "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv1/integrated_flux_eff_z/FluxMap.h"
 #include "UniverseBin.h"
 
 class Bin {
