@@ -135,6 +135,7 @@ TH1F* Fold(const TH1F* hist, const TH2D* matrix)
 
           quaderr += TMath::Power(localError * value, 2);
         }
+
       folded_hist->SetBinContent(i, sum);
       folded_hist->SetBinError(i, TMath::Sqrt(quaderr));
     }

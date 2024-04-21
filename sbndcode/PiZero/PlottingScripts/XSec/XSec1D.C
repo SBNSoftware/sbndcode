@@ -107,7 +107,7 @@ void MakePlot(const int type, const Selections &selections, const TString &saveD
       gPad->SetLeftMargin(0.2);
       gPad->SetRightMargin(0.1);
 
-      TH1F *hist = selection.plot->GetNominalHist1D(type == 0);
+      TH1F *hist = selection.plot->GetNominalHist1D(selection.name, type == 0);
       hist->GetYaxis()->SetTitleOffset(1.5);
       hist->GetYaxis()->SetTitleSize(0.05);
       hist->Draw("histe][");
@@ -217,7 +217,7 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       gPad->SetLeftMargin(0.2);
       gPad->SetRightMargin(0.1);
 
-      TH1F *hist = selection.plot->GetNominalHist1D(type == 0);
+      TH1F *hist = selection.plot->GetNominalHist1D(selection.name, type == 0, true);
       hist->GetYaxis()->SetTitleOffset(1.5);
       hist->GetYaxis()->SetTitleSize(0.05);
       hist->Draw("histe][");
@@ -225,7 +225,7 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       hist->SetMaximum(1.25 * hist->GetMaximum());
       gPad->Update();
 
-      TH1F *geniePred = selection.plot->GetPredictedHist1D(selection.name, "genie", 1e-38);
+      TH1F *geniePred = selection.plot->GetPredictedHist1D(selection.name, "genie", false, 1e-38);
       geniePred->SetLineColor(kOrange+2);
       geniePred->SetMarkerStyle(1);
       geniePred->Draw("histeqsame");
@@ -275,7 +275,7 @@ void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, c
       p1->SetRightMargin(0.05);
       p1->cd();
 
-      TH1F *hist = selection.plot->GetNominalHist1D();
+      TH1F *hist = selection.plot->GetNominalHist1D(selection.name);
       hist->GetYaxis()->SetTitleOffset(1.5);
       hist->GetYaxis()->SetTitleSize(0.05);
       hist->GetXaxis()->SetLabelSize(0);

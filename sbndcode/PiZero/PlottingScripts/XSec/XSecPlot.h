@@ -188,12 +188,22 @@ class XSecPlot {
     return hist;
   }
 
-  TH1F* GetNominalHist1D(const bool statErr = true)
+  TH1F* GetNominalHist1D(const TString selName, const bool statErr = true, const bool unfold = false)
   {
     if(_var0Bins.size() != 2 && _var1Bins.size() != 2)
       throw std::runtime_error("Asking for 1D hist but neither set has 1 bin");
 
     TH2F* full_hist = GetNominalHist(statErr);
+
+    std::string var;
+
+    if(_var0Bins.size() == 2)
+      var = _var1;
+    else if(_var1Bins.size() == 2)
+      var = _var0;
+
+    TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/unfoldingmatrices/unfoldingmatrices.root", "READ");
+    TH2D* foldingmatrix = (TH2D*) foldFile->Get(Form("hUnfold_%s_%s", var.c_str(), selName.Data()));
 
     if(_var0Bins.size() == 2)
       {
@@ -209,11 +219,13 @@ class XSecPlot {
             hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(1, binEdge_i + 1));
           }
 
-        hist->SetMarkerStyle(0);
-        hist->SetLineColor(kBlack);
+        TH1F* unfoldedHist = Fold(hist, foldingmatrix);
+
+        unfoldedHist->SetMarkerStyle(0);
+        unfoldedHist->SetLineColor(kBlack);
 
         delete full_hist;
-        return hist;
+        return unfoldedHist;
       }
 
     if(_var1Bins.size() == 2)
@@ -233,8 +245,13 @@ class XSecPlot {
         hist->SetMarkerStyle(0);
         hist->SetLineColor(kBlack);
 
+        TH1F* unfoldedHist = Fold(hist, foldingmatrix);
+
+        unfoldedHist->SetMarkerStyle(0);
+        unfoldedHist->SetLineColor(kBlack);
+
         delete full_hist;
-        return hist;
+        return unfoldedHist;
       }
 
     return NULL;
@@ -549,15 +566,11 @@ class XSecPlot {
 
   TH1F* GetPredictedHist0D(const TString selName, const TString genName, /*const TString flavour, */const float scale = 1.)
   {
-    //    TFile* xsecFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_" + flavour + ".root", "READ");
-    TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/forwardfoldingmatrices/forwardfoldingmatrices.root", "READ");
-
     TFile* xsecFileNuMu  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_numu.root", "READ");
     TFile* xsecFileANuMu = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anumu.root", "READ");
     TFile* xsecFileNuE   = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_nue.root", "READ");
     TFile* xsecFileANuE  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anue.root", "READ");
 
-    //  TH1F* hist          = (TH1F*) xsecFile->Get(Form("%s_%s_%s", var.c_str(), selName.Data(), flavour.Data()));
     TH1F* histNuMu      = (TH1F*) xsecFileNuMu->Get(Form("%s_numu", selName.Data()));
     TH1F* histANuMu     = (TH1F*) xsecFileANuMu->Get(Form("%s_anumu", selName.Data()));
     TH1F* histNuE       = (TH1F*) xsecFileNuE->Get(Form("%s_nue", selName.Data()));
@@ -576,9 +589,8 @@ class XSecPlot {
     return histNuMu;
   }
 
-  TH1F* GetPredictedHist1D(const TString selName, const TString genName, /*const TString flavour, */const float scale = 1.)
+  TH1F* GetPredictedHist1D(const TString selName, const TString genName, const bool fold = true, const float scale = 1.)
   {
-    //    TFile* xsecFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_" + flavour + ".root", "READ");
     TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/forwardfoldingmatrices/forwardfoldingmatrices.root", "READ");
 
     TFile* xsecFileNuMu  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_numu.root", "READ");
@@ -595,7 +607,6 @@ class XSecPlot {
     else
       throw std::runtime_error("This is not a 1D setup");
 
-    //  TH1F* hist          = (TH1F*) xsecFile->Get(Form("%s_%s_%s", var.c_str(), selName.Data(), flavour.Data()));
     TH1F* histNuMu      = (TH1F*) xsecFileNuMu->Get(Form("%s_%s_numu", var.c_str(), selName.Data()));
     TH1F* histANuMu     = (TH1F*) xsecFileANuMu->Get(Form("%s_%s_anumu", var.c_str(), selName.Data()));
     TH1F* histNuE       = (TH1F*) xsecFileNuE->Get(Form("%s_%s_nue", var.c_str(), selName.Data()));
@@ -611,11 +622,17 @@ class XSecPlot {
     histNuMu->Add(histNuE);
     histNuMu->Add(histANuE);
 
-    TH1F* foldedHist = Fold(histNuMu, foldingmatrix);
-
-    //TH1F* foldedHist = histNuMu;
-    foldedHist->Scale(scale);
-    return foldedHist;
+    if(fold)
+      {
+        TH1F* foldedHist = Fold(histNuMu, foldingmatrix);
+        foldedHist->Scale(scale);
+        return foldedHist;
+      }
+    else
+      {
+        histNuMu->Scale(scale);
+        return histNuMu;
+      }
   }
 
   TH1F* GetFracErrorHist0D(const std::string &name)

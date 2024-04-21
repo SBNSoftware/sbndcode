@@ -36,8 +36,8 @@ XSecSamples SetupSamples(const TString productionVersion)
   double rockboxScaling, ncpizeroScaling, intimeScaling;
   GetScaling(rockboxSubruns, ncpizeroSubruns, intimeSubruns, rockboxScaling, ncpizeroScaling, intimeScaling);
 
-  XSecSamples samples = { { "rockbox", rockboxNus, rockboxSlices, rockboxScaling, { 0, 1 } },
-                          { "ncpizero", ncpizeroNus, ncpizeroSlices, ncpizeroScaling, { 2, 3, 4, 5, 6, 7, 8 } },
+  XSecSamples samples = { { "rockbox", rockboxNus, rockboxSlices, rockboxScaling }, //, { 0, 1 } },
+                          { "ncpizero", ncpizeroNus, ncpizeroSlices, ncpizeroScaling, { 0, 1, 2, 3, 4, 5, 6, 7, 8 } }, //{ 2, 3, 4, 5, 6, 7, 8 } },
                           { "intime", intimeNus, intimeSlices, intimeScaling }
   };
 
