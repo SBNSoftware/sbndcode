@@ -93,6 +93,11 @@ class UniverseBin {
     return _xsec;
   }
 
+  double GetUnderlyingMCXSec()
+  {
+    return (_trueSignal * _scaleFactor) / (_nTargets * _intFlux * _binWidth);
+  }
+
   double GetFracStatErr()
   {
     return _fracStatErr;
@@ -116,6 +121,11 @@ class UniverseBin {
   double GetCount()
   {
     return _count;
+  }
+
+  double GetEfficiency()
+  {
+    return _efficiency;
   }
 
   void IncrementCount(const double &increment)

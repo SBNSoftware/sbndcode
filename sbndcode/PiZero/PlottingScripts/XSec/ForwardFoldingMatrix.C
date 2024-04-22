@@ -13,22 +13,25 @@ void ForwardFoldingMatrix(const TString productionVersion)
   gSystem->Exec("mkdir -p " + saveDir);
 
   const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero2.root";
 
   TChain *slices = new TChain("ncpizeroxsectrees/slices");
   slices->Add(rockboxFile);
-  slices->Add(ncpizeroFile);
+  //slices->Add(ncpizeroFile);
 
   std::deque<bool> sel(selections.size(), false);
   std::vector<int> event_type(selections.size(), -1);
   double pizero_mom, cos_theta_pizero, reco_pizero_mom, reco_cos_theta_pizero;
+  float comp;
 
   slices->SetBranchStatus("*", 0);
+  slices->SetBranchStatus("comp", 1);
   slices->SetBranchStatus("pizero_mom", 1);
   slices->SetBranchStatus("cos_theta_pizero", 1);
   slices->SetBranchStatus("reco_pizero_mom_fit", 1);
   slices->SetBranchStatus("reco_cos_theta_pizero", 1);
 
+  slices->SetBranchAddress("comp", &comp);
   slices->SetBranchAddress("pizero_mom", &pizero_mom);
   slices->SetBranchAddress("cos_theta_pizero", &cos_theta_pizero);
   slices->SetBranchAddress("reco_pizero_mom_fit", &reco_pizero_mom);
@@ -63,7 +66,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
         {
           slices->GetEntry(slc);
 
-          if(sel[selection_i] && event_type[selection_i] == 0)
+          if(sel[selection_i] && event_type[selection_i] == 0 && comp > .5)
             {
               const int trueMomBin = hPiZeroMom->FindBin(pizero_mom);
               const int recoMomBin = hPiZeroMom->FindBin(reco_pizero_mom);

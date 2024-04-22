@@ -9,7 +9,7 @@
 XSecSamples SetupSamples(const TString productionVersion)
 {
   const TString rockboxFile  = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
-  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
+  const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero2.root";
   const TString intimeFile   = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_intime.root";
 
   TChain *rockboxNus = new TChain("ncpizeroxsectrees/neutrinos");
@@ -36,8 +36,8 @@ XSecSamples SetupSamples(const TString productionVersion)
   double rockboxScaling, ncpizeroScaling, intimeScaling;
   GetScaling(rockboxSubruns, ncpizeroSubruns, intimeSubruns, rockboxScaling, ncpizeroScaling, intimeScaling);
 
-  XSecSamples samples = { { "rockbox", rockboxNus, rockboxSlices, rockboxScaling }, //, { 0, 1 } },
-                          { "ncpizero", ncpizeroNus, ncpizeroSlices, ncpizeroScaling, { 0, 1, 2, 3, 4, 5, 6, 7, 8 } }, //{ 2, 3, 4, 5, 6, 7, 8 } },
+  XSecSamples samples = { { "rockbox", rockboxNus, rockboxSlices, rockboxScaling },//, { 0, 1 } },
+                          //                      { "ncpizero", ncpizeroNus, ncpizeroSlices, ncpizeroScaling, { 2, 3, 4, 5, 6, 7, 8 } },
                           { "intime", intimeNus, intimeSlices, intimeScaling }
   };
 

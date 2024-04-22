@@ -66,10 +66,14 @@ void XSec1D(const TString &productionVersion, const TString &saveDirExt, const i
   selections[1].plot = xsec_0p0pi;
   selections[2].plot = xsec_Np0pi;
 
+  weightSets = {};
+
   FillPlots(samples, selections, weightSets);
 
   MakePlot(0, selections, saveDir);
   MakeSummaryPlot(0, selections, saveDir);
+
+  return;
 
   for(WeightSet &weightSet : weightSets)
     {
@@ -217,7 +221,7 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       gPad->SetLeftMargin(0.2);
       gPad->SetRightMargin(0.1);
 
-      TH1F *hist = selection.plot->GetNominalHist1D(selection.name, type == 0, true);
+      TH1F *hist = selection.plot->GetNominalHist1D(selection.name, type == 0, false);
       hist->GetYaxis()->SetTitleOffset(1.5);
       hist->GetYaxis()->SetTitleSize(0.05);
       hist->Draw("histe][");
@@ -225,10 +229,20 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       hist->SetMaximum(1.25 * hist->GetMaximum());
       gPad->Update();
 
-      TH1F *geniePred = selection.plot->GetPredictedHist1D(selection.name, "genie", false, 1e-38);
+      TH1F *geniePred = selection.plot->GetPredictedHist1D(selection.name, "genie", true, 1e-38);
       geniePred->SetLineColor(kOrange+2);
       geniePred->SetMarkerStyle(1);
       geniePred->Draw("histeqsame");
+
+      TH1F *underlyingMC = selection.plot->GetUnderlyingMCHist1D(selection.name, false);
+      underlyingMC->SetLineColor(kRed+2);
+      underlyingMC->SetMarkerStyle(1);
+      //underlyingMC->Draw("histeqsame");
+
+      TH1F *underlyingMCFolded = selection.plot->GetUnderlyingMCHist1D(selection.name, true);
+      underlyingMCFolded->SetLineColor(kPink+2);
+      underlyingMCFolded->SetMarkerStyle(1);
+      underlyingMCFolded->Draw("histeqsame");
 
       TPaveText* title = (TPaveText*)gPad->FindObject("title");
       title->SetY1NDC(0.92);

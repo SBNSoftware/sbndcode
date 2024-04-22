@@ -40,10 +40,14 @@ void XSec0D(const TString &productionVersion, const TString &saveDirExt)
   selections[1].plot = xsec_0p0pi;
   selections[2].plot = xsec_Np0pi;
 
+  weightSets = {};
+
   FillPlots(samples, selections, weightSets);
 
   MakePlot(0, selections, saveDir);
   MakeSummaryPlot(0, selections, saveDir);
+
+  return;
 
   for(WeightSet &weightSet : weightSets)
     {

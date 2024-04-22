@@ -219,7 +219,7 @@ class XSecPlot {
             hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(1, binEdge_i + 1));
           }
 
-        TH1F* unfoldedHist = Fold(hist, foldingmatrix);
+        TH1F* unfoldedHist = unfold ? Fold(hist, foldingmatrix) : hist;
 
         unfoldedHist->SetMarkerStyle(0);
         unfoldedHist->SetLineColor(kBlack);
@@ -245,7 +245,7 @@ class XSecPlot {
         hist->SetMarkerStyle(0);
         hist->SetLineColor(kBlack);
 
-        TH1F* unfoldedHist = Fold(hist, foldingmatrix);
+        TH1F* unfoldedHist = unfold ? Fold(hist, foldingmatrix) : hist;
 
         unfoldedHist->SetMarkerStyle(0);
         unfoldedHist->SetLineColor(kBlack);
@@ -624,7 +624,8 @@ class XSecPlot {
 
     if(fold)
       {
-        TH1F* foldedHist = Fold(histNuMu, foldingmatrix);
+        TH1F *effHist = GetEfficiencyHist1D();
+        TH1F* foldedHist = Fold(histNuMu, effHist, foldingmatrix);
         foldedHist->Scale(scale);
         return foldedHist;
       }
@@ -685,6 +686,203 @@ class XSecPlot {
           {
             hist->SetBinContent(bin_i + 1, bin->GetFracSystResAve(name));
             hist->SetBinError(bin_i + 1, 0);
+          }
+
+        hist->SetMarkerStyle(0);
+        hist->SetLineColor(kBlack);
+
+        return hist;
+      }
+
+    return NULL;
+  }
+
+  TH2F* GetUnderlyingMCHist()
+  {
+    double var0Bins[_var0Bins.size()];
+    GetVar0BinsArray(var0Bins);
+    double var1Bins[_var1Bins.size()];
+    GetVar1BinsArray(var1Bins);
+
+    TH2F* hist = new TH2F(Form("GeneralUnderlying_%s", _name.c_str()), _axes_labels.c_str(),
+                          _var0Bins.size() - 1, var0Bins,
+                          _var1Bins.size() - 1, var1Bins);
+
+    for(int i = 0; i < _bins.size(); ++i)
+      {
+        const int binIndex0 = i % ( _var0Bins.size() - 1 ) + 1;
+        const int binIndex1 = i / ( _var0Bins.size() - 1 ) + 1;
+
+        hist->SetBinContent(binIndex0, binIndex1, _bins[i]->GetUnderlyingMCXSec());
+        hist->SetBinError(binIndex0, binIndex1, 0);
+      }
+
+    return hist;
+  }
+
+  TH1F* GetUnderlyingMCHist0D()
+  {
+    double var0Bins[_var0Bins.size()];
+    GetVar0BinsArray(var0Bins);
+
+    if(_bins.size() != 1)
+      throw std::runtime_error("Asking for 0D hist but numbers of bins is not 1");
+
+    TH2F* full_hist = GetUnderlyingMCHist();
+
+    TH1F* hist = new TH1F(Form("ZeroD_UnderlyingMC_%s", _name.c_str()), _axes_labels.c_str(),
+                          _var0Bins.size() - 1, var0Bins);
+
+    hist->SetMarkerStyle(0);
+    hist->SetBinContent(1, full_hist->GetBinContent(1, 1));
+    hist->SetBinError(1, full_hist->GetBinError(1, 1));
+    hist->SetLineColor(kBlack);
+
+    delete full_hist;
+    return hist;
+  }
+
+  TH1F* GetUnderlyingMCHist1D(const TString selName = "", const bool fold = false)
+  {
+    if(_var0Bins.size() != 2 && _var1Bins.size() != 2)
+      throw std::runtime_error("Asking for 1D hist but neither set has 1 bin");
+
+    TFile* foldFile = new TFile("/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/forwardfoldingmatrices/forwardfoldingmatrices.root", "READ");
+
+    TH2F* full_hist = GetUnderlyingMCHist();
+
+    std::string var;
+
+    if(_var0Bins.size() == 2)
+      var = _var1;
+    else if(_var1Bins.size() == 2)
+      var = _var0;
+
+    if(_var0Bins.size() == 2)
+      {
+        double var1Bins[_var1Bins.size()];
+        GetVar1BinsArray(var1Bins);
+
+        TH1F* hist = new TH1F(Form("OneD_%s", _name.c_str()), _axes_labels.c_str(),
+                              _var1Bins.size() - 1, var1Bins);
+
+        for(auto&& [ binEdge_i, binEdge ] : enumerate(_var1Bins))
+          {
+            hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(1, binEdge_i + 1));
+            hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(1, binEdge_i + 1));
+          }
+
+        if(fold)
+          {
+            TH2D* foldingmatrix = (TH2D*) foldFile->Get(Form("hForwardFold_%s_%s", var.c_str(), selName.Data()));
+            TH1F *effHist = GetEfficiencyHist1D();
+            TH1F* foldedHist = Fold(hist, effHist, foldingmatrix);
+            return foldedHist;
+          }
+        else
+          return hist;
+      }
+
+    if(_var1Bins.size() == 2)
+      {
+        double var0Bins[_var0Bins.size()];
+        GetVar0BinsArray(var0Bins);
+
+        TH1F* hist = new TH1F(Form("OneD_%s", _name.c_str()), _axes_labels.c_str(),
+                              _var0Bins.size() - 1, var0Bins);
+
+        for(auto&& [ binEdge_i, binEdge ] : enumerate(_var0Bins))
+          {
+            hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(binEdge_i + 1, 1));
+            hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(binEdge_i + 1, 1));
+          }
+
+        hist->SetMarkerStyle(0);
+        hist->SetLineColor(kBlack);
+
+        if(fold)
+          {
+            TH2D* foldingmatrix = (TH2D*) foldFile->Get(Form("hForwardFold_%s_%s", var.c_str(), selName.Data()));
+            TH1F *effHist = GetEfficiencyHist1D();
+            TH1F* foldedHist = Fold(hist, effHist, foldingmatrix);
+            return foldedHist;
+          }
+        else
+          return hist;
+      }
+
+    return NULL;
+  }
+
+  TH2F* GetEfficiencyHist()
+  {
+    double var0Bins[_var0Bins.size()];
+    GetVar0BinsArray(var0Bins);
+    double var1Bins[_var1Bins.size()];
+    GetVar1BinsArray(var1Bins);
+
+    TH2F* hist = new TH2F(Form("GeneralEfficiency_%s", _name.c_str()), _axes_labels.c_str(),
+                          _var0Bins.size() - 1, var0Bins,
+                          _var1Bins.size() - 1, var1Bins);
+
+    for(int i = 0; i < _bins.size(); ++i)
+      {
+        const int binIndex0 = i % ( _var0Bins.size() - 1 ) + 1;
+        const int binIndex1 = i / ( _var0Bins.size() - 1 ) + 1;
+
+        hist->SetBinContent(binIndex0, binIndex1, _bins[i]->GetNominalEfficiency());
+        hist->SetBinError(binIndex0, binIndex1, 0);
+      }
+
+    return hist;
+  }
+
+  TH1F* GetEfficiencyHist1D(const TString selName = "", const bool fold = false)
+  {
+    if(_var0Bins.size() != 2 && _var1Bins.size() != 2)
+      throw std::runtime_error("Asking for 1D hist but neither set has 1 bin");
+
+    TH2F* full_hist = GetEfficiencyHist();
+
+    std::string var;
+
+    if(_var0Bins.size() == 2)
+      var = _var1;
+    else if(_var1Bins.size() == 2)
+      var = _var0;
+
+    if(_var0Bins.size() == 2)
+      {
+        double var1Bins[_var1Bins.size()];
+        GetVar1BinsArray(var1Bins);
+
+        TH1F* hist = new TH1F(Form("OneDEfficiency_%s", _name.c_str()), _axes_labels.c_str(),
+                              _var1Bins.size() - 1, var1Bins);
+
+        for(auto&& [ binEdge_i, binEdge ] : enumerate(_var1Bins))
+          {
+            hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(1, binEdge_i + 1));
+            hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(1, binEdge_i + 1));
+          }
+
+        hist->SetMarkerStyle(0);
+        hist->SetLineColor(kBlack);
+
+        return hist;
+      }
+
+    if(_var1Bins.size() == 2)
+      {
+        double var0Bins[_var0Bins.size()];
+        GetVar0BinsArray(var0Bins);
+
+        TH1F* hist = new TH1F(Form("OneDEfficiency_%s", _name.c_str()), _axes_labels.c_str(),
+                              _var0Bins.size() - 1, var0Bins);
+
+        for(auto&& [ binEdge_i, binEdge ] : enumerate(_var0Bins))
+          {
+            hist->SetBinContent(binEdge_i + 1, full_hist->GetBinContent(binEdge_i + 1, 1));
+            hist->SetBinError(binEdge_i + 1, full_hist->GetBinError(binEdge_i + 1, 1));
           }
 
         hist->SetMarkerStyle(0);

@@ -93,9 +93,19 @@ class Bin {
     return _nominalBin->GetXSec();
   }
 
+  double GetUnderlyingMCXSec()
+  {
+    return _nominalBin->GetUnderlyingMCXSec();
+  }
+
   double GetNominalFracStatErr()
   {
     return _nominalBin->GetFracStatErr();
+  }
+
+  double GetNominalEfficiency()
+  {
+    return _nominalBin->GetEfficiency();
   }
 
   void AddWeight(const std::string weightName, const int nunivs)

@@ -142,3 +142,40 @@ TH1F* Fold(const TH1F* hist, const TH2D* matrix)
 
   return folded_hist;
 }
+
+TH1F* Fold(const TH1F* hist, const TH1F* effHist, const TH2D* matrix)
+{
+  TH1F* folded_hist = (TH1F*) hist->Clone(Form("%s_folded", hist->GetName()));
+
+  for(int i = 0; i < hist->GetNbinsX() + 2; ++i)
+    {
+      double sum     = 0;
+      double quaderr = 0.;
+
+      for(int j = 0; j < hist->GetNbinsX() + 2; ++j)
+        {
+          if(isnan(matrix->GetBinContent(j + 1, i + 1)))
+            continue;
+
+          const double value = hist->GetBinContent(j) * effHist->GetBinContent(j) * matrix->GetBinContent(j + 1, i + 1) * (hist->GetBinWidth(j) / hist->GetBinWidth(i));
+          sum += value;
+
+          double localError = 0.;
+          if(hist->GetBinContent(j) > 0)
+            localError += TMath::Power(hist->GetBinError(j) / hist->GetBinContent(j), 2);
+          if(matrix->GetBinContent(j + 1, i + 1) > 0)
+            localError += TMath::Power(matrix->GetBinError(j + 1, i + 1) / matrix->GetBinContent(j + 1, i + 1), 2);
+
+          localError = TMath::Sqrt(localError);
+
+          quaderr += TMath::Power(localError * value, 2);
+        }
+
+      sum /= effHist->GetBinContent(i);
+
+      folded_hist->SetBinContent(i, sum);
+      folded_hist->SetBinError(i, TMath::Sqrt(quaderr));
+    }
+
+  return folded_hist;
+}
