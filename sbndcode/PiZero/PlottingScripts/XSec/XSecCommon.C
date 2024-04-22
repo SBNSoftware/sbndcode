@@ -36,8 +36,8 @@ XSecSamples SetupSamples(const TString productionVersion)
   double rockboxScaling, ncpizeroScaling, intimeScaling;
   GetScaling(rockboxSubruns, ncpizeroSubruns, intimeSubruns, rockboxScaling, ncpizeroScaling, intimeScaling);
 
-  XSecSamples samples = { { "rockbox", rockboxNus, rockboxSlices, rockboxScaling },//, { 0, 1 } },
-                          //                      { "ncpizero", ncpizeroNus, ncpizeroSlices, ncpizeroScaling, { 2, 3, 4, 5, 6, 7, 8 } },
+  XSecSamples samples = { { "rockbox", rockboxNus, rockboxSlices, rockboxScaling, { 0, 1 } },
+                          { "ncpizero", ncpizeroNus, ncpizeroSlices, ncpizeroScaling, { 2, 3, 4, 5, 6, 7, 8 } },
                           { "intime", intimeNus, intimeSlices, intimeScaling }
   };
 
@@ -142,7 +142,7 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
                       if(!bin->InBin(val0, val1))
                         continue;
 
-                      bin->IncrementNominalBinTrueSignal(scaling);
+                      bin->IncrementNominalBinTrueSignal(scaling * extraSignalScaling.at(selection.name));
 
                       int weight_i = 0;
 
@@ -154,7 +154,7 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
                                 *weights[weight_i] = std::vector<float>(weightSet.nunivs, 1.);
 
                               for(int univ = 0; univ < weightSet.nunivs; ++univ)
-                                bin->IncrementUniverseBinTrueSignal(name, univ, scaling * weights[weight_i]->at(univ));
+                                bin->IncrementUniverseBinTrueSignal(name, univ, scaling * weights[weight_i]->at(univ) * extraSignalScaling.at(selection.name));
 
                               ++weight_i;
                             }
@@ -234,14 +234,19 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
                         continue;
 
                       if(bin->InBin(trueVal0, trueVal1) && (event_type[selection_i] == 0 && comp > .5))
-                        bin->IncrementNominalBinSelSignalTrueBin(scaling);
+                        bin->IncrementNominalBinSelSignalTrueBin(scaling * extraSignalScaling.at(selection.name));
 
                       if(bin->InBin(val0, val1))
                         {
-                          bin->IncrementNominalBinCount(scaling);
-
                           if(!(event_type[selection_i] == 0 && comp > .5))
-                            bin->IncrementNominalBinBkgdCount(scaling);
+                            {
+                              bin->IncrementNominalBinCount(scaling);
+                              bin->IncrementNominalBinBkgdCount(scaling);
+                            }
+                          else
+                            {
+                              bin->IncrementNominalBinCount(scaling * extraSignalScaling.at(selection.name));
+                            }
                         }
 
                       int weight_i = 0;
@@ -256,14 +261,19 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
                               for(int univ = 0; univ < weightSet.nunivs; ++univ)
                                 {
                                   if(bin->InBin(trueVal0, trueVal1) && (event_type[selection_i] == 0 && comp > .5))
-                                    bin->IncrementUniverseBinSelSignalTrueBin(name, univ, scaling * weights[weight_i]->at(univ));
+                                    bin->IncrementUniverseBinSelSignalTrueBin(name, univ, scaling * weights[weight_i]->at(univ) * extraSignalScaling.at(selection.name));
 
                                   if(bin->InBin(val0, val1))
                                     {
-                                      bin->IncrementUniverseBinCount(name, univ, scaling * weights[weight_i]->at(univ));
-
                                       if(!(event_type[selection_i] == 0 && comp > .5))
-                                        bin->IncrementUniverseBinBkgdCount(name, univ, scaling * weights[weight_i]->at(univ));
+                                        {
+                                          bin->IncrementUniverseBinCount(name, univ, scaling * weights[weight_i]->at(univ));
+                                          bin->IncrementUniverseBinBkgdCount(name, univ, scaling * weights[weight_i]->at(univ));
+                                        }
+                                      else
+                                        {
+                                          bin->IncrementUniverseBinCount(name, univ, scaling * weights[weight_i]->at(univ) *  extraSignalScaling.at(selection.name));
+                                        }
                                     }
                                 }
                               ++weight_i;

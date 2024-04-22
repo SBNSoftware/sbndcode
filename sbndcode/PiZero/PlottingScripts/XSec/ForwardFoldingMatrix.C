@@ -17,7 +17,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
 
   TChain *slices = new TChain("ncpizeroxsectrees/slices");
   slices->Add(rockboxFile);
-  //slices->Add(ncpizeroFile);
+  slices->Add(ncpizeroFile);
 
   std::deque<bool> sel(selections.size(), false);
   std::vector<int> event_type(selections.size(), -1);
