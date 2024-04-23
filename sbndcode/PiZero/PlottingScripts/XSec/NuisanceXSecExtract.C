@@ -3,22 +3,22 @@
 constexpr float BF    = 0.98823; // PDG branching fraction for pi0 -> gamma gamma
 constexpr float units = 1e38;    // TO have cross section in 10^-38 cm^-2
 
-void NuisanceXSecExtract(const TString productionVersion, const TString flavour);
+void NuisanceXSecExtract(const TString productionVersion, const TString flavour, const TString cfg);
 
-void NuisanceXSecExtract(const TString productionVersion)
+void NuisanceXSecExtract(const TString productionVersion, const TString cfg)
 {
-  NuisanceXSecExtract(productionVersion, "numu");
-  NuisanceXSecExtract(productionVersion, "anumu");
-  NuisanceXSecExtract(productionVersion, "nue");
-  NuisanceXSecExtract(productionVersion, "anue");
+  NuisanceXSecExtract(productionVersion, "numu", cfg);
+  NuisanceXSecExtract(productionVersion, "anumu", cfg);
+  NuisanceXSecExtract(productionVersion, "nue", cfg);
+  NuisanceXSecExtract(productionVersion, "anue", cfg);
 }
 
-void NuisanceXSecExtract(const TString productionVersion, const TString flavour)
+void NuisanceXSecExtract(const TString productionVersion, const TString flavour, const TString cfg)
 {
   const TString baseDir = "/exp/sbnd/data/users/hlay/ncpizero/generators";
 
   TChain* events = new TChain("FlatTree_VARS");
-  events->Add(baseDir + "/genie/" + productionVersion + "/genie_" + flavour + "_prep.flat.root");
+  events->Add(baseDir + "/genie/" + productionVersion + "/" + cfg + "/genie_" + flavour + "_prep.flat.root");
 
   Char_t cc;
   Int_t  PDGnu, nfsp;
