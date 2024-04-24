@@ -10,9 +10,7 @@ namespace sbnd::crt {
     , fPEAttenuation(pset.get<double>("PEAttenuation"))
     , fPropDelay(pset.get<double>("PropDelay"))
     , fTimeWalkNorm(pset.get<double>("TimeWalkNorm"))
-    , fTimeWalkShift(pset.get<double>("TimeWalkShift"))
-    , fTimeWalkSigma(pset.get<double>("TimeWalkSigma"))
-    , fTimeWalkOffset(pset.get<double>("TimeWalkOffset"))
+    , fTimeWalkScale(pset.get<double>("TimeWalkScale"))
   {
   }
 
@@ -221,7 +219,10 @@ namespace sbnd::crt {
 
   double CRTClusterCharacterisationAlg::TimingCorrectionOffset(const double &dist, const double &pe)
   {
-    return dist * fPropDelay + fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset;
+
+    double t_TimeWalk  = fTimeWalkNorm * std::exp(- fTimeWalkScale * pe);
+    double t_PropDelay = fPropDelay * dist;
+    return t_PropDelay + t_TimeWalk;
   }
 
   void CRTClusterCharacterisationAlg::AggregatePositions(const std::vector<CRTSpacePoint> &complete_spacepoints, geo::Point_t &pos, geo::Point_t &err)

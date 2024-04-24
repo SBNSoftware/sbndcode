@@ -1,5 +1,5 @@
 # Produce GENIE nue and anue rockbox interactions and overlay CORSIKA cosmics
 # Note: To run G4 over CORSIKA and merge collections together you will need g4_dirt_overlay_filter.fcl
-#include "overlay/prodoverlay_corsika_cosmics_proton_genie_rockbox_sbnd.fcl"
+#include "prodoverlay_corsika_cosmics_proton_genie_rockbox_sbnd.fcl"
 
 #include "set_genie_nue.fcl"
