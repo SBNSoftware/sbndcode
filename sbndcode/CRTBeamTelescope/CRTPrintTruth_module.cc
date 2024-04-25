@@ -124,7 +124,7 @@ void CRTPrintTruth::analyze(art::Event const& e)
   std::map<int, double> mcptrackID_to_startx_map;
   std::map<int, double> mcptrackID_to_starty_map;
   std::map<int, double> mcptrackID_to_startz_map;
-  std::map<int, double> mcptrackID_to_energy_map;
+  //std::map<int, double> mcptrackID_to_energy_map;
   std::map<int, int> mcptrackID_to_pdg_map;  
   std::map<int, int> mcptrackID_to_motherID_map;  
   std::map<int, double> mcptrackID_to_momentum_map;
@@ -138,24 +138,24 @@ void CRTPrintTruth::analyze(art::Event const& e)
     mcptrackID_to_startx_map[mcp->TrackId()] = mcp->Vx();
     mcptrackID_to_starty_map[mcp->TrackId()] = mcp->Vy();
     mcptrackID_to_startz_map[mcp->TrackId()] = mcp->Vz();
-    mcptrackID_to_energy_map[mcp->TrackId()] = mcp->E();
-    mcptrackID_to_momentum_map[mcp->TrackId()] = mcp->P();
+    //mcptrackID_to_energy_map[mcp->TrackId()] = mcp->E();
+    mcptrackID_to_momentum_map[mcp->TrackId()] = mcp->P()*1000.;
     mcptrackID_to_start_process_map[mcp->TrackId()] = mcp->Process();
     mcptrackID_to_end_process_map[mcp->TrackId()] = mcp->EndProcess();
   }
 
   int counter = 0;
   for (auto const& adh : adh_v) {
-    std::cout<<"PrintTruth "<<counter<<" AuxDetHit: "<<adh->GetTrackID()<<", pdg: "<<mcptrackID_to_pdg_map[adh->GetTrackID()]<<", E: "<<mcptrackID_to_energy_map[adh->GetTrackID()]<<", P: "<<mcptrackID_to_momentum_map[adh->GetTrackID()]<<", Process: "<<mcptrackID_to_start_process_map[adh->GetTrackID()];
+    std::cout<<"PrintTruth AuxDetHit "<<counter<<": pdg: "<<mcptrackID_to_pdg_map[adh->GetTrackID()]<<", P: "<<mcptrackID_to_momentum_map[adh->GetTrackID()]<<" MeV, Process: "<<mcptrackID_to_start_process_map[adh->GetTrackID()]<<", hit postion: ("<<0.5*(adh->GetEntryX()+adh->GetExitX())<<", "<<0.5*(adh->GetEntryY()+adh->GetExitY())<<", "<<0.5*(adh->GetEntryZ()+adh->GetExitZ())<<"); track id: "<<adh->GetTrackID();
 
     std::string process = mcptrackID_to_start_process_map[adh->GetTrackID()];
     int thistrackid = adh->GetTrackID();
-    while (process!="primary") {
+    while (process!="primary" && mcptrackID_to_pdg_map[thistrackid]!=0) {
       int motherid = mcptrackID_to_motherID_map[thistrackid];
       process = mcptrackID_to_start_process_map[motherid];
       thistrackid = motherid;
       int mother_pdg = mcptrackID_to_pdg_map[motherid];
-      std::cout<<", has mother: "<<motherid<<" pdg: "<<mother_pdg<<", process: "<<process;
+      std::cout<<", which has mother pdg of: "<<mother_pdg<<", process: "<<process;
     }
     std::cout<<std::endl;
     counter++;
@@ -166,7 +166,9 @@ void CRTPrintTruth::analyze(art::Event const& e)
     auto hit = crt_hit_v[i];
     const sbnd::CRTBackTracker::TruthMatchMetrics truthMatch = _crt_back_tracker.TruthMatrixFromTotalEnergy(e, hit);
 
-    std::cout<<"PrintTruth Hit "<<i<<", time: "<<hit->ts1_ns-1.7e6<<"; hit postion: ("<<hit->x_pos<<", "<<hit->y_pos<<", "<<hit->z_pos<<"); pdg: "<<truthMatch.pdg<<"; deposited energy: "<<truthMatch.depEnergy_total<<"; purity: "<<truthMatch.purity<<"; trackID: "<<truthMatch.trackid/*<<", mother: "<<getParticleByID(mcp_v, truthMatch.trackid)->Mother()<<", "<<getParticleByID(mcp_v, getParticleByID(mcp_v, truthMatch.trackid)->Mother())->PdgCode()*/<<std::endl;
+    std::cout<<"PrintTruth CRTHit "<<i/*<<", time: "<<hit->ts1_ns-1.7e6*/<<"; hit postion: ("<<hit->x_pos<<", "<<hit->y_pos<<", "<<hit->z_pos<<"); pdg: "<<truthMatch.pdg<<"; deposited energy: "<<truthMatch.depEnergy_total*1000.<<" MeV; purity: "<<truthMatch.purity<<"; trackID: "<<truthMatch.trackid<<std::endl;
+    
+    /*<<", mother: "<<getParticleByID(mcp_v, truthMatch.trackid)->Mother()<<", "<<getParticleByID(mcp_v, getParticleByID(mcp_v, truthMatch.trackid)->Mother())->PdgCode()*/
 
     /*lar_pandora::MCTruthToMCParticles truthToParticles;
     lar_pandora::MCParticlesToMCTruth particlesToTruth;
@@ -202,6 +204,7 @@ void CRTPrintTruth::analyze(art::Event const& e)
       }
     }*/  
   }
+  std::cout<<"PrintTruth Hit =================================================================="<<std::endl;
 }
 
 art::Ptr<simb::MCParticle> CRTPrintTruth::getParticleByID(
