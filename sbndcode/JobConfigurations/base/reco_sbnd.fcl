@@ -50,8 +50,6 @@
 #include "sbnd_trackcalo_skimmer.fcl"
 #include "crtskim_sbnd.fcl"
 #include "pmtskim_sbnd.fcl"
-#include "mlreco_sbnd.fcl"
-#include "cluster_sbnd.fcl"
 
 #include "mlreco_sbnd.fcl"
 #include "cluster_sbnd.fcl"
