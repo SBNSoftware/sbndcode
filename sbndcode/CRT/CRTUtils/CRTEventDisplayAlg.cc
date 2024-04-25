@@ -18,7 +18,7 @@ CRTEventDisplayAlg::~CRTEventDisplayAlg(){
 
 }
 
-
+ 
 void CRTEventDisplayAlg::reconfigure(const Config& config){
 
   fSimLabel         = config.SimLabel();
@@ -139,6 +139,8 @@ void CRTEventDisplayAlg::DrawCube(TCanvas *c1, double *rmin, double *rmax, int c
 
 void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
                            const art::Event& event){
+  // print run, subrun and event number                          
+  if (fPrint) std::cout << "Run " << event.id().run() << ", subrun " << event.id().subRun() << ", event " << event.id().event() << std::endl;                        
   // Create a canvas 
   TCanvas *c1 = new TCanvas("c1","",700,700);
 

@@ -57,6 +57,7 @@ private:
   sbnd::CRTBackTracker _crt_back_tracker;
   std::string _crthit_label;
   std::string _g4_label;
+  std::string _auxdethit_label;
 
 };
 
@@ -68,15 +69,17 @@ CRTPrintTruth::CRTPrintTruth(fhicl::ParameterSet const& p)
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   _g4_label          = p.get<std::string>("G4Label", "largeant");
   _crthit_label      = p.get<std::string>("CRTHitLabel", "crthit");
+  _auxdethit_label   = p.get<std::string>("AuxDetHitLabel", "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN");
   _crt_back_tracker  = p.get<fhicl::ParameterSet>("CRTBackTracker", fhicl::ParameterSet());
 }
 
 void CRTPrintTruth::analyze(art::Event const& e)
 {
   // Implementation of required member function here.
-
   _crt_back_tracker.Initialize(e); // Initialise the backtrack alg. 
 
+  // print out the event, run, and subrun numbers
+  std::cout<<"PrintTruth This is run: "<<e.id().run()<<", SubRun: "<<e.id().subRun()<<", event: "<<e.id().event()<<std::endl;
 
   //
   // Get the MCParticles from G4
@@ -93,6 +96,18 @@ void CRTPrintTruth::analyze(art::Event const& e)
 
 
   //
+  // Get the AuxDetHits from G4
+  //
+  art::Handle<std::vector<sim::AuxDetHit>> adh_h; // geant4
+  std::vector<art::Ptr<sim::AuxDetHit>> adh_v;
+  e.getByLabel(_auxdethit_label, adh_h);
+  if(!adh_h.isValid()){
+    std::cout << "AuxDetHit product " << _auxdethit_label << " not found..." << std::endl;
+    throw std::exception();
+  }
+  art::fill_ptr_vector(adh_v, adh_h);
+
+  //
   // Get the CRT Hits
   //
   art::Handle<std::vector<sbn::crt::CRTHit>> crt_hit_h;
@@ -103,10 +118,47 @@ void CRTPrintTruth::analyze(art::Event const& e)
   }
   std::vector<art::Ptr<sbn::crt::CRTHit>> crt_hit_v;
   art::fill_ptr_vector(crt_hit_v, crt_hit_h);
-  // PRINT OUT ALL MCPARTICLES  
+
+
+  // PRINT OUT ALL MCPARTICLES
+  std::map<int, double> mcptrackID_to_startx_map;
+  std::map<int, double> mcptrackID_to_starty_map;
+  std::map<int, double> mcptrackID_to_startz_map;
+  std::map<int, double> mcptrackID_to_energy_map;
+  std::map<int, int> mcptrackID_to_pdg_map;  
+  std::map<int, int> mcptrackID_to_motherID_map;  
+  std::map<int, double> mcptrackID_to_momentum_map;
+  std::map<int, std::string> mcptrackID_to_start_process_map;
+  std::map<int, std::string> mcptrackID_to_end_process_map;
   for (auto const& mcp : mcp_v) {
     if (mcp->StatusCode() != 1) continue; 
-    //std::cout<<"MCParticle: "<<mcp->TrackId()<<", pdg: "<<mcp->PdgCode()<<", E: "<<mcp->E()<<", T: "<<mcp->T()<<", P: "<<mcp->P()<<", Process: "<<mcp->Process()<<", mother: "<<mcp->Mother()<<", has "<<mcp->NumberDaughters()<<" daughters. "<<std::endl;
+    //std::cout<<"MCParticle: "<<mcp->TrackId()<<", pdg: "<<mcp->PdgCode()<<", E: "<<mcp->E()<<", Process: "<<mcp->Process()<<", mother: "<<mcp->Mother()/*<<", has "<<mcp->NumberDaughters()<<" daughters. "*/<<std::endl;
+    mcptrackID_to_pdg_map[mcp->TrackId()] = mcp->PdgCode();
+    mcptrackID_to_motherID_map[mcp->TrackId()] = mcp->Mother();
+    mcptrackID_to_startx_map[mcp->TrackId()] = mcp->Vx();
+    mcptrackID_to_starty_map[mcp->TrackId()] = mcp->Vy();
+    mcptrackID_to_startz_map[mcp->TrackId()] = mcp->Vz();
+    mcptrackID_to_energy_map[mcp->TrackId()] = mcp->E();
+    mcptrackID_to_momentum_map[mcp->TrackId()] = mcp->P();
+    mcptrackID_to_start_process_map[mcp->TrackId()] = mcp->Process();
+    mcptrackID_to_end_process_map[mcp->TrackId()] = mcp->EndProcess();
+  }
+
+  int counter = 0;
+  for (auto const& adh : adh_v) {
+    std::cout<<"PrintTruth "<<counter<<" AuxDetHit: "<<adh->GetTrackID()<<", pdg: "<<mcptrackID_to_pdg_map[adh->GetTrackID()]<<", E: "<<mcptrackID_to_energy_map[adh->GetTrackID()]<<", P: "<<mcptrackID_to_momentum_map[adh->GetTrackID()]<<", Process: "<<mcptrackID_to_start_process_map[adh->GetTrackID()];
+
+    std::string process = mcptrackID_to_start_process_map[adh->GetTrackID()];
+    int thistrackid = adh->GetTrackID();
+    while (process!="primary") {
+      int motherid = mcptrackID_to_motherID_map[thistrackid];
+      process = mcptrackID_to_start_process_map[motherid];
+      thistrackid = motherid;
+      int mother_pdg = mcptrackID_to_pdg_map[motherid];
+      std::cout<<", has mother: "<<motherid<<" pdg: "<<mother_pdg<<", process: "<<process;
+    }
+    std::cout<<std::endl;
+    counter++;
   }
 
   size_t n_hits = crt_hit_v.size();
@@ -114,9 +166,9 @@ void CRTPrintTruth::analyze(art::Event const& e)
     auto hit = crt_hit_v[i];
     const sbnd::CRTBackTracker::TruthMatchMetrics truthMatch = _crt_back_tracker.TruthMatrixFromTotalEnergy(e, hit);
 
-    std::cout<<"Hit "<<i<<", time: "<<hit->ts1_ns-1.7e6<<"; hit postion: ("<<hit->x_pos<<", "<<hit->y_pos<<", "<<hit->z_pos<<"); pdg: "<<truthMatch.pdg<<"; deposited energy: "<<truthMatch.depEnergy_total<<"; purity: "<<truthMatch.purity<<"; trackID: "<<truthMatch.trackid/*<<", mother: "<<getParticleByID(mcp_v, truthMatch.trackid)->Mother()<<", "<<getParticleByID(mcp_v, getParticleByID(mcp_v, truthMatch.trackid)->Mother())->PdgCode()*/<<std::endl;
+    std::cout<<"PrintTruth Hit "<<i<<", time: "<<hit->ts1_ns-1.7e6<<"; hit postion: ("<<hit->x_pos<<", "<<hit->y_pos<<", "<<hit->z_pos<<"); pdg: "<<truthMatch.pdg<<"; deposited energy: "<<truthMatch.depEnergy_total<<"; purity: "<<truthMatch.purity<<"; trackID: "<<truthMatch.trackid/*<<", mother: "<<getParticleByID(mcp_v, truthMatch.trackid)->Mother()<<", "<<getParticleByID(mcp_v, getParticleByID(mcp_v, truthMatch.trackid)->Mother())->PdgCode()*/<<std::endl;
 
-    lar_pandora::MCTruthToMCParticles truthToParticles;
+    /*lar_pandora::MCTruthToMCParticles truthToParticles;
     lar_pandora::MCParticlesToMCTruth particlesToTruth;
 
     lar_pandora::LArPandoraHelper::CollectMCParticles(e, _g4_label, truthToParticles, particlesToTruth);
@@ -148,21 +200,21 @@ void CRTPrintTruth::analyze(art::Event const& e)
           }
         }
       }
-    }  
+    }*/  
   }
 }
 
 art::Ptr<simb::MCParticle> CRTPrintTruth::getParticleByID(
           std::vector<art::Ptr<simb::MCParticle>> mclistLARG4,
           int TrackId) 
-  {
-    for(auto particle : mclistLARG4) {
-      if ( particle->TrackId() == TrackId){
-        return particle;
-      }
+{
+  for(auto particle : mclistLARG4) {
+    if ( particle->TrackId() == TrackId){
+      return particle;
     }
-    return art::Ptr<simb::MCParticle>();
   }
+  return art::Ptr<simb::MCParticle>();
+}
 
 
 DEFINE_ART_MODULE(CRTPrintTruth)

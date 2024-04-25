@@ -558,7 +558,8 @@ CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(con
   // Find the true ID that contributed the most energy
   double bestPur = 0., comp = 0.;
   int trackid_true = -99999;
-  double particle_energy = 0.; int pdg = -1; double deposited_energy_track = 0.; double time = -1.;
+  //double particle_energy = 0.; int pdg = -1; double deposited_energy_track = 0.; double time = -1.;
+  double particle_energy = -99999.; int pdg = -99999; double deposited_energy_track = -99999.; double time = -99999.;
   for(auto const [id, en] : idToEnergyMap){
     double pur = en / totalEnergy;
     if(pur > bestPur){
@@ -569,7 +570,6 @@ CRTBackTracker::TruthMatchMetrics CRTBackTracker::TruthMatrixFromTotalEnergy(con
       comp    = en / particle_energy; 
     }
   }
-
   return TruthMatchMetrics(trackid_true, comp, bestPur, 1., 1., pdg, particle_energy, deposited_energy_track);
 }
 

@@ -5,6 +5,7 @@ BEGIN_PROLOG
 standard_crthitalg:
 {
    ADCThreshold: 60
+   ADCSaturation:  @local::sbnd_crtsim.DetSimParams.AdcSaturation
    QPedestal:      @local::sbnd_crtsim.DetSimParams.QPed
    QSlope:         @local::sbnd_crtsim.DetSimParams.QSlope
    PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift 

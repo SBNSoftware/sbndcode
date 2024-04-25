@@ -41,7 +41,7 @@ standard_sbnd_crtsimparams: {
 
   # Mean deposited charge for mips [GeV]
   UseEdep: true
-  Q0: 1.75e-3
+  Q0: 1.53e-3 #1.75e-3
 
   # ADC model: Pedestal offset [ADC], slope [ADC/photon], RMS [ADC]
   QPed: 0.0 #63.6
