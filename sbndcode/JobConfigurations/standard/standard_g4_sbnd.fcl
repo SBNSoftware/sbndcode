@@ -14,6 +14,7 @@
 #   * SimPhoton or SimPhotonLite (photons at the optical detectors)
 # - GenericCRT: produces:
 #   * AuxDetSimChannels (from LArG4 AuxDetHits)
+# - MCReco -> MCTrack, MCShower: deposited energy from each MCParticle (needs SimChannels)
 #
 # Input: a file with generated particles; all MCTruth data products in the input
 #        file are processed.
@@ -32,7 +33,7 @@
 #include "ionandscint_sbnd.fcl"
 #include "PDFastSim_sbnd.fcl"
 # include "simdrift_sbnd.fcl"
-# include "mcreco_sbnd.fcl"
+#include "mcreco_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 #include "config_genericCRT.fcl"
 
@@ -86,7 +87,7 @@ physics:
     # simdrift: @local::sbnd_simdrift
 
     # Truth-level reconstruction
-    # mcreco: @local::sbnd_mcreco
+    mcreco: @local::sbnd_mcreco
 
     # Generic CRT
     genericcrt: @local::sbnd_genericCRT
@@ -106,7 +107,7 @@ physics:
             , pdfastsim
             , pdfastsimout
             # , simdrift ## 1D TPC simulation no longer run
-            #, mcreco ## mcreco now run after WireCell sim
+            , mcreco
             , genericcrt
           ]
 

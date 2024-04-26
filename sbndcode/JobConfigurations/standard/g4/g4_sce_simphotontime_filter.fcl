@@ -37,5 +37,5 @@ physics.simulate: [ rns
                   , pdfastsimout
                   , genericcrt
                   ### Do truth-level reconstruction
-                #   , mcreco
+                  , mcreco
                   ]
