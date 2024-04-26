@@ -111,7 +111,7 @@ physics:
 ### Some potential overwrites below
 
 #physics.producers.pmttriggerproducer.SaveHists: true
-physics.producers.pmttriggerproducer.Verbose: true
+#physics.producers.pmttriggerproducer.Verbose: true
 
 #physics.producers.pmttriggerproducer.PairLogic: "AND"
 
