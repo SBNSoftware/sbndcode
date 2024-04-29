@@ -81,6 +81,9 @@ physics.producers.largeantdropped.InputSourcesLabels: [ "larg4intime:droppedMCPa
 # Change simple merge inputs since we're using an overlay sample
 physics.producers.simplemerge.InputSourcesLabels: ["largeant", "largeantdropped"]
 
+# Set proper input tags for mcreco
+physics.producers.mcreco.MCParticleDroppedLabel: "largeantdropped"
+
 # Add all these new modules to the simulate path
 physics.simulate: [ rns
                   ### Complete intime drift simulation and generic CRT
@@ -109,7 +112,7 @@ physics.simulate: [ rns
                   , pdfastsimout
                   , genericcrt
                   ### Do truth-level reconstruction
-                #   , mcreco
+                   , mcreco
                   ]
 
 services.ParticleListAction.keepGenTrajectories: ["GenInTimeSorter"]
