@@ -26,6 +26,8 @@ namespace blip {
     // for every single hit. Note that 'detProp.GetXTicksOffset()' does not make intuitive 
     // sense for cases with wireplanes aren't at X~0 (i.e., SBND).  We will account 
     // for that here so that our calculated drift times for hits makes sense.
+    
+    int kNumChannels = 0;
       
 
     // Loop over cryostats
@@ -40,6 +42,8 @@ namespace blip {
         // Loop planes in TPC 'tpc'
         for(size_t pl=0; pl<fGeom.Nplanes(tpcid); pl++){
           auto const& planeid = geo::PlaneID(cstat,tpc,pl);
+          
+          kNumChannels += fGeom.Nwires(planeid);
             
           float offset = detProp.GetXTicksOffset(pl,tpc,cstat);
           std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<fGeom.Nwires(planeid)<<" wires\n";
@@ -79,7 +83,7 @@ namespace blip {
           }
           
           // additional ad-hoc corrections supplied by user
-          kXTicksOffsets[cstat][tpc][pl] = fTimeOffset[pl];
+          kXTicksOffsets[cstat][tpc][pl] += fTimeOffset[pl];
             
 
           
@@ -87,15 +91,6 @@ namespace blip {
       }
     }
 
-    /*
-    std::cout<<"XticksOffset, Plane 0: "<<detProp.GetXTicksOffset(0,1,0)<<"\n";
-    std::cout<<"XticksOffset, Plane 1: "<<detProp.GetXTicksOffset(1,1,0)<<"\n";
-    std::cout<<"XticksOffset, Plane 2: "<<detProp.GetXTicksOffset(2,1,0)<<"\n";
-    std::cout<<"XticksOffset, Plane 0: "<<detProp.GetXTicksOffset(0,0,0)<<"\n";
-    std::cout<<"XticksOffset, Plane 1: "<<detProp.GetXTicksOffset(1,0,0)<<"\n";
-    std::cout<<"XticksOffset, Plane 2: "<<detProp.GetXTicksOffset(2,0,0)<<"\n";
-    */
-    
     /*
     // initialize channel list
     fBadChanMask       .resize(8256,false);
@@ -136,7 +131,7 @@ namespace blip {
     // create diagnostic histograms
     art::ServiceHandle<art::TFileService> tfs;
     art::TFileDirectory hdir = tfs->mkdir("BlipRecoAlg");
-   
+    
     /*
     h_chanstatus     = hdir.make<TH1D>("chanstatus","Channel status for 'channels' list",5,0,5);
     h_chanstatus     ->GetXaxis()->SetBinLabel(1, "disconnected");
@@ -154,56 +149,66 @@ namespace blip {
     */
 
     //h_hit_times       = hdir.make<TH1D>("hit_peaktime","Hit peaktimes",500,-5000,5000);
-    h_chan_nhits      = hdir.make<TH1D>("chan_nhits","Untracked hits;TPC readout channel;Total hits",8256,0,8256);
-    h_chan_nclusts    = hdir.make<TH1D>("chan_nclusts","Untracked isolated hits;TPC readout channel;Total clusts",8256,0,8256);
-    h_chan_bad        = hdir.make<TH1D>("chan_bad","Channels marked as bad;TPC readout channel",8256,0,8256);
-    h_recomb          = hdir.make<TH1D>("recomb","Applied recombination factor",150,0.40,0.70);
+    h_chan_nhits      = hdir.make<TH1D>("chan_nhits","Untracked hits;TPC readout channel;Total hits",kNumChannels,0,kNumChannels);
+    h_chan_nclusts    = hdir.make<TH1D>("chan_nclusts","Untracked isolated hits;TPC readout channel;Total clusts",kNumChannels,0,kNumChannels);
     h_clust_nwires    = hdir.make<TH1D>("clust_nwires","Clusters (pre-cut);Wires in cluster",100,0,100);
     h_clust_timespan  = hdir.make<TH1D>("clust_timespan","Clusters (pre-cut);Time span [ticks]",300,0,300);
 
     int qbins = 200;
     float qmax = 100;
-    //int wiresPerPlane[3]={2400,2400,3456};
-    for(int i=0; i<kNplanes; i++) {
-      //h_hit_maskfrac[i]       = dir_diag.make<TH1D>(Form("pl%i_hit_maskfrac",i),"",100,0,1.);
-      //h_hit_maskfrac_true[i]  = dir_diag.make<TH1D>(Form("pl%i_hit_maskfrac_true",i),"",100,0,1.);
-      //h_hit_mult[i]         = hdir.make<TH1D>(Form("pl%i_hit_mult",i),      Form("Plane %i;Num same-wire hits within +/- 50 ticks",i),20,0,20);
-      if( i == fCaloPlane ) continue;
-      //h_wire_nhits[i]       = hdir.make<TH1D>(Form("pl%i_wire_nhits",i),      Form("Plane %i untracked hits not plane-matched;TPC readout channel;Total hits",i),wiresPerPlane[i],0,wiresPerPlane[i]);
-      h_clust_overlap[i]    = hdir.make<TH1D>(Form("pl%i_clust_overlap",i),   Form("Plane %i clusters;Overlap fraction",i),101,0,1.01);
-      h_clust_dt[i]         = hdir.make<TH1D>(Form("pl%i_clust_dt",i),        Form("Plane %i clusters;dT [ticks]",i),200,-10,10);
-      h_clust_dtfrac[i]     = hdir.make<TH1D>(Form("pl%i_clust_dtfrac",i),    Form("Plane %i clusters;Charge-weighted mean dT/RMS",i),120,-3,3);
-      h_clust_q[i]     = hdir.make<TH2D>(Form("pl%i_clust_charge",i),  
-        Form("Pre-cut;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3} e-]",fCaloPlane,i),
-        qbins,0,qmax,qbins,0,qmax);
-      h_clust_q[i]    ->SetOption("colz");
-      h_clust_q_cut[i]     = hdir.make<TH2D>(Form("pl%i_clust_charge_cut",i),  
-        Form("Post-cut;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3}]",fCaloPlane,i),
-        qbins,0,qmax,qbins,0,qmax);
-      h_clust_q_cut[i]    ->SetOption("colz");
+    
+    // Loop over TPCs
+    for(int iTPC=0; iTPC<kNTPCs; iTPC++){
+   
+      for(int i=0; i<kNplanes; i++) {
+        if( i == fCaloPlane ) continue;
+        h_clust_overlap[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_overlap",iTPC,i),   Form("TPC %i, Plane %i clusters;Overlap fraction",iTPC,i),101,0,1.01);
+        h_clust_dt[iTPC][i]         = hdir.make<TH1D>(Form("t%i_p%i_clust_dt",iTPC,i),        Form("TPC %i, Plane %i clusters;dT [ticks]",iTPC,i),200,-10,10);
+        h_clust_dtfrac[iTPC][i]     = hdir.make<TH1D>(Form("t%i_p%i_clust_dtfrac",iTPC,i),    Form("TPC %i, Plane %i clusters;Charge-weighted mean dT/RMS",iTPC,i),150,-1.5,1.5);
+        
+        h_clust_q[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_charge",iTPC,i),  
+          Form("Pre-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3} e-]",iTPC,fCaloPlane,i),
+          qbins,0,qmax,qbins,0,qmax);
+          h_clust_q[iTPC][i]->SetOption("colz");
+        
+        h_clust_q_cut[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_charge_cut",iTPC,i),  
+          Form("Post-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3}]",iTPC,fCaloPlane,i),
+          qbins,0,qmax,qbins,0,qmax);
+          h_clust_q_cut[iTPC][i]->SetOption("colz");
       
-      h_clust_score[i]    = hdir.make<TH1D>(Form("pl%i_clust_matchscore",i),   Form("Plane %i clusters;Match score",i),101,0,1.01);
+        h_clust_score[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_matchscore",iTPC,i),   Form("TPC %i, Plane %i clusters;Match score",iTPC,i),101,0,1.01);
+       
 
-      h_clust_picky_overlap[i]   = hdir.make<TH1D>(Form("pl%i_clust_picky_overlap",i),  Form("Plane %i clusters (3 planes, intersect #Delta cut);Overlap fraction",i),101,0,1.01);
-      h_clust_picky_dt[i]        = hdir.make<TH1D>(Form("pl%i_clust_picky_dt",i),       Form("Plane %i clusters (3 planes, intersect #Delta cut);dT [ticks]",i),200,-10,10);
-      h_clust_picky_dtfrac[i]      = hdir.make<TH1D>(Form("pl%i_clust_picky_dtfrac",i),Form("Plane %i clusters (3 planes, intersect #Delta cut);Charge-weighted mean dT/RMS",i),120,-3,3);
-      h_clust_picky_q[i]  = hdir.make<TH2D>(Form("pl%i_clust_picky_charge",i),  
+
+        
+        h_clust_truematch_overlap[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_truematch_overlap",iTPC,i),   Form("TPC %i, Plane %i clusters;Overlap fraction",iTPC,i),101,0,1.01);
+        h_clust_truematch_dt[iTPC][i]         = hdir.make<TH1D>(Form("t%i_p%i_clust_truematch_dt",iTPC,i),        Form("TPC %i, Plane %i clusters;dT [ticks]",iTPC,i),200,-10,10);
+        h_clust_truematch_dtfrac[iTPC][i]     = hdir.make<TH1D>(Form("t%i_p%i_clust_truematch_dtfrac",iTPC,i),    Form("TPC %i, Plane %i clusters;Charge-weighted mean dT/RMS",iTPC,i),120,-3,3);
+        
+        h_clust_truematch_q[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_truematch_charge",iTPC,i),  
+          Form("Pre-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3} e-]",iTPC,fCaloPlane,i),
+          qbins,0,qmax,qbins,0,qmax);
+          h_clust_truematch_q[iTPC][i]->SetOption("colz");
+        
+        h_clust_truematch_score[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_truematch_matchscore",iTPC,i),   Form("TPC %i, Plane %i clusters;Match score",iTPC,i),101,0,1.01);
+
+
+        /*
+        h_clust_picky_overlap[iTPC][i]   = hdir.make<TH1D>(Form("t%i_p%i_clust_picky_overlap",iTPC,i),  Form("Plane %i clusters (3 planes, intersect #Delta cut);Overlap fraction",i),101,0,1.01);
+        h_clust_picky_dt[iTPC][i]        = hdir.make<TH1D>(Form("t%i_p%i_clust_picky_dt",iTPC,i),       Form("Plane %i clusters (3 planes, intersect #Delta cut);dT [ticks]",i),200,-10,10);
+        h_clust_picky_dtfrac[iTPC][i]      = hdir.make<TH1D>(Form("t%i_p%i_clust_picky_dtfrac",iTPC,i),Form("Plane %i clusters (3 planes, intersect #Delta cut);Charge-weighted mean dT/RMS",i),120,-3,3);
+        h_clust_picky_q[iTPC][i]  = hdir.make<TH2D>(Form("t%i_p%i_clust_picky_charge",iTPC,i),  
         Form("3 planes, intersect #Delta cut;Plane %i cluster charge [#times 10^{3} e-];Plane %i cluster charge [#times 10^{3} e-]",fCaloPlane,i),
         qbins,0,qmax,qbins,0,qmax);
-      h_clust_picky_q[i]     ->SetOption("colz");
+        h_clust_picky_q[iTPC][i]     ->SetOption("colz");
+        */
+
       
-      h_clust_truematch_overlap[i]   = hdir.make<TH1D>(Form("pl%i_clust_truematch_overlap",i),  Form("Plane %i clusters (MC match);Overlap fraction",i),101,0,1.01);
-      h_clust_truematch_dt[i]        = hdir.make<TH1D>(Form("pl%i_clust_truematch_dt",i),       Form("Plane %i clusters (MC match);dT [ticks]",i),200,-10,10);
-      h_clust_truematch_dtfrac[i]      = hdir.make<TH1D>(Form("pl%i_clust_truematch_dtfrac",i),Form("Plane %i clusters (MC match);Charge-weighted mean dT/RMS",i),120,-3,3);
-      h_clust_truematch_q[i]  = hdir.make<TH2D>(Form("pl%i_clust_truematch_charge",i),  
-        Form("3 planes, intersect #Delta cut ;Plane %i cluster charge [#times 10^{3} e-];Plane %i cluster charge [#times 10^{3} e-]",fCaloPlane,i),
-        qbins,0,qmax,qbins,0,qmax);
-      h_clust_truematch_q[i]     ->SetOption("colz");
-      h_clust_truematch_score[i]    = hdir.make<TH1D>(Form("pl%i_clust_truematch_matchscore",i),   Form("Plane %i clusters;Match score",i),101,0,1.01);
-      
-      
-      h_nmatches[i]         = hdir.make<TH1D>(Form("pl%i_nmatches",i),Form("number of plane%i matches to single collection cluster",i),20,0,20);
-    }
+        h_nmatches[iTPC][i]         = hdir.make<TH1D>(Form("t%i_p%i_nmatches",iTPC,i),Form("TPC %i;Number of plane%i matches to single collection cluster",iTPC,i),20,0,20);
+    }//endloop over planes
+    
+    }//endloop over TPCs
+
   
     // Efficiency as a function of energy deposited on a wire
     h_recoWireEff_denom = hdir.make<TH1D>("recoWireEff_trueCount","Collection plane;Electron energy deposited on wire [MeV];Count",150,0,1.5);
@@ -211,6 +216,7 @@ namespace blip {
     
     h_recoWireEffQ_denom = hdir.make<TH1D>("recoWireEffQ_trueCount","Collection plane;Charge deposited on wire [e-];Count",80,0,20000);
     h_recoWireEffQ_num   = hdir.make<TH1D>("recoWireEffQ","Collection plane;Charge deposited on wire [e-];Hit reco efficiency",80,0,20000);
+    
 
   }
   
@@ -257,7 +263,7 @@ namespace blip {
     fMinClusterCharge   = pset.get<float>         ("MinClusterCharge",  300);
     fMaxClusterCharge   = pset.get<float>         ("MaxClusterCharge",  12e6);
     
-    fApplyXTicksOffset  = pset.get<bool>          ("ApplyXTicksOffset", true);
+    fApplyXTicksOffset  = pset.get<bool>          ("ApplyXTicksOffset",     true);
     fTimeOffset         = pset.get<std::vector<float>>("TimeOffset", {0.,0.,0.});
     fMatchMinOverlap    = pset.get<float>         ("ClustMatchMinOverlap",  0.5 );
     fMatchSigmaFact     = pset.get<float>         ("ClustMatchSigmaFact",   1.0);
@@ -295,6 +301,7 @@ namespace blip {
         break;
       }
     }
+    
   }
 
 
@@ -308,9 +315,9 @@ namespace blip {
   //###########################################################
   void BlipRecoAlg::RunBlipReco( const art::Event& evt ) {
   
-    //std::cout<<"\n"
-    //<<"=========== BlipRecoAlg =========================\n"
-    //<<"Event "<<evt.id().event()<<" / run "<<evt.id().run()<<"\n";
+    std::cout<<"\n"
+    <<"=========== BlipRecoAlg =========================\n"
+    <<"Event "<<evt.id().event()<<" / run "<<evt.id().run()<<"\n";
   
     //=======================================
     // Reset things
@@ -874,6 +881,7 @@ namespace blip {
       
       //std::cout
       //<<"Performing cluster matching in TPC "<<tpcMap.first<<", which has clusters in "<<tpcMap.second.size()<<" planes\n";
+      auto tpc = tpcMap.first;
       auto& planeMap = tpcMap.second;
       if( planeMap.find(fCaloPlane) != planeMap.end() ){
         int   planeA              = fCaloPlane;
@@ -952,17 +960,17 @@ namespace blip {
               bool trueFlag = (hcA.isTruthMatched && (hcA.EdepID == hcB.EdepID)) ? true : false;
              
               // Diagnostic histograms
-              h_clust_overlap[planeB] ->Fill(overlapFrac);
-              h_clust_dt[planeB]      ->Fill(dt);
-              h_clust_dtfrac[planeB]  ->Fill(dtfrac);
-              h_clust_q[planeB]       ->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
-              if( score > 0 ) h_clust_score[planeB]   ->Fill(score);
+              h_clust_overlap[tpc][planeB] ->Fill(overlapFrac);
+              h_clust_dt[tpc][planeB]      ->Fill(dt);
+              h_clust_dtfrac[tpc][planeB]  ->Fill(dtfrac);
+              h_clust_q[tpc][planeB]       ->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
+              if( score > 0 ) h_clust_score[tpc][planeB]   ->Fill(score);
               if( trueFlag ) {
-                h_clust_truematch_overlap[planeB]->Fill(overlapFrac);
-                h_clust_truematch_dt[planeB]     ->Fill(dt);
-                h_clust_truematch_dtfrac[planeB] ->Fill(dtfrac);
-                h_clust_truematch_q[planeB]      ->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
-                if( score > 0 ) h_clust_truematch_score[planeB]  ->Fill(score);
+                h_clust_truematch_overlap[tpc][planeB]->Fill(overlapFrac);
+                h_clust_truematch_dt[tpc][planeB]     ->Fill(dt);
+                h_clust_truematch_dtfrac[tpc][planeB] ->Fill(dtfrac);
+                h_clust_truematch_q[tpc][planeB]      ->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
+                if( score > 0 ) h_clust_truematch_score[tpc][planeB]  ->Fill(score);
               }
 
               if( overlapFrac   < fMatchMinOverlap  ) continue;
@@ -971,7 +979,7 @@ namespace blip {
               if( qdiff         > _matchQDiffLimit 
                && ratio         > _matchMaxQRatio   ) continue;
               
-              h_clust_q_cut[planeB]->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
+              h_clust_q_cut[tpc][planeB]->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
               
               // **************************************************
               // We made it through the cuts -- the match is good!
@@ -992,7 +1000,7 @@ namespace blip {
           if( cands.size() ) {
             for(auto& c : cands ) {
               int plane = c.first;
-              h_nmatches[plane]->Fill(c.second.size());
+              h_nmatches[tpc][plane]->Fill(c.second.size());
               float bestScore   = -9;
               int   bestID      = -9;
               for(auto cid : c.second) {
@@ -1021,14 +1029,14 @@ namespace blip {
               for(auto hit : hitclust[hc.ID].HitIDs) hitinfo[hit].ismatch = true;
              
               // Diagnostic plots for successful 3-plane matches
-              if( picky && hc.Plane != fCaloPlane ) {
-                float q1 = (float)newBlip.clusters[fCaloPlane].Charge;
-                float q2 = (float)newBlip.clusters[hc.Plane].Charge;
-                h_clust_picky_overlap[hc.Plane]->Fill(map_clust_overlap[hc.ID]);
-                h_clust_picky_dtfrac[hc.Plane] ->Fill(map_clust_dtfrac[hc.ID]);
-                h_clust_picky_dt[hc.Plane]     ->Fill(map_clust_dt[hc.ID]);
-                h_clust_picky_q[hc.Plane]  ->Fill(0.001*q1,0.001*q2);
-              }//end diagnostic plots
+              //if( picky && hc.Plane != fCaloPlane ) {
+                //float q1 = (float)newBlip.clusters[fCaloPlane].Charge;
+                //float q2 = (float)newBlip.clusters[hc.Plane].Charge;
+                //h_clust_picky_overlap[hc.Plane]->Fill(map_clust_overlap[hc.ID]);
+                //h_clust_picky_dtfrac[hc.Plane] ->Fill(map_clust_dtfrac[hc.ID]);
+                //h_clust_picky_dt[hc.Plane]     ->Fill(map_clust_dt[hc.ID]);
+                //h_clust_picky_q[hc.Plane]  ->Fill(0.001*q1,0.001*q2);
+              //}//end diagnostic plots
               
             }//end loop over clusters
 
@@ -1103,7 +1111,7 @@ namespace blip {
 
     for(size_t i=0; i<hitlist.size(); i++){
       if (hitinfo[i].trkid >= 0 ) continue;
-      h_chan_nhits->Fill(fGeom.PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
+      //h_chan_nhits->Fill(fGeom.PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
       
       int clustid = hitinfo[i].clustid;
       if( clustid >= 0 ) {
@@ -1178,7 +1186,6 @@ namespace blip {
       // METHOD 1
       float recomb  = ModBoxRecomb(fCalodEdx,Efield);
       blip.Energy   = depEl * (1./recomb) * kWion;
-      h_recomb      ->Fill(recomb);
       
       // METHOD 2 (TODO)
       //std::cout<<"Calculating ESTAR energy dep...  "<<depEl<<", "<<Efield<<"\n";
@@ -1246,9 +1253,11 @@ namespace blip {
     for(auto val : fMatchMaxTicks) { printf("%3.1f   ",val); } printf("\n");
     */
 
-    for(int i=0; i<kNplanes; i++){
-    if( i == fCaloPlane ) continue;
-    printf("  pl%i matches per cand      : %4.2f\n",       i,h_nmatches[i]->GetMean());
+    for(int iTPC=0; iTPC<kNTPCs; iTPC++){
+      for(int i=0; i<kNplanes; i++){
+        if( i == fCaloPlane ) continue;
+          printf("  pl%i matches per cand      : %4.2f\n",       i,h_nmatches[iTPC][i]->GetMean());
+        }
     }
     
     //printf("  Track-cylinder radius     : %.1f cm\n",       fCylinderRadius);

@@ -114,6 +114,7 @@ namespace blip {
     float   kNominalEfield;
     float   kDriftVelocity;
     float   kTickPeriod;
+    int     kNumChannels;
 
    private:
     
@@ -184,32 +185,27 @@ namespace blip {
     TH1D*   h_hit_times;
     TH1D*   h_chan_nhits;
     TH1D*   h_chan_nclusts;
-    TH1D*   h_chan_bad;
     TH1D*   h_clust_nwires;
     TH1D*   h_clust_timespan;
-    TH1D*   h_hit_maskfrac[kNplanes];
-    TH1D*   h_hit_maskfrac_true[kNplanes];
-    TH1D*   h_clust_overlap[kNplanes];
-    TH1D*   h_clust_dt[kNplanes];
-    TH1D*   h_clust_dtfrac[kNplanes];
-    TH2D*   h_clust_q[kNplanes]; 
-    TH2D*   h_clust_q_cut[kNplanes];
-    TH1D*   h_clust_score[kNplanes];
-    TH1D*   h_clust_picky_overlap[kNplanes];
-    TH1D*   h_clust_picky_dt[kNplanes];
-    TH1D*   h_clust_picky_dtfrac[kNplanes];
-    TH2D*   h_clust_picky_q[kNplanes]; 
     
-    TH1D*   h_clust_truematch_overlap[kNplanes];
-    TH1D*   h_clust_truematch_dt[kNplanes];
-    TH1D*   h_clust_truematch_dtfrac[kNplanes];
-    TH1D*   h_clust_truematch_score[kNplanes]; 
-    TH2D*   h_clust_truematch_q[kNplanes]; 
+    TH1D*   h_clust_overlap[kNTPCs][kNplanes];
+    TH1D*   h_clust_dt[kNTPCs][kNplanes];
+    TH1D*   h_clust_dtfrac[kNTPCs][kNplanes];
+    TH2D*   h_clust_q[kNTPCs][kNplanes]; 
+    TH2D*   h_clust_q_cut[kNTPCs][kNplanes];
+    TH1D*   h_clust_score[kNTPCs][kNplanes];
+    //TH1D*   h_clust_picky_overlap[kNplanes];
+    //TH1D*   h_clust_picky_dt[kNplanes];
+    //TH1D*   h_clust_picky_dtfrac[kNplanes];
+    //TH2D*   h_clust_picky_q[kNplanes]; 
+    
+    TH1D*   h_clust_truematch_overlap[kNTPCs][kNplanes];
+    TH1D*   h_clust_truematch_dt[kNTPCs][kNplanes];
+    TH1D*   h_clust_truematch_dtfrac[kNTPCs][kNplanes];
+    TH1D*   h_clust_truematch_score[kNTPCs][kNplanes]; 
+    TH2D*   h_clust_truematch_q[kNTPCs][kNplanes]; 
 
-    TH1D*   h_nmatches[kNplanes];
-
-    TH1D*   h_recomb;
-
+    TH1D*   h_nmatches[kNTPCs][kNplanes];
 
   };
 

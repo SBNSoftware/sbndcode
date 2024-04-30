@@ -10,7 +10,8 @@ typedef std::vector<float>      vfloat_t;
 typedef std::set<int>           si_t;
 typedef std::map<int,float>     mif_t;
 
-const int kNplanes    = 3;  
+const int kNplanes    = 3; 
+const int kNTPCs      = 2;
 
 namespace blip {
   
