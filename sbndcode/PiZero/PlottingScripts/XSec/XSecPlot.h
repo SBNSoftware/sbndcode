@@ -147,12 +147,42 @@ public:
     return values;
   }
 
-  std::vector<float> GetFracErrors(const std::string &name)
+  std::vector<float> GetFracErrorsXSec(const std::string &name)
   {
     std::vector<float> values;
 
     for(auto const& bin : _bins)
-      values.push_back(bin->GetFracSystResAve(name));
+      values.push_back(bin->GetFracSystResAveXSec(name));
+
+    return values;
+  }
+
+  std::vector<float> GetFracErrorsEfficiency(const std::string &name)
+  {
+    std::vector<float> values;
+
+    for(auto const& bin : _bins)
+      values.push_back(bin->GetFracSystResAveEfficiency(name));
+
+    return values;
+  }
+
+  std::vector<float> GetFracErrorsPurity(const std::string &name)
+  {
+    std::vector<float> values;
+
+    for(auto const& bin : _bins)
+      values.push_back(bin->GetFracSystResAvePurity(name));
+
+    return values;
+  }
+
+  std::vector<float> GetFracErrorsBkgdCount(const std::string &name)
+  {
+    std::vector<float> values;
+
+    for(auto const& bin : _bins)
+      values.push_back(bin->GetFracSystResAveBkgdCount(name));
 
     return values;
   }
@@ -177,12 +207,69 @@ public:
     return values;
   }
 
+  std::vector<float> GetUniverseEfficiencies(const std::string &weightName, const int univ)
+  {
+    std::vector<float> values;
+
+    for(auto const& bin : _bins)
+      values.push_back(bin->GetUniverseEfficiency(weightName, univ));
+
+    return values;
+  }
+
+  std::vector<float> GetNominalPurities()
+  {
+    std::vector<float> values;
+
+    for(auto const& bin : _bins)
+      values.push_back(bin->GetNominalPurity());
+
+    return values;
+  }
+
+  std::vector<float> GetUniversePurities(const std::string &weightName, const int univ)
+  {
+    std::vector<float> values;
+
+    for(auto const& bin : _bins)
+      values.push_back(bin->GetUniversePurity(weightName, univ));
+
+    return values;
+  }
+
+  std::vector<float> GetNominalBkgdCounts()
+  {
+    std::vector<float> values;
+
+    for(auto const& bin : _bins)
+      values.push_back(bin->GetNominalBkgdCount());
+
+    return values;
+  }
+
+  std::vector<float> GetUniverseBkgdCounts(const std::string &weightName, const int univ)
+  {
+    std::vector<float> values;
+
+    for(auto const& bin : _bins)
+      values.push_back(bin->GetUniverseBkgdCount(weightName, univ));
+
+    return values;
+  }
+
   void InsertSystFracFlatError(const std::string &name, const double &frac)
   {
     for(int i = 0; i < _bins.size(); ++i)
       {
-        const double nom = _bins[i]->GetNominalXSec();
-        _bins[i]->InsertSystFracError(name, nom, frac);
+        const double nomxsec   = _bins[i]->GetNominalXSec();
+        const double nomeff    = _bins[i]->GetNominalEfficiency();
+        const double nompur    = _bins[i]->GetNominalPurity();
+        const double nombcount = _bins[i]->GetNominalBkgdCount();
+
+        _bins[i]->InsertSystFracErrorXSec(name, nomxsec, frac);
+        _bins[i]->InsertSystFracErrorEfficiency(name, nomeff, frac);
+        _bins[i]->InsertSystFracErrorPurity(name, nompur, frac);
+        _bins[i]->InsertSystFracErrorBkgdCount(name, nombcount, frac);
       }
   }
 
@@ -241,12 +328,12 @@ public:
     return hist;
   }
 
-  TH1F* GetFracErrorHist(const std::string &name)
+  TH1F* GetFracErrorXSecHist(const std::string &name)
   {
-    const std::vector<float> values = GetFracErrors(name);
+    const std::vector<float> values = GetFracErrorsXSec(name);
     const std::vector<float> errors = std::vector<float>(_bins.size(), 0.);
 
-    TH1F* hist = MakeHist(Form("Frac_Error_%s_%s", _name.c_str(), name.c_str()), values, errors);
+    TH1F* hist = MakeHist(Form("Frac_Error_XSec_%s_%s", _name.c_str(), name.c_str()), values, errors);
 
     hist->SetMarkerStyle(0);
     hist->SetLineColor(kBlack);
@@ -289,15 +376,14 @@ public:
     return hist;
   }
 
-  TGraphAsymmErrors* GetCVErrGraph(const std::string &weightName)
+  TGraphAsymmErrors* GetCVErrXSecGraph(const std::string &weightName)
   {
     TGraphAsymmErrors* graph = new TGraphAsymmErrors();
-    int bin_count = 0;
 
     for(auto&& [ bin_i, bin ] : enumerate(_bins))
       {
         double low, cv, high;
-        std::tie(low, cv, high) = bin->GetSystFracErrors(weightName);
+        std::tie(low, cv, high) = bin->GetSystFracErrorsXSec(weightName);
 
         if(cv == 0.)
           continue;
@@ -306,12 +392,94 @@ public:
         const double width  = bin->GetVarWidth();
 
         graph->SetPoint(bin_i, centre, cv);
-        graph->SetPointError(bin_count, 0.49 * width, 0.49 * width, low * cv, high * cv);
+        graph->SetPointError(bin_i, 0.49 * width, 0.49 * width, low * cv, high * cv);
 
-        graph->SetMarkerStyle(1);
-        graph->SetLineColor(kBlue+2);
-        graph->SetLineWidth(5);
       }
+
+    graph->SetMarkerStyle(1);
+    graph->SetLineColor(kBlue+2);
+    graph->SetLineWidth(5);
+
+    return graph;
+  }
+
+  TGraphAsymmErrors* GetCVErrEfficiencyGraph(const std::string &weightName)
+  {
+    TGraphAsymmErrors* graph = new TGraphAsymmErrors();
+
+    for(auto&& [ bin_i, bin ] : enumerate(_bins))
+      {
+        double low, cv, high;
+        std::tie(low, cv, high) = bin->GetSystFracErrorsEfficiency(weightName);
+
+        if(cv == 0.)
+          continue;
+
+        const double centre = bin->GetVarCenter();
+        const double width  = bin->GetVarWidth();
+
+        graph->SetPoint(bin_i, centre, cv);
+        graph->SetPointError(bin_i, 0.49 * width, 0.49 * width, low * cv, high * cv);
+
+      }
+
+    graph->SetMarkerStyle(1);
+    graph->SetLineColor(kBlue+2);
+    graph->SetLineWidth(5);
+
+    return graph;
+  }
+
+  TGraphAsymmErrors* GetCVErrPurityGraph(const std::string &weightName)
+  {
+    TGraphAsymmErrors* graph = new TGraphAsymmErrors();
+
+    for(auto&& [ bin_i, bin ] : enumerate(_bins))
+      {
+        double low, cv, high;
+        std::tie(low, cv, high) = bin->GetSystFracErrorsPurity(weightName);
+
+        if(cv == 0.)
+          continue;
+
+        const double centre = bin->GetVarCenter();
+        const double width  = bin->GetVarWidth();
+
+        graph->SetPoint(bin_i, centre, cv);
+        graph->SetPointError(bin_i, 0.49 * width, 0.49 * width, low * cv, high * cv);
+
+      }
+
+    graph->SetMarkerStyle(1);
+    graph->SetLineColor(kBlue+2);
+    graph->SetLineWidth(5);
+
+    return graph;
+  }
+
+  TGraphAsymmErrors* GetCVErrBkgdCountGraph(const std::string &weightName)
+  {
+    TGraphAsymmErrors* graph = new TGraphAsymmErrors();
+
+    for(auto&& [ bin_i, bin ] : enumerate(_bins))
+      {
+        double low, cv, high;
+        std::tie(low, cv, high) = bin->GetSystFracErrorsBkgdCount(weightName);
+
+        if(cv == 0.)
+          continue;
+
+        const double centre = bin->GetVarCenter();
+        const double width  = bin->GetVarWidth();
+
+        graph->SetPoint(bin_i, centre, cv);
+        graph->SetPointError(bin_i, 0.49 * width, 0.49 * width, low * cv, high * cv);
+
+      }
+
+    graph->SetMarkerStyle(1);
+    graph->SetLineColor(kBlue+2);
+    graph->SetLineWidth(5);
 
     return graph;
   }
@@ -320,12 +488,27 @@ public:
   {
     for(auto const&  bin : _bins)
       {
-        const double nom = bin->GetNominalXSec();
+        const double nomxsec   = bin->GetNominalXSec();
+        const double nomeff    = bin->GetNominalEfficiency();
+        const double nompur    = bin->GetNominalPurity();
+        const double nombcount = bin->GetNominalBkgdCount();
 
-        const double bias = bin->GetFracSystBiasQuadSum(weightNames);
-        const double res  = bin->GetFracSystResAveQuadSum(weightNames);
+        const double biasxsec = bin->GetFracSystBiasQuadSumXSec(weightNames);
+        const double resxsec  = bin->GetFracSystResAveQuadSumXSec(weightNames);
 
-        bin->InsertSystFracError(weightName, (1 + bias) * nom, res);
+        const double biaseff = bin->GetFracSystBiasQuadSumEfficiency(weightNames);
+        const double reseff  = bin->GetFracSystResAveQuadSumEfficiency(weightNames);
+
+        const double biaspur = bin->GetFracSystBiasQuadSumPurity(weightNames);
+        const double respur  = bin->GetFracSystResAveQuadSumPurity(weightNames);
+
+        const double biasbcount = bin->GetFracSystBiasQuadSumBkgdCount(weightNames);
+        const double resbcount  = bin->GetFracSystResAveQuadSumBkgdCount(weightNames);
+
+        bin->InsertSystFracErrorXSec(weightName, (1 + biasxsec) * nomxsec, resxsec);
+        bin->InsertSystFracErrorEfficiency(weightName, (1 + biaseff) * nomeff, reseff);
+        bin->InsertSystFracErrorPurity(weightName, (1 + biaspur) * nompur, respur);
+        bin->InsertSystFracErrorBkgdCount(weightName, (1 + biasbcount) * nombcount, resbcount);
       }
   }
 

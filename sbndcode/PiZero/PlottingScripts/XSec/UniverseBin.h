@@ -6,7 +6,7 @@ constexpr double def_double_high = std::numeric_limits<double>::max();
 
 class UniverseBin {
 
- private:
+private:
   double _xsec;
   double _count;
   double _bkgdCount;
@@ -20,23 +20,23 @@ class UniverseBin {
   double _intFlux;
   double _fracStatErr;
 
- public:
+public:
   
   UniverseBin(const double binWidth, const double nTargets, const double intFlux)
-    {
-      _xsec             = def_double;
-      _count            = 0.;
-      _bkgdCount        = 0.;
-      _trueSignal       = 0.;
-      _selSignalTrueBin = 0.;
-      _scaleFactor      = def_double;
-      _purity           = def_double;
-      _efficiency       = def_double;
-      _fracStatErr      = def_double;
-      _binWidth         = binWidth;
-      _nTargets         = nTargets;
-      _intFlux          = intFlux;
-    }
+  {
+    _xsec             = def_double;
+    _count            = 0.;
+    _bkgdCount        = 0.;
+    _trueSignal       = 0.;
+    _selSignalTrueBin = 0.;
+    _scaleFactor      = def_double;
+    _purity           = def_double;
+    _efficiency       = def_double;
+    _fracStatErr      = def_double;
+    _binWidth         = binWidth;
+    _nTargets         = nTargets;
+    _intFlux          = intFlux;
+  }
 
   void Print()
   {
@@ -126,6 +126,16 @@ class UniverseBin {
   double GetEfficiency()
   {
     return _efficiency;
+  }
+
+  double GetPurity()
+  {
+    return _purity;
+  }
+
+  double GetBkgdCount()
+  {
+    return _bkgdCount;
   }
 
   void IncrementCount(const double &increment)

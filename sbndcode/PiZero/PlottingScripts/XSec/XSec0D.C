@@ -97,14 +97,14 @@ void MakePlot(const int type, const Selections &selections, const TString &saveD
 
       if(type == 2)
         {
-          TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightName);
+          TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
           graph->Draw("PEsame");
         }
 
       if(type == 3)
         {
           selection.plot->CombineErrorsInQuaderature(weightNames, weightName);
-          TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightName);
+          TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
           graph->Draw("PEsame");
         }
 
@@ -157,8 +157,8 @@ m}$} & \\multicolumn{2}{|c|}{NC1$\\pi^{0}$Np0$\\pi^{\\pm}$} \\\\ \\hline"
               XSecPlot *plot = selection.plot;
               Bin *bin = plot->GetBins()[0];
 
-              texFile << Form(" & %.2f & %.2f", 100. * bin->GetFracSystResAve(name),
-                              100. * bin->GetFracSystBias(name));
+              texFile << Form(" & %.2f & %.2f", 100. * bin->GetFracSystResAveXSec(name),
+                              100. * bin->GetFracSystBiasXSec(name));
             }
 
           texFile << "\\\\ \\hline" << std::endl;
@@ -171,8 +171,8 @@ m}$} & \\multicolumn{2}{|c|}{NC1$\\pi^{0}$Np0$\\pi^{\\pm}$} \\\\ \\hline"
           XSecPlot *plot = selection.plot;
           Bin *bin = plot->GetBins()[0];
 
-          texFile << Form(" & %.2f & %.2f", 100. * bin->GetFracSystResAveQuadSum(weightSet.list),
-                          100. * bin->GetFracSystBiasQuadSum(weightSet.list));
+          texFile << Form(" & %.2f & %.2f", 100. * bin->GetFracSystResAveQuadSumXSec(weightSet.list),
+                          100. * bin->GetFracSystBiasQuadSumXSec(weightSet.list));
         }
 
       texFile << "\\\\ \\hline";
@@ -266,7 +266,7 @@ void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, c
 
       const std::vector<std::string> systs_list = SystSetToWeightList(systs);
       selection.plot->CombineErrorsInQuaderature(systs_list, weightName);
-      TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightName);
+      TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
       graph->Draw("PEsame");
 
       if(selection_i == 0)
@@ -293,7 +293,7 @@ void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, c
 
       for(auto const& syst : systs)
         {
-          TH1F *systHist = selection.plot->GetFracErrorHist(syst.name);
+          TH1F *systHist = selection.plot->GetFracErrorXSecHist(syst.name);
           systHist->SetTitle(";;Fractional Uncertainty");
           systHist->GetYaxis()->SetTitleOffset(1.2);
           systHist->GetXaxis()->SetLabelSize(0);

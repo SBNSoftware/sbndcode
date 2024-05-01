@@ -116,14 +116,14 @@ void MakePlot(const int type, const Selections &selections, const TString &saveD
 
       if(type == 2)
         {
-          TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightName);
+          TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
           graph->Draw("PEsame");
         }
 
       if(type == 3)
         {
           selection.plot->CombineErrorsInQuaderature(weightNames, weightName);
-          TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightName);
+          TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
           graph->Draw("PEsame");
         }
 
@@ -289,7 +289,7 @@ void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, c
 
       const std::vector<std::string> systs_list = SystSetToWeightList(systs);
       selection.plot->CombineErrorsInQuaderature(systs_list, weightName);
-      TGraphAsymmErrors *graph = selection.plot->GetCVErrGraph(weightName);
+      TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
       graph->Draw("PEsame");
 
       leg->AddEntry(graph, "#splitline{MC XSec +}{Combined Systematics}", "le");
@@ -315,7 +315,7 @@ void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, c
 
       for(auto const& syst : systs)
         {
-          TH1F *systHist = selection.plot->GetFracErrorHist(syst.name);
+          TH1F *systHist = selection.plot->GetFracErrorXSecHist(syst.name);
           systHist->SetBit(TH1::kNoTitle);
           systHist->GetYaxis()->SetTitle("#splitline{Fractional}{Uncertainty}");
           systHist->GetYaxis()->SetTitleOffset(0.5);

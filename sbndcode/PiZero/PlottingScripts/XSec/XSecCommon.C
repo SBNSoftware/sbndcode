@@ -284,7 +284,7 @@ void FillPlots(XSecSamples &samples, Selections &selections, WeightSets &weightS
           bin->SetScaleFactor(samples[0].scaling);
           bin->Update();
           bin->CalculateXSecPurity();
-          //          bin->CalculateSystFracErrorsMedianPercentiles();
+          //bin->CalculateSystFracErrorsMedianPercentiles();
           bin->CalculateSystFracErrorsNominalSD();
         }
 
