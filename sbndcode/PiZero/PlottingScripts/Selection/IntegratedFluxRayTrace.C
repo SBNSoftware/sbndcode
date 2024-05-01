@@ -8,7 +8,7 @@ void IntegratedFluxRayTrace(const TString productionVersion)
 
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL_1*.root";
+  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL_0.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -24,6 +24,8 @@ void IntegratedFluxRayTrace(const TString productionVersion)
   const double fv_face_area = 175 * 360 * 2.;
 
   const int N = nus->GetEntries();
+
+  const int n_univs = 1000;
 
   std::vector<std::string> weight_names = flux_weight_names;
   const int n_weights = weight_names.size() + 1;
@@ -55,9 +57,9 @@ void IntegratedFluxRayTrace(const TString productionVersion)
                                       1.5, 2., 3., 5. };
 
   std::vector<std::vector<TH1F*>> hNuEnergyFluxUniverses = std::vector<std::vector<TH1F*>>(n_weights, std::vector<TH1F*>());
-  std::vector<std::vector<double>> counts(n_weights, std::vector<double>(1000, 0.));
+  std::vector<std::vector<double>> counts(n_weights, std::vector<double>(n_univs, 0.));
 
-  TH1F *hNuEnergyNominal = new TH1F("hNuEnergyNominal", ";True E_{#nu} (GeV);#nu", 14, true_nu_e_bins);
+  TH1F *hNuEnergyNominal = new TH1F("hNuEnergyNominal", ";True E_{#nu} (GeV);#nu / 0.1 GeV", 14, true_nu_e_bins);
   double nominalCount = 0.;
 
   ofstream outFile;
@@ -66,8 +68,8 @@ void IntegratedFluxRayTrace(const TString productionVersion)
 
   for(auto&& [ weight_i, name ] : enumerate(weight_names))
     {
-      for(int j = 0; j < 1000; ++j)
-        hNuEnergyFluxUniverses[weight_i].push_back(new TH1F(Form("hNuEnergyFluxUniverses%s%d", name.c_str(), j), ";True E_{#nu} (GeV);#nu", 14, true_nu_e_bins));
+      for(int j = 0; j < n_univs; ++j)
+        hNuEnergyFluxUniverses[weight_i].push_back(new TH1F(Form("hNuEnergyFluxUniverses%s%d", name.c_str(), j), ";True E_{#nu} (GeV);#nu / 0.1 GeV", 14, true_nu_e_bins));
     }
 
   for(int i = 0; i < N; ++i)
@@ -86,7 +88,7 @@ void IntegratedFluxRayTrace(const TString productionVersion)
 
           for(auto&& [ weight_i, name ] : enumerate(weight_names))
             {
-              for(int j = 0; j < 1000; ++j)
+              for(int j = 0; j < n_univs; ++j)
                 {
                   counts[weight_i][j] += weights[weight_i]->at(j) * w;
                   hNuEnergyFluxUniverses[weight_i][j]->Fill(nu_e, weights[weight_i]->at(j) * w);
@@ -94,6 +96,10 @@ void IntegratedFluxRayTrace(const TString productionVersion)
             }
         }
     }
+
+  NormaliseEntriesByBinWidth(hNuEnergyNominal, .1);
+  hNuEnergyNominal->Scale(scaling);
+  hNuEnergyNominal->SetMaximum(1.5 * hNuEnergyNominal->GetMaximum());
 
   for(auto&& [ weight_i, name ] : enumerate(weight_names))
     {
@@ -104,7 +110,7 @@ void IntegratedFluxRayTrace(const TString productionVersion)
 
       outFile << Form("{ \"%s\", {", name.c_str()) << std::endl;
 
-      for(int j = 0; j < 1000; ++j)
+      for(int j = 0; j < n_univs; ++j)
         {
           double flux = counts[weight_i][j] * scaling / fv_face_area;
 
@@ -122,12 +128,14 @@ void IntegratedFluxRayTrace(const TString productionVersion)
       hFluxUniverses->SetLineColor(kBlue-3);
       hFluxUniverses->Draw("histe");
 
-      TLine *nominalLine = new TLine();
+      gPad->Update();
+
+      TLine *nominalLine = new TLine(nominalFlux, gPad->GetUymin(), nominalFlux, gPad->GetUymax());
       nominalLine->SetLineColor(kMagenta+2);
       nominalLine->SetLineWidth(5);
-      nominalLine->DrawLine(nominalFlux, 0., nominalFlux, 1.12 * hFluxUniverses->GetMaximum());
+      nominalLine->Draw();
 
-      TLatex *potLatex = new TLatex(hFluxUniverses->GetBinLowEdge(22), 1.14 * hFluxUniverses->GetMaximum(), POTString());
+      TLatex *potLatex = new TLatex(hFluxUniverses->GetBinLowEdge(22), 1.14 * hFluxUniverses->GetMaximum(), POTString(false));
       potLatex->SetTextColor(kGray+2);
       potLatex->SetTextSize(0.035);
       potLatex->Draw();
@@ -149,12 +157,9 @@ void IntegratedFluxRayTrace(const TString productionVersion)
       cNuEnergyFluxUniverses->cd();
       cNuEnergyFluxUniverses->SetTopMargin(.1);
 
-      NormaliseEntriesByBinWidth(hNuEnergyNominal, .1);
-      hNuEnergyNominal->Scale(scaling);
-      hNuEnergyNominal->SetMaximum(1.5 * hNuEnergyNominal->GetMaximum());
       hNuEnergyNominal->Draw("hist");
 
-      for(int j = 0; j < 1000; ++j)
+      for(int j = 0; j < n_univs; ++j)
         {
           NormaliseEntriesByBinWidth(hNuEnergyFluxUniverses[weight_i][j], .1);
           hNuEnergyFluxUniverses[weight_i][j]->Scale(scaling);
@@ -174,25 +179,30 @@ void IntegratedFluxRayTrace(const TString productionVersion)
       cNuEnergyFluxUniverses->SaveAs(saveDir + Form("/%s/nu_energy_flux_universes_%s.pdf", name.c_str(), name.c_str()));
 
       std::vector<TH1F*> hNuEnergyFluxUniversesPerBin;
-      TH1F* hNuEnergyFluxUniversesCV = new TH1F(Form("hNuEnergyFluxUniversesCV%s", name.c_str()), ";True E_{#nu} (GeV);#nu", 14, true_nu_e_bins);
+      TH1F* hNuEnergyFluxUniversesCV = new TH1F(Form("hNuEnergyFluxUniversesCV%s", name.c_str()), ";True E_{#nu} (GeV);#nu / 0.1 GeV", 14, true_nu_e_bins);
 
       for(int bin = 0; bin < hNuEnergyNominal->GetNbinsX(); ++bin)
         {
-          hNuEnergyFluxUniversesPerBin.push_back(new TH1F(Form("hNuEnergyFluxUniverses%sBin%i", name.c_str(), bin+1),
-                                                          Form(";%.1f < True E_{#nu} (GeV) < %.1f;Universes", hNuEnergyNominal->GetBinLowEdge(bin+1),
-                                                               hNuEnergyNominal->GetBinLowEdge(bin+1) + hNuEnergyNominal->GetBinWidth(bin+1)),
-                                                          25, .5 * hNuEnergyNominal->GetBinContent(bin+1), 1.5 * hNuEnergyNominal->GetBinContent(bin+1)));
+	  const float binscale = bin == 0 ? 4 : bin < 3 ? 2.5 : bin < 5 ? 2 : 1.5;
 
-          for(int j = 0; j < 1000; ++j)
-            hNuEnergyFluxUniversesPerBin[bin]->Fill(hNuEnergyFluxUniverses[weight_i][j]->GetBinContent(bin+1));
+          hNuEnergyFluxUniversesPerBin.push_back(new TH1F(Form("hNuEnergyFluxUniverses%sBin%i", name.c_str(), bin+1),
+                                                          Form("%.1f < True E_{#nu} (GeV) < %.1f;#nu / 0.1 GeV;Universes", hNuEnergyNominal->GetBinLowEdge(bin+1),
+                                                               hNuEnergyNominal->GetBinLowEdge(bin+1) + hNuEnergyNominal->GetBinWidth(bin+1)),
+                                                          25, .5 * hNuEnergyNominal->GetBinContent(bin+1), binscale * hNuEnergyNominal->GetBinContent(bin+1)));
+          for(int j = 0; j < n_univs; ++j)
+	    {
+	      hNuEnergyFluxUniversesPerBin[bin]->Fill(hNuEnergyFluxUniverses[weight_i][j]->GetBinContent(bin+1));
+	    }
 
           TCanvas *cNuEnergyFluxUniversesPerBin = new TCanvas(Form("cNuEnergyFluxUniverses%sBin%i", name.c_str(), bin+1),
                                                               Form("cNuEnergyFluxUniverses%sBin%i", name.c_str(), bin+1));
           cNuEnergyFluxUniversesPerBin->cd();
+          cNuEnergyFluxUniversesPerBin->SetTopMargin(.12);
+          cNuEnergyFluxUniversesPerBin->SetRightMargin(.15);
 
           hNuEnergyFluxUniversesPerBin[bin]->SetLineColor(kBlue+2);
 
-          TF1 *fGaus = new TF1("fGaus", "gaus", .5 * hNuEnergyNominal->GetBinContent(bin+1), 1.5 * hNuEnergyNominal->GetBinContent(bin+1));
+          TF1 *fGaus = new TF1("fGaus", "gaus", .5 * hNuEnergyNominal->GetBinContent(bin+1), binscale * hNuEnergyNominal->GetBinContent(bin+1));
           hNuEnergyFluxUniversesPerBin[bin]->Fit(fGaus);
           fGaus->SetLineColor(kRed+2);
 
@@ -239,7 +249,7 @@ void IntegratedFluxRayTrace(const TString productionVersion)
               double covXX = 0.;
               double covYY = 0.;
 
-              for(int univ = 0; univ < 1000; ++univ)
+              for(int univ = 0; univ < n_univs; ++univ)
                 {
                   covXY += (hNuEnergyFluxUniverses[weight_i][univ]->GetBinContent(binX) - hNuEnergyNominal->GetBinContent(binX))
                     * (hNuEnergyFluxUniverses[weight_i][univ]->GetBinContent(binY) - hNuEnergyNominal->GetBinContent(binY));
@@ -251,9 +261,9 @@ void IntegratedFluxRayTrace(const TString productionVersion)
                     * (hNuEnergyFluxUniverses[weight_i][univ]->GetBinContent(binY) - hNuEnergyNominal->GetBinContent(binY));
                 }
 
-              covXY /= 1000;
-              covXX /= 1000;
-              covYY /= 1000;
+              covXY /= n_univs;
+              covXX /= n_univs;
+              covYY /= n_univs;
 
               const double corrXY = covXY / (TMath::Sqrt(covXX) * TMath::Sqrt(covYY));
 
