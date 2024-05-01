@@ -22,32 +22,23 @@ void XSec0D(const TString &productionVersion, const TString &saveDirExt)
 
   XSecSamples samples = SetupSamples(productionVersion);
 
-  std::vector<double> piZeroMomBins      = { -10., 1e10 };
-  std::vector<double> cosThetaPiZeroBins = { -10., 1e10 };
+  std::vector<double> bins = { -10., 1e10 };
 
   XSecPlot *xsec_incl  = new XSecPlot("xsec_incl", "NC 1#pi^{0};;#sigma (cm^{2}/nucleon)",
-                                      1, piZeroMomBins, cosThetaPiZeroBins,
-                                      "pizero_mom", "cos_theta_pizero", nTargets, intFlux);
+                                      1, bins, "pizero_mom", nTargets, intFlux);
   XSecPlot *xsec_0p0pi = new XSecPlot("xsec_0p0pi", "NC 1#pi^{0}0p0#pi^{#pm};;#sigma (cm^{2}/nucleon)",
-                                      1, piZeroMomBins, cosThetaPiZeroBins,
-                                      "pizero_mom", "cos_theta_pizero", nTargets, intFlux);
-
+                                      1, bins, "pizero_mom", nTargets, intFlux);
   XSecPlot *xsec_Np0pi = new XSecPlot("xsec_Np0pi", "NC 1#pi^{0}Np0#pi^{#pm};;#sigma (cm^{2}/nucleon)",
-                                      1, piZeroMomBins, cosThetaPiZeroBins,
-                                      "pizero_mom", "cos_theta_pizero", nTargets, intFlux);
+                                      1, bins, "pizero_mom", nTargets, intFlux);
 
   selections[0].plot = xsec_incl;
   selections[1].plot = xsec_0p0pi;
   selections[2].plot = xsec_Np0pi;
 
-  weightSets = {};
-
   FillPlots(samples, selections, weightSets);
 
   MakePlot(0, selections, saveDir);
   MakeSummaryPlot(0, selections, saveDir);
-
-  return;
 
   for(WeightSet &weightSet : weightSets)
     {
@@ -84,7 +75,7 @@ void MakePlot(const int type, const Selections &selections, const TString &saveD
       gPad->SetLeftMargin(0.25);
       gPad->SetRightMargin(0.05);
 
-      TH1F *hist = selection.plot->GetNominalHist0D(type == 0);
+      TH1F *hist = selection.plot->GetNominalXSecHist(type == 0);
       hist->GetYaxis()->SetTitleOffset(1.9);
       hist->GetXaxis()->SetLabelSize(0);
       hist->GetXaxis()->SetLabelOffset(999);
@@ -97,7 +88,7 @@ void MakePlot(const int type, const Selections &selections, const TString &saveD
         {
           for(int univ = 0; univ < nunivs; ++univ)
             {
-              TH1F *unihist = selection.plot->GetUniverseHist0D(weightName, univ);
+              TH1F *unihist = selection.plot->GetUniverseXSecHist(weightName, univ);
               unihist->Draw("hist][same");
             }
 
@@ -206,7 +197,7 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       gPad->SetLeftMargin(0.25);
       gPad->SetRightMargin(0.05);
 
-      TH1F *hist = selection.plot->GetNominalHist0D(type == 0);
+      TH1F *hist = selection.plot->GetNominalXSecHist(type == 0);
       hist->GetYaxis()->SetTitleOffset(1.9);
       hist->GetXaxis()->SetLabelSize(0);
       hist->GetXaxis()->SetLabelOffset(999);
@@ -215,7 +206,7 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       hist->SetMaximum(5e-40);
       gPad->Update();
 
-      TH1F *geniePred = selection.plot->GetPredictedHist0D(selection.name, "genie", 1e-38);
+      TH1F *geniePred = selection.plot->GetPredictedXSecHist(selection.name, "genie", 1e-38);
       geniePred->SetLineColor(kOrange+2);
       geniePred->SetMarkerStyle(1);
       geniePred->Draw("histe][same");
@@ -264,7 +255,7 @@ void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, c
       p1->SetRightMargin(0.05);
       p1->cd();
 
-      TH1F *hist = selection.plot->GetNominalHist0D();
+      TH1F *hist = selection.plot->GetNominalXSecHist();
       hist->GetYaxis()->SetTitleOffset(1.9);
       hist->GetXaxis()->SetLabelSize(0);
       hist->GetXaxis()->SetLabelOffset(999);
@@ -302,7 +293,7 @@ void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, c
 
       for(auto const& syst : systs)
         {
-          TH1F *systHist = selection.plot->GetFracErrorHist0D(syst.name);
+          TH1F *systHist = selection.plot->GetFracErrorHist(syst.name);
           systHist->SetTitle(";;Fractional Uncertainty");
           systHist->GetYaxis()->SetTitleOffset(1.2);
           systHist->GetXaxis()->SetLabelSize(0);

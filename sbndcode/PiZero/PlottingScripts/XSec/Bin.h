@@ -5,37 +5,32 @@
 
 class Bin {
 
- private:
+private:
   int                                                        _index;
   UniverseBin                                               *_nominalBin;
   std::map<std::string, std::vector<UniverseBin*>>          *_universeBins;
   std::map<std::string, std::tuple<double, double, double>> *_systFracErrors;
-  double                                                     _var0Low;
-  double                                                     _var0High;
-  double                                                     _var1Low;
-  double                                                     _var1High;
+  double                                                     _varLow;
+  double                                                     _varHigh;
 
- public:
+public:
   
   Bin(const int index, const double binWidth, const double nTargets, const double intFlux,
-      const double var0Low, const double var0High, const double var1Low, const double var1High)
-    {
-      _index          = index;
-      _nominalBin     = new UniverseBin(binWidth, nTargets, intFlux);
-      _universeBins   = new std::map<std::string, std::vector<UniverseBin*>>();
-      _systFracErrors = new std::map<std::string, std::tuple<double, double, double>>();
-      _var0Low        = var0Low;
-      _var0High       = var0High;
-      _var1Low        = var1Low;
-      _var1High       = var1High;
-    }
+      const double varLow, const double varHigh)
+  {
+    _index          = index;
+    _nominalBin     = new UniverseBin(binWidth, nTargets, intFlux);
+    _universeBins   = new std::map<std::string, std::vector<UniverseBin*>>();
+    _systFracErrors = new std::map<std::string, std::tuple<double, double, double>>();
+    _varLow         = varLow;
+    _varHigh        = varHigh;
+  }
 
   void Print()
   {
     std::cout << "\n======================================\n"
               << "Bin Index: " << _index << '\n'
-              << "Var0: " << _var0Low << " --> " << _var0High  << '\n'
-              << "Var1: " << _var1Low << " --> " << _var1High  << '\n';
+              << "Var: " << _varLow << " --> " << _varHigh  << '\n';
 
     _nominalBin->Print();
 
@@ -46,8 +41,7 @@ class Bin {
   {
     std::cout << "\n======================================\n"
               << "Bin Index: " << _index << " (" << weightName << ", " << univ << ")" << '\n'
-              << "Var0: " << _var0Low << " --> " << _var0High  << '\n'
-              << "Var1: " << _var1Low << " --> " << _var1High  << '\n';
+              << "Var: " << _varLow << " --> " << _varHigh  << '\n';
 
     _nominalBin->Print();
     _universeBins->at(weightName).at(univ)->Print();
@@ -237,9 +231,9 @@ class Bin {
     _systFracErrors->insert({ name, { frac, centre, frac }});
   }
 
-  bool InBin(const double &val0, const double &val1)
+  bool InBin(const double &val)
   {
-    return val0 > _var0Low && val0 < _var0High && val1 > _var1Low && val1 < _var1High;
+    return val > _varLow && val < _varHigh;
   }
 
   double GetFracSystResAve(const std::string &weightName)
@@ -281,23 +275,13 @@ class Bin {
     return TMath::Sqrt(quadSum);
   }
 
-  double GetVar0Center()
+  double GetVarCenter()
   {
-    return (_var0Low + _var0High) / 2.;
+    return (_varLow + _varHigh) / 2.;
   }
 
-  double GetVar0Width()
+  double GetVarWidth()
   {
-    return _var0High - _var0Low;
-  }
-
-  double GetVar1Center()
-  {
-    return (_var1Low + _var1High) / 2.;
-  }
-
-  double GetVar1Width()
-  {
-    return _var1High - _var1Low;
+    return _varHigh - _varLow;
   }
 };
