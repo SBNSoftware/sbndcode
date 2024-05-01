@@ -244,6 +244,10 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       underlyingMCFolded->SetMarkerStyle(1);
       underlyingMCFolded->Draw("histeqsame");
 
+      std::cout << selection.name
+                << '\n' << hist->Integral() << " " << geniePred->Integral() << " " << underlyingMCFolded->Integral()
+                << '\n' << Integral(hist) << " " << Integral(geniePred) << " " << Integral(underlyingMCFolded) << std::endl;
+
       TPaveText* title = (TPaveText*)gPad->FindObject("title");
       title->SetY1NDC(0.92);
       title->SetY2NDC(1);

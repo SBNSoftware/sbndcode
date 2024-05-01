@@ -20,6 +20,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   TChain* events = new TChain("FlatTree_VARS");
   events->Add(baseDir + "/genie/" + productionVersion + "/" + cfg + "/genie_" + flavour + "_prep.flat.root");
 
+  Int_t Mode;
+
   Char_t cc;
   Int_t  PDGnu, nfsp;
 
@@ -30,6 +32,7 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   Double_t scale_factor;
 
   events->SetBranchStatus("*", 0);
+  events->SetBranchAddress("Mode", &Mode);
   events->SetBranchAddress("cc", &cc);
   events->SetBranchAddress("PDGnu", &PDGnu);
   events->SetBranchAddress("nfsp", &nfsp);
@@ -47,8 +50,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
 
   const int N = events->GetEntries();
 
-  float piZeroMomBins[9]       = { 0., 60., 120., 180., 240., 300., 400., 600., 1000. };
-  float cosThetaPiZeroBins[10] = { -1., -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. };
+  float piZeroMomBins[9]       = { 0. - std::numeric_limits<float>::epsilon(), 60., 120., 180., 240., 300., 400., 600., 1000. + std::numeric_limits<float>::epsilon() };
+  float cosThetaPiZeroBins[10] = { -1. - std::numeric_limits<float>::epsilon(), -0.5, 0., 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1. + std::numeric_limits<float>::epsilon() };
 
   TH1F *hTotalIncl           = new TH1F("hTotalIncl", "", 1, -10, 1e10);
   TH1F *hPiZeroMomIncl       = new TH1F("hPiZeroMomIncl", "", 8, piZeroMomBins);
@@ -94,6 +97,9 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
 
       if(cc == 0 && npizeros > 0)
         {
+          // if(abs(Mode) == 36)
+          //   continue;
+
           hTotalIncl->Fill(0., w);
           hPiZeroMomIncl->Fill(mom, w);
           hCosThetaPiZeroIncl->Fill(cosTheta, w);
@@ -126,9 +132,9 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
     }
 
   std::cout << "\nTotal XSec\n"
-            << "\t Incl:  " << hPiZeroMomIncl->Integral() << " " << hCosThetaPiZeroIncl->Integral() << '\n'
-            << "\t 0p0pi: " << hPiZeroMom0p0pi->Integral() << " " << hCosThetaPiZero0p0pi->Integral() << '\n'
-            << "\t Np0pi: " << hPiZeroMomNp0pi->Integral() << " " << hCosThetaPiZeroNp0pi->Integral() << '\n'
+            << "\t Incl:  " << hTotalIncl->Integral() << " " << hPiZeroMomIncl->Integral() << " " << hCosThetaPiZeroIncl->Integral() << '\n'
+            << "\t 0p0pi: " << hTotal0p0pi->Integral() << " " << hPiZeroMom0p0pi->Integral() << " " << hCosThetaPiZero0p0pi->Integral() << '\n'
+            << "\t Np0pi: " << hTotalNp0pi->Integral() << " " << hPiZeroMomNp0pi->Integral() << " " << hCosThetaPiZeroNp0pi->Integral() << '\n'
             << std::endl;
 
   TCanvas *cTotalIncl = new TCanvas("cTotalIncl", "cTotalIncl");

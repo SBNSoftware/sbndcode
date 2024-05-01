@@ -179,3 +179,15 @@ TH1F* Fold(const TH1F* hist, const TH1F* effHist, const TH2D* matrix)
 
   return folded_hist;
 }
+
+float Integral(TH1F *hist)
+{
+  float sum = 0.;
+
+  for(int i = 1; i < hist->GetNbinsX() + 1; ++i)
+    {
+      sum += hist->GetBinContent(i) * hist->GetBinWidth(i);
+    }
+
+  return sum;
+}
