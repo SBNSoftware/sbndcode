@@ -3,7 +3,7 @@
 
 constexpr double kPiZeroMass = 134.9769;
 
-const std::vector<double> kKFCovMatrix = {11964.3, 0, 0, 0, 3179.01, 0, 0, 0, 0.315488};
+const std::vector<double> kKFCovMatrix = {16574.3, 0, 0, 0, 20263.7, 0, 0, 0, 0.286075};
 
 constexpr int n_fluxweight_univs   = 1000;
 constexpr int n_genieweight_univs  = 500;

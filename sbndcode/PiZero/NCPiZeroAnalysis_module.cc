@@ -2364,8 +2364,6 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
                                                     const double &en0, const double &en1, const double &en0Corr, const double &en1Corr)
 {
   const bool goodKinematics     = !(shwDir0.X() == -999 || shwDir1.X() == -999 || shwDir0.X() == def_float || shwDir1.X() == def_float || en0 < 0 || en1 < 0);
-  const bool goodKinematicsCorr = !(trkDir0.X() == -999 || trkDir1.X() == -999 || trkDir0.X() == def_float || trkDir1.X() == def_float || en0Corr < 0 || en1Corr < 0);
-
   const double cosineThetaGammaGamma = shwDir0.Dot(shwDir1) / (shwDir0.Mag() * shwDir1.Mag());
   const TVector3 pizeroDir           = (en0 * shwDir0) + (en1 * shwDir1);
 
@@ -2375,10 +2373,15 @@ void sbnd::NCPiZeroAnalysis::ProducePiZeroCandidate(VecVarMap &vars, const std::
   const double cosCOM         = std::abs(en0 - en1) / pizeroMom;
   const double decayAsym      = std::abs(en0 - en1) / (en0 + en1);
 
-  const double cosineThetaGammaGammaCorr = trkDir0.Dot(trkDir1) / (trkDir0.Mag() * trkDir1.Mag());
+  const TVector3 dir0 = en0 > 150 ? shwDir0 : trkDir0;
+  const TVector3 dir1 = en1 > 150 ? shwDir1 : trkDir1;
+
+  const bool goodKinematicsCorr = !(dir0.X() == -999 || dir1.X() == -999 || dir0.X() == def_float || dir1.X() == def_float || en0Corr < 0 || en1Corr < 0);
+
+  const double cosineThetaGammaGammaCorr = dir0.Dot(dir1) / (dir0.Mag() * dir1.Mag());
   const double thetaGammaGammaCorr       = acos(cosineThetaGammaGammaCorr);
 
-  const TVector3 pizeroDirCorr           = (en0Corr * trkDir0) + (en1Corr * trkDir1);
+  const TVector3 pizeroDirCorr           = (en0Corr * dir0) + (en1Corr * dir1);
 
   const double invariantMassCorr  = sqrt(2 * en0Corr * en1Corr * (1 - cosineThetaGammaGammaCorr));
   const double pizeroMomCorr      = pizeroDirCorr.Mag();
@@ -2563,7 +2566,7 @@ double sbnd::NCPiZeroAnalysis::CorrectEnergy(const double &energy)
 {
   const int bin = fShowerEnergyCorrectionHist->FindBin(energy);
 
-  return energy * (1 - fShowerEnergyCorrectionHist->GetBinContent(bin));
+  return energy / (1 + fShowerEnergyCorrectionHist->GetBinContent(bin));
 }
 
 void sbnd::NCPiZeroAnalysis::ResizeVectors(VecVarMap &map, const int size)

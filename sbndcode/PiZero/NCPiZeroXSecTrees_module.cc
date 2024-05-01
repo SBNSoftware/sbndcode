@@ -122,6 +122,7 @@ public:
   double ShowerEnergy(const art::Ptr<recob::Shower> &shower, const art::FindManyP<recob::Hit> &showerToHits);
   double TrackEnergy(const art::Ptr<recob::Track> &track, const art::FindManyP<anab::Calorimetry> &trackToCalos);
   TVector3 TrackDir(const art::Ptr<recob::Track> &track);
+  TVector3 ShowerDir(const art::Ptr<recob::Shower> &shower);
 
 private:
 
@@ -769,8 +770,8 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
   struct RazzPhot
   {
     size_t   index;
-    double   shwEnergy;
-    TVector3 trkDir;
+    double   energy;
+    TVector3 dir;
   };
 
   std::vector<RazzPhot> razzled_photons;
@@ -798,8 +799,8 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
             {
               ++_n_primary_razzled_photons;
 
-              const TVector3 trkDir = TrackDir(track);
-              const RazzPhot phot = { pfp_i, shwEnergy, trkDir };
+              const TVector3 dir = shwEnergy > 150 ? ShowerDir(shower) : TrackDir(track);
+              const RazzPhot phot = { pfp_i, shwEnergy, dir };
               razzled_photons.push_back(phot);
             }
           if(razzledpdg == 211 && pfpenergy > 32.1)
@@ -819,13 +820,13 @@ void sbnd::NCPiZeroXSecTrees::AnalysePFPs(const art::Event &e, const art::Ptr<re
           if(j <= i)
             continue;
 
-          double energy_0 = CorrectEnergy(phot_0.shwEnergy);
-          double energy_1 = CorrectEnergy(phot_1.shwEnergy);
+          double energy_0 = CorrectEnergy(phot_0.energy);
+          double energy_1 = CorrectEnergy(phot_1.energy);
 
-          TVector3 dir_0 = phot_0.trkDir;
-          TVector3 dir_1 = phot_1.trkDir;
+          TVector3 dir_0 = phot_0.dir;
+          TVector3 dir_1 = phot_1.dir;
 
-          if(phot_0.shwEnergy < phot_1.shwEnergy)
+          if(phot_0.energy < phot_1.energy)
             {
               std::swap(energy_0, energy_1);
               std::swap(dir_0, dir_1);
@@ -1044,7 +1045,7 @@ double sbnd::NCPiZeroXSecTrees::CorrectEnergy(const double &energy)
 {
   const int bin = fShowerEnergyCorrectionHist->FindBin(energy);
 
-  return energy * (1 - fShowerEnergyCorrectionHist->GetBinContent(bin));
+  return energy / (1 + fShowerEnergyCorrectionHist->GetBinContent(bin));
 }
 
 int sbnd::NCPiZeroXSecTrees::MomBin(const double &mom)
@@ -1166,6 +1167,14 @@ TVector3 sbnd::NCPiZeroXSecTrees::TrackDir(const art::Ptr<recob::Track> &track)
   const geo::Vector_t dir = track->StartDirection();
 
   return TVector3(dir.X(), dir.Y(), dir.Z());
+}
+
+TVector3 sbnd::NCPiZeroXSecTrees::ShowerDir(const art::Ptr<recob::Shower> &shower)
+{
+  if(shower.isNull())
+    return TVector3(def_float, def_float, def_float);
+
+  return shower->ShowerStart();
 }
 
 DEFINE_ART_MODULE(sbnd::NCPiZeroXSecTrees)
