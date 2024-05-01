@@ -149,6 +149,12 @@ void ObservablesResolution3(const TString productionVersion)
                   std::swap(shwDir0, shwDir1);
                 }
 
+              if(en0 > 150)
+                dir0 = shwDir0;
+
+              if(en1 > 150)
+                dir1 = shwDir1;
+
               const double cosineThetaGammaGamma = dir0.Dot(dir1) / (dir0.Mag() * dir1.Mag());
               const double thetaGammaGamma       = acos(cosineThetaGammaGamma);
               const double shwThetaGammaGamma    = shwDir0.Angle(shwDir1);
@@ -169,6 +175,8 @@ void ObservablesResolution3(const TString productionVersion)
               const TVector3 pizeroMomFitted   = updated[0] * dir0 + updated[1] * dir1;
 
               const double pizeroMomFitted2    = TMath::Sqrt(TMath::Power(updated[0] + updated[1], 2) - TMath::Power(kPiZeroMass, 2));
+              //              const double pizeroMomFitted3    = TMath::Sqrt(TMath::Power(updated[0] + (TMath::Power(kPiZeroMass, 2) / (2 * updated[0] * (1 - cos(updated[2])))), 2) - TMath::Power(kPiZeroMass, 2));
+              //              const double pizeroMomFitted4    = TMath::Sqrt(TMath::Power(updated[1] + (TMath::Power(kPiZeroMass, 2) / (2 * updated[1] * (1 - cos(updated[2])))), 2) - TMath::Power(kPiZeroMass, 2));
 
               const float updatedEn0Proportion   = updated[0] / corrEn0;
               const float updatedEn1Proportion   = updated[1] / corrEn1;
@@ -178,9 +186,6 @@ void ObservablesResolution3(const TString productionVersion)
               const float fitFactor1             = (updatedEn0Proportion / (updatedEn0Proportion + updatedEn1Proportion)) * (updatedAngleProportion - 1) + 1;
               TVector3 fittedDir0 = fitFactor0 * (dir0 - dir1) + dir1;
               TVector3 fittedDir1 = fitFactor1 * (dir1 - dir0) + dir0;
-
-              if(updated[2] - fittedDir1.Angle(fittedDir0) > 0.01)
-                std::cout << updated[2] << " " << fittedDir1.Angle(fittedDir0) << std::endl;
 
               hInvariantMass->Fill(slc_best_pzc_invariant_mass->at(slc_i));
               hInvariantMassCorr->Fill(invariantMass);

@@ -10,6 +10,7 @@ void ObservablesResolution(const TString productionVersion)
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
+  gStyle->SetTitleOffset(1.35, "y");
   gROOT->ForceStyle();
 
   TChain *events = new TChain("ncpizeroana/events");
@@ -146,7 +147,7 @@ void ObservablesResolution(const TString productionVersion)
   TCanvas *cShowerEnergyReco = new TCanvas("cShowerEnergyReco", "cShowerEnergyReco");
   cShowerEnergyReco->cd();
 
-  TH1F *hShowerEnergyReco = new TH1F("hShowerEnergyReco", ";Reco E (MeV));#gamma / 30 MeV", 12, showerEnBins);
+  TH1F *hShowerEnergyReco = new TH1F("hShowerEnergyReco", ";Shower E (MeV));#gamma / 30 MeV", 12, showerEnBins);
   events->Draw("slc_pfp_shower_energy>>hShowerEnergyReco",
                "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 
@@ -216,7 +217,7 @@ void ObservablesResolution(const TString productionVersion)
   cShowerEnergy2DRecoFractionalResolution->cd();
   cShowerEnergy2DRecoFractionalResolution->SetRightMargin(.2);
 
-  TH2F *hShowerEnergy2DRecoFractionalResolution = new TH2F("hShowerEnergy2DRecoFractionalResolution", ";Reco E (MeV);E (#frac{Reco - True}{True});#gamma", 12, showerEnBins, 40, -1, 1);
+  TH2F *hShowerEnergy2DRecoFractionalResolution = new TH2F("hShowerEnergy2DRecoFractionalResolution", ";Shower E (MeV);E (#frac{Reco - True}{True});#gamma", 12, showerEnBins, 40, -1, 1);
   events->Draw("(slc_pfp_shower_energy-slc_pfp_true_energy*1e3)/(slc_pfp_true_energy*1e3):slc_pfp_shower_energy>>hShowerEnergy2DRecoFractionalResolution",
                "slc_pfp_pdg==11 && slc_pfp_comp>.5 && slc_pfp_pur>.5 && slc_pfp_shower_contained && slc_pfp_shower_energy>=0 && (slc_pfp_true_pdg==22)");
 

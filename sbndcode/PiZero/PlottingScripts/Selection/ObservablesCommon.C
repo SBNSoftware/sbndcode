@@ -68,5 +68,5 @@ double CorrectEnergy(const double &energy)
 {
   const int bin = fShowerEnergyCorrectionHist->FindBin(energy);
 
-  return energy * (1 - fShowerEnergyCorrectionHist->GetBinContent(bin));
+  return energy / (1 + fShowerEnergyCorrectionHist->GetBinContent(bin));
 }

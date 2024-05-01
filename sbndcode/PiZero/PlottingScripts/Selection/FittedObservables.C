@@ -263,14 +263,8 @@ vector<double> DoKF(const double &LdShowerEnergyRaw, const double &SlShowerEnerg
 
 std::vector<double> GetCovMatrix(const TString productionVersion, const bool diag = false)
 {
-  const TString saveDir = baseSaveDir + "/" + productionVersion + "/observables_resolution_2";
-  gSystem->Exec("mkdir -p " + saveDir);
-
   const TString rockboxFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_rockbox.root";
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
-
-  gROOT->SetStyle("henrySBND");
-  gROOT->ForceStyle();
 
   TChain *events = new TChain("ncpizeroana/events");
   events->Add(rockboxFile);
@@ -328,21 +322,29 @@ std::vector<double> GetCovMatrix(const TString productionVersion, const bool dia
                                                 slc_pfp_track_dir_y->at(slc_i).at(slc_best_pzc_photon_1_id->at(slc_i)),
                                                 slc_pfp_track_dir_z->at(slc_i).at(slc_best_pzc_photon_1_id->at(slc_i)));
 
-              const double cosineThetaGammaGammaTrk = trkDir0.Dot(trkDir1) / (trkDir0.Mag() * trkDir1.Mag());
-              const double thetaGammaGammaTrk       = acos(trkDir0.Dot(trkDir1) / (trkDir0.Mag() * trkDir1.Mag()));
+              const TVector3 shwDir0 = TVector3(slc_pfp_shower_dir_x->at(slc_i).at(slc_best_pzc_photon_0_id->at(slc_i)),
+                                                slc_pfp_shower_dir_y->at(slc_i).at(slc_best_pzc_photon_0_id->at(slc_i)),
+                                                slc_pfp_shower_dir_z->at(slc_i).at(slc_best_pzc_photon_0_id->at(slc_i)));
+
+              const TVector3 shwDir1 = TVector3(slc_pfp_shower_dir_x->at(slc_i).at(slc_best_pzc_photon_1_id->at(slc_i)),
+                                                slc_pfp_shower_dir_y->at(slc_i).at(slc_best_pzc_photon_1_id->at(slc_i)),
+                                                slc_pfp_shower_dir_z->at(slc_i).at(slc_best_pzc_photon_1_id->at(slc_i)));
+
+              TVector3 dir0 = shwEn0 > 150 ? shwDir0 : trkDir0;
+              TVector3 dir1 = shwEn1 > 150 ? shwDir1 : trkDir1;
+
+              const double cosineThetaGammaGammaTrk = dir0.Dot(dir1) / (dir0.Mag() * dir1.Mag());
+              const double thetaGammaGammaTrk       = acos(dir0.Dot(dir1) / (dir0.Mag() * dir1.Mag()));
 
               double trueEn0   = slc_true_pz_gamma0_energy->at(slc_i).at(0);
               double trueEn1   = slc_true_pz_gamma1_energy->at(slc_i).at(0);
               const double trueTheta = TMath::DegToRad() * slc_true_pz_open_angle->at(slc_i).at(0);
 
-              if(corrEn0 < corrEn1)
-                std::swap(corrEn0, corrEn1);
-              if(corrEn0 < corrEn1)
-                throw std::runtime_error("Reco energy order");
-              if(trueEn0 < trueEn1)
-                std::swap(trueEn0, trueEn1);
-              if(trueEn0 < trueEn1)
-                throw std::runtime_error("True energy order");
+              if(shwEn0 < shwEn1)
+                {
+                  std::swap(corrEn0, corrEn1);
+                  std::swap(trueEn0, trueEn1);
+                }
 
               pizeros.push_back({ corrEn0, corrEn1, thetaGammaGammaTrk, trueEn0 * 1e3, trueEn1 * 1e3, trueTheta });
             }

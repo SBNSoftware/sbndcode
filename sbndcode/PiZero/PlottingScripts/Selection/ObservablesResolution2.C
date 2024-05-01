@@ -11,6 +11,7 @@ void ObservablesResolution2(const TString productionVersion)
   const TString ncpizeroFile = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_ncpizero.root";
 
   gROOT->SetStyle("henrySBND");
+  gStyle->SetTitleOffset(1.3, "y");
   gROOT->ForceStyle();
 
   TChain *events = new TChain("ncpizeroana/events");
@@ -31,19 +32,11 @@ void ObservablesResolution2(const TString productionVersion)
   TH1F *hPiZeroMomTrackDir = new TH1F("hPiZeroMomTrackDir", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
   TH1F *hPiZeroMomEnergyCorr = new TH1F("hPiZeroMomEnergyCorr", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
   TH1F *hPiZeroMomBoth = new TH1F("hPiZeroMomBoth", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
-  TH1F *hPiZeroMomEn0Constr = new TH1F("hPiZeroMomEn0Constr", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
-  TH1F *hPiZeroMomEn1Constr = new TH1F("hPiZeroMomEn1Constr", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
-  TH1F *hPiZeroMomBothConstr = new TH1F("hPiZeroMomBothConstr", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
-  TH1F *hPiZeroMomBestConstr = new TH1F("hPiZeroMomBestConstr", ";p_{#pi^{0}} (MeV/c);#pi^{0}", 8, pizeroMomBins);
 
-  TH1F *hPiZeroMomResolution = new TH1F("hPiZeroMomResolution", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
-  TH1F *hPiZeroMomResolutionTrackDir = new TH1F("hPiZeroMomResolutionTrackDir", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
-  TH1F *hPiZeroMomResolutionEnergyCorr = new TH1F("hPiZeroMomResolutionEnergyCorr", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
-  TH1F *hPiZeroMomResolutionBoth = new TH1F("hPiZeroMomResolutionBoth", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
-  TH1F *hPiZeroMomResolutionEn0Constr = new TH1F("hPiZeroMomResolutionEn0Constr", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
-  TH1F *hPiZeroMomResolutionEn1Constr = new TH1F("hPiZeroMomResolutionEn1Constr", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
-  TH1F *hPiZeroMomResolutionBothConstr = new TH1F("hPiZeroMomResolutionBothConstr", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
-  TH1F *hPiZeroMomResolutionBestConstr = new TH1F("hPiZeroMomResolutionBestConstr", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -300, 400);
+  TH1F *hPiZeroMomResolution = new TH1F("hPiZeroMomResolution", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -310, 390);
+  TH1F *hPiZeroMomResolutionTrackDir = new TH1F("hPiZeroMomResolutionTrackDir", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -310, 390);
+  TH1F *hPiZeroMomResolutionEnergyCorr = new TH1F("hPiZeroMomResolutionEnergyCorr", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -310, 390);
+  TH1F *hPiZeroMomResolutionBoth = new TH1F("hPiZeroMomResolutionBoth", ";p_{#pi^{0}} (Reco - True) (MeV/c);#pi^{0}", 35, -310, 390);
 
   TH1F *hCosThetaPiZero = new TH1F("hCosThetaPiZero", ";cos(#theta_{#pi^{0}});#pi^{0}", 9, cosThetaBins);
   TH1F *hCosThetaPiZeroTrackDir = new TH1F("hCosThetaPiZeroTrackDir", ";cos(#theta_{#pi^{0}});#pi^{0}", 9, cosThetaBins);
@@ -87,34 +80,21 @@ void ObservablesResolution2(const TString productionVersion)
                                                 slc_pfp_track_dir_y->at(slc_i).at(slc_best_pzc_photon_1_id->at(slc_i)),
                                                 slc_pfp_track_dir_z->at(slc_i).at(slc_best_pzc_photon_1_id->at(slc_i)));
 
+              const TVector3 dir0 = shwEn0 > 150 ? shwDir0 : trkDir0;
+              const TVector3 dir1 = shwEn1 > 150 ? shwDir1 : trkDir1;
+
               const double cosineThetaGammaGammaShw = shwDir0.Dot(shwDir1) / (shwDir0.Mag() * shwDir1.Mag());
-              const double cosineThetaGammaGammaTrk = trkDir0.Dot(trkDir1) / (trkDir0.Mag() * trkDir1.Mag());
+              const double cosineThetaGammaGammaCor = dir0.Dot(dir1) / (dir0.Mag() * dir1.Mag());
 
               const double invariantMass           = sqrt(2 * shwEn0 * shwEn1 * (1 - cosineThetaGammaGammaShw));
-              const double invariantMassTrackDir   = sqrt(2 * shwEn0 * shwEn1 * (1 - cosineThetaGammaGammaTrk));
+              const double invariantMassTrackDir   = sqrt(2 * shwEn0 * shwEn1 * (1 - cosineThetaGammaGammaCor));
               const double invariantMassEnergyCorr = sqrt(2 * corrEn0 * corrEn1 * (1 - cosineThetaGammaGammaShw));
-              const double invariantMassBoth       = sqrt(2 * corrEn0 * corrEn1 * (1 - cosineThetaGammaGammaTrk));
+              const double invariantMassBoth       = sqrt(2 * corrEn0 * corrEn1 * (1 - cosineThetaGammaGammaCor));
 
               const TVector3 pizeroMom           = shwEn0 * shwDir0 + shwEn1 * shwDir1;
-              const TVector3 pizeroMomTrackDir   = shwEn0 * trkDir0 + shwEn1 * trkDir1;
+              const TVector3 pizeroMomTrackDir   = shwEn0 * dir0 + shwEn1 * dir1;
               const TVector3 pizeroMomEnergyCorr = corrEn0 * shwDir0 + corrEn1 * shwDir1;
-              const TVector3 pizeroMomBoth       = corrEn0 * trkDir0 + corrEn1 * trkDir1;
-
-              const double corrEn0Constr = TMath::Power(kPiZeroMass, 2) / (2 * shwEn1 * (1 - cosineThetaGammaGammaTrk));
-              const double corrEn1Constr = TMath::Power(kPiZeroMass, 2) / (2 * shwEn0 * (1 - cosineThetaGammaGammaTrk));
-
-              /*
-                const double pizeroMomSimp = corrEn0 + corrEn1;
-                const double alpha         = std::abs(corrEn0 - corrEn1) / (corrEn0 + corrEn1);
-                const double pizeroMomUB   = kPiZeroMass * TMath::Sqrt(2 / ((1 - TMath::Power(alpha, 2)) * (1 - cosineThetaGammaGammaTrk)));
-              */
-
-              const TVector3 pizeroMomEn0Constr  = corrEn0Constr * trkDir0 + corrEn1 * trkDir1;
-              const TVector3 pizeroMomEn1Constr  = corrEn0 * trkDir0 + corrEn1Constr * trkDir1;
-              const TVector3 pizeroMomBothConstr = corrEn0Constr * trkDir0 + corrEn1Constr * trkDir1;
-              const TVector3 pizeroMomBestConstr = abs(corrEn0Constr - corrEn0) < abs(corrEn1Constr - corrEn1) ?
-                                                                                  corrEn0Constr * trkDir0 + corrEn1 * trkDir1
-                                                                                  : corrEn0 * trkDir0 + corrEn1Constr * trkDir1;
+              const TVector3 pizeroMomBoth       = corrEn0 * dir0 + corrEn1 * dir1;
 
               const TVector3 zaxis = TVector3(0., 0., 1.);
 
@@ -127,19 +107,11 @@ void ObservablesResolution2(const TString productionVersion)
               hPiZeroMomTrackDir->Fill(pizeroMomTrackDir.Mag());
               hPiZeroMomEnergyCorr->Fill(pizeroMomEnergyCorr.Mag());
               hPiZeroMomBoth->Fill(pizeroMomBoth.Mag());
-              hPiZeroMomEn0Constr->Fill(pizeroMomEn0Constr.Mag());
-              hPiZeroMomEn1Constr->Fill(pizeroMomEn1Constr.Mag());
-              hPiZeroMomBothConstr->Fill(pizeroMomBothConstr.Mag());
-              hPiZeroMomBestConstr->Fill(pizeroMomBestConstr.Mag());
 
               hPiZeroMomResolution->Fill(pizeroMom.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
               hPiZeroMomResolutionTrackDir->Fill(pizeroMomTrackDir.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
               hPiZeroMomResolutionEnergyCorr->Fill(pizeroMomEnergyCorr.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
               hPiZeroMomResolutionBoth->Fill(pizeroMomBoth.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
-              hPiZeroMomResolutionEn0Constr->Fill(pizeroMomEn0Constr.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
-              hPiZeroMomResolutionEn1Constr->Fill(pizeroMomEn1Constr.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
-              hPiZeroMomResolutionBothConstr->Fill(pizeroMomBothConstr.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
-              hPiZeroMomResolutionBestConstr->Fill(pizeroMomBestConstr.Mag() - 1e3 * slc_true_pz_pizero_mom->at(slc_i).at(0));
 
               hCosThetaPiZero->Fill(cos(pizeroMom.Angle(zaxis)));
               hCosThetaPiZeroTrackDir->Fill(cos(pizeroMomTrackDir.Angle(zaxis)));
@@ -189,28 +161,16 @@ void ObservablesResolution2(const TString productionVersion)
   NormaliseEntriesByBinWidth(hPiZeroMomTrackDir);
   NormaliseEntriesByBinWidth(hPiZeroMomEnergyCorr);
   NormaliseEntriesByBinWidth(hPiZeroMomBoth);
-  NormaliseEntriesByBinWidth(hPiZeroMomEn0Constr);
-  NormaliseEntriesByBinWidth(hPiZeroMomEn1Constr);
-  NormaliseEntriesByBinWidth(hPiZeroMomBothConstr);
-  NormaliseEntriesByBinWidth(hPiZeroMomBestConstr);
 
   hPiZeroMom->SetLineColor(kMagenta+2);
   hPiZeroMomTrackDir->SetLineColor(kCyan+2);
   hPiZeroMomEnergyCorr->SetLineColor(kGreen+2);
   hPiZeroMomBoth->SetLineColor(kOrange+2);
-  hPiZeroMomEn0Constr->SetLineColor(kRed+2);
-  hPiZeroMomEn1Constr->SetLineColor(kBlue+2);
-  hPiZeroMomBothConstr->SetLineColor(kBlack);
-  hPiZeroMomBestConstr->SetLineColor(kGray+2);
 
   hPiZeroMomTrackDir->Draw("hist");
   hPiZeroMom->Draw("histsame");
   hPiZeroMomEnergyCorr->Draw("histsame");
   hPiZeroMomBoth->Draw("histsame");
-  hPiZeroMomEn0Constr->Draw("histsame");
-  hPiZeroMomEn1Constr->Draw("histsame");
-  hPiZeroMomBothConstr->Draw("histsame");
-  hPiZeroMomBestConstr->Draw("histsame");
 
   lInvariantMass->Draw();
 
@@ -224,21 +184,35 @@ void ObservablesResolution2(const TString productionVersion)
   hPiZeroMomResolutionTrackDir->SetLineColor(kCyan+2);
   hPiZeroMomResolutionEnergyCorr->SetLineColor(kGreen+2);
   hPiZeroMomResolutionBoth->SetLineColor(kOrange+2);
-  hPiZeroMomResolutionEn0Constr->SetLineColor(kRed+2);
-  hPiZeroMomResolutionEn1Constr->SetLineColor(kBlue+2);
-  hPiZeroMomResolutionBothConstr->SetLineColor(kBlack);
-  hPiZeroMomResolutionBestConstr->SetLineColor(kGray+2);
 
   hPiZeroMomResolutionTrackDir->Draw("hist");
   hPiZeroMomResolution->Draw("histsame");
   hPiZeroMomResolutionEnergyCorr->Draw("histsame");
   hPiZeroMomResolutionBoth->Draw("histsame");
-  hPiZeroMomResolutionEn0Constr->Draw("histsame");
-  hPiZeroMomResolutionEn1Constr->Draw("histsame");
-  hPiZeroMomResolutionBothConstr->Draw("histsame");
-  hPiZeroMomResolutionBestConstr->Draw("histsame");
 
   lInvariantMass->Draw();
+
+  TPaveText *tPiZeroMomResolution = new TPaveText(.56, .65, .68, .75, "NDC");
+  tPiZeroMomResolution->AddText("Standard");
+  tPiZeroMomResolution->AddText("Track Direction");
+  tPiZeroMomResolution->AddText("Energy Correction");
+  tPiZeroMomResolution->AddText("Both");
+  tPiZeroMomResolution->SetTextAlign(12);
+  tPiZeroMomResolution->SetTextSize(0.02);
+  tPiZeroMomResolution->SetBorderSize(0);
+  tPiZeroMomResolution->SetFillColor(kWhite);
+  tPiZeroMomResolution->Draw();
+
+  TPaveText *tPiZeroMomResolution2 = new TPaveText(.68, .65, .85, .75, "NDC");
+  tPiZeroMomResolution2->AddText(Form("Mean: %.2f MeV/c #sigma: %.2f MeV/c", hPiZeroMomResolution->GetMean(), hPiZeroMomResolution->GetStdDev()));
+  tPiZeroMomResolution2->AddText(Form("Mean: %.2f MeV/c #sigma: %.2f MeV/c", hPiZeroMomResolutionTrackDir->GetMean(), hPiZeroMomResolutionTrackDir->GetStdDev()));
+  tPiZeroMomResolution2->AddText(Form("Mean: %.2f MeV/c #sigma: %.2f MeV/c", hPiZeroMomResolutionEnergyCorr->GetMean(), hPiZeroMomResolutionEnergyCorr->GetStdDev()));
+  tPiZeroMomResolution2->AddText(Form("Mean: %.2f MeV/c #sigma: %.2f MeV/c", hPiZeroMomResolutionBoth->GetMean(), hPiZeroMomResolutionBoth->GetStdDev()));
+  tPiZeroMomResolution2->SetTextAlign(12);
+  tPiZeroMomResolution2->SetTextSize(0.02);
+  tPiZeroMomResolution2->SetBorderSize(0);
+  tPiZeroMomResolution2->SetFillColor(kWhite);
+  tPiZeroMomResolution2->Draw();
 
   cPiZeroMomResolution->SaveAs(saveDir + "/pizero_mom_resolution.png");
   cPiZeroMomResolution->SaveAs(saveDir + "/pizero_mom_resolution.pdf");
@@ -280,6 +254,39 @@ void ObservablesResolution2(const TString productionVersion)
   hCosThetaPiZeroResolutionBoth->Draw("histsame");
 
   lInvariantMass->Draw();
+
+  TPaveText *tCosThetaPiZeroResolution = new TPaveText(.56, .65, .68, .75, "NDC");
+  tCosThetaPiZeroResolution->AddText("Standard");
+  tCosThetaPiZeroResolution->AddText("Track Direction");
+  tCosThetaPiZeroResolution->AddText("Energy Correction");
+  tCosThetaPiZeroResolution->AddText("Both");
+  tCosThetaPiZeroResolution->SetTextAlign(12);
+  tCosThetaPiZeroResolution->SetTextSize(0.02);
+  tCosThetaPiZeroResolution->SetBorderSize(0);
+  tCosThetaPiZeroResolution->SetFillColor(kWhite);
+  tCosThetaPiZeroResolution->Draw();
+
+  TPaveText *tCosThetaPiZeroResolution2 = new TPaveText(.68, .65, .85, .75, "NDC");
+  tCosThetaPiZeroResolution2->AddText(Form("Mean: %.4f", hCosThetaPiZeroResolution->GetMean()));
+  tCosThetaPiZeroResolution2->AddText(Form("Mean: %.4f", hCosThetaPiZeroResolutionTrackDir->GetMean()));
+  tCosThetaPiZeroResolution2->AddText(Form("Mean: %.4f", hCosThetaPiZeroResolutionEnergyCorr->GetMean()));
+  tCosThetaPiZeroResolution2->AddText(Form("Mean: %.4f", hCosThetaPiZeroResolutionBoth->GetMean()));
+  tCosThetaPiZeroResolution2->SetTextAlign(12);
+  tCosThetaPiZeroResolution2->SetTextSize(0.02);
+  tCosThetaPiZeroResolution2->SetBorderSize(0);
+  tCosThetaPiZeroResolution2->SetFillColor(kWhite);
+  tCosThetaPiZeroResolution2->Draw();
+
+  TPaveText *tCosThetaPiZeroResolution3 = new TPaveText(.78, .65, .85, .75, "NDC");
+  tCosThetaPiZeroResolution3->AddText(Form("#sigma: %.4f", hCosThetaPiZeroResolution->GetStdDev()));
+  tCosThetaPiZeroResolution3->AddText(Form("#sigma: %.4f", hCosThetaPiZeroResolutionTrackDir->GetStdDev()));
+  tCosThetaPiZeroResolution3->AddText(Form("#sigma: %.4f", hCosThetaPiZeroResolutionEnergyCorr->GetStdDev()));
+  tCosThetaPiZeroResolution3->AddText(Form("#sigma: %.4f", hCosThetaPiZeroResolutionBoth->GetStdDev()));
+  tCosThetaPiZeroResolution3->SetTextAlign(12);
+  tCosThetaPiZeroResolution3->SetTextSize(0.02);
+  tCosThetaPiZeroResolution3->SetBorderSize(0);
+  tCosThetaPiZeroResolution3->SetFillColor(kWhite);
+  tCosThetaPiZeroResolution3->Draw();
 
   cCosThetaPiZeroResolution->SaveAs(saveDir + "/cos_theta_pizero_resolution.png");
   cCosThetaPiZeroResolution->SaveAs(saveDir + "/cos_theta_pizero_resolution.pdf");
