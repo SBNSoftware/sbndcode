@@ -9,7 +9,7 @@ void FluxExtrapolation(const TString productionVersion)
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/flux_extrapolation";
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL_*.root";
+  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL.root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -20,11 +20,11 @@ void FluxExtrapolation(const TString productionVersion)
   TChain *pot = new TChain("fluxana/pottree");
   pot->Add(file);
 
+  const int N = nus->GetEntries();
+
   const double nuPOT = GetPOT(pot);
   const double scaling = goalPOT / nuPOT;
   const double fv_face_area = 175 * 360 * 2.;
-
-  const int N = nus->GetEntries();
 
   int nu_pdg;
   float nu_x, nu_y, nu_other_x, nu_other_y, nu_e;
@@ -197,8 +197,8 @@ void FluxExtrapolation(const TString productionVersion)
   acrossLine->SetLineColor(kRed+2);
   acrossLine->Draw();
 
-  TPaveText *text2 = new TPaveText(.4, .74, .8, .85, "NDC");
-  text2->AddText(Form("Expected Value (11010 -> 11450): %.4e cm^{-2}", expectation));
+  TPaveText *text2 = new TPaveText(.38, .74, .8, .85, "NDC");
+  text2->AddText(Form("Expected Value (11010cm -> 11450cm): %.4e cm^{-2}", expectation));
   text2->AddText(Form("Effective Baseline: %.0f cm", effbaseline));
   text2->SetTextAlign(12);
   text2->SetTextSize(0.03);
