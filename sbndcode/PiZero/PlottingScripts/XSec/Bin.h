@@ -113,9 +113,9 @@ public:
     return _nominalBin->GetPurity();
   }
 
-  double GetNominalBkgdCount()
+  double GetNominalBkgdCount(const bool scale = false)
   {
-    return _nominalBin->GetBkgdCount();
+    return _nominalBin->GetBkgdCount(scale);
   }
 
   void AddWeight(const std::string weightName, const int nunivs)
@@ -151,9 +151,9 @@ public:
     return _universeBins->at(weightName).at(univ)->GetPurity();
   }
 
-  double GetUniverseBkgdCount(const std::string &weightName, const int univ)
+  double GetUniverseBkgdCount(const std::string &weightName, const int univ, const bool scale = false)
   {
-    return _universeBins->at(weightName).at(univ)->GetBkgdCount();
+    return _universeBins->at(weightName).at(univ)->GetBkgdCount(scale);
   }
 
   double GetNUniverses(const std::string &weightName)
@@ -310,9 +310,17 @@ public:
     return _systFracErrorsPurity->at(weightName);
   }
 
-  std::tuple<double, double, double> GetSystFracErrorsBkgdCount(const std::string &weightName)
+  std::tuple<double, double, double> GetSystFracErrorsBkgdCount(const std::string &weightName, const bool scale = false)
   {
-    return _systFracErrorsBkgdCount->at(weightName);
+    double low, cv, high;
+    std::tie(low, cv, high) = _systFracErrorsBkgdCount->at(weightName);
+
+    const double scaleFactor = _nominalBin->GetScaleFactor();
+
+    if(scale)
+      return { low, scaleFactor * cv, high };
+
+    return { low, cv, high };
   }
 
   void InsertSystFracErrorXSec(const std::string &name, const double &centre, const double &frac)
@@ -457,41 +465,41 @@ public:
     return TMath::Sqrt(quadSum);
   }
 
-  double GetFracSystResAveBkgdCount(const std::string &weightName)
+  double GetFracSystResAveBkgdCount(const std::string &weightName, const bool scale = false)
   {
     double low, cv, high;
 
-    std::tie(low, cv, high) = GetSystFracErrorsBkgdCount(weightName);
+    std::tie(low, cv, high) = GetSystFracErrorsBkgdCount(weightName, scale);
 
-    const double nom = _nominalBin->GetBkgdCount();
+    const double nom = _nominalBin->GetBkgdCount(scale);
 
     return (low + high) / 2.;
   }
 
-  double GetFracSystBiasBkgdCount(const std::string &weightName)
+  double GetFracSystBiasBkgdCount(const std::string &weightName, const bool scale = false)
   {
     double low, cv, high;
 
-    std::tie(low, cv, high) = GetSystFracErrorsBkgdCount(weightName);
+    std::tie(low, cv, high) = GetSystFracErrorsBkgdCount(weightName, scale);
 
-    const double nom = _nominalBin->GetBkgdCount();
+    const double nom = _nominalBin->GetBkgdCount(scale);
     return (cv - nom) / nom;
   }
 
-  double GetFracSystResAveQuadSumBkgdCount(const std::vector<std::string> &weightNames)
+  double GetFracSystResAveQuadSumBkgdCount(const std::vector<std::string> &weightNames, const bool scale = false)
   {
     double quadSum = 0.;
     for(auto const& weightName : weightNames)
-      quadSum += TMath::Power(GetFracSystResAveBkgdCount(weightName), 2);
+      quadSum += TMath::Power(GetFracSystResAveBkgdCount(weightName, scale), 2);
 
     return TMath::Sqrt(quadSum);
   }
 
-  double GetFracSystBiasQuadSumBkgdCount(const std::vector<std::string> &weightNames)
+  double GetFracSystBiasQuadSumBkgdCount(const std::vector<std::string> &weightNames, const bool scale = false)
   {
     double quadSum = 0.;
     for(auto const& weightName : weightNames)
-      quadSum += TMath::Power(GetFracSystBiasBkgdCount(weightName), 2);
+      quadSum += TMath::Power(GetFracSystBiasBkgdCount(weightName, scale), 2);
 
     return TMath::Sqrt(quadSum);
   }

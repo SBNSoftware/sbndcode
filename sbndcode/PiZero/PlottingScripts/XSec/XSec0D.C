@@ -1,8 +1,8 @@
 #include "XSecCommon.C"
 #include "LatexHeaders.h"
 
-void MakePlot(const int type, const Selections &selections, const TString &saveDir,
-              const std::string &weightName = "", const int &nunivs = 0,
+void MakePlot(const int type, const std::vector<int> &plot_types, const Selections &selections,
+              const TString &saveDir, const std::string &weightName = "", const int &nunivs = 0,
               const std::vector<std::string> &weightNames = std::vector<std::string>());
 
 void MakeTables(Selections &selections, WeightSets &weightSets, const TString &saveDir);
@@ -17,8 +17,13 @@ void XSec0D(const TString &productionVersion, const TString &saveDirExt)
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
 
+  const std::vector<int> plot_types = { 0, 1, 2, 3 };
+
   const TString saveDir = baseSaveDir + "/" + productionVersion + "/xsec_zero_d/" + saveDirExt;
   gSystem->Exec("mkdir -p " + saveDir);
+
+  for(auto const& plot_type : plot_types)
+    gSystem->Exec("mkdir -p " + saveDir + "/" + PlotTypeMap.at(plot_type));
 
   XSecSamples samples = SetupSamples(productionVersion);
 
@@ -37,100 +42,187 @@ void XSec0D(const TString &productionVersion, const TString &saveDirExt)
 
   FillPlots(samples, selections, weightSets);
 
-  MakePlot(0, selections, saveDir);
+  MakePlot(0, plot_types, selections, saveDir);
   MakeSummaryPlot(0, selections, saveDir);
 
   for(WeightSet &weightSet : weightSets)
     {
       for(std::string &name : weightSet.list)
         {
-          MakePlot(1, selections, saveDir, name, weightSet.nunivs);
-          MakePlot(2, selections, saveDir, name, weightSet.nunivs);
+          MakePlot(1, plot_types, selections, saveDir, name, weightSet.nunivs);
+          MakePlot(2, plot_types, selections, saveDir, name, weightSet.nunivs);
         }
 
       if(weightSet.name == "genie")
-        MakePlot(3, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
+        MakePlot(3, plot_types, selections, saveDir, weightSet.name + "_all", 0, weightSet.list);
     }
 
   const std::vector<std::string> all_systs_list = SystSetToWeightList(all_systs);
 
-  MakePlot(3, selections, saveDir, "all", 0, all_systs_list);
+  MakePlot(3, plot_types, selections, saveDir, "all", 0, all_systs_list);
   MakeSystSummaryPlot(selections, saveDir, "all", all_systs);
 
   MakeTables(selections, weightSets, saveDir);
 }
 
-void MakePlot(const int type, const Selections &selections, const TString &saveDir,
+void MakePlot(const int type, const std::vector<int> &plot_types, const Selections &selections, const TString &saveDir,
               const std::string &weightName, const int &nunivs, const std::vector<std::string> &weightNames)
 {
-  TCanvas *canvas = new TCanvas("canvas", "canvas");
-  canvas->cd();
-  canvas->Divide(3, 1);
-
-  for(auto&& [ selection_i, selection ] : enumerate(selections))
+  for(auto const& plot_type : plot_types)
     {
-      canvas->cd(selection_i + 1);
-      gPad->SetBottomMargin(0.05);
-      gPad->SetTopMargin(0.1);
-      gPad->SetLeftMargin(0.25);
-      gPad->SetRightMargin(0.05);
+      TCanvas *canvas = new TCanvas(Form("canvas_%d", plot_type),
+                                    Form("canvas_%d", plot_type));
+      canvas->cd();
+      canvas->Divide(3, 1);
 
-      TH1F *hist = selection.plot->GetNominalXSecHist(type == 0);
-      hist->GetYaxis()->SetTitleOffset(1.9);
-      hist->GetXaxis()->SetLabelSize(0);
-      hist->GetXaxis()->SetLabelOffset(999);
-      hist->Draw("histe][");
-      hist->SetMinimum(0);
-      hist->SetMaximum(5e-40);
-      gPad->Update();
-
-      if(type == 1)
+      for(auto&& [ selection_i, selection ] : enumerate(selections))
         {
-          for(int univ = 0; univ < nunivs; ++univ)
+          canvas->cd(selection_i + 1);
+          gPad->SetBottomMargin(0.05);
+          gPad->SetTopMargin(0.1);
+          gPad->SetLeftMargin(0.25);
+          gPad->SetRightMargin(0.05);
+
+          TH1F *hist;
+
+          switch(plot_type)
             {
-              TH1F *unihist = selection.plot->GetUniverseXSecHist(weightName, univ);
-              unihist->Draw("hist][same");
+            case 0:
+              hist = selection.plot->GetNominalXSecHist(type == 0);
+              hist->SetMaximum(5e-40);
+              break;
+            case 1:
+              hist = selection.plot->GetNominalEfficiencyHist(type == 0);
+              hist->SetMaximum(0.5);
+              break;
+            case 2:
+              hist = selection.plot->GetNominalPurityHist(type == 0);
+              hist->SetMaximum(0.6);
+              break;
+            case 3:
+              hist = selection.plot->GetNominalBkgdCountHist(type == 0, true);
+              hist->SetMaximum(2e5);
+              break;
+            default:
+              std::runtime_error(Form("What is variable %d ???", plot_type));
             }
 
-          hist->Draw("histe][same");
+          hist->GetYaxis()->SetTitleOffset(1.9);
+          hist->GetXaxis()->SetLabelSize(0);
+          hist->GetXaxis()->SetLabelOffset(999);
+
+          if(plot_type != 0)
+            hist->GetYaxis()->SetTitle(PlotAxisMap.at(plot_type));
+
+          hist->Draw("histe][");
+          hist->SetMinimum(0);
+          gPad->Update();
+
+          if(type == 1)
+            {
+              for(int univ = 0; univ < nunivs; ++univ)
+                {
+                  TH1F *unihist;
+
+                  switch(plot_type)
+                    {
+                    case 0:
+                      unihist = selection.plot->GetUniverseXSecHist(weightName, univ);
+                      break;
+                    case 1:
+                      unihist = selection.plot->GetUniverseEfficiencyHist(weightName, univ);
+                      break;
+                    case 2:
+                      unihist = selection.plot->GetUniversePurityHist(weightName, univ);
+                      break;
+                    case 3:
+                      unihist = selection.plot->GetUniverseBkgdCountHist(weightName, univ, true);
+                      break;
+                    default:
+                      std::runtime_error(Form("What is variable %d ???", plot_type));
+                    }
+
+                  unihist->Draw("hist][same");
+                }
+
+              hist->Draw("histe][same");
+            }
+
+          if(type == 2)
+            {
+              TGraphAsymmErrors *graph;
+
+              switch(plot_type)
+                {
+                case 0:
+                  graph = selection.plot->GetCVErrXSecGraph(weightName);
+                  break;
+                case 1:
+                  graph = selection.plot->GetCVErrEfficiencyGraph(weightName);
+                  break;
+                case 2:
+                  graph = selection.plot->GetCVErrPurityGraph(weightName);
+                  break;
+                case 3:
+                  graph = selection.plot->GetCVErrBkgdCountGraph(weightName, true);
+                  break;
+                default:
+                  std::runtime_error(Form("What is variable %d ???", plot_type));
+                }
+
+              graph->Draw("PEsame");
+            }
+
+          if(type == 3)
+            {
+              selection.plot->CombineErrorsInQuaderature(weightNames, weightName);
+              TGraphAsymmErrors *graph;
+
+              switch(plot_type)
+                {
+                case 0:
+                  graph = selection.plot->GetCVErrXSecGraph(weightName);
+                  break;
+                case 1:
+                  graph = selection.plot->GetCVErrEfficiencyGraph(weightName);
+                  break;
+                case 2:
+                  graph = selection.plot->GetCVErrPurityGraph(weightName);
+                  break;
+                case 3:
+                  graph = selection.plot->GetCVErrBkgdCountGraph(weightName, true);
+                  break;
+                default:
+                  std::runtime_error(Form("What is variable %d ???", plot_type));
+                }
+
+              graph->Draw("PEsame");
+            }
+
+          TPaveText* title = (TPaveText*)gPad->FindObject("title");
+          title->SetY1NDC(0.92);
+          title->SetY2NDC(1);
+          title->SetX1NDC(0.45);
+          title->SetX2NDC(.8);
+          gPad->Modified();
+          gPad->Update();
         }
 
-      if(type == 2)
+      if(type == 0)
         {
-          TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
-          graph->Draw("PEsame");
+          canvas->SaveAs(saveDir + "/" + PlotTypeMap.at(plot_type) + "/" + PlotTypeMap.at(plot_type) + "_nominal.png");
+          canvas->SaveAs(saveDir + "/" + PlotTypeMap.at(plot_type) + "/" + PlotTypeMap.at(plot_type) + "_nominal.pdf");
         }
-
-      if(type == 3)
+      else if(type == 1)
         {
-          selection.plot->CombineErrorsInQuaderature(weightNames, weightName);
-          TGraphAsymmErrors *graph = selection.plot->GetCVErrXSecGraph(weightName);
-          graph->Draw("PEsame");
+          canvas->SaveAs(saveDir + "/" + PlotTypeMap.at(plot_type) + "/" + PlotTypeMap.at(plot_type) + "_" + weightName.c_str() + "_univs.png");
+          canvas->SaveAs(saveDir + "/" + PlotTypeMap.at(plot_type) + "/" + PlotTypeMap.at(plot_type) + "_" + weightName.c_str() + "_univs.pdf");
         }
-
-      TPaveText* title = (TPaveText*)gPad->FindObject("title");
-      title->SetY1NDC(0.92);
-      title->SetY2NDC(1);
-      title->SetX1NDC(0.45);
-      title->SetX2NDC(.8);
-      gPad->Modified();
-      gPad->Update();
-    }
-
-  if(type == 0)
-    {
-      canvas->SaveAs(saveDir + "/nominal.png");
-      canvas->SaveAs(saveDir + "/nominal.pdf");
-    }
-  else if(type == 1)
-    {
-      canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_univs.png");
-      canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_univs.pdf");
-    }
-  else if(type == 2 || type == 3)
-    {
-      canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.png");
-      canvas->SaveAs(saveDir + "/" + weightName.c_str() + "_cv_err.pdf");
+      else if(type == 2 || type == 3)
+        {
+          canvas->SaveAs(saveDir + "/" + PlotTypeMap.at(plot_type) + "/" + PlotTypeMap.at(plot_type) +  "_" + weightName.c_str() + "_cv_err.png");
+          canvas->SaveAs(saveDir + "/" + PlotTypeMap.at(plot_type) + "/" + PlotTypeMap.at(plot_type) +  "_" + weightName.c_str() + "_cv_err.pdf");
+        }
     }
 }
 

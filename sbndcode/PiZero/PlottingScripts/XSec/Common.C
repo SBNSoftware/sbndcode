@@ -25,6 +25,17 @@ const double intFlux = 1.65974e+13; // Ray-traced value
 
 const double effbaseline = 11227.8; // For both flux configs
 
+const std::map<int, TString> PlotTypeMap = { { 0, "xsec" },
+                                             { 1, "eff" },
+                                             { 2, "pur" },
+                                             { 3, "bcount" }
+};
+
+const std::map<int, TString> PlotAxisMap = { { 1, "Efficiency" },
+                                             { 2, "Purity" },
+                                             { 3, "Background Count (1#times10^{21} POT)" }
+};
+
 double GetPOT(TChain *subruns)
 {
   double sum = 0., pot = 0;

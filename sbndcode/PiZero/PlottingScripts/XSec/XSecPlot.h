@@ -38,6 +38,13 @@ const std::map<TString, double> extraSignalScaling = { { "ncpizero_incl", 1.0176
                                                        { "ncpizero_Np0pi", 1.0251 }
 };
 
+/*
+  const std::map<TString, double> extraSignalScaling = { { "ncpizero_incl", 1. },
+  { "ncpizero_0p0pi", 1. },
+  { "ncpizero_Np0pi", 1. }
+  };
+*/
+
 const TString foldFileName   = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/forwardfoldingmatrices/forwardfoldingmatrices.root";
 const TString unfoldFileName = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/unfoldingmatrices/unfoldingmatrices.root";
 
@@ -127,16 +134,6 @@ public:
     return values;
   }
 
-  std::vector<float> GetNominalXSecErrors()
-  {
-    std::vector<float> errors;
-
-    for(auto const& bin : _bins)
-      errors.push_back(bin->GetNominalFracStatErr() * bin->GetNominalXSec());
-
-    return errors;
-  }
-
   std::vector<float> GetUniverseXSecs(const std::string &weightName, const int univ)
   {
     std::vector<float> values;
@@ -177,12 +174,12 @@ public:
     return values;
   }
 
-  std::vector<float> GetFracErrorsBkgdCount(const std::string &name)
+  std::vector<float> GetFracErrorsBkgdCount(const std::string &name, const bool scale = false)
   {
     std::vector<float> values;
 
     for(auto const& bin : _bins)
-      values.push_back(bin->GetFracSystResAveBkgdCount(name));
+      values.push_back(bin->GetFracSystResAveBkgdCount(name, scale));
 
     return values;
   }
@@ -205,6 +202,16 @@ public:
       values.push_back(bin->GetNominalEfficiency());
 
     return values;
+  }
+
+  std::vector<float> GetNominalStatErrors(const std::vector<float> &values)
+  {
+    std::vector<float> errors;
+
+    for(int i = 0; i < _bins.size(); ++i)
+      errors.push_back(_bins[i]->GetNominalFracStatErr() * values[i]);
+
+    return errors;
   }
 
   std::vector<float> GetUniverseEfficiencies(const std::string &weightName, const int univ)
@@ -237,22 +244,22 @@ public:
     return values;
   }
 
-  std::vector<float> GetNominalBkgdCounts()
+  std::vector<float> GetNominalBkgdCounts(const bool scale = false)
   {
     std::vector<float> values;
 
     for(auto const& bin : _bins)
-      values.push_back(bin->GetNominalBkgdCount());
+      values.push_back(bin->GetNominalBkgdCount(scale));
 
     return values;
   }
 
-  std::vector<float> GetUniverseBkgdCounts(const std::string &weightName, const int univ)
+  std::vector<float> GetUniverseBkgdCounts(const std::string &weightName, const int univ, const bool scale = false)
   {
     std::vector<float> values;
 
     for(auto const& bin : _bins)
-      values.push_back(bin->GetUniverseBkgdCount(weightName, univ));
+      values.push_back(bin->GetUniverseBkgdCount(weightName, univ, scale));
 
     return values;
   }
@@ -298,7 +305,7 @@ public:
       std::runtime_error("Can't unfold 0D result");
 
     const std::vector<float> values = GetNominalXSecs();
-    const std::vector<float> errors = statErr ? GetNominalXSecErrors() : std::vector<float>(_bins.size(), 0.);
+    const std::vector<float> errors = statErr ? GetNominalStatErrors(values) : std::vector<float>(_bins.size(), 0.);
 
     TH1F* hist = MakeHist(Form("Nominal_XSec_%s", _name.c_str()), values, errors);
 
@@ -314,12 +321,84 @@ public:
     return unfoldedHist;
   }
 
+  TH1F* GetNominalEfficiencyHist(const bool statErr = true)
+  {
+    const std::vector<float> values = GetNominalEfficiencies();
+    const std::vector<float> errors = statErr ? GetNominalStatErrors(values) : std::vector<float>(_bins.size(), 0.);
+
+    TH1F* hist = MakeHist(Form("Nominal_Efficiency_%s", _name.c_str()), values, errors);
+
+    return hist;
+  }
+
+  TH1F* GetNominalPurityHist(const bool statErr = true)
+  {
+    const std::vector<float> values = GetNominalPurities();
+    const std::vector<float> errors = statErr ? GetNominalStatErrors(values) : std::vector<float>(_bins.size(), 0.);
+
+    TH1F* hist = MakeHist(Form("Nominal_Purity_%s", _name.c_str()), values, errors);
+
+    return hist;
+  }
+
+  TH1F* GetNominalBkgdCountHist(const bool statErr = true, const bool scale = false)
+  {
+    const std::vector<float> values = GetNominalBkgdCounts(scale);
+    const std::vector<float> errors = statErr ? GetNominalStatErrors(values) : std::vector<float>(_bins.size(), 0.);
+
+    TH1F* hist = MakeHist(Form("Nominal_BkgdCount_%s", _name.c_str()), values, errors);
+
+    return hist;
+  }
+
   TH1F* GetUniverseXSecHist(const std::string &weightName, const int univ)
   {
     const std::vector<float> values = GetUniverseXSecs(weightName, univ);
     const std::vector<float> errors = std::vector<float>(_bins.size(), 0.);
 
     TH1F* hist = MakeHist(Form("Universe_XSec_%s_%s_%d", _name.c_str(), weightName.c_str(), univ), values, errors);
+
+    hist->SetMarkerStyle(0);
+    hist->SetLineColor(kMagenta-10);
+    hist->SetLineWidth(1);
+
+    return hist;
+  }
+
+  TH1F* GetUniverseEfficiencyHist(const std::string &weightName, const int univ)
+  {
+    const std::vector<float> values = GetUniverseEfficiencies(weightName, univ);
+    const std::vector<float> errors = std::vector<float>(_bins.size(), 0.);
+
+    TH1F* hist = MakeHist(Form("Universe_Efficiency_%s_%s_%d", _name.c_str(), weightName.c_str(), univ), values, errors);
+
+    hist->SetMarkerStyle(0);
+    hist->SetLineColor(kMagenta-10);
+    hist->SetLineWidth(1);
+
+    return hist;
+  }
+
+  TH1F* GetUniversePurityHist(const std::string &weightName, const int univ)
+  {
+    const std::vector<float> values = GetUniversePurities(weightName, univ);
+    const std::vector<float> errors = std::vector<float>(_bins.size(), 0.);
+
+    TH1F* hist = MakeHist(Form("Universe_Purity_%s_%s_%d", _name.c_str(), weightName.c_str(), univ), values, errors);
+
+    hist->SetMarkerStyle(0);
+    hist->SetLineColor(kMagenta-10);
+    hist->SetLineWidth(1);
+
+    return hist;
+  }
+
+  TH1F* GetUniverseBkgdCountHist(const std::string &weightName, const int univ, const bool scale = false)
+  {
+    const std::vector<float> values = GetUniverseBkgdCounts(weightName, univ, scale);
+    const std::vector<float> errors = std::vector<float>(_bins.size(), 0.);
+
+    TH1F* hist = MakeHist(Form("Universe_BkgdCount_%s_%s_%d", _name.c_str(), weightName.c_str(), univ), values, errors);
 
     hist->SetMarkerStyle(0);
     hist->SetLineColor(kMagenta-10);
@@ -361,19 +440,6 @@ public:
     foldedHist->SetLineColor(kBlack);
 
     return foldedHist;
-  }
-
-  TH1F* GetNominalEfficiencyHist()
-  {
-    const std::vector<float> values = GetNominalEfficiencies();
-    const std::vector<float> errors = std::vector<float>(_bins.size(), 0.);
-
-    TH1F* hist = MakeHist(Form("Efficiency_%s", _name.c_str()), values, errors);
-
-    hist->SetMarkerStyle(0);
-    hist->SetLineColor(kBlack);
-
-    return hist;
   }
 
   TGraphAsymmErrors* GetCVErrXSecGraph(const std::string &weightName)
@@ -457,14 +523,14 @@ public:
     return graph;
   }
 
-  TGraphAsymmErrors* GetCVErrBkgdCountGraph(const std::string &weightName)
+  TGraphAsymmErrors* GetCVErrBkgdCountGraph(const std::string &weightName, const bool scale = false)
   {
     TGraphAsymmErrors* graph = new TGraphAsymmErrors();
 
     for(auto&& [ bin_i, bin ] : enumerate(_bins))
       {
         double low, cv, high;
-        std::tie(low, cv, high) = bin->GetSystFracErrorsBkgdCount(weightName);
+        std::tie(low, cv, high) = bin->GetSystFracErrorsBkgdCount(weightName, scale);
 
         if(cv == 0.)
           continue;

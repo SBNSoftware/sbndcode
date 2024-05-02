@@ -93,6 +93,11 @@ public:
     return _xsec;
   }
 
+  double GetScaleFactor()
+  {
+    return _scaleFactor;
+  }
+
   double GetUnderlyingMCXSec()
   {
     return (_trueSignal * _scaleFactor) / (_nTargets * _intFlux * _binWidth);
@@ -133,9 +138,9 @@ public:
     return _purity;
   }
 
-  double GetBkgdCount()
+  double GetBkgdCount(const bool scale = false)
   {
-    return _bkgdCount;
+    return scale ? (_bkgdCount / _binWidth) * _scaleFactor : (_bkgdCount / _binWidth);
   }
 
   void IncrementCount(const double &increment)
