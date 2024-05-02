@@ -33,17 +33,17 @@ constexpr double anumufluxscale = 0.068619804;
 constexpr double nuefluxscale   = 0.0054254241;
 constexpr double anuefluxscale  = 0.00058497585;
 
-const std::map<TString, double> extraSignalScaling = { { "ncpizero_incl", 1.01763 },
-                                                       { "ncpizero_0p0pi", 1.01166 },
-                                                       { "ncpizero_Np0pi", 1.0251 }
-};
-
 /*
-  const std::map<TString, double> extraSignalScaling = { { "ncpizero_incl", 1. },
-  { "ncpizero_0p0pi", 1. },
-  { "ncpizero_Np0pi", 1. }
+  const std::map<TString, double> extraSignalScaling = { { "ncpizero_incl", 1.01763 },
+  { "ncpizero_0p0pi", 1.01166 },
+  { "ncpizero_Np0pi", 1.0251 }
   };
 */
+
+const std::map<TString, double> extraSignalScaling = { { "ncpizero_incl", 1. },
+                                                       { "ncpizero_0p0pi", 1. },
+                                                       { "ncpizero_Np0pi", 1. }
+};
 
 const TString foldFileName   = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/forwardfoldingmatrices/forwardfoldingmatrices.root";
 const TString unfoldFileName = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZeroBv3/unfoldingmatrices/unfoldingmatrices.root";
