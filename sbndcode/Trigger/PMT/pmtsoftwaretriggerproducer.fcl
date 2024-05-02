@@ -4,6 +4,9 @@ pmtSoftwareTriggerProducer:
 {
   module_type: "pmtSoftwareTriggerProducer"
   is_persistable: true
+
+  MultiplicityThreshold: 10  # NEEDS TO BE CONSISTENT WITH THE ARTDAQ PRODUCER MODULE 
+
   TriggerTimeOffset: 0.5    # seconds, defined by fragment producer
   WindowLength: 1.8     # us, extended by 0.2us to account for delayed signals
   WvfmLength: 5120
