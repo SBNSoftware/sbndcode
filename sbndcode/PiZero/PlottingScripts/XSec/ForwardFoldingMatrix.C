@@ -23,6 +23,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
   std::vector<int> event_type(selections.size(), -1);
   double pizero_mom, cos_theta_pizero, reco_pizero_mom, reco_cos_theta_pizero;
   float comp;
+  int mode;
 
   slices->SetBranchStatus("*", 0);
   slices->SetBranchStatus("comp", 1);
@@ -30,12 +31,14 @@ void ForwardFoldingMatrix(const TString productionVersion)
   slices->SetBranchStatus("cos_theta_pizero", 1);
   slices->SetBranchStatus("reco_pizero_mom_fit", 1);
   slices->SetBranchStatus("reco_cos_theta_pizero", 1);
+  slices->SetBranchStatus("event_mode", 1);
 
   slices->SetBranchAddress("comp", &comp);
   slices->SetBranchAddress("pizero_mom", &pizero_mom);
   slices->SetBranchAddress("cos_theta_pizero", &cos_theta_pizero);
   slices->SetBranchAddress("reco_pizero_mom_fit", &reco_pizero_mom);
   slices->SetBranchAddress("reco_cos_theta_pizero", &reco_cos_theta_pizero);
+  slices->SetBranchAddress("event_mode", &mode);
 
 
   for(auto&& [ selection_i, selection ] : enumerate(selections))
@@ -66,7 +69,7 @@ void ForwardFoldingMatrix(const TString productionVersion)
         {
           slices->GetEntry(slc);
 
-          if(sel[selection_i] && event_type[selection_i] == 0 && comp > .5)
+          if(sel[selection_i] && event_type[selection_i] == 0 && mode != 3 && comp > .5)
             {
               const int trueMomBin = hPiZeroMom->FindBin(pizero_mom);
               const int recoMomBin = hPiZeroMom->FindBin(reco_pizero_mom);

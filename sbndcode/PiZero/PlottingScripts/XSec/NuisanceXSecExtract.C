@@ -97,8 +97,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
 
       if(cc == 0 && npizeros > 0)
         {
-          // if(abs(Mode) == 36)
-          //   continue;
+          if(abs(Mode) == 36)
+            continue;
 
           hTotalIncl->Fill(0., w);
           hPiZeroMomIncl->Fill(mom, w);
