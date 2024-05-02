@@ -37,6 +37,7 @@
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
+#include "sbnobj/SBND/Trigger/pmtTrigger.hh"
 
 // ROOT includes
 #include "TH1D.h"
@@ -75,6 +76,8 @@ private:
 
   // fhicl parameters
   // art::Persistable is_persistable_;
+  int  fMultiplicityThreshold;
+
   double fTriggerTimeOffset;    // offset of trigger time, default 0.5 sec
   double fWindowLength; // beam window length after trigger time, default 1.6us
   uint32_t fWvfmLength;
@@ -143,6 +146,12 @@ private:
   double _flash_promptPE, _flash_prelimPE , _flash_peakPE; // prompt (sum) PE and preliminary (sum) PE for flash window
   double _flash_peaktime;
 
+  std::vector<int> _hardware_trig_pairs;
+  int    _hardware_trig_idx;
+  int    _hardware_trig_npairs;
+  int    _hardware_trig_maxPMTs;
+  int    _hardware_trig_maxPMTs_idx;
+
   TTree* _pulse_tree;
   int _npulses; 
   
@@ -157,6 +166,7 @@ private:
 
 sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::ParameterSet const& p)
   : EDProducer{p},
+  fMultiplicityThreshold(p.get<int>("MultiplicityThreshold", 1)),
   fTriggerTimeOffset (p.get<double>("TriggerTimeOffset", 0.5)),
   fWindowLength      (p.get<double>("WindowLength", 1.6)),
   fWvfmLength        (p.get<uint32_t>("WvfmLength", 5120)),
@@ -220,6 +230,12 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   _tree->Branch("flash_peakPE",   &_flash_peakPE,   "flash_peakPE/D");
   _tree->Branch("flash_peaktime", &_flash_peaktime, "flash_peaktime/D");
 
+  _tree->Branch("hardware_trig_pairs",  "std::vector<int>", &_hardware_trig_pairs);
+  _tree->Branch("hardware_trig_idx", &_hardware_trig_idx, "hardware_trig_idx/I");
+  _tree->Branch("hardware_trig_npairs", &_hardware_trig_npairs, "hardware_trig_npairs/I");
+  _tree->Branch("hardware_trig_maxPMTs", &_hardware_trig_maxPMTs, "hardware_trig_maxPMTs/I");
+  _tree->Branch("hardware_trig_maxPMTs_idx", &_hardware_trig_maxPMTs_idx, "hardware_trig_maxPMTs_idx/I");
+
   _pulse_tree = fs->make<TTree>("pulse_tree","");
   _pulse_tree->Branch("run",       &_run,       "run/I");
   _pulse_tree->Branch("sub",       &_sub,       "sub/I");
@@ -261,6 +277,26 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   _trig_promptPE = -9999; _trig_prelimPE = -9999; _trig_peakPE = -9999;
   _flash_promptPE = -9999; _flash_prelimPE = -9999; _flash_peakPE = -9999;
   _flash_peaktime = -9999;
+
+  // access hardware trigger information
+  _hardware_trig_idx = -1; _hardware_trig_npairs = -1; _hardware_trig_maxPMTs = -1; _hardware_trig_maxPMTs_idx = -1;
+  _hardware_trig_pairs.clear();
+  art::Handle< std::vector< sbnd::comm::pmtTrigger > > triggerHandle;
+  e.getByLabel("pmttriggerproducer", triggerHandle);
+  std::vector<size_t> triggerIndex; 
+  for(auto const& trigger : (*triggerHandle)) {
+    _hardware_trig_pairs.resize(trigger.numPassed.size());
+    _hardware_trig_maxPMTs = trigger.maxPMTs; 
+    for (size_t idx = 0; idx < trigger.numPassed.size(); idx++) {
+      _hardware_trig_pairs[idx] = trigger.numPassed[idx];
+      if (trigger.numPassed[idx] == _hardware_trig_maxPMTs)
+        _hardware_trig_maxPMTs_idx = idx;
+      if (trigger.numPassed[idx] >= fMultiplicityThreshold) {
+        _hardware_trig_idx = idx;
+        _hardware_trig_npairs = trigger.numPassed[idx];
+      }
+    }
+  } // trigger handle loop
 
   // get fragment handles
   std::vector<art::Handle<artdaq::Fragments>> fragmentHandles = e.getMany<std::vector<artdaq::Fragment>>();
