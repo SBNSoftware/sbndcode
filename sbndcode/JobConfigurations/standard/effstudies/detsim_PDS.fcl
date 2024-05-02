@@ -1,0 +1,13 @@
+#include "detsim_sce.fcl"
+
+process_name: DetSimPDS
+physics.simulate: [rns, opdaq]
+
+# allows only 400 us of optical simulation to run (instead of 3 ms)
+physics.producers.opdaq.TriggerEnableWindowOneDriftBeforeTPCReadout: false 
+physics.producers.opdaq.TriggerEnableWindowStart: -200
+physics.producers.opdaq.TriggerEnableWindowLength: 400
+
+# changes the gain from 1e7 -> 5e6
+physics.producers.opdaq.PMTGain: 5e6
+physics.producers.opdaq.GainFluctuationsParams.Gain: 5e6

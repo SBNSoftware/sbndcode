@@ -1,0 +1,4 @@
+#include "detsim_sce.fcl"
+
+process_name: DetSimNoPDS
+physics.simulate: [rns, simtpc2d, crtsim, mcreco]
