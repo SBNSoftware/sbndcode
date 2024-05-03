@@ -3,22 +3,22 @@
 constexpr float BF    = 0.98823; // PDG branching fraction for pi0 -> gamma gamma
 constexpr float units = 1e38;    // TO have cross section in 10^-38 cm^-2
 
-void NuisanceXSecExtract(const TString productionVersion, const TString flavour, const TString cfg);
+void NuisanceXSecExtract(const TString productionVersion, const TString gen, const TString flavour, const TString cfg);
 
-void NuisanceXSecExtract(const TString productionVersion, const TString cfg)
+void NuisanceXSecExtract(const TString productionVersion, const TString gen, const TString cfg)
 {
-  NuisanceXSecExtract(productionVersion, "numu", cfg);
-  NuisanceXSecExtract(productionVersion, "anumu", cfg);
-  NuisanceXSecExtract(productionVersion, "nue", cfg);
-  NuisanceXSecExtract(productionVersion, "anue", cfg);
+  NuisanceXSecExtract(productionVersion, gen, "numu", cfg);
+  NuisanceXSecExtract(productionVersion, gen, "anumu", cfg);
+  NuisanceXSecExtract(productionVersion, gen, "nue", cfg);
+  NuisanceXSecExtract(productionVersion, gen, "anue", cfg);
 }
 
-void NuisanceXSecExtract(const TString productionVersion, const TString flavour, const TString cfg)
+void NuisanceXSecExtract(const TString productionVersion, const TString gen, const TString flavour, const TString cfg)
 {
   const TString baseDir = "/exp/sbnd/data/users/hlay/ncpizero/generators";
 
   TChain* events = new TChain("FlatTree_VARS");
-  events->Add(baseDir + "/genie/" + productionVersion + "/" + cfg + "/genie_" + flavour + "_prep.flat.root");
+  events->Add(baseDir + "/" + gen + "/" + productionVersion + "/" + cfg + "/" + flavour + "/" + gen + "_" + flavour + "_prep.flat.root");
 
   Int_t Mode;
 
@@ -43,8 +43,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   events->SetBranchAddress("Weight", &weight);
   events->SetBranchAddress("fScaleFactor", &scale_factor);
 
-  gSystem->Exec("mkdir -p " + baseDir + "/plots");
-  TFile* outfile = new TFile(baseDir + "/genie_xsec_" + flavour + ".root", "RECREATE");
+  gSystem->Exec("mkdir -p " + baseDir + "/" + gen + "/plots");
+  TFile* outfile = new TFile(baseDir + "/" + gen + "_xsec_" + flavour + ".root", "RECREATE");
   if(!outfile->IsOpen())
     std::runtime_error("Couldn't open save file");
 
@@ -143,8 +143,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   hTotalIncl->Draw("histe");
   hTotalIncl->Write("ncpizero_incl_" + flavour);
 
-  cTotalIncl->SaveAs(baseDir + "/plots/total_incl_" + flavour + ".png");
-  cTotalIncl->SaveAs(baseDir + "/plots/total_incl_" + flavour + ".pdf");
+  cTotalIncl->SaveAs(baseDir + "/" + gen + "/plots/total_incl_" + flavour + ".png");
+  cTotalIncl->SaveAs(baseDir + "/" + gen + "/plots/total_incl_" + flavour + ".pdf");
 
   TCanvas *cPiZeroMomIncl = new TCanvas("cPiZeroMomIncl", "cPiZeroMomIncl");
   cPiZeroMomIncl->cd();
@@ -154,8 +154,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   hPiZeroMomIncl->Draw("histe");
   hPiZeroMomIncl->Write("pizero_mom_ncpizero_incl_" + flavour);
 
-  cPiZeroMomIncl->SaveAs(baseDir + "/plots/pizero_mom_incl_" + flavour + ".png");
-  cPiZeroMomIncl->SaveAs(baseDir + "/plots/pizero_mom_incl_" + flavour + ".pdf");
+  cPiZeroMomIncl->SaveAs(baseDir + "/" + gen + "/plots/pizero_mom_incl_" + flavour + ".png");
+  cPiZeroMomIncl->SaveAs(baseDir + "/" + gen + "/plots/pizero_mom_incl_" + flavour + ".pdf");
 
   TCanvas *cCosThetaPiZeroIncl = new TCanvas("cCosThetaPiZeroIncl", "cCosThetaPiZeroIncl");
   cCosThetaPiZeroIncl->cd();
@@ -164,8 +164,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   hCosThetaPiZeroIncl->Draw("histe");
   hCosThetaPiZeroIncl->Write("cos_theta_pizero_ncpizero_incl_" + flavour);
 
-  cCosThetaPiZeroIncl->SaveAs(baseDir + "/plots/cos_theta_pizero_incl_" + flavour + ".png");
-  cCosThetaPiZeroIncl->SaveAs(baseDir + "/plots/cos_theta_pizero_incl_" + flavour + ".pdf");
+  cCosThetaPiZeroIncl->SaveAs(baseDir + "/" + gen + "/plots/cos_theta_pizero_incl_" + flavour + ".png");
+  cCosThetaPiZeroIncl->SaveAs(baseDir + "/" + gen + "/plots/cos_theta_pizero_incl_" + flavour + ".pdf");
 
   delete hTotalIncl;
   delete hPiZeroMomIncl;
@@ -181,8 +181,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   hTotal0p0pi->Draw("histe");
   hTotal0p0pi->Write("ncpizero_0p0pi_" + flavour);
 
-  cTotal0p0pi->SaveAs(baseDir + "/plots/total_0p0pi_" + flavour + ".png");
-  cTotal0p0pi->SaveAs(baseDir + "/plots/total_0p0pi_" + flavour + ".pdf");
+  cTotal0p0pi->SaveAs(baseDir + "/" + gen + "/plots/total_0p0pi_" + flavour + ".png");
+  cTotal0p0pi->SaveAs(baseDir + "/" + gen + "/plots/total_0p0pi_" + flavour + ".pdf");
 
   TCanvas *cPiZeroMom0p0pi = new TCanvas("cPiZeroMom0p0pi", "cPiZeroMom0p0pi");
   cPiZeroMom0p0pi->cd();
@@ -192,8 +192,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   hPiZeroMom0p0pi->Draw("histe");
   hPiZeroMom0p0pi->Write("pizero_mom_ncpizero_0p0pi_" + flavour);
 
-  cPiZeroMom0p0pi->SaveAs(baseDir + "/plots/pizero_mom_0p0pi_" + flavour + ".png");
-  cPiZeroMom0p0pi->SaveAs(baseDir + "/plots/pizero_mom_0p0pi_" + flavour + ".pdf");
+  cPiZeroMom0p0pi->SaveAs(baseDir + "/" + gen + "/plots/pizero_mom_0p0pi_" + flavour + ".png");
+  cPiZeroMom0p0pi->SaveAs(baseDir + "/" + gen + "/plots/pizero_mom_0p0pi_" + flavour + ".pdf");
 
   TCanvas *cCosThetaPiZero0p0pi = new TCanvas("cCosThetaPiZero0p0pi", "cCosThetaPiZero0p0pi");
   cCosThetaPiZero0p0pi->cd();
@@ -202,8 +202,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   hCosThetaPiZero0p0pi->Draw("histe");
   hCosThetaPiZero0p0pi->Write("cos_theta_pizero_ncpizero_0p0pi_" + flavour);
 
-  cCosThetaPiZero0p0pi->SaveAs(baseDir + "/plots/cos_theta_pizero_0p0pi_" + flavour + ".png");
-  cCosThetaPiZero0p0pi->SaveAs(baseDir + "/plots/cos_theta_pizero_0p0pi_" + flavour + ".pdf");
+  cCosThetaPiZero0p0pi->SaveAs(baseDir + "/" + gen + "/plots/cos_theta_pizero_0p0pi_" + flavour + ".png");
+  cCosThetaPiZero0p0pi->SaveAs(baseDir + "/" + gen + "/plots/cos_theta_pizero_0p0pi_" + flavour + ".pdf");
 
   delete hTotal0p0pi;
   delete hPiZeroMom0p0pi;
@@ -219,8 +219,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   hTotalNp0pi->Draw("histe");
   hTotalNp0pi->Write("ncpizero_Np0pi_" + flavour);
 
-  cTotalNp0pi->SaveAs(baseDir + "/plots/total_Np0pi_" + flavour + ".png");
-  cTotalNp0pi->SaveAs(baseDir + "/plots/total_Np0pi_" + flavour + ".pdf");
+  cTotalNp0pi->SaveAs(baseDir + "/" + gen + "/plots/total_Np0pi_" + flavour + ".png");
+  cTotalNp0pi->SaveAs(baseDir + "/" + gen + "/plots/total_Np0pi_" + flavour + ".pdf");
 
   TCanvas *cPiZeroMomNp0pi = new TCanvas("cPiZeroMomNp0pi", "cPiZeroMomNp0pi");
   cPiZeroMomNp0pi->cd();
@@ -230,8 +230,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   hPiZeroMomNp0pi->Draw("histe");
   hPiZeroMomNp0pi->Write("pizero_mom_ncpizero_Np0pi_" + flavour);
 
-  cPiZeroMomNp0pi->SaveAs(baseDir + "/plots/pizero_mom_Np0pi_" + flavour + ".png");
-  cPiZeroMomNp0pi->SaveAs(baseDir + "/plots/pizero_mom_Np0pi_" + flavour + ".pdf");
+  cPiZeroMomNp0pi->SaveAs(baseDir + "/" + gen + "/plots/pizero_mom_Np0pi_" + flavour + ".png");
+  cPiZeroMomNp0pi->SaveAs(baseDir + "/" + gen + "/plots/pizero_mom_Np0pi_" + flavour + ".pdf");
 
   TCanvas *cCosThetaPiZeroNp0pi = new TCanvas("cCosThetaPiZeroNp0pi", "cCosThetaPiZeroNp0pi");
   cCosThetaPiZeroNp0pi->cd();
@@ -240,8 +240,8 @@ void NuisanceXSecExtract(const TString productionVersion, const TString flavour,
   hCosThetaPiZeroNp0pi->Draw("histe");
   hCosThetaPiZeroNp0pi->Write("cos_theta_pizero_ncpizero_Np0pi_" + flavour);
 
-  cCosThetaPiZeroNp0pi->SaveAs(baseDir + "/plots/cos_theta_pizero_Np0pi_" + flavour + ".png");
-  cCosThetaPiZeroNp0pi->SaveAs(baseDir + "/plots/cos_theta_pizero_Np0pi_" + flavour + ".pdf");
+  cCosThetaPiZeroNp0pi->SaveAs(baseDir + "/" + gen + "/plots/cos_theta_pizero_Np0pi_" + flavour + ".png");
+  cCosThetaPiZeroNp0pi->SaveAs(baseDir + "/" + gen + "/plots/cos_theta_pizero_Np0pi_" + flavour + ".pdf");
 
   delete hTotalNp0pi;
   delete hPiZeroMomNp0pi;

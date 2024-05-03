@@ -313,6 +313,11 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       geniePred->SetMarkerStyle(1);
       geniePred->Draw("histeqsame");
 
+      TH1F *nuwroPred = selection.plot->GetPredictedXSecHist(selection.name, "nuwro", 1e-38, true);
+      nuwroPred->SetLineColor(kGreen+2);
+      nuwroPred->SetMarkerStyle(1);
+      nuwroPred->Draw("histeqsame");
+
       TH1F *underlyingMC = selection.plot->GetUnderlyingMCXSecHist(selection.name, false);
       underlyingMC->SetLineColor(kRed+2);
       underlyingMC->SetMarkerStyle(1);

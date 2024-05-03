@@ -50,33 +50,33 @@ const TString unfoldFileName = "/exp/sbnd/data/users/hlay/ncpizero/plots/NCPiZer
 
 class XSecPlot {
 
-private:
+ private:
   std::string         _name;
   std::string         _axes_labels;
   std::vector<Bin*>   _bins;
   std::vector<double> _varBins;
   std::string         _var;
 
-public:
+ public:
 
   XSecPlot(const std::string name, const std::string axes_labels, const int N,
            const std::vector<double> varBins, const std::string var,
            const double nTargets, const double intFlux)
-  {
-    _name        = name;
-    _axes_labels = axes_labels;
-    _varBins     = varBins;
-    _var         = var;
+    {
+      _name        = name;
+      _axes_labels = axes_labels;
+      _varBins     = varBins;
+      _var         = var;
 
-    if(varBins.size() - 1 != N)
-      throw std::runtime_error("Bin Sizes Messed Up");
+      if(varBins.size() - 1 != N)
+        throw std::runtime_error("Bin Sizes Messed Up");
 
-    for(int i = 1; i < varBins.size(); ++i)
-      {
-        const double width = varBins.size() == 2 ? 1. : varBins[i] - varBins[i-1];
-        _bins.emplace_back(new Bin(i - 1, width, nTargets, intFlux, varBins[i-1], varBins[i]));
-      }
-  }
+      for(int i = 1; i < varBins.size(); ++i)
+        {
+          const double width = varBins.size() == 2 ? 1. : varBins[i] - varBins[i-1];
+          _bins.emplace_back(new Bin(i - 1, width, nTargets, intFlux, varBins[i-1], varBins[i]));
+        }
+    }
 
   void Print()
   {
@@ -97,14 +97,14 @@ public:
   }
 
   std::string GetName() const
-  {
-    return _name;
-  }
+    {
+      return _name;
+    }
 
   std::string GetAxesLabels() const
-  {
-    return _axes_labels;
-  }
+    {
+      return _axes_labels;
+    }
 
   Bin* GetBin(const int i)
   {
@@ -115,154 +115,154 @@ public:
   }
 
   std::vector<Bin*> GetBins()
-  {
-    return _bins;
-  }
+    {
+      return _bins;
+    }
 
   std::string GetVar()
-  {
-    return _var;
-  }
+    {
+      return _var;
+    }
 
   std::vector<float> GetNominalXSecs()
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetNominalXSec());
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetNominalXSec());
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetUniverseXSecs(const std::string &weightName, const int univ)
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetUniverseXSec(weightName, univ));
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetUniverseXSec(weightName, univ));
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetFracErrorsXSec(const std::string &name)
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetFracSystResAveXSec(name));
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetFracSystResAveXSec(name));
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetFracErrorsEfficiency(const std::string &name)
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetFracSystResAveEfficiency(name));
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetFracSystResAveEfficiency(name));
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetFracErrorsPurity(const std::string &name)
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetFracSystResAvePurity(name));
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetFracSystResAvePurity(name));
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetFracErrorsBkgdCount(const std::string &name, const bool scale = false)
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetFracSystResAveBkgdCount(name, scale));
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetFracSystResAveBkgdCount(name, scale));
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetUnderlyingMCXSecs()
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetUnderlyingMCXSec());
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetUnderlyingMCXSec());
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetNominalEfficiencies()
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetNominalEfficiency());
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetNominalEfficiency());
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetNominalStatErrors(const std::vector<float> &values)
-  {
-    std::vector<float> errors;
+    {
+      std::vector<float> errors;
 
-    for(int i = 0; i < _bins.size(); ++i)
-      errors.push_back(_bins[i]->GetNominalFracStatErr() * values[i]);
+      for(int i = 0; i < _bins.size(); ++i)
+        errors.push_back(_bins[i]->GetNominalFracStatErr() * values[i]);
 
-    return errors;
-  }
+      return errors;
+    }
 
   std::vector<float> GetUniverseEfficiencies(const std::string &weightName, const int univ)
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetUniverseEfficiency(weightName, univ));
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetUniverseEfficiency(weightName, univ));
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetNominalPurities()
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetNominalPurity());
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetNominalPurity());
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetUniversePurities(const std::string &weightName, const int univ)
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetUniversePurity(weightName, univ));
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetUniversePurity(weightName, univ));
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetNominalBkgdCounts(const bool scale = false)
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetNominalBkgdCount(scale));
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetNominalBkgdCount(scale));
 
-    return values;
-  }
+      return values;
+    }
 
   std::vector<float> GetUniverseBkgdCounts(const std::string &weightName, const int univ, const bool scale = false)
-  {
-    std::vector<float> values;
+    {
+      std::vector<float> values;
 
-    for(auto const& bin : _bins)
-      values.push_back(bin->GetUniverseBkgdCount(weightName, univ, scale));
+      for(auto const& bin : _bins)
+        values.push_back(bin->GetUniverseBkgdCount(weightName, univ, scale));
 
-    return values;
-  }
+      return values;
+    }
 
   void InsertSystFracFlatError(const std::string &name, const double &frac)
   {
@@ -669,10 +669,10 @@ public:
     if(_varBins.size() == 2 && fold)
       std::runtime_error("Can't fold 0D result");
 
-    TFile* xsecFileNuMu  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_numu.root", "READ");
-    TFile* xsecFileANuMu = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anumu.root", "READ");
-    TFile* xsecFileNuE   = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_nue.root", "READ");
-    TFile* xsecFileANuE  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/genie_xsec_anue.root", "READ");
+    TFile* xsecFileNuMu  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/" + genName + "_xsec_numu.root", "READ");
+    TFile* xsecFileANuMu = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/" + genName + "_xsec_anumu.root", "READ");
+    TFile* xsecFileNuE   = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/" + genName + "_xsec_nue.root", "READ");
+    TFile* xsecFileANuE  = new TFile("/exp/sbnd/data/users/hlay/ncpizero/generators/" + genName + "_xsec_anue.root", "READ");
 
     TH1F* histNuMu;
     TH1F* histANuMu;

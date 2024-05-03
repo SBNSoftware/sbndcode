@@ -307,6 +307,11 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       geniePred->SetMarkerStyle(1);
       geniePred->Draw("histe][same");
 
+      TH1F *nuwroPred = selection.plot->GetPredictedXSecHist(selection.name, "nuwro", 1e-38);
+      nuwroPred->SetLineColor(kGreen+2);
+      nuwroPred->SetMarkerStyle(1);
+      nuwroPred->Draw("histe][same");
+
       TPaveText* title = (TPaveText*)gPad->FindObject("title");
       title->SetY1NDC(0.92);
       title->SetY2NDC(1);
