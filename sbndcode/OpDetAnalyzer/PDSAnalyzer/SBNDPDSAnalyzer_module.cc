@@ -163,6 +163,8 @@ void opdet::SBNDPDSAnalyzer::beginJob()
     fTree->Branch("flash_yerr", "std::vector<double>", &_flash_yerr);
     fTree->Branch("flash_z","std::vector<double>", &_flash_z);
     fTree->Branch("flash_zerr", "std::vector<double>", &_flash_zerr);
+    fTree->Branch("flash_x","std::vector<double>", &_flash_x);
+    fTree->Branch("flash_xerr", "std::vector<double>", &_flash_xerr);
     fTree->Branch("flash_ophit_time", "std::vector<std::vector<double>>", &_flash_ophit_time);
     fTree->Branch("flash_ophit_risetime", "std::vector<std::vector<double>>", &_flash_ophit_risetime);
     fTree->Branch("flash_ophit_starttime", "std::vector<std::vector<double>>", &_flash_ophit_starttime);
@@ -301,6 +303,9 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     _mc_EndPx.clear(); _mc_EndPy.clear(); _mc_EndPz.clear();
     _mc_energydep.clear(); _mc_energydepX.clear(); _mc_energydepY.clear(); _mc_energydepZ.clear();
     _mc_InTimeCosmics=0; _mc_InTimeCosmicsTime.clear();
+
+    if(fVerbosity>0)
+      std::cout << "Saving MCParticles from" << fMCModuleLabel << std::endl;
 
     // Loop over the handle
     for(size_t i_p=0; i_p < mcpartVec.size(); i_p++){
@@ -475,7 +480,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
   if(fSaveRawWaveforms){
 
     if(fVerbosity>0)
-      std::cout << "Saving raw waveforms..." << std::endl;
+      std::cout << "Saving raw waveforms from " << fRawWaveformsModuleLabel << std::endl;
 
     art::Handle< std::vector< raw::OpDetWaveform > > wvfHandle;
     e.getByLabel(fRawWaveformsModuleLabel, wvfHandle);
@@ -508,7 +513,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
   if(fSaveDeconvolvedWaveforms){
 
     if(fVerbosity>0)
-      std::cout << "Saving deconvolved waveforms..." << std::endl;
+      std::cout << "Saving deconvolved waveforms from " << fDeconvolvedWaveformsModuleLabel << std::endl;
 
     art::Handle< std::vector< raw::OpDetWaveform > > wvfHandle;
     e.getByLabel(fDeconvolvedWaveformsModuleLabel, wvfHandle);
@@ -596,6 +601,8 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     _flash_yerr.clear();
     _flash_z.clear();
     _flash_zerr.clear();
+    _flash_x.clear();
+    _flash_xerr.clear();
     _flash_ophit_time.clear();
     _flash_ophit_risetime.clear();
     _flash_ophit_starttime.clear();
@@ -635,6 +642,8 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _flash_tpc.push_back( s );
         _flash_y.push_back( Flash.YCenter() );
         _flash_yerr.push_back( Flash.YWidth() );
+        _flash_x.push_back( Flash.XCenter() );
+        _flash_xerr.push_back( Flash.XWidth() );
         _flash_z.push_back( Flash.ZCenter() );
         _flash_zerr.push_back( Flash.ZWidth() );
         _nopflash++;

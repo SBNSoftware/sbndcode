@@ -248,6 +248,8 @@ private:
   std::vector<double> _flash_yerr ;
   std::vector<double> _flash_z;
   std::vector<double> _flash_zerr;
+  std::vector<double> _flash_x;
+  std::vector<double> _flash_xerr;
   std::vector<int> _flash_tpc;
   std::vector<std::vector<double>> _flash_ophit_time;
   std::vector<std::vector<double>> _flash_ophit_risetime;
