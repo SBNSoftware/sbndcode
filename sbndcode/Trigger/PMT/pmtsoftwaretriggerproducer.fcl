@@ -17,8 +17,8 @@ pmtSoftwareTriggerProducer:
   FindPulses:         false  # if true, will use crude pulse finding algorithm 
 
   # metric input parameters 
-  InputBaseline: [8000.0, 2.0] # in ADC, used if CalculateBaseline is FALSE // first entry is baseline, second entry is baseline error 
-  ADCThreshold:  7960          # in ADC, corresponds to ~5 PE in ideal response, used for CountPMTs (above threshold)  
+  InputBaseline: [14745, 2.0] # in ADC, used if CalculateBaseline is FALSE // first entry is baseline, second entry is baseline error 
+  ADCThreshold:  14705          # in ADC, corresponds to ~5 PE in ideal response, used for CountPMTs (above threshold) **not tuned**
   PEArea:        66.33         # conversion factor from ADCxns area to PE count **not tuned** 
 }
 

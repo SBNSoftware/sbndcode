@@ -256,6 +256,7 @@ physics:
   crtskim: @local::crtskim_sbnd
   pmtskim: @local::pmtskim_sbnd
   supera: @local::sbnd_supera
+  superampvmpr: @local::sbnd_supera_mpvmpr
  }
 
  caloskimana: [ caloskim, crtskim, pmtskim ]
