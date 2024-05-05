@@ -22,6 +22,8 @@ Configuration parameters:
 - `MCTruthOrigin`: specify the `MCTruth` origins that will be saved. Default is [1], i.e. neutrino generated events.
 - `MCTruthPDG`: specify the PDG codes of the candidate vertex particles for the `MCTruth`. Defaults is [12, -12, 14, -14], i.e. BNB neutrinos.
 - `PDTypes`: vector specifying the PD types for which it will save the `SimPhotons` (default is ["pmt_coated", "pmt_uncoated"])
+- `G4BufferBoxX`, `G4BufferBoxY`, `G4BufferBoxZ`: only store MC particle trajectories inside the boundaries defined by the G4BufferBox variables.
+- `G4BeamWindow`: only store MC particles and trajectories in the time window defined by this parameter. Default is [-10000, 12000] #ns.
 
 
 # Variables in the TTree
