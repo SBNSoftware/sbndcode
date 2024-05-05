@@ -1,29 +1,28 @@
 # Overview
 
-SBNDPDSAnalyzer is an art::analyzer that saves useful information for PDS MC/reco studies at different stages of the simulation:
-- Gen: MCTruth
-- G4: MCParticles and deposited energy
-- Detsim: OpDetWaveforms
-- Reco1: deconvolved waveforms, OpHits and OpFlashes
-- Reco2: flash matchers scores (SimpleFlash and OpT0Finder) and CRUMBS score
+`SBNDPDSAnalyzer` is an `art::analyzer` that saves useful information for PDS MC/reco studies at different stages of the simulation:
+- Gen: `MCTruth`
+- G4: `MCParticles` and deposited energy
+- Detsim: `OpDetWaveforms`
+- Reco1: deconvolved waveforms (`OpDetWaveforms`), `OpHits` and `OpFlashes`
+- Reco2: flash matchers scores (`SimpleFlash` and `OpT0Finder`) and `CRUMBS` score
 
-Two TTrees are created:
-- PDSMapTree: Creates a tree with the optical channel IDs, position (X, Y and Z in cm) and the photon detector type (0: CoatedPMT, 1: UncoatedPMT, 2: VUV XARAPUCA and 3: VIS XARAPUCA).
-- OpAnaTree: TTree with the analysis variables (described below). Each entry in the TTree corresponds to an event.
-- OpAnaPerTrackTree: TTree with the number of SimPhotons produced by each MC particle. Each entry in the TTree corresponds to one MC particle in one event. Requires SimPhotons (not SimPhotonsLite).
+Three TTrees are created:
+- `PDSMapTree`: Creates a tree with the optical channel IDs, position (X, Y and Z in cm) and the photon detector type (0: CoatedPMT, 1: UncoatedPMT, 2: VUV XARAPUCA and 3: VIS XARAPUCA).
+- `OpAnaTree`: TTree with the analysis variables (described below). Each entry in the TTree corresponds to an event.
+- `OpAnaPerTrackTree`: TTree with the number of SimPhotons produced by each MC particle. Each entry in the TTree corresponds to one MC particle in one event. Requires SimPhotons (not SimPhotonsLite).
 
 Configuration parameters: 
-- SaveMCTruth, SaveMCParticles, ...: booleans to save different data products at different stages of the simulation/reconstruction chain.
-- Verbosity: shows some printous while running the analyzer.
-- MakePerTrackTree: option to make a tree with the number of SimPhotons per MCParticle (OpAnaPerTrackTree).
-- MakePDSGeoTree: option to dump the PDS mapping in a TTree (PDSMapTree)
-- UseSimPhotonsLite: use SimPhotonsLite or SimPhotons (default is true, i.e. use SimPhotonsLite)
-- KeepPDGCode: specify what PDG codes will be stored in the TTree from the MCParticle list. If no PDGs are specified, it saves all the MCParticles (default is [], so it saves everything).
-- MCTruthOrigin: specify the MCTruth origins that will be saved. Default is [1], i.e. neutrino generated events.
-- MCTruthPDG: specify the PDG codes of the candidate vertex particles for the MCTruth. Defaults is [12, -12, 14, -14], i.e. BNB neutrinos.
-- PDTypes: vector specifying the PD types for which it will save the SimPhotons (default is ["pmt_coated", "pmt_uncoated"])
+- `SaveMCTruth`, `SaveMCParticles`, ...: booleans to save different data products at different stages of the simulation/reconstruction chain.
+- `Verbosity`: shows some printous while running the analyzer.
+- `MakePerTrackTree`: option to make a tree with the number of `SimPhotons` per `MCParticle` (`OpAnaPerTrackTree`).
+- `MakePDSGeoTree`: option to dump the PDS mapping in a TTree (`PDSMapTree`)
+- `UseSimPhotonsLite`: use `SimPhotonsLite` or `SimPhotons` (default is true, i.e. use `SimPhotonsLite`)
+- `KeepPDGCode`: specify what PDG codes will be stored in the TTree from the MC particles list. If no PDGs are specified, it saves all the MC particles (default is [], so it saves everything).
+- `MCTruthOrigin`: specify the `MCTruth` origins that will be saved. Default is [1], i.e. neutrino generated events.
+- `MCTruthPDG`: specify the PDG codes of the candidate vertex particles for the `MCTruth`. Defaults is [12, -12, 14, -14], i.e. BNB neutrinos.
+- `PDTypes`: vector specifying the PD types for which it will save the `SimPhotons` (default is ["pmt_coated", "pmt_uncoated"])
 
-# Variables in the TTree
 
 # Variables in the TTree
 
@@ -120,6 +119,8 @@ It dumps all the reconstructed OpHits in the event.
 
 It dumps all the reconstructed OpFlash in the event and the associated OpHits associated to each OpFlash. Each entry in the following vectors correspond to one OpFlash.
 
+| Branch name                 |    Type                                     |  Description |             
+|-----------------------------|---------------------------------------------|--------------|  
 | nopflash | int | Total number of reconstructed OpFlash objects |  
 | flash_time| std::vector<double\> | t0 of the reconstructed OpFlashes |  
 | flash_total_pe | std::vector<double\> | Integrated (all optical channels) number of photoelectrons in each OpFlash |  
