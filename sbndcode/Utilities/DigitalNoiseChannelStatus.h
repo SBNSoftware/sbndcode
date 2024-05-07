@@ -50,6 +50,5 @@ private:
 };
 
 DECLARE_ART_SERVICE(sbnd::DigitalNoiseChannelStatus, LEGACY)
-DEFINE_ART_SERVICE(sbnd::DigitalNoiseChannelStatus)
 
 #endif

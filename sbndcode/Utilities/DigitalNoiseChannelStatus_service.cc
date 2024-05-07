@@ -82,3 +82,7 @@ void sbnd::DigitalNoiseChannelStatus::priv_PrepEvent(const art::Event& evt, art:
   //    std::cout << "noisy chan: " << c << std::endl;
   //  }
 }
+
+DEFINE_ART_SERVICE(sbnd::DigitalNoiseChannelStatus)
+
+
