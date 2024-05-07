@@ -14,7 +14,7 @@ sbnd::DigitalNoiseChannelStatus::DigitalNoiseChannelStatus(fhicl::ParameterSet c
   fRawDigitLabel = p.get<std::string>("RawDigitLabel","daq");
   fRecobWireLabel = p.get<std::string>("RecobWireLabel","caldata");
 
-  areg.sPreProcessEvent.watch(this, &sbnd::DigitalNoiseChannelStatus::priv_PrepEvent);
+  areg.sPreProcessEvent.watch(this, &sbnd::DigitalNoiseChannelStatus::pub_PrepEvent);
 }
 
 bool sbnd::DigitalNoiseChannelStatus::IsBad(raw::ChannelID_t chan) const
@@ -37,7 +37,7 @@ size_t sbnd::DigitalNoiseChannelStatus::NBadChannels() const
 // put cuts on RMS, number of 0xBAD samples, and whether the differences between a sample and
 // the first are all even (catches all the powers of two).
 
-void sbnd::DigitalNoiseChannelStatus::priv_PrepEvent(const art::Event& evt, art::ScheduleContext)
+void sbnd::DigitalNoiseChannelStatus::pub_PrepEvent(const art::Event& evt, art::ScheduleContext)
 {
   fDNChannels.clear();
   if (fRawDigitLabel != "")
