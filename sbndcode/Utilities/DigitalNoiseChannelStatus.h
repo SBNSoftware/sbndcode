@@ -47,6 +47,11 @@ private:
   std::string fRawDigitLabel;
   std::string fRecobWireLabel;
 
+  int fNAwayFromPedestalRawDigit;
+  int fDistFromPedestalRawDigit;
+  int fNAwayFromPedestalRecobWire;
+  float fDistFromPedestalRecobWire;
+  
 };
 
 DECLARE_ART_SERVICE(sbnd::DigitalNoiseChannelStatus, LEGACY)

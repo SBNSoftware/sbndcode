@@ -7,6 +7,10 @@ DigitalNoiseChannelStatusDefaults :
   RMSCutRawDigit: 100
   RMSCutWire: 100
   NBADCutRawDigit: 5
+  NAwayFromPedestalRawDigit: 100
+  DistFromPedestalRawDigit: 100
+  NAwayFromPedestalRecobWire: 100
+  DistFromPedestalRecobWire: 100
 }
 
 END_PROLOG
