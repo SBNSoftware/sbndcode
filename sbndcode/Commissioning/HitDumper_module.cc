@@ -181,7 +181,7 @@ private:
   std::vector<int>    _hit_channel;             ///< Channel where the hit belongs to
   std::vector<double> _hit_peakT;               ///< Hit peak time
   std::vector<double> _hit_charge;              ///< Hit charge
-  std::vector<double> _hit_ph;                  ///< Hit ph?
+  std::vector<double> _hit_ph;                  ///< Hit pulse height
   std::vector<double> _hit_width;               ///< Hit width
   std::vector<double> _hit_full_integral;       ///< Hit charge integral
   std::vector<int>    _waveform_number;         ///< Number for each waveform, to allow for searching
@@ -239,6 +239,7 @@ private:
   std::vector<double> _ct_y2;           ///< CRT track y2
   std::vector<double> _ct_z2;           ///< CRT track z2
 
+  // Optical hit variables
   int _nophits;                               ///< Number of Optical Hits
   std::vector<int> _ophit_opch;               ///< OpChannel of the optical hit
   std::vector<int> _ophit_opdet;              ///< OpDet of the optical hit
@@ -254,7 +255,7 @@ private:
   std::vector<double> _ophit_opdet_z;         ///< OpDet Z coordinate of the optical hit
   std::vector<int> _ophit_opdet_type;         ///< OpDet tyoe of the optical hit
 
-  //pmt hardware trigger variables
+  // PMT hardware trigger variables
   std::vector<int> _pmtTrigger_npmtshigh;    ///< number of pmt pairs above threshold, index = time during trigger window (usually beam spill)
   int _pmtTrigger_maxpassed;    ///< maximum number of pmt pairs above threshold during trigger window (usually beam spill)
 
@@ -287,6 +288,7 @@ private:
   int                 _nmhits;               ///< Number of muon collection hits per track
   std::vector<int>    _mhit_trk;             ///< Track number that the hit belongs to
   std::vector<int>    _mhit_tpc;             ///< TPC where the hit belongs to
+  std::vector<int>    _mhit_plane;           ///< Wire plane where the hit belongs to
   std::vector<int>    _mhit_wire;            ///< Wire where the hit belongs to
   std::vector<int>    _mhit_channel;         ///< Channel where the hit belongs to
   std::vector<double> _mhit_peakT;           ///< Hit peak time
@@ -1036,6 +1038,7 @@ void Hitdumper::analyze(const art::Event& evt)
             geo::WireID wireid = muonhit->WireID();
             _mhit_trk.push_back(i);
             _mhit_tpc.push_back(wireid.TPC);
+            _mhit_plane.push_back(wireid.Plane);
             _mhit_wire.push_back(wireid.Wire);
             _mhit_channel.push_back(muonhit->Channel());
             _mhit_peakT.push_back(muonhit->PeakTime());
@@ -1477,6 +1480,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("nmhits", &_nmhits, "nmhits/I");
     fTree->Branch("mhit_trk", &_mhit_trk);
     fTree->Branch("mhit_tpc", &_mhit_tpc);
+    fTree->Branch("mhit_plane", &_mhit_plane);
     fTree->Branch("mhit_wire", &_mhit_wire); 
     fTree->Branch("mhit_channel", &_mhit_channel);
     fTree->Branch("mhit_peakT", &_mhit_peakT);
@@ -1707,6 +1711,7 @@ void Hitdumper::ResetMuonTracksVars(int n){
 void Hitdumper::ResetMuonHitVars(int n){
   _mhit_trk.clear(); 
   _mhit_tpc.clear();
+  _mhit_plane.clear();
   _mhit_wire.clear();
   _mhit_channel.clear();
   _mhit_peakT.clear();
@@ -1714,6 +1719,7 @@ void Hitdumper::ResetMuonHitVars(int n){
 
   _mhit_trk.reserve(n);
   _mhit_tpc.reserve(n);
+  _mhit_plane.reserve(n);
   _mhit_wire.reserve(n);
   _mhit_channel.reserve(n);
   _mhit_peakT.reserve(n);
