@@ -22,6 +22,7 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindMany.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/FindOneP.h"
 #include "canvas/Utilities/InputTag.h"
 
 // LArSoft includes
@@ -138,8 +139,8 @@ private:
   void ResetCRTCustomTracksVars(int n);
   /// Resets crt tracks tree variables
   void ResetCRTTracksVars(int n);
-  /// Resets crt hits tree variables
-  void ResetCRTHitsVars(int n);
+  /// Resets crt spacepoint tree variables
+  void ResetCRTSpacePointVars(int n);
   /// Resets optical hits tree variables
   void ResetOpHitsVars(int n);
   /// Resets pmt hardware trigger variables
@@ -194,8 +195,8 @@ private:
 
 
   // CRT strip variables
-  int _n_crt_strip_hits;                           ///< Number of CRT strip hits
-  std::vector<int> _crt_strip_hit_tagger;          ///< CRT strip hit tagger
+  uint _n_crt_strip_hits;                          ///< Number of CRT strip hits
+  std::vector<int> _crt_strip_hit_tagger;          ///< CRT strip hit tagger enum
   std::vector<int> _crt_strip_hit_module;          ///< CRT strip hit module
   std::vector<int> _crt_strip_hit_channel;         ///< CRT strip hit channel
   std::vector<int> _crt_strip_hit_orient;          ///< CRT strip hit orientation (0 for y (horizontal) and 1 for x (vertical))
@@ -205,6 +206,20 @@ private:
   std::vector<uint> _crt_strip_hit_adc2;           ///< CRT strip hit adc2
   std::vector<double> _crt_strip_hit_pos;          ///< CRT strip hit position
   std::vector<double> _crt_strip_hit_pos_err;      ///< CRT strip hit position error
+
+  // CRT space point variables (3D hits)
+  uint _n_crt_space_points;                         ///< Number of CRT SpacePoints
+  std::vector<double> _crt_space_point_x;           ///< CRT SpacePoint x
+  std::vector<double> _crt_space_point_y;           ///< CRT SpacePoint y
+  std::vector<double> _crt_space_point_z;           ///< CRT SpacePoint z
+  std::vector<double> _crt_space_point_time;        ///< CRT SpacePoint time
+  std::vector<double> _crt_space_point_x_err;       ///< CRT SpacePoint x error
+  std::vector<double> _crt_space_point_y_err;       ///< CRT SpacePoint y error
+  std::vector<double> _crt_space_point_z_err;       ///< CRT SpacePoint z error
+  std::vector<double> _crt_space_point_time_err;    ///< CRT SpacePoint time error
+  std::vector<double> _crt_space_point_pe;          ///< CRT SpacePoint PE
+  std::vector<int> _crt_space_point_tagger;         ///< CRT SpacePoint tagger enum
+  std::vector<int> _crt_space_point_nhits;          ///< CRT SpacePoint nhits
 
   // CRT track variables
   int _nctrks;                          ///< Number of created CRT tracks
@@ -220,15 +235,6 @@ private:
   std::vector<double> _ctrk_t2;         ///< CRT track t2
   std::vector<double> _ctrk_adc2;       ///< CRT track adc2
   std::vector<int> _ctrk_mod2x;         ///< CRT track mod2x
-
-  // CRT hits variables
-  int _nchits;                           ///< Number of CRT hits
-  std::vector<double> _chit_x;           ///< CRT hit x
-  std::vector<double> _chit_y;           ///< CRT hit y
-  std::vector<double> _chit_z;           ///< CRT hit z
-  std::vector<double> _chit_time;        ///< CRT hit time
-  // std::vector<double> _chit_adc;         ///< CRT hit adc
-  std::vector<int> _chit_plane;          ///< CRT hit plane
 
   // CRT track variables
   int _ncts;                            ///< Number of CRT tracks
@@ -391,12 +397,13 @@ private:
   int _max_ophits;                  ///< maximum number of hits (to be set via fcl)
   int _max_samples;                 ///< maximum number of samples (to be set via fcl)
   uint _max_crt_strip_hits;         ///< maximum number of CRT strip hits (to be set via fcl)
+  uint _max_crt_space_points;       ///< maximum number of CRT space points (to be set via fcl)
   int _max_nctrks;                  ///< maximum number of CRT tracks (to be set via fcl)
 
   std::string fHitsModuleLabel;     ///< Label for Hit dataproduct (to be set via fcl)
   std::string fLArG4ModuleLabel;    ///< Label for LArG4 dataproduct (to be set via fcl)
   std::string fCRTStripHitModuleLabel; ///< Label for CRTStrip dataproduct (to be set via fcl)
-  std::string fCRTHitModuleLabel;   ///< Label for CRTHit dataproduct (to be set via fcl)
+  std::string fCRTSpacePointModuleLabel;   ///< Label for CRTSpacePoint dataproduct (to be set via fcl)
   std::string fCRTTrackModuleLabel; ///< Label for CRTTrack dataproduct (to be set via fcl)
   std::string fpmtTriggerModuleLabel; ///< Label for pmtTrigger dataproduct (to be set vis fcl)
   std::string fpmtSoftTriggerModuleLabel; ///< Label for pmt software trigger data product (to be set via fcl)
@@ -411,7 +418,7 @@ private:
 
   // double fSelectedPDG;
 
-  bool fkeepCRThits;       ///< Keep the CRT hits (to be set via fcl)
+  bool fKeepCRTSpacePoints;///< Keep the CRT spacepoints (to be set via fcl)
   bool fKeepCRTStripHits;  ///< Keep the CRT strips (to be set via fcl)
   bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
   bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
@@ -471,7 +478,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fDigitModuleLabel    = p.get<std::string>("DigitModuleLabel", "daq");
   fLArG4ModuleLabel    = p.get<std::string>("LArG4ModuleLabel", "largeant");
   fCRTStripHitModuleLabel = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
-  fCRTHitModuleLabel   = p.get<std::string>("CRTHitModuleLabel", "crthit");
+  fCRTSpacePointModuleLabel   = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
   fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmttriggerproducer");
@@ -483,24 +490,24 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fMCTrackModuleLabel    = p.get<std::string>("MCTrackModuleLabel ", "mcreco");
   fMCShowerModuleLabel    = p.get<std::string>("MCShowerModuleLabel ", "mcreco");
 
-  fkeepCRThits       = p.get<bool>("keepCRThits",true);
-  fKeepCRTStripHits  = p.get<bool>("KeepCRTStripHits", true);
-  fmakeCRTtracks     = p.get<bool>("makeCRTtracks",true);
-  freadCRTtracks     = p.get<bool>("readCRTtracks",true);
-  freadOpHits        = p.get<bool>("readOpHits",true);
-  freadpmtTrigger    = p.get<bool>("readpmtTrigger",true);
-  freadpmtSoftTrigger= p.get<bool>("readpmtSoftTrigger",true);
-  freadcrtSoftTrigger= p.get<bool>("readcrtSoftTrigger",false);
-  freadMuonTracks    = p.get<bool>("readMuonTracks",true);
-  freadMuonHits      = p.get<bool>("readMuonHits",false);
-  fcheckTransparency = p.get<bool>("checkTransparency",false);
-  freadTruth         = p.get<bool>("readTruth",true);
-  freadMCParticle    = p.get<bool>("readMCParticle",false);
-  fsavePOTInfo       = p.get<bool>("savePOTinfo",true);
-  fUncompressWithPed = p.get<bool>("UncompressWithPed",false);
+  fKeepCRTSpacePoints = p.get<bool>("KeepCRTSpacePoints",true);
+  fKeepCRTStripHits   = p.get<bool>("KeepCRTStripHits", true);
+  fmakeCRTtracks      = p.get<bool>("makeCRTtracks",true);
+  freadCRTtracks      = p.get<bool>("readCRTtracks",true);
+  freadOpHits         = p.get<bool>("readOpHits",true);
+  freadpmtTrigger     = p.get<bool>("readpmtTrigger",true);
+  freadpmtSoftTrigger = p.get<bool>("readpmtSoftTrigger",true);
+  freadcrtSoftTrigger = p.get<bool>("readcrtSoftTrigger",false);
+  freadMuonTracks     = p.get<bool>("readMuonTracks",true);
+  freadMuonHits       = p.get<bool>("readMuonHits",false);
+  fcheckTransparency  = p.get<bool>("checkTransparency",false);
+  freadTruth          = p.get<bool>("readTruth",true);
+  freadMCParticle     = p.get<bool>("readMCParticle",false);
+  fsavePOTInfo        = p.get<bool>("savePOTinfo",true);
+  fUncompressWithPed  = p.get<bool>("UncompressWithPed",false);
 
-  fWindow            = p.get<int>("window",100);
-  fKeepTaggerTypes   = p.get<std::vector<int>>("KeepTaggerTypes");
+  fWindow             = p.get<int>("window",100);
+  fKeepTaggerTypes    = p.get<std::vector<int>>("KeepTaggerTypes");
 
   fSkipInd           = p.get<bool>("SkipInduction",false);
 }
@@ -580,21 +587,20 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // CRT strips
   //
-  uint _nstr = 0;
   art::Handle<std::vector<sbnd::crt::CRTStripHit>> crtStripHitHandle;
   std::vector<art::Ptr<sbnd::crt::CRTStripHit>> crtStripHitVector;
   if (evt.getByLabel(fCRTStripHitModuleLabel, crtStripHitHandle))  {
     art::fill_ptr_vector(crtStripHitVector, crtStripHitHandle);
-    _nstr = crtStripHitVector.size();
+    _n_crt_strip_hits = crtStripHitVector.size();
   }
   else
     std::cout << "Failed to get sbnd::crt::CRTStripHit data product." << std::endl;
 
-  if (_nstr > _max_crt_strip_hits) _nstr = _max_crt_strip_hits;
+  if (_n_crt_strip_hits > _max_crt_strip_hits) _n_crt_strip_hits = _max_crt_strip_hits;
 
-  ResetCRTStripHitVars(_nstr);
+  ResetCRTStripHitVars(_n_crt_strip_hits);
 
-  for(uint i = 0; i < _nstr; ++i)
+  for(uint i = 0; i < _n_crt_strip_hits; ++i)
     {
       const art::Ptr<sbnd::crt::CRTStripHit> stripHit = crtStripHitVector[i];
 
@@ -760,49 +766,57 @@ void Hitdumper::analyze(const art::Event& evt)
     } // loop over hits
     _nctrks = ntr;
   }  // end if make tracks
-
+  */
+  
   //
-  // CRT hits
+  // CRT SpacePoints (3D hits)
   //
-  if (fkeepCRThits) {
-    art::Handle<std::vector<sbn::crt::CRTHit> > crtHitListHandle;
-    std::vector<art::Ptr<sbn::crt::CRTHit> > chitlist;
-    // art::Handle< std::vector<sbnd::crt::CRTData> > crtStripListHandle;
-    // std::vector< art::Ptr<sbnd::crt::CRTData> > striplist;
-    if (evt.getByLabel(fCRTHitModuleLabel, crtHitListHandle))  {
-      art::fill_ptr_vector(chitlist, crtHitListHandle);
-      _nchits = chitlist.size();
+  if (fKeepCRTSpacePoints) {
+    art::Handle<std::vector<sbnd::crt::CRTSpacePoint> > crtSPHandle;
+    std::vector<art::Ptr<sbnd::crt::CRTSpacePoint> > crtSPVector;
+    if (evt.getByLabel(fCRTSpacePointModuleLabel, crtSPHandle))  {
+      art::fill_ptr_vector(crtSPVector, crtSPHandle);
+      _n_crt_space_points = crtSPVector.size();
     }
     else {
-      std::cout << "Failed to get sbn::crt::CRTHit data product." << std::endl;
-      _nchits = 0;
+      std::cout << "Failed to get sbnd::crt::CRTSpacePoint data product." << std::endl;
+      _n_crt_space_points = 0;
     }
 
-    if (_nchits > _max_chits) {
-      std::cout << "Available CRT hits are " << _nchits
+    art::FindOneP<sbnd::crt::CRTCluster> spToCluster(crtSPHandle, evt, fCRTSpacePointModuleLabel);
+
+    if (_n_crt_space_points > _max_crt_space_points) {
+      std::cout << "Available CRT hits are " << _n_crt_space_points
                 << ", which is above the maximum number allowed to store." << std::endl;
-      std::cout << "Will only store " << _max_chits << "CRT hits." << std::endl;
-      _nchits = _max_chits;
+      std::cout << "Will only store " << _max_crt_space_points << "CRT hits." << std::endl;
+      _n_crt_space_points = _max_crt_space_points;
     }
 
-    ResetCRTHitsVars(_nchits);
+    ResetCRTSpacePointVars(_n_crt_space_points);
 
-    for (int i = 0; i < _nchits; ++i){
-      // int ip = kNotDefined;
-      sbnd::crt::CRTTagger ip = sbnd::crt::CRTCommonUtils::GetTaggerEnum(chitlist[i]->tagger);
+    for (uint i = 0; i < _n_crt_space_points; ++i){
+      const art::Ptr<sbnd::crt::CRTSpacePoint> spacePoint = crtSPVector[i];
 
-      _chit_time[i]=chitlist[i]->ts1_ns*0.001;
-      if (chitlist[i]->ts1_ns > MAX_INT) {
-        _chit_time[i] = 0.001 * (chitlist[i]->ts1_ns - TIME_CORRECTION);
-      }
+      if(!spacePoint->Complete())
+	continue;
 
-      _chit_x[i] = chitlist[i]->x_pos;
-      _chit_y[i] = chitlist[i]->y_pos;
-      _chit_z[i] = chitlist[i]->z_pos;
-      _chit_plane[i] = ip;
+      const art::Ptr<sbnd::crt::CRTCluster> cluster = spToCluster.at(spacePoint.key());
+
+      _crt_space_point_x.push_back(spacePoint->X());
+      _crt_space_point_y.push_back(spacePoint->Y());
+      _crt_space_point_z.push_back(spacePoint->Z());
+      _crt_space_point_time.push_back(spacePoint->Time());
+      _crt_space_point_x_err.push_back(spacePoint->XErr());
+      _crt_space_point_y_err.push_back(spacePoint->YErr());
+      _crt_space_point_z_err.push_back(spacePoint->ZErr());
+      _crt_space_point_time_err.push_back(spacePoint->TimeErr());
+      _crt_space_point_pe.push_back(spacePoint->PE());
+      _crt_space_point_tagger.push_back(cluster->Tagger());
+      _crt_space_point_nhits.push_back(cluster->NHits());
     }
   }
 
+  /*
   //
   // CRT tracks
   //
@@ -1371,13 +1385,19 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ctrk_adc2", &_ctrk_adc2);
     fTree->Branch("ctrk_mod2x", &_ctrk_mod2x);
   }
-  if (fkeepCRThits) {
-    fTree->Branch("nchits", &_nchits, "nchits/I");
-    fTree->Branch("chit_x", &_chit_x);
-    fTree->Branch("chit_y", &_chit_y);
-    fTree->Branch("chit_z", &_chit_z);
-    fTree->Branch("chit_time", &_chit_time);
-    fTree->Branch("chit_plane", &_chit_plane);
+  if (fKeepCRTSpacePoints) {
+    fTree->Branch("n_crt_space_points", &_n_crt_space_points);
+    fTree->Branch("crt_space_point_x", &_crt_space_point_x);
+    fTree->Branch("crt_space_point_y", &_crt_space_point_y);
+    fTree->Branch("crt_space_point_z", &_crt_space_point_z);
+    fTree->Branch("crt_space_point_time", &_crt_space_point_time);
+    fTree->Branch("crt_space_point_x_err", &_crt_space_point_x_err);
+    fTree->Branch("crt_space_point_y_err", &_crt_space_point_y_err);
+    fTree->Branch("crt_space_point_z_err", &_crt_space_point_z_err);
+    fTree->Branch("crt_space_point_time_err", &_crt_space_point_time_err);
+    fTree->Branch("crt_space_point_pe", &_crt_space_point_pe);
+    fTree->Branch("crt_space_point_tagger", &_crt_space_point_tagger);
+    fTree->Branch("crt_space_point_nhits", &_crt_space_point_nhits);    
   }
   if (freadCRTtracks) {
     fTree->Branch("ncts", &_ncts, "ncts/I");
@@ -1618,12 +1638,18 @@ void Hitdumper::ResetCRTTracksVars(int n) {
   _ct_z2.assign(n, DEFAULT_VALUE);
 }
 
-void Hitdumper::ResetCRTHitsVars(int n) {
-  _chit_plane.assign(n, DEFAULT_VALUE);
-  _chit_time.assign(n, DEFAULT_VALUE);
-  _chit_x.assign(n, DEFAULT_VALUE);
-  _chit_y.assign(n, DEFAULT_VALUE);
-  _chit_z.assign(n, DEFAULT_VALUE);
+void Hitdumper::ResetCRTSpacePointVars(int n) {
+  _crt_space_point_x.clear();
+  _crt_space_point_y.clear();
+  _crt_space_point_z.clear();
+  _crt_space_point_time.clear();
+  _crt_space_point_x_err.clear();
+  _crt_space_point_y_err.clear();
+  _crt_space_point_z_err.clear();
+  _crt_space_point_time_err.clear();
+  _crt_space_point_pe.clear();
+  _crt_space_point_tagger.clear();
+  _crt_space_point_nhits.clear();
 }
 
 void Hitdumper::ResetOpHitsVars(int n) {
