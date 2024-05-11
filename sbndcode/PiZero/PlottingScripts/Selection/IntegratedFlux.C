@@ -79,7 +79,7 @@ void IntegratedFlux(const TString productionVersion, const bool back, const bool
   double nominalCount = 0.;
 
   ofstream outFile;
-  outFile.open(saveDir + "/FluxMap.h");
+  outFile.open(saveDir + "/FluxMap.h.new");
   outFile << "const std::map<std::string, std::map<int, double>> univsIntegratedFluxMap = {" << std::endl;
 
   for(auto&& [ weight_i, name ] : enumerate(weight_names))
@@ -312,6 +312,8 @@ void IntegratedFlux(const TString productionVersion, const bool back, const bool
 
   outFile << "};";
   outFile.close();
+
+  gSystem->Exec("mv " + saveDir + "/FluxMap.h.new " + saveDir + "/FluxMap.h");
 
   std::cout << nominalCount * scaling / fv_face_area << std::endl;
 }

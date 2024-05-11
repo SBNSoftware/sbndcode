@@ -8,7 +8,7 @@ void IntegratedFluxRayTrace(const TString productionVersion)
 
   gSystem->Exec("mkdir -p " + saveDir);
 
-  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL_0.root";
+  const TString file = baseFileDir + "/" + productionVersion + "/" + productionVersion + "_flux_configL_[0-1].root";
 
   gROOT->SetStyle("henrySBND");
   gROOT->ForceStyle();
@@ -63,7 +63,7 @@ void IntegratedFluxRayTrace(const TString productionVersion)
   double nominalCount = 0.;
 
   ofstream outFile;
-  outFile.open(saveDir + "/FluxMap.h");
+  outFile.open(saveDir + "/FluxMap.h.new");
   outFile << "const std::map<std::string, std::map<int, double>> univsIntegratedFluxMap = {" << std::endl;
 
   for(auto&& [ weight_i, name ] : enumerate(weight_names))
@@ -183,16 +183,16 @@ void IntegratedFluxRayTrace(const TString productionVersion)
 
       for(int bin = 0; bin < hNuEnergyNominal->GetNbinsX(); ++bin)
         {
-	  const float binscale = bin == 0 ? 4 : bin < 3 ? 2.5 : bin < 5 ? 2 : 1.5;
+          const float binscale = bin == 0 ? 4 : bin < 3 ? 2.5 : bin < 5 ? 2 : 1.5;
 
           hNuEnergyFluxUniversesPerBin.push_back(new TH1F(Form("hNuEnergyFluxUniverses%sBin%i", name.c_str(), bin+1),
                                                           Form("%.1f < True E_{#nu} (GeV) < %.1f;#nu / 0.1 GeV;Universes", hNuEnergyNominal->GetBinLowEdge(bin+1),
                                                                hNuEnergyNominal->GetBinLowEdge(bin+1) + hNuEnergyNominal->GetBinWidth(bin+1)),
                                                           25, .5 * hNuEnergyNominal->GetBinContent(bin+1), binscale * hNuEnergyNominal->GetBinContent(bin+1)));
           for(int j = 0; j < n_univs; ++j)
-	    {
-	      hNuEnergyFluxUniversesPerBin[bin]->Fill(hNuEnergyFluxUniverses[weight_i][j]->GetBinContent(bin+1));
-	    }
+            {
+              hNuEnergyFluxUniversesPerBin[bin]->Fill(hNuEnergyFluxUniverses[weight_i][j]->GetBinContent(bin+1));
+            }
 
           TCanvas *cNuEnergyFluxUniversesPerBin = new TCanvas(Form("cNuEnergyFluxUniverses%sBin%i", name.c_str(), bin+1),
                                                               Form("cNuEnergyFluxUniverses%sBin%i", name.c_str(), bin+1));
@@ -294,6 +294,8 @@ void IntegratedFluxRayTrace(const TString productionVersion)
 
   outFile << "};";
   outFile.close();
+
+  gSystem->Exec("mv " + saveDir + "/FluxMap.h.new " + saveDir + "/FluxMap.h");
 
   std::cout << nominalCount * scaling / fv_face_area << std::endl;
 }
