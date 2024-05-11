@@ -56,14 +56,10 @@ void XSec1D(const TString &productionVersion, const TString &saveDirExt, const i
   selections[1].plot = xsec_0p0pi;
   selections[2].plot = xsec_Np0pi;
 
-  weightSets = {};
-
   FillPlots(samples, selections, weightSets);
 
   MakePlot(0, plot_types, selections, saveDir);
   MakeSummaryPlot(0, selections, saveDir);
-
-  return;
 
   for(WeightSet &weightSet : weightSets)
     {
@@ -318,20 +314,6 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
       nuwroPred->SetMarkerStyle(1);
       nuwroPred->Draw("histeqsame");
 
-      TH1F *underlyingMC = selection.plot->GetUnderlyingMCXSecHist(selection.name, false);
-      underlyingMC->SetLineColor(kRed+2);
-      underlyingMC->SetMarkerStyle(1);
-      //underlyingMC->Draw("histeqsame");
-
-      TH1F *underlyingMCFolded = selection.plot->GetUnderlyingMCXSecHist(selection.name, true);
-      underlyingMCFolded->SetLineColor(kPink+2);
-      underlyingMCFolded->SetMarkerStyle(1);
-      underlyingMCFolded->Draw("histeqsame");
-
-      std::cout << selection.name
-                << '\n' << hist->Integral() << " " << geniePred->Integral() << " " << underlyingMCFolded->Integral()
-                << '\n' << Integral(hist) << " " << Integral(geniePred) << " " << Integral(underlyingMCFolded) << std::endl;
-
       TPaveText* title = (TPaveText*)gPad->FindObject("title");
       title->SetY1NDC(0.92);
       title->SetY2NDC(1);
@@ -342,10 +324,16 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
 
       AddText(canvas, wip, kGray+2, {.8, .895, .91, .905}, 0.025, 32);
 
+      TLegend *leg = new TLegend(.35, .6, .7, .8);
+      leg->AddEntry(hist, "Nominal + Stat", "le");
+      leg->AddEntry(geniePred, "GENIEv3 AR23_20i_00_000", "l");
+      leg->AddEntry(nuwroPred, "NuWro", "l");
+      leg->Draw();
+
       if(type == 0)
         {
-          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_genie_compare.png");
-          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_genie_compare.pdf");
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare.png");
+          canvas->SaveAs(saveSubDir + "/" + selection.name + "_nominal_generator_compare.pdf");
         }
 
       delete hist;

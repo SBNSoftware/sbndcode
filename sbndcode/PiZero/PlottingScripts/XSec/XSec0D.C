@@ -40,14 +40,10 @@ void XSec0D(const TString &productionVersion, const TString &saveDirExt)
   selections[1].plot = xsec_0p0pi;
   selections[2].plot = xsec_Np0pi;
 
-  weightSets = {};
-
   FillPlots(samples, selections, weightSets);
 
   MakePlot(0, plot_types, selections, saveDir);
   MakeSummaryPlot(0, selections, saveDir);
-
-  return;
 
   for(WeightSet &weightSet : weightSets)
     {
@@ -325,12 +321,13 @@ void MakeSummaryPlot(const int type, const Selections &selections, const TString
           TLegend *leg = new TLegend(.35, .6, .7, .8);
           leg->AddEntry(hist, "Nominal + Stat", "le");
           leg->AddEntry(geniePred, "GENIEv3 AR23_20i_00_000", "l");
+          leg->AddEntry(nuwroPred, "NuWro", "l");
           leg->Draw();
         }
     }
 
-  canvas->SaveAs(saveDir + "/nominal_genie_compare.png");
-  canvas->SaveAs(saveDir + "/nominal_genie_compare.pdf");
+  canvas->SaveAs(saveDir + "/nominal_generator_compare.png");
+  canvas->SaveAs(saveDir + "/nominal_generator_compare.pdf");
 }
 
 void MakeSystSummaryPlot(const Selections &selections, const TString &saveDir, const std::string &weightName,
