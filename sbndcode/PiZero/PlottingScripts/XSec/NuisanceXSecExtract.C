@@ -20,8 +20,6 @@ void NuisanceXSecExtract(const TString productionVersion, const TString gen, con
   TChain* events = new TChain("FlatTree_VARS");
   events->Add(baseDir + "/" + gen + "/" + productionVersion + "/" + cfg + "/" + flavour + "/" + gen + "_" + flavour + "_prep.flat.root");
 
-  Int_t Mode;
-
   Char_t cc;
   Int_t  PDGnu, nfsp;
 
@@ -32,7 +30,6 @@ void NuisanceXSecExtract(const TString productionVersion, const TString gen, con
   Double_t scale_factor;
 
   events->SetBranchStatus("*", 0);
-  events->SetBranchAddress("Mode", &Mode);
   events->SetBranchAddress("cc", &cc);
   events->SetBranchAddress("PDGnu", &PDGnu);
   events->SetBranchAddress("nfsp", &nfsp);
@@ -97,9 +94,6 @@ void NuisanceXSecExtract(const TString productionVersion, const TString gen, con
 
       if(cc == 0 && npizeros > 0)
         {
-          if(abs(Mode) == 36)
-            continue;
-
           hTotalIncl->Fill(0., w);
           hPiZeroMomIncl->Fill(mom, w);
           hCosThetaPiZeroIncl->Fill(cosTheta, w);
