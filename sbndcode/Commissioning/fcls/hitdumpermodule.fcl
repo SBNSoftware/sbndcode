@@ -15,7 +15,7 @@ hitdumper:
     OpHitsModuleLabel:        ["ophitpmt", "ophitxarapuca"]
     CRTHitModuleLabel:        "crthit"
     CRTStripModuleLabel:      "crt"
-    CRTTrackModuleLabel:      "crttrack"
+    CRTTrackModuleLabel:      "crttracks"
     pmtTriggerModuleLabel:    "pmttriggerproducer"
     pmtSoftTriggerModuleLabel:"pmtSoftwareTrigger"
     crtSoftTriggerModuleLabel:"MetricProducer"
