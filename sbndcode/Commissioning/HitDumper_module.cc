@@ -479,7 +479,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fLArG4ModuleLabel    = p.get<std::string>("LArG4ModuleLabel", "largeant");
   fCRTStripHitModuleLabel = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
   fCRTSpacePointModuleLabel   = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
-  fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttrack");
+  fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel", "crttracks");
   fOpHitsModuleLabels  = p.get<std::vector<std::string>>("OpHitsModuleLabel");
   fpmtTriggerModuleLabel = p.get<std::string>("pmtTriggerModuleLabel", "pmttriggerproducer");
   fpmtSoftTriggerModuleLabel = p.get<std::string>("pmtSoftTriggerModuleLabel", "pmtSoftwareTrigger");
@@ -816,14 +816,17 @@ void Hitdumper::analyze(const art::Event& evt)
     }
   }
 
-  /*
+  //*****************************here********************************//
+  
   //
   // CRT tracks
   //
+  std::cout <<"AAAAAAAAAAAAAAAA "<< freadCRTtracks <<  std::endl;
   _ncts = 0;
   if (freadCRTtracks) {
-    art::Handle<std::vector<sbn::crt::CRTTrack> > crtTrackListHandle;
-    std::vector<art::Ptr<sbn::crt::CRTTrack> > ctrklist;
+    std::cout <<"BBBBBBBBBBBBBB"<< std::endl;
+    art::Handle<std::vector<sbnd::crt::CRTTrack> > crtTrackListHandle; //changed to sbnd
+    std::vector<art::Ptr<sbnd::crt::CRTTrack> > ctrklist; //changed to sbnd
     if (evt.getByLabel(fCRTTrackModuleLabel, crtTrackListHandle))  {
       art::fill_ptr_vector(ctrklist, crtTrackListHandle);
       _ncts = ctrklist.size();
@@ -832,23 +835,29 @@ void Hitdumper::analyze(const art::Event& evt)
       ResetCRTTracksVars(_ncts);
 
       for (int i = 0; i < _ncts; ++i){
-        _ct_pes[i] = ctrklist[i]->peshit;
-        _ct_time[i] = ctrklist[i]->ts1_ns*0.001;
-        if (ctrklist[i]->ts1_ns > MAX_INT) {
+	const	art::Ptr<sbnd::crt::CRTTrack> crttrack=ctrklist[i];
+        _ct_pes.push_back(crttrack->PE()); //changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+	_ct_time.push_back(crttrack->Time()*0.001); //changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+	//not sure here
+	/*
+	if (ctrklist[i]->ts1_ns > MAX_INT) {
           _ct_time[i] = 0.001 * (ctrklist[i]->ts1_ns - TIME_CORRECTION);
         }
-        _ct_x1[i] = ctrklist[i]->x1_pos;
-        _ct_y1[i] = ctrklist[i]->y1_pos;
-        _ct_z1[i] = ctrklist[i]->z1_pos;
-        _ct_x2[i] = ctrklist[i]->x2_pos;
-        _ct_y2[i] = ctrklist[i]->y2_pos;
-        _ct_z2[i] = ctrklist[i]->z2_pos;
+	*/
+
+        _ct_x1.push_back(crttrack->Start().X()); //changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_y1.push_back(crttrack->Start().Y()); //changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_z1.push_back(crttrack->Start().Z());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_x2.push_back(crttrack->End().X());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_y2.push_back(crttrack->End().Y());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_z2.push_back(crttrack->End().Z());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
       }
     } else {
       std::cout << "Failed to get sbn::crt::CRTTrack data product." << std::endl;
     }
   }
-  */
+  
+  //*****************************here*************************************//
 
   //
   // Optical Hits
