@@ -246,6 +246,11 @@ private:
   std::vector<double> _ct_x2;           ///< CRT track x2
   std::vector<double> _ct_y2;           ///< CRT track y2
   std::vector<double> _ct_z2;           ///< CRT track z2
+  std::vector<int> _ct_tagger1;         ///< Hit 1 tagger 
+  std::vector<int> _ct_tagger2;         ///< Hit 2 tagger
+  std::vector<double> _ct_theta;      ///< CRT track theta
+  std::vector<double> _ct_phi;      ///< CRT track phi
+  std::vector<double> _ct_length;       ///< CRT track length
 
   // Optical hit variables
   int _nophits;                               ///< Number of Optical Hits
@@ -845,12 +850,22 @@ void Hitdumper::analyze(const art::Event& evt)
         }
 	*/
 
-        _ct_x1.push_back(crttrack->Start().X()); //changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
-        _ct_y1.push_back(crttrack->Start().Y()); //changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
-        _ct_z1.push_back(crttrack->Start().Z());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
-        _ct_x2.push_back(crttrack->End().X());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
-        _ct_y2.push_back(crttrack->End().Y());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
-        _ct_z2.push_back(crttrack->End().Z());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+	const geo::Point_t start = crttrack->Start();
+	const geo::Point_t end   = crttrack->End();
+
+        _ct_x1.push_back(start.X()); //changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_y1.push_back(start.Y()); //changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_z1.push_back(start.Z());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_x2.push_back(end.X());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_y2.push_back(end.Y());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+        _ct_z2.push_back(end.Z());//changed to variable from sbnobj/SBND/CRT/CRTTrack.hh
+	
+  	_ct_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
+	_ct_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
+     
+	_ct_theta.push_back(crttrack->Theta());
+	_ct_phi.push_back(crttrack->Phi());
+	_ct_length.push_back(crttrack->Length());
       }
     } else {
       std::cout << "Failed to get sbn::crt::CRTTrack data product." << std::endl;
@@ -1418,7 +1433,12 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("ct_z2", &_ct_z2);
     fTree->Branch("ct_time", &_ct_time);
     fTree->Branch("ct_pes", &_ct_pes);
-  }
+    fTree->Branch("ct_tagger1", &_ct_tagger1);
+    fTree->Branch("ct_tagger2", &_ct_tagger2);
+    fTree->Branch("ct_theta", &_ct_theta);
+    fTree->Branch("ct_phi", &_ct_phi);
+    fTree->Branch("ct_length", &_ct_length);
+ }
 
   if (freadOpHits) {
     fTree->Branch("nophits", &_nophits, "nophits/I");
@@ -1637,14 +1657,19 @@ void Hitdumper::ResetCRTCustomTracksVars(int n) {
 }
 
 void Hitdumper::ResetCRTTracksVars(int n) {
-  _ct_x1.assign(n, DEFAULT_VALUE);
-  _ct_y1.assign(n, DEFAULT_VALUE);
-  _ct_z1.assign(n, DEFAULT_VALUE);
-  _ct_time.assign(n, DEFAULT_VALUE);
-  _ct_pes.assign(n, DEFAULT_VALUE);
-  _ct_x2.assign(n, DEFAULT_VALUE);
-  _ct_y2.assign(n, DEFAULT_VALUE);
-  _ct_z2.assign(n, DEFAULT_VALUE);
+  _ct_x1.clear();
+  _ct_y1.clear();
+  _ct_z1.clear();
+  _ct_time.clear();
+  _ct_pes.clear();
+  _ct_x2.clear();
+  _ct_y2.clear();
+  _ct_z2.clear();
+  _ct_tagger1.clear();
+  _ct_tagger2.clear();
+  _ct_theta.clear();
+  _ct_phi.clear();
+  _ct_length.clear();
 }
 
 void Hitdumper::ResetCRTSpacePointVars(int n) {
