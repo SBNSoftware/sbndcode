@@ -7,8 +7,9 @@ hitdumper:
     MaxHits: 100000
     MaxOpHits: 100000
     MaxSamples: 5001
-    MaxCRTHits: 5000
-    MaxCRTTracks: 10
+    MaxCRTStripHits:   5000
+    MaxCRTSpacePoints: 500
+    MaxCRTTracks:      100
 
     DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
@@ -33,8 +34,8 @@ hitdumper:
     readpmtTrigger:           true
     readpmtSoftTrigger:       true
     readcrtSoftTrigger:	      false
-    readMuonTracks:           false
-    readMuonHits:             false
+    readMuonTracks:           true
+    readMuonHits:             true
     readTruth:                true
     readMCParticle:           false
     savePOTinfo:              true

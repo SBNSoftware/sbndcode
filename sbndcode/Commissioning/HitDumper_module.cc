@@ -477,7 +477,8 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   _max_ophits = p.get<int>("MaxOpHits", 50000);
   _max_samples = p.get<int>("MaxSamples", 5001);
   _max_crt_strip_hits = p.get<uint>("MaxCRTStripHits", 5000);
-  _max_nctrks = p.get<int>("MaxCRTTracks", 10);
+  _max_crt_space_points = p.get<uint>("MaxCRTSpacePoints", 500);
+  _max_nctrks = p.get<int>("MaxCRTTracks", 100);
 
   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
   fDigitModuleLabel    = p.get<std::string>("DigitModuleLabel", "daq");
@@ -791,9 +792,9 @@ void Hitdumper::analyze(const art::Event& evt)
     art::FindOneP<sbnd::crt::CRTCluster> spToCluster(crtSPHandle, evt, fCRTSpacePointModuleLabel);
 
     if (_n_crt_space_points > _max_crt_space_points) {
-      std::cout << "Available CRT hits are " << _n_crt_space_points
+      std::cout << "Available CRT space points are " << _n_crt_space_points
                 << ", which is above the maximum number allowed to store." << std::endl;
-      std::cout << "Will only store " << _max_crt_space_points << "CRT hits." << std::endl;
+      std::cout << "Will only store " << _max_crt_space_points << " CRT space points." << std::endl;
       _n_crt_space_points = _max_crt_space_points;
     }
 
