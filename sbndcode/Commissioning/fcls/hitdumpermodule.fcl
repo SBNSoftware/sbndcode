@@ -13,8 +13,8 @@ hitdumper:
     DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
     OpHitsModuleLabel:        ["ophitpmt", "ophitxarapuca"]
-    CRTHitModuleLabel:        "crthit"
-    CRTStripModuleLabel:      "crt"
+    CRTStripHitModuleLabel:   "crtstrips"
+    CRTSpacePointModuleLabel: "crtspacepoints"
     CRTTrackModuleLabel:      "crttracks"
     pmtTriggerModuleLabel:    "pmttriggerproducer"
     pmtSoftTriggerModuleLabel:"pmtSoftwareTrigger"
@@ -30,7 +30,7 @@ hitdumper:
     makeCRTtracks:            true
     readCRTtracks:            true
     readOpHits:               true
-    readpmtTrigger:	          true
+    readpmtTrigger:           true
     readpmtSoftTrigger:       true
     readcrtSoftTrigger:	      false
     readMuonTracks:           false
