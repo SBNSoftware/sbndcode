@@ -18,6 +18,8 @@
 #include "muontrackmodule.fcl"
 #include "hitdumpermodule.fcl"
 
+#include "crtrecoproducers_sbnd.fcl"
+
 process_name: MuonTrackProducer
 services:
 {
@@ -63,6 +65,11 @@ physics:
     ### hit-finder producers
     fasthit:                  @local::standard_fasthitfinder
     MuonTrackProducer:        @local::MuonTrackProducer
+
+    ### CRT producers
+    crtclustering:  @local::crtclusterproducer_sbnd
+    crtspacepoints: @local::crtspacepointproducer_sbnd
+    crttracks:      @local::crttrackproducer_sbnd
   }
   filters:
   {
@@ -75,8 +82,8 @@ physics:
 
   #define the producer and filter modules for this path, order matters, 
   #filters reject all following items.  see lines starting physics.producers below
-  reco: [fasthit, MuonTrackProducer, MuonTrackFilter]
-  ana: [hitdumper]
+  reco: [ fasthit, MuonTrackProducer, MuonTrackFilter, crtclustering, crtspacepoints, crttracks ]
+  ana:  [ hitdumper ]
 
   # define the output stream, there could be more than one if using filters 
   out: [out1]
