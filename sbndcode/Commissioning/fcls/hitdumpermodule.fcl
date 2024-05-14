@@ -26,13 +26,13 @@ hitdumper:
     MCTrackModuleLabel:       "mcreco"
     MCShowerModuleLabel:      "mcreco"
  
-    keepCRThits:              true
-    keepCRTstrips:            false
-    makeCRTtracks:            true
+    KeepCRTStripHits:         true
+    KeepCRTSpacePoints:       true
+    makeCRTtracks:            false
     readCRTtracks:            true
     readOpHits:               true
-    readpmtTrigger:           true
-    readpmtSoftTrigger:       true
+    readpmtTrigger:           false
+    readpmtSoftTrigger:       false
     readcrtSoftTrigger:	      false
     readMuonTracks:           true
     readMuonHits:             true
