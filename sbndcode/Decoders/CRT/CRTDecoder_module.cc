@@ -45,15 +45,16 @@ public:
 
   std::vector<sbnd::crt::FEBData> FragToFEB(const artdaq::Fragment &frag);
 
-private:
+  void endJob() override;
 
-  std::vector<std::pair<unsigned, unsigned>> fMac5ToGeoIDVec;
-  std::map<unsigned, unsigned>               fMac5ToGeoID;
+private:
 
   std::string              fCRTModuleLabel;
   std::vector<std::string> fCRTInstanceLabels;
 
   art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
+
+  std::set<unsigned int> fUnfoundMAC5s;
 };
 
 
@@ -63,16 +64,11 @@ CRTDecoder::CRTDecoder(fhicl::ParameterSet const& p)
   , fCRTInstanceLabels(p.get<std::vector<std::string>>("CRTInstanceLabels"))
 {
   produces<std::vector<sbnd::crt::FEBData>>();
-  //  produces<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
-
-  fMac5ToGeoIDVec = p.get<std::vector<std::pair<unsigned, unsigned>>>("FEBMac5ToGeometryIDMap");
-  fMac5ToGeoID    = std::map<unsigned, unsigned>(fMac5ToGeoIDVec.begin(), fMac5ToGeoIDVec.end());
 }
 
 void CRTDecoder::produce(art::Event& e)
 {
-  auto febDataVec      = std::make_unique<std::vector<sbnd::crt::FEBData>>();
-  //  auto febDataFragAssn = std::make_unique<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
+  auto febDataVec = std::make_unique<std::vector<sbnd::crt::FEBData>>();
 
   for(const std::string &CRTInstanceLabel : fCRTInstanceLabels)
     {
@@ -129,20 +125,22 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
           ++ii;
         }
 
-      if(fMac5ToGeoID.count(bern_frag_meta->MAC5()) == 0)
+      SBND::CRTChannelMapService::ModuleInfo_t module = fCRTChannelMapService->GetModuleInfoFromFEBMAC5(bern_frag_meta->MAC5());
+
+      if(!module.valid)
         {
-          std::cout << "===========================================================\n"
-                    << "ERROR: Cannot find simulation module for MAC5: "
-                    << unsigned(bern_frag_meta->MAC5()) << '\n'
-                    << "===========================================================\n"
-                    << std::endl;
+          mf::LogInfo("CRTDecoder") << "===========================================================\n"
+                                    << "ERROR: Cannot find simulation module for MAC5: "
+                                    << unsigned(bern_frag_meta->MAC5()) << '\n'
+                                    << "===========================================================\n"
+                                    << std::endl;
+
+          fUnfoundMAC5s.insert(bern_frag_meta->MAC5());
 
           continue;
         }
 
-      std::cout << fMac5ToGeoID.at(bern_frag_meta->MAC5()) << " " << fCRTChannelMapService->GetModuleInfoFromFEBMAC5(bern_frag_meta->MAC5()).offline_module_id << std::endl;
-
-      feb_datas.emplace_back(fMac5ToGeoID.at(bern_frag_meta->MAC5()),
+      feb_datas.emplace_back(module.offline_module_id,
                              bern_hit->flags,
                              bern_hit->ts0,
                              bern_hit->ts1,
@@ -171,6 +169,22 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
     }
 
   return feb_datas;
+}
+
+void CRTDecoder::endJob()
+{
+  if(fUnfoundMAC5s.size())
+    {
+      std::cout << "\n=================================================\n"
+                << "CRT Decoder finished\n"
+                << "Following MAC5s not found in channel map:\n";
+
+      for(const unsigned int mac5 : fUnfoundMAC5s)
+        std::cout << '\t' << mac5 << '\n';
+
+      std::cout << "================================================="
+                << std::endl;
+    }
 }
 
 DEFINE_ART_MODULE(CRTDecoder)

@@ -29,7 +29,7 @@ physics:
 {
   producers:
   {
-    crtdecoder: @local::crt_decoder_north_wall
+    crtdecoder: @local::crt_decoder
   }
   
   decoders:      [ crtdecoder ]

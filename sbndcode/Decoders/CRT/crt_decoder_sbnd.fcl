@@ -1,12 +1,9 @@
-#include "crt_data_params_north_wall.fcl"
-
 BEGIN_PROLOG
 
-crt_decoder_north_wall:
+crt_decoder:
 {
   module_type:            "CRTDecoder"
   CRTInstanceLabels:      [ "ContainerBERNCRTV2" ]
-  FEBMac5ToGeometryIDMap: @local::crt_data_params_north_wall.FEBMac5ToGeometryIDMap
 }
 
 END_PROLOG
