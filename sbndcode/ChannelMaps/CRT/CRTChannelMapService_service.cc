@@ -66,8 +66,8 @@ SBND::CRTChannelMapService::ModuleInfo_t SBND::CRTChannelMapService::GetModuleIn
 
   if(moduleIter == fModuleInfoFromFEBMAC5.end())
     {
-      std::cout << "SBND CRT Channel Map: Asked for FEB with MAC5: " << feb_mac5 << '\n'
-                << "This FEB does not appear in the channel map." << std::endl;
+      mf::LogInfo("SBND CRT Channel Map") << "Asked for FEB with MAC5: " << feb_mac5 << '\n'
+                                          << "This FEB does not appear in the channel map." << std::endl;
 
       return bad;
     }
@@ -84,8 +84,8 @@ SBND::CRTChannelMapService::ModuleInfo_t SBND::CRTChannelMapService::GetModuleIn
 
   if(moduleIter == fModuleInfoFromOfflineID.end())
     {
-      std::cout << "SBND CRT Channel Map: Asked for module with offline ID: " << offline_module_id << '\n'
-                << "This module does not appear in the channel map." << std::endl;
+      mf::LogInfo("SBND CRT Channel Map") << "Asked for module with offline ID: " << offline_module_id << '\n'
+                                          << "This module does not appear in the channel map." << std::endl;
 
       return bad;
     }
