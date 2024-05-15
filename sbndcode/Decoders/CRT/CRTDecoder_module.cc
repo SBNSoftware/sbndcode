@@ -23,6 +23,8 @@
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
 
+#include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
+
 class CRTDecoder;
 
 
@@ -50,6 +52,8 @@ private:
 
   std::string              fCRTModuleLabel;
   std::vector<std::string> fCRTInstanceLabels;
+
+  art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
 };
 
 
@@ -57,13 +61,13 @@ CRTDecoder::CRTDecoder(fhicl::ParameterSet const& p)
   : EDProducer{p}
   , fCRTModuleLabel(p.get<std::string>("CRTModuleLabel", "daq"))
   , fCRTInstanceLabels(p.get<std::vector<std::string>>("CRTInstanceLabels"))
-  {
-    produces<std::vector<sbnd::crt::FEBData>>();
-    //  produces<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
+{
+  produces<std::vector<sbnd::crt::FEBData>>();
+  //  produces<art::Assns<artdaq::Fragment,sbnd::crt::FEBData>>();
 
-    fMac5ToGeoIDVec = p.get<std::vector<std::pair<unsigned, unsigned>>>("FEBMac5ToGeometryIDMap");
-    fMac5ToGeoID    = std::map<unsigned, unsigned>(fMac5ToGeoIDVec.begin(), fMac5ToGeoIDVec.end());
-  }
+  fMac5ToGeoIDVec = p.get<std::vector<std::pair<unsigned, unsigned>>>("FEBMac5ToGeometryIDMap");
+  fMac5ToGeoID    = std::map<unsigned, unsigned>(fMac5ToGeoIDVec.begin(), fMac5ToGeoIDVec.end());
+}
 
 void CRTDecoder::produce(art::Event& e)
 {
@@ -126,15 +130,17 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
         }
 
       if(fMac5ToGeoID.count(bern_frag_meta->MAC5()) == 0)
-	{
-	  std::cout << "===========================================================\n"
-		    << "ERROR: Cannot find simulation module for MAC5: "
-		    << unsigned(bern_frag_meta->MAC5()) << '\n'
-		    << "===========================================================\n"
-		    << std::endl;
+        {
+          std::cout << "===========================================================\n"
+                    << "ERROR: Cannot find simulation module for MAC5: "
+                    << unsigned(bern_frag_meta->MAC5()) << '\n'
+                    << "===========================================================\n"
+                    << std::endl;
 
-	  continue;
-	}
+          continue;
+        }
+
+      std::cout << fMac5ToGeoID.at(bern_frag_meta->MAC5()) << " " << fCRTChannelMapService->GetModuleInfoFromFEBMAC5(bern_frag_meta->MAC5()).offline_module_id << std::endl;
 
       feb_datas.emplace_back(fMac5ToGeoID.at(bern_frag_meta->MAC5()),
                              bern_hit->flags,

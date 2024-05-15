@@ -1,12 +1,14 @@
 #include "crt_decoder_sbnd.fcl"
 #include "services_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
 
 process_name: CRTDecoder
 
 services:
 {
   @table::sbnd_services
+  CRTChannelMapService: @local::crt_channel_map_standard
 }
 
 source:
@@ -30,7 +32,7 @@ physics:
     crtdecoder: @local::crt_decoder_north_wall
   }
   
-  decoders:      [ crtdecoder ]	
+  decoders:      [ crtdecoder ]
   trigger_paths: [ decoders ]
 
   stream1:   [ out1 ]
