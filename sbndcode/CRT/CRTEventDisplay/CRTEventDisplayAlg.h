@@ -41,6 +41,8 @@
 // ROOT
 #include "TPolyLine3D.h"
 #include "TCanvas.h"
+#include "TView3D.h"
+#include "TAxis3D.h"
 
 namespace detinfo { class DetectorClocksData; }
 
@@ -87,6 +89,16 @@ namespace sbnd::crt {
         Name("TrackLabel")
           };
 
+      fhicl::Atom<bool> DataMode {
+	Name("DataMode"),
+      };
+      fhicl::Atom<bool> SaveRoot {
+	Name("SaveRoot"),
+      };
+      fhicl::Atom<bool> SaveViews {
+	Name("SaveViews"),
+      };
+
       fhicl::Atom<bool> DrawTaggers {
         Name("DrawTaggers")
           };
@@ -102,8 +114,8 @@ namespace sbnd::crt {
       fhicl::Atom<bool> DrawStrips {
         Name("DrawStrips")
           };
-      fhicl::Atom<bool> DrawTpc {
-        Name("DrawTpc")
+      fhicl::Atom<bool> DrawTPC {
+        Name("DrawTPC")
           };
       fhicl::Atom<bool> DrawTrueTracks {
         Name("DrawTrueTracks")
@@ -131,8 +143,18 @@ namespace sbnd::crt {
         Name("ChosenTaggers")
           };
 
+      fhicl::Atom<bool> HighlightModules {
+        Name("HighlightModules")
+          };
+      fhicl::Sequence<int> HighlightedModules {
+        Name("HighlightedModules")
+          };
+
       fhicl::Atom<int> TaggerColour {
         Name("TaggerColour")
+          };
+      fhicl::Atom<int> HighlightColour {
+        Name("HighlightColour")
           };
       fhicl::Atom<int> FEBColour {
         Name("FEBColour")
@@ -140,8 +162,8 @@ namespace sbnd::crt {
       fhicl::Atom<int> FEBEndColour {
         Name("FEBEndColour")
           };
-      fhicl::Atom<int> TpcColour {
-        Name("TpcColour")
+      fhicl::Atom<int> TPCColour {
+        Name("TPCColour")
           };
       fhicl::Atom<int> TrueTrackColour {
         Name("TrueTrackColour")
@@ -197,7 +219,7 @@ namespace sbnd::crt {
     void reconfigure(const Config& config);
 
     void SetDrawTaggers(bool tf);
-    void SetDrawTpc(bool tf);
+    void SetDrawTPC(bool tf);
     void SetDrawTrueTracks(bool tf);
     void SetDrawSimDeposits(bool tf);
     void SetDrawStripHits(bool tf);
@@ -205,14 +227,17 @@ namespace sbnd::crt {
 
     void SetPrint(bool tf);
 
-    void DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour);
+    void SetHighlightedModules(std::vector<int> hm);
 
-    void Draw(detinfo::DetectorClocksData const& clockData, const art::Event& event);
+    void DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour, int lineWidth = -1);
+
+    void Draw(detinfo::DetectorClocksData const& clockData, const art::Event& event,
+              const TString& saveName);
 
     bool IsPointInsideBox(const std::vector<double> &lims, const geo::Point_t &p);
 
   private:
-    
+
     TPCGeoAlg         fTPCGeoAlg;
     CRTGeoAlg         fCRTGeoAlg;
     CRTBackTrackerAlg fCRTBackTrackerAlg;
@@ -226,12 +251,16 @@ namespace sbnd::crt {
     art::InputTag fSpacePointLabel;
     art::InputTag fTrackLabel;
 
+    bool fDataMode;
+    bool fSaveRoot;
+    bool fSaveViews;
+
     bool fDrawTaggers;
     bool fDrawModules;
     bool fDrawFEBs;
     bool fDrawFEBEnds;
     bool fDrawStrips;
-    bool fDrawTpc;
+    bool fDrawTPC;
     bool fDrawTrueTracks;
     bool fDrawSimDeposits;
     bool fDrawStripHits;
@@ -242,10 +271,14 @@ namespace sbnd::crt {
     bool             fChoseTaggers;
     std::vector<int> fChosenTaggers;
 
+    bool             fHighlightModules;
+    std::vector<int> fHighlightedModules;
+
     int fTaggerColour;
+    int fHighlightColour;
     int fFEBColour;
     int fFEBEndColour;
-    int fTpcColour;
+    int fTPCColour;
     int fTrueTrackColour;
     int fSimDepositColour;
     int fStripHitColour;

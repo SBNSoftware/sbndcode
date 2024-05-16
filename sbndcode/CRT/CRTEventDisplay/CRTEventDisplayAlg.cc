@@ -26,12 +26,16 @@ namespace sbnd::crt {
     fSpacePointLabel = config.SpacePointLabel();
     fTrackLabel = config.TrackLabel();
 
+    fDataMode = config.DataMode();
+    fSaveRoot = config.SaveRoot();
+    fSaveViews = config.SaveViews();
+
     fDrawTaggers = config.DrawTaggers();
     fDrawModules = config.DrawModules();
     fDrawFEBs = config.DrawFEBs();
     fDrawFEBEnds = config.DrawFEBEnds();
     fDrawStrips = config.DrawStrips();
-    fDrawTpc = config.DrawTpc();
+    fDrawTPC = config.DrawTPC();
     fDrawTrueTracks = config.DrawTrueTracks();
     fDrawSimDeposits = config.DrawSimDeposits();
     fDrawStripHits = config.DrawStripHits();
@@ -42,10 +46,14 @@ namespace sbnd::crt {
     fChoseTaggers = config.ChoseTaggers();
     fChosenTaggers = config.ChosenTaggers();
 
+    fHighlightModules = config.HighlightModules();
+    fHighlightedModules = config.HighlightedModules();
+
     fTaggerColour = config.TaggerColour();
+    fHighlightColour = config.HighlightColour();
     fFEBColour = config.FEBColour();
     fFEBEndColour = config.FEBEndColour();
-    fTpcColour = config.TpcColour();
+    fTPCColour = config.TPCColour();
     fTrueTrackColour = config.TrueTrackColour();
     fSimDepositColour = config.SimDepositColour();
     fStripHitColour = config.StripHitColour();
@@ -69,9 +77,9 @@ namespace sbnd::crt {
     fDrawTaggers = tf;
   }
 
-  void CRTEventDisplayAlg::SetDrawTpc(bool tf)
+  void CRTEventDisplayAlg::SetDrawTPC(bool tf)
   {
-    fDrawTpc = tf;
+    fDrawTPC = tf;
   }
 
   void CRTEventDisplayAlg::SetDrawTrueTracks(bool tf)
@@ -99,7 +107,12 @@ namespace sbnd::crt {
     fPrint = tf;
   }
 
-  void CRTEventDisplayAlg::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour)
+  void CRTEventDisplayAlg::SetHighlightedModules(std::vector<int> hm)
+  {
+    fHighlightedModules = hm;
+  }
+
+  void CRTEventDisplayAlg::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour, int lineWidth)
   {
     c1->cd();
     TList *outline = new TList;
@@ -108,7 +121,12 @@ namespace sbnd::crt {
     TPolyLine3D *p3 = new TPolyLine3D(4);
     TPolyLine3D *p4 = new TPolyLine3D(4);
     p1->SetLineColor(colour);
-    p1->SetLineWidth(fLineWidth);
+
+    if(lineWidth == -1)
+      p1->SetLineWidth(fLineWidth);
+    else
+      p1->SetLineWidth(lineWidth);
+
     p1->Copy(*p2);
     p1->Copy(*p3);
     p1->Copy(*p4);
@@ -124,7 +142,7 @@ namespace sbnd::crt {
   }
 
   void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
-                                const art::Event& event)
+                                const art::Event& event, const TString& saveName)
   {
     if(fMC)
       fCRTBackTrackerAlg.SetupMaps(event);
@@ -138,7 +156,6 @@ namespace sbnd::crt {
     std::vector<double> crtLims = fCRTGeoAlg.CRTLimits();
     crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
     crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
-
 
     // Draw the CRT taggers
     if(fDrawTaggers)
@@ -154,6 +171,7 @@ namespace sbnd::crt {
             double rmax[3] = {tagger.maxX, 
                               tagger.maxY, 
                               tagger.maxZ};
+
             DrawCube(c1, rmin, rmax, fTaggerColour);
           }
       }
@@ -172,21 +190,30 @@ namespace sbnd::crt {
             double rmax[3] = {module.maxX, 
                               module.maxY, 
                               module.maxZ};
-            DrawCube(c1, rmin, rmax, fTaggerColour);
+
+            if(fHighlightModules && std::find(fHighlightedModules.begin(), fHighlightedModules.end(), module.adID) == fHighlightedModules.end())
+              {
+                DrawCube(c1, rmin, rmax, kGray, 1);
+                continue;
+              }
+            else if(fHighlightModules)
+              DrawCube(c1, rmin, rmax, fHighlightColour);
+            else
+              DrawCube(c1, rmin, rmax, fTaggerColour);
 
             if(fDrawFEBs)
               {
                 const std::array<double, 6> febPos = fCRTGeoAlg.FEBWorldPos(module);
                 
-                double rmin[3] = {febPos[0],
-                                  febPos[2],
-                                  febPos[4]};
+                double rminFEB[3] = {febPos[0],
+                                     febPos[2],
+                                     febPos[4]};
 
-                double rmax[3] = {febPos[1],
-                                  febPos[3],
-                                  febPos[5]};
+                double rmaxFEB[3] = {febPos[1],
+                                     febPos[3],
+                                     febPos[5]};
 
-                DrawCube(c1, rmin, rmax, fFEBColour);
+                DrawCube(c1, rminFEB, rmaxFEB, fFEBColour);
 
                 if(fDrawFEBEnds)
                   {
@@ -220,12 +247,13 @@ namespace sbnd::crt {
             double rmax[3] = {strip.maxX, 
                               strip.maxY, 
                               strip.maxZ};
+
             DrawCube(c1, rmin, rmax, fTaggerColour);
           }
       }
     
     // Draw the TPC with central cathode
-    if(fDrawTpc)
+    if(fDrawTPC)
       {
         double rmin[3] = {fTPCGeoAlg.MinX(), 
                           fTPCGeoAlg.MinY(), 
@@ -233,14 +261,15 @@ namespace sbnd::crt {
         double rmax[3] = {-fTPCGeoAlg.CpaWidth(), 
                           fTPCGeoAlg.MaxY(), 
                           fTPCGeoAlg.MaxZ()};
-        DrawCube(c1, rmin, rmax, fTpcColour);
+        DrawCube(c1, rmin, rmax, fTPCColour);
         double rmin2[3] = {fTPCGeoAlg.CpaWidth(), 
                            fTPCGeoAlg.MinY(), 
                            fTPCGeoAlg.MinZ()};
         double rmax2[3] = {fTPCGeoAlg.MaxX(), 
                            fTPCGeoAlg.MaxY(), 
                            fTPCGeoAlg.MaxZ()};
-        DrawCube(c1, rmin2, rmax2, fTpcColour);
+
+        DrawCube(c1, rmin2, rmax2, fTPCColour);
       }
     
     // Draw true track trajectories for visible particles that cross the CRT
@@ -303,6 +332,11 @@ namespace sbnd::crt {
                 if(t < fMinTime || t > fMaxTime)
                   continue;
 
+                CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z, 1.);
+
+                if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
+                  continue;
+
                 double ex = std::abs(ide.entryX - ide.exitX) / 2.;
                 double ey = std::abs(ide.entryY - ide.exitY) / 2.;
                 double ez = std::abs(ide.entryZ - ide.exitZ) / 2.;
@@ -336,6 +370,10 @@ namespace sbnd::crt {
               continue;
 
             CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
+            CRTTagger tagger  = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
+              continue;
 
             double rmin[3] = {strip.minX, strip.minY, strip.minZ};
             double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
@@ -376,6 +414,9 @@ namespace sbnd::crt {
         for(auto const cluster : clustersVec)
           {
             if(cluster->Ts1() - G4RefTime < fMinTime || cluster->Ts1() - G4RefTime > fMaxTime)
+              continue;
+
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), cluster->Tagger()) == fChosenTaggers.end())
               continue;
 
             auto stripHitVec   = clustersToStripHits.at(cluster.key());
@@ -451,6 +492,18 @@ namespace sbnd::crt {
             if(track->Time() - G4RefTime < fMinTime || track->Time() - G4RefTime > fMaxTime)
               continue;
 
+            std::set<CRTTagger> taggers = track->Taggers();
+
+            bool none = true;
+            for(auto const& tagger : taggers)
+              {
+                if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) != fChosenTaggers.end())
+                  none = false;
+              }
+
+            if(none)
+              continue;
+
             const geo::Point_t start = track->Start();
             const geo::Vector_t dir  = track->Direction();
 
@@ -492,7 +545,86 @@ namespace sbnd::crt {
           }
       }
 
-    c1->SaveAs(Form("crtEventDisplayEvent%d.root", event.event()));
+    if(fSaveRoot)
+      c1->SaveAs(Form("%s.root", saveName.Data()));
+
+    if(fSaveViews)
+      {
+        TView3D *view = (TView3D*) TView::CreateView(1);
+
+        double c[3] = { 0, 0, 250 };
+        double s[3] = { 800, -800, 800 };
+
+        if(std::find(fChosenTaggers.begin(), fChosenTaggers.end(), 5) != fChosenTaggers.end()
+           || std::find(fChosenTaggers.begin(), fChosenTaggers.end(), 6) != fChosenTaggers.end())
+          {
+            view->SetRange(-750, -500, -450, 750, 1000, 1050);
+            s[0] = 1200;
+            s[1] = -1200;
+            s[2] = 1200;
+          }
+        else
+          view->SetRange(-600, -600, -300, 600, 600, 900);
+
+        view->ToggleRulers();
+
+        TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
+        axis->GetXaxis()->SetTitle("X (W)");
+        axis->GetYaxis()->SetTitle("Y (Up)");
+        axis->GetZaxis()->SetTitle("Z (N)");
+        axis->GetXaxis()->SetAxisColor(kBlack);
+        axis->GetYaxis()->SetAxisColor(kBlack);
+        axis->GetZaxis()->SetAxisColor(kBlack);
+        axis->GetXaxis()->SetLabelColor(kBlack);
+        axis->GetYaxis()->SetLabelColor(kBlack);
+        axis->GetZaxis()->SetLabelColor(kBlack);
+        axis->GetXaxis()->SetLabelSize(0.024);
+        axis->GetYaxis()->SetLabelSize(0.024);
+        axis->GetZaxis()->SetLabelSize(0.024);
+
+        view->DefineViewDirection(s, c,
+                                  0, 1,
+                                  1, 0,
+                                  1, 0,
+                                  view->GetTnorm(),
+                                  view->GetTback());
+
+        axis->GetXaxis()->SetTitleOffset(2);
+        axis->GetYaxis()->SetTitleOffset(-1.7);
+        axis->GetXaxis()->SetLabelOffset(-0.065);
+        axis->GetYaxis()->SetLabelOffset(-0.2);
+        c1->SaveAs(Form("%s_front.png", saveName.Data()));
+        c1->SaveAs(Form("%s_front.pdf", saveName.Data()));
+
+        view->DefineViewDirection(s, c,
+                                  0, 1,
+                                  0, 1,
+                                  1, 0,
+                                  view->GetTnorm(),
+                                  view->GetTback());
+
+        axis->GetXaxis()->SetTitleOffset(2);
+        axis->GetZaxis()->SetTitleOffset(-1.7);
+        axis->GetXaxis()->SetLabelOffset(-0.065);
+        axis->GetZaxis()->SetLabelOffset(-0.2);
+        c1->SaveAs(Form("%s_top.png", saveName.Data()));
+        c1->SaveAs(Form("%s_top.pdf", saveName.Data()));
+
+        view->DefineViewDirection(s, c,
+                                  1, 0,
+                                  0, 1,
+                                  0, 1,
+                                  view->GetTnorm(),
+                                  view->GetTback());
+
+        axis->GetYaxis()->SetTitleOffset(-2);
+        axis->GetZaxis()->SetTitleOffset(-1.7);
+        axis->GetYaxis()->SetLabelOffset(0.005);
+        axis->GetZaxis()->SetLabelOffset(0.005);
+        c1->SaveAs(Form("%s_side.png", saveName.Data()));
+        c1->SaveAs(Form("%s_side.pdf", saveName.Data()));
+      }
+
     delete c1;
   }
 

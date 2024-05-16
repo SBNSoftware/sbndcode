@@ -377,13 +377,13 @@ namespace sbnd::crt {
     if(!module.top)
       {
         limits.SetX(-limits.X());
-        limits.SetX(-limits2.X());
+        limits2.SetX(-limits2.X());
       }
 
     if(module.invertedOrdering)
       {
         limits.SetY(-limits.Y());
-        limits.SetY(-limits2.Y());
+        limits2.SetY(-limits2.Y());
       }
 
     auto const limitsWorld  = auxDet.toWorldCoords(limits);

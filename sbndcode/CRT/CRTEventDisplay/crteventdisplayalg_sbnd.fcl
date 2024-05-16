@@ -16,12 +16,16 @@ crteventdisplayalg_sbnd:
    SpacePointLabel:  "crtspacepoints"
    TrackLabel:       "crttracks"
 
+   DataMode:         false
+   SaveRoot:         true
+   SaveViews:        false
+
    DrawTaggers:      true
    DrawModules:      false
    DrawFEBs:         false
    DrawFEBEnds:      false
    DrawStrips:       false
-   DrawTpc:          true
+   DrawTPC:          true
    DrawTrueTracks:   true
    DrawSimDeposits:  false
    DrawStripHits:    true
@@ -42,11 +46,15 @@ crteventdisplayalg_sbnd:
    ## 6 - Top High
    ChoseTaggers:  false
    ChosenTaggers: [ 0, 1, 2, 3, 4, 5, 6 ]
-   
+
+   HighlightModules:  false
+   HighlightedModules: [ ]
+
    TaggerColour:             1
+   HighlightColour:          8
    FEBColour:                2
    FEBEndColour:             4
-   TpcColour:                15
+   TPCColour:                15
    TrueTrackColour:          2
    SimDepositColour:         8
    StripHitColour:           4
@@ -63,19 +71,29 @@ crteventdisplayalg_sbnd:
    LineWidth:        3.
 }
 
-crteventdisplayalg_sbnd_feb_layout_debug: @local::crteventdisplayalg_sbnd
+crteventdisplayalg_sbnd_channel_mapping: @local::crteventdisplayalg_sbnd
 
-crteventdisplayalg_sbnd_feb_layout_debug.DrawTaggers:      false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawModules:      true
-crteventdisplayalg_sbnd_feb_layout_debug.DrawFEBs:         true
-crteventdisplayalg_sbnd_feb_layout_debug.DrawFEBEnds:      true
-crteventdisplayalg_sbnd_feb_layout_debug.DrawStrips:       false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawTpc:          false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawTrueTracks:   false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawSimDeposits:  false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawStripHits:    false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawClusters:     false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawSpacePoints:  false
+crteventdisplayalg_sbnd_channel_mapping.DataMode:         true
+crteventdisplayalg_sbnd_channel_mapping.SaveRoot:         false
+crteventdisplayalg_sbnd_channel_mapping.SaveViews:        true
+
+crteventdisplayalg_sbnd_channel_mapping.ChoseTaggers:     true
+crteventdisplayalg_sbnd_channel_mapping.HighlightModules: true
+
+crteventdisplayalg_sbnd_channel_mapping.DrawTaggers:      true
+crteventdisplayalg_sbnd_channel_mapping.DrawModules:      true
+crteventdisplayalg_sbnd_channel_mapping.DrawFEBs:         true
+crteventdisplayalg_sbnd_channel_mapping.DrawFEBEnds:      true
+crteventdisplayalg_sbnd_channel_mapping.DrawStrips:       false
+crteventdisplayalg_sbnd_channel_mapping.DrawTPC:          true
+crteventdisplayalg_sbnd_channel_mapping.DrawTrueTracks:   false
+crteventdisplayalg_sbnd_channel_mapping.DrawSimDeposits:  false
+crteventdisplayalg_sbnd_channel_mapping.DrawStripHits:    false
+crteventdisplayalg_sbnd_channel_mapping.DrawClusters:     false
+crteventdisplayalg_sbnd_channel_mapping.DrawSpacePoints:  false
+crteventdisplayalg_sbnd_channel_mapping.DrawTracks:       false
+
+crteventdisplayalg_sbnd_channel_mapping.Print:            false
 
 crteventdisplayalg_sbnd_data: @local::crteventdisplayalg_sbnd
 
