@@ -4,7 +4,6 @@ set (MODULE_LIBRARIES
                 larsim::PhotonPropagation_PhotonVisibilityService_service
                 larsim::LegacyLArG4
                 larcorealg::GeoAlgo
-                sbncode_OpT0Finder_flashmatch_Base
                 larcorealg::Geometry
                 larcore::Geometry_Geometry_service
                 larsim::Simulation 
