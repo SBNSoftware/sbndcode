@@ -5,7 +5,7 @@ BEGIN_PROLOG
 ####OpFlash finder for PMT deconvolved waveforms#####
 ###TPC0
 SBNDDecoSimpleFlashTPC0: @local::SBNDSimpleFlashTPC0
-SBNDDecoSimpleFlashTPC0.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC0.PECalib.SPEAreaGain: 200
 SBNDDecoSimpleFlashTPC0.OpHitProducers: ["ophitpmt"]
 SBNDDecoSimpleFlashTPC0.OpHitInputTime: "RiseTime"
 SBNDDecoSimpleFlashTPC0.UseT0Tool: true
@@ -14,7 +14,7 @@ SBNDDecoSimpleFlashTPC0.CorrectLightPropagation: true
 
 #TPC1
 SBNDDecoSimpleFlashTPC1: @local::SBNDSimpleFlashTPC1
-SBNDDecoSimpleFlashTPC1.PECalib.SPEAreaGain: 500
+SBNDDecoSimpleFlashTPC1.PECalib.SPEAreaGain: 200
 SBNDDecoSimpleFlashTPC1.OpHitProducers: ["ophitpmt"]
 SBNDDecoSimpleFlashTPC1.OpHitInputTime: "RiseTime"
 SBNDDecoSimpleFlashTPC1.UseT0Tool: true
@@ -32,20 +32,31 @@ SBNDDecoSimpleFlashTPC0Arapuca.PECalib.SPEAreaGain: 500
 SBNDDecoSimpleFlashTPC0Arapuca.OpHitProducers: ["ophitxarapuca"]
 SBNDDecoSimpleFlashTPC0Arapuca.OpFlashProducer: "opflasharapuca"
 SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.PD: ["xarapuca_vuv","xarapuca_vis"]
+SBNDDecoSimpleFlashTPC0Arapuca.FlashGeoConfig.PDTypes: ["xarapuca_vuv","xarapuca_vis"]
+SBNDDecoSimpleFlashTPC0Arapuca.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC0Arapuca.UseT0Tool: true
+SBNDDecoSimpleFlashTPC0Arapuca.FlashT0Config.PostWindow: 2e-2
+SBNDDecoSimpleFlashTPC0Arapuca.FlashT0Config.PreWindow:  2e-2
+
+SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.MinMultCoinc: 3
+SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.PEThreshold:  15
+SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.TimeResolution: 0.03
+
 #TPC1
 SBNDDecoSimpleFlashTPC1Arapuca: @local::SBNDSimpleFlashTPC1
 SBNDDecoSimpleFlashTPC1Arapuca.PECalib.SPEAreaGain: 500
 SBNDDecoSimpleFlashTPC1Arapuca.OpHitProducers: ["ophitxarapuca"]
 SBNDDecoSimpleFlashTPC1Arapuca.OpFlashProducer: "opflasharapuca"
 SBNDDecoSimpleFlashTPC1Arapuca.AlgoConfig.PD: ["xarapuca_vuv","xarapuca_vis"]
-
-SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.MinMultCoinc: 3
-SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.PEThreshold: 30
-SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.TimeResolution: 0.06
+SBNDDecoSimpleFlashTPC1Arapuca.FlashGeoConfig.PDTypes: ["xarapuca_vuv","xarapuca_vis"]
+SBNDDecoSimpleFlashTPC1Arapuca.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC1Arapuca.UseT0Tool: true
+SBNDDecoSimpleFlashTPC0Arapuca.FlashT0Config.PostWindow: 2e-2
+SBNDDecoSimpleFlashTPC0Arapuca.FlashT0Config.PreWindow:  2e-2
 
 SBNDDecoSimpleFlashTPC1Arapuca.AlgoConfig.MinMultCoinc: 3
-SBNDDecoSimpleFlashTPC1Arapuca.AlgoConfig.PEThreshold: 30
-SBNDDecoSimpleFlashTPC1Arapuca.AlgoConfig.TimeResolution: 0.06
+SBNDDecoSimpleFlashTPC1Arapuca.AlgoConfig.PEThreshold:  15
+SBNDDecoSimpleFlashTPC1Arapuca.AlgoConfig.TimeResolution: 0.03
 
 
 

@@ -1,20 +1,22 @@
-art_make_library( SOURCE CRTDetSimAlg.cxx
-                LIBRARIES  larcorealg::Geometry
-                           larcore::Geometry_Geometry_service
-                           lardataobj::Simulation
-                           lardataobj::RawData
-                           lardataobj::RecoBase
-                           lardata::RecoObjects
-                           lardataalg::DetectorInfo
-                           cetlib::cetlib
-                           cetlib_except::cetlib_except
-                           messagefacility::MF_MessageLogger
-                           fhiclcpp::fhiclcpp
-                           ROOT::Core
-                           ROOT::MathMore
-                           sbnobj::SBND_CRT
-        )
+art_make_library(
+                 SOURCE       CRTDetSimAlg.cxx
+                 LIBRARIES
+                        ROOT::MathMore
+                        fhiclcpp::fhiclcpp
+                        art::Persistency_Provenance
+                        canvas::canvas
+                        sbnobj::SBND_CRT
+                        sbndcode_GeoWrappers
+)
+
+simple_plugin(
+              CRTDetSim module
+              nurandom::RandomUtils_NuRandomService_service
+              larcorealg::Geometry
+              sbnobj::SBND_CRT
+              sbndcode_CRT_CRTSimulation
+)
 
 install_headers()
-install_fhicl()
 install_source()
+install_fhicl()

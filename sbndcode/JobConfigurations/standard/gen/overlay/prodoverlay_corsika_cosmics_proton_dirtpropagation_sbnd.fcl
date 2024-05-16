@@ -1,0 +1,110 @@
+# Produces overlay CORSIKA cosmics and dirt propagation throught the detector using largeant
+# and with an input of neutrino events. This fcl is made especially for GiBUU events since 
+# they are produced indepently of the overlay and the "dirt" 
+# 
+# Input: Neutrino events are required as input
+
+#include "mergesimsources_sbnd.fcl"
+#include "corsika_sbnd.fcl"
+
+# services
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+# filters
+#include "gennufilter.fcl"
+#include "simenergydepfaketriggerfilter.fcl"
+
+# modules
+#include "larg4_sbnd.fcl"
+
+process_name: GiBUUGenOverlay
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "hists_prodgibuu_cosmic_rockbox_sbnd_%p-%tc.root" }
+  IFDH:         {} # required by GENIEGen
+  @table::sbnd_simulation_services # load simulation services in bulk
+  @table::sbnd_g4_services
+}
+# Start with neutrino interactions
+source:
+{
+  module_type:     RootInput
+}
+
+physics:
+{
+  filters:
+  {
+    # Filter events that have an interaction in the TPC
+    tpcfilter: @local::sbnd_tpc_gennufilter
+
+    # Filter events where a particle deposits >100MeV in the TPC (AKA Dirt)
+    dirtfilter: @local::sbnd_simenergydepfaketriggerfilter
+  }
+  producers:
+  {
+    rns:       { module_type: "RandomNumberSaver" }
+
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
+
+    # The geant4 step
+    largeant: @local::sbnd_larg4
+  }
+
+  #define the producer and filter modules for this path, order matters,
+  simulatetpc:  [ loader, largeant, tpcfilter ]
+  simulatedirt: [ loader, largeant, "!tpcfilter", dirtfilter ]
+
+  #define the output stream, there could be more than one if using filters
+  # By deault Keep everything in one file:
+  stream1:   [ out1 ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
+outputs:
+{
+  # Keep all events with either TPC neutrinos or dirt interactions in one output
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "prodgibuu_cosmic_rockbox_sbnd_%p-%tc.root"
+    dataTier:    "generated"
+    SelectEvents: [ simulatetpc, simulatedirt ]
+    saveMemoryObjectThreshold: 0
+  }
+}
+
+# Now we are generating overlays we need to add CORSIKA to GENIE
+physics.producers.corsika: @local::sbnd_corsika_p
+
+# Create a new instance of largeant to just look at GENIE
+physics.producers.largeantnu: @local::sbnd_larg4
+physics.producers.largeantnu.inputCollections: [ "generator" ]
+
+# Create a new instance of largeant to just look at CORSIKA
+physics.producers.largeantcosmic: @local::sbnd_larg4
+physics.producers.largeantcosmic.inputCollections: [ "corsika" ]
+
+# Merge together the largeant instances
+physics.producers.largeant: @local::sbnd_merge_overlay_sim_sources
+
+# Tell the dirt filter to use the new largeant for neutrinos only
+physics.filters.dirtfilter.SimEnergyDepModuleName: "largeantnu:LArG4DetectorServicevolTPCActive"
+
+// Change the name of largeant->largeantnu and add corsika and largeant merging
+physics.simulatetpc:  [ loader, largeantnu, tpcfilter, corsika, largeantcosmic, largeant ]
+physics.simulatedirt: [ loader, largeantnu, "!tpcfilter", dirtfilter, corsika, largeantcosmic, largeant ]
+
+# Drop the GENIE and CORSIKA specific largeant instances and keep the merged output
+outputs.out1.outputCommands: [ "keep *_*_*_*"
+                             , "drop *_largeantnu_*_*"
+                             , "drop *_largeantcosmic_*_*"
+                             ]
+
+
+

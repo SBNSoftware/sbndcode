@@ -87,7 +87,7 @@
 #>  define_pythonpath
 ####################################
 parent		sbndcode
-defaultqual	e20
+defaultqual	e26
 ####################################
 
 ####################################
@@ -179,6 +179,7 @@ fwdir	product_dir	scripts
 gdmldir	product_dir
 incdir	product_dir	include
 libdir	fq_dir		lib
+wpdir   product_dir     wire-cell-cfg
 ####################################
 
 ####################################
@@ -252,10 +253,10 @@ libdir	fq_dir		lib
 #
 ####################################
 product		version		qual	flags		<table_format=2>
-sbncode		v09_67_00	-
-cetmodules	v3_20_00	-	only_for_build
-sbnd_data	v01_17_00	-	optional
-sbndutil	v09_67_00	-	optional
+sbncode		v09_89_01       -
+cetmodules	v3_24_01	-	only_for_build
+sbnd_data	v01_24_00	-	optional
+sbndutil	v09_89_01	-	optional
 end_product_list
 ####################################
 
@@ -311,10 +312,10 @@ end_product_list
 #
 ####################################
 qualifier	sbncode		sbndutil	sbnd_data	notes
-c7:debug	c7:debug	c7:debug	-nq-
-c7:prof		c7:prof		c7:prof		-nq-
-e20:debug	e20:debug	e20:debug	-nq-
-e20:prof	e20:prof	e20:prof	-nq-
+c14:debug	c14:debug	c14:debug	-nq-
+c14:prof	c14:prof	c14:prof	-nq-
+e26:debug	e26:debug	e26:debug	-nq-
+e26:prof	e26:prof	e26:prof	-nq-
 end_qualifier_list
 ####################################
 
@@ -327,6 +328,8 @@ table_fragment_begin
     pathPrepend(FW_SEARCH_PATH, ${SBNDCODE_DIR}/scripts)
     pathPrepend(FW_SEARCH_PATH, /cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash)
     pathPrepend(PYTHONPATH, ${UPS_PROD_DIR}/python)
+    # wirecell external data files; cfg path append to wpdir=${SBNDCODE_DIR}/wire-cell-cfg
+    pathPrepend(WIRECELL_PATH, ${SBND_DATA_DIR}/WireCell)
 table_fragment_end
 ####################################
 

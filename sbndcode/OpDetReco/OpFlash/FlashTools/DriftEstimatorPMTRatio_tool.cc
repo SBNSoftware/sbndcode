@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 #include "DriftEstimatorBase.hh"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
@@ -95,6 +96,8 @@ namespace lightana
     // PDS mapping
     opdet::sbndPDMapAlg fPDSMap;
 
+    std::set<int> fPDSBoxIDs;
+
   };
 
   DriftEstimatorPMTRatio::DriftEstimatorPMTRatio(art::ToolConfigTable<Config> const& config)
@@ -131,31 +134,68 @@ namespace lightana
     fKinkDistance = 0.5*fDriftDistance*(1-fVGroupVUV/fVGroupVIS);
 
     fVGroupVUV_I = 1./fVGroupVUV;
+
+    for(size_t oc=0; oc<fPDSMap.size(); oc++){
+      fPDSBoxIDs.insert( fPDSMap.pdBox(oc) );
+    }
   }
 
   double DriftEstimatorPMTRatio::GetDriftPosition(std::vector<double> PE_v){
 
-    double coatedPE=0, uncoatedPE=0;
+    std::map<int, double> BoxMap_PECoated;
+    std::map<int, double> BoxMap_PEUncoated;
+    std::map<int, int> BoxMap_NCoatedCh;
+    std::map<int, int> BoxMap_NUncoatedCh;
 
     for(size_t oc=0; oc<PE_v.size(); oc++){
-      if( fPDSMap.pdType(oc)=="pmt_coated" ) coatedPE+=PE_v[oc];
-      else if( fPDSMap.pdType(oc)=="pmt_uncoated" ) uncoatedPE+=PE_v[oc];
+      // skip 0 PE channels
+      if(PE_v[oc]==0) continue;
+
+      std::string pd_type=fPDSMap.pdType(oc);
+      // exclude xarapucas by now
+      if(pd_type=="xarapuca_vuv" || pd_type=="xarapuca_vis") continue;
+
+      // get PDS box
+      int box_id = fPDSMap.pdBox(oc);
+
+      // we store the pe in each box per PMT flavour
+      // and the number of "triggered" PMTs
+      if(pd_type=="pmt_coated") {
+        BoxMap_PECoated[box_id]+=PE_v[oc];
+        BoxMap_NCoatedCh[box_id]+=1;
+      }
+      else if(pd_type=="pmt_uncoated") {
+        BoxMap_PEUncoated[box_id]+=PE_v[oc];
+        BoxMap_NUncoatedCh[box_id]+=1;
+      }
     }
 
-    double pmtratio=1.;
-    if(coatedPE!=0)
-      pmtratio = 4*uncoatedPE/coatedPE;
+    // compute PMTRatio metric
+    double PECoated=0, PEUncoated=0;
+    for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
+      //we need the uncoated PMT in each window and at least one coated
+      if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
+        double CoWeight = 1./BoxMap_NCoatedCh[boxID];
+        PECoated+=CoWeight * BoxMap_PECoated[boxID];
+        PEUncoated+=BoxMap_PEUncoated[boxID];
+      }
+    }
 
-    double drift_distance;
-    if(pmtratio<=fPMTRatioCal[0])
-      drift_distance=fDriftCal[0];
-    else if(pmtratio>=fPMTRatioCal[fNCalBins-1])
-      drift_distance=fDriftCal[fNCalBins-1];
-    else
-      drift_distance=Interpolate(pmtratio);
+    if(PECoated!=0){
+      double pmtratio = PEUncoated/PECoated;
 
-    return drift_distance;
-   }
+      double drift_distance;
+      if(pmtratio<=fPMTRatioCal[0])
+        drift_distance=fDriftCal[0];
+      else if(pmtratio>=fPMTRatioCal[fNCalBins-1])
+        drift_distance=fDriftCal[fNCalBins-1];
+      else
+        drift_distance=Interpolate(pmtratio);
+
+      return drift_distance;
+    }
+    else return fDriftCal[fNCalBins-1]; 
+  }
 
   double DriftEstimatorPMTRatio::GetPropagationTime(double drift){
 

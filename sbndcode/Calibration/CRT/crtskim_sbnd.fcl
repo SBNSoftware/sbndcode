@@ -1,0 +1,8 @@
+#include "crtbacktrackeralg_sbnd.fcl"
+
+BEGIN_PROLOG    
+crtskim_sbnd:   {
+	module_type: "CRTCalibAna"
+	CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
+}
+END_PROLOG

@@ -32,7 +32,8 @@
 #include "artdaq-core/Data/ContainerFragment.hh"
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
-#include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
+// #include "sbnobj/SBND/Trigger/pmtSoftwareTrigger.hh"
+#include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
 
 // ROOT includes
 #include "TH1D.h"
@@ -122,7 +123,21 @@ private:
   bool   _beam_trig; 
   double _time_trig; 
   int    _npmt;
-  double _promptPE, _prelimPE; 
+  double _promptPE, _prelimPE;
+  std::vector<double> _ch_prelimPE, _ch_promptPE;
+  std::vector<int> _ch_AboveThreshold,_ch_type,_ch_ID;
+
+
+  TTree* _pulse_tree;
+  int _npulses; 
+  std::vector<int> _ch_npulses; // number of pulses per channel
+  
+  std::vector<int> _pulse_ch; // ch number for each pulse 
+  std::vector<double> _pulse_t_start; // t_start for each pulse 
+  std::vector<double> _pulse_t_end;
+  std::vector<double> _pulse_t_peak;
+  std::vector<double> _pulse_peak;
+  std::vector<double> _pulse_area;
 };
 
 
@@ -166,6 +181,23 @@ sbnd::trigger::pmtSoftwareTriggerProducer::pmtSoftwareTriggerProducer(fhicl::Par
   _tree->Branch("npmt",      &_npmt,      "npmt/I");
   _tree->Branch("promptPE",  &_promptPE,  "promptPE/D");
   _tree->Branch("prelimPE",  &_prelimPE,  "prelimPE/D");
+  _tree->Branch("ch_prelimPE","std::vector<double>",&_ch_prelimPE);
+  _tree->Branch("ch_promptPE","std::vector<double>",&_ch_promptPE);
+  _tree->Branch("ch_AboveThreshold","std::vector<int>",&_ch_AboveThreshold);
+  _tree->Branch("ch_ID","std::vector<int>",&_ch_ID);
+  _pulse_tree = fs->make<TTree>("pulse_tree","");
+  _pulse_tree->Branch("run",       &_run,       "run/I");
+  _pulse_tree->Branch("sub",       &_sub,       "sub/I");
+  _pulse_tree->Branch("evt",       &_evt,       "evt/I");
+  _pulse_tree->Branch("ch_npulses", "std::vector<int>",&_ch_npulses); 
+  _pulse_tree->Branch("npulses",   &_npulses,   "npulses/I");
+  _pulse_tree->Branch("pulse_ch",      "std::vector<int>",    &_pulse_ch);
+  _pulse_tree->Branch("pulse_t_start", "std::vector<double>", &_pulse_t_start);
+  _pulse_tree->Branch("pulse_t_end",   "std::vector<double>", &_pulse_t_end);
+  _pulse_tree->Branch("pulse_t_peak",  "std::vector<double>", &_pulse_t_peak);
+  _pulse_tree->Branch("pulse_peak",    "std::vector<double>", &_pulse_peak);
+  _pulse_tree->Branch("pulse_area",    "std::vector<double>", &_pulse_area);
+
 }
 
 void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
@@ -193,6 +225,10 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
   _time_trig = -9999;
   _npmt = -9999;
   _promptPE = -9999; _prelimPE = -9999;
+  //Initialize size, make it fast - to be pushed into the tree vector
+  std::vector<double> ch_promptPE(120,-9999), ch_prelimPE(120,-9999);
+  std::vector<int> ch_AboveThreshold(120,-9999),ch_ID(120,-9999);
+  // _TREE_VECTOR EVENT_VECTOR
 
   // get fragment handles
   std::vector<art::Handle<artdaq::Fragments>> fragmentHandles = e.getMany<std::vector<artdaq::Fragment>>();
@@ -235,21 +271,34 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
 
     // store timestamp of trigger, relative to beam window start
     double triggerTimeStamp = fTriggerTime - beamWindowStart;
-    trig_metrics.triggerTimestamp = triggerTimeStamp;
+    trig_metrics.trig_ts = triggerTimeStamp;
     _time_trig = triggerTimeStamp;
-    if (fVerbose) std::cout << "Saving trigger timestamp: " << trig_metrics.triggerTimestamp << " ns" << std::endl;
+    if (fVerbose) std::cout << "Saving trigger timestamp: " << trig_metrics.trig_ts << " ns" << std::endl;
 
     double promptPE = 0;
     double prelimPE = 0; 
 
     int nAboveThreshold = 0;
     // find the waveform bins that correspond to the start and end of the extended spill window (0 -> 1.8 us) within the 10 us waveform 
-    // if the triggerTimeStamp < 1000, the beginning of the beam spill is *not* contained within the waveform 
-    int beamStartBin = (triggerTimeStamp >= 1000)? 0 : int(500 - abs((triggerTimeStamp-1000)/2));
-    int beamEndBin   = (triggerTimeStamp >= 1000)? int(500 + (fBeamWindowLength*1e3 - triggerTimeStamp)/2) : (beamStartBin + (fBeamWindowLength*1e3)/2);
-
+    // !! if the triggerTimeStamp > 1000, the beginning of the beam spill is *not* contained within the waveform 
+    int beamStartBin = (triggerTimeStamp >= 1000)? 0 : int(500 - (triggerTimeStamp)/2); // units of bins 
+    int beamEndBin   = (triggerTimeStamp >= 1000)? (fBeamWindowLength*1e3 - (triggerTimeStamp-1000) )/2 : (beamStartBin + (fBeamWindowLength*1e3)/2);
+    
+    std::cout << "beamStartBin: " << beamStartBin << std::endl;
+    std::cout << "beamEndBin: "   << beamEndBin << std::endl;
     // wvfm loop to calculate metrics 
+
+    _npulses = 0;
+    _pulse_ch.clear(); //_pulse_npulses.clear();
+    _pulse_t_start.clear(); _pulse_t_end.clear(); _pulse_t_peak.clear();
+    _pulse_peak.clear(); _pulse_area.clear();
+
+    _pulse_ch.reserve(1000); //_pulse_npulses.reserve(1000);
+    _pulse_t_start.reserve(1000); _pulse_t_end.reserve(1000); _pulse_t_peak.reserve(1000);
+    _pulse_peak.reserve(1000); _pulse_area.reserve(1000);
+
     for (int i_ch = 0; i_ch < 120; ++i_ch){
+      ch_ID[i_ch] = channelList.at(i_ch);
       auto &pmtInfo = fpmtInfoVec.at(i_ch);
       auto wvfm = fWvfmsVec[i_ch];
 
@@ -264,10 +313,18 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       if (fCountPMTs){
         for (int bin = beamStartBin; bin < beamEndBin; ++bin){
           auto adc = wvfm[bin];
-          if (adc < fADCThreshold){ nAboveThreshold++; break; } 
+          if (adc < fADCThreshold){ 
+            ch_AboveThreshold[i_ch] = 1;
+            nAboveThreshold++; 
+            continue; 
+          } 
+          else{
+              ch_AboveThreshold[i_ch] = 0;
+            continue;
+          }
         }
       }
-      else nAboveThreshold=-9999;
+      else {nAboveThreshold=-9999;ch_AboveThreshold[i_ch] = -9999;}
 
       // quick estimate prompt and preliminary light, assuming sampling rate of 500 MHz (2 ns per bin)
       if (fCalculatePEMetrics){
@@ -275,32 +332,69 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
         auto prompt_window = std::vector<uint16_t>(wvfm.begin()+500, wvfm.begin()+1000);
         auto prelim_window = std::vector<uint16_t>(wvfm.begin()+beamStartBin, wvfm.begin()+500);
         if (fFindPulses == false){
-          double ch_promptPE = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
-          double ch_prelimPE = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
-          promptPE += ch_promptPE;
-          prelimPE += ch_prelimPE;
+          double ch_promptPE_ = (baseline-(*std::min_element(prompt_window.begin(), prompt_window.end())))/8;
+          double ch_prelimPE_ = (baseline-(*std::min_element(prelim_window.begin(), prelim_window.end())))/8;
+          ch_prelimPE[i_ch] = ch_prelimPE_;
+          ch_promptPE[i_ch] = ch_promptPE_;
+          promptPE += ch_promptPE_;
+          prelimPE += ch_prelimPE_;
         }
       }
-      else {promptPE = -9999; prelimPE =-9999;}
+      else {promptPE = -9999; prelimPE =-9999;ch_prelimPE[i_ch] = -9999; ch_promptPE[i_ch] = -9999;}
 
       // pulse finder + prompt and prelim calculation with pulses 
       if (fFindPulses == true){
+        int pulse_counter = 0;
+        std::cout << "Finding pulses for PMT #" << channelList.at(i_ch) << std::endl;
         SimpleThreshAlgo(i_ch);
+
         for (auto pulse : pmtInfo.pulseVec){
-          if (pulse.t_start > 500 && pulse.t_end < 550) promptPE+=pulse.pe;
-          if ((triggerTimeStamp) >= 1000){ if (pulse.t_end < 500) prelimPE+=pulse.pe; }
-          else if (triggerTimeStamp < 1000){
-            if (pulse.t_start > (500 - abs((triggerTimeStamp-1000)/2)) && pulse.t_end < 500) prelimPE+=pulse.pe; 
+          pulse_counter++; 
+          // times in pulse.t_**** are in units of *bins* not actually time 
+          if(pulse.t_start > beamStartBin && pulse.t_end < beamEndBin) {
+            std::cout << "pulse " << pulse_counter << std::endl;
+            std::cout << "pulse start, peak, end: (" << (pulse.t_start - beamStartBin)*2 << ", " 
+                                                     << (pulse.t_peak  - beamStartBin)*2 << ", " 
+                                                     << (pulse.t_end   - beamStartBin)*2 << ") " 
+                                                     << std::endl;
+            std::cout << "pulse peak ADC (baseline subtracted): " << pulse.peak << std::endl;
+            std::cout << "pulse area ADC (baseline subtracted): " << pulse.area << std::endl;
           }
-        }
+          if (pulse.t_start > 500 && pulse.t_end < 550){
+             ch_promptPE[i_ch] += pulse.pe;
+             promptPE+=pulse.pe;
+          }
+          if ((triggerTimeStamp) >= 1000){ 
+            if (pulse.t_end < 500) {
+              ch_prelimPE[i_ch] += pulse.pe;
+              prelimPE+=pulse.pe;
+            } 
+          }
+          else if (triggerTimeStamp < 1000){
+            if (pulse.t_start > (500 - abs((triggerTimeStamp-1000)/2)) && pulse.t_end < 500) {
+              ch_prelimPE[i_ch] += pulse.pe;
+              prelimPE+=pulse.pe;
+            } 
+          }
+          _npulses++;
+          _pulse_ch.push_back(channelList.at(i_ch));
+          _pulse_t_start.push_back((pulse.t_start - beamStartBin)*2);
+          _pulse_t_end.push_back(  (pulse.t_end   - beamStartBin)*2);
+          _pulse_t_peak.push_back( (pulse.t_peak  - beamStartBin)*2);
+          _pulse_peak.push_back(pulse.peak);
+          _pulse_area.push_back(pulse.area);
+        } // end of pulse loop 
       }
     } // end of wvfm loop 
 
+    _pulse_tree->Fill();
+
+    //We need to fill this - data product which is a LArSoft class
     trig_metrics.nAboveThreshold = nAboveThreshold;    
     trig_metrics.promptPE = promptPE;
     trig_metrics.prelimPE = prelimPE;
 
-    // tree variables 
+    // tree variables - TTree which is only part of root 
     _npmt = nAboveThreshold;
     _promptPE = promptPE; 
     _prelimPE = prelimPE;
@@ -315,35 +409,47 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       for (size_t i_wvfm = 0; i_wvfm < fWvfmsVec.size(); ++i_wvfm){
         std::vector<uint16_t> wvfm = fWvfmsVec[i_wvfm];
         hist_id++;
-        if (fEvent<4){
+        //if (fEvent<4){
             histname.str(std::string());
-            histname << "event_" << fEvent
-                    << "_channel_" << i_wvfm;
-            double StartTime = ((fTriggerTime-beamWindowStart) - 500)*1e-3; // us
-            double EndTime = StartTime + (5210*2)*1e-03; // us 
+            histname << "run_" << fRun  
+                    << "subrun_" <<fSubrun
+                    << "event_" << fEvent
+                    << "_pmtnum_" << channelList.at(i_wvfm);
+            // assuming that we save ~1 us before the triggerTimeStamp  
+            double StartTime = (triggerTimeStamp-1000)*1e-3; // us
+            double EndTime   = StartTime + (fWvfmLength*2)*1e-3;
+
             TH1D *wvfmHist = tfs->make< TH1D >(histname.str().c_str(), "Raw Waveform", wvfm.size(), StartTime, EndTime);
             wvfmHist->GetXaxis()->SetTitle("t (#mus)");
             for(unsigned int i = 0; i < wvfm.size(); i++) {
               wvfmHist->SetBinContent(i + 1, (double)wvfm[i]);
             }
-        } 
+        //} 
       } // end histo
     }
   }
   else{
     if (fVerbose) std::cout << "Beam and wvfms not found" << std::endl;
     trig_metrics.foundBeamTrigger = false;
-    trig_metrics.triggerTimestamp = -9999;
+    trig_metrics.trig_ts = -9999;
     trig_metrics.nAboveThreshold = -9999;
     trig_metrics.promptPE = -9999;
     trig_metrics.prelimPE = -9999;
     // tree variables 
     _beam_trig = false; 
     _time_trig = -9999; _npmt = -9999; _promptPE = -9999; _prelimPE = -9999;
+    ch_prelimPE = std::vector<double>(120,-9999);
+    ch_promptPE = std::vector<double>(120,-9999);
+    ch_AboveThreshold = std::vector<int>(120,-9999);
   }
+
+      _ch_prelimPE = (ch_prelimPE);
+      _ch_promptPE = (ch_promptPE);
+      _ch_ID = (ch_ID);
+      _ch_AboveThreshold = (ch_AboveThreshold);
     trig_metrics_v->push_back(trig_metrics);
     e.put(std::move(trig_metrics_v));   
-  _tree->Fill();
+    _tree->Fill();
    
 }
 
@@ -425,21 +531,27 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::estimateBaseline(int i_ch){
   pmtInfo.baselineSigma = subset_stddev;
 }
 
+/*
+PE threshold algorithm
+*/
 void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){
   auto wvfm = fWvfmsVec[i_ch];
   auto &pmtInfo = fpmtInfoVec[i_ch]; 
   double baseline = pmtInfo.baseline;
-  double baseline_sigma = pmtInfo.baselineSigma;
+  // double baseline_sigma = pmtInfo.baselineSigma;
   
   bool fire = false; // bool for if pulse has been detected
   int counter = 0; // counts the bin of the waveform
 
   // these should be fcl parameters 
   double start_adc_thres = 5, end_adc_thres = 2; 
-  double nsigma_start = 5, nsigma_end = 3; 
+  // double nsigma_start = 5, nsigma_end = 3; 
   
-  auto start_threshold = ( start_adc_thres > (nsigma_start * baseline_sigma) ? (baseline-start_adc_thres) : (baseline-(nsigma_start * baseline_sigma)));
-  auto end_threshold = ( end_adc_thres > (nsigma_end * baseline_sigma) ? (baseline - end_adc_thres) : (baseline - (nsigma_end * baseline_sigma)));
+  // auto start_threshold = ( start_adc_thres > (nsigma_start * baseline_sigma) ? (baseline-start_adc_thres) : (baseline-(nsigma_start * baseline_sigma)));
+  // auto end_threshold = ( end_adc_thres > (nsigma_end * baseline_sigma) ? (baseline - end_adc_thres) : (baseline - (nsigma_end * baseline_sigma)));
+  baseline = 8000;
+  auto start_threshold = baseline-start_adc_thres;
+  auto end_threshold   = baseline-end_adc_thres; 
 
   std::vector<sbnd::trigger::pmtPulse> pulse_vec;
   sbnd::trigger::pmtPulse pulse; 
@@ -451,7 +563,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){
       pulse.t_start = counter - 1 > 0 ? counter - 1 : counter;    
     }
 
-    if( fire && ((double)adc) > end_threshold ){ // found end of a pulse
+    else if( fire && ((double)adc) > end_threshold ){ // found end of a pulse
       fire = false;
       //vic: i move t_start forward one, this helps with tail
       pulse.t_end = counter < ((int)wvfm.size())  ? counter : counter - 1;
@@ -459,9 +571,9 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::SimpleThreshAlgo(int i_ch){
       pulse.area = 0; pulse.peak = 0; pulse.t_start = 0; pulse.t_end = 0; pulse.t_peak = 0;
     }   
 
-    if(fire){ // if we're in a pulse 
+    else if(fire){ // if we're in a pulse 
       pulse.area += (baseline-(double)adc);
-      if (pulse.peak > (baseline-(double)adc)) { // Found a new maximum
+      if ((baseline-(double)adc) > pulse.peak) { // Found a new maximum
         pulse.peak = (baseline-(double)adc);
         pulse.t_peak = counter;
       }

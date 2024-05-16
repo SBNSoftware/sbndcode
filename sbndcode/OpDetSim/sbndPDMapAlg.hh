@@ -60,6 +60,8 @@ namespace opdet {
     bool isPDType(size_t ch, std::string pdname) const override;
     bool isElectronics(size_t ch, std::string pdname) const;
     std::string pdType(size_t ch) const override;
+    int pdBox(size_t ch) const;
+    int pdTPC(size_t ch) const;
     std::string electronicsType(size_t ch) const;
     std::vector<int> getChannelsOfType(std::string pdname) const;
     std::vector<int> getChannelsOfType(std::string pdname,std::string elname) const;//overload

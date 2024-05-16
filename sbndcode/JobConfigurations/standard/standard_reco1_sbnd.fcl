@@ -6,6 +6,9 @@
 # 20200923 (d.brailsford@lancster.ac.uk) [v1.0]
 #   Initial definition
 #
+# Changes:
+# 20240228 (bcarlson1@ufl.edu) [v1.1]
+#    Add supera output using an analyzer end path
 # job configuration
 
 #include "reco_sbnd.fcl"
@@ -13,4 +16,6 @@
 process_name: Reco1
 
 physics.trigger_paths: [ reco1 ]
+physics.end_paths: [stream1, superaana]
+
 

@@ -184,6 +184,7 @@ namespace opdet{
                            0, 0, 1, // this are just default values
                            drift_distance, -1, Ycenter, Ywidth, Zcenter, Zwidth);
         opflashes->emplace_back(std::move(flash));
+
       }
       else{
         recob::OpFlash flash(flasht0, lflash.time_err, trigger_time + flasht0,

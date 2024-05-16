@@ -5,4 +5,4 @@
 # CORSIKA cosmics are generated using the
 # "proton" configuration. 
 
-#include "prodoverlay_corsika_cosmics_proton_genie_intrnue_spill_gsimple-configh-v1_tpc.fcl"
+#include "prodoverlay_corsika_cosmics_proton_genie_intrnue_spill_gsimple-configk-v1_tpc.fcl"
