@@ -33,9 +33,10 @@ physics:
         rns:       { module_type: "RandomNumberSaver" }
         generator: @local::MultiPartVertex
         rain:      @local::MultiPartRain
+        rain2:     @local::MultiPartRain2
     }
 
-    simulate: [ rns, generator, rain]
+    simulate: [ rns, generator, rain, rain2]
     out_stream: [ out1   ]
 
     trigger_paths: [simulate]

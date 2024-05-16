@@ -2,6 +2,9 @@
 
 #include "standard_g4_sbnd.fcl"
 
+# Set proper input tags for mcreco
+physics.producers.mcreco.MCParticleDroppedLabel: "largeantdropped"
+
 physics.simulate: [ rns
                   , sedlite #SEDLite reduces info from SED
                   , ionandscint
@@ -9,7 +12,7 @@ physics.simulate: [ rns
                   , pdfastsim
                   , pdfastsimout
                   # , simdrift ## 1D TPC simulation no longer run
-                  #, mcreco ## mcreco now run after WireCell sim
+                  , mcreco
                   , genericcrt
                   ]
 

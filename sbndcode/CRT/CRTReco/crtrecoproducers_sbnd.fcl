@@ -26,9 +26,7 @@ crtclustercharacterisationalg_sbnd:
    PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift
    PropDelay:      @local::sbnd_crtsim.DetSimParams.PropDelay
    TimeWalkNorm:   @local::sbnd_crtsim.DetSimParams.TDelayNorm
-   TimeWalkShift:  @local::sbnd_crtsim.DetSimParams.TDelayShift
-   TimeWalkSigma:  @local::sbnd_crtsim.DetSimParams.TDelaySigma
-   TimeWalkOffset: @local::sbnd_crtsim.DetSimParams.TDelayOffset
+   TimeWalkScale:  @local::sbnd_crtsim.DetSimParams.TDelayScale
 }
 
 crtspacepointproducer_sbnd:

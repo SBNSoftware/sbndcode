@@ -18,7 +18,7 @@ class TPCDecodeAna {
   uint8_t slot; //!< Index of "slot" of readout board 
   uint32_t event_number; //!< Event number for this header 
   uint32_t checksum; //!< checksum associated with header
-  uint32_t timestamp; //!< timestamp for this header
+  ULong64_t timestamp; //!< timestamp for this header
   uint32_t adc_word_count; //!< word count of ADC counts associated with this header
 
   unsigned index; //!< Globally usable index for this header information. 

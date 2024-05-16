@@ -4,4 +4,4 @@
 
 #include "reco1_sce_lite.fcl"
 
-physics.analyzers.supera: @local::sbnd_supera_mpvmpr
+physics.superaana: [superampvmpr]

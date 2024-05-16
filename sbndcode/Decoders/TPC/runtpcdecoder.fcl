@@ -15,16 +15,17 @@ physics:
 
   my_producer_modules: [daq]
   trigger_paths: [my_producer_modules]
-  a: [rootout]
+  a: [commissioning]
   end_paths: [a]
 }
 
 source: {}
 
 outputs: {
-  rootout: {
+  commissioning: {
     module_type: "RootOutput"
     fileName: "%ifb_tpcdecode.root"
+    dataTier: "decoded-raw"
   }
 }
 

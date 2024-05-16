@@ -48,6 +48,3 @@ physics:
  end_paths: [ stream1 ]
 
 }
-
-physics.producers.fragmentProducer.MultiplicityThreshold: 10
-physics.producers.fragmentProducer.BeamWindowLength: 1.8

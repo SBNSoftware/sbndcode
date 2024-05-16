@@ -561,20 +561,18 @@ namespace crt {
     {
         // Hit timing, with smearing and NPE dependence
         double tDelayMean =
-          fParams.TDelayNorm() *
-            exp(-0.5 * pow((npeMean - fParams.TDelayShift()) / fParams.TDelaySigma(), 2)) +
-          fParams.TDelayOffset();
+            fParams.TDelayNorm() * exp(-fParams.TDelayScale()*npeMean);
 
         double tDelayRMS =
-          fParams.TDelayRMSGausNorm() *
+            fParams.TDelayRMSGausNorm() *
             exp(-pow(npeMean - fParams.TDelayRMSGausShift(), 2) / fParams.TDelayRMSGausSigma()) +
-          fParams.TDelayRMSExpNorm() *
-            exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale());
+            exp(-(npeMean - fParams.TDelayRMSExpShift()) / fParams.TDelayRMSExpScale()) + fParams.TDelayRMSOffSetSlope()*r+ fParams.TDelayRMSOffSet();
 
         double tDelay = CLHEP::RandGauss::shoot(&fEngine, tDelayMean, tDelayRMS);
 
         // Time resolution of the interpolator
-        tDelay += CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator());
+        // comments: we should have a simulation for interpolator, but definitely not further smearing our timing resolution
+        // tDelay += CLHEP::RandGauss::shoot(&fEngine, 0, fParams.TResInterpolator());
 
         // Propagation time
         double tProp = CLHEP::RandGauss::shoot(fParams.PropDelay(), fParams.PropDelayError()) * r;

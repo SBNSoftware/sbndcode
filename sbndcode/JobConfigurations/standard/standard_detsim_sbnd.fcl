@@ -12,7 +12,6 @@
 # - recob::Wire (TPC signals per channel)
 # - sim::SimChannel (Simulated electrons per channel)
 # - OpDetWaveforms (optical waveforms)
-# - MCReco -> MCTrack, MCShower: deposited energy from each MCParticle (needs SimChannels)
 
 #
 # Dependencies:
@@ -33,7 +32,6 @@
 #include "wcsimsp_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
-#include "mcreco_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
 
@@ -67,11 +65,10 @@ physics:
     simtpc2d:  @local::sbnd_wcls_simsp 
     crtsim:    @local::sbnd_crtsim
     opdaq:     @local::sbnd_opdetdigitizer
-    mcreco:    @local::sbnd_mcreco
   }
 
   #define the producer and filter modules for this path, order matters,
-  simulate: [rns, simtpc2d, crtsim, opdaq, mcreco]
+  simulate: [rns, simtpc2d, crtsim, opdaq]
 
   #define the output stream, there could be more than one if using filters
   stream1:   [ out1 ]
