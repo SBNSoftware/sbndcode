@@ -23,7 +23,7 @@ lightcalo:
     SimpleOpFlashOffset: 0.2  # the offset between the t0 from SimpleFlash and OpFlashes 
     PMTARAFlashOffset:   0.05 # the offset between the t0 of PMT OpFlashes and X-ARA OpFlashes
     FlashNoiseThreshold: 600. # for PMTS, flash total PE threshold to ignore a flash (below thresh = noise)
-    PMTPERange: [10,300]      # the lower and upper PE thresholds to evaluate a flash. Below lower -> noise, above upper -> non-linearity
+    PMTPERange: [200,3000]      # the lower and upper PE thresholds to evaluate a flash. Below lower -> noise, above upper -> non-linearity
 
     # calibration constants & simulation parameters  
     ## shouldn't have to change this unless you change simulation parameters 
