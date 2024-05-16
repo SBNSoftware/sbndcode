@@ -28,9 +28,9 @@ lightcalo:
     # calibration constants & simulation parameters  
     ## shouldn't have to change this unless you change simulation parameters 
     CalAreaConstants:    [ 0.0200906, 0.0200016, 0.0201293 ] # calibration constants for wire planes 
-    OpDetDirectEff:      [ 0.03, 0.03, 0.014, 0.021 ] # direct efficiencies [uncoated PMT, coated PMT, vis ara, vuv ara]
-    OpDetReflectEff:     [ 0.03, 0.03, 0.014, 0.021 ] # reflected efficiencies 
-    ScintPreScale:       0.03 # Scintillation Pre-Scale factor in simulation (set in ionandscint)
+    OpDetDirectEff:      [ 0.152, 0.096, 0.01264, 0.01752 ] # direct efficiencies ... uncoated PMT, coated PMT, vis ara, vuv ara
+    OpDetReflectEff:     [ 0.152, 0.104, 0.01264, 0.00271 ] # reflected efficiencies 
+    ScintPreScale:       0.152 # Scintillation Pre-Scale factor in simulation (set in ionandscint)
     
     # parameters for truth validation 
     TruthValidation:     false # can only set to true if the reco2 files have SimEnergyDeposits
