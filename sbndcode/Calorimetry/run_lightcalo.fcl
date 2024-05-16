@@ -6,7 +6,7 @@
 #include "backtrackerservice.fcl"
 
 #include "lightcalo.fcl"
-#include "lightcalo_ana.fcl"
+##include "lightcalo_ana.fcl"
 
 process_name: LightCaloProducer
 
@@ -49,11 +49,11 @@ physics:
     }
     analyzers:
     {
-        lightcaloana: @local::lightcalo_ana
+        # lightcaloana: @local::lightcalo_ana
     }
     #define the producer and filter modules for this path, order matters,
     reco: [lightcalo]
-    ana:  [lightcaloana]
+    # ana:  [lightcaloana]
 
     # define the output stream, there could be more than one if using filters
     stream1: [out1]
