@@ -50,6 +50,7 @@ private:
   std::string         fFEBDataModuleLabel;
   uint16_t            fADCThreshold;
   std::vector<double> fErrorCoeff;
+  bool                fAllowFlag1;
 };
 
 
@@ -59,10 +60,11 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
-  {
-    produces<std::vector<CRTStripHit>>();
-    produces<art::Assns<FEBData, CRTStripHit>>();
-  }
+  , fAllowFlag1(p.get<bool>("AllowFlag1"))
+{
+  produces<std::vector<CRTStripHit>>();
+  produces<art::Assns<FEBData, CRTStripHit>>();
+}
 
 void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
 {
@@ -80,10 +82,10 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
       std::vector<CRTStripHit> newStripHits = CreateStripHits(data);
       
       for(auto hit : newStripHits)
-	{
-	  stripHitVec->push_back(hit);
-	  util::CreateAssn(*this, e, *stripHitVec, data, *stripHitDataAssn);
-	}
+        {
+          stripHitVec->push_back(hit);
+          util::CreateAssn(*this, e, *stripHitVec, data, *stripHitDataAssn);
+        }
     }
 
   e.put(std::move(stripHitVec));
@@ -98,7 +100,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
   const uint32_t unixs = data->UnixS();
 
   // Only consider "real data" readouts, not clock resets etc
-  if(data->Flags() != 3)
+  if(!(data->Flags() == 3 || (fAllowFlag1 && data->Flags() == 1)))
     return stripHits;
   
   const CRTModuleGeo module = fCRTGeoAlg.GetModule(mac5 * 32);
@@ -125,23 +127,23 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
       // Keep hit if both SiPMs above threshold
       if(adc1 > fADCThreshold && adc2 > fADCThreshold)
-	{
-	  // Access width of strip from the geometry algorithm
-	  const double width = strip.width;
+        {
+          // Access width of strip from the geometry algorithm
+          const double width = strip.width;
 
-	  // Use light ratio to infer lateral position
-	  const double pos = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
-	  double err       = fErrorCoeff[0] * width + fErrorCoeff[1] * pos + fErrorCoeff[2] * pos * pos;
+          // Use light ratio to infer lateral position
+          const double pos = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
+          double err       = fErrorCoeff[0] * width + fErrorCoeff[1] * pos + fErrorCoeff[2] * pos * pos;
 
-	  // Ensure error does not allow positions outside the strip geometry
-	  if(pos + err > width)
-	    err = width - pos;
+          // Ensure error does not allow positions outside the strip geometry
+          if(pos + err > width)
+            err = width - pos;
 
-	  if(pos - err < 0)
-	    err = pos;
+          if(pos - err < 0)
+            err = pos;
 
-	  stripHits.emplace_back(channel, t0, t1, unixs, pos, err, adc1, adc2);
-	}
+          stripHits.emplace_back(channel, t0, t1, unixs, pos, err, adc1, adc2);
+        }
     }
 
   return stripHits;

@@ -57,6 +57,7 @@ private:
   std::string fCRTStripHitModuleLabel;
   uint32_t    fCoincidenceTimeRequirement;
   double      fOverlapBuffer;
+  bool        fUseT0;
 };
 
 
@@ -66,10 +67,11 @@ sbnd::crt::CRTClusterProducer::CRTClusterProducer(fhicl::ParameterSet const& p)
   , fCRTStripHitModuleLabel(p.get<std::string>("CRTStripHitModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<uint32_t>("CoincidenceTimeRequirement"))
   , fOverlapBuffer(p.get<double>("OverlapBuffer"))
-  {
-    produces<std::vector<CRTCluster>>();
-    produces<art::Assns<CRTCluster, CRTStripHit>>();
-  }
+  , fUseT0(p.get<bool>("UseT0"))
+{
+  produces<std::vector<CRTCluster>>();
+  produces<art::Assns<CRTCluster, CRTStripHit>>();
+}
 
 void sbnd::crt::CRTClusterProducer::produce(art::Event& e)
 {
@@ -86,8 +88,8 @@ void sbnd::crt::CRTClusterProducer::produce(art::Event& e)
 
   for(auto& [tagger, stripHits] : taggerStripHitsMap)
     {
-      std::sort(stripHits.begin(), stripHits.end(), [](art::Ptr<CRTStripHit> &a, art::Ptr<CRTStripHit> &b)->bool{
-          return a->Ts1() < b->Ts1();});
+      std::sort(stripHits.begin(), stripHits.end(), [&](art::Ptr<CRTStripHit> &a, art::Ptr<CRTStripHit> &b)->bool{
+        return fUseT0 ? a->Ts0() < b->Ts0() : a->Ts1() < b->Ts1();});
 
       std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> clustersAndHits = CreateClusters(stripHits);
 
@@ -144,7 +146,9 @@ std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRT
     
               if(!used[ii])
                 {
-                  if(stripHit->Ts1() - initialStripHit->Ts1() < fCoincidenceTimeRequirement)
+                  const uint32_t timeDiff = fUseT0 ? stripHit->Ts0() - initialStripHit->Ts0() :
+                    stripHit->Ts1() - initialStripHit->Ts1();
+                  if(timeDiff < fCoincidenceTimeRequirement)
                     {
                       clusteredHits.push_back(stripHit);
                       used[ii] = true;
@@ -160,7 +164,7 @@ std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRT
 }
 
 std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>>>
-  sbnd::crt::CRTClusterProducer::SplitClusters(const std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> &initialClusters)
+sbnd::crt::CRTClusterProducer::SplitClusters(const std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> &initialClusters)
 {
   std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> clustersAndHits;
 

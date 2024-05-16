@@ -1,0 +1,15 @@
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "run_crtreco.fcl"
+
+services.message:              @local::sbnd_message_services
+services.CRTChannelMapService: @local::crt_channel_map_standard
+services.CRTCalibService:      @local::crt_calib_service
+
+physics.producers.crtstrips.FEBDataModuleLabel:                    "crtdecoder"
+physics.producers.crtstrips.AllowFlag1:                            true
+physics.producers.crtclustering.UseT0:                             true
+physics.producers.crtspacepoints.ClusterCharacterisationAlg.UseT1: false
+
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                               "drop *_*_daq_*" ]
