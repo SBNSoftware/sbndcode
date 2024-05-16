@@ -132,7 +132,7 @@ private:
   std::string _simenergy_producer;
   bool _truth_neutrino;
 
-  std::unique_ptr<SemiAnalyticalModel> _semi_model;
+  std::unique_ptr<phot::SemiAnalyticalModel> _semi_model;
   fhicl::ParameterSet _vuv_params;
   fhicl::ParameterSet _vis_params;
 
@@ -184,7 +184,7 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
 {
   _vuv_params = p.get<fhicl::ParameterSet>("VUVHits");
   _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
-  _semi_model = std::make_unique<SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
+  _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
 
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");

@@ -144,7 +144,7 @@ private:
   std::string _simenergy_producer;
   bool _truth_neutrino;
 
-  std::unique_ptr<SemiAnalyticalModel> _semi_model;
+  std::unique_ptr<phot::SemiAnalyticalModel> _semi_model;
   fhicl::ParameterSet _vuv_params;
   fhicl::ParameterSet _vis_params;
 
@@ -192,7 +192,7 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
 {
   _vuv_params = p.get<fhicl::ParameterSet>("VUVHits");
   _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
-  _semi_model = std::make_unique<SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
+  _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
 
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
@@ -602,11 +602,11 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
     }
     _slice_E = _energy.at(bestPlane);
 
-    sbn::LightCalo lightcalo(lightcalo_charge, lightcalo_light,lightcalo_energy,
-                             lightcalo_plane,flash_time);
+    // sbn::LightCalo lightcalo(lightcalo_charge, lightcalo_light,lightcalo_energy,
+    //                          lightcalo_plane,flash_time);
 
-    lightcalo_v->push_back(lightcalo);
-    util::CreateAssn(*this, e, *lightcalo_v, slice, *slice_lightcalo_assn_v);
+    // lightcalo_v->push_back(lightcalo);
+    // util::CreateAssn(*this, e, *lightcalo_v, slice, *slice_lightcalo_assn_v);
 
     ::art::Handle<std::vector<sim::SimEnergyDeposit>> energyDeps_h;
     e.getByLabel(_simenergy_producer, energyDeps_h);
