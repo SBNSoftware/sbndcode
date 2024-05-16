@@ -4,9 +4,11 @@ namespace sbnd::crt {
   
   CRTEventDisplayAlg::CRTEventDisplayAlg(const Config& config)
     : fCRTGeoAlg(config.GeoAlgConfig())
-    , fCRTBackTrackerAlg(config.BackTrackerAlgConfig())
   {
     this->reconfigure(config);
+
+    if(fMC)
+      fCRTBackTrackerAlg = CRTBackTrackerAlg(config.BackTrackerAlgConfig());
   }
   
   CRTEventDisplayAlg::CRTEventDisplayAlg(){}
@@ -15,6 +17,8 @@ namespace sbnd::crt {
 
   void CRTEventDisplayAlg::reconfigure(const Config& config)
   {
+    fMC = config.MC();
+
     fSimLabel = config.SimLabel();
     fSimDepositLabel = config.SimDepositLabel();
     fStripHitLabel = config.StripHitLabel();
@@ -122,7 +126,8 @@ namespace sbnd::crt {
   void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
                                 const art::Event& event)
   {
-    fCRTBackTrackerAlg.SetupMaps(event);
+    if(fMC)
+      fCRTBackTrackerAlg.SetupMaps(event);
 
     double G4RefTime(clockData.G4ToElecTime(0) * 1e3);
     if(fPrint) std::cout << "G4RefTime: " << G4RefTime << std::endl;
@@ -335,16 +340,24 @@ namespace sbnd::crt {
             double rmin[3] = {strip.minX, strip.minY, strip.minZ};
             double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
 
-            CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(event, stripHit);
-
             if(fPrint)
-              std::cout << "Strip Hit: (" 
-                        << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
-                        << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << stripHit->Ts1()
-                        << " (" << stripHit->Ts1() - G4RefTime << ")"
-                        << "\t Matches to trackID: " << truthMatch.trackid 
-                        << " with completeness: " << truthMatch.completeness 
-                        << " and purity: " << truthMatch.purity << std::endl;
+              {
+                std::cout << "Strip Hit: ("
+                          << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
+                          << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << stripHit->Ts1()
+                          << " (" << stripHit->Ts1() - G4RefTime << ")";
+
+                if(fMC)
+                  {
+                    CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(event, stripHit);
+
+                    std::cout << "\t Matches to trackID: " << truthMatch.trackid
+                              << " with completeness: " << truthMatch.completeness
+                              << " and purity: " << truthMatch.purity;
+                  }
+
+                std::cout << std::endl;
+              }
 
             DrawCube(c1, rmin, rmax, fStripHitColour);
           }
@@ -380,14 +393,22 @@ namespace sbnd::crt {
                     DrawCube(c1, rmin, rmax, colour);
                   }
 
-                CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(event, cluster);
-
                 if(fPrint)
-                  std::cout << "Cluster of " << cluster->NHits() << " hits at t1 = " << cluster->Ts1()
-                            << " (" << cluster->Ts1() - G4RefTime << ")"
-                            << "\t Matches to trackID: " << truthMatch.trackid
-                            << " with completeness: " << truthMatch.completeness
-                            << " and purity: " << truthMatch.purity << std::endl;
+                  {
+                    std::cout << "Cluster of " << cluster->NHits() << " hits at t1 = " << cluster->Ts1()
+                              << " (" << cluster->Ts1() - G4RefTime << ")";
+
+                    if(fMC)
+                      {
+                        CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(event, cluster);
+
+                        std::cout << "\t Matches to trackID: " << truthMatch.trackid
+                                  << " with completeness: " << truthMatch.completeness
+                                  << " and purity: " << truthMatch.purity;
+                      }
+
+                    std::cout << std::endl;
+                  }
 
                 colour += fClusterColourInterval;
               }

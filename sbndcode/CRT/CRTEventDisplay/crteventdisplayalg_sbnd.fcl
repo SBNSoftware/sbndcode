@@ -7,6 +7,8 @@ crteventdisplayalg_sbnd:
 {
    CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 
+   MC: true
+
    SimLabel:         "largeant"
    SimDepositLabel:  "genericcrt"
    StripHitLabel:    "crtstrips"
@@ -74,5 +76,19 @@ crteventdisplayalg_sbnd_feb_layout_debug.DrawSimDeposits:  false
 crteventdisplayalg_sbnd_feb_layout_debug.DrawStripHits:    false
 crteventdisplayalg_sbnd_feb_layout_debug.DrawClusters:     false
 crteventdisplayalg_sbnd_feb_layout_debug.DrawSpacePoints:  false
+
+crteventdisplayalg_sbnd_data: @local::crteventdisplayalg_sbnd
+
+crteventdisplayalg_sbnd_data.DrawStripHits:   false
+crteventdisplayalg_sbnd_data.DrawClusters:    false
+crteventdisplayalg_sbnd_data.DrawSpacePoints: true
+crteventdisplayalg_sbnd_data.DrawTracks:      true
+crteventdisplayalg_sbnd_data.MC:              false
+crteventdisplayalg_sbnd_data.DrawModules:     true
+crteventdisplayalg_sbnd_data.DrawTrueTracks:  false
+crteventdisplayalg_sbnd_data.ChoseTaggers:    true
+crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 0, 2, 4 ]
+crteventdisplayalg_sbnd_data.MinTime:         -1000000000
+crteventdisplayalg_sbnd_data.MaxTime:         1000000000
 
 END_PROLOG

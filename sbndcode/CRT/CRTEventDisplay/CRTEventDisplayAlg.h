@@ -64,6 +64,10 @@ namespace sbnd::crt {
         Comment("Configuration parameters for the CRT back tracking algorithm")
       };
       
+      fhicl::Atom<bool> MC {
+        Name("MC")
+          };
+
       fhicl::Atom<art::InputTag> SimLabel {
         Name("SimLabel")
           };
@@ -213,8 +217,8 @@ namespace sbnd::crt {
     CRTGeoAlg         fCRTGeoAlg;
     CRTBackTrackerAlg fCRTBackTrackerAlg;
 
-    art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
-    
+    bool fMC;
+
     art::InputTag fSimLabel;
     art::InputTag fSimDepositLabel;
     art::InputTag fStripHitLabel;

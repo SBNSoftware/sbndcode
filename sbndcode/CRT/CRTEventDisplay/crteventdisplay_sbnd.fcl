@@ -8,6 +8,12 @@ crteventdisplay_sbnd:
    module_type:        "CRTEventDisplay"
 }
 
+crteventdisplay_sbnd_data:
+{
+   EventDisplayConfig: @local::crteventdisplayalg_sbnd_data
+   module_type:        "CRTEventDisplay"
+}
+
 crteventdisplay_sbnd_feb_layout_debug:
 {
    EventDisplayConfig: @local::crteventdisplayalg_sbnd_feb_layout_debug
