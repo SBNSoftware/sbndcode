@@ -26,7 +26,6 @@ namespace sbnd::crt {
     fSpacePointLabel = config.SpacePointLabel();
     fTrackLabel = config.TrackLabel();
 
-    fDataMode = config.DataMode();
     fSaveRoot = config.SaveRoot();
     fSaveViews = config.SaveViews();
 

@@ -16,7 +16,6 @@ crteventdisplayalg_sbnd:
    SpacePointLabel:  "crtspacepoints"
    TrackLabel:       "crttracks"
 
-   DataMode:         false
    SaveRoot:         true
    SaveViews:        false
 
@@ -73,7 +72,7 @@ crteventdisplayalg_sbnd:
 
 crteventdisplayalg_sbnd_channel_mapping: @local::crteventdisplayalg_sbnd
 
-crteventdisplayalg_sbnd_channel_mapping.DataMode:         true
+crteventdisplayalg_sbnd_channel_mapping.MC:               false
 crteventdisplayalg_sbnd_channel_mapping.SaveRoot:         false
 crteventdisplayalg_sbnd_channel_mapping.SaveViews:        true
 
@@ -97,6 +96,8 @@ crteventdisplayalg_sbnd_channel_mapping.Print:            false
 
 crteventdisplayalg_sbnd_data: @local::crteventdisplayalg_sbnd
 
+crteventdisplayalg_sbnd_data.SaveRoot:        false
+crteventdisplayalg_sbnd_data.SaveViews:       true
 crteventdisplayalg_sbnd_data.DrawStripHits:   false
 crteventdisplayalg_sbnd_data.DrawClusters:    false
 crteventdisplayalg_sbnd_data.DrawSpacePoints: true
@@ -105,7 +106,7 @@ crteventdisplayalg_sbnd_data.MC:              false
 crteventdisplayalg_sbnd_data.DrawModules:     true
 crteventdisplayalg_sbnd_data.DrawTrueTracks:  false
 crteventdisplayalg_sbnd_data.ChoseTaggers:    true
-crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 0, 2, 4 ]
+crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 2, 4 ]
 crteventdisplayalg_sbnd_data.MinTime:         -1000000000
 crteventdisplayalg_sbnd_data.MaxTime:         1000000000
 

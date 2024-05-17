@@ -89,9 +89,6 @@ namespace sbnd::crt {
         Name("TrackLabel")
           };
 
-      fhicl::Atom<bool> DataMode {
-	Name("DataMode"),
-      };
       fhicl::Atom<bool> SaveRoot {
 	Name("SaveRoot"),
       };
@@ -251,7 +248,6 @@ namespace sbnd::crt {
     art::InputTag fSpacePointLabel;
     art::InputTag fTrackLabel;
 
-    bool fDataMode;
     bool fSaveRoot;
     bool fSaveViews;
 
