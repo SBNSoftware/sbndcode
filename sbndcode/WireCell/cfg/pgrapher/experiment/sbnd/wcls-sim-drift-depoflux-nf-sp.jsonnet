@@ -124,7 +124,6 @@ local wcls_depoflux_writer = g.pnode({
 
     reference_time: -1700 * wc.us,
 
-    energy: 1, # equivalent to use_energy = true
     simchan_label: 'simpleSC',
     sed_label: if (savetid == 'true') then 'ionandscint' else '',
     sparse: false,
