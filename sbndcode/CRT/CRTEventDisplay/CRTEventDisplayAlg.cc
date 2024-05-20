@@ -469,8 +469,9 @@ namespace sbnd::crt {
                     if(fPrint)
                       std::cout << "Space Point: (" 
                                 << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
-                                << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = "
-                                << spacepoint->Time() << " (" << spacepoint->Time() - G4RefTime << ")"
+                                << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t0 = "
+                                << spacepoint->Ts0() << " (" << spacepoint->Ts0() - G4RefTime << ") or t1 = "
+                                << spacepoint->Ts1() << " (" << spacepoint->Ts1() - G4RefTime << ")"
                                 << " with PE " << spacepoint->PE()
                                 << std::endl;
                   }
@@ -488,7 +489,7 @@ namespace sbnd::crt {
 
         for(auto track : tracksVec)
           {
-            if(track->Time() - G4RefTime < fMinTime || track->Time() - G4RefTime > fMaxTime)
+            if(track->Ts1() - G4RefTime < fMinTime || track->Ts1() - G4RefTime > fMaxTime)
               continue;
 
             std::set<CRTTagger> taggers = track->Taggers();
@@ -538,7 +539,8 @@ namespace sbnd::crt {
                         << "\twith direction (" << dir.X() << ", " << dir.Y() << ", " << dir.Z() << ")\n"
                         << "\tdrawn between (" << a.X() << ", " << a.Y() << ", " << a.Z() << ")\n"
                         << "\tand (" << b.X() << ", " << b.Y() << ", " << b.Z() << ")\n"
-                        << "\tat time " << track->Time() << " (" << track->Time() - G4RefTime << ")\n"
+                        << "\tat ts0 " << track->Ts0() << " (" << track->Ts0() - G4RefTime << ")\n"
+                        << "\tat ts1 " << track->Ts1() << " (" << track->Ts1() - G4RefTime << ")\n"
                         << "\tfrom three hits? " << track->Triple() << std::endl;
 
           }
