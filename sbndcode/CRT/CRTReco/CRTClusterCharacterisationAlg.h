@@ -65,7 +65,7 @@ namespace sbnd::crt {
     double ReconstructPE(const art::Ptr<CRTStripHit> &hit, const double dist);
 
     void CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const geo::Point_t &pos,
-                     double &time, double &etime);
+                     double &t0, double &et0, double &t1, double &et1);
 
     double TimingCorrectionOffset(const double &dist, const double &pe);
 

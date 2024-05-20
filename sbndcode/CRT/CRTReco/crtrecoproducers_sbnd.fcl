@@ -16,13 +16,12 @@ crtclusterproducer_sbnd:
    CRTStripHitModuleLabel:     "crtstrips"
    CoincidenceTimeRequirement: 50
    OverlapBuffer:              1.
-   UseT0:                      false
+   UseTs0:                     false
    module_type:                "CRTClusterProducer"
 }
 
 crtclustercharacterisationalg_sbnd:
 {
-   UseT1:          true
    TimeOffset:     -1.7e6 # Sim parameter
    OverlapBuffer:  1.
    PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift
@@ -43,6 +42,7 @@ crttrackproducer_sbnd:
    CRTSpacePointModuleLabel:   "crtspacepoints"
    CoincidenceTimeRequirement: 100.
    ThirdSpacePointMaximumDCA:  50.
+   UseTs0:                     false
    module_type:                "CRTTrackProducer"
 }
 

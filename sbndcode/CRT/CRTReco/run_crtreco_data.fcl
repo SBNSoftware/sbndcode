@@ -8,8 +8,7 @@ services.CRTCalibService:      @local::crt_calib_service
 
 physics.producers.crtstrips.FEBDataModuleLabel:                    "crtdecoder"
 physics.producers.crtstrips.AllowFlag1:                            true
-physics.producers.crtclustering.UseT0:                             true
-physics.producers.crtspacepoints.ClusterCharacterisationAlg.UseT1: false
-
+physics.producers.crtclustering.UseTs0:                            true
+physics.producers.crttracks.UseTs0:                                true
 outputs.out1.outputCommands: [ "keep *_*_*_*",
                                "drop *_*_daq_*" ]
