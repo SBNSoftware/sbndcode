@@ -177,8 +177,7 @@ private:
   std::vector <double> _nuvZ;
   std::vector <double> _nuvE;
   
-  // Saving MCParticles
-  int _nMCParticles;                        
+  // Saving MCParticles                       
   std::vector < std::vector <double> > _mc_stepX;
   std::vector < std::vector <double> > _mc_stepY;
   std::vector < std::vector <double> > _mc_stepZ;
