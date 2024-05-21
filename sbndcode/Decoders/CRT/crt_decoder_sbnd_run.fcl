@@ -1,0 +1,27 @@
+#include "crt_decoder_sbnd.fcl"
+#include "services_sbnd.fcl"
+
+process_name: CRTdecoder
+
+services:
+{
+    @table::sbnd_services
+}
+
+source:
+{
+
+    module_type: RootInput
+}
+
+physics:
+{
+    producers:
+    {
+        crtdecoder: @local::crt_decoder_rachel
+    }
+    
+    decoders: [ crtdecoder ]
+
+    trigger_paths: [ decoders ]
+}
