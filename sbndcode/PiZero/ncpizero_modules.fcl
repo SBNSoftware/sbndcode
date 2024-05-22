@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+ncpizerofilter:
+{
+  MCTruthModuleLabel: "generator"
+
+  module_type:        NCPiZeroFilter
+}
+
+END_PROLOG

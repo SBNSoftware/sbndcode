@@ -1,0 +1,15 @@
+#include "ncpizero_modules.fcl"
+#include "prodgenie_rockbox_sbnd.fcl"
+
+physics.filters.ncpizerofilter: @local::ncpizerofilter
+
+physics.simulatetpc:  [ rns, generator, ncpizerofilter, loader, largeant, tpcfilter ]
+physics.simulatedirt: [ ]
+
+outputs.out1.SelectEvents: [ simulatetpc ]
+
+#include "enable_spacecharge_services_sbnd_2D_DriftSimOnly.fcl"
+
+services.ParticleListAction.keepEMShowerDaughters:         true
+services.ParticleListAction.KeepDroppedParticlesInVolumes: []
+services.ParticleListAction.EnergyCut:                     1e-4
