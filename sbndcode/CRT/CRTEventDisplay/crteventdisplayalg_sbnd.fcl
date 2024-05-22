@@ -106,8 +106,8 @@ crteventdisplayalg_sbnd_data.MC:              false
 crteventdisplayalg_sbnd_data.DrawModules:     true
 crteventdisplayalg_sbnd_data.DrawTrueTracks:  false
 crteventdisplayalg_sbnd_data.ChoseTaggers:    true
-crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 2, 4 ]
-crteventdisplayalg_sbnd_data.MinTime:         -1000000000
-crteventdisplayalg_sbnd_data.MaxTime:         1000000000
+crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 2, 3, 4 ]
+crteventdisplayalg_sbnd_data.MinTime:         435000000
+crteventdisplayalg_sbnd_data.MaxTime:         436000000
 
 END_PROLOG
