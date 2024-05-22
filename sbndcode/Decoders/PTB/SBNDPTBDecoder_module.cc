@@ -142,7 +142,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  tstruct.word_type = ctbfrag.Trigger(iword)->word_type;
 	  wt = tstruct.word_type;
 	  tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word;
-	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp;
+	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp * 20; // PTB clock has 20ns ticks
 	  if (ctbfrag.Trigger(iword)->IsHLT()) 
 	    {
 	      ix = sout.HLTrigs.size();
