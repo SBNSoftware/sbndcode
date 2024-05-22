@@ -282,6 +282,11 @@ namespace sbnd::crt {
     return CRTCommonUtils::GetTaggerEnum(ChannelToTaggerName(channel));
   }
 
+  enum CRTTagger CRTGeoAlg::AuxDetIndexToTaggerEnum(const unsigned ad_i) const
+  {
+    return CRTCommonUtils::GetTaggerEnum(GetModuleByAuxDetIndex(ad_i).taggerName);
+  }
+
   size_t CRTGeoAlg::ChannelToOrientation(const uint16_t channel) const
   {
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).orientation;

@@ -309,6 +309,8 @@ namespace sbnd::crt {
 
     enum CRTTagger ChannelToTaggerEnum(const uint16_t channel) const;
 
+    enum CRTTagger AuxDetIndexToTaggerEnum(const unsigned ad_i) const;
+
     size_t ChannelToOrientation(const uint16_t channel) const;
 
     std::array<double, 6> StripHit3DPos(const uint16_t channel, const double x, const double ex);
