@@ -17,6 +17,7 @@
 #include "art_root_io/TFileService.h"
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
+#include "larcoreobj/SummaryData/POTSummary.h"
 
 #include "TTree.h"
 
@@ -37,13 +38,19 @@ public:
   SimpleAnalyzer& operator=(SimpleAnalyzer&&) = delete;
 
   // Required functions.
+  void beginSubRun(const art::SubRun &sr);
+  void endSubRun(const art::SubRun &sr);
   void analyze(art::Event const& e) override;
 
   void AnalyseMCParticles(std::vector<art::Ptr<simb::MCParticle>> &MCParticleVec);
 
 private:
 
-  std::string fMCTruthModuleLabel, fMCParticleModuleLabel;
+  std::string fMCTruthModuleLabel, fMCParticleModuleLabel, fPOTModuleLabel;
+
+  TTree* fSubRunTree;
+
+  double _pot;
 
   TTree* fTree;
 
@@ -80,41 +87,65 @@ private:
 
 sbnd::SimpleAnalyzer::SimpleAnalyzer(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
-  {
-    fMCTruthModuleLabel    = p.get<std::string>("MCTruthModuleLabel");
-    fMCParticleModuleLabel = p.get<std::string>("MCParticleModuleLabel");
+{
+  fMCTruthModuleLabel    = p.get<std::string>("MCTruthModuleLabel");
+  fMCParticleModuleLabel = p.get<std::string>("MCParticleModuleLabel");
+  fPOTModuleLabel        = p.get<std::string>("POTModuleLabel");
 
-    art::ServiceHandle<art::TFileService> fs;
+  art::ServiceHandle<art::TFileService> fs;
 
-    fTree = fs->make<TTree>("tree","");
-    fTree->Branch("run", &_run);
-    fTree->Branch("subrun", &_subrun);
-    fTree->Branch("event", &_event);
-    fTree->Branch("interaction", &_interaction);
+  fSubRunTree = fs->make<TTree>("subruns","");
+  fSubRunTree->Branch("pot", &_pot);
 
-    fTree->Branch("mc_trackid", "std::vector<int16_t>", &_mc_trackid);
-    fTree->Branch("mc_pdg", "std::vector<int16_t>", &_mc_pdg);
-    fTree->Branch("mc_status", "std::vector<int16_t>", &_mc_status);
-    fTree->Branch("mc_process", "std::vector<std::string>", &_mc_process);
-    fTree->Branch("mc_nchildren", "std::vector<uint16_t>", &_mc_nchildren);
-    fTree->Branch("mc_children", "std::vector<std::vector<int>>", &_mc_children);
-    fTree->Branch("mc_vx", "std::vector<double>", &_mc_vx);
-    fTree->Branch("mc_vy", "std::vector<double>", &_mc_vy);
-    fTree->Branch("mc_vz", "std::vector<double>", &_mc_vz);
-    fTree->Branch("mc_vt", "std::vector<double>", &_mc_vt);
-    fTree->Branch("mc_endx", "std::vector<double>", &_mc_endx);
-    fTree->Branch("mc_endy", "std::vector<double>", &_mc_endy);
-    fTree->Branch("mc_endz", "std::vector<double>", &_mc_endz);
-    fTree->Branch("mc_endt", "std::vector<double>", &_mc_endt);
-    fTree->Branch("mc_vpx", "std::vector<double>", &_mc_vpx);
-    fTree->Branch("mc_vpy", "std::vector<double>", &_mc_vpy);
-    fTree->Branch("mc_vpz", "std::vector<double>", &_mc_vpz);
-    fTree->Branch("mc_ve", "std::vector<double>", &_mc_ve);
-    fTree->Branch("mc_endpx", "std::vector<double>", &_mc_endpx);
-    fTree->Branch("mc_endpy", "std::vector<double>", &_mc_endpy);
-    fTree->Branch("mc_endpz", "std::vector<double>", &_mc_endpz);
-    fTree->Branch("mc_ende", "std::vector<double>", &_mc_ende);
+  fTree = fs->make<TTree>("tree","");
+  fTree->Branch("run", &_run);
+  fTree->Branch("subrun", &_subrun);
+  fTree->Branch("event", &_event);
+  fTree->Branch("interaction", &_interaction);
+
+  fTree->Branch("mc_trackid", "std::vector<int16_t>", &_mc_trackid);
+  fTree->Branch("mc_pdg", "std::vector<int16_t>", &_mc_pdg);
+  fTree->Branch("mc_status", "std::vector<int16_t>", &_mc_status);
+  fTree->Branch("mc_process", "std::vector<std::string>", &_mc_process);
+  fTree->Branch("mc_nchildren", "std::vector<uint16_t>", &_mc_nchildren);
+  fTree->Branch("mc_children", "std::vector<std::vector<int>>", &_mc_children);
+  fTree->Branch("mc_vx", "std::vector<double>", &_mc_vx);
+  fTree->Branch("mc_vy", "std::vector<double>", &_mc_vy);
+  fTree->Branch("mc_vz", "std::vector<double>", &_mc_vz);
+  fTree->Branch("mc_vt", "std::vector<double>", &_mc_vt);
+  fTree->Branch("mc_endx", "std::vector<double>", &_mc_endx);
+  fTree->Branch("mc_endy", "std::vector<double>", &_mc_endy);
+  fTree->Branch("mc_endz", "std::vector<double>", &_mc_endz);
+  fTree->Branch("mc_endt", "std::vector<double>", &_mc_endt);
+  fTree->Branch("mc_vpx", "std::vector<double>", &_mc_vpx);
+  fTree->Branch("mc_vpy", "std::vector<double>", &_mc_vpy);
+  fTree->Branch("mc_vpz", "std::vector<double>", &_mc_vpz);
+  fTree->Branch("mc_ve", "std::vector<double>", &_mc_ve);
+  fTree->Branch("mc_endpx", "std::vector<double>", &_mc_endpx);
+  fTree->Branch("mc_endpy", "std::vector<double>", &_mc_endpy);
+  fTree->Branch("mc_endpz", "std::vector<double>", &_mc_endpz);
+  fTree->Branch("mc_ende", "std::vector<double>", &_mc_ende);
+}
+
+void sbnd::SimpleAnalyzer::beginSubRun(const art::SubRun &sr)
+{
+  _pot = 0.;
+
+  // Get POT
+  art::Handle<sumdata::POTSummary> potHandle;
+  sr.getByLabel(fPOTModuleLabel, potHandle);
+  if(!potHandle.isValid()){
+    std::cout << "POT product " << fPOTModuleLabel << " not found..." << std::endl;
+    throw std::exception();
   }
+
+  _pot = potHandle->totpot;
+}
+
+void sbnd::SimpleAnalyzer::endSubRun(const art::SubRun &sr)
+{
+  fSubRunTree->Fill();
+}
 
 void sbnd::SimpleAnalyzer::analyze(art::Event const& e)
 {
@@ -139,7 +170,7 @@ void sbnd::SimpleAnalyzer::analyze(art::Event const& e)
       const simb::MCNeutrino mcn = mct->GetNeutrino();
 
       if(mcn.CCNC() == 0)
-	continue;
+        continue;
 
       art::FindManyP<simb::MCParticle> MCTruthToMCParticles( { mct }, e, fMCParticleModuleLabel);
       std::vector<art::Ptr<simb::MCParticle>> MCParticleVec = MCTruthToMCParticles.at(0);
@@ -147,21 +178,21 @@ void sbnd::SimpleAnalyzer::analyze(art::Event const& e)
       bool signal = false;
 
       for(auto const& mcp : MCParticleVec)
-	{
-	  if(mcp->Process() == "primary" && mcp->StatusCode() == 1 && mcp->PdgCode() == 111)
-	    signal = true;
-	}
+        {
+          if(mcp->Process() == "primary" && mcp->StatusCode() == 1 && mcp->PdgCode() == 111)
+            signal = true;
+        }
 
       if(signal)
-	{
-	  // Fill MCParticle variables
-	  AnalyseMCParticles(MCParticleVec);
+        {
+          // Fill MCParticle variables
+          AnalyseMCParticles(MCParticleVec);
 
-	  // Fill the Tree
-	  fTree->Fill();
+          // Fill the Tree
+          fTree->Fill();
 
-	  ++_interaction;
-	}
+          ++_interaction;
+        }
     }
 }
 

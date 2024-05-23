@@ -21,6 +21,7 @@ physics:
     { 
       MCTruthModuleLabel:    "generator"
       MCParticleModuleLabel: "largeant"
+      POTModuleLabel:        "generator"
       module_type:           "SimpleAnalyzer"
     }
   }

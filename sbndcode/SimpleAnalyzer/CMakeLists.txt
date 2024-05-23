@@ -1,8 +1,9 @@
 art_make(
-	 MODULE_LIBRARIES
-	 ROOT::Tree
+         MODULE_LIBRARIES
+         ROOT::Tree
          art_root_io::TFileService_service
-	 nusimdata::SimulationBase
+         nusimdata::SimulationBase
+         larcoreobj::SummaryData
 )
 
 install_fhicl()
