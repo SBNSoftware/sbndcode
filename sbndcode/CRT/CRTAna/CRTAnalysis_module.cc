@@ -298,9 +298,10 @@ private:
   std::vector<uint64_t> _ptb_hlt_trigger;
   std::vector<uint64_t> _ptb_hlt_timestamp;
 
-  std::vector<uint32_t> _tdc_channel;
-  std::vector<uint64_t> _tdc_timestamp;
-  std::vector<uint64_t> _tdc_offset;
+  std::vector<uint32_t>    _tdc_channel;
+  std::vector<uint64_t>    _tdc_timestamp;
+  std::vector<uint64_t>    _tdc_offset;
+  std::vector<std::string> _tdc_name;
 };
 
 sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
@@ -553,6 +554,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tdc_channel", "std::vector<uint32_t>", &_tdc_channel);
       fTree->Branch("tdc_timestamp", "std::vector<uint64_t>", &_tdc_timestamp);
       fTree->Branch("tdc_offset", "std::vector<uint64_t>", &_tdc_offset);
+      fTree->Branch("tdc_name", "std::vector<std::string>", &_tdc_name);
     }
 
   if(fDebug)
@@ -809,6 +811,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTDCs(std::vector<art::Ptr<sbnd::timing::DAQT
   _tdc_channel.resize(nTDCs);
   _tdc_timestamp.resize(nTDCs);
   _tdc_offset.resize(nTDCs);
+  _tdc_name.resize(nTDCs);
 
   unsigned tdc_i = 0;
 
@@ -817,6 +820,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTDCs(std::vector<art::Ptr<sbnd::timing::DAQT
       _tdc_channel[tdc_i]   = tdc->Channel();
       _tdc_timestamp[tdc_i] = tdc->Timestamp();
       _tdc_offset[tdc_i]    = tdc->Offset();
+      _tdc_name[tdc_i]      = tdc->Name();
 
       ++tdc_i;
     }
