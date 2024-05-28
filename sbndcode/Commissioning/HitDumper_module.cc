@@ -857,8 +857,8 @@ void Hitdumper::analyze(const art::Event& evt)
   	_ct_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
 	_ct_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
      
-	_ct_theta.push_back(crttrack->Theta());
-	_ct_phi.push_back(crttrack->Phi());
+	_ct_theta.push_back(crttrack->Theta()*(180.0/M_PI));
+	_ct_phi.push_back(crttrack->Phi()*(180.0/M_PI));
 	_ct_length.push_back(crttrack->Length());
       }
     } else {
