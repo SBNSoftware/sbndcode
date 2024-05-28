@@ -1,0 +1,5 @@
+#include "run_crtreco.fcl"
+
+physics.producers.crtstrips.ApplyTs1Window: true
+physics.producers.crtstrips.Ts1Min:         2500000
+physics.producers.crtstrips.Ts1Max:         3000000
