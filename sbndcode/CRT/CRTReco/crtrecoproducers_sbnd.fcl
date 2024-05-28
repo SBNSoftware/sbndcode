@@ -8,6 +8,7 @@ crtstriphitproducer_sbnd:
    ADCThreshold:       60
    ErrorCoeff:         [ 0.26, -0.27, 0.025 ]
    AllowFlag1:         false
+   ApplyTs1Window:     false
    module_type:        "CRTStripHitProducer"
 }
 

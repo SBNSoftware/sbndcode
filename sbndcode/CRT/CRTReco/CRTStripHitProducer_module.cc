@@ -51,6 +51,9 @@ private:
   uint16_t            fADCThreshold;
   std::vector<double> fErrorCoeff;
   bool                fAllowFlag1;
+  bool                fApplyTs1Window;
+  uint64_t            fTs1Min;
+  uint64_t            fTs1Max;
 };
 
 
@@ -61,6 +64,9 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
+  , fApplyTs1Window(p.get<bool>("ApplyTs1Window"))
+  , fTs1Min(p.get<uint64_t>("Ts1Min", 0))
+  , fTs1Max(p.get<uint64_t>("Ts1Max", std::numeric_limits<uint64_t>::max()))
 {
   produces<std::vector<CRTStripHit>>();
   produces<art::Assns<FEBData, CRTStripHit>>();
@@ -109,6 +115,9 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
   // (time is FEB-by-FEB not channel-by-channel)
   const uint32_t t0 = data->Ts0() - module.t0CableDelayCorrection;
   const uint32_t t1 = data->Ts1() - module.t1CableDelayCorrection;
+
+  if(fApplyTs1Window && (t1 < fTs1Min || t1 > fTs1Max))
+    return stripHits;
 
   // Iterate via strip (2 SiPMs per strip)
   const auto &sipm_adcs = data->ADC();
