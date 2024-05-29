@@ -28,8 +28,7 @@ hitdumper:
  
     KeepCRTStripHits:         true
     KeepCRTSpacePoints:       true
-    makeCRTtracks:            false
-    readCRTtracks:            true
+    KeepCRTTracks:            true
     readOpHits:               true
     readpmtTrigger:           false
     readpmtSoftTrigger:       false

@@ -134,13 +134,11 @@ private:
   /// Resets wire hits tree variables
   void ResetWireHitsVars(int n);
   /// Resets crt strip hit tree variables
-  void ResetCRTStripHitVars(int n);
-  /// Resets custom crt tracks tree variables
-  void ResetCRTCustomTracksVars(int n);
+  void ResetCRTStripHitVars();
   /// Resets crt tracks tree variables
-  void ResetCRTTracksVars(int n);
+  void ResetCRTTracksVars();
   /// Resets crt spacepoint tree variables
-  void ResetCRTSpacePointVars(int n);
+  void ResetCRTSpacePointVars();
   /// Resets optical hits tree variables
   void ResetOpHitsVars(int n);
   /// Resets pmt hardware trigger variables
@@ -222,35 +220,20 @@ private:
   std::vector<int> _crt_space_point_nhits;          ///< CRT SpacePoint nhits
 
   // CRT track variables
-  int _nctrks;                          ///< Number of created CRT tracks
-  std::vector<double> _ctrk_x1;         ///< CRT track x1
-  std::vector<double> _ctrk_y1;         ///< CRT track y1
-  std::vector<double> _ctrk_z1;         ///< CRT track z1
-  std::vector<double> _ctrk_t1;         ///< CRT track t1
-  std::vector<double> _ctrk_adc1;       ///< CRT track adc1
-  std::vector<int> _ctrk_mod1x;         ///< CRT track mod2x
-  std::vector<double> _ctrk_x2;         ///< CRT track x2
-  std::vector<double> _ctrk_y2;         ///< CRT track y2
-  std::vector<double> _ctrk_z2;         ///< CRT track z2
-  std::vector<double> _ctrk_t2;         ///< CRT track t2
-  std::vector<double> _ctrk_adc2;       ///< CRT track adc2
-  std::vector<int> _ctrk_mod2x;         ///< CRT track mod2x
-
-  // CRT track variables
-  int _ncts;                            ///< Number of CRT tracks
-  std::vector<double> _ct_time;         ///< CRT track time
-  std::vector<double> _ct_pes;          ///< CRT track PEs
-  std::vector<double> _ct_x1;           ///< CRT track x1
-  std::vector<double> _ct_y1;           ///< CRT track y1
-  std::vector<double> _ct_z1;           ///< CRT track z1
-  std::vector<double> _ct_x2;           ///< CRT track x2
-  std::vector<double> _ct_y2;           ///< CRT track y2
-  std::vector<double> _ct_z2;           ///< CRT track z2
-  std::vector<int> _ct_tagger1;         ///< Hit 1 tagger
-  std::vector<int> _ct_tagger2;         ///< Hit 2 tagger
-  std::vector<double> _ct_theta;        ///< CRT track theta
-  std::vector<double> _ct_phi;          ///< CRT track phi
-  std::vector<double> _ct_length;       ///< CRT track length
+  uint _n_crt_tracks;                            ///< Number of CRT tracks
+  std::vector<double> _crt_track_time;         ///< CRT track time
+  std::vector<double> _crt_track_pes;          ///< CRT track PEs
+  std::vector<double> _crt_track_x1;           ///< CRT track x1
+  std::vector<double> _crt_track_y1;           ///< CRT track y1
+  std::vector<double> _crt_track_z1;           ///< CRT track z1
+  std::vector<double> _crt_track_x2;           ///< CRT track x2
+  std::vector<double> _crt_track_y2;           ///< CRT track y2
+  std::vector<double> _crt_track_z2;           ///< CRT track z2
+  std::vector<int> _crt_track_tagger1;         ///< Hit 1 tagger
+  std::vector<int> _crt_track_tagger2;         ///< Hit 2 tagger
+  std::vector<double> _crt_track_theta;        ///< CRT track theta
+  std::vector<double> _crt_track_phi;          ///< CRT track phi
+  std::vector<double> _crt_track_length;       ///< CRT track length
 
   // Optical hit variables
   int _nophits;                               ///< Number of Optical Hits
@@ -403,7 +386,7 @@ private:
   int _max_samples;                 ///< maximum number of samples (to be set via fcl)
   uint _max_crt_strip_hits;         ///< maximum number of CRT strip hits (to be set via fcl)
   uint _max_crt_space_points;       ///< maximum number of CRT space points (to be set via fcl)
-  int _max_nctrks;                  ///< maximum number of CRT tracks (to be set via fcl)
+  uint _max_crt_tracks;                 ///< maximum number of CRT tracks (to be set via fcl)
 
   std::string fHitsModuleLabel;     ///< Label for Hit dataproduct (to be set via fcl)
   std::string fLArG4ModuleLabel;    ///< Label for LArG4 dataproduct (to be set via fcl)
@@ -425,8 +408,7 @@ private:
 
   bool fKeepCRTSpacePoints;///< Keep the CRT spacepoints (to be set via fcl)
   bool fKeepCRTStripHits;  ///< Keep the CRT strips (to be set via fcl)
-  bool fmakeCRTtracks;     ///< Make the CRT tracks (to be set via fcl)
-  bool freadCRTtracks;     ///< Keep the CRT tracks (to be set via fcl)
+  bool fKeepCRTTracks;     ///< Keep the CRT tracks (to be set via fcl)
   bool freadOpHits;        ///< Add OpHits to output (to be set via fcl)
   bool freadMuonTracks;    ///< Add MuonTracks to output (to be set via fcl)
   bool freadMuonHits;      ///< Add MuonTrack hits to output(to be set via fcl)
@@ -478,7 +460,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   _max_samples = p.get<int>("MaxSamples", 5001);
   _max_crt_strip_hits = p.get<uint>("MaxCRTStripHits", 5000);
   _max_crt_space_points = p.get<uint>("MaxCRTSpacePoints", 500);
-  _max_nctrks = p.get<int>("MaxCRTTracks", 100);
+  _max_crt_tracks = p.get<int>("MaxCRTTracks", 100);
 
   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
   fDigitModuleLabel    = p.get<std::string>("DigitModuleLabel", "daq");
@@ -498,8 +480,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
 
   fKeepCRTSpacePoints = p.get<bool>("KeepCRTSpacePoints",true);
   fKeepCRTStripHits   = p.get<bool>("KeepCRTStripHits", true);
-  fmakeCRTtracks      = p.get<bool>("makeCRTtracks",true);
-  freadCRTtracks      = p.get<bool>("readCRTtracks",true);
+  fKeepCRTTracks      = p.get<bool>("KeepCRTTracks",true);
   freadOpHits         = p.get<bool>("readOpHits",true);
   freadpmtTrigger     = p.get<bool>("readpmtTrigger",true);
   freadpmtSoftTrigger = p.get<bool>("readpmtSoftTrigger",true);
@@ -604,7 +585,7 @@ void Hitdumper::analyze(const art::Event& evt)
 
   if (_n_crt_strip_hits > _max_crt_strip_hits) _n_crt_strip_hits = _max_crt_strip_hits;
 
-  ResetCRTStripHitVars(_n_crt_strip_hits);
+  ResetCRTStripHitVars();
 
   for(uint i = 0; i < _n_crt_strip_hits; ++i)
     {
@@ -622,158 +603,6 @@ void Hitdumper::analyze(const art::Event& evt)
       _crt_strip_hit_pos_err.push_back(stripHit->Error());
     }
 
-  /*
-  //
-  // CRT Custom Tracks
-  //
-  ResetCRTCustomTracksVars(_n_crt_strip_hits);
-  _nctrks = 0;
-  if (fmakeCRTtracks) {
-    std::cout<<"Making tracks, number of strips = "<< ns<<std::endl;
-    int ntr = 0;
-    int iflag[1000] = {0};
-    for (int i = 0; i < (ns - 1); ++i) {
-      if (iflag[i] == 0) {
-        iflag[i] = 1;
-        float plane1x = 0, plane2x = 0;
-        float plane1y = 0, plane2y = 0;
-        float plane1tx = 0, plane2tx = 0;
-        float plane1ty = 0, plane2ty = 0;
-        float plane1xm = -1, plane2xm = -1;
-        float plane1ym = -1, plane2ym = -1;
-        int  nh1x = 0, nh2x = 0;
-        int  nh1y = 0, nh2y = 0;
-        float adc1x = 0, adc2x = 0;
-        float adc1y = 0, adc2y = 0;
-        if (_crt_plane[i] == sbnd::crt::kSouthTagger) { // 1
-          if (_crt_orient[i] == kCRTVertical && _crt_adc[i] > 500) { // < 500 hardcoded
-            if (nh1x == 0 || (_crt_module[i] == plane1xm)) {
-              nh1x++;
-              if (_crt_adc[i] > adc1x) {
-                plane1tx = _crt_time[i];
-                adc1x += _crt_adc[i];
-                plane1x = _crt_pos_x[i];
-                plane1xm = _crt_module[i];
-              }
-            }
-          }
-          else if (_crt_orient[i]==kCRTHorizontal && _crt_adc[i]>500) { // < 500 hardcoded
-            if (nh1y==0 || (_crt_module[i]==plane1ym)) {
-              nh1y++;
-              if (_crt_adc[i]>adc1y) {
-                plane1ty=_crt_time[i];
-                adc1y+=_crt_adc[i];
-                plane1y=_crt_pos_y[i];
-                plane1ym=_crt_module[i];
-              }
-            }
-          }
-        }
-        else {
-          if (_crt_orient[i]==kCRTVertical && _crt_adc[i]>500) { // < 500 hardcoded
-            if (nh2x==0 ||  (_crt_module[i]==plane2xm)) {
-              nh2x++;
-              if (_crt_adc[i]>adc2x) {
-                plane2tx=_crt_time[i];
-                adc2x+=_crt_adc[i];
-                plane2x=_crt_pos_x[i];
-                plane2xm=_crt_module[i];
-              }
-            }
-          }
-          else if (_crt_orient[i]==kCRTHorizontal && _crt_adc[i]>500) { // < 500 hardcoded
-            if (nh2y==0 ||  (_crt_module[i]==plane2ym)) {
-              nh2y++;
-              if (_crt_adc[i]>adc2y) {
-                plane2ty=_crt_time[i];
-                adc2y+=_crt_adc[i];
-                plane2y=_crt_pos_y[i];
-                plane2ym=_crt_module[i];
-              }
-            }
-          }
-        }
-        for (int j=i+1;j<ns;++j) {
-          float tdiff = fabs(_crt_time[i]-_crt_time[j]);
-          if (tdiff<0.1) {
-            iflag[j]=1;
-            if (_crt_plane[j]==sbnd::crt::kSouthTagger) {
-              if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
-                if (nh1x==0 ||  (_crt_module[j]==plane1xm)) {
-                  nh1x++;
-                  if (_crt_adc[j]>adc1x) {
-                    plane1tx=_crt_time[j];
-                    adc1x+=_crt_adc[j];
-                    plane1x=_crt_pos_x[j];
-                    plane1xm=_crt_module[j];
-                  }
-                }
-              }
-              else if (_crt_orient[j]==kCRTHorizontal && _crt_adc[j]>1000) {
-                if (nh1y==0 ||  (_crt_module[j]==plane1ym)) {
-                  nh1y++;
-                  if (_crt_adc[j]>adc1y) {
-                    plane1ty=_crt_time[j];
-                    adc1y+=_crt_adc[j];
-                    plane1y=_crt_pos_y[j];
-                    plane1ym=_crt_module[j];
-                  }
-                }
-              }
-            }
-            else {
-              if (_crt_orient[j]==kCRTVertical && _crt_adc[j]>1000) {
-                if (nh2x==0 ||  (_crt_module[j]==plane2xm)) {
-                  nh2x++;
-                  if (_crt_adc[j]>adc2x) {
-                    plane2tx=_crt_time[j];
-                    adc2x+=_crt_adc[j];
-                    plane2x=_crt_pos_x[j];
-                    plane2xm=_crt_module[j];
-                  }
-                }
-              }
-              else if (_crt_orient[j]==kCRTHorizontal && _crt_adc[j]>1000) {
-                if (nh2y==0 ||  (_crt_module[j]==plane2ym)) {
-                  nh2y++;
-                  if (_crt_adc[j]>adc2y) {
-                    plane2ty=_crt_time[j];
-                    adc2y+=_crt_adc[j];
-                    plane2y=_crt_pos_y[j];
-                    plane2ym=_crt_module[j];
-                  }
-                }
-              }
-            }
-          }
-	      } // look for hits at the same time as hit i
-	      if (nh1x>0 && nh1y>0 && nh2x>0 && nh2y>0 && adc1x<9000 && adc1y<9000 && adc2x<9000 && adc2y<9000) {
-	      // make a track!
-          _ctrk_x1.push_back(plane1x);
-          _ctrk_y1.push_back(plane1y);
-          _ctrk_z1.push_back(-239.95);
-          _ctrk_t1.push_back(0.5*(plane1tx+plane1ty));
-          _ctrk_adc1.push_back(adc1x+adc1y);
-          _ctrk_mod1x.push_back(plane1xm);
-          _ctrk_x2.push_back(plane2x);
-          _ctrk_y2.push_back(plane2y);
-          _ctrk_z2.push_back(656.25);
-          _ctrk_t2.push_back(0.5*(plane2tx+plane2ty));
-          _ctrk_adc2.push_back(adc2x+adc2y);
-          _ctrk_mod2x.push_back(plane2xm);
-          ntr++;
-	        // std::cout << "track " << ntr << std::endl;
-	        // std::cout <<  "x y t adc: plane 1 " << plane1x << " " << plane1y << " " <<
-	        //   0.5*(plane1tx+plane1ty) << " " << adc1x << " " << adc1y << std::endl;
-	        // std::cout <<  "         : plane 2 " << plane2x << " " << plane2y << " " <<
-	        //   0.5*(plane2tx+plane2ty) << " " << adc2x << " " << adc2y << std::endl;
-        }
-      } // i is the first hit with this time
-    } // loop over hits
-    _nctrks = ntr;
-  }  // end if make tracks
-  */
-  
   //
   // CRT SpacePoints (3D hits)
   //
@@ -798,7 +627,7 @@ void Hitdumper::analyze(const art::Event& evt)
       _n_crt_space_points = _max_crt_space_points;
     }
 
-    ResetCRTSpacePointVars(_n_crt_space_points);
+    ResetCRTSpacePointVars();
 
     for (uint i = 0; i < _n_crt_space_points; ++i){
       const art::Ptr<sbnd::crt::CRTSpacePoint> spacePoint = crtSPVector[i];
@@ -826,40 +655,40 @@ void Hitdumper::analyze(const art::Event& evt)
   // CRT tracks
   //
 
-  _ncts = 0;
-  if (freadCRTtracks) {
+  _n_crt_tracks = 0;
+  if (fKeepCRTTracks) {
 
     art::Handle<std::vector<sbnd::crt::CRTTrack>> crtTrackListHandle;
     std::vector<art::Ptr<sbnd::crt::CRTTrack>> ctrklist;
 
     if (evt.getByLabel(fCRTTrackModuleLabel, crtTrackListHandle))  {
       art::fill_ptr_vector(ctrklist, crtTrackListHandle);
-      _ncts = ctrklist.size();
-      if (_ncts > _max_nctrks) _ncts = _max_nctrks;
+      _n_crt_tracks = ctrklist.size();
+      if (_n_crt_tracks > _max_crt_tracks) _n_crt_tracks = _max_crt_tracks;
 
-      ResetCRTTracksVars(_ncts);
+      ResetCRTTracksVars();
 
-      for (int i = 0; i < _ncts; ++i){
+      for (uint i = 0; i < _n_crt_tracks; ++i){
         const art::Ptr<sbnd::crt::CRTTrack> crttrack=ctrklist[i];
-        _ct_pes.push_back(crttrack->PE());
-        _ct_time.push_back(crttrack->Time());
+        _crt_track_pes.push_back(crttrack->PE());
+        _crt_track_time.push_back(crttrack->Time());
 
 	const geo::Point_t start = crttrack->Start();
 	const geo::Point_t end   = crttrack->End();
 
-        _ct_x1.push_back(start.X());
-        _ct_y1.push_back(start.Y());
-        _ct_z1.push_back(start.Z());
-        _ct_x2.push_back(end.X());
-        _ct_y2.push_back(end.Y());
-        _ct_z2.push_back(end.Z());
+        _crt_track_x1.push_back(start.X());
+        _crt_track_y1.push_back(start.Y());
+        _crt_track_z1.push_back(start.Z());
+        _crt_track_x2.push_back(end.X());
+        _crt_track_y2.push_back(end.Y());
+        _crt_track_z2.push_back(end.Z());
 
-  	_ct_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
-	_ct_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
+  	_crt_track_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
+	_crt_track_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
      
-	_ct_theta.push_back(crttrack->Theta()*(180.0/M_PI));
-	_ct_phi.push_back(crttrack->Phi()*(180.0/M_PI));
-	_ct_length.push_back(crttrack->Length());
+	_crt_track_theta.push_back(crttrack->Theta()*(180.0/M_PI));
+	_crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
+	_crt_track_length.push_back(crttrack->Length());
       }
     } else {
       std::cout << "Failed to get sbnd::crt::CRTTrack data product." << std::endl;
@@ -1386,21 +1215,6 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("crt_strip_hit_pos_err", &_crt_strip_hit_pos_err);
   }
 
-  if (fmakeCRTtracks) {
-    fTree->Branch("nctrks", &_nctrks, "nctrks/I");
-    fTree->Branch("ctrk_x1", &_ctrk_x1);
-    fTree->Branch("ctrk_y1", &_ctrk_y1);
-    fTree->Branch("ctrk_z1", &_ctrk_z1);
-    fTree->Branch("ctrk_t1", &_ctrk_t1);
-    fTree->Branch("ctrk_adc1", &_ctrk_adc1);
-    fTree->Branch("ctrk_mod1x", &_ctrk_mod1x);
-    fTree->Branch("ctrk_x2", &_ctrk_x2);
-    fTree->Branch("ctrk_y2", &_ctrk_y2);
-    fTree->Branch("ctrk_z2", &_ctrk_z2);
-    fTree->Branch("ctrk_t2", &_ctrk_t2);
-    fTree->Branch("ctrk_adc2", &_ctrk_adc2);
-    fTree->Branch("ctrk_mod2x", &_ctrk_mod2x);
-  }
   if (fKeepCRTSpacePoints) {
     fTree->Branch("n_crt_space_points", &_n_crt_space_points);
     fTree->Branch("crt_space_point_x", &_crt_space_point_x);
@@ -1415,21 +1229,21 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("crt_space_point_tagger", &_crt_space_point_tagger);
     fTree->Branch("crt_space_point_nhits", &_crt_space_point_nhits);    
   }
-  if (freadCRTtracks) {
-    fTree->Branch("ncts", &_ncts, "ncts/I");
-    fTree->Branch("ct_x1", &_ct_x1);
-    fTree->Branch("ct_y1", &_ct_y1);
-    fTree->Branch("ct_z1", &_ct_z1);
-    fTree->Branch("ct_x2", &_ct_x2);
-    fTree->Branch("ct_y2", &_ct_y2);
-    fTree->Branch("ct_z2", &_ct_z2);
-    fTree->Branch("ct_time", &_ct_time);
-    fTree->Branch("ct_pes", &_ct_pes);
-    fTree->Branch("ct_tagger1", &_ct_tagger1);
-    fTree->Branch("ct_tagger2", &_ct_tagger2);
-    fTree->Branch("ct_theta", &_ct_theta);
-    fTree->Branch("ct_phi", &_ct_phi);
-    fTree->Branch("ct_length", &_ct_length);
+  if (fKeepCRTTracks) {
+    fTree->Branch("n_crt_tracks", &_n_crt_tracks, "n_crt_tracks/I");
+    fTree->Branch("crt_track_x1", &_crt_track_x1);
+    fTree->Branch("crt_track_y1", &_crt_track_y1);
+    fTree->Branch("crt_track_z1", &_crt_track_z1);
+    fTree->Branch("crt_track_x2", &_crt_track_x2);
+    fTree->Branch("crt_track_y2", &_crt_track_y2);
+    fTree->Branch("crt_track_z2", &_crt_track_z2);
+    fTree->Branch("crt_track_time", &_crt_track_time);
+    fTree->Branch("crt_track_pes", &_crt_track_pes);
+    fTree->Branch("crt_track_tagger1", &_crt_track_tagger1);
+    fTree->Branch("crt_track_tagger2", &_crt_track_tagger2);
+    fTree->Branch("crt_track_theta", &_crt_track_theta);
+    fTree->Branch("crt_track_phi", &_crt_track_phi);
+    fTree->Branch("crt_track_length", &_crt_track_length);
  }
 
   if (freadOpHits) {
@@ -1596,7 +1410,7 @@ void Hitdumper::ResetWireHitsVars(int n) {
   _hit_full_integral.assign(n, DEFAULT_VALUE);
 }
 
-void Hitdumper::ResetCRTStripHitVars(int n) {
+void Hitdumper::ResetCRTStripHitVars() {
   _crt_strip_hit_tagger.clear();
   _crt_strip_hit_module.clear();
   _crt_strip_hit_channel.clear();
@@ -1607,64 +1421,25 @@ void Hitdumper::ResetCRTStripHitVars(int n) {
   _crt_strip_hit_adc2.clear();
   _crt_strip_hit_pos.clear();
   _crt_strip_hit_pos_err.clear();
-
-  _crt_strip_hit_tagger.reserve(n);
-  _crt_strip_hit_module.reserve(n);
-  _crt_strip_hit_channel.reserve(n);
-  _crt_strip_hit_orient.reserve(n);
-  _crt_strip_hit_t0.reserve(n);
-  _crt_strip_hit_t1.reserve(n);
-  _crt_strip_hit_adc1.reserve(n);
-  _crt_strip_hit_adc2.reserve(n);
-  _crt_strip_hit_pos.reserve(n);
-  _crt_strip_hit_pos_err.reserve(n);
 }
 
-void Hitdumper::ResetCRTCustomTracksVars(int n) {
-  _ctrk_x1.clear();
-  _ctrk_y1.clear();
-  _ctrk_z1.clear();
-  _ctrk_t1.clear();
-  _ctrk_adc1.clear();
-  _ctrk_mod1x.clear();
-  _ctrk_x2.clear();
-  _ctrk_y2.clear();
-  _ctrk_z2.clear();
-  _ctrk_t2.clear();
-  _ctrk_adc2.clear();
-  _ctrk_mod2x.clear();
-
-  _ctrk_x1.reserve(n);
-  _ctrk_y1.reserve(n);
-  _ctrk_z1.reserve(n);
-  _ctrk_t1.reserve(n);
-  _ctrk_adc1.reserve(n);
-  _ctrk_mod1x.reserve(n);
-  _ctrk_x2.reserve(n);
-  _ctrk_y2.reserve(n);
-  _ctrk_z2.reserve(n);
-  _ctrk_t2.reserve(n);
-  _ctrk_adc2.reserve(n);
-  _ctrk_mod2x.reserve(n);
+void Hitdumper::ResetCRTTracksVars() {
+  _crt_track_x1.clear();
+  _crt_track_y1.clear();
+  _crt_track_z1.clear();
+  _crt_track_time.clear();
+  _crt_track_pes.clear();
+  _crt_track_x2.clear();
+  _crt_track_y2.clear();
+  _crt_track_z2.clear();
+  _crt_track_tagger1.clear();
+  _crt_track_tagger2.clear();
+  _crt_track_theta.clear();
+  _crt_track_phi.clear();
+  _crt_track_length.clear();
 }
 
-void Hitdumper::ResetCRTTracksVars(int n) {
-  _ct_x1.clear();
-  _ct_y1.clear();
-  _ct_z1.clear();
-  _ct_time.clear();
-  _ct_pes.clear();
-  _ct_x2.clear();
-  _ct_y2.clear();
-  _ct_z2.clear();
-  _ct_tagger1.clear();
-  _ct_tagger2.clear();
-  _ct_theta.clear();
-  _ct_phi.clear();
-  _ct_length.clear();
-}
-
-void Hitdumper::ResetCRTSpacePointVars(int n) {
+void Hitdumper::ResetCRTSpacePointVars() {
   _crt_space_point_x.clear();
   _crt_space_point_y.clear();
   _crt_space_point_z.clear();
