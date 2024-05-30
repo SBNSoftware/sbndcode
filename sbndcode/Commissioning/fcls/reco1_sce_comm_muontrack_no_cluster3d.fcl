@@ -1,0 +1,39 @@
+#include "hitdumpermodule.fcl"
+#include "muontrackmodule.fcl"
+#include "reco1_sce.fcl"
+
+process_name: Reco1Comm
+
+physics.producers.fasthit:           @local::standard_fasthitfinder
+physics.producers.MuonTrackProducer: @local::MuonTrackProducer
+
+physics.reco1comm: [ rns
+  , opdecopmt
+  , opdecoxarapuca
+  , ophitpmt
+  , ophitxarapuca
+  , crtstrips
+  , crtclustering
+  , crtspacepoints
+  , crttracks
+  , fasthit
+  , MuonTrackProducer
+ ]
+
+physics.trigger_paths: [ reco1comm ]
+
+physics.analyzers.hitdumper: @local::hitdumper
+physics.ana:                 [ hitdumper ]
+physics.end_paths:           [ ana, stream1 ]
+
+physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
+physics.producers.fasthit.MinSigInd: 15.0
+physics.producers.fasthit.MinSigCol: 15.0
+physics.producers.fasthit.SkipInd: false
+# parameter below enlarges the window of the hit symmetrically by adding
+#  this many widths to each side.   Original window is above threshold.
+#  Both thresh and larger window in this file are appropriate only when
+#  noise is turned off.
+physics.producers.fasthit.IncludeMoreTail: 3.0
+physics.producers.fasthit.ColMinWidth: 100.0
+physics.producers.fasthit.UncompressWithPed: false
