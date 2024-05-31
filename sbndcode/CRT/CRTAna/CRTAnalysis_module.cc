@@ -151,8 +151,8 @@ private:
   //strip hit to select the strip which has ADC above threshold
   std::vector<uint32_t> _sh_channel;
   std::vector<int16_t>  _sh_tagger;
-  std::vector<uint32_t> _sh_ts0;
-  std::vector<uint32_t> _sh_ts1;
+  std::vector<int64_t>  _sh_ts0;
+  std::vector<int64_t>  _sh_ts1;
   std::vector<uint32_t> _sh_unixs;
   std::vector<double>   _sh_pos;
   std::vector<double>   _sh_err;
@@ -168,8 +168,8 @@ private:
   std::vector<double>   _sh_truth_time;
 
   //cluster from x-y coincidence for CRTSpacePoint , this is what we normally call a CRT hit
-  std::vector<uint32_t> _cl_ts0;
-  std::vector<uint32_t> _cl_ts1;
+  std::vector<int64_t>  _cl_ts0;
+  std::vector<int64_t>  _cl_ts1;
   std::vector<uint32_t> _cl_unixs;
   std::vector<uint16_t> _cl_nhits;
   std::vector<int16_t>  _cl_tagger;
@@ -384,8 +384,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
   fTree->Branch("sh_channel", "std::vector<uint32_t>", &_sh_channel);
   fTree->Branch("sh_tagger", "std::vector<int16_t>", &_sh_tagger);
-  fTree->Branch("sh_ts0", "std::vector<uint32_t>", &_sh_ts0);
-  fTree->Branch("sh_ts1", "std::vector<uint32_t>", &_sh_ts1);
+  fTree->Branch("sh_ts0", "std::vector<int64_t>", &_sh_ts0);
+  fTree->Branch("sh_ts1", "std::vector<int64_t>", &_sh_ts1);
   fTree->Branch("sh_unixs", "std::vector<uint32_t>", &_sh_unixs);
   fTree->Branch("sh_pos", "std::vector<double>", &_sh_pos);
   fTree->Branch("sh_err", "std::vector<double>", &_sh_err);
@@ -403,8 +403,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("sh_truth_time", "std::vector<double>", &_sh_truth_time);
     }
 
-  fTree->Branch("cl_ts0", "std::vector<uint32_t>", &_cl_ts0);
-  fTree->Branch("cl_ts1", "std::vector<uint32_t>", &_cl_ts1);
+  fTree->Branch("cl_ts0", "std::vector<int64_t>", &_cl_ts0);
+  fTree->Branch("cl_ts1", "std::vector<int64_t>", &_cl_ts1);
   fTree->Branch("cl_unixs", "std::vector<uint32_t>", &_cl_unixs);
   fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
   fTree->Branch("cl_tagger", "std::vector<int16_t>", &_cl_tagger);

@@ -44,6 +44,7 @@ crttrackproducer_sbnd:
    CoincidenceTimeRequirement: 100.
    ThirdSpacePointMaximumDCA:  50.
    UseTs0:                     false
+   MaskedTaggers:              []
    module_type:                "CRTTrackProducer"
 }
 

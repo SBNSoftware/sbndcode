@@ -60,7 +60,7 @@ public:
 
   void produce(art::Event& e) override;
 
-  void OrderSpacePoints(std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec);
+  void OrderSpacePoints(std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec, const art::FindOneP<CRTCluster> &spacePointsToCluster);
 
   std::vector<std::pair<CRTTrack, std::set<unsigned>>> CreateTrackCandidates(const std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec,
                                                                              const art::FindOneP<CRTCluster> &spacePointsToCluster);
@@ -93,11 +93,12 @@ public:
 
 private:
 
-  CRTGeoAlg   fCRTGeoAlg;
-  std::string fCRTSpacePointModuleLabel;
-  double      fCoincidenceTimeRequirement;
-  double      fThirdSpacePointMaximumDCA;
-  bool        fUseTs0;
+  CRTGeoAlg        fCRTGeoAlg;
+  std::string      fCRTSpacePointModuleLabel;
+  double           fCoincidenceTimeRequirement;
+  double           fThirdSpacePointMaximumDCA;
+  bool             fUseTs0;
+  std::vector<int> fMaskedTaggers;
 };
 
 
@@ -108,6 +109,7 @@ sbnd::crt::CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const& p)
   , fCoincidenceTimeRequirement(p.get<double>("CoincidenceTimeRequirement"))
   , fThirdSpacePointMaximumDCA(p.get<double>("ThirdSpacePointMaximumDCA"))
   , fUseTs0(p.get<bool>("UseTs0"))
+  , fMaskedTaggers(p.get<std::vector<int>>("MaskedTaggers"))
 {
   produces<std::vector<CRTTrack>>();
   produces<art::Assns<CRTSpacePoint, CRTTrack>>();
@@ -117,7 +119,7 @@ void sbnd::crt::CRTTrackProducer::produce(art::Event& e)
 {
   auto trackVec            = std::make_unique<std::vector<CRTTrack>>();
   auto trackSpacePointAssn = std::make_unique<art::Assns<CRTSpacePoint, CRTTrack>>();
-  
+
   art::Handle<std::vector<CRTSpacePoint>> CRTSpacePointHandle;
   e.getByLabel(fCRTSpacePointModuleLabel, CRTSpacePointHandle);
   
@@ -126,7 +128,7 @@ void sbnd::crt::CRTTrackProducer::produce(art::Event& e)
 
   art::FindOneP<CRTCluster> spacePointsToCluster(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
 
-  OrderSpacePoints(CRTSpacePointVec);
+  OrderSpacePoints(CRTSpacePointVec, spacePointsToCluster);
 
   std::vector<std::pair<CRTTrack, std::set<unsigned>>> trackCandidates = CreateTrackCandidates(CRTSpacePointVec, spacePointsToCluster);
 
@@ -146,7 +148,7 @@ void sbnd::crt::CRTTrackProducer::produce(art::Event& e)
   e.put(std::move(trackSpacePointAssn));
 }
 
-void sbnd::crt::CRTTrackProducer::OrderSpacePoints(std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec)
+void sbnd::crt::CRTTrackProducer::OrderSpacePoints(std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec, const art::FindOneP<CRTCluster> &spacePointsToCluster)
 {
   std::sort(spacePointVec.begin(), spacePointVec.end(), 
             [&](const art::Ptr<CRTSpacePoint> &a, const art::Ptr<CRTSpacePoint> &b) -> bool {
@@ -155,6 +157,19 @@ void sbnd::crt::CRTTrackProducer::OrderSpacePoints(std::vector<art::Ptr<CRTSpace
               else
                 return a->Ts1() < b->Ts1();
             });
+
+  spacePointVec.erase(std::remove_if(spacePointVec.begin(), spacePointVec.end(),
+                                     [&](const art::Ptr<CRTSpacePoint> &spacepoint) {
+                                       const art::Ptr<CRTCluster> cluster = spacePointsToCluster.at(spacepoint.key());
+
+                                       for(auto const& tagger : fMaskedTaggers)
+                                         {
+                                           if(tagger == cluster->Tagger())
+                                             return true;
+                                         }
+
+                                       return false;
+                                     }), spacePointVec.end());
 }
 
 std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTrackProducer::CreateTrackCandidates(const std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec,

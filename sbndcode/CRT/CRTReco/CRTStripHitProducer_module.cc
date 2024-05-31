@@ -52,8 +52,8 @@ private:
   std::vector<double> fErrorCoeff;
   bool                fAllowFlag1;
   bool                fApplyTs1Window;
-  uint64_t            fTs1Min;
-  uint64_t            fTs1Max;
+  int64_t             fTs1Min;
+  int64_t             fTs1Max;
 };
 
 
@@ -65,8 +65,8 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
   , fApplyTs1Window(p.get<bool>("ApplyTs1Window"))
-  , fTs1Min(p.get<uint64_t>("Ts1Min", 0))
-  , fTs1Max(p.get<uint64_t>("Ts1Max", std::numeric_limits<uint64_t>::max()))
+  , fTs1Min(p.get<int64_t>("Ts1Min", 0))
+  , fTs1Max(p.get<int64_t>("Ts1Max", std::numeric_limits<int64_t>::max()))
 {
   produces<std::vector<CRTStripHit>>();
   produces<art::Assns<FEBData, CRTStripHit>>();
@@ -86,7 +86,7 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
   for(auto data : FEBDataVec)
     {
       std::vector<CRTStripHit> newStripHits = CreateStripHits(data);
-      
+
       for(auto hit : newStripHits)
         {
           stripHitVec->push_back(hit);
@@ -113,8 +113,8 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
   // Correct for FEB readout cable length
   // (time is FEB-by-FEB not channel-by-channel)
-  const uint32_t t0 = data->Ts0() - module.t0CableDelayCorrection;
-  const uint32_t t1 = data->Ts1() - module.t1CableDelayCorrection;
+  const int64_t t0 = (int)data->Ts0() + (int)module.t0CableDelayCorrection;
+  const int64_t t1 = (int)data->Ts1() + (int)module.t1CableDelayCorrection;
 
   if(fApplyTs1Window && (t1 < fTs1Min || t1 > fTs1Max))
     return stripHits;

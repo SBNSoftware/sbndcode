@@ -146,8 +146,9 @@ std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRT
     
               if(!used[ii])
                 {
-                  const uint32_t timeDiff = fUseTs0 ? stripHit->Ts0() - initialStripHit->Ts0() :
+                  const uint64_t timeDiff = fUseTs0 ? stripHit->Ts0() - initialStripHit->Ts0() :
                     stripHit->Ts1() - initialStripHit->Ts1();
+
                   if(timeDiff < fCoincidenceTimeRequirement)
                     {
                       clusteredHits.push_back(stripHit);
@@ -241,7 +242,8 @@ sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const s
   const CRTStripGeo strip0 = fCRTGeoAlg.GetStrip(clusteredHits.at(0)->Channel());
   const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(clusteredHits.at(0)->Channel());
 
-  uint32_t ts0 = 0, ts1 = 0, s = 0;
+  int64_t ts0 = 0, ts1 = 0;
+  uint64_t s = 0;
   CoordSet composition = kUndefinedSet;
 
   for(uint16_t i = 0; i < clusteredHits.size(); ++i)

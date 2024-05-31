@@ -11,5 +11,6 @@ physics.producers.crtstrips.AllowFlag1:                                 true
 physics.producers.crtclustering.UseTs0:                                 true
 physics.producers.crtspacepoints.ClusterCharacterisationAlg.TimeOffset: 0
 physics.producers.crttracks.UseTs0:                                     true
+physics.producers.crttracks.MaskedTaggers:                              [ 0 ]
 outputs.out1.outputCommands: [ "keep *_*_*_*",
                                "drop *_daq_*_*" ]
