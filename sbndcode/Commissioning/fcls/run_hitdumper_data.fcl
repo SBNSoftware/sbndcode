@@ -15,7 +15,7 @@
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
 #include "databaseutil_sbnd.fcl"
-#include "hitdumpermodule_data.fcl"
+#include "hitdumpermodule.fcl"
 #include "muontrackmodule.fcl"
 #include "ophit_finder_sbnd.fcl"
 #include "wvfana_sbnd.fcl"
@@ -76,7 +76,7 @@ physics:
   }
   analyzers:
   {
-    hitdumper: @local::hitdumper
+    hitdumper: @local::hitdumper_data
     wvfana: @local::wvf_ana_sbnd
   }
 
