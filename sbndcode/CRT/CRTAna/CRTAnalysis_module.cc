@@ -298,6 +298,9 @@ private:
   std::vector<uint64_t> _ptb_hlt_trigger;
   std::vector<uint64_t> _ptb_hlt_timestamp;
 
+  std::vector<uint64_t> _ptb_llt_trigger;
+  std::vector<uint64_t> _ptb_llt_timestamp;
+
   std::vector<uint32_t>    _tdc_channel;
   std::vector<uint64_t>    _tdc_timestamp;
   std::vector<uint64_t>    _tdc_offset;
@@ -547,6 +550,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     {
       fTree->Branch("ptb_hlt_trigger", "std::vector<uint64_t>", &_ptb_hlt_trigger);
       fTree->Branch("ptb_hlt_timestamp", "std::vector<uint64_t>", &_ptb_hlt_timestamp);
+      fTree->Branch("ptb_llt_trigger", "std::vector<uint64_t>", &_ptb_llt_trigger);
+      fTree->Branch("ptb_llt_timestamp", "std::vector<uint64_t>", &_ptb_llt_timestamp);
     }
 
   if(fHasTDC)
@@ -800,6 +805,27 @@ void sbnd::crt::CRTAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
           _ptb_hlt_timestamp[hlt_i] = ptb->GetHLTrigger(i).timestamp;
 
           ++hlt_i;
+        }
+    }
+
+  unsigned nLLTs = 0;
+
+  for(auto const& ptb : PTBVec)
+    nLLTs += ptb->GetNLLTriggers();
+
+  _ptb_llt_trigger.resize(nLLTs);
+  _ptb_llt_timestamp.resize(nLLTs);
+
+  unsigned llt_i = 0;
+
+  for(auto const& ptb : PTBVec)
+    {
+      for(unsigned i = 0; i < ptb->GetNLLTriggers(); ++i)
+        {
+          _ptb_llt_trigger[llt_i]   = ptb->GetLLTrigger(i).trigger_word;
+          _ptb_llt_timestamp[llt_i] = ptb->GetLLTrigger(i).timestamp;
+
+          ++llt_i;
         }
     }
 }
