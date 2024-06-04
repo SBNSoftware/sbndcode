@@ -19,9 +19,6 @@
 
 // larsoft includes
 #include "lardataobj/Simulation/AuxDetSimChannel.h"
-#include "larcore/Geometry/Geometry.h"
-#include "larcorealg/Geometry/AuxDetGeo.h"
-#include "larcore/Geometry/AuxDetGeometry.h"
 #include "larcorealg/CoreUtils/NumericUtils.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 

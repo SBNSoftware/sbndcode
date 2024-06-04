@@ -11,7 +11,7 @@
 #include "cetlib_except/exception.h"
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "TH1D.h"
 #include <fstream>
@@ -42,13 +42,14 @@ namespace sbnd_tool
     std::vector<float>   fPostROIPad;                 ///< ROI padding
     
     // Services
-    const geo::GeometryCore*                             fGeometry = lar::providerFrom<geo::Geometry>();
+    const geo::WireReadoutGeom* fWireReadoutGeom;
     art::ServiceHandle<util::SignalShapingServiceSBND> sss;
   };
     
   //----------------------------------------------------------------------
   // Constructor.
   ROIFinderStandardSBND::ROIFinderStandardSBND(const fhicl::ParameterSet& pset)
+    : fWireReadoutGeom{&art::ServiceHandle<geo::WireReadout const>()->Get()}
   {
     configure(pset);
   }
@@ -97,7 +98,7 @@ namespace sbnd_tool
   void ROIFinderStandardSBND::FindROIs(const Waveform& waveform, size_t channel, CandidateROIVec& roiVec) const
   {
     // First up, translate the channel to plane
-    std::vector<geo::WireID> wids    = fGeometry->ChannelToWire(channel);
+    std::vector<geo::WireID> wids    = fWireReadoutGeom->ChannelToWire(channel);
     const geo::PlaneID&      planeID = wids[0].planeID();
     
     size_t numBins(2 * fNumBinsHalf + 1);

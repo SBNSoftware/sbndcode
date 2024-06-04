@@ -32,6 +32,7 @@
 #include "canvas/Persistency/Common/Assns.h"
 
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "lardataobj/RecoBase/OpHit.h"
@@ -203,8 +204,8 @@ class opana::SBNDFlashAssAna : public art::EDAnalyzer {
     std::vector<float> m_pmt_y;
     std::vector<float> m_pmt_z;
 
-    geo::GeometryCore const* fGeom;
-
+    geo::WireReadoutGeom const& m_readout = art::ServiceHandle<geo::WireReadout>()->Get();
+    geo::GeometryCore const* fGeom = lar::providerFrom<geo::Geometry>();
 };
 
 
@@ -217,7 +218,6 @@ opana::SBNDFlashAssAna::SBNDFlashAssAna(Parameters const& config)
   , fFlashLabels( config().FlashLabels() )
   , fPEOpHitThreshold( config().PEOpHitThreshold() )
   , fDebug( config().Debug() )
-  , fGeom( lar::providerFrom<geo::Geometry>() )
 { }
 
 
@@ -230,9 +230,9 @@ void opana::SBNDFlashAssAna::beginJob() {
   fGeoTree->Branch("pmt_y",&m_pmt_y);
   fGeoTree->Branch("pmt_z",&m_pmt_z);
   
-  for(size_t opch=0; opch<fGeom->NOpChannels(); ++opch) {
+  for(size_t opch=0; opch<m_readout.NOpChannels(); ++opch) {
 
-    auto const PDSxyz = fGeom->OpDetGeoFromOpChannel(opch).GetCenter();
+    auto const PDSxyz = m_readout.OpDetGeoFromOpChannel(opch).GetCenter();
 
     //std::cout << PDSxyz[0] << " " << PDSxyz[1] << " " << PDSxyz[2] << std::endl;
 
@@ -392,7 +392,7 @@ template<typename T>
 geo::CryostatID::CryostatID_t opana::SBNDFlashAssAna::getCryostatByChannel( int channel ) {
 
 
-  const geo::OpDetGeo& opdetgeo = fGeom->OpDetGeoFromOpChannel(channel);
+  const geo::OpDetGeo& opdetgeo = m_readout.OpDetGeoFromOpChannel(channel);
   geo::CryostatID::CryostatID_t cid = opdetgeo.ID().Cryostat ; 
 
   return cid;

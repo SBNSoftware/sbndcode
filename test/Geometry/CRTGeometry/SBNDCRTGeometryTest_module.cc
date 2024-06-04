@@ -14,6 +14,7 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "larcore/Geometry/AuxDetGeometry.h"
 #include "larcore/Geometry/Geometry.h"
 
 #include "TGeoManager.h"
@@ -50,17 +51,18 @@ SBNDCRTGeometryTest::SBNDCRTGeometryTest(fhicl::ParameterSet const& p)
 void SBNDCRTGeometryTest::analyze(art::Event const& e)
 {
   art::ServiceHandle<geo::Geometry const> geoService;
+  geo::AuxDetGeometryCore const* auxDetGeom = art::ServiceHandle<geo::AuxDetGeometry>()->GetProviderPtr();
 
-  std::cout << "Number of CRT AuxDets is " << geoService->NAuxDets() << std::endl;
+  std::cout << "Number of CRT AuxDets is " << auxDetGeom->NAuxDets() << std::endl;
 
-  assert(geoService->NAuxDets() > 0);
+  assert(auxDetGeom->NAuxDets() > 0);
 
 
   std::vector<int> used_copynumbers_auxdet;
   std::vector<int> used_copynumbers_sensitiveauxdet;
 
-  for (size_t i = 0; i < geoService->NAuxDets(); i++) {
-    const geo::AuxDetGeo& adGeo = geoService->AuxDet(i);
+  for (size_t i = 0; i < auxDetGeom->NAuxDets(); i++) {
+    const geo::AuxDetGeo& adGeo = auxDetGeom->AuxDet(i);
 
     std::set<std::string> volNames = { adGeo.TotalVolume()->GetName() };
     std::vector<std::vector<TGeoNode const*> > paths =
@@ -103,7 +105,7 @@ void SBNDCRTGeometryTest::analyze(art::Event const& e)
 
     // Ensure that the number of AuxDetSensitive in the geometry service
     // is the same as the number of daughter nodes
-    assert((int)geoService->NAuxDetSensitive(i) == nodeArray->GetNdaughters());
+    assert((int)auxDetGeom->NAuxDetSensitive(i) == nodeArray->GetNdaughters());
 
     std::cout << "Auxiliary detector ID " << i
               << " with copynumber " << nodeModule->GetNumber()
@@ -134,6 +136,3 @@ void SBNDCRTGeometryTest::analyze(art::Event const& e)
 }
 
 DEFINE_ART_MODULE(SBNDCRTGeometryTest)
-
-
-

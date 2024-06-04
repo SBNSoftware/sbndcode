@@ -2,7 +2,7 @@ art_make_library(
                  SOURCE       CRTBackTrackerAlg.cc
                  LIBRARIES
                         sbnobj::SBND_CRT
-                        sbndcode_GeoWrappers
+                        sbndcode::GeoWrappers
                         larsim::MCCheater_ParticleInventoryService_service
 )
 

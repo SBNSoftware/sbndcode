@@ -373,10 +373,10 @@ namespace crt {
 
         const CRTStripGeo strip   = fCRTGeoAlg.GetStripByAuxDetIndices(adid, adsid);
         const CRTModuleGeo module = fCRTGeoAlg.GetModule(strip.moduleName);
-	
-	if(module.minos)
-	  return;
-        
+
+        if(module.minos)
+          return;
+
         // Retrive the ID of this CRT module
         const uint16_t mac5 = adid;
         const uint16_t orientation = module.orientation;
@@ -439,7 +439,7 @@ namespace crt {
 
             // Adjacent channels on a strip are numbered sequentially.
             //
-            // In the AuxDetChannelMapAlg methods, channels are identified by an
+            // In the AuxDetWireReadoutGeom methods, channels are identified by an
             // AuxDet name (retrievable given the hit AuxDet ID) which specifies a
             // module, and a channel number from 0 to 32.
             // uint32_t moduleID = adid;
@@ -511,11 +511,11 @@ namespace crt {
                 << "CRT PLANE ID: " << orientation << "\n"
                 << "CRT distToReadout: " << distToReadout << " " << (module.top ? "top" : "bot") << "\n"
                 << "CRT Q SiPM 0: " << q0 << ", SiPM 1: " << q1 << '\n'
-                << "CRT Ts1 SiPM 0: " << ts1_ch0 << " SiPM 1: " << ts1_ch1 << "\n";         
+                << "CRT Ts1 SiPM 0: " << ts1_ch0 << " SiPM 1: " << ts1_ch1 << "\n";
         }
     } //end FillTaggers
-  
-  
+
+
     void CRTDetSimAlg::ChargeResponse(double eDep, double d0, double d1, double distToReadout, // input
                                       long & npe0, long & npe1, double & q0, double &q1) // output
     {

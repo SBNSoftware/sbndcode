@@ -16,6 +16,7 @@
 #include "CLHEP/Random/JamesRandom.h"
 #include "sbndcode/CRT/CRTSimulation/CRTDetSimAlg.h"
 #include "sbndcode/CRT/CRTSimulation/CRTDetSimParams.h"
+#include "cetlib/filepath_maker.h"
 
 constexpr long SEED = 0;
 
@@ -32,7 +33,7 @@ Parameters get_parameters(int argc, char const** argv) {
 
     char const* fhicl_env = getenv("FHICL_FILE_PATH");
     std::string search_path = fhicl_env? std::string(fhicl_env) + ":": ".:";
-    testing::details::FirstAbsoluteOrLookupWithDotPolicy policy(search_path);
+    cet::filepath_first_absolute_or_lookup_with_dot policy(search_path);
 
     fhicl::intermediate_table table;
     table = fhicl::parse_document(argv[iParam], policy);
@@ -133,5 +134,3 @@ int main(int argc, char const** argv) {
     return errors;
 
 }
-
-

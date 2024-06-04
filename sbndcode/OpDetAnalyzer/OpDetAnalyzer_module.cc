@@ -22,6 +22,7 @@
 #include "art_root_io/TFileService.h"
 #include <TTree.h>
 
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/Geometry/Geometry.h"
 
 #include "lardataobj/Simulation/SimPhotons.h"
@@ -152,6 +153,8 @@ void opdet::OpDetAnalyzer::analyze(art::Event const& evt)
 
   // geometry information
   art::ServiceHandle<geo::Geometry> geo;
+  auto const& channelMapAlg =
+    art::ServiceHandle<geo::WireReadout const>()->Get();
 
   // get event number
   fEventID = evt.id().event();
@@ -174,9 +177,9 @@ void opdet::OpDetAnalyzer::analyze(art::Event const& evt)
   fCountOpDetReflected=0;
 
   // reset vectors
-  fNOpDetAll.clear(); fNOpDetAll.resize(geo->NOpChannels(), 0);
-  fNOpDetDirect.clear(); fNOpDetDirect.resize(geo->NOpChannels(), 0);
-  fNOpDetReflected.clear(); fNOpDetReflected.resize(geo->NOpChannels(), 0);
+  fNOpDetAll.clear(); fNOpDetAll.resize(channelMapAlg.NOpChannels(), 0);
+  fNOpDetDirect.clear(); fNOpDetDirect.resize(channelMapAlg.NOpChannels(), 0);
+  fNOpDetReflected.clear(); fNOpDetReflected.resize(channelMapAlg.NOpChannels(), 0);
 
   // Get SimPhotonsLite from Event
   for(auto const& mod : fInputModule){
@@ -241,7 +244,7 @@ void opdet::OpDetAnalyzer::analyze(art::Event const& evt)
 
 
   // fill information in perOpDet and perEvent trees
-  for (unsigned int OpDet = 0; OpDet < geo->NOpChannels(); OpDet++) {
+  for (unsigned int OpDet = 0; OpDet < channelMapAlg.NOpChannels(); OpDet++) {
     
     // perOpDet tree
     fOpChannel = OpDet;

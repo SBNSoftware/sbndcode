@@ -55,7 +55,7 @@
 #include "lardataobj/AnalysisBase/T0.h"
 
 // Geometry and mapping
-#include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 
@@ -159,7 +159,7 @@ private:
 
   // PDS mapping and geometry
   opdet::sbndPDMapAlg fPDSMap;
-  art::ServiceHandle<geo::Geometry> fGeoService;
+  geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
 
   static constexpr double fDefaultSimIDE = -999.;
 

@@ -3,17 +3,17 @@
 # Purpose: configuration of SBND geometry services
 # Version: 1.5
 # 
-# Offsers:
+# Offers:
 # * single service configuration:
 #   - sbnd_geo: configuration for Geometry service (standard SBND geometry);
 #     configure it in services table as:
 #     
 #     services.Geometry: @local::sbnd_geo
 #     
-#   - sbnd_geometry_helper: configuration for ExptGeoHelperInterface service
+#   - sbnd_wire_readout: configuration for WireReadout service
 #     configure it in services table as:
 #     
-#     services.ExptGeoHelperInterface: @local::sbnd_geometry_helper
+#     services.WireReadout: @local::sbnd_wire_readout
 #     
 # * bundles:
 #   - sbnd_geometry_services: complete geometry configuration; add it to
@@ -76,6 +76,7 @@ sbnd_geo:
  @table::sbnd_geo_source
 
  SortingParameters: { 
+  tool_type: "GeoObjectSorterSBND"
    DetectorVersion: "sbnd" 
  } 
 
@@ -84,31 +85,31 @@ sbnd_geo:
 
 } # sbnd_geo
 
-sbnd_geometry_helper:
+sbnd_wire_readout:
 {
- service_provider : SBNDGeometryHelper
+  @table::standard_wire_readout
+  SortingParameters: {
+    tool_type: WireReadoutSorterSBND
+  }
 }
 
 sbnd_auxdetgeo:
 {
   @table::sbnd_geo_source
+  ThrowIfAbsent: false
   SortingParameters: {}                   # empty parameter set for default
+  ReadoutInitializer: {
+    tool_type: CRTAuxDetInitializer
 }
-
-sbnd_auxdetgeometry_helper:
-{
- service_provider: "sbndcode/CRT/CRTGeometryHelper"
 }
 
 #
 # sbnd_geometry_services
 #
 sbnd_geometry_services: {
-  ExptGeoHelperInterface:         @local::sbnd_geometry_helper
-#  ExptGeoHelperInterface:         @local::standard_geometry_helper
+  WireReadout:                  @local::sbnd_wire_readout
   GeometryConfigurationWriter:    {}
   Geometry:                       @local::sbnd_geo
-  AuxDetExptGeoHelperInterface:   @local::sbnd_auxdetgeometry_helper
   AuxDetGeometry:                 @local::sbnd_auxdetgeo
 } # sbnd_geometry_services
 
@@ -151,4 +152,3 @@ sbnd_geometry_services: @local::future_sbnd_geo.sbnd_geometry_services
 ###############################################################################
 
 END_PROLOG
-

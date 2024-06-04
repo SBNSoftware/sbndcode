@@ -42,7 +42,7 @@ extern "C" {
 #include "lardataobj/RawData/TriggerData.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "sbndcode/Utilities/SignalShapingServiceSBND.h"
-#include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "lardataobj/Simulation/sim.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -219,8 +219,10 @@ void SimWireSBND::produce(art::Event& evt)
   //Generate gaussian and coherent noise if doing uBooNE noise model. For other models it does nothing.
   noiseserv->generateNoise(clockData);
 
-  // get the geometry to be able to figure out signal types and chan -> plane mappings
-  art::ServiceHandle<geo::Geometry> geo;
+  // get the channel-map alg. to be able to figure out signal types and chan -> plane mappings
+  geo::WireReadoutGeom const& channelMapAlg = art::ServiceHandle<geo::WireReadout const>()->Get();
+  const auto NChannels = channelMapAlg.Nchannels();
+
   //unsigned int signalSize = fNTicks;
   //
   //Get the channels status
@@ -236,12 +238,10 @@ void SimWireSBND::produce(art::Event& evt)
   // of entries as the number of channels in the detector
   // and set the entries for the channels that have signal on them
   // using the chanHandle
-  std::vector<const sim::SimChannel*> channels(geo->Nchannels(), nullptr);
+  std::vector<const sim::SimChannel*> channels(NChannels, nullptr);
   for (size_t c = 0; c < chanHandle.size(); ++c) {
     channels.at(chanHandle.at(c)->Channel()) = chanHandle.at(c);
   }
-
-  const auto NChannels = geo->Nchannels();
 
   // vectors for working
   std::vector<short>    adcvec(fNTimeSamples, 0);
@@ -259,7 +259,7 @@ void SimWireSBND::produce(art::Event& evt)
      
   //LOOP OVER ALL CHANNELS
   std::map<int, double>::iterator mapIter;
-  for (chan = 0; chan < geo->Nchannels(); chan++) {
+  for (chan = 0; chan < NChannels; chan++) {
 
     if (channelStatus.IsBad(chan)) continue;
 
@@ -292,7 +292,7 @@ void SimWireSBND::produce(art::Event& evt)
     //Pedestal determination
     float ped_mean = fCollectionPed;
     float preamp_sat=fCollectionSat;
-    geo::SigType_t sigtype = geo->SignalType(chan);
+    geo::SigType_t sigtype = channelMapAlg.SignalType(chan);
     if (sigtype == geo::kInduction) {
       ped_mean = fInductionPed;
       preamp_sat = fInductionSat;
