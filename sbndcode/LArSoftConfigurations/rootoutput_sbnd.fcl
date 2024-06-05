@@ -48,7 +48,13 @@ sbnd_rootoutput: {
   fileName:         "%ifb_%p-%tc.root"
   compressionLevel:  1  # minimum compression, but some
   saveMemoryObjectThreshold: 0
-  
+
+  #by default keep all producers in the output.
+  #this is needed to streamline adding in drop commands in inherited fcls
+  outputCommands: [
+       "keep *_*_*_*"
+  ]
+ 
 } # sbnd_rootoutput
 
 sbnd_tfileoutput.fileName: "hists_%ifb_%p-%tc.root"

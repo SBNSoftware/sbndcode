@@ -1,5 +1,0 @@
-#include "evd_sbnd.fcl"
-#include "3drift_services_sbnd.fcl"
-
-services.RawDrawingOptions.TotalTicks: 7800
-sbnd_rawdrawingopt.StartTick:		0
