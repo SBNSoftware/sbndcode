@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 crt_calib_service:
 {
-  TimingOffsetFileName: "SBNDCRTTimingOffsets_v1.txt"
+  TimingOffsetFileName: "SBNDCRTTimingOffsets_v2.txt"
   PedestalFileName:     "SBNDCRTPedestals_v1.txt"
 }
 
