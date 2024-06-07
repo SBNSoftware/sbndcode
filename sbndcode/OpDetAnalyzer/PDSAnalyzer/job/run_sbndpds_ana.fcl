@@ -1,0 +1,35 @@
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "SBNDPDSAna_config.fcl"
+
+process_name: SBNDPDSAna
+
+services:
+{
+  TFileService:              { fileName: "opana_tree.root" }
+  @table::sbnd_basic_services
+  @table::sbnd_simulation_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+  ParticleInventoryService: @local::standard_particleinventoryservice  
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1  # Number of events to create
+}
+
+physics:
+{
+
+  analyzers:
+  {
+    opanatree: @local::sbndPDSAna
+  }
+
+  ana: [opanatree]
+  end_paths: [ana]
+}
