@@ -1,0 +1,23 @@
+#include "rootoutput_sbnd.fcl"
+#include "FlashAnalyzer.fcl"
+#include "run_crtana_data.fcl"
+
+process_name: Ana
+
+services.TFileService.fileName: "crtana_flashana_sbnd.root"
+
+physics.analyzers.flashana: @local::FlashAnalyzer
+
+physics.ana: [ crtana, flashana ]
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+  }
+}
+
+physics.stream1: [ out1 ]
+physics.end_paths: [ ana, stream1 ]
