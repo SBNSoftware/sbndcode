@@ -1,0 +1,20 @@
+#include "wvfana_sbnd.fcl"
+#include "run_crtana_data.fcl"
+
+services.TFileService.fileName: "crtana_wvfmana_sbnd.root"
+
+physics.analyzers.flashana: @local::wvf_ana_sbnd
+
+physics.ana: [ crtana, flashana ]
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName: "crtana_wvfmana_sbnd-art.root"
+  }
+}
+
+physics.analyzers.flashana.InputModule: "pmtdecoder:PMTChannels"
+physics.analyzers.flashana.OpDetsToPlot: ["pmt_coated","pmt_uncoated"]

@@ -110,7 +110,7 @@ namespace opdet {
   void wvfAna::analyze(art::Event const & e)
   {
     // Implementation of required member function here.
-    std::cout << "My module on event #" << e.id().event() << std::endl;
+    //    std::cout << "My module on event #" << e.id().event() << std::endl;
 
     art::ServiceHandle<art::TFileService> tfs;
     fEvNumber = e.id().event();
@@ -145,11 +145,11 @@ namespace opdet {
     //   std::cout << "e:\t" << e << "\n";
     // }
 
-    std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
+    //    std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
 
-    std::cout << "fOpDetsToPlot:\t";
-    for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
-    std::cout << std::endl;
+    //    std::cout << "fOpDetsToPlot:\t";
+    //    for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
+    //    std::cout << std::endl;
 
     int hist_id = 0;
     for(auto const& wvf : (*waveHandle)) {
