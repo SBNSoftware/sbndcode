@@ -30,6 +30,7 @@
 #include "TH1D.h"
 #include "TFile.h"
 
+#include <algorithm>
 
 namespace opdet {
   class FlashAnalyzer;
@@ -81,27 +82,41 @@ void opdet::FlashAnalyzer::analyze(art::Event const& e)
  
   art::Handle< std::vector< raw::OpDetWaveform > > wvfHandle;
   e.getByLabel(fRawWaveformsModuleLabel, wvfHandle);
-  if(!wvfHandle.isValid()){
+  if(!wvfHandle.isValid() || wvfHandle->size() == 0){
     std::cout << "RawWaveform with label " << fRawWaveformsModuleLabel << " not found..." << std::endl;
-    throw std::exception();
+    return;
   }
   auto wvf_length = (*wvfHandle)[0].size();
   auto wvf_start  = (*wvfHandle)[0].TimeStamp();
   auto wvf_end    = wvf_start + wvf_length*2; 
 
-  std::vector<double> flash(wvf_length, 0);
+  std::vector<int> flash(wvf_length, 0);
+  int npmt_counter = 0;
   
   for(auto const& wvf : (*wvfHandle)) {
     int fChNumber = wvf.ChannelNumber();
     if(std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(fChNumber) ) != fPDTypes.end() ){
+      npmt_counter++;
+
+      // // make copy to get the median 
+      // std::vector<short int> wvf_copy;
+      // wvf_copy = wvf.Waveform();
+
+      // // get median of the waveform and remove it 
+      // const auto median_it = wvf_copy.begin() + int(wvf_copy.size() / 2);
+      // std::nth_element(wvf_copy.begin(), median_it , wvf_copy.end());
+      // auto median = *median_it;
+
       for(unsigned int i=0;i<wvf.size();i++){
         flash.at(i) += wvf.at(i);
+        // flash.at(i) += (wvf.at(i) - median);
       }
     }
   }
 
   histname.str(std::string());
   histname << "event_" << e.id().event()
+           << "_npmts_" << npmt_counter
             << "_PMTflash" ;
   TH1D *flashHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", wvf_start), flash.size(), wvf_start, wvf_end);
   for(unsigned int i = 0; i < flash.size(); i++) {
