@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+FlashAnalyzer:{
+    module_type: "FlashAnalyzer"
+	PDTypes: ["pmt_coated", "pmt_uncoated"]
+	RawWaveformsModuleLabel: "pmtdecoder:PMTChannels"
+}
+
+END_PROLOG
