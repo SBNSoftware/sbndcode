@@ -13,11 +13,13 @@
 #define BOOST_TEST_MODULE GeometryIteratorTestSBND
 
 // SBND libraries
-#include "sbndcode/Geometry/ChannelMapSBNDAlg.h"
+#include "sbndcode/Geometry/GeoObjectSorterSBND.h"
+#include "sbndcode/Geometry/WireReadoutSorterSBND.h"
 
 // LArSoft libraries
 #include "test/Geometry/geometry_unit_test_sbnd.h"
 #include "larcorealg/test/Geometry/GeometryIteratorTestAlg.h"
+#include "larcorealg/Geometry/WireReadoutStandardGeom.h"
 #include "larcorealg/TestUtils/boost_unit_test_base.h"
 
 //------------------------------------------------------------------------------
@@ -33,7 +35,6 @@
 struct SBNDGeometryConfiguration:
   public testing::BoostCommandLineConfiguration<
     sbnd::testing::SBNDGeometryEnvironmentConfiguration
-      <geo::ChannelMapSBNDAlg>
     >
 {
   /// Constructor: overrides the application name; ignores command line
@@ -47,18 +48,15 @@ struct SBNDGeometryConfiguration:
  * It provides:
  * - `Tester`, a configured instance of the test algorithm.
  */
-class SBNDGeometryIteratorTestFixture:
-  private testing::GeometryTesterEnvironment<SBNDGeometryConfiguration>
+struct SBNDGeometryIteratorTestFixture:
+  testing::GeometryTesterEnvironment<SBNDGeometryConfiguration, geo::GeoObjectSorterSBND>
 {
-    public:
-  geo::GeometryIteratorTestAlg Tester;
-  
-  /// Constructor: initialize the tester with the Geometry from base class
-  SBNDGeometryIteratorTestFixture(): Tester(Geometry())
-    {}
-
+  std::unique_ptr<geo::WireReadoutGeom> WireReadout{
+    std::make_unique<geo::WireReadoutStandardGeom>(fhicl::ParameterSet{},
+                                               Geometry(),
+                                               std::make_unique<geo::WireReadoutSorterSBND>())};
+  geo::GeometryIteratorTestAlg Tester{Geometry(), WireReadout.get()};
 }; // class SBNDGeometryIteratorTestFixture
-
 
 
 //------------------------------------------------------------------------------

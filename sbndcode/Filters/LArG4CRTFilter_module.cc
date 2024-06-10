@@ -7,6 +7,7 @@
 #include "art/Framework/Core/EDFilter.h" 
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Principal/Event.h" 
+#include "larcore/Geometry/AuxDetGeometry.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/GeometryCore.h"
@@ -77,7 +78,7 @@ namespace filt{
     //     It converts ticks to absolute time where 0 is the trigger time and not the start of the readout
     //     window, so if there is a front porch, this value is larger than the actually readout window
     // readoutWindow  = clockData.TPCTick2Time(static_cast<double>(detProp.ReadOutWindowSize())); // [us]
-    driftTime = (2.*fGeometryService->DetHalfWidth())/detProp.DriftVelocity(); // [us]
+    driftTime = (2.*fGeometryService->TPC({0, 0}).HalfWidth())/detProp.DriftVelocity(); // [us]
     std::cout << "readout window is " << readoutWindow << " us and drift time is " << driftTime << " us "<< std::endl;
   }
 
@@ -105,6 +106,7 @@ namespace filt{
 
     auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
+    double const halfWidth = fGeometryService->TPC({0, 0}).HalfWidth();
     for (simb::MCParticle const& particle : particles) {
       if (!IsInterestingParticle(particle)) continue;
       //std::cout<<"particlePDG: " << particle.PdgCode() << std::endl;
@@ -116,8 +118,8 @@ namespace filt{
         // Get the minimum and maximum |x| position in the TPC
         std::pair<double, double> xLimits = XLimitsTPC(particle);
         // Calculate the expected time of arrival of those points
-        double minTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.second)/detProp.DriftVelocity();
-        double maxTime = time + (2.0 * fGeometryService->DetHalfWidth() - xLimits.first)/detProp.DriftVelocity();
+        double minTime = time + (2.0 * halfWidth - xLimits.second)/detProp.DriftVelocity();
+        double maxTime = time + (2.0 * halfWidth - xLimits.first)/detProp.DriftVelocity();
         // If both times are below or above the readout window time then skip
         if((minTime < 0 && maxTime < 0) || (minTime > readoutWindow && maxTime > readoutWindow)) continue;
       }
@@ -193,9 +195,10 @@ namespace filt{
 
   void LArG4CRTFilter::LoadCRTAuxDetIDs(){
     art::ServiceHandle<geo::Geometry> geom;
+    auto const& auxDetGeom = art::ServiceHandle<geo::AuxDetGeometry const>()->GetProvider();
 
-    for (unsigned int auxdet_i = 0; auxdet_i < geom->NAuxDets(); auxdet_i++){
-      geo::AuxDetGeo const& crt = geom->AuxDet(auxdet_i);
+    for (unsigned int auxdet_i = 0; auxdet_i < auxDetGeom.NAuxDets(); auxdet_i++){
+      geo::AuxDetGeo const& crt = auxDetGeom.AuxDet(auxdet_i);
       const TGeoVolume* volModule = crt.TotalVolume();
       std::set<std::string> volNames = { volModule->GetName() };
       std::vector<std::vector<TGeoNode const*> > paths = geom->FindAllVolumePaths(volNames);
@@ -259,7 +262,7 @@ namespace filt{
 
   bool LArG4CRTFilter::UsesCRTAuxDets(const simb::MCParticle& particle, const std::vector<unsigned int> &crt_auxdet_vector){
     //Loop over the aux dets, extract each one and then perform the test
-    art::ServiceHandle<geo::Geometry> geom;
+    auto const& auxDetGeom = art::ServiceHandle<geo::AuxDetGeometry const>()->GetProvider();
     //art:: ServiceHandle <geo:: AuxDetGeometry > adGeoService;
     //const  geo:: AuxDetGeometry* adG = &(* adGeoService);   // !!
     //const  geo:: AuxDetGeometryCore* adGeoCore = adG ->GetProviderPtr ();
@@ -274,7 +277,7 @@ namespace filt{
                                   position_lvector.Z()};
       //The find the auxdet function throws a wobbler (an exception) if it can't find an auxdet.  Wrap what we want to do in a try catch statement pair
       try{
-        unsigned int crt_id = geom->FindAuxDetAtPosition(position);
+        unsigned int crt_id = auxDetGeom.FindAuxDetAtPosition(position);
         //size_t adID , svID;
         //adGeoCore ->PositionToAuxDetChannel(position , adID , svID);
         //So we got an ID.  Lets compare it to all of the CRT IDs we are interested in
@@ -300,12 +303,13 @@ namespace filt{
 
   bool LArG4CRTFilter::EntersTPC(const simb::MCParticle& particle){
     bool enters = false;
-    double xmin = -2.0 * fGeometryService->DetHalfWidth();
-    double xmax = 2.0 * fGeometryService->DetHalfWidth();
-    double ymin = -fGeometryService->DetHalfHeight();
-    double ymax = fGeometryService->DetHalfHeight();
+    geo::TPCGeo const& tpcGeom = fGeometryService->TPC({0, 0});
+    double xmin = -2.0 * tpcGeom.HalfWidth();
+    double xmax = 2.0 * tpcGeom.HalfWidth();
+    double ymin = -tpcGeom.HalfHeight();
+    double ymax = tpcGeom.HalfHeight();
     double zmin = 0.;
-    double zmax = fGeometryService->DetLength();
+    double zmax = tpcGeom.Length();
 
     int nTrajPoints = particle.NumberTrajectoryPoints();
     for (int traj_i = 0; traj_i < nTrajPoints; traj_i++){
@@ -319,12 +323,13 @@ namespace filt{
   }
 
   std::pair<double, double> LArG4CRTFilter::XLimitsTPC(const simb::MCParticle& particle){
-    double xmin = -2.0 * fGeometryService->DetHalfWidth();
-    double xmax = 2.0 * fGeometryService->DetHalfWidth();
-    double ymin = -fGeometryService->DetHalfHeight();
-    double ymax = fGeometryService->DetHalfHeight();
+    geo::TPCGeo const& tpcGeom = fGeometryService->TPC({0, 0});
+    double xmin = -2.0 * tpcGeom.HalfWidth();
+    double xmax = 2.0 * tpcGeom.HalfWidth();
+    double ymin = -tpcGeom.HalfHeight();
+    double ymax = tpcGeom.HalfHeight();
     double zmin = 0.;
-    double zmax = fGeometryService->DetLength();
+    double zmax = tpcGeom.Length();
 
     double minimum = 99999;
     double maximum = -99999;

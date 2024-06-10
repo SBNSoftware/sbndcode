@@ -27,7 +27,9 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
 
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 #include "nusimdata/SimulationBase/GTruth.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "nusimdata/SimulationBase/MCFlux.h"
@@ -157,6 +159,7 @@ private:
   sbnd::crt::CRTBackTrackerAlg* bt;
   map<int,art::InputTag> fFlashLabels;
   geo::GeometryCore const* fGeometryService;
+  geo::WireReadoutGeom const* fWireReadoutGeom;
   
   TTree* fMatchTree; 
   
@@ -367,6 +370,7 @@ void ToFAnalyzer::beginJob(){
   std::cout<<"job begin..."<<std::endl;
   
   fGeometryService = lar::providerFrom<geo::Geometry>();  
+  fWireReadoutGeom = &art::ServiceHandle<geo::WireReadout const>()->Get();
   
   art::ServiceHandle<art::TFileService> tfs;
   fMatchTree = tfs->make<TTree>("matchTree","CRTSpacePoint - OpHit/Flash matching analysis");
@@ -855,7 +859,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	       fLhit_crttgr_vec.push_back(cluster->Tagger());
 	       fLhit_pmthitkey_vec.push_back(ophit_index);
 	       fLhit_pmthitT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
-               auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
+               auto const pos = fWireReadoutGeom->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
                fLhit_pmthitX_vec.push_back(pos.X());
                fLhit_pmthitY_vec.push_back(pos.Y());
                fLhit_pmthitZ_vec.push_back(pos.Z());
@@ -911,7 +915,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	       fChit_crttgr_vec.push_back(cluster->Tagger());
 	       fChit_pmthitkey_vec.push_back(ophit_index);
 	       fChit_pmthitT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
-               auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
+               auto const pos = fWireReadoutGeom->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
                fChit_pmthitX_vec.push_back(pos.X());
                fChit_pmthitY_vec.push_back(pos.Y());
                fChit_pmthitZ_vec.push_back(pos.Z());
@@ -1115,7 +1119,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                  fLflshhit_pmtflshkey_vec.push_back(opflash_index);
                  fLflshhit_pmtkey_vec.push_back(ophit_index);
                  fLflshhit_pmtflshT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
-                 auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
+                 auto const pos = fWireReadoutGeom->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
                  fLflshhit_pmtflshX_vec.push_back(pos.X());
                  fLflshhit_pmtflshY_vec.push_back(pos.Y());
                  fLflshhit_pmtflshZ_vec.push_back(pos.Z());
@@ -1197,7 +1201,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                  fCflshhit_pmtflshkey_vec.push_back(opflash_index);
                  fCflshhit_pmtkey_vec.push_back(ophit_index);
                  fCflshhit_pmtflshT_vec.push_back(opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
-                 auto const pos = fGeometryService->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
+                 auto const pos = fWireReadoutGeom->OpDetGeoFromOpChannel(opHitList[ophit_index]->OpChannel()).GetCenter();
                  fCflshhit_pmtflshX_vec.push_back(pos.X());
                  fCflshhit_pmtflshY_vec.push_back(pos.Y());
                  fCflshhit_pmtflshZ_vec.push_back(pos.Z());
@@ -1242,7 +1246,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    fLhit_crttgr_vec.push_back(clstr->Tagger());
 	    fLhit_pmthitkey_vec.push_back(Lhit_tof_op_hits[ele.first][min_index].key());
 	    fLhit_pmthitT_vec.push_back(Lhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-            auto const pos = fGeometryService->OpDetGeoFromOpChannel(Lhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
+            auto const pos = fWireReadoutGeom->OpDetGeoFromOpChannel(Lhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
             fLhit_pmthitX_vec.push_back(pos.X());
             fLhit_pmthitY_vec.push_back(pos.Y());
             fLhit_pmthitZ_vec.push_back(pos.Z());
@@ -1284,7 +1288,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    fChit_crttgr_vec.push_back(clstr->Tagger());
 	    fChit_pmthitkey_vec.push_back(Chit_tof_op_hits[ele.first][min_index].key());
 	    fChit_pmthitT_vec.push_back(Chit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-            auto const pos = fGeometryService->OpDetGeoFromOpChannel(Chit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
+            auto const pos = fWireReadoutGeom->OpDetGeoFromOpChannel(Chit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
             fChit_pmthitX_vec.push_back(pos.X());
             fChit_pmthitY_vec.push_back(pos.Y());
             fChit_pmthitZ_vec.push_back(pos.Z());
@@ -1410,7 +1414,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
             fLflshhit_pmtflshkey_vec.push_back(Lflshhit_tof_op_flashes[ele.first][min_index].key());
             fLflshhit_pmtkey_vec.push_back(Lflshhit_tof_op_hits[ele.first][min_index].key());
             fLflshhit_pmtflshT_vec.push_back(Lflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-            auto const pos = fGeometryService->OpDetGeoFromOpChannel(Lflshhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
+            auto const pos = fWireReadoutGeom->OpDetGeoFromOpChannel(Lflshhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
             fLflshhit_pmtflshX_vec.push_back(pos.X());
             fLflshhit_pmtflshY_vec.push_back(pos.Y());
             fLflshhit_pmtflshZ_vec.push_back(pos.Z());
@@ -1454,7 +1458,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
             fCflshhit_pmtflshkey_vec.push_back(Cflshhit_tof_op_flashes[ele.first][min_index].key());
             fCflshhit_pmtkey_vec.push_back(Cflshhit_tof_op_hits[ele.first][min_index].key());
             fCflshhit_pmtflshT_vec.push_back(Cflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-            auto const pos = fGeometryService->OpDetGeoFromOpChannel(Cflshhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
+            auto const pos = fWireReadoutGeom->OpDetGeoFromOpChannel(Cflshhit_tof_op_hits[ele.first][min_index]->OpChannel()).GetCenter();
             fCflshhit_pmtflshX_vec.push_back(pos.X());
             fCflshhit_pmtflshY_vec.push_back(pos.Y());
             fCflshhit_pmtflshZ_vec.push_back(pos.Z());
@@ -1559,12 +1563,13 @@ bool ToFAnalyzer::SpacePointCompare(const art::Ptr<CRTSpacePoint>& sp1, const ar
 double ToFAnalyzer::length(const simb::MCParticle& part, TVector3& start, TVector3& end)
 {
   art::ServiceHandle<geo::Geometry> geom;
-  double xmin = -2.0 * geom->DetHalfWidth();
-  double xmax = 2.0 * geom->DetHalfWidth();
-  double ymin = -geom->DetHalfHeight();
-  double ymax = geom->DetHalfHeight();
+  geo::TPCGeo const& tpcGeo = geom->TPC({0, 0});
+  double xmin = -2.0 * tpcGeo.HalfWidth();
+  double xmax = 2.0 * tpcGeo.HalfWidth();
+  double ymin = -tpcGeo.HalfHeight();
+  double ymax = tpcGeo.HalfHeight();
   double zmin = 0.;
-  double zmax = geom->DetLength();
+  double zmax = tpcGeo.Length();
   
   double result = 0.;
   TVector3 disp;
