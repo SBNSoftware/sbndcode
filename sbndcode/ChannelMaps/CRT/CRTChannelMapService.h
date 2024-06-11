@@ -26,7 +26,7 @@ namespace SBND {
   
 class SBND::CRTChannelMapService {
 
- public:
+public:
 
   CRTChannelMapService(fhicl::ParameterSet const& pset);
   CRTChannelMapService(fhicl::ParameterSet const& pset, art::ActivityRegistry&);
@@ -42,7 +42,7 @@ class SBND::CRTChannelMapService {
 
   ModuleInfo_t GetModuleInfoFromOfflineID(unsigned int offline_module_id) const;
 
- private:
+private:
 
   // look up channel info by offline module number
   

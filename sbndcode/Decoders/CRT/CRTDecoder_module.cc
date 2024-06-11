@@ -51,6 +51,7 @@ private:
 
   std::string              fCRTModuleLabel;
   std::vector<std::string> fCRTInstanceLabels;
+  bool                     fDebug;
 
   art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
 
@@ -62,9 +63,10 @@ CRTDecoder::CRTDecoder(fhicl::ParameterSet const& p)
   : EDProducer{p}
   , fCRTModuleLabel(p.get<std::string>("CRTModuleLabel", "daq"))
   , fCRTInstanceLabels(p.get<std::vector<std::string>>("CRTInstanceLabels"))
-  {
-    produces<std::vector<sbnd::crt::FEBData>>();
-  }
+  , fDebug(p.get<bool>("Debug", false))
+{
+  produces<std::vector<sbnd::crt::FEBData>>();
+}
 
 void CRTDecoder::produce(art::Event& e)
 {
@@ -157,15 +159,16 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
         }
       adc_string.resize(adc_string.size() - 2);
 
-      mf::LogInfo("CRTDecoder")
-        << "Creating FEBData object from BernCRT Fragment\n"
-        << "Mac5: " << feb_datas.back().Mac5() << '\n'
-        << "Flags: " << feb_datas.back().Flags() << '\n'
-        << "Ts0: " << feb_datas.back().Ts0() << '\n'
-        << "Ts1: " << feb_datas.back().Ts1() << '\n'
-        << "UnixS: " << feb_datas.back().UnixS() << '\n'
-        << "ADC: [" << adc_string << "]\n"
-        << "Coinc: " << feb_datas.back().Coinc() << '\n' << std::endl;
+      if(fDebug)
+        mf::LogInfo("CRTDecoder")
+          << "Creating FEBData object from BernCRT Fragment\n"
+          << "Mac5: " << feb_datas.back().Mac5() << '\n'
+          << "Flags: " << feb_datas.back().Flags() << '\n'
+          << "Ts0: " << feb_datas.back().Ts0() << '\n'
+          << "Ts1: " << feb_datas.back().Ts1() << '\n'
+          << "UnixS: " << feb_datas.back().UnixS() << '\n'
+          << "ADC: [" << adc_string << "]\n"
+          << "Coinc: " << feb_datas.back().Coinc() << '\n' << std::endl;
     }
 
   return feb_datas;
