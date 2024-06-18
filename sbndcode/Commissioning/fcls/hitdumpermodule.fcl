@@ -47,5 +47,8 @@ hitdumper:
     SkipInduction:            false
     SelectEvents: []
 }
+ hitdumper_data: @local::hitdumpe
+ hitdumper_data.OpHitsModuleLabel: ["ophitpmt"] #only have PMT data as of 05/30/2024 
+ hitdumper_data.readTruth: false 
 
 END_PROLOG

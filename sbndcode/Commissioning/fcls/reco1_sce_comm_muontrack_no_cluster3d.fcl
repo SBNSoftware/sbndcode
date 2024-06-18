@@ -1,8 +1,5 @@
-#include "hitdumpermodule.fcl"
 #include "muontrackmodule.fcl"
-#include "reco1_sce.fcl"
-
-process_name: Reco1Comm
+#include "reco1_sce_comm.fcl"
 
 physics.producers.fasthit:           @local::standard_fasthitfinder
 physics.producers.MuonTrackProducer: @local::MuonTrackProducer
@@ -22,9 +19,6 @@ physics.reco1comm: [ rns
 
 physics.trigger_paths: [ reco1comm ]
 
-physics.analyzers.hitdumper: @local::hitdumper
-physics.ana:                 [ hitdumper ]
-physics.end_paths:           [ ana, stream1 ]
 
 physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
 physics.producers.fasthit.MinSigInd: 15.0
