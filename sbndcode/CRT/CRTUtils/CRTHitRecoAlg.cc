@@ -44,6 +44,9 @@ namespace sbnd{
         uint32_t t0 = FEBdata->Ts0() + module.cableDelayCorrection;
         uint32_t t1 = FEBdata->Ts1() + module.cableDelayCorrection;
 
+
+        mf::LogInfo("CRTHitRecoAlg") << ": FEBdata! taggerName: " << taggerName << "mac5: " << mac5 << ", FEBdata->Ts0(): " << FEBdata->Ts0() << ", FEBdata->Ts1(): " << FEBdata->Ts1() <<" After cableDelayCorrection t0: " << t0 << ", t1 " << t1 << std::endl;
+
         // Iterate via strip (2 SiPMs per strip)
         const auto &sipm_adcs = FEBdata->ADC();
         for(unsigned adc_i = 0; adc_i < 32; adc_i+=2)
@@ -65,6 +68,8 @@ namespace sbnd{
           // Keep hit if both SiPMs above threshold
           if(adc1 > fADCThreshold && adc2 > fADCThreshold)
           {
+            mf::LogInfo("CRTHitRecoAlg") << ": FEBdata! channel " << channel << " adc1: " << adc1 << " adc2: " << adc2 << std::endl;
+            
             std::cout<<"ADCs: channel1: "<<adc1<<" with pedstals "<<sipm1.pedestal<<" "<< adc1+sipm1.pedestal<<" channel2:"<<adc2<<" with pedstals "<<sipm2.pedestal<<" "<< adc2+sipm2.pedestal<<std::endl;
             // Access width of strip from the geometry algorithm
             // === TO-DO === //
@@ -314,6 +319,9 @@ namespace sbnd{
 
     diff = (double)(hit0.t1 - corr0) - (double)(hit1.t1 - corr1);
 
+    mf::LogInfo("CRTHitRecoAlg") <<" CorrectTimings! strip0: t0: "<<hit0.t0<<", t1: "<<hit0.t1<<std::endl;
+    mf::LogInfo("CRTHitRecoAlg") <<" CorrectTimings! strip1: t0: "<<hit1.t0<<", t1: "<<hit1.t1<<std::endl;
+
     mf::LogInfo("CRTHitRecoAlg") <<"strip: t1: "<<t1-1.7e6<<", diff: "<<diff<<std::endl;
   }
 
@@ -325,17 +333,8 @@ namespace sbnd{
     //    - the time walk effect (dependent on the size of the pulse)
 
     double t_TimeWalk = fTimeWalkNorm * std::exp(- fTimeWalkShift * pe);
-    //fTimeWalkNorm * std::exp(-0.5 * std::pow((pe - fTimeWalkShift) / fTimeWalkSigma, 2)) + fTimeWalkOffset; 
-    //if (t_TimeWalk<0) t_TimeWalk=0;
+
     return (uint32_t)(dist * fPropDelay + t_TimeWalk);
-    
-    //return (uint32_t)(t_TimeWalk);
-    /*
-    mf::LogInfo("CRTHitRecoAlg") << "distance to readout: "<< dist << ", fPropDelay: " << fPropDelay << "TProp: " << dist * fPropDelay << ", walkTime: " << t_TimeWalk << ", pe: " << pe << std::endl;
-    if (t_TimeWalk>0.){
-      return (uint32_t)(dist * fPropDelay + t_TimeWalk);
-    }else {
-      return (uint32_t)(dist * fPropDelay);
-    }*/
   } 
+  
 }

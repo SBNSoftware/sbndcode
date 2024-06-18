@@ -283,28 +283,31 @@ void CRTEventDisplayAlg::Draw(detinfo::DetectorClocksData const& clockData,
 
   // Draw the AuxDetHits (from g4) in the event
   if(!fDataMode && fDrawAuxDetHits){
-    auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetHit>>(fAuxDetHitsLabel); 
-    for(auto const simDep : *simDepositsHandle){
-      double x = (simDep.GetEntryX() + simDep.GetExitX()) / 2.;
-      double y = (simDep.GetEntryY() + simDep.GetExitY()) / 2.;
-      double z = (simDep.GetEntryZ() + simDep.GetExitZ()) / 2.;
-      double t = (simDep.GetEntryT() + simDep.GetExitT()) / 2.;
+    //auto simDepositsHandle = event.getValidHandle<std::vector<sim::AuxDetHit>>(fAuxDetHitsLabel); 
+    auto fAuxDetHitHandles = event.getMany<std::vector<sim::AuxDetHit>>();
+    for (auto const& adh_h: fAuxDetHitHandles){
+      for(auto const adh : *adh_h){
+        double x = (adh.GetEntryX() + adh.GetExitX()) / 2.;
+        double y = (adh.GetEntryY() + adh.GetExitY()) / 2.;
+        double z = (adh.GetEntryZ() + adh.GetExitZ()) / 2.;
+        double t = (adh.GetEntryT() + adh.GetExitT()) / 2.;
 
-      double ex = std::abs(simDep.GetEntryX() - simDep.GetExitX()) / 2.;
-      double ey = std::abs(simDep.GetEntryY() - simDep.GetExitY()) / 2.;
-      double ez = std::abs(simDep.GetEntryZ() - simDep.GetExitZ()) / 2.;
+        double ex = std::abs(adh.GetEntryX() - adh.GetExitX()) / 2.;
+        double ey = std::abs(adh.GetEntryY() - adh.GetExitY()) / 2.;
+        double ez = std::abs(adh.GetEntryZ() - adh.GetExitZ()) / 2.;
 
-      ex = std::max(ex, 1.);
-      ey = std::max(ey, 1.);
-      ez = std::max(ez, 1.);
-      double rmin[3] = { x - ex, y - ey, z - ez};
-      double rmax[3] = { x + ex, y + ey, z + ez};
-      if(fPrint)
-        std::cout << "Sim Energy Deposit: (" << x << ", " << y << ", " << z 
-                  << ")  +/- (" << ex << ", " << ey << ", " << ez << ") by trackID: " 
-                  << simDep.GetTrackID() << " at t = " << t << std::endl;
+        ex = std::max(ex, 1.);
+        ey = std::max(ey, 1.);
+        ez = std::max(ez, 1.);
+        double rmin[3] = { x - ex, y - ey, z - ez};
+        double rmax[3] = { x + ex, y + ey, z + ez};
+        if(fPrint)
+          std::cout << "Sim Energy Deposit: (" << x << ", " << y << ", " << z 
+                    << ")  +/- (" << ex << ", " << ey << ", " << ez << ") by trackID: " 
+                    << adh.GetTrackID() << " at t = " << t << std::endl;
 
-      DrawCube(c1, rmin, rmax, fAuxDetHitsColour);
+        DrawCube(c1, rmin, rmax, fAuxDetHitsColour);
+      }
     }
   }
 

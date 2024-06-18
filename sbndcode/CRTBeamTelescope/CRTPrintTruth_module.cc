@@ -57,7 +57,6 @@ private:
   sbnd::CRTBackTracker _crt_back_tracker;
   std::string _crthit_label;
   std::string _g4_label;
-  std::string _auxdethit_label;
 
 };
 
@@ -69,7 +68,6 @@ CRTPrintTruth::CRTPrintTruth(fhicl::ParameterSet const& p)
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   _g4_label          = p.get<std::string>("G4Label", "largeant");
   _crthit_label      = p.get<std::string>("CRTHitLabel", "crthit");
-  _auxdethit_label   = p.get<std::string>("AuxDetHitLabel", "largeant:LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN");
   _crt_back_tracker  = p.get<fhicl::ParameterSet>("CRTBackTracker", fhicl::ParameterSet());
 }
 
@@ -98,15 +96,18 @@ void CRTPrintTruth::analyze(art::Event const& e)
   //
   // Get the AuxDetHits from G4
   //
-  art::Handle<std::vector<sim::AuxDetHit>> adh_h; // geant4
+  auto fAuxDetHitHandles = e.getMany<std::vector<sim::AuxDetHit>>();
   std::vector<art::Ptr<sim::AuxDetHit>> adh_v;
-  e.getByLabel(_auxdethit_label, adh_h);
-  if(!adh_h.isValid()){
-    std::cout << "AuxDetHit product " << _auxdethit_label << " not found..." << std::endl;
-    throw std::exception();
+  for (auto const& adh_h: fAuxDetHitHandles){
+    if (fAuxDetHitHandles.size() == 0){
+      std::cout << "AuxDetHit product not found..." << std::endl;
+      throw std::exception();
+    }
+    if (!adh_h.isValid()||(*adh_h).size()==0) continue;
+    art::fill_ptr_vector(adh_v, adh_h);
+    std::cout<<"AuxDetHit size: "<<adh_v.size()<<std::endl;
   }
-  art::fill_ptr_vector(adh_v, adh_h);
-
+  
   //
   // Get the CRT Hits
   //
@@ -133,6 +134,7 @@ void CRTPrintTruth::analyze(art::Event const& e)
   for (auto const& mcp : mcp_v) {
     if (mcp->StatusCode() != 1) continue; 
     //std::cout<<"MCParticle: "<<mcp->TrackId()<<", pdg: "<<mcp->PdgCode()<<", E: "<<mcp->E()<<", Process: "<<mcp->Process()<<", mother: "<<mcp->Mother()/*<<", has "<<mcp->NumberDaughters()<<" daughters. "*/<<std::endl;
+    //std::cout<<"MCParticle: "<<mcp->TrackId()<<", pdg: "<<mcp->PdgCode()<<", E: "<<mcp->E()<<", Process: "<<mcp->Process()<<", start position: ("<<mcp->Vx()<<", "<<mcp->Vy()<<", "<<mcp->Vz()<<"), momentum: "<<mcp->P()*1000.<<" MeV"<<", end position: ("<<mcp->EndX()<<", "<<mcp->EndY()<<", "<<mcp->EndZ()<<"), end process: "<<mcp->EndProcess()<<std::endl;
     mcptrackID_to_pdg_map[mcp->TrackId()] = mcp->PdgCode();
     mcptrackID_to_motherID_map[mcp->TrackId()] = mcp->Mother();
     mcptrackID_to_startx_map[mcp->TrackId()] = mcp->Vx();
@@ -146,7 +148,8 @@ void CRTPrintTruth::analyze(art::Event const& e)
 
   int counter = 0;
   for (auto const& adh : adh_v) {
-    std::cout<<"PrintTruth AuxDetHit "<<counter<<": pdg: "<<mcptrackID_to_pdg_map[adh->GetTrackID()]<<", P: "<<mcptrackID_to_momentum_map[adh->GetTrackID()]<<" MeV, Process: "<<mcptrackID_to_start_process_map[adh->GetTrackID()]<<", hit postion: ("<<0.5*(adh->GetEntryX()+adh->GetExitX())<<", "<<0.5*(adh->GetEntryY()+adh->GetExitY())<<", "<<0.5*(adh->GetEntryZ()+adh->GetExitZ())<<"); track id: "<<adh->GetTrackID();
+    if (mcptrackID_to_pdg_map[adh->GetTrackID()] == 0) continue;
+    std::cout<<"PrintTruth AuxDetHit "<<counter<<": pdg: "<<mcptrackID_to_pdg_map[adh->GetTrackID()]<<", P: "<<mcptrackID_to_momentum_map[adh->GetTrackID()]<<" MeV, Process: "<<mcptrackID_to_start_process_map[adh->GetTrackID()]<<", hit postion: ("<<0.5*(adh->GetEntryX()+adh->GetExitX())<<", "<<0.5*(adh->GetEntryY()+adh->GetExitY())<<", "<<0.5*(adh->GetEntryZ()+adh->GetExitZ())<<"); hit time: "<<0.5*(adh->GetEntryT()+adh->GetExitT())<<", track id: "<<adh->GetTrackID();
 
     std::string process = mcptrackID_to_start_process_map[adh->GetTrackID()];
     int thistrackid = adh->GetTrackID();
@@ -166,7 +169,7 @@ void CRTPrintTruth::analyze(art::Event const& e)
     auto hit = crt_hit_v[i];
     const sbnd::CRTBackTracker::TruthMatchMetrics truthMatch = _crt_back_tracker.TruthMatrixFromTotalEnergy(e, hit);
 
-    std::cout<<"PrintTruth CRTHit "<<i/*<<", time: "<<hit->ts1_ns-1.7e6*/<<"; hit postion: ("<<hit->x_pos<<", "<<hit->y_pos<<", "<<hit->z_pos<<"); pdg: "<<truthMatch.pdg<<"; deposited energy: "<<truthMatch.depEnergy_total*1000.<<" MeV; purity: "<<truthMatch.purity<<"; trackID: "<<truthMatch.trackid<<std::endl;
+    std::cout<<"PrintTruth CRTHit "<<i<<", time: "<<hit->ts1_ns-1.7e6<<"; hit postion: ("<<hit->x_pos<<", "<<hit->y_pos<<", "<<hit->z_pos<<"); pdg: "<<truthMatch.pdg<<"; deposited energy: "<<truthMatch.depEnergy_total*1000.<<" MeV; purity: "<<truthMatch.purity<<"; trackID: "<<truthMatch.trackid<<std::endl;
     
     /*<<", mother: "<<getParticleByID(mcp_v, truthMatch.trackid)->Mother()<<", "<<getParticleByID(mcp_v, getParticleByID(mcp_v, truthMatch.trackid)->Mother())->PdgCode()*/
 

@@ -35,4 +35,14 @@ sbnd_crteventfilter:
     CRTHitLabel:    "crthit"
 }
 
+sbnd_crtana_airtpc:
+{
+    module_type:    "CRTAirTPCAnalysis" 
+    POTLabel:       "generator"
+    CRTBackTracker: @local::standard_crtbacktracker
+    SaveMCParticle: true
+    SaveInputFileName: true
+}
+
+
 END_PROLOG
