@@ -1,0 +1,8 @@
+
+services.Geometry.GDML: "sbnd_v02_00_airtpc.gdml"
+services.Geometry.ROOT: "sbnd_v02_00_airtpc.gdml"
+
+services.AuxDetGeometry.GDML: "sbnd_v02_00_airtpc.gdml"
+services.AuxDetGeometry.ROOT: "sbnd_v02_00_airtpc.gdml"
+
+services.LArG4Detector.gdmlFileName_: "sbnd_v02_00_airtpc_nowires.gdml"

@@ -1,0 +1,5 @@
+#include "ana_crt_airtpc_sbnd.fcl"
+
+physics.analyzers.crtana.SaveMCParticle: true
+physics.analyzers.crtana.KeepMCPFromADH: true
+physics.analyzers.crtana.SignalMode: true

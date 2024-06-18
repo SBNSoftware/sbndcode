@@ -1,0 +1,62 @@
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "configs_crt_analyzer.fcl"
+
+process_name: CRTEventFilter
+
+services:
+{
+  scheduler:    { defaultExceptions: false }    # Make all uncaught exceptions fatal.
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+  FileCatalogMetadata:  @local::art_file_catalog_mc
+  @table::sbnd_g4_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1          # Number of events to create
+}
+
+physics:
+{
+
+ producers:
+ {}
+
+ filters:
+ {
+  crteventfilter: @local::sbnd_crteventfilter
+ }
+
+ #define the producer and filter modules for this path, order matters,
+ #filters reject all following items.  see lines starting physics.producers below
+ simulate: [ crteventfilter ]
+ #define the output stream, there could be more than one if using filters
+ stream1:  [ out1 ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event,
+ #ie filters and producers
+ trigger_paths: [ simulate ]
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event,
+ #ie analyzers and output streams.  these all run simultaneously
+ end_paths:     [ stream1 ]
+ }
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+ out1:
+ {
+    @table::sbnd_rootoutput
+    fileName:    "%ifb_%p.root"
+    dataTier:    "reconstructed"
+    SelectEvents: [simulate]
+ }
+}
+
+#include "use_crt_airtpc_geometry_g4_services.fcl"

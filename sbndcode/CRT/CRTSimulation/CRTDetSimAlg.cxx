@@ -180,6 +180,7 @@ namespace crt {
             uint16_t adc_sipm0 = WaveformEmulation(strip.sipm0.t1 - trigger_time, strip.sipm0.adc);
             uint16_t adc_sipm1 = WaveformEmulation(strip.sipm1.t1 - trigger_time, strip.sipm1.adc);
 
+            std::cout<<"here1: mac5"<<strip.mac5<<" "<<strip.sipm0.sipmID<<" "<<strip.sipm1.sipmID<<std::endl;
             AddADC(feb_data, strip.sipm0.sipmID, adc_sipm0);
             AddADC(feb_data, strip.sipm1.sipmID, adc_sipm1);
 
@@ -331,6 +332,7 @@ namespace crt {
                          strip_data.sipm_coinc)
                 {
                     if (trigger.tagger_triggered()) {
+                        std::cout<<"here2: "<<is_bottom<<std::endl;
                         ProcessStrips(trigger._strips);
                     }
 
@@ -355,6 +357,8 @@ namespace crt {
             } // loop over strips
 
             if (trigger.tagger_triggered()) {
+
+                std::cout<<"here3: "<<is_bottom<<std::endl;
                 ProcessStrips(trigger._strips);
             }
 
@@ -449,7 +453,7 @@ namespace crt {
             uint32_t sipm0ID = stripID * 2 + 0;
             uint32_t sipm1ID = stripID * 2 + 1;
 
-            //            if (volumeName.find("MINOS") != std::string::npos) {continue;} // Ignoring MINOS modules for now.
+            //if (volumeName.find("MINOS") != std::string::npos) {continue;} // Ignoring MINOS modules for now.
 
             // Apply ADC threshold and strip-level coincidence (both fibers fire)
             double threshold = static_cast<double>(fParams.QThreshold());
