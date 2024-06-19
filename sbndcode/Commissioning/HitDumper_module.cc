@@ -581,7 +581,7 @@ void Hitdumper::analyze(const art::Event& evt)
     _n_crt_strip_hits = crtStripHitVector.size();
   }
   else
-    std::cout << "Failed to get sbnd::crt::CRTStripHit data product (fCRTStripHitModuleLabel)." << std::endl;
+    std::cout << "Failed to get sbnd::crt::CRTStripHit data product ("<<fCRTStripHitModuleLabel<<")." << std::endl;
 
   if (_n_crt_strip_hits > _max_crt_strip_hits) _n_crt_strip_hits = _max_crt_strip_hits;
 
@@ -614,7 +614,7 @@ void Hitdumper::analyze(const art::Event& evt)
       _n_crt_space_points = crtSPVector.size();
     }
     else {
-      std::cout << "Failed to get sbnd::crt::CRTSpacePoint data product (CRTSpacePointModuleLabel)." << std::endl;
+      std::cout << "Failed to get sbnd::crt::CRTSpacePoint data product ("<<CRTSpacePointModuleLabel<<")." << std::endl;
       _n_crt_space_points = 0;
     }
 
@@ -691,7 +691,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	_crt_track_length.push_back(crttrack->Length());
       }
     } else {
-      std::cout << "Failed to get sbnd::crt::CRTTrack data product (CRTTrackModuleLabel)." << std::endl;
+      std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<CRTTrackModuleLabel<<")." << std::endl;
     }
   }
   

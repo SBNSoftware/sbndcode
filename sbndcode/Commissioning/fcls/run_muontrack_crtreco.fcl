@@ -100,6 +100,8 @@ physics:
 # override hitdumper defaults 
 physics.analyzers.hitdumper.readMuonHits:  true
 physics.analyzers.hitdumper.SelectEvents:  [reco] 
+physics.analyzers.hitdumper.KeepCRTStripHits:  true
+physics.analyzers.hitdumper.KeepCRTTracks:  true
 
 # set thresholds 
 physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"

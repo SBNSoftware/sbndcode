@@ -26,9 +26,9 @@ hitdumper:
     MCTrackModuleLabel:       "mcreco"
     MCShowerModuleLabel:      "mcreco"
  
-    KeepCRTStripHits:         true
+    KeepCRTStripHits:         false
     KeepCRTSpacePoints:       true
-    KeepCRTTracks:            true
+    KeepCRTTracks:            false
     readOpHits:               true
     readpmtTrigger:           false
     readpmtSoftTrigger:       false
@@ -47,7 +47,7 @@ hitdumper:
     SkipInduction:            false
     SelectEvents: []
 }
- hitdumper_data: @local::hitdumpe
+ hitdumper_data: @local::hitdumper
  hitdumper_data.OpHitsModuleLabel: ["ophitpmt"] #only have PMT data as of 05/30/2024 
  hitdumper_data.readTruth: false 
 
