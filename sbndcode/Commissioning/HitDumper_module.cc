@@ -614,7 +614,7 @@ void Hitdumper::analyze(const art::Event& evt)
       _n_crt_space_points = crtSPVector.size();
     }
     else {
-      std::cout << "Failed to get sbnd::crt::CRTSpacePoint data product ("<<CRTSpacePointModuleLabel<<")." << std::endl;
+      std::cout << "Failed to get sbnd::crt::CRTSpacePoint data product ("<<fCRTSpacePointModuleLabel<<")." << std::endl;
       _n_crt_space_points = 0;
     }
 
@@ -691,7 +691,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	_crt_track_length.push_back(crttrack->Length());
       }
     } else {
-      std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<CRTTrackModuleLabel<<")." << std::endl;
+      std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<fCRTTrackModuleLabel<<")." << std::endl;
     }
   }
   
