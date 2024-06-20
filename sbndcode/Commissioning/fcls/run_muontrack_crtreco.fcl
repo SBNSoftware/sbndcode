@@ -102,6 +102,7 @@ physics.analyzers.hitdumper.readMuonHits:  true
 physics.analyzers.hitdumper.SelectEvents:  [reco] 
 physics.analyzers.hitdumper.KeepCRTStripHits:  true
 physics.analyzers.hitdumper.KeepCRTTracks:  true
+physics.analyzers.hitdumper.KeepCRTSpacePoints: true
 physics.analyzers.hitdumper.KeepSpacePoints:  true
 
 # set thresholds 
