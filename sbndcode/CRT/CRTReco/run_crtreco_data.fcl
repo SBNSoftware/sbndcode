@@ -8,6 +8,7 @@ services.CRTCalibService:      @local::crt_calib_service
 
 physics.producers.crtstrips.FEBDataModuleLabel:                         "crtdecoder"
 physics.producers.crtstrips.AllowFlag1:                                 true
+physics.producers.crtstrips.CorrectForDifferentSecond:                  true
 physics.producers.crtclustering.UseTs0:                                 true
 physics.producers.crtspacepoints.ClusterCharacterisationAlg.TimeOffset: 0
 physics.producers.crttracks.UseTs0:                                     true

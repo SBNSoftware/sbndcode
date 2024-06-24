@@ -42,7 +42,8 @@ public:
 
   void produce(art::Event& e) override;
 
-  std::vector<CRTStripHit> CreateStripHits(art::Ptr<FEBData> &data);
+  std::vector<CRTStripHit> CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_unix);
+  std::set<uint32_t> UnixSet(const std::vector<art::Ptr<FEBData>> &datas);
 
 private:
 
@@ -54,6 +55,7 @@ private:
   bool                fApplyTs1Window;
   int64_t             fTs1Min;
   int64_t             fTs1Max;
+  bool                fCorrectForDifferentSecond;
 };
 
 
@@ -67,6 +69,7 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fApplyTs1Window(p.get<bool>("ApplyTs1Window"))
   , fTs1Min(p.get<int64_t>("Ts1Min", 0))
   , fTs1Max(p.get<int64_t>("Ts1Max", std::numeric_limits<int64_t>::max()))
+  , fCorrectForDifferentSecond(p.get<bool>("CorrectForDifferentSecond"))
 {
   produces<std::vector<CRTStripHit>>();
   produces<art::Assns<FEBData, CRTStripHit>>();
@@ -83,9 +86,16 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
   std::vector<art::Ptr<FEBData>> FEBDataVec;
   art::fill_ptr_vector(FEBDataVec, FEBDataHandle);
 
+  // We get a set of the unix times of all the FEBDatas. In data they should only ever take up to 2 values.
+  // This comes if the PPS reset arrives mid-event. In the strip hit creation method we correct for this.
+  // These lines define our prescription for doing so. We take the later unix time as the reference point.
+  // The actual correction should always be turned off for simulation (by setting CorrectForDifferentSecond to false).
+  std::set<uint32_t> unix_set = UnixSet(FEBDataVec);
+  const uint32_t ref_unix = unix_set.size() ? *unix_set.rbegin() : 0;
+
   for(auto data : FEBDataVec)
     {
-      std::vector<CRTStripHit> newStripHits = CreateStripHits(data);
+      std::vector<CRTStripHit> newStripHits = CreateStripHits(data, ref_unix);
 
       for(auto hit : newStripHits)
         {
@@ -98,12 +108,12 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
   e.put(std::move(stripHitDataAssn));
 }
 
-std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<FEBData> &data)
+std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_unix)
 {
   std::vector<CRTStripHit> stripHits;
 
   const uint32_t mac5  = data->Mac5();
-  const uint32_t unixs = data->UnixS();
+  uint32_t unixs       = data->UnixS();
 
   // Only consider "real data" readouts, not clock resets etc
   if(!(data->Flags() == 3 || (fAllowFlag1 && data->Flags() == 1)))
@@ -113,8 +123,26 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
   // Correct for FEB readout cable length
   // (time is FEB-by-FEB not channel-by-channel)
-  const int64_t t0 = (int)data->Ts0() + (int)module.t0CableDelayCorrection;
-  const int64_t t1 = (int)data->Ts1() + (int)module.t1CableDelayCorrection;
+  int64_t t0 = (int)data->Ts0() + (int)module.t0CableDelayCorrection;
+  int64_t t1 = (int)data->Ts1() + (int)module.t1CableDelayCorrection;
+
+  if(fCorrectForDifferentSecond)
+    {
+      // For data events we correct the t0 time used for clustering if the
+      // events fell either side of the PPS reset.
+
+      const int64_t unix_diff = ref_unix - unixs;
+      if(unix_diff != 0 && unix_diff != 1)
+        throw std::runtime_error("Unix timestamps differ by more than 1" + unix_diff);
+
+      const bool previous_second = unix_diff == 1;
+
+      if(previous_second)
+        {
+          t0 -= static_cast<int>(1e9);
+          unixs += 1;
+        }
+    }
 
   if(fApplyTs1Window && (t1 < fTs1Min || t1 > fTs1Max))
     return stripHits;
@@ -151,11 +179,23 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
           if(pos - err < 0)
             err = pos;
 
-          stripHits.emplace_back(channel, t0, t1, unixs, pos, err, adc1, adc2);
+          stripHits.emplace_back(channel, t0, t1, ref_unix, pos, err, adc1, adc2);
         }
     }
 
   return stripHits;
+}
+
+std::set<uint32_t> sbnd::crt::CRTStripHitProducer::UnixSet(const std::vector<art::Ptr<FEBData>> &datas)
+{
+  std::set<uint32_t> set;
+
+  for(auto const& data : datas)
+    {
+      set.insert(data->UnixS());
+    }
+
+  return set;
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTStripHitProducer)

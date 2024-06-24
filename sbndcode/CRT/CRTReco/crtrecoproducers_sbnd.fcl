@@ -4,12 +4,13 @@ BEGIN_PROLOG
 
 crtstriphitproducer_sbnd:
 {
-   FEBDataModuleLabel: "crtsim"
-   ADCThreshold:       60
-   ErrorCoeff:         [ 0.26, -0.27, 0.025 ]
-   AllowFlag1:         false
-   ApplyTs1Window:     false
-   module_type:        "CRTStripHitProducer"
+   FEBDataModuleLabel:        "crtsim"
+   ADCThreshold:              60
+   ErrorCoeff:                [ 0.26, -0.27, 0.025 ]
+   AllowFlag1:                false
+   ApplyTs1Window:            false
+   CorrectForDifferentSecond: false
+   module_type:               "CRTStripHitProducer"
 }
 
 crtclusterproducer_sbnd:
