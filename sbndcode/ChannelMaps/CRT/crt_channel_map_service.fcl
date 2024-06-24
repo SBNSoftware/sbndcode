@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 crt_channel_map_standard:
 {
-  FileName: "SBNDCRTChannelMap_v4.txt"
+  FileName: "SBNDCRTChannelMap_v5.txt"
 }
 
 END_PROLOG
