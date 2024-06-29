@@ -22,6 +22,9 @@ physics:
   pass: [filter]
   fail: ["!filter"]
 
+  stream1: [lightPass, lightFail]
+  end_paths: [stream1]
+
 }
 
 outputs:
@@ -34,7 +37,7 @@ outputs:
     selectEvents: [pass]
   }
 
-  lightFass:
+  lightFail:
   {
     module_type: RootOutput
     fileName: "lightFail_%ifb_%p-%tc.root"
