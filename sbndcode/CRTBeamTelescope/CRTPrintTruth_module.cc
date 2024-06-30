@@ -57,6 +57,7 @@ private:
   sbnd::CRTBackTracker _crt_back_tracker;
   std::string _crthit_label;
   std::string _g4_label;
+  bool _isPrintAllMCPar;
 
 };
 
@@ -69,6 +70,7 @@ CRTPrintTruth::CRTPrintTruth(fhicl::ParameterSet const& p)
   _g4_label          = p.get<std::string>("G4Label", "largeant");
   _crthit_label      = p.get<std::string>("CRTHitLabel", "crthit");
   _crt_back_tracker  = p.get<fhicl::ParameterSet>("CRTBackTracker", fhicl::ParameterSet());
+  _isPrintAllMCPar   = p.get<bool>("PrintAllMCPar", false);
 }
 
 void CRTPrintTruth::analyze(art::Event const& e)
@@ -91,6 +93,11 @@ void CRTPrintTruth::analyze(art::Event const& e)
     throw std::exception();
   }
   art::fill_ptr_vector(mcp_v, mcp_h);
+  if (_isPrintAllMCPar){
+    for (size_t ipar=0; ipar<mcp_v.size(); ++ipar){
+      std::cout<<"PrintTruth MCParticle: "<<mcp_v[ipar]->TrackId()<<", pdg: "<<mcp_v[ipar]->PdgCode()<<", E: "<<mcp_v[ipar]->E()<<", Process: "<<mcp_v[ipar]->Process()<<"start position: ("<<mcp_v[ipar]->Vx()<<", "<<mcp_v[ipar]->Vy()<<", "<<mcp_v[ipar]->Vz()<<"), momentum: "<<mcp_v[ipar]->P()*1000.<<" MeV"<<", end position: ("<<mcp_v[ipar]->EndX()<<", "<<mcp_v[ipar]->EndY()<<", "<<mcp_v[ipar]->EndZ()<<"), end process: "<<mcp_v[ipar]->EndProcess()<<std::endl;
+    }
+  }
 
 
   //

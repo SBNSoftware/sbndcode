@@ -79,9 +79,13 @@ namespace sbnd{
               {
                 const int32_t cableDelayCorrection = fCableLengthCorrections.size() ? 
                   fCableLengthCorrections.at(ad_i) : 0;
+
+                const std::string stripName = nodeStrip->GetVolume()->GetName();
+                const bool minos = stripName.find("MINOS") != std::string::npos ? true : false;
+
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
-                                                    cableDelayCorrection, invert);
+                                                    cableDelayCorrection, invert, minos);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 

@@ -125,13 +125,15 @@ namespace sbnd{
     , adID(std::numeric_limits<uint16_t>::max())
     , cableDelayCorrection(0)
     , invertedOrdering(false)
+    , minos(false)
     , null(false)
     {}
 
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet, 
                  const uint16_t _adID, const std::string &_taggerName,
                  const int32_t _cableDelayCorrection,
-                 const bool _invertedOrdering)
+                 const bool _invertedOrdering,
+                 const bool _minos)
     {
       name       = moduleNode->GetName();
       taggerName = _taggerName;
@@ -154,7 +156,11 @@ namespace sbnd{
       double origin[3] = {0, 0, 0};
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
-      orientation = (modulePosMother[2] > 0);
+
+      if(_minos)
+        orientation = (modulePosMother[2] < 0);
+      else
+        orientation = (modulePosMother[2] > 0);
 
       // Location of SiPMs - CRT BeamTelescope specific
       top = false;
@@ -170,8 +176,9 @@ namespace sbnd{
       cableDelayCorrection = _cableDelayCorrection;
 
       invertedOrdering = _invertedOrdering;
-
       adID = _adID;
+      minos = _minos;
+
       null = false;
     }
     std::string   name;
@@ -187,6 +194,7 @@ namespace sbnd{
     uint16_t      adID;
     int32_t       cableDelayCorrection;
     bool          invertedOrdering;
+    bool          minos;
     bool          null;
   };
 

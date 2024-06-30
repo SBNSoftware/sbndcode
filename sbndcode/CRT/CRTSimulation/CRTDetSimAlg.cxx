@@ -380,6 +380,9 @@ namespace crt {
 
         const CRTStripGeo strip   = fCRTGeoAlg.GetStripByAuxDetIndices(adid, adsid);
         const CRTModuleGeo module = fCRTGeoAlg.GetModule(strip.moduleName);
+
+        // turn off MINOS modules for now
+        if(module.minos) return;
         
         // Retrive the ID of this CRT module
         const uint16_t mac5 = adid;
@@ -453,7 +456,6 @@ namespace crt {
             uint32_t sipm0ID = stripID * 2 + 0;
             uint32_t sipm1ID = stripID * 2 + 1;
 
-            //if (volumeName.find("MINOS") != std::string::npos) {continue;} // Ignoring MINOS modules for now.
 
             // Apply ADC threshold and strip-level coincidence (both fibers fire)
             double threshold = static_cast<double>(fParams.QThreshold());
@@ -528,6 +530,7 @@ namespace crt {
         // The expected number of PE, using a quadratic model for the distance
         // dependence, and scaling linearly with deposited energy.
         double qr = fParams.UseEdep() ? 1.0 * eDep / fParams.Q0() : 1.0;
+        //std::cout<<"ENERGYYYYY "<<eDep<<std::endl;
 
         double npeExpected =
             fParams.NpeScaleNorm() / pow(distToReadout - fParams.NpeScaleShift(), 2) * qr;

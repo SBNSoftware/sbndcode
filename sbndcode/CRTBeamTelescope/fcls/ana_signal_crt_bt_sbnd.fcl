@@ -1,5 +1,5 @@
 #include "ana_crt_bt_sbnd.fcl"
 
 physics.analyzers.crtana.SaveMCParticle: true
-physics.analyzers.crtana.KeepMCPFromADH: true
+physics.analyzers.crtana.KeepMCPFromADH: false
 physics.analyzers.crtana.SignalMode: true
