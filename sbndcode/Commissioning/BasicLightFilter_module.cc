@@ -107,11 +107,13 @@ bool sbnd::BasicLightFilter::filter(art::Event& e)
     }
   }
 
-  std::vector<int> flash(wvf_length, 0);
+  std::vector<int> flash_tpc0(wvf_length, 0);
+  std::vector<int> flash_tpc1(wvf_length, 0);
   int npmt_counter = 0;
 
   for(auto const& wvf : (*wvfHandle)) {
     int fChNumber = wvf.ChannelNumber();
+    if (fChNumber == 39) continue;
     if(std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(fChNumber) ) != fPDTypes.end() ){
 
       // make copy to get the median 
@@ -124,36 +126,43 @@ bool sbnd::BasicLightFilter::filter(art::Event& e)
       auto median = *median_it;
 
       for(unsigned int i=0;i<wvf.size();i++){
-        flash.at(i) += wvf.at(i) - median;
+        if (fChNumber%2==0) flash_tpc0.at(i) += wvf.at(i) - median;
+        else flash_tpc1.at(i) += wvf.at(i) - median;
       }
       npmt_counter++;
     }
   }
 
-  auto flash_peakval = *std::min_element(flash.begin(), flash.end());
-  auto flash_peaktime = std::distance(flash.begin(), std::min_element(flash.begin(), flash.end()))*2 + wvf_start; // units of ns
+  auto flash_tpc0_peakval = *std::min_element(flash_tpc0.begin(), flash_tpc0.end());
+  auto flash_tpc0_peaktime = std::distance(flash_tpc0.begin(), std::min_element(flash_tpc0.begin(), flash_tpc0.end()))*2 + wvf_start; // units of ns
 
-  std::cout << "flash peak value: " << flash_peakval << std::endl;
-  std::cout << "flash peak time: " << flash_peaktime << std::endl;
+  auto flash_tpc1_peakval = *std::min_element(flash_tpc1.begin(), flash_tpc1.end());
+  auto flash_tpc1_peaktime = std::distance(flash_tpc1.begin(), std::min_element(flash_tpc1.begin(), flash_tpc1.end()))*2 + wvf_start; // units of ns
 
-  bool inbeamwindow = false;
-  bool passthreshold = false;
+  std::cout << "TPC0 flash peak value = " << flash_tpc0_peakval << " PE at " << flash_tpc0_peaktime << " ns"<< std::endl;
+  std::cout << "TPC1 flash peak value = " << flash_tpc1_peakval << " PE at " << flash_tpc1_peaktime << " ns"<< std::endl;
 
-  if ((flash_peaktime > fBeamWindowMin) && (flash_peaktime < fBeamWindowMax)) inbeamwindow = true;
-  if (flash_peakval < fFlashADCThreshold) passthreshold = true;
+  bool tpc0_pass = false; 
+  bool tpc1_pass = false;
+
+  if ((flash_tpc0_peaktime > fBeamWindowMin) && (flash_tpc0_peaktime < fBeamWindowMax) && (flash_tpc0_peakval < fFlashADCThreshold)) tpc0_pass = true;
+  if ((flash_tpc1_peaktime > fBeamWindowMin) && (flash_tpc1_peaktime < fBeamWindowMax) && (flash_tpc1_peakval < fFlashADCThreshold)) tpc1_pass = true;
   
-  if (inbeamwindow && passthreshold){
+  if (tpc0_pass | tpc1_pass){
     histname.str(std::string());
+    int ntpc = (flash_tpc0_peakval < flash_tpc1_peakval) ? 0 : 1;
     histname << "event_" << e.id().event()
-            << "_npmts_" << npmt_counter
-              << "_PMTflash" ;
-    TH1D *flashHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", wvf_start), flash.size(), wvf_start, wvf_end);
-    for(unsigned int i = 0; i < flash.size(); i++) {
-      flashHist->SetBinContent(i + 1, (double)flash[i]);
+             << "_npmts_" << npmt_counter
+             << "_tpc_" << ntpc;
+
+    TH1D *flashHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", wvf_start), flash_tpc0.size(), wvf_start, wvf_end);
+    for(unsigned int i = 0; i < flash_tpc0.size(); i++) {
+      if (ntpc == 0) flashHist->SetBinContent(i + 1, (double)flash_tpc0[i]);
+      else flashHist->SetBinContent(i + 1, (double)flash_tpc1[i]);
     }
   }
 
-  return (inbeamwindow && passthreshold);
+  return (tpc0_pass || tpc1_pass);
 }
 
 DEFINE_ART_MODULE(sbnd::BasicLightFilter)
