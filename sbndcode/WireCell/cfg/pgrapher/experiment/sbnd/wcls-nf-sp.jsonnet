@@ -35,8 +35,6 @@ local simu_params = import 'simparams.jsonnet';
 local params = if reality == 'data' then data_params else simu_params;
 
 local tools = tools_maker(params);
-local nanodes = std.length(tools.anodes);
-local anode_iota = std.range(0, nanodes - 1);
 
 local mega_anode = {
   type: 'MegaAnodePlane',
@@ -118,7 +116,7 @@ local chndb = [{
   data: perfect(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   // data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   uses: [tools.anodes[n], tools.field, tools.dft],
-} for n in anode_iota];
+} for n in std.range(0, std.length(tools.anodes) - 1)];
 
 local chsel_pipes = [
   g.pnode({
@@ -148,7 +146,7 @@ local nfsp_pipes = [
                chsel_pipes[n],
                //sinks.orig_pipe[n],
 
-               //nf_pipes[n],
+               nf_pipes[n],
                //sinks.raw_pipe[n],
 
                sp_pipes[n],

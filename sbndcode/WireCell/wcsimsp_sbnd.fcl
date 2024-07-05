@@ -86,7 +86,7 @@ sbnd_wcls_sp.wcls_main.params :   {
                                    raw_input_label: "daq"   
 
                                    # Set "data" vs. "sim".  The epoch below probably should follow suit.
-                                   reality: "sim"   
+                                   reality: "data"   
 
                                    # if epoch is "dynamic" you MUST add
                                    # "wclsMultiChannelNoiseDB" to "inputers" and must NOT
