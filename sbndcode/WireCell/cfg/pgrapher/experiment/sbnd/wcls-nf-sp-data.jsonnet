@@ -30,10 +30,17 @@ local wc = import 'wirecell.jsonnet';
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
 local data_params = import 'params.jsonnet';
-local simu_params = import 'simparams.jsonnet';
-local params = simu_params;
+
+local params = data_params {
+    daq: super.daq { // <- super.daq overrides default values
+      // Longitudinal diffusion constant
+      nticks: std.extVar('nticks'),
+    },
+};
+
 
 local tools = tools_maker(params);
+
 
 local mega_anode = {
   type: 'MegaAnodePlane',
