@@ -140,6 +140,7 @@ physics.producers.cafmaker.CreateBlindedCAF: false
 
 # Save GENIE event record for MC
 # Turn this to false for data CAFMaker
+# More details can be found in here: https://sbn-docdb.fnal.gov/cgi-bin/sso/ShowDocument?docid=36869
 physics.producers.cafmaker.SaveGENIEEventRecord: true
 
 # Include Simple/OpFlashes for PMT/XARAPUCA
