@@ -96,5 +96,4 @@ sbnd_wcls_sp.wcls_main.params :   {
                                    # Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
                                    signal_output_form: "sparse"
                                    }
-
 END_PROLOG
