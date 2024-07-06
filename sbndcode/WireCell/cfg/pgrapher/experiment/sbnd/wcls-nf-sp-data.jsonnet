@@ -33,7 +33,7 @@ local data_params = import 'params.jsonnet';
 
 local params = data_params {
     daq: super.daq { // <- super.daq overrides default values
-      // Longitudinal diffusion constant
+      // Set the waveform sample length, eg, 6000, 15000, "auto"
       nticks: std.extVar('nticks'),
     },
 };
