@@ -29,7 +29,6 @@ local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local wc = import 'wirecell.jsonnet';
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
-local data_params = import 'params.jsonnet';
 local simu_params = import 'simparams.jsonnet';
 local params = simu_params;
 
