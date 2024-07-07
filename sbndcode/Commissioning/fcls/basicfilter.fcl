@@ -18,6 +18,7 @@ physics:
       FlashADCThreshold: -400
       BeamWindowMin: 900 # if etrig is the reference time then beam looks to start at 900 ns (tophat looks like us into the wavefor, and waveform time is ~-2100 w.r.t. etrig)
       BeamWindowMax: 2700 # beamWindowMin + 1.8 us
+      ChannelsToIgnore: [39,270]
     }
   }
 

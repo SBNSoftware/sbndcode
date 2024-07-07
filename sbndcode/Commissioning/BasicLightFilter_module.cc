@@ -64,6 +64,8 @@ art::ServiceHandle<art::TFileService> tfs;
   float fFlashADCThreshold;
   float fBeamWindowMin;
   float fBeamWindowMax;
+
+  std::vector <int> fChannelsToIgnore;
 };
 
 
@@ -74,7 +76,8 @@ sbnd::BasicLightFilter::BasicLightFilter(fhicl::ParameterSet const& p)
   fRawWaveformsModuleLabel( p.get< std::string >("RawWaveformsModuleLabel","pmtdecoder:PMTChannels")),
   fFlashADCThreshold( p.get<float>("FlashADCThreshold",-200)),
   fBeamWindowMin(p.get<float>("BeamWindowMin")),
-  fBeamWindowMax(p.get<float>("BeamWindowMax"))
+  fBeamWindowMax(p.get<float>("BeamWindowMax")),
+  fChannelsToIgnore( p.get<std::vector<int>>("ChannelsToIgnore",{}))
 {
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
@@ -112,9 +115,10 @@ bool sbnd::BasicLightFilter::filter(art::Event& e)
   int npmt_counter = 0;
 
   for(auto const& wvf : (*wvfHandle)) {
-    int fChNumber = wvf.ChannelNumber();
-    if (fChNumber == 39) continue;
-    if(std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(fChNumber) ) != fPDTypes.end() ){
+    int wvf_ch = wvf.ChannelNumber();
+    if(std::find(fChannelsToIgnore.begin(), fChannelsToIgnore.end(), wvf_ch) != fChannelsToIgnore.end() ) continue;
+
+    if(std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(wvf_ch) ) != fPDTypes.end() ){
 
       // make copy to get the median 
       std::vector<short int> wvf_copy;
@@ -126,7 +130,7 @@ bool sbnd::BasicLightFilter::filter(art::Event& e)
       auto median = *median_it;
 
       for(unsigned int i=0;i<wvf.size();i++){
-        if (fChNumber%2==0) flash_tpc0.at(i) += wvf.at(i) - median;
+        if (wvf_ch%2==0) flash_tpc0.at(i) += wvf.at(i) - median;
         else flash_tpc1.at(i) += wvf.at(i) - median;
       }
       npmt_counter++;
