@@ -1,0 +1,12 @@
+#include "wcsp_data_sbnd.fcl"
+#include "reco1_sce_lite.fcl"
+
+physics.producers:
+{
+    @table::physics.producers
+    sptpc2d : @local::sbnd_wcls_sp_data
+}
+
+physics.reco1: [sptpc2d, gaushit]
+physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
+physics.end_paths: ["stream1"]
