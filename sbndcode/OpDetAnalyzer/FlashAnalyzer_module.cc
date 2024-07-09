@@ -85,6 +85,10 @@ void opdet::FlashAnalyzer::analyze(art::Event const& e)
     std::cout << "RawWaveform with label " << fRawWaveformsModuleLabel << " not found..." << std::endl;
     throw std::exception();
   }
+
+  if(wvfHandle->size() == 0)
+    return;
+
   auto wvf_length = (*wvfHandle)[0].size();
   auto wvf_start  = (*wvfHandle)[0].TimeStamp();
   auto wvf_end    = wvf_start + wvf_length*2; 
