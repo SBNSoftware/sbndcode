@@ -1,0 +1,4 @@
+#include "run_crtana_data.fcl"
+
+physics.analyzers.crtana.HasPTB: false
+physics.analyzers.crtana.HasTDC: false
