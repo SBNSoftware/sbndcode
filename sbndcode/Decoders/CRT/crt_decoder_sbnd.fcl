@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+crt_decoder:
+{
+  module_type:            "CRTDecoder"
+  CRTInstanceLabels:      [ "ContainerBERNCRTV2" ]
+}
+
+END_PROLOG
