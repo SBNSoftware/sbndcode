@@ -8,6 +8,7 @@ art_make_library(
 simple_plugin(
               CRTStripHitProducer module
               sbnobj::SBND_CRT
+              sbnobj::SBND_Timing
               sbndcode_GeoWrappers
 )
 

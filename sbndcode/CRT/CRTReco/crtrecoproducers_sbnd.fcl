@@ -10,6 +10,7 @@ crtstriphitproducer_sbnd:
    AllowFlag1:                false
    ApplyTs1Window:            false
    CorrectForDifferentSecond: false
+   ReferenceTs0ToETrig:       false
    module_type:               "CRTStripHitProducer"
 }
 

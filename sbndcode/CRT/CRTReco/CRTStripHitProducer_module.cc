@@ -21,6 +21,7 @@
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
@@ -42,7 +43,8 @@ public:
 
   void produce(art::Event& e) override;
 
-  std::vector<CRTStripHit> CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_unix);
+  std::vector<CRTStripHit> CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_unix,
+                                           const uint64_t etrig_time);
   std::set<uint32_t> UnixSet(const std::vector<art::Ptr<FEBData>> &datas);
 
 private:
@@ -56,6 +58,9 @@ private:
   int64_t             fTs1Min;
   int64_t             fTs1Max;
   bool                fCorrectForDifferentSecond;
+  bool                fReferenceTs0ToETrig;
+  std::string         fSPECTDCModuleLabel;
+  uint32_t            fSPECTDCETrigChannel;
 };
 
 
@@ -70,6 +75,9 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fTs1Min(p.get<int64_t>("Ts1Min", 0))
   , fTs1Max(p.get<int64_t>("Ts1Max", std::numeric_limits<int64_t>::max()))
   , fCorrectForDifferentSecond(p.get<bool>("CorrectForDifferentSecond"))
+  , fReferenceTs0ToETrig(p.get<bool>("ReferenceTs0ToETrig"))
+  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel"))
+  , fSPECTDCETrigChannel(p.get<uint32_t>("SPECTDCETrigChannel", 4))
 {
   produces<std::vector<CRTStripHit>>();
   produces<art::Assns<FEBData, CRTStripHit>>();
@@ -93,9 +101,29 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
   std::set<uint32_t> unix_set = UnixSet(FEBDataVec);
   const uint32_t ref_unix = unix_set.size() ? *unix_set.rbegin() : 0;
 
+  uint64_t etrig_time = 0;
+
+  if(fReferenceTs0ToETrig)
+    {
+      art::Handle<std::vector<sbnd::timing::DAQTimestamp>> TDCHandle;
+      e.getByLabel(fSPECTDCModuleLabel, TDCHandle);
+
+      if(TDCHandle.isValid() && TDCHandle->size() != 0)
+        {
+          std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> TDCVec;
+          art::fill_ptr_vector(TDCVec, TDCHandle);
+
+          for(auto ts : TDCVec)
+            {
+              if(ts->Channel() == fSPECTDCETrigChannel)
+                etrig_time = ts->Timestamp() % static_cast<uint64_t>(1e9);
+            }
+        }
+    }
+
   for(auto data : FEBDataVec)
     {
-      std::vector<CRTStripHit> newStripHits = CreateStripHits(data, ref_unix);
+      std::vector<CRTStripHit> newStripHits = CreateStripHits(data, ref_unix, etrig_time);
 
       for(auto hit : newStripHits)
         {
@@ -108,7 +136,8 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
   e.put(std::move(stripHitDataAssn));
 }
 
-std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_unix)
+std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_unix,
+                                                                                    const uint64_t etrig_time)
 {
   std::vector<CRTStripHit> stripHits;
 
@@ -143,6 +172,9 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
           unixs += 1;
         }
     }
+
+  if(fReferenceTs0ToETrig)
+    t0 -= etrig_time;
 
   if(fApplyTs1Window && (t1 < fTs1Min || t1 > fTs1Max))
     return stripHits;
