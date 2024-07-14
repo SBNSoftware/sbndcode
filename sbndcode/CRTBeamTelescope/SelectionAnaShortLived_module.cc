@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       SelectionAna
+// Class:       SelectionAnaShortLived
 // Plugin Type: analyzer (Unknown Unknown)
-// File:        SelectionAna_module.cc
+// File:        SelectionAnaShortLived_module.cc
 //
 // Generated at Tue Nov 14 06:04:47 2023 by Jiaoyang Li using cetskelgen
 // from  version .
@@ -32,19 +32,19 @@
 #include <algorithm>  // for sort
 #include <functional> // for greater
 
-class SelectionAna;
+class SelectionAnaShortLivedShortLived;
 
-class SelectionAna : public art::EDAnalyzer {
+class SelectionAnaShortLived : public art::EDAnalyzer {
 public:
-  explicit SelectionAna(fhicl::ParameterSet const& p);
+  explicit SelectionAnaShortLived(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
   // Plugins should not be copied or assigned.
-  SelectionAna(SelectionAna const&) = delete;
-  SelectionAna(SelectionAna&&) = delete;
-  SelectionAna& operator=(SelectionAna const&) = delete;
-  SelectionAna& operator=(SelectionAna&&) = delete;
+  SelectionAnaShortLived(SelectionAnaShortLived const&) = delete;
+  SelectionAnaShortLived(SelectionAnaShortLived&&) = delete;
+  SelectionAnaShortLived& operator=(SelectionAnaShortLived const&) = delete;
+  SelectionAnaShortLived& operator=(SelectionAnaShortLived&&) = delete;
 
   // Required functions.
   void analyze(art::Event const& e) override;
@@ -75,14 +75,21 @@ private:
 
   int _n_chits_upstream, _n_chits_downstream;    ///< Number of CRT hits in the upstream/downstream CRTs
   
-  // Variables related to geometry for CRT hits.
-  std::vector<double> _distance_between_hits_downstream;     ///< Distance between any two hits. 
-  int _isSquare;                                 ///< Can CRT hits form a square?
-  double _biggest_distance_between_hits;            ///< Mean of the distance between diagonal hits. 
-  double _square_side_length;                       ///< Side length of the Square.
-  double _square_side_width;                        ///< Side width of the Square.
-  double _square_area;                              ///< Area of the Square.
+  // Variables related to geometry for CRT hits, upstream
+  std::vector<double> _distance_between_hits_downstream_upstream;     ///< Distance between any two hits. 
+  int _isSquare_upstream;                                 ///< Can CRT hits form a square?
+  double _biggest_distance_between_hits_upstream;            ///< Mean of the distance between diagonal hits. 
+  double _square_side_length_upstream;                       ///< Side length of the Square.
+  double _square_side_width_upstream;                        ///< Side width of the Square.
+  double _square_area_upstream;                              ///< Area of the Square.
 
+  // Variables related to geometry for CRT hits, downstream
+  std::vector<double> _distance_between_hits_downstream;     ///< Distance between any two hits.
+  int _isSquare_downstream;                                 ///< Can CRT hits form a square?
+  double _biggest_distance_between_hits_downstream;            ///< Mean of the distance between diagonal hits.
+  double _square_side_length_downstream;                       ///< Side length of the Square.
+  double _square_side_width_downstream;                        ///< Side width of the Square.
+  double _square_area_downstream;                              ///< Area of the Square.
 
   // Variables realted to deposited energy. 
   std::vector<double> _chit_depositedE;                 ///< CRT hit PEs
@@ -125,7 +132,7 @@ private:
 };
 
 
-SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
+SelectionAnaShortLived::SelectionAnaShortLived(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}  // ,
   // More initializers here.
 {
@@ -194,7 +201,7 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
   _sr_tree->Branch("pot", &_sr_pot, "pot/D");
 }
 
-void SelectionAna::analyze(art::Event const& e)
+void SelectionAnaShortLived::analyze(art::Event const& e)
 { 
   // clear all declared vectors;
   _chit_depositedE.clear(); _chit_true_t.clear();
@@ -384,7 +391,7 @@ void SelectionAna::analyze(art::Event const& e)
   _tree->Fill();
 }
 
-void SelectionAna::beginSubRun(art::SubRun const& sr) 
+void SelectionAnaShortLived::beginSubRun(art::SubRun const& sr) 
 {
   _sr_run       = sr.run();
   _sr_subrun    = sr.subRun();
@@ -406,12 +413,12 @@ void SelectionAna::beginSubRun(art::SubRun const& sr)
   _sr_tree->Fill();
 }
 
-void SelectionAna::respondToOpenInputFile(const art::FileBlock& fb)
+void SelectionAnaShortLived::respondToOpenInputFile(const art::FileBlock& fb)
 {
   _file_name = fb.fileName();
 }
 
-void SelectionAna::calculateMeanStd(std::vector<double> vec, double &mean, double &std){
+void SelectionAnaShortLived::calculateMeanStd(std::vector<double> vec, double &mean, double &std){
   if (vec.size()>=1){
     mean = std::accumulate(vec.begin(), vec.end(), 0.0) / vec.size();
     double accum = 0.0;
@@ -427,7 +434,7 @@ void SelectionAna::calculateMeanStd(std::vector<double> vec, double &mean, doubl
 }
 
 
-bool SelectionAna::canFormSquare(std::vector<double> distances) {
+bool SelectionAnaShortLived::canFormSquare(std::vector<double> distances) {
   if (distances.size() != 6) {
     return false; // Need exactly 4 points to form a square
   }
@@ -443,7 +450,7 @@ bool SelectionAna::canFormSquare(std::vector<double> distances) {
     std::abs(distances[4]-std::sqrt(distances[0]*distances[0] + distances[2]*distances[2]))<0.01;
 }
 
-void SelectionAna::calculateLenWidthArea(std::vector<std::array<double, 2>> position_x_y, double &length, double &width, double &area){
+void SelectionAnaShortLived::calculateLenWidthArea(std::vector<std::array<double, 2>> position_x_y, double &length, double &width, double &area){
   if (position_x_y.size() != 4 ) { length = -1.; width=-1.; area=-1.;}
 
   // initialize the variables.
@@ -460,4 +467,4 @@ void SelectionAna::calculateLenWidthArea(std::vector<std::array<double, 2>> posi
 
   area = length*width;
 }
-DEFINE_ART_MODULE(SelectionAna)
+DEFINE_ART_MODULE(SelectionAnaShortLived)
