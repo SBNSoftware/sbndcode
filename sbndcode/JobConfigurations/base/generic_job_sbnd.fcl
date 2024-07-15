@@ -1,23 +1,11 @@
-#
-# File:    generic_job_sbnd.fcl
-# Purpose: Defines a generic hob skeleton fcl that all SBND jobs should dervice from.  It sets up the minimial common items needed by every job
-# Version: 1.0
-#
-# Changes:
-# 20240311 (d.brailsford@lancster.ac.uk) [v1.0]
-#   Initial definition
-#
 # service configuration
 #
-
 #include "services_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 
-
 # output configuration
 #
-
 #include "rootoutput_sbnd.fcl"
 
 

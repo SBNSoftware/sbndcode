@@ -1,17 +1,5 @@
-#
-# File:    workflow_reco1.fcl
-# Purpose: Defines the list of producers and the sequences for configuring reco1 jobs
-# Version: 1.0
-#
-# Changes:
-# 20240311 (d.brailsford@lancster.ac.uk) [v1.0]
-#   Initial definition
-#
-
-#
 # module configuration
 #
-
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
 #include "opdeconvolution_sbnd.fcl"

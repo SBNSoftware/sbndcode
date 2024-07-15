@@ -1,17 +1,5 @@
-#
-# File:    reco1_drops.fcl
-# Purpose: Defines the list of producers to be dropped in a reco1 job
-# Version: 1.0
-#
-# Changes:
-# 20240311 (d.brailsford@lancster.ac.uk) [v1.0]
-#   Initial definition
-#
-
-#
 # outputs configuration
 #
-
 #include "detsim_drops.fcl"
 
 BEGIN_PROLOG

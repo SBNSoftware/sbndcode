@@ -1,24 +1,10 @@
-# File:    standard_reco1_sbnd.fcl
-# Purpose: The standard reconstruction workflow for 'reco1', which includes up to hit reconstruction
-# Version: 2.0
-#
-# Changes:
-# 20240311 (d.brailsford@lancster.ac.uk) [v2.0]
-#   Redesign of fcl structure
-# 20200923 (d.brailsford@lancster.ac.uk) [v1.0]
-#   Initial definition
-#
-# Changes:
-# 20240228 (bcarlson1@ufl.edu) [v1.1]
-#    Add supera output using an analyzer end path
 # job configuration
 #
-
 #include "workflow_reco1.fcl"
 #include "drops_reco1.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "generic_job_sbnd.fcl"
-#
+
 process_name: Reco1
 
 #services overrides
