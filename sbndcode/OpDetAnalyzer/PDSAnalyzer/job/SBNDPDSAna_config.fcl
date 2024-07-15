@@ -1,0 +1,51 @@
+BEGIN_PROLOG
+
+sbndPDSAna:
+{
+	module_type: "SBNDPDSAnalyzer"
+	
+	## Save options for TTree
+	SaveMCTruth: "true"
+	SaveMCParticles: "true"
+	SaveSimPhotons: "true"
+	SaveSimPhotonsArrivalTimes: "true"
+	SaveRawWaveforms: "false"
+	SaveDeconvolvedWaveforms: "false"
+	SaveOpHits: "true"
+	SaveOpFlashes: "true"
+	SaveCosmicId: "false"
+
+	## Configuration parameters
+	Verbosity: 0
+	MakePerTrackTree: "false"
+	MakePDSGeoTree: "true"
+	UseSimPhotonsLite: "true"
+	KeepPDGCode: []
+	MCTruthOrigin: [1]
+	MCTruthPDG: [12, 14, -12, -14]
+	PDTypes: ["pmt_coated", "pmt_uncoated"]
+
+	## Input module labels
+	MCTruthModuleLabel: ["generator"]
+	MCTruthInstanceLabel: [""]
+	MCModuleLabel: "largeant"
+	SimPhotonsModuleLabel: ["pdfastsim", "pdfastsimout"] #In legacy: "largeant"
+	RawWaveformsModuleLabel: "opdaq"
+	DeconvolvedWaveformsModuleLabel: "opdecopmt"
+	OpHitsModuleLabel: ["ophitpmt"]
+	OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1"]
+	HitsLabel: "gaushit"
+	Reco2Label: "pandora"
+	CosmicIdModuleLabel: "crumbs"
+  	OpT0FinderModuleLabel: "opt0finder"
+    SimpleFlashMatchModuleLabel: "fmatch"
+	
+	## Buffer box to save MCParticle steps
+	G4BufferBoxX: [-300, 300] #cm
+	G4BufferBoxY: [-400, 400] #cm
+	G4BufferBoxZ: [-100, 600] #cm
+	G4BeamWindow: [-10000, 12000] #ns
+
+}
+
+END_PROLOG

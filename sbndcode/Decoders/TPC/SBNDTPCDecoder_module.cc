@@ -49,7 +49,7 @@ tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(art::Event 
   ret.crate = (frag.fragmentID() >> 8) & 0xF;  
   ret.slot = raw_header->getSlot();
   ret.event_number = raw_header->getEventNum();
-  // ret.frame_number = raw_header->getFrameNum();
+  //std::cout << "TPC decoder frame, sample: " << raw_header->getFrameNum() << " " << raw_header->get2mhzSample() << std::endl;
   ret.checksum = raw_header->getChecksum();
   
   ret.adc_word_count = raw_header->getADCWordCount();
@@ -57,8 +57,8 @@ tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(art::Event 
   
   // formula for getting unix timestamp from nevis frame number:
   // timestamp = frame_number * (timesize + 1) + trigger_sample
-  ret.timestamp = (raw_header->getFrameNum() * (_config.timesize + 1) + raw_header->get2mhzSample()) * _config.frame_to_dt;
-
+  ret.timestamp = (raw_header->getFrameNum() * ( (ULong64_t) _config.timesize + 1) + raw_header->get2mhzSample()) * ( (double)  _config.frame_to_dt);
+  //std::cout << "timestamp: " << ret.timestamp << std::endl;
   ret.index = raw_header->getSlot() - _config.min_slot_no;
 
   return ret;

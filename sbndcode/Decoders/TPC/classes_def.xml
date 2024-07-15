@@ -1,5 +1,6 @@
 <lcgdict>
-  <class name="tpcAnalysis::TPCDecodeAna" ClassVersion="10">
+  <class name="tpcAnalysis::TPCDecodeAna" ClassVersion="11">
+   <version ClassVersion="11" checksum="3638395479"/>
    <version ClassVersion="10" checksum="3825172703"/>
   </class>
   <class name="std::vector<tpcAnalysis::TPCDecodeAna>"/>
