@@ -116,7 +116,22 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
           for(auto ts : TDCVec)
             {
               if(ts->Channel() == fSPECTDCETrigChannel)
-                etrig_time = ts->Timestamp() % static_cast<uint64_t>(1e9);
+                {
+                  etrig_time = ts->Timestamp() % static_cast<uint64_t>(1e9);
+
+                  if(fCorrectForDifferentSecond)
+                    {
+                      const uint64_t etrig_unix = ts->Timestamp() / static_cast<uint64_t>(1e9);
+                      const int64_t unix_diff = ref_unix - etrig_unix;
+                      if(unix_diff != 0 && unix_diff != 1)
+                        throw std::runtime_error("Unix timestamps differ by more than 1" + unix_diff);
+
+                      const bool previous_second = unix_diff == 1;
+
+                      if(previous_second)
+                        etrig_time -= static_cast<int>(1e9);
+                    }
+                }
             }
         }
     }
