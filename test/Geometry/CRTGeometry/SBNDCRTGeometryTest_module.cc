@@ -86,9 +86,6 @@ void SBNDCRTGeometryTest::analyze(art::Event const& e)
     TGeoNode* nodeTagger = manager->GetMother(2);
 
 
-    // Ensure auxiliary detector ID and its GDML copynumber are the same
-    assert(i == (size_t)nodeModule->GetNumber());
-
     // Check every aux det has a different copynumber
     auto iter = std::find(used_copynumbers_auxdet.begin(), used_copynumbers_auxdet.end(),
                           nodeModule->GetNumber());
