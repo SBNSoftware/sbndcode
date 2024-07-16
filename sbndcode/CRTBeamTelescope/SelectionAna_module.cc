@@ -76,37 +76,26 @@ private:
   int _n_chits_upstream, _n_chits_downstream;    ///< Number of CRT hits in the upstream/downstream CRTs
   
   // Variables related to geometry for CRT hits.
-  std::vector<double> _distance_between_hits_downstream;     ///< Distance between any two hits. 
   int _isSquare;                                 ///< Can CRT hits form a square?
   double _biggest_distance_between_hits;            ///< Mean of the distance between diagonal hits. 
   double _square_side_length;                       ///< Side length of the Square.
   double _square_side_width;                        ///< Side width of the Square.
   double _square_area;                              ///< Area of the Square.
 
-
   // Variables realted to deposited energy. 
   std::vector<double> _chit_depositedE;                 ///< CRT hit PEs
   double _chit_depositedE_mean;                         ///< Mean of the CRT hit PE for one event. 
   double _chit_depositedE_sample_std;                   ///< Sample standard deviation of the CRT hit PE for one event.
 
-  double _chit_depositedE_diff_between_hits_biggest_distance_mean;     ///< Mean of the PE diff between any two hits for one event.
-  double _chit_depositedE_diff_between_hits_biggest_distance_diff;     ///< Diff of the PE diff between any two hits for one event.
-
-  double _chit_depositedE_ratio_between_hits_biggest_distance_mean;     ///< Mean of the PE ratio between any two hits for one event.
-  double _chit_depositedE_ratio_between_hits_biggest_distance_diff;     ///< Diff of the PE ratio between any two hits for one event.
-
-  double _chit_depositedE_frac_diff_between_hits_biggest_distance_mean;     ///< Mean of the PE fractional diff between any two hits for one event.
-  double _biggest_distance_chit_depositedE_frac_diff_between_hits_diff;     ///< Diff of the PE fractional diff between any two hits for one event.
+  double _chit_depositedE_mean_between_hits_biggest_distance;     ///< Mean of the PE diff between any two hits for one event.
+  double _chit_depositedE_diff_between_hits_biggest_distance;     ///< Mean of the PE diff between any two hits for one event.
+  double _chit_depositedE_ratio_between_hits_biggest_distance;     ///< Mean of the PE ratio between any two hits for one event.
+  double _chit_depositedE_frac_diff_between_hits_biggest_distance;     ///< Mean of the PE fractional diff between any two hits for one event.
 
   // Variables related to t1.
   std::vector<double> _chit_t1;                             ///< CRT hit t1
   std::vector<double> _chit_t1_diff_biggest_distance;                        ///< CRT hit t1 diff
-  double _t1_diff_between_hits_biggest_distance_mean;       ///< Mean of the t1 between any diagnoal hits for one event.
-  double _t1_diff_between_hits_biggest_distance_diff;       ///< Diff of the t1 between any diagnoal hits for one event.
-
-  double _biggest_distance_chit_t1_between_hits_mean;     ///< Mean of the t1 between any two hits for one event.
-  double _biggest_distance_chit_t1_between_hits_diff;     ///< Diff of the t1 between any two hits for one event.
-  
+  double _t1_diff_between_hits_biggest_distance;       ///< Mean of the t1 between any diagnoal hits for one event.
 
   // truth info for crt_hit
   std::vector<float>  _chit_true_t;                     ///< CRT hit true time (from sim energy dep)
@@ -162,19 +151,13 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
   _tree->Branch("chit_depositedE_mean", &_chit_depositedE_mean, "chit_depositedE_mean/D");
   _tree->Branch("chit_depositedE_sample_std", &_chit_depositedE_sample_std, "chit_depositedE_sample_std/D");
 
-  _tree->Branch("chit_depositedE_diff_between_hits_biggest_distance_mean", &_chit_depositedE_diff_between_hits_biggest_distance_mean, "chit_depositedE_diff_between_hits_biggest_distance_mean/D");
-  _tree->Branch("chit_depositedE_diff_between_hits_biggest_distance_diff", &_chit_depositedE_diff_between_hits_biggest_distance_diff, "chit_depositedE_diff_between_hits_biggest_distance_diff/D");
-
-  _tree->Branch("chit_depositedE_ratio_between_hits_biggest_distance_mean", &_chit_depositedE_ratio_between_hits_biggest_distance_mean, "chit_depositedE_ratio_between_hits_biggest_distance_mean/D");
-  _tree->Branch("chit_depositedE_ratio_between_hits_biggest_distance_diff", &_chit_depositedE_ratio_between_hits_biggest_distance_diff, "chit_depositedE_ratio_between_hits_biggest_distance_diff/D");
-
-  _tree->Branch("chit_depositedE_frac_diff_between_hits_biggest_distance_mean", &_chit_depositedE_frac_diff_between_hits_biggest_distance_mean, "chit_depositedE_frac_diff_between_hits_biggest_distance_mean/D");
-  _tree->Branch("biggest_distance_chit_depositedE_frac_diff_between_hits_diff", &_biggest_distance_chit_depositedE_frac_diff_between_hits_diff, "biggest_distance_chit_depositedE_frac_diff_between_hits_diff/D");
+  _tree->Branch("chit_depositedE_mean_between_hits_biggest_distance", &_chit_depositedE_mean_between_hits_biggest_distance, "chit_depositedE_mean_between_hits_biggest_distance/D");
+  _tree->Branch("chit_depositedE_ratio_between_hits_biggest_distance", &_chit_depositedE_ratio_between_hits_biggest_distance, "chit_depositedE_ratio_between_hits_biggest_distance/D");
+  _tree->Branch("chit_depositedE_frac_diff_between_hits_biggest_distance", &_chit_depositedE_frac_diff_between_hits_biggest_distance, "chit_depositedE_frac_diff_between_hits_biggest_distance/D");
 
   _tree->Branch("chit_t1", &_chit_t1);
   _tree->Branch("chit_t1_diff_biggest_distance", &_chit_t1_diff_biggest_distance);
-  _tree->Branch("t1_diff_between_hits_biggest_distance_mean", &_t1_diff_between_hits_biggest_distance_mean, "t1_diff_between_hits_biggest_distance_mean/D");
-  _tree->Branch("t1_diff_between_hits_biggest_distance_diff", &_t1_diff_between_hits_biggest_distance_diff, "t1_diff_between_hits_biggest_distance_diff/D");
+  _tree->Branch("t1_diff_between_hits_biggest_distance", &_t1_diff_between_hits_biggest_distance, "t1_diff_between_hits_biggest_distance/D");
 
   if (!_data_mode){
     _tree->Branch("chit_true_t", &_chit_true_t);
@@ -199,7 +182,6 @@ void SelectionAna::analyze(art::Event const& e)
   // clear all declared vectors;
   _chit_depositedE.clear(); _chit_true_t.clear();
   _chit_backtrack_pdg.clear(); _chit_backtrack_energy.clear(); _chit_backtrack_deposited_energy.clear(); _chit_backtrack_purity.clear(); _chit_backtrack_trackID.clear();
-  _distance_between_hits_downstream.clear(); 
 
   // Implementation of required member function here.
   if (!_data_mode) _crt_back_tracker.Initialize(e); // Initialise the backtrack alg. 
@@ -267,20 +249,24 @@ void SelectionAna::analyze(art::Event const& e)
     _chit_backtrack_purity.resize(n_hits);
     _chit_backtrack_trackID.resize(n_hits);
   }
-  std::vector<double> chit_x_downstream, chit_y_downstream, chit_t1_downstream;
-  chit_x_downstream.clear(); chit_y_downstream.clear(); chit_t1_downstream.clear();
+  std::vector<double> chit_x_downstream, chit_y_downstream, chit_t1_downstream, chit_corrADC_strip_diff_downstream, chit_t1_strip_diff_downstream;
+  chit_x_downstream.clear(); chit_y_downstream.clear(); chit_t1_downstream.clear(); chit_corrADC_strip_diff_downstream.clear(); chit_t1_strip_diff_downstream.clear();
   _n_chits_upstream = 0; _n_chits_downstream = 0;
+
   for (size_t ihit = 0; ihit < n_hits; ihit++) {
     
     auto hit = crt_hit_v[ihit];
-
     _chit_t1[ihit] = hit->ts1_ns;
+    const std::array<uint16_t,4> corr_adcs = hit->corr_adcs;
 
     if (hit->tagger == "volTaggerNorth_0") { // downstream
       _n_chits_downstream++; 
       _chit_depositedE[ihit] = hit->peshit*calibration_constant[1];
       chit_x_downstream.push_back(hit->x_pos); chit_y_downstream.push_back(hit->y_pos); 
       chit_t1_downstream.push_back(hit->ts1_ns);
+      double corrADC_strip_diff = std::abs((corr_adcs[0]+corr_adcs[1])/2. - (corr_adcs[2]+corr_adcs[3])/2.);
+      chit_corrADC_strip_diff_downstream.push_back(corrADC_strip_diff);
+      chit_t1_strip_diff_downstream.push_back(hit->ts0_ns_corr);
     } else {  // upstream
       _n_chits_upstream++;
       _chit_depositedE[ihit] = hit->peshit*calibration_constant[0];
@@ -297,44 +283,58 @@ void SelectionAna::analyze(art::Event const& e)
   }
 
   // Calculate the distance between any two hits.
-  std::map<double, std::vector<double>> distance_to_t1_diff_map; distance_to_t1_diff_map.clear();
+  std::map<double, std::vector<double>>  distance_to_t1_diff_map; distance_to_t1_diff_map.clear();
+  std::map<double, std::vector<std::vector<double>>> distance_to_chit_depositedE_mean_map; distance_to_chit_depositedE_mean_map.clear();
   std::map<double, std::vector<double>> distance_to_chit_depositedE_diff_map; distance_to_chit_depositedE_diff_map.clear();
   std::map<double, std::vector<double>> distance_to_chit_depositedE_ratio_map; distance_to_chit_depositedE_ratio_map.clear();
   std::map<double, std::vector<double>> distance_to_chit_depositedE_frac_diff_map; distance_to_chit_depositedE_frac_diff_map.clear();
   std::vector<std::array<double, 2>> position_x_y; position_x_y.clear();
+  std::vector<double> distance_between_hits_downstream; distance_between_hits_downstream.clear();
+
   if (chit_x_downstream.size()>=2){
     for (size_t i=0; i<chit_x_downstream.size(); i++){
       for (size_t j=i+1; j<chit_x_downstream.size(); j++){
+
         double distance = std::hypot(chit_x_downstream[i]-chit_x_downstream[j], chit_y_downstream[i]-chit_y_downstream[j]);
         double t1_diff_between_hits = std::abs(chit_t1_downstream[i]-chit_t1_downstream[j]);
-        // diff.
+        
+        // deposited E mean. 
+        double chit_depositedE_mean_between_hits = (_chit_depositedE[i]+_chit_depositedE[j])/2;
+
+        // deposited E diff.
         double chit_depositedE_diff_between_hits = std::abs(_chit_depositedE[i]-_chit_depositedE[j]);
 
-        // ratio.
+        // deposited E ratio.
         double chit_depositedE_ratio_between_hits = -1; 
         if (_chit_depositedE[i]<_chit_depositedE[j]) chit_depositedE_ratio_between_hits = std::abs(_chit_depositedE[i]/_chit_depositedE[j]);
         else chit_depositedE_ratio_between_hits = std::abs(_chit_depositedE[j]/_chit_depositedE[i]);
 
-        // fractional diff.
+        // deposited E fractional diff.
         double chit_depositedE_frac_diff_between_hits = std::abs((_chit_depositedE[i]-_chit_depositedE[j]))/((_chit_depositedE[i]+_chit_depositedE[j])/2);
         
-        _distance_between_hits_downstream.push_back(distance);
+        // t1 strip diff 
+        double t1_strip_diff_mean = (chit_t1_strip_diff_downstream[i]+chit_t1_strip_diff_downstream[j])/2;
+
+        // corrADC strip diff
+        double corrADC_strip_diff_mean = (chit_corrADC_strip_diff_downstream[i]+chit_corrADC_strip_diff_downstream[j])/2;
+
+        distance_between_hits_downstream.push_back(distance);
+
         distance_to_t1_diff_map[distance].push_back(t1_diff_between_hits);
+        distance_to_chit_depositedE_mean_map[distance].push_back({chit_depositedE_mean_between_hits, t1_strip_diff_mean, corrADC_strip_diff_mean});
         distance_to_chit_depositedE_diff_map[distance].push_back(chit_depositedE_diff_between_hits);
         distance_to_chit_depositedE_ratio_map[distance].push_back(chit_depositedE_ratio_between_hits);
         distance_to_chit_depositedE_frac_diff_map[distance].push_back(chit_depositedE_frac_diff_between_hits);
-        
       }
       std::array<double, 2> position = {chit_x_downstream[i], chit_y_downstream[i]};
       position_x_y.push_back(position);
     }
   }
 
-  if (canFormSquare(_distance_between_hits_downstream)) {
+  if (canFormSquare(distance_between_hits_downstream)) {
     _isSquare = 1; // true
     calculateLenWidthArea(position_x_y, _square_side_length, _square_side_width, _square_area);
-  }
-  else {
+  }else {
     _isSquare = 0; // false
     _square_side_length = -1.;
     _square_side_width = -1.;
@@ -344,35 +344,38 @@ void SelectionAna::analyze(art::Event const& e)
   // Calculate the mean and std of the distance between the biggest/smallest distance between any two hits.
   // initialize the variables.
   _biggest_distance_between_hits = -1.;  
-  _t1_diff_between_hits_biggest_distance_mean = -1.;  _t1_diff_between_hits_biggest_distance_diff = -1.;
+  _t1_diff_between_hits_biggest_distance = -1.; 
 
-  _chit_depositedE_diff_between_hits_biggest_distance_mean = -1.;  _chit_depositedE_diff_between_hits_biggest_distance_diff = -1.;
-
-  _chit_depositedE_ratio_between_hits_biggest_distance_mean = -1.;  _chit_depositedE_ratio_between_hits_biggest_distance_diff = -1.;
-
-  _chit_depositedE_frac_diff_between_hits_biggest_distance_mean = -1.;  _biggest_distance_chit_depositedE_frac_diff_between_hits_diff = -1.;
+  _chit_depositedE_mean_between_hits_biggest_distance = -1.;
+  _chit_depositedE_diff_between_hits_biggest_distance = -1.;  
+  _chit_depositedE_ratio_between_hits_biggest_distance = -1.;  
+  _chit_depositedE_frac_diff_between_hits_biggest_distance = -1.;  
 
   size_t counter=0; //counter_smallest_distance=0, counter_biggest_distance=0;
-  for (auto & [distance, t1_vec] : distance_to_t1_diff_map){
-    if (counter==distance_to_t1_diff_map.size()-1){ // the maximum distance should belongs to the diagonal hits.  
+  for (auto & [distance, chit_depositedE_mean_vec] : distance_to_chit_depositedE_mean_map){
+    if (counter==distance_to_chit_depositedE_mean_map.size()-1){ // the maximum distance should belongs to the diagonal hits.  
       // read in the maps.
-      _chit_t1_diff_biggest_distance = t1_vec;
+      auto t1_diff_vec = distance_to_t1_diff_map[distance];
+      _chit_t1_diff_biggest_distance = t1_diff_vec;
+
       auto chit_depositedE_diff_vec = distance_to_chit_depositedE_diff_map[distance];
       auto chit_depositedE_ratio_vec = distance_to_chit_depositedE_ratio_map[distance];
       auto chit_depositedE_frac_diff_vec = distance_to_chit_depositedE_frac_diff_map[distance];
-      if (t1_vec.size()==2){
+
+      if (chit_depositedE_mean_vec.size()==2){ // two diagonal pairs. 
         _biggest_distance_between_hits = distance;
-        _t1_diff_between_hits_biggest_distance_mean = (t1_vec[0]+t1_vec[1])/2;
-        _t1_diff_between_hits_biggest_distance_diff = std::abs(t1_vec[0]-t1_vec[1]);
-
-        _chit_depositedE_diff_between_hits_biggest_distance_mean = (chit_depositedE_diff_vec[0]+chit_depositedE_diff_vec[1])/2;
-        _chit_depositedE_diff_between_hits_biggest_distance_diff = std::abs(chit_depositedE_diff_vec[0]-chit_depositedE_diff_vec[1]);
-
-        _chit_depositedE_ratio_between_hits_biggest_distance_mean = (chit_depositedE_ratio_vec[0]+chit_depositedE_ratio_vec[1])/2;
-        _chit_depositedE_ratio_between_hits_biggest_distance_diff = std::abs(chit_depositedE_ratio_vec[0]-chit_depositedE_ratio_vec[1]);
-
-        _chit_depositedE_frac_diff_between_hits_biggest_distance_mean = (chit_depositedE_frac_diff_vec[0]+chit_depositedE_frac_diff_vec[1])/2;
-        _biggest_distance_chit_depositedE_frac_diff_between_hits_diff = std::abs(chit_depositedE_frac_diff_vec[0]-chit_depositedE_frac_diff_vec[1]);
+        // select the pair based on the matrix: t1 strip diff + corrADC strip diff.
+        int index = 0; 
+        double t1_strip_diff_min = chit_depositedE_mean_vec[0][1];
+        if (chit_depositedE_mean_vec[1][1]<t1_strip_diff_min) { index = 1;}
+        else if (chit_depositedE_mean_vec[1][1]==t1_strip_diff_min){
+          if (chit_depositedE_mean_vec[1][2]<chit_depositedE_mean_vec[0][2]) { index = 1;}
+        }
+        _t1_diff_between_hits_biggest_distance = t1_diff_vec[index];
+        _chit_depositedE_mean_between_hits_biggest_distance = chit_depositedE_mean_vec[index][0];
+        _chit_depositedE_diff_between_hits_biggest_distance = chit_depositedE_diff_vec[index];
+        _chit_depositedE_ratio_between_hits_biggest_distance = chit_depositedE_ratio_vec[index];
+        _chit_depositedE_frac_diff_between_hits_biggest_distance = chit_depositedE_frac_diff_vec[index];
       }
     }
     counter++;
@@ -380,7 +383,6 @@ void SelectionAna::analyze(art::Event const& e)
   
   // Calculate the mean and std of the CRT hit PE.
   calculateMeanStd(_chit_depositedE, _chit_depositedE_mean, _chit_depositedE_sample_std);
-
   _tree->Fill();
 }
 
@@ -401,7 +403,6 @@ void SelectionAna::beginSubRun(art::SubRun const& sr)
     _sr_pot = 0.;
     _sr_spills = 0.;
   }
-
   std::cout << "POT for this subrun: " << _sr_pot << " (" << _sr_spills << " spills)" << std::endl;
   _sr_tree->Fill();
 }
@@ -436,15 +437,15 @@ bool SelectionAna::canFormSquare(std::vector<double> distances) {
   std::sort(distances.begin(), distances.end());
    
   // Check if the distances satisfy square properties
-  return distances[0] > 0 &&                    // Nonzero distance
+  return distances[0] > 0 &&                   // Nonzero distance
     distances[0] == distances[1] &&            // Opposite sides equal
     distances[2] == distances[3] &&
-    distances[4] == distances[5] &&           // Diagonals may or may not be equal
+    distances[4] == distances[5] &&            // Diagonals equal
     std::abs(distances[4]-std::sqrt(distances[0]*distances[0] + distances[2]*distances[2]))<0.01;
 }
 
 void SelectionAna::calculateLenWidthArea(std::vector<std::array<double, 2>> position_x_y, double &length, double &width, double &area){
-  if (position_x_y.size() != 4 ) { length = -1.; width=-1.; area=-1.;}
+  if (position_x_y.size() != 4) { length = -1.; width=-1.; area=-1.; }
 
   // initialize the variables.
   length = 0.; width = 0.; area = 0.;
@@ -460,4 +461,6 @@ void SelectionAna::calculateLenWidthArea(std::vector<std::array<double, 2>> posi
 
   area = length*width;
 }
+
+
 DEFINE_ART_MODULE(SelectionAna)
