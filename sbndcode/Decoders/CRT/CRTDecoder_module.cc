@@ -117,16 +117,6 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
 
   for(unsigned i = 0; i < bern_frag_meta->hits_in_fragment(); ++i)
     {
-      const sbndaq::BernCRTHitV2 *bern_hit = bern_frag.eventdata(i);
-
-      std::array<uint16_t, 32> adc_array;
-      unsigned ii = 0;
-      for(auto const &adc : bern_hit->adc)
-        {
-          adc_array[ii] = adc;
-          ++ii;
-        }
-
       SBND::CRTChannelMapService::ModuleInfo_t module = fCRTChannelMapService->GetModuleInfoFromFEBMAC5(bern_frag_meta->MAC5());
 
       if(!module.valid)
@@ -140,6 +130,22 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
           fUnfoundMAC5s.insert(bern_frag_meta->MAC5());
 
           continue;
+        }
+
+      const sbndaq::BernCRTHitV2 *bern_hit = bern_frag.eventdata(i);
+
+      // Fill ADC Array. If channel order is swapped in the GDML
+      // compared to reality then we fill the array in reverse.
+      std::array<uint16_t, 32> adc_array;
+      unsigned ii = module.channel_order_swapped ? 31 : 0;
+      for(auto const &adc : bern_hit->adc)
+        {
+          adc_array[ii] = adc;
+
+          if(module.channel_order_swapped)
+            --ii;
+          else
+            ++ii;
         }
 
       feb_datas.emplace_back(module.offline_module_id,
