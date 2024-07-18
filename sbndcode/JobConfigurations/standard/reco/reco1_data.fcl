@@ -1,5 +1,5 @@
 #include "wcsp_data_sbnd.fcl"
-#include "reco1_sce_lite.fcl"
+#include "standard_reco1_sbnd.fcl"
 
 physics.producers:
 {

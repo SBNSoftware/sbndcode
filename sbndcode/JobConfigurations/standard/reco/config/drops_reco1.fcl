@@ -24,4 +24,13 @@ sbnd_reco1_drops_keep_rawopdetwf: [
   , @sequence::sbnd_reco1_ml_drops
 ]
 
+sbnd_reco1_drops_selective: [  #Needed to maintain earlier workflows where some products are not needed but others are
+    "keep *_*_*_*"
+  , "drop raw::OpDetWaveforms_*_*_*"
+  , "drop *raw::RawDigits*_*_*_*"
+  , "drop sim::OpDetBacktrackerRecords_*_*_*"
+  , "drop *_fasthit_*_*"
+  , "drop *_cluster3d_*_*" #drop all mlreco output
+]
+
 END_PROLOG
