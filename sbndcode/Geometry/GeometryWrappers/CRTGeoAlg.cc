@@ -48,7 +48,6 @@ namespace sbnd::crt {
 
         SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(ad_i);
         const unsigned int mac5 = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
-        const bool invert       = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
 
         // Loop through strips
         for(unsigned ads_i = 0; ads_i < auxDet.NSensitiveVolume(); ads_i++)
@@ -86,17 +85,16 @@ namespace sbnd::crt {
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
                                                     cableDelayCorrection, cableDelayCorrection,
-                                                    invert, minos);
+                                                    false, minos);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
-            // Some modules need their channel numbers counted in reverse as they're inverted relative to the geometry
-            const uint32_t channel0       = invert ? 32 * ad_i + (31 - 2 * ads_i) : 32 * ad_i + 2 * ads_i;
-            const uint32_t simpleChannel0 = invert ? 31 - ads_i : ads_i;
-            const uint32_t channel1       = invert ? 32 * ad_i + (31 - 2 * ads_i -1) : 32 * ad_i + 2 * ads_i + 1;
-            const uint32_t simpleChannel1 = invert ? 31 - ads_i - 1 : ads_i + 1;
+            const uint32_t channel0       = 32 * ad_i + 2 * ads_i;
+            const uint32_t simpleChannel0 = ads_i;
+            const uint32_t channel1       = channel0 + 1;
+            const uint32_t simpleChannel1 = simpleChannel0 + 1;
 
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
               {
@@ -246,8 +244,7 @@ namespace sbnd::crt {
   CRTStripGeo CRTGeoAlg::GetStripByAuxDetIndices(const unsigned ad_i, const unsigned ads_i) const
   {
     const CRTModuleGeo module = GetModule(ad_i);
-    const uint16_t channel =
-      module.invertedOrdering ? 32 * ad_i + (31 -2 *ads_i) : 32 * ad_i + 2 * ads_i;
+    const uint16_t channel = 32 * ad_i + 2 * ads_i;
 
     return GetStrip(channel);
   }
