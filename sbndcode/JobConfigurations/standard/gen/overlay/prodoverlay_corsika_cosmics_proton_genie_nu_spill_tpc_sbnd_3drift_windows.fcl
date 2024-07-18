@@ -1,3 +1,0 @@
-#include "prodoverlay_corsika_cosmics_proton_genie_nu_spill_tpc_sbnd.fcl"
-physics.producers.corsika.SampleTime: 5.4e-3    #  0.2 ms (G4 rise time) + 1.3 ms (1 full drift window) + 3.9 ms (readout) @ 500 V/cm, 154.4 cm/ms
-physics.producers.corsika.TimeOffset: -2.8e-3  # -0.2 ms (G4 rise time) - 1.3 ms (1 full drift window) - 1.3 ms (front porch)
