@@ -1,0 +1,25 @@
+BEGIN_PROLOG
+analysis_config: {
+  raw_digit_producers: [daq]
+}
+END_PROLOG
+
+services:
+{
+  TFileService: { fileName: "tpcchoppyana_sbnd.root" }
+}
+
+physics:
+{
+  analyzers:
+  {
+    TPCChoppyAna: {
+      module_type: "TPCChoppyAna"
+      @table::analysis_config
+    }
+  }
+  choppyana: [TPCChoppyAna]
+  end_paths: [choppyana]
+}
+
+process_name: CHOPPYANALYSIS

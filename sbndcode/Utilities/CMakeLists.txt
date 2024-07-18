@@ -53,8 +53,26 @@ cet_build_plugin ( SBNDGeoHelper art::module
                      sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
 
                BASENAME_ONLY
-          )
+             )
 
+cet_build_plugin ( TPCChoppyAna art::module
+  lardataobj::RawData
+  lardataobj::RecoBase
+  ROOT::Core
+  ROOT::Tree
+  art::Framework_Core
+  art::Framework_Principal
+  art::Utilities
+  art_root_io::tfile_support
+  art_root_io::TFileService_service
+  canvas::canvas
+  fhiclcpp::fhiclcpp
+  cetlib::cetlib
+  cetlib_except::cetlib_except
+  messagefacility::MF_MessageLogger
+  
+  BASENAME_ONLY
+              )
 install_headers()
 install_fhicl()
 install_source()
