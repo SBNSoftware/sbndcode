@@ -1,3 +1,6 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
 BEGIN_PROLOG
 analysis_config: {
   raw_digit_producers: [daq]
@@ -7,6 +10,13 @@ END_PROLOG
 services:
 {
   TFileService: { fileName: "tpcchoppyana_sbnd.root" }
+  @table::sbnd_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
 }
 
 physics:
