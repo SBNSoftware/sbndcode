@@ -22,6 +22,16 @@ sbnd_supera_mpvmpr: {
     StrictDataLoading: false
 }
 
+#supera for data
+sbnd_supera_data: {
+    module_type:     "LArSoftSuperaDriver"
+    supera_params:   "supera_sbnd_data.fcl"
+    out_filename:    "larcv.root"
+    unique_filename: false
+    stream:          "data"
+    StrictDataLoading: false
+}
+
 #supera for everything else
 sbnd_supera: {
     module_type:     "LArSoftSuperaDriver"
