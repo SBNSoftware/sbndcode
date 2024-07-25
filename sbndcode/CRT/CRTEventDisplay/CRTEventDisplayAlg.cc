@@ -163,7 +163,7 @@ namespace sbnd::crt {
           {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(name)) == fChosenTaggers.end())
               continue;
-               
+
             double rmin[3] = {tagger.minX, 
                               tagger.minY, 
                               tagger.minZ};
@@ -247,7 +247,7 @@ namespace sbnd::crt {
                               strip.maxY, 
                               strip.maxZ};
 
-            DrawCube(c1, rmin, rmax, fTaggerColour);
+            DrawCube(c1, rmin, rmax, fTaggerColour, 1);
           }
       }
     

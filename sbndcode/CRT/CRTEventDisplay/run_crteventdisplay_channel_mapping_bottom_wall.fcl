@@ -1,0 +1,41 @@
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "run_crteventdisplay_channel_mapping.fcl"
+
+process_name: CRTEventDisplay
+
+services:
+{
+  @table::sbnd_services
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  CRTChannelMapService:     @local::crt_channel_map_no_inversion
+  CRTCalibService:          @local::crt_calib_service
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics:
+{
+  analyzers:
+  {
+    crtevdbot:   @local::crteventdisplay_sbnd_channel_mapping
+  }
+
+  ana: [ crtevdbot ]
+
+  end_paths: [ ana ]
+}
+
+physics.analyzers.crtevdbot.SaveDir:                             "/exp/sbnd/data/users/hlay/crt_channel_mapping/july2024/module133_test"
+physics.analyzers.crtevdbot.EventDisplayConfig.ChosenTaggers:    [ 0 ]
+physics.analyzers.crtevdbot.EventDisplayConfig.DrawStrips:       true
+physics.analyzers.crtevdbot.EventDisplayConfig.HighlightModules: true
+physics.analyzers.crtevdbot.EventDisplayConfig.SaveViews:        false
+physics.analyzers.crtevdbot.EventDisplayConfig.SaveRoot:         true
+physics.analyzers.crtevdbot.EventDisplayConfig.DrawTPC:          false
+physics.analyzers.crtevdbot.EventDisplayConfig.DrawModules:      true
+physics.analyzers.crtevdbot.EventDisplayConfig.DrawTaggers:      false

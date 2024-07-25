@@ -39,8 +39,8 @@ crteventdisplayalg_sbnd:
    ## 0 - Bottom
    ## 1 - South (upstream)
    ## 2 - North (downstream)
-   ## 3 - West (beam right)
-   ## 4 - East (beam left)
+   ## 3 - West (beam left)
+   ## 4 - East (beam right)
    ## 5 - Top Low
    ## 6 - Top High
    ChoseTaggers:  false
