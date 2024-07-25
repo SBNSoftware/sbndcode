@@ -1,0 +1,28 @@
+#include "wcsp_data_sbnd.fcl"
+#include "reco1_sce_lite.fcl"
+
+physics.producers:
+{
+    @table::physics.producers
+    sptpc2d : @local::sbnd_wcls_sp_data
+}
+
+physics.reco1: [fasthit]
+physics.producers.fasthit.CalDataModuleLabel: "daq"
+physics.producers.fasthit.DigitModuleLabel: "daq"
+#physics.end_paths: ["stream1"]
+
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                "drop raw::OpDetWaveforms_*_*_*",
+                "drop *raw::RawDigits*_*_*_*",
+                "drop sim::OpDetBacktrackerRecords_*_*_*",
+                "drop *_linecluster_*_*",
+                #"drop *_fasthit_*_*",
+                "drop sim::OpDetBacktrackerRecords_*_*_*",
+                "drop sim::SimPhotonsLites_*_*_*",
+                "drop sim::SimPhotons_*_*_*",
+                "drop raw::RawDigits_*_*_*",
+                "drop raw::OpDetWaveforms_*_*_*" ]
+
+physics.end_paths: ["stream1"]
+
