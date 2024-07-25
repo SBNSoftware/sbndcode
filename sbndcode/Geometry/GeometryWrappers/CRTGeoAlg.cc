@@ -48,6 +48,7 @@ namespace sbnd::crt {
 
         SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(ad_i);
         const unsigned int mac5 = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
+        const bool invert       = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
 
         // Loop through strips
         for(unsigned ads_i = 0; ads_i < auxDet.NSensitiveVolume(); ads_i++)
@@ -85,16 +86,14 @@ namespace sbnd::crt {
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
                                                     cableDelayCorrection, cableDelayCorrection,
-                                                    false, minos);
+                                                    invert, minos);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
             const uint32_t channel0       = 32 * ad_i + 2 * ads_i;
-            const uint32_t simpleChannel0 = ads_i;
             const uint32_t channel1       = channel0 + 1;
-            const uint32_t simpleChannel1 = simpleChannel0 + 1;
 
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
               {
@@ -120,8 +119,11 @@ namespace sbnd::crt {
             geo::AuxDetSensitiveGeo::LocalPoint_t const sipm1XYZ{sipmX, sipm1Y, 0};
             auto const sipm1XYZWorld = auxDetSensitive.toWorldCoords(sipm1XYZ);
 
-            const uint32_t pedestal0 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, simpleChannel0);
-            const uint32_t pedestal1 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, simpleChannel1);
+            const uint32_t actualChannel0 = invert ? 31 - (2 * ads_i) : 2 * ads_i;
+            const uint32_t actualChannel1 = invert ? actualChannel0 - 1 : actualChannel0 + 1;
+
+            const uint32_t pedestal0 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel0);
+            const uint32_t pedestal1 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel1);
 
             const double gain0 = fSiPMGains.size() ? fSiPMGains.at(channel0) : fDefaultGain;
             const double gain1 = fSiPMGains.size() ? fSiPMGains.at(channel1) : fDefaultGain;
