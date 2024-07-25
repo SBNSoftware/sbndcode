@@ -1,3 +1,0 @@
-#include "run_crteventdisplay_channel_mapping_all.fcl"
-
-physics.analyzers.ana: [ crtevdnor ]
