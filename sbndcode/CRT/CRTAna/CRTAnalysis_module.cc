@@ -71,13 +71,15 @@ public:
 
   void AnalyseCRTStripHits(const art::Event &e, const std::vector<art::Ptr<CRTStripHit>> &CRTStripHitVec);
 
-  void AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints);
+  void AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints,
+                          const art::FindManyP<CRTStripHit> &clustersToStripHits);
 
   void AnalyseTrueDepositsPerTagger(const std::map<CRTBackTrackerAlg::Category, bool> &recoStatusMap);
 
   void AnalyseTrueDeposits(const std::map<int, std::pair<bool, bool>> &recoStatusMap);
 
-  void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec);
+  void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec, const art::FindManyP<CRTSpacePoint> &tracksToSpacePoints,
+                        const art::FindOneP<CRTCluster> &spacePointsToClusters, const art::FindManyP<CRTStripHit> &clustersToStripHits);
 
   void AnalyseTPCMatching(const art::Event &e, const art::Handle<std::vector<recob::Track>> &TPCTrackHandle,
                           const art::Handle<std::vector<CRTSpacePoint>> &CRTSpacePointModuleLabel, const art::Handle<std::vector<recob::PFParticle>> &PFPHandle,
@@ -174,6 +176,7 @@ private:
   std::vector<uint16_t> _cl_nhits;
   std::vector<int16_t>  _cl_tagger;
   std::vector<uint8_t>  _cl_composition;
+  std::vector<std::vector<uint32_t>> _cl_channel_set;
   std::vector<int>      _cl_truth_trackid;
   std::vector<double>   _cl_truth_completeness;
   std::vector<double>   _cl_truth_purity;
@@ -246,6 +249,7 @@ private:
   std::vector<int16_t>             _tr_tagger1;
   std::vector<int16_t>             _tr_tagger2;
   std::vector<int16_t>             _tr_tagger3;
+  std::vector<std::vector<uint32_t>> _tr_channel_set;
   std::vector<int>                 _tr_truth_trackid;
   std::vector<double>              _tr_truth_completeness;
   std::vector<double>              _tr_truth_purity;
@@ -412,6 +416,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
   fTree->Branch("cl_tagger", "std::vector<int16_t>", &_cl_tagger);
   fTree->Branch("cl_composition", "std::vector<uint8_t>", &_cl_composition);
+  fTree->Branch("cl_channel_set", "std::vector<std::vector<uint32_t>>", &_cl_channel_set);
   if(!fDataMode)
     {
       fTree->Branch("cl_truth_trackid", "std::vector<int>", &_cl_truth_trackid);
@@ -488,6 +493,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("tr_tagger1", "std::vector<int16_t>", &_tr_tagger1);
   fTree->Branch("tr_tagger2", "std::vector<int16_t>", &_tr_tagger2);
   fTree->Branch("tr_tagger3", "std::vector<int16_t>", &_tr_tagger3);
+  fTree->Branch("tr_channel_set", "std::vector<std::vector<uint32_t>>", &_tr_channel_set);
   if(!fDataMode)
     {
       fTree->Branch("tr_truth_trackid", "std::vector<int>", &_tr_truth_trackid);
@@ -678,11 +684,14 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   std::vector<art::Ptr<CRTCluster>> CRTClusterVec;
   art::fill_ptr_vector(CRTClusterVec, CRTClusterHandle);
 
-  // Get CRTSpacePoint to CRTCluster Assns
+  // Get CRTCluster to CRTSpacePoint Assns
   art::FindManyP<CRTSpacePoint> clustersToSpacePoints(CRTClusterHandle, e, fCRTSpacePointModuleLabel);
 
+  // Get CRTCluster to CRTStripHit Assns
+  art::FindManyP<CRTStripHit> clustersToStripHits(CRTClusterHandle, e, fCRTClusterModuleLabel);
+
   // Fill CRTCluster variables
-  AnalyseCRTClusters(e, CRTClusterVec, clustersToSpacePoints);
+  AnalyseCRTClusters(e, CRTClusterVec, clustersToSpacePoints, clustersToStripHits);
 
   // Get CRTTracks
   art::Handle<std::vector<CRTTrack>> CRTTrackHandle;
@@ -694,8 +703,22 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   std::vector<art::Ptr<CRTTrack>> CRTTrackVec;
   art::fill_ptr_vector(CRTTrackVec, CRTTrackHandle);
 
+  // Get CRTTrack to CRTSpacePoint Assns
+  art::FindManyP<CRTSpacePoint> tracksToSpacePoints(CRTTrackHandle, e, fCRTTrackModuleLabel);
+
+  // Get CRTSpacePoints
+  art::Handle<std::vector<CRTSpacePoint>> CRTSpacePointHandle;
+  e.getByLabel(fCRTSpacePointModuleLabel, CRTSpacePointHandle);
+  if(!CRTSpacePointHandle.isValid()){
+    std::cout << "CRTSpacePoint product " << fCRTSpacePointModuleLabel << " not found..." << std::endl;
+    throw std::exception();
+  }
+
+  // Get CRTSpacePoint to CRTCluster Assns
+  art::FindOneP<CRTCluster> spacepointsToClusters(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
+
   // Fill CRTTrack variables
-  AnalyseCRTTracks(e, CRTTrackVec);
+  AnalyseCRTTracks(e, CRTTrackVec, tracksToSpacePoints, spacepointsToClusters, clustersToStripHits);
 
   if(fNoTPC)
     {
@@ -710,14 +733,6 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   e.getByLabel(fTPCTrackModuleLabel, TPCTrackHandle);
   if(!TPCTrackHandle.isValid()){
     std::cout << "TPCTrack product " << fTPCTrackModuleLabel << " not found..." << std::endl;
-    throw std::exception();
-  }
-
-  // Get CRTSpacePoints
-  art::Handle<std::vector<CRTSpacePoint>> CRTSpacePointHandle;
-  e.getByLabel(fCRTSpacePointModuleLabel, CRTSpacePointHandle);
-  if(!CRTSpacePointHandle.isValid()){
-    std::cout << "CRTSpacePoint product " << fCRTSpacePointModuleLabel << " not found..." << std::endl;
     throw std::exception();
   }
 
@@ -1043,7 +1058,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints)
+void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec, const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints,
+                                                const art::FindManyP<CRTStripHit> &clustersToStripHits)
 {
   const unsigned nClusters = CRTClusterVec.size();
 
@@ -1053,6 +1069,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_nhits.resize(nClusters);
   _cl_tagger.resize(nClusters);
   _cl_composition.resize(nClusters);
+  _cl_channel_set.resize(nClusters);
   _cl_truth_trackid.resize(nClusters);
   _cl_truth_completeness.resize(nClusters);
   _cl_truth_purity.resize(nClusters);
@@ -1093,6 +1110,15 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_nhits[i]       = cluster->NHits();
       _cl_tagger[i]      = cluster->Tagger();
       _cl_composition[i] = cluster->Composition();
+
+      const auto striphits = clustersToStripHits.at(cluster.key());
+      _cl_channel_set[i].resize(_cl_nhits[i]);
+
+      for(unsigned ii = 0; ii < _cl_nhits[i]; ++ii)
+        {
+          const auto striphit = striphits[ii];
+          _cl_channel_set[i][ii] = striphit->Channel();
+        }
 
       if(!fDataMode)
         {
@@ -1215,7 +1241,8 @@ void sbnd::crt::CRTAnalysis::AnalyseTrueDeposits(const std::map<int, std::pair<b
     }
 }
 
-void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec)
+void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec, const art::FindManyP<CRTSpacePoint> &tracksToSpacePoints,
+                                              const art::FindOneP<CRTCluster> &spacePointsToClusters, const art::FindManyP<CRTStripHit> &clustersToStripHits)
 {
   const unsigned nTracks = CRTTrackVec.size();
 
@@ -1241,6 +1268,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
   _tr_tagger1.resize(nTracks);
   _tr_tagger2.resize(nTracks);
   _tr_tagger3.resize(nTracks);
+  _tr_channel_set.resize(nTracks);
   _tr_truth_trackid.resize(nTracks);
   _tr_truth_completeness.resize(nTracks);
   _tr_truth_purity.resize(nTracks);
@@ -1304,6 +1332,20 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
             _tr_tagger3[i] = tagger;
 
           ++tag_i;
+        }
+
+      _tr_channel_set[i].clear();
+
+      const auto spacepoints = tracksToSpacePoints.at(track.key());
+
+      for(auto const& spacepoint : spacepoints)
+        {
+          const auto cluster = spacePointsToClusters.at(spacepoint.key());
+
+          const auto striphits = clustersToStripHits.at(cluster.key());
+
+          for(auto const& striphit : striphits)
+            _tr_channel_set[i].push_back(striphit->Channel());
         }
 
       if(!fDataMode)
