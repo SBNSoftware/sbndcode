@@ -29,8 +29,18 @@ local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local wc = import 'wirecell.jsonnet';
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
-local simu_params = import 'simparams.jsonnet';
-local params = simu_params;
+// local simu_params = import 'simparams.jsonnet';
+// local params = simu_params;
+
+local test_params = import 'simparams.jsonnet';
+
+local params = test_params {
+    files: super.files {
+      // The input file name
+      chresp: "sbnd-params-channel-responses-test.json.bz2",
+    },
+};
+
 
 local tools = tools_maker(params);
 
