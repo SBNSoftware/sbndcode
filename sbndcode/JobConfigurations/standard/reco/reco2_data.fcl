@@ -1,0 +1,4 @@
+#include "reco2_sce.fcl"
+
+physics.reco2_sce: [pandora, pandoraTrack, pandoraShower]
+physics.end_paths: [stream1]

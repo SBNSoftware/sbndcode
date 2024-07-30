@@ -2,6 +2,6 @@
 # March 1, 2024
 # Run reco1 while setting cosmic producer to "rain"
 
-#include "reco1_sce_lite.fcl"
+#include "standard_reco1_sbnd.fcl"
 
 physics.superaana: [superampvmpr]

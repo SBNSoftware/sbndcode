@@ -29,10 +29,18 @@ local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local wc = import 'wirecell.jsonnet';
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
-local simu_params = import 'simparams.jsonnet';
-local params = simu_params;
+local data_params = import 'params.jsonnet';
+
+local params = data_params {
+    daq: super.daq { // <- super.daq overrides default values
+      // Set the waveform sample length, eg, 6000, 15000, "auto"
+      nticks: std.extVar('nticks'),
+    },
+};
+
 
 local tools = tools_maker(params);
+
 
 local mega_anode = {
   type: 'MegaAnodePlane',

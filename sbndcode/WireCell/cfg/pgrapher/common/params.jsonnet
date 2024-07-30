@@ -73,7 +73,7 @@ local wc = import "wirecell.jsonnet";
         // as "nticks".  For example, NF will typicall differ.  Also,
         // in general this is not the number used for the Ductor for
         // simulation.
-        nticks: 10000,
+        nticks: 3415,
 
         // Readout period in units of time
         readout_time: self.tick*self.nticks,
