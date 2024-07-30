@@ -24,5 +24,5 @@ assignees: ''
 ## How to reproduce 
 
 ## Checklist
-- [ ] I've added a label
+- [ ] I've added at least 1 label
 - [ ] Assigned a reviewer
