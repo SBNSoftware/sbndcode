@@ -18,10 +18,10 @@ assignees: ''
 ## Current Behavior
 
 
-## Possible Solution
+## Possible Solution (optional)
 
 
-## How to reproduce (for bugs)
+## How to reproduce 
 
 ## Checklist
 - [ ] I've added a label
