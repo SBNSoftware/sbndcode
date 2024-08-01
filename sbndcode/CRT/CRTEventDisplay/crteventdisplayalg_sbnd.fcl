@@ -62,6 +62,7 @@ crteventdisplayalg_sbnd:
    SpacePointColour:         6
    TrackColour:              9
 
+   UseTs0:  false
    MinTime: -200000
    MaxTime: -150000
 
@@ -107,6 +108,7 @@ crteventdisplayalg_sbnd_data.DrawModules:     true
 crteventdisplayalg_sbnd_data.DrawTrueTracks:  false
 crteventdisplayalg_sbnd_data.ChoseTaggers:    true
 crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 2, 3, 4 ]
+crteventdisplayalg_sbnd_data.UseTs0:          true
 crteventdisplayalg_sbnd_data.MinTime:         435000000
 crteventdisplayalg_sbnd_data.MaxTime:         436000000
 

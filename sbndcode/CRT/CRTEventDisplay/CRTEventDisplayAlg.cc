@@ -61,6 +61,7 @@ namespace sbnd::crt {
     fSpacePointColour = config.SpacePointColour();
     fTrackColour = config.TrackColour();
 
+    fUseTs0  = config.UseTs0();
     fMinTime = config.MinTime();
     fMaxTime = config.MaxTime();
 
@@ -365,7 +366,9 @@ namespace sbnd::crt {
 
         for(auto const stripHit : stripHitsVec)
           {
-            if(stripHit->Ts1() - G4RefTime < fMinTime || stripHit->Ts1() - G4RefTime > fMaxTime)
+            const double stripHitTime = fUseTs0 ? stripHit->Ts0() - G4RefTime : stripHit->Ts1() - G4RefTime;
+
+            if(stripHitTime < fMinTime || stripHitTime > fMaxTime)
               continue;
 
             CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
@@ -412,7 +415,9 @@ namespace sbnd::crt {
 
         for(auto const cluster : clustersVec)
           {
-            if(cluster->Ts1() - G4RefTime < fMinTime || cluster->Ts1() - G4RefTime > fMaxTime)
+            const double clusterTime = fUseTs0 ? cluster->Ts0() - G4RefTime : cluster->Ts1() - G4RefTime;
+
+            if(clusterTime < fMinTime || clusterTime > fMaxTime)
               continue;
 
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), cluster->Tagger()) == fChosenTaggers.end())
@@ -489,7 +494,9 @@ namespace sbnd::crt {
 
         for(auto track : tracksVec)
           {
-            if(track->Ts1() - G4RefTime < fMinTime || track->Ts1() - G4RefTime > fMaxTime)
+            const double trackTime = fUseTs0 ? track->Ts0() - G4RefTime : track->Ts1() - G4RefTime;
+
+            if(trackTime < fMinTime || trackTime > fMaxTime)
               continue;
 
             std::set<CRTTagger> taggers = track->Taggers();

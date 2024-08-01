@@ -68,122 +68,125 @@ namespace sbnd::crt {
       
       fhicl::Atom<bool> MC {
         Name("MC")
-          };
+      };
 
       fhicl::Atom<art::InputTag> SimLabel {
         Name("SimLabel")
-          };
+      };
       fhicl::Atom<art::InputTag> SimDepositLabel {
         Name("SimDepositLabel")
-          };
+      };
       fhicl::Atom<art::InputTag> StripHitLabel {
         Name("StripHitLabel")
-          };
+      };
       fhicl::Atom<art::InputTag> ClusterLabel {
         Name("ClusterLabel")
-          };
+      };
       fhicl::Atom<art::InputTag> SpacePointLabel {
         Name("SpacePointLabel")
-          };
+      };
       fhicl::Atom<art::InputTag> TrackLabel {
         Name("TrackLabel")
-          };
+      };
 
       fhicl::Atom<bool> SaveRoot {
-	Name("SaveRoot"),
+        Name("SaveRoot"),
       };
       fhicl::Atom<bool> SaveViews {
-	Name("SaveViews"),
+        Name("SaveViews"),
       };
 
       fhicl::Atom<bool> DrawTaggers {
         Name("DrawTaggers")
-          };
+      };
       fhicl::Atom<bool> DrawModules {
         Name("DrawModules")
-          };
+      };
       fhicl::Atom<bool> DrawFEBs {
         Name("DrawFEBs")
-          };
+      };
       fhicl::Atom<bool> DrawFEBEnds {
         Name("DrawFEBEnds")
-          };
+      };
       fhicl::Atom<bool> DrawStrips {
         Name("DrawStrips")
-          };
+      };
       fhicl::Atom<bool> DrawTPC {
         Name("DrawTPC")
-          };
+      };
       fhicl::Atom<bool> DrawTrueTracks {
         Name("DrawTrueTracks")
-          };
+      };
       fhicl::Atom<bool> DrawSimDeposits {
         Name("DrawSimDeposits")
-          };
+      };
       fhicl::Atom<bool> DrawStripHits {
         Name("DrawStripHits")
-          };
+      };
       fhicl::Atom<bool> DrawClusters {
         Name("DrawClusters")
-          };
+      };
       fhicl::Atom<bool> DrawSpacePoints {
         Name("DrawSpacePoints")
-          };
+      };
       fhicl::Atom<bool> DrawTracks {
         Name("DrawTracks")
-          };
+      };
 
       fhicl::Atom<bool> ChoseTaggers {
         Name("ChoseTaggers")
-          };
+      };
       fhicl::Sequence<int> ChosenTaggers {
         Name("ChosenTaggers")
-          };
+      };
 
       fhicl::Atom<bool> HighlightModules {
         Name("HighlightModules")
-          };
+      };
       fhicl::Sequence<int> HighlightedModules {
         Name("HighlightedModules")
-          };
+      };
 
       fhicl::Atom<int> TaggerColour {
         Name("TaggerColour")
-          };
+      };
       fhicl::Atom<int> HighlightColour {
         Name("HighlightColour")
-          };
+      };
       fhicl::Atom<int> FEBColour {
         Name("FEBColour")
-          };
+      };
       fhicl::Atom<int> FEBEndColour {
         Name("FEBEndColour")
-          };
+      };
       fhicl::Atom<int> TPCColour {
         Name("TPCColour")
-          };
+      };
       fhicl::Atom<int> TrueTrackColour {
         Name("TrueTrackColour")
-          };
+      };
       fhicl::Atom<int> SimDepositColour {
         Name("SimDepositColour")
-          };
+      };
       fhicl::Atom<int> StripHitColour {
         Name("StripHitColour")
-          };
+      };
       fhicl::Atom<int> ClusterStartingColour {
         Name("ClusterStartingColour")
-          };
+      };
       fhicl::Atom<int> ClusterColourInterval {
         Name("ClusterColourInterval")
-          };
+      };
       fhicl::Atom<int> SpacePointColour {
         Name("SpacePointColour")
-          };
+      };
       fhicl::Atom<int> TrackColour {
         Name("TrackColour")
-          };
+      };
 
+      fhicl::Atom<bool> UseTs0 {
+        Name ("UseTs0")
+      };
       fhicl::Atom<double> MinTime {
         Name ("MinTime"),
         Comment ("Ignore truth & reco products before this time"),
@@ -197,11 +200,11 @@ namespace sbnd::crt {
 
       fhicl::Atom<bool> Print {
         Name("Print")
-          };
+      };
 
       fhicl::Atom<double> LineWidth {
         Name("LineWidth")
-          };
+      };
     };
     
     CRTEventDisplayAlg(const Config& config);
@@ -283,6 +286,7 @@ namespace sbnd::crt {
     int fSpacePointColour;
     int fTrackColour;
 
+    bool   fUseTs0;
     double fMinTime;
     double fMaxTime;
 
