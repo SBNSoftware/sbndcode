@@ -1,7 +1,7 @@
 #
 # File:    wirecell_sp_sbnd.fcl
 # Purpose: Performs 2D signal processing on RawDigits
-# Authors: Ewerton Belchior and Lynn Tung (lynnt@uchicago.edu)
+# Authors: Ewerton Belchior (ebelchior@lsu.edu) and Lynn Tung (lynnt@uchicago.edu)
 #
 # This configuration runs Wire-Cell TPC Signal Processing ONLY
 #
