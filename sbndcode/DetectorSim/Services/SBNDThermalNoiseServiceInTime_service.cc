@@ -6,6 +6,8 @@
 #include "sbndcode/DetectorSim/Services/SBNDThermalNoiseServiceInTime.h"
 #include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 
+#include "larcore/Geometry/WireReadout.h"
+
 using std::cout;
 using std::ostream;
 using std::endl;
@@ -69,11 +71,12 @@ int SBNDThermalNoiseServiceInTime::addNoise(detinfo::DetectorClocksData const&,
                                             Channel chan, AdcSignalVector& sigs) const {
 
   //Get services.
-  art::ServiceHandle<geo::Geometry> geo;
+  auto const& channelMapAlg =
+    art::ServiceHandle<geo::WireReadout const>()->Get();
   art::ServiceHandle<util::SignalShapingServiceSBND> sss;
   
   //Generate Noise:
-  size_t view = (size_t)geo->View(chan);
+  size_t view = (size_t)channelMapAlg.View(chan);
   
   double noise_factor;
   auto tempNoiseVec = sss->GetNoiseFactVec();

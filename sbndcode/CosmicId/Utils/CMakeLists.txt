@@ -30,7 +30,6 @@ art_make_library(LIBRARY_NAME sbndcode_CosmicIdUtils
                            ROOT::XMLIO
                            ROOT::Gdml
                            ROOT::Core
-                           sbndcode_CRT
                            sbnobj::Common_CRT
                            sbndcode_CRTUtils
         )
