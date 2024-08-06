@@ -6,4 +6,12 @@
   <class name="std::vector<tpcAnalysis::TPCDecodeAna>"/>
   <class name="art::Wrapper<tpcAnalysis::TPCDecodeAna>"/>
   <class name="art::Wrapper<std::vector<tpcAnalysis::TPCDecodeAna>>"/>
+
+  <class name="raw::ntb::sbndntb" ClassVersion="10">
+   <version ClassVersion="10" checksum="4110489055"/>
+  </class>
+  <class name="std::vector<raw::ntb::sbndntb>"/>
+  <class name="art::Wrapper<raw::ntb::sbndntb>"/>
+  <class name="art::Wrapper<std::vector<raw::ntb::sbndntb>>"/>
+
 </lcgdict>
