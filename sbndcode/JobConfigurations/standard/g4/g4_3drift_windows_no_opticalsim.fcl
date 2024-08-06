@@ -1,4 +1,0 @@
-#include "g4_no_opticalsim.fcl"
-
-#Make sure the 3drift fcl at the BOTTOM of the fcl
-#include "3drift_services_sbnd.fcl"
