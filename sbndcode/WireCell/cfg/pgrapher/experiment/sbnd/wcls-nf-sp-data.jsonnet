@@ -23,6 +23,7 @@
 local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
 local raw_input_label = std.extVar('raw_input_label');  // eg "daq"
+local use_paramresp = std.extVar('use_paramresp');  // eg "true" or "false"
 
 local g = import 'pgraph.jsonnet';
 local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
@@ -35,6 +36,11 @@ local params = data_params {
     daq: super.daq { // <- super.daq overrides default values
       // Set the waveform sample length, eg, 6000, 15000, "auto"
       nticks: std.extVar('nticks'),
+    },
+    # provides filename for parametrized per channel electronics response correction
+    # default is: use_parmresp = false
+    files: super.files {
+      chresp: if (use_paramresp == 'true') then "sbnd-params-channel-responses-data-v1.json.bz2" else "",
     },
 };
 

@@ -49,6 +49,9 @@ sbnd_wcls_sp_data.wcls_main.params :   {
 
                                         # Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
                                         signal_output_form: "sparse"
+
+                                        # use parametrized per channel response
+                                        use_paramresp: "false"
                                         }
 
 sbnd_wcls_sp_data.wcls_main.structs:   { 
