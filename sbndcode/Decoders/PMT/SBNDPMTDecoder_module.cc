@@ -376,7 +376,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     for(unsigned int n = 0; n < combined_wvfm.size(); n++) 
                         wvfmHist->SetBinContent(n + 1, (double)combined_wvfm[n]);
                 }
-                int time_diff = int(iwvfm_start) - int(event_trigger_time);
+                double time_diff = (int(iwvfm_start) - int(event_trigger_time))*1e-3; // us
                 uint ch;
                 if (i == 15){
                     ch = fragid;
