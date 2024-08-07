@@ -40,7 +40,7 @@ local params = data_params {
     # provides filename for parametrized per channel electronics response correction
     # default is: use_parmresp = false
     files: super.files {
-      chresp: if (use_paramresp == 'true') then "sbnd-params-channel-responses-data-v1.json.bz2" else "",
+      chresp: if (use_paramresp == 'true') then "sbnd-params-channel-responses-data-v1.json.bz2" else null,
     },
 };
 
