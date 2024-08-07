@@ -1,6 +1,12 @@
 #include "wcsp_data_sbnd.fcl"
 #include "standard_reco1_sbnd.fcl"
 
+services:
+{
+    @table::services
+    @table::sbnd_data_services
+}
+
 physics.producers:
 {
     @table::physics.producers
