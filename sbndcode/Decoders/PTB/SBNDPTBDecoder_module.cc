@@ -16,6 +16,7 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include <memory>
+#include <bitset>
 
 #include "sbndaq-artdaq-core/Overlays/SBND/PTBFragment.hh"
 #include "artdaq-core/Data/ContainerFragment.hh"
@@ -76,9 +77,31 @@ SBNDPTBDecoder::SBNDPTBDecoder(fhicl::ParameterSet const & p)
   produces<std::vector<raw::ptb::sbndptb> >(fOutputInstance);
 }
 
+
+int upBitLocation (int val){
+  int upBit =-1;
+  for(int i=0; i<32;i++){
+    if ((val & 0x01) ==1){
+      upBit =i;
+    }
+    val = val >> 1;
+  }
+  return upBit;
+}
+
+int eventNum =0;
+int _run;
+int _subrun;
+int _event;
+
 void SBNDPTBDecoder::produce(art::Event & evt)
 {
+  _run = evt.id().run();
+  _subrun = evt.id().subRun();
+  _event = evt.id().event();
 
+  std::cout << "Run: " << _run  << "  SubRun: " << _subrun  << "  Event: " << _event << " Listed Event: " << eventNum << std::endl; 
+  eventNum++;
 
   // look first for container fragments and then non-container fragments
 
@@ -86,17 +109,21 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 
   art::InputTag itag1(fInputLabel, fInputContainerInstance);
   auto cont_frags = evt.getHandle<artdaq::Fragments>(itag1);
+  int numcont =0;
   if (cont_frags)
     {
       for (auto const& cont : *cont_frags)
 	{
 	  artdaq::ContainerFragment cont_frag(cont);
+	  numcont++;
+	  int numfrag =0;
 	  for (size_t ii = 0; ii < cont_frag.block_count(); ++ii)
 	    {
+	      numfrag++;
               ptbsv_t sout;  // output structures
 	      _process_PTB_AUX(*cont_frag[ii], sout);
               raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
-              sbndptbs.push_back(ptbdp);
+	      sbndptbs.push_back(ptbdp);
 	    }
 	}
     }
@@ -119,6 +146,7 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 
 void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sout)
 {
+  int numLLT =0;
   sbndaq::CTBFragment ctbfrag(frag);   // somehow the name CTBFragment stuck
 
   // use the same logic in sbndaq-artdaq-core/Overlays/SBND/PTBFragment.cc: operator<<
@@ -139,11 +167,14 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
       if (ctbfrag.Trigger(iword))
 	{
 	  raw::ptb::Trigger tstruct;
-	  tstruct.word_type = ctbfrag.Trigger(iword)->word_type;
+	  // tstruct.word_type = ctbfrag.Trigger(iword)->word_type;
+	  tstruct.word_type = ctbfrag.Word(iword)->word_type; 
 	  wt = tstruct.word_type;
-	  tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word;
-	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp;
-	  if (ctbfrag.Trigger(iword)->IsHLT()) 
+	  //tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word;
+	  tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word & 0x1FFFFFFFFFFFFFFF; //& 0x1FFFFFFFFFFF extracts the 61 bit payload
+	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp * 20; //PTB clock has 20ns ticks
+	  //if (ctbfrag.Trigger(iword)->IsHLT()) 
+	  if (wt ==2)  
 	    {
 	      ix = sout.HLTrigs.size();
 	      sout.HLTrigs.push_back(tstruct);
@@ -152,8 +183,10 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 		  std::cout << "SBNDPTBDecoder_module: found HLT: " << wt << " " << ix << std::endl;
 		}
 	    }
-	  else if (ctbfrag.Trigger(iword)->IsLLT())
+	  //else if (ctbfrag.Trigger(iword)->IsLLT())
+	  else if (wt ==1)
 	    {
+	      numLLT++;
 	      ix = sout.LLTrigs.size();
 	      sout.LLTrigs.push_back(tstruct);
 	      if (fDebugLevel > 0)
