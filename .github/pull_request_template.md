@@ -4,12 +4,10 @@ Please provide a detailed description of the changes this pull request introduce
 ## Checklist
 - [ ] Added at least 1 label from [available labels](https://github.com/SBNSoftware/sbndcode/issues/labels?sort=name-asc).
 - [ ] Assigned at least 1 reviewer under `Reviewers`,
-- [ ] Assigned all contributers including yourself under `Assignees` ,
+- [ ] Assigned all contributers including yourself under `Assignees`
+- [ ] Linked any relevant issues under `Developement`
 - [ ] Does this PR affect CAF data format? If so, please assign a CAF maintainer as additional reviewer.
 - [ ] Does this affect the standard workflow? 
-
-### Relevant issue link(s) (optional)
-Is there existing issue that this PR addresses?
 
 ### Relevant PR links (optional)
 Does this PR require merging another PR in a different repository (such as sbnanobj/sbnobj etc.)?
