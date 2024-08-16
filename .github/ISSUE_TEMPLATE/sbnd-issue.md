@@ -12,6 +12,10 @@ assignees: ''
 - [ ] bug report
 - [ ] feature request
 
+## Checklist
+- [ ] I've added at least 1 label under `Labels`
+- [ ] Assigned a reviewer under `Assignees`
+
 ## Expected Behavior
 
 
@@ -22,7 +26,3 @@ assignees: ''
 
 
 ## How to reproduce 
-
-## Checklist
-- [ ] I've added at least 1 label
-- [ ] Assigned a reviewer
