@@ -1,0 +1,39 @@
+#include "services_sbnd.fcl"
+#include "TPCChannelMapService.fcl"
+
+process_name: FlagChoppy
+
+services:
+{
+  TFileService: { fileName: "choppymetrics.root"}
+  MemoryTracker:     {}
+  TimeTracker:       {}
+  RandomNumberGenerator: {} 
+  message:              @local::sbnd_message_services_prod_debug
+  FileCatalogMetadata:  @local::art_file_catalog_mc
+  TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
+  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
+  ExptGeoHelperInterface:    @local::sbnd_geometry_helper
+  Geometry:                  @local::sbnd_geo
+  GeometryConfigurationWriter:    {}
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1
+}
+
+
+physics:
+{
+  analyzers:
+  {
+    flagchoppy: {
+      module_type: FlagChoppy
+    }
+  }
+
+  ana: [ flagchoppy ]
+  end_paths:     [ana]
+}
