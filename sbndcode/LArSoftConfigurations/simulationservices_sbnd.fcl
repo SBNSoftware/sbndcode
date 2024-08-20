@@ -42,6 +42,7 @@ sbnd_largeantparameters.UseCustomPhysics: true
 sbnd_largeantparameters.EnabledPhysics: [ "Em", "FastOptical", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
 sbnd_largeantparameters.UseLitePhotons: true
 sbnd_largeantparameters.IonAndScintCalculator: "Correlated"
+sbnd_largeantparameters.UseModBoxRecomb: false
 sbnd_largeantparameters.UseEllipsModBoxRecomb: true
 
 #Define a largeantparameters which doesn't use the optical simulation
@@ -56,6 +57,7 @@ sbnd_largeantparameters_noopticalsim.TransverseDiffusion: 8.8e-9 #in cm^2/ns (wa
 
 # gputnam 19Aug2024: Add in service configuration without EMB recombination
 sbnd_largeantparameters_modbox: @local::sbnd_largeantparameters
+sbnd_largeantparameters_modbox.UseModBoxRecomb: true
 sbnd_largeantparameters_modbox.UseEllipsModBoxRecomb: false
 
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
