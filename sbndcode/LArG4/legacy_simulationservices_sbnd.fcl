@@ -57,7 +57,7 @@ sbnd_largeantparameters.UseEllipsModBoxRecomb: true
 #Define a largeantparameters which doesn't use the optical simulation
 sbnd_largeantparameters_noopticalsim: @local::sbnd_largeantparameters
 sbnd_largeantparameters_noopticalsim.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ]
-sbnd_largeantparameters_noopticalsim.useellipsmodboxrecomb: true
+sbnd_largeantparameters_noopticalsim.UseEllipsModBoxRecomb: true
 
 # ascarff 16Jun2020: Change the diffusion constants to match ProtoDUNE results
 sbnd_largeantparameters.LongitudinalDiffusion: 4.0e-9 #in cm^2/ns (was 6.2e-9)
