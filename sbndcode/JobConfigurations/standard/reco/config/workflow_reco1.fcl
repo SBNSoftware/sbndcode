@@ -75,6 +75,8 @@ sbnd_reco1_producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:  
 sbnd_reco1_analyzers: {
     #supera for ML reco
     supera: @local::sbnd_supera
+    superampvmpr: @local::sbnd_supera_mpvmpr
+    superadata: @local::sbnd_supera_data
 }
 
 sbnd_reco1_analyzer_sequence: [

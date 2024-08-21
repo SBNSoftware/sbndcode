@@ -1,4 +1,10 @@
 #include "evd_sbnd.fcl"
+
+services: {
+    @table::services
+    @table::sbnd_data_services
+}
+
 services.RawDrawingOptions.SeeBadChannels: true
 services.RawDrawingOptions.MinimumSignal: 0
 services.RawDrawingOptions.PedestalOption: 1
