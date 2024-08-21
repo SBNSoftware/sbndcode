@@ -125,6 +125,7 @@ void SBNDPTBDecoder::produce(art::Event & evt)
               raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
 	      sbndptbs.push_back(ptbdp);
 	    }
+
 	}
     }
 
@@ -143,6 +144,40 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 
   evt.put(std::make_unique<std::vector<raw::ptb::sbndptb>>(std::move(sbndptbs)),fOutputInstance);
 }
+
+
+
+
+
+
+//Copied from Lines 1382-1406 from     sbndaq-artdaq/sbndaq-artdaq/ArtModules/SBND/EventAna_module.cc
+
+ /*******************************************
+  * Note: Below for the Timestamp conversion,
+  *       The PTB TS is in UTC seconds since the Unix epoch in 50MHz clock ticks.
+  *       This means to recover seconds since the Unix epoch use: sec_since_epoch = TS / 50e6
+  *       and of course nanosec_since_epoch = (TS / 50e6) * 1e9 = TS * 20
+  *
+  * Note: The `CTBFragment` constructor grabs the chunk of memory the artDAQ fragment occupies.
+  *       Since we know a priori the number of PTB words (from the TCP header) and the size (128b for all words)
+  *       we can loop over the memory addresses, casting each 128b into the correct word type given by each word's `type`.
+  *
+  * There are 5 word types with the following bit arrangement:
+  *       Feeback        = | 3b Word Type | 61b Payload | 64b Timestamp | (here Payload is split into code, source, payload1, payload2)
+  *       LLT, HLT       = | 3b Word Type | 61b Payload | 64b Timestamp |
+  *       Channel Status = | 3b Word Type | 64b Payload | 61b Timestamp | (Larger Payload to fit all input channels)
+  *
+  * Word Type:
+  *       - 0x0 = Feedback/Error Word -> Errors from the firmware, should abort the run
+  *       - 0x1 = Low Level Trigger (LLT) -> Holds a record of any asserted LLTs
+  *       - 0x2 = High Level Trigger (HLT) -> Holds a record of any asserted HLTs
+  *       - 0x3 = Channel status -> Holds a record of any asserted inputs
+  *       - 0x7 = Timestamp Word -> No payload just a timestamp, these are periodic
+  *
+  * Note: Payload AND'd with mask the size of the expected number of bits just
+  *       to make sure we don't get any unexpected garbage bits since we aren't using
+  *       the full bits of the variable type e.g. uint64_t, unint16_t..
+  **************************************/
 
 void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sout)
 {
@@ -164,6 +199,8 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	}
       size_t ix=0;
       uint32_t wt = 0;
+      std::cout << "PTB Word type [" << ctbfrag.Word(iword)->word_type << "]  ";
+
       if (ctbfrag.Trigger(iword))
 	{
 	  raw::ptb::Trigger tstruct;
@@ -172,12 +209,13 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  wt = tstruct.word_type;
 	  //tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word;
 	  tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word & 0x1FFFFFFFFFFFFFFF; //& 0x1FFFFFFFFFFF extracts the 61 bit payload
-	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp * 20; //PTB clock has 20ns ticks
+	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp * 20; //Check note above about timestamps
 	  //if (ctbfrag.Trigger(iword)->IsHLT()) 
 	  if (wt ==2)  
 	    {
 	      ix = sout.HLTrigs.size();
 	      sout.HLTrigs.push_back(tstruct);
+	      std::cout << tstruct.trigger_word << "  HLT Status: " << tstruct.timestamp << std::endl;
 	      if (fDebugLevel > 0)
 		{
 		  std::cout << "SBNDPTBDecoder_module: found HLT: " << wt << " " << ix << std::endl;
@@ -189,6 +227,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	      numLLT++;
 	      ix = sout.LLTrigs.size();
 	      sout.LLTrigs.push_back(tstruct);
+	      std::cout << tstruct.trigger_word << "  LLT Status: " << tstruct.timestamp <<  std::endl;
 	      if (fDebugLevel > 0)
 		{
 		  std::cout << "SBNDPTBDecoder_module: found LLT: " << wt << " " << ix << std::endl;
@@ -198,7 +237,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
       else if (ctbfrag.ChStatus(iword))
 	{
 	  raw::ptb::ChStatus cstruct;
-	  cstruct.timestamp = ctbfrag.ChStatus(iword)->timestamp;
+	  cstruct.timestamp = ctbfrag.ChStatus(iword)->timestamp * 20; //Check above notes about timestamps
 	  cstruct.beam = ctbfrag.ChStatus(iword)->beam;
 	  cstruct.crt = ctbfrag.ChStatus(iword)->crt;
 	  cstruct.pds = ctbfrag.ChStatus(iword)->pds;
@@ -207,6 +246,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  cstruct.auxpds = ctbfrag.ChStatus(iword)->auxpds;
 	  cstruct.word_type = ctbfrag.ChStatus(iword)->word_type;
 	  wt = cstruct.word_type;
+	  std::cout <<cstruct.crt << "                  CRT Status: " << cstruct.timestamp <<  std::endl;
 	  ix = sout.ChStats.size();
 	  sout.ChStats.push_back(cstruct);
 	  if (fDebugLevel > 0)
@@ -217,7 +257,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
       else if (ctbfrag.Feedback(iword))
 	{
 	  raw::ptb::Feedback fstruct;
-	  fstruct.timestamp = ctbfrag.Feedback(iword)->timestamp;
+	  fstruct.timestamp = ctbfrag.Feedback(iword)->timestamp * 20;
 	  fstruct.code = ctbfrag.Feedback(iword)->code;
 	  fstruct.source = ctbfrag.Feedback(iword)->source;
 	  fstruct.payload = ctbfrag.Feedback(iword)->payload;  // broken in two in Tereza's version
@@ -233,7 +273,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
       else
 	{
 	  raw::ptb::Misc mstruct;
-	  mstruct.timestamp = ctbfrag.Word(iword)->timestamp;
+	  mstruct.timestamp = ctbfrag.Word(iword)->timestamp * 20;
 	  mstruct.payload = ctbfrag.Word(iword)->payload;
 	  mstruct.word_type = ctbfrag.Word(iword)->word_type;
 	  wt = mstruct.word_type;

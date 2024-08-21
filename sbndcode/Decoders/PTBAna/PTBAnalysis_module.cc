@@ -206,7 +206,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
    for (auto const& ptb : PTBVec)
      {
        for (unsigned i =0; i < ptb->GetNChStatuses(); i++)
-   	{
+	 {
 	  
    	  _ptb_chStatus_timestamp[chw_i] = ptb->GetChStatuse(i).timestamp;  //typo in the header file
   
@@ -525,7 +525,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
       for(unsigned i = 0; i < ptb->GetNHLTriggers(); ++i)
         {
 	  _ptb_hlt_trigger[h_i] = ptb->GetHLTrigger(i).trigger_word;
-	  _ptb_hlt_timestamp[h_i] = ((ptb->GetHLTrigger(i).timestamp / pow(50., 6)));// *pow(10.0, 9)) / pow(10.0,15) ; //50 MHz clock tick
+	  _ptb_hlt_timestamp[h_i] = ptb->GetHLTrigger(i).timestamp; //Units can be found in the Decoder Module 
 	  h_i++;
 
 	  int val = ptb->GetHLTrigger(i).trigger_word;
@@ -584,7 +584,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
       for(unsigned i = 0; i < ptb->GetNLLTriggers(); ++i)
         {
           _ptb_llt_trigger[l_i]   = ptb->GetLLTrigger(i).trigger_word;
-	  _ptb_llt_timestamp[l_i] = ((ptb->GetLLTrigger(i).timestamp / pow(50., 6)));// *pow(10.0, 9)) / pow(10.0,15) ; //50 MHz clock tick    
+	  _ptb_llt_timestamp[l_i] = ptb->GetLLTrigger(i).timestamp; //Units can be found in the Decoder Module    
 
 	  l_i++;
 	 
