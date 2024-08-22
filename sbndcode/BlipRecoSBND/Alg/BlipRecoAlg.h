@@ -147,6 +147,7 @@ namespace blip {
     int                 fHitClustWireRange;
     float               fMatchQDiffLimit;
     float               fMatchMaxQRatio;
+    float               fMatchMinScore;
     std::vector<float>  fTimeOffset;
     bool                fApplyXTicksOffset;
     float               fMatchMinOverlap;

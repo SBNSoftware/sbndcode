@@ -1,0 +1,2 @@
+#include "detsim_sce_lite.fcl"
+services.LArG4Parameters.KeepEMShowerDaughters: true

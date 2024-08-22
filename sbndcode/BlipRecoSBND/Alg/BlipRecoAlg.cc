@@ -270,6 +270,7 @@ namespace blip {
     fMatchMaxTicks      = pset.get<float>         ("ClustMatchMaxTicks",    5.0 );
     fMatchQDiffLimit    = pset.get<float>         ("ClustMatchQDiffLimit",  15e3);
     fMatchMaxQRatio     = pset.get<float>         ("ClustMatchMaxQRatio",   4);
+    fMatchMinScore      = pset.get<float>         ("ClustMatchMinScore",    -9);
     
     fMinMatchedPlanes   = pset.get<int>           ("MinMatchedPlanes",    2);
     fPickyBlips         = pset.get<bool>          ("PickyBlips",          false);
@@ -389,6 +390,13 @@ namespace blip {
     art::FindManyP<recob::Track> fmtrk(hitHandle,evt,fTrkProducer);
     art::FindManyP<recob::Track> fmtrkGH(hitHandleGH,evt,fTrkProducer);
     art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"gaushitTruthMatch");
+    
+    std::cout
+    <<"Found "<<hitlist.size()<<" hits from "<<fHitProducer<<"\n"
+    <<"Found "<<tracklist.size()<<" tracks from "<<fTrkProducer<<"\n"
+    <<"Found "<<plist.size()<<" MC particles from "<<fGeantProducer<<"\n"
+    <<"Found "<<sedlist.size()<<" SimEnergyDeposits from "<<fSimDepProducer<<"\n"
+    <<"Found "<<simchanlist.size()<<" SimChannels from "<<fSimChanProducer<<"\n";
   
     /*
     //====================================================
@@ -446,7 +454,11 @@ namespace blip {
     // Record PDG for every G4 Track ID
     //=====================================================
     std::map<int,int> map_g4trkid_pdg;
-    for(size_t i = 0; i<plist.size(); i++) map_g4trkid_pdg[plist[i]->TrackId()] = plist[i]->PdgCode();
+    std::cout<<"Checking MC particle list\n";
+    for(size_t i = 0; i<plist.size(); i++) {
+      map_g4trkid_pdg[plist[i]->TrackId()] = plist[i]->PdgCode();
+      printf("  %5li   TrackID %10i   PDG %10i\n",i,plist[i]->TrackId(),plist[i]->PdgCode());
+    }
   
     std::map<int, std::map<int,double> > map_g4trkid_chan_energy;
     std::map<int, std::map<int,double> > map_g4trkid_chan_charge;
@@ -458,10 +470,16 @@ namespace blip {
     //======================================================
     std::map<int,double> map_g4trkid_charge;
     for(auto const &chan : simchanlist ) {
-      if( fGeom.View(chan->Channel()) != geo::kW ) continue;
+      //size_t ch = chan->Channel();
+      //if( fGeom.View(chan->Channel()) != geo::kW ) continue;
+      if( fGeom.View(chan->Channel()) != fCaloPlane ) continue;
       //std::map<int,double> map_g4trkid_perWireEnergyDep;
       for(auto const& tdcide : chan->TDCIDEMap() ) {
         for(auto const& ide : tdcide.second) {
+          // In SBND, when 'KeepEMShowerDaughters' is disabled, any
+          // energy deposits from secondary particles are folded into
+          // their most upstream parent, and the trackID is set to
+          // negative of that parent.
           if( ide.trackID < 0 ) continue;
           double ne = ide.numElectrons;
           
@@ -475,15 +493,13 @@ namespace blip {
           // electrons collected on this channel.
           // ####################################################
           if( fSimGainFactor > 0 ) ne /= fSimGainFactor;
+          //std::cout<<"on chan "<<chan->Channel()<<", found trackID "<<trackID<<" depositing "<<ne<<" electrons\n";
           map_g4trkid_charge[ide.trackID] += ne;
          
           // keep track of charge deposited per wire for efficiency plots
-          // (coll plane only)
-          if( chan->Channel() > 4800 ) {
-            map_g4trkid_chan_charge[ide.trackID][chan->Channel()] += ne; 
-            if( abs(map_g4trkid_pdg[ide.trackID]) == 11 ) 
-              map_g4trkid_chan_energy[ide.trackID][chan->Channel()] += ide.energy;
-          }
+          map_g4trkid_chan_charge[ide.trackID][chan->Channel()] += ne; 
+          if( abs(map_g4trkid_pdg[ide.trackID]) == 11 ) 
+            map_g4trkid_chan_energy[ide.trackID][chan->Channel()] += ide.energy;
         
         }
       }
@@ -508,8 +524,11 @@ namespace blip {
     //==================================================
     if( plist.size() ) {
       pinfo.resize(plist.size());
+        std::cout<<"sedlist size "<<sedlist.size()<<"\n";
+      std::cout<<"NEW EVENT\n";
       for(size_t i = 0; i<plist.size(); i++){
         BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
+        std::cout<<"  particle "<<i<<"... trkID "<<pinfo[i].trackId<<"   charge "<<map_g4trkid_charge[pinfo[i].trackId]<<"\n";
         if( map_g4trkid_charge[pinfo[i].trackId] ) pinfo[i].numElectrons = (int)map_g4trkid_charge[pinfo[i].trackId];
         pinfo[i].index = i;
       }
@@ -876,6 +895,8 @@ namespace blip {
     
     float _matchQDiffLimit= (fMatchQDiffLimit <= 0 ) ? std::numeric_limits<float>::max() : fMatchQDiffLimit;
     float _matchMaxQRatio = (fMatchMaxQRatio  <= 0 ) ? std::numeric_limits<float>::max() : fMatchMaxQRatio;
+    float _matchTicks     = (fMatchMaxTicks   <= 0 ) ? std::numeric_limits<float>::max() : fMatchMaxTicks;
+    float _matchSigmaFact = (fMatchSigmaFact  <= 0 ) ? std::numeric_limits<float>::max() : fMatchSigmaFact;
      
     for(auto& tpcMap : tpc_planeclustsMap ) { // loop on TPCs
       
@@ -928,7 +949,6 @@ namespace blip {
               hcA.IntersectLocations[hcB.ID] = xloc;
               hcB.IntersectLocations[hcA.ID] = xloc;
               
-
               // ***********************************
               // Calculate the cluster overlap
               // ***********************************
@@ -941,6 +961,7 @@ namespace blip {
               float dt_start  = (hcB.StartTime - hcA.StartTime);
               float dt_end    = (hcB.EndTime   - hcA.EndTime);
               float dt        = ( fabs(dt_start) < fabs(dt_end) ) ? dt_start : dt_end;
+              if( dt > _matchTicks * 20.) continue;
               float sigmaT    = std::sqrt(pow(hcA.RMS,2)+pow(hcB.RMS,2));
               float dtfrac    = (hcB.Time - hcA.Time) / sigmaT;
               
@@ -950,10 +971,12 @@ namespace blip {
               float qdiff     = fabs(hcB.Charge-hcA.Charge);
               float ratio     = std::max(hcA.Charge,hcB.Charge)/std::min(hcA.Charge,hcB.Charge);
               
-              // *******************************************
-              // Combine metrics into a consolidated score
-              // *******************************************
-              float score = overlapFrac * exp(-fabs(ratio-1.)) * exp(-fabs(dt)/float(fMatchMaxTicks));
+              // **************************************************
+              // We made it through the cuts -- the match is good!
+              // Combine metrics into a consolidated "score" that 
+              // we can use later in the case of degenerate matches.
+              // **************************************************
+              float score = (1./3) * (overlapFrac + exp(-fabs(ratio-1.)) + exp(-fabs(dtfrac) ) );
               
               // If both clusters are matched to the same MC truth particle,
               // set flag to fill special diagnostic histograms...
@@ -975,9 +998,10 @@ namespace blip {
 
               if( overlapFrac   < fMatchMinOverlap  ) continue;
               if( fabs(dt)      > fMatchMaxTicks    ) continue;
-              if( fabs(dtfrac)  > fMatchSigmaFact   ) continue;
+              if( fabs(dtfrac)  > _matchSigmaFact   ) continue;
               if( qdiff         > _matchQDiffLimit 
                && ratio         > _matchMaxQRatio   ) continue;
+              if( score         < fMatchMinScore )      continue;
               
               h_clust_q_cut[tpc][planeB]->Fill(0.001*hcA.Charge,0.001*hcB.Charge);
               
@@ -1237,12 +1261,13 @@ namespace blip {
     printf("  Input hit collection      : %s\n",          fHitProducer.c_str());
     printf("  Input trk collection      : %s\n",          fTrkProducer.c_str());
     printf("  Max wires per cluster     : %i\n",          fMaxWiresInCluster);
-    printf("  Max cluster timespan      : %.1f ticks\n",    fMaxClusterSpan);
+    printf("  Max cluster timespan      : %.1f ticks\n",  fMaxClusterSpan);
     printf("  Min cluster overlap       : %4.1f\n",       fMatchMinOverlap);
     printf("  Clust match sigma-factor  : %4.1f\n",       fMatchSigmaFact);
     printf("  Clust match max dT        : %4.1f ticks\n", fMatchMaxTicks);
-    printf("  Charge diff limit         : %.1fe3\n",fMatchQDiffLimit/1000);
-    printf("  Charge ratio maximum      : %.1f\n",fMatchMaxQRatio);      
+    printf("  Charge diff limit         : %.1fe3\n",      fMatchQDiffLimit/1000);
+    printf("  Charge ratio maximum      : %.1f\n",        fMatchMaxQRatio);      
+    printf("  Minimum match score       : %.2f\n",        fMatchMinScore);
     
     /*
     printf("  Min cluster overlap       : ");

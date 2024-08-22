@@ -70,11 +70,11 @@ namespace{
 
 // Set global constants and max array sizes
 const int kMaxHits    =  30000;
-const int kMaxClusts  =  15000; 
-const int kMaxTrks    =   1000;
-const int kMaxBlips   =   5000;
-const int kMaxG4      =   30000;
-const int kMaxEDeps   =   10000;
+const int kMaxClusts  =  30000; 
+const int kMaxTrks    =  1000;
+const int kMaxBlips   = 10000;
+const int kMaxG4      = 100000;
+const int kMaxEDeps   = 10000;
 const int kMaxTrkPts  =   2000;  
 
 class BlipAna;
@@ -521,7 +521,7 @@ class BlipAnaTreeDataStruct
       evtTree->Branch("part_isPrimary",part_isPrimary,"part_isPrimary[nparticles]/O");
       //evtTree->Branch("part_madeHitCol",part_madeHitCol,"part_madeHitCol[nparticles]/O");
       //evtTree->Branch("part_madeClustCol",part_madeClustCol,"part_madeClustCol[nparticles]/O");
-      //evtTree->Branch("part_trackID",part_trackID,"part_trackID[nparticles]/I");
+      evtTree->Branch("part_trackID",part_trackID,"part_trackID[nparticles]/I");
       evtTree->Branch("part_pdg",part_pdg,"part_pdg[nparticles]/I");
       evtTree->Branch("part_nDaughters",part_nDaughters,"part_nDaughters[nparticles]/I");
       evtTree->Branch("part_mother",part_mother,"part_mother[nparticles]/I");
@@ -959,7 +959,7 @@ void BlipAna::analyze(const art::Event& evt)
     std::vector<blip::ParticleInfo>& pinfo = fBlipAlg->pinfo;
     
     // Loop through the MCParticles
-    //if( fDebugMode ) std::cout<<"\nLooping over G4 MCParticles: \n";
+    if( fDebugMode ) std::cout<<"\nLooping over G4 MCParticles: \n";
     for(size_t i = 0; i<plist.size(); i++){
       auto& pPart = plist[i];
       map_g4trkid_index[pPart->TrackId()] = i;
@@ -1010,7 +1010,7 @@ void BlipAna::analyze(const art::Event& evt)
   std::vector<blip::TrueBlip>& trueblips = fBlipAlg->trueblips;
   fData->nedeps = (int)trueblips.size();
   if( trueblips.size() ) {
-    //if( fDebugMode ) std::cout<<"\nLooping over true blips:\n";
+    if( fDebugMode ) std::cout<<"\nLooping over true blips:\n";
     for(auto& trueblip : trueblips ) {
       int i     = trueblip.ID;
       int ig4   = trueblip.LeadG4Index;

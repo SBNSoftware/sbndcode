@@ -46,7 +46,7 @@ sbnd_blipana:
   SaveTrkInfo:        true
   SaveHitInfo:        false
   SaveClustInfo:      true
-  #DebugMode:          true
+  DebugMode:          true
 }
 
 

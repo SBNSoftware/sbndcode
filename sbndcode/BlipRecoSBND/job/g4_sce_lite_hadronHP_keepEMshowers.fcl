@@ -1,0 +1,3 @@
+#include "g4_sce_lite.fcl"
+services.LArG4Parameters.KeepEMShowerDaughters: true
+services.LArG4Parameters.EnabledPhysics: [ "Em", "FastOptical", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "HadronHP", "Stopping" ]
