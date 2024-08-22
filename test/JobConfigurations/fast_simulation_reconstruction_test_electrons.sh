@@ -9,11 +9,16 @@
 declare -ar TestNames=(
     'prodsingle_electron_bnblike_newflux'
     'g4_sce'
-    'detsim_sce'
-    'reco1_sce'
+    'detsim_sce_lite'
+    'standard_reco1_sbnd'
     'reco2_sce'
 )
+
 #############################################################################
+
+# Set WireCell env vars
+export WIRECELL_PATH=${SBNDCODE_DIR}/sbndcode/WireCell/cfg/:${SBND_DATA_DIR}/WireCell
+
 
 function ExecBase() {
 	local LogFile="$1"

@@ -1,0 +1,53 @@
+#
+# File:    wirecell_sp_sbnd.fcl
+# Purpose: Performs 2D signal processing on RawDigits
+# Authors: Ewerton Belchior (ebelchior@lsu.edu) and Lynn Tung (lynnt@uchicago.edu)
+#
+# This configuration runs Wire-Cell TPC Signal Processing ONLY
+#
+# Input:
+# - std::vector<raw::RawDigit> with label `daq`
+#
+# Output:
+# - std::vector<recob::Wire> with labels `sptpc2d:gauss, `sptpc2d:wiener`
+
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+#include "wcsimsp_sbnd.fcl"
+
+process_name: WCLS
+
+services:
+{
+  TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
+  FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  message:      { debugModules: ["*"] destinations: { debugmsg:{type: "cout" threshold: "INFO"} } } #added Ewerton 2023-06-30
+  TimeTracker:  { printSummary: true } 
+}
+
+source: {
+   module_type: RootInput
+}
+
+outputs:{
+  out1:
+  {
+   @table::sbnd_rootoutput # inherit shared settings
+   dataTier: "reconstructed"
+  }
+}
+
+physics :{
+   producers: {
+      # 2D TPC Signal Proccessing only
+      sptpc2d: @local::sbnd_wcls_sp
+   }
+
+   sp : [ sptpc2d ]
+   trigger_paths : [ sp ]
+   
+   o1 : [ out1 ]
+   end_paths: [ o1 ]
+}

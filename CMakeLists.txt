@@ -15,12 +15,12 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.75.03)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.91.02)
 find_package(cetmodules REQUIRED)
 project(sbndcode LANGUAGES CXX)
 
 # for CI:
-# project(sbndcode VERSION 09.75.03)
+# project(sbndcode VERSION 09.91.02)
 
 message(STATUS "\n")
 message(STATUS "=================================   ${PROJECT_NAME}   =================================")
@@ -39,6 +39,8 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
+              -Wno-uninitialized
+              $<$<CXX_COMPILER_ID:Clang>:-Wno-return-stack-address>
 )
 ##add_definitions(-DGENIE_PRE_R3)
 
@@ -85,6 +87,11 @@ find_package( Eigen3 REQUIRED )
 find_package( Geant4 REQUIRED )
 find_package( Boost COMPONENTS system REQUIRED )
 find_package( ROOT REQUIRED )
+
+if(DEFINED ENV{HEP_HPC_DIR} )
+  find_ups_product( hdf5 )
+  find_ups_product( hep_hpc )
+endif()
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)

@@ -60,17 +60,14 @@
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "lardataobj/AnalysisBase/T0.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 
 #include "sbndcode/RecoUtils/RecoUtils.h"
 #include "lardataobj/MCBase/MCShower.h"
 
 // sbndcode includes
-#include "sbnobj/Common/CRT/CRTHit.hh"
-#include "sbnobj/Common/CRT/CRTTrack.hh"
-#include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
-#include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
-#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
+#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+#include "sbnobj/SBND/CRT/CRTTrack.hh"
 
 #include "lardataobj/RecoBase/OpHit.h"
 
@@ -114,7 +111,7 @@ namespace sbnd{
 	
 class ToFProducer : public art::EDProducer {
 public:
-  using CRTHit = sbn::crt::CRTHit;
+  using CRTSpacePoint = sbnd::crt::CRTSpacePoint;
   explicit ToFProducer(fhicl::ParameterSet const& pset);
   
   ToFProducer(ToFProducer const&) = delete;
@@ -124,19 +121,19 @@ public:
 
   void beginJob() override;
   void produce(art::Event& evt) override;
-  bool HitCompare(const art::Ptr<CRTHit>& h1, const art::Ptr<CRTHit>& h2);
+  bool SpacePointCompare(const art::Ptr<CRTSpacePoint>& sp1, const art::Ptr<CRTSpacePoint>& sp2);
   
 
 private:
     art::InputTag fOpHitModuleLabel;
     art::InputTag fOpFlashModuleLabel0;
     art::InputTag fOpFlashModuleLabel1;
-    art::InputTag fCrtHitModuleLabel;
+    art::InputTag fCrtSpacePointModuleLabel;
     art::InputTag fCrtTrackModuleLabel;
     
     double       fCoinWindow;
     double       fOpDelay;
-    double       fCRThitThresh;
+    double       fCRTSpacePointThresh;
     double       fFlashPeThresh;
     double       fHitPeThresh;
     double       fBeamLow;
@@ -148,7 +145,6 @@ private:
     bool         fLhit;
     bool         fChit;
 
-    CRTBackTracker* bt;
     map<int,art::InputTag> fFlashLabels;
     geo::GeometryCore const* fGeometryService;
 };
@@ -158,11 +154,11 @@ EDProducer{pset},
 fOpHitModuleLabel(pset.get<art::InputTag>("OpHitModuleLabel")),			
 fOpFlashModuleLabel0(pset.get<art::InputTag>("OpFlashModuleLabel0")),
 fOpFlashModuleLabel1(pset.get<art::InputTag>("OpFlashModuleLabel1")),
-fCrtHitModuleLabel(pset.get<art::InputTag>("CrtHitModuleLabel")),
+fCrtSpacePointModuleLabel(pset.get<art::InputTag>("CrtSpacePointModuleLabel")),
 fCrtTrackModuleLabel(pset.get<art::InputTag>("CrtTrackModuleLabel")),
 fCoinWindow(pset.get<double>("CoincidenceWindow")),
 fOpDelay(pset.get<double>("OpDelay")), 
-fCRThitThresh(pset.get<double>("CRThitThresh")), 
+fCRTSpacePointThresh(pset.get<double>("CRTSpacePointThresh")), 
 fFlashPeThresh(pset.get<double>("FlashPeThresh")),
 fHitPeThresh(pset.get<double>("HitPeThresh")),
 fBeamLow(pset.get<double>("BeamLow")),
@@ -172,8 +168,7 @@ fLFlash_hit(pset.get<bool>("LFlash_hit")),
 fCFlash(pset.get<bool>("CFlash")),
 fCFlash_hit(pset.get<bool>("CFlash_hit")),
 fLhit(pset.get<bool>("Lhit")),
-fChit(pset.get<bool>("Chit")),
-bt(new CRTBackTracker(pset.get<fhicl::ParameterSet>("CRTBackTrack")))		
+fChit(pset.get<bool>("Chit"))
 {
  fFlashLabels[0] = fOpFlashModuleLabel0;
  fFlashLabels[1] = fOpFlashModuleLabel1; 
@@ -189,48 +184,48 @@ void ToFProducer::produce(art::Event& evt)
 {
  std::unique_ptr<vector<sbnd::ToF::ToF>> ToF_vec(new vector<sbnd::ToF::ToF>);
  
- art::Handle< std::vector<sbn::crt::CRTTrack> > crtTrackListHandle;
- std::vector< art::Ptr<sbn::crt::CRTTrack> >    crtTrackList;
+ art::Handle< std::vector<sbnd::crt::CRTTrack> > crtTrackListHandle;
+ std::vector< art::Ptr<sbnd::crt::CRTTrack> >    crtTrackList;
  if( evt.getByLabel(fCrtTrackModuleLabel,crtTrackListHandle))
      art::fill_ptr_vector(crtTrackList, crtTrackListHandle);
  
- art::FindManyP<sbn::crt::CRTHit> findManyHits(crtTrackListHandle, evt, fCrtTrackModuleLabel); 
- std::vector<std::vector<art::Ptr<CRTHit>>> trackhits;
+ art::FindManyP<CRTSpacePoint> findManySPs(crtTrackListHandle, evt, fCrtTrackModuleLabel); 
+ std::vector<std::vector<art::Ptr<CRTSpacePoint>>> tracksps;
  
  //================================================================
  
  for(size_t itrk=0; itrk<crtTrackList.size(); itrk++){
-     std::vector<art::Ptr<CRTHit>> trkhits = findManyHits.at(itrk);
-     std::sort(trkhits.begin(),trkhits.end(),
-     [](const art::Ptr<CRTHit>& a, const art::Ptr<CRTHit>& b)->bool
+     std::vector<art::Ptr<CRTSpacePoint>> trksps = findManySPs.at(itrk);
+     std::sort(trksps.begin(),trksps.end(),
+     [](const art::Ptr<CRTSpacePoint>& a, const art::Ptr<CRTSpacePoint>& b)->bool
      { 
-        return a->ts1_ns < b->ts1_ns; 
+        return a->Time() < b->Time(); 
      });
-     trackhits.push_back(trkhits);
- } // Crt hits coming from are ordered on ascending order by looking into ts1_ns variable
+     tracksps.push_back(trksps);
+ } // Crt space points coming from are ordered on ascending order by looking into ts1_ns variable
  
  //==================================================================
  
- art::Handle< std::vector<sbn::crt::CRTHit> > crtHitListHandle;
- std::vector< art::Ptr<sbn::crt::CRTHit> >    crtHitList;
- if( evt.getByLabel(fCrtHitModuleLabel,crtHitListHandle))
-     art::fill_ptr_vector(crtHitList, crtHitListHandle);
+ art::Handle< std::vector<CRTSpacePoint> > crtSPListHandle;
+ std::vector< art::Ptr<CRTSpacePoint> >    crtSPList;
+ if( evt.getByLabel(fCrtSpacePointModuleLabel,crtSPListHandle))
+     art::fill_ptr_vector(crtSPList, crtSPListHandle);
  
- map<int, std::vector<art::Ptr<CRTHit>> > tof_crt_hits;
+ map<int, std::vector<art::Ptr<CRTSpacePoint>> > tof_crt_sps;
  map<int, std::vector<art::Ptr<recob::OpHit>> > tof_op_hits;
  map<int, std::vector<art::Ptr<recob::OpFlash>> > tof_op_flashes;
  map<int, std::vector<int>> tof_op_tpc;
  
- for(auto const& crt : crtHitList){	 
-     if(!(crt->ts1_ns >= fBeamLow &&  crt->ts1_ns<= fBeamUp)) continue;
-     if(crt->peshit < fCRThitThresh) continue;
+ for(auto const& crt : crtSPList){	 
+     if(!(crt->Time() >= fBeamLow &&  crt->Time()<= fBeamUp)) continue;
+     if(crt->PE() < fCRTSpacePointThresh) continue;
      
      bool frm_trk=false;
      int index=0;
      
-     for(auto const& trkhits: trackhits){
-	 for(size_t ihit=0; ihit<trkhits.size(); ihit++){
-	     if(HitCompare(trkhits[ihit],crt)){
+     for(auto const& trksps: tracksps){
+	 for(size_t isp=0; isp<trksps.size(); isp++){
+	   if(SpacePointCompare(trksps[isp],crt)){
 		frm_trk=true;
 		break;
 	     }
@@ -255,7 +250,7 @@ void ToFProducer::produce(art::Event& evt)
 	    if(hit->PE()<fHitPeThresh) continue;
 	    double thit = hit->PeakTime()*1e3-fOpDelay;
 	    
-	    if(abs(crt->ts1_ns-thit)<fCoinWindow && hit->PE()>pehit_max){
+	    if(abs(crt->Time()-thit)<fCoinWindow && hit->PE()>pehit_max){
 	       pehit_max = hit->PE();
 	       ophit_index = hit.key();
 	       found_tof = true;
@@ -264,18 +259,18 @@ void ToFProducer::produce(art::Event& evt)
 	
 	if(found_tof){	
 	    if(frm_trk){	    
-	       tof_crt_hits[index].push_back(crt);
+	       tof_crt_sps[index].push_back(crt);
 	       tof_op_hits[index].push_back(opHitList[ophit_index]);
 	    } // crt hit is coming from crt track
 	    
 	    else{
 		 sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->ts1_ns - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
+		 new_tof.tof = crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->ts1_ns;
+		 new_tof.crt_time = crt->Time();
 		 new_tof.pmt_time = opHitList[ophit_index]->PeakTime()*1e3-fOpDelay;
-		 new_tof.crt_tagger = crt->tagger;
-		 new_tof.crt_hit_id = crt.key();
+		 //		 new_tof.crt_tagger = crt->tagger;
+		 new_tof.crt_sp_id = crt.key();
 		 new_tof.pmt_hit_id = ophit_index;
 		 ToF_vec->push_back(new_tof);
 	    } // lonely crt hit
@@ -301,8 +296,8 @@ void ToFProducer::produce(art::Event& evt)
 	    if(hit->PE()<fHitPeThresh) continue;
 	    double thit = hit->PeakTime()*1e3-fOpDelay;
 	    
-	    if(abs(crt->ts1_ns-thit)<fCoinWindow && abs(crt->ts1_ns-thit)<ophit_minTOF){
-	       ophit_minTOF = abs(crt->ts1_ns-thit);
+	    if(abs(crt->Time()-thit)<fCoinWindow && abs(crt->Time()-thit)<ophit_minTOF){
+	       ophit_minTOF = abs(crt->Time()-thit);
 	       ophit_index = hit.key();
 	       found_tof = true;
 	    }
@@ -310,18 +305,18 @@ void ToFProducer::produce(art::Event& evt)
 	
 	if(found_tof){	
 	    if(frm_trk){	    
-	       tof_crt_hits[index].push_back(crt);
+	       tof_crt_sps[index].push_back(crt);
 	       tof_op_hits[index].push_back(opHitList[ophit_index]);
 	    } // crt hit is coming from crt track
 	    
 	    else{
 		 sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->ts1_ns - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
+		 new_tof.tof = crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->ts1_ns;
+		 new_tof.crt_time = crt->Time();
 		 new_tof.pmt_time = opHitList[ophit_index]->PeakTime()*1e3-fOpDelay;
-		 new_tof.crt_tagger = crt->tagger;
-		 new_tof.crt_hit_id = crt.key();
+		 //		 new_tof.crt_tagger = crt->tagger;
+		 new_tof.crt_sp_id = crt.key();
 		 new_tof.pmt_hit_id = ophit_index;
 		 ToF_vec->push_back(new_tof);
 	    } // lonely crt hit
@@ -352,7 +347,7 @@ void ToFProducer::produce(art::Event& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->Time()*1e3-fOpDelay;
-		if(abs(crt->ts1_ns-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
+		if(abs(crt->Time()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
 		   peflash_max=flash->TotalPE();
 		   opflash_index = flash.key();	
 		   found_tof = true;
@@ -363,19 +358,19 @@ void ToFProducer::produce(art::Event& evt)
 	
 	if(found_tof){
 	   if(frm_trk){	    
-	       tof_crt_hits[index].push_back(crt);
+	       tof_crt_sps[index].push_back(crt);
 	       tof_op_flashes[index].push_back(opFlashLists[flash_tpc][opflash_index]);
 	       tof_op_tpc[index].push_back(flash_tpc);
 	    } // crt hit is coming from crt track 
 	    
 	    else{
 	         sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->ts1_ns - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
+		 new_tof.tof = crt->Time() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->ts1_ns;
+		 new_tof.crt_time = crt->Time();
 		 new_tof.pmt_time = opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay;
-		 new_tof.crt_tagger = crt->tagger;
-		 new_tof.crt_hit_id = crt.key();
+		 //		 new_tof.crt_tagger = crt->tagger;
+		 new_tof.crt_sp_id = crt.key();
 		 new_tof.flash_tpc_id = flash_tpc;
 		 new_tof.pmt_flash_id = opflash_index;
 		 ToF_vec->push_back(new_tof);
@@ -407,8 +402,8 @@ void ToFProducer::produce(art::Event& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->Time()*1e3-fOpDelay;
-		if(abs(crt->ts1_ns-tflash)<fCoinWindow && abs(crt->ts1_ns-tflash)<flash_minTOF){
-		   flash_minTOF= abs(crt->ts1_ns-tflash);
+		if(abs(crt->Time()-tflash)<fCoinWindow && abs(crt->Time()-tflash)<flash_minTOF){
+		   flash_minTOF= abs(crt->Time()-tflash);
 		   opflash_index = flash.key();	
 		   found_tof = true;
 		   flash_tpc = flashList.first;
@@ -418,19 +413,19 @@ void ToFProducer::produce(art::Event& evt)
 	
 	if(found_tof){
 	   if(frm_trk){	    
-	       tof_crt_hits[index].push_back(crt);
+	       tof_crt_sps[index].push_back(crt);
 	       tof_op_flashes[index].push_back(opFlashLists[flash_tpc][opflash_index]);
 	       tof_op_tpc[index].push_back(flash_tpc);
 	    } // crt hit is coming from crt track 
 	    
 	    else{
 	         sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->ts1_ns - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
+		 new_tof.tof = crt->Time() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->ts1_ns;
+		 new_tof.crt_time = crt->Time();
 		 new_tof.pmt_time = opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay;
-		 new_tof.crt_tagger = crt->tagger;
-		 new_tof.crt_hit_id = crt.key();
+		 //		 new_tof.crt_tagger = crt->tagger;
+		 new_tof.crt_sp_id = crt.key();
 		 new_tof.flash_tpc_id = flash_tpc;
 		 new_tof.pmt_flash_id = opflash_index;
 		 ToF_vec->push_back(new_tof);
@@ -469,7 +464,7 @@ void ToFProducer::produce(art::Event& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->AbsTime()*1e3-fOpDelay;
-		if(abs(crt->ts1_ns-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
+		if(abs(crt->Time()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
 		   peflash_max=flash->TotalPE();
 		   opflash_index = flash.key();	
 		   found_tof = true;
@@ -489,7 +484,7 @@ void ToFProducer::produce(art::Event& evt)
 	
 	if(found_tof){
 	   if(frm_trk){	    
-	       tof_crt_hits[index].push_back(crt);
+	       tof_crt_sps[index].push_back(crt);
 	       tof_op_flashes[index].push_back(opFlashLists[flash_tpc][opflash_index]);
 	       tof_op_tpc[index].push_back(flash_tpc);
 	       tof_op_hits[index].push_back(opHitList[ophit_index]);
@@ -497,12 +492,12 @@ void ToFProducer::produce(art::Event& evt)
 	    
 	    else{
 	         sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->ts1_ns - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
+		 new_tof.tof = crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->ts1_ns;
+		 new_tof.crt_time = crt->Time();
 		 new_tof.pmt_time = opHitList[ophit_index]->PeakTime()*1e3-fOpDelay;
-		 new_tof.crt_tagger = crt->tagger;
-		 new_tof.crt_hit_id = crt.key();
+		 //		 new_tof.crt_tagger = crt->tagger;
+		 new_tof.crt_sp_id = crt.key();
 		 new_tof.flash_tpc_id = flash_tpc;
 		 new_tof.pmt_flash_id = opflash_index;
 		 new_tof.pmt_hit_id = ophit_index;
@@ -542,8 +537,8 @@ void ToFProducer::produce(art::Event& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->Time()*1e3-fOpDelay;
-		if(abs(crt->ts1_ns-tflash)<fCoinWindow && abs(crt->ts1_ns-tflash)<flash_minTOF){
-		   flash_minTOF= abs(crt->ts1_ns-tflash);
+		if(abs(crt->Time()-tflash)<fCoinWindow && abs(crt->Time()-tflash)<flash_minTOF){
+		   flash_minTOF= abs(crt->Time()-tflash);
 		   opflash_index = flash.key();	
 		   found_tof = true;
 		   flash_tpc = flashList.first;
@@ -562,7 +557,7 @@ void ToFProducer::produce(art::Event& evt)
 	
 	if(found_tof){
 	   if(frm_trk){	    
-	       tof_crt_hits[index].push_back(crt);
+	       tof_crt_sps[index].push_back(crt);
 	       tof_op_flashes[index].push_back(opFlashLists[flash_tpc][opflash_index]);
 	       tof_op_tpc[index].push_back(flash_tpc);
 	       tof_op_hits[index].push_back(opHitList[ophit_index]);
@@ -570,12 +565,12 @@ void ToFProducer::produce(art::Event& evt)
 	    
 	    else{
 	         sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->ts1_ns - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
+		 new_tof.tof = crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->ts1_ns;
+		 new_tof.crt_time = crt->Time();
 		 new_tof.pmt_time = opHitList[ophit_index]->PeakTime()*1e3-fOpDelay;
-		 new_tof.crt_tagger = crt->tagger;
-		 new_tof.crt_hit_id = crt.key();
+		 //		 new_tof.crt_tagger = crt->tagger;
+		 new_tof.crt_sp_id = crt.key();
 		 new_tof.flash_tpc_id = flash_tpc;
 		 new_tof.pmt_flash_id = opflash_index;
 		 new_tof.pmt_hit_id = ophit_index;
@@ -592,24 +587,24 @@ void ToFProducer::produce(art::Event& evt)
  //=================================== Calculation ToF values using Largest optical flash ===================================
  
  if(fLhit){
-    if(!tof_crt_hits.empty()){
-       for (auto& ele: tof_crt_hits){
+    if(!tof_crt_sps.empty()){
+       for (auto& ele: tof_crt_sps){
 	    double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
             for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    } 
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = trackhits[ele.first].front()->ts1_ns - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-	    new_tof.crt_time = trackhits[ele.first].front()->ts1_ns;
+	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
+	    new_tof.crt_time = tracksps[ele.first].front()->Time();
 	    new_tof.pmt_time = tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay;
-	    new_tof.crt_tagger = trackhits[ele.first].front()->tagger;
+	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
 	    new_tof.crt_trk_id = ele.first;
 	    new_tof.pmt_hit_id = tof_op_hits[ele.first][min_index].key();
@@ -623,24 +618,24 @@ void ToFProducer::produce(art::Event& evt)
  // ================================== Calculatin ToF values using Closest optical hit method ==================================
  
  if(fChit){
-    if(!tof_crt_hits.empty()){
-       for (auto& ele: tof_crt_hits){
+    if(!tof_crt_sps.empty()){
+       for (auto& ele: tof_crt_sps){
 	    double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
             for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    } 
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = trackhits[ele.first].front()->ts1_ns - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-	    new_tof.crt_time = trackhits[ele.first].front()->ts1_ns;
+	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
+	    new_tof.crt_time = tracksps[ele.first].front()->Time();
 	    new_tof.pmt_time = tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay;
-	    new_tof.crt_tagger = trackhits[ele.first].front()->tagger;
+	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
 	    new_tof.crt_trk_id = ele.first;
 	    new_tof.pmt_hit_id = tof_op_hits[ele.first][min_index].key();
@@ -654,24 +649,24 @@ void ToFProducer::produce(art::Event& evt)
  //=================================== Calculatin ToF values using Largest optical flash method ==================================
  
  if(fLFlash){
-    if(!tof_crt_hits.empty()){
-       for (auto& ele: tof_crt_hits){
+    if(!tof_crt_sps.empty()){
+       for (auto& ele: tof_crt_sps){
             double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = trackhits[ele.first].front()->ts1_ns - (tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay); 
-	    new_tof.crt_time = trackhits[ele.first].front()->ts1_ns;
+	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay); 
+	    new_tof.crt_time = tracksps[ele.first].front()->Time();
 	    new_tof.pmt_time = tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay;
-	    new_tof.crt_tagger = trackhits[ele.first].front()->tagger;
+	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
 	    new_tof.crt_trk_id = ele.first;
 	    new_tof.flash_tpc_id = tof_op_tpc[ele.first][min_index];
@@ -686,24 +681,24 @@ void ToFProducer::produce(art::Event& evt)
  //=================================== Calculatin ToF values using Closest optical flash method ================================
  
  if(fCFlash){
-    if(!tof_crt_hits.empty()){
-       for (auto& ele: tof_crt_hits){
+    if(!tof_crt_sps.empty()){
+       for (auto& ele: tof_crt_sps){
             double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = trackhits[ele.first].front()->ts1_ns - (tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay); 
-	    new_tof.crt_time = trackhits[ele.first].front()->ts1_ns;
+	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay); 
+	    new_tof.crt_time = tracksps[ele.first].front()->Time();
 	    new_tof.pmt_time = tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay;
-	    new_tof.crt_tagger = trackhits[ele.first].front()->tagger;
+	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
 	    new_tof.crt_trk_id = ele.first;
 	    new_tof.flash_tpc_id = tof_op_tpc[ele.first][min_index];
@@ -718,24 +713,24 @@ void ToFProducer::produce(art::Event& evt)
  //=========================Calculation ToF values using Earliest hit of the Largest flash =====================================
  
  if(fLFlash_hit){
-    if(!tof_crt_hits.empty()){
-       for (auto& ele: tof_crt_hits){
+    if(!tof_crt_sps.empty()){
+       for (auto& ele: tof_crt_sps){
             double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = trackhits[ele.first].front()->ts1_ns - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay); 
-	    new_tof.crt_time = trackhits[ele.first].front()->ts1_ns;
+	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay); 
+	    new_tof.crt_time = tracksps[ele.first].front()->Time();
 	    new_tof.pmt_time = tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay;
-	    new_tof.crt_tagger = trackhits[ele.first].front()->tagger;
+	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
 	    new_tof.crt_trk_id = ele.first;
 	    new_tof.flash_tpc_id = tof_op_tpc[ele.first][min_index];
@@ -751,24 +746,24 @@ void ToFProducer::produce(art::Event& evt)
  //=========================Calculation ToF values using Earliest hit of the Closest flash ====================================
  
  if(fCFlash_hit){
-    if(!tof_crt_hits.empty()){
-       for (auto& ele: tof_crt_hits){
+    if(!tof_crt_sps.empty()){
+       for (auto& ele: tof_crt_sps){
             double min_time = DBL_MAX; 
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->ts1_ns < min_time){ 
-	            min_time = hit->ts1_ns;
+		  if(hit->Time() < min_time){ 
+	            min_time = hit->Time();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = trackhits[ele.first].front()->ts1_ns - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay); 
-	    new_tof.crt_time = trackhits[ele.first].front()->ts1_ns;
+	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay); 
+	    new_tof.crt_time = tracksps[ele.first].front()->Time();
 	    new_tof.pmt_time = tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay;
-	    new_tof.crt_tagger = trackhits[ele.first].front()->tagger;
+	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
 	    new_tof.crt_trk_id = ele.first;
 	    new_tof.flash_tpc_id = tof_op_tpc[ele.first][min_index];
@@ -783,18 +778,16 @@ void ToFProducer::produce(art::Event& evt)
  evt.put(std::move(ToF_vec));
 }
 
-bool ToFProducer::HitCompare(const art::Ptr<CRTHit>& hit1, const art::Ptr<CRTHit>& hit2) {
+bool ToFProducer::SpacePointCompare(const art::Ptr<CRTSpacePoint>& sp1, const art::Ptr<CRTSpacePoint>& sp2) {
 
-      if(hit1->ts1_ns != hit2->ts1_ns) return false;
-      if(hit1->plane  != hit2->plane) return false;
-      if(hit1->x_pos  != hit2->x_pos) return false;
-      if(hit1->y_pos  != hit2->y_pos) return false;
-      if(hit1->z_pos  != hit2->z_pos) return false;
-      if(hit1->x_err  != hit2->x_err) return false;
-      if(hit1->y_err  != hit2->y_err) return false;
-      if(hit1->z_err  != hit2->z_err) return false;
-      if(hit1->tagger != hit2->tagger) return false;
-      return true;
+  if(sp1->Time()     != sp2->Time())     return false;
+  if(sp1->Pos()      != sp2->Pos())      return false;
+  if(sp1->Err()      != sp2->Err())      return false;
+  if(sp1->PE()       != sp2->PE())       return false;
+  if(sp1->TimeErr()  != sp2->TimeErr())  return false;
+  if(sp1->Complete() != sp2->Complete()) return false;
+
+  return true;
 }
 
 DEFINE_ART_MODULE(ToFProducer)

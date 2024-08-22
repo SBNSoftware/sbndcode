@@ -1,0 +1,16 @@
+BEGIN_PROLOG
+
+DigitalNoiseChannelStatusDefaults : 
+{
+  RawDigitLabel: "daq"
+  RecobWireLabel: "caldata"
+  RMSCutRawDigit: 100
+  RMSCutWire: 100
+  NBADCutRawDigit: 5
+  NAwayFromPedestalRawDigit: 200
+  DistFromPedestalRawDigit: 1000
+  NAwayFromPedestalRecobWire: 200
+  DistFromPedestalRecobWire: 1000
+}
+
+END_PROLOG

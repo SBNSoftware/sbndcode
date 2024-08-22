@@ -1,0 +1,87 @@
+# module configuration
+#
+#include "caldata_sbnd.fcl"
+#include "hitfindermodules_sbnd.fcl"
+#include "opdeconvolution_sbnd.fcl"
+#include "sbnd_ophitfinder_deco.fcl"
+#include "sbnd_flashfinder_deco.fcl"
+#include "crtrecoproducers_sbnd.fcl"
+#include "mlreco_sbnd.fcl"
+#include "cluster_sbnd.fcl"
+#include "mctrutht0matching.fcl"
+
+BEGIN_PROLOG
+
+sbnd_reco1_producers:{
+    ### random number saver
+    rns:                 { module_type: RandomNumberSaver }
+
+    ### optical deconvolution
+    opdecopmt:          @local::SBNDOpDeconvolutionPMT
+    opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
+
+    ### optical hit finders
+    # ophit:               @local::sbnd_hit_finder
+    ophitpmt:            @local::SBNDDecoOpHitFinderPMT
+    ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
+
+    ### flash finders
+    # opflash:             @local::sbnd_opflash
+    opflashtpc0:         @local::SBNDDecoSimpleFlashTPC0
+    opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1
+
+    # opflash(arapucas):             @local::sbnd_opflash
+    opflashtpc0xarapuca:         @local::SBNDDecoSimpleFlashTPC0Arapuca
+    opflashtpc1xarapuca:         @local::SBNDDecoSimpleFlashTPC1Arapuca
+
+    ### calwire producers
+    caldata:             @local::sbnd_calwire
+
+    ### hit-finder producers
+    gaushit:             @local::sbnd_gaushitfinder
+    fasthit:             @local::sbnd_fasthitfinder
+
+    ### Truth-matich for hits
+    gaushitTruthMatch:   @local::standard_mcparticlehitmatching
+
+    ### CRT reconstruction
+    crtstrips:      @local::crtstriphitproducer_sbnd
+
+    ### ML reco inputs
+    cluster3d: @local::sbnd_cluster3d
+}
+
+sbnd_reco1_producer_sequence: [  
+    rns
+  , opdecopmt
+  , opdecoxarapuca
+  , ophitpmt
+  , ophitxarapuca
+  , opflashtpc0
+  , opflashtpc1
+  , opflashtpc0xarapuca
+  , opflashtpc1xarapuca
+  , gaushit
+  , gaushitTruthMatch
+  , crtstrips
+  , cluster3d
+ ]
+
+#FIXME override the producer labels.  This should really happen in the module's config fcl
+sbnd_reco1_producers.gaushit.CalDataModuleLabel:                                           "simtpc2d:gauss"
+sbnd_reco1_producers.fasthit.DigitModuleLabel:                                             "simtpc2d:daq"
+sbnd_reco1_producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:             "gaushit"
+
+sbnd_reco1_analyzers: {
+    #supera for ML reco
+    supera: @local::sbnd_supera
+    superampvmpr: @local::sbnd_supera_mpvmpr
+    superadata: @local::sbnd_supera_data
+}
+
+sbnd_reco1_analyzer_sequence: [
+    supera
+]
+
+END_PROLOG
+

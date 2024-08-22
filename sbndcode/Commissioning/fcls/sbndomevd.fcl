@@ -1,0 +1,36 @@
+#include "services_sbnd.fcl"
+#include "TPCChannelMapService.fcl"
+
+process_name: SBNDEVD
+
+services: {
+#    TFileService: { fileName: "sbndevd.root" }
+    @table::sbnd_geometry_services
+}
+services.TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
+
+physics:
+{
+
+  analyzers: {}
+
+  ana: [ evd ]
+
+  end_paths:     [ ana ] 
+}
+
+source: {
+  module_type: RootInput
+  maxEvents:  1  # Number of events to create
+}
+
+outputs: {
+}
+
+physics.analyzers.evd:  {
+    module_type: "OnlineEvd"
+    RawDigitModuleLabel: "daq"
+#    palette: 87 #kLightTemperature
+#    palette: 55 #kRainBow
+#    palette: 104 #kTemperatureMap
+}

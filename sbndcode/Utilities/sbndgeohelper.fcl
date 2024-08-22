@@ -1,0 +1,46 @@
+#include "services_sbnd.fcl"
+#include "TPCChannelMapService.fcl"
+
+process_name: SBNDGeoHelper
+
+services:
+{
+    @table::sbnd_geometry_services
+}
+services.TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
+
+source:
+{
+  module_type: EmptyEvent
+  maxEvents:  1            # Number of events to create
+}
+
+outputs:
+{
+}
+
+physics:
+{
+ analyzers:{}
+ 
+ ana:  [ sbndgeohelper ]
+ #ana: []
+ 
+ #define the output stream, there could be more than one if using filters 
+ stream1:  [  ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #ie filters and producers
+ trigger_paths: [] 
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #ie analyzers and output streams.  these all run simultaneously
+ #end_paths:     [ stream1, ana ] 
+ end_paths:     [  ana ] 
+}
+
+# define the list of LArSoft modules to run through the simulate path
+
+physics.analyzers.sbndgeohelper:  {
+    module_type: "SBNDGeoHelper"
+}

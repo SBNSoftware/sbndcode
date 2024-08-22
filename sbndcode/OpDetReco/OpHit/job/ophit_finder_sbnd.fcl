@@ -33,11 +33,11 @@ sbnd_ophit_finder_pmt.SPEArea: 66.33 # It's 66.33 ADC = 132.66 ADCxns x 0.5ns^-1
                                      # and is 317.1 ADC = 634.2 ADCxns x 0.5ns^-1
                                      # for the test bench response,
                                      # where 0.5 is the sampling rate
-sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMax:  8004
-sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMin:  7994
+sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMax:  14749 #bear: update to 14k baseline
+sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMin:  14741 #bear: update to 14k baseline
 sbnd_ophit_finder_pmt.PedAlgoPset.Threshold:    1.7
 sbnd_ophit_finder_pmt.PedAlgoPset.MaxSigma:     1.7
-sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 7
+sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 13 #bear: update to 14k baseline (noise is larger too)
 
 #
 # OpHit for XArapuca - Configuration
@@ -45,11 +45,20 @@ sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 7
 sbnd_ophit_finder_arapuca: @local::sbnd_ophit_finder
 sbnd_ophit_finder_arapuca.PD: ["xarapuca_vis", "xarapuca_vuv"]
 sbnd_ophit_finder_arapuca.Electronics: "Daphne"
-sbnd_ophit_finder_arapuca.SPEArea: 8541. # It's 66.33 ADC = 132.66 ADCxns x 0.5ns^-1
+sbnd_ophit_finder_arapuca.SPEArea: 136.47 # rodrigoa: Sum of bins at 8ADC, 62.5 MHz/16ns and dipolar/realistic SER
 sbnd_ophit_finder_arapuca.PedAlgoPset.PedRangeMax:  1520
 sbnd_ophit_finder_arapuca.PedAlgoPset.PedRangeMin:  1480
 sbnd_ophit_finder_arapuca.PedAlgoPset.Threshold:    5
 sbnd_ophit_finder_arapuca.PedAlgoPset.MaxSigma:     5
-sbnd_ophit_finder_arapuca.HitAlgoPset.ADCThreshold: 20
+sbnd_ophit_finder_arapuca.PedAlgoPset.Name:"Edges"
+sbnd_ophit_finder_arapuca.PedAlgoPset.NumSampleFront:50
+sbnd_ophit_finder_arapuca.PedAlgoPset.NumSampleTail: 50
+sbnd_ophit_finder_arapuca.PedAlgoPset.Method:2
+sbnd_ophit_finder_arapuca.HitAlgoPset.ADCThreshold: 4  # rodrigoa: 4 ADC is 1/2 of the 8 ADC threshold
+sbnd_ophit_finder_arapuca.HitAlgoPset.NumPostSample: 0 # rodrigoa: prevent sum the negative part (overshooting)
+sbnd_ophit_finder_arapuca.HitAlgoPset.NumPreSample: 5
+sbnd_ophit_finder_arapuca.HitAlgoPset.TailADCThreshold: 2
+sbnd_ophit_finder_arapuca.HitAlgoPset.TailNSigmaThreshold: 2
+sbnd_ophit_finder_arapuca.HitAlgoPset.PositivePolarity: true
 
 END_PROLOG

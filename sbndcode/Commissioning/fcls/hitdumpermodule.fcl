@@ -12,7 +12,7 @@ hitdumper:
 
     DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
-    OpHitsModuleLabel:        ["ophitpmt", "ophitarapuca"]
+    OpHitsModuleLabel:        ["ophitpmt", "ophitxarapuca"]
     CRTHitModuleLabel:        "crthit"
     CRTStripModuleLabel:      "crt"
     CRTTrackModuleLabel:      "crttrack"
@@ -21,10 +21,13 @@ hitdumper:
     crtSoftTriggerModuleLabel:"MetricProducer"
     MuonTrackModuleLabel:     "MuonTrackProducer"
     GenieGenModuleLabel:      "generator"
+    MCParticleModuleLabel:    "largeant"
+    MCTrackModuleLabel:       "mcreco"
+    MCShowerModuleLabel:      "mcreco"
  
     keepCRThits:              true
     keepCRTstrips:            false
-    makeCRTtracks:            true
+    makeCRTtracks:            false
     readCRTtracks:            true
     readOpHits:               true
     readpmtTrigger:	          true
@@ -33,6 +36,7 @@ hitdumper:
     readMuonTracks:           false
     readMuonHits:             false
     readTruth:                true
+    readMCParticle:           false
     savePOTinfo:              true
     checkTransparency:        false
 
@@ -43,5 +47,9 @@ hitdumper:
     SkipInduction:            false
     SelectEvents: []
 }
+
+hitdumper_data: @local::hitdumper
+hitdumper_data.OpHitsModuleLabel: ["ophitpmt"] #only have PMT data as of 05/30/2024
+hitdumper_data.readTruth: false
 
 END_PROLOG

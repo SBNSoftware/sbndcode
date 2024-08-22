@@ -159,7 +159,7 @@ sbnd_flux_bnb_nu_Hv1_test1: {
 
 
 #
-# Booster Neutrino Beam, neutrino mode, configuration I (v1)
+# Booster Neutrino Beam, neutrino mode, dirt, configuration I (v1)
 #
 sbnd_flux_bnb_nu_Iv1: {
   FluxType:       "simple_flux"
@@ -206,6 +206,21 @@ sbnd_flux_bnb_nu_Kv1_test1: {
 }
 
 
+#
+# Booster Neutrino Beam, neutrino mode, dirt, configuration L (v1)
+#
+sbnd_flux_bnb_nu_Lv1: {
+  FluxType:       "simple_flux"
+  FluxCopyMethod: "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configL-v1/oct2023/neutrinoMode"
+  FluxFiles: [ "gsimple_april07_baseline_*_redecay_wkaonwgh.root" ]
+}
+
+sbnd_flux_bnb_nu_Lv1_test1: {
+  @table::sbnd_flux_bnb_nu_Lv1
+  FluxFiles: [ "gsimple_april07_baseline_1930_redecay_wkaonwgh.root" ]
+}
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Booster Neutrino Beam, neutrino mode, "default" configuration
@@ -216,8 +231,8 @@ sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Kv1_test1
 #
 # Booster Neutrino Beam, interaction from dirt
 #
-sbnd_flux_bnb_dirt: @local::sbnd_flux_bnb_nu_Iv1
-sbnd_flux_bnb_dirt_test1: @local::sbnd_flux_bnb_nu_Iv1_test1
+sbnd_flux_bnb_dirt: @local::sbnd_flux_bnb_nu_Lv1
+sbnd_flux_bnb_dirt_test1: @local::sbnd_flux_bnb_nu_Lv1_test1
 
 #
 # NuMI Beam (placeholder)
@@ -270,14 +285,17 @@ sbnd_flux_numi_dirt: {
 #
 # Bunch sigma taken from 
 # https://beamdocs.fnal.gov/AD/DocDB/0050/005000/001/bunchLength_1st_draft.pdf
+# Bunch spacing taken from
+# https://inspirehep.net/files/610a942fd8632bbbca2c8ad90da86670
+
 sbnd_fluxbucket_bnb: {
-  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=1.308"
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
 }
 
 # Booster Neutrino Beam, rotated bucket
 #
 sbnd_fluxbucket_bnb_rotated: {
-  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=19., sigma=1.308"
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
 }
 
 ################################################################################

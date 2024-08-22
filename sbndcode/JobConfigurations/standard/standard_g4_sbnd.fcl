@@ -12,12 +12,9 @@
 #   * SimEnergyDeposit before SCE (photons and electrons)
 # - OpticalFastSimulation: produces:
 #   * SimPhoton or SimPhotonLite (photons at the optical detectors)
-# - ElectronDrift: produces:
-#   * SimChannels (energy and charge at the wires)
 # - GenericCRT: produces:
 #   * AuxDetSimChannels (from LArG4 AuxDetHits)
-# - MCReco: produces:
-#   * MCTrack, MCShower: deposited energy from each MCParticle
+# - MCReco -> MCTrack, MCShower: deposited energy from each MCParticle (needs SimChannels)
 #
 # Input: a file with generated particles; all MCTruth data products in the input
 #        file are processed.
@@ -32,9 +29,10 @@
 # modules
 #
 #include "larg4_sbnd.fcl"
+#include "mlreco_sbnd.fcl"
 #include "ionandscint_sbnd.fcl"
 #include "PDFastSim_sbnd.fcl"
-#include "simdrift_sbnd.fcl"
+# include "simdrift_sbnd.fcl"
 #include "mcreco_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 #include "config_genericCRT.fcl"
@@ -70,6 +68,9 @@ physics:
     # The geant4 step
     largeant: @local::sbnd_larg4
 
+    # Create sim enegy deposit lite from geant4 sed
+    sedlite: @local::sbnd_sedlite
+
     # Creation of ionization electrons and scintillation photons, inside the active volume
     ionandscint: @local::sbnd_ionandscint
 
@@ -83,7 +84,7 @@ physics:
     pdfastsimout: @local::sbnd_pdfastsim_pvs
 
     # Electron propogation
-    simdrift: @local::sbnd_simdrift
+    # simdrift: @local::sbnd_simdrift
 
     # Truth-level reconstruction
     mcreco: @local::sbnd_mcreco
@@ -91,17 +92,21 @@ physics:
     # Generic CRT
     genericcrt: @local::sbnd_genericCRT
 
+    # Merges dropped and nominal MCParticle into separate vector
+    simplemerge: @local::sbnd_simplemerge
   }
 
   # All producers and filters modules for this path, order matters
   simulate: [ rns
             , loader
             , largeant
+            , simplemerge
+            , sedlite
             , ionandscint
             , ionandscintout
             , pdfastsim
             , pdfastsimout
-            , simdrift
+            # , simdrift ## 1D TPC simulation no longer run
             , mcreco
             , genericcrt
           ]

@@ -14,13 +14,9 @@
 #
 #include "caldata_sbnd.fcl"
 #include "hitfindermodules_sbnd.fcl"
-#include "cluster_sbnd.fcl"
-#include "trackfindermodules_sbnd.fcl"
-#include "calorimetry_sbnd.fcl"
-#include "showerfindermodules.fcl"
 #include "databaseutil_sbnd.fcl"
-#include "vertexfindermodules.fcl"
 #include "hitdumpermodule.fcl"
+#include "muontrackmodule.fcl"
 #include "ophit_finder_sbnd.fcl"
 
 process_name: HitDumper
@@ -73,8 +69,13 @@ physics:
     # gaushit:             @local::sbnd_gaushitfinder
     fasthit:             @local::standard_fasthitfinder
     ophitpmt:            @local::sbnd_ophit_finder_pmt
-    ophitarapuca:        @local::sbnd_ophit_finder_arapuca
+    ophitxarapuca:        @local::sbnd_ophit_finder_arapuca
+    MuonTrackProducer:        @local::MuonTrackProducer
 
+  }
+  filters:
+  {
+    MuonTrackFilter:          @local::MuonTrackFilter
   }
   analyzers:
   {
@@ -84,9 +85,11 @@ physics:
   #define the producer and filter modules for this path, order matters,
   #filters reject all following items.  see lines starting physics.producers below
   reco2: [
-    fasthit,
-    ophitpmt,
-    ophitarapuca
+    fasthit
+    , ophitpmt
+    , ophitxarapuca
+    #, MuonTrackProducer 
+    #, MuonTrackFilter
   ]
 
   ana: [hitdumper]
@@ -107,13 +110,13 @@ physics:
 }
 
 
-physics.analyzers.hitdumper.pmtSoftTriggerModuleLabel: "softmetric"
+#physics.analyzers.hitdumper.pmtSoftTriggerModuleLabel: "softmetric"
 physics.analyzers.hitdumper.crtSoftTriggerModuleLabel: "softmetric"
 physics.analyzers.hitdumper.HitsModuleLabel: "fasthit"
-physics.analyzers.hitdumper.keepCRThits: false
+physics.analyzers.hitdumper.keepCRThits: true
 physics.analyzers.hitdumper.keepCRTstrips: true
-physics.analyzers.hitdumper.makeCRTtracks: true
-physics.analyzers.hitdumper.readCRTtracks: false
+physics.analyzers.hitdumper.makeCRTtracks: false
+physics.analyzers.hitdumper.readCRTtracks: true
 physics.analyzers.hitdumper.readcrtSoftTrigger: true
 
 # set thresholds
@@ -124,6 +127,7 @@ physics.producers.fasthit.SkipInd: false
 #  this many widths to each side.   Original window is above threshold.
 #  Both thresh and larger window in this file are appropriate only when
 #  noise is turned off.
+physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
 physics.producers.fasthit.IncludeMoreTail: 3.0
 physics.producers.fasthit.ColMinWidth: 100.0
 physics.producers.fasthit.UncompressWithPed: false

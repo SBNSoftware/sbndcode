@@ -8,7 +8,7 @@ BEGIN_PROLOG
 #
 sbnd_physics_list_fastoptical:
 {
-  PhysicsListName: "SBND_QGSP_BERT_NNC"
+  PhysicsListName: "QGSP_BERT_HP"
   DumpList: true
   enableNeutronLimit: false
   NeutronTimeLimit: 0.0
@@ -41,33 +41,36 @@ sbnd_physics_list_fastoptical:
 sbnd_particle_list_action:
 {
   service_type: "ParticleListActionService"
-  EnergyCut: 1e-2                          # Kinetic Energy cut, note Geant4 assumes this is in MeV.
-                                           # So: 1e-2 MeV = 10 KeV: we are applying a 10 keV cut.
-  keepEMShowerDaughters: false             # If false, does not store electromagnetic shower daughter
-                                           # particles in the MCParticles data product.
+  EnergyCut: 1e-2                                   # Kinetic Energy cut, note Geant4 assumes this is in MeV.
+                                                    # So: 1e-2 MeV = 10 KeV: we are applying a 10 keV cut.
+  keepEMShowerDaughters: false                      # If false, does not store electromagnetic shower daughter
+                                                    # particles in the MCParticles data product.
   storeTrajectories: true
-  keepGenTrajectories: ["generator"]       # list of generator labels for which we want to store
-                                           # trajectory points.
-  keepOnlyPrimaryFullTrajectories: false   # (defaults to false in larg4) If set to true, only
-                                           # the particles with MCTruth process == "primary" and
-                                           # their descendants will have the full set of trajetory
-                                           # points stored. Particles descending from primaries with
-                                           # MCTruth process != "primary" will not have a full set
-                                           # of trajectory points stored -- only their start and
-                                           # end points. This filter only applies to the generator
-                                           # labels listed in the keepGenTrajectories. E.g, for the
-                                           # beam generator, no "primaryBackground" particles or their
-                                           # descendants would have a full set of traj. points. if
-                                           # this is set to true.
-  SparsifyTrajectories: true               # call SparsifyTrajectory() method on MCParticles with full trajectories
-                                           # being stored. This helps reduce memory usage in the root output stage
-                                           # if there are many trajectory points.
-  SparsifyMargin: 0.015      # required when SparsifyTrajectories is set to true
-  KeepTransportation: true   # When sparsifying: forces steps with the 'Transportation' process to be saved
-                             # Can be useful to keep the first step in the active volume
-  KeepSecondToLast: true     # Sparsifying could cut out the penultimate step point, which holds the correct info
-                             # of the end of the track (the final step is defined to have 0 kinetic energy)
-                             # This forces that true penultimate point to be saved, thus preserving the info
+  keepGenTrajectories: ["generator"]                # list of generator labels for which we want to store
+                                                    # trajectory points.
+  keepOnlyPrimaryFullTrajectories: false            # (defaults to false in larg4) If set to true, only
+                                                    # the particles with MCTruth process == "primary" and
+                                                    # their descendants will have the full set of trajetory
+                                                    # points stored. Particles descending from primaries with
+                                                    # MCTruth process != "primary" will not have a full set
+                                                    # of trajectory points stored -- only their start and
+                                                    # end points. This filter only applies to the generator
+                                                    # labels listed in the keepGenTrajectories. E.g, for the
+                                                    # beam generator, no "primaryBackground" particles or their
+                                                    # descendants would have a full set of traj. points. if
+                                                    # this is set to true.
+  SparsifyTrajectories: true                        # call SparsifyTrajectory() method on MCParticles with full trajectories
+                                                    # being stored. This helps reduce memory usage in the root output stage
+                                                    # if there are many trajectory points.
+  SparsifyMargin: 0.015                             # required when SparsifyTrajectories is set to true
+  KeepTransportation: true                          # When sparsifying: forces steps with the 'Transportation' process to be saved
+                                                    # Can be useful to keep the first step in the active volume
+  KeepSecondToLast: true                            # Sparsifying could cut out the penultimate step point, which holds the correct info
+                                                    # of the end of the track (the final step is defined to have 0 kinetic energy)
+                                                    # This forces that true penultimate point to be saved, thus preserving the info
+  KeepDroppedParticlesInVolumes: ["volTPCActive"]   # list of volumes for which we want to store particles that were dropped
+                                                    # (i.e. particles that are not included in the standard list, mainly em shower
+                                                    # daughters). Used for ml reco workflow.
 }
 
 #
