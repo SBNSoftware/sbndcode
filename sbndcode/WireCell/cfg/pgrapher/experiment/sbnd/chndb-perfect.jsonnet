@@ -21,14 +21,23 @@ function(params, anode, field, n, rms_cuts=[])
     // one group of channels which should be considered together for
     // coherent noise filtering.
     //groups: [std.range(g*48, (g+1)*48-1) for g in std.range(0,171)],
-    groups: [std.range(n * 5632 + g*64, n * 5632 + (g+1)*64-1) for g in std.range(0,87)],
+    groups: [std.range(n * 5632 + g*32, n * 5632 + (g+1)*32-1) for g in std.range(0,175)], // 32 channels added Ewerton 2024-07
+    //groups: [std.range(n * 5632 + g*64, n * 5632 + (g+1)*64-1) for g in std.range(0,87)],
     //groups: [std.range(n * 2560 + u * 40, n * 2560 + (u + 1) * 40 - 1) for u in std.range(0, 19)]
     //        + [std.range(n * 2560 + 800 + v * 40, n * 2560 + 800 + (v + 1) * 40 - 1) for v in std.range(0, 19)]
     //        + [std.range(n * 2560 + 1600 + w * 48, n * 2560 + 1600 + (w + 1) * 48 - 1) for w in std.range(0, 19)],
 
 
     // Externally determined "bad" channels.
-    bad: [],
+    //
+    // Dead channels: 3232:3263 (inclusive) (East V).   4160:4191 (East Y)
+    // Shorted channels:  7163, 8372. --> this seems a bit different from your reporting, you could check it in data.
+    // There are four physically missing wires ( = bad channels) due to combs, in the center of each 1/2 APA.
+    // They are 4374 and 5225 on the East, 10006 and 10857 on the West.
+    // So in total, there are 70 bad channels.
+    // 
+    //bad: [],
+    bad: [546, 607] + std.range(3232, 3263) + std.range(4160, 4191) + [4374, 5054, 5225, 5630, 5631, 7163, 8372, 8568, 10006, 10857],
 
     // Overide defaults for specific channels.  If an info is
     // mentioned for a particular channel in multiple objects in this
@@ -84,7 +93,7 @@ function(params, anode, field, n, rms_cuts=[])
         // response: { wpid: wc.WirePlaneId(wc.Ulayer) },
         /// this uses hard-coded waveform.
         response: { waveform: handmade.u_resp, waveformid: wc.Ulayer },
-        response_offset: 120, // offset of the negative peak
+        response_offset: 125.6, // offset of the negative peak
         pad_window_front: 20,
         decon_limit: 0.02,
         decon_limit1: 0.07,
@@ -104,7 +113,7 @@ function(params, anode, field, n, rms_cuts=[])
         // response: { wpid: wc.WirePlaneId(wc.Vlayer) },
         /// this uses hard-coded waveform.
         response: { waveform: handmade.v_resp, waveformid: wc.Vlayer },
-        response_offset: 124,
+        response_offset: 129.5,
         decon_limit: 0.01,
         decon_limit1: 0.08,
         roi_min_max_ratio: 1.5,
