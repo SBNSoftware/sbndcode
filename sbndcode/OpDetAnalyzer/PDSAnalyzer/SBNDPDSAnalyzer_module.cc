@@ -259,7 +259,6 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
   art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
   art::ServiceHandle<cheat::BackTrackerService> bt_serv;
   art::ServiceHandle<detinfo::DetectorClocksService> timeservice;
-  auto const clockData(timeservice->DataFor(e));
 
   // --- Saving MCTruths
   if(fSaveMCTruth){
@@ -998,7 +997,6 @@ void opdet::SBNDPDSAnalyzer::FillAverageDepositedEnergyVariables(std::vector<std
   }
 
   if(ndeps_tpc0!=0){
-    dE_tpc0=dE_tpc0;
     dEpromx_tpc0=dEpromx_tpc0/dE_tpc0;
     dEpromy_tpc0=dEpromy_tpc0/dE_tpc0;
     dEpromz_tpc0=dEpromz_tpc0/dE_tpc0;
@@ -1009,7 +1007,6 @@ void opdet::SBNDPDSAnalyzer::FillAverageDepositedEnergyVariables(std::vector<std
     dEspreadx[0]=spreadx_tpc0;dEspready[0]=spready_tpc0;dEspreadz[0]=spreadz_tpc0;
   }
   if(ndeps_tpc1!=0){
-    dE_tpc1=dE_tpc1;
     dEpromx_tpc1=dEpromx_tpc1/dE_tpc1;
     dEpromy_tpc1=dEpromy_tpc1/dE_tpc1;
     dEpromz_tpc1=dEpromz_tpc1/dE_tpc1;

@@ -1,0 +1,8 @@
+BEGIN_PROLOG
+
+crt_channel_map_standard:
+{
+  FileName: "SBNDCRTChannelMap_v6.txt"
+}
+
+END_PROLOG

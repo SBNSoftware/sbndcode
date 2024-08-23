@@ -1,5 +1,5 @@
-23rd September 2020
-The 'standard' fcls in this directory are the usual fcls you would need for the typical downstream stages of the sbnd workflow (g4, detsim, reco, anatree)
+15th July 2024
+Most of the 'standard' fcls are currently out of date.  Only standard_reco1_sbnd.fcl is currently up to date.
 The gen directory contains the various production generator-level fcls for producing different samples
 The g4, detsim, reco and anatree directories contain override fcls that tweak parameters/features of the simulation/reconstruction e.g. changing the electron lifetime in the g4 simulation.
 The workshop directory contains fcls from a past workshop that probably should have been organised elsewhere ;)

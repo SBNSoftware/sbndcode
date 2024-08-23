@@ -1,0 +1,11 @@
+#include "reco2_sce.fcl"
+
+services:
+{
+    @table::services
+    @table::sbnd_data_services
+}
+
+physics.reco2_sce: [pandora, pandoraTrack, pandoraShower, pandoraCalo, pandoraPid, caloskimCalorimetry]
+physics.caloskimana_tpconly: [ caloskim ]
+physics.end_paths: [stream1, caloskimana_tpconly]

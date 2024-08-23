@@ -1,0 +1,19 @@
+#include "wcsp_data_sbnd.fcl"
+#include "standard_reco1_sbnd.fcl"
+
+services:
+{
+    @table::services
+    @table::sbnd_data_services
+}
+
+physics.producers:
+{
+    @table::physics.producers
+    sptpc2d : @local::sbnd_wcls_sp_data
+}
+
+physics.reco1: [sptpc2d, gaushit, cluster3d]
+physics.ana: [superadata]
+physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
+physics.end_paths: ["stream1",ana]
