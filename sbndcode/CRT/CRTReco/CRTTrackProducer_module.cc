@@ -91,6 +91,10 @@ public:
 
   double TripleTrackToF(std::vector<double> times);
 
+  double LengthToToF(const double &length);
+
+  double ToFAgreement(const double &length, const double &tof);
+
 private:
 
   CRTGeoAlg        fCRTGeoAlg;
@@ -294,10 +298,10 @@ void sbnd::crt::CRTTrackProducer::OrderTrackCandidates(std::vector<std::pair<CRT
                 return a.second.size() > b.second.size();
               else
                 {
-                  if(fUseTs0)
-                    return a.first.Ts0Err() < b.first.Ts0Err();
-                  else
-                    return a.first.Ts1Err() < b.first.Ts1Err();
+                  const double tofAgreementA = ToFAgreement(a.first.Length(), a.first.ToF());
+                  const double tofAgreementB = ToFAgreement(b.first.Length(), b.first.ToF());
+
+                  return tofAgreementA < tofAgreementB;
                 }
             });
 }
@@ -519,6 +523,16 @@ double sbnd::crt::CRTTrackProducer::TripleTrackToF(std::vector<double> times)
   std::sort(times.begin(), times.end());
 
   return times[2] - times[0];
+}
+
+double sbnd::crt::CRTTrackProducer::LengthToToF(const double &length)
+{
+  return length / 29.9792; // c = 29.9792 cm / ns
+}
+
+double sbnd::crt::CRTTrackProducer::ToFAgreement(const double &length, const double &tof)
+{
+  return std::abs(tof - LengthToToF(length));
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTrackProducer)
