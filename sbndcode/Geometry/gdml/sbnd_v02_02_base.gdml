@@ -4730,10 +4730,10 @@
                              <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-1.5*CRTmoduleX_w)+(CRT_placing_modules-68)*CRTmoduleX_w" y="-CRTmoduleX_l/2" z="CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
- </loop>
-                </volume>
+			 </loop>
+                       </volume>
 
-				<volume name="volTaggerEast">
+		       <volume name="volTaggerEast">
                         <materialref ref="matAir"/>
                         <solidref ref="TaggerEast"/>
                         <loop for="CRT_placing_modules" to="75" step="1"/>
