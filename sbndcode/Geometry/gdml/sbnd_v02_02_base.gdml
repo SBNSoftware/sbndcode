@@ -6322,8 +6322,8 @@
 		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopLow" z="whereMembrane_Z"/>
 		<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
 		<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/>
-		<position name="posCRT_East" unit="mm" x="whereMembrane_X+CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
-		<position name="posCRT_West" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
+		<position name="posCRT_East" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
+		<position name="posCRT_West" unit="mm" x="whereMembrane_X+CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
 		<position name="posCRT_Bottom" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-CRT_DY_Bottom" z="whereMembrane_Z"/>
 		<position name="posCryoPlywood" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
 		<position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
