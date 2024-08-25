@@ -37,17 +37,17 @@ physics:
   end_paths: [ ana ]
 }
 
-physics.analyzers.crtevdbot.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/june2024/bottom_wall"
+physics.analyzers.crtevdbot.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/bottom_wall"
 physics.analyzers.crtevdbot.EventDisplayConfig.ChosenTaggers: [ 0 ]
-physics.analyzers.crtevdsou.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/june2024/south_wall"
+physics.analyzers.crtevdsou.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/south_wall"
 physics.analyzers.crtevdsou.EventDisplayConfig.ChosenTaggers: [ 1 ]
-physics.analyzers.crtevdnor.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/june2024/north_wall"
+physics.analyzers.crtevdnor.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/north_wall"
 physics.analyzers.crtevdnor.EventDisplayConfig.ChosenTaggers: [ 2 ]
-physics.analyzers.crtevdwes.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/june2024/west_wall"
+physics.analyzers.crtevdwes.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/west_wall"
 physics.analyzers.crtevdwes.EventDisplayConfig.ChosenTaggers: [ 3 ]
-physics.analyzers.crtevdeas.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/june2024/east_wall"
+physics.analyzers.crtevdeas.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/east_wall"
 physics.analyzers.crtevdeas.EventDisplayConfig.ChosenTaggers: [ 4 ]
-physics.analyzers.crtevdtpl.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/june2024/toplow_wall"
+physics.analyzers.crtevdtpl.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/toplow_wall"
 physics.analyzers.crtevdtpl.EventDisplayConfig.ChosenTaggers: [ 5 ]
-physics.analyzers.crtevdtph.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/june2024/tophigh_wall"
+physics.analyzers.crtevdtph.SaveDir:                          "/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/tophigh_wall"
 physics.analyzers.crtevdtph.EventDisplayConfig.ChosenTaggers: [ 6 ]
