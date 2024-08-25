@@ -4739,26 +4739,26 @@
                         <loop for="CRT_placing_modules" to="75" step="1"/>
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-72)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-72)*CRTmoduleY_w" z="-CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="79" step="1">
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-76)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-76)*CRTmoduleY_w" z="-CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="84" step="1"/>
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-80)*CRTmoduleX_w" y="CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-80)*CRTmoduleX_w" y="CRTmoduleX_l/2" z="CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="89" step="1">
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-85)*CRTmoduleX_w" y="-CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-85)*CRTmoduleX_w" y="-CRTmoduleX_l/2" z="CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
@@ -4770,26 +4770,26 @@
                         <loop for="CRT_placing_modules" to="93" step="1"/>
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-90)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-90)*CRTmoduleY_w" z="-CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="97" step="1">
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-94)*CRTmoduleY_w" z="CRTmoduleY_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l/2" y="(-1.5*CRTmoduleY_w)+(CRT_placing_modules-94)*CRTmoduleY_w" z="-CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="102" step="1"/>
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-98)*CRTmoduleX_w" y="CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-98)*CRTmoduleX_w" y="CRTmoduleX_l/2" z="CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="107" step="1">
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-103)*CRTmoduleX_w" y="-CRTmoduleX_l/2" z="-CRTmoduleX_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="(-2*CRTmoduleX_w)+(CRT_placing_modules-103)*CRTmoduleX_w" y="-CRTmoduleX_l/2" z="CRTmoduleX_t/2"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                         </loop>
