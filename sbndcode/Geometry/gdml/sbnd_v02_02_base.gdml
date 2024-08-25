@@ -4843,13 +4843,6 @@
                                 <volumeref ref="volCRTModule116"/>
                                 <position name="posCRT_module116" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_l/2)" y="BERNmodule_DY_small+(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
                         </physvol>
-			<!-- Missing flat module relaced here -->
-			<!-- number out of sequence for minimal diff -->
-                        <physvol copynumber="133">
-                                <volumeref ref="volCRTModule133"/>
-                                <position name="posCRT_module133" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_l/2)" y="BERNmodule_DY_large+(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
-                        </physvol>
-
                         <physvol copynumber="117">
                                 <volumeref ref="volCRTModule117"/>
                                 <position name="posCRT_module117" unit="cm" x="-BERNmodule_DX_middle-(CRTmoduleBERN_l/2)" y="-BERNmodule_DY_small-(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
@@ -4921,6 +4914,11 @@
                                 <volumeref ref="volCRTModule132"/>
                                 <position name="posCRT_module132" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleMINOS_l/2)" y="-BERNmodule_DY_small/2-CRTmoduleMINOS_w/4" z="CRTmoduleMINOS_t/2"/>
                         </physvol>
+                        <physvol copynumber="133">
+                                <volumeref ref="volCRTModule133"/>
+                                <position name="posCRT_module133" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_l/2)" y="BERNmodule_DY_large+(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
+                        </physvol>
+
 
                         <!-- G10  strips -->
                         <physvol>
