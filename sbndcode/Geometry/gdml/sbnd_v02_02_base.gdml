@@ -656,7 +656,7 @@
 
 
 		<!-- Wire Planes (see sbn-docdb 5526) -->
-		<constant name="numberChannelsY" value="1664"/>
+		<constant name="numberChannelsY" value="1670"/>
 		<constant name="numberChannelsV" value="1984"/>
 		<constant name="numberChannelsU" value="1984"/>
 
@@ -5747,7 +5747,7 @@
 
 			<!-- Y wires -->
 			<!-- iWire_Y starts from 1 -->
-			<loop for ="iWire_Y" to="1664" step="1"> <!-- #wire -->
+			<loop for ="iWire_Y" to="1670" step="1"> <!-- #wire -->
 				<physvol>
 					<volumeref ref="volTPCWireVert"/>
 					<rotationref ref="rotateN90X"/>
