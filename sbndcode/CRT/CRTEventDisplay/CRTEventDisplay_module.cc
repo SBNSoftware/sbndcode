@@ -62,7 +62,7 @@ sbnd::crt::CRTEventDisplay::CRTEventDisplay(Parameters const& config)
 void sbnd::crt::CRTEventDisplay::analyze(art::Event const& e)
 {
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
-  fCRTEventDisplayAlg.Draw(clockData, e);
+  fCRTEventDisplayAlg.Draw(clockData, e, Form("crtEventDisplayEvent%i", e.event()));
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTEventDisplay)

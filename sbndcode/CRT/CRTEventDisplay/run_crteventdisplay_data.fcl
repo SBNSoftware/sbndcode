@@ -1,25 +1,28 @@
 #include "services_sbnd.fcl"
 #include "crteventdisplay_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
 
 process_name: CRTEventDisplay
 
 services:
 {
   @table::sbnd_services
+  CRTChannelMapService: @local::crt_channel_map_standard
+  CRTCalibService:      @local::crt_calib_service
 }
 
 source:
 {
   module_type: RootInput
-  maxEvents:   -1 
-
+  maxEvents:   -1
 }
 
 physics:
 {
   analyzers:
   {
-    crtevd:   @local::crteventdisplay_sbnd
+    crtevd:   @local::crteventdisplay_sbnd_data
   }
 
   ana: [ crtevd ]
