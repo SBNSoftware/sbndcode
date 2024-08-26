@@ -9,28 +9,17 @@ namespace sbnd::crt {
 
   CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry,
                        geo::AuxDetGeometryCore const *auxdet_geometry)
-    : fT0CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T0CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
-    , fT1CableLengthCorrectionsVector(p.get<std::vector<std::pair<unsigned, double>>>("T1CableLengthCorrections", std::vector<std::pair<unsigned, double>>()))
-    , fDefaultPedestal(p.get<double>("DefaultPedestal", 0.))
-    , fSiPMPedestalsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMPedestals", std::vector<std::pair<unsigned, double>>()))
-    , fDefaultGain(p.get<double>("DefaultGain", 0.025))
+    : fDefaultGain(p.get<double>("DefaultGain", 0.025))
     , fSiPMGainsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMGains", std::vector<std::pair<unsigned, double>>()))
-    , fChannelInversionVector(p.get<std::vector<std::pair<unsigned, bool>>>("InvertedChannelOrder", std::vector<std::pair<unsigned, bool>>()))
   {
     fGeometryService = geometry;
     fAuxDetGeoCore   = auxdet_geometry;
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
 
-    fT0CableLengthCorrections = std::map<unsigned, double>(fT0CableLengthCorrectionsVector.begin(),
-                                                           fT0CableLengthCorrectionsVector.end());
-    fT1CableLengthCorrections = std::map<unsigned, double>(fT1CableLengthCorrectionsVector.begin(),
-                                                           fT1CableLengthCorrectionsVector.end());
-    fSiPMPedestals            = std::map<unsigned, double>(fSiPMPedestalsVector.begin(),
-                                                           fSiPMPedestalsVector.end());
-    fSiPMGains                = std::map<unsigned, double>(fSiPMGainsVector.begin(),
-                                                           fSiPMGainsVector.end());
-    fChannelInversion         = std::map<unsigned, bool>(fChannelInversionVector.begin(),
-                                                         fChannelInversionVector.end());
+    art::ServiceHandle<SBND::CRTCalibService> CalibService;
+    art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
+
+    fSiPMGains = std::map<unsigned, double>(fSiPMGainsVector.begin(), fSiPMGainsVector.end());
 
     // Record used objects
     std::vector<std::string> usedTaggers;
@@ -57,6 +46,10 @@ namespace sbnd::crt {
           }
         }
 
+        SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(ad_i);
+        const unsigned int mac5 = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
+        const bool invert       = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
+
         // Loop through strips
         for(unsigned ads_i = 0; ads_i < auxDet.NSensitiveVolume(); ads_i++)
           {
@@ -82,29 +75,26 @@ namespace sbnd::crt {
 
             // Fill the module information
             const std::string moduleName = nodeModule->GetName();
-            const bool invert = fChannelInversion.size() ? fChannelInversion.at(ad_i) : false;
+
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-                const int32_t t0CableDelayCorrection = fT0CableLengthCorrections.size() ?
-                  fT0CableLengthCorrections.at(ad_i) : 0;
-                const int32_t t1CableDelayCorrection = fT1CableLengthCorrections.size() ?
-                  fT1CableLengthCorrections.at(ad_i) : 0;
+                const int32_t cableDelayCorrection = CalibService->GetTimingOffsetFromFEBMAC5(mac5);
 
                 const std::string stripName = nodeStrip->GetVolume()->GetName();
                 const bool minos = stripName.find("MINOS") != std::string::npos ? true : false;
 
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
-                                                    t0CableDelayCorrection, t1CableDelayCorrection,
+                                                    cableDelayCorrection, cableDelayCorrection,
                                                     invert, minos);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
-            // Some modules need their channel numbers counted in reverse as they're inverted relative to the geometry
-            const uint32_t channel0 = invert ? 32 * ad_i + (31 - 2 * ads_i) : 32 * ad_i + 2 * ads_i;
-            const uint32_t channel1 = invert ? 32 * ad_i + (31 - 2 * ads_i -1) : 32 * ad_i + 2 * ads_i + 1;
+            const uint32_t channel0       = 32 * ad_i + 2 * ads_i;
+            const uint32_t channel1       = channel0 + 1;
+
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
               {
                 usedStrips.push_back(stripName);
@@ -129,8 +119,11 @@ namespace sbnd::crt {
             geo::AuxDetSensitiveGeo::LocalPoint_t const sipm1XYZ{sipmX, sipm1Y, 0};
             auto const sipm1XYZWorld = auxDetSensitive.toWorldCoords(sipm1XYZ);
 
-            const uint32_t pedestal0 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel0) : fDefaultPedestal;
-            const uint32_t pedestal1 = fSiPMPedestals.size() ? fSiPMPedestals.at(channel1) : fDefaultPedestal;
+            const uint32_t actualChannel0 = invert ? 31 - (2 * ads_i) : 2 * ads_i;
+            const uint32_t actualChannel1 = invert ? actualChannel0 - 1 : actualChannel0 + 1;
+
+            const uint32_t pedestal0 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel0);
+            const uint32_t pedestal1 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel1);
 
             const double gain0 = fSiPMGains.size() ? fSiPMGains.at(channel0) : fDefaultGain;
             const double gain1 = fSiPMGains.size() ? fSiPMGains.at(channel1) : fDefaultGain;
@@ -253,8 +246,7 @@ namespace sbnd::crt {
   CRTStripGeo CRTGeoAlg::GetStripByAuxDetIndices(const unsigned ad_i, const unsigned ads_i) const
   {
     const CRTModuleGeo module = GetModule(ad_i);
-    const uint16_t channel =
-      module.invertedOrdering ? 32 * ad_i + (31 -2 *ads_i) : 32 * ad_i + 2 * ads_i;
+    const uint16_t channel = 32 * ad_i + 2 * ads_i;
 
     return GetStrip(channel);
   }
@@ -289,6 +281,11 @@ namespace sbnd::crt {
     return CRTCommonUtils::GetTaggerEnum(ChannelToTaggerName(channel));
   }
 
+  enum CRTTagger CRTGeoAlg::AuxDetIndexToTaggerEnum(const unsigned ad_i) const
+  {
+    return CRTCommonUtils::GetTaggerEnum(GetModuleByAuxDetIndex(ad_i).taggerName);
+  }
+
   size_t CRTGeoAlg::ChannelToOrientation(const uint16_t channel) const
   {
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).orientation;
@@ -315,8 +312,8 @@ namespace sbnd::crt {
     auto const w2 = auxDetSensitive.toWorldCoords(l2);
 
     std::array<double, 6> limits = {std::min(w1.X(),w2.X()), std::max(w1.X(),w2.X()),
-                                    std::min(w1.Y(),w2.Y()), std::max(w1.Y(),w2.Y()),
-                                    std::min(w1.Z(),w2.Z()), std::max(w1.Z(),w2.Z())};
+      std::min(w1.Y(),w2.Y()), std::max(w1.Y(),w2.Y()),
+      std::min(w1.Z(),w2.Z()), std::max(w1.Z(),w2.Z())};
     return limits;
   }
 
@@ -384,13 +381,13 @@ namespace sbnd::crt {
     if(!module.top)
       {
         limits.SetX(-limits.X());
-        limits.SetX(-limits2.X());
+        limits2.SetX(-limits2.X());
       }
 
     if(module.invertedOrdering)
       {
         limits.SetY(-limits.Y());
-        limits.SetY(-limits2.Y());
+        limits2.SetY(-limits2.Y());
       }
 
     auto const limitsWorld  = auxDet.toWorldCoords(limits);
@@ -562,10 +559,10 @@ namespace sbnd::crt {
     const std::vector<double> lims = CRTLimits();
 
     return point.X() > lims[0] &&
-           point.X() < lims[3] &&
-           point.Y() > lims[1] &&
-           point.Y() < lims[4] &&
-           point.Z() > lims[2] &&
-           point.Z() < lims[5];
+      point.X() < lims[3] &&
+                  point.Y() > lims[1] &&
+      point.Y() < lims[4] &&
+                  point.Z() > lims[2] &&
+      point.Z() < lims[5];
   }
 }
