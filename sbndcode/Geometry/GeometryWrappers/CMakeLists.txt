@@ -33,6 +33,9 @@ art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
                            sbndcode_CRTUtils
                            sbnobj::SBND_CRT
                            ROOT::Core
+                           sbndcode::ChannelMaps_CRT_CRTChannelMapService_service
+                           sbndcode::Calibration_CRT_CalibService_CRTCalibService_service
+
         )
 
 install_headers()

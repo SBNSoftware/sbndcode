@@ -37,6 +37,8 @@
 
 // sbndcode
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
+#include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
+#include "sbndcode/Calibration/CRT/CalibService/CRTCalibService.h"
 
 namespace sbnd::crt {
 
@@ -118,22 +120,22 @@ namespace sbnd::crt {
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
   struct CRTModuleGeo{
     CRTModuleGeo()
-    : name("")
-    , taggerName("")
-    , minX(-std::numeric_limits<double>::max())
-    , maxX(std::numeric_limits<double>::max())
-    , minY(-std::numeric_limits<double>::max())
-    , maxY(std::numeric_limits<double>::max())
-    , minZ(-std::numeric_limits<double>::max())
-    , maxZ(std::numeric_limits<double>::max())
-    , orientation(0)
-    , top(false)
-    , adID(std::numeric_limits<uint16_t>::max())
-    , t0CableDelayCorrection(0)
-    , t1CableDelayCorrection(0)
-    , invertedOrdering(false)
-    , minos(false)
-    , null(false)
+      : name("")
+      , taggerName("")
+      , minX(-std::numeric_limits<double>::max())
+      , maxX(std::numeric_limits<double>::max())
+      , minY(-std::numeric_limits<double>::max())
+      , maxY(std::numeric_limits<double>::max())
+      , minZ(-std::numeric_limits<double>::max())
+      , maxZ(std::numeric_limits<double>::max())
+      , orientation(0)
+      , top(false)
+      , adID(std::numeric_limits<uint16_t>::max())
+      , t0CableDelayCorrection(0)
+      , t1CableDelayCorrection(0)
+      , invertedOrdering(false)
+      , minos(false)
+      , null(false)
     {}
 
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet,
@@ -169,7 +171,8 @@ namespace sbnd::crt {
         orientation = (modulePosMother[2] > 0);
 
       // Location of SiPMs
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger)
+      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger
+         || CRTCommonUtils::GetTaggerEnum(taggerName) == kWestTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kEastTagger)
         top = (orientation == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
       else
         top = (orientation == 0) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
@@ -307,6 +310,8 @@ namespace sbnd::crt {
 
     enum CRTTagger ChannelToTaggerEnum(const uint16_t channel) const;
 
+    enum CRTTagger AuxDetIndexToTaggerEnum(const unsigned ad_i) const;
+
     size_t ChannelToOrientation(const uint16_t channel) const;
 
     std::array<double, 6> StripHit3DPos(const uint16_t channel, const double x, const double ex);
@@ -355,18 +360,9 @@ namespace sbnd::crt {
     geo::GeometryCore const       *fGeometryService;
     const geo::AuxDetGeometryCore *fAuxDetGeoCore;
 
-    std::vector<std::pair<unsigned, double>> fT0CableLengthCorrectionsVector;
-    std::map<unsigned, double>               fT0CableLengthCorrections;
-    std::vector<std::pair<unsigned, double>> fT1CableLengthCorrectionsVector;
-    std::map<unsigned, double>               fT1CableLengthCorrections;
-    double                                   fDefaultPedestal;
-    std::vector<std::pair<unsigned, double>> fSiPMPedestalsVector;
-    std::map<unsigned, double>               fSiPMPedestals;
     double                                   fDefaultGain;
     std::vector<std::pair<unsigned, double>> fSiPMGainsVector;
     std::map<unsigned, double>               fSiPMGains;
-    std::vector<std::pair<unsigned, bool>>   fChannelInversionVector;
-    std::map<unsigned, bool>                 fChannelInversion;
   };
 }
 
