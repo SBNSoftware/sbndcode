@@ -229,7 +229,6 @@ namespace sbnd::crt {
   private:
     
     CRTGeoAlg fCRTGeoAlg;
-    art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
 
     art::InputTag fSimModuleLabel;
     art::InputTag fSimDepositModuleLabel;
