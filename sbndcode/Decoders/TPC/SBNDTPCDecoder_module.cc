@@ -61,6 +61,10 @@ tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(art::Event 
   //std::cout << "timestamp: " << ret.timestamp << std::endl;
   ret.index = raw_header->getSlot() - _config.min_slot_no;
 
+  ret.framenum = raw_header->getFrameNum();
+  ret.samplenum = raw_header->get2mhzSample();
+  ret.fragtimestamp = (ULong64_t) frag.timestamp();
+
   return ret;
 }
 
