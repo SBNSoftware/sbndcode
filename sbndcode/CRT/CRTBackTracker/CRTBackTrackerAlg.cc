@@ -578,6 +578,7 @@ namespace sbnd::crt {
 
   void CRTBackTrackerAlg::TrueParticlePDGEnergyTime(const int trackID, int &pdg, double &energy, double &time)
   {
+    art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
     const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(trackID);
 
     pdg    = particle == NULL ? -std::numeric_limits<int>::max()    : particle->PdgCode();
