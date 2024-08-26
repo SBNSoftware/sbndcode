@@ -9,7 +9,29 @@ namespace sbnd::crt {
 
     if(fMC)
       fCRTBackTrackerAlg = CRTBackTrackerAlg(config.BackTrackerAlgConfig());
-  }
+
+    std::cout << std::endl;
+
+    std::cout << "std::map<std::string, std::vector<double>> gTaggerGeo = {";
+
+    for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
+      {
+	std::cout << "{ \"" << name << "\", {" << tagger.minX << ", " << tagger.minY << ", " << tagger.minZ << ", " << tagger.maxX << ", " << tagger.maxY << ", " << tagger.maxZ << "} }," << std::endl;
+      }
+    std::cout << "};" << std::endl;
+
+    std::cout << std::endl;
+
+    std::cout << "std::map<std::string, std::vector<double>> gTPCGeo = {";
+
+    std::cout << "{ \"TPC0\", {" << fTPCGeoAlg.MinX() << ", " << fTPCGeoAlg.MinY() << ", " << fTPCGeoAlg.MinZ() << ", " << -fTPCGeoAlg.CpaWidth() << ", " << fTPCGeoAlg.MaxY() << ", " << fTPCGeoAlg.MaxZ() << "} }," << std::endl;
+
+    std::cout << "{ \"TPC1\", {" << fTPCGeoAlg.CpaWidth() << ", " << fTPCGeoAlg.MinY() << ", " << fTPCGeoAlg.MinZ() << ", " << fTPCGeoAlg.MaxX() << ", " << fTPCGeoAlg.MaxY() << ", " << fTPCGeoAlg.MaxZ() << "} }," << std::endl;	  
+
+    std::cout << "};" << std::endl;
+
+    std::cout << std::endl;
+}
   
   CRTEventDisplayAlg::CRTEventDisplayAlg(){}
   
