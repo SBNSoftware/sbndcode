@@ -60,11 +60,11 @@ if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
 
 else
     #if IFDH_DEBUG=0 ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
-    if IFDH_TOKEN_ENABLE=0 BEARER_TOKEN_FILE="" ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
+    if IFDH_PROXY_ENABLE=0 IFDH_TOKEN_ENABLE=0 BEARER_TOKEN_FILE="" ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
     then
 	echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
 	echo "ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}"
-	IFDH_TOKEN_ENABLE=0 BEARER_TOKEN_FILE="" ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}
+	IFDH_PROXY_ENABLE=0 IFDH_TOKEN_ENABLE=0 BEARER_TOKEN_FILE="" ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}
 	echo -e "\nExtract tar to local references directory"
 	echo "tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}"
 	tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}
