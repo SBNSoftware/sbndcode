@@ -141,8 +141,7 @@ base {
     },
 
     files: {
-        wires: "sbnd-wires-geometry-v0200.json.bz2",   // old SBND geometry
-        //wires: "sbnd-wires-geometry-v0202.json.bz2", // <- make sure to use this file when using Wire-Cell with new SBND geometry
+        wires: "sbnd-wires-geometry-v0202.json.bz2", // new SBND geometry
 
         fields: [ "garfield-sbnd-v1.json.bz2" ],
 
