@@ -27,13 +27,13 @@ function(params, anode, field, n, rms_cuts=[])
     // Externally determined "bad" channels.
     //
     // Dead channels: 3232:3263 (inclusive) (East V).   4160:4191 (East Y)
-    // Shorted channels:  7163, 8372. --> this seems a bit different from your reporting, you could check it in data.
+    // Shorted channels:  7169 (West U), 8378 (West V).
     // There are four physically missing wires ( = bad channels) due to combs, in the center of each 1/2 APA.
-    // They are 4374 and 5225 on the East, 10006 and 10857 on the West.
-    // So in total, there are 70 bad channels.
+    // They are 4374 and 5231 (East Y), 10012 and 10869 (West Y).
+    // So in total, there are 76 bad channels.
     // 
     //bad: [],
-    bad: [546, 607] + std.range(3232, 3263) + std.range(4160, 4191) + [4374, 4385, 5060, 5220, 5231, 5636, 5637, 7169, 8378, 8574, 10012, 10863],
+    bad: [546, 607] + std.range(3232, 3263) + std.range(4160, 4191) + [4374, 4800, 4801, 4802, 4803, 4804, 4805, 5060, 5231, 5636, 5637, 7169, 8378, 8574, 10012, 10869, 10438, 10439, 10440, 10441, 10442, 10443],
 
     // Overide defaults for specific channels.  If an info is
     // mentioned for a particular channel in multiple objects in this
