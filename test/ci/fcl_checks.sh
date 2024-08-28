@@ -63,7 +63,7 @@ if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
 
 else
     #if IFDH_DEBUG=0 ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
-    if IFDH_TOKEN_ENABLE=0 ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
+    if IFDH_TOKEN_ENABLE=0 IFDH_PROXY_ENABLE=0 ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
     then
 	echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
 	echo "ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}"
