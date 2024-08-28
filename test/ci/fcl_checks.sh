@@ -54,12 +54,16 @@ exit_code_dump=0
 
 echo -e "\nRemote Reference Directory: ${ACCESS_REF_DIR}"
 
+echo -e "\nEnv var list:"
+env
+
 if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
     echo -e "\nUpdating ref files for fcl checks"
     export datestamp=$(date +"%Y%m%d%H%M")
 
 else
-    if IFDH_DEBUG=0 ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
+    #if IFDH_DEBUG=0 ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
+    if ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
     then
 	echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
 	echo "ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}"
