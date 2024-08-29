@@ -46,7 +46,7 @@ cd "${WORK_DIR}"
 ### Loop over fcl files for checks ###
 ######################################
 
-ACCESS_REF_DIR=${REF_DIR///pnfs/http://fndca1.fnal.gov:8000/pnfs/fnal.gov/usr}
+ACCESS_REF_DIR=${REF_DIR///pnfs/http://fndcadoor.fnal.gov:8000/pnfs/fnal.gov/usr}
 REF_FILE=${INPUT_FILE}
 
 exit_code_parsing=0
