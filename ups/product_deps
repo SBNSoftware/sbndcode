@@ -37,6 +37,9 @@ product          version
 sbncode          v09_35_00
 sbnd_data        v01_09_00 - optional
 sbndutil         v09_35_00 - optional
+g4neutronxs       v1_4
+g4neutron         v4_5
+
 
 # list products required ONLY for the build
 # any products here must NOT have qualifiers
@@ -45,13 +48,13 @@ end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the dependencies.
 # Make the table by adding columns before "notes". 
-qualifier       sbncode       sbndutil        sbnd_data  notes
-e20:debug       e20:debug     e20:debug       -nq-
-e20:prof        e20:prof      e20:prof        -nq-
-e19:debug       e19:debug     e19:debug       -nq-
-e19:prof        e19:prof      e19:prof        -nq-
-c7:debug        c7:debug      c7:debug        -nq-
-c7:prof         c7:prof       c7:prof         -nq-
+qualifier       sbncode       sbndutil        sbnd_data  g4neutronxs  g4neutron
+e20:debug       e20:debug     e20:debug       -nq-       -nq-         -nq-
+e20:prof        e20:prof      e20:prof        -nq-       -nq-         -nq-
+e19:debug       e19:debug     e19:debug       -nq-       -nq-         -nq-
+e19:prof        e19:prof      e19:prof        -nq-       -nq-         -nq-  
+c7:debug        c7:debug      c7:debug        -nq-       -nq-         -nq-  
+c7:prof         c7:prof       c7:prof         -nq-       -nq-         -nq-
 end_qualifier_list
 
 # table fragment to set FW_SEARCH_PATH needed to find XML files:
