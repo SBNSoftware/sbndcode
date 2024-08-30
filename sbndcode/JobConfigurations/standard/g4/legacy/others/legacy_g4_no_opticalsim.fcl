@@ -1,4 +1,0 @@
-#include "legacy_g4_sbnd.fcl"
-
-services.PhotonVisibilityService: @erase
-services.LArG4Parameters: @local::sbnd_largeantparameters_noopticalsim

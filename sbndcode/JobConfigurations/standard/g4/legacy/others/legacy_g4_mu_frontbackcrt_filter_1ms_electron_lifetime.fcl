@@ -1,4 +1,0 @@
-#include "legacy_g4_mu_frontbackcrt_filter.fcl"
-
-services.DetectorPropertiesService.Electronlifetime:  1.0e3 #microseconds
-
