@@ -28,17 +28,17 @@ sbnd_data_badchannels_east_dead_femb: [
                                       ]
 
 #Shorted channels                                      
-sbnd_data_badchannels_west_plane0_shorted: [ 7163 ]
-sbnd_data_badchannels_west_plane1_shorted: [ 8372 ]
+sbnd_data_badchannels_west_plane0_shorted: [ 7169 ]
+sbnd_data_badchannels_west_plane1_shorted: [ 8378 ]
 
 #No response from channels
-sbnd_data_badchannels_no_response: [ 546, 607, 8568 ]
+sbnd_data_badchannels_no_response: [ 546, 607, 8574 ]
 
 #noisy channels
-sbnd_data_badchannels_noisy: [ 5054, 5630, 5631 ]
+sbnd_data_badchannels_noisy: [ 5060, 5636, 5637 ]
 
 #Missing wires where the combs are located (in data)
-sbnd_data_badchannels_east_plane2_missing_combs: [ 4374, 5225 ]
-sbnd_data_badchannels_west_plane2_missing_combs: [ 10006, 10857 ]
+sbnd_data_badchannels_east_plane2_missing_combs: [ 4374, 5231 ]
+sbnd_data_badchannels_west_plane2_missing_combs: [ 10012, 10869 ]
                                       
 END_PROLOG
