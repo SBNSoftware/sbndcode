@@ -38,7 +38,7 @@ sbnd_data_badchannels_no_response: [ 546, 607, 8574 ]
 sbnd_data_badchannels_noisy: [ 5060, 5636, 5637 ]
 
 #Missing wires where the combs are located (in data)
-sbnd_data_badchannels_east_plane2_missing_combs: [ 4374, 5225 ]
-sbnd_data_badchannels_west_plane2_missing_combs: [ 10006, 10857 ]
+sbnd_data_badchannels_east_plane2_missing_combs: [ 4374, 5231 ]
+sbnd_data_badchannels_west_plane2_missing_combs: [ 10012, 10869 ]
                                       
 END_PROLOG
