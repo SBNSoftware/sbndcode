@@ -1,0 +1,14 @@
+#
+# File:    prodgenie_corsika_p_nu_spill_cryo_sbnd.fcl
+#
+# Purpose: Generation of neutrinos from Booster Neutrino Beam with Corsika cosmic
+# rays using the proton model.
+# 
+# Neutrino events are generated in the whole cryostat
+# 
+# Input: no input file required
+
+#include "prodgenie_corsika_cmc_nu_spill_cryo_sbnd.fcl"
+
+# Set the Corsika proton model
+physics.producers.corsika: @local::sbnd_corsika_p

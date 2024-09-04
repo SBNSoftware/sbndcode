@@ -1,0 +1,14 @@
+#
+# File:    prodgenie_corsika_p_nu_spill_tpc_sbnd.fcl
+#
+# Purpose: Generation of neutrinos from Booster Neutrino Beam with Corsika cosmic
+# rays using the proton model.
+# 
+# Neutrino events are generated in the TPCs + 10 cm in each direction
+# 
+# Input: no input file required
+
+#include "prodgenie_corsika_p_nu_spill_cryo_sbnd.fcl"
+
+# Extend the box to include 20 cm around the TPC active region
+physics.producers.generator.FiducialCut: "mbox: -210,-210,-10,210,210,510"

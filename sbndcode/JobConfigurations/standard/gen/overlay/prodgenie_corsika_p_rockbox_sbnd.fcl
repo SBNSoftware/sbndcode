@@ -1,5 +1,13 @@
+#
+# File:    prodgenie_corsika_p_rockbox_sbnd.fcl
+# Purpose: Generation of dirt neutrinos using the rockbox model with Corsika cosmic
+# rays using the proton model.
+#
 # Produce GENIE rockbox interactions and overlay CORSIKA cosmics
 # Note: To run G4 over CORSIKA and merge collections together you will need g4_dirt_overlay_filter.fcl
+# 
+# Input: no input file required
+
 
 #include "mergesimsources_sbnd.fcl"
 #include "corsika_sbnd.fcl"

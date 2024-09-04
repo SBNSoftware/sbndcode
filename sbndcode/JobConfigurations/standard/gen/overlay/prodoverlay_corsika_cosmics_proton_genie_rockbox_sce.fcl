@@ -1,3 +1,0 @@
-#include "prodoverlay_corsika_cosmics_proton_genie_rockbox_sbnd.fcl"
-
-#include "enable_spacecharge_services_sbnd_2D_DriftSimOnly.fcl"
