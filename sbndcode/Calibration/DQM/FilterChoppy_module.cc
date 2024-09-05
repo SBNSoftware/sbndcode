@@ -98,7 +98,6 @@ namespace filt{
     npeak = 0;
     delta_tmaxmin = 0;
 
-
     // get the timestamps
     art::Handle<std::vector<raw::RDTimeStamp>> timestamp_handle;
     evt.getByLabel("daq", timestamp_handle);
@@ -110,16 +109,14 @@ namespace filt{
     }
     art::fill_ptr_vector(raw_timestamps_handle, timestamp_handle);
 
-
-    // analyze timestamp distributions
-    // collect timestamps
+    // collect TS
     unsigned timeindex = 0;
     for (auto const& timestamps: raw_timestamps_handle) {
       long this_ts = timestamps->GetTimeStamp();
       ts_vec.push_back(this_ts);
       timeindex++;
     }
-    // make binned hist
+    // find min, max TS values
     long ts_min = ts_vec[0];
     long ts_max = ts_vec[0];
     for (long ts : ts_vec) {
@@ -132,39 +129,42 @@ namespace filt{
     }
     delta_tmaxmin = std::abs(ts_max - ts_min);
 
-    float nbin = 100.;
-    float bin_width = (ts_max - ts_min)/nbin;
-    for (int i = 0; i < 100; ++i) {
-      float bin_low = ts_min + i*bin_width;
-      float bin_high = ts_min + (i+1)*bin_width;
-      int bin_count = 0;
-      for (long ts : ts_vec) {
-        if ((bin_low < ts) & (ts <= bin_high)) {
-          bin_count += 1;
-        }
-      }
-      ts_hist_vec.push_back(bin_count);
-    }
-    // find peak bins
-    for (int bc : ts_hist_vec) {
-      //TODO: make threshold fcl parameter
-      if (bc > 1000) {
-        npeak += 1;
-      }
-    }
-
-    // If the energy deposit within the beam time is greater than some limit then trigger the event
-    if (npeak > 1){
-      std::cout << "Event " << event << " has " << npeak << " peaks" << std::endl;
-    }
-    if (delta_tmaxmin > 100000){
-      std::cout << "Event " << event << " has a delta_tmaxmin of " << delta_tmaxmin << std::endl;
-    }
-    //return npeak < 2;
+    // if (delta_tmaxmin > 100000){
+    //   std::cout << "Event " << event << " has a delta_tmaxmin of " << delta_tmaxmin << std::endl;
+    // }
     return delta_tmaxmin < 100000;
 
-  }
 
+    // // Identify choppy events by looking at the # of peaks in the TS distribution
+    // make binned hist
+    // float nbin = 100.;
+    // float bin_width = (ts_max - ts_min)/nbin;
+    // for (int i = 0; i < 100; ++i) {
+    //   float bin_low = ts_min + i*bin_width;
+    //   float bin_high = ts_min + (i+1)*bin_width;
+    //   int bin_count = 0;
+    //   for (long ts : ts_vec) {
+    //     if ((bin_low < ts) & (ts <= bin_high)) {
+    //       bin_count += 1;
+    //     }
+    //   }
+    //   ts_hist_vec.push_back(bin_count);
+    // }
+    // // find peak bins
+    // for (int bc : ts_hist_vec) {
+    //   //TODO: make threshold fcl parameter
+    //   if (bc > 1000) {
+    //     npeak += 1;
+    //   }
+    // }
+
+    // // If the energy deposit within the beam time is greater than some limit then trigger the event
+    // if (npeak > 1){
+    //   std::cout << "Event " << event << " has " << npeak << " peaks" << std::endl;
+    // }
+    // return npeak < 2;
+    
+  }
 
   void FilterChoppy::beginJob() {
   }

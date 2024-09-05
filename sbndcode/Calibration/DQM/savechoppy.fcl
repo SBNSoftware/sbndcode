@@ -31,10 +31,10 @@ outputs:
  out1:
  {
    module_type: RootOutput
-   fileName:    "%ifb_choppyfiltered.root"
+   fileName:    "%ifb_choppy.root"
    dataTier:    "filtered"
    fastCloning: true
-   SelectEvents: [ filter ]
+   SelectEvents: [ savechoppy ]
  }
 }
 
@@ -47,9 +47,9 @@ physics:
     }
   }
 
-  filter: [ filterchoppy ]
+  savechoppy: [ "!filterchoppy"]
   stream1:  [ out1 ]
-  trigger_paths: [ filter ]
+  trigger_paths: [ savechoppy ]
   end_paths:     [ stream1 ]
 }
 
