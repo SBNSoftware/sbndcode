@@ -5,6 +5,7 @@
 # Author Henry Lay (h.lay@lancaster.ac.uk)
 
 #include "rootoutput_sbnd.fcl"
+#include "sam_sbnd.fcl"
 
 process_name: Scrub
 
