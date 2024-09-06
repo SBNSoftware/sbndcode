@@ -1,0 +1,7 @@
+# B. Carlson (bcarlson1@ufl.edu)
+# March 1, 2024
+# Run reco1 while setting cosmic producer to "rain"
+
+#include "standard_reco1_sbnd.fcl"
+
+physics.superaana: [superampvmpr]

@@ -1,3 +1,0 @@
-#include "reco1_keepOpDetWf.fcl"
-
-#include "enable_spacecharge_services_sbnd.fcl"
