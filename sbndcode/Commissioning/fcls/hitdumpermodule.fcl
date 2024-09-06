@@ -31,7 +31,7 @@ hitdumper:
     KeepCRTTracks:            false
     readOpHits:               true
     readpmtTrigger:           true
-    readpmtSoftTrigger:       false
+    readpmtSoftTrigger:       true
     readcrtSoftTrigger:	      false
     readMuonTracks:           false
     readMuonHits:             false
