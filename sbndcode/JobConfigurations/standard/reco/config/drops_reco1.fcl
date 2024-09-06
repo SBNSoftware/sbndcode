@@ -1,0 +1,36 @@
+# outputs configuration
+#
+#include "detsim_drops.fcl"
+
+BEGIN_PROLOG
+
+sbnd_reco1_ml_drops: [
+    "drop *_cluster3d_*_*" #drop all mlreco output
+  , "drop *_sedlite_*_*" #drop all mlreco output
+#  , "drop *_simplemerge_*_*" #drop all mlreco output
+]
+sbnd_reco1_drops: [ 
+    @sequence::detsim_drops
+  , "drop raw::RawDigits_*_*_*"
+  , "drop raw::OpDetWaveforms_*_*_*" 
+  , "drop *_fasthit_*_*"
+  , @sequence::sbnd_reco1_ml_drops
+]
+
+sbnd_reco1_drops_keep_rawopdetwf: [ 
+    @sequence::detsim_drops
+  , "drop raw::RawDigits_*_*_*"
+  , "drop *_fasthit_*_*"
+  , @sequence::sbnd_reco1_ml_drops
+]
+
+sbnd_reco1_drops_selective: [  #Needed to maintain earlier workflows where some products are not needed but others are
+    "keep *_*_*_*"
+  , "drop raw::OpDetWaveforms_*_*_*"
+  , "drop *raw::RawDigits*_*_*_*"
+  , "drop sim::OpDetBacktrackerRecords_*_*_*"
+  , "drop *_fasthit_*_*"
+  , "drop *_cluster3d_*_*" #drop all mlreco output
+]
+
+END_PROLOG

@@ -117,16 +117,6 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
 
   for(unsigned i = 0; i < bern_frag_meta->hits_in_fragment(); ++i)
     {
-      const sbndaq::BernCRTHitV2 *bern_hit = bern_frag.eventdata(i);
-
-      std::array<uint16_t, 32> adc_array;
-      unsigned ii = 0;
-      for(auto const &adc : bern_hit->adc)
-        {
-          adc_array[ii] = adc;
-          ++ii;
-        }
-
       SBND::CRTChannelMapService::ModuleInfo_t module = fCRTChannelMapService->GetModuleInfoFromFEBMAC5(bern_frag_meta->MAC5());
 
       if(!module.valid)
@@ -142,13 +132,40 @@ std::vector<sbnd::crt::FEBData> CRTDecoder::FragToFEB(const artdaq::Fragment &fr
           continue;
         }
 
+      const sbndaq::BernCRTHitV2 *bern_hit = bern_frag.eventdata(i);
+      // Fill ADC Array. If channel order is swapped in the GDML
+      // compared to reality then we fill the array in reverse.
+      std::array<uint16_t, 32> adc_array;
+      unsigned ii = module.channel_order_swapped ? 31 : 0;
+      for(auto const &adc : bern_hit->adc)
+        {
+          adc_array[ii] = adc;
+
+          if(module.channel_order_swapped)
+            --ii;
+          else
+            ++ii;
+        }
+
+      // Timestamp field stores the T0 time corrected by the cable length
+      // stored in the original fcl. We use it to get the cable delay for
+      // the module and store it in the unused coinc slot.
+      const int64_t whole_second_ns = static_cast<int64_t>(1e9);
+      int cable_length = bern_hit->timestamp % whole_second_ns - bern_hit->ts0;
+
+      if(cable_length < 0)
+        cable_length += whole_second_ns;
+
+      if(cable_length > 1000 || cable_length < 0)
+        throw std::runtime_error("Why is the cable length: " + std::to_string(cable_length) + "?");
+
       feb_datas.emplace_back(module.offline_module_id,
                              bern_hit->flags,
                              bern_hit->ts0,
                              bern_hit->ts1,
                              bern_hit->timestamp / 1e9,
                              adc_array,
-                             bern_hit->coinc);
+                             cable_length);
 
       std::string adc_string = "";
 
