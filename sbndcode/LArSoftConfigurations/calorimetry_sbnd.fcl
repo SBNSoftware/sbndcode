@@ -27,4 +27,18 @@ sbnd_gnewcalodata.CaloAlg:      @local::sbnd_calorimetryalgdata
 sbnd_gnewcalodata.ChargeMethod: 3
 sbnd_gnewcalodata.SpacePointModuleLabel: @erase
 
+# gputnam 19Aug2024: Upate calibration to EMB
+# Values from: https://arxiv.org/abs/2407.12969
+sbnd_gnewcalomc.CaloAlg.ModBoxA: 0.904
+sbnd_gnewcalomc.CaloAlg.ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
+sbnd_gnewcalomc.CaloAlg.ModBoxBParam: [0.204, 1.25]
+
+sbnd_calomc.CaloAlg.ModBoxA: 0.904
+sbnd_calomc.CaloAlg.ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
+sbnd_calomc.CaloAlg.ModBoxBParam: [0.204, 1.25]
+
+sbnd_calodata.CaloAlg.ModBoxA: 0.904
+sbnd_calodata.CaloAlg.ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
+sbnd_calodata.CaloAlg.ModBoxBParam: [0.204, 1.25]
+
 END_PROLOG
