@@ -1,4 +1,4 @@
-#include "crtrecoproducers.fcl"
+#include "crtrecoproducers_sbnd.fcl"
 #include "run_muontrack.fcl"
 
 physics.producers.crtclustering:  @local::crtclusterproducer_sbnd
