@@ -16,3 +16,6 @@ physics.analyzers.hitdumper.KeepCRTTracks:      true
 physics.analyzers.hitdumper.KeepCRTSpacePoints: true
 physics.analyzers.hitdumper.readpmtTrigger:     false
 physics.analyzers.hitdumper.readpmtSoftTrigger: false
+physics.analyzers.hitdumper.readOpHits:         true
+physics.analyzers.hitdumper.readTruth:          true
+physics.analyzers.hitdumper.savePOTinfo:        true
