@@ -92,8 +92,8 @@ namespace sbnd::crt {
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
-            const uint32_t channel0       = 32 * ad_i + 2 * ads_i;
-            const uint32_t channel1       = channel0 + 1;
+            const uint32_t channel0     = 32 * ad_i + 2 * ads_i;
+            const uint32_t channel1     = channel0 + 1;
 
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
               {
@@ -312,8 +312,8 @@ namespace sbnd::crt {
     auto const w2 = auxDetSensitive.toWorldCoords(l2);
 
     std::array<double, 6> limits = {std::min(w1.X(),w2.X()), std::max(w1.X(),w2.X()),
-      std::min(w1.Y(),w2.Y()), std::max(w1.Y(),w2.Y()),
-      std::min(w1.Z(),w2.Z()), std::max(w1.Z(),w2.Z())};
+                                    std::min(w1.Y(),w2.Y()), std::max(w1.Y(),w2.Y()),
+                                    std::min(w1.Z(),w2.Z()), std::max(w1.Z(),w2.Z())};
     return limits;
   }
 
@@ -558,11 +558,8 @@ namespace sbnd::crt {
   {
     const std::vector<double> lims = CRTLimits();
 
-    return point.X() > lims[0] &&
-      point.X() < lims[3] &&
-                  point.Y() > lims[1] &&
-      point.Y() < lims[4] &&
-                  point.Z() > lims[2] &&
-      point.Z() < lims[5];
+    return (point.X() > lims[0] && point.X() < lims[3]) &&
+           (point.Y() > lims[1] && point.Y() < lims[4]) &&
+           (point.Z() > lims[2] && point.Z() < lims[5]);
   }
 }
