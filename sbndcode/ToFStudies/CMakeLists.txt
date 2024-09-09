@@ -9,12 +9,11 @@ set(
                            larevt::Filters
                            lardataobj::RawData
                            lardataobj::RecoBase
-			   larreco::Calorimetry
+                           larreco::Calorimetry
                            larreco::RecoAlg
                            lardata::RecoObjects
                            larpandora::LArPandoraInterface
                            sbndcode_CRTUtils
-                           sbndcode_CRT
                            sbnobj::Common_CRT
                            nusimdata::SimulationBase
                            art::Framework_Core
@@ -30,9 +29,9 @@ set(
                            ROOT::XMLIO
                            ROOT::Gdml
                            ROOT::Core
-                           sbndcode_RecoUtils
-                           sbndcode_OpDetSim
-			   sbndcode_CRT_CRTBackTracker
+                           sbndcode::RecoUtils
+                           sbndcode::OpDetSim
+                           sbndcode::CRT_CRTBackTracker
         )
 
 cet_build_plugin(ToFAnalyzer art::module SOURCE ToFAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES})
@@ -42,4 +41,3 @@ cet_build_plugin(ToFProducer art::module SOURCE ToFProducer_module.cc LIBRARIES 
 # install_headers()
 install_fhicl()
 install_source()
-

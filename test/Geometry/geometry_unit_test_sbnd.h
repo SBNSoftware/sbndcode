@@ -17,8 +17,7 @@
 
 // LArSoft libraries
 #include "larcorealg/TestUtils/geometry_unit_test_base.h"
-// #include "sbndcode/Geometry/ChannelMapSBNDAlg.h"
-#include "larcorealg/Geometry/ChannelMapStandardAlg.h"
+#include "larcorealg/Geometry/WireReadoutStandardGeom.h"
 
 // C/C++ standard libraries
 #include <string>
@@ -49,13 +48,11 @@ namespace sbnd {
      * We reuse BasicGeometryEnvironmentConfiguration as base class and then we
      * fix its setup.
      */
-    template <typename CHANNELMAP = geo::ChannelMapStandardAlg>
     struct SBNDGeometryEnvironmentConfiguration:
-      public ::testing::BasicGeometryEnvironmentConfiguration<CHANNELMAP>
+      public ::testing::BasicGeometryEnvironmentConfiguration
     {
       // remember that BasicGeometryEnvironmentConfiguration is not polymorphic
-      using base_t
-        = ::testing::BasicGeometryEnvironmentConfiguration<CHANNELMAP>;
+      using base_t = ::testing::BasicGeometryEnvironmentConfiguration;
       
       /// Default constructor
       SBNDGeometryEnvironmentConfiguration() { SBNDdefaultInit(); }
@@ -76,7 +73,7 @@ namespace sbnd {
             Name:     "sbndv2"
             GDML:     "sbnd_v02_00.gdml"
             ROOT:     "sbnd_v02_00.gdml"
-            SortingParameters: {}
+            SortingParameters: { tool_type: "GeoObjectSorterSBND" }
             )");
         }
     }; // class SBNDGeometryEnvironmentConfiguration<>

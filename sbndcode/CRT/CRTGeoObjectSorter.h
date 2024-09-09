@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "larcorealg/Geometry/AuxDetGeoObjectSorter.h"
+#include "fhiclcpp/fwd.h"
 
 namespace geo {
 

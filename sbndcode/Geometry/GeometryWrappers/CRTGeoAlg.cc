@@ -270,7 +270,7 @@ namespace sbnd::crt {
       return fModules.at(fStrips.at(name).moduleName).taggerName;
     else if(fModules.find(name) != fModules.end())
       return fModules.at(name).taggerName;
-    
+
     return "";
   }
 
@@ -320,7 +320,7 @@ namespace sbnd::crt {
     return limits;
   }
 
-  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const CRTStripGeo &strip, const double x, 
+  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
                                                       const double y, const double z)
   {
     const uint16_t adsID = strip.adsID;

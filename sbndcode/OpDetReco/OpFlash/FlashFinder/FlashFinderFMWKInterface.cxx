@@ -11,6 +11,7 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "art_root_io/TFileService.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/Geometry/Geometry.h"
 #include "FlashFinderFMWKInterface.h"
 
@@ -19,16 +20,18 @@ namespace lightana {
   std::vector<size_t> ListOpChannels(int cryostat) {
     std::vector<size_t> res;
     ::art::ServiceHandle<geo::Geometry> geo;
+    auto const& channelMapAlg =
+      art::ServiceHandle<geo::WireReadout const>()->Get();
     if(cryostat<0) {
-      for(size_t opch=0; opch<geo->MaxOpChannel(); ++opch) {
-        if(geo->IsValidOpChannel(opch)) continue;
+      for(size_t opch=0; opch<channelMapAlg.MaxOpChannel(); ++opch) {
+        if(channelMapAlg.IsValidOpChannel(opch)) continue;
         res.push_back(opch);
       }
     }else{
       auto const& bbox = geo->Cryostat(geo::CryostatID(cryostat)).Boundaries();
-      for(size_t opch=0; opch<geo->MaxOpChannel(); ++opch) {
-        if(geo->IsValidOpChannel(opch)) continue;
-        auto const& pt = geo->OpDetGeoFromOpChannel(opch).GetCenter();
+      for(size_t opch=0; opch<channelMapAlg.MaxOpChannel(); ++opch) {
+        if(channelMapAlg.IsValidOpChannel(opch)) continue;
+        auto const& pt = channelMapAlg.OpDetGeoFromOpChannel(opch).GetCenter();
         if(!bbox.ContainsPosition(pt)) continue;
         res.push_back(opch);
       }
@@ -65,16 +68,18 @@ namespace lightana {
   std::vector<size_t> ListOpChannelsByTPC(int tpc) {
     std::vector<size_t> res;
     ::art::ServiceHandle<geo::Geometry> geo;
+    auto const& channelMapAlg =
+      art::ServiceHandle<geo::WireReadout const>()->Get();
     if(tpc<0) {
-      for(size_t opch=0; opch<geo->MaxOpChannel(); ++opch) {
-        if(geo->IsValidOpChannel(opch)) continue;
+      for(size_t opch=0; opch<channelMapAlg.MaxOpChannel(); ++opch) {
+        if(channelMapAlg.IsValidOpChannel(opch)) continue;
         res.push_back(opch);
       }
     }else{
       // auto const& bbox = geo->TPC(tpc).BoundingBox();
-      for(size_t opch=0; opch<geo->MaxOpChannel(); ++opch) {
-        if(!geo->IsValidOpChannel(opch)) continue;
-        auto const& pt = geo->OpDetGeoFromOpChannel(opch).GetCenter();
+      for(size_t opch=0; opch<channelMapAlg.MaxOpChannel(); ++opch) {
+        if(!channelMapAlg.IsValidOpChannel(opch)) continue;
+        auto const& pt = channelMapAlg.OpDetGeoFromOpChannel(opch).GetCenter();
         // std::cout << "pt: " << pt.X() << ", " << pt.Y() << ", " << pt.Z() << std::endl;
         // if(!bbox.ContainsPosition(pt)) continue;
         if(pt.X() < 0 && tpc == 0) {   
@@ -104,13 +109,15 @@ namespace lightana {
   }
 
   size_t OpDetFromOpChannel(size_t opch) {
-    ::art::ServiceHandle<geo::Geometry> geo;
-    return geo->OpDetFromOpChannel(opch);
+    auto const& channelMapAlg =
+      art::ServiceHandle<geo::WireReadout const>()->Get();
+    return channelMapAlg.OpDetFromOpChannel(opch);
   }
 
   void OpDetCenterFromOpChannel(size_t opch, double *xyz) {
-    ::art::ServiceHandle<geo::Geometry> geo;
-    auto const tmp = geo->OpDetGeoFromOpChannel(opch).GetCenter();
+    auto const& channelMapAlg =
+      art::ServiceHandle<geo::WireReadout const>()->Get();
+    auto const tmp = channelMapAlg.OpDetGeoFromOpChannel(opch).GetCenter();
     xyz[0] = tmp.X();
     xyz[1] = tmp.Y();
     xyz[2] = tmp.Z();
