@@ -147,7 +147,7 @@ namespace sbnd::crt {
     if(fMC)
       fCRTBackTrackerAlg.SetupMaps(event);
 
-    const double G4RefTime = fMC ? clockData.G4ToElecTime(0) * 1e3 : 0;
+    const double G4RefTime = fMC ? clockData.G4ToElecTime(0) * 1e3 : 0.;
     if(fPrint) std::cout << "G4RefTime: " << G4RefTime << std::endl;
 
     // Create a canvas 
@@ -560,16 +560,16 @@ namespace sbnd::crt {
       {
         TView3D *view = (TView3D*) TView::CreateView(1);
 
-        double c[3] = { 0, 0, 250 };
-        double s[3] = { 800, -800, 800 };
+        double c[3] = { 0., 0., 250. };
+        double s[3] = { 800., -800., 800. };
 
         if(std::find(fChosenTaggers.begin(), fChosenTaggers.end(), 5) != fChosenTaggers.end()
            || std::find(fChosenTaggers.begin(), fChosenTaggers.end(), 6) != fChosenTaggers.end())
           {
             view->SetRange(-750, -500, -450, 750, 1000, 1050);
-            s[0] = 1200;
-            s[1] = -1200;
-            s[2] = 1200;
+            s[0] = 1200.;
+            s[1] = -1200.;
+            s[2] = 1200.;
           }
         else
           view->SetRange(-600, -600, -300, 600, 600, 900);
