@@ -4,17 +4,41 @@
 BEGIN_PROLOG
 
 #Missing collection plane wires in the jumpered region
-sbnd_badchannels_tpc0_plane2_missing_jumpered: [ 4802, 4803, 4804, 4805, 4806, 4807 ]
-sbnd_badchannels_tpc1_plane2_missing_jumpered: [ 10440, 10441, 10442, 10443, 10444, 10445 ]
+sbnd_badchannels_tpc0_plane2_missing_jumpered: [ 4800, 4801, 4802, 4803, 4804, 4805 ]
+sbnd_badchannels_tpc1_plane2_missing_jumpered: [ 10438, 10439, 10440, 10441, 10442, 10443 ]
 
 #Missing wires where the combs are located
-sbnd_badchannels_tpc0_plane2_missing_combs: [ 4399, 5221 ]
-sbnd_badchannels_tpc1_plane2_missing_combs: [ 10037, 10859 ]
+sbnd_badchannels_tpc0_plane2_missing_combs: [ 4374, 5231 ]
+sbnd_badchannels_tpc1_plane2_missing_combs: [ 10012, 10869 ]
 
-#Missing wires at the extreme ends of the channel numbers
-sbnd_badchannels_tpc0_plane0_missing_extremities: [ 0, 1, 2, 1983, 1984, 1985 ]
-sbnd_badchannels_tpc0_plane1_missing_extremities: [ 1986, 1987, 1988, 3969, 3970, 3971 ]
-sbnd_badchannels_tpc1_plane0_missing_extremities: [ 5638, 5639, 5640, 7621, 7622, 7623 ]
-sbnd_badchannels_tpc1_plane1_missing_extremities: [ 7624, 7625, 7626, 9607, 9608, 9609 ]
 
+#################################################################################
+##################  -Dead/noisy/missing channels from data-  ####################
+#################################################################################
+
+sbnd_data_badchannels_east_dead_femb: [
+                                          3232, 3233, 3234, 3235, 3236, 3237, 3238, 3239, 3240, 3241 #plane1
+                                        , 3242, 3243, 3244, 3245, 3246, 3247, 3248, 3249, 3250, 3251 #plane1
+                                        , 3252, 3253, 3254, 3255, 3256, 3257, 3258, 3259, 3260, 3261 #plane1
+                                        , 3262, 3263                                                 #plane1
+                                        , 4160, 4161, 4162, 4163, 4164, 4165, 4166, 4167, 4168, 4169 #plane2
+                                        , 4170, 4171, 4172, 4173, 4174, 4175, 4176, 4177, 4178, 4179 #plane2
+                                        , 4180, 4181, 4182, 4183, 4184, 4185, 4186, 4187, 4188, 4189 #plane2
+                                        , 4190, 4191                                                 #plane2
+                                      ]
+
+#Shorted channels                                      
+sbnd_data_badchannels_west_plane0_shorted: [ 7169 ]
+sbnd_data_badchannels_west_plane1_shorted: [ 8378 ]
+
+#No response from channels
+sbnd_data_badchannels_no_response: [ 546, 607, 8574 ]
+
+#noisy channels
+sbnd_data_badchannels_noisy: [ 5060, 5636, 5637 ]
+
+#Missing wires where the combs are located (in data)
+sbnd_data_badchannels_east_plane2_missing_combs: [ 4374, 5231 ]
+sbnd_data_badchannels_west_plane2_missing_combs: [ 10012, 10869 ]
+                                      
 END_PROLOG
