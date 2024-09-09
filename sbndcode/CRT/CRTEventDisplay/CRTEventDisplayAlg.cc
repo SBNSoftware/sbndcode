@@ -147,7 +147,7 @@ namespace sbnd::crt {
     if(fMC)
       fCRTBackTrackerAlg.SetupMaps(event);
 
-    const double G4RefTime = fMC ? clockData.G4ToElecTime(0) * 1.e3 : 0.;
+    const double G4RefTime = fMC ? clockData.G4ToElecTime(0) * 1e3 : 0.;
     if(fPrint) std::cout << "G4RefTime: " << G4RefTime << std::endl;
 
     // Create a canvas 
