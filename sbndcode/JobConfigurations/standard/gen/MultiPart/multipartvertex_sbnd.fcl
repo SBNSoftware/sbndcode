@@ -1,0 +1,61 @@
+BEGIN_PROLOG
+
+MultiPartVertex : {
+    module_type  : "MultiPartVertex"
+    DebugMode    : 0
+    G4Time       : 819.2 # [ns]
+    G4TimeJitter : 1.6 # [ns]
+    TPCRange     : [[0,0],[0,1]]
+    XRange       : [30,30]
+    YRange       : [30,30]
+    ZRange       : [30,30]
+    MultiMax     : 7
+    MultiMin     : 2
+    GammaBetaRange : [0.0, 3.0]
+    Revert       : 0
+    UseBoost     : 0
+    ParticleParameter: {
+        PDGCode      : [   [-11,11,-13,13], [111], [211,-211],   [2212],  [22]]
+        MinMulti     : [         0,         0,          0,        0,       0]
+        MaxMulti     : [         1,         2,          2,        4,       2]
+        ProbWeight   : [         3,         1,          1,        3,       1]
+        KERange      : [ [0.0,3.0], [0.0,1.0], [0.0,1.0],  [0.0,1.0], [0.0,1.0]]
+        MomRange     : []
+    }
+}
+
+MultiPartRain : {
+    module_type  : "MultiPartRain"
+    DebugMode    : 0
+    G4Time       : 819.2 # [ns]
+    G4TimeJitter : 1638.4 # [ns]
+    TPCRange     : [[0,0],[0,1]]
+    XRange       : [20,20]
+    YRange       : [20,20]
+    ZRange       : [20,20]
+    DirectInward : true
+    CosmicDistribution : false
+    MultiMax     : 5
+    MultiMin     : 3
+    ParticleParameter: {
+        PDGCode      : [   [-13,13],   [-13,13],      [11,-11],     [22],     [2212]]
+        MinMulti     : [         0,         0,          0,          0,         0]
+        MaxMulti     : [         5,         5,          2,          3,         5]
+        ProbWeight   : [         5,         5,          1,          2,         1]
+        KERange      : [ [0.0,20.0],   [0.0,2.0],  [0.0,1.0],  [0.0,1.0],  [0.0,1.0]]
+        MomRange     : []
+    }
+}
+
+MultiPartRain2 : @local::MultiPartRain
+MultiPartRain2.G4Time: -50000 # [ns]
+MultiPartRain2.G4TimeJitter: 2900000 # [ns]
+MultiPartRain2.MultiMax: 4
+MultiPartRain2.MultiMin: 2
+MultiPartRain2.ParticleParameter.PDGCode      : [   [-13,13], [-13,13],     [2212]]
+MultiPartRain2.ParticleParameter.MinMulti     : [          0,        0,          0]
+MultiPartRain2.ParticleParameter.MaxMulti     : [          5,        5,          5]
+MultiPartRain2.ParticleParameter.ProbWeight   : [          5,        5,          1]
+MultiPartRain2.ParticleParameter.KERange      : [ [0.0,20.0], [0.0,2.0], [0.0,1.0]]
+
+END_PROLOG

@@ -1,0 +1,18 @@
+BEGIN_PROLOG
+
+FlashT0FirstHit:
+{
+  tool_type: "FlashT0FirstHit"
+  MinHitPE: 1.
+}
+
+FlashT0SelectedChannels:
+{
+  tool_type: "FlashT0SelectedChannels"
+  PDFraction: 0.6
+  PreWindow:  0.02
+  PostWindow: 0.01
+  MinHitPE:   1.
+}
+
+END_PROLOG

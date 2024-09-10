@@ -5,21 +5,24 @@ OpDeconvolutionAlg:
 {
   tool_type: "OpDeconvolutionAlgWiener"
   Debug: false
-  MaxFFTSizePow: 15
-  OpDetDataFile: "OpDetSim/digi_pmt_sbnd.root"
+  MaxFFTSizePow: 16
+  OpDetDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"
+  PositivePolarity: false
+  UseSaturated: false
+  ADCSaturationValue: 0
   ApplyExpoAvSmooth: true
   ApplyUnAvSmooth: true
   ExpoAvSmoothPar: 0.3
   UnAvNeighbours: 1
   BaselineSample: 15
   ####SPE area must be set to 1./DecoWaveformPrecision in OpHit finder
-  DecoWaveformPrecision: 0.01
+  DecoWaveformPrecision: 0.002 #Scale deco waves by factor x500
   HypoSignalTimeWindow: 8000 #ns
   HypoSignalCustom: true
   HypoSignalTimeConsts: [25., 1500.] #ns
   HypoSignalWeights: [0.3, 0.7] #weights must sum 1
   HypoSignalScale: 0.3
-  PMTChargeToADC: 51.9 #is -11.1927 for ideal SER, -51.9 for test bench
+  PMTChargeToADC: 25.97
   ScaleHypoSignal: true
   #### Filter type. Options are:
   #### Wiener: hypothesis is 2,3,4...-exponential shape
@@ -29,8 +32,8 @@ OpDeconvolutionAlg:
   UseParamFilter: false
   #Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))"
   FilterParams: [0.1, 20]
-  Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 80MHz/12.5 ns 
-  DaphneFreq:  80 # in MHz 
+  Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 62.5MHz/16 ns
+  DaphneFreq:  62.5 # in MHz
 }
 
 END_PROLOG

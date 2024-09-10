@@ -1,0 +1,18 @@
+BEGIN_PROLOG
+
+pmtArtdaqFragmentProducer:
+{
+  module_type: "pmtArtdaqFragmentProducer"
+  InputModuleNameWvfm: "opdaq"
+  InputModuleNameTrigger: "pmttriggerproducer"
+  Baseline: 14745 # new baseline
+  MultiplicityThreshold: 10
+  BeamWindowLength: 1.8 # us, extended by 0.2us to account for delayed signals
+  nChannelsFrag: 15
+  WfmLength: 5120
+  Verbose: true
+}
+
+END_PROLOG
+
+

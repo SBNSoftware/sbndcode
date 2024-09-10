@@ -1,0 +1,18 @@
+BEGIN_PROLOG
+
+FlashGeoBarycenter:
+{
+  tool_type: "FlashGeoBarycenter"
+  WeightExp: 2
+}
+
+FlashGeoThreshold:
+{
+  tool_type: "FlashGeoThreshold"
+  PDTypes: ["pmt_coated", "pmt_uncoated"]
+  Threshold: 0.8
+  NormalizeByPDType: true
+  WeightExp: 2
+}
+
+END_PROLOG

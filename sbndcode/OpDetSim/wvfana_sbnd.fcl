@@ -1,0 +1,17 @@
+//#include "trackfinderalgorithms.fcl"
+#include "detsimmodules.fcl"
+
+BEGIN_PROLOG
+
+wvf_ana_sbnd:
+{
+  module_type: "wvfAna"
+  InputModule: "opdaq"
+  ClusterModuleLabel: "linecluster"
+  OpDetsToPlot: ["pmt_coated", "pmt_uncoated",
+                 "xarapuca_vuv", "xarapuca_vis"]
+  DaphneFrequency: 62.5  #in MHz. Frequency of the Daphne Readouts
+
+}
+
+END_PROLOG

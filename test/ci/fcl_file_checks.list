@@ -8,6 +8,6 @@ prodsingle_sbnd_proj.fcl
 g4_sce.fcl
 g4_sce_dirt_filter.fcl
 detsim_sce.fcl
-reco1_sce.fcl
+standard_reco1_sbnd.fcl
 reco2_sce.fcl
-cafmakerjob_sbnd_sce_genie_and_fluxwgt.fcl
+cafmakerjob_sbnd_sce_systtools_and_fluxwgt.fcl

@@ -1,0 +1,60 @@
+BEGIN_PROLOG 
+
+pmtdecoder: 
+{
+    module_type: "SBNDPMTDecoder"
+    debug: 0 # 0=no output, 1=standard, 2=verbose
+
+    # output timing system configuration
+    ## priority system
+    ## SPEC TDC ETT [0] -> PTB ETT [1] -> CAEN-only [2]
+    timing_type: 0 # default is SPEC TDC ETT
+
+
+    # configure CAEN inputs 
+    caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
+    ignore_fragid: [8]     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
+    nominal_length: 5000     # expected waveform length
+
+    # configure SPEC TDC inputs 
+    spectdc_product_name: "tdcdecoder" # used if the tdc decoder has been run 
+    spectdc_ftrig_ch: 3 # this should be the channel number of the spec tdc that stores the flash trigger 
+    spectdc_etrig_ch: 4 # this should be the channel number of the spec tdc that stores the event trigger
+
+    # configure PTB inputs 
+    ptb_product_name: "ptbdecoder"
+    ptb_etrig_trigword: 0x0000000000000000
+    ptb_etrig_wordtype: 2
+
+    # configure output options
+    # configure the output data product instance names
+    pmtInstanceName: "PMTChannels"
+    ftrigInstanceName: "FTrigChannels"
+    output_ftrig_wvfm: true # whether or not to output the ftrig as an opdetwaveform (artroot data product)
+
+    # more detailed configurables
+    n_maxflashes:    30 # maximum number of flashes anticipated, this is used for memory allocation
+    n_caenboards:    8  # number of caen boards; this is used for memory allocation
+    threshold_ftrig: 16350 # the threshold for the flash trigger channel
+
+    fragid_offset:   40960 # the offset to subtract to get single digit fragids; if use_set_map is true, should set this to 0
+    hist_evt:        1  # the # of the event used to generate the histograms, 1st event by default 
+
+    # for when the fragIDs are mapped to the old configuration...
+    set_fragid_map: [3,7,5,9,11,13,15,17,19] # digitizers 0-8 are mapped to these fragids
+    use_set_map: false
+
+    # ordered in sets of 15 by increasing fragID
+    # the PMT_to_Digitizers.txt file in the same directory is the reference for this
+    # text file is obtained from docdb 33668-v9
+    ch_map: [17,16,71,70,41,40,15,14,69,68,13,12,67,66,65, # digitzer 0 
+             39,38,11,10,9,8,63,62,37,36,7,6,61,60,64, # digitizer 1 
+             95,94,149,148,119,118,93,92,147,146,91,90,145,144,143, # digitizer 2
+             117,116,89,88,87,86,141,140,115,114,85,84,139,138,142, # digitizer 3 
+             173,172,227,226,197,196,171,170,225,224,169,168,223,222,167, # digitizer 4
+             195,194,221,220,165,164,219,218,193,192,163,162,217,216,166, # digitizer 5
+             251,250,305,304,275,274,249,248,303,302,247,246,301,300,245, # digitizer 6
+             273,272,299,298,243,242,297,296,271,270,241,240,295,294,244] # digitizer 7
+}
+
+END_PROLOG

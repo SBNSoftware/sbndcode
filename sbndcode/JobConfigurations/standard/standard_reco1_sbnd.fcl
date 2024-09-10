@@ -1,16 +1,37 @@
-# File:    standard_reco1_sbnd.fcl
-# Purpose: The standard reconstruction workflow for 'reco1', which includes up to hit reconstruction
-# Version: 1.0
-#
-# Changes:
-# 20200923 (d.brailsford@lancster.ac.uk) [v1.0]
-#   Initial definition
-#
 # job configuration
-
-#include "reco_sbnd.fcl"
+#
+#include "workflow_reco1.fcl"
+#include "drops_reco1.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "generic_job_sbnd.fcl"
 
 process_name: Reco1
 
-physics.trigger_paths: [ reco1 ]
+#services overrides
+services:
+{
+    @table::services
+    @table::sbnd_random_services
+    @table::sbnd_g4_services
+    # FIXME The following services are temporarily included here to test tht the workflow is unchanged
+    LArFFT:                    @local::sbnd_larfft
+    SignalShapingServiceSBND:  @local::sbnd_signalshapingservice
+    BackTrackerService:        @local::sbnd_backtrackerservice
+    ParticleInventoryService:  @local::sbnd_particleinventoryservice
+}
 
+#physics table overrides
+physics.producers:      @local::sbnd_reco1_producers 
+physics.reco1:          @local::sbnd_reco1_producer_sequence
+physics.trigger_paths:  [ reco1 ]
+#analysers
+physics.analyzers:      @local::sbnd_reco1_analyzers
+physics.ana:            @local::sbnd_reco1_analyzer_sequence
+physics.end_paths:      [ @sequence::physics.end_paths, ana ]
+
+#outputs table overrides
+outputs.out1.dataTier:       "reconstructed"
+outputs.out1.outputCommands:  [@sequence::outputs.out1.outputCommands, @sequence::sbnd_reco1_drops]
+
+#FIXME permanently enable SCE in a service rather than override specific params in this way...
+#include "enable_spacecharge_services_sbnd.fcl"

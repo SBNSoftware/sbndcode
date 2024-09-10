@@ -5,11 +5,13 @@
 physics.simulate: [ rns
                   , loader
                   , largeant
+                  , simplemerge #merges dropped and nominal MCParticle
+                  , sedlite
                   , ionandscint
                   , ionandscintout
                   , pdfastsim
                   , pdfastsimout
-                  , simdrift
+                  # , simdrift #1D drift sim no longer run
                   , filter # Adding filter
                   , mcreco
                 ]

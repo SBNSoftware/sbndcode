@@ -1,13 +1,16 @@
-art_make(
-   TOOL_LIBRARIES
-         art::Utilities
-         messagefacility::MF_MessageLogger
-         fhiclcpp::fhiclcpp
-         cetlib::cetlib
-         CLHEP::CLHEP
-         cetlib::cetlib
-         cetlib_except::cetlib_except
-         
+cet_build_plugin(PMTGainFluctuations1Dynode art::tool 
+      SOURCE
+            PMTGainFluctuations1Dynode_tool.cc 
+      LIBRARIES 
+            nurandom::RandomUtils_NuRandomService_service
+)
+
+
+cet_build_plugin(PMTNonLinearityTF1 art::tool 
+      SOURCE
+            PMTNonLinearityTF1_tool.cc 
+      LIBRARIES
+            ROOT::Hist
 )
 
 

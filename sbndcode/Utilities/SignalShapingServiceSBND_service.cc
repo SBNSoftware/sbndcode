@@ -438,17 +438,14 @@ void util::SignalShapingServiceSBND::SetFieldResponse()
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clockData);
 
   // Get plane pitch.
- 
-  double xyz1[3] = {0.};
-  double xyz2[3] = {0.};
-  double xyzl[3] = {0.};
   // should always have at least 2 planes
-  geo->Plane(0).LocalToWorld(xyzl, xyz1);
-  geo->Plane(1).LocalToWorld(xyzl, xyz2);
+  constexpr geo::TPCID tpcid{0, 0};
+  auto const xyz1 = geo->Plane(geo::PlaneID{tpcid, 0}).GetBoxCenter();
+  auto const xyz2 = geo->Plane(geo::PlaneID{tpcid, 1}).GetBoxCenter();
 
   // this assumes all planes are equidistant from each other,
   // probably not a bad assumption
-  double pitch = xyz2[0] - xyz1[0]; ///in cm
+  double pitch = xyz2.X() - xyz1.X(); ///in cm
 
   fColFieldResponse.resize(fNFieldBins, 0.);
   fIndUFieldResponse.resize(fNFieldBins, 0.);

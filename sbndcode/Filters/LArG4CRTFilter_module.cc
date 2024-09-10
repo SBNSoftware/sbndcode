@@ -54,11 +54,11 @@ namespace filt{
       double readoutWindow;
       double driftTime;
       
-      bool IsInterestingParticle(const art::Ptr<simb::MCParticle> particle);
+      bool IsInterestingParticle(const simb::MCParticle& particle);
       void LoadCRTAuxDetIDs();
-      bool UsesCRTAuxDets(const art::Ptr<simb::MCParticle> particle, const std::vector<unsigned int> &crt_auxdet_vector);
-      bool EntersTPC(const art::Ptr<simb::MCParticle> particle);
-      std::pair<double, double> XLimitsTPC(const art::Ptr<simb::MCParticle> particle);
+      bool UsesCRTAuxDets(const simb::MCParticle& particle, const std::vector<unsigned int> &crt_auxdet_vector);
+      bool EntersTPC(const simb::MCParticle& particle);
+      std::pair<double, double> XLimitsTPC(const simb::MCParticle& particle);
   };
 
 
@@ -101,18 +101,16 @@ namespace filt{
 
 
   bool LArG4CRTFilter::filter(art::Event & e){
-    art::Handle<std::vector<simb::MCParticle> > particles;
-    e.getByLabel(fLArG4ModuleName,particles);
+    auto const& particles = e.getProduct<std::vector<simb::MCParticle>>(fLArG4ModuleName);
 
     auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
 
-    for (unsigned int part_i = 0; part_i < particles->size(); part_i++){
-      const art::Ptr<simb::MCParticle> particle(particles,part_i);
+    for (simb::MCParticle const& particle : particles) {
       if (!IsInterestingParticle(particle)) continue;
-      //std::cout<<"particlePDG: " << particle->PdgCode() << std::endl;
-      //particle->Position().Vect().Print();
-      //particle->Momentum().Vect().Print();
-      double time = particle->T() * 1e-3; //[us]
+      //std::cout<<"particlePDG: " << particle.PdgCode() << std::endl;
+      //particle.Position().Vect().Print();
+      //particle.Momentum().Vect().Print();
+      double time = particle.T() * 1e-3; //[us]
       if (fUseReadoutWindow){
         if (time <= -driftTime || time >= readoutWindow) continue;
         // Get the minimum and maximum |x| position in the TPC
@@ -175,9 +173,9 @@ namespace filt{
   }
 
 
-  bool LArG4CRTFilter::IsInterestingParticle(const art::Ptr<simb::MCParticle> particle){
-    double mom = particle->Momentum().Vect().Mag();
-    int pdg = particle->PdgCode();
+  bool LArG4CRTFilter::IsInterestingParticle(simb::MCParticle const& particle){
+    double mom = particle.Momentum().Vect().Mag();
+    int pdg = particle.PdgCode();
 
     for (unsigned int particle_i = 0; particle_i < fPDGs.size(); particle_i++){
       bool matched = true;
@@ -259,7 +257,7 @@ namespace filt{
   }
 
 
-  bool LArG4CRTFilter::UsesCRTAuxDets(const art::Ptr<simb::MCParticle> particle, const std::vector<unsigned int> &crt_auxdet_vector){
+  bool LArG4CRTFilter::UsesCRTAuxDets(const simb::MCParticle& particle, const std::vector<unsigned int> &crt_auxdet_vector){
     //Loop over the aux dets, extract each one and then perform the test
     art::ServiceHandle<geo::Geometry> geom;
     //art:: ServiceHandle <geo:: AuxDetGeometry > adGeoService;
@@ -267,14 +265,13 @@ namespace filt{
     //const  geo:: AuxDetGeometryCore* adGeoCore = adG ->GetProviderPtr ();
 
     //Loop over the trajectory points made by this particle
-    for (unsigned int pt_i = 0; pt_i < particle->NumberTrajectoryPoints(); pt_i++){
+    for (unsigned int pt_i = 0; pt_i < particle.NumberTrajectoryPoints(); pt_i++){
       //Get the position of the particle
-      TLorentzVector position_lvector = particle->Position(pt_i);
+      TLorentzVector position_lvector = particle.Position(pt_i);
       //We are going to use a function in the geometry service to see if there is a CRT at this particular position.  Said function requires an array, lets make one
-      double position[3];
-      position[0] = position_lvector.X();
-      position[1] = position_lvector.Y();
-      position[2] = position_lvector.Z();
+      geo::Point_t const position{position_lvector.X(),
+                                  position_lvector.Y(),
+                                  position_lvector.Z()};
       //The find the auxdet function throws a wobbler (an exception) if it can't find an auxdet.  Wrap what we want to do in a try catch statement pair
       try{
         unsigned int crt_id = geom->FindAuxDetAtPosition(position);
@@ -286,8 +283,8 @@ namespace filt{
           //if (adID == crt_auxdet_vector[crt_i]){
             /*
             std::cout<<"Hit a CRT we wanted: DUMPING" <<std::endl;
-            for (unsigned int i = 0; i < particle->NumberTrajectoryPoints(); i++){
-              particle->Position(i).Print();
+            for (unsigned int i = 0; i < particle.NumberTrajectoryPoints(); i++){
+              particle.Position(i).Print();
             }
             */
             //We found a CRT that we are interested in at this poisition!!!
@@ -301,7 +298,7 @@ namespace filt{
     return false;
   }
 
-  bool LArG4CRTFilter::EntersTPC(const art::Ptr<simb::MCParticle> particle){
+  bool LArG4CRTFilter::EntersTPC(const simb::MCParticle& particle){
     bool enters = false;
     double xmin = -2.0 * fGeometryService->DetHalfWidth();
     double xmax = 2.0 * fGeometryService->DetHalfWidth();
@@ -310,9 +307,9 @@ namespace filt{
     double zmin = 0.;
     double zmax = fGeometryService->DetLength();
 
-    int nTrajPoints = particle->NumberTrajectoryPoints();
+    int nTrajPoints = particle.NumberTrajectoryPoints();
     for (int traj_i = 0; traj_i < nTrajPoints; traj_i++){
-      TVector3 trajPoint(particle->Vx(traj_i), particle->Vy(traj_i), particle->Vz(traj_i));
+      TVector3 trajPoint(particle.Vx(traj_i), particle.Vy(traj_i), particle.Vz(traj_i));
       // Check if point is within reconstructable volume
       if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax && trajPoint[2] >= zmin && trajPoint[2] <= zmax){
         enters = true;
@@ -321,7 +318,7 @@ namespace filt{
     return enters;
   }
 
-  std::pair<double, double> LArG4CRTFilter::XLimitsTPC(const art::Ptr<simb::MCParticle> particle){
+  std::pair<double, double> LArG4CRTFilter::XLimitsTPC(const simb::MCParticle& particle){
     double xmin = -2.0 * fGeometryService->DetHalfWidth();
     double xmax = 2.0 * fGeometryService->DetHalfWidth();
     double ymin = -fGeometryService->DetHalfHeight();
@@ -332,9 +329,9 @@ namespace filt{
     double minimum = 99999;
     double maximum = -99999;
 
-    int nTrajPoints = particle->NumberTrajectoryPoints();
+    int nTrajPoints = particle.NumberTrajectoryPoints();
     for (int traj_i = 0; traj_i < nTrajPoints; traj_i++){
-      TVector3 trajPoint(particle->Vx(traj_i), particle->Vy(traj_i), particle->Vz(traj_i));
+      TVector3 trajPoint(particle.Vx(traj_i), particle.Vy(traj_i), particle.Vz(traj_i));
       // Check if point is within reconstructable volume
       if (trajPoint[0] >= xmin && trajPoint[0] <= xmax && trajPoint[1] >= ymin && trajPoint[1] <= ymax && trajPoint[2] >= zmin && trajPoint[2] <= zmax){
         if(std::abs(trajPoint[0]) < minimum) minimum = std::abs(trajPoint[0]);

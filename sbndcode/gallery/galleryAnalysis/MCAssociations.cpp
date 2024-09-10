@@ -381,7 +381,7 @@ double MCAssociations::length(const simb::MCParticle& part, double dx,
     {
         TVector3 posInTPC(0.,0.,0.);
         TVector3 posVec = part.Position(i).Vect();
-        double   pos[]  = {posVec.X(),posVec.Y(),posVec.Z()};
+        TVector3 pos = posVec;
         
         // Try identifying the TPC we are in
         unsigned int tpc(0);
@@ -391,9 +391,9 @@ double MCAssociations::length(const simb::MCParticle& part, double dx,
         // If the particle is not in the cryostat then we skip
         try
         {
-            const geo::TPCGeo& tpcGeo = fGeometry->PositionToTPC(pos, tpc, cstat);
+            const geo::TPCGeo& tpcGeo = fGeometry->PositionToTPC(geo::vect::toPoint(pos));
             
-            TVector3 activePos = posVec - tpcGeo.GetActiveVolumeCenter();
+            geo::Vector_t activePos = geo::vect::toPoint(posVec) - tpcGeo.GetActiveVolumeCenter();
             
             if (part.TrackId() == findTrackID)
                 std::cout << "   --> traj point: " << i << ", pos: " << posVec.X() << "/" << posVec.Y() << "/" << posVec.Z() << ", active pos: " << activePos.X() << "/" << activePos.Y() << "/" << activePos.Z() << std::endl;
@@ -409,7 +409,7 @@ double MCAssociations::length(const simb::MCParticle& part, double dx,
         //    within the confines of the physical TPC
         // 2) We then check the timing of the presumed hit and make sure it lies within the
         //    readout window for this simulation
-        pos[0] += dx;
+        pos.SetX(pos.X() + dx);
         double ticks = fDetectorProperties->ConvertXToTicks(posInTPC.X(), 0, tpc, cstat);
         
         if (part.TrackId() == findTrackID)
@@ -440,7 +440,7 @@ double MCAssociations::length(const simb::MCParticle& part, double dx,
             try
             {
                 std::cout << ">>> Track #" << findTrackID << ", pos: " << posVec.X() << ", " << posVec.Y() << ", " << posVec.Z() << ", ticks: " << ticks << ", nearest Y wire: ";
-                geo::WireID wireID = fGeometry->NearestWireID(pos, 2);
+                geo::WireID wireID = fGeometry->NearestWireID(geo::vect::toPoint(pos), geo::PlaneID{0, 0, 2});
                 std::cout << wireID << std::endl;
             }
             catch(...) {}

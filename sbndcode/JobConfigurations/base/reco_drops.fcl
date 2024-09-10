@@ -19,7 +19,11 @@ BEGIN_PROLOG
 
 reco_drops: [ @sequence::detsim_drops,
               "drop raw::RawDigits_*_*_*",
-              "drop raw::OpDetWaveforms_*_*_*" ]
+              "drop raw::OpDetWaveforms_*_*_*",
+              "drop *_sedlite_*_*" #drop all mlreco output
+              #"drop *_cluster3d_*_*", #drop cluster3d output
+              #"drop *_simplemerge_*_*" #drop all mlreco output
+               ]
 
 END_PROLOG
 

@@ -1,4 +1,5 @@
 #include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
@@ -12,6 +13,8 @@ services:{
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                              @table::sbnd_services              # from services_sbnd.fcl
   AuxDetGeometry:          { @table::sbnd_geo_source }
+  BackTrackerService:        @local::sbnd_backtrackerservice
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
 }
 
 
@@ -21,12 +24,15 @@ source:{
 
 physics: {
   producers: {
-    fmatch: @local::sbnd_simple_flashmatch
+    fmatch: @local::sbnd_simple_flashmatch		# For PMT SimpleFlashes
+    fmatchara: @local::sbnd_simple_flashmatch_ara	# For XARAPUCA SimpleFlashes
+    fmatchop: @local::sbnd_simple_flashmatch_op       # For PMT OpFlashes
+    fmatchopara: @local::sbnd_simple_flashmatch_opara       # For XARAPUCA OpFlashes
   }
 
-  reco: [fmatch]
-  stream: [out]
-  end_paths: [stream]
+  reco: [fmatch, fmatchop, fmatchara, fmatchopara]
+  stream: [out, out, out, out]
+  end_paths: ['0:stream', '0:stream', '0:stream', '0:stream']
 }
 
 outputs: {

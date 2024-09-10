@@ -1,5 +1,8 @@
 #include "sbnd_flashalgo.fcl"
 #include "sbnd_flashcalib.fcl"
+#include "sbnd_flashgeoalgo.fcl"
+#include "sbnd_flasht0algo.fcl"
+#include "sbnd_driftestimatoralgo.fcl"
 
 BEGIN_PROLOG
 
@@ -11,6 +14,13 @@ SBNDSimpleFlash:
   OpHitProducers  : ["ophitpmt","ophitarapuca"]
   OpFlashProducer : "opflash"
   PECalib         : @local::NoCalib
+  OpHitInputTime  : "PeakTime"
+  FlashGeoConfig  : @local::FlashGeoThreshold
+  UseT0Tool       : false
+  FlashT0Config   : @local::FlashT0SelectedChannels
+  ReadoutDelay    : 0. //in us
+  CorrectLightPropagation : false
+  DriftEstimatorConfig    : @local::DriftEstimatorPMTRatio
 }
 
 SBNDSimpleFlashTPC0: @local::SBNDSimpleFlash

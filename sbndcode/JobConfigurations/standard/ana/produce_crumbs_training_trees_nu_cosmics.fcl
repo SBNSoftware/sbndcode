@@ -1,0 +1,16 @@
+#
+# fcl file to produce CRUMBS training trees
+# to be run on files containing true neutrinos
+# and true cosmics
+#
+
+#include "crumbs_sbnd.fcl"
+
+physics.producers.crumbs.TrainingMode: true
+
+# This line removes the artroot output
+physics.stream1: []
+
+# To still produce artroot output with the calcluated
+# CRUMBS score remove the above line and uncomment this
+# physics.producers.crumbs.EvaluateResultInTrainingMode: true
