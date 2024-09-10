@@ -9,7 +9,7 @@ namespace sbnd::crt {
 
   CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry,
                        geo::AuxDetGeometryCore const *auxdet_geometry)
-    : fDefaultGain(p.get<double>("DefaultGain", 0.025))
+    : fDefaultGain(p.get<double>("DefaultGain"))
     , fSiPMGainsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMGains", std::vector<std::pair<unsigned, double>>()))
   {
     fGeometryService = geometry;
