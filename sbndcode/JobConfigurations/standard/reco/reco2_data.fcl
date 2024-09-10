@@ -1,7 +1,12 @@
 #include "reco2_sce.fcl"
 
-physics.reco2_sce: [pandora, pandoraTrack, pandoraShower, pandoraCalo, pandoraPid, caloskimCalorimetry]
+services:
+{
+    @table::services
+    @table::sbnd_data_services
+}
 
+physics.reco2_sce: [pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry]
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
 physics.caloskimana_tpconly: [ caloskim ]

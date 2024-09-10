@@ -20,7 +20,7 @@
 //         -J cfg cfg/pgrapher/experiment/uboone/wcls-nf-sp.jsonnet
 
 
-local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
+//local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
 local raw_input_label = std.extVar('raw_input_label');  // eg "daq"
 local use_paramresp = std.extVar('use_paramresp');  // eg "true" or "false"
@@ -115,19 +115,23 @@ local wcls_output = {
       // this may be needed to convert the decon charge [units:e-] to be consistent with the LArSoft default ?unit? e.g. decon charge * 0.005 --> "charge value" to GaussHitFinder
       frame_scale: [0.02, 0.02],
       nticks: params.daq.nticks,
-      chanmaskmaps: [],
+
+
+      // uncomment the below configs to save summaries and cmm
+      summary_tags: ['wiener'],
+      summary_operator: {wiener: 'set'},
+      summary_scale: [0.02], # summary scale should be the same as frame_scale
+      chanmaskmaps: ['bad'],
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 };
 
-local perfect = import 'pgrapher/experiment/sbnd/chndb-perfect.jsonnet';
-//local base = import 'pgrapher/experiment/sbnd/chndb-base_sbnd.jsonnet';
+local base = import 'pgrapher/experiment/sbnd/chndb-base.jsonnet';
 
 local chndb = [{
   type: 'OmniChannelNoiseDB',
   name: 'ocndbperfect%d' % n,
-  data: perfect(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
-  // data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
+  data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   uses: [tools.anodes[n], tools.field, tools.dft],
 } for n in std.range(0, std.length(tools.anodes) - 1)];
 
@@ -143,7 +147,7 @@ local chsel_pipes = [
   for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-local nf_maker = import 'pgrapher/experiment/sbnd/nf.jsonnet';
+local nf_maker = import 'pgrapher/experiment/sbnd/nf-data.jsonnet'; //added Ewerton 2024-08
 local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
 
 local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';

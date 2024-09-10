@@ -52,16 +52,25 @@ sbnd_largeantparameters.ElectronClusterSize: 20.0
 sbnd_largeantparameters.UseCustomPhysics: true
 sbnd_largeantparameters.EnabledPhysics: [ "Em", "FastOptical", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ] #Removed the neutron killer
 sbnd_largeantparameters.UseLitePhotons: true
+sbnd_largeantparameters.UseModBoxRecomb: false
+sbnd_largeantparameters.UseEllipsModBoxRecomb: true
 
 #Define a largeantparameters which doesn't use the optical simulation
 sbnd_largeantparameters_noopticalsim: @local::sbnd_largeantparameters
 sbnd_largeantparameters_noopticalsim.EnabledPhysics: [ "Em", "SynchrotronAndGN", "Ion", "Hadron", "Decay", "HadronElastic", "Stopping" ]
+sbnd_largeantparameters_noopticalsim.UseModBoxRecomb: false
+sbnd_largeantparameters_noopticalsim.UseEllipsModBoxRecomb: true
 
 # ascarff 16Jun2020: Change the diffusion constants to match ProtoDUNE results
 sbnd_largeantparameters.LongitudinalDiffusion: 4.0e-9 #in cm^2/ns (was 6.2e-9)
 sbnd_largeantparameters.TransverseDiffusion: 8.8e-9 #in cm^2/ns (was 16.3e-9)
 sbnd_largeantparameters_noopticalsim.LongitudinalDiffusion: 4.0e-9 #in cm^2/ns (was 6.2e-9)
 sbnd_largeantparameters_noopticalsim.TransverseDiffusion: 8.8e-9 #in cm^2/ns (was 16.3e-9)
+
+# gputnam 19Aug2024: Add in service configuration without EMB recombination
+sbnd_largeantparameters_modbox: @local::sbnd_largeantparameters
+sbnd_largeantparameters_modbox.UseModBoxRecomb: true
+sbnd_largeantparameters_modbox.UseEllipsModBoxRecomb: false
 
 
 sbnd_larvoxelcalculator:   @local::standard_larvoxelcalculator # from simulationservices.fcl
