@@ -45,7 +45,10 @@ public:
 private:
   bool fDebug;
   int fMaxFFTSizePow;
+  std::vector<std::vector<double>> fSinglePEWaveVector;
   std::vector<double> fSinglePEWave;
+  std::vector<int> fSinglePEChannels;
+  std::vector<int> fSkipChannelList;
   bool fPositivePolarity;
   bool fUseSaturated;
   int fADCSaturationValue;
@@ -78,6 +81,10 @@ private:
   std::vector<double> fSignalHypothesis;
   std::vector<double> fNoiseHypothesis;
 
+  bool fCorrectBaselineOscillations;
+  short unsigned int fBaseSampleBins;
+  double fBaseVarCut;
+
   // Declare member data here.
 
   // Declare member functions
@@ -87,6 +94,7 @@ private:
   std::vector<double> ScintArrivalTimesShape(size_t n, detinfo::LArProperties const& lar_prop);
   void SubtractBaseline(std::vector<double> &wf, double baseline);
   void EstimateBaselineStdDev(std::vector<double> &wf, double &_mean, double &_stddev);
+  void CorrectBaselineOscillations(std::vector<double> &wf);
   std::vector<TComplex> DeconvolutionKernel(size_t size, double baseline_stddev, double snr_scaling);
 
   //Load TFileService serrvice
@@ -119,11 +127,15 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fDecoWaveformPrecision = p.get< double >("DecoWaveformPrecision");
   fBaselineSample = p.get< short unsigned int >("BaselineSample");
   fOpDetDataFile = p.get< std::string >("OpDetDataFile");
+  fSkipChannelList = p.get< std::vector<int>>("SkipChannelList");
   fFilter = p.get< std::string >("Filter");
   fElectronics = p.get< std::string >("Electronics");
   fDaphne_Freq  = p.get< double >("DaphneFreq");
   fScaleHypoSignal = p.get< bool >("ScaleHypoSignal");
   fUseParamFilter = p.get< bool >("UseParamFilter");
+  fCorrectBaselineOscillations = p.get< bool >("CorrectBaselineOscillations");
+  fBaseSampleBins = p.get< short unsigned int >("BaseSampleBins");
+  fBaseVarCut = p.get< double >("BaseVarCut");
   fFilterParams = p.get< std::vector<double> >("FilterParams");
 
   fNormUnAvSmooth=1./(2*fUnAvNeighbours+1);
@@ -140,14 +152,17 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   std::string fname;
   cet::search_path sp("FW_SEARCH_PATH");
   sp.find_file(fOpDetDataFile, fname);
-  TFile* file = TFile::Open(fname.c_str(), "READ");
-  std::vector<double>* SinglePEVec_p;
+  TFile* file = TFile::Open(fOpDetDataFile.c_str(), "READ");
+  std::vector<std::vector<double>>* SinglePEVec_p;
+  std::vector<int>* fSinglePEChannels_p;
+
+  file->GetObject("SERChannels", fSinglePEChannels_p);
   file->GetObject("SinglePEVec", SinglePEVec_p);
   if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
-  fSinglePEWave = *SinglePEVec_p;
+  fSinglePEWaveVector = *SinglePEVec_p;
+  fSinglePEChannels = *fSinglePEChannels_p;
 
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
-  fSinglePEWave.resize(MaxBinsFFT, 0);
   file->Close();
 
   if(fUseParamFilter){
@@ -172,9 +187,27 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
 {
   std::vector<raw::OpDetWaveform> wfDeco;
   wfDeco.reserve(wfVector.size());
-
   for(auto const& wf : wfVector)
   {
+    int channelNumber = wf.ChannelNumber();
+    auto it = std::find(fSkipChannelList.begin(), fSkipChannelList.end(), channelNumber);
+    bool AnalyseChannel = false;
+    if (it == fSkipChannelList.end()) {
+      //If it's not try to find its SER in the file 
+      for(size_t i=0; i<fSinglePEChannels.size(); i++)
+      {
+        if(fSinglePEChannels[i]==channelNumber) 
+        {
+          fSinglePEWave = fSinglePEWaveVector[i];
+          fSinglePEWave.resize(MaxBinsFFT, 0);
+          AnalyseChannel = true;
+          break;
+        }
+      }
+      if(AnalyseChannel == false) mf::LogError("OpDeconvolutionAlg") << " SER for channel " << channelNumber <<" not found in the file \n";
+    } 
+    if(!AnalyseChannel) continue;
+
     //Read waveform
     size_t wfsize=wf.Waveform().size();
     if(wfsize>MaxBinsFFT){
@@ -232,6 +265,7 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
     SubtractBaseline(wave, baseline_mean);
     double fDecoWfScaleFactor=1./fDecoWaveformPrecision;
     std::transform(wave.begin(), wave.end(), wave.begin(), [fDecoWfScaleFactor](double &dec){ return fDecoWfScaleFactor*dec; } );
+    if(fCorrectBaselineOscillations) CorrectBaselineOscillations(wave);
 
     //Debbuging and save wf in hist file
     if(fDebug){
@@ -366,6 +400,73 @@ void opdet::OpDeconvolutionAlgWiener::EstimateBaselineStdDev(std::vector<double>
       hs_mean->SetBinContent(k, h_mean.GetBinContent(k));
   }
 
+  return;
+}
+
+
+void opdet::OpDeconvolutionAlgWiener::CorrectBaselineOscillations(std::vector<double>& wave) 
+{
+  // subtract baseline using linear interpolation between regions defined
+  // by the datasize and baseSampleBins
+  if(fBaseSampleBins <= 0) return;
+  // number of points to characterize the baseline
+  unsigned short nBasePts = wave.size() / fBaseSampleBins;
+  // the baseline offset vector
+  std::vector<double> base(nBasePts, 0.);
+  // find the average value in each region, using values that are
+  // similar
+  double fbins = fBaseSampleBins;
+  unsigned short nfilld = 0;
+
+  for(unsigned short ii = 0; ii < nBasePts; ++ii) {
+    unsigned short loBin = ii * fBaseSampleBins;
+    unsigned short hiBin = loBin + fBaseSampleBins;
+    double ave = 0.;
+    double sum = 0.;
+    for(unsigned short bin = loBin; bin < hiBin; ++bin) {
+      ave += wave[bin];
+      sum += wave[bin] * wave[bin];
+    } // bin
+    ave = ave / fbins;
+    double var = (sum - fbins * ave * ave) / (fbins - 1.);
+    // Set the baseline for this region if the variance is small
+    if(var < fBaseVarCut) {
+      base[ii] = ave;
+      ++nfilld;
+    }
+  } // ii
+    // interpolate and subtract
+    // find the first non-zero sample
+  unsigned short thisRegion = 0;
+  unsigned short nextRegion = 1;
+  for(nextRegion = 1; nextRegion < base.size(); ++nextRegion) if(base[nextRegion] != 0) break;
+  if(nextRegion == base.size()) return;
+  double nBins = (nextRegion - thisRegion) * fBaseSampleBins;
+  double slp = (base[nextRegion] - base[thisRegion]) / nBins;
+  for(unsigned short bin = 0; bin < wave.size(); ++bin) {
+    // determine which region we are in
+    short region = bin / fBaseSampleBins;
+    if(region == nextRegion) {
+      // update the slope for the next region
+      unsigned short nnr = 0;
+      for(nnr = nextRegion + 1; nnr < base.size(); ++nnr) if(base[nnr] != 0) break;
+      if(nnr == base.size()) nnr = base.size() - 1;
+      unsigned short previousRegion = thisRegion;
+      thisRegion = nextRegion;
+      nextRegion = nnr;
+      if(thisRegion == nextRegion) {
+        for (unsigned short kk = thisRegion * fBaseSampleBins; kk < thisRegion * fBaseSampleBins + fBaseSampleBins; ++ kk) {
+          double bs = base[previousRegion] + (double)(kk - previousRegion * fBaseSampleBins) * slp;
+            wave[kk] -= bs;
+        }
+        return;
+        }
+      nBins = (nextRegion - thisRegion) * fBaseSampleBins;
+        slp = (base[nextRegion] - base[thisRegion]) / nBins;
+    }
+    double bs = base[thisRegion] + (double)(bin - thisRegion * fBaseSampleBins) * slp;
+    wave[bin] -= bs;
+  } // bin
   return;
 }
 
