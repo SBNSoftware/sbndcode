@@ -142,6 +142,9 @@ physics:
   pandoraSCECalo:      @local::sbnd_gnewcalomc
   pandoraSCEPid:       @local::sbnd_chi2pid
 
+  pandoraCaloData:     @local::sbnd_gnewcalodata
+  pandoraPidData:      @local::sbnd_chi2pid
+
   ### SCE-aware pandora:
   pandoraSCE:          @local::scecorrection
   pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
@@ -348,6 +351,13 @@ physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
 physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
+
+physics.producers.pandoraCaloData.TrackModuleLabel:                  "pandoraTrack"
+physics.producers.pandoraCaloData.FieldDistortion:                   false
+physics.producers.pandoraCaloData.FieldDistortionEfield:             false
+physics.producers.pandoraCaloData.TrackIsFieldDistortionCorrected:   false
+physics.producers.pandoraPidData.TrackModuleLabel:                   "pandoraTrack"
+physics.producers.pandoraPidData.CalorimetryModuleLabel:             "pandoraCaloData"
 
 physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
