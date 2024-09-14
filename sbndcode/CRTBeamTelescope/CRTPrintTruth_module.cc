@@ -149,7 +149,7 @@ void CRTPrintTruth::analyze(art::Event const& e)
   int counter = 0;
   for (auto const& adh : adh_v) {
     if (mcptrackID_to_pdg_map[adh->GetTrackID()] == 0) continue;
-    std::cout<<"PrintTruth AuxDetHit "<<counter<<": pdg: "<<mcptrackID_to_pdg_map[adh->GetTrackID()]<<", P: "<<mcptrackID_to_momentum_map[adh->GetTrackID()]<<" MeV, Process: "<<mcptrackID_to_start_process_map[adh->GetTrackID()]<<", hit postion: ("<<0.5*(adh->GetEntryX()+adh->GetExitX())<<", "<<0.5*(adh->GetEntryY()+adh->GetExitY())<<", "<<0.5*(adh->GetEntryZ()+adh->GetExitZ())<<"); hit time: "<<0.5*(adh->GetEntryT()+adh->GetExitT())<<", track id: "<<adh->GetTrackID();
+    std::cout<<"PrintTruth AuxDetHit "<<counter<<": pdg: "<<mcptrackID_to_pdg_map[adh->GetTrackID()]<<", P: "<<mcptrackID_to_momentum_map[adh->GetTrackID()]<<" MeV, Process: "<<mcptrackID_to_start_process_map[adh->GetTrackID()]<<", hit postion: ("<<0.5*(adh->GetEntryX()+adh->GetExitX())<<", "<<0.5*(adh->GetEntryY()+adh->GetExitY())<<", "<<0.5*(adh->GetEntryZ()+adh->GetExitZ())<<"); hit time: "<<0.5*(adh->GetEntryT()+adh->GetExitT())<<", track id: "<<adh->GetTrackID()<<", start position: ("<<mcptrackID_to_startx_map[adh->GetTrackID()]<<", "<<mcptrackID_to_starty_map[adh->GetTrackID()]<<", "<<mcptrackID_to_startz_map[adh->GetTrackID()]<<")";
 
     std::string process = mcptrackID_to_start_process_map[adh->GetTrackID()];
     int thistrackid = adh->GetTrackID();
@@ -158,7 +158,7 @@ void CRTPrintTruth::analyze(art::Event const& e)
       process = mcptrackID_to_start_process_map[motherid];
       thistrackid = motherid;
       int mother_pdg = mcptrackID_to_pdg_map[motherid];
-      std::cout<<", which has mother pdg of: "<<mother_pdg<<", process: "<<process;
+      std::cout<<", which has mother pdg of: "<<mother_pdg<<", process: "<<process<<", mother id: "<<motherid<<", start position: ("<<mcptrackID_to_startx_map[motherid]<<", "<<mcptrackID_to_starty_map[motherid]<<", "<<mcptrackID_to_startz_map[motherid]<<")";
     }
     std::cout<<std::endl;
     counter++;

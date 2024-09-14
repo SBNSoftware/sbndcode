@@ -1,0 +1,4 @@
+#include "run_selection_ana_fakehits_signal_crt_bt_sbnd.fcl"
+
+physics.analyzers.crtana.InteractionMode: 1
+#include "use_crt_beam_tele_geometry_g4_services.fcl"

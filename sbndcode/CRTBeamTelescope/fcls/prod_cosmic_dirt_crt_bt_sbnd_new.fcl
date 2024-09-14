@@ -1,0 +1,5 @@
+#include "prod_cosmic_dirt_crt_bt_sbnd.fcl"
+
+physics.producers.generator.FluxSearchPaths: "/pnfs/sbnd/persistent/stash/fluxFiles/bnb/BooNEtoGSimple/configI-v1/october2021/neutrinoMode"
+physics.producers.generator.FluxCopyMethod: "IFDH"
+physics.producers.generator.MaxFluxFileMB: 500 

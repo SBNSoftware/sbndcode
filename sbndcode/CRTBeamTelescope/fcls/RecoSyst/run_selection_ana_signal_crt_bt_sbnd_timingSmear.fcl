@@ -1,0 +1,3 @@
+#include "run_selection_ana_signal_crt_bt_sbnd.fcl"
+
+physics.analyzers.crtana.SmearTiming: true

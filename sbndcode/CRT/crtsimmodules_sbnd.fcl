@@ -36,12 +36,12 @@ standard_sbnd_crtsimparams: {
   TResInterpolator: 1.268
 
   # Model parameters for Npe vs. distance along strip
-  NpeScaleNorm: 8.023e7 #5.261e7
-  NpeScaleShift: -1085.0 
+  NpeScaleNorm:  1.39e8  #8.023e7 #5.261e7
+  NpeScaleShift: 1135.15 #-1085.0 
 
-  # Mean deposited charge for mips [GeV]
+  # Mean deposited charge for mips [MeV]
   UseEdep: true
-  Q0: 1.53e-3 #1.75e-3
+  Q0: 1.68e-3 #1.75e-3
 
   # ADC model: Pedestal offset [ADC], slope [ADC/photon], RMS [ADC]
   QPed: 0.0 #63.6

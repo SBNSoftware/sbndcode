@@ -20,6 +20,24 @@ sbnd_crtselectionana:
     InteractionMode:   0
 }
 
+sbnd_crtselectionana_fakehits:
+{
+    module_type:       "SelectionAnaFakeHits" 
+    POTLabel:          "generator"
+    CRTBackTracker:    @local::standard_crtbacktracker
+    SaveInputFileName: true
+    InteractionMode:   0
+}
+
+sbnd_crtselectionana_realhits:
+{
+    module_type:       "SelectionAnaRealHits" 
+    POTLabel:          "generator"
+    CRTBackTracker:    @local::standard_crtbacktracker
+    SaveInputFileName: true
+    InteractionMode:   0
+}
+
 sbnd_crtselectionanatruth:
 {
     module_type:       "SelectionAnaTruth" 

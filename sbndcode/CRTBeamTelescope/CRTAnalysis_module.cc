@@ -59,6 +59,8 @@ public:
   virtual void beginSubRun(art::SubRun const& sr) override;
   virtual void respondToOpenInputFile(const art::FileBlock& fb) override;
   int FindNeutrinoSources(art::Event const & e, std::string _geant_producer, int geant_track_id, bool _signal_mode);
+  void StoreNeutrinoInfo(art::Event const & e, std::string _geant_producer, int geant_track_id, int &nu_pdg, int &ccnc, int &nu_mode, int &nu_interaction_type, float &nu_energy);
+
 
 private:
   sbnd::CRTBackTracker _crt_back_tracker;
@@ -261,6 +263,13 @@ private:
   std::vector<double> _ct_backtrack_deposited_energy; ///< CRT track, truth information of the deposited energy for both upstream and downstream
   std::vector<double> _ct_backtrack_purity; ///< CRT track, truth information of selection purity
 
+  // truth info for neutrino
+  std::vector<int> _chit_backtrack_nu_pdg;
+  std::vector<int> _chit_backtrack_nu_ccnc;
+  std::vector<int> _chit_backtrack_nu_mode;
+  std::vector<int> _chit_backtrack_nu_interaction_type;
+  std::vector<float> _chit_backtrack_nu_energy;
+
   std::vector<uint16_t> _feb_mac5; ///< FEBData Mac5 ID
   std::vector<uint16_t> _feb_flags; ///< FEBData Flags
   std::vector<uint32_t> _feb_ts0; ///< FEBData Ts0
@@ -441,6 +450,11 @@ CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
     _tree->Branch("chit_backtrack_purity", "std::vector<double>", &_chit_backtrack_purity);
     _tree->Branch("chit_backtrack_trackID", "std::vector<double>", &_chit_backtrack_trackID);
     _tree->Branch("chit_backtrack_origin", "std::vector<int>", &_chit_backtrack_origin);
+    _tree->Branch("chit_backtrack_nu_pdg", "std::vector<int>", &_chit_backtrack_nu_pdg);
+    _tree->Branch("chit_backtrack_nu_ccnc", "std::vector<int>", &_chit_backtrack_nu_ccnc);
+    _tree->Branch("chit_backtrack_nu_mode", "std::vector<int>", &_chit_backtrack_nu_mode);
+    _tree->Branch("chit_backtrack_nu_interaction_type", "std::vector<int>", &_chit_backtrack_nu_interaction_type);
+    _tree->Branch("chit_backtrack_nu_energy", "std::vector<float>", &_chit_backtrack_nu_energy);
     // _tree->Branch("chit_true_mcp_trackids", "std::vector<std::vector<int> >", &_chit_true_mcp_trackids);
     // _tree->Branch("chit_true_mcp_pdg", "std::vector<std::vector<int> >", &_chit_true_mcp_pdg);
     // _tree->Branch("chit_true_mcp_e", "std::vector<std::vector<double> >", &_chit_true_mcp_e);
@@ -939,6 +953,12 @@ void CRTAnalysis::analyze(art::Event const& e)
     _chit_backtrack_purity.resize(n_hits);
     _chit_backtrack_trackID.resize(n_hits);
     _chit_backtrack_origin.resize(n_hits);
+
+    _chit_backtrack_nu_pdg.resize(n_hits);
+    _chit_backtrack_nu_ccnc.resize(n_hits);
+    _chit_backtrack_nu_mode.resize(n_hits);
+    _chit_backtrack_nu_interaction_type.resize(n_hits);
+    _chit_backtrack_nu_energy.resize(n_hits);
   }
 
   for (size_t i = 0; i < n_hits; i++) {
@@ -1026,6 +1046,8 @@ void CRTAnalysis::analyze(art::Event const& e)
       _chit_backtrack_purity[i]           = truthMatch.purity;
       _chit_backtrack_trackID[i]          = truthMatch.trackid;
       _chit_backtrack_origin[i]           = FindNeutrinoSources(e, _g4_label, truthMatch.trackid,  _signal_mode);
+
+      StoreNeutrinoInfo(e, _g4_label, truthMatch.trackid, _chit_backtrack_nu_pdg[i], _chit_backtrack_nu_ccnc[i], _chit_backtrack_nu_mode[i], _chit_backtrack_nu_interaction_type[i], _chit_backtrack_nu_energy[i]);
     }
 
     if (_debug) std::cout << "CRT hit, z = " << _chit_z[i] << ", h1 time " << _chit_h1_t1[i] << ", h2 time " << _chit_h2_t1[i] << ", hit time " << _chit_t1[i] << std::endl;
@@ -1257,6 +1279,42 @@ int CRTAnalysis::FindNeutrinoSources(art::Event const & e, std::string _geant_pr
     }
   }  
   return std::numeric_limits<int>::max();
+}
+
+void CRTAnalysis::StoreNeutrinoInfo(art::Event const & e, std::string _geant_producer, int geant_track_id, int &nu_pdg, int &ccnc, int &nu_mode, int &nu_interaction_type, float &nu_energy){
+
+  lar_pandora::MCTruthToMCParticles truthToParticles;
+  lar_pandora::MCParticlesToMCTruth particlesToTruth;
+
+  lar_pandora::LArPandoraHelper::CollectMCParticles(e, _geant_producer, truthToParticles, particlesToTruth);
+  bool notFound = true;
+  for (auto iter : particlesToTruth) {
+    if (iter.first->TrackId() == geant_track_id) {
+      simb::Origin_t NuOrigin = iter.second->Origin();
+      if (NuOrigin == simb::kBeamNeutrino) { // check if the neutrino is from the beam.
+        auto neutrino = iter.second->GetNeutrino();
+        auto nu = neutrino.Nu();
+        
+        nu_pdg = nu.PdgCode();
+        ccnc = neutrino.CCNC();
+        nu_mode = neutrino.Mode();
+        nu_interaction_type = neutrino.InteractionType();
+        nu_energy = nu.Momentum().E();
+
+        if (_debug) std::cout<<"Neutrino pdg: "<<nu_pdg<<", nu_mode: "<<nu_mode<<", nu_interaction_type: "<<nu_interaction_type<<", nu_energy: "<<nu_energy<<", outgoing lepton: "<<neutrino.Lepton().PdgCode()<<", HitNuc: "<<neutrino.HitNuc()<<", Target: "<<neutrino.Target()<<", vertex: ("<<neutrino.Nu().Position().X()<<", "<<neutrino.Nu().Position().Y()<<", "<<neutrino.Nu().Position().Z()<<")"<<std::endl;
+
+        notFound = false;
+      }
+    }
+  } 
+
+  if (notFound) {
+    nu_pdg = -1;
+    ccnc = -1;
+    nu_mode = -1;
+    nu_interaction_type = -1;
+    nu_energy = -1;
+  }
 }
 
 DEFINE_ART_MODULE(CRTAnalysis)
