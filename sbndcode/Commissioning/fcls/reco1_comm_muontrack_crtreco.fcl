@@ -1,0 +1,45 @@
+#include "muontrackmodule.fcl"
+#include "reco1_comm.fcl"
+
+physics.producers.fasthit:           @local::standard_fasthitfinder
+physics.producers.MuonTrackProducer: @local::MuonTrackProducer
+
+physics.producers.crtclustering:  @local::crtclusterproducer_sbnd
+physics.producers.crtspacepoints: @local::crtspacepointproducer_sbnd
+physics.producers.crttracks:      @local::crttrackproducer_sbnd
+
+physics.reco1comm: [ rns
+  , opdecopmt
+  , opdecoxarapuca
+  , ophitpmt
+  , ophitxarapuca
+  , crtstrips
+  , crtclustering
+  , crtspacepoints
+  , crttracks
+  , fasthit
+  , MuonTrackProducer
+ ]
+
+physics.trigger_paths: [ reco1comm ]
+
+physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
+physics.producers.fasthit.MinSigInd: 15.0
+physics.producers.fasthit.MinSigCol: 15.0
+physics.producers.fasthit.SkipInd: false
+# parameter below enlarges the window of the hit symmetrically by adding
+#  this many widths to each side.   Original window is above threshold.
+#  Both thresh and larger window in this file are appropriate only when
+#  noise is turned off.
+physics.producers.fasthit.IncludeMoreTail: 3.0
+physics.producers.fasthit.ColMinWidth: 100.0
+physics.producers.fasthit.UncompressWithPed: false
+
+# override hitdumper defaults 
+physics.analyzers.hitdumper.readMuonHits:       true
+physics.analyzers.hitdumper.readMuonTracks:     true
+physics.analyzers.hitdumper.KeepCRTStripHits:   true
+physics.analyzers.hitdumper.KeepCRTTracks:      true
+physics.analyzers.hitdumper.KeepCRTSpacePoints: true
+physics.analyzers.hitdumper.readpmtTrigger:     false
+physics.analyzers.hitdumper.readpmtSoftTrigger: false
