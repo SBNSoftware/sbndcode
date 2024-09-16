@@ -138,7 +138,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   // by downstream processes if need be, but we are
   // done with them here
 
-  daq_handle.removeProduct();
+  if ( daq_handle.isValid() ) daq_handle.removeProduct();
 }
 
 
