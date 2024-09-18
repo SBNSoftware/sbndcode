@@ -84,8 +84,6 @@
 #include <string>
 #include <cmath>
 
-const int MAX_INT = std::numeric_limits<int>::max();
-const long int TIME_CORRECTION = (long int) std::numeric_limits<int>::max() * 2;
 const int DEFAULT_VALUE = -9999;
 
 enum CRTOrientation {
@@ -433,6 +431,9 @@ private:
   art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
   const geo::AuxDetGeometry* fAuxDetGeo;
   const geo::AuxDetGeometryCore* fAuxDetGeoCore;
+
+  const int MAX_INT = std::numeric_limits<int>::max();
+  const long int TIME_CORRECTION = (long int) std::numeric_limits<int>::max() * 2;
 };
 
 
