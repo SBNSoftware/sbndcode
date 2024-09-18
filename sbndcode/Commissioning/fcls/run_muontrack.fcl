@@ -91,14 +91,12 @@ physics:
 }
 
 # override hitdumper defaults 
-physics.analyzers.hitdumper.keepCRThits:   false
-physics.analyzers.hitdumper.makeCRTtracks: false
-physics.analyzers.hitdumper.readCRTtracks: false
-physics.analyzers.hitdumper.readOpHits:    false
-physics.analyzers.hitdumper.readTruth:     false
-physics.analyzers.hitdumper.savePOTinfo:   false
-physics.analyzers.hitdumper.readMuonHits:  true
-physics.analyzers.hitdumper.SelectEvents:  [reco] 
+physics.analyzers.hitdumper.KeepCRTStripHits: false
+physics.analyzers.hitdumper.readOpHits:       false
+physics.analyzers.hitdumper.readTruth:        false
+physics.analyzers.hitdumper.savePOTinfo:      false
+physics.analyzers.hitdumper.readMuonHits:     true
+physics.analyzers.hitdumper.SelectEvents:     [reco]
 
 # set thresholds 
 physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
