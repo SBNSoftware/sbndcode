@@ -260,7 +260,7 @@ local chsel_pipes = [
     type: 'ChannelSelector',
     name: 'chsel%d' % n,
     data: {
-      channels: std.range(5632 * n, 5632 * (n + 1) - 1),
+      channels: std.range(5638 * n, 5638 * (n + 1) - 1),
       //tags: ['orig%d' % n], // traces tag
     },
   }, nin=1, nout=1)
