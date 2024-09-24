@@ -62,7 +62,7 @@ private:
 
 sbnd::crt::CRTClusterProducer::CRTClusterProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
+  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fCRTStripHitModuleLabel(p.get<std::string>("CRTStripHitModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<uint32_t>("CoincidenceTimeRequirement"))
   , fOverlapBuffer(p.get<double>("OverlapBuffer"))
