@@ -14,11 +14,7 @@ sbnd_channelstatus: {
     @sequence::sbnd_badchannels_tpc0_plane2_missing_jumpered,
     @sequence::sbnd_badchannels_tpc1_plane2_missing_jumpered,
     @sequence::sbnd_badchannels_tpc0_plane2_missing_combs,
-    @sequence::sbnd_badchannels_tpc1_plane2_missing_combs,
-    @sequence::sbnd_badchannels_tpc0_plane0_missing_extremities,
-    @sequence::sbnd_badchannels_tpc0_plane1_missing_extremities,
-    @sequence::sbnd_badchannels_tpc1_plane0_missing_extremities,
-    @sequence::sbnd_badchannels_tpc1_plane1_missing_extremities
+    @sequence::sbnd_badchannels_tpc1_plane2_missing_combs
   ]
   
   # list of bad noisy channels:
@@ -26,5 +22,23 @@ sbnd_channelstatus: {
   NoisyChannels: [ ]
   
 } # sbnd_channel_filter
+
+sbnd_data_channelstatus: {
+
+  @table::sbnd_channelstatus
+
+  BadChannels: [
+      @sequence::sbnd_data_badchannels_east_dead_femb
+    , @sequence::sbnd_data_badchannels_west_plane0_shorted
+    , @sequence::sbnd_data_badchannels_west_plane1_shorted
+    , @sequence::sbnd_data_badchannels_no_response
+    , @sequence::sbnd_data_badchannels_east_plane2_missing_combs
+    , @sequence::sbnd_data_badchannels_west_plane2_missing_combs
+  ]
+
+  NoisyChannels: [
+    @sequence::sbnd_data_badchannels_noisy
+  ]
+} # sbnd_data_channelstatus
 
 END_PROLOG

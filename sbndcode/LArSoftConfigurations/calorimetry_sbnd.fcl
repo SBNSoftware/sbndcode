@@ -3,8 +3,9 @@
 BEGIN_PROLOG
 
 sbnd_calorimetryalgdata:    @local::standard_calorimetryalgdata
+sbnd_calorimetryalgdata.CalAreaConstants: [ 0.0204 , 0.0210, 0.0193 ]
 #values below aren't correct
-#sbnd_calorimetryalgdata.CalAreaConstants: [ 0.31e-2 , 0.31e-2 , 0.830e-2 ]
+sbnd_calorimetryalgdata.CalAmpConstants:    [ 0.588726e-3, 0.588726e-3, 1.18998e-3 ]
 sbnd_calorimetryalgmc:      @local::standard_calorimetryalgmc
 sbnd_calorimetryalgmc.CalAreaConstants:  [ 0.0200906, 0.0200016, 0.0201293 ]
 # amplitude constants below are arbitrary and have not yet been tuned
@@ -20,5 +21,24 @@ sbnd_gnewcalomc:              @local::standard_gnocchicalo
 sbnd_gnewcalomc.CaloAlg:      @local::sbnd_calorimetryalgmc
 sbnd_gnewcalomc.ChargeMethod: 3
 sbnd_gnewcalomc.SpacePointModuleLabel: @erase
+
+sbnd_gnewcalodata:              @local::standard_gnocchicalo
+sbnd_gnewcalodata.CaloAlg:      @local::sbnd_calorimetryalgdata
+sbnd_gnewcalodata.ChargeMethod: 3
+sbnd_gnewcalodata.SpacePointModuleLabel: @erase
+
+# gputnam 19Aug2024: Upate calibration to EMB
+# Values from: https://arxiv.org/abs/2407.12969
+sbnd_gnewcalomc.CaloAlg.ModBoxA: 0.904
+sbnd_gnewcalomc.CaloAlg.ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
+sbnd_gnewcalomc.CaloAlg.ModBoxBParam: [0.204, 1.25]
+
+sbnd_calomc.CaloAlg.ModBoxA: 0.904
+sbnd_calomc.CaloAlg.ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
+sbnd_calomc.CaloAlg.ModBoxBParam: [0.204, 1.25]
+
+sbnd_calodata.CaloAlg.ModBoxA: 0.904
+sbnd_calodata.CaloAlg.ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
+sbnd_calodata.CaloAlg.ModBoxBParam: [0.204, 1.25]
 
 END_PROLOG

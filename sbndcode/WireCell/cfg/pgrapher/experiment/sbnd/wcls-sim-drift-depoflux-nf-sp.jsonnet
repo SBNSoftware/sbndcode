@@ -2,7 +2,6 @@
 // simulate SBND.  It is simplest signal-only simulation with
 // one set of nominal field response function.  
 
-local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
 local reality = std.extVar('reality');
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
 local savetid = std.extVar("save_track_id");
@@ -37,14 +36,6 @@ local sim = sim_maker(params, tools);
 local nanodes = std.length(tools.anodes);
 local anode_iota = std.range(0, nanodes - 1);
 
-local mega_anode = {
-  type: 'MegaAnodePlane',
-  name: 'meganodes',
-  data: {
-    anodes_tn: [wc.tn(anode) for anode in tools.anodes],
-  },
-};
-
 local wcls_maker = import "pgrapher/ui/wcls/nodes.jsonnet";
 local wcls = wcls_maker(params, tools);
 
@@ -66,7 +57,13 @@ local wcls_input_sim = {
 // Collect all the wc/ls output converters for use below.  Note the
 // "name" MUST match what is used in theh "outputers" parameter in the
 // FHiCL that loads this file.
-
+local mega_anode = {
+  type: 'MegaAnodePlane',
+  name: 'meganodes',
+  data: {
+    anodes_tn: [wc.tn(anode) for anode in tools.anodes],
+  },
+};
 local wcls_output_sim = {
   // ADC output from simulation
   // sim_digits: wcls.output.digits(name="simdigits", tags=["orig"]),
@@ -93,7 +90,7 @@ local wcls_output_sim = {
   sp_signals: wcls.output.signals(name="spsignals", tags=["gauss", "wiener"]),
   // save "threshold" from normal decon for each channel noise
   // used in imaging
-  sp_thresholds: wcls.output.thresholds(name="spthresholds", tags=["threshold"]),
+  sp_thresholds: wcls.output.thresholds(name="spthresholds", tags=["wiener"]),
 };
 
 
@@ -124,6 +121,7 @@ local wcls_depoflux_writer = g.pnode({
 
     reference_time: -1700 * wc.us,
 
+    //energy: 1, # equivalent to use_energy = true
     simchan_label: 'simpleSC',
     sed_label: if (savetid == 'true') then 'ionandscint' else '',
     sparse: false,
@@ -138,13 +136,14 @@ local magoutput = 'sbnd-data-check.root';
 local magnify = import 'pgrapher/experiment/sbnd/magnify-sinks.jsonnet';
 local sinks = magnify(tools, magoutput);
 
-local perfect = import 'pgrapher/experiment/sbnd/chndb-perfect.jsonnet';
+local base = import 'pgrapher/experiment/sbnd/chndb-base.jsonnet';
+//local perfect = import 'pgrapher/experiment/sbnd/chndb-perfect.jsonnet';
 
 local chndb = [{
   type: 'OmniChannelNoiseDB',
   name: 'ocndbperfect%d' % n,
-  data: perfect(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
-  // data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
+  data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
+  //data: perfect(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   uses: [tools.anodes[n], tools.field, tools.dft],
 } for n in anode_iota];
 
@@ -164,7 +163,7 @@ local multipass2 = [
                sn_pipes[n],
                //sinks.orig_pipe[n],
                
-              //  nf_pipes[n], // NEED to include this pipe for channelmaskmaps    
+               nf_pipes[n], // NEED to include this pipe for channelmaskmaps    
                //sinks.raw_pipe[n], 
                
                sp_pipes[n], 
@@ -240,13 +239,12 @@ local wcls_output_sp = {
       // for SBND, this scale is about ~50. Frame scale needed when using LArSoft producers reading in recob::Wire.
       frame_scale: [0.02, 0.02],
       nticks: params.daq.nticks,
-      chanmaskmaps: [],
 
       // uncomment the below configs to save summaries and cmm
-      // summary_tags: ['wiener'],
-      // summary_operator: {threshold: 'set'},
-      // summary_scale: [0.02], # summary scale should be the same as frame_scale
-      // chanmaskmaps: ['bad'],
+       summary_tags: ['wiener'],
+       summary_operator: {wiener: 'set'},
+       summary_scale: [0.02], # summary scale should be the same as frame_scale
+       chanmaskmaps: ['bad'],
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 
@@ -258,7 +256,7 @@ local chsel_pipes = [
     type: 'ChannelSelector',
     name: 'chsel%d' % n,
     data: {
-      channels: std.range(5632 * n, 5632 * (n + 1) - 1),
+      channels: std.range(5638 * n, 5638 * (n + 1) - 1),
     },
   }, nin=1, nout=1)
   for n in anode_iota
@@ -270,7 +268,7 @@ local nfsp_pipes = [
                chsel_pipes[n],
                //sinks.orig_pipe[n],
 
-              //  nf_pipes[n], // NEED to include this pipe for channelmaskmaps 
+               nf_pipes[n], // NEED to include this pipe for channelmaskmaps 
                //sinks.raw_pipe[n],
 
                sp_pipes[n],
