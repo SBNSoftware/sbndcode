@@ -1,0 +1,8 @@
+BEGIN_PROLOG
+
+crtgeoalg_sbnd:
+{
+  DefaultGain: 0.025
+}
+
+END_PROLOG

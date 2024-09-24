@@ -177,6 +177,7 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
   wfm_length(p.get<double>("WfmLength", 5120)),
     fTriggerTimeEngine(art::ServiceHandle<rndm::NuRandomService>{}->registerAndSeedEngine(
                          createEngine(0, "HepJamesRandom", "trigger"), "HepJamesRandom", "trigger", p, "SeedTriggerTime"))
+  , fCrtGeo(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
