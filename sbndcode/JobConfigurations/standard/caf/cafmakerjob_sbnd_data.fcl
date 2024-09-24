@@ -55,8 +55,6 @@ services:
   DetectorClocksService:     @local::sbnd_services.DetectorClocksService
   DetectorPropertiesService: @local::sbnd_detproperties
   ChannelStatusService:      @local::sbnd_channelstatus
-  ParticleInventoryService:  @local::sbnd_particleinventoryservice
-  BackTrackerService:        @local::sbnd_backtrackerservice
   SpaceCharge:               @local::sbnd_spacecharge
   NuRandomService: {
     policy: perEvent
