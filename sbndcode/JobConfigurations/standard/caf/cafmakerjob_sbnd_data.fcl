@@ -147,6 +147,8 @@ physics.producers.cafmaker: @local::standard_cafmaker
 physics.producers.cafmaker.CosmicGenLabel: "corsika"
 physics.producers.cafmaker.TrackHitFillRRStartCut: 1000
 physics.producers.cafmaker.TrackHitFillRREndCut: 1000
+physics.producers.cafmaker.TrackCaloLabel: "pandoraCaloData"
+physics.producers.cafmaker.TrackChi2PidLabel: "pandoraPidData"
 
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false
@@ -161,7 +163,7 @@ physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 
 # Overwrite weight_functions label:
-physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
+#physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
 
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []
