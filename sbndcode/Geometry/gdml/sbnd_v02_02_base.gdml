@@ -656,7 +656,7 @@
 
 
 		<!-- Wire Planes (see sbn-docdb 5526) -->
-		<constant name="numberChannelsY" value="1664"/>
+		<constant name="numberChannelsY" value="1670"/>
 		<constant name="numberChannelsV" value="1984"/>
 		<constant name="numberChannelsU" value="1984"/>
 
@@ -4914,8 +4914,6 @@
                                 <volumeref ref="volCRTModule132"/>
                                 <position name="posCRT_module132" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleMINOS_l/2)" y="-BERNmodule_DY_small/2-CRTmoduleMINOS_w/4" z="CRTmoduleMINOS_t/2"/>
                         </physvol>
-			<!-- Missing flat module relaced here -->
-			<!-- number out of sequence for minimal diff -->
                         <physvol copynumber="133">
                                 <volumeref ref="volCRTModule133"/>
                                 <position name="posCRT_module133" unit="cm" x="BERNmodule_DX_middle+(CRTmoduleBERN_l/2)" y="BERNmodule_DY_large+(CRTmoduleBERN_w/2)" z="-CRTmoduleBERN_t/2"/>
@@ -5749,7 +5747,7 @@
 
 			<!-- Y wires -->
 			<!-- iWire_Y starts from 1 -->
-			<loop for ="iWire_Y" to="1664" step="1"> <!-- #wire -->
+			<loop for ="iWire_Y" to="1670" step="1"> <!-- #wire -->
 				<physvol>
 					<volumeref ref="volTPCWireVert"/>
 					<rotationref ref="rotateN90X"/>

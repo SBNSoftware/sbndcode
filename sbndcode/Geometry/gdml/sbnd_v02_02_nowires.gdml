@@ -15591,9 +15591,9 @@
 		</volume>
 	</structure>
 	<solids>
-		<box  name="boxTPCPlane"  lunit="mm" x="3"  y="4000.1523999999999" z="4995.1523999999999"/>
+		<box  name="boxTPCPlane"  lunit="mm" x="3"  y="4000.1523999999999" z="5013.1523999999999"/>
 		<tube name="solidWireVert" lunit="mm" rmax="0.076200000000000004" z="4000" aunit="deg" deltaphi="360" />
-			<tube name="solidWire" lunit="mm" rmax="0.076200000000000004" z="5767.7291892043613" aunit="deg" deltaphi="360" />
+			<tube name="solidWire" lunit="mm" rmax="0.076200000000000004" z="5788.5137988951874" aunit="deg" deltaphi="360" />
 	</solids>
 	<structure>
 		<volume name="volTPCWireVert">
