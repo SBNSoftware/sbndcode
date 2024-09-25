@@ -4,11 +4,11 @@
 physics.producers.fasthit:           @local::standard_fasthitfinder
 physics.producers.MuonTrackProducer: @local::MuonTrackProducer
 
+physics.producers.crtclustering:  @local::crtclusterproducer_sbnd
+physics.producers.crtspacepoints: @local::crtspacepointproducer_sbnd
+physics.producers.crttracks:      @local::crttrackproducer_sbnd
+
 physics.reco1comm: [ rns
-  , opdecopmt
-  , opdecoxarapuca
-  , ophitpmt
-  , ophitxarapuca
   , crtstrips
   , crtclustering
   , crtspacepoints
@@ -19,7 +19,9 @@ physics.reco1comm: [ rns
 
 physics.trigger_paths: [ reco1comm ]
 
-physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
+physics.producers.crtstrips.FEBDataModuleLabel: "crtdecoder"
+
+physics.producers.fasthit.DigitModuleLabel: "daq"
 physics.producers.fasthit.MinSigInd: 15.0
 physics.producers.fasthit.MinSigCol: 15.0
 physics.producers.fasthit.SkipInd: false
@@ -39,3 +41,5 @@ physics.analyzers.hitdumper.KeepCRTTracks:      true
 physics.analyzers.hitdumper.KeepCRTSpacePoints: true
 physics.analyzers.hitdumper.readpmtTrigger:     false
 physics.analyzers.hitdumper.readpmtSoftTrigger: false
+physics.analyzers.hitdumper.readTruth: false
+physics.analyzers.hitdumper.readOpHits: false
