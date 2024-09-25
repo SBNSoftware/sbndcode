@@ -277,8 +277,8 @@ private:
 
 sbnd::crt::CRTCalibAna::CRTCalibAna(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
-  , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
+  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
+  , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg"))
   {
     fMCParticleModuleLabel            = p.get<std::string>("MCParticleModuleLabel", "largeant");
     fSimDepositModuleLabel            = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
