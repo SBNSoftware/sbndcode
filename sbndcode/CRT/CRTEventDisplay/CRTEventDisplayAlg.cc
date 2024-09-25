@@ -11,8 +11,6 @@ namespace sbnd::crt {
       fCRTBackTrackerAlg = CRTBackTrackerAlg(config.BackTrackerAlgConfig());
   }
   
-  CRTEventDisplayAlg::CRTEventDisplayAlg(){}
-  
   CRTEventDisplayAlg::~CRTEventDisplayAlg(){}
 
   void CRTEventDisplayAlg::reconfigure(const Config& config)

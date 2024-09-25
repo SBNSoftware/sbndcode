@@ -55,10 +55,9 @@ namespace sbnd::crt {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
       
-      fhicl::Table<fhicl::ParameterSet> GeoAlgConfig {
+      fhicl::Table<CRTGeoAlg::Config> GeoAlgConfig {
         Name("CRTGeoAlg"),
         Comment("Configuration parameters for the CRT geometry algorithm"),
-        fhicl::ParameterSet()
       };
 
       fhicl::Table<CRTBackTrackerAlg::Config> BackTrackerAlgConfig {
@@ -212,8 +211,6 @@ namespace sbnd::crt {
     CRTEventDisplayAlg(const fhicl::ParameterSet& pset) :
       CRTEventDisplayAlg(fhicl::Table<Config>(pset, {})()) {}
     
-    CRTEventDisplayAlg();
-
     ~CRTEventDisplayAlg();
 
     void reconfigure(const Config& config);
