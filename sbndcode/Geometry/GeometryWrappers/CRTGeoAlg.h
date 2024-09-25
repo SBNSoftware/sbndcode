@@ -13,6 +13,7 @@
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "fhiclcpp/ParameterSet.h" 
+#include "fhiclcpp/types/Atom.h"
 #include "art/Framework/Principal/Handle.h" 
 #include "canvas/Persistency/Common/Ptr.h" 
 #include "canvas/Persistency/Common/PtrVector.h" 
@@ -261,10 +262,24 @@ namespace sbnd::crt {
   class CRTGeoAlg {
   public:
 
-    CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry,
+    struct Config {
+
+      fhicl::Atom<double> DefaultGain {
+        fhicl::Name("DefaultGain")
+      };
+
+      fhicl::Atom<bool> MC {
+        fhicl::Name("MC")
+      };
+    };
+    
+    CRTGeoAlg(const Config& config, geo::GeometryCore const *geometry,
               geo::AuxDetGeometryCore const *auxdet_geometry);
 
-    CRTGeoAlg(fhicl::ParameterSet const &p = fhicl::ParameterSet());
+    CRTGeoAlg(const Config& config);
+
+    CRTGeoAlg(const fhicl::ParameterSet& pset) :
+      CRTGeoAlg(fhicl::Table<Config>(pset, {})()) {}
 
     ~CRTGeoAlg();
 
@@ -360,9 +375,8 @@ namespace sbnd::crt {
     geo::GeometryCore const       *fGeometryService;
     const geo::AuxDetGeometryCore *fAuxDetGeoCore;
 
-    double                                   fDefaultGain;
-    std::vector<std::pair<unsigned, double>> fSiPMGainsVector;
-    std::map<unsigned, double>               fSiPMGains;
+    double fDefaultGain;
+    bool   fMC;
   };
 }
 

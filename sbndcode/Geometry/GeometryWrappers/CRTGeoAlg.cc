@@ -2,24 +2,19 @@
 
 namespace sbnd::crt {
 
-  CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p) :
-    CRTGeoAlg(p, lar::providerFrom<geo::Geometry>(),
+  CRTGeoAlg::CRTGeoAlg(const Config& config) :
+    CRTGeoAlg(config, lar::providerFrom<geo::Geometry>(),
               ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr())
   {}
 
-  CRTGeoAlg::CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry,
+  CRTGeoAlg::CRTGeoAlg(const Config& config, geo::GeometryCore const *geometry,
                        geo::AuxDetGeometryCore const *auxdet_geometry)
-    : fDefaultGain(p.get<double>("DefaultGain"))
-    , fSiPMGainsVector(p.get<std::vector<std::pair<unsigned, double>>>("SiPMGains", std::vector<std::pair<unsigned, double>>()))
+    : fDefaultGain(config.DefaultGain())
+    , fMC(config.MC())
   {
     fGeometryService = geometry;
     fAuxDetGeoCore   = auxdet_geometry;
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
-
-    art::ServiceHandle<SBND::CRTCalibService> CalibService;
-    art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
-
-    fSiPMGains = std::map<unsigned, double>(fSiPMGainsVector.begin(), fSiPMGainsVector.end());
 
     // Record used objects
     std::vector<std::string> usedTaggers;
@@ -46,10 +41,17 @@ namespace sbnd::crt {
           }
         }
 
-        SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(ad_i);
-        const unsigned int mac5 = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
-        const bool invert       = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
+        unsigned int mac5 = 0;
+        bool invert       = false;
 
+        if(!fMC)
+          {
+            art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
+            SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(ad_i);
+            mac5   = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
+            invert = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
+          }
+        
         // Loop through strips
         for(unsigned ads_i = 0; ads_i < auxDet.NSensitiveVolume(); ads_i++)
           {
@@ -78,7 +80,13 @@ namespace sbnd::crt {
 
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-                const int32_t cableDelayCorrection = CalibService->GetTimingOffsetFromFEBMAC5(mac5);
+                int32_t cableDelayCorrection = 0;
+
+                if(!fMC)
+                  {
+                    art::ServiceHandle<SBND::CRTCalibService> CalibService;
+                    cableDelayCorrection = CalibService->GetTimingOffsetFromFEBMAC5(mac5);
+                  }
 
                 const std::string stripName = nodeStrip->GetVolume()->GetName();
                 const bool minos = stripName.find("MINOS") != std::string::npos ? true : false;
@@ -122,11 +130,18 @@ namespace sbnd::crt {
             const uint32_t actualChannel0 = invert ? 31 - (2 * ads_i) : 2 * ads_i;
             const uint32_t actualChannel1 = invert ? actualChannel0 - 1 : actualChannel0 + 1;
 
-            const uint32_t pedestal0 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel0);
-            const uint32_t pedestal1 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel1);
+            uint32_t pedestal0 = 0;
+            uint32_t pedestal1 = 0;
 
-            const double gain0 = fSiPMGains.size() ? fSiPMGains.at(channel0) : fDefaultGain;
-            const double gain1 = fSiPMGains.size() ? fSiPMGains.at(channel1) : fDefaultGain;
+            if(!fMC)
+              {
+                art::ServiceHandle<SBND::CRTCalibService> CalibService;
+                pedestal0 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel0);
+                pedestal1 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel1);
+              }
+
+            const double gain0 = fDefaultGain;
+            const double gain1 = fDefaultGain;
 
             // Fill SiPM information
             CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0);
