@@ -13,8 +13,6 @@ namespace sbnd::crt {
   {
   }
 
-  CRTClusterCharacterisationAlg::CRTClusterCharacterisationAlg(){}
-  
   CRTClusterCharacterisationAlg::~CRTClusterCharacterisationAlg(){}
 
   CRTSpacePoint CRTClusterCharacterisationAlg::CharacteriseSingleHitCluster(const art::Ptr<CRTCluster> &cluster, const art::Ptr<CRTStripHit> &stripHit)

@@ -76,7 +76,7 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fTs1Max(p.get<int64_t>("Ts1Max", std::numeric_limits<int64_t>::max()))
   , fCorrectForDifferentSecond(p.get<bool>("CorrectForDifferentSecond"))
   , fReferenceTs0ToETrig(p.get<bool>("ReferenceTs0ToETrig"))
-  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel"))
+  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel", ""))
   , fSPECTDCETrigChannel(p.get<uint32_t>("SPECTDCETrigChannel", 4))
 {
   produces<std::vector<CRTStripHit>>();
