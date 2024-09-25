@@ -34,7 +34,7 @@ art_make_library(LIBRARY_NAME  sbndcode_BlipUtils
                            sbndcode_CRT
                            sbndcode_CRTUtils
                            sbnobj::Common_CRT
-                           sbndcode_CosmicIdUtils
+                           #sbndcode_CosmicIdUtils
 )
 
 install_headers()

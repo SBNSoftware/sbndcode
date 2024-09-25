@@ -49,6 +49,13 @@ sbnd_blipana:
   DebugMode:          true
 }
 
+sbnd_bliptruth:
+{
+  module_type:        "BlipTruth"
+  GeantProducer:      "largeant"
+  SimEDepProducer:    "ionandscint"
+}
+
 
 # ===============================================
 # TrackMasker settings

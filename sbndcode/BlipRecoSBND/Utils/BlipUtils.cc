@@ -2,6 +2,10 @@
 
 namespace BlipUtils {
 
+  void TestCall() {
+    std::cout<<"Bonjour!\n";
+  }
+
   //============================================================================
   // Find total visible energy deposited in the LAr, and number of electrons deposited
   // and drifted to the anode.
@@ -75,7 +79,7 @@ namespace BlipUtils {
   // Provided a vector of all particle information for event, fill a
   // vector of true blips
   void MakeTrueBlips( std::vector<blip::ParticleInfo>& pinfo, std::vector<blip::TrueBlip>& trueblips ) {
-     
+    
     art::ServiceHandle<geo::Geometry> geom;
     auto const& detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
     auto const& clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
@@ -148,6 +152,7 @@ namespace BlipUtils {
     if( !tblip.G4ChargeMap.size() ) {
       tblip.Position    = pinfo.position;
       tblip.Time        = pinfo.time;
+      tblip.PathLen     = pinfo.pathLength;
     
     // .. otherwise, check that the new particle
     // creation time is comparable to existing blip.
@@ -156,6 +161,7 @@ namespace BlipUtils {
       float totE = tblip.Energy + pinfo.depEnergy;
       float w1 = tblip.Energy/totE;
       float w2 = pinfo.depEnergy/totE;
+      tblip.PathLen     = std::max(tblip.PathLen, (float)pinfo.pathLength);
       tblip.Position    = w1*tblip.Position + w2*pinfo.position;
       tblip.Time        = w1*tblip.Time     + w2*pinfo.time;
       tblip.LeadCharge  = pinfo.depElectrons;

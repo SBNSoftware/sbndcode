@@ -60,6 +60,7 @@ namespace blip {
     int       LeadG4Index   = -9;     // lead G4 track index
     int       LeadG4PDG     = -9;     // lead G4 PDG
     float     LeadCharge    = -9;     // lead G4 charge dep
+    float     PathLen   = -9;
     TVector3  Position;               // XYZ position
     mif_t     G4ChargeMap;          
     mif_t     G4PDGMap;

@@ -12,8 +12,6 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            larreco::RecoAlg
                            lardata::RecoObjects
                            larpandora::LArPandoraInterface
-                           sbndcode_CRTUtils
-                           sbndcode_CRT
                            sbnobj::Common_CRT
                            nusimdata::SimulationBase
                            art::Framework_Core
@@ -32,13 +30,14 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            ROOT::XMLIO
                            ROOT::Gdml
                            sbndcode_RecoUtils
-                           sbndcode_OpDetSim
                            sbndcode_BlipUtils
                            sbndcode_BlipRecoAlg
 )
 
 cet_build_plugin(BlipAna art::Module SOURCE BlipAna_module.cc LIBRARIES ${MODULE_LIBRARIES} )
+cet_build_plugin(BlipTruth art::Module SOURCE BlipTruth_module.cc LIBRARIES ${MODULE_LIBRARIES} )
 cet_build_plugin(BlipRecoProducer art::Module SOURCE BlipRecoProducer_module.cc LIBRARIES ${MODULE_LIBRARIES} )
+cet_build_plugin(ParticleLister art::Module SOURCE ParticleLister_module.cc LIBRARIES ${MODULE_LIBRARIES} )
 
 add_subdirectory(Utils)
 add_subdirectory(Alg)

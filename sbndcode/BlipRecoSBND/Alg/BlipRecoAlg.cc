@@ -349,7 +349,7 @@ namespace blip {
   
     // -- geometry
     art::ServiceHandle<geo::Geometry> geom;
-
+    
     // -- G4 particles
     art::Handle< std::vector<simb::MCParticle> > pHandle;
     std::vector<art::Ptr<simb::MCParticle> > plist;

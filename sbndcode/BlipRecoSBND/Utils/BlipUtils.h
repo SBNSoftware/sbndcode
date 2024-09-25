@@ -65,7 +65,8 @@ namespace BlipUtils {
                        detinfo::DetectorClocksData const&);
 
   int       DriftDirX(geo::TPCGeo const&);
-  
+
+  void      TestCall();
 
   //###################################################
   // General functions 

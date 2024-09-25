@@ -1,0 +1,52 @@
+# ---------- base model --------
+#include "prodsingle_sbnd_proj.fcl"
+
+process_name: ProdGenG4
+
+# change geometry to all-LAr
+services.Geometry: @local::sbnd_geo_larworld
+
+# Define the modules
+physics:
+{
+
+  producers:
+  {
+    
+    # Random number saver
+    rns:       { module_type: "RandomNumberSaver" }
+
+    # Generation
+    generator: @local::sbnd_singlep
+
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
+
+    # The geant4 step
+    largeant: @local::sbnd_larg4
+
+    # Creation of ionization electrons and scintillation photons, inside the active volume
+    ionandscint: @local::sbnd_ionandscint
+
+    # Electron propogation
+    simdrift: @local::sbnd_simdrift
+
+  }
+
+  filters:
+  {
+    plister:   { module_type: "ParticleLister" } 
+  }
+
+  #define the producer and filter modules for this path, order matters, 
+  simulate:  [ rns, generator, loader, largeant, ionandscint, plister ] 
+
+  #define the output stream, there could be more than one if using filters 
+  stream1:   [ out1 ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [ stream1 ]  
+}
+
+outputs.out1.fileName: "prodsingle_larworld_%p-%tc.root"
+
