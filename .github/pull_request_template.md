@@ -6,7 +6,7 @@ Please provide a detailed description of the changes this pull request introduce
 - [ ] Assigned at least 1 reviewer under `Reviewers`,
 - [ ] Assigned all contributers including yourself under `Assignees`
 - [ ] Linked any relevant issues under `Developement`
-- [ ] Does this PR affect CAF data format? If so, please assign a CAF maintainer as additional reviewer.
+- [ ] Does this PR affect CAF data format? If so, please assign a CAF maintainer ([PetrilloAtWork](https://github.com/PetrilloAtWork) or [JosiePaton](https://github.com/JosiePaton)) as additional reviewer.
 - [ ] Does this affect the standard workflow? 
 
 ### Relevant PR links (optional)

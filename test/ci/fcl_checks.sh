@@ -46,7 +46,7 @@ cd "${WORK_DIR}"
 ### Loop over fcl files for checks ###
 ######################################
 
-ACCESS_REF_DIR=${REF_DIR///pnfs/http://fndca1.fnal.gov:8000/pnfs/fnal.gov/usr}
+ACCESS_REF_DIR=${REF_DIR///pnfs/http://fndcadoor.fnal.gov:8000/pnfs/fnal.gov/usr}
 REF_FILE=${INPUT_FILE}
 
 exit_code_parsing=0
@@ -59,11 +59,12 @@ if [[ ${UPDATE_REF_FILE_ON} -gt 0 ]]; then
     export datestamp=$(date +"%Y%m%d%H%M")
 
 else
-    if IFDH_DEBUG=0 ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
+    #if IFDH_DEBUG=0 ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
+    if IFDH_PROXY_ENABLE=0 IFDH_TOKEN_ENABLE=0 BEARER_TOKEN_FILE="" ifdh ll ${ACCESS_REF_DIR}/${REF_FILE}
     then
 	echo -e "\nFound reference tar: ${ACCESS_REF_DIR}/${REF_FILE}"
 	echo "ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}"
-	ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}
+	IFDH_PROXY_ENABLE=0 IFDH_TOKEN_ENABLE=0 BEARER_TOKEN_FILE="" ifdh cp ${ACCESS_REF_DIR}/${REF_FILE} ${LOCAL_REF_DIR}/${REF_FILE}
 	echo -e "\nExtract tar to local references directory"
 	echo "tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}"
 	tar -xzvf references/${REF_FILE} -C ${LOCAL_REF_DIR}
