@@ -527,6 +527,42 @@
 		<constant name="CRTstripSquare_l" value="179.2"/>
 		<constant name="CRTstripSquare_t" value="1.0"/>
 
+		<!-- uB square module -->
+		<constant name="CRTmoduleuBSquare_w" value="180"/>
+		<constant name="CRTmoduleuBSquare_l" value="184.5"/>
+		<constant name="CRTmoduleuBSquare_t" value="1.8"/>
+		<constant name="CRTmoduleuBSquare_b" value="0.4"/>
+		<constant name="CRTstripuBSquare_w" value="11.2"/>
+		<constant name="CRTstripuBSquare_l" value="183.7"/>
+		<constant name="CRTstripuBSquare_t" value="1.0"/>
+
+		<!-- uB longer -->
+		<constant name="CRTmoduleuB_w" value="180"/>
+		<constant name="CRTmoduleuB_l" value="364.5"/>
+		<constant name="CRTmoduleuB_t" value="1.8"/>
+		<constant name="CRTmoduleuB_b" value="0.4"/>
+		<constant name="CRTstripuB_w" value="11.2"/>
+		<constant name="CRTstripuB_l" value="363.7"/>
+		<constant name="CRTstripuB_t" value="1.0"/>
+
+		<!-- uB narrow long -->
+		<constant name="CRTmoduleuBnl_w" value="174.6"/>
+		<constant name="CRTmoduleuBnl_l" value="408.3"/>
+		<constant name="CRTmoduleuBnl_t" value="1.8"/>
+		<constant name="CRTmoduleuBnl_b" value="0.4"/>
+		<constant name="CRTstripuBnl_w" value="10.86"/>
+		<constant name="CRTstripuBnl_l" value="407.5"/>
+		<constant name="CRTstripuBnl_t" value="1.0"/>
+
+		<!-- uB narrow short -->
+		<constant name="CRTmoduleuBns_w" value="174.6"/>
+		<constant name="CRTmoduleuBns_l" value="264.1"/>
+		<constant name="CRTmoduleuBns_t" value="1.8"/>
+		<constant name="CRTmoduleuBns_b" value="0.4"/>
+		<constant name="CRTstripuBns_w" value="10.86"/>
+		<constant name="CRTstripuBns_l" value="263.3"/>
+		<constant name="CRTstripuBns_t" value="1.0"/>
+
 		<!-- BERN module -->
 		<constant name="CRTmoduleBERN_w" value="95.8"/>
 		<constant name="CRTmoduleBERN_l" value="272.1"/>
