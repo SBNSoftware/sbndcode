@@ -1,10 +1,12 @@
-#include "crtsimmodules_sbnd.fcl"
+#include "crtgeoalg_sbnd.fcl"
 #include "crtbacktrackeralg_sbnd.fcl"
+#include "crtsimmodules_sbnd.fcl"
 
 BEGIN_PROLOG
 
 crteventdisplayalg_sbnd:
 {
+   CRTGeoAlg:         @local::crtgeoalg_sbnd
    CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 
    MC: true

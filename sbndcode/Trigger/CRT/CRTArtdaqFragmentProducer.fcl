@@ -1,3 +1,4 @@
+#include "crtgeoalg_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -10,6 +11,7 @@ CRTArtdaqFragmentProducer:
   ClockSpeedCRT: 1 #set to @local::sbnd_crtsim.DetSimParams.ClockSpeedCRT in run fcl
   Verbose: true
   FirstFEBMac5: 0
+  CRTGeoAlg: @local::crtgeoalg_sbnd
 }
 
 END_PROLOG

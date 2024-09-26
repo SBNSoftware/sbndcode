@@ -1,9 +1,11 @@
+#include "crtgeoalg_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
 
 BEGIN_PROLOG
 
 crtstriphitproducer_sbnd:
 {
+   CRTGeoAlg:          @local::crtgeoalg_sbnd
    FEBDataModuleLabel: "crtsim"
    ADCThreshold:       60
    ErrorCoeff:         [ 0.26, -0.27, 0.025 ]
@@ -12,6 +14,7 @@ crtstriphitproducer_sbnd:
 
 crtclusterproducer_sbnd:
 {
+   CRTGeoAlg:                  @local::crtgeoalg_sbnd
    CRTStripHitModuleLabel:     "crtstrips"
    CoincidenceTimeRequirement: 50
    OverlapBuffer:              1.
@@ -20,6 +23,7 @@ crtclusterproducer_sbnd:
 
 crtclustercharacterisationalg_sbnd:
 {
+   CRTGeoAlg:      @local::crtgeoalg_sbnd
    UseT1:          true
    TimeOffset:     -1.7e6 # Sim parameter
    OverlapBuffer:  1.
@@ -38,6 +42,7 @@ crtspacepointproducer_sbnd:
 
 crttrackproducer_sbnd:
 {
+   CRTGeoAlg:                  @local::crtgeoalg_sbnd
    CRTSpacePointModuleLabel:   "crtspacepoints"
    CoincidenceTimeRequirement: 100.
    ThirdSpacePointMaximumDCA:  50.
