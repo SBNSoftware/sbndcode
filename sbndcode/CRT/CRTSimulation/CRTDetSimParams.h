@@ -12,6 +12,8 @@
 #ifndef SBND_CRTDETSIMPARAMS_H
 #define SBND_CRTDETSIMPARAMS_H
 
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/OptionalTable.h"
 #include "fhiclcpp/types/Sequence.h"
@@ -24,9 +26,8 @@ namespace crt
   struct CRTDetSimParams
   {
 
-    fhicl::Table<fhicl::ParameterSet> GeoAlgConfig {
+    fhicl::Table<CRTGeoAlg::Config> GeoAlgConfig {
       fhicl::Name("CRTGeoAlg"),
-      fhicl::Comment("Configuration parameters for the CRT geometry algorithm"),
     };
 
     fhicl::Atom<double> GlobalT0Offset {

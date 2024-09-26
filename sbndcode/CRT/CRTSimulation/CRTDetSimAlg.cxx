@@ -10,7 +10,7 @@ namespace crt {
     : fParams(params())
     , fEngine(engine)
     , fG4RefTime(g4RefTime)
-    , fCRTGeoAlg(fParams.GeoAlgConfig())
+    , fCRTGeoAlg(params().GeoAlgConfig())
     {
         ConfigureWaveform();
         ConfigureTimeOffset();

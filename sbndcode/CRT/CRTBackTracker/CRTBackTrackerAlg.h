@@ -53,7 +53,7 @@ namespace sbnd::crt {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
       
-      fhicl::Table<fhicl::ParameterSet> GeoAlgConfig {
+      fhicl::Table<CRTGeoAlg::Config> GeoAlgConfig {
         Name("CRTGeoAlg"),
 	  };
 
@@ -192,12 +192,12 @@ namespace sbnd::crt {
     };
 
     CRTBackTrackerAlg(const Config& config);
-    
+
+    CRTBackTrackerAlg();
+
     CRTBackTrackerAlg(const fhicl::ParameterSet& pset) :
     CRTBackTrackerAlg(fhicl::Table<Config>(pset, {})()) {}
     
-    CRTBackTrackerAlg();
-
     ~CRTBackTrackerAlg();
 
     void reconfigure(const Config& config);
@@ -232,8 +232,7 @@ namespace sbnd::crt {
 
   private:
     
-    CRTGeoAlg fCRTGeoAlg;
-    art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
+    CRTGeoAlg::Config fCRTGeoAlgConfig;
 
     art::InputTag fSimModuleLabel;
     art::InputTag fSimDepositModuleLabel;
