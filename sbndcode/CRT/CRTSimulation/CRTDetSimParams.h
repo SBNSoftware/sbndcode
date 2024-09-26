@@ -24,6 +24,11 @@ namespace crt
   struct CRTDetSimParams
   {
 
+    fhicl::Table<fhicl::ParameterSet> GeoAlgConfig {
+      fhicl::Name("CRTGeoAlg"),
+      fhicl::Comment("Configuration parameters for the CRT geometry algorithm"),
+    };
+
     fhicl::Atom<double> GlobalT0Offset {
       fhicl::Name("GlobalT0Offset"),
       fhicl::Comment("The global time offset to use for the CRT times"),

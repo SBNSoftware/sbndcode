@@ -281,7 +281,7 @@ private:
 
 sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
+  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
   {
     fMCParticleModuleLabel            = p.get<std::string>("MCParticleModuleLabel", "largeant");
