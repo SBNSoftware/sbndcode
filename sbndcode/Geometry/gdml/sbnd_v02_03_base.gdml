@@ -4543,7 +4543,68 @@
 
 
                 <!-- Declaring Modules -->
-                   <loop for="CRT_module_maker" to="39" step="1">
+                <!-- First 5 are narrow long uB modules-->
+                   <loop for="CRT_module_maker" to="4" step="1">
+                    <volume name="CRTmoduleuBnlCoverCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleuBnlCover"/>
+                    </volume>
+                    <volume name="volCRTModuleCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleuBnl"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleuBnlCoverCRT_module_maker"/>
+                        <position name="posCRTModuleCoverCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArrayCRT_module_maker"/>
+                        <position name="posvolAuxDetCRTStripArrayCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
+                  </loop>
+
+                  <!-- TODO add 5 to module index below DONE-->
+                  <!-- next 5 are narrow short uB modules -->
+                   <loop for="CRT_module_maker" to="4+5" step="1">
+                    <volume name="CRTmoduleuBnsCoverCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleuBnsCover"/>
+                    </volume>
+                    <volume name="volCRTModuleCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleuBns"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleuBnsCoverCRT_module_maker"/>
+                        <position name="posCRTModuleCoverCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArrayCRT_module_maker"/>
+                        <position name="posvolAuxDetCRTStripArrayCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
+                  </loop>
+
+                  <!-- next 5 are basic uB modules -->
+                   <loop for="CRT_module_maker" to="9+5" step="1">
+                    <volume name="CRTmoduleuBCoverCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleuBCover"/>
+                    </volume>
+                    <volume name="volCRTModuleCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleuB"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleuBCoverCRT_module_maker"/>
+                        <position name="posCRTModuleCoverCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArrayCRT_module_maker"/>
+                        <position name="posvolAuxDetCRTStripArrayCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
+                  </loop>
+
+                  <loop for="CRT_module_maker" to="29+5" step="1">
                     <volume name="CRTmoduleYCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleYCover"/>
@@ -4562,6 +4623,46 @@
                     </volume>
                   </loop>
 
+                  <loop for="CRT_module_maker" to="39+5" step="1">
+                    <volume name="CRTmoduleuBCoverCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleuBCover"/>
+                    </volume>
+                    <volume name="volCRTModuleCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleuB"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleuBCoverCRT_module_maker"/>
+                        <position name="posCRTModuleCoverCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArrayCRT_module_maker"/>
+                        <position name="posvolAuxDetCRTStripArrayCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      </physvol>
+                    </volume>
+                  </loop>
+
+
+                   <loop for="CRT_module_maker" to="44+5" step="1">
+                    <volume name="CRTmoduleSquareuBCoverCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleSquareuBCover"/>
+                    </volume>
+                    <volume name="volCRTModuleCRT_module_maker">
+                      <materialref ref="ALUMINUM_Al"/>
+                      <solidref ref="CRTmoduleSquareuB"/>
+                      <physvol>
+                        <volumeref ref="CRTmoduleSquareuBCoverCRT_module_maker"/>
+                        <position name="posCRTModuleCoverCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                      <physvol>
+                        <volumeref ref="volAuxDetCRTStripArrayCRT_module_maker"/>
+                        <position name="posvolAuxDetCRTStripArrayCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
+                      </physvol>
+                    </volume>
+                   </loop>
+                   <!-- TODO add 5 to module index below DONE-->
 		  <!-- wibble --> 
 
                   <loop for="CRT_module_maker" to="59" step="1">
