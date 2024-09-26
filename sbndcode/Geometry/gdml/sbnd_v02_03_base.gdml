@@ -4665,7 +4665,7 @@
                    <!-- TODO add 5 to module index below DONE-->
 		  <!-- wibble --> 
 
-                  <loop for="CRT_module_maker" to="59" step="1">
+                  <loop for="CRT_module_maker" to="59+10" step="1">
                     <volume name="CRTmoduleXCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleXCover"/>
@@ -4685,7 +4685,7 @@
                   </loop>
 
 		  <!-- square module -->
-                  <loop for="CRT_module_maker" to="60" step="1">
+                  <loop for="CRT_module_maker" to="60+10" step="1">
                     <volume name="CRTmoduleSquareCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleSquareCover"/>
@@ -4704,7 +4704,7 @@
                     </volume>
                   </loop>
 
-		  <loop for="CRT_module_maker" to="68" step="1">
+		  <loop for="CRT_module_maker" to="68+10" step="1">
                     <volume name="CRTmoduleXCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleXCover"/>
@@ -4724,7 +4724,7 @@
                   </loop>
 
 		  <!-- square module -->
-                  <loop for="CRT_module_maker" to="69" step="1">
+                  <loop for="CRT_module_maker" to="69+10" step="1">
                     <volume name="CRTmoduleSquareCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleSquareCover"/>
@@ -4743,7 +4743,7 @@
                     </volume>
                   </loop>
 
-                  <loop for="CRT_module_maker" to="71" step="1">
+                  <loop for="CRT_module_maker" to="71+10" step="1">
                     <volume name="CRTmoduleXCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleXCover"/>
@@ -4762,7 +4762,7 @@
                     </volume>
                   </loop>
 
-                  <loop for="CRT_module_maker" to="79" step="1">
+                  <loop for="CRT_module_maker" to="79+10" step="1">
                     <volume name="CRTmoduleYCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleYCover"/>
@@ -4781,7 +4781,7 @@
                     </volume>
                   </loop>
 
-                  <loop for="CRT_module_maker" to="89" step="1">
+                  <loop for="CRT_module_maker" to="89+10" step="1">
                     <volume name="CRTmoduleXCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleXCover"/>
@@ -4800,7 +4800,7 @@
                     </volume>
                   </loop>
 
-                  <loop for="CRT_module_maker" to="97" step="1">
+                  <loop for="CRT_module_maker" to="97+10" step="1">
                     <volume name="CRTmoduleYCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleYCover"/>
@@ -4819,7 +4819,7 @@
                     </volume>
                   </loop>
 
-                  <loop for="CRT_module_maker" to="107" step="1">
+                  <loop for="CRT_module_maker" to="107+10" step="1">
                     <volume name="CRTmoduleXCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleXCover"/>
@@ -4838,7 +4838,7 @@
                     </volume>
                   </loop>
 
-                  <loop for="CRT_module_maker" to="126" step="1">
+                  <loop for="CRT_module_maker" to="126+10" step="1">
                     <volume name="CRTmoduleBERNCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleBERNCover"/>
@@ -4857,7 +4857,7 @@
                     </volume>
                   </loop>
 
-                  <loop for="CRT_module_maker" to="132" step="1">
+                  <loop for="CRT_module_maker" to="132+10" step="1">
                     <volume name="CRTmoduleMINOSCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleMINOSCover"/>
@@ -4878,7 +4878,7 @@
 
 		  <!-- Replace BERN flat module put here -->
 		  <!-- For minimal diff -->
-                  <loop for="CRT_module_maker" to="133" step="1">
+                  <loop for="CRT_module_maker" to="133+10" step="1">
                     <volume name="CRTmoduleBERNCoverCRT_module_maker">
                       <materialref ref="ALUMINUM_Al"/>
                       <solidref ref="CRTmoduleBERNCover"/>
