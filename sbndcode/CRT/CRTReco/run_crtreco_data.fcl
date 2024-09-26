@@ -1,0 +1,23 @@
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "run_crtreco.fcl"
+
+services.message:              @local::sbnd_message_services
+services.CRTChannelMapService: @local::crt_channel_map_standard
+services.CRTCalibService:      @local::crt_calib_service
+
+physics.producers.crtstrips.CRTGeoAlg:                                  @local::crtgeoalg_data_sbnd
+physics.producers.crtstrips.FEBDataModuleLabel:                         "crtdecoder"
+physics.producers.crtstrips.AllowFlag1:                                 true
+physics.producers.crtstrips.CorrectForDifferentSecond:                  true
+physics.producers.crtstrips.ReferenceTs0ToETrig:                        true
+physics.producers.crtstrips.SPECTDCModuleLabel:                         "tdcdecoder"
+physics.producers.crtclustering.CRTGeoAlg:                              @local::crtgeoalg_data_sbnd
+physics.producers.crtclustering.UseTs0:                                 true
+physics.producers.crtspacepoints.ClusterCharacterisationAlg.CRTGeoAlg:  @local::crtgeoalg_data_sbnd
+physics.producers.crtspacepoints.ClusterCharacterisationAlg.TimeOffset: 0
+physics.producers.crttracks.CRTGeoAlg:                                  @local::crtgeoalg_data_sbnd
+physics.producers.crttracks.UseTs0:                                     true
+physics.producers.crttracks.MaskedTaggers:                              [ 0 ]
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                               "drop *_daq_*_*" ]

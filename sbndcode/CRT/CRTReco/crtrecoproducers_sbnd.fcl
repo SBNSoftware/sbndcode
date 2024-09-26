@@ -5,11 +5,15 @@ BEGIN_PROLOG
 
 crtstriphitproducer_sbnd:
 {
-   CRTGeoAlg:          @local::crtgeoalg_sbnd
-   FEBDataModuleLabel: "crtsim"
-   ADCThreshold:       60
-   ErrorCoeff:         [ 0.26, -0.27, 0.025 ]
-   module_type:        "CRTStripHitProducer"
+   CRTGeoAlg:                 @local::crtgeoalg_sbnd
+   FEBDataModuleLabel:        "crtsim"
+   ADCThreshold:              60
+   ErrorCoeff:                [ 0.26, -0.27, 0.025 ]
+   AllowFlag1:                false
+   ApplyTs1Window:            false
+   CorrectForDifferentSecond: false
+   ReferenceTs0ToETrig:       false
+   module_type:               "CRTStripHitProducer"
 }
 
 crtclusterproducer_sbnd:
@@ -18,13 +22,13 @@ crtclusterproducer_sbnd:
    CRTStripHitModuleLabel:     "crtstrips"
    CoincidenceTimeRequirement: 50
    OverlapBuffer:              1.
+   UseTs0:                     false
    module_type:                "CRTClusterProducer"
 }
 
 crtclustercharacterisationalg_sbnd:
 {
    CRTGeoAlg:      @local::crtgeoalg_sbnd
-   UseT1:          true
    TimeOffset:     -1.7e6 # Sim parameter
    OverlapBuffer:  1.
    PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift
@@ -46,6 +50,8 @@ crttrackproducer_sbnd:
    CRTSpacePointModuleLabel:   "crtspacepoints"
    CoincidenceTimeRequirement: 100.
    ThirdSpacePointMaximumDCA:  50.
+   UseTs0:                     false
+   MaskedTaggers:              []
    module_type:                "CRTTrackProducer"
 }
 
