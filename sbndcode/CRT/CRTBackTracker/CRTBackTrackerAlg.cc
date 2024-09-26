@@ -3,7 +3,6 @@
 namespace sbnd::crt {
   
   CRTBackTrackerAlg::CRTBackTrackerAlg(const Config& config)
-    : fCRTGeoAlg(config.GeoAlgConfig())
   {
     this->reconfigure(config);
   }
