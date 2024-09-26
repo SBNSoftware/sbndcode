@@ -528,13 +528,13 @@
 		<constant name="CRTstripSquare_t" value="1.0"/>
 
 		<!-- uB square module -->
-		<constant name="CRTmoduleuBSquare_w" value="180"/>
-		<constant name="CRTmoduleuBSquare_l" value="184.5"/>
-		<constant name="CRTmoduleuBSquare_t" value="1.8"/>
-		<constant name="CRTmoduleuBSquare_b" value="0.4"/>
-		<constant name="CRTstripuBSquare_w" value="11.2"/>
-		<constant name="CRTstripuBSquare_l" value="183.7"/>
-		<constant name="CRTstripuBSquare_t" value="1.0"/>
+		<constant name="CRTmoduleSquareuB_w" value="180"/>
+		<constant name="CRTmoduleSquareuB_l" value="184.5"/>
+		<constant name="CRTmoduleSquareuB_t" value="1.8"/>
+		<constant name="CRTmoduleSquareuB_b" value="0.4"/>
+		<constant name="CRTstripSquareuB_w" value="11.2"/>
+		<constant name="CRTstripSquareuB_l" value="183.7"/>
+		<constant name="CRTstripSquareuB_t" value="1.0"/>
 
 		<!-- uB longer -->
 		<constant name="CRTmoduleuB_w" value="180"/>
@@ -4933,8 +4933,7 @@
                         <loop for="CRT_placing_modules" to="4+5" step="1">
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l-CRTmoduleuBns_l/2" y="CRTmoduleY_l-(CRT_placing_modules-4.5)*CRTmoduleuBns_w-22.0" z="C\
-RTmoduleY_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l-CRTmoduleuBns_l/2" y="CRTmoduleY_l-(CRT_placing_modules-4.5)*CRTmoduleuBns_w-22.0" z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <!-- next 5 are west side, uB  -->
