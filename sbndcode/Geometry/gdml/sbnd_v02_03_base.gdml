@@ -3546,7 +3546,7 @@
                         <volume name="volAuxDetCRTStripArray40">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="655" step="1">
+                                <loop for="CRT_declaring_modules" to="655+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-40*16)*CRTstripY_w" z="0"/>
@@ -3556,7 +3556,7 @@
                         <volume name="volAuxDetCRTStripArray41">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="671" step="1">
+                                <loop for="CRT_declaring_modules" to="671+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-41*16)*CRTstripY_w" z="0"/>
@@ -3566,7 +3566,7 @@
                         <volume name="volAuxDetCRTStripArray42">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="687" step="1">
+                                <loop for="CRT_declaring_modules" to="687+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-42*16)*CRTstripY_w" z="0"/>
@@ -3576,7 +3576,7 @@
                         <volume name="volAuxDetCRTStripArray43">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="703" step="1">
+                                <loop for="CRT_declaring_modules" to="703+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-43*16)*CRTstripY_w" z="0"/>
@@ -3586,7 +3586,7 @@
                         <volume name="volAuxDetCRTStripArray44">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="719" step="1">
+                                <loop for="CRT_declaring_modules" to="719+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-44*16)*CRTstripY_w" z="0"/>
@@ -3596,7 +3596,7 @@
                         <volume name="volAuxDetCRTStripArray45">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="735" step="1">
+                                <loop for="CRT_declaring_modules" to="735+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-45*16)*CRTstripY_w" z="0"/>
@@ -3606,7 +3606,7 @@
                         <volume name="volAuxDetCRTStripArray46">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="751" step="1">
+                                <loop for="CRT_declaring_modules" to="751+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-46*16)*CRTstripY_w" z="0"/>
@@ -3616,7 +3616,7 @@
                         <volume name="volAuxDetCRTStripArray47">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="767" step="1">
+                                <loop for="CRT_declaring_modules" to="767+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-47*16)*CRTstripY_w" z="0"/>
@@ -3626,7 +3626,7 @@
                         <volume name="volAuxDetCRTStripArray48">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="783" step="1">
+                                <loop for="CRT_declaring_modules" to="783+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-48*16)*CRTstripY_w" z="0"/>
@@ -3636,7 +3636,7 @@
                         <volume name="volAuxDetCRTStripArray49">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="799" step="1">
+                                <loop for="CRT_declaring_modules" to="799+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-49*16)*CRTstripY_w" z="0"/>
@@ -3646,7 +3646,7 @@
                         <volume name="volAuxDetCRTStripArray50">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="815" step="1">
+                                <loop for="CRT_declaring_modules" to="815+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-50*16)*CRTstripY_w" z="0"/>
@@ -3656,7 +3656,7 @@
                         <volume name="volAuxDetCRTStripArray51">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="831" step="1">
+                                <loop for="CRT_declaring_modules" to="831+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-51*16)*CRTstripY_w" z="0"/>
@@ -3666,7 +3666,7 @@
                         <volume name="volAuxDetCRTStripArray52">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="847" step="1">
+                                <loop for="CRT_declaring_modules" to="847+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-52*16)*CRTstripY_w" z="0"/>
@@ -3676,7 +3676,7 @@
                         <volume name="volAuxDetCRTStripArray53">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="863" step="1">
+                                <loop for="CRT_declaring_modules" to="863+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-53*16)*CRTstripY_w" z="0"/>
@@ -3686,7 +3686,7 @@
                         <volume name="volAuxDetCRTStripArray54">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="879" step="1">
+                                <loop for="CRT_declaring_modules" to="879+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-54*16)*CRTstripY_w" z="0"/>
@@ -3696,7 +3696,7 @@
                         <volume name="volAuxDetCRTStripArray55">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="895" step="1">
+                                <loop for="CRT_declaring_modules" to="895+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-55*16)*CRTstripY_w" z="0"/>
@@ -3706,7 +3706,7 @@
                         <volume name="volAuxDetCRTStripArray56">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="911" step="1">
+                                <loop for="CRT_declaring_modules" to="911+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-56*16)*CRTstripY_w" z="0"/>
@@ -3716,7 +3716,7 @@
                         <volume name="volAuxDetCRTStripArray57">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="927" step="1">
+                                <loop for="CRT_declaring_modules" to="927+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-57*16)*CRTstripY_w" z="0"/>
@@ -3726,7 +3726,7 @@
                         <volume name="volAuxDetCRTStripArray58">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="943" step="1">
+                                <loop for="CRT_declaring_modules" to="943+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-58*16)*CRTstripY_w" z="0"/>
@@ -3736,7 +3736,7 @@
                         <volume name="volAuxDetCRTStripArray59">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="959" step="1">
+                                <loop for="CRT_declaring_modules" to="959+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-59*16)*CRTstripY_w" z="0"/>
@@ -3750,7 +3750,7 @@
                         <volume name="volAuxDetCRTStripArray60">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripSquareArray"/>
-                                <loop for="CRT_declaring_modules" to="975" step="1">
+                                <loop for="CRT_declaring_modules" to="975+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripSquare"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-60*16)*CRTstripY_w" z="0"/>
@@ -3760,7 +3760,7 @@
                         <volume name="volAuxDetCRTStripArray61">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="991" step="1">
+                                <loop for="CRT_declaring_modules" to="991+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-61*16)*CRTstripY_w" z="0"/>
@@ -3770,7 +3770,7 @@
                         <volume name="volAuxDetCRTStripArray62">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="1007" step="1">
+                                <loop for="CRT_declaring_modules" to="1007+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-62*16)*CRTstripY_w" z="0"/>
@@ -3780,7 +3780,7 @@
                         <volume name="volAuxDetCRTStripArray63">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="1023" step="1">
+                                <loop for="CRT_declaring_modules" to="1023+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-63*16)*CRTstripY_w" z="0"/>
@@ -3790,7 +3790,7 @@
                         <volume name="volAuxDetCRTStripArray64">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="1039" step="1">
+                                <loop for="CRT_declaring_modules" to="1039+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-64*16)*CRTstripY_w" z="0"/>
@@ -3800,7 +3800,7 @@
                         <volume name="volAuxDetCRTStripArray65">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="1055" step="1">
+                                <loop for="CRT_declaring_modules" to="1055+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-65*16)*CRTstripY_w" z="0"/>
@@ -3810,7 +3810,7 @@
                         <volume name="volAuxDetCRTStripArray66">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="1071" step="1">
+                                <loop for="CRT_declaring_modules" to="1071+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-66*16)*CRTstripY_w" z="0"/>
@@ -3820,7 +3820,7 @@
                         <volume name="volAuxDetCRTStripArray67">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="1087" step="1">
+                                <loop for="CRT_declaring_modules" to="1087+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-67*16)*CRTstripY_w" z="0"/>
@@ -3830,7 +3830,7 @@
                         <volume name="volAuxDetCRTStripArray68">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="1103" step="1">
+                                <loop for="CRT_declaring_modules" to="1103+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-68*16)*CRTstripY_w" z="0"/>
@@ -3843,7 +3843,7 @@
                         <volume name="volAuxDetCRTStripArray69">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripSquareArray"/>
-                                <loop for="CRT_declaring_modules" to="1119" step="1">
+                                <loop for="CRT_declaring_modules" to="1119+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripSquare"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-69*16)*CRTstripY_w" z="0"/>
@@ -3853,7 +3853,7 @@
                         <volume name="volAuxDetCRTStripArray70">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="1135" step="1">
+                                <loop for="CRT_declaring_modules" to="1135+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-70*16)*CRTstripY_w" z="0"/>
@@ -3863,7 +3863,7 @@
                         <volume name="volAuxDetCRTStripArray71">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripXArray"/>
-                                <loop for="CRT_declaring_modules" to="1151" step="1">
+                                <loop for="CRT_declaring_modules" to="1151+160" step="1">
                                         <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
                                                 <volumeref ref="volAuxDetSensitiveCRTStripX"/>
                                                 <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleY_w/2)+(CRTmoduleY_b)+(CRTstripY_w/2)+(CRT_declaring_modules-71*16)*CRTstripY_w" z="0"/>
