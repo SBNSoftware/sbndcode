@@ -3017,6 +3017,63 @@
 
                 <!-- topHigh and topLow panels -->
                 <!-- begin -->
+                <!-- 5 gap filler uB modules here narrow long -->
+                <!-- WIBBLE got to think about order here done hopefully-->
+                <volume name="volAuxDetCRTStripArrayuBnl0">
+                  <materialref ref="matPolystyrene"/>
+                  <solidref ref="CRTstripuBnlArray"/>
+                  <loop for="CRT_declaring_modules" to="15" step="1">
+                    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                      <volumeref ref="volAuxDetSensitiveCRTStripuBnl"/>
+                      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleuBnl_w/2)+(CRTmoduleuBnl_b)+(CRTstripuBnl_w/2)+(CRT_declaring_modules-0*16)*CRTstripuBnl_w" z="0"/>
+                    </physvol>
+                  </loop>
+                </volume>
+
+                <volume name="volAuxDetCRTStripArrayuBnl1">
+                  <materialref ref="matPolystyrene"/>
+                  <solidref ref="CRTstripuBnlArray"/>
+                  <loop for="CRT_declaring_modules" to="31" step="1">
+                    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                      <volumeref ref="volAuxDetSensitiveCRTStripuBnl"/>
+                      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleuBnl_w/2)+(CRTmoduleuBnl_b)+(CRTstripuBnl_w/2)+(CRT_declaring_modules-0*16)*CRTstripuBnl_w" z="0"/>
+                    </physvol>
+                  </loop>
+                </volume>
+
+                <volume name="volAuxDetCRTStripArrayuBnl2">
+                  <materialref ref="matPolystyrene"/>
+                  <solidref ref="CRTstripuBnlArray"/>
+                  <loop for="CRT_declaring_modules" to="47" step="1">
+                    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                      <volumeref ref="volAuxDetSensitiveCRTStripuBnl"/>
+                      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleuBnl_w/2)+(CRTmoduleuBnl_b)+(CRTstripuBnl_w/2)+(CRT_declaring_modules-0*16)*CRTstripuBnl_w" z="0"/>
+                    </physvol>
+                  </loop>
+                </volume>
+
+                <volume name="volAuxDetCRTStripArrayuBnl3">
+                  <materialref ref="matPolystyrene"/>
+                  <solidref ref="CRTstripuBnlArray"/>
+                  <loop for="CRT_declaring_modules" to="63" step="1">
+                    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                      <volumeref ref="volAuxDetSensitiveCRTStripuBnl"/>
+                      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleuBnl_w/2)+(CRTmoduleuBnl_b)+(CRTstripuBnl_w/2)+(CRT_declaring_modules-0*16)*CRTstripuBnl_w" z="0"/>
+                    </physvol>
+                  </loop>
+                </volume>
+
+                <volume name="volAuxDetCRTStripArrayuBnl4">
+                  <materialref ref="matPolystyrene"/>
+                  <solidref ref="CRTstripuBnlArray"/>
+                  <loop for="CRT_declaring_modules" to="79" step="1">
+                    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+                      <volumeref ref="volAuxDetSensitiveCRTStripuBnl"/>
+                      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleuBnl_w/2)+(CRTmoduleuBnl_b)+(CRTstripuBnl_w/2)+(CRT_declaring_modules-0*16)*CRTstripuBnl_w" z="0"/>
+                    </physvol>
+                  </loop>
+                </volume>
+
                         <volume name="volAuxDetCRTStripArray0">
                                 <materialref ref="matPolystyrene"/>
                                 <solidref ref="CRTstripYArray"/>
