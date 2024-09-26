@@ -34,8 +34,8 @@ physics.producers.fasthit.ColMinWidth: 100.0
 physics.producers.fasthit.UncompressWithPed: false
 
 # override hitdumper defaults 
-physics.analyzers.hitdumper.readMuonHits:       true
-physics.analyzers.hitdumper.readMuonTracks:     true
+physics.analyzers.hitdumper.readMuonHits:       false
+physics.analyzers.hitdumper.readMuonTracks:     false
 physics.analyzers.hitdumper.KeepCRTStripHits:   true
 physics.analyzers.hitdumper.KeepCRTTracks:      true
 physics.analyzers.hitdumper.KeepCRTSpacePoints: true
@@ -43,3 +43,6 @@ physics.analyzers.hitdumper.readpmtTrigger:     false
 physics.analyzers.hitdumper.readpmtSoftTrigger: false
 physics.analyzers.hitdumper.readTruth: false
 physics.analyzers.hitdumper.readOpHits: false
+physics.analyzers.hitdumper.checkTransparency: true
+physics.analyzers.hitdumper.window: 1
+physics.analyzers.hitdumper.SkipInduction: true
