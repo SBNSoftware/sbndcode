@@ -185,7 +185,7 @@ private:
   std::vector<double> _hit_width;               ///< Hit width
   std::vector<double> _hit_full_integral;       ///< Hit charge integral
   std::vector<int>    _waveform_number;         ///< Number for each waveform, to allow for searching
-  std::vector<double> _adc_on_wire;             ///< ADC on wire to draw waveform
+  std::vector<short> _adc_on_wire;             ///< ADC on wire to draw waveform
   std::vector<int>    _time_for_waveform;       ///<Time for waveform to plot
   int                 _adc_count;               ///<Used for plotting waveforms
   std::vector<int>    _waveform_integral;       ///<Used to see progression of the waveform integral
