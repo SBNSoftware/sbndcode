@@ -3482,7 +3482,64 @@
                                         </physvol>
                                 </loop>
                         </volume>
-                <!-- end -->
+			<!-- end of bottom layer of lower top crt -->
+			<!-- 5 gap filler uB modules here -->
+
+			<volume name="volAuxDetCRTStripArraySquareuB5">
+			  <materialref ref="matPolystyrene"/>
+			  <solidref ref="CRTstripSquareuBArray"/>
+			  <loop for="CRT_declaring_modules" to="655+80" step="1">
+			    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+			      <volumeref ref="volAuxDetSensitiveCRTStripSquareuB"/>
+			      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleSquareuB_w/2)+(CRTmoduleSquareuB_b)+(CRTstripSquareuB_w/2)+(CRT_declaring_modules-0*16)*CRTstripSquareuB_w" z="0"/>
+			    </physvol>
+			  </loop>
+			</volume>
+                        <volume name="volAuxDetCRTStripArraySquareuB6">
+			  <materialref ref="matPolystyrene"/>
+			  <solidref ref="CRTstripSquareuBArray"/>
+			  <loop for="CRT_declaring_modules" to="671+80" step="1">
+			    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+			      <volumeref ref="volAuxDetSensitiveCRTStripSquareuB"/>
+			      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleSquareuB_w/2)+(CRTmoduleSquareuB_b)+(CRTstripSquareuB_w/2)+(CRT_declaring_modules-0*16)*CRTstripSquareuB_w" z="0"/>
+			    </physvol>
+			  </loop>
+			</volume>
+			<volume name="volAuxDetCRTStripArraySquareuB7">
+			  <materialref ref="matPolystyrene"/>
+			  <solidref ref="CRTstripSquareuBArray"/>
+			  <loop for="CRT_declaring_modules" to="687+80" step="1">
+			    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+			      <volumeref ref="volAuxDetSensitiveCRTStripSquareuB"/>
+			      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleSquareuB_w/2)+(CRTmoduleSquareuB_b)+(CRTstripSquareuB_w/2)+(CRT_declaring_modules-0*16)*CRTstripSquareuB_w" z="0"/>
+			    </physvol>
+			  </loop>
+			</volume>
+			<volume name="volAuxDetCRTStripArraySquareuB8">
+			  <materialref ref="matPolystyrene"/>
+			  <solidref ref="CRTstripSquareuBArray"/>
+			  <loop for="CRT_declaring_modules" to="703+80" step="1">
+			    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+			      <volumeref ref="volAuxDetSensitiveCRTStripSquareuB"/>
+			      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleSquareuB_w/2)+(CRTmoduleSquareuB_b)+(CRTstripSquareuB_w/2)+(CRT_declaring_modules-0*16)*CRTstripSquareuB_w" z="0"/>
+			    </physvol>
+			  </loop>
+			</volume>
+			<volume name="volAuxDetCRTStripArraySquareuB9">
+			  <materialref ref="matPolystyrene"/>
+			  <solidref ref="CRTstripSquareuBArray"/>
+			  <loop for="CRT_declaring_modules" to="719+80" step="1">
+			    <physvol name="AuxDetSensitiveCRTStripCRT_declaring_modules" copynumber="CRT_declaring_modules">
+			      <volumeref ref="volAuxDetSensitiveCRTStripSquareuB"/>
+			      <position name="posCRT_declaring_modules_CRT" unit="cm" x="0" y="(-CRTmoduleSquareuB_w/2)+(CRTmoduleSquareuB_b)+(CRTstripSquareuB_w/2)+(CRT_declaring_modules-0*16)*CRTstripSquareuB_w" z="0"/>
+			    </physvol>
+			  </loop>
+			</volume>
+
+			<!-- end of uB module gap layer -->
+			<!-- TODO add 5*16=80 to strip index below here DONE-->
+
+			<!-- end -->
 
                 <!-- south and north panels -->
                 <!-- begin -->
