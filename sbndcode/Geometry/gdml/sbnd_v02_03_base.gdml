@@ -2854,6 +2854,38 @@
               		<second ref="CRTstripSquareArray"/>
                 </subtraction>
 
+                <box lunit="cm" name="CRTmoduleSquareuB" x="CRTmoduleSquareuB_l" y="CRTmoduleSquareuB_w" z="CRTmoduleSquareuB_t"/>
+                <box lunit="cm" name="CRTstripSquareuBArray" x="CRTstripSquareuB_l" y="CRTstripSquareuB_w*16.0" z="CRTstripSquareuB_t"/>
+                <box lunit="cm" name="CRTstripSquareuB" x="CRTstripSquareuB_l" y="CRTstripSquareuB_w" z="CRTstripSquareuB_t"/>
+                <subtraction name="CRTmoduleSquareuBCover">
+                  <first ref="CRTmoduleSquareuB"/>
+                  <second ref="CRTstripSquareuBArray"/>
+                </subtraction>
+
+                <box lunit="cm" name="CRTmoduleuB" x="CRTmoduleuB_l" y="CRTmoduleuB_w" z="CRTmoduleuB_t"/>
+                <box lunit="cm" name="CRTstripuBArray" x="CRTstripuB_l" y="CRTstripuB_w*16.0" z="CRTstripuB_t"/>
+                <box lunit="cm" name="CRTstripuB" x="CRTstripuB_l" y="CRTstripuB_w" z="CRTstripuB_t"/>
+                <subtraction name="CRTmoduleuBCover">
+                  <first ref="CRTmoduleuB"/>
+                  <second ref="CRTstripuBArray"/>
+                </subtraction>
+
+                <box lunit="cm" name="CRTmoduleuBnl" x="CRTmoduleuBnl_l" y="CRTmoduleuBnl_w" z="CRTmoduleuBnl_t"/>
+                <box lunit="cm" name="CRTstripuBnlArray" x="CRTstripuBnl_l" y="CRTstripuBnl_w*16.0" z="CRTstripuBnl_t"/>
+                <box lunit="cm" name="CRTstripuBnl" x="CRTstripuBnl_l" y="CRTstripuBnl_w" z="CRTstripuBnl_t"/>
+                <subtraction name="CRTmoduleuBnlCover">
+                  <first ref="CRTmoduleuBnl"/>
+                  <second ref="CRTstripuBnlArray"/>
+                </subtraction>
+
+                <box lunit="cm" name="CRTmoduleuBns" x="CRTmoduleuBns_l" y="CRTmoduleuBns_w" z="CRTmoduleuBns_t"/>
+                <box lunit="cm" name="CRTstripuBnsArray" x="CRTstripuBns_l" y="CRTstripuBns_w*16.0" z="CRTstripuBns_t"/>
+                <box lunit="cm" name="CRTstripuBns" x="CRTstripuBns_l" y="CRTstripuBns_w" z="CRTstripuBns_t"/>
+                <subtraction name="CRTmoduleuBnsCover">
+                  <first ref="CRTmoduleuBns"/>
+                  <second ref="CRTstripuBnsArray"/>
+                </subtraction>
+
                 <box lunit="cm" name="CRTmoduleBERN" x="CRTmoduleBERN_l" y="CRTmoduleBERN_w" z="CRTmoduleBERN_t"/>
                 <box lunit="cm" name="CRTstripBERNArray" x="CRTstripBERN_l" y="CRTstripBERN_w*16.0" z="CRTstripBERN_t"/>
                 <box lunit="cm" name="CRTstripBERN" x="CRTstripBERN_l" y="CRTstripBERN_w" z="CRTstripBERN_t"/>
