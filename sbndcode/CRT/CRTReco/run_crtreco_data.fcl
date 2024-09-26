@@ -6,18 +6,10 @@ services.message:              @local::sbnd_message_services
 services.CRTChannelMapService: @local::crt_channel_map_standard
 services.CRTCalibService:      @local::crt_calib_service
 
-physics.producers.crtstrips.CRTGeoAlg:                                  @local::crtgeoalg_data_sbnd
-physics.producers.crtstrips.FEBDataModuleLabel:                         "crtdecoder"
-physics.producers.crtstrips.AllowFlag1:                                 true
-physics.producers.crtstrips.CorrectForDifferentSecond:                  true
-physics.producers.crtstrips.ReferenceTs0ToETrig:                        true
-physics.producers.crtstrips.SPECTDCModuleLabel:                         "tdcdecoder"
-physics.producers.crtclustering.CRTGeoAlg:                              @local::crtgeoalg_data_sbnd
-physics.producers.crtclustering.UseTs0:                                 true
-physics.producers.crtspacepoints.ClusterCharacterisationAlg.CRTGeoAlg:  @local::crtgeoalg_data_sbnd
-physics.producers.crtspacepoints.ClusterCharacterisationAlg.TimeOffset: 0
-physics.producers.crttracks.CRTGeoAlg:                                  @local::crtgeoalg_data_sbnd
-physics.producers.crttracks.UseTs0:                                     true
-physics.producers.crttracks.MaskedTaggers:                              [ 0 ]
+physics.producers.crtstrips:      @local::crtstriphitproducer_data_sbnd
+physics.producers.crtclustering:  @local::crtclusterproducer_data_sbnd
+physics.producers.crtspacepoints: @local::crtspacepointproducer_data_sbnd
+physics.producers.crttracks:      @local::crttrackproducer_data_sbnd
+
 outputs.out1.outputCommands: [ "keep *_*_*_*",
                                "drop *_daq_*_*" ]

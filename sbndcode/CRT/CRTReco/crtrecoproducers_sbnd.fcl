@@ -16,6 +16,14 @@ crtstriphitproducer_sbnd:
    module_type:               "CRTStripHitProducer"
 }
 
+crtstriphitproducer_data_sbnd: @local::crtstriphitproducer_sbnd
+crtstriphitproducer_data_sbnd.CRTGeoAlg:                 @local::crtgeoalg_data_sbnd
+crtstriphitproducer_data_sbnd.FEBDataModuleLabel:        "crtdecoder"
+crtstriphitproducer_data_sbnd.AllowFlag1:                true
+crtstriphitproducer_data_sbnd.CorrectForDifferentSecond: true
+crtstriphitproducer_data_sbnd.ReferenceTs0ToETrig:       true
+crtstriphitproducer_data_sbnd.SPECTDCModuleLabel:        "tdcdecoder"
+
 crtclusterproducer_sbnd:
 {
    CRTGeoAlg:                  @local::crtgeoalg_sbnd
@@ -25,6 +33,10 @@ crtclusterproducer_sbnd:
    UseTs0:                     false
    module_type:                "CRTClusterProducer"
 }
+
+crtclusterproducer_data_sbnd: @local::crtclusterproducer_sbnd
+crtclusterproducer_data_sbnd.CRTGeoAlg: @local::crtgeoalg_data_sbnd
+crtclusterproducer_data_sbnd.UseTs0:    true
 
 crtclustercharacterisationalg_sbnd:
 {
@@ -44,6 +56,10 @@ crtspacepointproducer_sbnd:
    module_type:                "CRTSpacePointProducer"
 }
 
+crtspacepointproducer_data_sbnd: @local::crtspacepointproducer_sbnd
+crtspacepointproducer_data_sbnd.ClusterCharacterisationAlg.CRTGeoAlg:  @local::crtgeoalg_data_sbnd
+crtspacepointproducer_data_sbnd.ClusterCharacterisationAlg.TimeOffset: 0
+
 crttrackproducer_sbnd:
 {
    CRTGeoAlg:                  @local::crtgeoalg_sbnd
@@ -54,5 +70,10 @@ crttrackproducer_sbnd:
    MaskedTaggers:              []
    module_type:                "CRTTrackProducer"
 }
+
+crttrackproducer_data_sbnd: @local::crttrackproducer_sbnd
+crttrackproducer_data_sbnd.CRTGeoAlg:     @local::crtgeoalg_data_sbnd
+crttrackproducer_data_sbnd.UseTs0:        true
+crttrackproducer_data_sbnd.MaskedTaggers: [ 0 ]
 
 END_PROLOG
