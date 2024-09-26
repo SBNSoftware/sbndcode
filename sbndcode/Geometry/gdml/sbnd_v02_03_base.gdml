@@ -2976,6 +2976,12 @@
 			<auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
                 </volume>
 
+                <volume name="volAuxDetSensitiveCRTStripuB">
+                        <materialref ref="matPolystyrene"/>
+                        <solidref ref="CRTstripuB"/>
+                        <auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
+                </volume>
+
                 <volume name="volAuxDetSensitiveCRTStripuBnl">
                         <materialref ref="matPolystyrene"/>
                         <solidref ref="CRTstripuBnl"/>
