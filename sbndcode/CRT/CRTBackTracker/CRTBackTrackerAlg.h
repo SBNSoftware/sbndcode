@@ -53,6 +53,10 @@ namespace sbnd::crt {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
       
+      fhicl::Table<fhicl::ParameterSet> GeoAlgConfig {
+        Name("CRTGeoAlg"),
+	  };
+
       fhicl::Atom<art::InputTag> SimModuleLabel {
         Name("SimModuleLabel"),
           };
