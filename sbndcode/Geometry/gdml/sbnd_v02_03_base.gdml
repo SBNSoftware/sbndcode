@@ -2970,6 +2970,25 @@
                         <auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
                 </volume>
 
+		<volume name="volAuxDetSensitiveCRTStripSquareuB">
+                        <materialref ref="matPolystyrene"/>
+			<solidref ref="CRTstripSquareuB"/>
+			<auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
+                </volume>
+
+                <volume name="volAuxDetSensitiveCRTStripuBnl">
+                        <materialref ref="matPolystyrene"/>
+                        <solidref ref="CRTstripuBnl"/>
+                        <auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
+                </volume>
+
+                <volume name="volAuxDetSensitiveCRTStripuBns">
+                        <materialref ref="matPolystyrene"/>
+                        <solidref ref="CRTstripuBns"/>
+                        <auxiliary auxtype="SensDet" auxvalue="AuxDet"/>
+                </volume>
+
+
                 <volume name="volAuxDetSensitiveCRTStripBERN">
                         <materialref ref="matPolystyrene"/>
                         <solidref ref="CRTstripBERN"/>
