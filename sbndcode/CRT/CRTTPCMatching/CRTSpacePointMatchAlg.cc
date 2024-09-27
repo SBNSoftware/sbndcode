@@ -29,6 +29,7 @@ namespace sbnd::crt {
     fMaxUncert          = config.MaxUncert();
     fTPCTrackLabel      = config.TPCTrackLabel();
     fCRTSpacePointLabel = config.CRTSpacePointLabel();
+    fUseTs0             = config.UseTs0();
 
     return;
   }
@@ -74,7 +75,7 @@ namespace sbnd::crt {
 
     for(auto &crtSP : crtSPs){
 
-      const double crtTime = crtSP->Time() * 1e-3 + fTimeCorrection;
+      const double crtTime = fUseTs0 ? crtSP->Ts0() * 1e-3 + fTimeCorrection : crtSP->Ts1() * 1e-3 + fTimeCorrection;
 
       if(!(crtTime > t0MinMax.first - 10. && crtTime < t0MinMax.second + 10.))
         continue;
