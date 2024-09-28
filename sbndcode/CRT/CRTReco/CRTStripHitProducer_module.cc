@@ -66,7 +66,7 @@ private:
 
 sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
+  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
@@ -76,7 +76,7 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fTs1Max(p.get<int64_t>("Ts1Max", std::numeric_limits<int64_t>::max()))
   , fCorrectForDifferentSecond(p.get<bool>("CorrectForDifferentSecond"))
   , fReferenceTs0ToETrig(p.get<bool>("ReferenceTs0ToETrig"))
-  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel"))
+  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel", ""))
   , fSPECTDCETrigChannel(p.get<uint32_t>("SPECTDCETrigChannel", 4))
 {
   produces<std::vector<CRTStripHit>>();

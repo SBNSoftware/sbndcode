@@ -53,6 +53,10 @@ namespace sbnd::crt {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
       
+      fhicl::Table<CRTGeoAlg::Config> GeoAlgConfig {
+        Name("CRTGeoAlg"),
+	  };
+
       fhicl::Atom<art::InputTag> SimModuleLabel {
         Name("SimModuleLabel"),
           };
@@ -188,12 +192,12 @@ namespace sbnd::crt {
     };
 
     CRTBackTrackerAlg(const Config& config);
-    
+
+    CRTBackTrackerAlg();
+
     CRTBackTrackerAlg(const fhicl::ParameterSet& pset) :
     CRTBackTrackerAlg(fhicl::Table<Config>(pset, {})()) {}
     
-    CRTBackTrackerAlg();
-
     ~CRTBackTrackerAlg();
 
     void reconfigure(const Config& config);
@@ -228,7 +232,7 @@ namespace sbnd::crt {
 
   private:
     
-    CRTGeoAlg fCRTGeoAlg;
+    CRTGeoAlg::Config fCRTGeoAlgConfig;
 
     art::InputTag fSimModuleLabel;
     art::InputTag fSimDepositModuleLabel;

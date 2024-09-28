@@ -36,8 +36,6 @@ namespace sbnd::crt {
   class CRTClusterCharacterisationAlg {
   public:
     
-    CRTClusterCharacterisationAlg();
-    
     CRTClusterCharacterisationAlg(const fhicl::ParameterSet& pset);
     
     ~CRTClusterCharacterisationAlg();

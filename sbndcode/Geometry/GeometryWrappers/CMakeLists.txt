@@ -40,3 +40,4 @@ art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
 
 install_headers()
 install_source()
+install_fhicl()

@@ -1,10 +1,12 @@
-#include "crtsimmodules_sbnd.fcl"
+#include "crtgeoalg_sbnd.fcl"
 #include "crtbacktrackeralg_sbnd.fcl"
+#include "crtsimmodules_sbnd.fcl"
 
 BEGIN_PROLOG
 
 crteventdisplayalg_sbnd:
 {
+   CRTGeoAlg:         @local::crtgeoalg_sbnd
    CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
 
    MC: true
@@ -63,8 +65,8 @@ crteventdisplayalg_sbnd:
    TrackColour:              9
 
    UseTs0:  false
-   MinTime: -200000
-   MaxTime: -150000
+   MinTime: -10000000000
+   MaxTime: 10000000000
 
    Print:            true
 
@@ -107,9 +109,7 @@ crteventdisplayalg_sbnd_data.MC:              false
 crteventdisplayalg_sbnd_data.DrawModules:     true
 crteventdisplayalg_sbnd_data.DrawTrueTracks:  false
 crteventdisplayalg_sbnd_data.ChoseTaggers:    true
-crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 2, 3, 4 ]
+crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 0, 1, 2, 3, 4 ]
 crteventdisplayalg_sbnd_data.UseTs0:          true
-crteventdisplayalg_sbnd_data.MinTime:         435000000
-crteventdisplayalg_sbnd_data.MaxTime:         436000000
 
 END_PROLOG
