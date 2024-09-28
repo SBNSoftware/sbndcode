@@ -4645,7 +4645,6 @@
                         <volumeref ref="volAuxDetCRTStripArrayCRT_module_maker"/>
                         <position name="posvolAuxDetCRTStripArrayCRT_module_maker" unit="cm" x="0" y="0" z="0"/>
                       </physvol>
-                      </physvol>
                     </volume>
                   </loop>
 
