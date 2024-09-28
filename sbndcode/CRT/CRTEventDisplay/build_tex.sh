@@ -4,15 +4,15 @@ echo "\documentclass{article}
 \usepackage{pgffor}
 \usepackage[hidelinks]{hyperref}
 
-\title{SBND CRT Channel Mapping Displays \\\\ \vspace{1em} \small \textit{Produced using} \texttt{sbndcode v09\_90\_00} \textit{\&} \texttt{sbnd\_v02\_02.gdml}}
-\author{Henry Lay \\\\ \small h.lay@lancaster.ac.uk}" > crt_channel_mapping_evds.tex
+\title{SBND CRT Channel Mapping Displays \\\\ \vspace{1em} \small \textit{Produced using} \texttt{sbndcode v09\_91\_02\_02} \textit{\&} \texttt{sbnd\_v02\_03.gdml}}
+\author{Henry Lay \\\\ \small h.lay@sheffield.ac.uk}" > crt_channel_mapping_evds.tex
 
 walls=(bottom south north west east toplow tophigh)
 wallnames=(Bottom South North West East "Top Low" "Top High")
 
 for wall in "${walls[@]}"
 do
-    list=$(ls /exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/${wall}_wall/*_front.pdf)
+    list=$(ls /exp/sbnd/data/users/hlay/crt_channel_mapping/oct2024/${wall}_wall/*_front.pdf)
     echo -n "\newcommand*{\\"$wall"ids}{" >> crt_channel_mapping_evds.tex
 
     for item in ${list}
@@ -33,11 +33,10 @@ echo "\begin{document}
 \centering
 \vspace{2em}
 
-\includegraphics[width=.6\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/luphysics_logo.png}
-
+\includegraphics[width=.6\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/oct2024/UOSLogo_Primary_Violet_RGB.png}
 \vspace{2em}
 
-\includegraphics[width=.5\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/sbnd_pride_transparent.png}
+\includegraphics[width=.5\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/oct2024/sbnd_pride_transparent.png}
 \flushleft
 \newpage
 \tableofcontents
@@ -56,9 +55,9 @@ do
     \newpage
     \subsection{volCRTModule\x\_\x}
     \begin{center}
-            \includegraphics[width=.85\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/${walls[i]}_wall/volCRTModule\x_\x_front.pdf}\\\\
-            \includegraphics[width=.85\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/${walls[i]}_wall/volCRTModule\x_\x_top.pdf}\\\\
-            \includegraphics[width=.85\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/${walls[i]}_wall/volCRTModule\x_\x_side.pdf}
+            \includegraphics[width=.85\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/oct2024/${walls[i]}_wall/volCRTModule\x_\x_front.pdf}\\\\
+            \includegraphics[width=.85\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/oct2024/${walls[i]}_wall/volCRTModule\x_\x_top.pdf}\\\\
+            \includegraphics[width=.85\textwidth]{/exp/sbnd/data/users/hlay/crt_channel_mapping/oct2024/${walls[i]}_wall/volCRTModule\x_\x_side.pdf}
     \end{center}
 }
 \endgroup" >> crt_channel_mapping_evds.tex
@@ -66,5 +65,5 @@ done
 
 echo "\end{document}" >> crt_channel_mapping_evds.tex
 
-pdflatex --shell-escape -output-directory /exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/tex_work crt_channel_mapping_evds.tex
-pdflatex --shell-escape -output-directory /exp/sbnd/data/users/hlay/crt_channel_mapping/august2024/tex_work crt_channel_mapping_evds.tex
+pdflatex --shell-escape -output-directory /exp/sbnd/data/users/hlay/crt_channel_mapping/oct2024/tex_work crt_channel_mapping_evds.tex
+pdflatex --shell-escape -output-directory /exp/sbnd/data/users/hlay/crt_channel_mapping/oct2024/tex_work crt_channel_mapping_evds.tex
