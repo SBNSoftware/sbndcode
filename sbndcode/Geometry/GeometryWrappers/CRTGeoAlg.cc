@@ -122,20 +122,7 @@ namespace sbnd::crt {
 
             // Find world coordinates
             geo::AuxDetSensitiveGeo::LocalPoint_t const sipm0XYZ{sipmX, sipm0Y, 0};
-            geo::AuxDetGeo::LocalPoint_t const sipm0XYZNotSens{sipmX, sipm0Y, 0};
             auto const sipm0XYZWorld = auxDetSensitive.toWorldCoords(sipm0XYZ);
-            auto const sipm0XYZWorldNotSens = auxDet.toWorldCoords(sipm0XYZNotSens);
-
-            if(ad_i == 40 && (ads_i == 7 || ads_i == 8))
-              {
-                std::cout << "Module: " << ad_i << " Strip: " << ads_i << '\n'
-                          << "\tSiPM 0 - Local:         " << sipm0XYZ.X() << ", " << sipm0XYZ.Y() << ", " << sipm0XYZ.Z() << '\n'
-                          << "\t       - Global (Sens): " << sipm0XYZWorld.X() << ", " << sipm0XYZWorld.Y() << ", " << sipm0XYZWorld.Z() << '\n'
-                          << "\t       - Global:        " << sipm0XYZWorldNotSens.X() << ", " << sipm0XYZWorldNotSens.Y() << ", " << sipm0XYZWorldNotSens.Z() << '\n'
-                          << std::endl;
-
-                FEBWorldPos(fModules.at(moduleName));
-              }
 
             geo::AuxDetSensitiveGeo::LocalPoint_t const sipm1XYZ{sipmX, sipm1Y, 0};
             auto const sipm1XYZWorld = auxDetSensitive.toWorldCoords(sipm1XYZ);
@@ -385,11 +372,6 @@ namespace sbnd::crt {
 
     auto const limitsWorld  = auxDet.toWorldCoords(limits);
     auto const limitsWorld2 = auxDet.toWorldCoords(limits2);
-
-    std::cout << "Module: " << module.adID << '\n'
-              << "\tLocal:  " << limits.X() << ", " << limits.Y() << ", " << limits.Z() << '\n'
-              << "\tGlobal: " << limitsWorld.X() << ", " << limitsWorld.Y() << ", " << limitsWorld.Z() << '\n'
-              << std::endl;
 
     const double minX = std::min(limitsWorld.X(), limitsWorld2.X());
     const double maxX = std::max(limitsWorld.X(), limitsWorld2.X());
