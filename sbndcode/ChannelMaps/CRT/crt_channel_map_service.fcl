@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 crt_channel_map_standard:
 {
-  FileName: "SBNDCRTChannelMap_v6.txt"
+  FileName: "SBNDCRTChannelMap_v7.txt"
 }
 
 crt_channel_map_no_inversion:
