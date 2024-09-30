@@ -1,0 +1,69 @@
+BEGIN_PROLOG
+
+ncpizeroana:
+{
+  MCParticleModuleLabel:       "largeant"
+  SliceModuleLabel:            "pandoraSCE"
+  PFParticleModuleLabel:       "pandoraSCE"
+  VertexModuleLabel:           "pandoraSCE"
+  HitModuleLabel:              "gaushit"
+  TrackModuleLabel:            "pandoraTrack"
+  ShowerModuleLabel:           "pandoraShower"
+  CRUMBSModuleLabel:           "crumbs"
+  DazzleModuleLabel:           "dazzle"
+  CaloModuleLabel:             "pandoraCalo"
+  MCSModuleLabel:              "pandoraTrackMCS:muon"
+  Chi2ModuleLabel:             "pandoraPid"
+  RangeModuleLabel:            "pandoraTrackRange:muon"
+  ClosestApproachModuleLabel:  "pandoraTrackClosestApproach"
+  StoppingChi2ModuleLabel:     "pandoraTrackStoppingChi2"
+  RazzleModuleLabel:           "razzle"
+  CosmicDistModuleLabel:       "pandoraShowerCosmicDist"
+  ShowerTrackFitModuleLabel:   "pandoraShowerSelectionVars"
+  ShowerDensityFitModuleLabel: "pandoraShowerSelectionVars"
+  POTModuleLabel:              "generator"
+  OpT0ModuleLabel:             "opt0finder"
+  RazzledModuleLabel:          "razzled"
+  SpacePointModuleLabel:       "pandoraSCE"
+  EventWeightModuleLabels:     [ "fluxweight", "systtools", "geant4weight" ]
+
+  SecondShowerFinderAlg:
+  {
+    MinClusterHits:   10
+    MaxHitSeparation: 0.9
+  }
+
+  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroBv2.root"
+
+  module_type: NCPiZeroAnalysis
+}
+
+ncpizerofilter:
+{
+  MCTruthModuleLabel: "generator"
+
+  module_type:        NCPiZeroFilter
+}
+
+ncpizeroxsectrees:
+{
+  MCParticleModuleLabel:   "largeant"
+  SliceModuleLabel:        "pandoraSCE"
+  PFParticleModuleLabel:   "pandoraSCE"
+  VertexModuleLabel:       "pandoraSCE"
+  HitModuleLabel:          "gaushit"
+  TrackModuleLabel:        "pandoraTrack"
+  CaloModuleLabel:         "pandoraCalo"
+  ShowerModuleLabel:       "pandoraShower"
+  CRUMBSModuleLabel:       "crumbs"
+  POTModuleLabel:          "generator"
+  OpT0ModuleLabel:         "opt0finder"
+  RazzledModuleLabel:      "razzled"
+  EventWeightModuleLabels: [ "fluxweight", "systtools", "geant4weight" ]
+
+  ShowerEnergyCorrectionFileName: "shower_energy_correction_hist_NCPiZeroBv2.root"
+
+  module_type: NCPiZeroXSecTrees
+}
+
+END_PROLOG

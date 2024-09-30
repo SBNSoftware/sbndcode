@@ -1,0 +1,36 @@
+#include "simulationservices_sbnd.fcl"
+
+process_name: HitWaveformDisplay
+
+services:
+{
+  @table::sbnd_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    hitwaveformdisplay:
+    { 
+      module_type: "HitWaveformDisplay"
+      SaveDir:     "/exp/sbnd/data/users/hlay/thesis/waveformanalysis/"
+      BadHitMode:  false
+      LineMode:    false
+      SliceID:     -1
+      ChannelIDs:  [ 956, 959, 1001 ]
+    }
+  }
+
+  ana:       [ hitwaveformdisplay ]
+  end_paths: [ ana ]
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"

@@ -1,0 +1,73 @@
+#include "ncpizero_modules.fcl"
+#include "recoeff.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "reco2_sensible.fcl"
+
+process_name: NCPiZeroAnalyzer
+
+services:
+{
+  TFileService: { fileName: "ncpizeroana_sbnd.root" }
+  @table::sbnd_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+  @table::sbnd_random_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    ncpizeroana:       @local::ncpizeroana
+    ncpizeroxsectrees: @local::ncpizeroxsectrees
+    recoeff:           @local::recoeff
+  }
+
+  producers:
+  {
+    fluxweight:   @local::sbn_eventweight_flux
+    systtools:    @local::sbn_systtools
+    geant4weight: @local::sbn_eventweight_geant4
+    crumbstrees:  @local::crumbs_sbnd
+    razzledtrees: @local::razzled_sbnd
+  }
+
+  weight_paths:  [ fluxweight, systtools, geant4weight ]
+  mvatrees:      [ crumbstrees, razzledtrees ]
+  trigger_paths: [ weight_paths, mvatrees ]
+
+  ana:       [ ncpizeroana, ncpizeroxsectrees, recoeff ]
+  end_paths: [ ana ]
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
+
+physics.producers.crumbstrees.PFParticleModuleLabel:        "pandoraSCE"
+physics.producers.crumbstrees.SliceModuleLabel:             "pandoraSCE"
+physics.producers.crumbstrees.UseSimpleFlash:               false
+physics.producers.crumbstrees.UseOpT0Finder:                true
+physics.producers.crumbstrees.MVAFileName:                  "CRUMBS_Inclusive_NCPiZeroAv12.weights.xml"
+physics.producers.crumbstrees.CCNuMuMVAFileName:            "CRUMBS_CCNuMu_NCPiZeroAv12.weights.xml"
+physics.producers.crumbstrees.CCNuEMVAFileName:             "CRUMBS_CCNuE_NCPiZeroAv12.weights.xml"
+physics.producers.crumbstrees.NCMVAFileName:                "CRUMBS_NC_NCPiZeroAv12.weights.xml"
+physics.producers.crumbstrees.TrainingMode:                 true
+physics.producers.crumbstrees.EvaluateResultInTrainingMode: false
+
+physics.producers.razzledtrees.ClusterLabel:    "pandoraSCE"
+physics.producers.razzledtrees.DazzleLabel:     "dazzle"
+physics.producers.razzledtrees.RazzleLabel:     "razzle"
+physics.producers.razzledtrees.PFPLabel:        "pandoraSCE"
+physics.producers.razzledtrees.ShowerLabel:     "pandoraShower"
+physics.producers.razzledtrees.SimChannelLabel: "simtpc2d:simpleSC"
+physics.producers.razzledtrees.WeightFile:      "Razzled_BDTG_NCPiZeroAv12.weights.xml"
+physics.producers.razzledtrees.MakeTree:        true
+physics.producers.razzledtrees.RunMVA:          false
+
+#include "enable_spacecharge_services_sbnd.fcl"

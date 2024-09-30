@@ -1,4 +1,5 @@
-
+cet_find_library( BOOST_SERIALIZATION NAMES boost_serialization PATHS ENV BOOST_LIB NO_DEFAULT_PATH )
+cet_find_library( BOOST_DATE_TIME     NAMES boost_date_time     PATHS ENV BOOST_LIB NO_DEFAULT_PATH )
 add_subdirectory(JobConfigurations)
 add_subdirectory(LArSoftConfigurations)
 add_subdirectory(Utilities)
@@ -38,3 +39,9 @@ add_subdirectory(WireCell)
 
 add_subdirectory(Decoders)
 add_subdirectory(ChannelMaps)
+
+# for rohan
+add_subdirectory(BSM)
+add_subdirectory(BackTracking)
+add_subdirectory(PiZero)
+add_subdirectory(PID)

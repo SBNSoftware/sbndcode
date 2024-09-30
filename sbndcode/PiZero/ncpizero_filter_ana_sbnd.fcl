@@ -1,0 +1,48 @@
+#include "ncpizero_modules.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: NCPiZero
+
+services:
+{
+  TFileService: { fileName: "ncpizeroana_sbnd.root" }
+  @table::sbnd_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  filters:
+  {
+    ncpizerofilter: @local::ncpizerofilter
+  }
+
+  analyzers:
+  {
+    ncpizeroana: @local::ncpizeroana
+  }
+
+  filter:        [ ncpizerofilter ]
+
+  stream1:   [ out1 ]
+  ana:       [ ncpizeroana ]
+  end_paths: [ stream1, ana ]
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    SelectEvents: [ filter ]
+  }
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
