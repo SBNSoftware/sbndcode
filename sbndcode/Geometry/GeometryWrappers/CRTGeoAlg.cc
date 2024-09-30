@@ -150,26 +150,6 @@ namespace sbnd::crt {
             fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel1, sipm1));
           }
       }
-
-    for(uint i = 0; i < fModules.size(); ++i)
-      {
-
-	for(auto&& [ moduleName, module ] : fModules)
-	  {
-	    if(module.adID == i)
-	      {
-		std::cout << module.name << '\n'
-			  << "\tID: " << module.adID << '\n'
-			  << "\tIn: " << module.taggerName << '\n'
-			  << "\t x: " << module.minX << " -> " << module.maxX << " cm\n"
-			  << "\t y: " << module.minY << " -> " << module.maxY << " cm\n"
-			  << "\t z: " << module.minZ << " -> " << module.maxZ << " cm\n"
-			  << std::endl;
-
-		break;
-	      }
-	  }
-      }
   }
 
   CRTGeoAlg::~CRTGeoAlg() {}
