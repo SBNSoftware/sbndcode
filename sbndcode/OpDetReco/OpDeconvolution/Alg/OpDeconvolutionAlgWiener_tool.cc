@@ -84,6 +84,7 @@ private:
   bool fCorrectBaselineOscillations;
   short unsigned int fBaseSampleBins;
   double fBaseVarCut;
+  double fSPEPeakAmplitude;
 
   // Declare member data here.
 
@@ -136,6 +137,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fCorrectBaselineOscillations = p.get< bool >("CorrectBaselineOscillations");
   fBaseSampleBins = p.get< short unsigned int >("BaseSampleBins");
   fBaseVarCut = p.get< double >("BaseVarCut");
+  fSPEPeakAmplitude = p.get< double>("SPEPeakAmplitude");
   fFilterParams = p.get< std::vector<double> >("FilterParams");
 
   fNormUnAvSmooth=1./(2*fUnAvNeighbours+1);
@@ -152,7 +154,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   std::string fname;
   cet::search_path sp("FW_SEARCH_PATH");
   sp.find_file(fOpDetDataFile, fname);
-  TFile* file = TFile::Open(fOpDetDataFile.c_str(), "READ");
+  TFile* file = TFile::Open(fname.c_str(), "READ");
   std::vector<std::vector<double>>* SinglePEVec_p;
   std::vector<int>* fSinglePEChannels_p;
 
@@ -199,6 +201,9 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
         if(fSinglePEChannels[i]==channelNumber) 
         {
           fSinglePEWave = fSinglePEWaveVector[i];
+          double SPEPeakValue = *std::max_element(fSinglePEWave.begin(), fSinglePEWave.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
+          double SinglePENormalization = fSPEPeakAmplitude/SPEPeakValue;
+          std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(), [SinglePENormalization](double val) {return val * SinglePENormalization;});
           fSinglePEWave.resize(MaxBinsFFT, 0);
           AnalyseChannel = true;
           break;
