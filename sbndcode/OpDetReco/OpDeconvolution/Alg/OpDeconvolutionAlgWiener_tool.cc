@@ -48,6 +48,7 @@ private:
   std::vector<std::vector<double>> fSinglePEWaveVector;
   std::vector<double> fSinglePEWave;
   std::vector<int> fSinglePEChannels;
+  std::vector<double> fPeakAmplitude;
   std::vector<int> fSkipChannelList;
   bool fPositivePolarity;
   bool fUseSaturated;
@@ -84,7 +85,6 @@ private:
   bool fCorrectBaselineOscillations;
   short unsigned int fBaseSampleBins;
   double fBaseVarCut;
-  double fSPEPeakAmplitude;
 
   // Declare member data here.
 
@@ -137,7 +137,6 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fCorrectBaselineOscillations = p.get< bool >("CorrectBaselineOscillations");
   fBaseSampleBins = p.get< short unsigned int >("BaseSampleBins");
   fBaseVarCut = p.get< double >("BaseVarCut");
-  fSPEPeakAmplitude = p.get< double>("SPEPeakAmplitude");
   fFilterParams = p.get< std::vector<double> >("FilterParams");
 
   fNormUnAvSmooth=1./(2*fUnAvNeighbours+1);
@@ -157,12 +156,16 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   TFile* file = TFile::Open(fname.c_str(), "READ");
   std::vector<std::vector<double>>* SinglePEVec_p;
   std::vector<int>* fSinglePEChannels_p;
+  std::vector<double>* fPeakAmplitude_p;
 
   file->GetObject("SERChannels", fSinglePEChannels_p);
   file->GetObject("SinglePEVec", SinglePEVec_p);
+  file->GetObject("PeakAmplitude",  fPeakAmplitude_p);
+
   if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
   fSinglePEWaveVector = *SinglePEVec_p;
   fSinglePEChannels = *fSinglePEChannels_p;
+  fPeakAmplitude = *fPeakAmplitude_p;
 
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
   file->Close();
@@ -202,7 +205,7 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
         {
           fSinglePEWave = fSinglePEWaveVector[i];
           double SPEPeakValue = *std::max_element(fSinglePEWave.begin(), fSinglePEWave.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
-          double SinglePENormalization = fSPEPeakAmplitude/SPEPeakValue;
+          double SinglePENormalization = fPeakAmplitude[i]/SPEPeakValue;
           std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(), [SinglePENormalization](double val) {return val * SinglePENormalization;});
           fSinglePEWave.resize(MaxBinsFFT, 0);
           AnalyseChannel = true;
