@@ -390,8 +390,8 @@ namespace sbnd::crt {
     const double halfWidth  = auxDet.HalfWidth1();
     const double halfLength = auxDet.Length() / 2.;
 
-    geo::AuxDetGeo::LocalPoint_t limits { - halfWidth - 5, -15, -halfLength - 5};
-    geo::AuxDetGeo::LocalPoint_t limits2{ - halfWidth,     -12, -halfLength + 5};
+    geo::AuxDetGeo::LocalPoint_t limits { halfWidth + 5, -15, -halfLength - 5};
+    geo::AuxDetGeo::LocalPoint_t limits2{ halfWidth,     -12, -halfLength + 5};
 
     if(!module.top)
       {
