@@ -61,8 +61,7 @@ physics:
 
 physics.producers.opdecopmt.InputLabel: "pmtdecoder:PMTChannels"
 physics.producers.opdecopmt.OpDecoAlg.BaseSampleBins: 30
-physics.producers.opdecopmt.OpDecoAlg.OpDetDataFile: "./digi_pmt_sbnd_SER_individual_channels_v3.root"
+physics.producers.opdecopmt.OpDecoAlg.OpDetDataFile: "./digi_pmt_sbnd_SER_individual_channels_v4.root"
 physics.producers.opdecopmt.OpDecoAlg.BaseVarCut: 25
 physics.producers.opdecopmt.OpDecoAlg.SkipChannelList: []
 physics.producers.opdecopmt.OpDecoAlg.CorrectBaselineOscillations: true
-physics.producers.opdecopmt.OpDecoAlg.SPEPeakAmplitude: -12.5
