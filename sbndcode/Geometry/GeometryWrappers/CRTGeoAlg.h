@@ -174,9 +174,9 @@ namespace sbnd::crt {
       // Location of SiPMs
       if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger
          || CRTCommonUtils::GetTaggerEnum(taggerName) == kWestTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kEastTagger)
-        top = (orientation == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+        top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
       else
-        top = (orientation == 0) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+        top = (orientation == 0) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
 
       // Fill edges
       minX = std::min(limitsWorld.X(), limitsWorld2.X());
