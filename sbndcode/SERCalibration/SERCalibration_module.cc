@@ -1,7 +1,7 @@
 #include "sbndcode/SERCalibration/SERCalibration_module.hh"
 
 opdet::SERCalibration::SERCalibration(fhicl::ParameterSet const& p)
-  : EDAnalyzer{p}  // ,
+  : EDAnalyzer{p}  //
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
@@ -9,7 +9,7 @@ opdet::SERCalibration::SERCalibration(fhicl::ParameterSet const& p)
   fInputLabel = p.get< std::string >("InputLabel");
   fPDTypes = p.get< std::vector<std::string> >("PDTypes");
   fElectronics = p.get< std::vector<std::string> >("Electronics");
-  fSERPulseFinderPtr = art::make_tool<opdet::SERPulseFinder>( p.get< fhicl::ParameterSet >("SERPulseFinder") );
+  fSERPulseFinderPtr = art::make_tool<opdet::SERPulseFinderBase>( p.get< fhicl::ParameterSet >("SERPulseFinder") );
 }
 
 

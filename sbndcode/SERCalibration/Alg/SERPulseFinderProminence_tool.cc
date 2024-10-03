@@ -1,20 +1,104 @@
-#include <string>
-#include <sstream>
+
+#include "fhiclcpp/ParameterSet.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
+#include "art_root_io/TFileService.h"
+#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/LArPropertiesService.h"
+#include "art/Utilities/ToolMacros.h"
+#include "art/Utilities/make_tool.h"
+
+#include <memory>
+
+#include "lardataobj/RawData/OpDetWaveform.h"
+#include "lardata/Utilities/LArFFT.h"
+#include "TFile.h"
+
+#include <cmath>
+#include "TCanvas.h"
+#include "TH1.h"
+#include "TF1.h"
+#include "TComplex.h"
+
 #include <iostream>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <random>
-#include <map>
 #include <vector>
 #include <cmath>
 #include <string>
-#include <chrono>
+#include <numeric>
+#include "TVector2.h"
+#include "TH2D.h"
+#include "TCanvas.h"
+#include "TPad.h"
+#include "TTree.h"
+#include "TFile.h"
+#include "TGraph.h"
 
-#include "sbndcode/SERCalibration/Alg/SERPulseFinder_tool.h"
+#include "sbndcode/SERCalibration/Alg/SERPulseFinderBase.hh"
 
 
-opdet::SERPulseFinder::SERPulseFinder(fhicl::ParameterSet const& p) 
+namespace opdet {
+  class SERPulseFinderProminence;
+}
+
+class opdet::SERPulseFinderProminence : opdet::SERPulseFinderBase{
+
+public:
+
+    explicit  SERPulseFinderProminence(fhicl::ParameterSet const& p);
+    ~SERPulseFinderProminence(){}
+
+    virtual void RunSERCalibration(std::vector<raw::OpDetWaveform> const&  , std::vector<TH1D> * );
+
+    std::vector<int>* find_peaks(std::vector<double> * , int , double );
+    double calculateProminence(std::vector<double> * data, int peakIndex);
+    
+    void setProminence(double Prominence){ fProminence = Prominence; return;}
+    void setWindowLength(int WindowLenght){ fWindowLenght = WindowLenght; return;}
+    void setWindowInitialTime(int WindowInitialTime){ fWindowInitialTime = WindowInitialTime; return;}
+    void setPeakWidhtL(int PeakWidthL){ fPeakWidthL = PeakWidthL; return;}
+    void setPeakWidhtR(int PeakWidthR){ fPeakWidthR = PeakWidthR; return;}
+    void setInputWaveform(TH1D* InputWaveform){ fInputWaveform = InputWaveform; return;}
+    void SubstractBaseline();
+    void CalculateFFT();
+    void AddWaveforms(TH1D& , int);
+    bool IsIsolatedPeak(int );
+    int GetPeakValue(int );
+
+    std::vector<int>* GetTriggerIdx();
+    std::vector<int>* GetTriggerIdxFFT();
+
+private:
+
+    int fWindowLenght;
+    int fSmoothingWidth;
+    int fPeakWidthL;
+    int fPeakWidthR;
+    int fProminence;
+    int fWindowInitialTime;
+    size_t fDecreasingInterval;
+    int fWaveformMax;
+    int fProminenceLeftLimit;
+    int fProminenceRightLimit;
+    int fSummedWaveformLength;
+    int fProminenceLowerBound;
+    int fBaselineSample;
+    
+    double fTriggerTimeDifference;
+
+    TH1D * TimeSignal;
+    TH1D * CumulativeTimeSignal;
+
+    TH1D* fInputWaveform;
+    TH1D* fInputWaveformFFT;
+    std::vector<int> * TriggerIdx;
+
+    int fSERStart;
+    int fSEREnd;
+
+    std::vector<int> DetectedPeaksPerChannel;
+};
+
+opdet::SERPulseFinderProminence::SERPulseFinderProminence(fhicl::ParameterSet const& p) 
 {
     fSmoothingWidth = 20;
     fPeakWidthL=10;
@@ -36,10 +120,7 @@ opdet::SERPulseFinder::SERPulseFinder(fhicl::ParameterSet const& p)
     DetectedPeaksPerChannel.resize(320);
 }
 
-opdet::SERPulseFinder::~SERPulseFinder()
-{}
-
-std::vector<int>* opdet::SERPulseFinder::GetTriggerIdx()
+std::vector<int>* opdet::SERPulseFinderProminence::GetTriggerIdx()
 {
 
     Int_t b_max = fInputWaveform->GetMaximumBin();
@@ -59,7 +140,7 @@ std::vector<int>* opdet::SERPulseFinder::GetTriggerIdx()
 }
 
 
-void opdet::SERPulseFinder::RunSERCalibration(std::vector<raw::OpDetWaveform> const& wfVector , std::vector<TH1D> * calibratedSER_v)
+void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWaveform> const& wfVector , std::vector<TH1D> * calibratedSER_v)
 {
     //Loop over all waveforms and find the peaks 
     for(auto const& wf : wfVector)
@@ -95,7 +176,7 @@ void opdet::SERPulseFinder::RunSERCalibration(std::vector<raw::OpDetWaveform> co
 }
 
 
-std::vector<int>* opdet::SERPulseFinder::GetTriggerIdxFFT()
+std::vector<int>* opdet::SERPulseFinderProminence::GetTriggerIdxFFT()
 {
     Int_t b_max = fInputWaveformFFT->GetMaximumBin();
     fWaveformMax = fInputWaveformFFT->GetBinContent(b_max);
@@ -114,7 +195,7 @@ std::vector<int>* opdet::SERPulseFinder::GetTriggerIdxFFT()
 }
 
 
-std::vector<int>* opdet::SERPulseFinder::find_peaks(std::vector<double> * y, int width, double prominence) {
+std::vector<int>* opdet::SERPulseFinderProminence::find_peaks(std::vector<double> * y, int width, double prominence) {
         
     std::vector<int> * peaks = new std::vector<int>();
     int MaxWidth = std::max(fPeakWidthL, fPeakWidthR);
@@ -156,7 +237,7 @@ std::vector<int>* opdet::SERPulseFinder::find_peaks(std::vector<double> * y, int
     return peaks;
 }
 
-double opdet::SERPulseFinder::calculateProminence(std::vector<double> * data, int peakIndex) {
+double opdet::SERPulseFinderProminence::calculateProminence(std::vector<double> * data, int peakIndex) {
    
     int dataSize = data->size();
     // Verificar si el índice del pico está dentro de los límites del vector
@@ -209,7 +290,7 @@ double opdet::SERPulseFinder::calculateProminence(std::vector<double> * data, in
 
 }
 
-void opdet::SERPulseFinder::CalculateFFT()
+void opdet::SERPulseFinderProminence::CalculateFFT()
 {
     int N = fInputWaveform->GetNbinsX();
 
@@ -259,7 +340,7 @@ void opdet::SERPulseFinder::CalculateFFT()
 }
 
 
-void opdet::SERPulseFinder::AddWaveforms(TH1D& SERWaveform, int PeakTime)
+void opdet::SERPulseFinderProminence::AddWaveforms(TH1D& SERWaveform, int PeakTime)
 {
     int SERLength = fSEREnd-fSERStart;
     for(int j=0; j<SERLength; j++)
@@ -270,12 +351,12 @@ void opdet::SERPulseFinder::AddWaveforms(TH1D& SERWaveform, int PeakTime)
     }
 }
 
-int opdet::SERPulseFinder::GetPeakValue(int PeakIdx)
+int opdet::SERPulseFinderProminence::GetPeakValue(int PeakIdx)
 {
     return fInputWaveform->GetBinContent(PeakIdx);
 }
 
-bool opdet::SERPulseFinder::IsIsolatedPeak(int PeakIdx)
+bool opdet::SERPulseFinderProminence::IsIsolatedPeak(int PeakIdx)
 {
     int TimeDifferenceNext;
     int TimeDifferencePrevious;
@@ -301,7 +382,7 @@ bool opdet::SERPulseFinder::IsIsolatedPeak(int PeakIdx)
     return false;
 }
 
-void opdet::SERPulseFinder::SubstractBaseline(){
+void opdet::SERPulseFinderProminence::SubstractBaseline(){
 
     double minADC= fInputWaveform->GetMinimum();
     double maxADC=fInputWaveform->GetMaximum();
@@ -330,4 +411,4 @@ void opdet::SERPulseFinder::SubstractBaseline(){
     return;
 }
 
-DEFINE_ART_CLASS_TOOL(opdet::SERPulseFinder)
+DEFINE_ART_CLASS_TOOL(opdet::SERPulseFinderProminence)

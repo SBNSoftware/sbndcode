@@ -20,7 +20,7 @@ set(
          cetlib_except::cetlib_except
 )
 
-cet_build_plugin(SERPulseFinder art::tool SOURCE SERPulseFinder_tool.cc LIBRARIES ${TOOL_LIBRARIES})
+cet_build_plugin(SERPulseFinderProminence art::tool SOURCE SERPulseFinderProminence_tool.cc LIBRARIES ${TOOL_LIBRARIES})
 
 install_headers()
 install_fhicl()

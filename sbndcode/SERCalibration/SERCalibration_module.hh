@@ -59,14 +59,10 @@
 #include "larcore/Geometry/Geometry.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
-#include "sbndcode/SERCalibration/Alg/SERPulseFinder_tool.h"
+#include "sbndcode/SERCalibration/Alg/SERPulseFinderBase.hh"
 
 #include "TH1D.h"
 
-#define xdet_size 1000
-#define ydet_size 1000
-#define zmindet_size -500
-#define zmaxdet_size 1800
 
 namespace opdet {
   class SERCalibration;
@@ -99,7 +95,7 @@ class opdet::SERCalibration : public art::EDAnalyzer {
     std::vector<std::string> fPDTypes;
     std::vector<std::string> fElectronics;
     //OpDecoAlg tool
-    std::unique_ptr<opdet::SERPulseFinder> fSERPulseFinderPtr;
+    std::unique_ptr<opdet::SERPulseFinderBase> fSERPulseFinderPtr;
     //PDS map
     opdet::sbndPDMapAlg pdsmap;
     std::vector<TH1D> * calibratedSER_v;
