@@ -5135,7 +5135,7 @@
                          <loop for="CRT_placing_modules" to="82" step="1">
                            <physvol copynumber="CRT_placing_modules">
                              <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                             <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleX_l/2-40-35.6+CRTmoduleBERN_l" y="-CRTmoduleX_l+0.5*CRTmoduleBERN_w" z="-CRTmoduleX_t/2-12.8"/>
+                             <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleX_l/2-40-35.6+CRTmoduleBERN_l/2" y="-CRTmoduleX_l+0.5*CRTmoduleBERN_w" z="-CRTmoduleX_t/2-12.8"/>
                            </physvol>
                         </loop>
 
@@ -5143,7 +5143,7 @@
                          <loop for="CRT_placing_modules" to="83" step="1">
                            <physvol copynumber="CRT_placing_modules">
                              <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                             <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleX_l/2-40-35.6+CRTmoduleBERN_l" y="-CRTmoduleX_l+0.5*CRTmoduleBERN_w" z="-CRTmoduleX_t/2-17.8"/>
+                             <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleX_l/2-40-35.6+CRTmoduleBERN_l/2" y="-CRTmoduleX_l+0.5*CRTmoduleBERN_w" z="-CRTmoduleX_t/2-17.8"/>
                            </physvol>
                         </loop>
 
