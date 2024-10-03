@@ -597,8 +597,8 @@
 
 		<!-- <constant name="CRT_DY_TopHigh" value="8664.2"/> -->
 		<!-- <constant name="CRT_DY_TopLow" value="6624.2"/> -->
-		<constant name="CRT_DY_TopHigh" value="whereShielding_Y+shielding_thickness/2+aCRTModule_W"/>
-		<constant name="CRT_DY_TopLow" value="whereShielding_Y-shielding_thickness/2-aCRTModule_W"/>
+		<constant name="CRT_DY_TopHigh" value="CRT_DY_TopLow+1321+(CRTmoduleY_t*10)"/>
+		<constant name="CRT_DY_TopLow" value="2410+(2*CRTmoduleY_t*10)"/>
 		<constant name="CRT_DX_Side" value="3830"/>
 		<constant name="CRT_DZ_South" value="4750"/>
 		<constant name="CRT_DY_Bottom" value="3780"/>
@@ -6736,8 +6736,8 @@
 		<constant name="whereMembrane_Y" value="coordMembrane_at_Enclosure_Y"/>
 		<constant name="whereMembrane_Z" value="coordMembrane_at_Enclosure_Z"/>
 		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z" />
-		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopHigh" z="whereMembrane_Z"/>
-		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+CRT_DY_TopLow" z="whereMembrane_Z"/>
+		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="dimCryostatLidLarger_Outer_Z_mm+CRT_DY_TopHigh" z="whereMembrane_Z"/>
+		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="dimCryostatLidLarger_Outer_Z_mm+CRT_DY_TopLow" z="whereMembrane_Z"/>
 		<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
 		<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/>
 		<position name="posCRT_East" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
@@ -6859,7 +6859,7 @@
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
 					<positionref ref="posCRT_TopHigh"/>
-					<rotationref ref="rotateN90X"/>
+					<rotationref ref="rotateN90X180Z"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerTopLow"/>
