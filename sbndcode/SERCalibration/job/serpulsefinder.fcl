@@ -1,0 +1,8 @@
+BEGIN_PROLOG
+
+SERPulseFinder:
+{
+    tool_type: SERPulseFinder
+}
+
+END_PROLOG

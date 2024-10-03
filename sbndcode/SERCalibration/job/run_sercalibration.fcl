@@ -1,0 +1,44 @@
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+
+#include "serpulsefinder.fcl"
+#include "sercalibration.fcl"
+
+process_name: SERCali
+
+services:
+{
+  TFileService:              { fileName: "sercalibration.root" }
+  @table::sbnd_basic_services
+  @table::sbnd_simulation_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1  # Number of events to create
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "%ifb_%p.root"
+    dataTier:    "reconstructed"
+    compressionLevel: 1
+ }
+}
+
+physics:
+{
+  analyzers:
+  {
+    sercalibration:     @local::SERCalibration
+  }
+
+  ana: [sercalibration]
+  end_paths: [ana]
+}

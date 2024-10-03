@@ -1,0 +1,15 @@
+#include "serpulsefinder.fcl"
+
+BEGIN_PROLOG
+
+SERCalibration:
+{
+  module_type:	"SERCalibration"
+  InputLabel: "opdaq"
+  PDTypes: []
+  Electronics: []
+  SERPulseFinder: @local::SERPulseFinder
+}
+
+
+END_PROLOG
