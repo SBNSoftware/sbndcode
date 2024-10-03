@@ -82,7 +82,8 @@
 		<rotation name="rotateP180Y" unit="deg" x="0" y="180" z="0"/>
 		<rotation name="rotateP180X" unit="deg" x="180" y="0" z="0"/>
 		<rotation name="rotate180X180Y" unit="deg" x="180" y="180" z="0"/>
-        <rotation name="rotateP90X180Z" unit="deg" x="90" y="0" z="180"/>
+		<rotation name="rotateP90X180Z" unit="deg" x="90" y="0" z="180"/>
+		<rotation name="rotateN90X180Z" unit="deg" x="-90" y="0" z="180"/>
 
 		<constant name="system_DZ" value="417.5" />
 		<constant name="system_DY" value="12.899" />
@@ -4945,7 +4946,7 @@
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm"
                                                   x="45.7"
-                                                  y="(2*CRTmoduleY_w+(CRTmoduleY_w-CRTmoduleuBnl_w)/2)-(CRT_placing_modules-0)*CRTmoduleuBnl_w-22.1"
+                                                  y="(2*CRTmoduleY_w+(CRTmoduleY_w-CRTmoduleuBnl_w)/2)-(CRT_placing_modules-0)*CRTmoduleuBnl_w-9.9"
                                                   z="CRTmoduleY_t*3/2"/>
                                 </physvol>
                         </loop>
@@ -4956,7 +4957,7 @@
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                         <position name="posCRT_moduleCRT_placing_modules" unit="cm"
                                                   x="CRTmoduleY_l-CRTmoduleuBns_l/2"
-                                                  y="(2*CRTmoduleY_w+(CRTmoduleY_w-CRTmoduleuBns_w)/2)-(CRT_placing_modules-5)*CRTmoduleuBns_w-22.1"
+                                                  y="(2*CRTmoduleY_w+(CRTmoduleY_w-CRTmoduleuBns_w)/2)-(CRT_placing_modules-5)*CRTmoduleuBns_w-9.9"
                                                   z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
@@ -6786,7 +6787,7 @@
 			<physvol>
 					<volumeref ref="volTaggerTopHigh"/>
 					<positionref ref="posCRT_TopHigh"/>
-					<rotationref ref="rotateN90X"/>
+					<rotationref ref="rotateN90X180Z"/>
 			</physvol>
 			<physvol>
 					<volumeref ref="volTaggerTopLow"/>
