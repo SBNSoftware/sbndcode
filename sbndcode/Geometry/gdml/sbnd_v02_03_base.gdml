@@ -546,20 +546,20 @@
 		<constant name="CRTstripuB_t" value="1.0"/>
 
 		<!-- uB narrow long -->
-		<constant name="CRTmoduleuBnl_w" value="174.6"/>
+		<constant name="CRTmoduleuBnl_w" value="173.6"/>
 		<constant name="CRTmoduleuBnl_l" value="408.3"/>
 		<constant name="CRTmoduleuBnl_t" value="1.8"/>
 		<constant name="CRTmoduleuBnl_b" value="0.4"/>
-		<constant name="CRTstripuBnl_w" value="10.86"/>
+		<constant name="CRTstripuBnl_w" value="10.8"/>
 		<constant name="CRTstripuBnl_l" value="407.5"/>
 		<constant name="CRTstripuBnl_t" value="1.0"/>
 
 		<!-- uB narrow short -->
-		<constant name="CRTmoduleuBns_w" value="174.6"/>
+		<constant name="CRTmoduleuBns_w" value="173.6"/>
 		<constant name="CRTmoduleuBns_l" value="264.1"/>
 		<constant name="CRTmoduleuBns_t" value="1.8"/>
 		<constant name="CRTmoduleuBns_b" value="0.4"/>
-		<constant name="CRTstripuBns_w" value="10.86"/>
+		<constant name="CRTstripuBns_w" value="10.8"/>
 		<constant name="CRTstripuBns_l" value="263.3"/>
 		<constant name="CRTstripuBns_t" value="1.0"/>
 
@@ -4943,7 +4943,10 @@
                         <loop for="CRT_placing_modules" to="4" step="1">
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="45.7" y="(2*CRTmoduleY_w)-(CRT_placing_modules-0)*CRTmoduleuBnl_w-22.0" z="CRTmoduleY_t*3/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm"
+                                                  x="45.7"
+                                                  y="(2*CRTmoduleY_w+(CRTmoduleY_w-CRTmoduleuBnl_w)/2)-(CRT_placing_modules-0)*CRTmoduleuBnl_w-0"
+                                                  z="CRTmoduleY_t*3/2"/>
                                 </physvol>
                         </loop>
                         <!-- TODO add 5 to module index below here DONE-->
@@ -4951,14 +4954,18 @@
                         <loop for="CRT_placing_modules" to="9" step="1">
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="CRTmoduleY_l-CRTmoduleuBns_l/2" y="(2*CRTmoduleY_w)-(CRT_placing_modules-5)*CRTmoduleuBns_w-22.0" z="CRTmoduleY_t/2"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm"
+                                                  x="CRTmoduleY_l-CRTmoduleuBns_l/2"
+                                                  y="(2*CRTmoduleY_w+(CRTmoduleY_w-CRTmoduleuBns_w)/2)-(CRT_placing_modules-5)*CRTmoduleuBns_w-0"
+                                                  z="CRTmoduleY_t/2"/>
                                 </physvol>
                         </loop>
                         <!-- next 5 are west side, uB  -->
                         <loop for="CRT_placing_modules" to="14" step="1">
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l+CRTmoduleuB_l/2"
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm"
+                                                  x="-CRTmoduleY_l+CRTmoduleuB_l/2"
                                                   y="(2*CRTmoduleY_w)-(CRT_placing_modules-10)*CRTmoduleuB_w"
                                                   z="CRTmoduleY_t/2"/>
                                 </physvol>
