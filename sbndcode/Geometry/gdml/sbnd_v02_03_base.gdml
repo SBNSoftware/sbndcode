@@ -602,6 +602,8 @@
 		<constant name="CRT_DX_Side" value="3830"/>
 		<constant name="CRT_DZ_South" value="4750"/>
 		<constant name="CRT_DY_Bottom" value="3780"/>
+		<constant name="CRT_DZ_TopLow" value="0"/>
+		<constant name="CRT_DZ_TopHigh" value="CRT_DZ_TopLow+140"/>
 
 		<constant name="G10strip_Y_width" value="BERNmodule_DX_middle-BERNmodule_DX_small-CRTmoduleBERN_w"/>
 		<constant name="G10strip_X_width" value="(BERNmodule_DY_small-1.5*CRTmoduleMINOS_w)/2.0"/>
@@ -6736,8 +6738,8 @@
 		<constant name="whereMembrane_Y" value="coordMembrane_at_Enclosure_Y"/>
 		<constant name="whereMembrane_Z" value="coordMembrane_at_Enclosure_Z"/>
 		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z" />
-		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="dimCryostat_Outer_Y_mm/2+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm+CRT_DY_TopHigh" z="whereMembrane_Z"/>
-		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="dimCryostat_Outer_Y_mm/2+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm+CRT_DY_TopLow" z="whereMembrane_Z"/>
+		<position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X" y="dimCryostat_Outer_Y_mm/2+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm+CRT_DY_TopHigh" z="whereMembrane_Z+CRT_DZ_TopHigh"/>
+		<position name="posCRT_TopLow" unit="mm" x="whereMembrane_X" y="dimCryostat_Outer_Y_mm/2+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm+CRT_DY_TopLow" z="whereMembrane_Z+CRT_DZ_TopLow"/>
 		<position name="posCRT_South" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z-CRT_DZ_South"/>
 		<position name="posCRT_North" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z+CRT_DZ_South"/>
 		<position name="posCRT_East" unit="mm" x="whereMembrane_X-CRT_DX_Side" y="whereMembrane_Y" z="whereMembrane_Z"/>
