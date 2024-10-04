@@ -1,6 +1,6 @@
 # module configuration
 #
-#incldue "pandoramodules_sbnd.fcl"
+#include "pandoramodules_sbnd.fcl"
 #include "calorimetry_sbnd.fcl"
 #include "sbnd_flashfinder_deco.fcl"
 #include "crtrecoproducers_sbnd.fcl"
