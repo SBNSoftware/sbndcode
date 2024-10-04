@@ -12,13 +12,13 @@
 // framework
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/ModuleMacros.h"
-#include "fhiclcpp/ParameterSet.h" 
+#include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Atom.h"
-#include "art/Framework/Principal/Handle.h" 
-#include "canvas/Persistency/Common/Ptr.h" 
-#include "canvas/Persistency/Common/PtrVector.h" 
-#include "art/Framework/Services/Registry/ServiceHandle.h" 
-#include "messagefacility/MessageLogger/MessageLogger.h" 
+#include "art/Framework/Principal/Handle.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/PtrVector.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
 // LArSoft
 #include "larcore/Geometry/Geometry.h"
@@ -68,7 +68,7 @@ namespace sbnd::crt {
 
   // CRT strip geometry struct contains dimensions and mother module
   struct CRTStripGeo{
-    CRTStripGeo(const TGeoNode *stripNode, const geo::AuxDetSensitiveGeo &auxDetSensitive, 
+    CRTStripGeo(const TGeoNode *stripNode, const geo::AuxDetSensitiveGeo &auxDetSensitive,
                 const uint16_t _adsID, const std::string &_moduleName,
                 const uint16_t _channel0, const uint16_t _channel1)
     {
@@ -272,7 +272,7 @@ namespace sbnd::crt {
         fhicl::Name("MC")
       };
     };
-    
+
     CRTGeoAlg(const Config& config, geo::GeometryCore const *geometry,
               geo::AuxDetGeometryCore const *auxdet_geometry);
 
