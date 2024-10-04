@@ -1,0 +1,118 @@
+# module configuration
+#
+#incldue "pandoramodules_sbnd.fcl"
+#include "calorimetry_sbnd.fcl"
+#include "sbnd_flashfinder_deco.fcl"
+#include "crtrecoproducers_sbnd.fcl"
+#include "particleid_sbnd.fcl"
+#include "crttpcmatchingproducers_sbnd.fcl"
+
+#include "opt0finder_sbnd.fcl"
+
+#include "sbnd_trackcalo_skimmer.fcl"
+#include "crtskim_sbnd.fcl"
+#include "pmtskim_sbnd.fcl"
+
+BEGIN_PROLOG
+
+sbnd_reco2_producers:{
+    ### random number saver
+    rns:                 { module_type: RandomNumberSaver }
+
+    ### pandora
+    pandora:             @local::sbnd_pandora
+    pandoraTrack:        @local::sbnd_pandoraTrackCreation
+    pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreation
+    pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreation
+    pandoraCalo:         @local::sbnd_gnewcalomc
+    pandoraPid:          @local::sbnd_chi2pid
+
+    pandoraSCECalo:      @local::sbnd_gnewcalomc
+    pandoraSCEPid:       @local::sbnd_chi2pid
+
+    pandoraCaloData:     @local::sbnd_gnewcalodata
+    pandoraPidData:      @local::sbnd_chi2pid
+
+    ### SCE-aware pandora:
+    pandoraSCE:          @local::scecorrection
+    pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
+    pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
+    pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
+
+    ### CRT reconstruction
+    crtclustering:  @local::crtclusterproducer_sbnd
+    crtspacepoints: @local::crtspacepointproducer_sbnd
+    crttracks:      @local::crttrackproducer_sbnd
+
+    ### CRT-TPC matching
+    crtspacepointmatching:    @local::crtspacepointmatchproducer_sbnd
+    crttrackmatching:         @local::crttrackmatchproducer_sbnd
+    crtspacepointmatchingSCE: @local::crtspacepointmatchproducer_sbnd
+    crttrackmatchingSCE:      @local::crttrackmatchproducer_sbnd
+
+    ### flash-matching
+    fmatch:              @local::sbnd_simple_flashmatch
+    fmatchSCE:           @local::sbnd_simple_flashmatch_sce
+    fmatchop:            @local::sbnd_simple_flashmatch_op
+    fmatchopSCE:         @local::sbnd_simple_flashmatch_op_sce
+    fmatchara:           @local::sbnd_simple_flashmatch_ara
+    fmatcharaSCE:        @local::sbnd_simple_flashmatch_ara_sce
+    fmatchopara:         @local::sbnd_simple_flashmatch_opara
+    fmatchoparaSCE:      @local::sbnd_simple_flashmatch_opara_sce
+    opt0finder:          @local::sbnd_opt0_finder_one_to_many
+    opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
+
+    ### Uncalibrated calorimetry producer for calibration caloskimmer
+    caloskimCalorimetry: @local::caloskim_calorimetry
+}
+
+sbnd_reco2_producer_sequence: [  
+    rns
+    , pandora
+    , pandoraTrack
+    , pandoraShower
+    , pandoraShowerSBN
+    , pandoraCalo
+    , pandoraPid
+    , crtclustering
+    , crtspacepoints
+    , crttracks
+    , crtspacepointmatching
+    , crttrackmatching
+    , fmatch
+    , fmatchop
+    , fmatchara
+    , fmatchopara
+    , opt0finder
+    , caloskimCalorimetry
+    , pandoraSCE
+    , pandoraSCETrack
+    , pandoraSCEShower
+    , pandoraSCEShowerSBN
+    , pandoraSCECalo
+    , pandoraSCEPid
+    , crtspacepointmatchingSCE
+    , crttrackmatchingSCE
+    , fmatchSCE
+    , fmatchopSCE
+    , fmatcharaSCE
+    , fmatchoparaSCE
+    , opt0finderSCE
+]
+
+#FIXME override the producer labels.  This should really happen in the module's config fcl
+
+sbnd_reco2_analyzers: {
+    caloskim: @local::caloskim_nodigits_goldentracks
+    crtskim: @local::crtskim_sbnd
+    pmtskim: @local::pmtskim_sbnd
+}
+
+sbnd_reco2_analyzer_sequence: [
+    caloskim
+    , pmtskim
+    , crtskim
+]
+
+END_PROLOG
+
