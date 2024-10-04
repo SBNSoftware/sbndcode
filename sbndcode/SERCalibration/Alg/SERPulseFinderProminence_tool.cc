@@ -46,7 +46,7 @@ public:
 
     explicit  SERPulseFinderProminence(fhicl::ParameterSet const& p);
     
-    virtual void RunSERCalibration(std::vector<raw::OpDetWaveform> const&  , std::vector<TH1D> * ) override;
+    virtual void RunSERCalibration(std::vector<raw::OpDetWaveform> const&  , std::vector<TH1D>& ) override;
 
     std::vector<int>* find_peaks(std::vector<double> * , int , double );
     double calculateProminence(std::vector<double> * data, int peakIndex);
@@ -138,13 +138,15 @@ std::vector<int>* opdet::SERPulseFinderProminence::GetTriggerIdx()
     return TriggerIdx;
 }
 
-void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWaveform> const& wfVector , std::vector<TH1D> * calibratedSER_v)
+void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWaveform> const& wfVector , std::vector<TH1D>& calibratedSER_v)
 {
+    std::cout << " Entering the run SER calibration with a wf vector of size " << wfVector.size() << std::endl;
     //Loop over all waveforms and find the peaks 
     for(auto const& wf : wfVector)
     {
         int ChNumber = wf.ChannelNumber();
-
+        std::cout << " Analysing channel number " << ChNumber << std::endl;
+        // This is not done properly now, should not be a pointer 
         TH1D* currentWform = new TH1D("Current WForm", "" , wf.size(), 0, double(wf.size()));
 
         for(size_t i = 0; i < wf.size(); i++) {
@@ -158,6 +160,7 @@ void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWa
         // Calculate waveform FFT
         CalculateFFT();
         std::vector<int> *PeakIdx = GetTriggerIdxFFT();
+        std::cout << " The size of the trigger Idxs is " << PeakIdx->size() << std::endl;
         // Loop over the found peaks to see if we add it to the waveform
         for(size_t k=0; k<PeakIdx->size(); k++)
         {
@@ -166,10 +169,12 @@ void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWa
             if(PeakValue>40 ||PeakValue<7) continue;
             if(PeakIdx->at(k)>4900 || PeakIdx->at(k)<100) continue;
             if(PeakIdx->size()>40 || !isIsolated) continue;
-            AddWaveforms(calibratedSER_v->at(ChNumber), PeakIdx->at(k));
+            std::cout << " Found peak for channel " << ChNumber << " adding waveform " << std::endl;
+            AddWaveforms(calibratedSER_v.at(ChNumber), PeakIdx->at(k));
             DetectedPeaksPerChannel.at(ChNumber)+=1;
             //myWaveformPeakFinder.PlotPeak(PeakIdx->at(k));
         }
+        delete currentWform;
     }
 }
 
@@ -345,6 +350,7 @@ void opdet::SERPulseFinderProminence::AddWaveforms(TH1D& SERWaveform, int PeakTi
     {
         if(PeakTime-int(SERLength/2)<0) break;
         double updatedValue = SERWaveform.GetBinContent(j)+fInputWaveform->GetBinContent(PeakTime-int(SERLength/2)+j);
+        //std::cout << " Setting content of the calibrated ser in bin " << j << " to " << updatedValue << std::endl;
         SERWaveform.SetBinContent(j, updatedValue);
     }
 }

@@ -3,8 +3,7 @@
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 
-#include "serpulsefinder.fcl"
-#include "sercalibration.fcl"
+#include "my_sercalibration.fcl"
 
 process_name: SERCali
 

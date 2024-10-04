@@ -98,7 +98,7 @@ class opdet::SERCalibration : public art::EDAnalyzer {
     std::unique_ptr<opdet::SERPulseFinderBase> fSERPulseFinderPtr;
     //PDS map
     opdet::sbndPDMapAlg pdsmap;
-    std::vector<TH1D> * calibratedSER_v;
+    std::vector<TH1D> calibratedSER_v;
     int fSERStart=-200; //TTicks before the peak to build the SER
     int fSEREnd=300; //TTicks after the peak to build the SER
 

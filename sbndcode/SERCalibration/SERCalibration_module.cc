@@ -19,7 +19,6 @@ void opdet::SERCalibration::beginJob()
   // Implementation of optional member function here.
   art::ServiceHandle<art::TFileService> tfs;
   fTree = tfs->make<TTree>("OpAnaTree", "Optical Analyzer Tree");
-
   fTree->Branch("eventID", &_eventID, "eventID/i");
   fTree->Branch("runID", &_runID, "runID/i");
   fTree->Branch("subrunID", &_subrunID, "subrunID/i");
@@ -28,7 +27,7 @@ void opdet::SERCalibration::beginJob()
   for(size_t i=0; i<320; i++)
   {
     TH1D SER(TString::Format("SER for channel %zu", i), "" , fSEREnd-fSERStart, fSERStart, fSEREnd);
-    calibratedSER_v->push_back(SER);
+    calibratedSER_v.push_back(SER);
   }
 }
 
@@ -36,7 +35,7 @@ void opdet::SERCalibration::beginJob()
 // -------- Main function --------
 void opdet::SERCalibration::analyze(art::Event const& e)
 {
-
+  
   // --- Event General Info
   _eventID = e.id().event();
   _runID = e.id().run();
@@ -55,14 +54,12 @@ void opdet::SERCalibration::analyze(art::Event const& e)
 
   std::vector< raw::OpDetWaveform > RawWfVector;
   RawWfVector.reserve(wfHandle->size());
-
   for(auto const& wf : *wfHandle){
     if((std::find(fPDTypes.begin(), fPDTypes.end(), pdsmap.pdType(wf.ChannelNumber()) ) != fPDTypes.end() ) &&
        (std::find(fElectronics.begin(), fElectronics.end(), pdsmap.electronicsType(wf.ChannelNumber()) ) != fElectronics.end()) ){
       RawWfVector.push_back(wf);
     }
   }
-
   fSERPulseFinderPtr->RunSERCalibration(RawWfVector, calibratedSER_v);
 
 }
@@ -70,6 +67,17 @@ void opdet::SERCalibration::analyze(art::Event const& e)
 
 void opdet::SERCalibration::endJob()
 {
+
+  art::ServiceHandle<art::TFileService> tfs;
+  for(size_t i=0; i<320; i++)
+  {
+    TH1D *wvfHist = tfs->make< TH1D >(TString::Format("SER for channel %zu", i), "Time [TTicks]", calibratedSER_v[i].GetNbinsX(), fSERStart, fSEREnd);
+    for(size_t j=0; j<size_t(fSEREnd-fSERStart); j++)
+    {
+      std::cout << " Setting bin content of channel " << i << " in time tick " << j << " to " << calibratedSER_v[i].GetBinContent(j+1) << std::endl;
+      wvfHist->SetBinContent(j+1, calibratedSER_v[i].GetBinContent(j+1));
+    }
+  }
 }
 
 

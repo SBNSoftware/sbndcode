@@ -1,14 +1,14 @@
-#include "serpulsefinder.fcl"
+#include "my_serpulsefinder.fcl"
 
 BEGIN_PROLOG
 
 SERCalibration:
 {
   module_type:	"SERCalibration"
-  InputLabel: "opdaq"
-  PDTypes: []
-  Electronics: []
-  SERPulseFinderBase: @local::SERPulseFinderProminence
+  InputLabel: "pmtdecoder:PMTChannels"
+  PDTypes: ["pmt_coated", "pmt_uncoated"]
+  Electronics: [""]
+  SERPulseFinder: @local::SERPulseFinderProminence
 }
 
 
