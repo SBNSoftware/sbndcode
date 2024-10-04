@@ -110,12 +110,6 @@ sbnd_reco2_tpc_sequence_sce: [
 
 sbnd_reco2_multi_system_matching_sequence_sce: [
     crtspacepointmatchingSCE
-    , crttrackmatchingSCE
-    , fmatchSCE
-    , fmatchopSCE
-    , fmatcharaSCE
-    , fmatchoparaSCE
-    , opt0finderSCE
     , cvn
 ]
 
@@ -205,4 +199,3 @@ sbnd_reco2_analyzer_sequence_no_sce_corrections: [
 sbnd_reco2_analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
 END_PROLOG
-
