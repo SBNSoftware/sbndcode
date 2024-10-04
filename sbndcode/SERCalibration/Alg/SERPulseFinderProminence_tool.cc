@@ -33,7 +33,7 @@
 #include "TFile.h"
 #include "TGraph.h"
 
-#include "sbndcode/SERCalibration/Alg/SERPulseFinderBase.hh"
+#include "SERPulseFinderBase.hh"
 
 
 namespace opdet {
@@ -45,9 +45,8 @@ class opdet::SERPulseFinderProminence : opdet::SERPulseFinderBase{
 public:
 
     explicit  SERPulseFinderProminence(fhicl::ParameterSet const& p);
-    ~SERPulseFinderProminence(){}
-
-    virtual void RunSERCalibration(std::vector<raw::OpDetWaveform> const&  , std::vector<TH1D> * );
+    
+    virtual void RunSERCalibration(std::vector<raw::OpDetWaveform> const&  , std::vector<TH1D> * ) override;
 
     std::vector<int>* find_peaks(std::vector<double> * , int , double );
     double calculateProminence(std::vector<double> * data, int peakIndex);
@@ -138,7 +137,6 @@ std::vector<int>* opdet::SERPulseFinderProminence::GetTriggerIdx()
     delete y;
     return TriggerIdx;
 }
-
 
 void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWaveform> const& wfVector , std::vector<TH1D> * calibratedSER_v)
 {

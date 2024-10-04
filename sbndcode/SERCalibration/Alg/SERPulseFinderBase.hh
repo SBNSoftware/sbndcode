@@ -13,7 +13,7 @@ public:
 
     virtual ~SERPulseFinderBase() noexcept = default;
 
-    virtual void RunSERCalibration(std::vector<raw::OpDetWaveform> const&  , std::vector<TH1D> * );
+    virtual void RunSERCalibration(std::vector<raw::OpDetWaveform> const&  , std::vector<TH1D> * ) = 0;
 };
 
 #endif

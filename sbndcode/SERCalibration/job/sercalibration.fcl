@@ -8,7 +8,7 @@ SERCalibration:
   InputLabel: "opdaq"
   PDTypes: []
   Electronics: []
-  SERPulseFinder: @local::SERPulseFinder
+  SERPulseFinderBase: @local::SERPulseFinderProminence
 }
 
 

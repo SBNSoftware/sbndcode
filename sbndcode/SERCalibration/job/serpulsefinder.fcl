@@ -1,8 +1,8 @@
 BEGIN_PROLOG
 
-SERPulseFinder:
+SERPulseFinderProminence:
 {
-    tool_type: SERPulseFinder
+    tool_type: SERPulseFinderProminence
 }
 
 END_PROLOG
