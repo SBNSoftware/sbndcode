@@ -86,8 +86,8 @@ sbnd_reco2_producer_sequence: [
     , fmatchop
     , fmatchara
     , fmatchopara
-    , opt0finder
     , caloskimCalorimetry
+    , opt0finder
     , pandoraSCE
     , pandoraSCETrack
     , pandoraSCEShower
