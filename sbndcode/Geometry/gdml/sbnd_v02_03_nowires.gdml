@@ -15803,7 +15803,7 @@
                                 </physvol>
                                 <physvol copynumber="70">
                                         <volumeref ref="volCRTModule70"/>
-                                        <position name="posCRT_module70" unit="cm" x="-310" y="-270" z="-0.90000000000000002"/>
+                                        <position name="posCRT_module70" unit="cm" x="-270" y="-270" z="2.7000000000000002"/>
                                 </physvol>
 
                                 <physvol copynumber="71">
