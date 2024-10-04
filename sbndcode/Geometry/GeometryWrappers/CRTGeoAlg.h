@@ -172,7 +172,7 @@ namespace sbnd::crt {
         orientation = (modulePosMother[2] > 0);
 
       // Location of SiPMs
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kSouthTagger)
+      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kSouthTagger || _adID == 82 || _adID == 70)
         top = (orientation == 0) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
       else
         top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
