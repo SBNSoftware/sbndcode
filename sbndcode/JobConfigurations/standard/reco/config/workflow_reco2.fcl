@@ -8,6 +8,7 @@
 #include "crttpcmatchingproducers_sbnd.fcl"
 
 #include "scecorrections.fcl"
+#include "flashmatch_sbnd.fcl"
 
 #include "opt0finder_sbnd.fcl"
 
