@@ -162,5 +162,8 @@ sbnd_reco2_analyzer_sequence: [
     , crtskim
 ]
 
+#FIXME override the analyzer labels.  This should really happen in the module's config fcl
+physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
+
 END_PROLOG
 
