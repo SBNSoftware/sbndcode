@@ -81,6 +81,7 @@
 		<rotation name="rotateP30X" unit="deg" x="30" y="0" z="0"/>
 		<rotation name="rotateP180Y" unit="deg" x="0" y="180" z="0"/>
 		<rotation name="rotateP180X" unit="deg" x="180" y="0" z="0"/>
+		<rotation name="rotateP180Z" unit="deg" x="0" y="0" z="180"/>
 		<rotation name="rotate180X180Y" unit="deg" x="180" y="180" z="0"/>
 		<rotation name="rotateP90X180Z" unit="deg" x="90" y="0" z="180"/>
 		<rotation name="rotateN90X180Z" unit="deg" x="-90" y="0" z="180"/>
@@ -4950,6 +4951,7 @@
                                                   x="45.7"
                                                   y="(2*CRTmoduleY_w+(CRTmoduleY_w-CRTmoduleuBnl_w)/2)-(CRT_placing_modules-0)*CRTmoduleuBnl_w-9.9"
                                                   z="-CRTmoduleY_t*3/2"/>
+                                        <rotationref ref="rotateP180Z"/>
                                 </physvol>
                         </loop>
                         <!-- TODO add 5 to module index below here DONE-->
@@ -5025,6 +5027,7 @@
                                 <physvol copynumber="CRT_placing_modules">
                                   <volumeref ref="volCRTModuleCRT_placing_modules"/>
                                   <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="0" y="(-2*CRTmoduleY_w)+(CRT_placing_modules-45)*CRTmoduleY_w" z="-CRTmoduleY_t*3/2"/>
+                                  <rotationref ref="rotateP180Z"/>
                                 </physvol>
                         </loop>
                         <!-- TODO add 5 to module index below here DONE-->
