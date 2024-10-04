@@ -104,51 +104,51 @@ sbnd_reco2_producer_sequence: [
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
-physics.producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
-physics.producers.pandoraCalo.FieldDistortion:                	 false
-physics.producers.pandoraCalo.FieldDistortionEfield:          	 false
-physics.producers.pandoraCalo.TrackIsFieldDistortionCorrected:	 false
-physics.producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
-physics.producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
+sbnd_reco2_producers.pandoraCalo.TrackModuleLabel:                  "pandoraTrack"
+sbnd_reco2_producers.pandoraCalo.FieldDistortion:                	 false
+sbnd_reco2_producers.pandoraCalo.FieldDistortionEfield:          	 false
+sbnd_reco2_producers.pandoraCalo.TrackIsFieldDistortionCorrected:	 false
+sbnd_reco2_producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
+sbnd_reco2_producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
 
-physics.producers.pandoraSCECalo.TrackModuleLabel:               "pandoraSCETrack"
-physics.producers.pandoraSCECalo.FieldDistortion:                true
-physics.producers.pandoraSCECalo.FieldDistortionEfield:          true
-physics.producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
-physics.producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
-physics.producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
+sbnd_reco2_producers.pandoraSCECalo.TrackModuleLabel:               "pandoraSCETrack"
+sbnd_reco2_producers.pandoraSCECalo.FieldDistortion:                true
+sbnd_reco2_producers.pandoraSCECalo.FieldDistortionEfield:          true
+sbnd_reco2_producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
+sbnd_reco2_producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
+sbnd_reco2_producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
 
-physics.producers.pandoraCaloData.TrackModuleLabel:                  "pandoraTrack"
-physics.producers.pandoraCaloData.FieldDistortion:                   false
-physics.producers.pandoraCaloData.FieldDistortionEfield:             false
-physics.producers.pandoraCaloData.TrackIsFieldDistortionCorrected:   false
-physics.producers.pandoraPidData.TrackModuleLabel:                   "pandoraTrack"
-physics.producers.pandoraPidData.CalorimetryModuleLabel:             "pandoraCaloData"
+sbnd_reco2_producers.pandoraCaloData.TrackModuleLabel:                  "pandoraTrack"
+sbnd_reco2_producers.pandoraCaloData.FieldDistortion:                   false
+sbnd_reco2_producers.pandoraCaloData.FieldDistortionEfield:             false
+sbnd_reco2_producers.pandoraCaloData.TrackIsFieldDistortionCorrected:   false
+sbnd_reco2_producers.pandoraPidData.TrackModuleLabel:                   "pandoraTrack"
+sbnd_reco2_producers.pandoraPidData.CalorimetryModuleLabel:             "pandoraCaloData"
 
 physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
-physics.producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
-physics.producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
-physics.producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
-physics.producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
+sbnd_reco2_producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
+sbnd_reco2_producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
+sbnd_reco2_producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
+sbnd_reco2_producers.opt0finderSCE.CaloProducer:   "pandoraSCECalo"
 
 # Configure the SCE corrections
 # For now: always assume t = 0
-physics.producers.pandoraSCE.T0Labels: []
-physics.producers.pandoraSCE.T0LabelsCorrectT0: []
-physics.producers.pandoraSCE.CorrectNoT0Tag: true
+sbnd_reco2_producers.pandoraSCE.T0Labels: []
+sbnd_reco2_producers.pandoraSCE.T0LabelsCorrectT0: []
+sbnd_reco2_producers.pandoraSCE.CorrectNoT0Tag: true
 # point track/shower creation to the SCE pandora
-physics.producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
-physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
-physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
+sbnd_reco2_producers.pandoraSCETrack.PFParticleLabel:               "pandoraSCE"
+sbnd_reco2_producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
+sbnd_reco2_producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 
-physics.producers.crtspacepointmatchingSCE.TPCTrackModuleLabel:       "pandoraSCETrack"
-physics.producers.crtspacepointmatchingSCE.PFPModuleLabel:            "pandoraSCE"
-physics.producers.crtspacepointmatchingSCE.MatchingAlg.TPCTrackLabel: "pandoraSCETrack"
+sbnd_reco2_producers.crtspacepointmatchingSCE.TPCTrackModuleLabel:       "pandoraSCETrack"
+sbnd_reco2_producers.crtspacepointmatchingSCE.PFPModuleLabel:            "pandoraSCE"
+sbnd_reco2_producers.crtspacepointmatchingSCE.MatchingAlg.TPCTrackLabel: "pandoraSCETrack"
 
-physics.producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSCETrack"
-physics.producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandoraSCE"
-physics.producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
+sbnd_reco2_producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSCETrack"
+sbnd_reco2_producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandoraSCE"
+sbnd_reco2_producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
 
 sbnd_reco2_analyzers: {
     caloskim: @local::caloskim_nodigits_goldentracks
@@ -163,7 +163,7 @@ sbnd_reco2_analyzer_sequence: [
 ]
 
 #FIXME override the analyzer labels.  This should really happen in the module's config fcl
-physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
+sbnd_reco2_analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
 END_PROLOG
 
