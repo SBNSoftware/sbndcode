@@ -7,6 +7,8 @@
 #include "particleid_sbnd.fcl"
 #include "crttpcmatchingproducers_sbnd.fcl"
 
+#include "scecorrections.fcl"
+
 #include "opt0finder_sbnd.fcl"
 
 #include "sbnd_trackcalo_skimmer.fcl"
