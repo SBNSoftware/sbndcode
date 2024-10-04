@@ -108,7 +108,7 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
       art::Handle<std::vector<sbnd::timing::DAQTimestamp>> TDCHandle;
       e.getByLabel(fSPECTDCModuleLabel, TDCHandle);
 
-      if(TDCHandle.isValid() && TDCHandle->size() != 0)
+      if(TDCHandle.isValid() && TDCHandle->size() != 0 && FEBDataVec.size() != 0)
         {
           std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> TDCVec;
           art::fill_ptr_vector(TDCVec, TDCHandle);
