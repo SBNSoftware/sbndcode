@@ -15861,11 +15861,11 @@
                                 </physvol>
                            <physvol copynumber="82">
                              <volumeref ref="volCRTModule82"/>
-                             <position name="posCRT_module82" unit="cm" x="-119.54999999999998" y="-312.10000000000002" z="-13.700000000000001"/>
+                             <position name="posCRT_module82" unit="cm" x="-79.549999999999983" y="-312.10000000000002" z="-13.700000000000001"/>
                            </physvol>
                            <physvol copynumber="83">
                              <volumeref ref="volCRTModule83"/>
-                             <position name="posCRT_module83" unit="cm" x="-119.54999999999998" y="-312.10000000000002" z="-18.699999999999999"/>
+                             <position name="posCRT_module83" unit="cm" x="-79.549999999999983" y="-312.10000000000002" z="-18.699999999999999"/>
                            </physvol>
                        </volume>
 		       <volume name="volTaggerEast">
