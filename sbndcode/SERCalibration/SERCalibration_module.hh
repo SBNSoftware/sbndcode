@@ -99,6 +99,7 @@ class opdet::SERCalibration : public art::EDAnalyzer {
     //PDS map
     opdet::sbndPDMapAlg pdsmap;
     std::vector<TH1D> calibratedSER_v;
+    std::vector<std::vector<int>> fPeakAmplitudeVector;
     int fSERStart=-200; //TTicks before the peak to build the SER
     int fSEREnd=300; //TTicks after the peak to build the SER
 

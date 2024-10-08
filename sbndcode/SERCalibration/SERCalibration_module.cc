@@ -61,6 +61,7 @@ void opdet::SERCalibration::analyze(art::Event const& e)
     }
   }
   fSERPulseFinderPtr->RunSERCalibration(RawWfVector, calibratedSER_v);
+  fPeakAmplitudeVector = fSERPulseFinderPtr->GetPeakAmplitudeVector();
 
 }
 
@@ -74,14 +75,21 @@ void opdet::SERCalibration::endJob()
     TH1D *wvfHist = tfs->make< TH1D >(TString::Format("SER for channel %zu", i), "Time [TTicks]", calibratedSER_v[i].GetNbinsX(), fSERStart, fSEREnd);
     for(size_t j=0; j<size_t(fSEREnd-fSERStart); j++)
     {
-      std::cout << " Setting bin content of channel " << i << " in time tick " << j << " to " << calibratedSER_v[i].GetBinContent(j+1) << std::endl;
       wvfHist->SetBinContent(j+1, calibratedSER_v[i].GetBinContent(j+1));
     }
   }
+
+  for(size_t i = 0 ; i<320; i++)
+  {
+    TH1D *fPeakAmplitudeHist = tfs->make< TH1D >(TString::Format("Peak amplitude for channel %zu", i), "Peak Amplitude [ADC]", 100, 0, 100);
+    for(size_t j=0; j<fPeakAmplitudeVector[i].size(); j++)
+    {
+     fPeakAmplitudeHist->Fill(fPeakAmplitudeVector[i][j]); 
+    }
+  }
+
+
 }
 
 
 DEFINE_ART_MODULE(opdet::SERCalibration)
-
-
-

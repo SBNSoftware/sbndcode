@@ -62,6 +62,7 @@ public:
     void AddWaveforms(TH1D& , int);
     bool IsIsolatedPeak(int );
     int GetPeakValue(int );
+    std::vector<std::vector<int>> GetPeakAmplitudeVector() override {return fPeakAmplitudeVector;}
 
     std::vector<int>* GetTriggerIdx();
     std::vector<int>* GetTriggerIdxFFT();
@@ -90,6 +91,7 @@ private:
     TH1D* fInputWaveform;
     TH1D* fInputWaveformFFT;
     std::vector<int> * TriggerIdx;
+    std::vector<std::vector<int>> fPeakAmplitudeVector;
 
     int fSERStart;
     int fSEREnd;
@@ -117,6 +119,7 @@ opdet::SERPulseFinderProminence::SERPulseFinderProminence(fhicl::ParameterSet co
     fSERStart = -200;
     fSEREnd = 300;
     DetectedPeaksPerChannel.resize(320);
+    fPeakAmplitudeVector.resize(320);
 }
 
 std::vector<int>* opdet::SERPulseFinderProminence::GetTriggerIdx()
@@ -166,6 +169,7 @@ void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWa
         {
             int PeakValue = this->GetPeakValue(PeakIdx->at(k));
             bool isIsolated = this->IsIsolatedPeak(PeakIdx->at(k));
+            fPeakAmplitudeVector.at(ChNumber).push_back(PeakValue);
             if(PeakValue>40 ||PeakValue<7) continue;
             if(PeakIdx->at(k)>4900 || PeakIdx->at(k)<100) continue;
             if(PeakIdx->size()>40 || !isIsolated) continue;

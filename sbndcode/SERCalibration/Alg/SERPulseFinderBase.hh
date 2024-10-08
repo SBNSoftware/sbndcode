@@ -14,6 +14,7 @@ public:
     virtual ~SERPulseFinderBase() noexcept = default;
 
     virtual void RunSERCalibration(std::vector<raw::OpDetWaveform> const&  , std::vector<TH1D>& ) = 0;
+    virtual std::vector<std::vector<int>> GetPeakAmplitudeVector()=0;
 };
 
 #endif
