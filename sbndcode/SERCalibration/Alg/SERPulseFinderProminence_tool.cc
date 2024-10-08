@@ -53,7 +53,6 @@ public:
     
     void setProminence(double Prominence){ fProminence = Prominence; return;}
     void setWindowLength(int WindowLenght){ fWindowLenght = WindowLenght; return;}
-    void setWindowInitialTime(int WindowInitialTime){ fWindowInitialTime = WindowInitialTime; return;}
     void setPeakWidhtL(int PeakWidthL){ fPeakWidthL = PeakWidthL; return;}
     void setPeakWidhtR(int PeakWidthR){ fPeakWidthR = PeakWidthR; return;}
     void setInputWaveform(TH1D* InputWaveform){ fInputWaveform = InputWaveform; return;}
@@ -74,17 +73,15 @@ private:
     int fPeakWidthL;
     int fPeakWidthR;
     int fProminence;
-    int fWindowInitialTime;
     size_t fDecreasingInterval;
     int fWaveformMax;
     int fProminenceLeftLimit;
     int fProminenceRightLimit;
-    int fSummedWaveformLength;
     int fProminenceLowerBound;
     int fBaselineSample;
-    
-    double fTriggerTimeDifference;
-
+    int fLowerSERAmplitude;
+    int fHigherSERAmplitude;
+    size_t fMaxNumPeaks;
     TH1D * TimeSignal;
     TH1D * CumulativeTimeSignal;
 
@@ -101,23 +98,22 @@ private:
 
 opdet::SERPulseFinderProminence::SERPulseFinderProminence(fhicl::ParameterSet const& p) 
 {
-    fSmoothingWidth = 20;
-    fPeakWidthL=10;
-    fPeakWidthR=10;
-    fProminence = 21;
-    //fProminence = 18;
-    fWindowInitialTime=0;
-    fTriggerTimeDifference=0.;
+    fSmoothingWidth = p.get< int >("SmoothingWidth");
+    fPeakWidthL = p.get< int >("PeakWidthL");
+    fPeakWidthR = p.get< int >("PeakWidthR");
+    fProminence = p.get< int >("Prominence");
+    fDecreasingInterval = p.get< size_t >("DecreasingInterval", 0);
+    fProminenceLeftLimit = p.get< int >("ProminenceLeftLimit");
+    fProminenceRightLimit = p.get< int >("ProminenceRightLimit");
+    fProminenceLowerBound = p.get< int >("ProminenceLowerBound", -9999);
+    fBaselineSample = p.get< int >("BaselineSample");
+    fSERStart = p.get< int >("SERStart");
+    fSEREnd = p.get< int >("SEREnd");
+    fLowerSERAmplitude = p.get< int >("LowerSERAmplitude");
+    fHigherSERAmplitude = p.get< int >("HigherSERAmplitude");
+    fMaxNumPeaks = p.get< size_t >("MaxNumPeaks");
     TriggerIdx = nullptr;
     fInputWaveformFFT=0;
-    fDecreasingInterval=0;
-    fProminenceLeftLimit=200; // Prev. 50
-    fProminenceRightLimit=50; // Prev. 50
-    fSummedWaveformLength=1000;
-    fProminenceLowerBound=-99999;
-    fBaselineSample=15;
-    fSERStart = -200;
-    fSEREnd = 300;
     DetectedPeaksPerChannel.resize(320);
     fPeakAmplitudeVector.resize(320);
 }
@@ -170,9 +166,9 @@ void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWa
             int PeakValue = this->GetPeakValue(PeakIdx->at(k));
             bool isIsolated = this->IsIsolatedPeak(PeakIdx->at(k));
             fPeakAmplitudeVector.at(ChNumber).push_back(PeakValue);
-            if(PeakValue>40 ||PeakValue<7) continue;
-            if(PeakIdx->at(k)>4900 || PeakIdx->at(k)<100) continue;
-            if(PeakIdx->size()>40 || !isIsolated) continue;
+            if(PeakValue>fHigherSERAmplitude ||PeakValue<fLowerSERAmplitude) continue;
+            if(PeakIdx->at(k)>4900 || PeakIdx->at(k)<100) continue; // Substitue by function that tells wether it is within waveform limits 
+            if(PeakIdx->size()>fMaxNumPeaks || !isIsolated) continue;
             std::cout << " Found peak for channel " << ChNumber << " adding waveform " << std::endl;
             AddWaveforms(calibratedSER_v.at(ChNumber), PeakIdx->at(k));
             DetectedPeaksPerChannel.at(ChNumber)+=1;

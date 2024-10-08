@@ -3,6 +3,20 @@ BEGIN_PROLOG
 SERPulseFinderProminence:
 {
     tool_type: SERPulseFinderProminence
+    SmoothingWidth: 20
+    PeakWidthL: 10
+    PeakWidthR: 10
+    Prominence: 15
+    DecreasingInterval: 0
+    ProminenceLeftLimit: 200
+    ProminenceRightLimit: 200
+    ProminenceLowerBound: -9999
+    BaselineSample: 15
+    SERStart: -200
+    SEREnd: 300
+    LowerSERAmplitude: 11
+    HigherSERAmplitude: 40
+    fMaxNumberPeaks: 40
 }
 
 END_PROLOG
