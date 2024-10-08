@@ -9,6 +9,7 @@
 
 #include "TPCChannelMapService.fcl"
 #include "SBNDTPCDecoderDefaults.fcl"
+#include "NTBDecoderDefaults.fcl"
 
 #include "crt_decoder_sbnd.fcl"
 #include "crt_channel_map_service.fcl"
@@ -31,6 +32,7 @@ physics:
   producers:
   {
       daq: @local::SBNDTPCDecoderDefaults
+      ntbdecoder: @local::NTBDecoderDefaults
       tdcdecoder: @local::spec_tdc_decoder_sbnd
       pmtdecoder: @local::pmtdecoder
       ptbdecoder: @local::SBNDPTBDecoderDefaults
@@ -40,7 +42,7 @@ physics:
   filters: {}
   analyzers: {}
 
-  decode: [daq, crtdecoder, ptbdecoder, tdcdecoder, pmtdecoder]
+  decode: [daq, ntbdecoder, crtdecoder, ptbdecoder, tdcdecoder, pmtdecoder]
   trigger_paths: [decode]
 
   stream1: [out1]
