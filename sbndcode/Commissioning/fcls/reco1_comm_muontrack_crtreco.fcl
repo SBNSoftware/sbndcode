@@ -1,12 +1,18 @@
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
 #include "muontrackmodule.fcl"
 #include "reco1_comm.fcl"
 
 physics.producers.fasthit:           @local::standard_fasthitfinder
 physics.producers.MuonTrackProducer: @local::MuonTrackProducer
 
-physics.producers.crtclustering:  @local::crtclusterproducer_sbnd
-physics.producers.crtspacepoints: @local::crtspacepointproducer_sbnd
-physics.producers.crttracks:      @local::crttrackproducer_sbnd
+services.CRTChannelMapService: @local::crt_channel_map_standard
+services.CRTCalibService:      @local::crt_calib_service
+
+physics.producers.crtstrips:      @local::crtstriphitproducer_data_sbnd
+physics.producers.crtclustering:  @local::crtclusterproducer_data_sbnd
+physics.producers.crtspacepoints: @local::crtspacepointproducer_data_sbnd
+physics.producers.crttracks:      @local::crttrackproducer_data_sbnd
 
 physics.reco1comm: [ rns
   , crtstrips
