@@ -188,7 +188,7 @@ private:
   int                 _adc_count;               ///<Used for plotting waveforms
   std::vector<int>    _waveform_integral;       ///<Used to see progression of the waveform integral
   std::vector<int>    _adc_count_in_waveform;   ///<Used to view all waveforms on a hitplane together
-
+  std::vector<int>    _wire_number;             /// Wire number corresponding to waveform
 
   // CRT strip variables
   uint _n_crt_strip_hits;                          ///< Number of CRT strip hits
@@ -889,6 +889,7 @@ void Hitdumper::analyze(const art::Event& evt)
     _time_for_waveform.resize(_max_hits*_max_samples, -9999.);
     _waveform_integral.resize(_max_hits*_max_samples, -9999.);
     _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
+    _wire_number.resize(_max_hits*_max_samples, -9999.);
 
     art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
 
@@ -950,6 +951,7 @@ void Hitdumper::analyze(const art::Event& evt)
             _waveform_number[adc_counter] = waveform_number_tracker;
             _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
             _time_for_waveform[adc_counter] = ibin;
+	    _wire_number[adc_counter] = _hit_wire[ihit];
             //std::cout << "DUMP: " << _waveform_number[adc_counter] << " " << _adc_count << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<ibin << " " << (rawadc[ibin]-pedestal) << " " << _time_for_waveform[adc_counter] << " " << _adc_on_wire[adc_counter] << std::endl;
             integral+=_adc_on_wire[adc_counter];
             _waveform_integral[adc_counter] = integral;
@@ -1206,6 +1208,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("adc_on_wire", &_adc_on_wire);
     fTree->Branch("waveform_integral", &_waveform_integral);
     fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
+    fTree->Branch("wire_number", &_wire_number);
   }
 
   if (fKeepCRTStripHits) {
