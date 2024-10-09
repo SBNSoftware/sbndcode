@@ -48,7 +48,7 @@ public:
     
     virtual void RunSERCalibration(std::vector<raw::OpDetWaveform> const&  , std::vector<TH1D>& ) override;
 
-    std::vector<int>* find_peaks(std::vector<double> * , int , double );
+    void find_peaks(std::vector<double> * , int , double );
     double calculateProminence(std::vector<double> * data, int peakIndex);
     
     void setProminence(double Prominence){ fProminence = Prominence; return;}
@@ -62,9 +62,10 @@ public:
     bool IsIsolatedPeak(int );
     int GetPeakValue(int );
     std::vector<std::vector<int>> GetPeakAmplitudeVector() override {return fPeakAmplitudeVector;}
+    std::vector<int> GetNumberOfPeaksVector() override {return fNumberOfPeaksVector;}
 
-    std::vector<int>* GetTriggerIdx();
-    std::vector<int>* GetTriggerIdxFFT();
+    void GetTriggerIdx();
+    void GetTriggerIdxFFT();
 
 private:
 
@@ -87,13 +88,18 @@ private:
 
     TH1D* fInputWaveform;
     TH1D* fInputWaveformFFT;
-    std::vector<int> * TriggerIdx;
+    std::vector<int> TriggerIdx;
     std::vector<std::vector<int>> fPeakAmplitudeVector;
 
     int fSERStart;
     int fSEREnd;
 
-    std::vector<int> DetectedPeaksPerChannel;
+    std::vector<int> fNumberOfPeaksVector;
+
+    //Load FFT serrvice
+    art::ServiceHandle<util::LArFFT> fft_service;
+
+
 };
 
 opdet::SERPulseFinderProminence::SERPulseFinderProminence(fhicl::ParameterSet const& p) 
@@ -112,13 +118,11 @@ opdet::SERPulseFinderProminence::SERPulseFinderProminence(fhicl::ParameterSet co
     fLowerSERAmplitude = p.get< int >("LowerSERAmplitude");
     fHigherSERAmplitude = p.get< int >("HigherSERAmplitude");
     fMaxNumPeaks = p.get< size_t >("MaxNumPeaks");
-    TriggerIdx = nullptr;
-    fInputWaveformFFT=0;
-    DetectedPeaksPerChannel.resize(320);
+    fNumberOfPeaksVector.resize(320);
     fPeakAmplitudeVector.resize(320);
 }
 
-std::vector<int>* opdet::SERPulseFinderProminence::GetTriggerIdx()
+void opdet::SERPulseFinderProminence::GetTriggerIdx()
 {
 
     Int_t b_max = fInputWaveform->GetMaximumBin();
@@ -131,10 +135,9 @@ std::vector<int>* opdet::SERPulseFinderProminence::GetTriggerIdx()
         y->push_back(fInputWaveform->GetBinContent(i));
     }
 
-    TriggerIdx = find_peaks(y, fSmoothingWidth, fProminence);
+    find_peaks(y, fSmoothingWidth, fProminence);
 
     delete y;
-    return TriggerIdx;
 }
 
 void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWaveform> const& wfVector , std::vector<TH1D>& calibratedSER_v)
@@ -144,8 +147,6 @@ void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWa
     for(auto const& wf : wfVector)
     {
         int ChNumber = wf.ChannelNumber();
-        std::cout << " Analysing channel number " << ChNumber << std::endl;
-        // This is not done properly now, should not be a pointer 
         TH1D* currentWform = new TH1D("Current WForm", "" , wf.size(), 0, double(wf.size()));
 
         for(size_t i = 0; i < wf.size(); i++) {
@@ -158,28 +159,31 @@ void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWa
         SubstractBaseline();
         // Calculate waveform FFT
         CalculateFFT();
-        std::vector<int> *PeakIdx = GetTriggerIdxFFT();
-        std::cout << " The size of the trigger Idxs is " << PeakIdx->size() << std::endl;
+        GetTriggerIdxFFT();
+        //GetTriggerIdx();
+
         // Loop over the found peaks to see if we add it to the waveform
-        for(size_t k=0; k<PeakIdx->size(); k++)
+        for(size_t k=0; k<TriggerIdx.size(); k++)
         {
-            int PeakValue = this->GetPeakValue(PeakIdx->at(k));
-            bool isIsolated = this->IsIsolatedPeak(PeakIdx->at(k));
+            int PeakValue = this->GetPeakValue(TriggerIdx[k]);
+            bool isIsolated = this->IsIsolatedPeak(TriggerIdx[k]);
             fPeakAmplitudeVector.at(ChNumber).push_back(PeakValue);
             if(PeakValue>fHigherSERAmplitude ||PeakValue<fLowerSERAmplitude) continue;
-            if(PeakIdx->at(k)>4900 || PeakIdx->at(k)<100) continue; // Substitue by function that tells wether it is within waveform limits 
-            if(PeakIdx->size()>fMaxNumPeaks || !isIsolated) continue;
-            std::cout << " Found peak for channel " << ChNumber << " adding waveform " << std::endl;
-            AddWaveforms(calibratedSER_v.at(ChNumber), PeakIdx->at(k));
-            DetectedPeaksPerChannel.at(ChNumber)+=1;
+            if(TriggerIdx[k]>4900 || TriggerIdx[k]<100) continue; // Substitue by function that tells wether it is within waveform limits 
+            if(TriggerIdx.size()>fMaxNumPeaks || !isIsolated) continue;
+            AddWaveforms(calibratedSER_v.at(ChNumber), TriggerIdx[k]);
+            fNumberOfPeaksVector.at(ChNumber)+=1;
             //myWaveformPeakFinder.PlotPeak(PeakIdx->at(k));
         }
         delete currentWform;
+        fInputWaveform = nullptr;
+        delete fInputWaveformFFT;
+        TriggerIdx.clear();
     }
 }
 
 
-std::vector<int>* opdet::SERPulseFinderProminence::GetTriggerIdxFFT()
+void opdet::SERPulseFinderProminence::GetTriggerIdxFFT()
 {
     Int_t b_max = fInputWaveformFFT->GetMaximumBin();
     fWaveformMax = fInputWaveformFFT->GetBinContent(b_max);
@@ -191,16 +195,15 @@ std::vector<int>* opdet::SERPulseFinderProminence::GetTriggerIdxFFT()
         y->push_back(fInputWaveformFFT->GetBinContent(i));
     }
 
-    TriggerIdx = find_peaks(y, fSmoothingWidth, fProminence);
+    find_peaks(y, fSmoothingWidth, fProminence);
 
     delete y;
-    return TriggerIdx;
 }
 
 
-std::vector<int>* opdet::SERPulseFinderProminence::find_peaks(std::vector<double> * y, int width, double prominence) {
+void opdet::SERPulseFinderProminence::find_peaks(std::vector<double> * y, int width, double prominence) {
         
-    std::vector<int> * peaks = new std::vector<int>();
+    
     int MaxWidth = std::max(fPeakWidthL, fPeakWidthR);
 
     for (size_t i = MaxWidth; i < y->size() - MaxWidth; ++i) {
@@ -232,12 +235,10 @@ std::vector<int>* opdet::SERPulseFinderProminence::find_peaks(std::vector<double
             double current_prominence = calculateProminence(y,  i);
             if(current_prominence>=prominence) 
             {
-                peaks->push_back(i);
+                TriggerIdx.push_back(i);
             }
         }
     }
-
-    return peaks;
 }
 
 double opdet::SERPulseFinderProminence::calculateProminence(std::vector<double> * data, int peakIndex) {
@@ -261,7 +262,6 @@ double opdet::SERPulseFinderProminence::calculateProminence(std::vector<double> 
 
 
     //Find the min of the histogram from the peakIndex to the left
-
     double peakHeight = data->at(peakIndex);
     double leftMin = peakHeight;
     for(int i=leftIndex; i<peakIndex; i++)
@@ -288,10 +288,51 @@ double opdet::SERPulseFinderProminence::calculateProminence(std::vector<double> 
 
     if(std::min(leftMin, rightMin)<fProminenceLowerBound) return 0;
     else return prominence;
+}
 
-    //return prominence;
+/*
+void opdet::SERPulseFinderProminence::CalculateFFT()
+{
+    int N = fInputWaveform->GetNbinsX();
+
+    TComplex wforminit(0,0,false);
+    std::vector<TComplex> wformfft(N, wforminit);
+    fft_service->ReinitializeFFT (N, "", 20);
+
+    std::vector<double> wform;
+    for(int i=0; i<N; i++)
+    {
+        wform.push_back(fInputWaveform->GetBinContent(i));
+    }
+   
+    wformfft.resize(N);
+    fft_service->DoFFT(wform, wformfft);
+
+    int lowerFreqCut=1500;
+
+    for(int i=lowerFreqCut; i<N; i++)
+    {
+        wformfft[i]=0;
+    }
+
+    for(int i=N/2; i< N-lowerFreqCut; i++)
+    {
+        wformfft[i]=0;
+    }
+
+    std::vector<double> filtered_wform;
+    filtered_wform.resize(N);
+    fft_service->DoInvFFT(wformfft, filtered_wform);
+
+    fInputWaveformFFT = new TH1D("", "", N, 0, N);
+    for(int i=0; i<N; i++)
+    {
+        fInputWaveformFFT->SetBinContent(i, filtered_wform[i]);
+    }
 
 }
+*/
+
 
 void opdet::SERPulseFinderProminence::CalculateFFT()
 {
@@ -309,10 +350,9 @@ void opdet::SERPulseFinderProminence::CalculateFFT()
     Double_t *re_full = new Double_t[N];
     Double_t *im_full = new Double_t[N];
 
-
     fft->GetPointsComplex(re_full,im_full);
 
-    int lowerFreqCut=2000;
+    int lowerFreqCut=1500;
     for(int i=lowerFreqCut; i<N; i++)
     {
         re_full[i] = 0;
@@ -328,18 +368,21 @@ void opdet::SERPulseFinderProminence::CalculateFFT()
     TVirtualFFT *fft_back = TVirtualFFT::FFT(1, &N, "C2R M K");
     fft_back->SetPointsComplex(re_full, im_full);
     fft_back->Transform();
+    
+    fInputWaveformFFT= new TH1D("", "", N , 0 , N);
     fInputWaveformFFT = dynamic_cast<TH1D*>(TH1D::TransformHisto(fft_back, fInputWaveformFFT, "Re"));
+
     for(int i=0; i<N; i++)
     {
         fInputWaveformFFT->SetBinContent(i+1, fInputWaveformFFT->GetBinContent(i+1)/N);
     }
 
-    fft_back=0;
     delete fft_back;
+    delete fft;
+    delete h_fft;
     delete [] re_full;
     delete [] im_full;
     delete [] signal_array;
-    delete h_fft;
 }
 
 
@@ -366,15 +409,15 @@ bool opdet::SERPulseFinderProminence::IsIsolatedPeak(int PeakIdx)
     int TimeDifferencePrevious;
     int NextTriggerIdx;
     int PreviousTriggerIdx;
-    unsigned int PeakPositionOnVector = std::distance(TriggerIdx->begin(), std::find(TriggerIdx->begin(), TriggerIdx->end(), PeakIdx));
+    unsigned int PeakPositionOnVector = std::distance(TriggerIdx.begin(), std::find(TriggerIdx.begin(), TriggerIdx.end(), PeakIdx));
     
-    if(PeakPositionOnVector<TriggerIdx->size()-1)
+    if(PeakPositionOnVector<TriggerIdx.size()-1)
     {
-        NextTriggerIdx = TriggerIdx->at(PeakPositionOnVector+1);
+        NextTriggerIdx = TriggerIdx.at(PeakPositionOnVector+1);
     }
     if(PeakPositionOnVector>0)
     {
-        PreviousTriggerIdx = TriggerIdx->at(PeakPositionOnVector-1);
+        PreviousTriggerIdx = TriggerIdx.at(PeakPositionOnVector-1);
     }
     
     TimeDifferenceNext = abs(NextTriggerIdx - PeakIdx);

@@ -1,4 +1,4 @@
-#include "my_serpulsefinder.fcl"
+#include "serpulsefinder.fcl"
 
 BEGIN_PROLOG
 

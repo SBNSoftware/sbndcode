@@ -16,7 +16,7 @@ SERPulseFinderProminence:
     SEREnd: 300
     LowerSERAmplitude: 11
     HigherSERAmplitude: 40
-    fMaxNumberPeaks: 40
+    MaxNumberPeaks: 40
 }
 
 END_PROLOG
