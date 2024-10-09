@@ -5,9 +5,4 @@ crt_channel_map_standard:
   FileName: "SBNDCRTChannelMap_v8.txt"
 }
 
-crt_channel_map_no_inversion:
-{
-  FileName: "SBNDCRTChannelMap_v8_no_inversion.txt"
-}
-
 END_PROLOG
