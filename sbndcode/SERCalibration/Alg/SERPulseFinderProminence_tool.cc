@@ -55,7 +55,6 @@ public:
     void setWindowLength(int WindowLenght){ fWindowLenght = WindowLenght; return;}
     void setPeakWidhtL(int PeakWidthL){ fPeakWidthL = PeakWidthL; return;}
     void setPeakWidhtR(int PeakWidthR){ fPeakWidthR = PeakWidthR; return;}
-    void setInputWaveform(TH1D* InputWaveform){ fInputWaveform = InputWaveform; return;}
     void SubstractBaseline();
     void CalculateFFT();
     void AddWaveforms(TH1D& , int);
@@ -82,12 +81,13 @@ private:
     int fBaselineSample;
     int fLowerSERAmplitude;
     int fHigherSERAmplitude;
+    bool fUseFrequencyFilter;
     size_t fMaxNumPeaks;
     TH1D * TimeSignal;
     TH1D * CumulativeTimeSignal;
 
-    TH1D* fInputWaveform;
-    TH1D* fInputWaveformFFT;
+    TH1D* fInputWaveform= nullptr;
+    TH1D* fInputWaveformFFT = nullptr;
     std::vector<int> TriggerIdx;
     std::vector<std::vector<int>> fPeakAmplitudeVector;
 
@@ -118,13 +118,13 @@ opdet::SERPulseFinderProminence::SERPulseFinderProminence(fhicl::ParameterSet co
     fLowerSERAmplitude = p.get< int >("LowerSERAmplitude");
     fHigherSERAmplitude = p.get< int >("HigherSERAmplitude");
     fMaxNumPeaks = p.get< size_t >("MaxNumPeaks");
+    fUseFrequencyFilter = p.get< bool >("UseFrequencyFilter");
     fNumberOfPeaksVector.resize(320);
     fPeakAmplitudeVector.resize(320);
 }
 
 void opdet::SERPulseFinderProminence::GetTriggerIdx()
 {
-
     Int_t b_max = fInputWaveform->GetMaximumBin();
     fWaveformMax = fInputWaveform->GetBinContent(b_max);
 
@@ -147,20 +147,20 @@ void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWa
     for(auto const& wf : wfVector)
     {
         int ChNumber = wf.ChannelNumber();
-        TH1D* currentWform = new TH1D("Current WForm", "" , wf.size(), 0, double(wf.size()));
+        fInputWaveform = new TH1D("Input WForm", "" , wf.size(), 0, double(wf.size()));
 
         for(size_t i = 0; i < wf.size(); i++) {
-            currentWform->SetBinContent(i + 1, (double)wf[i]);
+            fInputWaveform->SetBinContent(i + 1, (double)wf[i]);
         }
-
-        //Set the inpuf waveform for the pulse finder
-        setInputWaveform(currentWform);
         // Substract waveform baseline
         SubstractBaseline();
         // Calculate waveform FFT
-        CalculateFFT();
-        GetTriggerIdxFFT();
-        //GetTriggerIdx();
+        if(fUseFrequencyFilter)
+        {
+            CalculateFFT();
+            GetTriggerIdxFFT();
+        }
+        else GetTriggerIdx();
 
         // Loop over the found peaks to see if we add it to the waveform
         for(size_t k=0; k<TriggerIdx.size(); k++)
@@ -175,9 +175,11 @@ void opdet::SERPulseFinderProminence::RunSERCalibration(std::vector<raw::OpDetWa
             fNumberOfPeaksVector.at(ChNumber)+=1;
             //myWaveformPeakFinder.PlotPeak(PeakIdx->at(k));
         }
-        delete currentWform;
-        fInputWaveform = nullptr;
-        delete fInputWaveformFFT;
+        delete fInputWaveform;
+        if (fInputWaveformFFT != nullptr) {
+            delete fInputWaveformFFT;
+            fInputWaveformFFT = nullptr;  // No es estrictamente necesario, pero es buena práctica
+        }
         TriggerIdx.clear();
     }
 }
@@ -368,9 +370,11 @@ void opdet::SERPulseFinderProminence::CalculateFFT()
     TVirtualFFT *fft_back = TVirtualFFT::FFT(1, &N, "C2R M K");
     fft_back->SetPointsComplex(re_full, im_full);
     fft_back->Transform();
-    
+
     fInputWaveformFFT= new TH1D("", "", N , 0 , N);
     fInputWaveformFFT = dynamic_cast<TH1D*>(TH1D::TransformHisto(fft_back, fInputWaveformFFT, "Re"));
+
+
 
     for(int i=0; i<N; i++)
     {
