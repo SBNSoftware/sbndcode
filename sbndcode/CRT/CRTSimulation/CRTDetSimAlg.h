@@ -51,8 +51,6 @@
 #include "sbnobj/SBND/CRT/CRTData.hh"
 #include "CRTDetSimParams.h"
 
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
-
 using std::vector;
 using std::pair;
 using std::map;

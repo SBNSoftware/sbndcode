@@ -3,8 +3,7 @@
 namespace sbnd::crt {
   
   CRTClusterCharacterisationAlg::CRTClusterCharacterisationAlg(const fhicl::ParameterSet& pset)
-    : fCRTGeoAlg(pset.get<fhicl::ParameterSet>("GeoAlg", fhicl::ParameterSet()))
-    , fUseT1(pset.get<bool>("UseT1"))
+    : fCRTGeoAlg(pset.get<fhicl::ParameterSet>("CRTGeoAlg"))
     , fTimeOffset(pset.get<double>("TimeOffset"))
     , fOverlapBuffer(pset.get<double>("OverlapBuffer"))
     , fPEAttenuation(pset.get<double>("PEAttenuation"))
@@ -14,8 +13,6 @@ namespace sbnd::crt {
   {
   }
 
-  CRTClusterCharacterisationAlg::CRTClusterCharacterisationAlg(){}
-  
   CRTClusterCharacterisationAlg::~CRTClusterCharacterisationAlg(){}
 
   CRTSpacePoint CRTClusterCharacterisationAlg::CharacteriseSingleHitCluster(const art::Ptr<CRTCluster> &cluster, const art::Ptr<CRTStripHit> &stripHit)
@@ -27,7 +24,7 @@ namespace sbnd::crt {
     geo::Point_t pos, err;
     CentralPosition(hitPos, pos, err);
 
-    return CRTSpacePoint(pos, err, pe, stripHit->Ts1() + fTimeOffset, 0., false);
+    return CRTSpacePoint(pos, err, pe, stripHit->Ts0() + fTimeOffset, 0., stripHit->Ts1() + fTimeOffset, 0., false);
   }
 
   bool CRTClusterCharacterisationAlg::CharacteriseDoubleHitCluster(const art::Ptr<CRTCluster> &cluster, const std::vector<art::Ptr<CRTStripHit>> &stripHits, CRTSpacePoint &spacepoint)
@@ -52,10 +49,10 @@ namespace sbnd::crt {
             CentralPosition(overlap, pos, err);
 
             const double pe   = ReconstructPE(hit0, hit1, pos);
-            double time, etime;
-            CorrectTime(hit0, hit1, pos, time, etime);
+            double t0, et0, t1, et1;
+            CorrectTime(hit0, hit1, pos, t0, et0, t1, et1);
 
-            spacepoint = CRTSpacePoint(pos, err, pe, time + fTimeOffset, etime, true);
+            spacepoint = CRTSpacePoint(pos, err, pe, t0 + fTimeOffset, et0, t1 + fTimeOffset, et1, true);
             return true;
           }
         return false;
@@ -69,11 +66,13 @@ namespace sbnd::crt {
             geo::Point_t pos, err;
             CentralPosition(overlap, pos, err);
 
-            const double pe   = ADCToPE(hit0->Channel(), hit0->ADC1(), hit0->ADC2()) + ADCToPE(hit1->Channel(), hit1->ADC1(), hit1->ADC2());
-            const double time  = (hit0->Ts1() + hit1->Ts1()) / 2.;
-            const double etime = std::abs((double)hit0->Ts1() - (double)hit1->Ts1()) / 2.;
+            const double pe  = ADCToPE(hit0->Channel(), hit0->ADC1(), hit0->ADC2()) + ADCToPE(hit1->Channel(), hit1->ADC1(), hit1->ADC2());
+            const double t0  = (hit0->Ts0() + hit1->Ts0()) / 2.;
+            const double t1  = (hit0->Ts1() + hit1->Ts1()) / 2.;
+            const double et0 = std::abs((double)hit0->Ts0() - (double)hit1->Ts0()) / 2.;
+            const double et1 = std::abs((double)hit0->Ts1() - (double)hit1->Ts1()) / 2.;
 
-            spacepoint = CRTSpacePoint(pos, err, pe, time + fTimeOffset, etime, false);
+            spacepoint = CRTSpacePoint(pos, err, pe, t0 + fTimeOffset, et0, t1 + fTimeOffset, et1, false);
             return true;
           }
         return false;
@@ -107,21 +106,25 @@ namespace sbnd::crt {
       return false;
     
     double pe = 0.;
-    std::vector<double> times;
+    std::vector<double> t0s, t1s;
 
     for(auto const &sp : complete_spacepoints)
       {
         pe += sp.PE();
-        times.push_back(sp.Time());
+        t0s.push_back(sp.Ts0());
+        t1s.push_back(sp.Ts1());
       }
 
     geo::Point_t pos, err;
     AggregatePositions(complete_spacepoints, pos, err);
 
-    double time, etime;
-    TimeErrorCalculator(times, time, etime);
-    
-    spacepoint = CRTSpacePoint(pos, err, pe, time, etime, true);
+    double t0, et0;
+    TimeErrorCalculator(t0s, t0, et0);
+
+    double t1, et1;
+    TimeErrorCalculator(t1s, t1, et1);
+
+    spacepoint = CRTSpacePoint(pos, err, pe, t0, et0, t1, et1, true);
     return true;
   }
 
@@ -194,7 +197,7 @@ namespace sbnd::crt {
   }
 
   void CRTClusterCharacterisationAlg::CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const geo::Point_t &pos,
-                                                  double &time, double &etime)
+                                                  double &t0, double &et0, double &t1, double &et1)
   {
     const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0->Channel());
     const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1->Channel());
@@ -205,16 +208,11 @@ namespace sbnd::crt {
     const double corr0 = TimingCorrectionOffset(dist0, pe0);
     const double corr1 = TimingCorrectionOffset(dist1, pe1);
 
-    if(fUseT1)
-      {
-        time  = ((double)hit0->Ts1() - corr0 + (double)hit1->Ts1() - corr1) / 2.;
-        etime = std::abs(((double)hit0->Ts1() - corr0) - ((double)hit1->Ts1() - corr1)) / 2.;
-      }
-    else
-      {
-        time  = ((double)hit0->Ts0() - corr0 + (double)hit1->Ts0() - corr1) / 2.;
-        etime = std::abs(((double)hit0->Ts0() - corr0) - ((double)hit1->Ts0() - corr1)) / 2.;
-      }
+    t0  = ((double)hit0->Ts0() - corr0 + (double)hit1->Ts0() - corr1) / 2.;
+    et0 = std::abs(((double)hit0->Ts0() - corr0) - ((double)hit1->Ts0() - corr1)) / 2.;
+
+    t1  = ((double)hit0->Ts1() - corr0 + (double)hit1->Ts1() - corr1) / 2.;
+    et1 = std::abs(((double)hit0->Ts1() - corr0) - ((double)hit1->Ts1() - corr1)) / 2.;
   }
 
   double CRTClusterCharacterisationAlg::TimingCorrectionOffset(const double &dist, const double &pe)

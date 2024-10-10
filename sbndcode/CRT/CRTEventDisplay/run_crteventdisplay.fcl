@@ -1,5 +1,4 @@
-#include "services_sbnd.fcl"
-#include "particleinventoryservice.fcl"
+#include "simulationservices_sbnd.fcl"
 #include "crteventdisplay_sbnd.fcl"
 
 process_name: CRTEventDisplay
@@ -7,7 +6,7 @@ process_name: CRTEventDisplay
 services:
 {
   @table::sbnd_services
-  ParticleInventoryService: @local::standard_particleinventoryservice
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
 }
 
 source:

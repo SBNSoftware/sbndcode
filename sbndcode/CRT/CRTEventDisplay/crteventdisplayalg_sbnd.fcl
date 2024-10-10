@@ -1,11 +1,15 @@
-#include "crtsimmodules_sbnd.fcl"
+#include "crtgeoalg_sbnd.fcl"
 #include "crtbacktrackeralg_sbnd.fcl"
+#include "crtsimmodules_sbnd.fcl"
 
 BEGIN_PROLOG
 
 crteventdisplayalg_sbnd:
 {
+   CRTGeoAlg:         @local::crtgeoalg_sbnd
    CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
+
+   MC: true
 
    SimLabel:         "largeant"
    SimDepositLabel:  "genericcrt"
@@ -14,12 +18,15 @@ crteventdisplayalg_sbnd:
    SpacePointLabel:  "crtspacepoints"
    TrackLabel:       "crttracks"
 
+   SaveRoot:         true
+   SaveViews:        false
+
    DrawTaggers:      true
    DrawModules:      false
    DrawFEBs:         false
    DrawFEBEnds:      false
    DrawStrips:       false
-   DrawTpc:          true
+   DrawTPC:          true
    DrawTrueTracks:   true
    DrawSimDeposits:  false
    DrawStripHits:    true
@@ -34,17 +41,21 @@ crteventdisplayalg_sbnd:
    ## 0 - Bottom
    ## 1 - South (upstream)
    ## 2 - North (downstream)
-   ## 3 - West (beam right)
-   ## 4 - East (beam left)
+   ## 3 - West (beam left)
+   ## 4 - East (beam right)
    ## 5 - Top Low
    ## 6 - Top High
    ChoseTaggers:  false
    ChosenTaggers: [ 0, 1, 2, 3, 4, 5, 6 ]
-   
+
+   HighlightModules:  false
+   HighlightedModules: [ ]
+
    TaggerColour:             1
+   HighlightColour:          8
    FEBColour:                2
    FEBEndColour:             4
-   TpcColour:                15
+   TPCColour:                15
    TrueTrackColour:          2
    SimDepositColour:         8
    StripHitColour:           4
@@ -53,26 +64,28 @@ crteventdisplayalg_sbnd:
    SpacePointColour:         6
    TrackColour:              9
 
-   MinTime: -200000
-   MaxTime: -150000
+   UseTs0:  false
+   MinTime: -10000000000
+   MaxTime: 10000000000
 
    Print:            true
 
    LineWidth:        3.
 }
 
-crteventdisplayalg_sbnd_feb_layout_debug: @local::crteventdisplayalg_sbnd
+crteventdisplayalg_sbnd_data: @local::crteventdisplayalg_sbnd
 
-crteventdisplayalg_sbnd_feb_layout_debug.DrawTaggers:      false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawModules:      true
-crteventdisplayalg_sbnd_feb_layout_debug.DrawFEBs:         true
-crteventdisplayalg_sbnd_feb_layout_debug.DrawFEBEnds:      true
-crteventdisplayalg_sbnd_feb_layout_debug.DrawStrips:       false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawTpc:          false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawTrueTracks:   false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawSimDeposits:  false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawStripHits:    false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawClusters:     false
-crteventdisplayalg_sbnd_feb_layout_debug.DrawSpacePoints:  false
+crteventdisplayalg_sbnd_data.SaveRoot:        false
+crteventdisplayalg_sbnd_data.SaveViews:       true
+crteventdisplayalg_sbnd_data.DrawStripHits:   false
+crteventdisplayalg_sbnd_data.DrawClusters:    false
+crteventdisplayalg_sbnd_data.DrawSpacePoints: true
+crteventdisplayalg_sbnd_data.DrawTracks:      true
+crteventdisplayalg_sbnd_data.MC:              false
+crteventdisplayalg_sbnd_data.DrawModules:     true
+crteventdisplayalg_sbnd_data.DrawTrueTracks:  false
+crteventdisplayalg_sbnd_data.ChoseTaggers:    true
+crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 0, 1, 2, 3, 4 ]
+crteventdisplayalg_sbnd_data.UseTs0:          true
 
 END_PROLOG
