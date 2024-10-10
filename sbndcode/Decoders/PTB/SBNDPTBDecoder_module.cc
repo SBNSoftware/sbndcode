@@ -93,6 +93,9 @@ int eventNum =0;
 int _run;
 int _subrun;
 int _event;
+std::vector<long long> HLTTimestamp;
+long long  prevHLTTimestamp; //Used for exposure accounting to keep a memory of the previous HLT timestamp 
+bool  oneHLTperEvt =true;
 
 void SBNDPTBDecoder::produce(art::Event & evt)
 {
@@ -100,8 +103,11 @@ void SBNDPTBDecoder::produce(art::Event & evt)
   _subrun = evt.id().subRun();
   _event = evt.id().event();
 
+  //std::cout << sbndaq::TriggerBoardReader::PTB_Clock() << std::endl;
+
   std::cout << "Run: " << _run  << "  SubRun: " << _subrun  << "  Event: " << _event << " Listed Event: " << eventNum << std::endl; 
   eventNum++;
+  oneHLTperEvt=true;
 
   // look first for container fragments and then non-container fragments
 
@@ -124,11 +130,16 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 	      _process_PTB_AUX(*cont_frag[ii], sout);
               raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
 	      sbndptbs.push_back(ptbdp);
-	    }
 
-	}
-    }
-
+	    } //End of loop over the number of fragments per container
+	} //End of loop over the number of containers
+    } //End of if statement for container fragments
+  
+  HLTTimestamp.push_back(prevHLTTimestamp);
+  if (eventNum!=1) {
+    std::cout <<"Current Event: " << eventNum-1 << " ||  Previous HLT Timestamp: " << HLTTimestamp[eventNum-2] << std::endl;
+  }
+  
   art::InputTag itag2(fInputLabel, fInputNonContainerInstance);
   auto frags = evt.getHandle<artdaq::Fragments>(itag2);
   if (frags)
@@ -182,6 +193,27 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sout)
 {
   int numLLT =0;
+  
+  __uint128_t payload;
+  const __uint128_t *  data_ptr = reinterpret_cast<const __uint128_t*>(frag.dataBegin());
+  size_t wordCount = frag.dataSizeBytes() / sizeof(__uint128_t);
+
+  for (size_t i=0; i < wordCount; i++){
+    payload = data_ptr[i];
+    
+    for (int i = 127; i>=0; --i){
+      std::cout << static_cast<int>((payload >> i) & 1);
+      if (i% 8 ==0){
+	std::cout << " ";
+      }
+
+    }
+    std::cout << std::endl;
+  }
+  
+
+  //std::cout << "Fragment ID: " << frag.fragmentID() << " | Sequence ID: "<<frag.sequenceID() << " | Timestamp: " << frag.timestamp() << std::endl;
+  
   sbndaq::CTBFragment ctbfrag(frag);   // somehow the name CTBFragment stuck
 
   // use the same logic in sbndaq-artdaq-core/Overlays/SBND/PTBFragment.cc: operator<<
@@ -199,8 +231,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	}
       size_t ix=0;
       uint32_t wt = 0;
-      std::cout << "PTB Word type [" << ctbfrag.Word(iword)->word_type << "]  ";
-
+      
       if (ctbfrag.Trigger(iword))
 	{
 	  raw::ptb::Trigger tstruct;
@@ -215,11 +246,24 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	    {
 	      ix = sout.HLTrigs.size();
 	      sout.HLTrigs.push_back(tstruct);
-	      std::cout << tstruct.trigger_word << "  HLT Status: " << tstruct.timestamp << std::endl;
+	      
+	      if (oneHLTperEvt){
+		//if (tstruct.trigger_word == 2){
+		prevHLTTimestamp = tstruct.timestamp;
+		//}
+	      }
+	      
+
+	      std::cout << "PTB Word type [" << std::bitset<3>(ctbfrag.Word(iword)->word_type) << "]  ";
+	      std::cout << std::bitset<32>(tstruct.trigger_word) << "  HLT Timestamp: "  << std::bitset<64>(tstruct.timestamp/20) <<std::endl;
+	      
+	      oneHLTperEvt = false;
+
 	      if (fDebugLevel > 0)
 		{
 		  std::cout << "SBNDPTBDecoder_module: found HLT: " << wt << " " << ix << std::endl;
 		}
+	      
 	    }
 	  //else if (ctbfrag.Trigger(iword)->IsLLT())
 	  else if (wt ==1)
@@ -227,7 +271,11 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	      numLLT++;
 	      ix = sout.LLTrigs.size();
 	      sout.LLTrigs.push_back(tstruct);
-	      std::cout << tstruct.trigger_word << "  LLT Status: " << tstruct.timestamp <<  std::endl;
+
+	      // std::cout << "PTB Word type [" << std::bitset<3>(ctbfrag.Word(iword)->word_type) << "]  ";
+	      // std::cout << std::bitset<32>(tstruct.trigger_word) << "  LLT Timestamp: "  << std::bitset<64>(tstruct.timestamp/20) <<std::endl;
+
+	      //std::cout << tstruct.trigger_word << "  LLT Timestamp: " << tstruct.timestamp <<  std::endl;
 	      if (fDebugLevel > 0)
 		{
 		  std::cout << "SBNDPTBDecoder_module: found LLT: " << wt << " " << ix << std::endl;
@@ -246,7 +294,9 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  cstruct.auxpds = ctbfrag.ChStatus(iword)->auxpds;
 	  cstruct.word_type = ctbfrag.ChStatus(iword)->word_type;
 	  wt = cstruct.word_type;
-	  std::cout <<cstruct.crt << "                  CRT Status: " << cstruct.timestamp <<  std::endl;
+	  //std::cout <<cstruct.crt << "                  CRT Status: " << cstruct.timestamp <<  std::endl;
+	  std::cout << "PTB Word type [" << std::bitset<3>(ctbfrag.Word(iword)->word_type) << "]  ";
+	  std::cout << std::bitset<14>(cstruct.crt) << "  ChStatus Timestamp: "  << std::bitset<64>(cstruct.timestamp /20) <<std::endl;
 	  ix = sout.ChStats.size();
 	  sout.ChStats.push_back(cstruct);
 	  if (fDebugLevel > 0)
