@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+NTBDecoderDefaults: {
+      module_type: NTBDecoder
+      ntb_data_label: "daq:NEVISTB"
+      ntb_container_data_label: "daq:ContainerNEVISTB"
+      OutputInstance: ""
+      DebugLevel: 0
+    }
+
+END_PROLOG
+
