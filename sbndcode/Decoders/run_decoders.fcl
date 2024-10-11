@@ -1,0 +1,59 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+#include "pmtdecoder.fcl"
+#include "spectdc_decoder_sbnd.fcl"
+#include "SBNDPTBDecoderDefaults.fcl"
+#include "SBNDTPCDecoderDefaults.fcl"
+
+#include "TPCChannelMapService.fcl"
+#include "crt_decoder_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+
+
+process_name: DECODE
+
+services:
+{
+    @table::sbnd_services
+    TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
+    CRTChannelMapService: @local::crt_channel_map_standard
+    TFileService: {
+        fileName: "decoder_hist.root"
+    }
+}
+
+physics:
+{
+  producers:
+  {
+      daq:        @local::SBNDTPCDecoderDefaults
+      tdcdecoder: @local::spec_tdc_decoder_sbnd
+      pmtdecoder: @local::pmtdecoder
+      ptbdecoder: @local::SBNDPTBDecoderDefaults
+      crtdecoder: @local::crt_decoder
+  }
+
+  decode:        [ daq, crtdecoder, ptbdecoder, tdcdecoder, pmtdecoder ]
+  trigger_paths: [ decode ]
+
+  stream1:   [ out1 ]
+  end_paths: [ stream1 ]
+}
+
+source:
+{
+    module_type: RootInput
+    maxEvents: -1
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    fileName: "%ifb_decode.root"
+    dataTier: "decoded-raw"
+    outputCommands: [ "keep *", "drop artdaq::Fragments_*_*_*" ]
+  }
+}
