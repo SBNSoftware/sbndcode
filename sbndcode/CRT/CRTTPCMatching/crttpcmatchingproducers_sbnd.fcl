@@ -12,6 +12,7 @@ crtspacepointmatchalg_sbnd:
    MaxUncert:          20.
    TPCTrackLabel:      "pandoraTrack"
    CRTSpacePointLabel: "crtspacepoints"
+   UseTs0:             false
 }
 
 crtspacepointmatchproducer_sbnd:
@@ -31,6 +32,7 @@ crttrackmatchalg_sbnd:
    MinTPCTrackLength: 5.
    SelectionMetric:   "score"
    TPCTrackLabel:     "pandoraTrack"
+   UseTs0:            false
 }
 
 crttrackmatchproducer_sbnd:
