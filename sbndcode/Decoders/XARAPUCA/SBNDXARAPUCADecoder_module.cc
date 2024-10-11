@@ -17,6 +17,8 @@
 
 #include <memory>
 
+#include "lardataobj/RawData/OpDetWaveform.h"
+
 namespace sbndaq {
   class SBNDXARAPUCADecoder;
 }
@@ -40,7 +42,7 @@ public:
 private:
 
   // Declare member data here.
-
+  std::string fch_instance_name;
 };
 
 
@@ -48,8 +50,13 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   : EDProducer{p}  // ,
   // More initializers here.
 {
+
   std::cout << "Entering the constructor" << std::endl;
+
+  fch_instance_name = p.get<std::string>("xarapucaInstanceName");
+  std::cout << "xarapucaInstanceName: " << fch_instance_name << std::endl;
   // Call appropriate produces<>() functions here.
+  produces< std::vector <raw::OpDetWaveform> > (fch_instance_name);
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
@@ -57,6 +64,9 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
 {
   std::cout << "Entering the produce function" << std::endl;
   // Implementation of required member function here.
+  auto wvfms = std::make_unique <std::vector <raw::OpDetWaveform> >();
+
+  e.put(std::move(wvfms), fch_instance_name);
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDXARAPUCADecoder)

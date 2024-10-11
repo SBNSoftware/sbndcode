@@ -3,6 +3,10 @@ BEGIN_PROLOG
 xarapucadecoder: 
 {
     module_type: "SBNDXARAPUCADecoder"
+
+    # OUTPUT configuration
+    # Output data product instance name
+    xarapucaInstanceName: "XARAPUCAChannels"
 }
 
 END_PROLOG
