@@ -1,0 +1,39 @@
+#include "opdeconvolution_alg_data.fcl"
+
+BEGIN_PROLOG
+
+SBNDOpDeconvolution:
+{
+  module_type:	"SBNDOpDeconvolution"
+  InputLabel: ""pmtdecoder:PMTChannels""
+  PDTypes: []
+  Electronics: []
+  OpDecoAlg: @local::OpDeconvolutionAlg
+}
+
+SBNDOpDeconvolutionPMT: @local::SBNDOpDeconvolution
+SBNDOpDeconvolutionPMT.PDTypes: ["pmt_coated", "pmt_uncoated"]
+SBNDOpDeconvolutionPMT.Electronics: [""]
+SBNDOpDeconvolutionPMT.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"
+SBNDOpDeconvolutionPMT.OpDecoAlg.UseParamFilter: true
+SBNDOpDeconvolutionPMT.OpDecoAlg.FilterParams: [0.049, 2] #Freq in GHz
+SBNDOpDeconvolutionPMT.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0
+SBNDOpDeconvolutionPMT.OpDecoAlg.DecoWaveformPrecision: 0.005
+
+SBNDOpDeconvolutionXARAPUCA: @local::SBNDOpDeconvolution
+SBNDOpDeconvolutionXARAPUCA.PDTypes: ["xarapuca_vuv", "xarapuca_vis"]
+SBNDOpDeconvolutionXARAPUCA.Electronics: ["daphne"]
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_arapuca_sbnd.root"
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Electronics: "Daphne"
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.UseParamFilter: true
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0;
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.FilterParams: [0.003193, 2] #Freq in GHz
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.PositivePolarity: true
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ADCSaturationValue: 4095 #From digi_arapuca_sbnd.fcl values and DigiArapucaSBNDAlg.cc#L15
+
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ApplyExpoAvSmooth:false
+SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ApplyUnAvSmooth:  false
+
+
+
+END_PROLOG

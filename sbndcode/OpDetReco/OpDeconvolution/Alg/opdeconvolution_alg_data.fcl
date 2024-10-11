@@ -1,49 +1,43 @@
-#include "opdeconvolution_alg.fcl"
-
 BEGIN_PROLOG
 
-SBNDOpDeconvolution:
+
+OpDeconvolutionAlg:
 {
-  module_type:	"SBNDOpDeconvolution"
-  InputLabel: "pmtdecoder:PMTChannels"
-  PDTypes: []
-  Electronics: []
-  OpDecoAlg: @local::OpDeconvolutionAlg
+  tool_type: "OpDeconvolutionAlgWienerData"
+  Debug: false
+  MaxFFTSizePow: 16
+  OpDetDataFile: "./digi_pmt_sbnd_SER_individual_channels_v5_ALL.root"
+  BaseSampleBins: 30
+  BaseVarCut: 25
+  SkipChannelList: []
+  CorrectBaselineOscillations: true
+  PositivePolarity: false
+  UseSaturated: false
+  ADCSaturationValue: 0
+  ApplyExpoAvSmooth: true
+  ApplyUnAvSmooth: true
+  ExpoAvSmoothPar: 0.3
+  UnAvNeighbours: 1
+  BaselineSample: 15
+  ####SPE area must be set to 1./DecoWaveformPrecision in OpHit finder
+  DecoWaveformPrecision: 0.002 #Scale deco waves by factor x500
+  HypoSignalTimeWindow: 8000 #ns
+  HypoSignalCustom: true
+  HypoSignalTimeConsts: [25., 1500.] #ns
+  HypoSignalWeights: [0.3, 0.7] #weights must sum 1
+  HypoSignalScale: 0.3
+  PMTChargeToADC: 25.97
+  ScaleHypoSignal: true
+  #### Filter type. Options are:
+  #### Wiener: hypothesis is 2,3,4...-exponential shape
+  #### Wiener1PE: hypothesis is 1PE (delta pulse)
+  #### Parameter filter
+  Filter: "Wiener"
+  UseParamFilter: false
+  #Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))"
+  FilterParams: [0.1, 20]
+  Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 62.5MHz/16 ns
+  DaphneFreq:  62.5 # in MHz
 }
-
-SBNDOpDeconvolutionPMT: @local::SBNDOpDeconvolution
-SBNDOpDeconvolutionPMT.PDTypes: ["pmt_coated", "pmt_uncoated"]
-SBNDOpDeconvolutionPMT.Electronics: [""]
-SBNDOpDeconvolutionPMT.OpDecoAlg.BaseSampleBins: [30]
-SBNDOpDeconvolutionPMT.OpDecoAlg.OpDetDataFile: "/exp/sbnd/app/users/acastill/Deconvolution/Workdir/digi_pmt_sbnd_SER_individual_channels_v2.root"
-SBNDOpDeconvolutionPMT.OpDecoAlg.UseParamFilter: true
-SBNDOpDeconvolutionPMT.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0
-SBNDOpDeconvolutionPMT.OpDecoAlg.FilterParams: [0.049, 2] #Freq in GHz
-SBNDOpDeconvolutionPMT.OpDecoAlg.DecoWaveformPrecision: 0.005
-SBNDOpDeconvolutionPMT.OpDecoAlg.Debug: false
-SBNDOpDeconvolutionPMT.OpDecoAlg.ApplyExpoAvSmooth: true
-SBNDOpDeconvolutionPMT.OpDecoAlg.ApplyUnAvSmooth: true
-SBNDOpDeconvolutionPMT.OpDecoAlg.BaseSampleBins: 30
-SBNDOpDeconvolutionPMT.OpDecoAlg.BaseVarCut: 25
-SBNDOpDeconvolutionPMT.OpDecoAlg.SkipChannelList: [119]
-SBNDOpDeconvolutionPMT.OpDecoAlg.CorrectBaselineOscillations: true
-
-
-
-
-
-SBNDOpDeconvolutionXARAPUCA: @local::SBNDOpDeconvolution
-SBNDOpDeconvolutionXARAPUCA.PDTypes: ["xarapuca_vuv", "xarapuca_vis"]
-SBNDOpDeconvolutionXARAPUCA.Electronics: ["daphne"]
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_arapuca_sbnd.root"
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Electronics: "Daphne"
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.UseParamFilter: true
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0;
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.FilterParams: [0.003193, 2] #Freq in GHz
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.PositivePolarity: true
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ADCSaturationValue: 4095 #From digi_arapuca_sbnd.fcl values and DigiArapucaSBNDAlg.cc#L15
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ApplyExpoAvSmooth:false
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ApplyUnAvSmooth:  false
-
 
 END_PROLOG
