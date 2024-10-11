@@ -5,7 +5,7 @@ BEGIN_PROLOG
 SBNDOpDeconvolution:
 {
   module_type:	"SBNDOpDeconvolution"
-  InputLabel: ""pmtdecoder:PMTChannels""
+  InputLabel: "pmtdecoder:PMTChannels"
   PDTypes: []
   Electronics: []
   OpDecoAlg: @local::OpDeconvolutionAlg
