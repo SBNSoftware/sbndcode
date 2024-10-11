@@ -20,6 +20,10 @@
 #include "ophit_finder_sbnd.fcl"
 #include "wvfana_sbnd.fcl"
 
+#include "crtrecoproducers_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+
 process_name: HitDumper
 
 services:
@@ -32,6 +36,9 @@ services:
                              @table::sbnd_services              # from services_sbnd.fcl
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND:  @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  CRTChannelMapService:      @local::crt_channel_map_standard
+  CRTCalibService:           @local::crt_calib_service
+
 }
 
 
@@ -69,6 +76,9 @@ physics:
     ophitxarapuca:        @local::sbnd_ophit_finder_arapuca
     MuonTrackProducer:        @local::MuonTrackProducer
 
+    crtclustering:  @local::crtclusterproducer_data_sbnd
+    crtspacepoints: @local::crtspacepointproducer_data_sbnd
+    crttracks:      @local::crttrackproducer_data_sbnd
   }
   filters:
   {
@@ -88,6 +98,9 @@ physics:
     #, ophitxarapuca
     #, MuonTrackProducer 
     #, MuonTrackFilter
+    , crtclustering
+    , crtspacepoints
+    , crttracks
   ]
 
   ana: [hitdumper

@@ -196,8 +196,8 @@ private:
   std::vector<int> _crt_strip_hit_module;          ///< CRT strip hit module
   std::vector<int> _crt_strip_hit_channel;         ///< CRT strip hit channel
   std::vector<int> _crt_strip_hit_orient;          ///< CRT strip hit orientation (0 for y (horizontal) and 1 for x (vertical))
-  std::vector<uint> _crt_strip_hit_t0;             ///< CRT strip hit t0
-  std::vector<uint> _crt_strip_hit_t1;             ///< CRT strip hit t1
+  std::vector<int> _crt_strip_hit_t0;              ///< CRT strip hit t0
+  std::vector<int> _crt_strip_hit_t1;              ///< CRT strip hit t1
   std::vector<uint> _crt_strip_hit_adc1;           ///< CRT strip hit adc1
   std::vector<uint> _crt_strip_hit_adc2;           ///< CRT strip hit adc2
   std::vector<double> _crt_strip_hit_pos;          ///< CRT strip hit position

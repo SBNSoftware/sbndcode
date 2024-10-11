@@ -10,8 +10,8 @@ hitdumper:
     MaxOpHits: 100000
     MaxSamples: 5001
     MaxCRTStripHits:   5000
-    MaxCRTSpacePoints: 500
-    MaxCRTTracks:      100
+    MaxCRTSpacePoints: 1000
+    MaxCRTTracks:      500
 
     DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
@@ -53,7 +53,9 @@ hitdumper:
 }
 
 hitdumper_data: @local::hitdumper
-hitdumper_data.OpHitsModuleLabel: ["ophitpmt"] #only have PMT data as of 05/30/2024
-hitdumper_data.readTruth: false
+hitdumper_data.OpHitsModuleLabel:  ["ophitpmt"]
+hitdumper_data.readTruth:          false
+hitdumper_data.KeepCRTSpacePoints: true
+hitdumper_data.KeepCRTTracks:      true
 
 END_PROLOG
