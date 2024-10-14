@@ -1,0 +1,51 @@
+# experiment specific configurations
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+# configuration files containing prologs
+#include "singles_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+process_name: SingleGen
+services:
+{
+	@table::sbnd_simulation_services
+	TFileService:
+	{
+		fileName: "hist_prod_single_sbnd.root"
+	}
+}
+source:
+{
+	module_type: EmptyEvent
+	timestampPlugin:
+	{
+		plugin_type: "GeneratedEventTimestamp"
+	}
+	maxEvents: 10
+	firstRun: 1
+	firstEvent: 1
+}
+
+physics:
+{
+
+	producers:
+	{
+		rns: { module_type: "RandomNumberSaver"
+}
+		generator: @local::sbnd_singlep
+	}
+	analyzers: { }
+	filters: { }
+	simulate: [rns, generator]
+	stream1: [out1]
+	trigger_paths: [simulate]
+	end_paths: [stream1]
+}
+outputs:
+{
+	out1:
+	{
+		@table::sbnd_rootoutput
+		fileName: "prodsingle_sbnd_%p-%tc.root"
+	}
+}
