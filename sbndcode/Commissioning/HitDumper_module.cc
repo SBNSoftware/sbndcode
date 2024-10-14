@@ -581,9 +581,11 @@ void Hitdumper::analyze(const art::Event& evt)
     art::fill_ptr_vector(crtStripHitVector, crtStripHitHandle);
     _n_crt_strip_hits = crtStripHitVector.size();
   }
-  else
+  else {
     std::cout << "Failed to get sbnd::crt::CRTStripHit data product ("<<fCRTStripHitModuleLabel<<")." << std::endl;
-
+    _n_crt_strip_hits = 0;
+  }
+  
   if (_n_crt_strip_hits > _max_crt_strip_hits) _n_crt_strip_hits = _max_crt_strip_hits;
 
   ResetCRTStripHitVars();
