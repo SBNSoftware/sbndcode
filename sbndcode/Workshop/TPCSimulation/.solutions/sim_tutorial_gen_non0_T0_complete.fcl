@@ -51,8 +51,8 @@ outputs:
 }
 
 physics.producers.generator.PadOutVectors: true
-physics.producers.generator.PDG: [11,2212]
-physics.producers.generator.P0: [0.7, 0.8]
+physics.producers.generator.PDG: [13,2212]
+physics.producers.generator.P0: [0.7, 0.7]
 physics.producers.generator.PDist: 0
 physics.producers.generator.X0: [-100, -100]
 physics.producers.generator.Y0: [0, 0]
@@ -65,8 +65,8 @@ physics.producers.generator.SigmaY: [0., 0] # variation in the starting y positi
 physics.producers.generator.SigmaZ: [0., 0.] # variation in the starting z position
 physics.producers.generator.SigmaT: [0., 0.] # variation in the starting time
 physics.producers.generator.PosDist: 0 # 0 - uniform, 1 - gaussian
-physics.producers.generator.Theta0XZ: [ -10, 35 ] #angle in XZ plane (degrees)
-physics.producers.generator.Theta0YZ: [  0, 10 ] #angle in YZ plane (degrees)
+physics.producers.generator.Theta0XZ: [ -10, -10 ] #angle in XZ plane (degrees)
+physics.producers.generator.Theta0YZ: [  0, 0 ] #angle in YZ plane (degrees)
 physics.producers.generator.SigmaThetaXZ: [ 0., 0. ] #in degrees
 physics.producers.generator.SigmaThetaYZ: [ 0., 0. ] #in degrees
 physics.producers.generator.AngleDist: 0 # 0 - uniform, 1 - gaussian
