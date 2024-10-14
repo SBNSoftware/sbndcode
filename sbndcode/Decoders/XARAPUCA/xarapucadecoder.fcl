@@ -4,6 +4,13 @@ xarapucadecoder:
 {
     module_type: "SBNDXARAPUCADecoder"
 
+    # INPUT configuration
+    # CAEN Fragments
+    caen_module_label: "daq"
+    caen_fragment_name: [ "CAENV1740", "ContainerCAENV1740" ]
+    # Boards
+    num_caen_boards: 1
+
     # OUTPUT configuration
     # Output data product instance name
     xarapucaInstanceName: "XARAPUCAChannels"
