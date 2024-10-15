@@ -56,6 +56,9 @@ private:
 
   std::string fch_instance_name;
 
+  // Private functions.
+  void add_fragment(artdaq::Fragment& fragment, std::vector <std::vector <artdaq::Fragment> >& fragments);
+  
 };
 
 
@@ -78,7 +81,7 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   std::cout << "Num CAEN boards: " << fnum_caen_boards << std::endl;
 
   // Call appropriate produces<>() functions here.
-  produces< std::vector <raw::OpDetWaveform> > (fch_instance_name);
+  produces <std::vector <raw::OpDetWaveform> > (fch_instance_name);
   
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
@@ -93,12 +96,12 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
   auto wvfms = std::make_unique <std::vector <raw::OpDetWaveform> > ();
 
   // Create a vector for all fragments for <fnum_caen_boards> boards
-  std::vector< std::vector < artdaq::Fragment> > fragments (fnum_caen_boards);
+  std::vector <std::vector <artdaq::Fragment> > fragments (fnum_caen_boards);
 
   bool found_caen = false;
 
   for (const std::string &caen_name: fcaen_fragment_name) {
-    art::Handle<std::vector <artdaq::Fragment> > fragment_handle;
+    art::Handle <std::vector <artdaq::Fragment> > fragment_handle;
     e.getByLabel(fcaen_module_label, caen_name, fragment_handle);
     
     if (!fragment_handle.isValid()) {
@@ -123,7 +126,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
           if (container_fragment.fragment_type() == sbndaq::detail::FragmentType::CAENV1740) {
             for (size_t i = 0; i < container_fragment.block_count(); i++) {
               artdaq::Fragment fragment = *container_fragment[i].get();
-              std::cout << "\t\t\t Accessing fragment " << i << " CAENV1740: " << fragment;
+              add_fragment(fragment, fragments);
             }
           }
         }
@@ -135,7 +138,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
         // Search for all CAEN V1740 fragments
         for (size_t i = 0; i < fragment_handle->size(); i++) {
           artdaq::Fragment fragment = fragment_handle->at(i);
-          std::cout << "\t\t\t Accessing fragment " << i << " CAENVV1740: " << fragment;
+          add_fragment(fragment, fragments);
         }
       }
     }
@@ -150,6 +153,16 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
   }
 
   std::cout << std::endl;
+}
+
+void sbndaq::SBNDXARAPUCADecoder::add_fragment(artdaq::Fragment& fragment, std::vector <std::vector <artdaq::Fragment> >& fragments) {
+  auto fragment_ID = fragment.fragmentID();
+  if (fragment_ID < 0 || fragment_ID >= fnum_caen_boards) {
+    std::cout << "\t\t\tFragment ID " << fragment_ID << " is out of range. Skipping this fragment..." << std::endl;
+  } else {
+    std::cout << "\t\t\tGetting a CAENV1740 fragment: [" << fragment_ID << "]" << fragment;
+    fragments.at(fragment_ID).push_back(fragment);
+  }
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDXARAPUCADecoder)
