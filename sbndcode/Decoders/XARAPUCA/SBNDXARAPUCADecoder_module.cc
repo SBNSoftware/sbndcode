@@ -18,6 +18,8 @@
 #include <memory>
 
 #include "artdaq-core/Data/Fragment.hh"
+#include "artdaq-core/Data/ContainerFragment.hh"
+#include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "sbndaq-artdaq-core/Overlays/Common/CAENV1740Fragment.hh"
 
 #include "lardataobj/RawData/OpDetWaveform.h"
@@ -98,15 +100,46 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
   for (const std::string &caen_name: fcaen_fragment_name) {
     art::Handle<std::vector <artdaq::Fragment> > fragment_handle;
     e.getByLabel(fcaen_module_label, caen_name, fragment_handle);
-
+    
     if (!fragment_handle.isValid()) {
       std::cout << "\tHandle not valid for " << caen_name << std::endl;
+    
     } else if (fragment_handle->size() == 0) {
       std::cout << "\tHandle with size " << fragment_handle->size() << " for " << caen_name << std::endl;
+    
     } else {
       found_caen |= true;
       std::cout << "\tHandle valid for " << caen_name << " with size " << fragment_handle->size() << std::endl;
+    
+      // It is a group of containers containing a group of CAEN V1740 fragments
+      if (fragment_handle->front().type() == artdaq::Fragment::ContainerFragmentType){
+        std::cout << "\t\tCONTAINER" << std::endl;
+        
+        // For every container
+        for (auto container: *fragment_handle) {
+          artdaq::ContainerFragment container_fragment(container);
+          
+          // Search for all CAEN V1740 fragments inside the container
+          if (container_fragment.fragment_type() == sbndaq::detail::FragmentType::CAENV1740) {
+            for (size_t i = 0; i < container_fragment.block_count(); i++) {
+              artdaq::Fragment fragment = *container_fragment[i].get();
+              std::cout << "\t\t\t Accessing fragment " << i << " CAENV1740: " << fragment;
+            }
+          }
+        }
+    
+      // It is a group of CAEN V1740 fragments 
+      } else if (fragment_handle->front().type() == sbndaq::detail::FragmentType::CAENV1740) {
+        std::cout << "\t\tCAENV1740" << std::endl;
+        
+        // Search for all CAEN V1740 fragments
+        for (size_t i = 0; i < fragment_handle->size(); i++) {
+          artdaq::Fragment fragment = fragment_handle->at(i);
+          std::cout << "\t\t\t Accessing fragment " << i << " CAENVV1740: " << fragment;
+        }
+      }
     }
+    fragment_handle.removeProduct();
   }
 
   if (!found_caen) {
