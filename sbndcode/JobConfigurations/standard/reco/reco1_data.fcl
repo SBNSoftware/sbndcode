@@ -15,5 +15,6 @@ physics.producers:
 
 physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d]
 physics.ana: [superadata]
+outputs.out1.SelectEvents: [ "reco1" ]
 physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
 physics.end_paths: ["stream1",ana]
