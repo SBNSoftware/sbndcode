@@ -6,7 +6,7 @@ sbnd_numberofhitsfilter:
  module_type:                     "NumberOfHitsFilter"
  LimitPerTPC:                     true
  HitModule:                       "gaushit"
- HitLimit:                        40000
+ HitLimit:                        50000
  ScaleThresholdForReadoutWindow:  true
  Verbose:                         false
 }
