@@ -78,10 +78,6 @@ sbnd_reco1_filters: {
     numberofhitsfilter: @local::sbnd_numberofhitsfilter
 }
 
-sbnd_reco1_filter_sequence: [
-    numberofhitsfilter
-]
-
 sbnd_reco1_analyzers: {
     #supera for ML reco
     supera: @local::sbnd_supera
