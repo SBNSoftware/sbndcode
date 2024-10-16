@@ -58,6 +58,8 @@ private:
 
   // Private functions.
   void add_fragment(artdaq::Fragment& fragment, std::vector <std::vector <artdaq::Fragment> >& fragments);
+  uint16_t get_range(uint64_t buffer, uint32_t msb, uint32_t lsb);
+  uint32_t read_word(const uint32_t* & data_ptr);
   
 };
 
@@ -93,7 +95,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
   event_counter++;
 
   // Initialize output product
-  auto wvfms = std::make_unique <std::vector <raw::OpDetWaveform> > ();
+  auto prod_wvfms = std::make_unique <std::vector <raw::OpDetWaveform> > ();
 
   // Create a vector for all fragments for <fnum_caen_boards> boards
   std::vector <std::vector <artdaq::Fragment> > fragments (fnum_caen_boards);
@@ -147,9 +149,71 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
 
   if (!found_caen) {
     std::cout << "\tNo CAEN V1740 fragments of any type found, pushing empty waveforms." << std::endl;
-    e.put(std::move(wvfms), fch_instance_name);      
+    e.put(std::move(prod_wvfms), fch_instance_name);      
+  
   } else {
-    e.put(std::move(wvfms), fch_instance_name);
+    std::cout << "\tDecoding fragments... " << std::endl;
+
+    for (size_t b = 0; b < fragments.size(); b++) {
+      for (size_t f = 0; f < fragments[b].size(); f++) {
+        std::cout << "\t\tCAEN fragment " << f << " from board " << b << std::endl;
+
+        CAENV1740Fragment caen_fragment(fragments[b][f]);
+        CAENV1740FragmentMetadata const* metadata = caen_fragment.Metadata();
+        uint32_t num_channels = metadata->nChannels;
+        uint32_t num_samples_per_wvfm = metadata->nSamples;
+        uint32_t num_samples_per_group = num_samples_per_wvfm * 8;
+        uint32_t TTT_ns = metadata->timeStampNSec;
+        uint32_t TTT_s = metadata->timeStampSec;
+        std::cout << "\t\t\tNumber of channels: " << num_channels << std::endl;
+        std::cout << "\t\t\tNumber of samples: " << num_samples_per_wvfm << "(" << num_samples_per_group << " samples per group - 8 channels -)"<< std::endl;
+        std::cout << "\t\t\tTTT_ns: " << TTT_ns << " ns. \t" << "TTT_s: " << TTT_s << " s." << std::endl;
+
+        CAENV1740Event const* event = caen_fragment.Event();
+        CAENV1740EventHeader header = event->Header;
+        uint32_t num_words_per_event = header.eventSize;
+        uint32_t num_words_per_header = sizeof(CAENV1740EventHeader)/sizeof(uint32_t);
+        uint32_t num_words_per_wvfm = (num_words_per_event - num_words_per_header);
+
+        std::cout << "\t\t\tNumber of words per event: " << num_words_per_event << " [Header: " << num_words_per_header << ", Waveform: " << num_words_per_wvfm << "] words" << std::endl;
+
+        // ===============  Start decoding the waveforms =============== //
+        std::vector <std::vector <uint16_t> > wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
+
+        // Absolute sample number        
+        uint32_t S = 0;
+        // Buffer variables
+        uint64_t buffer = 0;
+        uint32_t bits_in_buffer = 0;
+
+        uint32_t sample_bits = 12;
+        
+        // Data pointer to the beggining of the waveforms stores in the event.
+        const uint32_t* data_ptr = reinterpret_cast<const uint32_t*>(fragments[b][f].dataBeginBytes() + sizeof(CAENV1740EventHeader));
+        for (size_t j = 0; j < num_words_per_wvfm; j++) {
+          uint64_t word = read_word(data_ptr);
+          //std::cout << buffer << "[word: " << word << "]" << std::endl;
+          buffer |= word << bits_in_buffer;
+          bits_in_buffer += sizeof(uint32_t) * 8;
+          //std::cout << "  +" << buffer << " [bits in buffer: "<< bits_in_buffer << "]" << std::endl;
+
+          // Get sequences of 12 bits
+          while (bits_in_buffer >= sample_bits) {
+            uint32_t g = (S / num_samples_per_group);                       // Group index.
+            uint32_t c = ((S / 3) % 8) + g * 8;                             // Channel index.
+            uint32_t s = (S % 3) + ((S / 24) * 3) % num_samples_per_wvfm;   // Sample/channel index.
+            uint16_t sample = get_range(buffer, sample_bits - 1, 0);
+            //std::cout << "\tSample: " << sample << "\tg: " << g <<  "\tch: " << c << "\ts:" << s << "\tS: " << S << std::endl;
+            wvfms[c][s] = sample;
+            buffer >>= sample_bits;
+            bits_in_buffer -= sample_bits;
+            //std::cout << "  -" << buffer << " [bits in buffer: "<< bits_in_buffer << "]" << std::endl;
+            S++;
+          }
+        }
+      }
+    }
+    e.put(std::move(prod_wvfms), fch_instance_name);
   }
 
   std::cout << std::endl;
@@ -163,6 +227,18 @@ void sbndaq::SBNDXARAPUCADecoder::add_fragment(artdaq::Fragment& fragment, std::
     std::cout << "\t\t\tGetting a CAENV1740 fragment: [" << fragment_ID << "]" << fragment;
     fragments.at(fragment_ID).push_back(fragment);
   }
+}
+
+uint16_t sbndaq::SBNDXARAPUCADecoder::get_range(uint64_t buffer, uint32_t msb, uint32_t lsb) {
+  uint64_t mask = (1U << (msb - lsb + 1)) - 1;
+  uint64_t sample = buffer >> lsb;
+  return sample & mask;
+}
+
+uint32_t sbndaq::SBNDXARAPUCADecoder::read_word(const uint32_t* & data_ptr) {
+  uint32_t word = *data_ptr;
+  data_ptr += 1;
+  return word;
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDXARAPUCADecoder)

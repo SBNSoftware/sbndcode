@@ -9,7 +9,7 @@ xarapucadecoder:
     caen_module_label: "daq"
     caen_fragment_name: [ "CAENV1740", "ContainerCAENV1740" ]
     # Boards
-    num_caen_boards: 1
+    num_caen_boards: 4
 
     # OUTPUT configuration
     # Output data product instance name
