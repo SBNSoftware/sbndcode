@@ -51,7 +51,7 @@ private:
 hit::NumberOfHitsFilter::NumberOfHitsFilter(fhicl::ParameterSet const& pset):
   EDFilter(pset)
 {
-70G  fLimitPerTPC = pset.get<bool>("LimitPerTPC");
+  fLimitPerTPC = pset.get<bool>("LimitPerTPC");
   fHitLimit = pset.get<unsigned int>("HitLimit");
   fHitModule = pset.get<std::string>("HitModule");
   fVerbose = pset.get<bool>("Verbose");
