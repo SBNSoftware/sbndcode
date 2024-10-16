@@ -153,7 +153,6 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
   
   } else {
     std::cout << "\tDecoding fragments... " << std::endl;
-
     for (size_t b = 0; b < fragments.size(); b++) {
       for (size_t f = 0; f < fragments[b].size(); f++) {
         std::cout << "\t\tCAEN fragment " << f << " from board " << b << std::endl;
@@ -211,12 +210,18 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
             S++;
           }
         }
+        
+        for (size_t ch = 0; ch < wvfms.size(); ch++) {
+          raw::OpDetWaveform waveform(0, ch, wvfms[ch]);
+          prod_wvfms->push_back(waveform);
+        }
       }
     }
+
     e.put(std::move(prod_wvfms), fch_instance_name);
   }
 
-  std::cout << std::endl;
+  std::cout << "End of producer function." << std::endl;
 }
 
 void sbndaq::SBNDXARAPUCADecoder::add_fragment(artdaq::Fragment& fragment, std::vector <std::vector <artdaq::Fragment> >& fragments) {
