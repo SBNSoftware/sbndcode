@@ -13,7 +13,7 @@ physics.producers:
     sptpc2d : @local::sbnd_wcls_sp_data
 }
 
-physics.reco1: [sptpc2d, gaushit, cluster3d]
+physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d]
 physics.ana: [superadata]
 physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
 physics.end_paths: ["stream1",ana]
