@@ -40,7 +40,7 @@ services:
 #  scheduler:    {wantTracer : false wantSummary : false}
   TimeTracker: {}
   RandomNumberGenerator: {} #ART native random number generator
-  TFileService: { fileName: "fullchain_production_hist_prod5.root" closeFileFast: false }
+  TFileService: { fileName: "%ifb_fullchain_production_hist_prod5.root" closeFileFast: false }
 #  scheduler:    { wantTracer: false wantSummary: true }
   message:      { destinations: { debugmsg:{type: "cout" threshold: "INFO"} } }
   TimeTracker:  { printSummary: true }
