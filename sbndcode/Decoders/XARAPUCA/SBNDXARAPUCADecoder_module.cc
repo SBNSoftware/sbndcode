@@ -56,7 +56,10 @@ private:
 
   std::string fch_instance_name;
 
-  // Private functions.
+  float fns_per_sample;
+  uint16_t fns_per_tick;
+
+  // Functions.
   void add_fragment(artdaq::Fragment& fragment, std::vector <std::vector <artdaq::Fragment> >& fragments);
   uint16_t get_range(uint64_t buffer, uint32_t msb, uint32_t lsb);
   uint32_t read_word(const uint32_t* & data_ptr);
@@ -78,6 +81,9 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   fcaen_fragment_name = p.get<std::vector <std::string> > ("caen_fragment_name");
   
   fch_instance_name = p.get<std::string> ("xarapucaInstanceName");
+
+  fns_per_sample = p.get<float>("ns_per_sample");
+  fns_per_tick = 8;
   
   std::cout << event_counter << "\t - xarapucaInstanceName: " << fch_instance_name << "\t - caen module label: " << fcaen_module_label << std::endl;
   std::cout << "Num CAEN boards: " << fnum_caen_boards << std::endl;
@@ -162,14 +168,18 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
         uint32_t num_channels = metadata->nChannels;
         uint32_t num_samples_per_wvfm = metadata->nSamples;
         uint32_t num_samples_per_group = num_samples_per_wvfm * 8;
-        uint32_t TTT_ns = metadata->timeStampNSec;
-        uint32_t TTT_s = metadata->timeStampSec;
         std::cout << "\t\t\tNumber of channels: " << num_channels << std::endl;
         std::cout << "\t\t\tNumber of samples: " << num_samples_per_wvfm << "(" << num_samples_per_group << " samples per group - 8 channels -)"<< std::endl;
-        std::cout << "\t\t\tTTT_ns: " << TTT_ns << " ns. \t" << "TTT_s: " << TTT_s << " s." << std::endl;
 
         CAENV1740Event const* event = caen_fragment.Event();
         CAENV1740EventHeader header = event->Header;
+        float TTT_end_ns = header.triggerTime() * fns_per_tick;
+        float TTT_ini_ns = TTT_end_ns - num_samples_per_wvfm * fns_per_sample;
+        float TTT_end_us = TTT_end_ns * 1E-3f;
+        float TTT_ini_us = TTT_ini_ns * 1E-3f;
+        std::cout << std::fixed << std::setprecision(3);
+        std::cout << "TTT_ini [us]: " << TTT_ini_us << "\tTTT_end [us]: " << TTT_end_us << std::endl;
+          
         uint32_t num_words_per_event = header.eventSize;
         uint32_t num_words_per_header = sizeof(CAENV1740EventHeader)/sizeof(uint32_t);
         uint32_t num_words_per_wvfm = (num_words_per_event - num_words_per_header);
@@ -212,7 +222,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
         }
         
         for (size_t ch = 0; ch < wvfms.size(); ch++) {
-          raw::OpDetWaveform waveform(0, ch, wvfms[ch]);
+          raw::OpDetWaveform waveform(TTT_ini_us, ch, wvfms[ch]);
           prod_wvfms->push_back(waveform);
         }
       }

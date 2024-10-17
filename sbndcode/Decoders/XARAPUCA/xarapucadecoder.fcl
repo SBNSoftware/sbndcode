@@ -10,6 +10,8 @@ xarapucadecoder:
     caen_fragment_name: [ "CAENV1740", "ContainerCAENV1740" ]
     # Boards
     num_caen_boards: 4
+    # Time
+    ns_per_sample: 16
 
     # OUTPUT configuration
     # Output data product instance name
