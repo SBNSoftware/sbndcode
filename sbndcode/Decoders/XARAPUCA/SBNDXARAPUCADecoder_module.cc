@@ -24,6 +24,9 @@
 
 #include "lardataobj/RawData/OpDetWaveform.h"
 
+#include "art_root_io/TFileService.h"
+#include "TH1D.h"
+
 namespace sbndaq {
   class SBNDXARAPUCADecoder;
 }
@@ -58,6 +61,9 @@ private:
 
   float fns_per_sample;
   uint16_t fns_per_tick;
+
+  std::stringstream hist_name;
+  art::ServiceHandle<art::TFileService> tfs;
 
   // Functions.
   void add_fragment(artdaq::Fragment& fragment, std::vector <std::vector <artdaq::Fragment> >& fragments);
@@ -224,6 +230,14 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
         for (size_t ch = 0; ch < wvfms.size(); ch++) {
           raw::OpDetWaveform waveform(TTT_ini_us, ch, wvfms[ch]);
           prod_wvfms->push_back(waveform);
+          hist_name.str("");
+          hist_name << "Event " << event_counter << " CH " << ch << " [frag: " << f << ", board: " << b << "] waveform";
+          TH1D* hist = tfs->make<TH1D>(hist_name.str().c_str(), hist_name.str().c_str(), wvfms[ch].size(), TTT_ini_us, TTT_end_us);
+          hist->GetYaxis()->SetTitle("ADCs");
+          hist->GetXaxis()->SetTitle("Time [us]");
+          for (size_t i = 0; i < wvfms[ch].size(); i++) {
+            hist->SetBinContent(i+1, wvfms[ch][i]);
+          }
         }
       }
     }
