@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+analyzeEvents:
+{
+  module_type: "AnalyzeEvents"
+  GenieGenModuleLabel:  "generator"
+
+}
+
+END_PROLOG

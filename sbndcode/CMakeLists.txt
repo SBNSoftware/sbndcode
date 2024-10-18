@@ -1,4 +1,5 @@
 
+add_subdirectory(Hyperon)
 add_subdirectory(JobConfigurations)
 add_subdirectory(LArSoftConfigurations)
 add_subdirectory(Utilities)
