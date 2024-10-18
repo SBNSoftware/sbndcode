@@ -166,13 +166,13 @@ namespace sbnd::crt {
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
 
-      if(_minos)
+      if(_minos || _adID == 70)
         orientation = (modulePosMother[2] < 0);
       else
         orientation = (modulePosMother[2] > 0);
 
       // Location of SiPMs
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kSouthTagger || _adID == 82 || _adID == 70)
+      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kSouthTagger || _adID == 82)
         top = (orientation == 0) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
       else
         top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
