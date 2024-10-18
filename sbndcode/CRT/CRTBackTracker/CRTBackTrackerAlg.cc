@@ -8,7 +8,7 @@ namespace sbnd::crt {
   }
   
   CRTBackTrackerAlg::CRTBackTrackerAlg(){}
-  
+
   CRTBackTrackerAlg::~CRTBackTrackerAlg(){}
 
   void CRTBackTrackerAlg::reconfigure(const Config& config)
@@ -20,6 +20,7 @@ namespace sbnd::crt {
     fClusterModuleLabel = config.ClusterModuleLabel();
     fSpacePointModuleLabel = config.SpacePointModuleLabel();
     fTrackModuleLabel = config.TrackModuleLabel();
+    fCRTGeoAlgConfig = config.GeoAlgConfig();
 
     return;
   }
@@ -36,6 +37,8 @@ namespace sbnd::crt {
     fMCPStripHitsMap.clear();
     fTrackIDMotherMap.clear();
     fStripHitMCPMap.clear();
+
+    CRTGeoAlg geoAlg = CRTGeoAlg(fCRTGeoAlgConfig);
 
     art::Handle<std::vector<sim::ParticleAncestryMap>> droppedTrackIDMapVecHandle;
     event.getByLabel(fSimModuleLabel, droppedTrackIDMapVecHandle);
@@ -91,7 +94,7 @@ namespace sbnd::crt {
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
+        const CRTTagger tagger = geoAlg.WhichTagger(x, y, z);
 
         const int rollUpID = RollUpID(ide->trackID);
 
@@ -244,7 +247,7 @@ namespace sbnd::crt {
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z);
+        const CRTTagger tagger = geoAlg.WhichTagger(x, y, z);
 
         const int rollUpID = RollUpID(ide->trackID);
         Category category(rollUpID, tagger);
@@ -260,7 +263,7 @@ namespace sbnd::crt {
 
     for(auto const stripHit : stripHitVec)
       {
-        const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+        const CRTTagger tagger = geoAlg.ChannelToTaggerEnum(stripHit->Channel());
         TruthMatchMetrics truthMatch = TruthMatching(event, stripHit);
 
         fStripHitMCPMap[stripHit.key()] = truthMatch.trackid;
@@ -337,6 +340,8 @@ namespace sbnd::crt {
 
   CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<CRTStripHit> &stripHit)
   {  
+    CRTGeoAlg geoAlg = CRTGeoAlg(fCRTGeoAlgConfig);
+
     art::Handle<std::vector<FEBData>> febDataHandle;
     event.getByLabel(fFEBDataModuleLabel, febDataHandle);
 
@@ -345,7 +350,7 @@ namespace sbnd::crt {
 
     art::FindManyP<sim::AuxDetIDE, FEBTruthInfo> febDataToIDEs(febDataHandle, event, fFEBDataModuleLabel);
     art::FindOneP<FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
-    const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+    const CRTTagger tagger = geoAlg.ChannelToTaggerEnum(stripHit->Channel());
 
     auto const febData = stripHitToFEBData.at(stripHit.key());
     auto const assnIDEVec = febDataToIDEs.at(febData.key());
@@ -540,8 +545,10 @@ namespace sbnd::crt {
                                                                                  const geo::Vector_t &dir, 
                                                                                  const CRTTagger &tagger)
   {
+    CRTGeoAlg geoAlg = CRTGeoAlg(fCRTGeoAlgConfig);
+
     const CoordSet constrainedPlane = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
-    const CRTTaggerGeo taggerGeo    = fCRTGeoAlg.GetTagger(CRTCommonUtils::GetTaggerName(tagger));
+    const CRTTaggerGeo taggerGeo    = geoAlg.GetTagger(CRTCommonUtils::GetTaggerName(tagger));
     double k;
 
     switch(constrainedPlane)
@@ -570,7 +577,7 @@ namespace sbnd::crt {
         break;
       }
     
-    if(!fCRTGeoAlg.IsPointInsideCRTLimits(start + k * dir))
+    if(!geoAlg.IsPointInsideCRTLimits(start + k * dir))
       return {999999., {999999., 999999., 999999.}};
     
     return {k, start + k * dir};
@@ -578,6 +585,7 @@ namespace sbnd::crt {
 
   void CRTBackTrackerAlg::TrueParticlePDGEnergyTime(const int trackID, int &pdg, double &energy, double &time)
   {
+    art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
     const simb::MCParticle* particle = particleInv->TrackIdToParticle_P(trackID);
 
     pdg    = particle == NULL ? -std::numeric_limits<int>::max()    : particle->PdgCode();
