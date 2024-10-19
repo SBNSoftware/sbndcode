@@ -1,7 +1,5 @@
 # SBND CRT Channel Maps
 
-***
-
 The SBND CRT channel maps are stored in text files that contain 3 numbers:
 
 GDML ID | FEB MAC5 | Inversion
@@ -15,10 +13,10 @@ These numbers are:
 
 During commissioning a number of boards have been replaced for a variety of reasons. This means the channel map has changed in a time/run dependent fashion. The channel maps here each represent a distinct period in this history.
 
-- v1 before run 13511 (28th May 2024)
-- v2 before run 15947 (9th August 2024)
-- v3 before run 16955 (26th September 2024)
-- v4 before run 17192 (11th October 2024)
+- v1 before run 13511 (28th May 2024 - swapped FEB181 for FEB58, North Wall)
+- v2 before run 15947 (9th August 2024 - swapped FEB80 for FEB55, West Wall)
+- v3 before run 16955 (26th September 2024 - swapped FEB193 for FEB120, West Wall)
+- v4 before run 17192 (11th October 2024 - swapped FEB108 for FEB145, Top Low Wall)
 - v5 Current - run 17192 onwards
 
 ***
