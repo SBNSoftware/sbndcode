@@ -166,7 +166,7 @@ namespace sbnd::crt {
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
 
-      if(_minos || _adID == 70)
+      if(_minos || _adID == 70 || _adID == 139)
         orientation = (modulePosMother[2] < 0);
       else
         orientation = (modulePosMother[2] > 0);
