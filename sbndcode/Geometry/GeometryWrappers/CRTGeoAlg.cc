@@ -99,9 +99,6 @@ namespace sbnd::crt {
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
-            if(minos)
-              continue;
-
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
             const uint32_t channel0     = 32 * ad_i + 2 * ads_i;
