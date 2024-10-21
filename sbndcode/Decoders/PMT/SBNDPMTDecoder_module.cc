@@ -18,10 +18,12 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
-#include "sbndaq-artdaq-core/Overlays/Common/CAENV1730Fragment.hh"
 #include "artdaq-core/Data/Fragment.hh"
-#include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "artdaq-core/Data/ContainerFragment.hh"
+#include "artdaq-core/Data/RawEvent.hh"
+
+#include "sbndaq-artdaq-core/Overlays/Common/CAENV1730Fragment.hh"
+#include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
 #include "sbndaq-artdaq-core/Overlays/SBND/PTBFragment.hh"
@@ -84,6 +86,7 @@ private:
     std::string               fspectdc_product_name;
     uint32_t                  fspectdc_ftrig_ch;
     uint32_t                  fspectdc_etrig_ch;
+    uint32_t                  fspectdc_etrig_raw_diff;
 
     std::string               fptb_product_name;
     ULong64_t                 fptb_etrig_trigword; 
@@ -129,6 +132,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fspectdc_product_name = p.get<std::string>("spectdc_product_name","tdcdecoder");
     fspectdc_ftrig_ch = p.get<uint32_t>("spectdc_ftrig_ch",3);
     fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
+    fspectdc_etrig_raw_diff = p.get<uint32_t>("spectdc_etrig_raw_diff",365000); // ns
 
     fptb_product_name = p.get<std::string>("ptb_product_name","ptbdecoder");
     fptb_etrig_trigword = p.get<ULong64_t>("ptb_etrig_trigword",0x0000000000000000);
@@ -161,8 +165,6 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     evt_counter++;
 
     std::vector<std::vector<artdaq::Fragment>> board_frag_v(fn_caenboards);
-    uint64_t event_trigger_time = 0; 
-
     uint ncont = 0; // counter for number of containers
 
     bool found_caen = false;
@@ -212,10 +214,24 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     // create a timing type per event so the default doesn't get overwritten
     auto timing_type = ftiming_type; 
 
+    // get the raw event header timestamp
+    art::Handle<artdaq::detail::RawEventHeader> header_handle;
+    uint64_t raw_timestamp = 0;
+    evt.getByLabel("daq", "RawEventHeader", header_handle);
+    if ((header_handle.isValid())){
+        auto rawheader = artdaq::RawEvent(*header_handle); 
+        raw_timestamp = rawheader.timestamp()%int(1e9);
+    }
+
     // get spec tdc product
+    uint64_t event_trigger_time = 0; 
     if (timing_type==0){
         art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
         evt.getByLabel(fspectdc_product_name,tdcHandle);
+        bool found_ett = false;
+        std::vector<uint64_t> event_trigger_time_v; 
+        int min_raw_ett_diff = 1e9;
+
         if (!tdcHandle.isValid() || tdcHandle->size() == 0){
             if (fdebug>0) std::cout << "No SPECTDC products found." << std::endl;
             timing_type++;
@@ -239,10 +255,26 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     << ", offset: " << offset 
                     << std::endl;
                 }
-                if (ch==fspectdc_etrig_ch)
-                    event_trigger_time = ts%uint64_t(1e9);
+                if (ch==fspectdc_etrig_ch){
+                    found_ett = true;
+                    event_trigger_time_v.push_back(ts%uint64_t(1e9));
+                }
             }
-        }
+            if (found_ett==false){
+                // this is a temporary fix for the case where the ETRIG is not found in the SPECTDC products
+                event_trigger_time = raw_timestamp - fspectdc_etrig_raw_diff;
+            }
+            else{
+                // finding the closest ETRIG to the raw timestamp
+                for (auto etrig : event_trigger_time_v){
+                    int diff = std::abs(int(raw_timestamp)-int(etrig));
+                    if (diff < min_raw_ett_diff){
+                        event_trigger_time = etrig;
+                        min_raw_ett_diff = diff;
+                    }
+                }
+            }
+        } // end else statement for finding tdc
     }
     if (timing_type==1){
         // get ptb product
@@ -361,7 +393,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 if (fdebug>2){
                     std::cout << "      Frag ID: " << fragid
                               << " -> start time: " << int(iwvfm_start) - int(event_trigger_time)
-                              << " , wvfm length: " << iwvfm_v.at(0).size()
+                              << " , extended wvfm length: " << iwvfm_v.at(0).size()
                               << std::endl; 
                 }
             } // end extended flag         
@@ -410,7 +442,7 @@ void sbndaq::SBNDPMTDecoder::get_fragments(artdaq::Fragment & frag, std::vector<
             fragid = idx;
         }
     }
-    // ignore boards that are not in the list of boards to ignore
+    // ignore boards that are in the list of boards to ignore
     if (std::find(fignore_fragid.begin(), fignore_fragid.end(), fragid) != fignore_fragid.end())
         return;
     // check our fragid, is it reasonable?
