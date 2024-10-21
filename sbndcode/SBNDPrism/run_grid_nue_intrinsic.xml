@@ -3,10 +3,10 @@
 <!-- Production Project -->
 
 <!DOCTYPE project [
-<!ENTITY release "v09_52_01">
-<!ENTITY releasetag "e20:prof">
-<!ENTITY my_version "v11">
-<!ENTITY my_run "1">
+<!ENTITY release "v09_91_02_01">
+<!ENTITY releasetag "e26:prof">
+<!ENTITY my_version "v2">
+<!ENTITY my_run "3">
 <!ENTITY name "mdeltutt_prism_nue_intr">
 <!ENTITY file_type "data">
 <!ENTITY run_type "physics">
@@ -21,7 +21,7 @@
 
   <!-- Project size -->
   <!-- <numevents>10</numevents> -->
-  <numevents>1000000</numevents>
+  <numevents>3000000</numevents>
 
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
@@ -30,7 +30,7 @@
   <larsoft>
     <tag>&release;</tag>
     <qual>&releasetag;</qual>
-    <local>&PNFSpath;Tarballs/sbndcode_v09_42_00_prism__&my_version;.tgz</local>
+    <local>&PNFSpath;Tarballs/sbndcode_&release;_prism__&my_version;.tgz</local>
   </larsoft>
 
   <!-- Project stages -->
@@ -43,7 +43,7 @@
     <maxfilesperjob>1</maxfilesperjob>
     <outdir>/pnfs/sbnd/scratch/users/mdeltutt/&release;/prism_ana_nue_intr_&my_version;_&my_run;</outdir>
     <workdir>&PNFSpath;grid_workdir_sbnd/prism_ana_nue_intr</workdir>
-    <numjobs>200</numjobs>
+    <numjobs>600</numjobs>
     <!-- <numjobs>2</numjobs> -->
     <datatier>generated</datatier>
     <memory>4000</memory>

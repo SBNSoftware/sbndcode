@@ -77,7 +77,8 @@ private:
   std::string _flux_eventweight_multisim_producer;
   std::string _genie_eventweight_multisim_producer;
   std::string _genie_eventweight_sk_producer;
-  bool _save_systs;
+  bool _save_systs_flux;
+  bool _save_systs_genie;
   float _beam_origin_x = 73.78;
   float _beam_origin_y = 0.0;
   float _beam_origin_z = 11000.0;
@@ -217,7 +218,8 @@ PrismAnalyzer::PrismAnalyzer(fhicl::ParameterSet const& p)
   _genie_eventweight_multisim_producer = p.get<std::string>("GENIEEventWeightProducer", "genieweight");
   _genie_eventweight_sk_producer = p.get<std::string>("GENIEEventWeightSKProducer", "genieweightsk");
 
-  _save_systs = p.get<bool>("SaveSysts", false);
+  _save_systs_flux = p.get<bool>("SaveSystsFlux", false);
+  _save_systs_genie = p.get<bool>("SaveSystsGenie", false);
 
   _beam_origin_x = p.get<float>("BeamCenterX");
   _beam_origin_y = p.get<float>("BeamCenterY");
@@ -336,12 +338,16 @@ void PrismAnalyzer::analyze(art::Event const& e)
   //
   art::FindManyP<simb::MCFlux> mct_to_mcf (mct_h, e, _mctruth_producer);
   art::FindManyP<simb::GTruth> mct_to_gt (mct_h, e, _mctruth_producer);
-  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_fluxewm(mct_h, e, _flux_eventweight_multisim_producer);
-  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewm(mct_h, e, _genie_eventweight_multisim_producer);
-  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewmA(mct_h, e, _genie_eventweight_multisim_producer + "A");
-  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewmB(mct_h, e, _genie_eventweight_multisim_producer + "B");
-  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewmC(mct_h, e, _genie_eventweight_multisim_producer + "C");
-  art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewm_sk(mct_h, e, _genie_eventweight_sk_producer);
+  // if(_save_systs_flux) {
+  //   art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_fluxewm(mct_h, e, _flux_eventweight_multisim_producer);
+  // }
+  // if(_save_systs_genie) {
+  //   art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewm(mct_h, e, _genie_eventweight_multisim_producer);
+  //   art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewmA(mct_h, e, _genie_eventweight_multisim_producer + "A");
+  //   art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewmB(mct_h, e, _genie_eventweight_multisim_producer + "B");
+  //   art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewmC(mct_h, e, _genie_eventweight_multisim_producer + "C");
+  //   art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewm_sk(mct_h, e, _genie_eventweight_sk_producer);
+  // }
 
   _pars_pdg.clear();
   _pars_e.clear();
@@ -465,8 +471,10 @@ void PrismAnalyzer::analyze(art::Event const& e)
     //   std::cout << "Got neutron, mother is " << mcp.Mother() << ", energy is " << mcp.E() << std::endl;
     // }
 
-    if (_save_systs) {
+    if (_save_systs_flux) {
 
+      art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_fluxewm(mct_h, e, _flux_eventweight_multisim_producer);
+      
       // Flux weights
       std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> flux_ewm_v = mct_to_fluxewm.at(i);
       if (flux_ewm_v.size() != 1) {
@@ -509,7 +517,22 @@ void PrismAnalyzer::analyze(art::Event const& e)
       _evtwgt_flux_nfunc = countFunc;
       _evtwgt_flux_oneweight = final_weights;
 
+    }
+
+    if (_save_systs_genie) {
+
+      art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewm(mct_h, e, _genie_eventweight_multisim_producer);
+      art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewmA(mct_h, e, _genie_eventweight_multisim_producer + "A");
+      art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewmB(mct_h, e, _genie_eventweight_multisim_producer + "B");
+      art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewmC(mct_h, e, _genie_eventweight_multisim_producer + "C");
+      art::FindManyP<sbn::evwgh::EventWeightMap> mct_to_genieewm_sk(mct_h, e, _genie_eventweight_sk_producer);
+
+      std::map<std::string, std::vector<float>> evtwgt_map;
+
       std::vector<art::Ptr<sbn::evwgh::EventWeightMap>> genie_ewm_v;
+      std::vector<float> previous_weights;
+      std::vector<float> final_weights;
+      int countFunc = 0;
 
       // Cross section weights
       if (mct_to_genieewm.size()) {
@@ -517,6 +540,7 @@ void PrismAnalyzer::analyze(art::Event const& e)
         if (genie_ewm_v.size() != 1) {
           std::cout << "[PrismAnalyzer] EventWeightMap of " << _genie_eventweight_multisim_producer << " bigger than 1?" << std::endl;
         }
+
         evtwgt_map = *(genie_ewm_v[0]);
 
         // _evtwgt_genie_funcname.clear();
@@ -526,6 +550,7 @@ void PrismAnalyzer::analyze(art::Event const& e)
 
         previous_weights.clear();
         final_weights.clear();
+
 
         countFunc = 0;
         for(auto it : evtwgt_map) {
@@ -662,7 +687,7 @@ void PrismAnalyzer::analyze(art::Event const& e)
         }
       }
 
-    } // _save_systs
+    } // _save_systs_genie
 
     _tree->Fill();
   }
