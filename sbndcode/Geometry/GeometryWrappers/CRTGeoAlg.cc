@@ -51,7 +51,9 @@ namespace sbnd::crt {
             mac5   = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
             invert = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
           }
-        
+
+        const bool minos = auxDet.NSensitiveVolume() == 20 ? true : false;
+
         // Loop through strips
         for(unsigned ads_i = 0; ads_i < auxDet.NSensitiveVolume(); ads_i++)
           {
@@ -89,7 +91,6 @@ namespace sbnd::crt {
                   }
 
                 const std::string stripName = nodeStrip->GetVolume()->GetName();
-                const bool minos = stripName.find("MINOS") != std::string::npos ? true : false;
 
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
@@ -97,6 +98,9 @@ namespace sbnd::crt {
                                                     invert, minos);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
+
+            if(minos)
+              continue;
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
@@ -327,8 +331,8 @@ namespace sbnd::crt {
     auto const w2 = auxDetSensitive.toWorldCoords(l2);
 
     std::array<double, 6> limits = {std::min(w1.X(),w2.X()), std::max(w1.X(),w2.X()),
-      std::min(w1.Y(),w2.Y()), std::max(w1.Y(),w2.Y()),
-      std::min(w1.Z(),w2.Z()), std::max(w1.Z(),w2.Z())};
+                                    std::min(w1.Y(),w2.Y()), std::max(w1.Y(),w2.Y()),
+                                    std::min(w1.Z(),w2.Z()), std::max(w1.Z(),w2.Z())};
     return limits;
   }
 
