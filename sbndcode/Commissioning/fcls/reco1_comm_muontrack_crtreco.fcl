@@ -51,4 +51,4 @@ physics.analyzers.hitdumper.readTruth: false
 physics.analyzers.hitdumper.readOpHits: false
 physics.analyzers.hitdumper.checkTransparency: true
 physics.analyzers.hitdumper.window: 20
-physics.analyzers.hitdumper.SkipInduction: true
+physics.analyzers.hitdumper.SkipInduction: false

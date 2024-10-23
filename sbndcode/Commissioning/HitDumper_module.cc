@@ -189,6 +189,7 @@ private:
   std::vector<int>    _waveform_integral;       ///<Used to see progression of the waveform integral
   std::vector<int>    _adc_count_in_waveform;   ///<Used to view all waveforms on a hitplane together
   std::vector<int>    _wire_number;             /// Wire number corresponding to waveform
+  std::vector<double> _hit_time;
 
   // CRT strip variables
   uint _n_crt_strip_hits;                          ///< Number of CRT strip hits
@@ -890,6 +891,7 @@ void Hitdumper::analyze(const art::Event& evt)
     _waveform_integral.resize(_max_hits*_max_samples, -9999.);
     _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
     _wire_number.resize(_max_hits*_max_samples, -9999.);
+    _hit_time.resize(_max_hits*_max_samples, -9999.);
 
     art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
 
@@ -916,7 +918,7 @@ void Hitdumper::analyze(const art::Event& evt)
 
       // see if there is a hit on this channel
       for (int ihit = 0; ihit < _nhits; ++ihit) {
-        if (_hit_channel[ihit] == channel) {
+        if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==1 && _hit_plane[ihit]==0) {
 
           int pedestal = (int)digitVec->GetPedestal();
           //UNCOMPRESS THE DATA.
@@ -942,23 +944,22 @@ void Hitdumper::analyze(const art::Event& evt)
           if (high_edge > (fDataSize-1)) {
             high_edge = fDataSize - 1;
           }
-          double integral = 0.0;
+	  // double integral = 0.0;
           waveform_number_tracker++;
-          int counter_for_adc_in_waveform = 0;
+	  // int counter_for_adc_in_waveform = 0;
           for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
-            _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
-            counter_for_adc_in_waveform++;
+	    // _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
+	    // counter_for_adc_in_waveform++;
             _waveform_number[adc_counter] = waveform_number_tracker;
             _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
             _time_for_waveform[adc_counter] = ibin;
 	    _wire_number[adc_counter] = _hit_wire[ihit];
-            //std::cout << "DUMP: " << _waveform_number[adc_counter] << " " << _adc_count << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<ibin << " " << (rawadc[ibin]-pedestal) << " " << _time_for_waveform[adc_counter] << " " << _adc_on_wire[adc_counter] << std::endl;
-            integral+=_adc_on_wire[adc_counter];
-            _waveform_integral[adc_counter] = integral;
+	    _hit_time[adc_counter] = _hit_peakT[ihit];
+	    // integral+=_adc_on_wire[adc_counter];
+	    // _waveform_integral[adc_counter] = integral;
             adc_counter++;
           }
-          std::cout << "DUMP SUM: " << _hit_tpc[ihit] << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<  integral << " " << waveform_number_tracker << std::endl;
-          _hit_full_integral[ihit] = integral;
+	  //          _hit_full_integral[ihit] = integral;
         } // if hit channel matches waveform channel
       } //end loop over hits
     }// end loop over waveforms
@@ -1209,7 +1210,8 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("waveform_integral", &_waveform_integral);
     fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
     fTree->Branch("wire_number", &_wire_number);
-  }
+    fTree->Branch("hit_time", &_hit_time); 
+ }
 
   if (fKeepCRTStripHits) {
     fTree->Branch("n_crt_strip_hits", &_n_crt_strip_hits);

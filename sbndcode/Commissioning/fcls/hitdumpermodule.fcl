@@ -6,7 +6,7 @@ hitdumper:
 {
     module_type:              "HitDumper"
 
-    MaxHits: 10000
+    MaxHits: 18000
     MaxOpHits: 100000
     MaxSamples: 5001
     MaxCRTStripHits:   5000
