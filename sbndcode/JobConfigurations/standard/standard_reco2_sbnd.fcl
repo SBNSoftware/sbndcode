@@ -13,4 +13,5 @@
 process_name: Reco2
 
 physics.trigger_paths: [ reco2 ]
-physics.end_paths: [stream1, caloskimana]
+physics.caloskimana_tpconly: [ caloskim ]
+physics.end_paths: [stream1, caloskimana_tpconly]
