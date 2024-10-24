@@ -18,10 +18,12 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
-#include "sbndaq-artdaq-core/Overlays/Common/CAENV1730Fragment.hh"
 #include "artdaq-core/Data/Fragment.hh"
-#include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "artdaq-core/Data/ContainerFragment.hh"
+#include "artdaq-core/Data/RawEvent.hh"
+
+#include "sbndaq-artdaq-core/Overlays/Common/CAENV1730Fragment.hh"
+#include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
 #include "sbndaq-artdaq-core/Overlays/SBND/PTBFragment.hh"
@@ -84,14 +86,18 @@ private:
     std::string               fspectdc_product_name;
     uint32_t                  fspectdc_ftrig_ch;
     uint32_t                  fspectdc_etrig_ch;
+    uint32_t                  fspectdc_etrig_raw_diff;
 
     std::string               fptb_product_name;
     ULong64_t                 fptb_etrig_trigword; 
     uint32_t                  fptb_etrig_wordtype;
 
-    std::string fch_instance_name;
-    std::string ftr_instance_name;
+    std::string fpmt_instance_name;
+    std::string fflt_instance_name;
+    std::string ftim_instance_name;
     bool foutput_ftrig_wvfm;
+    bool foutput_timing_wvfm;
+    std::vector<int> fignore_timing_ch;
 
     int fn_maxflashes;
     uint fn_caenboards;
@@ -129,14 +135,18 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fspectdc_product_name = p.get<std::string>("spectdc_product_name","tdcdecoder");
     fspectdc_ftrig_ch = p.get<uint32_t>("spectdc_ftrig_ch",3);
     fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
+    fspectdc_etrig_raw_diff = p.get<uint32_t>("spectdc_etrig_raw_diff",365000); // ns
 
     fptb_product_name = p.get<std::string>("ptb_product_name","ptbdecoder");
     fptb_etrig_trigword = p.get<ULong64_t>("ptb_etrig_trigword",0x0000000000000000);
     fptb_etrig_wordtype = p.get<uint32_t>("ptb_etrig_wordtype",2);
 
-    fch_instance_name = p.get<std::string>("pmtInstanceName","PMTChannels");
-    ftr_instance_name = p.get<std::string>("ftrigInstanceName","FTrigChannels");
+    fpmt_instance_name = p.get<std::string>("pmtInstanceName","PMTChannels");
+    fflt_instance_name = p.get<std::string>("ftrigInstanceName","FTrigChannels");
+    ftim_instance_name = p.get<std::string>("timingInstanceName","TimingChannels");
     foutput_ftrig_wvfm = p.get<bool>("output_ftrig_wvfm",true);
+    foutput_timing_wvfm = p.get<bool>("output_timing_wvfm",true);
+    fignore_timing_ch = p.get<std::vector<int>>("ignore_timing_ch",{});
 
     fn_maxflashes    = p.get<int>("n_maxflashes",30);
     fn_caenboards    = p.get<uint>("n_caenboards",8);
@@ -149,20 +159,19 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
 
     fch_map          = p.get<std::vector<uint>>("ch_map",{});
 
-    produces< std::vector< raw::OpDetWaveform > >(fch_instance_name); 
-    produces< std::vector< raw::OpDetWaveform > >(ftr_instance_name);
+    produces< std::vector< raw::OpDetWaveform > >(fpmt_instance_name); 
+    produces< std::vector< raw::OpDetWaveform > >(fflt_instance_name);
+    produces< std::vector< raw::OpDetWaveform > >(ftim_instance_name);
 }
 
 void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
 {
-    std::unique_ptr< std::vector< raw::OpDetWaveform > > wvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
-    std::unique_ptr< std::vector< raw::OpDetWaveform > > twvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
-
+    std::unique_ptr< std::vector< raw::OpDetWaveform > > pmtwvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
+    std::unique_ptr< std::vector< raw::OpDetWaveform > > fltwvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
+    std::unique_ptr< std::vector< raw::OpDetWaveform > > timwvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
     evt_counter++;
 
     std::vector<std::vector<artdaq::Fragment>> board_frag_v(fn_caenboards);
-    uint64_t event_trigger_time = 0; 
-
     uint ncont = 0; // counter for number of containers
 
     bool found_caen = false;
@@ -204,18 +213,33 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     if (found_caen==false){
         if (fdebug>0) std::cout << "No CAEN V1730 fragments of any type found, pushing empty waveforms." << std::endl;
 
-        evt.put(std::move(wvfmVec),fch_instance_name);  
-        evt.put(std::move(twvfmVec),ftr_instance_name);
+        evt.put(std::move(pmtwvfmVec),fpmt_instance_name);  
+        evt.put(std::move(fltwvfmVec),fflt_instance_name);
+        evt.put(std::move(timwvfmVec),ftim_instance_name);
         return;
     }
     
     // create a timing type per event so the default doesn't get overwritten
     auto timing_type = ftiming_type; 
 
+    // get the raw event header timestamp
+    art::Handle<artdaq::detail::RawEventHeader> header_handle;
+    uint64_t raw_timestamp = 0;
+    evt.getByLabel("daq", "RawEventHeader", header_handle);
+    if ((header_handle.isValid())){
+        auto rawheader = artdaq::RawEvent(*header_handle); 
+        raw_timestamp = rawheader.timestamp()%int(1e9);
+    }
+
     // get spec tdc product
+    uint64_t event_trigger_time = 0; 
     if (timing_type==0){
         art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
         evt.getByLabel(fspectdc_product_name,tdcHandle);
+        bool found_ett = false;
+        std::vector<uint64_t> event_trigger_time_v; 
+        int min_raw_ett_diff = 1e9;
+
         if (!tdcHandle.isValid() || tdcHandle->size() == 0){
             if (fdebug>0) std::cout << "No SPECTDC products found." << std::endl;
             timing_type++;
@@ -239,10 +263,26 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     << ", offset: " << offset 
                     << std::endl;
                 }
-                if (ch==fspectdc_etrig_ch)
-                    event_trigger_time = ts%uint64_t(1e9);
+                if (ch==fspectdc_etrig_ch){
+                    found_ett = true;
+                    event_trigger_time_v.push_back(ts%uint64_t(1e9));
+                }
             }
-        }
+            if (found_ett==false){
+                // this is a temporary fix for the case where the ETRIG is not found in the SPECTDC products
+                event_trigger_time = raw_timestamp - fspectdc_etrig_raw_diff;
+            }
+            else{
+                // finding the closest ETRIG to the raw timestamp
+                for (auto etrig : event_trigger_time_v){
+                    int diff = std::abs(int(raw_timestamp)-int(etrig));
+                    if (diff < min_raw_ett_diff){
+                        event_trigger_time = etrig;
+                        min_raw_ett_diff = diff;
+                    }
+                }
+            }
+        } // end else statement for finding tdc
     }
     if (timing_type==1){
         // get ptb product
@@ -361,13 +401,16 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 if (fdebug>2){
                     std::cout << "      Frag ID: " << fragid
                               << " -> start time: " << int(iwvfm_start) - int(event_trigger_time)
-                              << " , wvfm length: " << iwvfm_v.at(0).size()
+                              << " , extended wvfm length: " << iwvfm_v.at(0).size()
                               << std::endl; 
                 }
             } // end extended flag         
             for (size_t i = 0; i < iwvfm_v.size(); i++){
                 auto combined_wvfm = iwvfm_v[i];
-                if (evt_counter==fhist_evt){                    // histo: save waveforms section for combined waveforms
+                if (evt_counter==fhist_evt){                    
+                    // histo: save waveforms section for combined waveforms
+                    if ((fragid==8) && (std::find(fignore_timing_ch.begin(), fignore_timing_ch.end(), i) != fignore_timing_ch.end()))
+                        continue;
                     histname.str(std::string());
                     histname << "evt" << evt.event() << "_trig" << trig_counter << "_frag" << fragid << "_ch" << i << "_combined_wvfm";
 
@@ -385,11 +428,12 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     ch = fch_map.at(fragid*15 + i);
                 raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
 
-                if (i == 15){
-                    if (foutput_ftrig_wvfm) twvfmVec->push_back(waveform);
-                }
+                if ((i == 15) && (foutput_ftrig_wvfm))
+                    fltwvfmVec->push_back(waveform);
+                else if ((fragid == 8) && (foutput_timing_wvfm) && (std::find(fignore_timing_ch.begin(), fignore_timing_ch.end(), i) == fignore_timing_ch.end()))
+                    timwvfmVec->push_back(waveform);
                 else 
-                    wvfmVec->push_back(waveform);
+                    pmtwvfmVec->push_back(waveform);
             }
             trig_counter++;
 
@@ -397,8 +441,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     } // end board loop
     board_frag_v.clear();
 
-    evt.put(std::move(wvfmVec),fch_instance_name);  
-    evt.put(std::move(twvfmVec),ftr_instance_name);
+    evt.put(std::move(pmtwvfmVec),fpmt_instance_name);  
+    evt.put(std::move(fltwvfmVec),fflt_instance_name);
+    evt.put(std::move(timwvfmVec),ftim_instance_name);
 }
 
 void sbndaq::SBNDPMTDecoder::get_fragments(artdaq::Fragment & frag, std::vector<std::vector<artdaq::Fragment>> & board_frag_v){
@@ -410,15 +455,16 @@ void sbndaq::SBNDPMTDecoder::get_fragments(artdaq::Fragment & frag, std::vector<
             fragid = idx;
         }
     }
-    // ignore boards that are not in the list of boards to ignore
+    // ignore boards that are in the list of boards to ignore
     if (std::find(fignore_fragid.begin(), fignore_fragid.end(), fragid) != fignore_fragid.end())
         return;
-    // check our fragid, is it reasonable?
-    if (fragid<0 || fragid >= fn_caenboards){
-        std::cout << "Fragment ID " << fragid << " is out of range. FragID offset/FragID map may be misconfigured, or this FragID is not attributed to a PMT Digitizer. Skipping this fragment..." << std::endl;
-        return;
+    else if ((fragid>=0) && (fragid < fn_caenboards )){
+        board_frag_v.at(fragid).push_back(frag);
     }
-    board_frag_v.at(fragid).push_back(frag);
+    // if fragid is out of range
+    else{
+        std::cout << "Fragment ID " << fragid << " is out of range. FragID offset/FragID map may be misconfigured, or this FragID is not attributed to a PMT Digitizer. Skipping this fragment..." << std::endl;
+    }
 }
 
 void sbndaq::SBNDPMTDecoder::get_waveforms(artdaq::Fragment & frag, std::vector<std::vector<uint16_t>> & wvfm_v){
