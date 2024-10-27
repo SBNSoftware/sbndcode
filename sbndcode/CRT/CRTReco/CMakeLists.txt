@@ -10,12 +10,14 @@ simple_plugin(
               sbnobj::SBND_CRT
               sbnobj::SBND_Timing
               sbndcode_GeoWrappers
+              ROOT::Tree
 )
 
 simple_plugin(
               CRTClusterProducer module
               sbnobj::SBND_CRT
               sbndcode_GeoWrappers
+              ROOT::Tree
 )
 
 simple_plugin(

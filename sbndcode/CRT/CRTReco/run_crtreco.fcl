@@ -7,6 +7,7 @@ process_name: CRTReco
 services:
 {
   @table::sbnd_services
+  TFileService: { fileName: "crtrecoana_sbnd.root" }
 }
 
 source:

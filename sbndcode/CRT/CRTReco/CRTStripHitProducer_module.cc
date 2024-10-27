@@ -27,6 +27,9 @@
 
 #include <memory>
 
+#include "TTree.h"
+#include "art_root_io/TFileService.h"
+
 namespace sbnd::crt {
   class CRTStripHitProducer;
 }
@@ -47,6 +50,8 @@ public:
                                            const uint64_t etrig_time);
   std::set<uint32_t> UnixSet(const std::vector<art::Ptr<FEBData>> &datas);
 
+  void beginJob() override;
+
 private:
 
   CRTGeoAlg           fCRTGeoAlg;
@@ -61,6 +66,14 @@ private:
   bool                fReferenceTs0ToETrig;
   std::string         fSPECTDCModuleLabel;
   uint32_t            fSPECTDCETrigChannel;
+
+  TTree *fTree;
+
+  std::vector<uint> sd_channel, sd_unixs, sd_etrig;
+  std::vector<int> sd_tagger, sd_ts0, sd_ts1, sd_second_corr, sd_ts0_corr, sd_adc1, sd_adc2,
+    sd_cable_length, sd_pedestal1, sd_pedestal2;
+  std::vector<bool> sd_max_strip;
+  std::vector<double> sd_width, sd_lat_pos;
 };
 
 
@@ -83,8 +96,35 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   produces<art::Assns<FEBData, CRTStripHit>>();
 }
 
+void sbnd::crt::CRTStripHitProducer::beginJob()
+{
+  art::ServiceHandle<art::TFileService> tfs;
+  fTree = tfs->make<TTree>("strip_data_tree", "");
+
+  fTree->Branch("channel", &sd_channel);
+  fTree->Branch("tagger", &sd_tagger);
+  fTree->Branch("ts0", &sd_ts0);
+  fTree->Branch("ts1", &sd_ts1);
+  fTree->Branch("unixs", &sd_unixs);
+  fTree->Branch("second_corr", &sd_second_corr);
+  fTree->Branch("etrig", &sd_etrig);
+  fTree->Branch("ts0_corr", &sd_ts0_corr);
+  fTree->Branch("adc1", &sd_adc1);
+  fTree->Branch("adc2", &sd_adc2);
+  fTree->Branch("max_strip", &sd_max_strip);
+  fTree->Branch("cable_length", &sd_cable_length);
+  fTree->Branch("pedestal1", &sd_pedestal1);
+  fTree->Branch("pedestal2", &sd_pedestal2);
+  fTree->Branch("width", &sd_width);
+  fTree->Branch("lat_pos", &sd_lat_pos);
+}
+
 void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
 {
+  sd_channel.clear(); sd_tagger.clear(); sd_unixs.clear(); sd_ts0.clear(); sd_ts1.clear(); sd_second_corr.clear(); sd_etrig.clear();
+  sd_ts0_corr.clear(); sd_adc1.clear(); sd_adc2.clear(); sd_max_strip.clear(); sd_cable_length.clear(); sd_pedestal1.clear(); sd_pedestal2.clear();
+  sd_width.clear(); sd_lat_pos.clear();
+
   auto stripHitVec      = std::make_unique<std::vector<CRTStripHit>>();
   auto stripHitDataAssn = std::make_unique<art::Assns<FEBData, CRTStripHit>>();
   
@@ -147,6 +187,8 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
         }
     }
 
+  fTree->Fill();
+
   e.put(std::move(stripHitVec));
   e.put(std::move(stripHitDataAssn));
 }
@@ -170,6 +212,8 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
   int64_t t0 = (int)data->Ts0() + (int)module.t0CableDelayCorrection;
   int64_t t1 = (int)data->Ts1() + (int)module.t1CableDelayCorrection;
 
+  int second_corr = 0;
+
   if(fCorrectForDifferentSecond)
     {
       // For data events we correct the t0 time used for clustering if the
@@ -185,6 +229,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
         {
           t0 -= static_cast<int>(1e9);
           unixs += 1;
+          second_corr = 1;
         }
     }
 
@@ -194,8 +239,31 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
   if(fApplyTs1Window && (t1 < fTs1Min || t1 > fTs1Max))
     return stripHits;
 
+  int max_adc = std::numeric_limits<int>::lowest(), max_adc_chan = -1;
+
   // Iterate via strip (2 SiPMs per strip)
   const auto &sipm_adcs = data->ADC();
+  for(unsigned adc_i = 0; adc_i < 32; adc_i+=2)
+    {
+      // Calculate SiPM channel number
+      const uint16_t channel = mac5 * 32 + adc_i;
+
+      const CRTSiPMGeo sipm1 = fCRTGeoAlg.GetSiPM(channel);
+      const CRTSiPMGeo sipm2 = fCRTGeoAlg.GetSiPM(channel+1);
+
+      if((int)sipm_adcs[adc_i] - (int)sipm1.pedestal > max_adc)
+        {
+          max_adc = (int)sipm_adcs[adc_i] - (int)sipm1.pedestal;
+          max_adc_chan = adc_i;
+        }
+
+      if((int)sipm_adcs[adc_i+1] - (int)sipm2.pedestal > max_adc)
+        {
+          max_adc = (int)sipm_adcs[adc_i+1] - (int)sipm2.pedestal;
+          max_adc_chan = adc_i+1;
+        }
+    }
+
   for(unsigned adc_i = 0; adc_i < 32; adc_i+=2)
     {
       // Calculate SiPM channel number
@@ -208,6 +276,23 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       // Subtract channel pedestals
       const uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i] - sipm1.pedestal   : 0;
       const uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1] - sipm2.pedestal : 0;
+
+      sd_channel.push_back(channel);
+      sd_tagger.push_back(fCRTGeoAlg.ChannelToTaggerEnum(channel));
+      sd_unixs.push_back(data->UnixS());
+      sd_ts0.push_back((int)data->Ts0());
+      sd_ts1.push_back((int)data->Ts1());
+      sd_second_corr.push_back(second_corr);
+      sd_etrig.push_back(etrig_time);
+      sd_ts0_corr.push_back(t0);
+      sd_adc1.push_back((int)sipm_adcs[adc_i]);
+      sd_adc2.push_back((int)sipm_adcs[adc_i+1]);
+      sd_max_strip.push_back(max_adc_chan == (int)adc_i || max_adc_chan == (int)adc_i+1);
+      sd_cable_length.push_back((int)module.t0CableDelayCorrection);
+      sd_pedestal1.push_back((int)sipm1.pedestal);
+      sd_pedestal2.push_back((int)sipm2.pedestal);
+      sd_width.push_back(strip.width);
+      sd_lat_pos.push_back((strip.width / 2. * tanh(log(1. * adc2/adc1)) + strip.width / 2.));
 
       // Keep hit if both SiPMs above threshold
       if(adc1 > fADCThreshold && adc2 > fADCThreshold)

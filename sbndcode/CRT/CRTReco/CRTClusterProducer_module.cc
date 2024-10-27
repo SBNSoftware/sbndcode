@@ -27,6 +27,9 @@
 
 #include <memory>
 
+#include "TTree.h"
+#include "art_root_io/TFileService.h"
+
 namespace sbnd::crt {
   class CRTClusterProducer;
 }
@@ -51,6 +54,8 @@ public:
 
   CRTCluster CharacteriseCluster(const std::vector<art::Ptr<CRTStripHit>> &clusteredHits);
 
+  void beginJob() override;
+
 private:
 
   CRTGeoAlg   fCRTGeoAlg;
@@ -58,6 +63,12 @@ private:
   uint32_t    fCoincidenceTimeRequirement;
   double      fOverlapBuffer;
   bool        fUseTs0;
+
+  TTree *fSHTree, *fClCTree;
+
+  std::vector<int> sh_channel, sh_tagger, sh_ts0;
+
+  std::vector<int> clc_tagger, clc_ts0;
 };
 
 
@@ -73,8 +84,25 @@ sbnd::crt::CRTClusterProducer::CRTClusterProducer(fhicl::ParameterSet const& p)
   produces<art::Assns<CRTCluster, CRTStripHit>>();
 }
 
+void sbnd::crt::CRTClusterProducer::beginJob()
+{
+  art::ServiceHandle<art::TFileService> tfs;
+  fSHTree  = tfs->make<TTree>("strip_hit_tree", "");
+  fClCTree = tfs->make<TTree>("cluster_candidate_tree", "");
+
+  fSHTree->Branch("channel", &sh_channel);
+  fSHTree->Branch("tagger", &sh_tagger);
+  fSHTree->Branch("ts0", &sh_ts0);
+
+  fClCTree->Branch("tagger", &clc_tagger);
+  fClCTree->Branch("ts0", &clc_ts0);
+}
+
 void sbnd::crt::CRTClusterProducer::produce(art::Event& e)
 {
+  sh_channel.clear(); sh_tagger.clear(); sh_ts0.clear();
+  clc_tagger.clear(); clc_ts0.clear();
+
   auto clusterVec          = std::make_unique<std::vector<CRTCluster>>();
   auto clusterStripHitAssn = std::make_unique<art::Assns<CRTCluster, CRTStripHit>>();
   
@@ -99,6 +127,9 @@ void sbnd::crt::CRTClusterProducer::produce(art::Event& e)
           util::CreateAssn(*this, e, *clusterVec, clusteredHits, *clusterStripHitAssn);
         }
     }
+
+  fSHTree->Fill();
+  fClCTree->Fill();
 
   e.put(std::move(clusterVec));
   e.put(std::move(clusterStripHitAssn));
@@ -129,6 +160,14 @@ std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRT
   std::vector<std::pair<CRTCluster, std::vector<art::Ptr<CRTStripHit>>>> clustersAndHits;
 
   std::vector<bool> used(stripHits.size(), false);
+
+  for(uint16_t i = 0; i < stripHits.size(); ++i)
+    {
+      const art::Ptr<CRTStripHit> &sh = stripHits[i];
+      sh_channel.push_back(sh->Channel());
+      sh_tagger.push_back(fCRTGeoAlg.ChannelToTaggerEnum(sh->Channel()));
+      sh_ts0.push_back(sh->Ts0());
+    }
 
   for(uint16_t i = 0; i < stripHits.size(); ++i)
     {
@@ -171,6 +210,9 @@ sbnd::crt::CRTClusterProducer::SplitClusters(const std::vector<std::pair<CRTClus
 
   for(auto const& [cluster, hits] : initialClusters)
     {
+      clc_tagger.push_back(cluster.Tagger());
+      clc_ts0.push_back(cluster.Ts0());
+
       std::map<uint16_t, std::set<uint16_t>> overlaps;
       
       std::vector<bool> used(hits.size(), false);
