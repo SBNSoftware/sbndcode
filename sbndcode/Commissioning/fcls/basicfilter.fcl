@@ -1,0 +1,50 @@
+process_name: BasicLightFilter 
+
+services: {
+  TFileService : {fileName: "filtered_hist.root"}
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1        # Number of events to create                                                                       
+}
+
+physics:
+{
+  filters:{
+    filter: {
+      module_type: "BasicLightFilter"
+      FlashADCThreshold: -400
+      BeamWindowMin: 900 # if etrig is the reference time then beam looks to start at 900 ns (tophat looks like us into the wavefor, and waveform time is ~-2100 w.r.t. etrig)
+      BeamWindowMax: 2700 # beamWindowMin + 1.8 us
+      ChannelsToIgnore: [39,270]
+    }
+  }
+
+  pass: [filter]
+  fail: ["!filter"]
+
+  stream1: [lightPass, lightFail]
+  end_paths: [stream1]
+
+}
+
+outputs:
+{
+  lightPass:
+  {
+    module_type: RootOutput
+    fileName: "lightPass_%ifb_%p-%tc.root"
+    dataTier: "decoded-raw"
+    SelectEvents: [pass]
+  }
+
+  lightFail:
+  {
+    module_type: RootOutput
+    fileName: "lightFail_%ifb_%p-%tc.root"
+    dataTier: "decoded-raw"
+    SelectEvents: [fail]
+  }
+}
