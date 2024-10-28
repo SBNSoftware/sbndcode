@@ -257,12 +257,14 @@ physics:
  analyzers:{
   caloskim: @local::caloskim_nodigits_goldentracks
   crtskim: @local::crtskim_sbnd
+  crtskimnosce: @local::crtskim_noSCE_sbnd
   pmtskim: @local::pmtskim_sbnd
   supera: @local::sbnd_supera
   superampvmpr: @local::sbnd_supera_mpvmpr
  }
 
  caloskimana: [ caloskim, crtskim, pmtskim ]
+ caloskimana_nosce: [ caloskim, crtskimnosce, pmtskim ]
  superaana: [ supera ] #outputs larcv.root for use in mlreco
 
  #define the output stream, there could be more than one if using filters
