@@ -35,6 +35,10 @@ sbnd_digipmt_alg:
   PMTCoatedVISEff:       0.104      #PMT coated detection efficiency for reflected (VIS) light
   PMTUncoatedEff:        0.152      #PMT uncoated detection efficiency
 
+  # Use noise from data
+  UseDataNoise: false
+  OpDetNoiseFile: ""
+
   # Simulate gain fluctuations
   # (comment-out to skip gain fluctuations simulation)
   GainFluctuationsParams: @local::FirstDynodeGainFluctuations

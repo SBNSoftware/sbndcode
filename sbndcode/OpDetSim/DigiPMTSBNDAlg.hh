@@ -43,6 +43,9 @@
 #include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
 
 #include "TFile.h"
+#include "TKey.h"
+#include "TH1.h"
+#include "TH1D.h"
 
 namespace opdet {
 
@@ -61,6 +64,9 @@ namespace opdet {
       double PMTMeanAmplitude; //mean amplitude for single pe in pC
       double PMTBaselineRMS; //Pedestal RMS in ADC counts
       double PMTDarkNoiseRate; //in Hz
+      bool UseDataNoise;
+      std::string OpDetNoiseFile;
+
       double PMTADCDynamicRange; //ADC dynbamic range
       double PMTCoatedVUVEff; //PMT (coated) efficiency for direct (VUV) light
       double PMTCoatedVISEff; //PMT (coated) efficiency for reflected (VIS) light
@@ -130,6 +136,10 @@ namespace opdet {
     double fPMTCoatedVUVEff;
     double fPMTCoatedVISEff;
     double fPMTUncoatedEff;
+
+    bool fUseDataNoise;
+    std::string fOpDetNoiseFile;
+
     bool fPositivePolarity;
     int fADCSaturation;
 
@@ -188,6 +198,7 @@ namespace opdet {
       std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap);
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects (dynamic range)
     void AddLineNoise(std::vector<double>& wave); //add noise to baseline
+    void AddDataNoise(std::vector<double>& wave, int ch); //add noise to baseline based on data file
     void AddDarkNoise(std::vector<double>& wave); //add dark noise
     double FindMinimumTime(
       sim::SimPhotons const&,
@@ -266,6 +277,16 @@ namespace opdet {
       fhicl::Atom<double> pmtcoatedVUVEff {
         Name("PMTCoatedVUVEff"),
         Comment("PMT (coated) detection efficiency for direct (VUV) light")
+      };
+
+      fhicl::Atom<bool> UseDataNoise {
+        Name("UseDataNoise"),
+        Comment("Add noise to waveform based on data")
+      };
+
+      fhicl::Atom<std::string> OpDetNoiseFile {
+        Name("OpDetNoiseFile"),
+        Comment("file containing the noise template from data")
       };
 
       fhicl::Atom<double> pmtcoatedVISEff {

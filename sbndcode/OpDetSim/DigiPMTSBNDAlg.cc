@@ -13,6 +13,8 @@ namespace opdet {
     , fPMTCoatedVUVEff(fParams.PMTCoatedVUVEff / fParams.larProp->ScintPreScale())
     , fPMTCoatedVISEff(fParams.PMTCoatedVISEff / fParams.larProp->ScintPreScale())
     , fPMTUncoatedEff(fParams.PMTUncoatedEff/ fParams.larProp->ScintPreScale())
+    , fUseDataNoise(fParams.UseDataNoise)
+    , fOpDetNoiseFile(fParams.OpDetNoiseFile)
       //  , fSinglePEmodel(fParams.SinglePEmodel)
     , fEngine(fParams.engine)
     , fFlatGen(*fEngine)
@@ -48,6 +50,11 @@ namespace opdet {
     file->GetObject("timeTPB", timeTPB_p);
     fTimeTPB = std::make_unique<CLHEP::RandGeneral>
       (*fEngine, timeTPB_p->data(), timeTPB_p->size());
+
+
+    std::cout << " The value of use data noise is " << fUseDataNoise << " and the file name is " << fOpDetNoiseFile << std::endl;
+
+
 
     //shape of single pulse
     if (fParams.PMTSinglePEmodel) {
@@ -194,7 +201,15 @@ namespace opdet {
       }
     }
 
-    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
+    if(fParams.PMTBaselineRMS > 0.0) 
+    {
+      if(fUseDataNoise)
+      {
+        std::cout << " Using data noise for channel " << ch << std::endl;
+        AddDataNoise(wave, ch);
+      } 
+      else AddLineNoise(wave);
+    }
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
   }
@@ -262,7 +277,11 @@ namespace opdet {
     }
 
     //Adding noise and saturation
-    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
+    if(fParams.PMTBaselineRMS > 0.0) 
+    {
+      if(fUseDataNoise) AddDataNoise(wave, ch);
+      else AddLineNoise(wave);
+    }
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
   }
@@ -316,7 +335,11 @@ namespace opdet {
       }
     }
     
-    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
+    if(fParams.PMTBaselineRMS > 0.0) 
+    {
+      if(fUseDataNoise) AddDataNoise(wave, ch);
+      else AddLineNoise(wave);
+    }
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
   }
@@ -393,7 +416,11 @@ namespace opdet {
     }
 
     //Adding noise and saturation
-    if(fParams.PMTBaselineRMS > 0.0) AddLineNoise(wave);
+    if(fParams.PMTBaselineRMS > 0.0) 
+    {
+      if(fUseDataNoise) AddDataNoise(wave, ch);
+      else AddLineNoise(wave);
+    }
     if(fParams.PMTDarkNoiseRate > 0.0) AddDarkNoise(wave);
     CreateSaturation(wave);
   }
@@ -478,6 +505,66 @@ namespace opdet {
     std::transform(wave.begin(), wave.end(), wave.begin(),
                    [this](double w) -> double {
                      return w + fGaussQGen.fire(0., fParams.PMTBaselineRMS) ; });
+  }
+
+
+  void DigiPMTSBNDAlg::AddDataNoise(std::vector<double>& wave, int ch)
+  {
+
+    // Get the noise waveform from data
+    // Get all the noise waveforms that do correspond to the channel we are using 
+    // Select a random noise waveform
+    // Compare the length of the noise and the simulation waveform:
+    // if the simulation is larger then choose another random noise waveform to fill up the missing items
+
+    std::string fname;
+    cet::search_path sp("FW_SEARCH_PATH");
+    sp.find_file(fOpDetNoiseFile, fname);
+    TFile* file = TFile::Open(fname.c_str(), "READ");
+
+    TDirectory *dir = (TDirectory*)file->Get("flashana");
+    if (!dir) {
+        std::cerr << " File could not be opened" << std::endl;
+        file->Close();
+        return;
+    }
+
+    std::string opChannelName = "opchannel_" + std::to_string(ch)+"_pmt";
+    std::vector<TKey*> keylist;
+    for (auto it = dir->GetListOfKeys()->begin(); it != dir->GetListOfKeys()->end(); ++it) {
+        TKey *key = (TKey*)(*it);
+        std::string channel_name = key->GetName();
+        if (channel_name.find(opChannelName.c_str()) != std::string::npos) {
+          //Creating a list of keys that contain the channel number
+            keylist.push_back(key);
+        }
+    }
+
+    std::vector<double> noise_wform; 
+    int waveBins = wave.size();
+
+    int currentSize=0;
+    while(currentSize<waveBins)
+    {
+      int noiseWformIdx = static_cast<int>(fEngine->flat() * keylist.size());
+      std::cout << " Choosing noise waveform number " << noiseWformIdx << " out of " << keylist.size() << std::endl;
+      TH1 *noiseHist = (TH1*)keylist[noiseWformIdx]->ReadObj();
+      for(int i=1; i<=noiseHist->GetNbinsX(); i++)
+      {
+        noise_wform.push_back(noiseHist->GetBinContent(i));
+        currentSize+=1;
+        if(currentSize>=waveBins) break;
+      }
+    }
+
+    for(size_t i=0; i<wave.size();i++)
+    {
+      wave[i]+=noise_wform[i];
+    }
+
+    //std::transform(wave.begin(), wave.end(), noise_wform.begin(), noise_wform.begin(), std::plus<double>());
+
+    file->Close();
   }
 
 
@@ -583,6 +670,8 @@ namespace opdet {
     fBaseConfig.PMTFallTime              = config.pmtfallTime();
     fBaseConfig.PMTMeanAmplitude         = config.pmtmeanAmplitude();
     fBaseConfig.PMTDarkNoiseRate         = config.pmtdarkNoiseRate();
+    fBaseConfig.UseDataNoise             = config.UseDataNoise();
+    fBaseConfig.OpDetNoiseFile             = config.OpDetNoiseFile();
     fBaseConfig.PMTBaselineRMS           = config.pmtbaselineRMS();
     fBaseConfig.TransitTime              = config.transitTime();
     fBaseConfig.TTS                      = config.tts();
