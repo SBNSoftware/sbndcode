@@ -65,6 +65,7 @@ namespace opdet {
       double PMTBaselineRMS; //Pedestal RMS in ADC counts
       double PMTDarkNoiseRate; //in Hz
       bool UseDataNoise;
+      bool UseCustomSPEHeight;
       std::string OpDetNoiseFile;
 
       double PMTADCDynamicRange; //ADC dynbamic range
@@ -76,6 +77,7 @@ namespace opdet {
       bool MakeGainFluctuations; //Fluctuate PMT gain
       fhicl::ParameterSet GainFluctuationsParams;
       bool SimulateNonLinearity; //Fluctuate PMT gain
+      double SPEPeakHeight;
       fhicl::ParameterSet NonLinearityParams;
       
       fhicl::ParameterSet HDOpticalWaveformParams;
@@ -138,7 +140,10 @@ namespace opdet {
     double fPMTUncoatedEff;
 
     bool fUseDataNoise;
+    bool fUseCustomSPEHeight;
     std::string fOpDetNoiseFile;
+
+    double fSPEPeakHeight;
 
     bool fPositivePolarity;
     int fADCSaturation;
@@ -284,10 +289,22 @@ namespace opdet {
         Comment("Add noise to waveform based on data")
       };
 
+      fhicl::Atom<bool> UseCustomSPEHeight {
+        Name("UseCustomSPEHeight"),
+        Comment("Add noise to waveform based on data")
+      };
+
       fhicl::Atom<std::string> OpDetNoiseFile {
         Name("OpDetNoiseFile"),
         Comment("file containing the noise template from data")
       };
+
+
+      fhicl::Atom<double> SPEPeakHeight {
+        Name("SPEPeakHeight"),
+        Comment("Height of the SPE in ADCs")
+      };
+
 
       fhicl::Atom<double> pmtcoatedVISEff {
         Name("PMTCoatedVISEff"),

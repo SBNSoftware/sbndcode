@@ -39,6 +39,10 @@ sbnd_digipmt_alg:
   UseDataNoise: false
   OpDetNoiseFile: ""
 
+  # Use custom peak height for the SPE response
+  UseCustomSPEHeight: false
+  SPEPeakHeight: 25.97
+
   # Simulate gain fluctuations
   # (comment-out to skip gain fluctuations simulation)
   GainFluctuationsParams: @local::FirstDynodeGainFluctuations

@@ -14,7 +14,9 @@ namespace opdet {
     , fPMTCoatedVISEff(fParams.PMTCoatedVISEff / fParams.larProp->ScintPreScale())
     , fPMTUncoatedEff(fParams.PMTUncoatedEff/ fParams.larProp->ScintPreScale())
     , fUseDataNoise(fParams.UseDataNoise)
+    , fUseCustomSPEHeight(fParams.UseCustomSPEHeight)
     , fOpDetNoiseFile(fParams.OpDetNoiseFile)
+    , fSPEPeakHeight(fParams.SPEPeakHeight)
       //  , fSinglePEmodel(fParams.SinglePEmodel)
     , fEngine(fParams.engine)
     , fFlatGen(*fEngine)
@@ -52,16 +54,21 @@ namespace opdet {
       (*fEngine, timeTPB_p->data(), timeTPB_p->size());
 
 
-    std::cout << " The value of use data noise is " << fUseDataNoise << " and the file name is " << fOpDetNoiseFile << std::endl;
-
-
 
     //shape of single pulse
     if (fParams.PMTSinglePEmodel) {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
       std::vector<double>* SinglePEVec_p;
       file->GetObject("SinglePEVec_HD", SinglePEVec_p);
-      fSinglePEWave = *SinglePEVec_p;
+    fSinglePEWave = *SinglePEVec_p;
+      if(fUseCustomSPEHeight)
+      {
+        double min_value = *std::min_element(fSinglePEWave.begin(), fSinglePEWave.end());
+        double SPENormalization = std::abs(fSPEPeakHeight/min_value);
+        // Transform the SPE response to have a given peak height
+        std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(),
+                    [SPENormalization](double x) { return x * SPENormalization; });
+      }
 
       // Prepare HD waveforms
       fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
@@ -671,7 +678,9 @@ namespace opdet {
     fBaseConfig.PMTMeanAmplitude         = config.pmtmeanAmplitude();
     fBaseConfig.PMTDarkNoiseRate         = config.pmtdarkNoiseRate();
     fBaseConfig.UseDataNoise             = config.UseDataNoise();
-    fBaseConfig.OpDetNoiseFile             = config.OpDetNoiseFile();
+    fBaseConfig.UseCustomSPEHeight       = config.UseCustomSPEHeight();
+    fBaseConfig.SPEPeakHeight            = config.SPEPeakHeight();
+    fBaseConfig.OpDetNoiseFile           = config.OpDetNoiseFile();
     fBaseConfig.PMTBaselineRMS           = config.pmtbaselineRMS();
     fBaseConfig.TransitTime              = config.transitTime();
     fBaseConfig.TTS                      = config.tts();
