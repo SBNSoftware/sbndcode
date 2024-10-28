@@ -515,7 +515,7 @@ namespace opdet {
     // Get all the noise waveforms that do correspond to the channel we are using 
     // Select a random noise waveform
     // Compare the length of the noise and the simulation waveform:
-    // if the simulation is larger then choose another random noise waveform to fill up the missing items
+    // if the simulation length is larger then choose another random noise waveform to fill up the missing items
 
     std::string fname;
     cet::search_path sp("FW_SEARCH_PATH");
@@ -535,7 +535,7 @@ namespace opdet {
         TKey *key = (TKey*)(*it);
         std::string channel_name = key->GetName();
         if (channel_name.find(opChannelName.c_str()) != std::string::npos) {
-          //Creating a list of keys that contain the channel number
+          //Creating a list of keys that contains the channel number
             keylist.push_back(key);
         }
     }
@@ -547,7 +547,6 @@ namespace opdet {
     while(currentSize<waveBins)
     {
       int noiseWformIdx = static_cast<int>(fEngine->flat() * keylist.size());
-      std::cout << " Choosing noise waveform number " << noiseWformIdx << " out of " << keylist.size() << std::endl;
       TH1 *noiseHist = (TH1*)keylist[noiseWformIdx]->ReadObj();
       for(int i=1; i<=noiseHist->GetNbinsX(); i++)
       {
@@ -555,6 +554,7 @@ namespace opdet {
         currentSize+=1;
         if(currentSize>=waveBins) break;
       }
+      delete noiseHist;
     }
 
     for(size_t i=0; i<wave.size();i++)
