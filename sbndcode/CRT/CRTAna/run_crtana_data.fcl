@@ -1,0 +1,15 @@
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "run_crtana.fcl"
+
+services.ParticleInventoryService: @erase
+services.BackTrackerService:       @erase
+
+services.CRTChannelMapService: @local::crt_channel_map_standard
+services.CRTCalibService:      @local::crt_calib_service
+
+physics.analyzers.crtana.FEBDataModuleLabel: "crtdecoder"
+physics.analyzers.crtana.DataMode:           true
+physics.analyzers.crtana.NoTPC:              true
+physics.analyzers.crtana.HasPTB:             true
+physics.analyzers.crtana.HasTDC:             true
