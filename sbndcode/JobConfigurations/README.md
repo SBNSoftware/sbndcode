@@ -1,7 +1,7 @@
 # SBND Core FHiCL Files
 
 4th October 2024 (Dom Brailsford)
-`standard_reco2_sbnd.fcl` has been promoted back to an up-to-date fcl and has rejoined the standard workflow
+`standard_reco2_sbnd.fcl` has been promoted back to an up-to-date fcl and has rejoined the standard workflow.  SCE services are enabled by default
 15th July 2024 (Dom Brailsford)
 `standard_reco1_sbnd.fcl` has been promoted back to an up-to-date fcl so can be used as part of any standard workflow.  The below suggested workflows have been updated to include this information.
 
