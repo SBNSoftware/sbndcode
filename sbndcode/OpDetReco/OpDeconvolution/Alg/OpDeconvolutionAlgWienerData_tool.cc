@@ -162,10 +162,17 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   std::vector<double>* fPeakAmplitude_p;
   std::vector<std::vector<double>> * fFilterParamVector_p;
 
+
+  std::cout << " Before reading 0 " << std::endl;
   file->GetObject("SERChannels", fSinglePEChannels_p);
+  std::cout << " Before reading 1 " << std::endl;
   file->GetObject("SinglePEVec", SinglePEVec_p);
+  std::cout << " Before reading 2 " << std::endl;
   file->GetObject("PeakAmplitude",  fPeakAmplitude_p);
+  std::cout << " Before reading 3 " << std::endl;
   file->GetObject("FilterParams",  fFilterParamVector_p);
+  std::cout << " Before reading 4 " << std::endl;
+
 
   if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
   fSinglePEWaveVector = *SinglePEVec_p;
@@ -176,7 +183,9 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
   file->Close();
 
+  std::cout << " Before reading 5 " << std::endl;
   if(fUseParamFilter && !fUseParamFilterInidividualChannel){
+    //If use param filter but not one for each channel, build it here
     fFilterTF1 = new TF1("FilterTemplate", fFilter.c_str());
     for(size_t k=0; k<fFilterParams.size(); k++)
       fFilterTF1->SetParameter(k, fFilterParams[k]);
@@ -200,6 +209,7 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
   wfDeco.reserve(wfVector.size());
   for(auto const& wf : wfVector)
   {
+    std::cout << " Before reading 6 " << std::endl;
     int channelNumber = wf.ChannelNumber();
     auto it = std::find(fSkipChannelList.begin(), fSkipChannelList.end(), channelNumber);
     bool AnalyseChannel = false;
@@ -232,7 +242,7 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
       if(AnalyseChannel == false) mf::LogError("OpDeconvolutionAlg") << " SER for channel " << channelNumber <<" not found in the file \n";
     }
     if(!AnalyseChannel) continue;
-
+    std::cout << " Before reading 7 " << std::endl;
     //Read waveform
     size_t wfsize=wf.Waveform().size();
     if(wfsize>MaxBinsFFT){
@@ -547,7 +557,7 @@ std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_
     for(size_t k=0; k<size/2; k++)
       hs_wiener->SetBinContent(k, TComplex::Abs( kernel[k]*serfft[k] ) );
   }
-  if(fUseParamFilterInidividualChannel) delete fFilterTF1;
+  if(fUseParamFilter && fUseParamFilterInidividualChannel) delete fFilterTF1;
   return kernel;
 }
 
