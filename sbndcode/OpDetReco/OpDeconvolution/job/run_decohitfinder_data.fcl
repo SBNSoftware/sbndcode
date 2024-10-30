@@ -3,7 +3,7 @@
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 
-#include "opdeconvolution_data_sbnd.fcl"
+#include "opdeconvolution_sbnd_data.fcl"
 #include "sbnd_flashfinder_deco.fcl"
 #include "sbnd_ophitfinder_deco_data.fcl"
 
