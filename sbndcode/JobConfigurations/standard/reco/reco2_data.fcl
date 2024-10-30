@@ -24,4 +24,13 @@ physics.reco2_sce: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pan
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
 physics.caloskimana_tpconly: [ caloskim ]
+
+physics.producers.pandora.HitFinderModuleLabel: "fasthit"
+physics.analyzers.caloskim.HITproducer: "fasthit"
+
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                #"drop raw::OpDetWaveforms_*_*_*",
+                "drop *raw::RawDigits*_*_*_*",
+                "drop *_linecluster_*_*" ]
+
 physics.end_paths: [stream1, caloskimana_tpconly]
