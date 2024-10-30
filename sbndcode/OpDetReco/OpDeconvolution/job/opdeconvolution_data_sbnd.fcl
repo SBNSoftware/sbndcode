@@ -15,7 +15,7 @@ SBNDOpDeconvolutionPMT: @local::SBNDOpDeconvolution
 SBNDOpDeconvolutionPMT.PDTypes: ["pmt_coated", "pmt_uncoated"]
 SBNDOpDeconvolutionPMT.Electronics: [""]
 SBNDOpDeconvolutionPMT.OpDecoAlg.OpDetDataFile: "./users/acastill/digi_pmt_sbnd_SER_individual_channels_v5_ALL.root"
-SBNDOpDeconvolutionPMT.OpDecoAlg.UseParamFilter: true
+#SBNDOpDeconvolutionPMT.OpDecoAlg.UseParamFilter: true
 SBNDOpDeconvolutionPMT.OpDecoAlg.FilterParams: [0.049, 2] #Freq in GHz
 SBNDOpDeconvolutionPMT.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0
 SBNDOpDeconvolutionPMT.OpDecoAlg.DecoWaveformPrecision: 0.005
