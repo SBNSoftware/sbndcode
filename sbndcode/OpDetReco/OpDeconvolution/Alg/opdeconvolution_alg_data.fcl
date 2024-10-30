@@ -6,7 +6,7 @@ OpDeconvolutionAlg:
   tool_type: "OpDeconvolutionAlgWienerData"
   Debug: false
   MaxFFTSizePow: 16
-  OpDetDataFile: "./digi_pmt_sbnd_SER_individual_channels_v5_ALL.root"
+  OpDetDataFile: "./users/acastill/digi_pmt_sbnd_SER_individual_channels_v6_ALL.root"
   BaseSampleBins: 30
   BaseVarCut: 25
   SkipChannelList: []
@@ -34,6 +34,7 @@ OpDeconvolutionAlg:
   #### Parameter filter
   Filter: "Wiener"
   UseParamFilter: false
+  UseParamFilterInidividualChannel: true
   #Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))"
   FilterParams: [0.1, 20]
   Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 62.5MHz/16 ns

@@ -71,7 +71,8 @@ private:
   bool fScaleHypoSignal;
   bool fUseParamFilter;
   std::vector<double> fFilterParams;
-
+  std::vector<std::vector<double>> fFilterParamVector;
+  std::vector<double> fFilterParamChannel;
   double fNormUnAvSmooth;
   double fSamplingFreq;
   double fDaphne_Freq;
@@ -82,6 +83,7 @@ private:
   std::vector<double> fSignalHypothesis;
   std::vector<double> fNoiseHypothesis;
 
+  bool fUseParamFilterInidividualChannel;
   bool fCorrectBaselineOscillations;
   short unsigned int fBaseSampleBins;
   double fBaseVarCut;
@@ -134,6 +136,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fDaphne_Freq  = p.get< double >("DaphneFreq");
   fScaleHypoSignal = p.get< bool >("ScaleHypoSignal");
   fUseParamFilter = p.get< bool >("UseParamFilter");
+  fUseParamFilterInidividualChannel = p.get< bool >("UseParamFilterInidividualChannel");
   fCorrectBaselineOscillations = p.get< bool >("CorrectBaselineOscillations");
   fBaseSampleBins = p.get< short unsigned int >("BaseSampleBins");
   fBaseVarCut = p.get< double >("BaseVarCut");
@@ -157,20 +160,23 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   std::vector<std::vector<double>>* SinglePEVec_p;
   std::vector<int>* fSinglePEChannels_p;
   std::vector<double>* fPeakAmplitude_p;
+  std::vector<std::vector<double>> * fFilterParamVector_p;
 
   file->GetObject("SERChannels", fSinglePEChannels_p);
   file->GetObject("SinglePEVec", SinglePEVec_p);
   file->GetObject("PeakAmplitude",  fPeakAmplitude_p);
+  file->GetObject("FilterParams",  fFilterParamVector_p);
 
   if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
   fSinglePEWaveVector = *SinglePEVec_p;
   fSinglePEChannels = *fSinglePEChannels_p;
+  
   fPeakAmplitude = *fPeakAmplitude_p;
-
+  fFilterParamVector = *fFilterParamVector_p;          
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
   file->Close();
 
-  if(fUseParamFilter){
+  if(!fUseParamFilterInidividualChannel){
     fFilterTF1 = new TF1("FilterTemplate", fFilter.c_str());
     for(size_t k=0; k<fFilterParams.size(); k++)
       fFilterTF1->SetParameter(k, fFilterParams[k]);
@@ -205,15 +211,26 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
         {
           fSinglePEWave = fSinglePEWaveVector[i];
           double SPEPeakValue = *std::max_element(fSinglePEWave.begin(), fSinglePEWave.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
-          double SinglePENormalization = fPeakAmplitude[i]/SPEPeakValue;
+          double SinglePENormalization = std::abs(fPeakAmplitude[i]/SPEPeakValue);
           std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(), [SinglePENormalization](double val) {return val * SinglePENormalization;});
           fSinglePEWave.resize(MaxBinsFFT, 0);
           AnalyseChannel = true;
+          // If use channel dependent paraam filter
+          if(fUseParamFilterInidividualChannel)
+          {
+            fFilterParamChannel = fFilterParamVector[i];
+            fFilterTF1 = new TF1("FilterTemplate", fFilter.c_str());
+            for(size_t k=0; k<fFilterParamChannel.size(); k++)
+            {
+              fFilterTF1->SetParameter(k, fFilterParamChannel[k]);
+            }
+            mf::LogInfo("OpDeconvolutionAlg")<<"Creating parametrized filter... TF1:"<<fFilter << " for channel " << channelNumber <<std::endl;
+          }
           break;
         }
       }
       if(AnalyseChannel == false) mf::LogError("OpDeconvolutionAlg") << " SER for channel " << channelNumber <<" not found in the file \n";
-    } 
+    }
     if(!AnalyseChannel) continue;
 
     //Read waveform
@@ -530,7 +547,7 @@ std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_
     for(size_t k=0; k<size/2; k++)
       hs_wiener->SetBinContent(k, TComplex::Abs( kernel[k]*serfft[k] ) );
   }
-
+  if(fUseParamFilterInidividualChannel) delete fFilterTF1;
   return kernel;
 }
 
