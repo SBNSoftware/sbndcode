@@ -7,6 +7,7 @@
 #ifndef Hitdumper_Module
 #define Hitdumper_Module
 
+
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -236,6 +237,8 @@ private:
   std::vector<double> _crt_track_theta;        ///< CRT track theta
   std::vector<double> _crt_track_phi;          ///< CRT track phi
   std::vector<double> _crt_track_length;       ///< CRT track length
+  std::vector<double> _theta_xz_CRT;
+  std::vector<double> _theta_yz_CRT;
 
   // Optical hit variables
   int _nophits;                               ///< Number of Optical Hits
@@ -697,6 +700,36 @@ void Hitdumper::analyze(const art::Event& evt)
 	_crt_track_theta.push_back(crttrack->Theta()*(180.0/M_PI));
 	_crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
 	_crt_track_length.push_back(crttrack->Length());
+
+	double dx;
+	double dy;
+	double dz;
+	double CRT_theta_xz;
+	double CRT_theta_yz;
+      
+	dx =end.X() - start.X();
+	dy =end.Y() - start.Y();
+	dz =end.Z() - start.Z();
+
+	CRT_theta_xz= atan2(dx,dz)*(180/TMath::Pi());
+	CRT_theta_yz= atan2(dy,dz)*(180/TMath::Pi());
+        
+	double modified_theta_xz_CRT = CRT_theta_xz;
+	if ( CRT_theta_xz < -90 ) {
+	  modified_theta_xz_CRT = CRT_theta_xz + 180.;
+	}
+	if ( CRT_theta_xz > 90 ) {
+	  modified_theta_xz_CRT = CRT_theta_xz - 180.;
+	}
+	double modified_theta_yz_CRT = CRT_theta_yz;
+	if ( CRT_theta_yz < -90 ) {
+	  modified_theta_yz_CRT = CRT_theta_yz + 180.;
+	}
+	if ( CRT_theta_yz > 90 ) {
+	  modified_theta_yz_CRT = CRT_theta_yz - 180.;
+	}
+	_theta_xz_CRT.push_back(modified_theta_xz_CRT);
+	_theta_yz_CRT.push_back(modified_theta_yz_CRT);
       }
     } else {
       std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<fCRTTrackModuleLabel<<")." << std::endl;
@@ -821,7 +854,7 @@ void Hitdumper::analyze(const art::Event& evt)
       auto crtSoftTriggerMetrics = crtsofttriggerlist[0];
 
       for (int i=0; i<7; i++){
-	      _crtSoftTrigger_hitsperplane[i] = crtSoftTriggerMetrics->hitsperplane[i];
+	_crtSoftTrigger_hitsperplane[i] = crtSoftTriggerMetrics->hitsperplane[i];
       }
     }
     else{
@@ -862,7 +895,7 @@ void Hitdumper::analyze(const art::Event& evt)
         ResetMuonHitVars(3000); //estimate of maximum collection hits
         _nmhits = 0;
         for (int i=0; i < _nmuontrks; i++){ 
-        std::vector< const recob::Hit*> muonhitsVec = muontrkassn.at(i);
+	  std::vector< const recob::Hit*> muonhitsVec = muontrkassn.at(i);
           _nmhits += (muonhitsVec.size()); 
           for (size_t j=0; j<muonhitsVec.size(); j++){
             auto muonhit = muonhitsVec.at(j);
@@ -884,85 +917,84 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   if (fcheckTransparency) {
+	_waveform_number.resize(_max_hits*_max_samples, -9999.);
+	_adc_on_wire.resize(_max_hits*_max_samples, -9999.);
+	_time_for_waveform.resize(_max_hits*_max_samples, -9999.);
+	_waveform_integral.resize(_max_hits*_max_samples, -9999.);
+	_adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
+	_wire_number.resize(_max_hits*_max_samples, -9999.);
+	_hit_time.resize(_max_hits*_max_samples, -9999.);
 
-    _waveform_number.resize(_max_hits*_max_samples, -9999.);
-    _adc_on_wire.resize(_max_hits*_max_samples, -9999.);
-    _time_for_waveform.resize(_max_hits*_max_samples, -9999.);
-    _waveform_integral.resize(_max_hits*_max_samples, -9999.);
-    _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
-    _wire_number.resize(_max_hits*_max_samples, -9999.);
-    _hit_time.resize(_max_hits*_max_samples, -9999.);
+	art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
 
-    art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
+	bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
+	if(retVal == true) {
+	  mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
+	} else {
+	  mf::LogWarning("HitDumper") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
+	}
 
-    bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
-    if(retVal == true) {
-      mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
-    } else {
-      mf::LogWarning("HitDumper") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
-    }
+	int waveform_number_tracker = 0;
+	int adc_counter = 1;
+	_adc_count = _nhits * (fWindow * 2 + 1);
 
-    int waveform_number_tracker = 0;
-    int adc_counter = 1;
-    _adc_count = _nhits * (fWindow * 2 + 1);
+	// loop over waveforms
+	for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
+      
+	  //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
+	  art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
+	  int channel   = digitVec->Channel();
+	  auto fDataSize = digitVec->Samples();
+	  std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
+	  rawadc.resize(fDataSize);
 
-    // loop over waveforms
-    for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
+	  // see if there is a hit on this channel
+	  for (int ihit = 0; ihit < _nhits; ++ihit) {
+	    if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==1 && _hit_plane[ihit]==0 &&  _hit_peakT[ihit]<1500.0) {
 
-      //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
-      art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
-      int channel   = digitVec->Channel();
-      auto fDataSize = digitVec->Samples();
-      std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
-      rawadc.resize(fDataSize);
+	      int pedestal = (int)digitVec->GetPedestal();
+	      //UNCOMPRESS THE DATA.
+	      if (fUncompressWithPed) {
+		raw::Uncompress(digitVec->ADCs(), rawadc, pedestal, digitVec->Compression());
+	      }
+	      else {
+		raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
+	      }
 
-      // see if there is a hit on this channel
-      for (int ihit = 0; ihit < _nhits; ++ihit) {
-        if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==1 && _hit_plane[ihit]==0) {
-
-          int pedestal = (int)digitVec->GetPedestal();
-          //UNCOMPRESS THE DATA.
-          if (fUncompressWithPed) {
-            raw::Uncompress(digitVec->ADCs(), rawadc, pedestal, digitVec->Compression());
-          }
-          else {
-            raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
-          }
-
-          unsigned int bin = _hit_peakT[ihit];
-          unsigned int low_edge,high_edge;
-          if((int)bin > fWindow and _hit_plane[ihit] == 0) {
-            low_edge = bin - (2*fWindow);
-          }
-          else if ((int)bin>fWindow) {
-            low_edge = bin-fWindow;
-          }
-          else {
-            low_edge = 0;
-          }
-          high_edge = bin + fWindow;
-          if (high_edge > (fDataSize-1)) {
-            high_edge = fDataSize - 1;
-          }
-	  // double integral = 0.0;
-          waveform_number_tracker++;
-	  // int counter_for_adc_in_waveform = 0;
-          for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
-	    // _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
-	    // counter_for_adc_in_waveform++;
-            _waveform_number[adc_counter] = waveform_number_tracker;
-            _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
-            _time_for_waveform[adc_counter] = ibin;
-	    _wire_number[adc_counter] = _hit_wire[ihit];
-	    _hit_time[adc_counter] = _hit_peakT[ihit];
-	    // integral+=_adc_on_wire[adc_counter];
-	    // _waveform_integral[adc_counter] = integral;
-            adc_counter++;
-          }
-	  //          _hit_full_integral[ihit] = integral;
-        } // if hit channel matches waveform channel
-      } //end loop over hits
-    }// end loop over waveforms
+	      unsigned int bin = _hit_peakT[ihit];
+	      unsigned int low_edge,high_edge;
+	      if((int)bin > fWindow and _hit_plane[ihit] == 0) {
+		low_edge = bin - (2*fWindow);
+	      }
+	      else if ((int)bin>fWindow) {
+		low_edge = bin-fWindow;
+	      }
+	      else {
+		low_edge = 0;
+	      }
+	      high_edge = bin + fWindow;
+	      if (high_edge > (fDataSize-1)) {
+		high_edge = fDataSize - 1;
+	      }
+	      // double integral = 0.0;
+	      waveform_number_tracker++;
+	      // int counter_for_adc_in_waveform = 0;
+	      for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
+		// _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
+		// counter_for_adc_in_waveform++;
+		_waveform_number[adc_counter] = waveform_number_tracker;
+		_adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
+		_time_for_waveform[adc_counter] = ibin;
+		_wire_number[adc_counter] = _hit_wire[ihit];
+		_hit_time[adc_counter] = _hit_peakT[ihit];
+		// integral+=_adc_on_wire[adc_counter];
+		// _waveform_integral[adc_counter] = integral;
+		adc_counter++;
+	      }
+	      //          _hit_full_integral[ihit] = integral;
+	    } // if hit channel matches waveform channel
+	  } //end loop over hits
+	}// end loop over waveforms
   }// end if fCheckTrasparency
 
 
@@ -1054,14 +1086,14 @@ void Hitdumper::analyze(const art::Event& evt)
 
     art::Ptr<simb::MCTruth> mctruth;
 
-      if (!mclist.empty()) {//at least one mc record
+    if (!mclist.empty()) {//at least one mc record
 
-        mctruth = mclist[0];
+      mctruth = mclist[0];
 
-        if (mctruth->NeutrinoSet()) nGeniePrimaries = mctruth->NParticles();
+      if (mctruth->NeutrinoSet()) nGeniePrimaries = mctruth->NParticles();
 
     } // if have MC truth
-      MF_LOG_DEBUG("HitDumper") << "Expected " << nGeniePrimaries << " GENIE particles";
+    MF_LOG_DEBUG("HitDumper") << "Expected " << nGeniePrimaries << " GENIE particles";
 
     //Initially call the number of neutrinos to be stored the number of MCTruth objects.  This is not strictly true i.e. BNB + cosmic overlay but we will count the number of neutrinos later
     nMCNeutrinos = mclist.size();
@@ -1128,11 +1160,11 @@ void Hitdumper::analyze(const art::Event& evt)
         //We need to also store N 'flux' neutrinos per event so now check that the FindOneP is valid and, if so, use it!
         if (fmFluxNeutrino.isValid()){
           if (fmFluxNeutrino.at(0).size()>i_mctruth){
-          art::Ptr<simb::MCFlux> curr_mcflux = fmFluxNeutrino.at(0).at(i_mctruth);
-          tpx_flux[i_mctruth] = curr_mcflux->ftpx;
-          tpy_flux[i_mctruth] = curr_mcflux->ftpy;
-          tpz_flux[i_mctruth] = curr_mcflux->ftpz;
-          tptype_flux[i_mctruth] = curr_mcflux->ftptype;
+	    art::Ptr<simb::MCFlux> curr_mcflux = fmFluxNeutrino.at(0).at(i_mctruth);
+	    tpx_flux[i_mctruth] = curr_mcflux->ftpx;
+	    tpy_flux[i_mctruth] = curr_mcflux->ftpy;
+	    tpz_flux[i_mctruth] = curr_mcflux->ftpz;
+	    tptype_flux[i_mctruth] = curr_mcflux->ftptype;
           }
         }
 
@@ -1149,8 +1181,8 @@ void Hitdumper::analyze(const art::Event& evt)
           // got this error? it might be a bug,
           // since the structure should have enough room for everything
           mf::LogError("HitDumper") << "event has "
-            << genie_no_primaries << " MC particles, only "
-            << StoreParticles << " stored in tree";
+				    << genie_no_primaries << " MC particles, only "
+				    << StoreParticles << " stored in tree";
         }
         for(size_t iPart = 0; iPart < StoreParticles; ++iPart){
           const simb::MCParticle& part(mctruth->GetParticle(iPart));
@@ -1179,8 +1211,8 @@ void Hitdumper::analyze(const art::Event& evt)
 
 }
 
- void Hitdumper::beginJob()
- {
+void Hitdumper::beginJob()
+{
   // Implementation of optional member function here.
   art::ServiceHandle<art::TFileService> tfs;
   fTree = tfs->make<TTree>("hitdumpertree","analysis tree");
@@ -1211,7 +1243,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
     fTree->Branch("wire_number", &_wire_number);
     fTree->Branch("hit_time", &_hit_time); 
- }
+  }
 
   if (fKeepCRTStripHits) {
     fTree->Branch("n_crt_strip_hits", &_n_crt_strip_hits);
@@ -1259,6 +1291,8 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("crt_track_theta", &_crt_track_theta);
     fTree->Branch("crt_track_phi", &_crt_track_phi);
     fTree->Branch("crt_track_length", &_crt_track_length);
+    fTree->Branch("theta_xz_CRT", &_theta_xz_CRT); 
+    fTree->Branch("theta_yz_CRT", &_theta_yz_CRT);
  }
 
   if (freadOpHits) {
@@ -1311,7 +1345,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("muontrk_type", &_muontrk_type); 
   }
 
-    if (freadMuonHits) {
+  if (freadMuonHits) {
     fTree->Branch("nmhits", &_nmhits, "nmhits/I");
     fTree->Branch("mhit_trk", &_mhit_trk);
     fTree->Branch("mhit_tpc", &_mhit_tpc);
@@ -1453,6 +1487,8 @@ void Hitdumper::ResetCRTTracksVars() {
   _crt_track_theta.clear();
   _crt_track_phi.clear();
   _crt_track_length.clear();
+  _theta_xz_CRT.clear();
+  _theta_yz_CRT.clear();
 }
 
 void Hitdumper::ResetCRTSpacePointVars() {
