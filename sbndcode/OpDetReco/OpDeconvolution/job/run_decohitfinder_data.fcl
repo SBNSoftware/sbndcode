@@ -7,7 +7,7 @@
 #include "sbnd_flashfinder_deco.fcl"
 #include "sbnd_ophitfinder_deco_data.fcl"
 
-process_name: DecoReco
+process_name: DecoRecoData
 
 services:
 {
@@ -42,11 +42,16 @@ physics:
   producers:
   {
     opdecopmt:     @local::SBNDOpDeconvolutionPMT
-
+    ophitpmt:  @local::SBNDDecoOpHitFinderPMT
+    opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0
+    opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1
   }
 
   reco: [
-    opdecopmt
+    opdecopmt,
+    ophitpmt,
+    opflashtpc0,
+    opflashtpc1
   ]
 
 
