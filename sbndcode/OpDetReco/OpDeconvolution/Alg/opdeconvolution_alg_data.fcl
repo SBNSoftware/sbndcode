@@ -33,7 +33,7 @@ OpDeconvolutionAlg:
   #### Wiener1PE: hypothesis is 1PE (delta pulse)
   #### Parameter filter
   Filter: "Wiener"
-  UseParamFilter: false
+  UseParamFilter: true
   UseParamFilterInidividualChannel: true
   #Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))"
   FilterParams: [0.1, 20]
