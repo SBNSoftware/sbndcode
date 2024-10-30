@@ -5,7 +5,7 @@
 
 #include "opdeconvolution_data_sbnd.fcl"
 #include "sbnd_flashfinder_deco.fcl"
-#include "sbnd_ophitfinder_deco.fcl"
+#include "sbnd_ophitfinder_deco_data.fcl"
 
 process_name: DecoReco
 
