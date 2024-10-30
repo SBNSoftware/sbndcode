@@ -176,13 +176,13 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
   file->Close();
 
-  if(!fUseParamFilterInidividualChannel){
+  if(fUseParamFilter && !fUseParamFilterInidividualChannel){
     fFilterTF1 = new TF1("FilterTemplate", fFilter.c_str());
     for(size_t k=0; k<fFilterParams.size(); k++)
       fFilterTF1->SetParameter(k, fFilterParams[k]);
     mf::LogInfo("OpDeconvolutionAlg")<<"Creating parametrized filter... TF1:"<<fFilter<<std::endl;
   }
-  else{
+  else if (!fUseParamFilter){
     //Create light signal hypothesis for "on-fly" Wiener filter
     fSignalHypothesis.resize(MaxBinsFFT, 0);
     if(fFilter=="Wiener")
