@@ -1,12 +1,26 @@
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
 #include "standard_reco2_sbnd.fcl"
 
 services:
 {
     @table::services
     @table::sbnd_data_services
+    CRTChannelMapService: @local::crt_channel_map_standard
+    CRTCalibService:      @local::crt_calib_service
 }
 
-physics.reco2: [pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry]
+physics.producers:
+{
+    @table::physics.producers
+    crtclustering:  @local::crtclusterproducer_data_sbnd
+    crtspacepoints: @local::crtspacepointproducer_data_sbnd
+    crttracks:      @local::crttrackproducer_data_sbnd
+}
+
+physics.reco2_sce: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
+  crtclustering, crtspacepoints, crttracks ]
+
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
 physics.caloskimana_tpconly: [ caloskim ]

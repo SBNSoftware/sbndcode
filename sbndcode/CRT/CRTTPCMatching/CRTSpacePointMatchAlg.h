@@ -64,67 +64,73 @@ namespace sbnd::crt {
 
       fhicl::Atom<double> TrackDirectionFrac {
         Name("TrackDirectionFrac"),
-          Comment(""),
-          0.5
-          };
+        Comment(""),
+        0.5
+      };
 
       fhicl::Atom<double> TimeCorrection {
         Name("TimeCorrection"),
-          Comment(""),
-          0.
-          };
+        Comment(""),
+        0.
+      };
 
       fhicl::Atom<double> DCALimit {
         Name("DCALimit"),
-          Comment(""),
-          200.
-          };
+        Comment(""),
+        200.
+      };
 
       fhicl::Atom<double> MinTPCTrackLength {
         Name("MinTPCTrackLength"),
-          Comment("Only consider TPC tracks with a length longer than this (cm)"),
-          0.
-          };
+        Comment("Only consider TPC tracks with a length longer than this (cm)"),
+        0.
+      };
 
       fhicl::Atom<int> DirMethod {
         Name("DirMethod"),
-          Comment("1=endpoints (default), 2=average;  must use endpoints if applying SCE position corrections"),
-          1
-          };
+        Comment("1=endpoints (default), 2=average;  must use endpoints if applying SCE position corrections"),
+        1
+      };
 
       fhicl::Atom<bool> DCAuseBox {
         Name("DCAuseBox"),
-          Comment("false = distance to point (default), true = distance to box edge"),
-          false
-          };
+        Comment("false = distance to point (default), true = distance to box edge"),
+        false
+      };
 
       fhicl::Atom<bool> DCAoverLength {
         Name("DCAoverLength"),
-          Comment("false = use DCA to select closest CRTSpacePoint (default), true = use DCA/extrapolation_length"),
-          false
-          };
+        Comment("false = use DCA to select closest CRTSpacePoint (default), true = use DCA/extrapolation_length"),
+        false
+      };
 
       fhicl::Atom<double> PECut {
         Name("PECut"),
-          Comment("Only consider CRTSpacePoints with PE values larger than this"),
-          0.0
-          };
+        Comment("Only consider CRTSpacePoints with PE values larger than this"),
+        0.0
+      };
 
       fhicl::Atom<double> MaxUncert {
         Name("MaxUncert"),
-          Comment("Only consider CRTSpacePoints with position uncertainties below this value (cm)"),
-          1000.0
-          };
+        Comment("Only consider CRTSpacePoints with position uncertainties below this value (cm)"),
+        1000.0
+      };
 
       fhicl::Atom<art::InputTag> TPCTrackLabel {
         Name("TPCTrackLabel"),
-          Comment("")
-          };
+        Comment("")
+      };
 
       fhicl::Atom<art::InputTag> CRTSpacePointLabel {
         Name("CRTSpacePointLabel"),
-          Comment("")
-          };
+        Comment("")
+      };
+
+      fhicl::Atom<bool> UseTs0 {
+        Name("UseTs0"),
+        Comment("Whether to use the T0 or T1 clock time of the CRT object"),
+      };
+
     };
 
     CRTSpacePointMatchAlg(const Config& config);
@@ -132,10 +138,10 @@ namespace sbnd::crt {
     CRTSpacePointMatchAlg(const Config& config, geo::GeometryCore const *GeometryService);
 
     CRTSpacePointMatchAlg(const fhicl::ParameterSet& pset) :
-    CRTSpacePointMatchAlg(fhicl::Table<Config>(pset, {})()) {}
+      CRTSpacePointMatchAlg(fhicl::Table<Config>(pset, {})()) {}
 
     CRTSpacePointMatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const *GeometryService) :
-    CRTSpacePointMatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService) {}
+      CRTSpacePointMatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService) {}
 
     CRTSpacePointMatchAlg();
 
@@ -178,6 +184,7 @@ namespace sbnd::crt {
     bool   fDCAoverLength;
     double fPECut;
     double fMaxUncert;
+    bool   fUseTs0;
 
     art::InputTag fTPCTrackLabel;
     art::InputTag fCRTSpacePointLabel;
