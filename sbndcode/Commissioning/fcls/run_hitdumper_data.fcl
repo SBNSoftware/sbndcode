@@ -104,7 +104,7 @@ physics:
   ]
 
   ana: [hitdumper
-  #, wvfana
+  , wvfana
   ]
 
   # define the output stream, there could be more than one if using filters
