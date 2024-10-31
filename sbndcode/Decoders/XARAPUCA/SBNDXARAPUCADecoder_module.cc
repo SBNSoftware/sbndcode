@@ -16,6 +16,7 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include <memory>
+#include <algorithm>
 
 #include "artdaq-core/Data/Fragment.hh"
 #include "artdaq-core/Data/ContainerFragment.hh"
@@ -53,6 +54,8 @@ private:
   uint event_counter;
 
   uint fnum_caen_boards;
+  uint ffragment_id_offset;
+  std::vector<uint> fboard_id_list;
 
   std::string fcaen_module_label;
   std::vector<std::string> fcaen_fragment_name;
@@ -82,6 +85,9 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   event_counter = 0;
   
   fnum_caen_boards = p.get<uint> ("num_caen_boards");
+  ffragment_id_offset = p.get<uint> ("fragment_id_offset");
+  
+  fboard_id_list = p.get<std::vector <uint> > ("board_id_list");
   
   fcaen_module_label = p.get<std::string> ("caen_module_label");
   fcaen_fragment_name = p.get<std::vector <std::string> > ("caen_fragment_name");
@@ -130,7 +136,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
     
       // It is a group of containers containing a group of CAEN V1740 fragments
       if (fragment_handle->front().type() == artdaq::Fragment::ContainerFragmentType){
-        std::cout << "\t\tCONTAINER" << std::endl;
+        std::cout << "\t\tCONTAINER";
         
         // For every container
         for (auto container: *fragment_handle) {
@@ -139,6 +145,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
           // Search for all CAEN V1740 fragments inside the container
           if (container_fragment.fragment_type() == sbndaq::detail::FragmentType::CAENV1740) {
             for (size_t i = 0; i < container_fragment.block_count(); i++) {
+              std::cout << "\t\t[container_size: " << container_fragment.block_count() << "]" << std::endl;
               artdaq::Fragment fragment = *container_fragment[i].get();
               add_fragment(fragment, fragments);
             }
@@ -186,6 +193,8 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
         std::cout << std::fixed << std::setprecision(3);
         std::cout << "TTT_ini [us]: " << TTT_ini_us << "\tTTT_end [us]: " << TTT_end_us << std::endl;
           
+        //std::cout << "\t\t\tBoard ID (from header): " << header.boardID << std::endl;
+
         uint32_t num_words_per_event = header.eventSize;
         uint32_t num_words_per_header = sizeof(CAENV1740EventHeader)/sizeof(uint32_t);
         uint32_t num_words_per_wvfm = (num_words_per_event - num_words_per_header);
@@ -249,13 +258,21 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
 }
 
 void sbndaq::SBNDXARAPUCADecoder::add_fragment(artdaq::Fragment& fragment, std::vector <std::vector <artdaq::Fragment> >& fragments) {
-  auto fragment_ID = fragment.fragmentID();
-  if (fragment_ID < 0 || fragment_ID >= fnum_caen_boards) {
-    std::cout << "\t\t\tFragment ID " << fragment_ID << " is out of range. Skipping this fragment..." << std::endl;
+  auto fragment_id = fragment.fragmentID() - ffragment_id_offset;
+  auto it = std::find(fboard_id_list.begin(), fboard_id_list.end(), fragment_id);
+
+  if (it != fboard_id_list.end()) {
+    uint index = it - fboard_id_list.begin();
+    if (index < 0 || index >= fnum_caen_boards) {
+      std::cout << "\t\t\tFragment ID " << fragment_id << " (" << index << ") is out of range. Skipping this fragment..." << std::endl;
+    } else {
+      std::cout << "\t\t\tGetting a CAENV1740 fragment: [" << fragment_id << " (" << index << ") " << "]" << fragment;
+      fragments.at(index).push_back(fragment);
+    }
   } else {
-    std::cout << "\t\t\tGetting a CAENV1740 fragment: [" << fragment_ID << "]" << fragment;
-    fragments.at(fragment_ID).push_back(fragment);
+      std::cout << "\t\t\tFragment ID " << fragment_id << " is not valid. Skipping this fragment..." << std::endl;
   }
+
 }
 
 uint16_t sbndaq::SBNDXARAPUCADecoder::get_range(uint64_t buffer, uint32_t msb, uint32_t lsb) {

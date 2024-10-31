@@ -10,6 +10,8 @@ xarapucadecoder:
     caen_fragment_name: [ "CAENV1740", "ContainerCAENV1740" ]
     # Boards
     num_caen_boards: 4
+    fragment_id_offset: 40960
+    board_id_list: [7, 13, 16, 19]
     # Time
     ns_per_sample: 16
 
