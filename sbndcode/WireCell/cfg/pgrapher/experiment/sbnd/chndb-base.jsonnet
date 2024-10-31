@@ -20,8 +20,10 @@ function(params, anode, field, n, rms_cuts=[])
     // For MicroBooNE, channel groups is a 2D list.  Each element is
     // one group of channels which should be considered together for
     // coherent noise filtering.
-    groups: [std.range(   0 + n * 5638 + g*32,    0 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,149)] +
-            [std.range(4806 + n * 5638 + g*32, 4806 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,25)] ,
+    // 5638 is the number of channels in a single APA, (1984*2 + 1670), including the 6 channel gap.
+    // 4806 is the number of channels for both induction + half of real collection wires + 6 channel gap
+    groups: [std.range(   0 + n * 5638 + g*32,    0 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,150)] +
+            [std.range(4806 + n * 5638 + g*32, 4806 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,26)] ,
     
 
     // Externally determined "bad" channels.
@@ -55,9 +57,11 @@ function(params, anode, field, n, rms_cuts=[])
         response_offset: 0.0,  // ticks?
         pad_window_front: 10,  // ticks?
         pad_window_back: 10,  // ticks?
-        decon_limit: 0.02,
+        decon_limit: 0.02, // (SignalProtection, same as upper_decon_limit (default 0.02))
         decon_limit1: 0.09,
-        adc_limit: 10,
+        adc_limit: 5, // (SignalProtection, same as upper_adc_limit (default 15))
+        // min_adc_limit = 50
+        // protection_factor = 5.0 (SignalProtection)
         roi_min_max_ratio: 0.8, // default 0.8
         min_rms_cut: 1.0,  // units???
         max_rms_cut: 30.0,  // units???
