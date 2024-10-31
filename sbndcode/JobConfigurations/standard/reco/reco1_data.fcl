@@ -1,19 +1,24 @@
 #include "wcsp_data_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
 #include "standard_reco1_sbnd.fcl"
 
 services:
 {
     @table::services
     @table::sbnd_data_services
+    CRTChannelMapService: @local::crt_channel_map_standard
+    CRTCalibService:      @local::crt_calib_service
 }
 
 physics.producers:
 {
     @table::physics.producers
-    sptpc2d : @local::sbnd_wcls_sp_data
+    sptpc2d:   @local::sbnd_wcls_sp_data
+    crtstrips: @local::crtstriphitproducer_data_sbnd
 }
 
-physics.reco1: [sptpc2d, gaushit, cluster3d]
+physics.reco1: [sptpc2d, gaushit, cluster3d, crtstrips]
 physics.ana: [superadata]
 physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
 physics.end_paths: ["stream1",ana]
