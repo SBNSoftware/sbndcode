@@ -89,6 +89,10 @@ base {
         nticks: 3415,
     },
 
+    nf: super.nf { 
+        nsamples: $.daq.nticks,
+    },
+
     adc: super.adc {
 	// AC coupling in front of ADC to solve FE baseline distortion
 	// induction plane: 6k Ohm vs 6k Ohm; collection: 6k Ohm vs 1.2k Ohm
