@@ -72,6 +72,7 @@ private:
   void add_fragment(artdaq::Fragment& fragment, std::vector <std::vector <artdaq::Fragment> >& fragments);
   uint16_t get_range(uint64_t buffer, uint32_t msb, uint32_t lsb);
   uint32_t read_word(const uint32_t* & data_ptr);
+  uint get_channel_id(uint board, uint board_channel);
   
 };
 
@@ -237,10 +238,12 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
         }
         
         for (size_t ch = 0; ch < wvfms.size(); ch++) {
-          raw::OpDetWaveform waveform(TTT_ini_us, ch, wvfms[ch]);
+          uint channel_id = get_channel_id(b, ch);
+          raw::OpDetWaveform waveform(TTT_ini_us, channel_id, wvfms[ch]);
+          //std::cout << "Pushing waveform from board " << b << "(slot " << fboard_id_list[b] << ") channel " << ch << "(ch_id " << channel_id << ")" << std::endl;
           prod_wvfms->push_back(waveform);
           hist_name.str("");
-          hist_name << "Event " << event_counter << " CH " << ch << " [frag: " << f << ", board: " << b << "] waveform";
+          hist_name << "Event " << event_counter << " CH " << ch << " [frag " << f << ", board " << b << " (slot " << fboard_id_list[b] << ") ] waveform";
           TH1D* hist = tfs->make<TH1D>(hist_name.str().c_str(), hist_name.str().c_str(), wvfms[ch].size(), TTT_ini_us, TTT_end_us);
           hist->GetYaxis()->SetTitle("ADCs");
           hist->GetXaxis()->SetTitle("Time [us]");
@@ -285,6 +288,11 @@ uint32_t sbndaq::SBNDXARAPUCADecoder::read_word(const uint32_t* & data_ptr) {
   uint32_t word = *data_ptr;
   data_ptr += 1;
   return word;
+}
+
+uint sbndaq::SBNDXARAPUCADecoder::get_channel_id(uint board, uint board_channel) {
+  uint channel_id = fboard_id_list[board] * 1000 + board_channel;
+  return channel_id;
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDXARAPUCADecoder)
