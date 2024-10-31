@@ -59,9 +59,7 @@ function(params, anode, field, n, rms_cuts=[])
         pad_window_back: 10,  // ticks?
         decon_limit: 0.02, // (SignalProtection, same as upper_decon_limit (default 0.02))
         decon_limit1: 0.09,
-        adc_limit: 5, // (SignalProtection, same as upper_adc_limit (default 15))
-        // min_adc_limit = 50
-        // protection_factor = 5.0 (SignalProtection)
+        adc_limit: 10,
         roi_min_max_ratio: 0.8, // default 0.8
         min_rms_cut: 1.0,  // units???
         max_rms_cut: 30.0,  // units???
