@@ -1,6 +1,6 @@
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
-#include "reco2_sce.fcl"
+#include "standard_reco2_sbnd.fcl"
 
 services:
 {
