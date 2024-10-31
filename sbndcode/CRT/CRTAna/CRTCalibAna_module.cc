@@ -277,8 +277,8 @@ private:
 
 sbnd::crt::CRTCalibAna::CRTCalibAna(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
-  , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
+  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
+  , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg"))
   {
     fMCParticleModuleLabel            = p.get<std::string>("MCParticleModuleLabel", "largeant");
     fSimDepositModuleLabel            = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
@@ -967,8 +967,8 @@ void sbnd::crt::CRTCalibAna::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_sp_z[i]        = spacepoint->Z();
           _cl_sp_ez[i]       = spacepoint->ZErr();
           _cl_sp_pe[i]       = spacepoint->PE();
-          _cl_sp_time[i]     = spacepoint->Time();
-          _cl_sp_etime[i]    = spacepoint->TimeErr();
+          _cl_sp_time[i]     = spacepoint->Ts0();
+          _cl_sp_etime[i]    = spacepoint->Ts0Err();
           _cl_sp_complete[i] = spacepoint->Complete();
         }
       else
@@ -1112,8 +1112,8 @@ void sbnd::crt::CRTCalibAna::AnalyseCRTTracks(const art::Event &e, const std::ve
       _tr_dir_y[i] = dir.Y();
       _tr_dir_z[i] = dir.Z();
 
-      _tr_time[i]    = track->Time();
-      _tr_etime[i]   = track->TimeErr();
+      _tr_time[i]    = track->Ts0();
+      _tr_etime[i]   = track->Ts0();
       _tr_pe[i]      = track->PE();
       _tr_length[i]  = track->Length();
       _tr_tof[i]     = track->ToF();
@@ -1267,7 +1267,7 @@ void sbnd::crt::CRTCalibAna::AnalyseTPCMatching(const art::Event &e, const art::
 
           _tpc_sp_matched[nActualTracks]    = true;
           _tpc_sp_good_match[nActualTracks] = truthMatch.trackid == trackid;
-          _tpc_sp_time[nActualTracks]       = spacepoint->Time();
+          _tpc_sp_time[nActualTracks]       = spacepoint->Ts0();
           _tpc_sp_score[nActualTracks]      = spMatch.TriggerConfidence();
         }
       else
@@ -1287,7 +1287,7 @@ void sbnd::crt::CRTCalibAna::AnalyseTPCMatching(const art::Event &e, const art::
 
           _tpc_tr_matched[nActualTracks]    = true;
           _tpc_tr_good_match[nActualTracks] = truthMatch.trackid == trackid;
-          _tpc_tr_time[nActualTracks]       = crttrack->Time();
+          _tpc_tr_time[nActualTracks]       = crttrack->Ts0();
           _tpc_tr_score[nActualTracks]      = trackMatch.TriggerConfidence();
         }
       else
