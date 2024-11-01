@@ -185,7 +185,7 @@ sbnd_reco2_analyzer_sequence: [
     , crtskim
 ]
 
-sbnd_reco2_analyzer_sequence_no_sce: [
+sbnd_reco2_analyzer_sequence_no_sce_corrections: [
     caloskim
     , pmtskim
     , crtskimNoSCE
