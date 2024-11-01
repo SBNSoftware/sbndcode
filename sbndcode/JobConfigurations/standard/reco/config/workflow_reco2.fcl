@@ -155,8 +155,6 @@ sbnd_reco2_producers.pandoraCaloData.TrackIsFieldDistortionCorrected:   false
 sbnd_reco2_producers.pandoraPidData.TrackModuleLabel:                   "pandoraTrack"
 sbnd_reco2_producers.pandoraPidData.CalorimetryModuleLabel:             "pandoraCaloData"
 
-physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
-
 sbnd_reco2_producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
 sbnd_reco2_producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
 sbnd_reco2_producers.opt0finderSCE.ShowerProducer: "pandoraSCEShowerSBN"
@@ -181,15 +179,22 @@ sbnd_reco2_producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandor
 sbnd_reco2_producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
 
 sbnd_reco2_analyzers: {
-    caloskim: @local::caloskim_nodigits_goldentracks
-    crtskim: @local::crtskim_sbnd
-    pmtskim: @local::pmtskim_sbnd
+    caloskim:     @local::caloskim_nodigits_goldentracks
+    crtskim:      @local::crtskim_sbnd
+    crtskimNoSCE: @local::crtskim_no_sce_sbnd
+    pmtskim:      @local::pmtskim_sbnd
 }
 
 sbnd_reco2_analyzer_sequence: [
     caloskim
     , pmtskim
     , crtskim
+]
+
+sbnd_reco2_analyzer_sequence_no_sce: [
+    caloskim
+    , pmtskim
+    , crtskimNoSCE
 ]
 
 #FIXME override the analyzer labels.  This should really happen in the module's config fcl
