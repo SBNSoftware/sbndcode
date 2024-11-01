@@ -119,12 +119,16 @@ sbnd_reco2_multi_system_matching_sequence_sce: [
     , cvn
 ]
 
-sbnd_reco2_producer_sequence: [  
+sbnd_reco2_producer_sequence_no_sce_corrections: [
     rns
     , @sequence::sbnd_reco2_tpc_sequence
     , @sequence::sbnd_reco2_crt_sequence
     , @sequence::sbnd_reco2_multi_system_matching_sequence
     , caloskimCalorimetry
+]
+
+sbnd_reco2_producer_sequence: [
+    @sequence::sbnd_reco2_producer_sequence_no_sce_corrections
     , @sequence::sbnd_reco2_tpc_sequence_sce
     , @sequence::sbnd_reco2_multi_system_matching_sequence_sce
 ]
