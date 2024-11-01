@@ -578,4 +578,22 @@ namespace sbnd::crt {
            (point.Y() > lims[1] && point.Y() < lims[4]) &&
            (point.Z() > lims[2] && point.Z() < lims[5]);
   }
+
+  double CRTGeoAlg::StripArea(const uint16_t channel)
+  {
+    CRTStripGeo strip = GetStrip(channel);
+    const double x = abs(strip.maxX - strip.minX) / 2;
+    const double y = abs(strip.maxY - strip.minY) / 2;
+    const double z = abs(strip.maxZ - strip.minZ) / 2;
+
+    // One will be 1cm so this gives the area in cm^2
+    return x * y * z;
+  }
+
+  double CRTGeoAlg::StripAverageY(const uint16_t channel)
+  {
+    CRTStripGeo strip = GetStrip(channel);
+
+    return (strip.maxY + strip.minY) / 2;
+  }
 }

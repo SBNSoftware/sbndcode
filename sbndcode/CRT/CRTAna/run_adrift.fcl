@@ -1,0 +1,42 @@
+#include "services_sbnd.fcl"
+#include "crtgeoalg_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+
+process_name: ADRIFT
+
+services:
+{
+  TFileService: { fileName: "adrift_sbnd.root" }
+  @table::sbnd_basic_services
+  CRTChannelMapService: @local::crt_channel_map_standard
+  CRTCalibService:      @local::crt_calib_service
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    adrift:
+    { 
+      module_type:              "ADRIFT"
+      CRTGeoAlg:                @local::crtgeoalg_data_sbnd
+      FEBDataModuleLabel:       "crtdecoder"
+      CRTStripHitModuleLabel:   "crtstrips"
+      CRTClusterModuleLabel:    "crtclustering"
+      CRTSpacePointModuleLabel: "crtspacepoints"
+      CRTTrackModuleLabel:      "crttracks"
+      Only2HitSpacePoints:      false
+      TrackAngleLimit:          20
+      PullWindow:               0.35
+    }
+  }
+
+  ana:       [ adrift ]
+  end_paths: [ ana ]
+}

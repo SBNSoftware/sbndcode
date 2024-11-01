@@ -364,6 +364,10 @@ namespace sbnd::crt {
 
     bool IsPointInsideCRTLimits(const geo::Point_t &point);
 
+    double StripArea(const uint16_t channel);
+
+    double StripAverageY(const uint16_t channel);
+
   private:
 
     std::map<std::string, CRTTaggerGeo> fTaggers;
