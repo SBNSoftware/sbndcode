@@ -8,12 +8,12 @@ crtskim_sbnd:   {
        CRTGeoAlg: @local::crtgeoalg_sbnd
 }
 
-crtskim_noSCE_sbnd:   {
+crtskim_no_sce_sbnd:   {
        module_type: "CRTCalibAna"
        CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
        CRTGeoAlg: @local::crtgeoalg_sbnd
-		 TPCTrackModuleLabel:              "pandoraTrack"
-		 CRTSpacePointMatchingModuleLabel: "crtspacepointmatching"
-		 CRTTrackMatchingModuleLabel:      "crttrackmatching"
+       TPCTrackModuleLabel:              "pandoraTrack"
+       CRTSpacePointMatchingModuleLabel: "crtspacepointmatching"
+       CRTTrackMatchingModuleLabel:      "crttrackmatching"
 }
 END_PROLOG
