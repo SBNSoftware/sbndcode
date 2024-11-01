@@ -32,6 +32,7 @@ set(
                 sbndcode_RecoUtils
         )
 cet_build_plugin(CRTTrigFilter art::module SOURCE CRTTrigFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(CRTTrackFilter art::module SOURCE CRTTrackFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(GenCRTFilter art::module SOURCE GenCRTFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(GenNuFilter art::module SOURCE GenNuFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(LArG4CRTFilter art::module SOURCE LArG4CRTFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
