@@ -1,0 +1,31 @@
+#include "NTBDecoderDefaults.fcl"
+
+physics:
+{
+  // now also have something produce the digits and headers
+  producers:
+  {
+    daq: @local::NTBDecoderDefaults
+  }
+
+  analyzers: {}
+
+  my_producer_modules: [daq]
+  trigger_paths: [my_producer_modules]
+  a: [commissioning]
+  end_paths: [a]
+}
+
+source: {}
+
+outputs: {
+  commissioning: {
+    module_type: "RootOutput"
+    fileName: "%ifb_ntbdecode.root"
+    dataTier: "decoded-raw"
+  }
+}
+
+
+process_name: NTBDECODER
+
