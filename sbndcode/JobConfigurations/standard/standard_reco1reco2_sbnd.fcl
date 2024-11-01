@@ -1,16 +1,50 @@
-# File:    standard_reco1reco2_sbnd.fcl
-# Purpose: The standard reconstruction workflow for both 'reco1' and 'reco2', starting at deconvolution and includes all high level reconstruction.  This fcl is provided for convenience and separating the reco stages is recommended.
-# Version: 1.0
-#
-# Changes:
-# 20200923 (d.brailsford@lancster.ac.uk) [v1.0]
-#   Initial definition
-#
 # job configuration
-
-#include "reco_sbnd.fcl"
+#
+#include "workflow_reco1.fcl"
+#include "drops_reco1.fcl"
+#include "workflow_reco2.fcl"
+#include "drops_reco2.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "generic_job_sbnd.fcl"
 
 process_name: Reco1Reco2
 
-physics.trigger_paths: [ fullreco ]
-physics.end_paths: [stream1, superaana]
+#services overrides
+services:
+{
+    @table::services
+    @table::sbnd_random_services
+    @table::sbnd_g4_services
+    # FIXME The following services are temporarily included here to test tht the workflow is unchanged
+    LArFFT:                    @local::sbnd_larfft
+    SignalShapingServiceSBND:  @local::sbnd_signalshapingservice
+    BackTrackerService:        @local::sbnd_backtrackerservice
+    ParticleInventoryService:  @local::sbnd_particleinventoryservice
+}
+
+#producers
+physics.producers:
+{
+  @table::sbnd_reco1_producers
+  @table::sbnd_reco2_producers
+}
+physics.reco1:          @local::sbnd_reco1_producer_sequence
+physics.reco2:          @local::sbnd_reco2_producer_sequence
+physics.trigger_paths:  [ reco1, reco2 ]
+
+#analysers
+physics.analyzers:
+{
+  @table::sbnd_reco1_analyzers
+  @table::sbnd_reco2_analyzers
+}
+physics.ana1:           @local::sbnd_reco1_analyzer_sequence
+physics.ana2:           @local::sbnd_reco2_analyzer_sequence
+physics.end_paths:      [ @sequence::physics.end_paths, ana1, ana2 ]
+
+#outputs table overrides
+outputs.out1.dataTier:       "reconstructed"
+outputs.out1.outputCommands:  [ @sequence::outputs.out1.outputCommands, @sequence::sbnd_reco1_drops, @sequence::sbnd_reco2_drops ]
+
+#FIXME permanently enable SCE in a service rather than override specific params in this way...
+#include "enable_spacecharge_services_sbnd.fcl"
