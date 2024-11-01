@@ -86,7 +86,7 @@ base {
     },
 
     daq: super.daq {
-        nticks: 3415,
+        nticks: 3427,
     },
 
     nf: super.nf { 
