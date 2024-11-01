@@ -69,38 +69,58 @@ sbnd_reco2_producers:{
     caloskimCalorimetry: @local::caloskim_calorimetry
 }
 
-sbnd_reco2_producer_sequence: [  
-    rns
-    , pandora
+sbnd_reco2_tpc_sequence: [
+    pandora
     , pandoraTrack
     , pandoraShower
     , pandoraShowerSBN
     , pandoraCalo
     , pandoraPid
-    , crtclustering
+]
+
+sbnd_reco2_crt_sequence: [
+    crtclustering
     , crtspacepoints
     , crttracks
-    , crtspacepointmatching
+]
+
+sbnd_reco2_multi_system_matching_sequence: [
+    crtspacepointmatching
     , crttrackmatching
     , fmatch
     , fmatchop
     , fmatchara
     , fmatchopara
-    , caloskimCalorimetry
     , opt0finder
-    , pandoraSCE
+]
+
+sbnd_reco2_tpc_sequence_sce: [
+    pandoraSCE
     , pandoraSCETrack
     , pandoraSCEShower
     , pandoraSCEShowerSBN
     , pandoraSCECalo
     , pandoraSCEPid
-    , crtspacepointmatchingSCE
+]
+
+sbnd_reco2_multi_system_matching_sequence_sce: [
+    crtspacepointmatchingSCE
     , crttrackmatchingSCE
     , fmatchSCE
     , fmatchopSCE
     , fmatcharaSCE
     , fmatchoparaSCE
     , opt0finderSCE
+]
+
+sbnd_reco2_producer_sequence: [  
+    rns
+    , @sequence::sbnd_reco2_tpc_sequence
+    , @sequence::sbnd_reco2_crt_sequence
+    , @sequence::sbnd_reco2_multi_system_matching_sequence
+    , caloskimCalorimetry
+    , @sequence::sbnd_reco2_tpc_sequence_sce
+    , @sequence::sbnd_reco2_multi_system_matching_sequence_sce
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
