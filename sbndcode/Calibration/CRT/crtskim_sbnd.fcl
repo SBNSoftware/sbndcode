@@ -2,18 +2,17 @@
 #include "crtbacktrackeralg_sbnd.fcl"
 
 BEGIN_PROLOG    
-crtskim_sbnd:   {
-       module_type: "CRTCalibAna"
-       CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
-       CRTGeoAlg: @local::crtgeoalg_sbnd
+
+crtskim_sbnd:
+{
+  module_type:       "CRTCalibAna"
+  CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
+  CRTGeoAlg:         @local::crtgeoalg_sbnd
 }
 
-crtskim_no_sce_sbnd:   {
-       module_type: "CRTCalibAna"
-       CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
-       CRTGeoAlg: @local::crtgeoalg_sbnd
-       TPCTrackModuleLabel:              "pandoraTrack"
-       CRTSpacePointMatchingModuleLabel: "crtspacepointmatching"
-       CRTTrackMatchingModuleLabel:      "crttrackmatching"
-}
+crtskim_no_sce_sbnd: @local::crtskim_sbnd
+crtskim_no_sce_sbnd.TPCTrackModuleLabel:              "pandoraTrack"
+crtskim_no_sce_sbnd.CRTSpacePointMatchingModuleLabel: "crtspacepointmatching"
+crtskim_no_sce_sbnd.CRTTrackMatchingModuleLabel:      "crttrackmatching"
+
 END_PROLOG
