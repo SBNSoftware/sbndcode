@@ -1,10 +1,9 @@
 BEGIN_PROLOG
 
-
 standard_crt_track_filter:
 {
    module_type:          "CRTTrackFilter"
-   CRTTrackModuleLabel:  "crt"
+   CRTTrackModuleLabel:  "crttracks"
 }
 
 END_PROLOG

@@ -1,0 +1,70 @@
+#
+# service configuration
+#
+
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+#
+# module configuration
+#
+#include "crttrackfilter.fcl"
+
+process_name: CRTTrackFilter
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  RandomNumberGenerator: {}
+  @table::sbnd_services        # from services_sbnd.fcl
+  message:               @local::sbnd_message_services_prod # from messages_sbnd.fcl
+}
+
+
+#source is now a root file
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1       # Number of events to create
+}
+
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+    SelectEvents: ["select"]
+ }
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+  producers: {}
+  filters:
+  {
+    crttrackfilter: @local::standard_crt_track_filter
+  }
+  analyzers:  {}
+
+  #define the producer and filter modules for this path, order matters,
+  #filters reject all following items.  see lines starting physics.producers below
+  select: [crttrackfilter]
+
+  ana: []
+
+  # define the output stream, there could be more than one if using filters
+  stream1: [out1]
+
+  # trigger_paths is a keyword and contains the paths that modify the art::event,
+  #  ie filters and producers
+  trigger_paths: [select]
+}
