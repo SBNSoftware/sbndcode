@@ -2,22 +2,31 @@ BEGIN_PROLOG
 
 xarapucadecoder: 
 {
-    module_type: "SBNDXARAPUCADecoder"
+    # Module name.
+    module_type: "SBNDXARAPUCADecoder"                          # The name to be assigne to this art::EDProducer module.
 
-    # INPUT configuration
-    # CAEN Fragments
-    caen_module_label: "daq"
-    caen_fragment_name: [ "CAENV1740", "ContainerCAENV1740" ]
-    # Boards
-    num_caen_boards: 4
-    fragment_id_offset: 40960
-    board_id_list: [7, 13, 16, 19]
-    # Time
-    ns_per_sample: 16
+    # INPUT configuration:
+    # - CAEN Fragments.
+    caen_module_label: "daq"                                    # Label identifying the CAEN fragments module.
+    caen_fragment_names: [ "CAENV1740", "ContainerCAENV1740" ]  # Valid CAEN fragments for this decoder.
+    # - Boards configuration.
+    num_caen_boards: 4                                          # Maximum number of boards to be considered.
+    fragment_id_offset: 40960                                   # Offset to be applied to the fragment IDs.
+    board_id_list: [7, 13, 16, 19]                              # Slots where the boards are installed.
+    # - Timing configuration.
+    ns_per_sample: 16                                           # Nanoseconds per sample.
 
-    # OUTPUT configuration
-    # Output data product instance name
-    xarapucaInstanceName: "XARAPUCAChannels"
+    # OUTPUT configuration:
+    # - Output data product instance name.
+    product_instance_name: "XARAPUCAChannels"                   # Name for the instance produt created.
+    # - Debug options.
+    debug_all: false                                            # (De)activates all debug options.
+    debug_handle: false                                         # (De)activates art::Handle data printing.
+    debug_timing: false                                         # (De)activates timing data printing. 
+    debug_buffer: false                                         # (De)activates buffer status printing.
+    debug_waveforms: false                                      # (De)activates waveforms decoding printing.
+    # - Verbose option.
+    verbose: false                                              # (De)activates verbosity.
 }
 
 END_PROLOG
