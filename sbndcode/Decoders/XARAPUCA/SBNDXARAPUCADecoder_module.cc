@@ -9,6 +9,8 @@
  * @file SBNDXARAPUCADecoder_module.cc
  * @brief Defines and implements the SBNDXARAPUCADecoder class which inherits from an art::EDProducer
  * as the decoder for V1740B digitizers, intended for the X-ARAPUCAs.
+ * @details The current version of the SBND X-ARAPUCAs decoder implements the updates shown in 
+ * the SBN Document 38475-v1 in the SBN Document Database.
  */
 
 #include "art/Framework/Core/EDProducer.h"
