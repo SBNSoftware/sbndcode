@@ -11,6 +11,8 @@
  * as the decoder for V1740B digitizers, intended for the X-ARAPUCAs.
  * @details The current version of the SBND X-ARAPUCAs decoder implements the updates shown in 
  * the SBN Document 38475-v1 in the SBN Document Database.
+ * @note A Python version of the binary decoding is available for testing purposes. You can find 
+ * it [here: V1740 binary decoder](https://github.com/aliciavr/V1740_binary_decoder).
  */
 
 #include "art/Framework/Core/EDProducer.h"
