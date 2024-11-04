@@ -15,6 +15,10 @@
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "canvas/Utilities/InputTag.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/PtrVector.h"
+#include "canvas/Persistency/Common/Assns.h"
+#include "art/Persistency/Common/PtrMaker.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
@@ -23,11 +27,11 @@
 #include "artdaq-core/Data/RawEvent.hh"
 
 #include "sbndaq-artdaq-core/Overlays/Common/CAENV1730Fragment.hh"
+#include "sbndaq-artdaq-core/Overlays/SBND/PTBFragment.hh"
 #include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
-
-#include "sbndaq-artdaq-core/Overlays/SBND/PTBFragment.hh"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
+#include "sbndcode/Decoders/PMT/sbndpmt.h"
 
 #include "art_root_io/TFileService.h"
 #include "TH1D.h"
@@ -70,8 +74,7 @@ public:
     uint32_t get_length(artdaq::Fragment & frag);
     uint32_t get_ttt(artdaq::Fragment & frag);
     uint32_t get_boardid(artdaq::Fragment & frag);
-    void     get_timing(artdaq::Fragment & frag, uint32_t & ttt, uint32_t & len, int & tick);
-    
+    void     get_timing(artdaq::Fragment & frag, uint16_t & postpercent, uint32_t & ttt, uint32_t & len, int & tick);
 
 private:
     uint fdebug;
@@ -95,6 +98,11 @@ private:
     std::string fpmt_instance_name;
     std::string fflt_instance_name;
     std::string ftim_instance_name;
+
+    std::string fpmt_timing_instance_name;
+    std::string fflt_timing_instance_name;
+    std::string ftim_timing_instance_name;
+
     bool foutput_ftrig_wvfm;
     bool foutput_timing_wvfm;
     std::vector<int> fignore_timing_ch;
@@ -102,6 +110,7 @@ private:
     int fn_maxflashes;
     uint fn_caenboards;
     uint16_t fthreshold_ftrig;
+    uint16_t fdefault_postpercent; // should be a number between 0 and 100
 
     uint ffragid_offset;
     uint fhist_evt;
@@ -135,7 +144,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fspectdc_product_name = p.get<std::string>("spectdc_product_name","tdcdecoder");
     fspectdc_ftrig_ch = p.get<uint32_t>("spectdc_ftrig_ch",3);
     fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
-    fspectdc_etrig_raw_diff = p.get<uint32_t>("spectdc_etrig_raw_diff",365000); // ns
+    fspectdc_etrig_raw_diff = p.get<uint32_t>("spectdc_etrig_raw_diff",367000); // ns
 
     fptb_product_name = p.get<std::string>("ptb_product_name","ptbdecoder");
     fptb_etrig_trigword = p.get<ULong64_t>("ptb_etrig_trigword",0x0000000000000000);
@@ -144,6 +153,10 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fpmt_instance_name = p.get<std::string>("pmtInstanceName","PMTChannels");
     fflt_instance_name = p.get<std::string>("ftrigInstanceName","FTrigChannels");
     ftim_instance_name = p.get<std::string>("timingInstanceName","TimingChannels");
+    fpmt_timing_instance_name = p.get<std::string>("pmtTimingInstanceName","PMTTiming");
+    fflt_timing_instance_name = p.get<std::string>("ftrigTimingInstanceName","FTrigTiming");
+    ftim_timing_instance_name = p.get<std::string>("timingTimingInstanceName","TimingTiming");
+
     foutput_ftrig_wvfm = p.get<bool>("output_ftrig_wvfm",true);
     foutput_timing_wvfm = p.get<bool>("output_timing_wvfm",true);
     fignore_timing_ch = p.get<std::vector<int>>("ignore_timing_ch",{});
@@ -151,6 +164,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fn_maxflashes    = p.get<int>("n_maxflashes",30);
     fn_caenboards    = p.get<uint>("n_caenboards",8);
     fthreshold_ftrig = p.get<uint16_t>("threshold_ftrig",16350);
+    fdefault_postpercent = p.get<uint16_t>("default_postpercent",80);
     ffragid_offset   = p.get<uint>("fragid_offset",40960);
     fhist_evt        = p.get<int>("hist_evt",1);
 
@@ -162,13 +176,36 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     produces< std::vector< raw::OpDetWaveform > >(fpmt_instance_name); 
     produces< std::vector< raw::OpDetWaveform > >(fflt_instance_name);
     produces< std::vector< raw::OpDetWaveform > >(ftim_instance_name);
+
+    produces< raw::pmt::eventTimingInfo >();
+    produces< std::vector< raw::pmt::boardTimingInfo > >();
+    produces< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform > >(fpmt_timing_instance_name);
+    produces< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform > >(fflt_timing_instance_name);
+    produces< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform > >(ftim_timing_instance_name);
 }
 
 void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
 {
-    std::unique_ptr< std::vector< raw::OpDetWaveform > > pmtwvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
-    std::unique_ptr< std::vector< raw::OpDetWaveform > > fltwvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
-    std::unique_ptr< std::vector< raw::OpDetWaveform > > timwvfmVec(std::make_unique< std::vector< raw::OpDetWaveform > > ());
+    // output data products
+    std::unique_ptr< std::vector< raw::OpDetWaveform > > pmtwvfmVec (new std::vector< raw::OpDetWaveform >);
+    std::unique_ptr< std::vector< raw::OpDetWaveform > > fltwvfmVec (new std::vector< raw::OpDetWaveform >);
+    std::unique_ptr< std::vector< raw::OpDetWaveform > > timwvfmVec (new std::vector< raw::OpDetWaveform >);
+
+    std::unique_ptr< raw::pmt::eventTimingInfo > evtTimingInfo (new raw::pmt::eventTimingInfo());
+    std::unique_ptr< std::vector< raw::pmt::boardTimingInfo > > brdTimingInfoVec (new std::vector< raw::pmt::boardTimingInfo >);
+
+    // creating PtrMakers for the associations
+    art::PtrMaker<raw::pmt::boardTimingInfo> make_pmtbrd_ptr{evt};
+
+    art::PtrMaker<raw::OpDetWaveform> make_pmtwvfm_ptr{evt,fpmt_instance_name};
+    art::PtrMaker<raw::OpDetWaveform> make_fltwvfm_ptr{evt,fflt_instance_name};
+    art::PtrMaker<raw::OpDetWaveform> make_timwvfm_ptr{evt,ftim_instance_name};
+
+    // making the associations
+    std::unique_ptr< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform> > pmtTimingAssns (new art::Assns< raw::pmt::boardTimingInfo, raw::OpDetWaveform >);
+    std::unique_ptr< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform> > fltTimingAssns (new art::Assns< raw::pmt::boardTimingInfo, raw::OpDetWaveform >);
+    std::unique_ptr< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform> > timTimingAssns (new art::Assns< raw::pmt::boardTimingInfo, raw::OpDetWaveform >);
+
     evt_counter++;
 
     std::vector<std::vector<artdaq::Fragment>> board_frag_v(fn_caenboards);
@@ -216,11 +253,20 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         evt.put(std::move(pmtwvfmVec),fpmt_instance_name);  
         evt.put(std::move(fltwvfmVec),fflt_instance_name);
         evt.put(std::move(timwvfmVec),ftim_instance_name);
+
+        evt.put(std::move(evtTimingInfo));
+        evt.put(std::move(brdTimingInfoVec));
+
+        evt.put(std::move(pmtTimingAssns),fpmt_timing_instance_name);
+        evt.put(std::move(fltTimingAssns),fflt_timing_instance_name);
+        evt.put(std::move(timTimingAssns),ftim_timing_instance_name);
         return;
     }
     
     // create a timing type per event so the default doesn't get overwritten
+    uint64_t event_trigger_time = 0; // in ns
     auto timing_type = ftiming_type; 
+    int  timing_ch = -1;
 
     // get the raw event header timestamp
     art::Handle<artdaq::detail::RawEventHeader> header_handle;
@@ -228,17 +274,16 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     evt.getByLabel("daq", "RawEventHeader", header_handle);
     if ((header_handle.isValid())){
         auto rawheader = artdaq::RawEvent(*header_handle); 
-        raw_timestamp = rawheader.timestamp()%int(1e9);
+        raw_timestamp = rawheader.timestamp(); // includes sec + ns portion
     }
 
     // get spec tdc product
-    uint64_t event_trigger_time = 0; 
     if (timing_type==0){
         art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
         evt.getByLabel(fspectdc_product_name,tdcHandle);
         bool found_ett = false;
-        std::vector<uint64_t> event_trigger_time_v; 
-        int min_raw_ett_diff = 1e9;
+        std::vector<uint64_t> tdc_etrig_v;
+        int min_raw_tdc_diff = 1e9;
 
         if (!tdcHandle.isValid() || tdcHandle->size() == 0){
             if (fdebug>0) std::cout << "No SPECTDC products found." << std::endl;
@@ -265,20 +310,20 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 }
                 if (ch==fspectdc_etrig_ch){
                     found_ett = true;
-                    event_trigger_time_v.push_back(ts%uint64_t(1e9));
+                    tdc_etrig_v.push_back(ts);
+                    timing_ch = fspectdc_etrig_ch;
                 }
             }
-            if (found_ett==false){
-                // this is a temporary fix for the case where the ETRIG is not found in the SPECTDC products
-                event_trigger_time = raw_timestamp - fspectdc_etrig_raw_diff;
-            }
+            if (found_ett==false)
+                timing_type++;
             else{
                 // finding the closest ETRIG to the raw timestamp
-                for (auto etrig : event_trigger_time_v){
-                    int diff = std::abs(int(raw_timestamp)-int(etrig));
-                    if (diff < min_raw_ett_diff){
-                        event_trigger_time = etrig;
-                        min_raw_ett_diff = diff;
+                for (size_t i=0; i < tdc_etrig_v.size(); i++){
+                    auto tdc_etrig = tdc_etrig_v[i];
+                    auto diff = std::abs(int(raw_timestamp-fspectdc_etrig_raw_diff*1e-9) - int(tdc_etrig));
+                    if (diff < min_raw_tdc_diff){
+                        event_trigger_time = tdc_etrig%uint64_t(1e9);
+                        min_raw_tdc_diff = diff;
                     }
                 }
             }
@@ -307,7 +352,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                                       << "ts (ns): " << (trig.timestamp * 20)%(uint(1e9)) 
                                       << ", trigger word: " << std::hex << trig.trigger_word << std::dec
                                       << ", word type: " << trig.word_type
-                                      << std::endl;
+                                      << std::endl; 
                         }
                         if (trig.trigger_word == fptb_etrig_trigword && trig.word_type == fptb_etrig_wordtype){
                             event_trigger_time = (trig.timestamp * 20)%(uint64_t(1e9));
@@ -324,7 +369,11 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         // if neither PTB or SPEC products are found, the timestamp will be equal to
         // the start of the waveform (according to CAEN TTT and wvfm length)
         event_trigger_time = 0;
+        timing_ch=16;
     }
+
+    evtTimingInfo->timingType = timing_type;
+    evtTimingInfo->timingChannel = timing_ch;
 
     bool extended_flag = false;
 
@@ -355,24 +404,44 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             continue;
         if (frag_v.empty()) continue;
         auto fragid = iboard;
+        // trigger number bookkeeping
         auto trig_counter = 0;
+        auto full_found = 0;
+        auto extensions_found = 0;
+        auto extensions_used  = 0;
 
         for (size_t itrig=0; itrig < frag_v.size(); itrig++){
+            raw::pmt::boardTimingInfo board_info;
             std::vector<std::vector<uint16_t>> iwvfm_v;
             auto ifrag = frag_v.at(itrig);
-            uint32_t ittt = 0; 
+            uint16_t ipostpercent = 0; // nanosecond portion of the timestamp (at flash trigger)
+            uint32_t ittt = 0; // trigger time tag in ns (at end of the waveform)
             uint32_t ilen = 0;
+            // uint32_t isec = 0;  // needs to be set to the **start** of the waveform for consistency 
             int      itick = 0;
             
-            get_timing(ifrag, ittt, ilen, itick);
+            get_timing(ifrag, ipostpercent, ittt, ilen, itick);
             // if this waveform is short, skip it 
-            if (ilen < fnominal_length) continue;
+            if (ilen < fnominal_length){
+                extensions_found++;
+                continue;
+            }
+            full_found++;
+            board_info.postPercent = ipostpercent;
+            board_info.triggerTimeTag = ittt;
 
             get_waveforms(ifrag, iwvfm_v);
-            auto iwvfm_start = ittt - 2*ilen;
+            uint iwvfm_start = 0;
             auto iwvfm_end   = ittt;
 
-            if (fdebug>1){
+            // need to check if there is rollover between ttt and start (will shift ttt)
+            if (ittt < ilen*2){ 
+                iwvfm_start = 1e9 - (ilen*2 - ittt);
+                std::cout<< "WARNING: ROLLOVER-> ttt: " << ittt << std::endl;
+            }
+            else iwvfm_start = ittt - ilen*2;
+            
+            if (fdebug>2){
                 std::cout << "      Frag ID: " << fragid
                           << ", ttt: " << ittt
                           << ", tick: " << itick
@@ -388,6 +457,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     // if the next trigger is more than 10 us away than the end of the wvfm or is equal to the nominal length, stop looking
                     if (((signed)(jttt - iwvfm_end) > (signed)(fnominal_length*2)) || (jlen >= fnominal_length)) break; 
                     else if (((jttt - iwvfm_end) < 1e4) && (jlen < fnominal_length)){
+                        extensions_used++;
                         std::vector<std::vector<uint16_t>> jwvfm_v;
                         get_waveforms(jfrag, jwvfm_v);
                         for (size_t ich=0; ich < iwvfm_v.size(); ich++){
@@ -404,7 +474,11 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                               << " , extended wvfm length: " << iwvfm_v.at(0).size()
                               << std::endl; 
                 }
-            } // end extended flag         
+            } // end extended flag
+
+            brdTimingInfoVec->push_back(board_info);
+            art::Ptr<raw::pmt::boardTimingInfo> brdTimingInfoPtr = make_pmtbrd_ptr(brdTimingInfoVec->size()-1);
+
             for (size_t i = 0; i < iwvfm_v.size(); i++){
                 auto combined_wvfm = iwvfm_v[i];
                 if (evt_counter==fhist_evt){                    
@@ -420,30 +494,57 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                         wvfmHist->SetBinContent(n + 1, (double)combined_wvfm[n]);
                 }
                 double time_diff = (int(iwvfm_start) - int(event_trigger_time))*1e-3; // us
+                // if (isec != event_trigger_sec){
+                //     std::cout << "WARNING POSSIBLE SECOND ROLLOVER.\nEvent timestamp: " << event_trigger_sec << ", waveform timestamp: " << isec << std::endl;
+                // }
                 uint ch;
-                if (i == 15){
+                if (i == 15)
                     ch = fragid;
-                }
                 else
                     ch = fch_map.at(fragid*15 + i);
                 raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
 
-                if ((i == 15) && (foutput_ftrig_wvfm))
+                if ((i == 15) && (foutput_ftrig_wvfm)){
                     fltwvfmVec->push_back(waveform);
-                else if ((fragid == 8) && (foutput_timing_wvfm) && (std::find(fignore_timing_ch.begin(), fignore_timing_ch.end(), i) == fignore_timing_ch.end()))
+                    art::Ptr<raw::OpDetWaveform> wvfmPtr = make_fltwvfm_ptr(fltwvfmVec->size()-1);
+                    fltTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
+                }
+                else if ((fragid == 8) && (foutput_timing_wvfm) && (std::find(fignore_timing_ch.begin(), fignore_timing_ch.end(), i) == fignore_timing_ch.end())){
                     timwvfmVec->push_back(waveform);
-                else 
+                    art::Ptr<raw::OpDetWaveform> wvfmPtr = make_timwvfm_ptr(timwvfmVec->size()-1);
+                    timTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
+                }
+                else{
                     pmtwvfmVec->push_back(waveform);
+                    art::Ptr<raw::OpDetWaveform> wvfmPtr = make_pmtwvfm_ptr(pmtwvfmVec->size()-1);
+                    pmtTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
+                }
             }
-            trig_counter++;
+            trig_counter++;       
+        } // end itrig loop
 
-        } // end itrig loop 
+        if (fdebug>1){
+            // print number of triggers, number of extensions found, and number of extensions used
+            std::cout << "      Board: " << fragid
+                        << " -> # of triggers: " << trig_counter
+                        << ", full found: " << full_found
+                        << ", extensions found: " << extensions_found
+                        << ", extensions used: " << extensions_used
+                        << std::endl;
+        }  
     } // end board loop
     board_frag_v.clear();
 
     evt.put(std::move(pmtwvfmVec),fpmt_instance_name);  
     evt.put(std::move(fltwvfmVec),fflt_instance_name);
     evt.put(std::move(timwvfmVec),ftim_instance_name);
+
+    evt.put(std::move(evtTimingInfo));
+    evt.put(std::move(brdTimingInfoVec));
+
+    evt.put(std::move(pmtTimingAssns),fpmt_timing_instance_name);
+    evt.put(std::move(fltTimingAssns),fflt_timing_instance_name);
+    evt.put(std::move(timTimingAssns),ftim_timing_instance_name);
 }
 
 void sbndaq::SBNDPMTDecoder::get_fragments(artdaq::Fragment & frag, std::vector<std::vector<artdaq::Fragment>> & board_frag_v){
@@ -498,8 +599,8 @@ void sbndaq::SBNDPMTDecoder::get_waveforms(artdaq::Fragment & frag, std::vector<
     }
 }
 
-
-void sbndaq::SBNDPMTDecoder::get_timing(artdaq::Fragment & frag, 
+void sbndaq::SBNDPMTDecoder::get_timing(artdaq::Fragment & frag,
+                                       uint16_t & frag_postpercent,
                                        uint32_t & frag_ttt, 
                                        uint32_t & frag_len, 
                                        int & frag_tick){
@@ -520,8 +621,28 @@ void sbndaq::SBNDPMTDecoder::get_timing(artdaq::Fragment & frag,
     uint32_t data_size_double_bytes = 2*(ev_size_quad_bytes - evt_header_size_quad_bytes);
     uint32_t wvfm_length = data_size_double_bytes/nch;
 
+    auto frag_ts = frag.timestamp()%uint(1e9);
     frag_ttt = header.triggerTimeTag*8;
     frag_len = wvfm_length;
+
+    if (wvfm_length < fnominal_length){ // if an extension
+        frag_postpercent = fdefault_postpercent;
+    }
+    else{
+        if (frag_ts!=frag_ttt){
+            // this assumes that if timestamp != ttt... then the time tag shift is enabled in the caen configuration
+            if (frag_ttt>frag_ts)
+                frag_postpercent = round((100.0*(frag_ttt-frag_ts)/(frag_len*2.0)));
+            else // second rollover between ts and ttt
+                frag_postpercent = round((100.0*(1e9+frag_ttt-frag_ts)/(frag_len*2.0))); 
+            if (frag_postpercent > 100){
+                std::cout << "WARNING: Postpercent is not correctly configured!! Saving default postpercent." << std::endl;
+                frag_postpercent = fdefault_postpercent;
+            }
+        }
+        else
+            frag_postpercent = fdefault_postpercent;
+    }
 
     const uint16_t* data_begin = reinterpret_cast<const uint16_t*>(frag.dataBeginBytes() 
 								   + sizeof(CAENV1730EventHeader));
