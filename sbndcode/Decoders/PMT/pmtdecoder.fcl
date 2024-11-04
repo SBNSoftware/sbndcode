@@ -21,9 +21,10 @@ pmtdecoder:
     spectdc_ftrig_ch: 3 # channel number of the spec tdc that stores the flash trigger 
     spectdc_etrig_ch: 4 # channel number of the spec tdc that stores the event trigger
 
-    # configure PTB inputs 
+    # configure PTB inputs; the HLT with the smallest trigger word will be used
     ptb_product_name: "ptbdecoder"
-    ptb_etrig_trigword: 0x0000000000000000
+    ptb_etrig_trigword_min: 1   # minimum trigger word (in decimal) 
+    ptb_etrig_trigword_max: 100000 # maximum trigger word (in decimal)
     ptb_etrig_wordtype: 2
 
     # configure output options
