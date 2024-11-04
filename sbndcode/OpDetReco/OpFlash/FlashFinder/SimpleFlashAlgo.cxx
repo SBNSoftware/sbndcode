@@ -179,7 +179,7 @@ namespace lightana{
                 continue;
             }
             size_t index = (size_t)((oph.peak_time - min_time) / _time_res);
-            // std::cout << "Ophit from ch " << oph.channel << " at time " << oph.peak_time << " with PE " << oph.pe << ", index " << index << std::endl;
+            //std::cout << "Ophit from ch " << oph.channel << " at time " << oph.peak_time << " with PE " << oph.pe << ", index " << index << std::endl;
             _pesum_v[index] += oph.pe;
             mult_v[index] += 1;
             pespec_v[index][_opch_to_index_v[oph.channel]] += oph.pe;
@@ -189,9 +189,9 @@ namespace lightana{
         // Order by pe (above threshold)
         std::map<double,size_t> pesum_idx_map;
         for(size_t idx=0; idx<nbins_pesum_v; ++idx) {
-            // std::cout <<  "    _pesum_v at " << idx << " is " << _pesum_v[idx] << ", _min_pe_coinc is " << _min_pe_coinc << std::endl;
+            //std::cout <<  "    _pesum_v at " << idx << " is " << _pesum_v[idx] << ", _min_pe_coinc is " << _min_pe_coinc << " at time " << idx*_time_res+ min_time <<std::endl;
             if(_pesum_v[idx] < _min_pe_coinc   ) continue;
-            // std::cout <<  "    mult_v at " << idx << " is " << mult_v[idx] << ", _min_mult_coinc is " << _min_mult_coinc << std::endl;
+            //std::cout <<  "    mult_v at " << idx << " is " << mult_v[idx] << ", _min_mult_coinc is " << _min_mult_coinc << std::endl;
             if(mult_v[idx]  < _min_mult_coinc ) continue;
             pesum_idx_map[1./(_pesum_v[idx])] = idx;
         }

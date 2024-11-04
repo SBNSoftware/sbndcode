@@ -128,7 +128,6 @@ namespace opdet {
     // currently assumes all dynamic range for PE (no overshoot)
     fADCSaturation = (fPositivePolarity ? fParams.PMTBaseline + fParams.PMTADCDynamicRange : fParams.PMTBaseline - fParams.PMTADCDynamicRange);
 
-
     file->Close();
   } // end constructor
 

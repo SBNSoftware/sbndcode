@@ -3,10 +3,14 @@ BEGIN_PROLOG
 
 OpDeconvolutionAlg:
 {
-  tool_type: "OpDeconvolutionAlgWiener"
+  tool_type: "OpDeconvolutionAlgWienerData"
   Debug: false
   MaxFFTSizePow: 16
-  OpDetDataFile: "OpDetSim/digi_pmt_sbnd_v2int0.root"
+  OpDetDataFile: "./users/acastill/digi_pmt_sbnd_SER_individual_channels_v6_ALL.root"
+  BaseSampleBins: 30
+  BaseVarCut: 50
+  SkipChannelList: []
+  CorrectBaselineOscillations: true
   PositivePolarity: false
   UseSaturated: false
   ADCSaturationValue: 0
@@ -29,7 +33,8 @@ OpDeconvolutionAlg:
   #### Wiener1PE: hypothesis is 1PE (delta pulse)
   #### Parameter filter
   Filter: "Wiener"
-  UseParamFilter: false
+  UseParamFilter: true
+  UseParamFilterInidividualChannel: true
   #Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))"
   FilterParams: [0.1, 20]
   Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 62.5MHz/16 ns
