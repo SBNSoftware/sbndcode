@@ -15,6 +15,7 @@ namespace opdet {
     , fPMTUncoatedEff(fParams.PMTUncoatedEff/ fParams.larProp->ScintPreScale())
     , fUseDataNoise(fParams.UseDataNoise)
     , fUseCustomSPEHeight(fParams.UseCustomSPEHeight)
+    , fUseMeasuredSER(fParams.UseMeasuredSER)
     , fOpDetNoiseFile(fParams.OpDetNoiseFile)
     , fSPEPeakHeight(fParams.SPEPeakHeight)
       //  , fSinglePEmodel(fParams.SinglePEmodel)
@@ -53,14 +54,23 @@ namespace opdet {
     fTimeTPB = std::make_unique<CLHEP::RandGeneral>
       (*fEngine, timeTPB_p->data(), timeTPB_p->size());
 
-
-
     //shape of single pulse
     if (fParams.PMTSinglePEmodel) {
       mf::LogDebug("DigiPMTSBNDAlg") << " using testbench pe response";
-      std::vector<double>* SinglePEVec_p;
+      std::vector<double>* SinglePEVec_p; 
+      std::vector<std::vector<double>> * fSinglePEVecCh_p;
+      std::vector<int>* fSinglePEChannels_p;
+
       file->GetObject("SinglePEVec_HD", SinglePEVec_p);
-    fSinglePEWave = *SinglePEVec_p;
+      file->GetObject("SERChannels", fSinglePEChannels_p);
+      file->GetObject("SinglePEVec", fSinglePEVecCh_p);
+
+      fSinglePEWave = *SinglePEVec_p;
+      fSinglePEWave_vector = *fSinglePEVecCh_p;
+      fSinglePEChannels = *fSinglePEChannels_p;
+
+      int NChannels = fSinglePEWave_vector.size();
+
       if(fUseCustomSPEHeight)
       {
         double min_value = *std::min_element(fSinglePEWave.begin(), fSinglePEWave.end());
@@ -71,10 +81,24 @@ namespace opdet {
       }
 
       // Prepare HD waveforms
+
       fPMTHDOpticalWaveformsPtr = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
       fPMTHDOpticalWaveformsPtr->produceSER_HD(fSinglePEWave_HD,fSinglePEWave);
-
       pulsesize = fSinglePEWave_HD[0].size();
+
+      if(fUseMeasuredSER)
+      {
+        fPMTHDOpticalWaveformsPtr_vector.resize(NChannels);
+        fSinglePEWave_HD_vector.resize(NChannels);
+        fSinglePEWave_vector.resize(NChannels);
+        for(size_t i=0; i<fPMTHDOpticalWaveformsPtr_vector.size(); i++)
+        {
+          fPMTHDOpticalWaveformsPtr_vector[i] = art::make_tool<opdet::HDOpticalWaveform>(fParams.HDOpticalWaveformParams);
+          fPMTHDOpticalWaveformsPtr_vector[i]->produceSER_HD(fSinglePEWave_HD_vector[i],fSinglePEWave_vector[i]);
+        }
+        pulsesize = fSinglePEWave_HD_vector[0][0].size();
+      }
+
       mf::LogDebug("DigiPMTSBNDAlg")<<"HD wvfs size: "<<pulsesize;
     }
     else {
@@ -200,7 +224,8 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          if(fUseMeasuredSER) AddSPEPerCh(t, wave, ch, fPMTNonLinearityPtr->NObservedPE(t, nPE_v));
+          else AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
         }
         else{
           AddSPE(t, wave, nPE_v[t]);
@@ -275,7 +300,8 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          if(fUseMeasuredSER) AddSPEPerCh(t, wave, ch, fPMTNonLinearityPtr->NObservedPE(t, nPE_v));
+          else AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
         }
         else{
           AddSPE(t, wave, nPE_v[t]);
@@ -334,7 +360,8 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          if(fUseMeasuredSER) AddSPEPerCh(t, wave, ch ,fPMTNonLinearityPtr->NObservedPE(t, nPE_v));
+          else AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
         }
         else{
           AddSPE(t, wave, nPE_v[t]);
@@ -414,7 +441,8 @@ namespace opdet {
     for(size_t t=0; t<nPE_v.size(); t++){
       if(nPE_v[t] > 0) {
         if(fParams.SimulateNonLinearity){
-          AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
+          if(fUseMeasuredSER) AddSPEPerCh(t, wave, ch ,fPMTNonLinearityPtr->NObservedPE(t, nPE_v));
+          else AddSPE(t, wave, fPMTNonLinearityPtr->NObservedPE(t, nPE_v) );
         }
         else{
           AddSPE(t, wave, nPE_v[t]);
@@ -479,6 +507,43 @@ namespace opdet {
     // add SER to the waveform
     std::transform(min_it, max_it,
                      fSinglePEWave_HD[wvf_shift].begin(), min_it,
+                     [npe_anode](auto a, auto b) { return a+npe_anode*b; });
+  }
+
+  void DigiPMTSBNDAlg::AddSPEPerCh(size_t time, std::vector<double>& wave, int ch,  double npe)
+  {
+
+    // Get the channel idx of the fPMTHDOpticalWaveformsPtr that is going to be used
+    int channelIdx=-1;
+    for(size_t i=0; i<fSinglePEChannels.size(); i++)
+    {
+      if(fSinglePEChannels[i]==ch)
+      {
+        channelIdx = i;
+        break;
+      }
+    }
+
+    // time bin HD (double precision)
+    // used to gert the time-shifted SER
+    if(channelIdx==-1) return;
+    double time_bin_hd = fSampling*time;
+    size_t wvf_shift  = fPMTHDOpticalWaveformsPtr_vector[channelIdx]->TimeBinShift(time_bin_hd);
+    
+    // get actual time bin and waveform min/max iterators
+    size_t time_bin=std::floor(time_bin_hd);
+    size_t max = time_bin + pulsesize < wave.size() ? time_bin + pulsesize : wave.size();
+    auto min_it = std::next(wave.begin(), time_bin);
+    auto max_it = std::next(wave.begin(), max);
+    
+    // simulate gain fluctuations
+    double npe_anode = npe;
+    if(fParams.MakeGainFluctuations)
+      npe_anode=fPMTGainFluctuationsPtr->GainFluctuation(npe, fEngine);
+
+    // add SER to the waveform
+    std::transform(min_it, max_it,
+                     fSinglePEWave_HD_vector[channelIdx][wvf_shift].begin(), min_it,
                      [npe_anode](auto a, auto b) { return a+npe_anode*b; });
   }
 
@@ -679,6 +744,7 @@ namespace opdet {
     fBaseConfig.PMTDarkNoiseRate         = config.pmtdarkNoiseRate();
     fBaseConfig.UseDataNoise             = config.UseDataNoise();
     fBaseConfig.UseCustomSPEHeight       = config.UseCustomSPEHeight();
+    fBaseConfig.UseMeasuredSER           = config.UseMeasuredSER();
     fBaseConfig.SPEPeakHeight            = config.SPEPeakHeight();
     fBaseConfig.OpDetNoiseFile           = config.OpDetNoiseFile();
     fBaseConfig.PMTBaselineRMS           = config.pmtbaselineRMS();

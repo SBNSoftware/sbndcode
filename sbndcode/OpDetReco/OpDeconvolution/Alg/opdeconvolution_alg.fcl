@@ -15,6 +15,9 @@ OpDeconvolutionAlg:
   ExpoAvSmoothPar: 0.3
   UnAvNeighbours: 1
   BaselineSample: 15
+  CorrectBaselineOscillations: true
+  BaseSampleBins: 30
+  BaseVarCut: 25
   ####SPE area must be set to 1./DecoWaveformPrecision in OpHit finder
   DecoWaveformPrecision: 0.002 #Scale deco waves by factor x500
   HypoSignalTimeWindow: 8000 #ns
@@ -30,6 +33,8 @@ OpDeconvolutionAlg:
   #### Parameter filter
   Filter: "Wiener"
   UseParamFilter: false
+  UseCustomSPEHeight: false
+  SPEPeakHeight: 12.5
   #Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))"
   FilterParams: [0.1, 20]
   Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 62.5MHz/16 ns

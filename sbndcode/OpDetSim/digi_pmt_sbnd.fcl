@@ -41,6 +41,7 @@ sbnd_digipmt_alg:
 
   # Use custom peak height for the SPE response
   UseCustomSPEHeight: false
+  UseMeasuredSER: false
   SPEPeakHeight: 25.97
 
   # Simulate gain fluctuations

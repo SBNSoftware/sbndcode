@@ -66,7 +66,11 @@ private:
   std::string fElectronics;
   bool fScaleHypoSignal;
   bool fUseParamFilter;
+  bool fUseCustomSPEHeight;
+  double fSPEPeakHeight;
   std::vector<double> fFilterParams;
+  short unsigned int fBaseSampleBins;
+  double fBaseVarCut;
 
   double fNormUnAvSmooth;
   double fSamplingFreq;
@@ -78,6 +82,9 @@ private:
   std::vector<double> fSignalHypothesis;
   std::vector<double> fNoiseHypothesis;
 
+  bool fCorrectBaselineOscillations;
+
+
   // Declare member data here.
 
   // Declare member functions
@@ -88,6 +95,7 @@ private:
   void SubtractBaseline(std::vector<double> &wf, double baseline);
   void EstimateBaselineStdDev(std::vector<double> &wf, double &_mean, double &_stddev);
   std::vector<TComplex> DeconvolutionKernel(size_t size, double baseline_stddev, double snr_scaling);
+  void CorrectBaselineOscillations(std::vector<double> &wf);
 
   //Load TFileService serrvice
   art::ServiceHandle<art::TFileService> tfs;
@@ -124,6 +132,11 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fDaphne_Freq  = p.get< double >("DaphneFreq");
   fScaleHypoSignal = p.get< bool >("ScaleHypoSignal");
   fUseParamFilter = p.get< bool >("UseParamFilter");
+  fBaseSampleBins = p.get< short unsigned int >("BaseSampleBins");
+  fBaseVarCut = p.get< double >("BaseVarCut");
+  fCorrectBaselineOscillations = p.get< bool >("CorrectBaselineOscillations");
+  fUseCustomSPEHeight = p.get< bool >("UseCustomSPEHeight");
+  fSPEPeakHeight = p.get< double >("SPEPeakHeight");
   fFilterParams = p.get< std::vector<double> >("FilterParams");
 
   fNormUnAvSmooth=1./(2*fUnAvNeighbours+1);
@@ -135,7 +148,6 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   if (fElectronics=="Daphne") fSamplingFreq=fDaphne_Freq/1000.;//in GHz
   auto const* lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
 
-
   //Load SER
   std::string fname;
   cet::search_path sp("FW_SEARCH_PATH");
@@ -145,6 +157,15 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   file->GetObject("SinglePEVec", SinglePEVec_p);
   if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
   fSinglePEWave = *SinglePEVec_p;
+  if(fUseCustomSPEHeight)
+  {
+    double min_value = *std::min_element(fSinglePEWave.begin(), fSinglePEWave.end());
+    double SPENormalization = std::abs(fSPEPeakHeight/min_value);
+    // Transform the SPE response to have a given peak height
+    std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(),
+                [SPENormalization](double x) { return x * SPENormalization; });
+  }
+
 
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
   fSinglePEWave.resize(MaxBinsFFT, 0);
@@ -232,6 +253,7 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
     SubtractBaseline(wave, baseline_mean);
     double fDecoWfScaleFactor=1./fDecoWaveformPrecision;
     std::transform(wave.begin(), wave.end(), wave.begin(), [fDecoWfScaleFactor](double &dec){ return fDecoWfScaleFactor*dec; } );
+    if(fCorrectBaselineOscillations) CorrectBaselineOscillations(wave);
 
     //Debbuging and save wf in hist file
     if(fDebug){
@@ -366,6 +388,73 @@ void opdet::OpDeconvolutionAlgWiener::EstimateBaselineStdDev(std::vector<double>
       hs_mean->SetBinContent(k, h_mean.GetBinContent(k));
   }
 
+  return;
+}
+
+
+void opdet::OpDeconvolutionAlgWiener::CorrectBaselineOscillations(std::vector<double>& wave) 
+{
+  // subtract baseline using linear interpolation between regions defined
+  // by the datasize and baseSampleBins
+  if(fBaseSampleBins <= 0) return;
+  // number of points to characterize the baseline
+  unsigned short nBasePts = wave.size() / fBaseSampleBins;
+  // the baseline offset vector
+  std::vector<double> base(nBasePts, 0.);
+  // find the average value in each region, using values that are
+  // similar
+  double fbins = fBaseSampleBins;
+  unsigned short nfilld = 0;
+
+  for(unsigned short ii = 0; ii < nBasePts; ++ii) {
+    unsigned short loBin = ii * fBaseSampleBins;
+    unsigned short hiBin = loBin + fBaseSampleBins;
+    double ave = 0.;
+    double sum = 0.;
+    for(unsigned short bin = loBin; bin < hiBin; ++bin) {
+      ave += wave[bin];
+      sum += wave[bin] * wave[bin];
+    } // bin
+    ave = ave / fbins;
+    double var = (sum - fbins * ave * ave) / (fbins - 1.);
+    // Set the baseline for this region if the variance is small
+    if(var < fBaseVarCut) {
+      base[ii] = ave;
+      ++nfilld;
+    }
+  } // ii
+    // interpolate and subtract
+    // find the first non-zero sample
+  unsigned short thisRegion = 0;
+  unsigned short nextRegion = 1;
+  for(nextRegion = 1; nextRegion < base.size(); ++nextRegion) if(base[nextRegion] != 0) break;
+  if(nextRegion == base.size()) return;
+  double nBins = (nextRegion - thisRegion) * fBaseSampleBins;
+  double slp = (base[nextRegion] - base[thisRegion]) / nBins;
+  for(unsigned short bin = 0; bin < wave.size(); ++bin) {
+    // determine which region we are in
+    short region = bin / fBaseSampleBins;
+    if(region == nextRegion) {
+      // update the slope for the next region
+      unsigned short nnr = 0;
+      for(nnr = nextRegion + 1; nnr < base.size(); ++nnr) if(base[nnr] != 0) break;
+      if(nnr == base.size()) nnr = base.size() - 1;
+      unsigned short previousRegion = thisRegion;
+      thisRegion = nextRegion;
+      nextRegion = nnr;
+      if(thisRegion == nextRegion) {
+        for (unsigned short kk = thisRegion * fBaseSampleBins; kk < thisRegion * fBaseSampleBins + fBaseSampleBins; ++ kk) {
+          double bs = base[previousRegion] + (double)(kk - previousRegion * fBaseSampleBins) * slp;
+            wave[kk] -= bs;
+        }
+        return;
+        }
+      nBins = (nextRegion - thisRegion) * fBaseSampleBins;
+        slp = (base[nextRegion] - base[thisRegion]) / nBins;
+    }
+    double bs = base[thisRegion] + (double)(bin - thisRegion * fBaseSampleBins) * slp;
+    wave[bin] -= bs;
+  } // bin
   return;
 }
 

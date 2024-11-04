@@ -66,6 +66,8 @@ namespace opdet {
       double PMTDarkNoiseRate; //in Hz
       bool UseDataNoise;
       bool UseCustomSPEHeight;
+      bool UseMeasuredSER;
+      
       std::string OpDetNoiseFile;
 
       double PMTADCDynamicRange; //ADC dynbamic range
@@ -141,6 +143,7 @@ namespace opdet {
 
     bool fUseDataNoise;
     bool fUseCustomSPEHeight;
+    bool fUseMeasuredSER;
     std::string fOpDetNoiseFile;
 
     double fSPEPeakHeight;
@@ -164,16 +167,22 @@ namespace opdet {
     std::unique_ptr<opdet::PMTGainFluctuations> fPMTGainFluctuationsPtr;
     //HDWaveforms
     std::unique_ptr<opdet::HDOpticalWaveform> fPMTHDOpticalWaveformsPtr;
+    std::vector<std::unique_ptr<opdet::HDOpticalWaveform>> fPMTHDOpticalWaveformsPtr_vector;
 
     //PMTNonLinearity
     std::unique_ptr<opdet::PMTNonLinearity> fPMTNonLinearityPtr;
 
     void AddSPE(size_t time, std::vector<double>& wave, double npe = 1); // add single pulse to auxiliary waveform
+    void AddSPEPerCh(size_t time, std::vector<double>& wave, int ch, double npe = 1);
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
     std::vector<double> fSinglePEWave; // single photon pulse vector
     std::vector<std::vector<double>> fSinglePEWave_HD; // single photon pulse vector
+    std::vector<std::vector<std::vector<double>>> fSinglePEWave_HD_vector;
+    std::vector<std::vector<double>> fSinglePEWave_vector;
+    std::vector<int> fSinglePEChannels; // vector containing channel number corresponding to each SER
+
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
 
@@ -291,7 +300,12 @@ namespace opdet {
 
       fhicl::Atom<bool> UseCustomSPEHeight {
         Name("UseCustomSPEHeight"),
-        Comment("Add noise to waveform based on data")
+        Comment("Use a custom height for SER (normalise the SER to this value)")
+      };
+
+      fhicl::Atom<bool> UseMeasuredSER {
+        Name("UseMeasuredSER"),
+        Comment("Use Measured SER for each channel")
       };
 
       fhicl::Atom<std::string> OpDetNoiseFile {
