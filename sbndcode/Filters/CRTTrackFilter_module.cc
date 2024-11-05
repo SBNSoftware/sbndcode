@@ -48,7 +48,7 @@ CRTTrackFilter::CRTTrackFilter(fhicl::ParameterSet const& p) : EDFilter{p} {
   fThetaXZMax          = p.get<double>("ThetaXZMax",10.);
   fUseLengthMin        = p.get<bool>("UseLengthMin",true);
   fLengthMin           = p.get<double>("LengthMin",300.);
-  fVerbose             = p.get<bool>("Verbose",true);
+  fVerbose             = p.get<bool>("Verbose",false);
 }
 
 bool CRTTrackFilter::filter(art::Event& e) {
@@ -80,7 +80,7 @@ bool CRTTrackFilter::filter(art::Event& e) {
     // Get (x, y, z) coordinates of the south and north CRT track points
     double x_S, y_S, z_S, x_N, y_N, z_N;
     for(auto point : crt_trk.Points()) {
-      if(fVerbose) std::cout << "      Point: " << point.X() << " " << point.Y() << " " << point.Z() << std::endl;
+      if(fVerbose) std::cout << "      Point: " << "(" << point.X() << ", " << point.Y() << ", " << point.Z() << ")" << std::endl;
       if(point.Z() < 0.) {
 	x_S = point.X();
 	y_S = point.Y();
@@ -93,8 +93,8 @@ bool CRTTrackFilter::filter(art::Event& e) {
       }
     }
     if(fVerbose) {
-      std::cout << "    South point: " << x_S << " " << y_S << " " << z_S << std::endl;
-      std::cout << "    North point: " << x_N << " " << y_N << " " << z_N << std::endl;
+      std::cout << "    South point: (" << x_S << ", " << y_S << ", " << z_S << ")" << std::endl;
+      std::cout << "    North point: (" << x_N << ", " << y_N << ", " << z_N << ")" << std::endl;
     }
     
     // Calculate (signed) difference between north and south endpoints of the CRT track
