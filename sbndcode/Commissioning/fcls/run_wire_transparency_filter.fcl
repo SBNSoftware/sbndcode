@@ -59,7 +59,6 @@ physics:
   #filters reject all following items.  see lines starting physics.producers below
   select: [crttrackfilter]
 
-  ana: []
 
   # define the output stream, there could be more than one if using filters
   stream1: [out1]
