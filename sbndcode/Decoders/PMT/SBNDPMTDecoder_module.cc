@@ -86,15 +86,19 @@ private:
     std::vector<uint32_t>     fignore_fragid;
     uint32_t                  fnominal_length; 
 
+    uint32_t                  fraw_ts_correction;
+
     std::string               fspectdc_product_name;
     uint32_t                  fspectdc_ftrig_ch;
     uint32_t                  fspectdc_etrig_ch;
-    uint32_t                  fspectdc_etrig_raw_diff;
 
     std::string               fptb_product_name;
     uint                      fptb_etrig_trigword_min;
     uint                      fptb_etrig_trigword_max;    
     uint32_t                  fptb_etrig_wordtype;
+    uint                      fptb_raw_diff_max;
+
+    uint                      fallowed_time_diff;
 
     std::string fpmt_instance_name;
     std::string fflt_instance_name;
@@ -119,7 +123,6 @@ private:
     std::vector<uint> fset_fragid_map;
     bool fuse_set_map;
 
-
     std::vector<uint> fch_map;
 
     // histogram info  
@@ -141,17 +144,20 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fnominal_length = p.get<uint32_t>("nominal_length",5000);
 
     ftiming_type = p.get<uint>("timing_type",0);
+    
+    fraw_ts_correction = p.get<uint>("raw_ts_correction",367000); // ns
 
     fspectdc_product_name = p.get<std::string>("spectdc_product_name","tdcdecoder");
     fspectdc_ftrig_ch = p.get<uint32_t>("spectdc_ftrig_ch",3);
     fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
-    fspectdc_etrig_raw_diff = p.get<uint32_t>("spectdc_etrig_raw_diff",367000); // ns
 
     fptb_product_name = p.get<std::string>("ptb_product_name","ptbdecoder");
     fptb_etrig_trigword_min = p.get<uint>("ptb_etrig_trigword_min",1);
     fptb_etrig_trigword_max = p.get<uint>("ptb_etrig_trigword_max",10000);
     fptb_etrig_wordtype = p.get<uint32_t>("ptb_etrig_wordtype",2);
+    fptb_raw_diff_max = p.get<uint>("ptb_raw_diff_max",3000000); // ns
 
+    fallowed_time_diff = p.get<uint>("allowed_time_diff",3000); // us!!! 
     fpmt_instance_name = p.get<std::string>("pmtInstanceName","PMTChannels");
     fflt_instance_name = p.get<std::string>("ftrigInstanceName","FTrigChannels");
     ftim_instance_name = p.get<std::string>("timingInstanceName","TimingChannels");
@@ -276,9 +282,11 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     evt.getByLabel("daq", "RawEventHeader", header_handle);
     if ((header_handle.isValid())){
         auto rawheader = artdaq::RawEvent(*header_handle); 
-        raw_timestamp = rawheader.timestamp(); // includes sec + ns portion
+        raw_timestamp = rawheader.timestamp() - fraw_ts_correction; // includes sec + ns portion
+        if (fdebug>1)
+            std::cout << "Raw timestamp (w/ correction) -> "  << "ts (ns): " << raw_timestamp % uint64_t(1e9) << ", sec (s): " << raw_timestamp / uint64_t(1e9) << std::endl;
     }
-
+    
     // get spec tdc product
     if (timing_type==0){
         art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
@@ -326,10 +334,10 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     for (size_t i=0; i < tdc_etrig_v.size(); i++){
                         auto tdc_etrig = tdc_etrig_v[i];
                         uint64_t diff;
-                        if (tdc_etrig < (raw_timestamp-fspectdc_etrig_raw_diff))
-                            diff = (raw_timestamp-fspectdc_etrig_raw_diff) - tdc_etrig;
+                        if (tdc_etrig < (raw_timestamp))
+                            diff = raw_timestamp - tdc_etrig;
                         else
-                            diff = tdc_etrig - (raw_timestamp-fspectdc_etrig_raw_diff);
+                            diff = tdc_etrig - raw_timestamp;
                         if (diff < min_raw_tdc_diff){
                             event_trigger_time = tdc_etrig%uint64_t(1e9);
                             min_raw_tdc_diff = diff;
@@ -360,19 +368,22 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     if (fdebug>1) std::cout << "PTB (decoded) HLTs found: " << std::endl;
                     for (size_t j=0; j < hltrigs.size(); j++){
                         raw::ptb::Trigger trig = hltrigs.at(j);
-                        uint int_word; 
-                        // convert from hex to dec
-                        std::stringstream ss; ss << std::hex << trig.trigger_word << std::dec; ss >> int_word;
-                        if ((trig.word_type==fptb_etrig_wordtype) & (int_word >= fptb_etrig_trigword_min) & (int_word <= fptb_etrig_trigword_max)){
-                            hlt_words.push_back(int_word);
-                            hlt_timestamps.push_back((trig.timestamp * 20)%(uint(1e9)));
-                        }
+                        uint     ptb_word; 
+                        uint64_t ptb_timestamp = (trig.timestamp * 20)%(uint(1e9));
+                        std::stringstream ss; ss << std::hex << trig.trigger_word << std::dec; ss >> ptb_word;
                         if (fdebug>1){
                             std::cout << "      PTB HLT " <<  j << "-> " 
-                                      << "ts (ns): " << (trig.timestamp * 20)%(uint(1e9)) 
-                                      << ", trigger word: " << int_word
+                                      << "ts (ns): " << ptb_timestamp 
+                                      << ", trigger word: " << ptb_word
                                       << ", word type: " << trig.word_type
                                       << std::endl; 
+                        }
+                        // don't account for rollover... PTB second part is not trustworthly anyhow 
+                        if (std::abs(int(raw_timestamp%uint(1e9)) - int(ptb_timestamp)) > fptb_raw_diff_max)
+                            continue;
+                        if ((trig.word_type==fptb_etrig_wordtype) & (ptb_word >= fptb_etrig_trigword_min) & (ptb_word <= fptb_etrig_trigword_max)){
+                            hlt_words.push_back(ptb_word);
+                            hlt_timestamps.push_back(ptb_timestamp);
                         }
                     } 
                 } // end hlt check 
@@ -407,7 +418,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         timing_ch=16;
     }
 
-    if (fdebug>0){
+    if (fdebug>1){
         std::cout << "Using " ;
         if (timing_type==0)
             std::cout << "SPECTDC for event reference time, ";
@@ -436,9 +447,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         }
         if (std::find(fignore_fragid.begin(), fignore_fragid.end(), iboard) != fignore_fragid.end())
             continue;
-        if (fdebug>1) std::cout << "Board " << iboard << " has " << board_frag_v.at(iboard).size() << " trigger(s) || " ;
     }
-    if (fdebug>1) std::cout << std::endl;
 
     // store the waveform itself
     // store the waveform start time (for OpDetWaveform timestamp)
@@ -479,11 +488,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             uint iwvfm_start = 0;
             auto iwvfm_end   = ittt;
 
-            // need to check if there is rollover between ttt and start (will shift ttt)
-            if (ittt < ilen*2){ 
+            // need to check if there is rollover between ttt and start
+            if (ittt < ilen*2)
                 iwvfm_start = 1e9 - (ilen*2 - ittt);
-                std::cout<< "WARNING: ROLLOVER-> ttt: " << ittt << std::endl;
-            }
             else iwvfm_start = ittt - ilen*2;
             
             if (fdebug>2){
@@ -539,9 +546,17 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                         wvfmHist->SetBinContent(n + 1, (double)combined_wvfm[n]);
                 }
                 double time_diff = (int(iwvfm_start) - int(event_trigger_time))*1e-3; // us
-                // if (isec != event_trigger_sec){
-                //     std::cout << "WARNING POSSIBLE SECOND ROLLOVER.\nEvent timestamp: " << event_trigger_sec << ", waveform timestamp: " << isec << std::endl;
-                // }
+                if ((std::abs(time_diff) > fallowed_time_diff) && (timing_type<2)){
+                    std::cout << "EVENT ROLLOVER: " << event_trigger_time << ", " << iwvfm_start << std::endl;
+                    // second rollover between reference time and waveform start 
+                    if (std::abs(time_diff + 1e6) < fallowed_time_diff)
+                        time_diff += 1e6; // us 
+                    // second rollover between waveform start and reference time
+                    else if (std::abs(time_diff - 1e6) < fallowed_time_diff)
+                        time_diff -= 1e6; // us
+                    else if (fdebug>1)
+                        std::cout << "WARNING: TIME DIFFERENCE IS GREATER THAN 3 ms. Event timestamp: " << event_trigger_time << ", waveform timestamp: " << iwvfm_start << std::endl;
+                }
                 uint ch;
                 if (i == 15)
                     ch = fragid;
@@ -571,7 +586,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         if (fdebug>1){
             // print number of triggers, number of extensions found, and number of extensions used
             std::cout << "      Board: " << fragid
-                        << " -> # of triggers: " << trig_counter
+                        << " -> # of triggers: " << frag_v.size()
                         << ", full found: " << full_found
                         << ", extensions found: " << extensions_found
                         << ", extensions used: " << extensions_used

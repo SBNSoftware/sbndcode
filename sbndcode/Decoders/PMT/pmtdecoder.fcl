@@ -15,19 +15,23 @@ pmtdecoder:
     caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
     ignore_fragid: []     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
     nominal_length: 5000     # expected waveform length
+    raw_ts_correction: 367000 # ns, correction to the rawheader timestamp
 
     # configure SPEC TDC inputs 
     spectdc_product_name: "tdcdecoder" # used if the tdc decoder has been run 
     spectdc_ftrig_ch: 3 # channel number of the spec tdc that stores the flash trigger 
     spectdc_etrig_ch: 4 # channel number of the spec tdc that stores the event trigger
 
-    # configure PTB inputs; the HLT with the smallest trigger word will be used
+    # configure PTB inputs; the HLT with the smallest trigger word will be used (within some range to the rawheader timestamp)
     ptb_product_name: "ptbdecoder"
     ptb_etrig_trigword_min: 1   # minimum trigger word (in decimal) 
     ptb_etrig_trigword_max: 100000 # maximum trigger word (in decimal)
     ptb_etrig_wordtype: 2
+    ptb_trig_raw_diff_max: 3000000 # the maximum allowed time difference in ns
 
     # configure output options
+    # use time difference between reference + CAEN used to determine rollover and/or weirdness
+    allowed_time_diff: 3000 # us!! not nanoseconds
     # configure the output data product instance names
     pmtInstanceName: "PMTChannels"
     ftrigInstanceName: "FTrigChannels"
