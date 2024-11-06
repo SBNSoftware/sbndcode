@@ -85,6 +85,14 @@
 #include <string>
 #include <cmath>
 
+
+bool Cut_NS_Function(double x1, double y1,double z1,double x2, double y2,double z2){
+  bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
+  bool y = (y1>-360 && y1<360) && (y2>-360 && y2<360);
+  bool x=((x1>-200 && x1<-150) && (x2>-200 && x2<-150)) || ((x1>150 && x1<200) && (x2>150 && x2<200));
+  return x && y && z;
+}
+
 const int DEFAULT_VALUE = -9999;
 
 enum CRTOrientation {
@@ -385,6 +393,12 @@ private:
   double _sr_begintime, _sr_endtime;
   double _sr_pot; ///< POTs in each subrun
 
+  int _tpc_num;
+  int _plane_num;
+  int _noisy_channel;
+  double _max_time;
+  double _min_time;
+  int _time_window;
 
   int _max_hits;                    ///< maximum number of hits (to be set via fcl)
   int _max_ophits;                  ///< maximum number of hits (to be set via fcl)
@@ -462,6 +476,13 @@ Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
 
 void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
 {
+
+  _tpc_num = p.get<int>("TPCNum", 0);
+  _plane_num = p.get<int>("PlaneNum", 0);
+  _noisy_channel = p.get<int>("NoisyChannel",0);
+  _max_time = p.get<double>("MaxTime", 1100);
+  _min_time = p.get<double>("MinTime", 400);
+  _time_window = p.get<int>("TimeWindow", 150);
 
   _max_hits = p.get<int>("MaxHits", 50000);
   _max_ophits = p.get<int>("MaxOpHits", 50000);
@@ -664,6 +685,8 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // CRT tracks
   //
+  double time_cut_upper;
+  double time_cut_lower;
 
   _n_crt_tracks = 0;
   if (fKeepCRTTracks) {
@@ -701,36 +724,53 @@ void Hitdumper::analyze(const art::Event& evt)
 	_crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
 	_crt_track_length.push_back(crttrack->Length());
 
-	double dx;
-	double dy;
-	double dz;
-	double CRT_theta_xz;
-	double CRT_theta_yz;
-      
-	dx =end.X() - start.X();
-	dy =end.Y() - start.Y();
-	dz =end.Z() - start.Z();
+	if(Cut_NS_Function(start.X(),start.Y(),start.Z(),end.X(),end.Y(),end.Z())){
+	  double dx;
+	  double dy;
+	  double dz;
+	  double CRT_theta_xz;
+	  double CRT_theta_yz;
+	  double average_xvalue;
+	  double hit_time_ticks;
+	  double start_x=200- abs(start.X());	    
+	  double end_x=200- abs(end.X());
 
-	CRT_theta_xz= atan2(dx,dz)*(180/TMath::Pi());
-	CRT_theta_yz= atan2(dy,dz)*(180/TMath::Pi());
+	  average_xvalue = (start_x + end_x)/2 ;      
+	  std::cout<<"start x"<<start_x<<std::endl;
+	  std::cout<<"end x"<<end_x<<std::endl;
+	  std::cout<<"average x"<<average_xvalue<<std::endl;
+
+	  hit_time_ticks= (average_xvalue*2/0.16)+400 ;
+
+	  std::cout<<"hit time"<< hit_time_ticks<< std::endl;	  
+	  time_cut_upper=hit_time_ticks + _time_window;
+	  time_cut_lower=hit_time_ticks - _time_window;
+
+	  dx =end.X() - start.X();
+	  dy =end.Y() - start.Y();
+	  dz =end.Z() - start.Z();
+
+	  CRT_theta_xz= atan2(dx,dz)*(180/TMath::Pi());
+	  CRT_theta_yz= atan2(dy,dz)*(180/TMath::Pi());
         
-	double modified_theta_xz_CRT = CRT_theta_xz;
-	if ( CRT_theta_xz < -90 ) {
-	  modified_theta_xz_CRT = CRT_theta_xz + 180.;
+	  double modified_theta_xz_CRT = CRT_theta_xz;
+	  if ( CRT_theta_xz < -90 ) {
+	    modified_theta_xz_CRT = CRT_theta_xz + 180.;
+	  }
+	  if ( CRT_theta_xz > 90 ) {
+	    modified_theta_xz_CRT = CRT_theta_xz - 180.;
+	  }
+	  double modified_theta_yz_CRT = CRT_theta_yz;
+	  if ( CRT_theta_yz < -90 ) {
+	    modified_theta_yz_CRT = CRT_theta_yz + 180.;
+	  }
+	  if ( CRT_theta_yz > 90 ) {
+	    modified_theta_yz_CRT = CRT_theta_yz - 180.;
+	  }
+	  _theta_xz_CRT.push_back(modified_theta_xz_CRT);
+	  _theta_yz_CRT.push_back(modified_theta_yz_CRT);
 	}
-	if ( CRT_theta_xz > 90 ) {
-	  modified_theta_xz_CRT = CRT_theta_xz - 180.;
-	}
-	double modified_theta_yz_CRT = CRT_theta_yz;
-	if ( CRT_theta_yz < -90 ) {
-	  modified_theta_yz_CRT = CRT_theta_yz + 180.;
-	}
-	if ( CRT_theta_yz > 90 ) {
-	  modified_theta_yz_CRT = CRT_theta_yz - 180.;
-	}
-	_theta_xz_CRT.push_back(modified_theta_xz_CRT);
-	_theta_yz_CRT.push_back(modified_theta_yz_CRT);
-      }
+      }  
     } else {
       std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<fCRTTrackModuleLabel<<")." << std::endl;
     }
@@ -749,47 +789,47 @@ void Hitdumper::analyze(const art::Event& evt)
       art::Handle<std::vector<recob::OpHit>> ophitListHandle;
       std::vector<art::Ptr<recob::OpHit>> ophitlist;
       if (evt.getByLabel(ophit_label, ophitListHandle)) {
-        art::fill_ptr_vector(ophitlist, ophitListHandle);
-        _nophits += ophitlist.size();
+	art::fill_ptr_vector(ophitlist, ophitListHandle);
+	_nophits += ophitlist.size();
       }
       else {
-        std::cout << "Failed to get recob::OpHit data product: " << ophit_label << std::endl;
+	std::cout << "Failed to get recob::OpHit data product: " << ophit_label << std::endl;
       }
 
       if (_nophits > _max_ophits) {
-        std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
-        std::cout << "Will only store " << _max_ophits << " optical hits." << std::endl;
-        _nophits = _max_ophits;
+	std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
+	std::cout << "Will only store " << _max_ophits << " optical hits." << std::endl;
+	_nophits = _max_ophits;
       }
 
       ResetOpHitsVars(_nophits);
 
       for (size_t i = 0; i < ophitlist.size(); ++i) {
-        size_t index = previous_nophits + i;
-        _ophit_opch[index] = ophitlist.at(i)->OpChannel();
-        _ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
-        _ophit_peakT[index] = ophitlist.at(i)->PeakTime();
-        _ophit_startT[index] = ophitlist.at(i)->StartTime();
-        _ophit_riseT[index] = ophitlist.at(i)->RiseTime();
-        _ophit_width[index] = ophitlist.at(i)->Width();
-        _ophit_area[index] = ophitlist.at(i)->Area();
-        _ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
-        _ophit_pe[index] = ophitlist.at(i)->PE();
-        auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
-        _ophit_opdet_x[index] = opdet_center.X();
-        _ophit_opdet_y[index] = opdet_center.Y();
-        _ophit_opdet_z[index] = opdet_center.Z();
-        auto pd_type = _pd_map.pdType(ophitlist.at(i)->OpChannel());
-        if (pd_type == "pmt_coated") {_ophit_opdet_type[index] = kPMTCoated;}
-        else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[index] = kPMTUnCoated;}
-        else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[index] = kXArapucaVis;}
-        else if (pd_type == "xarapuca_vuv") {
-          _ophit_opdet_type[index] = kXArapucaVuv;
-          //std::cout<<"XA VUV: "<< pd_type <<std::endl;
-        }
-        else {
-          _ophit_opdet_type[index] = kPDNotDefined;
-        }
+	size_t index = previous_nophits + i;
+	_ophit_opch[index] = ophitlist.at(i)->OpChannel();
+	_ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
+	_ophit_peakT[index] = ophitlist.at(i)->PeakTime();
+	_ophit_startT[index] = ophitlist.at(i)->StartTime();
+	_ophit_riseT[index] = ophitlist.at(i)->RiseTime();
+	_ophit_width[index] = ophitlist.at(i)->Width();
+	_ophit_area[index] = ophitlist.at(i)->Area();
+	_ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
+	_ophit_pe[index] = ophitlist.at(i)->PE();
+	auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
+	_ophit_opdet_x[index] = opdet_center.X();
+	_ophit_opdet_y[index] = opdet_center.Y();
+	_ophit_opdet_z[index] = opdet_center.Z();
+	auto pd_type = _pd_map.pdType(ophitlist.at(i)->OpChannel());
+	if (pd_type == "pmt_coated") {_ophit_opdet_type[index] = kPMTCoated;}
+	else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[index] = kPMTUnCoated;}
+	else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[index] = kXArapucaVis;}
+	else if (pd_type == "xarapuca_vuv") {
+	  _ophit_opdet_type[index] = kXArapucaVuv;
+	  //std::cout<<"XA VUV: "<< pd_type <<std::endl;
+	}
+	else {
+	  _ophit_opdet_type[index] = kPDNotDefined;
+	}
       }
       previous_nophits = _nophits;
     }
@@ -808,7 +848,7 @@ void Hitdumper::analyze(const art::Event& evt)
       ResetPmtTriggerVars( (int)pmttriggerlist[0]->numPassed.size());
 
       for (int i=0; i < (int)pmttriggerlist[0]->numPassed.size(); i++){
-        _pmtTrigger_npmtshigh[i] = pmttriggerlist[0]->numPassed[i];
+	_pmtTrigger_npmtshigh[i] = pmttriggerlist[0]->numPassed[i];
       }
       _pmtTrigger_maxpassed = pmttriggerlist[0]->maxPMTs;
 
@@ -878,37 +918,37 @@ void Hitdumper::analyze(const art::Event& evt)
 
       for (int i=0; i < _nmuontrks; i++){ 
         
-        _muontrk_t0[i] = muontrklist[i]->t0_us; 
-        _muontrk_x1[i] = muontrklist[i]->x1_pos;
-        _muontrk_y1[i] = muontrklist[i]->y1_pos;
-        _muontrk_z1[i] = muontrklist[i]->z1_pos;
-        _muontrk_x2[i] = muontrklist[i]->x2_pos;
-        _muontrk_y2[i] = muontrklist[i]->y2_pos;
-        _muontrk_z2[i] = muontrklist[i]->z2_pos; 
-        _muontrk_theta_xz[i] = muontrklist[i]->theta_xz; 
-        _muontrk_theta_yz[i] = muontrklist[i]->theta_yz;
-        _muontrk_tpc[i] = muontrklist[i]->tpc; 
-        _muontrk_type[i] = muontrklist[i]->type;
+	_muontrk_t0[i] = muontrklist[i]->t0_us; 
+	_muontrk_x1[i] = muontrklist[i]->x1_pos;
+	_muontrk_y1[i] = muontrklist[i]->y1_pos;
+	_muontrk_z1[i] = muontrklist[i]->z1_pos;
+	_muontrk_x2[i] = muontrklist[i]->x2_pos;
+	_muontrk_y2[i] = muontrklist[i]->y2_pos;
+	_muontrk_z2[i] = muontrklist[i]->z2_pos; 
+	_muontrk_theta_xz[i] = muontrklist[i]->theta_xz; 
+	_muontrk_theta_yz[i] = muontrklist[i]->theta_yz;
+	_muontrk_tpc[i] = muontrklist[i]->tpc; 
+	_muontrk_type[i] = muontrklist[i]->type;
       }
       if (freadMuonHits){
-        art::FindMany<recob::Hit> muontrkassn(muonTrackListHandle, evt, fMuonTrackModuleLabel);
-        ResetMuonHitVars(3000); //estimate of maximum collection hits
-        _nmhits = 0;
-        for (int i=0; i < _nmuontrks; i++){ 
+	art::FindMany<recob::Hit> muontrkassn(muonTrackListHandle, evt, fMuonTrackModuleLabel);
+	ResetMuonHitVars(3000); //estimate of maximum collection hits
+	_nmhits = 0;
+	for (int i=0; i < _nmuontrks; i++){ 
 	  std::vector< const recob::Hit*> muonhitsVec = muontrkassn.at(i);
-          _nmhits += (muonhitsVec.size()); 
-          for (size_t j=0; j<muonhitsVec.size(); j++){
-            auto muonhit = muonhitsVec.at(j);
-            geo::WireID wireid = muonhit->WireID();
-            _mhit_trk.push_back(i);
-            _mhit_tpc.push_back(wireid.TPC);
-            _mhit_plane.push_back(wireid.Plane);
-            _mhit_wire.push_back(wireid.Wire);
-            _mhit_channel.push_back(muonhit->Channel());
-            _mhit_peakT.push_back(muonhit->PeakTime());
-            _mhit_charge.push_back(muonhit->Integral());
-          }
-        }
+	  _nmhits += (muonhitsVec.size()); 
+	  for (size_t j=0; j<muonhitsVec.size(); j++){
+	    auto muonhit = muonhitsVec.at(j);
+	    geo::WireID wireid = muonhit->WireID();
+	    _mhit_trk.push_back(i);
+	    _mhit_tpc.push_back(wireid.TPC);
+	    _mhit_plane.push_back(wireid.Plane);
+	    _mhit_wire.push_back(wireid.Wire);
+	    _mhit_channel.push_back(muonhit->Channel());
+	    _mhit_peakT.push_back(muonhit->PeakTime());
+	    _mhit_charge.push_back(muonhit->Integral());
+	  }
+	}
       }
     }
     else{
@@ -917,84 +957,102 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   if (fcheckTransparency) {
-	_waveform_number.resize(_max_hits*_max_samples, -9999.);
-	_adc_on_wire.resize(_max_hits*_max_samples, -9999.);
-	_time_for_waveform.resize(_max_hits*_max_samples, -9999.);
-	_waveform_integral.resize(_max_hits*_max_samples, -9999.);
-	_adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
-	_wire_number.resize(_max_hits*_max_samples, -9999.);
-	_hit_time.resize(_max_hits*_max_samples, -9999.);
+    _waveform_number.resize(_max_hits*_max_samples, -9999.);
+    _adc_on_wire.resize(_max_hits*_max_samples, -9999.);
+    _time_for_waveform.resize(_max_hits*_max_samples, -9999.);
+    _waveform_integral.resize(_max_hits*_max_samples, -9999.);
+    _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
+    _wire_number.resize(_max_hits*_max_samples, -9999.);
+    _hit_time.resize(_max_hits*_max_samples, -9999.);
 
-	art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
+    art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
 
-	bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
-	if(retVal == true) {
-	  mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
-	} else {
-	  mf::LogWarning("HitDumper") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
-	}
+    bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
+    if(retVal == true) {
+      mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
+    } else {
+      mf::LogWarning("HitDumper") << "Could not get fDigitModuleLabel: " << fDigitModuleLabel << std::endl;
+    }
 
-	int waveform_number_tracker = 0;
-	int adc_counter = 1;
-	_adc_count = _nhits * (fWindow * 2 + 1);
+    int waveform_number_tracker = 0;
+    int adc_counter = 1;
+    _adc_count = _nhits * (fWindow * 2 + 1);
 
-	// loop over waveforms
-	for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
+
+    std::map<int, int> channelHitCounts;
+    for (int ihit = 0; ihit < _nhits; ++ihit) {
+      if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num &&
+	  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower &&
+	  !(_hit_wire[ihit] == _noisy_channel)) {
+	channelHitCounts[_hit_channel[ihit]]++;
+      }
+    }
+
+    // loop over waveforms
+    for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
       
-	  //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
-	  art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
-	  int channel   = digitVec->Channel();
-	  auto fDataSize = digitVec->Samples();
-	  std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
-	  rawadc.resize(fDataSize);
+      //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
+      art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
+      int channel   = digitVec->Channel();
+      auto fDataSize = digitVec->Samples();
+      std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
+      rawadc.resize(fDataSize);
 
-	  // see if there is a hit on this channel
-	  for (int ihit = 0; ihit < _nhits; ++ihit) {
-	    if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==1 && _hit_plane[ihit]==0 &&  _hit_peakT[ihit]<1500.0) {
+      // see if there is a hit on this channel
+      if (channelHitCounts[channel] == 1) {
+	for (int ihit = 0; ihit < _nhits; ++ihit) {
+	  if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==_tpc_num && _hit_plane[ihit]==_plane_num  &&  _hit_peakT[ihit]<time_cut_upper && _hit_peakT[ihit]>time_cut_lower && !(_hit_wire[ihit] == _noisy_channel)) {
 
-	      int pedestal = (int)digitVec->GetPedestal();
-	      //UNCOMPRESS THE DATA.
-	      if (fUncompressWithPed) {
-		raw::Uncompress(digitVec->ADCs(), rawadc, pedestal, digitVec->Compression());
-	      }
-	      else {
-		raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
-	      }
+	    int pedestal = (int)digitVec->GetPedestal();
+	    //UNCOMPRESS THE DATA.
+	    if (fUncompressWithPed) {
+	      raw::Uncompress(digitVec->ADCs(), rawadc, pedestal, digitVec->Compression());
+	    }
+	    else {
+	      raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
+	    }
 
-	      unsigned int bin = _hit_peakT[ihit];
-	      unsigned int low_edge,high_edge;
-	      if((int)bin > fWindow and _hit_plane[ihit] == 0) {
-		low_edge = bin - (2*fWindow);
-	      }
-	      else if ((int)bin>fWindow) {
-		low_edge = bin-fWindow;
-	      }
-	      else {
-		low_edge = 0;
-	      }
+	    unsigned int bin = _hit_peakT[ihit];
+	    unsigned int low_edge,high_edge;
+	    if((int)bin > fWindow and _hit_plane[ihit] == 0) {
+	      low_edge = bin - (2*fWindow);
+	    }
+	    else if ((int)bin>fWindow) {
+	      low_edge = bin-fWindow;
+	    }
+	    else {
+	      low_edge = 0;
+	    }
+
+	    if (_hit_plane[ihit] == 0) {
+	      high_edge = bin + fWindow + 6;
+	    } else {
 	      high_edge = bin + fWindow;
-	      if (high_edge > (fDataSize-1)) {
-		high_edge = fDataSize - 1;
-	      }
-	      // double integral = 0.0;
-	      waveform_number_tracker++;
-	      // int counter_for_adc_in_waveform = 0;
-	      for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
-		// _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
-		// counter_for_adc_in_waveform++;
-		_waveform_number[adc_counter] = waveform_number_tracker;
-		_adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
-		_time_for_waveform[adc_counter] = ibin;
-		_wire_number[adc_counter] = _hit_wire[ihit];
-		_hit_time[adc_counter] = _hit_peakT[ihit];
-		// integral+=_adc_on_wire[adc_counter];
-		// _waveform_integral[adc_counter] = integral;
-		adc_counter++;
-	      }
-	      //          _hit_full_integral[ihit] = integral;
-	    } // if hit channel matches waveform channel
-	  } //end loop over hits
-	}// end loop over waveforms
+	    }
+
+	    if (high_edge > (fDataSize-1)) {
+	      high_edge = fDataSize - 1;
+	    }
+	    // double integral = 0.0;
+	    waveform_number_tracker++;
+	    // int counter_for_adc_in_waveform = 0;
+	    for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
+	      // _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
+	      // counter_for_adc_in_waveform++;
+	      _waveform_number[adc_counter] = waveform_number_tracker;
+	      _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
+	      _time_for_waveform[adc_counter] = ibin;
+	      _wire_number[adc_counter] = _hit_wire[ihit];
+	      _hit_time[adc_counter] = _hit_peakT[ihit];
+	      // integral+=_adc_on_wire[adc_counter];
+	      // _waveform_integral[adc_counter] = integral;
+	      adc_counter++;
+	    }
+	    //          _hit_full_integral[ihit] = integral;
+	  } // if hit channel matches waveform channel
+	} //end loop over hits
+      }
+    }// end loop over waveforms
   }// end if fCheckTrasparency
 
 
@@ -1007,32 +1065,32 @@ void Hitdumper::analyze(const art::Event& evt)
       mcpart_no_primaries = MCParticleList.size();
       ResizeMCParticle(MCParticleList.size()); //Set vectors
       for (size_t iMCPart = 0; iMCPart < MCParticleList.size(); iMCPart++){
-        art::Ptr<simb::MCParticle> pPart = MCParticleList[iMCPart]; //get particle pointer
-        //Geant info
-        mcpart_Mother[iMCPart] = pPart->Mother();
-        mcpart_TrackId[iMCPart] = pPart->TrackId();
-        mcpart_pdg[iMCPart] = pPart->PdgCode();
-        mcpart_status[iMCPart] =  pPart->StatusCode();
-        mcpart_process[iMCPart] =  pPart->Process();
-        mcpart_endprocess[iMCPart] =  pPart->EndProcess();
-        mcpart_Eng[iMCPart] = pPart->E();
-        mcpart_EndE[iMCPart] = pPart->EndE();
-        mcpart_Mass[iMCPart] = pPart->Mass();
-        mcpart_Px[iMCPart] = pPart->Px();
-        mcpart_Py[iMCPart] = pPart->Py();
-        mcpart_Pz[iMCPart] = pPart->Pz();
-        mcpart_P[iMCPart] = pPart->Momentum().Vect().Mag();
-        mcpart_StartPointx[iMCPart] = pPart->Vx();
-        mcpart_StartPointy[iMCPart] = pPart->Vy();
-        mcpart_StartPointz[iMCPart] = pPart->Vz();
-        mcpart_StartT[iMCPart] = pPart->T();
-        mcpart_EndPointx[iMCPart] = pPart->EndPosition()[0];
-        mcpart_EndPointy[iMCPart] = pPart->EndPosition()[1];
-        mcpart_EndPointz[iMCPart] = pPart->EndPosition()[2];
-        mcpart_EndT[iMCPart] = pPart->EndT();
-        mcpart_theta_xz[iMCPart] =  std::atan2(pPart->Px(), pPart->Pz());
-        mcpart_theta_yz[iMCPart] =  std::atan2(pPart->Py(), pPart->Pz());
-        mcpart_NumberDaughters[iMCPart] = pPart->NumberDaughters();
+	art::Ptr<simb::MCParticle> pPart = MCParticleList[iMCPart]; //get particle pointer
+	//Geant info
+	mcpart_Mother[iMCPart] = pPart->Mother();
+	mcpart_TrackId[iMCPart] = pPart->TrackId();
+	mcpart_pdg[iMCPart] = pPart->PdgCode();
+	mcpart_status[iMCPart] =  pPart->StatusCode();
+	mcpart_process[iMCPart] =  pPart->Process();
+	mcpart_endprocess[iMCPart] =  pPart->EndProcess();
+	mcpart_Eng[iMCPart] = pPart->E();
+	mcpart_EndE[iMCPart] = pPart->EndE();
+	mcpart_Mass[iMCPart] = pPart->Mass();
+	mcpart_Px[iMCPart] = pPart->Px();
+	mcpart_Py[iMCPart] = pPart->Py();
+	mcpart_Pz[iMCPart] = pPart->Pz();
+	mcpart_P[iMCPart] = pPart->Momentum().Vect().Mag();
+	mcpart_StartPointx[iMCPart] = pPart->Vx();
+	mcpart_StartPointy[iMCPart] = pPart->Vy();
+	mcpart_StartPointz[iMCPart] = pPart->Vz();
+	mcpart_StartT[iMCPart] = pPart->T();
+	mcpart_EndPointx[iMCPart] = pPart->EndPosition()[0];
+	mcpart_EndPointy[iMCPart] = pPart->EndPosition()[1];
+	mcpart_EndPointz[iMCPart] = pPart->EndPosition()[2];
+	mcpart_EndT[iMCPart] = pPart->EndT();
+	mcpart_theta_xz[iMCPart] =  std::atan2(pPart->Px(), pPart->Pz());
+	mcpart_theta_yz[iMCPart] =  std::atan2(pPart->Py(), pPart->Pz());
+	mcpart_NumberDaughters[iMCPart] = pPart->NumberDaughters();
       }
     }//endif get label
     else {
@@ -1046,9 +1104,9 @@ void Hitdumper::analyze(const art::Event& evt)
       mctrack_no_primaries = MCTrackList.size();
       ResizeMCTrack(MCTrackList.size());
       for (size_t iMCTrack = 0; iMCTrack < MCTrackList.size(); iMCTrack++){
-        art::Ptr<sim::MCTrack> pTrack = MCTrackList[iMCTrack]; //get particle pointer
-        mctrack_pdg[iMCTrack] = pTrack->PdgCode();
-        mctrack_TrackId[iMCTrack] = pTrack->TrackID();
+	art::Ptr<sim::MCTrack> pTrack = MCTrackList[iMCTrack]; //get particle pointer
+	mctrack_pdg[iMCTrack] = pTrack->PdgCode();
+	mctrack_TrackId[iMCTrack] = pTrack->TrackID();
       }
     }
     else{
@@ -1063,9 +1121,9 @@ void Hitdumper::analyze(const art::Event& evt)
       mcshower_no_primaries = MCShowerList.size();
       ResizeMCShower(MCShowerList.size());
       for (size_t iMCShower = 0; iMCShower < MCShowerList.size(); iMCShower++){
-        art::Ptr<sim::MCShower> pShower = MCShowerList[iMCShower]; //get particle pointer
-        mcshower_pdg[iMCShower] = pShower->PdgCode();
-        mcshower_TrackId[iMCShower] = pShower->TrackID();
+	art::Ptr<sim::MCShower> pShower = MCShowerList[iMCShower]; //get particle pointer
+	mcshower_pdg[iMCShower] = pShower->PdgCode();
+	mcshower_TrackId[iMCShower] = pShower->TrackID();
       }
     }
     else{
@@ -1117,87 +1175,87 @@ void Hitdumper::analyze(const art::Event& evt)
       //Because MCTruth could be a neutrino OR something else (e.g. cosmics) we are going to have to count up how many neutrinos there are
       mcevts_truth = 0;
       for (unsigned int i_mctruth = 0; i_mctruth < mclist.size(); i_mctruth++){
-        //fetch an mctruth
-        art::Ptr<simb::MCTruth> curr_mctruth = mclist[i_mctruth];
-        //Check if it's a neutrino
-        if (!curr_mctruth->NeutrinoSet()) continue;
+	//fetch an mctruth
+	art::Ptr<simb::MCTruth> curr_mctruth = mclist[i_mctruth];
+	//Check if it's a neutrino
+	if (!curr_mctruth->NeutrinoSet()) continue;
 
-        // Genie Truth association only for the neutrino
-        if (fmgt.size()>i_mctruth) {
-          std::vector< art::Ptr<simb::GTruth> > mcgtAssn = fmgt.at(i_mctruth);
+	// Genie Truth association only for the neutrino
+	if (fmgt.size()>i_mctruth) {
+	  std::vector< art::Ptr<simb::GTruth> > mcgtAssn = fmgt.at(i_mctruth);
 
-          nuScatterCode_truth[i_mctruth] = mcgtAssn[0]->fGscatter;
-        } else {
-          nuScatterCode_truth[i_mctruth] = -1.;
-        }
+	  nuScatterCode_truth[i_mctruth] = mcgtAssn[0]->fGscatter;
+	} else {
+	  nuScatterCode_truth[i_mctruth] = -1.;
+	}
 
-        nuPDG_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().PdgCode();
-        ccnc_truth[i_mctruth] = curr_mctruth->GetNeutrino().CCNC();
-        mode_truth[i_mctruth] = curr_mctruth->GetNeutrino().Mode();
-        Q2_truth[i_mctruth] = curr_mctruth->GetNeutrino().QSqr();
-        W_truth[i_mctruth] = curr_mctruth->GetNeutrino().W();
-        hitnuc_truth[i_mctruth] = curr_mctruth->GetNeutrino().HitNuc();
-        enu_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().E();
-        nuvtxx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vx();
-        nuvtxy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vy();
-        nuvtxz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vz();
-        if (curr_mctruth->GetNeutrino().Nu().P()){
-          nu_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Px()/curr_mctruth->GetNeutrino().Nu().P();
-          nu_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Py()/curr_mctruth->GetNeutrino().Nu().P();
-          nu_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Pz()/curr_mctruth->GetNeutrino().Nu().P();
-        }
-        lep_mom_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().P();
-        if (curr_mctruth->GetNeutrino().Lepton().P()){
-          lep_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Px()/curr_mctruth->GetNeutrino().Lepton().P();
-          lep_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Py()/curr_mctruth->GetNeutrino().Lepton().P();
-          lep_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Pz()/curr_mctruth->GetNeutrino().Lepton().P();
-        }
-        //Brailsford
-        //2017/10/17
-        //Issue 12918
-        //Use the art::Ptr key as the neutrino's unique ID
-        nuID_truth[i_mctruth] = curr_mctruth.key();
-        //We need to also store N 'flux' neutrinos per event so now check that the FindOneP is valid and, if so, use it!
-        if (fmFluxNeutrino.isValid()){
-          if (fmFluxNeutrino.at(0).size()>i_mctruth){
+	nuPDG_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().PdgCode();
+	ccnc_truth[i_mctruth] = curr_mctruth->GetNeutrino().CCNC();
+	mode_truth[i_mctruth] = curr_mctruth->GetNeutrino().Mode();
+	Q2_truth[i_mctruth] = curr_mctruth->GetNeutrino().QSqr();
+	W_truth[i_mctruth] = curr_mctruth->GetNeutrino().W();
+	hitnuc_truth[i_mctruth] = curr_mctruth->GetNeutrino().HitNuc();
+	enu_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().E();
+	nuvtxx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vx();
+	nuvtxy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vy();
+	nuvtxz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vz();
+	if (curr_mctruth->GetNeutrino().Nu().P()){
+	  nu_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Px()/curr_mctruth->GetNeutrino().Nu().P();
+	  nu_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Py()/curr_mctruth->GetNeutrino().Nu().P();
+	  nu_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Pz()/curr_mctruth->GetNeutrino().Nu().P();
+	}
+	lep_mom_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().P();
+	if (curr_mctruth->GetNeutrino().Lepton().P()){
+	  lep_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Px()/curr_mctruth->GetNeutrino().Lepton().P();
+	  lep_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Py()/curr_mctruth->GetNeutrino().Lepton().P();
+	  lep_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Pz()/curr_mctruth->GetNeutrino().Lepton().P();
+	}
+	//Brailsford
+	//2017/10/17
+	//Issue 12918
+	//Use the art::Ptr key as the neutrino's unique ID
+	nuID_truth[i_mctruth] = curr_mctruth.key();
+	//We need to also store N 'flux' neutrinos per event so now check that the FindOneP is valid and, if so, use it!
+	if (fmFluxNeutrino.isValid()){
+	  if (fmFluxNeutrino.at(0).size()>i_mctruth){
 	    art::Ptr<simb::MCFlux> curr_mcflux = fmFluxNeutrino.at(0).at(i_mctruth);
 	    tpx_flux[i_mctruth] = curr_mcflux->ftpx;
 	    tpy_flux[i_mctruth] = curr_mcflux->ftpy;
 	    tpz_flux[i_mctruth] = curr_mcflux->ftpz;
 	    tptype_flux[i_mctruth] = curr_mcflux->ftptype;
-          }
-        }
+	  }
+	}
 
-        //Let's increase the neutrino count
-        mcevts_truth++;
+	//Let's increase the neutrino count
+	mcevts_truth++;
       }
 
       if (mctruth->NeutrinoSet()){
-        //genie particles information
-        genie_no_primaries = mctruth->NParticles();
+	//genie particles information
+	genie_no_primaries = mctruth->NParticles();
 
-        size_t StoreParticles = std::min((size_t) genie_no_primaries, MaxGeniePrimaries);
-        if (genie_no_primaries > (int) StoreParticles) {
-          // got this error? it might be a bug,
-          // since the structure should have enough room for everything
-          mf::LogError("HitDumper") << "event has "
+	size_t StoreParticles = std::min((size_t) genie_no_primaries, MaxGeniePrimaries);
+	if (genie_no_primaries > (int) StoreParticles) {
+	  // got this error? it might be a bug,
+	  // since the structure should have enough room for everything
+	  mf::LogError("HitDumper") << "event has "
 				    << genie_no_primaries << " MC particles, only "
 				    << StoreParticles << " stored in tree";
-        }
-        for(size_t iPart = 0; iPart < StoreParticles; ++iPart){
-          const simb::MCParticle& part(mctruth->GetParticle(iPart));
-          genie_primaries_pdg[iPart]=part.PdgCode();
-          genie_Eng[iPart]=part.E();
-          genie_Px[iPart]=part.Px();
-          genie_Py[iPart]=part.Py();
-          genie_Pz[iPart]=part.Pz();
-          genie_P[iPart]=part.P();
-          genie_status_code[iPart]=part.StatusCode();
-          genie_mass[iPart]=part.Mass();
-          genie_trackID[iPart]=part.TrackId();
-          genie_ND[iPart]=part.NumberDaughters();
-          genie_mother[iPart]=part.Mother();
-        } // for particle
+	}
+	for(size_t iPart = 0; iPart < StoreParticles; ++iPart){
+	  const simb::MCParticle& part(mctruth->GetParticle(iPart));
+	  genie_primaries_pdg[iPart]=part.PdgCode();
+	  genie_Eng[iPart]=part.E();
+	  genie_Px[iPart]=part.Px();
+	  genie_Py[iPart]=part.Py();
+	  genie_Pz[iPart]=part.Pz();
+	  genie_P[iPart]=part.P();
+	  genie_status_code[iPart]=part.StatusCode();
+	  genie_mass[iPart]=part.Mass();
+	  genie_trackID[iPart]=part.TrackId();
+	  genie_ND[iPart]=part.NumberDaughters();
+	  genie_mother[iPart]=part.Mother();
+	} // for particle
       } //if neutrino set
     }//if (mcevts_truth)
 
@@ -1293,7 +1351,7 @@ void Hitdumper::beginJob()
     fTree->Branch("crt_track_length", &_crt_track_length);
     fTree->Branch("theta_xz_CRT", &_theta_xz_CRT); 
     fTree->Branch("theta_yz_CRT", &_theta_yz_CRT);
- }
+  }
 
   if (freadOpHits) {
     fTree->Branch("nophits", &_nophits, "nophits/I");

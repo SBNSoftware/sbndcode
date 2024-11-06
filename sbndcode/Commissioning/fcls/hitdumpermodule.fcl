@@ -6,6 +6,13 @@ hitdumper:
 {
     module_type:              "HitDumper"
 
+    TPCNum: 1
+    PlaneNum: 0
+    NoisyChannel: 1525 
+    MaxTime: 1100.0
+    MinTime: 400.0
+    TimeWindow: 150	
+
     MaxHits: 18000
     MaxOpHits: 100000
     MaxSamples: 5001
@@ -40,9 +47,9 @@ hitdumper:
     readTruth:                true
     readMCParticle:           false
     savePOTinfo:              true
-    checkTransparency:        false
+    checkTransparency:        true
 
-    window:                   100
+    window:                   20
 
     KeepTaggerTypes:          [0, 1, 2, 3, 4, 5, 6]
 
