@@ -466,12 +466,12 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
 
         for (size_t itrig=0; itrig < frag_v.size(); itrig++){
             raw::pmt::boardTimingInfo board_info;
+            std::vector<uint32_t> board_ttt_v; 
             std::vector<std::vector<uint16_t>> iwvfm_v;
             auto ifrag = frag_v.at(itrig);
             uint16_t ipostpercent = 0; // nanosecond portion of the timestamp (at flash trigger)
             uint32_t ittt = 0; // trigger time tag in ns (at end of the waveform)
             uint32_t ilen = 0;
-            // uint32_t isec = 0;  // needs to be set to the **start** of the waveform for consistency 
             int      itick = 0;
             
             get_timing(ifrag, ipostpercent, ittt, ilen, itick);
@@ -482,7 +482,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             }
             full_found++;
             board_info.postPercent = ipostpercent;
-            board_info.triggerTimeTag = ittt;
+            board_ttt_v.push_back(ittt);
 
             get_waveforms(ifrag, iwvfm_v);
             uint iwvfm_start = 0;
@@ -494,7 +494,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             else iwvfm_start = ittt - ilen*2;
             
             if (fdebug>2){
-                std::cout << "      Frag ID: " << fragid
+                std::cout << "      Board: " << fragid
                           << ", ttt: " << ittt
                           << ", tick: " << itick
                           << ", frag ts: " << ifrag.timestamp()%uint(1e9)
@@ -506,28 +506,43 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     auto jfrag = frag_v.at(jtrig);
                     auto jlen = get_length(jfrag);
                     auto jttt = get_ttt(jfrag);
-                    // if the next trigger is more than 10 us away than the end of the wvfm or is equal to the nominal length, stop looking
-                    if (((signed)(jttt - iwvfm_end) > (signed)(fnominal_length*2)) || (jlen >= fnominal_length)) break; 
-                    else if (((jttt - iwvfm_end) < 1e4) && (jlen < fnominal_length)){
+                    // to be an extended trigger, need to fulfill both conditions:
+                    // 1. the length of the extension will be less than the nominal length 
+                    // 2. the time between the first ttt and the extended ttt will be less than the nominal length*2 (2 ns tick)
+                    bool length_check = (jlen < fnominal_length);
+                    bool ttt_check=false;
+                    if (iwvfm_end < uint(1e9-fnominal_length*2)){
+                        if ((jttt-iwvfm_end) < fnominal_length*2)
+                            ttt_check = true;
+                    }
+                    // if the end of wvfm is less than 10 us away from end of the second, may be second rollover
+                    else if ((iwvfm_end > uint(1e9-fnominal_length*2)) && (jttt < fnominal_length*2)) {
+                        if ((jttt + 1e9 - iwvfm_end) < fnominal_length*2){
+                            ttt_check = true;
+                        }
+                    }
+                    if (length_check && ttt_check){
                         extensions_used++;
+                        board_ttt_v.push_back(jttt);
                         std::vector<std::vector<uint16_t>> jwvfm_v;
                         get_waveforms(jfrag, jwvfm_v);
                         for (size_t ich=0; ich < iwvfm_v.size(); ich++){
                             std::vector<uint16_t>& orig_wvfm = iwvfm_v.at(ich);
                             std::vector<uint16_t>  extd_wvfm = jwvfm_v.at(ich); // extended waveform 
                             orig_wvfm.insert( orig_wvfm.end(), extd_wvfm.begin(), extd_wvfm.end());
-                        } // end ch loop 
+                        } // end ch loop
                     } // end if extension condition
+                    else break; // if the immediate next trigger is not an extension, break
                     iwvfm_end = jttt;
                 } // end jtrig loop
                 if (fdebug>2){
-                    std::cout << "      Frag ID: " << fragid
+                    std::cout << "      Board: " << fragid
                               << " -> start time: " << int(iwvfm_start) - int(event_trigger_time)
                               << " , extended wvfm length: " << iwvfm_v.at(0).size()
                               << std::endl; 
                 }
             } // end extended flag
-
+            board_info.triggerTimeTag = board_ttt_v;
             brdTimingInfoVec->push_back(board_info);
             art::Ptr<raw::pmt::boardTimingInfo> brdTimingInfoPtr = make_pmtbrd_ptr(brdTimingInfoVec->size()-1);
 
@@ -547,7 +562,6 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 }
                 double time_diff = (int(iwvfm_start) - int(event_trigger_time))*1e-3; // us
                 if ((std::abs(time_diff) > fallowed_time_diff) && (timing_type<2)){
-                    std::cout << "EVENT ROLLOVER: " << event_trigger_time << ", " << iwvfm_start << std::endl;
                     // second rollover between reference time and waveform start 
                     if (std::abs(time_diff + 1e6) < fallowed_time_diff)
                         time_diff += 1e6; // us 
@@ -555,7 +569,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     else if (std::abs(time_diff - 1e6) < fallowed_time_diff)
                         time_diff -= 1e6; // us
                     else if (fdebug>1)
-                        std::cout << "WARNING: TIME DIFFERENCE IS GREATER THAN 3 ms. Event timestamp: " << event_trigger_time << ", waveform timestamp: " << iwvfm_start << std::endl;
+                        std::cout << "WARNING: TIME DIFFERENCE IS GREATER THAN " << fallowed_time_diff << " us. Event timestamp: " << event_trigger_time << ", waveform timestamp: " << iwvfm_start << std::endl;
                 }
                 uint ch;
                 if (i == 15)
@@ -584,13 +598,20 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         } // end itrig loop
 
         if (fdebug>1){
-            // print number of triggers, number of extensions found, and number of extensions used
+            bool trigger_bookkeeping = (full_found + extensions_used) == int(frag_v.size());
+            bool found_used = (extensions_used == extensions_found);
             std::cout << "      Board: " << fragid
-                        << " -> # of triggers: " << frag_v.size()
-                        << ", full found: " << full_found
-                        << ", extensions found: " << extensions_found
-                        << ", extensions used: " << extensions_used
-                        << std::endl;
+                      << ", passed trigger bookkeeping: " << (trigger_bookkeeping && found_used)
+                      << std::endl;
+            if (fdebug>2){
+            // print number of triggers, number of extensions found, and number of extensions used
+                std::cout << "      Board: " << fragid
+                          << " -> # of triggers: " << frag_v.size()
+                          << ", full found: " << full_found
+                          << ", extensions found: " << extensions_found
+                          << ", extensions used: " << extensions_used
+                          << std::endl;
+            }
         }  
     } // end board loop
     board_frag_v.clear();

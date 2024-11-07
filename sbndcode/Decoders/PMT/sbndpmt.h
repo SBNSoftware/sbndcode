@@ -31,11 +31,11 @@ namespace raw {
       public:
         boardTimingInfo() {}; // constructor
         boardTimingInfo(uint16_t postPercent, 
-                        uint32_t triggerTimeTag) :
+                        std::vector<uint32_t> &triggerTimeTag) :
         postPercent(postPercent), triggerTimeTag(triggerTimeTag) {};
 
-        uint16_t    postPercent; // # 0-100, represents a percentage
-        uint32_t triggerTimeTag; // ns
+        uint16_t              postPercent; // # 0-100, represents a percentage
+        std::vector<uint32_t> triggerTimeTag; // ns
     };
   }
 }

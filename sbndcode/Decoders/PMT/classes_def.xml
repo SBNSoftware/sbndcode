@@ -12,7 +12,8 @@
   <class name="art::Wrapper<raw::pmt::eventTimingInfo>"/>
   <class name="art::Wrapper<std::vector<raw::pmt::eventTimingInfo> >"/>
 
-  <class name="raw::pmt::boardTimingInfo" ClassVersion="10">
+  <class name="raw::pmt::boardTimingInfo" ClassVersion="11">
+   <version ClassVersion="11" checksum="2889288417"/>
    <version ClassVersion="10" checksum="652371108"/>
   </class>
   <class name="std::vector<raw::pmt::boardTimingInfo>"/>
