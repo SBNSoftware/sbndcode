@@ -18,9 +18,10 @@ physics.producers:
     crtstrips: @local::crtstriphitproducer_data_sbnd
 }
 
-physics.reco1: [sptpc2d, gaushit, cluster3d, crtstrips]
+physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d, crtstrips]
 physics.ana: [superadata]
 physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
 physics.end_paths: ["stream1",ana]
 
+outputs.out1.SelectEvents: [ "reco1" ]
 outputs.out1.outputCommands: [@sequence::sbnd_rootoutput.outputCommands, @sequence::sbnd_reco1_drops_keep_rawopdetwf]
