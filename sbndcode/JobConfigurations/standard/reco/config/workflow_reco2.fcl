@@ -124,6 +124,7 @@ sbnd_reco2_producer_sequence_no_sce_corrections: [
 sbnd_reco2_producer_sequence_sce: [
     @sequence::sbnd_reco2_tpc_sequence_sce
     , @sequence::sbnd_reco2_multi_system_matching_sequence_sce
+]
 
 sbnd_reco2_producer_sequence: [
     @sequence::sbnd_reco2_producer_sequence_no_sce_corrections
