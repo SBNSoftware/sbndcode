@@ -5,17 +5,21 @@
 -->
 
 <lcgdict>
-  <class name="raw::pmt::eventTimingInfo">
+  <class name="raw::pmt::eventTimingInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="42360994"/>
   </class>
   <class name="std::vector<raw::pmt::eventTimingInfo>"/>
   <class name="art::Wrapper<raw::pmt::eventTimingInfo>"/>
   <class name="art::Wrapper<std::vector<raw::pmt::eventTimingInfo> >"/>
 
-  <class name="raw::pmt::boardTimingInfo">
+  <class name="raw::pmt::boardTimingInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="652371108"/>
   </class>
   <class name="std::vector<raw::pmt::boardTimingInfo>"/>
   <class name="art::Wrapper<std::vector<raw::pmt::boardTimingInfo>>"/>
 
+  <class name="std::pair<art::Ptr<raw::pmt::boardTimingInfo>, art::Ptr<raw::OpDetWaveform>>"/>
+  <class name="std::pair<art::Ptr<raw::OpDetWaveform>, art::Ptr<raw::pmt::boardTimingInfo>>"/>
   <class name="art::Assns<raw::pmt::boardTimingInfo, raw::OpDetWaveform, void>"/>
   <class name="art::Assns<raw::OpDetWaveform, raw::pmt::boardTimingInfo, void>"/>
   <class name="art::Wrapper<art::Assns<raw::pmt::boardTimingInfo, raw::OpDetWaveform, void>>"/>
