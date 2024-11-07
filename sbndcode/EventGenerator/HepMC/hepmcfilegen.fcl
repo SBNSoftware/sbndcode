@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+standard_hepmcfilegen:
+{
+  module_type:   "HepMCFileGen"
+
+  FileSearchPaths: "/pnfs/sbnd/persistent/users/abeever/xsec/HepMC/NuWro_INCL_CCQE/"
+  FilePatterns:    ["*.hepmc"]
+  EventsPerPOT:    1 # Currently not implemented
+
+  FluxCopyMethod:  "DIRECT"
+}
+
+END_PROLOG 
