@@ -32,6 +32,8 @@
 #include "TFitResultPtr.h"
 #include "TFitResult.h"
 #include "TCanvas.h"
+#include "TSystem.h"
+#include "TStyle.h"
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
@@ -81,13 +83,15 @@ private:
 
   CRTGeoAlg fCRTGeoAlg;
 
+  // Inputs
   std::string fFEBDataModuleLabel, fCRTStripHitModuleLabel, fCRTClusterModuleLabel,
-    fCRTSpacePointModuleLabel, fCRTTrackModuleLabel;
+    fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTopSaveDirectory;
 
-  bool fOnly2HitSpacePoints;
+  bool fOnly2HitSpacePoints, fSaveAllFits, fSaveBadFits;
 
   double fTrackAngleLimit, fPullWindow;
 
+  // Other Global Parameters
   int fNEvents;
 
   TTree* fChannelTree;
@@ -104,6 +108,8 @@ private:
     _tr_peak_fit_converged, _tr_lim_angle_peak_fit_converged;
 
   std::map<uint, TH1D*> hADCPed, hADCSH, hADCSP, hADCTr, hADCTrLA;
+
+  std::string fPedestalSaveDirectory, fPeakSaveDirectory, fBadPedestalSaveDirectory, fBadPeakSaveDirectory;
 };
 
 
@@ -116,7 +122,10 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fCRTClusterModuleLabel    = p.get<std::string>("CRTClusterModuleLabel");
   fCRTSpacePointModuleLabel = p.get<std::string>("CRTSpacePointModuleLabel");
   fCRTTrackModuleLabel      = p.get<std::string>("CRTTrackModuleLabel");
+  fTopSaveDirectory         = p.get<std::string>("TopSaveDirectory");
   fOnly2HitSpacePoints      = p.get<bool>("Only2HitSpacePoints");
+  fSaveAllFits              = p.get<bool>("SaveAllFits");
+  fSaveBadFits              = p.get<bool>("SaveBadFits");
   fTrackAngleLimit          = p.get<double>("TrackAngleLimit");
   fPullWindow               = p.get<double>("PullWindow");
 
@@ -166,7 +175,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
 
   for(int ch = 0; ch < 4480; ++ch)
     {
-      hADCPed[ch]  = new TH1D(Form("hADCPed_Channel%i", ch), ";ADC;Readouts", 4300, -.5, 4299.5);
+      hADCPed[ch]  = new TH1D(Form("hADCPed_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
       hADCSH[ch]   = new TH1D(Form("hADCSH_Channel%i", ch), ";ADC;Strip Hits", 4300, -.5, 4299.5);
       hADCSP[ch]   = new TH1D(Form("hADCSP_Channel%i", ch), ";ADC;Space Points", 4300, -.5, 4299.5);
       hADCTr[ch]   = new TH1D(Form("hADCTr_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
@@ -176,6 +185,32 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
 
 void sbnd::crt::ADRIFT::analyze(art::Event const& e)
 {
+  if((fSaveAllFits || fSaveBadFits) && fNEvents == 0)
+    {
+      gSystem->Exec(Form("mkdir -p %s", fTopSaveDirectory.c_str()));
+
+      fPedestalSaveDirectory = Form("%s/run%i/pedestals", fTopSaveDirectory.c_str(), e.run());
+      gSystem->Exec(Form("mkdir -p %s", fPedestalSaveDirectory.c_str()));
+
+      fPeakSaveDirectory = Form("%s/run%i/peaks", fTopSaveDirectory.c_str(), e.run());
+      gSystem->Exec(Form("mkdir -p %s", fPeakSaveDirectory.c_str()));
+
+      fBadPedestalSaveDirectory = Form("%s/run%i/pedestals/bad", fTopSaveDirectory.c_str(), e.run());
+      gSystem->Exec(Form("mkdir -p %s", fBadPedestalSaveDirectory.c_str()));
+
+      fBadPeakSaveDirectory = Form("%s/run%i/peaks/bad", fTopSaveDirectory.c_str(), e.run());
+      gSystem->Exec(Form("mkdir -p %s", fBadPeakSaveDirectory.c_str()));
+
+      gStyle->SetOptStat(0);
+      gStyle->SetFrameLineWidth(2);
+      gStyle->SetTextFont(62);
+      gStyle->SetTextSize(0.07);
+      gStyle->SetLabelFont(62, "xyz");
+      gStyle->SetLabelSize(0.05, "xyz");
+      gStyle->SetTitleSize(0.05, "xyz");
+      gStyle->SetTitleFont(62, "xyz");
+    }
+
   // Get FEBDatas
   art::Handle<std::vector<FEBData>> FEBDataHandle;
   e.getByLabel(fFEBDataModuleLabel, FEBDataHandle);
@@ -381,16 +416,22 @@ void sbnd::crt::ADRIFT::endJob()
 
           Rate(hADCSH[ch], _sh_rate);
           Rate(hADCSP[ch], _sp_rate);
-          Rate(hADCTr[ch], _tr_rate);
+
+          if(_tagger != kBottomTagger)
+            Rate(hADCTr[ch], _tr_rate);
 
           PeakPeak(hADCSH[ch], _ped_calib, _sh_peak_peak);
           PeakFit(hADCSH[ch], _sh_peak_peak, _ped_calib, _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_fit_converged);
           PeakPeak(hADCSP[ch], _ped_calib, _sp_peak_peak);
           PeakFit(hADCSP[ch], _sp_peak_peak, _ped_calib, _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_fit_converged);
-          PeakPeak(hADCTr[ch], _ped_calib, _tr_peak_peak);
-          PeakFit(hADCTr[ch], _tr_peak_peak, _ped_calib, _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_fit_converged);
-          PeakPeak(hADCTrLA[ch], _ped_calib, _tr_lim_angle_peak_peak);
-          PeakFit(hADCTrLA[ch], _tr_lim_angle_peak_peak, _ped_calib, _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_fit_converged);
+
+          if(_tagger != kBottomTagger)
+            {
+              PeakPeak(hADCTr[ch], _ped_calib, _tr_peak_peak);
+              PeakFit(hADCTr[ch], _tr_peak_peak, _ped_calib, _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_fit_converged);
+              PeakPeak(hADCTrLA[ch], _ped_calib, _tr_lim_angle_peak_peak);
+              PeakFit(hADCTrLA[ch], _tr_lim_angle_peak_peak, _ped_calib, _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_fit_converged);
+            }
 
           const double sh_sat = Saturation(hADCSH[ch]);
           _sh_sat_ratio_total = sh_sat / hADCSH[ch]->GetEntries();
@@ -400,13 +441,16 @@ void sbnd::crt::ADRIFT::endJob()
           _sp_sat_ratio_total = sp_sat / hADCSP[ch]->GetEntries();
           _sp_sat_ratio_peak  = sp_sat / hADCSP[ch]->GetBinContent(hADCSP[ch]->FindBin(_sp_peak_peak));
 
-          const double tr_sat = Saturation(hADCTr[ch]);
-          _tr_sat_ratio_total = tr_sat / hADCTr[ch]->GetEntries();
-          _tr_sat_ratio_peak  = tr_sat / hADCTr[ch]->GetBinContent(hADCTr[ch]->FindBin(_tr_peak_peak));
+          if(_tagger != kBottomTagger)
+            {
+              const double tr_sat = Saturation(hADCTr[ch]);
+              _tr_sat_ratio_total = tr_sat / hADCTr[ch]->GetEntries();
+              _tr_sat_ratio_peak  = tr_sat / hADCTr[ch]->GetBinContent(hADCTr[ch]->FindBin(_tr_peak_peak));
 
-          const double tr_lim_angle_sat = Saturation(hADCTrLA[ch]);
-          _tr_lim_angle_sat_ratio_total = tr_lim_angle_sat / hADCTrLA[ch]->GetEntries();
-          _tr_lim_angle_sat_ratio_peak  = tr_lim_angle_sat / hADCTrLA[ch]->GetBinContent(hADCTrLA[ch]->FindBin(_tr_lim_angle_peak_peak));
+              const double tr_lim_angle_sat = Saturation(hADCTrLA[ch]);
+              _tr_lim_angle_sat_ratio_total = tr_lim_angle_sat / hADCTrLA[ch]->GetEntries();
+              _tr_lim_angle_sat_ratio_peak  = tr_lim_angle_sat / hADCTrLA[ch]->GetBinContent(hADCTrLA[ch]->FindBin(_tr_lim_angle_peak_peak));
+            }
 
           fChannelTree->Fill();
         }
@@ -416,12 +460,14 @@ void sbnd::crt::ADRIFT::endJob()
 void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool &converged)
 {
   TF1 *gaus = new TF1("gaus", "gaus", 0, 500);
-  TString name = hADC->GetName();
+  const TString name = hADC->GetName();
+  TString ch_name = name;
+  ch_name.Remove(0,15);
 
   TH1D* hADC2 = (TH1D*) hADC->Clone(name+ "_2");
-  hADC2->Rebin(10);
+  hADC2->Rebin(5);
 
-  TFitResultPtr fit_result = hADC->Fit(gaus, "QRS");
+  TFitResultPtr fit_result = hADC2->Fit(gaus, "QRS");
   converged = !(bool)(int(fit_result));
 
   if(!converged)
@@ -429,6 +475,29 @@ void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool 
 
   fit  = gaus->GetParameter("Mean");
   chi2 = gaus->GetChisquare() / gaus->GetNDF();
+
+  if(fSaveAllFits || (fSaveBadFits && !converged))
+    {
+      TCanvas *c = new TCanvas(Form("c%s", name.Data()), Form("c%s", name.Data()));
+      c->cd();
+
+      hADC2->SetLineColor(kOrange+2);
+      hADC2->SetLineWidth(2);
+      hADC2->Draw("histe");
+      gaus->SetLineColor(kSpring-6);
+      gaus->Draw("same");
+
+      if(converged)
+        {
+          c->SaveAs(Form("%s/pedestal_fit_channel_%s.png", fPedestalSaveDirectory.c_str(), ch_name.Data()));
+          c->SaveAs(Form("%s/pedestal_fit_channel_%s.pdf", fPedestalSaveDirectory.c_str(), ch_name.Data()));
+        }
+      else
+        {
+          c->SaveAs(Form("%s/pedestal_fit_channel_%s.png", fBadPedestalSaveDirectory.c_str(), ch_name.Data()));
+          c->SaveAs(Form("%s/pedestal_fit_channel_%s.pdf", fBadPedestalSaveDirectory.c_str(), ch_name.Data()));
+        }
+    }
 }
 
 void sbnd::crt::ADRIFT::PedestalPeak(TH1D* hADC, double &peak)
@@ -465,10 +534,35 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
   TF1 *langau = new TF1("langau", LanGau, ped + 20, 4000, 4);
   double params[4] = { 10, peak, hADC->GetEntries(), 50 };
   langau->SetParameters(params);
-  TString name = hADC->GetName();
+  const TString name = hADC->GetName();
+  TString ch_name    = name;
+  TString type       = "";
+
+  if(name.Contains("SH"))
+    {
+      ch_name.Remove(0,14);
+      type = "strip_hit";
+    }
+  else if(name.Contains("SP"))
+    {
+      ch_name.Remove(0,14);
+      type = "space_point";
+    }
+  else if(name.Contains("TrLA"))
+    {
+      ch_name.Remove(0,16);
+      type = "track_limited_angle";
+    }
+  else if(name.Contains("Tr"))
+    {
+      ch_name.Remove(0,14);
+      type = "track";
+    }
+  else
+    std::cout << "Cannot identify histogram type (" << name << ")" << std::endl;
 
   TH1D* hADC2 = (TH1D*) hADC->Clone(name+ "_for_fit");
-  hADC2->Rebin(50);
+  hADC2->Rebin(20);
 
   TFitResultPtr fit_result = hADC2->Fit(langau, "QRS");
   converged = !(bool)(int(fit_result));
@@ -478,6 +572,29 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
 
   fit  = langau->GetParameter("Most Probable");
   chi2 = langau->GetChisquare() / langau->GetNDF();
+
+  if(fSaveAllFits || (fSaveBadFits && !converged))
+    {
+      TCanvas *c = new TCanvas(Form("c%s", name.Data()), Form("c%s", name.Data()));
+      c->cd();
+
+      hADC2->SetLineColor(kOrange+2);
+      hADC2->SetLineWidth(2);
+      hADC2->Draw("histe");
+      langau->SetLineColor(kSpring-6);
+      langau->Draw("same");
+
+      if(converged)
+        {
+          c->SaveAs(Form("%s/peak_fit_%s_channel_%s.png", fPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+          c->SaveAs(Form("%s/peak_fit_%s_channel_%s.pdf", fPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+        }
+      else
+        {
+          c->SaveAs(Form("%s/peak_fit_%s_channel_%s.png", fBadPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+          c->SaveAs(Form("%s/peak_fit_%s_channel_%s.pdf", fBadPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+        }
+    }
 }
 
 double sbnd::crt::ADRIFT::Saturation(TH1D* hADC)

@@ -31,7 +31,10 @@ physics:
       CRTClusterModuleLabel:    "crtclustering"
       CRTSpacePointModuleLabel: "crtspacepoints"
       CRTTrackModuleLabel:      "crttracks"
+      TopSaveDirectory:         "/exp/sbnd/data/users/hlay/crt_comm_summer_2024/plots/adrift"
       Only2HitSpacePoints:      false
+      SaveAllFits:              false
+      SaveBadFits:              true
       TrackAngleLimit:          20
       PullWindow:               0.35
     }
