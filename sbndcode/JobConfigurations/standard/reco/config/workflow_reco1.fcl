@@ -5,7 +5,6 @@
 #include "opdeconvolution_sbnd.fcl"
 #include "sbnd_ophitfinder_deco.fcl"
 #include "sbnd_flashfinder_deco.fcl"
-#include "crtrecoproducers_sbnd.fcl"
 #include "mlreco_sbnd.fcl"
 #include "cluster_sbnd.fcl"
 #include "numberofhitsfilter_sbnd.fcl"
@@ -46,7 +45,7 @@ sbnd_reco1_producers:{
     gaushitTruthMatch:   @local::standard_mcparticlehitmatching
 
     ### CRT reconstruction
-    crtstrips:      @local::crtstriphitproducer_sbnd
+##    crtstrips:      @local::crtstriphitproducer_sbnd
 
     ### ML reco inputs
     cluster3d: @local::sbnd_cluster3d
@@ -64,7 +63,7 @@ sbnd_reco1_producer_sequence: [
   , opflashtpc1xarapuca
   , gaushit
   , gaushitTruthMatch
-  , crtstrips
+##  , crtstrips
   , cluster3d
  ]
 
@@ -80,13 +79,13 @@ sbnd_reco1_filters: {
 
 sbnd_reco1_analyzers: {
     #supera for ML reco
-    supera: @local::sbnd_supera
-    superampvmpr: @local::sbnd_supera_mpvmpr
-    superadata: @local::sbnd_supera_data
+##    supera: @local::sbnd_supera
+##    superampvmpr: @local::sbnd_supera_mpvmpr
+##    superadata: @local::sbnd_supera_data
 }
 
 sbnd_reco1_analyzer_sequence: [
-    supera
+##    supera
 ]
 
 END_PROLOG
