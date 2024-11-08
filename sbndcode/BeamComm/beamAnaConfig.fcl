@@ -1,0 +1,8 @@
+BEGIN_PROLOG
+
+beamAnalysis:
+{
+      module_type:  "BeamAnalysis" 
+}
+
+END_PROLOG
