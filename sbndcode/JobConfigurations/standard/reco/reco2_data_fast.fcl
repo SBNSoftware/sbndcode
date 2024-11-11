@@ -1,0 +1,36 @@
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "reco2_sce.fcl"
+
+services:
+{
+    @table::services
+    @table::sbnd_data_services
+    CRTChannelMapService: @local::crt_channel_map_standard
+    CRTCalibService:      @local::crt_calib_service
+}
+
+physics.producers:
+{
+    @table::physics.producers
+    crtclustering:  @local::crtclusterproducer_data_sbnd
+    crtspacepoints: @local::crtspacepointproducer_data_sbnd
+    crttracks:      @local::crttrackproducer_data_sbnd
+}
+
+physics.reco2_sce: [ pandora, pandoraTrack, pandoraCaloData, caloskimCalorimetry,
+  crtclustering, crtspacepoints, crttracks ]
+
+physics.analyzers.caloskim.G4producer: ""
+physics.analyzers.caloskim.SimChannelproducer: ""
+physics.caloskimana_tpconly: [ caloskim ]
+
+physics.producers.pandora.HitFinderModuleLabel: "fasthit"
+physics.analyzers.caloskim.HITproducer: "fasthit"
+
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                #"drop raw::OpDetWaveforms_*_*_*",
+                "drop *raw::RawDigits*_*_*_*",
+                "drop *_linecluster_*_*" ]
+
+physics.end_paths: [stream1, caloskimana_tpconly]
