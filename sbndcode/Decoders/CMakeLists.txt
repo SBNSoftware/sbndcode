@@ -4,3 +4,5 @@ add_subdirectory(SPECTDC)
 add_subdirectory(PMT)
 add_subdirectory(CRT)
 add_subdirectory(EventAna)
+
+install_fhicl()
