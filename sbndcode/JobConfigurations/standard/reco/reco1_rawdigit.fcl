@@ -1,0 +1,18 @@
+#include "reco1_data.fcl"
+
+#1D/Data Deconvolution
+physics.producers.daq.DigitModuleLabel: "daq"
+
+#2D Deconvolution
+#physics.producers.simtpc2d.DigitModuleLabel: "simtpc2d:daq"
+
+outputs.out1.outputCommands: [
+            	"keep *_*_*_*"
+            	, "drop raw::OpDetWaveforms_*_*_*"
+            	, "drop sim::OpDetBacktrackerRecords_*_*_*"
+            	, "drop *_linecluster_*_*"
+            	, "drop *_fasthit_*_*"
+            	#, "drop raw::RawDigit*_simtpc2d_*_*"
+            	#, "drop raw::RawDigit*_daq_*_DetSim"
+            	, "keep raw::RawDigit*_*_*_*"
+        	]
