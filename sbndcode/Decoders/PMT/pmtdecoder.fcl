@@ -3,7 +3,7 @@ BEGIN_PROLOG
 pmtdecoder: 
 {
     module_type: "SBNDPMTDecoder"
-    debug: 0 # 0=no output, 1=standard, 2=verbose
+    debug: 2 # 0=no output, 1=standard, 2=verbose
 
     # output timing system configuration
     ## priority system
@@ -13,8 +13,9 @@ pmtdecoder:
 
     # configure CAEN inputs 
     caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
-    ignore_fragid: [8]     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
+    ignore_fragid: []     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
     nominal_length: 5000     # expected waveform length
+    Ignore_Short: false
 
     # configure SPEC TDC inputs 
     spectdc_product_name: "tdcdecoder" # used if the tdc decoder has been run 
@@ -34,7 +35,7 @@ pmtdecoder:
 
     # more detailed configurables
     n_maxflashes:    30 # maximum number of flashes anticipated, this is used for memory allocation
-    n_caenboards:    8  # number of caen boards; this is used for memory allocation
+    n_caenboards:    9  # number of caen boards; this is used for memory allocation
     threshold_ftrig: 16350 # the threshold for the flash trigger channel
 
     fragid_offset:   40960 # the offset to subtract to get single digit fragids; if use_set_map is true, should set this to 0
@@ -54,7 +55,8 @@ pmtdecoder:
              173,172,227,226,197,196,171,170,225,224,169,168,223,222,167, # digitizer 4
              195,194,221,220,165,164,219,218,193,192,163,162,217,216,166, # digitizer 5
              251,250,305,304,275,274,249,248,303,302,247,246,301,300,245, # digitizer 6
-             273,272,299,298,243,242,297,296,271,270,241,240,295,294,244] # digitizer 7
+             273,272,299,298,243,242,297,296,271,270,241,240,295,294,244, # digitizer 7
+             901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915] #digitizer 8
 }
 
 END_PROLOG

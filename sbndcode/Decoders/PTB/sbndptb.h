@@ -18,9 +18,11 @@ namespace raw {
   namespace ptb {
 
     struct Trigger {
-      ULong64_t timestamp;
-      ULong64_t trigger_word;
-      uint32_t word_type;
+      ULong64_t timestamp; //PTB clock ticks *20 ns gives UNIX
+      ULong64_t trigger_word; //Which HLT (<20 is event triggers). Possibly several HLT but should generally be close in time
+      //PTB fcl has a list of HLT 
+      //grafana has other resources listing HLT with descriptive name
+      uint32_t word_type; 
     };
 
     struct ChStatus {
@@ -75,8 +77,8 @@ namespace raw {
       fMiscs(m),
       fIndexes(wordindexes) {};
 
-      const std::vector<raw::ptb::Trigger>&     GetHLTriggers() const;   
-      const std::vector<raw::ptb::Trigger>&     GetLLTriggers() const;   
+      const std::vector<raw::ptb::Trigger>&     GetHLTriggers() const;   //HLT menu 
+      const std::vector<raw::ptb::Trigger>&     GetLLTriggers() const;   //LLT menu 
       const std::vector<raw::ptb::ChStatus>&    GetChStatuses() const; 
       const std::vector<raw::ptb::Feedback>&    GetFeedbacks() const;  
       const std::vector<raw::ptb::Misc>&        GetMiscs() const;

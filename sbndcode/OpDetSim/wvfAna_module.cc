@@ -78,6 +78,10 @@ namespace opdet {
     double fSampling_Daphne;
     double fStartTime;
     double fEndTime;
+    bool fSaveSummedWaveform;
+    bool fJustOne;
+    int fChToPlot;
+    std::string fSummedInputModuleName;
     //TTree *fWaveformTree;
 
     // Declare member data here.
@@ -96,10 +100,14 @@ namespace opdet {
   {
     fInputModuleName = p.get< std::string >("InputModule" );
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
+    fSaveSummedWaveform = p.get<bool>("SaveSummedWaveform", false);
+    fSummedInputModuleName = p.get< std::string >("SummedInputModule", ":::");
 
     auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     fSampling = clockData.OpticalClock().Frequency(); // MHz
     fSampling_Daphne = p.get<double>("DaphneFrequency" );
+    fJustOne = p.get<bool>("JustOne", false );
+    fChToPlot = p.get<int>("ChToPlot", -1 );
   }
 
   void wvfAna::beginJob()
@@ -111,12 +119,11 @@ namespace opdet {
   {
     // Implementation of required member function here.
     std::cout << "My module on event #" << e.id().event() << std::endl;
-
     art::ServiceHandle<art::TFileService> tfs;
     fEvNumber = e.id().event();
 
     art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
-    e.getByLabel(fInputModuleName, waveHandle);
+    e.getByLabel(art::InputTag(fInputModuleName), waveHandle);
 
     if(!waveHandle.isValid()) {
       std::cout << Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
@@ -154,8 +161,17 @@ namespace opdet {
     int hist_id = 0;
     for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();
-      opdetType = pdMap.pdType(fChNumber);
-      opdetElectronics = pdMap.electronicsType(fChNumber);
+      if(fJustOne && fChToPlot!=int(fChNumber)) continue;
+      if(fChNumber>=900)
+      {
+        opdetType = "pmt_coated";
+        opdetElectronics = "";
+      }
+      else
+      {
+        opdetType = pdMap.pdType(fChNumber);
+        opdetElectronics = pdMap.electronicsType(fChNumber);
+      }
       if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
       histname.str(std::string());
       histname << "event_" << fEvNumber
@@ -177,6 +193,24 @@ namespace opdet {
         wvfHist->SetBinContent(i + 1, (double)wvf[i]);
       }
       hist_id++;
+      std::cout << " on event " << e.id().event() << " event at time " << e.time().value() << " for channel " << fChNumber << "  On hist " << hist_id << std::endl;
+    }
+    if(fSaveSummedWaveform)
+    {
+      //Load approrpirate 
+      art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
+      e.getByLabel(art::InputTag(fSummedInputModuleName), waveHandle);
+      if(!waveHandle.isValid()) return;
+      for(auto const& wvf : (*waveHandle)) 
+      { //Should just be one entry
+        histname.str(std::string());
+        histname << "event_" << fEvNumber << "_SummedWaveform";
+        TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), 0, wvf.size());
+        for(unsigned int i = 0; i < wvf.size(); i++) 
+        {
+          wvfHist->SetBinContent(i + 1, (double)wvf[i]);
+        }
+      }
     }
   }
 

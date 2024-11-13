@@ -102,6 +102,7 @@ private:
 
     std::vector<uint> fset_fragid_map;
     bool fuse_set_map;
+    bool fIgnoreShort;
 
 
     std::vector<uint> fch_map;
@@ -119,9 +120,13 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fdebug          = p.get<uint>("debug",0);
 
     fcaen_fragment_name = p.get<std::vector<std::string>>("caen_fragment_name");
+    for(auto fragName:fcaen_fragment_name) std::cout << "CAEN Frag Name " << fragName << " ";
+    std::cout << std::endl;
     fcaen_module_label  = p.get<std::string>("caen_module_label","daq");
 
     fignore_fragid = p.get<std::vector<uint32_t>>("ignore_fragid",{});
+    for(auto fragID:fignore_fragid) std::cout << "Ignored fragID " << fragID << " ";
+    std::cout << std::endl;
     fnominal_length = p.get<uint32_t>("nominal_length",5000);
 
     ftiming_type = p.get<uint>("timing_type",0);
@@ -143,12 +148,14 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fthreshold_ftrig = p.get<uint16_t>("threshold_ftrig",16350);
     ffragid_offset   = p.get<uint>("fragid_offset",40960);
     fhist_evt        = p.get<int>("hist_evt",1);
+    fIgnoreShort = p.get<bool>("Ignore_Short", true);
 
     fset_fragid_map = p.get<std::vector<uint>>("set_fragid_map",{});
     fuse_set_map    = p.get<bool>("use_set_map",false);
 
     fch_map          = p.get<std::vector<uint>>("ch_map",{});
-
+    for(auto chMap:fch_map) std::cout << "Channel included " << chMap << " ";
+    std::cout << std::endl;
     produces< std::vector< raw::OpDetWaveform > >(fch_instance_name); 
     produces< std::vector< raw::OpDetWaveform > >(ftr_instance_name);
 }
@@ -312,7 +319,10 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         // the vector of fragments from a single digitizer 
         auto frag_v = board_frag_v.at(iboard);
         if (std::find(fignore_fragid.begin(), fignore_fragid.end(), iboard) != fignore_fragid.end())
+        {
+            if (fdebug>1) std::cout << "skipping board " << iboard << std::endl;
             continue;
+        }
         if (frag_v.empty()) continue;
         auto fragid = iboard;
         auto trig_counter = 0;
@@ -326,7 +336,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             
             get_timing(ifrag, ittt, ilen, itick);
             // if this waveform is short, skip it 
-            if (ilen < fnominal_length) continue;
+            if (ilen < fnominal_length && fIgnoreShort) continue;
 
             get_waveforms(ifrag, iwvfm_v);
             auto iwvfm_start = ittt - 2*ilen;
@@ -361,6 +371,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 if (fdebug>2){
                     std::cout << "      Frag ID: " << fragid
                               << " -> start time: " << int(iwvfm_start) - int(event_trigger_time)
+                              << " -> end time: " << int(iwvfm_end) - int(event_trigger_time)
                               << " , wvfm length: " << iwvfm_v.at(0).size()
                               << std::endl; 
                 }
@@ -526,3 +537,4 @@ uint32_t sbndaq::SBNDPMTDecoder::get_boardid(artdaq::Fragment & frag){
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDPMTDecoder)
+
