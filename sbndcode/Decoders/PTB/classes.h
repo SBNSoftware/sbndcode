@@ -8,3 +8,5 @@
 
 //local includes
 #include "sbndcode/Decoders/PTB/sbndptb.h"
+
+#include "sbndcode/Decoders/PTB/CRTmetric.hh"

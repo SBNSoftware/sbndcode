@@ -11,6 +11,7 @@ DigitalNoiseChannelStatusDefaults :
   DistFromPedestalRawDigit: 1000
   NAwayFromPedestalRecobWire: 200
   DistFromPedestalRecobWire: 1000
+  Channels: []
 }
 
 END_PROLOG

@@ -27,6 +27,9 @@ set(
 )
 
 cet_build_plugin(SBNDOpHitFinder art::module SOURCE SBNDOpHitFinder_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(RawBaselineFinder art::module SOURCE RawHitBaselines_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(RawHitFinderJacob art::module SOURCE RawHitFinder_module.cc LIBRARIES ${MODULE_LIBRARIES})
+
 
 install_headers()
 install_fhicl()

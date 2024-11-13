@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+RawHitBaseline:
+{
+  module_type: "RawBaselineFinder"
+  ChannelWaveformName: "pmtdecoder:PMTChannels:PMTDecoder"
+
+}
+
+END_PROLOG
