@@ -36,6 +36,7 @@
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+#include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
@@ -96,6 +97,8 @@ private:
     fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel, fPFPModuleLabel, fPTBModuleLabel,
     fTDCModuleLabel;
   bool fDebug, fDataMode, fNoTPC, fHasPTB, fHasTDC;
+  //! Adding some of the reco parameters to save corrections
+  double fPEAttenuation, fTimeWalkNorm, fTimeWalkScale, fPropDelay;
 
   TTree* fTree;
 
@@ -178,6 +181,11 @@ private:
   std::vector<uint8_t>               _cl_composition;
   std::vector<std::vector<uint32_t>> _cl_channel_set;
   std::vector<std::vector<uint16_t>> _cl_adc_set;
+  std::vector<std::vector<uint32_t>> _cl_sh_ts0_set; //! To store t0 from x-y coincidences
+  std::vector<std::vector<uint32_t>> _cl_sh_ts1_set; //! To store t1 from x-y coincidences
+  std::vector<std::vector<uint16_t>> _cl_sh_feb_mac5_set; //! MAC5 addresses of StripHit FEBs
+  std::vector<std::vector<double>>   _cl_sh_time_walk_set; //! Time walk correction
+  std::vector<std::vector<double>>   _cl_sh_prop_delay_set; //! Light propagation correction
   std::vector<int>                   _cl_truth_trackid;
   std::vector<double>                _cl_truth_completeness;
   std::vector<double>                _cl_truth_purity;
@@ -336,6 +344,11 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fNoTPC                            = p.get<bool>("NoTPC", false);
   fHasPTB                           = p.get<bool>("HasPTB", false);
   fHasTDC                           = p.get<bool>("HasTDC", false);
+  //! Adding some of the reco parameters to save corrections
+  fPEAttenuation                    = p.get<double>("PEAttenuation", 1.0);
+  fTimeWalkNorm                     = p.get<double>("TimeWalkNorm",  0.0);
+  fTimeWalkScale                    = p.get<double>("TimeWalkScale", 0.0);
+  fPropDelay                        = p.get<double>("PropDelay",     0.0);
 
   if(!fDataMode)
     fCRTBackTrackerAlg = CRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()));
@@ -421,6 +434,11 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("cl_composition", "std::vector<uint8_t>", &_cl_composition);
   fTree->Branch("cl_channel_set", "std::vector<std::vector<uint32_t>>", &_cl_channel_set);
   fTree->Branch("cl_adc_set", "std::vector<std::vector<uint16_t>>", &_cl_adc_set);
+  fTree->Branch("cl_sh_ts0_set", "std::vector<std::vector<uint32_t>>", &_cl_sh_ts0_set);
+  fTree->Branch("cl_sh_ts1_set", "std::vector<std::vector<uint32_t>>", &_cl_sh_ts1_set);
+  fTree->Branch("cl_sh_feb_mac5_set", "std::vector<std::vector<uint16_t>>", &_cl_sh_feb_mac5_set);
+  fTree->Branch("cl_sh_time_walk_set", "std::vector<std::vector<double>>", &_cl_sh_time_walk_set);
+  fTree->Branch("cl_sh_prop_delay_set", "std::vector<std::vector<double>>", &_cl_sh_prop_delay_set);
   if(!fDataMode)
     {
       fTree->Branch("cl_truth_trackid", "std::vector<int>", &_cl_truth_trackid);
@@ -1076,6 +1094,11 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_composition.resize(nClusters);
   _cl_channel_set.resize(nClusters);
   _cl_adc_set.resize(nClusters);
+  _cl_sh_ts0_set.resize(nClusters);
+  _cl_sh_ts1_set.resize(nClusters);
+  _cl_sh_feb_mac5_set.resize(nClusters);
+  _cl_sh_time_walk_set.resize(nClusters);
+  _cl_sh_prop_delay_set.resize(nClusters);
   _cl_truth_trackid.resize(nClusters);
   _cl_truth_completeness.resize(nClusters);
   _cl_truth_purity.resize(nClusters);
@@ -1106,6 +1129,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_sp_ets1.resize(nClusters);
   _cl_sp_complete.resize(nClusters);
 
+  art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
+
   for(unsigned i = 0; i < nClusters; ++i)
     {
       const auto cluster = CRTClusterVec[i];
@@ -1117,9 +1142,16 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_tagger[i]      = cluster->Tagger();
       _cl_composition[i] = cluster->Composition();
 
+      const auto spacepoints = clustersToSpacePoints.at(cluster.key());
+
       const auto striphits = clustersToStripHits.at(cluster.key());
       _cl_channel_set[i].resize(_cl_nhits[i]);
       _cl_adc_set[i].resize(2 * _cl_nhits[i]);
+      _cl_sh_ts0_set[i].resize(_cl_nhits[i] );
+      _cl_sh_ts1_set[i].resize(_cl_nhits[i] );
+      _cl_sh_feb_mac5_set[i].resize(_cl_nhits[i]);
+      _cl_sh_time_walk_set[i].resize(_cl_nhits[i]);
+      _cl_sh_prop_delay_set[i].resize(_cl_nhits[i]);
 
       for(unsigned ii = 0; ii < _cl_nhits[i]; ++ii)
         {
@@ -1127,6 +1159,29 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_channel_set[i][ii] = striphit->Channel();
           _cl_adc_set[i][2*ii]   = striphit->ADC1();
           _cl_adc_set[i][2*ii+1] = striphit->ADC2();
+	  _cl_sh_ts0_set[i][ii]  = striphit->Ts0();
+	  _cl_sh_ts1_set[i][ii]  = striphit->Ts1();
+	  SBND::CRTChannelMapService::ModuleInfo_t module_info = ChannelMapService->GetModuleInfoFromOfflineID( striphit->Channel() / 32 );
+	  _cl_sh_feb_mac5_set[i][ii] = ( module_info.valid ) ? module_info.feb_mac5 : 0;
+
+	  if(spacepoints.size() == 1) { // need unique position of spacepoint
+	    double pe0 = fCRTGeoAlg.GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
+	    double pe1 = fCRTGeoAlg.GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
+	    double pe  = pe0 + pe1;
+
+	    double dist = fCRTGeoAlg.DistanceDownStrip( spacepoints[0]->Pos(), striphit->Channel() );
+
+	    double corr = std::pow( dist - fPEAttenuation, 2.0 ) / std::pow( fPEAttenuation, 2.0 );
+	    double tw_pe = pe * corr;
+
+	    _cl_sh_time_walk_set[i][ii]  = fTimeWalkNorm * std::exp( -fTimeWalkScale * tw_pe );
+	    _cl_sh_prop_delay_set[i][ii] = fPropDelay * dist;
+
+	  } else { // fill with nonsense
+	    _cl_sh_time_walk_set[i][ii]  = -999999.;
+	    _cl_sh_prop_delay_set[i][ii] = -999999.;
+	  }
+
         }
 
       if(!fDataMode)
@@ -1150,7 +1205,6 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_truth_core_z[i]           = truthMatch.deposit.coreZ;
         }
 
-      const auto spacepoints = clustersToSpacePoints.at(cluster.key());
       if(spacepoints.size() == 1)
         { 
           const auto spacepoint = spacepoints[0];
