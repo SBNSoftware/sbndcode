@@ -1,3 +1,5 @@
+#include "crtgeoalg_sbnd.fcl"
+
 BEGIN_PROLOG
 
 hitdumper:
@@ -7,15 +9,16 @@ hitdumper:
     MaxHits: 100000
     MaxOpHits: 100000
     MaxSamples: 5001
-    MaxCRTHits: 5000
-    MaxCRTTracks: 10
+    MaxCRTStripHits:   5000
+    MaxCRTSpacePoints: 500
+    MaxCRTTracks:      100
 
     DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
     OpHitsModuleLabel:        ["ophitpmt", "ophitxarapuca"]
-    CRTHitModuleLabel:        "crthit"
-    CRTStripModuleLabel:      "crt"
-    CRTTrackModuleLabel:      "crttrack"
+    CRTStripHitModuleLabel:   "crtstrips"
+    CRTSpacePointModuleLabel: "crtspacepoints"
+    CRTTrackModuleLabel:      "crttracks"
     pmtTriggerModuleLabel:    "pmttriggerproducer"
     pmtSoftTriggerModuleLabel:"pmtSoftwareTrigger"
     crtSoftTriggerModuleLabel:"MetricProducer"
@@ -25,12 +28,11 @@ hitdumper:
     MCTrackModuleLabel:       "mcreco"
     MCShowerModuleLabel:      "mcreco"
  
-    keepCRThits:              true
-    keepCRTstrips:            false
-    makeCRTtracks:            false
-    readCRTtracks:            true
+    KeepCRTStripHits:         true
+    KeepCRTSpacePoints:       false
+    KeepCRTTracks:            false
     readOpHits:               true
-    readpmtTrigger:	          true
+    readpmtTrigger:           true
     readpmtSoftTrigger:       true
     readcrtSoftTrigger:	      false
     readMuonTracks:           false
@@ -46,6 +48,8 @@ hitdumper:
 
     SkipInduction:            false
     SelectEvents: []
+
+    CRTGeoAlg: @local::crtgeoalg_sbnd
 }
 
 hitdumper_data: @local::hitdumper

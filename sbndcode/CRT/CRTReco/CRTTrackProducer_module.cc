@@ -60,7 +60,7 @@ public:
 
   void produce(art::Event& e) override;
 
-  void OrderSpacePoints(std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec);
+  void OrderSpacePoints(std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec, const art::FindOneP<CRTCluster> &spacePointsToCluster);
 
   std::vector<std::pair<CRTTrack, std::set<unsigned>>> CreateTrackCandidates(const std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec,
                                                                              const art::FindOneP<CRTCluster> &spacePointsToCluster);
@@ -91,31 +91,39 @@ public:
 
   double TripleTrackToF(std::vector<double> times);
 
+  double LengthToToF(const double &length);
+
+  double ToFAgreement(const double &length, const double &tof);
+
 private:
 
-  CRTGeoAlg   fCRTGeoAlg;
-  std::string fCRTSpacePointModuleLabel;
-  double      fCoincidenceTimeRequirement;
-  double      fThirdSpacePointMaximumDCA;
+  CRTGeoAlg        fCRTGeoAlg;
+  std::string      fCRTSpacePointModuleLabel;
+  double           fCoincidenceTimeRequirement;
+  double           fThirdSpacePointMaximumDCA;
+  bool             fUseTs0;
+  std::vector<int> fMaskedTaggers;
 };
 
 
 sbnd::crt::CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
+  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fCRTSpacePointModuleLabel(p.get<std::string>("CRTSpacePointModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<double>("CoincidenceTimeRequirement"))
   , fThirdSpacePointMaximumDCA(p.get<double>("ThirdSpacePointMaximumDCA"))
-  {
-    produces<std::vector<CRTTrack>>();
-    produces<art::Assns<CRTSpacePoint, CRTTrack>>();
-  }
+  , fUseTs0(p.get<bool>("UseTs0"))
+  , fMaskedTaggers(p.get<std::vector<int>>("MaskedTaggers"))
+{
+  produces<std::vector<CRTTrack>>();
+  produces<art::Assns<CRTSpacePoint, CRTTrack>>();
+}
 
 void sbnd::crt::CRTTrackProducer::produce(art::Event& e)
 {
   auto trackVec            = std::make_unique<std::vector<CRTTrack>>();
   auto trackSpacePointAssn = std::make_unique<art::Assns<CRTSpacePoint, CRTTrack>>();
-  
+
   art::Handle<std::vector<CRTSpacePoint>> CRTSpacePointHandle;
   e.getByLabel(fCRTSpacePointModuleLabel, CRTSpacePointHandle);
   
@@ -124,7 +132,7 @@ void sbnd::crt::CRTTrackProducer::produce(art::Event& e)
 
   art::FindOneP<CRTCluster> spacePointsToCluster(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
 
-  OrderSpacePoints(CRTSpacePointVec);
+  OrderSpacePoints(CRTSpacePointVec, spacePointsToCluster);
 
   std::vector<std::pair<CRTTrack, std::set<unsigned>>> trackCandidates = CreateTrackCandidates(CRTSpacePointVec, spacePointsToCluster);
 
@@ -144,12 +152,28 @@ void sbnd::crt::CRTTrackProducer::produce(art::Event& e)
   e.put(std::move(trackSpacePointAssn));
 }
 
-void sbnd::crt::CRTTrackProducer::OrderSpacePoints(std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec)
+void sbnd::crt::CRTTrackProducer::OrderSpacePoints(std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec, const art::FindOneP<CRTCluster> &spacePointsToCluster)
 {
   std::sort(spacePointVec.begin(), spacePointVec.end(), 
-            [](const art::Ptr<CRTSpacePoint> &a, const art::Ptr<CRTSpacePoint> &b) -> bool {
-              return a->Time() < b->Time();
+            [&](const art::Ptr<CRTSpacePoint> &a, const art::Ptr<CRTSpacePoint> &b) -> bool {
+              if(fUseTs0)
+                return a->Ts0() < b->Ts0();
+              else
+                return a->Ts1() < b->Ts1();
             });
+
+  spacePointVec.erase(std::remove_if(spacePointVec.begin(), spacePointVec.end(),
+                                     [&](const art::Ptr<CRTSpacePoint> &spacepoint) {
+                                       const art::Ptr<CRTCluster> cluster = spacePointsToCluster.at(spacepoint.key());
+
+                                       for(auto const& tagger : fMaskedTaggers)
+                                         {
+                                           if(tagger == cluster->Tagger())
+                                             return true;
+                                         }
+
+                                       return false;
+                                     }), spacePointVec.end());
 }
 
 std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTrackProducer::CreateTrackCandidates(const std::vector<art::Ptr<CRTSpacePoint>> &spacePointVec,
@@ -167,8 +191,9 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
           const art::Ptr<CRTSpacePoint> secondarySpacePoint = spacePointVec[ii];
           const art::Ptr<CRTCluster> secondaryCluster       = spacePointsToCluster.at(secondarySpacePoint.key());
 
-          if(secondarySpacePoint->Time() - primarySpacePoint->Time() > fCoincidenceTimeRequirement ||
-             secondaryCluster->Tagger() == primaryCluster->Tagger())
+          const double tdiff_prim_sec = fUseTs0 ? secondarySpacePoint->Ts0() - primarySpacePoint->Ts0() : secondarySpacePoint->Ts1() - primarySpacePoint->Ts1();
+
+          if(tdiff_prim_sec > fCoincidenceTimeRequirement || secondaryCluster->Tagger() == primaryCluster->Tagger())
             continue;
 
           const geo::Point_t &start = primarySpacePoint->Pos();
@@ -185,12 +210,14 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
                   if(!CRTCommonUtils::CoverTopTaggers(primaryCluster->Tagger(), secondaryCluster->Tagger(), tertiaryCluster->Tagger()))
                     continue;
 
-                  if(tertiarySpacePoint->Time() - primarySpacePoint->Time() > fCoincidenceTimeRequirement ||
-                     tertiaryCluster->Tagger() == primaryCluster->Tagger())
+                  const double tdiff_prim_ter = fUseTs0 ? tertiarySpacePoint->Ts0() - primarySpacePoint->Ts0() : tertiarySpacePoint->Ts1() - primarySpacePoint->Ts1();
+
+                  if(tdiff_prim_ter > fCoincidenceTimeRequirement || tertiaryCluster->Tagger() == primaryCluster->Tagger())
                     continue;
 
-                  if(tertiarySpacePoint->Time() - secondarySpacePoint->Time() > fCoincidenceTimeRequirement ||
-                     tertiaryCluster->Tagger() == secondaryCluster->Tagger())
+                  const double tdiff_sec_ter = fUseTs0 ? tertiarySpacePoint->Ts0() - secondarySpacePoint->Ts0() : tertiarySpacePoint->Ts1() - secondarySpacePoint->Ts1();
+
+                  if(tdiff_sec_ter > fCoincidenceTimeRequirement || tertiaryCluster->Tagger() == secondaryCluster->Tagger())
                     continue;
 
                   const CRTTagger &tertiaryTagger = tertiaryCluster->Tagger();
@@ -199,10 +226,15 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
 
                   if(dca < fThirdSpacePointMaximumDCA)
                     {
-                      double time, etime;
-                      const std::vector<double> times = {primarySpacePoint->Time(), secondarySpacePoint->Time(), tertiarySpacePoint->Time()};
-                      TimeErrorCalculator(times, time, etime);
-                      const double tof = TripleTrackToF(times);
+                      double t0, et0;
+                      const std::vector<double> t0s = {primarySpacePoint->Ts0(), secondarySpacePoint->Ts0(), tertiarySpacePoint->Ts0()};
+                      TimeErrorCalculator(t0s, t0, et0);
+
+                      double t1, et1;
+                      const std::vector<double> t1s = {primarySpacePoint->Ts1(), secondarySpacePoint->Ts1(), tertiarySpacePoint->Ts1()};
+                      TimeErrorCalculator(t1s, t1, et1);
+
+                      const double tof = TripleTrackToF(fUseTs0 ? t0s : t1s);
 
                       const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE() + tertiarySpacePoint->PE();
 
@@ -214,7 +246,7 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
                       BestFitLine(primarySpacePoint->Pos(), secondarySpacePoint->Pos(), tertiarySpacePoint->Pos(), primaryCluster->Tagger(), 
                                   secondaryCluster->Tagger(), tertiaryCluster->Tagger(), fitStart, fitMid, fitEnd, gof);
 
-                      const CRTTrack track({fitStart, fitMid, fitEnd}, time, etime, pe, tof, used_taggers);
+                      const CRTTrack track({fitStart, fitMid, fitEnd}, t0, et0, t1, et1, pe, tof, used_taggers);
                       const std::set<unsigned> used_spacepoints = {i, ii, iii};
 
                       candidates.emplace_back(track, used_spacepoints);
@@ -222,15 +254,19 @@ std::vector<std::pair<sbnd::crt::CRTTrack, std::set<unsigned>>> sbnd::crt::CRTTr
                 }
             }
 
-          double time, etime;
-          TimeErrorCalculator({primarySpacePoint->Time(), secondarySpacePoint->Time()}, time, etime);
-          const double tof = secondarySpacePoint->Time() - primarySpacePoint->Time();
+          double t0, et0;
+          TimeErrorCalculator({primarySpacePoint->Ts0(), secondarySpacePoint->Ts0()}, t0, et0);
+
+          double t1, et1;
+          TimeErrorCalculator({primarySpacePoint->Ts1(), secondarySpacePoint->Ts1()}, t1, et1);
+
+          const double tof = fUseTs0 ? secondarySpacePoint->Ts0() - primarySpacePoint->Ts0() : secondarySpacePoint->Ts1() - primarySpacePoint->Ts1();
 
           const double pe = primarySpacePoint->PE() + secondarySpacePoint->PE();
 
           const std::set<CRTTagger> used_taggers = {primaryCluster->Tagger(), secondaryCluster->Tagger()};
 
-          const CRTTrack track(start, end, time, etime, pe, tof, used_taggers);
+          const CRTTrack track(start, end, t0, et0, t1, et1, pe, tof, used_taggers);
           const std::set<unsigned> used_spacepoints = {i, ii};
 
           candidates.emplace_back(track, used_spacepoints);
@@ -257,11 +293,16 @@ void sbnd::crt::CRTTrackProducer::TimeErrorCalculator(const std::vector<double> 
 void sbnd::crt::CRTTrackProducer::OrderTrackCandidates(std::vector<std::pair<CRTTrack, std::set<unsigned>>> &trackCandidates)
 {
   std::sort(trackCandidates.begin(), trackCandidates.end(),
-            [](const std::pair<CRTTrack, std::set<unsigned>> &a, const std::pair<CRTTrack, std::set<unsigned>> &b) -> bool {
+            [&](const std::pair<CRTTrack, std::set<unsigned>> &a, const std::pair<CRTTrack, std::set<unsigned>> &b) -> bool {
               if(a.second.size() != b.second.size())
                 return a.second.size() > b.second.size();
               else
-                return a.first.TimeErr() < b.first.TimeErr();
+                {
+                  const double tofAgreementA = ToFAgreement(a.first.Length(), a.first.ToF());
+                  const double tofAgreementB = ToFAgreement(b.first.Length(), b.first.ToF());
+
+                  return tofAgreementA < tofAgreementB;
+                }
             });
 }
 
@@ -364,7 +405,7 @@ double sbnd::crt::CRTTrackProducer::MinimumApproach(const double &x, const doubl
                    DistanceOfClosestApproach(v4, v2, p),
                    DistanceOfClosestApproach(v3, v4, p),
                    DistanceOfClosestApproach(v1, v3, p)
-        });
+    });
 }
 
 double sbnd::crt::CRTTrackProducer::DistanceOfClosestApproach(const geo::Point2D_t &v1, const geo::Point2D_t &v2, const geo::Point2D_t &p)
@@ -482,6 +523,16 @@ double sbnd::crt::CRTTrackProducer::TripleTrackToF(std::vector<double> times)
   std::sort(times.begin(), times.end());
 
   return times[2] - times[0];
+}
+
+double sbnd::crt::CRTTrackProducer::LengthToToF(const double &length)
+{
+  return length / 29.9792; // c = 29.9792 cm / ns
+}
+
+double sbnd::crt::CRTTrackProducer::ToFAgreement(const double &length, const double &tof)
+{
+  return std::abs(tof - LengthToToF(length));
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTrackProducer)

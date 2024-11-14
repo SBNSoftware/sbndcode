@@ -59,35 +59,40 @@ namespace sbnd::crt {
 
       fhicl::Atom<double> MaxAngleDiff {
         Name("MaxAngleDiff"),
-          Comment("")
-          };
+        Comment("")
+      };
 
       fhicl::Atom<double> MaxDCA {
         Name("MaxDCA"),
-          Comment("")
-          };
+        Comment("")
+      };
 
       fhicl::Atom<double> MaxScore {
         Name("MaxScore"),
-          Comment(""),
-          200.
-          };
+        Comment(""),
+        200.
+      };
 
       fhicl::Atom<double> MinTPCTrackLength {
         Name("MinTPCTrackLength"),
-          Comment(""),
-          0.
-          };
+        Comment(""),
+        0.
+      };
 
       fhicl::Atom<std::string> SelectionMetric {
         Name("SelectionMetric"),
-          Comment("")
-          };
+        Comment("")
+      };
 
       fhicl::Atom<art::InputTag> TPCTrackLabel {
         Name("TPCTrackLabel"),
-          Comment("")
-          };
+        Comment("")
+      };
+      
+      fhicl::Atom<bool> UseTs0 {
+        Name("UseTs0"),
+        Comment("")
+      };
     };
 
     CRTTrackMatchAlg(const Config& config);
@@ -95,10 +100,10 @@ namespace sbnd::crt {
     CRTTrackMatchAlg(const Config& config, geo::GeometryCore const* GeometryService);
 
     CRTTrackMatchAlg(const fhicl::ParameterSet& pset) :
-    CRTTrackMatchAlg(fhicl::Table<Config>(pset, {})()) {}
+      CRTTrackMatchAlg(fhicl::Table<Config>(pset, {})()) {}
 
     CRTTrackMatchAlg(const fhicl::ParameterSet& pset, geo::GeometryCore const* GeometryService) :
-    CRTTrackMatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService) {}
+      CRTTrackMatchAlg(fhicl::Table<Config>(pset, {})(), GeometryService) {}
 
     CRTTrackMatchAlg();
 
@@ -151,6 +156,7 @@ namespace sbnd::crt {
     double      fMaxScore;
     double      fMinTPCTrackLength;
     std::string fSelectionMetric;
+    bool        fUseTs0;
 
     art::InputTag fTPCTrackLabel;
   };

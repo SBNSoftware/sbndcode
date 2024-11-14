@@ -23,6 +23,7 @@
 //local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
 local raw_input_label = std.extVar('raw_input_label');  // eg "daq"
+local use_paramresp = std.extVar('use_paramresp');  // eg "true" or "false"
 
 local g = import 'pgraph.jsonnet';
 local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
@@ -35,6 +36,11 @@ local params = data_params {
     daq: super.daq { // <- super.daq overrides default values
       // Set the waveform sample length, eg, 6000, 15000, "auto"
       nticks: std.extVar('nticks'),
+    },
+    # provides filename for parametrized per channel electronics response correction
+    # default is: use_parmresp = false
+    files: super.files {
+      chresp: if (use_paramresp == 'true') then "sbnd-params-chresp-ideal-v1.json.bz2" else null,
     },
 };
 
@@ -134,7 +140,7 @@ local chsel_pipes = [
     type: 'ChannelSelector',
     name: 'chsel%d' % n,
     data: {
-      channels: std.range(5632 * n, 5632 * (n + 1) - 1),
+      channels: std.range(5638 * n, 5638 * (n + 1) - 1),
       //tags: ['orig%d' % n], // traces tag
     },
   }, nin=1, nout=1)
