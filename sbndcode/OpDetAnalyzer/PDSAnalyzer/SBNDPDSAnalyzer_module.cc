@@ -499,7 +499,6 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _stampTime.push_back(t0_digi);//time stamp in us
         _opChDigi.push_back(fChNumber);
         _signalsDigi.push_back({});
-        
         for(unsigned int i=0;i<wvf.size();i++){
           _signalsDigi[_signalsDigi.size()-1].push_back(wvf[i]);
         }
