@@ -52,7 +52,7 @@ sbnd_blipana:
 sbnd_bliptruth:
 {
   module_type:        "BlipTruth"
-  GeantProducer:      "largeant"
+  GeantProducer:      "largeant" #"simplemerge"
   SimEDepProducer:    "ionandscint:priorSCE"
 }
 

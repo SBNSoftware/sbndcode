@@ -64,10 +64,13 @@ namespace BlipUtils {
     // Energy/charge deposited by this particle, found using SimEnergyDeposits 
     pinfo.depEnergy     = 0;
     pinfo.depElectrons  = 0;
-    for(auto& sed : sedvec ) {
-      if( abs(sed->TrackID()) == part.TrackId() ) {
-        pinfo.depEnergy     += sed->Energy();
-        pinfo.depElectrons  += sed->NumElectrons();
+
+    if( part.PdgCode() != 22 ){
+      for(auto& sed : sedvec ) {
+        if( abs(sed->TrackID()) == part.TrackId() ) {
+          pinfo.depEnergy     += sed->Energy();
+          pinfo.depElectrons  += sed->NumElectrons();
+        }
       }
     }
     

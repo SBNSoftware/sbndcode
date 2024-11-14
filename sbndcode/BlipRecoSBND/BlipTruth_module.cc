@@ -1,5 +1,8 @@
 //#####################################################################
 //###  BlipTruth analyzer module
+//###
+//###  wforeman5@gmail.com
+//###
 //#####################################################################
 #ifndef BLIPANA_H
 #define BLIPANA_H
@@ -285,6 +288,8 @@ class BlipTruth : public art::EDAnalyzer
 
   // --- Histograms ---
   TH1D*   h_part_process;
+  TH2D*   h_edep_zy;
+  TH2D*   h_edep_zx;
 
   // Initialize histograms
   void InitializeHistograms(){
@@ -299,7 +304,14 @@ class BlipTruth : public art::EDAnalyzer
       xa->SetBinLabel(3,"phot");
       xa->SetBinLabel(4,"conv");
       xa->SetBinLabel(5,"other");
-    
+  
+    float zlim[2]={-500,1000}; int zbins=150;
+    float ylim[2]={-500,1000}; int ybins=150;
+    float xlim[2]={-500,1000}; int xbins=150;
+    h_edep_zy = tfs->make<TH2D>("edep_zy","True energy depositions;Z [cm];Y [cm]",zbins,zlim[0],zlim[1],ybins,ylim[0],ylim[1]);
+    h_edep_zx = tfs->make<TH2D>("edep_zx","True energy depositions;Z [cm];X [cm]",zbins,zlim[0],zlim[1],xbins,xlim[0],ylim[1]);    
+    h_edep_zy ->SetOption("colz");
+    h_edep_zx ->SetOption("colz");
     
  }
 
@@ -506,6 +518,9 @@ void BlipTruth::analyze(const art::Event& evt)
       //total_numElectrons += ne;
 
       if( printout ) PrintTrueBlipInfo(trueblip);
+      
+      h_edep_zy->Fill(trueblip.Position.Z(),trueblip.Position.Y());
+      h_edep_zx->Fill(trueblip.Position.Z(),trueblip.Position.X());
 
     }
   }//endif trueblips were made

@@ -1,4 +1,5 @@
 # ---------- base model --------
+#include "mlreco_sbnd.fcl"
 #include "prodsingle_sbnd_proj.fcl"
 
 process_name: ProdGenG4
@@ -31,6 +32,9 @@ physics:
     # Electron propogation
     simdrift: @local::sbnd_simdrift
 
+    # Merges dropped and nominal MCParticle into separate vector
+    #simplemerge: @local::sbnd_simplemerge
+
   }
 
   filters:
@@ -39,7 +43,7 @@ physics:
   }
 
   #define the producer and filter modules for this path, order matters, 
-  simulate:  [ rns, generator, loader, largeant, ionandscint, plister ] 
+  simulate:  [ rns, generator, loader, largeant, ionandscint ] #, #simplemerge, plister ] 
 
   #define the output stream, there could be more than one if using filters 
   stream1:   [ out1 ]
@@ -47,6 +51,16 @@ physics:
   #ie analyzers and output streams.  these all run simultaneously
   end_paths: [ stream1 ]  
 }
+
+
+physics.producers.largeant.G4PhysListName:      "QGSP_BERT_HP"
+
+services.LArG4Parameters.UseCustomPhysics:      true
+services.LArG4Parameters.EnabledPhysics:        [ "Em", "SynchrotronAndGN", "Ion", "HadronHP", "Decay", "HadronElastic", "Stopping" ]
+services.LArG4Parameters.ElectronClusterSize:   600
+services.LArG4Parameters.KeepEMShowerDaughters: true
+services.ParticleListAction.keepEMShowerDaughters: true
+services.ParticleListAction.KeepDroppedParticlesInVolumes: []
 
 outputs.out1.fileName: "prodsingle_larworld_%p-%tc.root"
 

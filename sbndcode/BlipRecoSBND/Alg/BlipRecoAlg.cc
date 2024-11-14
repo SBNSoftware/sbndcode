@@ -524,8 +524,8 @@ namespace blip {
     //==================================================
     if( plist.size() ) {
       pinfo.resize(plist.size());
-        std::cout<<"sedlist size "<<sedlist.size()<<"\n";
-      std::cout<<"NEW EVENT\n";
+        //std::cout<<"sedlist size "<<sedlist.size()<<"\n";
+      //std::cout<<"NEW EVENT\n";
       for(size_t i = 0; i<plist.size(); i++){
         BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
         std::cout<<"  particle "<<i<<"... trkID "<<pinfo[i].trackId<<"   charge "<<map_g4trkid_charge[pinfo[i].trackId]<<"\n";
