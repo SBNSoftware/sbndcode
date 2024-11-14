@@ -6,7 +6,7 @@ sbnd_blipalg:
   HitProducer:          "gaushit"       #// input recob::Hits to use for blip reconstruction
   TrkProducer:          "pandora"       #// input recob::Tracks to use for blip reconstruction
   GeantProducer:        "largeant"      #// input sim::MCParticles (getting true particle info)
-  SimEDepProducer:      "ionandscint"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
+  SimEDepProducer:      "ionandscint:priorSCE"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
   SimChanProducer:      "simdrift"      #// label for sim::SimChannels (getting drifted charge; optional)
   MaxHitTrkLength:      5.0             #// hits in trks > this length will be vetoed [cm]
   DoHitFiltering:       false           #// filter hits based on amp, width, RMS
@@ -53,7 +53,7 @@ sbnd_bliptruth:
 {
   module_type:        "BlipTruth"
   GeantProducer:      "largeant"
-  SimEDepProducer:    "ionandscint"
+  SimEDepProducer:    "ionandscint:priorSCE"
 }
 
 
