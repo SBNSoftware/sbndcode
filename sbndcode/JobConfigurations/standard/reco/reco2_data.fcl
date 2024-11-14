@@ -25,3 +25,5 @@ physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
 physics.caloskimana_tpconly: [ caloskim ]
 physics.end_paths: [stream1, caloskimana_tpconly]
+
+outputs.out1.outputCommands: [@sequence::sbnd_rootoutput.outputCommands, @sequence::sbnd_reco1_drops_keep_rawopdetwf]
