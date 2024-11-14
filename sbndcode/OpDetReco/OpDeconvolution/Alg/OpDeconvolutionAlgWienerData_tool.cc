@@ -88,6 +88,9 @@ private:
   short unsigned int fBaseSampleBins;
   double fBaseVarCut;
 
+  bool fUseLowPassFilter;
+  double fFrequencyCutoff;
+
   // Declare member data here.
 
   // Declare member functions
@@ -135,6 +138,8 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fElectronics = p.get< std::string >("Electronics");
   fDaphne_Freq  = p.get< double >("DaphneFreq");
   fScaleHypoSignal = p.get< bool >("ScaleHypoSignal");
+  fUseLowPassFilter = p.get< bool >("UseLowPassFilter");
+  fFrequencyCutoff =  p.get< double >("FrequencyCutoff");
   fUseParamFilter = p.get< bool >("UseParamFilter");
   fUseParamFilterInidividualChannel = p.get< bool >("UseParamFilterInidividualChannel");
   fCorrectBaselineOscillations = p.get< bool >("CorrectBaselineOscillations");
@@ -150,7 +155,6 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fSamplingFreq=clockData.OpticalClock().Frequency()/1000.;//in GHz
   if (fElectronics=="Daphne") fSamplingFreq=fDaphne_Freq/1000.;//in GHz
   auto const* lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
-
 
   //Load SER
   std::string fname;
@@ -225,6 +229,8 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
             {
               fFilterTF1->SetParameter(k, fFilterParamChannel[k]);
             }
+
+
             mf::LogInfo("OpDeconvolutionAlg")<<"Creating parametrized filter... TF1:"<<fFilter << " for channel " << channelNumber <<std::endl;
           }
           break;
@@ -513,6 +519,15 @@ std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_
     double freq_step=fSamplingFreq/size;
     for(size_t k=0; k<size/2; k++){
       kernel[k]= fFilterTF1->Eval(k*freq_step) / serfft[k] ;
+    }
+  }
+  else if(fUseLowPassFilter)
+  {
+    double freq_step=fSamplingFreq/size;
+    for(size_t k=0; k<size/2; k++){
+      double freq = k*freq_step;
+      if(freq<=fFrequencyCutoff) kernel[k]= fFilterTF1->Eval(k*freq_step) / serfft[k];
+      else kernel[k]=0;
     }
   }
   else{
