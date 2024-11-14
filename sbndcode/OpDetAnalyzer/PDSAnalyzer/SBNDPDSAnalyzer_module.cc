@@ -13,7 +13,6 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fSaveOpHits( p.get<bool>("SaveOpHits") ),
   fSaveOpFlashes( p.get<bool>("SaveOpFlashes") ),
   fSaveCosmicId( p.get<bool>("SaveCosmicId") ),
-  fSaveOnlyStampTime( p.get<bool>("SaveOnlyStampTime") ),
   fVerbosity( p.get<int>("Verbosity") ),
   fMakePerTrackTree( p.get<bool>("MakePerTrackTree") ),
   fMakePDSGeoTree( p.get<bool>("MakePDSGeoTree") ),
@@ -500,7 +499,6 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _stampTime.push_back(t0_digi);//time stamp in us
         _opChDigi.push_back(fChNumber);
         _signalsDigi.push_back({});
-        if(fSaveOnlyStampTime) continue;
         for(unsigned int i=0;i<wvf.size();i++){
           _signalsDigi[_signalsDigi.size()-1].push_back(wvf[i]);
         }
@@ -535,7 +533,6 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _stampTimeDeco.push_back(t0_Deco);//time stamp in us
         _opChDeco.push_back(fChNumber);
         _signalsDeco.push_back({});
-        if(fSaveOnlyStampTime) continue;
         for(unsigned int i=0;i<wvf.size();i++){
           _signalsDeco[_signalsDeco.size()-1].push_back(wvf[i]);
         }
