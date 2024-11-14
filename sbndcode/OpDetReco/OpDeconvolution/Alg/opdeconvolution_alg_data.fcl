@@ -8,7 +8,7 @@ OpDeconvolutionAlg:
   MaxFFTSizePow: 16
   OpDetDataFile: "./users/acastill/digi_pmt_sbnd_SER_individual_channels_v6_ALL.root"
   BaseSampleBins: 30
-  BaseVarCut: 25
+  BaseVarCut: 50
   SkipChannelList: []
   CorrectBaselineOscillations: true
   PositivePolarity: false
@@ -39,6 +39,8 @@ OpDeconvolutionAlg:
   FilterParams: [0.1, 20]
   Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 62.5MHz/16 ns
   DaphneFreq:  62.5 # in MHz
+  UseLowPassFilter: false
+  FrequencyCutoff: 0.12
 }
 
 END_PROLOG
