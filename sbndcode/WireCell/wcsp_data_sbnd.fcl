@@ -52,7 +52,7 @@ sbnd_wcls_sp_data.wcls_main.params :   {
 
                                         # whether or not to use calibrated, parametrized electronics response
                                         # MUST be a string!
-                                        use_paramresp: "false"
+                                        use_paramresp: "true"
                                         }
 
 sbnd_wcls_sp_data.wcls_main.structs:   { 
