@@ -125,7 +125,6 @@ private:
   bool fSaveOpHits;
   bool fSaveOpFlashes;
   bool fSaveCosmicId;
-  bool fSaveOnlyStampTime;
 
   // Configuration parameters
   int fVerbosity;
