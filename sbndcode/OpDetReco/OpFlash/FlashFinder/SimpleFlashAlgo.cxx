@@ -189,7 +189,7 @@ namespace lightana{
         // Order by pe (above threshold)
         std::map<double,size_t> pesum_idx_map;
         for(size_t idx=0; idx<nbins_pesum_v; ++idx) {
-            // std::cout <<  "    _pesum_v at " << idx << " is " << _pesum_v[idx] << ", _min_pe_coinc is " << _min_pe_coinc << " at time " << idx*_time_res+ min_time <<std::endl;
+            // std::cout <<  "    _pesum_v at " << idx << " is " << _pesum_v[idx] << ", _min_pe_coinc is " << _min_pe_coinc << std::endl;
             if(_pesum_v[idx] < _min_pe_coinc   ) continue;
             // std::cout <<  "    mult_v at " << idx << " is " << mult_v[idx] << ", _min_mult_coinc is " << _min_mult_coinc << std::endl;
             if(mult_v[idx]  < _min_mult_coinc ) continue;
