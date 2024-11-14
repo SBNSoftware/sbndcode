@@ -166,17 +166,16 @@ namespace sbnd::crt {
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
 
-      if(_minos)
+      if(_minos || _adID == 70 || _adID == 139)
         orientation = (modulePosMother[2] < 0);
       else
         orientation = (modulePosMother[2] > 0);
 
       // Location of SiPMs
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger
-         || CRTCommonUtils::GetTaggerEnum(taggerName) == kWestTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kEastTagger)
-        top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
-      else
+      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kSouthTagger || _adID == 82)
         top = (orientation == 0) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
+      else
+        top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
 
       // Fill edges
       minX = std::min(limitsWorld.X(), limitsWorld2.X());
