@@ -9,9 +9,9 @@ hitdumper:
     MaxHits: 100000
     MaxOpHits: 100000
     MaxSamples: 5001
-    MaxCRTStripHits:   10000
-    MaxCRTSpacePoints: 10000
-    MaxCRTTracks:      10000
+    MaxCRTStripHits:   5000
+    MaxCRTSpacePoints: 500
+    MaxCRTTracks:      100
 
     DigitModuleLabel:         "daq"
     HitsModuleLabel:          "fasthit"
@@ -27,10 +27,9 @@ hitdumper:
     MCParticleModuleLabel:    "largeant"
     MCTrackModuleLabel:       "mcreco"
     MCShowerModuleLabel:      "mcreco"
-    TDCModuleLabel:           "tdcdecoder"
  
     KeepCRTStripHits:         true
-    KeepCRTSpacePoints:       true
+    KeepCRTSpacePoints:       false
     KeepCRTTracks:            true
     readOpHits:               true
     readpmtTrigger:           true
@@ -42,7 +41,6 @@ hitdumper:
     readMCParticle:           false
     savePOTinfo:              true
     checkTransparency:        false
-    HasTDC:                   false
 
     window:                   100
 
@@ -57,6 +55,5 @@ hitdumper:
 hitdumper_data: @local::hitdumper
 hitdumper_data.OpHitsModuleLabel: ["ophitpmt"] #only have PMT data as of 05/30/2024
 hitdumper_data.readTruth: false
-hitdumper_data.HasTDC: true
 
 END_PROLOG
