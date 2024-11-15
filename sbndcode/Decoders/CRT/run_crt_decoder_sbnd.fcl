@@ -1,0 +1,40 @@
+#include "crt_decoder_sbnd.fcl"
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+
+process_name: CRTDecoder
+
+services:
+{
+  @table::sbnd_services
+  CRTChannelMapService: @local::crt_channel_map_standard
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    crtdecoder: @local::crt_decoder
+  }
+  
+  decoders:      [ crtdecoder ]
+  trigger_paths: [ decoders ]
+
+  stream1:   [ out1 ]
+  end_paths: [ stream1 ]
+}

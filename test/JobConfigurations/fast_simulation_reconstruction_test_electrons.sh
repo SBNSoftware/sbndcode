@@ -10,8 +10,8 @@ declare -ar TestNames=(
     'prodsingle_electron_bnblike_newflux'
     'g4_sce'
     'detsim_sce_lite'
-    'reco1_sce_lite'
-    'reco2_sce'
+    'standard_reco1_sbnd'
+    'standard_reco2_sbnd'
 )
 
 #############################################################################

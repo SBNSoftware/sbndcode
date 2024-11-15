@@ -1,0 +1,63 @@
+BEGIN_PROLOG
+
+sbnd_wcls: { 
+    module_type : WireCellToolkit
+    wcls_main: {
+        tool_type: "WCLS"
+        apps: ["TbbFlow"] 
+
+        ## Uncomment the following lines for debugging
+        # loglevels: ["debug", "pgraph:info"]
+        # logsinks: ["stdout"]
+
+        ## This sets the "main" Jsonnet file which provides the 
+        ## configuration for the Wire-Cell Toolkit components.  It is
+        ## take as relative to entries in WIRECELL_PATH.
+        configs: []
+
+        ## Libraries in which to look for WCT components
+        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb"]
+        inputers: []
+        outputers: []
+        
+        ## Set the "external variables" required by the Jsonnet.
+        params: {}
+        structs: {}
+    }
+}
+
+
+# ------------------------------------------------------------------------------------ #
+
+## Configuration for **Signal processing ONLY** for data
+sbnd_wcls_sp_data: @local::sbnd_wcls
+sbnd_wcls_sp_data.wcls_main.configs:   ["pgrapher/experiment/sbnd/wcls-nf-sp-data.jsonnet"]
+sbnd_wcls_sp_data.wcls_main.inputers:  ["wclsRawFrameSource"
+                                         # To use wclsMultiChannelNoiseDB you must also put epoch:dynamic below
+                                         # and you must have geo::Geometry service in your environment.
+                                         # ,"wclsMultiChannelNoiseDB"
+                                       ]
+sbnd_wcls_sp_data.wcls_main.outputers: ["wclsFrameSaver:spsaver"]
+sbnd_wcls_sp_data.wcls_main.params :   {
+                                        # This locates the input raw::RawDigit collection in the art::Event 
+                                        raw_input_label: "daq"   
+
+                                        # if epoch is "dynamic" you MUST add
+                                        # "wclsMultiChannelNoiseDB" to "inputers" and must NOT
+                                        # add it if not "dynamic"
+                                        epoch: "perfect"   
+
+                                        # Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
+                                        signal_output_form: "sparse"
+
+                                        # whether or not to use calibrated, parametrized electronics response
+                                        # MUST be a string!
+                                        use_paramresp: "false"
+                                        }
+
+sbnd_wcls_sp_data.wcls_main.structs:   { 
+                                        # Set the waveform sample length, eg, 6000, 15000, "auto"
+                                        nticks: 3415
+                                       }
+
+END_PROLOG

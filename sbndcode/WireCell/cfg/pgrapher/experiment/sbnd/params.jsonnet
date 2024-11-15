@@ -86,7 +86,7 @@ base {
     },
 
     daq: super.daq {
-        nticks: 3400,
+        nticks: 3415,
     },
 
     adc: super.adc {
@@ -108,7 +108,7 @@ base {
     elec: super.elec {
       postgain: 1.0, // pulser calibration: 41.649 ADC*tick/1ke
                        // theoretical elec resp (14mV/fC): 36.6475 ADC*tick/1ke
-      shaping: 2.0 * wc.us,
+      shaping: 2.2 * wc.us,
     },
 
     sim: super.sim {
@@ -141,7 +141,7 @@ base {
     },
 
     files: {
-        wires: "sbnd-wires-geometry-v0200.json.bz2",
+        wires: "sbnd-wires-geometry-v0202.json.bz2", // new SBND geometry
 
         fields: [ "garfield-sbnd-v1.json.bz2" ],
 

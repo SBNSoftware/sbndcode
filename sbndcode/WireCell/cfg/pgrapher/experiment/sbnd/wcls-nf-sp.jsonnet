@@ -21,7 +21,6 @@
 
 
 local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
-local reality = std.extVar('reality');
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
 local raw_input_label = std.extVar('raw_input_label');  // eg "daq"
 
@@ -30,13 +29,10 @@ local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local wc = import 'wirecell.jsonnet';
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
-local data_params = import 'params.jsonnet';
 local simu_params = import 'simparams.jsonnet';
-local params = if reality == 'data' then data_params else simu_params;
+local params = simu_params;
 
 local tools = tools_maker(params);
-local nanodes = std.length(tools.anodes);
-local anode_iota = std.range(0, nanodes - 1);
 
 local mega_anode = {
   type: 'MegaAnodePlane',
@@ -65,6 +61,7 @@ local wcls_input = {
   }, nin=0, nout=1),
 
 };
+
 
 // Collect all the wc/ls output converters for use below.  Note the
 // "name" MUST match what is used in theh "outputers" parameter in the
@@ -118,14 +115,14 @@ local chndb = [{
   data: perfect(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   // data: base(params, tools.anodes[n], tools.field, n){dft:wc.tn(tools.dft)},
   uses: [tools.anodes[n], tools.field, tools.dft],
-} for n in anode_iota];
+} for n in std.range(0, std.length(tools.anodes) - 1)];
 
 local chsel_pipes = [
   g.pnode({
     type: 'ChannelSelector',
     name: 'chsel%d' % n,
     data: {
-      channels: std.range(5632 * n, 5632 * (n + 1) - 1),
+      channels: std.range(5638 * n, 5638 * (n + 1) - 1),
       //tags: ['orig%d' % n], // traces tag
     },
   }, nin=1, nout=1)
@@ -148,7 +145,7 @@ local nfsp_pipes = [
                chsel_pipes[n],
                //sinks.orig_pipe[n],
 
-               //nf_pipes[n],
+               nf_pipes[n],
                //sinks.raw_pipe[n],
 
                sp_pipes[n],

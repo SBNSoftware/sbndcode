@@ -9,7 +9,7 @@ local default_dft = { type: 'FftwDFT' };
 function(params, anode, chndbobj, n, name='', dft=default_dft)
   {
     local single = {
-      type: 'pdOneChannelNoise',
+      type: 'mbOneChannelNoise', // added Ewerton 2024-07-29
       name: name,
       uses: [dft, chndbobj, anode],
       data: {
@@ -44,15 +44,6 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
         stky_max_len: 10,
       },
     },
-    local gaincalib = {
-      type: 'pdRelGainCalib',
-      name: name,
-      data: {
-        noisedb: wc.tn(chndbobj),
-        anode: wc.tn(anode),
-        rel_gain: gainmap.rel_gain,
-      },
-    },
 
     local obnf = g.pnode({
       type: 'OmnibusNoiseFilter',
@@ -68,10 +59,9 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
         channel_filters: [
           // wc.tn(sticky),
           wc.tn(single),
-          // wc.tn(gaincalib),
         ],
         grouped_filters: [
-          wc.tn(grouped),
+          //wc.tn(grouped),
         ],
         channel_status_filters: [
         ],
@@ -79,8 +69,8 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
         intraces: 'orig%d' % n,  // frame tag get all traces
         outtraces: 'raw%d' % n,
       },
-    }, uses=[chndbobj, anode, sticky, single, grouped, gaincalib], nin=1, nout=1),
-    //}, uses=[chndbobj, anode, sticky, single, gaincalib], nin=1, nout=1),
+    }, uses=[chndbobj, anode, sticky, single, grouped], nin=1, nout=1),
+    //}, uses=[chndbobj, anode, sticky, single], nin=1, nout=1),
 
     pipe: g.pipeline([obnf], name=name),
   }.pipe
