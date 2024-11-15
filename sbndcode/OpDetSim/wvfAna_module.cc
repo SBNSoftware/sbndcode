@@ -38,6 +38,8 @@
 #include "lardataobj/Simulation/sim.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/SimPhotons.h"
+#include "sbndcode/Decoders/PTB/sbndptb.h"
+
 
 #include "TH1D.h"
 #include "TFile.h"
@@ -81,7 +83,9 @@ namespace opdet {
     bool fSaveSummedWaveform;
     bool fJustOne;
     int fChToPlot;
+    bool fCheckTiming;
     std::string fSummedInputModuleName;
+    std::string fPTBLabel;
     //TTree *fWaveformTree;
 
     // Declare member data here.
@@ -108,6 +112,8 @@ namespace opdet {
     fSampling_Daphne = p.get<double>("DaphneFrequency" );
     fJustOne = p.get<bool>("JustOne", false );
     fChToPlot = p.get<int>("ChToPlot", -1 );
+    fCheckTiming = p.get<bool>("CheckTiming", false);
+    fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
   }
 
   void wvfAna::beginJob()
@@ -151,7 +157,6 @@ namespace opdet {
     // for(auto const& e:uncoatedsInTPC0){
     //   std::cout << "e:\t" << e << "\n";
     // }
-
     std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
 
     std::cout << "fOpDetsToPlot:\t";
@@ -162,6 +167,23 @@ namespace opdet {
     for(auto const& wvf : (*waveHandle)) {
       fChNumber = wvf.ChannelNumber();
       if(fJustOne && fChToPlot!=int(fChNumber)) continue;
+      if(fCheckTiming)
+      {
+        art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
+        e.getByLabel(fPTBLabel,ptbHandle);
+        for(int index=0; index<int(ptbHandle->size()); index++)
+        {
+          auto ptb = (*ptbHandle)[index];
+          auto hltrigs = ptb.GetHLTriggers();
+          std::cout << "ptb fragment " << index << " with " << hltrigs.size() << " HLTs" <<std::endl;
+          for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
+          {
+            std::cout << "This guy has " <<  hltrigs[HLT].trigger_word  << " HLT word of type " << hltrigs[HLT].word_type << " at time " << hltrigs[HLT].timestamp*20 << " ns UNIX" << std::endl;
+            std::cout << "The event has timestamp " << e.time().timeHigh() << " and my wvfm has " << wvf.TimeStamp() << std::endl;
+            std::cout << " event time low " <<  e.time().timeLow() << " event time high " << e.time().timeHigh() <<std::endl;
+          }
+        }
+      }
       if(fChNumber>=900)
       {
         opdetType = "pmt_coated";

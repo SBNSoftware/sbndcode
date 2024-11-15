@@ -228,7 +228,7 @@ namespace opdet { //OpDet means optical detector
               int Index = fmod(NumCycles,1)==0?(NumCycles):(NumCycles)+1; 
               double Peak = TComplex::Abs(EmptyVec[Index]);
               bool PeakIsHighest=true;
-              PeakIsHighest = Peak>((3.0)*(TComplex::Abs(EmptyVec[0])));
+              PeakIsHighest = Peak>((10.0)*(TComplex::Abs(EmptyVec[0])));
               if((Peak>FourierAmpCut) && PeakIsHighest)
               {
                   std::cout << "Got peak val " << Peak << "  zero val " << (TComplex::Abs(EmptyVec[0])) << std::endl;
