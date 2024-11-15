@@ -1,0 +1,39 @@
+#include "wcsp_data_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "standard_reco1_sbnd.fcl"
+
+services:
+{
+    @table::services
+    @table::sbnd_data_services
+    CRTChannelMapService: @local::crt_channel_map_standard
+    CRTCalibService:      @local::crt_calib_service
+}
+
+physics.producers:
+{
+    @table::physics.producers
+    sptpc2d:   @local::sbnd_wcls_sp_data
+    crtstrips: @local::crtstriphitproducer_data_sbnd
+}
+
+physics.reco1: [crtstrips, fasthit]
+physics.ana: [superadata]
+#physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
+physics.producers.fasthit.CalDataModuleLabel: "daq"
+physics.producers.fasthit.DigitModuleLabel: "daq"
+
+outputs.out1.outputCommands: [
+         "keep *_*_*_*",
+         "drop sim::OpDetBacktrackerRecords_*_*_*",
+         "drop sim::SimPhotonsLites_*_*_*",
+         "drop sim::SimPhotons_*_*_*",
+         "drop raw::RawDigits_*_*_*",
+         #"drop raw::OpDetWaveforms_*_*_*",
+         #"drop *_fasthit_*_*",
+         "drop *_cluster3d_*_*",
+         "drop *_sedlite_*_*"
+      ]
+
+physics.end_paths: ["stream1"]
