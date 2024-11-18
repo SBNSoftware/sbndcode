@@ -1,0 +1,308 @@
+XML file structure
+ ------------------
+ 
+The xml file must contain one or more elements with tag "project."
+ 
+The project element must have attribute "name."
+ 
+The following element tags withing the project element are recognized.
+ 
+<numevents> - Total number of events (required).
+ <numjobs> - Number of worker jobs (default 1).  This value can be
+             overridden for individual stages by <stage><numjobs>.
+ <maxfilesperjob> - Maximum number of files to deliver to a single job
+             Useful in case you want to limit output file size or keep
+             1 -> 1 correlation between input and output. can be overwritten
+             by <stage><maxfilesperjob>
+ <ups>     - Override top level ups products (repeatable).
+ <os>      - Specify batch OS (comma-separated list: SL5,SL6).
+             Default let jobsub decide.
+ 
+            If the singularity flag is false, this option is passed directly as 
+             jobsub_submit option --OS.
+ 
+            If singularity flag is true, this option is used to specify the
+             singularity image, passed via jobsub_submit --lines.
+ 
+            A singularity image can be specified as an absolute or relative path
+             of the image file, or as an alias, such as sl6, sl7, el8.
+             A singularity image alias can be upper or lower case.
+             The alias selects an image file in
+             directory /cvmfs/singularity.opensciencegrid.org/fermilab.
+ 
+<server>  - Jobsub server (expert option, jobsub_submit --jobsub-server=...).
+             If "" (blank), "-" (hyphen), or missing, omit --jobsub-server
+             option (use default server).
+ <resource> - Jobsub resources (comma-separated list: DEDICATED,OPPORTUNISTIC,
+              OFFSITE,FERMICLOUD,PAID_CLOUD,FERMICLOUD8G).
+              Default: DEDICATED,OPPORTUNISTIC.
+ <role>    - Role (normally Analysis or Production).  This element overrides the
+             default role-determining algorithm in larbatch_utilities.get_role().
+ <lines>   - Arbitrary condor commands (expert option, jobsub_submit --lines=...).
+ <site>    - Specify sites (comma-separated list, default jobsub decides).
+ <blacklist> - Blacklist sites (comma-separated list, default jobsub decides).
+ 
+<cpu>     - Number of cpus (jobsub_submit --cpu=...).
+ <disk>    - Amount of scratch disk space (jobsub_submit --disk=...).
+             Specify value and unit (e.g. 50GB).
+ <memory>  - Specify amount of memory in MB (jobsub_submit --memory=...).
+ <nthreads> - Specify number of threads.
+ <nschedules> - Specify number of art schedules.
+ <args>    - Specify extra lar arguments.
+ 
+<script>  - Name of batch worker script (default condor_lar.sh).
+             The batch script must be on the execution path.
+ <startscript> - Name of batch worker start project script (default condor_start_project.sh)
+             Must be on execution path.
+ <stopscript> - Name of batch worker stop project script (default condor_start_project.sh)
+             Must be on execution path.
+ 
+
+<larsoft> - Information about larsoft release.
+ <larsoft><tag> - Frozen release tag (default "development").
+ <larsoft><qual> - Build qualifier (default "debug", or "prof").
+ <larsoft><local> - Local test release directory or tarball (default none).
+ <version> - Specify project version (default same as <larsoft><tag>).
+ 
+<filetype> - Sam file type ("data" or "mc", default none).
+ <runtype>  - Sam run type (normally "physics", default none).
+ <runnumber> - Sam run number (default nont).
+ <parameter name="parametername"> - Specify experiment-specific metadata parameters
+ 
+<merge>    - special histogram merging program (default "hadd -T",
+              can be overridden at each stage).
+              Set to "1" to generate merging metadata for artroot files.
+ <anamerge> - Set to "1" to generate merging metadata for analysis files.
+              
+ <check>    - Do on-node validation and sam declaration (0 or 1, default 0).
+ <copy>     - Copy validated root files to FTS (0 or 1, default 0).
+ <cvmfs>    - Cvmfs flag (0 or 1, default 1).  If nonzero, add option
+              "--append_condor_requirements='(TARGET.HAS_CVMFS_<experiment>_opensciencegrid_org==true)'"
+ <stash>    - Stash cache flag (0 or 1, default 1).  If nonzero, add option
+              "--append_condor_requirements='(TARGET.HAS_CVMFS_<experiment>_osgstorage_org==true)'"
+ <singularity> - Singularity flag (0 or 1, default 1).
+ 
+<stage name="stagename" base="basestage"> - Information about project stage.
+             There can be multiple instances of this tag with different name
+             attributes.  The name attribute is optional if there is
+             only one project stage.  The base attribute is also optional.
+             If present, it specifies a "base stage" which supplies default
+             values for all unspecified xml tags.
+ <stage><batchname> - If present and not empty, override default batch job name.
+ <stage><fcl> - Name of fcl file (required).
+                Search $FHICL_FILE_PATH, <fcldir>, or specify full path.
+                Repeatable.
+                See below for additional information about multiple fcls (substages).
+ <stage><outdir> - Output directory (required).  A subdirectory with the
+             project name is created underneath this directory.  Individual
+             batch workers create an additional subdirectory under that with
+             names like <cluster>_<process>.  Output data (root) files
+             generated by batch jobs are stored in this directory.  This
+             directory should be grid-accessible.
+ <stage><logdir> - Log directory (optional).  If not specified, default to
+             be the same as the output directory.  A directory structure
+             is created under the log directory similar to the one
+             under the output directory.  Non-data (non-root, usually small)
+             files generated by batch jobs are stored in this directory.
+             This directory should be grid-accessible.
+ <stage><workdir> - Work directory (required).  This directory acts as the
+             submission directory for the batch job.  Fcl file, batch
+             script, and input file list are copied here.  A subdirectory with
+             the name of the project and "/work" are appended to this path.
+             This directory should be grid-accessible.
+ <stage><bookdir> - Bookkeeping directory (optional).  If not specified, default
+             to be the same as the log directory.  A directory
+             structure is created under the bookkeeping directory similar
+             to the one under the output directory.  This directory is used
+             to store bookkeeping files generated by this script.  It does not
+             need to be grid-accessible.  Ideally the bookkeeping directory
+             should be on a local disk.
+ <stage><dirsize> - Specify maximum directory size.  No effect unless <dirlevels>
+              is greater than zero.
+ <stage><dirlevels> - Specify number of extra directory levels (default 0).
+ <stage><inputfile> - Specify a single input file (full path).  The number
+             of batch jobs must be one.
+ <stage><inputlist> - Specify input file list (a file containing a list
+             of input files, one per line, full path).
+ <stage><inputmode> - Specify input file tyle. Default is none which means
+             art root file. Alternative is textfile
+ <stage><inputdef>  - Specify input sam dataset definition.
+ 
+            It is optional to specify an input file or input list (Monte
+             Carlo generaiton doesn't need it, obviously).  It is also
+             optional for later production stages.  If no input is specified,
+             the list of files produced by the previous production stage
+             (if any) will be used as input to the current production stage
+             (must have been checked using option --check).
+ <stage><inputstream> - Specify input stream.  This only effect of this
+             parameter is to change the default input file list name from
+             "files.list" to "files_<inputstream>.list."  This parameter has
+             no effect if any non-default input is specified.
+ <stage><previousstage> - Specify the previous stage name to be something other
+             than the immediate predecessor stage specified in the xml file.
+             This parameter only affects the default input file list.  This
+             parameter has no effect if any non-default input is specified.
+             Specify as "none" (or any nonexistent stage) to prevent generation
+             of any default input (i.e. for noninitial generator stages).
+ <stage><filelistdef> - Evaluate input sam definition using separated queries
+                        (may reduce load on sam database).
+ <stage><mixinputdef> - Specify mix input from a sam dataset.
+ <stage><pubsinput> - 0 (false) or 1 (true).  If true, modify input file list
+                      for specific (run, subrun, version) in pubs mode.  Default is true.
+ <stage><maxfluxfilemb> - Specify GENIEHelper fcl parameter MaxFluxFileMB (default 500).
+                          Specifying this parameter as 0 will inhibit genie flux fcl
+                          overrides, which may be useful for non-genie generators.
+ 
+
+<stage><recur>      - Recursive flag (0 or 1).  Same as command line option --recur.
+ <stage><recurdef>   - Specify recursive (aka draining) input dataset name.  Can be
+                       a predefined dataset definition or project.py can define it
+                       for you.
+ 
+                      The dataset specified by <recurdef> is used as input in preference
+                       to <inputdef> (if specified).
+ 
+                      This element also implicitly sets the recursive flag.
+ 
+                      If you want project.py to create a recursive dataset definition
+                       for you, specify both <recurdef> and <inputdef>.  Then
+                       project.py will create a dataset definition (if one doesn't exist)
+                       using <intputdef> as base, and adding optional "minus" and/or
+                       "with limit" clause in the sam dimension.
+ 
+<stage><recurtype>  - Specify the type of minus clause to use in a an automatically
+                       generated recursive dataset definition.  If this element is
+                       missing, the generated dataset definition will not include
+                       a minus clause.
+ 
+                      Allowed values are:
+ 
+                      none      - Don't generate a minus clause.
+                       snapshot  - "minus snapshot_for_project_name ...".
+                       consumed  - "minus (project_name ... and consumed_status consumed)"
+                       child     - "minus isparentof: ( ... )" using artroot data tier.
+                       anachild  - "minus isparentof: ( ... )" using analysis data tier.
+ 
+<stage><recurlimit> - Specify an integer value for "with limit" clause.  If this
+                       element is missing or the value is zero, the generated dataset
+                       definition will not include a "with limit" clause.
+ 
+<stage><singlerun>  - Single run flag.  If nonzero, limit input to come from a single
+                       run.  The run is based on a randomly selected file.
+ 
+<stage><prestart>   - Prestart flag.  If specified and nonzero, start the sam project
+                       in this script, instead of in a batch job.
+ 
+<stage><activebase> - If this element is present and nonempty, define or update an
+                       active projects dataset "<activebase>_active,"
+                       where <activebase> is the value of this element.
+                       Do this in the input checking phase (e.g. prior to job submission)
+                       in function stagedef.checkinput.
+ 
+<stage><dropboxwait> - If this element is present as well as <activebase>, specify a
+                        dropbox waiting interval.  Specify as floating point days.
+                        Create dataset "<activebase>_wait."
+ 
+<stage><prestagefraction> - This parameter should be a floating point number between
+                       0 and 1 (default 0).  If nonzero, the separate batch job that
+                       starts the sam project (if any) will prestage at least the
+                       specified fraction of files from the input sam project before
+                       exiting.
+ 
+<stage><ana>        - Analysis flag (0 or 1, default 0).  Setting this flag to 1
+                       informs project.py that this stage does not contain a RootOutput
+                       module, and not to expect any artroot output file.  This flag
+                       effectively converts command line action options to the
+                       analysis equivalent (e.g. --check acts like --checkana).
+ 
+<stage><numjobs> - Number of worker jobs (default 1).
+ <stage><numevents> - Number of events (override project level number of events).
+ <stage><maxfilesperjob> - Maximum number of files to deliver to a single job
+             Useful in case you want to limit output file size or keep
+             1 -> 1 correlation between input and output
+ <stage><targetsize> - Specify target size for input files.  If specified,
+                       this attribute may override <numjobs> in the downward
+                       direction (i.e. <numjobs> is the maximum number of jobs).
+ <stage><defname> - Sam output dataset defition name (default none).
+ <stage><anadefname> - Sam analysis output dataset defition name (default none).
+ <stage><datatier> - Sam data tier (default none).
+ <stage><datastream> - Sam data stream (default none).
+ <stage><anadatatier> - Sam analysis data tier (default none).
+ <stage><anadatastream> - Sam analysis data stream (default none).
+ <stage><submitscript> - Presubmission check script.  Must be on execution path.
+                         If this script exits with nonzero exit status, job submission
+                         is aborted.
+ <stage><initscript> - Worker initialization script (condor_lar.sh --init-script).  Repeatable.
+ <stage><initsource> - Worker initialization bash source script (condor_lar.sh --init-source).
+ <stage><endscript>  - Worker finalization script (condor_lar.sh --end-script).  Repeatable.
+ <stage><merge>  - Name of special histogram merging program or script (default "hadd -T",
+                   can be overridden at each stage).
+                   Set to "1" to generate merging metadata for artroot files.
+ <stage><anamerge> - Set to "1" to generate merging metadata for analysis files.
+ <stage><resource> - Jobsub resources (comma-separated list: DEDICATED,OPPORTUNISTIC,
+                     OFFSITE,FERMICLOUD,PAID_CLOUD,FERMICLOUD8G).
+                     Default: DEDICATED,OPPORTUNISTIC.
+ <stage><lines>   - Arbitrary condor commands (expert option, jobsub_submit --lines=...).
+ <stage><site>    - Specify sites (default jobsub decides).
+ <stage><blacklist> - Blacklist sites (default jobsub decides).
+ <stage><cpu>     - Number of cpus (jobsub_submit --cpu=...).
+ <stage><disk>    - Amount of scratch disk space (jobsub_submit --disk=...).
+                    Specify value and unit (e.g. 50GB).
+ <stage><memory>  - Specify amount of memory in MB (jobsub_submit --memory=...).
+ <stage><nthreads> - Specify number of threads.
+ <stage><nschedules> - Specify number of art schedules.
+ <stage><args>    - Specify extra lar arguments.
+ <stage><script>  - Name of batch worker script (default condor_lar.sh).
+                    The batch script must be on the execution path.
+ <stage><startscript> - Name of batch worker start project script (default condor_start_project.sh)
+                    Must be on execution path.
+ <stage><stopscript> - Name of batch worker stop project script (default condor_start_project.sh)
+                    Must be on execution path.
+ <stage><output>  - Specify output file name.  Can aslso appear in fcl substages (see below).
+ <stage><datafiletypes>  - Specify file types that should be considered as data and
+                           saved in batch jobs (comma-separated list).  Default "root".
+ <stage><TFileName>   - Ability to specify unique output TFile Name
+                        (Required when generating Metadata for TFiles)
+ <stage><jobsub>  - Arbitrary jobsub_submit option(s).  Space-separated list.
+                    Only applies to main worker submission, not sam start/stop
+                    project submissions.
+ <stage><jobsub_start>  - Arbitrary jobsub_submit option(s).  Space-separated list.
+                    Applies to sam start/stop project submissions.
+ <stage><jobsub_timeout> - Jobsubmission timeout (seconds).
+ <stage><maxfilesperjob> - Maximum number of files to be processed in a single worker.
+ <stage><exe>     - Executable (default "lar").  Can also appear in fcl substages (see below).
+ <stage><schema>  - Sam schema (default none).  Use "root" to stream using xrootd.
+ <stage><check>   - Do on-node validation and sam declaration (0 or 1, default 0).
+ <stage><copy>    - Copy validated root files to FTS (0 or 1, default 0).
+ <stage><cvmfs>   - Cvmfs flag (0 or 1, default 1).  If nonzero, add option
+              "--append_condor_requirements='(TARGET.HAS_CVMFS_<experiment>_opensciencegrid_org==true)'"
+ <stage><stash>   - Stash cache flag (0 or 1, default 1).  If nonzero, add option
+              "--append_condor_requirements='(TARGET.HAS_CVMFS_<experiment>_osgstorage_org==true)'"
+ <stage><singularity> - Singularity flag (0 or 1, default 1).
+ 
+Batch job substages.
+ 
+Batch jobs can have multiple substages.  The number of substages equals the number
+ of <fcl> elements.  Each <fcl> element triggers the execution of a different executable
+ within a single batch job.  Some aspects of the environment are tunable within each 
+ substage by specifying additional subelements within each <fcl> slement.
+ 
+<stage><fcl> - Name of fcl file.  This should come first within each <fcl> element
+                before additional substage subelements.
+ <stage><fcl><initsource> - Initialization source script for this substage.
+ <stage><fcl><endstage> - Finalization script for this substage.
+ <stage><fcl><exe> - Executable to use in this substage (default "lar").
+ <stage><fcl><output> - Output file name for this substage.
+ <stage><fcl><projectname> - Override project name for this substage.
+ <stage><fcl><stagename> - Override stage name for this substage.
+ <stage><fcl><version> - Override project version for this substage.
+ 
+
+<fcldir>  - Directory in which to search for fcl files (optional, repeatable).
+             Fcl files are searched for in the following directories, in order.
+             1.  Fcl directories specified using <fcldir>.
+             2.  $FHICL_FILE_PATH.
+             Regardless of where an fcl file is found, a copy is placed
+             in the work directory before job submission.  It is an
+             error of the fcl file isn't found.
+ 

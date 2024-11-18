@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+protonanalyzer:
+{
+  module_type:   "ProtonAnalyzer"
+
+  # BeamCenterX:   73.78
+  FlashTimeWindow:  [0, 2.0]
+  FlashProducer:    ["opflashtpc0", "opflashtpc1"]
+  OpHitProducer:    ["opflashtpc0", "opflashtpc1"]
+  TPC:              [0,             1]
+}
+
+END_PROLOG
