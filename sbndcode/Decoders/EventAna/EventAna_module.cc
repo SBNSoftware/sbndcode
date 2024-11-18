@@ -181,40 +181,40 @@ private:
   std::vector<int> TTT_ns;
   std::vector<uint64_t>  caen_frag_ts;
   std::vector<uint64_t>   ntb_frag_ts; //this is never a vector. if the ntb is in it it has to be pushing, but I don't want to fix it right now for reasons
-  std::vector<uint64_t>  fTicksVec;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch0;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch1;
+  //std::vector<uint64_t>  fTicksVec;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch0;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch1;
   std::vector< std::vector<uint16_t> >  fWvfmsVec_ch2;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch3;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch4;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch5;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch6;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch7;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch8;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch9;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch10;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch11;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch12;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch13;
-  std::vector< std::vector<uint16_t> >  fWvfmsVec_ch14;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch3;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch4;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch5;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch6;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch7;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch8;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch9;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch10;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch11;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch12;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch13;
+  //std::vector< std::vector<uint16_t> >  fWvfmsVec_ch14;
   std::vector< std::vector<uint16_t> >  fWvfmsVec_ch15;
-  std::vector<int> fPMT_ch0;
-  std::vector<int> fPMT_ch1;
-  std::vector<int> fPMT_ch2;
-  std::vector<int> fPMT_ch3;
-  std::vector<int> fPMT_ch4;
-  std::vector<int> fPMT_ch5;
-  std::vector<int> fPMT_ch6;
-  std::vector<int> fPMT_ch7;
-  std::vector<int> fPMT_ch8;
-  std::vector<int> fPMT_ch9;
-  std::vector<int> fPMT_ch10;
-  std::vector<int> fPMT_ch11;
-  std::vector<int> fPMT_ch12;
-  std::vector<int> fPMT_ch13;
-  std::vector<int> fPMT_ch14;
-  std::vector<int> fPMT_ch15;
+  //std::vector<int> fPMT_ch0;
+  //std::vector<int> fPMT_ch1;
+  //std::vector<int> fPMT_ch2;
+  //std::vector<int> fPMT_ch3;
+  //std::vector<int> fPMT_ch4;
+  //std::vector<int> fPMT_ch5;
+  //std::vector<int> fPMT_ch6;
+  //std::vector<int> fPMT_ch7;
+  //std::vector<int> fPMT_ch8;
+  //std::vector<int> fPMT_ch9;
+  //std::vector<int> fPMT_ch10;
+  //std::vector<int> fPMT_ch11;
+  //std::vector<int> fPMT_ch12;
+  //std::vector<int> fPMT_ch13;
+  //std::vector<int> fPMT_ch14;
+  //std::vector<int> fPMT_ch15;
   std::vector<int> ffragID;
 
   //WR DIO  
@@ -404,41 +404,41 @@ void sbndaq::EventAna::beginJob()
     events->Branch("TTT_ns",&TTT_ns);
     events->Branch("caen_frag_ts",&caen_frag_ts);
     if (fcaen_keepwaveforms) {
-      events->Branch("fTicksVec",&fTicksVec);
-      events->Branch("fWvfmsVec",&fWvfmsVec);
-      events->Branch("fWvfmsVec_ch0",&fWvfmsVec_ch0);
-      events->Branch("fWvfmsVec_ch1",&fWvfmsVec_ch1);
+      //events->Branch("fTicksVec",&fTicksVec);
+      //events->Branch("fWvfmsVec",&fWvfmsVec);
+      //events->Branch("fWvfmsVec_ch0",&fWvfmsVec_ch0);
+      //events->Branch("fWvfmsVec_ch1",&fWvfmsVec_ch1);
       events->Branch("fWvfmsVec_ch2",&fWvfmsVec_ch2);
-      events->Branch("fWvfmsVec_ch3",&fWvfmsVec_ch3);
-      events->Branch("fWvfmsVec_ch4",&fWvfmsVec_ch4);
-      events->Branch("fWvfmsVec_ch5",&fWvfmsVec_ch5);
-      events->Branch("fWvfmsVec_ch6",&fWvfmsVec_ch6);
-      events->Branch("fWvfmsVec_ch7",&fWvfmsVec_ch7);
-      events->Branch("fWvfmsVec_ch8",&fWvfmsVec_ch8);
-      events->Branch("fWvfmsVec_ch9",&fWvfmsVec_ch9);
-      events->Branch("fWvfmsVec_ch10",&fWvfmsVec_ch10);
-      events->Branch("fWvfmsVec_ch11",&fWvfmsVec_ch11);
-      events->Branch("fWvfmsVec_ch12",&fWvfmsVec_ch12);
-      events->Branch("fWvfmsVec_ch13",&fWvfmsVec_ch13);
-      events->Branch("fWvfmsVec_ch14",&fWvfmsVec_ch14);
+      //events->Branch("fWvfmsVec_ch3",&fWvfmsVec_ch3);
+      //events->Branch("fWvfmsVec_ch4",&fWvfmsVec_ch4);
+      //events->Branch("fWvfmsVec_ch5",&fWvfmsVec_ch5);
+      //events->Branch("fWvfmsVec_ch6",&fWvfmsVec_ch6);
+      //events->Branch("fWvfmsVec_ch7",&fWvfmsVec_ch7);
+      //events->Branch("fWvfmsVec_ch8",&fWvfmsVec_ch8);
+      //events->Branch("fWvfmsVec_ch9",&fWvfmsVec_ch9);
+      //events->Branch("fWvfmsVec_ch10",&fWvfmsVec_ch10);
+      //events->Branch("fWvfmsVec_ch11",&fWvfmsVec_ch11);
+      //events->Branch("fWvfmsVec_ch12",&fWvfmsVec_ch12);
+      //events->Branch("fWvfmsVec_ch13",&fWvfmsVec_ch13);
+      //events->Branch("fWvfmsVec_ch14",&fWvfmsVec_ch14);
       events->Branch("fWvfmsVec_ch15",&fWvfmsVec_ch15);
     }
-    events->Branch("fPMT_ch0",&fPMT_ch0);
-    events->Branch("fPMT_ch1",&fPMT_ch1);
-    events->Branch("fPMT_ch2",&fPMT_ch2);
-    events->Branch("fPMT_ch3",&fPMT_ch3);
-    events->Branch("fPMT_ch4",&fPMT_ch4);
-    events->Branch("fPMT_ch5",&fPMT_ch5);
-    events->Branch("fPMT_ch6",&fPMT_ch6);
-    events->Branch("fPMT_ch7",&fPMT_ch7);
-    events->Branch("fPMT_ch8",&fPMT_ch8);
-    events->Branch("fPMT_ch9",&fPMT_ch9);
-    events->Branch("fPMT_ch10",&fPMT_ch10);
-    events->Branch("fPMT_ch11",&fPMT_ch11);
-    events->Branch("fPMT_ch12",&fPMT_ch12);
-    events->Branch("fPMT_ch13",&fPMT_ch13);
-    events->Branch("fPMT_ch14",&fPMT_ch14);
-    events->Branch("fPMT_ch15",&fPMT_ch15);
+    //events->Branch("fPMT_ch0",&fPMT_ch0);
+    //events->Branch("fPMT_ch1",&fPMT_ch1);
+    //events->Branch("fPMT_ch2",&fPMT_ch2);
+    //events->Branch("fPMT_ch3",&fPMT_ch3);
+    //events->Branch("fPMT_ch4",&fPMT_ch4);
+    //events->Branch("fPMT_ch5",&fPMT_ch5);
+    //events->Branch("fPMT_ch6",&fPMT_ch6);
+    //events->Branch("fPMT_ch7",&fPMT_ch7);
+    //events->Branch("fPMT_ch8",&fPMT_ch8);
+    //events->Branch("fPMT_ch9",&fPMT_ch9);
+    //events->Branch("fPMT_ch10",&fPMT_ch10);
+    //events->Branch("fPMT_ch11",&fPMT_ch11);
+    //events->Branch("fPMT_ch12",&fPMT_ch12);
+    //events->Branch("fPMT_ch13",&fPMT_ch13);
+    //events->Branch("fPMT_ch14",&fPMT_ch14);
+    //events->Branch("fPMT_ch15",&fPMT_ch15);
     events->Branch("ffragID",&ffragID);
   }
   if (finclude_wr) {
@@ -639,7 +639,7 @@ void sbndaq::EventAna::analyze(const art::Event& evt)
 	  artdaq::ContainerFragment contf(cont);
 	  if (contf.fragment_type()==sbndaq::detail::FragmentType::CAENV1730) {
 	    if (fverbose) 	  std::cout << "    Found " << contf.block_count() << " CAEN Fragments in container " << std::endl;
- 	    fWvfmsVec.resize(16*contf.block_count());
+ 	    //fWvfmsVec.resize(16*contf.block_count());
 	    for (size_t ii = 0; ii < contf.block_count(); ++ii)
 	      analyze_caen_fragment(*contf[ii].get());
 	  }
@@ -649,7 +649,7 @@ void sbndaq::EventAna::analyze(const art::Event& evt)
 	//normal fragment
 	if (handle->front().type()==sbndaq::detail::FragmentType::CAENV1730) {
 	  if (fverbose)	std::cout << "   found normal caen fragments " << handle->size() << std::endl;
-	  fWvfmsVec.resize(16*handle->size());
+	  //fWvfmsVec.resize(16*handle->size());
  	  for (auto frag : *handle)
 	    analyze_caen_fragment(frag);
 	}
@@ -772,6 +772,34 @@ void sbndaq::EventAna::analyze(const art::Event& evt)
        }
      }
    } // if includes ptb
+   //********************************************************
+   //NEVIS TB timestamp
+ 
+   if (finclude_ntb) {
+     for (auto handle : fragmentHandles) {
+       if (!handle.isValid() || handle->size() == 0) continue;      
+       if (handle->front().type() == artdaq::Fragment::ContainerFragmentType) {
+	 //Container fragment
+	 for (auto cont : *handle) {
+	   artdaq::ContainerFragment contf(cont);
+	   if (contf.fragment_type()==sbndaq::detail::FragmentType::NevisTB){//NEVISTB) {
+	     if (fverbose) 	  std::cout << "    Found " << contf.block_count() << " NEVISTB Fragments in container " << std::endl;
+	     for (size_t ii = 0; ii < contf.block_count(); ++ii)
+	       analyze_ntb_fragment(*contf[ii].get());
+	   }
+	 }
+       }
+       else {
+	 //normal fragment
+	 if (handle->front().type()==sbndaq::detail::FragmentType::NevisTB){//NEVISTB) {
+	   for (auto frag : *handle)
+	     analyze_ntb_fragment(frag);
+	 }
+       }
+     } // loop over frag handles
+     /************************************************************************************************/
+    
+   } // if (include_ntb)
 
    /************************************************************************************************/
    // Save Software Trigger Metrics
@@ -962,10 +990,10 @@ void sbndaq::EventAna::analyze_caen_fragment(artdaq::Fragment & frag)  {
   if (fverbose) std::cout << "Channel waveform length = " << wfm_length << "\n";
 
   //--store the tick value for each acquisition
-  fTicksVec.resize(wfm_length);
+  //fTicksVec.resize(wfm_length);
 
   const uint16_t* data_begin = reinterpret_cast<const uint16_t*>(frag.dataBeginBytes()
-						      	 + sizeof(CAENV1730EventHeader));
+    					      	 + sizeof(CAENV1730EventHeader));
   const uint16_t* value_ptr =  data_begin;
   uint16_t value = 0;
   size_t ch_offset = 0;
@@ -975,7 +1003,7 @@ void sbndaq::EventAna::analyze_caen_fragment(artdaq::Fragment & frag)  {
     
   for (size_t i_ch=0; i_ch<nChannels; ++i_ch){
 
-    fWvfmsVec[i_ch+nChannels*fShift].resize(wfm_length);
+    //fWvfmsVec[i_ch+nChannels*fShift].resize(wfm_length);
     ch_offset = (size_t)(i_ch * wfm_length);
     
     temp.resize(wfm_length);
@@ -987,27 +1015,27 @@ void sbndaq::EventAna::analyze_caen_fragment(artdaq::Fragment & frag)  {
 
       temp[i_t] = value;
 
-      fTicksVec[i_t] = t0*Ttt_DownSamp + i_t;   /*timestamps, event level, TODO: Ttt_DownSamp is not initiated*/
-      fWvfmsVec[i_ch+nChannels*fShift][i_t] = value;
-      if (i_ch == 0 && firstEvt) h_wvfm_ev0_ch0->SetBinContent(i_t,value);
-     
+    //  fTicksVec[i_t] = t0*Ttt_DownSamp + i_t;   /*timestamps, event level, TODO: Ttt_DownSamp is not initiated*/
+    //  fWvfmsVec[i_ch+nChannels*fShift][i_t] = value;
+    //  if (i_ch == 0 && firstEvt) h_wvfm_ev0_ch0->SetBinContent(i_t,value);
+    // 
     } //--end waveforms loop
   
-    if(i_ch == 0) fWvfmsVec_ch0.push_back(temp);
-    if(i_ch == 1) fWvfmsVec_ch1.push_back(temp);
+    //if(i_ch == 0) fWvfmsVec_ch0.push_back(temp);
+    //if(i_ch == 1) fWvfmsVec_ch1.push_back(temp);
     if(i_ch == 2) fWvfmsVec_ch2.push_back(temp);
-    if(i_ch == 3) fWvfmsVec_ch3.push_back(temp);
-    if(i_ch == 4) fWvfmsVec_ch4.push_back(temp);
-    if(i_ch == 5) fWvfmsVec_ch5.push_back(temp);
-    if(i_ch == 6) fWvfmsVec_ch6.push_back(temp);
-    if(i_ch == 7) fWvfmsVec_ch7.push_back(temp);
-    if(i_ch == 8) fWvfmsVec_ch8.push_back(temp);
-    if(i_ch == 9) fWvfmsVec_ch9.push_back(temp);
-    if(i_ch == 10) fWvfmsVec_ch10.push_back(temp);
-    if(i_ch == 11) fWvfmsVec_ch11.push_back(temp);
-    if(i_ch == 12) fWvfmsVec_ch12.push_back(temp);
-    if(i_ch == 13) fWvfmsVec_ch13.push_back(temp);
-    if(i_ch == 14) fWvfmsVec_ch14.push_back(temp);
+    //if(i_ch == 3) fWvfmsVec_ch3.push_back(temp);
+    //if(i_ch == 4) fWvfmsVec_ch4.push_back(temp);
+    //if(i_ch == 5) fWvfmsVec_ch5.push_back(temp);
+    //if(i_ch == 6) fWvfmsVec_ch6.push_back(temp);
+    //if(i_ch == 7) fWvfmsVec_ch7.push_back(temp);
+    //if(i_ch == 8) fWvfmsVec_ch8.push_back(temp);
+    //if(i_ch == 9) fWvfmsVec_ch9.push_back(temp);
+    //if(i_ch == 10) fWvfmsVec_ch10.push_back(temp);
+    //if(i_ch == 11) fWvfmsVec_ch11.push_back(temp);
+    //if(i_ch == 12) fWvfmsVec_ch12.push_back(temp);
+    //if(i_ch == 13) fWvfmsVec_ch13.push_back(temp);
+    //if(i_ch == 14) fWvfmsVec_ch14.push_back(temp);
     if(i_ch == 15) fWvfmsVec_ch15.push_back(temp);
  
     temp.clear();
@@ -1015,239 +1043,239 @@ void sbndaq::EventAna::analyze_caen_fragment(artdaq::Fragment & frag)  {
   } //--end channels loop 
 
   // threshold values and fragID are hardcoded, should be fcl params instead.
-  int threshold[]= { 9000, 9000, 9000, 9000,9000, 9000, 9000, 9000,9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000};
+  //int threshold[]= { 9000, 9000, 9000, 9000,9000, 9000, 9000, 9000,9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000};
 
-  int thisind = ffragID.size();
-  thisind--;
-  if (ffragID.at(thisind)==9) {
-  // find leading edges in waveforms
-  int toggle=0;
-  int i_ch =0 ;
-  auto this_wf = fWvfmsVec_ch0.at(thisind);
-  wfm_length=this_wf.size();
-  auto this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch0.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //int thisind = ffragID.size();
+  //thisind--;
+  //if (ffragID.at(thisind)==9) {
+  //// find leading edges in waveforms
+  //int toggle=0;
+  //int i_ch =0 ;
+  //auto this_wf = fWvfmsVec_ch0.at(thisind);
+  //wfm_length=this_wf.size();
+  //auto this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch0.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 1; toggle=0;
-  this_wf = fWvfmsVec_ch1.at(thisind);
-  this_value =this_wf[0];
-  //  std::cout << "starting : this+value " << this_value << " thresh " << threshold[i_ch] << std::endl;
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    //    std::cout << " i_t " << i_t << " this_value " << this_value << " toggle " << toggle << std::endl;
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch1.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 1; toggle=0;
+  //this_wf = fWvfmsVec_ch1.at(thisind);
+  //this_value =this_wf[0];
+  ////  std::cout << "starting : this+value " << this_value << " thresh " << threshold[i_ch] << std::endl;
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  //    std::cout << " i_t " << i_t << " this_value " << this_value << " toggle " << toggle << std::endl;
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch1.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 2; toggle=0;
-  this_wf = fWvfmsVec_ch2.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch2.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 2; toggle=0;
+  //this_wf = fWvfmsVec_ch2.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch2.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 3; toggle=0;
-  this_wf = fWvfmsVec_ch2.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch3.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 3; toggle=0;
+  //this_wf = fWvfmsVec_ch2.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch3.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 4; toggle=0;
-  this_wf = fWvfmsVec_ch4.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch4.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 4; toggle=0;
+  //this_wf = fWvfmsVec_ch4.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch4.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 5; toggle=0;
-  this_wf = fWvfmsVec_ch5.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch5.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 5; toggle=0;
+  //this_wf = fWvfmsVec_ch5.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch5.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 6; toggle=0;
-  this_wf = fWvfmsVec_ch6.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch6.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 6; toggle=0;
+  //this_wf = fWvfmsVec_ch6.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch6.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 7; toggle=0;
-  this_wf = fWvfmsVec_ch7.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch7.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 7; toggle=0;
+  //this_wf = fWvfmsVec_ch7.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch7.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 8; toggle=0;
-  this_wf = fWvfmsVec_ch8.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch8.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 8; toggle=0;
+  //this_wf = fWvfmsVec_ch8.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch8.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 9; toggle=0;
-  this_wf = fWvfmsVec_ch9.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch9.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 9; toggle=0;
+  //this_wf = fWvfmsVec_ch9.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch9.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 10; toggle=0;
-  this_wf = fWvfmsVec_ch10.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch10.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 10; toggle=0;
+  //this_wf = fWvfmsVec_ch10.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch10.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 11; toggle=0;
-  this_wf = fWvfmsVec_ch11.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch11.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 11; toggle=0;
+  //this_wf = fWvfmsVec_ch11.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch11.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 12; toggle=0;
-  this_wf = fWvfmsVec_ch12.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch12.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 12; toggle=0;
+  //this_wf = fWvfmsVec_ch12.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch12.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 13; toggle=0;
-  this_wf = fWvfmsVec_ch13.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch13.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 13; toggle=0;
+  //this_wf = fWvfmsVec_ch13.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch13.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 14; toggle=0;
-  this_wf = fWvfmsVec_ch14.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch14.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
+  //// find leading edges in waveforms
+  //i_ch = 14; toggle=0;
+  //this_wf = fWvfmsVec_ch14.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch14.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
 
-  // find leading edges in waveforms
-  i_ch = 15; toggle=0;
-  this_wf = fWvfmsVec_ch15.at(thisind);
-  this_value =this_wf[0];
-  if (this_value>threshold[i_ch]) toggle=1;
-  for(size_t i_t=1; i_t<wfm_length; ++i_t){
-    this_value = this_wf[i_t];
-    if (toggle==0 && this_value>threshold[i_ch]) {
-      toggle=1;
-      fPMT_ch15.emplace_back(i_t);
-    }
-    if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
-  }
-  }// end if fragID==9
+  //// find leading edges in waveforms
+  //i_ch = 15; toggle=0;
+  //this_wf = fWvfmsVec_ch15.at(thisind);
+  //this_value =this_wf[0];
+  //if (this_value>threshold[i_ch]) toggle=1;
+  //for(size_t i_t=1; i_t<wfm_length; ++i_t){
+  //  this_value = this_wf[i_t];
+  //  if (toggle==0 && this_value>threshold[i_ch]) {
+  //    toggle=1;
+  //    fPMT_ch15.emplace_back(i_t);
+  //  }
+  //  if (toggle==1 && this_value<threshold[i_ch]) toggle=0;
+  //}
+  //}// end if fragID==9
   fShift++;
 
 }
@@ -1261,17 +1289,20 @@ void sbndaq::EventAna::reset_caen_variables() {
   caen_frag_ts.clear();
   ffragID.clear();  
 
-  fPMT_ch0.clear();   fPMT_ch1.clear();   fPMT_ch2.clear(); fPMT_ch3.clear(); fPMT_ch4.clear();
-  fPMT_ch5.clear();   fPMT_ch6.clear();   fPMT_ch7.clear(); fPMT_ch8.clear(); fPMT_ch9.clear();
-  fPMT_ch10.clear();   fPMT_ch11.clear();   fPMT_ch12.clear(); fPMT_ch13.clear(); fPMT_ch14.clear();
-  fPMT_ch15.clear();
+  //fPMT_ch0.clear();   fPMT_ch1.clear();   fPMT_ch2.clear(); fPMT_ch3.clear(); fPMT_ch4.clear();
+  //fPMT_ch5.clear();   fPMT_ch6.clear();   fPMT_ch7.clear(); fPMT_ch8.clear(); fPMT_ch9.clear();
+  //fPMT_ch10.clear();   fPMT_ch11.clear();   fPMT_ch12.clear(); fPMT_ch13.clear(); fPMT_ch14.clear();
+  //fPMT_ch15.clear();
 
-  fWvfmsVec_ch0.clear(); fWvfmsVec_ch1.clear(); fWvfmsVec_ch2.clear(); fWvfmsVec_ch3.clear();
-  fWvfmsVec_ch4.clear(); fWvfmsVec_ch5.clear(); fWvfmsVec_ch6.clear(); fWvfmsVec_ch7.clear();
-  fWvfmsVec_ch8.clear(); fWvfmsVec_ch9.clear(); fWvfmsVec_ch10.clear(); fWvfmsVec_ch11.clear();
-  fWvfmsVec_ch12.clear(); fWvfmsVec_ch13.clear(); fWvfmsVec_ch14.clear(); fWvfmsVec_ch15.clear();
+  //fWvfmsVec_ch0.clear(); fWvfmsVec_ch1.clear(); fWvfmsVec_ch2.clear(); fWvfmsVec_ch3.clear();
+  //fWvfmsVec_ch4.clear(); fWvfmsVec_ch5.clear(); fWvfmsVec_ch6.clear(); fWvfmsVec_ch7.clear();
+  //fWvfmsVec_ch8.clear(); fWvfmsVec_ch9.clear(); fWvfmsVec_ch10.clear(); fWvfmsVec_ch11.clear();
+  //fWvfmsVec_ch12.clear(); fWvfmsVec_ch13.clear(); fWvfmsVec_ch14.clear(); fWvfmsVec_ch15.clear();
 
-  fTicksVec.clear();
+  //fTicksVec.clear();
+
+  fWvfmsVec_ch2.clear();
+  fWvfmsVec_ch15.clear();
 }// end reset caen 1730
 
 void sbndaq::EventAna::analyze_bern_fragment(artdaq::Fragment & frag)  {
