@@ -6,7 +6,7 @@ OpDeconvolutionAlg:
   tool_type: "OpDeconvolutionAlgWienerData"
   Debug: false
   MaxFFTSizePow: 16
-  OpDetDataFile: "./users/acastill/digi_pmt_sbnd_SER_individual_channels_v6_ALL.root"
+  OpDetDataFile: "./OpDetSim/digi_pmt_sbnd_data.root"
   BaseSampleBins: 30
   BaseVarCut: 50
   SkipChannelList: []
