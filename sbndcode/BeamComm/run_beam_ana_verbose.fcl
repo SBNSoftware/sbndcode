@@ -1,0 +1,3 @@
+#include "run_beam_ana.fcl"
+
+physics.analyzers.ana.beamAnalysis.Debug: true
