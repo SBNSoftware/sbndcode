@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////
 // Specific class tool for OpDeconvolutionAlg
-// File: OpDeconvolutionAlgWiener_tool.hh
+// File: OpDeconvolutionAlgWienerData_tool.hh
 // Base class:        OpDeconvolutionAlg.hh
 ////////////////////////////////////////////////////////////////////////
 
@@ -91,7 +91,6 @@ private:
   bool fUseLowPassFilter;
   double fFrequencyCutoff;
 
-  // Declare member data here.
 
   // Declare member functions
   void ApplyExpoAvSmoothing(std::vector<double>& wf);
@@ -174,9 +173,9 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
   fSinglePEWaveVector = *SinglePEVec_p;
   fSinglePEChannels = *fSinglePEChannels_p;
-  
   fPeakAmplitude = *fPeakAmplitude_p;
   fFilterParamVector = *fFilterParamVector_p;          
+  
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
   file->Close();
 
@@ -220,7 +219,7 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
           std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(), [SinglePENormalization](double val) {return val * SinglePENormalization;});
           fSinglePEWave.resize(MaxBinsFFT, 0);
           AnalyseChannel = true;
-          // If use channel dependent paraam filter
+          // If use channel dependent param filter
           if(fUseParamFilterInidividualChannel)
           {
             fFilterParamChannel = fFilterParamVector[i];
