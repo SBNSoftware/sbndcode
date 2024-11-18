@@ -15,6 +15,8 @@ SBNDOpDeconvolutionPMT: @local::SBNDOpDeconvolution
 SBNDOpDeconvolutionPMT.PDTypes: ["pmt_coated", "pmt_uncoated"]
 SBNDOpDeconvolutionPMT.Electronics: [""]
 SBNDOpDeconvolutionPMT.OpDecoAlg.OpDetDataFile: "./OpDetSim/digi_pmt_sbnd_data.root"
+#SBNDOpDeconvolutionPMT.OpDecoAlg.UseParamFilter: true
+#SBNDOpDeconvolutionPMT.OpDecoAlg.FilterParams: [0.049, 2] #Freq in GHz
 SBNDOpDeconvolutionPMT.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0
 SBNDOpDeconvolutionPMT.OpDecoAlg.DecoWaveformPrecision: 0.005
 SBNDOpDeconvolutionPMT.OpDecoAlg.SkipChannelList: [39, 64, 65, 66, 67, 68, 71, 85, 86, 87, 114, 115, 118, 138, 141, 142, 148, 149, 163, 170, 194, 197, 217, 220, 221, 222, 223, 224, 226, 243, 245, 248, 296, 298, 301, 302]
