@@ -1,0 +1,8 @@
+<lcgdict>
+ <class name="lcvn::SBNDPixelMap" ClassVersion="11">
+  <version ClassVersion="11" checksum="2030373393"/>
+  <version ClassVersion="10" checksum="2956136997"/>
+ </class>
+ <class name="std::vector<lcvn::SBNDPixelMap>"/>
+ <class name="art::Wrapper<std::vector<lcvn::SBNDPixelMap> >"/>
+</lcgdict>

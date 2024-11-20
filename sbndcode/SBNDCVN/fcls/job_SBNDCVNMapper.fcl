@@ -1,0 +1,103 @@
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "larfft_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: SBNDCVNMAPPER
+
+standard_pixelmapproducer:
+{
+  TdcWidth:      500 # 1000
+  WireLength:    1984 #collection plane : 1664, induction plane : 1984
+  TimeResolution: 1700 #1600 # 2560 # 3400
+  Threshold: 0
+  MultipleDrifts: true
+  verbose: false
+  ChangeWireNo: true
+  ReadoutSize: 3400. # in time ticks # 2560
+  ShiftT: 420. # 420.
+  InductionWires: 1984
+  FlipInductionView: false
+  UseT: false
+}
+
+standard_cvnmapper:
+{
+  module_type:       SBNDCVNMapper
+  HitsModuleLabel:   "gaushit"
+  ClusterPMLabel: "cvnmap"
+  MinClusterHits: 100
+  verbose: true
+  UseSlice: true
+  SliceLabel: "pandora"
+  PFParticleModuleLabel: "pandora"
+  T0Label: "pandora"
+  PixelMapProducer: @local::standard_pixelmapproducer
+  MapVecSize: 100000
+}
+
+services:
+{
+  RandomNumberGenerator:     {}                                 # required by fuzzyCluster
+  message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+  FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+                             @table::sbnd_services              # from services_sbnd.fcl
+  LArFFT:                    @local::sbnd_larfft
+  SignalShapingServiceSBND:  @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  ParticleInventoryService:  @local::standard_particleinventoryservice
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1
+}
+
+
+physics:
+{
+ producers:{
+       sbndpixelmap: @local::standard_cvnmapper
+ }
+ 
+ filters:  {} 
+ 
+ analyzers:{}
+ 
+ reco: [ sbndpixelmap ]
+ 
+ stream: [ out ]
+ 
+ trigger_paths: [ reco ] 
+ 
+ end_paths: [ stream ]
+}
+
+outputs:
+{
+ out:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   SelectEvents: [ reco ]
+   fileName: @local::sbnd_rootoutput.fileName
+ } 
+}
+
+outputs.out.outputCommands: [
+      "keep *_*_*_*",
+      "drop recob::Showers_*_*_*",
+      "drop recob::Tracks_*_*_*",
+      "drop recob::OpHits_*_*_*",
+      "drop recob::Clusters_*_*_*",
+      "drop recob::SpacePoints_*_*_*",
+      "drop anab::Calorimetrys_*_*_*",
+      "drop anab::anab::ParticleIDs_*_*_*",
+      "drop recob::OpFlashs_*_*_*"
+]
+
+
