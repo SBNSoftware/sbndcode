@@ -3,6 +3,9 @@ BEGIN_PROLOG
 beamAnalysis:
 {
       module_type:  "BeamAnalysis" 
+      TDCDecodeLabel: tdcdecoder
+      CRTSpacePointLabel: crtspacepoints
+      Debug: false
 }
 
 END_PROLOG

@@ -26,6 +26,10 @@
 #include "TTree.h"
 
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+#include "sbnobj/SBND/CRT/CRTStripHit.hh"
+#include "sbnobj/SBND/CRT/CRTCluster.hh"
+#include "sbnobj/SBND/CRT/CRTTrack.hh"
+#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 
 namespace sbnd {
   class BeamAnalysis;
@@ -74,8 +78,21 @@ private:
     std::vector<uint64_t> fTDC_ch3_utc;
     std::vector<uint64_t> fTDC_ch4_utc;
 
+    std::vector<double> fCRT_x;
+    std::vector<double> fCRT_y;
+    std::vector<double> fCRT_z;
+    std::vector<double> fCRT_xe;
+    std::vector<double> fCRT_ye;
+    std::vector<double> fCRT_ze;
+    std::vector<double> fCRT_ts0;
+    std::vector<double> fCRT_ts1;
+    std::vector<double> fCRT_ts0e;
+    std::vector<double> fCRT_ts1e;
+    std::vector<int> fCRT_tagger;
+
     // Product label
     art::InputTag fTDCDecodeLabel;
+    art::InputTag fCRTSpacePointLabel;
 
     bool fDebug;
 };
@@ -86,8 +103,8 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
     // More initializers here.
 {
     fTDCDecodeLabel = p.get<art::InputTag>("TDCDecodeLabel", "tdcdecoder");
-    fDebug = p.get<bool>("Debug", true);
-  
+    fCRTSpacePointLabel = p.get<art::InputTag>("CRTSpacePointLabel", "crtspacepoints");
+    fDebug = p.get<bool>("Debug", false);
 }
 
 void sbnd::BeamAnalysis::analyze(art::Event const& e)
@@ -99,11 +116,11 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
     _subrun = e.id().subRun();
     _event  =  e.id().event();
 
+    //---------------------------TDC-----------------------------//
     art::Handle<std::vector<sbnd::timing::DAQTimestamp>> TDCHandle;
     e.getByLabel(fTDCDecodeLabel, TDCHandle);
 
     if (!TDCHandle.isValid() || TDCHandle->size() == 0){
-
         if (fDebug) std::cout << "No SPECTDC products found." << std::endl;
     }
     else{
@@ -146,6 +163,53 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
         } 
     }
 
+    //---------------------------CRT-----------------------------//
+    art::Handle<std::vector<sbnd::crt::CRTSpacePoint>> CRTSpacePointHandle;
+    std::vector<art::Ptr<sbnd::crt::CRTSpacePoint>> crt_sp_v;
+    e.getByLabel(fCRTSpacePointLabel, CRTSpacePointHandle);
+
+    if (!CRTSpacePointHandle.isValid() || CRTSpacePointHandle->size() == 0){
+        if (fDebug) std::cout << "No CRT Space Point products found." << std::endl;
+    }
+    else{
+
+        art::fill_ptr_vector(crt_sp_v, CRTSpacePointHandle);
+        art::FindManyP<sbnd::crt::CRTCluster> CRTSPClusterAssoc(crt_sp_v, e, fCRTSpacePointLabel);
+
+        if (crt_sp_v.empty()) return;
+
+        for (auto const& crt_sp: crt_sp_v){
+            
+            if (!crt_sp->Complete()) continue;
+
+            const std::vector<art::Ptr<sbnd::crt::CRTCluster>> crt_cluster_v(CRTSPClusterAssoc.at(crt_sp.key()));
+
+            if(crt_cluster_v.size() != 1 ) continue;
+
+            const art::Ptr<sbnd::crt::CRTCluster>& crt_cluster(crt_cluster_v.front());
+
+            fCRT_x.push_back(crt_sp->X());
+            fCRT_y.push_back(crt_sp->Y());
+            fCRT_z.push_back(crt_sp->Z());
+            fCRT_xe.push_back(crt_sp->XErr());
+            fCRT_ye.push_back(crt_sp->YErr());
+            fCRT_ze.push_back(crt_sp->ZErr());
+            fCRT_ts0.push_back(crt_sp->Ts0());
+            fCRT_ts1.push_back(crt_sp->Ts1());
+            fCRT_ts0e.push_back(crt_sp->Ts0Err());
+            fCRT_ts1e.push_back(crt_sp->Ts1Err());
+            fCRT_tagger.push_back(crt_cluster->Tagger());
+
+            if (fDebug){
+                std::cout << "CRT Space Point------------------------------------" << std::endl;
+                std::cout << "x = " << fCRT_x.back() << ", y = " << fCRT_y.back() << ", z = " << fCRT_z.back() << std::endl;
+                std::cout << "ts0 = " << fCRT_ts0.back() << ", ts1 = " << fCRT_ts1.back() << std::endl;
+                std::cout << "tagger = " << fCRT_tagger.back() << std::endl;
+            }
+        }
+
+    }
+
     //Fill once every event
     fTree->Fill();
 }
@@ -171,6 +235,19 @@ void sbnd::BeamAnalysis::beginJob()
     fTree->Branch("TDC_ch2_utc", &fTDC_ch2_utc);
     fTree->Branch("TDC_ch3_utc", &fTDC_ch3_utc);
     fTree->Branch("TDC_ch4_utc", &fTDC_ch4_utc);
+
+    fTree->Branch("CRT_x", &fCRT_x);
+    fTree->Branch("CRT_y", &fCRT_y);
+    fTree->Branch("CRT_z", &fCRT_z);
+    fTree->Branch("CRT_xe", &fCRT_xe);
+    fTree->Branch("CRT_ye", &fCRT_ye);
+    fTree->Branch("CRT_ze", &fCRT_ze);
+    fTree->Branch("CRT_ts0", &fCRT_ts0);
+    fTree->Branch("CRT_ts1", &fCRT_ts1);
+    fTree->Branch("CRT_ts0e", &fCRT_ts0e);
+    fTree->Branch("CRT_ts1e", &fCRT_ts1e);
+    fTree->Branch("CRT_tagger", &fCRT_tagger);
+
 }
 
 void sbnd::BeamAnalysis::endJob()
@@ -193,6 +270,18 @@ void sbnd::BeamAnalysis::ResetEventVars()
     fTDC_ch2_utc.clear();
     fTDC_ch3_utc.clear();
     fTDC_ch4_utc.clear();
+
+    fCRT_x.clear();
+    fCRT_y.clear();
+    fCRT_z.clear();
+    fCRT_xe.clear();
+    fCRT_ye.clear();
+    fCRT_ze.clear();
+    fCRT_ts0.clear();
+    fCRT_ts1.clear();
+    fCRT_ts0e.clear();
+    fCRT_ts1e.clear();
+    fCRT_tagger.clear();
 }
 
 DEFINE_ART_MODULE(sbnd::BeamAnalysis)

@@ -26,6 +26,7 @@ art_make(  MODULE_LIBRARIES  larpandora::LArPandoraInterface
                              sbndcode::RecoUtils
                              sbnobj::Common_Reco
                              sbnobj::SBND_Timing
+                             sbnobj::SBND_CRT
 
                              messagefacility::MF_MessageLogger
                              fhiclcpp::fhiclcpp
