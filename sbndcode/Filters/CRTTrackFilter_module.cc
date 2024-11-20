@@ -164,7 +164,8 @@ bool CRTTrackFilter::filter(art::Event& e) {
     
     // If we've made it this far, then this track is good and this event passes the filter
     if(fVerbose) std::cout << "    Found a good track!" << std::endl;
-    //if(fVerbose) std::cout << "    ToF " << crt_trk.ToF() << "ns" << std::endl;
+    if(fVerbose) std::cout << "    ToF " << crt_trk.ToF() << "ns" << std::endl;
+    if(fVerbose) std::cout << "    ts0 " << crt_trk.Ts0() << "ns" << std::endl;
     return true;
 
   } // end loop over CRT tracks
