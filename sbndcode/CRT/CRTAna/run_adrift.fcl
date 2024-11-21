@@ -35,6 +35,8 @@ physics:
       Only2HitSpacePoints:      false
       SaveAllFits:              false
       SaveBadFits:              true
+      SaveSubset:               true
+      TrackLA:                  true
       TrackAngleLimit:          20
       PullWindow:               0.35
     }
