@@ -20,6 +20,7 @@ void geoVis_sbnd(const TString &inputFileName,const TString &volName="volWorld")
 	TGeoManager::Import(inputFileName);
 
 drawopt optsbnd[] = {
+	{"volMassBuffer", kRed,100},	
 	{"volBuildingBase", kGray+2,0},	
 	{"volBuldingTube_H_1", kRed+1,0},
 	{"volBuldingTube_H_2", kRed+1,0},
@@ -52,12 +53,14 @@ drawopt optsbnd[] = {
 	{"volTPCActive_West",  kCyan-9,30},
 	{"volOneAPAFrame", 	  kMagenta-2,    0},	
 	{"volCryoExt", kRed+1, 0}, 
-	{"volCryoInsulation", kOrange-10, 90},
-	{"volCryoPlywood", kOrange-6,    0},
-	{"volCryoMembrane", kBlue-5,    0},
-	{"volCryoLid_Larger", kBlue-5,    0},
-	{"volCryoLid_Smaller", kBlue-5,    0},
-	{"volCryoUllage", kCyan,    50},
+	{"volCryoInsulation", kOrange-10, 100},
+	{"volCryoPlywood", kOrange-6,    100},
+	{"volCryoMembrane", kBlue-5,    100},
+	{"volCryoLid_Larger", kBlue-5,   100},
+	{"volCryoLid_Smaller", kBlue-5,    100},
+	{"volCryoLidInsulation_Larger", kBlue-5,   100},
+	{"volCryoLidInsulation_Smaller", kBlue-5,    100},
+	{"volCryoUllage", kCyan,    100},
 	{"volAuxDetSensitiveCRT_X", kBlue,0},
 	{"volAuxDetSensitiveCRT_Z", kBlue,0},
 	{"volShielding", kYellow-5, 0},
@@ -79,6 +82,7 @@ drawopt optsbnd[] = {
 	{"volDewarInsulation", kRed, 0},
 	{"volDewarFluidLAr", kBlue+1, 0},
 	{"volDewarFluidLN2", kBlue+2, 0},
+	{"CRTmodule*", kGreen+8, 0},
 	{0, 0}
 };
 
