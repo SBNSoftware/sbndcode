@@ -30,7 +30,7 @@ standard_sbndcvnevaluator:
   PixelMapInput: "cvnmap"
   ResultLabel: "cvnresult"
   CVNType: "Tensorflow"
-  MultiplePMs: false
+  MultiplePMs: true
   SBNDTFHandler: {
     tool_type: SBNDTFNetHandler
     @table::standard_sbndtfnethandler

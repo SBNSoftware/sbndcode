@@ -5,4 +5,12 @@
  </class>
  <class name="std::vector<lcvn::SBNDPixelMap>"/>
  <class name="art::Wrapper<std::vector<lcvn::SBNDPixelMap> >"/>
+
+ <class name="std::pair< art::Ptr<recob::Slice>, art::Ptr<lcvn::SBNDPixelMap>>"/>
+ <class name="std::pair< art::Ptr<lcvn::SBNDPixelMap>, art::Ptr<recob::Slice>>"/>
+ <class name="art::Assns<recob::Slice, lcvn::SBNDPixelMap, void>"/>
+ <class name="art::Assns<lcvn::SBNDPixelMap, recob::Slice, void>"/>
+ <class name="art::Wrapper< art::Assns<recob::Slice, lcvn::SBNDPixelMap, void>>"/>
+ <class name="art::Wrapper< art::Assns<lcvn::SBNDPixelMap, recob::Slice, void>>"/>
+ 
 </lcgdict>
