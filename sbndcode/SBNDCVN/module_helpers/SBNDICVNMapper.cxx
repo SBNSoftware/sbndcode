@@ -4,6 +4,7 @@
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/AnalysisBase/T0.h"
+#include "lardata/Utilities/AssociationUtil.h"
 
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Core/EDProducer.h"
@@ -40,6 +41,7 @@ namespace lcvn
   {
 
     produces<std::vector<lcvn::SBNDPixelMap>>(fClusterPMLabel);
+    produces<art::Assns<recob::Slice, lcvn::SBNDPixelMap>>(fClusterPMLabel);
   }
 	
   //--------------------------------------------------------------------------------------------------------------------------	
@@ -66,7 +68,8 @@ template <class T, class U> void SBNDICVNMapper<T, U>::produce(art::Event& evt)
       art::FindManyP<anab::T0> findManyT0s(PFPListHandle, evt, fT0Label);
       
       std::unique_ptr< std::vector<SBNDPixelMap> > pmCol(new std::vector<SBNDPixelMap>);
-      
+      auto assn = std::make_unique< art::Assns<recob::Slice, lcvn::SBNDPixelMap> >();
+
       auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
       
       for(auto const& slice : SliceList){
@@ -103,12 +106,14 @@ template <class T, class U> void SBNDICVNMapper<T, U>::produce(art::Event& evt)
              
 	     if(nhits > fMinClusterHits && pmCol->size()<fMapVecSize){ 
 	        pmCol->push_back(pm);
+                util::CreateAssn(*this, evt, *pmCol, slice, *assn, fClusterPMLabel);
 	     }
 	  
           }
       }
       
       evt.put(std::move(pmCol), fClusterPMLabel);
+      evt.put(std::move(assn), fClusterPMLabel);
      
    }
    
