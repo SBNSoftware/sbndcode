@@ -1,3 +1,4 @@
+#include "SBNDCVNMapper.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 #include "services_sbnd.fcl"
