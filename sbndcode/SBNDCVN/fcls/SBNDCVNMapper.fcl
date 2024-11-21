@@ -105,4 +105,32 @@ standard_cvnmapper_sim:
   }
 }
 
+standard_sbndtfnethandler:
+{
+  LibPath: "PWD"
+  TFProtoBuf: "pb_model_dir"
+  ChargeLogScale: false
+  NImageWires: 500
+  NImageTDCs  : 500
+  ReverseViews: [false,false,false]
+  UseBundle: true
+  NInputs: 3
+  NOutputs: 7
+}
+
+standard_sbndcvnevaluator:
+{
+  module_type:  SBNDCVNEvaluator
+  #==================
+  PixelMapModuleLabel: "sbndpixelmap"
+  PixelMapInput: "cvnmap"
+  ResultLabel: "cvnresult"
+  CVNType: "Tensorflow"
+  MultiplePMs: true
+  SBNDTFHandler: {
+    tool_type: SBNDTFNetHandler
+    @table::standard_sbndtfnethandler
+  }
+}
+
 END_PROLOG

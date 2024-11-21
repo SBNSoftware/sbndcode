@@ -7,37 +7,10 @@
 #include "signalservices_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
-process_name: ZlibMaker
-
-standard_cvnzlibmaker:
-{
-  module_type:       SBNDCVNZlibMaker
-  OutputDir: "./"
-  PixelMapInput: "sbndpixelmap"
-  SetLog: false
-  ReverseViews: [false,false,false]	
-  PlaneLimit: 500
-  TDCLimit: 500
-  verbose: false
-  UseSlice: true
-  SliceLabel: "pandora"
-  TopologyHitsCut: 0
-  GenieGenModuleLabel: "generator"
-  Verbose: false
-  UseBackTrackInfo: true
-  UseNuContainment: false
-  CosEfrac: 0.75
-  NuEfrac: 0.25
-  VolCut: 0.
-  SaveTree: false
-  PFParticleModuleLabel: "pandora"
-  HitModuleLabel: "gaushit"
-  T0Label: "pandora"
-}
+process_name: SBNDCVNEVALUATOR
 
 services:
 {
-  TFileService: { fileName: "SBNDZlibMaker.root" }
   RandomNumberGenerator:     {}                                 # required by fuzzyCluster
   message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
   FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
@@ -45,7 +18,6 @@ services:
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND:  @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
   ParticleInventoryService:  @local::standard_particleinventoryservice
-  BackTrackerService: @local::standard_backtrackerservice
 }
 
 source:
@@ -57,17 +29,31 @@ source:
 
 physics:
 {
- producers:{}
+ producers:{
+       sbndevaluator: @local::standard_sbndcvnevaluator
+ }
  
  filters:  {} 
  
- analyzers:{
-    map:@local::standard_cvnzlibmaker
- }
+ analyzers:{}
  
- ana:  [ map ]
- end_paths:     [  ana ] 
+ reco: [ sbndevaluator ]
+ 
+ stream: [ out ]
+ 
+ trigger_paths: [ reco ] 
+ 
+ end_paths: [ stream ]
 }
 
-outputs:{}
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"
+outputs:
+{
+ out:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   SelectEvents: [ reco ]
+   fileName: @local::sbnd_rootoutput.fileName
+ } 
+}
+
