@@ -79,6 +79,7 @@ private:
   void PeakFit(TH1D* hADC, const double &peak, const double &ped, double &fit, double &chi2, bool &converged);
   double Saturation(TH1D* hADC);
   void ResetVars();
+  void SaveHist(TH1D *hADC, std::string &saveDir, std::string saveName, int rebin = 1);
   static double LanGau(double *x, double *par);
 
   CRTGeoAlg fCRTGeoAlg;
@@ -87,7 +88,7 @@ private:
   std::string fFEBDataModuleLabel, fCRTStripHitModuleLabel, fCRTClusterModuleLabel,
     fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTopSaveDirectory;
 
-  bool fOnly2HitSpacePoints, fSaveAllFits, fSaveBadFits;
+  bool fOnly2HitSpacePoints, fSaveAllFits, fSaveBadFits, fSaveSubset, fTrackLA;
 
   double fTrackAngleLimit, fPullWindow;
 
@@ -109,7 +110,9 @@ private:
 
   std::map<uint, TH1D*> hADCPed, hADCSH, hADCSP, hADCTr, hADCTrLA;
 
-  std::string fPedestalSaveDirectory, fPeakSaveDirectory, fBadPedestalSaveDirectory, fBadPeakSaveDirectory;
+  std::string fPedestalSaveDirectory, fPeakSaveDirectory, fBadPedestalSaveDirectory, fBadPeakSaveDirectory,
+    fPedestalSubsetSaveDirectory, fStripHitSubsetSaveDirectory, fSpacePointSubsetSaveDirectory, fTrackSubsetSaveDirectory,
+    fTrackLASubsetSaveDirectory;
 };
 
 
@@ -126,6 +129,8 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fOnly2HitSpacePoints      = p.get<bool>("Only2HitSpacePoints");
   fSaveAllFits              = p.get<bool>("SaveAllFits");
   fSaveBadFits              = p.get<bool>("SaveBadFits");
+  fSaveSubset               = p.get<bool>("SaveSubset");
+  fTrackLA                  = p.get<bool>("TrackLA");
   fTrackAngleLimit          = p.get<double>("TrackAngleLimit");
   fPullWindow               = p.get<double>("PullWindow");
 
@@ -166,12 +171,15 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree->Branch("tr_peak_peak", &_tr_peak_peak);
   fChannelTree->Branch("tr_sat_ratio_total", &_tr_sat_ratio_total);
   fChannelTree->Branch("tr_sat_ratio_peak", &_tr_sat_ratio_peak);
-  fChannelTree->Branch("tr_lim_angle_peak_fit", &_tr_lim_angle_peak_fit);
-  fChannelTree->Branch("tr_lim_angle_peak_fit_chi2", &_tr_lim_angle_peak_fit_chi2);
-  fChannelTree->Branch("tr_lim_angle_peak_fit_converged", &_tr_lim_angle_peak_fit_converged);
-  fChannelTree->Branch("tr_lim_angle_peak_peak", &_tr_lim_angle_peak_peak);
-  fChannelTree->Branch("tr_lim_angle_sat_ratio_total", &_tr_lim_angle_sat_ratio_total);
-  fChannelTree->Branch("tr_lim_angle_sat_ratio_peak", &_tr_lim_angle_sat_ratio_peak);
+  if(fTrackLA)
+    {
+      fChannelTree->Branch("tr_lim_angle_peak_fit", &_tr_lim_angle_peak_fit);
+      fChannelTree->Branch("tr_lim_angle_peak_fit_chi2", &_tr_lim_angle_peak_fit_chi2);
+      fChannelTree->Branch("tr_lim_angle_peak_fit_converged", &_tr_lim_angle_peak_fit_converged);
+      fChannelTree->Branch("tr_lim_angle_peak_peak", &_tr_lim_angle_peak_peak);
+      fChannelTree->Branch("tr_lim_angle_sat_ratio_total", &_tr_lim_angle_sat_ratio_total);
+      fChannelTree->Branch("tr_lim_angle_sat_ratio_peak", &_tr_lim_angle_sat_ratio_peak);
+    }
 
   for(int ch = 0; ch < 4480; ++ch)
     {
@@ -179,7 +187,9 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
       hADCSH[ch]   = new TH1D(Form("hADCSH_Channel%i", ch), ";ADC;Strip Hits", 4300, -.5, 4299.5);
       hADCSP[ch]   = new TH1D(Form("hADCSP_Channel%i", ch), ";ADC;Space Points", 4300, -.5, 4299.5);
       hADCTr[ch]   = new TH1D(Form("hADCTr_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
-      hADCTrLA[ch] = new TH1D(Form("hADCTrLA_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
+
+      if(fTrackLA)
+        hADCTrLA[ch] = new TH1D(Form("hADCTrLA_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
     }
 }
 
@@ -200,7 +210,33 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
 
       fBadPeakSaveDirectory = Form("%s/run%i/peaks/bad", fTopSaveDirectory.c_str(), e.run());
       gSystem->Exec(Form("mkdir -p %s", fBadPeakSaveDirectory.c_str()));
+    }
 
+  if(fSaveSubset && fNEvents == 0)
+    {
+      gSystem->Exec(Form("mkdir -p %s", fTopSaveDirectory.c_str()));
+
+      fPedestalSubsetSaveDirectory = Form("%s/run%i/subset/pedestals", fTopSaveDirectory.c_str(), e.run());
+      gSystem->Exec(Form("mkdir -p %s", fPedestalSubsetSaveDirectory.c_str()));
+
+      fStripHitSubsetSaveDirectory = Form("%s/run%i/subset/striphits", fTopSaveDirectory.c_str(), e.run());
+      gSystem->Exec(Form("mkdir -p %s", fStripHitSubsetSaveDirectory.c_str()));
+
+      fSpacePointSubsetSaveDirectory = Form("%s/run%i/subset/spacepoints", fTopSaveDirectory.c_str(), e.run());
+      gSystem->Exec(Form("mkdir -p %s", fSpacePointSubsetSaveDirectory.c_str()));
+
+      fTrackSubsetSaveDirectory = Form("%s/run%i/subset/tracks", fTopSaveDirectory.c_str(), e.run());
+      gSystem->Exec(Form("mkdir -p %s", fTrackSubsetSaveDirectory.c_str()));
+
+      if(fTrackLA)
+        {
+          fTrackLASubsetSaveDirectory = Form("%s/run%i/subset/tracks_limited_angle", fTopSaveDirectory.c_str(), e.run());
+          gSystem->Exec(Form("mkdir -p %s", fTrackLASubsetSaveDirectory.c_str()));
+        }
+    }
+
+  if((fSaveAllFits || fSaveBadFits || fSaveSubset) && fNEvents == 0)
+    {
       gStyle->SetOptStat(0);
       gStyle->SetFrameLineWidth(2);
       gStyle->SetTextFont(62);
@@ -366,7 +402,7 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
               hADCTr[strip_hit->Channel()]->Fill(strip_hit->ADC1() + sipm1.pedestal);
               hADCTr[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() + sipm2.pedestal);
 
-              if(angle < fTrackAngleLimit)
+              if(fTrackLA && angle < fTrackAngleLimit)
                 {
                   hADCTrLA[strip_hit->Channel()]->Fill(strip_hit->ADC1() + sipm1.pedestal);
                   hADCTrLA[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() + sipm2.pedestal);
@@ -401,6 +437,17 @@ void sbnd::crt::ADRIFT::endJob()
         {
           const int ch = gdml_i * 32 + ch_i;
 
+          if(fSaveSubset && (ch > 1471 && ch < 1728))
+            {
+              SaveHist(hADCPed[ch], fPedestalSubsetSaveDirectory, Form("pedestal_channel_%i", ch), 2);
+              SaveHist(hADCSH[ch], fStripHitSubsetSaveDirectory, Form("strip_hit_channel_%i", ch), 20);
+              SaveHist(hADCSP[ch], fSpacePointSubsetSaveDirectory, Form("space_point_channel_%i", ch), 20);
+              SaveHist(hADCTr[ch], fTrackSubsetSaveDirectory, Form("track_channel_%i", ch), 20);
+
+              if(fTrackLA)
+                SaveHist(hADCTrLA[ch], fTrackLASubsetSaveDirectory, Form("track_limited_angle_channel_%i", ch), 20);
+            }
+
           _channel     = ch;
           _gdml_id     = gdml_i;
           _mac5        = mac5;
@@ -429,8 +476,12 @@ void sbnd::crt::ADRIFT::endJob()
             {
               PeakPeak(hADCTr[ch], _ped_calib, _tr_peak_peak);
               PeakFit(hADCTr[ch], _tr_peak_peak, _ped_calib, _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_fit_converged);
-              PeakPeak(hADCTrLA[ch], _ped_calib, _tr_lim_angle_peak_peak);
-              PeakFit(hADCTrLA[ch], _tr_lim_angle_peak_peak, _ped_calib, _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_fit_converged);
+
+              if(fTrackLA)
+                {
+                  PeakPeak(hADCTrLA[ch], _ped_calib, _tr_lim_angle_peak_peak);
+                  PeakFit(hADCTrLA[ch], _tr_lim_angle_peak_peak, _ped_calib, _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_fit_converged);
+                }
             }
 
           const double sh_sat = Saturation(hADCSH[ch]);
@@ -447,9 +498,12 @@ void sbnd::crt::ADRIFT::endJob()
               _tr_sat_ratio_total = tr_sat / hADCTr[ch]->GetEntries();
               _tr_sat_ratio_peak  = tr_sat / hADCTr[ch]->GetBinContent(hADCTr[ch]->FindBin(_tr_peak_peak));
 
-              const double tr_lim_angle_sat = Saturation(hADCTrLA[ch]);
-              _tr_lim_angle_sat_ratio_total = tr_lim_angle_sat / hADCTrLA[ch]->GetEntries();
-              _tr_lim_angle_sat_ratio_peak  = tr_lim_angle_sat / hADCTrLA[ch]->GetBinContent(hADCTrLA[ch]->FindBin(_tr_lim_angle_peak_peak));
+              if(fTrackLA)
+                {
+                  const double tr_lim_angle_sat = Saturation(hADCTrLA[ch]);
+                  _tr_lim_angle_sat_ratio_total = tr_lim_angle_sat / hADCTrLA[ch]->GetEntries();
+                  _tr_lim_angle_sat_ratio_peak  = tr_lim_angle_sat / hADCTrLA[ch]->GetBinContent(hADCTrLA[ch]->FindBin(_tr_lim_angle_peak_peak));
+                }
             }
 
           fChannelTree->Fill();
@@ -464,7 +518,7 @@ void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool 
   TString ch_name = name;
   ch_name.Remove(0,15);
 
-  TH1D* hADC2 = (TH1D*) hADC->Clone(name+ "_2");
+  TH1D* hADC2 = (TH1D*) hADC->Clone(name + "_for_fit");
   hADC2->Rebin(5);
 
   TFitResultPtr fit_result = hADC2->Fit(gaus, "QRS");
@@ -509,7 +563,7 @@ void sbnd::crt::ADRIFT::PedestalPeak(TH1D* hADC, double &peak)
 
 void sbnd::crt::ADRIFT::Rate(TH1D* hADC, double &rate)
 {
-  rate = hADC->GetEntries() * fNEvents * fPullWindow;
+  rate = hADC->GetEntries() / (fNEvents * fPullWindow);
 }
 
 void sbnd::crt::ADRIFT::PeakPeak(TH1D* hADC, const double &ped, double &peak)
@@ -561,7 +615,7 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
   else
     std::cout << "Cannot identify histogram type (" << name << ")" << std::endl;
 
-  TH1D* hADC2 = (TH1D*) hADC->Clone(name+ "_for_fit");
+  TH1D* hADC2 = (TH1D*) hADC->Clone(name + "_for_fit");
   hADC2->Rebin(20);
 
   TFitResultPtr fit_result = hADC2->Fit(langau, "QRS");
@@ -570,7 +624,7 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
   if(!converged)
     std::cout << "Peak fit has not converged - " << hADC->GetName() << std::endl;
 
-  fit  = langau->GetParameter("Most Probable");
+  fit  = langau->GetParameter(1);
   chi2 = langau->GetChisquare() / langau->GetNDF();
 
   if(fSaveAllFits || (fSaveBadFits && !converged))
@@ -658,8 +712,23 @@ void sbnd::crt::ADRIFT::ResetVars()
   _sp_peak_fit_converged           = false;
   _tr_peak_fit_converged           = false;
   _tr_lim_angle_peak_fit_converged = false;
+}
 
+void sbnd::crt::ADRIFT::SaveHist(TH1D *hADC, std::string &saveDir, std::string saveName, int rebin)
+{
+  TCanvas *c = new TCanvas(Form("c%s", saveName.c_str()), Form("c%s", saveName.c_str()));
+  c->cd();
 
+  const TString name = hADC->GetName();
+  TH1D* hADC2 = (TH1D*) hADC->Clone(name + "_for_save");
+
+  hADC2->SetLineColor(kOrange+2);
+  hADC2->SetLineWidth(2);
+  hADC2->Rebin(rebin);
+  hADC2->Draw("histe");
+
+  c->SaveAs(Form("%s/%s.png", saveDir.c_str(), saveName.c_str()));
+  c->SaveAs(Form("%s/%s.pdf", saveDir.c_str(), saveName.c_str()));
 }
 
 double sbnd::crt::ADRIFT::LanGau(double *x, double *par)
