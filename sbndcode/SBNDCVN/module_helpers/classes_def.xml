@@ -12,5 +12,12 @@
  <class name="art::Assns<lcvn::SBNDPixelMap, recob::Slice, void>"/>
  <class name="art::Wrapper< art::Assns<recob::Slice, lcvn::SBNDPixelMap, void>>"/>
  <class name="art::Wrapper< art::Assns<lcvn::SBNDPixelMap, recob::Slice, void>>"/>
+
+ <class name="std::pair< art::Ptr<lcvn::Result>, art::Ptr<lcvn::SBNDPixelMap>>"/>
+ <class name="std::pair< art::Ptr<lcvn::SBNDPixelMap>, art::Ptr<lcvn::Result>>"/>
+ <class name="art::Assns<lcvn::Result, lcvn::SBNDPixelMap, void>"/>
+ <class name="art::Assns<lcvn::SBNDPixelMap, lcvn::Result, void>"/>
+ <class name="art::Wrapper< art::Assns<lcvn::Result, lcvn::SBNDPixelMap, void>>"/>
+ <class name="art::Wrapper< art::Assns<lcvn::SBNDPixelMap, lcvn::Result, void>>"/>
  
 </lcgdict>

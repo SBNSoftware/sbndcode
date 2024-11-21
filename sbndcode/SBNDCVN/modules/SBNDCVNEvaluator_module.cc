@@ -27,6 +27,7 @@
 #include "sbndcode/SBNDCVN/module_helpers/SBNDPixelMap.h"
 #include "larrecodnn/CVN/func/Result.h"
 #include "sbndcode/SBNDCVN/module_helpers/SBNDITFNetHandler.h"
+#include "lardata/Utilities/AssociationUtil.h"
 
 namespace lcvn {
 
@@ -70,6 +71,7 @@ namespace lcvn {
     fMultiplePMs(pset.get<bool>("MultiplePMs"))
   {
     produces<std::vector<lcvn::Result>>(fResultLabel);
+    produces<art::Assns<lcvn::SBNDPixelMap, lcvn::Result>>(fResultLabel);
   }
   //......................................................................
   void SBNDCVNEvaluator::produce(art::Event& evt)
@@ -77,7 +79,7 @@ namespace lcvn {
 
     /// Define containers for the things we're going to produce
     std::unique_ptr<std::vector<Result>> resultCol(new std::vector<Result>);
-
+    auto assn = std::make_unique< art::Assns<lcvn::SBNDPixelMap, lcvn::Result> >();
     /// Load in the pixel maps
     std::vector<art::Ptr<lcvn::SBNDPixelMap>> pixelmaplist;
     art::InputTag itag1(fPixelMapModuleLabel, fPixelMapInput);
@@ -92,12 +94,14 @@ namespace lcvn {
         std::vector<std::vector<float>> networkOutput = fTFHandler->Predict(*pixelmaplist[0]);
         // lcvn::Result can now take a vector of floats and works out the number of outputs
         resultCol->emplace_back(networkOutput);
+        util::CreateAssn(*this, evt, *resultCol, pixelmaplist[0], *assn, fResultLabel);
 
         // Classify other pixel maps if they exist
         if (fMultiplePMs) {
           for (unsigned int p = 1; p < pixelmaplist.size(); ++p) {
             std::vector<std::vector<float>> output = fTFHandler->Predict(*pixelmaplist[p]);
             resultCol->emplace_back(output);
+            util::CreateAssn(*this, evt, *resultCol, pixelmaplist[p], *assn, fResultLabel);
           }
         }
       }
@@ -110,6 +114,7 @@ namespace lcvn {
     }
 
     evt.put(std::move(resultCol), fResultLabel);
+    evt.put(std::move(assn), fResultLabel);
   }
 
   DEFINE_ART_MODULE(lcvn::SBNDCVNEvaluator)
