@@ -41,7 +41,7 @@ namespace lcvn
   {
 
     produces<std::vector<lcvn::SBNDPixelMap>>(fClusterPMLabel);
-    produces<art::Assns<recob::Slice, lcvn::SBNDPixelMap>>(fClusterPMLabel);
+    //produces<art::Assns<recob::Slice, lcvn::SBNDPixelMap>>(fClusterPMLabel);
   }
 	
   //--------------------------------------------------------------------------------------------------------------------------	
@@ -106,14 +106,14 @@ template <class T, class U> void SBNDICVNMapper<T, U>::produce(art::Event& evt)
              
 	     if(nhits > fMinClusterHits && pmCol->size()<fMapVecSize){ 
 	        pmCol->push_back(pm);
-                util::CreateAssn(*this, evt, *pmCol, slice, *assn, fClusterPMLabel);
+                //util::CreateAssn(*this, evt, *pmCol, slice, *assn, fClusterPMLabel);
 	     }
 	  
           }
       }
-      
+      std::cout<<pmCol->size()<<std::endl;
       evt.put(std::move(pmCol), fClusterPMLabel);
-      evt.put(std::move(assn), fClusterPMLabel);
+      //evt.put(std::move(assn), fClusterPMLabel);
      
    }
    
