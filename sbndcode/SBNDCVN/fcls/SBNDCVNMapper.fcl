@@ -118,19 +118,39 @@ standard_sbndtfnethandler:
   NOutputs: 7
 }
 
-standard_sbndcvnevaluator:
+standard_sbndcvnevaluatorpm:
 {
   module_type:  SBNDCVNEvaluator
   #==================
   PixelMapModuleLabel: "sbndpixelmap"
   PixelMapInput: "cvnmap"
-  ResultLabel: "cvnresult"
+  SliceLabel: ""
+  PFParticleModuleLabel: ""
+  T0Label: ""
   CVNType: "Tensorflow"
-  MultiplePMs: true
   SBNDTFHandler: {
     tool_type: SBNDTFNetHandler
     @table::standard_sbndtfnethandler
   }
+  PixelMapProducer: @local::standard_pixelmapproducer
 }
+
+standard_sbndcvnevaluatorslc:
+{
+  module_type:  SBNDCVNEvaluator
+  #==================
+  PixelMapModuleLabel: ""
+  PixelMapInput: ""
+  SliceLabel: "pandora"
+  PFParticleModuleLabel: "pandora"
+  T0Label: "pandora"
+  CVNType: "Tensorflow"
+  SBNDTFHandler: {
+    tool_type: SBNDTFNetHandler
+    @table::standard_sbndtfnethandler
+  }
+  PixelMapProducer: @local::standard_pixelmapproducer
+}
+
 
 END_PROLOG

@@ -31,14 +31,14 @@ source:
 physics:
 {
  producers:{
-       sbndevaluator: @local::standard_sbndcvnevaluator
+       cvn: @local::standard_sbndcvnevaluatorslc
  }
  
  filters:  {} 
  
  analyzers:{}
  
- reco: [ sbndevaluator ]
+ reco: [ cvn ]
  
  stream: [ out ]
  
