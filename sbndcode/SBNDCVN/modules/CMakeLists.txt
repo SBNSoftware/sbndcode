@@ -100,6 +100,20 @@ cet_build_plugin(SBNDCVNEvaluator art::EDProducer
   sbndcode_sbndcvn_module_helpers
 )
 
+cet_build_plugin(SBNDCVNTest art::EDAnalyzer
+  LIBRARIES PRIVATE
+  larrecodnn::CVN_func
+  larrecodnn::CVN_interfaces
+  larsim::MCCheater_BackTrackerService_service
+  larsim::MCCheater_ParticleInventoryService_service
+  art_plugin_support::toolMaker
+  art::Framework_Core
+  art::Framework_Principal
+  art_root_io::TFileService_service
+  canvas::canvas
+  sbndcode_sbndcvn_module_helpers
+)
+
 install_headers()
 install_fhicl()
 install_source()

@@ -152,5 +152,16 @@ standard_sbndcvnevaluatorslc:
   PixelMapProducer: @local::standard_pixelmapproducer
 }
 
+standard_sbndcvntest:
+{
+  module_type:  SBNDCVNTest
+  #==================
+  SliceLabel:     "pandora"
+  CVNLabel:       "cvn"
+  GenieLabel:     "generator"
+  HitLabel:       "gaushit"
+  HitMatchLabel:  "gaushitTruthMatch"
+}
+
 
 END_PROLOG
