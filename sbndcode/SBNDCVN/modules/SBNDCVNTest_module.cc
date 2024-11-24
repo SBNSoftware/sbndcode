@@ -13,6 +13,7 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
+#include "art_root_io/TFileService.h"
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -24,6 +25,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/AnalysisBase/BackTrackerMatchingData.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
+#include "TTree.h"
 
 using namespace std;
 
@@ -56,6 +58,15 @@ private:
   art::InputTag fCVNLabel;
   art::InputTag fHitLabel;
   art::InputTag fHitMatchLabel;
+
+  TTree *anatree;
+  int run;
+  int event;
+  vector<int> nhits;
+  vector<float> numuscore;
+  vector<float> nuescore;
+  vector<float> cosmicscore;
+  vector<float> ncscore;
 };
 
 
@@ -71,6 +82,14 @@ lcvn::SBNDCVNTest::SBNDCVNTest(fhicl::ParameterSet const& p)
 
 void lcvn::SBNDCVNTest::analyze(art::Event const& e)
 {
+  run = e.run();
+  event = e.id().event();
+  nhits.clear();
+  numuscore.clear();
+  nuescore.clear();
+  cosmicscore.clear();
+  ncscore.clear();
+  
   auto slcHandle = e.getHandle< std::vector<recob::Slice> >(fSliceLabel);
   if (!slcHandle){
     cout<<"slcHandle invalid"<<endl;
@@ -86,19 +105,43 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
   art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
     
   for (size_t i = 0; i<slcHandle->size(); ++i){
-    cout<<"slice "<<i<<endl;
     if (findOneCVN.at(i).isValid()){
-      auto const & cvn = (findOneCVN.at(i).ref());
-      cout<<"numu "<<cvn.GetNumuProbability()<<endl;
-      cout<<"nue"<<cvn.GetNueProbability()<<endl;
-      cout<<"nutau"<<cvn.GetNutauProbability()<<endl;
-      cout<<"nc"<<cvn.GetNCProbability()<<endl;
+      auto const & cvn = findOneCVN.at(i).ref().fOutput;
 //      for (size_t j = 0; j<cvn.size(); ++j){
 //        for (size_t k = 0; k<cvn[j].size(); ++k){
-//          std::cout<<i<<" "<<j<<" "<<k<<" "<<cvn[j][k]<<std::endl;
+//          std::cout<<cvn[j][k]<<" ";
+//          if (k==cvn[j].size()-1) std::cout<<std::endl;
 //        }
 //      }
+      numuscore.push_back(cvn[4][0]);
+      nuescore.push_back(cvn[4][1]);
+      cosmicscore.push_back(cvn[4][2]);
+      ncscore.push_back(cvn[4][3]);
     }
+    if(findManyHits.isValid()){
+      auto const & slice_hits = findManyHits.at(i);
+      nhits.push_back(slice_hits.size());
+    }
+    /*
+    if(findManyHits.isValid()){
+      auto const & slice_hits = findManyHits.at(i);
+      cout<<"slice "<<i<<" nhits "<<slice_hits.size()<<endl;
+      double avgtpc[3] = {0};
+      double avgwire[3] = {0};
+      double avgtick[3] = {0};
+      int nhits[3] ={0};
+      for (auto const & hit : slice_hits){
+        auto const & wid = hit->WireID();
+        avgtpc[wid.Plane] += wid.TPC;
+        avgwire[wid.Plane] += wid.Wire;
+        avgtick[wid.Plane] += hit->PeakTime();
+        ++nhits[wid.Plane];
+      }
+      for (int ipl = 0; ipl <3; ++ipl){
+        std::cout<<"plane="<<ipl<<" tpc="<<avgtpc[ipl]/nhits[ipl]<<" wire="<<avgwire[ipl]/nhits[ipl]<<" tick="<<avgtick[ipl]/nhits[ipl]<<std::endl;
+      }
+    }
+    */     
     /*
     if (!e.isRealData()){
       if(findManyHits.isValid()){
@@ -160,11 +203,20 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
     }
     */
   }
+  anatree->Fill();
 }
 
 void lcvn::SBNDCVNTest::beginJob()
 {
-  // Implementation of optional member function here.
+  art::ServiceHandle<art::TFileService> tfs;
+  anatree = tfs->make<TTree>("anatree", "anatree");
+  anatree->Branch("run", &run);
+  anatree->Branch("event", &event);
+  anatree->Branch("nhits", &nhits);
+  anatree->Branch("numuscore", &numuscore);
+  anatree->Branch("nuescore", &nuescore);
+  anatree->Branch("cosmicscore", &cosmicscore);
+  anatree->Branch("ncscore", &ncscore);
 }
 
 DEFINE_ART_MODULE(lcvn::SBNDCVNTest)

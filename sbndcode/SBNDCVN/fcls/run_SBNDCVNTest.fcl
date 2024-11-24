@@ -18,7 +18,7 @@ services:
   LArFFT:                    @local::sbnd_larfft
   SignalShapingServiceSBND:  @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
   ParticleInventoryService:  @local::standard_particleinventoryservice
-  BackTrackerService:        @local::standard_backtrackerservice
+  TFileService: { fileName: "cvn.root" }
 }
 
 source:

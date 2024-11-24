@@ -112,6 +112,7 @@ cet_build_plugin(SBNDCVNTest art::EDAnalyzer
   art_root_io::TFileService_service
   canvas::canvas
   sbndcode_sbndcvn_module_helpers
+  ROOT::Tree
 )
 
 install_headers()
