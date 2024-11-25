@@ -78,7 +78,13 @@ private:
     std::stringstream _histName; //raw waveform hist name
     art::ServiceHandle<art::TFileService> tfs;
 
-    TH1D* _hTopHatCRTT0;
+    std::vector<std::string> crtTagger{"Bottom","South","North","West","East","TopLow","TopHigh"};
+    size_t nCrt = crtTagger.size(); 
+    TH1D* _hTopHatCRTT0[8];
+    
+    std::vector<std::string> pmtBoard{"0","1","2","3","4","5","6","7","8","9"};
+    size_t nPmt = pmtBoard.size(); 
+    TH1D* _hFTRIG[10];
 
     //---Tree Variables
     int _run, _subrun, _event;
@@ -150,9 +156,9 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
     fPmtFtrigDecodeLabel = p.get<art::InputTag>("PmtFtrigDecodeLabel", "pmtdecoder:FTrigChannels");
     fPmtFtrigBoardLabel = p.get<art::InputTag>("PmtFtrigBoardLabel", "pmtdecoder:FTrigTiming");
 
-    fDebugTdc = p.get<bool>("DebugTdc", false);
+    fDebugTdc = p.get<bool>("DebugTdc", true);
     fDebugCrt = p.get<bool>("DebugCrt", false);
-    fDebugPmt = p.get<bool>("DebugPmt", true);
+    fDebugPmt = p.get<bool>("DebugPmt", false);
 
     fIncludeCrt = p.get<bool>("IncludeCrt", true);
     fIncludePmt = p.get<bool>("IncludePmt", true);
@@ -282,7 +288,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                 double ts0_ns = crt_ts0.back() - (tdc_ch2.back() - tdc_ch4.back());
                 double ts0_us = ts0_ns / 1'000;
 
-                _hTopHatCRTT0->Fill(ts0_us);
+                _hTopHatCRTT0[crt_tagger.back()]->Fill(ts0_us);
             }
         }
     }
@@ -340,7 +346,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                 }
 
                 if (excludeThisCh){
-                    std::cout << "   channel id = " << pmt->ChannelNumber() << " is exluded." << std::endl << std::endl;; 
+                    if(fDebugPmt) std::cout << "   channel id = " << pmt->ChannelNumber() << " is exluded." << std::endl << std::endl;; 
                     continue;
                 }
 
@@ -350,6 +356,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                     std::cout << "   channel id = " << pmt->ChannelNumber() << " has FTRIG rising edge = " << tsFtrig << " ns." << std::endl << std::endl;
                 }
 
+                _hFTRIG[pmt->ChannelNumber()]->Fill(tsFtrig);
             }
         }
     }
@@ -364,7 +371,13 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
 
 void sbnd::BeamAnalysis::beginJob()
 {
-    _hTopHatCRTT0 = tfs->make<TH1D>("CRTT0 - (RWM - ETRIG)", "CRTT0 - (RWM - ETRIG)", 100, -5, 5);
+    for(size_t i = 0; i < nCrt; i++){
+        _hTopHatCRTT0[i] = tfs->make<TH1D>(Form("hCRTT0_Tagger_%s", crtTagger[i].c_str()), "", 100, -5, 5);
+    }
+
+    for(size_t i = 0; i < nPmt; i++){
+        _hFTRIG[i] = tfs->make<TH1D>(Form("hFTRIG_RisingEdge_Board_%s", pmtBoard[i].c_str()), "", 100, -5, 5);
+    }
 
     //Event Tree
     _tree = tfs->make<TTree>("events", "");
@@ -401,17 +414,6 @@ void sbnd::BeamAnalysis::beginJob()
 
 void sbnd::BeamAnalysis::endJob()
 {
-    //save CRTT0
-    TCanvas *c = new TCanvas("CRTT0", "CRTT0");
-    c->cd();
-
-    _hTopHatCRTT0->GetXaxis()->SetTitle("t (#mus)");
-    _hTopHatCRTT0->GetYaxis()->SetTitle("Entries");
-    //_hTopHatCRTT0->GetXaxis()->SetRangeUser(wf_lb, wf_ub);
-    
-    _hTopHatCRTT0->SetLineColor(kBlack);
-    _hTopHatCRTT0->SetLineWidth(2);
-    _hTopHatCRTT0->Draw("histe");
 }
 
 void sbnd::BeamAnalysis::ResetEventVars()
