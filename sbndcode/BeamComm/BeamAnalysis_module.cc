@@ -23,7 +23,15 @@
 #include "canvas/Persistency/Provenance/ProcessHistory.h"
 #include "art_root_io/TFileService.h"
 
+#include "TCanvas.h"
 #include "TTree.h"
+#include "TH1D.h"
+#include "TFile.h"
+#include "TF1.h"
+#include "TGraphErrors.h"
+#include "TFitResult.h"
+#include "TStyle.h"
+#include "TSystem.h"
 
 #include "lardataobj/RawData/OpDetWaveform.h"
 
@@ -61,10 +69,16 @@ public:
 
     void ResetEventVars();
 
+    double GetFtrigRisingEdge(const art::Ptr<raw::OpDetWaveform> wf, uint16_t pp);
+
 private:
 
     // Event Tree
     TTree *_tree;
+    std::stringstream _histName; //raw waveform hist name
+    art::ServiceHandle<art::TFileService> tfs;
+
+    TH1D* _hTopHatCRTT0;
 
     //---Tree Variables
     int _run, _subrun, _event;
@@ -116,6 +130,10 @@ private:
     // Which data products to include
     bool fIncludeCrt;
     bool fIncludePmt;
+
+    std::vector<int> fExcludePmtCh;
+    bool fSavePmt;
+    std::string fSavePmtPath;
 };
 
 
@@ -134,16 +152,32 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
 
     fDebugTdc = p.get<bool>("DebugTdc", false);
     fDebugCrt = p.get<bool>("DebugCrt", false);
-    fDebugPmt = p.get<bool>("DebugPmt", false);
+    fDebugPmt = p.get<bool>("DebugPmt", true);
 
     fIncludeCrt = p.get<bool>("IncludeCrt", true);
     fIncludePmt = p.get<bool>("IncludePmt", true);
+
+    fExcludePmtCh = p.get<std::vector<int>>("ExcludePmtCh", {1});
+    fSavePmt = p.get<bool>("SavePmt", true);
+    fSavePmtPath = p.get<std::string>("SavePmtPath", "/exp/sbnd/data/users/lnguyen/BeamComm/BeamAna/plots/");
 }
 
 void sbnd::BeamAnalysis::analyze(art::Event const& e)
 {
     
     ResetEventVars();
+  
+    if(fSavePmt){
+        gSystem->Exec(Form("mkdir -p %s", fSavePmtPath.c_str()));
+
+        gStyle->SetFrameLineWidth(2);
+        gStyle->SetTextFont(62);
+        gStyle->SetTextSize(0.07);
+        gStyle->SetLabelFont(62, "xyz");
+        gStyle->SetLabelSize(0.05, "xyz");
+        gStyle->SetTitleSize(0.05, "xyz");
+        gStyle->SetTitleFont(62, "xyz");
+    }
 
     _run    = e.id().run();
     _subrun = e.id().subRun();
@@ -244,6 +278,11 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                     std::cout << "   ts0 = " << crt_ts0.back() << ", ts1 = " << crt_ts1.back() << std::endl;
                     std::cout << "   tagger = " << crt_tagger.back() << std::endl;
                 }
+                
+                double ts0_ns = crt_ts0.back() - (tdc_ch2.back() - tdc_ch4.back());
+                double ts0_us = ts0_ns / 1'000;
+
+                _hTopHatCRTT0->Fill(ts0_us);
             }
         }
     }
@@ -285,7 +324,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
             art::fill_ptr_vector(pmt_ftrig_v, pmtFtrigHandle);
             art::FindManyP<raw::pmt::boardTimingInfo> pmtBoardAssoc(pmt_ftrig_v, e, fPmtFtrigBoardLabel);
 
-            std::cout << "Found OpDetWaveform FTRIG size = " << pmt_ftrig_v.size() << std::endl;
+            if (fDebugPmt) std::cout << "Found OpDetWaveform FTRIG size = " << pmt_ftrig_v.size() << std::endl;
 
             for (auto const& pmt: pmt_ftrig_v){
 
@@ -294,11 +333,22 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                 if(pmt_board_v.size() != 1 ) continue;
 
                 const art::Ptr<raw::pmt::boardTimingInfo> pmt_board(pmt_board_v.front());
+              
+                bool excludeThisCh = false;
+                for(auto const ch: fExcludePmtCh){
+                    if (int(pmt->ChannelNumber())==ch) excludeThisCh = true;
+                }
 
+                if (excludeThisCh){
+                    std::cout << "   channel id = " << pmt->ChannelNumber() << " is exluded." << std::endl << std::endl;; 
+                    continue;
+                }
 
-                std::cout << "   channel id = " << pmt->ChannelNumber() << std::endl;
-                std::cout << "   board postpercent = " << pmt_board->postPercent << std::endl;
-                std::cout << "   board ttt = " <<  pmt_board->triggerTimeTag.front() << std::endl;
+                double tsFtrig = GetFtrigRisingEdge(pmt, pmt_board->postPercent);
+                
+                if (fDebugPmt){ 
+                    std::cout << "   channel id = " << pmt->ChannelNumber() << " has FTRIG rising edge = " << tsFtrig << " ns." << std::endl << std::endl;
+                }
 
             }
         }
@@ -314,8 +364,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
 
 void sbnd::BeamAnalysis::beginJob()
 {
- 
-    art::ServiceHandle<art::TFileService> tfs;
+    _hTopHatCRTT0 = tfs->make<TH1D>("CRTT0 - (RWM - ETRIG)", "CRTT0 - (RWM - ETRIG)", 100, -5, 5);
 
     //Event Tree
     _tree = tfs->make<TTree>("events", "");
@@ -352,7 +401,17 @@ void sbnd::BeamAnalysis::beginJob()
 
 void sbnd::BeamAnalysis::endJob()
 {
-  // Implementation of optional member function here.
+    //save CRTT0
+    TCanvas *c = new TCanvas("CRTT0", "CRTT0");
+    c->cd();
+
+    _hTopHatCRTT0->GetXaxis()->SetTitle("t (#mus)");
+    _hTopHatCRTT0->GetYaxis()->SetTitle("Entries");
+    //_hTopHatCRTT0->GetXaxis()->SetRangeUser(wf_lb, wf_ub);
+    
+    _hTopHatCRTT0->SetLineColor(kBlack);
+    _hTopHatCRTT0->SetLineWidth(2);
+    _hTopHatCRTT0->Draw("histe");
 }
 
 void sbnd::BeamAnalysis::ResetEventVars()
@@ -385,6 +444,116 @@ void sbnd::BeamAnalysis::ResetEventVars()
 
     pmt_timing_type = -1;
     pmt_timing_ch = -1;
+}
+
+double sbnd::BeamAnalysis::GetFtrigRisingEdge(const art::Ptr<raw::OpDetWaveform> wf, uint16_t pp){
+
+    //---------Fill waveform hist
+    _histName.str(std::string());
+    _histName << "run" << _run  
+            << "_subrun" << _subrun
+            << "_event" << _event
+            << "_pmtnum" << wf->ChannelNumber();
+   
+    unsigned int recordLength = wf->Waveform().size();
+
+    TH1D *hWvfm = new TH1D(_histName.str().c_str(), _histName.str().c_str(), recordLength, 0, recordLength);
+
+    for(unsigned int i = 0 ; i < recordLength; i++) {
+      hWvfm->SetBinContent(i, (double)wf->Waveform()[i]);
+    }
+
+    //---------Find baseline value
+    double baseline = 0.;
+    unsigned int baselineNBin = recordLength * 0.4;
+    for(unsigned int i = 0 ; i < baselineNBin; i++) {
+      baseline += hWvfm->GetBinContent(i);
+    }
+    baseline /= baselineNBin;
+
+    //-------Find rising/falling edge
+    double postPercent = pp / 100.0;
+    double largestRise = -9999;
+    double largestFall = 9999;
+    double risingTickGuess = 0;
+    double fallingTickGuess = 0;
+    for(unsigned int i = recordLength * postPercent; i < recordLength - 1; i++){
+       double diff = hWvfm->GetBinContent(i + 1) -  hWvfm->GetBinContent(i);
+       if(diff > largestRise){
+            largestRise = diff;
+            risingTickGuess = i;
+       }
+       if(diff < largestFall){
+           largestFall = diff;
+           fallingTickGuess = i;
+       }
+    }
+
+    //-------Find amplitude
+    double amplitude = 0;
+    for(unsigned int i = risingTickGuess; i < fallingTickGuess; i++){
+        amplitude += hWvfm->GetBinContent(i);
+    }
+    amplitude /= (fallingTickGuess - risingTickGuess);
+    amplitude -= baseline;
+
+    //---------Define Square Wave
+    std::string square_wave = "(-1/(1+exp(([0]-x)/[4])) + 1/(1+exp(([1]-x)/[5])))*[2]+[3]";
+
+    double wf_lb = recordLength * postPercent - 50;
+    double wf_ub = recordLength * postPercent + 150;
+
+    TF1 *fitf = new TF1("fitf", square_wave.c_str(), wf_lb, wf_ub);
+    fitf->SetParameter(0, risingTickGuess);
+    fitf->SetParameter(1, fallingTickGuess);
+    fitf->SetParameter(2, amplitude);
+    fitf->SetParameter(3, baseline);
+    fitf->SetParameter(4, -1);
+    fitf->SetParameter(5, -1);
+    fitf->Draw();
+
+    //---------Fit
+    TFitResultPtr fp = hWvfm->Fit(fitf,"SRQ","", wf_lb, wf_ub);
+    bool converged = !(bool)(int(fp));
+
+    //-------Save fits to plots
+    if(fSavePmt){
+        
+        gStyle->SetOptStat(0); 
+        gStyle->SetOptFit(1);
+    
+        TCanvas *c = new TCanvas(_histName.str().c_str(), _histName.str().c_str());
+        c->cd();
+
+        hWvfm->GetXaxis()->SetTitle("Tick");
+        hWvfm->GetYaxis()->SetTitle("ADC");
+        hWvfm->GetXaxis()->SetRangeUser(wf_lb, wf_ub);
+        
+        hWvfm->SetLineColor(kBlack);
+        hWvfm->SetLineWidth(2);
+        hWvfm->Draw("histe");
+        fitf->SetLineColor(kSpring-6);
+        fitf->Draw("same");
+        
+        c->SaveAs(Form("%s/%s.png", fSavePmtPath.c_str(), _histName.str().c_str()));
+        //c->SaveAs(Form("%s/%s.pdf", fSavePmtPath.c_str(), _histName.str().c_str()));
+    }
+
+    //-------Check if fit converges
+    if(!converged) {
+        if(fDebugPmt) std::cout << "Fitting FTRIG waveform does not converge!" << std::endl;
+        return -99999;
+    }
+
+    double parA = fitf->GetParameter(0);
+    double parOffset = fitf->GetParameter(2);
+    double parMag = fitf->GetParameter(3);
+    double halfPointY = parMag/2 + parOffset;
+
+    double risingEdgeTick = fitf->GetX(halfPointY, parA - 10, parA + 10);
+    double risingEdgeNs = std::round(wf->TimeStamp()*1'000 + risingEdgeTick*2.0);
+
+    return risingEdgeNs;
 }
 
 DEFINE_ART_MODULE(sbnd::BeamAnalysis)
