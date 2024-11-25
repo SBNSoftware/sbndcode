@@ -1,0 +1,4 @@
+#include "run_adrift.fcl"
+
+physics.analyzers.adrift.PullWindow: 0.07
+physics.analyzers.adrift.TrackLA:    true
