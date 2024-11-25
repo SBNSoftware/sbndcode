@@ -12,7 +12,7 @@ SBNDDecoOpHitFinderPMT.RiseTimeCalculator:   @local::sbnd_opreco_risetimecalcula
 
 #HitAlgoPset
 SBNDDecoOpHitFinderPMT.HitAlgoPset.ADCThreshold: 25
-SBNDDecoOpHitFinderPMT.HitAlgoPset.NSigmaThreshold: 3.7
+SBNDDecoOpHitFinderPMT.HitAlgoPset.NSigmaThreshold: 3.4
 SBNDDecoOpHitFinderPMT.HitAlgoPset.EndADCThreshold: 8
 SBNDDecoOpHitFinderPMT.HitAlgoPset.EndNSigmaThreshold: 0.2
 SBNDDecoOpHitFinderPMT.HitAlgoPset.MinPulseWidth: 4
@@ -22,7 +22,7 @@ SBNDDecoOpHitFinderPMT.HitAlgoPset.NumPreSample: 3
 SBNDDecoOpHitFinderPMT.HitAlgoPset.PositivePolarity: true
 SBNDDecoOpHitFinderPMT.HitAlgoPset.TailADCThreshold: 2
 SBNDDecoOpHitFinderPMT.HitAlgoPset.TailNSigmaThreshold: 2
-SBNDDecoOpHitFinderPMT.HitAlgoPset.Verbosity: false
+SBNDDecoOpHitFinderPMT.HitAlgoPset.Verbosity: false 
 
 #BaselinePset
 SBNDDecoOpHitFinderPMT.PedAlgoPset.Name:"Edges"
