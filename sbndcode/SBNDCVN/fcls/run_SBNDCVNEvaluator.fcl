@@ -31,7 +31,7 @@ source:
 physics:
 {
  producers:{
-       cvn: @local::standard_sbndcvnevaluatorslc
+       cvn: @local::standard_sbndcvnevaluatorpm
  }
  
  filters:  {} 

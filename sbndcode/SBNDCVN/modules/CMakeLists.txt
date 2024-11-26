@@ -86,6 +86,7 @@ cet_build_plugin(SBNDTFNetHandler art::tool
   fhiclcpp::fhiclcpp
   ROOT::Hist
   sbndcode_sbndcvn_module_helpers
+  sbndcode_SBNDCVN_tf
 )
 
 cet_build_plugin(SBNDCVNEvaluator art::EDProducer
