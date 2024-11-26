@@ -1,0 +1,66 @@
+#include "ophit_finder_sbnd.fcl"
+
+BEGIN_PROLOG
+
+#####OpHit finder for PMT deconvolved waveforms#####
+SBNDDecoOpHitFinderPMT_data: @local::sbnd_ophit_finder_pmt
+####SPE area must be 1./DecoWaveformPrecision
+SBNDDecoOpHitFinderPMT_data.SPEArea: 200
+SBNDDecoOpHitFinderPMT_data.InputModule: "opdecopmt"
+SBNDDecoOpHitFinderPMT_data.HitThreshold: 1
+SBNDDecoOpHitFinderPMT_data.RiseTimeCalculator:   @local::sbnd_opreco_risetimecalculator
+
+#HitAlgoPset
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.ADCThreshold: 25
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.NSigmaThreshold: 3.4
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.EndADCThreshold: 8
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.EndNSigmaThreshold: 0.2
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.MinPulseWidth: 4
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.Name: "SlidingWindow"
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.NumPostSample: 6
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.NumPreSample: 3
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.PositivePolarity: true
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.TailADCThreshold: 2
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.TailNSigmaThreshold: 2
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.Verbosity: false 
+
+#BaselinePset
+SBNDDecoOpHitFinderPMT_data.PedAlgoPset.Name:"Edges"
+SBNDDecoOpHitFinderPMT_data.PedAlgoPset.NumSampleFront:200
+SBNDDecoOpHitFinderPMT_data.PedAlgoPset.NumSampleTail:200
+SBNDDecoOpHitFinderPMT_data.PedAlgoPset.Method:2
+
+
+#####OpHit finder for XArapuca deconvolved waveforms#####
+SBNDDecoOpHitFinderXArapuca:               @local::SBNDDecoOpHitFinderPMT_data
+SBNDDecoOpHitFinderXArapuca.InputModule:   "opdecoxarapuca"
+SBNDDecoOpHitFinderXArapuca.Electronics:   "Daphne"
+SBNDDecoOpHitFinderXArapuca.PD:            ["xarapuca_vis","xarapuca_vuv"]
+SBNDDecoOpHitFinderXArapuca.SPEArea: 500
+SBNDDecoOpHitFinderXArapuca.RiseTimeCalculator:   @local::sbnd_opreco_risetimegaussfit
+SBNDDecoOpHitFinderXArapuca.RiseTimeCalculator.Nbins:      2
+SBNDDecoOpHitFinderXArapuca.RiseTimeCalculator.InitSigma:  5
+SBNDDecoOpHitFinderXArapuca.RiseTimeCalculator.MinAmp:    20
+
+#HitAlgoPset
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.ADCThreshold: 20
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.NSigmaThreshold: 3
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.EndADCThreshold: 20
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.EndNSigmaThreshold: 0.2
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.MinPulseWidth: 3
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.Name: "SlidingWindow"
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.NumPreSample:  3
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.NumPostSample: 6
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.PositivePolarity: true
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.TailADCThreshold: 2
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.TailNSigmaThreshold: 2
+SBNDDecoOpHitFinderXArapuca.HitAlgoPset.Verbosity: false
+
+#BaselinePset
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.Name:"Edges"
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.NumSampleFront:50
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.NumSampleTail: 50
+SBNDDecoOpHitFinderXArapuca.PedAlgoPset.Method:2
+
+
+END_PROLOG
