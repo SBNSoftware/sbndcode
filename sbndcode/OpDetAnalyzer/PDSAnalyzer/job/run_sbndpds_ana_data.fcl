@@ -34,8 +34,7 @@ physics:
   end_paths: [ana]
 }
 
-physics.analyzers.opanatree.SaveRawWaveforms: true
-physics.analyzers.opanatree.SaveOnlyStampTime: true
+physics.analyzers.opanatree.SaveRawWaveforms: false
 physics.analyzers.opanatree.SaveDeconvolvedWaveforms: false
 physics.analyzers.opanatree.SaveMCTruth: "false"
 physics.analyzers.opanatree.SaveMCParticles: "false"
