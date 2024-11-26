@@ -15,7 +15,7 @@
 
 #include "larrecodnn/CVN/func/CVNImageUtils.h"
 #include "sbndcode/SBNDCVN/module_helpers/SBNDITFNetHandler.h"
-#include "larrecodnn/ImagePatternAlgs/Tensorflow/TF/tf_graph.h"
+#include "sbndcode/SBNDCVN/tf/tf_graph.h"
 
 namespace lcvn {
 
@@ -36,6 +36,10 @@ namespace lcvn {
     unsigned int fImageTDCs;         ///< Number of tdcs for the network to classify
     std::vector<bool> fReverseViews; ///< Do we need to reverse any views?
     bool fUseBundle; ///< Use a bundled model saved in the SavedModel format from Tensorflow
+    std::vector<std::string> fInputs; 
+    std::vector<std::string> fOutputs;
+    int fNInputs;
+    int fNOutputs;
     std::unique_ptr<tf::Graph> fTFGraph; ///< Tensorflow graph
   };
 
@@ -47,13 +51,17 @@ namespace lcvn {
     , fImageTDCs(pset.get<unsigned int>("NImageTDCs"))
     , fReverseViews(pset.get<std::vector<bool>>("ReverseViews"))
     , fUseBundle(pset.get<bool>("UseBundle"))
+    , fInputs(pset.get<std::vector<std::string>>("Inputs"))
+    , fOutputs(pset.get<std::vector<std::string>>("Outputs"))
+    , fNInputs(pset.get<int>("NInputs"))
+    , fNOutputs(pset.get<int>("NOutputs"))
   {
 
     // Construct the TF Graph object. The empty vector {} is used since the protobuf
     // file gives the names of the output layer nodes
     mf::LogInfo("TFNetHandler") << "Loading network: " << fTFProtoBuf << std::endl;
     fTFGraph = tf::Graph::create(
-      fTFProtoBuf.c_str(), {}, fUseBundle, pset.get<int>("NInputs"), pset.get<int>("NOutputs"));
+      fTFProtoBuf.c_str(), fInputs, fOutputs, fUseBundle, fNInputs, fNOutputs);
     if (!fTFGraph) {
       art::Exception(art::errors::Unknown) << "Tensorflow model not found or incorrect";
     }

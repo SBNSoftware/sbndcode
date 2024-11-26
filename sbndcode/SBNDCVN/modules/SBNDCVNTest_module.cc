@@ -113,10 +113,10 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
 //          if (k==cvn[j].size()-1) std::cout<<std::endl;
 //        }
 //      }
-      numuscore.push_back(cvn[4][0]);
-      nuescore.push_back(cvn[4][1]);
-      cosmicscore.push_back(cvn[4][2]);
-      ncscore.push_back(cvn[4][3]);
+      numuscore.push_back(cvn[0][0]);
+      nuescore.push_back(cvn[0][1]);
+      cosmicscore.push_back(cvn[0][2]);
+      ncscore.push_back(cvn[0][3]);
     }
     if(findManyHits.isValid()){
       auto const & slice_hits = findManyHits.at(i);

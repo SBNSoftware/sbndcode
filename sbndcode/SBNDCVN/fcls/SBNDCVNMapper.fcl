@@ -108,12 +108,14 @@ standard_cvnmapper_sim:
 standard_sbndtfnethandler:
 {
   LibPath: "PWD"
-  TFProtoBuf: "pb_model_dir"
+  TFProtoBuf: "sbnd_cvn_model"
   ChargeLogScale: false
   NImageWires: 500
   NImageTDCs  : 500
   ReverseViews: [false,false,false]
   UseBundle: true
+  Inputs: ["view0","view1","view2"]
+  Outputs: ["flavour"]
   NInputs: 3
   NOutputs: 7
 }
