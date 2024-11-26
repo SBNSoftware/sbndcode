@@ -41,8 +41,8 @@ physics:
 {
   producers:
   {
-    opdecopmt:     @local::SBNDOpDeconvolutionPMT
-    ophitpmt:  @local::SBNDDecoOpHitFinderPMT
+    opdecopmt:     @local::SBNDOpDeconvolutionPMT_data
+    ophitpmt:  @local::SBNDDecoOpHitFinderPMT_data
     opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0
     opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1
   }

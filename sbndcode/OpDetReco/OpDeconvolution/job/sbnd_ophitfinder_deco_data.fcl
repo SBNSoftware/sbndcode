@@ -3,36 +3,36 @@
 BEGIN_PROLOG
 
 #####OpHit finder for PMT deconvolved waveforms#####
-SBNDDecoOpHitFinderPMT: @local::sbnd_ophit_finder_pmt
+SBNDDecoOpHitFinderPMT_data: @local::sbnd_ophit_finder_pmt
 ####SPE area must be 1./DecoWaveformPrecision
-SBNDDecoOpHitFinderPMT.SPEArea: 200
-SBNDDecoOpHitFinderPMT.InputModule: "opdecopmt"
-SBNDDecoOpHitFinderPMT.HitThreshold: 1
-SBNDDecoOpHitFinderPMT.RiseTimeCalculator:   @local::sbnd_opreco_risetimecalculator
+SBNDDecoOpHitFinderPMT_data.SPEArea: 200
+SBNDDecoOpHitFinderPMT_data.InputModule: "opdecopmt"
+SBNDDecoOpHitFinderPMT_data.HitThreshold: 1
+SBNDDecoOpHitFinderPMT_data.RiseTimeCalculator:   @local::sbnd_opreco_risetimecalculator
 
 #HitAlgoPset
-SBNDDecoOpHitFinderPMT.HitAlgoPset.ADCThreshold: 25
-SBNDDecoOpHitFinderPMT.HitAlgoPset.NSigmaThreshold: 3.4
-SBNDDecoOpHitFinderPMT.HitAlgoPset.EndADCThreshold: 8
-SBNDDecoOpHitFinderPMT.HitAlgoPset.EndNSigmaThreshold: 0.2
-SBNDDecoOpHitFinderPMT.HitAlgoPset.MinPulseWidth: 4
-SBNDDecoOpHitFinderPMT.HitAlgoPset.Name: "SlidingWindow"
-SBNDDecoOpHitFinderPMT.HitAlgoPset.NumPostSample: 6
-SBNDDecoOpHitFinderPMT.HitAlgoPset.NumPreSample: 3
-SBNDDecoOpHitFinderPMT.HitAlgoPset.PositivePolarity: true
-SBNDDecoOpHitFinderPMT.HitAlgoPset.TailADCThreshold: 2
-SBNDDecoOpHitFinderPMT.HitAlgoPset.TailNSigmaThreshold: 2
-SBNDDecoOpHitFinderPMT.HitAlgoPset.Verbosity: false 
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.ADCThreshold: 25
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.NSigmaThreshold: 3.4
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.EndADCThreshold: 8
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.EndNSigmaThreshold: 0.2
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.MinPulseWidth: 4
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.Name: "SlidingWindow"
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.NumPostSample: 6
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.NumPreSample: 3
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.PositivePolarity: true
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.TailADCThreshold: 2
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.TailNSigmaThreshold: 2
+SBNDDecoOpHitFinderPMT_data.HitAlgoPset.Verbosity: false 
 
 #BaselinePset
-SBNDDecoOpHitFinderPMT.PedAlgoPset.Name:"Edges"
-SBNDDecoOpHitFinderPMT.PedAlgoPset.NumSampleFront:200
-SBNDDecoOpHitFinderPMT.PedAlgoPset.NumSampleTail:200
-SBNDDecoOpHitFinderPMT.PedAlgoPset.Method:2
+SBNDDecoOpHitFinderPMT_data.PedAlgoPset.Name:"Edges"
+SBNDDecoOpHitFinderPMT_data.PedAlgoPset.NumSampleFront:200
+SBNDDecoOpHitFinderPMT_data.PedAlgoPset.NumSampleTail:200
+SBNDDecoOpHitFinderPMT_data.PedAlgoPset.Method:2
 
 
 #####OpHit finder for XArapuca deconvolved waveforms#####
-SBNDDecoOpHitFinderXArapuca:               @local::SBNDDecoOpHitFinderPMT
+SBNDDecoOpHitFinderXArapuca:               @local::SBNDDecoOpHitFinderPMT_data
 SBNDDecoOpHitFinderXArapuca.InputModule:   "opdecoxarapuca"
 SBNDDecoOpHitFinderXArapuca.Electronics:   "Daphne"
 SBNDDecoOpHitFinderXArapuca.PD:            ["xarapuca_vis","xarapuca_vuv"]
