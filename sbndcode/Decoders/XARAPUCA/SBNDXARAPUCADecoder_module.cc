@@ -28,7 +28,7 @@
 #include "artdaq-core/Data/Fragment.hh"
 #include "artdaq-core/Data/ContainerFragment.hh"
 #include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
-#include "sbndaq-artdaq-core/Overlays/Common/CAENV1740Fragment.hh"
+#include "sbndaq-artdaq-core/Overlays/SBND/CAENV1740Fragment.hh"
 
 #include "lardataobj/RawData/OpDetWaveform.h"
 
@@ -166,7 +166,7 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
  * Where the group index is computed as \f$ \frac{S}{s_{g}} \f$.
  * 4. The decoded waveforms are dumped into:
  * - decoder_hist.root file (waveforms in ROOT histograms format).
- * - 
+ * - xarapucadecoder-art.root file (EDProducer product: a vector of raw::OpDetWaverform).
  */
 void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
 {
