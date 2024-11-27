@@ -141,6 +141,7 @@ private:
   /// Resets wire hits tree variables
   void ResetWireHitsVars(int n);
   /// Resets crt strip hit tree variables
+  void ResetWaveforms();
   void ResetCRTStripHitVars();
   /// Resets crt tracks tree variables
   void ResetCRTTracksVars();
@@ -955,7 +956,7 @@ void Hitdumper::analyze(const art::Event& evt)
       std::cout << "Failed to get sbnd::comm::MuonTrack data product" << std::endl;
     }
   }
-
+  ResetWaveforms();
   if (fcheckTransparency) {
     _waveform_number.resize(_max_hits*_max_samples, -9999.);
     _adc_on_wire.resize(_max_hits*_max_samples, -9999.);
@@ -1505,6 +1506,7 @@ void Hitdumper::beginJob()
 
 
 void Hitdumper::ResetWireHitsVars(int n) {
+  assert(nhits <= _max_hits);
   _hit_cryostat.assign(n, DEFAULT_VALUE);
   _hit_tpc.assign(n, DEFAULT_VALUE);
   _hit_plane.assign(n, DEFAULT_VALUE);
@@ -1515,6 +1517,16 @@ void Hitdumper::ResetWireHitsVars(int n) {
   _hit_ph.assign(n, DEFAULT_VALUE);
   _hit_width.assign(n, DEFAULT_VALUE);
   _hit_full_integral.assign(n, DEFAULT_VALUE);
+}
+
+void Hitdumper::ResetWaveforms(){
+  _waveform_number.clear();
+  _adc_on_wire.clear();
+  _time_for_waveform.clear();
+  _waveform_integral.clear();
+  _adc_count_in_waveform.clear();
+  _wire_number.clear();
+  _hit_time.clear();
 }
 
 void Hitdumper::ResetCRTStripHitVars() {
