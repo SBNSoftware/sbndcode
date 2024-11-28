@@ -553,7 +553,7 @@ void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool 
   TFitResultPtr fit_result = hADC2->Fit(gaus, "QRS");
   converged = !(bool)(int(fit_result));
 
-  if(!converged)
+  if(!converged && !badChannel)
     std::cout << "Pedestal fit has not converged - " << hADC->GetName() << std::endl;
 
   fit  = gaus->GetParameter("Mean");
@@ -659,7 +659,7 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
   TFitResultPtr fit_result = hADC2->Fit(langau, "QRS");
   converged = !(bool)(int(fit_result));
 
-  if(!converged)
+  if(!converged && !badChannel)
     std::cout << "Peak fit has not converged - " << hADC->GetName() << std::endl;
 
   fit  = langau->GetParameter(1);
