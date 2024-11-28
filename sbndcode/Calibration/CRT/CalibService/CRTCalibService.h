@@ -17,6 +17,7 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Services/Registry/ServiceMacros.h"
+#include "sbnobj/SBND/CRT/CRTEnums.hh"
 
 namespace SBND {
   class CRTCalibService;
@@ -34,11 +35,16 @@ public:
 
   double GetPedestalFromFEBMAC5AndChannel(unsigned int feb_mac5, unsigned int ch) const;
 
+  enum sbnd::crt::CRTChannelStatus GetChannelStatusFromFEBMAC5AndChannel(unsigned int feb_mac5,
+                                                                         unsigned int ch) const;
+
 private:
 
   std::unordered_map<unsigned int, double> fTimingOffsetFromFEBMAC5;
 
   std::unordered_map<unsigned int, std::unordered_map<unsigned int, double>> fPedestalFromFEBMAC5AndChannel;
+
+  std::unordered_map<unsigned int, std::unordered_map<unsigned int, sbnd::crt::CRTChannelStatus>> fChannelStatusFromFEBMAC5AndChannel;
 
 };
 
