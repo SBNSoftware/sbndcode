@@ -458,6 +458,17 @@ void sbnd::crt::ADRIFT::endJob()
         {
           const int ch = gdml_i * 32 + ch_i;
 
+          _channel        = ch;
+          _gdml_id        = gdml_i;
+          _mac5           = mac5;
+          _raw_channel    = invert ? 31 - ch_i : ch_i;
+          _tagger         = fCRTGeoAlg.ChannelToTaggerEnum(ch);
+          _channel_status = fCRTGeoAlg.GetSiPM(ch).status;
+          _area           = fCRTGeoAlg.StripArea(ch);
+          _y_average      = fCRTGeoAlg.StripAverageY(ch);
+          _ped_calib      = fCRTGeoAlg.GetSiPM(ch).pedestal;
+          _horizontal     = _tagger == kBottomTagger || _tagger == kTopLowTagger || _tagger == kTopHighTagger;
+
           if(fSaveSubset && (ch > 1471 && ch < 1728))
             {
               SaveHist(hADCPed[ch], fPedestalSubsetSaveDirectory, Form("pedestal_channel_%i", ch), 2, _channel_status);
@@ -469,17 +480,6 @@ void sbnd::crt::ADRIFT::endJob()
               if(fTrackLA)
                 SaveHist(hADCTrLA[ch], fTrackLASubsetSaveDirectory, Form("track_limited_angle_channel_%i", ch), 20, _channel_status);
             }
-
-          _channel        = ch;
-          _gdml_id        = gdml_i;
-          _mac5           = mac5;
-          _raw_channel    = invert ? 31 - ch_i : ch_i;
-          _tagger         = fCRTGeoAlg.ChannelToTaggerEnum(ch);
-          _channel_status = fCRTGeoAlg.GetSiPM(ch).status;
-          _area           = fCRTGeoAlg.StripArea(ch);
-          _y_average      = fCRTGeoAlg.StripAverageY(ch);
-          _ped_calib      = fCRTGeoAlg.GetSiPM(ch).pedestal;
-          _horizontal     = _tagger == kBottomTagger || _tagger == kTopLowTagger || _tagger == kTopHighTagger;
 
           PedestalFit(hADCPed[ch], _ped_fit, _ped_fit_chi2, _ped_fit_converged, _channel_status);
           PedestalPeak(hADCPed[ch], _ped_peak);
