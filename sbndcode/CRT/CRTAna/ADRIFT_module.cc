@@ -34,6 +34,7 @@
 #include "TCanvas.h"
 #include "TSystem.h"
 #include "TStyle.h"
+#include "TText.h"
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
@@ -72,14 +73,15 @@ public:
 
 private:
 
-  void PedestalFit(TH1D* hADC, double &fit, double &chi2, bool &converged);
+  void PedestalFit(TH1D* hADC, double &fit, double &chi2, bool &converged, bool badChannel);
   void PedestalPeak(TH1D* hADC, double &peak);
   void Rate(TH1D* hADC, double &rate);
   void PeakPeak(TH1D* hADC, const double &ped, double &peak);
-  void PeakFit(TH1D* hADC, const double &peak, const double &ped, double &fit, double &chi2, bool &converged);
+  void PeakFit(TH1D* hADC, const double &peak, const double &ped, double &fit,
+               double &chi2, bool &converged, bool badChannel);
   double Saturation(TH1D* hADC);
   void ResetVars();
-  void SaveHist(TH1D *hADC, std::string &saveDir, std::string saveName, int rebin = 1);
+  void SaveHist(TH1D *hADC, std::string &saveDir, std::string saveName, int rebin, bool badChannel);
   static double LanGau(double *x, double *par);
 
   CRTGeoAlg fCRTGeoAlg;
@@ -97,14 +99,14 @@ private:
 
   TTree* fChannelTree;
 
-  int _channel, _gdml_id, _mac5, _raw_channel, _tagger;
+  int _channel, _gdml_id, _mac5, _raw_channel, _tagger, _channel_status;
   double _area, _y_average, _ped_calib, _ped_fit, _ped_fit_chi2, _ped_peak,
     _ped_reset_fit, _ped_reset_fit_chi2, _ped_reset_peak, _sh_rate, _sp_rate, _tr_rate,
     _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_peak, _sh_sat_ratio_total, _sh_sat_ratio_peak,
     _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_peak, _sp_sat_ratio_total, _sp_sat_ratio_peak,
     _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_peak, _tr_sat_ratio_total, _tr_sat_ratio_peak,
     _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_peak, _tr_lim_angle_sat_ratio_total,
-    _tr_lim_angle_sat_ratio_peak;
+    _tr_lim_angle_sat_ratio_peak, _sh_ped_to_peak_fit, _sh_reset_ped_to_peak_fit;
   bool _horizontal, _ped_fit_converged, _ped_reset_fit_converged, _sh_peak_fit_converged, _sp_peak_fit_converged,
     _tr_peak_fit_converged, _tr_lim_angle_peak_fit_converged;
 
@@ -142,6 +144,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree->Branch("mac5", &_mac5);
   fChannelTree->Branch("raw_channel", &_raw_channel);
   fChannelTree->Branch("tagger", &_tagger);
+  fChannelTree->Branch("channel_status", &_channel_status);
   fChannelTree->Branch("area", &_area);
   fChannelTree->Branch("y_average", &_y_average);
   fChannelTree->Branch("horizontal", &_horizontal);
@@ -163,6 +166,8 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree->Branch("sh_peak_peak", &_sh_peak_peak);
   fChannelTree->Branch("sh_sat_ratio_total", &_sh_sat_ratio_total);
   fChannelTree->Branch("sh_sat_ratio_peak", &_sh_sat_ratio_peak);
+  fChannelTree->Branch("sh_ped_to_peak_fit", &_sh_ped_to_peak_fit);
+  fChannelTree->Branch("sh_reset_ped_to_peak_fit", &_sh_reset_ped_to_peak_fit);
   fChannelTree->Branch("sp_peak_fit", &_sp_peak_fit);
   fChannelTree->Branch("sp_peak_fit_chi2", &_sp_peak_fit_chi2);
   fChannelTree->Branch("sp_peak_fit_converged", &_sp_peak_fit_converged);
@@ -455,30 +460,31 @@ void sbnd::crt::ADRIFT::endJob()
 
           if(fSaveSubset && (ch > 1471 && ch < 1728))
             {
-              SaveHist(hADCPed[ch], fPedestalSubsetSaveDirectory, Form("pedestal_channel_%i", ch), 2);
-              SaveHist(hADCPedReset[ch], fPedestalResetSubsetSaveDirectory, Form("pedestal_reset_channel_%i", ch), 2);
-              SaveHist(hADCSH[ch], fStripHitSubsetSaveDirectory, Form("strip_hit_channel_%i", ch), 20);
-              SaveHist(hADCSP[ch], fSpacePointSubsetSaveDirectory, Form("space_point_channel_%i", ch), 20);
-              SaveHist(hADCTr[ch], fTrackSubsetSaveDirectory, Form("track_channel_%i", ch), 20);
+              SaveHist(hADCPed[ch], fPedestalSubsetSaveDirectory, Form("pedestal_channel_%i", ch), 2, _channel_status);
+              SaveHist(hADCPedReset[ch], fPedestalResetSubsetSaveDirectory, Form("pedestal_reset_channel_%i", ch), 2, _channel_status);
+              SaveHist(hADCSH[ch], fStripHitSubsetSaveDirectory, Form("strip_hit_channel_%i", ch), 20, _channel_status);
+              SaveHist(hADCSP[ch], fSpacePointSubsetSaveDirectory, Form("space_point_channel_%i", ch), 20, _channel_status);
+              SaveHist(hADCTr[ch], fTrackSubsetSaveDirectory, Form("track_channel_%i", ch), 20, _channel_status);
 
               if(fTrackLA)
-                SaveHist(hADCTrLA[ch], fTrackLASubsetSaveDirectory, Form("track_limited_angle_channel_%i", ch), 20);
+                SaveHist(hADCTrLA[ch], fTrackLASubsetSaveDirectory, Form("track_limited_angle_channel_%i", ch), 20, _channel_status);
             }
 
-          _channel     = ch;
-          _gdml_id     = gdml_i;
-          _mac5        = mac5;
-          _raw_channel = invert ? 31 - ch_i : ch_i;
-          _tagger      = fCRTGeoAlg.ChannelToTaggerEnum(ch);
-          _area        = fCRTGeoAlg.StripArea(ch);
-          _y_average   = fCRTGeoAlg.StripAverageY(ch);
-          _ped_calib   = fCRTGeoAlg.GetSiPM(ch).pedestal;
-          _horizontal  = _tagger == kBottomTagger || _tagger == kTopLowTagger || _tagger == kTopHighTagger;
+          _channel        = ch;
+          _gdml_id        = gdml_i;
+          _mac5           = mac5;
+          _raw_channel    = invert ? 31 - ch_i : ch_i;
+          _tagger         = fCRTGeoAlg.ChannelToTaggerEnum(ch);
+          _channel_status = fCRTGeoAlg.GetSiPM(ch).status;
+          _area           = fCRTGeoAlg.StripArea(ch);
+          _y_average      = fCRTGeoAlg.StripAverageY(ch);
+          _ped_calib      = fCRTGeoAlg.GetSiPM(ch).pedestal;
+          _horizontal     = _tagger == kBottomTagger || _tagger == kTopLowTagger || _tagger == kTopHighTagger;
 
-          PedestalFit(hADCPed[ch], _ped_fit, _ped_fit_chi2, _ped_fit_converged);
+          PedestalFit(hADCPed[ch], _ped_fit, _ped_fit_chi2, _ped_fit_converged, _channel_status);
           PedestalPeak(hADCPed[ch], _ped_peak);
 
-          PedestalFit(hADCPedReset[ch], _ped_reset_fit, _ped_reset_fit_chi2, _ped_reset_fit_converged);
+          PedestalFit(hADCPedReset[ch], _ped_reset_fit, _ped_reset_fit_chi2, _ped_reset_fit_converged, _channel_status);
           PedestalPeak(hADCPedReset[ch], _ped_reset_peak);
 
           Rate(hADCSH[ch], _sh_rate);
@@ -488,19 +494,22 @@ void sbnd::crt::ADRIFT::endJob()
             Rate(hADCTr[ch], _tr_rate);
 
           PeakPeak(hADCSH[ch], _ped_calib, _sh_peak_peak);
-          PeakFit(hADCSH[ch], _sh_peak_peak, _ped_calib, _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_fit_converged);
+          PeakFit(hADCSH[ch], _sh_peak_peak, _ped_calib, _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_fit_converged, _channel_status);
+          _sh_ped_to_peak_fit       = _sh_peak_fit - _ped_fit;
+          _sh_reset_ped_to_peak_fit = _sh_peak_fit - _ped_reset_fit;
+
           PeakPeak(hADCSP[ch], _ped_calib, _sp_peak_peak);
-          PeakFit(hADCSP[ch], _sp_peak_peak, _ped_calib, _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_fit_converged);
+          PeakFit(hADCSP[ch], _sp_peak_peak, _ped_calib, _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_fit_converged, _channel_status);
 
           if(_tagger != kBottomTagger)
             {
               PeakPeak(hADCTr[ch], _ped_calib, _tr_peak_peak);
-              PeakFit(hADCTr[ch], _tr_peak_peak, _ped_calib, _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_fit_converged);
+              PeakFit(hADCTr[ch], _tr_peak_peak, _ped_calib, _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_fit_converged, _channel_status);
 
               if(fTrackLA)
                 {
                   PeakPeak(hADCTrLA[ch], _ped_calib, _tr_lim_angle_peak_peak);
-                  PeakFit(hADCTrLA[ch], _tr_lim_angle_peak_peak, _ped_calib, _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_fit_converged);
+                  PeakFit(hADCTrLA[ch], _tr_lim_angle_peak_peak, _ped_calib, _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_fit_converged, _channel_status);
                 }
             }
 
@@ -531,7 +540,7 @@ void sbnd::crt::ADRIFT::endJob()
     }
 }
 
-void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool &converged)
+void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool &converged, bool badChannel)
 {
   TF1 *gaus = new TF1("gaus", "gaus", 0, 500);
   const TString name = hADC->GetName();
@@ -560,6 +569,14 @@ void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool 
       hADC2->Draw("histe");
       gaus->SetLineColor(kSpring-6);
       gaus->Draw("same");
+
+      if(badChannel)
+        {
+          TText *t = new TText(.5, .75, "Bad Channel");
+          t->SetTextSize(0.1);
+          t->SetTextColor(kRed);
+          t->Draw();
+        }
 
       if(converged)
         {
@@ -603,7 +620,8 @@ void sbnd::crt::ADRIFT::PeakPeak(TH1D* hADC, const double &ped, double &peak)
   peak = hADC->GetBinCenter(bin);
 }
 
-void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &ped, double &fit, double &chi2, bool &converged)
+void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &ped, double &fit,
+                                double &chi2, bool &converged, bool badChannel)
 {
   TF1 *langau = new TF1("langau", LanGau, ped + 20, 4000, 4);
   double params[4] = { 10, peak, hADC->GetEntries(), 50 };
@@ -658,6 +676,14 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
       langau->SetLineColor(kSpring-6);
       langau->Draw("same");
 
+      if(badChannel)
+        {
+          TText *t = new TText(.5, .75, "Bad Channel");
+          t->SetTextSize(0.1);
+          t->SetTextColor(kRed);
+          t->Draw();
+        }
+
       if(converged)
         {
           c->SaveAs(Form("%s/peak_fit_%s_channel_%s.png", fPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
@@ -690,11 +716,12 @@ double sbnd::crt::ADRIFT::Saturation(TH1D* hADC)
 
 void sbnd::crt::ADRIFT::ResetVars()
 {
-  _channel     = std::numeric_limits<int>::lowest();
-  _gdml_id     = std::numeric_limits<int>::lowest();
-  _mac5        = std::numeric_limits<int>::lowest();
-  _raw_channel = std::numeric_limits<int>::lowest();
-  _tagger      = std::numeric_limits<int>::lowest();
+  _channel        = std::numeric_limits<int>::lowest();
+  _gdml_id        = std::numeric_limits<int>::lowest();
+  _mac5           = std::numeric_limits<int>::lowest();
+  _raw_channel    = std::numeric_limits<int>::lowest();
+  _tagger         = std::numeric_limits<int>::lowest();
+  _channel_status = std::numeric_limits<int>::lowest();
 
   _area                         = std::numeric_limits<double>::lowest();
   _y_average                    = std::numeric_limits<double>::lowest();
@@ -713,6 +740,8 @@ void sbnd::crt::ADRIFT::ResetVars()
   _sh_peak_peak                 = std::numeric_limits<double>::lowest();
   _sh_sat_ratio_total           = std::numeric_limits<double>::lowest();
   _sh_sat_ratio_peak            = std::numeric_limits<double>::lowest();
+  _sh_ped_to_peak_fit           = std::numeric_limits<double>::lowest();
+  _sh_reset_ped_to_peak_fit     = std::numeric_limits<double>::lowest();
   _sp_peak_fit                  = std::numeric_limits<double>::lowest();
   _sp_peak_fit_chi2             = std::numeric_limits<double>::lowest();
   _sp_peak_peak                 = std::numeric_limits<double>::lowest();
@@ -738,7 +767,7 @@ void sbnd::crt::ADRIFT::ResetVars()
   _tr_lim_angle_peak_fit_converged = false;
 }
 
-void sbnd::crt::ADRIFT::SaveHist(TH1D *hADC, std::string &saveDir, std::string saveName, int rebin)
+void sbnd::crt::ADRIFT::SaveHist(TH1D *hADC, std::string &saveDir, std::string saveName, int rebin, bool badChannel)
 {
   TCanvas *c = new TCanvas(Form("c%s", saveName.c_str()), Form("c%s", saveName.c_str()));
   c->cd();
@@ -750,6 +779,14 @@ void sbnd::crt::ADRIFT::SaveHist(TH1D *hADC, std::string &saveDir, std::string s
   hADC2->SetLineWidth(2);
   hADC2->Rebin(rebin);
   hADC2->Draw("histe");
+
+  if(badChannel)
+    {
+      TText *t = new TText(.5, .75, "Bad Channel");
+      t->SetTextSize(0.1);
+      t->SetTextColor(kRed);
+      t->Draw();
+    }
 
   c->SaveAs(Form("%s/%s.png", saveDir.c_str(), saveName.c_str()));
   c->SaveAs(Form("%s/%s.pdf", saveDir.c_str(), saveName.c_str()));
