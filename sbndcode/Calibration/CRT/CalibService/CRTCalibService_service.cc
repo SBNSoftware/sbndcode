@@ -19,11 +19,13 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
 {
   const std::string timingOffsetFile = pset.get<std::string>("TimingOffsetFileName");
   const std::string pedestalFile     = pset.get<std::string>("PedestalFileName");
+  const std::string badChannelsFile  = pset.get<std::string>("BadChannelsFileName");
 
-  std::string timingOffsetPath, pedestalPath;
+  std::string timingOffsetPath, pedestalPath, badChannelsPath;
   cet::search_path sp("FW_SEARCH_PATH");
   sp.find_file(timingOffsetFile, timingOffsetPath);
   sp.find_file(pedestalFile, pedestalPath);
+  sp.find_file(badChannelsFile, badChannelsPath);
 
   if(timingOffsetPath.empty())
     {
@@ -37,9 +39,16 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
       throw cet::exception("File not found");
     }
 
+  if(badChannelsPath.empty())
+    {
+      std::cout << "SBND::CRTCalibService Input file " << badChannelsFile << " not found" << std::endl;
+      throw cet::exception("File not found");
+    }
+
   std::cout << "SBND CRT Channel Map: Building map from files...\n"
             << "\t Timing Offsets: " << timingOffsetFile << '\n'
-            << "\t Pedestals: " << pedestalFile << std::endl;
+            << "\t Pedestals: " << pedestalFile << '\n'
+            << "\t Bad Channels: " << badChannelsFile << std::endl;
 
   std::ifstream timingOffsetStream(timingOffsetPath, std::ios::in);
   std::string line;
@@ -72,8 +81,29 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
 
       fPedestalFromFEBMAC5AndChannel[mac5][ch] = pedestal;
     }
-  
+
   pedestalStream.close();
+
+  std::ifstream badChannelsStream(badChannelsPath, std::ios::in);
+
+  while(std::getline(badChannelsStream, line))
+    {
+      std::stringstream linestream(line);
+
+      unsigned int mac5, ch, status;
+
+      linestream
+        >> mac5
+        >> ch
+        >> status;
+
+      fChannelStatusFromFEBMAC5AndChannel[mac5][ch] = (sbnd::crt::CRTChannelStatus)status;
+
+      unsigned int ch_pair = ch % 2 ? ch - 1 : ch + 1;
+      fChannelStatusFromFEBMAC5AndChannel[mac5][ch_pair] = (sbnd::crt::CRTChannelStatus)(status + 1);
+    }
+
+  badChannelsStream.close();
 }
 
 SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset, art::ActivityRegistry&)
@@ -121,6 +151,22 @@ double SBND::CRTCalibService::GetPedestalFromFEBMAC5AndChannel(unsigned int feb_
 
       return 0.;
     }
+
+  return subIter->second;
+}
+
+enum sbnd::crt::CRTChannelStatus SBND::CRTCalibService::GetChannelStatusFromFEBMAC5AndChannel(unsigned int feb_mac5,
+                                                                                              unsigned int ch) const
+{
+  auto iter = fChannelStatusFromFEBMAC5AndChannel.find(feb_mac5);
+
+  if(iter == fChannelStatusFromFEBMAC5AndChannel.end())
+    return sbnd::crt::CRTChannelStatus::kGoodChannel;
+
+  auto subIter = iter->second.find(ch);
+
+  if(subIter == iter->second.end())
+    return sbnd::crt::CRTChannelStatus::kGoodChannel;
 
   return subIter->second;
 }
