@@ -134,7 +134,7 @@ namespace sbnd::crt {
             uint32_t pedestal0 = 0;
             uint32_t pedestal1 = 0;
             uint16_t status0   = 0;
-            uint16_t status1   = 1;
+            uint16_t status1   = 0;
 
             if(!fMC)
               {
