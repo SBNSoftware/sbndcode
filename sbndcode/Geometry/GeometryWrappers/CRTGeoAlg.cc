@@ -133,20 +133,24 @@ namespace sbnd::crt {
 
             uint32_t pedestal0 = 0;
             uint32_t pedestal1 = 0;
+            uint16_t status0   = 0;
+            uint16_t status1   = 1;
 
             if(!fMC)
               {
                 art::ServiceHandle<SBND::CRTCalibService> CalibService;
                 pedestal0 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel0);
                 pedestal1 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel1);
+                status0   = CalibService->GetChannelStatusFromFEBMAC5AndChannel(mac5, actualChannel0);
+                status1   = CalibService->GetChannelStatusFromFEBMAC5AndChannel(mac5, actualChannel1);
               }
 
             const double gain0 = fDefaultGain;
             const double gain1 = fDefaultGain;
 
             // Fill SiPM information
-            CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0);
-            CRTSiPMGeo sipm1 = CRTSiPMGeo(stripName, channel1, sipm1XYZWorld, pedestal1, gain1);
+            CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0, status0);
+            CRTSiPMGeo sipm1 = CRTSiPMGeo(stripName, channel1, sipm1XYZWorld, pedestal1, gain1, status1);
             fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel0, sipm0));
             fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel1, sipm1));
           }
