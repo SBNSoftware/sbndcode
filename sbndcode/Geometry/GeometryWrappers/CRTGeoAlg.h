@@ -45,7 +45,7 @@ namespace sbnd::crt {
 
   struct CRTSiPMGeo{
     CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const geo::Point_t location,
-               const uint32_t _pedestal, const double _gain)
+               const uint32_t _pedestal, const double _gain, const uint16_t _status)
     {
       stripName = _stripName;
       channel   = _channel;
@@ -54,6 +54,7 @@ namespace sbnd::crt {
       z         = location.Z();
       pedestal  = _pedestal;
       gain      = _gain;
+      status    = _status;
       null      = false;
     }
     std::string stripName;
@@ -63,6 +64,7 @@ namespace sbnd::crt {
     double      z;
     bool        null;
     uint32_t    pedestal;
+    uint16_t    status;
     double      gain;
   };
 
