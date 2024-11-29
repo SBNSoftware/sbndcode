@@ -107,8 +107,8 @@ standard_cvnmapper_sim:
 
 standard_sbndtfnethandler:
 {
-  LibPath: "PWD"
-  TFProtoBuf: "sbnd_cvn_model"
+  LibPath: "SBND_DATA_DIR"
+  TFProtoBuf: "CVN"
   ChargeLogScale: false
   NImageWires: 500
   NImageTDCs  : 500
