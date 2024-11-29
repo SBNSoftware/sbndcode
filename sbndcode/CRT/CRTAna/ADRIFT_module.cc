@@ -106,7 +106,7 @@ private:
     _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_peak, _sp_sat_ratio_total, _sp_sat_ratio_peak,
     _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_peak, _tr_sat_ratio_total, _tr_sat_ratio_peak,
     _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_peak, _tr_lim_angle_sat_ratio_total,
-    _tr_lim_angle_sat_ratio_peak, _sh_ped_to_peak_fit, _sh_reset_ped_to_peak_fit;
+    _tr_lim_angle_sat_ratio_peak, _sh_ped_to_peak_fit, _sh_ped_reset_to_peak_fit;
   bool _horizontal, _ped_fit_converged, _ped_reset_fit_converged, _sh_peak_fit_converged, _sp_peak_fit_converged,
     _tr_peak_fit_converged, _tr_lim_angle_peak_fit_converged;
 
@@ -167,7 +167,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree->Branch("sh_sat_ratio_total", &_sh_sat_ratio_total);
   fChannelTree->Branch("sh_sat_ratio_peak", &_sh_sat_ratio_peak);
   fChannelTree->Branch("sh_ped_to_peak_fit", &_sh_ped_to_peak_fit);
-  fChannelTree->Branch("sh_reset_ped_to_peak_fit", &_sh_reset_ped_to_peak_fit);
+  fChannelTree->Branch("sh_ped_reset_to_peak_fit", &_sh_ped_reset_to_peak_fit);
   fChannelTree->Branch("sp_peak_fit", &_sp_peak_fit);
   fChannelTree->Branch("sp_peak_fit_chi2", &_sp_peak_fit_chi2);
   fChannelTree->Branch("sp_peak_fit_converged", &_sp_peak_fit_converged);
@@ -496,7 +496,7 @@ void sbnd::crt::ADRIFT::endJob()
           PeakPeak(hADCSH[ch], _ped_calib, _sh_peak_peak);
           PeakFit(hADCSH[ch], _sh_peak_peak, _ped_calib, _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_fit_converged, _channel_status);
           _sh_ped_to_peak_fit       = _sh_peak_fit - _ped_fit;
-          _sh_reset_ped_to_peak_fit = _sh_peak_fit - _ped_reset_fit;
+          _sh_ped_reset_to_peak_fit = _sh_peak_fit - _ped_reset_fit;
 
           PeakPeak(hADCSP[ch], _ped_calib, _sp_peak_peak);
           PeakFit(hADCSP[ch], _sp_peak_peak, _ped_calib, _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_fit_converged, _channel_status);
@@ -741,7 +741,7 @@ void sbnd::crt::ADRIFT::ResetVars()
   _sh_sat_ratio_total           = std::numeric_limits<double>::lowest();
   _sh_sat_ratio_peak            = std::numeric_limits<double>::lowest();
   _sh_ped_to_peak_fit           = std::numeric_limits<double>::lowest();
-  _sh_reset_ped_to_peak_fit     = std::numeric_limits<double>::lowest();
+  _sh_ped_reset_to_peak_fit     = std::numeric_limits<double>::lowest();
   _sp_peak_fit                  = std::numeric_limits<double>::lowest();
   _sp_peak_fit_chi2             = std::numeric_limits<double>::lowest();
   _sp_peak_peak                 = std::numeric_limits<double>::lowest();
