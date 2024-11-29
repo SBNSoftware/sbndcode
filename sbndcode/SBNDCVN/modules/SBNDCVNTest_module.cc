@@ -67,6 +67,16 @@ private:
   vector<float> nuescore;
   vector<float> cosmicscore;
   vector<float> ncscore;
+  vector<float> edep;
+  vector<float> nufrac;
+  vector<float> enu;
+  vector<float> y;
+  vector<int> nupdg;
+  vector<int> ccnc;
+  vector<int> type;
+  vector<double> nuvtxx;
+  vector<double> nuvtxy;
+  vector<double> nuvtxz;
 };
 
 
@@ -89,7 +99,17 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
   nuescore.clear();
   cosmicscore.clear();
   ncscore.clear();
-  
+  edep.clear();
+  nufrac.clear();
+  enu.clear();
+  y.clear();
+  nupdg.clear();
+  ccnc.clear();
+  type.clear();
+  nuvtxx.clear();
+  nuvtxy.clear();
+  nuvtxz.clear();
+
   auto slcHandle = e.getHandle< std::vector<recob::Slice> >(fSliceLabel);
   if (!slcHandle){
     cout<<"slcHandle invalid"<<endl;
@@ -142,13 +162,22 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
       }
     }
     */     
-    /*
+
     if (!e.isRealData()){
+      double tot_slice_eng = 0;
+      double tot_slice_nu_eng = 0;
+      double tot_slice_cos_eng = 0;
+      double this_nufrac = 0;
+      double this_enu = 0;
+      double this_y = 0;
+      int    this_nupdg = 0;
+      int    this_ccnc = 0;
+      int    this_type = 0;
+      double this_nuvtxx = -1000;
+      double this_nuvtxy = -1000;
+      double this_nuvtxz = -1000;
       if(findManyHits.isValid()){
         auto const & slice_hits = findManyHits.at(i);
-        double tot_slice_eng = 0;
-        double tot_slice_nu_eng = 0;
-        double tot_slice_cos_eng = 0;
         
 //        int fNhits_tpc_0_pl_0 = Get_Hit_Count(0,0,slice_hits);
 //        int fNhits_tpc_0_pl_1 = Get_Hit_Count(0,1,slice_hits);
@@ -159,7 +188,7 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
 //        int fNhits_total = slice_hits.size();
         
         //std::vector<double> mc_truth_eng(mcHandle->size(),0.);
-        std::cout<<"slice "<<i<<" total hits "<<slice_hits.size()<<std::endl;
+        //std::cout<<"slice "<<i<<" total hits "<<slice_hits.size()<<std::endl;
         for(auto const & hit : slice_hits){
           auto particles = fmhitmc.at(hit.key());
           auto hitmatch = fmhitmc.data(hit.key());
@@ -171,9 +200,17 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
             tot_slice_eng += hitmatch[e]->energy;
             auto & mctruth = pi_serv->TrackIdToMCTruth_P(particles[e]->TrackId());
             if (mctruth){
-              std::cout<<"origin= "<<mctruth->Origin()<<" pdg= "<<particles[e]->PdgCode()<<std::endl;
+              //std::cout<<"origin= "<<mctruth->Origin()<<" pdg= "<<particles[e]->PdgCode()<<std::endl;
               if (mctruth->Origin() == simb::kBeamNeutrino){
                 tot_slice_nu_eng += hitmatch[e]->energy;
+                this_enu = mctruth->GetNeutrino().Nu().E();
+                this_y = mctruth->GetNeutrino().Y();
+                this_nupdg = mctruth->GetNeutrino().Nu().PdgCode();
+                this_ccnc = mctruth->GetNeutrino().CCNC();
+                this_type = mctruth->GetNeutrino().InteractionType();
+                this_nuvtxx = mctruth->GetNeutrino().Nu().Vx();
+                this_nuvtxy = mctruth->GetNeutrino().Nu().Vy();
+                this_nuvtxz = mctruth->GetNeutrino().Nu().Vz();
               }
               else if (mctruth->Origin() == simb::kCosmicRay){
                 tot_slice_cos_eng += hitmatch[e]->energy;
@@ -186,12 +223,12 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
         //ftotsliceE = tot_slice_eng;
     	
         if(tot_slice_eng > 0){
-          std::cout << "Total energy : " << tot_slice_eng << "\n";
-          std::cout << "Total cosmic energy : " << tot_slice_cos_eng << "\n";
-          std::cout << "Total nu energy : " << tot_slice_nu_eng << "\n";
-          std::cout << "Cosmic fraction : " << double(tot_slice_cos_eng)/tot_slice_eng << "\n";
-          std::cout << "Neutrino fraction : " << double(tot_slice_nu_eng)/tot_slice_eng << "\n";
-          
+//          std::cout << "Total energy : " << tot_slice_eng << "\n";
+//          std::cout << "Total cosmic energy : " << tot_slice_cos_eng << "\n";
+//          std::cout << "Total nu energy : " << tot_slice_nu_eng << "\n";
+//          std::cout << "Cosmic fraction : " << double(tot_slice_cos_eng)/tot_slice_eng << "\n";
+//          std::cout << "Neutrino fraction : " << double(tot_slice_nu_eng)/tot_slice_eng << "\n";
+          this_nufrac = tot_slice_nu_eng/tot_slice_eng;
 //          ftotsliceNuE = tot_slice_nu_eng;
 //          ftotsliceCosE = tot_slice_cos_eng;
 //          ftotsliceOthE = ftotsliceE - ftotsliceNuE - ftotsliceCosE;
@@ -200,8 +237,17 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
 //          fsliceOthEfrac = double(ftotsliceOthE)/ftotsliceE;
         }
       }
+      edep.push_back(tot_slice_eng);
+      nufrac.push_back(this_nufrac);
+      enu.push_back(this_enu);
+      y.push_back(this_y);
+      nupdg.push_back(this_nupdg);
+      ccnc.push_back(this_ccnc);
+      type.push_back(this_type);
+      nuvtxx.push_back(this_nuvtxx);
+      nuvtxy.push_back(this_nuvtxy);
+      nuvtxz.push_back(this_nuvtxz);
     }
-    */
   }
   anatree->Fill();
 }
@@ -217,6 +263,17 @@ void lcvn::SBNDCVNTest::beginJob()
   anatree->Branch("nuescore", &nuescore);
   anatree->Branch("cosmicscore", &cosmicscore);
   anatree->Branch("ncscore", &ncscore);
+  anatree->Branch("edep", &ncscore);
+  anatree->Branch("nufrac", &nufrac);
+  anatree->Branch("enu", &enu);
+  anatree->Branch("y", &y);
+  anatree->Branch("nupdg", &nupdg);
+  anatree->Branch("ccnc", &ccnc);
+  anatree->Branch("type", &type);
+  anatree->Branch("nuvtxx", &nuvtxx);
+  anatree->Branch("nuvtxy", &nuvtxy);
+  anatree->Branch("nuvtxz", &nuvtxz);
+
 }
 
 DEFINE_ART_MODULE(lcvn::SBNDCVNTest)
