@@ -106,15 +106,17 @@ private:
     _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_peak, _sp_sat_ratio_total, _sp_sat_ratio_peak,
     _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_peak, _tr_sat_ratio_total, _tr_sat_ratio_peak,
     _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_peak, _tr_lim_angle_sat_ratio_total,
-    _tr_lim_angle_sat_ratio_peak, _sh_ped_to_peak_fit, _sh_ped_reset_to_peak_fit;
+    _tr_lim_angle_sat_ratio_peak, _sh_ped_to_peak_fit, _sh_ped_reset_to_peak_fit, _tr_by_length_peak_fit,
+    _tr_by_length_peak_fit_chi2, _tr_by_length_peak_peak;
   bool _horizontal, _ped_fit_converged, _ped_reset_fit_converged, _sh_peak_fit_converged, _sp_peak_fit_converged,
-    _tr_peak_fit_converged, _tr_lim_angle_peak_fit_converged;
+    _tr_peak_fit_converged, _tr_lim_angle_peak_fit_converged, _tr_by_length_peak_fit_converged;
 
-  std::map<uint, TH1D*> hADCPed, hADCPedReset, hADCSH, hADCSP, hADCTr, hADCTrLA;
+  std::map<uint, TH1D*> hADCPed, hADCPedReset, hADCSH, hADCSP, hADCTr, hADCTrLA, hADCTrByLength;
 
   std::string fPedestalSaveDirectory, fPedestalResetSaveDirectory, fPeakSaveDirectory, fBadPedestalSaveDirectory,
     fBadPedestalResetSaveDirectory, fBadPeakSaveDirectory, fPedestalSubsetSaveDirectory, fPedestalResetSubsetSaveDirectory,
-    fStripHitSubsetSaveDirectory, fSpacePointSubsetSaveDirectory, fTrackSubsetSaveDirectory, fTrackLASubsetSaveDirectory;
+    fStripHitSubsetSaveDirectory, fSpacePointSubsetSaveDirectory, fTrackSubsetSaveDirectory, fTrackLASubsetSaveDirectory,
+    fTrackByLengthSubsetSaveDirectory;
 };
 
 
@@ -180,6 +182,10 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree->Branch("tr_peak_peak", &_tr_peak_peak);
   fChannelTree->Branch("tr_sat_ratio_total", &_tr_sat_ratio_total);
   fChannelTree->Branch("tr_sat_ratio_peak", &_tr_sat_ratio_peak);
+  fChannelTree->Branch("tr_by_length_peak_fit", &_tr_by_length_peak_fit);
+  fChannelTree->Branch("tr_by_length_peak_fit_chi2", &_tr_by_length_peak_fit_chi2);
+  fChannelTree->Branch("tr_by_length_peak_fit_converged", &_tr_by_length_peak_fit_converged);
+  fChannelTree->Branch("tr_by_length_peak_peak", &_tr_by_length_peak_peak);
   if(fTrackLA)
     {
       fChannelTree->Branch("tr_lim_angle_peak_fit", &_tr_lim_angle_peak_fit);
@@ -192,11 +198,12 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
 
   for(int ch = 0; ch < 4480; ++ch)
     {
-      hADCPed[ch]      = new TH1D(Form("hADCPed_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
-      hADCPedReset[ch] = new TH1D(Form("hADCPedReset_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
-      hADCSH[ch]       = new TH1D(Form("hADCSH_Channel%i", ch), ";ADC;Strip Hits", 4300, -.5, 4299.5);
-      hADCSP[ch]       = new TH1D(Form("hADCSP_Channel%i", ch), ";ADC;Space Points", 4300, -.5, 4299.5);
-      hADCTr[ch]       = new TH1D(Form("hADCTr_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
+      hADCPed[ch]        = new TH1D(Form("hADCPed_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
+      hADCPedReset[ch]   = new TH1D(Form("hADCPedReset_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
+      hADCSH[ch]         = new TH1D(Form("hADCSH_Channel%i", ch), ";ADC;Strip Hits", 4300, -.5, 4299.5);
+      hADCSP[ch]         = new TH1D(Form("hADCSP_Channel%i", ch), ";ADC;Space Points", 4300, -.5, 4299.5);
+      hADCTr[ch]         = new TH1D(Form("hADCTr_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
+      hADCTrByLength[ch] = new TH1D(Form("hADCTr_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
 
       if(fTrackLA)
         hADCTrLA[ch] = new TH1D(Form("hADCTrLA_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
@@ -246,6 +253,9 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
 
       fTrackSubsetSaveDirectory = Form("%s/run%i/subset/tracks", fTopSaveDirectory.c_str(), e.run());
       gSystem->Exec(Form("mkdir -p %s", fTrackSubsetSaveDirectory.c_str()));
+
+      fTrackByLengthSubsetSaveDirectory = Form("%s/run%i/subset/tracks", fTopSaveDirectory.c_str(), e.run());
+      gSystem->Exec(Form("mkdir -p %s", fTrackByLengthSubsetSaveDirectory.c_str()));
 
       if(fTrackLA)
         {
@@ -411,6 +421,7 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
             normal = TVector3(0, 0, 1);
 
           const double angle = TMath::RadToDeg() * normal.Angle(tr_dir);
+          const double path_length = 1 / TMath::Cos(normal.Angle(tr_dir));
 
           for(const art::Ptr<CRTStripHit> &strip_hit : strip_hits)
             {
@@ -422,6 +433,11 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
           
               hADCTr[strip_hit->Channel()]->Fill(strip_hit->ADC1() + sipm1.pedestal);
               hADCTr[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() + sipm2.pedestal);
+
+              if(strip_hit->ADC1() < 4090)
+                hADCTrByLength[strip_hit->Channel()]->Fill((strip_hit->ADC1() + sipm1.pedestal) / path_length);
+              if(strip_hit->ADC2() < 4090)
+                hADCTrByLength[strip_hit->Channel() + 1]->Fill((strip_hit->ADC2() + sipm2.pedestal) / path_length);
 
               if(fTrackLA && angle < fTrackAngleLimit)
                 {
@@ -476,6 +492,7 @@ void sbnd::crt::ADRIFT::endJob()
               SaveHist(hADCSH[ch], fStripHitSubsetSaveDirectory, Form("strip_hit_channel_%i", ch), 20, _channel_status);
               SaveHist(hADCSP[ch], fSpacePointSubsetSaveDirectory, Form("space_point_channel_%i", ch), 20, _channel_status);
               SaveHist(hADCTr[ch], fTrackSubsetSaveDirectory, Form("track_channel_%i", ch), 20, _channel_status);
+              SaveHist(hADCTrByLength[ch], fTrackByLengthSubsetSaveDirectory, Form("track_by_length_channel_%i", ch), 20, _channel_status);
 
               if(fTrackLA)
                 SaveHist(hADCTrLA[ch], fTrackLASubsetSaveDirectory, Form("track_limited_angle_channel_%i", ch), 20, _channel_status);
@@ -505,6 +522,9 @@ void sbnd::crt::ADRIFT::endJob()
             {
               PeakPeak(hADCTr[ch], _ped_calib, _tr_peak_peak);
               PeakFit(hADCTr[ch], _tr_peak_peak, _ped_calib, _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_fit_converged, _channel_status);
+
+              PeakPeak(hADCTrByLength[ch], _ped_calib, _tr_by_length_peak_peak);
+              PeakFit(hADCTrByLength[ch], _tr_by_length_peak_peak, _ped_calib, _tr_by_length_peak_fit, _tr_by_length_peak_fit_chi2, _tr_by_length_peak_fit_converged, _channel_status);
 
               if(fTrackLA)
                 {
@@ -752,6 +772,9 @@ void sbnd::crt::ADRIFT::ResetVars()
   _tr_peak_peak                 = std::numeric_limits<double>::lowest();
   _tr_sat_ratio_total           = std::numeric_limits<double>::lowest();
   _tr_sat_ratio_peak            = std::numeric_limits<double>::lowest();
+  _tr_by_length_peak_fit        = std::numeric_limits<double>::lowest();
+  _tr_by_length_peak_fit_chi2   = std::numeric_limits<double>::lowest();
+  _tr_by_length_peak_peak       = std::numeric_limits<double>::lowest();
   _tr_lim_angle_peak_fit        = std::numeric_limits<double>::lowest();
   _tr_lim_angle_peak_fit_chi2   = std::numeric_limits<double>::lowest();
   _tr_lim_angle_peak_peak       = std::numeric_limits<double>::lowest();
@@ -764,6 +787,7 @@ void sbnd::crt::ADRIFT::ResetVars()
   _sh_peak_fit_converged           = false;
   _sp_peak_fit_converged           = false;
   _tr_peak_fit_converged           = false;
+  _tr_by_length_peak_fit_converged = false;
   _tr_lim_angle_peak_fit_converged = false;
 }
 
