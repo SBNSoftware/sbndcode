@@ -14,7 +14,7 @@ standard_pixelmapproducer:
   ShiftT: 420. # 420.
   InductionWires: 1984
   FlipInductionView: false
-  UseT: false
+  UseT: true
 }
 
 standard_cvnmapper:
