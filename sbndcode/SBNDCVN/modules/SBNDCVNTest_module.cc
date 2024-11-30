@@ -63,6 +63,9 @@ private:
   int run;
   int event;
   vector<int> nhits;
+  vector<int> nhits0;
+  vector<int> nhits1;
+  vector<int> nhits2;
   vector<float> numuscore;
   vector<float> nuescore;
   vector<float> cosmicscore;
@@ -95,6 +98,9 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
   run = e.run();
   event = e.id().event();
   nhits.clear();
+  nhits0.clear();
+  nhits1.clear();
+  nhits2.clear();
   numuscore.clear();
   nuescore.clear();
   cosmicscore.clear();
@@ -140,7 +146,25 @@ void lcvn::SBNDCVNTest::analyze(art::Event const& e)
     }
     if(findManyHits.isValid()){
       auto const & slice_hits = findManyHits.at(i);
-      nhits.push_back(slice_hits.size());
+      nhits.push_back(slice_hits.size());      
+      int this_nhits0 = 0;
+      int this_nhits1 = 0;
+      int this_nhits2 = 0;
+      for (auto const & hit: slice_hits){
+        int plane = hit->WireID().Plane;
+        if (plane == 0){
+          ++this_nhits0;
+        }
+        else if (plane == 1){
+          ++this_nhits1;
+        }
+        else if (plane == 2){
+          ++this_nhits2;
+        }
+      }
+      nhits0.push_back(this_nhits0);
+      nhits1.push_back(this_nhits1);
+      nhits2.push_back(this_nhits2);
     }
     /*
     if(findManyHits.isValid()){
@@ -259,6 +283,9 @@ void lcvn::SBNDCVNTest::beginJob()
   anatree->Branch("run", &run);
   anatree->Branch("event", &event);
   anatree->Branch("nhits", &nhits);
+  anatree->Branch("nhits0", &nhits0);
+  anatree->Branch("nhits1", &nhits1);
+  anatree->Branch("nhits2", &nhits2);
   anatree->Branch("numuscore", &numuscore);
   anatree->Branch("nuescore", &nuescore);
   anatree->Branch("cosmicscore", &cosmicscore);
