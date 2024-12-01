@@ -61,6 +61,7 @@ private:
 
   TTree *anatree;
   int run;
+  int subrun;
   int event;
   vector<int> nhits;
   vector<int> nhits0;
@@ -96,7 +97,8 @@ lcvn::SBNDCVNTest::SBNDCVNTest(fhicl::ParameterSet const& p)
 void lcvn::SBNDCVNTest::analyze(art::Event const& e)
 {
   run = e.run();
-  event = e.id().event();
+  subrun = e.subRun();
+  event = e.event();
   nhits.clear();
   nhits0.clear();
   nhits1.clear();
@@ -281,6 +283,7 @@ void lcvn::SBNDCVNTest::beginJob()
   art::ServiceHandle<art::TFileService> tfs;
   anatree = tfs->make<TTree>("anatree", "anatree");
   anatree->Branch("run", &run);
+  anatree->Branch("subrun", &subrun);
   anatree->Branch("event", &event);
   anatree->Branch("nhits", &nhits);
   anatree->Branch("nhits0", &nhits0);
