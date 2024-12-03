@@ -459,7 +459,7 @@ double sbnd::BeamAnalysis::GetFtrigRisingEdge(const art::Ptr<raw::OpDetWaveform>
    
     unsigned int recordLength = wf->Waveform().size();
 
-    TH1D *hWvfm = new TH1D(_histName.str().c_str(), _histName.str().c_str(), recordLength, 0, recordLength);
+    TH1D *hWvfm = new TH1D(Form("run%s_subrun%s_event%s_pmtnum%s", std::to_string(_run).c_str(), std::to_string(_subrun).c_str(),std::to_string(_event).c_str(), std::to_string(wf->ChannelNumber()).c_str()), "", recordLength, 0, recordLength);
 
     for(unsigned int i = 0 ; i < recordLength; i++) {
       hWvfm->SetBinContent(i, (double)wf->Waveform()[i]);
