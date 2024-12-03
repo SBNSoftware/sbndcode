@@ -1,3 +1,4 @@
+#include "drops_reco1.fcl"
 #include "wcsp_data_sbnd.fcl"
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
@@ -22,5 +23,6 @@ physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d, crtstrips]
 physics.ana: [superadata]
 
 outputs.out1.SelectEvents: [ "reco1" ]
+outputs.out1.outputCommands:[@sequence::sbnd_reco1_drops_data]
 
 physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
