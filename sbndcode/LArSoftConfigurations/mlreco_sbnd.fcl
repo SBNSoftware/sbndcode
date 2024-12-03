@@ -17,7 +17,7 @@ sbnd_supera_mpvmpr: {
     module_type:     "LArSoftSuperaDriver"
     supera_params:   "supera_sbnd_mpvmpr.fcl"
     out_filename:    "larcv.root"
-    unique_filename: false
+    unique_filename: true
     stream:          "mc"
     StrictDataLoading: false
 }
@@ -27,7 +27,7 @@ sbnd_supera_data: {
     module_type:     "LArSoftSuperaDriver"
     supera_params:   "supera_sbnd_data.fcl"
     out_filename:    "larcv.root"
-    unique_filename: false
+    unique_filename: true
     stream:          "data"
     StrictDataLoading: false
 }
@@ -37,7 +37,7 @@ sbnd_supera: {
     module_type:     "LArSoftSuperaDriver"
     supera_params:   "supera_sbnd_corsika.fcl"
     out_filename:    "larcv.root"
-    unique_filename: false
+    unique_filename: true
     stream:          "mc"
     StrictDataLoading: false
 }
