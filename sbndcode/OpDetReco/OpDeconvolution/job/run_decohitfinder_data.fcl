@@ -63,3 +63,4 @@ physics:
 
 #Uncomment to drop deconvolved waveforms
 #outputs.out1.outputCommands: [ "keep *_*_*_*", "drop raw::OpDetWaveforms_opdecopmt__DecoReco"]
+physics.producers.opdecopmt.OpDecoAlg.OpDetDataFile: "./users/acastill/digi_pmt_sbnd_SER_individual_channels_v11_ALL.root"
