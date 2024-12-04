@@ -34,6 +34,7 @@
 #include "TSystem.h"
 
 #include "lardataobj/RawData/OpDetWaveform.h"
+#include "lardataobj/RecoBase/OpHit.h"
 
 #include "sbndcode/Decoders/PMT/sbndpmt.h"
 
@@ -82,9 +83,9 @@ private:
     size_t nCrt = crtTagger.size(); 
     TH1D* _hTopHatCRTT0[8];
     
-    std::vector<std::string> pmtBoard{"0","1","2","3","4","5","6","7","8","9"};
+    std::vector<std::string> pmtBoard{"0","1","2","3","4","5","6","7","8"};
     size_t nPmt = pmtBoard.size(); 
-    TH1D* _hFTRIG[10];
+    TH1D* _hFTRIG[9];
 
     //---Tree Variables
     int _run, _subrun, _event;
@@ -118,6 +119,7 @@ private:
     // PMT Timing
     uint16_t pmt_timing_type;
     uint16_t pmt_timing_ch;
+    std::map<uint16_t, double> board_jitter;
 
     //---FHICL CONFIG PARAMETERS
     
@@ -127,6 +129,7 @@ private:
     art::InputTag fPmtFtrigDecodeLabel;
     art::InputTag fPmtFtrigBoardLabel;
     art::InputTag fPmtTimingLabel;
+    art::InputTag fOpHitLabel;
 
     // Debug
     bool fDebugTdc;
@@ -156,9 +159,11 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
     fPmtFtrigDecodeLabel = p.get<art::InputTag>("PmtFtrigDecodeLabel", "pmtdecoder:FTrigChannels");
     fPmtFtrigBoardLabel = p.get<art::InputTag>("PmtFtrigBoardLabel", "pmtdecoder:FTrigTiming");
 
-    fDebugTdc = p.get<bool>("DebugTdc", true);
+    fOpHitLabel = p.get<art::InputTag>("OpHitLabel","");
+
+    fDebugTdc = p.get<bool>("DebugTdc", false);
     fDebugCrt = p.get<bool>("DebugCrt", false);
-    fDebugPmt = p.get<bool>("DebugPmt", false);
+    fDebugPmt = p.get<bool>("DebugPmt", true);
 
     fIncludeCrt = p.get<bool>("IncludeCrt", true);
     fIncludePmt = p.get<bool>("IncludePmt", true);
@@ -346,19 +351,42 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                 }
 
                 if (excludeThisCh){
-                    if(fDebugPmt) std::cout << "   channel id = " << pmt->ChannelNumber() << " is exluded." << std::endl << std::endl;; 
+                    //FTRIG channel ID is actually digitiser board ID
+                    if(fDebugPmt) std::cout << "   board id = " << pmt->ChannelNumber() << " is exluded." << std::endl << std::endl;; 
                     continue;
                 }
 
                 double tsFtrig = GetFtrigRisingEdge(pmt, pmt_board->postPercent);
                 
                 if (fDebugPmt){ 
-                    std::cout << "   channel id = " << pmt->ChannelNumber() << " has FTRIG rising edge = " << tsFtrig << " ns." << std::endl << std::endl;
+                    std::cout << "   board id = " << pmt->ChannelNumber() << " has FTRIG rising edge = " << tsFtrig << " ns." << std::endl << std::endl;
                 }
 
+                board_jitter[pmt->ChannelNumber()] = tsFtrig;
                 _hFTRIG[pmt->ChannelNumber()]->Fill(tsFtrig);
             }
         }
+
+        //---------------------------OpHit-----------------------------//
+        art::Handle<std::vector<recob::OpHit>> opHitHandle;
+        std::vector<art::Ptr<recob::OpHit>> ophit_v;
+        e.getByLabel(fOpHitLabel, opHitHandle);
+        
+        if (!opHitHandle.isValid() || opHitHandle->size() == 0){
+            if (fDebugPmt) std::cout << "No OpHit products found." << std::endl;
+        }
+        else{
+            art::fill_ptr_vector(ophit_v, opHitHandle);
+
+            for (auto const& ophit: ophit_v){
+                std::cout << "hello" << std::endl;
+
+                //get channel ID
+                uint64_t ch = ophit->OpChannel();
+                std::cout << ch << std::endl;
+            }
+        }
+
     }
 
     //-----------------------------------------------------------//
