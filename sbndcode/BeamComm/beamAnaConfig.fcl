@@ -2,7 +2,29 @@ BEGIN_PROLOG
 
 beamAnalysis:
 {
-      module_type:  "BeamAnalysis" 
+    module_type:  "BeamAnalysis" 
+      
+    TdcDecodeLabel: "tdcdecoder"
+    
+    CrtSpacePointLabel: "crtspacepoints"
+
+    PmtTimingLabel: "pmtdecoder"
+    PmtFtrigDecodeLabel: "pmtdecoder:FTrigChannels"
+    PmtFtrigBoardLabel: "pmtdecoder:FTrigTiming"
+    
+    OpHitLabel: "ophitpmt"
+    OpFlashLabel: ["opflashtpc0","opflashtpc1"]
+    
+    IncludeCrt: true
+    IncludePmt: true
+
+    DebugTdc: false
+    DebugCrt: false
+    DebugPmt: false
+    
+    ExcludeFtrigBoard: []
+    SavePmt: false
+    SavePmtPath: ""
 }
 
 END_PROLOG

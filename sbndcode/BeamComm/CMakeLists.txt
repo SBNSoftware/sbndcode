@@ -23,6 +23,7 @@ art_make(  MODULE_LIBRARIES  larpandora::LArPandoraInterface
                              ${FHICLCPP}
                              ${CLHEP}
 
+                             sbndcode::ChannelMaps_PMT_PMTChannelMapService_service
                              sbndcode::RecoUtils
                              sbnobj::Common_Reco
                              sbnobj::SBND_Timing

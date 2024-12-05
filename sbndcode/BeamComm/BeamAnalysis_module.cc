@@ -35,6 +35,7 @@
 
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "lardataobj/RecoBase/OpHit.h"
+#include "lardataobj/RecoBase/OpFlash.h"
 
 #include "sbndcode/Decoders/PMT/sbndpmt.h"
 
@@ -43,6 +44,8 @@
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+#include "sbndcode/ChannelMaps/PMT/PMTChannelMapService.h"
+
 
 namespace sbnd {
   class BeamAnalysis;
@@ -75,7 +78,7 @@ public:
 private:
 
     // Event Tree
-    TTree *_tree;
+    TTree *fTree;
     std::stringstream _histName; //raw waveform hist name
     art::ServiceHandle<art::TFileService> tfs;
 
@@ -91,36 +94,76 @@ private:
     int _run, _subrun, _event;
 
     // TDC stuff
-    std::vector<uint64_t> tdc_ch0;
-    std::vector<uint64_t> tdc_ch1;
-    std::vector<uint64_t> tdc_ch2;
-    std::vector<uint64_t> tdc_ch3;
-    std::vector<uint64_t> tdc_ch4;
+    std::vector<uint64_t> _tdc_ch0;
+    std::vector<uint64_t> _tdc_ch1;
+    std::vector<uint64_t> _tdc_ch2;
+    std::vector<uint64_t> _tdc_ch3;
+    std::vector<uint64_t> _tdc_ch4;
 
-    std::vector<uint64_t> tdc_ch0_utc;
-    std::vector<uint64_t> tdc_ch1_utc;
-    std::vector<uint64_t> tdc_ch2_utc;
-    std::vector<uint64_t> tdc_ch3_utc;
-    std::vector<uint64_t> tdc_ch4_utc;
+    std::vector<uint64_t> _tdc_ch0_utc;
+    std::vector<uint64_t> _tdc_ch1_utc;
+    std::vector<uint64_t> _tdc_ch2_utc;
+    std::vector<uint64_t> _tdc_ch3_utc;
+    std::vector<uint64_t> _tdc_ch4_utc;
 
     // CRT stuff
-    std::vector<double> crt_x;
-    std::vector<double> crt_y;
-    std::vector<double> crt_z;
-    std::vector<double> crt_xe;
-    std::vector<double> crt_ye;
-    std::vector<double> crt_ze;
-    std::vector<double> crt_ts0;
-    std::vector<double> crt_ts1;
-    std::vector<double> crt_ts0e;
-    std::vector<double> crt_ts1e;
-    std::vector<int> crt_tagger;
+    std::vector<double> _crt_x;
+    std::vector<double> _crt_y;
+    std::vector<double> _crt_z;
+    std::vector<double> _crt_xe;
+    std::vector<double> _crt_ye;
+    std::vector<double> _crt_ze;
+    std::vector<double> _crt_ts0;
+    std::vector<double> _crt_ts1;
+    std::vector<double> _crt_ts0e;
+    std::vector<double> _crt_ts1e;
+    std::vector<int> _crt_tagger;
 
     // PMT Timing
-    uint16_t pmt_timing_type;
-    uint16_t pmt_timing_ch;
+    uint16_t _pmt_timing_type;
+    uint16_t _pmt_timing_ch;
     std::map<uint16_t, double> board_jitter;
 
+    //OpHit
+    int _nophits;
+    std::vector<int>  _ophit_opch;           ///< OpChannel of the optical hit
+    std::vector<double>  _ophit_peakT;       ///< Peak time of the optical hit
+    std::vector<double>  _ophit_startT;       ///< Peak time of the optical hit
+    std::vector<double>  _ophit_riseT;       ///< Peak time of the optical hit
+    std::vector<double> _ophit_width;       ///< Width of the optical hit
+    std::vector<double> _ophit_area;        ///< Area of the optical hit
+    std::vector<double> _ophit_amplitude;   ///< Amplitude of the optical hit
+    std::vector<double> _ophit_pe;          ///< PEs of the optical hit
+    std::vector<double> _ophit_totalTransit;  ///< Cable delay from PMT to digitiser
+    std::vector<double> _ophit_boardJitter;  ///< Board jittering deduced from FTRIG
+
+    // OpFlash
+    int _nopflash;
+    std::vector<int> _flash_id;
+    std::vector<double> _flash_time;
+    std::vector<double> _flash_total_pe;
+    std::vector<std::vector<double>> _flash_pe_v;
+    std::vector<double> _flash_y;
+    std::vector<double> _flash_yerr ;
+    std::vector<double> _flash_z;
+    std::vector<double> _flash_zerr;
+    std::vector<double> _flash_x;
+    std::vector<double> _flash_xerr;
+    std::vector<int> _flash_tpc;
+    std::vector<std::vector<double>> _flash_ophit_time;
+    std::vector<std::vector<double>> _flash_ophit_risetime;
+    std::vector<std::vector<double>> _flash_ophit_starttime;
+    std::vector<std::vector<double>>_flash_ophit_amp;
+    std::vector<std::vector<double>> _flash_ophit_area;
+    std::vector<std::vector<double>> _flash_ophit_width;
+    std::vector<std::vector<double>> _flash_ophit_pe;
+    std::vector<std::vector<int>> _flash_ophit_ch;
+    std::vector<std::vector<double>> _flash_ophit_totalTransit;
+    std::vector<std::vector<double>> _flash_ophit_boardJitter;
+
+    //Service
+    art::ServiceHandle<SBND::PMTChannelMapService> fPMTChannelMapService;
+    
     //---FHICL CONFIG PARAMETERS
     
     // Product label
@@ -130,6 +173,7 @@ private:
     art::InputTag fPmtFtrigBoardLabel;
     art::InputTag fPmtTimingLabel;
     art::InputTag fOpHitLabel;
+    std::vector<art::InputTag> fOpFlashLabels;
 
     // Debug
     bool fDebugTdc;
@@ -140,7 +184,7 @@ private:
     bool fIncludeCrt;
     bool fIncludePmt;
 
-    std::vector<int> fExcludePmtCh;
+    std::vector<int> fExcludeFtrigBoard;
     bool fSavePmt;
     std::string fSavePmtPath;
 };
@@ -159,18 +203,19 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
     fPmtFtrigDecodeLabel = p.get<art::InputTag>("PmtFtrigDecodeLabel", "pmtdecoder:FTrigChannels");
     fPmtFtrigBoardLabel = p.get<art::InputTag>("PmtFtrigBoardLabel", "pmtdecoder:FTrigTiming");
 
-    fOpHitLabel = p.get<art::InputTag>("OpHitLabel","");
+    fOpHitLabel = p.get<art::InputTag>("OpHitLabel","ophitpmt");
+    fOpFlashLabels = p.get<std::vector<art::InputTag>>("OpFlashLabel", {"opflashtpc0","opflashtpc1"});
 
     fDebugTdc = p.get<bool>("DebugTdc", false);
     fDebugCrt = p.get<bool>("DebugCrt", false);
-    fDebugPmt = p.get<bool>("DebugPmt", true);
+    fDebugPmt = p.get<bool>("DebugPmt", false);
 
     fIncludeCrt = p.get<bool>("IncludeCrt", true);
     fIncludePmt = p.get<bool>("IncludePmt", true);
 
-    fExcludePmtCh = p.get<std::vector<int>>("ExcludePmtCh", {1});
-    fSavePmt = p.get<bool>("SavePmt", true);
-    fSavePmtPath = p.get<std::string>("SavePmtPath", "/exp/sbnd/data/users/lnguyen/BeamComm/BeamAna/plots/");
+    fExcludeFtrigBoard = p.get<std::vector<int>>("ExcludeFtrigBoard", {});
+    fSavePmt = p.get<bool>("SavePmt", false);
+    fSavePmtPath = p.get<std::string>("SavePmtPath", "");
 }
 
 void sbnd::BeamAnalysis::analyze(art::Event const& e)
@@ -222,24 +267,24 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                                 << std::endl;
 
             if(ch == 0){
-                tdc_ch0_utc.push_back(ts);
-                tdc_ch0.push_back(ts%uint64_t(1e9));
+                _tdc_ch0_utc.push_back(ts);
+                _tdc_ch0.push_back(ts%uint64_t(1e9));
             }
             if(ch == 1){
-                tdc_ch1_utc.push_back(ts);
-                tdc_ch1.push_back(ts%uint64_t(1e9));
+                _tdc_ch1_utc.push_back(ts);
+                _tdc_ch1.push_back(ts%uint64_t(1e9));
             }
             if(ch == 2){
-                tdc_ch2_utc.push_back(ts);
-                tdc_ch2.push_back(ts%uint64_t(1e9));
+                _tdc_ch2_utc.push_back(ts);
+                _tdc_ch2.push_back(ts%uint64_t(1e9));
             }
             if(ch == 3){
-                tdc_ch3_utc.push_back(ts);
-                tdc_ch3.push_back(ts%uint64_t(1e9));
+                _tdc_ch3_utc.push_back(ts);
+                _tdc_ch3.push_back(ts%uint64_t(1e9));
             }
             if(ch == 4){
-                tdc_ch4_utc.push_back(ts);
-                tdc_ch4.push_back(ts%uint64_t(1e9));
+                _tdc_ch4_utc.push_back(ts);
+                _tdc_ch4.push_back(ts%uint64_t(1e9));
             }
         } 
     }
@@ -271,29 +316,29 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
 
                 const art::Ptr<sbnd::crt::CRTCluster>& crt_cluster(crt_cluster_v.front());
 
-                crt_x.push_back(crt_sp->X());
-                crt_y.push_back(crt_sp->Y());
-                crt_z.push_back(crt_sp->Z());
-                crt_xe.push_back(crt_sp->XErr());
-                crt_ye.push_back(crt_sp->YErr());
-                crt_ze.push_back(crt_sp->ZErr());
-                crt_ts0.push_back(crt_sp->Ts0());
-                crt_ts1.push_back(crt_sp->Ts1());
-                crt_ts0e.push_back(crt_sp->Ts0Err());
-                crt_ts1e.push_back(crt_sp->Ts1Err());
-                crt_tagger.push_back(crt_cluster->Tagger());
+                _crt_x.push_back(crt_sp->X());
+                _crt_y.push_back(crt_sp->Y());
+                _crt_z.push_back(crt_sp->Z());
+                _crt_xe.push_back(crt_sp->XErr());
+                _crt_ye.push_back(crt_sp->YErr());
+                _crt_ze.push_back(crt_sp->ZErr());
+                _crt_ts0.push_back(crt_sp->Ts0());
+                _crt_ts1.push_back(crt_sp->Ts1());
+                _crt_ts0e.push_back(crt_sp->Ts0Err());
+                _crt_ts1e.push_back(crt_sp->Ts1Err());
+                _crt_tagger.push_back(crt_cluster->Tagger());
 
                 if (fDebugCrt){
                     std::cout << "CRT Space Point------------------------------------" << std::endl;
-                    std::cout << "   x = " << crt_x.back() << ", y = " << crt_y.back() << ", z = " << crt_z.back() << std::endl;
-                    std::cout << "   ts0 = " << crt_ts0.back() << ", ts1 = " << crt_ts1.back() << std::endl;
-                    std::cout << "   tagger = " << crt_tagger.back() << std::endl;
+                    std::cout << "   x = " << _crt_x.back() << ", y = " << _crt_y.back() << ", z = " << _crt_z.back() << std::endl;
+                    std::cout << "   ts0 = " << _crt_ts0.back() << ", ts1 = " << _crt_ts1.back() << std::endl;
+                    std::cout << "   tagger = " << _crt_tagger.back() << std::endl;
                 }
                 
-                double ts0_ns = crt_ts0.back() - (tdc_ch2.back() - tdc_ch4.back());
+                double ts0_ns = _crt_ts0.back() - (_tdc_ch2.back() - _tdc_ch4.back());
                 double ts0_us = ts0_ns / 1'000;
 
-                _hTopHatCRTT0[crt_tagger.back()]->Fill(ts0_us);
+                _hTopHatCRTT0[_crt_tagger.back()]->Fill(ts0_us);
             }
         }
     }
@@ -312,13 +357,13 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
         else{
             raw::pmt::eventTimingInfo const& pmt_timing(*pmtTimingHandle);
             
-            pmt_timing_type = pmt_timing.timingType;
-            pmt_timing_ch = pmt_timing.timingChannel;
+            _pmt_timing_type = pmt_timing.timingType;
+            _pmt_timing_ch = pmt_timing.timingChannel;
 
             if (fDebugPmt){
                 std::cout << "Timing Reference For Decoding PMT" << std::endl;
-                std::cout << "   Type = " << pmt_timing_type << " (SPECTDC = 0; PTB HLT = 1; CAEN-only = 3)." << std::endl;
-                std::cout << "   Channel = " << pmt_timing_ch << " (TDC ETRIG = 4; PTB BNB Beam+Light = 2)." << std::endl;
+                std::cout << "   Type = " << _pmt_timing_type << " (SPECTDC = 0; PTB HLT = 1; CAEN-only = 3)." << std::endl;
+                std::cout << "   Channel = " << _pmt_timing_ch << " (TDC ETRIG = 4; PTB BNB Beam+Light = 2)." << std::endl;
             }
         }
 
@@ -336,7 +381,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
             art::FindManyP<raw::pmt::boardTimingInfo> pmtBoardAssoc(pmt_ftrig_v, e, fPmtFtrigBoardLabel);
 
             if (fDebugPmt) std::cout << "Found OpDetWaveform FTRIG size = " << pmt_ftrig_v.size() << std::endl;
-
+            
             for (auto const& pmt: pmt_ftrig_v){
 
                 const std::vector<art::Ptr<raw::pmt::boardTimingInfo>> pmt_board_v(pmtBoardAssoc.at(pmt.key()));
@@ -345,12 +390,12 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
 
                 const art::Ptr<raw::pmt::boardTimingInfo> pmt_board(pmt_board_v.front());
               
-                bool excludeThisCh = false;
-                for(auto const ch: fExcludePmtCh){
-                    if (int(pmt->ChannelNumber())==ch) excludeThisCh = true;
+                bool excludeThisBoard = false;
+                for(auto const ch: fExcludeFtrigBoard){
+                    if (int(pmt->ChannelNumber())==ch) excludeThisBoard = true;
                 }
 
-                if (excludeThisCh){
+                if (excludeThisBoard){
                     //FTRIG channel ID is actually digitiser board ID
                     if(fDebugPmt) std::cout << "   board id = " << pmt->ChannelNumber() << " is exluded." << std::endl << std::endl;; 
                     continue;
@@ -378,23 +423,113 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
         else{
             art::fill_ptr_vector(ophit_v, opHitHandle);
 
-            for (auto const& ophit: ophit_v){
-                std::cout << "hello" << std::endl;
+            if (fDebugPmt) std::cout << "Found OpHit size = " << ophit_v.size() << std::endl;
+      
+            _nophits = ophit_v.size();
 
-                //get channel ID
-                uint64_t ch = ophit->OpChannel();
-                std::cout << ch << std::endl;
+            for (auto const& ophit: ophit_v){
+
+                 _ophit_opch.push_back( ophit->OpChannel() );
+                 _ophit_peakT.push_back( ophit->PeakTimeAbs() );
+                 _ophit_startT.push_back( ophit->StartTime() );
+                 _ophit_riseT.push_back( ophit->RiseTime() );
+                 _ophit_width.push_back( ophit->Width() );
+                 _ophit_area.push_back( ophit->Area() );
+                 _ophit_amplitude.push_back(  ophit->Amplitude() );
+                 _ophit_pe.push_back( ophit->PE() );
+
+                //get PMT Info
+                SBND::PMTChannelMapService::PMTInfo_t pmtInfo = fPMTChannelMapService->GetPMTInfoFromChannelID(ophit->OpChannel());
+
+                if(!pmtInfo.valid){
+                    if (fDebugPmt) std::cout << "Cannot find PMT Info for channel ID " << ophit->OpChannel() << std::endl;
+                    _ophit_totalTransit.push_back(-99999);
+                    _ophit_boardJitter.push_back(-99999);
+                }else{
+                    _ophit_totalTransit.push_back(pmtInfo.TotalTransit);
+                    _ophit_boardJitter.push_back(board_jitter[pmtInfo.digitiserBoardID]);
+                }
             }
         }
+        //---------------------------OpFlash-----------------------------//
+        art::Handle<std::vector<recob::OpFlash>> opFlashHandle;
+        std::vector<art::Ptr<recob::OpFlash>> opflash_v;
 
+        // Loop over all the OpFlash labels
+        for (size_t s = 0; s < fOpFlashLabels.size(); s++) {
+            e.getByLabel(fOpFlashLabels[s], opFlashHandle);
+
+            if(!opFlashHandle.isValid() || opFlashHandle->size() == 0){
+                if (fDebugPmt) std::cout << "No OpFlash products found with label " << fOpFlashLabels[s] << std::endl;
+            }else{
+            
+                art::fill_ptr_vector(opflash_v, opFlashHandle);
+                art::FindManyP<recob::OpHit> flashOpHitAssoc(opflash_v, e, fOpFlashLabels[s]);
+
+                if (fDebugPmt) std::cout << "Found OpFlash with label " << fOpFlashLabels[s] << " size = " << opflash_v.size() << std::endl;
+                
+                for (auto const& flash: opflash_v){
+
+                    const std::vector<art::Ptr<recob::OpHit>> ophit_v(flashOpHitAssoc.at(flash.key()));
+
+                    _flash_id.push_back( _nopflash );
+                    _flash_time.push_back( flash->AbsTime() );
+                    _flash_total_pe.push_back( flash->TotalPE() );
+                    _flash_pe_v.push_back( flash->PEs() );
+                    _flash_tpc.push_back( s );
+                    _flash_y.push_back( flash->YCenter() );
+                    _flash_yerr.push_back( flash->YWidth() );
+                    _flash_x.push_back( flash->XCenter() );
+                    _flash_xerr.push_back( flash->XWidth() );
+                    _flash_z.push_back( flash->ZCenter() );
+                    _flash_zerr.push_back( flash->ZWidth() );
+          
+                    _flash_ophit_time.push_back({});
+                    _flash_ophit_risetime.push_back({});
+                    _flash_ophit_starttime.push_back({});
+                    _flash_ophit_amp.push_back({});
+                    _flash_ophit_area.push_back({});
+                    _flash_ophit_width.push_back({});
+                    _flash_ophit_pe.push_back({});
+                    _flash_ophit_ch.push_back({});
+                    _flash_ophit_totalTransit.push_back({});
+                    _flash_ophit_boardJitter.push_back({});
+
+                    if (fDebugPmt) std::cout << "  OpHit associated with this flash size = " << ophit_v.size() << std::endl;
+                    
+                    for (auto ophit : ophit_v) {
+                        _flash_ophit_time[_nopflash].push_back(ophit->PeakTimeAbs());
+                        _flash_ophit_risetime[_nopflash].push_back(ophit->RiseTime());
+                        _flash_ophit_starttime[_nopflash].push_back(ophit->StartTime());
+                        _flash_ophit_amp[_nopflash].push_back(ophit->Amplitude());
+                        _flash_ophit_area[_nopflash].push_back(ophit->Area());
+                        _flash_ophit_width[_nopflash].push_back(ophit->Width());
+                        _flash_ophit_pe[_nopflash].push_back(ophit->PE());
+                        _flash_ophit_ch[_nopflash].push_back(ophit->OpChannel());
+
+                        SBND::PMTChannelMapService::PMTInfo_t pmtInfo = fPMTChannelMapService->GetPMTInfoFromChannelID(ophit->OpChannel());
+
+                        if(!pmtInfo.valid){
+                            if (fDebugPmt) std::cout << "Cannot find PMT Info for channel ID " << ophit->OpChannel() << std::endl;
+                            _flash_ophit_totalTransit[_nopflash].push_back(-99999);
+                            _flash_ophit_boardJitter[_nopflash].push_back(-99999);
+                        }else{
+                            _flash_ophit_totalTransit[_nopflash].push_back(pmtInfo.TotalTransit);
+                            _flash_ophit_boardJitter[_nopflash].push_back(board_jitter[pmtInfo.digitiserBoardID]);
+                        }
+                    }
+
+                    _nopflash++;
+                } 
+            }
+        }
     }
-
     //-----------------------------------------------------------//
     
     if (fDebugTdc | fDebugCrt | fDebugPmt) std::cout <<"#--------------------------------------------------------#" << std::endl;
 
     //Fill once every event
-    _tree->Fill();
+    fTree->Fill();
 }
 
 void sbnd::BeamAnalysis::beginJob()
@@ -404,40 +539,79 @@ void sbnd::BeamAnalysis::beginJob()
     }
 
     for(size_t i = 0; i < nPmt; i++){
-        _hFTRIG[i] = tfs->make<TH1D>(Form("hFTRIG_RisingEdge_Board_%s", pmtBoard[i].c_str()), "", 100, -5, 5);
+        _hFTRIG[i] = tfs->make<TH1D>(Form("hFTRIG_RisingEdge_Board_%s", pmtBoard[i].c_str()), "", 40, -120, -80);
     }
 
     //Event Tree
-    _tree = tfs->make<TTree>("events", "");
+    fTree = tfs->make<TTree>("events", "");
   
-    _tree->Branch("run", &_run);
-    _tree->Branch("subrun", &_subrun);
-    _tree->Branch("event", &_event);
-    _tree->Branch("tdc_ch0", &tdc_ch0);
-    _tree->Branch("tdc_ch1", &tdc_ch1);
-    _tree->Branch("tdc_ch2", &tdc_ch2);
-    _tree->Branch("tdc_ch3", &tdc_ch3);
-    _tree->Branch("tdc_ch4", &tdc_ch4);
-    _tree->Branch("tdc_ch0_utc", &tdc_ch0_utc);
-    _tree->Branch("tdc_ch1_utc", &tdc_ch1_utc);
-    _tree->Branch("tdc_ch2_utc", &tdc_ch2_utc);
-    _tree->Branch("tdc_ch3_utc", &tdc_ch3_utc);
-    _tree->Branch("tdc_ch4_utc", &tdc_ch4_utc);
+    fTree->Branch("run", &_run);
+    fTree->Branch("subrun", &_subrun);
+    fTree->Branch("event", &_event);
+    fTree->Branch("_tdc_ch0", &_tdc_ch0);
+    fTree->Branch("_tdc_ch1", &_tdc_ch1);
+    fTree->Branch("_tdc_ch2", &_tdc_ch2);
+    fTree->Branch("_tdc_ch3", &_tdc_ch3);
+    fTree->Branch("_tdc_ch4", &_tdc_ch4);
+    fTree->Branch("_tdc_ch0_utc", &_tdc_ch0_utc);
+    fTree->Branch("_tdc_ch1_utc", &_tdc_ch1_utc);
+    fTree->Branch("_tdc_ch2_utc", &_tdc_ch2_utc);
+    fTree->Branch("_tdc_ch3_utc", &_tdc_ch3_utc);
+    fTree->Branch("_tdc_ch4_utc", &_tdc_ch4_utc);
 
-    _tree->Branch("crt_x", &crt_x);
-    _tree->Branch("crt_y", &crt_y);
-    _tree->Branch("crt_z", &crt_z);
-    _tree->Branch("crt_xe", &crt_xe);
-    _tree->Branch("crt_ye", &crt_ye);
-    _tree->Branch("crt_ze", &crt_ze);
-    _tree->Branch("crt_ts0", &crt_ts0);
-    _tree->Branch("crt_ts1", &crt_ts1);
-    _tree->Branch("crt_ts0e", &crt_ts0e);
-    _tree->Branch("crt_ts1e", &crt_ts1e);
-    _tree->Branch("crt_tagger", &crt_tagger);
+    if (fIncludeCrt){
+        fTree->Branch("_crt_x", &_crt_x);
+        fTree->Branch("_crt_y", &_crt_y);
+        fTree->Branch("_crt_z", &_crt_z);
+        fTree->Branch("_crt_xe", &_crt_xe);
+        fTree->Branch("_crt_ye", &_crt_ye);
+        fTree->Branch("_crt_ze", &_crt_ze);
+        fTree->Branch("_crt_ts0", &_crt_ts0);
+        fTree->Branch("_crt_ts1", &_crt_ts1);
+        fTree->Branch("_crt_ts0e", &_crt_ts0e);
+        fTree->Branch("_crt_ts1e", &_crt_ts1e);
+        fTree->Branch("_crt_tagger", &_crt_tagger);
+    }
+    
+    if (fIncludePmt){
+        fTree->Branch("_pmt_timing_type", &_pmt_timing_type);
+        fTree->Branch("_pmt_timing_ch", &_pmt_timing_ch);
 
-    _tree->Branch("pmt_timing_type", &pmt_timing_type);
-    _tree->Branch("pmt_timing_ch", &pmt_timing_ch);
+        fTree->Branch("nophits", &_nophits);
+        fTree->Branch("ophit_opch", &_ophit_opch);
+        fTree->Branch("ophit_peakT", &_ophit_peakT);
+        fTree->Branch("ophit_startT", &_ophit_startT);
+        fTree->Branch("ophit_riseT", &_ophit_riseT);
+        fTree->Branch("ophit_width", &_ophit_width);
+        fTree->Branch("ophit_area", &_ophit_area);
+        fTree->Branch("ophit_amplitude", &_ophit_amplitude);
+        fTree->Branch("ophit_pe", &_ophit_pe);
+        fTree->Branch("ophit_totalTransit", &_ophit_totalTransit);
+        fTree->Branch("ophit_boardJitter", &_ophit_boardJitter);
+
+        fTree->Branch("nopflash", &_nopflash);
+        fTree->Branch("flash_id", &_flash_id);
+        fTree->Branch("flash_time", &_flash_time);
+        fTree->Branch("flash_total_pe", &_flash_total_pe);
+        fTree->Branch("flash_pe_v", &_flash_pe_v);
+        fTree->Branch("flash_y",&_flash_y);
+        fTree->Branch("flash_yerr",&_flash_yerr);
+        fTree->Branch("flash_z",&_flash_z);
+        fTree->Branch("flash_zerr",&_flash_zerr);
+        fTree->Branch("flash_x",&_flash_x);
+        fTree->Branch("flash_xerr",&_flash_xerr);
+        fTree->Branch("flash_tpc",&_flash_tpc);
+        fTree->Branch("flash_ophit_time",&_flash_ophit_time);
+        fTree->Branch("flash_ophit_risetime",&_flash_ophit_risetime);
+        fTree->Branch("flash_ophit_starttime",&_flash_ophit_starttime);
+        fTree->Branch("flash_ophit_amp",&_flash_ophit_amp);
+        fTree->Branch("flash_ophit_area",&_flash_ophit_area);
+        fTree->Branch("flash_ophit_width",&_flash_ophit_width);
+        fTree->Branch("flash_ophit_pe",&_flash_ophit_pe);
+        fTree->Branch("flash_ophit_ch",&_flash_ophit_ch);
+        fTree->Branch("flash_ophit_totalTransit",&_flash_ophit_totalTransit);
+        fTree->Branch("flash_ophit_boardJitter",&_flash_ophit_boardJitter);
+    }
 }
 
 void sbnd::BeamAnalysis::endJob()
@@ -448,32 +622,77 @@ void sbnd::BeamAnalysis::ResetEventVars()
 {
     _run = -1; _subrun = -1; _event = -1;
    
-    tdc_ch0.clear();
-    tdc_ch1.clear();
-    tdc_ch2.clear();
-    tdc_ch3.clear();
-    tdc_ch4.clear();
+    _tdc_ch0.clear();
+    _tdc_ch1.clear();
+    _tdc_ch2.clear();
+    _tdc_ch3.clear();
+    _tdc_ch4.clear();
 
-    tdc_ch0_utc.clear();
-    tdc_ch1_utc.clear();
-    tdc_ch2_utc.clear();
-    tdc_ch3_utc.clear();
-    tdc_ch4_utc.clear();
+    _tdc_ch0_utc.clear();
+    _tdc_ch1_utc.clear();
+    _tdc_ch2_utc.clear();
+    _tdc_ch3_utc.clear();
+    _tdc_ch4_utc.clear();
 
-    crt_x.clear();
-    crt_y.clear();
-    crt_z.clear();
-    crt_xe.clear();
-    crt_ye.clear();
-    crt_ze.clear();
-    crt_ts0.clear();
-    crt_ts1.clear();
-    crt_ts0e.clear();
-    crt_ts1e.clear();
-    crt_tagger.clear();
+    if (fIncludeCrt){
+        _crt_x.clear();
+        _crt_y.clear();
+        _crt_z.clear();
+        _crt_xe.clear();
+        _crt_ye.clear();
+        _crt_ze.clear();
+        _crt_ts0.clear();
+        _crt_ts1.clear();
+        _crt_ts0e.clear();
+        _crt_ts1e.clear();
+        _crt_tagger.clear();
+    }
 
-    pmt_timing_type = -1;
-    pmt_timing_ch = -1;
+
+    if (fIncludePmt){
+        _pmt_timing_type = -1;
+        _pmt_timing_ch = -1;
+
+        for (unsigned int i = 0; i < nPmt; i++){
+            board_jitter[i] = -99999;
+        } 
+
+        _nophits = 0;
+        _ophit_opch.clear();
+        _ophit_peakT.clear();
+        _ophit_startT.clear();
+        _ophit_riseT.clear();
+        _ophit_width.clear();
+        _ophit_area.clear();
+        _ophit_amplitude.clear();
+        _ophit_pe.clear();
+        _ophit_totalTransit.clear();
+        _ophit_boardJitter.clear();
+
+        _nopflash = 0;
+        _flash_id.clear();
+        _flash_time.clear();
+        _flash_total_pe.clear();
+        _flash_pe_v.clear();
+        _flash_y.clear();
+        _flash_yerr.clear();
+        _flash_z.clear();
+        _flash_zerr.clear();
+        _flash_x.clear();
+        _flash_xerr.clear();
+        _flash_tpc.clear();
+        _flash_ophit_time.clear();
+        _flash_ophit_risetime.clear();
+        _flash_ophit_starttime.clear();
+        _flash_ophit_amp.clear();
+        _flash_ophit_area.clear();
+        _flash_ophit_width.clear();
+        _flash_ophit_pe.clear();
+        _flash_ophit_ch.clear();
+        _flash_ophit_totalTransit.clear();
+        _flash_ophit_boardJitter.clear();
+
+    }
 }
 
 double sbnd::BeamAnalysis::GetFtrigRisingEdge(const art::Ptr<raw::OpDetWaveform> wf, uint16_t pp){

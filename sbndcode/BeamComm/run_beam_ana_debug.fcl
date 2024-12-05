@@ -1,0 +1,5 @@
+#include "run_beam_ana.fcl"
+
+physics.analyzers.ana.DebugPmt: true
+physics.analyzers.ana.SavePmt: true
+physics.analyzers.ana.SavePmtPath: "/exp/sbnd/data/users/lnguyen/BeamComm/BeamAna/plots/"

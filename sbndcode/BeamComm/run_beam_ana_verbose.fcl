@@ -1,3 +1,0 @@
-#include "run_beam_ana.fcl"
-
-physics.analyzers.ana.DebugPMT: true
