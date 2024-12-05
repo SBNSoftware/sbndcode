@@ -67,7 +67,7 @@ sbndaq::MetricAnalyzer::MetricAnalyzer(fhicl::ParameterSet const& p)
   // More initializers here.
 {
   fmetric_module_label = p.get<std::string>("metric_module_label","pmtmetricproducer");
-  fmetric_instance_name = p.get<std::string>("metric_instance_name","offline");
+  fmetric_instance_name = p.get<std::string>("metric_instance_name","");
   fspectdc_module_label = p.get<std::string>("spectdc_module_name","tdcdecoder");
   fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
 
