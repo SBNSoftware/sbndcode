@@ -57,6 +57,8 @@ private:
   float  _flash_peaktime; // us
   float  _trigger_dt;     // us
   int    _timing_type;
+  int    _tdc_etrig;
+  int    _tdc_bes;
 };
 
 
@@ -78,6 +80,8 @@ sbndaq::MetricAnalyzer::MetricAnalyzer(fhicl::ParameterSet const& p)
   tree->Branch("flash_peaktime",&_flash_peaktime,"flash_peaktime/F");
   tree->Branch("trigger_dt",&_trigger_dt,"trigger_dt/F");
   tree->Branch("timing_type",&_timing_type,"timing_type/I");
+  tree->Branch("tdc_etrig",&_tdc_etrig,"tdc_etrig/I");
+  tree->Branch("tdc_bes",&_tdc_bes,"tdc_bes/I");
 }
 
 void sbndaq::MetricAnalyzer::analyze(art::Event const& e)
@@ -91,6 +95,8 @@ void sbndaq::MetricAnalyzer::analyze(art::Event const& e)
   _flash_peaktime = -999999999;
   _trigger_dt = -999999999;
   _timing_type = -1;
+  _tdc_etrig = -999999999;
+  _tdc_bes = -999999999;
 
   art::Handle<std::vector<sbnd::trigger::pmtSoftwareTrigger>> metricHandle;
   e.getByLabel(fmetric_module_label,fmetric_instance_name,metricHandle);
@@ -120,6 +126,8 @@ void sbndaq::MetricAnalyzer::analyze(art::Event const& e)
           auto tdc = tdc_v[i];
           const uint32_t  ch = tdc.Channel();
           if (ch==fspectdc_etrig_ch) found_ett = true;
+          if (ch==fspectdc_etrig_ch) _tdc_etrig = tdc.Timestamp()%uint64_t(1e9);
+          if (ch==1)                 _tdc_bes   = tdc.Timestamp()%uint64_t(1e9);
       }
   }
   if (found_ett) _timing_type = 0;
