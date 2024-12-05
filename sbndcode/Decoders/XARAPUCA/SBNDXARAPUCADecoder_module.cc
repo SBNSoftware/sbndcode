@@ -253,7 +253,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
     if (fverbose) std::cout << "\n > SBNDXARAPUCADecoder::produce: decoding V1740 CAEN fragments..." << std::endl;
     for (size_t b = 0; b < fragments.size(); b++) {
       for (size_t f = 0; f < fragments[b].size(); f++) {
-        if (fverbose) std::cout << "\n > SBNDXARAPUCADecoder::produce: decoding V1740 CAEN fragment " << f << " from the board " << b << "(slot " << fboard_id_list[b] << "):" << std::endl;
+        if (fverbose) std::cout << "\n > SBNDXARAPUCADecoder::produce: decoding V1740 CAEN fragment " << f << " from the board " << b << " (slot " << fboard_id_list[b] << "):" << std::endl;
 
         // Accesses the metadata of the CAEN fragment.
         CAENV1740Fragment caen_fragment(fragments[b][f]);
