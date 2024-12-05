@@ -33,7 +33,8 @@ SBND::PMTChannelMapService::PMTChannelMapService(fhicl::ParameterSet const& pset
   std::ifstream inFile(fullname, std::ios::in);
   std::string line;
 
-  //Read the first header line
+  //Read the first two header lines
+  std::getline(inFile,line);
   std::getline(inFile,line);
 
   while(std::getline(inFile,line))

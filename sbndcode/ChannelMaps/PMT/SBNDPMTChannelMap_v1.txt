@@ -1,3 +1,4 @@
+SBN-DOCDC#33668 version#14
 PMT Simulation ID	PMT Installation ID	Breakout Board # (1=Curly, 2=Larry, 3=Moe)	Slot (0-47)	DIGITIZER (1-8)	CHANNEL (0-14)	Warm Cable Transit (ns)	PMT to BB Delay (ns)	PMT to BB Transit (ns)	BB to Digitizer Delay (ns)	BB to Digitizer Transit (ns)	Total Transit (ns)	DQM ID
 250	M11	2	3	7	1	na	-5.5	135.5	0.06	7.46	143.0	91
 304	M13	2	15	7	3	108.9	-1.1	139.9	-0.12	7.28	147.2	93
