@@ -70,13 +70,18 @@ set (
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
+                    art::Framework_Services_Registry
                     art::Framework_Services_Optional_RandomNumberGenerator_service
+                    art::Persistency_Common
+                    art::Persistency_Provenance
+                    art::Utilities
                     canvas::canvas
                     messagefacility::MF_MessageLogger
                     fhiclcpp::fhiclcpp
                     cetlib::cetlib
                     CLHEP::CLHEP
                     ROOT::Core
+                    ROOT::Tree
 )
 
 set (

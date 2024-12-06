@@ -85,7 +85,7 @@ void ZeroSurpressedPMTSummer::produce(art::Event& evt)
     for(int FlashCounter=0; FlashCounter<NumFlash; FlashCounter++)
     {
         //Start a new summed wvfm for this flash
-        std::vector<uint16_t> summedWvfm(5000);
+        std::vector<int> summedWvfm(5000);
         //Loop over each CAEN board
         for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
         {
@@ -96,6 +96,7 @@ void ZeroSurpressedPMTSummer::produce(art::Event& evt)
                 //To move to the next board we have to shift forward by 15 PMT*Number flash
                 //To move to next PMT we have to shift forward by 1
                 //I think ARAPUCA live in their own object? I hope so
+                int MinNextStart=-1;
                 int Index = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
                 auto const& wvf = (*waveHandle)[Index];
                 tempTimeStamp = wvf.TimeStamp();
@@ -108,27 +109,37 @@ void ZeroSurpressedPMTSummer::produce(art::Event& evt)
                 if(wvf.size() != summedWvfm.size()) summedWvfm.resize(wvf.size()); 
                 //Loop through samples of channel waveforms
                 int j=1;
+                fBaselineValue=GetWaveformMedian(wvf); //Can comment out later
                 while(j<int(wvf.size()))
                 {
                     if( (wvf[j]-fBaselineValue <= fSummingThreshold) && (wvf[j-1]-fBaselineValue > fSummingThreshold) )
                     {
                         int StartIndex = j-fSummingWindow;
+                        //Prevent addition of some samples multiple times
+                        if(StartIndex<MinNextStart) StartIndex=MinNextStart;
                         int EndIndex = j+fSummingWindow;
+                        //handle bounds errors
                         if(StartIndex<0) StartIndex=0;
                         if(EndIndex>=int(wvf.size())) EndIndex=wvf.size()-1;
                         for(int k=StartIndex; k<=EndIndex; k++)
                         {
                             summedWvfm[k] = summedWvfm[k] + wvf[k] - fBaselineValue;
                         }
-                        j = EndIndex + 1;
+                        MinNextStart=EndIndex + 1;
+                        j = EndIndex + 1; //should add a tracker for last start
                     }
                     else j=j+1;
-                }
-            }
-        }
+                } //Loop over waveform index
+            } //Loop over channels
+        } //Loop over board
         // End of flash so copy the summed waveform into our vector
+        std::vector<uint16_t> summedWvfm_CorrectFormat(summedWvfm.size());
+        for(int k=0; k<int(summedWvfm.size()); k++)
+        {
+            summedWvfm_CorrectFormat[k] = summedWvfm[k] + 29000;
+        }
         unsigned int tempChannel = 9999;
-        raw::OpDetWaveform summedWvfmObject(tempTimeStamp, tempChannel, summedWvfm);
+        raw::OpDetWaveform summedWvfmObject(tempTimeStamp, tempChannel, summedWvfm_CorrectFormat);
         summedWvfmVec->push_back(summedWvfmObject);
     }
     //Put summed waveform into event

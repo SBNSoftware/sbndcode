@@ -39,6 +39,9 @@
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
+#include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
+
+
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -72,10 +75,11 @@ namespace opdet { //OpDet means optical detector
     void beginJob() override;
     void endJob() override;
 
-    void SaveChannelWaveforms(const raw::OpDetWaveform &wvf, int EventCounter, int Threshold);
-    void SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter, int WaveformSize);
-    void ConstructMonPulse(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, std::vector<int> *MonPulse, bool Saving=false);
-    void analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int WaveformSize);
+    void ResetTree();
+    void SaveChannelWaveforms(const raw::OpDetWaveform &wvf, int EventCounter, int FlashCounter);
+    void SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter);
+    void ConstructMonPulse(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, std::vector<int> *MonPulse, bool Saving=false, int FlashCounter=0);
+    void analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle);
     void Validate_MonSim_Outputs(art::Event const & e);
     double GetWaveformMedian(raw::OpDetWaveform wvf);
     opdet::sbndPDMapAlg pdMap; //map for photon detector types
@@ -103,6 +107,8 @@ namespace opdet { //OpDet means optical detector
     TH1D* hist_MSUM_Energy;
     TH1D* hist_MSUM_Trigger_Eff;
     int EventCounter;
+    int PMTReadouts;
+    int PMTPerBoard;
     int fChNumber;
     int fEvNumber;
     int fMonStart;
@@ -117,6 +123,32 @@ namespace opdet { //OpDet means optical detector
     bool fSaveAllMON;
     bool fCheckTriggers;
     int hist_id;
+    bool fCheckSoftTrig;
+    std::string fSoftTrigLabel;
+    int fTotalCAENBoards;
+
+    //Event Tree saving infomation
+    // --- TTrees
+    TTree* evtTree;
+    // --- Event information ---   
+    int           tree_event;                // event number
+    int           tree_run;                  // run number
+    int           tree_subrun;               // subrun number
+    unsigned int  tree_timestamp;            // unix time of event
+    // -- Hardware Trigger Information
+    std::vector<int> tree_OnBeamMonPeaks;
+    std::vector<int> tree_OffBeamMonPeaks;
+    std::vector<int> tree_FullBeamMonPeaks;
+    int tree_MonStart;
+    int tree_MonEnd;
+    int tree_MonStep;
+    //Software trigger information
+    int tree_nAboveThreshold;
+    int tree_trig_ts;  // relative to beam window start, in ns
+    double tree_promptPE;       // total PE for the 100 ns following trigger time 
+    double tree_prelimPE;       // total PE for the 1 us before trigger time
+    double tree_peakPE;
+    double tree_peaktime;
 
   };
 
@@ -144,15 +176,46 @@ namespace opdet { //OpDet means optical detector
     fMTCAStart        = p.get<int>("MTCAStart", 3);
     fMTCAStop        = p.get<int>("MTCAStop", 64);
     fMTCAStep        = p.get<int>("MTCAStep", 1);
+    PMTPerBoard=15;
     fBeamWindowStart = p.get<int>("BeamWindowStart", 828+680);
     fBeamWindowEnd = p.get<int>("BeamWindowEnd", 1688+680);
     fSaveAllMON = p.get<bool>("SaveAllMon", false);
     fCheckTriggers = p.get<bool>("CheckHardwareTriggers", false); //Needs MTCA LLT to be digitized which is unusual (run 15670)
     fFCLthreshold        = p.get<int>("FCLthreshold", 15);
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
+    fCheckSoftTrig = p.get<bool>("CheckSoftTrig", false);
+    fSoftTrigLabel = p.get<std::string>("SoftTrigLabel", "pmtmetricproducer:");
+    fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
     fChNumber = 0;
     fEvNumber = 0;
     hist_id=0;
+  }
+
+  void BeamRateCalib::ResetTree()
+  {
+    tree_event = -1;
+    tree_run = -1;
+    tree_subrun = -1;
+    tree_timestamp = -9999;
+    // -- Hardware Trigger Information
+    tree_OnBeamMonPeaks.clear();
+    tree_OffBeamMonPeaks.clear();
+    tree_FullBeamMonPeaks.clear();
+    int TotalMonBins = (fMonStop-fMonStart)/fMonStep;
+    tree_OnBeamMonPeaks.resize(TotalMonBins);
+    tree_OffBeamMonPeaks.resize(TotalMonBins);
+    tree_FullBeamMonPeaks.resize(TotalMonBins);
+    tree_MonStart=fMonStart;
+    tree_MonEnd=fMonStop;
+    tree_MonStep=fMonStep;
+    //Software trigger information
+    tree_nAboveThreshold=-1;
+    tree_trig_ts=-999999;  // relative to beam window start, in ns
+    tree_promptPE=-99999;       // total PE for the 100 ns following trigger time 
+    tree_prelimPE=-99999;       // total PE for the 1 us before trigger time
+    tree_peakPE=-99999;
+    tree_peaktime=-9999999;
+    
   }
 
   void BeamRateCalib::beginJob()
@@ -173,6 +236,7 @@ namespace opdet { //OpDet means optical detector
         MTCA_Thresholds.push_back( MTCAStart+i*MTCAStep);
     }
     EventCounter=0;
+    PMTReadouts=0;
     art::ServiceHandle<art::TFileService> tfs;
     hist_PropTriggers = tfs->make<TH2D>("hist_PropTriggers", "Proportion of Beam Spill Making Light Trigger", int((MonEnd-MonStart)/MonStep), MonStart, MonEnd, int((MTCAEnd-MTCAStart)/MTCAStep), MTCAStart, MTCAEnd); //Give it a real address + bins
     hist_PropTriggers_NoRestriction = tfs->make<TH2D>("hist_PropTriggers_LLT", "Proportion of Beam Spills with light LLT", int((MonEnd-MonStart)/MonStep), MonStart, MonEnd, int((MTCAEnd-MTCAStart)/MTCAStep), MTCAStart, MTCAEnd);
@@ -202,14 +266,42 @@ namespace opdet { //OpDet means optical detector
       histname4 = histname4 + std::to_string(fFCLthreshold);
       hist_MSUM_Trigger_Eff = tfs->make<TH1D>(histname4.c_str(),histname4.c_str(), int((MTCAEnd-MTCAStart)/MTCAStep), MTCAStart, MTCAEnd );
     }
+
+    //Tree of objects to save
+    ResetTree(); //call at start of every event
+    evtTree = tfs->make<TTree>("TriggerMetrics","Trigger Metric Tree");
+    evtTree->Branch("event",&tree_event);
+    evtTree->Branch("run",&tree_run);
+    evtTree->Branch("subrun",&tree_subrun);
+    evtTree->Branch("timestamp",&tree_timestamp);
+    int MonBins = (fMonStop - fMonStart)/fMonStep+1;
+    evtTree->Branch("OnBeamMonPeaks",&tree_OnBeamMonPeaks, MonBins, 0);
+    evtTree->Branch("OffBeamMonPeaks",&tree_OffBeamMonPeaks, MonBins, 0);
+    evtTree->Branch("FullBeamMonPeaks",&tree_FullBeamMonPeaks, MonBins, 0);
+    evtTree->Branch("MonStart",&tree_MonStart);
+    evtTree->Branch("MonEnd",&tree_MonEnd);
+    evtTree->Branch("MonStep",&tree_MonStep);
+    evtTree->Branch("nAboveThreshold",&tree_nAboveThreshold);
+    evtTree->Branch("trig_ts",&tree_trig_ts);
+    evtTree->Branch("promptPE",&tree_promptPE);
+    evtTree->Branch("prelimPE",&tree_prelimPE);
+    evtTree->Branch("peakPE",&tree_peakPE);
+    evtTree->Branch("peaktime",&tree_peaktime);
   }
 
   void BeamRateCalib::analyze(art::Event const & e)
   {
     // Implementation of required member function here.
     art::ServiceHandle<art::TFileService> tfs; //Common art service should read about
+    ResetTree();
     fEvNumber = e.id().event();
-
+    tree_event = fEvNumber;
+    tree_run = e.run();
+    tree_subrun = e.subRun();
+    std::cout << " on run " << tree_run << " event " << fEvNumber << std::endl;
+    unsigned long long int tsval = e.time().value();
+    const unsigned long int mask32 = 0xFFFFFFFFUL;
+    tree_timestamp = ( tsval >> 32 ) & mask32;
     art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
     e.getByLabel(fInputModuleName, fInputInstanceName, fInputProcessName, waveHandle);
     if(!waveHandle.isValid() || waveHandle->size() == 0){
@@ -217,50 +309,73 @@ namespace opdet { //OpDet means optical detector
     return;
     }
     
-    int WaveformSize=0;
-    for(auto const& wvf : (*waveHandle)) 
-    { //Iterate through each raw:OpDetWaveforms
-      fChNumber = wvf.ChannelNumber(); //Get the channel number for this waveform
-      if(fChNumber>899) continue; //copy of trigger in signal doesn't need to be analyzed. 899 is for commissioning test
-      opdetType = pdMap.pdType(fChNumber); //opdet::sbndPDMapAlg pdMap; //map for photon detector types. Lists arapuca vs PMT by channel num I guess
-      opdetElectronics = pdMap.electronicsType(fChNumber); //? Maybe what kind of CAEN it is for digitization rate
-      if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
-      WaveformSize = wvf.size(); //Get the channel number for this waveform
-      break;
-    }
     //Seems to be a vector with some extra stuff like isValid()
     //raw::OpDetWaveform is a class with start time, vector of samples, and channel ID
-    analyzeTrigger(waveHandle, WaveformSize); //Update the TH2D in other loop...Although maybe we dont need to 
+    analyzeTrigger(waveHandle); //Update the TH2D in other loop...Although maybe we dont need to 
     if(EventCounter<20 || fSaveAllMON)
     {
         //SaveChannelWaveforms(waveHandle, fEvNumber);
-        SaveMonWaveforms(waveHandle, fFCLthreshold, fEvNumber, WaveformSize);
+        SaveMonWaveforms(waveHandle, fFCLthreshold, fEvNumber);
     }
     if(fCheckTriggers)
     {
       Validate_MonSim_Outputs(e);
     }
     EventCounter=EventCounter+1;
+    PMTReadouts = PMTReadouts+(waveHandle->size())/(fTotalCAENBoards*PMTPerBoard);
+    if(fCheckSoftTrig)
+    {
+      art::Handle<std::vector<sbnd::trigger::pmtSoftwareTrigger > >softwareTrigHandle; //User handle for vector of OpDetWaveforms
+      e.getByLabel(fSoftTrigLabel, softwareTrigHandle);
+      tree_nAboveThreshold = (*softwareTrigHandle)[0].nAboveThreshold;
+      tree_trig_ts = (*softwareTrigHandle)[0].trig_ts;
+      tree_promptPE = (*softwareTrigHandle)[0].promptPE;
+      tree_prelimPE = (*softwareTrigHandle)[0].prelimPE;
+      tree_peakPE = (*softwareTrigHandle)[0].peakPE;
+      tree_peaktime = (*softwareTrigHandle)[0].peaktime;
+      std::cout << "Soft trig size " << (*softwareTrigHandle).size() << " peak PE " <<  (*softwareTrigHandle)[0].peakPE << " peak time " << (*softwareTrigHandle)[0].peaktime << std::endl;
+    }
+    evtTree->Fill(); //call at end of every event
   }
 
-  void BeamRateCalib::SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter, int WaveformSize)
+  void BeamRateCalib::SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter)
   {
-    std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); //Maybe works? Should really add a waveform size getter 
-    if(!fSaveAllMON) ConstructMonPulse(waveHandle, MonThreshold, MonPulse, true);
-    else ConstructMonPulse(waveHandle, MonThreshold, MonPulse, false); //Dont save individual channels for now
-    std::stringstream histname;
-    histname << "event_" << EventCounter <<"_Mon"<<"_"<<hist_id;
-    hist_id=hist_id+1;
-    art::ServiceHandle<art::TFileService> tfs;
-    TH1D *MonHist = tfs->make<TH1D>(histname.str().c_str(), histname.str().c_str(), 
-                                    MonPulse->size(), 0.0, MonPulse->size()-1); //so this just breaks
-    for(unsigned int i = 0; i < MonPulse->size(); i++) {
-        MonHist->SetBinContent(i + 1, (double)(*MonPulse)[i]); //Loop over waveform and set bin content
+    int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
+    int GoodFlashIndex=0;
+    double SmallestTimestamp=0;
+    for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
+    {
+      int WaveIndex = FlashCounter*PMTPerBoard;
+      double currentTimeStamp = (*waveHandle)[WaveIndex].TimeStamp(); //Getting channel 17 every time!
+      if(FlashCounter==0) SmallestTimestamp=TMath::Abs(currentTimeStamp);
+      if(TMath::Abs(currentTimeStamp)<SmallestTimestamp) 
+      {
+        GoodFlashIndex=FlashCounter;
+        SmallestTimestamp=TMath::Abs(currentTimeStamp);
       }
-    delete MonPulse;
+    }
+    for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
+    {
+      int WaveIndex = FlashCounter*PMTPerBoard;
+      int WaveformSize = (*waveHandle)[WaveIndex].size();
+      std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); //Maybe works? Should really add a waveform size getter 
+      if(!fSaveAllMON) ConstructMonPulse(waveHandle, MonThreshold, MonPulse, true, FlashCounter);
+      else ConstructMonPulse(waveHandle, MonThreshold, MonPulse, false, FlashCounter); //Dont save individual channels for now
+      std::stringstream histname;
+      if(GoodFlashIndex==FlashCounter) histname << "event_" << EventCounter <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter << "_TriggerPulse";
+      else histname << "event_" << EventCounter <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter;
+      hist_id=hist_id+1;
+      art::ServiceHandle<art::TFileService> tfs;
+      TH1D *MonHist = tfs->make<TH1D>(histname.str().c_str(), histname.str().c_str(), 
+                                      MonPulse->size(), 0.0, MonPulse->size()-1); //so this just breaks
+      for(unsigned int i = 0; i < MonPulse->size(); i++) {
+          MonHist->SetBinContent(i + 1, (double)(*MonPulse)[i]); //Loop over waveform and set bin content
+        }
+      delete MonPulse;
+    }
   }
 
-  void BeamRateCalib::SaveChannelWaveforms(const raw::OpDetWaveform &wvf, int EventCounter, int Threshold)
+  void BeamRateCalib::SaveChannelWaveforms(const raw::OpDetWaveform &wvf, int EventCounter, int FlashCounter)
   {
     std::stringstream histname;
     art::ServiceHandle<art::TFileService> tfs;
@@ -268,185 +383,207 @@ namespace opdet { //OpDet means optical detector
       histname.str(std::string()); //Resets string stream to nothing
       histname << "event_" << EventCounter
                << "_opchannel_" << fChNumber
-               << "_" << opdetType;
+               << "_" << opdetType << "_"<<FlashCounter;
       //Create a new histogram
       //Make TH1D to hold waveform. String name is gross, right size and start and end time match timestamps
       TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), wvf.size(), 0, wvf.size()-1);
       for(unsigned int i = 0; i < wvf.size(); i++) {
         wvfHist->SetBinContent(i + 1, (double)wvf[i]); //Loop over waveform and set bin content
       }
-      histname.str(std::string()); //reset name to name graph
-      histname << "event_" << EventCounter
-               << "_opchannel_" << fChNumber
-               << "_" << opdetType << "_g";
-      TH1D *ThreshHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), 3, 0, wvf.size()-1);
-      for(unsigned int i = 0; i < 3; i++) {
-        ThreshHist->SetBinContent(i + 1, (double)Threshold); //Loop over waveform and set bin content
-      }
+      hist_id++;
         
   }
 
-  void BeamRateCalib::ConstructMonPulse(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, std::vector<int> *MonPulse, bool Saving)
+  void BeamRateCalib::ConstructMonPulse(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, std::vector<int> *MonPulse, bool Saving, int FlashCounter)
   {
     std::vector<int> Crossings;
     std::fill(MonPulse->begin(), MonPulse->end(), 0);
     //Loop over the entries in our waveform vector
     //We care about getting the pairing correct
-    int PMTIndex=0;
     std::vector<int> Pair2= { 6,   8,  10,  12,  14,  16,  36,  38,  40,  60,  62,  66,  68, 70,  84,  86,  88,  90,  92,  94, 114, 116, 118, 138, 140, 144, 146, 148, 162, 164, 168, 170, 172, 192, 194, 196, 216, 218, 220, 222, 224, 226, 240, 242, 246, 248, 250, 270, 272, 274, 294, 296, 298, 300, 302, 304};
     std::vector<int> Pair1= { 7,   9,  11,  13,  15,  17,  37,  39,  41,  61,  63,  67,  69, 71,  85,  87,  89,  91,  93,  95, 115, 117, 119, 139, 141, 145, 147, 149, 163, 165, 169, 171, 173, 193, 195, 197, 217, 219, 221, 223, 225, 227, 241, 243, 247, 249, 251, 271, 273, 275, 295, 297, 299, 301, 303, 305};
     std::vector<int> Unpaired= {65,  64, 143, 142, 167, 166, 245, 244};
-    for(auto const& wvf : (*waveHandle))
-    {
-        PMTIndex=PMTIndex+1; // Just counting wires in CAEN boards. Every 16th waveform is skippable, but I think the decoder handles that for me
-        bool FirstChannelCross=true;
-        bool SecondInPair=false;
-        //Second pairs are one index below the previous value
-        //Always even 
-        //Not the 15th pair 
-        //Add in a catch for the next CAEN start too
-        
-        SecondInPair = std::any_of(Pair2.begin(), Pair2.end(), [wvf](int x){return ( int(wvf.ChannelNumber()) == x); } );
-        if(!SecondInPair)
-        {
-            Crossings.clear(); //Reset list of crossings
-        }
-        fChNumber = wvf.ChannelNumber(); //Get the channel number for this waveform
-        //if((PMTIndex)%16==0 || fChNumber>899) continue; //copy of trigger in signal doesn't need to be analyzed. 899 is for commissioning test
-        if(fChNumber>899) continue; //copy of trigger in signal doesn't need to be analyzed. 899 is for commissioning test
-        opdetType = pdMap.pdType(fChNumber); //opdet::sbndPDMapAlg pdMap; //map for photon detector types. Lists arapuca vs PMT by channel num I guess
-        opdetElectronics = pdMap.electronicsType(fChNumber); //? Maybe what kind of CAEN it is for digitization rate
-        if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
-        int k=1;
-        int Baseline=0;
-        //int NumPoints = 10;
-        //for(int Index=0; Index<NumPoints; Index++)
-        //{
-        //  Baseline = Baseline + wvf[Index];
-        //}
-        Baseline=14250; //Confirmed its been this value since Oct 4 but probably much earlier too   //Baseline/NumPoints;
-        while(k < int(MonPulse->size())-1 )
-        {
-            //Check for crossings
-            bool CrossedThreshold = (((wvf[k-1]-Baseline)>-MonThreshold) && ((wvf[k]-Baseline)<-MonThreshold));
-            if(CrossedThreshold)
+    int NumFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
+    for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
+      {
+          //Loop over each PMT in a board
+          for(int CAENChannel=0; CAENChannel<PMTPerBoard; CAENChannel++)
+          {
+            int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
+            auto const& wvf = (*waveHandle)[WaveIndex];
+            bool FirstChannelCross=true;
+            bool SecondInPair=false;
+            SecondInPair = std::any_of(Pair2.begin(), Pair2.end(), [wvf](int x){return ( int(wvf.ChannelNumber()) == x); } );
+            if(!SecondInPair)
             {
-              if(Saving && FirstChannelCross){
-                SaveChannelWaveforms(wvf, fEvNumber, Baseline-MonThreshold);
-                FirstChannelCross=false; // avoid overwrite of hist
-              }
-              bool Overlap=false;
-              bool CrossLeft = std::any_of(Crossings.begin(), Crossings.end(), [k, this](int x){return (k>(x-4*fMonWidth))&&(k<x) ; } );
-              bool CrossRight = std::any_of(Crossings.begin(), Crossings.end(), [k, this](int x){return (k<(x+4*fMonWidth)&&(k>x)) ;} );
-              Overlap = (CrossLeft || CrossRight);
-              //Need some logic for adjacent channels and for non-overlapping pulses
-              //Increment the MON Pulse
-              if(Overlap)
-              {
-                  int StartIndex=0; 
-                  int EndIndex=0;
-                  if(CrossLeft) //adjust end index to be first crossing bigger than k
-                  {
-                    StartIndex = k;
-                    EndIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k)) - 1; //First value that is not less than given val
-                    if(CrossRight)
-                    {
-                      StartIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k-4*fMonWidth))+4*fMonWidth+1; // adjust start index
-                    }
-                  }
-                  else if(CrossRight)
-                  {
-                    EndIndex = k+4*fMonWidth;
-                    StartIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k-4*fMonWidth))+4*fMonWidth+1;
-                    if(CrossLeft)
-                    {
-                      EndIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k)) - 1; // adjust end index
-                    }
-                  }
-                  if(StartIndex>=int(MonPulse->size())) StartIndex=MonPulse->size()-1; //should never happen
-                  if(EndIndex>=int(MonPulse->size())) EndIndex=MonPulse->size()-1; //May happen
-                  if(StartIndex<EndIndex) std::for_each(MonPulse->begin()+StartIndex, MonPulse->begin()+EndIndex, [](int &X){return X=X+1;}); //extra check for safety                  
-                  if(!SecondInPair) Crossings.push_back(k); // only need to track other channel
-                  k=EndIndex+1;
-              }
-              else
-              {
-                int StartIndex = k;
-                int EndIndex = k+4*fMonWidth;
-                if(StartIndex>=int(MonPulse->size())) StartIndex=MonPulse->size()-1; //should never happen
-                if(EndIndex>=int(MonPulse->size())) EndIndex=MonPulse->size()-1; //May happen
-                if(StartIndex<EndIndex) std::for_each(MonPulse->begin()+StartIndex, MonPulse->begin()+EndIndex, [](int &X){return X=X+1;});
-                if(!SecondInPair) Crossings.push_back(k);
-                k=EndIndex+1;
-              }
+                Crossings.clear(); //Reset list of crossings
             }
-            else 
+            fChNumber = wvf.ChannelNumber(); //Get the channel number for this waveform
+            if(fChNumber>899) continue; //copy of trigger in signal doesn't need to be analyzed. 899 is for commissioning test
+            opdetType = pdMap.pdType(fChNumber); //opdet::sbndPDMapAlg pdMap; //map for photon detector types. Lists arapuca vs PMT by channel num I guess
+            opdetElectronics = pdMap.electronicsType(fChNumber); //? Maybe what kind of CAEN it is for digitization rate
+            if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
+            int k=1;
+            int Baseline=0;
+            //int NumPoints = 10;
+            //for(int Index=0; Index<NumPoints; Index++)
+            //{
+            //  Baseline = Baseline + wvf[Index];
+            //}
+            Baseline=14250; //Confirmed its been this value since Oct 4 but probably much earlier too   //Baseline/NumPoints;
+            while(k < int(MonPulse->size())-1 )
             {
-              k=k+1;
-            }
-        }
-    }
+                //Check for crossings
+                bool CrossedThreshold = (((wvf[k-1]-Baseline)>-MonThreshold) && ((wvf[k]-Baseline)<-MonThreshold));
+                if(CrossedThreshold)
+                {
+                  if(Saving && FirstChannelCross){
+                    SaveChannelWaveforms(wvf, fEvNumber, Baseline-MonThreshold);
+                    FirstChannelCross=false; // avoid overwrite of hist
+                  }
+                  bool Overlap=false;
+                  bool CrossLeft = std::any_of(Crossings.begin(), Crossings.end(), [k, this](int x){return (k>=(x-4*fMonWidth))&&(k<=x) ; } );
+                  bool CrossRight = std::any_of(Crossings.begin(), Crossings.end(), [k, this](int x){return (k<=(x+4*fMonWidth)&&(k>=x)) ;} );
+                  Overlap = (CrossLeft || CrossRight);
+                  //Need some logic for adjacent channels and for non-overlapping pulses
+                  //Increment the MON Pulse
+                  if(Overlap)
+                  {
+                      int StartIndex=0; 
+                      int EndIndex=0;
+                      if(CrossLeft && CrossRight) //exactly equal crossing point
+                      {
+                        StartIndex=k+4*fMonWidth;
+                        EndIndex=StartIndex; //Stat and stop have to be the same
+                      }
+                      else if(CrossLeft) //adjust end index to be first crossing bigger than k
+                      {
+                        StartIndex = k;
+                        EndIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k)) - 1; //First value that is not less than given val
+                        if(CrossRight)
+                        {
+                          StartIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k-4*fMonWidth))+4*fMonWidth+1; // adjust start index
+                        }
+                      }
+                      else if(CrossRight)
+                      {
+                        EndIndex = k+4*fMonWidth;
+                        StartIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k-4*fMonWidth))+4*fMonWidth+1;
+                        if(CrossLeft)
+                        {
+                          EndIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k)) - 1; // adjust end index
+                        }
+                      }
+                      if(StartIndex>=int(MonPulse->size())) StartIndex=MonPulse->size()-1; //should never happen
+                      if(EndIndex>=int(MonPulse->size())) EndIndex=MonPulse->size()-1; //May happen
+                      if(StartIndex<EndIndex) std::for_each(MonPulse->begin()+StartIndex, MonPulse->begin()+EndIndex, [](int &X){return X=X+1;}); //extra check for safety                  
+                      if(!SecondInPair) Crossings.push_back(k); // only need to track other channel
+                      k=EndIndex+1;
+                  }
+                  else
+                  {
+                    int StartIndex = k;
+                    int EndIndex = k+4*fMonWidth;
+                    if(StartIndex>=int(MonPulse->size())) StartIndex=MonPulse->size()-1; //should never happen
+                    if(EndIndex>=int(MonPulse->size())) EndIndex=MonPulse->size()-1; //May happen
+                    if(StartIndex<EndIndex) std::for_each(MonPulse->begin()+StartIndex, MonPulse->begin()+EndIndex, [](int &X){return X=X+1;});
+                    if(!SecondInPair) Crossings.push_back(k);
+                    k=EndIndex+1;
+                  }
+                }
+                else 
+                {
+                  k=k+1;
+                }
+            } // Loop over an individual waveform
+        } //Loop over channels in board
+      } // loop over boards
   }
 
-  void BeamRateCalib::analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int WaveformSize)
+  void BeamRateCalib::analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle)
   { //Use fill and not set entries for the th2d interface
     //Define some MON pulse to do trigger logics on
     //Loop over MON thresholds
-    for(int i=0; i<int(MONThresholds.size()); i++)
+    int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
+    int GoodFlashIndex=0;
+    double SmallestTimestamp=0;
+    bool GoodFlash;
+    for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
     {
-        //Loop over the entries in our waveform vector
-        //We care about getting the pairing correct
-        std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); 
-        ConstructMonPulse(waveHandle, MONThresholds[i], MonPulse, false);
-        //Constructed MON pulse now lets compare it to the MTCA requirement
-        //Reduce this to range where beam acceptance is valid too
-        //20% of waveform is trigger
-        //Accept 1.8 - 3 us 
-        // 2000 - 3800 ns  with 2 ns samples
-        // 1000 - 1900 samples
-        int BeamAcceptanceStart = fBeamWindowStart;
-        int BeamAcceptanceEnd = fBeamWindowEnd;
-        int PeakMon = *std::max_element(MonPulse->begin()+BeamAcceptanceStart, MonPulse->begin()+BeamAcceptanceEnd);
-        int PeakMon_NoRange = *std::max_element(MonPulse->begin(), MonPulse->end());
-        int PeakOffBeam = *std::max_element(MonPulse->end()-1-(BeamAcceptanceEnd-BeamAcceptanceStart), MonPulse->end()-1);
-        //Loop over MTCA thresholds
-        for(int j=0; j<int(MTCA_Thresholds.size()); j++)
-        {
-            int PairVal = MTCA_Thresholds[j];
-            int Index = j + i*int(MTCA_Thresholds.size());
-            for(int Q=1; Q<int(MonPulse->size()); Q++)
-            {
-              if( ((*MonPulse)[Q] >=PairVal) && ((*MonPulse)[Q-1] <PairVal)   )
+      int WaveIndex = FlashCounter*PMTPerBoard;
+      double currentTimeStamp = (*waveHandle)[WaveIndex].TimeStamp(); //Getting channel 17 every time!
+      if(FlashCounter==0) SmallestTimestamp=TMath::Abs(currentTimeStamp);
+      if(TMath::Abs(currentTimeStamp)<SmallestTimestamp) 
+      {
+        GoodFlashIndex=FlashCounter;
+        SmallestTimestamp=TMath::Abs(currentTimeStamp);
+      }
+    }
+    for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
+    {
+      for(int i=0; i<int(MONThresholds.size()); i++)
+      {
+          //Grab first entry in flash to set MonPulse size
+          int WaveIndex = FlashCounter*PMTPerBoard;
+          int WaveformSize = (*waveHandle)[WaveIndex].size();
+          //Check timestamp of the waveform to see if its a good flash
+          if(FlashCounter==GoodFlashIndex) GoodFlash=true;
+          else GoodFlash=false;
+          //Loop over the entries in our waveform vector
+          //We care about getting the pairing correct
+          std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); 
+          ConstructMonPulse(waveHandle, MONThresholds[i], MonPulse, false, FlashCounter);
+          //Constructed MON pulse now lets compare it to the MTCA requirement
+          int BeamAcceptanceStart = fBeamWindowStart;
+          int BeamAcceptanceEnd = fBeamWindowEnd;
+          int PeakMon = *std::max_element(MonPulse->begin()+BeamAcceptanceStart, MonPulse->begin()+BeamAcceptanceEnd);
+          int PeakMon_NoRange = *std::max_element(MonPulse->begin(), MonPulse->end());
+          int PeakOffBeam = *std::max_element(MonPulse->end()-1-(BeamAcceptanceEnd-BeamAcceptanceStart), MonPulse->end()-1);
+          //Loop over MTCA thresholds
+          if(GoodFlash)
+          {
+            tree_OnBeamMonPeaks[i] = PeakMon;
+            tree_OffBeamMonPeaks[i] = PeakOffBeam;
+            tree_FullBeamMonPeaks[i] = PeakMon_NoRange;
+          }
+          for(int j=0; j<int(MTCA_Thresholds.size()); j++)
+          {
+              int PairVal = MTCA_Thresholds[j];
+              int Index = j + i*int(MTCA_Thresholds.size());
+              for(int Q=1; Q<int(MonPulse->size()); Q++)
               {
-                hist_TopHatPlots[Index]->Fill(Q); //Remake tophat plot to look at every crossing
+                if( ((*MonPulse)[Q] >=PairVal) && ((*MonPulse)[Q-1] <PairVal) && GoodFlash )
+                {
+                  hist_TopHatPlots[Index]->Fill(Q); //Remake tophat plot to look at every crossing
+                }
               }
-            }
-            if(PeakMon>=PairVal)
-            {
-                //fill histogram
+              if(PeakMon>=PairVal && GoodFlash) //Right trigger type here
+              {
+                  //fill histogram
+                  double FillX = MONThresholds[i]+float((MONThresholds[1]-MONThresholds[0])/2.);
+                  double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
+                  hist_PropTriggers->Fill(FillX, FillY); //Fill histogram if we trigger
+              }
+              if(PeakOffBeam>=PairVal && GoodFlash) //Right trigger type here
+              {
                 double FillX = MONThresholds[i]+float((MONThresholds[1]-MONThresholds[0])/2.);
                 double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
-                hist_PropTriggers->Fill(FillX, FillY); //Fill histogram if we trigger
-            }
-            if(PeakOffBeam>=PairVal)
-            {
-              double FillX = MONThresholds[i]+float((MONThresholds[1]-MONThresholds[0])/2.);
-              double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
-              hist_PropTriggers_OffBeam->Fill(FillX, FillY);
-            }
-            if(PeakMon_NoRange>=PairVal)
-            {
-              double FillX = MONThresholds[i]+float((MONThresholds[1]-MONThresholds[0])/2.);
-              double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
-              hist_PropTriggers_NoRestriction->Fill(FillX, FillY); //Fill histogram if we trigger
-            }
-            //else // out of things to fill in break for time
-            //{
-            //  break;
-            //}
-        }
-        delete MonPulse;
-    }
+                hist_PropTriggers_OffBeam->Fill(FillX, FillY);
+              }
+              if(PeakMon_NoRange>=PairVal && GoodFlash) //Runs over all flashes
+              {
+                double FillX = MONThresholds[i]+float((MONThresholds[1]-MONThresholds[0])/2.);
+                double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
+                hist_PropTriggers_NoRestriction->Fill(FillX, FillY); //Fill histogram if we trigger
+              }
+              //else // out of things to fill in break for time
+              //{
+              //  break;
+              //}
+          } //Loop over MTCA threasholds
+          delete MonPulse;
+      } //Loop over MON thresholds
+    } // Loop over flash counters
 
   }
 
@@ -479,92 +616,98 @@ namespace opdet { //OpDet means optical detector
   bool OneChannel[] = {false, false, false};
   int count=0;
   double Energy=0;
-  for(auto const& wvf : (*waveHandle))
-  {
-    if(wvf.ChannelNumber()<904 || wvf.ChannelNumber()>907) continue;
-    //Determine if waveform has a pulse in it
-    std::stringstream histname;
-    art::ServiceHandle<art::TFileService> tfs;
-    int k=0;
-    int fChNumber = wvf.ChannelNumber(); //Get the channel number for this waveform
-    histname.str(std::string()); //Resets string stream to nothing
-    histname << "event_" << fEvNumber
-              << "_opchannel_" << fChNumber;
-    //Create a new histogram
-    //Make TH1D to hold waveform. String name is gross, right size and start and end time match timestamps
-    TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), wvf.size(), 0, wvf.size()-1);
-    for(unsigned int i = 0; i < wvf.size(); i++) {
-      wvfHist->SetBinContent(i + 1, (double)wvf[i]); //Loop over waveform and set bin content
-    }
-    std::vector<int> MonPulse;
-    while(k < int(wvf.size()))
+  int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
+
+  for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
     {
-      if(wvf[k]-wvf[0] > 100 && TMath::Abs(wvf[wvf.size()-1]-wvf[0])<30) //Make sure no baseline shift 
+      for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
       {
-        if(wvf.ChannelNumber()==905) OneChannel[0] = true;
-        if(wvf.ChannelNumber()==906) OneChannel[1] = true;
-        if(wvf.ChannelNumber()==907) OneChannel[2] = true;
-        //break;
-      }
-      if(wvf.ChannelNumber()==904 && wvf[k]-wvf[0] > 17)
-      {
-        count=count+1; //We also care about coincident crossings though
-      }
-      if(wvf.ChannelNumber()==904)
-      {
-        //They disappate more power
-        //Approximate power through the resistor is ( int(wvf[k]-wvf[0]/30)*0.125 V )**2/50 ohm
-        //Total energy would be power * 10 us
-        //Could do both energy and average power
-        double ADC_Per_Pair = 17;
-        int wvfMedian = GetWaveformMedian( wvf);
-        int NPairs = std::max(int(-1*(wvf[k]-wvfMedian)/ADC_Per_Pair), 0);
-        MonPulse.push_back(NPairs);
-        double Volts_Per_Pair = 0.125; // 125 mV from CAEN. Knocked down by 10x by attenuators
-        double Voltage = NPairs*Volts_Per_Pair;
-        double Resistance = 50; //Ohms 
-        double Power = Voltage*Voltage/Resistance;
-        Energy =Energy +  Power*2*TMath::Power(10, -9); //Power integrated over 2ns. Joules
-      }
-      k=k+1;
-    }
-    if(wvf.ChannelNumber()==904)
-    {
-      double DutyCycle = double(count)/double(wvf.size());
-      hist_MSUM_DutyCycle->Fill(DutyCycle);
-      hist_MSUM_Energy->Fill(Energy); //Can convert to average power by dividing by readout time
-      std::cout << Energy << std::endl;
-      //Make th1d of trigger rate plot of column enabled in fcl
-      int BeamAcceptanceStart = 828; //380; //   //1520? 380*4
-      int BeamAcceptanceEnd = 1688; //2380; //    //2380? 595*4
-      int PeakMon = *std::max_element(MonPulse.begin()+BeamAcceptanceStart, MonPulse.begin()+BeamAcceptanceEnd);
-      for(int j=0; j<int(MTCA_Thresholds.size()); j++)
-        {
-            int PairVal = MTCA_Thresholds[j];
-            if(PeakMon>=PairVal)
+          //Loop over each PMT in a board
+          for(int CAENChannel=0; CAENChannel<PMTPerBoard; CAENChannel++)
+          {
+            int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*TotalFlash;
+            auto const& wvf = (*waveHandle)[WaveIndex];
+
+            if( (wvf.ChannelNumber()<904) || (wvf.ChannelNumber()>907) ) continue;
+            //Determine if waveform has a pulse in it
+            std::stringstream histname;
+            art::ServiceHandle<art::TFileService> tfs;
+            int k=0;
+            //Save waveform
+            if( (wvf.ChannelNumber()==904 )) SaveChannelWaveforms(wvf, fEvNumber, FlashCounter);
+            std::vector<int> MonPulse;
+            while(k < int(wvf.size()))
             {
-                //fill histogram
-                double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
-                hist_MSUM_Trigger_Eff->Fill(FillY); //Fill histogram if we trigger
+              if(wvf[k]-wvf[0] > 100 && TMath::Abs(wvf[wvf.size()-1]-wvf[0])<30) //Make sure no baseline shift 
+              {
+                if(wvf.ChannelNumber()==905) OneChannel[0] = true;
+                if(wvf.ChannelNumber()==906) OneChannel[1] = true;
+                if(wvf.ChannelNumber()==907) OneChannel[2] = true;
+                //break;
+              }
+              if(wvf.ChannelNumber()==904 && wvf[k]-wvf[0] > 17)
+              {
+                count=count+1; //We also care about coincident crossings though
+              }
+              if(wvf.ChannelNumber()==904)
+              {
+                //They disappate more power
+                //Approximate power through the resistor is ( int(wvf[k]-wvf[0]/30)*0.125 V )**2/50 ohm
+                //Total energy would be power * 10 us
+                //Could do both energy and average power
+                double ADC_Per_Pair = 17;
+                int wvfMedian = GetWaveformMedian( wvf);
+                int NPairs = std::max(int(-1*(wvf[k]-wvfMedian)/ADC_Per_Pair), 0);
+                MonPulse.push_back(NPairs);
+                double Volts_Per_Pair = 0.125; // 125 mV from CAEN. Knocked down by 10x by attenuators
+                double Voltage = NPairs*Volts_Per_Pair;
+                double Resistance = 50; //Ohms 
+                double Power = Voltage*Voltage/Resistance;
+                Energy =Energy +  Power*2*TMath::Power(10, -9); //Power integrated over 2ns. Joules
+              }
+              k=k+1;
             }
-        }
+            if(wvf.ChannelNumber()==904)
+            {
+              double DutyCycle = double(count)/double(wvf.size());
+              hist_MSUM_DutyCycle->Fill(DutyCycle);
+              hist_MSUM_Energy->Fill(Energy); //Can convert to average power by dividing by readout time
+              std::cout << Energy << std::endl;
+              //Make th1d of trigger rate plot of column enabled in fcl
+              int BeamAcceptanceStart = fBeamWindowStart; //380; //   //1520? 380*4
+              int BeamAcceptanceEnd = fBeamWindowEnd; //2380; //    //2380? 595*4
+              int PeakMon = *std::max_element(MonPulse.begin()+BeamAcceptanceStart, MonPulse.begin()+BeamAcceptanceEnd);
+              for(int j=0; j<int(MTCA_Thresholds.size()); j++)
+                {
+                    int PairVal = MTCA_Thresholds[j];
+                    if(PeakMon>=PairVal)
+                    {
+                        //fill histogram
+                        double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
+                        hist_MSUM_Trigger_Eff->Fill(FillY); //Fill histogram if we trigger
+                    }
+                }
+            }
+        }//waveform handle loop
+      }
     }
 
 
-  }
   GoodTrigger = OneChannel[0] && OneChannel[1] && OneChannel[2];
   std::stringstream histname;
   art::ServiceHandle<art::TFileService> tfs;
-  histname.str(std::string()); //Resets string stream to nothing
-  histname << "event_" << fEvNumber << "pmtriggerprod";
+  int FlashCount=0;
   for(auto& Trig: (*TriggerHandle))
   {
+    histname.str(std::string()); //Resets string stream to nothing
+    histname << "event_" << fEvNumber << "pmtriggerprod" << "_flash_" << FlashCount;
     std::vector< int > 	numPassed = Trig.numPassed;
     TH1D *pmtTrigHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), numPassed.size(), 0, numPassed.size()-1);
     for(int i=0; i<int(numPassed.size()); i++)
     {
       pmtTrigHist->SetBinContent(i+1, (double)numPassed[i]);
     }
+    FlashCount=FlashCount+1;
   }
   if(GoodTrigger)
   {
@@ -579,6 +722,7 @@ namespace opdet { //OpDet means optical detector
   void BeamRateCalib::endJob()
   {
     float Scale = 1/float(EventCounter);
+    //Should do some checks on flash timing to only pick out trigger flash
     hist_PropTriggers->Scale(Scale);
     hist_PropTriggers->GetXaxis()->SetTitle("MON-Sigma Threshold (adc)");
     hist_PropTriggers->GetYaxis()->SetTitle("MTC/A Threshold (Pairs)");
@@ -587,10 +731,11 @@ namespace opdet { //OpDet means optical detector
     hist_PropTriggers_OffBeam->GetXaxis()->SetTitle("MON-Sigma Threshold (adc)");
     hist_PropTriggers_OffBeam->GetYaxis()->SetTitle("MTC/A Threshold (Pairs)");
     hist_PropTriggers_OffBeam->SetEntries(double(EventCounter));
+    Scale = 1/float(PMTReadouts);
     hist_PropTriggers_NoRestriction->Scale(Scale);
     hist_PropTriggers_NoRestriction->GetXaxis()->SetTitle("MON-Sigma Threshold (adc)");
     hist_PropTriggers_NoRestriction->GetYaxis()->SetTitle("MTC/A Threshold (Pairs)");
-    hist_PropTriggers_NoRestriction->SetEntries(double(EventCounter));
+    hist_PropTriggers_NoRestriction->SetEntries(double(PMTReadouts));
     if(fCheckTriggers)
     {
     hist_MSUM_Trigger_Eff->Scale(Scale);
