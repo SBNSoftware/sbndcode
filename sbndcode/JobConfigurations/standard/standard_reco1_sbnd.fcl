@@ -18,6 +18,7 @@ services:
     SignalShapingServiceSBND:  @local::sbnd_signalshapingservice
     BackTrackerService:        @local::sbnd_backtrackerservice
     ParticleInventoryService:  @local::sbnd_particleinventoryservice
+    ChannelStatusService:      @local::sbnd_data_channelstatus
 }
 
 #physics table overrides
