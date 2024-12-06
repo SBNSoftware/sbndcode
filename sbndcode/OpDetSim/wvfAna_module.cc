@@ -86,6 +86,8 @@ namespace opdet {
     bool fCheckTiming;
     std::string fSummedInputModuleName;
     std::string fPTBLabel;
+    int fTotalCAENBoards;
+    bool fTriggerOnly;
     //TTree *fWaveformTree;
 
     // Declare member data here.
@@ -114,6 +116,9 @@ namespace opdet {
     fChToPlot = p.get<int>("ChToPlot", -1 );
     fCheckTiming = p.get<bool>("CheckTiming", false);
     fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
+    fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
+    fTriggerOnly = p.get<bool>("TriggerOnly", false);
+
   }
 
   void wvfAna::beginJob()
@@ -124,12 +129,74 @@ namespace opdet {
   void wvfAna::analyze(art::Event const & e)
   {
     // Implementation of required member function here.
-    std::cout << "My module on event #" << e.id().event() << std::endl;
+    std::cout << "My module on run # " << e.id().run() << "event #" << e.id().event() << std::endl;
     art::ServiceHandle<art::TFileService> tfs;
     fEvNumber = e.id().event();
 
     art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
     e.getByLabel(art::InputTag(fInputModuleName), waveHandle);
+    //delete from here Nov 27
+    std::cout << "Printing timing information for event + HLT + LLT + Waveforms" << std::endl;
+    std::cout << "Run #" <<  e.id().run() << " event #" << e.id().event() << " has timestamp " << e.time().timeHigh() << "."<<e.time().timeLow() <<" s" << std::endl;
+    art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle_2;
+    e.getByLabel(fPTBLabel,ptbHandle_2);
+    std::cout << "\t It has " << ptbHandle_2->size() << " PTB fragments" << std::endl;
+    for(int index=0; index<int(ptbHandle_2->size()); index++)
+    {
+      auto ptb = (*ptbHandle_2)[index];
+      auto hltrigs = ptb.GetHLTriggers();
+      auto LLtrigs = ptb.GetLLTriggers();
+      std::cout << "\t \t ptb fragment " << index << " with " << hltrigs.size() << " HLTs" <<std::endl;
+      for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
+      {
+        int Power=0;
+        while(Power<64)
+        {
+          if(hltrigs[HLT].trigger_word & (0x1 << Power)) break;
+          else Power=Power+1;
+        }
+        std::cout << "\t \t \t HLT " << HLT << " has trigger word " <<  hltrigs[HLT].trigger_word  << " HLT word of type " << Power << " at time " << hltrigs[HLT].timestamp*20 << " ns UNIX" << std::endl;
+      }
+      std::cout << "\t \t ptb fragment " << index << " with " << LLtrigs.size() << " LLTs" <<std::endl;
+      for(int LLT=0; LLT<int(LLtrigs.size()); LLT++)
+      {
+        int Power=0;
+        while(Power<64)
+        {
+          if(LLtrigs[LLT].trigger_word & (0x1 << Power)) break;
+          else Power=Power+1;
+        }
+        std::cout << "\t \t \t LLT " << LLT << " has trigger word " <<  LLtrigs[LLT].trigger_word  << " LLT word of type " << Power << " at time " << LLtrigs[LLT].timestamp*20 << " ns UNIX" << std::endl;
+      }
+    }
+    int PMTPerCAEN=15;
+    int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerCAEN);
+    std::cout << "\t It also has " << TotalFlash << " opDetWaveforms " << std::endl;
+    for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
+    {
+      int WaveIndex = FlashCounter*PMTPerCAEN;
+      double currentTimeStamp = (*waveHandle)[WaveIndex].TimeStamp(); //Getting channel 17 every time!
+      std::cout << "\t\t\t Flash " << FlashCounter << " is at " << currentTimeStamp << " us relative to the event?" << std::endl;
+      
+    }
+
+
+    int GoodFlashIndex=0;
+    double SmallestTimestamp=0;
+    for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
+    {
+      int WaveIndex = FlashCounter*PMTPerCAEN;
+      double currentTimeStamp = (*waveHandle)[WaveIndex].TimeStamp(); //Getting channel 17 every time!
+      if(FlashCounter==0) SmallestTimestamp=TMath::Abs(currentTimeStamp);
+      if(TMath::Abs(currentTimeStamp)<SmallestTimestamp) 
+      {
+        GoodFlashIndex=FlashCounter;
+        SmallestTimestamp=TMath::Abs(currentTimeStamp);
+      }
+    }
+    //delete to here Nov 27
+
+
 
     if(!waveHandle.isValid()) {
       std::cout << Form("Did not find any G4 photons from a producer: %s", "largeant") << std::endl;
@@ -157,65 +224,80 @@ namespace opdet {
     // for(auto const& e:uncoatedsInTPC0){
     //   std::cout << "e:\t" << e << "\n";
     // }
-    std::cout << "Number of waveforms: " << waveHandle->size() << std::endl;
-
-    std::cout << "fOpDetsToPlot:\t";
-    for (auto const& opdet : fOpDetsToPlot){std::cout << opdet << " ";}
-    std::cout << std::endl;
 
     int hist_id = 0;
-    for(auto const& wvf : (*waveHandle)) {
-      fChNumber = wvf.ChannelNumber();
-      if(fJustOne && fChToPlot!=int(fChNumber)) continue;
-      if(fCheckTiming)
-      {
-        art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
-        e.getByLabel(fPTBLabel,ptbHandle);
-        for(int index=0; index<int(ptbHandle->size()); index++)
+
+    for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
+    {
+    for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
         {
-          auto ptb = (*ptbHandle)[index];
-          auto hltrigs = ptb.GetHLTriggers();
-          std::cout << "ptb fragment " << index << " with " << hltrigs.size() << " HLTs" <<std::endl;
-          for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
-          {
-            std::cout << "This guy has " <<  hltrigs[HLT].trigger_word  << " HLT word of type " << hltrigs[HLT].word_type << " at time " << hltrigs[HLT].timestamp*20 << " ns UNIX" << std::endl;
-            std::cout << "The event has timestamp " << e.time().timeHigh() << " and my wvfm has " << wvf.TimeStamp() << std::endl;
-            std::cout << " event time low " <<  e.time().timeLow() << " event time high " << e.time().timeHigh() <<std::endl;
-          }
+            //Loop over each PMT in a board
+            for(int CAENChannel=0; CAENChannel<PMTPerCAEN; CAENChannel++)
+            {
+              int WaveIndex = CAENChannel + FlashCounter*PMTPerCAEN + CurrentBoard*PMTPerCAEN*TotalFlash;
+              auto const& wvf = (*waveHandle)[WaveIndex];
+              fChNumber = wvf.ChannelNumber();
+              if(fJustOne && fChToPlot!=int(fChNumber)) continue;
+              if(fCheckTiming)
+              {
+                art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
+                e.getByLabel(fPTBLabel,ptbHandle);
+                for(int index=0; index<int(ptbHandle->size()); index++)
+                {
+                  auto ptb = (*ptbHandle)[index];
+                  auto hltrigs = ptb.GetHLTriggers();
+                  std::cout << "ptb fragment " << index << " with " << hltrigs.size() << " HLTs" <<std::endl;
+                  for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
+                  {
+                    std::cout << "This guy has " <<  hltrigs[HLT].trigger_word  << " HLT word of type " << hltrigs[HLT].word_type << " at time " << hltrigs[HLT].timestamp*20 << " ns UNIX" << std::endl;
+                    std::cout << "The event has timestamp " << e.time().timeHigh() << " and my wvfm has " << wvf.TimeStamp() << std::endl;
+                    std::cout << " event time low " <<  e.time().timeLow() << " event time high " << e.time().timeHigh() <<std::endl;
+                  }
+                }
+              }
+              if(fChNumber>=900)
+              {
+                opdetType = "pmt_coated";
+                opdetElectronics = "";
+              }
+              else
+              {
+                opdetType = pdMap.pdType(fChNumber);
+                opdetElectronics = pdMap.electronicsType(fChNumber);
+              }
+              if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
+              histname.str(std::string());
+              if(GoodFlashIndex!=FlashCounter)
+              {
+              histname <<"run_"<< e.id().run()  <<"_event_" << fEvNumber
+                      << "_opchannel_" << fChNumber
+                      << "_" << opdetType
+                      << "_" << FlashCounter;
+              if(fTriggerOnly) continue;
+              }
+              else
+              {
+              histname <<"run_"<< e.id().run()  <<"_event_" << fEvNumber
+                      << "_opchannel_" << fChNumber
+                      << "_" << opdetType
+                      << "_" << FlashCounter << "_TriggerPulse";
+              }
+              fStartTime = wvf.TimeStamp(); //in us
+              if (opdetElectronics == "daphne"){
+                fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;
+              } //in us
+              else{
+                fEndTime = double(wvf.size()) / fSampling + fStartTime;
+              } //in us
+
+              //Create a new histogram
+              TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), fStartTime, fEndTime);
+              for(unsigned int i = 0; i < wvf.size(); i++) {
+                wvfHist->SetBinContent(i + 1, (double)wvf[i]);
+              }
+              hist_id++;
+            }
         }
-      }
-      if(fChNumber>=900)
-      {
-        opdetType = "pmt_coated";
-        opdetElectronics = "";
-      }
-      else
-      {
-        opdetType = pdMap.pdType(fChNumber);
-        opdetElectronics = pdMap.electronicsType(fChNumber);
-      }
-      if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
-      histname.str(std::string());
-      histname << "event_" << fEvNumber
-               << "_opchannel_" << fChNumber
-               << "_" << opdetType
-               << "_" << hist_id;
-
-      fStartTime = wvf.TimeStamp(); //in us
-      if (opdetElectronics == "daphne"){
-				fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;
-			} //in us
-			else{
-        fEndTime = double(wvf.size()) / fSampling + fStartTime;
-      } //in us
-
-      //Create a new histogram
-      TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), fStartTime, fEndTime);
-      for(unsigned int i = 0; i < wvf.size(); i++) {
-        wvfHist->SetBinContent(i + 1, (double)wvf[i]);
-      }
-      hist_id++;
-      std::cout << " on event " << e.id().event() << " event at time " << e.time().value() << " for channel " << fChNumber << "  On hist " << hist_id << std::endl;
     }
     if(fSaveSummedWaveform)
     {
@@ -223,10 +305,15 @@ namespace opdet {
       art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
       e.getByLabel(art::InputTag(fSummedInputModuleName), waveHandle);
       if(!waveHandle.isValid()) return;
-      for(auto const& wvf : (*waveHandle)) 
-      { //Should just be one entry
+      for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
+      {
+        auto const& wvf = (*waveHandle)[FlashCounter];
         histname.str(std::string());
-        histname << "event_" << fEvNumber << "_SummedWaveform";
+        if(GoodFlashIndex!=FlashCounter){ 
+          histname <<"run_"<< e.id().run()  <<"_event_" << fEvNumber << "_SummedWaveform_" << FlashCounter;
+          if(fTriggerOnly) continue;
+        }
+        else histname <<"run_"<< e.id().run()  <<"_event_" << fEvNumber << "_SummedWaveform_" << FlashCounter<< "_TriggerPulse";
         TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), 0, wvf.size());
         for(unsigned int i = 0; i < wvf.size(); i++) 
         {

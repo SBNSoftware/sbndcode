@@ -34,6 +34,4 @@
   <class name="art::Wrapper<std::vector<raw::ptb::sbndptb>>"/>
   <class name="art::TypeID"/>
   <class name="art::Wrapper<art::TypeID>"/>
-  <class name="sbndaq::CRTmetric"/>
-  <class name="art::Wrapper<sbndaq::CRTmetric>"/>
 </lcgdict>
