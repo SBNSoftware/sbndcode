@@ -82,6 +82,7 @@ namespace opdet { //OpDet means optical detector
     void analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle);
     void Validate_MonSim_Outputs(art::Event const & e);
     double GetWaveformMedian(raw::OpDetWaveform wvf);
+    std::vector<bool> ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold);
     opdet::sbndPDMapAlg pdMap; //map for photon detector types
   private:
     //Data members for analysis/output
@@ -394,9 +395,33 @@ namespace opdet { //OpDet means optical detector
         
   }
 
+  std::vector<bool> BeamRateCalib::ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold)
+  {
+    int Baseline=14250;
+    std::vector<bool> BinaryResponse(wvf.size());
+    int WaveformIndex=1;
+    while(WaveformIndex<int(wvf.size()))
+    {
+      bool CrossedThreshold = (((wvf[WaveformIndex-1]-Baseline)>-MonThreshold) && ((wvf[WaveformIndex]-Baseline)<-MonThreshold));
+      if(CrossedThreshold)
+      {
+        int StartIndex = WaveformIndex;
+        int EndIndex = WaveformIndex+4*fMonWidth;
+        if(StartIndex>=int(wvf.size() )) StartIndex=wvf.size()-1; //should never happen
+        if(EndIndex>=int(wvf.size())) EndIndex=wvf.size()-1; //May happen
+        for(int k=StartIndex; k<EndIndex; k++)
+        {
+          BinaryResponse[k] = true;
+        }
+        WaveformIndex=EndIndex+1;
+      }
+      else WaveformIndex=WaveformIndex+1;
+    }
+    return BinaryResponse;
+  }
+
   void BeamRateCalib::ConstructMonPulse(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, std::vector<int> *MonPulse, bool Saving, int FlashCounter)
   {
-    std::vector<int> Crossings;
     std::fill(MonPulse->begin(), MonPulse->end(), 0);
     //Loop over the entries in our waveform vector
     //We care about getting the pairing correct
@@ -404,10 +429,44 @@ namespace opdet { //OpDet means optical detector
     std::vector<int> Pair1= { 7,   9,  11,  13,  15,  17,  37,  39,  41,  61,  63,  67,  69, 71,  85,  87,  89,  91,  93,  95, 115, 117, 119, 139, 141, 145, 147, 149, 163, 165, 169, 171, 173, 193, 195, 197, 217, 219, 221, 223, 225, 227, 241, 243, 247, 249, 251, 271, 273, 275, 295, 297, 299, 301, 303, 305};
     std::vector<int> Unpaired= {65,  64, 143, 142, 167, 166, 245, 244};
     int NumFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
+    int FirstReadoutIndex = 0 + FlashCounter*PMTPerBoard + 0*PMTPerBoard*NumFlash;
+    int ReadoutSize = (*waveHandle)[FirstReadoutIndex].size();
     for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
       {
           //Loop over each PMT in a board
-          for(int CAENChannel=0; CAENChannel<PMTPerBoard; CAENChannel++)
+          int CAENChannel=0;
+          while(CAENChannel<PMTPerBoard)
+          {
+            
+            int ChannelStep = 1;
+            std::vector<bool> BinaryMonContrib(ReadoutSize);
+            if(CAENChannel!=14) //We are on a paired channel so we won't want to double count
+            { 
+              int WaveIndex_Pair1 = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
+              int WaveIndex_Pair2 = CAENChannel+1 + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
+              ChannelStep=2;
+              auto const& wvf_Pair1 = (*waveHandle)[WaveIndex_Pair1];
+              auto const& wvf_Pair2 = (*waveHandle)[WaveIndex_Pair2];
+              std::vector<bool> BinaryResponse_Pair1 = ConstructBinaryResponse(wvf_Pair1, MonThreshold);
+              std::vector<bool> BinaryResponse_Pair2 = ConstructBinaryResponse(wvf_Pair2, MonThreshold);
+              for(int i=0; i<ReadoutSize; i++) BinaryMonContrib[i] = (BinaryResponse_Pair1[i] || BinaryResponse_Pair2[i]);
+            }
+            else //Unpaired PMT so no OR
+            {
+              int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
+              auto const& wvf_Unpaired = (*waveHandle)[WaveIndex];
+              std::vector<bool> BinaryResponse_Unpaired = ConstructBinaryResponse(wvf_Unpaired, MonThreshold);
+              for(int i=0; i<ReadoutSize; i++) BinaryMonContrib[i] = (BinaryResponse_Unpaired[i]);
+            }
+            for(int i=0; i<ReadoutSize; i++)
+            {
+              if(BinaryMonContrib[i]) (*MonPulse)[i] = (*MonPulse)[i]+1;
+            }
+            CAENChannel=CAENChannel+ChannelStep;
+          } //loop over channels
+      } //loop over boards
+  }
+  /*        for(int CAENChannel=0; CAENChannel<PMTPerBoard; CAENChannel++)
           {
             int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
             auto const& wvf = (*waveHandle)[WaveIndex];
@@ -499,6 +558,7 @@ namespace opdet { //OpDet means optical detector
         } //Loop over channels in board
       } // loop over boards
   }
+  */
 
   void BeamRateCalib::analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle)
   { //Use fill and not set entries for the th2d interface
