@@ -26,6 +26,7 @@
 #include "canvas/Utilities/Exception.h"
 #include "canvas/Persistency/Common/PtrVector.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/FindOneP.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 
 // Data products
@@ -52,7 +53,6 @@
 #include "larrecodnn/CVN/func/LArTrainingData.h"
 #include "larrecodnn/CVN/func/InteractionType.h"
 #include "larrecodnn/CVN/func/PixelMap.h"
-#include "sbndcode/SBNDCVN/module_helpers/SBNDPixelMap.h"
 #include "larrecodnn/CVN/func/CVNImageUtils.h"
 #include "sbndcode/SBNDCVN/module_helpers/SBNDICVNZlibMaker.h"
 
@@ -284,13 +284,16 @@ namespace lcvn {
 	  
        ///////////////////////////////////////////////////////////////////////////////////////////  
 	  
-       std::vector<art::Ptr<lcvn::SBNDPixelMap>> pixelmaps;
+       std::vector<art::Ptr<lcvn::PixelMap>> pixelmaps;
        art::InputTag itag1(fPixelMapInput, "cvnmap");
-       auto h_pixelmaps = evt.getHandle<std::vector<lcvn::SBNDPixelMap>>(itag1);
+       auto h_pixelmaps = evt.getHandle<std::vector<lcvn::PixelMap>>(itag1);
        if (h_pixelmaps)
            art::fill_ptr_vector(pixelmaps, h_pixelmaps); 	  
 	  
        if (pixelmaps.size() == 0) return;
+
+       // Get associated slice for each pixel map
+       art::FindOneP<recob::Slice> findOneSlice(h_pixelmaps, evt, itag1);
        
        /*Clear();
        
@@ -391,13 +394,17 @@ namespace lcvn {
 		 frun = evt.run();
                  fsubrun = evt.subRun();
                  fevent = evt.id().event();
+
+                 if (findOneSlice.isValid()){
+                   auto const & slice = findOneSlice.at(i);
 		     
-		 std::cout << evt.run() << "  " << evt.subRun() << "  " << evt.event() << "  " << pixelmaps[i]->fSliceID << "\n";
-	         AssignLabels labels;
-                 TDNuInfo info;
-                 double event_weight =1;
-                 InteractionType interaction = kOther;	  
-	         for(unsigned int j=0; j<SliceList.size(); j++){
+                   std::cout << evt.run() << "  " << evt.subRun() << "  " << evt.event() << "  " << slice->ID() << "\n";
+                   AssignLabels labels;
+                   TDNuInfo info;
+                   double event_weight =1;
+                   InteractionType interaction = kOther;
+
+                   //for(unsigned int j=0; j<SliceList.size(); j++){
 			 
 		    //////////////////////// TEST ////////////////////////////////////// 	 
 			 
@@ -409,10 +416,10 @@ namespace lcvn {
 		   //////////////////////// TEST //////////////////////////////////////	     
 			     
 			 
-	             if(SliceList[j]->ID() == pixelmaps[i]->fSliceID){
-			fsliceID = SliceList[j]->ID();
+                   //if(SliceList[j]->ID() == pixelmaps[i]->fSliceID){
+			fsliceID = slice->ID();
 		        if(findManyHits.isValid()){
-		           std::vector<art::Ptr<recob::Hit>> slice_hits = findManyHits.at(SliceList[j].key());
+		           std::vector<art::Ptr<recob::Hit>> slice_hits = findManyHits.at(slice.key());
 			   double tot_slice_eng = 0;
 			   double tot_slice_nu_eng = 0;
 			   double tot_slice_cos_eng = 0;
@@ -479,7 +486,7 @@ namespace lcvn {
 			      
 			      std::vector<float> pfp_T0_vec;
 			      if(findManyPFPs.isValid()){
-			         std::vector<art::Ptr<recob::PFParticle>> slicePFPs = findManyPFPs.at(SliceList[j].key());
+			         std::vector<art::Ptr<recob::PFParticle>> slicePFPs = findManyPFPs.at(slice.key());
 				 if(slicePFPs.size()){
 				    for(auto const &pfp : slicePFPs){
 				        if(findManyT0s.isValid()){
@@ -564,7 +571,7 @@ namespace lcvn {
 		     } // valid hit association
 		     
 		     if(findManyPFPs.isValid()){
-		        fIsSliceNu=Is_Slice_Nu(findManyPFPs,SliceList[j]);
+		        fIsSliceNu=Is_Slice_Nu(findManyPFPs,slice);
 			if(fIsSliceNu){
 			   
 			   /*art::Handle< std::vector<recob::PFParticle> > PFPListHandle;
@@ -575,21 +582,21 @@ namespace lcvn {
 			   //art::FindManyP<larpandoraobj::PFParticleMetadata> fm_pfpmd(PFPListHandle, evt, fPFParticleModuleLabel);
 			   
 			   if(fm_pfpmd.isValid()){
-			      fSliceScore = Get_Slice_Score(fm_pfpmd,Get_Nu_like_PFP(findManyPFPs,SliceList[j]));
-			      if(SliceList[j]->ID() == Get_Best_Slice_ID_PFP_pdg(findManyPFPs,fm_pfpmd,SliceList)[0]) fIsbestSlice = true;
+			      fSliceScore = Get_Slice_Score(fm_pfpmd,Get_Nu_like_PFP(findManyPFPs,slice));
+			      if(slice->ID() == Get_Best_Slice_ID_PFP_pdg(findManyPFPs,fm_pfpmd,SliceList)[0]) fIsbestSlice = true;
 			      fbestpfppdg = Get_Best_Slice_ID_PFP_pdg(findManyPFPs,fm_pfpmd,SliceList)[1];
 			      fbestsliceID = Get_Best_Slice_ID_PFP_pdg(findManyPFPs,fm_pfpmd,SliceList)[0];
-			      fpfppdg = Get_Slice_PFP_ID(findManyPFPs, SliceList[j]);
+			      fpfppdg = Get_Slice_PFP_ID(findManyPFPs, slice);
 			   }
 			}
 		     }
 		     
 		     LArTrainingNuData train(interaction, *pixelmaps[i], info);
-		     std::string evtid = "r"+std::to_string(evt.run())+"_s"+std::to_string(evt.subRun())+"_e"+std::to_string(evt.event())+"_sl"+std::to_string(pixelmaps[i]->fSliceID)+"_h"+std::to_string(time(0));
+		     std::string evtid = "r"+std::to_string(evt.run())+"_s"+std::to_string(evt.subRun())+"_e"+std::to_string(evt.event())+"_sl"+std::to_string(slice->ID())+"_h"+std::to_string(time(0));
 	             write_files(train, evtid);
 		     break;
-		   } // found the matching slice
-	         } // loop over slices
+                     //} // found the matching slice
+	         } // find associated slice
 	      } // loop over pixel maps
           } // use backtrack inoformation
 	  
@@ -604,7 +611,7 @@ namespace lcvn {
 		  if(Nu_is_contained) fNuIsContained = true;
 		      
 		  LArTrainingNuData train(interaction, *pixelmaps[i], info);
-		  fsliceID = pixelmaps[i]->fSliceID;
+		  //fsliceID = pixelmaps[i]->fSliceID;
 		  
 		  /*art::Handle< std::vector<recob::Slice> > SliceListHandle;
                   std::vector< art::Ptr<recob::Slice> > SliceList;
@@ -612,12 +619,13 @@ namespace lcvn {
                       art::fill_ptr_vector(SliceList,SliceListHandle);
 		  
 		  art::FindManyP<recob::PFParticle> findManyPFPs(SliceListHandle, evt, fPFParticleModuleLabel);*/
-		  
-		  for(unsigned int j=0; j<SliceList.size(); j++){
-		      if(SliceList[j]->ID() == fsliceID){
+		  if (findOneSlice.isValid()){
+                   auto const & slice = findOneSlice.at(i);
+		  //for(unsigned int j=0; j<SliceList.size(); j++){
+                    //if(SliceList[j]->ID() == fsliceID){
 			 
 			 if(findManyHits.isValid()){
-		            std::vector<art::Ptr<recob::Hit>> slice_hits = findManyHits.at(SliceList[j].key());
+		            std::vector<art::Ptr<recob::Hit>> slice_hits = findManyHits.at(slice.key());
 			    fNhits_tpc_0_pl_0 = Get_Hit_Count(0,0,slice_hits);
                             fNhits_tpc_0_pl_1 = Get_Hit_Count(0,1,slice_hits);
                             fNhits_tpc_0_pl_2 = Get_Hit_Count(0,2,slice_hits);
@@ -628,13 +636,13 @@ namespace lcvn {
 		         }      
 			      
 			 if(findManyPFPs.isValid()){
-		            fIsSliceNu=Is_Slice_Nu(findManyPFPs,SliceList[j]);
+		            fIsSliceNu=Is_Slice_Nu(findManyPFPs,slice);
 			    
 			    ////////////////////////////////////////// pandora T0 //////////////////////////////////////////////////////
 			    
 			    std::vector<float> pfp_T0_vec;
 			      if(findManyPFPs.isValid()){
-			         std::vector<art::Ptr<recob::PFParticle>> slicePFPs = findManyPFPs.at(SliceList[j].key());
+			         std::vector<art::Ptr<recob::PFParticle>> slicePFPs = findManyPFPs.at(slice.key());
 				 if(slicePFPs.size()){
 				    for(auto const &pfp : slicePFPs){
 				        if(findManyT0s.isValid()){
@@ -664,20 +672,20 @@ namespace lcvn {
 			       //art::FindManyP<larpandoraobj::PFParticleMetadata> fm_pfpmd(PFPListHandle, evt, fPFParticleModuleLabel);
 			   
 			       if(fm_pfpmd.isValid()){
-			          fSliceScore = Get_Slice_Score(fm_pfpmd,Get_Nu_like_PFP(findManyPFPs,SliceList[j]));
-				  if(SliceList[j]->ID() == Get_Best_Slice_ID_PFP_pdg(findManyPFPs,fm_pfpmd,SliceList)[0]) fIsbestSlice = true;
+			          fSliceScore = Get_Slice_Score(fm_pfpmd,Get_Nu_like_PFP(findManyPFPs,slice));
+				  if(slice->ID() == Get_Best_Slice_ID_PFP_pdg(findManyPFPs,fm_pfpmd,SliceList)[0]) fIsbestSlice = true;
 			          fbestpfppdg = Get_Best_Slice_ID_PFP_pdg(findManyPFPs,fm_pfpmd,SliceList)[1];
 				  fbestsliceID = Get_Best_Slice_ID_PFP_pdg(findManyPFPs,fm_pfpmd,SliceList)[0];
-				  fpfppdg = Get_Slice_PFP_ID(findManyPFPs, SliceList[j]);
+				  fpfppdg = Get_Slice_PFP_ID(findManyPFPs, slice);
 			       }
 			    }
 		         }
 		         break;
-		      }
+                         //}
+		  std::string evtid = "r"+std::to_string(evt.run())+"_s"+std::to_string(evt.subRun())+"_e"+std::to_string(evt.event())+"_sl"+std::to_string(slice->ID())+"_h"+std::to_string(time(0));
+	          write_files(train, evtid);
 		  }
 		  
-		  std::string evtid = "r"+std::to_string(evt.run())+"_s"+std::to_string(evt.subRun())+"_e"+std::to_string(evt.event())+"_sl"+std::to_string(pixelmaps[i]->fSliceID)+"_h"+std::to_string(time(0));
-	          write_files(train, evtid);
 	      }
           } // don't use slice information to extrac truth info
         } // use slcie to make images

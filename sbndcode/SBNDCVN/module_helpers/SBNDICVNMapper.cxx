@@ -40,8 +40,8 @@ namespace lcvn
     , fMapVecSize(pset.get<unsigned int>("MapVecSize"))
   {
 
-    produces<std::vector<lcvn::SBNDPixelMap>>(fClusterPMLabel);
-    //produces<art::Assns<recob::Slice, lcvn::SBNDPixelMap>>(fClusterPMLabel);
+    produces<std::vector<lcvn::PixelMap>>(fClusterPMLabel);
+    produces<art::Assns<recob::Slice, lcvn::PixelMap>>(fClusterPMLabel);
   }
 	
   //--------------------------------------------------------------------------------------------------------------------------	
@@ -67,13 +67,13 @@ template <class T, class U> void SBNDICVNMapper<T, U>::produce(art::Event& evt)
       art::FindManyP<recob::PFParticle> findManyPFPs(SliceListHandle, evt, fPFParticleModuleLabel);
       art::FindManyP<anab::T0> findManyT0s(PFPListHandle, evt, fT0Label);
       
-      std::unique_ptr< std::vector<SBNDPixelMap> > pmCol(new std::vector<SBNDPixelMap>);
-      auto assn = std::make_unique< art::Assns<recob::Slice, lcvn::SBNDPixelMap> >();
+      std::unique_ptr< std::vector<PixelMap> > pmCol(new std::vector<PixelMap>);
+      auto assn = std::make_unique< art::Assns<recob::Slice, lcvn::PixelMap> >();
 
       auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
       
       for(auto const& slice : SliceList){
-	  std::cout << "********* " << evt.run() << "  " << evt.subRun() << "  " << evt.id().event() << "  " << slice->ID() << "  **************\n";
+          if (fverbose) std::cout << "********* " << evt.run() << "  " << evt.subRun() << "  " << evt.id().event() << "  " << slice->ID() << "  **************\n";
 	  std::vector<float> pfp_T0_vec;
 	  if(findManyPFPs.isValid()){
 	     std::vector<art::Ptr<recob::PFParticle>> slicePFPs = findManyPFPs.at(slice.key());
@@ -99,21 +99,21 @@ template <class T, class U> void SBNDICVNMapper<T, U>::produce(art::Event& evt)
           if(findManyHits.isValid()){
 	     std::vector<art::Ptr<U>> slicehits = findManyHits.at(slice.key());
 	     fProducer.Set_fT0_value(min_T0);
-	     SBNDPixelMap pm = fProducer.SBNDCreateMap(detProp, slicehits);
+	     PixelMap pm = fProducer.SBNDCreateMap(detProp, slicehits);
 	     auto nhits = fProducer.NROI();
              pm.SetTotHits(nhits);
-	     pm.fSliceID = slice->ID();
+	     //pm.fSliceID = slice->ID();
              
 	     if(nhits > fMinClusterHits && pmCol->size()<fMapVecSize){ 
 	        pmCol->push_back(pm);
-                //util::CreateAssn(*this, evt, *pmCol, slice, *assn, fClusterPMLabel);
+                util::CreateAssn(*this, evt, *pmCol, slice, *assn, fClusterPMLabel);
 	     }
 	  
           }
       }
-      std::cout<<pmCol->size()<<std::endl;
+      //std::cout<<pmCol->size()<<std::endl;
       evt.put(std::move(pmCol), fClusterPMLabel);
-      //evt.put(std::move(assn), fClusterPMLabel);
+      evt.put(std::move(assn), fClusterPMLabel);
      
    }
    
@@ -126,10 +126,10 @@ template <class T, class U> void SBNDICVNMapper<T, U>::produce(art::Event& evt)
        if (hitListHandle) art::fill_ptr_vector(hitlist, hitListHandle);
 
        //Declaring containers for things to be stored in event
-       std::unique_ptr<std::vector<SBNDPixelMap>> pmCol(new std::vector<SBNDPixelMap>);
+       std::unique_ptr<std::vector<PixelMap>> pmCol(new std::vector<PixelMap>);
 
        auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
-       SBNDPixelMap pm = fProducer.SBNDCreateMap(detProp, hitlist);
+       PixelMap pm = fProducer.SBNDCreateMap(detProp, hitlist);
        auto nhits = fProducer.NROI();
        pm.SetTotHits(nhits);
 

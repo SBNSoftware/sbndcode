@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "larrecodnn/CVN/func/InteractionType.h"
-#include "sbndcode/SBNDCVN/module_helpers/SBNDPixelMap.h"
+#include "larrecodnn/CVN/func/PixelMap.h"
 
 namespace lcvn {
 
@@ -19,8 +19,8 @@ namespace lcvn {
   class SBNDITFNetHandler {
   public:
     virtual ~SBNDITFNetHandler() noexcept = default;
-    /// Return prediction arrays for SBNDPixelMap
-    virtual std::vector<std::vector<float>> Predict(const SBNDPixelMap& pm) const = 0;
+    /// Return prediction arrays for PixelMap
+    virtual std::vector<std::vector<float>> Predict(const PixelMap& pm) const = 0;
   };
 
 }

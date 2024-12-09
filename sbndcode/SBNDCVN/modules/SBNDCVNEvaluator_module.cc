@@ -29,7 +29,7 @@
 #include "larrecodnn/CVN/func/AssignLabels.h"
 #include "larrecodnn/CVN/func/InteractionType.h"
 #include "larrecodnn/CVN/func/Result.h"
-#include "sbndcode/SBNDCVN/module_helpers/SBNDPixelMap.h"
+#include "larrecodnn/CVN/func/PixelMap.h"
 #include "sbndcode/SBNDCVN/module_helpers/SBNDITFNetHandler.h"
 #include "sbndcode/SBNDCVN/module_helpers/SBNDPixelMapProducer.h"
 
@@ -81,7 +81,7 @@ namespace lcvn {
       produces<art::Assns<recob::Slice, lcvn::Result>>();
     }
     else{
-      produces<art::Assns<lcvn::SBNDPixelMap, lcvn::Result>>();
+      produces<art::Assns<lcvn::PixelMap, lcvn::Result>>();
     }
   }
   //......................................................................
@@ -91,7 +91,7 @@ namespace lcvn {
     /// Define containers for the things we're going to produce
     std::unique_ptr<std::vector<Result>> resultCol(new std::vector<Result>);
     auto assn1 = std::make_unique< art::Assns<recob::Slice, lcvn::Result> >();
-    auto assn2 = std::make_unique< art::Assns<lcvn::SBNDPixelMap, lcvn::Result> >();
+    auto assn2 = std::make_unique< art::Assns<lcvn::PixelMap, lcvn::Result> >();
 
     if (fCVNType == "TF" || fCVNType == "Tensorflow" || fCVNType == "TensorFlow") {
       if (fSliceLabel != ""){ // by default use slice information
@@ -139,10 +139,10 @@ namespace lcvn {
           if(findManyHits.isValid()){
             std::vector<art::Ptr<recob::Hit>> slicehits = findManyHits.at(slice.key());
             fPMProducer.Set_fT0_value(min_T0);
-            SBNDPixelMap pm = fPMProducer.SBNDCreateMap(detProp, slicehits);
+            PixelMap pm = fPMProducer.SBNDCreateMap(detProp, slicehits);
             auto nhits = fPMProducer.NROI();
             pm.SetTotHits(nhits);
-            pm.fSliceID = slice->ID();
+            //pm.fSliceID = slice->ID();
             std::vector<std::vector<float>> output = fTFHandler->Predict(pm);
             resultCol->emplace_back(output);
             util::CreateAssn(*this, evt, *resultCol, slice, *assn1);
@@ -151,9 +151,9 @@ namespace lcvn {
       }
       else{ //Try to read pixel maps saved in the file
         /// Load in the pixel maps
-        std::vector<art::Ptr<lcvn::SBNDPixelMap>> pixelmaplist;
+        std::vector<art::Ptr<lcvn::PixelMap>> pixelmaplist;
         art::InputTag itag1(fPixelMapModuleLabel, fPixelMapInput);
-        auto pixelmapListHandle = evt.getHandle<std::vector<lcvn::SBNDPixelMap>>(itag1);
+        auto pixelmapListHandle = evt.getHandle<std::vector<lcvn::PixelMap>>(itag1);
         if (pixelmapListHandle) art::fill_ptr_vector(pixelmaplist, pixelmapListHandle);
         
         // If we have a pixel map then use the TF interface to give us a prediction

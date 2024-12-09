@@ -2,7 +2,7 @@
 cet_make_library(
   SOURCE
   SBNDPixelMapProducer.cxx
-  SBNDPixelMap.h
+  #SBNDPixelMap.h
   SBNDICVNMapper.cxx
   SBNDICVNZlibMaker.cxx
   SBNDITFNetHandler.h

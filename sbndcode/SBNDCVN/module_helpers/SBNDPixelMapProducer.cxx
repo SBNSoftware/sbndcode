@@ -189,10 +189,10 @@ namespace lcvn
   
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   
-  template <class T, class U> SBNDPixelMap SBNDPixelMapProducer<T, U>::SBNDCreateMapGivenBoundary(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster, const Boundary& bound)
+  template <class T, class U> PixelMap SBNDPixelMapProducer<T, U>::SBNDCreateMapGivenBoundary(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster, const Boundary& bound)
   {
     if(fverbose) std::cout << "============ Calling the function SBNDPixelMapProducer::SBNDCreateMapGivenBoundary() ==============\n";
-    SBNDPixelMap pm(this->fNWire, this->fNTdc, bound);
+    PixelMap pm(this->fNWire, this->fNTdc, bound);
 
     for(size_t iHit = 0; iHit < cluster.size(); ++iHit)
     {
@@ -231,7 +231,7 @@ namespace lcvn
   
   //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   
-  template <class T, class U> SBNDPixelMap SBNDPixelMapProducer<T, U>::SBNDCreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector<art::Ptr<T>>& cluster)
+  template <class T, class U> PixelMap SBNDPixelMapProducer<T, U>::SBNDCreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector<art::Ptr<T>>& cluster)
   {
     if(fverbose) std::cout << "============ Calling the function SBNDPixelMapProducer::SBNDCreateMap() [Art::Ptr form] ==============\n";
     std::vector<const T*> newCluster;
@@ -244,7 +244,7 @@ namespace lcvn
   
   //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   
-  template <class T, class U> SBNDPixelMap SBNDPixelMapProducer<T, U>::SBNDCreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster)
+  template <class T, class U> PixelMap SBNDPixelMapProducer<T, U>::SBNDCreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster)
   {
     if(fverbose) std::cout << "============ Calling the function SBNDPixelMapProducer::SBNDCreateMap() [Normal::Ptr form] ==============\n";
     Boundary bound = DefineBoundary(detProp, cluster);
@@ -292,4 +292,3 @@ namespace lcvn
   template class SBNDPixelMapProducer<sim::SimChannel, lcvn::SimChannelHelper>;
 
 }
-
