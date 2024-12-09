@@ -114,7 +114,6 @@ namespace lcvn {
         auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
         for(auto const& slice : slcList){
           if (fverbose) std::cout << "********* " << evt.run() << "  " << evt.subRun() << "  " << evt.id().event() << "  " << slice->ID() << "  **************\n";
-          if (slice->ID()>0) continue;
 	  std::vector<float> pfp_T0_vec;
 	  if(findManyPFPs.isValid()){
             std::vector<art::Ptr<recob::PFParticle>> slicePFPs = findManyPFPs.at(slice.key());
