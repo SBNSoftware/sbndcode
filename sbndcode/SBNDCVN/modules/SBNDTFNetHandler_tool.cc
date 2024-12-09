@@ -41,6 +41,7 @@ namespace lcvn {
     int fNInputs;
     int fNOutputs;
     std::unique_ptr<tf::Graph> fTFGraph; ///< Tensorflow graph
+    bool fverbose;
   };
 
   SBNDTFNetHandler::SBNDTFNetHandler(const fhicl::ParameterSet& pset)
@@ -55,6 +56,7 @@ namespace lcvn {
     , fOutputs(pset.get<std::vector<std::string>>("Outputs"))
     , fNInputs(pset.get<int>("NInputs"))
     , fNOutputs(pset.get<int>("NOutputs"))
+    , fverbose(pset.get<bool>("verbose"))
   {
 
     // Construct the TF Graph object. The empty vector {} is used since the protobuf
@@ -127,17 +129,18 @@ namespace lcvn {
       }
     };
 
-    std::cout << "Classifier summary: ";
-    std::cout << std::endl;
-    int output_index = 0;
-    for (auto const& output : cvnResults[0]) {
-      std::cout << "Output " << output_index++ << ": ";
-      for (auto const v : output)
-        std::cout << v << ", ";
+    if (fverbose){
+      std::cout << "Classifier summary: ";
+      std::cout << std::endl;
+      int output_index = 0;
+      for (auto const& output : cvnResults[0]) {
+        std::cout << "Output " << output_index++ << ": ";
+        for (auto const v : output)
+          std::cout << v << ", ";
+        std::cout << std::endl;
+      }
       std::cout << std::endl;
     }
-    std::cout << std::endl;
-
     return cvnResults[0];
   }
 
