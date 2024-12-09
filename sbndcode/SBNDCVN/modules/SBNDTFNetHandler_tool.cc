@@ -25,8 +25,8 @@ namespace lcvn {
     /// Constructor which takes a pset with DeployProto and ModelFile fields
     explicit SBNDTFNetHandler(const fhicl::ParameterSet& pset);
 
-    /// Return prediction arrays for SBNDPixelMap
-    std::vector<std::vector<float>> Predict(const SBNDPixelMap& pm) const override;
+    /// Return prediction arrays for PixelMap
+    std::vector<std::vector<float>> Predict(const PixelMap& pm) const override;
 
   private:
     std::string fLibPath; ///< Library path (typically dune_pardata...)
@@ -94,7 +94,7 @@ namespace lcvn {
     return;
   }
 
-  std::vector<std::vector<float>> SBNDTFNetHandler::Predict(const SBNDPixelMap& pm) const
+  std::vector<std::vector<float>> SBNDTFNetHandler::Predict(const PixelMap& pm) const
   {
 
     CVNImageUtils imageUtils(fImageWires, fImageTDCs, 3);

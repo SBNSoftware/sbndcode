@@ -10,7 +10,7 @@
 
 #include "canvas/Persistency/Common/Ptr.h"
 #include "larrecodnn/CVN/interfaces/PixelMapProducer.h"
-#include "sbndcode/SBNDCVN/module_helpers/SBNDPixelMap.h"
+#include "larrecodnn/CVN/func/PixelMap.h"
 
 namespace lcvn
 {
@@ -26,9 +26,9 @@ namespace lcvn
 	PixelMap CreateMapGivenBoundary(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster,const Boundary& bound) override;
 	PixelMap CreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector<art::Ptr<T>>& cluster) override;
 	PixelMap CreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster) override;
-        SBNDPixelMap SBNDCreateMapGivenBoundary(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster,const Boundary& bound);
-	SBNDPixelMap SBNDCreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector<art::Ptr<T>>& cluster);
-	SBNDPixelMap SBNDCreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster);
+        PixelMap SBNDCreateMapGivenBoundary(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster,const Boundary& bound);
+	PixelMap SBNDCreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector<art::Ptr<T>>& cluster);
+	PixelMap SBNDCreateMap(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster);
 	void Set_fT0_value(float value);
     protected:
         bool fverbose;
