@@ -81,7 +81,7 @@ namespace lcvn
           if (std::abs(tmin_2[i] - tmean_2) < (double)this->fTRes) bwire_2.push_back(wire_2[i]);
      }
 
-     std::cout << "Boundary wire vector sizes: " << bwire_0.size() << ", " << bwire_1.size() << ", " << bwire_2.size() << std::endl;
+     if (fverbose) std::cout << "Boundary wire vector sizes: " << bwire_0.size() << ", " << bwire_1.size() << ", " << bwire_2.size() << std::endl;
 
      int minwire_0 = 0;
      int minwire_1 = 0;
@@ -93,30 +93,30 @@ namespace lcvn
      if(fChangeWireNo){
         if (bwire_0.size() > 0) {
             minwire_0 = *minwireelement_0 - 1;
-            std::cout << "minwire 0: " << (*minwireelement_0 - 1) << std::endl;
+            if (fverbose) std::cout << "minwire 0: " << (*minwireelement_0 - 1) << std::endl;
         }
         if (bwire_1.size() > 0) {
             minwire_1 = *minwireelement_1 - 1;
-            std::cout << "minwire 1: " << (*minwireelement_1 - 1) << std::endl;
+            if (fverbose) std::cout << "minwire 1: " << (*minwireelement_1 - 1) << std::endl;
         }
         if (bwire_2.size() > 0) {
             minwire_2 = *minwireelement_2 - 1;
-            std::cout << "minwire 2: " << (*minwireelement_2 - 1) << std::endl;
+            if (fverbose) std::cout << "minwire 2: " << (*minwireelement_2 - 1) << std::endl;
         }
     }
     
     else{
         if (bwire_0.size() > 0) {
             minwire_0 = *minwireelement_0;
-            std::cout << "minwire 0: " << *minwireelement_0 << std::endl;
+            if (fverbose) std::cout << "minwire 0: " << *minwireelement_0 << std::endl;
         }
         if (bwire_1.size() > 0) {
             minwire_1 = *minwireelement_1;
-            std::cout << "minwire 1: " << *minwireelement_1 << std::endl;
+            if (fverbose) std::cout << "minwire 1: " << *minwireelement_1 << std::endl;
         }
         if (bwire_2.size() > 0) {
             minwire_2 = *minwireelement_2;
-            std::cout << "minwire 2: " << *minwireelement_2<< std::endl;
+            if (fverbose) std::cout << "minwire 2: " << *minwireelement_2<< std::endl;
         }
     }
 

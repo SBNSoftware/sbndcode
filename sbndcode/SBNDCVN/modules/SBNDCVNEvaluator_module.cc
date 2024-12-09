@@ -52,6 +52,8 @@ namespace lcvn {
     /// Can use Caffe or Tensorflow
     std::string fCVNType;
 
+    bool fverbose;
+    
     //lcvn::CaffeNetHandler fCaffeHandler;
     std::unique_ptr<lcvn::SBNDITFNetHandler> fTFHandler;
 
@@ -70,6 +72,7 @@ namespace lcvn {
     , fPFParticleModuleLabel(pset.get<art::InputTag>("PFParticleModuleLabel"))
     , fT0Label(pset.get<art::InputTag>("T0Label"))
     , fCVNType(pset.get<std::string>("CVNType"))
+    , fverbose(pset.get<bool>("verbose"))      
     , fTFHandler{art::make_tool<SBNDITFNetHandler>(pset.get<fhicl::ParameterSet>("SBNDTFHandler"))}
     , fPMProducer(pset.get<fhicl::ParameterSet>("PixelMapProducer"))
   {
@@ -110,7 +113,8 @@ namespace lcvn {
         art::FindManyP<anab::T0> findManyT0s(PFPListHandle, evt, fT0Label);
         auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
         for(auto const& slice : slcList){
-	  std::cout << "********* " << evt.run() << "  " << evt.subRun() << "  " << evt.id().event() << "  " << slice->ID() << "  **************\n";
+          if (fverbose) std::cout << "********* " << evt.run() << "  " << evt.subRun() << "  " << evt.id().event() << "  " << slice->ID() << "  **************\n";
+          if (slice->ID()>0) continue;
 	  std::vector<float> pfp_T0_vec;
 	  if(findManyPFPs.isValid()){
             std::vector<art::Ptr<recob::PFParticle>> slicePFPs = findManyPFPs.at(slice.key());
@@ -155,7 +159,7 @@ namespace lcvn {
         
         // If we have a pixel map then use the TF interface to give us a prediction
         if (pixelmaplist.size() > 0) {
-          std::cout << "===================== size of the pixelmap list : " << pixelmaplist.size() << " ========================\n"; 
+          if (fverbose) std::cout << "===================== size of the pixelmap list : " << pixelmaplist.size() << " ========================\n"; 
           std::vector<std::vector<float>> networkOutput = fTFHandler->Predict(*pixelmaplist[0]);
           // lcvn::Result can now take a vector of floats and works out the number of outputs
           for (unsigned int p = 0; p < pixelmaplist.size(); ++p) {
