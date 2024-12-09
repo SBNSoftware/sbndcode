@@ -31,7 +31,7 @@ source:
 physics:
 {
  producers:{
-       cvn: @local::standard_sbndcvnevaluatorpm
+   cvn: @local::standard_sbndcvnevaluatorslc
  }
  
  filters:  {} 
@@ -53,7 +53,8 @@ outputs:
  {
    module_type: RootOutput
    dataTier: "reconstructed"
-   SelectEvents: [ reco ]
+   #SelectEvents: [ reco ]
+   fastCloning: true
    fileName: @local::sbnd_rootoutput.fileName
  } 
 }
