@@ -10,8 +10,8 @@ namespace lcvn
  class SBNDPixelMap : public PixelMap
  {
   public:
-    SBNDPixelMap(unsigned int nWire, unsigned int nTdc, const Boundary& bound): PixelMap::PixelMap(nWire, nTdc, bound) {std::cout << "============ Calling the function SBNDPixelMap::SBNDPixelMap() ==============\n";}
-    SBNDPixelMap(): PixelMap::PixelMap(){std::cout << "============ Calling the function SBNDPixelMap::SBNDPixelMap() ==============\n";}
+    SBNDPixelMap(unsigned int nWire, unsigned int nTdc, const Boundary& bound): PixelMap::PixelMap(nWire, nTdc, bound) {}
+    SBNDPixelMap(): PixelMap::PixelMap(){}
     int fSliceID = -9999;
  };	
 }

@@ -23,7 +23,7 @@ standard_cvnmapper:
   HitsModuleLabel:   "gaushit"
   ClusterPMLabel: "cvnmap"
   MinClusterHits: 100
-  verbose: true
+  verbose: false
   UseSlice: true
   SliceLabel: "pandora"
   PFParticleModuleLabel: "pandora"
@@ -118,6 +118,7 @@ standard_sbndtfnethandler:
   Outputs: ["flavour"]
   NInputs: 3
   NOutputs: 7
+  verbose: false
 }
 
 standard_sbndcvnevaluatorpm:
@@ -130,6 +131,7 @@ standard_sbndcvnevaluatorpm:
   PFParticleModuleLabel: ""
   T0Label: ""
   CVNType: "Tensorflow"
+  verbose: false
   SBNDTFHandler: {
     tool_type: SBNDTFNetHandler
     @table::standard_sbndtfnethandler
@@ -147,6 +149,7 @@ standard_sbndcvnevaluatorslc:
   PFParticleModuleLabel: "pandora"
   T0Label: "pandora"
   CVNType: "Tensorflow"
+  verbose: false
   SBNDTFHandler: {
     tool_type: SBNDTFNetHandler
     @table::standard_sbndtfnethandler
