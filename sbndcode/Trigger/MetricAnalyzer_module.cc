@@ -99,7 +99,8 @@ void sbndaq::MetricAnalyzer::analyze(art::Event const& e)
   _tdc_bes = -999999999;
 
   art::Handle<std::vector<sbnd::trigger::pmtSoftwareTrigger>> metricHandle;
-  e.getByLabel(fmetric_module_label,fmetric_instance_name,metricHandle);
+  if (fmetric_instance_name.empty()) e.getByLabel(fmetric_module_label,metricHandle);
+  else e.getByLabel(fmetric_module_label,fmetric_instance_name,metricHandle);
   if (!metricHandle.isValid() || metricHandle->size() == 0){
     std::cout << "No Metrics found" << std::endl;
     tree->Fill();
