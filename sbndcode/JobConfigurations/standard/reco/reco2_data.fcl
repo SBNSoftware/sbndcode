@@ -19,7 +19,7 @@ physics.producers:
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  crtclustering, crtspacepoints, crttracks ]
+  crtclustering, crtspacepoints, crttracks, cvn ]
 
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""

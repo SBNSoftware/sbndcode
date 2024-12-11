@@ -1,0 +1,23 @@
+<lcgdict>
+ <class name="std::pair< art::Ptr<recob::Slice>, art::Ptr<lcvn::PixelMap>>"/>
+ <class name="std::pair< art::Ptr<lcvn::PixelMap>, art::Ptr<recob::Slice>>"/>
+ <class name="art::Assns<recob::Slice, lcvn::PixelMap, void>"/>
+ <class name="art::Assns<lcvn::PixelMap, recob::Slice, void>"/>
+ <class name="art::Wrapper< art::Assns<recob::Slice, lcvn::PixelMap, void>>"/>
+ <class name="art::Wrapper< art::Assns<lcvn::PixelMap, recob::Slice, void>>"/>
+
+ <class name="std::pair< art::Ptr<lcvn::Result>, art::Ptr<lcvn::PixelMap>>"/>
+ <class name="std::pair< art::Ptr<lcvn::PixelMap>, art::Ptr<lcvn::Result>>"/>
+ <class name="art::Assns<lcvn::Result, lcvn::PixelMap, void>"/>
+ <class name="art::Assns<lcvn::PixelMap, lcvn::Result, void>"/>
+ <class name="art::Wrapper< art::Assns<lcvn::Result, lcvn::PixelMap, void>>"/>
+ <class name="art::Wrapper< art::Assns<lcvn::PixelMap, lcvn::Result, void>>"/>
+
+ <class name="std::pair< art::Ptr<lcvn::Result>, art::Ptr<recob::Slice>>"/>
+ <class name="std::pair< art::Ptr<recob::Slice>, art::Ptr<lcvn::Result>>"/>
+ <class name="art::Assns<lcvn::Result, recob::Slice, void>"/>
+ <class name="art::Assns<recob::Slice, lcvn::Result, void>"/>
+ <class name="art::Wrapper< art::Assns<lcvn::Result, recob::Slice, void>>"/>
+ <class name="art::Wrapper< art::Assns<recob::Slice, lcvn::Result, void>>"/>
+ 
+</lcgdict>
