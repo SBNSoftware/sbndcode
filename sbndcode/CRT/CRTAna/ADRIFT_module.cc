@@ -90,7 +90,8 @@ private:
   std::string fFEBDataModuleLabel, fCRTStripHitModuleLabel, fCRTClusterModuleLabel,
     fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTopSaveDirectory;
 
-  bool fOnly2HitSpacePoints, fSaveAllFits, fSaveBadFits, fSaveSubset, fTrackLA;
+  bool fOnly2HitSpacePoints, fSaveAllFits, fSaveBadFits, fSaveSubset, fTrackLA,
+    fSaveROOTHists;
 
   double fTrackAngleLimit, fPullWindow;
 
@@ -102,12 +103,12 @@ private:
   int _channel, _gdml_id, _mac5, _raw_channel, _tagger, _channel_status;
   double _area, _y_average, _ped_calib, _ped_fit, _ped_fit_chi2, _ped_peak,
     _ped_reset_fit, _ped_reset_fit_chi2, _ped_reset_peak, _sh_rate, _sp_rate, _tr_rate,
-    _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_peak, _sh_sat_ratio_total, _sh_sat_ratio_peak,
-    _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_peak, _sp_sat_ratio_total, _sp_sat_ratio_peak,
-    _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_peak, _tr_sat_ratio_total, _tr_sat_ratio_peak,
-    _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_peak, _tr_lim_angle_sat_ratio_total,
-    _tr_lim_angle_sat_ratio_peak, _sh_ped_to_peak_fit, _sh_ped_reset_to_peak_fit, _tr_by_length_peak_fit,
-    _tr_by_length_peak_fit_chi2, _tr_by_length_peak_peak;
+    _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_peak, _sh_sat_rate, _sh_sat_ratio_total, _sh_sat_ratio_peak,
+    _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_peak, _sp_sat_rate, _sp_sat_ratio_total, _sp_sat_ratio_peak,
+    _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_peak, _tr_sat_rate, _tr_sat_ratio_total, _tr_sat_ratio_peak,
+    _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_peak, _tr_lim_angle_sat_rate,
+    _tr_lim_angle_sat_ratio_total, _tr_lim_angle_sat_ratio_peak, _sh_ped_to_peak_fit, _sh_ped_reset_to_peak_fit,
+    _tr_by_length_peak_fit, _tr_by_length_peak_fit_chi2, _tr_by_length_peak_peak;
   bool _horizontal, _ped_fit_converged, _ped_reset_fit_converged, _sh_peak_fit_converged, _sp_peak_fit_converged,
     _tr_peak_fit_converged, _tr_lim_angle_peak_fit_converged, _tr_by_length_peak_fit_converged;
 
@@ -135,6 +136,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fSaveBadFits              = p.get<bool>("SaveBadFits");
   fSaveSubset               = p.get<bool>("SaveSubset");
   fTrackLA                  = p.get<bool>("TrackLA");
+  fSaveROOTHists            = p.get<bool>("SaveROOTHists");
   fTrackAngleLimit          = p.get<double>("TrackAngleLimit");
   fPullWindow               = p.get<double>("PullWindow");
 
@@ -166,6 +168,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree->Branch("sh_peak_fit_chi2", &_sh_peak_fit_chi2);
   fChannelTree->Branch("sh_peak_fit_converged", &_sh_peak_fit_converged);
   fChannelTree->Branch("sh_peak_peak", &_sh_peak_peak);
+  fChannelTree->Branch("sh_sat_rate", &_sh_sat_rate);
   fChannelTree->Branch("sh_sat_ratio_total", &_sh_sat_ratio_total);
   fChannelTree->Branch("sh_sat_ratio_peak", &_sh_sat_ratio_peak);
   fChannelTree->Branch("sh_ped_to_peak_fit", &_sh_ped_to_peak_fit);
@@ -174,12 +177,14 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree->Branch("sp_peak_fit_chi2", &_sp_peak_fit_chi2);
   fChannelTree->Branch("sp_peak_fit_converged", &_sp_peak_fit_converged);
   fChannelTree->Branch("sp_peak_peak", &_sp_peak_peak);
+  fChannelTree->Branch("sp_sat_rate", &_sp_sat_rate);
   fChannelTree->Branch("sp_sat_ratio_total", &_sp_sat_ratio_total);
   fChannelTree->Branch("sp_sat_ratio_peak", &_sp_sat_ratio_peak);
   fChannelTree->Branch("tr_peak_fit", &_tr_peak_fit);
   fChannelTree->Branch("tr_peak_fit_chi2", &_tr_peak_fit_chi2);
   fChannelTree->Branch("tr_peak_fit_converged", &_tr_peak_fit_converged);
   fChannelTree->Branch("tr_peak_peak", &_tr_peak_peak);
+  fChannelTree->Branch("tr_sat_rate", &_tr_sat_rate);
   fChannelTree->Branch("tr_sat_ratio_total", &_tr_sat_ratio_total);
   fChannelTree->Branch("tr_sat_ratio_peak", &_tr_sat_ratio_peak);
   fChannelTree->Branch("tr_by_length_peak_fit", &_tr_by_length_peak_fit);
@@ -192,21 +197,22 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
       fChannelTree->Branch("tr_lim_angle_peak_fit_chi2", &_tr_lim_angle_peak_fit_chi2);
       fChannelTree->Branch("tr_lim_angle_peak_fit_converged", &_tr_lim_angle_peak_fit_converged);
       fChannelTree->Branch("tr_lim_angle_peak_peak", &_tr_lim_angle_peak_peak);
+      fChannelTree->Branch("tr_lim_angle_sat_rate", &_tr_lim_angle_sat_rate);
       fChannelTree->Branch("tr_lim_angle_sat_ratio_total", &_tr_lim_angle_sat_ratio_total);
       fChannelTree->Branch("tr_lim_angle_sat_ratio_peak", &_tr_lim_angle_sat_ratio_peak);
     }
 
   for(int ch = 0; ch < 4480; ++ch)
     {
-      hADCPed[ch]        = new TH1D(Form("hADCPed_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
-      hADCPedReset[ch]   = new TH1D(Form("hADCPedReset_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
-      hADCSH[ch]         = new TH1D(Form("hADCSH_Channel%i", ch), ";ADC;Strip Hits", 4300, -.5, 4299.5);
-      hADCSP[ch]         = new TH1D(Form("hADCSP_Channel%i", ch), ";ADC;Space Points", 4300, -.5, 4299.5);
-      hADCTr[ch]         = new TH1D(Form("hADCTr_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
-      hADCTrByLength[ch] = new TH1D(Form("hADCTr_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
+      hADCPed[ch]        = fs->make<TH1D>(Form("hADCPed_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
+      hADCPedReset[ch]   = fs->make<TH1D>(Form("hADCPedReset_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
+      hADCSH[ch]         = fs->make<TH1D>(Form("hADCSH_Channel%i", ch), ";ADC;Strip Hits", 4300, -.5, 4299.5);
+      hADCSP[ch]         = fs->make<TH1D>(Form("hADCSP_Channel%i", ch), ";ADC;Space Points", 4300, -.5, 4299.5);
+      hADCTr[ch]         = fs->make<TH1D>(Form("hADCTr_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
+      hADCTrByLength[ch] = fs->make<TH1D>(Form("hADCTrByLength_Channel%i", ch), ";ADC/Path Length;Tracks", 4300, -.5, 4299.5);
 
       if(fTrackLA)
-        hADCTrLA[ch] = new TH1D(Form("hADCTrLA_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
+        hADCTrLA[ch] = fs->make<TH1D>(Form("hADCTrLA_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
     }
 }
 
@@ -534,22 +540,26 @@ void sbnd::crt::ADRIFT::endJob()
             }
 
           const double sh_sat = Saturation(hADCSH[ch]);
+          _sh_sat_rate        = sh_sat / (fNEvents * fPullWindow);
           _sh_sat_ratio_total = sh_sat / hADCSH[ch]->GetEntries();
           _sh_sat_ratio_peak  = sh_sat / hADCSH[ch]->GetBinContent(hADCSH[ch]->FindBin(_sh_peak_peak));
 
           const double sp_sat = Saturation(hADCSP[ch]);
+          _sp_sat_rate        = sp_sat / (fNEvents * fPullWindow);
           _sp_sat_ratio_total = sp_sat / hADCSP[ch]->GetEntries();
           _sp_sat_ratio_peak  = sp_sat / hADCSP[ch]->GetBinContent(hADCSP[ch]->FindBin(_sp_peak_peak));
 
           if(_tagger != kBottomTagger)
             {
               const double tr_sat = Saturation(hADCTr[ch]);
+              _tr_sat_rate        = tr_sat / (fNEvents * fPullWindow);
               _tr_sat_ratio_total = tr_sat / hADCTr[ch]->GetEntries();
               _tr_sat_ratio_peak  = tr_sat / hADCTr[ch]->GetBinContent(hADCTr[ch]->FindBin(_tr_peak_peak));
 
               if(fTrackLA)
                 {
                   const double tr_lim_angle_sat = Saturation(hADCTrLA[ch]);
+                  _tr_lim_angle_sat_rate        = tr_lim_angle_sat / (fNEvents * fPullWindow);
                   _tr_lim_angle_sat_ratio_total = tr_lim_angle_sat / hADCTrLA[ch]->GetEntries();
                   _tr_lim_angle_sat_ratio_peak  = tr_lim_angle_sat / hADCTrLA[ch]->GetBinContent(hADCTrLA[ch]->FindBin(_tr_lim_angle_peak_peak));
                 }
@@ -758,6 +768,7 @@ void sbnd::crt::ADRIFT::ResetVars()
   _sh_peak_fit                  = std::numeric_limits<double>::lowest();
   _sh_peak_fit_chi2             = std::numeric_limits<double>::lowest();
   _sh_peak_peak                 = std::numeric_limits<double>::lowest();
+  _sh_sat_rate                  = std::numeric_limits<double>::lowest();
   _sh_sat_ratio_total           = std::numeric_limits<double>::lowest();
   _sh_sat_ratio_peak            = std::numeric_limits<double>::lowest();
   _sh_ped_to_peak_fit           = std::numeric_limits<double>::lowest();
@@ -765,11 +776,13 @@ void sbnd::crt::ADRIFT::ResetVars()
   _sp_peak_fit                  = std::numeric_limits<double>::lowest();
   _sp_peak_fit_chi2             = std::numeric_limits<double>::lowest();
   _sp_peak_peak                 = std::numeric_limits<double>::lowest();
+  _sp_sat_rate                  = std::numeric_limits<double>::lowest();
   _sp_sat_ratio_total           = std::numeric_limits<double>::lowest();
   _sp_sat_ratio_peak            = std::numeric_limits<double>::lowest();
   _tr_peak_fit                  = std::numeric_limits<double>::lowest();
   _tr_peak_fit_chi2             = std::numeric_limits<double>::lowest();
   _tr_peak_peak                 = std::numeric_limits<double>::lowest();
+  _tr_sat_rate                  = std::numeric_limits<double>::lowest();
   _tr_sat_ratio_total           = std::numeric_limits<double>::lowest();
   _tr_sat_ratio_peak            = std::numeric_limits<double>::lowest();
   _tr_by_length_peak_fit        = std::numeric_limits<double>::lowest();
@@ -778,6 +791,7 @@ void sbnd::crt::ADRIFT::ResetVars()
   _tr_lim_angle_peak_fit        = std::numeric_limits<double>::lowest();
   _tr_lim_angle_peak_fit_chi2   = std::numeric_limits<double>::lowest();
   _tr_lim_angle_peak_peak       = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_sat_rate        = std::numeric_limits<double>::lowest();
   _tr_lim_angle_sat_ratio_total = std::numeric_limits<double>::lowest();
   _tr_lim_angle_sat_ratio_peak  = std::numeric_limits<double>::lowest();
 
