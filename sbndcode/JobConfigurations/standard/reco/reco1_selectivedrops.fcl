@@ -1,0 +1,5 @@
+#include "standard_reco1_sbnd.fcl"
+
+outputs.out1.outputCommands: [
+    @sequence::sbnd_reco1_drops_selective
+]

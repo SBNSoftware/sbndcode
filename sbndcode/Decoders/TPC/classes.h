@@ -1,6 +1,7 @@
 #include "canvas/Persistency/Common/Wrapper.h"
 #include <vector>
 #include "sbndcode/Decoders/TPC/TPCDecodeAna.h"
+#include "sbndcode/Decoders/TPC/sbndntb.h"
 
 
 namespace {

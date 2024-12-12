@@ -200,7 +200,7 @@ void ToFProducer::produce(art::Event& evt)
      std::sort(trksps.begin(),trksps.end(),
      [](const art::Ptr<CRTSpacePoint>& a, const art::Ptr<CRTSpacePoint>& b)->bool
      { 
-        return a->Time() < b->Time(); 
+        return a->Ts1() < b->Ts1(); 
      });
      tracksps.push_back(trksps);
  } // Crt space points coming from are ordered on ascending order by looking into ts1_ns variable
@@ -218,7 +218,7 @@ void ToFProducer::produce(art::Event& evt)
  map<int, std::vector<int>> tof_op_tpc;
  
  for(auto const& crt : crtSPList){	 
-     if(!(crt->Time() >= fBeamLow &&  crt->Time()<= fBeamUp)) continue;
+     if(!(crt->Ts1() >= fBeamLow &&  crt->Ts1()<= fBeamUp)) continue;
      if(crt->PE() < fCRTSpacePointThresh) continue;
      
      bool frm_trk=false;
@@ -251,7 +251,7 @@ void ToFProducer::produce(art::Event& evt)
 	    if(hit->PE()<fHitPeThresh) continue;
 	    double thit = hit->PeakTime()*1e3-fOpDelay;
 	    
-	    if(abs(crt->Time()-thit)<fCoinWindow && hit->PE()>pehit_max){
+	    if(abs(crt->Ts1()-thit)<fCoinWindow && hit->PE()>pehit_max){
 	       pehit_max = hit->PE();
 	       ophit_index = hit.key();
 	       found_tof = true;
@@ -266,9 +266,9 @@ void ToFProducer::produce(art::Event& evt)
 	    
 	    else{
 		 sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
+		 new_tof.tof = crt->Ts1() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->Time();
+		 new_tof.crt_time = crt->Ts1();
 		 new_tof.pmt_time = opHitList[ophit_index]->PeakTime()*1e3-fOpDelay;
 		 //		 new_tof.crt_tagger = crt->tagger;
 		 new_tof.crt_sp_id = crt.key();
@@ -297,8 +297,8 @@ void ToFProducer::produce(art::Event& evt)
 	    if(hit->PE()<fHitPeThresh) continue;
 	    double thit = hit->PeakTime()*1e3-fOpDelay;
 	    
-	    if(abs(crt->Time()-thit)<fCoinWindow && abs(crt->Time()-thit)<ophit_minTOF){
-	       ophit_minTOF = abs(crt->Time()-thit);
+	    if(abs(crt->Ts1()-thit)<fCoinWindow && abs(crt->Ts1()-thit)<ophit_minTOF){
+	       ophit_minTOF = abs(crt->Ts1()-thit);
 	       ophit_index = hit.key();
 	       found_tof = true;
 	    }
@@ -312,9 +312,9 @@ void ToFProducer::produce(art::Event& evt)
 	    
 	    else{
 		 sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
+		 new_tof.tof = crt->Ts1() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->Time();
+		 new_tof.crt_time = crt->Ts1();
 		 new_tof.pmt_time = opHitList[ophit_index]->PeakTime()*1e3-fOpDelay;
 		 //		 new_tof.crt_tagger = crt->tagger;
 		 new_tof.crt_sp_id = crt.key();
@@ -348,7 +348,7 @@ void ToFProducer::produce(art::Event& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->Time()*1e3-fOpDelay;
-		if(abs(crt->Time()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
+		if(abs(crt->Ts1()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
 		   peflash_max=flash->TotalPE();
 		   opflash_index = flash.key();	
 		   found_tof = true;
@@ -366,9 +366,9 @@ void ToFProducer::produce(art::Event& evt)
 	    
 	    else{
 	         sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->Time() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
+		 new_tof.tof = crt->Ts1() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->Time();
+		 new_tof.crt_time = crt->Ts1();
 		 new_tof.pmt_time = opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay;
 		 //		 new_tof.crt_tagger = crt->tagger;
 		 new_tof.crt_sp_id = crt.key();
@@ -403,8 +403,8 @@ void ToFProducer::produce(art::Event& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->Time()*1e3-fOpDelay;
-		if(abs(crt->Time()-tflash)<fCoinWindow && abs(crt->Time()-tflash)<flash_minTOF){
-		   flash_minTOF= abs(crt->Time()-tflash);
+		if(abs(crt->Ts1()-tflash)<fCoinWindow && abs(crt->Ts1()-tflash)<flash_minTOF){
+		   flash_minTOF= abs(crt->Ts1()-tflash);
 		   opflash_index = flash.key();	
 		   found_tof = true;
 		   flash_tpc = flashList.first;
@@ -421,9 +421,9 @@ void ToFProducer::produce(art::Event& evt)
 	    
 	    else{
 	         sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->Time() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
+		 new_tof.tof = crt->Ts1() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->Time();
+		 new_tof.crt_time = crt->Ts1();
 		 new_tof.pmt_time = opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay;
 		 //		 new_tof.crt_tagger = crt->tagger;
 		 new_tof.crt_sp_id = crt.key();
@@ -465,7 +465,7 @@ void ToFProducer::produce(art::Event& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->AbsTime()*1e3-fOpDelay;
-		if(abs(crt->Time()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
+		if(abs(crt->Ts1()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
 		   peflash_max=flash->TotalPE();
 		   opflash_index = flash.key();	
 		   found_tof = true;
@@ -493,9 +493,9 @@ void ToFProducer::produce(art::Event& evt)
 	    
 	    else{
 	         sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
+		 new_tof.tof = crt->Ts1() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->Time();
+		 new_tof.crt_time = crt->Ts1();
 		 new_tof.pmt_time = opHitList[ophit_index]->PeakTime()*1e3-fOpDelay;
 		 //		 new_tof.crt_tagger = crt->tagger;
 		 new_tof.crt_sp_id = crt.key();
@@ -538,8 +538,8 @@ void ToFProducer::produce(art::Event& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->Time()*1e3-fOpDelay;
-		if(abs(crt->Time()-tflash)<fCoinWindow && abs(crt->Time()-tflash)<flash_minTOF){
-		   flash_minTOF= abs(crt->Time()-tflash);
+		if(abs(crt->Ts1()-tflash)<fCoinWindow && abs(crt->Ts1()-tflash)<flash_minTOF){
+		   flash_minTOF= abs(crt->Ts1()-tflash);
 		   opflash_index = flash.key();	
 		   found_tof = true;
 		   flash_tpc = flashList.first;
@@ -566,9 +566,9 @@ void ToFProducer::produce(art::Event& evt)
 	    
 	    else{
 	         sbnd::ToF::ToF new_tof;
-		 new_tof.tof = crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
+		 new_tof.tof = crt->Ts1() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay);
 		 new_tof.frm_hit = true;
-		 new_tof.crt_time = crt->Time();
+		 new_tof.crt_time = crt->Ts1();
 		 new_tof.pmt_time = opHitList[ophit_index]->PeakTime()*1e3-fOpDelay;
 		 //		 new_tof.crt_tagger = crt->tagger;
 		 new_tof.crt_sp_id = crt.key();
@@ -594,16 +594,16 @@ void ToFProducer::produce(art::Event& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
             for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    } 
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-	    new_tof.crt_time = tracksps[ele.first].front()->Time();
+	    new_tof.tof = tracksps[ele.first].front()->Ts1() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
+	    new_tof.crt_time = tracksps[ele.first].front()->Ts1();
 	    new_tof.pmt_time = tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay;
 	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
@@ -625,16 +625,16 @@ void ToFProducer::produce(art::Event& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
             for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    } 
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
-	    new_tof.crt_time = tracksps[ele.first].front()->Time();
+	    new_tof.tof = tracksps[ele.first].front()->Ts1() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay);
+	    new_tof.crt_time = tracksps[ele.first].front()->Ts1();
 	    new_tof.pmt_time = tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay;
 	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
@@ -656,16 +656,16 @@ void ToFProducer::produce(art::Event& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay); 
-	    new_tof.crt_time = tracksps[ele.first].front()->Time();
+	    new_tof.tof = tracksps[ele.first].front()->Ts1() - (tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay); 
+	    new_tof.crt_time = tracksps[ele.first].front()->Ts1();
 	    new_tof.pmt_time = tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay;
 	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
@@ -688,16 +688,16 @@ void ToFProducer::produce(art::Event& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay); 
-	    new_tof.crt_time = tracksps[ele.first].front()->Time();
+	    new_tof.tof = tracksps[ele.first].front()->Ts1() - (tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay); 
+	    new_tof.crt_time = tracksps[ele.first].front()->Ts1();
 	    new_tof.pmt_time = tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay;
 	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
@@ -720,16 +720,16 @@ void ToFProducer::produce(art::Event& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay); 
-	    new_tof.crt_time = tracksps[ele.first].front()->Time();
+	    new_tof.tof = tracksps[ele.first].front()->Ts1() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay); 
+	    new_tof.crt_time = tracksps[ele.first].front()->Ts1();
 	    new_tof.pmt_time = tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay;
 	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
@@ -753,16 +753,16 @@ void ToFProducer::produce(art::Event& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
 	    sbnd::ToF::ToF new_tof;
-	    new_tof.tof = tracksps[ele.first].front()->Time() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay); 
-	    new_tof.crt_time = tracksps[ele.first].front()->Time();
+	    new_tof.tof = tracksps[ele.first].front()->Ts1() - (tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay); 
+	    new_tof.crt_time = tracksps[ele.first].front()->Ts1();
 	    new_tof.pmt_time = tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay;
 	    //	    new_tof.crt_tagger = tracksps[ele.first].front()->tagger;
 	    new_tof.frm_trk = true;
@@ -781,11 +781,11 @@ void ToFProducer::produce(art::Event& evt)
 
 bool ToFProducer::SpacePointCompare(const art::Ptr<CRTSpacePoint>& sp1, const art::Ptr<CRTSpacePoint>& sp2) {
 
-  if(sp1->Time()     != sp2->Time())     return false;
+  if(sp1->Ts1()      != sp2->Ts1())      return false;
   if(sp1->Pos()      != sp2->Pos())      return false;
   if(sp1->Err()      != sp2->Err())      return false;
   if(sp1->PE()       != sp2->PE())       return false;
-  if(sp1->TimeErr()  != sp2->TimeErr())  return false;
+  if(sp1->Ts1Err()   != sp2->Ts1Err())   return false;
   if(sp1->Complete() != sp2->Complete()) return false;
 
   return true;

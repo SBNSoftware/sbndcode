@@ -26,6 +26,7 @@ namespace sbnd::crt {
     fMinTPCTrackLength = config.MinTPCTrackLength();
     fTPCTrackLabel     = config.TPCTrackLabel();
     fSelectionMetric   = config.SelectionMetric();
+    fUseTs0            = config.UseTs0();
 
     return;
   }
@@ -117,7 +118,7 @@ namespace sbnd::crt {
         if(!TPCIntersection(tpcGeo, crtTrack, entry, exit))
           continue;
 
-        const double crtTime = crtTrack->Time() * 1e-3;
+        const double crtTime = fUseTs0 ? crtTrack->Ts0() * 1e-3 : crtTrack->Ts1() * 1e-3;
         const double shift = driftDirection * crtTime * detProp.DriftVelocity();
 
         geo::Point_t start = tpcTrack->Vertex();
@@ -163,7 +164,7 @@ namespace sbnd::crt {
 
     for(auto const &possCRTTrack : possCRTTracks)
       {
-        const double crtTime = possCRTTrack->Time() * 1e-3;
+        const double crtTime = fUseTs0 ? possCRTTrack->Ts0() * 1e-3 : possCRTTrack->Ts1() * 1e-3;
         const double shift   = driftDirection * crtTime * detProp.DriftVelocity();
         const double DCA     = AveDCABetweenTracks(tpcTrack, possCRTTrack, shift);
         const double angle   = AngleBetweenTracks(tpcTrack, possCRTTrack);
@@ -210,7 +211,7 @@ namespace sbnd::crt {
 
     for(auto const &possCRTTrack : possCRTTracks)
       {
-        const double crtTime = possCRTTrack->Time() * 1e-3;
+        const double crtTime = fUseTs0 ? possCRTTrack->Ts0() * 1e-3 : possCRTTrack->Ts1() * 1e-3;
         const double shift   = driftDirection * crtTime * detProp.DriftVelocity();
         const double DCA     = AveDCABetweenTracks(tpcTrack, possCRTTrack, shift);
         const double angle   = AngleBetweenTracks(tpcTrack, possCRTTrack);
@@ -253,7 +254,7 @@ namespace sbnd::crt {
 
     for(auto const &possCRTTrack : possCRTTracks)
       {
-        const double crtTime = possCRTTrack->Time() * 1e-3;
+        const double crtTime = fUseTs0 ? possCRTTrack->Ts0() * 1e-3 : possCRTTrack->Ts1() * 1e-3;
         const double shift   = driftDirection * crtTime * detProp.DriftVelocity();
         const double DCA     = AveDCABetweenTracks(tpcTrack, possCRTTrack, shift);
         const double angle   = AngleBetweenTracks(tpcTrack, possCRTTrack);

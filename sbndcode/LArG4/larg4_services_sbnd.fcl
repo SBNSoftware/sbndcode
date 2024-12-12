@@ -8,7 +8,7 @@ BEGIN_PROLOG
 #
 sbnd_physics_list_fastoptical:
 {
-  PhysicsListName: "SBN_QGSP_BERT_NNC"
+  PhysicsListName: "QGSP_BERT_HP"
   DumpList: true
   enableNeutronLimit: false
   NeutronTimeLimit: 0.0
@@ -71,6 +71,15 @@ sbnd_particle_list_action:
   KeepDroppedParticlesInVolumes: ["volTPCActive"]   # list of volumes for which we want to store particles that were dropped
                                                     # (i.e. particles that are not included in the standard list, mainly em shower
                                                     # daughters). Used for ml reco workflow.
+  
+  KeepParticlesInVolumes: ["volCryostat",           # Keep list of nominal mc particles that interact within the cryostat and CRTs
+     "volTaggerTopHigh", 
+     "volTaggerTopLow",
+     "volTaggerSideLeft", 
+     "volTaggerSideRight", 
+     "volTaggerFaceFront", 
+     "volTaggerFaceBack", 
+     "volTaggerBot"]
 }
 
 #

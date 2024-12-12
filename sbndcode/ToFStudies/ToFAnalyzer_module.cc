@@ -676,7 +676,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
      std::sort(trksps.begin(),trksps.end(),
      [](const art::Ptr<CRTSpacePoint>& a, const art::Ptr<CRTSpacePoint>& b)->bool
      { 
-       return a->Time() < b->Time(); 
+       return a->Ts1() < b->Ts1(); 
      });
      tracksps.push_back(trksps);
  } // Crt space points coming from are ordered on ascending order by looking into ts1_ns variable
@@ -721,7 +721,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 
    art::Ptr<sbnd::crt::CRTCluster> cluster = spToCluster.at(crt.key());
 
-     if(!(crt->Time() >= fBeamLow &&  crt->Time()<= fBeamUp)) continue;
+     if(!(crt->Ts1() >= fBeamLow &&  crt->Ts1()<= fBeamUp)) continue;
      if(crt->PE() < fCRTSpacePointThresh) continue;
      
      bool frm_trk=false;
@@ -764,7 +764,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                      auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
                      double dprop=(opDetPos - point).R();
 		     double tprop=pos.T() + dprop*LAR_PROP_DELAY;
-		     fTrue_TOF.push_back(crt->Time()-tprop);
+		     fTrue_TOF.push_back(crt->Ts1()-tprop);
 		     fTrue_TOF_hit.push_back(true);
 		     fTrue_TOF_pdg.push_back(particle->PdgCode());
 		     fTrue_TOF_part_ID.push_back(particle->TrackId());
@@ -790,7 +790,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                         auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
                         double dprop=(opDetPos - point).R();
 		         double tprop=pos.T() + dprop*LAR_PROP_DELAY;
-		         fTrue_TOF.push_back(crt->Time()-tprop);
+		         fTrue_TOF.push_back(crt->Ts1()-tprop);
 		         fTrue_TOF_hit.push_back(true);
 		         fTrue_TOF_pdg.push_back(particle->PdgCode());
 		         fTrue_TOF_part_ID.push_back(particle->TrackId());
@@ -831,7 +831,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    if(hit->PE()<fHitPeThresh) continue;
 	    double thit = hit->PeakTime()*1e3-fOpDelay;
 	    
-	    if(abs(crt->Time()-thit)<fCoinWindow && hit->PE()>pehit_max){
+	    if(abs(crt->Ts1()-thit)<fCoinWindow && hit->PE()>pehit_max){
 	       pehit_max = hit->PE();
 	       ophit_index = hit.key();
 	       found_tof = true;
@@ -845,12 +845,12 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	   }
 	   
 	   else{
-               fLhit_tof_vec.push_back(crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
+               fLhit_tof_vec.push_back(crt->Ts1() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
 	       fLhit_frmtrk_vec.push_back(false);
 	       fLhit_frmhit_vec.push_back(true);
 	       fLhit_crtspkey_vec.push_back(crt.key());
 	       fLhit_crttrkkey_vec.push_back(-9999);
-	       fLhit_crttime_t1_vec.push_back(crt->Time());
+	       fLhit_crttime_t1_vec.push_back(crt->Ts1());
 	       //	       fLhit_crttime_t0_vec.push_back(crt->ts0_ns);
 	       fLhit_crtpos_X_vec.push_back(crt->X());
 	       fLhit_crtpos_Y_vec.push_back(crt->Y());
@@ -887,8 +887,8 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    if(hit->PE()<fHitPeThresh) continue;
 	    double thit = hit->PeakTime()*1e3-fOpDelay;
 	    
-	    if(abs(crt->Time()-thit)<fCoinWindow && abs(crt->Time()-thit)<ophit_minTOF){
-	       ophit_minTOF = abs(crt->Time()-thit);
+	    if(abs(crt->Ts1()-thit)<fCoinWindow && abs(crt->Ts1()-thit)<ophit_minTOF){
+	       ophit_minTOF = abs(crt->Ts1()-thit);
 	       ophit_index = hit.key();
 	       found_tof = true;
 	    }
@@ -901,12 +901,12 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	   }
 	   
 	   else{
-	       fChit_tof_vec.push_back(crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
+	       fChit_tof_vec.push_back(crt->Ts1() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
 	       fChit_frmtrk_vec.push_back(false);
 	       fChit_frmhit_vec.push_back(true);
 	       fChit_crtspkey_vec.push_back(crt.key());
 	       fChit_crttrkkey_vec.push_back(-9999);
-	       fChit_crttime_t1_vec.push_back(crt->Time());
+	       fChit_crttime_t1_vec.push_back(crt->Ts1());
 	       //	       fChit_crttime_t0_vec.push_back(crt->ts0_ns);
 	       fChit_crtpos_X_vec.push_back(crt->X());
 	       fChit_crtpos_Y_vec.push_back(crt->Y());
@@ -947,7 +947,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->AbsTime()*1e3-fOpDelay;
-		if(abs(crt->Time()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
+		if(abs(crt->Ts1()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
 		   peflash_max=flash->TotalPE();
 		   opflash_index = flash.key();	
 		   found_tof = true;
@@ -963,12 +963,12 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	      Lflsh_tof_op_tpc[index].push_back(flash_tpc);
 	   }
 	   else{
-	       fLflsh_tof_vec.push_back(crt->Time() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay));
+	       fLflsh_tof_vec.push_back(crt->Ts1() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay));
 	       fLflsh_frmtrk_vec.push_back(false);
 	       fLflsh_frmhit_vec.push_back(true);
 	       fLflsh_crtspkey_vec.push_back(crt.key());
 	       fLflsh_crttrkkey_vec.push_back(-9999);
-	       fLflsh_crttime_t1_vec.push_back(crt->Time());
+	       fLflsh_crttime_t1_vec.push_back(crt->Ts1());
 	       //	       fLflsh_crttime_t0_vec.push_back(crt->ts0_ns);
 	       fLflsh_crtpos_X_vec.push_back(crt->X());
 	       fLflsh_crtpos_Y_vec.push_back(crt->Y());
@@ -1008,8 +1008,8 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->Time()*1e3-fOpDelay;
-		if(abs(crt->Time()-tflash)<fCoinWindow && abs(crt->Time()-tflash)<flash_minTOF){
-		   flash_minTOF= abs(crt->Time()-tflash);
+		if(abs(crt->Ts1()-tflash)<fCoinWindow && abs(crt->Ts1()-tflash)<flash_minTOF){
+		   flash_minTOF= abs(crt->Ts1()-tflash);
 		   opflash_index = flash.key();	
 		   found_tof = true;
 		   flash_tpc = flashList.first;
@@ -1024,12 +1024,12 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	      Cflsh_tof_op_tpc[index].push_back(flash_tpc);
 	   }
 	   else{
-	       fCflsh_tof_vec.push_back(crt->Time() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay));
+	       fCflsh_tof_vec.push_back(crt->Ts1() - (opFlashLists[flash_tpc][opflash_index]->Time()*1e3-fOpDelay));
 	       fCflsh_frmtrk_vec.push_back(false);
 	       fCflsh_frmhit_vec.push_back(true);
 	       fCflsh_crtspkey_vec.push_back(crt.key());
 	       fCflsh_crttrkkey_vec.push_back(-9999);
-	       fCflsh_crttime_t1_vec.push_back(crt->Time());
+	       fCflsh_crttime_t1_vec.push_back(crt->Ts1());
 	       //	       fCflsh_crttime_t0_vec.push_back(crt->ts0_ns);
 	       fCflsh_crtpos_X_vec.push_back(crt->X());
 	       fCflsh_crtpos_Y_vec.push_back(crt->Y());
@@ -1076,7 +1076,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->AbsTime()*1e3-fOpDelay;
-		if(abs(crt->Time()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
+		if(abs(crt->Ts1()-tflash)<fCoinWindow && flash->TotalPE()>peflash_max){
 		   peflash_max=flash->TotalPE();
 		   opflash_index = flash.key();	
 		   found_tof = true;
@@ -1103,12 +1103,12 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    }
 	    
 	    else{
-	         fLflshhit_tof_vec.push_back(crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
+	         fLflshhit_tof_vec.push_back(crt->Ts1() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
 		 fLflshhit_frmtrk_vec.push_back(false);
                  fLflshhit_frmhit_vec.push_back(true);   
 		 fLflshhit_crtspkey_vec.push_back(crt.key());
                  fLflshhit_crttrkkey_vec.push_back(-9999);
-                 fLflshhit_crttime_t1_vec.push_back(crt->Time());
+                 fLflshhit_crttime_t1_vec.push_back(crt->Ts1());
 		 //                 fLflshhit_crttime_t0_vec.push_back(crt->ts0_ns);
                  fLflshhit_crtpos_X_vec.push_back(crt->X());
                  fLflshhit_crtpos_Y_vec.push_back(crt->Y());
@@ -1158,8 +1158,8 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	        auto const& flash = flashList.second[iflash];
 		if(flash->TotalPE()<fFlashPeThresh) continue;
 		double tflash = flash->AbsTime()*1e3-fOpDelay;
-		if(abs(crt->Time()-tflash)<fCoinWindow && abs(crt->Time()-tflash)<flash_minTOF){
-		   flash_minTOF= abs(crt->Time()-tflash);
+		if(abs(crt->Ts1()-tflash)<fCoinWindow && abs(crt->Ts1()-tflash)<flash_minTOF){
+		   flash_minTOF= abs(crt->Ts1()-tflash);
 		   opflash_index = flash.key();	
 		   found_tof = true;
 		   flash_tpc = flashList.first;
@@ -1185,12 +1185,12 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    }
 	    
 	    else{
-	         fCflshhit_tof_vec.push_back(crt->Time() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
+	         fCflshhit_tof_vec.push_back(crt->Ts1() - (opHitList[ophit_index]->PeakTime()*1e3-fOpDelay));
 		 fCflshhit_frmtrk_vec.push_back(false);
                  fCflshhit_frmhit_vec.push_back(true);   
 		 fCflshhit_crtspkey_vec.push_back(crt.key());
                  fCflshhit_crttrkkey_vec.push_back(-9999);
-                 fCflshhit_crttime_t1_vec.push_back(crt->Time());
+                 fCflshhit_crttime_t1_vec.push_back(crt->Ts1());
 		 //                 fCflshhit_crttime_t0_vec.push_back(crt->ts0_ns);
                  fCflshhit_crtpos_X_vec.push_back(crt->X());
                  fCflshhit_crtpos_Y_vec.push_back(crt->Y());
@@ -1224,19 +1224,19 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
             for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    } 
 	    
-	    fLhit_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Lhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
+	    fLhit_tof_vec.push_back(tracksps[ele.first].front()->Ts1() - (Lhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
 	    fLhit_frmtrk_vec.push_back(true);
 	    fLhit_frmhit_vec.push_back(false);
 	    fLhit_crtspkey_vec.push_back(tracksps[ele.first].front().key());
 	    fLhit_crttrkkey_vec.push_back(ele.first);
-	    fLhit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    fLhit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Ts1());
 	    //	    fLhit_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
 	    fLhit_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
 	    fLhit_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
@@ -1266,19 +1266,19 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
             for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    } 
 	    
-	    fChit_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Chit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
+	    fChit_tof_vec.push_back(tracksps[ele.first].front()->Ts1() - (Chit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
 	    fChit_frmtrk_vec.push_back(true);
 	    fChit_frmhit_vec.push_back(false);
 	    fChit_crtspkey_vec.push_back(tracksps[ele.first].front().key());
 	    fChit_crttrkkey_vec.push_back(ele.first);
-	    fChit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    fChit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Ts1());
 	    //	    fChit_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
 	    fChit_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
 	    fChit_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
@@ -1308,19 +1308,19 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
-	    fLflsh_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Lflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay));
+	    fLflsh_tof_vec.push_back(tracksps[ele.first].front()->Ts1() - (Lflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay));
 	    fLflsh_frmtrk_vec.push_back(true);
 	    fLflsh_frmhit_vec.push_back(false);
 	    fLflsh_crtspkey_vec.push_back(tracksps[ele.first].front().key());
 	    fLflsh_crttrkkey_vec.push_back(ele.first);
-	    fLflsh_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    fLflsh_crttime_t1_vec.push_back(tracksps[ele.first].front()->Ts1());
 	    //	    fLflsh_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
 	    fLflsh_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
 	    fLflsh_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
@@ -1349,19 +1349,19 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
-	    fCflsh_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Cflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay));
+	    fCflsh_tof_vec.push_back(tracksps[ele.first].front()->Ts1() - (Cflsh_tof_op_flashes[ele.first][min_index]->Time()*1e3-fOpDelay));
 	    fCflsh_frmtrk_vec.push_back(true);
 	    fCflsh_frmhit_vec.push_back(false);
 	    fCflsh_crtspkey_vec.push_back(tracksps[ele.first].front().key());
 	    fCflsh_crttrkkey_vec.push_back(ele.first);
-	    fCflsh_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    fCflsh_crttime_t1_vec.push_back(tracksps[ele.first].front()->Ts1());
 	    //	    fCflsh_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
 	    fCflsh_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
 	    fCflsh_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
@@ -1390,19 +1390,19 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
-	    fLflshhit_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Lflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
+	    fLflshhit_tof_vec.push_back(tracksps[ele.first].front()->Ts1() - (Lflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
             fLflshhit_frmtrk_vec.push_back(true);
             fLflshhit_frmhit_vec.push_back(false);   
             fLflshhit_crtspkey_vec.push_back(tracksps[ele.first].front().key());
             fLflshhit_crttrkkey_vec.push_back(ele.first);
-	    fLflshhit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+	    fLflshhit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Ts1());
 	    //            fLflshhit_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
             fLflshhit_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
             fLflshhit_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
@@ -1434,19 +1434,19 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
 	    }
 	    
-	    fCflshhit_tof_vec.push_back(tracksps[ele.first].front()->Time() - (Cflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
+	    fCflshhit_tof_vec.push_back(tracksps[ele.first].front()->Ts1() - (Cflshhit_tof_op_hits[ele.first][min_index]->PeakTime()*1e3-fOpDelay));
             fCflshhit_frmtrk_vec.push_back(true);
             fCflshhit_frmhit_vec.push_back(false);   
             fCflshhit_crtspkey_vec.push_back(tracksps[ele.first].front().key());
             fCflshhit_crttrkkey_vec.push_back(ele.first);
-            fCflshhit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Time());
+            fCflshhit_crttime_t1_vec.push_back(tracksps[ele.first].front()->Ts1());
 	    //            fCflshhit_crttime_t0_vec.push_back(tracksps[ele.first].front()->ts0_ns);
             fCflshhit_crtpos_X_vec.push_back(tracksps[ele.first].front()->X());
             fCflshhit_crtpos_Y_vec.push_back(tracksps[ele.first].front()->Y());
@@ -1479,8 +1479,8 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 	    int all_index = 0;
 	    int min_index = 0;  
 	    for (auto const& hit:  ele.second){
-		  if(hit->Time() < min_time){ 
-	            min_time = hit->Time();
+		  if(hit->Ts1() < min_time){ 
+	            min_time = hit->Ts1();
 		    min_index = all_index;
 		 }
 		 all_index++;
@@ -1494,7 +1494,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                    auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
                    double dprop=(opDetPos - point).R();
 		   double tprop=pos.T() + dprop*LAR_PROP_DELAY;
-		   fTrue_TOF.push_back(tracksps[ele.first].front()->Time()-tprop);
+		   fTrue_TOF.push_back(tracksps[ele.first].front()->Ts1()-tprop);
 		   fTrue_TOF_hit.push_back(false);
 		   fTrue_TOF_pdg.push_back(True_tof_sim_particles[ele.first][min_index]->PdgCode());
 		   fTrue_TOF_part_ID.push_back(True_tof_sim_particles[ele.first][min_index]->TrackId());
@@ -1520,7 +1520,7 @@ void ToFAnalyzer::analyze(art::Event const& evt)
                          auto const opDetPos = cryo0.OpDet(cryo0.GetClosestOpDet(point)).GetCenter();
                          double dprop=(opDetPos - point).R();
 		         double tprop=pos.T() + dprop*LAR_PROP_DELAY;
-		         fTrue_TOF.push_back(tracksps[ele.first].front()->Time()-tprop);
+		         fTrue_TOF.push_back(tracksps[ele.first].front()->Ts1()-tprop);
 		         fTrue_TOF_hit.push_back(false);
 		         fTrue_TOF_pdg.push_back(True_tof_sim_particles[ele.first][min_index]->PdgCode());
 		         fTrue_TOF_part_ID.push_back(True_tof_sim_particles[ele.first][min_index]->TrackId());
@@ -1548,11 +1548,11 @@ void ToFAnalyzer::analyze(art::Event const& evt)
 
 //==========================================================================================
 bool ToFAnalyzer::SpacePointCompare(const art::Ptr<CRTSpacePoint>& sp1, const art::Ptr<CRTSpacePoint>& sp2) {
-     if(sp1->Time()     != sp2->Time())     return false;
+     if(sp1->Ts1()      != sp2->Ts1())      return false;
      if(sp1->Pos()      != sp2->Pos())      return false;
      if(sp1->Err()      != sp2->Err())      return false;
      if(sp1->PE()       != sp2->PE())       return false;
-     if(sp1->TimeErr()  != sp2->TimeErr())  return false;
+     if(sp1->Ts1Err()   != sp2->Ts1Err())   return false;
      if(sp1->Complete() != sp2->Complete()) return false;
 
      return true;

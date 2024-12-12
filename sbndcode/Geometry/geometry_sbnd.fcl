@@ -53,8 +53,8 @@
 
 BEGIN_PROLOG
 
-sbnd_geometry_file: "sbnd_v02_00.gdml"
-sbnd_geometry_file_nowires: "sbnd_v02_00_nowires.gdml"
+sbnd_geometry_file: "sbnd_v02_02.gdml"
+sbnd_geometry_file_nowires: "sbnd_v02_02_nowires.gdml"
 
 
 #
