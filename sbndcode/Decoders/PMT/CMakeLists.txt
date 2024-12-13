@@ -15,9 +15,6 @@ cet_build_plugin( SBNDPMTDecoder art::module
     ROOT::Tree
 )
 
-art_dictionary(DICTIONARY_LIBRARIES 
-                lardataobj::RawData)
-
 install_fhicl()
 install_headers()
 install_source()
