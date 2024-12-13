@@ -29,10 +29,11 @@
 # modules
 #
 
-#include "wcsimsp_sbnd.fcl"
+# include "wcsimsp_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
 #include "opdetdigitizer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
+#include "wirecell_sim_rawdigits_sp.fcl"
 
 
 process_name: DetSim

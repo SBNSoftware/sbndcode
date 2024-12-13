@@ -5,3 +5,19 @@
 #include "standard_reco1_sbnd.fcl"
 
 physics.superaana: [superampvmpr]
+
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane0:              @local::candhitfinder_standard
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane0.Plane:        0
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane0.RoiThreshold: 10.
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane1:              @local::candhitfinder_standard
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane1.Plane:        1
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane1.RoiThreshold: 10.
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane2:              @local::candhitfinder_standard
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane2.Plane:        2
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane2.RoiThreshold: 10.
+
+physics.producers.gaushit.MaxMultiHit:                                       5
+physics.producers.gaushit.TryNplus1Fits:                                     false
+physics.producers.gaushit.PeakFitter.MinWidth:                               1
+physics.producers.gaushit.PeakFitter.FloatBaseline:                          false
+physics.producers.gaushit.PeakFitter.tool_type:                              "PeakFitterMrqdt"
