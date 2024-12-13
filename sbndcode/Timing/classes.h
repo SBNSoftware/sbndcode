@@ -7,7 +7,7 @@
 #include "canvas/Persistency/Common/Assns.h"
 
 //local includes
-#include "sbndcode/Decoders/PMT/sbndpmt.h"
+#include "sbndcode/Timing/SBNDRawTimingObj.h"
 
 //larsoft includes
 #include "lardataobj/RawData/OpDetWaveform.h"
