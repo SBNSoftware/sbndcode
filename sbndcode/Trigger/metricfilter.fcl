@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+metricfilter_sbnd:
+{
+ module_type:         "MetricFilter"
+ metric_module_label: "pmtmetricproducer"
+ ftime_min: 0
+ ftime_max: 3
+ pe_thresh: 50
+}
+
+END_PROLOG
