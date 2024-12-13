@@ -7,18 +7,17 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#ifndef  sbndpmt_H
-#define  sbndpmt_H
+#ifndef  sbndtiming_H
+#define  sbndtiming_H
 
 #include <stdint.h>
 #include <vector>
 
 namespace raw {
-  namespace pmt {
-    class eventTimingInfo {
+    class TimingReferenceInfo {
       public:
-        eventTimingInfo() {}; // constructor
-        eventTimingInfo(uint16_t timingType, 
+        TimingReferenceInfo() {}; // constructor
+        TimingReferenceInfo(uint16_t timingType, 
                         uint16_t timingChannel) :
         timingType(timingType), timingChannel(timingChannel) {};
     
@@ -26,11 +25,12 @@ namespace raw {
         uint16_t timingChannel; // e.g. TDC ETRIG = 4; PTB BNB Beam+Light = 2
     };
 
-    class boardTimingInfo {
+  namespace pmt {
+    class BoardTimingInfo {
       // Associate one of these to every opdetwaveform in the board/digitizer, one per trigger
       public:
-        boardTimingInfo() {}; // constructor
-        boardTimingInfo(uint16_t postPercent, 
+        BoardTimingInfo() {}; // constructor
+        BoardTimingInfo(uint16_t postPercent, 
                         std::vector<uint32_t> &triggerTimeTag) :
         postPercent(postPercent), triggerTimeTag(triggerTimeTag) {};
 

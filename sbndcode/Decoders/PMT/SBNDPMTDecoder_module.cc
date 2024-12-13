@@ -31,7 +31,7 @@
 #include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
-#include "sbndcode/Decoders/PMT/sbndpmt.h"
+#include "sbndcode/Timing/SBNDRawTimingObj.h"
 
 #include "art_root_io/TFileService.h"
 #include "TH1D.h"
@@ -185,11 +185,11 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     produces< std::vector< raw::OpDetWaveform > >(fflt_instance_name);
     produces< std::vector< raw::OpDetWaveform > >(ftim_instance_name);
 
-    produces< raw::pmt::eventTimingInfo >();
-    produces< std::vector< raw::pmt::boardTimingInfo > >();
-    produces< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform > >(fpmt_timing_instance_name);
-    produces< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform > >(fflt_timing_instance_name);
-    produces< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform > >(ftim_timing_instance_name);
+    produces< raw::TimingReferenceInfo >();
+    produces< std::vector< raw::pmt::BoardTimingInfo > >();
+    produces< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform > >(fpmt_timing_instance_name);
+    produces< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform > >(fflt_timing_instance_name);
+    produces< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform > >(ftim_timing_instance_name);
 }
 
 void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
@@ -199,20 +199,20 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     std::unique_ptr< std::vector< raw::OpDetWaveform > > fltwvfmVec (new std::vector< raw::OpDetWaveform >);
     std::unique_ptr< std::vector< raw::OpDetWaveform > > timwvfmVec (new std::vector< raw::OpDetWaveform >);
 
-    std::unique_ptr< raw::pmt::eventTimingInfo > evtTimingInfo (new raw::pmt::eventTimingInfo());
-    std::unique_ptr< std::vector< raw::pmt::boardTimingInfo > > brdTimingInfoVec (new std::vector< raw::pmt::boardTimingInfo >);
+    std::unique_ptr< raw::TimingReferenceInfo > evtTimingInfo (new raw::TimingReferenceInfo());
+    std::unique_ptr< std::vector< raw::pmt::BoardTimingInfo > > brdTimingInfoVec (new std::vector< raw::pmt::BoardTimingInfo >);
 
     // creating PtrMakers for the associations
-    art::PtrMaker<raw::pmt::boardTimingInfo> make_pmtbrd_ptr{evt};
+    art::PtrMaker<raw::pmt::BoardTimingInfo> make_pmtbrd_ptr{evt};
 
     art::PtrMaker<raw::OpDetWaveform> make_pmtwvfm_ptr{evt,fpmt_instance_name};
     art::PtrMaker<raw::OpDetWaveform> make_fltwvfm_ptr{evt,fflt_instance_name};
     art::PtrMaker<raw::OpDetWaveform> make_timwvfm_ptr{evt,ftim_instance_name};
 
     // making the associations
-    std::unique_ptr< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform> > pmtTimingAssns (new art::Assns< raw::pmt::boardTimingInfo, raw::OpDetWaveform >);
-    std::unique_ptr< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform> > fltTimingAssns (new art::Assns< raw::pmt::boardTimingInfo, raw::OpDetWaveform >);
-    std::unique_ptr< art::Assns<  raw::pmt::boardTimingInfo, raw::OpDetWaveform> > timTimingAssns (new art::Assns< raw::pmt::boardTimingInfo, raw::OpDetWaveform >);
+    std::unique_ptr< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform> > pmtTimingAssns (new art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform >);
+    std::unique_ptr< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform> > fltTimingAssns (new art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform >);
+    std::unique_ptr< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform> > timTimingAssns (new art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform >);
 
     evt_counter++;
 
@@ -465,7 +465,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         auto extensions_used  = 0;
 
         for (size_t itrig=0; itrig < frag_v.size(); itrig++){
-            raw::pmt::boardTimingInfo board_info;
+            raw::pmt::BoardTimingInfo board_info;
             std::vector<uint32_t> board_ttt_v; 
             std::vector<std::vector<uint16_t>> iwvfm_v;
             auto ifrag = frag_v.at(itrig);
@@ -496,7 +496,6 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             if (fdebug>2){
                 std::cout << "      Board: " << fragid
                           << ", ttt: " << ittt
-                          << ", tick: " << itick
                           << ", frag ts: " << ifrag.timestamp()%uint(1e9)
                           << ", length: " << ilen
                           << std::endl;
@@ -522,6 +521,13 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                         }
                     }
                     if (length_check && ttt_check){
+                        if (fdebug>3){
+                        std::cout << "      Board: " << fragid
+                          << ", ttt: " << jttt
+                          << ", frag ts: " << jfrag.timestamp()%uint(1e9)
+                          << ", length: " << jlen
+                          << std::endl;
+                        }
                         extensions_used++;
                         board_ttt_v.push_back(jttt);
                         std::vector<std::vector<uint16_t>> jwvfm_v;
@@ -531,6 +537,7 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                             std::vector<uint16_t>  extd_wvfm = jwvfm_v.at(ich); // extended waveform 
                             orig_wvfm.insert( orig_wvfm.end(), extd_wvfm.begin(), extd_wvfm.end());
                         } // end ch loop
+                    
                     } // end if extension condition
                     else break; // if the immediate next trigger is not an extension, break
                     iwvfm_end = jttt;
@@ -539,12 +546,12 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     std::cout << "      Board: " << fragid
                               << " -> start time: " << int(iwvfm_start) - int(event_trigger_time)
                               << " , extended wvfm length: " << iwvfm_v.at(0).size()
-                              << std::endl; 
+                              << std::endl;
                 }
             } // end extended flag
             board_info.triggerTimeTag = board_ttt_v;
             brdTimingInfoVec->push_back(board_info);
-            art::Ptr<raw::pmt::boardTimingInfo> brdTimingInfoPtr = make_pmtbrd_ptr(brdTimingInfoVec->size()-1);
+            art::Ptr<raw::pmt::BoardTimingInfo> brdTimingInfoPtr = make_pmtbrd_ptr(brdTimingInfoVec->size()-1);
 
             for (size_t i = 0; i < iwvfm_v.size(); i++){
                 auto combined_wvfm = iwvfm_v[i];
@@ -577,7 +584,6 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 else
                     ch = fch_map.at(fragid*15 + i);
                 raw::OpDetWaveform waveform(time_diff, ch, combined_wvfm);
-
                 if ((i == 15) && (foutput_ftrig_wvfm)){
                     fltwvfmVec->push_back(waveform);
                     art::Ptr<raw::OpDetWaveform> wvfmPtr = make_fltwvfm_ptr(fltwvfmVec->size()-1);
