@@ -208,18 +208,21 @@ private:
   std::vector<double> _crt_space_point_x;           ///< CRT SpacePoint x
   std::vector<double> _crt_space_point_y;           ///< CRT SpacePoint y
   std::vector<double> _crt_space_point_z;           ///< CRT SpacePoint z
-  std::vector<double> _crt_space_point_time;        ///< CRT SpacePoint time
+  std::vector<double> _crt_space_point_t0;          ///< CRT SpacePoint t0
+  std::vector<double> _crt_space_point_t1;          ///< CRT SpacePoint t1
   std::vector<double> _crt_space_point_x_err;       ///< CRT SpacePoint x error
   std::vector<double> _crt_space_point_y_err;       ///< CRT SpacePoint y error
   std::vector<double> _crt_space_point_z_err;       ///< CRT SpacePoint z error
-  std::vector<double> _crt_space_point_time_err;    ///< CRT SpacePoint time error
+  std::vector<double> _crt_space_point_t0_err;      ///< CRT SpacePoint t0 error
+  std::vector<double> _crt_space_point_t1_err;      ///< CRT SpacePoint t1 error
   std::vector<double> _crt_space_point_pe;          ///< CRT SpacePoint PE
   std::vector<int> _crt_space_point_tagger;         ///< CRT SpacePoint tagger enum
   std::vector<int> _crt_space_point_nhits;          ///< CRT SpacePoint nhits
 
   // CRT track variables
-  uint _n_crt_tracks;                            ///< Number of CRT tracks
-  std::vector<double> _crt_track_time;         ///< CRT track time
+  uint _n_crt_tracks;                          ///< Number of CRT tracks
+  std::vector<double> _crt_track_t0;           ///< CRT track t0
+  std::vector<double> _crt_track_t1;           ///< CRT track t1
   std::vector<double> _crt_track_pes;          ///< CRT track PEs
   std::vector<double> _crt_track_x1;           ///< CRT track x1
   std::vector<double> _crt_track_y1;           ///< CRT track y1
@@ -581,9 +584,11 @@ void Hitdumper::analyze(const art::Event& evt)
     art::fill_ptr_vector(crtStripHitVector, crtStripHitHandle);
     _n_crt_strip_hits = crtStripHitVector.size();
   }
-  else
+  else {
     std::cout << "Failed to get sbnd::crt::CRTStripHit data product ("<<fCRTStripHitModuleLabel<<")." << std::endl;
-
+    _n_crt_strip_hits = 0;
+  }
+  
   if (_n_crt_strip_hits > _max_crt_strip_hits) _n_crt_strip_hits = _max_crt_strip_hits;
 
   ResetCRTStripHitVars();
@@ -641,11 +646,13 @@ void Hitdumper::analyze(const art::Event& evt)
       _crt_space_point_x.push_back(spacePoint->X());
       _crt_space_point_y.push_back(spacePoint->Y());
       _crt_space_point_z.push_back(spacePoint->Z());
-      _crt_space_point_time.push_back(spacePoint->Time());
+      _crt_space_point_t0.push_back(spacePoint->Ts0());
+      _crt_space_point_t1.push_back(spacePoint->Ts1());
       _crt_space_point_x_err.push_back(spacePoint->XErr());
       _crt_space_point_y_err.push_back(spacePoint->YErr());
       _crt_space_point_z_err.push_back(spacePoint->ZErr());
-      _crt_space_point_time_err.push_back(spacePoint->TimeErr());
+      _crt_space_point_t0_err.push_back(spacePoint->Ts0Err());
+      _crt_space_point_t1_err.push_back(spacePoint->Ts1Err());
       _crt_space_point_pe.push_back(spacePoint->PE());
       _crt_space_point_tagger.push_back(cluster->Tagger());
       _crt_space_point_nhits.push_back(cluster->NHits());
@@ -672,7 +679,8 @@ void Hitdumper::analyze(const art::Event& evt)
       for (uint i = 0; i < _n_crt_tracks; ++i){
         const art::Ptr<sbnd::crt::CRTTrack> crttrack=ctrklist[i];
         _crt_track_pes.push_back(crttrack->PE());
-        _crt_track_time.push_back(crttrack->Time());
+        _crt_track_t0.push_back(crttrack->Ts0());
+        _crt_track_t1.push_back(crttrack->Ts1());
 
 	const geo::Point_t start = crttrack->Start();
 	const geo::Point_t end   = crttrack->End();
@@ -1221,11 +1229,13 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("crt_space_point_x", &_crt_space_point_x);
     fTree->Branch("crt_space_point_y", &_crt_space_point_y);
     fTree->Branch("crt_space_point_z", &_crt_space_point_z);
-    fTree->Branch("crt_space_point_time", &_crt_space_point_time);
+    fTree->Branch("crt_space_point_t0", &_crt_space_point_t0);
+    fTree->Branch("crt_space_point_t1", &_crt_space_point_t1);
     fTree->Branch("crt_space_point_x_err", &_crt_space_point_x_err);
     fTree->Branch("crt_space_point_y_err", &_crt_space_point_y_err);
     fTree->Branch("crt_space_point_z_err", &_crt_space_point_z_err);
-    fTree->Branch("crt_space_point_time_err", &_crt_space_point_time_err);
+    fTree->Branch("crt_space_point_t0_err", &_crt_space_point_t0_err);
+    fTree->Branch("crt_space_point_t1_err", &_crt_space_point_t1_err);
     fTree->Branch("crt_space_point_pe", &_crt_space_point_pe);
     fTree->Branch("crt_space_point_tagger", &_crt_space_point_tagger);
     fTree->Branch("crt_space_point_nhits", &_crt_space_point_nhits);    
@@ -1238,7 +1248,8 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("crt_track_x2", &_crt_track_x2);
     fTree->Branch("crt_track_y2", &_crt_track_y2);
     fTree->Branch("crt_track_z2", &_crt_track_z2);
-    fTree->Branch("crt_track_time", &_crt_track_time);
+    fTree->Branch("crt_track_t0", &_crt_track_t0);
+    fTree->Branch("crt_track_t1", &_crt_track_t1);
     fTree->Branch("crt_track_pes", &_crt_track_pes);
     fTree->Branch("crt_track_tagger1", &_crt_track_tagger1);
     fTree->Branch("crt_track_tagger2", &_crt_track_tagger2);
@@ -1428,7 +1439,8 @@ void Hitdumper::ResetCRTTracksVars() {
   _crt_track_x1.clear();
   _crt_track_y1.clear();
   _crt_track_z1.clear();
-  _crt_track_time.clear();
+  _crt_track_t0.clear();
+  _crt_track_t1.clear();
   _crt_track_pes.clear();
   _crt_track_x2.clear();
   _crt_track_y2.clear();
@@ -1444,11 +1456,13 @@ void Hitdumper::ResetCRTSpacePointVars() {
   _crt_space_point_x.clear();
   _crt_space_point_y.clear();
   _crt_space_point_z.clear();
-  _crt_space_point_time.clear();
+  _crt_space_point_t0.clear();
+  _crt_space_point_t1.clear();
   _crt_space_point_x_err.clear();
   _crt_space_point_y_err.clear();
   _crt_space_point_z_err.clear();
-  _crt_space_point_time_err.clear();
+  _crt_space_point_t0_err.clear();
+  _crt_space_point_t1_err.clear();
   _crt_space_point_pe.clear();
   _crt_space_point_tagger.clear();
   _crt_space_point_nhits.clear();
