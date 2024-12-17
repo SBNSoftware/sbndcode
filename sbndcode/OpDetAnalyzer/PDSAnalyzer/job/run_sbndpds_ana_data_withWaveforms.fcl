@@ -1,5 +1,4 @@
 #include "run_sbndpds_ana_data.fcl"
 
 physics.analyzers.opanatree.SaveRawWaveforms: "true"
-physics.analyzers.opanatree.SaveOnlyStampTime: "false"
 physics.analyzers.opanatree.SaveDeconvolvedWaveforms: "true"
