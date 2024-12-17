@@ -464,7 +464,6 @@ void opdet::OpDeconvolutionAlgWiener::CorrectBaselineOscillations(std::vector<do
   unsigned short thisRegion = 0;
   unsigned short nextRegion = 1;
   for(nextRegion = 1; nextRegion < base.size(); ++nextRegion) if(base[nextRegion] != 0) break;
-  if(nextRegion == base.size()) return;
   double nBins = (nextRegion - thisRegion) * fBaseSampleBins;
   double slp = (base[nextRegion] - base[thisRegion]) / nBins;
   for(unsigned short bin = 0; bin < wave.size(); ++bin) {
