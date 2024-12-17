@@ -218,8 +218,8 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	      sout.HLTrigs.push_back(tstruct);
 
 	      //Make sure HLT words are printing correctly
-	      print_fragment_words(frag, iword, 192 ); 
-	      std::cout <<"Gate Counter: " << ctbfrag.Trigger(iword)->gate_counter  << "  |  Trigger Payload: " << tstruct.trigger_word << "  | Previous Timestamp: " << ctbfrag.PTBWord(iword)->prevTS*20 << std::endl;
+	      //print_fragment_words(frag, iword, 192 ); 
+	      //std::cout <<"Gate Counter: " << tstruct.gate_counter  << "  |  Trigger Payload: " << tstruct.trigger_word << "  | Previous Timestamp: " << tstruct.prev_timestamp << std::endl;
 
 
 	      if (fDebugLevel > 0)
