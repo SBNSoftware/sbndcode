@@ -38,7 +38,7 @@ pmtdecoder:
     timingInstanceName: "TimingChannels"
     output_ftrig_wvfm: true # whether or not to output the ftrig as an opdetwaveform (artroot data product)
     output_timing_wvfm: true # whether or not to output the timing caen wvfms as an opdetwaveform (artroot data product)
-    ignore_timing_ch: [3,4,5,6,7,8,9,10,11,12,13,14] # only ch0, ch1, ch2, and ch15 are used currently in timing caen
+    ignore_timing_ch: [4,5,6,7,8,9,10,11,12,13,14] # only ch0=BES, ch1=RWM, ch2=ETRIG, ch3=MSUM, ch15=FTRIG
 
     # more detailed configurables
     n_maxflashes:    30 # maximum number of flashes anticipated, this is used for memory allocation
