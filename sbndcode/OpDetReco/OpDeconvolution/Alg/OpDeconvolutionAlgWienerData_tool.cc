@@ -185,6 +185,8 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
       fSignalHypothesis = ScintArrivalTimesShape(MaxBinsFFT, *lar_prop);
     else if(fFilter=="Wiener1PE")
       fSignalHypothesis[0]=1;
+    else:
+      throw std::runtime_error("Deconvolution not chosen correctly ");
     mf::LogInfo("OpDeconvolutionAlg")<<"Built light signal hypothesis... L="<<fFilter<<" size"<<fSignalHypothesis.size()<<std::endl;
   }
 }
