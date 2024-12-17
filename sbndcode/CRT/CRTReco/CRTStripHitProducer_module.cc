@@ -129,8 +129,6 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
           raw_ts = rawHeaderEvent.timestamp() - fRawTSCorrection;
         }
 
-      std::cout << "Raw TS: " << raw_ts / uint64_t(1e9) << "s " << raw_ts % uint64_t(1e9) << "ns" << std::endl;
-
       int timingType = fTimingType;
 
       if(timingType == 0)
@@ -138,10 +136,7 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
           uint64_t spec_tdc_ref_time = 0;
 
           if(SPECTDCReference(e, raw_ts, spec_tdc_ref_time))
-            {
-              ref_time = spec_tdc_ref_time;
-              std::cout << "Found SPECTDC ETRIG: " << ref_time / uint64_t(1e9) << "s " << ref_time % uint64_t(1e9) << "ns" << std::endl;
-            }
+            ref_time = spec_tdc_ref_time;
           else
             ++timingType;
         }
@@ -152,10 +147,7 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
           uint32_t hlt_code         = 0;
 
           if(PTBHLTReference(e, raw_ts, ptb_hlt_ref_time, hlt_code))
-            {
-              ref_time = ptb_hlt_ref_time;
-              std::cout << "Found PTB HLT (" << hlt_code << "): " << ref_time / uint64_t(1e9) << "s " << ref_time % uint64_t(1e9) << "ns" << std::endl;
-            }
+            ref_time = ptb_hlt_ref_time;
           else
             ++timingType;
         }
@@ -164,7 +156,6 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
         {
           std::set<uint32_t> unix_set = UnixSet(FEBDataVec);
           ref_time = unix_set.size() ? *unix_set.rbegin() * static_cast<uint64_t>(1e9) : 0;
-          std::cout << "Found CRT Ref: " << ref_time / uint64_t(1e9) << "s " << ref_time % uint64_t(1e9) << "ns" << std::endl;
         }
 
       ref_time_s  = ref_time / static_cast<uint64_t>(1e9);
@@ -347,10 +338,6 @@ bool sbnd::crt::CRTStripHitProducer::PTBHLTReference(art::Event& e, const uint64
         {
           uint64_t hlt_timestamp          = (hlt.timestamp * 20);
           std::bitset<32> hlt_word_bitset = TriggerWordBitset(hlt.trigger_word);
-          std::cout << "Word: " << hlt_word_bitset << std::endl;
-          for(int i = 0; i < 32; ++i)
-            if(hlt_word_bitset[i])
-              std::cout << "Contains " << i << std::endl;
 
           for(uint32_t allowed_hlt : fAllowedPTBHLTs)
             {
