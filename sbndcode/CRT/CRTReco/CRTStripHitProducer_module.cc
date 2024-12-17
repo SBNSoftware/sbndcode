@@ -17,6 +17,8 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "artdaq-core/Data/RawEvent.hh"
+
 #include "lardata/Utilities/AssociationUtil.h"
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
@@ -25,8 +27,7 @@
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
-
-#include "artdaq-core/Data/RawEvent.hh"
+#include "sbndcode/Timing/SBNDRawTimingObj.h"
 
 #include <memory>
 #include <bitset>
@@ -102,13 +103,15 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
 {
   produces<std::vector<CRTStripHit>>();
   produces<art::Assns<FEBData, CRTStripHit>>();
+  produces<raw::TimingReferenceInfo>();
 }
 
 void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
 {
-  auto stripHitVec      = std::make_unique<std::vector<CRTStripHit>>();
-  auto stripHitDataAssn = std::make_unique<art::Assns<FEBData, CRTStripHit>>();
-  
+  auto stripHitVec         = std::make_unique<std::vector<CRTStripHit>>();
+  auto stripHitDataAssn    = std::make_unique<art::Assns<FEBData, CRTStripHit>>();
+  auto timingReferenceInfo = std::make_unique<raw::TimingReferenceInfo>();
+
   art::Handle<std::vector<FEBData>> FEBDataHandle;
   e.getByLabel(fFEBDataModuleLabel, FEBDataHandle);
   
@@ -130,13 +133,17 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
         }
 
       int timingType = fTimingType;
+      int timingCh   = 0;
 
       if(timingType == 0)
         {
           uint64_t spec_tdc_ref_time = 0;
 
           if(SPECTDCReference(e, raw_ts, spec_tdc_ref_time))
-            ref_time = spec_tdc_ref_time;
+            {
+              ref_time = spec_tdc_ref_time;
+              timingCh = fSPECTDCETrigChannel;
+            }
           else
             ++timingType;
         }
@@ -147,7 +154,10 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
           uint32_t hlt_code         = 0;
 
           if(PTBHLTReference(e, raw_ts, ptb_hlt_ref_time, hlt_code))
-            ref_time = ptb_hlt_ref_time;
+            {
+              ref_time = ptb_hlt_ref_time;
+              timingCh = hlt_code;
+            }
           else
             ++timingType;
         }
@@ -160,6 +170,9 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
 
       ref_time_s  = ref_time / static_cast<uint64_t>(1e9);
       ref_time_ns = ref_time % static_cast<uint64_t>(1e9);
+
+      timingReferenceInfo->timingType    = timingType;
+      timingReferenceInfo->timingChannel = timingCh;
     }
 
   for(auto data : FEBDataVec)
@@ -175,6 +188,9 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
 
   e.put(std::move(stripHitVec));
   e.put(std::move(stripHitDataAssn));
+
+  if(fReferenceTs0)
+    e.put(std::move(timingReferenceInfo));
 }
 
 std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripHits(art::Ptr<FEBData> &data, const uint32_t ref_time_s,
