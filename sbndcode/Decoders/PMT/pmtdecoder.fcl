@@ -13,36 +13,46 @@ pmtdecoder:
 
     # configure CAEN inputs 
     caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
-    ignore_fragid: [8]     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
+    ignore_fragid: []     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
     nominal_length: 5000     # expected waveform length
+    raw_ts_correction: 367000 # ns, correction to the rawheader timestamp
 
     # configure SPEC TDC inputs 
     spectdc_product_name: "tdcdecoder" # used if the tdc decoder has been run 
-    spectdc_ftrig_ch: 3 # this should be the channel number of the spec tdc that stores the flash trigger 
-    spectdc_etrig_ch: 4 # this should be the channel number of the spec tdc that stores the event trigger
+    spectdc_ftrig_ch: 3 # channel number of the spec tdc that stores the flash trigger 
+    spectdc_etrig_ch: 4 # channel number of the spec tdc that stores the event trigger
 
-    # configure PTB inputs 
+    # configure PTB inputs; the HLT with the smallest trigger word will be used (within some range to the rawheader timestamp)
     ptb_product_name: "ptbdecoder"
-    ptb_etrig_trigword: 0x0000000000000000
+    ptb_etrig_trigword_min: 1   # minimum trigger word (in decimal) 
+    ptb_etrig_trigword_max: 100000 # maximum trigger word (in decimal)
     ptb_etrig_wordtype: 2
+    ptb_trig_raw_diff_max: 3000000 # the maximum allowed time difference in ns
 
     # configure output options
+    # use time difference between reference + CAEN used to determine rollover and/or weirdness
+    allowed_time_diff: 3000 # us!! not nanoseconds
     # configure the output data product instance names
     pmtInstanceName: "PMTChannels"
     ftrigInstanceName: "FTrigChannels"
+    timingInstanceName: "TimingChannels"
     output_ftrig_wvfm: true # whether or not to output the ftrig as an opdetwaveform (artroot data product)
+    output_timing_wvfm: true # whether or not to output the timing caen wvfms as an opdetwaveform (artroot data product)
+    ignore_timing_ch: [3,4,5,6,7,8,9,10,11,12,13,14] # only ch0, ch1, ch2, and ch15 are used currently in timing caen
 
     # more detailed configurables
     n_maxflashes:    30 # maximum number of flashes anticipated, this is used for memory allocation
-    n_caenboards:    8  # number of caen boards; this is used for memory allocation
+    n_caenboards:    9 # number of caen boards; this is used for memory allocation
+                       # 1-8 = PMT caens, 9th = timing caen 
     threshold_ftrig: 16350 # the threshold for the flash trigger channel
 
     fragid_offset:   40960 # the offset to subtract to get single digit fragids; if use_set_map is true, should set this to 0
     hist_evt:        1  # the # of the event used to generate the histograms, 1st event by default 
 
-    # for when the fragIDs are mapped to the old configuration...
-    set_fragid_map: [3,7,5,9,11,13,15,17,19] # digitizers 0-8 are mapped to these fragids
+    # for when the fragIDs are mapped to the old configuration or you need to hardcode fragids...
+    ## to use this, must set `fragid_offset` to 0!!!
     use_set_map: false
+    set_fragid_map: [3,7,5,9,11,13,15,17,19] # use if `use_set_map` is true: digitizers 0-8 are mapped to these fragids
 
     # ordered in sets of 15 by increasing fragID
     # the PMT_to_Digitizers.txt file in the same directory is the reference for this
@@ -54,7 +64,8 @@ pmtdecoder:
              173,172,227,226,197,196,171,170,225,224,169,168,223,222,167, # digitizer 4
              195,194,221,220,165,164,219,218,193,192,163,162,217,216,166, # digitizer 5
              251,250,305,304,275,274,249,248,303,302,247,246,301,300,245, # digitizer 6
-             273,272,299,298,243,242,297,296,271,270,241,240,295,294,244] # digitizer 7
+             273,272,299,298,243,242,297,296,271,270,241,240,295,294,244, # digitizer 7
+             900,901,902,903,904,905,906,907,908,909,910,911,912,913,914] # digitizer 8 (TIMING CAEN)
 }
 
 END_PROLOG
