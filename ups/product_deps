@@ -253,11 +253,10 @@ wpdir   product_dir     wire-cell-cfg
 #
 ####################################
 product		version		qual	flags		<table_format=2>
-sbncode		v10_10_03_01       -
+sbncode		v09_93_01_01    -
 cetmodules	v3_24_01	-	only_for_build
-sbnd_data	v01_36_00	-	
-sbndutil        v10_06_01    -       optional
-fhiclpy		v4_03_05    -
+sbnd_data	v01_25_00	-	optional
+sbndutil	v09_93_01_01	-	optional
 end_product_list
 ####################################
 
@@ -312,11 +311,11 @@ end_product_list
 #   case it is optional.
 #
 ####################################
-qualifier	sbncode		sbndutil	sbnd_data    fhiclpy	notes
-c14:debug	c14:debug	c14:debug	-nq-         c14:debug
-c14:prof	c14:prof	c14:prof	-nq-         c14:prof
-e26:debug	e26:debug	e26:debug	-nq-         e26:debug
-e26:prof	e26:prof	e26:prof	-nq-         e26:prof
+qualifier	sbncode		sbndutil	sbnd_data	notes
+c14:debug	c14:debug	c14:debug	-nq-
+c14:prof	c14:prof	c14:prof	-nq-
+e26:debug	e26:debug	e26:debug	-nq-
+e26:prof	e26:prof	e26:prof	-nq-
 end_qualifier_list
 ####################################
 
@@ -327,7 +326,6 @@ end_qualifier_list
 table_fragment_begin
     # currently, XML pandora files are installed in 'scripts':
     pathPrepend(FW_SEARCH_PATH, ${SBNDCODE_DIR}/scripts)
-    pathPrepend(FW_SEARCH_PATH, ${SBND_DATA_DIR}/CalibrationDatabase)
     pathPrepend(FW_SEARCH_PATH, /cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash)
     pathPrepend(PYTHONPATH, ${UPS_PROD_DIR}/python)
     # wirecell external data files; cfg path append to wpdir=${SBNDCODE_DIR}/wire-cell-cfg
