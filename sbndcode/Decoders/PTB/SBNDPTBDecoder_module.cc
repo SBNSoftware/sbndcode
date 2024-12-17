@@ -79,13 +79,7 @@ SBNDPTBDecoder::SBNDPTBDecoder(fhicl::ParameterSet const & p)
 int _run; int _subrun; int _event;
 void SBNDPTBDecoder::produce(art::Event & evt)
 {
-  _run = evt.id().run();
-  _subrun = evt.id().subRun();
-  _event = evt.id().event();
-   std::cout << "Run: " << _run  << "  SubRun: " << _subrun  << "  Event: " << _event  << std::endl; 
-
   // look first for container fragments and then non-container fragments
-
   std::vector<raw::ptb::sbndptb> sbndptbs;
 
   art::InputTag itag1(fInputLabel, fInputContainerInstance);
@@ -216,11 +210,6 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 
 	      ix = sout.HLTrigs.size();
 	      sout.HLTrigs.push_back(tstruct);
-
-	      //Make sure HLT words are printing correctly
-	      //print_fragment_words(frag, iword, 192 ); 
-	      //std::cout <<"Gate Counter: " << tstruct.gate_counter  << "  |  Trigger Payload: " << tstruct.trigger_word << "  | Previous Timestamp: " << tstruct.prev_timestamp << std::endl;
-
 
 	      if (fDebugLevel > 0)
 		{
