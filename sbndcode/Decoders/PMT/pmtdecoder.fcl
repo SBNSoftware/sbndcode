@@ -3,7 +3,7 @@ BEGIN_PROLOG
 pmtdecoder: 
 {
     module_type: "SBNDPMTDecoder"
-    debug: 2 # 0=no output, 1=standard, 2=verbose
+    debug: 0 # 0=no output, 1=standard, 2=verbose
 
     # output timing system configuration
     ## priority system
@@ -13,9 +13,8 @@ pmtdecoder:
 
     # configure CAEN inputs 
     caen_fragment_name: [ "CAENV1730", "ContainerCAENV1730" ]
-    ignore_fragid: []     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
+    ignore_fragid: [8]     # boards to ignore for testing purposes, fragid==8 is the timing board, this is 0-indexed!
     nominal_length: 5000     # expected waveform length
-    Ignore_Short: false
 
     # configure SPEC TDC inputs 
     spectdc_product_name: "tdcdecoder" # used if the tdc decoder has been run 
@@ -35,7 +34,7 @@ pmtdecoder:
 
     # more detailed configurables
     n_maxflashes:    30 # maximum number of flashes anticipated, this is used for memory allocation
-    n_caenboards:    9  # number of caen boards; this is used for memory allocation
+    n_caenboards:    8  # number of caen boards; this is used for memory allocation
     threshold_ftrig: 16350 # the threshold for the flash trigger channel
 
     fragid_offset:   40960 # the offset to subtract to get single digit fragids; if use_set_map is true, should set this to 0
@@ -48,15 +47,14 @@ pmtdecoder:
     # ordered in sets of 15 by increasing fragID
     # the PMT_to_Digitizers.txt file in the same directory is the reference for this
     # text file is obtained from docdb 33668-v9
-    ch_map: [17 ,16 ,71 ,70 ,41 ,40 ,15 ,14 ,69 ,68 ,13 ,12 ,67 ,66 ,65, # digitzer 0 
-             39 ,38 ,11 ,10 ,9  ,8  ,63 ,62 ,37 ,36 ,7  ,6  ,61 ,60 ,64, # digitizer 1 
-             95 ,94 ,149,148,119,118,93 ,92 ,147,146,91 ,90 ,145,144,143, # digitizer 2
-             117,116,89 ,88 ,87 ,86 ,141,140,115,114,85 ,84 ,139,138,142, # digitizer 3 
+    ch_map: [17,16,71,70,41,40,15,14,69,68,13,12,67,66,65, # digitzer 0 
+             39,38,11,10,9,8,63,62,37,36,7,6,61,60,64, # digitizer 1 
+             95,94,149,148,119,118,93,92,147,146,91,90,145,144,143, # digitizer 2
+             117,116,89,88,87,86,141,140,115,114,85,84,139,138,142, # digitizer 3 
              173,172,227,226,197,196,171,170,225,224,169,168,223,222,167, # digitizer 4
              195,194,221,220,165,164,219,218,193,192,163,162,217,216,166, # digitizer 5
              251,250,305,304,275,274,249,248,303,302,247,246,301,300,245, # digitizer 6
-             273,272,299,298,243,242,297,296,271,270,241,240,295,294,244, # digitizer 7
-             901,902,903,904,905,906,907,908,909,910,911,912,913,914,915] #digitizer 8
+             273,272,299,298,243,242,297,296,271,270,241,240,295,294,244] # digitizer 7
 }
 
 END_PROLOG
