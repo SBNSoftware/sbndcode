@@ -88,10 +88,6 @@ private:
   short unsigned int fBaseSampleBins;
   double fBaseVarCut;
 
-  bool fUseLowPassFilter;
-  double fFrequencyCutoff;
-
-
   // Declare member functions
   void ApplyExpoAvSmoothing(std::vector<double>& wf);
   void ApplyUnAvSmoothing(std::vector<double>& wf);
@@ -137,8 +133,6 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fElectronics = p.get< std::string >("Electronics");
   fDaphne_Freq  = p.get< double >("DaphneFreq");
   fScaleHypoSignal = p.get< bool >("ScaleHypoSignal");
-  fUseLowPassFilter = p.get< bool >("UseLowPassFilter");
-  fFrequencyCutoff =  p.get< double >("FrequencyCutoff");
   fUseParamFilter = p.get< bool >("UseParamFilter");
   fUseParamFilterInidividualChannel = p.get< bool >("UseParamFilterInidividualChannel");
   fCorrectBaselineOscillations = p.get< bool >("CorrectBaselineOscillations");
@@ -518,15 +512,6 @@ std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_
     double freq_step=fSamplingFreq/size;
     for(size_t k=0; k<size/2; k++){
       kernel[k]= fFilterTF1->Eval(k*freq_step) / serfft[k] ;
-    }
-  }
-  else if(fUseLowPassFilter)
-  {
-    double freq_step=fSamplingFreq/size;
-    for(size_t k=0; k<size/2; k++){
-      double freq = k*freq_step;
-      if(freq<=fFrequencyCutoff) kernel[k]= fFilterTF1->Eval(k*freq_step) / serfft[k];
-      else kernel[k]=0;
     }
   }
   else{
