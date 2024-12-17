@@ -57,25 +57,25 @@ public:
 
 private:
 
-  CRTGeoAlg           fCRTGeoAlg;
-  std::string         fFEBDataModuleLabel;
-  uint16_t            fADCThreshold;
-  std::vector<double> fErrorCoeff;
-  bool                fAllowFlag1;
-  bool                fApplyTs1Window;
-  int64_t             fTs1Min;
-  int64_t             fTs1Max;
-  bool                fCorrectForDifferentSecond;
-  bool                fReferenceTs0;
-  int                 fTimingType;
-  std::string         fDAQHeaderModuleLabel;
-  std::string         fDAQHeaderInstanceLabel;
-  uint32_t            fRawTSCorrection;
-  uint32_t            fMaxAllowedRefTimeDiff;
-  std::string         fSPECTDCModuleLabel;
-  uint32_t            fSPECTDCETrigChannel;
-  std::string         fPTBModuleLabel;
-  std::set<uint32_t>  fAllowedPTBHLTs;
+  CRTGeoAlg             fCRTGeoAlg;
+  std::string           fFEBDataModuleLabel;
+  uint16_t              fADCThreshold;
+  std::vector<double>   fErrorCoeff;
+  bool                  fAllowFlag1;
+  bool                  fApplyTs1Window;
+  int64_t               fTs1Min;
+  int64_t               fTs1Max;
+  bool                  fCorrectForDifferentSecond;
+  bool                  fReferenceTs0;
+  int                   fTimingType;
+  std::string           fDAQHeaderModuleLabel;
+  std::string           fDAQHeaderInstanceLabel;
+  uint32_t              fRawTSCorrection;
+  uint32_t              fMaxAllowedRefTimeDiff;
+  std::string           fSPECTDCModuleLabel;
+  uint32_t              fSPECTDCETrigChannel;
+  std::string           fPTBModuleLabel;
+  std::vector<uint32_t> fAllowedPTBHLTs;
 };
 
 
@@ -99,7 +99,7 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel", ""))
   , fSPECTDCETrigChannel(p.get<uint32_t>("SPECTDCETrigChannel", 4))
   , fPTBModuleLabel(p.get<std::string>("PTBModuleLabel", ""))
-  , fAllowedPTBHLTs(p.get<std::vector<uint32_t>>("AllowedPTBHLTs", {}).begin(), p.get<std::vector<uint32_t>>("AllowedPTBHLTs", {}).end())
+  , fAllowedPTBHLTs(p.get<std::vector<uint32_t>>("AllowedPTBHLTs", {}))
 {
   produces<std::vector<CRTStripHit>>();
   produces<art::Assns<FEBData, CRTStripHit>>();
