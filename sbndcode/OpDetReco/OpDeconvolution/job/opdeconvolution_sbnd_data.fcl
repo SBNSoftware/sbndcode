@@ -8,7 +8,7 @@ SBNDOpDeconvolution:
   InputLabel: "pmtdecoder:PMTChannels"
   PDTypes: []
   Electronics: []
-  OpDecoAlg: @local::OpDeconvolutionAlg
+  OpDecoAlg: @local::OpDeconvolutionAlgData
 }
 
 SBNDOpDeconvolutionPMT_data: @local::SBNDOpDeconvolution
