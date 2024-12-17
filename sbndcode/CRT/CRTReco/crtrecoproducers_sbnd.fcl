@@ -12,7 +12,7 @@ crtstriphitproducer_sbnd:
    AllowFlag1:                false
    ApplyTs1Window:            false
    CorrectForDifferentSecond: false
-   ReferenceTs0ToETrig:       false
+   ReferenceTs0:              false
    module_type:               "CRTStripHitProducer"
 }
 
@@ -21,8 +21,15 @@ crtstriphitproducer_data_sbnd.CRTGeoAlg:                 @local::crtgeoalg_data_
 crtstriphitproducer_data_sbnd.FEBDataModuleLabel:        "crtdecoder"
 crtstriphitproducer_data_sbnd.AllowFlag1:                true
 crtstriphitproducer_data_sbnd.CorrectForDifferentSecond: true
-crtstriphitproducer_data_sbnd.ReferenceTs0ToETrig:       true
+crtstriphitproducer_data_sbnd.ReferenceTs0:              true
+crtstriphitproducer_data_sbnd.TimingType:                0
+crtstriphitproducer_data_sbnd.DAQHeaderModuleLabel:      "daq"
+crtstriphitproducer_data_sbnd.DAQHeaderInstanceLabel:    "RawEventHeader"
+crtstriphitproducer_data_sbnd.RawTSCorrection:           367000
+crtstriphitproducer_data_sbnd.MaxAllowedRefTimeDiff:     3000000
 crtstriphitproducer_data_sbnd.SPECTDCModuleLabel:        "tdcdecoder"
+crtstriphitproducer_data_sbnd.PTBModuleLabel:            "ptbdecoder"
+crtstriphitproducer_data_sbnd.AllowedPTBHLTs:            [ 1, 2, 3, 4, 5 ]
 
 crtclusterproducer_sbnd:
 {
