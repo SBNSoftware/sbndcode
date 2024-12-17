@@ -71,7 +71,6 @@ public:
   double GetWaveformMedian(raw::OpDetWaveform wvf);
   double GetWaveformMedian(std::vector<short int> wvf);
   void NoRingingFound(double MaxElement, int TreeVecCounter);
-  void FFTTest();
 
 private:
   //FCL params
@@ -81,7 +80,6 @@ private:
   int histCounter;
   int fTotalCAENBoards;
   int fMaxRings;
-  int PeakGrabWindow;
   double fRingingAmpCut;
   //Building up the output tree with useful information
   TTree* evtTree;
@@ -94,7 +92,6 @@ private:
   std::vector<int> tree_ChID; //Record to make sure I know the ID associated with each entry
   std::vector<double> tree_PeakFFT; //1 per channel
   std::vector<std::vector<double>> tree_RingingPeakAmplitudes; //Potentially many per channel
-  std::vector<std::vector<int>> tree_RingingPeakSamples;
   std::vector<double> tree_RecoDampingConstants; //1 per channel
   double fFFTAmpCut;
 };
@@ -118,13 +115,10 @@ void PMTRingingTagging::ResetTree()
     tree_RecoDampingConstants.clear();
     tree_RecoDampingConstants.resize(fTotalCAENBoards*15);
     tree_RingingPeakAmplitudes.clear();
-    tree_RingingPeakSamples.clear();
     for(int i =0; i<fTotalCAENBoards*15; i++)
     {
       std::vector<double> tempRingingAmpRecording(int(fNominalWaveformSize/1000)); 
-      std::vector<int> tempRingingSampleRecording(int(fNominalWaveformSize/1000)); 
       tree_RingingPeakAmplitudes.push_back(tempRingingAmpRecording);
-      tree_RingingPeakSamples.push_back(tempRingingSampleRecording);
     }
   }
 PMTRingingTagging::PMTRingingTagging(fhicl::ParameterSet const& p)
@@ -137,7 +131,6 @@ PMTRingingTagging::PMTRingingTagging(fhicl::ParameterSet const& p)
   fTotalCAENBoards = p.get<int>("totalCAENBaord", 9);
   fRingingAmpCut = p.get<double>("RingingAmpCut", 70);
   fFFTAmpCut = p.get<double>("FFTminAmp", 5000);
-  PeakGrabWindow=p.get<int>("PeakGrabWindow", 200);
   histCounter=0;
   int TotalPMT=fTotalCAENBoards*15;
   int MaxRings = int(fNominalWaveformSize/1000);
@@ -156,59 +149,11 @@ PMTRingingTagging::PMTRingingTagging(fhicl::ParameterSet const& p)
   evtTree->Branch("ReconstructedDampingConstant",&tree_RecoDampingConstants, TotalPMT, 0);
   //maybe change below to a size_of * TotalPMT
   evtTree->Branch("RingingPeakAmplitudes", &tree_RingingPeakAmplitudes, TotalPMT*MaxRings, 0); //Not sure if this will actually work
-  evtTree->Branch("RingingPeakSamples", &  tree_RingingPeakSamples, TotalPMT*MaxRings, 0); //Not sure if this will actually work
 
-}
-
-
-void PMTRingingTagging::FFTTest()
-{
-  int NumberPoints=200;
-  int PeriodToTest = 100;
-  double FreqToTest = 1.0/PeriodToTest;
-  std::vector<int> X(NumberPoints);
-  std::iota(X.begin(), X.end(), 0);
-  std::vector<double> Y(NumberPoints);
-  for(int i=0; i<NumberPoints; i++)
-  {
-    Y[i] = TMath::Sin(2*TMath::Pi()*FreqToTest*X[i]);
-    std::cout << "X:"<<X[i] << " Y:"<<Y[i] << std::endl;
-  }
-  size_t FFT_Size = 65536*5;//1<<cont;
-  art::ServiceHandle<util::LArFFT> fft;
-  std::vector<TComplex> EmptyVec(FFT_Size); //May need to make this uncessarily large to prevent seg fault
-  //std::vector<double> EmptyVecSizeCopy(fFreqSize);
-  fft->DoFFT(Y, EmptyVec);
-  for(int i=0; i<500; i++)
-  {
-    std::cout << "Fourier Mode " << i << " Has Amp " << TComplex::Abs(EmptyVec[i]) << std::endl;
-  }
-
-  TVirtualFFT *fftr2c = TVirtualFFT::FFT(1, &NumberPoints, "R2C");
-  int j;
-  for(j = 1; j < NumberPoints; j *= 2) {}
-    int fSize = j;
-    int fFreqSize = fSize / 2 + 1;
-
-   fftr2c->SetPoints(&(Y[0]));
-   fftr2c->Transform();
-   double real; 
-   double imaginary;
-    for(int i=0; i<fFreqSize; ++i)
-    {
-        fftr2c->GetPointComplex(i, real, imaginary);
-        EmptyVec[i]=TComplex(real, imaginary);
-        std::cout << "Second go  mode " << i << " amp " << TComplex::Abs(EmptyVec[i]) << " Real " << real << " imaginary " << imaginary << std::endl;
-    }
-
-
-  std::cout << " did that go well?" << std::endl;
-  std::cin >> NumberPoints;
 }
 
 void PMTRingingTagging::analyze(art::Event const& e)
 {
-  //FFTTest();
   //grab initial inputs for tree book keeping
   art::ServiceHandle<art::TFileService> tfs; //Common art service should read about
   ResetTree();
@@ -217,9 +162,8 @@ void PMTRingingTagging::analyze(art::Event const& e)
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
   e.getByLabel(fPMTWaveformLabel, waveHandle);
   int PMTPerBoard = 15;
-  int NumPMT = fTotalCAENBoards*PMTPerBoard; //15 baords per CAEN is fixed
-  int NumFlash = (*waveHandle).size()/NumPMT; 
-  //if(NumFlash>1) NumFlash=1; //assume 1 flash per event
+  //int NumPMT = fTotalCAENBoards*PMTPerBoard; //15 baords per CAEN is fixed
+  int NumFlash = 1;//(*waveHandle).size()/NumPMT; //assuming exactly 1 flash for this analysis
   int TreeVecCounter=0;
   double Baseline=14250;
   for(int FlashCounter=0; FlashCounter<NumFlash; FlashCounter++)
@@ -242,68 +186,38 @@ void PMTRingingTagging::analyze(art::Event const& e)
                 continue;
               }
               //Else do our fft for the remaining hunk of waveform
-              int ShiftWindow=2000;
+              int ShiftWindow=30;
               if(MinIndex+ShiftWindow<int(wvf.size())) MinIndex=MinIndex+ShiftWindow;
-              //size_t n = wvf.size()-MinIndex;
-              //size_t cont=0;
-              //while(n>0){
-              //    cont++; //count for every factor of 2
-              //    n=(n>>1);
-              //}
-              //size_t FFT_Size = 65536*5;//1<<cont;
-              //std::vector<TComplex> EmptyVec(FFT_Size); //May need to make this uncessarily large to prevent seg fault
-              //std::vector<double> EmptyVecSizeCopy(FFT_Size);
-              //std::vector<short int> TempWaveform(wvf.size()-MinIndex);
-              int wvfMedian = GetWaveformMedian( wvf);
-              int EndIndex = int(wvf.size());
-              if(EndIndex-MinIndex > 14000) EndIndex=14000+MinIndex;
-              int NumberPoints = EndIndex-MinIndex;
-              std::vector<double> TempWaveform(NumberPoints);
-              TVirtualFFT *fftr2c = TVirtualFFT::FFT(1, &NumberPoints, "R2C"); //1 dimensional, size of sample, Real entrys to complex?
-              int fSize, fFreqSize;
-              for(fSize = 1; fSize < NumberPoints; fSize *= 2) {}
-              fFreqSize  = fSize/2 + 1;
-              fFreqSize=fFreqSize+0; //get compiler to be happy
-              std::vector<double> EmptyVec(fFreqSize); //used to be type TComplex but I don't touch the complex value directly now
-              //art::ServiceHandle<util::LArFFT> fft;
-              for(int i=MinIndex; i<EndIndex; i++)
-              {
-                int AccumBegin = i;
-                int AverageWindow=10;
-                int AccumEnd=i+AverageWindow;
-                if(AccumEnd>=int(wvf.size())) AccumEnd=int(wvf.size())-1;
-                TempWaveform[i-MinIndex] = std::accumulate(wvf.begin()+AccumBegin,wvf.begin()+AccumEnd, 0.0)/(AccumEnd-AccumBegin) - wvfMedian;
-                //Add zeros to waveform to avoid later peaks
-                if(TempWaveform[i-MinIndex]<-100)
-                {
-                  int ZeroWidth = 20;
-                  int Start = i-MinIndex-ZeroWidth;
-                  int End = i-MinIndex+ZeroWidth;
-                  if(Start<0) Start=0;
-                  if(End>=int(TempWaveform.size())) End=int(TempWaveform.size())-1;
-                  for(int j=Start; j<=End; j++) TempWaveform[j] = 0;
-                }
+              size_t n = wvf.size()-MinIndex;
+              size_t cont=0;
+              while(n>0){
+                  cont++; //count for every factor of 2
+                  n=(n>>1);
               }
-              fftr2c->SetPoints(&(TempWaveform[0]));
-              fftr2c->Transform();
-              double real; 
-              double imaginary;
-              //fft->DoFFT(TempWaveform, EmptyVec);
+              size_t FFT_Size = 65536*5;//1<<cont;
+              art::ServiceHandle<util::LArFFT> fft;
+              std::vector<TComplex> EmptyVec(FFT_Size); //May need to make this uncessarily large to prevent seg fault
+              std::vector<double> EmptyVecSizeCopy(FFT_Size);
+              std::vector<short int> TempWaveform(wvf.size()-MinIndex);
+              int wvfMedian = GetWaveformMedian( wvf);
+              for(int i=MinIndex; i<int(TempWaveform.size()); i++)
+              {
+                TempWaveform[i-MinIndex] = wvf[i] - wvfMedian;
+              }
+              fft->DoFFT(TempWaveform, EmptyVec);
               //FFT done so now we can explicitly check for ringing
               for(int i=0; i<int(EmptyVec.size()); i++)
               {
-                fftr2c->GetPointComplex(i, real, imaginary);
-                //EmptyVec[i]=TComplex(real, imaginary);
-                EmptyVec[i] = TMath::Sqrt(real*real + imaginary*imaginary);
-                //EmptyVecSizeCopy[i] = TComplex::Abs(EmptyVec[i]);
+                EmptyVec[i] = TComplex::Abs(EmptyVec[i]);
+                EmptyVecSizeCopy[i] = TComplex::Abs(EmptyVec[i]);
               }
-              int MaxFFTIndex = std::distance(EmptyVec.begin(), std::max_element(EmptyVec.begin(), EmptyVec.end()) );
-              double MaxFFTAmp = EmptyVec[MaxFFTIndex];
-              double WindowSize =  (EndIndex-MinIndex)*(2e-9); //seconds
+              int MaxFFTIndex = std::distance(EmptyVecSizeCopy.begin(), std::max_element(EmptyVecSizeCopy.begin(), EmptyVecSizeCopy.end()) );
+              double MaxFFTAmp = EmptyVecSizeCopy[MaxFFTIndex];
+              double WindowSize =  (wvf.size()-MinIndex)*(2e-9); //seconds
               double FundamentalFreq = 1/WindowSize; // Hz
               double PeakFreq = FundamentalFreq*MaxFFTIndex; //Hz
-              int NumberPeaks = (wvf.size()-MinIndex)*(2e-9)*PeakFreq-1; //We want a full cycle back to peak so don't count 1
-              if( (MaxFFTAmp < fFFTAmpCut) || (NumberPeaks>=fMaxRings) || (PeakFreq==0) || NumberPeaks<3)
+              int NumberPeaks = WindowSize*PeakFreq + 1; //quarter cycle to get the first peak
+              if( (MaxFFTAmp < fFFTAmpCut) || (NumberPeaks>=fMaxRings) || (PeakFreq==0))
               {
                 NoRingingFound(TMath::Abs(MinADC - wvfMedian), TreeVecCounter);
                 TreeVecCounter=TreeVecCounter+1;
@@ -315,28 +229,25 @@ void PMTRingingTagging::analyze(art::Event const& e)
               tree_ChBiggestPulse[TreeVecCounter] = TMath::Abs(MinADC - wvfMedian);
               tree_ChannelNumberOfRings[TreeVecCounter] = NumberPeaks;
               tree_PeakFFT[TreeVecCounter] = PeakFreq;
-              int StepSize = (EndIndex-MinIndex)/MaxFFTIndex; //Peak to peak distance
+              int StartIndex = MinIndex-ShiftWindow;
+              int StepSize = 1/PeakFreq*2e9; //Number of PMT samples corresponding to desired period
               std::vector<int> PeakTime(NumberPeaks);
               std::vector<int> PeakYFill(NumberPeaks);
-              int StartIndex = std::distance(wvf.begin(), std::max_element(wvf.begin()+MinIndex+StepSize, wvf.begin()+MinIndex+int(StepSize*1.05)) );
-              tree_RingingPeakSamples[TreeVecCounter][0] = StartIndex;
-              tree_RingingPeakAmplitudes[TreeVecCounter][0] =wvf[tree_RingingPeakSamples[TreeVecCounter][0]]- wvfMedian;
-              PeakYFill[0] =tree_RingingPeakAmplitudes[TreeVecCounter][0];
-              PeakTime[0]=tree_RingingPeakSamples[TreeVecCounter][0]*2e-9;
+              int PeakGrabWindow = 30;
+              tree_RingingPeakAmplitudes[TreeVecCounter][0] = *std::max_element(wvf.begin()+int(StartIndex+StepSize*0.25)-PeakGrabWindow, wvf.begin()+int(StartIndex+StepSize*0.25)+PeakGrabWindow) - wvfMedian;
+              if( (wvf[int(StartIndex+StepSize*0.25)] - wvfMedian) > 0)
+              {
+                PeakYFill[0] = TMath::Log(wvf[int(StartIndex+StepSize*0.25)] - wvfMedian);
+                PeakTime[0]=StepSize*0.25*2e-9; //seconds
+              }
               int FitIndexHelper=1;
               for(int i=1; i<NumberPeaks; i++)
               {
-                PeakGrabWindow=StepSize*0.05;
-                int InterestingIndex = StartIndex+StepSize*(i);
-                if(InterestingIndex-PeakGrabWindow<0) InterestingIndex=PeakGrabWindow;
-                int EndSearch = InterestingIndex+PeakGrabWindow;
-                if(EndSearch>int(wvf.size())) EndSearch=int(wvf.size())-1;
-                tree_RingingPeakAmplitudes[TreeVecCounter][i] = *std::max_element(wvf.begin()+InterestingIndex-PeakGrabWindow, wvf.begin()+EndSearch) - wvfMedian;;
-                int IndexGrabbed = std::distance(wvf.begin(), std::max_element(wvf.begin()+InterestingIndex-PeakGrabWindow, wvf.begin()+EndSearch));
-                tree_RingingPeakSamples[TreeVecCounter][i] = IndexGrabbed;
+                int InterestingIndex = StartIndex+StepSize*(i+0.25);
+                tree_RingingPeakAmplitudes[TreeVecCounter][i] = *std::max_element(wvf.begin()+InterestingIndex-PeakGrabWindow, wvf.begin()+InterestingIndex+PeakGrabWindow) - wvfMedian;
                 if( tree_RingingPeakAmplitudes[TreeVecCounter][i] > 0)
                 {
-                  PeakTime[FitIndexHelper]= IndexGrabbed*2e-9;//StepSize*(i+0.25)*2e-9; //should change to actual time units
+                  PeakTime[FitIndexHelper]=StepSize*(i+0.25)*2e-9; //should change to actual time units
                   PeakYFill[FitIndexHelper] = TMath::Log( tree_RingingPeakAmplitudes[TreeVecCounter][i] );
                   FitIndexHelper=FitIndexHelper+1;
                 }
@@ -403,7 +314,6 @@ void PMTRingingTagging::NoRingingFound(double MaxElement, int TreeVecCounter)
   for(int j=0; j<fMaxRings; j++)
   {
     tree_RingingPeakAmplitudes[TreeVecCounter][j]=-1;
-    tree_RingingPeakSamples[TreeVecCounter][j]=-1;
   }
 }
 
