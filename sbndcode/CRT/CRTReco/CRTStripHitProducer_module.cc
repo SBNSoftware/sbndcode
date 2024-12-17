@@ -347,6 +347,10 @@ bool sbnd::crt::CRTStripHitProducer::PTBHLTReference(art::Event& e, const uint64
         {
           uint64_t hlt_timestamp          = (hlt.timestamp * 20);
           std::bitset<32> hlt_word_bitset = TriggerWordBitset(hlt.trigger_word);
+          std::cout << "Word: " << hlt_word_bitset << std::endl;
+          for(int i = 0; i < 32; ++i)
+            if(hlt_word_bitset[i])
+              std::cout << "Contains " << i << std::endl;
 
           for(uint32_t allowed_hlt : fAllowedPTBHLTs)
             {
