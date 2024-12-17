@@ -21,19 +21,6 @@ SBNDOpDeconvolutionPMT_data.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #
 SBNDOpDeconvolutionPMT_data.OpDecoAlg.DecoWaveformPrecision: 0.005
 SBNDOpDeconvolutionPMT_data.OpDecoAlg.SkipChannelList: [39, 64, 65, 66, 67, 68, 71, 85, 86, 87, 114, 115, 118, 138, 141, 142, 148, 149, 163, 170, 194, 197, 217, 220, 221, 222, 223, 224, 226, 243, 245, 248, 296, 298, 301, 302]
 
-SBNDOpDeconvolutionXARAPUCA: @local::SBNDOpDeconvolution
-SBNDOpDeconvolutionXARAPUCA.PDTypes: ["xarapuca_vuv", "xarapuca_vis"]
-SBNDOpDeconvolutionXARAPUCA.Electronics: ["daphne"]
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.OpDetDataFile: "OpDetSim/digi_arapuca_sbnd.root"
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Electronics: "Daphne"
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.UseParamFilter: true
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))" #Gauss filter, remove DC component F(0)=0;
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.FilterParams: [0.003193, 2] #Freq in GHz
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.PositivePolarity: true
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ADCSaturationValue: 4095 #From digi_arapuca_sbnd.fcl values and DigiArapucaSBNDAlg.cc#L15
-
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ApplyExpoAvSmooth:false
-SBNDOpDeconvolutionXARAPUCA.OpDecoAlg.ApplyUnAvSmooth:  false
 
 
 
