@@ -1,6 +1,35 @@
 #include "sbndcode/OpDetAnalyzer/PDSAnalyzer/SBNDPDSAnalyzer_module.hh"
 
 
+std::vector<int> bitsUP(int trigger_word) {
+    std::string binary = "";
+    
+    // Convierte el número a binario
+    while (trigger_word > 0) {
+        binary = std::to_string(trigger_word % 2) + binary;
+        trigger_word /= 2;
+    }
+
+    // Si el número es 0, el binario es "0"
+    if (binary.empty()) {
+        binary = "0";
+    }
+
+    // Encuentra las posiciones de los bits que están arriba (con valor 1)
+    std::vector<int> bits_up;
+
+    // Recorre la cadena de binario desde la derecha
+    for (int i = binary.size() - 1; i >= 0; --i) {
+        if (binary[i] == '1') {
+            bits_up.push_back(binary.size() - 1 - i);
+        }
+    }
+
+    return bits_up;
+
+}
+
+
 // -------- Constructor --------
 opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
@@ -13,6 +42,9 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fSaveOpHits( p.get<bool>("SaveOpHits") ),
   fSaveOpFlashes( p.get<bool>("SaveOpFlashes") ),
   fSaveCosmicId( p.get<bool>("SaveCosmicId") ),
+  fSaveOnlyStampTime( p.get<bool>("SaveOnlyStampTime") ),
+  fSavePTB( p.get<bool>("SavePTB") ),
+  fSaveSPECTDC( p.get<bool>("SaveSPECTDC") ),
   fVerbosity( p.get<int>("Verbosity") ),
   fMakePerTrackTree( p.get<bool>("MakePerTrackTree") ),
   fMakePDSGeoTree( p.get<bool>("MakePDSGeoTree") ),
@@ -34,6 +66,8 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fCosmicIdModuleLabel( p.get< std::string >("CosmicIdModuleLabel") ),
   fOpT0FinderModuleLabel( p.get< std::string >("OpT0FinderModuleLabel") ),
   fSimpleFlashMatchModuleLabel( p.get< std::string >("SimpleFlashMatchModuleLabel") ),
+  fPTBLabel(p.get< std::string >("PTBLabel") ), 
+  fSPECTDCLabel(p.get< std::string >("SPECTDCLabel") ), 
   fG4BufferBoxX( p.get<std::vector<int>>("G4BufferBoxX") ),
   fG4BufferBoxY( p.get<std::vector<int>>("G4BufferBoxY") ),
   fG4BufferBoxZ( p.get<std::vector<int>>("G4BufferBoxZ") ),
@@ -128,6 +162,7 @@ void opdet::SBNDPDSAnalyzer::beginJob()
   if(fSaveRawWaveforms){
     fTree->Branch("SignalsDigi", "std::vector<std::vector<double>>",&_signalsDigi);
     fTree->Branch("StampTime", "std::vector<double>",&_stampTime);
+    fTree->Branch("WaveformLength", "std::vector<int>",&_waveformLength);
     fTree->Branch("OpChDigi", "std::vector<int>",&_opChDigi);
   }
 
@@ -209,6 +244,23 @@ void opdet::SBNDPDSAnalyzer::beginJob()
     fPerTrackTree->Branch("TrackID",&_perTrackID);
   }
 
+  if(fSavePTB)
+  {
+    fPTBTree = tfs->make<TTree>("PTBTree", "Photon Trigger Board Tree");
+    fPTBTree->Branch("LLTTimestamp", &_llt_timestamp);
+    fPTBTree->Branch("LLTTriggerWord", &_llt_trigger_word);
+    fPTBTree->Branch("LLTTriggerType", &_llt_trigger_type);
+    fPTBTree->Branch("HLTTimestamp", &_hlt_timestamp);
+    fPTBTree->Branch("HLTTriggerWord", &_hlt_trigger_word);
+    fPTBTree->Branch("HLTTriggerType", &_hlt_trigger_type);
+
+  }
+  if(fSaveSPECTDC)
+  {
+    fSPECTDCTree = tfs->make<TTree>("SPECTDCTree", "SPEC TDC Tree");
+    fSPECTDCTree->Branch("FTRIGTime",&_ftrig_time);
+  }
+
   if(fMakePDSGeoTree){
     fPDSMapTree = tfs->make<TTree>("PDSMapTree", "PDS Map Tree");
     fPDSMapTree->Branch("OpDetID", "std::vector<int>", &_opDetID);
@@ -243,11 +295,9 @@ void opdet::SBNDPDSAnalyzer::beginJob()
 
 }
 
-
 // -------- Main function --------
 void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
 {
-
   // --- Event General Info
   _eventID = e.id().event();
   _runID = e.id().run();
@@ -490,6 +540,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
 
     _signalsDigi.clear();
     _stampTime.clear();
+    _waveformLength.clear();
     _opChDigi.clear();
     
     for(auto const& wvf : (*wvfHandle)) {
@@ -498,8 +549,9 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         double t0_digi = wvf.TimeStamp();
         _stampTime.push_back(t0_digi);//time stamp in us
         _opChDigi.push_back(fChNumber);
+        _waveformLength.push_back(wvf.Waveform().size());
         _signalsDigi.push_back({});
-
+        if(fSaveOnlyStampTime) continue;
         for(unsigned int i=0;i<wvf.size();i++){
           _signalsDigi[_signalsDigi.size()-1].push_back(wvf[i]);
         }
@@ -522,7 +574,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     }
 
     _signalsDeco.clear();
-    _stampTimeDeco.clear(); 
+    _stampTimeDeco.clear();
     _opChDeco.clear();
 
     for(auto const& wvf : (*wvfHandle)) {
@@ -534,6 +586,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _stampTimeDeco.push_back(t0_Deco);//time stamp in us
         _opChDeco.push_back(fChNumber);
         _signalsDeco.push_back({});
+        if(fSaveOnlyStampTime) continue;
         for(unsigned int i=0;i<wvf.size();i++){
           _signalsDeco[_signalsDeco.size()-1].push_back(wvf[i]);
         }
@@ -827,8 +880,117 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     }
   }
 
+  if(fSavePTB)
+  {
+    _llt_timestamp.clear();
+    _llt_trigger_word.clear();
+    _llt_trigger_type.clear();
+    _hlt_timestamp.clear();
+    _hlt_trigger_word.clear();
+    _hlt_trigger_type.clear();
+    //delete from here Nov 27
+    std::cout << "Printing timing information for event + HLT + LLT + Waveforms" << std::endl;
+    std::cout << "Run #" <<  e.id().run() << " event #" << e.id().event() << " has timestamp " << e.time().timeHigh() << "."<<e.time().timeLow() <<" s or " << e.time().timeLow() << " ns PPS" << std::endl;
+    art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle_2;
+    e.getByLabel(fPTBLabel,ptbHandle_2);
+    std::cout << "\t It has " << ptbHandle_2->size() << " PTB fragments" << std::endl;
+    for(int index=0; index<int(ptbHandle_2->size()); index++)
+    {
+      auto ptb = (*ptbHandle_2)[index];
+      auto hltrigs = ptb.GetHLTriggers();
+      auto LLtrigs = ptb.GetLLTriggers();
+
+      std::cout << "\t \t ptb fragment " << index << " with " << hltrigs.size() << " HLTs" <<std::endl;
+      for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
+      {
+        int Power=0;
+        while(Power<64)
+        {
+          if(hltrigs[HLT].trigger_word & (0x1 << Power)) break;
+          else Power=Power+1;
+        }
+        //bool IsTrig=hltrigs[HLT].trigger_word & ( 0x1 << HLT );
+        std::vector<int> bits_up = bitsUP(hltrigs[HLT].trigger_word);
+
+        std::cout << "\t \t \t HLT " << HLT << " has trigger word " <<  hltrigs[HLT].trigger_word  << " HLT word of type ";
+        for(size_t i = 0 ; i< bits_up.size(); i++)
+        {
+          if(i<bits_up.size()-1) std::cout << bits_up[i] << ", " ;
+          else std::cout << bits_up[i];
+        }
+        std::cout << " at time " << (hltrigs[HLT].timestamp*20)%uint64_t(1e9) << " ns PPS" << std::endl;
+        _hlt_timestamp.push_back((hltrigs[HLT].timestamp*20)%uint64_t(1e9));
+        _hlt_trigger_word.push_back(hltrigs[HLT].trigger_word);
+        _hlt_trigger_type.push_back(bits_up);
+      }
+      std::cout << "\t \t ptb fragment " << index << " with " << LLtrigs.size() << " LLTs" <<std::endl;
+      for(int LLT=0; LLT<int(LLtrigs.size()); LLT++)
+      {
+        int Power=0;
+        while(Power<64)
+        {
+          if(LLtrigs[LLT].trigger_word & (0x1 << Power)) break;
+          else Power=Power+1;
+        }
+        std::vector<int> bits_up = bitsUP(LLtrigs[LLT].trigger_word);
+        std::cout << "\t \t \t LLT " << LLT << " has trigger word " <<  LLtrigs[LLT].trigger_word  << " LLT word of type ";
+                for(size_t i = 0 ; i< bits_up.size(); i++)
+        {
+          if(i<bits_up.size()-1) std::cout << bits_up[i] << ", " ;
+          else std::cout << bits_up[i];
+        }
+        std::cout << " at time " << (LLtrigs[LLT].timestamp*20)%uint64_t(1e9) << " ns PPS" << std::endl;
+        _llt_timestamp.push_back((LLtrigs[LLT].timestamp*20)%uint64_t(1e9));
+        _llt_trigger_word.push_back(LLtrigs[LLT].trigger_word);
+        _llt_trigger_type.push_back(bits_up);
+      }
+    }
+  }
+
+  if(fSaveSPECTDC)
+  {
+      _ftrig_time.clear();
+      // get spec tdc product
+      art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+      e.getByLabel(fSPECTDCLabel,tdcHandle);
+      if (!tdcHandle.isValid() || tdcHandle->size() == 0){
+        std::cout << "No SPECTDC products found." << std::endl;
+      }
+      else{
+          std::cout << "SPECTDC (decoded) products found: " << std::endl;
+          const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+
+          for (size_t i=0; i<tdc_v.size(); i++){
+              auto tdc = tdc_v[i];
+              const uint32_t  ch = tdc.Channel();
+              const uint64_t  ts = tdc.Timestamp();
+              const uint64_t  offset = tdc.Offset();
+              const std::string name  = tdc.Name();
+              fspectdc_ftrig_ch = 3;
+              fspectdc_etrig_ch = 4;
+              if ((ch==fspectdc_etrig_ch || ch==fspectdc_ftrig_ch)){
+                  std::cout << "      TDC CH " << ch << " -> "
+                  << "name: " << name
+                  << ", ts (ns): " << ts%uint64_t(1e9)
+                  << ", sec (s): " << ts/uint64_t(1e9)
+                  << ", offset: " << offset
+                  << std::endl;
+                  _ftrig_time.push_back(ts%uint64_t(1e9));
+              }
+              if (ch==fspectdc_etrig_ch)
+              {
+                  uint64_t event_trigger_time = 0; 
+                  event_trigger_time = ts%uint64_t(1e9);
+                  std::cout << " Event trigger time is " << event_trigger_time << std::endl;
+              }
+          }
+      }
+  }
+
   // --- Fill the tree
   fTree->Fill();
+  fPTBTree->Fill();
+  fSPECTDCTree->Fill();
 }
 
 
@@ -1311,3 +1473,4 @@ std::map<std::string, int> opdet::SBNDPDSAnalyzer::GetAllHitsTruthMatch(art::Eve
 
     return allHitsTruthMap;
 }
+
