@@ -4,7 +4,4 @@ art_make(
          larsim::Utils
 	 sbndcode_GeoWrappers
 )
-
-
-
 install_fhicl()

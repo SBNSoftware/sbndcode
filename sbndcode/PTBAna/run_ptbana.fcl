@@ -1,6 +1,3 @@
-//#include "simulationservices_sbnd.fcl"
-//#include "crtbacktrackeralg_sbnd.fcl"
-
 process_name: PTBAnalyzer
 
 services:
