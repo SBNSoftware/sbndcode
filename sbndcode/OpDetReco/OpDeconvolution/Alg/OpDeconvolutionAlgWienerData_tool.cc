@@ -109,7 +109,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
 {
   //read fhicl paramters
   fDebug = p.get< bool >("Debug");
-  fMaxFFTSizePow = p.get< int >("MaxFFTSizePow", 15);
+  fMaxFFTSizePow = p.get< int >("MaxFFTSizePow");
   fPositivePolarity = p.get< bool >("PositivePolarity");
   fUseSaturated = p.get< bool >("UseSaturated");
   fADCSaturationValue = p.get< int >("ADCSaturationValue");
@@ -118,11 +118,9 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fExpoAvSmoothPar = p.get< float >("ExpoAvSmoothPar");
   fUnAvNeighbours = p.get< short unsigned int >("UnAvNeighbours");
   fHypoSignalTimeWindow = p.get< double >("HypoSignalTimeWindow");
-  fHypoSignalCustom = p.get< bool >("HypoSignalCustom", false);
-  if(fHypoSignalCustom){
-    fHypoSignalTimeConsts = p.get< std::vector<double> >("HypoSignalTimeConsts");
-    fHypoSignalWeights = p.get< std::vector<double> >("HypoSignalWeights");
-  }
+  fHypoSignalCustom = p.get< bool >("HypoSignalCustom");
+  fHypoSignalTimeConsts = p.get< std::vector<double> >("HypoSignalTimeConsts");
+  fHypoSignalWeights = p.get< std::vector<double> >("HypoSignalWeights");
   fHypoSignalScale = p.get< double >("HypoSignalScale");
   fPMTChargeToADC = p.get< double >("PMTChargeToADC");
   fDecoWaveformPrecision = p.get< double >("DecoWaveformPrecision");
