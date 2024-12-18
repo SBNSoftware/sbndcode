@@ -95,6 +95,7 @@ namespace opdet { //OpDet means optical detector
     std::string fInputInstanceName;
     std::vector<std::string> fOpDetsToPlot; //keep for now but probably don't need
     std::string opdetType;
+    std::string fTimingInstanceName;
     std::string opdetElectronics;
     TH2D* hist_PropTriggers; //Initializes as nullptr
     TH2D* hist_PropTriggers_OffBeam; //Initializes as nullptr
@@ -128,6 +129,7 @@ namespace opdet { //OpDet means optical detector
     std::string fPTBLabel;
     std::string fSoftTrigLabel;
     int fTotalCAENBoards;
+    bool fTriggerProdCheck;
 
     //Event Tree saving infomation
     // --- TTrees
@@ -172,6 +174,7 @@ namespace opdet { //OpDet means optical detector
     fInputModuleName = p.get< std::string >("InputModule" );
     fInputProcessName = p.get< std::string >("InputProcess" );
     fInputInstanceName = p.get< std::string >("InputInstance" );
+    fTimingInstanceName = p.get<std::string>("TimingInstanceName");
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
     fMonWidth        = p.get<int>("MonWidth");
     fMonStart        = p.get<int>("MonStart", 20);
@@ -191,6 +194,7 @@ namespace opdet { //OpDet means optical detector
     fSoftTrigLabel = p.get<std::string>("SoftTrigLabel", "pmtmetricproducer:");
     fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
     fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
+    fTriggerProdCheck = p.get<bool>("TriggerProdCheck", false);
     fChNumber = 0;
     fEvNumber = 0;
     hist_id=0;
@@ -493,99 +497,6 @@ namespace opdet { //OpDet means optical detector
           } //loop over channels
       } //loop over boards
   }
-  /*        for(int CAENChannel=0; CAENChannel<PMTPerBoard; CAENChannel++)
-          {
-            int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
-            auto const& wvf = (*waveHandle)[WaveIndex];
-            bool FirstChannelCross=true;
-            bool SecondInPair=false;
-            SecondInPair = std::any_of(Pair2.begin(), Pair2.end(), [wvf](int x){return ( int(wvf.ChannelNumber()) == x); } );
-            if(!SecondInPair)
-            {
-                Crossings.clear(); //Reset list of crossings
-            }
-            fChNumber = wvf.ChannelNumber(); //Get the channel number for this waveform
-            if(fChNumber>899) continue; //copy of trigger in signal doesn't need to be analyzed. 899 is for commissioning test
-            opdetType = pdMap.pdType(fChNumber); //opdet::sbndPDMapAlg pdMap; //map for photon detector types. Lists arapuca vs PMT by channel num I guess
-            opdetElectronics = pdMap.electronicsType(fChNumber); //? Maybe what kind of CAEN it is for digitization rate
-            if (std::find(fOpDetsToPlot.begin(), fOpDetsToPlot.end(), opdetType) == fOpDetsToPlot.end()) {continue;}
-            int k=1;
-            int Baseline=0;
-            //int NumPoints = 10;
-            //for(int Index=0; Index<NumPoints; Index++)
-            //{
-            //  Baseline = Baseline + wvf[Index];
-            //}
-            Baseline=14250; //Confirmed its been this value since Oct 4 but probably much earlier too   //Baseline/NumPoints;
-            while(k < int(MonPulse->size())-1 )
-            {
-                //Check for crossings
-                bool CrossedThreshold = (((wvf[k-1]-Baseline)>-MonThreshold) && ((wvf[k]-Baseline)<-MonThreshold));
-                if(CrossedThreshold)
-                {
-                  if(Saving && FirstChannelCross){
-                    SaveChannelWaveforms(wvf, fEvNumber, Baseline-MonThreshold);
-                    FirstChannelCross=false; // avoid overwrite of hist
-                  }
-                  bool Overlap=false;
-                  bool CrossLeft = std::any_of(Crossings.begin(), Crossings.end(), [k, this](int x){return (k>=(x-4*fMonWidth))&&(k<=x) ; } );
-                  bool CrossRight = std::any_of(Crossings.begin(), Crossings.end(), [k, this](int x){return (k<=(x+4*fMonWidth)&&(k>=x)) ;} );
-                  Overlap = (CrossLeft || CrossRight);
-                  //Need some logic for adjacent channels and for non-overlapping pulses
-                  //Increment the MON Pulse
-                  if(Overlap)
-                  {
-                      int StartIndex=0; 
-                      int EndIndex=0;
-                      if(CrossLeft && CrossRight) //exactly equal crossing point
-                      {
-                        StartIndex=k+4*fMonWidth;
-                        EndIndex=StartIndex; //Stat and stop have to be the same
-                      }
-                      else if(CrossLeft) //adjust end index to be first crossing bigger than k
-                      {
-                        StartIndex = k;
-                        EndIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k)) - 1; //First value that is not less than given val
-                        if(CrossRight)
-                        {
-                          StartIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k-4*fMonWidth))+4*fMonWidth+1; // adjust start index
-                        }
-                      }
-                      else if(CrossRight)
-                      {
-                        EndIndex = k+4*fMonWidth;
-                        StartIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k-4*fMonWidth))+4*fMonWidth+1;
-                        if(CrossLeft)
-                        {
-                          EndIndex = (*std::lower_bound(Crossings.begin(), Crossings.end(), k)) - 1; // adjust end index
-                        }
-                      }
-                      if(StartIndex>=int(MonPulse->size())) StartIndex=MonPulse->size()-1; //should never happen
-                      if(EndIndex>=int(MonPulse->size())) EndIndex=MonPulse->size()-1; //May happen
-                      if(StartIndex<EndIndex) std::for_each(MonPulse->begin()+StartIndex, MonPulse->begin()+EndIndex, [](int &X){return X=X+1;}); //extra check for safety                  
-                      if(!SecondInPair) Crossings.push_back(k); // only need to track other channel
-                      k=EndIndex+1;
-                  }
-                  else
-                  {
-                    int StartIndex = k;
-                    int EndIndex = k+4*fMonWidth;
-                    if(StartIndex>=int(MonPulse->size())) StartIndex=MonPulse->size()-1; //should never happen
-                    if(EndIndex>=int(MonPulse->size())) EndIndex=MonPulse->size()-1; //May happen
-                    if(StartIndex<EndIndex) std::for_each(MonPulse->begin()+StartIndex, MonPulse->begin()+EndIndex, [](int &X){return X=X+1;});
-                    if(!SecondInPair) Crossings.push_back(k);
-                    k=EndIndex+1;
-                  }
-                }
-                else 
-                {
-                  k=k+1;
-                }
-            } // Loop over an individual waveform
-        } //Loop over channels in board
-      } // loop over boards
-  }
-  */
 
   void BeamRateCalib::analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle)
   { //Use fill and not set entries for the th2d interface
@@ -694,23 +605,22 @@ namespace opdet { //OpDet means optical detector
   */
   //sbnd::comm::pmtTrigger has a vector numPassed that says how many PMT passed MON threshold for this (MON) sample
   //Also has an a number for the max number of PMT simultaneously passing (basically max of numPassed vector)
-  art::Handle< std::vector<sbnd::comm::pmtTrigger> > TriggerHandle;
-  e.getByLabel(std::string("pmttriggerproducer"), std::string(""), std::string("PMTDecodeAndTriggerProd"), TriggerHandle);
   //Get channel 903 (I labeled timing CAEN to be 900+ channel ID)
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
-  e.getByLabel(fInputModuleName, fInputInstanceName, fInputProcessName, waveHandle);
+  e.getByLabel(fTimingInstanceName, waveHandle);
   bool GoodTrigger=false; //could be an vector when we have many flash
   bool OneChannel[] = {false, false, false};
   int count=0;
   double Energy=0;
   int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
-
+  int TimingChannelsIncluded=4;
+  int TimingBoards=1;
   for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
     {
-      for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
+      for(int CurrentBoard=0; CurrentBoard<TimingBoards; CurrentBoard++)
       {
           //Loop over each PMT in a board
-          for(int CAENChannel=0; CAENChannel<PMTPerBoard; CAENChannel++)
+          for(int CAENChannel=0; CAENChannel<TimingChannelsIncluded; CAENChannel++)
           {
             int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*TotalFlash;
             auto const& wvf = (*waveHandle)[WaveIndex];
@@ -784,23 +694,28 @@ namespace opdet { //OpDet means optical detector
   std::stringstream histname;
   art::ServiceHandle<art::TFileService> tfs;
   int FlashCount=0;
-  for(auto& Trig: (*TriggerHandle))
+  if(fTriggerProdCheck)
   {
-    histname.str(std::string()); //Resets string stream to nothing
-    histname << "event_" << fEvNumber << "pmtriggerprod" << "_flash_" << FlashCount;
-    std::vector< int > 	numPassed = Trig.numPassed;
-    TH1D *pmtTrigHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), numPassed.size(), 0, numPassed.size()-1);
-    for(int i=0; i<int(numPassed.size()); i++)
-    {
-      pmtTrigHist->SetBinContent(i+1, (double)numPassed[i]);
-    }
-    FlashCount=FlashCount+1;
-  }
-  if(GoodTrigger)
-  {
+    art::Handle< std::vector<sbnd::comm::pmtTrigger> > TriggerHandle;
+    e.getByLabel(std::string("pmttriggerproducer"), std::string(""), std::string("PMTDecodeAndTriggerProd"), TriggerHandle);
     for(auto& Trig: (*TriggerHandle))
     {
-      hist_TriggerThreshold->Fill(Trig.maxPMTs);
+      histname.str(std::string()); //Resets string stream to nothing
+      histname << "event_" << fEvNumber << "pmtriggerprod" << "_flash_" << FlashCount;
+      std::vector< int > 	numPassed = Trig.numPassed;
+      TH1D *pmtTrigHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), numPassed.size(), 0, numPassed.size()-1);
+      for(int i=0; i<int(numPassed.size()); i++)
+      {
+        pmtTrigHist->SetBinContent(i+1, (double)numPassed[i]);
+      }
+      FlashCount=FlashCount+1;
+    }
+    if(GoodTrigger)
+    {
+      for(auto& Trig: (*TriggerHandle))
+      {
+        hist_TriggerThreshold->Fill(Trig.maxPMTs);
+      }
     }
   }
   //Record how proporition of readout where MSUM is over threshold by a fixed amount for a given run
