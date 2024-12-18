@@ -76,7 +76,6 @@ SBNDPTBDecoder::SBNDPTBDecoder(fhicl::ParameterSet const & p)
   produces<std::vector<raw::ptb::sbndptb> >(fOutputInstance);
 }
 
-int _run; int _subrun; int _event;
 void SBNDPTBDecoder::produce(art::Event & evt)
 {
   // look first for container fragments and then non-container fragments
