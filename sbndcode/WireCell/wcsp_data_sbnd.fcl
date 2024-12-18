@@ -52,12 +52,12 @@ sbnd_wcls_sp_data.wcls_main.params :   {
 
                                         # whether or not to use calibrated, parametrized electronics response
                                         # MUST be a string!
-                                        use_paramresp: "false"
+                                        use_paramresp: "true"
                                         }
 
 sbnd_wcls_sp_data.wcls_main.structs:   { 
                                         # Set the waveform sample length, eg, 6000, 15000, "auto"
-                                        nticks: 3415
+                                        nticks: 3427
                                        }
 
 END_PROLOG
