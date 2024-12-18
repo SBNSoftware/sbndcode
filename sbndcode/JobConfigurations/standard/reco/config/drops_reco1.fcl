@@ -33,6 +33,11 @@ sbnd_reco1_drops_selective: [  #Needed to maintain earlier workflows where some 
   , "drop *_cluster3d_*_*" #drop all mlreco output
 ]
 
+sbnd_reco1_drops_data: [ #data specific drops to conserve space where needed
+  "keep *_*_*_*",
+  "drop *_cluster3d_*_*" #drop uneeded spine (mlreco) output
+]
+
 sbnd_reco1_drops_keep_rawdigits: [
 	@sequence::sbnd_reco1_drops_selective
   , "keep raw::RawDigit*_*_*_*"
