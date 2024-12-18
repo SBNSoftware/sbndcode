@@ -20,17 +20,21 @@ function(params, anode, field, n, rms_cuts=[])
     // For MicroBooNE, channel groups is a 2D list.  Each element is
     // one group of channels which should be considered together for
     // coherent noise filtering.
-    groups: [std.range(   0 + n * 5638 + g*32,    0 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,149)] +
-            [std.range(4806 + n * 5638 + g*32, 4806 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,25)] ,
+    // 5638 is the number of channels in a single APA, (1984*2 + 1670), including the 6 channel gap.
+    // 4806 is the number of channels for both induction + half of real collection wires + 6 channel gap
+    groups: [std.range(   0 + n * 5638 + g*32,    0 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,150)] +
+            [std.range(4806 + n * 5638 + g*32, 4806 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,26)] ,
     
 
     // Externally determined "bad" channels.
     //
     // Dead channels: 3232:3263 (inclusive) (East V).   4160:4191 (East Y)
+    // Jumpered region: 4800:4805 (inclusive, East Y), 10438:10443 (inclusive, West Y)
+    // No response: 546, 607, 8574
     // Shorted channels:  7169 (West U), 8378 (West V).
     // There are four physically missing wires ( = bad channels) due to combs, in the center of each 1/2 APA.
     // They are 4374 and 5231 (East Y), 10012 and 10869 (West Y).
-    // So in total, there are 76 bad channels.
+    // So in total, there are 88 bad channels.
     // 
     //bad: [],
     bad: [546, 607] + std.range(3232, 3263) + std.range(4160, 4191) + [4374, 4800, 4801, 4802, 4803, 4804, 4805, 5060, 5231, 5636, 5637, 7169, 8378, 8574, 10012, 10869, 10438, 10439, 10440, 10441, 10442, 10443],
@@ -53,15 +57,15 @@ function(params, anode, field, n, rms_cuts=[])
         response_offset: 0.0,  // ticks?
         pad_window_front: 10,  // ticks?
         pad_window_back: 10,  // ticks?
-        decon_limit: 0.02,
+        decon_limit: 0.02, // (SignalProtection, same as upper_decon_limit (default 0.02))
         decon_limit1: 0.09,
-        adc_limit: 15,
+        adc_limit: 10,
         roi_min_max_ratio: 0.8, // default 0.8
         min_rms_cut: 1.0,  // units???
         max_rms_cut: 30.0,  // units???
 
         // parameter used to make "rcrc" spectrum
-        rcrc: 1.1 * wc.millisecond, // 1.1 for collection, 3.3 for induction
+        rcrc: 0.5 * wc.millisecond, // 1.1 for collection, 3.3 for induction
         rc_layers: 1, // default 2
 
         // parameters used to make "config" spectrum
