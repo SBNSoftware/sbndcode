@@ -125,6 +125,7 @@ namespace opdet { //OpDet means optical detector
     bool fCheckTriggers;
     int hist_id;
     bool fCheckSoftTrig;
+    std::string fPTBLabel;
     std::string fSoftTrigLabel;
     int fTotalCAENBoards;
 
@@ -150,6 +151,8 @@ namespace opdet { //OpDet means optical detector
     double tree_prelimPE;       // total PE for the 1 us before trigger time
     double tree_peakPE;
     double tree_peaktime;
+    std::vector<int> tree_HLTs;
+    
 
   };
 
@@ -187,6 +190,7 @@ namespace opdet { //OpDet means optical detector
     fCheckSoftTrig = p.get<bool>("CheckSoftTrig", false);
     fSoftTrigLabel = p.get<std::string>("SoftTrigLabel", "pmtmetricproducer:");
     fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
+    fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
     fChNumber = 0;
     fEvNumber = 0;
     hist_id=0;
@@ -206,6 +210,9 @@ namespace opdet { //OpDet means optical detector
     tree_OnBeamMonPeaks.resize(TotalMonBins);
     tree_OffBeamMonPeaks.resize(TotalMonBins);
     tree_FullBeamMonPeaks.resize(TotalMonBins);
+    tree_HLTs.clear();
+    tree_HLTs.resize(20);
+    for(int i=0; i<int(tree_HLTs.size()); i++) tree_HLTs[i] = -1;
     tree_MonStart=fMonStart;
     tree_MonEnd=fMonStop;
     tree_MonStep=fMonStep;
@@ -288,6 +295,7 @@ namespace opdet { //OpDet means optical detector
     evtTree->Branch("prelimPE",&tree_prelimPE);
     evtTree->Branch("peakPE",&tree_peakPE);
     evtTree->Branch("peaktime",&tree_peaktime);
+    evtTree->Branch("HLT", &tree_HLTs);
   }
 
   void BeamRateCalib::analyze(art::Event const & e)
@@ -310,6 +318,25 @@ namespace opdet { //OpDet means optical detector
     return;
     }
     
+    art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
+    e.getByLabel(fPTBLabel,ptbHandle);
+    int FillIndex = 0;
+    for(int index=0; index<int(ptbHandle->size()); index++)
+    {
+      auto ptb = (*ptbHandle)[index];
+      auto hltrigs = ptb.GetHLTriggers();
+      for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
+      {
+        int Power=0;
+        while(Power<64)
+        {
+          if(hltrigs[HLT].trigger_word & (0x1 << Power)) break;
+          else Power=Power+1;
+        }
+        tree_HLTs[FillIndex] = Power;
+        FillIndex=FillIndex+1;
+      }
+    }
     //Seems to be a vector with some extra stuff like isValid()
     //raw::OpDetWaveform is a class with start time, vector of samples, and channel ID
     analyzeTrigger(waveHandle); //Update the TH2D in other loop...Although maybe we dont need to 
