@@ -103,7 +103,9 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
 {
   produces<std::vector<CRTStripHit>>();
   produces<art::Assns<FEBData, CRTStripHit>>();
-  produces<raw::TimingReferenceInfo>();
+
+  if(fReferenceTs0)
+    produces<raw::TimingReferenceInfo>();
 }
 
 void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
