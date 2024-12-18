@@ -1,0 +1,11 @@
+# job configuration
+#
+#include "standard_reco2_sbnd.fcl"
+
+physics.reco2: @local::sbnd_reco2_producer_sequence_no_sce_corrections
+physics.ana:   @local::sbnd_reco2_analyzer_sequence_no_sce_corrections
+
+services.SpaceCharge.EnableCalSpatialSCE: false
+services.SpaceCharge.EnableSimSpatialSCE: false
+services.SpaceCharge.EnableSimEfieldSCE:  false
+services.SpaceCharge.EnableCalEfieldSCE:  false
