@@ -626,13 +626,13 @@ namespace opdet { //OpDet means optical detector
             int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*TotalFlash;
             auto const& wvf = (*waveHandle)[WaveIndex];
 
-            if( (wvf.ChannelNumber()<904) || (wvf.ChannelNumber()>907) ) continue;
+            if( (wvf.ChannelNumber()<903) || (wvf.ChannelNumber()>907) ) continue;
             //Determine if waveform has a pulse in it
             std::stringstream histname;
             art::ServiceHandle<art::TFileService> tfs;
             int k=0;
             //Save waveform
-            if( (wvf.ChannelNumber()==904 )) SaveChannelWaveforms(wvf, fEvNumber, FlashCounter);
+            if( (wvf.ChannelNumber()==903 )) SaveChannelWaveforms(wvf, fEvNumber, FlashCounter);
             std::vector<int> MonPulse;
             while(k < int(wvf.size()))
             {
@@ -643,11 +643,11 @@ namespace opdet { //OpDet means optical detector
                 if(wvf.ChannelNumber()==907) OneChannel[2] = true;
                 //break;
               }
-              if(wvf.ChannelNumber()==904 && wvf[k]-wvf[0] > 17)
+              if(wvf.ChannelNumber()==903 && wvf[k]-wvf[0] > 17)
               {
                 count=count+1; //We also care about coincident crossings though
               }
-              if(wvf.ChannelNumber()==904)
+              if(wvf.ChannelNumber()==903)
               {
                 //They disappate more power
                 //Approximate power through the resistor is ( int(wvf[k]-wvf[0]/30)*0.125 V )**2/50 ohm
@@ -665,7 +665,7 @@ namespace opdet { //OpDet means optical detector
               }
               k=k+1;
             }
-            if(wvf.ChannelNumber()==904)
+            if(wvf.ChannelNumber()==903)
             {
               double DutyCycle = double(count)/double(wvf.size());
               hist_MSUM_DutyCycle->Fill(DutyCycle);
