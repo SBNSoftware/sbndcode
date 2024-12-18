@@ -16,6 +16,8 @@
 #include "crtskim_sbnd.fcl"
 #include "pmtskim_sbnd.fcl"
 
+#include "SBNDCVNMapper.fcl"
+
 BEGIN_PROLOG
 
 sbnd_reco2_producers:{
@@ -67,6 +69,9 @@ sbnd_reco2_producers:{
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
+
+    ### CVN
+    cvn:                 @local::standard_sbndcvnevaluatorslc
 }
 
 sbnd_reco2_tpc_sequence: [
@@ -111,6 +116,7 @@ sbnd_reco2_multi_system_matching_sequence_sce: [
     , fmatcharaSCE
     , fmatchoparaSCE
     , opt0finderSCE
+    , cvn
 ]
 
 sbnd_reco2_producer_sequence_no_sce_corrections: [
