@@ -1,0 +1,9 @@
+#include "reco1_data.fcl"
+
+physics.analyzers.superadata.SelectEvents: [ "reco1" ]
+
+outputs.out2: @local::outputs.out1
+outputs.out2.SelectEvents: [ "!reco1" ]
+outputs.out2.fileName: "nhitsfilteredevents_%ifb_%p-%tc.root"
+physics.stream2: [ out2 ]
+physics.end_paths: [ @sequence::physics.end_paths, stream2]
