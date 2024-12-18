@@ -1,5 +1,7 @@
 #include "drops_reco1.fcl"
 #include "wcsp_data_sbnd.fcl"
+#include "opdeconvolution_sbnd_data.fcl"
+#include "sbnd_ophitfinder_deco_data.fcl"
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
 #include "standard_reco1_sbnd.fcl"
@@ -17,9 +19,13 @@ physics.producers:
     @table::physics.producers
     sptpc2d:   @local::sbnd_wcls_sp_data
     crtstrips: @local::crtstriphitproducer_data_sbnd
+    opdecopmt: @local::SBNDOpDeconvolutionPMT_data
+    ophitpmt:  @local::SBNDDecoOpHitFinderPMT_data
+    opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0
+    opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1
 }
 
-physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d, crtstrips]
+physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d, crtstrips, opdecopmt, ophitpmt, opflashtpc0, opflashtpc1]
 physics.ana: [superadata]
 
 outputs.out1.SelectEvents: [ "reco1" ]

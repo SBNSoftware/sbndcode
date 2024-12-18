@@ -38,4 +38,9 @@ sbnd_reco1_drops_data: [ #data specific drops to conserve space where needed
   "drop *_cluster3d_*_*" #drop uneeded spine (mlreco) output
 ]
 
+sbnd_reco1_drops_keep_rawdigits: [
+	@sequence::sbnd_reco1_drops_selective
+  , "keep raw::RawDigit*_*_*_*"
+]
+ 
 END_PROLOG
