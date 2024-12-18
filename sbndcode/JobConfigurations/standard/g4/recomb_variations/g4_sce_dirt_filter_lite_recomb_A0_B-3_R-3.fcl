@@ -1,0 +1,5 @@
+#include "g4_sce_dirt_filter_lite.fcl"
+process_name: G4Var
+services.LArG4Parameters.EllipsModBoxA: .904
+services.LArG4Parameters.EllipsModBoxB: .180
+services.LArG4Parameters.EllipsModBoxR: 1.19
