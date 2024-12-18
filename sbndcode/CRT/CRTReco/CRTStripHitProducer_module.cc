@@ -124,7 +124,7 @@ void sbnd::crt::CRTStripHitProducer::produce(art::Event& e)
                       const uint64_t etrig_unix = ts->Timestamp() / static_cast<uint64_t>(1e9);
                       const int64_t unix_diff = ref_unix - etrig_unix;
                       if(unix_diff != 0 && unix_diff != 1)
-                        throw std::runtime_error("Unix timestamps differ by more than 1" + unix_diff);
+                        throw std::runtime_error(Form("Unix timestamps differ by more than 1 (%li)", unix_diff));
 
                       const bool previous_second = unix_diff == 1;
 
@@ -177,7 +177,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
       const int64_t unix_diff = ref_unix - unixs;
       if(unix_diff != 0 && unix_diff != 1)
-        throw std::runtime_error("Unix timestamps differ by more than 1" + unix_diff);
+        throw std::runtime_error(Form("Unix timestamps differ by more than 1 (%li)", unix_diff));
 
       const bool previous_second = unix_diff == 1;
 
