@@ -10,7 +10,7 @@
 // Ported to SBND by Marco Del Tutto, March 2018
 
 // LArSoft includes
-#include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "larana/OpticalDetector/OpHitFinder/PMTPulseRecoBase.h"
@@ -135,8 +135,8 @@ namespace opdet {
     fHitThreshold = pset.get< float >("HitThreshold");
     bool useCalibrator = pset.get< bool > ("UseCalibrator", false);
 
-    auto const& geometry(*lar::providerFrom< geo::Geometry >());
-    fMaxOpChannel = geometry.MaxOpChannel();
+    geo::WireReadoutGeom const& channelMapAlg = art::ServiceHandle<geo::WireReadout const>()->Get();
+    fMaxOpChannel = channelMapAlg.MaxOpChannel();
 
     if (useCalibrator) {
       // If useCalibrator, get it from ART
@@ -232,7 +232,6 @@ namespace opdet {
       if ( err.categoryCode() != art::errors::ProductNotFound ) throw;
     }
 
-    auto const& geometry(*lar::providerFrom< geo::Geometry >());
     auto const clockData_CAEN = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(evt);
     auto const& calibrator(*fCalib);
     detinfo::ElecClock const optical_clock_daphne = detinfo::ElecClock(clockData_CAEN.OpticalClock().Time(),
@@ -253,6 +252,7 @@ namespace opdet {
     //
 
     // Load pulses into WaveformVector
+    geo::WireReadoutGeom const& channelMapAlg = art::ServiceHandle<geo::WireReadout const>()->Get();
     if(fChannelMasks.empty() && _opch_to_use.empty() && fInputLabels.size()<2) {
       art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
       if(fInputLabels.empty())
@@ -264,7 +264,7 @@ namespace opdet {
                    *HitPtr,
                    fPulseRecoMgr,
                    *fThreshAlg,
-                   geometry,
+                   channelMapAlg,
                    fHitThreshold,
                    clockData,
                    calibrator);
@@ -304,7 +304,7 @@ namespace opdet {
                    *HitPtr,
                    fPulseRecoMgr,
                    *fThreshAlg,
-                   geometry,
+                   channelMapAlg,
                    fHitThreshold,
                    clockData,
                    calibrator);

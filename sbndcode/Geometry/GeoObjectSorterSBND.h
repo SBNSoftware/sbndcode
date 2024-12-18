@@ -12,34 +12,20 @@
 #include "fhiclcpp/fwd.h"
 
 // LArSoft libraries
-#include "larcorealg/Geometry/AuxDetGeo.h"
 #include "larcorealg/Geometry/GeoObjectSorter.h"
-#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
-
-// C/C++ standard libraries
-#include <vector>
-#include <string>
-
 
 namespace geo {
 
   class GeoObjectSorterSBND: public GeoObjectSorter {
   public:
 
-    GeoObjectSorterSBND(fhicl::ParameterSet const& p);
-
-    virtual void SortCryostats(std::vector<geo::CryostatGeo> & cgeo)     const override;
-    virtual void SortOpDets   (std::vector<geo::OpDetGeo> & opdet)       const override;
-    virtual void SortTPCs     (std::vector<geo::TPCGeo>      & tgeo)     const override;
-    virtual void SortPlanes   (std::vector<geo::PlaneGeo>    & pgeo,
-                               geo::DriftDirection_t           driftDir) const override;
-    virtual void SortWires    (std::vector<geo::WireGeo>     & wgeo)     const override;
-    virtual void SortAuxDets  (std::vector<geo::AuxDetGeo>   & adgeo)    const override;
-    virtual void SortAuxDetSensitive(std::vector<geo::AuxDetSensitiveGeo> & adsgeo) const override;
+    explicit GeoObjectSorterSBND(fhicl::ParameterSet const&);
 
   private:
 
-    std::string fDetVersion;  ///< String of the detector version.
+    bool compareCryostats(CryostatGeo const& c1, CryostatGeo const& c2) const override;
+    bool compareOpDets(OpDetGeo const& t1, OpDetGeo const& t2) const override;
+    bool compareTPCs(TPCGeo const& t1, TPCGeo const& t2) const override;
 
   }; // class GeoObjectSorterSBND
 
