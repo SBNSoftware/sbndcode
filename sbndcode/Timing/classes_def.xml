@@ -1,0 +1,26 @@
+<!-- 
+  File: classes_def.xml
+  Brief: Data product definitions for pmt timing data products.
+  Author: Lynn Tung
+-->
+
+<lcgdict>
+  <class name="raw::TimingReferenceInfo">
+  </class>
+  <class name="std::vector<raw::TimingReferenceInfo>"/>
+  <class name="art::Wrapper<raw::TimingReferenceInfo>"/>
+  <class name="art::Wrapper<std::vector<raw::TimingReferenceInfo> >"/>
+
+  <class name="raw::pmt::BoardTimingInfo">
+  </class>
+  <class name="std::vector<raw::pmt::BoardTimingInfo>"/>
+  <class name="art::Wrapper<std::vector<raw::pmt::BoardTimingInfo>>"/>
+
+  <class name="std::pair<art::Ptr<raw::pmt::BoardTimingInfo>, art::Ptr<raw::OpDetWaveform>>"/>
+  <class name="std::pair<art::Ptr<raw::OpDetWaveform>, art::Ptr<raw::pmt::BoardTimingInfo>>"/>
+  <class name="art::Assns<raw::pmt::BoardTimingInfo, raw::OpDetWaveform, void>"/>
+  <class name="art::Assns<raw::OpDetWaveform, raw::pmt::BoardTimingInfo, void>"/>
+  <class name="art::Wrapper<art::Assns<raw::pmt::BoardTimingInfo, raw::OpDetWaveform, void>>"/>
+  <class name="art::Wrapper<art::Assns<raw::OpDetWaveform, raw::pmt::BoardTimingInfo, void>>"/>
+
+</lcgdict>
