@@ -18,10 +18,10 @@ namespace raw {
   namespace ptb {
 
     struct Trigger {
-      ULong64_t prev_timestamp;
+      long prev_timestamp;
       ULong64_t timestamp;
       ULong64_t trigger_word;
-      uint32_t gate_counter;
+      int gate_counter;
       uint32_t word_type;
     };
 

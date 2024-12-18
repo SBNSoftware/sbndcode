@@ -203,8 +203,8 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 		tstruct.gate_counter = ctbfrag.Trigger(iword)->gate_counter;
               }
               else if (*(frag.metadata<int>()) != 2){ //If data is taken with 128b PTB words
-		tstruct.prev_timestamp = 0;
-		tstruct.gate_counter = 0;
+		tstruct.prev_timestamp = -1;
+		tstruct.gate_counter = -1;
 	      }
 
 	      ix = sout.HLTrigs.size();

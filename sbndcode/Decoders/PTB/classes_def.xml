@@ -5,7 +5,8 @@
 -->
 
 <lcgdict>
-  <class name="raw::ptb::Trigger" ClassVersion="11">
+  <class name="raw::ptb::Trigger" ClassVersion="12">
+   <version ClassVersion="12" checksum="283875453"/>
    <version ClassVersion="11" checksum="1173933314"/>
    <version ClassVersion="10" checksum="983962440"/>
   </class>
