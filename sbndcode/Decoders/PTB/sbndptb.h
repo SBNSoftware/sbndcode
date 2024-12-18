@@ -18,15 +18,12 @@ namespace raw {
   namespace ptb {
 
     struct Trigger {
-      ULong64_t prev_timestamp;
       ULong64_t timestamp;
       ULong64_t trigger_word;
-      uint32_t gate_counter;
       uint32_t word_type;
     };
 
     struct ChStatus {
-      ULong64_t prev_timestamp;
       ULong64_t timestamp;
       uint32_t beam;
       uint32_t crt;
@@ -38,7 +35,6 @@ namespace raw {
     };
 
     struct Feedback {
-      ULong64_t prev_timestamp;
       ULong64_t timestamp;
       uint32_t code;
       uint32_t source;
@@ -47,7 +43,6 @@ namespace raw {
     };
 
     struct Misc {
-      ULong64_t prev_timestamp;
       ULong64_t timestamp;
       ULong64_t payload;
       uint32_t word_type;
