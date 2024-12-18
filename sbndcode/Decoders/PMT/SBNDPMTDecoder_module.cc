@@ -589,10 +589,13 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                     art::Ptr<raw::OpDetWaveform> wvfmPtr = make_fltwvfm_ptr(fltwvfmVec->size()-1);
                     fltTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
                 }
-                else if ((fragid == 8) && (foutput_timing_wvfm) && (std::find(fignore_timing_ch.begin(), fignore_timing_ch.end(), i) == fignore_timing_ch.end())){
-                    timwvfmVec->push_back(waveform);
-                    art::Ptr<raw::OpDetWaveform> wvfmPtr = make_timwvfm_ptr(timwvfmVec->size()-1);
-                    timTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
+                else if ((fragid == 8)  ){
+                    if( (foutput_timing_wvfm) && (std::find(fignore_timing_ch.begin(), fignore_timing_ch.end(), i) == fignore_timing_ch.end()) )
+                    {
+                        timwvfmVec->push_back(waveform);
+                        art::Ptr<raw::OpDetWaveform> wvfmPtr = make_timwvfm_ptr(timwvfmVec->size()-1);
+                        timTimingAssns->addSingle(brdTimingInfoPtr, wvfmPtr);
+                    }
                 }
                 else{
                     pmtwvfmVec->push_back(waveform);
