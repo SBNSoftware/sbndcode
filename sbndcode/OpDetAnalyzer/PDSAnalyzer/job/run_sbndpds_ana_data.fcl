@@ -1,0 +1,19 @@
+#include "run_sbndpds_ana.fcl"
+
+physics.analyzers.opanatree.SaveRawWaveforms: false
+physics.analyzers.opanatree.SaveDeconvolvedWaveforms: false
+physics.analyzers.opanatree.SaveMCTruth: "false"
+physics.analyzers.opanatree.SaveMCParticles: "false"
+physics.analyzers.opanatree.SaveSimPhotons: "false"
+physics.analyzers.opanatree.SaveSimPhotonsArrivalTimes: "false"
+physics.analyzers.opanatree.SaveOpFlashes: "true"
+physics.analyzers.opanatree.MCTruthModuleLabel: [""]
+physics.analyzers.opanatree.MCModuleLabel: ""
+physics.analyzers.opanatree.SimPhotonsModuleLabel: ["", ""]
+physics.analyzers.opanatree.RawWaveformsModuleLabel: "pmtdecoder:PMTChannels"
+physics.analyzers.opanatree.OpFlashesModuleLabel: ["opflashtpc0","opflashtpc1"]
+physics.analyzers.opanatree.HitsLabel: ""
+physics.analyzers.opanatree.Reco2Label: ""
+physics.analyzers.opanatree.CosmicIdModuleLabel: ""
+physics.analyzers.opanatree.OpT0FinderModuleLabel: ""
+physics.analyzers.opanatree.SimpleFlashMatchModuleLabel: ""

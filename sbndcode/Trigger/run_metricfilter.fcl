@@ -1,0 +1,40 @@
+#include "metricfilter.fcl"
+
+process_name: MetricFilter
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "metricfiltered-art.root"
+  }
+}
+
+physics:
+{
+  producers: {}
+  filters:
+  {
+    metricfilter: @local::metricfilter_sbnd
+  }
+  analyzers:{}
+
+  reco: [metricfilter]
+  stream1: [out1]
+  trigger_paths: [reco]
+  end_paths: [stream1]
+}
+
+outputs.out1.SelectEvents: [ "reco" ]
+
+# beam window as of run17998
+physics.filters.metricfilter.time_min: 0.7
+physics.filters.metricfilter.time_max: 2.3
+physics.filters.metricfilter.pe_thresh: 50 
