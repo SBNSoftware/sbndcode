@@ -29,8 +29,8 @@ hitdumper:
     MCShowerModuleLabel:      "mcreco"
  
     KeepCRTStripHits:         true
-    KeepCRTSpacePoints:       false
-    KeepCRTTracks:            false
+    KeepCRTSpacePoints:       true
+    KeepCRTTracks:            true
     readOpHits:               true
     readpmtTrigger:           true
     readpmtSoftTrigger:       true

@@ -39,6 +39,7 @@
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
+#include "sbndcode/Timing/SBNDRawTimingObj.h"
 
 namespace sbnd::crt {
   class CRTAnalysis;
@@ -94,7 +95,7 @@ private:
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
     fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTPCTrackModuleLabel,
     fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel, fPFPModuleLabel, fPTBModuleLabel,
-    fTDCModuleLabel;
+    fTDCModuleLabel, fTimingReferenceModuleLabel;
   bool fDebug, fDataMode, fNoTPC, fHasPTB, fHasTDC;
 
   TTree* fTree;
@@ -104,6 +105,8 @@ private:
   int _run;
   int _subrun;
   int _event;
+  int _crt_timing_reference_type;
+  int _crt_timing_reference_channel;
 
   //mc truth
   std::vector<int16_t>              _mc_trackid;
@@ -331,6 +334,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fPFPModuleLabel                   = p.get<std::string>("PFPModuleLabel", "pandora");
   fPTBModuleLabel                   = p.get<std::string>("PTBModuleLabel", "ptbdecoder");
   fTDCModuleLabel                   = p.get<std::string>("TDCModuleLabel", "tdcdecoder");
+  fTimingReferenceModuleLabel       = p.get<std::string>("TimingReferenceModuleLabel", "crtstrips");
   fDebug                            = p.get<bool>("Debug", false);
   fDataMode                         = p.get<bool>("DataMode", false);
   fNoTPC                            = p.get<bool>("NoTPC", false);
@@ -346,6 +350,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("run", &_run);
   fTree->Branch("subrun", &_subrun);
   fTree->Branch("event", &_event);
+  fTree->Branch("crt_timing_reference_type", &_crt_timing_reference_type);
+  fTree->Branch("crt_timing_reference_channel", &_crt_timing_reference_channel);
 
   if(!fDataMode)
     {
@@ -620,6 +626,17 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   _event =  e.id().event();
 
   if(fDebug) std::cout << "This is event " << _run << "-" << _subrun << "-" << _event << std::endl;
+
+  _crt_timing_reference_type    = -1;
+  _crt_timing_reference_channel = -1;
+
+  art::Handle<raw::TimingReferenceInfo> TimingReferenceHandle;
+  e.getByLabel(fTimingReferenceModuleLabel, TimingReferenceHandle);
+  if(TimingReferenceHandle.isValid())
+    {
+      _crt_timing_reference_type    = TimingReferenceHandle->timingType;
+      _crt_timing_reference_channel = TimingReferenceHandle->timingChannel;
+    }
 
   if(fHasPTB)
     {
