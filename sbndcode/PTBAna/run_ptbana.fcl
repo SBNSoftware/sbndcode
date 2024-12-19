@@ -3,9 +3,6 @@ process_name: PTBAnalyzer
 services:
 {
   TFileService: { fileName: "ptbana_sbnd.root" }
-  //@table::sbnd_basic_services
-  //ParticleInventoryService: @local::sbnd_particleinventoryservice
-  //BackTrackerService:       @local::sbnd_backtrackerservice
   DetectorClocksService:    @local::sbnd_detectorclocks
 }
 
@@ -21,7 +18,6 @@ physics:
     ptbana: 
     { 
       module_type:       "PTBAnalysis"
-      //CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
     }
   }
 

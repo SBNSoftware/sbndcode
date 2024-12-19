@@ -223,7 +223,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
       if(unix_diff < -1 || unix_diff > 1)
         {
-          throw std::runtime_error("Unix timestamps differ by more than 1" + unix_diff);
+          throw std::runtime_error(Form("Unix timestamps differ by more than 1 (%li)", unix_diff));
         }
 
       if(unix_diff == 1)

@@ -186,7 +186,7 @@ void sbnd::ptb::PTBAnalysis::analyze(art::Event const& e)
 
 void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>> &PTBVec, int eventNum)
 {
-
+  /*
 
   //######################################################
 
@@ -502,7 +502,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
 
 
 
-
+  */
 
    // #################################################################
 
