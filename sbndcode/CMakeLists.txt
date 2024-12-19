@@ -23,7 +23,6 @@ add_subdirectory(Commissioning)
 add_subdirectory(Trigger)
 add_subdirectory(PTBAna)
 add_subdirectory(Timing)
-add_subdirectory(PTBAna)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
