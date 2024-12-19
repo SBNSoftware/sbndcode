@@ -88,9 +88,11 @@ void SBNDPTBDecoder::produce(art::Event & evt)
   auto cont_frags = evt.getHandle<artdaq::Fragments>(itag1);
   if (cont_frags)
     {
+		std::cout << " I found a ptb container! " << cont_frags->size() << std::endl;
       for (auto const& cont : *cont_frags)
 	{
 	  artdaq::ContainerFragment cont_frag(cont);
+	  std::cout << " \t\t\t I have  " << cont_frag.block_count() << " bloskcs " << std::endl;
 	  for (size_t ii = 0; ii < cont_frag.block_count(); ++ii)
 	    {
               ptbsv_t sout;  // output structures
@@ -149,6 +151,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	      sout.HLTrigs.push_back(tstruct);
 	      if (fDebugLevel > 0)
 		{
+			std::cout << ctbfrag.WordSize() << " is the word size of my HLT here!!" << std::endl;
 		  std::cout << "SBNDPTBDecoder_module: found HLT: " << wt << " " << ix << std::endl;
 		}
 	    }

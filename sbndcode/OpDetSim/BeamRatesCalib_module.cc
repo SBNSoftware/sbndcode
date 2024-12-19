@@ -155,6 +155,9 @@ namespace opdet { //OpDet means optical detector
     double tree_peakPE;
     double tree_peaktime;
     std::vector<int> tree_HLTs;
+    std::vector<ULong64_t> tree_HLTTimes;
+    std::vector<int> tree_LLTs;
+    std::vector<ULong64_t> tree_LLTTimes;
     
 
   };
@@ -217,6 +220,12 @@ namespace opdet { //OpDet means optical detector
     tree_FullBeamMonPeaks.resize(TotalMonBins);
     tree_HLTs.clear();
     tree_HLTs.resize(20);
+    tree_HLTTimes.clear();
+    tree_HLTTimes.resize(20);
+    tree_LLTs.clear();
+    tree_LLTs.resize(200);
+    tree_LLTTimes.clear();
+    tree_LLTTimes.resize(200);
     for(int i=0; i<int(tree_HLTs.size()); i++) tree_HLTs[i] = -1;
     tree_MonStart=fMonStart;
     tree_MonEnd=fMonStop;
@@ -301,6 +310,9 @@ namespace opdet { //OpDet means optical detector
     evtTree->Branch("peakPE",&tree_peakPE);
     evtTree->Branch("peaktime",&tree_peaktime);
     evtTree->Branch("HLT", &tree_HLTs);
+    evtTree->Branch("HLTTimes", &tree_HLTTimes);
+    evtTree->Branch("LLT", &tree_LLTs);
+    evtTree->Branch("LLTTimes", &tree_LLTTimes);
   }
 
   void BeamRateCalib::analyze(art::Event const & e)
@@ -333,6 +345,8 @@ namespace opdet { //OpDet means optical detector
       for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
       {
         int Power=0;
+        if(FillIndex> int(tree_HLTTimes.size()-1)) continue;
+        tree_HLTTimes[FillIndex] = hltrigs[HLT].timestamp*20; //ns
         while(Power<64)
         {
           if(hltrigs[HLT].trigger_word & (0x1 << Power)) break;
@@ -341,6 +355,28 @@ namespace opdet { //OpDet means optical detector
         tree_HLTs[FillIndex] = Power;
         FillIndex=FillIndex+1;
       }
+      auto lltrigs = ptb.GetLLTriggers();
+    }
+
+      FillIndex=0;
+    for(int index=0; index<int(ptbHandle->size()); index++)
+    {
+      auto ptb = (*ptbHandle)[index];
+      auto lltrigs = ptb.GetLLTriggers();
+      for(int LLT=0; LLT<int(lltrigs.size()); LLT++)
+      {
+        if(FillIndex> int(tree_LLTTimes.size()-1)) continue;
+        tree_LLTTimes[FillIndex] = lltrigs[LLT].timestamp*20; //ns
+        int Power=0;
+        while(Power<64)
+        {
+          if(lltrigs[LLT].trigger_word & (0x1 << Power)) break;
+          else Power=Power+1;
+        }
+        tree_LLTs[FillIndex] = Power;
+        FillIndex=FillIndex+1;
+      }
+
     }
     //Seems to be a vector with some extra stuff like isValid()
     //raw::OpDetWaveform is a class with start time, vector of samples, and channel ID
@@ -613,9 +649,9 @@ namespace opdet { //OpDet means optical detector
   bool OneChannel[] = {false, false, false};
   int count=0;
   double Energy=0;
-  int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
   int TimingChannelsIncluded=4;
   int TimingBoards=1;
+   int TotalFlash = waveHandle->size()/(TimingBoards*TimingChannelsIncluded); //should match earlier total flash result but different object
   for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
     {
       for(int CurrentBoard=0; CurrentBoard<TimingBoards; CurrentBoard++)
@@ -623,7 +659,7 @@ namespace opdet { //OpDet means optical detector
           //Loop over each PMT in a board
           for(int CAENChannel=0; CAENChannel<TimingChannelsIncluded; CAENChannel++)
           {
-            int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*TotalFlash;
+            int WaveIndex = CAENChannel + FlashCounter*TimingChannelsIncluded + CurrentBoard*TimingChannelsIncluded*TotalFlash;
             auto const& wvf = (*waveHandle)[WaveIndex];
 
             if( (wvf.ChannelNumber()<903) || (wvf.ChannelNumber()>907) ) continue;
@@ -686,9 +722,9 @@ namespace opdet { //OpDet means optical detector
                     }
                 }
             }
-        }//waveform handle loop
-      }
-    }
+        }//Channel loop
+      } //CAEN loop
+    } //flash loop
 
 
   GoodTrigger = OneChannel[0] && OneChannel[1] && OneChannel[2];
