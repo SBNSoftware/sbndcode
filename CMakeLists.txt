@@ -15,12 +15,12 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.93.01)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.93.01.01)
 find_package(cetmodules REQUIRED)
 project(sbndcode LANGUAGES CXX)
 
 # for CI:
-# project(sbndcode VERSION 09.93.01)
+# project(sbndcode VERSION 09.93.01.01)
 
 message(STATUS "\n")
 message(STATUS "=================================   ${PROJECT_NAME}   =================================")
@@ -80,6 +80,7 @@ find_package( larcore REQUIRED )
 find_package( larcorealg REQUIRED )
 find_package( larcoreobj REQUIRED )
 find_package( larreco REQUIRED )
+find_package( larrecodnn REQUIRED )
 find_package( larana REQUIRED )
 find_package( PostgreSQL REQUIRED )
 find_package( hep_concurrency REQUIRED )

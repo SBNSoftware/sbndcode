@@ -8,5 +8,5 @@ services: {
 services.RawDrawingOptions.SeeBadChannels: true
 services.RawDrawingOptions.MinimumSignal: 0
 services.RawDrawingOptions.PedestalOption: 1
-Services.RawDrawingOptions.TotalTicks: 3415
+services.RawDrawingOptions.TotalTicks: 3427
 services.ColorDrawingOptions.ColorOrGrayScale: 0

@@ -7,6 +7,7 @@ art_make_library(
 
 simple_plugin(
               CRTStripHitProducer module
+              artdaq_core::artdaq-core_Data
               sbnobj::SBND_CRT
               sbnobj::SBND_Timing
               sbndcode_GeoWrappers
