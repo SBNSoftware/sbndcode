@@ -1,3 +1,5 @@
+#include "detectorclocks_sbnd.fcl"
+
 process_name: PTBAnalyzer
 
 services:
