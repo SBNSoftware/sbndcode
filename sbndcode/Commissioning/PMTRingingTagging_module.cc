@@ -321,7 +321,6 @@ void PMTRingingTagging::analyze(art::Event const& e)
               //Extract peak frequency
               tree_ringingChannelIDs[TreeVecCounter] = wvf.ChannelNumber();
               tree_ChBiggestPulse[TreeVecCounter] = TMath::Abs(MinADC - wvfMedian);
-              tree_ChannelNumberOfRings[TreeVecCounter] = NumberPeaks;
               tree_PeakFFT[TreeVecCounter] = PeakFreq;
               int StepSize = (EndIndex-MinIndex)/MaxFFTIndex; //Peak to peak distance
               std::vector<double> PeakTime(NumberPeaks);
@@ -352,8 +351,9 @@ void PMTRingingTagging::analyze(art::Event const& e)
                   PeakYFill[FitIndexHelper] = TMath::Log( tree_RingingPeakAmplitudes[TreeVecCounter][i] );
                   FitIndexHelper=FitIndexHelper+1;
                 }
-                else NumberPeaks = NumberPeaks-1;
+                if( tree_RingingPeakAmplitudes[TreeVecCounter][i] > 0 ) NumberPeaks = NumberPeaks-1;
               }
+              tree_ChannelNumberOfRings[TreeVecCounter] = NumberPeaks;
               PeakTime.resize(FitIndexHelper);
               PeakYFill.resize(FitIndexHelper);
               TGraph g = TGraph(FitIndexHelper, &PeakTime[0], &PeakYFill[0]);
