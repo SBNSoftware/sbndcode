@@ -331,7 +331,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
               int FitIndexHelper=1;
               for(int i=1; i<NumberPeaks; i++)
               {
-                PeakGrabWindow=StepSize*0.5;
+                PeakGrabWindow=StepSize*0.25;
                 int InterestingIndex = StartIndex+StepSize*(i);
                 if(InterestingIndex-PeakGrabWindow<0) InterestingIndex=PeakGrabWindow;
                 int EndSearch = InterestingIndex+PeakGrabWindow;
