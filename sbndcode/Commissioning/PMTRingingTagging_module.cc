@@ -323,7 +323,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
               //Do running average to capture baseline wander during ringing
               std::vector<int> RunningAvg(wvf.size());
               CalcRunningAvg(RunningAvg, wvf, 50, wvfMedian);
-              int StartIndex = std::distance(RunningAvg.begin(), std::max_element(RunningAvg.begin()+MinIndex+StepSize, RunningAvg.begin()+MinIndex+int(StepSize*1.05)) );
+              int StartIndex = std::distance(RunningAvg.begin(), std::max_element(RunningAvg.begin()+MinIndex+StepSize, RunningAvg.begin()+MinIndex+int(StepSize*1.5)) );
               tree_RingingPeakSamples[TreeVecCounter][0] = StartIndex;
               tree_RingingPeakAmplitudes[TreeVecCounter][0] =RunningAvg[tree_RingingPeakSamples[TreeVecCounter][0]]- wvfMedian;
               PeakYFill[0] =tree_RingingPeakAmplitudes[TreeVecCounter][0];
@@ -331,7 +331,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
               int FitIndexHelper=1;
               for(int i=1; i<NumberPeaks; i++)
               {
-                PeakGrabWindow=StepSize*0.05;
+                PeakGrabWindow=StepSize*0.25;
                 int InterestingIndex = StartIndex+StepSize*(i);
                 if(InterestingIndex-PeakGrabWindow<0) InterestingIndex=PeakGrabWindow;
                 int EndSearch = InterestingIndex+PeakGrabWindow;
