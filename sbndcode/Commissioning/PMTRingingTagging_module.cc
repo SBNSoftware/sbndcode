@@ -224,6 +224,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
   int PMTPerBoard = 15;
   int NumPMT = fTotalCAENBoards*PMTPerBoard; //15 baords per CAEN is fixed
   int NumFlash = (*waveHandle).size()/NumPMT; 
+  std::cout << " on run " << tree_run << " event " << tree_event << " with flashes " << NumFlash << std::endl;
   //if(NumFlash>1) NumFlash=1; //assume 1 flash per event
   int TreeVecCounter=0;
   double Baseline=14250;
@@ -352,7 +353,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
                 else NumberPeaks = NumberPeaks-1;
               }
               TGraph g = TGraph(NumberPeaks, &PeakTime[0], &PeakYFill[0]);
-              TF1 f1 = TF1("f1","[0]*x+[1]",0., NumberPeaks+10);
+              TF1 f1 = TF1("f1","[0]*x+[1]",0., PeakTime[PeakTime.size()-1]+10);
               g.Fit("f1");
               tree_RecoDampingConstants[TreeVecCounter] = -1/f1.GetParameter(0); //time constant in seconds
               tree_RecoDampingConstants_Intercept[TreeVecCounter] = f1.GetParameter(1);
