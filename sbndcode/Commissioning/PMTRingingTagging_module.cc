@@ -97,6 +97,7 @@ private:
   std::vector<std::vector<double>> tree_RingingPeakAmplitudes; //Potentially many per channel
   std::vector<std::vector<int>> tree_RingingPeakSamples;
   std::vector<double> tree_RecoDampingConstants; //1 per channel
+  std::vector<double> tree_RecoDampingConstants_Intercept;
   double fFFTAmpCut;
 };
 
@@ -118,6 +119,8 @@ void PMTRingingTagging::ResetTree()
     tree_PeakFFT.resize(fTotalCAENBoards*15);
     tree_RecoDampingConstants.clear();
     tree_RecoDampingConstants.resize(fTotalCAENBoards*15);
+    tree_RecoDampingConstants_Intercept.clear();
+    tree_RecoDampingConstants_Intercept.resize(fTotalCAENBoards*15);
     tree_RingingPeakAmplitudes.clear();
     tree_RingingPeakSamples.clear();
     for(int i =0; i<fTotalCAENBoards*15; i++)
@@ -155,6 +158,7 @@ PMTRingingTagging::PMTRingingTagging(fhicl::ParameterSet const& p)
   evtTree->Branch("ChannelID",&tree_ChID, TotalPMT, 0);
   evtTree->Branch("ChannelPeakFFTFreq",&tree_PeakFFT, TotalPMT, 0);
   evtTree->Branch("ReconstructedDampingConstant",&tree_RecoDampingConstants, TotalPMT, 0);
+  evtTree->Branch("ReconstructedDampingConstantIntercept",&tree_RecoDampingConstants_Intercept, TotalPMT, 0);
   //maybe change below to a size_of * TotalPMT
   evtTree->Branch("RingingPeakAmplitudes", &tree_RingingPeakAmplitudes, TotalPMT*MaxRings, 0); //Not sure if this will actually work
   evtTree->Branch("RingingPeakSamples", &  tree_RingingPeakSamples, TotalPMT*MaxRings, 0); //Not sure if this will actually work
@@ -351,8 +355,9 @@ void PMTRingingTagging::analyze(art::Event const& e)
               TF1 f1 = TF1("f1","[0]*x+[1]",0., NumberPeaks+10);
               g.Fit("f1");
               tree_RecoDampingConstants[TreeVecCounter] = -1/f1.GetParameter(0); //time constant in seconds
-              if((histCounter<fTaggedHistsToSave) || 
-              (PeakFreq>=100e3 && PeakFreq<=400e3 && tree_ChBiggestPulse[TreeVecCounter]> 200 && NumberPeaks>3)){ 
+              tree_RecoDampingConstants_Intercept[TreeVecCounter] = f1.GetParameter(1);
+              if( (histCounter<fTaggedHistsToSave) || 
+              (PeakFreq>=100e3 && PeakFreq<=400e3 && tree_ChBiggestPulse[TreeVecCounter]> 200 && NumberPeaks>3) ){ 
                 SaveChannelWaveforms(wvf);
               }
               TreeVecCounter=TreeVecCounter+1;
@@ -450,6 +455,7 @@ void PMTRingingTagging::NoRingingFound(double MaxElement, int TreeVecCounter)
   tree_ringingChannelIDs[TreeVecCounter] = -1;
   tree_ChannelNumberOfRings[TreeVecCounter] = 0;
   tree_RecoDampingConstants[TreeVecCounter] = -1;
+  tree_RecoDampingConstants_Intercept[TreeVecCounter] = -1;
   tree_PeakFFT[TreeVecCounter] = -1;
   for(int j=0; j<fMaxRings; j++)
   {
