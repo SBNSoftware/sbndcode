@@ -71,6 +71,7 @@ public:
   double GetWaveformMedian(raw::OpDetWaveform wvf);
   double GetWaveformMedian(std::vector<short int> wvf);
   void NoRingingFound(double MaxElement, int TreeVecCounter);
+  void CalcRunningAvg(std::vector<int> &Baseline, raw::OpDetWaveform wvf, int HalfWindow, double Median);
   void FFTTest();
 
 private:
@@ -256,7 +257,8 @@ void PMTRingingTagging::analyze(art::Event const& e)
               //std::vector<short int> TempWaveform(wvf.size()-MinIndex);
               int wvfMedian = GetWaveformMedian( wvf);
               int EndIndex = int(wvf.size());
-              if(EndIndex-MinIndex > 14000) EndIndex=14000+MinIndex;
+              int DesiredSize = 14000; //Size of waveform we do FFT on
+              if(EndIndex-MinIndex > DesiredSize) EndIndex=DesiredSize+MinIndex;
               int NumberPoints = EndIndex-MinIndex;
               std::vector<double> TempWaveform(NumberPoints);
               TVirtualFFT *fftr2c = TVirtualFFT::FFT(1, &NumberPoints, "R2C"); //1 dimensional, size of sample, Real entrys to complex?
@@ -318,9 +320,12 @@ void PMTRingingTagging::analyze(art::Event const& e)
               int StepSize = (EndIndex-MinIndex)/MaxFFTIndex; //Peak to peak distance
               std::vector<int> PeakTime(NumberPeaks);
               std::vector<int> PeakYFill(NumberPeaks);
-              int StartIndex = std::distance(wvf.begin(), std::max_element(wvf.begin()+MinIndex+StepSize, wvf.begin()+MinIndex+int(StepSize*1.05)) );
+              //Do running average to capture baseline wander during ringing
+              std::vector<int> RunningAvg(wvf.size());
+              CalcRunningAvg(RunningAvg, wvf, 50, wvfMedian);
+              int StartIndex = std::distance(RunningAvg.begin(), std::max_element(RunningAvg.begin()+MinIndex+StepSize, RunningAvg.begin()+MinIndex+int(StepSize*1.05)) );
               tree_RingingPeakSamples[TreeVecCounter][0] = StartIndex;
-              tree_RingingPeakAmplitudes[TreeVecCounter][0] =wvf[tree_RingingPeakSamples[TreeVecCounter][0]]- wvfMedian;
+              tree_RingingPeakAmplitudes[TreeVecCounter][0] =RunningAvg[tree_RingingPeakSamples[TreeVecCounter][0]]- wvfMedian;
               PeakYFill[0] =tree_RingingPeakAmplitudes[TreeVecCounter][0];
               PeakTime[0]=tree_RingingPeakSamples[TreeVecCounter][0]*2e-9;
               int FitIndexHelper=1;
@@ -331,8 +336,8 @@ void PMTRingingTagging::analyze(art::Event const& e)
                 if(InterestingIndex-PeakGrabWindow<0) InterestingIndex=PeakGrabWindow;
                 int EndSearch = InterestingIndex+PeakGrabWindow;
                 if(EndSearch>int(wvf.size())) EndSearch=int(wvf.size())-1;
-                tree_RingingPeakAmplitudes[TreeVecCounter][i] = *std::max_element(wvf.begin()+InterestingIndex-PeakGrabWindow, wvf.begin()+EndSearch) - wvfMedian;;
-                int IndexGrabbed = std::distance(wvf.begin(), std::max_element(wvf.begin()+InterestingIndex-PeakGrabWindow, wvf.begin()+EndSearch));
+                tree_RingingPeakAmplitudes[TreeVecCounter][i] = *std::max_element(RunningAvg.begin()+InterestingIndex-PeakGrabWindow, RunningAvg.begin()+EndSearch) - wvfMedian;;
+                int IndexGrabbed = std::distance(RunningAvg.begin(), std::max_element(RunningAvg.begin()+InterestingIndex-PeakGrabWindow, RunningAvg.begin()+EndSearch));
                 tree_RingingPeakSamples[TreeVecCounter][i] = IndexGrabbed;
                 if( tree_RingingPeakAmplitudes[TreeVecCounter][i] > 0)
                 {
@@ -356,6 +361,52 @@ void PMTRingingTagging::analyze(art::Event const& e)
     }//flash loop
     evtTree->Fill();
 }//Analyze
+
+
+
+void PMTRingingTagging::CalcRunningAvg(std::vector<int> &Baseline, raw::OpDetWaveform wvf, int HalfWindow, double Median)
+{
+  //Do middle baseline where we should have the right number samples always
+  double PulseMaskAmp=40;
+  for(int i =HalfWindow ; i<int(wvf.size())-HalfWindow; i++)
+  {
+    int EndIndex = i+HalfWindow;
+    double sum=0;
+    for(int j=i-HalfWindow; j<EndIndex; j++)
+    {
+      if(wvf[j] > Median-PulseMaskAmp) sum = sum + wvf[j]; //mask out pulses
+      else sum = sum + Median;
+    }
+    Baseline[i] = sum/(2*HalfWindow);
+  }
+  //Do end of window
+  for(int i =int(wvf.size())-HalfWindow ; i<int(wvf.size()); i++)
+  {
+    //int EndIndex = i+HalfWindow;
+    //if(EndIndex>int(wvf.size())) EndIndex = int(wvf.size());
+    //double sum=0;
+    //for(int j=i; j<EndIndex; j++)
+    //{
+    //  if(wvf[j] > Median-PulseMaskAmp) sum = sum + wvf[j]; //mask out pulses
+    //  else sum = sum + Median;
+    //}
+    Baseline[i] = Median; //sum/(EndIndex - i);
+  }
+  //Do start of window
+  for(int i =0 ; i<HalfWindow; i++)
+  {
+    //int EndIndex = i;
+    //if(EndIndex>int(wvf.size())) EndIndex = int(wvf.size());
+    //double sum=0;
+    //for(int j=0; j<EndIndex; j++)
+    //{
+    //  if(wvf[j] > Median-PulseMaskAmp) sum = sum + wvf[j]; //mask out pulses
+    //  else sum = sum + Median;
+    //}
+    Baseline[i] = Median; //sum/i;
+  }
+  //Baseline is all updated an can return
+}
 
 
 void PMTRingingTagging::SaveChannelWaveforms(const raw::OpDetWaveform &wvf)
