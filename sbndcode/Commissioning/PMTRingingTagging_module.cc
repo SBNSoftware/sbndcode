@@ -357,6 +357,11 @@ void PMTRingingTagging::analyze(art::Event const& e)
               g.Fit("f1");
               tree_RecoDampingConstants[TreeVecCounter] = -1/f1.GetParameter(0); //time constant in seconds
               tree_RecoDampingConstants_Intercept[TreeVecCounter] = f1.GetParameter(1);
+              for(int i=0; i<NumberPeaks; i++)
+              {
+                std::cout << PeakTime[i] << " , " << PeakYFill[i] << std::endl;
+              }
+              std::cout << "Gives slope " << f1.GetParameter(0) << " and intercept " << f1.GetParameter(1);
               if( (histCounter<fTaggedHistsToSave) || 
               (PeakFreq>=100e3 && PeakFreq<=400e3 && tree_ChBiggestPulse[TreeVecCounter]> 200 && NumberPeaks>3) ){ 
                 SaveChannelWaveforms(wvf);
