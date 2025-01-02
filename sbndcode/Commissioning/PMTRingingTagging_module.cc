@@ -356,7 +356,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
               }
               PeakTime.resize(FitIndexHelper);
               PeakYFill.resize(FitIndexHelper);
-              TGraph g = TGraph(NumberPeaks, &PeakTime[0], &PeakYFill[0]);
+              TGraph g = TGraph(FitIndexHelper, &PeakTime[0], &PeakYFill[0]);
               TF1 f1 = TF1("f1","[0]*x+[1]",0., PeakTime[PeakTime.size()-1]+10);
               g.Fit("f1");
               tree_RecoDampingConstants[TreeVecCounter] = -1/f1.GetParameter(0); //time constant in seconds
