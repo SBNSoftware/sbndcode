@@ -225,6 +225,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
   int NumPMT = fTotalCAENBoards*PMTPerBoard; //15 baords per CAEN is fixed
   int NumFlash = (*waveHandle).size()/NumPMT; 
   std::cout << " on run " << tree_run << " event " << tree_event << " with flashes " << NumFlash << std::endl;
+  if(NumFlash>1) return; //quick fix
   //if(NumFlash>1) NumFlash=1; //assume 1 flash per event
   int TreeVecCounter=0;
   double Baseline=14250;
