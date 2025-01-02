@@ -323,7 +323,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
               tree_ChannelNumberOfRings[TreeVecCounter] = NumberPeaks;
               tree_PeakFFT[TreeVecCounter] = PeakFreq;
               int StepSize = (EndIndex-MinIndex)/MaxFFTIndex; //Peak to peak distance
-              int PeaksToFit = 15;
+              int PeaksToFit = NumberPeaks<15 ? NumberPeaks : 15;
               std::vector<double> PeakTime(PeaksToFit);
               std::vector<double> PeakYFill(PeaksToFit);
               //Do running average to capture baseline wander during ringing
