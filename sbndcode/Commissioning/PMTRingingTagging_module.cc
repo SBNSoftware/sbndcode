@@ -330,7 +330,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
               int StartIndex = std::distance(RunningAvg.begin(), std::max_element(RunningAvg.begin()+MinIndex+StepSize, RunningAvg.begin()+MinIndex+int(StepSize*1.5)) );
               tree_RingingPeakSamples[TreeVecCounter][0] = StartIndex;
               tree_RingingPeakAmplitudes[TreeVecCounter][0] =RunningAvg[tree_RingingPeakSamples[TreeVecCounter][0]]- wvfMedian;
-              PeakYFill[0] =tree_RingingPeakAmplitudes[TreeVecCounter][0];
+              PeakYFill[0] =TMath::Log(tree_RingingPeakAmplitudes[TreeVecCounter][0]);
               PeakTime[0]=tree_RingingPeakSamples[TreeVecCounter][0]*2e-9;
               int FitIndexHelper=1;
               for(int i=1; i<NumberPeaks; i++)
