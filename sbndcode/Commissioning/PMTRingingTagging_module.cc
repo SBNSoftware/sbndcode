@@ -323,8 +323,9 @@ void PMTRingingTagging::analyze(art::Event const& e)
               tree_ChannelNumberOfRings[TreeVecCounter] = NumberPeaks;
               tree_PeakFFT[TreeVecCounter] = PeakFreq;
               int StepSize = (EndIndex-MinIndex)/MaxFFTIndex; //Peak to peak distance
-              std::vector<double> PeakTime(NumberPeaks);
-              std::vector<double> PeakYFill(NumberPeaks);
+              int PeaksToFit = 15;
+              std::vector<double> PeakTime(PeaksToFit);
+              std::vector<double> PeakYFill(PeaksToFit);
               //Do running average to capture baseline wander during ringing
               std::vector<int> RunningAvg(wvf.size());
               CalcRunningAvg(RunningAvg, wvf, 50, wvfMedian);
@@ -344,7 +345,7 @@ void PMTRingingTagging::analyze(art::Event const& e)
                 tree_RingingPeakAmplitudes[TreeVecCounter][i] = *std::max_element(RunningAvg.begin()+InterestingIndex-PeakGrabWindow, RunningAvg.begin()+EndSearch) - wvfMedian;;
                 int IndexGrabbed = std::distance(RunningAvg.begin(), std::max_element(RunningAvg.begin()+InterestingIndex-PeakGrabWindow, RunningAvg.begin()+EndSearch));
                 tree_RingingPeakSamples[TreeVecCounter][i] = IndexGrabbed;
-                if( tree_RingingPeakAmplitudes[TreeVecCounter][i] > 0)
+                if( tree_RingingPeakAmplitudes[TreeVecCounter][i] > 0 && FitIndexHelper<PeaksToFit)
                 {
                   PeakTime[FitIndexHelper]= IndexGrabbed*2e-9;//StepSize*(i+0.25)*2e-9; //should change to actual time units
                   PeakYFill[FitIndexHelper] = TMath::Log( tree_RingingPeakAmplitudes[TreeVecCounter][i] );
@@ -357,11 +358,6 @@ void PMTRingingTagging::analyze(art::Event const& e)
               g.Fit("f1");
               tree_RecoDampingConstants[TreeVecCounter] = -1/f1.GetParameter(0); //time constant in seconds
               tree_RecoDampingConstants_Intercept[TreeVecCounter] = f1.GetParameter(1);
-              for(int i=0; i<NumberPeaks; i++)
-              {
-                std::cout << PeakTime[i] << " , " << PeakYFill[i] << std::endl;
-              }
-              std::cout << "Gives slope " << f1.GetParameter(0) << " and intercept " << f1.GetParameter(1);
               if( (histCounter<fTaggedHistsToSave) || 
               (PeakFreq>=100e3 && PeakFreq<=400e3 && tree_ChBiggestPulse[TreeVecCounter]> 200 && NumberPeaks>3) ){ 
                 SaveChannelWaveforms(wvf);
