@@ -420,7 +420,7 @@ void PMTRingingTagging::SaveChannelWaveforms(const raw::OpDetWaveform &wvf)
   art::ServiceHandle<art::TFileService> tfs;
   int fChNumber = wvf.ChannelNumber(); //Get the channel number for this waveform
   histname.str(std::string()); //Resets string stream to nothing
-  histname << "event_" << tree_event
+  histname << "run_" << tree_run << "_event_" << tree_event
             << "_opchannel_" << fChNumber
             << "_hist_" << histCounter;
   //Create a new histogram
