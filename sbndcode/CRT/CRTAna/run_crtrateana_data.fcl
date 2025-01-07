@@ -1,0 +1,40 @@
+#include "crtgeoalg_sbnd.fcl"
+#include "services_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+
+process_name: CRTRateAnalyzer
+
+services:
+{
+  @table::sbnd_basic_services
+
+  TFileService:         { fileName: "crtrateana_sbnd.root" }
+  CRTChannelMapService: @local::crt_channel_map_standard
+  CRTCalibService:      @local::crt_calib_service
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    crtrateana:
+    { 
+      module_type:       "CRTRateAnalysis"
+
+      CRTGeoAlg:                @local::crtgeoalg_sbnd
+      FEBDataModuleLabel:       "crtdecoder"
+      CRTSpacePointModuleLabel: "crtspacepoints"
+      DAQHeaderModuleLabel:     "daq"
+      DAQHeaderInstanceLabel:   "RawEventHeader"
+    }
+  }
+
+  ana:       [ crtrateana ]
+  end_paths: [ ana ]
+}
