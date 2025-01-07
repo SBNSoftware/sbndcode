@@ -82,6 +82,7 @@ namespace opdet {
     double fEndTime;
     bool fSaveSummedWaveform;
     bool fJustOne;
+    int fPMTperCAEN;
     int fChToPlot;
     bool fCheckTiming;
     std::string fSummedInputModuleName;
@@ -118,6 +119,7 @@ namespace opdet {
     fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
     fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
     fTriggerOnly = p.get<bool>("TriggerOnly", false);
+    fPMTperCAEN = p.get<int>("TriggerOnly", 15);
 
   }
 
@@ -169,7 +171,7 @@ namespace opdet {
         std::cout << "\t \t \t LLT " << LLT << " has trigger word " <<  LLtrigs[LLT].trigger_word  << " LLT word of type " << Power << " at time " << LLtrigs[LLT].timestamp*20 << " ns UNIX" << std::endl;
       }
     }
-    int PMTPerCAEN=15;
+    int PMTPerCAEN=fPMTperCAEN;
     int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerCAEN);
     std::cout << "\t It also has " << TotalFlash << " opDetWaveforms " << std::endl;
     for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
