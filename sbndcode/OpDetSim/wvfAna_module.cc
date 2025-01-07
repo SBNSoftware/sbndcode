@@ -119,7 +119,7 @@ namespace opdet {
     fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
     fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
     fTriggerOnly = p.get<bool>("TriggerOnly", false);
-    fPMTperCAEN = p.get<int>("TriggerOnly", 15);
+    fPMTperCAEN = p.get<int>("PMTPerCAEN", 15);
 
   }
 
