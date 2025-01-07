@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+emptyfragmentfilter_sbnd:
+{
+  module_type: "EmptyFragmentFilter"
+
+  EmptyFragmentModuleLabel:    "daq"
+  EmptyFragmentInstanceLabels: [ "Empty", "ContainerEmpty" ]
+}
+
+END_PROLOG

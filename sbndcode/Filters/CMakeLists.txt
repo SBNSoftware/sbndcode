@@ -30,6 +30,7 @@ set(
                 ROOT::Gdml
                 ROOT::Core
                 sbndcode_RecoUtils
+                artdaq_core::artdaq-core_Data
         )
 cet_build_plugin(CRTTrigFilter art::module SOURCE CRTTrigFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(GenCRTFilter art::module SOURCE GenCRTFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
@@ -38,6 +39,7 @@ cet_build_plugin(LArG4CRTFilter art::module SOURCE LArG4CRTFilter_module.cc LIBR
 cet_build_plugin(LArG4FakeTriggerFilter art::module SOURCE LArG4FakeTriggerFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(SimEnergyDepFakeTriggerFilter art::module SOURCE SimEnergyDepFakeTriggerFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(NumberOfHitsFilter art::module SOURCE NumberOfHitsFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(EmptyFragmentFilter art::module SOURCE EmptyFragmentFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()

@@ -1,0 +1,43 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+#include "emptyfragmentfilter_sbnd.fcl"
+
+process_name: FILTER
+
+services:
+{
+  @table::sbnd_services
+}
+
+physics:
+{
+  filters: 
+  {
+    emptyfragmentfilter: @local::emptyfragmentfilter_sbnd
+  }
+
+  nonempty: [ emptyfragmentfilter ]
+  trigger_paths: [ nonempty ]
+
+  stream1: [ out1 ]
+  end_paths: [ stream1 ]
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents: -1
+}
+
+outputs:
+{
+  out1: {
+    @table::sbnd_rootoutput
+    fileName: "%ifb_decoded-filtered.root"
+    dataTier: "decoded-raw"
+    fastCloning: true
+    SelectEvents: [ nonempty ]
+    outputCommands: [ "keep *", "drop artdaq::Fragments_*_*TPC_*" ]
+  }
+}
