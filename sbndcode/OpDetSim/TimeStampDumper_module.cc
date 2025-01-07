@@ -14,6 +14,7 @@
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "canvas/Utilities/InputTag.h"
+#include "art_root_io/TFileService.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
@@ -168,7 +169,7 @@ void TimeStampDumper::analyze(art::Event const& e)
       int Power=0;
       while(Power<64)
       {
-        if(lltrigs[HLT].trigger_word & (0x1 << Power)) break;
+        if(lltrigs[LLT].trigger_word & (0x1 << Power)) break;
         else Power=Power+1;
       }
       LLT_Type[LLT] = Power;
