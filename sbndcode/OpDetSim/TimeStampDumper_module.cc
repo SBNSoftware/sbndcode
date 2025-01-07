@@ -55,6 +55,7 @@ public:
 
   // Required functions.
   void analyze(art::Event const& e) override;
+  void ResetTree();
 
 private:
 
@@ -115,9 +116,10 @@ TimeStampDumper::TimeStampDumper(fhicl::ParameterSet const& p)
   fPMTWaveformLabel = p.get< std::string >("PMTLabel",  "pmtdecoder:PMTChannels:DECODE");
   fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
   fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
-  fPMTperCAEN = p.get<int>("PMTPerCAEN", 15);
+  fPMTPerCAEN = p.get<int>("PMTPerCAEN", 15);
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   ResetTree();
+  art::ServiceHandle<art::TFileService> tfs;
   evtTree = tfs->make<TTree>("TimeStamps","Time Stamp Dump Tree");
   evtTree->Branch("event",&tree_event);
   evtTree->Branch("run",&tree_run);
@@ -136,6 +138,7 @@ TimeStampDumper::TimeStampDumper(fhicl::ParameterSet const& p)
 
 void TimeStampDumper::analyze(art::Event const& e)
 {
+  ResetTree();
   // Implementation of required member function here.
   EventTime_s=e.time().timeHigh();
   EventTime_ns=e.time().timeLow();
@@ -174,7 +177,7 @@ void TimeStampDumper::analyze(art::Event const& e)
   }
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
   e.getByLabel(fPMTWaveformLabel, waveHandle);
-  int PMTPerCAEN=fPMTperCAEN;
+  int PMTPerCAEN=fPMTPerCAEN;
   int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerCAEN);
   std::cout << "\t It also has " << TotalFlash << " opDetWaveforms " << std::endl;
   long MinTime = 9999999999;
@@ -189,7 +192,7 @@ void TimeStampDumper::analyze(art::Event const& e)
       TriggerPulseID = FlashCounter;
     }
   }
-
+evtTree->Fill();
 }
 
 DEFINE_ART_MODULE(TimeStampDumper)
