@@ -17,6 +17,27 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "canvas/Utilities/Exception.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "larcore/Geometry/Geometry.h"
+
+
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/LArPropertiesService.h"
+#include "lardataobj/RawData/OpDetWaveform.h"
+#include "sbndcode/Utilities/SignalShapingServiceSBND.h"
+#include "lardataobj/Simulation/sim.h"
+#include "lardataobj/Simulation/SimChannel.h"
+#include "lardataobj/Simulation/SimPhotons.h"
+#include "sbnobj/SBND/Trigger/pmtTrigger.hh"
+#include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
+#include "sbndcode/Decoders/PTB/sbndptb.h"
+
+
+#include "TTree.h"
+
 class TimeStampDumper;
 
 
