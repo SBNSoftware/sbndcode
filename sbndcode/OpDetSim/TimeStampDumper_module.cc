@@ -95,7 +95,7 @@ void TimeStampDumper::ResetTree()
     int LLTSize=600;
     LLT_Type.clear();
     LLT_Type.resize(LLTSize);
-    LLT_Time.clear()
+    LLT_Time.clear();
     LLT_Time.resize(LLTSize);
     int HLTSize=25;
     HLT_Type.clear();
