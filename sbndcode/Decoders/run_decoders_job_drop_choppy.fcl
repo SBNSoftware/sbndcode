@@ -1,0 +1,3 @@
+#include "run_decoders_job.fcl"
+
+physics.end_paths: [ stream1 ]
