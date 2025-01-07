@@ -89,6 +89,7 @@ namespace opdet {
     std::string fPTBLabel;
     int fTotalCAENBoards;
     bool fTriggerOnly;
+    bool Timestamp_In_Name;
     //TTree *fWaveformTree;
 
     // Declare member data here.
@@ -120,6 +121,7 @@ namespace opdet {
     fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
     fTriggerOnly = p.get<bool>("TriggerOnly", false);
     fPMTperCAEN = p.get<int>("PMTPerCAEN", 15);
+    Timestamp_In_Name = p.get<bool>("TimestampInName", false);
 
   }
 
@@ -284,6 +286,7 @@ namespace opdet {
                       << "_" << opdetType
                       << "_" << FlashCounter << "_TriggerPulse";
               }
+              if(Timestamp_In_Name) histname << "_" << e.time().timeHigh();
               fStartTime = wvf.TimeStamp(); //in us
               if (opdetElectronics == "daphne"){
                 fEndTime = double(wvf.size()) / fSampling_Daphne + fStartTime;
