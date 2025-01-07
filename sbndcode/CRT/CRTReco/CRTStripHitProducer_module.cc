@@ -307,14 +307,14 @@ bool sbnd::crt::CRTStripHitProducer::SPECTDCReference(art::Event& e, const uint6
   std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> TDCVec;
   art::fill_ptr_vector(TDCVec, TDCHandle);
 
-  int64_t min_diff     = std::numeric_limits<int64_t>::max();
+  uint64_t min_diff    = std::numeric_limits<int64_t>::max();
   uint64_t min_diff_ts = 0;
 
   for(auto ts : TDCVec)
     {
       if(ts->Channel() == fSPECTDCETrigChannel)
         {
-          int64_t diff = raw_ts > ts->Timestamp() ? raw_ts - ts->Timestamp() : ts->Timestamp() - raw_ts;
+          uint64_t diff = raw_ts > ts->Timestamp() ? raw_ts - ts->Timestamp() : ts->Timestamp() - raw_ts;
 
           if(diff < min_diff)
             {
@@ -346,7 +346,7 @@ bool sbnd::crt::CRTStripHitProducer::PTBHLTReference(art::Event& e, const uint64
   std::vector<art::Ptr<raw::ptb::sbndptb>> PTBVec;
   art::fill_ptr_vector(PTBVec, PTBHandle);
 
-  int64_t min_diff     = std::numeric_limits<int64_t>::max();
+  uint64_t min_diff    = std::numeric_limits<int64_t>::max();
   uint64_t min_diff_ts = 0;
 
   for(auto ptb : PTBVec)
@@ -360,7 +360,7 @@ bool sbnd::crt::CRTStripHitProducer::PTBHLTReference(art::Event& e, const uint64
             {
               if(hlt_word_bitset[allowed_hlt])
                 {
-                  int64_t diff = raw_ts > hlt_timestamp ? raw_ts - hlt_timestamp : hlt_timestamp - raw_ts;
+                  uint64_t diff = raw_ts > hlt_timestamp ? raw_ts - hlt_timestamp : hlt_timestamp - raw_ts;
 
                   if(diff < min_diff)
                     {
