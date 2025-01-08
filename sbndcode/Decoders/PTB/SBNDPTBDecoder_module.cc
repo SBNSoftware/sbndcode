@@ -100,7 +100,8 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 		  std::cout << "block " << ii << "should give " << sout.LLTrigs.size() << " LLT " << std::endl;
               raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
               sbndptbs.push_back(ptbdp);
-			std::cout << "block " << ii << " After construction " << ptbdp.GetLLTriggers().size() << "  LLT  (bonus check) " << ptbdp.GetNLLTriggers();
+			std::cout << "block " << ii << " After construction " << ptbdp.GetLLTriggers().size() << "  LLT  (bonus check) " << ptbdp.GetNLLTriggers() << std::endl;
+			std::cout << "Checking Vector block " << ii << " After construction " << sbndptbs[ii].GetLLTriggers().size() << "  LLT  (bonus check) " << sbndptbs[ii].GetNLLTriggers() << std::endl;
 	    }
 	}
     }
