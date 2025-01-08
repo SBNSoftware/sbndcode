@@ -268,6 +268,7 @@ else
           }
       }
   }
+std::cout << event_trigger_time << "  " << found_ett << std::endl;
 
 
 evtTree->Fill();
