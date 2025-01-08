@@ -18,15 +18,16 @@ xarapucadecoder:
 
     # OUTPUT configuration:
     # - Output data product instance name.
-    product_instance_name: "XARAPUCAChannels"                   # Name for the instance produt created.
+    product_instance_name: "XARAPUCAChannels"                   # Name for the instance product created.
+    store_debug_waveforms: 0                                    # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
     # - Debug options.
     debug_all: false                                            # (De)activates all debug options.
-    debug_handle: true                                          # (De)activates art::Handle data printing.
+    debug_handle: false                                         # (De)activates art::Handle data printing.
     debug_timing: false                                         # (De)activates timing data printing. 
     debug_buffer: false                                         # (De)activates buffer status printing.
     debug_waveforms: false                                      # (De)activates waveforms decoding printing.
     # - Verbose option.
-    verbose: true                                               # (De)activates verbosity.
+    verbose: false                                              # (De)activates verbosity.
 }
 
 END_PROLOG
