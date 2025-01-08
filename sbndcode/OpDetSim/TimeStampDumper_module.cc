@@ -252,7 +252,7 @@ for (size_t i=0; i<tdc_v.size(); i++){
     TDC_Channel[i]=ch;
     if (ch==fspectdc_etrig_ch){
         found_ett = true;
-        tdc_etrig_v.push_back(ts);
+        tdc_etrig_v.push_back(ts-offset);
     }
 }
 uint64_t event_trigger_time = 0; // in ns
