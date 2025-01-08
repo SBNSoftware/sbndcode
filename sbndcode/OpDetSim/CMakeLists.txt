@@ -55,6 +55,8 @@ set (
                     lardata::Utilities
                     lardataobj::RawData
                     lardataobj::RecoBase
+                    lardataobj::RecoBase
+                    lardataobj::headers
                     lardata::Utilities_LArFFT_service
                     lardataobj::AnalysisBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
@@ -66,6 +68,7 @@ set (
 		                sbndcode_CRTUtils
                     sbnobj::SBND_CRT
                     sbndcode_CRTUtils
+                    sbnobj::SBND_Timing
                     sbndcode_GeoWrappers
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
