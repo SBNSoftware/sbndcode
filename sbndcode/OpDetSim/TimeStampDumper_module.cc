@@ -185,6 +185,7 @@ void TimeStampDumper::analyze(art::Event const& e)
     auto ptb = (*ptbHandle_2)[index];
     auto hltrigs = ptb.GetHLTriggers();
     auto lltrigs = ptb.GetLLTriggers();
+    std::cout << lltrigs.size() << " from block " << index;
     NHLT = NHLT+int(hltrigs.size());
     NLLT = NLLT+int(lltrigs.size());
     for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
