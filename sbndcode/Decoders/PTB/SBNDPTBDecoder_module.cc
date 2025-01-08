@@ -97,6 +97,7 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 	    {
               ptbsv_t sout;  // output structures
 	      _process_PTB_AUX(*cont_frag[ii], sout);
+		  std::cout << "block " << ii << "should give " << sout.LLTrigs.size() << " LLT " << std::endl;
               raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
               sbndptbs.push_back(ptbdp);
 	    }
