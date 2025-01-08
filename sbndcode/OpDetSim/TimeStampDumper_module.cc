@@ -23,6 +23,14 @@
 #include "larcore/Geometry/Geometry.h"
 
 
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+#include "sbndcode/Decoders/PTB/sbndptb.h"
+#include "sbndcode/Timing/SBNDRawTimingObj.h"
+#include "artdaq-core/Data/Fragment.hh"
+#include "artdaq-core/Data/ContainerFragment.hh"
+#include "artdaq-core/Data/RawEvent.hh"
+
+
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksServiceStandard.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -208,19 +216,19 @@ void TimeStampDumper::analyze(art::Event const& e)
   }
 //TDC timestamps
 art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-evt.getByLabel(fspectdc_product_name,tdcHandle);
+e.getByLabel(fspectdc_product_name,tdcHandle);
 bool found_ett = false;
 std::vector<uint64_t> tdc_etrig_v;
 uint64_t min_raw_tdc_diff = uint64_t(1e12);
 const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
 art::Handle<artdaq::detail::RawEventHeader> header_handle;
 uint64_t raw_timestamp = 0;
-evt.getByLabel("daq", "RawEventHeader", header_handle);
+e.getByLabel("daq", "RawEventHeader", header_handle);
 
 raw_timestamp = rawheader.timestamp() - fraw_ts_correction; // includes sec + ns portion
 std::cout << "Raw timestamp (w/ correction) -> "  << "ts (ns): " << raw_timestamp % uint64_t(1e9) << ", sec (s): " << raw_timestamp / uint64_t(1e9) << std::endl;
 std::cout << "vs event object itself " << EventTime_s << " sec " << EventTime_ns << std::endl;
-for (size_t i=0; i<tdc_v.size(); i++){
+for (size_t i=0; i<int(tdc_v.size()); i++){
     auto tdc = tdc_v[i];
     const uint32_t  ch = tdc.Channel();
     const uint64_t  ts = tdc.Timestamp();
@@ -240,13 +248,14 @@ for (size_t i=0; i<tdc_v.size(); i++){
         tdc_etrig_v.push_back(ts);
     }
 }
+uint64_t event_trigger_time = 0; // in ns
 if (tdc_etrig_v.size()==1)
   {
       event_trigger_time = tdc_etrig_v.front()%uint64_t(1e9);
   }
 else
   { // finding the closest ETRIG to the raw timestamp
-      for (size_t i=0; i < tdc_etrig_v.size(); i++){
+      for (size_t i=0; i < int(tdc_etrig_v.size()); i++){
           auto tdc_etrig = tdc_etrig_v[i];
           uint64_t diff;
           if (tdc_etrig < (raw_timestamp))
