@@ -65,6 +65,10 @@ private:
   std::string fPMTWaveformLabel;
   int fTotalCAENBoards;
   int fPMTPerCAEN;
+  uint32_t                  fraw_ts_correction;
+  std::string               fspectdc_product_name;
+  uint32_t                  fspectdc_ftrig_ch;
+  uint32_t                  fspectdc_etrig_ch;
   TTree* evtTree;
   int NLLT;
   int NHLT;
@@ -118,6 +122,10 @@ TimeStampDumper::TimeStampDumper(fhicl::ParameterSet const& p)
   fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
   fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
   fPMTPerCAEN = p.get<int>("PMTPerCAEN", 15);
+  fspectdc_product_name = p.get<std::string>("spectdc_product_name","tdcdecoder");
+  fspectdc_ftrig_ch = p.get<uint32_t>("spectdc_ftrig_ch",3);
+  fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
+  fraw_ts_correction = p.get<uint>("raw_ts_correction",367000); // ns
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   ResetTree();
   art::ServiceHandle<art::TFileService> tfs;
@@ -140,10 +148,14 @@ TimeStampDumper::TimeStampDumper(fhicl::ParameterSet const& p)
 void TimeStampDumper::analyze(art::Event const& e)
 {
   ResetTree();
+  tree_run = e.run();
+  tree_subrun = e.subRun();
+  tree_event =  e.id().event();;
   // Implementation of required member function here.
   EventTime_s=e.time().timeHigh();
   EventTime_ns=e.time().timeLow();
 
+  //PTB Trigger times
   art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle_2;
   e.getByLabel(fPTBLabel,ptbHandle_2);
   for(int index=0; index<int(ptbHandle_2->size()); index++)
@@ -176,6 +188,7 @@ void TimeStampDumper::analyze(art::Event const& e)
       LLT_Time[LLT] = lltrigs[LLT].timestamp*20;
     }
   }
+  //PMT timestamps
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
   e.getByLabel(fPMTWaveformLabel, waveHandle);
   int PMTPerCAEN=fPMTPerCAEN;
@@ -193,6 +206,61 @@ void TimeStampDumper::analyze(art::Event const& e)
       TriggerPulseID = FlashCounter;
     }
   }
+//TDC timestamps
+art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+evt.getByLabel(fspectdc_product_name,tdcHandle);
+bool found_ett = false;
+std::vector<uint64_t> tdc_etrig_v;
+uint64_t min_raw_tdc_diff = uint64_t(1e12);
+const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+art::Handle<artdaq::detail::RawEventHeader> header_handle;
+uint64_t raw_timestamp = 0;
+evt.getByLabel("daq", "RawEventHeader", header_handle);
+
+raw_timestamp = rawheader.timestamp() - fraw_ts_correction; // includes sec + ns portion
+std::cout << "Raw timestamp (w/ correction) -> "  << "ts (ns): " << raw_timestamp % uint64_t(1e9) << ", sec (s): " << raw_timestamp / uint64_t(1e9) << std::endl;
+std::cout << "vs event object itself " << EventTime_s << " sec " << EventTime_ns << std::endl;
+for (size_t i=0; i<tdc_v.size(); i++){
+    auto tdc = tdc_v[i];
+    const uint32_t  ch = tdc.Channel();
+    const uint64_t  ts = tdc.Timestamp();
+    const uint64_t  offset = tdc.Offset();
+    const std::string name  = tdc.Name();
+
+    if (true){
+        std::cout << "      TDC CH " << ch << " -> "
+        << "name: " << name
+        << ", ts (ns): " << ts%uint64_t(1e9)
+        << ", sec (s): " << ts/uint64_t(1e9)
+        << ", offset: " << offset 
+        << std::endl;
+    }
+    if (ch==fspectdc_etrig_ch){
+        found_ett = true;
+        tdc_etrig_v.push_back(ts);
+    }
+}
+if (tdc_etrig_v.size()==1)
+  {
+      event_trigger_time = tdc_etrig_v.front()%uint64_t(1e9);
+  }
+else
+  { // finding the closest ETRIG to the raw timestamp
+      for (size_t i=0; i < tdc_etrig_v.size(); i++){
+          auto tdc_etrig = tdc_etrig_v[i];
+          uint64_t diff;
+          if (tdc_etrig < (raw_timestamp))
+              diff = raw_timestamp - tdc_etrig;
+          else
+              diff = tdc_etrig - raw_timestamp;
+          if (diff < min_raw_tdc_diff){
+              event_trigger_time = tdc_etrig%uint64_t(1e9);
+              min_raw_tdc_diff = diff;
+          }
+      }
+  }
+
+
 evtTree->Fill();
 }
 
