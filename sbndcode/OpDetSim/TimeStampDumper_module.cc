@@ -162,6 +162,9 @@ TimeStampDumper::TimeStampDumper(fhicl::ParameterSet const& p)
   evtTree->Branch("LLT_Time",&LLT_Time);
   evtTree->Branch("HLT_Time",&HLT_Time);
   evtTree->Branch("Flash_Time",&Flash_Time);
+  evtTree->Branch("TDC_Channel",&TDC_Channel);
+  evtTree->Branch("TDC_Time",&TDC_TimeStamp);
+  evtTree->Branch("TDC_Name",&TDC_Name);
 }
 
 void TimeStampDumper::analyze(art::Event const& e)
