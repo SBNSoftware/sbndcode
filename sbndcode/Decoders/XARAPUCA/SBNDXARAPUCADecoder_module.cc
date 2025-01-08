@@ -33,7 +33,7 @@
 #include "lardataobj/RawData/OpDetWaveform.h"
 
 #include "art_root_io/TFileService.h"
-#include "TH1D.h"
+#include "TH1I.h"
 
 #include <memory>
 #include <algorithm>
@@ -118,19 +118,19 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   fevent_counter = 0;
   
   // Gets the CAEN fragments information.
-  fcaen_module_label = p.get<std::string> ("caen_module_label");
-  fcaen_fragment_names = p.get<std::vector <std::string> > ("caen_fragment_names");
+  fcaen_module_label = p.get<std::string> ("caen_module_label", "daq");
+  fcaen_fragment_names = p.get<std::vector <std::string> > ("caen_fragment_names", {"CAENV1740", "ContainerCAENV1740"});
 
   // Gets the CAEN boards information.
-  ffragment_id_offset = p.get<unsigned int> ("fragment_id_offset");
-  fboard_id_list = p.get<std::vector <unsigned int> > ("board_id_list");
-  fnum_caen_boards = p.get<unsigned int> ("num_caen_boards");
+  ffragment_id_offset = p.get<unsigned int> ("fragment_id_offset", 41216);
+  fboard_id_list = p.get<std::vector <unsigned int> > ("board_id_list", {7, 13, 16, 19});
+  fnum_caen_boards = p.get<unsigned int> ("num_caen_boards", 4);
   
   // Gets the name of the instance created by this module.
-  fproduct_instance_name = p.get<std::string> ("product_instance_name");
+  fproduct_instance_name = p.get<std::string> ("product_instance_name", "XARAPUCAChannels");
 
   // Gets timing information.
-  fns_per_sample = p.get<unsigned int> ("ns_per_sample");
+  fns_per_sample = p.get<unsigned int> ("ns_per_sample", 16);
   fns_per_tick = 8;
 
   // Sets the number of bits per sample.
@@ -140,12 +140,12 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   fstore_debug_waveforms = p.get<int> ("store_debug_waveforms", 0);
 
   // Gets the debug and verbose options.
-  fdebug_all = p.get<bool> ("debug_all");
-  fdebug_handle = p.get<bool> ("debug_handle");
-  fdebug_timing = p.get<bool> ("debug_timing");
-  fdebug_buffer = p.get<bool> ("debug_buffer");
-  fdebug_waveforms = p.get<bool> ("debug_waveforms");
-  fverbose = p.get<bool> ("verbose");
+  fdebug_all = p.get<bool> ("debug_all", false);
+  fdebug_handle = p.get<bool> ("debug_handle", false);
+  fdebug_timing = p.get<bool> ("debug_timing", false);
+  fdebug_buffer = p.get<bool> ("debug_buffer", false);
+  fdebug_waveforms = p.get<bool> ("debug_waveforms", false);
+  fverbose = p.get<bool> ("verbose", false);
 
   // Creates the instance product of this module.
   produces <std::vector <raw::OpDetWaveform> > (fproduct_instance_name);
@@ -418,13 +418,13 @@ void sbndaq::SBNDXARAPUCADecoder::save_prod_wvfm(size_t b, size_t ch, float TTT_
  * - Y-axis representing ADC counts.
  * The histogram is stored using ROOT's `TFileService`.
  *
- * @see TH1D, TFileService
+ * @see TH1I, TFileService
  */
 
 void sbndaq::SBNDXARAPUCADecoder::save_debug_wvfm(size_t b, size_t f, int ch, float TTT_ini_us, float TTT_end_us, const std::vector <std::vector <uint16_t> > & wvfms) {
   std::stringstream hist_name("");
   hist_name << "Event " << fevent_counter << " CH " << ch << " [frag " << f << ", board " << b << " (slot " << fboard_id_list[b] << ") ] waveform";
-  TH1D* hist = tfs->make<TH1D>(hist_name.str().c_str(), hist_name.str().c_str(), wvfms[ch].size(), TTT_ini_us, TTT_end_us);
+  TH1I* hist = tfs->make<TH1I>(hist_name.str().c_str(), hist_name.str().c_str(), wvfms[ch].size(), TTT_ini_us, TTT_end_us);
   hist->GetYaxis()->SetTitle("ADCs");
   hist->GetXaxis()->SetTitle("Time [us]");
   for (size_t i = 0; i < wvfms[ch].size(); i++) {
