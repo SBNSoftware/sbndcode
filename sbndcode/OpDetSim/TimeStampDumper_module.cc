@@ -91,6 +91,9 @@ private:
   std::vector<long> LLT_Time;
   std::vector<long> HLT_Time;
   std::vector<long> Flash_Time;
+  std::vector<int> TDC_Channel;
+  std::vector<std::string> TDC_Name;
+  std::vector<uint64_t> TDC_TimeStamp;
 
 };
 
@@ -117,6 +120,14 @@ void TimeStampDumper::ResetTree()
     int NFlashMax = 50;
     Flash_Time.clear();
     Flash_Time.resize(NFlashMax);
+    int TDCSize= 50;
+    TDC_Channel.clear();
+    TDC_Channel.resize(TDCSize);
+    TDC_Name.clear();
+    TDC_Name.resize(TDCSize);
+    TDC_TimeStamp.clear();
+    TDC_TimeStamp.resize(TDCSize);
+
   }
 
 
@@ -160,7 +171,7 @@ void TimeStampDumper::analyze(art::Event const& e)
   tree_subrun = e.subRun();
   tree_event =  e.id().event();;
   // Implementation of required member function here.
-  EventTime_s=e.time().timeHigh();
+  EventTime_s=e.time().timeHigh(); //DONT USE THIS USE EVENT HEADDER
   EventTime_ns=e.time().timeLow();
 
   //PTB Trigger times
@@ -226,6 +237,8 @@ uint64_t raw_timestamp = 0;
 e.getByLabel("daq", "RawEventHeader", header_handle);
 auto rawheader = artdaq::RawEvent(*header_handle); 
 raw_timestamp = rawheader.timestamp() - fraw_ts_correction; // includes sec + ns portion
+EventTime_s = raw_timestamp/ uint64_t(1e9);
+EventTime_ns = raw_timestamp % uint64_t(1e9);
 std::cout << "Raw timestamp (w/ correction) -> "  << "ts (ns): " << raw_timestamp % uint64_t(1e9) << ", sec (s): " << raw_timestamp / uint64_t(1e9) << std::endl;
 std::cout << "vs event object itself " << EventTime_s << " sec " << EventTime_ns << std::endl;
 for (size_t i=0; i<tdc_v.size(); i++){
@@ -234,15 +247,9 @@ for (size_t i=0; i<tdc_v.size(); i++){
     const uint64_t  ts = tdc.Timestamp();
     const uint64_t  offset = tdc.Offset();
     const std::string name  = tdc.Name();
-
-    if (true){
-        std::cout << "      TDC CH " << ch << " -> "
-        << "name: " << name
-        << ", ts (ns): " << ts%uint64_t(1e9)
-        << ", sec (s): " << ts/uint64_t(1e9)
-        << ", offset: " << offset 
-        << std::endl;
-    }
+    TDC_TimeStamp[i] = ts;
+    TDC_Name[i]=name;
+    TDC_Channel[i]=ch;
     if (ch==fspectdc_etrig_ch){
         found_ett = true;
         tdc_etrig_v.push_back(ts);
@@ -269,7 +276,7 @@ else
       }
   }
 std::cout << event_trigger_time << "  " << found_ett << std::endl;
-
+//Save to tree
 
 evtTree->Fill();
 }
