@@ -224,11 +224,11 @@ const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
 art::Handle<artdaq::detail::RawEventHeader> header_handle;
 uint64_t raw_timestamp = 0;
 e.getByLabel("daq", "RawEventHeader", header_handle);
-
+auto rawheader = artdaq::RawEvent(*header_handle); 
 raw_timestamp = rawheader.timestamp() - fraw_ts_correction; // includes sec + ns portion
 std::cout << "Raw timestamp (w/ correction) -> "  << "ts (ns): " << raw_timestamp % uint64_t(1e9) << ", sec (s): " << raw_timestamp / uint64_t(1e9) << std::endl;
 std::cout << "vs event object itself " << EventTime_s << " sec " << EventTime_ns << std::endl;
-for (size_t i=0; i<int(tdc_v.size()); i++){
+for (size_t i=0; i<tdc_v.size(); i++){
     auto tdc = tdc_v[i];
     const uint32_t  ch = tdc.Channel();
     const uint64_t  ts = tdc.Timestamp();
@@ -255,7 +255,7 @@ if (tdc_etrig_v.size()==1)
   }
 else
   { // finding the closest ETRIG to the raw timestamp
-      for (size_t i=0; i < int(tdc_etrig_v.size()); i++){
+      for (size_t i=0; i < dc_etrig_v.size(); i++){
           auto tdc_etrig = tdc_etrig_v[i];
           uint64_t diff;
           if (tdc_etrig < (raw_timestamp))
