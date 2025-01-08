@@ -130,7 +130,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
   // but separate out the HLTs and LLTs
   if (fDebugLevel > 0)
     {
-      std::cout << "SBNDPTBDecoder_module: got into aux" << std::endl;
+      std::cout << "SBNDPTBDecoder_module: got into aux " <<  ctbfrag.NWords() << " words found" << std::endl;
     }
   
   for (size_t iword = 0; iword < ctbfrag.NWords(); ++iword)
