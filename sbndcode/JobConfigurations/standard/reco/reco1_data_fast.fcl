@@ -1,6 +1,7 @@
 #include "wcsp_data_sbnd.fcl"
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
+#include "ophit_finder_sbnd.fcl"
 #include "standard_reco1_sbnd.fcl"
 
 services:
@@ -16,13 +17,19 @@ physics.producers:
     @table::physics.producers
     sptpc2d:   @local::sbnd_wcls_sp_data
     crtstrips: @local::crtstriphitproducer_data_sbnd
+    ophitraw: @local::sbnd_ophit_finder_pmt
 }
 
-physics.reco1: [crtstrips, fasthit]
+physics.reco1: [crtstrips, ophitraw, fasthit]
 physics.ana: [superadata]
 #physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
 physics.producers.fasthit.CalDataModuleLabel: "daq"
 physics.producers.fasthit.DigitModuleLabel: "daq"
+physics.producers.ophitraw.InputModule: "pmtdecoder"
+physics.producers.ophitraw.InputLabels: ["PMTChannels"]
+# Setup Hit and Pedestal algorithm
+physics.producers.ophitraw.HitAlgoPset.ADCThreshold: 5
+physics.producers.ophitraw.HitAlgoPset.NSigmaThreshold: 5
 
 outputs.out1.outputCommands: [
          "keep *_*_*_*",
