@@ -85,15 +85,20 @@ void SBNDPTBDecoder::produce(art::Event & evt)
   auto cont_frags = evt.getHandle<artdaq::Fragments>(itag1);
   if (cont_frags)
     {
+		std::cout << " I found a ptb container! " << cont_frags->size() << std::endl;
       for (auto const& cont : *cont_frags)
 	{
 	  artdaq::ContainerFragment cont_frag(cont);
+	  std::cout << " \t\t\t I have  " << cont_frag.block_count() << " bloskcs " << std::endl;
 	  for (size_t ii = 0; ii < cont_frag.block_count(); ++ii)
 	    {
               ptbsv_t sout;  // output structures
 	      _process_PTB_AUX(*cont_frag[ii], sout);
+		  std::cout << "block " << ii << "should give " << sout.LLTrigs.size() << " LLT " << std::endl;
               raw::ptb::sbndptb ptbdp(sout.HLTrigs,sout.LLTrigs,sout.ChStats,sout.Feedbacks,sout.Miscs,sout.WordIndexes);
               sbndptbs.push_back(ptbdp);
+			std::cout << "block " << ii << " After construction " << ptbdp.GetLLTriggers().size() << "  LLT  (bonus check) " << ptbdp.GetNLLTriggers() << std::endl;
+			std::cout << "Checking Vector block " << ii << " After construction " << sbndptbs[ii].GetLLTriggers().size() << "  LLT  (bonus check) " << sbndptbs[ii].GetNLLTriggers() << std::endl;
 	    }
 	}
     }
@@ -177,7 +182,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
   // but separate out the HLTs and LLTs
   if (fDebugLevel > 0)
     {
-      std::cout << "SBNDPTBDecoder_module: got into aux" << std::endl;
+      std::cout << "SBNDPTBDecoder_module: got into aux " <<  ctbfrag.NWords() << " words found" << std::endl;
     }
   
   for (size_t iword = 0; iword < ctbfrag.NWords(); ++iword)
@@ -212,6 +217,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 
 	      if (fDebugLevel > 0)
 		{
+			std::cout << ctbfrag.WordSize() << " is the word size of my HLT here!!" << std::endl;
 		  std::cout << "SBNDPTBDecoder_module: found HLT: " << wt << " " << ix << std::endl;
 		}
 	    }

@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+RawHitFinder:
+{
+  module_type: "RawHitFinder"
+  BaselineSubtractedChName: "pmtdecoder:PMTChannels:PMTDecoder"
+  SummedSubtractedName: ""
+
+}
+
+END_PROLOG

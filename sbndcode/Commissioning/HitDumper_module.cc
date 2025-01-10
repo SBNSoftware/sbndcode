@@ -518,7 +518,6 @@ void Hitdumper::analyze(const art::Event& evt)
   _run = evt.run();
   _subrun = evt.subRun();
   _event = evt.id().event();
-
   _t0 = 0.;
   // t0 = detprop->TriggerOffset();  // units of TPC ticks
 
@@ -713,12 +712,15 @@ void Hitdumper::analyze(const art::Event& evt)
 
     // Loop over all the ophits labels
     for (auto ophit_label : fOpHitsModuleLabels) {
-
+      std::cout << "Trying to get with label " << ophit_label << std::endl;
+      art::InputTag	tag(ophit_label);
       art::Handle<std::vector<recob::OpHit>> ophitListHandle;
       std::vector<art::Ptr<recob::OpHit>> ophitlist;
-      if (evt.getByLabel(ophit_label, ophitListHandle)) {
+      if (evt.getByLabel(tag, ophitListHandle)) {
+        std::cout << "filling pointer vector" << std::endl;
         art::fill_ptr_vector(ophitlist, ophitListHandle);
         _nophits += ophitlist.size();
+        std::cout << "Did it" << std::endl;
       }
       else {
         std::cout << "Failed to get recob::OpHit data product: " << ophit_label << std::endl;
@@ -731,9 +733,9 @@ void Hitdumper::analyze(const art::Event& evt)
       }
 
       ResetOpHitsVars(_nophits);
-
       for (size_t i = 0; i < ophitlist.size(); ++i) {
         size_t index = previous_nophits + i;
+        std::cout << "Filling in op hit variables on index " << index << std::endl;
         _ophit_opch[index] = ophitlist.at(i)->OpChannel();
         _ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
         _ophit_peakT[index] = ophitlist.at(i)->PeakTime();
@@ -743,11 +745,14 @@ void Hitdumper::analyze(const art::Event& evt)
         _ophit_area[index] = ophitlist.at(i)->Area();
         _ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
         _ophit_pe[index] = ophitlist.at(i)->PE();
+        std::cout << " doing this center stuff" << std::endl;
         auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
         _ophit_opdet_x[index] = opdet_center.X();
         _ophit_opdet_y[index] = opdet_center.Y();
         _ophit_opdet_z[index] = opdet_center.Z();
+        std::cout << " getting pd_type " << std::endl;
         auto pd_type = _pd_map.pdType(ophitlist.at(i)->OpChannel());
+        std::cout << " got pd_type " << std::endl;
         if (pd_type == "pmt_coated") {_ophit_opdet_type[index] = kPMTCoated;}
         else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[index] = kPMTUnCoated;}
         else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[index] = kXArapucaVis;}
@@ -786,6 +791,7 @@ void Hitdumper::analyze(const art::Event& evt)
     }
   }
 
+
   //
   // PMT Software Trigger
   //
@@ -813,6 +819,7 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // CRT Software Trigger
   //
+
   if (freadcrtSoftTrigger){
     art::Handle<std::vector<sbndaq::CRTmetric>> crtSoftTriggerListHandle;
     std::vector<art::Ptr<sbndaq::CRTmetric>>    crtsofttriggerlist;
@@ -834,6 +841,7 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // Muon tracks 
   //
+
   _nmuontrks = 0; 
   if (freadMuonTracks){
     art::Handle<std::vector<sbnd::comm::MuonTrack> > muonTrackListHandle;
@@ -1173,9 +1181,7 @@ void Hitdumper::analyze(const art::Event& evt)
   }//if (fReadTruth){
 
 
-
   fTree->Fill();
-
 }
 
  void Hitdumper::beginJob()
