@@ -529,11 +529,16 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
 	  h_i++;
 
 	  int val = ptb->GetHLTrigger(i).trigger_word;
-	  int upBit[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	  int upBit[32];
+	  
+	  for (int u=0; u<32; u++){ //setting default values for maximum of 32 bits
+	    upbit[u]=-1
+	  }
+
 	  int numOfTrig =0;
-	  for(int i=0; i<32;i++){
+	  for(int b=0; b<32;b++){
 	    if ((val & 0x01) ==1){
-	      upBit[numOfTrig] = i;
+	      upBit[numOfTrig] = b;
 	      numOfTrig++;
 	    }
 	    val = val >> 1;
@@ -590,11 +595,15 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
 	 
 	  int val = ptb->GetLLTrigger(i).trigger_word;
 	  
-	  int upBit[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	  int upBit[32];
+	  for(int u=0; u<32; u++){
+	    upBit[u]=-1;
+	  }
+
 	  int numOfTrig =0;
-	  for(int i=0; i<32;i++){
+	  for(int b=0; b<32;b++){
 	    if ((val & 0x01) ==1){
-	      upBit[numOfTrig] = i;
+	      upBit[numOfTrig] = b;
 	      numOfTrig++;
 	    }
 	    val = val >> 1;
