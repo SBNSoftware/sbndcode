@@ -1,0 +1,8 @@
+BEGIN_PROLOG
+
+pmt_channel_map_standard:
+{
+  FileName: "SBNDPMTChannelMap_v1.txt"
+}
+
+END_PROLOG
