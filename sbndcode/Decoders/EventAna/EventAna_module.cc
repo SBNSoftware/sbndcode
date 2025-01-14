@@ -297,6 +297,11 @@ private:
   std::vector<int>  feb_hits_in_fragment;
   
   //WR spectdc data
+  std::vector<uint64_t> ftdc_ch0_ps; //fractional part of the timestamp
+  std::vector<uint64_t> ftdc_ch1_ps;
+  std::vector<uint64_t> ftdc_ch2_ps;
+  std::vector<uint64_t> ftdc_ch3_ps;
+  std::vector<uint64_t> ftdc_ch4_ps;
   std::vector<uint64_t> ftdc_ch0; //fractional part of the timestamp
   std::vector<uint64_t> ftdc_ch1;
   std::vector<uint64_t> ftdc_ch2;
@@ -454,6 +459,11 @@ void sbndaq::EventAna::beginJob()
     events->Branch("ftdc_ch2",&ftdc_ch2);
     events->Branch("ftdc_ch3",&ftdc_ch3);
     events->Branch("ftdc_ch4",&ftdc_ch4);
+    events->Branch("ftdc_ch0_ps",&ftdc_ch0_ps);
+    events->Branch("ftdc_ch1_ps",&ftdc_ch1_ps);
+    events->Branch("ftdc_ch2_ps",&ftdc_ch2_ps);
+    events->Branch("ftdc_ch3_ps",&ftdc_ch3_ps);
+    events->Branch("ftdc_ch4_ps",&ftdc_ch4_ps);
     if(ftdc_utc){
       events->Branch("ftdc_ch0_utc",&ftdc_ch0_utc);
       events->Branch("ftdc_ch1_utc",&ftdc_ch1_utc);
@@ -585,6 +595,7 @@ void sbndaq::EventAna::analyze(const art::Event& evt)
 
   //WR SPEC TDC
   ftdc_ch0.clear();   ftdc_ch1.clear();   ftdc_ch2.clear();   ftdc_ch3.clear();   ftdc_ch4.clear();
+  ftdc_ch0_ps.clear();   ftdc_ch1_ps.clear();   ftdc_ch2_ps.clear();   ftdc_ch3_ps.clear();   ftdc_ch4_ps.clear();
   ftdc_ch0_utc.clear();   ftdc_ch1_utc.clear();   ftdc_ch2_utc.clear();   ftdc_ch3_utc.clear();   ftdc_ch4_utc.clear();
   /************************************************************************************************/
   //BERN CRT 
@@ -1488,53 +1499,68 @@ void sbndaq::EventAna::extract_triggers(artdaq::Fragment & frag) {
   // Loop through all the PTB words in the fragment, casting to
   // one of the 5 word types. The 3 Msb hold the word type
   for ( size_t i = 0; i < ptb_fragment.NWords(); i++ ) {
-    if (fverbose) std::cout << "PTB Word type [" << ptb_fragment.Word(i)->word_type << "]" << std::endl;
-    //std::cout << "PTB Word type [" << ptb_fragment.Word(i)->word_type << "]" ;
-    switch ( ptb_fragment.Word(i)->word_type ) {
-      case 0x0 : // Feedback (errors) Word
-        // Only get this word if something goes wrong at the firmware level requires expert knowledge
-        // to interpret. The appearance of this word should have crashed the run.
-        unknown_or_error_word = true;
-        std::cout << "Feedback Word! Code: " << ptb_fragment.Feedback(i)->code
-                  << " Source: "             << ptb_fragment.Feedback(i)->source
-                  << " Payload: "            <<  ptb_fragment.Feedback(i)->payload
-                  << " Timestamp: "          << ptb_fragment.TimeStamp(i) << std::endl;
-        break;
-      case 0x1 : // LL Trigger
-        if (fverbose) std::cout << "LLT Payload: " << ptb_fragment.Trigger(i)->trigger_word << std::endl;
-        llt_trigger.emplace_back( ptb_fragment.Trigger(i)->trigger_word & 0x1FFFFFFFFFFFFFFF ); // bit map of asserted LLTs
-        llt_ts.emplace_back( ptb_fragment.TimeStamp(i) * 20 ); // Timestamp of the word
-	//std::cout <<ptb_fragment.Trigger(i)->trigger_word << "  LLT Timestamp: " <<  ptb_fragment.TimeStamp(i) << "  " <<std::bitset<64>( ptb_fragment.TimeStamp(i) ) <<  std::endl;
-        break;
-      case 0x2 : // HL Trigger
-        if (fverbose) std::cout << "HLT Payload: " << ptb_fragment.Trigger(i)->trigger_word << std::endl;
-	if (fverbose) std::cout << "HLT ts: " << ptb_fragment.TimeStamp(i) << std::endl;
-        hlt_gateCount.emplace_back(ptb_fragment.Trigger(i)->gate_counter & 0xFF);
-        hlt_trigger.emplace_back( ptb_fragment.Trigger(i)->trigger_word & 0x1FFFFFFFFFFFFFFF );
-        hlt_ts.emplace_back( ptb_fragment.TimeStamp(i) * 20 );
-        ptb_frag_ts.push_back(frag.timestamp());
-        hlt_word_count++;
-	//std::cout << "HLT Word: " << ptb_fragment.Trigger(i)->trigger_word << " HLT GateCount: " << ptb_fragment.Trigger(i)->gate_counter  << " TS: " << ptb_fragment.TimeStamp(i) * 20<< " Prev TS: " <<ptb_fragment.PTBWord(i)->prevTS *20<< std::endl;
-	break;
-      case 0x3 : // Channel Status
-        // Each PTB input gets a bit map e.g. CRT has 14 inputs and is 14b
-        // (1 is channel asserted 0 otherwise)
-        // TODO add MTCA and NIM channel status words
-        auxpds_status.emplace_back( ptb_fragment.ChStatus(i)->pds & 0x3FF );
-        crt_status.emplace_back( ptb_fragment.ChStatus(i)->crt & 0x3FFF );
-	//std::cout <<std::bitset<14>(ptb_fragment.ChStatus(i)->crt) << "                        CRT Timestamp: " <<  ptb_fragment.TimeStamp(i) << "  " <<std::bitset<64>( ptb_fragment.TimeStamp(i)) <<  std::endl;
-        beam_status.emplace_back( ptb_fragment.ChStatus(i)->beam & 0x3 );
-        chan_stat_ts.emplace_back( ptb_fragment.TimeStamp(i) * 20 );
-        break;
-      case 0x7 : // Timestamp Word
-        // We don't care about this word, it only has a TS and is sent periodically.
-        ptb_fragment.TimeStamp(i);
-        ts_word_count++;
-        break;
-      default : // Unknown, should never happen!
-        unknown_or_error_word = true;
-        std::cout << "Unknown PTB word type = " << ptb_fragment.Word(i)->word_type << std::endl;
+    if  (ptb_fragment.Word(i)->word_type !=0x2 ) continue; //0x2 is the type for an HLT (0x1 for LLT) 
+    //uint64_t hlttrigger=ptb_fragment.Trigger(i)->trigger_word & 0x1FFFFFFFFFFFFFFF;
+    uint64_t hlt_mask = ptb_fragment.Trigger(i)->trigger_word & 0x1FFFFFFFFFFFFFFF;
+    // Process each set bit in hlt_mask as a separate HLT trigger
+    while (hlt_mask) {
+            uint64_t hlttrigger = __builtin_ctzll(hlt_mask); // Find the least significant set bit
+            hlt_mask &= (hlt_mask - 1); // Clear the least significant set bit
+            //if (hlttrigger >= 20) continue;  //HLT triggers greater then 20 are reserved for non event triggers
+            hlt_trigger.emplace_back(hlttrigger);
+            hlt_ts.emplace_back(ptb_fragment.TimeStamp(i) * 20);
+            if (fverbose) std::cout << "HLT   : " << hlttrigger << std::endl;
+	        if (fverbose) std::cout << "HLT ts: " << ptb_fragment.TimeStamp(i)*20 << std::endl;
     }
+
+    //if (fverbose) std::cout << "PTB Word type [" << ptb_fragment.Word(i)->word_type << "]" << std::endl;
+    //std::cout << "PTB Word type [" << ptb_fragment.Word(i)->word_type << "]" ;
+    //switch ( ptb_fragment.Word(i)->word_type ) {
+    //  case 0x0 : // Feedback (errors) Word
+    //    // Only get this word if something goes wrong at the firmware level requires expert knowledge
+    //    // to interpret. The appearance of this word should have crashed the run.
+    //    unknown_or_error_word = true;
+    //    std::cout << "Feedback Word! Code: " << ptb_fragment.Feedback(i)->code
+    //              << " Source: "             << ptb_fragment.Feedback(i)->source
+    //              << " Payload: "            <<  ptb_fragment.Feedback(i)->payload
+    //              << " Timestamp: "          << ptb_fragment.TimeStamp(i) << std::endl;
+    //    break;
+    //  case 0x1 : // LL Trigger
+    //    if (fverbose) std::cout << "LLT Payload: " << ptb_fragment.Trigger(i)->trigger_word << std::endl;
+    //    llt_trigger.emplace_back( ptb_fragment.Trigger(i)->trigger_word & 0x1FFFFFFFFFFFFFFF ); // bit map of asserted LLTs
+    //    llt_ts.emplace_back( ptb_fragment.TimeStamp(i) * 20 ); // Timestamp of the word
+	////std::cout <<ptb_fragment.Trigger(i)->trigger_word << "  LLT Timestamp: " <<  ptb_fragment.TimeStamp(i) << "  " <<std::bitset<64>( ptb_fragment.TimeStamp(i) ) <<  std::endl;
+    //    break;
+    //  case 0x2 : // HL Trigger
+    //    if (fverbose) std::cout << "HLT Payload: " << ptb_fragment.Trigger(i)->trigger_word << std::endl;
+	//    if (fverbose) std::cout << "HLT ts: " << ptb_fragment.TimeStamp(i) << std::endl;
+
+    //    hlt_gateCount.emplace_back(ptb_fragment.Trigger(i)->gate_counter & 0xFF);
+    //    hlt_trigger.emplace_back( ptb_fragment.Trigger(i)->trigger_word & 0x1FFFFFFFFFFFFFFF );
+    //    hlt_ts.emplace_back( ptb_fragment.TimeStamp(i) * 20 );
+    //    ptb_frag_ts.push_back(frag.timestamp());
+    //    hlt_word_count++;
+	////std::cout << "HLT Word: " << ptb_fragment.Trigger(i)->trigger_word << " HLT GateCount: " << ptb_fragment.Trigger(i)->gate_counter  << " TS: " << ptb_fragment.TimeStamp(i) * 20<< " Prev TS: " <<ptb_fragment.PTBWord(i)->prevTS *20<< std::endl;
+	//break;
+    //  case 0x3 : // Channel Status
+    //    // Each PTB input gets a bit map e.g. CRT has 14 inputs and is 14b
+    //    // (1 is channel asserted 0 otherwise)
+    //    // TODO add MTCA and NIM channel status words
+    //    auxpds_status.emplace_back( ptb_fragment.ChStatus(i)->pds & 0x3FF );
+    //    crt_status.emplace_back( ptb_fragment.ChStatus(i)->crt & 0x3FFF );
+	////std::cout <<std::bitset<14>(ptb_fragment.ChStatus(i)->crt) << "                        CRT Timestamp: " <<  ptb_fragment.TimeStamp(i) << "  " <<std::bitset<64>( ptb_fragment.TimeStamp(i)) <<  std::endl;
+    //    beam_status.emplace_back( ptb_fragment.ChStatus(i)->beam & 0x3 );
+    //    chan_stat_ts.emplace_back( ptb_fragment.TimeStamp(i) * 20 );
+    //    break;
+    //  case 0x7 : // Timestamp Word
+    //    // We don't care about this word, it only has a TS and is sent periodically.
+    //    ptb_fragment.TimeStamp(i);
+    //    ts_word_count++;
+    //    break;
+    //  default : // Unknown, should never happen!
+    //    unknown_or_error_word = true;
+    //    std::cout << "Unknown PTB word type = " << ptb_fragment.Word(i)->word_type << std::endl;
+    //}
   }
 
 }  // extract trigger fragments for the PTB
@@ -1566,6 +1592,12 @@ void sbndaq::EventAna::analyze_tdc_fragment(artdaq::Fragment & frag)  {
   const auto ts = tsfrag.getTDCTimestamp();
 
   // each TDCTimstamp fragment has data from only one channel. The fragments are not always in time order
+  if (ts->vals.channel==0)  ftdc_ch0_ps.emplace_back(ts->picoseconds());
+  if (ts->vals.channel==1)  ftdc_ch1_ps.emplace_back(ts->picoseconds());
+  if (ts->vals.channel==2)  ftdc_ch2_ps.emplace_back(ts->picoseconds());
+  if (ts->vals.channel==3)  ftdc_ch3_ps.emplace_back(ts->picoseconds());
+  if (ts->vals.channel==4)  ftdc_ch4_ps.emplace_back(ts->picoseconds());
+
 
   if (ts->vals.channel==0)  ftdc_ch0.emplace_back(ts->nanoseconds());
   if (ts->vals.channel==1)  ftdc_ch1.emplace_back(ts->nanoseconds());
