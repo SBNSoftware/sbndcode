@@ -37,7 +37,7 @@
 #include "lardataobj/RecoBase/OpHit.h"
 #include "lardataobj/RecoBase/OpFlash.h"
 
-#include "sbndcode/Decoders/PMT/sbndpmt.h"
+#include "sbndcode/Timing/SBNDRawTimingObj.h"
 
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
@@ -127,9 +127,9 @@ private:
     //OpHit
     int _nophits;
     std::vector<int>  _ophit_opch;           ///< OpChannel of the optical hit
-    std::vector<double>  _ophit_peakT;       ///< Peak time of the optical hit
-    std::vector<double>  _ophit_startT;       ///< Peak time of the optical hit
-    std::vector<double>  _ophit_riseT;       ///< Peak time of the optical hit
+    std::vector<double> _ophit_peakT;       ///< Peak time of the optical hit
+    std::vector<double> _ophit_startT;       ///< Peak time of the optical hit
+    std::vector<double> _ophit_riseT;       ///< Peak time of the optical hit
     std::vector<double> _ophit_width;       ///< Width of the optical hit
     std::vector<double> _ophit_area;        ///< Area of the optical hit
     std::vector<double> _ophit_amplitude;   ///< Amplitude of the optical hit
@@ -348,14 +348,14 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
     if (fIncludePmt){
 
         //------------------------PMT Timing--------------------------//
-        art::Handle<raw::pmt::eventTimingInfo> pmtTimingHandle;
-        e.getByLabel(fPmtTimingLabel, pmtTimingHandle);
+        art::Handle<raw::TimingReferenceInfo> timingRefHandle;
+        e.getByLabel(fPmtTimingLabel, timingRefHandle);
 
-        if (!pmtTimingHandle.isValid()){
-            if (fDebugPmt) std::cout << "No PMT Timing products found." << std::endl;
+        if (!timingRefHandle.isValid()){
+            if (fDebugPmt) std::cout << "No Timing Reference products found." << std::endl;
         }
         else{
-            raw::pmt::eventTimingInfo const& pmt_timing(*pmtTimingHandle);
+            raw::TimingReferenceInfo const& pmt_timing(*timingRefHandle);
             
             _pmt_timing_type = pmt_timing.timingType;
             _pmt_timing_ch = pmt_timing.timingChannel;
@@ -378,17 +378,17 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
         else{
 
             art::fill_ptr_vector(pmt_ftrig_v, pmtFtrigHandle);
-            art::FindManyP<raw::pmt::boardTimingInfo> pmtBoardAssoc(pmt_ftrig_v, e, fPmtFtrigBoardLabel);
+            art::FindManyP<raw::pmt::BoardTimingInfo> pmtBoardAssoc(pmt_ftrig_v, e, fPmtFtrigBoardLabel);
 
             if (fDebugPmt) std::cout << "Found OpDetWaveform FTRIG size = " << pmt_ftrig_v.size() << std::endl;
-            
+                
             for (auto const& pmt: pmt_ftrig_v){
 
-                const std::vector<art::Ptr<raw::pmt::boardTimingInfo>> pmt_board_v(pmtBoardAssoc.at(pmt.key()));
+                const std::vector<art::Ptr<raw::pmt::BoardTimingInfo>> pmt_board_v(pmtBoardAssoc.at(pmt.key()));
 
                 if(pmt_board_v.size() != 1 ) continue;
 
-                const art::Ptr<raw::pmt::boardTimingInfo> pmt_board(pmt_board_v.front());
+                const art::Ptr<raw::pmt::BoardTimingInfo> pmt_board(pmt_board_v.front());
               
                 bool excludeThisBoard = false;
                 for(auto const ch: fExcludeFtrigBoard){
@@ -397,7 +397,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
 
                 if (excludeThisBoard){
                     //FTRIG channel ID is actually digitiser board ID
-                    if(fDebugPmt) std::cout << "   board id = " << pmt->ChannelNumber() << " is exluded." << std::endl << std::endl;; 
+                    if(fDebugPmt) std::cout << "   board id = " << pmt->ChannelNumber() << " is exluded." << std::endl << std::endl;
                     continue;
                 }
 
@@ -467,7 +467,7 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
                 art::FindManyP<recob::OpHit> flashOpHitAssoc(opflash_v, e, fOpFlashLabels[s]);
 
                 if (fDebugPmt) std::cout << "Found OpFlash with label " << fOpFlashLabels[s] << " size = " << opflash_v.size() << std::endl;
-                
+
                 for (auto const& flash: opflash_v){
 
                     const std::vector<art::Ptr<recob::OpHit>> ophit_v(flashOpHitAssoc.at(flash.key()));
@@ -548,29 +548,29 @@ void sbnd::BeamAnalysis::beginJob()
     fTree->Branch("run", &_run);
     fTree->Branch("subrun", &_subrun);
     fTree->Branch("event", &_event);
-    fTree->Branch("_tdc_ch0", &_tdc_ch0);
-    fTree->Branch("_tdc_ch1", &_tdc_ch1);
-    fTree->Branch("_tdc_ch2", &_tdc_ch2);
-    fTree->Branch("_tdc_ch3", &_tdc_ch3);
-    fTree->Branch("_tdc_ch4", &_tdc_ch4);
-    fTree->Branch("_tdc_ch0_utc", &_tdc_ch0_utc);
-    fTree->Branch("_tdc_ch1_utc", &_tdc_ch1_utc);
-    fTree->Branch("_tdc_ch2_utc", &_tdc_ch2_utc);
-    fTree->Branch("_tdc_ch3_utc", &_tdc_ch3_utc);
-    fTree->Branch("_tdc_ch4_utc", &_tdc_ch4_utc);
+    fTree->Branch("tdc_ch0", &_tdc_ch0);
+    fTree->Branch("tdc_ch1", &_tdc_ch1);
+    fTree->Branch("tdc_ch2", &_tdc_ch2);
+    fTree->Branch("tdc_ch3", &_tdc_ch3);
+    fTree->Branch("tdc_ch4", &_tdc_ch4);
+    fTree->Branch("tdc_ch0_utc", &_tdc_ch0_utc);
+    fTree->Branch("tdc_ch1_utc", &_tdc_ch1_utc);
+    fTree->Branch("tdc_ch2_utc", &_tdc_ch2_utc);
+    fTree->Branch("tdc_ch3_utc", &_tdc_ch3_utc);
+    fTree->Branch("tdc_ch4_utc", &_tdc_ch4_utc);
 
     if (fIncludeCrt){
-        fTree->Branch("_crt_x", &_crt_x);
-        fTree->Branch("_crt_y", &_crt_y);
-        fTree->Branch("_crt_z", &_crt_z);
-        fTree->Branch("_crt_xe", &_crt_xe);
-        fTree->Branch("_crt_ye", &_crt_ye);
-        fTree->Branch("_crt_ze", &_crt_ze);
-        fTree->Branch("_crt_ts0", &_crt_ts0);
-        fTree->Branch("_crt_ts1", &_crt_ts1);
-        fTree->Branch("_crt_ts0e", &_crt_ts0e);
-        fTree->Branch("_crt_ts1e", &_crt_ts1e);
-        fTree->Branch("_crt_tagger", &_crt_tagger);
+        fTree->Branch("crt_x", &_crt_x);
+        fTree->Branch("crt_y", &_crt_y);
+        fTree->Branch("crt_z", &_crt_z);
+        fTree->Branch("crt_xe", &_crt_xe);
+        fTree->Branch("crt_ye", &_crt_ye);
+        fTree->Branch("crt_ze", &_crt_ze);
+        fTree->Branch("crt_ts0", &_crt_ts0);
+        fTree->Branch("crt_ts1", &_crt_ts1);
+        fTree->Branch("crt_ts0e", &_crt_ts0e);
+        fTree->Branch("crt_ts1e", &_crt_ts1e);
+        fTree->Branch("crt_tagger", &_crt_tagger);
     }
     
     if (fIncludePmt){
@@ -721,7 +721,7 @@ double sbnd::BeamAnalysis::GetFtrigRisingEdge(const art::Ptr<raw::OpDetWaveform>
     baseline /= baselineNBin;
 
     //-------Find rising/falling edge
-    double postPercent = pp / 100.0;
+    double postPercent = 1 - (pp / 100.0);
     double largestRise = -9999;
     double largestFall = 9999;
     double risingTickGuess = 0;
@@ -765,6 +765,12 @@ double sbnd::BeamAnalysis::GetFtrigRisingEdge(const art::Ptr<raw::OpDetWaveform>
     TFitResultPtr fp = hWvfm->Fit(fitf,"SRQ","", wf_lb, wf_ub);
     bool converged = !(bool)(int(fp));
 
+    //-------Check if fit converges
+    if(!converged) {
+        if(fDebugPmt) std::cout << "Fitting FTRIG waveform does not converge!" << std::endl;
+        return -99999;
+    }
+
     //-------Save fits to plots
     if(fSavePmt){
         
@@ -776,7 +782,7 @@ double sbnd::BeamAnalysis::GetFtrigRisingEdge(const art::Ptr<raw::OpDetWaveform>
 
         hWvfm->GetXaxis()->SetTitle("Tick");
         hWvfm->GetYaxis()->SetTitle("ADC");
-        hWvfm->GetXaxis()->SetRangeUser(wf_lb, wf_ub);
+        //hWvfm->GetXaxis()->SetRangeUser(wf_lb, wf_ub);
         
         hWvfm->SetLineColor(kBlack);
         hWvfm->SetLineWidth(2);
@@ -786,12 +792,6 @@ double sbnd::BeamAnalysis::GetFtrigRisingEdge(const art::Ptr<raw::OpDetWaveform>
         
         c->SaveAs(Form("%s/%s.png", fSavePmtPath.c_str(), _histName.str().c_str()));
         //c->SaveAs(Form("%s/%s.pdf", fSavePmtPath.c_str(), _histName.str().c_str()));
-    }
-
-    //-------Check if fit converges
-    if(!converged) {
-        if(fDebugPmt) std::cout << "Fitting FTRIG waveform does not converge!" << std::endl;
-        return -99999;
     }
 
     double parA = fitf->GetParameter(0);

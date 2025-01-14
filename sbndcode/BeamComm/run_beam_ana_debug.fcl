@@ -1,5 +1,6 @@
 #include "run_beam_ana.fcl"
 
+physics.analyzers.ana.ExcludeFtrigBoard: [1, 2, 3, 4, 5, 6, 7, 8]
 physics.analyzers.ana.DebugPmt: true
-physics.analyzers.ana.SavePmt: true
+physics.analyzers.ana.SavePmt: false
 physics.analyzers.ana.SavePmtPath: "/exp/sbnd/data/users/lnguyen/BeamComm/BeamAna/plots/"
