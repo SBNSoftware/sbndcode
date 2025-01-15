@@ -124,13 +124,39 @@ void SBNDPTBDecoder::produce(art::Event & evt)
 
 void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sout)
 {
+	std::cout << "Data begin byte " << frag.dataBeginBytes() << "  data size bytes " << frag.dataSizeBytes() << std::endl;
   sbndaq::CTBFragment ctbfrag(frag);   // somehow the name CTBFragment stuck
-
+	std::cout << " The default word size is " << ctbfrag.WordSize() << std::endl;
   // use the same logic in sbndaq-artdaq-core/Overlays/SBND/PTBFragment.cc: operator<<
   // but separate out the HLTs and LLTs
-  if (fDebugLevel > 0)
+  int LLTCount =0;
+  int HLTCount=0;
+  if (fDebugLevel == -2)
     {
-      std::cout << "SBNDPTBDecoder_module: got into aux " <<  ctbfrag.NWords() << " words found" << std::endl;
+	  int WordSize = 24; // bytes
+	  size_t WordsByHand = frag.dataSizeBytes()/WordSize;
+      std::cout << "SBNDPTBDecoder_module: got into aux " <<  ctbfrag.NWords() << " words found" << " words by hand " << WordsByHand << std::endl;
+	  for(size_t iword=0; iword<WordsByHand; ++iword)
+	  {
+		unsigned int Offset = iword * WordSize;
+		const ptb::content::word::PTBBoardReaderWord_t* CurrentWord( reinterpret_cast<const ptb::content::word::PTBBoardReaderWord_t*>( frag.dataBeginBytes() + Offset ) );
+		//std::cout << " current word has type " << CurrentWord->word.word_type << std::endl;
+		if ( CurrentWord->word.word_type == ptb::content::word::t_ch ) std::cout << " Channel Status word found in my by hand stuff" << std::endl;
+
+		//else if ( CurrentWord->word.word_type == ptb::content::word::t_fback ) std::cout << " Feedback word found in my by hand stuff" << std::endl;
+
+		//else if ( CurrentWord->word.word_type == ptb::content::word::t_ts ) std::cout << " time stamp word found in my by hand stuff" << std::endl;
+
+		else if( CurrentWord->word.word_type == ptb::content::word::t_lt || CurrentWord->word.word_type == ptb::content::word::t_gt)
+		{
+			//Found a trigger word lets 
+			const ptb::content::word::trigger_t* TriggerWord( reinterpret_cast<const ptb::content::word::trigger_t*>( &(CurrentWord->word) ) );
+			if(TriggerWord->IsHLT()) HLTCount++;
+			if(TriggerWord->IsLLT()) LLTCount++;
+		}
+		else std::cout << " its a by hand mysterious word" << std::endl;
+	  }
+	std::cout << "My by hand count gives " << LLTCount << " LLT and " << HLTCount << " HLT for this block" << std::endl;
     }
   
   for (size_t iword = 0; iword < ctbfrag.NWords(); ++iword)
@@ -154,7 +180,6 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	      sout.HLTrigs.push_back(tstruct);
 	      if (fDebugLevel > 0)
 		{
-			std::cout << ctbfrag.WordSize() << " is the word size of my HLT here!!" << std::endl;
 		  std::cout << "SBNDPTBDecoder_module: found HLT: " << wt << " " << ix << std::endl;
 		}
 	    }
