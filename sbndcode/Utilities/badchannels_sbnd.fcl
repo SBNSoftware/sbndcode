@@ -32,7 +32,7 @@ sbnd_data_badchannels_west_plane0_shorted: [ 7169 ]
 sbnd_data_badchannels_west_plane1_shorted: [ 8378 ]
 
 #No response from channels
-sbnd_data_badchannels_no_response: [ 546, 607, 8574 ]
+sbnd_data_badchannels_no_response: [ 546, 607, 8574, 8395, 11147 ]
 
 #noisy channels
 sbnd_data_badchannels_noisy: [ 5060, 5636, 5637 ]
