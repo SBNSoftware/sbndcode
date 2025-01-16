@@ -581,6 +581,7 @@ namespace opdet { //OpDet means optical detector
     }
     for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
     {
+      if(FlashCounter != GoodFlashIndex) continue;
       for(int i=0; i<int(MONThresholds.size()); i++)
       {
           //Grab first entry in flash to set MonPulse size
