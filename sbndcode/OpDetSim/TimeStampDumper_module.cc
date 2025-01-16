@@ -107,20 +107,20 @@ void TimeStampDumper::ResetTree()
     TriggerPulseID=-1;
     NLLT=-1;
     NHLT=-1;
-    int LLTSize=600;
+    int LLTSize=2400;
     LLT_Type.clear();
     LLT_Type.resize(LLTSize);
     LLT_Time.clear();
     LLT_Time.resize(LLTSize);
-    int HLTSize=25;
+    int HLTSize=200;
     HLT_Type.clear();
     HLT_Type.resize(HLTSize);
     HLT_Time.clear();
     HLT_Time.resize(HLTSize);
-    int NFlashMax = 50;
+    int NFlashMax = 200;
     Flash_Time.clear();
     Flash_Time.resize(NFlashMax);
-    int TDCSize= 50;
+    int TDCSize= 200;
     TDC_Channel.clear();
     TDC_Channel.resize(TDCSize);
     TDC_Name.clear();
@@ -180,44 +180,65 @@ void TimeStampDumper::analyze(art::Event const& e)
   //PTB Trigger times
   art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle_2;
   e.getByLabel(fPTBLabel,ptbHandle_2);
+  int HLTIndexer=0;
+  int LLTIndexer=0;
   for(int index=0; index<int(ptbHandle_2->size()); index++)
   {
     auto ptb = (*ptbHandle_2)[index];
     auto hltrigs = ptb.GetHLTriggers();
     auto lltrigs = ptb.GetLLTriggers();
-    std::cout << lltrigs.size() << " from block " << index << std::endl;
-    NHLT = NHLT+int(hltrigs.size());
-    NLLT = NLLT+int(lltrigs.size());
     for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
     {
       int Power=0;
-      while(Power<64)
+      std::vector<int> GrabbedHLTs;
+      while(Power<32)
       {
-        if(hltrigs[HLT].trigger_word & (0x1 << Power)) break;
-        else Power=Power+1;
+        if(hltrigs[HLT].trigger_word & (0x1 << Power))
+        {
+          GrabbedHLTs.push_back(Power);
+        }
+        Power=Power+1;
       }
-      HLT_Type[HLT] = Power;
-      HLT_Time[HLT] = hltrigs[HLT].timestamp*20;
+      //Do a loop over vector elements of HLT types
+      for(int i=0; i<int(GrabbedHLTs.size()); i++ )
+      {
+        if(HLTIndexer>=int(HLT_Type.size())) return; //Error handling for weird events
+        HLT_Type[HLTIndexer] = GrabbedHLTs[i];
+        HLT_Time[HLTIndexer] = hltrigs[HLT].timestamp*20;
+        HLTIndexer=HLTIndexer+1;
+      }
     }
     for(int LLT=0; LLT<int(lltrigs.size()); LLT++)
     {
       int Power=0;
-      while(Power<64)
+      std::vector<int> GrabbedLLTs;
+      while(Power<32)
       {
-        if(lltrigs[LLT].trigger_word & (0x1 << Power)) break;
-        else Power=Power+1;
+        if(lltrigs[LLT].trigger_word & (0x1 << Power))
+        {
+          GrabbedLLTs.push_back(Power);
+        }
+        Power=Power+1;
       }
-      LLT_Type[LLT] = Power;
-      LLT_Time[LLT] = lltrigs[LLT].timestamp*20;
+      for(int i=0; i<int(GrabbedLLTs.size()); i++ )
+      {
+        if(LLTIndexer>=int(LLT_Type.size())) return; //Error handling for weird events
+        LLT_Type[LLTIndexer] = GrabbedLLTs[i];
+        LLT_Time[LLTIndexer] = lltrigs[LLT].timestamp*20;
+        LLTIndexer=LLTIndexer+1;
+      }
     }
   }
+  NHLT = HLTIndexer+1;
+  NLLT = LLTIndexer+1;
+  if(NHLT>100 || NLLT >2000) std::cout << NHLT << "  " << NLLT << "   something overflowed " << std::endl; 
   //PMT timestamps
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle;
   e.getByLabel(fPMTWaveformLabel, waveHandle);
   int PMTPerCAEN=fPMTPerCAEN;
   int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerCAEN);
-  std::cout << "\t It also has " << TotalFlash << " opDetWaveforms " << std::endl;
   long MinTime = 9999999999;
+  if( TotalFlash>int(Flash_Time.size()) ) return; //Error handling for weird events
   for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
   {
     int WaveIndex = FlashCounter*PMTPerCAEN;
@@ -232,9 +253,7 @@ void TimeStampDumper::analyze(art::Event const& e)
 //TDC timestamps
 art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
 e.getByLabel(fspectdc_product_name,tdcHandle);
-bool found_ett = false;
 std::vector<uint64_t> tdc_etrig_v;
-uint64_t min_raw_tdc_diff = uint64_t(1e12);
 const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
 art::Handle<artdaq::detail::RawEventHeader> header_handle;
 uint64_t raw_timestamp = 0;
@@ -243,8 +262,7 @@ auto rawheader = artdaq::RawEvent(*header_handle);
 raw_timestamp = rawheader.timestamp() - fraw_ts_correction; // includes sec + ns portion
 EventTime_s = raw_timestamp/ uint64_t(1e9);
 EventTime_ns = raw_timestamp % uint64_t(1e9);
-std::cout << "Raw timestamp (w/ correction) -> "  << "ts (ns): " << raw_timestamp % uint64_t(1e9) << ", sec (s): " << raw_timestamp / uint64_t(1e9) << std::endl;
-std::cout << "vs event object itself " << EventTime_s << " sec " << EventTime_ns << std::endl;
+if( tdc_v.size()> TDC_TimeStamp.size() ) return; //Error handling for weird events
 for (size_t i=0; i<tdc_v.size(); i++){
     auto tdc = tdc_v[i];
     const uint32_t  ch = tdc.Channel();
@@ -255,31 +273,9 @@ for (size_t i=0; i<tdc_v.size(); i++){
     TDC_Name[i]=name;
     TDC_Channel[i]=ch;
     if (ch==fspectdc_etrig_ch){
-        found_ett = true;
         tdc_etrig_v.push_back(ts-offset);
     }
 }
-uint64_t event_trigger_time = 0; // in ns
-if (tdc_etrig_v.size()==1)
-  {
-      event_trigger_time = tdc_etrig_v.front()%uint64_t(1e9);
-  }
-else
-  { // finding the closest ETRIG to the raw timestamp
-      for (size_t i=0; i < tdc_etrig_v.size(); i++){
-          auto tdc_etrig = tdc_etrig_v[i];
-          uint64_t diff;
-          if (tdc_etrig < (raw_timestamp))
-              diff = raw_timestamp - tdc_etrig;
-          else
-              diff = tdc_etrig - raw_timestamp;
-          if (diff < min_raw_tdc_diff){
-              event_trigger_time = tdc_etrig%uint64_t(1e9);
-              min_raw_tdc_diff = diff;
-          }
-      }
-  }
-std::cout << event_trigger_time << "  " << found_ett << std::endl;
 //Save to tree
 
 evtTree->Fill();

@@ -127,11 +127,13 @@ namespace opdet { //OpDet means optical detector
     bool fCheckTriggers;
     int hist_id;
     bool fCheckSoftTrig;
+    int fNominalGoodStart;
     std::string fPTBLabel;
     std::string fSoftTrigLabel;
     int fTotalCAENBoards;
+    int fNominalWaveformSize;
     bool fTriggerProdCheck;
-
+    int fCAENOffset;
     //Event Tree saving infomation
     // --- TTrees
     TTree* evtTree;
@@ -144,6 +146,8 @@ namespace opdet { //OpDet means optical detector
     std::vector<int> tree_OnBeamMonPeaks;
     std::vector<int> tree_OffBeamMonPeaks;
     std::vector<int> tree_FullBeamMonPeaks;
+    std::vector<int> tree_OnBeamMonPeakSample;
+    std::vector<int> tree_FullBeamMonPeakSample;
     int tree_MonStart;
     int tree_MonEnd;
     int tree_MonStep;
@@ -180,6 +184,7 @@ namespace opdet { //OpDet means optical detector
     fInputInstanceName = p.get< std::string >("InputInstance" );
     fTimingInstanceName = p.get<std::string>("TimingInstanceName");
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
+    fNominalGoodStart = p.get<int>("NominalGoodStartTime", 10); //ns timestamp for OpDetWaveform 
     fMonWidth        = p.get<int>("MonWidth");
     fMonStart        = p.get<int>("MonStart", 20);
     fMonStop        = p.get<int>("MonStop", 250);
@@ -199,6 +204,8 @@ namespace opdet { //OpDet means optical detector
     fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
     fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
     fTriggerProdCheck = p.get<bool>("TriggerProdCheck", false);
+    fNominalWaveformSize = p.get<int>("NominalWaveformSize", 5000);
+    fCAENOffset = p.get<int>("CAENOffset", -150); //Flash peaks show up 150 samples before trigger moment of flash triggers
     fChNumber = 0;
     fEvNumber = 0;
     hist_id=0;
@@ -214,10 +221,14 @@ namespace opdet { //OpDet means optical detector
     tree_OnBeamMonPeaks.clear();
     tree_OffBeamMonPeaks.clear();
     tree_FullBeamMonPeaks.clear();
+    tree_OnBeamMonPeakSample.clear();
+    tree_FullBeamMonPeakSample.clear();
     int TotalMonBins = (fMonStop-fMonStart)/fMonStep;
     tree_OnBeamMonPeaks.resize(TotalMonBins);
     tree_OffBeamMonPeaks.resize(TotalMonBins);
     tree_FullBeamMonPeaks.resize(TotalMonBins);
+    tree_OnBeamMonPeakSample.resize(TotalMonBins);
+    tree_FullBeamMonPeakSample.resize(TotalMonBins);
     tree_HLTs.clear();
     tree_HLTs.resize(20);
     tree_HLTTimes.clear();
@@ -298,8 +309,10 @@ namespace opdet { //OpDet means optical detector
     evtTree->Branch("timestamp",&tree_timestamp);
     int MonBins = (fMonStop - fMonStart)/fMonStep+1;
     evtTree->Branch("OnBeamMonPeaks",&tree_OnBeamMonPeaks, MonBins, 0);
+    evtTree->Branch("OnBeamMonPeaksSample",&tree_OnBeamMonPeakSample, MonBins, 0);
     evtTree->Branch("OffBeamMonPeaks",&tree_OffBeamMonPeaks, MonBins, 0);
     evtTree->Branch("FullBeamMonPeaks",&tree_FullBeamMonPeaks, MonBins, 0);
+    evtTree->Branch("FullBeamMonPeaksSample",&tree_FullBeamMonPeakSample, MonBins, 0);
     evtTree->Branch("MonStart",&tree_MonStart);
     evtTree->Branch("MonEnd",&tree_MonEnd);
     evtTree->Branch("MonStep",&tree_MonStep);
@@ -332,12 +345,12 @@ namespace opdet { //OpDet means optical detector
     e.getByLabel(fInputModuleName, fInputInstanceName, fInputProcessName, waveHandle);
     if(!waveHandle.isValid() || waveHandle->size() == 0){
     std::cout << "Bad wavehandle found on event " << fEvNumber << "  " << waveHandle.isValid()  << "  " << waveHandle->size() << std::endl;
+    evtTree->Fill();
     return;
     }
-    
     art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
     e.getByLabel(fPTBLabel,ptbHandle);
-    int FillIndex = 0;
+    int HLTIndexer = 0;
     for(int index=0; index<int(ptbHandle->size()); index++)
     {
       auto ptb = (*ptbHandle)[index];
@@ -345,38 +358,50 @@ namespace opdet { //OpDet means optical detector
       for(int HLT=0; HLT<int(hltrigs.size()); HLT++)
       {
         int Power=0;
-        if(FillIndex> int(tree_HLTTimes.size()-1)) continue;
-        tree_HLTTimes[FillIndex] = hltrigs[HLT].timestamp*20; //ns
-        while(Power<64)
+        std::vector<int> GrabbedHLTs;
+        while(Power<32)
         {
-          if(hltrigs[HLT].trigger_word & (0x1 << Power)) break;
-          else Power=Power+1;
+          if(hltrigs[HLT].trigger_word & (0x1 << Power))
+          {
+            GrabbedHLTs.push_back(Power);
+          }
+          Power=Power+1;
         }
-        tree_HLTs[FillIndex] = Power;
-        FillIndex=FillIndex+1;
+        //Do a loop over vector elements of HLT types
+        for(int i=0; i<int(GrabbedHLTs.size()); i++ )
+        {
+          if(HLTIndexer>=int(tree_HLTs.size())) break; //Error handling for weird events
+          tree_HLTs[HLTIndexer] = GrabbedHLTs[i];
+          tree_HLTTimes[HLTIndexer] = hltrigs[HLT].timestamp*20;
+          HLTIndexer=HLTIndexer+1;
+        }
       }
-      auto lltrigs = ptb.GetLLTriggers();
     }
-
-      FillIndex=0;
+    int LLTIndexer=0;
     for(int index=0; index<int(ptbHandle->size()); index++)
     {
       auto ptb = (*ptbHandle)[index];
       auto lltrigs = ptb.GetLLTriggers();
       for(int LLT=0; LLT<int(lltrigs.size()); LLT++)
       {
-        if(FillIndex> int(tree_LLTTimes.size()-1)) continue;
-        tree_LLTTimes[FillIndex] = lltrigs[LLT].timestamp*20; //ns
-        int Power=0;
-        while(Power<64)
+      int Power=0;
+      std::vector<int> GrabbedLLTs;
+      while(Power<32)
+      {
+        if(lltrigs[LLT].trigger_word & (0x1 << Power))
         {
-          if(lltrigs[LLT].trigger_word & (0x1 << Power)) break;
-          else Power=Power+1;
+          GrabbedLLTs.push_back(Power);
         }
-        tree_LLTs[FillIndex] = Power;
-        FillIndex=FillIndex+1;
+        Power=Power+1;
       }
-
+      for(int i=0; i<int(GrabbedLLTs.size()); i++ )
+      {
+        if(LLTIndexer>=int(tree_LLTs.size())) continue; //Error handling for weird events
+        tree_LLTs[LLTIndexer] = GrabbedLLTs[i];
+        tree_LLTTimes[LLTIndexer] = lltrigs[LLT].timestamp*20;
+        LLTIndexer=LLTIndexer+1;
+      }
+      }
     }
     //Seems to be a vector with some extra stuff like isValid()
     //raw::OpDetWaveform is a class with start time, vector of samples, and channel ID
@@ -569,8 +594,13 @@ namespace opdet { //OpDet means optical detector
           std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); 
           ConstructMonPulse(waveHandle, MONThresholds[i], MonPulse, false, FlashCounter);
           //Constructed MON pulse now lets compare it to the MTCA requirement
-          int BeamAcceptanceStart = fBeamWindowStart;
-          int BeamAcceptanceEnd = fBeamWindowEnd;
+          //Flash just before beam gate can offset waveform
+          int WaveformOffset = (*waveHandle)[WaveIndex].TimeStamp()*1000 - fNominalGoodStart; //Waveform timestamps are in us // Also delivers time of sample 0 //ns
+          WaveformOffset = WaveformOffset/2; //sample/2 ns //Probably a sign error here
+          WaveformOffset = WaveformOffset + fNominalWaveformSize*0.2; //Trigger moment is at 20% of waveform readout
+          WaveformOffset = WaveformOffset + fCAENOffset; //Flash trigger peaks are not exactly at 1000 samples as expected from trigger. MTCA process time
+          int BeamAcceptanceStart = fBeamWindowStart+WaveformOffset;
+          int BeamAcceptanceEnd = fBeamWindowEnd+WaveformOffset;
           int PeakMon = *std::max_element(MonPulse->begin()+BeamAcceptanceStart, MonPulse->begin()+BeamAcceptanceEnd);
           int PeakMon_NoRange = *std::max_element(MonPulse->begin(), MonPulse->end());
           int PeakOffBeam = *std::max_element(MonPulse->end()-1-(BeamAcceptanceEnd-BeamAcceptanceStart), MonPulse->end()-1);
@@ -578,7 +608,9 @@ namespace opdet { //OpDet means optical detector
           if(GoodFlash)
           {
             tree_OnBeamMonPeaks[i] = PeakMon;
+            tree_OnBeamMonPeakSample[i] = std::distance(MonPulse->begin(), std::max_element(MonPulse->begin()+BeamAcceptanceStart, MonPulse->begin()+BeamAcceptanceEnd));
             tree_OffBeamMonPeaks[i] = PeakOffBeam;
+            tree_FullBeamMonPeakSample[i] = std::distance(MonPulse->begin(), std::max_element(MonPulse->begin(), MonPulse->end()) );
             tree_FullBeamMonPeaks[i] = PeakMon_NoRange;
           }
           for(int j=0; j<int(MTCA_Thresholds.size()); j++)
