@@ -1,0 +1,5 @@
+<lcgdict>
+<class name="art::Wrapper<std::vector<blip::Blip> >"/>
+<class name="blip::Blip"/>
+<class name="std::vector<blip::Blip>"/>
+</lcgdict>
