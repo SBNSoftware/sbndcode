@@ -1,0 +1,29 @@
+#include "detsimmodules.fcl"
+#include "BeamRatesCalib_Defaults.fcl"
+
+process_name: BeamRateCalib
+
+
+# Source is an art-ROOT file containing CAEN waveforms for each beam spill
+source: {
+  module_type: RootInput
+}
+
+services: 
+{
+  TFileService:            { fileName: "BeamRateRes.root" }
+}
+
+
+# Define and schedule filter/producer/analyzers
+physics:{
+
+  analyzers:{
+    BeamCalib: @local::BeamRatesCalib
+  }
+  reco: [ ]
+  
+  ana:            [ BeamCalib ]
+  trigger_paths:  [ ] 
+  end_paths:      [ ana ] 
+}
