@@ -20,6 +20,7 @@ art_make_library(LIBRARY_NAME  sbndcode_BlipRecoAlg
                            art::Framework_Services_Registry
                            art_root_io::tfile_support
                            art_root_io::TFileService_service
+                           art_root_io::tfile_support ROOT::Core
                            art::Persistency_Common
                            canvas::canvas
                            art::Persistency_Provenance
