@@ -1,0 +1,47 @@
+BEGIN_PROLOG 
+
+BeamRatesCalib: 
+{
+    module_type: "BeamRatesCalib"
+    ClusterModuleLabel: "linecluster"
+    OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]
+    DaphneFrequency: 62.5  #in MHz. Frequency of the Daphne Readouts
+    # Width of CAEN trigger pulse in CAEN clock ticks (8ns)
+    MonWidth: 12 #in 8ns bins
+    # Stepped over per-PMT MON thresholds for contribution to trigger pulse
+    MonStart: 24
+    MonStop: 64
+    MonStep: 1
+    # Plotting option for histograms generated
+    MTCAStart: 1
+    MTCAStop: 63
+    MTCAStep: 1
+    # Save some example trigger pulses for each flash (TH1D similar to wvfana)
+    SaveAllMon: true
+    # The MON threshold used in the saved TH1D examples
+    FCLthreshold: 25 
+    # PMT index corresponding to the opening of the beam acceptance BeamWindowEnd
+    # Note that BeamWindowStart should not account for MTC/A wire+processing delays
+    # Those are handled by CAENOffset
+    BeamWindowStart: 1000
+    BeamWindowEnd: 2500
+    CAENOffset: -150 #Based on peak index for flash triggered readouts. Accounts for cable + processing delays
+    # Sample length of a normal PMT readout 
+    NominalWaveformSize: 5000
+    NominalGoodStartTime: 10 #ns. extra offset from TDC 
+    # Flags for additional outputs for MSUM digitization + software trigger 
+    CheckHardwareTriggers: true
+    CheckSoftTrig: true
+    # Number of CAEN boards on for this run
+    TotalCAENBoards: 8
+    # Assorted labels to get data products out of Art files
+    SoftTrigLabel: "pmtmetricproducer"
+    InputModule: "pmtdecoder"
+    InputProcess: "DECODE"
+    InputInstance: "PMTChannels"
+    PTBLabel: "ptbdecoder::DECODE"
+    TimingInstanceName: "pmtdecoder:TimingChannels:DECODE"
+
+}
+
+END_PROLOG
