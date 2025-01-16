@@ -13,6 +13,7 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            lardata::RecoObjects
                            larpandora::LArPandoraInterface
                            sbndcode_CRTUtils
+                           sbndcode_CRT
                            sbnobj::Common_CRT
                            nusimdata::SimulationBase
                            art::Framework_Core
@@ -20,7 +21,6 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            art::Framework_Services_Registry
                            art_root_io::tfile_support
                            art_root_io::TFileService_service
-                           art_root_io::tfile_support ROOT::Core
                            art::Persistency_Common
                            art::Persistency_Provenance
                            art::Utilities
@@ -37,11 +37,11 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            sbndcode_BlipRecoAlg
 )
 
-add_subdirectory(Utils)
-add_subdirectory(Alg)
-
 cet_build_plugin(BlipAna art::Module SOURCE BlipAna_module.cc LIBRARIES ${MODULE_LIBRARIES} )
 cet_build_plugin(BlipRecoProducer art::Module SOURCE BlipRecoProducer_module.cc LIBRARIES ${MODULE_LIBRARIES} )
+
+add_subdirectory(Utils)
+add_subdirectory(Alg)
 
 install_headers()
 install_fhicl()

@@ -1117,7 +1117,7 @@ void BlipAna::analyze(const art::Event& evt)
     float   logGOF  = (isFit && mult == 1) ? log10(gof) : 99;
     float   amp     = (isFit && mult == 1) ? hitlist[i]->PeakAmplitude() : -9;
     float   rms     = (isFit && mult == 1) ? hitlist[i]->RMS() : -9; //(gof>0) ? hitlist[i]->RMS() : -99;
-    float   sumADC  = hitlist[i]->ROISummedADC();
+    float   sumADC  = hitlist[i]->SummedADC();
     float   integral= hitlist[i]->Integral();
     float   qreco   = hinfo.charge;
     bool    isMC    = (hinfo.g4trkid >= 0 );
@@ -1202,7 +1202,7 @@ void BlipAna::analyze(const art::Event& evt)
       fData->hit_rms[i]       = hitlist[i]->RMS();
       fData->hit_amp[i]	      = hitlist[i]->PeakAmplitude();
       fData->hit_area[i]      = hitlist[i]->Integral();
-      fData->hit_sumadc[i]    = hitlist[i]->ROISummedADC();
+      fData->hit_sumadc[i]    = hitlist[i]->SummedADC();
       fData->hit_mult[i]      = hitlist[i]->Multiplicity();
       fData->hit_gof[i]       = gof;
       fData->hit_trkid[i]     = hinfo.trkid;

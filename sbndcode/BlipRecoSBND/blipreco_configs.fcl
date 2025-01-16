@@ -1,18 +1,15 @@
-#include "calorimetry_sbnd.fcl"
-
 BEGIN_PROLOG
 
 # Main BlipAlg settings
 sbnd_blipalg:
 {
   HitProducer:          "gaushit"       #// input recob::Hits to use for blip reconstruction
-  TrkProducer:          "pandoraTrack"       #// input recob::Tracks to use for blip reconstruction
+  TrkProducer:          "pandora"       #// input recob::Tracks to use for blip reconstruction
   GeantProducer:        "largeant"      #// input sim::MCParticles (getting true particle info)
   SimEDepProducer:      "ionandscint"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)
   SimChanProducer:      "simdrift"      #// label for sim::SimChannels (getting drifted charge; optional)
   MaxHitTrkLength:      5.0             #// hits in trks > this length will be vetoed [cm]
   DoHitFiltering:       false           #// filter hits based on amp, width, RMS
-  HitClustWireRange:    1               #// clustering wire width
   MaxWiresInCluster:    10              #// max allowable wires in a cluster
   MaxClusterSpan:       50              #// max allowable time-ticks of a cluster
   ClustMatchMinOverlap: 0.5             #// minimum fractional overlap to be eligible for matching
@@ -26,8 +23,6 @@ sbnd_blipalg:
   CylinderRadius:       15.0            #// 3D cylinder cut radius [cm]
   CaloPlane:            2               #// plane used for calorimetry (2=collection)
   CalodEdx:             2.8             #// assumed dE/dx for MeV-scale recombination corrections
-  ESTAR_p0:             0.01730         #// p0 for electrons to energy conversion function using ESTAR table
-  ESTAR_p1:		0.00003479	#// p1 for electrons to	energy conversion function using ESTAR table
   LifetimeCorrection:   false           #// correct blips for lifetime (assumes T0 = 0)
   SCECorrection:        false           #// correct blips for space charge (requires known XYZ)
   CaloAlg:              @local::sbnd_calorimetryalgmc

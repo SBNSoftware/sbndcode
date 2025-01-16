@@ -146,7 +146,6 @@ namespace blip {
     float     Charge          = -9;         // Charge on calorimetry plane
     float     Energy          = -999;       // Energy (const dE/dx, fcl-configurable)
     float     EnergyESTAR     = -999;       // Energy (ESTAR method from ArgoNeuT)
-    float     EnergyPSTAR     = -999;       // Energy (PSTAR method similar with ESTAR method from ArgoNeuT)
     float     ProxTrkDist     = -9;         // Distance to cloest track
     int       ProxTrkID       = -9;         // ID of closest track
     bool      inCylinder      = false;      // Is it in a cone/cylinder region? 
