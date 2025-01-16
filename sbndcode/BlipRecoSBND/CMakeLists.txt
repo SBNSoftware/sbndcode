@@ -21,6 +21,7 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            art::Framework_Services_Registry
                            art_root_io::tfile_support
                            art_root_io::TFileService_service
+                           art_root_io::tfile_support ROOT::Core
                            art::Persistency_Common
                            art::Persistency_Provenance
                            art::Utilities
