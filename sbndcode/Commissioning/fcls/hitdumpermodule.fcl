@@ -12,6 +12,7 @@ hitdumper:
     MaxTime: 1100.0
     MinTime: 400.0
     TimeWindow: 150	
+    MaxTPCHits:800
 
     MaxHits: 21000
     MaxOpHits: 100000

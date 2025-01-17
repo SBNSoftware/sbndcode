@@ -86,11 +86,10 @@
 #include <cmath>
 
 
-bool Cut_NS_Function(double x1, double y1,double z1,double x2, double y2,double z2){
+bool Cut_NS_Function(double x1, double z1,double x2, double z2){
   bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
-  bool y = (y1>-360 && y1<360) && (y2>-360 && y2<360);
-  bool x=((x1>-200 && x1<-150) && (x2>-200 && x2<-150)) || ((x1>150 && x1<200) && (x2>150 && x2<200));
-  return x && y && z;
+   bool x=((x1>-205 && x1<-135) && (x2>-205 && x2<-135)) || ((x1>135 && x1<205) && (x2>135 && x2<205));
+  return x && z;
 }
 
 const int DEFAULT_VALUE = -9999;
@@ -192,7 +191,7 @@ private:
   std::vector<double> _hit_ph;                  ///< Hit pulse height
   std::vector<double> _hit_width;               ///< Hit width
   std::vector<double> _hit_full_integral;       ///< Hit charge integral
-  std::vector<int>    _waveform_number;         ///< Number for each waveform, to allow for searching
+   std::vector<int>    _waveform_number;         ///< Number for each waveform, to allow for searching
   std::vector<short>  _adc_on_wire;             ///< ADC on wire to draw waveform
   std::vector<int>    _time_for_waveform;       ///<Time for waveform to plot
   int                 _adc_count;               ///<Used for plotting waveforms
@@ -248,6 +247,8 @@ private:
   std::vector<double> _crt_track_length;       ///< CRT track length
   std::vector<double> _theta_xz_CRT;
   std::vector<double> _theta_yz_CRT;
+  std::vector<double> _gradient;
+  std::vector<double> _intercept;
 
   // Optical hit variables
   int _nophits;                               ///< Number of Optical Hits
@@ -400,7 +401,7 @@ private:
   double _max_time;
   double _min_time;
   int _time_window;
-
+  int _max_tpc_hits;
   int _max_hits;                    ///< maximum number of hits (to be set via fcl)
   int _max_ophits;                  ///< maximum number of hits (to be set via fcl)
   int _max_samples;                 ///< maximum number of samples (to be set via fcl)
@@ -484,6 +485,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   _max_time = p.get<double>("MaxTime", 1100);
   _min_time = p.get<double>("MinTime", 400);
   _time_window = p.get<int>("TimeWindow", 150);
+  _max_tpc_hits=p.get<int>("MaxTPCHits",800);
 
   _max_hits = p.get<int>("MaxHits", 50000);
   _max_ophits = p.get<int>("MaxOpHits", 50000);
@@ -704,28 +706,30 @@ void Hitdumper::analyze(const art::Event& evt)
 
       for (uint i = 0; i < _n_crt_tracks; ++i){
         const art::Ptr<sbnd::crt::CRTTrack> crttrack=ctrklist[i];
-        _crt_track_pes.push_back(crttrack->PE());
-        _crt_track_t0.push_back(crttrack->Ts0());
-        _crt_track_t1.push_back(crttrack->Ts1());
-
-	const geo::Point_t start = crttrack->Start();
+      	const geo::Point_t start = crttrack->Start();
 	const geo::Point_t end   = crttrack->End();
 
-        _crt_track_x1.push_back(start.X());
-        _crt_track_y1.push_back(start.Y());
-        _crt_track_z1.push_back(start.Z());
-        _crt_track_x2.push_back(end.X());
-        _crt_track_y2.push_back(end.Y());
-        _crt_track_z2.push_back(end.Z());
+	if(Cut_NS_Function(start.X(),start.Z(),end.X(),end.Z())){
+	  _crt_track_pes.push_back(crttrack->PE());
+	  _crt_track_t0.push_back(crttrack->Ts0());
+	  _crt_track_t1.push_back(crttrack->Ts1());
+	  _crt_track_x1.push_back(start.X());
+	  _crt_track_y1.push_back(start.Y());
+	  _crt_track_z1.push_back(start.Z());
+	  _crt_track_x2.push_back(end.X());
+	  _crt_track_y2.push_back(end.Y());
+	  _crt_track_z2.push_back(end.Z());
+	  
+	  _crt_track_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
+	  _crt_track_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
+	  
+	  _crt_track_theta.push_back(crttrack->Theta()*(180.0/M_PI));
+	  _crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
+	  _crt_track_length.push_back(crttrack->Length());
+	  
+	  _gradient.push_back((end.y() - start.y()) / (end.z() - start.z()));
+          _intercept.push_back( start.y() - (((end.y() - start.y()) / (end.z() - start.z())) * start.z()));
 
-  	_crt_track_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
-	_crt_track_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
-     
-	_crt_track_theta.push_back(crttrack->Theta()*(180.0/M_PI));
-	_crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
-	_crt_track_length.push_back(crttrack->Length());
-
-	if(Cut_NS_Function(start.X(),start.Y(),start.Z(),end.X(),end.Y(),end.Z())){
 	  double dx;
 	  double dy;
 	  double dz;
@@ -770,12 +774,13 @@ void Hitdumper::analyze(const art::Event& evt)
 	  }
 	  _theta_xz_CRT.push_back(modified_theta_xz_CRT);
 	  _theta_yz_CRT.push_back(modified_theta_yz_CRT);
+	 
 	}
       }  
-    } else {
-      std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<fCRTTrackModuleLabel<<")." << std::endl;
-    }
+  } else {
+    std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<fCRTTrackModuleLabel<<")." << std::endl;
   }
+}
   
   //
   // Optical Hits
@@ -979,15 +984,18 @@ void Hitdumper::analyze(const art::Event& evt)
     int adc_counter = 1;
     _adc_count = _nhits * (fWindow * 2 + 1);
 
-
+    int hit_counter=0;
     std::map<int, int> channelHitCounts;
     for (int ihit = 0; ihit < _nhits; ++ihit) {
       if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num &&
 	  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower &&
 	  !(_hit_wire[ihit] == _noisy_channel)) {
 	channelHitCounts[_hit_channel[ihit]]++;
+	++hit_counter;
       }
     }
+
+    std::cout << "Number of hits passing cuts: " << hit_counter << std::endl;
 
     // loop over waveforms
     for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
@@ -999,11 +1007,12 @@ void Hitdumper::analyze(const art::Event& evt)
       std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
       rawadc.resize(fDataSize);
 
+      
       // see if there is a hit on this channel
-      if (channelHitCounts[channel] == 1) {
+      if (channelHitCounts[channel] == 1 && hit_counter > _max_tpc_hits) {
 	for (int ihit = 0; ihit < _nhits; ++ihit) {
 	  if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==_tpc_num && _hit_plane[ihit]==_plane_num  &&  _hit_peakT[ihit]<time_cut_upper && _hit_peakT[ihit]>time_cut_lower && !(_hit_wire[ihit] == _noisy_channel)) {
-
+	   
 	    int pedestal = (int)digitVec->GetPedestal();
 	    //UNCOMPRESS THE DATA.
 	    if (fUncompressWithPed) {
@@ -1016,7 +1025,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	    unsigned int bin = _hit_peakT[ihit];
 	    unsigned int low_edge,high_edge;
 	    if((int)bin > fWindow and _hit_plane[ihit] == 0) {
-	      low_edge = bin - (2*fWindow);
+	      low_edge = bin - fWindow;
 	    }
 	    else if ((int)bin>fWindow) {
 	      low_edge = bin-fWindow;
@@ -1026,7 +1035,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	    }
 
 	    if (_hit_plane[ihit] == 0) {
-	      high_edge = bin + fWindow + 6;
+	      high_edge = bin + fWindow;
 	    } else {
 	      high_edge = bin + fWindow;
 	    }
@@ -1559,6 +1568,8 @@ void Hitdumper::ResetCRTTracksVars() {
   _crt_track_length.clear();
   _theta_xz_CRT.clear();
   _theta_yz_CRT.clear();
+  _gradient.clear();
+  _intercept.clear();
 }
 
 void Hitdumper::ResetCRTSpacePointVars() {
