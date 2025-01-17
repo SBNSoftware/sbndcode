@@ -1,0 +1,30 @@
+process_name: PTBAnalyzer
+
+services:
+{
+  TFileService: { fileName: "ptbana_sbnd.root" }
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    ptbana: 
+    { 
+      module_type:       "PTBAnalysis"
+    }
+  }
+
+  ana:       [ ptbana ]
+  end_paths: [ ana ]
+}
+
+physics.analyzers.ptbana.DataMode:           true
+physics.analyzers.ptbana.NoTPC:              false
+physics.analyzers.ptbana.HasPTB:             true
+physics.analyzers.ptbana.HasTDC:             false
