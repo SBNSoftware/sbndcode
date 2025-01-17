@@ -21,6 +21,7 @@ set(
                     sbnobj::SBND_Trigger
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
+                    sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND 
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
@@ -30,15 +31,15 @@ set(
                     CLHEP::CLHEP
                     ROOT::Core
                     ROOT::Tree
-		  )
+)
+add_subdirectory(fcls)
+add_subdirectory(metric_fcls)
 
 cet_build_plugin(pmtArtdaqFragmentProducer art::module SOURCE pmtArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(pmtSoftwareTriggerProducer art::module SOURCE pmtSoftwareTriggerProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(pmtTriggerProducer art::module SOURCE pmtTriggerProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
-
+cet_build_plugin(PMTMetricProducer art::module SOURCE PMTMetricProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
 install_source()
-
-
