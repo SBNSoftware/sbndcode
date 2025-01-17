@@ -108,14 +108,12 @@ void BlipRecoProducer::produce(art::Event & evt)
   std::cout<<"\n"
   <<"******************** BlipReco ****************************\n"
   <<"Event "<<evt.id().event()<<" / run "<<evt.id().run()<<"\n";
-
   //============================================
   // Make unique pointers to the vectors of objects 
   // and associations we will create
   //============================================
-  std::unique_ptr< std::vector< recob::SpacePoint> > SpacePoint_v(new std::vector<recob::SpacePoint>);
-  std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_hit_sps_v(new art::Assns<recob::Hit,recob::SpacePoint> );
-
+  std::unique_ptr< std::vector< recob::SpacePoint> > SpacePoint_v(std::make_unique<std::vector<recob::SpacePoint>>());
+  std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_hit_sps_v(std::make_unique<art::Assns<recob::Hit,recob::SpacePoint>>() );
   //std::unique_ptr< std::vector< blip::Blip > > Blip_v(new std::vector<blip::Blip>);
   
   //============================================

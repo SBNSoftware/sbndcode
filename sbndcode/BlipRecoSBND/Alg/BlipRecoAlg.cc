@@ -345,7 +345,6 @@ namespace blip {
     //auto const& lifetime_provider   = art::ServiceHandle<lariov::UBElectronLifetimeService>()->GetProvider();
     //auto const& tpcCalib_provider   = art::ServiceHandle<lariov::TPCEnergyCalibService>()->GetProvider();
     
-  
     // -- geometry
     art::ServiceHandle<geo::Geometry> geom;
 
@@ -389,7 +388,6 @@ namespace blip {
     art::FindManyP<recob::Track> fmtrk(hitHandle,evt,fTrkProducer);
     art::FindManyP<recob::Track> fmtrkGH(hitHandleGH,evt,fTrkProducer);
     art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"gaushitTruthMatch");
-  
     /*
     //====================================================
     // Update map of bad channels for this event
@@ -653,7 +651,6 @@ namespace blip {
       //for(auto& b : a.second ) 
         //std::cout<<"TPC "<<a.first<<", plane "<<b.first<<": "<<b.second.size()<<" hits\n";
     //}
-
 
     //=================================================================
     // Blip Reconstruction
@@ -1205,7 +1202,6 @@ namespace blip {
         blip.truth = trueblips[*set_edepids.begin()];
     
     }//endloop over blip vector
-
   }//End main blip reco function
  
   
