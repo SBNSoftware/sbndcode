@@ -11,7 +11,7 @@ declare -ar TestNames=(
     'g4_sce'
     'detsim_sce_lite'
     'standard_reco1_sbnd'
-    'standard_reco2_sbnd'
+    'reco2_sce'
 )
 
 #############################################################################

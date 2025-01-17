@@ -8,7 +8,6 @@
 #include "crtrecoproducers_sbnd.fcl"
 #include "mlreco_sbnd.fcl"
 #include "cluster_sbnd.fcl"
-#include "numberofhitsfilter_sbnd.fcl"
 #include "mctrutht0matching.fcl"
 
 BEGIN_PROLOG
@@ -72,11 +71,6 @@ sbnd_reco1_producer_sequence: [
 sbnd_reco1_producers.gaushit.CalDataModuleLabel:                                           "simtpc2d:gauss"
 sbnd_reco1_producers.fasthit.DigitModuleLabel:                                             "simtpc2d:daq"
 sbnd_reco1_producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:             "gaushit"
-
-sbnd_reco1_filters: {
-    #filter events based on the number of reconstructed hits (avoids overly messy data events)
-    numberofhitsfilter: @local::sbnd_numberofhitsfilter
-}
 
 sbnd_reco1_analyzers: {
     #supera for ML reco

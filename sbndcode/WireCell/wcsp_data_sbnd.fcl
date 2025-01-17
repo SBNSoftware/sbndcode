@@ -57,7 +57,7 @@ sbnd_wcls_sp_data.wcls_main.params :   {
 
 sbnd_wcls_sp_data.wcls_main.structs:   { 
                                         # Set the waveform sample length, eg, 6000, 15000, "auto"
-                                        nticks: 3427
+                                        nticks: 3415
                                        }
 
 END_PROLOG
