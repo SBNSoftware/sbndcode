@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+pmtmetricproducer: {
+        module_type: "PMTMetricProducer" 
+        CAENInstanceLabels: ["ContainerCAENV1730" ]
+
+        FragIDs: [40960,40961,40962,40963,40964,40965,40966,40967]
+        FlashThreshold: 1
+        CalculateBaseline: true
+        MetricInstanceLabel: "offline"
+        IncludeExtensions: true
+        AllowNTB: false
+}
+END_PROLOG
