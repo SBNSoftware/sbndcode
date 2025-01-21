@@ -151,7 +151,7 @@ TimeStampDumper::TimeStampDumper(fhicl::ParameterSet const& p)
   fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
   fraw_ts_correction = p.get<uint>("raw_ts_correction",367000); // ns
   fSavePOT = p.get<bool>("SavePOT", false);
-  fPOT_Label = p.get<std::string>("POTLabel", "sbndbnbzerobiasinfo::SBNDBNBZEROBIASInfoGen")
+  fPOT_Label = p.get<std::string>("POTLabel", "sbndbnbzerobiasinfo::SBNDBNBZEROBIASInfoGen");
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   ResetTree();
   art::ServiceHandle<art::TFileService> tfs;
@@ -172,7 +172,7 @@ TimeStampDumper::TimeStampDumper(fhicl::ParameterSet const& p)
   evtTree->Branch("TDC_Channel",&TDC_Channel);
   evtTree->Branch("TDC_Time",&TDC_TimeStamp);
   evtTree->Branch("TDC_Name",&TDC_Name);
-  if(fSavePOT) evtTree->Branc("POT", &event_POT);
+  if(fSavePOT) evtTree->Branch("POT", &event_POT);
 }
 
 void TimeStampDumper::analyze(art::Event const& e)
