@@ -69,6 +69,7 @@ public:
 private:
 
   // Declare member data here.
+  bool fSavePOT;
   std::string fPTBLabel;
   std::string fPMTWaveformLabel;
   int fTotalCAENBoards;
@@ -85,6 +86,7 @@ private:
   int tree_subrun;
   int EventTime_s;
   int EventTime_ns;
+  double event_POT;
   int TriggerPulseID;
   std::vector<int> LLT_Type;
   std::vector<int> HLT_Type;
@@ -107,7 +109,7 @@ void TimeStampDumper::ResetTree()
     TriggerPulseID=-1;
     NLLT=-1;
     NHLT=-1;
-    int LLTSize=2400;
+    int LLTSize=1300;
     LLT_Type.clear();
     LLT_Type.resize(LLTSize);
     LLT_Time.clear();
@@ -127,6 +129,7 @@ void TimeStampDumper::ResetTree()
     TDC_Name.resize(TDCSize);
     TDC_TimeStamp.clear();
     TDC_TimeStamp.resize(TDCSize);
+    event_POT=0;
 
   }
 
@@ -145,6 +148,7 @@ TimeStampDumper::TimeStampDumper(fhicl::ParameterSet const& p)
   fspectdc_ftrig_ch = p.get<uint32_t>("spectdc_ftrig_ch",3);
   fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
   fraw_ts_correction = p.get<uint>("raw_ts_correction",367000); // ns
+  fSavePOT = p.get<bool>("SavePOT", false);
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   ResetTree();
   art::ServiceHandle<art::TFileService> tfs;
@@ -165,6 +169,7 @@ TimeStampDumper::TimeStampDumper(fhicl::ParameterSet const& p)
   evtTree->Branch("TDC_Channel",&TDC_Channel);
   evtTree->Branch("TDC_Time",&TDC_TimeStamp);
   evtTree->Branch("TDC_Name",&TDC_Name);
+  if(fSavePOT) eventTree->Branc("POT", &event_POT);
 }
 
 void TimeStampDumper::analyze(art::Event const& e)
@@ -277,6 +282,13 @@ for (size_t i=0; i<tdc_v.size(); i++){
     }
 }
 //Save to tree
+if(fSavePOT)
+{
+  art::Handle<std::vector<sbn::BNBSpillInfo>> POTHandle;
+  auto event_POT_Point = e.getByLabel(fPOT_Label,POTHandle);
+  event_POT = (*event_POT_Point)[0].POT();
+}
+
 
 evtTree->Fill();
 }
