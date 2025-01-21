@@ -288,8 +288,8 @@ for (size_t i=0; i<tdc_v.size(); i++){
 if(fSavePOT)
 {
   art::Handle<std::vector<sbn::BNBSpillInfo>> POTHandle;
-  auto event_POT_Point = e.getByLabel(fPOT_Label,POTHandle);
-  event_POT = (*event_POT_Point)[0].POT();
+  e.getByLabel(fPOT_Label,POTHandle);
+  event_POT = (*POTHandle)[0].POT();
 }
 
 
