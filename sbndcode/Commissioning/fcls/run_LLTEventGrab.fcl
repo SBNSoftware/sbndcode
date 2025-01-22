@@ -17,7 +17,7 @@ physics:{
     LLTGrab: {
                       module_type: "LLTEventGrabber"
                       eventHLT: 1
-                      TrigWindow_ns: 3000
+                      TrigWindowNs: 3000
                       LLT: [21]
                       PTBLabel: "ptbdecoder::DECODE"
                     }
