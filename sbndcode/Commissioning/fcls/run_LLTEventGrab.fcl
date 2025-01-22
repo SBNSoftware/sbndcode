@@ -36,7 +36,7 @@ outputs:
   GoodEvent:
   {
     module_type: RootOutput
-    fileName: "%i_SuccessfulTriggers.root"
+    fileName: "%ifb_SuccessfulTriggers.root"
     SelectEvents: [pass]
   }
 }
