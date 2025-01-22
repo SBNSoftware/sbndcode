@@ -65,7 +65,7 @@ TriggerWork::LLTEventGrabber::LLTEventGrabber(fhicl::ParameterSet const& p)
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
   fLLT = p.get<std::vector<int>>("LLT");
-  fEventHLT = p.get<std::vector<int>>("eventHLT");
+  fEventHLT = p.get<int>("eventHLT");
   fPTBLabel = p.get<std::string>("PTBLabel");
   fTrigWindow_ns = p.get<int>("TrigWindowNs");
 }
