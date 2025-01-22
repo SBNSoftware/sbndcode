@@ -93,6 +93,7 @@ cet_build_plugin(OnlineEvd art::module SOURCE OnlineEvd_module.cc LIBRARIES ${MO
 cet_build_plugin(TrackWiggles art::module SOURCE TrackWiggles_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(PMTRingingTagging art::module SOURCE PMTRingingTagging_module.cc LIBRARIES ${Ringing_LIBRARIES})
 cet_build_plugin(GrabExplicitEventID art::module SOURCE GrabExplicitEventID_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(LLTEventGrabber art::module SOURCE LLTEventGrabber_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 
 install_source()
