@@ -16,7 +16,7 @@ physics:{
   filters:{
     LLTGrab: {
                       module_type: "LLTEventGrabber"
-                      EventHLT: 1
+                      eventHLT: 1
                       TrigWindow_ns: 3000
                       LLT: [21]
                       PTBLabel: "ptbdecoder::DECODE"
