@@ -27,7 +27,7 @@ physics:{
   fail: []  
   ana:            [ LLTGrab]
   //trigger_paths:  [ ana ] 
-  stream1: [pass]
+  stream1: [GoodEvent]
   end_paths: [stream1]
 } # physics
 
@@ -36,7 +36,7 @@ outputs:
   GoodEvent:
   {
     module_type: RootOutput
-    fileName: "vCCevents.root"
+    fileName: "%i_SuccessfulTriggers.root"
     SelectEvents: [pass]
   }
 }
