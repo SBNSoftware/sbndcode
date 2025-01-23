@@ -30,6 +30,8 @@
 #include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "sbndaq-artdaq-core/Overlays/SBND/CAENV1740Fragment.hh"
 
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+
 #include "lardataobj/RawData/OpDetWaveform.h"
 
 #include "art_root_io/TFileService.h"
@@ -67,6 +69,9 @@ public:
 
 private:
 
+  constexpr static uint64_t NANOSEC_IN_SEC = 1000000000;
+  constexpr static uint64_t MICROSEC_IN_NANOSEC = 1000;
+
   unsigned int fevent_counter; /**< Event counter. */
 
   unsigned int fnum_caen_boards; /**< Maximum number of CAEN boards to be considered. */
@@ -81,12 +86,17 @@ private:
   unsigned int fns_per_sample; /**< Number of nanoseconds per sample. */
   uint16_t fns_per_tick; /**< Number of nanoseconds per trigger time stamp (TTT) tick. */
 
+  std::string fspectdc_product_name;
+  uint32_t fspectdc_ftrig_ch;
+  uint32_t fspectdc_etrig_ch;
+
   uint32_t fsample_bits; /**< Number of bits per sample. */
 
   art::ServiceHandle<art::TFileService> tfs; /**<  ServiceHandle object to store the histograms in the decoder_hist.root output file. */
   int fstore_debug_waveforms; /**< Number of waveforms to store in the ServiceHandle object for debugging purposes (0: none, -1: all, n: first n waveforms each event). */
 
   bool fdebug_all; /**< If `true` all debug information is printed. */
+  bool fdebug_tdc_handle;
   bool fdebug_handle; /**< If `true` art::Handle object data is printed. */
   bool fdebug_timing; /**< If `true` timing data is printed. */
   bool fdebug_buffer; /**< If `true` the buffer status is printed. */
@@ -94,9 +104,9 @@ private:
   bool fverbose; /**< If `true` it increases verbosity of console output for detailed processing steps. */
 
   // Class methods.
-  void decode_fragment(std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms);
-  void save_prod_wvfm(size_t board_idx, size_t ch, float TTT_ini_us, const std::vector <std::vector <uint16_t> > & wvfms, std::vector <raw::OpDetWaveform> & prod_wvfms);
-  void save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, float TTT_ini_us, float TTT_end_us, const std::vector <std::vector <uint16_t> > & wvfms);
+  void decode_fragment(uint64_t event_trigger_timestamp, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms);
+  void save_prod_wvfm(size_t board_idx, size_t ch, double ini_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms, std::vector <raw::OpDetWaveform> & prod_wvfms);
+  void save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, double ini_wvfm_timestamp, double end_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms);
   uint16_t get_sample(uint64_t buffer, uint32_t msb, uint32_t lsb);
   uint32_t read_word(const uint32_t* & data_ptr);
   unsigned int get_channel_id(unsigned int board, unsigned int board_channel);
@@ -133,6 +143,11 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   fns_per_sample = p.get<unsigned int> ("ns_per_sample", 16);
   fns_per_tick = 8;
 
+  // SPEC-TDC access configuration.
+  fspectdc_product_name = p.get<std::string>("spectdc_product_name", "tdcdecoder");
+  fspectdc_ftrig_ch = p.get<uint32_t>("spectdc_ftrig_ch", 3);
+  fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch", 4);
+
   // Sets the number of bits per sample.
   fsample_bits = 12;
   
@@ -141,6 +156,7 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
 
   // Gets the debug and verbose options.
   fdebug_all = p.get<bool> ("debug_all", false);
+  fdebug_tdc_handle = p.get<bool> ("debug_tdc_handle", false);
   fdebug_handle = p.get<bool> ("debug_handle", false);
   fdebug_timing = p.get<bool> ("debug_timing", false);
   fdebug_buffer = p.get<bool> ("debug_buffer", false);
@@ -167,6 +183,57 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
 
   // Advances the event counter.
   fevent_counter++;
+
+  
+
+  // Gets the SPEC-TDC product.
+  uint64_t event_trigger_timestamp = 0;
+  bool tdc_products_found = false;
+
+  art::Handle <std::vector<sbnd::timing::DAQTimestamp> > tdc_handle;
+  e.getByLabel(fspectdc_product_name, tdc_handle);
+
+  if (!tdc_handle.isValid()) {
+    if (fdebug_tdc_handle | fdebug_all) std::cout << "\n > SBNDXARAPUCADecoder::produce: TDC-SPEC handle not valid for " << fspectdc_product_name << "." << std::endl;
+  } else if (tdc_handle->empty()) {
+    if (fdebug_tdc_handle | fdebug_all) std::cout << "\n > SBNDXARAPUCADecoder::produce: TDC-SPEC handle is empty." << std::endl;
+  } else  {
+    if (fdebug_tdc_handle | fdebug_all) std::cout << " \n > SBNDXARAPUCADecoder::produce: Decoded TDC-SPEC products found: " << tdc_handle->size() << " products." << std::endl;
+    tdc_products_found = true;
+  }
+
+  if (tdc_products_found) {
+    unsigned int num_event_triggers = 0;
+    unsigned int num_flash_triggers = 0;
+    
+    if (fdebug_tdc_handle | fdebug_all) std::cout << "\tTDC Channel \t TDC Name \t TDC Timestamp [ns] \t\t\t\t\t TDC Offset [ns]" << std::endl;
+    
+    for (size_t t = 0; t < tdc_handle->size(); t++) {
+      const uint64_t tdc_timestamp = tdc_handle->at(t).Timestamp(); // Timestamp of the signal [ns].
+      const uint32_t tdc_channel = tdc_handle->at(t).Channel();     // Hardware channel.
+      
+      if (tdc_channel == fspectdc_ftrig_ch) {
+        num_flash_triggers++;
+      }
+      if (tdc_channel == fspectdc_etrig_ch) {
+        num_event_triggers++;
+        event_trigger_timestamp = tdc_timestamp;
+      }
+
+      if (fdebug_tdc_handle | fdebug_all) {
+        const std::string tdc_name = tdc_handle->at(t).Name();        // Name of channel input.
+        const uint64_t tdc_offset = tdc_handle->at(t).Offset();       // Channel specific offset [ns].
+        std::cout << "\t " << tdc_channel << "   \t\t  " << tdc_name 
+                  << "\t\t " << tdc_timestamp << " (" << tdc_timestamp / NANOSEC_IN_SEC << " s " << tdc_timestamp % NANOSEC_IN_SEC << " ns." << ")"
+                  << "\t  " << tdc_offset << std::endl;
+      }
+    }
+    if (fverbose) std::cout << "\n > SBNDXARAPUCADecoder::produce: Event trigger timestamp: " << event_trigger_timestamp << " ns." << std::endl;
+    if (fdebug_tdc_handle | fdebug_all) std::cout << "\t Number of event triggers: " << num_event_triggers << "." << std::endl;
+    if (fdebug_tdc_handle | fdebug_all) std::cout << "\t Number of flash triggers: " << num_flash_triggers << "." << std::endl;
+  } 
+
+  tdc_handle.removeProduct();
 
   // Initializes the output instance product.
   auto prod_wvfms = std::make_unique <std::vector <raw::OpDetWaveform> > ();
@@ -215,7 +282,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
             
             for (size_t f = 0; f < num_caen_fragments; f++) {
               const artdaq::Fragment fragment = *container_fragment[f].get();
-              decode_fragment(fragment_indices, fragment, *prod_wvfms);
+              decode_fragment(event_trigger_timestamp, fragment_indices, fragment, *prod_wvfms);
             } // End CAEN V1740 fragments loop.
           }
         } // End Container fragments loop.
@@ -227,7 +294,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
         // It searches for all CAEN V1740 fragments.
         for (size_t f = 0; f < frag_handle_size; f++) {
           const artdaq::Fragment fragment = fragment_handle->at(f);
-          decode_fragment(fragment_indices, fragment, *prod_wvfms);
+          decode_fragment(event_trigger_timestamp, fragment_indices, fragment, *prod_wvfms);
         } // End CAEN V1740 fragments loop.
       }
     } // End extracting CAEN V1740 fragments.
@@ -272,7 +339,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
  * - Populates the output vector (`prod_wvfms`) with decoded waveforms and optionally generates debug waveforms output.
  * 
  */
-void sbndaq::SBNDXARAPUCADecoder::decode_fragment(std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms) {
+void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t event_trigger_timestamp, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms) {
   auto fragment_id = fragment.fragmentID() - ffragment_id_offset;
   auto it = std::find(fboard_id_list.begin(), fboard_id_list.end(), fragment_id);
   size_t board_idx;
@@ -305,21 +372,37 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(std::vector<size_t> & fragment
     CAENV1740Event const* event = caen_fragment.Event();
     CAENV1740EventHeader header = event->Header;
 
-    // Gets the TTT data of the event.
+    // ===============  Extracts timing information for this fragment =============== //
+
+    // Gets the timing information of the CAEN fragment.
     uint32_t TTT_end_ticks = header.triggerTime();
-    float TTT_end_ns = TTT_end_ticks * fns_per_tick;
-    float TTT_ini_ns = TTT_end_ns - num_samples_per_wvfm * fns_per_sample;
-    float TTT_end_us = TTT_end_ns * 1E-3f;
-    float TTT_ini_us = TTT_ini_ns * 1E-3f;
+    uint64_t TTT_end_ns = TTT_end_ticks * fns_per_tick;
+    uint64_t TTT_ini_ns = TTT_end_ns - num_samples_per_wvfm * fns_per_sample;
+    double TTT_end_us = TTT_end_ns * 1E-3; // us.
+    double TTT_ini_us = TTT_ini_ns * 1E-3; // us.
+
+    // SPEC-TDC timestamp associated to this CAEN fragment.
+    int64_t event_trigger_timestamp_ns = event_trigger_timestamp % NANOSEC_IN_SEC; // ns.
+    
+    // If a SPEC-TDC timestamp was found it restarts the time from it. Otherwise the CAEN time frame is assigned.
+    double ini_wvfm_timestamp = (int64_t(TTT_ini_ns) - event_trigger_timestamp_ns) * 1E-3; // us.
+    double end_wvfm_timestamp = (int64_t(TTT_end_ns) - event_trigger_timestamp_ns) * 1E-3; // us.
+
     if (fverbose | fdebug_timing | fdebug_all) {
-      std::cout << std::fixed << std::setprecision(1);
-      std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: time window of " << TTT_end_us - TTT_ini_us << " us: [" << TTT_ini_us << ", " << TTT_end_us << "] us." << std::endl;
+      std::cout << std::fixed << std::setprecision(3);
+      std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN time window of " << TTT_end_us - TTT_ini_us << " us: [" << TTT_ini_us << ", " << TTT_end_us << "] us." << std::endl;
+      if (event_trigger_timestamp != 0) {
+        std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: SPEC-TDC time window of: " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
+      }
     }
     if (fdebug_timing | fdebug_all) {
-      std::cout << "\tTTT_end [ticks]: " << TTT_end_ticks << "\tNanoseconds per tick: " << fns_per_tick << " ns." << std::endl;
-      std::cout << "\tTTT_end [ns]: " << TTT_end_ns << "\tNanoseconds per sample: " << fns_per_sample << " ns." << std::endl;
-      std::cout << "\tTTT_ini [us]: " << TTT_ini_us << std::endl;
-      std::cout << "\tTTT_end [us]: " << TTT_end_us << std::endl;
+      std::cout << "\tns/tick = " << fns_per_tick << ", ns/sample = " << fns_per_sample << std::endl;
+      std::cout << "\tCAEN trigger timestamp (TTT) of the fragment: " << std::endl;
+      std::cout << "\t\tTTT ini " << TTT_ini_ns << " ns = " << TTT_ini_us << " us." << std::endl;
+      std::cout << "\t\tTTT end " << TTT_end_ticks << " ticks = " << TTT_end_ns << " ns = " << TTT_end_us << " us." << std::endl;
+      std::cout << "\tSPEC-TDC timestamp of the fragment: " << std::endl;
+      std::cout << "\t\tSPEC-TDC difference applied to the CAEN frame: " << TTT_ini_ns << " - " << "("<< event_trigger_timestamp / NANOSEC_IN_SEC << " s) " << event_trigger_timestamp % NANOSEC_IN_SEC << " ns." << std::endl;
+
     } 
       
     // Gets the number of words of the header and the waveforms.
@@ -387,12 +470,12 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(std::vector<size_t> & fragment
     uint32_t ch;
 
     for (ch = 0; ch < num_debug_wvfms; ch++) {
-      save_prod_wvfm(board_idx, ch, TTT_ini_us, wvfms, prod_wvfms);
-      save_debug_wvfm(board_idx, fragment_indices[board_idx], ch, TTT_ini_us, TTT_end_us, wvfms);
+      save_prod_wvfm(board_idx, ch, ini_wvfm_timestamp, wvfms, prod_wvfms);
+      save_debug_wvfm(board_idx, fragment_indices[board_idx], ch, ini_wvfm_timestamp, end_wvfm_timestamp, wvfms);
     }
 
     for (;ch < num_channels; ch++) {
-      save_prod_wvfm(board_idx, ch, TTT_ini_us, wvfms, prod_wvfms);
+      save_prod_wvfm(board_idx, ch, ini_wvfm_timestamp, wvfms, prod_wvfms);
     }
 
     fragment_indices[board_idx]++;
@@ -405,7 +488,7 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(std::vector<size_t> & fragment
  *
  * @param[in] b The board index (position in the list of boards).
  * @param[in] ch The channel index (channel number from which the waveform is extracted).
- * @param[in] TTT_ini_us The initial timestamp of the waveform in microseconds.
+ * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform in microseconds.
  * @param[in] wvfms A 2D vector containing the waveforms. Each inner vector corresponds to a channel,
  * and each element of the inner vector represents a sample (ADC count).
  * @param[out] prod_wvfms A reference to the vector where the produced `raw::OpDetWaveform` objects
@@ -416,12 +499,14 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(std::vector<size_t> & fragment
  * 1. Determines the global channel ID for the specified board and channel using `get_channel_id`.
  * 2. Creates a `raw::OpDetWaveform` object with the initial timestamp, global channel ID, and waveform data.
  * 3. Appends the `raw::OpDetWaveform` object to the provided `prod_wvfms` collection.
+ * 
+ * @pre ini_wvfm_timestamp is asumed to be given in microseconds.
  *
  * @see raw::OpDetWaveform
  */
-void sbndaq::SBNDXARAPUCADecoder::save_prod_wvfm(size_t board_idx, size_t ch, float TTT_ini_us, const std::vector <std::vector <uint16_t> > & wvfms, std::vector <raw::OpDetWaveform> & prod_wvfms) {
+void sbndaq::SBNDXARAPUCADecoder::save_prod_wvfm(size_t board_idx, size_t ch, double ini_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms, std::vector <raw::OpDetWaveform> & prod_wvfms) {
   unsigned int channel_id = get_channel_id(board_idx, ch);
-  raw::OpDetWaveform waveform(TTT_ini_us, channel_id, wvfms[ch]);
+  raw::OpDetWaveform waveform(ini_wvfm_timestamp, channel_id, wvfms[ch]);
   if (fdebug_waveforms | fdebug_all) std::cout << "Pushing waveform from board " << board_idx << " (slot " << fboard_id_list[board_idx] << ") channel " << ch << " (ch_id " << channel_id << ")" << std::endl;
   prod_wvfms.push_back(waveform);
 }
@@ -433,8 +518,8 @@ void sbndaq::SBNDXARAPUCADecoder::save_prod_wvfm(size_t board_idx, size_t ch, fl
  * @param[in] board_idx The board index (position in the list of boards).
  * @param[in] fragment_idx The fragment index (order in decoding).
  * @param[in] ch The channel index (channel number from which the waveform is extracted).
- * @param[in] TTT_ini_us The initial timestamp of the waveform in microseconds.
- * @param[in] TTT_end_us The final timestamp of the waveform in microseconds.
+ * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform in microseconds.
+ * @param[in] end_wvfm_timestamp The final timestamp of the waveform in microseconds.
  * @param[in] wvfms A 2D vector containing the waveforms. Each inner vector corresponds to a channel,
  * and each element of the inner vector represents a sample (ADC count).
  *
@@ -443,14 +528,16 @@ void sbndaq::SBNDXARAPUCADecoder::save_prod_wvfm(size_t board_idx, size_t ch, fl
  * - X-axis representing time in microseconds, scaled between `TTT_ini_us` and `TTT_end_us`.
  * - Y-axis representing ADC counts.
  * The histogram is stored using ROOT's `TFileService`.
+ * 
+ * @pre ini_wvfm_timestamp and end_wvfm_timestamp are asumed to be given in microseconds.
  *
  * @see TH1I, TFileService
  */
 
-void sbndaq::SBNDXARAPUCADecoder::save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, float TTT_ini_us, float TTT_end_us, const std::vector <std::vector <uint16_t> > & wvfms) {
+void sbndaq::SBNDXARAPUCADecoder::save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, double ini_wvfm_timestamp, double end_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms) {
   std::stringstream hist_name("");
   hist_name << "Event " << fevent_counter << " CH " << ch << " [frag " << fragment_idx << ", board " << board_idx << " (slot " << fboard_id_list[board_idx] << ") ] waveform";
-  TH1I* hist = tfs->make<TH1I>(hist_name.str().c_str(), hist_name.str().c_str(), wvfms[ch].size(), TTT_ini_us, TTT_end_us);
+  TH1I* hist = tfs->make<TH1I>(hist_name.str().c_str(), hist_name.str().c_str(), wvfms[ch].size(), ini_wvfm_timestamp, end_wvfm_timestamp);
   hist->GetYaxis()->SetTitle("ADCs");
   hist->GetXaxis()->SetTitle("Time [us]");
   for (size_t i = 0; i < wvfms[ch].size(); i++) {

@@ -15,19 +15,24 @@ xarapucadecoder:
     board_id_list: [7, 13, 16, 19]                              # Slots where the boards are installed.
     # - Timing configuration.
     ns_per_sample: 16                                           # Nanoseconds per sample.
+    # - SPEC-TDC access configuration
+    spectdc_product_name:  "tdcdecoder"
+    spectdc_ftrig_ch: 3
+    spectdc_etrig_ch: 4
 
     # OUTPUT configuration:
     # - Output data product instance name.
     product_instance_name: "XARAPUCAChannels"                   # Name for the instance product created.
-    store_debug_waveforms: 0                                   # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
+    store_debug_waveforms: -1                                   # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
     # - Debug options.
     debug_all: false                                            # (De)activates all debug options.
-    debug_handle: false                                         # (De)activates art::Handle data printing.
-    debug_timing: false                                         # (De)activates timing data printing. 
+    debug_tdc_handle: true
+    debug_handle: true                                         # (De)activates art::Handle data printing.
+    debug_timing: true                                         # (De)activates timing data printing. 
     debug_buffer: false                                         # (De)activates buffer status printing.
     debug_waveforms: false                                      # (De)activates waveforms decoding printing.
     # - Verbose option.
-    verbose: false                                              # (De)activates verbosity.
+    verbose: true                                              # (De)activates verbosity.
 }
 
 END_PROLOG
