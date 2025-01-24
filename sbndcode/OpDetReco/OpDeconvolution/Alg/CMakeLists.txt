@@ -21,6 +21,8 @@ set(
 )
 
 cet_build_plugin(OpDeconvolutionAlgWiener art::tool SOURCE OpDeconvolutionAlgWiener_tool.cc LIBRARIES ${TOOL_LIBRARIES})
+cet_build_plugin(OpDeconvolutionAlgWienerData art::tool SOURCE OpDeconvolutionAlgWienerData_tool.cc LIBRARIES ${TOOL_LIBRARIES})
+
 
 install_headers()
 install_fhicl()
