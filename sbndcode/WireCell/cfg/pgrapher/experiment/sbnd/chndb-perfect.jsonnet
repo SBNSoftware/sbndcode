@@ -27,11 +27,13 @@ function(params, anode, field, n, rms_cuts=[])
     // Externally determined "bad" channels.
     //
     // Dead channels: 3232:3263 (inclusive) (East V).   4160:4191 (East Y)
+    // Jumpered region: 4800:4805 (inclusive, East Y), 10438:10443 (inclusive, West Y)
+    // No response: 546, 607, 8574
     // Shorted channels:  7169 (West U), 8378 (West V).
     // Unresponsive channels: 546, 607, 8574, 8395, 11147
-    // There are four physically missing wires ( = bad channels) due to combs, in the center of each 1/2 APA.
+    // There are six physically missing wires ( = bad channels) due to combs, in the center of each 1/2 APA.
     // They are 4374 and 5231 (East Y), 10012 and 10869 (West Y).
-    // So in total, there are 78 bad channels (including four missing wires). 
+    // So in total, there are 78 bad channels + 12 from missing wires. 
     // 
     //bad: [],
     bad: [546, 607] + std.range(3232, 3263) + std.range(4160, 4191) + [4374, 4800, 4801, 4802, 4803, 4804, 4805, 5060, 5231, 5636, 5637, 7169, 8378, 8395, 8574, 10012, 10869, 10438, 10439, 10440, 10441, 10442, 10443, 11147],
@@ -62,7 +64,7 @@ function(params, anode, field, n, rms_cuts=[])
         max_rms_cut: 30.0,  // units???
 
         // parameter used to make "rcrc" spectrum
-        rcrc: 1.1 * wc.millisecond, // 1.1 for collection, 3.3 for induction
+        rcrc: 0.5 * wc.millisecond, // 1.1 for collection, 3.3 for induction
         rc_layers: 1, // default 2
 
         // parameters used to make "config" spectrum
