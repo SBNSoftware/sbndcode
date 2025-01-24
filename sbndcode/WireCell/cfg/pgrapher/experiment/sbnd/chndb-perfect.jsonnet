@@ -20,9 +20,18 @@ function(params, anode, field, n, rms_cuts=[])
     // For MicroBooNE, channel groups is a 2D list.  Each element is
     // one group of channels which should be considered together for
     // coherent noise filtering.
-    groups: [std.range(   0 + n * 5638 + g*32,    0 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,149)] +
-            [std.range(4806 + n * 5638 + g*32, 4806 + n * 5638 + (g+1)*32 - 1) for g in std.range(0,25)] ,
+    // 5638 is the number of channels in a single APA, (1984*2 + 1670), 
+    // including the 6 channel gap.
+    // The induction planes have to types of ch grouping (due to FEMB), 
+    // one where the grouping is 32 channels wide and one where it is 128 channels wide.
+    // The collection planes are grouped by 64. 
     
+    groups: [std.range(   0 + n * 5638 + g*32 ,    0 + n * 5638 + (g+1)*32  - 1) for g in std.range(0,26)] + # first section of u 
+            [std.range( 832 + n * 5638 + g*128,  832 + n * 5638 + (g+1)*128 - 1) for g in std.range(0,9)] +  # second section of u
+            [std.range(1984 + n * 5638 + g*128, 1984 + n * 5638 + (g+1)*128 - 1) for g in std.range(0,9)] +  # first section of v
+            [std.range(3136 + n * 5638 + g*32 , 3136 + n * 5638 + (g+1)*32  - 1) for g in std.range(0,26)] + # second section of v 
+            [std.range(3974 + n * 5638 + g*64 , 3974 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,13)] + # first half of w
+            [std.range(4806 + n * 5638 + g*64 , 4806 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,13)] , # second half of w
 
     // Externally determined "bad" channels.
     //
