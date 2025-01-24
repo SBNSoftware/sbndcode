@@ -78,10 +78,7 @@ SBNDPTBDecoder::SBNDPTBDecoder(fhicl::ParameterSet const & p)
 
 void SBNDPTBDecoder::produce(art::Event & evt)
 {
-
-
   // look first for container fragments and then non-container fragments
-
   std::vector<raw::ptb::sbndptb> sbndptbs;
 
   art::InputTag itag1(fInputLabel, fInputContainerInstance);
@@ -117,6 +114,61 @@ void SBNDPTBDecoder::produce(art::Event & evt)
   evt.put(std::make_unique<std::vector<raw::ptb::sbndptb>>(std::move(sbndptbs)),fOutputInstance);
 }
 
+
+void print_fragment_words(const artdaq::Fragment& frag, size_t wordNum, size_t bitsPerWord ) {
+  
+  const __uint8_t* data_ptr = reinterpret_cast<const __uint8_t*>(frag.dataBegin());
+  size_t wordCount = frag.dataSizeBytes() / (bitsPerWord / 8);
+  for (size_t w = 0; w < wordCount; w++) {
+    // Check if the current word index matches the specified word index
+    if (w == wordNum) {
+        // Print the bits for the specified n-bit word
+      for (int i = (bitsPerWord-1); i >= 0; --i) {
+            // Calculate the byte index and bit index
+	size_t byteIndex = w * (bitsPerWord / 8) + (i / 8);
+	int bitIndex = (i % 8); // Get the correct bit position in the byte
+	// Print the bit
+	std::cout << static_cast<int>((data_ptr[byteIndex] >> bitIndex) & 1);
+	if (i % 8 == 0) {
+	  std::cout << " "; 
+	}
+      }
+      std::cout << std::endl; // New line after printing the word
+    }
+  }      
+}
+
+
+//Copied from Lines 1382-1406 from     sbndaq-artdaq/sbndaq-artdaq/ArtModules/SBND/EventAna_module.cc
+
+ /*******************************************
+  * Note: Below for the Timestamp conversion,
+  *       The PTB TS is in UTC seconds since the Unix epoch in 50MHz clock ticks.
+  *       This means to recover seconds since the Unix epoch use: sec_since_epoch = TS / 50e6
+  *       and of course nanosec_since_epoch = (TS / 50e6) * 1e9 = TS * 20
+  *
+  * Note: The `CTBFragment` constructor grabs the chunk of memory the artDAQ fragment occupies.
+  *       Since we know a priori the number of PTB words (from the TCP header) and the size (128b for all words)
+  *       we can loop over the memory addresses, casting each 128b into the correct word type given by each word's `type`.
+  *
+  * There are 5 word types with the following bit arrangement:
+  *       Feeback        = | 3b Word Type | 61b Payload | 64b Timestamp | (here Payload is split into code, source, payload1, payload2)
+  *       LLT, HLT       = | 3b Word Type | 61b Payload | 64b Timestamp |
+  *       Channel Status = | 3b Word Type | 64b Payload | 61b Timestamp | (Larger Payload to fit all input channels)
+  *
+  * Word Type:
+  *       - 0x0 = Feedback/Error Word -> Errors from the firmware, should abort the run
+  *       - 0x1 = Low Level Trigger (LLT) -> Holds a record of any asserted LLTs
+  *       - 0x2 = High Level Trigger (HLT) -> Holds a record of any asserted HLTs
+  *       - 0x3 = Channel status -> Holds a record of any asserted inputs
+  *       - 0x7 = Timestamp Word -> No payload just a timestamp, these are periodic
+  *
+  * Note: Payload AND'd with mask the size of the expected number of bits just
+  *       to make sure we don't get any unexpected garbage bits since we aren't using
+  *       the full bits of the variable type e.g. uint64_t, unint16_t..
+  **************************************/
+
+
 void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sout)
 {
   sbndaq::CTBFragment ctbfrag(frag);   // somehow the name CTBFragment stuck
@@ -145,8 +197,19 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp;
 	  if (ctbfrag.Trigger(iword)->IsHLT()) 
 	    {
+	      
+	      if (*(frag.metadata<int>()) == 2){ //If data is taken with 192b PTB words
+		tstruct.prev_timestamp = ctbfrag.PTBWord(iword)->prevTS;
+		tstruct.gate_counter = ctbfrag.Trigger(iword)->gate_counter;
+              }
+              else if (*(frag.metadata<int>()) != 2){ //If data is taken with 128b PTB words
+		tstruct.prev_timestamp = 0;
+		tstruct.gate_counter = 0;
+	      }
+
 	      ix = sout.HLTrigs.size();
 	      sout.HLTrigs.push_back(tstruct);
+
 	      if (fDebugLevel > 0)
 		{
 		  std::cout << "SBNDPTBDecoder_module: found HLT: " << wt << " " << ix << std::endl;

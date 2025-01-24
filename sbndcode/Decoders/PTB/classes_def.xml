@@ -5,16 +5,20 @@
 -->
 
 <lcgdict>
-  <class name="raw::ptb::Trigger" ClassVersion="10">
+  <class name="raw::ptb::Trigger" ClassVersion="11">
+   <version ClassVersion="11" checksum="1173933314"/>
    <version ClassVersion="10" checksum="983962440"/>
   </class>
-  <class name="raw::ptb::ChStatus" ClassVersion="10">
+  <class name="raw::ptb::ChStatus" ClassVersion="11">
+   <version ClassVersion="11" checksum="1302570871"/>
    <version ClassVersion="10" checksum="2716777827"/>
   </class>
-  <class name="raw::ptb::Feedback" ClassVersion="10">
+  <class name="raw::ptb::Feedback" ClassVersion="11">
+   <version ClassVersion="11" checksum="2612286493"/>
    <version ClassVersion="10" checksum="404427229"/>
   </class>
-  <class name="raw::ptb::Misc" ClassVersion="10">
+  <class name="raw::ptb::Misc" ClassVersion="11">
+   <version ClassVersion="11" checksum="686355011"/>
    <version ClassVersion="10" checksum="1110799137"/>
   </class>
   <class name="raw::ptb::WordIndex" ClassVersion="10">
