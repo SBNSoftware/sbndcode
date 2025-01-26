@@ -43,6 +43,7 @@
 #include "TCanvas.h"
 #include "TView3D.h"
 #include "TAxis3D.h"
+#include "TPaveText.h"
 
 namespace detinfo { class DetectorClocksData; }
 
@@ -94,6 +95,21 @@ namespace sbnd::crt {
       fhicl::Atom<bool> SaveViews {
         Name("SaveViews"),
       };
+      fhicl::Atom<bool> DrawAxes {
+        Name("DrawAxes"),
+      };
+      fhicl::Atom<bool> SaveFront {
+        Name("SaveFront"),
+	true
+      };
+      fhicl::Atom<bool> SaveTop {
+        Name("SaveTop"),
+	true
+      };
+      fhicl::Atom<bool> SaveSide {
+        Name("SaveSide"),
+	true
+      };
 
       fhicl::Atom<bool> DrawTaggers {
         Name("DrawTaggers")
@@ -144,6 +160,9 @@ namespace sbnd::crt {
       };
       fhicl::Sequence<int> HighlightedModules {
         Name("HighlightedModules")
+      };
+      fhicl::Atom<bool> HighlightModuleText {
+        Name("HighlightModuleText")
       };
 
       fhicl::Atom<int> TaggerColour {
@@ -225,6 +244,9 @@ namespace sbnd::crt {
     void SetPrint(bool tf);
 
     void SetHighlightedModules(std::vector<int> hm);
+    void SetSaveFront(bool tf);
+    void SetSaveTop(bool tf);
+    void SetSaveSide(bool tf);
 
     void DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour, int lineWidth = -1);
 
@@ -250,6 +272,10 @@ namespace sbnd::crt {
 
     bool fSaveRoot;
     bool fSaveViews;
+    bool fDrawAxes;
+    bool fSaveFront;
+    bool fSaveTop;
+    bool fSaveSide;
 
     bool fDrawTaggers;
     bool fDrawModules;
@@ -269,6 +295,7 @@ namespace sbnd::crt {
 
     bool             fHighlightModules;
     std::vector<int> fHighlightedModules;
+    bool             fHighlightModuleText;
 
     int fTaggerColour;
     int fHighlightColour;

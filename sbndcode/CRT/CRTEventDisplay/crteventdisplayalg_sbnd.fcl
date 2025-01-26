@@ -20,6 +20,7 @@ crteventdisplayalg_sbnd:
 
    SaveRoot:         true
    SaveViews:        false
+   DrawAxes:         false
 
    DrawTaggers:      true
    DrawModules:      false
@@ -48,8 +49,9 @@ crteventdisplayalg_sbnd:
    ChoseTaggers:  false
    ChosenTaggers: [ 0, 1, 2, 3, 4, 5, 6 ]
 
-   HighlightModules:  false
-   HighlightedModules: [ ]
+   HighlightModules:    false
+   HighlightedModules:  [ ]
+   HighlightModuleText: false
 
    TaggerColour:             1
    HighlightColour:          8
@@ -78,6 +80,7 @@ crteventdisplayalg_sbnd_channel_mapping: @local::crteventdisplayalg_sbnd
 crteventdisplayalg_sbnd_channel_mapping.MC:               false
 crteventdisplayalg_sbnd_channel_mapping.SaveRoot:         false
 crteventdisplayalg_sbnd_channel_mapping.SaveViews:        true
+crteventdisplayalg_sbnd_channel_mapping.DrawAxes:         true
 
 crteventdisplayalg_sbnd_channel_mapping.ChoseTaggers:     true
 crteventdisplayalg_sbnd_channel_mapping.HighlightModules: true
@@ -96,6 +99,14 @@ crteventdisplayalg_sbnd_channel_mapping.DrawSpacePoints:  false
 crteventdisplayalg_sbnd_channel_mapping.DrawTracks:       false
 
 crteventdisplayalg_sbnd_channel_mapping.Print:            false
+
+
+crteventdisplayalg_sbnd_visualisation: @local::crteventdisplayalg_sbnd_channel_mapping
+crteventdisplayalg_sbnd_visualisation.HighlightModuleText: true
+#crteventdisplayalg_sbnd_visualisation.DrawAxes:            false
+crteventdisplayalg_sbnd_visualisation.DrawTPC:             false
+crteventdisplayalg_sbnd_visualisation.DrawFEBs:            false
+crteventdisplayalg_sbnd_visualisation.DrawFEBEnds:         false
 
 crteventdisplayalg_sbnd_data: @local::crteventdisplayalg_sbnd
 

@@ -20,4 +20,10 @@ crteventdisplay_sbnd_channel_mapping:
    module_type:        "CRTChannelMappingEventDisplay"
 }
 
+crteventdisplay_sbnd_visualisation:
+{
+   EventDisplayConfig: @local::crteventdisplayalg_sbnd_visualisation
+   module_type:        "CRTVisualisation"
+}
+
 END_PROLOG

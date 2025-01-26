@@ -26,6 +26,10 @@ namespace sbnd::crt {
 
     fSaveRoot = config.SaveRoot();
     fSaveViews = config.SaveViews();
+    fDrawAxes = config.DrawAxes();
+    fSaveFront = config.SaveFront();
+    fSaveTop = config.SaveTop();
+    fSaveSide = config.SaveSide();
 
     fDrawTaggers = config.DrawTaggers();
     fDrawModules = config.DrawModules();
@@ -45,6 +49,7 @@ namespace sbnd::crt {
 
     fHighlightModules = config.HighlightModules();
     fHighlightedModules = config.HighlightedModules();
+    fHighlightModuleText = config.HighlightModuleText();
 
     fTaggerColour = config.TaggerColour();
     fHighlightColour = config.HighlightColour();
@@ -110,7 +115,22 @@ namespace sbnd::crt {
     fHighlightedModules = hm;
   }
 
-  void CRTEventDisplayAlg::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour, int lineWidth)
+  void CRTEventDisplayAlg::SetSaveFront(bool tf)
+  {
+    fSaveFront = tf;
+  }
+
+  void CRTEventDisplayAlg::SetSaveTop(bool tf)
+  {
+    fSaveTop = tf;
+  }
+
+  void CRTEventDisplayAlg::SetSaveSide(bool tf)
+  {
+    fSaveSide = tf;
+  }
+
+  void CRTEventDisplayAlg::DrawCube(TCanvas *c1, double *rmin, double *rmax, int colour, int lineWidth, bool fill)
   {
     c1->cd();
     TList *outline = new TList;
@@ -198,6 +218,25 @@ namespace sbnd::crt {
               DrawCube(c1, rmin, rmax, fHighlightColour);
             else
               DrawCube(c1, rmin, rmax, fTaggerColour);
+
+	    if(fHighlightModules && fHighlightModuleText)
+	      {
+		double xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+		
+		if(rmax[0] - rmin[0] < 10)
+		  { xmin = rmin[1]; xmax = rmax[1]; ymin = rmin[2]; ymax = rmax[2]; }
+		else if(rmax[1] - rmin[1] < 10)
+		  { xmin = rmin[0]; xmax = rmax[0]; ymin = rmin[2]; ymax = rmax[2]; }
+		if(rmax[2] - rmin[2] < 10)
+		  { xmin = rmin[0]; xmax = rmax[0]; ymin = rmin[1]; ymax = rmax[1]; }
+
+		TPaveText *pt = new TPaveText(xmin, ymin, xmax, ymax, "NDC");
+		pt->AddText(Form("Module %i", module.adID));
+		pt->SetTextSize(0.08);
+		pt->SetTextColor(kBlack);
+
+		//		pt->Draw();
+	      }
 
             if(fDrawFEBs)
               {
@@ -300,7 +339,7 @@ namespace sbnd::crt {
                     start = pos;
                   }
                 end = pos;
-              
+
                 line->SetPoint(ipt, pos.X(), pos.Y(), pos.Z());
                 ipt++;
               }
@@ -572,22 +611,25 @@ namespace sbnd::crt {
         else
           view->SetRange(-600, -600, -300, 600, 600, 900);
 
-        view->ToggleRulers();
+	if(fDrawAxes)
+	  {
+	    view->ToggleRulers();
 
-        TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
-        axis->GetXaxis()->SetTitle("X (W)");
-        axis->GetYaxis()->SetTitle("Y (Up)");
-        axis->GetZaxis()->SetTitle("Z (N)");
-        axis->GetXaxis()->SetAxisColor(kBlack);
-        axis->GetYaxis()->SetAxisColor(kBlack);
-        axis->GetZaxis()->SetAxisColor(kBlack);
-        axis->GetXaxis()->SetLabelColor(kBlack);
-        axis->GetYaxis()->SetLabelColor(kBlack);
-        axis->GetZaxis()->SetLabelColor(kBlack);
-        axis->GetXaxis()->SetLabelSize(0.024);
-        axis->GetYaxis()->SetLabelSize(0.024);
-        axis->GetZaxis()->SetLabelSize(0.024);
-
+	    TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
+	    axis->GetXaxis()->SetTitle("X (W)");
+	    axis->GetYaxis()->SetTitle("Y (Up)");
+	    axis->GetZaxis()->SetTitle("Z (N)");
+	    axis->GetXaxis()->SetAxisColor(kBlack);
+	    axis->GetYaxis()->SetAxisColor(kBlack);
+	    axis->GetZaxis()->SetAxisColor(kBlack);
+	    axis->GetXaxis()->SetLabelColor(kBlack);
+	    axis->GetYaxis()->SetLabelColor(kBlack);
+	    axis->GetZaxis()->SetLabelColor(kBlack);
+	    axis->GetXaxis()->SetLabelSize(0.024);
+	    axis->GetYaxis()->SetLabelSize(0.024);
+	    axis->GetZaxis()->SetLabelSize(0.024);
+	  }
+	
         view->DefineViewDirection(s, c,
                                   0, 1,
                                   1, 0,
@@ -595,12 +637,20 @@ namespace sbnd::crt {
                                   view->GetTnorm(),
                                   view->GetTback());
 
-        axis->GetXaxis()->SetTitleOffset(2);
-        axis->GetYaxis()->SetTitleOffset(-1.7);
-        axis->GetXaxis()->SetLabelOffset(-0.065);
-        axis->GetYaxis()->SetLabelOffset(-0.2);
-        c1->SaveAs(Form("%s_front.png", saveName.Data()));
-        c1->SaveAs(Form("%s_front.pdf", saveName.Data()));
+	if(fDrawAxes)
+	  {
+	    TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
+	    axis->GetXaxis()->SetTitleOffset(2);
+	    axis->GetYaxis()->SetTitleOffset(-1.7);
+	    axis->GetXaxis()->SetLabelOffset(-0.065);
+	    axis->GetYaxis()->SetLabelOffset(-0.2);
+	  }
+
+	if(fSaveFront)
+	  {
+	    c1->SaveAs(Form("%s_front.png", saveName.Data()));
+	    c1->SaveAs(Form("%s_front.pdf", saveName.Data()));
+	  }
 
         view->DefineViewDirection(s, c,
                                   0, 1,
@@ -609,12 +659,20 @@ namespace sbnd::crt {
                                   view->GetTnorm(),
                                   view->GetTback());
 
-        axis->GetXaxis()->SetTitleOffset(2);
-        axis->GetZaxis()->SetTitleOffset(-1.7);
-        axis->GetXaxis()->SetLabelOffset(-0.065);
-        axis->GetZaxis()->SetLabelOffset(-0.2);
-        c1->SaveAs(Form("%s_top.png", saveName.Data()));
-        c1->SaveAs(Form("%s_top.pdf", saveName.Data()));
+	if(fDrawAxes)
+	  {
+	    TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
+	    axis->GetXaxis()->SetTitleOffset(2);
+	    axis->GetZaxis()->SetTitleOffset(-1.7);
+	    axis->GetXaxis()->SetLabelOffset(-0.065);
+	    axis->GetZaxis()->SetLabelOffset(-0.2);
+	  }
+
+        if(fSaveTop)
+	  {
+	    c1->SaveAs(Form("%s_top.png", saveName.Data()));
+	    c1->SaveAs(Form("%s_top.pdf", saveName.Data()));
+	  }
 
         view->DefineViewDirection(s, c,
                                   1, 0,
@@ -623,12 +681,20 @@ namespace sbnd::crt {
                                   view->GetTnorm(),
                                   view->GetTback());
 
-        axis->GetYaxis()->SetTitleOffset(-2);
-        axis->GetZaxis()->SetTitleOffset(-1.7);
-        axis->GetYaxis()->SetLabelOffset(0.005);
-        axis->GetZaxis()->SetLabelOffset(0.005);
-        c1->SaveAs(Form("%s_side.png", saveName.Data()));
-        c1->SaveAs(Form("%s_side.pdf", saveName.Data()));
+	if(fDrawAxes)
+	  {
+	    TAxis3D *axis = TAxis3D::GetPadAxis(gPad);
+	    axis->GetYaxis()->SetTitleOffset(-2);
+	    axis->GetZaxis()->SetTitleOffset(-1.7);
+	    axis->GetYaxis()->SetLabelOffset(0.005);
+	    axis->GetZaxis()->SetLabelOffset(0.005);
+	  }
+
+	if(fSaveSide)
+	  {
+	    c1->SaveAs(Form("%s_side.png", saveName.Data()));
+	    c1->SaveAs(Form("%s_side.pdf", saveName.Data()));
+	  }
       }
 
     delete c1;

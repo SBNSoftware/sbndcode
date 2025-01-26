@@ -18,4 +18,9 @@ simple_plugin(
               sbndcode_CRT_CRTEventDisplay
 )
 
+simple_plugin(
+              CRTVisualisation module
+              sbndcode_CRT_CRTEventDisplay
+)
+
 install_fhicl()

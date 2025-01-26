@@ -1,0 +1,36 @@
+#include "services_sbnd.fcl"
+#include "particleinventoryservice.fcl"
+#include "crteventdisplay_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+
+process_name: CRTEventDisplay
+
+services:
+{
+  @table::sbnd_services
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  CRTChannelMapService:     @local::crt_channel_map_no_inversion
+  CRTCalibService:          @local::crt_calib_service
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics:
+{
+  analyzers:
+  {
+    crtevdsou:   @local::crteventdisplay_sbnd_visualisation
+  }
+
+  ana: [ crtevdsou ]
+
+  end_paths: [ ana ]
+}
+
+physics.analyzers.crtevdsou.SaveDir:                          "/exp/sbnd/app/users/hlay/tmp/south_wall"
+physics.analyzers.crtevdsou.EventDisplayConfig.ChosenTaggers: [ 1 ]
