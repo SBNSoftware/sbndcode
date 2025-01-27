@@ -27,6 +27,7 @@ hitdumper:
     MCParticleModuleLabel:    "largeant"
     MCTrackModuleLabel:       "mcreco"
     MCShowerModuleLabel:      "mcreco"
+    TDCModuleLabel:           "tdcdecoder"
  
     KeepCRTStripHits:         true
     KeepCRTSpacePoints:       true
@@ -41,6 +42,7 @@ hitdumper:
     readMCParticle:           false
     savePOTinfo:              true
     checkTransparency:        false
+    HasTDC:                   true
 
     window:                   100
 
