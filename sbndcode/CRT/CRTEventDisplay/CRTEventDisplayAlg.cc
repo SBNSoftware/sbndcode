@@ -147,6 +147,8 @@ namespace sbnd::crt {
 
     const double G4RefTime = fMC ? clockData.G4ToElecTime(0) * 1e3 : 0.;
     if(fPrint) std::cout << "G4RefTime: " << G4RefTime << std::endl;
+    if(fPrint) std::cout << "MinTime: " << fMinTime << std::endl;
+    if(fPrint) std::cout << "MaxTime: " << fMaxTime << std::endl;
 
     // Create a canvas 
     TCanvas *c1 = new TCanvas("c1","",700,700);
@@ -163,12 +165,8 @@ namespace sbnd::crt {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(name)) == fChosenTaggers.end())
               continue;
 
-            double rmin[3] = {tagger.minX, 
-                              tagger.minY, 
-                              tagger.minZ};
-            double rmax[3] = {tagger.maxX, 
-                              tagger.maxY, 
-                              tagger.maxZ};
+            double rmin[3] = {tagger.minX, tagger.minY, tagger.minZ};
+            double rmax[3] = {tagger.maxX, tagger.maxY, tagger.maxZ};
 
             DrawCube(c1, rmin, rmax, fTaggerColour);
           }
@@ -182,12 +180,8 @@ namespace sbnd::crt {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(module.taggerName)) == fChosenTaggers.end())
               continue;
 
-            double rmin[3] = {module.minX, 
-                              module.minY, 
-                              module.minZ};
-            double rmax[3] = {module.maxX, 
-                              module.maxY, 
-                              module.maxZ};
+            double rmin[3] = {module.minX, module.minY, module.minZ};
+            double rmax[3] = {module.maxX, module.maxY, module.maxZ};
 
             if(fHighlightModules && std::find(fHighlightedModules.begin(), fHighlightedModules.end(), module.adID) == fHighlightedModules.end())
               {
@@ -203,13 +197,8 @@ namespace sbnd::crt {
               {
                 const std::array<double, 6> febPos = fCRTGeoAlg.FEBWorldPos(module);
                 
-                double rminFEB[3] = {febPos[0],
-                                     febPos[2],
-                                     febPos[4]};
-
-                double rmaxFEB[3] = {febPos[1],
-                                     febPos[3],
-                                     febPos[5]};
+                double rminFEB[3] = {febPos[0], febPos[2], febPos[4]};
+                double rmaxFEB[3] = {febPos[1], febPos[3], febPos[5]};
 
                 DrawCube(c1, rminFEB, rmaxFEB, fFEBColour);
 
@@ -217,13 +206,8 @@ namespace sbnd::crt {
                   {
                     const std::array<double, 6> febCh0Pos = fCRTGeoAlg.FEBChannel0WorldPos(module);
 
-                    double rminCh0[3] = {febCh0Pos[0],
-                                         febCh0Pos[2],
-                                         febCh0Pos[4]};
-
-                    double rmaxCh0[3] = {febCh0Pos[1],
-                                         febCh0Pos[3],
-                                         febCh0Pos[5]};
+                    double rminCh0[3] = {febCh0Pos[0], febCh0Pos[2], febCh0Pos[4]};
+                    double rmaxCh0[3] = {febCh0Pos[1], febCh0Pos[3], febCh0Pos[5]};
 
                     DrawCube(c1, rminCh0, rmaxCh0, fFEBEndColour);
                   }
@@ -239,12 +223,8 @@ namespace sbnd::crt {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), fCRTGeoAlg.ChannelToTaggerEnum(strip.channel0)) == fChosenTaggers.end())
               continue;
 
-            double rmin[3] = {strip.minX, 
-                              strip.minY, 
-                              strip.minZ};
-            double rmax[3] = {strip.maxX, 
-                              strip.maxY, 
-                              strip.maxZ};
+            double rmin[3] = {strip.minX,  strip.minY, strip.minZ};
+            double rmax[3] = {strip.maxX,  strip.maxY, strip.maxZ};
 
             DrawCube(c1, rmin, rmax, fTaggerColour, 1);
           }
@@ -253,19 +233,13 @@ namespace sbnd::crt {
     // Draw the TPC with central cathode
     if(fDrawTPC)
       {
-        double rmin[3] = {fTPCGeoAlg.MinX(), 
-                          fTPCGeoAlg.MinY(), 
-                          fTPCGeoAlg.MinZ()};
-        double rmax[3] = {-fTPCGeoAlg.CpaWidth(), 
-                          fTPCGeoAlg.MaxY(), 
-                          fTPCGeoAlg.MaxZ()};
+        double rmin[3] = {fTPCGeoAlg.MinX(), fTPCGeoAlg.MinY(), fTPCGeoAlg.MinZ()};
+        double rmax[3] = {-fTPCGeoAlg.CpaWidth(), fTPCGeoAlg.MaxY(), fTPCGeoAlg.MaxZ()};
+
         DrawCube(c1, rmin, rmax, fTPCColour);
-        double rmin2[3] = {fTPCGeoAlg.CpaWidth(), 
-                           fTPCGeoAlg.MinY(), 
-                           fTPCGeoAlg.MinZ()};
-        double rmax2[3] = {fTPCGeoAlg.MaxX(), 
-                           fTPCGeoAlg.MaxY(), 
-                           fTPCGeoAlg.MaxZ()};
+
+        double rmin2[3] = {fTPCGeoAlg.CpaWidth(), fTPCGeoAlg.MinY(), fTPCGeoAlg.MinZ()};
+        double rmax2[3] = {fTPCGeoAlg.MaxX(), fTPCGeoAlg.MaxY(), fTPCGeoAlg.MaxZ()};
 
         DrawCube(c1, rmin2, rmax2, fTPCColour);
       }
@@ -382,8 +356,11 @@ namespace sbnd::crt {
               {
                 std::cout << "Strip Hit: ("
                           << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
-                          << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t1 = " << stripHit->Ts1()
-                          << " (" << stripHit->Ts1() - G4RefTime << ")";
+                          << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ")";
+                if(fUseTs0)
+                  std::cout << " at t0 = " << stripHit->Ts0() << " (" << stripHit->Ts0() - G4RefTime << ")";
+                else
+                  std::cout << " at t1 = " << stripHit->Ts1() << " (" << stripHit->Ts1() - G4RefTime << ")";
 
                 if(fMC)
                   {
@@ -438,8 +415,14 @@ namespace sbnd::crt {
 
                 if(fPrint)
                   {
-                    std::cout << "Cluster of " << cluster->NHits() << " hits at t1 = " << cluster->Ts1()
-                              << " (" << cluster->Ts1() - G4RefTime << ")";
+                    std::cout << "Cluster of " << cluster->NHits() << " hits";
+
+                    if(fUseTs0)
+                      std::cout << " at t0 = " << cluster->Ts0() << " (" << cluster->Ts0() - G4RefTime << ")";
+                    else
+                      std::cout << " at t1 = " << cluster->Ts1() << " (" << cluster->Ts1() - G4RefTime << ")";
+
+
 
                     if(fMC)
                       {
