@@ -69,66 +69,38 @@ sbnd_reco2_producers:{
     caloskimCalorimetry: @local::caloskim_calorimetry
 }
 
-sbnd_reco2_tpc_sequence: [
-    pandora
+sbnd_reco2_producer_sequence: [  
+    rns
+    , pandora
     , pandoraTrack
     , pandoraShower
     , pandoraShowerSBN
     , pandoraCalo
     , pandoraPid
-]
-
-sbnd_reco2_crt_sequence: [
-    crtclustering
+    , crtclustering
     , crtspacepoints
     , crttracks
-]
-
-sbnd_reco2_multi_system_matching_sequence: [
-    crtspacepointmatching
+    , crtspacepointmatching
     , crttrackmatching
     , fmatch
     , fmatchop
     , fmatchara
     , fmatchopara
+    , caloskimCalorimetry
     , opt0finder
-]
-
-sbnd_reco2_tpc_sequence_sce: [
-    pandoraSCE
+    , pandoraSCE
     , pandoraSCETrack
     , pandoraSCEShower
     , pandoraSCEShowerSBN
     , pandoraSCECalo
     , pandoraSCEPid
-]
-
-sbnd_reco2_multi_system_matching_sequence_sce: [
-    crtspacepointmatchingSCE
+    , crtspacepointmatchingSCE
     , crttrackmatchingSCE
     , fmatchSCE
     , fmatchopSCE
     , fmatcharaSCE
     , fmatchoparaSCE
     , opt0finderSCE
-]
-
-sbnd_reco2_producer_sequence_no_sce_corrections: [
-    rns
-    , @sequence::sbnd_reco2_tpc_sequence
-    , @sequence::sbnd_reco2_crt_sequence
-    , @sequence::sbnd_reco2_multi_system_matching_sequence
-    , caloskimCalorimetry
-]
-
-sbnd_reco2_producer_sequence_sce: [
-    @sequence::sbnd_reco2_tpc_sequence_sce
-    , @sequence::sbnd_reco2_multi_system_matching_sequence_sce
-]
-
-sbnd_reco2_producer_sequence: [
-    @sequence::sbnd_reco2_producer_sequence_no_sce_corrections
-    , @sequence::sbnd_reco2_producer_sequence_sce
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
@@ -152,6 +124,8 @@ sbnd_reco2_producers.pandoraCaloData.FieldDistortionEfield:             false
 sbnd_reco2_producers.pandoraCaloData.TrackIsFieldDistortionCorrected:   false
 sbnd_reco2_producers.pandoraPidData.TrackModuleLabel:                   "pandoraTrack"
 sbnd_reco2_producers.pandoraPidData.CalorimetryModuleLabel:             "pandoraCaloData"
+
+physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
 sbnd_reco2_producers.opt0finderSCE.SliceProducer:  "pandoraSCE"
 sbnd_reco2_producers.opt0finderSCE.TrackProducer:  "pandoraSCETrack"
@@ -177,22 +151,15 @@ sbnd_reco2_producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandor
 sbnd_reco2_producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
 
 sbnd_reco2_analyzers: {
-    caloskim:     @local::caloskim_nodigits_goldentracks
-    crtskim:      @local::crtskim_sbnd
-    crtskimNoSCE: @local::crtskim_no_sce_sbnd
-    pmtskim:      @local::pmtskim_sbnd
+    caloskim: @local::caloskim_nodigits_goldentracks
+    crtskim: @local::crtskim_sbnd
+    pmtskim: @local::pmtskim_sbnd
 }
 
 sbnd_reco2_analyzer_sequence: [
     caloskim
     , pmtskim
     , crtskim
-]
-
-sbnd_reco2_analyzer_sequence_no_sce_corrections: [
-    caloskim
-    , pmtskim
-    , crtskimNoSCE
 ]
 
 #FIXME override the analyzer labels.  This should really happen in the module's config fcl
