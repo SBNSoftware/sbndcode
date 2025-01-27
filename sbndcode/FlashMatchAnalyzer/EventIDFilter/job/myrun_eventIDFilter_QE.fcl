@@ -1,0 +1,4 @@
+#include "run_eventIDFilter.fcl"
+
+physics.filters.evFilter.EventList: "/sbnd/data/users/fnicolas/HyperonSelection/FRAMS/MixOverlay/SelectedEvents.txt"	
+outputs.out1.fileName:    "caf_filtered_events_QE.root"

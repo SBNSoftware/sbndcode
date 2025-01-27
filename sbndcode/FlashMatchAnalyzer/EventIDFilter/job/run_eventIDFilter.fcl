@@ -1,0 +1,41 @@
+#include "eventid_filter.fcl"
+
+process_name: EventIDFilter
+
+source:
+{
+module_type:RootInput
+maxEvents: -1
+}
+
+services:
+{
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "caf_filtered_events.root"
+    dataTier:    "reconstructed"
+    compressionLevel: 1
+	SelectEvents: [ "myfilter" ]
+ }
+}
+
+physics:
+{
+	filters:
+	{
+		evFilter: @local::eventIDFilterCAF
+	}
+	
+	myfilter: [evFilter]
+	
+	trigger_paths: [myfilter]
+
+	stream1: [out1]
+
+	end_paths: [stream1]
+}

@@ -1,0 +1,45 @@
+#include "tpcanalyzer_config.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "hitfindermodules_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+
+
+process_name: Ana
+
+source:
+{
+module_type:RootInput
+maxEvents: -1
+}
+
+services:
+{
+TFileService: { fileName: "analyzeItOutput_R%r-%R_SR%s-%S.root"}
+@table::sbnd_services
+BackTrackerService: @local::standard_backtrackerservice
+ParticleInventoryService: @local::standard_particleinventoryservice
+#SpaceCharge:               @local::sbnd_spacecharge
+}
+
+physics:
+{
+	analyzers:
+	{
+		ana: @local::flashmatchana
+	}
+	path0: [ana]
+	end_paths: [path0]
+}
+
+physics.analyzers.ana.SaveTruth: false
+physics.analyzers.ana.SaveSpacePoints: true
+physics.analyzers.ana.SaveSimED: false
+physics.analyzers.ana.SaveSimEDOut: false
+physics.analyzers.ana.SaveReco2: true
+physics.analyzers.ana.SaveWires: false
+physics.analyzers.ana.SaveOpFlashes: true
+physics.analyzers.ana.OpFlashesModuleLabel: ["opflashtpc0","opflashtpc1"]
+
+physics.analyzers.ana.RecobWireLabel: "sptpc2d:gauss"
+physics.analyzers.ana.CalorimetryLabel: "pandoraCaloData"
+physics.analyzers.ana.ParticleIDLabel: "pandoraPidData"

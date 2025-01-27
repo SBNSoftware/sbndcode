@@ -1,0 +1,33 @@
+#include "tpcanalyzer_config.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "hitfindermodules_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+
+process_name: Ana
+
+source:
+{
+module_type:RootInput
+maxEvents: -1
+}
+
+services:
+{
+TFileService: { fileName: "analyzeItOutput_R%r-%R_SR%s-%S.root"}
+@table::sbnd_services
+BackTrackerService: @local::standard_backtrackerservice
+ParticleInventoryService: @local::standard_particleinventoryservice
+#SpaceCharge:               @local::sbnd_spacecharge
+}
+
+physics:
+{
+	analyzers:
+	{
+		ana: @local::tpcana
+	}
+	path0: [ana]
+	end_paths: [path0]
+}
+
+physics.analyzers.ana.SaveHits: false

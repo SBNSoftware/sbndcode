@@ -1,0 +1,44 @@
+BEGIN_PROLOG
+flashmatchana:
+{
+  module_type:  "FlashMatchAnalyzer"
+
+  MCTruthLabel: "generator"
+  SimEnergyDepositLabel: "ionandscint"
+  SimEnergyDepositInstanceLabel: "priorSCE"
+  SimEnergyDepositLabelOut: "ionandscintout"
+  SimEnergyDepositInstanceLabelOut: ""
+  SimChannelLabel: "simtpc2d:simpleSC"
+  RecobWireLabel: "caldata"
+  RawDigitLabel: "daq"
+  HitLabel: "gaushit"
+  SpacePointLabel: "pandora"
+  VertexLabel: "pandora"
+  Reco2Label: "pandora"
+  TrackLabel: "pandoraTrack"
+  ClusterLabel: "pandora"
+  CalorimetryLabel: "pandoraCalo"
+  ParticleIDLabel: "pandoraPid"
+
+  SaveReco2: true
+  SaveTruth: true
+  SaveSimED: true
+  SaveSimEDOut: false
+  SaveWaveforms: false
+  SaveWires: false
+  SaveHits: true
+  SaveSpacePoints: true
+  SaveVertex: true
+  CreateTPCMap: false
+  ApplyFiducialCut: true
+  ApplyVertexSCE: true
+
+  UseSlices: true
+  UseSimChannels: false
+}
+
+
+
+END_PROLOG
+
+

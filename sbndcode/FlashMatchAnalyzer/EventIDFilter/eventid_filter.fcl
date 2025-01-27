@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+eventIDFilterCAF:
+{
+	module_type:	"EventIDFilterCAF"
+	MCTruthLabel:   "generator"
+}
+
+END_PROLOG
