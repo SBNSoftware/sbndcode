@@ -37,5 +37,5 @@ sbnd_reco1_drops_keep_rawdigits: [
 	@sequence::sbnd_reco1_drops_selective
   , "keep raw::RawDigit*_*_*_*"
 ]
- 
+
 END_PROLOG
