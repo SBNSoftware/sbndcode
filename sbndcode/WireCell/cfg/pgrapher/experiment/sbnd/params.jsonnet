@@ -123,7 +123,7 @@ base {
         // The "absolute" time (ie, relative to trigger time?) that the lower edge
         // of final readout tick #0 should correspond to.  This is a
         // "fixed" notion.
-        local tick0_time = -205*wc.us, // updated in January 2024, front porch in data = 410 ticks
+        local tick0_time = -205*wc.us, // updated in January 2025, front porch in data = 410 ticks
 
         // Open the ductor's gate a bit early.
         local response_time_offset = $.det.response_plane / $.lar.drift_speed,
