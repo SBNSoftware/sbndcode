@@ -30,7 +30,7 @@ hitdumper:
     TDCModuleLabel:           "tdcdecoder"
  
     KeepCRTStripHits:         true
-    KeepCRTSpacePoints:       false
+    KeepCRTSpacePoints:       true
     KeepCRTTracks:            true
     readOpHits:               true
     readpmtTrigger:           true
