@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+analyseINCLevents:
+{
+    module_type: "AnalyseINCLevents"
+
+    SliceLabel: "pandora"
+}
+
+END_PROLOG

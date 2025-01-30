@@ -1,5 +1,3 @@
-add_subdirectory(nuclearClusters)
-
 install_fhicl()
 
 FILE(GLOB fcl_files *.fcl)

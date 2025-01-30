@@ -1,0 +1,28 @@
+#include "INCLanalysisConfig.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: AnalyseINCLevents
+
+source:
+{
+    module_type: RootInput
+    maxEvents: -1
+}
+
+services:
+{
+    TFileService: { fileName: "INCLanalysisOutput.root" }
+    @table::sbnd_services
+}
+
+physics:
+{
+    analyzers:
+    {
+        ana: @local::analyseINCLevents
+    }
+
+    path0: [ ana ]
+    end_paths: [ path0 ]
+
+}

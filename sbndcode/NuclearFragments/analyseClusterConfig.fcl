@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+analyseClusterParams:
+{
+    module_type: "AnalyseClusterReco"
+
+    SliceLabel: "pandora"
+    PFParticleLabel: "pandora"
+    TrackLabel: "pandoraTrack"
+    CalorimetryLabel: "pandoraCalo"
+    HitLabel: "cluster3d"
+}
+
+END_PROLOG
