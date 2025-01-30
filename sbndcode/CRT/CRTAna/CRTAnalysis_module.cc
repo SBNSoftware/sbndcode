@@ -1164,6 +1164,12 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
 	  SBND::CRTChannelMapService::ModuleInfo_t module_info = ChannelMapService->GetModuleInfoFromOfflineID( striphit->Channel() / 32 );
 	  _cl_sh_feb_mac5_set[i][ii] = ( module_info.valid ) ? module_info.feb_mac5 : 0;
 
+	  /*
+	   * The below segment reimplements the CorrectTime() method 
+	   * from CRTReco/CRTClusterCharacterisationAlg.cc .
+	   * Because the Ts0(), Ts1() getters invoked in _cl_sp_ts*, _cl_sh_ts*_set are raw T0/1
+	   * counters, the time walk and propagation delay are saved as explicit branches here.
+	   */
 	  if(spacepoints.size() == 1) { // need unique position of spacepoint
 	    double pe0 = fCRTGeoAlg.GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
 	    double pe1 = fCRTGeoAlg.GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
