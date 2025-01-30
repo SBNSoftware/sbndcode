@@ -8,7 +8,7 @@ analyseClusterParams:
     PFParticleLabel: "pandora"
     TrackLabel: "pandoraTrack"
     CalorimetryLabel: "pandoraCalo"
-    HitLabel: "cluster3d"
+    HitLabel: "gaushit"
 }
 
 END_PROLOG
