@@ -1,0 +1,37 @@
+#include "crt_trigger_filter.fcl"
+
+process_name: CRTTriggerFilter
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName: "%ifb_%p-%tc.root"
+    dataTier: "reconstructed"
+    compressionLevel: 1
+    }
+}
+
+physics:
+{
+  producers: {}
+  filters:
+  {
+    CRTTriggerFilter: @local::crt_trigger_filter_sbnd
+  }
+  analyzers:{}
+
+  reco: [CRTTriggerFilter]
+  stream1: [out1]
+  trigger_paths: [reco]
+  end_paths: [stream1]
+}
+
+outputs.out1.SelectEvents: [ "reco" ]
