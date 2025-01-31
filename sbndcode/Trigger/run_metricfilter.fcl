@@ -13,7 +13,7 @@ outputs:
   out1:
   {
     module_type: RootOutput
-    fileName:    "metricfiltered-art.root"
+    fileName: "%ifb_%p-%tc.root"
   }
 }
 

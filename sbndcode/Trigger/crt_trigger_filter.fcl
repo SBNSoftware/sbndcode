@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+crt_trigger_filter_sbnd:
+{
+ module_type:         "CRTTriggerFilter"
+ PTBLabel: "ptbdecoder"
+ CRTTriggerType: "NS"
+}
+
+END_PROLOG
