@@ -1,0 +1,15 @@
+BEGIN_PROLOG 
+
+MichelETagger: 
+{
+    module_type: "michelETagger"
+    GaussianConvlSize: 501 #samples
+    fGaussianConvlWidth: 160 #samples
+    fCoincidentWindow: 250 #ns 
+    TotalCAENBoards: 8 
+    PMTPerBoard: 15
+    CRTclusterLabel: "crtclustering"
+    PMTLabel: "opdecopmt"
+}
+
+END_PROLOG

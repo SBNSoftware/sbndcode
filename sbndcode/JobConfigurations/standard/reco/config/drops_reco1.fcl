@@ -12,7 +12,7 @@ sbnd_reco1_ml_drops: [
 sbnd_reco1_drops: [ 
     @sequence::detsim_drops
   , "drop raw::RawDigits_*_*_*"
-  , "drop raw::OpDetWaveforms_*_*_*" 
+  #, "drop raw::OpDetWaveforms_*_*_*" 
   , "drop *_fasthit_*_*"
   , @sequence::sbnd_reco1_ml_drops
 ]
