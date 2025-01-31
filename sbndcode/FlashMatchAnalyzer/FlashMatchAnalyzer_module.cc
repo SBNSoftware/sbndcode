@@ -24,9 +24,11 @@ test::FlashMatchAnalyzer::FlashMatchAnalyzer(fhicl::ParameterSet const& p)
   fClusterLabel( p.get<std::string>("ClusterLabel", "pandora") ),
   fSpacePointLabel( p.get<std::string>("SpacePointLabel", "pandora") ),
   fVertexLabel( p.get<std::string>("VertexLabel", "pandora") ),
+  fT0label( p.get<std::string>("T0label", "pandora") ),
   fCalorimetryLabel( p.get<std::string>("CalorimetryLabel", "pandoraCalo") ),
   fParticleIDLabel( p.get<std::string>("ParticleIDLabel", "pandoraPid") ),
   fOpFlashesModuleLabel( p.get<std::vector<std::string>>("OpFlashesModuleLabel") ),
+  fCRTTrackModuleLabel( p.get<std::string>("CRTTrackModuleLabel") ),
   fSaveReco2( p.get<bool>("SaveReco2", "false") ),
   fSaveTruth( p.get<bool>("SaveTruth", "true") ),
   fSaveSimED( p.get<bool>("SaveSimED", "true") ),
@@ -44,6 +46,10 @@ test::FlashMatchAnalyzer::FlashMatchAnalyzer(fhicl::ParameterSet const& p)
   fSaveOpHits( p.get<bool>("SaveOpHits") ),  
   fSaveOpFlashes( p.get<bool>("SaveOpFlashes") ),  
   fSaveFlashWindow( p.get<std::vector<double>>("SaveFlashWindow")),
+  fSaveCRTWindow( p.get<std::vector<double>>("SaveCRTWindow")),
+  fSaveOnlyNeutrino( p.get<bool>("SaveOnlyNeutrino")),
+  fSaveCRTTracks( p.get<bool>("SaveCRTTracks")),
+  fComputePMTRatio( p.get<bool>("ComputePMTRatio")),
   fNChannels(fGeom->Nchannels())
   // More initializers here.
 {
@@ -62,11 +68,11 @@ test::FlashMatchAnalyzer::FlashMatchAnalyzer(fhicl::ParameterSet const& p)
   fSin60 = std::sin(  60 * (M_PI / 180.0) );
   fWirePitch = 0.3;
 
-  std::cout<<"Cos and sin 60 "<<fCos60<<" "<<fSin60<<std::endl;
+  //std::cout<<"Cos and sin 60 "<<fCos60<<" "<<fSin60<<std::endl;
 
-  std::cout<<"  - Read TPC clocks...  ReadOutWindowSize: "<<fReadoutWindow<<"  TriggerOffsetTPC: "<<fTriggerOffsetTPC;
-  std::cout<<"  TickPeriodTPC: "<<fTickPeriodTPC<<std::endl;
-  std::cout<<"  - Drift Velocity: "<<fDriftVelocity<<"  WirePlanePosition: "<<fWirePlanePosition<<std::endl;
+  //std::cout<<"  - Read TPC clocks...  ReadOutWindowSize: "<<fReadoutWindow<<"  TriggerOffsetTPC: "<<fTriggerOffsetTPC;
+  //std::cout<<"  TickPeriodTPC: "<<fTickPeriodTPC<<std::endl;
+  //std::cout<<"  - Drift Velocity: "<<fDriftVelocity<<"  WirePlanePosition: "<<fWirePlanePosition<<std::endl;
 
   fRawChannelADC.resize(fNChannels, std::vector<double>(0));
   for(size_t k=0; k<fNChannels; k++) fRawChannelADC[k].reserve(fReadoutWindow);
@@ -129,6 +135,8 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
     art::FindManyP<recob::Cluster> pfp_cluster_assns (pfpHandle, e, fReco2Label);
     //PF to track
     art::FindManyP<recob::Track> pfp_track_assns (pfpHandle, e, fTrackLabel);
+    // PF to T0
+    art::FindManyP<anab::T0> pfp_t0_assns(pfpHandle, e, fT0label);
     //Cluster to hit
     art::FindManyP<recob::Hit> cluster_hit_assns (clusterHandle, e, fReco2Label);
     //Track to hit
@@ -144,30 +152,30 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
     bool isNeutrino = false;
     for(const art::Ptr<recob::PFParticle> &pfp : pfpVect){
 
-      std::cout<<"   ** PFParticle: "<<pfp->Self()<<"      PDG:"<<pfp->PdgCode()<<"  Primary="<<pfp->IsPrimary()<<" Mother="<<pfp->Parent()<<std::endl;
+      //std::cout<<"   ** PFParticle: "<<pfp->Self()<<"      PDG:"<<pfp->PdgCode()<<"  Primary="<<pfp->IsPrimary()<<" Mother="<<pfp->Parent()<<std::endl;
 
       // Save reconstructed neutrino vertex
       if(  pfp->IsPrimary() && ( !fUseSlices || ( std::abs(pfp->PdgCode())==12 || std::abs(pfp->PdgCode())==14 ) ) ){
-        std::cout<<"    This is a reconstructed netrino!\n";
+        //std::cout<<"    This is a reconstructed netrino!\n";
         isNeutrino=true;
         //Get PFParticle Vertex
         std::vector< art::Ptr<recob::Vertex> > vertexVec = pfp_vertex_assns.at(pfp.key());
         for(const art::Ptr<recob::Vertex> &ver : vertexVec){
           geo::Point_t xyz_vertex = ver->position();
-          double chi2=ver->chi2(), chi2ndof=ver->chi2PerNdof();
-          std::cout<<"    --VERTEX  ID="<<ver->ID()<<"  x,y,z="<<xyz_vertex.X()<<","<<xyz_vertex.Y()<<","<<xyz_vertex.Z();
-          std::cout<<" Chi2="<<chi2<<" Chi2/DoF="<<chi2ndof<<" Status:"<<ver->status()<<",\n";
+          //double chi2=ver->chi2(), chi2ndof=ver->chi2PerNdof();
+          //std::cout<<"    --VERTEX  ID="<<ver->ID()<<"  x,y,z="<<xyz_vertex.X()<<","<<xyz_vertex.Y()<<","<<xyz_vertex.Z();
+          //std::cout<<" Chi2="<<chi2<<" Chi2/DoF="<<chi2ndof<<" Status:"<<ver->status()<<",\n";
 
           fRecoVx= xyz_vertex.X();
           fRecoVy= xyz_vertex.Y();
           fRecoVz= xyz_vertex.Z();
 
-          std::cout<<"  Reco vertex in FV "<<PointInFV(fRecoVx, fRecoVy, fRecoVz)<<std::endl;
+          //std::cout<<"  Reco vertex in FV "<<PointInFV(fRecoVx, fRecoVy, fRecoVz)<<std::endl;
 
           if(fApplyFiducialCut && PointInFV(fRecoVx, fRecoVy, fRecoVz)){
             //const double p[3]={fVx, fTrueVy, fTrueVz};
-            std::cout<<"     HasTPC: "<<fGeom->HasTPC(fGeom->FindTPCAtPosition(xyz_vertex))<<" "
-              <<fGeom->FindTPCAtPosition(xyz_vertex).TPC<<std::endl;
+            //std::cout<<"     HasTPC: "<<fGeom->HasTPC(fGeom->FindTPCAtPosition(xyz_vertex))<<" "
+            //  <<fGeom->FindTPCAtPosition(xyz_vertex).TPC<<std::endl;
 
             if( fGeom->HasTPC(fGeom->FindTPCAtPosition(xyz_vertex)) ){
               unsigned int tpcID=fGeom->FindTPCAtPosition(xyz_vertex).TPC;
@@ -190,10 +198,10 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
 
       //Read cluster and store hits
       if(fUseSlices){
-        std::vector<art::Ptr<recob::Cluster>> cluster_v = pfp_cluster_assns.at(pfp.key());
+        std::vector<art::Ptr<recob::Cluster>> cluster_v = pfp_cluster_assns.at(pfp.key());        
         for(size_t i=0; i<cluster_v.size(); i++){
           std::vector<art::Ptr<recob::Hit>> hitVect = cluster_hit_assns.at(cluster_v[i].key());
-          std::cout<<"  ClusterID="<<cluster_v[i]->ID()<<" Hits: "<<hitVect.size()<<std::endl;
+          //std::cout<<"  ClusterID="<<cluster_v[i]->ID()<<" Hits: "<<hitVect.size()<<std::endl;
           FillHits(pfp->Self(), hitVect, hitToSpacePointMap);
         }
       }
@@ -201,9 +209,9 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
       //Read the tracks and store the PFParticle start/end points
       std::vector<art::Ptr<recob::Track>> track_v = pfp_track_assns.at(pfp.key());
       for(size_t i=0; i<track_v.size(); i++){
-        std::cout<<"     * Track number "<<i<<std::endl;
-        std::cout<<"   "<<track_v[i]->Vertex()<<std::endl;
-        std::cout<<"   "<<track_v[i]->End()<<std::endl;
+        //std::cout<<"     * Track number "<<i<<std::endl;
+        //std::cout<<"   "<<track_v[i]->Vertex()<<std::endl;
+        //std::cout<<"   "<<track_v[i]->End()<<std::endl;
         
         std::vector<double> start {track_v[i]->Vertex().X(), track_v[i]->Vertex().Y(), track_v[i]->Vertex().Z()};
         std::vector<double> end {track_v[i]->End().X(), track_v[i]->End().Y(), track_v[i]->End().Z()};
@@ -213,7 +221,7 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
 
         if(!fUseSlices){
           std::vector<art::Ptr<recob::Hit>> hitVect = track_hit_assns.at(track_v[i].key());
-          std::cout<<"  Hits: "<<hitVect.size()<<std::endl;
+          //std::cout<<"  Hits: "<<hitVect.size()<<std::endl;
           FillHits(pfp->Self(), hitVect, hitToSpacePointMap);
         }
       
@@ -225,20 +233,33 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
           anab::Calorimetry calo = *caloV[j];
 
           // Collection plane
-          std::cout<<"  Calorimetry object in plane "<<calo.PlaneID().Plane<<std::endl;
-          std::cout<<"  Kinetic Energy: "<<calo.KineticEnergy()<<std::endl;
+          //std::cout<<"  Calorimetry object in plane "<<calo.PlaneID().Plane<<std::endl;
+          //std::cout<<"  Kinetic Energy: "<<calo.KineticEnergy()<<std::endl;
           
         } // end of calorimetry loop
+      }
+
+      //Read the T0 and store the PFParticle start/end points
+      std::vector<art::Ptr<anab::T0>> T0_v = pfp_t0_assns.at(pfp.key());
+      for(size_t i=0; i<T0_v.size(); i++){
+        fPFPT0.push_back(T0_v[i]->Time());
       }
     }
 
     // if save reco1, save one slice per entry 
     // one entry per slice
-    if(isNeutrino || !fUseSlices){
+    
+    if(fSaveOnlyNeutrino)
+    {
+      if(isNeutrino || !fUseSlices){
+        fTree->Fill();
+      }
+    }
+    else{
       fTree->Fill();
     }
-
 }
+
 
 // Main function
 void test::FlashMatchAnalyzer::analyze(art::Event const& e)
@@ -678,6 +699,13 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
     _flash_ophit_pe.clear();
     _flash_ophit_ch.clear();
 
+    fPMTRatioPE.clear();
+    fPECoated.clear();
+    fPEUncoated.clear();
+    double _PEUncoated=0;
+    double _PECoated=0;
+    double _PMTRatioPE=0;
+
     art::Handle< std::vector<recob::OpFlash> > opflashListHandle;
 
     // Loop over all the OpFlash labels
@@ -735,10 +763,47 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
 
         }
 
+        if(fComputePMTRatio)
+        {
+          // Get OpFlash
+          std::vector<double> FlashPE_v = Flash.PEs();
+          for(size_t OpCh=0; OpCh<Flash.PEs().size(); OpCh++){
+            std::string pd_type=fPDSMap.pdType(OpCh);
+            if(pd_type=="xarapuca_vuv" || pd_type=="xarapuca_vis") continue;
+            if(pd_type=="pmt_coated") _PECoated+=FlashPE_v[OpCh];
+            else if(pd_type=="pmt_uncoated") _PEUncoated+=FlashPE_v[OpCh];
+          }
+          if(_PECoated!=0)
+          {
+            _PMTRatioPE=4*_PEUncoated/_PECoated;
+            fPMTRatioPE.push_back(_PMTRatioPE);
+            fPECoated.push_back(_PECoated);
+            fPEUncoated.push_back(_PECoated);
+          }
+          else{
+            fPMTRatioPE.push_back(-1);
+            fPECoated.push_back(-1);
+            fPEUncoated.push_back(-1);
+          }
+        }
       }
-  
     }
     fOpAnaTree->Fill();
+  }
+
+  if(fSaveCRTTracks)
+  {
+    // Get CRTTracks
+    art::Handle<std::vector<sbnd::crt::CRTTrack>> CRTTrackHandle;
+    e.getByLabel(fCRTTrackModuleLabel, CRTTrackHandle);
+    if(!CRTTrackHandle.isValid()){
+      std::cout << "CRTTrack product " << fCRTTrackModuleLabel << " not found..." << std::endl;
+      throw std::exception();
+    }
+    std::vector<art::Ptr<sbnd::crt::CRTTrack>> CRTTrackVec;
+    art::fill_ptr_vector(CRTTrackVec, CRTTrackHandle);
+    AnalyseCRTTracks(e, CRTTrackVec);
+    fCRTTree->Fill();
   }
 
   // if save reco1, save one event per entry
@@ -873,6 +938,7 @@ void test::FlashMatchAnalyzer::resetRecoVars()
     fPFTrackStart.clear();
     fPFTrackEnd.clear();
     fPFPDGCode.clear();
+    fPFPT0.clear();
   }
 }
 
@@ -881,4 +947,78 @@ void test::FlashMatchAnalyzer::resetVars()
   resetTrueVars();
   resetSimVars();
   resetRecoVars();
+}
+
+void test::FlashMatchAnalyzer::AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<sbnd::crt::CRTTrack>> &CRTTrackVec)
+{
+  const unsigned nTracks = CRTTrackVec.size();
+  _tr_start_x.clear();
+  _tr_start_y.clear();
+  _tr_start_z.clear();
+  _tr_end_x.clear();
+  _tr_end_y.clear();
+  _tr_end_z.clear();
+  _tr_dir_x.clear();
+  _tr_dir_y.clear();
+  _tr_dir_z.clear();
+  _tr_ts0.clear();
+  _tr_ets0.clear();
+  _tr_ts1.clear();
+  _tr_ets1.clear();
+  _tr_pe.clear();
+  _tr_length.clear();
+  _tr_tof.clear();
+  _tr_theta.clear();
+  _tr_phi.clear();
+  _tr_triple.clear();
+  _tr_tagger1.clear();
+  _tr_tagger2.clear();
+  _tr_tagger3.clear();
+
+  for(unsigned i = 0; i < nTracks; ++i)
+    {
+      const auto track = CRTTrackVec[i];
+
+      if((track->Ts0()<fSaveCRTWindow[0]) || (track->Ts0()>fSaveCRTWindow[1])) continue;
+
+      const geo::Point_t start = track->Start();
+      _tr_start_x.push_back(start.X());
+      _tr_start_y.push_back(start.Y());
+      _tr_start_z.push_back(start.Z());
+
+      const geo::Point_t end = track->End();
+      _tr_end_x.push_back(end.X());
+      _tr_end_y.push_back(end.Y());
+      _tr_end_z.push_back(end.Z());
+
+      const geo::Vector_t dir = track->Direction();
+      _tr_dir_x.push_back(dir.X());
+      _tr_dir_y.push_back(dir.Y());
+      _tr_dir_z.push_back(dir.Z());
+
+      _tr_ts0.push_back(track->Ts0());
+      _tr_ets0.push_back(track->Ts0Err());
+      _tr_ts1.push_back(track->Ts1());
+      _tr_ets1.push_back(track->Ts1Err());
+      _tr_pe.push_back(track->PE());
+      _tr_length.push_back(track->Length());
+      _tr_tof.push_back(track->ToF());
+      _tr_theta.push_back(TMath::RadToDeg() * track->Theta());
+      _tr_phi.push_back(TMath::RadToDeg() * track->Phi());
+      _tr_triple.push_back(track->Triple());
+
+      unsigned tag_i = 0;
+
+      for(auto const &tagger : track->Taggers())
+        {
+          if(tag_i == 0)
+            _tr_tagger1.push_back(tagger);
+          else if(tag_i == 1)
+            _tr_tagger2.push_back(tagger);
+          else if(tag_i == 2)
+            _tr_tagger3.push_back(tagger);
+
+          ++tag_i;
+        }
+    }
 }

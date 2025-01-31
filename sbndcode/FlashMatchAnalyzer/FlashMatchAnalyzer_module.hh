@@ -56,7 +56,22 @@
 #include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "lardataobj/AnalysisBase/ParticleID.h"
+#include "lardataobj/AnalysisBase/T0.h"
 
+
+#include "sbnobj/SBND/CRT/FEBData.hh"
+#include "sbnobj/SBND/CRT/CRTStripHit.hh"
+#include "sbnobj/SBND/CRT/CRTCluster.hh"
+#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+#include "sbnobj/SBND/CRT/CRTTrack.hh"
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
+#include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
+#include "sbndcode/Decoders/PTB/sbndptb.h"
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 #include "TTree.h"
 #include "TFile.h"
@@ -119,7 +134,7 @@ private:
   bool PointInFV(double x, double y, double z);
   void FillReco2(art::Event const& e, std::vector<art::Ptr<recob::PFParticle>> pfpVect, std::map<int, art::Ptr<recob::SpacePoint>> hitToSpacePointMap);
   void FillHits(int clusterId, std::vector<art::Ptr<recob::Hit>> hitVect, std::map<int, art::Ptr<recob::SpacePoint>> hitToSpacePointMap);
-
+  void AnalyseCRTTracks(const art::Event &, const std::vector<art::Ptr<sbnd::crt::CRTTrack>> &);
   std::string fMCTruthLabel;
   std::string fMCLabel;
   std::string fSimEnergyDepositLabel;
@@ -135,9 +150,11 @@ private:
   std::string fClusterLabel;
   std::string fSpacePointLabel;
   std::string fVertexLabel;
+  std::string fT0label;
   std::string fCalorimetryLabel;
   std::string fParticleIDLabel;  
   std::vector<std::string> fOpFlashesModuleLabel;
+  std::string fCRTTrackModuleLabel;
   bool fSaveReco2;
   bool fSaveTruth;
   bool fSaveSimED;
@@ -155,10 +172,14 @@ private:
   bool fSaveOpHits;
   bool fSaveOpFlashes;
   std::vector<double> fSaveFlashWindow;
-
+  std::vector<double> fSaveCRTWindow;
+  bool fSaveOnlyNeutrino;
+  bool fSaveCRTTracks;
+  bool fComputePMTRatio;
 
   TTree* fTree;
   TTree* fOpAnaTree;
+  TTree* fCRTTree;
   int fEventID, fRunID, fSubRunID;
 
   //True variables
@@ -248,6 +269,35 @@ private:
   std::vector<std::vector<double>> _flash_ophit_pe;
   std::vector<std::vector<int>> _flash_ophit_ch;
 
+  // PMT Ration variables
+  std::vector<double> fPEUncoated;
+  std::vector<double> fPECoated;
+  std::vector<double> fPMTRatioPE;
+
+  // CRT track variables 
+  std::vector<double>                _tr_start_x;
+  std::vector<double>                _tr_start_y;
+  std::vector<double>                _tr_start_z;
+  std::vector<double>                _tr_end_x;
+  std::vector<double>                _tr_end_y;
+  std::vector<double>                _tr_end_z;
+  std::vector<double>                _tr_dir_x;
+  std::vector<double>                _tr_dir_y;
+  std::vector<double>                _tr_dir_z;
+  std::vector<double>                _tr_ts0;
+  std::vector<double>                _tr_ets0;
+  std::vector<double>                _tr_ts1;
+  std::vector<double>                _tr_ets1;
+  std::vector<double>                _tr_pe;
+  std::vector<double>                _tr_length;
+  std::vector<double>                _tr_tof;
+  std::vector<double>                _tr_theta;
+  std::vector<double>                _tr_phi;
+  std::vector<bool>                  _tr_triple;
+  std::vector<int16_t>               _tr_tagger1;
+  std::vector<int16_t>               _tr_tagger2;
+  std::vector<int16_t>               _tr_tagger3;
+
   // Slice variables
   int fNSlices;
 
@@ -283,6 +333,7 @@ private:
   std::vector<std::vector<double>> fPFTrackStart;
   std::vector<std::vector<double>> fPFTrackEnd;
   std::vector<double> fPFPDGCode;
+  std::vector<double> fPFPT0;
 
   int fNAnalyzedEvents;
 
@@ -298,6 +349,8 @@ private:
   double fCos60;
   double fSin60;
   double fWirePitch;
+
+  opdet::sbndPDMapAlg fPDSMap;
 
 };
 
@@ -427,6 +480,7 @@ void test::FlashMatchAnalyzer::beginJob()
     fTree->Branch("PFTrackStart", &fPFTrackStart);
     fTree->Branch("PFTrackEnd", &fPFTrackEnd);
     fTree->Branch("PFPDGCode", &fPFPDGCode);
+    fTree->Branch("PFPT0", &fPFPT0);
   }
 
   fOpAnaTree = tfs->make<TTree>("OpAnaTree", "PDS Analysis Output Tree");
@@ -456,6 +510,40 @@ void test::FlashMatchAnalyzer::beginJob()
     fOpAnaTree->Branch("flash_ophit_width", "std::vector<std::vector<double>>", &_flash_ophit_width);
     fOpAnaTree->Branch("flash_ophit_pe", "std::vector<std::vector<double>>", &_flash_ophit_pe);
     fOpAnaTree->Branch("flash_ophit_ch", "std::vector<std::vector<int>>", &_flash_ophit_ch);
+    fOpAnaTree->Branch("PECoated", "std::vector<double>", &fPECoated);
+    fOpAnaTree->Branch("PEUncoated", "std::vector<double>", &fPEUncoated);
+    fOpAnaTree->Branch("PMTRatioPE","std::vector<double>", &fPMTRatioPE);
+  }
+
+  fCRTTree = tfs->make<TTree>("CRTTree", "CRT Analysis Output Tree");
+  fCRTTree->Branch("RunID", &fRunID, "RunID/I");
+  fCRTTree->Branch("SubRunID", &fSubRunID, "SubRunID/I");
+  fCRTTree->Branch("EventID", &fEventID, "EventID/I");
+  // CRT info
+  if(fSaveCRTTracks)
+  {
+    fCRTTree->Branch("tr_start_x", "std::vector<double>", &_tr_start_x);
+    fCRTTree->Branch("tr_start_y", "std::vector<double>", &_tr_start_y);
+    fCRTTree->Branch("tr_start_z", "std::vector<double>", &_tr_start_z);
+    fCRTTree->Branch("tr_end_x", "std::vector<double>", &_tr_end_x);
+    fCRTTree->Branch("tr_end_y", "std::vector<double>", &_tr_end_y);
+    fCRTTree->Branch("tr_end_z", "std::vector<double>", &_tr_end_z);
+    fCRTTree->Branch("tr_dir_x", "std::vector<double>", &_tr_dir_x);
+    fCRTTree->Branch("tr_dir_y", "std::vector<double>", &_tr_dir_y);
+    fCRTTree->Branch("tr_dir_z", "std::vector<double>", &_tr_dir_z);
+    fCRTTree->Branch("tr_ts0", "std::vector<double>", &_tr_ts0);
+    fCRTTree->Branch("tr_ets0", "std::vector<double>", &_tr_ets0);
+    fCRTTree->Branch("_trts1", "std::vector<double>", &_tr_ts1);
+    fCRTTree->Branch("tr_ets1", "std::vector<double>", &_tr_ets1);
+    fCRTTree->Branch("tr_pe", "std::vector<double>", &_tr_pe);
+    fCRTTree->Branch("tr_length", "std::vector<double>", &_tr_length);
+    fCRTTree->Branch("tr_tof", "std::vector<double>", &_tr_tof);
+    fCRTTree->Branch("tr_theta", "std::vector<double>", &_tr_theta);
+    fCRTTree->Branch("tr_phi", "std::vector<double>", &_tr_phi);
+    fCRTTree->Branch("tr_triple", "std::vector<bool>", &_tr_triple);
+    fCRTTree->Branch("tr_tagger1", "std::vector<int16_t>", &_tr_tagger1);
+    fCRTTree->Branch("tr_tagger2", "std::vector<int16_t>", &_tr_tagger2);
+    fCRTTree->Branch("tr_tagger3", "std::vector<int16_t>", &_tr_tagger3);
   }
 
   fNAnalyzedEvents=0;
