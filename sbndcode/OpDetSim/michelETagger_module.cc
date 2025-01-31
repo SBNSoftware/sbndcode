@@ -85,7 +85,7 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fMichelADCCutoff = p.get<double>("MichelADCCutoff", 100);
   fNsPerSample = p.get<int>("NsPerSample", 2);
   fBaseline = p.get<int>("Baseline", 0);
-  fMuonLifetimes = p.get<double>("MuonLifetimes", 2.5)
+  fMuonLifetimes = p.get<double>("MuonLifetimes", 2.5);
 }
 
 bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
