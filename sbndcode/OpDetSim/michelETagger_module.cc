@@ -43,7 +43,7 @@ public:
 
   // Required functions.
   bool filter(art::Event& e) override;
-  bool DoubleFlashCheck(std::vector<int> SummedVector);
+  bool DoubleFlashCheck(std::vector<double> SummedVector);
   void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
   std::vector<double> ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel);
 
@@ -58,6 +58,10 @@ private:
   int PMTPerBoard;
   std::string fCRTclusterLabel;
   std::string fPMTLabel;
+  double fMuonADCCutoff;
+  double fMichelADCCutoff;
+  int fNsPerSample;
+  int fBaseline;
   // Declare member data here.
 
 };
@@ -150,6 +154,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
 void michelETagger::ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, 
 std::vector<double> &SummedVector_TPC2, int &FlashCounter)
 {
+  int NumFlash = (waveHandle->size())/(PMTPerBoard*fTotalCAENBoards);
   //Loop over each CAEN
   for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
       {
@@ -176,7 +181,6 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
 
 std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel) {
     int KernelSize = Kernel.size();
-    double X = 0;
     if (KernelSize % 2 == 0) 
     {
         KernelSize = KernelSize + 1; // We are appending in a 0 point effectively
