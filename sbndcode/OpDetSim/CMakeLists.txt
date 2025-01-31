@@ -147,6 +147,7 @@ cet_build_plugin(PMTNoiseCounter art::module SOURCE PMTNoiseCounter_module.cc LI
 cet_build_plugin(FlashWithNeutrino art::module SOURCE FlashWithNeutrinoInTPC.cc LIBRARIES ${OTHER_LIBRARIES})
 cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_Summer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 
 install_headers()
