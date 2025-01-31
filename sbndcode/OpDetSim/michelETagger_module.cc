@@ -62,6 +62,7 @@ private:
   double fMichelADCCutoff;
   int fNsPerSample;
   int fBaseline;
+  double fMuonLifetimes;
   // Declare member data here.
 
 };
@@ -83,7 +84,8 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fMuonADCCutoff = p.get<double>("MuonADCCutoff", 1000.);
   fMichelADCCutoff = p.get<double>("MichelADCCutoff", 100);
   fNsPerSample = p.get<int>("NsPerSample", 2);
-  fBaseline = p.get<int>("fBaseline", 0);
+  fBaseline = p.get<int>("Baseline", 0);
+  fMuonLifetimes = p.get<double>("MuonLifetimes", 2.5)
 }
 
 bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
@@ -102,7 +104,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   
   //Construct the gaussian kernel
   std::vector<int> X(fGuassianConvlSize);
-  std::iota(X_indices.begin(), X_indices.end(), -int(fGuassianConvlSize/2)); // Indices
+  std::iota(X.begin(), X.end(), -int(fGuassianConvlSize/2)); // Indices
   std::vector<double> GaussianKernel(fGuassianConvlSize);
   for(int i=0; i<fGuassianConvlSize; i++)
   {
