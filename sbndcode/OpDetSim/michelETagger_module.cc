@@ -44,7 +44,7 @@ public:
   // Required functions.
   bool filter(art::Event& e) override;
   bool DoubleFlashCheck(std::vector<int> SummedVector);
-  void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, *std::vector<double> SummedVector_TPC1,std::vector<double> SummedVector_TPC2, int FlashCounter);
+  void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
   std::vector<double> ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel);
 
 
@@ -76,9 +76,13 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   PMTPerBoard = p.get<int>("PMTPerBoard", 15);
   fCRTclusterLabel = p.get<std::string>("CRTclusterLabel");
   fPMTLabel = p.get<std::string>("PMTLabel");
+  fMuonADCCutoff = p.get<double>("MuonADCCutoff", 1000.);
+  fMichelADCCutoff = p.get<double>("MichelADCCutoff", 100);
+  fNsPerSample = p.get<int>("NsPerSample", 2);
+  fBaseline = p.get<int>("fBaseline", 0);
 }
 
-bool michelETagger::DoubleFlashCheck(std::vector<int> SummedVector)
+bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
 {
   //Baseline subtracted summed waveform for a give TPC is available
   //Check for at least two big excursions from baseline
@@ -143,8 +147,8 @@ bool michelETagger::DoubleFlashCheck(std::vector<int> SummedVector)
 }
 
 //This should really be done by TPC
-void michelETagger::ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, *std::vector<double> SummedVector_TPC1, 
-*std::vector<double> SummedVector_TPC2, int FlashCounter)
+void michelETagger::ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, 
+std::vector<double> &SummedVector_TPC2, int &FlashCounter)
 {
   //Loop over each CAEN
   for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
@@ -161,8 +165,8 @@ void michelETagger::ConstructSummedWaveform(art::Handle< std::vector< raw::OpDet
             for(int Sample=0; Sample<int(wvf.size()); Sample++)
             {
               int Baseline = fBaseline; //Fixed fcl baseline for use with either decoded or deconvolved waveforms
-              if( pdMap.pdTPC(wvf.Channel) == 0 ) SummedVector_TPC1[Sample] = wvf[Sample] - Baseline; //Update summed vector
-              else if( pdMap.pdTPC(wvf.Channel) == 1 ) SummedVector_TPC2[Sample] = wvf[Sample] - Baseline; //Update summed vector
+              if( pdMap.pdTPC(wvf.ChannelNumber()) == 0 ) SummedVector_TPC1[Sample] = wvf[Sample] - Baseline; //Update summed vector
+              else if( pdMap.pdTPC(wvf.ChannelNumber()) == 1 ) SummedVector_TPC2[Sample] = wvf[Sample] - Baseline; //Update summed vector
             }
           }
       } // Finish loop over all waveforms in this flash and Summed vector for each TPC is ready for use in Analyze
@@ -242,7 +246,7 @@ bool michelETagger::filter(art::Event& e)
   //Could instead use deconvolved waveforms if they are ready enough. Might give better performance
   //Plus we have to go through reco1 already so no real processing overhead associated with that choice
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
-  e.getByLabel(fPMTLabel,ptbHandle);
+  e.getByLabel(fPMTLabel,waveHandle);
   //Loop over OpDetWaveforms and check for double peak signature
   int TotalFlash =  waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
   bool MichelFound=false;
@@ -265,7 +269,7 @@ bool michelETagger::filter(art::Event& e)
       //Loop over crt clusters to check for good time with this opDetWaveform
       for(int ClustID; ClustID<int(crtClusterHandle->size()); ClustID++)
       {
-        double CRTTimeStamp = (*crtClusterHandle)[ClustID].fTs0;
+        double CRTTimeStamp = (*crtClusterHandle)[ClustID].Ts0();
         double TDiff = (currentTimeStamp-CRTTimeStamp); //CRT should be slightly early so this is a little positive
         if(TDiff>0 && TDiff<=fCoincidentWindow) CoincidentCRT=true;
         if(TDiff > fCoincidentWindow) break; // stop looping over later clusters than this flash
