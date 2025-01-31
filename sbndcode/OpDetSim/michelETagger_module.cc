@@ -17,6 +17,13 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "lardataobj/RawData/OpDetWaveform.h"
+#include "sbnobj/SBND/CRT/CRTCluster.hh"
+
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
+
 #include <memory>
 
 class michelETagger;
@@ -36,6 +43,11 @@ public:
 
   // Required functions.
   bool filter(art::Event& e) override;
+  bool DoubleFlashCheck(std::vector<int> SummedVector);
+  void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, *std::vector<double> SummedVector_TPC1,std::vector<double> SummedVector_TPC2, int FlashCounter);
+  std::vector<double> ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel);
+
+
 
 private:
   opdet::sbndPDMapAlg pdMap; //map for photon detector types
