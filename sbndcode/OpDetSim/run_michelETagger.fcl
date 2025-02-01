@@ -1,0 +1,39 @@
+#include "michelETagger_Defaults.fcl"
+
+process_name: michelETagger
+
+
+# Source is an art-ROOT file containing CAEN waveforms for each beam spill
+source: {
+  module_type: RootInput
+}
+
+services: 
+{
+}
+
+
+# Define and schedule filter/producer/analyzers
+physics:{
+
+  filters:{
+    michelTagger: @local::MichelETagger
+  }
+  reco: [ ]
+
+  pass: [MichelEvents]
+  ana:            [ michelTagger]
+  stream1: [MichelEventsFound]
+  end_paths: [stream1]
+  ana:            [ michelTagger ]
+}
+
+outputs:
+{
+  MichelEventsFound:
+  {
+    module_type: RootOutput
+    fileName: "MichelFound.root"
+    SelectEvents: [pass]
+  }
+}
