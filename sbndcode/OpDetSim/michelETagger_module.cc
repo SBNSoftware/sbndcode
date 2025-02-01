@@ -227,7 +227,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
         {
-            PointSum += Waveform[i - Index] * Kernel[KernelSize + Index];
+            PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
     }
