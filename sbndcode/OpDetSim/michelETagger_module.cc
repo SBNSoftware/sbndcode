@@ -203,6 +203,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize/2); // Indices
     // Now do the convolution
     std::vector<double> Out(Waveform.size(), 0);
+    std::cout << " generated a new out vector " << std::endl;
     for (int i = KernelSize/2; i < int(Waveform.size()) - (KernelSize)/2; i++) 
     {
         double PointSum = 0;
