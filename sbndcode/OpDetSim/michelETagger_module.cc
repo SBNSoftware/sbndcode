@@ -185,7 +185,7 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
 
 
 std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel) {
-    int KernelSize = .size();
+    int KernelSize = Kernel.size();
     if(KernelSize%2==0)
     {
       //Insert a value at the mid point that averages the closest two values
