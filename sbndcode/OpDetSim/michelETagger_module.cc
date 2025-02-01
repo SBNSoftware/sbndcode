@@ -212,6 +212,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         }
         Out[i] = PointSum;
     }
+    std::cout << " doing edges " << std::endl;
     // Handle edges properly
     for (int i = 0; i < KernelSize/2; i++) 
     {
@@ -222,11 +223,14 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         }
         Out[i] = PointSum;
     }
+    std::cout << " Later end " << std::endl;
     for (int i = int(Waveform.size()) - (KernelSize/2); i < int(Waveform.size()); i++) 
     {
+      std::cout << i << std::endl;
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
         {
+          std::cout << " KernelSize/2 + Index " << KernelSize/2 + Index << " i - Index " << i - Index << std::endl;
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
