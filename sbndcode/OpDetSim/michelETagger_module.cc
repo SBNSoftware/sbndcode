@@ -207,7 +207,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         Out[i] = PointSum;
     }
     // Handle edges properly
-    for (int i = 0; i <= KernelSize; i++) 
+    for (int i = 0; i < KernelSize; i++) 
     {
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - i, X_indices.end())) 
