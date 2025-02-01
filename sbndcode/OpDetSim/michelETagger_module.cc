@@ -200,8 +200,11 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
     }
     std::cout << "kernel size " << KernelSize << std::endl;
     std::vector<int> X_indices(KernelSize);
+    std::cout << "X_indices is made " << std::endl;
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize/2); // Indices
+    std::cout << "X_indices is filled in  " << std::endl;
     // Now do the convolution
+    std::cout << "Just making out vector  " << std::endl;
     std::vector<double> Out(Waveform.size(), 0);
     std::cout << " generated a new out vector " << std::endl;
     for (int i = KernelSize/2; i < int(Waveform.size()) - (KernelSize)/2; i++) 
