@@ -103,6 +103,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   //We will grab the two largest peaks and make a decision on Michel-ness based on delta T and overall flash sizes
   
   //Construct the gaussian kernel
+  bool DoubleFlash=false;
   std::vector<int> X(fGuassianConvlSize);
   std::iota(X.begin(), X.end(), -int(fGuassianConvlSize/2)); // Indices
   std::vector<double> GaussianKernel(fGuassianConvlSize);
@@ -149,7 +150,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   double MuonLifetime = 2197; // 2197 ns mu+ lifetime;   616 mu- ns lifetime; These are all timeconstants not t1/2
   bool GoodLifetime = TimeToMichel < fMuonLifetimes*MuonLifetime;
 
-  bool DoubleFlash = MichelFollowsMuon && BigEnoughMuonFlash && BigEnoughMichelFlash && GoodLifetime;
+  DoubleFlash = MichelFollowsMuon && BigEnoughMuonFlash && BigEnoughMichelFlash && GoodLifetime;
   return DoubleFlash;
 }
 
