@@ -201,7 +201,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize); // Indices
     // Now do the convolution
     std::vector<double> Out(Waveform.size());
-    for (int i = KernelSize + 1; i < int(Waveform.size()) - (KernelSize + 1); i++) 
+    for (int i = KernelSize + 1; i <= int(Waveform.size()) - (KernelSize + 1); i++) 
     {
         double PointSum = 0;
         for (int Index : X_indices) 
@@ -220,7 +220,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         }
         Out[i] = PointSum;
     }
-    for (int i = int(Waveform.size()) - (KernelSize + 1); i < int(Waveform.size()); i++) 
+    for (int i = int(Waveform.size()) - (KernelSize); i < int(Waveform.size()); i++) 
     {
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
