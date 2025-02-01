@@ -125,6 +125,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   std::cout << "looking over edge waveform and smoothed waveform" << std::endl;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
   {
+    std::cout << " i " << i << " edge waveform at i " << EdgeWaveform[i] << std::endl;
     if(EdgeWaveform[i-1]>0 && EdgeWaveform[i]<0)
     {
       CrossingIndecies.push_back(i);
