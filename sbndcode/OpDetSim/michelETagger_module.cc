@@ -229,6 +229,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         }
         Out[i] = PointSum;
     }
+    std::cout << " returning out now " << std::endl;
     return Out;
 }
 
