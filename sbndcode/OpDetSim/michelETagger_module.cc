@@ -115,8 +115,10 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   std::cout << " make gaussian kernel. Time to convolve " << std::endl;
   auto SmoothedWaveform = ConvolveWithAnyKernel(SummedVector, GaussianKernel);
   //Make edge detection kernel
+  std::cout << "Done with gaussian" << std::endl;
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
   //Do edge detection on waveform 
+  std::cout << "About to do edge detection" << std::endl;
   auto EdgeWaveform =ConvolveWithAnyKernel(EdgeDetectionKernel, GaussianKernel); //Summed vector passed by reference and modified
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
@@ -204,7 +206,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         double PointSum = 0;
         for (int Index : X_indices) 
         {
-          std::cout << "Waveform Index " <<  i - Index << "  Kernel index " << KernelSize + Index << std::endl;
+          std::cout << "Middle boys: Waveform Index " <<  i - Index << "  Kernel index " << KernelSize + Index << std::endl;
             PointSum += Waveform[i - Index] * Kernel[KernelSize + Index];
         }
         Out[i] = PointSum;
@@ -215,7 +217,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - i, X_indices.end())) 
         {
-          std::cout << "Waveform Index " <<  i - Index << "  Kernel index " << KernelSize + Index << std::endl;
+          std::cout << "Start boys: Waveform Index " <<  i - Index << "  Kernel index " << KernelSize + Index << std::endl;
             PointSum += Waveform[i - Index] * Kernel[KernelSize + Index];
         }
         Out[i] = PointSum;
@@ -225,11 +227,12 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (i - Waveform.size()), X_indices.end())) 
         {
-          std::cout << "Waveform Index " <<  i - Index << "  Kernel index " << KernelSize + Index << std::endl;
+          std::cout << "End boys: Waveform Index " <<  i - Index << "  Kernel index " << KernelSize + Index << std::endl;
             PointSum += Waveform[i - Index] * Kernel[KernelSize + Index];
         }
         Out[i] = PointSum;
     }
+    std::cout << "Trying to return out now" << std::endl;
     return Out;
 }
 
