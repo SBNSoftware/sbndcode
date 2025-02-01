@@ -199,7 +199,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
       KernelSize=KernelSize+1;
     }
     std::vector<int> X_indices(KernelSize);
-    std::iota(X_indices.begin(), X_indices.end(), -KernelSize); // Indices
+    std::iota(X_indices.begin(), X_indices.end(), -KernelSize/2); // Indices
     // Now do the convolution
     std::vector<double> Out(Waveform.size(), 0);
     for (int i = KernelSize + 1; i <= int(Waveform.size()) - (KernelSize + 1); i++) 
