@@ -106,7 +106,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   bool DoubleFlash=false;
   std::vector<int> X(fGuassianConvlSize);
   std::iota(X.begin(), X.end(), -int(fGuassianConvlSize/2)); // Indices
-  std::vector<double> GaussianKernel(fGuassianConvlSize);
+  std::vector<double> GaussianKernel(fGuassianConvlSize, 0);
   for(int i=0; i<fGuassianConvlSize; i++)
   {
     GaussianKernel[i] = 1/TMath::Sqrt(2*TMath::Pi() * TMath::Power(double(fGaussianConvlWidth), 2.0) )*TMath::Exp( - TMath::Power(double(X[i]), 2.0) / (2*TMath::Power(double(fGaussianConvlWidth), 2.0)) );
@@ -114,6 +114,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   //Do convolution to smooth the waveform
   std::cout<<"doing Gauss Smooth " << std::endl;
   auto SmoothedWaveform = ConvolveWithAnyKernel(SummedVector, GaussianKernel);
+  std::cout << SmoothedWaveform.size() << "  " << SmoothedWaveform[0] << "  " << SmoothedWaveform[1] << std::endl;
   //Make edge detection kernel
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
   //Do edge detection on waveform 
@@ -200,7 +201,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
     std::vector<int> X_indices(KernelSize);
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize); // Indices
     // Now do the convolution
-    std::vector<double> Out(Waveform.size());
+    std::vector<double> Out(Waveform.size(), 0);
     for (int i = KernelSize + 1; i <= int(Waveform.size()) - (KernelSize + 1); i++) 
     {
         double PointSum = 0;
