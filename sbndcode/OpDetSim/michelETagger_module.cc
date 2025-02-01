@@ -201,32 +201,28 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
     std::cout << "kernel size " << KernelSize << std::endl;
     std::vector<int> X_indices(KernelSize);
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize/2); // Indices
-    for(int i=0; i<KernelSize; i++)
-    {
-      std::cout << " X " << X_indices[i] << " at " << i << std::endl;
-    }
     // Now do the convolution
     std::vector<double> Out(Waveform.size(), 0);
-    for (int i = KernelSize + 1; i <= int(Waveform.size()) - (KernelSize + 1); i++) 
+    for (int i = KernelSize/2; i < int(Waveform.size()) - (KernelSize)/2; i++) 
     {
         double PointSum = 0;
         for (int Index : X_indices) 
         {
-            PointSum += Waveform[i - Index] * Kernel[KernelSize + Index];
+            PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
     }
     // Handle edges properly
-    for (int i = 0; i < KernelSize; i++) 
+    for (int i = 0; i < KernelSize/2; i++) 
     {
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - i, X_indices.end()) ) 
         {
-            PointSum += Waveform[i - Index] * Kernel[KernelSize + Index];
+            PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
     }
-    for (int i = int(Waveform.size()) - (KernelSize); i < int(Waveform.size()); i++) 
+    for (int i = int(Waveform.size()) - (KernelSize/2); i < int(Waveform.size()); i++) 
     {
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
