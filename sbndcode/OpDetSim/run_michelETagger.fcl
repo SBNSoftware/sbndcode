@@ -21,7 +21,7 @@ physics:{
   }
   reco: [ ]
 
-  pass: [MichelEvents]
+  pass: [michelTagger]
   ana:            [ michelTagger]
   stream1: [MichelEventsFound]
   end_paths: [stream1]
