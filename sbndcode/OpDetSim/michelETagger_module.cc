@@ -106,31 +106,29 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   std::vector<int> X(fGuassianConvlSize);
   std::iota(X.begin(), X.end(), -int(fGuassianConvlSize/2)); // Indices
   std::vector<double> GaussianKernel(fGuassianConvlSize);
-  std::cout << " making gaussian kernel " << std::endl;
   for(int i=0; i<fGuassianConvlSize; i++)
   {
     GaussianKernel[i] = 1/TMath::Sqrt(2*TMath::Pi() * TMath::Power(double(fGaussianConvlWidth), 2.0) )*TMath::Exp( - TMath::Power(double(X[i]), 2.0) / (2*TMath::Power(double(fGaussianConvlWidth), 2.0)) );
   }
   //Do convolution to smooth the waveform
-  std::cout << " make gaussian kernel. Time to convolve " << std::endl;
   auto SmoothedWaveform = ConvolveWithAnyKernel(SummedVector, GaussianKernel);
   //Make edge detection kernel
-  std::cout << "Done with gaussian" << std::endl;
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
   //Do edge detection on waveform 
-  std::cout << "About to do edge detection" << std::endl;
   auto EdgeWaveform =ConvolveWithAnyKernel(SummedVector, EdgeDetectionKernel); //Summed vector passed by reference and modified
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
   std::vector<int> SmoothedValueAtIndex;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
   {
-    if(EdgeWaveform[i-1]>0 && EdgeWaveform[i-1]<0)
+    if(EdgeWaveform[i-1]>0 && EdgeWaveform[i]<0)
     {
       CrossingIndecies.push_back(i);
       SmoothedValueAtIndex.push_back(SmoothedWaveform[i]);
     }
   }
+  if(int(CrossingIndecies.size())<2) return DoubleFlash; // else we have enough indecies
+  //May want to add some histogram saving of summed waveforms, smoothed, edge, etc to check on algorithm
   //Now take the two largest smoothed values with a crossing index
   //Lambda function notes for future reference
   //[&] captures used variables by reference
@@ -140,7 +138,6 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   //So the first entry is the one that always returns greater
   std::sort(CrossingIndecies.begin(), CrossingIndecies.end(), 
   [&](int Index_1, int Index_2)->bool { return SmoothedWaveform[Index_1] > SmoothedWaveform[Index_2]; } ); //sorts index from max to min
-
   //Now we can apply the actual waveform selection we want
   //Michel e- has the second largest peak follow the largest
   bool MichelFollowsMuon = (CrossingIndecies[0] < CrossingIndecies[1] );
@@ -181,7 +178,6 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
             }
           }
       } // Finish loop over all waveforms in this flash and Summed vector for each TPC is ready for use in Analyze
-      std::cout << "finished making summed waveforms " << std::endl;
 
 }
 
@@ -195,9 +191,7 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
       Kernel.insert(Kernel.begin()+KernelSize/2, NewVal);
       KernelSize=KernelSize+1;
     }
-    std::cout << " kernel size " <<  KernelSize << std::endl;
     std::vector<int> X_indices(KernelSize);
-    std::cout << "Generated X " << std::endl;
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize); // Indices
     // Now do the convolution
     std::vector<double> Out(Waveform.size());
@@ -222,7 +216,6 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
     }
     for (int i = int(Waveform.size()) - (KernelSize); i < int(Waveform.size()); i++) 
     {
-        std::cout << " on waveform index " << i << std::endl;
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
         {
@@ -230,7 +223,6 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         }
         Out[i] = PointSum;
     }
-    std::cout << " returning out now " << std::endl;
     return Out;
 }
 
