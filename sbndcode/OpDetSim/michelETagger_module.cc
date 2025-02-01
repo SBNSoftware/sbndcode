@@ -106,11 +106,13 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   std::vector<int> X(fGuassianConvlSize);
   std::iota(X.begin(), X.end(), -int(fGuassianConvlSize/2)); // Indices
   std::vector<double> GaussianKernel(fGuassianConvlSize);
+  std::cout << " making gaussian kernel " << std::endl;
   for(int i=0; i<fGuassianConvlSize; i++)
   {
     GaussianKernel[i] = 1/TMath::Sqrt(2*TMath::Pi() * TMath::Power(double(fGaussianConvlWidth), 2.0) )*TMath::Exp( - TMath::Power(double(X[i]), 2.0) / (2*TMath::Power(double(fGaussianConvlWidth), 2.0)) );
   }
   //Do convolution to smooth the waveform
+  std::cout << " make gaussian kernel. Time to convolve " << std::endl;
   auto SmoothedWaveform = ConvolveWithAnyKernel(SummedVector, GaussianKernel);
   //Make edge detection kernel
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
@@ -177,36 +179,21 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
             }
           }
       } // Finish loop over all waveforms in this flash and Summed vector for each TPC is ready for use in Analyze
+      std::cout << "finished making summed waveforms " << std::endl;
 
 }
 
 
 std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel) {
-    int KernelSize = Kernel.size();
-    if (KernelSize % 2 == 0) 
+    int KernelSize = .size();
+    if(KernelSize%2==0)
     {
-        KernelSize = KernelSize + 1; // We are appending in a 0 point effectively
-        KernelSize = KernelSize / 2;
+      //Insert a value at the mid point that averages the closest two values
+      double NewVal = (Kernel[KernelSize/2] + Kernel[KernelSize/2+1])/2;
+      Kernel.insert(Kernel.begin()+KernelSize/2, NewVal);
+      KernelSize=KernelSize+1;
     }
-    else 
-    {
-        KernelSize = KernelSize / 2;
-    }
-    std::vector<double> _Kernel(Kernel.size() + 1, 0);
-    if(KernelSize % 2 == 0)
-    {
-        for (int i = 0; i < int(Kernel.size()) / 2; i++) 
-        {
-            _Kernel[i] = Kernel[i];
-        }
-        _Kernel[Kernel.size() / 2] = (Kernel[Kernel.size() / 2 - 1] + Kernel[Kernel.size() / 2]) / 2;
-        for (int i = Kernel.size() / 2 + 1; i < int(_Kernel.size()); i++) 
-        {
-            _Kernel[i] = Kernel[i - 1];
-        }
-        Kernel=_Kernel;
-    }
-    std::vector<int> X_indices(KernelSize * 2 + 1);
+    std::vector<int> X_indices(KernelSize);
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize); // Indices
     // Now do the convolution
     std::vector<double> Out(Waveform.size());
@@ -253,9 +240,11 @@ bool michelETagger::filter(art::Event& e)
   //Plus we have to go through reco1 already so no real processing overhead associated with that choice
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
   e.getByLabel(fPMTLabel,waveHandle);
+  std::cout << " got my clusters and waveforms " << std::endl;
   //Loop over OpDetWaveforms and check for double peak signature
   int TotalFlash =  waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
   bool MichelFound=false;
+  std::cout << "this event has " << TotalFlash << " flashes " << std::endl;
   for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
   {
     int WaveIndex = FlashCounter*PMTPerBoard;
@@ -263,6 +252,7 @@ bool michelETagger::filter(art::Event& e)
     double currentTimeStamp = (*waveHandle)[WaveIndex].TimeStamp(); 
     //Get size of this waveform to build a summed waveform vector
     int FlashSamples = int((*waveHandle)[WaveIndex].size()); 
+    std::cout << " flash " << FlashCounter << " has " << FlashSamples << " samples" << std::endl;
     std::vector<double> SummedWaveform_TPC1(FlashSamples);
     std::vector<double> SummedWaveform_TPC2(FlashSamples);
     ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
