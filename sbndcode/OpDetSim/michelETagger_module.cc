@@ -43,7 +43,7 @@ public:
 
   // Required functions.
   bool filter(art::Event& e) override;
-  bool DoubleFlashCheck(std::vector<double> SummedVector);
+  bool DoubleFlashCheck(std::vector<double> &SummedVector);
   void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
   void ConvolveWithAnyKernel(std::vector<double> &Waveform, std::vector<double> &Kernel, std::vector<double> &Out);
 
@@ -88,7 +88,7 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fMuonLifetimes = p.get<double>("MuonLifetimes", 2.5);
 }
 
-bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
+bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
 {
   //Baseline subtracted summed waveform for a give TPC is available
   //Check for at least two big excursions from baseline
