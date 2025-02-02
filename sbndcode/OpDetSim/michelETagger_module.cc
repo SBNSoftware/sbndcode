@@ -116,9 +116,9 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
   std::vector<double> SmoothedWaveform(SummedVector.size());
   std::vector<double> EdgeWaveform(SummedVector.size());
-  ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
+  //ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
   //Do edge detection on waveform 
-  ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
+  //ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
@@ -269,7 +269,7 @@ bool michelETagger::filter(art::Event& e)
     std::cout << " flash " << FlashCounter << " has " << FlashSamples << " samples" << std::endl;
     std::vector<double> SummedWaveform_TPC1(FlashSamples);
     std::vector<double> SummedWaveform_TPC2(FlashSamples);
-    ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
+    //ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
     //Check for double flash in each TPC
     bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1 );
     std::cout << " Done checking for double flash in tpc 1" << std::endl;
