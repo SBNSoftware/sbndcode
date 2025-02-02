@@ -192,6 +192,7 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
 
 
 void michelETagger::ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel, std::vector<double> &Out) {
+    std::cout << " in problematic function " << std::endl;
     int KernelSize = Kernel.size();
     if(KernelSize%2==0)
     {
@@ -200,10 +201,11 @@ void michelETagger::ConvolveWithAnyKernel(const std::vector<double> Waveform, st
       Kernel.insert(Kernel.begin()+KernelSize/2, NewVal);
       KernelSize=KernelSize+1;
     }
+    std::cout << " Making X indecies " << std::endl;
     std::vector<int> X_indices(KernelSize);
-    std::cout << "Mid samples" << std::endl;
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize/2); // Indices
     // Now do the convolution
+    std::cout << "Mid samples" << std::endl;
     for (int i = KernelSize/2; i < int(Waveform.size()) - (KernelSize)/2; i++) 
     {
         std::cout << "Samples " << i << std::endl;
