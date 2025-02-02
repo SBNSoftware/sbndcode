@@ -45,7 +45,7 @@ public:
   bool filter(art::Event& e) override;
   bool DoubleFlashCheck(std::vector<double> SummedVector);
   void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
-  void ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel, std::vector<double> &Out);
+  void ConvolveWithAnyKernel(std::vector<double> &Waveform, std::vector<double> &Kernel, std::vector<double> &Out);
 
 
 
@@ -191,7 +191,7 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
 }
 
 
-void michelETagger::ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel, std::vector<double> &Out) {
+void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::vector<double> &Kernel, std::vector<double> &Out) {
     std::cout << " in problematic function " << std::endl;
     int KernelSize = Kernel.size();
     if(KernelSize%2==0)
