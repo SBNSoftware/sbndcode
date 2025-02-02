@@ -130,6 +130,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   }
   //Add saving for each analysis step
   //Will format histogram names as event_N_Flash_Y_Step_Name_TPC_Z
+  return DoubleFlash;
   if(int(CrossingIndecies.size())<2) return DoubleFlash; // else we have enough indecies
   //May want to add some histogram saving of summed waveforms, smoothed, edge, etc to check on algorithm
   //Now take the two largest smoothed values with a crossing index
@@ -139,27 +140,19 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   //-> bool lets me define the type of the return 
   //Body compares values and returns true when something is greater than other
   //So the first entry is the one that always returns greater
-  std::cout << " doing sort " << std::endl;
   std::sort(CrossingIndecies.begin(), CrossingIndecies.end(), 
   [&](int Index_1, int Index_2)->bool { return SmoothedWaveform[Index_1] > SmoothedWaveform[Index_2]; } ); //sorts index from max to min
-  std::cout << " Done sort " << std::endl;
   //Now we can apply the actual waveform selection we want
   //Michel e- has the second largest peak follow the largest
   bool MichelFollowsMuon = (CrossingIndecies[0] < CrossingIndecies[1] );
-  std::cout << " Order check done" << std::endl;
   //Require that both muon and michel are large enough
   bool BigEnoughMuonFlash = SmoothedWaveform[CrossingIndecies[0]] >= fMuonADCCutoff;
-  std::cout << " Big flash 1" << std::endl;
   bool BigEnoughMichelFlash = SmoothedWaveform[CrossingIndecies[1]] >= fMichelADCCutoff;
-  std::cout << " Big Flash 2" << std::endl;
   //Finally require the Muon lifetime is approximately correct
-  std::cout << " Start life check" << std::endl;
   double TimeToMichel = (CrossingIndecies[1]-CrossingIndecies[0])*fNsPerSample;
   double MuonLifetime = 2197; // 2197 ns mu+ lifetime;   616 mu- ns lifetime; These are all timeconstants not t1/2
   bool GoodLifetime = TimeToMichel < (fMuonLifetimes*MuonLifetime);
-  std::cout << " done life check" << std::endl;
   DoubleFlash = MichelFollowsMuon && BigEnoughMuonFlash && BigEnoughMichelFlash && GoodLifetime;
-  std:: cout << "about to return " << DoubleFlash << std::endl;
   return DoubleFlash;
 }
 
