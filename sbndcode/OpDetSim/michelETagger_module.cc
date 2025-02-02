@@ -106,19 +106,20 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   bool DoubleFlash=false;
   std::vector<int> X(fGuassianConvlSize);
   std::iota(X.begin(), X.end(), -int(fGuassianConvlSize/2)); // Indices
-  std::vector<double> GaussianKernel(fGuassianConvlSize, 0);
+  std::vector<double> GaussianKernel(fGuassianConvlSize);
   for(int i=0; i<fGuassianConvlSize; i++)
   {
     GaussianKernel[i] = 1/TMath::Sqrt(2*TMath::Pi() * TMath::Power(double(fGaussianConvlWidth), 2.0) )*TMath::Exp( - TMath::Power(double(X[i]), 2.0) / (2*TMath::Power(double(fGaussianConvlWidth), 2.0)) );
   }
   //Do convolution to smooth the waveform
-  std::vector<double> SmoothedWaveform(SummedVector.size());
-  std::vector<double> EdgeWaveform(SummedVector.size());
-  //ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
   //Make edge detection kernel
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
+  std::vector<double> SmoothedWaveform(SummedVector.size());
+  std::vector<double> EdgeWaveform(SummedVector.size());
+  return DoubleFlash;
+  ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
   //Do edge detection on waveform 
-  //ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
+  ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
