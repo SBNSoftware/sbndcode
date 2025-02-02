@@ -120,7 +120,6 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   //Do edge detection on waveform 
   ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
   //Apply selection cuts to our edge detection waveform 
-  return DoubleFlash;
   std::vector<int> CrossingIndecies;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
   {
@@ -202,6 +201,11 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         double PointSum = 0;
         for (int Index : X_indices) 
         {
+            if( ((i - Index) >= Waveform.size()) || ((KernelSize/2 + Index) >= Kernel.size()) )
+            {
+              std::cout << "Middle guys gives me a seg fault " << i-Index << " of " << Waveform.size() << "  "  << KernelSize/2 + Index << " of " << Kernel.size() << std::endl;
+              std::cout << " i " << i << " index " << Index << std::endl;
+            }
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
@@ -212,6 +216,11 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - i, X_indices.end()) ) 
         {
+            if( ((i - Index) >= Waveform.size()) || ((KernelSize/2 + Index) >= Kernel.size()) )
+            {
+              std::cout << "Start guys gives me a seg fault " << i-Index << " of " << Waveform.size() << "  "  << KernelSize/2 + Index << " of " << Kernel.size() << std::endl;
+              std::cout << " i " << i << " index " << Index << std::endl;
+            }
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
@@ -221,6 +230,11 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
         {
+          if( ((i - Index) >= Waveform.size()) || ((KernelSize/2 + Index) >= Kernel.size()) )
+            {
+              std::cout << "End guys gives me a seg fault " << i-Index << " of " << Waveform.size() << "  "  << KernelSize/2 + Index << " of " << Kernel.size() << std::endl;
+              std::cout << " i " << i << " index " << Index << std::endl;
+            }
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
