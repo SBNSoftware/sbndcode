@@ -201,7 +201,8 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         double PointSum = 0;
         for (int Index : X_indices) 
         {
-            if( ((i - Index) >= int(Waveform.size())) || ((KernelSize/2 + Index) >= int(Kernel.size())) )
+            if( ((i - Index) >= int(Waveform.size())) || ((KernelSize/2 + Index) >= int(Kernel.size())) 
+            || (i-Index)<0 || KernelSize/2 + Index < 0)
             {
               std::cout << "Middle guys gives me a seg fault " << i-Index << " of " << Waveform.size() << "  "  << KernelSize/2 + Index << " of " << Kernel.size() << std::endl;
               std::cout << " i " << i << " index " << Index << std::endl;
@@ -216,7 +217,8 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - i, X_indices.end()) ) 
         {
-            if( ((i - Index) >= int(Waveform.size())) || ((KernelSize/2 + Index) >= int(Kernel.size())) )
+            if( ((i - Index) >= int(Waveform.size())) || ((KernelSize/2 + Index) >= int(Kernel.size())) 
+            || (i-Index)<0 || KernelSize/2 + Index < 0 )
             {
               std::cout << "Start guys gives me a seg fault " << i-Index << " of " << Waveform.size() << "  "  << KernelSize/2 + Index << " of " << Kernel.size() << std::endl;
               std::cout << " i " << i << " index " << Index << std::endl;
@@ -230,7 +232,8 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
         {
-          if( ((i - Index) >= int(Waveform.size())) || ((KernelSize/2 + Index) >= int(Kernel.size())) )
+          if( ((i - Index) >= int(Waveform.size())) || ((KernelSize/2 + Index) >= int(Kernel.size())) 
+            || (i-Index)<0 || KernelSize/2 + Index < 0)
             {
               std::cout << "End guys gives me a seg fault " << i-Index << " of " << Waveform.size() << "  "  << KernelSize/2 + Index << " of " << Kernel.size() << std::endl;
               std::cout << " i " << i << " index " << Index << std::endl;
