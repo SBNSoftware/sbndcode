@@ -114,13 +114,13 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   //Do convolution to smooth the waveform
   //Make edge detection kernel
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
-    return DoubleFlash;
   std::vector<double> SmoothedWaveform(SummedVector.size());
   std::vector<double> EdgeWaveform(SummedVector.size());
   ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
   //Do edge detection on waveform 
   ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
   //Apply selection cuts to our edge detection waveform 
+  return DoubleFlash;
   std::vector<int> CrossingIndecies;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
   {
