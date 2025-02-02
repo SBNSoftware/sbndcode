@@ -45,7 +45,7 @@ public:
   bool filter(art::Event& e) override;
   bool DoubleFlashCheck(std::vector<double> SummedVector);
   void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
-  void ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel);
+  void ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel, std::vector<double> &Out);
 
 
 
