@@ -104,6 +104,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   
   //Construct the gaussian kernel
   bool DoubleFlash=false;
+  return DoubleFlash;
   std::vector<int> X(fGuassianConvlSize);
   std::iota(X.begin(), X.end(), -int(fGuassianConvlSize/2)); // Indices
   std::vector<double> GaussianKernel(fGuassianConvlSize);
@@ -116,7 +117,6 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
   std::vector<double> SmoothedWaveform(SummedVector.size());
   std::vector<double> EdgeWaveform(SummedVector.size());
-  return DoubleFlash;
   ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
   //Do edge detection on waveform 
   ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
