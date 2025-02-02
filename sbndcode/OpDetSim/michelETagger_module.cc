@@ -128,6 +128,9 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   std::cout << "looking over edge waveform and smoothed waveform" << std::endl;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
   {
+    std::cout << "on index " << i << std::endl;
+    std::cout << " edge waveform " << EdgeWaveform[i] << std::endl;
+    std::cout << " Smoothed waveform " << SmoothedWaveform[i] << std::endl;
     if(EdgeWaveform[i-1]>0 && EdgeWaveform[i]<0)
     {
       CrossingIndecies.push_back(i);
@@ -192,7 +195,6 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
 
 
 void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::vector<double> &Kernel, std::vector<double> &Out) {
-    std::cout << " in problematic function " << std::endl;
     int KernelSize = Kernel.size();
     if(KernelSize%2==0)
     {
@@ -201,14 +203,11 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
       Kernel.insert(Kernel.begin()+KernelSize/2, NewVal);
       KernelSize=KernelSize+1;
     }
-    std::cout << " Making X indecies " << std::endl;
     std::vector<int> X_indices(KernelSize);
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize/2); // Indices
     // Now do the convolution
-    std::cout << "Mid samples" << std::endl;
     for (int i = KernelSize/2; i < int(Waveform.size()) - (KernelSize)/2; i++) 
     {
-        std::cout << "Samples " << i << std::endl;
         double PointSum = 0;
         for (int Index : X_indices) 
         {
@@ -217,7 +216,6 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         Out[i] = PointSum;
     }
     // Handle edges properly
-    std::cout << "Start samples" << std::endl;
     for (int i = 0; i < KernelSize/2; i++) 
     {
         double PointSum = 0;
@@ -227,13 +225,11 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         }
         Out[i] = PointSum;
     }
-    std::cout << "end samples" << std::endl;
     for (int i = int(Waveform.size()) - (KernelSize/2); i < int(Waveform.size()); i++) 
     {
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
         {
-          std::cout << " on waveform sample " << i-Index << std::endl;
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
