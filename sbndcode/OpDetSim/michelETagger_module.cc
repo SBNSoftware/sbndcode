@@ -112,32 +112,22 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
     GaussianKernel[i] = 1/TMath::Sqrt(2*TMath::Pi() * TMath::Power(double(fGaussianConvlWidth), 2.0) )*TMath::Exp( - TMath::Power(double(X[i]), 2.0) / (2*TMath::Power(double(fGaussianConvlWidth), 2.0)) );
   }
   //Do convolution to smooth the waveform
-  std::cout<<"Making output vectors " << std::endl;
   std::vector<double> SmoothedWaveform(SummedVector.size(), 0);
   std::vector<double> EdgeWaveform(SummedVector.size(), 0);
-  std::cout<<"doing Gauss Smooth " << std::endl;
   ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
-  std::cout << " doing edge detection" << std::endl;
   //Make edge detection kernel
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
   //Do edge detection on waveform 
   ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
-  std::vector<int> SmoothedValueAtIndex;
-  std::cout << "looking over edge waveform and smoothed waveform" << std::endl;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
   {
-    std::cout << "on index " << i << std::endl;
-    std::cout << " edge waveform " << EdgeWaveform[i] << std::endl;
-    std::cout << " Smoothed waveform " << SmoothedWaveform[i] << std::endl;
     if(EdgeWaveform[i-1]>0 && EdgeWaveform[i]<0)
     {
       CrossingIndecies.push_back(i);
-      SmoothedValueAtIndex.push_back(SmoothedWaveform[i]);
     }
   }
-  std::cout << " below the filling of indecies " << std::endl;
   //Add saving for each analysis step
   //Will format histogram names as event_N_Flash_Y_Step_Name_TPC_Z
   if(int(CrossingIndecies.size())<2) return DoubleFlash; // else we have enough indecies
@@ -150,7 +140,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   //Body compares values and returns true when something is greater than other
   //So the first entry is the one that always returns greater
   std::sort(CrossingIndecies.begin(), CrossingIndecies.end(), 
-  [&](int Index_1, int Index_2)->bool { return SmoothedValueAtIndex[Index_1] > SmoothedValueAtIndex[Index_2]; } ); //sorts index from max to min
+  [&](int Index_1, int Index_2)->bool { return SmoothedWaveform[Index_1] > SmoothedWaveform[Index_2]; } ); //sorts index from max to min
   //Now we can apply the actual waveform selection we want
   //Michel e- has the second largest peak follow the largest
   bool MichelFollowsMuon = (CrossingIndecies[0] < CrossingIndecies[1] );
