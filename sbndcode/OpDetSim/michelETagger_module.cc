@@ -112,9 +112,10 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
     GaussianKernel[i] = 1/TMath::Sqrt(2*TMath::Pi() * TMath::Power(double(fGaussianConvlWidth), 2.0) )*TMath::Exp( - TMath::Power(double(X[i]), 2.0) / (2*TMath::Power(double(fGaussianConvlWidth), 2.0)) );
   }
   //Do convolution to smooth the waveform
-  std::cout<<"doing Gauss Smooth " << std::endl;
+  std::cout<<"Making output vectors " << std::endl;
   std::vector<double> SmoothedWaveform(SummedVector.size(), 0);
   std::vector<double> EdgeWaveform(SummedVector.size(), 0);
+  std::cout<<"doing Gauss Smooth " << std::endl;
   ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
   std::cout << " doing edge detection" << std::endl;
   //Make edge detection kernel
