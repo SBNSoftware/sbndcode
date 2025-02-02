@@ -221,11 +221,13 @@ void michelETagger::ConvolveWithAnyKernel(const std::vector<double> Waveform, st
         }
         Out[i] = PointSum;
     }
+    std::cout << "end samples" << std::endl;
     for (int i = int(Waveform.size()) - (KernelSize/2); i < int(Waveform.size()); i++) 
     {
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
         {
+          std::cout << " on waveform sample " << i-Index << std::endl;
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
