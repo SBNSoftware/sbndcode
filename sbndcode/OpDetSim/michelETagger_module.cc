@@ -45,7 +45,7 @@ public:
   bool filter(art::Event& e) override;
   bool DoubleFlashCheck(std::vector<double> SummedVector);
   void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
-  std::vector<double> ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel);
+  void ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel);
 
 
 
@@ -113,27 +113,27 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   }
   //Do convolution to smooth the waveform
   std::cout<<"doing Gauss Smooth " << std::endl;
-  auto SmoothedWaveform = ConvolveWithAnyKernel(SummedVector, GaussianKernel);
-  std::cout << SmoothedWaveform.size() << "  " << SmoothedWaveform[0] << "  " << SmoothedWaveform[1] << " address "<< &SmoothedWaveform[0] << std::endl;
+  std::vector<double> SmoothedWaveform(SummedVector.size(), 0);
+  std::vector<double> EdgeWaveform(SummedVector.size(), 0);
+  ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
   //Make edge detection kernel
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
   //Do edge detection on waveform 
-  std::cout<<"doing edge detection " << std::endl;
-  auto EdgeWaveform =ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel); //Summed vector passed by reference and modified
+  ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
   std::vector<int> SmoothedValueAtIndex;
   std::cout << "looking over edge waveform and smoothed waveform" << std::endl;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
   {
-    std::cout << " i " << i << " edge waveform at i " << EdgeWaveform[i] << std::endl;
     if(EdgeWaveform[i-1]>0 && EdgeWaveform[i]<0)
     {
       CrossingIndecies.push_back(i);
       SmoothedValueAtIndex.push_back(SmoothedWaveform[i]);
     }
   }
-  std::cout << "CrossingIndecies.size() " << CrossingIndecies.size()  << std::endl;
+  //Add saving for each analysis step
+  //Will format histogram names as event_N_Flash_Y_Step_Name_TPC_Z
   if(int(CrossingIndecies.size())<2) return DoubleFlash; // else we have enough indecies
   //May want to add some histogram saving of summed waveforms, smoothed, edge, etc to check on algorithm
   //Now take the two largest smoothed values with a crossing index
@@ -189,7 +189,7 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
 }
 
 
-std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel) {
+void michelETagger::ConvolveWithAnyKernel(const std::vector<double> Waveform, std::vector<double> Kernel, std::vector<double> &Out) {
     int KernelSize = Kernel.size();
     if(KernelSize%2==0)
     {
@@ -198,15 +198,9 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
       Kernel.insert(Kernel.begin()+KernelSize/2, NewVal);
       KernelSize=KernelSize+1;
     }
-    std::cout << "kernel size " << KernelSize << std::endl;
     std::vector<int> X_indices(KernelSize);
-    std::cout << "X_indices is made " << std::endl;
     std::iota(X_indices.begin(), X_indices.end(), -KernelSize/2); // Indices
-    std::cout << "X_indices is filled in  " << std::endl;
     // Now do the convolution
-    std::cout << "Just making out vector of size  " << Waveform.size() << std::endl;
-    std::vector<double> Out(Waveform.size(), 0);
-    std::cout << " generated a new out vector " << std::endl;
     for (int i = KernelSize/2; i < int(Waveform.size()) - (KernelSize)/2; i++) 
     {
         double PointSum = 0;
@@ -216,7 +210,6 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         }
         Out[i] = PointSum;
     }
-    std::cout << " doing edges " << std::endl;
     // Handle edges properly
     for (int i = 0; i < KernelSize/2; i++) 
     {
@@ -227,20 +220,16 @@ std::vector<double> michelETagger::ConvolveWithAnyKernel(const std::vector<doubl
         }
         Out[i] = PointSum;
     }
-    std::cout << " Later end " << std::endl;
     for (int i = int(Waveform.size()) - (KernelSize/2); i < int(Waveform.size()); i++) 
     {
-      std::cout << i << std::endl;
         double PointSum = 0;
         for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
         {
-          std::cout << " KernelSize/2 + Index " << KernelSize/2 + Index << " i - Index " << i - Index << std::endl;
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
     }
-    std::cout << Out.size() << "  " << Out[0] << "  " << Out[1] << " address "<< &Out[0] << std::endl;
-    return Out;
+    return;
 }
 
 
