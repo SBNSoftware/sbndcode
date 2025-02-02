@@ -116,7 +116,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   std::vector<double> SmoothedWaveform(SummedVector.size(), 0);
   std::vector<double> EdgeWaveform(SummedVector.size(), 0);
   ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
-  std::cout << ' doing edge detection' << std::endl;
+  std::cout << " doing edge detection" << std::endl;
   //Make edge detection kernel
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
   //Do edge detection on waveform 
