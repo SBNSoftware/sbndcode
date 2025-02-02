@@ -139,8 +139,10 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   //-> bool lets me define the type of the return 
   //Body compares values and returns true when something is greater than other
   //So the first entry is the one that always returns greater
+  std::cout << " doing sort " << std::endl;
   std::sort(CrossingIndecies.begin(), CrossingIndecies.end(), 
   [&](int Index_1, int Index_2)->bool { return SmoothedWaveform[Index_1] > SmoothedWaveform[Index_2]; } ); //sorts index from max to min
+  std::cout << " Done sort " << std::endl;
   //Now we can apply the actual waveform selection we want
   //Michel e- has the second largest peak follow the largest
   bool MichelFollowsMuon = (CrossingIndecies[0] < CrossingIndecies[1] );
@@ -150,7 +152,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
   //Finally require the Muon lifetime is approximately correct
   double TimeToMichel = (CrossingIndecies[1]-CrossingIndecies[0])*fNsPerSample;
   double MuonLifetime = 2197; // 2197 ns mu+ lifetime;   616 mu- ns lifetime; These are all timeconstants not t1/2
-  bool GoodLifetime = TimeToMichel < fMuonLifetimes*MuonLifetime;
+  bool GoodLifetime = TimeToMichel < (fMuonLifetimes*MuonLifetime);
 
   DoubleFlash = MichelFollowsMuon && BigEnoughMuonFlash && BigEnoughMichelFlash && GoodLifetime;
   return DoubleFlash;
@@ -258,7 +260,9 @@ bool michelETagger::filter(art::Event& e)
     ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
     //Check for double flash in each TPC
     bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1 );
+    std::cout << " Done checking for double flash in tpc 1" << std::endl;
     bool DoubleFlash_TPC2 = DoubleFlashCheck( SummedWaveform_TPC2 );
+    std::cout << " Done checking for double flash in both tpc" << std::endl;
     bool CoincidentCRT = false;
     if(DoubleFlash_TPC1 || DoubleFlash_TPC2)
     {
