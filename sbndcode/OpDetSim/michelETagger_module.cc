@@ -137,6 +137,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> SummedVector)
       SmoothedValueAtIndex.push_back(SmoothedWaveform[i]);
     }
   }
+  std::cout << " below the filling of indecies " << std::endl;
   //Add saving for each analysis step
   //Will format histogram names as event_N_Flash_Y_Step_Name_TPC_Z
   if(int(CrossingIndecies.size())<2) return DoubleFlash; // else we have enough indecies
