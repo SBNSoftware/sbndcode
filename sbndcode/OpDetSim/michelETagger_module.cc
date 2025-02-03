@@ -55,7 +55,7 @@ private:
   double fGaussianConvlWidth;
   double fCoincidentWindow;
   int fTotalCAENBoards;
-  int PMTPerBoard;
+  std::vector<int> PMTPerBoard;
   std::string fCRTclusterLabel;
   std::string fPMTLabel;
   double fMuonADCCutoff;
