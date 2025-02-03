@@ -121,12 +121,12 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   std::vector<double> SmoothedWaveform(SummedVector.size());
   std::vector<double> EdgeWaveform(SummedVector.size());
   ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
-  SaveVector(SmoothedWaveform, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
-    std::string(FlashNumForName)+std::string("TPC_")+std::string(TPCNumForName)+std::string("_Smoothed"));
+  SaveVector(SmoothedWaveform, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
+    std::to_string(FlashNumForName)+std::string("TPC_")+std::to_string(TPCNumForName)+std::string("_Smoothed"));
   //Do edge detection on waveform 
   ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
-  SaveVector(SmoothedWaveform, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
-    std::string(FlashNumForName)+std::string("TPC_")+std::string(TPCNumForName)+std::string("_EdgeWaveform"));
+  SaveVector(SmoothedWaveform, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
+    std::to_string(FlashNumForName)+std::string("TPC_")+std::to_string(TPCNumForName)+std::string("_EdgeWaveform"));
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
@@ -280,10 +280,10 @@ bool michelETagger::filter(art::Event& e)
     std::vector<double> SummedWaveform_TPC1(FlashSamples);
     std::vector<double> SummedWaveform_TPC2(FlashSamples);
     ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
-    SaveVector(SummedWaveform_TPC1, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
-    std::string(FlashNumForName)+std::string("TPC_1_SummedWaveform"));
-    SaveVector(SummedWaveform_TPC2, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
-    std::string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
+    SaveVector(SummedWaveform_TPC1, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
+    std::to_string(FlashNumForName)+std::string("TPC_1_SummedWaveform"));
+    SaveVector(SummedWaveform_TPC2, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
+    std::to_string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
     //Check for double flash in each TPC
     TPCNumForName=1;
     bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1 );
