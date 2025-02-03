@@ -174,7 +174,7 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
             FlashCounter*PMTPerBoard[CurrentBoard] + 
             CurrentBoard*(std::accumulate(PMTPerBoard.begin(), PMTPerBoard.begin()+CurrentBoard, 0))*NumFlash);
             auto const& wvf = (*waveHandle)[WaveIndex];
-            std::cout << "On Channel " << wvf.ChannelNumber() << " With start " << wvf.TimeStamp();
+            std::cout << "On Channel " << wvf.ChannelNumber() << " With start " << wvf.TimeStamp() << std::endl;
             for(int Sample=0; Sample<int(wvf.size()); Sample++)
             {
               int Baseline = fBaseline; //Fixed fcl baseline for use with either decoded or deconvolved waveforms
