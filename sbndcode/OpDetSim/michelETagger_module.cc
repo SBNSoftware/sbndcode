@@ -304,7 +304,11 @@ bool michelETagger::filter(art::Event& e)
     }
     //end of flash processing check if we had good result 
     MichelFound = CoincidentCRT & (DoubleFlash_TPC1 || DoubleFlash_TPC2); 
-    if(MichelFound) break;
+    if(MichelFound) 
+    {
+      std::cout << "Found a Michel Candidate in Event " << EventNum << "  Flash " << FlashNumForName << std::endl;
+      break;
+    }
   }
   return MichelFound;
 }
