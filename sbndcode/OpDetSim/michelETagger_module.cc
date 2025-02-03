@@ -68,6 +68,7 @@ private:
   int EventNum;
   int FlashNumForName;
   int TPCNumForName;
+  int fPeakSearchSamples;
   // Declare member data here.
 
 };
@@ -91,6 +92,7 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fNsPerSample = p.get<int>("NsPerSample", 2);
   fBaseline = p.get<int>("Baseline", 0);
   fMuonLifetimes = p.get<double>("MuonLifetimes", 2.5);
+  fPeakSearchSamples = p.get<int>("PeakSearchSamples", 100)
 }
 
 bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
@@ -151,15 +153,12 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   //So the first entry is the one that always returns greater
   std::sort(CrossingIndecies.begin(), CrossingIndecies.end(), 
   [&](int Index_1, int Index_2)->bool { return SmoothedWaveform[Index_1] > SmoothedWaveform[Index_2]; } ); //sorts index from max to min
-  std::cout << "On event " << EventNum << " flash " << FlashNumForName << " TPC " << TPCNumForName << 
-  " with two indecies " << CrossingIndecies[0] << " and " << CrossingIndecies[1] << " with smooth values " << 
-  SmoothedWaveform[CrossingIndecies[0]] << " and " << SmoothedWaveform[CrossingIndecies[1]] << std::endl;
   //Now we can apply the actual waveform selection we want
   //Michel e- has the second largest peak follow the largest
   bool MichelFollowsMuon = (CrossingIndecies[0] < CrossingIndecies[1] );
   //Require that both muon and michel are large enough
-  bool BigEnoughMuonFlash = SmoothedWaveform[CrossingIndecies[0]] >= fMuonADCCutoff;
-  bool BigEnoughMichelFlash = SmoothedWaveform[CrossingIndecies[1]] >= fMichelADCCutoff;
+  bool BigEnoughMuonFlash = *std::max_element(SmoothedWaveform.begin()+CrossingIndeces[0], SmoothedWaveform.begin()+CrossingIndeces[0]+fPeakSearchSamples) >= fMuonADCCutoff;
+  bool BigEnoughMichelFlash = *std::max_element(SmoothedWaveform.begin()+CrossingIndeces[0], SmoothedWaveform.begin()+CrossingIndeces[0]+fPeakSearchSamples) >= fMichelADCCutoff;
   //Finally require the Muon lifetime is approximately correct
   double TimeToMichel = (CrossingIndecies[1]-CrossingIndecies[0])*fNsPerSample;
   double MuonLifetime = 2197; // 2197 ns mu+ lifetime;   616 mu- ns lifetime; These are all timeconstants not t1/2
