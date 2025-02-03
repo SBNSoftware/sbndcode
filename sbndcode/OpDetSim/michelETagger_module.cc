@@ -239,7 +239,7 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
 }
 
 
-void michelETagger::SaveVector(std::vector<double> HistEntries, std::string Name)
+void michelETagger::SaveVector(std::vector<double> &HistEntries, std::string Name)
 {
     std::stringstream histname;
     art::ServiceHandle<art::TFileService> tfs;
