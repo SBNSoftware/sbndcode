@@ -3,9 +3,9 @@ BEGIN_PROLOG
 MichelETagger: 
 {
     module_type: "michelETagger"
-    GaussianConvlSize: 501 #samples
+    GaussianConvlSize: 61 #samples
     fGaussianConvlWidth: 30 #samples
-    fCoincidentWindow: 61 #ns 
+    fCoincidentWindow: 500 #ns 
     TotalCAENBoards: 8 
     PMTPerBoard: [10, 13, 12, 7, 9, 10, 11, 12]
     CRTclusterLabel: "crtclustering"
