@@ -46,6 +46,7 @@ public:
   bool DoubleFlashCheck(std::vector<double> &SummedVector);
   void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
   void ConvolveWithAnyKernel(std::vector<double> &Waveform, std::vector<double> &Kernel, std::vector<double> &Out);
+  void michelETagger::SaveVector(std::vector<double> &HistEntries, std::string Name);
 
 
 
@@ -63,6 +64,9 @@ private:
   int fNsPerSample;
   int fBaseline;
   double fMuonLifetimes;
+  int EventNum;
+  int FlashNumForName;
+  int TPCNumForName;
   // Declare member data here.
 
 };
@@ -117,8 +121,12 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   std::vector<double> SmoothedWaveform(SummedVector.size());
   std::vector<double> EdgeWaveform(SummedVector.size());
   ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
+  SaveVector(SmoothedWaveform, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
+    str::string(FlashNumForName)+std::string("TPC_")+std::string(TPCNumForName)+std::string("_Smoothed"));
   //Do edge detection on waveform 
   ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
+  SaveVector(SmoothedWaveform, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
+    str::string(FlashNumForName)+std::string("TPC_")+std::string(TPCNumForName)+std::string("_EdgeWaveform"));
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
@@ -173,7 +181,6 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
             int WaveIndex = (CAENChannel + 
             FlashCounter*PMTPerBoard[CurrentBoard] + (std::accumulate(PMTPerBoard.begin(), PMTPerBoard.begin()+CurrentBoard, 0))*NumFlash);
             auto const& wvf = (*waveHandle)[WaveIndex];
-            std::cout << "On Channel " << wvf.ChannelNumber() << " With start " << wvf.TimeStamp() << std::endl;
             for(int Sample=0; Sample<int(wvf.size()); Sample++)
             {
               int Baseline = fBaseline; //Fixed fcl baseline for use with either decoded or deconvolved waveforms
@@ -232,38 +239,56 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
 }
 
 
+void michelETagger::SaveVector(std::vector<double> HistEntries, std::string Name)
+{
+    std::stringstream histname;
+    art::ServiceHandle<art::TFileService> tfs;
+    histname.str(Name); //Resets string stream to nothing
+    //Create a new histogram
+    //Make TH1D to hold waveform. String name is gross, right size and start and end time match timestamps
+    TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), wvf.size(), 0, wvf.size()-1);
+    for(unsigned int i = 0; i < wvf.size(); i++) {
+      wvfHist->SetBinContent(i + 1, HistEntries[i]); //Loop over waveform and set bin content
+    }
+    hist_id++;
+}
+
+
 bool michelETagger::filter(art::Event& e)
 {
   // Implementation of required member function here.
   //Will need CRT hit clusters
   //OpDetWaveforms
+  EventNum = e.id().event();
   art::Handle< std::vector<sbnd::crt::CRTCluster>> crtClusterHandle;
   e.getByLabel(fCRTclusterLabel, crtClusterHandle);
   //Could instead use deconvolved waveforms if they are ready enough. Might give better performance
   //Plus we have to go through reco1 already so no real processing overhead associated with that choice
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
   e.getByLabel(fPMTLabel,waveHandle);
-  std::cout << " got my clusters and waveforms " << std::endl;
   //Loop over OpDetWaveforms and check for double peak signature
   int TotalFlash =  waveHandle->size()/(std::accumulate(PMTPerBoard.begin(), PMTPerBoard.end(), 0));
   bool MichelFound=false;
-  std::cout << "this event has " << TotalFlash << " flashes " << std::endl;
   for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
   {
+    FlashNumForName=FlashCounter;
     int WaveIndex = FlashCounter*PMTPerBoard[0];
     //Get timestamp for comparison with CRT clusters
     double currentTimeStamp = (*waveHandle)[WaveIndex].TimeStamp(); 
     //Get size of this waveform to build a summed waveform vector
     int FlashSamples = int((*waveHandle)[WaveIndex].size()); 
-    std::cout << " flash " << FlashCounter << " has " << FlashSamples << " samples" << std::endl;
     std::vector<double> SummedWaveform_TPC1(FlashSamples);
     std::vector<double> SummedWaveform_TPC2(FlashSamples);
     ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
+    SaveVector(SummedWaveform_TPC1, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
+    str::string(FlashNumForName)+std::string("TPC_1_SummedWaveform"));
+    SaveVector(SummedWaveform_TPC2, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
+    str::string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
     //Check for double flash in each TPC
+    TPCNumForName=1;
     bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1 );
-    std::cout << " Done checking for double flash in tpc 1" << std::endl;
+    TPCNumForName=2;
     bool DoubleFlash_TPC2 = DoubleFlashCheck( SummedWaveform_TPC2 );
-    std::cout << " Done checking for double flash in both tpc" << std::endl;
     bool CoincidentCRT = false;
     if(DoubleFlash_TPC1 || DoubleFlash_TPC2)
     {
