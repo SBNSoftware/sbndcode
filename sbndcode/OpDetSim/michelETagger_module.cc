@@ -122,11 +122,11 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   std::vector<double> EdgeWaveform(SummedVector.size());
   ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
   SaveVector(SmoothedWaveform, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
-    str::string(FlashNumForName)+std::string("TPC_")+std::string(TPCNumForName)+std::string("_Smoothed"));
+    std::string(FlashNumForName)+std::string("TPC_")+std::string(TPCNumForName)+std::string("_Smoothed"));
   //Do edge detection on waveform 
   ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
   SaveVector(SmoothedWaveform, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
-    str::string(FlashNumForName)+std::string("TPC_")+std::string(TPCNumForName)+std::string("_EdgeWaveform"));
+    std::string(FlashNumForName)+std::string("TPC_")+std::string(TPCNumForName)+std::string("_EdgeWaveform"));
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
