@@ -299,7 +299,7 @@ bool michelETagger::filter(art::Event& e)
     }
     if(DoubleFlash_TPC2)
     {
-      std::cout << "Found a Michel Candidate in Event " << EventNum << "  Flash " << FlashNumForName << " in TPC 1"  << std::endl;
+      std::cout << "Found a Michel Candidate in Event " << EventNum << "  Flash " << FlashNumForName << " in TPC 2"  << std::endl;
     }
     if(DoubleFlash_TPC1 || DoubleFlash_TPC2)
     {
