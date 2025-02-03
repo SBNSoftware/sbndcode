@@ -157,8 +157,8 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   //Michel e- has the second largest peak follow the largest
   bool MichelFollowsMuon = (CrossingIndecies[0] < CrossingIndecies[1] );
   //Require that both muon and michel are large enough
-  bool BigEnoughMuonFlash = *std::max_element(SmoothedWaveform.begin()+CrossingIndeces[0], SmoothedWaveform.begin()+CrossingIndeces[0]+fPeakSearchSamples) >= fMuonADCCutoff;
-  bool BigEnoughMichelFlash = *std::max_element(SmoothedWaveform.begin()+CrossingIndeces[0], SmoothedWaveform.begin()+CrossingIndeces[0]+fPeakSearchSamples) >= fMichelADCCutoff;
+  bool BigEnoughMuonFlash = *std::max_element(SmoothedWaveform.begin()+CrossingIndecies[0], SmoothedWaveform.begin()+CrossingIndecies[0]+fPeakSearchSamples) >= fMuonADCCutoff;
+  bool BigEnoughMichelFlash = *std::max_element(SmoothedWaveform.begin()+CrossingIndecies[0], SmoothedWaveform.begin()+CrossingIndecies[0]+fPeakSearchSamples) >= fMichelADCCutoff;
   //Finally require the Muon lifetime is approximately correct
   double TimeToMichel = (CrossingIndecies[1]-CrossingIndecies[0])*fNsPerSample;
   double MuonLifetime = 2197; // 2197 ns mu+ lifetime;   616 mu- ns lifetime; These are all timeconstants not t1/2
