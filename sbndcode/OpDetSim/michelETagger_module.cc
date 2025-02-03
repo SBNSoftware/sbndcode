@@ -151,6 +151,9 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   //So the first entry is the one that always returns greater
   std::sort(CrossingIndecies.begin(), CrossingIndecies.end(), 
   [&](int Index_1, int Index_2)->bool { return SmoothedWaveform[Index_1] > SmoothedWaveform[Index_2]; } ); //sorts index from max to min
+  std::cout << "On event " << EventNum << " flash " << FlashNumForName << " TPC " << TPCNumForName << 
+  " with two indecies " << CrossingIndecies[0] << " and " << CrossingIndecies[1] << " with smooth values " << 
+  SmoothedWaveform[CrossingIndecies[0]] << " and " << SmoothedWaveform[CrossingIndecies[1]] << std::endl;
   //Now we can apply the actual waveform selection we want
   //Michel e- has the second largest peak follow the largest
   bool MichelFollowsMuon = (CrossingIndecies[0] < CrossingIndecies[1] );
