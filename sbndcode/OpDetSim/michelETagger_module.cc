@@ -78,7 +78,8 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fGaussianConvlWidth = p.get< double >("GaussianConvlWidth", 160. );
   fCoincidentWindow = p.get< double >("CoincidentWindow", 250.); //ns
   fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
-  PMTPerBoard = p.get<int>("PMTPerBoard", 15);
+  PMTPerBoard = p.get<std::vector<int>>("PMTPerBoard", {10, 13, 12, 7, 9, 10, 11, 12});
+  TotalPMT = p.get<int>("TotalPMT", 104);
   fCRTclusterLabel = p.get<std::string>("CRTclusterLabel");
   fPMTLabel = p.get<std::string>("PMTLabel");
   fMuonADCCutoff = p.get<double>("MuonADCCutoff", 1000.);
@@ -116,9 +117,9 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   std::vector<double> EdgeDetectionKernel = {0, 1, 1, -1, -1, 0};
   std::vector<double> SmoothedWaveform(SummedVector.size());
   std::vector<double> EdgeWaveform(SummedVector.size());
-  //ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
+  ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
   //Do edge detection on waveform 
-  //ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
+  ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
@@ -159,7 +160,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
 void michelETagger::ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, 
 std::vector<double> &SummedVector_TPC2, int &FlashCounter)
 {
-  int NumFlash = (waveHandle->size())/(PMTPerBoard*fTotalCAENBoards);
+  int NumFlash = waveHandle->size()/(std::accumulate(PMTPerBoard.begin(), PMTPerBoard.end(), 0));
   //Loop over each CAEN
   for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
       {
@@ -170,7 +171,9 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
             //Waveforms are ordered by CAEN, Flash, PMT channel
             //At least in the decoded files
             //Have to verify for the deconvolved files, but I assume order is preserved
-            int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
+            int WaveIndex = (CAENChannel + 
+            FlashCounter*PMTPerBoard[CurrentBoard] + 
+            CurrentBoard*(std::accumulate(PMTPerBoard.begin(), PMTPerBoard.begin()+CurrentBoard, 0))*NumFlash);
             auto const& wvf = (*waveHandle)[WaveIndex];
             for(int Sample=0; Sample<int(wvf.size()); Sample++)
             {
@@ -201,40 +204,27 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         double PointSum = 0;
         for (int Index : X_indices) 
         {
-            if( ((i - Index) >= int(Waveform.size())) || ((KernelSize/2 + Index) >= int(Kernel.size())) 
-            || (i-Index)<0 || KernelSize/2 + Index < 0)
-            {
-              continue;
-            }
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
     }
     // Handle edges properly
+    //Front edge
     for (int i = 0; i < KernelSize/2; i++) 
     {
         double PointSum = 0;
-        for (int Index : std::vector<int>(X_indices.begin() + KernelSize - i, X_indices.end()) ) 
+        for (int Index : std::vector<int>(X_indices.begin(), X_indices.begin()+ KernelSize/2 - i) ) 
         {
-            if( ((i - Index) >= int(Waveform.size())) || ((KernelSize/2 + Index) >= int(Kernel.size())) 
-            || (i-Index)<0 || KernelSize/2 + Index < 0 )
-            {
-              continue; // check bounds later 
-            }
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
     }
+    //Back edge
     for (int i = int(Waveform.size()) - (KernelSize/2); i < int(Waveform.size()); i++) 
     {
         double PointSum = 0;
-        for (int Index : std::vector<int>(X_indices.begin() + KernelSize - (Waveform.size() - i), X_indices.end()) ) 
+        for (int Index : std::vector<int>(X_indices.begin() + KernelSize/2 - (Waveform.size() - i), X_indices.end()) ) 
         {
-          if( ((i - Index) >= int(Waveform.size())) || ((KernelSize/2 + Index) >= int(Kernel.size())) 
-            || (i-Index)<0 || KernelSize/2 + Index < 0)
-            {
-              continue;
-            }
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
@@ -256,12 +246,12 @@ bool michelETagger::filter(art::Event& e)
   e.getByLabel(fPMTLabel,waveHandle);
   std::cout << " got my clusters and waveforms " << std::endl;
   //Loop over OpDetWaveforms and check for double peak signature
-  int TotalFlash =  waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
+  int TotalFlash =  waveHandle->size()/(std::accumulate(PMTPerBoard.begin(), PMTPerBoard.end(), 0));
   bool MichelFound=false;
   std::cout << "this event has " << TotalFlash << " flashes " << std::endl;
   for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
   {
-    int WaveIndex = FlashCounter*PMTPerBoard;
+    int WaveIndex = FlashCounter*PMTPerBoard[0];
     //Get timestamp for comparison with CRT clusters
     double currentTimeStamp = (*waveHandle)[WaveIndex].TimeStamp(); 
     //Get size of this waveform to build a summed waveform vector
@@ -269,7 +259,7 @@ bool michelETagger::filter(art::Event& e)
     std::cout << " flash " << FlashCounter << " has " << FlashSamples << " samples" << std::endl;
     std::vector<double> SummedWaveform_TPC1(FlashSamples);
     std::vector<double> SummedWaveform_TPC2(FlashSamples);
-    //ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
+    ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
     //Check for double flash in each TPC
     bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1 );
     std::cout << " Done checking for double flash in tpc 1" << std::endl;
