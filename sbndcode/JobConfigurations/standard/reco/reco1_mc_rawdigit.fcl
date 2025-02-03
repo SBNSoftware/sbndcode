@@ -1,4 +1,4 @@
-#include "reco1_sce_lite.fcl"
+#include "standard_reco2_sbnd.fcl"
 
 #1D/Data Deconvolution
 #physics.producers.daq.DigitModuleLabel: "daq"
