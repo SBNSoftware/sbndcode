@@ -92,7 +92,7 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fNsPerSample = p.get<int>("NsPerSample", 2);
   fBaseline = p.get<int>("Baseline", 0);
   fMuonLifetimes = p.get<double>("MuonLifetimes", 2.5);
-  fPeakSearchSamples = p.get<int>("PeakSearchSamples", 100)
+  fPeakSearchSamples = p.get<int>("PeakSearchSamples", 100);
 }
 
 bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
