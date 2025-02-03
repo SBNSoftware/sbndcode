@@ -1,0 +1,99 @@
+BEGIN_PROLOG
+
+sbnd_wcls: { 
+    module_type : WireCellToolkit
+    wcls_main: {
+        tool_type: "WCLS"
+        apps: ["TbbFlow"] 
+
+        ## Uncomment the following lines for debugging
+        # loglevels: ["debug", "pgraph:info"]
+        # logsinks: ["stdout"]
+
+        ## This sets the "main" Jsonnet file which provides the 
+        ## configuration for the Wire-Cell Toolkit components.  It is
+        ## take as relative to entries in WIRECELL_PATH.
+        configs: []
+
+        ## Libraries in which to look for WCT components
+        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb"]
+        inputers: []
+        outputers: []
+        
+        ## Set the "external variables" required by the Jsonnet.
+        params: {}
+        structs: {}
+    }
+}
+
+# ------------------------------------------------------------------------------------ #
+
+## Configuration for 2D Sim + Signal Processing 
+sbnd_wcls_simsp: @local::sbnd_wcls
+sbnd_wcls_simsp.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp.jsonnet"]
+sbnd_wcls_simsp.wcls_main.inputers: ["wclsSimDepoSetSource:"]
+sbnd_wcls_simsp.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
+                                     # "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+                                     "wclsFrameSaver:spsaver"
+                                    ]
+sbnd_wcls_simsp.wcls_main.params:   {
+                                     ## This locates the input SimEnergyDeposits in the art::Event
+                                     inputTag: "ionandscint:"             
+             
+                                     ## Set "data" vs. "sim".  The epoch below probably should follow suit.
+                                     reality: "sim"
+             
+                                     ## if epoch is "dynamic" you MUST add
+                                     ## "wclsMultiChannelNoiseDB" to "inputers" and must NOT
+                                     ## add it if not "dynamic"
+                                     epoch: "perfect"
+             
+                                     ## Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
+                                     signal_output_form: "sparse"
+             
+                                     ## If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
+                                     ## If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
+                                     ## this is whether or not to save raw digits!!! 
+                                     save_simdigits: "false"
+          
+                                     save_track_id: "true"
+                                    }
+                                    
+sbnd_wcls_simsp.wcls_main.structs:  {
+                                     ## Longitudinal diffusion constant [cm2/s]
+                                     DL: 4.0
+                                     ## Transverse diffusion constant [cm2/s]
+                                     DT: 8.8
+                                     ## Electron lifetime [ms]
+                                     lifetime: 100.0
+                                     ## Electron drift speed, assumes 0.5 kV/cm and 88.4 K. Units: mm/us
+                                     driftSpeed: 1.563
+                                    }
+
+# ------------------------------------------------------------------------------------ #
+
+## Configuration for **Signal processing ONLY**
+sbnd_wcls_sp: @local::sbnd_wcls
+sbnd_wcls_sp.wcls_main.configs:   ["pgrapher/experiment/sbnd/wcls-nf-sp.jsonnet"]
+sbnd_wcls_sp.wcls_main.inputers:  ["wclsRawFrameSource"
+                                    # To use wclsMultiChannelNoiseDB you must also put epoch:dynamic below
+                                    # and you must have geo::Geometry service in your environment.
+                                    # ,"wclsMultiChannelNoiseDB"
+                                  ]
+sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver"]
+sbnd_wcls_sp.wcls_main.params :   {
+                                   # This locates the input raw::RawDigit collection in the art::Event 
+                                   raw_input_label: "daq"   
+
+                                   # Set "data" vs. "sim".  The epoch below probably should follow suit.
+                                   reality: "sim"   
+
+                                   # if epoch is "dynamic" you MUST add
+                                   # "wclsMultiChannelNoiseDB" to "inputers" and must NOT
+                                   # add it if not "dynamic"
+                                   epoch: "perfect"   
+
+                                   # Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
+                                   signal_output_form: "sparse"
+                                   }
+END_PROLOG

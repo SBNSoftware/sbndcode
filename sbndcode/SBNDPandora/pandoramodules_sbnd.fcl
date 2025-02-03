@@ -7,7 +7,7 @@ sbnd_basicpandora:
 {
     module_type:                                                    "StandardPandora"
     GeantModuleLabel:                                               "largeant"
-    SimChannelModuleLabel:                                          "simdrift"
+    SimChannelModuleLabel:                                          "simtpc2d:simpleSC"
     HitFinderModuleLabel:                                           "gaushit"
     EnableMCParticles:                                              false
     EnableProduction:                                               true

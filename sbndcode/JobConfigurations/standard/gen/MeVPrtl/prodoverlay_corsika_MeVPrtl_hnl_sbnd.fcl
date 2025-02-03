@@ -1,0 +1,11 @@
+#include "corsika_sbnd.fcl"
+#include "prodMeVPrtl_hnl_sbnd.fcl"
+
+# Now we are generating overlays we need to add CORSIKA to producers 
+physics.producers.corsika: @local::sbnd_corsika_p
+
+physics.simulate: [ rns, generator, corsika ]
+
+# Overidde the names of the output files
+outputs.out.fileName: "prodMeVPrtl_cosmic_HNL_sbnd_%p-%tc.root"
+services.TFileService.fileName: "hists_prodMeVPrtl_cosmic_HNL_sbnd_%p-%tc.root"

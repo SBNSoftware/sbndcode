@@ -38,7 +38,7 @@ namespace sbnd{
     art::FindManyP<larpandoraobj::PFParticleMetadata> PFPMetaDataAssoc(pfParticleHandle, event, fPandoraLabel);
 
     // Loop over all the pfps
-    for(auto const pfp : (*pfParticleHandle)){
+    for(auto const &pfp : (*pfParticleHandle)){
       // Get the associated track if there is one
       const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(pfp.Self()));
       if(associatedTracks.size() != 1) continue;

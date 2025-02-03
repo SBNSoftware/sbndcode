@@ -4,8 +4,11 @@ BEGIN_PROLOG
 
 sbnd_singlep: @local::standard_singlep
 
+# By default pad ot a vector if it is size 1
+physics.producers.generator.PadOutVectors: true
+
 # Particle generated at this time will appear in main drift window at trigger T0.
-physics.producers.generator.T0:     [  1.7e3  ] # us
+physics.producers.generator.T0:     [0] # us
 
 physics.producers.generator.P0:     [ -1.0 ]  # GeV/c
 physics.producers.generator.SigmaP: [ 0.0 ]  # GeV/c

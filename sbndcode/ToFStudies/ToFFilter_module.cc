@@ -65,12 +65,8 @@
 #include "lardataobj/MCBase/MCShower.h"
 
 // sbndcode includes
-#include "sbnobj/Common/CRT/CRTHit.hh"
-#include "sbnobj/Common/CRT/CRTTrack.hh"
-#include "sbndcode/CRT/CRTUtils/CRTT0MatchAlg.h"
-#include "sbndcode/CRT/CRTUtils/CRTTrackMatchAlg.h"
-#include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
+#include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
+#include "sbnobj/SBND/CRT/CRTTrack.hh"
 
 #include "lardataobj/RecoBase/OpHit.h"
 

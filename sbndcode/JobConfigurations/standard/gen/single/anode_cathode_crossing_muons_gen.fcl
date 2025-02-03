@@ -1,0 +1,24 @@
+#include "prodsingle_sbnd_proj.fcl"
+
+
+physics.producers.generator.PadOutVectors: true
+
+physics.producers.generator.PDG: [13, 13, 13, 13, 13, 13, 13, 13, 13, 13]
+physics.producers.generator.P0: [0.8] # GeV
+
+physics.producers.generator.X0: [196.25,196.25,196.25,196.25,196.25,-196.25,-196.25,-196.25,-196.25,-196.25] # cm ?
+physics.producers.generator.Y0: [0]
+physics.producers.generator.Z0:[250]
+physics.producers.generator.Theta0XZ: [-90,-90,-90,-90,-90,90,90,90,90,90]
+physics.producers.generator.Theta0YZ: [45]
+
+physics.producers.generator.T0: [0] # us 
+physics.producers.generator.SigmaX: [1.25]
+physics.producers.generator.SigmaY: [200]
+physics.producers.generator.SigmaZ: [250]
+physics.producers.generator.SigmaT: [0]
+physics.producers.generator.SigmaP: [0]
+physics.producers.generator.PosDist: 0
+physics.producers.generator.AngleDist: "uniform"
+physics.producers.generator.SigmaThetaXZ: [45]
+physics.producers.generator.SigmaThetaYZ: [45]

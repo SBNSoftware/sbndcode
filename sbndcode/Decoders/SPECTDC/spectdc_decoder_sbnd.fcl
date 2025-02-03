@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+spec_tdc_decoder_sbnd:
+{
+   module_type:           "SPECTDCDecoder"
+   SPECTDCInstanceLabels: [ "TDCTIMESTAMP", "ContainerTDCTIMESTAMP" ]
+}
+
+END_PROLOG

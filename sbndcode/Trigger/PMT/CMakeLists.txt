@@ -20,11 +20,11 @@ set(
                     artdaq_core::artdaq-core_Utilities
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
+                    sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
 		                sbndcode_CRT
 		                sbndcode_CRTUtils
                     sbnobj::Common_CRT
 		                sbnobj::SBND_CRT
-		                sbnobj::SBND_Trigger
                     sbndcode_CRTUtils
                     sbndcode_GeoWrappers
                     art::Framework_Services_Optional_RandomNumberGenerator_service

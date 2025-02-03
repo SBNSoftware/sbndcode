@@ -1,0 +1,29 @@
+#include "SBNDPTBDecoderDefaults.fcl"
+
+physics:
+{
+  producers:
+  {
+    ptbdecoder: @local::SBNDPTBDecoderDefaults
+  }
+
+  analyzers: {}
+
+  my_producer_modules: [ptbdecoder]
+  trigger_paths: [my_producer_modules]
+  a: [rootout]
+  end_paths: [a]
+}
+
+source: {}
+
+outputs: {
+  rootout: {
+    module_type: "RootOutput"
+    fileName: "decoded_ptb.root"
+  }
+}
+
+
+process_name: PTBDECODER
+

@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+
+pmtskim_sbnd:
+{
+	module_type:       "SBNDFlashAssAna"
+	TriggerLabel: "generator"
+	DumpWaveformsInfo: false
+	OpDetWaveformLabels: ["opdecopmt", "opdecoxarapuca"]
+	OpHitLabels: ["ophitpmt", "ophitxarapuca"]
+	FlashLabels: ["opflashtpc0", "opflashtpc1", "opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+	PEOpHitThreshold: 0
+	Debug: false
+}
+
+END_PROLOG

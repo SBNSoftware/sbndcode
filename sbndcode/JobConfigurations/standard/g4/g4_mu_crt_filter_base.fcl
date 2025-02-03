@@ -6,11 +6,13 @@ physics.filters.filter: @local::sbnd_larg4crtfilter
 physics.simulate: [ rns
                   , loader
                   , largeant
+                  , simplemerge
+                  , sedlite
                   , ionandscint
                   , ionandscintout
                   , pdfastsim
                   , pdfastsimout
-                  , simdrift
+                #   , simdrift #1D drift sim no longer run
                   , filter # Adding filter
                   , mcreco
                   , genericcrt

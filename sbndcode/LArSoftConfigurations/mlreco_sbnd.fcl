@@ -1,0 +1,45 @@
+#include "g4inforeducer.fcl"
+#include "simplemerge.fcl"
+
+BEGIN_PROLOG
+
+#info reducer - produces lite version of sim energy deposit
+sbnd_sedlite: @local::sbn_largeant_info_reducer
+sbnd_sedlite.SimEnergyDepositLabel: "largeant:LArG4DetectorServicevolTPCActive"
+sbnd_sedlite.useOrigTrackID: true #needed since TrackID overwritten by SBND modules
+
+#simple merge - merges nominal and dropped mcparticles into separate list
+sbnd_simplemerge: @local::simplemerge
+sbnd_simplemerge.InputSourcesLabels: ["largeant","largeant:droppedMCParticles"]
+
+#supera for mpvmpr
+sbnd_supera_mpvmpr: {
+    module_type:     "LArSoftSuperaDriver"
+    supera_params:   "supera_sbnd_mpvmpr.fcl"
+    out_filename:    "larcv.root"
+    unique_filename: false
+    stream:          "mc"
+    StrictDataLoading: false
+}
+
+#supera for data
+sbnd_supera_data: {
+    module_type:     "LArSoftSuperaDriver"
+    supera_params:   "supera_sbnd_data.fcl"
+    out_filename:    "larcv.root"
+    unique_filename: false
+    stream:          "data"
+    StrictDataLoading: false
+}
+
+#supera for everything else
+sbnd_supera: {
+    module_type:     "LArSoftSuperaDriver"
+    supera_params:   "supera_sbnd_corsika.fcl"
+    out_filename:    "larcv.root"
+    unique_filename: false
+    stream:          "mc"
+    StrictDataLoading: false
+}
+
+END_PROLOG

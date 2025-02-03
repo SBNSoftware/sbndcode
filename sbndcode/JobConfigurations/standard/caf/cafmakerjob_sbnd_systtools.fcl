@@ -1,0 +1,4 @@
+#include "cafmakerjob_sbnd.fcl"
+
+physics.runprod: [rns, systtools, @sequence::physics.runprod]
+physics.producers.cafmaker.SystWeightLabels: [ "systtools" ]

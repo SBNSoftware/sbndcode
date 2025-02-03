@@ -30,14 +30,7 @@
 #include "pmttriggerproducer.fcl"
 
 #include "hitfindermodules_sbnd.fcl"
-#include "cluster_sbnd.fcl"
-#include "trackfindermodules_sbnd.fcl"
-#include "calorimetry_sbnd.fcl"
-#include "showerfindermodules.fcl"
 #include "databaseutil_sbnd.fcl"
-#include "vertexfindermodules.fcl"
-
-
 
 #include "rootoutput_sbnd.fcl"
 
@@ -118,7 +111,7 @@ physics:
 ### Some potential overwrites below
 
 #physics.producers.pmttriggerproducer.SaveHists: true
-physics.producers.pmttriggerproducer.Verbose: true
+#physics.producers.pmttriggerproducer.Verbose: true
 
 #physics.producers.pmttriggerproducer.PairLogic: "AND"
 

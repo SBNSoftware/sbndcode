@@ -1,6 +1,0 @@
-#include "reco1_data.fcl"
-
-#Data Rawdigit Deconvolution
-physics.producers.daq.DigitModuleLabel: "daq"
-
-outputs.out1.outputCommands: [@sequence::sbnd_reco1_drops_keep_rawdigits]

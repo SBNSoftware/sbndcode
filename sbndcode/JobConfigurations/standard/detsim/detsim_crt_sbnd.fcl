@@ -1,0 +1,9 @@
+#include "standard_detsim_sbnd.fcl"
+
+process_name: DetSimCRT
+
+physics.simulate: [ rns, crtsim ]
+
+# Remove unnecesary processes
+physics.producers.daq:   @erase
+physics.producers.opdaq: @erase

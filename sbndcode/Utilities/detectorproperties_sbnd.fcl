@@ -5,7 +5,7 @@ BEGIN_PROLOG
 sbnd_detproperties:                   @local::standard_detproperties
 sbnd_detproperties.Temperature:       88.4  # measured in ArgoNeut (MicroBooNE measured 89K, arXiv:1910.01430)
 sbnd_detproperties.Efield:           [0.5,0.666,0.8]  #reasonable values 
-sbnd_detproperties.Electronlifetime:  10.0e3  # microseconds
+sbnd_detproperties.Electronlifetime:  100.0e3  # microseconds
 sbnd_detproperties.ElectronsToADC:    6.29778e-3 
 sbnd_detproperties.TimeOffsetU:       0.
 sbnd_detproperties.TimeOffsetV:       0.
@@ -16,5 +16,11 @@ sbnd_detproperties.InheritNumberTimeSamples: false
 sbnd_detproperties.NumberTimeSamples: 3400
 sbnd_detproperties.ReadOutWindowSize: 3400 
 
+# WireCell corrects for the interplane drift in its signal processing. This is
+# not something traditional 1D approaches do. Setting this flag to false
+# ensures that we don't 'double correct' at the start of pandora. This
+# should be set to true when using 1D signal processing.
+# Henry Lay - Nov 2023
+sbnd_detproperties.IncludeInterPlanePitchInXTickOffsets: false
 
 END_PROLOG

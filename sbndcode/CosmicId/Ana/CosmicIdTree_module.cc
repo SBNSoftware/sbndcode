@@ -741,7 +741,7 @@ namespace sbnd {
 
       // The PFP Nu Score only exists for PFP Neutrinos
       if (track_pfp_nu){
-        for(auto const pfp : (*pfParticleHandle)){
+        for(auto const &pfp : (*pfParticleHandle)){
           // Get the associated track if there is one
           const std::vector< art::Ptr<recob::Track> > associatedTracks(pfPartToTrackAssoc.at(pfp.Self()));
           if(associatedTracks.size() != 1) continue;

@@ -3,5 +3,8 @@
 BEGIN_PROLOG
 
 sbnd_larg4: @local::standard_larg4
+sbnd_larg4.FillSimEnergyDeposits: true #fill sim energy deposits for ml reco workflow. Will later convert to 
+                                       #sedlite and be dropped from the output
+sbnd_larg4.EnergyDepositInstanceLabels: ["LArG4DetectorServicevolTPCActive"] #sed instance label to keep
 
 END_PROLOG

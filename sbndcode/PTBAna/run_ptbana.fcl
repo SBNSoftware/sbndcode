@@ -1,0 +1,25 @@
+process_name: PTBAnalyzer
+
+services:
+{
+  TFileService: { fileName: "ptbana_sbnd.root" }
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  analyzers:
+  {
+    ptbana: 
+    { 
+      module_type:       "PTBAnalysis"
+    }
+  }
+
+  ana:       [ ptbana ]
+  end_paths: [ ana ]
+}

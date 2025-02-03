@@ -1,0 +1,70 @@
+# Run just CRT simulation
+
+#
+# services
+#
+
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+#
+# modules
+#
+
+#include "crtsimmodules_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+
+
+process_name: CrtSim
+
+services:
+{
+  TFileService:                 { fileName: @local::sbnd_tfileoutput.fileName }
+  FileCatalogMetadata:          @local::sbnd_file_catalog_mc
+  AuxDetExptGeoHelperInterface: { service_provider: "CRTGeometryHelper" }
+  AuxDetGeometry:               { @table::sbnd_geo_source }
+  @table::sbnd_g4_services
+}
+
+
+source:
+{
+  module_type:     RootInput
+}
+
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+
+  producers:
+  {
+    rns:       { module_type: "RandomNumberSaver" }
+    crtsim:    @local::sbnd_crtsim
+  }
+
+  #define the producer and filter modules for this path, order matters,
+  simulate:  [ rns, crtsim ]
+
+  #define the output stream, there could be more than one if using filters
+  stream1:   [ out1 ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
+
+# block to define where the output goes.  if you defined a filter in the physics
+# block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+# entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput # inherit shared settings
+    dataTier:    "simulated"
+    compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
+  }
+}

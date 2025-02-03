@@ -1,7 +1,7 @@
 set(
   MODULE_LIBRARIES
                     sbndcode_OpDetSim
-		                larcorealg::Geometry
+                                larcorealg::Geometry
                     larcore::Geometry_Geometry_service
                     lardataobj::Simulation
                     lardata::Utilities
@@ -16,15 +16,15 @@ set(
                     art::Framework_Services_Registry
                     art_root_io::tfile_support
                     art_root_io::TFileService_service
-		                artdaq_core::artdaq-core_Data
+                                artdaq_core::artdaq-core_Data
                     artdaq_core::artdaq-core_Utilities
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
-		                sbndcode_CRT
-		                sbndcode_CRTUtils
+                    sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
+                    sbndcode_CRTUtils
                     sbnobj::Common_CRT
-		                sbnobj::SBND_CRT
-		                sbnobj::SBND_Trigger
+                    sbnobj::SBND_CRT
+                    sbnobj::SBND_Timing
                     sbndcode_CRTUtils
                     sbndcode_GeoWrappers
                     art::Framework_Services_Optional_RandomNumberGenerator_service
@@ -42,6 +42,8 @@ add_subdirectory(PMT)
 
 cet_build_plugin(ArtdaqFragmentProducer art::module SOURCE ArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(MetricProducer art::module SOURCE MetricProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(MetricAnalyzer art::module SOURCE MetricAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(MetricFilter   art::module SOURCE MetricFilter_module.cc   LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()

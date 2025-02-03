@@ -1,4 +1,3 @@
-#include "standard_g4_sbnd.fcl"
-#include "enable_spacecharge_services_sbnd.fcl"
+#include "g4_sce.fcl"
 
 services.ParticleListAction.keepGenTrajectories: ["generator", "corsika"]

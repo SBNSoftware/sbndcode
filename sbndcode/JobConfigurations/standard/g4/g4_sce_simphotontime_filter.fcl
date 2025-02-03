@@ -1,3 +1,41 @@
 #include "g4_simphotontime_filter.fcl"
 
-#include "enable_spacecharge_services_sbnd.fcl"
+#include "enable_spacecharge_services_sbnd_2D_DriftSimOnly.fcl"
+
+# specify that we want to save the non-priorSCE instance of SimEnergyDeposits from ionandscint
+physics.producers.ionandscint.EnergyDepositInstanceLabels: [""]
+
+# Add a process that merges the priorSCE SimEnergyDeposits as well
+# We want to keep both the priorSCE and non-priorSCE instances of SimEnergyDeposits
+physics.producers.ionandscintpriorSCE: @local::sbnd_merge_sim_sources
+physics.producers.ionandscintpriorSCE.FillSimEnergyDeposits: true
+physics.producers.ionandscintpriorSCE.InputSourcesLabels: [ "ionandscintintime", "ionandscintouttime"]
+physics.producers.ionandscintpriorSCE.EnergyDepositInstanceLabels: ["priorSCE"]
+
+physics.simulate: [ rns
+                  ### Complete intime drift simulation and generic CRT
+                  , genericcrtintime
+                  ### Do full Geant4 simulation for the outtimes
+                  , loader
+                  , larg4outtime
+                  , ionandscintouttime
+                  , pdfastsimouttime
+                  , genericcrtouttime
+                  ### Simulate the light outside the AV
+                  , ionandscintoutintime
+                  , pdfastsimoutintime
+                  , ionandscintoutouttime
+                  , pdfastsimoutouttime
+                  ### Merge the intime and outtime paths
+                  , largeant
+                  , largeantdropped
+                  , simplemerge
+                  , sedlite
+                  , ionandscint
+                  , ionandscintpriorSCE
+                  , pdfastsim
+                  , pdfastsimout
+                  , genericcrt
+                  ### Do truth-level reconstruction
+                  , mcreco
+                  ]

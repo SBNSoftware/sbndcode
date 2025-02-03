@@ -24,7 +24,6 @@ set(
 		                sbndcode_CRTUtils
                     sbnobj::Common_CRT
 		                sbnobj::SBND_CRT
-		                sbnobj::SBND_Trigger
                     sbndcode_CRTUtils
                     sbndcode_GeoWrappers
                     art::Framework_Services_Optional_RandomNumberGenerator_service

@@ -1,0 +1,17 @@
+#include "crtgeoalg_sbnd.fcl"
+
+BEGIN_PROLOG
+
+crtbacktrackeralg_sbnd:
+{
+   SimModuleLabel:         "largeant"
+   SimDepositModuleLabel:  "genericcrt"
+   FEBDataModuleLabel:     "crtsim"
+   StripHitModuleLabel:    "crtstrips"
+   ClusterModuleLabel:     "crtclustering"
+   SpacePointModuleLabel:  "crtspacepoints"
+   TrackModuleLabel:       "crttracks"
+   CRTGeoAlg:              @local::crtgeoalg_sbnd
+}
+
+END_PROLOG

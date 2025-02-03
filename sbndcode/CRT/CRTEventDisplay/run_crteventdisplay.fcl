@@ -1,0 +1,29 @@
+#include "simulationservices_sbnd.fcl"
+#include "crteventdisplay_sbnd.fcl"
+
+process_name: CRTEventDisplay
+
+services:
+{
+  @table::sbnd_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1 
+
+}
+
+physics:
+{
+  analyzers:
+  {
+    crtevd:   @local::crteventdisplay_sbnd
+  }
+
+  ana: [ crtevd ]
+
+  end_paths: [ ana ]
+}

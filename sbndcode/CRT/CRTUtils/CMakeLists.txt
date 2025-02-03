@@ -1,51 +1,14 @@
-art_make_library(    LIBRARY_NAME sbndcode_CRTUtils
-                   SOURCE
-                           CRTBackTracker.cc
-                           CRTCommonUtils.cc
-                           CRTEventDisplay.cc
-                           CRTHitRecoAlg.cc
-                           CRTT0MatchAlg.cc
-                           CRTTrackMatchAlg.cc
-                           CRTTrackRecoAlg.cc
-                           TPCGeoUtil.cc
-                 LIBRARIES larcorealg::Geometry
-                           larcore::Geometry_Geometry_service
-                           larsim::Simulation
-                           lardataobj::Simulation
-                           larsim::MCCheater_BackTrackerService_service
-                           larsim::MCCheater_ParticleInventoryService_service
-                           lardata::Utilities
-                           larevt::Filters
-                           lardataobj::RawData
-                           lardataobj::RecoBase
-                           lardata::RecoObjects
-                           lardataalg::DetectorInfo
-                           larpandora::LArPandoraInterface
-                           nusimdata::SimulationBase
-                           cetlib::cetlib
-                           cetlib_except::cetlib_except
-                           art::Framework_Core
-                           art::Framework_Principal
-                           art::Framework_Services_Registry
-                           art_root_io::tfile_support
-                           art_root_io::TFileService_service
-                           art::Persistency_Common
-                           art::Persistency_Provenance
-                           art::Utilities
-                           messagefacility::MF_MessageLogger
-                           fhiclcpp::fhiclcpp
-                           ROOT::Geom
-                           ROOT::XMLIO
-                           ROOT::Gdml
-                           ROOT::Core
-                           ROOT::Graf3d
-                           ROOT::Gpad
-                           sbndcode_CRT
-                           sbnobj::Common_CRT
-                           sbnobj::SBND_CRT
-                           sbndcode_GeoWrappers
-                           sbndcode_RecoUtils
-        )
+art_make(
+         LIBRARY_NAME sbndcode_CRTUtils
+
+         LIB_LIBRARIES
+         messagefacility::MF_MessageLogger
+         art::Persistency_Common
+         lardataobj::Simulation
+         larcore::Geometry_Geometry_service
+         nusimdata::SimulationBase
+         sbnobj::SBND_CRT
+)
 
 install_headers()
 install_fhicl()

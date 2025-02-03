@@ -4,6 +4,13 @@ BEGIN_PROLOG
 
 sbnd_mcreco: @local::standard_mcreco
 sbnd_mcreco.MCParticleLabel: "largeant"
-sbnd_mcreco.SimChannelLabel: "simdrift"
+#Include dropped particles to fill in their ancestry
+sbnd_mcreco.MCParticleDroppedLabel: "largeant:droppedMCParticles"
+sbnd_mcreco.IncludeDroppedParticles: true
+#Use sedlite for energy depositions
+sbnd_mcreco.SimChannelLabel: "sedlite"
+sbnd_mcreco.UseSimEnergyDepositLite: true
+sbnd_mcreco.MCRecoPart.SavePathPDGList: [13,-13,211,-211,111,311,310,130,321,-321,2212,2112,2224,2214,2114,1114,3122,1000010020,1000010030,1000020030,1000020040]
+sbnd_mcreco.MCRecoPart.TrackIDOffsets: [0,10000000,20000000] #Account for track ID offsets in labeling primaries
 
 END_PROLOG

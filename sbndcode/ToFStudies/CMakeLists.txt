@@ -32,6 +32,7 @@ set(
                            ROOT::Core
                            sbndcode_RecoUtils
                            sbndcode_OpDetSim
+			   sbndcode_CRT_CRTBackTracker
         )
 
 cet_build_plugin(ToFAnalyzer art::module SOURCE ToFAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES})

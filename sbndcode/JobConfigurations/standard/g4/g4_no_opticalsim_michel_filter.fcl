@@ -13,6 +13,8 @@
 physics.simulate: [ rns
                   , loader
                   , largeant
+                  , simplemerge
+                  , sedlite
                   , ionandscint
                   , simdrift
                   , filter # Adding filter

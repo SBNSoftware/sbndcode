@@ -21,29 +21,29 @@
 
 
 local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
-local reality = std.extVar('reality');
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
-
-
-local wc = import 'wirecell.jsonnet';
-local g = import 'pgraph.jsonnet';
-
 local raw_input_label = std.extVar('raw_input_label');  // eg "daq"
 
-
-local data_params = import 'params.jsonnet';
-local simu_params = import 'simparams.jsonnet';
-local params = if reality == 'data' then data_params else simu_params;
-
-
+local g = import 'pgraph.jsonnet';
+local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
+local wc = import 'wirecell.jsonnet';
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
+
+local simu_params = import 'simparams.jsonnet';
+local params = simu_params;
+
 local tools = tools_maker(params);
+
+local mega_anode = {
+  type: 'MegaAnodePlane',
+  name: 'meganodes',
+  data: {
+    anodes_tn: [wc.tn(anode) for anode in tools.anodes],
+  },
+};
 
 local wcls_maker = import 'pgrapher/ui/wcls/nodes.jsonnet';
 local wcls = wcls_maker(params, tools);
-
-local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
-
 
 // Collect the WC/LS input converters for use below.  Make sure the
 // "name" argument matches what is used in the FHiCL that loads this
@@ -62,16 +62,11 @@ local wcls_input = {
 
 };
 
+
 // Collect all the wc/ls output converters for use below.  Note the
 // "name" MUST match what is used in theh "outputers" parameter in the
 // FHiCL that loads this file.
-local mega_anode = {
-  type: 'MegaAnodePlane',
-  name: 'meganodes',
-  data: {
-    anodes_tn: [wc.tn(anode) for anode in tools.anodes],
-  },
-};
+
 local wcls_output = {
   // The noise filtered "ADC" values.  These are truncated for
   // art::Event but left as floats for the WCT SP.  Note, the tag
@@ -99,23 +94,20 @@ local wcls_output = {
     type: 'wclsFrameSaver',
     name: 'spsaver',
     data: {
-      // anode: wc.tn(tools.anode),
       anode: wc.tn(mega_anode),
       digitize: false,  // true means save as RawDigit, else recob::Wire
       frame_tags: ['gauss', 'wiener'],
 
       // this may be needed to convert the decon charge [units:e-] to be consistent with the LArSoft default ?unit? e.g. decon charge * 0.005 --> "charge value" to GaussHitFinder
       frame_scale: [0.02, 0.02],
-       nticks: params.daq.nticks,
+      nticks: params.daq.nticks,
       chanmaskmaps: [],
-      //nticks: ,
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 };
 
-
 local perfect = import 'pgrapher/experiment/sbnd/chndb-perfect.jsonnet';
-//local base = import 'chndb-base_sbnd.jsonnet';
+//local base = import 'pgrapher/experiment/sbnd/chndb-base_sbnd.jsonnet';
 
 local chndb = [{
   type: 'OmniChannelNoiseDB',
@@ -125,24 +117,24 @@ local chndb = [{
   uses: [tools.anodes[n], tools.field, tools.dft],
 } for n in std.range(0, std.length(tools.anodes) - 1)];
 
-
-local nf_maker = import 'pgrapher/experiment/sbnd/nf.jsonnet';
-local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
-
-local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
-local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
-
 local chsel_pipes = [
   g.pnode({
     type: 'ChannelSelector',
     name: 'chsel%d' % n,
     data: {
-      channels: std.range(5632 * n, 5632 * (n + 1) - 1),
+      channels: std.range(5638 * n, 5638 * (n + 1) - 1),
       //tags: ['orig%d' % n], // traces tag
     },
   }, nin=1, nout=1)
   for n in std.range(0, std.length(tools.anodes) - 1)
 ];
+
+local nf_maker = import 'pgrapher/experiment/sbnd/nf.jsonnet';
+local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
+
+local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
+local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
+local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
 local magoutput = 'sbnd-data-check.root';
 local magnify = import 'pgrapher/experiment/sbnd/magnify-sinks.jsonnet';
@@ -153,7 +145,7 @@ local nfsp_pipes = [
                chsel_pipes[n],
                //sinks.orig_pipe[n],
 
-               //nf_pipes[n],
+               nf_pipes[n],
                //sinks.raw_pipe[n],
 
                sp_pipes[n],
@@ -165,7 +157,6 @@ local nfsp_pipes = [
   for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local fanpipe = f.fanpipe('FrameFanout', nfsp_pipes, 'FrameFanin', 'sn_mag_nf');
 
 local retagger = g.pnode({

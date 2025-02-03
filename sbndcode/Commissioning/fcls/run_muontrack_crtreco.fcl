@@ -1,0 +1,21 @@
+#include "crtrecoproducers_sbnd.fcl"
+#include "run_muontrack.fcl"
+
+physics.producers.crtclustering:  @local::crtclusterproducer_sbnd
+physics.producers.crtspacepoints: @local::crtspacepointproducer_sbnd
+physics.producers.crttracks:      @local::crttrackproducer_sbnd
+
+physics.reco: [ fasthit, MuonTrackProducer, MuonTrackFilter, crtclustering, crtspacepoints, crttracks ]
+physics.ana:  [ hitdumper ]
+
+# override hitdumper defaults 
+physics.analyzers.hitdumper.readMuonHits:       true
+physics.analyzers.hitdumper.readMuonTracks:     true
+physics.analyzers.hitdumper.KeepCRTStripHits:   true
+physics.analyzers.hitdumper.KeepCRTTracks:      true
+physics.analyzers.hitdumper.KeepCRTSpacePoints: true
+physics.analyzers.hitdumper.readpmtTrigger:     false
+physics.analyzers.hitdumper.readpmtSoftTrigger: false
+physics.analyzers.hitdumper.readOpHits:         true
+physics.analyzers.hitdumper.readTruth:          true
+physics.analyzers.hitdumper.savePOTinfo:        true

@@ -1,0 +1,6 @@
+#include "standard_detsim_sbnd.fcl"
+
+process_name: DetsimVar
+
+#remove diffusion
+physics.producers.simtpc2d.wcls_main.structs.DL: 0

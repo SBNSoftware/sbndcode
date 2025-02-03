@@ -13,3 +13,4 @@
 process_name: Reco1Reco2
 
 physics.trigger_paths: [ fullreco ]
+physics.end_paths: [stream1, superaana]

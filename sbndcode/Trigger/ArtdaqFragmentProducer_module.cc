@@ -10,7 +10,6 @@
 ////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/CRT/CRTUtils/CRTBackTracker.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
@@ -19,7 +18,6 @@
 #include "sbnobj/Common/CRT/CRTHit.hh"
 #include "sbnobj/Common/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-#include "sbndcode/CRT/CRTUtils/CRTHitRecoAlg.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
 
@@ -130,7 +128,7 @@ private:
 
   // Other variables shared between different methods.
   geo::GeometryCore const* fGeometryService;
-  CRTGeoAlg fCrtGeo;
+  sbnd::crt::CRTGeoAlg fCrtGeo;
 
   //PMT
 
@@ -170,6 +168,7 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
   fVerbose(p.get<bool>("Verbose", false)),
   fClockSpeedCRT(p.get<double>("ClockSpeedCRT")),
   fFirstFEBMac5(p.get<size_t>("FirstFEBMac5", 0)),
+  fCrtGeo(p.get<fhicl::ParameterSet>("CRTGeoAlg")),
   fInputModuleNameWvfm(p.get<std::string>("InputModuleNameWvfm")),
   fInputModuleNameTrigger(p.get<std::string>("InputModuleNameTrigger")),
   fBaseline(p.get<int>("Baseline",8000)),
@@ -177,8 +176,8 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
   fBeamWindowLength(p.get<double>("BeamWindowLength", 1.6)),
   nChannelsFrag(p.get<double>("nChannelsFrag", 15)),
   wfm_length(p.get<double>("WfmLength", 5120)),
-    fTriggerTimeEngine(art::ServiceHandle<rndm::NuRandomService>{}->registerAndSeedEngine(
-                         createEngine(0, "HepJamesRandom", "trigger"), "HepJamesRandom", "trigger", p, "SeedTriggerTime"))
+  fTriggerTimeEngine(art::ServiceHandle<rndm::NuRandomService>{}->registerAndSeedEngine(
+     createEngine(0, "HepJamesRandom", "trigger"), "HepJamesRandom", "trigger", p, "SeedTriggerTime"))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
@@ -342,8 +341,8 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
         uint64_t  timestamp = (uint64_t)(T0s[feb_i][feb_hits_in_fragments[feb_i]]/fClockSpeedCRT); //absolute timestamp
 
         // create fragment
-        sbnd::CRTPlane plane_num = sbnd::CRTCommonUtils::GetPlaneIndex(taggers[feb_i]);
-        uint16_t fragmentIDVal = 32768 + 12288 + (plane_num * 256) + (uint16_t)mac5;
+        sbnd::crt::CRTTagger tagger_num = sbnd::crt::CRTCommonUtils::GetTaggerEnum(taggers[feb_i]);
+        uint16_t fragmentIDVal = 32768 + 12288 + (tagger_num * 256) + (uint16_t)mac5;
         if(fVerbose){std::cout<<"fragmentID: "<<std::bitset<16>{fragmentIDVal}<<std::endl;}
         auto fragment_uptr = artdaq::Fragment::FragmentBytes(sizeof(sbndaq::BernCRTHitV2)*metadata.hits_in_fragment(), //payload_size
             sequence_id,

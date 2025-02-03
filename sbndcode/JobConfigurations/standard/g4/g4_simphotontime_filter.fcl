@@ -3,13 +3,14 @@
 #          for making cosmics in time samples.
 #
 # This runs the new, refactored, LArG4 simulation.
+# Note: All references to simdrift have been removed in the switch to the 2D WireCell Drift Simulation.
 
 #include "mergesimsources_sbnd.fcl"
 
 #include "standard_g4_sbnd.fcl"
 
 # Add process to finish the electron drift simulation for the intimes
-physics.producers.simdriftintime: @local::sbnd_simdrift
+# physics.producers.simdriftintime: @local::sbnd_simdrift
 physics.producers.genericcrtintime: @local::sbnd_genericCRT
 
 # Add a geant4 process, that will run only on the outtime cosmics
@@ -17,16 +18,16 @@ physics.producers.loader: { module_type: "PhysListLoader" }
 physics.producers.larg4outtime: @local::sbnd_larg4
 physics.producers.ionandscintouttime: @local::sbnd_ionandscint
 physics.producers.pdfastsimouttime: @local::sbnd_pdfastsim_par
-physics.producers.simdriftouttime: @local::sbnd_simdrift
+# physics.producers.simdriftouttime: @local::sbnd_simdrift
 physics.producers.genericcrtouttime: @local::sbnd_genericCRT
 
 # Set the appropriate input labels, to run geant4 only on the outtime cosmics
-physics.producers.simdriftintime.SimulationLabel: "ionandscintintime:priorSCE"
+# physics.producers.simdriftintime.SimulationLabel: "ionandscintintime:priorSCE"
 physics.producers.genericcrtintime.LArG4Label: "larg4intime"
 physics.producers.larg4outtime.inputCollections: [ "GenInTimeSorter:outtime" ]
 physics.producers.ionandscintouttime.InputModuleLabels: ["larg4outtime"]
 physics.producers.pdfastsimouttime.SimulationLabel: "ionandscintouttime:priorSCE"
-physics.producers.simdriftouttime.SimulationLabel: "ionandscintouttime:priorSCE"
+# physics.producers.simdriftouttime.SimulationLabel: "ionandscintouttime:priorSCE"
 physics.producers.genericcrtouttime.LArG4Label: "larg4outtime"
 
 # Add processes for light simulation outside the active volume (AV) for the intimes
@@ -44,6 +45,8 @@ physics.producers.pdfastsimoutouttime.SimulationLabel: "ionandscintoutouttime"
 # Add a process that merges the MCParticles
 physics.producers.largeant: @local::sbnd_merge_sim_sources
 physics.producers.largeant.FillMCParticles: true
+physics.producers.largeant.FillSimEnergyDeposits: true
+physics.producers.largeant.EnergyDepositInstanceLabels: @local::largeant_volumes
 physics.producers.largeant.InputSourcesLabels: [ "larg4intime", "larg4outtime"]
 
 # Add a process that merges the SimEnergyDeposits
@@ -52,9 +55,9 @@ physics.producers.ionandscint.FillSimEnergyDeposits: true
 physics.producers.ionandscint.InputSourcesLabels: [ "ionandscintintime", "ionandscintouttime"]
 
 # Add a process that merges the SimChannels
-physics.producers.simdrift: @local::sbnd_merge_sim_sources
-physics.producers.simdrift.FillSimChannels: true
-physics.producers.simdrift.InputSourcesLabels: [ "simdriftintime", "simdriftouttime"]
+# physics.producers.simdrift: @local::sbnd_merge_sim_sources
+# physics.producers.simdrift.FillSimChannels: true
+# physics.producers.simdrift.InputSourcesLabels: [ "simdriftintime", "simdriftouttime"]
 
 # Add a process that merges the AuxDetSimChannels
 physics.producers.genericcrt: @local::sbnd_merge_sim_sources
@@ -71,17 +74,27 @@ physics.producers.pdfastsimout: @local::sbnd_merge_sim_sources
 physics.producers.pdfastsimout.FillSimPhotons: true
 physics.producers.pdfastsimout.InputSourcesLabels: [ "pdfastsimoutintime", "pdfastsimoutouttime"]
 
+#Merge dropped MCParticle collections
+physics.producers.largeantdropped: @local::sbnd_merge_dropped_mcpart_overlay
+physics.producers.largeantdropped.InputSourcesLabels: [ "larg4intime:droppedMCParticles", "larg4outtime:droppedMCParticles"]
+
+# Change simple merge inputs since we're using an overlay sample
+physics.producers.simplemerge.InputSourcesLabels: ["largeant", "largeantdropped"]
+
+# Set proper input tags for mcreco
+physics.producers.mcreco.MCParticleDroppedLabel: "largeantdropped"
+
 # Add all these new modules to the simulate path
 physics.simulate: [ rns
                   ### Complete intime drift simulation and generic CRT
-                  , simdriftintime
+                #   , simdriftintime
                   , genericcrtintime
                   ### Do full Geant4 simulation for the outtimes
                   , loader
                   , larg4outtime
                   , ionandscintouttime
                   , pdfastsimouttime
-                  , simdriftouttime
+                #   , simdriftouttime
                   , genericcrtouttime
                   ### Simulate the light outside the AV
                   , ionandscintoutintime
@@ -90,13 +103,16 @@ physics.simulate: [ rns
                   , pdfastsimoutouttime
                   ### Merge the intime and outtime paths
                   , largeant
+                  , largeantdropped
+                  , simplemerge
+                  , sedlite
                   , ionandscint
-                  , simdrift
+                #   , simdrift
                   , pdfastsim
                   , pdfastsimout
                   , genericcrt
                   ### Do truth-level reconstruction
-                  , mcreco
+                   , mcreco
                   ]
 
 services.ParticleListAction.keepGenTrajectories: ["GenInTimeSorter"]

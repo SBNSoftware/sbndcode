@@ -1,0 +1,65 @@
+#include "services_sbnd.fcl"
+#include "TPCChannelMapService.fcl"
+
+process_name: FilterChoppy
+
+services:
+{
+  TFileService: { fileName: "reco_hist.root"}
+  MemoryTracker:     {}
+  TimeTracker:       {}
+  RandomNumberGenerator: {} 
+  message:              @local::sbnd_message_services_prod_debug
+  FileCatalogMetadata:  @local::art_file_catalog_mc
+  TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
+  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
+  ExptGeoHelperInterface:    @local::sbnd_geometry_helper
+  Geometry:                  @local::sbnd_geo
+  GeometryConfigurationWriter:    {}
+  @table::sbnd_basic_services
+  @table::sbnd_random_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1
+}
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "%ifb_nonchoppy.root"
+   dataTier:    "filtered"
+   fastCloning: true
+   SelectEvents: [ dropchoppy ]
+ }
+ out2:
+ {
+   module_type: RootOutput
+   fileName:    "%ifb_choppy.root"
+   dataTier:    "filtered"
+   fastCloning: true
+   SelectEvents: [ savechoppy ]
+ }
+}
+
+physics:
+{
+  filters:
+  {
+    filterchoppy: {
+      module_type: FilterChoppy
+    }
+  }
+
+  dropchoppy: [ "filterchoppy"]
+  savechoppy: [ "!filterchoppy"]
+  stream1:  [ out1 ]
+  stream2:  [ out2 ]
+  trigger_paths: [ dropchoppy, savechoppy ]
+  end_paths:     [ stream1, stream2 ]
+}
+

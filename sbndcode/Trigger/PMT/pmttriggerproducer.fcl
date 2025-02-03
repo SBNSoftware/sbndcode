@@ -9,7 +9,7 @@ pmtTriggerProducer:
   ClusterModuleLabel: "linecluster"
   OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]
   IndividualThresholds: false #if true, Threshold needs to be a 120 element array of each individual PMT ADC threshold in order of lowest to highest channel number
-  Threshold: [7960.0, 7976.0] #[coated, uncoated], unless IndividualThresholds is true
+  Threshold: [14705.0, 14721.0] # [coated, uncoated], unless IndividualThresholds is true *not tuned*
   #ADC, ideal single PE response: 1 PE ~ 8 ADC, test bench: 1 PE ~ 25 ADC
   OVTHRWidth: 11 #over-threshold width, page 40 of manual
   #paired and unpaired pmt channel numbers, to pair two channels put them at the same index in Pair1 and Pair2

@@ -1,0 +1,5 @@
+#include "standard_detsim_sbnd.fcl"
+
+#remove diffusion
+physics.producers.simtpc2d.wcls_main.structs.DL: 0
+physics.producers.simtpc2d.wcls_main.structs.DT: 0

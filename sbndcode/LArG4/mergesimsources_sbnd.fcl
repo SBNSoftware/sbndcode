@@ -42,4 +42,15 @@ sbnd_merge_overlay_sim_sources : {
   AuxDetHitsInstanceLabels:    @local::largeant_crt_volumes
 }
 
+# Merge the overlay MCParticles from "dropped" processes
+sbnd_merge_dropped_mcpart_overlay: 
+{
+    @table::sbnd_merge_sim_sources
+    module_type: "MergeSimSourcesSBN"
+    InputSourcesLabels: ["largeantnu:droppedMCParticles","largeantcosmic:droppedMCParticles"]
+    FillMCParticles: true
+    FillMCParticlesLite: false
+    FillMCParticlesAssociated: false
+}
+
 END_PROLOG

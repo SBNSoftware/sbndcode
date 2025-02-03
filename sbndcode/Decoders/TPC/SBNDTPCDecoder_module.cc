@@ -46,10 +46,10 @@ tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(art::Event 
   const sbndaq::NevisTPCHeader *raw_header = fragment.header();
   tpcAnalysis::TPCDecodeAna ret;
 
-  ret.crate = raw_header->getFEMID();
+  ret.crate = (frag.fragmentID() >> 8) & 0xF;  
   ret.slot = raw_header->getSlot();
   ret.event_number = raw_header->getEventNum();
-  // ret.frame_number = raw_header->getFrameNum();
+  //std::cout << "TPC decoder frame, sample: " << raw_header->getFrameNum() << " " << raw_header->get2mhzSample() << std::endl;
   ret.checksum = raw_header->getChecksum();
   
   ret.adc_word_count = raw_header->getADCWordCount();
@@ -57,9 +57,13 @@ tpcAnalysis::TPCDecodeAna daq::SBNDTPCDecoder::Fragment2TPCDecodeAna(art::Event 
   
   // formula for getting unix timestamp from nevis frame number:
   // timestamp = frame_number * (timesize + 1) + trigger_sample
-  ret.timestamp = (raw_header->getFrameNum() * (_config.timesize + 1) + raw_header->get2mhzSample()) * _config.frame_to_dt;
-
+  ret.timestamp = (raw_header->getFrameNum() * ( (ULong64_t) _config.timesize + 1) + raw_header->get2mhzSample()) * ( (double)  _config.frame_to_dt);
+  //std::cout << "timestamp: " << ret.timestamp << std::endl;
   ret.index = raw_header->getSlot() - _config.min_slot_no;
+
+  ret.framenum = raw_header->getFrameNum();
+  ret.samplenum = raw_header->get2mhzSample();
+  ret.fragtimestamp = (ULong64_t) frag.timestamp();
 
   return ret;
 }
@@ -100,8 +104,8 @@ daq::SBNDTPCDecoder::Config::Config(fhicl::ParameterSet const & param) {
 
 void daq::SBNDTPCDecoder::produce(art::Event & event)
 {
-  auto const& daq_handle = event.getValidHandle<artdaq::Fragments>(_tag);
-
+  auto daq_handle = event.getHandle<artdaq::Fragments>(_tag);
+  
   RDPmkr rdpm(event);
   TSPmkr tspm(event);
 
@@ -111,10 +115,17 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   std::unique_ptr<RDTsAssocs> rdtsassoc_collection(new RDTsAssocs);
   std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> header_collection(new std::vector<tpcAnalysis::TPCDecodeAna>);
 
-  for (auto const &rawfrag: *daq_handle) {
-    process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
+  if ( daq_handle.isValid() ) {
+    for (auto const &rawfrag: *daq_handle) {
+      process_fragment(event, rawfrag, rawdigit_collection, header_collection, rdpm, tspm, rdts_collection, rdtsassoc_collection);
+    }
   }
+  else
+    {
+      mf::LogWarning("SBNDTPCDecoder_module") <<  " Invalid fragment handle: Skipping TPC digit decoding";
+    }
 
+  
   event.put(std::move(rawdigit_collection));
   event.put(std::move(rdts_collection));
   event.put(std::move(rdtsassoc_collection));
@@ -122,6 +133,12 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   if (_config.produce_header) {
     event.put(std::move(header_collection));
   }
+
+  // remove TPC fragments from the art event cache.  They can be re-read from the file
+  // by downstream processes if need be, but we are
+  // done with them here
+
+  if ( daq_handle.isValid() ) daq_handle.removeProduct();
 }
 
 
@@ -149,10 +166,12 @@ void daq::SBNDTPCDecoder::process_fragment(art::Event &event, const artdaq::Frag
     header_collection->push_back(header_data);
   }
 
+  unsigned int FEMCrate = (frag.fragmentID() >> 8) & 0xF;
+  unsigned int FEMSlot = fragment.header()->getSlot()-_config.min_slot_no + 1;
+  
   for (auto waveform: waveform_map) {
-    auto chanInfo = channelMap->GetChanInfoFromFEMElements(
-							   fragment.header()->getFEMID(), // FEM crate
-							   fragment.header()->getSlot()-_config.min_slot_no + 1, // FEM slot
+    auto chanInfo = channelMap->GetChanInfoFromFEMElements(FEMCrate,
+							   FEMSlot,
 							   waveform.first); // nevis_channel_id    
     if (!chanInfo.valid) continue;
 
