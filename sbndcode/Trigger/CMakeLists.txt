@@ -24,6 +24,7 @@ set(
                     sbndcode_CRTUtils
                     sbnobj::Common_CRT
                     sbnobj::SBND_CRT
+                    sbnobj::SBND_Timing
                     sbndcode_CRTUtils
                     sbndcode_GeoWrappers
                     art::Framework_Services_Optional_RandomNumberGenerator_service
@@ -41,6 +42,8 @@ add_subdirectory(PMT)
 
 cet_build_plugin(ArtdaqFragmentProducer art::module SOURCE ArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(MetricProducer art::module SOURCE MetricProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(MetricAnalyzer art::module SOURCE MetricAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(MetricFilter   art::module SOURCE MetricFilter_module.cc   LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
