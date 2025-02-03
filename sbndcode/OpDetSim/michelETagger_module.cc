@@ -46,7 +46,7 @@ public:
   bool DoubleFlashCheck(std::vector<double> &SummedVector);
   void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
   void ConvolveWithAnyKernel(std::vector<double> &Waveform, std::vector<double> &Kernel, std::vector<double> &Out);
-  void michelETagger::SaveVector(std::vector<double> &HistEntries, std::string Name);
+  void SaveVector(std::vector<double> &HistEntries, std::string Name);
 
 
 
