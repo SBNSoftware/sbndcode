@@ -165,7 +165,7 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
   for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
       {
           //Loop over each PMT in a board
-          for(int CAENChannel=0; CAENChannel<PMTPerBoard; CAENChannel++)
+          for(int CAENChannel=0; CAENChannel<PMTPerBoard[CurrentBoard]; CAENChannel++)
           {
             //Extract the waveforms associated with this particular flash
             //Waveforms are ordered by CAEN, Flash, PMT channel
