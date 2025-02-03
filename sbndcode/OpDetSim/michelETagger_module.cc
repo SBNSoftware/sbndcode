@@ -114,7 +114,8 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   std::vector<double> GaussianKernel(fGuassianConvlSize);
   for(int i=0; i<fGuassianConvlSize; i++)
   {
-    GaussianKernel[i] = 1/TMath::Sqrt(2*TMath::Pi() * TMath::Power(double(fGaussianConvlWidth), 2.0) )*TMath::Exp( - TMath::Power(double(X[i]), 2.0) / (2*TMath::Power(double(fGaussianConvlWidth), 2.0)) );
+    GaussianKernel[i] = (1/TMath::Sqrt(2*TMath::Pi() * TMath::Power(double(fGaussianConvlWidth), 2.0) )*
+    TMath::Exp( - TMath::Power(double(X[i]), 2.0) / (2*TMath::Power(double(fGaussianConvlWidth), 2.0)) ) ); 
   }
   //Do convolution to smooth the waveform
   //Make edge detection kernel
@@ -126,7 +127,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
     std::to_string(FlashNumForName)+std::string("TPC_")+std::to_string(TPCNumForName)+std::string("_Smoothed"));
   //Do edge detection on waveform 
   ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
-  SaveVector(SmoothedWaveform, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
+  SaveVector(EdgeWaveform, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
     std::to_string(FlashNumForName)+std::string("TPC_")+std::to_string(TPCNumForName)+std::string("_EdgeWaveform"));
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
