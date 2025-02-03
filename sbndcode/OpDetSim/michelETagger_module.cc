@@ -48,6 +48,7 @@ public:
   void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
   void ConvolveWithAnyKernel(std::vector<double> &Waveform, std::vector<double> &Kernel, std::vector<double> &Out);
   void SaveVector(std::vector<double> &HistEntries, std::string Name);
+  bool CheckForMichelCoincidence(double WaveformTimestamp, int MuonSample, art::Handle< std::vector<sbnd::crt::CRTCluster>> &crtClusterHandle);
 
 
 
@@ -95,7 +96,7 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fPeakSearchSamples = p.get<int>("PeakSearchSamples", 100);
 }
 
-bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
+bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector, int &MuonSample)
 {
   //Baseline subtracted summed waveform for a give TPC is available
   //Check for at least two big excursions from baseline
@@ -164,6 +165,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   double MuonLifetime = 2197; // 2197 ns mu+ lifetime;   616 mu- ns lifetime; These are all timeconstants not t1/2
   bool GoodLifetime = TimeToMichel < (fMuonLifetimes*MuonLifetime);
   DoubleFlash = MichelFollowsMuon && BigEnoughMuonFlash && BigEnoughMichelFlash && GoodLifetime;
+  MuonSample = CrossingIndecies[0];
   return DoubleFlash;
 }
 
@@ -288,10 +290,12 @@ bool michelETagger::filter(art::Event& e)
     SaveVector(SummedWaveform_TPC2, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
     std::to_string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
     //Check for double flash in each TPC
+    int MuonSample_TPC1 =0;
+    int MuonSample_TPC2 =0;
     TPCNumForName=1;
-    bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1 );
+    bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1, MuonSample_TPC1 );
     TPCNumForName=2;
-    bool DoubleFlash_TPC2 = DoubleFlashCheck( SummedWaveform_TPC2 );
+    bool DoubleFlash_TPC2 = DoubleFlashCheck( SummedWaveform_TPC2, MuonSample_TPC2 );
     bool CoincidentCRT = false;
     if(DoubleFlash_TPC1)
     {
@@ -301,16 +305,13 @@ bool michelETagger::filter(art::Event& e)
     {
       std::cout << "Found a Michel Candidate in Event " << EventNum << "  Flash " << FlashNumForName << " in TPC 2"  << std::endl;
     }
-    if(DoubleFlash_TPC1 || DoubleFlash_TPC2)
+    if(DoubleFlash_TPC1)
     {
-      //Loop over crt clusters to check for good time with this opDetWaveform
-      for(int ClustID; ClustID<int(crtClusterHandle->size()); ClustID++)
-      {
-        double CRTTimeStamp = (*crtClusterHandle)[ClustID].Ts0();
-        double TDiff = (currentTimeStamp-CRTTimeStamp); //CRT should be slightly early so this is a little positive
-        if(TDiff>0 && TDiff<=fCoincidentWindow) CoincidentCRT=true;
-        if(TDiff > fCoincidentWindow) break; // stop looping over later clusters than this flash
-      }
+      CoincidentCRT=CheckForMichelCoincidence(currentTimeStamp, MuonSample_TPC1, crtClusterHandle);
+    }
+    else if(DoubleFlash_TPC2)
+    {
+      CoincidentCRT=CheckForMichelCoincidence(currentTimeStamp, MuonSample_TPC2, crtClusterHandle);
     }
     //end of flash processing check if we had good result 
     MichelFound = CoincidentCRT & (DoubleFlash_TPC1 || DoubleFlash_TPC2); 
@@ -321,6 +322,20 @@ bool michelETagger::filter(art::Event& e)
     }
   }
   return MichelFound;
+}
+
+bool michelETagger::CheckForMichelCoincidence(double WaveformTimestamp, int MuonSample, art::Handle< std::vector<sbnd::crt::CRTCluster>> &crtClusterHandle)
+{
+  bool CoincidentCRT=false;
+  double currentTimeStamp = WaveformTimestamp + MuonSample*fNsPerSample;
+  for(int ClustID; ClustID<int(crtClusterHandle->size()); ClustID++)
+  {
+    double CRTTimeStamp = (*crtClusterHandle)[ClustID].Ts0();
+    double TDiff = (currentTimeStamp-CRTTimeStamp); //CRT should be slightly early so this is a little positive
+    if(TDiff>0 && TDiff<=fCoincidentWindow) CoincidentCRT=true;
+    if(TDiff > fCoincidentWindow) break; // stop looping over later clusters than this flash
+  }
+  return CoincidentCRT;
 }
 
 DEFINE_ART_MODULE(michelETagger)
