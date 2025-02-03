@@ -291,6 +291,14 @@ bool michelETagger::filter(art::Event& e)
     TPCNumForName=2;
     bool DoubleFlash_TPC2 = DoubleFlashCheck( SummedWaveform_TPC2 );
     bool CoincidentCRT = false;
+    if(DoubleFlash_TPC1)
+    {
+      std::cout << "Found a Michel Candidate in Event " << EventNum << "  Flash " << FlashNumForName << " in TPC 1"  << std::endl;
+    }
+    if(DoubleFlash_TPC2)
+    {
+      std::cout << "Found a Michel Candidate in Event " << EventNum << "  Flash " << FlashNumForName << " in TPC 1"  << std::endl;
+    }
     if(DoubleFlash_TPC1 || DoubleFlash_TPC2)
     {
       //Loop over crt clusters to check for good time with this opDetWaveform
