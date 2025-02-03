@@ -24,6 +24,7 @@
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
+#include "TH1D.h"
 #include <memory>
 
 class michelETagger;
@@ -250,7 +251,6 @@ void michelETagger::SaveVector(std::vector<double> &HistEntries, std::string Nam
     for(unsigned int i = 0; i < wvf.size(); i++) {
       wvfHist->SetBinContent(i + 1, HistEntries[i]); //Loop over waveform and set bin content
     }
-    hist_id++;
 }
 
 
