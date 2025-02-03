@@ -333,6 +333,7 @@ bool michelETagger::CheckForMichelCoincidence(double WaveformTimestamp, int Muon
     double CRTTimeStamp = (*crtClusterHandle)[ClustID].Ts0();
     double TDiff = (currentTimeStamp-CRTTimeStamp); //CRT should be slightly early so this is a little positive
     if(TDiff>0 && TDiff<=fCoincidentWindow) CoincidentCRT=true;
+    if(CoincidentCRT) break;
     //if(TDiff > fCoincidentWindow) break; // stop looping over later clusters than this flash
   }
   return CoincidentCRT;
