@@ -165,7 +165,7 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector, int &Muo
   double MuonLifetime = 2197; // 2197 ns mu+ lifetime;   616 mu- ns lifetime; These are all timeconstants not t1/2
   bool GoodLifetime = TimeToMichel < (fMuonLifetimes*MuonLifetime);
   DoubleFlash = MichelFollowsMuon && BigEnoughMuonFlash && BigEnoughMichelFlash && GoodLifetime;
-  MuonSample = CrossingIndecies[0];
+  MuonSample = std::distance(SmoothedWaveform.begin(),std::max_element(SmoothedWaveform.begin()+CrossingIndecies[0], SmoothedWaveform.begin()+CrossingIndecies[0]+fPeakSearchSamples));
   return DoubleFlash;
 }
 
@@ -331,9 +331,9 @@ bool michelETagger::CheckForMichelCoincidence(double WaveformTimestamp, int Muon
   double currentTimeStamp = WaveformTimestamp*1000 + MuonSample*fNsPerSample; // ns
   for(int ClustID; ClustID<int(crtClusterHandle->size()); ClustID++)
   {
-    if(ClustID==0) std::cout << (*crtClusterHandle)[ClustID].Ts0() << std::endl;
     double CRTTimeStamp = (*crtClusterHandle)[ClustID].Ts0();
     double TDiff = (currentTimeStamp-CRTTimeStamp); //CRT should be slightly early so this is a little positive
+    std::cout << TDiff << std::endl;
     if(TDiff>0 && TDiff<=fCoincidentWindow) CoincidentCRT=true;
     if(TDiff > fCoincidentWindow) break; // stop looping over later clusters than this flash
   }
