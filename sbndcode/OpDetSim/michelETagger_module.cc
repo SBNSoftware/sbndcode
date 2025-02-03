@@ -247,8 +247,8 @@ void michelETagger::SaveVector(std::vector<double> &HistEntries, std::string Nam
     histname.str(Name); //Resets string stream to nothing
     //Create a new histogram
     //Make TH1D to hold waveform. String name is gross, right size and start and end time match timestamps
-    TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), wvf.size(), 0, wvf.size()-1);
-    for(unsigned int i = 0; i < wvf.size(); i++) {
+    TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), histname.str().c_str(), HistEntries.size(), 0, HistEntries.size()-1);
+    for(unsigned int i = 0; i < HistEntries.size(); i++) {
       wvfHist->SetBinContent(i + 1, HistEntries[i]); //Loop over waveform and set bin content
     }
 }
