@@ -79,7 +79,6 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fCoincidentWindow = p.get< double >("CoincidentWindow", 250.); //ns
   fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
   PMTPerBoard = p.get<std::vector<int>>("PMTPerBoard", {10, 13, 12, 7, 9, 10, 11, 12});
-  TotalPMT = p.get<int>("TotalPMT", 104);
   fCRTclusterLabel = p.get<std::string>("CRTclusterLabel");
   fPMTLabel = p.get<std::string>("PMTLabel");
   fMuonADCCutoff = p.get<double>("MuonADCCutoff", 1000.);
