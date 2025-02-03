@@ -281,9 +281,9 @@ bool michelETagger::filter(art::Event& e)
     std::vector<double> SummedWaveform_TPC2(FlashSamples);
     ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
     SaveVector(SummedWaveform_TPC1, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
-    str::string(FlashNumForName)+std::string("TPC_1_SummedWaveform"));
+    std::string(FlashNumForName)+std::string("TPC_1_SummedWaveform"));
     SaveVector(SummedWaveform_TPC2, std::string("Event_") + std::string(EventNum)+std::string("_Flash_")+
-    str::string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
+    std::string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
     //Check for double flash in each TPC
     TPCNumForName=1;
     bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1 );
