@@ -53,7 +53,7 @@ public:
 
 private:
   opdet::sbndPDMapAlg pdMap; //map for photon detector types
-  int fGuassianConvlSize;
+  int fGaussianConvlSize;
   double fGaussianConvlWidth;
   double fCoincidentWindow;
   int fTotalCAENBoards;
@@ -79,7 +79,7 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
 {
   // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
-  fGuassianConvlSize = p.get< int >("GaussianConvlSize", 501 );
+  fGaussianConvlSize = p.get< int >("GaussianConvlSize", 501 );
   fGaussianConvlWidth = p.get< double >("GaussianConvlWidth", 160. );
   fCoincidentWindow = p.get< double >("CoincidentWindow", 250.); //ns
   fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
@@ -109,10 +109,10 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector)
   
   //Construct the gaussian kernel
   bool DoubleFlash=false;
-  std::vector<int> X(fGuassianConvlSize);
-  std::iota(X.begin(), X.end(), -int(fGuassianConvlSize/2)); // Indices
-  std::vector<double> GaussianKernel(fGuassianConvlSize);
-  for(int i=0; i<fGuassianConvlSize; i++)
+  std::vector<int> X(fGaussianConvlSize);
+  std::iota(X.begin(), X.end(), -int(fGaussianConvlSize/2)); // Indices
+  std::vector<double> GaussianKernel(fGaussianConvlSize);
+  for(int i=0; i<fGaussianConvlSize; i++)
   {
     GaussianKernel[i] = (1/TMath::Sqrt(2*TMath::Pi() * TMath::Power(double(fGaussianConvlWidth), 2.0) )*
     TMath::Exp( - TMath::Power(double(X[i]), 2.0) / (2*TMath::Power(double(fGaussianConvlWidth), 2.0)) ) ); 

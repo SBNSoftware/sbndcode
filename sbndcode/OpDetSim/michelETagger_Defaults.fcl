@@ -4,8 +4,8 @@ MichelETagger:
 {
     module_type: "michelETagger"
     GaussianConvlSize: 501 #samples
-    fGaussianConvlWidth: 160 #samples
-    fCoincidentWindow: 250 #ns 
+    fGaussianConvlWidth: 30 #samples
+    fCoincidentWindow: 61 #ns 
     TotalCAENBoards: 8 
     PMTPerBoard: [10, 13, 12, 7, 9, 10, 11, 12]
     CRTclusterLabel: "crtclustering"
