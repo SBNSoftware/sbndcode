@@ -171,8 +171,7 @@ std::vector<double> &SummedVector_TPC2, int &FlashCounter)
             //At least in the decoded files
             //Have to verify for the deconvolved files, but I assume order is preserved
             int WaveIndex = (CAENChannel + 
-            FlashCounter*PMTPerBoard[CurrentBoard] + 
-            CurrentBoard*(std::accumulate(PMTPerBoard.begin(), PMTPerBoard.begin()+CurrentBoard, 0))*NumFlash);
+            FlashCounter*PMTPerBoard[CurrentBoard] + (std::accumulate(PMTPerBoard.begin(), PMTPerBoard.begin()+CurrentBoard, 0))*NumFlash);
             auto const& wvf = (*waveHandle)[WaveIndex];
             std::cout << "On Channel " << wvf.ChannelNumber() << " With start " << wvf.TimeStamp() << std::endl;
             for(int Sample=0; Sample<int(wvf.size()); Sample++)
