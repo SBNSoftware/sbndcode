@@ -327,6 +327,7 @@ bool michelETagger::filter(art::Event& e)
 bool michelETagger::CheckForMichelCoincidence(double WaveformTimestamp, int MuonSample, art::Handle< std::vector<sbnd::crt::CRTCluster>> &crtClusterHandle)
 {
   bool CoincidentCRT=false;
+  std::cout << "waveform timestamp " << WaveformTimestamp << " Muon correction " <<  MuonSample*fNsPerSample << std::endl;
   double currentTimeStamp = WaveformTimestamp + MuonSample*fNsPerSample;
   for(int ClustID; ClustID<int(crtClusterHandle->size()); ClustID++)
   {
