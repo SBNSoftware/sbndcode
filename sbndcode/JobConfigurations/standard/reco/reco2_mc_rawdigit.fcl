@@ -1,4 +1,4 @@
-#include "reco1_sce_lite.fcl"
+#include "standard_reco2_sbnd.fcl"
 #
 analyzers.caloskim: @local::caloskim_nodigits_goldentracks
 
