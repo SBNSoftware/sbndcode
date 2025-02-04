@@ -1,9 +1,10 @@
+#include "detectorclocks_sbnd.fcl"
+
 process_name: PTBAnalyzer
 
 services:
 {
   TFileService: { fileName: "ptbana_sbnd.root" }
-  DetectorClocksService:    @local::sbnd_detectorclocks
 }
 
 source:
