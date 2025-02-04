@@ -56,6 +56,8 @@
 #include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
 #include "sbndaq-artdaq-core/Obj/SBND/CRTmetric.hh"
 
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+
 // Truth includes
 //#include "larsim/MCCheater/BackTrackerService.h"
 //#include "larsim/MCCheater/ParticleInventoryService.h"
@@ -125,6 +127,9 @@ public:
 
   // Called at the beginning of every subrun
   virtual void beginSubRun(art::SubRun const& sr) override;
+
+  void AnalyseTDCs(std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> &TDCVec);
+
 private:
 
   /// Resets the variables that are saved to the TTree
@@ -159,6 +164,11 @@ private:
   void ResizeMCTrack(int nTracks);
   /// Resize the data structure for MCShowers
   void ResizeMCShower(int nShowers);
+
+  std::string fTDCModuleLabel;
+
+  bool fHasTDC;
+
 
   opdet::sbndPDMapAlg _pd_map;
 
@@ -437,6 +447,12 @@ private:
 
   const int MAX_INT = std::numeric_limits<int>::max();
   const long int TIME_CORRECTION = (long int) std::numeric_limits<int>::max() * 2;
+
+  std::vector<uint32_t>    _tdc_channel;
+  std::vector<uint64_t>    _tdc_timestamp;
+  std::vector<uint64_t>    _tdc_offset;
+  std::vector<std::string> _tdc_name;
+
 };
 
 
@@ -458,6 +474,9 @@ Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
 
 void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
 {
+
+  fTDCModuleLabel                   = p.get<std::string>("TDCModuleLabel", "tdcdecoder");
+  fHasTDC                           = p.get<bool>("HasTDC", false);
 
   _max_hits = p.get<int>("MaxHits", 50000);
   _max_ophits = p.get<int>("MaxOpHits", 50000);
@@ -521,6 +540,24 @@ void Hitdumper::analyze(const art::Event& evt)
 
   _t0 = 0.;
   // t0 = detprop->TriggerOffset();  // units of TPC ticks
+
+
+  if(fHasTDC)
+    {
+      // Get TDCs                                                                               
+      art::Handle<std::vector<sbnd::timing::DAQTimestamp>> TDCHandle;
+      evt.getByLabel(fTDCModuleLabel, TDCHandle);
+      if(!TDCHandle.isValid()){
+	std::cout << "TDC product " << fTDCModuleLabel << " not found..." << std::endl;
+        throw std::exception();
+      }
+      std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> TDCVec;
+      art::fill_ptr_vector(TDCVec, TDCHandle);
+
+      // Fill TDC variables                                                                     
+      AnalyseTDCs(TDCVec);
+    }
+
 
   //
   // Hits
@@ -1189,6 +1226,15 @@ void Hitdumper::analyze(const art::Event& evt)
   fTree->Branch("evttime",&_evttime,"evttime/D");
   fTree->Branch("t0",&_t0,"t0/I");
 
+  if(fHasTDC)
+    {
+      fTree->Branch("tdc_channel", "std::vector<uint32_t>", &_tdc_channel);
+      fTree->Branch("tdc_timestamp", "std::vector<uint64_t>", &_tdc_timestamp);
+      fTree->Branch("tdc_offset", "std::vector<uint64_t>", &_tdc_offset);
+      fTree->Branch("tdc_name", "std::vector<std::string>", &_tdc_name);
+    }
+
+
   fTree->Branch("nhits", &_nhits, "nhits/I");
   fTree->Branch("hit_cryostat", &_hit_cryostat);
   fTree->Branch("hit_tpc", &_hit_tpc);
@@ -1406,6 +1452,29 @@ void Hitdumper::analyze(const art::Event& evt)
     _sr_tree->Branch("pot", &_sr_pot, "pot/D");
   }
 
+}
+
+
+void Hitdumper::AnalyseTDCs(std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> &TDCVec)
+{
+  const unsigned nTDCs = TDCVec.size();
+
+  _tdc_channel.resize(nTDCs);
+  _tdc_timestamp.resize(nTDCs);
+  _tdc_offset.resize(nTDCs);
+  _tdc_name.resize(nTDCs);
+
+  unsigned tdc_i = 0;
+
+  for(auto const& tdc : TDCVec)
+    {
+      _tdc_channel[tdc_i]   = tdc->Channel();
+      _tdc_timestamp[tdc_i] = tdc->Timestamp();
+      _tdc_offset[tdc_i]    = tdc->Offset();
+      _tdc_name[tdc_i]      = tdc->Name();
+
+      ++tdc_i;
+    }
 }
 
 
