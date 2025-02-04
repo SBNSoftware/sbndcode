@@ -18,7 +18,7 @@ physics.producers:
     crttracks:      @local::crttrackproducer_data_sbnd
 }
 
-physics.reco2_sce: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
+physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
   crtclustering, crtspacepoints, crttracks ]
 
 physics.analyzers.caloskim.G4producer: ""
