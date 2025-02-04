@@ -27,6 +27,7 @@ hitdumper:
     MCParticleModuleLabel:    "largeant"
     MCTrackModuleLabel:       "mcreco"
     MCShowerModuleLabel:      "mcreco"
+    TDCModuleLabel:           "tdcdecoder"
  
     KeepCRTStripHits:         true
     KeepCRTSpacePoints:       true
@@ -41,6 +42,7 @@ hitdumper:
     readMCParticle:           false
     savePOTinfo:              true
     checkTransparency:        false
+    HasTDC:                   true
 
     window:                   100
 
@@ -55,5 +57,6 @@ hitdumper:
 hitdumper_data: @local::hitdumper
 hitdumper_data.OpHitsModuleLabel: ["ophitpmt"] #only have PMT data as of 05/30/2024
 hitdumper_data.readTruth: false
+hitdumper_data.HasTDC: true
 
 END_PROLOG
