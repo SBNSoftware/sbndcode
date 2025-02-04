@@ -222,17 +222,15 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
     }
     // Handle edges properly
     //Front edge
-    //Have some bug here
     for (int i = 0; i < KernelSize/2; i++) 
     {
         double PointSum = 0;
-        for (int Index : std::vector<int>(X_indices.begin(), X_indices.end()-1 - KernelSize/2 + i) ) //end is samples +1 so the -1 shows up
+        for (int Index : std::vector<int>(X_indices.begin(), X_indices.end() - KernelSize/2 + i) ) //end is samples +1 so the -1 shows up
         {
             PointSum += Waveform[i - Index] * Kernel[KernelSize/2 + Index];
         }
         Out[i] = PointSum;
     }
-    //Back edge
     for (int i = int(Waveform.size()) - (KernelSize/2); i < int(Waveform.size()); i++) 
     {
         double PointSum = 0;
