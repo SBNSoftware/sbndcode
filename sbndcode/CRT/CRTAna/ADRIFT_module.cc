@@ -73,7 +73,7 @@ public:
 
 private:
 
-  void PedestalFit(TH1D* hADC, double &fit, double &chi2, bool &converged, bool badChannel);
+  void PedestalFit(TH1D* hADC, double &fit, double &std, double &chi2, bool &converged, bool badChannel);
   void PedestalPeak(TH1D* hADC, double &peak);
   void Rate(TH1D* hADC, double &rate);
   void PeakPeak(TH1D* hADC, const double &ped, double &peak);
@@ -101,8 +101,8 @@ private:
   TTree* fChannelTree;
 
   int _channel, _gdml_id, _mac5, _raw_channel, _tagger, _channel_status;
-  double _area, _y_average, _ped_calib, _ped_fit, _ped_fit_chi2, _ped_peak,
-    _ped_reset_fit, _ped_reset_fit_chi2, _ped_reset_peak, _sh_rate, _sp_rate, _tr_rate,
+  double _area, _y_average, _ped_calib, _ped_fit, _ped_fit_std, _ped_fit_chi2, _ped_peak,
+    _ped_reset_fit, _ped_reset_fit_std, _ped_reset_fit_chi2, _ped_reset_peak, _raw_max_chan_rate, _sh_rate, _sp_rate, _tr_rate,
     _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_peak, _sh_sat_rate, _sh_sat_ratio_total, _sh_sat_ratio_peak,
     _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_peak, _sp_sat_rate, _sp_sat_ratio_total, _sp_sat_ratio_peak,
     _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_peak, _tr_sat_rate, _tr_sat_ratio_total, _tr_sat_ratio_peak,
@@ -112,7 +112,7 @@ private:
   bool _horizontal, _ped_fit_converged, _ped_reset_fit_converged, _sh_peak_fit_converged, _sp_peak_fit_converged,
     _tr_peak_fit_converged, _tr_lim_angle_peak_fit_converged, _tr_by_length_peak_fit_converged;
 
-  std::map<uint, TH1D*> hADCPed, hADCPedReset, hADCSH, hADCSP, hADCTr, hADCTrLA, hADCTrByLength;
+  std::map<uint, TH1D*> hADCPed, hADCPedReset, hADCMaxChan, hADCSH, hADCSP, hADCTr, hADCTrLA, hADCTrByLength;
 
   std::string fPedestalSaveDirectory, fPedestalResetSaveDirectory, fPeakSaveDirectory, fBadPedestalSaveDirectory,
     fBadPedestalResetSaveDirectory, fBadPeakSaveDirectory, fPedestalSubsetSaveDirectory, fPedestalResetSubsetSaveDirectory,
@@ -154,13 +154,16 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree->Branch("horizontal", &_horizontal);
   fChannelTree->Branch("ped_calib", &_ped_calib);
   fChannelTree->Branch("ped_fit", &_ped_fit);
+  fChannelTree->Branch("ped_fit_std", &_ped_fit_std);
   fChannelTree->Branch("ped_fit_chi2", &_ped_fit_chi2);
   fChannelTree->Branch("ped_fit_converged", &_ped_fit_converged);
   fChannelTree->Branch("ped_peak", &_ped_peak);
   fChannelTree->Branch("ped_reset_fit", &_ped_reset_fit);
+  fChannelTree->Branch("ped_reset_fit_std", &_ped_reset_fit_std);
   fChannelTree->Branch("ped_reset_fit_chi2", &_ped_reset_fit_chi2);
   fChannelTree->Branch("ped_reset_fit_converged", &_ped_reset_fit_converged);
   fChannelTree->Branch("ped_reset_peak", &_ped_reset_peak);
+  fChannelTree->Branch("raw_max_chan_rate", &_raw_max_chan_rate);
   fChannelTree->Branch("sh_rate", &_sh_rate);
   fChannelTree->Branch("sp_rate", &_sp_rate);
   fChannelTree->Branch("tr_rate", &_tr_rate);
@@ -206,6 +209,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
     {
       hADCPed[ch]        = fs->make<TH1D>(Form("hADCPed_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
       hADCPedReset[ch]   = fs->make<TH1D>(Form("hADCPedReset_Channel%i", ch), ";ADC;Readouts", 1000, -.5, 999.5);
+      hADCMaxChan[ch]    = fs->make<TH1D>(Form("hADCMaxChan_Channel%i", ch), ";ADC;Readouts - Max Channel", 4300, -.5, 4299.5);
       hADCSH[ch]         = fs->make<TH1D>(Form("hADCSH_Channel%i", ch), ";ADC;Strip Hits", 4300, -.5, 4299.5);
       hADCSP[ch]         = fs->make<TH1D>(Form("hADCSP_Channel%i", ch), ";ADC;Space Points", 4300, -.5, 4299.5);
       hADCTr[ch]         = fs->make<TH1D>(Form("hADCTr_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
@@ -312,8 +316,16 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
             std::cout << "ODD Strip Hit Channel Number" << std::endl;
         }
 
+      int max_adc = -1, max_chan = -1;
+
       for(int i = 0; i < 32; ++i)
         {
+          if(feb_data->ADC(i) > max_adc)
+            {
+              max_adc  = feb_data->ADC(i);
+              max_chan = i;
+            }
+
           const int ch = m5 * 32 + i;
 
           if(!mask_channels.count(ch))
@@ -322,6 +334,10 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
           if(flags != 1 && flags != 3)
             hADCPedReset[ch]->Fill(feb_data->ADC(i));
         }
+
+      if((flags == 1 || flags == 3) && max_chan != -1)
+        hADCMaxChan[m5 * 32 + max_chan]->Fill(feb_data->ADC(max_chan));
+
     }
 
   // Get CRTStripHits
@@ -504,12 +520,13 @@ void sbnd::crt::ADRIFT::endJob()
                 SaveHist(hADCTrLA[ch], fTrackLASubsetSaveDirectory, Form("track_limited_angle_channel_%i", ch), 20, _channel_status);
             }
 
-          PedestalFit(hADCPed[ch], _ped_fit, _ped_fit_chi2, _ped_fit_converged, _channel_status);
+          PedestalFit(hADCPed[ch], _ped_fit, _ped_fit_std, _ped_fit_chi2, _ped_fit_converged, _channel_status);
           PedestalPeak(hADCPed[ch], _ped_peak);
 
-          PedestalFit(hADCPedReset[ch], _ped_reset_fit, _ped_reset_fit_chi2, _ped_reset_fit_converged, _channel_status);
+          PedestalFit(hADCPedReset[ch], _ped_reset_fit, _ped_reset_fit_std, _ped_reset_fit_chi2, _ped_reset_fit_converged, _channel_status);
           PedestalPeak(hADCPedReset[ch], _ped_reset_peak);
 
+          Rate(hADCMaxChan[ch], _raw_max_chan_rate);
           Rate(hADCSH[ch], _sh_rate);
           Rate(hADCSP[ch], _sp_rate);
 
@@ -570,12 +587,22 @@ void sbnd::crt::ADRIFT::endJob()
     }
 }
 
-void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool &converged, bool badChannel)
+void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &std, double &chi2, bool &converged, bool badChannel)
 {
   TF1 *gaus = new TF1("gaus", "gaus", 0, 500);
   const TString name = hADC->GetName();
   TString ch_name = name;
-  ch_name.Remove(0,15);
+  TString type    = "";
+
+  if(name.Contains("Reset"))
+    {
+      ch_name.Remove(0,20);
+      type = "reset";
+    }
+  else
+    ch_name.Remove(0,15);
+
+  int ch = std::stoi(ch_name.Data());
 
   TH1D* hADC2 = (TH1D*) hADC->Clone(name + "_for_fit");
   hADC2->Rebin(5);
@@ -587,9 +614,10 @@ void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool 
     std::cout << "Pedestal fit has not converged - " << hADC->GetName() << std::endl;
 
   fit  = gaus->GetParameter("Mean");
+  std  = gaus->GetParameter("Sigma");
   chi2 = gaus->GetChisquare() / gaus->GetNDF();
 
-  if(fSaveAllFits || (fSaveBadFits && !converged))
+  if(fSaveAllFits || (fSaveBadFits && !converged) || (fSaveSubset && ch > 1471 && ch < 1728))
     {
       TCanvas *c = new TCanvas(Form("c%s", name.Data()), Form("c%s", name.Data()));
       c->cd();
@@ -610,13 +638,29 @@ void sbnd::crt::ADRIFT::PedestalFit(TH1D* hADC, double &fit, double &chi2, bool 
 
       if(converged)
         {
-          c->SaveAs(Form("%s/pedestal_fit_channel_%s.png", fPedestalSaveDirectory.c_str(), ch_name.Data()));
-          c->SaveAs(Form("%s/pedestal_fit_channel_%s.pdf", fPedestalSaveDirectory.c_str(), ch_name.Data()));
+          if(type.Contains("reset"))
+            {
+              c->SaveAs(Form("%s/pedestal_reset_fit_channel_%s.png", fPedestalResetSaveDirectory.c_str(), ch_name.Data()));
+              c->SaveAs(Form("%s/pedestal_reset_fit_channel_%s.pdf", fPedestalResetSaveDirectory.c_str(), ch_name.Data()));
+            }
+          else
+            {
+              c->SaveAs(Form("%s/pedestal_fit_channel_%s.png", fPedestalSaveDirectory.c_str(), ch_name.Data()));
+              c->SaveAs(Form("%s/pedestal_fit_channel_%s.pdf", fPedestalSaveDirectory.c_str(), ch_name.Data()));
+            }
         }
       else
         {
-          c->SaveAs(Form("%s/pedestal_fit_channel_%s.png", fBadPedestalSaveDirectory.c_str(), ch_name.Data()));
-          c->SaveAs(Form("%s/pedestal_fit_channel_%s.pdf", fBadPedestalSaveDirectory.c_str(), ch_name.Data()));
+          if(type.Contains("reset"))
+            {
+              c->SaveAs(Form("%s/pedestal_reset_fit_channel_%s.png", fBadPedestalResetSaveDirectory.c_str(), ch_name.Data()));
+              c->SaveAs(Form("%s/pedestal_reset_fit_channel_%s.pdf", fBadPedestalResetSaveDirectory.c_str(), ch_name.Data()));
+            }
+          else
+            {
+              c->SaveAs(Form("%s/pedestal_fit_channel_%s.png", fBadPedestalSaveDirectory.c_str(), ch_name.Data()));
+              c->SaveAs(Form("%s/pedestal_fit_channel_%s.pdf", fBadPedestalSaveDirectory.c_str(), ch_name.Data()));
+            }
         }
     }
 }
@@ -675,6 +719,11 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
       ch_name.Remove(0,16);
       type = "track_limited_angle";
     }
+  else if(name.Contains("TrByLength"))
+    {
+      ch_name.Remove(0,22);
+      type = "track_by_length";
+    }
   else if(name.Contains("Tr"))
     {
       ch_name.Remove(0,14);
@@ -682,6 +731,8 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
     }
   else
     std::cout << "Cannot identify histogram type (" << name << ")" << std::endl;
+
+  int ch = std::stoi(ch_name.Data());
 
   TH1D* hADC2 = (TH1D*) hADC->Clone(name + "_for_fit");
   hADC2->Rebin(20);
@@ -695,7 +746,7 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
   fit  = langau->GetParameter(1);
   chi2 = langau->GetChisquare() / langau->GetNDF();
 
-  if(fSaveAllFits || (fSaveBadFits && !converged))
+  if(fSaveAllFits || (fSaveBadFits && !converged) || (fSaveSubset && ch > 1471 && ch < 1728))
     {
       TCanvas *c = new TCanvas(Form("c%s", name.Data()), Form("c%s", name.Data()));
       c->cd();
@@ -757,9 +808,11 @@ void sbnd::crt::ADRIFT::ResetVars()
   _y_average                    = std::numeric_limits<double>::lowest();
   _ped_calib                    = std::numeric_limits<double>::lowest();
   _ped_fit                      = std::numeric_limits<double>::lowest();
+  _ped_fit_std                  = std::numeric_limits<double>::lowest();
   _ped_fit_chi2                 = std::numeric_limits<double>::lowest();
   _ped_peak                     = std::numeric_limits<double>::lowest();
   _ped_reset_fit                = std::numeric_limits<double>::lowest();
+  _ped_reset_fit_std            = std::numeric_limits<double>::lowest();
   _ped_reset_fit_chi2           = std::numeric_limits<double>::lowest();
   _ped_reset_peak               = std::numeric_limits<double>::lowest();
   _sh_rate                      = std::numeric_limits<double>::lowest();
