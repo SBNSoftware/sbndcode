@@ -266,8 +266,8 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
 {
   // Implementation of required member function here.
   auto fSCE = lar::providerFrom<spacecharge::SpaceChargeService>();
-  std::cout<<"\n -------------------------------------- \n";
-  std::cout<<"Running TPCAnalyzer---run="<< e.id().run()<<" --subrun="<< e.id().subRun()<<" --event="<<e.id().event()<<"\n";
+  //std::cout<<"\n -------------------------------------- \n";
+  //std::cout<<"Running TPCAnalyzer---run="<< e.id().run()<<" --subrun="<< e.id().subRun()<<" --event="<<e.id().event()<<"\n";
 
   //............................Event General Info
   fNAnalyzedEvents++;
@@ -335,7 +335,7 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
           if(fApplyFiducialCut && PointInFV(fTrueVx, fTrueVy, fTrueVz)){
             geo::Point_t po ={fTrueVx, fTrueVy, fTrueVz};
 
-            std::cout<<"HasTPC: "<<fGeom->HasTPC(fGeom->FindTPCAtPosition(po))<<" "<<fGeom->FindTPCAtPosition(po).TPC<<std::endl;
+            //std::cout<<"HasTPC: "<<fGeom->HasTPC(fGeom->FindTPCAtPosition(po))<<" "<<fGeom->FindTPCAtPosition(po).TPC<<std::endl;
 
             
             if( fGeom->HasTPC(fGeom->FindTPCAtPosition(po)) ){
@@ -356,8 +356,8 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
             fTrueVTimeTick=-1;
           }
 
-          std::cout<<"  -- Vertex: "<<fTrueVx<<" "<<fTrueVy<<" "<<fTrueVz<<std::endl;
-          std::cout<<"   - VertexWire: "<<fTrueVU<<" "<<fTrueVV<<" "<<fTrueVC<<std::endl;
+          //std::cout<<"  -- Vertex: "<<fTrueVx<<" "<<fTrueVy<<" "<<fTrueVz<<std::endl;
+          //std::cout<<"   - VertexWire: "<<fTrueVU<<" "<<fTrueVV<<" "<<fTrueVC<<std::endl;
         }
       }
     }
@@ -560,7 +560,7 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
     if(fSaveHits){
       art::Handle<std::vector<recob::Hit>> hitsHandle;
       std::vector<art::Ptr<recob::Hit>> hitsVect;
-      std::cout<<" --- Saving recob::Hit\n";
+      //std::cout<<" --- Saving recob::Hit\n";
       e.getByLabel(fHitLabel, hitsHandle);
       art::fill_ptr_vector(hitsVect, hitsHandle);
 
@@ -584,7 +584,7 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
     if(fSaveSpacePoints){
       art::Handle<std::vector<recob::SpacePoint>> eventSpacePoints;
       std::vector<art::Ptr<recob::SpacePoint>> eventSpacePointsVect;
-      std::cout<<"  --- Saving recob::SpacePoints\n";
+      //std::cout<<"  --- Saving recob::SpacePoints\n";
 
       e.getByLabel(fSpacePointLabel, eventSpacePoints);
       art::fill_ptr_vector(eventSpacePointsVect, eventSpacePoints);
@@ -609,7 +609,7 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
   //............................Read Hits (Reco2 version)
   if( fSaveReco2 ){
 
-    std::cout<<" --- Saving reco2\n";
+    //std::cout<<" --- Saving reco2\n";
     
     // map to store the space points associated to hits
     std::map<int, art::Ptr<recob::SpacePoint>> hitToSpacePointMap;
@@ -617,7 +617,7 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
     if(fSaveSpacePoints){
       art::Handle<std::vector<recob::SpacePoint>> eventSpacePoints;
       std::vector<art::Ptr<recob::SpacePoint>> eventSpacePointsVect;
-      std::cout<<"      ** Creating hit-space point map\n";
+      //std::cout<<"      ** Creating hit-space point map\n";
 
       e.getByLabel(fSpacePointLabel, eventSpacePoints);
       art::fill_ptr_vector(eventSpacePointsVect, eventSpacePoints);
@@ -652,13 +652,13 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
       // Loop over slices
       art::fill_ptr_vector(sliceVect, sliceHandle);
       fNSlices = sliceVect.size();
-      std::cout<<" Number of slices to analyze: "<<fNSlices<<std::endl;
+      //std::cout<<" Number of slices to analyze: "<<fNSlices<<std::endl;
     
       for(auto & slice:sliceVect){
           // Get the slices PFPs
           pfpVect = slice_pfp_assns.at(slice.key());
           size_t slice_ix = std::distance(sliceVect.begin(), std::find(sliceVect.begin(), sliceVect.end(), slice));
-          std::cout<<std::endl<<slice_ix<<"  -- Slice ID="<<slice->ID()<<" NPFPs="<<pfpVect.size()<<std::endl;
+          //std::cout<<std::endl<<slice_ix<<"  -- Slice ID="<<slice->ID()<<" NPFPs="<<pfpVect.size()<<std::endl;
           
           // Fill reco2
           FillReco2(e, pfpVect, hitToSpacePointMap);
@@ -669,7 +669,7 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
       ::art::Handle<std::vector<recob::PFParticle>> pfpHandle;
       e.getByLabel(fReco2Label, pfpHandle);
       art::fill_ptr_vector(pfpVect, pfpHandle);
-      std::cout<<" Number of PFParticles to analyze: "<<pfpVect.size()<<std::endl;
+      //std::cout<<" Number of PFParticles to analyze: "<<pfpVect.size()<<std::endl;
       FillReco2(e, pfpVect, hitToSpacePointMap);
     }
 
@@ -997,6 +997,7 @@ void test::FlashMatchAnalyzer::AnalyseCRTTracks(const art::Event &e, const std::
       _tr_dir_z.push_back(dir.Z());
 
       _tr_ts0.push_back(track->Ts0());
+      std::cout << " The track t0 is " << track->Ts0() << std::endl;
       _tr_ets0.push_back(track->Ts0Err());
       _tr_ts1.push_back(track->Ts1());
       _tr_ets1.push_back(track->Ts1Err());
