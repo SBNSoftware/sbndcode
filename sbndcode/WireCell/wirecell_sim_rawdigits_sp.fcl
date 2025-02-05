@@ -15,7 +15,7 @@
 
 #include "wirecell_sim_sp_sbnd.fcl"
 
-## need both of the below lines to save rawdigits! 
+## need both of the below lines to save rawdigits!
 physics.producers.simtpc2d.wcls_main.outputers: [ "wclsDepoFluxWriter:postdrift",
                                                   "wclsFrameSaver:simdigits" , # adding this line asks wcls to save raw digits
                                                   "wclsFrameSaver:spsaver"]
