@@ -42,7 +42,7 @@ hitdumper:
     readMCParticle:           false
     savePOTinfo:              true
     checkTransparency:        false
-    HasTDC:                   true
+    HasTDC:                   false
 
     window:                   100
 
