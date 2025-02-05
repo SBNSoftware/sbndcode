@@ -43,10 +43,7 @@ add_subdirectory(WireCell)
 add_subdirectory(Decoders)
 add_subdirectory(ChannelMaps)
 
-<<<<<<< HEAD
 add_subdirectory(FlashMatchAnalyzer)
 
-=======
 # for CVN
 add_subdirectory(SBNDCVN)
->>>>>>> d22406f34adff9f6849a6da68c267858fcbe1f4f
