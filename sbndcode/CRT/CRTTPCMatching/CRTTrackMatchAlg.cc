@@ -1,7 +1,5 @@
 #include "CRTTrackMatchAlg.h"
 
-#include "larcore/Geometry/Geometry.h"
-
 namespace sbnd::crt {
 
   CRTTrackMatchAlg::CRTTrackMatchAlg(const Config& config)

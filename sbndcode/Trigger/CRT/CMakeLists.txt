@@ -20,6 +20,7 @@ set(
                     artdaq_core::artdaq-core_Utilities
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
+		                sbndcode_CRT
 		                sbndcode_CRTUtils
                     sbnobj::Common_CRT
 		                sbnobj::SBND_CRT

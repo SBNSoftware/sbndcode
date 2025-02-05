@@ -8,8 +8,15 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDAnalyzer.h"
+#include "art/Framework/Core/ModuleMacros.h"
+#include "art/Framework/Principal/Event.h"
+#include "art/Framework/Principal/Handle.h"
+#include "art/Framework/Principal/Run.h"
+#include "art/Framework/Principal/SubRun.h"
+#include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
-#include "larcore/Geometry/WireReadout.h"
+#include "larcore/Geometry/Geometry.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "sbndcode/ChannelMaps/TPC/TPCChannelMapService.h"
 
@@ -34,16 +41,22 @@ public:
   SBNDGeoHelper& operator=(SBNDGeoHelper const&) = delete;
   SBNDGeoHelper& operator=(SBNDGeoHelper&&) = delete;
 
+  // Required functions.
+  void analyze(art::Event const& e) override;
+
 private:
-  void analyze(art::Event const& e) override {}
+
+  // Declare member data here.
+
 };
 
 
 util::SBNDGeoHelper::SBNDGeoHelper(fhicl::ParameterSet const& p)
-  : EDAnalyzer{p}
+  : EDAnalyzer{p}  // ,
+  // More initializers here.
 {
   // Call appropriate consumes<>() for any products to be retrieved by this module.
-  auto const& wireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
+  art::ServiceHandle<geo::Geometry> geo;
   art::ServiceHandle<SBND::TPCChannelMapService> channelMap;
 
   int input = -1;
@@ -63,7 +76,7 @@ util::SBNDGeoHelper::SBNDGeoHelper(fhicl::ParameterSet const& p)
       cout<<"Wire number: ";
       cin>>wire;
       geo::WireID wireid(0,tpc,plane,wire);
-      auto const & channel = wireReadout.PlaneWireToChannel(wireid);
+      auto const & channel = geo->PlaneWireToChannel(wireid);
       auto const & chaninfo = channelMap->GetChanInfoFromOfflChan(channel);
       cout<<"##############################"<<endl;
       cout<<"TPC             = "<<tpc<<endl;
@@ -95,12 +108,12 @@ util::SBNDGeoHelper::SBNDGeoHelper(fhicl::ParameterSet const& p)
       cin>>wire2;
       geo::WireID wid1(0,tpc1,plane1,wire1);
       geo::WireID wid2(0,tpc2,plane2,wire2);
-      geo::Point_t intersection;
-      auto intersect = wireReadout.WireIDsIntersect(wid1,wid2,intersection);
+      double y,z;
+      bool intersect = geo->IntersectionPoint(wid1,wid2,y,z);
       cout<<"WireID 1:"<<wid1.toString()<<endl;
       cout<<"WireID 2:"<<wid2.toString()<<endl;
+      cout<<"The intersection point is ("<<y<<","<<z<<")."<<endl;
       if (intersect){
-        cout<<"The intersection point is ("<<intersection.Y()<<","<<intersection.Z()<<")."<<endl;
         cout<<"It is inside the detector."<<endl;
       }
       else{
@@ -109,6 +122,11 @@ util::SBNDGeoHelper::SBNDGeoHelper(fhicl::ParameterSet const& p)
     }
   }
 
+}
+
+void util::SBNDGeoHelper::analyze(art::Event const& e)
+{
+  // Implementation of required member function here.
 }
 
 DEFINE_ART_MODULE(util::SBNDGeoHelper)

@@ -6,27 +6,19 @@
 
 #include "geometry_sbnd.fcl"
 
-BEGIN_PROLOG
-sbnd_geometry_specs: {
-  Name:  "sbndv1"
-  GDML:  "sbnd_v01_05.gdml"
-  ROOT:  "sbnd_v01_05.gdml"
-}
-END_PROLOG
-
 process_name: testGeo
 
 services: {
   
   @table::sbnd_geometry_services 
-  AuxDetGeometry: {
-    @table::sbnd_auxdetgeo
-    @table::sbnd_geometry_specs
-  }
   Geometry: {
-    @table::sbnd_geometry_specs
+    SurfaceY: 130.0e2                      #in cm, vertical distance to the surface
+ 
+     Name:  "sbndv1"
+     GDML:  "sbnd_v01_05.gdml"
+    ROOT:  "sbnd_v01_05.gdml"
+
      SortingParameters: { 
-      tool_type: "GeoObjectSorterSBND"
        DetectorVersion: "sbnd" 
      } 
 
@@ -99,3 +91,4 @@ physics: {
 
 # Uncomment if you want to check for overlaps
 # physics.analyzers.geotest.CheckForOverlaps: true 
+

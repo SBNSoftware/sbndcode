@@ -3677,15 +3677,17 @@ bool sbnd::AnalysisTree::TrackIdToMCTruth( Int_t const trkID, art::Ptr<simb::MCT
 double sbnd::AnalysisTree::bdist(const recob::Track::Point_t& pos)
 {
   // Get geometry.
-  geo::TPCGeo const& tpc = art::ServiceHandle<geo::Geometry>()->TPC({0, 0});
-  double d1 = pos.X();                             // Distance to right side (wires).
-  double d2 = 2.*tpc.HalfWidth() - pos.X();   // Distance to left side (cathode).
-  double d3 = pos.Y() + tpc.HalfHeight();     // Distance to bottom.
-  double d4 = tpc.HalfHeight() - pos.Y();     // Distance to top.
-  double d5 = pos.Z();                             // Distance to front.
-  double d6 = tpc.Length() - pos.Z();           // Distance to back.
+  art::ServiceHandle<geo::Geometry> geom;
 
-  return std::min({d1, d2, d3, d4, d5, d6});
+  double d1 = pos.X();                             // Distance to right side (wires).
+  double d2 = 2.*geom->DetHalfWidth() - pos.X();   // Distance to left side (cathode).
+  double d3 = pos.Y() + geom->DetHalfHeight();     // Distance to bottom.
+  double d4 = geom->DetHalfHeight() - pos.Y();     // Distance to top.
+  double d5 = pos.Z();                             // Distance to front.
+  double d6 = geom->DetLength() - pos.Z();           // Distance to back.
+
+  double result = std::min(std::min(std::min(std::min(std::min(d1, d2), d3), d4), d5), d6);
+  return result;
 }
 
 
@@ -3699,14 +3701,16 @@ double sbnd::AnalysisTree::length(const recob::Track& track)
 // Length of MC particle, trajectory by trajectory.
 double sbnd::AnalysisTree::length(const simb::MCParticle& part, TVector3& start, TVector3& end)
 {
+  // Get geometry.
+  art::ServiceHandle<geo::Geometry> geom;
+
   // Get active volume boundary.
-  geo::TPCGeo const& tpc = art::ServiceHandle<geo::Geometry>()->TPC({0, 0});
-  double xmin = -2.0 * tpc.HalfWidth() - 1e-8;
-  double xmax = 2.0 * tpc.HalfWidth() + 1e-8;
-  double ymin = -tpc.HalfHeight() -1e-8;
-  double ymax = tpc.HalfHeight() + 1e-8;
+  double xmin = -2.0 * geom->DetHalfWidth() - 1e-8;
+  double xmax = 2.0 * geom->DetHalfWidth() + 1e-8;
+  double ymin = -geom->DetHalfHeight() -1e-8;
+  double ymax = geom->DetHalfHeight() + 1e-8;
   double zmin = 0. -1e-8;
-  double zmax = tpc.Length() + 1e-8;
+  double zmax = geom->DetLength() + 1e-8;
   
   // Get number traj points
   int n = part.NumberTrajectoryPoints();

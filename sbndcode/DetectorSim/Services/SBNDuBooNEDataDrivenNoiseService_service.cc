@@ -7,8 +7,6 @@
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 
-#include "larcore/Geometry/WireReadout.h"
-
 using std::cout;
 using std::ostream;
 using std::endl;
@@ -169,13 +167,12 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(detinfo::DetectorClocksData const
     fCohNoiseChanHist->Fill(cohNoisechan);
   }
 
-  auto const& channelMapAlg =
-    art::ServiceHandle<geo::WireReadout const>()->Get();
-  std::vector<geo::WireID> wireIDs = channelMapAlg.ChannelToWire(chan);
+  art::ServiceHandle<geo::Geometry> geo;
+  std::vector<geo::WireID> wireIDs = geo->ChannelToWire(chan);
   unsigned int wireID = wireIDs.front().Wire;
   unsigned int planeID = wireIDs.front().Plane;
 
-  geo::WireGeo const& wire = channelMapAlg.Wire(wireIDs.front());
+  geo::WireGeo const& wire = geo->Wire(wireIDs.front());
   double wirelength = wire.Length(); //wirelength in cm.
 
   if(fIncludeJumpers){
@@ -258,7 +255,7 @@ int SBNDuBooNEDataDrivenNoiseService::addNoise(detinfo::DetectorClocksData const
   
 
 
-  const geo::View_t view = channelMapAlg.View(chan);
+  const geo::View_t view = geo->View(chan);
   for ( unsigned int itck=0; itck<sigs.size(); ++itck ) {
     double tnoise = 0;
     if ( view==geo::kU ) {
@@ -528,9 +525,8 @@ void SBNDuBooNEDataDrivenNoiseService::generateCoherentNoise(detinfo::DetectorCl
 void SBNDuBooNEDataDrivenNoiseService::makeCoherentGroupsByOfflineChannel(unsigned int nchpergroup) {
 	CLHEP::RandFlat flat(*m_pran);
 	CLHEP::RandGauss gaus(*m_pran);
-        auto const& channelMapAlg =
-          art::ServiceHandle<geo::WireReadout const>()->Get();
-        const unsigned int nchan = channelMapAlg.Nchannels();
+	art::ServiceHandle<geo::Geometry> geo;
+	const unsigned int nchan = geo->Nchannels();
 	fChannelGroupMap.resize(nchan);
 	unsigned int numberofgroups = 0;
 	if(nchan%nchpergroup == 0) numberofgroups = nchan/nchpergroup;

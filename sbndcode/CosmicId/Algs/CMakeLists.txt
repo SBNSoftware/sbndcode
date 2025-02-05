@@ -39,6 +39,7 @@ art_make_library(LIBRARY_NAME  sbndcode_CosmicIdAlgs
                            ROOT::Geom
                            ROOT::XMLIO
                            ROOT::Gdml
+                           sbndcode_CRT
                            sbndcode_CRTUtils
                            sbnobj::Common_CRT
                            sbndcode_CosmicIdUtils

@@ -17,7 +17,14 @@
 #include "prodsingle_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
 
-services.AuxDetGeometry: @local::sbnd_auxdetgeo
+services.AuxDetGeometry: {
+ @table::sbnd_geo_source
+}
+
+services.AuxDetExptGeoHelperInterface: {
+  service_provider: "sbndcode/CRT/CRTGeometryHelper"
+}
 
 physics.producers.crt: @local::sbnd_crtsim
 physics.simulate: [ @sequence::physics.simulate, crt ]
+

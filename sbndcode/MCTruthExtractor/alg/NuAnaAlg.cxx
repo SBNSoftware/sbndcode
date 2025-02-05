@@ -13,14 +13,12 @@ namespace sbnd{
 
   void NuAnaAlg::configureGeometry(art::ServiceHandle<geo::Geometry> geom){
 
-    geo::TPCGeo const& tpcGeo = geom->TPC(geo::TPCID{0, 0});
-
-    xlow  = - tpcGeo.HalfWidth();
-    xhigh = tpcGeo.HalfWidth();
-    ylow  = - tpcGeo.HalfHeight();
-    yhigh = tpcGeo.HalfHeight();
+    xlow  = - geom -> DetHalfWidth();
+    xhigh = geom -> DetHalfWidth();
+    ylow  = - geom -> DetHalfHeight();
+    yhigh = geom -> DetHalfHeight();
     zlow  = 0.0;
-    zhigh = tpcGeo.Length();
+    zhigh = geom -> DetLength();
 
     if (geom -> DetectorName() == "uboone_basic"){
       xlow = 0.0;

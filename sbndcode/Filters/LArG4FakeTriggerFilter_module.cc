@@ -100,13 +100,12 @@ namespace filt{
   // Add up energy deposit in TPC
   double LArG4FakeTriggerFilter::EnergyInTPC(const simb::MCParticle& particle){
 
-    geo::TPCGeo const& tpcGeo = fGeometryService->TPC({0, 0});
-    double xmin = -2.0 * tpcGeo.HalfWidth();
-    double xmax = 2.0 * tpcGeo.HalfWidth();
-    double ymin = -tpcGeo.HalfHeight();
-    double ymax = tpcGeo.HalfHeight();
+    double xmin = -2.0 * fGeometryService->DetHalfWidth();
+    double xmax = 2.0 * fGeometryService->DetHalfWidth();
+    double ymin = -fGeometryService->DetHalfHeight();
+    double ymax = fGeometryService->DetHalfHeight();
     double zmin = 0.;
-    double zmax = tpcGeo.Length();
+    double zmax = fGeometryService->DetLength();
 
     double e_dep = 0;
 

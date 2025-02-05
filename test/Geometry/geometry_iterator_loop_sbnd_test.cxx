@@ -14,14 +14,12 @@
 
 
 // SBND libraries
-#include "sbndcode/Geometry/GeoObjectSorterSBND.h"
-#include "sbndcode/Geometry/WireReadoutSorterSBND.h"
+#include "sbndcode/Geometry/ChannelMapSBNDAlg.h"
 
 // LArSoft libraries
 #include "test/Geometry/geometry_unit_test_sbnd.h"
 #include "larcorealg/test/Geometry/GeometryIteratorLoopTestAlg.h"
 #include "larcorealg/Geometry/GeometryCore.h"
-#include "larcorealg/Geometry/WireReadoutStandardGeom.h"
 
 // utility libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -35,7 +33,8 @@
 // we use an existing class provided for this purpose, since our test
 // environment allows us to tailor it at run time.
 using SBNDGeometryConfiguration
-  = sbnd::testing::SBNDGeometryEnvironmentConfiguration;
+  = sbnd::testing::SBNDGeometryEnvironmentConfiguration
+    <geo::ChannelMapSBNDAlg>;
 
 /*
  * GeometryTesterFixture, configured with the object above, is used in a
@@ -45,7 +44,7 @@ using SBNDGeometryConfiguration
  * - `geo::GeometryCore const* GlobalGeometry()` (static member)
  */
 using SBNDGeometryTestEnvironment
-  = testing::GeometryTesterEnvironment<SBNDGeometryConfiguration, geo::GeoObjectSorterSBND>;
+  = testing::GeometryTesterEnvironment<SBNDGeometryConfiguration>;
 
 
 //------------------------------------------------------------------------------
@@ -99,17 +98,13 @@ int main(int argc, char const** argv) {
   // testing environment setup
   //
   SBNDGeometryTestEnvironment TestEnvironment(config);
-  auto const wireReadout =
-    std::make_unique<geo::WireReadoutStandardGeom>(fhicl::ParameterSet{},
-                                               TestEnvironment.Geometry(),
-                                               std::make_unique<geo::WireReadoutSorterSBND>());
   
   //
   // run the test algorithm
   //
   
   // 1. we initialize it with the geometry from the environment,
-  geo::GeometryIteratorLoopTestAlg Tester(TestEnvironment.Geometry(), wireReadout.get());
+  geo::GeometryIteratorLoopTestAlg Tester(TestEnvironment.Geometry());
   
   // 2. then we run it!
   unsigned int nErrors = Tester.Run();
