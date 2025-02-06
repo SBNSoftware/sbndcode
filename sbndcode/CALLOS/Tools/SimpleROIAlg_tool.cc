@@ -102,11 +102,16 @@ bool callos::SimpleROIAlg::ProcessWaveform(std::vector<float> const& wvf ,std::v
   // store the ROI in the ROI vector
 
   for (size_t i = 0; i < wave.size(); i++) {
-    
 
     if (wave[i] > fThresholdLow) { //found a peak
+
+      // Compute the first bin of the ROI
+      int first_bin = i+half;
+
       SimpleROI roi(10, 1);//this should be updated with something more meaningful later on
       roi.SetCharge(0);
+      roi.SetStartTick(first_bin);
+
       float aux_charge = 0;
       int j = i;
       // Add the bins after the threshold until the waveform crosses the baseline

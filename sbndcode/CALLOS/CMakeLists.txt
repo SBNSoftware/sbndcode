@@ -17,6 +17,8 @@ MODULE_LIBRARIES
   fhiclcpp::fhiclcpp
   ROOT::Core
   ROOT::Tree
+  ROOT::Graf3d
+  nuevdb::EventDisplayBase
   lardataobj::Simulation
   sbndcode_OpDetSim
 )

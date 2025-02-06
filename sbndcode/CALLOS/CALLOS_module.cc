@@ -42,8 +42,11 @@
 #include <vector>
 
 #include "TTree.h"
+#include "TCanvas.h"
+#include "TApplication.h"
 
 #include "Tools/ROIFinderAlg.hh"
+#include "Evd.hh"
 
 namespace callos {
   class CALLOS;
@@ -81,6 +84,7 @@ private:
   // fhicl parameters
   std::string fInputLabel;
   std::vector<std::string> fPDTypes;
+  bool fDEBUG;
   // std::vector<std::string> fElectronics; //Not needed for now
 
   //PDS map
@@ -130,6 +134,7 @@ callos::CALLOS::CALLOS(fhicl::ParameterSet const& p)
   fROISamples = p.get<int>("ROI_samples", 1000);
   fStartToPeak = p.get<int>("StartToPeak",200);
   fSpecificChannels = p.get<std::vector<int>>("SpecificChannels", {});
+  fDEBUG = p.get<bool>("DEBUG", false);
   // get map info
   // for each pdtype in fPDTypes, get the channels and add them to the list of selected channels
   std::vector<int> fSelectedChannels={};//
@@ -218,7 +223,13 @@ void callos::CALLOS::analyze(art::Event const& e)
           roi.reserve(wfsize);
           roi.assign(ROIs[i].Waveform().begin(), ROIs[i].Waveform().end());
           float charge = ROIs[i].Charge();
-          
+          int startTick = ROIs[i].StartTick();
+
+          if (fDEBUG) 
+          {
+            std::cout<<"CALLOS: Event "<<e.id().event()<<" Channel "<<wfChannel<<" ROI "<<i<<" Charge "<<charge<<std::endl;
+            event_display(wave,startTick);
+          }
           // Update containers
           AverageWaveform_SelectedChannels[fPDSchannelMap[wfChannel]].addToAverage(roi);
           Charge_SelectedChannels[fPDSchannelMap[wfChannel]].push_back(charge);

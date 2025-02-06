@@ -8,6 +8,7 @@ simpleROIAlg:
   ConstantBaseline: 699
   ThresholdLow: 4
   ThresholdHigh: 17
+  ThresholdUndershoot:-4
   BinsBefore:5
 }
 

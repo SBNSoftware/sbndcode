@@ -2,6 +2,9 @@
 // Also stores the number of waveforms added to the average.
 
 
+#ifndef CALLOS_AV_WVF_H
+#define CALLOS_AV_WVF_H
+
 #include <vector>
 #include "lardataobj/RawData/OpDetWaveform.h"
 
@@ -39,6 +42,8 @@ class SimpleROI :  public std::vector<float>
     }
     void SetCharge(double charge) {fCharge = charge;}
     double Charge() {return fCharge;}
+    void SetStartTick(unsigned int startTick) {fStartTick = startTick;}
+    int StartTick() {return fStartTick;}
 
     // Functions included for backwards compatability with previous data types
     std::vector<float>& Waveform() { return *this; }
@@ -50,5 +55,8 @@ private:
   int fROISamples;
   unsigned int fChannel;
   double fCharge;
+  unsigned int fStartTick;
 
 };
+
+#endif
