@@ -9,8 +9,8 @@
 BEGIN_PROLOG
 sbnd_geometry_specs: {
   Name:  "sbndv1"
-  GDML:  "sbnd_v01_05.gdml"
-  ROOT:  "sbnd_v01_05.gdml"
+  GDML:  "sbnd_v02_03.gdml"
+  ROOT:  "sbnd_v02_03.gdml"
 }
 END_PROLOG
 
