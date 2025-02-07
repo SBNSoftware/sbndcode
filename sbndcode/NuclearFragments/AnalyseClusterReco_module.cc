@@ -34,7 +34,7 @@
 // ROOT includes
 #include <TTree.h>
 
-constexpr float float_default = -999.0f;
+constexpr double double_default = -999.0;
 
 namespace testReco {
   class AnalyseClusterReco;
@@ -69,13 +69,13 @@ private:
   unsigned int fEventID;
   unsigned int fNPFParticles;
   unsigned int fNPrimaryChildren;
-  bool fThreeTracks;
+  int fNumTracks;
 
   std::vector<double> fChildTrackLengths;
-  std::vector<float> fChildTrackCompleteness;
-  std::vector<float> fChildTrackPurity;
-  std::vector<std::vector<float>> fChildTrackdEdx;
-  std::vector<std::vector<float>> fChildTrackResRange;
+  std::vector<double> fChildTrackCompleteness;
+  std::vector<double> fChildTrackPurity;
+  std::vector<std::vector<double>> fChildTrackdEdx;
+  std::vector<std::vector<double>> fChildTrackResRange;
   std::vector<bool> fChildTrackIsLongest;
   std::vector<bool> fChildTrackIsMiddle;
   std::vector<bool> fChildTrackIsShortest;
@@ -128,20 +128,9 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
     art::fill_ptr_vector(hitVector,hitHandle);
   }
 
-  int hitCount = 0;
   for(const art::Ptr<recob::Hit> &hit : hitVector){
-    hitCount++;
-    //if(TruthMatchUtils::TrueParticleID(clockData,hit,true) >= 0){
     fTrackHitsMap[TruthMatchUtils::TrueParticleID(clockData,hit,true)]++;
-    std::cout << TruthMatchUtils::TrueParticleID(clockData,hit,true) << ",";
-    //}
   }
-  std::cout << "end" << std::endl;
-  std::cout << fTrackHitsMap[0] << std::endl;
-  std::cout << fTrackHitsMap[1] << std::endl;
-  std::cout << fTrackHitsMap[2] << std::endl;
-  std::cout << fTrackHitsMap[3] << std::endl;
-  std::cout << hitCount << std::endl;
 
   // Get event slices
   art::ValidHandle<std::vector<recob::Slice>> sliceHandle = e.getValidHandle<std::vector<recob::Slice>>(fSliceLabel);
@@ -244,9 +233,7 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
 
       }
 
-      if(trackCounter == 3){
-        fThreeTracks = 1;
-      }
+      fNumTracks = trackCounter;
       
       // Actual analysis loop
       for(const art::Ptr<recob::PFParticle> &nuSlicePFP : nuSlicePFPs)
@@ -266,10 +253,10 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
 
         art::Ptr<recob::Track> track = tracks.at(0);
 
-        art::ValidHandle<std::vector<recob::Track>> trackHandle = e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
+        const art::ValidHandle<std::vector<recob::Track>> trackHandle = e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
         art::FindManyP<recob::Hit> trackHitAssoc(trackHandle,e,fTrackLabel);
 
-        std::vector<art::Ptr<recob::Hit> > trackHits = trackHitAssoc.at(track.key());
+        std::vector<art::Ptr<recob::Hit>> trackHits = trackHitAssoc.at(track.key());
         int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true);
         fChildTrackCompleteness.push_back(Completeness(trackHits,trackID));
         float comp = Completeness(trackHits, trackID);
@@ -279,14 +266,14 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
         std::cout << "purity: " << pur << std::endl;
 
         fChildTrackLengths.push_back(track->Length());
-        //std::cout << "pushed back length: " << track->Length() << std::endl;
+        std::cout << "pushed back length: " << track->Length() << std::endl;
         fChildTrackIsLongest.push_back(track->ID() == longestID);
         fChildTrackIsMiddle.push_back(track->ID() == middleID);
         fChildTrackIsShortest.push_back(track->ID() == shortestID);
-        //std::cout << "isLongest: " << (track->ID() == longestID) << std::endl;
-        //std::cout << "isMiddle: " << (track->ID() == middleID) << std::endl;
-        //std::cout << "isShortest: " << (track->ID() == shortestID) << std::endl;
-        //std::cout << "size of longest vector: " << fChildTrackIsLongest.size() << std::endl;
+        std::cout << "isLongest: " << (track->ID() == longestID) << std::endl;
+        std::cout << "isMiddle: " << (track->ID() == middleID) << std::endl;
+        std::cout << "isShortest: " << (track->ID() == shortestID) << std::endl;
+        std::cout << "size of longest vector: " << fChildTrackIsLongest.size() << std::endl;
 
         //art::ValidHandle<std::vector<recob::Track>> trackHandle = e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
         art::FindManyP<anab::Calorimetry> trackCaloAssoc(trackHandle, e, fCalorimetryLabel);
@@ -301,9 +288,10 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
           {
             continue;
           }
-          fChildTrackdEdx.push_back(calo->dEdx());
-          fChildTrackResRange.push_back(calo->ResidualRange());
-          std::vector<float> resRange = calo->ResidualRange();
+          std::vector<double> dEdx (calo->dEdx().begin(), calo->dEdx().end());
+          std::vector<double> resRange (calo->ResidualRange().begin(), calo->ResidualRange().end());
+          fChildTrackdEdx.push_back(dEdx);
+          fChildTrackResRange.push_back(resRange);
         }
 
       }
@@ -339,7 +327,7 @@ void testReco::AnalyseClusterReco::beginJob()
   fTree->Branch("childTrackIsLongest", &fChildTrackIsLongest);
   fTree->Branch("childTrackIsMiddle", &fChildTrackIsMiddle);
   fTree->Branch("childTrackIsShortest", &fChildTrackIsShortest);
-  fTree->Branch("threeTracks", &fThreeTracks);
+  fTree->Branch("numTracks", &fNumTracks);
   fTree->Branch("childTrackdEdx", &fChildTrackdEdx);
   fTree->Branch("childTrackResRange", &fChildTrackResRange);
 }
@@ -354,7 +342,7 @@ void testReco::AnalyseClusterReco::ResetVariables()
   // Set all trackCounters to zero for the current event
   fNPFParticles = 0;
   fNPrimaryChildren = 0;
-  fThreeTracks = 0;
+  fNumTracks = 0;
   fChildTrackLengths.clear();
   fChildTrackCompleteness.clear();
   fChildTrackPurity.clear();
@@ -368,58 +356,26 @@ void testReco::AnalyseClusterReco::ResetVariables()
 
 float testReco::AnalyseClusterReco::Completeness(std::vector< art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
 {
-  //std::cout << "COMPLETENESS" << std::endl;
   std::map<int,int> objectHitsMap;
   objectHitsMap.clear();
 
-  //std::cout << "number of hits: " << objectHits.size() << std::endl;
-
-  std::cout << "number of hits measured: " << objectHitsMap[trackID] << std::endl;
-  std::cout << "object hits map size: " << objectHitsMap.size() << std::endl;
-
   for(unsigned int i = 0; i < objectHits.size(); ++i){
-    //if(TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true) >= 0){
     objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)]++;
-    std::cout << TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true) << ",";
-    //}
   }
-  std::cout << "end" << std::endl;
 
-  std::cout << "object hits map size: " << objectHitsMap.size() << std::endl;
-  //std::cout << "number of object hits: " << objectHitsMap[trackID] << std::endl;
-  //std::cout << "track ID: " << trackID << std::endl;
-  //std::cout << fTrackHitsMap[trackID] << std::endl;
-
-  std::cout << "number of hits in object: " << objectHits.size() << std::endl;
-  std::cout << "number of hits measured: " << objectHitsMap[trackID] << std::endl;
-  std::cout << "number of hits: " << fTrackHitsMap[trackID] << std::endl;
-
-  return (fTrackHitsMap[trackID] == 0) ? float_default : objectHitsMap[trackID]/static_cast<float>(fTrackHitsMap[trackID]);
+  return (fTrackHitsMap[trackID] == 0) ? double_default : objectHitsMap[trackID]/static_cast<double>(fTrackHitsMap[trackID]);
 }
 
 float testReco::AnalyseClusterReco::Purity(std::vector<art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
 {
-  //std::cout << "PURITY" << std::endl;
   std::map<int,int> objectHitsMap;
   objectHitsMap.clear();
 
-  //std::cout << "number of hits: " << objectHits.size() << std::endl;
-
   for(unsigned int i = 0; i < objectHits.size(); ++i){
-    //if(TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true) >= 0){
     objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)]++;
-    //}
   }
 
-  //std::cout << "track ID: " << trackID << std::endl;
-  //std::cout << "number of hits from the true track: " << objectHitsMap[trackID] << std::endl;
-
-  if(objectHitsMap[trackID] > static_cast<float>(objectHits.size())){
-    std::cout << "number of hits: " << objectHits.size() << std::endl;
-    std::cout << "number of hits from the true track: " << objectHitsMap[trackID] << std::endl;
-  }
-
-  return (objectHits.size() == 0) ? float_default : objectHitsMap[trackID]/static_cast<float>(objectHits.size());
+  return (objectHits.size() == 0) ? double_default : objectHitsMap[trackID]/static_cast<double>(objectHits.size());
 }
 
 DEFINE_ART_MODULE(testReco::AnalyseClusterReco)
