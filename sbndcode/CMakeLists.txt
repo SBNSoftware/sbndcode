@@ -44,5 +44,4 @@ add_subdirectory(Decoders)
 add_subdirectory(ChannelMaps)
 
 # for CVN
-# Disable for now
 add_subdirectory(SBNDCVN)
