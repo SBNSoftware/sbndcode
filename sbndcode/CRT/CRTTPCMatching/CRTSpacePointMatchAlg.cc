@@ -1,7 +1,5 @@
 #include "CRTSpacePointMatchAlg.h"
 
-#include "larcore/Geometry/Geometry.h"
-
 namespace sbnd::crt {
 
   CRTSpacePointMatchAlg::CRTSpacePointMatchAlg(const Config& config)

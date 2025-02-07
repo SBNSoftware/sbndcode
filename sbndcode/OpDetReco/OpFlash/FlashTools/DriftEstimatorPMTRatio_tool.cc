@@ -15,8 +15,10 @@
 
 #include "fhiclcpp/types/Atom.h"
 #include "art/Utilities/ToolMacros.h"
+#include "art/Utilities/make_tool.h"
 #include "art/Utilities/ToolConfigTable.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
 
 #include <vector>
@@ -125,9 +127,9 @@ namespace lightana
 
     input_file->Close();
 
-    auto const& tpc = art::ServiceHandle<geo::Geometry>()->TPC();
+    geo::GeometryCore const& geom = *(lar::providerFrom<geo::Geometry>());
 
-    fDriftDistance = tpc.DriftDistance();
+    fDriftDistance = geom.TPC().DriftDistance();
     fVISLightPropTime = fDriftDistance/fVGroupVIS;
     fKinkDistance = 0.5*fDriftDistance*(1-fVGroupVUV/fVGroupVIS);
 

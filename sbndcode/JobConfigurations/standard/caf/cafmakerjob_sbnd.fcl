@@ -46,7 +46,8 @@ services:
   TimeTracker:  { printSummary: true }
   # #  @table::standard_services
 
-  WireReadout:               @local::sbnd_wire_readout
+  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
+  ExptGeoHelperInterface:    @local::sbnd_geometry_helper
   GeometryConfigurationWriter: {}
   Geometry:                  @local::sbnd_geo
   AuxDetGeometry:            @local::sbnd_auxdetgeo

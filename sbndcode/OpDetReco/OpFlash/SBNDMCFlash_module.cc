@@ -23,7 +23,6 @@
 #include "lardataobj/RawData/TriggerData.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/RecoBase/OpFlash.h"
-#include "larcore/Geometry/WireReadout.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -126,7 +125,6 @@ void SBNDMCFlash::produce(art::Event& e)
 {
 
   ::art::ServiceHandle<geo::Geometry> geo;
-  auto const &channelMapAlg = art::ServiceHandle<geo::WireReadout const>()->Get();
   auto const *lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
   auto const clock_data = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
   auto const det_prop = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e, clock_data);
@@ -202,7 +200,7 @@ void SBNDMCFlash::produce(art::Event& e)
   // opdet=>opchannel mapping
   std::vector<size_t> opdet2opch(geo->NOpDets(),0);
   for(size_t opch=0; opch<opdet2opch.size(); ++opch){
-    opdet2opch[channelMapAlg.OpDetFromOpChannel(opch)] = opch;
+    opdet2opch[geo->OpDetFromOpChannel(opch)] = opch;
   }
 
   // Get the OpChannel of the PD to use
@@ -306,7 +304,7 @@ void SBNDMCFlash::produce(art::Event& e)
           auto iter = std::find(opch_to_use.begin(), opch_to_use.end(), opch);
           if (iter == opch_to_use.end()) continue;
 
-          auto const& pt = channelMapAlg.OpDetGeoFromOpChannel(opch).GetCenter();
+          auto const& pt = geo->OpDetGeoFromOpChannel(opch).GetCenter();
 
           if(pt.X() < 0 && _tpc == 1) continue;
           if(pt.X() > 0 && _tpc == 0) continue;
@@ -356,7 +354,6 @@ void SBNDMCFlash::GetFlashLocation(std::vector<double> pePerOpChannel,
                                        double& Ywidth,
                                        double& Zwidth)
 {
-  auto const &channelMapAlg = art::ServiceHandle<geo::WireReadout const>()->Get();
 
   // Reset variables
   Ycenter = Zcenter = 0.;
@@ -367,7 +364,8 @@ void SBNDMCFlash::GetFlashLocation(std::vector<double> pePerOpChannel,
   for (unsigned int opch = 0; opch < pePerOpChannel.size(); opch++) {
 
     // Get physical detector location for this opChannel
-    auto const PMTxyz = channelMapAlg.OpDetGeoFromOpChannel(opch).GetCenter();
+    ::art::ServiceHandle<geo::Geometry> geo;
+    auto const PMTxyz = geo->OpDetGeoFromOpChannel(opch).GetCenter();
 
     // Add up the position, weighting with PEs
     sumy    += pePerOpChannel[opch]*PMTxyz.Y();
