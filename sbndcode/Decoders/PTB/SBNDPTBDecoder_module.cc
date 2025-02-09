@@ -207,7 +207,6 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 		tstruct.gate_counter = -1;
 	      }
 
-	      std::cout << tstruct.prev_timestamp << "   ||   " << tstruct.gate_counter << std::endl;
 
 	      ix = sout.HLTrigs.size();
 	      sout.HLTrigs.push_back(tstruct);
