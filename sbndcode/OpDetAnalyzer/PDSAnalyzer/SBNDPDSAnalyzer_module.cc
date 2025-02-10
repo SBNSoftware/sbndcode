@@ -378,6 +378,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
 
       // Get the associated SimIDEs
       std::vector< const sim::IDE * > ides_v = bt_serv->TrackIdToSimIDEs_Ps (pPart.TrackId());
+      std::cout << " Geo Check: " << ides_v.size() << std::endl;
       for(auto *ide:ides_v){
         // need to divide by 3 to avoid triple counting (3 wire planes)
         endep+=ide->energy/3.;
