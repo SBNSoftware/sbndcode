@@ -17,9 +17,12 @@
 
 BEGIN_PROLOG
 
-detsim_drops: [ @sequence::g4_drops,
-                "drop sim::SimPhotonsLites_*_*_*",
-                "drop sim::SimPhotons_*_*_*" ]
+detsim_drops: [ @sequence::g4_drops
+                , "drop sim::SimPhotonsLites_*_*_*"
+                , "drop sim::SimPhotons_*_*_*" 
+                , "drop sim::SimEnergyDeposits_ionandscintout__*"
+                , "drop sim::SimEnergyDeposits_ionandscint_*_*"
+                , "drop sim::SimEnergyDeposits_largeant_*_*"]
 
 END_PROLOG
 
