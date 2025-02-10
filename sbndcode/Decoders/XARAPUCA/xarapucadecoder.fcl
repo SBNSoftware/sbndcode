@@ -24,7 +24,7 @@ xarapucadecoder:
     # OUTPUT configuration:
     # - Output data product instance name.
     waveforms_instance_name: "XARAPUCAChannels"                 # Name for the instance product containing the raw decoded waveforms.
-    timing_instance_name: "TimingReferenceInfo"                 # Name for the instance product containing the timing reference information.
+    timing_instance_name: ""                                    # Name for the instance product containing the timing reference information.
     store_debug_waveforms: 0                                    # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
     # - Debug options.
     debug_all: false                                            # (De)activates all debug options.

@@ -151,7 +151,7 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   
   // Gets the name of the instance created by this module.
   fwaveforms_instance_name = p.get<std::string> ("waveforms_instance_name", "XARAPUCAChannels");
-  ftiming_instance_name = p.get<std::string> ("timing_instance_name", "TimingReferenceInfo");
+  ftiming_instance_name = p.get<std::string> ("timing_instance_name", "");
 
   // Gets timing configuration.
   ftiming_priority = p.get<unsigned int> ("timing_priority", SPEC_TDC_TIMING);
