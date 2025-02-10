@@ -20,6 +20,7 @@ namespace {
       // In the geometry, CRTStripArrays are AuxDets and CRTStrips are the
       // AuxDetSensitives. Each strip has two SiPM channels, one per optical
       // fiber (not in the geometry).
+      //
 
       for (size_t a=0; a<adgeo.size(); a++){
         std::string volName(adgeo[a].TotalVolume()->GetName());
