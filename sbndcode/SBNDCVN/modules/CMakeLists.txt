@@ -13,6 +13,8 @@ cet_build_plugin(SBNDCVNMapper art::EDProducer
   larreco::RecoAlg
   lardata::RecoObjects  
   larpandora::LArPandoraInterface
+  sbndcode_CRTUtils
+  sbndcode_CRT
   sbnobj::Common_CRT
   nusimdata::SimulationBase
   art::Framework_Core
@@ -50,6 +52,8 @@ cet_build_plugin(SBNDCVNZlibMaker art::EDAnalyzer
   larreco::RecoAlg
   lardata::RecoObjects  
   larpandora::LArPandoraInterface
+  sbndcode_CRTUtils
+  sbndcode_CRT
   sbnobj::Common_CRT
   nusimdata::SimulationBase
   art::Framework_Core
