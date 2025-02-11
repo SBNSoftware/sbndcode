@@ -44,7 +44,7 @@ public:
 
   // Required functions.
   bool filter(art::Event& e) override;
-  bool DoubleFlashCheck(std::vector<double> &SummedVector, int &MuonSample);
+  bool DoubleFlashCheck(std::vector<double> &SummedVector, int &MuonSample, bool Saving);
   void ConstructSummedWaveform(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, std::vector<double> &SummedVector_TPC1, std::vector<double> &SummedVector_TPC2, int &FlashCounter);
   void ConvolveWithAnyKernel(std::vector<double> &Waveform, std::vector<double> &Kernel, std::vector<double> &Out);
   void SaveVector(std::vector<double> &HistEntries, std::string Name);
@@ -96,7 +96,7 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fPeakSearchSamples = p.get<int>("PeakSearchSamples", 100);
 }
 
-bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector, int &MuonSample)
+bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector, int &MuonSample, bool Saving)
 {
   //Baseline subtracted summed waveform for a give TPC is available
   //Check for at least two big excursions from baseline
@@ -126,12 +126,18 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector, int &Muo
   std::vector<double> SmoothedWaveform(SummedVector.size());
   std::vector<double> EdgeWaveform(SummedVector.size());
   ConvolveWithAnyKernel(SummedVector, GaussianKernel, SmoothedWaveform);
+  if(Saving)
+  {
   SaveVector(SmoothedWaveform, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
     std::to_string(FlashNumForName)+std::string("TPC_")+std::to_string(TPCNumForName)+std::string("_Smoothed"));
+  }
   //Do edge detection on waveform 
   ConvolveWithAnyKernel(SmoothedWaveform, EdgeDetectionKernel, EdgeWaveform); //Summed vector passed by reference and modified
+  if(Saving)
+  {
   SaveVector(EdgeWaveform, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
     std::to_string(FlashNumForName)+std::string("TPC_")+std::to_string(TPCNumForName)+std::string("_EdgeWaveform"));
+  }
   //Apply selection cuts to our edge detection waveform 
   std::vector<int> CrossingIndecies;
   for(int i=1; i<int(EdgeWaveform.size()); i++)
@@ -231,6 +237,7 @@ void michelETagger::ConvolveWithAnyKernel(std::vector<double> &Waveform, std::ve
         }
         Out[i] = PointSum;
     }
+    //Some remaining bug here to find
     for (int i = int(Waveform.size()) - (KernelSize/2); i < int(Waveform.size()); i++) 
     {
         double PointSum = 0;
@@ -284,17 +291,17 @@ bool michelETagger::filter(art::Event& e)
     std::vector<double> SummedWaveform_TPC1(FlashSamples);
     std::vector<double> SummedWaveform_TPC2(FlashSamples);
     ConstructSummedWaveform(waveHandle, SummedWaveform_TPC1, SummedWaveform_TPC2, FlashCounter);
-    SaveVector(SummedWaveform_TPC1, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
-    std::to_string(FlashNumForName)+std::string("TPC_1_SummedWaveform"));
-    SaveVector(SummedWaveform_TPC2, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
-    std::to_string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
+    //SaveVector(SummedWaveform_TPC1, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
+    //std::to_string(FlashNumForName)+std::string("TPC_1_SummedWaveform"));
+    //SaveVector(SummedWaveform_TPC2, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
+    //std::to_string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
     //Check for double flash in each TPC
     int MuonSample_TPC1 =0;
     int MuonSample_TPC2 =0;
     TPCNumForName=1;
-    bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1, MuonSample_TPC1 );
+    bool DoubleFlash_TPC1 = DoubleFlashCheck( SummedWaveform_TPC1, MuonSample_TPC1, false );
     TPCNumForName=2;
-    bool DoubleFlash_TPC2 = DoubleFlashCheck( SummedWaveform_TPC2, MuonSample_TPC2 );
+    bool DoubleFlash_TPC2 = DoubleFlashCheck( SummedWaveform_TPC2, MuonSample_TPC2, false );
     bool CoincidentCRT = false;
     if(DoubleFlash_TPC1)
     {
@@ -317,6 +324,14 @@ bool michelETagger::filter(art::Event& e)
     if(MichelFound) 
     {
       std::cout << "Found a Michel Candidate in Event " << EventNum << "  Flash " << FlashNumForName << std::endl;
+      SaveVector(SummedWaveform_TPC1, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
+      std::to_string(FlashNumForName)+std::string("TPC_1_SummedWaveform"));
+      SaveVector(SummedWaveform_TPC2, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
+      std::to_string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
+      TPCNumForName=1;
+      DoubleFlashCheck( SummedWaveform_TPC1, MuonSample_TPC1, true );
+      TPCNumForName=2;
+      DoubleFlashCheck( SummedWaveform_TPC2, MuonSample_TPC2, true);
       break;
     }
   }
