@@ -25,6 +25,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
 #include "TH1D.h"
+#include "TTree.h"
 #include <memory>
 
 class michelETagger;
@@ -70,6 +71,8 @@ private:
   int FlashNumForName;
   int TPCNumForName;
   int fPeakSearchSamples;
+  double MichelDecayTime;
+  TTree* evtTree;
   // Declare member data here.
 
 };
@@ -94,6 +97,7 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fBaseline = p.get<int>("Baseline", 0);
   fMuonLifetimes = p.get<double>("MuonLifetimes", 2.5);
   fPeakSearchSamples = p.get<int>("PeakSearchSamples", 100);
+  evtTree->Branch("MichelDecayTime", &MichelDecayTime);
 }
 
 bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector, int &MuonSample, bool Saving)
@@ -172,6 +176,10 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector, int &Muo
   bool GoodLifetime = TimeToMichel < (fMuonLifetimes*MuonLifetime);
   DoubleFlash = MichelFollowsMuon && BigEnoughMuonFlash && BigEnoughMichelFlash && GoodLifetime;
   MuonSample = std::distance(SmoothedWaveform.begin(),std::max_element(SmoothedWaveform.begin()+CrossingIndecies[0], SmoothedWaveform.begin()+CrossingIndecies[0]+fPeakSearchSamples));
+  if(Saving)
+  {
+    MichelDecayTime = TimeToMichel;
+  }
   return DoubleFlash;
 }
 
@@ -267,6 +275,7 @@ void michelETagger::SaveVector(std::vector<double> &HistEntries, std::string Nam
 
 bool michelETagger::filter(art::Event& e)
 {
+  MichelDecayTime=-10;
   // Implementation of required member function here.
   //Will need CRT hit clusters
   //OpDetWaveforms
@@ -332,6 +341,7 @@ bool michelETagger::filter(art::Event& e)
       DoubleFlashCheck( SummedWaveform_TPC1, MuonSample_TPC1, true );
       TPCNumForName=2;
       DoubleFlashCheck( SummedWaveform_TPC2, MuonSample_TPC2, true);
+      evtTree->Fill();
       break;
     }
   }
