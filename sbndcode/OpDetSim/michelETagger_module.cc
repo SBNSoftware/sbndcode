@@ -97,6 +97,7 @@ michelETagger::michelETagger(fhicl::ParameterSet const& p)
   fBaseline = p.get<int>("Baseline", 0);
   fMuonLifetimes = p.get<double>("MuonLifetimes", 2.5);
   fPeakSearchSamples = p.get<int>("PeakSearchSamples", 100);
+  evtTree = tfs->make<TTree>("MichelEMetrics","Michel e Metric Tree");
   evtTree->Branch("MichelDecayTime", &MichelDecayTime);
 }
 
