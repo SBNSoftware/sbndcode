@@ -171,11 +171,11 @@ bool michelETagger::DoubleFlashCheck(std::vector<double> &SummedVector, int &Muo
   bool MichelFollowsMuon = (CrossingIndecies[0] < CrossingIndecies[1] );
   //Require that both muon and michel are large enough
   bool BigEnoughMuonFlash = *std::max_element(SmoothedWaveform.begin()+CrossingIndecies[0], SmoothedWaveform.begin()+CrossingIndecies[0]+fPeakSearchSamples) >= fMuonADCCutoff;
-  bool BigEnoughMichelFlash = *std::max_element(SmoothedWaveform.begin()+CrossingIndecies[0], SmoothedWaveform.begin()+CrossingIndecies[0]+fPeakSearchSamples) >= fMichelADCCutoff;
+  bool BigEnoughMichelFlash = *std::max_element(SmoothedWaveform.begin()+CrossingIndecies[1], SmoothedWaveform.begin()+CrossingIndecies[1]+fPeakSearchSamples) >= fMichelADCCutoff;
   //Finally require the Muon lifetime is approximately correct
   double TimeToMichel = (CrossingIndecies[1]-CrossingIndecies[0])*fNsPerSample;
   double MuonLifetime = 2197; // 2197 ns mu+ lifetime;   616 mu- ns lifetime; These are all timeconstants not t1/2
-  bool GoodLifetime = TimeToMichel < (fMuonLifetimes*MuonLifetime);
+  bool GoodLifetime = (TimeToMichel < (fMuonLifetimes*MuonLifetime));
   DoubleFlash = MichelFollowsMuon && BigEnoughMuonFlash && BigEnoughMichelFlash && GoodLifetime;
   MuonSample = std::distance(SmoothedWaveform.begin(),std::max_element(SmoothedWaveform.begin()+CrossingIndecies[0], SmoothedWaveform.begin()+CrossingIndecies[0]+fPeakSearchSamples));
   if(Saving)
@@ -340,9 +340,9 @@ bool michelETagger::filter(art::Event& e)
       SaveVector(SummedWaveform_TPC2, std::string("Event_") + std::to_string(EventNum)+std::string("_Flash_")+
       std::to_string(FlashNumForName)+std::string("TPC_2_SummedWaveform"));
       TPCNumForName=1;
-      DoubleFlashCheck( SummedWaveform_TPC1, MuonSample_TPC1, true );
+      if(DoubleFlash_TPC1) DoubleFlashCheck( SummedWaveform_TPC1, MuonSample_TPC1, true );
       TPCNumForName=2;
-      DoubleFlashCheck( SummedWaveform_TPC2, MuonSample_TPC2, true);
+      if(DoubleFlash_TPC2) DoubleFlashCheck( SummedWaveform_TPC2, MuonSample_TPC2, true);
       evtTree->Fill();
       break;
     }
