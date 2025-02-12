@@ -3,7 +3,6 @@
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 #include "particleinventoryservice.fcl"
-#include "backtrackerservice.fcl"
 
 #include "lightcalo.fcl"
 ##include "lightcalo_ana.fcl"
@@ -18,7 +17,6 @@ services:
     FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
                                 @table::sbnd_services              # from services_sbnd.fcl
                                 @table::sbnd_g4_services
-    BackTrackerService: @local::standard_backtrackerservice
     ParticleInventoryService: @local::standard_particleinventoryservice
 
 }
@@ -34,7 +32,7 @@ outputs:
     out1:
     {
         module_type: RootOutput
-        fileName: "lightcalo-art.root"
+        # fileName: "lightcalo-art.root"
         dataTier: "reconstructed"
         compressionLevel:1
         SelectEvents: ["reco"]
@@ -66,5 +64,3 @@ physics:
     # ie analyzers and output streams.  these all run simultaneously
     end_paths: [stream1]
 }
-
-services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simdrift"

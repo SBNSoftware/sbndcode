@@ -327,11 +327,14 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
       if(_truth_neutrino && !(abs(pfp->PdgCode()) == 12 || abs(pfp->PdgCode()) == 14|| abs(pfp->PdgCode()) == 16))
         continue;
       // if primary, get nu-score 
-      const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpmeta_v = pfp_to_meta.at(pfp->Self());
+      const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpmeta_v = pfp_to_meta.at(pfp.key());
       const art::Ptr<larpandoraobj::PFParticleMetadata> pfpmeta = pfpmeta_v.front();
-      larpandoraobj::PFParticleMetadata::PropertiesMap propmap = pfpmeta->GetPropertiesMap();
-      if (propmap.count("NuScore")) nu_score = propmap.at("NuScore");
-      else nu_score = -1;
+      std::map<std::string, float> propmap = pfpmeta->GetPropertiesMap();
+      auto propertiesMapIter = propmap.find("NuScore");
+      if (propertiesMapIter == propmap.end()){
+        nu_score = -1;
+      }
+      else{nu_score = propertiesMapIter->second;}
       
       // get fm-score 
       std::vector<art::Ptr<sbn::SimpleFlashMatch>> fm_v = pfp_to_sfm.at(pfp.key());
@@ -343,9 +346,10 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
       for (size_t n_fm=0; n_fm < fm_v.size(); n_fm++){
         auto fm = fm_v.at(n_fm);
         fm_score = fm->score.total;
-        if (nu_score > _nuscore_cut && fm_score < _fmscore_cut && fm_score > 0){
+        if (nu_score >= _nuscore_cut && fm_score < _fmscore_cut && fm_score > 0){
           found_fm = true;
           match_fm_v.push_back(fm);
+          if (_verbose) std::cout << "Nuscore: " << nu_score << ", FmScore: " << fm_score << std::endl;
         }
       } // end flashmatch loop
       if (found_fm ==true){
