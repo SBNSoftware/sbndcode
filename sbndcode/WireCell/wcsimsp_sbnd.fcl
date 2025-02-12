@@ -16,7 +16,7 @@ sbnd_wcls: {
         configs: []
 
         ## Libraries in which to look for WCT components
-        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb"]
+        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb", "WireCellPytorch"]
         inputers: []
         outputers: []
         
