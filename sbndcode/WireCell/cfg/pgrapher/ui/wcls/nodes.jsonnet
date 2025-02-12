@@ -67,8 +67,8 @@ function(params, tools)
             },
         },nin=1, nout=1, uses=[tools.anode]),
 
-        // Save thresholds
-        thresholds: function(tags=["threshold"], name="thsaver", cmm=[]) g.pnode({
+        // Save wiener RMS.  this used to be saved in threshold trace tag summary.
+        thresholds: function(tags=["wiener"], name="thsaver", cmm=[]) g.pnode({
             type: "wclsFrameSaver",
             name: name,
             data: {

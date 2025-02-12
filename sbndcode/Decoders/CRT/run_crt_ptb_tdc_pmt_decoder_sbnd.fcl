@@ -1,0 +1,47 @@
+#include "crt_decoder_sbnd.fcl"
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "SBNDPTBDecoderDefaults.fcl"
+#include "spectdc_decoder_sbnd.fcl"
+#include "pmtdecoder.fcl"
+
+process_name: Decoders
+
+services:
+{
+  @table::sbnd_services
+  CRTChannelMapService: @local::crt_channel_map_standard
+  TFileService :        { fileName: "decoder_hist.root" }
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    crtdecoder: @local::crt_decoder
+    ptbdecoder: @local::SBNDPTBDecoderDefaults
+    tdcdecoder: @local::spec_tdc_decoder_sbnd
+    pmtdecoder: @local::pmtdecoder
+  }
+  
+  decoders:      [ crtdecoder, ptbdecoder, tdcdecoder, pmtdecoder ]
+  trigger_paths: [ decoders ]
+
+  stream1:   [ out1 ]
+  end_paths: [ stream1 ]
+}

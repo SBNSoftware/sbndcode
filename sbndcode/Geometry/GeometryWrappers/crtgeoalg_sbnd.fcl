@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+
+crtgeoalg_sbnd:
+{
+  DefaultGain: 0.025
+  MC:          true
+}
+
+crtgeoalg_data_sbnd:
+{
+  DefaultGain: 0.025
+  MC:          false
+}
+
+END_PROLOG

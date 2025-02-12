@@ -1,3 +1,5 @@
+add_subdirectory(PDSAnalyzer)
+
 set(
 MODULE_LIBRARIES
   art::Framework_Principal

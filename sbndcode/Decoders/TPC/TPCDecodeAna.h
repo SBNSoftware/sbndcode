@@ -18,9 +18,12 @@ class TPCDecodeAna {
   uint8_t slot; //!< Index of "slot" of readout board 
   uint32_t event_number; //!< Event number for this header 
   uint32_t checksum; //!< checksum associated with header
-  uint32_t timestamp; //!< timestamp for this header
+  ULong64_t timestamp; //!< timestamp for this header
   uint32_t adc_word_count; //!< word count of ADC counts associated with this header
-
+  uint32_t framenum; //!<  Nevis frame number
+  uint32_t samplenum; //!<  2 MHz sample number
+  ULong64_t fragtimestamp; //!<  artdaq fragment timestmap (put on by BoardReader)
+  
   unsigned index; //!< Globally usable index for this header information. 
     // No two header objects in the same event shold have the same index
 
@@ -33,7 +36,10 @@ class TPCDecodeAna {
     event_number(0xBEEFDEAD),
     checksum(0xBEEFDEAD),
     timestamp(0xBEEFDEAD),
-    adc_word_count(0xBEEFDEAD)
+    adc_word_count(0xBEEFDEAD),
+    framenum(0xBEEFDEAD),
+    samplenum(0xBEEFDEAD),
+    fragtimestamp(0xBEEFDEAD)
   {}
 
   // print the data -- for debugging
@@ -45,8 +51,10 @@ class TPCDecodeAna {
     buffer << "checksum: " << checksum << std::endl;
     buffer << "adc word count: " << adc_word_count << std::endl;
     buffer << "timestamp: " << timestamp << std::endl;
-    buffer << std::hex << "HEX checksum: " << checksum << std::endl;
-
+    buffer << std::hex << "HEX checksum: " << checksum << std::dec << std::endl;
+    buffer << "Frame no: " << framenum << std::endl; 
+    buffer << "2MHz Sample no: " << samplenum << std::endl; 
+    buffer << "frag timestamp: " << fragtimestamp << std::endl; 
     return buffer.str();
   }
 

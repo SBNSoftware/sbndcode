@@ -1,3 +1,0 @@
-#include "g4_simphotontime_filter.fcl"
-
-#include "3drift_services_sbnd.fcl"

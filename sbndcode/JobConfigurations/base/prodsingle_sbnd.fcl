@@ -26,13 +26,6 @@
 
 #include "singles_sbnd.fcl"
 
-#include "larg4_sbnd.fcl"
-#include "ionandscint_sbnd.fcl"
-#include "PDFastSim_sbnd.fcl"
-#include "simdrift_sbnd.fcl"
-
-#include "detsimmodules_sbnd.fcl"
-
 #include "rootoutput_sbnd.fcl"
 
 
@@ -74,37 +67,11 @@ physics:
 
     # Generation
     generator: @local::sbnd_singlep
-
-    # A dummy module that forces the G4 physics list to be loaded
-    loader: { module_type: "PhysListLoader" }
-
-    # The geant4 step
-    largeant: @local::sbnd_larg4
-
-    # Creation of ionization electrons and scintillation photons, inside the active volume
-    ionandscint: @local::sbnd_ionandscint
-
-    # Light propogation inside the active volume
-    pdfastsim: @local::sbnd_pdfastsim_par
-
-    # Electron propogation
-    simdrift: @local::sbnd_simdrift
-
-    # Detector simulation
-    daq: @local::sbnd_simwire
   }
 
   #define the producer and filter modules for this path, order matters,
-  # simulate:  [ rns, generator, largeant, daq]
-  # simulate:  [ rns, generator ]
   simulate: [ rns
           , generator
-          , loader
-          , largeant
-          , ionandscint
-          , pdfastsim
-          , simdrift
-          , daq
         ]
 
   #define the output stream, there could be more than one if using filters
@@ -121,16 +88,8 @@ outputs:
 {
   out1:
   {
-              @table::sbnd_rootoutput # inherit shared settings
+    @table::sbnd_rootoutput # inherit shared settings
     fileName: "prodsingle_sbnd_%p-%tc.root" # default file name, can override from command line with -o or --output
-    outputCommands: [ "keep *_*_*_*"
-                    , "drop *_ionandscint__*" # Drop the IonAndScint w/ SCE offsets applied
-                    ]
   }
 }
 
-#
-# at the end of the configuration, we can override single parameters to reflect our needs:
-#
-physics.producers.generator.T0: [ 0 ]
-physics.producers.generator.Theta0XZ: [ 10 ]

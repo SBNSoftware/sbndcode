@@ -1,5 +1,6 @@
-#include "simulationservices_sbnd.fcl"
+#include "crtgeoalg_sbnd.fcl"
 #include "crtbacktrackeralg_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
 
 process_name: CRTAnalyzer
 
@@ -24,6 +25,7 @@ physics:
     crtana: 
     { 
       module_type:       "CRTAnalysis"
+      CRTGeoAlg:         @local::crtgeoalg_sbnd
       CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
     }
   }

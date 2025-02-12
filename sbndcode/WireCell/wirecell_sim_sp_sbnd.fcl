@@ -1,7 +1,7 @@
 #
 # File:    wirecell_sim_sp_sbnd.fcl
 # Purpose: 2D Simulation of readout response to induced and collected charge and performs 2D signal processing
-# Authors: Ewerton Belchior and Lynn Tung (lynnt@uchicago.edu)
+# Authors: Ewerton Belchior (ebelchior@lsu.edu) and Lynn Tung (lynnt@uchicago.edu)
 #
 # This configuration runs Wire-Cell TPC Simulation and Signal Processing
 #

@@ -12,6 +12,8 @@
 #ifndef SBND_CRTDETSIMPARAMS_H
 #define SBND_CRTDETSIMPARAMS_H
 
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+
 #include "fhiclcpp/types/Table.h"
 #include "fhiclcpp/types/OptionalTable.h"
 #include "fhiclcpp/types/Sequence.h"
@@ -23,6 +25,10 @@ namespace crt
 {
   struct CRTDetSimParams
   {
+
+    fhicl::Table<CRTGeoAlg::Config> GeoAlgConfig {
+      fhicl::Name("CRTGeoAlg"),
+    };
 
     fhicl::Atom<double> GlobalT0Offset {
       fhicl::Name("GlobalT0Offset"),

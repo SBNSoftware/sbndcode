@@ -1,0 +1,45 @@
+#include "xarapucadecoder.fcl"
+
+process_name: XARAPUCADecoder
+
+services: {
+    TFileService : {fileName: "decoder_hist.root"}  # Output file containing the histograms with the extracted waveforms.
+}
+
+source: {
+    module_type: RootInput
+    maxEvents:   -1       
+}
+
+outputs: {
+    out1: {
+        module_type: RootOutput
+        fileName:    "xarapucadecoder-art.root"     # Output file containing the module products.
+    }
+}
+
+physics: {
+
+    producers: {
+        xarapucadecoder: @local::xarapucadecoder    
+    }
+
+    filters:{}
+
+    analyzers:{}
+
+
+    reco: [xarapucadecoder]
+
+
+    # Defines the output stream, there could be more than one if using filters.
+    stream1: [out1]
+
+    # trigger_paths is a keyword and contains the paths that modify the art::Event.
+    # ie filters and producer.
+    trigger_paths: [reco]
+
+    # end_paths is a keyword and contains the paths that do not modify the art::Event,
+    # ie analyzers and output streams. These all run simultaneously.
+    end_paths: [stream1]
+}

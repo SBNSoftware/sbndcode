@@ -12,12 +12,13 @@
 // framework
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/ModuleMacros.h"
-#include "fhiclcpp/ParameterSet.h" 
-#include "art/Framework/Principal/Handle.h" 
-#include "canvas/Persistency/Common/Ptr.h" 
-#include "canvas/Persistency/Common/PtrVector.h" 
-#include "art/Framework/Services/Registry/ServiceHandle.h" 
-#include "messagefacility/MessageLogger/MessageLogger.h" 
+#include "fhiclcpp/ParameterSet.h"
+#include "fhiclcpp/types/Atom.h"
+#include "art/Framework/Principal/Handle.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/PtrVector.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
 // LArSoft
 #include "larcore/Geometry/Geometry.h"
@@ -37,6 +38,8 @@
 
 // sbndcode
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
+#include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
+#include "sbndcode/Calibration/CRT/CalibService/CRTCalibService.h"
 
 namespace sbnd::crt {
 
@@ -65,7 +68,7 @@ namespace sbnd::crt {
 
   // CRT strip geometry struct contains dimensions and mother module
   struct CRTStripGeo{
-    CRTStripGeo(const TGeoNode *stripNode, const geo::AuxDetSensitiveGeo &auxDetSensitive, 
+    CRTStripGeo(const TGeoNode *stripNode, const geo::AuxDetSensitiveGeo &auxDetSensitive,
                 const uint16_t _adsID, const std::string &_moduleName,
                 const uint16_t _channel0, const uint16_t _channel1)
     {
@@ -118,22 +121,22 @@ namespace sbnd::crt {
   // CRT module geometry struct contains dimensions, daughter strips and mother tagger
   struct CRTModuleGeo{
     CRTModuleGeo()
-    : name("")
-    , taggerName("")
-    , minX(-std::numeric_limits<double>::max())
-    , maxX(std::numeric_limits<double>::max())
-    , minY(-std::numeric_limits<double>::max())
-    , maxY(std::numeric_limits<double>::max())
-    , minZ(-std::numeric_limits<double>::max())
-    , maxZ(std::numeric_limits<double>::max())
-    , orientation(0)
-    , top(false)
-    , adID(std::numeric_limits<uint16_t>::max())
-    , t0CableDelayCorrection(0)
-    , t1CableDelayCorrection(0)
-    , invertedOrdering(false)
-    , minos(false)
-    , null(false)
+      : name("")
+      , taggerName("")
+      , minX(-std::numeric_limits<double>::max())
+      , maxX(std::numeric_limits<double>::max())
+      , minY(-std::numeric_limits<double>::max())
+      , maxY(std::numeric_limits<double>::max())
+      , minZ(-std::numeric_limits<double>::max())
+      , maxZ(std::numeric_limits<double>::max())
+      , orientation(0)
+      , top(false)
+      , adID(std::numeric_limits<uint16_t>::max())
+      , t0CableDelayCorrection(0)
+      , t1CableDelayCorrection(0)
+      , invertedOrdering(false)
+      , minos(false)
+      , null(false)
     {}
 
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet,
@@ -163,16 +166,17 @@ namespace sbnd::crt {
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
 
-      if(_minos)
+      if(_minos || _adID == 70 || _adID == 139)
         orientation = (modulePosMother[2] < 0);
       else
         orientation = (modulePosMother[2] > 0);
 
       // Location of SiPMs
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger)
-        top = (orientation == 1) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger
+         || CRTCommonUtils::GetTaggerEnum(taggerName) == kWestTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kEastTagger)
+        top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
       else
-        top = (orientation == 0) ? (modulePosMother[1] > 0) : (modulePosMother[0] < 0);
+        top = (orientation == 0) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
 
       // Fill edges
       minX = std::min(limitsWorld.X(), limitsWorld2.X());
@@ -258,10 +262,24 @@ namespace sbnd::crt {
   class CRTGeoAlg {
   public:
 
-    CRTGeoAlg(fhicl::ParameterSet const &p, geo::GeometryCore const *geometry,
+    struct Config {
+
+      fhicl::Atom<double> DefaultGain {
+        fhicl::Name("DefaultGain")
+      };
+
+      fhicl::Atom<bool> MC {
+        fhicl::Name("MC")
+      };
+    };
+
+    CRTGeoAlg(const Config& config, geo::GeometryCore const *geometry,
               geo::AuxDetGeometryCore const *auxdet_geometry);
 
-    CRTGeoAlg(fhicl::ParameterSet const &p = fhicl::ParameterSet());
+    CRTGeoAlg(const Config& config);
+
+    CRTGeoAlg(const fhicl::ParameterSet& pset) :
+      CRTGeoAlg(fhicl::Table<Config>(pset, {})()) {}
 
     ~CRTGeoAlg();
 
@@ -306,6 +324,8 @@ namespace sbnd::crt {
     std::string ChannelToTaggerName(const uint16_t channel) const;
 
     enum CRTTagger ChannelToTaggerEnum(const uint16_t channel) const;
+
+    enum CRTTagger AuxDetIndexToTaggerEnum(const unsigned ad_i) const;
 
     size_t ChannelToOrientation(const uint16_t channel) const;
 
@@ -355,18 +375,8 @@ namespace sbnd::crt {
     geo::GeometryCore const       *fGeometryService;
     const geo::AuxDetGeometryCore *fAuxDetGeoCore;
 
-    std::vector<std::pair<unsigned, double>> fT0CableLengthCorrectionsVector;
-    std::map<unsigned, double>               fT0CableLengthCorrections;
-    std::vector<std::pair<unsigned, double>> fT1CableLengthCorrectionsVector;
-    std::map<unsigned, double>               fT1CableLengthCorrections;
-    double                                   fDefaultPedestal;
-    std::vector<std::pair<unsigned, double>> fSiPMPedestalsVector;
-    std::map<unsigned, double>               fSiPMPedestals;
-    double                                   fDefaultGain;
-    std::vector<std::pair<unsigned, double>> fSiPMGainsVector;
-    std::map<unsigned, double>               fSiPMGains;
-    std::vector<std::pair<unsigned, bool>>   fChannelInversionVector;
-    std::map<unsigned, bool>                 fChannelInversion;
+    double fDefaultGain;
+    bool   fMC;
   };
 }
 

@@ -33,11 +33,11 @@ sbnd_ophit_finder_pmt.SPEArea: 66.33 # It's 66.33 ADC = 132.66 ADCxns x 0.5ns^-1
                                      # and is 317.1 ADC = 634.2 ADCxns x 0.5ns^-1
                                      # for the test bench response,
                                      # where 0.5 is the sampling rate
-sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMax:  14749 #bear: update to 14k baseline
-sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMin:  14741 #bear: update to 14k baseline
+sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMax:  14260  #acastill: update to 14k baseline
+sbnd_ophit_finder_pmt.PedAlgoPset.PedRangeMin:  14240 #acastill: update to 14k baseline
 sbnd_ophit_finder_pmt.PedAlgoPset.Threshold:    1.7
 sbnd_ophit_finder_pmt.PedAlgoPset.MaxSigma:     1.7
-sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 13 #bear: update to 14k baseline (noise is larger too)
+sbnd_ophit_finder_pmt.HitAlgoPset.ADCThreshold: 25 #acastill: update to ~2PE level
 
 #
 # OpHit for XArapuca - Configuration

@@ -1,0 +1,172 @@
+BEGIN_PROLOG
+
+#   This file defines the configuration for the CVNMapper and CVNMapperProtoDUNE modules
+standard_pixelmapproducer:
+{
+  TdcWidth:      500 # 1000
+  WireLength:    1984 #collection plane : 1664, induction plane : 1984
+  TimeResolution: 1700 #1600 # 2560 # 3400
+  Threshold: 0
+  MultipleDrifts: true
+  verbose: false
+  ChangeWireNo: true
+  ReadoutSize: 3400. # in time ticks # 2560
+  ShiftT: 420. # 420.
+  InductionWires: 1984
+  FlipInductionView: false
+  UseT: true
+}
+
+standard_cvnmapper:
+{
+  module_type:       SBNDCVNMapper
+  HitsModuleLabel:   "gaushit"
+  ClusterPMLabel: "cvnmap"
+  MinClusterHits: 100
+  verbose: false
+  UseSlice: true
+  SliceLabel: "pandora"
+  PFParticleModuleLabel: "pandora"
+  T0Label: "pandora"
+  PixelMapProducer: @local::standard_pixelmapproducer
+  MapVecSize: 100000
+  
+}
+
+standard_cvnzlibmaker:
+{
+  module_type:       SBNDCVNZlibMaker
+  OutputDir: "./NewZlibMakerOutput"
+  PixelMapInput: "sbndpixelmap"
+  SetLog: false
+  ReverseViews: [false,false,false]	
+  PlaneLimit: 500
+  TDCLimit: 500
+  verbose: false
+  UseSlice: true
+  SliceLabel: "pandora"
+  TopologyHitsCut: 0
+  GenieGenModuleLabel: "generator"
+  Verbose: false
+  UseBackTrackInfo: true
+  UseNuContainment: false
+  CosEfrac: 0.75
+  NuEfrac: 0.25
+  VolCut: 0.
+  SaveTree: false
+  PFParticleModuleLabel: "pandora"
+  HitModuleLabel: "gaushit"
+  T0Label: "pandora"
+}
+
+standard_sbndwirecheck:
+{
+  module_type: SBNDWireCheck
+  HitModuleLabel: "gaushit"
+  SpacePointModuleLabel: "pandora"
+  SliceLabel: "pandora"
+  GenieGenModuleLabel: "generator"
+  TrackModuleLabel: "pandoraTrack"
+  PFPLabel: "pandora"
+  T0Label: "pandora" # pandora # opt0finder
+  Run: 1
+  SubRun: 13
+  Event: 74
+  SliceID: 0
+}
+
+standard_cvnmapper_wire:
+{
+  module_type:        CVNMapperWire
+  #==================
+  HitsModuleLabel:   "wclsdatanfsp:gauss"
+  ClusterPMLabel: "cvnmap"
+  MinClusterHits: 100
+  PixelMapProducer:
+  {
+    @table::standard_pixelmapproducer
+    TimeResolution: 1500
+    Threshold: 0.6
+  }
+}
+
+standard_cvnmapper_sim:
+{
+  module_type:        CVNMapperSim
+  #==================
+  HitsModuleLabel:   "tpcrawdecoder:simpleSC"
+  ClusterPMLabel: "cvnmap"
+  MinClusterHits: 100
+  PixelMapProducer:
+  {
+    @table::standard_pixelmapproducer
+    TimeResolution: 1500
+    Threshold: 0.6
+  }
+}
+
+standard_sbndtfnethandler:
+{
+  LibPath: "SBND_DATA_DIR"
+  TFProtoBuf: "CVN"
+  ChargeLogScale: false
+  NImageWires: 500
+  NImageTDCs  : 500
+  ReverseViews: [false,false,false]
+  UseBundle: true
+  Inputs: ["view0","view1","view2"]
+  Outputs: ["flavour"]
+  NInputs: 3
+  NOutputs: 7
+  verbose: false
+}
+
+standard_sbndcvnevaluatorpm:
+{
+  module_type:  SBNDCVNEvaluator
+  #==================
+  PixelMapModuleLabel: "sbndpixelmap"
+  PixelMapInput: "cvnmap"
+  SliceLabel: ""
+  PFParticleModuleLabel: ""
+  T0Label: ""
+  CVNType: "Tensorflow"
+  verbose: false
+  SBNDTFHandler: {
+    tool_type: SBNDTFNetHandler
+    @table::standard_sbndtfnethandler
+  }
+  PixelMapProducer: @local::standard_pixelmapproducer
+}
+
+standard_sbndcvnevaluatorslc:
+{
+  module_type:  SBNDCVNEvaluator
+  #==================
+  PixelMapModuleLabel: ""
+  PixelMapInput: ""
+  SliceLabel: "pandora"
+  PFParticleModuleLabel: "pandora"
+  T0Label: "pandora"
+  CVNType: "Tensorflow"
+  verbose: false
+  SBNDTFHandler: {
+    tool_type: SBNDTFNetHandler
+    @table::standard_sbndtfnethandler
+  }
+  PixelMapProducer: @local::standard_pixelmapproducer
+}
+
+standard_sbndcvntest:
+{
+  module_type:  SBNDCVNTest
+  #==================
+  SliceLabel:     "pandora"
+  CVNLabel:       "cvn"
+  GenieLabel:     "generator"
+  HitLabel:       "gaushit"
+  HitMatchLabel:  "gaushitTruthMatch"
+}
+
+
+END_PROLOG

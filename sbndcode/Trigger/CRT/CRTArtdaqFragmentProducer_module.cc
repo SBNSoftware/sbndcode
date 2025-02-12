@@ -134,6 +134,7 @@ sbnd::trigger::CRTArtdaqFragmentProducer::CRTArtdaqFragmentProducer(fhicl::Param
   fVerbose(p.get<bool>("Verbose", false)),
   fClockSpeedCRT(p.get<double>("ClockSpeedCRT")),
   fFirstFEBMac5(p.get<size_t>("FirstFEBMac5", 0))
+  , fCrtGeo(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.

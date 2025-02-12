@@ -1,0 +1,138 @@
+#
+# service configuration
+#
+
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "larfft_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+#
+# module configuration
+#
+#include "caldata_sbnd.fcl"
+#include "hitfindermodules_sbnd.fcl"
+#include "databaseutil_sbnd.fcl"
+#include "hitdumpermodule.fcl"
+#include "muontrackmodule.fcl"
+#include "ophit_finder_sbnd.fcl"
+#include "wvfana_sbnd.fcl"
+
+process_name: HitDumper
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService:              { fileName: "hitdumper_tree.root" }
+  RandomNumberGenerator:     {}                                 # required by fuzzyCluster
+  message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+  FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+                             @table::sbnd_services              # from services_sbnd.fcl
+  LArFFT:                    @local::sbnd_larfft
+  SignalShapingServiceSBND:  @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+}
+
+
+#source is now a root file
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1       # Number of events to create
+}
+
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "reconstructed"
+    SelectEvents: ["reco2"]
+ }
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+  producers:
+  {
+    ### hit-finder producers
+    fasthit:             @local::standard_fasthitfinder
+    ophitpmt:            @local::sbnd_ophit_finder_pmt
+    ophitxarapuca:        @local::sbnd_ophit_finder_arapuca
+    MuonTrackProducer:        @local::MuonTrackProducer
+
+  }
+  filters:
+  {
+    MuonTrackFilter:          @local::MuonTrackFilter
+  }
+  analyzers:
+  {
+    hitdumper: @local::hitdumper_data
+    wvfana: @local::wvf_ana_sbnd
+  }
+
+  #define the producer and filter modules for this path, order matters,
+  #filters reject all following items.  see lines starting physics.producers below
+  reco2: [
+    #fasthit
+    ophitpmt
+    #, ophitxarapuca
+    #, MuonTrackProducer 
+    #, MuonTrackFilter
+  ]
+
+  ana: [hitdumper
+  #, wvfana
+  ]
+
+  # define the output stream, there could be more than one if using filters
+  stream1: [out1]
+
+  # trigger_paths is a keyword and contains the paths that modify the art::event,
+  #  ie filters and producers
+  # trigger_paths: []
+  trigger_paths: [reco2]
+
+  # end_paths is a keyword and contains the paths that do not modify the art::Event,
+  # ie analyzers and output streams.  these all run simultaneously
+  #
+  #end_paths: [ana, stream1]
+  # end_paths: [ana]
+}
+
+# set thresholds - these need to be tuned for data
+physics.producers.fasthit.MinSigInd: 15.0
+physics.producers.fasthit.MinSigCol: 15.0
+physics.producers.fasthit.SkipInd: false
+# parameter below enlarges the window of the hit symmetrically by adding
+#  this many widths to each side.   Original window is above threshold.
+#  Both thresh and larger window in this file are appropriate only when
+#  noise is turned off.
+physics.producers.fasthit.DigitModuleLabel: "simtpc2d:daq"
+physics.producers.fasthit.IncludeMoreTail: 3.0
+physics.producers.fasthit.ColMinWidth: 100.0
+physics.producers.fasthit.UncompressWithPed: false
+
+#services.DetectorClocksService.TriggerOffsetTPC: 100
+
+#Turn off everything except PMT
+physics.producers.ophitpmt.InputModule: "pmtdecoder"
+physics.producers.ophitpmt.InputLabels: ["PMTChannels"]
+
+#Run the wvfana on the PMT channels
+physics.analyzers.wvfana.InputModule: "pmtdecoder:PMTChannels"
+physics.analyzers.wvfana.OpDetsToPlot: ["pmt_coated","pmt_uncoated"]
+
+#Data tuning for ophit
+#The range is a *bit* wider to account for board to board baseline differences ~couple ADC
+physics.producers.ophitpmt.PedAlgoPset.PedRangeMax: 14263
+physics.producers.ophitpmt.PedAlgoPset.PedRangeMin: 14241

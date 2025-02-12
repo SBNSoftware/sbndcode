@@ -15,12 +15,12 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.89.01)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.93.01.02.02)
 find_package(cetmodules REQUIRED)
 project(sbndcode LANGUAGES CXX)
 
 # for CI:
-# project(sbndcode VERSION 09.89.01)
+# project(sbndcode VERSION 09.93.01.02.02)
 
 message(STATUS "\n")
 message(STATUS "=================================   ${PROJECT_NAME}   =================================")
@@ -80,6 +80,7 @@ find_package( larcore REQUIRED )
 find_package( larcorealg REQUIRED )
 find_package( larcoreobj REQUIRED )
 find_package( larreco REQUIRED )
+find_package( larrecodnn REQUIRED )
 find_package( larana REQUIRED )
 find_package( PostgreSQL REQUIRED )
 find_package( hep_concurrency REQUIRED )
@@ -87,6 +88,11 @@ find_package( Eigen3 REQUIRED )
 find_package( Geant4 REQUIRED )
 find_package( Boost COMPONENTS system REQUIRED )
 find_package( ROOT REQUIRED )
+
+if(DEFINED ENV{HEP_HPC_DIR} )
+  find_ups_product( hdf5 )
+  find_ups_product( hep_hpc )
+endif()
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)

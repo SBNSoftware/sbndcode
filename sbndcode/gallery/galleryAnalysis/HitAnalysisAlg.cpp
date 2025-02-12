@@ -247,7 +247,7 @@ void HitAnalysisAlg::fillHistograms(const HitVec& hitVec) const
         int                hitMult  = hit.Multiplicity();
         float              peakTime = hit.PeakTime();
         float              charge   = hit.Integral();
-        float              sumADC   = hit.SummedADC();
+        float              sumADC   = hit.ROISummedADC();
         float              hitPH    = std::min(hit.PeakAmplitude(),float(249.8));
         float              hitSigma = hit.RMS();
         

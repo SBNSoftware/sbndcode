@@ -1,0 +1,3 @@
+#include "standard_g4_sbnd.fcl"
+
+services.LArG4Parameters: @local::sbnd_largeantparameters_modbox
