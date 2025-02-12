@@ -166,11 +166,10 @@ namespace opdet {
     // Initialize the rise time calculator tool
     auto const rise_alg_pset = pset.get_if_present<fhicl::ParameterSet>("RiseTimeCalculator");
 
-    // Initialize the hit finder algorithm
-    auto const hit_alg_pset = pset.get<fhicl::ParameterSet>("HitAlgoPset");
-    std::string threshAlgName = hit_alg_pset.get<std::string>("Name");
+    // If we need to apply and individual threshold for each channel, set the algorithm threhsold to the lowest value
     auto hit_alg_pset = pset.get<fhicl::ParameterSet>("HitAlgoPset");
     if(fUseIndividualHitThreshold) hit_alg_pset.put_or_replace<double>("ADCThreshold", *min_element(fADCThresholdVector.begin(), fADCThresholdVector.end()));
+    std::string threshAlgName = hit_alg_pset.get<std::string>("Name");
     if (threshAlgName == "Threshold")
       fThreshAlg = thresholdAlgorithm<pmtana::AlgoThreshold>(hit_alg_pset, rise_alg_pset);
     else if (threshAlgName == "SiPM")
