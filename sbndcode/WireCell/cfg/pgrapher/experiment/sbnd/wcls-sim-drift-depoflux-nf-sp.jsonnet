@@ -87,7 +87,7 @@ local wcls_output_sim = {
   // sets each created with its own filter.  The "gauss" one is best
   // for charge reconstruction, the "wiener" is best for S/N
   // separation.  Both are used in downstream WC code.
-  spsaver: wcls.output.signals(name="spsignals", tags=["gauss", "wiener"]),
+  sp_signals: wcls.output.signals(name="spsignals", tags=["gauss", "wiener"]),
   // save "threshold" from normal decon for each channel noise
   // used in imaging
   sp_thresholds: wcls.output.thresholds(name="spthresholds", tags=["wiener"]),
@@ -129,51 +129,12 @@ local wcls_depoflux_writer = g.pnode({
 }, nin=1, nout=1, uses=tools.anodes + [tools.field]);
 
 local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
-//local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
-local sp_override = if use_dnnroi then {
-    sparse: true,
-    use_roi_debug_mode: true,
-    save_negtive_charge: true, // TODO: no negative charge in gauss, default is false
-    use_multi_plane_protection: true,
-    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
-    mp_tick_resolution: 10,
-    tight_lf_tag: "",
-    // loose_lf_tag: "",
-    cleanup_roi_tag: "",
-    break_roi_loop1_tag: "",
-    break_roi_loop2_tag: "",
-    shrink_roi_tag: "",
-    extend_roi_tag: "",
-    // m_decon_charge_tag: "",
-} else {
-    sparse: true,
-};
-local sp = sp_maker(params, tools, sp_override);
-local osps = [sp.make_sigproc(a) for a in tools.anodes];
-
-local dnnroi = import 'dnnroi.jsonnet';
-local ts = {
-    type: "TorchService",
-    name: "dnnroi",
-    data: {
-        model: "bnb_ptracks-model.ts",
-        device: "cpu",
-        concurrency: 1,
-    },
-};
+local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
+local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
 local magoutput = 'sbnd-data-check.root';
 local magnify = import 'pgrapher/experiment/sbnd/magnify-sinks.jsonnet';
 local sinks = magnify(tools, magoutput);
-
-local use_magnify = false;
-//local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
-local sp_pipes = if use_magnify then
-[g.pipeline([osps[n], sinks.decon_pipe[n]], 'sp_pipe_%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)]
-else osps;
-
-local sp_fans = [fanout("sp_fan_%d" % n) for n in std.range(0, std.length(tools.anodes) - 1)];
-local dnnroi_pipes = [ dnnroi(tools.anodes[n], ts, output_scale=1, nchunks=nchunks) for n in std.range(0, std.length(tools.anodes) - 1) ];
 
 local base = import 'pgrapher/experiment/sbnd/chndb-base.jsonnet';
 //local perfect = import 'pgrapher/experiment/sbnd/chndb-perfect.jsonnet';
@@ -266,7 +227,7 @@ local wcls_output_sp = {
   // sets each created with its own filter.  The "gauss" one is best
   // for charge reconstruction, the "wiener" is best for S/N
   // separation.  Both are used in downstream WC code.
-  spsaver: g.pnode({
+  sp_signals: g.pnode({
     type: 'wclsFrameSaver',
     name: 'spsaver',
     data: {
@@ -287,21 +248,6 @@ local wcls_output_sp = {
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 
-  dnnsaver: g.pnode({
-    type: 'wclsFrameSaver',
-    name: 'dnnsaver',
-    data: {
-      anode: wc.tn(mega_anode),
-      digitize: false,  // true means save as RawDigit, else recob::Wire
-      frame_tags: ['dnnsp'],
-
-      // this may be needed to convert the decon charge [units:e-] to be consistent with the LArSoft default ?unit? e.g. decon charge * 0.005 --> "charge value" to GaussHitFinder
-      frame_scale: [0.02, 0.02, 0.02],
-      nticks: params.daq.nticks,
-      chanmaskmaps: [],
-    },
-  }, nin=1, nout=1, uses=[mega_anode]),
-
 };
 
 
@@ -317,85 +263,29 @@ local chsel_pipes = [
 ];
 
 
-local nfsp_pipes = if use_dnnroi then
-// oports: 0: dnnroi, 1: traditional sp
-[
-  g.intern(
-    innodes=[chsel_pipes[n]],
-    outnodes=[dnnroi_pipes[n],sp_fans[n]],
-    centernodes=[nf_pipes[n], sp_pipes[n], sp_fans[n]],
-    edges=[
-      g.edge(chsel_pipes[n], nf_pipes[n], 0, 0),
-      g.edge(nf_pipes[n], sp_pipes[n], 0, 0),
-      g.edge(sp_pipes[n], sp_fans[n], 0, 0),
-      g.edge(sp_fans[n], dnnroi_pipes[n], 0, 0),
-    ],
-    iports=chsel_pipes[n].iports,
-    oports=dnnroi_pipes[n].oports+[sp_fans[n].oports[1]],
-    name='nfsp_pipe_%d' % n,
-  )
-  for n in std.range(0, std.length(tools.anodes) - 1)
-]
-else
-[
+local nfsp_pipes = [
   g.pipeline([
                chsel_pipes[n],
                //sinks.orig_pipe[n],
-               nf_pipes[n],
+
+               nf_pipes[n], // NEED to include this pipe for channelmaskmaps 
                //sinks.raw_pipe[n],
+
                sp_pipes[n],
                //sinks.decon_pipe[n],
                //sinks.threshold_pipe[n],
-               //sinks.debug_pipe[n], // use_roi_debug_mode=true in sp.jsonnet
+               // sinks.debug_pipe[n], // use_roi_debug_mode=true in sp.jsonnet
              ],
              'nfsp_pipe_%d' % n)
-  for n in std.range(0, std.length(tools.anodes) - 1)
+  for n in anode_iota
 ];
-
-//local nfsp_pipes = [
-//  g.pipeline([
-//               chsel_pipes[n],
-//               //sinks.orig_pipe[n],
-//
-//               nf_pipes[n], // NEED to include this pipe for channelmaskmaps 
-//               //sinks.raw_pipe[n],
-//
-//               sp_pipes[n],
-//               //sinks.decon_pipe[n],
-//               //sinks.threshold_pipe[n],
-//               // sinks.debug_pipe[n], // use_roi_debug_mode=true in sp.jsonnet
-//             ],
-//             'nfsp_pipe_%d' % n)
-//  for n in anode_iota
-//];
 
 //local fanpipe = f_sp.fanpipe('FrameFanout', nfsp_pipes, 'FrameFanin', 'sn_mag_nf'); // commented Ewerton 2023-05-24
 local fanpipe = f_sp.fanpipe('FrameFanout', nfsp_pipes, 'FrameFanin', 'sn_mag_nf_mod');   //added Ewerton 2023-05-24
 
-//local retagger_sp = g.pnode({
-//  type: 'Retagger',
-//  name: 'sp',  //added Ewerton 2023-05-24
-//  data: {
-//    // Note: retagger keeps tag_rules an array to be like frame fanin/fanout.
-//    tag_rules: [{
-//      // Retagger also handles "frame" and "trace" like fanin/fanout
-//      // merge separately all traces like gaussN to gauss.
-//      frame: {
-//        '.*': 'retagger',
-//      },
-//      merge: {
-//        'gauss\\d': 'gauss',
-//        'wiener\\d': 'wiener',
-//      },
-//    }],
-//  },
-//}, nin=1, nout=1);
-
-//local sink_sp = g.pnode({ type: 'DumpFrames' }, nin=1, nout=0);
-
-local retagger = function(name) g.pnode({
+local retagger_sp = g.pnode({
   type: 'Retagger',
-  name: name,
+  name: 'sp',  //added Ewerton 2023-05-24
   data: {
     // Note: retagger keeps tag_rules an array to be like frame fanin/fanout.
     tag_rules: [{
@@ -407,62 +297,12 @@ local retagger = function(name) g.pnode({
       merge: {
         'gauss\\d': 'gauss',
         'wiener\\d': 'wiener',
-        'dnnsp\\d': 'dnnsp',
       },
     }],
   },
 }, nin=1, nout=1);
 
-local sink = function(name) g.pnode({ type: 'DumpFrames', name: name }, nin=1, nout=0);
-
-local retag_dnnroi = retagger("retag_dnnroi");
-local retag_sp = retagger("retag_sp");
-local sink_dnnroi = sink("sink_dnnroi");
-local sink_sp = sink("sink_sp");
-
-local fanout_apa = g.pnode({
-    type: 'FrameFanout',
-    name: 'fanout_apa',
-    data: {
-        multiplicity: std.length(tools.anodes),
-        "tag_rules": [
-            {
-               "frame": {
-                  ".*": "orig%d" % n
-               },
-               "trace": { }
-            }
-            for n in std.range(0, std.length(tools.anodes) - 1)
-        ]
-        }},
-    nin=1, nout=std.length(tools.anodes));
-local framefanin = function(name) g.pnode({
-    type: 'FrameFanin', 
-    name: name,
-    data: {
-        multiplicity: std.length(tools.anodes),
-
-         "tag_rules": [
-            {     
-                "frame": {
-                  ".*": "framefanin"
-                },
-                trace: {
-                  ['dnnsp%d' % n]: ['dnnsp%d' % n],
-                  ['gauss%d' % n]: ['gauss%d' % n],
-                  ['wiener%d' % n]: ['wiener%d' % n],
-                  ['threshold%d' % n]: ['threshold%d' % n],
-                },
-            }
-            for n in std.range(0, std.length(tools.anodes) - 1)
-         ],    
-         "tags": [ ]
-    },
-}, nin=std.length(tools.anodes), nout=1);
-local fanin_apa_dnnroi = framefanin('fanin_apa_dnnroi');
-local fanin_apa_sp = framefanin('fanin_apa_sp');
-
-local fanpipe = f.fanpipe('FrameFanout', nfsp_pipes, 'FrameFanin', 'sn_mag_nf');
+local sink_sp = g.pnode({ type: 'DumpFrames' }, nin=1, nout=0);
 
 local graph1 = g.pipeline([
 wcls_input_sim.deposet,         //sim
@@ -473,7 +313,7 @@ retagger_sim,                   //sim
 wcls_output_sim.sim_digits,     //sim
 fanpipe,                        //sp
 retagger_sp,                    //sp
-wcls_output_sp.spsaver,      //sp
+wcls_output_sp.sp_signals,      //sp
 sink_sp                         //sp
 ]);
 
@@ -484,46 +324,9 @@ setdrifter,                     //sim
 wcls_depoflux_writer,           //sim
 bi_manifold2,                   //sim
 retagger_sp,                    //sp
-wcls_output_sp.spsaver,      //sp
+wcls_output_sp.sp_signals,      //sp
 sink_sp                         //sp
 ]);
-
-
-local graph = if use_dnnroi then
-g.intern(
-  innodes=[wcls_input_sim.deposet],
-  outnodes=[],
-  centernodes=nfsp_pipes+[fanout_apa, retag_dnnroi, retagger_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output_sp.spsaver, wcls_output_sp.dnnsaver, sink_dnnroi, sink_sp],
-  edges=[
-    g.edge(wcls_input_sim.deposet, setdrifter, 0, 0),
-    g.edge(setdrifter, wcls_depoflux_writer, 0, 0),
-    g.edge(wcls_depoflux_writer, bi_manifold2, 0, 0),
-    g.edge(bi_manifold2, fanout_apa, 0, 0),
-    g.edge(fanout_apa, nfsp_pipes[0], 0, 0),
-    g.edge(fanout_apa, nfsp_pipes[1], 1, 0),
-    g.edge(nfsp_pipes[0], fanin_apa_dnnroi, 0, 0),
-    g.edge(nfsp_pipes[1], fanin_apa_dnnroi, 0, 1),
-    g.edge(fanin_apa_dnnroi, retag_dnnroi, 0, 0),
-    g.edge(retag_dnnroi, wcls_output_sp.dnnsaver, 0, 0),
-    g.edge(wcls_output_sp.dnnsaver, sink_dnnroi, 0, 0),
-    g.edge(nfsp_pipes[0], fanin_apa_sp, 1, 0),
-    g.edge(nfsp_pipes[1], fanin_apa_sp, 1, 1),
-    g.edge(fanin_apa_sp, retagger_sp, 0, 0),
-    g.edge(retagger_sp, wcls_output_sp.spsaver, 0, 0),
-    g.edge(wcls_output_sp.spsaver, sink_sp, 0, 0),
-  ]
-)
-else
-g.pipeline([wcls_input_sim.deposet,
-wcls_input_sim.depos,
-setdrifter,
-wcls_depoflux_writer,
-bi_manifold2,
-retagger_sp,
-wcls_output_sp.spsaver,
-sink_sp
-]);
-
 
 local save_simdigits = std.extVar('save_simdigits');
 

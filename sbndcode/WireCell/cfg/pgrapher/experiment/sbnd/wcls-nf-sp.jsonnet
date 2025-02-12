@@ -90,7 +90,7 @@ local wcls_output = {
   // sets each created with its own filter.  The "gauss" one is best
   // for charge reconstruction, the "wiener" is best for S/N
   // separation.  Both are used in downstream WC code.
-  spsaver: g.pnode({
+  sp_signals: g.pnode({
     type: 'wclsFrameSaver',
     name: 'spsaver',
     data: {
@@ -104,22 +104,6 @@ local wcls_output = {
       chanmaskmaps: [],
     },
   }, nin=1, nout=1, uses=[mega_anode]),
-
-  dnnsaver: g.pnode({
-    type: 'wclsFrameSaver',
-    name: 'dnnsaver',
-    data: {
-      anode: wc.tn(mega_anode),
-      digitize: false,  // true means save as RawDigit, else recob::Wire
-      frame_tags: ['dnnsp'],
-
-      // this may be needed to convert the decon charge [units:e-] to be consistent with the LArSoft default ?unit? e.g. decon charge * 0.005 --> "charge value" to GaussHitFinder
-      frame_scale: [0.02, 0.02, 0.02],
-      nticks: params.daq.nticks,
-      chanmaskmaps: [],
-    },
-  }, nin=1, nout=1, uses=[mega_anode]),
-
 };
 
 local perfect = import 'pgrapher/experiment/sbnd/chndb-perfect.jsonnet';
@@ -319,11 +303,7 @@ g.intern(
   ]
 )
 else
-g.pipeline([wcls_input.adc_digits, 
-fanpipe, 
-retag_sp, 
-wcls_output.spsaver, 
-sink_sp]);
+g.pipeline([wcls_input.adc_digits, fanpipe, retag_sp, wcls_output.spsaver, sink_sp]);
 
 local app = {
   type: 'TbbFlow',
