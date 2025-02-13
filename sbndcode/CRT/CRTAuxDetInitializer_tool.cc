@@ -21,11 +21,6 @@ namespace {
       // AuxDetSensitives. Each strip has two SiPM channels, one per optical
       // fiber (not in the geometry).
       //
-      // 2x TaggerTop:  (5x2  +5x2)x16 = 320 strips,  640 channels
-      // 2x TaggerSide: (4x2  +5x2)x16 = 288 strips,  576 channels
-      // 1x TaggerFace: (4x2  +4x2)x16 = 256 strips,  512 channels
-      // 1x TaggerFace: (4x2-1+4x2)x16 = 240 strips,  480 channels
-      // 1x TaggerBot:           34x16 = 544 strips, 1088 channels
 
       for (size_t a=0; a<adgeo.size(); a++){
         std::string volName(adgeo[a].TotalVolume()->GetName());
