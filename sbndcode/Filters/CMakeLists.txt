@@ -1,4 +1,3 @@
-
 set(
         MODULE_LIBRARIES
                 larcorealg::Geometry
