@@ -254,6 +254,9 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       const CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
       const CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
 
+      if(sipm1.status != 0 || sipm2.status != 0)
+        continue;
+
       // Subtract channel pedestals
       const uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i] - sipm1.pedestal   : 0;
       const uint16_t adc2 = sipm2.pedestal < sipm_adcs[adc_i+1] ? sipm_adcs[adc_i+1] - sipm2.pedestal : 0;
