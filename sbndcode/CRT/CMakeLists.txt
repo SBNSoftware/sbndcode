@@ -28,6 +28,8 @@ art_make_library(
 )
 
 cet_build_plugin( CRTAuxDetInitializer art::tool
+    SOURCE
+        CRTAuxDetInitializer.cxx
     LIBRARIES REG
         larcorealg::Geometry
         sbndcode_CRTData
