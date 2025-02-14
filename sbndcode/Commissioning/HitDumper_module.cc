@@ -187,18 +187,35 @@ private:
   std::vector<int>    _hit_wire;                ///< Wire where the hit belongs to
   std::vector<int>    _hit_channel;             ///< Channel where the hit belongs to
   std::vector<double> _hit_peakT;               ///< Hit peak time
-  std::vector<double> _hit_charge;              ///< Hit charge
+  std::vector<double> _hit_charge;              ///< Hit charge (integral)
   std::vector<double> _hit_ph;                  ///< Hit pulse height
-  std::vector<double> _hit_width;               ///< Hit width
-  std::vector<double> _hit_full_integral;       ///< Hit charge integral
-   std::vector<int>    _waveform_number;         ///< Number for each waveform, to allow for searching
+  std::vector<double> _hit_width;               ///< Hit width (rms), RMS of the hit shape, in tick units
+  std::vector<double> _hit_full_integral;       ///< Hit charge integral ?????????????
+
+  std::vector<int>    _waveform_number;         ///< Number for each waveform, to allow for searching
   std::vector<short>  _adc_on_wire;             ///< ADC on wire to draw waveform
   std::vector<int>    _time_for_waveform;       ///<Time for waveform to plot
   int                 _adc_count;               ///<Used for plotting waveforms
   std::vector<int>    _waveform_integral;       ///<Used to see progression of the waveform integral
   std::vector<int>    _adc_count_in_waveform;   ///<Used to view all waveforms on a hitplane together
   std::vector<int>    _wire_number;             /// Wire number corresponding to waveform
+  std::vector<int>    _channel_number;
   std::vector<double> _hit_time;
+
+  std::vector<double> _waveform_amplitude;
+  std::vector<double> _waveform_charge;
+  std::vector<double> _waveform_dof;
+
+
+  //Test hit variables
+  std::vector<double> _hit_sigma_peak_time;      //< uncertainty for the signal peak, in tick units
+  std::vector<double> _hit_sigma_peak_amplitude; //uncertainty on estimated amplitude of the hit at its peak, in ADC units
+  std::vector<double> _hit_sigma_integral;       //< the uncertainty of integral under the calibrated signal waveform of the hit, in ADC units
+  std::vector<double> _hit_multiplicity;         //< how many hits could this one be shared with
+  std::vector<double> _hit_goodness_of_fit;      //< how well do we believe we know this hit?
+  std::vector<double> _hit_dof;                  //< degrees of freedom in the determination of the hit shape
+
+
 
   // CRT strip variables
   uint _n_crt_strip_hits;                          ///< Number of CRT strip hits
@@ -247,8 +264,8 @@ private:
   std::vector<double> _crt_track_length;       ///< CRT track length
   std::vector<double> _theta_xz_CRT;
   std::vector<double> _theta_yz_CRT;
-  std::vector<double> _gradient;
-  std::vector<double> _intercept;
+  std::vector<double> _crt_gradient;
+  std::vector<double> _crt_intercept;
 
   // Optical hit variables
   int _nophits;                               ///< Number of Optical Hits
@@ -600,6 +617,13 @@ void Hitdumper::analyze(const art::Event& evt)
     _hit_charge[counter] = hitlist[i]->Integral();
     _hit_ph[counter] = hitlist[i]->PeakAmplitude();
     _hit_width[counter] = hitlist[i]->RMS();
+   
+    _hit_sigma_peak_time[counter] = hitlist[i]->SigmaPeakTime(); 
+    _hit_sigma_peak_amplitude[counter] = hitlist[i]->SigmaPeakAmplitude();
+    _hit_sigma_integral[counter] = hitlist[i]->SigmaIntegral();
+    _hit_multiplicity[counter] = hitlist[i]->Multiplicity(); 
+    _hit_goodness_of_fit[counter] = hitlist[i]->GoodnessOfFit();  
+    _hit_dof[counter] = hitlist[i]->DegreesOfFreedom(); 
     counter ++;
   }
 
@@ -727,8 +751,8 @@ void Hitdumper::analyze(const art::Event& evt)
 	  _crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
 	  _crt_track_length.push_back(crttrack->Length());
 	  
-	  _gradient.push_back((end.y() - start.y()) / (end.z() - start.z()));
-          _intercept.push_back( start.y() - (((end.y() - start.y()) / (end.z() - start.z())) * start.z()));
+	  _crt_gradient.push_back((end.z() - start.z()) / (end.y() - start.y()));
+          _crt_intercept.push_back( start.z() - (((end.z() - start.z()) / (end.y() - start.y())) * start.y()));
 
 	  double dx;
 	  double dy;
@@ -969,7 +993,12 @@ void Hitdumper::analyze(const art::Event& evt)
     _waveform_integral.resize(_max_hits*_max_samples, -9999.);
     _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
     _wire_number.resize(_max_hits*_max_samples, -9999.);
+    _channel_number.resize(_max_hits*_max_samples, -9999.);
     _hit_time.resize(_max_hits*_max_samples, -9999.);
+    _waveform_charge.resize(_max_hits*_max_samples, -9999.);
+    _waveform_amplitude.resize(_max_hits*_max_samples, -9999.);
+    _waveform_dof.resize(_max_hits*_max_samples, -9999.);
+    _waveform_integral.resize(_max_hits*_max_samples, -9999.);
 
     art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
 
@@ -1043,7 +1072,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	    if (high_edge > (fDataSize-1)) {
 	      high_edge = fDataSize - 1;
 	    }
-	    // double integral = 0.0;
+	     double integral = 0.0;
 	    waveform_number_tracker++;
 	    // int counter_for_adc_in_waveform = 0;
 	    for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
@@ -1053,12 +1082,19 @@ void Hitdumper::analyze(const art::Event& evt)
 	      _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
 	      _time_for_waveform[adc_counter] = ibin;
 	      _wire_number[adc_counter] = _hit_wire[ihit];
+	      _channel_number[adc_counter] = _hit_channel[ihit];
 	      _hit_time[adc_counter] = _hit_peakT[ihit];
-	      // integral+=_adc_on_wire[adc_counter];
-	      // _waveform_integral[adc_counter] = integral;
+	     
+
+	      _waveform_amplitude[adc_counter]=_hit_ph[ihit];
+	      _waveform_charge[adc_counter]=_hit_charge[ihit];
+	      _waveform_dof[adc_counter]=_hit_dof[ihit];
+
+	       integral+=_adc_on_wire[adc_counter];
+	       _waveform_integral[adc_counter] = integral;
 	      adc_counter++;
 	    }
-	    //          _hit_full_integral[ihit] = integral;
+	    //	    _hit_full_integral[ihit] = integral;
 	  } // if hit channel matches waveform channel
 	} //end loop over hits
       }
@@ -1301,6 +1337,13 @@ void Hitdumper::beginJob()
   fTree->Branch("hit_ph", &_hit_ph);
   fTree->Branch("hit_width", &_hit_width);
   fTree->Branch("hit_full_integral", &_hit_full_integral);
+  fTree->Branch("hit_sigma_peak_time", &_hit_sigma_peak_time);
+  fTree->Branch("hit_sigma_peak_amplitude", &_hit_sigma_peak_amplitude);
+  fTree->Branch("hit_sigma_integral", &_hit_sigma_integral);
+  fTree->Branch("hit_multiplicity", &_hit_multiplicity);
+  fTree->Branch("hit_goodness_of_fit", &_hit_goodness_of_fit);
+  fTree->Branch("hit_dof", &_hit_dof);
+
 
   if (fcheckTransparency) {
     fTree->Branch("adc_count", &_adc_count,"adc_count/I");
@@ -1310,7 +1353,11 @@ void Hitdumper::beginJob()
     fTree->Branch("waveform_integral", &_waveform_integral);
     fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
     fTree->Branch("wire_number", &_wire_number);
+    fTree->Branch("channel_number", &_channel_number);
     fTree->Branch("hit_time", &_hit_time); 
+    fTree->Branch("waveform_amplitude", &_waveform_amplitude);
+    fTree->Branch("waveform_charge", &_waveform_charge);
+    fTree->Branch("waveform_dof", &_waveform_dof);
   }
 
   if (fKeepCRTStripHits) {
@@ -1361,6 +1408,8 @@ void Hitdumper::beginJob()
     fTree->Branch("crt_track_length", &_crt_track_length);
     fTree->Branch("theta_xz_CRT", &_theta_xz_CRT); 
     fTree->Branch("theta_yz_CRT", &_theta_yz_CRT);
+    fTree->Branch("crt_gradient", &_crt_gradient);
+    fTree->Branch("crt_intercept", &_crt_intercept);
   }
 
   if (freadOpHits) {
@@ -1526,6 +1575,13 @@ void Hitdumper::ResetWireHitsVars(int n) {
   _hit_ph.assign(n, DEFAULT_VALUE);
   _hit_width.assign(n, DEFAULT_VALUE);
   _hit_full_integral.assign(n, DEFAULT_VALUE);
+  _hit_sigma_peak_time.assign(n, DEFAULT_VALUE);
+  _hit_sigma_peak_amplitude.assign(n, DEFAULT_VALUE);
+  _hit_sigma_integral.assign(n, DEFAULT_VALUE);
+  _hit_multiplicity.assign(n, DEFAULT_VALUE);
+  _hit_goodness_of_fit.assign(n, DEFAULT_VALUE);
+  _hit_dof.assign(n, DEFAULT_VALUE);
+
 }
 
 void Hitdumper::ResetWaveforms(){
@@ -1535,7 +1591,11 @@ void Hitdumper::ResetWaveforms(){
   _waveform_integral.clear();
   _adc_count_in_waveform.clear();
   _wire_number.clear();
+  _channel_number.clear();
   _hit_time.clear();
+  _waveform_amplitude.clear();
+  _waveform_charge.clear();
+  _waveform_dof.clear();
 }
 
 void Hitdumper::ResetCRTStripHitVars() {
@@ -1568,8 +1628,8 @@ void Hitdumper::ResetCRTTracksVars() {
   _crt_track_length.clear();
   _theta_xz_CRT.clear();
   _theta_yz_CRT.clear();
-  _gradient.clear();
-  _intercept.clear();
+  _crt_gradient.clear();
+  _crt_intercept.clear();
 }
 
 void Hitdumper::ResetCRTSpacePointVars() {

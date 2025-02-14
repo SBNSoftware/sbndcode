@@ -10,8 +10,13 @@ standard_crt_track_filter:
    UseLengthMin:         true  # flag to use the fancy calculation of projected CRT track length the active volume, and to cut on that
    LengthMin:            300.  # if UseLengthMin, then this is minimum length in the active volume, in cm
    Verbose:              true
-   TPCPos:                true
-   TPCNeg:                false
+   TPCPos:               true
+   TPCNeg:               false
+   TPCNum:               1
+   PlaneNum:             2
+   NoiseyChannel:        0
+   TimeWindow:           175
+   MaxTPCHits:           800
 
    HitsModuleLabel: "fasthit"	
 }
