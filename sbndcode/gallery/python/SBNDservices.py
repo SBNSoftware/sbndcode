@@ -36,6 +36,26 @@ class SBNDGeometryServiceGetter(LArSoftUtils.SimpleServiceLoader):
   
 # class SBNDGeometryServiceGetter
 
+class SBNDWireRedoutServiceGetter(LArSoftUtils.SimpleServiceLoader):
+  
+  def __init__(self):
+    LArSoftUtils.SimpleServiceLoader.__init__(self, 'WireRedout')
+  
+  def load(self, manager):
+    return SBNDutils.loadSBNDwireReadout(registry=manager.registry())
+  
+# class SBNDWireRedoutServiceGetter
+
+class SBNDAuxDetGeometryServiceGetter(LArSoftUtils.SimpleServiceLoader):
+  
+  def __init__(self):
+    LArSoftUtils.SimpleServiceLoader.__init__(self, 'AuxDetGeometry')
+  
+  def load(self, manager):
+    return SBNDutils.loadSBNDauxDetgeometry(registry=manager.registry())
+  
+# class SBNDAuxDetGeometryServiceGetter
+
 
 ################################################################################
 ###  module setup - part I
@@ -90,6 +110,8 @@ class SBNDserviceManagerClass(LArSoftUtils.ServiceManagerInstance):
     #
     
     self.manager.registerLoader('Geometry', SBNDGeometryServiceGetter())
+    self.manager.registerLoader('WireReadout', SBNDWireRedoutServiceGetter())
+    self.manager.registerLoader('AuxDetGeometry', SBNDAuxDetGeometryServiceGetter())
     
     return self.manager
     

@@ -15,6 +15,8 @@ __all__ = [
 import sys, os
 from ROOTutils import ROOT
 
+# Make sure <span> is not included in the range v3 library
+ROOT.gROOT.ProcessLine('#define RANGES_WORKAROUND_MSVC_UNUSABLE_SPAN 1')
 
 ################################################################################
 def readHeader(headerPath):

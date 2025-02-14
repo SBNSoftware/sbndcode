@@ -23,6 +23,8 @@ __all__ = [
   'ConfigurationHelper',
   'loadGeometry',
   'justLoadGeometry',
+  'loadWireReadout',
+  'justLoadWireReadout',
   'loadSimpleService',
   ]
 
@@ -47,15 +49,11 @@ readHeader = galleryUtils.readHeader
 ################################################################################
 ### LArSoft
 ################################################################################
-def loadGeometry(config=None, registry=None, mapping=None):
-  """The argument `config` is an instance of `ConfigurationClass`.
-
-  If a config object is provided, configurations will be read from there.
-  Otherwise, they will be read from the registry.
-  If a registry is provided, the services will be registered in there.
-  """
+def startMessageFacility(config=None, registry=None):
+  '''
+  Starts the MessageFacility
+  '''
   assert(config or registry)
-  serviceName = 'Geometry'
 
   # deal with messagefacility first
   if not (registry and registry.has("message")):
@@ -64,19 +62,10 @@ def loadGeometry(config=None, registry=None, mapping=None):
     if registry: registry.register("message", None) # there is no direct access, sorry
   # if need to load message facility
 
-  geometryConfig = config.service(serviceName) if config else registry.config(serviceName)
-  if geometryConfig is None:
-    raise RuntimeError("Failed to retrieve the configuration for %s service" % serviceName)
-
-  if not mapping:
-    SourceCode.loadHeaderFromUPS('larcorealg/Geometry/ChannelMapStandardAlg.h')
-    mapping = ROOT.geo.ChannelMapStandardAlg
-  SourceCode.loadHeaderFromUPS("larcorealg/Geometry/StandaloneGeometrySetup.h")
-  SourceCode.loadLibrary("larcorealg_Geometry")
-  service = ROOT.lar.standalone.SetupGeometry[mapping](geometryConfig)
-  if registry: registry.register(serviceName, service)
-
-  # make it easy to print points and vectors in python
+def simplifyPrinting():
+  '''
+  make it easy to print points and vectors in python
+  '''
   for varName in ( 'Point_t', 'Vector_t', ):
     try: klass = getattr(ROOT.geo, varName)
     except AttributeError: continue
@@ -99,17 +88,132 @@ def loadGeometry(config=None, registry=None, mapping=None):
     klass.__str__ = getattr(klass, varName[:-3] + "Info")
   # for geo object
 
+
+
+def loadGeometry(config=None, registry=None, sorter=None):
+  """The argument `config` is an instance of `ConfigurationClass`.
+
+  If a config object is provided, configurations will be read from there.
+  Otherwise, they will be read from the registry.
+  If a registry is provided, the services will be registered in there.
+  """
+  serviceName = 'Geometry'
+
+  startMessageFacility(config, registry)
+
+  geometryConfig = config.service(serviceName) if config else registry.config(serviceName)
+  if geometryConfig is None:
+    raise RuntimeError("Failed to retrieve the configuration for %s service" % serviceName)
+
+  if not sorter:
+    SourceCode.loadHeaderFromUPS('larcorealg/Geometry/GeoObjectSorterStandard.h')
+    sorter = ROOT.geo.GeoObjectSorterStandard
+
+  SourceCode.loadHeaderFromUPS("larcorealg/Geometry/StandaloneGeometrySetup.h")
+  SourceCode.loadLibrary("larcorealg_Geometry")
+  service = ROOT.lar.standalone.SetupGeometry[sorter](geometryConfig)
+  if registry: registry.register(serviceName, service)
+
+  simplifyPrinting()
+
   return service
-# loadGeometry()
 
 
 ################################################################################
-def justLoadGeometry(configFile, mapping=None):
+def justLoadGeometry(configFile, sorter=None):
   """Loads and returns the geometry from the specified configuration file.
 
   This is a one-stop procedure recommended only when running interactively.
   """
-  return loadGeometry(config=ConfigurationClass(configFile), mapping=mapping)
+  return loadGeometry(config=ConfigurationClass(configFile), sorter=sorter)
+# justLoadGeometry()
+
+
+################################################################################
+def loadWireReadout(config=None, registry=None, mapping=None, sorter=None):
+  """The argument `config` is an instance of `ConfigurationClass`.
+
+  If a config object is provided, configurations will be read from there.
+  Otherwise, they will be read from the registry.
+  If a registry is provided, the services will be registered in there.
+  """
+  serviceName = 'WireReadout'
+
+  startMessageFacility(config, registry)
+
+  # geometryConfig = config.service(serviceName) if config else registry.config(serviceName)
+  geometryConfig = config.service('Geometry') if config else registry.config('Geometry')
+  if geometryConfig is None:
+    raise RuntimeError("Failed to retrieve the configuration for %s service" % serviceName)
+
+  if not sorter:
+    SourceCode.loadHeaderFromUPS('larcorealg/Geometry/GeoObjectSorterStandard.h')
+    sorter = ROOT.geo.GeoObjectSorterStandard
+
+  if not mapping:
+    SourceCode.loadHeaderFromUPS('larcorealg/Geometry/WireReadoutSorterStandard.h')
+    mapping = ROOT.geo.WireReadoutSorterStandard
+
+  SourceCode.loadHeaderFromUPS("larcorealg/Geometry/StandaloneGeometrySetup.h")
+  SourceCode.loadLibrary("larcorealg_Geometry")
+  service = ROOT.lar.standalone.SetupGeometry[sorter](geometryConfig)
+  service_readout = ROOT.lar.standalone.SetupReadout[mapping](geometryConfig, service)
+  if registry: registry.register(serviceName, service)
+
+  simplifyPrinting()
+
+  return service_readout
+
+
+################################################################################
+def justLoadWireReadout(configFile, mapping=None, sorter=None):
+  """Loads and returns the geometry from the specified configuration file.
+
+  This is a one-stop procedure recommended only when running interactively.
+  """
+  return loadWireReadout(config=ConfigurationClass(configFile), mapping=None, sorter=None)
+# justLoadWireReadout()
+
+
+def loadAuxDetGeometry(config=None, registry=None, sorter=None, auxdetinit=None):
+  """The argument `config` is an instance of `ConfigurationClass`.
+
+  If a config object is provided, configurations will be read from there.
+  Otherwise, they will be read from the registry.
+  If a registry is provided, the services will be registered in there.
+  """
+  serviceName = 'AuxDetGeometry'
+
+  startMessageFacility(config, registry)
+
+  geometryConfig = config.service('Geometry') if config else registry.config('Geometry')
+  if geometryConfig is None:
+    raise RuntimeError("Failed to retrieve the configuration for %s service" % serviceName)
+
+  if not sorter:
+    SourceCode.loadHeaderFromUPS('larcorealg/Geometry/AuxDetGeoObjectSorterStandard.h')
+    sorter = ROOT.geo.AuxDetGeoObjectSorterStandard
+
+  SourceCode.loadHeaderFromUPS("larcorealg/Geometry/StandaloneGeometrySetup.h")
+  SourceCode.loadLibrary("larcorealg_Geometry")
+
+  adi = auxdetinit(geometryConfig) if auxdetinit is not None else None
+  
+  service = ROOT.lar.standalone.SetupAuxDetGeometry[sorter](geometryConfig, adi)
+  if registry: registry.register(serviceName, service)
+
+  simplifyPrinting()
+
+  return service
+
+
+################################################################################
+def justLoadAuxDetGeometry(configFile, mapping=None):
+  """Loads and returns the geometry from the specified configuration file.
+
+  This is a one-stop procedure recommended only when running interactively.
+  """
+  return loadAuxDetGeometry(config=ConfigurationClass(configFile), mapping=mapping)
 # justLoadGeometry()
 
 
@@ -275,6 +379,39 @@ class GeometryServiceGetter:
 # class GeometryServiceGetter
 
 
+class WireReadoutServiceGetter:
+
+  def serviceKey(self): return 'WireReadout'
+
+  def load(self, manager): return loadWireReadout(registry=manager.registry())
+
+  def get(self, manager):
+    try: return manager.registry().get(self.serviceKey())
+    except KeyError:
+      return self.load(manager)
+  # get()
+
+  def __call__(self, manager): return self.get(manager)
+
+# class WireReadoutServiceGetter
+
+
+class AuxDetGeometryServiceGetter:
+
+  def serviceKey(self): return 'AuxDetGeometry'
+
+  def load(self, manager): return loadAuxDetGeometry(registry=manager.registry())
+
+  def get(self, manager):
+    try: return manager.registry().get(self.serviceKey())
+    except KeyError:
+      return self.load(manager)
+  # get()
+
+  def __call__(self, manager): return self.get(manager)
+
+# class AuxDetGeometryServiceGetter
+
 
 class ServiceManagerInterface:
   """The interface of a service manager implementation."""
@@ -402,6 +539,10 @@ class ServiceManagerInstance(ServiceManagerInterface):
 
     'Geometry': GeometryServiceGetter(),
 
+    'WireReadout': WireReadoutServiceGetter(),
+
+    'AuxDetGeometry': AuxDetGeometryServiceGetter(),
+
     'LArProperties': SimpleServiceLoader(
       "detinfo::LArPropertiesStandard",
       interfaceClass="detinfo::LArProperties",
@@ -421,7 +562,7 @@ class ServiceManagerInstance(ServiceManagerInterface):
       interfaceClass="detinfo::DetectorProperties",
       headers = 'lardataalg/DetectorInfo/DetectorPropertiesStandardTestHelpers.h',
       libraries = 'lardataalg_DetectorInfo',
-      dependencies = [ 'Geometry', 'LArProperties' ],
+      dependencies = [ 'Geometry', 'WireReadout', 'LArProperties' ],
       ),
 
   } # StandardLoadingTable
