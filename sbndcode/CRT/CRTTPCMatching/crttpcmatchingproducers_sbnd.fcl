@@ -3,7 +3,7 @@ BEGIN_PROLOG
 crtspacepointmatchalg_sbnd:
 {
    TrackDirectionFrac: 0.5
-   DCALimit:           70.
+   DCALimit:           140.
    MinTPCTrackLength:  10.
    DirMethod:          1
    DCAuseBox:          false
@@ -12,7 +12,7 @@ crtspacepointmatchalg_sbnd:
    MaxUncert:          20.
    TPCTrackLabel:      "pandoraTrack"
    CRTSpacePointLabel: "crtspacepoints"
-   UseTs0:             false
+   UseTs0:             true
 }
 
 crtspacepointmatchproducer_sbnd:
@@ -26,13 +26,13 @@ crtspacepointmatchproducer_sbnd:
 
 crttrackmatchalg_sbnd:
 {
-   MaxAngleDiff:      0.4
-   MaxDCA:            70.
-   MaxScore:          150.
+   MaxAngleDiff:      0.8
+   MaxDCA:            140.
+   MaxScore:          300.
    MinTPCTrackLength: 5.
    SelectionMetric:   "score"
    TPCTrackLabel:     "pandoraTrack"
-   UseTs0:            false
+   UseTs0:            true
 }
 
 crttrackmatchproducer_sbnd:

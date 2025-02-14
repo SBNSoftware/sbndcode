@@ -87,6 +87,9 @@ namespace sbnd::crt {
       fhicl::Atom<art::InputTag> TrackLabel {
         Name("TrackLabel")
       };
+      fhicl::Atom<art::InputTag> TrackMatchLabel {
+        Name("TrackMatchLabel")
+      };
 
       fhicl::Atom<bool> SaveRoot {
         Name("SaveRoot"),
@@ -247,6 +250,7 @@ namespace sbnd::crt {
     art::InputTag fClusterLabel;
     art::InputTag fSpacePointLabel;
     art::InputTag fTrackLabel;
+    art::InputTag fTrackMatchLabel;
 
     bool fSaveRoot;
     bool fSaveViews;

@@ -297,12 +297,33 @@ private:
   std::vector<double> _tpc_sp_ts0;
   std::vector<double> _tpc_sp_ts1;
   std::vector<double> _tpc_sp_score;
+  std::vector<double> _tpc_sp_x;
+  std::vector<double> _tpc_sp_y;
+  std::vector<double> _tpc_sp_z;
+  std::vector<int16_t> _tpc_sp_tag;
   std::vector<bool>   _tpc_tr_matchable;
   std::vector<bool>   _tpc_tr_matched;
   std::vector<bool>   _tpc_tr_good_match;
   std::vector<double> _tpc_tr_ts0;
   std::vector<double> _tpc_tr_ts1;
   std::vector<double> _tpc_tr_score;
+  std::vector<double> _tpc_tr_start_x;
+  std::vector<double> _tpc_tr_start_y;
+  std::vector<double> _tpc_tr_start_z;
+  std::vector<double> _tpc_tr_dir_x;
+  std::vector<double> _tpc_tr_dir_y;
+  std::vector<double> _tpc_tr_dir_z;
+  std::vector<int16_t> _tpc_tr_tagger1;
+  std::vector<int16_t> _tpc_tr_tagger2;
+  std::vector<int16_t> _tpc_tr_tagger3;
+  std::vector<int16_t> _tpc_diff_tagger_1;
+  std::vector<double> _tpc_diff1_x;
+  std::vector<double> _tpc_diff1_y;
+  std::vector<double> _tpc_diff1_z;
+  std::vector<int16_t> _tpc_diff_tagger_2;
+  std::vector<double> _tpc_diff2_x;
+  std::vector<double> _tpc_diff2_y;
+  std::vector<double> _tpc_diff2_z;
 
   std::vector<uint64_t> _ptb_hlt_trigger;
   std::vector<uint64_t> _ptb_hlt_timestamp;
@@ -542,6 +563,35 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tpc_dir_z", "std::vector<double>", &_tpc_dir_z);
       fTree->Branch("tpc_length", "std::vector<double>", &_tpc_length);
       fTree->Branch("tpc_track_score", "std::vector<double>", &_tpc_track_score);
+      fTree->Branch("tpc_sp_matched", "std::vector<bool>", &_tpc_sp_matched);
+      fTree->Branch("tpc_sp_ts0", "std::vector<double>", &_tpc_sp_ts0);
+      fTree->Branch("tpc_sp_ts1", "std::vector<double>", &_tpc_sp_ts1);
+      fTree->Branch("tpc_sp_score", "std::vector<double>", &_tpc_sp_score);
+      fTree->Branch("tpc_sp_x", "std::vector<double>", &_tpc_sp_x);
+      fTree->Branch("tpc_sp_y", "std::vector<double>", &_tpc_sp_y);
+      fTree->Branch("tpc_sp_z", "std::vector<double>", &_tpc_sp_z);
+      fTree->Branch("tpc_sp_tag", "std::vector<int16_t>", &_tpc_sp_tag);
+      fTree->Branch("tpc_tr_matched", "std::vector<bool>", &_tpc_tr_matched);
+      fTree->Branch("tpc_tr_ts0", "std::vector<double>", &_tpc_tr_ts0);
+      fTree->Branch("tpc_tr_ts1", "std::vector<double>", &_tpc_tr_ts1);
+      fTree->Branch("tpc_tr_score", "std::vector<double>", &_tpc_tr_score);
+      fTree->Branch("tpc_tr_start_x", "std::vector<double>", &_tpc_tr_start_x);
+      fTree->Branch("tpc_tr_start_y", "std::vector<double>", &_tpc_tr_start_y);
+      fTree->Branch("tpc_tr_start_z", "std::vector<double>", &_tpc_tr_start_z);
+      fTree->Branch("tpc_tr_dir_x", "std::vector<double>", &_tpc_tr_dir_x);
+      fTree->Branch("tpc_tr_dir_y", "std::vector<double>", &_tpc_tr_dir_y);
+      fTree->Branch("tpc_tr_dir_z", "std::vector<double>", &_tpc_tr_dir_z);
+      fTree->Branch("tpc_tr_tagger1", "std::vector<int16_t>", &_tpc_tr_tagger1);
+      fTree->Branch("tpc_tr_tagger2", "std::vector<int16_t>", &_tpc_tr_tagger2);
+      fTree->Branch("tpc_tr_tagger3", "std::vector<int16_t>", &_tpc_tr_tagger3);
+      fTree->Branch("tpc_diff_tagger_1", "std::vector<int16_t>", &_tpc_diff_tagger_1);
+      fTree->Branch("tpc_diff1_x", "std::vector<double>", &_tpc_diff1_x);
+      fTree->Branch("tpc_diff1_y", "std::vector<double>", &_tpc_diff1_y);
+      fTree->Branch("tpc_diff1_z", "std::vector<double>", &_tpc_diff1_z);
+      fTree->Branch("tpc_diff_tagger_2", "std::vector<int16_t>", &_tpc_diff_tagger_2);
+      fTree->Branch("tpc_diff2_x", "std::vector<double>", &_tpc_diff2_x);
+      fTree->Branch("tpc_diff2_y", "std::vector<double>", &_tpc_diff2_y);
+      fTree->Branch("tpc_diff2_z", "std::vector<double>", &_tpc_diff2_z);
       if(!fDataMode)
         {
           fTree->Branch("tpc_truth_trackid", "std::vector<int>", &_tpc_truth_trackid);
@@ -549,17 +599,9 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
           fTree->Branch("tpc_truth_energy", "std::vector<double>", &_tpc_truth_energy);
           fTree->Branch("tpc_truth_time", "std::vector<double>", &_tpc_truth_time);
           fTree->Branch("tpc_sp_matchable", "std::vector<bool>", &_tpc_sp_matchable);
-          fTree->Branch("tpc_sp_matched", "std::vector<bool>", &_tpc_sp_matched);
           fTree->Branch("tpc_sp_good_match", "std::vector<bool>", &_tpc_sp_good_match);
-          fTree->Branch("tpc_sp_ts0", "std::vector<double>", &_tpc_sp_ts0);
-          fTree->Branch("tpc_sp_ts1", "std::vector<double>", &_tpc_sp_ts1);
-          fTree->Branch("tpc_sp_score", "std::vector<double>", &_tpc_sp_score);
           fTree->Branch("tpc_tr_matchable", "std::vector<bool>", &_tpc_tr_matchable);
-          fTree->Branch("tpc_tr_matched", "std::vector<bool>", &_tpc_tr_matched);
           fTree->Branch("tpc_tr_good_match", "std::vector<bool>", &_tpc_tr_good_match);
-          fTree->Branch("tpc_tr_ts0", "std::vector<double>", &_tpc_tr_ts0);
-          fTree->Branch("tpc_tr_ts1", "std::vector<double>", &_tpc_tr_ts1);
-          fTree->Branch("tpc_tr_score", "std::vector<double>", &_tpc_tr_score);
         }
     }
 
@@ -1446,12 +1488,33 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_sp_ts0.resize(nTracks);
   _tpc_sp_ts1.resize(nTracks);
   _tpc_sp_score.resize(nTracks);
+  _tpc_sp_x.resize(nTracks);
+  _tpc_sp_y.resize(nTracks);
+  _tpc_sp_z.resize(nTracks);
+  _tpc_sp_tag.resize(nTracks);
   _tpc_tr_matchable.resize(nTracks);
   _tpc_tr_matched.resize(nTracks);
   _tpc_tr_good_match.resize(nTracks);
   _tpc_tr_ts0.resize(nTracks);
   _tpc_tr_ts1.resize(nTracks);
   _tpc_tr_score.resize(nTracks);
+  _tpc_tr_start_x.resize(nTracks);
+  _tpc_tr_start_y.resize(nTracks);
+  _tpc_tr_start_z.resize(nTracks);
+  _tpc_tr_dir_x.resize(nTracks);
+  _tpc_tr_dir_y.resize(nTracks);
+  _tpc_tr_dir_z.resize(nTracks);
+  _tpc_tr_tagger1.resize(nTracks);
+  _tpc_tr_tagger2.resize(nTracks);
+  _tpc_tr_tagger3.resize(nTracks);
+  _tpc_diff_tagger_1.resize(nTracks);
+  _tpc_diff1_x.resize(nTracks);
+  _tpc_diff1_y.resize(nTracks);
+  _tpc_diff1_z.resize(nTracks);
+  _tpc_diff_tagger_2.resize(nTracks);
+  _tpc_diff2_x.resize(nTracks);
+  _tpc_diff2_y.resize(nTracks);
+  _tpc_diff2_z.resize(nTracks);
 
   art::FindOneP<recob::PFParticle>                 tracksToPFPs(TPCTrackHandle, e, fTPCTrackModuleLabel);
   art::FindOneP<larpandoraobj::PFParticleMetadata> pfpsToMetadata(PFPHandle, e, fPFPModuleLabel);
@@ -1496,6 +1559,273 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       else
         _tpc_track_score[nActualTracks] = -std::numeric_limits<double>::max();
 
+      const art::Ptr<CRTSpacePoint> spacepoint = tracksToSPMatches.at(track.key());
+      const art::Ptr<CRTTrack> crttrack = tracksToTrackMatches.at(track.key());
+      if(spacepoint.isNonnull())
+        {
+          const anab::T0 spMatch                                = tracksToSPMatches.data(track.key()).ref();
+          const art::Ptr<CRTCluster> cluster                    = spsToClusters.at(spacepoint.key());
+          std::cout << "SPACE POINT TAG = " << cluster->Tagger() << std::endl;
+          _tpc_sp_matched[nActualTracks]    = true;
+          _tpc_sp_ts0[nActualTracks]        = spacepoint->Ts0();
+          _tpc_sp_ts1[nActualTracks]        = spacepoint->Ts1();
+          _tpc_sp_score[nActualTracks]      = spMatch.TriggerConfidence();
+          _tpc_sp_x[nActualTracks]          = spacepoint->X();
+          _tpc_sp_y[nActualTracks]          = spacepoint->Y();
+          _tpc_sp_z[nActualTracks]          = spacepoint->Z();
+          _tpc_sp_tag[nActualTracks]        = cluster->Tagger();
+        }
+      else
+        {
+          _tpc_sp_matched[nActualTracks]    = false;
+          _tpc_sp_ts0[nActualTracks]        = -std::numeric_limits<double>::max();
+          _tpc_sp_ts1[nActualTracks]        = -std::numeric_limits<double>::max();
+          _tpc_sp_score[nActualTracks]      = -std::numeric_limits<double>::max();
+          _tpc_sp_x[nActualTracks]          = -std::numeric_limits<double>::max();
+          _tpc_sp_y[nActualTracks]          = -std::numeric_limits<double>::max();
+          _tpc_sp_z[nActualTracks]          = -std::numeric_limits<double>::max();
+          _tpc_sp_tag[nActualTracks]        = -1;
+        }
+      if(crttrack.isNonnull())
+        {
+          const anab::T0 trackMatch                             = tracksToTrackMatches.data(track.key()).ref();
+
+          geo::Point_t entry_tag1, exit_tag1, entry_tag2, exit_tag2, entry_tag3, exit_tag3;
+          bool hasTag1 = false;
+          bool hasTag2 = false;
+          bool hasTag3 = false;
+          int taggerNum1 = -1;
+          int taggerNum2 = -1;
+          int taggerNum3 = -1;
+          unsigned tag_i = 0;
+          for(auto const &tagger : crttrack->Taggers())
+          {
+            if(tag_i == 0) {
+              _tpc_tr_tagger1[i] = tagger;
+
+              for(auto const &[name, tagger2] : fCRTGeoAlg.GetTaggers())
+              {
+                if (CRTCommonUtils::GetTaggerEnum(name) ==tagger) {
+                   std::cout << "name = " << name << "   " << CRTCommonUtils::GetTaggerEnum(name) << std::endl;
+                   taggerNum1 = CRTCommonUtils::GetTaggerEnum(name);
+               
+                   const geo::Point_t min(tagger2.minX, tagger2.minY, tagger2.minZ);
+                   const geo::Point_t max(tagger2.maxX, tagger2.maxY, tagger2.maxZ);
+                 
+                   std::vector<std::pair<double, CoordSet>> distances;
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kX, min.X()), kX);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kX, max.X()), kX);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kY, min.Y()), kY);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kY, max.Y()), kY);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kZ, min.Z()), kZ);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kZ, max.Z()), kZ);
+                   std::vector<double> chosen_distances;
+                   for(auto const& [k, plane] : distances)
+                   {
+                     const geo::Point_t intersection = start + k * dir;
+                     if(CRTCommonUtils::IsInsideRectangle(min, max, intersection, plane))
+                       chosen_distances.push_back(k);
+                   }
+                   if(chosen_distances.size() == 0)
+                     std::cout << "Looks like the TPC track wouldn't intersect this CRT plane. (Starting tag for CRT track))" << std::endl;
+                   else if(chosen_distances.size() == 2)
+                   {
+                     entry_tag1 = start + chosen_distances[0] * dir;
+                     exit_tag1  = start + chosen_distances[1] * dir;
+                     hasTag1 = true;
+                     if(chosen_distances[1] < chosen_distances[0])
+                       std::swap(entry_tag1, exit_tag1);
+                   }
+                 }   //tagger match
+              }    //tagger loop
+
+             std::cout << "tagger = " << tagger <<"  TPC has tag 1 in this tagger = " << hasTag1 <<std::endl;
+            }
+            else if(tag_i == 1)  {          //2nd tag point
+              _tpc_tr_tagger2[i] = tagger;
+              for(auto const &[name, tagger2] : fCRTGeoAlg.GetTaggers())
+              {
+                if (CRTCommonUtils::GetTaggerEnum(name) ==tagger) {
+                  std::cout << "name = " << name << "   " << CRTCommonUtils::GetTaggerEnum(name) << std::endl;
+                   taggerNum2 = CRTCommonUtils::GetTaggerEnum(name);
+                   const geo::Point_t min(tagger2.minX, tagger2.minY, tagger2.minZ);
+                   const geo::Point_t max(tagger2.maxX, tagger2.maxY, tagger2.maxZ);
+                   std::vector<std::pair<double, CoordSet>> distances;
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kX, min.X()), kX);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kX, max.X()), kX);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kY, min.Y()), kY);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kY, max.Y()), kY);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kZ, min.Z()), kZ);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kZ, max.Z()), kZ);
+                   std::vector<double> chosen_distances;
+                   for(auto const& [k, plane] : distances)
+                   {
+                     const geo::Point_t intersection = start + k * dir;
+                     if(CRTCommonUtils::IsInsideRectangle(min, max, intersection, plane))
+                       chosen_distances.push_back(k);
+                   }
+                   if(chosen_distances.size() == 0)
+                     std::cout << "Looks like the TPC track wouldn't intersect this CRT plane. (Starting tag for CRT track))" << std::endl;
+                   else if(chosen_distances.size() == 2)
+                   {
+                     entry_tag2 = start + chosen_distances[0] * dir;
+                     exit_tag2  = start + chosen_distances[1] * dir;
+                     hasTag2 = true;
+                     if(chosen_distances[1] < chosen_distances[0])
+                       std::swap(entry_tag2, exit_tag2);
+                   }
+                 }   //tagger match
+              }    //tagger loop
+             std::cout << "tagger = " << tagger <<"  TPC has tag 2 in this tagger = " << hasTag2<<std::endl;
+            }
+            else if(tag_i == 2)  {          //3rd tag point
+              _tpc_tr_tagger3[i] = tagger;
+              for(auto const &[name, tagger2] : fCRTGeoAlg.GetTaggers())
+              {
+                if (CRTCommonUtils::GetTaggerEnum(name) ==tagger) {
+                   std::cout << "name = " << name << "   " << CRTCommonUtils::GetTaggerEnum(name) << std::endl;
+                   taggerNum3 = CRTCommonUtils::GetTaggerEnum(name);
+                   const geo::Point_t min(tagger2.minX, tagger2.minY, tagger2.minZ);
+                   const geo::Point_t max(tagger2.maxX, tagger2.maxY, tagger2.maxZ);
+                   std::vector<std::pair<double, CoordSet>> distances;
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kX, min.X()), kX);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kX, max.X()), kX);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kY, min.Y()), kY);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kY, max.Y()), kY);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kZ, min.Z()), kZ);
+                   distances.emplace_back(CRTCommonUtils::LinePlaneIntersection(start, dir, kZ, max.Z()), kZ);
+                   std::vector<double> chosen_distances;
+                   for(auto const& [k, plane] : distances)
+                   {
+                     const geo::Point_t intersection = start + k * dir;
+                     if(CRTCommonUtils::IsInsideRectangle(min, max, intersection, plane))
+                       chosen_distances.push_back(k);
+                   }
+                   if(chosen_distances.size() == 0)
+                     std::cout << "Looks like the TPC track wouldn't intersect this CRT plane. (Starting tag for CRT track))" << std::endl;
+                   else if(chosen_distances.size() == 2)
+                   {
+                     entry_tag3 = start + chosen_distances[0] * dir;
+                     exit_tag3  = start + chosen_distances[1] * dir;
+                     hasTag3 = true;
+                     if(chosen_distances[1] < chosen_distances[0])
+                       std::swap(entry_tag3, exit_tag3);
+                   }
+                 }   //tagger match
+              }    //tagger loop
+             std::cout << "tagger = " << tagger <<"  TPC has tag 3 in this tagger = " << hasTag3 <<std::endl;
+            }
+
+            ++tag_i;
+          }
+         //so should be able to pull a TPC start and end of the above by orderingby comparing (beam) direction coords
+         //then can compare to CRT start and end
+
+          _tpc_tr_matched[nActualTracks]    = true;
+          _tpc_tr_ts0[nActualTracks]        = crttrack->Ts0();
+          _tpc_tr_ts1[nActualTracks]        = crttrack->Ts1();
+          _tpc_tr_score[nActualTracks]      = trackMatch.TriggerConfidence();
+          const geo::Point_t startcrt = crttrack->Start();
+          const geo::Point_t endcrt = crttrack->End();
+          _tpc_tr_start_x[nActualTracks] = startcrt.X();
+          _tpc_tr_start_y[nActualTracks] = startcrt.Y();
+          _tpc_tr_start_z[nActualTracks] = startcrt.Z();
+          const geo::Vector_t dircrt = crttrack->Direction();
+          _tpc_tr_dir_x[nActualTracks] = dircrt.X();
+          _tpc_tr_dir_y[nActualTracks] = dircrt.Y();
+          _tpc_tr_dir_z[nActualTracks] = dircrt.Z();
+          if (hasTag3 && !hasTag2) {
+            entry_tag2 = entry_tag3;
+            exit_tag2 = exit_tag3;
+            taggerNum2 = taggerNum3;
+          }
+          std::cout << "So the four points then are..." << std::endl;
+          std::cout << "TPC tags = " << entry_tag1 << " and " << entry_tag2 << std::endl;
+          std::cout << "CRT tags = " << startcrt << " and " << endcrt << std::endl;
+          std::cout << "TPC Rs = " << entry_tag1.R() << " and " << entry_tag2.R() << std::endl;
+          std::cout << "CRT Rs = " << startcrt.R() << " and " << endcrt.R() << std::endl;
+          if ((entry_tag1.R() < entry_tag2.R()) && (startcrt.R() > endcrt.R())) {
+            std::cout << "Swapping..." << std::endl;
+            std::swap(entry_tag1, entry_tag2);
+            std::swap(taggerNum1, taggerNum2);
+          }
+          else if ((entry_tag1.R() > entry_tag2.R()) && (startcrt.R() < endcrt.R())) {
+            std::cout << "Swapping 2..." << std::endl;
+            std::swap(entry_tag1, entry_tag2);
+            std::swap(taggerNum1, taggerNum2);
+          }
+          std::cout << "  " << std::endl;
+          std::cout << "So the four points then are..." << std::endl;
+          std::cout << "TPC tags = " << entry_tag1 << " and " << entry_tag2 << std::endl;
+          std::cout << "CRT tags = " << startcrt << " and " << endcrt << std::endl;
+          std::cout << "  " << std::endl;
+          double diff1X = 0.0;
+          double diff1Y = 0.0;
+          double diff1Z = 0.0;
+          double diff2X = 0.0;
+          double diff2Y = 0.0;
+          double diff2Z = 0.0;
+          if (hasTag1 && (hasTag2 || hasTag3)) {
+             diff1X = entry_tag1.X() - startcrt.X();
+             diff1Y = entry_tag1.Y() - startcrt.Y();
+             diff1Z = entry_tag1.Z() - startcrt.Z();
+             diff2X = entry_tag2.X() - endcrt.X();
+             diff2Y = entry_tag2.Y() - endcrt.Y();
+             diff2Z = entry_tag2.Z() - endcrt.Z();
+             _tpc_diff_tagger_1[nActualTracks] = taggerNum1;
+             _tpc_diff1_x[nActualTracks] = diff1X;
+             _tpc_diff1_y[nActualTracks] = diff1Y;
+             _tpc_diff1_z[nActualTracks] = diff1Z;
+             _tpc_diff_tagger_2[nActualTracks] = taggerNum2;
+             _tpc_diff2_x[nActualTracks] = diff2X;
+             _tpc_diff2_y[nActualTracks] = diff2Y;
+             _tpc_diff2_z[nActualTracks] = diff2Z;
+          }
+          else {
+             _tpc_diff_tagger_1[nActualTracks] = -1;
+             _tpc_diff1_x[nActualTracks] = -std::numeric_limits<double>::max();
+             _tpc_diff1_y[nActualTracks] = -std::numeric_limits<double>::max();
+             _tpc_diff1_z[nActualTracks] = -std::numeric_limits<double>::max();
+             _tpc_diff_tagger_2[nActualTracks] = -1;
+             _tpc_diff2_x[nActualTracks] = -std::numeric_limits<double>::max();
+             _tpc_diff2_y[nActualTracks] = -std::numeric_limits<double>::max();
+             _tpc_diff2_z[nActualTracks] = -std::numeric_limits<double>::max();
+          }
+          std::cout << "In the 1st tagger " << taggerNum1 << std::endl;;
+          std::cout << " X TCP - CRT = " << diff1X << std::endl;
+          std::cout << " Y TCP - CRT = " << diff1Y << std::endl;
+          std::cout << " Z TCP - CRT = " << diff1Z << std::endl;;
+          std::cout << "In the 2nd tagger " << taggerNum2 << std::endl;
+          std::cout << " X TCP - CRT = " << diff2X << std::endl;
+          std::cout << " Y TCP - CRT = " << diff2Y << std::endl;
+          std::cout << " Z TCP - CRT = " << diff2Z << std::endl;
+          std::cout << "----------------------------------------------------" << std::endl;
+        }
+     else
+        {
+          _tpc_tr_matched[nActualTracks]    = false;
+          _tpc_tr_ts0[nActualTracks]        = -std::numeric_limits<double>::max();
+          _tpc_tr_ts1[nActualTracks]        = -std::numeric_limits<double>::max();
+          _tpc_tr_score[nActualTracks]      = -std::numeric_limits<double>::max();
+          _tpc_tr_start_x[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_tr_start_y[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_tr_start_z[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_tr_dir_x[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_tr_dir_y[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_tr_dir_z[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_tr_tagger1[i] = -1;
+          _tpc_tr_tagger2[i] = -1;
+          _tpc_tr_tagger3[i] = -1;
+          _tpc_diff_tagger_1[nActualTracks] = -1;
+          _tpc_diff1_x[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_diff1_y[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_diff1_z[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_diff_tagger_2[nActualTracks] = -1;
+          _tpc_diff2_x[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_diff2_y[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_diff2_z[nActualTracks] = -std::numeric_limits<double>::max();
+        }
+
       if(!fDataMode)
         {
           const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
@@ -1522,49 +1852,27 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
           _tpc_sp_matchable[nActualTracks] = sp_matchable;
           _tpc_tr_matchable[nActualTracks] = tr_matchable;
 
-          const art::Ptr<CRTSpacePoint> spacepoint = tracksToSPMatches.at(track.key());
-
           if(spacepoint.isNonnull())
             {
-              const anab::T0 spMatch                                = tracksToSPMatches.data(track.key()).ref();
               const art::Ptr<CRTCluster> cluster                    = spsToClusters.at(spacepoint.key());
               const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
 
-              _tpc_sp_matched[nActualTracks]    = true;
               _tpc_sp_good_match[nActualTracks] = truthMatch.trackid == trackid;
-              _tpc_sp_ts0[nActualTracks]        = spacepoint->Ts0();
-              _tpc_sp_ts1[nActualTracks]        = spacepoint->Ts1();
-              _tpc_sp_score[nActualTracks]      = spMatch.TriggerConfidence();
             }
           else
             {
-              _tpc_sp_matched[nActualTracks]    = false;
               _tpc_sp_good_match[nActualTracks] = false;
-              _tpc_sp_ts0[nActualTracks]        = -std::numeric_limits<double>::max();
-              _tpc_sp_ts1[nActualTracks]        = -std::numeric_limits<double>::max();
-              _tpc_sp_score[nActualTracks]      = -std::numeric_limits<double>::max();
             }
-
-          const art::Ptr<CRTTrack> crttrack = tracksToTrackMatches.at(track.key());
 
           if(crttrack.isNonnull())
             {
-              const anab::T0 trackMatch                             = tracksToTrackMatches.data(track.key()).ref();
               const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, crttrack);
 
-              _tpc_tr_matched[nActualTracks]    = true;
               _tpc_tr_good_match[nActualTracks] = truthMatch.trackid == trackid;
-              _tpc_tr_ts0[nActualTracks]        = crttrack->Ts0();
-              _tpc_tr_ts1[nActualTracks]        = crttrack->Ts1();
-              _tpc_tr_score[nActualTracks]      = trackMatch.TriggerConfidence();
             }
           else
             {
-              _tpc_tr_matched[nActualTracks]    = false;
               _tpc_tr_good_match[nActualTracks] = false;
-              _tpc_tr_ts0[nActualTracks]        = -std::numeric_limits<double>::max();
-              _tpc_tr_ts1[nActualTracks]        = -std::numeric_limits<double>::max();
-              _tpc_tr_score[nActualTracks]      = -std::numeric_limits<double>::max();
             }
         }
 
@@ -1592,12 +1900,33 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_sp_ts0.resize(nActualTracks);
   _tpc_sp_ts1.resize(nActualTracks);
   _tpc_sp_score.resize(nActualTracks);
+  _tpc_sp_x.resize(nActualTracks);
+  _tpc_sp_y.resize(nActualTracks);
+  _tpc_sp_z.resize(nActualTracks);
+  _tpc_sp_tag.resize(nActualTracks);
   _tpc_tr_matchable.resize(nActualTracks);
   _tpc_tr_matched.resize(nActualTracks);
   _tpc_tr_good_match.resize(nActualTracks);
   _tpc_tr_ts0.resize(nActualTracks);
   _tpc_tr_ts1.resize(nActualTracks);
   _tpc_tr_score.resize(nActualTracks);
+  _tpc_tr_start_x.resize(nActualTracks);
+  _tpc_tr_start_y.resize(nActualTracks);
+  _tpc_tr_start_z.resize(nActualTracks);
+  _tpc_tr_dir_x.resize(nActualTracks);
+  _tpc_tr_dir_y.resize(nActualTracks);
+  _tpc_tr_dir_z.resize(nActualTracks);
+  _tpc_tr_tagger1.resize(nActualTracks);
+  _tpc_tr_tagger2.resize(nActualTracks);
+  _tpc_tr_tagger3.resize(nActualTracks);
+  _tpc_diff_tagger_1.resize(nActualTracks);
+  _tpc_diff1_x.resize(nActualTracks);
+  _tpc_diff1_y.resize(nActualTracks);
+  _tpc_diff1_z.resize(nActualTracks);
+  _tpc_diff_tagger_2.resize(nActualTracks);
+  _tpc_diff2_x.resize(nActualTracks);
+  _tpc_diff2_y.resize(nActualTracks);
+  _tpc_diff2_z.resize(nActualTracks);
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTAnalysis)
