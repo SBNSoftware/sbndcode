@@ -105,8 +105,13 @@ namespace filt{
     // exit if the data isn't present
     if (!timestamp_handle.isValid()) {
       std::cerr << "Error: missing timestamps with producer (" << "daq" << ")" << std::endl;
-      return false;
+      return true; // don't want to filter out events missing TPC data (e.g. CRT-only runs)
     }
+    if (timestamp_handle->size() == 0) {
+      std::cerr << "Error: missing timestamps with producer (" << "daq" << ")" << std::endl;
+      return true; // don't want to filter out events missing TPC data (e.g. CRT-only runs)
+    }
+    
     art::fill_ptr_vector(raw_timestamps_handle, timestamp_handle);
 
     // collect TS
