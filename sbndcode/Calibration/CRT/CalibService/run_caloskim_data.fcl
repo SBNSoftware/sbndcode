@@ -1,0 +1,10 @@
+#include "run_calorimetry_skim_sbnd.fcl"
+
+services.ParticleInventoryService: @erase
+services.BackTrackerService:       @erase
+
+physics.analyzers.caloskim.G4producer: ""
+physics.analyzers.caloskim.SimChannelproducer: ""
+
+#outputs.outpid.dataTier: "reconstructed"
+#outputs.outpid.fastCloning: true
