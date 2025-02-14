@@ -1,0 +1,44 @@
+BEGIN_PROLOG
+
+
+OpDeconvolutionAlgData:
+{
+  tool_type: "OpDeconvolutionAlgWienerData"
+  Debug: false
+  MaxFFTSizePow: 16
+  OpDetDataFile: "./OpDetSim/digi_pmt_sbnd_data.root"
+  BaseSampleBins: 30
+  BaseVarCut: 50
+  SkipChannelList: []
+  CorrectBaselineOscillations: true
+  PositivePolarity: false
+  UseSaturated: false
+  ADCSaturationValue: 0
+  ApplyExpoAvSmooth: true
+  ApplyUnAvSmooth: true
+  ExpoAvSmoothPar: 0.3
+  UnAvNeighbours: 1
+  BaselineSample: 15
+  ####SPE area must be set to 1./DecoWaveformPrecision in OpHit finder
+  DecoWaveformPrecision: 0.002 #Scale deco waves by factor x500
+  HypoSignalTimeWindow: 8000 #ns
+  HypoSignalCustom: true
+  HypoSignalTimeConsts: [25., 1500.] #ns
+  HypoSignalWeights: [0.3, 0.7] #weights must sum 1
+  HypoSignalScale: 0.3
+  PMTChargeToADC: 25.97
+  ScaleHypoSignal: true
+  #### Filter type. Options are:
+  #### Wiener: hypothesis is 2,3,4...-exponential shape
+  #### Wiener1PE: hypothesis is 1PE (delta pulse)
+  #### Parameter filter
+  Filter: "Wiener"
+  UseParamFilter: true
+  UseParamFilterInidividualChannel: true
+  #Filter: "(x>0)*exp(-0.5*pow(x/[0],[1]))"
+  FilterParams: [0.1, 20]
+  Electronics: "CAEN" # 2 Optical readouts in sbnd: "CAEN" for PMT and Apsaia XArapucas (500MHz/2 ns), "Daphne" for XArapucas with 62.5MHz/16 ns
+  DaphneFreq:  62.5 # in MHz
+}
+
+END_PROLOG

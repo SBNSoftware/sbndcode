@@ -21,6 +21,7 @@ add_subdirectory(OpT0Finder)
 add_subdirectory(ShowerAna)
 add_subdirectory(Commissioning)
 add_subdirectory(Trigger)
+add_subdirectory(Timing)
 add_subdirectory(PTBAna)
 
 # subdirectory for gallery stuff
@@ -41,3 +42,7 @@ add_subdirectory(WireCell)
 
 add_subdirectory(Decoders)
 add_subdirectory(ChannelMaps)
+
+# for CVN
+# Disable for now
+#add_subdirectory(SBNDCVN)
