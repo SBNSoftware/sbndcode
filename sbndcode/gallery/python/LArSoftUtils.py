@@ -158,7 +158,7 @@ def loadWireReadout(config=None, registry=None, mapping=None, sorter=None):
   SourceCode.loadLibrary("larcorealg_Geometry")
   service = ROOT.lar.standalone.SetupGeometry[sorter](geometryConfig)
   service_readout = ROOT.lar.standalone.SetupReadout[mapping](geometryConfig, service)
-  if registry: registry.register(serviceName, service)
+  if registry: registry.register(serviceName, service_readout)
 
   simplifyPrinting()
 
