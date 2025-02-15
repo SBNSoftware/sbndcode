@@ -10,6 +10,7 @@ add_subdirectory(LArSoftConfigurations)
 add_subdirectory(JobConfigurations)
 #add_subdirectory(CRT)
 add_subdirectory(fcl)
+add_subdirectory(python)
 
 # integration tests
 add_subdirectory(ci)
