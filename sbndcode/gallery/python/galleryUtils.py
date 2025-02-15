@@ -1,10 +1,31 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 
 __doc__ = """
 Collection of utilities to interface gallery with python.
 
 This module requires ROOT.
+
+An example of a interactive session counting the number of muons
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+import galleryUtils
+import ROOT
+sampleEvents = galleryUtils.makeEvent("data.root")
+LArG4tag = ROOT.art.InputTag("largeant")
+
+getParticleHandle \\
+  = galleryUtils.make_getValidHandle("std::vector<simb::MCParticle>", sampleEvents)
+for event in galleryUtils.forEach(sampleEvents):
+  particles = getParticleHandle(LArG4tag).product()
+  
+  nMuons = sum(1 for part in particles if abs(part.PdgCode()) == 13)
+  print("%s: %d muons" % (event.eventAuxiliary().id(), nMuons))
+  
+# for all events
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 """
 
 __all__ = [
@@ -23,8 +44,7 @@ __all__ = [
   ]
 
 import sys, os
-import uuid
-from ROOTutils import ROOT
+from ROOTutils import ROOT, expandFileList
 import cppUtils
 import warnings
 
@@ -40,48 +60,122 @@ readHeader = cppUtils.readHeader
 ###  gallery
 ################################################################################
 
+# override conversion of art::EventID into a string (used by `print()`)
+ROOT.art.EventID.__str__ \
+  = lambda self: "R:%d S:%d E:%d" % (self.run(), self.subRun(), self.event())
+
+
 class HandleMaker:
   """Make the ROOT C++ jit compiler instantiate the
   Event::getValidHandle member template for template parameter klass.
   
   Needs to keep track of what was done already, because Cling will protest if
   the same class is asked twice.
+  
+  See the documentation of `__call__` for examples of usage of instances of
+  this class.
+  
   """
-  AlreadyMade = set()
+  class ManyByTypeProc:
+    def __init__(self, klass):
+      self.handleVectorClass = ROOT.std.vector[f'gallery::Handle<{klass}>']
+      self.getHandles = ROOT.gallery.Event.getManyByType[klass]
+    def __call__(self, event):
+      handles = self.handleVectorClass()
+      self.getHandles(event, handles)
+      return handles
+  # ManyByTypeProc
   
-  def __call__(self, klass):
-    if klass in HandleMaker.AlreadyMade: return
-    res = HandleMaker.make(klass)
-    if res != ROOT.TInterpreter.kNoError:
-      raise RuntimeError(
-       "Could not create `ROOT.gallery.Event.getValidHandle` for '%s' (code: %d)"
-       % (klass, res)
-       )
-    # if
-    HandleMaker.AlreadyMade.add(klass)
-    # if already there
-    return event.getValidHandle[klass] if event \
-      else ROOT.gallery.Event.getValidHandle[klass]
+  
+  def validHandle(self,
+    klass: "data product class to prepare for (as a C++ class name string)",
+    event: "(optional) the event object to retrieve the data products from " = None,
+    ) -> "if `event` is specified, bound `getValidHandle<klass>`, unbound otherwise":
+    # this has been tested with ROOT 6.22;
+    # big improvements in cppyy make this **way** simpler than it used to be
+    getHandle = ROOT.gallery.Event.getValidHandle[klass]
+    return (lambda tag: getHandle(event, tag)) if event else getHandle
+  # validHandle()
+  
+  def manyByType(self,
+    klass: "data product class to prepare for (as a C++ class name string)",
+    event: "(optional) the event object to retrieve the data products from " = None,
+    ) -> """if `event` is specified, a list (std::vector) of handles,
+            otherwise a callable that when called on an event returns such list""":
+    getManyByType = HandleMaker.ManyByTypeProc(klass)
+    return getManyByType(event) if event else (lambda event: getManyByType(event))
+  # manyByType()
+  
+  def __call__(self,
+    klass: "data product class to prepare for (as a C++ class name string)",
+    event: "(optional) the event object to retrieve the data products from " = None,
+    ) -> "if `event` is specified, bound `getValidHandle<klass>`, unbound otherwise":
+    """Prepares for reading data products of the specified class.
+    
+    This function causes the instantiation of the `gallery::Event::getValidHandle()`
+    method specialized to read the specified `klass`.
+    It also returns a bound or unbound function to actually retrieve data products.
+    
+    If an `event` instance is specified, the returned value is a bound function
+    that can be used directly.
+        
+        from galleryUtils import makeEvent, make_getValidHandle
+        import ROOT
+        
+        event = makeEvent("test.root")
+        inputTag = ROOT.art.InputTag("largeant")
+        
+        getParticlesFrom = make_getValidHandle("std::vector<simb::MCParticle>")
+        # note: the following is currently mostly broken (see below)
+        particles1 = getParticlesFrom(event, inputTag).product()
+        
+        getParticles = make_getValidHandle("std::vector<simb::MCParticle>", event)
+        particles2 = getParticles(inputTag).product()
+        
+    Both `particles1` and `particles2` point to the same data product.
+    
+    Exception (`RuntimeError`) is raised on error.
+    """
+    return self.validHandle(klass, event)
   # __call__()
-  
-  @staticmethod
-  def make(klass):
-    ROOT.gROOT.ProcessLine('template gallery::ValidHandle<%(name)s> gallery::Event::getValidHandle<%(name)s>(art::InputTag const&) const;' % {'name' : klass})
   
 # class HandleMaker
 make_getValidHandle = HandleMaker()
 
 
-
-def makeFileList(*filePaths):
-  """Creates a file list suitable for `gallery::Event`."""
+def makeFileList(
+ *filePaths: "a list of input files"
+ ) -> "a list of files suitable to construct a `gallery.Event object":
+  """Creates a file list suitable for `gallery::Event`.
+  
+  If a file ends with `.root`, it is added directly to the list.
+  Otherwise, it is interpreted as a file list and treated as such
+  (see `ROOTutils.expandFileList()`).
+  File list recursion is disabled.
+  """
   files = ROOT.vector(ROOT.string)()
-  for path in filePaths: files.push_back(path)
+  for path in filePaths:
+    entries = [ path ] if path.endswith('.root') else expandFileList(path)
+    for entry in entries: files.push_back(entry)
+  # for
   return files
 # makeFileList()
 
 
-def forEach(event):
+def makeEvent(
+ files: "files or file lists, as supported by `ROOTutils.makeFileList()`",
+ **kwargs: "additional arguments to `gallery::Event` constructor"
+ ) -> "a gallery.Event object reading the specified input files":
+  return ROOT.gallery.Event(makeFileList(files), **kwargs)
+# makeEvent()
+
+
+def forEach(
+  event,
+  fromStart: "always restarts from the beginning of the dataset" = True,
+  maxEvents: "stop after processing this many events (None = all)" = None,
+  skipEvents: "skip these many events at the beginning of the dataset" = 0,
+  ):
   """
   Simplifies sequential event looping.
   
@@ -89,18 +183,40 @@ def forEach(event):
   Therefore, it has side effects.
   The function returns `event` itself, after it has set to the next available
   event.
+  Normally the function restarts from the beginning of the event list.
+  If `fromStart` is `False`, though, it will start after the last event
+  processed by `event`.
+  A number of entries to skip (either from the start or from the current event,
+  depending on the value of `fromStart`) and a maximum number of events to
+  process can be specified. However, there is no feedback on whether processing
+  stopped because of a reached limit or because of no more events are available.
   
   This function is actually a generator.
   
   Example of loop:
       
-      for iEvent, event in enumerate(forEach(event)):
+      for iEvent, event in enumerate(forEach(event, maxEvents=5)):
         ...
       
-  
+  will process up to 5 events from the start of the sample;
+      
+      for iEvent, event in enumerate(forEach(event, maxEvents=5, skipEvents=8), 8):
+        ...
+      
+  will process events from 8 to 12 (included) at most; `iEvent` starts from `8`
+  because we explicitly requested that in the `enumerate()` call, or else it
+  would have started from `0` (i.e. `enumerate()` does not know about the events
+  being skipped).
   """
-  while (not event.atEnd()):
+  if fromStart:
+    if skipEvents > 0: event.goToEntry(skipEvents)
+    else:              event.toBegin()
+  elif skipEvents > 0:
+    for _ in range(skipEvents): event.next() # probably slower than goToEntry()
+  nEvents = 0
+  while (not event.atEnd() and ((maxEvents is None) or (nEvents < maxEvents))):
     yield event
+    nEvents += 1
     event.next()
   # while
 # forEach()
@@ -205,7 +321,7 @@ def eventLoop(inputFiles,
     
   # for
   if nErrors > 0:
-    print >>sys.stderr, "Encountered %d/%d errors." % (nErrors, nProcessedEvents)
+    print("Encountered %d/%d errors." % (nErrors, nProcessedEvents),file=sys.stderr)
   return nErrors
 # eventLoop()
 
@@ -222,13 +338,26 @@ def eventLoop(inputFiles,
 def findFHiCL(configRelPath, extraDirs = []):
   
   if os.path.isfile(configRelPath):
-    return os.path.join(os.getcwd(), configRelPath)
+    return os.path.join(os.getcwd(), str(configRelPath))
   for path in extraDirs + os.environ.get('FHICL_FILE_PATH', "").split(':'):
-    candidate = os.path.join(path, configRelPath)
+    candidate = os.path.join(path, str(configRelPath))
     if os.path.isfile(candidate): return candidate
   else: return None
 
 # findFHiCL()
+
+
+def getTableIfPresent(
+ pset: "fhicl.ParameterSet object containing the desired configuration table",
+ key: "name of the table to be extracted",
+ defValue: "value returned if the key is not present (None by default)" = None,
+ type_: "type to look for (instead of ROOT.fhicl.ParameterSet)" = None,
+ ) -> "ParameterSet with `key` in `pset`, or `defValue` if not present":
+  
+  try: return pset.get(type_ if type_ else ROOT.fhicl.ParameterSet)(key)
+  except Exception: return defValue
+  
+# getTableIfPresent()
 
 
 ################################################################################
@@ -305,41 +434,23 @@ class ConfigurationHelper:
   
 # class ConfigurationHelper
 
-class TemporaryFile:
-  def __init__(self, data = None):
-    with warnings.catch_warnings():
-      # os.tempnam() is a potential security risk: ACK
-      warnings.filterwarnings("ignore", ".*tempnam .*", RuntimeWarning)
-      self._file = open(str(uuid.uuid4()), "w+")
-    self.name = self._file.name
-    if data is not None:
-      self._file.write(str(data))
-      self._file.flush() # we are not going to close this file...
-    # 
-  # __init__()
-  def __del__(self):
-    if not self._file: return
-    del self._file
-    os.remove(self.name)
-  # __del__()
-  def file_(self): return self._file
-  def __str__(self): return self.name
-# class TemporaryFile
-
 
 def loadConfiguration(configSpec):
   # this utility actually relies on generic utilities that while not LArSoft
   # specific, are nevertheless distributed with LArSoft (`larcorealg`).
   SourceCode.loadHeaderFromUPS("larcorealg/Geometry/StandaloneBasicSetup.h")
-  
+ 
   if isinstance(configSpec, ConfigurationString):
-    configFile = TemporaryFile(configSpec)
+    import tempfile
+    configFile = tempfile.NamedTemporaryFile("w+")
+    configFile.write(str(configSpec))
+    configFile.flush()
     configPath = configFile.name
   else:
     configFile = None
     configPath = configSpec
   # if
-  
+
   fullPath = findFHiCL(configPath)
   if not fullPath:
     raise RuntimeError("Couldn't find configuration file '%s'" % configPath)
