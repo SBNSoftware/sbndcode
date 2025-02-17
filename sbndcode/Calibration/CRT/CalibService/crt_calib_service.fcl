@@ -5,7 +5,6 @@ crt_calib_service:
   TimingOffsetFileName: "SBNDCRTTimingOffsets_v1.txt"
   PedestalFileName:     "SBNDCRTPedestals_v2.txt"
   BadChannelsFileName:  "SBNDCRTBadChannels_v1.txt"
->>>>>>> 719d905a (Fix typo)
 }
 
 END_PROLOG
