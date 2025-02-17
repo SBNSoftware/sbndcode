@@ -84,6 +84,14 @@ message_errorfile_sbnd: {
   append:     false
   threshold:  "ERROR"
   categories: {
+     #Turn down verbosity of modules with many messages
+     SimDriftElectrons: {
+        limit: 0
+     }
+     #ParticleListActionService can be removed once this PR 53 in larg4 is merged
+     ParticleListActionService: {
+        limit: 0
+     }
     default:  {}
   }
 } # message_errorfile_sbnd
@@ -97,6 +105,14 @@ message_stdout_warning_sbnd: {
   threshold:  "WARNING"
   categories:{
     default:  {}
+    #Turn down verbosity of modules with many messages
+    SimDriftElectrons: {
+      limit: 0
+    }
+    #ParticleListActionService can be removed once this PR 53 in larg4 is merged
+    ParticleListActionService: {
+       limit: 0
+    }
     GeometryBadInputPoint: { limit: 5 timespan: 1000}
   }
 } # message_stdout_warning_sbnd

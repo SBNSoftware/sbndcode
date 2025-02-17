@@ -101,5 +101,15 @@ sbnd_prod_services: {
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
 } # sbnd_prod_services
 
+#
+# sbnd_data_services
+#
+# Complete set of reconstruction services, and any services needed to handle real data
+#
+sbnd_data_services:
+{
+  @table::sbnd_services
+  ChannelStatusService:  @local::sbnd_data_channelstatus
+}
 
 END_PROLOG
