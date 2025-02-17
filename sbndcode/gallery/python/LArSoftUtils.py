@@ -197,9 +197,12 @@ def loadAuxDetGeometry(config=None, registry=None, sorter=None, auxdetinit=None)
   SourceCode.loadHeaderFromUPS("larcorealg/Geometry/StandaloneGeometrySetup.h")
   SourceCode.loadLibrary("larcorealg_Geometry")
 
-  adi = auxdetinit(geometryConfig) if auxdetinit is not None else None
+  if auxdetinit is not None:
+    adi = auxdetinit(geometryConfig)
+    service = ROOT.lar.standalone.SetupAuxDetGeometry[sorter](geometryConfig, adi)
+  else:
+    service = ROOT.lar.standalone.SetupAuxDetGeometry[sorter](geometryConfig)
   
-  service = ROOT.lar.standalone.SetupAuxDetGeometry[sorter](geometryConfig, adi)
   if registry: registry.register(serviceName, service)
 
   simplifyPrinting()
