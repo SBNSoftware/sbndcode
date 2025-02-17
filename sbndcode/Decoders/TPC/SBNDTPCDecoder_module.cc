@@ -34,6 +34,7 @@
 #include "sbndaq-artdaq-core/Overlays/SBND/NevisTPCFragment.hh"
 #include "sbndaq-artdaq-core/Overlays/SBND/NevisTPC/NevisTPCTypes.hh"
 #include "sbndaq-artdaq-core/Overlays/SBND/NevisTPC/NevisTPCUtilities.hh"
+#include "sbnobj/Common/Analysis/TPCChannelInfo.hh"
 
 
 DEFINE_ART_MODULE(daq::SBNDTPCDecoder)
@@ -77,6 +78,7 @@ daq::SBNDTPCDecoder::SBNDTPCDecoder(fhicl::ParameterSet const & param):
   produces<RawDigits>();
   produces<RDTimeStamps>();
   produces<RDTsAssocs>();
+  produces<std::vector<anab::TPCChannelInfo>>();
   if (_config.produce_header) {
     produces<std::vector<tpcAnalysis::TPCDecodeAna>>();
   }
@@ -113,6 +115,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
   std::unique_ptr<RawDigits> rawdigit_collection(new RawDigits);
   std::unique_ptr<RDTimeStamps> rdts_collection(new RDTimeStamps);
   std::unique_ptr<RDTsAssocs> rdtsassoc_collection(new RDTsAssocs);
+  std::unique_ptr<std::vector<anab::TPCChannelInfo>> channeldata_collection(new std::vector<anab::TPCChannelInfo>);
   std::unique_ptr<std::vector<tpcAnalysis::TPCDecodeAna>> header_collection(new std::vector<tpcAnalysis::TPCDecodeAna>);
 
   if ( daq_handle.isValid() ) {
@@ -125,10 +128,16 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
       mf::LogWarning("SBNDTPCDecoder_module") <<  " Invalid fragment handle: Skipping TPC digit decoding";
     }
 
+  for (const raw::RawDigit &r: *rawdigit_collection) {
+    anab::TPCChannelInfo i {r.Channel(), r.GetPedestal(), r.GetSigma()};
+    channeldata_collection->push_back(i);
+  }
+
   
   event.put(std::move(rawdigit_collection));
   event.put(std::move(rdts_collection));
   event.put(std::move(rdtsassoc_collection));
+  event.put(std::move(channeldata_collection));
 
   if (_config.produce_header) {
     event.put(std::move(header_collection));
