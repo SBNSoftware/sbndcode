@@ -129,7 +129,7 @@ void daq::SBNDTPCDecoder::produce(art::Event & event)
     }
 
   for (const raw::RawDigit &r: *rawdigit_collection) {
-    anab::TPCChannelInfo i {r.Channel(), r.GetPedestal(), r.GetSigma()};
+    anab::TPCChannelInfo i {r.Channel(), r.GetPedestal(), r.GetSigma(), getEvenFraction(r.ADCs()), getxBADFraction(r.ADCs())};
     channeldata_collection->push_back(i);
   }
 
@@ -228,6 +228,23 @@ uint32_t daq::SBNDTPCDecoder::compute_checksum(sbndaq::NevisTPCFragment &fragmen
 
 }
 
+float daq::SBNDTPCDecoder::getxBADFraction(const std::vector<int16_t> &v_adc) const {
+  int n_bad = 0;
+  for (int16_t s: v_adc) {
+    if (s == 0xBAD) n_bad += 1;
+  }
+  return ((float)n_bad) / v_adc.size();
+  
+}
+
+float daq::SBNDTPCDecoder::getEvenFraction(const std::vector<int16_t> &v_adc) const {
+  int n_even = 0;
+  for (int16_t s: v_adc) {
+    if (s % 2 == 0) n_even += 1;
+  }
+  return ((float)n_even) / v_adc.size();
+  
+}
 
 
 void daq::SBNDTPCDecoder::getMedianSigma(const std::vector<int16_t> &v_adc, float &median,
