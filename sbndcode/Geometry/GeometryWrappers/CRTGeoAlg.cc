@@ -133,6 +133,8 @@ namespace sbnd::crt {
 
             uint32_t pedestal0       = 0;
             uint32_t pedestal1       = 0;
+            double gain0             = fDefaultGain;
+            double gain1             = fDefaultGain;
             CRTChannelStatus status0 = CRTChannelStatus::kGoodChannel;
             CRTChannelStatus status1 = CRTChannelStatus::kGoodChannel;
 
@@ -141,12 +143,11 @@ namespace sbnd::crt {
                 art::ServiceHandle<SBND::CRTCalibService> CalibService;
                 pedestal0 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel0);
                 pedestal1 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel1);
+                gain0     = CalibService->GetGainFromFEBMAC5AndChannel(mac5, actualChannel0);
+                gain1     = CalibService->GetGainFromFEBMAC5AndChannel(mac5, actualChannel1);
                 status0   = CalibService->GetChannelStatusFromFEBMAC5AndChannel(mac5, actualChannel0);
                 status1   = CalibService->GetChannelStatusFromFEBMAC5AndChannel(mac5, actualChannel1);
               }
-
-            const double gain0 = fDefaultGain;
-            const double gain1 = fDefaultGain;
 
             // Fill SiPM information
             CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0, status0);
