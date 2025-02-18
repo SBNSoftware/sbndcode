@@ -11,7 +11,7 @@ local wc = import "wirecell.jsonnet";
 local pg = import "pgraph.jsonnet";
 
 
-function (anode, ts, prefix="dnnroi", output_scale=1.0, nticks=3500, tick_per_slice=10, nchunks=1)
+function (anode, ts, prefix="dnnroi", output_scale=1.0, nticks=3500, tick_per_slice=4, nchunks=1)
     local apaid = anode.data.ident;
     local prename = prefix + std.toString(apaid);
     local intags = ['loose_lf%d'%apaid, 'mp2_roi%d'%apaid,

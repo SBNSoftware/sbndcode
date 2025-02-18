@@ -157,7 +157,7 @@ local sp_override = if use_dnnroi then {
     save_negtive_charge: true, // TODO: no negative charge in gauss, default is false
     use_multi_plane_protection: true,
     do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
-    mp_tick_resolution: 10,
+    mp_tick_resolution: 4,
     tight_lf_tag: "",
     // loose_lf_tag: "",
     cleanup_roi_tag: "",
@@ -177,7 +177,8 @@ local ts = {
     type: "TorchService",
     name: "dnnroi",
     data: {
-        model: "/exp/sbnd/app/users/munjung/wirecell/NNs/bnb_ptracks-model.ts",
+        // model: "/exp/sbnd/app/users/munjung/wirecell/NNs/bnb_ptracks-model.ts",
+        model: "bnb_trk_shw-scale4-planeboth-tpcboth.ts",
         device: "cpu",
         concurrency: 1,
     },
