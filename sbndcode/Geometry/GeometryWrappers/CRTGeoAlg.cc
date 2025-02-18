@@ -130,10 +130,10 @@ namespace sbnd::crt {
             const uint32_t actualChannel0 = invert ? 31 - (2 * ads_i) : 2 * ads_i;
             const uint32_t actualChannel1 = invert ? actualChannel0 - 1 : actualChannel0 + 1;
 
-            uint32_t pedestal0 = 0;
-            uint32_t pedestal1 = 0;
-            uint16_t status0   = 0;
-            uint16_t status1   = 1;
+            uint32_t pedestal0       = 0;
+            uint32_t pedestal1       = 0;
+            CRTChannelStatus status0 = CRTChannelStatus::kGoodChannel;
+            CRTChannelStatus status1 = CRTChannelStatus::kGoodChannel;
 
             if(!fMC)
               {

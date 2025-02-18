@@ -90,17 +90,37 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
     {
       std::stringstream linestream(line);
 
-      unsigned int mac5, ch, status;
+      unsigned int mac5, ch;
+      char* status_string;
 
       linestream
         >> mac5
         >> ch
-        >> status;
+        >> status_string;
 
-      fChannelStatusFromFEBMAC5AndChannel[mac5][ch] = (sbnd::crt::CRTChannelStatus)status;
+      sbnd::crt::CRTChannelStatus status      = sbnd::crt::CRTChannelStatus::kGoodChannel;
+      sbnd::crt::CRTChannelStatus status_pair = sbnd::crt::CRTChannelStatus::kGoodChannel;
+
+      if(strcmp(status_string, "kDeadChannel") == 0)
+        {
+          status      = sbnd::crt::CRTChannelStatus::kDeadChannel;
+          status_pair = sbnd::crt::CRTChannelStatus::kDeadNeighbourChannel;
+        }
+      else if(strcmp(status_string, "kQuietChannel") == 0)
+        {
+          status      = sbnd::crt::CRTChannelStatus::kQuietChannel;
+          status_pair = sbnd::crt::CRTChannelStatus::kQuietNeighbourChannel;
+        }
+      else
+        {
+          std::cout << "SBND::CRTCalibService unknown channel status " << status_string << std::endl;
+          throw cet::exception("Unknown status");
+        }
+
+      fChannelStatusFromFEBMAC5AndChannel[mac5][ch] = status;
 
       unsigned int ch_pair = ch % 2 ? ch - 1 : ch + 1;
-      fChannelStatusFromFEBMAC5AndChannel[mac5][ch_pair] = (sbnd::crt::CRTChannelStatus)(status + 1);
+      fChannelStatusFromFEBMAC5AndChannel[mac5][ch_pair] = status_pair;
     }
 
   badChannelsStream.close();
