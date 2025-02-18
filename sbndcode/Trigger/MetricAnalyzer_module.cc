@@ -46,13 +46,15 @@ public:
 
 private:
   std::string fmetric_instance_name;
-  std::string fmetric_module_label;              
+  std::vector<std::string> fmetric_module_labels;       
+  std::vector<int> fstream_labels;       
   
   std::string fspectdc_module_label;
   uint32_t    fspectdc_etrig_ch;
 
   TTree* tree;
   int _run, _subrun, _event;
+  int _stream;
   float  _flash_peakpe;
   float  _flash_peaktime; // us
   float  _trigger_dt;     // us
@@ -66,7 +68,13 @@ sbndaq::MetricAnalyzer::MetricAnalyzer(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}  // ,
   // More initializers here.
 {
-  fmetric_module_label = p.get<std::string>("metric_module_label","pmtmetricproducer");
+  fmetric_module_labels = p.get<std::vector<std::string>>("metric_module_labels",{"pmtmetricproducer",
+                                                                                  "pmtmetricbnbzero",
+                                                                                  "pmtmetricbnblight",
+                                                                                  "pmtmetricoffbeamzero",
+                                                                                  "pmtmetricoffbeamlight",
+                                                                                  "pmtmetriccrossingsmuon"});
+  fstream_labels = p.get<std::vector<int>>("stream_labels",{0,1,2,3,4,5});
   fmetric_instance_name = p.get<std::string>("metric_instance_name","");
   fspectdc_module_label = p.get<std::string>("spectdc_module_name","tdcdecoder");
   fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
@@ -76,6 +84,7 @@ sbndaq::MetricAnalyzer::MetricAnalyzer(fhicl::ParameterSet const& p)
   tree->Branch("run",&_run,"run/I");
   tree->Branch("subrun",&_subrun,"subrun/I");
   tree->Branch("event",&_event,"event/I");
+  tree->Branch("stream",&_stream,"stream/I");
   tree->Branch("flash_peakpe",&_flash_peakpe,"flash_peakpe/F");
   tree->Branch("flash_peaktime",&_flash_peaktime,"flash_peaktime/F");
   tree->Branch("trigger_dt",&_trigger_dt,"trigger_dt/F");
@@ -91,6 +100,7 @@ void sbndaq::MetricAnalyzer::analyze(art::Event const& e)
   _event  = e.id().event();
 
   // initialize tree variables
+  _stream = -1;
   _flash_peakpe = -999999999;
   _flash_peaktime = -999999999;
   _trigger_dt = -999999999;
@@ -98,20 +108,39 @@ void sbndaq::MetricAnalyzer::analyze(art::Event const& e)
   _tdc_etrig = -999999999;
   _tdc_bes = -999999999;
 
-  art::Handle<std::vector<sbnd::trigger::pmtSoftwareTrigger>> metricHandle;
-  if (fmetric_instance_name.empty()) e.getByLabel(fmetric_module_label,metricHandle);
-  else e.getByLabel(fmetric_module_label,fmetric_instance_name,metricHandle);
-  if (!metricHandle.isValid() || metricHandle->size() == 0){
-    std::cout << "No Metrics found" << std::endl;
-    tree->Fill();
+  if (fstream_labels.size() != fmetric_module_labels.size()){
+    std::cout << "Error: stream labels and metric module labels are not the same size" << std::endl;
     return;
   }
-  else{
+
+  bool found_metrics = false;
+
+  size_t nlabels = fmetric_module_labels.size();
+  for (size_t i=0; i<nlabels; i++){
+    auto label = fmetric_module_labels[i];
+
+    art::Handle<std::vector<sbnd::trigger::pmtSoftwareTrigger>> metricHandle;
+    if (fmetric_instance_name.empty()){
+      e.getByLabel(label,metricHandle);
+    }
+    else{
+      e.getByLabel(label,fmetric_instance_name,metricHandle);
+    }
+
+    if (!metricHandle.isValid() || metricHandle->size() == 0)
+      continue;
+    found_metrics = true;
     const std::vector<sbnd::trigger::pmtSoftwareTrigger> metric_v(*metricHandle);
     auto metric = metric_v[0];
     _trigger_dt     = float(metric.trig_ts)/1e3;
     _flash_peakpe   = metric.peakPE;
     _flash_peaktime = metric.peaktime;
+    _stream          = fstream_labels[i];
+  }
+  if (!found_metrics){
+    std::cout << "No Metrics found" << std::endl;
+    tree->Fill();
+    return;
   }
 
   // see if etrig exists
