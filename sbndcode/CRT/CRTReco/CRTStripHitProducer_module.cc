@@ -267,8 +267,12 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
           // Access width of strip from the geometry algorithm
           const double width = strip.width;
 
+          // Convert ADC to PE
+          const double pe1 = sipm1.gain * adc1;
+          const double pe2 = sipm2.gain * adc2;
+
           // Use light ratio to infer lateral position
-          const double pos = width / 2. * tanh(log(1. * adc2/adc1)) + width / 2.;
+          const double pos = width / 2. * tanh(log(1. * pe2/pe1)) + width / 2.;
           double err       = fErrorCoeff[0] * width + fErrorCoeff[1] * pos + fErrorCoeff[2] * pos * pos;
 
           // Ensure error does not allow positions outside the strip geometry
