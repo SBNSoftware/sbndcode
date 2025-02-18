@@ -254,7 +254,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       const CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
       const CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
 
-      if(sipm1.status != 0 || sipm2.status != 0)
+      if(sipm1.status != CRTChannelStatus::kGoodChannel || sipm2.status != CRTChannelStatus::kGoodChannel)
         continue;
 
       // Subtract channel pedestals
