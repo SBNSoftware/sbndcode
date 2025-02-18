@@ -23,4 +23,16 @@
   <class name="art::Wrapper<art::Assns<raw::pmt::BoardTimingInfo, raw::OpDetWaveform, void>>"/>
   <class name="art::Wrapper<art::Assns<raw::OpDetWaveform, raw::pmt::BoardTimingInfo, void>>"/>
 
+  <class name="raw::pmt::WaveformShift">
+  </class>
+  <class name="std::vector<raw::pmt::WaveformShift>"/>
+  <class name="art::Wrapper<std::vector<raw::pmt::WaveformShift>>"/>
+
+  <class name="std::pair<art::Ptr<raw::pmt::WaveformShift>, art::Ptr<raw::OpDetWaveform>>"/>
+  <class name="std::pair<art::Ptr<raw::OpDetWaveform>, art::Ptr<raw::pmt::WaveformShift>>"/>
+  <class name="art::Assns<raw::pmt::WaveformShift, raw::OpDetWaveform, void>"/>
+  <class name="art::Assns<raw::OpDetWaveform, raw::pmt::WaveformShift, void>"/>
+  <class name="art::Wrapper<art::Assns<raw::pmt::WaveformShift, raw::OpDetWaveform, void>>"/>
+  <class name="art::Wrapper<art::Assns<raw::OpDetWaveform, raw::pmt::WaveformShift, void>>"/>
+
 </lcgdict>

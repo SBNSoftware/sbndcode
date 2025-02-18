@@ -1,0 +1,36 @@
+BEGIN_PROLOG
+
+wfAlign:
+{
+    module_type:  "WaveformAlignment" 
+      
+    TdcDecodeLabel: "tdcdecoder"
+    TimingLabel: "pmtdecoder"
+    FtrigDecodeLabel: "pmtdecoder:FTrigChannels"
+    FtrigBoardLabel: "pmtdecoder:FTrigTiming"
+    PmtDecodeLabel: "pmtdecoder:PMTChannels"
+    PmtBoardLabel: "pmtdecoder:PMTTiming"
+
+    PmtNewLabel: "PMTChannels"
+    PmtBoardNewLabel: "PMTTiming"
+
+    DebugTdc: false
+    DebugTimeRef: false
+    DebugFtrig: false
+    DebugPmt: false
+
+    WfLength: 5000 #ticks
+    Tdc3CaenOffset: [101, 101, 101, 101, 101, 101, 101, 102, 100] #ns
+    nCAEN: 9 #digitisers
+    TickLb: 1005
+    TickUb: 1035
+
+    ApplyShift: true
+    ExcludeFtrigBoard: []
+
+    SaveGoodFit: false
+    SaveBadFit: false
+    SaveCompare: false
+    SavePath: ""
+}
+END_PROLOG

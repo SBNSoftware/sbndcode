@@ -37,6 +37,17 @@ namespace raw {
         uint16_t              postPercent; // # 0-100, represents a percentage
         std::vector<uint32_t> triggerTimeTag; // ns
     };
+
+    class WaveformShift {
+      // Associate one of these to every opdetwaveform in the board/digitizer, one per trigger
+      public:
+        WaveformShift() {}; // constructor
+        WaveformShift(unsigned int boardId, std::vector<double> shift) :
+        boardId(boardId), shift(shift) {};
+
+        unsigned int boardId; //board 0-7
+        std::vector<double> shift; //shift per waveform
+    };
   }
 }
 
