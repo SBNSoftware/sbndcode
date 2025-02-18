@@ -29,6 +29,7 @@ art_make_library(
 
 cet_build_plugin( CRTAuxDetInitializer art::tool
     SOURCE
+        CRTAuxDetInitializer_tool.cc
         CRTAuxDetInitializer.cxx
     LIBRARIES REG
         larcorealg::Geometry
