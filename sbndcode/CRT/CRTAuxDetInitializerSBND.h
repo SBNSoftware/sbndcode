@@ -1,5 +1,5 @@
-#ifndef SBND_CRT_CRTAUXDETINITIALIZER_H
-#define SBND_CRT_CRTAUXDETINITIALIZER_H
+#ifndef SBND_CRT_CRTAUXDETINITIALIZERSBND_H
+#define SBND_CRT_CRTAUXDETINITIALIZERSBND_H
 
 #include "larcorealg/Geometry/AuxDetGeo.h"
 #include "larcorealg/Geometry/AuxDetSensitiveGeo.h"
@@ -7,9 +7,9 @@
 
 namespace sbnd::crt {
 
-  class CRTAuxDetInitializer : public geo::AuxDetInitializer {
+  class CRTAuxDetInitializerSBND : public geo::AuxDetInitializer {
   public:
-    explicit CRTAuxDetInitializer(fhicl::ParameterSet const&);
+    explicit CRTAuxDetInitializerSBND(fhicl::ParameterSet const&);
 
   private:
     geo::AuxDetReadoutInitializers
@@ -18,4 +18,4 @@ namespace sbnd::crt {
 
 } // namespace sbnd::crt
 
-#endif // SBND_CRT_CRTAUXDETINITIALIZER_H
+#endif // SBND_CRT_CRTAUXDETINITIALIZERSBND_H

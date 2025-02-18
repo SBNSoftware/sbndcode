@@ -1,11 +1,11 @@
-#include "CRTAuxDetInitializer.h"
+#include "CRTAuxDetInitializerSBND.h"
 
 namespace sbnd::crt {
 
-  CRTAuxDetInitializer::CRTAuxDetInitializer(fhicl::ParameterSet const&) {}
+  CRTAuxDetInitializerSBND::CRTAuxDetInitializerSBND(fhicl::ParameterSet const&) {}
 
   geo::AuxDetReadoutInitializers
-  CRTAuxDetInitializer::initialize(std::vector<geo::AuxDetGeo> const& adgeo) const {
+  CRTAuxDetInitializerSBND::initialize(std::vector<geo::AuxDetGeo> const& adgeo) const {
     geo::AuxDetReadoutInitializers result;
     // Map the AuxDetGeo names to their position in the sorted vector
     //
