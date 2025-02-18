@@ -19,12 +19,14 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
 {
   const std::string timingOffsetFile = pset.get<std::string>("TimingOffsetFileName");
   const std::string pedestalFile     = pset.get<std::string>("PedestalFileName");
+  const std::string gainFile         = pset.get<std::string>("GainFileName");
   const std::string badChannelsFile  = pset.get<std::string>("BadChannelsFileName");
 
-  std::string timingOffsetPath, pedestalPath, badChannelsPath;
+  std::string timingOffsetPath, pedestalPath, gainPath, badChannelsPath;
   cet::search_path sp("FW_SEARCH_PATH");
   sp.find_file(timingOffsetFile, timingOffsetPath);
   sp.find_file(pedestalFile, pedestalPath);
+  sp.find_file(gainFile, gainPath);
   sp.find_file(badChannelsFile, badChannelsPath);
 
   if(timingOffsetPath.empty())
@@ -39,6 +41,12 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
       throw cet::exception("File not found");
     }
 
+  if(gainPath.empty())
+    {
+      std::cout << "SBND::CRTCalibService Input file " << gainFile << " not found" << std::endl;
+      throw cet::exception("File not found");
+    }
+
   if(badChannelsPath.empty())
     {
       std::cout << "SBND::CRTCalibService Input file " << badChannelsFile << " not found" << std::endl;
@@ -48,6 +56,7 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
   std::cout << "SBND CRT Channel Map: Building map from files...\n"
             << "\t Timing Offsets: " << timingOffsetFile << '\n'
             << "\t Pedestals: " << pedestalFile << '\n'
+            << "\t Gains: " << gainFile << '\n'
             << "\t Bad Channels: " << badChannelsFile << std::endl;
 
   std::ifstream timingOffsetStream(timingOffsetPath, std::ios::in);
@@ -56,9 +65,9 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
   while(std::getline(timingOffsetStream, line))
     {
       std::stringstream linestream(line);
-    
+
       unsigned int mac5, offset;
-      linestream 
+      linestream
         >> mac5
         >> offset;
 
@@ -72,9 +81,9 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
   while(std::getline(pedestalStream, line))
     {
       std::stringstream linestream(line);
-    
+
       unsigned int mac5, ch, pedestal;
-      linestream 
+      linestream
         >> mac5
         >> ch
         >> pedestal;
@@ -83,6 +92,24 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
     }
 
   pedestalStream.close();
+
+  std::ifstream gainStream(gainPath, std::ios::in);
+
+  while(std::getline(gainStream, line))
+    {
+      std::stringstream linestream(line);
+
+      unsigned int mac5, ch;
+      float gain;
+      linestream
+        >> mac5
+        >> ch
+        >> gain;
+
+      fGainFromFEBMAC5AndChannel[mac5][ch] = 1. / gain;
+    }
+
+  gainStream.close();
 
   std::ifstream badChannelsStream(badChannelsPath, std::ios::in);
 
@@ -170,6 +197,34 @@ double SBND::CRTCalibService::GetPedestalFromFEBMAC5AndChannel(unsigned int feb_
                                                   << std::endl;
 
       return 0.;
+    }
+
+  return subIter->second;
+}
+
+double SBND::CRTCalibService::GetGainFromFEBMAC5AndChannel(unsigned int feb_mac5, unsigned int ch) const
+{
+  auto iter = fGainFromFEBMAC5AndChannel.find(feb_mac5);
+
+  if(iter == fGainFromFEBMAC5AndChannel.end())
+    {
+      mf::LogInfo("SBND CRT Calibration Service") << "Asked for FEB with MAC5: " << feb_mac5 << '\n'
+                                                  << "This FEB does not appear in the calibration service."
+                                                  << std::endl;
+
+      return 0.025;
+    }
+
+  auto subIter = iter->second.find(ch);
+
+  if(subIter == iter->second.end())
+    {
+      mf::LogInfo("SBND CRT Calibration Service") << "Asked for channel: " << ch << '\n'
+                                                  << "in FEB with MAC5: " << feb_mac5 << '\n'
+                                                  << "This channel does not appear in the calibration service."
+                                                  << std::endl;
+
+      return 0.025;
     }
 
   return subIter->second;

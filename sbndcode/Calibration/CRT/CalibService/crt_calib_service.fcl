@@ -4,6 +4,7 @@ crt_calib_service:
 {
   TimingOffsetFileName: "SBNDCRTTimingOffsets_v1.txt"
   PedestalFileName:     "SBNDCRTPedestals_v2.txt"
+  GainFileName:         "SBNDCRTGains_v0.1.txt"
   BadChannelsFileName:  "SBNDCRTBadChannels_v1.txt"
 }
 
