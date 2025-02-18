@@ -91,7 +91,7 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
       std::stringstream linestream(line);
 
       unsigned int mac5, ch;
-      char* status_string;
+      std::string status_string;
 
       linestream
         >> mac5
@@ -101,12 +101,12 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
       sbnd::crt::CRTChannelStatus status      = sbnd::crt::CRTChannelStatus::kGoodChannel;
       sbnd::crt::CRTChannelStatus status_pair = sbnd::crt::CRTChannelStatus::kGoodChannel;
 
-      if(strcmp(status_string, "kDeadChannel") == 0)
+      if(status_string.compare("kDeadChannel") == 0)
         {
           status      = sbnd::crt::CRTChannelStatus::kDeadChannel;
           status_pair = sbnd::crt::CRTChannelStatus::kDeadNeighbourChannel;
         }
-      else if(strcmp(status_string, "kQuietChannel") == 0)
+      else if(status_string.compare("kQuietChannel") == 0)
         {
           status      = sbnd::crt::CRTChannelStatus::kQuietChannel;
           status_pair = sbnd::crt::CRTChannelStatus::kQuietNeighbourChannel;
