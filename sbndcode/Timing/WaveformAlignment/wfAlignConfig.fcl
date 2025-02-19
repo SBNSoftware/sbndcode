@@ -13,6 +13,7 @@ wfAlign:
 
     PmtNewLabel: "PMTChannels"
     PmtBoardNewLabel: "PMTTiming"
+    PmtAlignNewLabel: "PMTAlign"
 
     DebugTdc: false
     DebugTimeRef: false

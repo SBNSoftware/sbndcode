@@ -156,7 +156,7 @@ private:
     std::vector<int> fExcludeFtrigBoard;
     std::string fPmtNewLabel;
     std::string fPmtBoardNewLabel;
-    std::string fPmtShiftNewLabel;
+    std::string fPmtAlignNewLabel;
 
     // Plotting
     bool fSaveGoodFit;
@@ -201,12 +201,12 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
 
     fPmtNewLabel = p.get<std::string>("PmtNewLabel","PMTChannels");
     fPmtBoardNewLabel = p.get<std::string>("PmtBoardNewLabel","PMTTiming");
-    fPmtShiftNewLabel = p.get<std::string>("PmtShiftNewLabel","PMTShift");
+    fPmtAlignNewLabel = p.get<std::string>("PmtAlignNewLabel","PMTAlign");
 
     produces< std::vector< raw::OpDetWaveform > >(fPmtNewLabel); 
     produces< art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform > >(fPmtBoardNewLabel);
-    produces< std::vector< raw::pmt::WaveformShift > >();
-    produces< art::Assns< raw::pmt::WaveformShift, raw::OpDetWaveform > >(fPmtShiftNewLabel);
+    produces< std::vector< raw::pmt::BoardAlignment > >();
+    produces< art::Assns< raw::pmt::BoardAlignment, raw::OpDetWaveform > >(fPmtAlignNewLabel);
 }
 
 void sbnd::WaveformAlignment::produce(art::Event& e)
@@ -214,17 +214,17 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
 
     // Output data products
     std::unique_ptr< std::vector< raw::OpDetWaveform > > newPmtWf (new std::vector< raw::OpDetWaveform >);
-    std::unique_ptr< std::vector< raw::pmt::WaveformShift >> newPmtShift (new std::vector< raw::pmt::WaveformShift >);
+    std::unique_ptr< std::vector< raw::pmt::BoardAlignment >> newPmtAlign (new std::vector< raw::pmt::BoardAlignment >);
 
     std::unique_ptr< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform> > newPmtBoardAssn (new art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform >);
-    std::unique_ptr< art::Assns<  raw::pmt::WaveformShift, raw::OpDetWaveform> > newPmtShiftAssn (new art::Assns< raw::pmt::WaveformShift, raw::OpDetWaveform >);
+    std::unique_ptr< art::Assns<  raw::pmt::BoardAlignment, raw::OpDetWaveform> > newPmtAlignAssn (new art::Assns< raw::pmt::BoardAlignment, raw::OpDetWaveform >);
 
     art::PtrMaker<raw::OpDetWaveform> make_pmtwf_ptr{e, fPmtNewLabel}; 
-    art::PtrMaker<raw::pmt::WaveformShift> make_shift_ptr{e}; 
+    art::PtrMaker<raw::pmt::BoardAlignment> make_align_ptr{e}; 
     
 
-    //art::PtrMaker<raw::pmt::WaveformShift> make_wfshift_ptr{e};
-    //std::unique_ptr< art::Assns<  raw::pmt::WaveformShift, raw::OpDetWaveform> > pmtShiftAssn (new art::Assns< raw::pmt::WaveformShift, raw::OpDetWaveform >);
+    //art::PtrMaker<raw::pmt::BoardAlignment> make_wfshift_ptr{e};
+    //std::unique_ptr< art::Assns<  raw::pmt::BoardAlignment, raw::OpDetWaveform> > pmtShiftAssn (new art::Assns< raw::pmt::BoardAlignment, raw::OpDetWaveform >);
 
     
 
@@ -410,7 +410,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
 
         //Make new products
         for (auto i : boardJitter){
-            raw::pmt::WaveformShift board_shift;
+            raw::pmt::BoardAlignment board_shift;
             board_shift.boardId = i.first;
             
             std::vector<double> shift_vec;
@@ -419,7 +419,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
             }
             board_shift.shift = shift_vec;
 
-            newPmtShift->push_back(board_shift);
+            newPmtAlign->push_back(board_shift);
         }
     }
 
@@ -445,17 +445,21 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
         //TODO: Fix the fnCAEN - 1, that might crash if data structure is changed
         for (int i = 0 ; i < (fnCAEN - 1); i++){
             for (int j = 0; j < nWfperBoard; j++){
-                for (int k = 0; k < fnChperBoard; k++){
 
+                if (fDebugPmt) std::cout << "   Board " << i << " flash " << j << " has shift value " << boardJitter[i][j] << std::endl;
+
+                for (int k = 0; k < fnChperBoard; k++){
                     int wfIdx = i * nWfperBoard * fnChperBoard + j * fnChperBoard + k;
                     art::Ptr<raw::OpDetWaveform> wf(wf_pmt_v.at(wfIdx));
 
+                    //Get assn
                     std::vector<art::Ptr<raw::pmt::BoardTimingInfo>> wf_board_v(pmtBoardAssn.at(wf.key()));
-                    
-                    art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
-                    art::Ptr<raw::pmt::WaveformShift> wf_shift = make_shift_ptr(i);
-
                     if(wf_board_v.size() != 1 ) throw cet::exception("WaveformAlignment") << "No raw::wf::BoardTimingInfo found associated with raw::OpDetWaveform!";
+
+                    art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
+                    art::Ptr<raw::pmt::BoardAlignment> wf_align = make_align_ptr(i);
+
+                    //TODO: Get cable length + PMT Response from Channel Map Service
                  
                     double new_ts = wf->TimeStamp() + boardJitter[i][j] / 1000; //ns to us
                     std::vector<uint16_t> adc_vec(wf->Waveform().size(), 0);
@@ -470,7 +474,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     art::Ptr<raw::OpDetWaveform> wfPtr = make_pmtwf_ptr(newPmtWf->size()-1);
 
                     newPmtBoardAssn->addSingle(wf_board, wfPtr);
-                    newPmtShiftAssn->addSingle(wf_shift, wfPtr);
+                    newPmtAlignAssn->addSingle(wf_align, wfPtr);
                 }
             }
         }
@@ -483,8 +487,8 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     //Put product in event
     e.put(std::move(newPmtWf), fPmtNewLabel);
     e.put(std::move(newPmtBoardAssn), fPmtBoardNewLabel);
-    e.put(std::move(newPmtShift));
-    e.put(std::move(newPmtShiftAssn), fPmtShiftNewLabel);
+    e.put(std::move(newPmtAlign));
+    e.put(std::move(newPmtAlignAssn), fPmtAlignNewLabel);
 
     //Fill once every event
     fTree->Fill();
@@ -630,11 +634,11 @@ double sbnd::WaveformAlignment::GetFtrigRisingEdge(art::Ptr<raw::OpDetWaveform> 
     amplitude /= 50;
     amplitude -= baseline;
 
-    ////---------Define Rising Edge
+    //---------Define Rising Edge
     int fitLb = risingTickGuess - 30;
     int fitUb = risingTickGuess + 30;
-    g->GetXaxis()->SetRangeUser(950, 1300);
-    //g->GetXaxis()->SetRangeUser(x[fitLb], x[fitUb]);
+    //g->GetXaxis()->SetRangeUser(950, 1300);
+    g->GetXaxis()->SetRangeUser(x[fitLb], x[fitUb]);
 
     std::string rising_edge = "1/(1+exp(([0]-x)/[1]))*[2]+[3]";
 
@@ -703,11 +707,11 @@ void sbnd::WaveformAlignment::PlotPmtFit(TGraph *g, TF1 *fitf, const bool conver
         _plotName << "_BADFIT";
     }
     
-    //gStyle->SetStatX(0.95);
-    //gStyle->SetStatY(0.55);
+    gStyle->SetStatX(0.95);
+    gStyle->SetStatY(0.55);
     gStyle->SetOptStat(0); 
-    //gStyle->SetOptFit(1);
-    gStyle->SetOptFit(0);
+    gStyle->SetOptFit(1);
+    //gStyle->SetOptFit(0);
     gStyle->SetPadTickX(1);
     gStyle->SetPadTickY(1);
 
@@ -745,8 +749,8 @@ void sbnd::WaveformAlignment::PlotPmtFit(TGraph *g, TF1 *fitf, const bool conver
     c->SetRightMargin(0.1);
     c->SetBottomMargin(0.25);
     
-    g->SetMinimum(2000); g->SetMaximum(2100);
-    //g->SetMinimum(1800); g->SetMaximum(6500);
+    //g->SetMinimum(2000); g->SetMaximum(2100);
+    g->SetMinimum(1800); g->SetMaximum(6500);
     g->GetYaxis()->SetNdivisions(505, true);
     g->GetXaxis()->SetNdivisions(515, true);
     g->GetXaxis()->SetTitleOffset(2.1);

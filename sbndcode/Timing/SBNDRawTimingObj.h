@@ -38,13 +38,15 @@ namespace raw {
         std::vector<uint32_t> triggerTimeTag; // ns
     };
 
-    class WaveformShift {
-      // Associate one of these to every opdetwaveform in the board/digitizer, one per trigger
+    //TODO: remove board ID
+    class BoardAlignment {
+      // Associate one of these to every opdetwaveform in the board/digitizer, one per board
       public:
-        WaveformShift() {}; // constructor
-        WaveformShift(unsigned int boardId, std::vector<double> shift) :
+        BoardAlignment() {}; // constructor
+        BoardAlignment(unsigned int boardId, std::vector<double> shift) :
         boardId(boardId), shift(shift) {};
 
+        //TODO: remove boardId after validation check
         unsigned int boardId; //board 0-7
         std::vector<double> shift; //shift per waveform
     };

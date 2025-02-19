@@ -2,7 +2,7 @@
 #include "wfAlignConfig.fcl"
 #include "pmt_channel_map_service.fcl"
 
-process_name: wfAlign  # The process name must NOT contain any underscores
+process_name: WFALIGN  # The process name must NOT contain any underscores
 
 source:
 {
@@ -30,7 +30,7 @@ physics:
 {
     producers:
     {
-        wfalign: @local::wfAlign 
+        wfalign: @local::wfAlign
     }
 
     prod: [ wfalign ]
