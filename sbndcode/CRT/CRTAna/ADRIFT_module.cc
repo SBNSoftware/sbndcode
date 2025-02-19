@@ -91,7 +91,7 @@ private:
     fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTopSaveDirectory;
 
   bool fOnly2HitSpacePoints, fSaveAllFits, fSaveBadFits, fSaveSubset, fTrackLA,
-    fSaveROOTHists;
+    fSaveROOTHists, fAnalysePE;
 
   double fTrackAngleLimit, fPullWindow;
 
@@ -101,23 +101,29 @@ private:
   TTree* fChannelTree;
 
   int _channel, _gdml_id, _mac5, _raw_channel, _tagger, _channel_status;
-  double _area, _y_average, _ped_calib, _ped_fit, _ped_fit_std, _ped_fit_chi2, _ped_peak,
+  double _area, _y_average, _ped_calib, _gain_calib, _ped_fit, _ped_fit_std, _ped_fit_chi2, _ped_peak,
     _ped_reset_fit, _ped_reset_fit_std, _ped_reset_fit_chi2, _ped_reset_peak, _raw_max_chan_rate, _sh_rate, _sp_rate, _tr_rate,
-    _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_peak, _sh_sat_rate, _sh_sat_ratio_total, _sh_sat_ratio_peak,
-    _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_peak, _sp_sat_rate, _sp_sat_ratio_total, _sp_sat_ratio_peak,
-    _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_peak, _tr_sat_rate, _tr_sat_ratio_total, _tr_sat_ratio_peak,
-    _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_peak, _tr_lim_angle_sat_rate,
+    _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_peak, _sh_pe_peak_fit, _sh_pe_peak_fit_chi2, _sh_pe_peak_peak,
+    _sh_sat_rate, _sh_sat_ratio_total, _sh_sat_ratio_peak, _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_peak,
+    _sp_pe_peak_fit, _sp_pe_peak_fit_chi2, _sp_pe_peak_peak, _sp_sat_rate, _sp_sat_ratio_total, _sp_sat_ratio_peak,
+    _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_peak, _tr_pe_peak_fit, _tr_pe_peak_fit_chi2, _tr_pe_peak_peak,
+    _tr_sat_rate, _tr_sat_ratio_total, _tr_sat_ratio_peak, _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_peak,
+    _tr_lim_angle_pe_peak_fit, _tr_lim_angle_pe_peak_fit_chi2, _tr_lim_angle_pe_peak_peak, _tr_lim_angle_sat_rate,
     _tr_lim_angle_sat_ratio_total, _tr_lim_angle_sat_ratio_peak, _sh_ped_to_peak_fit, _sh_ped_reset_to_peak_fit,
-    _tr_by_length_peak_fit, _tr_by_length_peak_fit_chi2, _tr_by_length_peak_peak;
-  bool _horizontal, _ped_fit_converged, _ped_reset_fit_converged, _sh_peak_fit_converged, _sp_peak_fit_converged,
-    _tr_peak_fit_converged, _tr_lim_angle_peak_fit_converged, _tr_by_length_peak_fit_converged;
+    _tr_by_length_peak_fit, _tr_by_length_peak_fit_chi2, _tr_by_length_peak_peak,
+    _tr_by_length_pe_peak_fit, _tr_by_length_pe_peak_fit_chi2, _tr_by_length_pe_peak_peak;
+  bool _horizontal, _ped_fit_converged, _ped_reset_fit_converged, _sh_peak_fit_converged, _sh_pe_peak_fit_converged,
+    _sp_peak_fit_converged, _sp_pe_peak_fit_converged, _tr_peak_fit_converged, _tr_pe_peak_fit_converged, _tr_lim_angle_peak_fit_converged,
+    _tr_lim_angle_pe_peak_fit_converged, _tr_by_length_peak_fit_converged, _tr_by_length_pe_peak_fit_converged;
 
-  std::map<uint, TH1D*> hADCPed, hADCPedReset, hADCMaxChan, hADCSH, hADCSP, hADCTr, hADCTrLA, hADCTrByLength;
+  std::map<uint, TH1D*> hADCPed, hADCPedReset, hADCMaxChan, hADCSH, hPESH, hADCSP, hPESP, hADCTr, hPETr,
+    hADCTrLA, hPETrLA, hADCTrByLength, hPETrByLength;
 
   std::string fPedestalSaveDirectory, fPedestalResetSaveDirectory, fPeakSaveDirectory, fBadPedestalSaveDirectory,
     fBadPedestalResetSaveDirectory, fBadPeakSaveDirectory, fPedestalSubsetSaveDirectory, fPedestalResetSubsetSaveDirectory,
-    fStripHitSubsetSaveDirectory, fSpacePointSubsetSaveDirectory, fTrackSubsetSaveDirectory, fTrackLASubsetSaveDirectory,
-    fTrackByLengthSubsetSaveDirectory;
+    fStripHitSubsetSaveDirectory, fStripHitPESubsetSaveDirectory, fSpacePointSubsetSaveDirectory, fSpacePointPESubsetSaveDirectory,
+    fTrackSubsetSaveDirectory, fTrackPESubsetSaveDirectory, fTrackLASubsetSaveDirectory, fTrackLAPESubsetSaveDirectory,
+    fTrackByLengthSubsetSaveDirectory, fTrackByLengthPESubsetSaveDirectory;
 };
 
 
@@ -137,6 +143,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fSaveSubset               = p.get<bool>("SaveSubset");
   fTrackLA                  = p.get<bool>("TrackLA");
   fSaveROOTHists            = p.get<bool>("SaveROOTHists");
+  fAnalysePE                = p.get<bool>("AnalysePE");
   fTrackAngleLimit          = p.get<double>("TrackAngleLimit");
   fPullWindow               = p.get<double>("PullWindow");
 
@@ -153,6 +160,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree->Branch("y_average", &_y_average);
   fChannelTree->Branch("horizontal", &_horizontal);
   fChannelTree->Branch("ped_calib", &_ped_calib);
+  fChannelTree->Branch("gain_calib", &_gain_calib);
   fChannelTree->Branch("ped_fit", &_ped_fit);
   fChannelTree->Branch("ped_fit_std", &_ped_fit_std);
   fChannelTree->Branch("ped_fit_chi2", &_ped_fit_chi2);
@@ -204,6 +212,32 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
       fChannelTree->Branch("tr_lim_angle_sat_ratio_total", &_tr_lim_angle_sat_ratio_total);
       fChannelTree->Branch("tr_lim_angle_sat_ratio_peak", &_tr_lim_angle_sat_ratio_peak);
     }
+  if(fAnalysePE)
+    {
+      fChannelTree->Branch("sh_pe_peak_fit", &_sh_pe_peak_fit);
+      fChannelTree->Branch("sh_pe_peak_fit_chi2", &_sh_pe_peak_fit_chi2);
+      fChannelTree->Branch("sh_pe_peak_fit_converged", &_sh_pe_peak_fit_converged);
+      fChannelTree->Branch("sh_pe_peak_peak", &_sh_pe_peak_peak);
+      fChannelTree->Branch("sp_pe_peak_fit", &_sp_pe_peak_fit);
+      fChannelTree->Branch("sp_pe_peak_fit_chi2", &_sp_pe_peak_fit_chi2);
+      fChannelTree->Branch("sp_pe_peak_fit_converged", &_sp_pe_peak_fit_converged);
+      fChannelTree->Branch("sp_pe_peak_peak", &_sp_pe_peak_peak);
+      fChannelTree->Branch("tr_pe_peak_fit", &_tr_pe_peak_fit);
+      fChannelTree->Branch("tr_pe_peak_fit_chi2", &_tr_pe_peak_fit_chi2);
+      fChannelTree->Branch("tr_pe_peak_fit_converged", &_tr_pe_peak_fit_converged);
+      fChannelTree->Branch("tr_pe_peak_peak", &_tr_pe_peak_peak);
+      fChannelTree->Branch("tr_by_length_pe_peak_fit", &_tr_by_length_pe_peak_fit);
+      fChannelTree->Branch("tr_by_length_pe_peak_fit_chi2", &_tr_by_length_pe_peak_fit_chi2);
+      fChannelTree->Branch("tr_by_length_pe_peak_fit_converged", &_tr_by_length_pe_peak_fit_converged);
+      fChannelTree->Branch("tr_by_length_pe_peak_peak", &_tr_by_length_pe_peak_peak);
+      if(fTrackLA)
+        {
+          fChannelTree->Branch("tr_lim_angle_pe_peak_fit", &_tr_lim_angle_pe_peak_fit);
+          fChannelTree->Branch("tr_lim_angle_pe_peak_fit_chi2", &_tr_lim_angle_pe_peak_fit_chi2);
+          fChannelTree->Branch("tr_lim_angle_pe_peak_fit_converged", &_tr_lim_angle_pe_peak_fit_converged);
+          fChannelTree->Branch("tr_lim_angle_pe_peak_peak", &_tr_lim_angle_pe_peak_peak);
+        }
+    }
 
   for(int ch = 0; ch < 4480; ++ch)
     {
@@ -217,6 +251,17 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
 
       if(fTrackLA)
         hADCTrLA[ch] = fs->make<TH1D>(Form("hADCTrLA_Channel%i", ch), ";ADC;Tracks", 4300, -.5, 4299.5);
+
+      if(fAnalysePE)
+        {
+          hPESH[ch]         = fs->make<TH1D>(Form("hPESH_Channel%i", ch), ";PE;Strip Hits", 4000, 0, 200);
+          hPESP[ch]         = fs->make<TH1D>(Form("hPESP_Channel%i", ch), ";PE;Space Points", 4000, 0, 200);
+          hPETr[ch]         = fs->make<TH1D>(Form("hPETr_Channel%i", ch), ";PE;Tracks", 4000, 0, 200);
+          hPETrByLength[ch] = fs->make<TH1D>(Form("hPETrByLength_Channel%i", ch), ";PE/Path Length;Tracks", 4000, 0, 200);
+
+          if(fTrackLA)
+            hPETrLA[ch] = fs->make<TH1D>(Form("hPETrLA_Channel%i", ch), ";PE;Tracks", 4000, 0, 200);
+        }
     }
 }
 
@@ -264,13 +309,34 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
       fTrackSubsetSaveDirectory = Form("%s/run%i/subset/tracks", fTopSaveDirectory.c_str(), e.run());
       gSystem->Exec(Form("mkdir -p %s", fTrackSubsetSaveDirectory.c_str()));
 
-      fTrackByLengthSubsetSaveDirectory = Form("%s/run%i/subset/tracks", fTopSaveDirectory.c_str(), e.run());
+      fTrackByLengthSubsetSaveDirectory = Form("%s/run%i/subset/tracks_by_length", fTopSaveDirectory.c_str(), e.run());
       gSystem->Exec(Form("mkdir -p %s", fTrackByLengthSubsetSaveDirectory.c_str()));
 
       if(fTrackLA)
         {
           fTrackLASubsetSaveDirectory = Form("%s/run%i/subset/tracks_limited_angle", fTopSaveDirectory.c_str(), e.run());
           gSystem->Exec(Form("mkdir -p %s", fTrackLASubsetSaveDirectory.c_str()));
+        }
+
+      if(fAnalysePE)
+        {
+          fStripHitPESubsetSaveDirectory = Form("%s/run%i/subset/striphits_pe", fTopSaveDirectory.c_str(), e.run());
+          gSystem->Exec(Form("mkdir -p %s", fStripHitPESubsetSaveDirectory.c_str()));
+
+          fSpacePointPESubsetSaveDirectory = Form("%s/run%i/subset/spacepoints_pe", fTopSaveDirectory.c_str(), e.run());
+          gSystem->Exec(Form("mkdir -p %s", fSpacePointPESubsetSaveDirectory.c_str()));
+
+          fTrackPESubsetSaveDirectory = Form("%s/run%i/subset/tracks_pe", fTopSaveDirectory.c_str(), e.run());
+          gSystem->Exec(Form("mkdir -p %s", fTrackPESubsetSaveDirectory.c_str()));
+
+          fTrackByLengthPESubsetSaveDirectory = Form("%s/run%i/subset/tracks_by_length_pe", fTopSaveDirectory.c_str(), e.run());
+          gSystem->Exec(Form("mkdir -p %s", fTrackByLengthPESubsetSaveDirectory.c_str()));
+
+          if(fTrackLA)
+            {
+              fTrackLAPESubsetSaveDirectory = Form("%s/run%i/subset/tracks_limited_angle_pe", fTopSaveDirectory.c_str(), e.run());
+              gSystem->Exec(Form("mkdir -p %s", fTrackLAPESubsetSaveDirectory.c_str()));
+            }
         }
     }
 
@@ -360,6 +426,12 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
 
       hADCSH[strip_hit->Channel()]->Fill(strip_hit->ADC1() + sipm1.pedestal);
       hADCSH[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() + sipm2.pedestal);
+
+      if(fAnalysePE)
+        {
+          hPESH[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
+          hPESH[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
+        }
     }
 
   // Get CRTSpacePoints
@@ -405,6 +477,12 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
           
           hADCSP[strip_hit->Channel()]->Fill(strip_hit->ADC1() + sipm1.pedestal);
           hADCSP[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() + sipm2.pedestal);
+
+          if(fAnalysePE)
+            {
+              hPESP[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
+              hPESP[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
+            }
         }
     }
 
@@ -456,15 +534,36 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
               hADCTr[strip_hit->Channel()]->Fill(strip_hit->ADC1() + sipm1.pedestal);
               hADCTr[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() + sipm2.pedestal);
 
-              if(strip_hit->ADC1() < 4090)
-                hADCTrByLength[strip_hit->Channel()]->Fill((strip_hit->ADC1() + sipm1.pedestal) / path_length);
-              if(strip_hit->ADC2() < 4090)
-                hADCTrByLength[strip_hit->Channel() + 1]->Fill((strip_hit->ADC2() + sipm2.pedestal) / path_length);
+              if(fAnalysePE)
+                {
+                  hPETr[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
+                  hPETr[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
+                }
 
+              if(strip_hit->ADC1() < 4090)
+                {
+                  hADCTrByLength[strip_hit->Channel()]->Fill((strip_hit->ADC1() + sipm1.pedestal) / path_length);
+
+                  if(fAnalysePE)
+                    hPETrByLength[strip_hit->Channel()]->Fill((strip_hit->ADC1() * sipm1.gain) / path_length);
+                }
+              if(strip_hit->ADC2() < 4090)
+                {
+                  hADCTrByLength[strip_hit->Channel() + 1]->Fill((strip_hit->ADC2() + sipm2.pedestal) / path_length);
+
+                  if(fAnalysePE)
+                    hPETrByLength[strip_hit->Channel() + 1]->Fill((strip_hit->ADC2() * sipm2.gain) / path_length);
+                }
               if(fTrackLA && angle < fTrackAngleLimit)
                 {
                   hADCTrLA[strip_hit->Channel()]->Fill(strip_hit->ADC1() + sipm1.pedestal);
                   hADCTrLA[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() + sipm2.pedestal);
+
+                  if(fAnalysePE)
+                    {
+                      hPETrLA[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
+                      hPETrLA[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
+                    }
                 }
             }
         }
@@ -505,6 +604,7 @@ void sbnd::crt::ADRIFT::endJob()
           _area           = fCRTGeoAlg.StripArea(ch);
           _y_average      = fCRTGeoAlg.StripAverageY(ch);
           _ped_calib      = fCRTGeoAlg.GetSiPM(ch).pedestal;
+          _gain_calib     = fCRTGeoAlg.GetSiPM(ch).gain;
           _horizontal     = _tagger == kBottomTagger || _tagger == kTopLowTagger || _tagger == kTopHighTagger;
 
           if(fSaveSubset && (ch > 1471 && ch < 1728))
@@ -518,6 +618,17 @@ void sbnd::crt::ADRIFT::endJob()
 
               if(fTrackLA)
                 SaveHist(hADCTrLA[ch], fTrackLASubsetSaveDirectory, Form("track_limited_angle_channel_%i", ch), 20, _channel_status);
+
+              if(fAnalysePE)
+                {
+                  SaveHist(hPESH[ch], fStripHitPESubsetSaveDirectory, Form("strip_hit_channel_%i", ch), 20, _channel_status);
+                  SaveHist(hPESP[ch], fSpacePointPESubsetSaveDirectory, Form("space_point_channel_%i", ch), 20, _channel_status);
+                  SaveHist(hPETr[ch], fTrackPESubsetSaveDirectory, Form("track_channel_%i", ch), 20, _channel_status);
+                  SaveHist(hPETrByLength[ch], fTrackByLengthPESubsetSaveDirectory, Form("track_by_length_channel_%i", ch), 20, _channel_status);
+
+                  if(fTrackLA)
+                    SaveHist(hPETrLA[ch], fTrackLAPESubsetSaveDirectory, Form("track_limited_angle_channel_%i", ch), 20, _channel_status);
+                }
             }
 
           PedestalFit(hADCPed[ch], _ped_fit, _ped_fit_std, _ped_fit_chi2, _ped_fit_converged, _channel_status);
@@ -553,6 +664,30 @@ void sbnd::crt::ADRIFT::endJob()
                 {
                   PeakPeak(hADCTrLA[ch], _ped_calib, _tr_lim_angle_peak_peak);
                   PeakFit(hADCTrLA[ch], _tr_lim_angle_peak_peak, _ped_calib, _tr_lim_angle_peak_fit, _tr_lim_angle_peak_fit_chi2, _tr_lim_angle_peak_fit_converged, _channel_status);
+                }
+            }
+
+          if(fAnalysePE)
+            {
+              PeakPeak(hPESH[ch], _ped_calib, _sh_pe_peak_peak);
+              PeakFit(hPESH[ch], _sh_pe_peak_peak, _ped_calib, _sh_pe_peak_fit, _sh_pe_peak_fit_chi2, _sh_pe_peak_fit_converged, _channel_status);
+
+              PeakPeak(hPESP[ch], _ped_calib, _sp_pe_peak_peak);
+              PeakFit(hPESP[ch], _sp_pe_peak_peak, _ped_calib, _sp_pe_peak_fit, _sp_pe_peak_fit_chi2, _sp_pe_peak_fit_converged, _channel_status);
+
+              if(_tagger != kBottomTagger)
+                {
+                  PeakPeak(hPETr[ch], _ped_calib, _tr_pe_peak_peak);
+                  PeakFit(hPETr[ch], _tr_pe_peak_peak, _ped_calib, _tr_pe_peak_fit, _tr_pe_peak_fit_chi2, _tr_pe_peak_fit_converged, _channel_status);
+
+                  PeakPeak(hPETrByLength[ch], _ped_calib, _tr_by_length_pe_peak_peak);
+                  PeakFit(hPETrByLength[ch], _tr_by_length_pe_peak_peak, _ped_calib, _tr_by_length_pe_peak_fit, _tr_by_length_pe_peak_fit_chi2, _tr_by_length_pe_peak_fit_converged, _channel_status);
+
+                  if(fTrackLA)
+                    {
+                      PeakPeak(hPETrLA[ch], _ped_calib, _tr_lim_angle_pe_peak_peak);
+                      PeakFit(hPETrLA[ch], _tr_lim_angle_pe_peak_peak, _ped_calib, _tr_lim_angle_pe_peak_fit, _tr_lim_angle_pe_peak_fit_chi2, _tr_lim_angle_pe_peak_fit_converged, _channel_status);
+                    }
                 }
             }
 
@@ -677,56 +812,66 @@ void sbnd::crt::ADRIFT::Rate(TH1D* hADC, double &rate)
   rate = hADC->GetEntries() / (fNEvents * fPullWindow);
 }
 
-void sbnd::crt::ADRIFT::PeakPeak(TH1D* hADC, const double &ped, double &peak)
+void sbnd::crt::ADRIFT::PeakPeak(TH1D* hist, const double &ped, double &peak)
 {
   int bin = 0;
   double max = std::numeric_limits<double>::lowest();
 
-  for(int i = (int)ped + 20; i < 4000; ++i)
+  const TString name = hist->GetName();
+
+  const int start = name.Contains("PE") ? 0 : (int)ped + 20;
+
+  for(int i = start; i < 4000; ++i)
     {
-      if(hADC->GetBinContent(i) > max)
+      if(hist->GetBinContent(i) > max)
         {
-          max = hADC->GetBinContent(i);
+          max = hist->GetBinContent(i);
           bin = i;
         }
     }
 
-  peak = hADC->GetBinCenter(bin);
+  peak = hist->GetBinCenter(bin);
 }
 
-void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &ped, double &fit,
+void sbnd::crt::ADRIFT::PeakFit(TH1D* hist, const double &peak, const double &ped, double &fit,
                                 double &chi2, bool &converged, bool badChannel)
 {
   TF1 *langau = new TF1("langau", LanGau, ped + 20, 4000, 4);
-  double params[4] = { 10, peak, hADC->GetEntries(), 50 };
+  double params[4] = { 10, peak, hist->GetEntries(), 50 };
   langau->SetParameters(params);
-  const TString name = hADC->GetName();
+  const TString name = hist->GetName();
+  const bool pe      = name.Contains("PE");
   TString ch_name    = name;
   TString type       = "";
 
   if(name.Contains("SH"))
     {
-      ch_name.Remove(0,14);
+      const int end = pe ? 13 : 14;
+      ch_name.Remove(0, end);
       type = "strip_hit";
     }
   else if(name.Contains("SP"))
     {
-      ch_name.Remove(0,14);
+      const int end = pe ? 13 : 14;
+      ch_name.Remove(0, end);
       type = "space_point";
     }
   else if(name.Contains("TrLA"))
     {
-      ch_name.Remove(0,16);
+      const int end = pe ? 15 : 16;
+      ch_name.Remove(0, end);
       type = "track_limited_angle";
     }
   else if(name.Contains("TrByLength"))
     {
-      ch_name.Remove(0,22);
+      const int end = pe ? 21 : 22;
+      ch_name.Remove(0, end);
       type = "track_by_length";
     }
   else if(name.Contains("Tr"))
     {
-      ch_name.Remove(0,14);
+      const int end = pe ? 13 : 14;
+      ch_name.Remove(0, end);
       type = "track";
     }
   else
@@ -734,14 +879,14 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
 
   int ch = std::stoi(ch_name.Data());
 
-  TH1D* hADC2 = (TH1D*) hADC->Clone(name + "_for_fit");
-  hADC2->Rebin(20);
+  TH1D* hist2 = (TH1D*) hist->Clone(name + "_for_fit");
+  hist2->Rebin(20);
 
-  TFitResultPtr fit_result = hADC2->Fit(langau, "QRS");
+  TFitResultPtr fit_result = hist2->Fit(langau, "QRS");
   converged = !(bool)(int(fit_result));
 
   if(!converged && !badChannel)
-    std::cout << "Peak fit has not converged - " << hADC->GetName() << std::endl;
+    std::cout << "Peak fit has not converged - " << hist->GetName() << std::endl;
 
   fit  = langau->GetParameter(1);
   chi2 = langau->GetChisquare() / langau->GetNDF();
@@ -751,9 +896,9 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hADC, const double &peak, const double &pe
       TCanvas *c = new TCanvas(Form("c%s", name.Data()), Form("c%s", name.Data()));
       c->cd();
 
-      hADC2->SetLineColor(kOrange+2);
-      hADC2->SetLineWidth(2);
-      hADC2->Draw("histe");
+      hist2->SetLineColor(kOrange+2);
+      hist2->SetLineWidth(2);
+      hist2->Draw("histe");
       langau->SetLineColor(kSpring-6);
       langau->Draw("same");
 
@@ -804,72 +949,93 @@ void sbnd::crt::ADRIFT::ResetVars()
   _tagger         = std::numeric_limits<int>::lowest();
   _channel_status = std::numeric_limits<int>::lowest();
 
-  _area                         = std::numeric_limits<double>::lowest();
-  _y_average                    = std::numeric_limits<double>::lowest();
-  _ped_calib                    = std::numeric_limits<double>::lowest();
-  _ped_fit                      = std::numeric_limits<double>::lowest();
-  _ped_fit_std                  = std::numeric_limits<double>::lowest();
-  _ped_fit_chi2                 = std::numeric_limits<double>::lowest();
-  _ped_peak                     = std::numeric_limits<double>::lowest();
-  _ped_reset_fit                = std::numeric_limits<double>::lowest();
-  _ped_reset_fit_std            = std::numeric_limits<double>::lowest();
-  _ped_reset_fit_chi2           = std::numeric_limits<double>::lowest();
-  _ped_reset_peak               = std::numeric_limits<double>::lowest();
-  _sh_rate                      = std::numeric_limits<double>::lowest();
-  _sp_rate                      = std::numeric_limits<double>::lowest();
-  _tr_rate                      = std::numeric_limits<double>::lowest();
-  _sh_peak_fit                  = std::numeric_limits<double>::lowest();
-  _sh_peak_fit_chi2             = std::numeric_limits<double>::lowest();
-  _sh_peak_peak                 = std::numeric_limits<double>::lowest();
-  _sh_sat_rate                  = std::numeric_limits<double>::lowest();
-  _sh_sat_ratio_total           = std::numeric_limits<double>::lowest();
-  _sh_sat_ratio_peak            = std::numeric_limits<double>::lowest();
-  _sh_ped_to_peak_fit           = std::numeric_limits<double>::lowest();
-  _sh_ped_reset_to_peak_fit     = std::numeric_limits<double>::lowest();
-  _sp_peak_fit                  = std::numeric_limits<double>::lowest();
-  _sp_peak_fit_chi2             = std::numeric_limits<double>::lowest();
-  _sp_peak_peak                 = std::numeric_limits<double>::lowest();
-  _sp_sat_rate                  = std::numeric_limits<double>::lowest();
-  _sp_sat_ratio_total           = std::numeric_limits<double>::lowest();
-  _sp_sat_ratio_peak            = std::numeric_limits<double>::lowest();
-  _tr_peak_fit                  = std::numeric_limits<double>::lowest();
-  _tr_peak_fit_chi2             = std::numeric_limits<double>::lowest();
-  _tr_peak_peak                 = std::numeric_limits<double>::lowest();
-  _tr_sat_rate                  = std::numeric_limits<double>::lowest();
-  _tr_sat_ratio_total           = std::numeric_limits<double>::lowest();
-  _tr_sat_ratio_peak            = std::numeric_limits<double>::lowest();
-  _tr_by_length_peak_fit        = std::numeric_limits<double>::lowest();
-  _tr_by_length_peak_fit_chi2   = std::numeric_limits<double>::lowest();
-  _tr_by_length_peak_peak       = std::numeric_limits<double>::lowest();
-  _tr_lim_angle_peak_fit        = std::numeric_limits<double>::lowest();
-  _tr_lim_angle_peak_fit_chi2   = std::numeric_limits<double>::lowest();
-  _tr_lim_angle_peak_peak       = std::numeric_limits<double>::lowest();
-  _tr_lim_angle_sat_rate        = std::numeric_limits<double>::lowest();
-  _tr_lim_angle_sat_ratio_total = std::numeric_limits<double>::lowest();
-  _tr_lim_angle_sat_ratio_peak  = std::numeric_limits<double>::lowest();
+  _area                          = std::numeric_limits<double>::lowest();
+  _y_average                     = std::numeric_limits<double>::lowest();
+  _ped_calib                     = std::numeric_limits<double>::lowest();
+  _gain_calib                    = std::numeric_limits<double>::lowest();
+  _ped_fit                       = std::numeric_limits<double>::lowest();
+  _ped_fit_std                   = std::numeric_limits<double>::lowest();
+  _ped_fit_chi2                  = std::numeric_limits<double>::lowest();
+  _ped_peak                      = std::numeric_limits<double>::lowest();
+  _ped_reset_fit                 = std::numeric_limits<double>::lowest();
+  _ped_reset_fit_std             = std::numeric_limits<double>::lowest();
+  _ped_reset_fit_chi2            = std::numeric_limits<double>::lowest();
+  _ped_reset_peak                = std::numeric_limits<double>::lowest();
+  _sh_rate                       = std::numeric_limits<double>::lowest();
+  _sp_rate                       = std::numeric_limits<double>::lowest();
+  _tr_rate                       = std::numeric_limits<double>::lowest();
+  _sh_peak_fit                   = std::numeric_limits<double>::lowest();
+  _sh_peak_fit_chi2              = std::numeric_limits<double>::lowest();
+  _sh_peak_peak                  = std::numeric_limits<double>::lowest();
+  _sh_sat_rate                   = std::numeric_limits<double>::lowest();
+  _sh_sat_ratio_total            = std::numeric_limits<double>::lowest();
+  _sh_sat_ratio_peak             = std::numeric_limits<double>::lowest();
+  _sh_ped_to_peak_fit            = std::numeric_limits<double>::lowest();
+  _sh_ped_reset_to_peak_fit      = std::numeric_limits<double>::lowest();
+  _sp_peak_fit                   = std::numeric_limits<double>::lowest();
+  _sp_peak_fit_chi2              = std::numeric_limits<double>::lowest();
+  _sp_peak_peak                  = std::numeric_limits<double>::lowest();
+  _sp_sat_rate                   = std::numeric_limits<double>::lowest();
+  _sp_sat_ratio_total            = std::numeric_limits<double>::lowest();
+  _sp_sat_ratio_peak             = std::numeric_limits<double>::lowest();
+  _tr_peak_fit                   = std::numeric_limits<double>::lowest();
+  _tr_peak_fit_chi2              = std::numeric_limits<double>::lowest();
+  _tr_peak_peak                  = std::numeric_limits<double>::lowest();
+  _tr_sat_rate                   = std::numeric_limits<double>::lowest();
+  _tr_sat_ratio_total            = std::numeric_limits<double>::lowest();
+  _tr_sat_ratio_peak             = std::numeric_limits<double>::lowest();
+  _tr_by_length_peak_fit         = std::numeric_limits<double>::lowest();
+  _tr_by_length_peak_fit_chi2    = std::numeric_limits<double>::lowest();
+  _tr_by_length_peak_peak        = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_peak_fit         = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_peak_fit_chi2    = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_peak_peak        = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_sat_rate         = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_sat_ratio_total  = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_sat_ratio_peak   = std::numeric_limits<double>::lowest();
+  _sh_pe_peak_fit                = std::numeric_limits<double>::lowest();
+  _sh_pe_peak_fit_chi2           = std::numeric_limits<double>::lowest();
+  _sh_pe_peak_peak               = std::numeric_limits<double>::lowest();
+  _sp_pe_peak_fit                = std::numeric_limits<double>::lowest();
+  _sp_pe_peak_fit_chi2           = std::numeric_limits<double>::lowest();
+  _sp_pe_peak_peak               = std::numeric_limits<double>::lowest();
+  _tr_pe_peak_fit                = std::numeric_limits<double>::lowest();
+  _tr_pe_peak_fit_chi2           = std::numeric_limits<double>::lowest();
+  _tr_pe_peak_peak               = std::numeric_limits<double>::lowest();
+  _tr_by_length_pe_peak_fit      = std::numeric_limits<double>::lowest();
+  _tr_by_length_pe_peak_fit_chi2 = std::numeric_limits<double>::lowest();
+  _tr_by_length_pe_peak_peak     = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_pe_peak_fit      = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_pe_peak_fit_chi2 = std::numeric_limits<double>::lowest();
+  _tr_lim_angle_pe_peak_peak     = std::numeric_limits<double>::lowest();
 
-  _horizontal                      = false;
-  _ped_fit_converged               = false;
-  _ped_reset_fit_converged         = false;
-  _sh_peak_fit_converged           = false;
-  _sp_peak_fit_converged           = false;
-  _tr_peak_fit_converged           = false;
-  _tr_by_length_peak_fit_converged = false;
-  _tr_lim_angle_peak_fit_converged = false;
+  _horizontal                         = false;
+  _ped_fit_converged                  = false;
+  _ped_reset_fit_converged            = false;
+  _sh_peak_fit_converged              = false;
+  _sp_peak_fit_converged              = false;
+  _tr_peak_fit_converged              = false;
+  _tr_by_length_peak_fit_converged    = false;
+  _tr_lim_angle_peak_fit_converged    = false;
+  _sh_pe_peak_fit_converged           = false;
+  _sp_pe_peak_fit_converged           = false;
+  _tr_pe_peak_fit_converged           = false;
+  _tr_by_length_pe_peak_fit_converged = false;
+  _tr_lim_angle_pe_peak_fit_converged = false;
 }
 
-void sbnd::crt::ADRIFT::SaveHist(TH1D *hADC, std::string &saveDir, std::string saveName, int rebin, bool badChannel)
+void sbnd::crt::ADRIFT::SaveHist(TH1D *hist, std::string &saveDir, std::string saveName, int rebin, bool badChannel)
 {
   TCanvas *c = new TCanvas(Form("c%s", saveName.c_str()), Form("c%s", saveName.c_str()));
   c->cd();
 
-  const TString name = hADC->GetName();
-  TH1D* hADC2 = (TH1D*) hADC->Clone(name + "_for_save");
+  const TString name = hist->GetName();
+  TH1D* hist2 = (TH1D*) hist->Clone(name + "_for_save");
 
-  hADC2->SetLineColor(kOrange+2);
-  hADC2->SetLineWidth(2);
-  hADC2->Rebin(rebin);
-  hADC2->Draw("histe");
+  hist2->SetLineColor(kOrange+2);
+  hist2->SetLineWidth(2);
+  hist2->Rebin(rebin);
+  hist2->Draw("histe");
 
   if(badChannel)
     {

@@ -38,6 +38,7 @@ physics:
       SaveSubset:               false
       TrackLA:                  false
       SaveROOTHists:            true
+      AnalysePE:                true
       TrackAngleLimit:          20
       PullWindow:               0.35
     }
