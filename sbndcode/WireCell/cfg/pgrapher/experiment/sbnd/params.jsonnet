@@ -120,11 +120,6 @@ base {
         // For running in LArSoft, the simulation must be in fixed time mode. 
         fixed: true,
 
-        // The "absolute" time (ie, relative to trigger time?) that the lower edge
-        // of final readout tick #0 should correspond to.  This is a
-        // "fixed" notion.
-        local tick0_time = -205*wc.us, // updated in January 2025, front porch in data = 410 ticks
-
         // Open the ductor's gate a bit early.
         local response_time_offset = $.det.response_plane / $.lar.drift_speed,
         local response_nticks = wc.roundToInt(response_time_offset / $.daq.tick),
@@ -132,7 +127,7 @@ base {
         ductor : {
             nticks: $.daq.nticks + response_nticks,
             readout_time: self.nticks * $.daq.tick,
-            start_time: tick0_time - response_time_offset,
+            start_time: $.sim.tick0_time - response_time_offset,
         },
 
         // To counter the enlarged duration of the ductor, a Reframer

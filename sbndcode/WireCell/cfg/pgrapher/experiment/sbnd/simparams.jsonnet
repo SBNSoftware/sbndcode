@@ -76,6 +76,13 @@ base {
     continuous: false,
     fluctuate: false,
 
+    // The "absolute" time (ie, relative to trigger time?) that the lower edge
+    // of final readout tick #0 should correspond to.  This is a
+    // "fixed" notion.
+    // note: should be overriden by extVar in main jsonnet to maintain consistency
+    // with the larsoft clock service
+    local tick0_time = -200*wc.us, 
+
     //ductor : super.ductor {
     //    start_time: $.daq.start_time - $.elec.fields.drift_dt + $.trigger.time,
     //},
