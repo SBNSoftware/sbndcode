@@ -55,8 +55,17 @@
 #include "lardataobj/AnalysisBase/T0.h"
 
 // Geometry and mapping
-#include "larcore/Geometry/WireReadout.h"
+#include "larcore/Geometry/Geometry.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+
+// artdaq includes
+#include "sbndaq-artdaq-core/Overlays/SBND/PTB_content.h"
+
+// ptb include
+#include "sbndcode/Decoders/PTB/sbndptb.h"
+
+// sbnobj include
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 
 
 #define xdet_size 1000
@@ -125,6 +134,9 @@ private:
   bool fSaveOpHits;
   bool fSaveOpFlashes;
   bool fSaveCosmicId;
+  bool fSaveOnlyStampTime;
+  bool fSavePTB;
+  bool fSaveSPECTDC;
 
   // Configuration parameters
   int fVerbosity;
@@ -150,6 +162,8 @@ private:
   std::string fCosmicIdModuleLabel;
   std::string fOpT0FinderModuleLabel;
   std::string fSimpleFlashMatchModuleLabel;
+  std::string fPTBLabel; 
+  std::string fSPECTDCLabel;
 
   // Fiducial volume for MC Particles
   std::vector<int> fG4BufferBoxX;
@@ -159,17 +173,22 @@ private:
 
   // PDS mapping and geometry
   opdet::sbndPDMapAlg fPDSMap;
-  geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
+  art::ServiceHandle<geo::Geometry> fGeoService;
 
   static constexpr double fDefaultSimIDE = -999.;
 
   // TTrees
   TTree *fPDSMapTree;
   TTree *fTree;
+  TTree *fPTBTree;
+  TTree *fSPECTDCTree;
   TTree *fPerTrackTree;
   
   unsigned int _eventID, _runID, _subrunID;
   
+  uint32_t fspectdc_etrig_ch;
+  uint32_t fspectdc_ftrig_ch;
+
   // Saving MCTruth
   std::vector <double> _nuvT;
   std::vector <double> _nuvX;
@@ -220,7 +239,7 @@ private:
   std::vector < std::vector <double> > _signalsDigi;
   std::vector <double> _stampTime;
   std::vector <int> _opChDigi;
-
+  std::vector<int> _waveformLength;
   // Saving deconvolved signals
   std::vector < std::vector <double> > _signalsDeco;
   std::vector <double> _stampTimeDeco;
@@ -258,6 +277,14 @@ private:
   std::vector<std::vector<double>> _flash_ophit_width;
   std::vector<std::vector<double>> _flash_ophit_pe;
   std::vector<std::vector<int>> _flash_ophit_ch;
+  std::vector<double> _llt_timestamp;
+  std::vector<int> _llt_trigger_word;
+  std::vector<std::vector<int>> _llt_trigger_type;
+  std::vector<double> _hlt_timestamp;
+  std::vector<int> _hlt_trigger_word;
+  std::vector<std::vector<int>> _hlt_trigger_type;
+  std::vector<int> _ftrig_time;
+
 
   // Cosmic ID
   std::vector<double> _CRUMBSScore;

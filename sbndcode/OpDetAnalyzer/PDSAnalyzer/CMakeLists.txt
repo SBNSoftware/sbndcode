@@ -6,7 +6,12 @@ set(MODULE_LIBRARIES
     art::Persistency_Common
     art::Persistency_Provenance
     art::Utilities
-
+    sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
+    sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
+    sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
+    
+    sbnobj::SBND_Timing
+    
     ROOT::Tree
     ROOT::Core
     
