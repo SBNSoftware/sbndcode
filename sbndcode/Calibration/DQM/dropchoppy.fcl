@@ -11,9 +11,9 @@ services:
   RandomNumberGenerator: {} 
   message:              @local::sbnd_message_services_prod_debug
   FileCatalogMetadata:  @local::art_file_catalog_mc
-  TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults
-  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
-  ExptGeoHelperInterface:    @local::sbnd_geometry_helper
+  TPCChannelMapService: @local::SBNDTPCChannelMapServiceDefaults    
+  AuxDetGeometry: @local::sbnd_auxdetgeo
+  WireReadout:               @local::sbnd_wire_readout
   Geometry:                  @local::sbnd_geo
   GeometryConfigurationWriter:    {}
   @table::sbnd_basic_services
