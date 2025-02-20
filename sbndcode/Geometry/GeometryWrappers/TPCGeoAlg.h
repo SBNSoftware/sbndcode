@@ -20,9 +20,8 @@
 #include "messagefacility/MessageLogger/MessageLogger.h" 
 
 // LArSoft
-#include "larcore/Geometry/Geometry.h"
-#include "larcore/CoreUtils/ServiceUtil.h"
-#include "larcorealg/Geometry/GeometryCore.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
+#include "larcorealg/Geometry/fwd.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "lardataobj/RecoBase/Hit.h"
 
@@ -58,11 +57,11 @@ namespace sbnd{
     bool InsideTPC(geo::Point_t point, const geo::TPCGeo& tpc, double buffer=0.);
 
     // Determine which TPC a collection of hits is detected in (-1 if multiple)
-    int DetectedInTPC(std::vector<art::Ptr<recob::Hit>> hits);
+    int DetectedInTPC(std::vector<art::Ptr<recob::Hit>> const& hits);
     // Determine the drift direction for a collection of hits (-1, 0 or 1 assuming drift in X)
-    int DriftDirectionFromHits(std::vector<art::Ptr<recob::Hit>> hits);
+    int DriftDirectionFromHits(std::vector<art::Ptr<recob::Hit>> const& hits);
     // Work out the drift limits for a collection of hits
-    std::pair<double, double> XLimitsFromHits(std::vector<art::Ptr<recob::Hit>> hits);
+    std::pair<double, double> XLimitsFromHits(std::vector<art::Ptr<recob::Hit>> const& hits);
 
     double MinDistToWall(geo::Point_t point);
 
@@ -91,7 +90,7 @@ namespace sbnd{
     double fCpaWidth;
 
     geo::GeometryCore const* fGeometryService;
-
+    geo::WireReadoutGeom const* fChannelMap;
   };
 
 }

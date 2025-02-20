@@ -12,4 +12,5 @@ physics.producers.crtspacepoints: @local::crtspacepointproducer_data_sbnd
 physics.producers.crttracks:      @local::crttrackproducer_data_sbnd
 
 outputs.out1.outputCommands: [ "keep *_*_*_*",
-                               "drop *_daq_*_*" ]
+                               "drop *_daq_*_*",
+                               "keep *_daq_RawEventHeader_*" ]

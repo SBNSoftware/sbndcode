@@ -1,0 +1,61 @@
+#include "SBNDCVNMapper.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+#include "larfft_sbnd.fcl"
+#include "signalservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+process_name: SBNDCVNEVALUATOR
+
+services:
+{
+  RandomNumberGenerator:     {}                                 # required by fuzzyCluster
+  message:                   @local::sbnd_message_services_prod # from messages_sbnd.fcl
+  FileCatalogMetadata:       @local::sbnd_file_catalog_mc       # from sam_sbnd.fcl
+                             @table::sbnd_services              # from services_sbnd.fcl
+  LArFFT:                    @local::sbnd_larfft
+  SignalShapingServiceSBND:  @local::sbnd_signalshapingservice  # from signalservices_sbnd.fcl
+  ParticleInventoryService:  @local::standard_particleinventoryservice
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1
+}
+
+
+physics:
+{
+ producers:{
+   cvn: @local::standard_sbndcvnevaluatorslc
+ }
+ 
+ filters:  {} 
+ 
+ analyzers:{}
+ 
+ reco: [ cvn ]
+ 
+ stream: [ out ]
+ 
+ trigger_paths: [ reco ] 
+ 
+ end_paths: [ stream ]
+}
+
+outputs:
+{
+ out:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   #SelectEvents: [ reco ]
+   fastCloning: true
+   fileName: @local::sbnd_rootoutput.fileName
+ } 
+}
+
