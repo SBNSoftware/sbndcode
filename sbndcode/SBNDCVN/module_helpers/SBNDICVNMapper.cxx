@@ -100,7 +100,7 @@ template <class T, class U> void SBNDICVNMapper<T, U>::produce(art::Event& evt)
 	     std::vector<art::Ptr<U>> slicehits = findManyHits.at(slice.key());
 	     fProducer.Set_fT0_value(min_T0);
 	     PixelMap pm = fProducer.SBNDCreateMap(detProp, slicehits);
-	     auto nhits = fProducer.NROI();
+	     auto nhits = fProducer.TotHits();
              pm.SetTotHits(nhits);
 	     //pm.fSliceID = slice->ID();
              
@@ -130,7 +130,7 @@ template <class T, class U> void SBNDICVNMapper<T, U>::produce(art::Event& evt)
 
        auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(evt);
        PixelMap pm = fProducer.SBNDCreateMap(detProp, hitlist);
-       auto nhits = fProducer.NROI();
+       auto nhits = fProducer.TotHits();
        pm.SetTotHits(nhits);
 
        if (nhits > fMinClusterHits) pmCol->push_back(pm);
