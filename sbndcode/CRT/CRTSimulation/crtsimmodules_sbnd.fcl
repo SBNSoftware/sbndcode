@@ -62,7 +62,7 @@ standard_sbnd_crtsimparams: {
   # Minimum time between energy deposits that SiPMs can resolve [ns]
   SipmTimeResponse: 2.0
 
-  AdcSaturation: 4095
+  AdcSaturation: 4089
 
   DeadTime: 22000
 
