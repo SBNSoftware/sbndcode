@@ -429,8 +429,10 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
 
       if(fAnalysePE)
         {
-          hPESH[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
-          hPESH[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
+          if((strip_hit->ADC1() + sipm1.pedestal) < 4089)
+            hPESH[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
+          if((strip_hit->ADC2() + sipm2.pedestal) < 4089)
+            hPESH[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
         }
     }
 
@@ -480,8 +482,10 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
 
           if(fAnalysePE)
             {
-              hPESP[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
-              hPESP[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
+              if((strip_hit->ADC1() + sipm1.pedestal) < 4089)
+                hPESP[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
+              if((strip_hit->ADC2() + sipm2.pedestal) < 4089)
+                hPESP[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
             }
         }
     }
@@ -536,22 +540,24 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
 
               if(fAnalysePE)
                 {
-                  hPETr[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
-                  hPETr[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
+                  if((strip_hit->ADC1() + sipm1.pedestal) < 4089)
+                    hPETr[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
+                  if((strip_hit->ADC2() + sipm2.pedestal) < 4089)
+                    hPETr[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
                 }
 
-              if(strip_hit->ADC1() < 4090)
+              if((strip_hit->ADC1() + sipm1.pedestal) < 4089)
                 {
                   hADCTrByLength[strip_hit->Channel()]->Fill((strip_hit->ADC1() + sipm1.pedestal) / path_length);
 
-                  if(fAnalysePE)
+                  if(fAnalysePE && (strip_hit->ADC1() + sipm1.pedestal) < 4089)
                     hPETrByLength[strip_hit->Channel()]->Fill((strip_hit->ADC1() * sipm1.gain) / path_length);
                 }
-              if(strip_hit->ADC2() < 4090)
+              if((strip_hit->ADC2() + sipm2.pedestal) < 4089)
                 {
                   hADCTrByLength[strip_hit->Channel() + 1]->Fill((strip_hit->ADC2() + sipm2.pedestal) / path_length);
 
-                  if(fAnalysePE)
+                  if(fAnalysePE && (strip_hit->ADC2() + sipm2.pedestal) < 4089)
                     hPETrByLength[strip_hit->Channel() + 1]->Fill((strip_hit->ADC2() * sipm2.gain) / path_length);
                 }
               if(fTrackLA && angle < fTrackAngleLimit)
@@ -561,8 +567,10 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
 
                   if(fAnalysePE)
                     {
-                      hPETrLA[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
-                      hPETrLA[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
+                      if((strip_hit->ADC1() + sipm1.pedestal) < 4089)
+                        hPETrLA[strip_hit->Channel()]->Fill(strip_hit->ADC1() * sipm1.gain);
+                      if((strip_hit->ADC2() + sipm2.pedestal) < 4089)
+                        hPETrLA[strip_hit->Channel() + 1]->Fill(strip_hit->ADC2() * sipm2.gain);
                     }
                 }
             }
@@ -836,13 +844,19 @@ void sbnd::crt::ADRIFT::PeakPeak(TH1D* hist, const double &ped, double &peak)
 void sbnd::crt::ADRIFT::PeakFit(TH1D* hist, const double &peak, const double &ped, double &fit,
                                 double &chi2, bool &converged, bool badChannel)
 {
-  TF1 *langau = new TF1("langau", LanGau, ped + 20, 4000, 4);
-  double params[4] = { 10, peak, hist->GetEntries(), 50 };
-  langau->SetParameters(params);
   const TString name = hist->GetName();
   const bool pe      = name.Contains("PE");
   TString ch_name    = name;
   TString type       = "";
+
+  const double start = pe ? 0 : ped + 20;
+  const double end   = pe ? 200 : 4000;
+  const double width = pe ? 0.25 : 10;
+  const double sigma = pe ? 1 : 50;
+
+  TF1 *langau = new TF1("langau", LanGau, start, end, 4);
+  double params[4] = { width, peak, hist->GetEntries(), sigma };
+  langau->SetParameters(params);
 
   if(name.Contains("SH"))
     {

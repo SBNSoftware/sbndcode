@@ -2,3 +2,4 @@
 
 physics.analyzers.adrift.PullWindow: 0.05
 physics.analyzers.adrift.TrackLA:    false
+physics.analyzers.adrift.SaveSubset: true
