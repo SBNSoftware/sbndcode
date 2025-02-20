@@ -629,13 +629,13 @@ void sbnd::crt::ADRIFT::endJob()
 
               if(fAnalysePE)
                 {
-                  SaveHist(hPESH[ch], fStripHitPESubsetSaveDirectory, Form("strip_hit_channel_%i", ch), 20, _channel_status);
-                  SaveHist(hPESP[ch], fSpacePointPESubsetSaveDirectory, Form("space_point_channel_%i", ch), 20, _channel_status);
-                  SaveHist(hPETr[ch], fTrackPESubsetSaveDirectory, Form("track_channel_%i", ch), 20, _channel_status);
-                  SaveHist(hPETrByLength[ch], fTrackByLengthPESubsetSaveDirectory, Form("track_by_length_channel_%i", ch), 20, _channel_status);
+                  SaveHist(hPESH[ch], fStripHitPESubsetSaveDirectory, Form("strip_hit_pe_channel_%i", ch), 20, _channel_status);
+                  SaveHist(hPESP[ch], fSpacePointPESubsetSaveDirectory, Form("space_point_pe_channel_%i", ch), 20, _channel_status);
+                  SaveHist(hPETr[ch], fTrackPESubsetSaveDirectory, Form("track_pe_channel_%i", ch), 20, _channel_status);
+                  SaveHist(hPETrByLength[ch], fTrackByLengthPESubsetSaveDirectory, Form("track_by_length_pe_channel_%i", ch), 20, _channel_status);
 
                   if(fTrackLA)
-                    SaveHist(hPETrLA[ch], fTrackLAPESubsetSaveDirectory, Form("track_limited_angle_channel_%i", ch), 20, _channel_status);
+                    SaveHist(hPETrLA[ch], fTrackLAPESubsetSaveDirectory, Form("track_limited_angle_pe_channel_%i", ch), 20, _channel_status);
                 }
             }
 
@@ -924,15 +924,31 @@ void sbnd::crt::ADRIFT::PeakFit(TH1D* hist, const double &peak, const double &pe
           t->Draw();
         }
 
-      if(converged)
+      if(pe)
         {
-          c->SaveAs(Form("%s/peak_fit_%s_channel_%s.png", fPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
-          c->SaveAs(Form("%s/peak_fit_%s_channel_%s.pdf", fPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+          if(converged)
+            {
+              c->SaveAs(Form("%s/peak_fit_%s_pe_channel_%s.png", fPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+              c->SaveAs(Form("%s/peak_fit_%s_pe_channel_%s.pdf", fPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+            }
+          else
+            {
+              c->SaveAs(Form("%s/peak_fit_%s_pe_channel_%s.png", fBadPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+              c->SaveAs(Form("%s/peak_fit_%s_pe_channel_%s.pdf", fBadPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+            }
         }
       else
         {
-          c->SaveAs(Form("%s/peak_fit_%s_channel_%s.png", fBadPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
-          c->SaveAs(Form("%s/peak_fit_%s_channel_%s.pdf", fBadPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+          if(converged)
+            {
+              c->SaveAs(Form("%s/peak_fit_%s_channel_%s.png", fPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+              c->SaveAs(Form("%s/peak_fit_%s_channel_%s.pdf", fPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+            }
+          else
+            {
+              c->SaveAs(Form("%s/peak_fit_%s_channel_%s.png", fBadPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+              c->SaveAs(Form("%s/peak_fit_%s_channel_%s.pdf", fBadPeakSaveDirectory.c_str(), type.Data(), ch_name.Data()));
+            }
         }
     }
 }
