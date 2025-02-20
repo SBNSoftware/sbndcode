@@ -1,5 +1,6 @@
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
+#include "opt0finder_sbnd_data.fcl"
 #include "standard_reco2_sbnd.fcl"
 
 services:
@@ -16,10 +17,12 @@ physics.producers:
     crtclustering:  @local::crtclusterproducer_data_sbnd
     crtspacepoints: @local::crtspacepointproducer_data_sbnd
     crttracks:      @local::crttrackproducer_data_sbnd
+    opt0finder:     @local::sbnd_opt0_finder_data
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  crtclustering, crtspacepoints, crttracks]
+  crtclustering, crtspacepoints, crttracks,
+  opt0finder]
 #  crtclustering, crtspacepoints, crttracks, cvn ]
 
 physics.analyzers.caloskim.G4producer: ""
