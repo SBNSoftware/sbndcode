@@ -123,7 +123,7 @@ base {
         // The "absolute" time (ie, relative to trigger time?) that the lower edge
         // of final readout tick #0 should correspond to.
         // this is the default value unless overridden with extVar in main
-        tick0_time: -200 * wc.us,
+        tick0_time: -205 * wc.us,
 
         // Open the ductor's gate a bit early.
         local response_time_offset = $.det.response_plane / $.lar.drift_speed,
