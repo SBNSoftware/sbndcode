@@ -26,6 +26,7 @@
 #include "canvas/Utilities/InputTag.h"
 
 // LArSoft includes
+#include "larcore/Geometry/AuxDetGeometry.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
 #include "larcorealg/Geometry/PlaneGeo.h"
@@ -33,6 +34,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/OpHit.h"
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -152,8 +154,8 @@ private:
   void ResetCrtSoftTriggerVars();
   /// Resets crossing muon tracks tree variables
   void ResetMuonTracksVars(int n);
-  /// Resets crossing muon hit tree variables 
-  void ResetMuonHitVars(int n); 
+  /// Resets crossing muon hit tree variables
+  void ResetMuonHitVars(int n);
   /// Resize the data structure for MCNeutrino particles
   void ResizeMCNeutrino(int nNeutrinos);
   /// Resize the data structure for Genie primaries
@@ -266,29 +268,29 @@ private:
   std::vector<int> _pmtTrigger_npmtshigh;    ///< number of pmt pairs above threshold, index = time during trigger window (usually beam spill)
   int _pmtTrigger_maxpassed;    ///< maximum number of pmt pairs above threshold during trigger window (usually beam spill)
 
-  // PMT software trigger variables 
-  bool   _pmtSoftTrigger_foundBeamTrigger;   /// Whether the beam spill was found or not 
+  // PMT software trigger variables
+  bool   _pmtSoftTrigger_foundBeamTrigger;   /// Whether the beam spill was found or not
   int    _pmtSoftTrigger_tts;                /// Trigger Time Stamp (TTS), ns (relative to start of beam spill)
   double _pmtSoftTrigger_promptPE;           /// Total photoelectron count 100 ns after the TTS
-  double _pmtSoftTrigger_prelimPE;           /// Total photoelectron count before the TTS, during the beam spill             
+  double _pmtSoftTrigger_prelimPE;           /// Total photoelectron count before the TTS, during the beam spill
   int    _pmtSoftTrigger_nAboveThreshold;    /// number of individual PMTs above ADC threshold (fcl) during the beam spill
-  // std::vector<sbnd::trigger::pmtInfo> _pmtSoftTrigger_pmtInfoVec; /// vector of PMT information 
+  // std::vector<sbnd::trigger::pmtInfo> _pmtSoftTrigger_pmtInfoVec; /// vector of PMT information
 
   // CRT software trigger variables
   int    _crtSoftTrigger_hitsperplane[7];       ///< Number of (very low level) CRT hits per plane
 
-  // Muon track variables 
+  // Muon track variables
   int _nmuontrks;                            ///< number of muon tracks
   std::vector<double> _muontrk_t0;           ///< t0 (time of interaction)
   std::vector<float>  _muontrk_x1;           ///< x coordinate closer to anode
-  std::vector<float>  _muontrk_y1;           ///< y coordinate closer to anode 
-  std::vector<float>  _muontrk_z1;           ///< z coordinate closer to anode 
-  std::vector<float>  _muontrk_x2;           ///< x coordinate closer to cathode 
-  std::vector<float>  _muontrk_y2;           ///< y coordinate closer to cathode 
+  std::vector<float>  _muontrk_y1;           ///< y coordinate closer to anode
+  std::vector<float>  _muontrk_z1;           ///< z coordinate closer to anode
+  std::vector<float>  _muontrk_x2;           ///< x coordinate closer to cathode
+  std::vector<float>  _muontrk_y2;           ///< y coordinate closer to cathode
   std::vector<float>  _muontrk_z2;           ///< z coordinate closer to cathode
-  std::vector<float>  _muontrk_theta_xz;     ///< theta_xz trajectory angle 
-  std::vector<float>  _muontrk_theta_yz;     ///< theta_yz trajectory angle 
-  std::vector<int>    _muontrk_tpc;          ///< tpc that muon is located in 
+  std::vector<float>  _muontrk_theta_xz;     ///< theta_xz trajectory angle
+  std::vector<float>  _muontrk_theta_yz;     ///< theta_yz trajectory angle
+  std::vector<int>    _muontrk_tpc;          ///< tpc that muon is located in
   std::vector<int>    _muontrk_type;         ///< type of muon track
 
   // Muon Hit variables
@@ -300,7 +302,7 @@ private:
   std::vector<int>    _mhit_channel;         ///< Channel where the hit belongs to
   std::vector<double> _mhit_peakT;           ///< Hit peak time
   std::vector<double> _mhit_charge;          ///< Hit charge
-  
+
   //mctruth information
   size_t MaxMCNeutrinos;     ///! The number of MCNeutrinos there is currently room for
   Int_t     mcevts_truth;                     ///< number of neutrino Int_teractions in the spill
@@ -347,12 +349,12 @@ private:
 
   //MCParticle Info
   size_t MaxMCParticles = 0;
-  Int_t     mcpart_no_primaries;                 
-  std::vector<Int_t>    mcpart_pdg;              
-  std::vector<Int_t>    mcpart_status;           
+  Int_t     mcpart_no_primaries;
+  std::vector<Int_t>    mcpart_pdg;
+  std::vector<Int_t>    mcpart_status;
   std::vector<std::string>    mcpart_process;
   std::vector<std::string>    mcpart_endprocess;
-  std::vector<Float_t>  mcpart_Eng;              
+  std::vector<Float_t>  mcpart_Eng;
   std::vector<Float_t>  mcpart_EndE;
   std::vector<Float_t>  mcpart_Mass;
   std::vector<Float_t>  mcpart_Px;
@@ -362,13 +364,13 @@ private:
   std::vector<Float_t>  mcpart_StartPointx;
   std::vector<Float_t>  mcpart_StartPointy;
   std::vector<Float_t>  mcpart_StartPointz;
-  std::vector<Float_t>  mcpart_StartT;  
-  std::vector<Float_t>  mcpart_EndT;          
+  std::vector<Float_t>  mcpart_StartT;
+  std::vector<Float_t>  mcpart_EndT;
   std::vector<Float_t>  mcpart_EndPointx;
   std::vector<Float_t>  mcpart_EndPointy;
   std::vector<Float_t>  mcpart_EndPointz;
-  std::vector<Float_t>  mcpart_theta_xz;    
-  std::vector<Float_t>  mcpart_theta_yz;    
+  std::vector<Float_t>  mcpart_theta_xz;
+  std::vector<Float_t>  mcpart_theta_yz;
   std::vector<Int_t>    mcpart_NumberDaughters;
   std::vector<Int_t>    mcpart_TrackId;
   std::vector<Int_t>    mcpart_Mother;
@@ -376,13 +378,13 @@ private:
   //MCTrack info
   size_t MaxMCTracks = 0;
   Int_t mctrack_no_primaries;
-  std::vector<Int_t>    mctrack_pdg;                      
+  std::vector<Int_t>    mctrack_pdg;
   std::vector<Int_t>    mctrack_TrackId;
 
   //MCShower info
   size_t MaxMCShowers = 0;
   Int_t mcshower_no_primaries;
-  std::vector<Int_t>    mcshower_pdg;                       
+  std::vector<Int_t>    mcshower_pdg;
   std::vector<Int_t>    mcshower_TrackId;
 
 
@@ -441,8 +443,7 @@ private:
 
   geo::GeometryCore const* fGeometryService;
   // detinfo::ElecClock fTrigClock;
-  art::ServiceHandle<geo::AuxDetGeometry> fAuxDetGeoService;
-  const geo::AuxDetGeometry* fAuxDetGeo;
+  const geo::WireReadoutGeom* fWireReadoutGeom;
   const geo::AuxDetGeometryCore* fAuxDetGeoCore;
 
   const int MAX_INT = std::numeric_limits<int>::max();
@@ -462,11 +463,11 @@ Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
 {
 
   fGeometryService = lar::providerFrom<geo::Geometry>();
+  fWireReadoutGeom = &art::ServiceHandle<geo::WireReadout>()->Get();
   // fDetectorClocks = lar::providerFrom<detinfo::DetectorClocksService>();
   // fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
   // fTrigClock = fDetectorClocks->TriggerClock();
-  fAuxDetGeo = &(*fAuxDetGeoService);
-  fAuxDetGeoCore = fAuxDetGeo->GetProviderPtr();
+  fAuxDetGeoCore = art::ServiceHandle<geo::AuxDetGeometry>()->GetProviderPtr();
 
   // Read in the parameters from the .fcl file.
   this->reconfigure(pset);
@@ -772,7 +773,7 @@ void Hitdumper::analyze(const art::Event& evt)
       for (size_t i = 0; i < ophitlist.size(); ++i) {
         size_t index = previous_nophits + i;
         _ophit_opch[index] = ophitlist.at(i)->OpChannel();
-        _ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
+        _ophit_opdet[index] = fWireReadoutGeom->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
         _ophit_peakT[index] = ophitlist.at(i)->PeakTime();
         _ophit_startT[index] = ophitlist.at(i)->StartTime();
         _ophit_riseT[index] = ophitlist.at(i)->RiseTime();
@@ -780,7 +781,7 @@ void Hitdumper::analyze(const art::Event& evt)
         _ophit_area[index] = ophitlist.at(i)->Area();
         _ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
         _ophit_pe[index] = ophitlist.at(i)->PE();
-        auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
+        auto opdet_center = fWireReadoutGeom->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
         _ophit_opdet_x[index] = opdet_center.X();
         _ophit_opdet_y[index] = opdet_center.Y();
         _ophit_opdet_z[index] = opdet_center.Z();
@@ -859,7 +860,7 @@ void Hitdumper::analyze(const art::Event& evt)
       auto crtSoftTriggerMetrics = crtsofttriggerlist[0];
 
       for (int i=0; i<7; i++){
-	      _crtSoftTrigger_hitsperplane[i] = crtSoftTriggerMetrics->hitsperplane[i];
+              _crtSoftTrigger_hitsperplane[i] = crtSoftTriggerMetrics->hitsperplane[i];
       }
     }
     else{
@@ -869,39 +870,39 @@ void Hitdumper::analyze(const art::Event& evt)
   }
 
   //
-  // Muon tracks 
+  // Muon tracks
   //
-  _nmuontrks = 0; 
+  _nmuontrks = 0;
   if (freadMuonTracks){
     art::Handle<std::vector<sbnd::comm::MuonTrack> > muonTrackListHandle;
     std::vector<art::Ptr<sbnd::comm::MuonTrack> > muontrklist;
 
     if (evt.getByLabel(fMuonTrackModuleLabel, muonTrackListHandle)){
-      art::fill_ptr_vector(muontrklist, muonTrackListHandle); 
+      art::fill_ptr_vector(muontrklist, muonTrackListHandle);
       _nmuontrks = muontrklist.size();
       ResetMuonTracksVars(_nmuontrks);
 
-      for (int i=0; i < _nmuontrks; i++){ 
-        
-        _muontrk_t0[i] = muontrklist[i]->t0_us; 
+      for (int i=0; i < _nmuontrks; i++){
+
+        _muontrk_t0[i] = muontrklist[i]->t0_us;
         _muontrk_x1[i] = muontrklist[i]->x1_pos;
         _muontrk_y1[i] = muontrklist[i]->y1_pos;
         _muontrk_z1[i] = muontrklist[i]->z1_pos;
         _muontrk_x2[i] = muontrklist[i]->x2_pos;
         _muontrk_y2[i] = muontrklist[i]->y2_pos;
-        _muontrk_z2[i] = muontrklist[i]->z2_pos; 
-        _muontrk_theta_xz[i] = muontrklist[i]->theta_xz; 
+        _muontrk_z2[i] = muontrklist[i]->z2_pos;
+        _muontrk_theta_xz[i] = muontrklist[i]->theta_xz;
         _muontrk_theta_yz[i] = muontrklist[i]->theta_yz;
-        _muontrk_tpc[i] = muontrklist[i]->tpc; 
+        _muontrk_tpc[i] = muontrklist[i]->tpc;
         _muontrk_type[i] = muontrklist[i]->type;
       }
       if (freadMuonHits){
         art::FindMany<recob::Hit> muontrkassn(muonTrackListHandle, evt, fMuonTrackModuleLabel);
         ResetMuonHitVars(3000); //estimate of maximum collection hits
         _nmhits = 0;
-        for (int i=0; i < _nmuontrks; i++){ 
+        for (int i=0; i < _nmuontrks; i++){
         std::vector< const recob::Hit*> muonhitsVec = muontrkassn.at(i);
-          _nmhits += (muonhitsVec.size()); 
+          _nmhits += (muonhitsVec.size());
           for (size_t j=0; j<muonhitsVec.size(); j++){
             auto muonhit = muonhitsVec.at(j);
             geo::WireID wireid = muonhit->WireID();
@@ -1350,8 +1351,8 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("muontrk_z2", &_muontrk_z2);
     fTree->Branch("muontrk_theta_xz", &_muontrk_theta_xz);
     fTree->Branch("muontrk_theta_yz", &_muontrk_theta_yz);
-    fTree->Branch("muontrk_tpc", &_muontrk_tpc); 
-    fTree->Branch("muontrk_type", &_muontrk_type); 
+    fTree->Branch("muontrk_tpc", &_muontrk_tpc);
+    fTree->Branch("muontrk_type", &_muontrk_type);
   }
 
     if (freadMuonHits) {
@@ -1362,7 +1363,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("mhit_wire", &_mhit_wire); 
     fTree->Branch("mhit_channel", &_mhit_channel);
     fTree->Branch("mhit_peakT", &_mhit_peakT);
-    fTree->Branch("mhit_charge", &_mhit_charge); 
+    fTree->Branch("mhit_charge", &_mhit_charge);
   }
 
   if (freadTruth) {
@@ -1408,9 +1409,9 @@ void Hitdumper::analyze(const art::Event& evt)
   if (freadMCParticle){
     //MCParticle
     fTree->Branch("mcpart_pdg",&mcpart_pdg);
-    fTree->Branch("mcpart_status",&mcpart_status);    
-    fTree->Branch("mcpart_process",&mcpart_process);  
-    fTree->Branch("mcpart_endprocess",&mcpart_endprocess);  
+    fTree->Branch("mcpart_status",&mcpart_status);
+    fTree->Branch("mcpart_process",&mcpart_process);
+    fTree->Branch("mcpart_endprocess",&mcpart_endprocess);
     fTree->Branch("mcpart_Eng",&mcpart_Eng);
     fTree->Branch("mcpart_EndE",&mcpart_EndE);
     fTree->Branch("mcpart_Mass",&mcpart_Mass);
@@ -1425,21 +1426,21 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("mcpart_EndT",&mcpart_EndT);
     fTree->Branch("mcpart_EndPointx",&mcpart_EndPointx);
     fTree->Branch("mcpart_EndPointy",&mcpart_EndPointy);
-    fTree->Branch("mcpart_EndPointz",&mcpart_EndPointz);         
+    fTree->Branch("mcpart_EndPointz",&mcpart_EndPointz);
     fTree->Branch("mcpart_theta_xz",&mcpart_theta_xz);
-    fTree->Branch("mcpart_theta_yz",&mcpart_theta_yz);   
+    fTree->Branch("mcpart_theta_yz",&mcpart_theta_yz);
     fTree->Branch("mcpart_NumberDaughters",&mcpart_NumberDaughters);
     fTree->Branch("mcpart_TrackId",&mcpart_TrackId);
     fTree->Branch("mcpart_Mother",&mcpart_Mother);
 
     //MCTrack info
     fTree->Branch("mctrack_no_primaries",&mctrack_no_primaries);
-    fTree->Branch("mctrack_pdg",&mctrack_pdg);                        
+    fTree->Branch("mctrack_pdg",&mctrack_pdg);
     fTree->Branch("mctrack_TrackId",&mctrack_TrackId);
 
     //MCShower info
     fTree->Branch("mcshower_no_primaries",&mcshower_no_primaries);
-    fTree->Branch("mcshower_pdg",&mcshower_pdg);                        
+    fTree->Branch("mcshower_pdg",&mcshower_pdg);
     fTree->Branch("mcshower_TrackId",&mcshower_TrackId);
   }
 
@@ -1579,15 +1580,15 @@ void Hitdumper::ResetMuonTracksVars(int n){
   _muontrk_z1.assign(n, DEFAULT_VALUE);
   _muontrk_x2.assign(n, DEFAULT_VALUE);
   _muontrk_y2.assign(n, DEFAULT_VALUE);
-  _muontrk_z2.assign(n, DEFAULT_VALUE); 
-  _muontrk_theta_xz.assign(n, DEFAULT_VALUE); 
+  _muontrk_z2.assign(n, DEFAULT_VALUE);
+  _muontrk_theta_xz.assign(n, DEFAULT_VALUE);
   _muontrk_theta_yz.assign(n, DEFAULT_VALUE);
   _muontrk_tpc.assign(n, DEFAULT_VALUE);
   _muontrk_type.assign(n, DEFAULT_VALUE);
 }
 
 void Hitdumper::ResetMuonHitVars(int n){
-  _mhit_trk.clear(); 
+  _mhit_trk.clear();
   _mhit_tpc.clear();
   _mhit_plane.clear();
   _mhit_wire.clear();
@@ -1676,12 +1677,12 @@ void Hitdumper::ResizeMCParticle(int nParticles) {
 
   // minimum size is 1, so that we always have an address
   MaxMCParticles = (size_t) std::max(nParticles, 1);
-              
-  mcpart_pdg.assign(MaxMCParticles,DEFAULT_VALUE);              
-  mcpart_status.assign(MaxMCParticles,DEFAULT_VALUE); 
-  mcpart_process.assign(MaxMCParticles,"Dummy"); 
-  mcpart_endprocess.assign(MaxMCParticles,"Dummy");           
-  mcpart_Eng.assign(MaxMCParticles,DEFAULT_VALUE);              
+
+  mcpart_pdg.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_status.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_process.assign(MaxMCParticles,"Dummy");
+  mcpart_endprocess.assign(MaxMCParticles,"Dummy");
+  mcpart_Eng.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_EndE.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_Mass.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_Px.assign(MaxMCParticles,DEFAULT_VALUE);
@@ -1691,13 +1692,13 @@ void Hitdumper::ResizeMCParticle(int nParticles) {
   mcpart_StartPointx.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_StartPointy.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_StartPointz.assign(MaxMCParticles,DEFAULT_VALUE);
-  mcpart_StartT.assign(MaxMCParticles,DEFAULT_VALUE);  
-  mcpart_EndT.assign(MaxMCParticles,DEFAULT_VALUE);          
+  mcpart_StartT.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_EndT.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_EndPointx.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_EndPointy.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_EndPointz.assign(MaxMCParticles,DEFAULT_VALUE);
-  mcpart_theta_xz.assign(MaxMCParticles,DEFAULT_VALUE);    
-  mcpart_theta_yz.assign(MaxMCParticles,DEFAULT_VALUE);    
+  mcpart_theta_xz.assign(MaxMCParticles,DEFAULT_VALUE);
+  mcpart_theta_yz.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_NumberDaughters.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_TrackId.assign(MaxMCParticles,DEFAULT_VALUE);
   mcpart_Mother.assign(MaxMCParticles,DEFAULT_VALUE);
