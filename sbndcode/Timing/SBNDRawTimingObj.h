@@ -49,6 +49,9 @@ namespace raw {
         //TODO: remove boardId after validation check
         unsigned int boardId; //board 0-7
         std::vector<double> shift; //shift per waveform
+
+        //TODO: add a flag if jittering is applied
+        //or a flag indicating the level of PMT timing
     };
   }
 }

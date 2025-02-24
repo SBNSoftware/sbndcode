@@ -21,10 +21,14 @@ wfAlign:
     DebugPmt: false
 
     WfLength: 5000 #ticks
-    Tdc3CaenOffset: [101, 101, 101, 101, 101, 101, 101, 102, 100] #ns
+    Tdc3CaenOffset: [101, 101, 101, 101, 101, 101, 101, 101, 101] #ns
     nCAEN: 9 #digitisers
-    TickLb: 1005
-    TickUb: 1035
+    
+    TickLbPmt: 1005
+    TickUbPmt: 1035
+    
+    TickLbTiming: 975
+    TickUbTiming: 1005
 
     ApplyShift: true
     ExcludeFtrigBoard: []

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////
 // Class:       WaveformAlignment
-// Plugin Type: analyzer (Unknown Unknown)
+// Plugin Type: Producer
 // File:        WaveformAlignment_module.cc
 //
 // Generated at Tue Oct 29 09:11:32 2024 by Vu Chi Lan Nguyen using cetskelgen
@@ -70,17 +70,17 @@ public:
 
     void ResetEventVars();
 
-    double GetFtrigRisingEdge(art::Ptr<raw::OpDetWaveform> wf, const int flashId);
+    double GetFtrigRisingEdge(art::Ptr<raw::OpDetWaveform> wf, const int flashId, const int tickLb, const int tickUb);
     double GetFtrigOffsetFromTdc(const double tickFtrig, art::Ptr<raw::pmt::BoardTimingInfo> rawTime, const std::vector<uint64_t> tdcVec, const int boardId);
     bool CheckTick(const double tick);
     double CheckShift(const double shift);
 
-    void PlotPmtCompare(std::map<uint16_t, std::vector<double>> xVec,
+    void PlotFtrigCompare(std::map<uint16_t, std::vector<double>> xVec,
                         std::map<uint16_t, std::vector<double>> xVec_shift,
                         std::map<uint16_t, std::vector<double>> yVec,
                         std::map<uint16_t, double> tickVec,
                         const int flashId);
-    void PlotPmtFit(TGraph *g, TF1 *fitf, const bool converged, const int boardId, const int flashId);
+    void PlotFtrigFit(TGraph *g, TF1 *fitf, const bool converged, const int boardId, const int flashId);
     void ResetPlotVars();
 private:
 
@@ -101,7 +101,7 @@ private:
     art::ServiceHandle<art::TFileService> tfs;
     
     std::vector<std::string> pmtBoard{"0","1","2","3","4","5","6","7","8"};
-    std::vector<int> pmtCol{1, 2, 3, 4, 5, 6, 7, 28, 12};
+    std::vector<int> pmtCol{1, 2, 3, 4, 5, 6, 7, 28, 30};
     size_t nCAEN = pmtBoard.size(); 
     TH1D* _hFTRIG[9];
 
@@ -142,8 +142,12 @@ private:
     std::vector<double> fTdc3CaenOffset;
     int fnCAEN;
     int fnChperBoard;
-    int fTickLb;
-    int fTickUb;
+
+    int fTickLbPmt;
+    int fTickUbPmt;
+
+    int fTickLbTiming;
+    int fTickUbTiming;
 
     // Debug
     bool fDebugTdc;
@@ -183,8 +187,12 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fTdc3CaenOffset = p.get<std::vector<double>>("Tdc3CaenOffset", {});
     fnCAEN = p.get<int>("nCAEN", 9);
     fnChperBoard = p.get<int>("nChperBoard", 15);
-    fTickLb = p.get<int>("TickLb", 1005);
-    fTickUb = p.get<int>("TickUb", 1035);
+
+    fTickLbPmt = p.get<int>("TickLbPmt", 1005);
+    fTickUbPmt = p.get<int>("TickUbPmt", 1035);
+
+    fTickLbTiming = p.get<int>("TickLbTiming", 975);
+    fTickUbTiming = p.get<int>("TickUbTiming", 1005);
 
     fDebugTdc = p.get<bool>("DebugTdc", false);
     fDebugTimeRef = p.get<bool>("DebugTimeRef", false);
@@ -346,11 +354,11 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
 
             for (int j = 0; j < fnCAEN; j++){
 
-                art::Ptr<raw::OpDetWaveform> wf(wf_ftrig_v.at(i + j * nWfperBoard));
-                std::vector<art::Ptr<raw::pmt::BoardTimingInfo>> wf_board_v(ftrigBoardAssn.at(wf.key()));
+                int wfIdx = i + j * nWfperBoard;
+                art::Ptr<raw::OpDetWaveform> wf(wf_ftrig_v.at(wfIdx));
 
+                std::vector<art::Ptr<raw::pmt::BoardTimingInfo>> wf_board_v(ftrigBoardAssn.at(wf.key()));
                 if(wf_board_v.size() != 1 ) throw cet::exception("WaveformAlignment") << "No raw::wf::BoardTimingInfo found associated with raw::OpDetWaveform!";
-                 
                 art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
 
                 //TODO: Check which reference frame the OpDetWaveform was decoded, assuming TDC for now
@@ -363,26 +371,31 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     if (int(wf->ChannelNumber())==ch) excludeThisBoard = true;
 
                 if (excludeThisBoard){
-                    //TODO: Add CAEN09
                     //FTRIG channel ID is actually digitiser board ID
                     if(fDebugFtrig) std::cout << "      board id = " << wf->ChannelNumber() << " is exluded." << std::endl;
                     continue;
                 }
 
                 //Determine FTRIG rising edge
-                double tickFtrig = GetFtrigRisingEdge(wf, i);
+                double tickFtrig = -9999;
+                //TODO: Add CAEN09
+                if (int(wf->ChannelNumber())==8){
+                    tickFtrig = GetFtrigRisingEdge(wf, i, fTickLbTiming, fTickUbTiming);
+                }else{
+                    tickFtrig = GetFtrigRisingEdge(wf, i, fTickLbPmt, fTickUbPmt);
+                }
 
                 //Compute shift amount in ns
                 double shift = 0;
                 if (CheckTick(tickFtrig)) shift = GetFtrigOffsetFromTdc(tickFtrig, wf_board, _tdc_ch3, wf->ChannelNumber());
-                shift = CheckShift(shift);
+                //shift = CheckShift(shift);
                 
                 if (fDebugFtrig)  std::cout << "        board id = " << wf->ChannelNumber() << " has rising tick value = " << tickFtrig << " and shift value = " << shift << " ns." << std::endl;
                 
                 //Save to vector
                 //TODO: manual add shift values 
-                boardJitter[wf->ChannelNumber()].push_back(i+j*nWfperBoard);
-                //boardJitter[wf->ChannelNumber()].push_back(shift);
+                //boardJitter[wf->ChannelNumber()].push_back(i+j*nWfperBoard);
+                boardJitter[wf->ChannelNumber()].push_back(shift);
 
 
                 //Save to tree
@@ -400,7 +413,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
             } //Done looping over boards
 
             if (fSaveCompare){
-                PlotPmtCompare(xVec, xVec_shift, yVec, tickVec, i);
+                PlotFtrigCompare(xVec, xVec_shift, yVec, tickVec, i);
                 ResetPlotVars();
             }
         } //Done looping over OpDetWf
@@ -408,7 +421,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
         wfFtrigHandle.removeProduct();
         wf_ftrig_v.clear();
 
-        //Make new products
+        //TODO: Do I want to save just digitiser jittering or everything?
         for (auto i : boardJitter){
             raw::pmt::BoardAlignment board_shift;
             board_shift.boardId = i.first;
@@ -424,63 +437,66 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     }
 
     //---------------------------ALIGN PMT WAVEFORMS-----------------------------//
+    // 
+    //// Grab pmt waveforms
+    //art::Handle<std::vector<raw::OpDetWaveform>> wfPmtHandle;
+    //std::vector<art::Ptr<raw::OpDetWaveform>> wf_pmt_v;
+    //e.getByLabel(fPmtDecodeLabel, wfPmtHandle);
     
-    // Grab pmt waveforms
-    art::Handle<std::vector<raw::OpDetWaveform>> wfPmtHandle;
-    std::vector<art::Ptr<raw::OpDetWaveform>> wf_pmt_v;
-    e.getByLabel(fPmtDecodeLabel, wfPmtHandle);
-    
-    if (!wfPmtHandle.isValid() || wfPmtHandle->size() == 0){
-        throw cet::exception("WaveformAlignment") << "No raw::OpDetWaveform found w/ tag " << fPmtDecodeLabel << ". Check data quality!";
-    }
-    else{
+    //if (!wfPmtHandle.isValid() || wfPmtHandle->size() == 0){
+    //    throw cet::exception("WaveformAlignment") << "No raw::OpDetWaveform found w/ tag " << fPmtDecodeLabel << ". Check data quality!";
+    //}
+    //else{
 
-        art::fill_ptr_vector(wf_pmt_v, wfPmtHandle);
-        art::FindManyP<raw::pmt::BoardTimingInfo> pmtBoardAssn(wf_pmt_v, e, fPmtBoardLabel);
-        
-        if (fDebugPmt) std::cout << "Found OpDetWaveform PMT size = " << wf_pmt_v.size() << ", nWf per board = " << (wf_pmt_v.size()/(fnCAEN - 1))/fnChperBoard<< std::endl << std::endl;
-       
-        int nWfperBoard = (wf_pmt_v.size() / (fnCAEN - 1)) / fnChperBoard;
+    //    art::fill_ptr_vector(wf_pmt_v, wfPmtHandle);
+    //    art::FindManyP<raw::pmt::BoardTimingInfo> pmtBoardAssn(wf_pmt_v, e, fPmtBoardLabel);
+    //    
+    //    int fnPmtCAEN = fnCAEN - 1; //remove 1 Timing CAEN
 
-        //TODO: Fix the fnCAEN - 1, that might crash if data structure is changed
-        for (int i = 0 ; i < (fnCAEN - 1); i++){
-            for (int j = 0; j < nWfperBoard; j++){
+    //    if (fDebugPmt) std::cout << "Found OpDetWaveform PMT size = " << wf_pmt_v.size() << ", nWf per board = " << (wf_pmt_v.size()/fnPmtCAEN)/fnChperBoard<< std::endl << std::endl;
+    //   
+    //    int nWfperBoard = (wf_pmt_v.size() / fnPmtCAEN) / fnChperBoard;
+    //    
 
-                if (fDebugPmt) std::cout << "   Board " << i << " flash " << j << " has shift value " << boardJitter[i][j] << std::endl;
+    //    for (int i = 0 ; i < fnPmtCAEN; i++){
+    //        for (int j = 0; j < nWfperBoard; j++){
 
-                for (int k = 0; k < fnChperBoard; k++){
-                    int wfIdx = i * nWfperBoard * fnChperBoard + j * fnChperBoard + k;
-                    art::Ptr<raw::OpDetWaveform> wf(wf_pmt_v.at(wfIdx));
+    //            if (fDebugPmt) std::cout << "   Board " << i << " flash " << j << " has shift value " << boardJitter[i][j] << std::endl;
 
-                    //Get assn
-                    std::vector<art::Ptr<raw::pmt::BoardTimingInfo>> wf_board_v(pmtBoardAssn.at(wf.key()));
-                    if(wf_board_v.size() != 1 ) throw cet::exception("WaveformAlignment") << "No raw::wf::BoardTimingInfo found associated with raw::OpDetWaveform!";
+    //            for (int k = 0; k < fnChperBoard; k++){
+    //                int wfIdx = i * nWfperBoard * fnChperBoard + j * fnChperBoard + k;
+    //                art::Ptr<raw::OpDetWaveform> wf(wf_pmt_v.at(wfIdx));
 
-                    art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
-                    art::Ptr<raw::pmt::BoardAlignment> wf_align = make_align_ptr(i);
+    //                //Get assn
+    //                std::vector<art::Ptr<raw::pmt::BoardTimingInfo>> wf_board_v(pmtBoardAssn.at(wf.key()));
+    //                if(wf_board_v.size() != 1 ) throw cet::exception("WaveformAlignment") << "No raw::wf::BoardTimingInfo found associated with raw::OpDetWaveform!";
 
-                    //TODO: Get cable length + PMT Response from Channel Map Service
-                 
-                    double new_ts = wf->TimeStamp() + boardJitter[i][j] / 1000; //ns to us
-                    std::vector<uint16_t> adc_vec(wf->Waveform().size(), 0);
-                    
-                    for (size_t i = 0; i < wf->Waveform().size(); i++){
-                        adc_vec[i] = wf->Waveform()[i];
-                    }
+    //                art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
+    //                art::Ptr<raw::pmt::BoardAlignment> wf_align = make_align_ptr(i);
 
-                    raw::OpDetWaveform new_wf(new_ts, wf->ChannelNumber(), adc_vec);
+    //                //TODO: Get cable length + PMT Response from Channel Map Service
+    //                double correction = boardJitter[i][j]; // - cable length - pmt response
+    //             
+    //                double new_ts = wf->TimeStamp() + correction; //ns to us
+    //                std::vector<uint16_t> adc_vec(wf->Waveform().size(), 0);
+    //                
+    //                for (size_t i = 0; i < wf->Waveform().size(); i++){
+    //                    adc_vec[i] = wf->Waveform()[i];
+    //                }
 
-                    newPmtWf->push_back(new_wf);
-                    art::Ptr<raw::OpDetWaveform> wfPtr = make_pmtwf_ptr(newPmtWf->size()-1);
+    //                raw::OpDetWaveform new_wf(new_ts, wf->ChannelNumber(), adc_vec);
 
-                    newPmtBoardAssn->addSingle(wf_board, wfPtr);
-                    newPmtAlignAssn->addSingle(wf_align, wfPtr);
-                }
-            }
-        }
+    //                newPmtWf->push_back(new_wf);
+    //                art::Ptr<raw::OpDetWaveform> wfPtr = make_pmtwf_ptr(newPmtWf->size()-1);
 
-    }
-    wfPmtHandle.removeProduct();
+    //                newPmtBoardAssn->addSingle(wf_board, wfPtr);
+    //                newPmtAlignAssn->addSingle(wf_align, wfPtr);
+    //            }
+    //        }
+    //    }
+
+    //}
+    //wfPmtHandle.removeProduct();
 
     if (fDebugTdc | fDebugFtrig) std::cout <<"#--------------------------------------------------------#" << std::endl;
     
@@ -501,36 +517,21 @@ bool sbnd::WaveformAlignment::CheckTick(const double tick)
         if (fDebugFtrig) std::cout << "     Fail fitting FTRIG waveform. Check waveform fitting. Also check data quality" << std::endl;;
         return false;
     }
-    
-    if ((tick < fTickLb) | (tick > fTickUb)){
-        std::stringstream warning;
-        warning << "     Rising tick position " << tick << " is out of tolerance "<< fTickLb << " - " << fTickUb << ". Check data quality.";
+   
+    //TODO: to include both PMT and Timing CAEN
+    //if ((tick < fTickLbPmt) | (tick > fTickUbPmt)){
+    //    std::stringstream warning;;
+    //    warning << "     Rising tick position " << tick << " is out of tolerance "<< fTickLbPmt << " - " << fTickUbPmt << ". Check data quality." << std::endl;
 
-        if (fDebugFtrig) std::cout << warning.str() << std::endl;
-        throw cet::exception("WaveformAlignment") << warning.str();
-    }
+    //    if (fDebugFtrig) std::cout << warning.str() << std::endl;
+    //    throw cet::exception("WaveformAlignment") << warning.str();
+    //}
 
     return true;
 }
 
 double sbnd::WaveformAlignment::CheckShift(const double shift)
 {
-
-    //Check if diff is within acceptable range, 2 trigger clock ticks of 8ns/tick
-    if (std::abs(shift) > 16){
-        std::stringstream warning;
-        warning << "Shift " << shift << " > 16 ns. That's too big. Check data quailty.";
-    
-        if (fDebugFtrig) std::cout << warning.str() << std::endl;
-        throw cet::exception("WaveformAlignment") << warning.str();
-    }
-
-    //Minumum jittering in CAEN 1 ADC clock ticks of 2ns/tick
-    //If jittering is less than that, most likely due to the fitting process, and therefore it's fine
-    if (std::abs(shift) < 2) {
-        if (fDebugFtrig) std::cout << "     Shift " << shift <<" < 2 ns! Most likely artificially introduced by the FTRIG waveform fitting and not jittering. Shift is set to 0." << std::endl;
-        return 0;
-    }
 
     //TODO:
     //if (shift == 0){
@@ -594,7 +595,7 @@ void sbnd::WaveformAlignment::ResetEventVars()
     boardJitter.clear();
 }
 
-double sbnd::WaveformAlignment::GetFtrigRisingEdge(art::Ptr<raw::OpDetWaveform> wf, const int flashId)
+double sbnd::WaveformAlignment::GetFtrigRisingEdge(art::Ptr<raw::OpDetWaveform> wf, const int flashId, const int tickLb, const int tickUb)
 {
     //--------Make TGraph
     size_t wfLength = wf->Waveform().size();
@@ -617,7 +618,7 @@ double sbnd::WaveformAlignment::GetFtrigRisingEdge(art::Ptr<raw::OpDetWaveform> 
     //-------Guess rising tick
     double largestRise = -9999;
     int risingTickGuess = 0;
-    for(int i = fTickLb; i < fTickUb; i++){
+    for(int i = tickLb; i < tickUb; i++){
         
         double diff = y[i + 1] -  y[i];
         if(diff > largestRise){
@@ -635,9 +636,8 @@ double sbnd::WaveformAlignment::GetFtrigRisingEdge(art::Ptr<raw::OpDetWaveform> 
     amplitude -= baseline;
 
     //---------Define Rising Edge
-    int fitLb = risingTickGuess - 30;
-    int fitUb = risingTickGuess + 30;
-    //g->GetXaxis()->SetRangeUser(950, 1300);
+    int fitLb = risingTickGuess - 25;
+    int fitUb = risingTickGuess + 25;
     g->GetXaxis()->SetRangeUser(x[fitLb], x[fitUb]);
 
     std::string rising_edge = "1/(1+exp(([0]-x)/[1]))*[2]+[3]";
@@ -665,8 +665,8 @@ double sbnd::WaveformAlignment::GetFtrigRisingEdge(art::Ptr<raw::OpDetWaveform> 
     }
     
     //-------Save fits to plots
-    if(converged && fSaveGoodFit) PlotPmtFit(g, fitf, converged, wf->ChannelNumber(), flashId);
-    if(!converged && fSaveBadFit) PlotPmtFit(g, fitf, converged, wf->ChannelNumber(), flashId);
+    if(converged && fSaveGoodFit) PlotFtrigFit(g, fitf, converged, wf->ChannelNumber(), flashId);
+    if(!converged && fSaveBadFit) PlotFtrigFit(g, fitf, converged, wf->ChannelNumber(), flashId);
 
     return risingEdge; 
 }
@@ -689,12 +689,12 @@ double  sbnd::WaveformAlignment::GetFtrigOffsetFromTdc(const double tickFtrig, a
     }
 
     //Compute shift for alignment
-    double shift = fTdc3CaenOffset[boardId] - smallestDiff;
+    double shift = smallestDiff - fTdc3CaenOffset[boardId]; 
 
     return shift;
 }
 
-void sbnd::WaveformAlignment::PlotPmtFit(TGraph *g, TF1 *fitf, const bool converged, const int boardId, const int flashId)
+void sbnd::WaveformAlignment::PlotFtrigFit(TGraph *g, TF1 *fitf, const bool converged, const int boardId, const int flashId)
 {
 
     _plotName.str(std::string());
@@ -749,7 +749,6 @@ void sbnd::WaveformAlignment::PlotPmtFit(TGraph *g, TF1 *fitf, const bool conver
     c->SetRightMargin(0.1);
     c->SetBottomMargin(0.25);
     
-    //g->SetMinimum(2000); g->SetMaximum(2100);
     g->SetMinimum(1800); g->SetMaximum(6500);
     g->GetYaxis()->SetNdivisions(505, true);
     g->GetXaxis()->SetNdivisions(515, true);
@@ -764,7 +763,7 @@ void sbnd::WaveformAlignment::PlotPmtFit(TGraph *g, TF1 *fitf, const bool conver
     c->SaveAs(Form("%s/%s.png", fSavePath.c_str(), _plotName.str().c_str()));
 }
 
-void sbnd::WaveformAlignment::PlotPmtCompare(std::map<uint16_t, std::vector<double>> xVec,
+void sbnd::WaveformAlignment::PlotFtrigCompare(std::map<uint16_t, std::vector<double>> xVec,
                                              std::map<uint16_t, std::vector<double>> xVec_shift,
                                              std::map<uint16_t, std::vector<double>> yVec,
                                              std::map<uint16_t, double> tickVec,
@@ -777,6 +776,13 @@ void sbnd::WaveformAlignment::PlotPmtCompare(std::map<uint16_t, std::vector<doub
     int x_lb = std::abs(tickVec[0] - 2);
     int x_ub = std::abs(tickVec[0] + 4);
 
+    //---------Find baseline value
+    double baseline = 0.;
+    for(unsigned int i = 0 ; i < 800; i++) {
+      baseline += yVec[0][i];
+    }
+    baseline /= 800;
+
     for(int k = 0; k < fnCAEN; k++){
     
         std::vector<double> x1 = xVec[k];
@@ -784,7 +790,19 @@ void sbnd::WaveformAlignment::PlotPmtCompare(std::map<uint16_t, std::vector<doub
         std::vector<double> y = yVec[k];
 
         if ((x1.size() == 0) | (y.size() == 0) | (x2.size() == 0)) continue;
+       
+        double current_baseline = 0;
+        for(size_t i = 0 ; i < 800; i++) {
+          current_baseline += y[i];
+        }
+        current_baseline /= 800;
 
+        double baseline_shift = baseline - current_baseline;
+        std::cout << baseline_shift << " " << baseline << " " << current_baseline << std::endl;
+        for (size_t i = 0; i < y.size(); i++){
+            y[i] += baseline_shift;
+        }
+        
         auto *g1 = new TGraph(fWfLength, &x1[0], &y[0]);
         g1->SetTitle(Form("Board_%s", pmtBoard[k].c_str()));
         g1->SetMarkerStyle(5);
