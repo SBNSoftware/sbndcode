@@ -3,6 +3,7 @@
 analyzers.caloskim: @local::caloskim_nodigits_goldentracks
 
 physics.analyzers.caloskim.SelectionTools: []
+physics.analyzers.caloskim.RawDigitproducers: ["daq"]
 physics.analyzers.caloskim.RequireT0: false
 physics.analyzers.caloskim.HitRawDigitsTickCollectWidth: 200
 

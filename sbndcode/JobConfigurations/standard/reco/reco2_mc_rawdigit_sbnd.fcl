@@ -1,6 +1,8 @@
 #include "standard_reco2_sbnd.fcl"
-#
+
 analyzers.caloskim: @local::caloskim_nodigits_goldentracks
+
+physics.analyzers.caloskim.RawDigitproducers: ["simtpc2d:daq"]
 
 physics.analyzers.caloskim.SelectionTools: []
 physics.analyzers.caloskim.RequireT0: false
