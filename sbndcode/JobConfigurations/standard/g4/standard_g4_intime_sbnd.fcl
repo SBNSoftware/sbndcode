@@ -84,17 +84,25 @@ physics.producers.simplemerge.InputSourcesLabels: ["largeant", "largeantdropped"
 # Set proper input tags for mcreco
 physics.producers.mcreco.MCParticleDroppedLabel: "largeantdropped"
 
+# specify that we want to save the non-priorSCE instance of SimEnergyDeposits from ionandscint
+physics.producers.ionandscint.EnergyDepositInstanceLabels: [""]
+
+# Add a process that merges the priorSCE SimEnergyDeposits as well
+# We want to keep both the priorSCE and non-priorSCE instances of SimEnergyDeposits
+physics.producers.ionandscintpriorSCE: @local::sbnd_merge_sim_sources
+physics.producers.ionandscintpriorSCE.FillSimEnergyDeposits: true
+physics.producers.ionandscintpriorSCE.InputSourcesLabels: [ "ionandscintintime", "ionandscintouttime"]
+physics.producers.ionandscintpriorSCE.EnergyDepositInstanceLabels: ["priorSCE"]
+
 # Add all these new modules to the simulate path
 physics.simulate: [ rns
                   ### Complete intime drift simulation and generic CRT
-                #   , simdriftintime
                   , genericcrtintime
                   ### Do full Geant4 simulation for the outtimes
                   , loader
                   , larg4outtime
                   , ionandscintouttime
                   , pdfastsimouttime
-                #   , simdriftouttime
                   , genericcrtouttime
                   ### Simulate the light outside the AV
                   , ionandscintoutintime
@@ -107,12 +115,12 @@ physics.simulate: [ rns
                   , simplemerge
                   , sedlite
                   , ionandscint
-                #   , simdrift
+                  , ionandscintpriorSCE
                   , pdfastsim
                   , pdfastsimout
                   , genericcrt
                   ### Do truth-level reconstruction
-                   , mcreco
+                  , mcreco
                   ]
 
 services.ParticleListAction.keepGenTrajectories: ["GenInTimeSorter"]
@@ -140,6 +148,8 @@ outputs.out1.outputCommands: [ "keep *_*_*_*"
                              , "drop *_pdfastsimoutouttime_*_*"
                              # Drop LArG4 AuxDetHits, now replaced by AuxDetSimChannels
                              , "drop sim::AuxDetHits_*_*_*"
+                             # Additional
+                             , "drop sim::OpDetBacktrackerRecords_*_*_*"
                              ]
 
 # Remove unnecesary processes

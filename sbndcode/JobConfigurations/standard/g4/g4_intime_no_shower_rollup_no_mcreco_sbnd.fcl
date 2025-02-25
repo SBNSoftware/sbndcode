@@ -1,4 +1,4 @@
-#include "g4_sce_simphotontime_filter_no_shower_rollup.fcl"
+#include "g4_intime_no_shower_rollup_sbnd.fcl"
 
 # Add all these new modules to the simulate path                                                                                                                                 
 physics.simulate: [ rns
