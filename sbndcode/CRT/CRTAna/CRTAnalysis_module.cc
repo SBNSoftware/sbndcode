@@ -1558,38 +1558,39 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
 
       const art::Ptr<CRTSpacePoint> spacepoint = tracksToSPMatches.at(track.key());
       const art::Ptr<CRTTrack> crttrack = tracksToTrackMatches.at(track.key());
+
       if(spacepoint.isNonnull())
         {
-          const anab::T0 spMatch                                = tracksToSPMatches.data(track.key()).ref();
+          const anab::T0 spMatch = tracksToSPMatches.data(track.key()).ref();
 
-          _tpc_sp_matched[nActualTracks]    = true;
-          _tpc_sp_ts0[nActualTracks]        = spacepoint->Ts0();
-          _tpc_sp_ts1[nActualTracks]        = spacepoint->Ts1();
-          _tpc_sp_score[nActualTracks]      = spMatch.TriggerConfidence();
+          _tpc_sp_matched[nActualTracks] = true;
+          _tpc_sp_ts0[nActualTracks]     = spacepoint->Ts0();
+          _tpc_sp_ts1[nActualTracks]     = spacepoint->Ts1();
+          _tpc_sp_score[nActualTracks]   = spMatch.TriggerConfidence();
         }
       else
         {
-          _tpc_sp_matched[nActualTracks]    = false;
-          _tpc_sp_ts0[nActualTracks]        = -std::numeric_limits<double>::max();
-          _tpc_sp_ts1[nActualTracks]        = -std::numeric_limits<double>::max();
-          _tpc_sp_score[nActualTracks]      = -std::numeric_limits<double>::max();
+          _tpc_sp_matched[nActualTracks] = false;
+          _tpc_sp_ts0[nActualTracks]     = -std::numeric_limits<double>::max();
+          _tpc_sp_ts1[nActualTracks]     = -std::numeric_limits<double>::max();
+          _tpc_sp_score[nActualTracks]   = -std::numeric_limits<double>::max();
         }
 
       if(crttrack.isNonnull())
         {
-          const anab::T0 trackMatch                             = tracksToTrackMatches.data(track.key()).ref();
+          const anab::T0 trackMatch = tracksToTrackMatches.data(track.key()).ref();
 
-          _tpc_tr_matched[nActualTracks]    = true;
-          _tpc_tr_ts0[nActualTracks]        = crttrack->Ts0();
-          _tpc_tr_ts1[nActualTracks]        = crttrack->Ts1();
-          _tpc_tr_score[nActualTracks]      = trackMatch.TriggerConfidence();
+          _tpc_tr_matched[nActualTracks] = true;
+          _tpc_tr_ts0[nActualTracks]     = crttrack->Ts0();
+          _tpc_tr_ts1[nActualTracks]     = crttrack->Ts1();
+          _tpc_tr_score[nActualTracks]   = trackMatch.TriggerConfidence();
         }
      else
         {
-          _tpc_tr_matched[nActualTracks]    = false;
-          _tpc_tr_ts0[nActualTracks]        = -std::numeric_limits<double>::max();
-          _tpc_tr_ts1[nActualTracks]        = -std::numeric_limits<double>::max();
-          _tpc_tr_score[nActualTracks]      = -std::numeric_limits<double>::max();
+          _tpc_tr_matched[nActualTracks] = false;
+          _tpc_tr_ts0[nActualTracks]     = -std::numeric_limits<double>::max();
+          _tpc_tr_ts1[nActualTracks]     = -std::numeric_limits<double>::max();
+          _tpc_tr_score[nActualTracks]   = -std::numeric_limits<double>::max();
         }
 
       if(!fDataMode)
