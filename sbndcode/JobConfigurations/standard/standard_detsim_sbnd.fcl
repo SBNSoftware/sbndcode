@@ -86,5 +86,9 @@ outputs:
     @table::sbnd_rootoutput # inherit shared settings
     dataTier: "simulated"
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
+    outputCommands: [ "keep *_*_*_*",
+                      "drop sim::SimPhotonsLites_*_*_*",
+                      "drop sim::SimPhotons_*_*_*"
+                    ]
   }
 }
