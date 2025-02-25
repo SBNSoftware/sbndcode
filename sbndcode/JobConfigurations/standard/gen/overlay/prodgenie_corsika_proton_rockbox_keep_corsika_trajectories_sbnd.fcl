@@ -1,3 +1,4 @@
-#include "prodoverlay_corsika_cosmics_proton_genie_rockbox_sce.fcl"
+#include "prodoverlay_corsika_cosmics_proton_genie_rockbox_sbnd.fcl"
 
 services.ParticleListAction.keepGenTrajectories: [ "generator", "corsika" ]
+
