@@ -1,3 +1,4 @@
-#include "g4_sce_simphotontime_filter.fcl"
+#include "standard_g4_intime_sbnd.fcl"
 
 services.ParticleListAction.keepEMShowerDaughters: true
+
