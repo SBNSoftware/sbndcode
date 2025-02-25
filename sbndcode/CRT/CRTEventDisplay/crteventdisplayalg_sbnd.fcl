@@ -17,6 +17,7 @@ crteventdisplayalg_sbnd:
    ClusterLabel:     "crtclustering"
    SpacePointLabel:  "crtspacepoints"
    TrackLabel:       "crttracks"
+   TrackMatchLabel:  "crttrackmatching"
 
    SaveRoot:         true
    SaveViews:        false
