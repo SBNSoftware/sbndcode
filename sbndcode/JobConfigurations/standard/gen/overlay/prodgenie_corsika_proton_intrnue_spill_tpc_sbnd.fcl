@@ -5,6 +5,6 @@
 # CORSIKA cosmics are generated using the
 # "proton" configuration. 
 
-#include "prodoverlay_corsika_cosmics_proton_genie_nu_spill_gsimple_tpc.fcl"
+#include "prodgenie_corsika_proton_nu_spill_tpc_sbnd.fcl"
 
 #include "set_genie_nue.fcl"
