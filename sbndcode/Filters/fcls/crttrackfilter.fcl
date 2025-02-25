@@ -13,7 +13,7 @@ standard_crt_track_filter:
    TPCPos:               true
    TPCNeg:               false
    TPCNum:               1
-   PlaneNum:             2
+   PlaneNum:             0
    NoiseyChannel:        0
    TimeWindow:           175
    MaxTPCHits:           800

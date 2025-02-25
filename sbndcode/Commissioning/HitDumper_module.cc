@@ -205,7 +205,7 @@ private:
   std::vector<double> _waveform_amplitude;
   std::vector<double> _waveform_charge;
   std::vector<double> _waveform_dof;
-
+  std::vector<double> _waveform_width;
 
   //Test hit variables
   std::vector<double> _hit_sigma_peak_time;      //< uncertainty for the signal peak, in tick units
@@ -987,18 +987,19 @@ void Hitdumper::analyze(const art::Event& evt)
   }
   ResetWaveforms();
   if (fcheckTransparency) {
-    _waveform_number.resize(_max_hits*_max_samples, -9999.);
-    _adc_on_wire.resize(_max_hits*_max_samples, -9999.);
-    _time_for_waveform.resize(_max_hits*_max_samples, -9999.);
-    _waveform_integral.resize(_max_hits*_max_samples, -9999.);
-    _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
-    _wire_number.resize(_max_hits*_max_samples, -9999.);
-    _channel_number.resize(_max_hits*_max_samples, -9999.);
-    _hit_time.resize(_max_hits*_max_samples, -9999.);
-    _waveform_charge.resize(_max_hits*_max_samples, -9999.);
-    _waveform_amplitude.resize(_max_hits*_max_samples, -9999.);
-    _waveform_dof.resize(_max_hits*_max_samples, -9999.);
-    _waveform_integral.resize(_max_hits*_max_samples, -9999.);
+    //    _waveform_number.resize(_max_hits*_max_samples, -9999.);
+    // _adc_on_wire.resize(_max_hits*_max_samples, -9999.);
+    // _time_for_waveform.resize(_max_hits*_max_samples, -9999.);
+    // _waveform_integral.resize(_max_hits*_max_samples, -9999.);
+    // _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
+    // _wire_number.resize(_max_hits*_max_samples, -9999.);
+    // _channel_number.resize(_max_hits*_max_samples, -9999.);
+    // _hit_time.resize(_max_hits*_max_samples, -9999.);
+    // _waveform_charge.resize(_max_hits*_max_samples, -9999.);
+    // _waveform_amplitude.resize(_max_hits*_max_samples, -9999.);
+    // _waveform_dof.resize(_max_hits*_max_samples, -9999.);
+    // _waveform_integral.resize(_max_hits*_max_samples, -9999.);
+    // _waveform_width.resize(_max_hits*_max_samples, -9999.);
 
     art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
 
@@ -1078,20 +1079,21 @@ void Hitdumper::analyze(const art::Event& evt)
 	    for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
 	      // _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
 	      // counter_for_adc_in_waveform++;
-	      _waveform_number[adc_counter] = waveform_number_tracker;
-	      _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
-	      _time_for_waveform[adc_counter] = ibin;
-	      _wire_number[adc_counter] = _hit_wire[ihit];
-	      _channel_number[adc_counter] = _hit_channel[ihit];
-	      _hit_time[adc_counter] = _hit_peakT[ihit];
+	      _waveform_number.push_back(waveform_number_tracker);
+	      _adc_on_wire.push_back(rawadc[ibin]-pedestal);
+	      _time_for_waveform.push_back(ibin);
+	      _wire_number.push_back(_hit_wire[ihit]);
+	      _channel_number.push_back(_hit_channel[ihit]);
+	      _hit_time.push_back(_hit_peakT[ihit]);
 	     
 
-	      _waveform_amplitude[adc_counter]=_hit_ph[ihit];
-	      _waveform_charge[adc_counter]=_hit_charge[ihit];
-	      _waveform_dof[adc_counter]=_hit_dof[ihit];
+	      _waveform_amplitude.push_back(_hit_ph[ihit]);
+	      _waveform_charge.push_back(_hit_charge[ihit]);
+	      _waveform_dof.push_back(_hit_dof[ihit]);
+	      _waveform_width.push_back(_hit_width[ihit]);
 
 	       integral+=_adc_on_wire[adc_counter];
-	       _waveform_integral[adc_counter] = integral;
+	       _waveform_integral.push_back(integral);
 	      adc_counter++;
 	    }
 	    //	    _hit_full_integral[ihit] = integral;
@@ -1358,6 +1360,7 @@ void Hitdumper::beginJob()
     fTree->Branch("waveform_amplitude", &_waveform_amplitude);
     fTree->Branch("waveform_charge", &_waveform_charge);
     fTree->Branch("waveform_dof", &_waveform_dof);
+    fTree->Branch("waveform_width", &_waveform_width);
   }
 
   if (fKeepCRTStripHits) {
@@ -1596,6 +1599,7 @@ void Hitdumper::ResetWaveforms(){
   _waveform_amplitude.clear();
   _waveform_charge.clear();
   _waveform_dof.clear();
+  _waveform_width.clear();
 }
 
 void Hitdumper::ResetCRTStripHitVars() {
