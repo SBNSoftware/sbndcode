@@ -128,7 +128,9 @@ outputs:
   {
                     @table::sbnd_rootoutput
     dataTier:       "simulated"
-    outputCommands: [ "keep *_*_*_*" ]
+    outputCommands: [ "keep *_*_*_*",
+                      "drop sim::OpDetBacktrackerRecords_*_*_*" 
+                    ]
   }
 }
 

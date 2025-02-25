@@ -2,6 +2,7 @@
 
 #include "standard_g4_sbnd.fcl"
 
+
 # Set proper input tags for mcreco
 physics.producers.mcreco.MCParticleDroppedLabel: "largeantdropped"
 
@@ -19,3 +20,4 @@ physics.simulate: [ rns
 # Remove unnecesary processes
 physics.producers.loader: @erase
 physics.producers.largeant: @erase
+
