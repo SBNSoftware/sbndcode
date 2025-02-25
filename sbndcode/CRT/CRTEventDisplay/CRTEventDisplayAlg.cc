@@ -475,7 +475,6 @@ namespace sbnd::crt {
                       const art::Ptr<recob::Track> TPCTrack = CRTSPstoTPCTracks.at(spacepoint.key());
                       if(TPCTrack.isNonnull()) {
                         const anab::T0 t0Match = CRTSPstoTPCTracks.data(spacepoint.key()).ref();
-                        std::cout << "t0 SP match (confidence) = " << t0Match.TriggerConfidence() << std::endl;
                         double t0SPMatchConfidence = t0Match.TriggerConfidence();
                         const geo::Point_t startTPC = TPCTrack->Start();
                         const geo::Vector_t dirTPC  = TPCTrack->StartDirection();
@@ -507,8 +506,9 @@ namespace sbnd::crt {
                           pt->SetLineStyle(0);
                           pt->SetTextAlign(12);
                           pt->SetBorderSize(0);
-                          pt->AddText(Form("t0SPMatchConfidence=%g", t0SPMatchConfidence));
                           pt->Draw();
+                          if(fPrint)
+                            std::cout << "t0 matching confidence for this spacepoint is " << t0SPMatchConfidence << std::endl;
                       }
                       else {
                         continue;
@@ -543,7 +543,7 @@ namespace sbnd::crt {
         auto tracksHandle = event.getValidHandle<std::vector<CRTTrack>>(fTrackLabel);
         std::vector<art::Ptr<CRTTrack>> tracksVec;
         art::fill_ptr_vector(tracksVec, tracksHandle);
-        art::FindOneP<recob::Track, anab::T0> CRTTrackstoTPCTracks(tracksHandle, event, "crttrackmatching");  //fTrackMatchLabel
+        art::FindOneP<recob::Track, anab::T0> CRTTrackstoTPCTracks(tracksHandle, event, "crttrackmatching");
 
 
         for(auto track : tracksVec)
@@ -570,7 +570,6 @@ namespace sbnd::crt {
             const art::Ptr<recob::Track> TPCTrack = CRTTrackstoTPCTracks.at(track.key());
             if(TPCTrack.isNonnull()) {
               const anab::T0 t0Match = CRTTrackstoTPCTracks.data(track.key()).ref();
-              std::cout << "t0 match (confidence) = " << t0Match.TriggerConfidence() << std::endl;
               double t0MatchConfidence = t0Match.TriggerConfidence();
               
               const geo::Point_t startTPC = TPCTrack->Start();
@@ -603,8 +602,9 @@ namespace sbnd::crt {
               pt->SetLineStyle(0);
               pt->SetTextAlign(12);
               pt->SetBorderSize(0);
-              pt->AddText(Form("t0MatchConfidence=%g", t0MatchConfidence));
               pt->Draw();
+              if(fPrint)
+                std::cout << "t0 matching confidence for this track is " << t0MatchConfidence << std::endl;
             }
             else {
               continue;
@@ -650,7 +650,6 @@ namespace sbnd::crt {
           }
       }
 
-    std::cout << Form("%s", saveName.Data()) << std::endl;
     if(fSaveRoot)
       c1->SaveAs(Form("%s.root", saveName.Data()));
 
