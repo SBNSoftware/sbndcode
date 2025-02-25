@@ -88,7 +88,7 @@ sbnd_g4_services_noophybrid:
                              @table::sbnd_g4_services
   PhotonVisibilityService:   @local::sbnd_Nhits_vuv_vis_prop_timing_photonvisibilityservice
                              @table::sbnd_larg4_services_noophybrid
-} # sbnd_g4_services_hybrid
+} # sbnd_g4_services_noophybrid
 
 
 # Define sbnd_detsim_services
