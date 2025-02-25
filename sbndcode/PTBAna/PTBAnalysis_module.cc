@@ -588,7 +588,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
   _ptb_llt_trigger.resize(nLLTs);
   _ptb_llt_timestamp.resize(nLLTs);
   _ptb_llt_trunmask.resize(nLLTs);
-  _ptb_llt_unmask_timestamp.resize(nHLTs);
+  _ptb_llt_unmask_timestamp.resize(nLLTs);
   
   unsigned llt_i = 0; //For ptb_llt_trunmask and perevent, includes the multiples with multiple upbits per word
   unsigned l_i=0; //For ptb_llt_trigger, records only unique words
