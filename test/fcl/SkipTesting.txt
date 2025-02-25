@@ -37,3 +37,4 @@ reco_uboonedatadrivennoise.fcl
 reco_uddnoise_gausfilter.fcl
 detsimmodules_sbnd.fcl
 reco_calorimetry_workshop2020_sbnd.fcl
+trackfindermodules_sbnd.fcl
