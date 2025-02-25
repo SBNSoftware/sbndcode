@@ -4,4 +4,12 @@
 # CORSIKA cosmics are generated using the
 # "constant mass composition" model. 
 
-#include "prodoverlay_corsika_cosmics_cmc_genie_nu_spill_gsimple-configk-v1_cryostat.fcl"
+#include "prodgenie_bnb_nu_cosmic_sbnd.fcl"
+
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_nu_Kv1
+     EventsPerSpill: 0
+     TopVolume: "volCryostat"
+}
+

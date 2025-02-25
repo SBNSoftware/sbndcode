@@ -5,4 +5,6 @@
 # CORSIKA cosmics are generated using the
 # "constant mass composition" model. 
 
-#include "prodoverlay_corsika_cosmics_cmc_genie_nu_spill_gsimple-configk-v1_tpc.fcl"
+#include "prodoverlay_corsika_cosmics_cmc_genie_nu_spill_gsimple_cryostat.fcl"
+
+#include "set_genie_tpc.fcl"
