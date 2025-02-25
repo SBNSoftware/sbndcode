@@ -1,4 +1,4 @@
-#include "standard_g4_rockbox.fcl"
+#include "standard_g4_rockbox_sbnd.fcl"
 process_name: G4Var
 services.LArG4Parameters.EllipsModBoxA: .904
 services.LArG4Parameters.EllipsModBoxB: .228
