@@ -9,7 +9,7 @@
 declare -ar TestNames=(
     'prodsingle_mu_bnblike_newflux'
     'standard_g4_sbnd'
-    'standatd_detsim_sbnd'
+    'standard_detsim_sbnd'
     'standard_reco1_sbnd'
     'standard_reco2_sbnd'
 )
