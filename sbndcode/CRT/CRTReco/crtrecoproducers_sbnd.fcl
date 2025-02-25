@@ -29,7 +29,7 @@ crtstriphitproducer_data_sbnd.RawTSCorrection:           367000
 crtstriphitproducer_data_sbnd.MaxAllowedRefTimeDiff:     3000000
 crtstriphitproducer_data_sbnd.SPECTDCModuleLabel:        "tdcdecoder"
 crtstriphitproducer_data_sbnd.PTBModuleLabel:            "ptbdecoder"
-crtstriphitproducer_data_sbnd.AllowedPTBHLTs:            [ 1, 2, 3, 4, 5 ]
+crtstriphitproducer_data_sbnd.AllowedPTBHLTs:            [ 1, 2, 3, 4, 5, 14, 15 ]
 
 crtclusterproducer_sbnd:
 {
