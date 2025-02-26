@@ -34,4 +34,11 @@ simple_plugin(
               Eigen3::Eigen
 )
 
+simple_plugin(
+              CRTVetoProducer module
+              sbnobj::SBND_CRT
+              sbndcode_CRTUtils
+              sbndcode_GeoWrappers
+)
+
 install_fhicl()
