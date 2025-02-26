@@ -3,7 +3,7 @@
 
 BEGIN_PROLOG
 analysis_config: {
-  edepo_sim_producers: [ionandscintout]
+  edepo_sim_producers: [ionandscint]
 }
 END_PROLOG
 

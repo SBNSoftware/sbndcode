@@ -22,6 +22,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RawData/raw.h"
 #include "lardataobj/Simulation/sim.h"
+#include "lardataobj/Simulation/SimEnergyDeposit.h"
 
 #include "art_root_io/TFileService.h"
 
@@ -71,9 +72,11 @@ private:
   int _run;
   int _subrun;
   int _event;
-  std::vector<float> _edepo;
-  std::vector<float> _nele;
-  std::vector<float> _angle;
+  std::vector<double> _edepo;
+  std::vector<int> _nele;
+  std::vector<double> _steplen;
+  std::vector<double> _angle;
+  std::vector<int> _pdg;
 };
 
 
@@ -93,7 +96,9 @@ void util::TPCRecomAna::beginJob()
   fEventTree->Branch("event", &_event);
   fEventTree->Branch("edepo", &_edepo);
   fEventTree->Branch("nele", &_nele);
+  fEventTree->Branch("steplen", &_steplen);
   fEventTree->Branch("angle", &_angle);
+  fEventTree->Branch("pdg", &_pdg);
 }
 
 util::TPCRecomAna::AnalysisConfig::AnalysisConfig(const fhicl::ParameterSet &param) {
@@ -124,7 +129,7 @@ void util::TPCRecomAna::analyze(art::Event const& e)
     }
 
     // exit if the data isn't present
-    if (!timestamp_handle.isValid()) {
+    if (!edposim_handle.isValid()) {
       std::cerr << "Error: missing timestamps with producer (" << prod << ")" << std::endl;
       return;
     }
@@ -135,8 +140,20 @@ void util::TPCRecomAna::analyze(art::Event const& e)
   // collect timestamps
   unsigned edeposim_index = 0;
   for (auto const& edposims: _edposim_handle) {
-    float this_edpo = edposims->Energy();
+    double this_edpo = edposims->Energy();
+    int this_nele = edposims -> NumElectrons();
+    double this_steplen = edposims -> StepLength();
+
+    geo::Vector_t stepvec = edposims -> Start() - edposims -> End();
+    geo::Vector_t elecvec{1., 0., 0.};
+    double this_angle = std::acos(stepvec.Dot(elecvec) / (stepvec.R() * elecvec.R()));
+    double this_pdg = edposims -> PdgCode();
+
     _edepo.push_back(this_edpo);
+    _nele.push_back(this_nele);
+    _steplen.push_back(this_steplen);
+    _angle.push_back(this_angle);
+    _pdg.push_back(this_pdg);
     edeposim_index++;
   }
 
