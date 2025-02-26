@@ -248,6 +248,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
       if(!ptbHandle.isValid() || ptbHandle->size() == 0)
         continue;
       foundgate = getGateTime(ptbHandle, gateTime);
+      // std::cout << "Gate time: " << int(gateTime) << std::endl;
     }
   }
 
@@ -355,6 +356,7 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
         if (contf.fragment_type()==sbndaq::detail::FragmentType::CAENV1730) {
           if (std::find(fFragIDs.begin(), fFragIDs.end(), contf[0].get()->fragmentID()) == fFragIDs.end()) continue;
           if (fVerbose>=3) TLOG(TLVL_INFO) << "Found " << contf.block_count() << " CAEN1730 fragments in container with fragID " << contf[0].get()->fragmentID();
+          // std::cout << "Found " << contf.block_count() << " CAEN1730 fragments in container with fragID " << contf[0].get()->fragmentID() << std::endl;
 
           if (etrig_frag_dt==1e9){
             for (size_t ii = 0; ii < contf.block_count(); ++ii){
@@ -486,13 +488,15 @@ void sbnd::trigger::pmtSoftwareTriggerProducer::produce(art::Event& e)
 
       flash_prelimPE = (flash_baseline-(*std::min_element(wvfm_sum.begin()+prelimStart,wvfm_sum.begin()+windowStartBin)))/fADCtoPE;
       flash_promptPE = (flash_baseline-(*std::min_element(wvfm_sum.begin()+windowStartBin,wvfm_sum.begin()+promptEnd)))/fADCtoPE;
-      flash_peakPE   = (flash_baseline-(*std::min_element(wvfm_sum.begin(),wvfm_sum.end())))/fADCtoPE;
       // auto flash_peak_it = std::min_element(wvfm_sum.begin(),wvfm_sum.end());
       // look at only the last 5000 samples of the waveform
       // important because our "chosen" ftrig may be an extended fragment
       auto flash_peak_it = std::min_element(wvfm_sum.end()-fWvfmLength,wvfm_sum.end());
       // time is referenced to the end of the waveform; this is correct assuming we grabbed the right fragment!  
+      flash_peakPE   = (flash_baseline-(*flash_peak_it))/fADCtoPE;
       flash_peaktime = (fWvfmLength*fWvfmPostPercent - (wvfm_sum.end() -  flash_peak_it))*ticks_to_us; // us
+      // std::cout << "Flash peak time: " << flash_peaktime << " us" << std::endl;
+      // std::cout << "Flash peak PE: " << flash_peakPE << " PE" << std::endl;
     }
     trig_metrics.nAboveThreshold = nAboveThreshold;
     if (fCalculatePEMetrics){
@@ -567,7 +571,10 @@ bool sbnd::trigger::pmtSoftwareTriggerProducer::getGateTime(art::Handle<std::vec
       for(size_t word_i = 0; word_i < ctb_frag.NWords(); ++word_i){
         if(ctb_frag.Trigger(word_i)){
           auto wt = ctb_frag.Word(word_i)->word_type;
-          if (wt == 2 && ( ctb_frag.Trigger(word_i)->IsTrigger(26) || ctb_frag.Trigger(word_i)->IsTrigger(27) )){
+          bool gate_hlt = false;
+          if ((fStreamType == 2 ) && (ctb_frag.Trigger(word_i)->IsTrigger(26))) gate_hlt = true;
+          if ((fStreamType == 4 ) && (ctb_frag.Trigger(word_i)->IsTrigger(27))) gate_hlt = true;
+          if (wt == 2 && gate_hlt){            
             foundgate = true;
             gateTime = double((std::bitset<64>(ctb_frag.Trigger(word_i)->timestamp).to_ullong()*20)%(uint(1e9)) - fPTBDelay);
             if (fVerbose>=3) TLOG(TLVL_INFO) << "PTB gated FTRIG HLT timestamp: " << uint(gateTime) << " ns";
@@ -592,6 +599,7 @@ int8_t sbnd::trigger::pmtSoftwareTriggerProducer::getClosestFTrig(double refTime
     // auto iftrig = ftrig_v[i];
     double diff = ftrig_v[i] - refTime;
     diff_v[i] = std::abs(diff);
+    // std::cout << "ftrig " << i << ": " << int(ftrig_v[i]) << "diff = " << diff << std::endl;
     if (std::abs(diff) < min_diff){
         min_idx = int8_t(i);
         min_diff = std::abs(diff);
