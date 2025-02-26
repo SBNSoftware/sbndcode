@@ -1,0 +1,35 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+BEGIN_PROLOG
+analysis_config: {
+  edepo_sim_producers: [ionandscintout]
+}
+END_PROLOG
+
+services:
+{
+  TFileService: { fileName: "tpcrecomana_sbnd.root" }
+  @table::sbnd_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
+}
+
+physics:
+{
+  analyzers:
+  {
+    TPCRecomAna: {
+      module_type: "TPCRecomAna"
+      @table::analysis_config
+    }
+  }
+  recomana: [TPCRecomAna]
+  end_paths: [recomana]
+}
+
+process_name: RECOMANALYSIS
