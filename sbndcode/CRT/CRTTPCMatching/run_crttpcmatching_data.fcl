@@ -1,0 +1,6 @@
+#include "run_crttpcmatching.fcl"
+
+process_name: CRTTPCMatching
+
+physics.producers.crtspacepointmatching: @local::crtspacepointmatchproducer_data_sbnd
+physics.producers.crttrackmatching:      @local::crttrackmatchproducer_data_sbnd

@@ -12,8 +12,11 @@ crtspacepointmatchalg_sbnd:
    MaxUncert:          20.
    TPCTrackLabel:      "pandoraTrack"
    CRTSpacePointLabel: "crtspacepoints"
-   UseTs0:             true
+   UseTs0:             false
 }
+
+crtspacepointmatchalg_data_sbnd: @local::crtspacepointmatchalg_sbnd
+crtspacepointmatchalg_data_sbnd.UseTs0: true
 
 crtspacepointmatchproducer_sbnd:
 {
@@ -24,6 +27,9 @@ crtspacepointmatchproducer_sbnd:
    module_type:              "CRTSpacePointMatching"
 }
 
+crtspacepointmatchproducer_data_sbnd: @local::crtspacepointmatchproducer_sbnd
+crtspacepointmatchproducer_data_sbnd.MatchingAlg: @local::crtspacepointmatchalg_data_sbnd
+
 crttrackmatchalg_sbnd:
 {
    MaxAngleDiff:      0.4
@@ -32,8 +38,11 @@ crttrackmatchalg_sbnd:
    MinTPCTrackLength: 5.
    SelectionMetric:   "score"
    TPCTrackLabel:     "pandoraTrack"
-   UseTs0:            true
+   UseTs0:            false
 }
+
+crttrackmatchalg_data_sbnd: @local::crttrackmatchalg_sbnd
+crttrackmatchalg_data_sbnd.UseTs0: true
 
 crttrackmatchproducer_sbnd:
 {
@@ -43,5 +52,8 @@ crttrackmatchproducer_sbnd:
    MatchingAlg:         @local::crttrackmatchalg_sbnd
    module_type:         "CRTTrackMatching"
 }
+
+crttrackmatchproducer_data_sbnd: @local::crttrackmatchproducer_sbnd
+crttrackmatchproducer_data_sbnd.MatchingAlg: @local::crttrackmatchalg_sbnd
 
 END_PROLOG
