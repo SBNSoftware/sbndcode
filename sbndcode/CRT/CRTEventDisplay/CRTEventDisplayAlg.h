@@ -87,8 +87,11 @@ namespace sbnd::crt {
       fhicl::Atom<art::InputTag> TrackLabel {
         Name("TrackLabel")
       };
-      fhicl::Atom<art::InputTag> TrackMatchLabel {
-        Name("TrackMatchLabel")
+      fhicl::Atom<art::InputTag> TPCSpacePointMatchLabel {
+        Name("TPCSpacePointMatchLabel")
+      };
+      fhicl::Atom<art::InputTag> TPCTrackMatchLabel {
+        Name("TPCTrackMatchLabel")
       };
 
       fhicl::Atom<bool> SaveRoot {
@@ -133,6 +136,9 @@ namespace sbnd::crt {
       };
       fhicl::Atom<bool> DrawTracks {
         Name("DrawTracks")
+      };
+      fhicl::Atom<bool> DrawTPCMatching {
+        Name("DrawTPCMatching")
       };
 
       fhicl::Atom<bool> ChoseTaggers {
@@ -184,6 +190,9 @@ namespace sbnd::crt {
       };
       fhicl::Atom<int> TrackColour {
         Name("TrackColour")
+      };
+      fhicl::Atom<int> TPCMatchColour {
+        Name("TPCMatchColour")
       };
 
       fhicl::Atom<bool> UseTs0 {
@@ -250,7 +259,8 @@ namespace sbnd::crt {
     art::InputTag fClusterLabel;
     art::InputTag fSpacePointLabel;
     art::InputTag fTrackLabel;
-    art::InputTag fTrackMatchLabel;
+    art::InputTag fTPCSpacePointMatchLabel;
+    art::InputTag fTPCTrackMatchLabel;
 
     bool fSaveRoot;
     bool fSaveViews;
@@ -267,6 +277,7 @@ namespace sbnd::crt {
     bool fDrawClusters;
     bool fDrawSpacePoints;
     bool fDrawTracks;
+    bool fDrawTPCMatching;
 
     bool             fChoseTaggers;
     std::vector<int> fChosenTaggers;
@@ -286,6 +297,7 @@ namespace sbnd::crt {
     int fClusterColourInterval;
     int fSpacePointColour;
     int fTrackColour;
+    int fTPCMatchColour;
 
     bool   fUseTs0;
     double fMinTime;

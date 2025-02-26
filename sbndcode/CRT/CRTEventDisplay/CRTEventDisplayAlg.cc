@@ -28,7 +28,8 @@ namespace sbnd::crt {
     fClusterLabel = config.ClusterLabel();
     fSpacePointLabel = config.SpacePointLabel();
     fTrackLabel = config.TrackLabel();
-    fTrackMatchLabel = config.TrackMatchLabel();
+    fTPCSpacePointMatchLabel = config.TPCSpacePointMatchLabel();
+    fTPCTrackMatchLabel = config.TPCTrackMatchLabel();
 
     fSaveRoot = config.SaveRoot();
     fSaveViews = config.SaveViews();
@@ -45,6 +46,7 @@ namespace sbnd::crt {
     fDrawClusters = config.DrawClusters();
     fDrawSpacePoints = config.DrawSpacePoints();
     fDrawTracks = config.DrawTracks();
+    fDrawTPCMatching = config.DrawTPCMatching();
 
     fChoseTaggers = config.ChoseTaggers();
     fChosenTaggers = config.ChosenTaggers();
@@ -64,6 +66,7 @@ namespace sbnd::crt {
     fClusterColourInterval = config.ClusterColourInterval();
     fSpacePointColour = config.SpacePointColour();
     fTrackColour = config.TrackColour();
+    fTPCMatchColour = config.TPCMatchColour();
 
     fUseTs0  = config.UseTs0();
     fMinTime = config.MinTime();
@@ -469,54 +472,6 @@ namespace sbnd::crt {
                     const art::Ptr<CRTSpacePoint> spacepoint = spacePointVec[0];
                     const geo::Point_t pos = spacepoint->Pos();
                     const geo::Point_t err = spacepoint->Err();
-                    try {
-                      auto spacePointsHandle = event.getValidHandle<std::vector<CRTSpacePoint>>(fSpacePointLabel);
-                      art::FindOneP<recob::Track, anab::T0> CRTSPstoTPCTracks(spacePointsHandle, event, "crtspacepointmatching");
-                      const art::Ptr<recob::Track> TPCTrack = CRTSPstoTPCTracks.at(spacepoint.key());
-                      if(TPCTrack.isNonnull()) {
-                        const anab::T0 t0Match = CRTSPstoTPCTracks.data(spacepoint.key()).ref();
-                        double t0SPMatchConfidence = t0Match.TriggerConfidence();
-                        const geo::Point_t startTPC = TPCTrack->Start();
-                        const geo::Vector_t dirTPC  = TPCTrack->StartDirection();
-                        TPolyLine3D *lineTPC = new TPolyLine3D(2);
-                        geo::Point_t aTPC {0,0,0};
-                        geo::Point_t bTPC {0,0,0};
-                        int i = 0;
-                        do
-                          {
-                            aTPC = startTPC + i * dirTPC;
-                            ++i;
-                          }
-                        while(IsPointInsideBox(crtLims, aTPC));
-                        i = 0;
-                        do
-                          {
-                            bTPC = startTPC + i * dirTPC;
-                            --i;
-                          }
-                          while(IsPointInsideBox(crtLims, bTPC));
-                          lineTPC->SetPoint(0, aTPC.X(), aTPC.Y(), aTPC.Z());
-                          lineTPC->SetPoint(1, bTPC.X(), bTPC.Y(), bTPC.Z());
-                          lineTPC->SetLineColor(3);
-                          lineTPC->SetLineWidth(fLineWidth);
-                          lineTPC->Draw();
-                          TPaveText *pt = new TPaveText(0.05,0.85,0.35,0.65,"NB");
-                          pt->SetTextSize(0.02);
-                          pt->SetFillStyle(0);
-                          pt->SetLineStyle(0);
-                          pt->SetTextAlign(12);
-                          pt->SetBorderSize(0);
-                          pt->Draw();
-                          if(fPrint)
-                            std::cout << "t0 matching confidence for this spacepoint is " << t0SPMatchConfidence << std::endl;
-                      }
-                      else {
-                        continue;
-                      }
-                    } catch(...) {
-                      continue;
-                    }  
-
 
                     double rmin[3] = {pos.X() - err.X(), pos.Y() - err.Y(), pos.Z() - err.Z()};
                     double rmax[3] = {pos.X() + err.X(), pos.Y() + err.Y(), pos.Z() + err.Z()};
@@ -530,8 +485,43 @@ namespace sbnd::crt {
                                 << spacepoint->Ts0() << " (" << spacepoint->Ts0() - G4RefTime << ") or t1 = "
                                 << spacepoint->Ts1() << " (" << spacepoint->Ts1() - G4RefTime << ")"
                                 << " with PE " << spacepoint->PE()
-                                << std::endl;
-                  }
+				<< std::endl;
+
+		    if(fDrawTPCMatching)
+		      {
+			auto spacePointsHandle = event.getValidHandle<std::vector<CRTSpacePoint>>(fSpacePointLabel);
+			art::FindOneP<recob::Track, anab::T0> CRTSPstoTPCTracks(spacePointsHandle, event, fTPCSpacePointMatchLabel);
+
+			const art::Ptr<recob::Track> TPCTrack = CRTSPstoTPCTracks.at(spacepoint.key());
+
+			if(TPCTrack.isNonnull())
+			  {
+			    const anab::T0 t0Match = CRTSPstoTPCTracks.data(spacepoint.key()).ref();
+
+			    const double t0MatchConfidence = t0Match.TriggerConfidence();
+			    const geo::Point_t startTPC    = TPCTrack->Start();
+			    const geo::Point_t endTPC      = TPCTrack->End();
+
+			    TPolyLine3D *lineTPC = new TPolyLine3D(2);			    
+			    lineTPC->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+			    lineTPC->SetPoint(1, endTPC.X(), endTPC.Y(), endTPC.Z());
+			    lineTPC->SetLineColor(fTPCMatchColour);
+			    lineTPC->SetLineWidth(fLineWidth);
+			    lineTPC->Draw();
+
+			    TPaveText *pt = new TPaveText(0.05,0.85,0.35,0.65,"NB");
+			    pt->SetTextSize(0.02);
+			    pt->SetFillStyle(0);
+			    pt->SetLineStyle(0);
+			    pt->SetTextAlign(12);
+			    pt->SetBorderSize(0);
+			    pt->Draw();
+
+			    if(fPrint)
+			      std::cout << "t0 matching confidence for this spacepoint is " << t0MatchConfidence << std::endl;
+			  }
+			}
+		      }
                 else if(spacePointVec.size() != 0)
                   std::cout << "What an earth is going on here then..." << std::endl;
               }
@@ -543,8 +533,6 @@ namespace sbnd::crt {
         auto tracksHandle = event.getValidHandle<std::vector<CRTTrack>>(fTrackLabel);
         std::vector<art::Ptr<CRTTrack>> tracksVec;
         art::fill_ptr_vector(tracksVec, tracksHandle);
-        art::FindOneP<recob::Track, anab::T0> CRTTrackstoTPCTracks(tracksHandle, event, "crttrackmatching");
-
 
         for(auto track : tracksVec)
           {
@@ -567,49 +555,6 @@ namespace sbnd::crt {
 
             const geo::Point_t start = track->Start();
             const geo::Vector_t dir  = track->Direction();
-            const art::Ptr<recob::Track> TPCTrack = CRTTrackstoTPCTracks.at(track.key());
-            if(TPCTrack.isNonnull()) {
-              const anab::T0 t0Match = CRTTrackstoTPCTracks.data(track.key()).ref();
-              double t0MatchConfidence = t0Match.TriggerConfidence();
-              
-              const geo::Point_t startTPC = TPCTrack->Start();
-              const geo::Vector_t dirTPC  = TPCTrack->StartDirection();
-              TPolyLine3D *lineTPC = new TPolyLine3D(2);
-              geo::Point_t aTPC {0,0,0};
-              geo::Point_t bTPC {0,0,0};
-              int i = 0;
-              do
-                {
-                  aTPC = startTPC + i * dirTPC;
-                  ++i;
-                }
-              while(IsPointInsideBox(crtLims, aTPC));
-              i = 0;
-              do
-                {
-                  bTPC = startTPC + i * dirTPC;
-                  --i;
-                }
-              while(IsPointInsideBox(crtLims, bTPC));
-              lineTPC->SetPoint(0, aTPC.X(), aTPC.Y(), aTPC.Z());
-              lineTPC->SetPoint(1, bTPC.X(), bTPC.Y(), bTPC.Z());
-              lineTPC->SetLineColor(2);
-              lineTPC->SetLineWidth(fLineWidth);
-              lineTPC->Draw();
-              TPaveText *pt = new TPaveText(0.05,0.8,0.35,0.6,"NB");
-              pt->SetTextSize(0.02);
-              pt->SetFillStyle(0);
-              pt->SetLineStyle(0);
-              pt->SetTextAlign(12);
-              pt->SetBorderSize(0);
-              pt->Draw();
-              if(fPrint)
-                std::cout << "t0 matching confidence for this track is " << t0MatchConfidence << std::endl;
-            }
-            else {
-              continue;
-            }
-
 
             TPolyLine3D *line = new TPolyLine3D(2);
             geo::Point_t a {0,0,0};
@@ -647,7 +592,39 @@ namespace sbnd::crt {
                         << "\tat ts1 " << track->Ts1() << " (" << track->Ts1() - G4RefTime << ")\n"
                         << "\tfrom three hits? " << track->Triple() << std::endl;
 
-          }
+	    if(fDrawTPCMatching)
+	      {
+		art::FindOneP<recob::Track, anab::T0> CRTTrackstoTPCTracks(tracksHandle, event, fTPCTrackMatchLabel);
+		const art::Ptr<recob::Track> TPCTrack = CRTTrackstoTPCTracks.at(track.key());
+
+		if(TPCTrack.isNonnull())
+		  {
+		    const anab::T0 t0Match = CRTTrackstoTPCTracks.data(track.key()).ref();
+
+		    const double t0MatchConfidence = t0Match.TriggerConfidence();
+		    const geo::Point_t startTPC    = TPCTrack->Start();
+		    const geo::Point_t endTPC      = TPCTrack->End();
+
+		    TPolyLine3D *lineTPC = new TPolyLine3D(2);			    
+		    lineTPC->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+		    lineTPC->SetPoint(1, endTPC.X(), endTPC.Y(), endTPC.Z());
+		    lineTPC->SetLineColor(fTPCMatchColour);
+		    lineTPC->SetLineWidth(fLineWidth);
+		    lineTPC->Draw();
+
+		    TPaveText *pt = new TPaveText(0.05,0.8,0.35,0.6,"NB");
+		    pt->SetTextSize(0.02);
+		    pt->SetFillStyle(0);
+		    pt->SetLineStyle(0);
+		    pt->SetTextAlign(12);
+		    pt->SetBorderSize(0);
+		    pt->Draw();
+
+		    if(fPrint)
+		      std::cout << "t0 matching confidence for this track is " << t0MatchConfidence << std::endl;
+		  }
+	      }
+	  }
       }
 
     if(fSaveRoot)
