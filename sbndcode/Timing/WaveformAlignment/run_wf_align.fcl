@@ -23,6 +23,7 @@ outputs:
     {
         module_type: RootOutput
         fileName:    "wfalign-art.root"
+        dataTier: "reco"
     }
 }
 

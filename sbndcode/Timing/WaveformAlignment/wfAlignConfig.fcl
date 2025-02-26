@@ -30,8 +30,7 @@ wfAlign:
     TickLbTiming: 975
     TickUbTiming: 1005
 
-    ApplyShift: true
-    ExcludeFtrigBoard: []
+    ShiftSubNs: false
 
     SaveGoodFit: false
     SaveBadFit: false
