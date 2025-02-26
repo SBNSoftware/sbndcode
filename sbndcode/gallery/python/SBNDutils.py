@@ -82,13 +82,12 @@ def loadSBNDauxDetgeometry(config = None, registry = None):
   SourceCode = LArSoftUtils.SourceCode # alias
   
   SourceCode.loadHeaderFromUPS('sbndcode/CRT/CRTGeoObjectSorter.h')
-  SourceCode.loadHeaderFromUPS('sbndcode/CRT/CRTAuxDetInitializer.h')
+  SourceCode.loadHeaderFromUPS('sbndcode/CRT/CRTAuxDetInitializerSBND.h')
   SourceCode.loadLibrary('sbndcode_CRTData')
 
   return LArSoftUtils.loadAuxDetGeometry \
-    (config=config, registry=registry, sorter=None, auxdetinit=ROOT.sbnd.crt.CRTAuxDetInitializer) #auxdetinit=ROOT.geo.AuxDetReadoutGeom) 
-    # (config=config, registry=registry, sorter=ROOT.geo.AuxDetGeoObjectSorterStandard, auxdetinit=ROOT.sbnd.crt.CRTAuxDetInitializer) #auxdetinit=ROOT.geo.AuxDetReadoutGeom) 
-# loadSBNDauxDetgeometry()
+    (config=config, registry=registry, sorter=None, auxdetinit=None)
+    # (config=config, registry=registry, sorter=None, auxdetinit=ROOT.sbnd.crt.CRTAuxDetInitializerSBND)
 
 
 def justLoadSBNDauxDetgeometry(configFile, mapping = None):
