@@ -1,4 +1,4 @@
-#include "g4_no_opticalsim.fcl"
+#include "g4_no_opticalsim_sbnd.fcl"
 
 services.SpaceCharge.EnableSimSpatialSCE: true
 services.SpaceCharge.EnableSimEfieldSCE: true
