@@ -6,7 +6,7 @@
 
 
 #include "larg4particlefilter.fcl"
-#include "g4_no_opticalsim.fcl"
+#include "g4_no_opticalsim_sbnd.fcl"
 
 
 # Remove the optical simulation process from the simulate path and add the filter

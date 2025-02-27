@@ -1,4 +1,4 @@
-#include "g4_no_opticalsim.fcl"
+#include "g4_no_opticalsim_sbnd.fcl"
 
 services.DetectorPropertiesService.Electronlifetime:  9.6e3 #microseconds
 
