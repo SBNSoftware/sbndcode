@@ -26,6 +26,7 @@
 
 //larsoft
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 // sbnobj
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
@@ -37,6 +38,7 @@
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
+#include "sbndcode/CRT/CRTUtils/TPCGeoUtil.h"
 
 // ROOT
 #include "TPolyLine3D.h"
@@ -93,6 +95,9 @@ namespace sbnd::crt {
       fhicl::Atom<art::InputTag> TPCTrackMatchLabel {
         Name("TPCTrackMatchLabel")
       };
+      fhicl::Atom<art::InputTag> TPCTrackLabel {
+        Name("TPCTrackLabel")
+      };
 
       fhicl::Atom<bool> SaveRoot {
         Name("SaveRoot"),
@@ -139,6 +144,12 @@ namespace sbnd::crt {
       };
       fhicl::Atom<bool> DrawTPCMatching {
         Name("DrawTPCMatching")
+      };
+      fhicl::Atom<bool> OnlyDrawMatched {
+        Name("OnlyDrawMatched")
+      };
+      fhicl::Atom<bool> DisplayMatchScore {
+        Name("DisplayMatchScore")
       };
 
       fhicl::Atom<bool> ChoseTaggers {
@@ -234,6 +245,9 @@ namespace sbnd::crt {
     void SetDrawStripHits(bool tf);
     void SetDrawClusters(bool tf);
 
+    void SetMinTime(double time);
+    void SetMaxTime(double time);
+
     void SetPrint(bool tf);
 
     void SetHighlightedModules(std::vector<int> hm);
@@ -261,6 +275,7 @@ namespace sbnd::crt {
     art::InputTag fTrackLabel;
     art::InputTag fTPCSpacePointMatchLabel;
     art::InputTag fTPCTrackMatchLabel;
+    art::InputTag fTPCTrackLabel;
 
     bool fSaveRoot;
     bool fSaveViews;
@@ -278,6 +293,8 @@ namespace sbnd::crt {
     bool fDrawSpacePoints;
     bool fDrawTracks;
     bool fDrawTPCMatching;
+    bool fOnlyDrawMatched;
+    bool fDisplayMatchScore;
 
     bool             fChoseTaggers;
     std::vector<int> fChosenTaggers;
