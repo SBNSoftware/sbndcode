@@ -81,6 +81,6 @@ crttrackproducer_sbnd:
 crttrackproducer_data_sbnd: @local::crttrackproducer_sbnd
 crttrackproducer_data_sbnd.CRTGeoAlg:     @local::crtgeoalg_data_sbnd
 crttrackproducer_data_sbnd.UseTs0:        true
-crttrackproducer_data_sbnd.MaskedTaggers: [ 0 ]
+crttrackproducer_data_sbnd.MaskedTaggers: [ ]
 
 END_PROLOG

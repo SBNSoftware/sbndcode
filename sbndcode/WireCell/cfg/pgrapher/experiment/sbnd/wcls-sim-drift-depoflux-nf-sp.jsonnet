@@ -28,6 +28,10 @@ local params = base {
     // Electron drift speed, assumes a certain applied E-field
     drift_speed: std.extVar('driftSpeed') * wc.mm / wc.us,
   },
+  sim: super.sim {
+    // front porch size [us]
+    tick0_time: std.extVar('tick0_time') * wc.us,
+  }
 };
 
 local tools = tools_maker(params);
@@ -116,7 +120,7 @@ local wcls_depoflux_writer = g.pnode({
     field_response: wc.tn(tools.field),
     tick: 0.5 * wc.us,
     window_start: 0.0 * wc.ms,
-    window_duration: self.tick * 3400,
+    window_duration: self.tick * params.daq.nticks,
     nsigma: 3.0,
 
     reference_time: -1700 * wc.us,
