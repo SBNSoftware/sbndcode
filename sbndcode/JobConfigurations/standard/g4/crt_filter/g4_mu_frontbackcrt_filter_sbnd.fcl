@@ -1,4 +1,4 @@
-#include "g4_mu_crt_filter_base.fcl"
+#include "g4_mu_crt_filter_base_sbnd.fcl"
 
 physics.filters.filter.PDGs:                     [ 13, -13 ]
 # units GeV/c, needs at least 1 GeV/c to cross the active volume
