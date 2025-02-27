@@ -1,18 +1,20 @@
+#include "crteventdisplayalg_sbnd.fcl"
+
 BEGIN_PROLOG
 
 crtspacepointmatchalg_sbnd:
 {
-   TrackDirectionFrac: 0.5
-   DCALimit:           70.
-   MinTPCTrackLength:  10.
-   DirMethod:          1
-   DCAuseBox:          false
-   DCAoverLength:      false
-   PECut:              60.
-   MaxUncert:          20.
-   TPCTrackLabel:      "pandoraTrack"
-   CRTSpacePointLabel: "crtspacepoints"
-   UseTs0:             false
+  TrackDirectionFrac: 0.5
+  DCALimit:           70.
+  MinTPCTrackLength:  10.
+  DirMethod:          1
+  DCAuseBox:          false
+  DCAoverLength:      false
+  PECut:              60.
+  MaxUncert:          20.
+  TPCTrackLabel:      "pandoraTrack"
+  CRTSpacePointLabel: "crtspacepoints"
+  UseTs0:             false
 }
 
 crtspacepointmatchalg_data_sbnd: @local::crtspacepointmatchalg_sbnd
@@ -20,25 +22,28 @@ crtspacepointmatchalg_data_sbnd.UseTs0: true
 
 crtspacepointmatchproducer_sbnd:
 {
-   CRTSpacePointModuleLabel: "crtspacepoints"
-   TPCTrackModuleLabel:      @local::crtspacepointmatchalg_sbnd.TPCTrackLabel
-   PFPModuleLabel:           "pandora"
-   MatchingAlg:              @local::crtspacepointmatchalg_sbnd
-   module_type:              "CRTSpacePointMatching"
+  CRTSpacePointModuleLabel: "crtspacepoints"
+  TPCTrackModuleLabel:      @local::crtspacepointmatchalg_sbnd.TPCTrackLabel
+  PFPModuleLabel:           "pandora"
+  MatchingAlg:              @local::crtspacepointmatchalg_sbnd
+  CRTEventDisplayAlg:       @local::crteventdisplayalg_sbnd
+  MakeEventDisplays:        false
+  module_type:              "CRTSpacePointMatching"
 }
 
 crtspacepointmatchproducer_data_sbnd: @local::crtspacepointmatchproducer_sbnd
-crtspacepointmatchproducer_data_sbnd.MatchingAlg: @local::crtspacepointmatchalg_data_sbnd
+crtspacepointmatchproducer_data_sbnd.MatchingAlg:        @local::crtspacepointmatchalg_data_sbnd
+crtspacepointmatchproducer_data_sbnd.CRTEventDisplayAlg: @local::crteventdisplayalg_sbnd_data
 
 crttrackmatchalg_sbnd:
 {
-   MaxAngleDiff:      0.4
-   MaxDCA:            70.
-   MaxScore:          150.
-   MinTPCTrackLength: 5.
-   SelectionMetric:   "score"
-   TPCTrackLabel:     "pandoraTrack"
-   UseTs0:            false
+  MaxAngleDiff:      0.4
+  MaxDCA:            70.
+  MaxScore:          150.
+  MinTPCTrackLength: 5.
+  SelectionMetric:   "score"
+  TPCTrackLabel:     "pandoraTrack"
+  UseTs0:            false
 }
 
 crttrackmatchalg_data_sbnd: @local::crttrackmatchalg_sbnd
@@ -46,14 +51,17 @@ crttrackmatchalg_data_sbnd.UseTs0: true
 
 crttrackmatchproducer_sbnd:
 {
-   CRTTrackModuleLabel: "crttracks"
-   TPCTrackModuleLabel: @local::crttrackmatchalg_sbnd.TPCTrackLabel
-   PFPModuleLabel:      "pandora"
-   MatchingAlg:         @local::crttrackmatchalg_sbnd
-   module_type:         "CRTTrackMatching"
+  CRTTrackModuleLabel: "crttracks"
+  TPCTrackModuleLabel: @local::crttrackmatchalg_sbnd.TPCTrackLabel
+  PFPModuleLabel:      "pandora"
+  MatchingAlg:         @local::crttrackmatchalg_sbnd
+  CRTEventDisplayAlg:  @local::crteventdisplayalg_sbnd
+  MakeEventDisplays:   false
+  module_type:         "CRTTrackMatching"
 }
 
 crttrackmatchproducer_data_sbnd: @local::crttrackmatchproducer_sbnd
-crttrackmatchproducer_data_sbnd.MatchingAlg: @local::crttrackmatchalg_sbnd
+crttrackmatchproducer_data_sbnd.MatchingAlg:        @local::crttrackmatchalg_data_sbnd
+crttrackmatchproducer_data_sbnd.CRTEventDisplayAlg: @local::crteventdisplayalg_sbnd_data
 
 END_PROLOG
