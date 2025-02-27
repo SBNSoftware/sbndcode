@@ -20,6 +20,7 @@
 #include "fhiclcpp/ParameterSet.h"
 
 #include "larcorealg/Geometry/GeometryCore.h"
+#include "larcorealg/Geometry/WireReadoutGeom.h"
 
 #include "lardataobj/RecoBase/Hit.h"
 
@@ -47,7 +48,7 @@ public:
 
     // provide for initialization
     void reconfigure(fhicl::ParameterSet const & pset);
-    void setup(const geo::GeometryCore&, TDirectory*);
+    void setup(const geo::GeometryCore&, const geo::WireReadoutGeom&, TDirectory*);
     void endJob(int numEvents);
     
     void fillHistograms(const TrackPlaneHitMap&) const;
@@ -92,6 +93,7 @@ private:
     
     // Useful services, keep copies for now (we can update during begin run periods)
     const geo::GeometryCore*           fGeometry;             ///< pointer to Geometry service
+    const geo::WireReadoutGeom*        fReadout;              ///< pointer to WireReaout service
 };
 
 } // end of namespace caldata

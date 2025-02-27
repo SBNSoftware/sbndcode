@@ -256,3 +256,65 @@ def getROOTclass(classPath):
 
 
 ################################################################################
+# this is not really specific to ROOT, but we often have ROOT file lists
+def expandFileList(
+ fileListPath: "path of the file list",
+ comment: "(default: '#') character used to introduce a comment" = '#',
+ fileListSuffixes: "suffix of entries to recursively add file lists" = [],
+ ) -> "a list of file names":
+  """Returns a list of file names as found in the specified file list.
+  
+  The `fileListPath` path is read as a text file; each line represents a full
+  file path.
+  Empty lines and lines starting with a comment character are ignored.
+  Also if blanks and a comment character are found, the content of the line
+  from the first of those blank characters on is ignored as part of a comment.
+  If `comment` is `None`, this feature is disabled.
+  
+  If file list suffixes are specified, a line ending with any of those suffixes
+  will be considered a file list itself, and recursively expanded.
+  
+  If `fileListPath` can't be read, an exception is raised.
+  """
+  
+  import logging
+  
+  l = []
+  with open(fileListPath, 'r') as fileList:
+    
+    for iLine, line in enumerate(fileList):
+      line = line.strip()
+      if not line: continue
+      if comment:
+        if line.startswith(comment): continue
+        
+        words = line.split(comment)
+        line = words[0]
+        for left, right in zip(words[:-1], words[1:]):
+          if left and left[-1].isspace():
+            logging.debug("Comment starting at line %d between '%s' and '%s'", iLine, left, right)
+            break
+          line += comment + right
+        # for
+        line = line.rstrip()
+      # if comment
+      
+      for suffix in fileListSuffixes:
+        if not line.endswith(suffix): continue
+        logging.debug("Adding content of file list from line %d ('%s')", iLine, line)
+        extra = expandFileList(line, comment=comment, fileListSuffixes=fileListSuffixes)
+        logging.debug("%d entries collected under file list '%s'", len(extra), line)
+        l.extend(extra)
+        break
+      else:
+        logging.debug("Line %d added to the list", iLine)
+        l.append(line)
+      # for suffix... else
+    # for line in list
+    
+  # with
+  return l
+# expandFileList()
+
+
+################################################################################
