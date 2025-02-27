@@ -1,4 +1,0 @@
-#include "legacy_g4_mu_frontbackcrt_filter_10ms_electron_lifetime.fcl"
-
-services.SpaceCharge.EnableSimSpatialSCE: true
-services.SpaceCharge.EnableSimEfieldSCE: true
