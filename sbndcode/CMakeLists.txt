@@ -45,3 +45,6 @@ add_subdirectory(ChannelMaps)
 
 # for CVN
 add_subdirectory(SBNDCVN)
+
+# nu+e directory
+add_subdirectory(nue)

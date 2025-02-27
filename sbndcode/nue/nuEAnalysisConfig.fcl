@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+nuE:
+{
+    module_type:        "NuE"
+    SliceLabel:         "pandora"
+    PFParticleLabel:    "pandora"
+    VertexLabel:        "pandora"
+    NuGenModuleLabel:   "generator"
+    HitLabel:           "gaushit"
+}
+
+END_PROLOG
