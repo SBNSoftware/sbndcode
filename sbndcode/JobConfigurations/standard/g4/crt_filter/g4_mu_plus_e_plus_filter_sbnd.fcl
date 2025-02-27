@@ -1,0 +1,2 @@
+#include "g4_michelelectron_filter_sbnd.fcl"
+physics.filters.filter.InterestingPDGs: [ -13 , -11 ] 

@@ -1,0 +1,4 @@
+#include "prodgenie_corsika_proton_rockbox_sbnd.fcl"
+
+services.ParticleListAction.keepEMShowerDaughters: true
+
