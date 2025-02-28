@@ -26,6 +26,7 @@
 
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
@@ -39,6 +40,7 @@
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
+#include "sbndcode/CRT/CRTUtils/TPCGeoUtil.h"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
 
@@ -284,33 +286,49 @@ private:
   std::vector<double>                _tr_truth_theta;
   std::vector<double>                _tr_truth_phi;
 
-  std::vector<double> _tpc_start_x;
-  std::vector<double> _tpc_start_y;
-  std::vector<double> _tpc_start_z;
-  std::vector<double> _tpc_end_x;
-  std::vector<double> _tpc_end_y;
-  std::vector<double> _tpc_end_z;
-  std::vector<double> _tpc_dir_x;
-  std::vector<double> _tpc_dir_y;
-  std::vector<double> _tpc_dir_z;
-  std::vector<double> _tpc_length;
-  std::vector<double> _tpc_track_score;
-  std::vector<int>    _tpc_truth_trackid;
-  std::vector<int>    _tpc_truth_pdg;
-  std::vector<double> _tpc_truth_energy;
-  std::vector<double> _tpc_truth_time;
-  std::vector<bool>   _tpc_sp_matchable;
-  std::vector<bool>   _tpc_sp_matched;
-  std::vector<bool>   _tpc_sp_good_match;
-  std::vector<double> _tpc_sp_ts0;
-  std::vector<double> _tpc_sp_ts1;
-  std::vector<double> _tpc_sp_score;
-  std::vector<bool>   _tpc_tr_matchable;
-  std::vector<bool>   _tpc_tr_matched;
-  std::vector<bool>   _tpc_tr_good_match;
-  std::vector<double> _tpc_tr_ts0;
-  std::vector<double> _tpc_tr_ts1;
-  std::vector<double> _tpc_tr_score;
+  std::vector<double>           _tpc_start_x;
+  std::vector<double>           _tpc_start_y;
+  std::vector<double>           _tpc_start_z;
+  std::vector<double>           _tpc_end_x;
+  std::vector<double>           _tpc_end_y;
+  std::vector<double>           _tpc_end_z;
+  std::vector<double>           _tpc_start_dir_x;
+  std::vector<double>           _tpc_start_dir_y;
+  std::vector<double>           _tpc_start_dir_z;
+  std::vector<double>           _tpc_end_dir_x;
+  std::vector<double>           _tpc_end_dir_y;
+  std::vector<double>           _tpc_end_dir_z;
+  std::vector<double>           _tpc_length;
+  std::vector<double>           _tpc_track_score;
+  std::vector<int>              _tpc_truth_trackid;
+  std::vector<int>              _tpc_truth_pdg;
+  std::vector<double>           _tpc_truth_energy;
+  std::vector<double>           _tpc_truth_time;
+  std::vector<bool>             _tpc_sp_matchable;
+  std::vector<bool>             _tpc_sp_matched;
+  std::vector<bool>             _tpc_sp_good_match;
+  std::vector<double>           _tpc_sp_xshift;
+  std::vector<double>           _tpc_sp_ts0;
+  std::vector<double>           _tpc_sp_ts1;
+  std::vector<int>              _tpc_sp_tagger;
+  std::vector<int>              _tpc_sp_nhits;
+  std::vector<double>           _tpc_sp_x;
+  std::vector<double>           _tpc_sp_y;
+  std::vector<double>           _tpc_sp_z;
+  std::vector<double>           _tpc_sp_score;
+  std::vector<bool>             _tpc_tr_matchable;
+  std::vector<bool>             _tpc_tr_matched;
+  std::vector<bool>             _tpc_tr_good_match;
+  std::vector<double>           _tpc_tr_ts0;
+  std::vector<double>           _tpc_tr_ts1;
+  std::vector<std::vector<int>> _tpc_tr_taggers;
+  std::vector<double>           _tpc_tr_start_x;
+  std::vector<double>           _tpc_tr_start_y;
+  std::vector<double>           _tpc_tr_start_z;
+  std::vector<double>           _tpc_tr_end_x;
+  std::vector<double>           _tpc_tr_end_y;
+  std::vector<double>           _tpc_tr_end_z;
+  std::vector<double>           _tpc_tr_score;
 
   std::vector<uint64_t> _ptb_hlt_trigger;
   std::vector<uint64_t> _ptb_hlt_timestamp;
@@ -556,18 +574,34 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tpc_end_x", "std::vector<double>", &_tpc_end_x);
       fTree->Branch("tpc_end_y", "std::vector<double>", &_tpc_end_y);
       fTree->Branch("tpc_end_z", "std::vector<double>", &_tpc_end_z);
-      fTree->Branch("tpc_dir_x", "std::vector<double>", &_tpc_dir_x);
-      fTree->Branch("tpc_dir_y", "std::vector<double>", &_tpc_dir_y);
-      fTree->Branch("tpc_dir_z", "std::vector<double>", &_tpc_dir_z);
+      fTree->Branch("tpc_start_dir_x", "std::vector<double>", &_tpc_start_dir_x);
+      fTree->Branch("tpc_start_dir_y", "std::vector<double>", &_tpc_start_dir_y);
+      fTree->Branch("tpc_start_dir_z", "std::vector<double>", &_tpc_start_dir_z);
+      fTree->Branch("tpc_end_dir_x", "std::vector<double>", &_tpc_end_dir_x);
+      fTree->Branch("tpc_end_dir_y", "std::vector<double>", &_tpc_end_dir_y);
+      fTree->Branch("tpc_end_dir_z", "std::vector<double>", &_tpc_end_dir_z);
       fTree->Branch("tpc_length", "std::vector<double>", &_tpc_length);
       fTree->Branch("tpc_track_score", "std::vector<double>", &_tpc_track_score);
       fTree->Branch("tpc_sp_matched", "std::vector<bool>", &_tpc_sp_matched);
+      fTree->Branch("tpc_sp_xshift", "std::vector<double>", &_tpc_sp_xshift);
       fTree->Branch("tpc_sp_ts0", "std::vector<double>", &_tpc_sp_ts0);
       fTree->Branch("tpc_sp_ts1", "std::vector<double>", &_tpc_sp_ts1);
+      fTree->Branch("tpc_sp_tagger", "std::vector<int>", &_tpc_sp_tagger);
+      fTree->Branch("tpc_sp_nhits", "std::vector<int>", &_tpc_sp_nhits);
+      fTree->Branch("tpc_sp_x", "std::vector<double>", &_tpc_sp_x);
+      fTree->Branch("tpc_sp_y", "std::vector<double>", &_tpc_sp_y);
+      fTree->Branch("tpc_sp_z", "std::vector<double>", &_tpc_sp_z);
       fTree->Branch("tpc_sp_score", "std::vector<double>", &_tpc_sp_score);
       fTree->Branch("tpc_tr_matched", "std::vector<bool>", &_tpc_tr_matched);
       fTree->Branch("tpc_tr_ts0", "std::vector<double>", &_tpc_tr_ts0);
       fTree->Branch("tpc_tr_ts1", "std::vector<double>", &_tpc_tr_ts1);
+      fTree->Branch("tpc_tr_taggers", "std::vector<std::vector<int>>", &_tpc_tr_taggers);
+      fTree->Branch("tpc_tr_start_x", "std::vector<double>", &_tpc_tr_start_x);
+      fTree->Branch("tpc_tr_start_y", "std::vector<double>", &_tpc_tr_start_y);
+      fTree->Branch("tpc_tr_start_z", "std::vector<double>", &_tpc_tr_start_z);
+      fTree->Branch("tpc_tr_end_x", "std::vector<double>", &_tpc_tr_end_x);
+      fTree->Branch("tpc_tr_end_y", "std::vector<double>", &_tpc_tr_end_y);
+      fTree->Branch("tpc_tr_end_z", "std::vector<double>", &_tpc_tr_end_z);
       fTree->Branch("tpc_tr_score", "std::vector<double>", &_tpc_tr_score);
       if(!fDataMode && fTruthMatch)
         {
@@ -1547,9 +1581,12 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_end_x.resize(nTracks);
   _tpc_end_y.resize(nTracks);
   _tpc_end_z.resize(nTracks);
-  _tpc_dir_x.resize(nTracks);
-  _tpc_dir_y.resize(nTracks);
-  _tpc_dir_z.resize(nTracks);
+  _tpc_start_dir_x.resize(nTracks);
+  _tpc_start_dir_y.resize(nTracks);
+  _tpc_start_dir_z.resize(nTracks);
+  _tpc_end_dir_x.resize(nTracks);
+  _tpc_end_dir_y.resize(nTracks);
+  _tpc_end_dir_z.resize(nTracks);
   _tpc_length.resize(nTracks);
   _tpc_track_score.resize(nTracks);
   _tpc_truth_trackid.resize(nTracks);
@@ -1559,14 +1596,27 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_sp_matchable.resize(nTracks);
   _tpc_sp_matched.resize(nTracks);
   _tpc_sp_good_match.resize(nTracks);
+  _tpc_sp_xshift.resize(nTracks);
   _tpc_sp_ts0.resize(nTracks);
   _tpc_sp_ts1.resize(nTracks);
+  _tpc_sp_tagger.resize(nTracks);
+  _tpc_sp_nhits.resize(nTracks);
+  _tpc_sp_x.resize(nTracks);
+  _tpc_sp_y.resize(nTracks);
+  _tpc_sp_z.resize(nTracks);
   _tpc_sp_score.resize(nTracks);
   _tpc_tr_matchable.resize(nTracks);
   _tpc_tr_matched.resize(nTracks);
   _tpc_tr_good_match.resize(nTracks);
   _tpc_tr_ts0.resize(nTracks);
   _tpc_tr_ts1.resize(nTracks);
+  _tpc_tr_taggers.resize(nTracks);
+  _tpc_tr_start_x.resize(nTracks);
+  _tpc_tr_start_y.resize(nTracks);
+  _tpc_tr_start_z.resize(nTracks);
+  _tpc_tr_end_x.resize(nTracks);
+  _tpc_tr_end_y.resize(nTracks);
+  _tpc_tr_end_z.resize(nTracks);
   _tpc_tr_score.resize(nTracks);
 
   art::FindOneP<recob::PFParticle>                 tracksToPFPs(TPCTrackHandle, e, fTPCTrackModuleLabel);
@@ -1576,7 +1626,10 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   art::FindOneP<CRTCluster>                        spsToClusters(CRTSpacePointHandle, e, fCRTSpacePointModuleLabel);
   art::FindOneP<CRTTrack, anab::T0>                tracksToTrackMatches(TPCTrackHandle, e, fCRTTrackMatchingModuleLabel);
 
-  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+  const detinfo::DetectorClocksData clockData   = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+  const detinfo::DetectorPropertiesData detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e);
+  geo::GeometryCore const* geometryService      = lar::providerFrom<geo::Geometry>();
+
   int nActualTracks = 0;
 
   for(unsigned i = 0; i < nTracks; ++i)
@@ -1599,10 +1652,17 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       _tpc_end_y[nActualTracks] = end.Y();
       _tpc_end_z[nActualTracks] = end.Z();
 
-      const geo::Vector_t dir = track->StartDirection();
-      _tpc_dir_x[nActualTracks] = dir.X();
-      _tpc_dir_y[nActualTracks] = dir.Y();
-      _tpc_dir_z[nActualTracks] = dir.Z();
+      const std::pair<geo::Vector_t, geo::Vector_t> dirs = CRTCommonUtils::AverageTrackDirections(track, 0.2);
+
+      const geo::Vector_t start_dir = dirs.first;
+      _tpc_start_dir_x[nActualTracks] = start_dir.X();
+      _tpc_start_dir_y[nActualTracks] = start_dir.Y();
+      _tpc_start_dir_z[nActualTracks] = start_dir.Z();
+
+      const geo::Vector_t end_dir = dirs.first;
+      _tpc_end_dir_x[nActualTracks] = end_dir.X();
+      _tpc_end_dir_y[nActualTracks] = end_dir.Y();
+      _tpc_end_dir_z[nActualTracks] = end_dir.Z();
 
       _tpc_length[nActualTracks] = track->Length();
 
@@ -1615,13 +1675,25 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       const art::Ptr<CRTSpacePoint> spacepoint = tracksToSPMatches.at(track.key());
       const art::Ptr<CRTTrack> crttrack = tracksToTrackMatches.at(track.key());
 
+      const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
+
       if(spacepoint.isNonnull())
         {
-          const anab::T0 spMatch = tracksToSPMatches.data(track.key()).ref();
+          const anab::T0 spMatch             = tracksToSPMatches.data(track.key()).ref();
+          const art::Ptr<CRTCluster> cluster = spsToClusters.at(spacepoint.key());
+
+          const int driftDirection     = TPCGeoUtil::DriftDirectionFromHits(geometryService, trackHits);
+          const double crtShiftingTime = fDataMode ? spacepoint->Ts0() * 1e-3 : spacepoint->Ts1() * 1e-3;
 
           _tpc_sp_matched[nActualTracks] = true;
+          _tpc_sp_xshift[nActualTracks]  = driftDirection * crtShiftingTime * detProp.DriftVelocity();
           _tpc_sp_ts0[nActualTracks]     = spacepoint->Ts0();
           _tpc_sp_ts1[nActualTracks]     = spacepoint->Ts1();
+          _tpc_sp_tagger[nActualTracks]  = cluster->Tagger();
+          _tpc_sp_nhits[nActualTracks]   = cluster->NHits();
+          _tpc_sp_x[nActualTracks]       = spacepoint->X();
+          _tpc_sp_y[nActualTracks]       = spacepoint->Y();
+          _tpc_sp_z[nActualTracks]       = spacepoint->Z();
           _tpc_sp_score[nActualTracks]   = spMatch.TriggerConfidence();
         }
       else
@@ -1629,6 +1701,10 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
           _tpc_sp_matched[nActualTracks] = false;
           _tpc_sp_ts0[nActualTracks]     = -std::numeric_limits<double>::max();
           _tpc_sp_ts1[nActualTracks]     = -std::numeric_limits<double>::max();
+          _tpc_sp_tagger[nActualTracks]  = -std::numeric_limits<int>::max();
+          _tpc_sp_x[nActualTracks]       = -std::numeric_limits<double>::max();
+          _tpc_sp_y[nActualTracks]       = -std::numeric_limits<double>::max();
+          _tpc_sp_z[nActualTracks]       = -std::numeric_limits<double>::max();
           _tpc_sp_score[nActualTracks]   = -std::numeric_limits<double>::max();
         }
 
@@ -1640,18 +1716,40 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
           _tpc_tr_ts0[nActualTracks]     = crttrack->Ts0();
           _tpc_tr_ts1[nActualTracks]     = crttrack->Ts1();
           _tpc_tr_score[nActualTracks]   = trackMatch.TriggerConfidence();
+
+          const std::set<CRTTagger> taggers = crttrack->Taggers();
+          const geo::Point_t start          = crttrack->Start();
+          const geo::Point_t end            = crttrack->End();
+
+          _tpc_tr_taggers[nActualTracks] = std::vector<int>();
+
+          for(auto const& tagger : taggers)
+            _tpc_tr_taggers[nActualTracks].push_back(tagger);
+
+          _tpc_tr_start_x[nActualTracks] = start.X();
+          _tpc_tr_start_y[nActualTracks] = start.Y();
+          _tpc_tr_start_z[nActualTracks] = start.Z();
+          _tpc_tr_end_x[nActualTracks]   = end.X();
+          _tpc_tr_end_y[nActualTracks]   = end.Y();
+          _tpc_tr_end_z[nActualTracks]   = end.Z();
         }
-     else
+      else
         {
           _tpc_tr_matched[nActualTracks] = false;
           _tpc_tr_ts0[nActualTracks]     = -std::numeric_limits<double>::max();
           _tpc_tr_ts1[nActualTracks]     = -std::numeric_limits<double>::max();
           _tpc_tr_score[nActualTracks]   = -std::numeric_limits<double>::max();
+          _tpc_tr_taggers[nActualTracks] = std::vector<int>();
+          _tpc_tr_start_x[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_tr_start_y[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_tr_start_z[nActualTracks] = -std::numeric_limits<double>::max();
+          _tpc_tr_end_x[nActualTracks]   = -std::numeric_limits<double>::max();
+          _tpc_tr_end_y[nActualTracks]   = -std::numeric_limits<double>::max();
+          _tpc_tr_end_z[nActualTracks]   = -std::numeric_limits<double>::max();
         }
 
       if(!fDataMode && fTruthMatch)
         {
-          const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
           const int trackid = fCRTBackTrackerAlg.RollUpID(TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true));
 
           _tpc_truth_trackid[nActualTracks] = trackid;
@@ -1708,9 +1806,12 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_end_x.resize(nActualTracks);
   _tpc_end_y.resize(nActualTracks);
   _tpc_end_z.resize(nActualTracks);
-  _tpc_dir_x.resize(nActualTracks);
-  _tpc_dir_y.resize(nActualTracks);
-  _tpc_dir_z.resize(nActualTracks);
+  _tpc_start_dir_x.resize(nActualTracks);
+  _tpc_start_dir_y.resize(nActualTracks);
+  _tpc_start_dir_z.resize(nActualTracks);
+  _tpc_end_dir_x.resize(nActualTracks);
+  _tpc_end_dir_y.resize(nActualTracks);
+  _tpc_end_dir_z.resize(nActualTracks);
   _tpc_length.resize(nActualTracks);
   _tpc_track_score.resize(nActualTracks);
   _tpc_truth_trackid.resize(nActualTracks);
@@ -1719,12 +1820,24 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_truth_time.resize(nActualTracks);
   _tpc_sp_matchable.resize(nActualTracks);
   _tpc_sp_matched.resize(nActualTracks);
+  _tpc_sp_tagger.resize(nActualTracks);
+  _tpc_sp_nhits.resize(nActualTracks);
+  _tpc_sp_x.resize(nActualTracks);
+  _tpc_sp_y.resize(nActualTracks);
+  _tpc_sp_z.resize(nActualTracks);
   _tpc_sp_good_match.resize(nActualTracks);
   _tpc_sp_ts0.resize(nActualTracks);
   _tpc_sp_ts1.resize(nActualTracks);
   _tpc_sp_score.resize(nActualTracks);
   _tpc_tr_matchable.resize(nActualTracks);
   _tpc_tr_matched.resize(nActualTracks);
+  _tpc_tr_taggers.resize(nActualTracks);
+  _tpc_tr_start_x.resize(nActualTracks);
+  _tpc_tr_start_y.resize(nActualTracks);
+  _tpc_tr_start_z.resize(nActualTracks);
+  _tpc_tr_end_x.resize(nActualTracks);
+  _tpc_tr_end_y.resize(nActualTracks);
+  _tpc_tr_end_z.resize(nActualTracks);
   _tpc_tr_good_match.resize(nActualTracks);
   _tpc_tr_ts0.resize(nActualTracks);
   _tpc_tr_ts1.resize(nActualTracks);
