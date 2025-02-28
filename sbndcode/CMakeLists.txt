@@ -46,3 +46,5 @@ add_subdirectory(ChannelMaps)
 # for CVN
 # Disable for now
 #add_subdirectory(SBNDCVN)
+
+add_subdirectory(BeamComm)
