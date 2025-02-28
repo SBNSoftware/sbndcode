@@ -481,14 +481,16 @@ namespace sbnd::crt {
 
                             const anab::T0 t0Match = CRTSPstoTPCTracks.data(spacepoint.key()).ref();
 
-                            matchScore                      = t0Match.TriggerConfidence();
-                            geo::Point_t startTPC           = TPCTrack->Start();
-                            geo::Point_t endTPC             = TPCTrack->End();
-                            const geo::Vector_t startDirTPC = TPCTrack->StartDirection();
-                            const geo::Vector_t endDirTPC   = TPCTrack->EndDirection();
+                            matchScore            = t0Match.TriggerConfidence();
+                            geo::Point_t startTPC = TPCTrack->Start();
+                            geo::Point_t endTPC   = TPCTrack->End();
 
                             startTPC.SetX(startTPC.X() + shift);
                             endTPC.SetX(endTPC.X() + shift);
+
+                            const std::pair<geo::Vector_t, geo::Vector_t> directions = CRTCommonUtils::AverageTrackDirections(TPCTrack, 0.2);
+                            const geo::Vector_t startDirTPC = directions.first;
+                            const geo::Vector_t endDirTPC   = directions.second;
 
                             TPolyLine3D *lineTPC = new TPolyLine3D(2);
                             lineTPC->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
@@ -624,14 +626,16 @@ namespace sbnd::crt {
 
                     const anab::T0 t0Match = CRTTrackstoTPCTracks.data(track.key()).ref();
 
-                    matchScore                      = t0Match.TriggerConfidence();
-                    geo::Point_t startTPC           = TPCTrack->Start();
-                    geo::Point_t endTPC             = TPCTrack->End();
-                    const geo::Vector_t startDirTPC = TPCTrack->StartDirection();
-                    const geo::Vector_t endDirTPC   = TPCTrack->EndDirection();
+                    matchScore            = t0Match.TriggerConfidence();
+                    geo::Point_t startTPC = TPCTrack->Start();
+                    geo::Point_t endTPC   = TPCTrack->End();
 
                     startTPC.SetX(startTPC.X() + shift);
                     endTPC.SetX(endTPC.X() + shift);
+
+                    const std::pair<geo::Vector_t, geo::Vector_t> directions = CRTCommonUtils::AverageTrackDirections(TPCTrack, 0.2);
+                    const geo::Vector_t startDirTPC = directions.first;
+                    const geo::Vector_t endDirTPC   = directions.second;
 
                     TPolyLine3D *lineTPC = new TPolyLine3D(2);
                     lineTPC->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
