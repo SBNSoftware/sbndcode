@@ -9,9 +9,11 @@ services:
 {
   TFileService: { fileName: "crtana_sbnd.root" }
   @table::sbnd_basic_services
-  ParticleInventoryService: @local::sbnd_particleinventoryservice
-  BackTrackerService:       @local::sbnd_backtrackerservice
-  DetectorClocksService:    @local::sbnd_detectorclocks
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  BackTrackerService:        @local::sbnd_backtrackerservice
+  DetectorClocksService:     @local::sbnd_detectorclocks
+  LArPropertiesService:      @local::sbnd_properties
+  DetectorPropertiesService: @local::sbnd_detproperties
 }
 
 source:
@@ -28,9 +30,9 @@ physics:
       module_type:       "CRTAnalysis"
       CRTGeoAlg:         @local::crtgeoalg_sbnd
       CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
-      PEAttenuation:     @local::sbnd_crtsim.DetSimParams.NpeScaleShift	
-      PropDelay:         @local::sbnd_crtsim.DetSimParams.PropDelay	
-      TimeWalkNorm:      @local::sbnd_crtsim.DetSimParams.TDelayNorm	
+      PEAttenuation:     @local::sbnd_crtsim.DetSimParams.NpeScaleShift
+      PropDelay:         @local::sbnd_crtsim.DetSimParams.PropDelay
+      TimeWalkNorm:      @local::sbnd_crtsim.DetSimParams.TDelayNorm
       TimeWalkScale:     @local::sbnd_crtsim.DetSimParams.TDelayScale
     }
   }
