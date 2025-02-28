@@ -21,7 +21,17 @@ physics:
 {
   analyzers:
   {
-    crtana: @local::crtana_sbnd
+    crtana: 
+    { 
+      module_type:       "CRTAnalysis"
+      CRTGeoAlg:         @local::crtgeoalg_sbnd
+      CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
+      PEAttenuation:     @local::sbnd_crtsim.DetSimParams.NpeScaleShift
+      PropDelay:         @local::sbnd_crtsim.DetSimParams.PropDelay
+      TimeWalkNorm:      @local::sbnd_crtsim.DetSimParams.TDelayNorm
+      TimeWalkScale:     @local::sbnd_crtsim.DetSimParams.TDelayScale
+      TruthMatch:        false
+    }
   }
 
   ana:       [ crtana ]
