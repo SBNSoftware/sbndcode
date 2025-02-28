@@ -5,14 +5,18 @@ BEGIN_PROLOG
 sbnd_opt0_finder_data: @local::sbnd_opt0_finder_one_to_many
 
 sbnd_opt0_finder_data.CaloProducer:     "pandoraCaloData"
-sbnd_opt0_finder_data.SelectNeutrino:   false # for data, unsure about trusting pandora to select neutrinos
+sbnd_opt0_finder_data.SelectNeutrino:   true 
 sbnd_opt0_finder_data.CalAreaConstants: [ 0.0204 , 0.0210, 0.0193 ]
-sbnd_opt0_finder_data.OpChannelsToSkip: [39, 66, 67, 69, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302, # OFF/uncalibrated PMTs
-                                        134,135,150,151,152,153,154,155,156,157,158,159,160,161,176,177] # APSIA channels
+sbnd_opt0_finder_data.OpChannelsToSkip: [39, 66, 67, 69, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302]
+# since the flash time is w.r.t the TDC ETRIG, this may move with light arrival; need to extend the flash window
 sbnd_opt0_finder_data.FlashVetoTimeStart: -1
 sbnd_opt0_finder_data.FlashVetoTimeEnd:    5
 
-# set to arbitrary high value to ignore saturation correction until we know it better
+sbnd_opt0_finder_data.FlashMatchConfig.QLLMatch.ChiErrorWidth: 0.25 # increase the error width from 0.1
+sbnd_opt0_finder_data.FlashMatchConfig.PhotonLibHypothesis.GlobalQE:     0.25 # effectively a global scaling factor
+sbnd_opt0_finder_data.FlashMatchConfig.PhotonLibHypothesis.GlobalQERefl: 0.25 # effectively a global scaling factor
+
+# set to arbitrary high value to ignore non-linearity correction until we know it better
 sbnd_opt0_finder_data.FlashMatchConfig.QLLMatch.SaturatedThreshold: 1e9  
 
 END_PROLOG
