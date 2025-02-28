@@ -441,7 +441,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("sh_adc2", "std::vector<uint16_t>", &_sh_adc2);
   fTree->Branch("sh_saturated1", "std::vector<bool>", &_sh_saturated1);
   fTree->Branch("sh_saturated2", "std::vector<bool>", &_sh_saturated2);
-  if(!fDataMode)
+  if(!fDataMode && fTruthMatch)
     {
       fTree->Branch("sh_truth_trackid", "std::vector<int>", &_sh_truth_trackid);
       fTree->Branch("sh_truth_completeness", "std::vector<double>", &_sh_truth_completeness);
@@ -464,7 +464,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("cl_sh_feb_mac5_set", "std::vector<std::vector<uint16_t>>", &_cl_sh_feb_mac5_set);
   fTree->Branch("cl_sh_time_walk_set", "std::vector<std::vector<double>>", &_cl_sh_time_walk_set);
   fTree->Branch("cl_sh_prop_delay_set", "std::vector<std::vector<double>>", &_cl_sh_prop_delay_set);
-  if(!fDataMode)
+  if(!fDataMode && fTruthMatch)
     {
       fTree->Branch("cl_truth_trackid", "std::vector<int>", &_cl_truth_trackid);
       fTree->Branch("cl_truth_completeness", "std::vector<double>", &_cl_truth_completeness);
@@ -497,7 +497,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("cl_sp_ets1", "std::vector<double>", &_cl_sp_ets1);
   fTree->Branch("cl_sp_complete", "std::vector<bool>", &_cl_sp_complete);
 
-  if(!fDataMode)
+  if(!fDataMode && fTruthMatch)
     {
       fTree->Branch("td_tag_trackid", "std::vector<int>", &_td_tag_trackid);
       fTree->Branch("td_tag_pdg", "std::vector<int>", &_td_tag_pdg);
@@ -542,7 +542,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("tr_tagger3", "std::vector<int16_t>", &_tr_tagger3);
   fTree->Branch("tr_channel_set", "std::vector<std::vector<uint32_t>>", &_tr_channel_set);
   fTree->Branch("tr_adc_set", "std::vector<std::vector<uint16_t>>", &_tr_adc_set);
-  if(!fDataMode)
+  if(!fDataMode && fTruthMatch)
     {
       fTree->Branch("tr_truth_trackid", "std::vector<int>", &_tr_truth_trackid);
       fTree->Branch("tr_truth_completeness", "std::vector<double>", &_tr_truth_completeness);
@@ -603,7 +603,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tpc_tr_end_y", "std::vector<double>", &_tpc_tr_end_y);
       fTree->Branch("tpc_tr_end_z", "std::vector<double>", &_tpc_tr_end_z);
       fTree->Branch("tpc_tr_score", "std::vector<double>", &_tpc_tr_score);
-      if(!fDataMode)
+      if(!fDataMode && fTruthMatch)
         {
           fTree->Branch("tpc_truth_trackid", "std::vector<int>", &_tpc_truth_trackid);
           fTree->Branch("tpc_truth_pdg", "std::vector<int>", &_tpc_truth_pdg);
