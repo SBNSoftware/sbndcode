@@ -38,6 +38,10 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
             std::string fname;
             cet::search_path sp("FW_SEARCH_PATH");
             sp.find_file(fInputFilename, fname);
+	    // Test
+	    fname = "/exp/sbnd/app/users/lkashur/sce_twomaps/test/SCEoffsets_SBND_E500_voxelTH3_test.root";
+	    //std::cout << "test " << fname << std::endl;
+	    // end test
 
             std::unique_ptr<TFile> infile(new TFile(fname.c_str(), "READ"));
             if(!infile->IsOpen())
@@ -49,6 +53,7 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
       	      std::cout << "begin loading voxelized TH3s..." << std::endl;
 
       	      //Load in histograms
+	      /*
       	      TH3F* hTrueFwdX = (TH3F*) infile->Get("TrueFwd_Displacement_X");
       	      TH3F* hTrueFwdY = (TH3F*) infile->Get("TrueFwd_Displacement_Y");
       	      TH3F* hTrueFwdZ = (TH3F*) infile->Get("TrueFwd_Displacement_Z");
@@ -58,11 +63,35 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
       	      TH3F* hTrueEFieldX = (TH3F*) infile->Get("True_ElecField_X");
       	      TH3F* hTrueEFieldY = (TH3F*) infile->Get("True_ElecField_Y");
       	      TH3F* hTrueEFieldZ = (TH3F*) infile->Get("True_ElecField_Z");
+	      */
 
+	      // E TPC
+	      TH3F* hTrueFwdX_E = (TH3F*) infile->Get("TrueFwd_Displacement_X_E");
+              TH3F* hTrueFwdY_E = (TH3F*) infile->Get("TrueFwd_Displacement_Y_E");
+              TH3F* hTrueFwdZ_E = (TH3F*) infile->Get("TrueFwd_Displacement_Z_E");
+              TH3F* hTrueBkwdX_E = (TH3F*) infile->Get("TrueBkwd_Displacement_X_E");
+              TH3F* hTrueBkwdY_E = (TH3F*) infile->Get("TrueBkwd_Displacement_Y_E");
+              TH3F* hTrueBkwdZ_E = (TH3F*) infile->Get("TrueBkwd_Displacement_Z_E");
+              TH3F* hTrueEFieldX_E = (TH3F*) infile->Get("True_ElecField_X_E");
+              TH3F* hTrueEFieldY_E = (TH3F*) infile->Get("True_ElecField_Y_E");
+              TH3F* hTrueEFieldZ_E = (TH3F*) infile->Get("True_ElecField_Z_E");
+	      
+	      // W TPC
+	      TH3F* hTrueFwdX_W = (TH3F*) infile->Get("TrueFwd_Displacement_X_W");
+              TH3F* hTrueFwdY_W = (TH3F*) infile->Get("TrueFwd_Displacement_Y_W");
+              TH3F* hTrueFwdZ_W = (TH3F*) infile->Get("TrueFwd_Displacement_Z_W");
+              TH3F* hTrueBkwdX_W = (TH3F*) infile->Get("TrueBkwd_Displacement_X_W");
+              TH3F* hTrueBkwdY_W = (TH3F*) infile->Get("TrueBkwd_Displacement_Y_W");
+              TH3F* hTrueBkwdZ_W = (TH3F*) infile->Get("TrueBkwd_Displacement_Z_W");
+              TH3F* hTrueEFieldX_W = (TH3F*) infile->Get("True_ElecField_X_W");
+              TH3F* hTrueEFieldY_W = (TH3F*) infile->Get("True_ElecField_Y_W");
+              TH3F* hTrueEFieldZ_W = (TH3F*) infile->Get("True_ElecField_Z_W");
+	      
       	      //https://root.cern.ch/doc/master/classTH1.html#a0367fe04ae8709fd4b82795d0a5462c3
       	      //Set hist directories so they can be referenced elsewhere
       	      //This needs to be done because they were read in from ext file
       	      //Note this is not a property of the TH3F, so does't survive copying
+	      /*
       	      hTrueFwdX->SetDirectory(0);
       	      hTrueFwdY->SetDirectory(0);
       	      hTrueFwdZ->SetDirectory(0);
@@ -72,13 +101,43 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
       	      hTrueEFieldX->SetDirectory(0);
       	      hTrueEFieldY->SetDirectory(0);
       	      hTrueEFieldZ->SetDirectory(0);
+	      */
+	      
+	      hTrueFwdX_E->SetDirectory(0);
+              hTrueFwdY_E->SetDirectory(0);
+              hTrueFwdZ_E->SetDirectory(0);
+              hTrueBkwdX_E->SetDirectory(0);
+              hTrueBkwdY_E->SetDirectory(0);
+              hTrueBkwdZ_E->SetDirectory(0);
+              hTrueEFieldX_E->SetDirectory(0);
+              hTrueEFieldY_E->SetDirectory(0);
+              hTrueEFieldZ_E->SetDirectory(0);
+
+	      hTrueFwdX_W->SetDirectory(0);
+              hTrueFwdY_W->SetDirectory(0);
+              hTrueFwdZ_W->SetDirectory(0);
+              hTrueBkwdX_W->SetDirectory(0);
+              hTrueBkwdY_W->SetDirectory(0);
+              hTrueBkwdZ_W->SetDirectory(0);
+              hTrueEFieldX_W->SetDirectory(0);
+              hTrueEFieldY_W->SetDirectory(0);
+              hTrueEFieldZ_W->SetDirectory(0);
 
       	      //SCEhistograms can be accessed globally in this script
+	      /*
       	      SCEhistograms = {hTrueFwdX, hTrueFwdY, hTrueFwdZ,
       			       hTrueBkwdX, hTrueBkwdY, hTrueBkwdZ,
       			       hTrueEFieldX, hTrueEFieldY, hTrueEFieldZ};
+	      */
 
-
+              SCEhistograms_E = {hTrueFwdX_E, hTrueFwdY_E, hTrueFwdZ_E,
+				 hTrueBkwdX_E, hTrueBkwdY_E, hTrueBkwdZ_E,
+				 hTrueEFieldX_E, hTrueEFieldY_E, hTrueEFieldZ_E};
+	      
+	      SCEhistograms_W = {hTrueFwdX_W, hTrueFwdY_W, hTrueFwdZ_W,
+				 hTrueBkwdX_W, hTrueBkwdY_W, hTrueBkwdZ_W,
+				 hTrueEFieldX_W, hTrueEFieldY_W, hTrueEFieldZ_W};
+	      
       	      std::cout << "...finished loading TH3s" << std::endl;
       	    }else if(fRepresentationType == "Parametric")
                 {
@@ -230,9 +289,16 @@ geo::Vector_t spacecharge::SpaceChargeSBND::GetPosOffsets(geo::Point_t const& po
       }
             
       double offset_x=0., offset_y=0., offset_z=0.;
-      offset_x = corr*SCEhistograms.at(0)->Interpolate(xx,yy,zz);
-      offset_y = SCEhistograms.at(1)->Interpolate(xx,yy,zz);
-      offset_z = SCEhistograms.at(2)->Interpolate(xx,yy,zz);
+      if(xx < 0){
+	offset_x = corr*SCEhistograms_E.at(0)->Interpolate(xx,yy,zz);
+	offset_y = SCEhistograms_E.at(1)->Interpolate(xx,yy,zz);
+	offset_z = SCEhistograms_E.at(2)->Interpolate(xx,yy,zz);
+      }
+      else{
+	offset_x = corr*SCEhistograms_W.at(0)->Interpolate(xx,yy,zz);
+	offset_y = SCEhistograms_W.at(1)->Interpolate(xx,yy,zz);
+	offset_z = SCEhistograms_W.at(2)->Interpolate(xx,yy,zz);
+      }
       thePosOffsets = {offset_x, offset_y, offset_z};
 
     }else if(fRepresentationType == "Parametric"){
@@ -269,9 +335,16 @@ geo::Vector_t spacecharge::SpaceChargeSBND::GetCalPosOffsets(geo::Point_t const&
     if ((TPCid == 0) and (xx > -2.5)) { xx = -2.5; }
     if ((TPCid == 1) and (xx < 2.5)) { xx = 2.5; }
     double offset_x=0., offset_y=0., offset_z=0.;
-    offset_x = SCEhistograms.at(3)->Interpolate(xx,yy,zz);
-    offset_y = SCEhistograms.at(4)->Interpolate(xx,yy,zz);
-    offset_z = SCEhistograms.at(5)->Interpolate(xx,yy,zz);
+    if(xx < 0){
+      offset_x = SCEhistograms_E.at(3)->Interpolate(xx,yy,zz);
+      offset_y = SCEhistograms_E.at(4)->Interpolate(xx,yy,zz);
+      offset_z = SCEhistograms_E.at(5)->Interpolate(xx,yy,zz);
+    }
+    else{
+      offset_x = SCEhistograms_W.at(3)->Interpolate(xx,yy,zz);
+      offset_y = SCEhistograms_W.at(4)->Interpolate(xx,yy,zz);
+      offset_z = SCEhistograms_W.at(5)->Interpolate(xx,yy,zz);
+    }
     theCalPosOffsets = {offset_x, offset_y, offset_z};
     
   }else if(fRepresentationType == "Parametric"){     
@@ -409,10 +482,16 @@ geo::Vector_t spacecharge::SpaceChargeSBND::GetEfieldOffsets(geo::Point_t const&
       else if(yy>199.999){yy=199.999;}
       if(zz<0.001){zz=0.001;}
       else if(zz>499.999){zz=499.999;}
-      offset_x = SCEhistograms.at(6)->Interpolate(xx, yy, zz);
-      offset_y = SCEhistograms.at(7)->Interpolate(xx, yy, zz);
-      offset_z = SCEhistograms.at(8)->Interpolate(xx, yy, zz);
-
+      if(xx < 0){
+	offset_x = SCEhistograms_E.at(6)->Interpolate(xx, yy, zz);
+	offset_y = SCEhistograms_E.at(7)->Interpolate(xx, yy, zz);
+	offset_z = SCEhistograms_E.at(8)->Interpolate(xx, yy, zz);
+      }
+      else{
+	offset_x = SCEhistograms_W.at(6)->Interpolate(xx, yy, zz);
+        offset_y = SCEhistograms_W.at(7)->Interpolate(xx, yy, zz);
+        offset_z = SCEhistograms_W.at(8)->Interpolate(xx, yy, zz);
+      }
       theEfieldOffsets = {offset_x, offset_y, offset_z};
       
     }else if(fRepresentationType == "Parametric"){
