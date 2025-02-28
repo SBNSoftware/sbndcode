@@ -4,10 +4,10 @@ BEGIN_PROLOG
 
 crtspacepointmatchalg_sbnd:
 {
-  TrackDirectionFrac: 0.5
+  TrackDirectionFrac: 0.25
   DCALimit:           70.
   MinTPCTrackLength:  10.
-  DirMethod:          1
+  DirMethod:          2
   DCAuseBox:          false
   DCAoverLength:      false
   PECut:              60.
