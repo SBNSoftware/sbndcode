@@ -155,6 +155,9 @@ private:
     int fTickLbTiming;
     int fTickUbTiming;
 
+    int fPmtFitBound;
+    int fTimingFitBound;
+
     double fPmtJitterBound;
     double fTimingJitterBound;
 
@@ -215,8 +218,11 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fTickLbTiming = p.get<int>("TickLbTiming", 975);
     fTickUbTiming = p.get<int>("TickUbTiming", 1005);
 
-    fPmtJitterBound = p.get<double>("PmtJitterBound", 16);
-    fTimingJitterBound = p.get<double>("TimingJitterBound", 68);
+    fPmtFitBound = p.get<int>("PmtFitBound", 35);
+    fTimingFitBound = p.get<int>("TimingFitBound", 35);
+
+    fPmtJitterBound = p.get<int>("PmtJitterBound", 16);
+    fTimingJitterBound = p.get<int>("TimingJitterBound", 68);
 
     fDebugTdc = p.get<bool>("DebugTdc", false);
     fDebugTimeRef = p.get<bool>("DebugTimeRef", false);
@@ -229,8 +235,8 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fSaveCompare = p.get<bool>("SaveCompare", false);
     fSavePath = p.get<std::string>("SavePath", "");
     
-    fFtrigNewLabel = p.get<std::string>("FtrigNewLabel","FtrigChannels");
-    fFtrigBoardNewLabel = p.get<std::string>("FtrigBoardNewLabel","FtrigTiming");
+    fFtrigNewLabel = p.get<std::string>("FtrigNewLabel","FTrigChannels");
+    fFtrigBoardNewLabel = p.get<std::string>("FtrigBoardNewLabel","FTrigTiming");
     
     fPmtNewLabel = p.get<std::string>("PmtNewLabel","PMTChannels");
     fPmtBoardNewLabel = p.get<std::string>("PmtBoardNewLabel","PMTTiming");
@@ -427,6 +433,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
 
                         if (CheckShift(tempShift, wf->ChannelNumber())){
                             status = kGood;
+                            //if (fDebugFtrig)  std::cout << "    board id = " << wf->ChannelNumber() << " has rising tick value = " << tickFtrig << " and shift value = " << shift << " ns." << std::endl;
                             shift = tempShift;
                         }else{
                             status = kOutOfBound; //either jitter too much or no reference frame 
@@ -438,7 +445,6 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     
                 }
 
-                if (fDebugFtrig)  std::cout << "    board id = " << wf->ChannelNumber() << " has rising tick value = " << tickFtrig << " and shift value = " << shift << " ns." << std::endl;
                 
                 //Save to vector
                 boardJitter[wf->ChannelNumber()].push_back(shift);
@@ -454,7 +460,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     saveLb = fTickLbPmt - 25;
                     saveUb = fTickLbPmt + 100;
                 }
-                double saveTs = wf_board->triggerTimeTag[0] - (fWfLength - saveLb)*2.0; 
+                double saveTs = wf->TimeStamp() + saveLb*2.0; 
                 std::vector<uint16_t> adc_vec(saveUb - saveLb, 0);
 
                 for (int i = 0; i < (saveUb - saveLb); i++){
@@ -616,7 +622,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                 raw::OpDetWaveform new_wf(new_ts, wf->ChannelNumber(), adc_vec);
 
                 newTimingWf->push_back(new_wf);
-                art::Ptr<raw::OpDetWaveform> wfPtr = make_pmtwf_ptr(newTimingWf->size()-1);
+                art::Ptr<raw::OpDetWaveform> wfPtr = make_timingwf_ptr(newTimingWf->size()-1);
 
                 newTimingBoardAssn->addSingle(wf_board, wfPtr);
                 newTimingAlignAssn->addSingle(wf_align, wfPtr);
@@ -767,11 +773,12 @@ std::pair<double, double> sbnd::WaveformAlignment::FitFtrig(art::Ptr<raw::OpDetW
     int fitUb = std::numeric_limits<int>::min();
     
     if (boardId == 8){
-        fitLb = risingTickGuess - 30;
-        fitUb = risingTickGuess + 30;
+        //TODO: Maybe need to change the equation for Timing CAEN?
+        fitLb = risingTickGuess - 85;
+        fitUb = risingTickGuess + 55;
     }else{
-        fitLb = risingTickGuess - 25;
-        fitUb = risingTickGuess + 25;
+        fitLb = risingTickGuess - fPmtFitBound; //25;
+        fitUb = risingTickGuess + fPmtFitBound; //25;
     }
 
     g->GetXaxis()->SetRangeUser(x[fitLb], x[fitUb]);
