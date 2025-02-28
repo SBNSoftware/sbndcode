@@ -97,7 +97,7 @@ private:
     fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTPCTrackModuleLabel,
     fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel, fPFPModuleLabel, fPTBModuleLabel,
     fTDCModuleLabel, fTimingReferenceModuleLabel;
-  bool fDebug, fDataMode, fNoTPC, fHasPTB, fHasTDC;
+  bool fDebug, fDataMode, fNoTPC, fHasPTB, fHasTDC, fTruthMatch;
   //! Adding some of the reco parameters to save corrections
   double fPEAttenuation, fTimeWalkNorm, fTimeWalkScale, fPropDelay;
 
@@ -348,13 +348,14 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fNoTPC                            = p.get<bool>("NoTPC", false);
   fHasPTB                           = p.get<bool>("HasPTB", false);
   fHasTDC                           = p.get<bool>("HasTDC", false);
+  fTruthMatch                       = p.get<bool>("TruthMatch", true);
   //! Adding some of the reco parameters to save corrections
   fPEAttenuation                    = p.get<double>("PEAttenuation", 1.0);
   fTimeWalkNorm                     = p.get<double>("TimeWalkNorm",  0.0);
   fTimeWalkScale                    = p.get<double>("TimeWalkScale", 0.0);
   fPropDelay                        = p.get<double>("PropDelay",     0.0);
 
-  if(!fDataMode)
+  if(!fDataMode && fTruthMatch)
     fCRTBackTrackerAlg = CRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()));
 
   art::ServiceHandle<art::TFileService> fs;
@@ -632,21 +633,28 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
 void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 {
-  if(!fDataMode)
+  _run = e.id().run();
+  _subrun = e.id().subRun();
+  _event =  e.id().event();
+
+  if(fDebug)
+    std::cout << "CRTAnalysis -- This is event " << _run << "-" << _subrun << "-" << _event << std::endl;
+
+  if(!fDataMode && fTruthMatch)
     {
+      if(fDebug)
+        std::cout << "CRTAnalysis -- Setting up back track maps" << std::endl;
+
       fCRTBackTrackerAlg.SetupMaps(e);
       fCRTBackTrackerAlg.RunSpacePointRecoStatusChecks(e);
       fCRTBackTrackerAlg.RunTrackRecoStatusChecks(e);
     }
 
-  _run = e.id().run();
-  _subrun = e.id().subRun();
-  _event =  e.id().event();
-
-  if(fDebug) std::cout << "This is event " << _run << "-" << _subrun << "-" << _event << std::endl;
-
   _crt_timing_reference_type    = -1;
   _crt_timing_reference_channel = -1;
+
+  if(fDebug)
+    std::cout << "CRTAnalysis -- Processing Timing Reference Info" << std::endl;
 
   art::Handle<raw::TimingReferenceInfo> TimingReferenceHandle;
   e.getByLabel(fTimingReferenceModuleLabel, TimingReferenceHandle);
@@ -658,6 +666,9 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
   if(fHasPTB)
     {
+      if(fDebug)
+        std::cout << "CRTAnalysis -- Processing PTB" << std::endl;
+
       // Get PTBs
       art::Handle<std::vector<raw::ptb::sbndptb>> PTBHandle;
       e.getByLabel(fPTBModuleLabel, PTBHandle);
@@ -674,6 +685,9 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
   if(fHasTDC)
     {
+      if(fDebug)
+        std::cout << "CRTAnalysis -- Processing TDC" << std::endl;
+
       // Get TDCs
       art::Handle<std::vector<sbnd::timing::DAQTimestamp>> TDCHandle;
       e.getByLabel(fTDCModuleLabel, TDCHandle);
@@ -688,6 +702,9 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
       AnalyseTDCs(TDCVec);
     }
 
+  if(fDebug)
+    std::cout << "CRTAnalysis -- Processing FEBDatas" << std::endl;
+
   // Get FEBDatas
   art::Handle<std::vector<FEBData>> FEBDataHandle;
   e.getByLabel(fFEBDataModuleLabel, FEBDataHandle);
@@ -701,6 +718,9 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   // Fill FEBData variables
   AnalyseFEBDatas(FEBDataVec);
 
+  if(fDebug)
+    std::cout << "CRTAnalysis -- Processing StripHits" << std::endl;
+
   // Get CRTStripHits
   art::Handle<std::vector<CRTStripHit>> CRTStripHitHandle;
   e.getByLabel(fCRTStripHitModuleLabel, CRTStripHitHandle);
@@ -713,6 +733,9 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
   // Fill CRTStripHit variables
   AnalyseCRTStripHits(e, CRTStripHitVec);
+
+  if(fDebug)
+    std::cout << "CRTAnalysis -- Processing Clusters" << std::endl;
 
   // Get CRTClusters
   art::Handle<std::vector<CRTCluster>> CRTClusterHandle;
@@ -732,6 +755,9 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
   // Fill CRTCluster variables
   AnalyseCRTClusters(e, CRTClusterVec, clustersToSpacePoints, clustersToStripHits);
+
+  if(fDebug)
+    std::cout << "CRTAnalysis -- Processing Tracks" << std::endl;
 
   // Get CRTTracks
   art::Handle<std::vector<CRTTrack>> CRTTrackHandle;
@@ -786,6 +812,9 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
   if(fDataMode)
     {
+      if(fDebug)
+        std::cout << "CRTAnalysis -- Processing TPC" << std::endl;
+
       // Fill TPC matching variables
       AnalyseTPCMatching(e, TPCTrackHandle, CRTSpacePointHandle, PFPHandle);
 
@@ -794,6 +823,9 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
 
       return;
     }
+
+  if(fDebug)
+    std::cout << "CRTAnalysis -- Processing MCParticles" << std::endl;
 
   // Get MCParticles
   art::Handle<std::vector<simb::MCParticle>> MCParticleHandle;
@@ -808,6 +840,9 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   // Fill MCParticle variables
   AnalyseMCParticles(MCParticleVec);
 
+  if(fDebug)
+    std::cout << "CRTAnalysis -- Processing Sim Deposits" << std::endl;
+
   // Get SimDeposits
   art::Handle<std::vector<sim::AuxDetSimChannel>> SimDepositHandle;
   e.getByLabel(fSimDepositModuleLabel, SimDepositHandle);
@@ -821,21 +856,37 @@ void sbnd::crt::CRTAnalysis::analyze(art::Event const& e)
   // Fill SimDeposit variables
   AnalyseSimDeposits(SimDepositVec);
 
-  // Get Map of TrueDeposits per tagger from BackTracker
-  std::map<CRTBackTrackerAlg::Category, bool> spacePointRecoStatusMap = fCRTBackTrackerAlg.GetSpacePointRecoStatusMap();
+  if(fDebug)
+    std::cout << "CRTAnalysis -- Processing CRT Back Tracking" << std::endl;
 
-  // Fill TrueDeposit variables
-  AnalyseTrueDepositsPerTagger(spacePointRecoStatusMap);
+  if(fTruthMatch)
+    {
+      // Get Map of TrueDeposits per tagger from BackTracker
+      std::map<CRTBackTrackerAlg::Category, bool> spacePointRecoStatusMap = fCRTBackTrackerAlg.GetSpacePointRecoStatusMap();
 
-  // Get Map of TrueDeposits from BackTracker
-  std::map<int, std::pair<bool, bool>> trackRecoStatusMap = fCRTBackTrackerAlg.GetTrackRecoStatusMap();
+      // Fill TrueDeposit variables
+      AnalyseTrueDepositsPerTagger(spacePointRecoStatusMap);
 
-  // Fill TrueDeposit variables
-  AnalyseTrueDeposits(trackRecoStatusMap);
+      // Get Map of TrueDeposits from BackTracker
+      std::map<int, std::pair<bool, bool>> trackRecoStatusMap = fCRTBackTrackerAlg.GetTrackRecoStatusMap();
 
-  // Fill TPC matching variables
-  AnalyseTPCMatching(e, TPCTrackHandle, CRTSpacePointHandle, PFPHandle, spacePointRecoStatusMap, trackRecoStatusMap);
+      // Fill TrueDeposit variables
+      AnalyseTrueDeposits(trackRecoStatusMap);
 
+      if(fDebug)
+        std::cout << "CRTAnalysis -- Processing TPC" << std::endl;
+
+      // Fill TPC matching variables
+      AnalyseTPCMatching(e, TPCTrackHandle, CRTSpacePointHandle, PFPHandle, spacePointRecoStatusMap, trackRecoStatusMap);
+    }
+  else
+    {
+      if(fDebug)
+        std::cout << "CRTAnalysis -- Processing TPC" << std::endl;
+
+      // Fill TPC matching variables
+      AnalyseTPCMatching(e, TPCTrackHandle, CRTSpacePointHandle, PFPHandle);
+    }
   // Fill the Tree
   fTree->Fill();
 }
@@ -1082,7 +1133,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
       _sh_saturated1[i] = hit->Saturated1();
       _sh_saturated2[i] = hit->Saturated2();
 
-      if(!fDataMode)
+      if(!fDataMode && fTruthMatch)
         {
           const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, hit);
           const std::vector<double> localpos = fCRTGeoAlg.StripWorldToLocalPos(hit->Channel(), truthMatch.deposit.x, truthMatch.deposit.y, truthMatch.deposit.z);
@@ -1212,7 +1263,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
 
         }
 
-      if(!fDataMode)
+      if(!fDataMode && fTruthMatch)
         {
           const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, cluster);
           _cl_truth_trackid[i]          = truthMatch.trackid;
@@ -1445,7 +1496,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTTracks(const art::Event &e, const std::ve
             }
         }
 
-      if(!fDataMode)
+      if(!fDataMode && fTruthMatch)
         {
           const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, track);
           _tr_truth_trackid[i]          = truthMatch.trackid;
@@ -1598,7 +1649,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
           _tpc_tr_score[nActualTracks]   = -std::numeric_limits<double>::max();
         }
 
-      if(!fDataMode)
+      if(!fDataMode && fTruthMatch)
         {
           const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
           const int trackid = fCRTBackTrackerAlg.RollUpID(TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true));
