@@ -93,9 +93,7 @@ private:
     uint32_t                  fspectdc_etrig_ch;
 
     std::string               fptb_product_name;
-    uint                      fptb_etrig_trigword_min;
-    uint                      fptb_etrig_trigword_max;    
-    uint32_t                  fptb_etrig_wordtype;
+    std::vector<uint>         fptb_allowed_hlts;   
     uint                      fptb_raw_diff_max;
 
     uint                      fallowed_time_diff;
@@ -152,9 +150,7 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
 
     fptb_product_name = p.get<std::string>("ptb_product_name","ptbdecoder");
-    fptb_etrig_trigword_min = p.get<uint>("ptb_etrig_trigword_min",1);
-    fptb_etrig_trigword_max = p.get<uint>("ptb_etrig_trigword_max",10000);
-    fptb_etrig_wordtype = p.get<uint32_t>("ptb_etrig_wordtype",2);
+    fptb_allowed_hlts = p.get<std::vector<uint>>("ptb_allowed_hlts",{});
     fptb_raw_diff_max = p.get<uint>("ptb_raw_diff_max",3000000); // ns
 
     fallowed_time_diff = p.get<uint>("allowed_time_diff",3000); // us!!! 
@@ -332,12 +328,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
                 }
                 else{ // finding the closest ETRIG to the raw timestamp
                     for (size_t i=0; i < tdc_etrig_v.size(); i++){
+                        event_trigger_time = tdc_etrig_v.front()%uint64_t(1e9);
                         auto tdc_etrig = tdc_etrig_v[i];
-                        uint64_t diff;
-                        if (tdc_etrig < (raw_timestamp))
-                            diff = raw_timestamp - tdc_etrig;
-                        else
-                            diff = tdc_etrig - raw_timestamp;
+                        uint64_t diff = (tdc_etrig < (raw_timestamp)) ? (raw_timestamp - tdc_etrig) : (tdc_etrig - raw_timestamp);
                         if (diff < min_raw_tdc_diff){
                             event_trigger_time = tdc_etrig%uint64_t(1e9);
                             min_raw_tdc_diff = diff;
@@ -351,62 +344,44 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         // get ptb product
         art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
         evt.getByLabel(fptb_product_name,ptbHandle);
+        bool found_ptb_hlt = false;
         if ((!ptbHandle.isValid() || ptbHandle->size() == 0)){
             if (fdebug>0) std::cout << "No PTB products found." << std::endl;
             timing_type++;
         }
         else{
             const std::vector<raw::ptb::sbndptb> ptb_v(*ptbHandle);
-            std::vector<uint>     hlt_words;
-            std::vector<uint64_t> hlt_timestamps;
 
+            if (fdebug>1) std::cout << "PTB (decoded) HLTs: " << std::endl;
             for (size_t i=0; i<ptb_v.size(); i++){
                 auto ptb = ptb_v[i];
                 auto hltrigs = ptb.GetHLTriggers();
 
                 if (!hltrigs.empty()){
-                    if (fdebug>1) std::cout << "PTB (decoded) HLTs found: " << std::endl;
                     for (size_t j=0; j < hltrigs.size(); j++){
                         raw::ptb::Trigger trig = hltrigs.at(j);
-                        uint     ptb_word; 
-                        uint64_t ptb_timestamp = (trig.timestamp * 20)%(uint(1e9));
-                        std::stringstream ss; ss << std::hex << trig.trigger_word << std::dec; ss >> ptb_word;
-                        if (fdebug>1){
-                            std::cout << "      PTB HLT " <<  j << "-> " 
-                                      << "ts (ns): " << ptb_timestamp 
-                                      << ", trigger word: " << ptb_word
-                                      << ", word type: " << trig.word_type
-                                      << std::endl; 
-                        }
-                        // don't account for rollover... PTB second part is not trustworthly anyhow 
-                        if (std::abs(int(raw_timestamp%uint(1e9)) - int(ptb_timestamp)) > fptb_raw_diff_max)
-                            continue;
-                        if ((trig.word_type==fptb_etrig_wordtype) & (ptb_word >= fptb_etrig_trigword_min) & (ptb_word <= fptb_etrig_trigword_max)){
-                            hlt_words.push_back(ptb_word);
-                            hlt_timestamps.push_back(ptb_timestamp);
+                        uint64_t ptb_timestamp = (trig.timestamp * 20);
+                        std::bitset<32> ptb_hlt_bitset = std::bitset<32>(trig.trigger_word);
+                        for (auto allowed_hlt : fptb_allowed_hlts){
+                            if (ptb_hlt_bitset[allowed_hlt]){
+                                auto diff = (ptb_timestamp < raw_timestamp) ? (raw_timestamp - ptb_timestamp) : (ptb_timestamp - raw_timestamp);
+                                if (diff > fptb_raw_diff_max) continue;
+                                
+                                found_ptb_hlt = true;
+                                event_trigger_time = ptb_timestamp%(uint(1e9));
+                                timing_ch = allowed_hlt;
+                                if (fdebug>1){
+                                    std::cout << "      PTB HLT " <<  allowed_hlt << " -> " 
+                                              << "ts (ns): " << ptb_timestamp%(uint(1e9))
+                                              << std::endl; 
+                                }
+                            }
                         }
                     } 
-                } // end hlt check 
+                } // end hlt check
             } // end of loop over ptb products
-            if (hlt_words.empty())
+            if (found_ptb_hlt==false){
                 timing_type++;
-            else{
-                uint   smallest_word = fptb_etrig_trigword_max;
-                size_t smallest_idx = 0;
-                for (size_t i=0; i < hlt_words.size(); i++){
-                    if (hlt_words.at(i) < smallest_word){
-                        smallest_idx = i;
-                        smallest_word = hlt_words.at(i);
-                    }
-                }
-                if (smallest_word==fptb_etrig_trigword_max){
-                    std::cout << "No valid PTB HLTs found." << std::endl;
-                    timing_type++;
-                }
-                else{
-                    timing_ch = smallest_word;
-                    event_trigger_time = hlt_timestamps.at(smallest_idx);
-                }
             }
         } // end handle validity check
     } // end of timing type 1
