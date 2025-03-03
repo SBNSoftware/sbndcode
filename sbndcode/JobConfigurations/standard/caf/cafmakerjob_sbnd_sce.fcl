@@ -71,7 +71,5 @@ physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
             pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs, cnnid,
             cafmaker ]
 
-# Enable the Space-Charge service
-#include "enable_spacecharge_services_sbnd.fcl"
 
 physics.producers.cafmaker.SimChannelLabel: "simtpc2d:simpleSC"
