@@ -30,14 +30,13 @@ sbndDB::PMTCalibrationDatabaseProvider::PMTCalibrationDatabaseProvider(
   , fLogCategory{pset.get<std::string>("LogCategory", "PMTTimingCorrection")}
 {
   fhicl::ParameterSet const tags{pset.get<fhicl::ParameterSet>("CorrectionTags")};
-  fCablesTag = tags.get<std::string>("CablesTag");
+  fPMTCalibrationDatabaseTag = tags.get<std::string>("PMTCalibrationDatabaseTag");
   fDatabaseTimeStamp = tags.get<long>("DatabaseTimeStamp");
   fTableName = tags.get<std::string>("TableName");
-  fVariabletoread = tags.get<std::string>("VariableToRead");
   fSERLength = tags.get<size_t>("SERLength");
   if (fVerbose)
     mf::LogInfo(fLogCategory) << "Database tags for timing corrections:\n"
-                              << "Cables corrections  " << fCablesTag << "\n";
+                              << "Cables corrections  " << fPMTCalibrationDatabaseTag << "\n";
 }
 
 // -------------------------------------------------------------------------------
@@ -47,7 +46,7 @@ uint64_t sbndDB::PMTCalibrationDatabaseProvider::RunToDatabaseTimestamp(uint32_t
 
   // Run number to timestamp used in the db
   // DBFolder.h only takes 19 digit (= timestamp in nano second),
-  // but ICARUS tables are currently using run numbers
+  // but SBND tables are currently using run numbers
   // Step 1) Add 1000000000 to the run number; e.g., run XXXXX -> 10000XXXXX
   // Step 2) Multiply 1000000000
   uint64_t runNum = uint64_t(run);
@@ -65,14 +64,10 @@ uint64_t sbndDB::PMTCalibrationDatabaseProvider::RunToDatabaseTimestamp(uint32_t
 /// Function to look up the calibration database at the table holding the pmt hardware cables corrections
 void sbndDB::PMTCalibrationDatabaseProvider::ReadPMTCalibration(uint32_t run)
 {
-
-  // pmt_cables_delay: delays of the cables relative to trigger
-  // and reset distribution
-
   const std::string dbname(fTableName);
-  lariov::DBFolder db(dbname, "", "", fCablesTag, true, false);
+  lariov::DBFolder db(dbname, "", "", fPMTCalibrationDatabaseTag, true, false);
 
-  bool ret = db.UpdateData(fDatabaseTimeStamp); // select table based on run number
+  bool ret = db.UpdateData(fDatabaseTimeStamp); // select table based on timestamp (this is temporary, once we generate db based on run numbers this should be changed)
   mf::LogDebug(fLogCategory) << dbname + " corrections" << (ret ? "" : " not")
                              << " updated for run " << run;
   mf::LogTrace(fLogCategory)
