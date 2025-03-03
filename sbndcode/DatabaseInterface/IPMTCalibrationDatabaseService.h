@@ -27,4 +27,4 @@ DECLARE_ART_SERVICE_INTERFACE(sbndDB::IPMTCalibrationDatabaseService, SHARED)
 
 // -----------------------------------------------------------------------------
 
-#endif // ICARUSCODE_DATABASEINTERFACE_IPMTCALIBRATIONDATABASESERVICE_H
+#endif
