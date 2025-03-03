@@ -1,0 +1,8 @@
+BEGIN_PROLOG
+
+timingcaen:
+{
+    module_type:  "TimingCAEN" 
+}
+
+END_PROLOG

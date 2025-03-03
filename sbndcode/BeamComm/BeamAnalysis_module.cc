@@ -109,7 +109,6 @@ private:
     std::vector<uint64_t> _tdc_ch3_utc;
     std::vector<uint64_t> _tdc_ch4_utc;
 
-
     // Ptb stuff
     std::vector<uint64_t> _ptb_hlt_trigger;
     std::vector<uint64_t> _ptb_hlt_timestamp;
@@ -226,9 +225,9 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
     fDebugPmt = p.get<bool>("DebugPmt", false);
 
     fIncludePtb = p.get<bool>("IncludePtb", true);
-    fIncludeCrtSP = p.get<bool>("IncludeCrtSP", true);
-    fIncludeCrtTrack = p.get<bool>("IncludeCrtTrack", true);
-    fIncludePmt = p.get<bool>("IncludePmt", true);
+    fIncludeCrtSP = p.get<bool>("IncludeCrtSP", false);
+    fIncludeCrtTrack = p.get<bool>("IncludeCrtTrack", false);
+    fIncludePmt = p.get<bool>("IncludePmt", false);
 }
 
 void sbnd::BeamAnalysis::analyze(art::Event const& e)
@@ -594,10 +593,6 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
 
 void sbnd::BeamAnalysis::beginJob()
 {
-    for(size_t i = 0; i < nCrt; i++){
-        _hTopHatCRTT0[i] = tfs->make<TH1D>(Form("hCRTT0_Tagger_%s", crtTagger[i].c_str()), "", 100, -5, 5);
-    }
-
     //Event Tree
     fTree = tfs->make<TTree>("events", "");
   
@@ -633,6 +628,11 @@ void sbnd::BeamAnalysis::beginJob()
         fTree->Branch("crt_sp_ts0e", &_crt_ts0e);
         fTree->Branch("crt_sp_ts1e", &_crt_ts1e);
         fTree->Branch("crt_sp_tagger", &_crt_tagger);
+
+        for(size_t i = 0; i < nCrt; i++){
+            _hTopHatCRTT0[i] = tfs->make<TH1D>(Form("hCRTT0_Tagger_%s", crtTagger[i].c_str()), "", 100, -5, 5);
+        }
+
     }
     
     if (fIncludeCrtTrack){
