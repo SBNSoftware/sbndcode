@@ -31,18 +31,6 @@ namespace sbndDB{ class PMTCalibrationDatabaseProvider; }
  * @brief 
  * 
  * This module reads the PMT timing corrections from the database.
- * Corrections are picked according to the run number being processed.  
- *
- * All time corrections are offsets (in microseconds) that need to be _added_ to the uncorrected time.
- * 
- * Configuration parameters
- * -------------------------
- * * `CorrectionTags`: tags to select the correction versions:
- *     * `CablesTag` (default: `v1r0`): correction for cable delay.
- *     * `LaserTag` (default: `v1r0`): first order PMT time correction, from laser data.
- *     * `CosmicsTag` (default: `v1r0`): second order PMT time correction, from cosmic rays.
- * * `Verbose` (default: `false`): Print-out the corrections read from the database.
- * * `LogCategory` (default: `PMTTimingCorrection")
  *
  */
 class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
@@ -51,10 +39,8 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
 
         PMTCalibrationDatabaseProvider(const fhicl::ParameterSet& pset);
 
-	/// Read timing corrections from the database
         void readPMTCalibrationDatabase(const art::Run& run);
 
-	/// Get time delay on the trigger line
         int getBreakoutBox( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).breakoutBox;
         };
@@ -83,12 +69,9 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
         
         bool fVerbose = false; ///< Whether to print the configuration we read.
         std::string fLogCategory; ///< Category tag for messages.
-        std::string fCablesTag;  ///< Tag for cable corrections database.	
+        std::string fPMTCalibrationDatabaseTag;  
         long fDatabaseTimeStamp;
-        std::string fLaserTag;   ///< Tag for laser corrections database.
-        std::string fCosmicsTag; ///< Tag for cosmics corrections database.	
         std::string fTableName;
-        std::string fVariabletoread;
         size_t fSERLength;
 
         /// Structure for single channel corrections

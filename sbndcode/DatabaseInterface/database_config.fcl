@@ -2,7 +2,12 @@ BEGIN_PROLOG
 
 sbnd_pmttimingservice : {
   service_provider: PMTTimingCorrectionService 
-  CorrectionTags: {CablesTag: "v1r0"} 
+    CorrectionTags: {
+      PMTCalibrationDatabaseTag: "v1r1"
+      DatabaseTimeStamp: 1740739388000000000
+      TableName: "pds_calibration"
+      SERLength: 550
+    }
   Verbose: false
 }
 
