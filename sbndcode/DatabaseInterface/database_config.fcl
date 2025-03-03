@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+sbnd_pmttimingservice:
+{
+    # service name:   IPMTTimingCorrectionService
+    service_provider: PMTTimingCorrectionService
+    CorrectionTags: {
+      CablesTag: "v1r0"
+    }
+    Verbose:          false
+}
+
+END_PROLOG
