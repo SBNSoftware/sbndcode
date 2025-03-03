@@ -26,8 +26,7 @@
 #include "TComplex.h"
 
 #include "sbndcode/OpDetReco/OpDeconvolution/Alg/OpDeconvolutionAlg.hh"
-#include "sbndcode/DatabaseInterface/PMTCalibrationDatabase.h"
-#include "sbndcode/DatabaseInterface/IPMTCalibrationDatabaseService.h"
+
 
 namespace opdet {
   class OpDeconvolutionAlgWiener;
@@ -88,8 +87,6 @@ private:
   bool fCorrectBaselineOscillations;
   short unsigned int fBaseSampleBins;
   double fBaseVarCut;
-
-  sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
 
   // Declare member functions
   void ApplyExpoAvSmoothing(std::vector<double>& wf);
@@ -169,9 +166,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fSinglePEWaveVector = *SinglePEVec_p;
   fSinglePEChannels = *fSinglePEChannels_p;
   fPeakAmplitude = *fPeakAmplitude_p;
-  fFilterParamVector = *fFilterParamVector_p;  
-
-  fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
+  fFilterParamVector = *fFilterParamVector_p;          
   
   mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
   file->Close();
@@ -199,15 +194,6 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
 
 std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolution(std::vector<raw::OpDetWaveform> const& wfVector)
 {
-
-  int channel_0= 6;
-  int channel_1 = 7;
-  int breakoutbox_0 = fPMTCalibrationDatabaseService->getBreakoutBox(channel_0);
-  int breakoutbox_1 = fPMTCalibrationDatabaseService->getBreakoutBox(channel_1);
-
-  std::cout << " breakcout box for channel " << channel_0 << " is " << breakoutbox_0 << std::endl;
-  std::cout << " breakcout box for channel " << channel_1 << " is " << breakoutbox_1 << std::endl;
-  
   std::vector<raw::OpDetWaveform> wfDeco;
   wfDeco.reserve(wfVector.size());
   for(auto const& wf : wfVector)
