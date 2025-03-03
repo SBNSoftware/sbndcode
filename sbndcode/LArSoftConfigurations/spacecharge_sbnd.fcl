@@ -30,8 +30,6 @@ BEGIN_PROLOG
 
 sbnd_spacecharge: @local::standard_spacecharge
 
-sbnd_spacecharge.EnableSimEfield : false
-sbnd_spacecharge.EnableSimEfield : false
 sbnd_spacecharge.EnableCalSpatialSCE: true
 sbnd_spacecharge.EnableSimSpatialSCE: true
 sbnd_spacecharge.EnableSimEfieldSCE: true
