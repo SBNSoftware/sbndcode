@@ -537,7 +537,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
 	  int upBit[32];
 	  
 	  for (int u=0; u<32; u++){ //setting default values for maximum of 32 bits
-	    upbit[u]=-1
+	    upBit[u]=-1;
 	  }
 
 	  int numOfTrig =0;
