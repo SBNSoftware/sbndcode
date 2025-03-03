@@ -13,21 +13,17 @@
 // LArSoft libraries
 #include "larcore/CoreUtils/ServiceProviderWrappers.h"
 
-
 // -----------------------------------------------------------------------------
 namespace sbndDB {
   /// The only thing this service does is to return its service provider of type
   /// `sbndDB::PMTCalibrationDatabase`.
-  using IPMTCalibrationDatabaseService
-    = lar::ServiceProviderInterfaceWrapper<PMTCalibrationDatabase>;
+  using IPMTCalibrationDatabaseService =
+    lar::ServiceProviderInterfaceWrapper<PMTCalibrationDatabase>;
 }
-
 
 // -----------------------------------------------------------------------------
 DECLARE_ART_SERVICE_INTERFACE(sbndDB::IPMTCalibrationDatabaseService, SHARED)
 
-
 // -----------------------------------------------------------------------------
-
 
 #endif // ICARUSCODE_DATABASEINTERFACE_IPMTCALIBRATIONDATABASESERVICE_H
