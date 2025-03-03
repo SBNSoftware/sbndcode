@@ -3,6 +3,7 @@
  * @brief  Wrapper class for 'PMTTimingCorrectionsProvider.h'
  * @author Andrea Scarpelli (ascarpell@bnl.gov), Gianluca Petrillo (petrillo@slac.stanford.edu)
  */
+// Ported to SBND by Alejandro Sanchez-Castillo, Jan. 2025
 
 #ifndef SBNDCCODE_DATABASEINTERFACE_IPMTCALIBRATIONDATABASESERVICE_H
 #define SBNDCCODE_DATABASEINTERFACE_IPMTCALIBRATIONDATABASESERVICE_H
