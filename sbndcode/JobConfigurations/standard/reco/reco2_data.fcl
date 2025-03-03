@@ -13,13 +13,15 @@ services:
 physics.producers:
 {
     @table::physics.producers
-    crtclustering:  @local::crtclusterproducer_data_sbnd
-    crtspacepoints: @local::crtspacepointproducer_data_sbnd
-    crttracks:      @local::crttrackproducer_data_sbnd
+    crtclustering:         @local::crtclusterproducer_data_sbnd
+    crtspacepoints:        @local::crtspacepointproducer_data_sbnd
+    crttracks:             @local::crttrackproducer_data_sbnd
+    crtspacepointmatching: @local::crtspacepointmatchproducer_data_sbnd
+    crttrackmatching:      @local::crttrackmatchproducer_data_sbnd
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  crtclustering, crtspacepoints, crttracks, cvn ]
+  crtclustering, crtspacepoints, crttracks, crtspacepointmatching, crttrackmatching, cvn ]
 
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
