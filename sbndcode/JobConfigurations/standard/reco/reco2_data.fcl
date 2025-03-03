@@ -14,14 +14,15 @@ services:
 physics.producers:
 {
     @table::physics.producers
-    crtclustering:  @local::crtclusterproducer_data_sbnd
-    crtspacepoints: @local::crtspacepointproducer_data_sbnd
-    crttracks:      @local::crttrackproducer_data_sbnd
-    opt0finder:     @local::sbnd_opt0_finder_data
+    crtclustering:         @local::crtclusterproducer_data_sbnd
+    crtspacepoints:        @local::crtspacepointproducer_data_sbnd
+    crttracks:             @local::crttrackproducer_data_sbnd
+    crtspacepointmatching: @local::crtspacepointmatchproducer_data_sbnd
+    crttrackmatching:      @local::crttrackmatchproducer_data_sbnd
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  crtclustering, crtspacepoints, crttracks, cvn, opt0finder]
+  crtclustering, crtspacepoints, crttracks, crtspacepointmatching, crttrackmatching, cvn ]
 
 #The next 3 lines need to be commented out once data use pandoraSCE by default. 
 physics.producers.cvn.SliceLabel: "pandora"
