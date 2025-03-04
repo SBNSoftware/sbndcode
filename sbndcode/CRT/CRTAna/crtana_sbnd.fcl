@@ -1,5 +1,6 @@
 #include "crtgeoalg_sbnd.fcl"
 #include "crtbacktrackeralg_sbnd.fcl"
+#include "crtsimmodules_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -7,6 +8,10 @@ crtana_sbnd:
 {
   CRTGeoAlg:         @local::crtgeoalg_sbnd
   CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd 
+  PEAttenuation:     @local::sbnd_crtsim.DetSimParams.NpeScaleShift
+  PropDelay:         @local::sbnd_crtsim.DetSimParams.PropDelay
+  TimeWalkNorm:      @local::sbnd_crtsim.DetSimParams.TDelayNorm
+  TimeWalkScale:     @local::sbnd_crtsim.DetSimParams.TDelayScale
   module_type:       "CRTAnalysis"
 }
 

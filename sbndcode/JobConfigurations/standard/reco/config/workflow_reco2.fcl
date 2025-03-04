@@ -16,7 +16,7 @@
 #include "crtana_sbnd.fcl"
 #include "pmtskim_sbnd.fcl"
 
-##include "SBNDCVNMapper.fcl"
+#include "SBNDCVNMapper.fcl"
 
 BEGIN_PROLOG
 
@@ -71,7 +71,7 @@ sbnd_reco2_producers:{
     caloskimCalorimetry: @local::caloskim_calorimetry
 
     ### CVN
-#    cvn:                 @local::standard_sbndcvnevaluatorslc
+    cvn:                 @local::standard_sbndcvnevaluatorslc
 }
 
 sbnd_reco2_producer_sequence: [  
@@ -106,7 +106,7 @@ sbnd_reco2_producer_sequence: [
     , fmatcharaSCE
     , fmatchoparaSCE
     , opt0finderSCE
-#    , cvn
+    , cvn
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
