@@ -25,5 +25,7 @@ physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandora
 
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
-physics.caloskimana_tpconly: [ caloskim ]
-physics.end_paths: [stream1, caloskimana_tpconly]
+physics.analyzers.crtana: @local::crtana_data_sbnd
+
+physics.caloskimana: [ caloskim, crtana ]
+physics.end_paths: [stream1, caloskimana ]
