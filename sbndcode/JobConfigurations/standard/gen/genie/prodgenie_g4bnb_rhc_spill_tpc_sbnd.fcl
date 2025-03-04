@@ -1,0 +1,4 @@
+#include "genie_sbnd.fcl"
+#include "prodgenie_nu_spill_tpc_sbnd.fcl"
+
+physics.producers.generator: @local::sbnd_genie_g4bnb_rhc
