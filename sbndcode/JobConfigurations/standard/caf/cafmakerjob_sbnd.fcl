@@ -81,7 +81,7 @@ physics:
 #  cosmictrack:          @local::standard_cosmictrack         #reco
 #  windowtrack:          @local::window_cosmictrack           #reco
 
-   # Includes: pandoraTrackMCS, pandoraTrackRange, rns, fluxweight
+   # Includes: pandoraTrackMCS, pandoraTrackRange, rns, fluxweight, genieweight
    @table::cafmaker_common_producers
 
    flashtrig: @local::pmtflashtrigmaker_sbnd
@@ -148,6 +148,7 @@ physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 
 # Overwrite weight_functions label:
+physics.producers.genieweight.weight_functions: @local::physics.producers.genieweight.weight_functions_genie
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
 
 # input art file.
