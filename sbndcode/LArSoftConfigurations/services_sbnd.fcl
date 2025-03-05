@@ -45,6 +45,7 @@
 #include "database_sbnd.fcl"
 #include "sam_sbnd.fcl"
 #include "spacecharge_sbnd.fcl"
+#include "pmtcalibrationdatabase_sbnd.fcl"
 
 BEGIN_PROLOG
 
