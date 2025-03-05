@@ -27,6 +27,8 @@
 
 #include "sbndcode/OpDetReco/OpDeconvolution/Alg/OpDeconvolutionAlg.hh"
 
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
 
 namespace opdet {
   class OpDeconvolutionAlgWiener;
