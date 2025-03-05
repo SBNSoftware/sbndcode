@@ -1,5 +1,5 @@
 #include "gencrtfilter.fcl"
-#include "prodcorsika_cosmics_proton.fcl"
+#include "prodcorsika_cosmics_proton_sbnd.fcl"
 
 physics.filters.filter: @local::sbnd_gencrtfilter
 physics.simulate: [ generator, filter, rns ]
