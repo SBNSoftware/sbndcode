@@ -1,7 +1,7 @@
 BEGIN_PROLOG
 
-sbnd_pmttimingservice : {
-  service_provider: PMTTimingCorrectionService 
+sbnd_pmtcalibrationdatabaseservice : {
+  service_provider: "PMTCalibrationDatabaseService" 
     CorrectionTags: {
       PMTCalibrationDatabaseTag: "v1r1"
       DatabaseTimeStamp: 1740739388000000000
