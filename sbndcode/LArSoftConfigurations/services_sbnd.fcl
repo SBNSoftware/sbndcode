@@ -89,6 +89,7 @@ sbnd_services:
   ChannelStatusService:           @local::sbnd_data_channelstatus
   DetPedestalService:             @local::sbnd_detpedestalservice  # from database_sbnd.fcl
   SpaceCharge:                    @local::sbnd_spacecharge
+  IPMTCalibrationDatabaseService:  @local::sbnd_pmtcalibrationdatabaseservice
 } # sbnd_services
 
 
