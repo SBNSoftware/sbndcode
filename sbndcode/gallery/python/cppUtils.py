@@ -176,4 +176,7 @@ class SourceCentral:
 # global instance of source tracking class
 SourceCode = SourceCentral()
 
+# type for decorations
+class UnusedAttr: pass
+
 ################################################################################
