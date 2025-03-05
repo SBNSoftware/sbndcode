@@ -9,7 +9,7 @@
 #define SBNDCCODE_DATABASEINTERFACE_IPMTCALIBRATIONDATABASESERVICE_H
 
 // ICARUS libraries
-#include "sbndcode/DatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
 
 // LArSoft libraries
 #include "larcore/CoreUtils/ServiceProviderWrappers.h"

@@ -18,7 +18,7 @@
 #include "fhiclcpp/ParameterSet.h"
 
 // Local
-#include "sbndcode/DatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
 
 // C/C++ standard libraries
 #include <string>

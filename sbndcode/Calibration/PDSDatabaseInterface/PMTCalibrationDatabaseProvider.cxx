@@ -11,8 +11,8 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 // Local
-#include "sbndcode/DatabaseInterface/PMTCalibrationDatabase.h"
-#include "sbndcode/DatabaseInterface/PMTCalibrationDatabaseProvider.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabaseProvider.h"
 
 // Database interface helpers
 #include "larevt/CalibrationDBI/IOVData/TimeStampDecoder.h"

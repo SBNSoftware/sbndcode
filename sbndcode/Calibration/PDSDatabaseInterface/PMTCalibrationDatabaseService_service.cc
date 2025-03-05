@@ -4,8 +4,8 @@
  */
 // Ported to SBND by Alejandro Sanchez-Castillo, Jan. 2025
 
-#include "sbndcode/DatabaseInterface/IPMTCalibrationDatabaseService.h"
-#include "sbndcode/DatabaseInterface/PMTCalibrationDatabaseProvider.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabaseProvider.h"
 
 // framework libraries
 #include "art/Framework/Principal/Run.h"

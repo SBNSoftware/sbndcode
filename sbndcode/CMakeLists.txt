@@ -45,6 +45,3 @@ add_subdirectory(ChannelMaps)
 
 # for CVN
 add_subdirectory(SBNDCVN)
-
-# for Calibration database
-add_subdirectory(DatabaseInterface)
