@@ -14,7 +14,7 @@
 #include "PDFastSim_sbnd.fcl"
 #include "simdrift_sbnd.fcl"
 
-#include "prodcorsika_cosmics_proton.fcl"
+#include "prodcorsika_cosmics_proton_sbnd.fcl"
 
 
 # Add the g4 services
