@@ -118,7 +118,7 @@ private:
   double recoNeutrinoVX;                    // Reco vertex x coord
   double recoNeutrinoVY;                    // Reco vertex y coord
   double recoNeutrinoVZ;                    // Reco vertex z coord
-  int numRecoNeutrinos = 0;                 // Counter for number of reco neutrinos
+  size_t numRecoNeutrinos = 0;                 // Counter for number of reco neutrinos
 
   geo::Point_t pos = {0, 0, 0};             // Geometry position (0, 0, 0), gets overwritten with actual coords
 
@@ -179,6 +179,7 @@ void sbnd::NuE::analyze(art::Event const& e)
   subRunID = e.id().subRun();
 
   std::cout << "" << std::endl;
+  std::cout << "________________________________________________________________________________________" << std::endl;
   std::cout << "Run: " << runID << ", Subrun: " << subRunID << ", Event: " << eventID << std::endl;
 
   numTrueNeutrinos = 0;
@@ -259,8 +260,13 @@ void sbnd::NuE::analyze(art::Event const& e)
 
   int PFParticleID(std::numeric_limits<int>::max());
 
+  // Get associations between pfparticles and slices
   art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceLabel);
+  // Get associations between pfparticles and vertex
   art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
+
+  // initialises the vector that holds the primary reco neutrino info
+  std::vector<std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>>> v;
 
   for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
     nPFParticles++;
@@ -269,9 +275,8 @@ void sbnd::NuE::analyze(art::Event const& e)
     if(PFParticleID == std::numeric_limits<int>::max()) return;
 
     const std::vector<art::Ptr<recob::Slice>> pfpSlices(pfpSliceAssns.at(pfp.key()));
-    
-    // Condition on the number of slices in the event (can be changed so events > 1 slice are skipped)
-    if(pfpSlices.size() == 1 || pfpSlices.size() != 1){
+    // Condition on the number of slices associated with the pfparticle. pfp has > 1 slice or no slice then it is skipped
+    if(pfpSlices.size() == 1){
         const art::Ptr<recob::Slice> &pfpSlice(pfpSlices.front());
         int SliceID = pfpSlice->ID();
 
@@ -282,90 +287,86 @@ void sbnd::NuE::analyze(art::Event const& e)
             bool pfpPrimary = pfp->IsPrimary();
 
             if(pfpPrimary && (PFParticleID == 12 || PFParticleID == 14)){
-                std::tuple<art::Ptr<recob::PFParticle>, double, double, double> tuple; 
-                tuple = std::make_tuple(pfp, pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z()); // Creates a tuple that contains the pfp, and the vertex coords
-                std::vector<std::tuple<art::Ptr<recob::PFParticle>, double, double, double>> &v = slicePFParticleMap[SliceID];
+                std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>> tuple;  // add in crumbs slice score
+                tuple = std::make_tuple(pfp, pfpVertex, pfpSlice); // Creates a tuple that contains the pfp, and the vertex coords
+                // Pushes the tuple containing the reco primary neutrino info to a vector called v
                 v.push_back(tuple);
+                std::cout << "slice ID associated with primary reco neutrino: " << SliceID << std::endl;
                 numRecoNeutrinos++;
+                std::cout << pfpVertex->position().X() << ", " << pfpVertex->position().Y() << ", " << pfpVertex->position().Z() << std::endl;
             }
         }
     } 
   }
 
-  if(numTrueNeutrinos == 1 && numRecoNeutrinos != 0){
-    double closestX = 999999999.9, closestY = 999999999.9, closestZ = 999999999.9;
-    // size_t closestIndex = 0;
-    // size_t closestSlice = 0;
+  if(v.size() == numRecoNeutrinos) std::cout << "num reco neutrinos == v.size" << std::endl;
 
-    for(auto const& slice : slicePFParticleMap){
-        for(size_t g = 0; g < slice.second.size(); g++){
-            double x, y, z;
-            art::Ptr<recob::PFParticle> particle;
-            std::tie(particle, x, y, z) = slice.second[g];
-
-            if(numRecoNeutrinos != 1){
-                std::cout << "This slice has more than one reco neutrino!!!!!!!!!!!" << std::endl; 
-                double dist = dist_between(trueNeutrinoVX, trueNeutrinoVY, trueNeutrinoVZ, x, y, z);
-                if(dist < dist_between(trueNeutrinoVX, trueNeutrinoVY, trueNeutrinoVZ, closestX, closestY, closestZ)){
-                    closestX = x;
-                    closestY = y;
-                    closestZ = z;
-                    //closestIndex = g;
-                    //closestSlice = slice.first;
-                }
-            } else if(numRecoNeutrinos == 1){
-                std::cout << "This slice has one reco neutrino" << std::endl;
-                closestX = x;
-                closestY = y;
-                closestZ = z;
-                // closestIndex = g;
-                // closestSlice = slice.first;
-            }
-        }
+  if(numTrueNeutrinos == 1 && (v.size() != 0 && v.size() != 1)){
+    std::cout << "This slice has 1 true neutrino + " << v.size() << " primary reco neutrinos" << std::endl;
+    for(size_t numPrimary = 0; numPrimary < v.size(); numPrimary++){
+        auto vertexPtr = std::get<1>(v[numPrimary]);
+        if(vertexPtr){
+            recoNeutrinoVX = vertexPtr->position().X();
+            recoNeutrinoVY = vertexPtr->position().Y();
+            recoNeutrinoVZ = vertexPtr->position().Z();
+            std::cout << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << std::endl;
+        } else{
+            std::cout << "pfpVertex pointer is null when accessing from the vector!" << std::endl;
+        }   
     }
+  } 
+  
+  if(numTrueNeutrinos == 1 && v.size() == 1){
+    std::cout << "This slice has 1 true neutrino + 1 primary reco neutrino" << std::endl;
+    
+    auto vertexPtr = std::get<1>(v.front());
+    if(vertexPtr){
+        recoNeutrinoVX = vertexPtr->position().X();
+        recoNeutrinoVY = vertexPtr->position().Y();
+        recoNeutrinoVZ = vertexPtr->position().Z();
 
-    recoNeutrinoVX = closestX;
-    recoNeutrinoVY = closestY;
-    recoNeutrinoVZ = closestZ;
+        std::cout << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << std::endl;
+    } else{
+        std::cout << "pfpVertex pointer is null when accessing from the vector!" << std::endl;
+    }
+  }
 
-    std::cout << "Num of true neutrinos: " << numTrueNeutrinos << ", Num of reco neutrinos: " << numRecoNeutrinos << std::endl;
-    std::cout << "True vertex: (" << trueNeutrinoVX << ", " << trueNeutrinoVY << ", " << trueNeutrinoVZ << ")   Reco vertex: (" << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << ")" << std::endl;
+  std::cout << "Num of true neutrinos: " << numTrueNeutrinos << ", Num of reco neutrinos: " << numRecoNeutrinos << std::endl;
+  std::cout << "True vertex: (" << trueNeutrinoVX << ", " << trueNeutrinoVY << ", " << trueNeutrinoVZ << ")   Reco vertex: (" << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << ")" << std::endl;
 
-    for(auto &hit : hitVec){
-        if(hit->View() == 0 || hit->View() == 1 || hit->View() == 2){
-            const geo::WireID& wireID(hit->WireID());
-            const double xpos = propD.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
+  for(auto &hit : hitVec){
+    if(hit->View() == 0 || hit->View() == 1 || hit->View() == 2){
+        const geo::WireID& wireID(hit->WireID());
+        const double xpos = propD.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
            
-            auto const& channelMapAlg =  art::ServiceHandle<geo::WireReadout const>()->Get();
+        auto const& channelMapAlg =  art::ServiceHandle<geo::WireReadout const>()->Get();
 
-            auto const wire = channelMapAlg.Plane(geo::PlaneID(wireID.Cryostat, wireID.TPC, wireID.Plane)).Wire(wireID);
+        auto const wire = channelMapAlg.Plane(geo::PlaneID(wireID.Cryostat, wireID.TPC, wireID.Plane)).Wire(wireID);
             
-            geo::Point_t start = wire.GetStart();
-            geo::Point_t end = wire.GetEnd();
+        geo::Point_t start = wire.GetStart();
+        geo::Point_t end = wire.GetEnd();
 
-            const double ay(start.Y());
-            const double az(start.Z());
-            const double by(end.Y());
-            const double bz(end.Z());
+        const double ay(start.Y());
+        const double az(start.Z());
+        const double by(end.Y());
+        const double bz(end.Z());
 
-            const double ny(by - ay);
-            const double nz(bz - az);
-            const double n2(ny * ny + nz * nz);
+        const double ny(by - ay);
+        const double nz(bz - az);
+        const double n2(ny * ny + nz * nz);
 
-            const double ry(ay - (ay * ny + az * nz) * ny / n2);
-            const double rz(az - (ay * ny + az * nz) * nz / n2);
-            const double sign((rz > 0.0) ? +1.0 : -1.0);
-            const double uvz = sign * std::sqrt(ry * ry + rz * rz); // this is the U/V/Z coordinate
+        const double ry(ay - (ay * ny + az * nz) * ny / n2);
+        const double rz(az - (ay * ny + az * nz) * nz / n2);
+        const double sign((rz > 0.0) ? +1.0 : -1.0);
+        const double uvz = sign * std::sqrt(ry * ry + rz * rz); // this is the U/V/Z coordinate
 
-            event_hitTree.push_back(eventID);
-            run_hitTree.push_back(runID);
-            subrun_hitTree.push_back(subRunID);
-            plane_hitTree.push_back(hit->View());
-            x_hitTree.push_back(xpos);
-            uvz_hitTree.push_back(uvz);
-        }
+        event_hitTree.push_back(eventID);
+        run_hitTree.push_back(runID);
+        subrun_hitTree.push_back(subRunID);
+        plane_hitTree.push_back(hit->View());
+        x_hitTree.push_back(xpos);
+        uvz_hitTree.push_back(uvz);
     }
-
   }
 
   event_tree.push_back(eventID);
