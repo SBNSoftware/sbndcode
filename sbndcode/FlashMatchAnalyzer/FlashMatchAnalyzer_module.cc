@@ -53,7 +53,7 @@ test::FlashMatchAnalyzer::FlashMatchAnalyzer(fhicl::ParameterSet const& p)
   fSaveCRTTracks( p.get<bool>("SaveCRTTracks")),
   fComputePMTRatio( p.get<bool>("ComputePMTRatio")),
   fSaveChargeBarycenter(p.get<bool>("SaveChargeBarycenter")),
-  fNChannels(fGeom->Nchannels())
+  fNChannels(channelMapAlg.Nchannels())
   // More initializers here.
 {
 
@@ -65,7 +65,7 @@ test::FlashMatchAnalyzer::FlashMatchAnalyzer(fhicl::ParameterSet const& p)
   fReadoutWindow = detProp.ReadOutWindowSize();
   fDriftVelocity = detProp.DriftVelocity(); //in cm/us
   constexpr geo::TPCID tpcid{0, 0};
-  fWirePlanePosition = std::abs( fGeom->Plane(geo::PlaneID{tpcid, 1}).GetCenter().X() );
+  fWirePlanePosition = std::abs( channelMapAlg.Plane(geo::PlaneID{tpcid, 1}).GetBoxCenter().X() );
 
   fCos60 = std::cos(  60 * (M_PI / 180.0) );
   fSin60 = std::sin(  60 * (M_PI / 180.0) );
@@ -211,9 +211,9 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
             if( fGeom->HasTPC(fGeom->FindTPCAtPosition(xyz_vertex)) ){
               unsigned int tpcID=fGeom->FindTPCAtPosition(xyz_vertex).TPC;
 
-              fRecoVU=fGeom->NearestChannel(xyz_vertex, geo::PlaneID(0, tpcID, 0));
-              fRecoVV=fGeom->NearestChannel(xyz_vertex, geo::PlaneID(0, tpcID, 1));
-              fRecoVC=fGeom->NearestChannel(xyz_vertex, geo::PlaneID(0, tpcID, 2));
+              fRecoVU=channelMapAlg.NearestChannel(xyz_vertex, geo::PlaneID(0, tpcID, 0));
+              fRecoVV=channelMapAlg.NearestChannel(xyz_vertex, geo::PlaneID(0, tpcID, 1));
+              fRecoVC=channelMapAlg.NearestChannel(xyz_vertex, geo::PlaneID(0, tpcID, 2));
               fRecoVTimeTick=VertexToDriftTick(fTrueVt, fRecoVx);
             }
           }
@@ -401,15 +401,14 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
 
             //std::cout<<"HasTPC: "<<fGeom->HasTPC(fGeom->FindTPCAtPosition(po))<<" "<<fGeom->FindTPCAtPosition(po).TPC<<std::endl;
 
-            
             if( fGeom->HasTPC(fGeom->FindTPCAtPosition(po)) ){
               
               unsigned int tpcID=fGeom->FindTPCAtPosition(po).TPC;
               geo::PlaneID plane(0, tpcID, 0);
               //fTrueVU=fGeom->NearestChannel(po, 0, tpcID, 0);
-              fTrueVU=fGeom->NearestChannel(po, geo::PlaneID(0, tpcID, 0));
-              fTrueVV=fGeom->NearestChannel(po, geo::PlaneID(0, tpcID, 1));
-              fTrueVC=fGeom->NearestChannel(po, geo::PlaneID(0, tpcID, 2));
+              fTrueVU=channelMapAlg.NearestChannel(po, geo::PlaneID(0, tpcID, 0));
+              fTrueVV=channelMapAlg.NearestChannel(po, geo::PlaneID(0, tpcID, 1));
+              fTrueVC=channelMapAlg.NearestChannel(po, geo::PlaneID(0, tpcID, 2));
               fTrueVTimeTick=VertexToDriftTick(fTrueVt, fTrueVx);
             }
           }
