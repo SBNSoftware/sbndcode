@@ -46,8 +46,7 @@ services:
   TimeTracker:  { printSummary: true }
   # #  @table::standard_services
 
-  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
-  ExptGeoHelperInterface:    @local::sbnd_geometry_helper
+  WireReadout:               @local::sbnd_wire_readout
   GeometryConfigurationWriter: {}
   Geometry:                  @local::sbnd_geo
   AuxDetGeometry:            @local::sbnd_auxdetgeo
@@ -134,6 +133,7 @@ physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
 
 physics.producers.cafmaker: @local::standard_cafmaker
 physics.producers.cafmaker.CosmicGenLabel: "corsika"
+physics.producers.cafmaker.SimChannelLabel: "simtpc2d:simpleSC"
 
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false

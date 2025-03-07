@@ -140,7 +140,7 @@ namespace lcvn {
             std::vector<art::Ptr<recob::Hit>> slicehits = findManyHits.at(slice.key());
             fPMProducer.Set_fT0_value(min_T0);
             PixelMap pm = fPMProducer.SBNDCreateMap(detProp, slicehits);
-            auto nhits = fPMProducer.NROI();
+            auto nhits = fPMProducer.TotHits();
             pm.SetTotHits(nhits);
             //pm.fSliceID = slice->ID();
             std::vector<std::vector<float>> output = fTFHandler->Predict(pm);

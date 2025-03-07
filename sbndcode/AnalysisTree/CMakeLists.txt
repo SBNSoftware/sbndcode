@@ -13,7 +13,6 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            lardata::RecoObjects
                            larpandora::LArPandoraInterface
                            sbndcode_CRTUtils
-                           sbndcode_CRT
                            sbnobj::Common_CRT
                            nusimdata::SimulationBase
                            art::Framework_Core

@@ -8,7 +8,7 @@
 #include "art/Framework/Services/Registry/ServiceDefinitionMacros.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "cetlib_except/exception.h"
-#include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcorealg/Geometry/TPCGeo.h"
 #include "larcorealg/Geometry/PlaneGeo.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -433,15 +433,15 @@ void util::SignalShapingServiceSBND::SetFieldResponse()
 {
   // Get services.
 
-  art::ServiceHandle<geo::Geometry> geo;
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
   auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob(clockData);
 
   // Get plane pitch.
   // should always have at least 2 planes
   constexpr geo::TPCID tpcid{0, 0};
-  auto const xyz1 = geo->Plane(geo::PlaneID{tpcid, 0}).GetBoxCenter();
-  auto const xyz2 = geo->Plane(geo::PlaneID{tpcid, 1}).GetBoxCenter();
+  auto const& channelMapAlg =  art::ServiceHandle<geo::WireReadout const>()->Get();
+  auto const xyz1 = channelMapAlg.Plane(geo::PlaneID{tpcid, 0}).GetBoxCenter();
+  auto const xyz2 = channelMapAlg.Plane(geo::PlaneID{tpcid, 1}).GetBoxCenter();
 
   // this assumes all planes are equidistant from each other,
   // probably not a bad assumption
@@ -888,14 +888,15 @@ int util::SignalShapingServiceSBND::FieldResponseTOffset(detinfo::DetectorClocks
 }
 
 geo::View_t util::SignalShapingServiceSBND::GetView(unsigned int chan) const {
-  art::ServiceHandle<geo::Geometry> geom;
-  geo::View_t view = geom->View(chan);
+  auto const& channelMapAlg =
+    art::ServiceHandle<geo::WireReadout const>()->Get();
+  geo::View_t view = channelMapAlg.View(chan);
   
   // TEMPORARY BUG FIX (7/23/2021, v09_26_00): With geometry v2, LArSoft is mixing 
   // up the view assignments for the U and V planes in TPC0, but not TPC1, resulting
   // in the wrong signal shapes being used. To work around this, we explicitly assign 
   // the view based on the plane number for the two induction planes. -wforeman
-  std::vector<geo::WireID> wires = geom->ChannelToWire(chan);
+  std::vector<geo::WireID> wires = channelMapAlg.ChannelToWire(chan);
   if( wires.size() ) {
     if      ( wires[0].Plane == 0 ) view = geo::kU;
     else if ( wires[0].Plane == 1 ) view = geo::kV;

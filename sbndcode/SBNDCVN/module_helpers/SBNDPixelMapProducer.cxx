@@ -29,20 +29,20 @@ namespace lcvn
      //std::cout << "===================== SBNDPixelMapProducer::DefineBoundary() Number of hits : " << cluster.size() << "\n";
 
      for (size_t iHit = 0; iHit < cluster.size(); ++iHit) {
-          U wraphit(*(cluster[iHit]), this->fThreshold);
+          U wraphit(*(cluster[iHit]), this->Threshold());
           Waveform wf = wraphit.GetWaveform();
           geo::WireID wireid = wraphit.GetID();
 
           unsigned int tempWire = wireid.Wire;
           unsigned int tempPlane = wireid.Plane;
 
-          if (!this->fMultipleDrifts) ConvertLocaltoGlobal(wireid, tempWire, tempPlane);
+          if (!this->MultipleDrifts()) ConvertLocaltoGlobal(wireid, tempWire, tempPlane);
 
           for (auto& pulse : wf) {
               double min_tick = (double)INT_MAX;
               for (auto& i : pulse) {
                    double temptdc = i.first;
-                   if (this->fMultipleDrifts) ConvertLocaltoGlobalTDC(wireid, i.first, tempWire, tempPlane, temptdc);
+                   if (this->MultipleDrifts()) ConvertLocaltoGlobalTDC(wireid, i.first, tempWire, tempPlane, temptdc);
                    if (temptdc < min_tick) min_tick = temptdc;
 		   tsum[tempPlane] += temptdc;
                    tsize[tempPlane] += 1.;
@@ -72,13 +72,13 @@ namespace lcvn
      double tmean_2 = tsum[2] / tsize[2];
 
      for (int i = 0; i < (int)wire_0.size(); i++) {
-          if (std::abs(tmin_0[i] - tmean_0) < (double)this->fTRes) bwire_0.push_back(wire_0[i]);
+          if (std::abs(tmin_0[i] - tmean_0) < (double)this->TRes()) bwire_0.push_back(wire_0[i]);
      }
      for (int i = 0; i < (int)wire_1.size(); i++) {
-          if (std::abs(tmin_1[i] - tmean_1) < (double)this->fTRes) bwire_1.push_back(wire_1[i]);
+          if (std::abs(tmin_1[i] - tmean_1) < (double)this->TRes()) bwire_1.push_back(wire_1[i]);
      }
      for (int i = 0; i < (int)wire_2.size(); i++) {
-          if (std::abs(tmin_2[i] - tmean_2) < (double)this->fTRes) bwire_2.push_back(wire_2[i]);
+          if (std::abs(tmin_2[i] - tmean_2) < (double)this->TRes()) bwire_2.push_back(wire_2[i]);
      }
 
      if (fverbose) std::cout << "Boundary wire vector sizes: " << bwire_0.size() << ", " << bwire_1.size() << ", " << bwire_2.size() << std::endl;
@@ -120,9 +120,9 @@ namespace lcvn
         }
     }
 
-    this->fTotHits = bwire_0.size() + bwire_1.size() + bwire_2.size();
+    this->SetTotHits(bwire_0.size() + bwire_1.size() + bwire_2.size());
 
-    Boundary bound(this->fNWire, this->fTRes, minwire_0, minwire_1, minwire_2, tmean_0, tmean_1, tmean_2);
+    Boundary bound(this->NWire(), this->TRes(), minwire_0, minwire_1, minwire_2, tmean_0, tmean_1, tmean_2);
     
     if(fverbose) std::cout << "============  Reached the end of the function SBNDPixelMapProducer::DefineBoundary() ==============\n"; 
     return bound;
@@ -192,19 +192,19 @@ namespace lcvn
   template <class T, class U> PixelMap SBNDPixelMapProducer<T, U>::SBNDCreateMapGivenBoundary(detinfo::DetectorPropertiesData const& detProp,const std::vector< const T* >& cluster, const Boundary& bound)
   {
     if(fverbose) std::cout << "============ Calling the function SBNDPixelMapProducer::SBNDCreateMapGivenBoundary() ==============\n";
-    PixelMap pm(this->fNWire, this->fNTdc, bound);
+    PixelMap pm(this->NWire(), this->NTdc(), bound);
 
     for(size_t iHit = 0; iHit < cluster.size(); ++iHit)
     {
 
-      U wraphit(*(cluster[iHit]), this->fThreshold);
+      U wraphit(*(cluster[iHit]), this->Threshold());
       Waveform wf = wraphit.GetWaveform();
       geo::WireID wireid = wraphit.GetID();
 
       unsigned int tempWire  = wireid.Wire;
       unsigned int tempPlane = wireid.Plane;
 
-      if(!this->fMultipleDrifts)
+      if(!this->MultipleDrifts())
          ConvertLocaltoGlobal(wireid, tempWire, tempPlane);
 
       for(auto &pulse: wf){
@@ -212,7 +212,7 @@ namespace lcvn
         for(auto &i: pulse){
           const double pe = i.second;
           double temptdc = i.first;
-          if(this->fMultipleDrifts)
+          if(this->MultipleDrifts())
             ConvertLocaltoGlobalTDC(wireid, i.first, tempWire, tempPlane, temptdc); 
        
           const unsigned int wire = tempWire;
@@ -224,7 +224,7 @@ namespace lcvn
       }
 
     }
-    pm.SetTotHits(this->fTotHits);
+    pm.SetTotHits(this->TotHits());
     if(fverbose) std::cout << "============ Reached the end of the function SBNDPixelMapProducer::SBNDCreateMapGivenBoundary() ==============\n";
     return pm;
  }

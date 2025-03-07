@@ -1,5 +1,6 @@
 #include "sbndcode/OpDetAnalyzer/PDSAnalyzer/SBNDPDSAnalyzer_module.hh"
 
+#include "larcorealg/Geometry/OpDetGeo.h"
 
 // -------- Constructor --------
 opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
@@ -220,8 +221,8 @@ void opdet::SBNDPDSAnalyzer::beginJob()
     if(fVerbosity>0)
       std::cout << " -- Dumping SBND PDS mapping -- \n";
 
-    for(unsigned int opch=0; opch<fGeoService->NOpChannels(); opch++){
-      auto pdCenter = fGeoService->OpDetGeoFromOpChannel(opch).GetCenter();
+    for(unsigned int opch=0; opch<fWireReadout.NOpChannels(); opch++){
+      auto pdCenter = fWireReadout.OpDetGeoFromOpChannel(opch).GetCenter();
       _opDetID.push_back(opch);
       _opDetX.push_back(pdCenter.X());
       _opDetY.push_back(pdCenter.Y());
@@ -283,7 +284,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     if(fMakePerTrackTree){
 
       std::vector<std::vector<double>> fPhVTemplate;
-      fPhVTemplate.resize( fGeoService->NOpChannels() );
+      fPhVTemplate.resize( fWireReadout.NOpChannels() );
       
       for(size_t i_p=0; i_p < mcpartVec.size(); i_p++){
         const simb::MCParticle pPart = mcpartVec[i_p];
@@ -1030,10 +1031,10 @@ void opdet::SBNDPDSAnalyzer::FillAverageDepositedEnergyVariables(std::vector<std
 // -------- Restet SimPhotons variables --------
 void opdet::SBNDPDSAnalyzer::ResetSimPhotons(){
     //Cleaning
-    _simPhotonsLiteVIS.clear(); _simPhotonsLiteVIS.resize(fGeoService->NOpChannels());
-    _simPhotonsLiteVUV.clear(); _simPhotonsLiteVUV.resize(fGeoService->NOpChannels());
-    _simPhotonsperOpChVUV.clear(); _simPhotonsperOpChVUV.resize(fGeoService->NOpChannels(), 0);
-    _simPhotonsperOpChVIS.clear(); _simPhotonsperOpChVIS.resize(fGeoService->NOpChannels(), 0);
+    _simPhotonsLiteVIS.clear(); _simPhotonsLiteVIS.resize(fWireReadout.NOpChannels());
+    _simPhotonsLiteVUV.clear(); _simPhotonsLiteVUV.resize(fWireReadout.NOpChannels());
+    _simPhotonsperOpChVUV.clear(); _simPhotonsperOpChVUV.resize(fWireReadout.NOpChannels(), 0);
+    _simPhotonsperOpChVIS.clear(); _simPhotonsperOpChVIS.resize(fWireReadout.NOpChannels(), 0);
     _NPhotons=0;
     _NPhotonsPMTCo=0; _NPhotonsPMTUnco=0; _NPhotonsPMTCoVUV=0;
     _NPhotonsXARAPUCAVUV=0; _NPhotonsXARAPUCAVIS=0;
@@ -1044,7 +1045,7 @@ void opdet::SBNDPDSAnalyzer::ResetSimPhotons(){
 void opdet::SBNDPDSAnalyzer::FillSimPhotons(std::vector<art::Handle<std::vector<sim::SimPhotons> >> photonHandle_list){
   
   if(fVerbosity>0)
-    std::cout << "Saving SimPhotons for NOpCh=" << fGeoService->NOpChannels() << std::endl;
+    std::cout << "Saving SimPhotons for NOpCh=" << fWireReadout.NOpChannels() << std::endl;
 
   //Fill SimPhotons variables, loop over the Handle
   for ( const art::Handle<std::vector<sim::SimPhotons>>& photonHandle: (photonHandle_list) ){
@@ -1127,7 +1128,7 @@ void opdet::SBNDPDSAnalyzer::FillSimPhotons(std::vector<art::Handle<std::vector<
 void opdet::SBNDPDSAnalyzer::FillSimPhotonsLite(std::vector<art::Handle<std::vector<sim::SimPhotonsLite> >> photonHandle_list){
   
   if(fVerbosity>0)
-    std::cout << "Saving SimPhotonsLite for NOpCh=" << fGeoService->NOpChannels() << std::endl;
+    std::cout << "Saving SimPhotonsLite for NOpCh=" << fWireReadout.NOpChannels() << std::endl;
   
   //Fill SimPhotons variables, loop over the Handle
   for ( const art::Handle<std::vector<sim::SimPhotonsLite>>& litePhotonHandle: (photonHandle_list) ){

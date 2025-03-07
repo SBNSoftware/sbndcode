@@ -1,5 +1,8 @@
-# job configuration
 #
+# File:    standard_reco1reco2_sbnd.fcl
+# Purpose: The standard reconstruction workflow for both 'reco1' and 'reco2', starting at deconvolution and includes all high level reconstruction.  This fcl is provided for convenience and separating the reco stages is recommended.
+#
+
 #include "workflow_reco1.fcl"
 #include "drops_reco1.fcl"
 #include "workflow_reco2.fcl"

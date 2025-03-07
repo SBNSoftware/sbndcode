@@ -19,7 +19,7 @@ services:
 # services from LArSoft - see definitions for configurations in 
 # geometry_argoneut.fcl
 # services_argoneut.fcl
-services.user.ExptGeoHelperInterface: @local::argoneut_geometry_helper
+services.user.WireReadout: @local::argoneut_wire_readout
 services.user.Geometry:           @local::argoneut_geo 
 services.user.DetectorPropertiesService: @local::argoneut_detproperties
 services.user.LArPropertiesService:      @local::argoneut_properties

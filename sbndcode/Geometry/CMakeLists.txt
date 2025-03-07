@@ -1,7 +1,7 @@
 art_make_library(
           SOURCE
-                      ChannelMapSBNDAlg.cxx
                       GeoObjectSorterSBND.cxx
+                      WireReadoutSorterSBND.cxx
           LIBRARIES     larcorealg::Geometry
                         messagefacility::MF_MessageLogger
                         cetlib::cetlib
@@ -10,19 +10,9 @@ art_make_library(
                         ROOT::Core
                         ROOT::Geom
 )
-cet_build_plugin( SBNDGeometryHelper art::service
-          SOURCE SBNDGeometryHelper_service.cc
-          LIBRARIES
-                        sbndcode::Geometry
-                        larcorealg::Geometry
-                        larcore::Geometry_Geometry_service
-                        art::Framework_Services_Registry
-                        canvas::canvas
-                        fhiclcpp::fhiclcpp
-                        cetlib_except::cetlib_except
-                        ROOT::Core
-        )
 
+cet_build_plugin(GeoObjectSorterSBND art::tool LIBRARIES PRIVATE sbndcode::Geometry)
+cet_build_plugin(WireReadoutSorterSBND art::tool LIBRARIES PRIVATE sbndcode::Geometry)
 
 install_headers()
 install_fhicl()

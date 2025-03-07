@@ -156,6 +156,11 @@ local wc = import "wirecell.jsonnet";
     // Parameters related to simulation, not given elsewhere.
     sim : {
 
+        // The "absolute" time (ie, relative to trigger time?) that the lower edge
+        // of final readout tick #0 should correspond to.  This is a
+        // "fixed" notion.
+        tick0_time: 0,
+
         // The number of impact bins per wire region gives the
         // granularity of the simulation convolution in the transverse
         // dimension.  Typically should match what the granularity at

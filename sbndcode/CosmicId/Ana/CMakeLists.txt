@@ -33,7 +33,6 @@ set(
                            ROOT::RooFit
                            ROOT::RooFitCore
                            sbndcode_RecoUtils
-                           sbndcode_CRT
                            sbndcode_CRTUtils
                            sbndcode_GeoWrappers
                            sbndcode_CosmicIdAlgs

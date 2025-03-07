@@ -11,8 +11,7 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 // LArSoft includes 
-#include "larcore/Geometry/Geometry.h"
-#include "larcore/CoreUtils/ServiceUtil.h" // lar::providerFrom()
+#include "larcore/Geometry/WireReadout.h"
 #include "larcorealg/Geometry/PlaneGeo.h"
 #include "larcorealg/Geometry/WireGeo.h"
 #include "lardataobj/RecoBase/Hit.h"
@@ -120,7 +119,7 @@ private:
 
    // services 
    art::ServiceHandle<art::TFileService> tfs;
-   geo::GeometryCore const* fGeometryService;
+   geo::WireReadoutGeom const& fChannelMap = art::ServiceHandle<geo::WireReadout>()->Get();
 
 }; // class MuonTrackProducer
 
@@ -130,7 +129,6 @@ MuonTrackProducer::MuonTrackProducer(fhicl::ParameterSet const & p)
    produces< std::vector<sbnd::comm::MuonTrack> >();
    produces< art::Assns<recob::Hit, sbnd::comm::MuonTrack> >();
 
-   fGeometryService = lar::providerFrom<geo::Geometry>();
    this->reconfigure(p);
 }
 
@@ -569,8 +567,8 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vec
                geo::WireID cwire_ind = hitlist[wire1_ind]->WireID();
                geo::Point_t apoint, cpoint, endpoint1, endpoint2; 
 
-               bool aintersect = fGeometryService->WireIDsIntersect(awire_col, awire_ind, apoint);
-               bool cintersect = fGeometryService->WireIDsIntersect(cwire_col, cwire_ind, cpoint); 
+               bool aintersect = fChannelMap.WireIDsIntersect(awire_col, awire_ind, apoint);
+               bool cintersect = fChannelMap.WireIDsIntersect(cwire_col, cwire_ind, cpoint);
 
                if (aintersect)
                   endpoint1 = apoint;
@@ -607,8 +605,8 @@ void MuonTrackProducer::FindEndpoints(vector<vector<int>>& lines_col, vector<vec
 bool MuonTrackProducer::FixEndpoints(geo::WireID wire_col, geo::WireID wire_ind, geo::Point_t& point){
    bool pass = false; 
    double col_end1[3], col_end2[3], ind_end1[3], ind_end2[3];
-   fGeometryService->WireEndPoints(wire_col, col_end1, col_end2);
-   fGeometryService->WireEndPoints(wire_ind, ind_end1, ind_end2);
+   fChannelMap.WireEndPoints(wire_col, col_end1, col_end2);
+   fChannelMap.WireEndPoints(wire_ind, ind_end1, ind_end2);
    if (abs(ind_end1[1]) > 198 || abs(ind_end2[1]) > 198){ // if it's located on the top or bottom 
       double ind_y = (abs(ind_end1[1]) == 199.792) ? ind_end1[1] : ind_end2[1];
       double ind_z = (abs(ind_end1[1]) == 199.792) ? ind_end1[2] : ind_end2[2]; 

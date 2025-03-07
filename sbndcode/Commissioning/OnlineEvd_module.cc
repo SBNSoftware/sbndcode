@@ -20,7 +20,7 @@
 
 #include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RawData/raw.h"
-#include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
 
 #include "sbndcode/ChannelMaps/TPC/TPCChannelMapService.h"
 
@@ -150,8 +150,9 @@ void sbnd::OnlineEvd::analyze(art::Event const& e)
     }
   }
 
-  art::ServiceHandle<geo::Geometry> geo;
   art::ServiceHandle<SBND::TPCChannelMapService> channelMap;
+
+  auto const& wireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
 
   // Get raw digits
   auto const& rawdigts = e.getProduct<std::vector<raw::RawDigit>>(fRawDigitModuleLabel);
@@ -160,7 +161,7 @@ void sbnd::OnlineEvd::analyze(art::Event const& e)
     rawadc.resize(rd.Samples());
     raw::Uncompress(rd.ADCs(), rawadc, rd.GetPedestal(), rd.Compression());
     int ch = rd.Channel();
-    auto const & chids = geo->ChannelToWire(ch);
+    auto const & chids = wireReadout.ChannelToWire(ch);
     int tpc = chids[0].TPC;
     int plane = chids[0].Plane;
     int wire = chids[0].Wire;

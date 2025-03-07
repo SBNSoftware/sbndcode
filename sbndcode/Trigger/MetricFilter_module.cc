@@ -43,7 +43,7 @@ public:
 
 private:
   std::string fmetric_instance_name;
-  std::string fmetric_module_label;
+  std::vector<std::string> fmetric_module_labels;              
 
   float ftime_min; // us
   float ftime_max; // us
@@ -58,7 +58,12 @@ sbndaq::MetricFilter::MetricFilter(fhicl::ParameterSet const& p)
   : EDFilter{p}  // ,
   // More initializers here.
 {
-  fmetric_module_label = p.get<std::string>("metric_module_label","pmtmetricproducer");
+  fmetric_module_labels = p.get<std::vector<std::string>>("metric_module_labels",{"pmtmetricproducer",
+                                                                                 "pmtmetricbnbzero",
+                                                                                 "pmtmetricbnblight",
+                                                                                 "pmtmetricoffbeamzero",
+                                                                                 "pmtmetricoffbeamlight",
+                                                                                 "pmtmetriccrossingmuon"});
   fmetric_instance_name = p.get<std::string>("metric_instance_name","");
   ftime_min = p.get<float>("time_min",0);
   ftime_max = p.get<float>("time_max",3);
@@ -67,14 +72,24 @@ sbndaq::MetricFilter::MetricFilter(fhicl::ParameterSet const& p)
 
 bool sbndaq::MetricFilter::filter(art::Event& e)
 {
-  // Implementation of required member function here.
-  art::Handle<std::vector<sbnd::trigger::pmtSoftwareTrigger>> metricHandle;
-  if (fmetric_instance_name.empty()) e.getByLabel(fmetric_module_label,metricHandle);
-  else e.getByLabel(fmetric_module_label,fmetric_instance_name,metricHandle);
-  if (!metricHandle.isValid() || metricHandle->size() == 0){
-    return false;
-  }
-  else{
+  bool pass = false;
+
+  bool found_metrics = false;
+  size_t nlabels = fmetric_module_labels.size();
+  for (size_t i=0; i<nlabels; i++){
+    auto label = fmetric_module_labels[i];
+
+    art::Handle<std::vector<sbnd::trigger::pmtSoftwareTrigger>> metricHandle;
+    if (fmetric_instance_name.empty()){
+      e.getByLabel(label,metricHandle);
+    }
+    else{
+      e.getByLabel(label,fmetric_instance_name,metricHandle);
+    }
+
+    if (!metricHandle.isValid() || metricHandle->size() == 0)
+      continue;
+    found_metrics = true;
     const std::vector<sbnd::trigger::pmtSoftwareTrigger> metric_v(*metricHandle);
     auto metric = metric_v[0];
     auto flash_peakpe   = metric.peakPE;
@@ -82,9 +97,13 @@ bool sbndaq::MetricFilter::filter(art::Event& e)
 
     bool pass_timing = (flash_peaktime > ftime_min) && (flash_peaktime < ftime_max);
     bool pass_pe = flash_peakpe > fpe_thresh;
-    return pass_timing && pass_pe;
+    pass = (pass_timing && pass_pe);
   }
-
+  if (!found_metrics){
+    std::cout << "No Metrics found" << std::endl;
+    pass=false;
+  }
+  return pass;
 }
 
 DEFINE_ART_MODULE(sbndaq::MetricFilter)

@@ -2,13 +2,8 @@
 
 analyzers.caloskim: @local::caloskim_nodigits_goldentracks
 
-#1D/Data Deconvolution
-physics.analyzers.caloskim.RawDigitproducers: ["daq"]
-
-#2D Deconvolution
-#physics.analyzers.caloskim.RawDigitproducers: ["simtpc2d:daq"]
-
 physics.analyzers.caloskim.SelectionTools: []
+physics.analyzers.caloskim.RawDigitproducers: ["daq"]
 physics.analyzers.caloskim.RequireT0: false
 physics.analyzers.caloskim.HitRawDigitsTickCollectWidth: 200
 
