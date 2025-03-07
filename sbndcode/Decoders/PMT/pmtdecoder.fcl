@@ -22,11 +22,9 @@ pmtdecoder:
     spectdc_ftrig_ch: 3 # channel number of the spec tdc that stores the flash trigger 
     spectdc_etrig_ch: 4 # channel number of the spec tdc that stores the event trigger
 
-    # configure PTB inputs; the HLT with the smallest trigger word will be used (within some range to the rawheader timestamp)
+    # configure PTB inputs; used in case spec etrig is missing
     ptb_product_name: "ptbdecoder"
-    ptb_etrig_trigword_min: 1   # minimum trigger word (in decimal) 
-    ptb_etrig_trigword_max: 100000 # maximum trigger word (in decimal)
-    ptb_etrig_wordtype: 2
+    ptb_allowed_hlts: [1,2,3,4,5,14,15] # beam, offbeam, and crossing muon hlts
     ptb_trig_raw_diff_max: 3000000 # the maximum allowed time difference in ns
 
     # configure output options

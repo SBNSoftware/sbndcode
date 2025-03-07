@@ -13,7 +13,7 @@ sbnd_detectorclocks: @local::standard_detectorclocks
 
 sbnd_detectorclocks.TrigModuleName:     "triggersim"
 sbnd_detectorclocks.InheritClockConfig: true
-sbnd_detectorclocks.TriggerOffsetTPC:   -0.2e3  # Time [us] for TPC readout start w.r.t. trigger time
+sbnd_detectorclocks.TriggerOffsetTPC:   -0.205e3  # Time [us] for TPC readout start w.r.t. trigger time
 sbnd_detectorclocks.FramePeriod:        1.3e3   # Frame period [us]
 sbnd_detectorclocks.ClockSpeedTPC:      2.      # TPC clock speed in MHz
 sbnd_detectorclocks.ClockSpeedOptical:  500.    # Optical clock speed in MHz

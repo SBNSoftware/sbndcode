@@ -1,3 +1,5 @@
 #include "reco1_data_storefilteredevents.fcl"
 
+physics.producers.daq.DigitModuleLabel: "daq"
+
 outputs.out1.outputCommands: [@sequence::sbnd_reco1_drops_keep_rawdigits]

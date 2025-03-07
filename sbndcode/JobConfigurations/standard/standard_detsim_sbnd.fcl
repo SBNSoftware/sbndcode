@@ -42,8 +42,7 @@ services:
   TFileService: { fileName: @local::sbnd_tfileoutput.fileName }
   @table::sbnd_detsim_services
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
-  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
-  AuxDetGeometry: { @table::sbnd_geo_source }
+  AuxDetGeometry: @local::sbnd_auxdetgeo
 }
 
 
@@ -62,7 +61,7 @@ physics:
   producers:
   {
     rns:       { module_type: "RandomNumberSaver" }
-    simtpc2d:  @local::sbnd_wcls_simsp 
+    simtpc2d:  @local::sbnd_wcls_simsp
     crtsim:    @local::sbnd_crtsim
     opdaq:     @local::sbnd_opdetdigitizer
   }
@@ -89,4 +88,3 @@ outputs:
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
   }
 }
-

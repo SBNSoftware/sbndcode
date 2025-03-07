@@ -12,15 +12,23 @@
  */
 
 // SBND libraries
-#include "sbndcode/Geometry/ChannelMapSBNDAlg.h"
+#include "sbndcode/Geometry/GeoObjectSorterSBND.h"
+#include "sbndcode/Geometry/WireReadoutSorterSBND.h"
 
 // LArSoft libraries
 #include "test/Geometry/geometry_unit_test_sbnd.h"
 #include "larcorealg/test/Geometry/GeometryTestAlg.h"
+#include "larcorealg/Geometry/AuxDetGeometryCore.h"
+#include "larcorealg/Geometry/AuxDetReadoutGeom.h"
 #include "larcorealg/Geometry/GeometryCore.h"
+#include "larcorealg/Geometry/WireReadoutStandardGeom.h"
+#include "larcorealg/Geometry/StandaloneGeometrySetup.h"
 
-// utility libraries
+// framework libraries
 #include "messagefacility/MessageLogger/MessageLogger.h"
+
+// C++ standard libraries
+#include <memory>
 
 
 //------------------------------------------------------------------------------
@@ -32,8 +40,7 @@
 // we use an existing class provided for this purpose, since our test
 // environment allows us to tailor it at run time.
 using SBNDGeometryConfiguration
-  = sbnd::testing::SBNDGeometryEnvironmentConfiguration
-    <geo::ChannelMapSBNDAlg>;
+  = sbnd::testing::SBNDGeometryEnvironmentConfiguration;
 
 /*
  * GeometryTesterFixture, configured with the object above, is used in a
@@ -43,7 +50,7 @@ using SBNDGeometryConfiguration
  * - `geo::GeometryCore const* GlobalGeometry()` (static member)
  */
 using SBNDGeometryTestEnvironment
-  = testing::GeometryTesterEnvironment<SBNDGeometryConfiguration>;
+  = testing::GeometryTesterEnvironment<SBNDGeometryConfiguration, geo::GeoObjectSorterSBND>;
 
 
 //------------------------------------------------------------------------------
@@ -95,22 +102,26 @@ int main(int argc, char const** argv) {
   //
   // testing environment setup
   //
+  using namespace lar::standalone;
   SBNDGeometryTestEnvironment TestEnvironment(config);
-  
+  auto const wireReadout = SetupReadout<geo::WireReadoutSorterSBND>(TestEnvironment.ServiceParameters("WireReadout"),
+                                                                    TestEnvironment.Geometry());
+  auto const auxDetGeom = SetupAuxDetGeometry(TestEnvironment.ServiceParameters("AuxDetGeometry"));
+
   //
   // run the test algorithm
   //
   
-  // 1. we initialize it from the configuration in the environment,
-  geo::GeometryTestAlg Tester(TestEnvironment.TesterParameters());
+  // 1. we initialize it from the environment,
+  geo::GeometryTestAlg Tester(TestEnvironment.Geometry(),
+                              wireReadout.get(),
+                              auxDetGeom.get(),
+                              TestEnvironment.TesterParameters());
   
-  // 2. we set it up with the geometry from the environment
-  Tester.Setup(*TestEnvironment.Geometry());
-  
-  // 3. then we run it!
+  // 2. then we run it!
   unsigned int nErrors = Tester.Run();
   
-  // 4. And finally we cross fingers.
+  // 3. And finally we cross fingers.
   if (nErrors > 0) {
     mf::LogError("geometry_test_SBND") << nErrors << " errors detected!";
   }
