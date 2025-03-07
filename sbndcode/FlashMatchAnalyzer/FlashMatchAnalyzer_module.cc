@@ -29,13 +29,15 @@ test::FlashMatchAnalyzer::FlashMatchAnalyzer(fhicl::ParameterSet const& p)
   fParticleIDLabel( p.get<std::string>("ParticleIDLabel", "pandoraPid") ),
   fOpFlashesModuleLabel( p.get<std::vector<std::string>>("OpFlashesModuleLabel") ),
   fCRTTrackModuleLabel( p.get<std::string>("CRTTrackModuleLabel") ),
+  fSaveReco1( p.get<bool>("SaveReco1", "false") ),
   fSaveReco2( p.get<bool>("SaveReco2", "false") ),
   fSaveTruth( p.get<bool>("SaveTruth", "true") ),
   fSaveSimED( p.get<bool>("SaveSimED", "true") ),
   fSaveSimEDOut( p.get<bool>("SaveSimEDOut", "false") ),
   fSaveWaveforms( p.get<bool>("SaveWaveforms", "false") ),
   fSaveWires( p.get<bool>("SaveWires", "false") ),
-  fSaveHits( p.get<bool>("SaveHits", "true") ),
+  fSaveHitsReco1( p.get<bool>("SaveHitsReco1", "true") ),
+  fSaveHitsReco2( p.get<bool>("SaveHitsReco2", "true") ),
   fSaveSpacePoints( p.get<bool>("SaveSpacePoints", "false") ),
   fSaveVertex( p.get<bool>("SaveVertex", "true") ),
   fCreateTPCMap( p.get<bool>("CreateTPCMap", "false") ),
@@ -50,6 +52,7 @@ test::FlashMatchAnalyzer::FlashMatchAnalyzer(fhicl::ParameterSet const& p)
   fSaveOnlyNeutrino( p.get<bool>("SaveOnlyNeutrino")),
   fSaveCRTTracks( p.get<bool>("SaveCRTTracks")),
   fComputePMTRatio( p.get<bool>("ComputePMTRatio")),
+  fSaveChargeBarycenter(p.get<bool>("SaveChargeBarycenter")),
   fNChannels(fGeom->Nchannels())
   // More initializers here.
 {
@@ -76,40 +79,68 @@ test::FlashMatchAnalyzer::FlashMatchAnalyzer(fhicl::ParameterSet const& p)
 
   fRawChannelADC.resize(fNChannels, std::vector<double>(0));
   for(size_t k=0; k<fNChannels; k++) fRawChannelADC[k].reserve(fReadoutWindow);
+
+  // Initialize the PDS box-map
+  for(size_t oc=0; oc<fPDSMap.size(); oc++){
+    fPDSBoxIDs.insert( fPDSMap.pdBox(oc) );
+  }
+
 }
 
 // Fill Hits function
 void test::FlashMatchAnalyzer::FillHits(int clusterId, std::vector<art::Ptr<recob::Hit>> hitVect, std::map<int, art::Ptr<recob::SpacePoint>> hitToSpacePointMap){
   for (const art::Ptr<recob::Hit> &hit: hitVect){
-    fHitsView.push_back(hit->View());
-    fHitsPeakTime.push_back(hit->PeakTime());
-    fHitsIntegral.push_back(hit->Integral());
-    fHitsSummedADC.push_back(hit->ROISummedADC());
-    fHitsChannel.push_back(hit->Channel());
-    fHitsAmplitude.push_back(hit->PeakAmplitude());
-    fHitsRMS.push_back(hit->RMS());
-    fHitsStartT.push_back(hit->StartTick());
-    fHitsEndT.push_back(hit->EndTick());
-    fHitsWidth.push_back( std::abs(hit->StartTick()-hit->EndTick()) );
-    fHitsChi2.push_back(hit->GoodnessOfFit());
-    fHitsNDF.push_back(hit->DegreesOfFreedom());
-    fHitsClusterID.push_back(clusterId);
-    if(fSaveSpacePoints){
+    if(fSaveSpacePoints)
+    {
+      // If find assns hit-space point then save information
       if(hitToSpacePointMap.find(hit.key())!=hitToSpacePointMap.end()){
-        fHitsX.push_back(hitToSpacePointMap[hit.key()]->XYZ()[0]);
-        fHitsY.push_back(hitToSpacePointMap[hit.key()]->XYZ()[1]);
-        fHitsZ.push_back(hitToSpacePointMap[hit.key()]->XYZ()[2]);
+
+        // If x<0 then TPC 0
+        if(hitToSpacePointMap[hit.key()]->XYZ()[0]<0 && hit->View()==0)
+        {
+          fChargeWeightX[0]+= hit->Integral()*hitToSpacePointMap[hit.key()]->XYZ()[0];
+          fChargeWeightY[0]+= hit->Integral()*hitToSpacePointMap[hit.key()]->XYZ()[1];
+          fChargeWeightZ[0]+= hit->Integral()*hitToSpacePointMap[hit.key()]->XYZ()[2];
+          fChargeTotalWeight[0]+=hit->Integral();
+        }
+        // If x>0 then TPC 1
+        else if (hitToSpacePointMap[hit.key()]->XYZ()[0]>0 && hit->View()==0){
+          fChargeWeightX[1]+= hit->Integral()*hitToSpacePointMap[hit.key()]->XYZ()[0];
+          fChargeWeightY[1]+= hit->Integral()*hitToSpacePointMap[hit.key()]->XYZ()[1];
+          fChargeWeightZ[1]+= hit->Integral()*hitToSpacePointMap[hit.key()]->XYZ()[2];
+          fChargeTotalWeight[1]+=hit->Integral();
+        }
+        if(fSaveHitsReco2)
+        {
+          fHitsXReco2.push_back(hitToSpacePointMap[hit.key()]->XYZ()[0]);
+          fHitsYReco2.push_back(hitToSpacePointMap[hit.key()]->XYZ()[1]);
+          fHitsZReco2.push_back(hitToSpacePointMap[hit.key()]->XYZ()[2]);
+        }
       }
       else{
-        fHitsX.push_back(-999);
-        fHitsY.push_back(-999);
-        fHitsZ.push_back(-999);
+        if(fSaveHitsReco2)
+        {
+          fHitsXReco2.push_back(-999);
+          fHitsYReco2.push_back(-999);
+          fHitsZReco2.push_back(-999);
+        }
       }
     }
-    else{
-      fHitsX.push_back(-999);
-      fHitsY.push_back(-999);
-      fHitsZ.push_back(-999);
+    if(fSaveHitsReco2)
+    {
+      fHitsViewReco2.push_back(hit->View());
+      fHitsPeakTimeReco2.push_back(hit->PeakTime());
+      fHitsIntegralReco2.push_back(hit->Integral());
+      fHitsSummedADCReco2.push_back(hit->ROISummedADC());
+      fHitsChannelReco2.push_back(hit->Channel());
+      fHitsAmplitudeReco2.push_back(hit->PeakAmplitude());
+      fHitsRMSReco2.push_back(hit->RMS());
+      fHitsStartTReco2.push_back(hit->StartTick());
+      fHitsEndTReco2.push_back(hit->EndTick());
+      fHitsWidthReco2.push_back( std::abs(hit->StartTick()-hit->EndTick()) );
+      fHitsChi2Reco2.push_back(hit->GoodnessOfFit());
+      fHitsNDFReco2.push_back(hit->DegreesOfFreedom());
+      fHitsClusterIDReco2.push_back(clusterId);
     }
   }
 }
@@ -141,7 +172,7 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
     art::FindManyP<recob::Hit> cluster_hit_assns (clusterHandle, e, fReco2Label);
     //Track to hit
     art::FindManyP<recob::Hit> track_hit_assns (trackHandle, e, fTrackLabel);
-    //PF to vertex
+    //PFP to vertex
     art::FindManyP<recob::Vertex> pfp_vertex_assns(pfpHandle, e, fReco2Label);
     // Track to calorimetry
     art::FindManyP<anab::Calorimetry> track_to_calo_assns(trackHandle, e, fCalorimetryLabel);
@@ -192,7 +223,6 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
             fRecoVC=-1;
             fRecoVTimeTick=-1;
           }
-
         }
       }
 
@@ -244,6 +274,40 @@ void test::FlashMatchAnalyzer::FillReco2(art::Event const& e, std::vector<art::P
       for(size_t i=0; i<T0_v.size(); i++){
         fPFPT0.push_back(T0_v[i]->Time());
       }
+    }    
+    if(fSaveSpacePoints){
+      art::Handle<std::vector<recob::SpacePoint>> eventSpacePoints;
+      std::vector<art::Ptr<recob::SpacePoint>> eventSpacePointsVect;
+      //std::cout<<"      ** Creating hit-space point map\n";
+
+      e.getByLabel(fSpacePointLabel, eventSpacePoints);
+      art::fill_ptr_vector(eventSpacePointsVect, eventSpacePoints);
+
+      art::FindManyP<recob::Hit> SPToHitAssoc (eventSpacePointsVect, e, fSpacePointLabel);
+
+      for (const art::Ptr<recob::SpacePoint> &SP: eventSpacePointsVect){
+        std::vector<art::Ptr<recob::Hit>> SPHit = SPToHitAssoc.at(SP.key());
+        if (SPHit.at(0)->WireID().Plane==2){
+          //fSpacePointX.push_back(SP->position().X());
+          //fSpacePointY.push_back(SP->position().Y());
+          //fSpacePointZ.push_back(SP->position().Z());
+          //fSpacePointIntegral.push_back(SPHit.at(0)->Integral());
+        }
+        //std::cout<<"  SpacePoint: "<<SP->ID()<<" "<<SPHit.at(0).key()<<std::endl;
+      }
+    }
+
+    // Save barycenter information
+    if(fSaveChargeBarycenter)
+    {
+      //Fill TPC 0 information
+      fChargeBarycenterX[0] = fChargeWeightX[0]/fChargeTotalWeight[0];
+      fChargeBarycenterY[0] = fChargeWeightY[0]/fChargeTotalWeight[0];
+      fChargeBarycenterZ[0] = fChargeWeightZ[0]/fChargeTotalWeight[0];
+      //Fill TPC 1 information
+      fChargeBarycenterX[1] = fChargeWeightX[1]/fChargeTotalWeight[1];
+      fChargeBarycenterY[1] = fChargeWeightY[1]/fChargeTotalWeight[1];
+      fChargeBarycenterZ[1] = fChargeWeightZ[1]/fChargeTotalWeight[1];
     }
 
     // if save reco1, save one slice per entry 
@@ -501,7 +565,6 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
 
   }
 
-
   //............................Read Waveforms
   if(fSaveWaveforms){
     art::Handle<std::vector<raw::RawDigit>> eventRawDigits;
@@ -555,9 +618,9 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
 
 
   //............................Read Hits (Reco1 version)
-  if(fSaveReco2==false){
+  if(fSaveReco1==true){
 
-    if(fSaveHits){
+    if(fSaveHitsReco1){
       art::Handle<std::vector<recob::Hit>> hitsHandle;
       std::vector<art::Ptr<recob::Hit>> hitsVect;
       //std::cout<<" --- Saving recob::Hit\n";
@@ -565,26 +628,25 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
       art::fill_ptr_vector(hitsVect, hitsHandle);
 
       for (const art::Ptr<recob::Hit> &hit: hitsVect){
-        fHitsPeakTime.push_back(hit->PeakTime());
-        fHitsIntegral.push_back(hit->Integral());
-        fHitsSummedADC.push_back(hit->ROISummedADC());
-        fHitsChannel.push_back(hit->Channel());
-        fHitsAmplitude.push_back(hit->PeakAmplitude());
-        fHitsRMS.push_back(hit->RMS());
-        fHitsStartT.push_back(hit->StartTick());
-        fHitsEndT.push_back(hit->EndTick());
-        fHitsWidth.push_back( std::abs(hit->StartTick()-hit->EndTick()) );
-        fHitsChi2.push_back(hit->GoodnessOfFit());
-        fHitsNDF.push_back(hit->DegreesOfFreedom());
-        fHitsClusterID.push_back(0);
+        fHitsViewReco1.push_back(hit->View());
+        fHitsPeakTimeReco1.push_back(hit->PeakTime());
+        fHitsIntegralReco1.push_back(hit->Integral());
+        fHitsSummedADCReco1.push_back(hit->ROISummedADC());
+        fHitsChannelReco1.push_back(hit->Channel());
+        fHitsAmplitudeReco1.push_back(hit->PeakAmplitude());
+        fHitsRMSReco1.push_back(hit->RMS());
+        fHitsStartTReco1.push_back(hit->StartTick());
+        fHitsEndTReco1.push_back(hit->EndTick());
+        fHitsWidthReco1.push_back( std::abs(hit->StartTick()-hit->EndTick()) );
+        fHitsChi2Reco1.push_back(hit->GoodnessOfFit());
+        fHitsNDFReco1.push_back(hit->DegreesOfFreedom());
       }
     }
-    
 
     if(fSaveSpacePoints){
       art::Handle<std::vector<recob::SpacePoint>> eventSpacePoints;
       std::vector<art::Ptr<recob::SpacePoint>> eventSpacePointsVect;
-      //std::cout<<"  --- Saving recob::SpacePoints\n";
+      std::cout<<"  --- Saving recob::SpacePoints\n";
 
       e.getByLabel(fSpacePointLabel, eventSpacePoints);
       art::fill_ptr_vector(eventSpacePointsVect, eventSpacePoints);
@@ -601,7 +663,6 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
           fSpacePointZ.push_back(SP->position().Z());
           fSpacePointIntegral.push_back(SPHit.at(0)->Integral());
         }
-
       }
     }
   }
@@ -630,7 +691,7 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
 
         //std::cout<<"  SpacePoint: "<<SP->ID()<<" "<<SPHit.at(0).key()<<std::endl;
         hitToSpacePointMap[SPHit.at(0).key()] = SP;
-  
+
       }
     }
 
@@ -657,9 +718,8 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
       for(auto & slice:sliceVect){
           // Get the slices PFPs
           pfpVect = slice_pfp_assns.at(slice.key());
-          size_t slice_ix = std::distance(sliceVect.begin(), std::find(sliceVect.begin(), sliceVect.end(), slice));
+          //size_t slice_ix = std::distance(sliceVect.begin(), std::find(sliceVect.begin(), sliceVect.end(), slice));
           //std::cout<<std::endl<<slice_ix<<"  -- Slice ID="<<slice->ID()<<" NPFPs="<<pfpVect.size()<<std::endl;
-          
           // Fill reco2
           FillReco2(e, pfpVect, hitToSpacePointMap);
       }//end slice loop
@@ -677,7 +737,7 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
   
     // --- Saving OpFlashes
   if(fSaveOpFlashes){
-
+    
     _nopflash=0;
     _flash_id.clear();
     _flash_time.clear();
@@ -702,9 +762,8 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
     fPMTRatioPE.clear();
     fPECoated.clear();
     fPEUncoated.clear();
-    double _PEUncoated=0;
-    double _PECoated=0;
-    double _PMTRatioPE=0;
+    fPMTRatioPEPerBox.clear();
+
 
     art::Handle< std::vector<recob::OpFlash> > opflashListHandle;
 
@@ -719,6 +778,12 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
       art::FindManyP<recob::OpHit> flashToOpHitAssns(opflashListHandle, e, fOpFlashesModuleLabel[s]);
 
       for (unsigned int i = 0; i < opflashListHandle->size(); ++i) {
+        double _PEUncoated=0;
+        double _PECoated=0;
+        double _PMTRatioPE=0;
+        TH1D* _current_flash_time_distribution = new TH1D("FlashTimeDistribution","FlashTimeDistribution",100, 0, 10 );
+
+        // I need to create the current flash time distribution. Maybe i create the component 
         // Get OpFlash
         art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
         recob::OpFlash Flash = *FlashPtr;
@@ -737,6 +802,13 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
         _flash_z.push_back( Flash.ZCenter() );
         _flash_zerr.push_back( Flash.ZWidth() );
         _nopflash++;
+
+        std::vector<art::Ptr<recob::OpHit>> ophit_v = flashToOpHitAssns.at(i);
+        for (auto ophit : ophit_v) {
+          _current_flash_time_distribution->Fill(ophit->RiseTime());
+        }
+
+        _flash_time_distribution.push_back(_current_flash_time_distribution);
 
         if(fSaveOpHits){
           
@@ -762,23 +834,45 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
           }
 
         }
-
+        
+        std::vector<double> FlashPE_v = Flash.PEs();
         if(fComputePMTRatio)
         {
+          fBoxMap_PECoated.clear();
+          fBoxMap_PEUncoated.clear();
+          fBoxMap_NCoatedCh.clear();
+          fBoxMap_NUncoatedCh.clear();
+          for(size_t boxId=0; boxId<fPDSBoxIDs.size(); boxId++){
+            fBoxMap_PECoated[boxId]=0;
+            fBoxMap_PEUncoated[boxId]=0;
+            fBoxMap_NCoatedCh[boxId]=0;
+            fBoxMap_NUncoatedCh[boxId]=0;    
+          }
           // Get OpFlash
-          std::vector<double> FlashPE_v = Flash.PEs();
           for(size_t OpCh=0; OpCh<Flash.PEs().size(); OpCh++){
+            if(Flash.PEs()[OpCh]==0) continue;
             std::string pd_type=fPDSMap.pdType(OpCh);
+            int box_id = fPDSMap.pdBox(OpCh);
             if(pd_type=="xarapuca_vuv" || pd_type=="xarapuca_vis") continue;
-            if(pd_type=="pmt_coated") _PECoated+=FlashPE_v[OpCh];
-            else if(pd_type=="pmt_uncoated") _PEUncoated+=FlashPE_v[OpCh];
+            if(pd_type=="pmt_coated")
+            {
+              _PECoated+=FlashPE_v[OpCh];
+              fBoxMap_PECoated[box_id]+=FlashPE_v[OpCh];
+              fBoxMap_NCoatedCh[box_id]+=1;
+            } 
+            else if(pd_type=="pmt_uncoated")
+            {
+              _PEUncoated+=FlashPE_v[OpCh];
+              fBoxMap_PEUncoated[box_id]+=FlashPE_v[OpCh];
+              fBoxMap_NUncoatedCh[box_id]+=1;
+            }
           }
           if(_PECoated!=0)
           {
             _PMTRatioPE=4*_PEUncoated/_PECoated;
             fPMTRatioPE.push_back(_PMTRatioPE);
             fPECoated.push_back(_PECoated);
-            fPEUncoated.push_back(_PECoated);
+            fPEUncoated.push_back(_PEUncoated);
           }
           else{
             fPMTRatioPE.push_back(-1);
@@ -786,9 +880,38 @@ void test::FlashMatchAnalyzer::analyze(art::Event const& e)
             fPEUncoated.push_back(-1);
           }
         }
+        // Compute the ratio for each PDS box and then compute the weighted average
+        if(fComputePMTRatio)
+        {
+          double TotalPE=0;
+          double RatioPerBoxWeight=0;
+          for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
+            double RatioPerBox;
+            double _PECoated=0;
+            double _PEUncoated=0;
+            //we need the uncoated PMT in each window and at least one coated
+            if( fBoxMap_NUncoatedCh[boxID]==1 && fBoxMap_NCoatedCh[boxID]>=1){
+                _PECoated+= fBoxMap_PECoated[boxID];
+                _PEUncoated+= fBoxMap_PEUncoated[boxID];
+                TotalPE += _PECoated + _PEUncoated;
+                RatioPerBox = (_PEUncoated/_PECoated)*fBoxMap_NCoatedCh[boxID]/4;
+                RatioPerBoxWeight += RatioPerBox * (_PECoated + _PEUncoated);
+              }
+          }
+          if(_PECoated!=0)
+            fPMTRatioPEPerBox.push_back(RatioPerBoxWeight/TotalPE);
+          else
+            fPMTRatioPEPerBox.push_back(-1);
+        }
       }
     }
     fOpAnaTree->Fill();
+
+    for (auto h : _flash_time_distribution) {
+      delete h;
+    }
+    _flash_time_distribution.clear();  // Limpiar el vector
+
   }
 
   if(fSaveCRTTracks)
@@ -895,24 +1018,48 @@ void test::FlashMatchAnalyzer::resetWireVars()
 
 void test::FlashMatchAnalyzer::resetRecoVars()
 {
+  fChargeWeightX={0,0};
+  fChargeWeightY={0,0};
+  fChargeWeightZ={0,0};
+  fChargeTotalWeight={0,0};
 
-  if(fSaveHits){
-    fHitsView.clear();
-    fHitsIntegral.clear();
-    fHitsSummedADC.clear();
-    fHitsPeakTime.clear();
-    fHitsChannel.clear();
-    fHitsAmplitude.clear();
-    fHitsRMS.clear();
-    fHitsStartT.clear();
-    fHitsEndT.clear();
-    fHitsWidth.clear();
-    fHitsChi2.clear();
-    fHitsNDF.clear();
-    fHitsClusterID.clear();
-    fHitsX.clear();
-    fHitsY.clear();
-    fHitsZ.clear();
+  fChargeBarycenterX={0,0};
+  fChargeBarycenterY={0,0};
+  fChargeBarycenterZ={0,0};
+
+  if(fSaveHitsReco1){
+    fHitsViewReco1.clear();
+    fHitsIntegralReco1.clear();
+    fHitsSummedADCReco1.clear();
+    fHitsPeakTimeReco1.clear();
+    fHitsChannelReco1.clear();
+    fHitsAmplitudeReco1.clear();
+    fHitsRMSReco1.clear();
+    fHitsStartTReco1.clear();
+    fHitsEndTReco1.clear();
+    fHitsWidthReco1.clear();
+    fHitsChi2Reco1.clear();
+    fHitsNDFReco1.clear();
+  }
+
+  if(fSaveHitsReco2)
+  {
+    fHitsViewReco2.clear();
+    fHitsIntegralReco2.clear();
+    fHitsSummedADCReco2.clear();
+    fHitsPeakTimeReco2.clear();
+    fHitsChannelReco2.clear();
+    fHitsAmplitudeReco2.clear();
+    fHitsRMSReco2.clear();
+    fHitsStartTReco2.clear();
+    fHitsEndTReco2.clear();
+    fHitsWidthReco2.clear();
+    fHitsChi2Reco2.clear();
+    fHitsNDFReco2.clear();
+    fHitsClusterIDReco2.clear();
+    fHitsXReco2.clear();
+    fHitsYReco2.clear();
+    fHitsZReco2.clear();
   }
 
   fNSlices = 0;
@@ -997,7 +1144,6 @@ void test::FlashMatchAnalyzer::AnalyseCRTTracks(const art::Event &e, const std::
       _tr_dir_z.push_back(dir.Z());
 
       _tr_ts0.push_back(track->Ts0());
-      std::cout << " The track t0 is " << track->Ts0() << std::endl;
       _tr_ets0.push_back(track->Ts0Err());
       _tr_ts1.push_back(track->Ts1());
       _tr_ets1.push_back(track->Ts1Err());

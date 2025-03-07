@@ -21,24 +21,31 @@ flashmatchana:
   ParticleIDLabel: "pandoraPid"
 
   SaveReco2: true
+  SaveReco1: false
   SaveTruth: true
   SaveSimED: true
   SaveSimEDOut: false
   SaveWaveforms: false
   SaveWires: false
-  SaveHits: true
+  SaveHitsReco2: true
+  SaveHitsReco1: false
   SaveSpacePoints: true
   SaveVertex: true
   CreateTPCMap: false
   ApplyFiducialCut: true
   ApplyVertexSCE: true
+  ComputePMTRatio: true
+  SaveChargeBarycenter: true
 
   UseSlices: true
   UseSimChannels: false
+
+  SaveOnlyNeutrino: false
+
+  SaveCRTTracks: true
+  CRTTrackModuleLabel: "crttracks"
+  SaveCRTWindow:[-1500000,1500000]
 }
-
-
-
 END_PROLOG
 
 

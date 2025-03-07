@@ -171,19 +171,23 @@ namespace lightana
     }
 
     // compute PMTRatio metric
-    double PECoated=0, PEUncoated=0;
+    double PECoated=0, PEUncoated=0, TotalPE=0;
+    double RatioPerBoxWeight=0;
     for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
+      double RatioPerBox;
       //we need the uncoated PMT in each window and at least one coated
       if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
         double CoWeight = 1./BoxMap_NCoatedCh[boxID];
         PECoated+=CoWeight * BoxMap_PECoated[boxID];
         PEUncoated+=BoxMap_PEUncoated[boxID];
+        TotalPE += PECoated + PEUncoated;
+        RatioPerBox = (PEUncoated/PECoated)*BoxMap_NCoatedCh[boxID]/4;
+        RatioPerBoxWeight += RatioPerBox * (PECoated + PEUncoated);
       }
     }
 
     if(PECoated!=0){
-      double pmtratio = PEUncoated/PECoated;
-
+      double pmtratio = RatioPerBoxWeight/TotalPE;
       double drift_distance;
       if(pmtratio<=fPMTRatioCal[0])
         drift_distance=fDriftCal[0];
@@ -191,7 +195,7 @@ namespace lightana
         drift_distance=fDriftCal[fNCalBins-1];
       else
         drift_distance=Interpolate(pmtratio);
-
+      std::cout << " The pmt ratio is " << pmtratio << " the drift distance is " << drift_distance << std::endl;
       return drift_distance;
     }
     else return fDriftCal[fNCalBins-1]; 

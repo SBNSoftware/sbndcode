@@ -77,6 +77,7 @@
 #include "TFile.h"
 #include "TInterpreter.h"
 #include "TTimeStamp.h"
+#include "TH1D.h"
 
 #include <vector>
 #include <limits>
@@ -155,13 +156,15 @@ private:
   std::string fParticleIDLabel;  
   std::vector<std::string> fOpFlashesModuleLabel;
   std::string fCRTTrackModuleLabel;
+  bool fSaveReco1;
   bool fSaveReco2;
   bool fSaveTruth;
   bool fSaveSimED;
   bool fSaveSimEDOut;
   bool fSaveWaveforms;
   bool fSaveWires;
-  bool fSaveHits;
+  bool fSaveHitsReco1;
+  bool fSaveHitsReco2;
   bool fSaveSpacePoints;
   bool fSaveVertex;
   bool fCreateTPCMap;
@@ -176,8 +179,10 @@ private:
   bool fSaveOnlyNeutrino;
   bool fSaveCRTTracks;
   bool fComputePMTRatio;
+  bool fSaveChargeBarycenter;
 
   TTree* fTree;
+  TTree* fTreeReco1;
   TTree* fOpAnaTree;
   TTree* fCRTTree;
   int fEventID, fRunID, fSubRunID;
@@ -228,24 +233,37 @@ private:
   std::vector<double> fEnDepZOut;
   std::vector<double> fEnDepTOut;
 
-  //Hit variables
-  std::vector<int> fHitsView;
-  std::vector<double> fHitsPeakTime;
-  std::vector<double> fHitsIntegral;
-  std::vector<double> fHitsSummedADC;
-  std::vector<double> fHitsChannel;
-  std::vector<double> fHitsAmplitude;
-  std::vector<double> fHitsRMS;
-  std::vector<double> fHitsStartT;
-  std::vector<double> fHitsEndT;
-  std::vector<double> fHitsWidth;
-  std::vector<double> fHitsChi2;
-  std::vector<double> fHitsNDF;
-  std::vector<int> fHitsClusterID;
-  std::vector<double> fHitsX;
-  std::vector<double> fHitsY;
-  std::vector<double> fHitsZ;
+  //Hit variables (reco2 level)
+  std::vector<int> fHitsViewReco2;
+  std::vector<double> fHitsPeakTimeReco2;
+  std::vector<double> fHitsIntegralReco2;
+  std::vector<double> fHitsSummedADCReco2;
+  std::vector<double> fHitsChannelReco2;
+  std::vector<double> fHitsAmplitudeReco2;
+  std::vector<double> fHitsRMSReco2;
+  std::vector<double> fHitsStartTReco2;
+  std::vector<double> fHitsEndTReco2;
+  std::vector<double> fHitsWidthReco2;
+  std::vector<double> fHitsChi2Reco2;
+  std::vector<double> fHitsNDFReco2;
+  std::vector<int> fHitsClusterIDReco2;
+  std::vector<double> fHitsXReco2;
+  std::vector<double> fHitsYReco2;
+  std::vector<double> fHitsZReco2;
 
+  //Hit variables (reco1 level)
+  std::vector<int> fHitsViewReco1;
+  std::vector<double> fHitsPeakTimeReco1;
+  std::vector<double> fHitsIntegralReco1;
+  std::vector<double> fHitsSummedADCReco1;
+  std::vector<double> fHitsChannelReco1;
+  std::vector<double> fHitsAmplitudeReco1;
+  std::vector<double> fHitsRMSReco1;
+  std::vector<double> fHitsStartTReco1;
+  std::vector<double> fHitsEndTReco1;
+  std::vector<double> fHitsWidthReco1;
+  std::vector<double> fHitsChi2Reco1;
+  std::vector<double> fHitsNDFReco1;
 
   // Flash variables
   int _nopflash;
@@ -268,11 +286,23 @@ private:
   std::vector<std::vector<double>> _flash_ophit_width;
   std::vector<std::vector<double>> _flash_ophit_pe;
   std::vector<std::vector<int>> _flash_ophit_ch;
+  std::vector<TH1D* > _flash_time_distribution;
 
-  // PMT Ration variables
+
+  // Maps to store the photon information per box
+  std::set<int> fPDSBoxIDs;
+
+  std::map<int, double> fBoxMap_PECoated;
+  std::map<int, double> fBoxMap_PEUncoated;
+  std::map<int, int> fBoxMap_NCoatedCh;
+  std::map<int, int> fBoxMap_NUncoatedCh;
+
+  // PMT Ratio variables
   std::vector<double> fPEUncoated;
   std::vector<double> fPECoated;
   std::vector<double> fPMTRatioPE;
+  std::vector<double> fPMTRatioPEPerBox;
+
 
   // CRT track variables 
   std::vector<double>                _tr_start_x;
@@ -307,6 +337,8 @@ private:
   std::vector<double> fSpacePointZ;
   std::vector<double> fSpacePointIntegral;
 
+
+
   //Waveforms
   std::vector<std::vector<double>> fRawChannelADC;
   std::vector<int> fRawChannelID;
@@ -326,8 +358,18 @@ private:
   int fRecoVV;
   int fRecoVC;
   int fRecoVTimeTick;
-
   bool fRecoInFV;
+  
+  // Charge barycenter variables
+  std::vector<double> fChargeWeightX;
+  std::vector<double> fChargeWeightY;
+  std::vector<double> fChargeWeightZ;
+  std::vector<double> fChargeTotalWeight;
+
+  std::vector<double> fChargeBarycenterX;
+  std::vector<double> fChargeBarycenterY;
+  std::vector<double> fChargeBarycenterZ;
+
 
   // Reco track start/end points
   std::vector<std::vector<double>> fPFTrackStart;
@@ -355,9 +397,6 @@ private:
 };
 
 
-
-
-
 void test::FlashMatchAnalyzer::beginJob()
 {
   // Implementation of optional member function here.
@@ -367,7 +406,6 @@ void test::FlashMatchAnalyzer::beginJob()
   fTree->Branch("RunID", &fRunID, "RunID/I");
   fTree->Branch("SubRunID", &fSubRunID, "SubRunID/I");
   fTree->Branch("EventID", &fEventID, "EventID/I");
-
 
   if(fSaveTruth){
     fTree->Branch("TruePrimariesPDG", &fTruePrimariesPDG);
@@ -438,50 +476,57 @@ void test::FlashMatchAnalyzer::beginJob()
     //fTree->Branch("RawChannelPedestal", &fRawChannelPedestal);
   }
 
-  if(fSaveHits){
-    fTree->Branch("HitsView", &fHitsView);
-    fTree->Branch("HitsIntegral", &fHitsIntegral);
-    fTree->Branch("HitsSummedADC", &fHitsSummedADC);
-    fTree->Branch("HitsPeakTime", &fHitsPeakTime);
-    fTree->Branch("HitsChannel", &fHitsChannel);
-    fTree->Branch("HitsAmplitude", &fHitsAmplitude);
-    fTree->Branch("HitsRMS", &fHitsRMS);
-    fTree->Branch("HitsStartT", &fHitsStartT);
-    fTree->Branch("HitsEndT", &fHitsEndT);
-    fTree->Branch("HitsWidth", &fHitsWidth);
-    fTree->Branch("HitsChi2", &fHitsChi2);
-    fTree->Branch("HitsNDF", &fHitsNDF);
-    fTree->Branch("HitsClusterID", &fHitsClusterID);
-    fTree->Branch("HitsX", &fHitsX);
-    fTree->Branch("HitsY", &fHitsY);
-    fTree->Branch("HitsZ", &fHitsZ);
-    
-  }
+  fTree->Branch("HitsViewReco1", &fHitsViewReco1);
+  fTree->Branch("HitsIntegralReco1", &fHitsIntegralReco1);
+  fTree->Branch("HitsSummedADCReco1", &fHitsSummedADCReco1);
+  fTree->Branch("HitsPeakTimeReco1", &fHitsPeakTimeReco1);
+  fTree->Branch("HitsChannelReco1", &fHitsChannelReco1);
+  fTree->Branch("HitsAmplitudeReco1", &fHitsAmplitudeReco1);
+  fTree->Branch("HitsRMSReco1", &fHitsRMSReco1);
+  fTree->Branch("HitsStartTReco1", &fHitsStartTReco1);
+  fTree->Branch("HitsEndTReco1", &fHitsEndTReco1);
+  fTree->Branch("HitsWidthReco1", &fHitsWidthReco1);
+  fTree->Branch("HitsChi2Reco1", &fHitsChi2Reco1);
+  fTree->Branch("HitsNDFReco1", &fHitsNDFReco1);
 
-  if(fSaveSpacePoints){
-    fTree->Branch("SpacePointX", &fSpacePointX);
-    fTree->Branch("SpacePointY", &fSpacePointY);
-    fTree->Branch("SpacePointZ", &fSpacePointZ);
-    fTree->Branch("SpacePointIntegral", &fSpacePointIntegral);
-  }
+  fTree->Branch("HitsView", &fHitsViewReco2);
+  fTree->Branch("HitsSummedADC", &fHitsSummedADCReco2);
+  fTree->Branch("HitsPeakTime", &fHitsPeakTimeReco2);
+  fTree->Branch("HitsChannel", &fHitsChannelReco2);
+  fTree->Branch("HitsAmplitude", &fHitsAmplitudeReco2);
+  fTree->Branch("HitsRMS", &fHitsRMSReco2);
+  fTree->Branch("HitsStartT", &fHitsStartTReco2);
+  fTree->Branch("HitsEndT", &fHitsEndTReco2);
+  fTree->Branch("HitsWidth", &fHitsWidthReco2);
+  fTree->Branch("HitsChi2", &fHitsChi2Reco2);
+  fTree->Branch("HitsNDF", &fHitsNDFReco2);
+  fTree->Branch("HitsIntegral", &fHitsIntegralReco2);
+  fTree->Branch("HitsX", &fHitsXReco2);
+  fTree->Branch("HitsY", &fHitsYReco2);
+  fTree->Branch("HitsZ", &fHitsZReco2);
 
-  if(fSaveVertex){
-    fTree->Branch("RecoVx", &fRecoVx, "RecoVx/D");
-    fTree->Branch("RecoVy", &fRecoVy, "RecoVy/D");
-    fTree->Branch("RecoVz", &fRecoVz, "RecoVz/D");
-    fTree->Branch("RecoVU", &fRecoVU, "RecoVU/I");
-    fTree->Branch("RecoVV", &fRecoVV, "RecoVV/I");
-    fTree->Branch("RecoVC", &fRecoVC, "RecoVC/I");
-    fTree->Branch("RecoVTimeTick", &fRecoVTimeTick, "RecoVC/I");
-    fTree->Branch("RecoInFV", &fRecoInFV, "RecoInFV/O");
-  }
+  fTree->Branch("SpacePointX", &fSpacePointX);
+  fTree->Branch("SpacePointY", &fSpacePointY);
+  fTree->Branch("SpacePointZ", &fSpacePointZ);
+  fTree->Branch("SpacePointIntegral", &fSpacePointIntegral);
 
-  if(fSaveReco2){
-    fTree->Branch("PFTrackStart", &fPFTrackStart);
-    fTree->Branch("PFTrackEnd", &fPFTrackEnd);
-    fTree->Branch("PFPDGCode", &fPFPDGCode);
-    fTree->Branch("PFPT0", &fPFPT0);
-  }
+  fTree->Branch("RecoVx", &fRecoVx, "RecoVx/D");
+  fTree->Branch("RecoVy", &fRecoVy, "RecoVy/D");
+  fTree->Branch("RecoVz", &fRecoVz, "RecoVz/D");
+  fTree->Branch("RecoVU", &fRecoVU, "RecoVU/I");
+  fTree->Branch("RecoVV", &fRecoVV, "RecoVV/I");
+  fTree->Branch("RecoVC", &fRecoVC, "RecoVC/I");
+  fTree->Branch("RecoVTimeTick", &fRecoVTimeTick, "RecoVC/I");
+  fTree->Branch("RecoInFV", &fRecoInFV, "RecoInFV/O");
+
+  fTree->Branch("ChargeBarycenterX", &fChargeBarycenterX);
+  fTree->Branch("ChargeBarycenterY", &fChargeBarycenterY);
+  fTree->Branch("ChargeBarycenterZ", &fChargeBarycenterZ);
+
+  fTree->Branch("PFTrackStart", &fPFTrackStart);
+  fTree->Branch("PFTrackEnd", &fPFTrackEnd);
+  fTree->Branch("PFPDGCode", &fPFPDGCode);
+  fTree->Branch("PFPT0", &fPFPT0);
 
   fOpAnaTree = tfs->make<TTree>("OpAnaTree", "PDS Analysis Output Tree");
   fOpAnaTree->Branch("RunID", &fRunID, "RunID/I");
@@ -502,6 +547,7 @@ void test::FlashMatchAnalyzer::beginJob()
     fOpAnaTree->Branch("flash_zerr", "std::vector<double>", &_flash_zerr);
     fOpAnaTree->Branch("flash_x","std::vector<double>", &_flash_x);
     fOpAnaTree->Branch("flash_xerr", "std::vector<double>", &_flash_xerr);
+    fOpAnaTree->Branch("flash_time_distribution", "std::vector<TH1D*>" ,&_flash_time_distribution);
     fOpAnaTree->Branch("flash_ophit_time", "std::vector<std::vector<double>>", &_flash_ophit_time);
     fOpAnaTree->Branch("flash_ophit_risetime", "std::vector<std::vector<double>>", &_flash_ophit_risetime);
     fOpAnaTree->Branch("flash_ophit_starttime", "std::vector<std::vector<double>>", &_flash_ophit_starttime);
@@ -513,6 +559,7 @@ void test::FlashMatchAnalyzer::beginJob()
     fOpAnaTree->Branch("PECoated", "std::vector<double>", &fPECoated);
     fOpAnaTree->Branch("PEUncoated", "std::vector<double>", &fPEUncoated);
     fOpAnaTree->Branch("PMTRatioPE","std::vector<double>", &fPMTRatioPE);
+    fOpAnaTree->Branch("PMTRatioPEPerBox","std::vector<double>", &fPMTRatioPEPerBox);
   }
 
   fCRTTree = tfs->make<TTree>("CRTTree", "CRT Analysis Output Tree");

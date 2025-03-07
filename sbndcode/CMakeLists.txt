@@ -47,3 +47,5 @@ add_subdirectory(FlashMatchAnalyzer)
 
 # for CVN
 add_subdirectory(SBNDCVN)
+
+add_subdirectory(EvtsFiltering)
