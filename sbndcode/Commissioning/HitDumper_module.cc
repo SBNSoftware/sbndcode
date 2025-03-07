@@ -92,6 +92,38 @@ bool Cut_NS_Function(double x1, double z1,double x2, double z2){
   return x && z;
 }
 
+std::pair<double, double> CalculateHalfWidthHeightAndAmplitudeCollection(const std::vector<double>& adc_vals, const std::vector<double>& time_vals) {
+  if (adc_vals.empty() || time_vals.empty()) return {-1.0, -1.0};
+    
+  double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
+  double half_max = max_adc / 2.0;
+    
+  double t_left = -1, t_right = -1;
+  for (size_t i = 1; i < adc_vals.size(); ++i) {
+    if (adc_vals[i-1] < half_max && adc_vals[i] >= half_max) {
+      t_left = time_vals[i-1] + (time_vals[i] - time_vals[i-1]) * 
+	(half_max - adc_vals[i-1]) / (adc_vals[i] - adc_vals[i-1]);
+    }
+    if (adc_vals[i-1] >= half_max && adc_vals[i] < half_max) {
+      t_right = time_vals[i-1] + (time_vals[i] - time_vals[i-1]) * 
+	(half_max - adc_vals[i-1]) / (adc_vals[i] - adc_vals[i-1]);
+      break;
+    }
+  }
+  double half_width = (t_left >= 0 && t_right >= 0) ? (t_right - t_left) : -1.0;
+  return {half_width, max_adc};
+}
+bool HasDoublePeakFeature(const std::vector<double>& adc_vals, double threshold) {
+  int peak_count = 0;
+  for (size_t i = 1; i < adc_vals.size() - 1; ++i) {
+    if (adc_vals[i] > threshold && adc_vals[i] > adc_vals[i - 1] && adc_vals[i] > adc_vals[i + 1]) {
+      peak_count++;
+      if (peak_count > 1) return true;
+    }
+  }
+  return false;
+}
+
 const int DEFAULT_VALUE = -9999;
 
 enum CRTOrientation {
@@ -201,20 +233,6 @@ private:
   std::vector<int>    _wire_number;             /// Wire number corresponding to waveform
   std::vector<int>    _channel_number;
   std::vector<double> _hit_time;
-
-  std::vector<double> _waveform_amplitude;
-  std::vector<double> _waveform_charge;
-  std::vector<double> _waveform_dof;
-  std::vector<double> _waveform_width;
-
-  //Test hit variables
-  std::vector<double> _hit_sigma_peak_time;      //< uncertainty for the signal peak, in tick units
-  std::vector<double> _hit_sigma_peak_amplitude; //uncertainty on estimated amplitude of the hit at its peak, in ADC units
-  std::vector<double> _hit_sigma_integral;       //< the uncertainty of integral under the calibrated signal waveform of the hit, in ADC units
-  std::vector<double> _hit_multiplicity;         //< how many hits could this one be shared with
-  std::vector<double> _hit_goodness_of_fit;      //< how well do we believe we know this hit?
-  std::vector<double> _hit_dof;                  //< degrees of freedom in the determination of the hit shape
-
 
 
   // CRT strip variables
@@ -617,13 +635,7 @@ void Hitdumper::analyze(const art::Event& evt)
     _hit_charge[counter] = hitlist[i]->Integral();
     _hit_ph[counter] = hitlist[i]->PeakAmplitude();
     _hit_width[counter] = hitlist[i]->RMS();
-   
-    _hit_sigma_peak_time[counter] = hitlist[i]->SigmaPeakTime(); 
-    _hit_sigma_peak_amplitude[counter] = hitlist[i]->SigmaPeakAmplitude();
-    _hit_sigma_integral[counter] = hitlist[i]->SigmaIntegral();
-    _hit_multiplicity[counter] = hitlist[i]->Multiplicity(); 
-    _hit_goodness_of_fit[counter] = hitlist[i]->GoodnessOfFit();  
-    _hit_dof[counter] = hitlist[i]->DegreesOfFreedom(); 
+
     counter ++;
   }
 
@@ -987,22 +999,7 @@ void Hitdumper::analyze(const art::Event& evt)
   }
   ResetWaveforms();
   if (fcheckTransparency) {
-    //    _waveform_number.resize(_max_hits*_max_samples, -9999.);
-    // _adc_on_wire.resize(_max_hits*_max_samples, -9999.);
-    // _time_for_waveform.resize(_max_hits*_max_samples, -9999.);
-    // _waveform_integral.resize(_max_hits*_max_samples, -9999.);
-    // _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
-    // _wire_number.resize(_max_hits*_max_samples, -9999.);
-    // _channel_number.resize(_max_hits*_max_samples, -9999.);
-    // _hit_time.resize(_max_hits*_max_samples, -9999.);
-    // _waveform_charge.resize(_max_hits*_max_samples, -9999.);
-    // _waveform_amplitude.resize(_max_hits*_max_samples, -9999.);
-    // _waveform_dof.resize(_max_hits*_max_samples, -9999.);
-    // _waveform_integral.resize(_max_hits*_max_samples, -9999.);
-    // _waveform_width.resize(_max_hits*_max_samples, -9999.);
-
     art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
-
     bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
     if(retVal == true) {
       mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
@@ -1026,6 +1023,20 @@ void Hitdumper::analyze(const art::Event& evt)
     }
 
     std::cout << "Number of hits passing cuts: " << hit_counter << std::endl;
+
+    std::vector<double> temp_waveform_number;
+    std::vector<double> temp_adc_on_wire;
+    std::vector<double> temp_time_for_waveform;
+    std::vector<double> temp_wire_number;
+    std::vector<double> temp_channel_number;
+    std::vector<double> temp_hit_time;
+
+    std::map<int, std::vector<double>> waveform_adc_map;
+    std::map<int, std::vector<double>> waveform_time_map;
+    std::map<int, std::vector<int>> waveform_wire_map;
+    std::map<int, std::vector<int>> waveform_number_map;
+    std::map<int, std::vector<int>> waveform_channel_number;
+    std::map<int, std::vector<int>> waveform_hit_time;
 
     // loop over waveforms
     for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
@@ -1079,28 +1090,68 @@ void Hitdumper::analyze(const art::Event& evt)
 	    for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
 	      // _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
 	      // counter_for_adc_in_waveform++;
-	      _waveform_number.push_back(waveform_number_tracker);
-	      _adc_on_wire.push_back(rawadc[ibin]-pedestal);
-	      _time_for_waveform.push_back(ibin);
-	      _wire_number.push_back(_hit_wire[ihit]);
-	      _channel_number.push_back(_hit_channel[ihit]);
-	      _hit_time.push_back(_hit_peakT[ihit]);
+	     temp_waveform_number.push_back(waveform_number_tracker);
+	     temp_adc_on_wire.push_back(rawadc[ibin]-pedestal);
+	     temp_time_for_waveform.push_back(ibin);
+	     temp_wire_number.push_back(_hit_wire[ihit]);
+	     temp_channel_number.push_back(_hit_channel[ihit]);
+	     temp_hit_time.push_back(_hit_peakT[ihit]);
 	     
-
-	      _waveform_amplitude.push_back(_hit_ph[ihit]);
-	      _waveform_charge.push_back(_hit_charge[ihit]);
-	      _waveform_dof.push_back(_hit_dof[ihit]);
-	      _waveform_width.push_back(_hit_width[ihit]);
+	     int wave_num =static_cast<int>(temp_waveform_number.back());
+	     waveform_adc_map[wave_num].push_back(temp_adc_on_wire.back());
+	     waveform_time_map[wave_num].push_back(temp_time_for_waveform.back());
+	     waveform_wire_map[wave_num].push_back(temp_wire_number.back());
+	     waveform_number_map[wave_num].push_back(temp_waveform_number.back());
+	     waveform_channel_number[wave_num].push_back(temp_channel_number.back());
+	     waveform_hit_time[wave_num].push_back(temp_hit_time.back());
 
 	       integral+=_adc_on_wire[adc_counter];
 	       _waveform_integral.push_back(integral);
 	      adc_counter++;
-	    }
-	    //	    _hit_full_integral[ihit] = integral;
-	  } // if hit channel matches waveform channel
+	    }//bin loop
+	  } // if cuts
 	} //end loop over hits
-      }
+      }//if one hit per channel
     }// end loop over waveforms
+
+
+      for (const auto &entry : waveform_adc_map) {
+	int wave_num = entry.first; // The current waveform number
+	const std::vector<double> &adc_vals = entry.second;
+	const std::vector<double> &time_vals = waveform_time_map[wave_num];
+       	const std::vector<int> &wire_nums = waveform_wire_map[wave_num];
+	const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
+	const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
+	const std::vector<int> &hit_times = waveform_hit_time[wave_num];
+
+	// If no data, skip this waveform
+	if (adc_vals.empty() || time_vals.empty()) {
+	  continue;
+	}
+    
+	if (HasDoublePeakFeature(adc_vals, 10.0)){
+	  continue;
+	}
+
+	double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
+	if (max_adc > 140) {
+	
+	  continue;
+	} 
+	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);
+	if (half_width < 5.5 || half_width > 8.5) {
+	  continue;
+	}
+	_time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
+	_adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
+	_wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
+	_channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
+	_waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
+	_hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
+
+      }
+
+
   }// end if fCheckTrasparency
 
 
@@ -1339,12 +1390,6 @@ void Hitdumper::beginJob()
   fTree->Branch("hit_ph", &_hit_ph);
   fTree->Branch("hit_width", &_hit_width);
   fTree->Branch("hit_full_integral", &_hit_full_integral);
-  fTree->Branch("hit_sigma_peak_time", &_hit_sigma_peak_time);
-  fTree->Branch("hit_sigma_peak_amplitude", &_hit_sigma_peak_amplitude);
-  fTree->Branch("hit_sigma_integral", &_hit_sigma_integral);
-  fTree->Branch("hit_multiplicity", &_hit_multiplicity);
-  fTree->Branch("hit_goodness_of_fit", &_hit_goodness_of_fit);
-  fTree->Branch("hit_dof", &_hit_dof);
 
 
   if (fcheckTransparency) {
@@ -1357,10 +1402,7 @@ void Hitdumper::beginJob()
     fTree->Branch("wire_number", &_wire_number);
     fTree->Branch("channel_number", &_channel_number);
     fTree->Branch("hit_time", &_hit_time); 
-    fTree->Branch("waveform_amplitude", &_waveform_amplitude);
-    fTree->Branch("waveform_charge", &_waveform_charge);
-    fTree->Branch("waveform_dof", &_waveform_dof);
-    fTree->Branch("waveform_width", &_waveform_width);
+
   }
 
   if (fKeepCRTStripHits) {
@@ -1578,12 +1620,6 @@ void Hitdumper::ResetWireHitsVars(int n) {
   _hit_ph.assign(n, DEFAULT_VALUE);
   _hit_width.assign(n, DEFAULT_VALUE);
   _hit_full_integral.assign(n, DEFAULT_VALUE);
-  _hit_sigma_peak_time.assign(n, DEFAULT_VALUE);
-  _hit_sigma_peak_amplitude.assign(n, DEFAULT_VALUE);
-  _hit_sigma_integral.assign(n, DEFAULT_VALUE);
-  _hit_multiplicity.assign(n, DEFAULT_VALUE);
-  _hit_goodness_of_fit.assign(n, DEFAULT_VALUE);
-  _hit_dof.assign(n, DEFAULT_VALUE);
 
 }
 
@@ -1596,10 +1632,7 @@ void Hitdumper::ResetWaveforms(){
   _wire_number.clear();
   _channel_number.clear();
   _hit_time.clear();
-  _waveform_amplitude.clear();
-  _waveform_charge.clear();
-  _waveform_dof.clear();
-  _waveform_width.clear();
+
 }
 
 void Hitdumper::ResetCRTStripHitVars() {
