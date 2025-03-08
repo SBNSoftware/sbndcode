@@ -21,6 +21,9 @@ physics.producers:
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
   crtclustering, crtspacepoints, crttracks, cvn ]
 
+physics.producers.cvn.SliceLabel: "pandora"
+physics.producers.cvn.PFParticleModuleLabel: "pandora"
+physics.producers.cvn.T0Label: "pandora"
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
 physics.caloskimana_tpconly: [ caloskim ]
