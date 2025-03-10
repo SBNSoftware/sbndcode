@@ -145,9 +145,9 @@ standard_sbndcvnevaluatorslc:
   #==================
   PixelMapModuleLabel: ""
   PixelMapInput: ""
-  SliceLabel: "pandora"
-  PFParticleModuleLabel: "pandora"
-  T0Label: "pandora"
+  SliceLabel: "pandoraSCE"
+  PFParticleModuleLabel: "pandoraSCE"
+  T0Label: "pandoraSCE"
   CVNType: "Tensorflow"
   verbose: false
   SBNDTFHandler: {
