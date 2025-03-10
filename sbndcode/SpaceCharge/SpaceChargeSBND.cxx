@@ -38,10 +38,6 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
             std::string fname;
             cet::search_path sp("FW_SEARCH_PATH");
             sp.find_file(fInputFilename, fname);
-	    // Test
-	    fname = "/exp/sbnd/app/users/lkashur/sce_twomaps/test/SCEoffsets_SBND_E500_voxelTH3_test.root";
-	    //std::cout << "test " << fname << std::endl;
-	    // end test
 
             std::unique_ptr<TFile> infile(new TFile(fname.c_str(), "READ"));
             if(!infile->IsOpen())
@@ -53,17 +49,6 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
       	      std::cout << "begin loading voxelized TH3s..." << std::endl;
 
       	      //Load in histograms
-	      /*
-      	      TH3F* hTrueFwdX = (TH3F*) infile->Get("TrueFwd_Displacement_X");
-      	      TH3F* hTrueFwdY = (TH3F*) infile->Get("TrueFwd_Displacement_Y");
-      	      TH3F* hTrueFwdZ = (TH3F*) infile->Get("TrueFwd_Displacement_Z");
-      	      TH3F* hTrueBkwdX = (TH3F*) infile->Get("TrueBkwd_Displacement_X");
-      	      TH3F* hTrueBkwdY = (TH3F*) infile->Get("TrueBkwd_Displacement_Y");
-      	      TH3F* hTrueBkwdZ = (TH3F*) infile->Get("TrueBkwd_Displacement_Z");
-      	      TH3F* hTrueEFieldX = (TH3F*) infile->Get("True_ElecField_X");
-      	      TH3F* hTrueEFieldY = (TH3F*) infile->Get("True_ElecField_Y");
-      	      TH3F* hTrueEFieldZ = (TH3F*) infile->Get("True_ElecField_Z");
-	      */
 
 	      // E TPC
 	      TH3F* hTrueFwdX_E = (TH3F*) infile->Get("TrueFwd_Displacement_X_E");
@@ -91,18 +76,6 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
       	      //Set hist directories so they can be referenced elsewhere
       	      //This needs to be done because they were read in from ext file
       	      //Note this is not a property of the TH3F, so does't survive copying
-	      /*
-      	      hTrueFwdX->SetDirectory(0);
-      	      hTrueFwdY->SetDirectory(0);
-      	      hTrueFwdZ->SetDirectory(0);
-      	      hTrueBkwdX->SetDirectory(0);
-      	      hTrueBkwdY->SetDirectory(0);
-      	      hTrueBkwdZ->SetDirectory(0);
-      	      hTrueEFieldX->SetDirectory(0);
-      	      hTrueEFieldY->SetDirectory(0);
-      	      hTrueEFieldZ->SetDirectory(0);
-	      */
-	      
 	      hTrueFwdX_E->SetDirectory(0);
               hTrueFwdY_E->SetDirectory(0);
               hTrueFwdZ_E->SetDirectory(0);
@@ -124,12 +97,6 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
               hTrueEFieldZ_W->SetDirectory(0);
 
       	      //SCEhistograms can be accessed globally in this script
-	      /*
-      	      SCEhistograms = {hTrueFwdX, hTrueFwdY, hTrueFwdZ,
-      			       hTrueBkwdX, hTrueBkwdY, hTrueBkwdZ,
-      			       hTrueEFieldX, hTrueEFieldY, hTrueEFieldZ};
-	      */
-
               SCEhistograms_E = {hTrueFwdX_E, hTrueFwdY_E, hTrueFwdZ_E,
 				 hTrueBkwdX_E, hTrueBkwdY_E, hTrueBkwdZ_E,
 				 hTrueEFieldX_E, hTrueEFieldY_E, hTrueEFieldZ_E};
