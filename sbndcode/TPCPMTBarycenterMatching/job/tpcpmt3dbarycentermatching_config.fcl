@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+#Common paramters for the barycenter matching
+tpcpmt3Dbarycentermatch:
+{
+    OpFlashesModuleLabel:     ["opflashtpc0", "opflashtpc1"]
+    PandoraLabel:     "pandora"
+    CollectionOnly:   true
+    Verbose:          false
+    FillMatchTree:    true
+}
+
+END_PROLOG
