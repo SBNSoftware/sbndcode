@@ -435,9 +435,6 @@ namespace crt {
                 ts1_ch1 = ts1_ch0;
             }
 
-            // Time relative to PPS: Random for now! (FIXME)
-            uint32_t ppsTicks = CLHEP::RandFlat::shootInt(&fEngine, fParams.ClockSpeedCRT() * 1e6);
-
             // Adjacent channels on a strip are numbered sequentially.
             //
             // In the AuxDetWireReadoutGeom methods, channels are identified by an
@@ -477,14 +474,18 @@ namespace crt {
                 std::swap(sipm0ID, sipm1ID);
             }
 
+            // Note we use the time relative to the event trigger for both
+            // T0 and T1 because we cannot simulate T0 effectively.
+            // This will make MC/Data comparisons much easier.
+
             SiPMData sipm0 = SiPMData(sipm0ID,
                                       channel0ID,
-                                      ppsTicks,
+                                      ts1_ch0,
                                       ts1_ch0,
                                       q0);
             SiPMData sipm1 = SiPMData(sipm1ID,
                                       channel1ID,
-                                      ppsTicks,
+                                      ts1_ch1,
                                       ts1_ch1,
                                       q1);
 
