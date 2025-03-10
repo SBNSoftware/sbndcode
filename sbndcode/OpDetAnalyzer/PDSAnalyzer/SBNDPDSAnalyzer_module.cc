@@ -718,8 +718,8 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     // Slice to OpT0Finder
     art::FindManyP<sbn::OpT0Finder> slice_opt0finder_assns(sliceHandle, e, fOpT0FinderModuleLabel);
     // Slice to hits
-    art::FindManyP<recob::Hit> slice_hit_assns (sliceHandle, e, fReco2Label);
-    
+    art::FindManyP<recob::Hit> slice_hit_assns(sliceHandle, e, fReco2Label);
+
     // --- Store candidate slices
     std::vector< art::Ptr<recob::Slice> > sliceVect;
     art::fill_ptr_vector(sliceVect, sliceHandle);
@@ -749,7 +749,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
       // --- Get the OpT0Finder score
       const std::vector< art::Ptr<sbn::OpT0Finder> > slcOpT0Finder = slice_opt0finder_assns.at( slice.key() );
       if(slcOpT0Finder.size()>0){
-        
+
         for(size_t jx=0; jx<slcOpT0Finder.size(); jx++){
           _opT0Score.push_back(slcOpT0Finder[jx]->score);
           _opT0Time.push_back(slcOpT0Finder[jx]->time);
