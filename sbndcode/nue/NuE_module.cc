@@ -58,6 +58,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cmath>
 
 // ROOT
 #include "art_root_io/TFileService.h"
@@ -121,6 +122,9 @@ private:
   double recoNeutrinoVY;                    // Reco vertex y coord
   double recoNeutrinoVZ;                    // Reco vertex z coord
   size_t numRecoNeutrinos = 0;                 // Counter for number of reco neutrinos
+
+  float highestSliceScore = -10000;
+  int highestSliceScoreIndex;
 
   geo::Point_t pos = {0, 0, 0};             // Geometry position (0, 0, 0), gets overwritten with actual coords
 
@@ -283,7 +287,7 @@ void sbnd::NuE::analyze(art::Event const& e)
     // Condition on the number of slices associated with the pfparticle. pfp has > 1 slice or no slice then it is skipped
     if(pfpSlices.size() == 1){
         const art::Ptr<recob::Slice> &pfpSlice(pfpSlices.front());
-        int SliceID = pfpSlice->ID();
+        //int SliceID = pfpSlice->ID();
 
         const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
 
@@ -293,20 +297,17 @@ void sbnd::NuE::analyze(art::Event const& e)
 
             if(pfpPrimary && (PFParticleID == 12 || PFParticleID == 14)){
                 art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(pfpSlices, e, crumbsLabel);
+                // Initialise tuple to contain the pfp primary neutrino, its vertex, its slice, and the crumbs score associated to the slice
                 std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>, art::Ptr<sbn::CRUMBSResult>> tuple;
                 
-                std::cout << "slice ID associated with primary reco neutrino: " << SliceID << std::endl;
                 numRecoNeutrinos++;
 
-                std::cout << "pfpslice.key = " << pfpSlice.key() << std::endl;
- 
                 const std::vector<art::Ptr<sbn::CRUMBSResult>> sliceCrumbsResults = sliceCrumbsAssns.at(0);
                 if(sliceCrumbsResults.size() != 1){
                     std::cout << "Errors: slice has multiple CRUMBS results" << std::endl;
                 }
 
                 const art::Ptr<sbn::CRUMBSResult> sliceCrumbsResult(sliceCrumbsResults.front());
-                std::cout << "crumbs score: " << sliceCrumbsResult->score << std::endl; 
                 tuple = std::make_tuple(pfp, pfpVertex, pfpSlice, sliceCrumbsResult); // Creates a tuple that contains the pfp, and the vertex coords
                 // Pushes the tuple containing the reco primary neutrino info to a vector called v
                 v.push_back(tuple);
@@ -315,39 +316,27 @@ void sbnd::NuE::analyze(art::Event const& e)
     } 
   }
 
-  if(v.size() == numRecoNeutrinos) std::cout << "num reco neutrinos == v.size" << std::endl;
-
-  if(numTrueNeutrinos == 1 && (v.size() != 0 && v.size() != 1)){
-    std::cout << "This slice has 1 true neutrino + " << v.size() << " primary reco neutrinos" << std::endl;
-    for(size_t numPrimary = 0; numPrimary < v.size(); numPrimary++){
-        auto vertexPtr = std::get<1>(v[numPrimary]);
-        if(vertexPtr){
-            recoNeutrinoVX = vertexPtr->position().X();
-            recoNeutrinoVY = vertexPtr->position().Y();
-            recoNeutrinoVZ = vertexPtr->position().Z();
-        } else{
-            std::cout << "pfpVertex pointer is null when accessing from the vector!" << std::endl;
-        }   
+  if(v.size() != 0){
+    for(long unsigned int neutrinoCand = 0; neutrinoCand < v.size(); neutrinoCand++){
+        auto crumbsPtr = std::get<3>(v[neutrinoCand]);
+        if(crumbsPtr->score > highestSliceScore){
+            highestSliceScore = crumbsPtr->score;
+            highestSliceScoreIndex = neutrinoCand;
+        }
     }
-  } 
-  
-  if(numTrueNeutrinos == 1 && v.size() == 1){
-    std::cout << "This slice has 1 true neutrino + 1 primary reco neutrino" << std::endl;
-    
-    auto vertexPtr = std::get<1>(v.front());
-    if(vertexPtr){
-        recoNeutrinoVX = vertexPtr->position().X();
-        recoNeutrinoVY = vertexPtr->position().Y();
-        recoNeutrinoVZ = vertexPtr->position().Z();
 
-        std::cout << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << std::endl;
-    } else{
-        std::cout << "pfpVertex pointer is null when accessing from the vector!" << std::endl;
-    }
+    recoNeutrinoVX = std::get<1>(v[highestSliceScoreIndex])->position().X();
+    recoNeutrinoVY = std::get<1>(v[highestSliceScoreIndex])->position().Y();
+    recoNeutrinoVZ = std::get<1>(v[highestSliceScoreIndex])->position().Z();
+
+  } else{
+    recoNeutrinoVX = NAN;
+    recoNeutrinoVY = NAN;
+    recoNeutrinoVZ = NAN;
   }
 
-  std::cout << "Num of true neutrinos: " << numTrueNeutrinos << ", Num of reco neutrinos: " << numRecoNeutrinos << std::endl;
   std::cout << "True vertex: (" << trueNeutrinoVX << ", " << trueNeutrinoVY << ", " << trueNeutrinoVZ << ")   Reco vertex: (" << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << ")" << std::endl;
+  std::cout << "dx: " << recoNeutrinoVX - trueNeutrinoVX << ", dy: " << recoNeutrinoVY - trueNeutrinoVY << ", dz: " << recoNeutrinoVZ - trueNeutrinoVZ << std::endl; 
 
   for(auto &hit : hitVec){
     if(hit->View() == 0 || hit->View() == 1 || hit->View() == 2){
@@ -374,7 +363,7 @@ void sbnd::NuE::analyze(art::Event const& e)
         const double rz(az - (ay * ny + az * nz) * nz / n2);
         const double sign((rz > 0.0) ? +1.0 : -1.0);
         const double uvz = sign * std::sqrt(ry * ry + rz * rz); // this is the U/V/Z coordinate
-
+ 
         event_hitTree.push_back(eventID);
         run_hitTree.push_back(runID);
         subrun_hitTree.push_back(subRunID);
@@ -384,19 +373,22 @@ void sbnd::NuE::analyze(art::Event const& e)
     }
   }
 
-  event_tree.push_back(eventID);
-  run_tree.push_back(runID);
-  subrun_tree.push_back(subRunID);
-  trueNeutrinoVX_tree.push_back(trueNeutrinoVX);
-  trueNeutrinoVY_tree.push_back(trueNeutrinoVY);
-  trueNeutrinoVZ_tree.push_back(trueNeutrinoVZ);
-  recoNeutrinoVX_tree.push_back(recoNeutrinoVX);
-  recoNeutrinoVY_tree.push_back(recoNeutrinoVY);
-  recoNeutrinoVZ_tree.push_back(recoNeutrinoVZ);
-  trueCCNC_tree.push_back(trueCCNC);
-  trueNeutrinoType_tree.push_back(trueNeutrinoType);
-  trueLeptonType_tree.push_back(trueChargedLepton);
-
+  if(recoNeutrinoVX != NAN){
+    event_tree.push_back(eventID);
+    run_tree.push_back(runID);
+    subrun_tree.push_back(subRunID);
+    trueNeutrinoVX_tree.push_back(trueNeutrinoVX);
+    trueNeutrinoVY_tree.push_back(trueNeutrinoVY);
+    trueNeutrinoVZ_tree.push_back(trueNeutrinoVZ);
+    recoNeutrinoVX_tree.push_back(recoNeutrinoVX);
+    recoNeutrinoVY_tree.push_back(recoNeutrinoVY);
+    recoNeutrinoVZ_tree.push_back(recoNeutrinoVZ);
+    trueCCNC_tree.push_back(trueCCNC);
+    trueNeutrinoType_tree.push_back(trueNeutrinoType);
+    trueLeptonType_tree.push_back(trueChargedLepton);
+  } else{
+    std::cout << "There is no reco neutrino, skipping event" << std::endl;
+  } 
 }
 
 void sbnd::NuE::beginJob()
@@ -428,10 +420,6 @@ void sbnd::NuE::endJob()
 {
   NuETree->Fill();
   NuEHitTree->Fill();
-
-  std::cout << "number of events with just one reco neutrino: " << numEventsOneReco << std::endl;
-  std::cout << "number of eents with more than just one reco neutrinos: " << numEventsMoreThanOneReco << std::endl;
-  std::cout << "number of slices with more than one reco neutrino in a slice: " << numEventsMoreThanOneRecoNeutrinoInSlice << std::endl;
 }
 
 DEFINE_ART_MODULE(sbnd::NuE)
