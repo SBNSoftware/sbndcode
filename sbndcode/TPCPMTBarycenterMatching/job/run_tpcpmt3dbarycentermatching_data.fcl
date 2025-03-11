@@ -1,32 +1,36 @@
 # A script to run the producer module: TPCPMTBarycenterMatchProducer
 
-#include "tpcpmt3dbarycentermatching_config.fcl"
-
+#include "services_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
 
-process_name: TPCPMT3DBarycenterMatchProducer
+#include "tpcpmt3dbarycentermatching_config.fcl"
+
+process_name: BarycenterMatchProducer
 
 services:
 {
-  # Load the service that manages root files for histograms.
-  TFileService:           { fileName: "tpcpmtmatchingana.root" }
-  # This parameter controls the level of descriptive output from various LArSoft modules.
-  message:                @local::sbnd_message_services_prod
+  TFileService:              { fileName: "tpcpmt3dbarycentermatch_tree.root" }
+  @table::sbnd_basic_services
+  @table::sbnd_simulation_services
+}
 
-} # services
-
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1  # Number of events to create
+}
 
 outputs:
 {
   out1:
   {
     module_type: RootOutput
-    fileName:    "%ifb_%tc_TPCPMTBarycenterMatch.root"
-    dataTier: "reconstructed"
-    saveMemoryObjectThreshold: 0
+    fileName:    "%ifb_%p.root"
+    dataTier:    "reconstructed"
     compressionLevel: 1
-  }
+ }
 }
 
 # The 'physics' section defines and configures some modules to do work on each event.
@@ -34,11 +38,11 @@ physics:
 {
    producers:
   {
-    tpcpmt3dbarycentermatch: @local::tpcpmt3Dbarycentermatch
+    tpcpmtbarycentermatch: @local::TPCPMTBarycenterMatchProducer
   }
 
   # Schedule job step(s) for execution by defining the analysis module for this job.
-  reco: [ tpcpmt3dbarycentermatch ]
+  reco: [ tpcpmtbarycentermatch ]
 
   stream1: [ out1 ]
 
@@ -47,5 +51,4 @@ physics:
   # "end_paths" is a keyword and contains the modules that do not modify the art::Event;
   # i.e., analyzers and output streams.
   end_paths: [ stream1 ]
-
 }
