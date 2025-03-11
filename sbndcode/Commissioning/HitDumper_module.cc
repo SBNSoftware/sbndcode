@@ -76,6 +76,7 @@
 #include "TLorentzVector.h"
 #include "TVector3.h"
 #include "TGeoManager.h"
+#include "TF1.h"
 
 // C++ Includes
 #include <map>
@@ -1084,7 +1085,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	    if (high_edge > (fDataSize-1)) {
 	      high_edge = fDataSize - 1;
 	    }
-	     double integral = 0.0;
+	    //	     double integral = 0.0;
 	    waveform_number_tracker++;
 	    // int counter_for_adc_in_waveform = 0;
 	    for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
@@ -1105,8 +1106,8 @@ void Hitdumper::analyze(const art::Event& evt)
 	     waveform_channel_number[wave_num].push_back(temp_channel_number.back());
 	     waveform_hit_time[wave_num].push_back(temp_hit_time.back());
 
-	       integral+=_adc_on_wire[adc_counter];
-	       _waveform_integral.push_back(integral);
+	     //	       integral+=_adc_on_wire[adc_counter];
+	     // _waveform_integral.push_back(integral);
 	      adc_counter++;
 	    }//bin loop
 	  } // if cuts
@@ -1115,43 +1116,39 @@ void Hitdumper::analyze(const art::Event& evt)
     }// end loop over waveforms
 
 
-      for (const auto &entry : waveform_adc_map) {
-	int wave_num = entry.first; // The current waveform number
-	const std::vector<double> &adc_vals = entry.second;
-	const std::vector<double> &time_vals = waveform_time_map[wave_num];
-       	const std::vector<int> &wire_nums = waveform_wire_map[wave_num];
-	const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
-	const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
-	const std::vector<int> &hit_times = waveform_hit_time[wave_num];
-
-	// If no data, skip this waveform
-	if (adc_vals.empty() || time_vals.empty()) {
-	  continue;
-	}
-    
-	if (HasDoublePeakFeature(adc_vals, 10.0)){
-	  continue;
-	}
-
-	double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
-	if (max_adc > 140) {
-	
-	  continue;
-	} 
-	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);
-	if (half_width < 5.5 || half_width > 8.5) {
-	  continue;
-	}
-	_time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
-	_adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
-	_wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
-	_channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
-	_waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
-	_hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
-
+    for (const auto &entry : waveform_adc_map) {
+      int wave_num = entry.first; // The current waveform number
+      const std::vector<double> &adc_vals = entry.second;
+      const std::vector<double> &time_vals = waveform_time_map[wave_num];
+      const std::vector<int> &wire_nums = waveform_wire_map[wave_num];
+      const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
+      const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
+      const std::vector<int> &hit_times = waveform_hit_time[wave_num];
+      
+      // If no data, skip this waveform
+      if (adc_vals.empty() || time_vals.empty()) {
+	continue;
       }
+      
+      if (HasDoublePeakFeature(adc_vals, 10.0)){
+	continue;
+      }
+      
+      //       	double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
+      
+      //	if (max_adc > 2 * mean) {
+      //  continue;
+      //	}
 
-
+      
+      _time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
+      _adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
+      _wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
+      _channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
+      _waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
+      _hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
+      
+    }
   }// end if fCheckTrasparency
 
 

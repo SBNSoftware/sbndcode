@@ -7,7 +7,7 @@ hitdumper:
     module_type:              "HitDumper"
 
     TPCNum: 1
-    PlaneNum: 0
+    PlaneNum: 2
     NoisyChannel: 0 
     MaxTime: 1100.0
     MinTime: 400.0
