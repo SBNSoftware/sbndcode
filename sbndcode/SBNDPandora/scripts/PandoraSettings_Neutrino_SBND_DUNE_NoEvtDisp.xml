@@ -14,6 +14,32 @@
     <CurrentCaloHitListReplacement>CaloHitList2D</CurrentCaloHitListReplacement>
   </algorithm>
 
+  <algorithm type = "LArDLVertexing">
+    <TrainingMode>false</TrainingMode>
+    <OutputVertexListName>NeutrinoVertices3D_Pass1</OutputVertexListName>
+    <CaloHitListNames>CaloHitListW CaloHitListU CaloHitListV</CaloHitListNames>
+    <ModelFileNameU>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_1_U_v04_03_00.pt</ModelFileNameU>
+    <ModelFileNameV>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_1_V_v04_03_00.pt</ModelFileNameV>
+    <ModelFileNameW>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_1_W_v04_03_00.pt</ModelFileNameW>
+    <DistanceThresholds>0. 0.00275 0.00825 0.01925 0.03575 0.05775 0.08525 0.12375 0.15125 0.20625 0.26125 0.31625 0.37125 0.42625 0.50875 0.59125 0.67375 0.75625 0.85 1.0</DistanceThresholds>
+    <Visualise>false</Visualise>
+</algorithm>
+
+  <algorithm type = "LArDLVertexing">
+    <TrainingMode>false</TrainingMode>
+    <Pass>2</Pass>
+    <InputVertexListName>NeutrinoVertices3D_Pass1</InputVertexListName>
+    <OutputVertexListName>NeutrinoVertices3D</OutputVertexListName>
+    <CaloHitListNames>CaloHitListW CaloHitListU CaloHitListV</CaloHitListNames>
+    <ModelFileNameU>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_2_U_v04_03_00.pt</ModelFileNameU>
+    <ModelFileNameV>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_2_V_v04_03_00.pt</ModelFileNameV>
+    <ModelFileNameW>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_2_W_v04_03_00.pt</ModelFileNameW>
+    <ImageWidth>128</ImageWidth>
+    <ImageHeight>128</ImageHeight>
+    <DistanceThresholds>0. 0.00275 0.00825 0.01925 0.03575 0.05775 0.08525 0.12375 0.15125 0.20625 0.26125 0.31625 0.37125 0.42625 0.50875 0.59125 0.67375 0.75625 0.85 1.0</DistanceThresholds>
+    <Visualise>false</Visualise>
+  </algorithm>
+
   <!-- TwoDReconstruction -->
   <algorithm type = "LArClusteringParent">
     <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
@@ -84,36 +110,6 @@
   <!-- VertexAlgorithms -->
   <algorithm type = "LArCutClusterCharacterisation">
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
-  </algorithm>
-  <algorithm type = "LArCandidateVertexCreation">
-    <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
-    <OutputVertexListName>CandidateVertices3D</OutputVertexListName>
-    <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
-    <EnableCrossingCandidates>false</EnableCrossingCandidates>
-  </algorithm>
-  <algorithm type = "LArVertexRefinement">
-    <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
-    <InputVertexListName>CandidateVertices3D</InputVertexListName>
-    <OutputVertexListName>RefinedVertices3D</OutputVertexListName>
-  </algorithm>
-  <algorithm type = "LArBdtVertexSelection">
-    <InputCaloHitListNames>CaloHitListU CaloHitListV CaloHitListW</InputCaloHitListNames>
-    <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
-    <OutputVertexListName>NeutrinoVertices3D</OutputVertexListName>
-    <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
-    <MvaFileName>PandoraMVAs/PandoraBdt_SBND.xml</MvaFileName>
-    <RegionMvaName>VertexBDTRegion</RegionMvaName>
-    <VertexMvaName>VertexBDTVertex</VertexMvaName>
-    <FeatureTools>
-      <tool type = "LArEnergyKickFeature"/>
-      <tool type = "LArLocalAsymmetryFeature"/>
-      <tool type = "LArGlobalAsymmetryFeature"/>
-      <tool type = "LArShowerAsymmetryFeature"/>
-      <tool type = "LArRPhiFeature"/>
-      <tool type = "LArEnergyDepositionAsymmetryFeature"/>
-    </FeatureTools>
-    <LegacyEventShapes>false</LegacyEventShapes>
-    <LegacyVariables>false</LegacyVariables>
   </algorithm>
   <algorithm type = "LArCutClusterCharacterisation">
     <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
@@ -460,8 +456,7 @@
   <!-- Output list management -->
   <algorithm type = "LArPostProcessing">
     <PfoListNames>NeutrinoParticles3D TrackParticles3D ShowerParticles3D</PfoListNames>
-    <!--<VertexListNames>NeutrinoVertices3D DaughterVertices3D RefinedVertices3D</VertexListNames>-->
-    <VertexListNames>NeutrinoVertices3D DaughterVertices3D CandidateVertices3D</VertexListNames>
+    <VertexListNames>NeutrinoVertices3D_Pass1 NeutrinoVertices3D DaughterVertices3D RefinedVertices3D</VertexListNames>
     <ClusterListNames>ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</ClusterListNames>
     <CaloHitListNames>CaloHitListU CaloHitListV CaloHitListW CaloHitList2D</CaloHitListNames>
     <CurrentPfoListReplacement>NeutrinoParticles3D</CurrentPfoListReplacement>
