@@ -3,7 +3,7 @@
 BEGIN_PROLOG
 
 sbnd_cluster3d: @local::sbn_cluster3d
-sbnd_cluster3d.Hit3DBuilderAlg.SaveMythicalPoints: false
+sbnd_cluster3d.Hit3DBuilderAlg.SaveMythicalPoints: true #true = doublets, false = triplets
 sbnd_cluster3d.MakeSpacePointsOnly: true
 
 END_PROLOG

@@ -68,6 +68,8 @@ private:
 
   std::vector<uint64_t> _ptb_hlt_trigger;
   std::vector<uint64_t> _ptb_hlt_timestamp;
+  std::vector<uint64_t> _ptb_hlt_unmask_timestamp;
+  std::vector<uint64_t> _ptb_llt_unmask_timestamp;
   std::vector<int> _ptb_hlt_trunmask;
   std::vector<uint64_t> _ptb_llt_trigger;
   std::vector<uint64_t> _ptb_llt_timestamp;
@@ -124,6 +126,8 @@ sbnd::ptb::PTBAnalysis::PTBAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("ptb_hlt_trigger", "std::vector<uint64_t>", &_ptb_hlt_trigger);
       fTree->Branch("ptb_hlt_trunmask", "std::vector<int>", &_ptb_hlt_trunmask);
       fTree->Branch("ptb_hlt_timestamp", "std::vector<uint64_t>", &_ptb_hlt_timestamp);
+      fTree->Branch("ptb_hlt_unmask_timestamp", "std::vector<uint64_t>", &_ptb_hlt_unmask_timestamp);
+      fTree->Branch("ptb_llt_unmask_timestamp", "std::vector<uint64_t>", &_ptb_llt_unmask_timestamp);
       fTree->Branch("ptb_llt_trigger", "std::vector<uint64_t>", &_ptb_llt_trigger);
       fTree->Branch("ptb_chStatus_timestamp", "std::vector<uint64_t>", &_ptb_chStatus_timestamp);
       fTree->Branch("ptb_chStatus_beam", "std::vector<uint64_t>", &_ptb_chStatus_beam);
@@ -516,6 +520,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
   _ptb_hlt_trigger.resize(nHLTs);
   _ptb_hlt_timestamp.resize(nHLTs);
   _ptb_hlt_trunmask.resize(nHLTs);
+  _ptb_hlt_unmask_timestamp.resize(nHLTs);
   
   
   unsigned hlt_i = 0; //For multiple upbits in trigger words for unmasking
@@ -529,28 +534,35 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
 	  h_i++;
 
 	  int val = ptb->GetHLTrigger(i).trigger_word;
-	  int upBit[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	  int upBit[32];
+	  
+	  for (int u=0; u<32; u++){ //setting default values for maximum of 32 bits
+	    upBit[u]=-1;
+	  }
+
 	  int numOfTrig =0;
-	  for(int i=0; i<32;i++){
+	  for(int b=0; b<32;b++){
 	    if ((val & 0x01) ==1){
-	      upBit[numOfTrig] = i;
+	      upBit[numOfTrig] = b;
 	      numOfTrig++;
 	    }
 	    val = val >> 1;
 	  }
 	  
 	  if (numOfTrig ==1){
+	    _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
 	    _ptb_hlt_trunmask[hlt_i] = upBit[0];
 	    hlt_i++;
 	  }//End of if statement for single upbit
 	  
 	  else if (numOfTrig > 1){
 	    nHLTs += (numOfTrig -1);
-	    _ptb_hlt_timestamp.resize(nHLTs);
+	    _ptb_hlt_unmask_timestamp.resize(nHLTs);
 	    _ptb_hlt_trunmask.resize(nHLTs);
 
 	    for (int mult =0; mult < numOfTrig; mult++){ 
 	      _ptb_hlt_trunmask[hlt_i] = upBit[mult];
+	      _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
 	      hlt_i++;
 	    } //End of loop over multiple upbits
 	  } //End of else statement for multiple triggers
@@ -576,6 +588,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
   _ptb_llt_trigger.resize(nLLTs);
   _ptb_llt_timestamp.resize(nLLTs);
   _ptb_llt_trunmask.resize(nLLTs);
+  _ptb_llt_unmask_timestamp.resize(nLLTs);
   
   unsigned llt_i = 0; //For ptb_llt_trunmask and perevent, includes the multiples with multiple upbits per word
   unsigned l_i=0; //For ptb_llt_trigger, records only unique words
@@ -590,11 +603,15 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
 	 
 	  int val = ptb->GetLLTrigger(i).trigger_word;
 	  
-	  int upBit[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	  int upBit[32];
+	  for(int u=0; u<32; u++){
+	    upBit[u]=-1;
+	  }
+
 	  int numOfTrig =0;
-	  for(int i=0; i<32;i++){
+	  for(int b=0; b<32;b++){
 	    if ((val & 0x01) ==1){
-	      upBit[numOfTrig] = i;
+	      upBit[numOfTrig] = b;
 	      numOfTrig++;
 	    }
 	    val = val >> 1;
@@ -602,16 +619,18 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
 	 
 
 	  if (numOfTrig ==1){
+	    _ptb_llt_unmask_timestamp[llt_i] = _ptb_llt_timestamp[h_i-1];
 	    _ptb_llt_trunmask[llt_i] = upBit[0];
 	    llt_i++;
 	  } //End of if statement for single triggers
 	  
 	  else if (numOfTrig > 1){
 	    nLLTs += (numOfTrig -1);
-	    _ptb_llt_timestamp.resize(nLLTs);
+	    _ptb_llt_unmask_timestamp.resize(nLLTs);
 	    _ptb_llt_trunmask.resize(nLLTs);
 
 	    for (int mult =0; mult < numOfTrig; mult++){ 
+	      _ptb_llt_unmask_timestamp[llt_i] = _ptb_llt_timestamp[h_i-1];
 	      _ptb_llt_trunmask[llt_i] = upBit[mult];
 	      llt_i++;
 	    } //End of loop over multiple upBits
