@@ -204,13 +204,6 @@
  * * `FillMatchTree` (flag, default: `false`): if set to `true`, a ROOT tree
  *     with detailed matching information called `"matchTree"` will be written
  *     via `TFileService`.
- * * `TriggerDelay` (real, mandatory, in microseconds): the expected time
- *     difference between the scintillation flash and the global trigger.
- * * `TriggerTolerance` (real, mandatory, in microseconds): the tolerance used
- *     to identify a light flash associated with the trigger.
- * * `TimeRangeMargin` (real, microseconds; default: `0`): when `UseTimeRange`
- *     is set, the allowed time interval for each slice is extended on both
- *     sides by this amount of time.
  * 
  */
 class TPCPMTBarycenterMatchProducer : public art::EDProducer {
@@ -243,7 +236,8 @@ private:
   bool                      fCollectionOnly;       ///< Only use TPC spacepoints from the collection plane
   bool                      fVerbose;              ///< Print extra info
   bool                      fFillMatchTree;        ///< Fill an output TTree in the supplemental file
-  
+  bool                      fDo3DMatching;         ///< Wether to perform the matching in 3D or 2D
+
   // Event-level data members
   int                       fRun;                  ///< Number of the run being processed
   int                       fEvent;                ///< Number of the event being processed
@@ -285,7 +279,8 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   fPandoraLabel(p.get<std::string>("PandoraLabel")),
   fCollectionOnly(p.get<bool>("CollectionOnly", true)),
   fVerbose(p.get<bool>("Verbose", false)),
-  fFillMatchTree(p.get<bool>("FillMatchTree", false))
+  fFillMatchTree(p.get<bool>("FillMatchTree", false)),
+  fDo3DMatching(p.get<bool>("Do3DMatching",true))
   {
   // Call appropriate produces<>() functions here.
 
@@ -361,17 +356,14 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
   auto sliceAssns = std::make_unique< art::Assns<sbn::TPCPMTBarycenterMatch, recob::Slice> >();
   auto flashAssns = std::make_unique< art::Assns<sbn::TPCPMTBarycenterMatch, recob::OpFlash> >();
 
-  //For each TPC
-  for ( size_t tpc=0; tpc<1 ; tpc ++) {
-    fTPC = tpc;
     /* ~~~~~~~~~~~~~~~~~~~~ Flash Section
  *
  * Here we gather the OpFlashes found in this cryostat and their OpHits
  * We iterate through the flashes to identify a triggering flash
  */
-
+  std::array<double, 3> triggerFlashCenter ;
+  for ( size_t tpc=0; tpc<2 ; tpc ++) {
     //Fetch the flashes and their associated hits, pointer vector needed for generating associations
-    std::array<double, 3> triggerFlashCenter ;
     art::Handle flashHandle = e.getHandle<std::vector<recob::OpFlash>>(fOpFlashesModuleLabel[tpc]);
     int nFlashes = (*flashHandle).size();
     triggerFlashCenter = {-9999., -9999., -9999.};
@@ -384,6 +376,9 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
             triggerFlashCenter = {flash.XCenter(), flash.YCenter(), flash.ZCenter()};
         }
     }
+  }
+
+    // We need to evaluate if there are two flashes in time coincidence and treat them as one.
 
 /* ~~~~~~~~~~~~~~~~~~~~ TPC Section
  * Here we start by gathering the Slices in the event
@@ -393,16 +388,24 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
  */
 
     //Fetch slices, TPC hits, and PFPs; pointer vector needed for generating associations
-    art::Handle const sliceHandle
-      = e.getHandle<std::vector<recob::Slice>>(fPandoraLabel);
-    art::FindManyP<recob::Hit> fmTPCHits(sliceHandle, e, fPandoraLabel);
-    art::FindManyP<recob::PFParticle> fmPFPs(sliceHandle, e, fPandoraLabel);
-    unsigned nSlices = (*sliceHandle).size();
+  art::Handle const sliceHandle
+    = e.getHandle<std::vector<recob::Slice>>(fPandoraLabel);
+  art::FindManyP<recob::Hit> fmTPCHits(sliceHandle, e, fPandoraLabel);
+  art::FindManyP<recob::PFParticle> fmPFPs(sliceHandle, e, fPandoraLabel);
+  unsigned nSlices = (*sliceHandle).size();
 
     //For slice...
-    for ( unsigned j = 0; j < nSlices; j++ ) {
-      fSliceNum = j;
-      const art::Ptr<recob::Slice> slicePtr { sliceHandle, j };
+  for ( unsigned j = 0; j < nSlices; j++ ) {
+  //For each TPC
+  std::vector<sbn::TPCPMTBarycenterMatch> sliceMatchInfoVector;
+  std::vector<art::Ptr<sbn::TPCPMTBarycenterMatch>>  infoPtrVector;
+  std::vector<art::Ptr<recob::OpFlash>> flashPtrVector;
+  std::cout << " Slice number " << j << std::endl;
+  fSliceNum = j;
+  const art::Ptr<recob::Slice> slicePtr { sliceHandle, j };
+    for ( size_t tpc=0; tpc<2 ; tpc ++) {
+      std::cout << " TPC number " << tpc << std::endl; 
+      fTPC = tpc;
       InitializeSlice();
       sbn::TPCPMTBarycenterMatch sliceMatchInfo;
       updateMatchInfo(sliceMatchInfo);
@@ -429,7 +432,7 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
 
       //For hit...
       for ( int k = 0; k < nHits; k++ ) {
-        // If hit does not velong to correct tpc then skip 
+        // If hit does not belong to correct tpc then skip 
         const art::Ptr<recob::Hit> &tpcHit = tpcHitsVec.at(k);
 
         //Only use hits with associated SpacePoints, and optionally only collection plane hits
@@ -437,9 +440,9 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
         if ( !f1SpacePoint.at(k).isValid() ) continue;
 
         const recob::SpacePoint point = f1SpacePoint.at(k).ref();
-        thisCharge = tpcHit->Integral();
         TVector3 const thisPoint = point.XYZ();
         if ((tpc == 0) == (thisPoint.X() > 0)) continue; // Skip if the point is not in the TPC we are considering
+        thisCharge = tpcHit->Integral();
         TVector3 const thisPointSqr {thisPoint.X()*thisPoint.X(), thisPoint.Y()*thisPoint.Y(), thisPoint.Z()*thisPoint.Z()};
         sumCharge += thisCharge;
         sumPos += thisPoint * thisCharge;
@@ -450,8 +453,9 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       if ( sumCharge == 0. ) {
         if ( fFillMatchTree ) fMatchTree->Fill();
         art::Ptr<sbn::TPCPMTBarycenterMatch> const infoPtr = makeInfoPtr(matchInfoVector->size());
-        sliceAssns->addSingle(infoPtr, slicePtr);
-        matchInfoVector->push_back(std::move(sliceMatchInfo));
+        infoPtrVector.push_back(infoPtr);
+        sliceMatchInfoVector.push_back(sliceMatchInfo);
+        //matchInfoVector->push_back(std::move(sliceMatchInfo));
         if ( fVerbose ) std::cout << "No charge found in Event: " << fEvent << " Slice: " << j << "! Continuing..."  << std::endl;
         continue;
       }
@@ -464,6 +468,8 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       double minDistance = 1e6;
       double thisFlashCenterX, thisFlashCenterY, thisFlashCenterZ, thisDistance;
 
+      art::Handle flashHandle = e.getHandle<std::vector<recob::OpFlash>>(fOpFlashesModuleLabel[tpc]);
+      int nFlashes = (*flashHandle).size();
       //For flash...
       for ( int m = 0; m < nFlashes; m++ ) {
         const recob::OpFlash &flash = (*flashHandle).at(m);
@@ -471,7 +477,9 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
         thisFlashCenterX = flash.XCenter();
         thisFlashCenterY = flash.YCenter();
         thisFlashCenterZ = flash.ZCenter();
-        thisDistance = std::hypot( (thisFlashCenterX - fChargeCenterX), (thisFlashCenterY - fChargeCenterY), (thisFlashCenterZ - fChargeCenterZ) );
+        if(fDo3DMatching)
+          thisDistance = std::hypot( (thisFlashCenterX - fChargeCenterX), (thisFlashCenterY - fChargeCenterY), (thisFlashCenterZ - fChargeCenterZ) );
+        else thisDistance = std::hypot( (thisFlashCenterY - fChargeCenterY), (thisFlashCenterZ - fChargeCenterZ) );
         if ( thisDistance < minDistance ) {
           minDistance = thisDistance;
           matchIndex = m;
@@ -482,8 +490,10 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       if ( matchIndex == -1 ) {
         if ( fFillMatchTree ) fMatchTree->Fill();
         art::Ptr<sbn::TPCPMTBarycenterMatch> const infoPtr = makeInfoPtr(matchInfoVector->size());
-        sliceAssns->addSingle(infoPtr, slicePtr);
-        matchInfoVector->push_back(std::move(sliceMatchInfo));
+        infoPtrVector.push_back(infoPtr);
+        sliceMatchInfoVector.push_back(sliceMatchInfo);
+        //sliceAssns->addSingle(infoPtr, slicePtr);
+        //matchInfoVector->push_back(std::move(sliceMatchInfo));
         if ( fVerbose ) std::cout << "No matching flash found for Event: " << fEvent << " Slice: " << j << "! Continuing..."  << std::endl;
         continue;
       }
@@ -491,18 +501,39 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       //Best match flash pointer
       unsigned unsignedMatchIndex = matchIndex;
       const art::Ptr<recob::OpFlash> flashPtr { flashHandle, unsignedMatchIndex };
-
       //Update match info
       updateFlashVars(flashPtr);
       updateMatchInfo(sliceMatchInfo);
+      sliceMatchInfoVector.push_back(sliceMatchInfo);
       art::Ptr<sbn::TPCPMTBarycenterMatch> const infoPtr = makeInfoPtr(matchInfoVector->size());
-      sliceAssns->addSingle(infoPtr, slicePtr);
-      flashAssns->addSingle(infoPtr, flashPtr);
-      matchInfoVector->push_back(std::move(sliceMatchInfo));
+      infoPtrVector.push_back(infoPtr);
+      flashPtrVector.push_back(flashPtr);
       if ( fFillMatchTree ) fMatchTree->Fill();
-    } //End for slice
+    } //End for tpc
 
-  } //End for tpc
+    int maxFlashIdx=-1;
+    int minNPes = -1000000000;
+    for(int i=0; i<static_cast<int>(flashPtrVector.size()); i++)
+    {
+      int nPEs = flashPtrVector[i]->TotalPE();
+      if(nPEs>minNPes)
+      {
+        maxFlashIdx=i;
+        minNPes = nPEs;
+      }
+    }
+    if(maxFlashIdx!=-1) 
+    {
+      sliceAssns->addSingle(infoPtrVector[maxFlashIdx], slicePtr);
+      flashAssns->addSingle(infoPtrVector[maxFlashIdx], flashPtrVector[maxFlashIdx]);
+      matchInfoVector->push_back(std::move(sliceMatchInfoVector[maxFlashIdx]));
+    }
+    else
+    {
+      sliceAssns->addSingle(infoPtrVector[0], slicePtr);
+      matchInfoVector->push_back(std::move(sliceMatchInfoVector[0]));
+    }
+  } //End for slice
 
   //Store new products at the end of the event
   e.put(std::move(matchInfoVector));
@@ -587,6 +618,8 @@ void TPCPMTBarycenterMatchProducer::updateMatchInfo(sbn::TPCPMTBarycenterMatch& 
   matchInfo.deltaZ = fDeltaZ;
   matchInfo.radius = fRadius;
   matchInfo.radius_Trigger = fRadius_Trigger;
+  if(fChargeT0 != -9999)
+    std::cout << " Charge center X " << fChargeCenterX << " Flash center X " << fFlashCenterX << " fChargeCenterY " << fChargeCenterY << " Flash center Y " << fFlashCenterY <<  " fChargeCenterZ "  << fChargeCenterZ <<" Flash center Z " << fFlashCenterZ << " and delta t " << fDeltaT <<  std::endl; 
 } //End updateMatchInfo()
 
 
