@@ -32,7 +32,7 @@
 
 namespace lightana
 {
-  class DriftEstimatorPMTRatio : DriftEstimatorBase{
+  class DriftEstimatorPMTRatioData : DriftEstimatorBase{
 
   public:
 
@@ -54,14 +54,10 @@ namespace lightana
         fhicl::Comment("Group velocity for VIS photons")
       };
 
-      fhicl::Atom<bool> fDataCalibration {
-        fhicl::Name("DataCalibration"),
-        fhicl::Comment("Running on data")
-      };
     };
 
     // Default constructor
-    explicit DriftEstimatorPMTRatio(art::ToolConfigTable<Config> const& config);
+    explicit DriftEstimatorPMTRatioData(art::ToolConfigTable<Config> const& config);
 
     // Method giving the estimated drift coordinate
     double GetDriftPosition(std::vector<double> PE_v) override;
@@ -83,9 +79,6 @@ namespace lightana
     double fVGroupVIS;
     double fVGroupVUV_I;
 
-    // Whether to use data calibration for drift distance estimation
-    bool fDataCalibration;
-
     //Geo properties
     double fDriftDistance;
     double fVISLightPropTime;
@@ -105,7 +98,7 @@ namespace lightana
 
   };
 
-  DriftEstimatorPMTRatio::DriftEstimatorPMTRatio(art::ToolConfigTable<Config> const& config)
+  DriftEstimatorPMTRatioData::DriftEstimatorPMTRatioData(art::ToolConfigTable<Config> const& config)
     : fCalibrationFile { config().CalibrationFile() },
     fVGroupVUV { config().VGroupVUV() },
     fVGroupVIS { config().VGroupVIS() }
@@ -115,7 +108,7 @@ namespace lightana
     std::string file_name;
     cet::search_path sp("FW_SEARCH_PATH");
     if ( !sp.find_file(fCalibrationFile, file_name) )
-      throw cet::exception("DriftEstimatorPMTRatio") << "Calibration file " <<
+      throw cet::exception("DriftEstimatorPMTRatioData") << "Calibration file " <<
           fCalibrationFile << " not found in FW_SEARCH_PATH\n";
 
     TFile* input_file = TFile::Open(file_name.c_str(), "READ");
@@ -145,7 +138,7 @@ namespace lightana
     }
   }
 
-  double DriftEstimatorPMTRatio::GetDriftPosition(std::vector<double> PE_v){
+  double DriftEstimatorPMTRatioData::GetDriftPosition(std::vector<double> PE_v){
 
     std::map<int, double> BoxMap_PECoated;
     std::map<int, double> BoxMap_PEUncoated;
@@ -175,40 +168,26 @@ namespace lightana
       }
     }
 
-    double pmtratio=-1.;
     // compute PMTRatio metric
-    if(fDataCalibration)
-    {
-      double TotalPE=0;
-      double RatioPerBoxWeight=0;
-      for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
-        double RatioPerBox;
-        double PECoated=0, PEUncoated=0;
-        //we need the uncoated PMT in each window and at least one coated
-        if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
-          PECoated+= BoxMap_PECoated[boxID];
-          PEUncoated+=BoxMap_PEUncoated[boxID];
-          TotalPE += PECoated + PEUncoated;
-          RatioPerBox = (PEUncoated/PECoated)*BoxMap_NCoatedCh[boxID];
-          RatioPerBoxWeight += RatioPerBox * (PECoated + PEUncoated);
-        }
-      }
-      if(TotalPE!=0) pmtratio = RatioPerBoxWeight/TotalPE;
-    }
-    else{
+    //double PECoated=0, PEUncoated=0, TotalPE=0;
+    double TotalPE=0;
+    double RatioPerBoxWeight=0;
+    for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
+      double RatioPerBox;
       double PECoated=0, PEUncoated=0;
-      for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
-        //we need the uncoated PMT in each window and at least one coated
-        if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
-          double CoWeight = 1./BoxMap_NCoatedCh[boxID];
-          PECoated+=CoWeight * BoxMap_PECoated[boxID];
-          PEUncoated+=BoxMap_PEUncoated[boxID];
-        }
+      //we need the uncoated PMT in each window and at least one coated
+      if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
+        PECoated+= BoxMap_PECoated[boxID];
+        PEUncoated+=BoxMap_PEUncoated[boxID];
+        TotalPE += PECoated + PEUncoated;
+        RatioPerBox = (PEUncoated/PECoated)*BoxMap_NCoatedCh[boxID]/4;
+        RatioPerBoxWeight += 4*RatioPerBox * (PECoated + PEUncoated);
       }
-      if(PECoated!=0) pmtratio = PEUncoated/PECoated;
     }
 
-    if(pmtratio!=-1){
+    if(TotalPE!=0){
+      double pmtratio = RatioPerBoxWeight/TotalPE;
+
       double drift_distance;
       if(pmtratio<=fPMTRatioCal[0])
         drift_distance=fDriftCal[0];
@@ -216,13 +195,12 @@ namespace lightana
         drift_distance=fDriftCal[fNCalBins-1];
       else
         drift_distance=Interpolate(pmtratio);
-
       return drift_distance;
     }
     else return fDriftCal[fNCalBins-1]; 
   }
 
-  double DriftEstimatorPMTRatio::GetPropagationTime(double drift){
+  double DriftEstimatorPMTRatioData::GetPropagationTime(double drift){
 
     // drift is here the X coordinate
     // cathode: x=0 cm, PDS: x=200 cm
@@ -232,22 +210,22 @@ namespace lightana
       return std::abs(drift) * fVGroupVUV_I + fVISLightPropTime;
   }
 
-  double DriftEstimatorPMTRatio::PEToPropagationTime(std::vector<double> PE_v){
+  double DriftEstimatorPMTRatioData::PEToPropagationTime(std::vector<double> PE_v){
 
     double _drift = GetDriftPosition(PE_v);
 
     return GetPropagationTime(_drift);
   }
 
-  double DriftEstimatorPMTRatio::Interpolate(double val){
+  double DriftEstimatorPMTRatioData::Interpolate(double val){
 
     size_t upix = std::upper_bound(fPMTRatioCal.begin(), fPMTRatioCal.end(), val)-fPMTRatioCal.begin();
 
-    double slope = ( fDriftCal[upix]-fDriftCal[upix-1] ) / ( fPMTRatioCal[upix]-fPMTRatioCal[upix-1] );
+    double slope = ( fDriftCal[upix]-fDriftCal[upix] ) / ( fPMTRatioCal[upix]-fPMTRatioCal[upix-1] );
 
     return fDriftCal[upix-1] + slope * ( val - fPMTRatioCal[upix-1] );
   }
 
 }
 
-DEFINE_ART_CLASS_TOOL(lightana::DriftEstimatorPMTRatio)
+DEFINE_ART_CLASS_TOOL(lightana::DriftEstimatorPMTRatioData)
