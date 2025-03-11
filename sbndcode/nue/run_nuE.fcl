@@ -24,3 +24,5 @@ physics:
     path0:          [ ana ]
     end_paths:      [ path0 ]
 }
+
+services.DetectorClocksService.InheritClockConfig: false

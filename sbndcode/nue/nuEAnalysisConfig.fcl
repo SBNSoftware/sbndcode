@@ -8,6 +8,7 @@ nuE:
     VertexLabel:        "pandora"
     NuGenModuleLabel:   "generator"
     HitLabel:           "gaushit"
+    CRUMBSLabel:        "crumbs"
 }
 
 END_PROLOG

@@ -52,6 +52,8 @@
 #include "larcorealg/Geometry/TPCGeo.h"
 #include "larcore/Geometry/WireReadout.h"
 
+#include "sbnobj/Common/Reco/CRUMBSResult.h"
+
 // C++
 #include <string>
 #include <vector>
@@ -156,6 +158,7 @@ private:
   const std::string vertexLabel;
   const std::string nuGenModuleLabel;
   const std::string hitLabel;
+  const std::string crumbsLabel;
 
   // Output file
   TFile *outputFile = TFile::Open("NuEAnalyserOutput.root","RECREATE");
@@ -168,7 +171,8 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   sliceLabel(p.get<std::string>("SliceLabel")),
   vertexLabel(p.get<std::string>("VertexLabel")),
   nuGenModuleLabel(p.get<std::string>("NuGenModuleLabel")),
-  hitLabel(p.get<std::string>("HitLabel"))
+  hitLabel(p.get<std::string>("HitLabel")),
+  crumbsLabel(p.get<std::string>("CRUMBSLabel"))
 {
 }
 
@@ -264,9 +268,9 @@ void sbnd::NuE::analyze(art::Event const& e)
   art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceLabel);
   // Get associations between pfparticles and vertex
   art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
-
+      
   // initialises the vector that holds the primary reco neutrino info
-  std::vector<std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>>> v;
+  std::vector<std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>, art::Ptr<sbn::CRUMBSResult>>> v;
 
   for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
     nPFParticles++;
@@ -275,6 +279,7 @@ void sbnd::NuE::analyze(art::Event const& e)
     if(PFParticleID == std::numeric_limits<int>::max()) return;
 
     const std::vector<art::Ptr<recob::Slice>> pfpSlices(pfpSliceAssns.at(pfp.key()));
+    
     // Condition on the number of slices associated with the pfparticle. pfp has > 1 slice or no slice then it is skipped
     if(pfpSlices.size() == 1){
         const art::Ptr<recob::Slice> &pfpSlice(pfpSlices.front());
@@ -287,13 +292,24 @@ void sbnd::NuE::analyze(art::Event const& e)
             bool pfpPrimary = pfp->IsPrimary();
 
             if(pfpPrimary && (PFParticleID == 12 || PFParticleID == 14)){
-                std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>> tuple;  // add in crumbs slice score
-                tuple = std::make_tuple(pfp, pfpVertex, pfpSlice); // Creates a tuple that contains the pfp, and the vertex coords
-                // Pushes the tuple containing the reco primary neutrino info to a vector called v
-                v.push_back(tuple);
+                art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(pfpSlices, e, crumbsLabel);
+                std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>, art::Ptr<sbn::CRUMBSResult>> tuple;
+                
                 std::cout << "slice ID associated with primary reco neutrino: " << SliceID << std::endl;
                 numRecoNeutrinos++;
-                std::cout << pfpVertex->position().X() << ", " << pfpVertex->position().Y() << ", " << pfpVertex->position().Z() << std::endl;
+
+                std::cout << "pfpslice.key = " << pfpSlice.key() << std::endl;
+ 
+                const std::vector<art::Ptr<sbn::CRUMBSResult>> sliceCrumbsResults = sliceCrumbsAssns.at(0);
+                if(sliceCrumbsResults.size() != 1){
+                    std::cout << "Errors: slice has multiple CRUMBS results" << std::endl;
+                }
+
+                const art::Ptr<sbn::CRUMBSResult> sliceCrumbsResult(sliceCrumbsResults.front());
+                std::cout << "crumbs score: " << sliceCrumbsResult->score << std::endl; 
+                tuple = std::make_tuple(pfp, pfpVertex, pfpSlice, sliceCrumbsResult); // Creates a tuple that contains the pfp, and the vertex coords
+                // Pushes the tuple containing the reco primary neutrino info to a vector called v
+                v.push_back(tuple);
             }
         }
     } 
@@ -309,7 +325,6 @@ void sbnd::NuE::analyze(art::Event const& e)
             recoNeutrinoVX = vertexPtr->position().X();
             recoNeutrinoVY = vertexPtr->position().Y();
             recoNeutrinoVZ = vertexPtr->position().Z();
-            std::cout << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << std::endl;
         } else{
             std::cout << "pfpVertex pointer is null when accessing from the vector!" << std::endl;
         }   
