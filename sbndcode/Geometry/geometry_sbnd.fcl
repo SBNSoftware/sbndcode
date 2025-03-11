@@ -99,7 +99,7 @@ sbnd_auxdetgeo:
   ThrowIfAbsent: false
   SortingParameters: {}                   # empty parameter set for default
   ReadoutInitializer: {
-    tool_type: CRTAuxDetInitializer
+    tool_type: CRTAuxDetInitializerSBND
 }
 }
 
