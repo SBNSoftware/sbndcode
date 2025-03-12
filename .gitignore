@@ -44,6 +44,10 @@ build_*
 *.sql
 *.sqlite
 
+# ROOT Files #
+##############
+*.root
+
 # OS generated files #
 ######################
 .DS_Store
