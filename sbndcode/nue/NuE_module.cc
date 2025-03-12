@@ -97,10 +97,6 @@ private:
   TTree *NuETree = new TTree("NuETree", "NuE");
   TTree *NuEHitTree = new TTree("NuEHitTree", "NuEHit");
 
-  int numEventsMoreThanOneReco = 0;
-  int numEventsOneReco = 0;
-  int numEventsMoreThanOneRecoNeutrinoInSlice = 0;
-
   unsigned int eventID;                    // Event num
   unsigned int runID;                      // Run num  
   unsigned int subRunID;                   // Subrun num
@@ -147,7 +143,9 @@ private:
   std::vector<int> trueCCNC_tree = std::vector<int>(0);
   std::vector<int> trueNeutrinoType_tree = std::vector<int>(0);
   std::vector<int> trueLeptonType_tree = std::vector<int>(0);
-  
+  std::vector<int> numSlices_tree = std::vector<int>(0);
+  std::vector<int> numPfps_tree = std::vector<int>(0); 
+
   // Vectors for the NuEHit Tree
   std::vector<double> event_hitTree = std::vector<double>(0);
   std::vector<double> run_hitTree = std::vector<double>(0);
@@ -373,6 +371,8 @@ void sbnd::NuE::analyze(art::Event const& e)
     }
   }
 
+  std::cout << "num slices: " << nSlices << ", num pfps: " << nPFParticles << std::endl;
+
   if(recoNeutrinoVX != NAN){
     event_tree.push_back(eventID);
     run_tree.push_back(runID);
@@ -386,6 +386,8 @@ void sbnd::NuE::analyze(art::Event const& e)
     trueCCNC_tree.push_back(trueCCNC);
     trueNeutrinoType_tree.push_back(trueNeutrinoType);
     trueLeptonType_tree.push_back(trueChargedLepton);
+    numSlices_tree.push_back(nSlices);
+    numPfps_tree.push_back(nPFParticles);
   } else{
     std::cout << "There is no reco neutrino, skipping event" << std::endl;
   } 
@@ -407,6 +409,8 @@ void sbnd::NuE::beginJob()
   NuETree->Branch("trueCCNC_tree", &trueCCNC_tree);
   NuETree->Branch("trueNeutrinoType_tree", &trueNeutrinoType_tree);
   NuETree->Branch("trueLeptonType_tree", &trueLeptonType_tree);
+  NuETree->Branch("numSlices_tree", &numSlices_tree);
+  NuETree->Branch("numPfps_tree", &numPfps_tree);
 
   NuEHitTree->Branch("event_hitTree", &event_hitTree);
   NuEHitTree->Branch("run_hitTree", &run_hitTree);
