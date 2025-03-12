@@ -48,3 +48,6 @@ add_subdirectory(SBNDCVN)
 
 # nu+e directory
 add_subdirectory(nue)
+
+# dl directory
+add_subdirectory(dl)
