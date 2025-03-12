@@ -35,6 +35,32 @@ typedef struct{
 
 void numberPlots(std::vector<event_t> allEvents_vec){
     size_t numEvents = allEvents_vec.size();
+
+    TCanvas *numSlicesCanvas = new TCanvas("numSlices_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* numSlices_dist = new TH1F("Number of Slices", "Num Slices", 5, 0, 5);
+    numSlices_dist->SetTitle("Distribution of the Number of Slices in an Event;Number of Slices in Event;# of Events");
+
+    TCanvas *numPFPsCanvas = new TCanvas("numPFPs_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* numPFPs_dist = new TH1F("Number of PFPs", "Num PFPs", 10, 0, 10);
+    numPFPs_dist->SetTitle("Distribution of the Number of PFPs in an Event;Number of PFPs in Event;# of Events");
+
+    for(UInt_t i = 0; i < numEvents; i++){
+        event_t event = allEvents_vec.at(i);
+        numSlices_dist->Fill(event.nSlices);
+        numPFPs_dist->Fill(event.nPFPs);
+    }
+
+        numSlicesCanvas->cd();
+        numSlices_dist->Draw();
+        numSlices_dist->SetStats(0);
+        numSlices_dist->SetLineWidth(2);
+        numSlicesCanvas->SaveAs("/nashome/c/coackley/nuEPlots/numSlices_dist.pdf");
+    
+        numPFPsCanvas->cd();
+        numPFPs_dist->Draw();
+        numPFPs_dist->SetStats(0);
+        numPFPs_dist->SetLineWidth(2);
+        numPFPsCanvas->SaveAs("/nashome/c/coackley/nuEPlots/numPFPs_dist.pdf");
 }
 
 void deltaVertices(std::vector<event_t> allEvents_vec){
@@ -66,24 +92,31 @@ void deltaVertices(std::vector<event_t> allEvents_vec){
 
     deltaXCanvas->cd();
     deltaX_dist->Draw();
-    deltaXCanvas->SaveAs("/nashome/c/coackley/nuEPlots/deltaX_dist.png");
+    deltaX_dist->SetLineWidth(2);
+    deltaX_dist->SetStats(0);
+    deltaXCanvas->SaveAs("/nashome/c/coackley/nuEPlots/deltaX_dist_nuE.pdf");
 
     deltaYCanvas->cd();
     deltaY_dist->Draw();
-    deltaYCanvas->SaveAs("/nashome/c/coackley/nuEPlots/deltaY_dist.png");
+    deltaY_dist->SetLineWidth(2);
+    deltaY_dist->SetStats(0);
+    deltaYCanvas->SaveAs("/nashome/c/coackley/nuEPlots/deltaY_dist_nuE.pdf");
 
     deltaZCanvas->cd();
     deltaZ_dist->Draw();
-    deltaZCanvas->SaveAs("/nashome/c/coackley/nuEPlots/deltaZ_dist.png");
+    deltaZ_dist->SetLineWidth(2);
+    deltaZ_dist->SetStats(0);
+    deltaZCanvas->SaveAs("/nashome/c/coackley/nuEPlots/deltaZ_dist_nuE.pdf");
 
     deltaRCanvas->cd();
     deltaR_dist->Draw();
-    deltaRCanvas->SaveAs("/nashome/c/coackley/nuEPlots/deltaR_dist.png");
+    deltaR_dist->SetLineWidth(2);
+    deltaR_dist->SetStats(0);
+    deltaRCanvas->SaveAs("/nashome/c/coackley/nuEPlots/deltaR_dist_nuE.pdf");
 }
 
 void nuE_macro(){
-    //TFile *f = TFile::Open("/exp/sbnd/app/users/coackley/nuev09_91_02/srcs/sbndcode/sbndcode/NuE/NuEAnalyserOutput.root", "READ");
-    TFile *f = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_04_03/NuEAnalyserOutput.root", "READ");
+    TFile *f = TFile::Open("/exp/sbnd/data/users/coackley/cosmics/analysed_Current_3March25_nue/NoRefinement/CRUMBS/merged.root", "READ");
     if(!f){
         std::cout << "Failed to read file" << std::endl;
         return;
@@ -217,5 +250,5 @@ void nuE_macro(){
     }
 
     deltaVertices(allEvents);
-    numberPlots(allEvents);
+    //numberPlots(allEvents);
 }
