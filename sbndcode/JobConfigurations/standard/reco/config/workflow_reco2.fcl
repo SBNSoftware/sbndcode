@@ -44,11 +44,6 @@ sbnd_reco2_producers:{
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
 
-    ### CRT reconstruction
-    crtclustering:  @local::crtclusterproducer_sbnd
-    crtspacepoints: @local::crtspacepointproducer_sbnd
-    crttracks:      @local::crttrackproducer_sbnd
-
     ### CRT-TPC matching
     crtspacepointmatching:    @local::crtspacepointmatchproducer_sbnd
     crttrackmatching:         @local::crttrackmatchproducer_sbnd
@@ -82,9 +77,6 @@ sbnd_reco2_producer_sequence: [
     , pandoraShowerSBN
     , pandoraCalo
     , pandoraPid
-    , crtclustering
-    , crtspacepoints
-    , crttracks
     , crtspacepointmatching
     , crttrackmatching
     , fmatch
