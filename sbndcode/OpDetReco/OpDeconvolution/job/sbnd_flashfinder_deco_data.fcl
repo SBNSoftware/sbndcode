@@ -28,7 +28,7 @@ SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.CalibrationFile: "PMTRatioCali
 
 ####OpFlash finder for XArapucas deconvolved waveforms#####
 ###TPC0
-SBNDDecoSimpleFlashTPC0Arapuca: @local::SBNDSimpleFlashTPC0
+SBNDDecoSimpleFlashTPC0Arapuca: @local::SBNDSimpleFlashTPC0_data
 SBNDDecoSimpleFlashTPC0Arapuca.PECalib.SPEAreaGain: 500
 SBNDDecoSimpleFlashTPC0Arapuca.OpHitProducers: ["ophitxarapuca"]
 SBNDDecoSimpleFlashTPC0Arapuca.OpFlashProducer: "opflasharapuca"
@@ -44,7 +44,7 @@ SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.PEThreshold:  15
 SBNDDecoSimpleFlashTPC0Arapuca.AlgoConfig.TimeResolution: 0.03
 
 #TPC1
-SBNDDecoSimpleFlashTPC1Arapuca: @local::SBNDSimpleFlashTPC1
+SBNDDecoSimpleFlashTPC1Arapuca: @local::SBNDSimpleFlashTPC1_data
 SBNDDecoSimpleFlashTPC1Arapuca.PECalib.SPEAreaGain: 500
 SBNDDecoSimpleFlashTPC1Arapuca.OpHitProducers: ["ophitxarapuca"]
 SBNDDecoSimpleFlashTPC1Arapuca.OpFlashProducer: "opflasharapuca"

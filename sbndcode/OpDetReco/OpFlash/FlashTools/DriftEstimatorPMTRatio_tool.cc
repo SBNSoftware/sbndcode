@@ -54,7 +54,7 @@ namespace lightana
         fhicl::Comment("Group velocity for VIS photons")
       };
 
-      fhicl::Atom<double> fDataCalibration {
+      fhicl::Atom<bool> fDataCalibration {
         fhicl::Name("DataCalibration"),
         fhicl::Comment("Running on data")
       };
@@ -82,6 +82,9 @@ namespace lightana
     double fVGroupVUV;
     double fVGroupVIS;
     double fVGroupVUV_I;
+
+    // Whether to use data calibration for drift distance estimation
+    bool fDataCalibration;
 
     //Geo properties
     double fDriftDistance;
