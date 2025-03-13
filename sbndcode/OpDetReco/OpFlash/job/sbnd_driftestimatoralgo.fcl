@@ -8,6 +8,7 @@ DriftEstimatorPMTRatio:
   CalibrationFile: "OpDetReco/PMTRatioCalibration.root"
   VGroupVUV: @local::sbnd_vuv_timing_parameterization.vuv_vgroup_mean
   VGroupVIS: @local::sbnd_vis_timing_parameterization.vis_vmean
+  DataCalibration: false
 }
 
 END_PROLOG
