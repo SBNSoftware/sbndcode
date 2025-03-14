@@ -11,6 +11,7 @@
 //  @author Jack Smedley ( jsmedley@fnal.gov )
 //
 ////////////////////////////////////////////////////////////////////////
+// Ported to sbndcode by Alejandro Sánchez Castillo (asanchezcastillo@ugr.es) on March 2025. 
 
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -67,27 +68,16 @@
  * 
  * This algorithm associates slices of charge from the TPC (`recob::Slice`) to
  * reconstructed scintillation light flashes (`recob::OpFlash`).
- * 
- * For each one of the `InputTags` tags, one slice and one flash set are
- * identified and matching is done between them.
+ *
  * 
  * Each slice is associated independently to the closest among the flashes.
  * Distance is computed between the charge centroid of the slice and the one 
- * of the flash.
- * 
- * All flashes are candidate for matching with any given slice. If
- * `UseTimeRange` is specified, though, an allowed time range is determined
- * for the slice based on the drift time of its TPC hits (in the extreme case,
- * a slice covering from anode to cathode has an allowed time interval reduced
- * to a single instant). In this case, only flashes that are no farther from
- * this interval (with a set margin, `TimeRangeMargin`, accommodating for some
- * reconstruction biases) are kept in the candidate pool.
- * 
- * Matching of a slice immediately fails if no charge is associated to it, or,
- * in the case `UseTimeRange` is set, if there are no reconstructed flash
- * compatible with the time interval of the slice. Whenever the candidate pool
- * contains at least a flash, the matching is "successful", meaning that it
- * yields a result. It is the privilege of the analyzer to decide whether that
+ * of the flash (either in 2D or 3D).
+ *  * 
+ * Matching of a slice immediately fails if no charge is associated to it. 
+ * Whenever the candidate pool contains at least a flash, the matching is 
+ * "successful", meaning that it yields a result.
+ * It is the privilege of the analyzer to decide whether that
  * is a good match or not, based on the information in the matching data
  * product associated to the slice. If the matching did not succeed, matching
  * information will still be associated with the slice, but most or all of its
@@ -117,7 +107,7 @@
  * 
  * The centroid of a flash is defined only in its projection on the PMT plane.
  * Its definition is delegated to the flash reconstruction algorithm
- * (`recob::OpFlash::YCenter()` and `recob::OpFlash::ZCenter()`).
+ * (`recob::OpFlash::XCenter()`, `recob::OpFlash::YCenter()` and `recob::OpFlash::ZCenter()`).
  * In particular note that there is no attempt to enforce a location based on
  * the earliest light. In fact, the standard flash reconstruction algorithm
  * builds the center of the flash from _all_ the associated hits no matter
@@ -152,8 +142,6 @@
  *     associations to `recob::Hit` and `recob::PFParticle`, and
  *     `recob::SpacePoint` objects associated to those hits
  *     (and also the associated objects as well).
- * * `std::vector<raw::Trigger>` (`TriggerLabel`): collection of the global
- *     triggers (only at most one is expected).
  * 
  * 
  * Output
@@ -182,23 +170,11 @@
  * Configuration parameters
  * -------------------------
  * 
- * * `InputTags` (list of strings, mandatory): suffixes to be added to the
- *     labels of the reconstructed data products to be used in the matching.
- *     Two typical choices are to process independently parts of the detector,
- *     e.g. `[ "cryoE", "cryoW" ]` to process east cryostat first and west one
- *     next, or to have a single empty suffix (`[ "" ]`) to use as input tags
- *     exactly the labels as specified by the following parameters.
  * * `OpFlashLabel` (string, mandatory): base of the tag of the input flashes.
  * * `PandoraLabel` (string, mandatory): base of the tag of input slices, and
  *     their associations to hits, space points, particle flow objects etc.
- * * `TriggerLabel` (input tag, mandatory): information on the global trigger
- *     (hardware or synthetic).
  * * `CollectionOnly` (flag, default: `true`): if set, only hits from
  *     collection planes will contribute to the centroid of the TPC slice.
- * * `UseTimeRange` (flag, default: `true`): if set, a slice is assigned an
- *     allowed time interval based on the drift time of its hits and only
- *     flashes falling in that interval are considered for matching. Otherwise,
- *     all flashes are game for matching.
  * * `Verbose` (flag, default: `false`): enables verbose output directly to
  *     console standard output.
  * * `FillMatchTree` (flag, default: `false`): if set to `true`, a ROOT tree
@@ -400,11 +376,9 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
   std::vector<sbn::TPCPMTBarycenterMatch> sliceMatchInfoVector;
   std::vector<art::Ptr<sbn::TPCPMTBarycenterMatch>>  infoPtrVector;
   std::vector<art::Ptr<recob::OpFlash>> flashPtrVector;
-  std::cout << " Slice number " << j << std::endl;
   fSliceNum = j;
   const art::Ptr<recob::Slice> slicePtr { sliceHandle, j };
     for ( size_t tpc=0; tpc<2 ; tpc ++) {
-      std::cout << " TPC number " << tpc << std::endl; 
       fTPC = tpc;
       InitializeSlice();
       sbn::TPCPMTBarycenterMatch sliceMatchInfo;
@@ -492,8 +466,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
         art::Ptr<sbn::TPCPMTBarycenterMatch> const infoPtr = makeInfoPtr(matchInfoVector->size());
         infoPtrVector.push_back(infoPtr);
         sliceMatchInfoVector.push_back(sliceMatchInfo);
-        //sliceAssns->addSingle(infoPtr, slicePtr);
-        //matchInfoVector->push_back(std::move(sliceMatchInfo));
         if ( fVerbose ) std::cout << "No matching flash found for Event: " << fEvent << " Slice: " << j << "! Continuing..."  << std::endl;
         continue;
       }
@@ -618,8 +590,6 @@ void TPCPMTBarycenterMatchProducer::updateMatchInfo(sbn::TPCPMTBarycenterMatch& 
   matchInfo.deltaZ = fDeltaZ;
   matchInfo.radius = fRadius;
   matchInfo.radius_Trigger = fRadius_Trigger;
-  if(fChargeT0 != -9999)
-    std::cout << " Charge center X " << fChargeCenterX << " Flash center X " << fFlashCenterX << " fChargeCenterY " << fChargeCenterY << " Flash center Y " << fFlashCenterY <<  " fChargeCenterZ "  << fChargeCenterZ <<" Flash center Z " << fFlashCenterZ << " and delta t " << fDeltaT <<  std::endl; 
 } //End updateMatchInfo()
 
 
