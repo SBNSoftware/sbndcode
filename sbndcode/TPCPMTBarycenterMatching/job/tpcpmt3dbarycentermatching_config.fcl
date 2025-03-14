@@ -1,5 +1,3 @@
-BEGIN_PROLOG
-
 #Common paramters for the barycenter matching
 
 TPCPMTBarycenterMatchProducer:
@@ -8,9 +6,7 @@ TPCPMTBarycenterMatchProducer:
     PandoraLabel:     "pandora"
     CollectionOnly:   true
     Verbose:          true
-    FillMatchTree:    true
+    FillMatchTree:    false
     Do3DMatching:     true
     module_type: "TPCPMTBarycenterMatchProducer"
 }
-
-END_PROLOG
