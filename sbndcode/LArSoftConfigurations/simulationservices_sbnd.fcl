@@ -111,9 +111,17 @@ sbnd_simulation_services:
                              @table::sbnd_g4_services
                              @table::sbnd_detsim_services
   SignalShapingServiceSBND:  @local::sbnd_signalshapingservice # from signalservices_sbnd.fcl
-  SpaceCharge:               @local::sbnd_spacecharge
 }
 
+#
+# Turn ON the Space Charge 2D sim hack for the simulation only
+# To be removed once https://cdcvs.fnal.gov/redmine/issues/28099
+# is resolved
+#
+sbnd_g4_services.SpaceCharge.is2DdriftSimHack:            true
+sbnd_g4_services_noophybrid.SpaceCharge.is2DdriftSimHack: true
+sbnd_detsim_services.SpaceCharge.is2DdriftSimHack:        true
+sbnd_simulation_services.SpaceCharge.is2DdriftSimHack:    true
 
 
 END_PROLOG
