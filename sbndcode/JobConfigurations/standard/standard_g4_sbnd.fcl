@@ -32,7 +32,7 @@
 #include "mlreco_sbnd.fcl"
 #include "ionandscint_sbnd.fcl"
 #include "PDFastSim_sbnd.fcl"
-# include "simdrift_sbnd.fcl"
+#include "simdrift_sbnd.fcl"
 #include "mcreco_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 #include "config_genericCRT.fcl"
