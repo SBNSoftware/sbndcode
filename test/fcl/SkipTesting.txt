@@ -68,6 +68,7 @@ reco_3drift_windows.fcl
 reco_pandora_cut_based.fcl
 reco_pandora_cheat.fcl
 reco_pandora_microboone_mva.fcl
+reco_sbnd.fcl
 standard_reco_sbnd_basic.fcl
 reco_uboonedatadrivennoise.fcl
 reco_uddnoise_gausfilter.fcl
