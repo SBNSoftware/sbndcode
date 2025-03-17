@@ -4940,7 +4940,7 @@
                         <loop for="CRT_placing_modules" to="14" step="1">
                                 <physvol copynumber="CRT_placing_modules">
                                         <volumeref ref="volCRTModuleCRT_placing_modules"/>
-                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l+CRTmoduleuB_l/2"; y="(2*CRTmoduleY_w)-(CRT_placing_modules-10)*CRTmoduleuB_w" z="0"/>
+                                        <position name="posCRT_moduleCRT_placing_modules" unit="cm" x="-CRTmoduleY_l+CRTmoduleuB_l/2" y="(2*CRTmoduleY_w)-(CRT_placing_modules-10)*CRTmoduleuB_w" z="0"/>
                                 </physvol>
                         </loop>
                         <loop for="CRT_placing_modules" to="19" step="1">

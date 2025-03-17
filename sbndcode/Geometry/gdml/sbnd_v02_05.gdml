@@ -15473,23 +15473,23 @@
                                 </physvol>
                                 <physvol copynumber="10">
                                         <volumeref ref="volCRTModule10"/>
-                                        <position name="posCRT_module10" unit="cm" x="-267.75"; y="360" z="0"/>
+                                        <position name="posCRT_module10" unit="cm" x="-267.75" y="360" z="0"/>
                                 </physvol>
                                 <physvol copynumber="11">
                                         <volumeref ref="volCRTModule11"/>
-                                        <position name="posCRT_module11" unit="cm" x="-267.75"; y="180" z="0"/>
+                                        <position name="posCRT_module11" unit="cm" x="-267.75" y="180" z="0"/>
                                 </physvol>
                                 <physvol copynumber="12">
                                         <volumeref ref="volCRTModule12"/>
-                                        <position name="posCRT_module12" unit="cm" x="-267.75"; y="0" z="0"/>
+                                        <position name="posCRT_module12" unit="cm" x="-267.75" y="0" z="0"/>
                                 </physvol>
                                 <physvol copynumber="13">
                                         <volumeref ref="volCRTModule13"/>
-                                        <position name="posCRT_module13" unit="cm" x="-267.75"; y="-180" z="0"/>
+                                        <position name="posCRT_module13" unit="cm" x="-267.75" y="-180" z="0"/>
                                 </physvol>
                                 <physvol copynumber="14">
                                         <volumeref ref="volCRTModule14"/>
-                                        <position name="posCRT_module14" unit="cm" x="-267.75"; y="-360" z="0"/>
+                                        <position name="posCRT_module14" unit="cm" x="-267.75" y="-360" z="0"/>
                                 </physvol>
                                 <physvol copynumber="15">
                                         <volumeref ref="volCRTModule15"/>
