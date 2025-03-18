@@ -34,7 +34,7 @@ sbnd_wcls_simsp: @local::sbnd_wcls
 sbnd_wcls_simsp.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp.jsonnet"]
 sbnd_wcls_simsp.wcls_main.inputers: ["wclsSimDepoSetSource:"]
 sbnd_wcls_simsp.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
-                                     "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+                                     # "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
                                      "wclsFrameSaver:spsaver"
                                      # "wclsFrameSaver:dnnsaver"
                                     ]
@@ -56,7 +56,7 @@ sbnd_wcls_simsp.wcls_main.params:   {
                                      ## If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
                                      ## If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
                                      ## this is whether or not to save raw digits!!! 
-                                     save_simdigits: "true"
+                                     save_simdigits: "false"
           
                                      save_track_id: "true"
 
@@ -96,7 +96,7 @@ sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver"
                                   ]
 sbnd_wcls_sp.wcls_main.params :   {
                                    # This locates the input raw::RawDigit collection in the art::Event 
-                                   raw_input_label: "simtpc2d:daq"   
+                                   raw_input_label: "daq"   
 
                                    # Set "data" vs. "sim".  The epoch below probably should follow suit.
                                    reality: "sim"   
