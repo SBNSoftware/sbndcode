@@ -15428,117 +15428,117 @@
                         <solidref ref="TaggerTopHigh"/>
                                 <physvol copynumber="0">
                                         <volumeref ref="volCRTModule0"/>
-                                        <position name="posCRT_module0" unit="cm" x="44.8569729516524587" y="353.30000000000001" z="-4.9144111936674292"/>
+                                        <position name="posCRT_module0" unit="cm" x="44.856972951652459" y="353.30000000000001" z="-4.9144111936674291"/>
                                         <rotationref ref="rotateP180Z"/>
                                 </physvol>
                                 <physvol copynumber="1">
                                         <volumeref ref="volCRTModule1"/>
-                                        <position name="posCRT_module1" unit="cm" x="44.9106645153329901" y="179.69999999999999" z="-3.274098655776197"/>
+                                        <position name="posCRT_module1" unit="cm" x="44.910664515332989" y="179.69999999999999" z="-3.2740986557761969"/>
                                         <rotationref ref="rotateP180Z"/>
                                 </physvol>
                                 <physvol copynumber="2">
                                         <volumeref ref="volCRTModule2"/>
-                                        <position name="posCRT_module2" unit="cm" x="44.9779195276559538" y="6.0999999999999996" z="-.8199704882070516"/>
+                                        <position name="posCRT_module2" unit="cm" x="44.977919527655956" y="6.0999999999999996" z="-0.81997048820705165"/>
                                         <rotationref ref="rotateP180Z"/>
                                 </physvol>
                                 <physvol copynumber="3">
                                         <volumeref ref="volCRTModule3"/>
-                                        <position name="posCRT_module3" unit="cm" x="46.2797570103132881" y="-167.49999999999997" z="-.9226420499100052"/>
+                                        <position name="posCRT_module3" unit="cm" x="46.27975701031329" y="-167.49999999999997" z="-0.9226420499100052"/>
                                         <rotationref ref="rotateP180Z"/>
                                 </physvol>
                                 <physvol copynumber="4">
                                         <volumeref ref="volCRTModule4"/>
-                                        <position name="posCRT_module4" unit="cm" x="48.7553473840914988" y="-341.09999999999997" z="-3.7985770035862245"/>
+                                        <position name="posCRT_module4" unit="cm" x="48.7553473840915" y="-341.09999999999997" z="-3.7985770035862245"/>
                                         <rotationref ref="rotateP180Z"/>
                                 </physvol>
                                 <physvol copynumber="5">
                                         <volumeref ref="volCRTModule5"/>
-                                        <position name="posCRT_module5" unit="cm" x="318.2996090525546113" y="353.30000000000001" z="-1.2438967709052635"/>
+                                        <position name="posCRT_module5" unit="cm" x="318.29960905255462" y="353.30000000000001" z="-1.2438967709052635"/>
                                 </physvol>
                                 <physvol copynumber="6">
                                         <volumeref ref="volCRTModule6"/>
-                                        <position name="posCRT_module6" unit="cm" x="317.2786288634020334" y="179.69999999999999" z="-1.8468165204659424"/>
+                                        <position name="posCRT_module6" unit="cm" x="317.27862886340205" y="179.69999999999999" z="-1.8468165204659424"/>
                                 </physvol>
                                 <physvol copynumber="7">
                                         <volumeref ref="volCRTModule7"/>
-                                        <position name="posCRT_module7" unit="cm" x="316.947792834524709" y="6.0999999999999996" z="-.6713343270643809"/>
+                                        <position name="posCRT_module7" unit="cm" x="316.94779283452471" y="6.0999999999999996" z="-0.6713343270643809"/>
                                 </physvol>
                                 <physvol copynumber="8">
                                         <volumeref ref="volCRTModule8"/>
-                                        <position name="posCRT_module8" unit="cm" x="317.5983102111394597" y="-167.49999999999997" z="-.3905244858052531"/>
+                                        <position name="posCRT_module8" unit="cm" x="317.59831021113945" y="-167.49999999999997" z="-0.39052448580525312"/>
                                 </physvol>
                                 <physvol copynumber="9">
                                         <volumeref ref="volCRTModule9"/>
-                                        <position name="posCRT_module9" unit="cm" x="319.3340152611960192" y="-341.09999999999997" z="-2.7789818469637475"/>
+                                        <position name="posCRT_module9" unit="cm" x="319.33401526119604" y="-341.09999999999997" z="-2.7789818469637475"/>
                                 </physvol>
                                 <physvol copynumber="10">
                                         <volumeref ref="volCRTModule10"/>
-                                        <position name="posCRT_module10" unit="cm" x="-268.9623181917091614" y="360" z=".14413314104700792"/>
+                                        <position name="posCRT_module10" unit="cm" x="-268.96231819170919" y="360" z="0.14413314104700792"/>
                                 </physvol>
                                 <physvol copynumber="11">
                                         <volumeref ref="volCRTModule11"/>
-                                        <position name="posCRT_module11" unit="cm" x="-268.323772613616558" y="180" z="-.22217257156721837"/>
+                                        <position name="posCRT_module11" unit="cm" x="-268.32377261361654" y="180" z="-0.22217257156721837"/>
                                 </physvol>
                                 <physvol copynumber="12">
                                         <volumeref ref="volCRTModule12"/>
-                                        <position name="posCRT_module12" unit="cm" x="-267.7175324470048134" y="0" z="-.04271098057009861"/>
+                                        <position name="posCRT_module12" unit="cm" x="-267.71753244700483" y="0" z="-0.04271098057009861"/>
                                 </physvol>
                                 <physvol copynumber="13">
                                         <volumeref ref="volCRTModule13"/>
-                                        <position name="posCRT_module13" unit="cm" x="-268.4106209633511312" y="-180" z="-.5785820455152664"/>
+                                        <position name="posCRT_module13" unit="cm" x="-268.41062096335111" y="-180" z="-0.57858204551526637"/>
                                 </physvol>
                                 <physvol copynumber="14">
                                         <volumeref ref="volCRTModule14"/>
-                                        <position name="posCRT_module14" unit="cm" x="-268.2733631359412549" y="-360" z="-1.58942113935655"/>
+                                        <position name="posCRT_module14" unit="cm" x="-268.27336313594128" y="-360" z="-1.5894211393565501"/>
                                 </physvol>
                                 <physvol copynumber="15">
                                         <volumeref ref="volCRTModule15"/>
-                                        <position name="posCRT_module15" unit="cm" x="-361.9165213130372425" y="225" z="2.3365273672445778"/>
+                                        <position name="posCRT_module15" unit="cm" x="-361.91652131303726" y="225" z="2.3365273672445777"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="16">
                                         <volumeref ref="volCRTModule16"/>
-                                        <position name="posCRT_module16" unit="cm" x="-179.7374429568969551" y="225" z="1.3642141641069106"/>
+                                        <position name="posCRT_module16" unit="cm" x="-179.73744295689696" y="225" z="1.3642141641069105"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="17">
                                         <volumeref ref="volCRTModule17"/>
-                                        <position name="posCRT_module17" unit="cm" x="-.2826379964876163" y="225" z=".2781786194285091"/>
+                                        <position name="posCRT_module17" unit="cm" x="-0.28263799648761628" y="225" z="0.27817861942850908"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="18">
                                         <volumeref ref="volCRTModule18"/>
-                                        <position name="posCRT_module18" unit="cm" x="177.393864932509839" y="225" z=".1593987099222986"/>
+                                        <position name="posCRT_module18" unit="cm" x="177.39386493250984" y="225" z="0.1593987099222986"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="19">
                                         <volumeref ref="volCRTModule19"/>
-                                        <position name="posCRT_module19" unit="cm" x="360.02816021993190608" y="225" z=".7056654507766124"/>
+                                        <position name="posCRT_module19" unit="cm" x="360.02816021993192" y="225" z="0.70566545077661236"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                           <physvol copynumber="20">
                             <volumeref ref="volCRTModule20"/>
-                            <position name="posCRT_module20" unit="cm" x="-361.0040228268172127" y="-225" z="1.1457277901291564"/>
+                            <position name="posCRT_module20" unit="cm" x="-361.00402282681722" y="-225" z="1.1457277901291565"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="21">
                             <volumeref ref="volCRTModule21"/>
-                            <position name="posCRT_module21" unit="cm" x="-179.84477203270097306" y="-225" z="1.1802677200568589"/>
+                            <position name="posCRT_module21" unit="cm" x="-179.84477203270097" y="-225" z="1.180267720056859"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="22">
                             <volumeref ref="volCRTModule22"/>
-                            <position name="posCRT_module22" unit="cm" x=".978770255605505" y="-225" z="2.6293288633052397"/>
+                            <position name="posCRT_module22" unit="cm" x="0.97877025560550501" y="-225" z="2.6293288633052398"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="23">
                             <volumeref ref="volCRTModule23"/>
-                            <position name="posCRT_module23" unit="cm" x="179.0647730706998515" y="-225" z="2.3532635702133796"/>
+                            <position name="posCRT_module23" unit="cm" x="179.06477307069986" y="-225" z="2.3532635702133797"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="24">
                             <volumeref ref="volCRTModule24"/>
-                            <position name="posCRT_module24" unit="cm" x="359.79745489171859785" y="-225" z=".404373855458078"/>
+                            <position name="posCRT_module24" unit="cm" x="359.79745489171859" y="-225" z="0.40437385545807802"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                 </volume>
@@ -15547,93 +15547,93 @@
                         <solidref ref="TaggerTopLow"/>
                           <physvol copynumber="25">
                             <volumeref ref="volCRTModule25"/>
-                            <position name="posCRT_module25" unit="cm" x="-359.6264054787178137" y="225" z=".3582890011579247"/>
+                            <position name="posCRT_module25" unit="cm" x="-359.6264054787178" y="225" z="0.35828900115792472"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="26">
                             <volumeref ref="volCRTModule26"/>
-                            <position name="posCRT_module26" unit="cm" x="-182.4979822794311604" y="225" z=".143580494078712"/>
+                            <position name="posCRT_module26" unit="cm" x="-182.49798227943117" y="225" z="0.14358049407871201"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="27">
                             <volumeref ref="volCRTModule27"/>
-                            <position name="posCRT_module27" unit="cm" x="-.5212832929137481" y="225" z=".429692701684717"/>
+                            <position name="posCRT_module27" unit="cm" x="-0.52128329291374809" y="225" z="0.42969270168471702"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="28">
                             <volumeref ref="volCRTModule28"/>
-                            <position name="posCRT_module28" unit="cm" x="180.7437677944789806" y="225" z=".820265669724992"/>
+                            <position name="posCRT_module28" unit="cm" x="180.74376779447897" y="225" z="0.82026566972499204"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="29">
                             <volumeref ref="volCRTModule29"/>
-                            <position name="posCRT_module29" unit="cm" x="357.223973173732684" y="225" z="2.9473354959183877"/>
+                            <position name="posCRT_module29" unit="cm" x="357.2239731737327" y="225" z="2.9473354959183875"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="30">
                             <volumeref ref="volCRTModule30"/>
-                            <position name="posCRT_module30" unit="cm" x="-358.7397216303909633" y="-225" z="1.4002339693871643"/>
+                            <position name="posCRT_module30" unit="cm" x="-358.73972163039099" y="-225" z="1.4002339693871644"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="31">
                             <volumeref ref="volCRTModule31"/>
-                            <position name="posCRT_module31" unit="cm" x="-181.6496603173656037" y="-225" z="2.8396068813172887"/>
+                            <position name="posCRT_module31" unit="cm" x="-181.6496603173656" y="-225" z="2.8396068813172888"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="32">
                             <volumeref ref="volCRTModule32"/>
-                            <position name="posCRT_module32" unit="cm" x=".776656406873189" y="-225" z="3.1275683819510216"/>
+                            <position name="posCRT_module32" unit="cm" x="0.77665640687318904" y="-225" z="3.1275683819510216"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="33">
                             <volumeref ref="volCRTModule33"/>
-                            <position name="posCRT_module33" unit="cm" x="180.8684728898611005" y="-225" z="2.538641874826489"/>
+                            <position name="posCRT_module33" unit="cm" x="180.8684728898611" y="-225" z="2.5386418748264892"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="34">
                             <volumeref ref="volCRTModule34"/>
-                            <position name="posCRT_module34" unit="cm" x="357.7205945099695654" y="-225" z="1.62405551018579987"/>
+                            <position name="posCRT_module34" unit="cm" x="357.72059450996954" y="-225" z="1.6240555101857999"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                           <physvol copynumber="35">
                             <volumeref ref="volCRTModule35"/>
-                            <position name="posCRT_module35" unit="cm" x="267.78694105809805573" y="-360" z="-.7740412364483751"/>
+                            <position name="posCRT_module35" unit="cm" x="267.78694105809808" y="-360" z="-0.77404123644837508"/>
                           </physvol>
                           <physvol copynumber="36">
                             <volumeref ref="volCRTModule36"/>
-                            <position name="posCRT_module36" unit="cm" x="267.56264851973796975" y="-180" z=".9235758004181776"/>
+                            <position name="posCRT_module36" unit="cm" x="267.56264851973799" y="-180" z="0.92357580041817755"/>
                           </physvol>
                           <physvol copynumber="37">
                             <volumeref ref="volCRTModule37"/>
-                            <position name="posCRT_module37" unit="cm" x="267.99906800039106022" y="0" z=".4475587198687315"/>
+                            <position name="posCRT_module37" unit="cm" x="267.99906800039105" y="0" z="0.44755871986873152"/>
                           </physvol>
                           <physvol copynumber="38">
                             <volumeref ref="volCRTModule38"/>
-                            <position name="posCRT_module38" unit="cm" x="267.99415175247795678" y="180" z="-.8459927630733837"/>
+                            <position name="posCRT_module38" unit="cm" x="267.99415175247793" y="180" z="-0.84599276307338367"/>
                           </physvol>
                           <physvol copynumber="39">
                             <volumeref ref="volCRTModule39"/>
-                            <position name="posCRT_module39" unit="cm" x="266.2758551423905522" y="360" z=".34912966176783033"/>
+                            <position name="posCRT_module39" unit="cm" x="266.27585514239053" y="360" z="0.34912966176783033"/>
                           </physvol>
                           <physvol copynumber="40">
                             <volumeref ref="volCRTModule40"/>
-                            <position name="posCRT_module40" unit="cm" x="-265.9537345159687873" y="-360" z="2.177734314139368"/>
+                            <position name="posCRT_module40" unit="cm" x="-265.95373451596879" y="-360" z="2.1777343141393679"/>
                           </physvol>
                           <physvol copynumber="41">
                             <volumeref ref="volCRTModule41"/>
-                            <position name="posCRT_module41" unit="cm" x="-268.0750921039642279" y="-180" z=".6979129321432082"/>
+                            <position name="posCRT_module41" unit="cm" x="-268.07509210396421" y="-180" z="0.69791293214320815"/>
                           </physvol>
                           <physvol copynumber="42">
                             <volumeref ref="volCRTModule42"/>
-                            <position name="posCRT_module42" unit="cm" x="-269.2418667987894214" y="0" z="-.08799405082256909"/>
+                            <position name="posCRT_module42" unit="cm" x="-269.24186679878943" y="0" z="-0.087994050822569087"/>
                           </physvol>
                           <physvol copynumber="43">
                             <volumeref ref="volCRTModule43"/>
-                            <position name="posCRT_module43" unit="cm" x="-269.7065597536326096" y="180" z="-1.8484484391417348"/>
+                            <position name="posCRT_module43" unit="cm" x="-269.70655975363263" y="180" z="-1.8484484391417348"/>
                           </physvol>
                           <physvol copynumber="44">
                             <volumeref ref="volCRTModule44"/>
-                            <position name="posCRT_module44" unit="cm" x="-268.8981352046098243" y="360" z="-2.1172275750754976"/>
+                            <position name="posCRT_module44" unit="cm" x="-268.89813520460984" y="360" z="-2.1172275750754976"/>
                           </physvol>
                                 <physvol copynumber="45">
                                   <volumeref ref="volCRTModule45"/>
@@ -15642,17 +15642,17 @@
                                 </physvol>
                                 <physvol copynumber="46">
                                   <volumeref ref="volCRTModule46"/>
-                                  <position name="posCRT_module46" unit="cm" x=".8786942973878464" y="-180" z="-.186219584876249"/>
+                                  <position name="posCRT_module46" unit="cm" x="0.87869429738784643" y="-180" z="-0.18621958487624901"/>
                                   <rotationref ref="rotateP180Z"/>
                                 </physvol>
                                 <physvol copynumber="47">
                                   <volumeref ref="volCRTModule47"/>
-                                  <position name="posCRT_module47" unit="cm" x="-.23823869081785626" y="0" z="-1.59520383796821614"/>
+                                  <position name="posCRT_module47" unit="cm" x="-0.23823869081785626" y="0" z="-1.5952038379682161"/>
                                   <rotationref ref="rotateP180Z"/>
                                 </physvol>
                                 <physvol copynumber="48">
                                   <volumeref ref="volCRTModule48"/>
-                                  <position name="posCRT_module48" unit="cm" x="-.46775596910862793" y="180" z="-3.5790402797981628"/>
+                                  <position name="posCRT_module48" unit="cm" x="-0.46775596910862793" y="180" z="-3.5790402797981629"/>
                                   <rotationref ref="rotateP180Z"/>
                                 </physvol>
                                 <physvol copynumber="49">
@@ -15666,74 +15666,74 @@
                         <solidref ref="TaggerSouth"/>
                                 <physvol copynumber="50">
                                         <volumeref ref="volCRTModule50"/>
-                                        <position name="posCRT_module50" unit="cm" x="180.827678242301052" y="-276.800926169067869" z="0.90000000000000002"/>
+                                        <position name="posCRT_module50" unit="cm" x="180.82767824230106" y="-276.80092616906785" z="0.90000000000000002"/>
                                 </physvol>
                                 <physvol copynumber="51">
                                         <volumeref ref="volCRTModule51"/>
-                                        <position name="posCRT_module51" unit="cm" x="181.114378260844965" y="-93.798879838510042" z="0.90000000000000002"/>
+                                        <position name="posCRT_module51" unit="cm" x="181.11437826084497" y="-93.798879838510047" z="0.90000000000000002"/>
                                 </physvol>
                                 <physvol copynumber="52">
                                         <volumeref ref="volCRTModule52"/>
-                                        <position name="posCRT_module52" unit="cm" x="181.6258086521059332" y="92.722920468561333" z="0.90000000000000002"/>
+                                        <position name="posCRT_module52" unit="cm" x="181.62580865210595" y="92.722920468561327" z="0.90000000000000002"/>
                                 </physvol>
                                 <physvol copynumber="53">
                                         <volumeref ref="volCRTModule53"/>
-                                        <position name="posCRT_module53" unit="cm" x="181.1280793130251023" y="276.1074401029800685" z="0.90000000000000002"/>
+                                        <position name="posCRT_module53" unit="cm" x="181.1280793130251" y="276.10744010298009" z="0.90000000000000002"/>
                                 </physvol>
                                 <physvol copynumber="54">
                                         <volumeref ref="volCRTModule54"/>
-                                        <position name="posCRT_module54" unit="cm" x="-180.8814821101586229" y="-277.536705567975782" z="0.90000000000000002"/>
+                                        <position name="posCRT_module54" unit="cm" x="-180.88148211015863" y="-277.53670556797579" z="0.90000000000000002"/>
                                 </physvol>
                                 <physvol copynumber="55">
                                         <volumeref ref="volCRTModule55"/>
-                                        <position name="posCRT_module55" unit="cm" x="-180.24198093702222176" y="-93.1617425049696184" z="0.90000000000000002"/>
+                                        <position name="posCRT_module55" unit="cm" x="-180.24198093702222" y="-93.161742504969624" z="0.90000000000000002"/>
                                 </physvol>
                                 <physvol copynumber="56">
                                         <volumeref ref="volCRTModule56"/>
-                                        <position name="posCRT_module56" unit="cm" x="-180.4233054712063368" y="91.813679822826848" z="0.90000000000000002"/>
+                                        <position name="posCRT_module56" unit="cm" x="-180.42330547120633" y="91.813679822826842" z="0.90000000000000002"/>
                                 </physvol>
                                 <physvol copynumber="57">
                                         <volumeref ref="volCRTModule57"/>
-                                        <position name="posCRT_module57" unit="cm" x="-179.6779774231251987" y="274.116841338249211" z="0.90000000000000002"/>
+                                        <position name="posCRT_module57" unit="cm" x="-179.67797742312518" y="274.11684133824923" z="0.90000000000000002"/>
                                 </physvol>
                                 <physvol copynumber="58">
                                         <volumeref ref="volCRTModule58"/>
-                                        <position name="posCRT_module58" unit="cm" x="-268.8052023170578795" y="182.582012641139303" z="-0.90000000000000002"/>
+                                        <position name="posCRT_module58" unit="cm" x="-268.80520231705788" y="182.5820126411393" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="59">
                                         <volumeref ref="volCRTModule59"/>
-                                        <position name="posCRT_module59" unit="cm" x="-90.6123370141565577" y="183.0924502099649827" z="-0.90000000000000002"/>
+                                        <position name="posCRT_module59" unit="cm" x="-90.612337014156552" y="183.09245020996499" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="60">
                                         <volumeref ref="volCRTModule60"/>
-                                        <position name="posCRT_module60" unit="cm" x="91.7274912961949813" y="184.700435120396653" z="-0.90000000000000002"/>
+                                        <position name="posCRT_module60" unit="cm" x="91.727491296194984" y="184.70043512039666" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="61">
                                         <volumeref ref="volCRTModule61"/>
-                                        <position name="posCRT_module61" unit="cm" x="270.8818388650745104" y="184.158131487413997" z="-0.90000000000000002"/>
+                                        <position name="posCRT_module61" unit="cm" x="270.88183886507449" y="184.15813148741401" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="62">
                                         <volumeref ref="volCRTModule62"/>
-                                        <position name="posCRT_module62" unit="cm" x="-269.6049159401968755" y="-182.8218042340279097" z="-0.90000000000000002"/>
+                                        <position name="posCRT_module62" unit="cm" x="-269.60491594019686" y="-182.82180423402792" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="63">
                                         <volumeref ref="volCRTModule63"/>
-                                        <position name="posCRT_module63" unit="cm" x="-90.8115698142821137" y="-187.756038896735997" z="-0.90000000000000002"/>
+                                        <position name="posCRT_module63" unit="cm" x="-90.811569814282109" y="-187.75603889673599" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="64">
                                         <volumeref ref="volCRTModule64"/>
-                                        <position name="posCRT_module64" unit="cm" x="90.9646472209163226" y="-184.98092860697866" z="-0.90000000000000002"/>
+                                        <position name="posCRT_module64" unit="cm" x="90.964647220916319" y="-184.98092860697867" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="65">
                                         <volumeref ref="volCRTModule65"/>
-                                        <position name="posCRT_module65" unit="cm" x="271.7124816122071045" y="-184.821046910369252" z="-0.90000000000000002"/>
+                                        <position name="posCRT_module65" unit="cm" x="271.71248161220711" y="-184.82104691036926" z="-0.90000000000000002"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                 </volume>
@@ -15742,76 +15742,75 @@
                         <solidref ref="TaggerNorth"/>
                                 <physvol copynumber="66">
                                         <volumeref ref="volCRTModule66"/>
-                                        <position name="posCRT_module66" unit="cm" x="179.76655844635257372" y="-262.340487969069185" z="7.0999999999999996"/>
+                                        <position name="posCRT_module66" unit="cm" x="179.76655844635258" y="-262.34048796906916" z="7.0999999999999996"/>
                                 </physvol>
                                 <physvol copynumber="67">
                                         <volumeref ref="volCRTModule67"/>
-                                        <position name="posCRT_module67" unit="cm" x="179.3281091790238777" y="-83.150430152445179" z="7.0999999999999996"/>
+                                        <position name="posCRT_module67" unit="cm" x="179.32810917902387" y="-83.150430152445182" z="7.0999999999999996"/>
                                 </physvol>
                                 <physvol copynumber="68">
                                         <volumeref ref="volCRTModule68"/>
-                                        <position name="posCRT_module68" unit="cm" x="179.62383079783318046" y="90.7311667535108224" z="7.0999999999999996"/>
+                                        <position name="posCRT_module68" unit="cm" x="179.62383079783319" y="90.73116675351082" z="7.0999999999999996"/>
                                 </physvol>
                                 <physvol copynumber="69">
                                         <volumeref ref="volCRTModule69"/>
-                                        <position name="posCRT_module69" unit="cm" x="180.3800171432546564" y="271.675582986806563" z="7.0999999999999996"/>
+                                        <position name="posCRT_module69" unit="cm" x="180.38001714325466" y="271.67558298680655" z="7.0999999999999996"/>
                                 </physvol>
                                 <physvol copynumber="70">
                                         <volumeref ref="volCRTModule70"/>
-                                        <position name="posCRT_module70" unit="cm" x="-268.3280867493536077" y="-271.1082095983862075" z="10.700000000000001"/>
+                                        <position name="posCRT_module70" unit="cm" x="-268.32808674935359" y="-271.10820959838622" z="10.700000000000001"/>
                                 </physvol>
-
                                 <physvol copynumber="71">
                                         <volumeref ref="volCRTModule71"/>
-                                        <position name="posCRT_module71" unit="cm" x="-179.0595041295965784" y="-76.050529888571484" z="7.0999999999999996"/>
+                                        <position name="posCRT_module71" unit="cm" x="-179.05950412959658" y="-76.050529888571489" z="7.0999999999999996"/>
                                 </physvol>
                                 <physvol copynumber="72">
                                         <volumeref ref="volCRTModule72"/>
-                                        <position name="posCRT_module72" unit="cm" x="-179.2509444068385673" y="89.59343046961620216" z="7.0999999999999996"/>
+                                        <position name="posCRT_module72" unit="cm" x="-179.25094440683856" y="89.593430469616209" z="7.0999999999999996"/>
                                 </physvol>
                                 <physvol copynumber="73">
                                         <volumeref ref="volCRTModule73"/>
-                                        <position name="posCRT_module73" unit="cm" x="-177.128120644411051" y="237.731036077106456" z="5.2999999999999998"/>
+                                        <position name="posCRT_module73" unit="cm" x="-177.12812064441104" y="237.73103607710647" z="5.2999999999999998"/>
                                 </physvol>
 			
 			  <physvol copynumber="74">
                             <volumeref ref="volCRTModule74"/>
-                            <position name="posCRT_module74" unit="cm" x="-269.108232361201967" y="150.035131449909315" z="10.700000000000001"/>
+                            <position name="posCRT_module74" unit="cm" x="-269.10823236120194" y="150.03513144990933" z="10.700000000000001"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
 			  <physvol copynumber="75">
                             <volumeref ref="volCRTModule75"/>
-                            <position name="posCRT_module75" unit="cm" x="-87.66982546502971" y="175.466377189351696" z="8.9000000000000004"/>
+                            <position name="posCRT_module75" unit="cm" x="-87.669825465029703" y="175.4663771893517" z="8.9000000000000004"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
 			  <physvol copynumber="76">
                             <volumeref ref="volCRTModule76"/>
-                            <position name="posCRT_module76" unit="cm" x="89.6356858320840583" y="181.9694556640527057" z="8.9000000000000004"/>
+                            <position name="posCRT_module76" unit="cm" x="89.635685832084064" y="181.9694556640527" z="8.9000000000000004"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
 			  <physvol copynumber="77">
                             <volumeref ref="volCRTModule77"/>
-                            <position name="posCRT_module77" unit="cm" x="270.9834442105752134" y="179.3048042682109484" z="8.9000000000000004"/>
+                            <position name="posCRT_module77" unit="cm" x="270.98344421057521" y="179.30480426821094" z="8.9000000000000004"/>
                             <rotationref ref="rotateP90Z"/>
                           </physvol>
                                 <physvol copynumber="78">
                                         <volumeref ref="volCRTModule78"/>
-                                        <position name="posCRT_module78" unit="cm" x="-268.4707941545615322" y="-178.8659248725625308" z="8.9000000000000004"/>
+                                        <position name="posCRT_module78" unit="cm" x="-268.47079415456153" y="-178.86592487256254" z="8.9000000000000004"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                            <physvol copynumber="79">
                              <volumeref ref="volCRTModule79"/>
-                             <position name="posCRT_module79" unit="cm" x="-89.049611897315595" y="-83.863871448915063" z="8.9000000000000004"/>
+                             <position name="posCRT_module79" unit="cm" x="-89.0496118973156" y="-83.863871448915063" z="8.9000000000000004"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                            <physvol copynumber="80">
                              <volumeref ref="volCRTModule80"/>
-                             <position name="posCRT_module80" unit="cm" x="89.6527936728173634" y="-172.383512250845174" z="8.9000000000000004"/>
+                             <position name="posCRT_module80" unit="cm" x="89.652793672817367" y="-172.38351225084517" z="8.9000000000000004"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                            <physvol copynumber="81">
                              <volumeref ref="volCRTModule81"/>
-                             <position name="posCRT_module81" unit="cm" x="270.4407679644125193" y="-173.739466014071059" z="8.9000000000000004"/>
+                             <position name="posCRT_module81" unit="cm" x="270.44076796441254" y="-173.73946601407107" z="8.9000000000000004"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                            <physvol copynumber="82">
@@ -15828,84 +15827,84 @@
                         <solidref ref="TaggerEast"/>
                                 <physvol copynumber="84">
                                         <volumeref ref="volCRTModule84"/>
-                                        <position name="posCRT_module84" unit="cm" x="225" y="-280.613953716775166" z="-.03386727248370032"/>
+                                        <position name="posCRT_module84" unit="cm" x="225" y="-280.61395371677514" z="-0.03386727248370032"/>
                                 </physvol>
                                 <physvol copynumber="85">
                                         <volumeref ref="volCRTModule85"/>
-                                        <position name="posCRT_module85" unit="cm" x="225" y="-94.515169616466601" z="-.48401851428866776"/>
+                                        <position name="posCRT_module85" unit="cm" x="225" y="-94.515169616466608" z="-0.48401851428866777"/>
                                 </physvol>
                                 <physvol copynumber="86">
                                         <volumeref ref="volCRTModule86"/>
-                                        <position name="posCRT_module86" unit="cm" x="225" y="93.717366602638127" z=".08289461849981328"/>
+                                        <position name="posCRT_module86" unit="cm" x="225" y="93.717366602638123" z="0.082894618499813277"/>
                                 </physvol>
                                 <physvol copynumber="87">
                                         <volumeref ref="volCRTModule87"/>
-                                        <position name="posCRT_module87" unit="cm" x="225" y="276.401123944692773" z="-.39409596183461982"/>
+                                        <position name="posCRT_module87" unit="cm" x="225" y="276.40112394469276" z="-0.39409596183461981"/>
                                 </physvol>
                                 <physvol copynumber="88">
                                         <volumeref ref="volCRTModule88"/>
-                                        <position name="posCRT_module88" unit="cm" x="-225" y="-279.566992619441312" z="-2.69256960993459902"/>
+                                        <position name="posCRT_module88" unit="cm" x="-225" y="-279.56699261944129" z="-2.692569609934599"/>
                                 </physvol>
                                 <physvol copynumber="89">
                                         <volumeref ref="volCRTModule89"/>
-                                        <position name="posCRT_module89" unit="cm" x="-225" y="-92.8950839762544756" z="-2.22300901500413312"/>
+                                        <position name="posCRT_module89" unit="cm" x="-225" y="-92.895083976254469" z="-2.2230090150041333"/>
                                 </physvol>
                                 <physvol copynumber="90">
                                         <volumeref ref="volCRTModule90"/>
-                                        <position name="posCRT_module90" unit="cm" x="-225" y="94.09009403893646" z="-1.28646758912831352"/>
+                                        <position name="posCRT_module90" unit="cm" x="-225" y="94.090094038936456" z="-1.2864675891283135"/>
                                 </physvol>
                                 <physvol copynumber="91">
                                         <volumeref ref="volCRTModule91"/>
-                                        <position name="posCRT_module91" unit="cm" x="-225" y="275.891253763088305" z="-1.34030040882161039"/>
+                                        <position name="posCRT_module91" unit="cm" x="-225" y="275.89125376308829" z="-1.3403004088216104"/>
                                 </physvol>
                                 <physvol copynumber="92">
                                         <volumeref ref="volCRTModule92"/>
-                                        <position name="posCRT_module92" unit="cm" x="-360" y="184.271326851674208" z="1.58705183099705642"/>
+                                        <position name="posCRT_module92" unit="cm" x="-360" y="184.27132685167422" z="1.5870518309970565"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="93">
                                         <volumeref ref="volCRTModule93"/>
-                                        <position name="posCRT_module93" unit="cm" x="-180" y="184.7093800276514015" z=".37222971670578832"/>
+                                        <position name="posCRT_module93" unit="cm" x="-180" y="184.70938002765141" z="0.3722297167057883"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="94">
                                         <volumeref ref="volCRTModule94"/>
-                                        <position name="posCRT_module94" unit="cm" x="0" y="184.915688921928988" z="1.13413883383399505"/>
+                                        <position name="posCRT_module94" unit="cm" x="0" y="184.91568892192899" z="1.1341388338339951"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="95">
                                         <volumeref ref="volCRTModule95"/>
-                                        <position name="posCRT_module95" unit="cm" x="180" y="184.633338377076247" z="2.12974517792012382"/>
+                                        <position name="posCRT_module95" unit="cm" x="180" y="184.63333837707626" z="2.1297451779201237"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="96">
                                         <volumeref ref="volCRTModule96"/>
-                                        <position name="posCRT_module96" unit="cm" x="360" y="186.374300141836509" z="1.00932164607976757"/>
+                                        <position name="posCRT_module96" unit="cm" x="360" y="186.3743001418365" z="1.0093216460797676"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="97">
                                         <volumeref ref="volCRTModule97"/>
-                                        <position name="posCRT_module97" unit="cm" x="-360" y="-185.469713655185438" z="-1.50362340293680178"/>
+                                        <position name="posCRT_module97" unit="cm" x="-360" y="-185.46971365518544" z="-1.5036234029368019"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="98">
                                         <volumeref ref="volCRTModule98"/>
-                                        <position name="posCRT_module98" unit="cm" x="-180" y="-185.24492219901437" z="-.82229578481468248"/>
+                                        <position name="posCRT_module98" unit="cm" x="-180" y="-185.24492219901438" z="-0.82229578481468246"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="99">
                                         <volumeref ref="volCRTModule99"/>
-                                        <position name="posCRT_module99" unit="cm" x="0" y="-187.389241610275296" z=".93511164448087781"/>
+                                        <position name="posCRT_module99" unit="cm" x="0" y="-187.38924161027529" z="0.9351116444808778"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="100">
                                         <volumeref ref="volCRTModule100"/>
-                                        <position name="posCRT_module100" unit="cm" x="180" y="-188.814792015557183" z="1.18121183510848065"/>
+                                        <position name="posCRT_module100" unit="cm" x="180" y="-188.81479201555717" z="1.1812118351084806"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="101">
                                         <volumeref ref="volCRTModule101"/>
-                                        <position name="posCRT_module101" unit="cm" x="360" y="-189.648521476710961" z="2.40010124638769502"/>
+                                        <position name="posCRT_module101" unit="cm" x="360" y="-189.64852147671095" z="2.400101246387695"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                 </volume>
@@ -15914,84 +15913,84 @@
                         <solidref ref="TaggerWest"/>
                                 <physvol copynumber="102">
                                         <volumeref ref="volCRTModule102"/>
-                                        <position name="posCRT_module102" unit="cm" x="225" y="-276.763881975517592" z="-1.23401427835091622"/>
+                                        <position name="posCRT_module102" unit="cm" x="225" y="-276.76388197551762" z="-1.2340142783509163"/>
                                 </physvol>
                                 <physvol copynumber="103">
                                         <volumeref ref="volCRTModule103"/>
-                                        <position name="posCRT_module103" unit="cm" x="225" y="-91.6591346198819161" z="-.68276102004170558"/>
+                                        <position name="posCRT_module103" unit="cm" x="225" y="-91.659134619881911" z="-0.68276102004170558"/>
                                 </physvol>
                                 <physvol copynumber="104">
                                         <volumeref ref="volCRTModule104"/>
-                                        <position name="posCRT_module104" unit="cm" x="225" y="91.1803137270161435" z="-.20583986881058332"/>
+                                        <position name="posCRT_module104" unit="cm" x="225" y="91.180313727016141" z="-0.20583986881058333"/>
                                 </physvol>
                                 <physvol copynumber="105">
                                         <volumeref ref="volCRTModule105"/>
-                                        <position name="posCRT_module105" unit="cm" x="225" y="274.770156861054315" z="-.38403760504946722"/>
+                                        <position name="posCRT_module105" unit="cm" x="225" y="274.77015686105432" z="-0.38403760504946721"/>
                                 </physvol>
                                 <physvol copynumber="106">
                                         <volumeref ref="volCRTModule106"/>
-                                        <position name="posCRT_module106" unit="cm" x="-225" y="-274.930017555437663" z="-2.12479776356100462"/>
+                                        <position name="posCRT_module106" unit="cm" x="-225" y="-274.93001755543764" z="-2.1247977635610047"/>
                                 </physvol>
                                 <physvol copynumber="107">
                                         <volumeref ref="volCRTModule107"/>
-                                        <position name="posCRT_module107" unit="cm" x="-225" y="-93.132809574630589" z="-2.37862679735390382"/>
+                                        <position name="posCRT_module107" unit="cm" x="-225" y="-93.132809574630585" z="-2.3786267973539039"/>
                                 </physvol>
                                 <physvol copynumber="108">
                                         <volumeref ref="volCRTModule108"/>
-                                        <position name="posCRT_module108" unit="cm" x="-225" y="89.76433062809022606" z="-.81993630954102431"/>
+                                        <position name="posCRT_module108" unit="cm" x="-225" y="89.764330628090221" z="-0.81993630954102426"/>
                                 </physvol>
                                 <physvol copynumber="109">
                                         <volumeref ref="volCRTModule109"/>
-                                        <position name="posCRT_module109" unit="cm" x="-225" y="273.143428856220717" z="-.43447334377603752"/>
+                                        <position name="posCRT_module109" unit="cm" x="-225" y="273.14342885622074" z="-0.43447334377603752"/>
                                 </physvol>
                                 <physvol copynumber="110">
                                         <volumeref ref="volCRTModule110"/>
-                                        <position name="posCRT_module110" unit="cm" x="-360" y="180.8934632799350651" z="-1.12309258879101028"/>
+                                        <position name="posCRT_module110" unit="cm" x="-360" y="180.89346327993508" z="-1.1230925887910104"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="111">
                                         <volumeref ref="volCRTModule111"/>
-                                        <position name="posCRT_module111" unit="cm" x="-180" y="180.7796345913025724" z="1.47683608971938152"/>
+                                        <position name="posCRT_module111" unit="cm" x="-180" y="180.77963459130257" z="1.4768360897193815"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="112">
                                         <volumeref ref="volCRTModule112"/>
-                                        <position name="posCRT_module112" unit="cm" x="0" y="181.552191649473618" z="1.74712020768767792"/>
+                                        <position name="posCRT_module112" unit="cm" x="0" y="181.55219164947363" z="1.747120207687678"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="113">
                                         <volumeref ref="volCRTModule113"/>
-                                        <position name="posCRT_module113" unit="cm" x="180" y="182.4392954643803195" z="1.51712261529827072"/>
+                                        <position name="posCRT_module113" unit="cm" x="180" y="182.43929546438031" z="1.5171226152982706"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="114">
                                         <volumeref ref="volCRTModule114"/>
-                                        <position name="posCRT_module114" unit="cm" x="360" y="182.7715731653073177" z=".19048832186238842"/>
+                                        <position name="posCRT_module114" unit="cm" x="360" y="182.77157316530733" z="0.19048832186238843"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="115">
                                         <volumeref ref="volCRTModule115"/>
-                                        <position name="posCRT_module115" unit="cm" x="-360" y="-182.9811434737743543" z="-7.51315830943127998"/>
+                                        <position name="posCRT_module115" unit="cm" x="-360" y="-182.98114347377435" z="-7.5131583094312804"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="116">
                                         <volumeref ref="volCRTModule116"/>
-                                        <position name="posCRT_module116" unit="cm" x="-180" y="-178.4245768296912644" z="-.23365652037720548"/>
+                                        <position name="posCRT_module116" unit="cm" x="-180" y="-178.42457682969126" z="-0.23365652037720547"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="117">
                                         <volumeref ref="volCRTModule117"/>
-                                        <position name="posCRT_module117" unit="cm" x="0" y="-184.818811149180798" z=".38376888817852512"/>
+                                        <position name="posCRT_module117" unit="cm" x="0" y="-184.81881114918079" z="0.38376888817852511"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="118">
                                         <volumeref ref="volCRTModule118"/>
-                                        <position name="posCRT_module118" unit="cm" x="180" y="-184.054828951724806" z="1.06343711603906624"/>
+                                        <position name="posCRT_module118" unit="cm" x="180" y="-184.0548289517248" z="1.0634371160390663"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                                 <physvol copynumber="119">
                                         <volumeref ref="volCRTModule119"/>
-                                        <position name="posCRT_module119" unit="cm" x="360" y="-181.267995452110812" z=".21963777907979602"/>
+                                        <position name="posCRT_module119" unit="cm" x="360" y="-181.26799545211082" z="0.21963777907979601"/>
                                         <rotationref ref="rotateP90Z"/>
                                 </physvol>
                 </volume>
@@ -16000,20 +15999,20 @@
                         <solidref ref="TaggerBottom"/>
                         <physvol copynumber="120">
                                 <volumeref ref="volCRTModule120"/>
-                                <position name="posCRT_module120" unit="cm" x="-265.6493600403065333" y="445.89999999999998" z="2.35789859571547326"/>
+                                <position name="posCRT_module120" unit="cm" x="-265.64936004030653" y="445.89999999999998" z="2.3578985957154734"/>
                         </physvol>
                         <physvol copynumber="121">
                                 <volumeref ref="volCRTModule121"/>
-                                <position name="posCRT_module121" unit="cm" x="-266.730868675377169" y="238" z="1.83781779469957416"/>
+                                <position name="posCRT_module121" unit="cm" x="-266.73086867537717" y="238" z="1.8378177946995742"/>
                         </physvol>
                         <physvol copynumber="122">
                                 <volumeref ref="volCRTModule122"/>
-                                <position name="posCRT_module122" unit="cm" x="-351.752221432352226" y="326.14999999999998" z="7.67660317379802164"/>
+                                <position name="posCRT_module122" unit="cm" x="-351.7522214323522" y="326.14999999999998" z="7.6766031737980214"/>
 								<rotationref ref="rotateP90Z"/>
 						</physvol>
                         <physvol copynumber="123">
                                 <volumeref ref="volCRTModule123"/>
-                                <position name="posCRT_module123" unit="cm" x="-178.4359715044329099" y="326.14999999999998" z="4.53272958811354704"/>
+                                <position name="posCRT_module123" unit="cm" x="-178.4359715044329" y="326.14999999999998" z="4.532729588113547"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="124">
@@ -16028,34 +16027,34 @@
                         </physvol>
                         <physvol copynumber="126">
                                 <volumeref ref="volCRTModule126"/>
-                                <position name="posCRT_module126" unit="cm" x="180.6491617848289999" y="326.14999999999998" z="2.09492698736894064"/>
+                                <position name="posCRT_module126" unit="cm" x="180.649161784829" y="326.14999999999998" z="2.0949269873689405"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="127">
                                 <volumeref ref="volCRTModule127"/>
-                                <position name="posCRT_module127" unit="cm" x="359.3789200328419305" y="326.14999999999998" z="1.92697618239539084"/>
+                                <position name="posCRT_module127" unit="cm" x="359.3789200328419" y="326.14999999999998" z="1.9269761823953908"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="128">
                                 <volumeref ref="volCRTModule128"/>
-                                <position name="posCRT_module128" unit="cm" x="269.2125040756228337" y="238" z=".58277493401531746"/>
+                                <position name="posCRT_module128" unit="cm" x="269.21250407562286" y="238" z="0.58277493401531744"/>
                         </physvol>
                         <physvol copynumber="129">
                                 <volumeref ref="volCRTModule129"/>
-                                <position name="posCRT_module129" unit="cm" x="-268.8396612665847761" y="-238" z="-2.56326229208906224"/>
+                                <position name="posCRT_module129" unit="cm" x="-268.83966126658476" y="-238" z="-2.5632622920890622"/>
                         </physvol>
                         <physvol copynumber="130">
                                 <volumeref ref="volCRTModule130"/>
-                                <position name="posCRT_module130" unit="cm" x="-269.7298132908968109" y="-445.89999999999998" z="-.72556466265513966"/>
+                                <position name="posCRT_module130" unit="cm" x="-269.7298132908968" y="-445.89999999999998" z="-0.72556466265513964"/>
                         </physvol>
                         <physvol copynumber="131">
                                 <volumeref ref="volCRTModule131"/>
-                                <position name="posCRT_module131" unit="cm" x="-356.906413148013524187" y="-326.14999999999998" z="-.82408787477984476"/>
+                                <position name="posCRT_module131" unit="cm" x="-356.90641314801354" y="-326.14999999999998" z="-0.8240878747798448"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="132">
                                 <volumeref ref="volCRTModule132"/>
-                                <position name="posCRT_module132" unit="cm" x="-181.1181738814594367" y="-326.14999999999998" z="-.66335129517590976"/>
+                                <position name="posCRT_module132" unit="cm" x="-181.11817388145943" y="-326.14999999999998" z="-0.66335129517590974"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="133">
@@ -16070,25 +16069,25 @@
                         </physvol>
                         <physvol copynumber="135">
                                 <volumeref ref="volCRTModule135"/>
-                                <position name="posCRT_module135" unit="cm" x="178.17009465363549" y="-326.14999999999998" z=".33899904644894114"/>
+                                <position name="posCRT_module135" unit="cm" x="178.17009465363549" y="-326.14999999999998" z="0.33899904644894113"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="136">
                                 <volumeref ref="volCRTModule136"/>
-                                <position name="posCRT_module136" unit="cm" x="358.261895217810458" y="-326.14999999999998" z=".846471070390547235"/>
+                                <position name="posCRT_module136" unit="cm" x="358.26189521781043" y="-326.14999999999998" z="0.84647107039054725"/>
 								<rotationref ref="rotateP90Z"/>
                         </physvol>
                         <physvol copynumber="137">
                                 <volumeref ref="volCRTModule137"/>
-                                <position name="posCRT_module137" unit="cm" x="266.901372406741082" y="-238" z="-1.25880692017623180"/>
+                                <position name="posCRT_module137" unit="cm" x="266.90137240674107" y="-238" z="-1.2588069201762317"/>
                         </physvol>
                         <physvol copynumber="138">
                                 <volumeref ref="volCRTModule138"/>
-                                <position name="posCRT_module138" unit="cm" x="264.684863411841617" y="-445.89999999999998" z="4.42621034876795096"/>
+                                <position name="posCRT_module138" unit="cm" x="264.6848634118416" y="-445.89999999999998" z="4.4262103487679507"/>
                         </physvol>
                         <physvol copynumber="139">
                                 <volumeref ref="volCRTModule139"/>
-                                <position name="posCRT_module139" unit="cm" x="269.983825054199575" y="445.89999999999998" z="-1.58165520339055226"/>
+                                <position name="posCRT_module139" unit="cm" x="269.9838250541996" y="445.89999999999998" z="-1.5816552033905522"/>
                         </physvol>
                         <physvol copynumber="140">
                                 <volumeref ref="volCRTModule140"/>
