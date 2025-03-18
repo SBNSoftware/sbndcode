@@ -1,4 +1,3 @@
-#include "detectorclocks_sbnd.fcl"
 BEGIN_PROLOG
 
 sbnd_wcls: { 
@@ -17,7 +16,7 @@ sbnd_wcls: {
         configs: []
 
         ## Libraries in which to look for WCT components
-        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb", "WireCellPytorch"]
+        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb"]
         inputers: []
         outputers: []
         
@@ -31,12 +30,11 @@ sbnd_wcls: {
 
 ## Configuration for 2D Sim + Signal Processing 
 sbnd_wcls_simsp: @local::sbnd_wcls
-sbnd_wcls_simsp.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp.jsonnet"]
+sbnd_wcls_simsp.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp-samples_tru.jsonnet"]
 sbnd_wcls_simsp.wcls_main.inputers: ["wclsSimDepoSetSource:"]
 sbnd_wcls_simsp.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
                                      "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
                                      "wclsFrameSaver:spsaver"
-                                     # "wclsFrameSaver:dnnsaver"
                                     ]
 sbnd_wcls_simsp.wcls_main.params:   {
                                      ## This locates the input SimEnergyDeposits in the art::Event
@@ -56,12 +54,9 @@ sbnd_wcls_simsp.wcls_main.params:   {
                                      ## If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
                                      ## If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
                                      ## this is whether or not to save raw digits!!! 
-                                     save_simdigits: "true"
+                                     save_simdigits: "false"
           
                                      save_track_id: "true"
-
-                                     dnnroi_model_p0: "DNN_ROI/plane0.ts"
-                                     dnnroi_model_p1: "DNN_ROI/plane1.ts"
                                     }
                                     
 sbnd_wcls_simsp.wcls_main.structs:  {
@@ -73,12 +68,6 @@ sbnd_wcls_simsp.wcls_main.structs:  {
                                      lifetime: 100.0
                                      ## Electron drift speed, assumes 0.5 kV/cm and 88.4 K. Units: mm/us
                                      driftSpeed: 1.563
-                                     ## simulated front porch size [us]
-                                     tick0_time: @local::sbnd_detectorclocks.TriggerOffsetTPC
-                                     nticks: 3427
-                                     use_dnnroi: false
-                                     nchunks: 2
-                                     tick_per_slice: 4
                                     }
 
 # ------------------------------------------------------------------------------------ #
@@ -91,12 +80,10 @@ sbnd_wcls_sp.wcls_main.inputers:  ["wclsRawFrameSource"
                                     # and you must have geo::Geometry service in your environment.
                                     # ,"wclsMultiChannelNoiseDB"
                                   ]
-sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver"
-                                   # "wclsFrameSaver:dnnsaver"
-                                  ]
+sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver"]
 sbnd_wcls_sp.wcls_main.params :   {
                                    # This locates the input raw::RawDigit collection in the art::Event 
-                                   raw_input_label: "simtpc2d:daq"   
+                                   raw_input_label: "daq"   
 
                                    # Set "data" vs. "sim".  The epoch below probably should follow suit.
                                    reality: "sim"   
@@ -108,16 +95,5 @@ sbnd_wcls_sp.wcls_main.params :   {
 
                                    # Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
                                    signal_output_form: "sparse"
-
-                                     dnnroi_model_p0: "DNN_ROI/plane0.ts"
-                                     dnnroi_model_p1: "DNN_ROI/plane1.ts"
-
                                    }
-
-sbnd_wcls_sp.wcls_main.structs:  {
-                                     nticks: 3427
-                                     use_dnnroi: false
-                                     nchunks: 2
-                                     tick_per_slice: 4
-                                    }
 END_PROLOG
