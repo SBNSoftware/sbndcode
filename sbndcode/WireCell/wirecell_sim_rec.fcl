@@ -24,7 +24,6 @@
 
 #include "detsimmodules_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-
 #include "wcsimsp_sbnd.fcl"
 
 process_name: DNNsamplerec
