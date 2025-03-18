@@ -40,6 +40,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 #include "sbndcode/Calibration/CRT/CalibService/CRTCalibService.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTOrientationMaps.h"
 
 namespace sbnd::crt {
 
@@ -166,18 +167,9 @@ namespace sbnd::crt {
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
 
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger)
-        orientation = _adID == 70 || (modulePosMother[2] < 8.9);
-      else if(_minos || _adID == 139)
-        orientation = (modulePosMother[2] < 0);
-      else
-        orientation = (modulePosMother[2] > 0);
-
-      // Location of SiPMs
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kSouthTagger || (CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger && _adID != 82))
-        top = (orientation == 0) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
-      else
-        top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
+      CRTOrientationMaps orientationMaps;
+      orientation = orientationMaps.orientation.at(_adID);
+      top         = orientationMaps.top.at(_adID);
 
       // Fill edges
       minX = std::min(limitsWorld.X(), limitsWorld2.X());
