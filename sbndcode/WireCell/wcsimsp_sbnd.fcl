@@ -120,4 +120,95 @@ sbnd_wcls_sp.wcls_main.structs:  {
                                      nchunks: 2
                                      tick_per_slice: 4
                                     }
+
+
+# ------------------------------------------------------------------------------------ #
+
+## Configuration for generating training samples -- input images
+sbnd_wcls_samples_rec: @local::sbnd_wcls
+sbnd_wcls_samples_rec.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp-samples_rec.jsonnet"]
+sbnd_wcls_samples_rec.wcls_main.inputers: ["wclsSimDepoSetSource:"]
+sbnd_wcls_samples_rec.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
+                                     # "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+                                     "wclsFrameSaver:spsaver"
+                                    ]
+sbnd_wcls_samples_rec.wcls_main.params:   {
+                                     ## This locates the input SimEnergyDeposits in the art::Event
+                                     inputTag: "ionandscint:"             
+             
+                                     ## Set "data" vs. "sim".  The epoch below probably should follow suit.
+                                     reality: "sim"
+             
+                                     ## if epoch is "dynamic" you MUST add
+                                     ## "wclsMultiChannelNoiseDB" to "inputers" and must NOT
+                                     ## add it if not "dynamic"
+                                     epoch: "perfect"
+             
+                                     ## Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
+                                     signal_output_form: "sparse"
+             
+                                     ## If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
+                                     ## If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
+                                     ## this is whether or not to save raw digits!!! 
+                                     save_simdigits: "false"
+          
+                                     save_track_id: "true"
+                                    }
+                                    
+sbnd_wcls_samples_rec.wcls_main.structs:  {
+                                     ## Longitudinal diffusion constant [cm2/s]
+                                     DL: 4.0
+                                     ## Transverse diffusion constant [cm2/s]
+                                     DT: 8.8
+                                     ## Electron lifetime [ms]
+                                     lifetime: 100.0
+                                     ## Electron drift speed, assumes 0.5 kV/cm and 88.4 K. Units: mm/us
+                                     driftSpeed: 1.563
+                                    }
+
+
+# ------------------------------------------------------------------------------------ #
+
+## Configuration for generating training samples -- target images
+sbnd_wcls_samples_tru: @local::sbnd_wcls
+sbnd_wcls_samples_tru.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp-samples_tru.jsonnet"]
+sbnd_wcls_samples_tru.wcls_main.inputers: ["wclsSimDepoSetSource:"]
+sbnd_wcls_samples_tru.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
+                                     "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+                                     "wclsFrameSaver:spsaver"
+                                    ]
+sbnd_wcls_samples_tru.wcls_main.params:   {
+                                     ## This locates the input SimEnergyDeposits in the art::Event
+                                     inputTag: "ionandscint:"             
+             
+                                     ## Set "data" vs. "sim".  The epoch below probably should follow suit.
+                                     reality: "sim"
+             
+                                     ## if epoch is "dynamic" you MUST add
+                                     ## "wclsMultiChannelNoiseDB" to "inputers" and must NOT
+                                     ## add it if not "dynamic"
+                                     epoch: "perfect"
+             
+                                     ## Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
+                                     signal_output_form: "sparse"
+             
+                                     ## If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
+                                     ## If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
+                                     ## this is whether or not to save raw digits!!! 
+                                     save_simdigits: "false"
+          
+                                     save_track_id: "true"
+                                    }
+                                    
+sbnd_wcls_samples_tru.wcls_main.structs:  {
+                                     ## Longitudinal diffusion constant [cm2/s]
+                                     DL: 4.0
+                                     ## Transverse diffusion constant [cm2/s]
+                                     DT: 8.8
+                                     ## Electron lifetime [ms]
+                                     lifetime: 100.0
+                                     ## Electron drift speed, assumes 0.5 kV/cm and 88.4 K. Units: mm/us
+                                     driftSpeed: 1.563
+                                    }
+
 END_PROLOG
