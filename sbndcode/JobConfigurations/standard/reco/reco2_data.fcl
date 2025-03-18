@@ -1,5 +1,6 @@
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
+#include "opt0finder_sbnd_data.fcl"
 #include "standard_reco2_sbnd.fcl"
 #include "tpcpmt3dbarycentermatching_config.fcl"
 services:
@@ -17,12 +18,20 @@ physics.producers:
     crtspacepoints: @local::crtspacepointproducer_data_sbnd
     crttracks:      @local::crttrackproducer_data_sbnd
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
+    opt0finder:     @local::sbnd_opt0_finder_data
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  crtclustering, crtspacepoints, crttracks, cvn , tpcpmtbarycentermatching]
+  crtclustering, crtspacepoints, crttracks, cvn, opt0finder, tpcpmtbarycentermatching]
 
+#The next 3 lines need to be commented out once data use pandoraSCE by default. 
+physics.producers.cvn.SliceLabel: "pandora"
+physics.producers.cvn.PFParticleModuleLabel: "pandora"
+physics.producers.cvn.T0Label: "pandora"
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
-physics.caloskimana_tpconly: [ caloskim ]
-physics.end_paths: [stream1, caloskimana_tpconly]
+physics.analyzers.crtana: @local::crtana_data_sbnd
+
+physics.caloskimana: [ caloskim, crtana ]
+physics.end_paths: [stream1, caloskimana ]
+
