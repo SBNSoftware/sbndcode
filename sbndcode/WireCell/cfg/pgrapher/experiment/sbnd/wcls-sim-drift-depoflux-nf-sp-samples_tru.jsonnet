@@ -6,6 +6,7 @@ local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect
 local reality = std.extVar('reality');
 // local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
 local sigoutform = "sparse";  // eg "sparse" or "dense"
+local savetid = std.extVar("save_track_id");
 
 local g = import 'pgraph.jsonnet';
 local f = import 'pgrapher/common/funcs.jsonnet';
@@ -43,15 +44,15 @@ local wcls = wcls_maker(params, tools);
 // added Ewerton 2023-03-14
 local wcls_input_sim = {
     depos: wcls.input.depos(name="", art_tag=std.extVar('inputTag')), //commented Ewerton 2023-03-15
-    //depos: wcls.input.depos(name="", art_tag="ionandscint"), //commented Ewerton 2023-03-15
     deposet: g.pnode({
-            type: 'wclsSimDepoSource',
+            type: 'wclsSimDepoSetSource',
             name: "",
             data: {
                 model: "",
                 scale: -1, //scale is -1 to correct a sign error in the SimDepoSource converter.
                 // art_tag: std.extVar('inputTag'), //name of upstream art producer of depos "label:instance:processName"
-                art_tag: "ionandscint", //name of upstream art producer of depos "label:instance:processName"
+                art_tag: std.extVar('inputTag'), //name of upstream art producer of depos "label:instance:processName"
+                id_is_track: if (savetid == 'true') then false else true,
                 assn_art_tag: "",
             },
         }, nin=0, nout=1),
