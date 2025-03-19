@@ -9,6 +9,8 @@ nuE:
     NuGenModuleLabel:   "generator"
     HitLabel:           "gaushit"
     CRUMBSLabel:        "crumbs"
+    TrackLabel:         "pandoraTrack"
+    ShowerLabel:        "pandoraShower"
 }
 
 END_PROLOG

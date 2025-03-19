@@ -103,6 +103,8 @@ private:
   unsigned int nPFParticles;               // Number of PFParticles
   unsigned int nSlices;                    // Number of Slices
   unsigned int nNeutrinos;                 // Number of MCTruth Neutrinos
+  unsigned int nTracks;                    // Number of reconstructed Tracks
+  unsigned int nShowers;                   // Number of reconstructed Showers
 
   // Truth variables
   double trueNeutrinoVX;                    // MCTruth vertex x coord
@@ -129,7 +131,9 @@ private:
   detinfo::DetectorPropertiesData propData = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob();
   art::ServiceHandle<geo::Geometry> theGeometry;
   geo::GeometryCore const* geom = art::ServiceHandle<geo::Geometry>()->provider();
-  
+ 
+  double tpcID_num = 100;
+
   // Vectors for the NuE Tree
   std::vector<double> event_tree = std::vector<double>(0);
   std::vector<double> run_tree = std::vector<double>(0);
@@ -145,6 +149,10 @@ private:
   std::vector<int> trueLeptonType_tree = std::vector<int>(0);
   std::vector<int> numSlices_tree = std::vector<int>(0);
   std::vector<int> numPfps_tree = std::vector<int>(0); 
+  std::vector<int> numTracks_tree = std::vector<int>(0);
+  std::vector<int> numShowers_tree = std::vector<int>(0);
+  std::vector<double> tpcID_tree = std::vector<double>(0);
+  std::vector<int> dl_current_tree = std::vector<int>(0);
 
   // Vectors for the NuEHit Tree
   std::vector<double> event_hitTree = std::vector<double>(0);
@@ -161,6 +169,8 @@ private:
   const std::string nuGenModuleLabel;
   const std::string hitLabel;
   const std::string crumbsLabel;
+  const std::string trackLabel;
+  const std::string showerLabel;
 
   // Output file
   TFile *outputFile = TFile::Open("NuEAnalyserOutput.root","RECREATE");
@@ -174,7 +184,9 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   vertexLabel(p.get<std::string>("VertexLabel")),
   nuGenModuleLabel(p.get<std::string>("NuGenModuleLabel")),
   hitLabel(p.get<std::string>("HitLabel")),
-  crumbsLabel(p.get<std::string>("CRUMBSLabel"))
+  crumbsLabel(p.get<std::string>("CRUMBSLabel")),
+  trackLabel(p.get<std::string>("TrackLabel")),
+  showerLabel(p.get<std::string>("ShowerLabel"))
 {
 }
 
@@ -198,6 +210,10 @@ void sbnd::NuE::analyze(art::Event const& e)
   art::Handle<std::vector<recob::PFParticle>>   pfpHandle;
   std::vector<art::Ptr<recob::PFParticle>>      pfpVec;
   art::Handle<std::vector<simb::MCTruth>>       neutrinoHandle;
+  art::Handle<std::vector<recob::Track>>        trackHandle;
+  std::vector<art::Ptr<recob::Track>>           trackVec;
+  art::Handle<std::vector<recob::Shower>>       showerHandle;
+  std::vector<art::Ptr<recob::Shower>>          showerVec;
 
   e.getByLabel(nuGenModuleLabel, neutrinoHandle);
 
@@ -219,7 +235,8 @@ void sbnd::NuE::analyze(art::Event const& e)
    
         pos = {neutrinoParticle.Vx(), neutrinoParticle.Vy(), neutrinoParticle.Vz()};
         geo::TPCID tpcID = theGeometry->FindTPCAtPosition(pos);
-    
+        tpcID_num = tpcID.TPC;
+
         if(tpcID.isValid){
             trueNeutrinoVX = neutrinoParticle.Vx();
             trueNeutrinoVY = neutrinoParticle.Vy();
@@ -263,6 +280,17 @@ void sbnd::NuE::analyze(art::Event const& e)
     art::fill_ptr_vector(pfpVec, pfpHandle);
 
   if(pfpVec.empty()) return;
+
+  if(e.getByLabel(trackLabel, trackHandle))
+    art::fill_ptr_vector(trackVec, trackHandle);
+
+  if(e.getByLabel(showerLabel, showerHandle))
+    art::fill_ptr_vector(showerVec, showerHandle);
+
+  nTracks = trackVec.size();
+  nShowers = showerVec.size();
+
+  std::cout << "num tracks: " << nTracks << " num showers: " << nShowers << std::endl;
 
   int PFParticleID(std::numeric_limits<int>::max());
 
@@ -388,6 +416,10 @@ void sbnd::NuE::analyze(art::Event const& e)
     trueLeptonType_tree.push_back(trueChargedLepton);
     numSlices_tree.push_back(nSlices);
     numPfps_tree.push_back(nPFParticles);
+    numTracks_tree.push_back(nTracks);
+    numShowers_tree.push_back(nShowers);
+    tpcID_tree.push_back(tpcID_num);
+    dl_current_tree.push_back(2); // 0 = uboone dl, 1 = dune dl, 2 = current
   } else{
     std::cout << "There is no reco neutrino, skipping event" << std::endl;
   } 
@@ -411,6 +443,10 @@ void sbnd::NuE::beginJob()
   NuETree->Branch("trueLeptonType_tree", &trueLeptonType_tree);
   NuETree->Branch("numSlices_tree", &numSlices_tree);
   NuETree->Branch("numPfps_tree", &numPfps_tree);
+  NuETree->Branch("numTracks_tree", &numTracks_tree);
+  NuETree->Branch("numShowers_tree", &numShowers_tree);
+  NuETree->Branch("tpcID_tree", &tpcID_tree);
+  NuETree->Branch("dl_current_tree", &dl_current_tree);  
 
   NuEHitTree->Branch("event_hitTree", &event_hitTree);
   NuEHitTree->Branch("run_hitTree", &run_hitTree);

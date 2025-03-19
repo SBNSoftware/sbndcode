@@ -31,36 +31,162 @@ typedef struct{
     int trueLeptonType;
     int nSlices;
     int nPFPs;
+    int nTracks;
+    int nShowers;
+    double tpcID;
+    int dl_current;
 } event_t;
 
 void numberPlots(std::vector<event_t> allEvents_vec){
     size_t numEvents = allEvents_vec.size();
 
-    TCanvas *numSlicesCanvas = new TCanvas("numSlices_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* numSlices_dist = new TH1F("Number of Slices", "Num Slices", 5, 0, 5);
-    numSlices_dist->SetTitle("Distribution of the Number of Slices in an Event;Number of Slices in Event;# of Events");
-
-    TCanvas *numPFPsCanvas = new TCanvas("numPFPs_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* numPFPs_dist = new TH1F("Number of PFPs", "Num PFPs", 10, 0, 10);
-    numPFPs_dist->SetTitle("Distribution of the Number of PFPs in an Event;Number of PFPs in Event;# of Events");
+    std::vector<event_t> dlDune = std::vector<event_t>();
+    std::vector<event_t> dlUboone = std::vector<event_t>();
+    std::vector<event_t> current = std::vector<event_t>();
 
     for(UInt_t i = 0; i < numEvents; i++){
-        event_t event = allEvents_vec.at(i);
-        numSlices_dist->Fill(event.nSlices);
-        numPFPs_dist->Fill(event.nPFPs);
+       event_t event = allEvents_vec.at(i);
+       if(event.dl_current == 0){
+           dlUboone.push_back(event);
+       } else if(event.dl_current == 1){
+           dlDune.push_back(event);
+       } else if(event.dl_current == 2){
+           current.push_back(event);
+       }
     }
 
-        numSlicesCanvas->cd();
-        numSlices_dist->Draw();
-        numSlices_dist->SetStats(0);
-        numSlices_dist->SetLineWidth(2);
-        numSlicesCanvas->SaveAs("/nashome/c/coackley/nuEPlots/numSlices_dist.pdf");
+    TCanvas *numSlicesCanvas = new TCanvas("numSlices_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* numSlicesCurrent_dist = new TH1F("Number of Slices", "Num Slices", 5, -0.5, 4.5);
+    numSlicesCurrent_dist->SetTitle("Distribution of the Number of Slices in an Event;Number of Slices in Event;# of Events");
+    TH1F* numSlicesDLUboone_dist = (TH1F*) numSlicesCurrent_dist->Clone("Number of Slices");
+    TH1F* numSlicesDLDune_dist = (TH1F*) numSlicesCurrent_dist->Clone("Number of Slices");
+
+    TCanvas *numPFPsCanvas = new TCanvas("numPFPs_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* numPFPsCurrent_dist = new TH1F("Number of PFPs", "Num PFPs", 10, -0.5, 9.5);
+    numPFPsCurrent_dist->SetTitle("Distribution of the Number of PFPs in an Event;Number of PFPs in Event;# of Events");
+    TH1F* numPFPsDLUboone_dist = (TH1F*) numPFPsCurrent_dist->Clone("Number of PFPs");
+    TH1F* numPFPsDLDune_dist = (TH1F*) numPFPsCurrent_dist->Clone("Number of PFPs");
+
+    TCanvas *numTracksCanvas = new TCanvas("numTracks_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* numTracksCurrent_dist = new TH1F("Number of Tracks", "Num Tracks", 10, -0.5, 9.5);
+    numTracksCurrent_dist->SetTitle("Distribution of the Number of Tracks in an Event;Number of Tracks in Event;# of Events");
+    TH1F* numTracksDLUboone_dist = (TH1F*) numTracksCurrent_dist->Clone("Number of Tracks");
+    TH1F* numTracksDLDune_dist = (TH1F*) numTracksCurrent_dist->Clone("Number of Tracks");
+
+    TCanvas *numShowersCanvas = new TCanvas("numShowers_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* numShowersCurrent_dist = new TH1F("Number of Showers", "Num Showers", 10, -0.5, 9.5);
+    numShowersCurrent_dist->SetTitle("Distribution of the Number of Showers in an Event;Number of Showers in Event;# of Events");
+    TH1F* numShowersDLUboone_dist = (TH1F*) numShowersCurrent_dist->Clone("Number of Showers");
+    TH1F* numShowersDLDune_dist = (TH1F*) numShowersCurrent_dist->Clone("Number of Showers");
+
+    for(UInt_t j = 0; j < current.size(); j++){
+        numSlicesCurrent_dist->Fill(current.at(j).nSlices);
+        numPFPsCurrent_dist->Fill(current.at(j).nPFPs);
+        numTracksCurrent_dist->Fill(current.at(j).nTracks);
+        numShowersCurrent_dist->Fill(current.at(j).nShowers);
+    }
+
+    for(UInt_t j = 0; j < dlDune.size(); j++){
+        numSlicesDLDune_dist->Fill(dlDune.at(j).nSlices);
+        numPFPsDLDune_dist->Fill(dlDune.at(j).nPFPs);
+        numTracksDLDune_dist->Fill(dlDune.at(j).nTracks);
+        numShowersDLDune_dist->Fill(dlDune.at(j).nShowers);
+    }
+
+    for(UInt_t j = 0; j < dlUboone.size(); j++){
+        numSlicesDLUboone_dist->Fill(dlUboone.at(j).nSlices);
+        numPFPsDLUboone_dist->Fill(dlUboone.at(j).nPFPs);
+        numTracksDLUboone_dist->Fill(dlUboone.at(j).nTracks);
+        numShowersDLUboone_dist->Fill(dlUboone.at(j).nShowers);
+    }
+
+    numSlicesCanvas->cd();
+    numSlicesCurrent_dist->SetLineWidth(2);
+    numSlicesCurrent_dist->SetLineColor(kRed);
+    numSlicesDLDune_dist->SetLineWidth(2);
+    numSlicesDLDune_dist->SetLineColor(kViolet-5);
+    numSlicesDLUboone_dist->SetLineWidth(2);
+    numSlicesDLUboone_dist->SetLineColor(kBlue);
+    numSlicesCurrent_dist->Draw("hist");
+    numSlicesDLDune_dist->Draw("histsame");
+    numSlicesDLUboone_dist->Draw("histsame");
+    numSlicesCurrent_dist->SetStats(0);
+    numSlicesCurrent_dist->GetYaxis()->SetRangeUser(0, 1000);
     
-        numPFPsCanvas->cd();
-        numPFPs_dist->Draw();
-        numPFPs_dist->SetStats(0);
-        numPFPs_dist->SetLineWidth(2);
-        numPFPsCanvas->SaveAs("/nashome/c/coackley/nuEPlots/numPFPs_dist.pdf");
+    auto legend = new TLegend(0.56,0.86,0.88,0.70);
+    legend->AddEntry(numSlicesDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
+    legend->AddEntry(numSlicesDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
+    legend->AddEntry(numSlicesCurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
+    legend->SetTextSize(0.0225);
+    legend->SetMargin(0.13);
+    legend->Draw();
+    numSlicesCanvas->SaveAs("/nashome/c/coackley/nuEPlots/numSlices_dist.pdf");
+    
+    numPFPsCanvas->cd();
+    numPFPsCurrent_dist->SetLineWidth(2);
+    numPFPsCurrent_dist->SetLineColor(kRed);
+    numPFPsDLDune_dist->SetLineWidth(2);
+    numPFPsDLDune_dist->SetLineColor(kViolet-5);
+    numPFPsDLUboone_dist->SetLineWidth(2);
+    numPFPsDLUboone_dist->SetLineColor(kBlue);
+    numPFPsCurrent_dist->Draw("hist");
+    numPFPsDLDune_dist->Draw("histsame");
+    numPFPsDLUboone_dist->Draw("histsame");
+    numPFPsCurrent_dist->SetStats(0);
+    numPFPsCurrent_dist->GetYaxis()->SetRangeUser(0, 900);
+
+    auto legend2 = new TLegend(0.56,0.86,0.88,0.70);
+    legend2->AddEntry(numPFPsDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
+    legend2->AddEntry(numPFPsDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
+    legend2->AddEntry(numPFPsCurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
+    legend2->SetTextSize(0.0225);
+    legend2->SetMargin(0.13);
+    legend2->Draw();
+    numPFPsCanvas->SaveAs("/nashome/c/coackley/nuEPlots/numPFPs_dist.pdf");
+
+    numTracksCanvas->cd();
+    numTracksCurrent_dist->SetLineWidth(2);
+    numTracksCurrent_dist->SetLineColor(kRed);
+    numTracksDLDune_dist->SetLineWidth(2);
+    numTracksDLDune_dist->SetLineColor(kViolet-5);
+    numTracksDLUboone_dist->SetLineWidth(2);
+    numTracksDLUboone_dist->SetLineColor(kBlue);
+    numTracksCurrent_dist->Draw("hist");
+    numTracksDLDune_dist->Draw("histsame");
+    numTracksDLUboone_dist->Draw("histsame");
+    numTracksCurrent_dist->SetStats(0);
+    numTracksCurrent_dist->GetYaxis()->SetRangeUser(0, 900);
+    
+    auto legend3 = new TLegend(0.56,0.86,0.88,0.70);
+    legend3->AddEntry(numTracksDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
+    legend3->AddEntry(numTracksDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
+    legend3->AddEntry(numTracksCurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
+    legend3->SetTextSize(0.0225);
+    legend3->SetMargin(0.13);
+    legend3->Draw();
+    numTracksCanvas->SaveAs("/nashome/c/coackley/nuEPlots/numTracks_dist.pdf");
+
+    numShowersCanvas->cd();
+    numShowersCurrent_dist->SetLineWidth(2);
+    numShowersCurrent_dist->SetLineColor(kRed);
+    numShowersDLDune_dist->SetLineWidth(2);
+    numShowersDLDune_dist->SetLineColor(kViolet-5);
+    numShowersDLUboone_dist->SetLineWidth(2);
+    numShowersDLUboone_dist->SetLineColor(kBlue);
+    numShowersCurrent_dist->Draw("hist");
+    numShowersDLDune_dist->Draw("histsame");
+    numShowersDLUboone_dist->Draw("histsame");
+    numShowersCurrent_dist->SetStats(0);
+    numShowersCurrent_dist->GetYaxis()->SetRangeUser(0, 900);
+
+    auto legend4 = new TLegend(0.56,0.86,0.88,0.70);
+    legend4->AddEntry(numShowersDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
+    legend4->AddEntry(numShowersDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
+    legend4->AddEntry(numShowersCurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
+    legend4->SetTextSize(0.0225);
+    legend4->SetMargin(0.13);
+    legend4->Draw();
+    numShowersCanvas->SaveAs("/nashome/c/coackley/nuEPlots/numShowers_dist.pdf");
 }
 
 void deltaVertices(std::vector<event_t> allEvents_vec){
@@ -116,7 +242,9 @@ void deltaVertices(std::vector<event_t> allEvents_vec){
 }
 
 void nuE_macro(){
-    TFile *f = TFile::Open("/exp/sbnd/data/users/coackley/cosmics/analysed_Current_3March25_nue/NoRefinement/CRUMBS/merged.root", "READ");
+    //TFile *f = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_04_03/NuEAnalyserOutput.root", "READ");
+    TFile *f = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/merged.root", "READ");
+    
     if(!f){
         std::cout << "Failed to read file" << std::endl;
         return;
@@ -139,6 +267,10 @@ void nuE_macro(){
     std::vector<int> allTrueLeptonType = std::vector<int>(0);
     std::vector<int> allNumSlices = std::vector<int>(0);
     std::vector<int> allNumPfps = std::vector<int>(0);
+    std::vector<int> allNumTracks = std::vector<int>(0);
+    std::vector<int> allNumShowers = std::vector<int>(0);
+    std::vector<double> allTpcID = std::vector<double>(0);
+    std::vector<int> allDl_current = std::vector<int>(0);
 
     Long64_t numEntries = t->GetEntries();
     int fileNumber = 1;
@@ -159,6 +291,10 @@ void nuE_macro(){
         std::vector<int> *pTrueLeptonType = 0;
         std::vector<int> *pNumSlices = 0;
         std::vector<int> *pNumPfps = 0;
+        std::vector<int> *pNumTracks = 0;
+        std::vector<int> *pNumShowers = 0;
+        std::vector<double> *pTpcID = 0;
+        std::vector<int> *pDl_current = 0;
 
         TBranch *event_branch = 0;
         TBranch *run_branch = 0;
@@ -174,6 +310,10 @@ void nuE_macro(){
         TBranch *trueLeptonType_branch = 0;
         TBranch *numSlices_branch = 0;
         TBranch *numPfps_branch = 0;
+        TBranch *numTracks_branch = 0;
+        TBranch *numShowers_branch = 0;
+        TBranch *tpcID_branch = 0;
+        TBranch *dl_current_branch = 0;
 
         t->SetBranchAddress("event_tree", &pEvent, &event_branch);
         t->SetBranchAddress("run_tree", &pRun, &run_branch);
@@ -189,6 +329,10 @@ void nuE_macro(){
         t->SetBranchAddress("trueLeptonType_tree", &pTrueLeptonType, &trueLeptonType_branch);
         t->SetBranchAddress("numSlices_tree", &pNumSlices, &numSlices_branch);
         t->SetBranchAddress("numPfps_tree", &pNumPfps, &numPfps_branch);
+        t->SetBranchAddress("numTracks_tree", &pNumTracks, &numTracks_branch);
+        t->SetBranchAddress("numShowers_tree", &pNumShowers, &numShowers_branch);
+        t->SetBranchAddress("tpcID_tree", &pTpcID, &tpcID_branch);
+        t->SetBranchAddress("dl_current_tree", &pDl_current, &dl_current_branch);
 
         event_branch->GetEntry(i);
         run_branch->GetEntry(i);
@@ -204,6 +348,10 @@ void nuE_macro(){
         trueLeptonType_branch->GetEntry(i);
         numSlices_branch->GetEntry(i);
         numPfps_branch->GetEntry(i);
+        numTracks_branch->GetEntry(i);
+        numShowers_branch->GetEntry(i);
+        tpcID_branch->GetEntry(i);
+        dl_current_branch->GetEntry(i);
 
         size_t vecSize = pEvent->size();
         for(UInt_t j = 0; j < vecSize; j++){
@@ -221,6 +369,10 @@ void nuE_macro(){
             allTrueLeptonType.push_back(pTrueLeptonType->at(j));
             allNumSlices.push_back(pNumSlices->at(j));
             allNumPfps.push_back(pNumPfps->at(j));
+            allNumTracks.push_back(pNumTracks->at(j));
+            allNumShowers.push_back(pNumShowers->at(j));
+            allTpcID.push_back(pTpcID->at(j));
+            allDl_current.push_back(pDl_current->at(j));
         }
 
         fileNumber++;
@@ -246,9 +398,13 @@ void nuE_macro(){
         event.trueLeptonType = allTrueLeptonType.at(k);
         event.nSlices = allNumSlices.at(k);
         event.nPFPs = allNumPfps.at(k);
+        event.nTracks = allNumTracks.at(k);
+        event.nShowers = allNumShowers.at(k);
+        event.tpcID = allTpcID.at(k);
+        event.dl_current = allDl_current.at(k);
         allEvents.push_back(event);
     }
 
-    deltaVertices(allEvents);
-    //numberPlots(allEvents);
+    //deltaVertices(allEvents);
+    numberPlots(allEvents);
 }
