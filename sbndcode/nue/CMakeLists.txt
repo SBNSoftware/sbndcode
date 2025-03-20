@@ -7,6 +7,10 @@ art_make(
                            larreco::RecoAlg
                            larcorealg::Geometry
                            larcore::Geometry_Geometry_service
+                            
+                           larsim::Utils
+                           larsim::MCCheater_BackTrackerService_service
+
 
                            art::Framework_Core
                            art::Framework_Principal

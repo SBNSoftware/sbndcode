@@ -13,6 +13,8 @@ services:
 {
     TFileService:   { fileName: "NuEAnalyserOutput.root" }
     @table::sbnd_services
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
 }
 
 physics:

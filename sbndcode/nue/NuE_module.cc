@@ -42,6 +42,8 @@
 
 // LArSoft
 #include "larsim/Utils/TruthMatchUtils.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
+#include "larsim/MCCheater/BackTrackerService.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/Utilities/GeometryUtilities.h"
@@ -64,6 +66,8 @@
 #include "art_root_io/TFileService.h"
 #include <TTree.h>
 #include <TFile.h>
+
+constexpr double def_double = -std::numeric_limits<double>::max();
 
 double dist_between(double x0, double y0, double z0, double x1, double y1, double z1) {
   return pow((pow(x0-x1, 2.0) + pow(y0-y1, 2.0) + pow(z0-z1, 2.0)), 0.5);
@@ -93,7 +97,15 @@ public:
   void beginJob() override;
   void endJob() override;
 
+double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
+double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
+void ClearMaps(const art::Event &e);
+void SetupMaps(const art::Event &e);
+
 private:
+
+  art::ServiceHandle<cheat::BackTrackerService>       backTracker;
+
   TTree *NuETree = new TTree("NuETree", "NuE");
   TTree *NuEHitTree = new TTree("NuEHitTree", "NuEHit");
 
@@ -123,6 +135,8 @@ private:
 
   float highestSliceScore = -10000;
   int highestSliceScoreIndex;
+
+  std::map<int,int> fHitsMap;
 
   geo::Point_t pos = {0, 0, 0};             // Geometry position (0, 0, 0), gets overwritten with actual coords
 
@@ -190,8 +204,13 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
 {
 }
 
-void sbnd::NuE::analyze(art::Event const& e)
-{
+void sbnd::NuE::analyze(art::Event const& e){
+
+  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+  ClearMaps(e);
+  SetupMaps(e);
+
   eventID = e.id().event();
   runID = e.id().run();
   subRunID = e.id().subRun();
@@ -213,7 +232,7 @@ void sbnd::NuE::analyze(art::Event const& e)
   art::Handle<std::vector<recob::Track>>        trackHandle;
   std::vector<art::Ptr<recob::Track>>           trackVec;
   art::Handle<std::vector<recob::Shower>>       showerHandle;
-  std::vector<art::Ptr<recob::Shower>>          showerVec;
+  std::vector<art::Ptr<recob::Shower>>          showerVec;  
 
   e.getByLabel(nuGenModuleLabel, neutrinoHandle);
 
@@ -289,6 +308,22 @@ void sbnd::NuE::analyze(art::Event const& e)
 
   nTracks = trackVec.size();
   nShowers = showerVec.size();
+
+  for(const art::Ptr<recob::Shower> &shower : showerVec){
+    art::FindManyP<recob::Hit> showerHitAssns(showerVec, e, showerLabel);
+    const std::vector<art::Ptr<recob::Hit>> showerHits(showerHitAssns.at(shower.key()));
+    //std::cout << "num of hits in shower: " << showerHits.size();
+    
+    const int showerID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
+
+    // Calculating the completeness of the shower
+    double showerCompleteness = Completeness(e, showerHits, showerID_truth);
+    std::cout << "Shower Completeness: " << showerCompleteness << std::endl;
+
+    // Calculating the purity of the shower
+    double showerPurity = Purity(e, showerHits, showerID_truth);
+    std::cout << "Shower Purity: " << showerPurity << std::endl;
+  }
 
   std::cout << "num tracks: " << nTracks << " num showers: " << nShowers << std::endl;
 
@@ -423,6 +458,46 @@ void sbnd::NuE::analyze(art::Event const& e)
   } else{
     std::cout << "There is no reco neutrino, skipping event" << std::endl;
   } 
+}
+
+double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
+  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+  std::map<int, int> objectHitsMap;
+
+  for(unsigned int i = 0; i < objectHits.size(); ++i)
+    ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
+
+  std::cout << "Number of hits in reco shower: " << objectHitsMap[ID] << " Number of hits in shower: " << fHitsMap[ID] << std::endl;
+  return (fHitsMap[ID] == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(fHitsMap[ID]);
+}
+
+double sbnd::NuE::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
+  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+  std::map<int, int> objectHitsMap;
+
+  for(unsigned int i = 0; i < objectHits.size(); ++i)
+    ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
+
+  std::cout << "Number of hits in shower that are supposed to be: " << objectHitsMap[ID] << " Number of hits in shower: " << objectHits.size() << std::endl;
+  return (objectHits.size() == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(objectHits.size());
+}
+
+void sbnd::NuE::ClearMaps(const art::Event &e){
+    fHitsMap.clear();
+}
+
+void sbnd::NuE::SetupMaps(const art::Event &e){
+  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+  art::Handle<std::vector<recob::Hit> > hitsHandle;
+  e.getByLabel(hitLabel,hitsHandle);
+
+  for(unsigned hit_i = 0; hit_i < hitsHandle->size(); ++hit_i) {
+    const art::Ptr<recob::Hit> hit(hitsHandle,hit_i);
+    fHitsMap[TruthMatchUtils::TrueParticleID(clockData,hit,true)]++;
+  }
 }
 
 void sbnd::NuE::beginJob()
