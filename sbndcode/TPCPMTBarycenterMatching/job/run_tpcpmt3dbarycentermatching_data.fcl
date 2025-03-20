@@ -5,7 +5,7 @@
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 
-#include "tpcpmt3dbarycentermatching_config.fcl"
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
 
 process_name: BarycenterMatchProducer
 
