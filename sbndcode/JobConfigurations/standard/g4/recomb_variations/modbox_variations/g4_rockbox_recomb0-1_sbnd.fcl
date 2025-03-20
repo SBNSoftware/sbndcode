@@ -1,0 +1,8 @@
+#include "standard_g4_rockbox_sbnd.fcl"
+
+process_name: G4Var
+
+services.LArG4Parameters.UseModBoxRecomb: true
+services.LArG4Parameters.UseEllipsModBoxRecomb: false
+services.LArG4Parameters.ModBoxA: 0.93
+services.LArG4Parameters.ModBoxB: 0.21
