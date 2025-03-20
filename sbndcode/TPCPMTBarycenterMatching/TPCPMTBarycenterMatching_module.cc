@@ -348,7 +348,7 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
     }
   }
 
-    // We need to evaluate if there are two flashes in time coincidence and treat them as one.
+  // TODO (acastill): evaluate if there are two flashes in time coincidence and treat them as one.
 
 /* ~~~~~~~~~~~~~~~~~~~~ TPC Section
  * Here we start by gathering the Slices in the event
@@ -364,7 +364,7 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
   art::FindManyP<recob::PFParticle> fmPFPs(sliceHandle, e, fPandoraLabel);
   unsigned nSlices = (*sliceHandle).size();
 
-    //For slice...
+  //For slice...
   for ( unsigned j = 0; j < nSlices; j++ ) {
   //For each TPC
   std::vector<sbn::TPCPMTBarycenterMatch> sliceMatchInfoVector;
@@ -420,10 +420,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       //No charge found in slice...
       if ( sumCharge == 0. ) {
         if ( fFillMatchTree ) fMatchTree->Fill();
-        art::Ptr<sbn::TPCPMTBarycenterMatch> const infoPtr = makeInfoPtr(matchInfoVector->size());
-        infoPtrVector.push_back(infoPtr);
-        sliceMatchInfoVector.push_back(sliceMatchInfo);
-        //matchInfoVector->push_back(std::move(sliceMatchInfo));
         if ( fVerbose ) std::cout << "No charge found in Event: " << fEvent << " Slice: " << j << "! Continuing..."  << std::endl;
         continue;
       }
@@ -457,9 +453,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       //No valid match found...
       if ( matchIndex == -1 ) {
         if ( fFillMatchTree ) fMatchTree->Fill();
-        art::Ptr<sbn::TPCPMTBarycenterMatch> const infoPtr = makeInfoPtr(matchInfoVector->size());
-        infoPtrVector.push_back(infoPtr);
-        sliceMatchInfoVector.push_back(sliceMatchInfo);
         if ( fVerbose ) std::cout << "No matching flash found for Event: " << fEvent << " Slice: " << j << "! Continuing..."  << std::endl;
         continue;
       }
@@ -479,6 +472,7 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
 
     int maxFlashIdx=-1;
     int minNPes = -1000000000;
+    
     for(int i=0; i<static_cast<int>(flashPtrVector.size()); i++)
     {
       int nPEs = flashPtrVector[i]->TotalPE();
