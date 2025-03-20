@@ -1,4 +1,5 @@
 #include "trackfinderalgorithms.fcl"
+#include "trackfindermodules.fcl"
 
 BEGIN_PROLOG
 
@@ -37,3 +38,4 @@ sbnd_seedfinderalgorithm.SpacePointAlg.PreferColl: true
 sbnd_seedfinderalgorithm.SpacePointAlg.Filter:     false
 
 END_PROLOG
+
