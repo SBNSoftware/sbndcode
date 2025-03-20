@@ -11,6 +11,7 @@
 //  @author Jack Smedley ( jsmedley@fnal.gov )
 //
 ////////////////////////////////////////////////////////////////////////
+
 // Ported to sbndcode by Alejandro Sánchez Castillo (asanchezcastillo@ugr.es) on March 2025. 
 
 #include "art/Framework/Core/EDProducer.h"
@@ -180,7 +181,9 @@
  * * `FillMatchTree` (flag, default: `false`): if set to `true`, a ROOT tree
  *     with detailed matching information called `"matchTree"` will be written
  *     via `TFileService`.
- * 
+ * * `Do3DMatching` (bool, default: `true`): if set to true the matching is peformed
+ *     using the 3 dimensions (XYZ). If false, the matching is performed using only
+ *     the reconstruction on the detection plane (YZ).
  */
 class TPCPMTBarycenterMatchProducer : public art::EDProducer {
 public:
@@ -264,20 +267,11 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   produces< art::Assns<sbn::TPCPMTBarycenterMatch, recob::Slice> >();
   produces< art::Assns<sbn::TPCPMTBarycenterMatch, recob::OpFlash> >();
 
-  /*
-  // Call appropriate consumes<>() for any products to be retrieved by this module.
-  for ( const std::string& inputTag : fInputTags ) {
-    consumes<std::vector<recob::OpFlash>>(fOpFlashLabel + inputTag);
-    consumes<std::vector<recob::Slice>>(fPandoraLabel + inputTag);
-    
-    // via art::FindMany:
-    consumes<art::Assns<recob::OpFlash, recob::OpHit>>(fOpFlashLabel + inputTag);
-    consumes<art::Assns<recob::Slice, recob::Hit>>(fPandoraLabel + inputTag);
-    consumes<art::Assns<recob::Slice, recob::PFParticle>>(fPandoraLabel + inputTag);
-    consumes<art::Assns<recob::Hit, recob::SpacePoint>>(fPandoraLabel + inputTag);
-    consumes<art::Assns<recob::PFParticle, anab::T0>>(fPandoraLabel + inputTag);
-  } // for
-    */
+  if(fOpFlashesModuleLabel.size()!=2){
+    throw cet::exception("TPCPMTBarycenterMatching")
+    << "Module has been missconfigured. Number of OpFlashesModuleLabel must be 2!";
+  }
+
   if ( fFillMatchTree ) {
     art::ServiceHandle<art::TFileService> tfs;
     fMatchTree = tfs->make<TTree>("matchTree","TPC Slice - OpFlash Matching Analysis");
@@ -499,11 +493,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       sliceAssns->addSingle(infoPtrVector[maxFlashIdx], slicePtr);
       flashAssns->addSingle(infoPtrVector[maxFlashIdx], flashPtrVector[maxFlashIdx]);
       matchInfoVector->push_back(std::move(sliceMatchInfoVector[maxFlashIdx]));
-    }
-    else
-    {
-      sliceAssns->addSingle(infoPtrVector[0], slicePtr);
-      matchInfoVector->push_back(std::move(sliceMatchInfoVector[0]));
     }
   } //End for slice
 
