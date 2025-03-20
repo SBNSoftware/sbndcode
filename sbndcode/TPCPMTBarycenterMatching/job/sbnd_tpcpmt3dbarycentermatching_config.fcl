@@ -5,7 +5,7 @@ TPCPMTBarycenterMatchProducer:
     OpFlashesModuleLabel:     ["opflashtpc0", "opflashtpc1"]
     PandoraLabel:     "pandora"
     CollectionOnly:   true
-    Verbose:          true
+    Verbose:          false
     FillMatchTree:    false
     Do3DMatching:     true
     module_type: "TPCPMTBarycenterMatchProducer"
