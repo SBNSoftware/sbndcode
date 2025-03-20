@@ -536,6 +536,7 @@ void TPCPMTBarycenterMatchProducer::updateChargeVars(double sumCharge, TVector3 
   fChargeWidthX = std::sqrt( sumPosSqr[0]/sumCharge - (sumPos[0]/sumCharge)*(sumPos[0]/sumCharge) );
   fChargeWidthY = std::sqrt( sumPosSqr[1]/sumCharge - (sumPos[1]/sumCharge)*(sumPos[1]/sumCharge) );
   fChargeWidthZ = std::sqrt( sumPosSqr[2]/sumCharge - (sumPos[2]/sumCharge)*(sumPos[2]/sumCharge) );
+  fChargeTotal = sumCharge;
   if ( triggerFlashCenter[1] != -9999. ) {
     fDeltaY_Trigger = abs(triggerFlashCenter[0] - fChargeCenterY);
     fDeltaZ_Trigger = abs(triggerFlashCenter[1] - fChargeCenterZ);
