@@ -1,4 +1,4 @@
-#Common paramters for the barycenter matching
+BEGIN_PROLOG
 
 TPCPMTBarycenterMatchProducer:
 {
@@ -10,3 +10,5 @@ TPCPMTBarycenterMatchProducer:
     Do3DMatching:     true
     module_type: "TPCPMTBarycenterMatchProducer"
 }
+
+END_PROLOG
