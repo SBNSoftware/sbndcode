@@ -1,8 +1,9 @@
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
 #include "opt0finder_sbnd_data.fcl"
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
 #include "standard_reco2_sbnd.fcl"
-#include "tpcpmt3dbarycentermatching_config.fcl"
+
 services:
 {
     @table::services
