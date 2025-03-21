@@ -171,6 +171,7 @@ private:
   std::vector<double> tpcID_tree = std::vector<double>(0);
   std::vector<int> dl_current_tree = std::vector<int>(0);
   std::vector<double> sliceCompleteness_tree = std::vector<double>(0);
+  std::vector<double> trackScore_tree = std::vector<double>(0);
 
   // Vectors for the NuEHit Tree
   std::vector<double> event_hitTree = std::vector<double>(0);
@@ -214,6 +215,8 @@ void sbnd::NuE::analyze(art::Event const& e){
 
   ClearMaps(e);
   SetupMaps(e);
+
+  double trackscore;
 
   eventID = e.id().event();
   runID = e.id().run();
@@ -349,6 +352,8 @@ void sbnd::NuE::analyze(art::Event const& e){
   art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceLabel);
   // Get associations between pfparticles and vertex
   art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
+  // Get associations between pfparticles and metadat
+  art::FindOneP<larpandoraobj::PFParticleMetadata> pfpMetadataAssns(pfpHandle, e, PFParticleLabel);
 
   // initialises the vector that holds the primary reco neutrino info
   std::vector<std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>, art::Ptr<sbn::CRUMBSResult>>> v;
@@ -365,6 +370,15 @@ void sbnd::NuE::analyze(art::Event const& e){
     if(pfpSlices.size() == 1){
         const art::Ptr<recob::Slice> &pfpSlice(pfpSlices.front());
         //int SliceID = pfpSlice->ID();
+    
+        const auto meta  = pfpMetadataAssns.at(pfp.key());
+        const auto props = meta->GetPropertiesMap();
+        const auto trackscoreobj = props.find("TrackScore");
+
+        if(!(PFParticleID == 12 || PFParticleID == 14)){
+            trackscore = trackscoreobj->second;
+            std::cout << "PFP PDG: " << PFParticleID << ", Track Score: " << trackscore << std::endl; 
+        }
 
         const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
 
@@ -482,8 +496,9 @@ void sbnd::NuE::analyze(art::Event const& e){
     numTracks_tree.push_back(nTracks);
     numShowers_tree.push_back(nShowers);
     tpcID_tree.push_back(tpcID_num);
-    dl_current_tree.push_back(2); // 0 = uboone dl, 1 = dune dl, 2 = current
+    dl_current_tree.push_back(1); // 0 = uboone dl, 1 = dune dl, 2 = current
     sliceCompleteness_tree.push_back(chosenSliceCompleteness);
+    trackScore_tree.push_back(trackscore);
   } else{
     std::cout << "There is no reco neutrino, skipping event" << std::endl;
   }
@@ -553,6 +568,7 @@ void sbnd::NuE::beginJob()
   NuETree->Branch("tpcID_tree", &tpcID_tree);
   NuETree->Branch("dl_current_tree", &dl_current_tree);  
   NuETree->Branch("sliceCompleteness_tree", &sliceCompleteness_tree);
+  NuETree->Branch("trackScore_tree", &trackScore_tree);
 
   NuEHitTree->Branch("event_hitTree", &event_hitTree);
   NuEHitTree->Branch("run_hitTree", &run_hitTree);
