@@ -133,10 +133,13 @@ private:
   double recoNeutrinoVZ;                    // Reco vertex z coord
   size_t numRecoNeutrinos = 0;                 // Counter for number of reco neutrinos
 
+  double chosenSliceCompleteness;           // The completeness of the chosen slice
+
   float highestSliceScore = -10000;
   int highestSliceScoreIndex;
 
   std::map<int,int> fHitsMap;
+  std::vector<std::vector<double>> sliceInfo;
 
   geo::Point_t pos = {0, 0, 0};             // Geometry position (0, 0, 0), gets overwritten with actual coords
 
@@ -167,6 +170,7 @@ private:
   std::vector<int> numShowers_tree = std::vector<int>(0);
   std::vector<double> tpcID_tree = std::vector<double>(0);
   std::vector<int> dl_current_tree = std::vector<int>(0);
+  std::vector<double> sliceCompleteness_tree = std::vector<double>(0);
 
   // Vectors for the NuEHit Tree
   std::vector<double> event_hitTree = std::vector<double>(0);
@@ -292,7 +296,20 @@ void sbnd::NuE::analyze(art::Event const& e){
     nSlices++;
     slice_ID = slice->ID();
 
+    std::vector<double> vec4SliceInfo = std::vector<double>(0);
     if(slice_ID == std::numeric_limits<int>::max()) return; 
+ 
+    art::FindManyP<recob::Hit> sliceHitAssns(sliceVec, e, sliceLabel);
+    const std::vector<art::Ptr<recob::Hit>> sliceHits(sliceHitAssns.at(slice.key())); 
+    
+    const int sliceID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, hitVec, true);
+    // Calculating slice completeness
+    double sliceCompleteness = Completeness(e, sliceHits, sliceID_truth);
+    std::cout << "Slice Completeness: " << sliceCompleteness << std::endl;
+    vec4SliceInfo.push_back(slice_ID);
+    vec4SliceInfo.push_back(sliceCompleteness);
+    sliceInfo.push_back(vec4SliceInfo);
+    vec4SliceInfo.clear();
   }
 
   if(e.getByLabel(PFParticleLabel, pfpHandle))
@@ -312,7 +329,6 @@ void sbnd::NuE::analyze(art::Event const& e){
   for(const art::Ptr<recob::Shower> &shower : showerVec){
     art::FindManyP<recob::Hit> showerHitAssns(showerVec, e, showerLabel);
     const std::vector<art::Ptr<recob::Hit>> showerHits(showerHitAssns.at(shower.key()));
-    //std::cout << "num of hits in shower: " << showerHits.size();
     
     const int showerID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
 
@@ -333,7 +349,7 @@ void sbnd::NuE::analyze(art::Event const& e){
   art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceLabel);
   // Get associations between pfparticles and vertex
   art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
-      
+
   // initialises the vector that holds the primary reco neutrino info
   std::vector<std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>, art::Ptr<sbn::CRUMBSResult>>> v;
 
@@ -355,6 +371,10 @@ void sbnd::NuE::analyze(art::Event const& e){
         if(pfpVertexs.size() == 1){
             const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
             bool pfpPrimary = pfp->IsPrimary();
+
+            // Print statements when looking at the cheated vertexing
+            //std::cout << "PFP Vertex: " << pfpVertex->position().X() << ", " << pfpVertex->position().Y() << ", " << pfpVertex->position().Z() << std::endl;
+            //std::cout << "Is Primary: " << pfpPrimary << " PFP ID: " << PFParticleID << std::endl;
 
             if(pfpPrimary && (PFParticleID == 12 || PFParticleID == 14)){
                 art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(pfpSlices, e, crumbsLabel);
@@ -389,6 +409,13 @@ void sbnd::NuE::analyze(art::Event const& e){
     recoNeutrinoVX = std::get<1>(v[highestSliceScoreIndex])->position().X();
     recoNeutrinoVY = std::get<1>(v[highestSliceScoreIndex])->position().Y();
     recoNeutrinoVZ = std::get<1>(v[highestSliceScoreIndex])->position().Z();
+
+    double chosenSliceID = std::get<2>(v[highestSliceScoreIndex])->ID();
+    for(double sliceIndex = 0; sliceIndex < sliceInfo.size(); sliceIndex++){
+        if(chosenSliceID == sliceInfo[sliceIndex][0]){
+            chosenSliceCompleteness = sliceInfo[sliceIndex][1];
+        } 
+    }
 
   } else{
     recoNeutrinoVX = NAN;
@@ -433,7 +460,8 @@ void sbnd::NuE::analyze(art::Event const& e){
         uvz_hitTree.push_back(uvz);
     }
   }
-
+ 
+  std::cout << "completeness of chosen slice: " << chosenSliceCompleteness << std::endl;
   std::cout << "num slices: " << nSlices << ", num pfps: " << nPFParticles << std::endl;
 
   if(recoNeutrinoVX != NAN){
@@ -455,9 +483,12 @@ void sbnd::NuE::analyze(art::Event const& e){
     numShowers_tree.push_back(nShowers);
     tpcID_tree.push_back(tpcID_num);
     dl_current_tree.push_back(2); // 0 = uboone dl, 1 = dune dl, 2 = current
+    sliceCompleteness_tree.push_back(chosenSliceCompleteness);
   } else{
     std::cout << "There is no reco neutrino, skipping event" << std::endl;
-  } 
+  }
+
+ sliceInfo.clear(); 
 }
 
 double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
@@ -468,7 +499,7 @@ double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<r
   for(unsigned int i = 0; i < objectHits.size(); ++i)
     ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
 
-  std::cout << "Number of hits in reco shower: " << objectHitsMap[ID] << " Number of hits in shower: " << fHitsMap[ID] << std::endl;
+  //std::cout << "Number in object: " << objectHitsMap[ID] << " Number of hits in object in truth: " << fHitsMap[ID] << std::endl;
   return (fHitsMap[ID] == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(fHitsMap[ID]);
 }
 
@@ -480,7 +511,6 @@ double sbnd::NuE::Purity(const art::Event &e, const std::vector<art::Ptr<recob::
   for(unsigned int i = 0; i < objectHits.size(); ++i)
     ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
 
-  std::cout << "Number of hits in shower that are supposed to be: " << objectHitsMap[ID] << " Number of hits in shower: " << objectHits.size() << std::endl;
   return (objectHits.size() == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(objectHits.size());
 }
 
@@ -522,6 +552,7 @@ void sbnd::NuE::beginJob()
   NuETree->Branch("numShowers_tree", &numShowers_tree);
   NuETree->Branch("tpcID_tree", &tpcID_tree);
   NuETree->Branch("dl_current_tree", &dl_current_tree);  
+  NuETree->Branch("sliceCompleteness_tree", &sliceCompleteness_tree);
 
   NuEHitTree->Branch("event_hitTree", &event_hitTree);
   NuEHitTree->Branch("run_hitTree", &run_hitTree);
