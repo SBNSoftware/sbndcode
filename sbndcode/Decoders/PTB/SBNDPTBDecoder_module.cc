@@ -179,7 +179,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
     {
       std::cout << "SBNDPTBDecoder_module: got into aux" << std::endl;
     }
-
+  
   for (size_t iword = 0; iword < ctbfrag.NWords(); ++iword)
     {
       if (fDebugLevel > 0)
@@ -188,19 +188,14 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	}
       size_t ix=0;
       uint32_t wt = 0;
-
-       if (ctbfrag.Trigger(iword))
+      if (ctbfrag.Trigger(iword))
 	{
 	  raw::ptb::Trigger tstruct;
-	  tstruct.word_type = ctbfrag.Word(iword)->word_type;//ctbfrag.Trigger(iword)->word_type;
+	  tstruct.word_type = ctbfrag.Trigger(iword)->word_type;
 	  wt = tstruct.word_type;
-	  //	  tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word;
-	  tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word & 0x1FFFFFFFFFFFFFFF;
-	  //	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp * 20; // PTB clock has 20ns ticks
-	  tstruct.timestamp = ctbfrag.TimeStamp(iword) * 20; // PTB clock has 20ns ticks
-
-	  //if (ctbfrag.Trigger(iword)->IsHLT())
-	  if(wt == 2)
+	  tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word;
+	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp;
+	  if (ctbfrag.Trigger(iword)->IsHLT()) 
 	    {
 	      
 	      if (*(frag.metadata<int>()) == 2){ //If data is taken with 192b PTB words
@@ -220,8 +215,7 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 		  std::cout << "SBNDPTBDecoder_module: found HLT: " << wt << " " << ix << std::endl;
 		}
 	    }
-	  //else if (ctbfrag.Trigger(iword)->IsLLT())
-	  else if(wt == 1)
+	  else if (ctbfrag.Trigger(iword)->IsLLT())
 	    {
 	      ix = sout.LLTrigs.size();
 	      sout.LLTrigs.push_back(tstruct);
