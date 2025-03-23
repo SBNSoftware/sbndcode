@@ -95,6 +95,8 @@ cet_build_plugin(TrackWiggles art::module SOURCE TrackWiggles_module.cc LIBRARIE
 cet_build_plugin(PMTRingingTagging art::module SOURCE PMTRingingTagging_module.cc LIBRARIES ${Ringing_LIBRARIES})
 cet_build_plugin(GrabExplicitEventID art::module SOURCE GrabExplicitEventID_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(LLTEventGrabber art::module SOURCE LLTEventGrabber_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(RecoBWireDump art::module SOURCE RecoBWireDump_module.cc LIBRARIES ${MODULE_LIBRARIES})
+
 
 
 install_source()
