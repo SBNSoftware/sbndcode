@@ -56,8 +56,8 @@ function(params, tools, override = {}) {
       fft_flag: 0,  // 1 is faster but higher memory, 0 is slightly slower but lower memory
       postgain: 1.0,  // default 1.2
       ADC_mV: ADC_mV_ratio, // 4096 / (1400.0 * wc.mV), 
-      troi_col_th_factor: 4.5,  // default 5
-      troi_ind_th_factor: 2.7,  // default 3
+      troi_col_th_factor: 4.0,  // default 5
+      troi_ind_th_factor: 2.4,  // default 3
       troi_pad: 5, //default 5
       lroi_rebin: 6, // default 6
       lroi_th_factor: 3.5, // default 3.5
