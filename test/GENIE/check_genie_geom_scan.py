@@ -31,7 +31,7 @@ print('\t -> flux configuration:', flux_config)
 #
 # Check that the two are the same, if not, need to regenerate the GeomScan file
 #
-message = 'Please regenerate the GeomScan file. Instructions: link.'
+message = 'Please regenerate the GeomScan file. Instructions are in fcl file make_genie_geomscan_file_sbnd.fcl.'
 
 assert geom_scan_flux_config == flux_config, f"Have you updated/changed the flux files? {message}"
 
