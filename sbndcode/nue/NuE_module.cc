@@ -131,7 +131,9 @@ private:
   double recoNeutrinoVX;                    // Reco vertex x coord
   double recoNeutrinoVY;                    // Reco vertex y coord
   double recoNeutrinoVZ;                    // Reco vertex z coord
-  size_t numRecoNeutrinos = 0;                 // Counter for number of reco neutrinos
+  size_t numRecoNeutrinos = 0;              // Counter for number of reco neutrinos
+
+  double totalShowerEnergy;                 // Total energy of the shower in the event
 
   double chosenSliceCompleteness;           // The completeness of the chosen slice
 
@@ -217,6 +219,7 @@ void sbnd::NuE::analyze(art::Event const& e){
   SetupMaps(e);
 
   double trackscore;
+  totalShowerEnergy = 0;
 
   eventID = e.id().event();
   runID = e.id().run();
@@ -352,8 +355,10 @@ void sbnd::NuE::analyze(art::Event const& e){
   art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceLabel);
   // Get associations between pfparticles and vertex
   art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
-  // Get associations between pfparticles and metadat
+  // Get associations between pfparticles and metadata
   art::FindOneP<larpandoraobj::PFParticleMetadata> pfpMetadataAssns(pfpHandle, e, PFParticleLabel);
+  // Get associations between pfparticles and showers
+  art::FindOneP<recob::Shower> pfpShowerAssns(pfpVec, e, showerLabel);
 
   // initialises the vector that holds the primary reco neutrino info
   std::vector<std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>, art::Ptr<sbn::CRUMBSResult>>> v;
@@ -365,8 +370,9 @@ void sbnd::NuE::analyze(art::Event const& e){
     if(PFParticleID == std::numeric_limits<int>::max()) return;
 
     const std::vector<art::Ptr<recob::Slice>> pfpSlices(pfpSliceAssns.at(pfp.key()));
+    const art::Ptr<recob::Shower> pfpShower(pfpShowerAssns.at(pfp.key()));  
     
-    // Condition on the number of slices associated with the pfparticle. pfp has > 1 slice or no slice then it is skipped
+    // Condition on the number of slices and showers associated with the pfparticle. pfp has > 1 slice or no slice then it is skipped
     if(pfpSlices.size() == 1){
         const art::Ptr<recob::Slice> &pfpSlice(pfpSlices.front());
         //int SliceID = pfpSlice->ID();
@@ -378,6 +384,13 @@ void sbnd::NuE::analyze(art::Event const& e){
         if(!(PFParticleID == 12 || PFParticleID == 14)){
             trackscore = trackscoreobj->second;
             std::cout << "PFP PDG: " << PFParticleID << ", Track Score: " << trackscore << std::endl; 
+        
+            //if(trackscore < 0.7){
+                std::cout << "counting this as a shower" << std::endl;
+                std::cout << "energy of this shower: " << pfpShower->Energy()[pfpShower->best_plane()] << ", best plane: " << pfpShower->best_plane() << std::endl;
+                totalShowerEnergy += pfpShower->Energy()[pfpShower->best_plane()];
+                std::cout << "theta: " << TMath::RadToDeg() * pfpShower->Direction().Theta() << std::endl;
+            //}
         }
 
         const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
@@ -439,6 +452,7 @@ void sbnd::NuE::analyze(art::Event const& e){
 
   std::cout << "True vertex: (" << trueNeutrinoVX << ", " << trueNeutrinoVY << ", " << trueNeutrinoVZ << ")   Reco vertex: (" << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << ")" << std::endl;
   std::cout << "dx: " << recoNeutrinoVX - trueNeutrinoVX << ", dy: " << recoNeutrinoVY - trueNeutrinoVY << ", dz: " << recoNeutrinoVZ - trueNeutrinoVZ << std::endl; 
+  std::cout << "Total shower energy: " << totalShowerEnergy << std::endl;
 
   for(auto &hit : hitVec){
     if(hit->View() == 0 || hit->View() == 1 || hit->View() == 2){
