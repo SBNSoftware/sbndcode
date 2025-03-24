@@ -57,33 +57,62 @@ void scores(std::vector<event_t> allEvents_vec){
     }
 
     TCanvas *sliceCompletenessCanvas = new TCanvas("sliceCompleteness_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* sliceCompletenessCurrent_dist = new TH1F("Slice Completeness", "Completeness of Slice", 40, 0.65, 1.05);
+    //TH1F* sliceCompletenessCurrent_dist = new TH1F("Slice Completeness", "Completeness of Slice", 35, 0.655, 1.005);
+    TH1F* sliceCompletenessCurrent_dist = new TH1F("Slice Completeness", "Completeness of Slice", 35, 0.935, 1.005);
     sliceCompletenessCurrent_dist->SetTitle("Completeness of Slice in an Event;Completeness Score;# of Events");
     TH1F* sliceCompletenessDLUboone_dist = (TH1F*) sliceCompletenessCurrent_dist->Clone("Slice Completeness");
     TH1F* sliceCompletenessDLDune_dist = (TH1F*) sliceCompletenessCurrent_dist->Clone("Slice Completeness");
 
     TCanvas *trackScoreCanvas = new TCanvas("trackscore_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* trackScoreCurrent_dist = new TH1F("Track Score", "Score of Track", 20, 0, 1);
-    trackScoreCurrent_dist->SetTitle("Recoil Electron Track Score;Track Score;# of Events");
+    TH1F* trackScoreCurrent_dist = new TH1F("Track Score", "Score of Track", 21, -0.025, 1.025);
+    trackScoreCurrent_dist->SetTitle("Recoil Electron Track Score in an Event (with Number of PFPs = 2);Track Score;# of Events");
     TH1F* trackScoreDLUboone_dist = (TH1F*) trackScoreCurrent_dist->Clone("Track Score");
     TH1F* trackScoreDLDune_dist = (TH1F*) trackScoreCurrent_dist->Clone("Track Score");
-  
+   
+    double sizeCurrentSlice = 0;
+    double sizeCurrentTrack = 0;
+    double sizeDLDuneSlice = 0;
+    double sizeDLDuneTrack = 0;
+    double sizeDLUbooneSlice = 0;
+    double sizeDLUbooneTrack = 0;
+
     std::cout << "current size: " << current.size() << std::endl; 
     for(UInt_t j = 0; j < current.size(); j++){
-        if(current.at(j).nSlices == 1) sliceCompletenessCurrent_dist->Fill(current.at(j).sliceCompleteness);
-        if(current.at(j).nPFPs == 2) trackScoreCurrent_dist->Fill(current.at(j).trackScore);
+        //if(current.at(j).nSlices == 1){
+            sliceCompletenessCurrent_dist->Fill(current.at(j).sliceCompleteness);
+            sizeCurrentSlice++;
+        //}
+
+        if(current.at(j).nPFPs == 2){
+            trackScoreCurrent_dist->Fill(current.at(j).trackScore);
+            sizeCurrentTrack++;
+        }
     }
 
     std::cout << "dl uboone: " << dlUboone.size() << std::endl;
     for(UInt_t j = 0; j < dlUboone.size(); j++){
-        if(dlUboone.at(j).nSlices == 1) sliceCompletenessDLUboone_dist->Fill(dlUboone.at(j).sliceCompleteness);
-        if(dlUboone.at(j).nPFPs == 2) trackScoreDLUboone_dist->Fill(dlUboone.at(j).trackScore);
+        //if(dlUboone.at(j).nSlices == 1){ 
+            sliceCompletenessDLUboone_dist->Fill(dlUboone.at(j).sliceCompleteness);
+            sizeDLUbooneSlice++;
+        //}
+
+        if(dlUboone.at(j).nPFPs == 2){
+            trackScoreDLUboone_dist->Fill(dlUboone.at(j).trackScore);
+            sizeDLUbooneTrack++;
+        }
     }
 
     std::cout << "dl dune size: " << dlDune.size() << std::endl;
     for(UInt_t j = 0; j < dlDune.size(); j++){
-        if(dlDune.at(j).nSlices == 1) sliceCompletenessDLDune_dist->Fill(dlDune.at(j).sliceCompleteness);
-        if(dlDune.at(j).nPFPs == 2) trackScoreDLDune_dist->Fill(dlDune.at(j).trackScore);
+        //if(dlDune.at(j).nSlices == 1){
+            sliceCompletenessDLDune_dist->Fill(dlDune.at(j).sliceCompleteness);
+            sizeDLDuneSlice++;
+        //}
+
+        if(dlDune.at(j).nPFPs == 2){
+            trackScoreDLDune_dist->Fill(dlDune.at(j).trackScore);
+            sizeDLDuneTrack++;
+        }
     }
 
     sliceCompletenessCanvas->cd();
@@ -97,17 +126,19 @@ void scores(std::vector<event_t> allEvents_vec){
     sliceCompletenessDLDune_dist->Draw("histsame");
     sliceCompletenessDLUboone_dist->Draw("histsame");
     sliceCompletenessCurrent_dist->SetStats(0);
-    sliceCompletenessCurrent_dist->GetYaxis()->SetRangeUser(0, 1000);
-    sliceCompletenessCurrent_dist->GetXaxis()->SetRangeUser(0.7, 1.1);
+    sliceCompletenessCurrent_dist->GetYaxis()->SetRangeUser(0, 800);
+    //sliceCompletenessCurrent_dist->GetXaxis()->SetRangeUser(0.8, 1.0052);
+    sliceCompletenessCurrent_dist->GetXaxis()->SetRangeUser(0.935, 1.001);
 
-    auto legend = new TLegend(0.56,0.86,0.88,0.70);
+    auto legend = new TLegend(1-0.86,0.86,1-0.54,0.70);
     legend->AddEntry(sliceCompletenessDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
     legend->AddEntry(sliceCompletenessDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
     legend->AddEntry(sliceCompletenessCurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
     legend->SetTextSize(0.0225);
     legend->SetMargin(0.13);
     legend->Draw();
-    sliceCompletenessCanvas->SaveAs("/nashome/c/coackley/nuEPlots/sliceCompleteness_dist.pdf");
+    //sliceCompletenessCanvas->SaveAs("/nashome/c/coackley/nuEPlots/sliceCompleteness_dist.pdf");
+    sliceCompletenessCanvas->SaveAs("/nashome/c/coackley/nuEPlots/sliceCompleteness_dist_zoomed.pdf");
 
     trackScoreCanvas->cd();
     trackScoreCurrent_dist->SetLineWidth(2);
@@ -120,7 +151,7 @@ void scores(std::vector<event_t> allEvents_vec){
     trackScoreDLDune_dist->Draw("histsame");
     trackScoreDLUboone_dist->Draw("histsame");
     trackScoreCurrent_dist->SetStats(0);
-    trackScoreCurrent_dist->GetYaxis()->SetRangeUser(0, 1000);
+    trackScoreCurrent_dist->GetYaxis()->SetRangeUser(0, 200);
     
     auto legend1 = new TLegend(0.56,0.86,0.88,0.70);
     legend1->AddEntry(trackScoreDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
@@ -131,8 +162,85 @@ void scores(std::vector<event_t> allEvents_vec){
     legend1->Draw();
     trackScoreCanvas->SaveAs("/nashome/c/coackley/nuEPlots/trackScore_dist.pdf");
 
-    
+    TCanvas *sliceCompletenessPercCanvas = new TCanvas("sliceCompletenessPerc_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    //TH1F* sliceCompletenessCurrent_dist_perc = new TH1F("Slice Completeness Perc", "Completeness of Slice Perc", 35, 0.655, 1.005);
+    TH1F* sliceCompletenessCurrent_dist_perc = new TH1F("Slice Completeness Perc", "Completeness of Slice Perc", 35, 0.935, 1.005);
+    sliceCompletenessCurrent_dist_perc->SetTitle("Completeness of Slice in an Event;Completeness Score;Percentage of Events (%)");
+    TH1F* sliceCompletenessDLUboone_dist_perc = (TH1F*) sliceCompletenessCurrent_dist_perc->Clone("Slice Completeness Perc");
+    TH1F* sliceCompletenessDLDune_dist_perc = (TH1F*) sliceCompletenessCurrent_dist_perc->Clone("Slice Completeness Perc");
 
+    TCanvas *trackScorePercCanvas = new TCanvas("trackscorePerc_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* trackScoreCurrent_dist_perc = new TH1F("Track Score Perc", "Score of Track Perc", 21, -0.025, 1.025);
+    trackScoreCurrent_dist_perc->SetTitle("Recoil Electron Track Score in an Event (with Number of PFPs = 2);Track Score;Percentage of Events (%)");
+    TH1F* trackScoreDLUboone_dist_perc = (TH1F*) trackScoreCurrent_dist_perc->Clone("Track Score Perc");
+    TH1F* trackScoreDLDune_dist_perc = (TH1F*) trackScoreCurrent_dist_perc->Clone("Track Score Perc");
+
+    //double binFilling = 0.66; // lowest value + bin width/2 (0.655 + 0.005)
+    double binFilling = 0.936; // lowest value + bin width/2 (0.935 + 0.001)
+    for(int i = 1; i < 36; i++){
+        //std::cout << "bin filling: " << binFilling << std::endl;
+        sliceCompletenessCurrent_dist_perc->Fill(binFilling, (100.0f*sliceCompletenessCurrent_dist->GetBinContent(i)/sizeCurrentSlice));
+        sliceCompletenessDLUboone_dist_perc->Fill(binFilling, (100.0f*sliceCompletenessDLUboone_dist->GetBinContent(i)/sizeDLUbooneSlice));
+        sliceCompletenessDLDune_dist_perc->Fill(binFilling, (100.0f*sliceCompletenessDLDune_dist->GetBinContent(i)/sizeDLDuneSlice));
+        //binFilling += 0.01;
+        binFilling += 0.002; // bin width
+        //std::cout << sliceCompletenessCurrent_dist->GetBinContent(i) << ", " << sliceCompletenessDLUboone_dist->GetBinContent(i) << ", " << sliceCompletenessDLDune_dist->GetBinContent(i) << std::endl;
+    }
+
+    binFilling = 0; // lowest value + bin width/2 (-0.025 + 0.025)
+    for(int i = 1; i < 22; i++){
+        trackScoreCurrent_dist_perc->Fill(binFilling, (100.0f*trackScoreCurrent_dist->GetBinContent(i)/sizeCurrentTrack));
+        trackScoreDLUboone_dist_perc->Fill(binFilling, (100.0f*trackScoreDLUboone_dist->GetBinContent(i)/sizeDLUbooneTrack));
+        trackScoreDLDune_dist_perc->Fill(binFilling, (100.0f*trackScoreDLDune_dist->GetBinContent(i)/sizeDLDuneTrack));
+        binFilling += 0.05; // bin width
+    }
+
+    sliceCompletenessPercCanvas->cd();
+    sliceCompletenessCurrent_dist_perc->SetLineWidth(2);
+    sliceCompletenessCurrent_dist_perc->SetLineColor(kRed);
+    sliceCompletenessDLDune_dist_perc->SetLineWidth(2);
+    sliceCompletenessDLDune_dist_perc->SetLineColor(kViolet-5);
+    sliceCompletenessDLUboone_dist_perc->SetLineWidth(2);
+    sliceCompletenessDLUboone_dist_perc->SetLineColor(kBlue);
+    sliceCompletenessCurrent_dist_perc->Draw("hist");
+    sliceCompletenessDLDune_dist_perc->Draw("histsame");
+    sliceCompletenessDLUboone_dist_perc->Draw("histsame");
+    sliceCompletenessCurrent_dist_perc->SetStats(0);
+    sliceCompletenessCurrent_dist_perc->GetYaxis()->SetRangeUser(0, 80);
+    //sliceCompletenessCurrent_dist_perc->GetXaxis()->SetRangeUser(0.8, 1.0052);
+    sliceCompletenessCurrent_dist_perc->GetXaxis()->SetRangeUser(0.935, 1.001);
+
+    auto legend3 = new TLegend(1-0.86,0.86,1-0.54,0.70);
+    legend3->AddEntry(sliceCompletenessDLDune_dist_perc, "Deep Learning: DUNE/LBNF Tune", "f");
+    legend3->AddEntry(sliceCompletenessDLUboone_dist_perc, "Deep Learning: #muBooNE/BNB Tune", "f");
+    legend3->AddEntry(sliceCompletenessCurrent_dist_perc, "Current SBND Vertexing (without Refinement)", "f");
+    legend3->SetTextSize(0.0225);
+    legend3->SetMargin(0.13);
+    legend3->Draw();
+    //sliceCompletenessPercCanvas->SaveAs("/nashome/c/coackley/nuEPlots/sliceCompleteness_dist_perc.pdf");
+    sliceCompletenessPercCanvas->SaveAs("/nashome/c/coackley/nuEPlots/sliceCompleteness_dist_perc_zoomed.pdf");
+
+    trackScorePercCanvas->cd();
+    trackScoreCurrent_dist_perc->SetLineWidth(2);
+    trackScoreCurrent_dist_perc->SetLineColor(kRed);
+    trackScoreDLDune_dist_perc->SetLineWidth(2);
+    trackScoreDLDune_dist_perc->SetLineColor(kViolet-5);
+    trackScoreDLUboone_dist_perc->SetLineWidth(2);
+    trackScoreDLUboone_dist_perc->SetLineColor(kBlue);
+    trackScoreCurrent_dist_perc->Draw("hist");
+    trackScoreDLDune_dist_perc->Draw("histsame");
+    trackScoreDLUboone_dist_perc->Draw("histsame");
+    trackScoreCurrent_dist_perc->SetStats(0);
+    trackScoreCurrent_dist_perc->GetYaxis()->SetRangeUser(0, 30);
+    
+    auto legend4 = new TLegend(0.56,0.86,0.88,0.70);
+    legend4->AddEntry(trackScoreDLDune_dist_perc, "Deep Learning: DUNE/LBNF Tune", "f");
+    legend4->AddEntry(trackScoreDLUboone_dist_perc, "Deep Learning: #muBooNE/BNB Tune", "f");
+    legend4->AddEntry(trackScoreCurrent_dist_perc, "Current SBND Vertexing (without Refinement)", "f");
+    legend4->SetTextSize(0.0225);
+    legend4->SetMargin(0.13);
+    legend4->Draw();
+    trackScorePercCanvas->SaveAs("/nashome/c/coackley/nuEPlots/trackScore_dist_perc.pdf");
 }
 
 void numberPlots(std::vector<event_t> allEvents_vec){
@@ -310,7 +418,7 @@ void numberPlots(std::vector<event_t> allEvents_vec){
     TH1F* numShowersDLUboone_dist_perc = (TH1F*) numShowersCurrent_dist_perc->Clone("Number of Showers Perc");
     TH1F* numShowersDLDune_dist_perc = (TH1F*) numShowersCurrent_dist_perc->Clone("Number of Showers Perc");
 
-    double binFilling = 0; // lowest value + bin width (-0.5 + 0.5)
+    double binFilling = 0; // lowest value + bin width/2 (-0.5 + 0.5)
     for(int i = 1; i < 11; i++){
         numPFPsCurrent_dist_perc->Fill(binFilling, (100.0f*numPFPsCurrent_dist->GetBinContent(i)/(double)current.size()));
         numPFPsDLUboone_dist_perc->Fill(binFilling, (100.0f*numPFPsDLUboone_dist->GetBinContent(i)/(double)dlUboone.size()));
@@ -324,7 +432,7 @@ void numberPlots(std::vector<event_t> allEvents_vec){
         binFilling += 1;
     }
 
-    binFilling = 0; // lowest value + bin width (-0.5 + 0.5)
+    binFilling = 0; // lowest value + bin width/2 (-0.5 + 0.5)
     for(int i = 1; i < 6; i++){
         numSlicesCurrent_dist_perc->Fill(binFilling, (100.0f*numSlicesCurrent_dist->GetBinContent(i)/(double)current.size()));
         numSlicesDLUboone_dist_perc->Fill(binFilling, (100.0f*numSlicesDLUboone_dist->GetBinContent(i)/(double)dlUboone.size()));
