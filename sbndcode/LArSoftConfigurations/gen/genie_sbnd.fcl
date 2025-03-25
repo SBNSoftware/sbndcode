@@ -320,6 +320,10 @@ sbnd_genie_simple_rockbox: {
   GeomScan: "file: GENIE/sbnd_rock_maxpathlength_fluxI_gdmlv02_00.xml"
 }
 
+# Rotated bucket configuration
+sbnd_fluxbucket_bnb_rotated: {
+  SpillTimeConfig:  "evgb::EvtTimeFNALBeam  booster,  dtbucket=18.936, sigma=1.308"
+}
 
 #
 # Basic configurations (NuMI beam)
