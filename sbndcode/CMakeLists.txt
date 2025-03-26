@@ -1,3 +1,5 @@
+add_subdirectory(Analysis)
+
 
 add_subdirectory(JobConfigurations)
 add_subdirectory(LArSoftConfigurations)

@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+tophatplot:
+{
+    module_type: "XARAPUCATopHatPlotAnalyzer"
+
+    waveforms_module_label: "xarapucadecoder:XARAPUCAChannels"
+
+    debug: 0                                                                # 0: no debug, 1: do debug
+    
+}
+
+END_PROLOG

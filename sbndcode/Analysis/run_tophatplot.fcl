@@ -1,0 +1,27 @@
+#include "tophatplot_analysis_config.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: XARAPUCATopHatPlotAnalyzer # The process name must NOT contain underscores
+
+source:
+{
+    module_type: RootInput # Telling art we want a ROOT input
+    maxEvents: -1
+}
+
+services:
+{
+    TFileService: { fileName: "top_hat_plot.root" }
+    @table::sbnd_services
+}
+
+physics:
+{
+    analyzers:
+    {
+        ana: @local::tophatplot 
+    }
+
+    path0: [ana]
+    end_paths: [path0]
+}

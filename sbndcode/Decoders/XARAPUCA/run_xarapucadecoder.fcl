@@ -16,6 +16,7 @@ outputs: {
     out1: {
         module_type: RootOutput
         fileName:    "xarapucadecoder-art.root"     # Output file containing the module products.
+        dataTier:  "decoded-raw"
     }
 }
 
