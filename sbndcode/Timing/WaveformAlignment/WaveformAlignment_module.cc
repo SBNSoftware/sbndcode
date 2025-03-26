@@ -263,23 +263,28 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
 void sbnd::WaveformAlignment::produce(art::Event& e)
 {
     // Output data products
+    
+    // FTRIG
     std::unique_ptr< std::vector< raw::OpDetWaveform > > newFtrigWf (new std::vector< raw::OpDetWaveform >);
     art::PtrMaker<raw::OpDetWaveform> make_ftrigwf_ptr{e, fFtrigNewLabel}; 
     
     std::unique_ptr< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform> > newFtrigBoardAssn (new art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform >);
 
+    // PMT
     std::unique_ptr< std::vector< raw::OpDetWaveform > > newPmtWf (new std::vector< raw::OpDetWaveform >);
     art::PtrMaker<raw::OpDetWaveform> make_pmtwf_ptr{e, fPmtNewLabel}; 
     
     std::unique_ptr< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform> > newPmtBoardAssn (new art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform >);
     std::unique_ptr< art::Assns<  raw::pmt::BoardAlignment, raw::OpDetWaveform> > newPmtAlignAssn (new art::Assns< raw::pmt::BoardAlignment, raw::OpDetWaveform >);
-    
+   
+    // TIMING
     std::unique_ptr< std::vector< raw::OpDetWaveform > > newTimingWf (new std::vector< raw::OpDetWaveform >);
     art::PtrMaker<raw::OpDetWaveform> make_timingwf_ptr{e, fTimingNewLabel}; 
     
     std::unique_ptr< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform> > newTimingBoardAssn (new art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform >);
     std::unique_ptr< art::Assns<  raw::pmt::BoardAlignment, raw::OpDetWaveform> > newTimingAlignAssn (new art::Assns< raw::pmt::BoardAlignment, raw::OpDetWaveform >);
-    
+   
+    // Board Timing
     std::unique_ptr< std::vector< raw::pmt::BoardAlignment >> newBoardAlign (new std::vector< raw::pmt::BoardAlignment >);
     art::PtrMaker<raw::pmt::BoardAlignment> make_align_ptr{e}; 
     
@@ -306,9 +311,9 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     _subrun = e.id().subRun();
     _event  =  e.id().event();
 
-    //if (fDebugTdc | fDebugTimeRef | fDebugFtrig | fDebugPmt | fDebugTiming)
+    if (fDebugTdc | fDebugTimeRef | fDebugFtrig | fDebugPmt | fDebugTiming)
         std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
-
+    
     //---------------------------TDC-----------------------------//
     art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
     e.getByLabel(fTdcDecodeLabel, tdcHandle);
@@ -444,7 +449,6 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     //TODO: Add reference for PTB and CAEN only
                     
                 }
-
                 
                 //Save to vector
                 boardJitter[wf->ChannelNumber()].push_back(shift);
@@ -544,8 +548,15 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
                     art::Ptr<raw::pmt::BoardAlignment> wf_align = make_align_ptr(boardIdx);
 
+                    //TODO: turn this to database
+                    SBND::PMTChannelMapService::PMTInfo_t pmtInfo = fPMTChannelMapService->GetPMTInfoFromChannelID(wf->ChannelNumber());
+                    if(!pmtInfo.valid)
+                        throw cet::exception("WaveformAlignment") << "No PMTChannelMapService found for ch " << wf->ChannelNumber() << std::endl;
+                    double total_transit = pmtInfo.TotalTransit;
+
                     //TODO: Get cable length + PMT Response from Channel Map Service
-                    double correction = boardJitter[boardIdx][flashIdx]; // - cable length - pmt response
+                    double correction = boardJitter[boardIdx][flashIdx] - total_transit;// - pmt response
+                    //double correction = total_transit;// - pmt response
                  
                     double new_ts = wf->TimeStamp() + correction; //ns to us
                     std::vector<uint16_t> adc_vec(wf->Waveform().size(), 0);
@@ -609,8 +620,8 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                 art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
                 art::Ptr<raw::pmt::BoardAlignment> wf_align = make_align_ptr(boardIdx);
 
-                //TODO: Get cable length + PMT Response from Channel Map Service
-                double correction = boardJitter[boardIdx][flashIdx]; // - cable length - pmt response
+                //Timing CAEN is not connected to PMT
+                double correction = boardJitter[boardIdx][flashIdx]; 
              
                 double new_ts = wf->TimeStamp() + correction; //ns to us
                 std::vector<uint16_t> adc_vec(wf->Waveform().size(), 0);
@@ -632,7 +643,8 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     wfTimingHandle.removeProduct();
     wf_timing_v.clear();
 
-    if (fDebugTdc | fDebugFtrig) std::cout <<"#--------------------------------------------------------#" << std::endl;
+    if (fDebugTdc | fDebugFtrig) 
+      std::cout <<"#--------------------------------------------------------#" << std::endl;
     
     //Put product in event
     e.put(std::move(newBoardAlign));

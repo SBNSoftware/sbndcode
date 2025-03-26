@@ -21,8 +21,8 @@ outputs:
 {
     out1:
     {
+        fileName: "%ifb_wfalign.root"
         module_type: RootOutput
-        fileName:    "wfalign-art.root"
         dataTier: "reco"
     }
 }

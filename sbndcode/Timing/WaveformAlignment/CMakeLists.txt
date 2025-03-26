@@ -1,45 +1,18 @@
-art_make(  MODULE_LIBRARIES  larpandora::LArPandoraInterface
-                             lardata::RecoObjects  
-                             lardataobj::RecoBase
-                             lardataobj::AnalysisBase
-                             larreco::RecoAlg
+set (
+  MODULE_LIBRARIES
+                    lardata::Utilities
+                    lardataobj::RecoBase
+                    art_root_io::tfile_support
+                    art_root_io::TFileService_service
+                    canvas::canvas
+                    ROOT::Gpad
+                    ROOT::Core
+                    ROOT::Tree
+                    sbnobj::SBND_Timing
+                    sbnobj::SBND_CRT
+                    sbndcode::ChannelMaps_PMT_PMTChannelMapService_service
+)
+cet_build_plugin(WaveformAlignment art::module SOURCE WaveformAlignment_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
-                             art::Framework_Core
-                             art::Framework_Principal
-                             art::Framework_Services_Registry
-                             art_root_io::tfile_support
-                             art_root_io::TFileService_service
-                             art::Persistency_Common
-                             art::Persistency_Provenance
-                             art::Utilities
-
-                             cetlib::cetlib
-                             cetlib_except::cetlib_except
-                             ${LARRECO_LIB}
-                             ${LARDATA_LIB}
-                             ${ART_FRAMEWORK_SERVICES_BASIC}
-                             ${ART_FRAMEWORK_SERVICES_OPTIONAL}
-                             ${MF_UTILITIES}
-                             ${FHICLCPP}
-                             ${CLHEP}
-
-                             sbndcode::ChannelMaps_PMT_PMTChannelMapService_service
-                             sbndcode::RecoUtils
-                             sbnobj::Common_Reco
-                             sbnobj::SBND_Timing
-                             sbnobj::SBND_CRT
-
-                             messagefacility::MF_MessageLogger
-                             fhiclcpp::fhiclcpp
-                             ROOT::Geom
-                             ROOT::XMLIO
-                             ROOT::Gdml
-                             ROOT::Core
-
-                             ${ROOT_BASIC_LIB_LIST}
-                             ${ROOT_SPECTRUM}
-                             ${ROOT_ROOFIT}
-                             ${ROOT_ROOFITCORE}
-        )
 install_fhicl()
 install_source()
