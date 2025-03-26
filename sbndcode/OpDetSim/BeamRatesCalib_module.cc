@@ -125,6 +125,7 @@ namespace opdet { //OpDet means optical detector
     int fBeamWindowEnd;
     bool fSaveAllMON;
     bool fCheckTriggers;
+    bool fMakeTree;
     int hist_id;
     bool fCheckSoftTrig;
     int fNominalGoodStart;
@@ -134,6 +135,9 @@ namespace opdet { //OpDet means optical detector
     int fNominalWaveformSize;
     bool fTriggerProdCheck;
     int fCAENOffset;
+    int fEtrigOffset;
+    ULong64_t GateOpenTime;
+    ULong64_t ETrigTime;
     //Event Tree saving infomation
     // --- TTrees
     TTree* evtTree;
@@ -179,6 +183,7 @@ namespace opdet { //OpDet means optical detector
     // More initializers here.
   {
     //Read in assorted fcl parameters
+    GateOpenTime=0;
     fInputModuleName = p.get< std::string >("InputModule" );
     fInputProcessName = p.get< std::string >("InputProcess" );
     fInputInstanceName = p.get< std::string >("InputInstance" );
@@ -205,9 +210,11 @@ namespace opdet { //OpDet means optical detector
     fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
     fTriggerProdCheck = p.get<bool>("TriggerProdCheck", false);
     fNominalWaveformSize = p.get<int>("NominalWaveformSize", 5000);
-    fCAENOffset = p.get<int>("CAENOffset", -150); //Flash peaks show up 150 samples before trigger moment of flash triggers
+    fMakeTree = p.get<bool>("MakeTree", true);
+    fCAENOffset = p.get<int>("CAENOffset", 287); 
     fChNumber = 0;
     fEvNumber = 0;
+    fEtrigOffset = p.get<int>("EtrigOffset", 257);
     hist_id=0;
   }
 
@@ -230,13 +237,13 @@ namespace opdet { //OpDet means optical detector
     tree_OnBeamMonPeakSample.resize(TotalMonBins);
     tree_FullBeamMonPeakSample.resize(TotalMonBins);
     tree_HLTs.clear();
-    tree_HLTs.resize(20);
+    tree_HLTs.resize(200);
     tree_HLTTimes.clear();
-    tree_HLTTimes.resize(20);
+    tree_HLTTimes.resize(200);
     tree_LLTs.clear();
-    tree_LLTs.resize(200);
+    tree_LLTs.resize(1300);
     tree_LLTTimes.clear();
-    tree_LLTTimes.resize(200);
+    tree_LLTTimes.resize(1300);
     for(int i=0; i<int(tree_HLTs.size()); i++) tree_HLTs[i] = -1;
     tree_MonStart=fMonStart;
     tree_MonEnd=fMonStop;
@@ -299,33 +306,35 @@ namespace opdet { //OpDet means optical detector
       histname4 = histname4 + std::to_string(fFCLthreshold);
       hist_MSUM_Trigger_Eff = tfs->make<TH1D>(histname4.c_str(),histname4.c_str(), int((MTCAEnd-MTCAStart)/MTCAStep), MTCAStart, MTCAEnd );
     }
-
-    //Tree of objects to save
-    ResetTree(); //call at start of every event
-    evtTree = tfs->make<TTree>("TriggerMetrics","Trigger Metric Tree");
-    evtTree->Branch("event",&tree_event);
-    evtTree->Branch("run",&tree_run);
-    evtTree->Branch("subrun",&tree_subrun);
-    evtTree->Branch("timestamp",&tree_timestamp);
-    int MonBins = (fMonStop - fMonStart)/fMonStep+1;
-    evtTree->Branch("OnBeamMonPeaks",&tree_OnBeamMonPeaks, MonBins, 0);
-    evtTree->Branch("OnBeamMonPeaksSample",&tree_OnBeamMonPeakSample, MonBins, 0);
-    evtTree->Branch("OffBeamMonPeaks",&tree_OffBeamMonPeaks, MonBins, 0);
-    evtTree->Branch("FullBeamMonPeaks",&tree_FullBeamMonPeaks, MonBins, 0);
-    evtTree->Branch("FullBeamMonPeaksSample",&tree_FullBeamMonPeakSample, MonBins, 0);
-    evtTree->Branch("MonStart",&tree_MonStart);
-    evtTree->Branch("MonEnd",&tree_MonEnd);
-    evtTree->Branch("MonStep",&tree_MonStep);
-    evtTree->Branch("nAboveThreshold",&tree_nAboveThreshold);
-    evtTree->Branch("trig_ts",&tree_trig_ts);
-    evtTree->Branch("promptPE",&tree_promptPE);
-    evtTree->Branch("prelimPE",&tree_prelimPE);
-    evtTree->Branch("peakPE",&tree_peakPE);
-    evtTree->Branch("peaktime",&tree_peaktime);
-    evtTree->Branch("HLT", &tree_HLTs);
-    evtTree->Branch("HLTTimes", &tree_HLTTimes);
-    evtTree->Branch("LLT", &tree_LLTs);
-    evtTree->Branch("LLTTimes", &tree_LLTTimes);
+    if(fMakeTree)
+    {
+      //Tree of objects to save
+      ResetTree(); //call at start of every event
+      evtTree = tfs->make<TTree>("TriggerMetrics","Trigger Metric Tree");
+      evtTree->Branch("event",&tree_event);
+      evtTree->Branch("run",&tree_run);
+      evtTree->Branch("subrun",&tree_subrun);
+      evtTree->Branch("timestamp",&tree_timestamp);
+      int MonBins = (fMonStop - fMonStart)/fMonStep+1;
+      evtTree->Branch("OnBeamMonPeaks",&tree_OnBeamMonPeaks, MonBins, 0);
+      evtTree->Branch("OnBeamMonPeaksSample",&tree_OnBeamMonPeakSample, MonBins, 0);
+      evtTree->Branch("OffBeamMonPeaks",&tree_OffBeamMonPeaks, MonBins, 0);
+      evtTree->Branch("FullBeamMonPeaks",&tree_FullBeamMonPeaks, MonBins, 0);
+      evtTree->Branch("FullBeamMonPeaksSample",&tree_FullBeamMonPeakSample, MonBins, 0);
+      evtTree->Branch("MonStart",&tree_MonStart);
+      evtTree->Branch("MonEnd",&tree_MonEnd);
+      evtTree->Branch("MonStep",&tree_MonStep);
+      evtTree->Branch("nAboveThreshold",&tree_nAboveThreshold);
+      evtTree->Branch("trig_ts",&tree_trig_ts);
+      evtTree->Branch("promptPE",&tree_promptPE);
+      evtTree->Branch("prelimPE",&tree_prelimPE);
+      evtTree->Branch("peakPE",&tree_peakPE);
+      evtTree->Branch("peaktime",&tree_peaktime);
+      evtTree->Branch("HLT", &tree_HLTs);
+      evtTree->Branch("HLTTimes", &tree_HLTTimes);
+      evtTree->Branch("LLT", &tree_LLTs);
+      evtTree->Branch("LLTTimes", &tree_LLTTimes);
+    }
   }
 
   void BeamRateCalib::analyze(art::Event const & e)
@@ -364,6 +373,7 @@ namespace opdet { //OpDet means optical detector
           if(hltrigs[HLT].trigger_word & (0x1 << Power))
           {
             GrabbedHLTs.push_back(Power);
+            if(Power==1 || Power==2 || Power==3 || Power==4) ETrigTime = hltrigs[HLT].timestamp*20-fEtrigOffset; //BNB Zero-Bias, BNB+Light, Off Beam Zero-Bias, OffBeam + Light
           }
           Power=Power+1;
         }
@@ -391,6 +401,7 @@ namespace opdet { //OpDet means optical detector
         if(lltrigs[LLT].trigger_word & (0x1 << Power))
         {
           GrabbedLLTs.push_back(Power);
+          if(Power==26 || Power==30) GateOpenTime=lltrigs[LLT].timestamp*20-fCAENOffset; //UNIX ns time of gate opening. Adjusted for PTB-TDC offset
         }
         Power=Power+1;
       }
@@ -429,7 +440,7 @@ namespace opdet { //OpDet means optical detector
       tree_peaktime = (*softwareTrigHandle)[0].peaktime;
       std::cout << "Soft trig size " << (*softwareTrigHandle).size() << " peak PE " <<  (*softwareTrigHandle)[0].peakPE << " peak time " << (*softwareTrigHandle)[0].peaktime << std::endl;
     }
-    evtTree->Fill(); //call at end of every event
+    if(fMakeTree) evtTree->Fill(); //call at end of every event
   }
 
   void BeamRateCalib::SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter)
@@ -518,6 +529,7 @@ namespace opdet { //OpDet means optical detector
     std::fill(MonPulse->begin(), MonPulse->end(), 0);
     //Loop over the entries in our waveform vector
     //We care about getting the pairing correct
+    //These aren't used? Why doesn't sbndcode stop me from compiling
     std::vector<int> Pair2= { 6,   8,  10,  12,  14,  16,  36,  38,  40,  60,  62,  66,  68, 70,  84,  86,  88,  90,  92,  94, 114, 116, 118, 138, 140, 144, 146, 148, 162, 164, 168, 170, 172, 192, 194, 196, 216, 218, 220, 222, 224, 226, 240, 242, 246, 248, 250, 270, 272, 274, 294, 296, 298, 300, 302, 304};
     std::vector<int> Pair1= { 7,   9,  11,  13,  15,  17,  37,  39,  41,  61,  63,  67,  69, 71,  85,  87,  89,  91,  93,  95, 115, 117, 119, 139, 141, 145, 147, 149, 163, 165, 169, 171, 173, 193, 195, 197, 217, 219, 221, 223, 225, 227, 241, 243, 247, 249, 251, 271, 273, 275, 295, 297, 299, 301, 303, 305};
     std::vector<int> Unpaired= {65,  64, 143, 142, 167, 166, 245, 244};
@@ -576,7 +588,7 @@ namespace opdet { //OpDet means optical detector
       if(TMath::Abs(currentTimeStamp)<SmallestTimestamp) 
       {
         GoodFlashIndex=FlashCounter;
-        SmallestTimestamp=TMath::Abs(currentTimeStamp);
+        SmallestTimestamp=TMath::Abs(currentTimeStamp); //timestamp is relatiTimeStampve to etrig
       }
     }
     for(int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
@@ -596,10 +608,10 @@ namespace opdet { //OpDet means optical detector
           ConstructMonPulse(waveHandle, MONThresholds[i], MonPulse, false, FlashCounter);
           //Constructed MON pulse now lets compare it to the MTCA requirement
           //Flash just before beam gate can offset waveform
-          int WaveformOffset = (*waveHandle)[WaveIndex].TimeStamp()*1000 - fNominalGoodStart; //Waveform timestamps are in us // Also delivers time of sample 0 //ns
-          WaveformOffset = WaveformOffset/2; //sample/2 ns //Probably a sign error here
-          WaveformOffset = WaveformOffset + fNominalWaveformSize*0.2; //Trigger moment is at 20% of waveform readout
-          WaveformOffset = WaveformOffset + fCAENOffset; //Flash trigger peaks are not exactly at 1000 samples as expected from trigger. MTCA process time
+          //int WaveformOffset = (*waveHandle)[WaveIndex].TimeStamp()*1000 - fNominalGoodStart; //Waveform timestamps are in us // Also delivers time of sample 0 //ns
+          //Ideally this should be 0 for normal gate opening. For extended waveform we need it to be positive, and our waveform has ealier timestamp 
+          int WaveformOffset = GateOpenTime - ((*waveHandle)[WaveIndex].TimeStamp()*1000 + ETrigTime) ;
+          WaveformOffset = WaveformOffset/2; //sample/2 ns 
           int BeamAcceptanceStart = fBeamWindowStart+WaveformOffset;
           int BeamAcceptanceEnd = fBeamWindowEnd+WaveformOffset;
           int PeakMon = *std::max_element(MonPulse->begin()+BeamAcceptanceStart, MonPulse->begin()+BeamAcceptanceEnd);
@@ -741,8 +753,10 @@ namespace opdet { //OpDet means optical detector
               hist_MSUM_Energy->Fill(Energy); //Can convert to average power by dividing by readout time
               std::cout << Energy << std::endl;
               //Make th1d of trigger rate plot of column enabled in fcl
-              int BeamAcceptanceStart = fBeamWindowStart; //380; //   //1520? 380*4
-              int BeamAcceptanceEnd = fBeamWindowEnd; //2380; //    //2380? 595*4
+              int WaveformOffset = GateOpenTime - (wvf.TimeStamp()*1000 + ETrigTime) ;
+              WaveformOffset = WaveformOffset/2; //sample/2 ns 
+              int BeamAcceptanceStart = fBeamWindowStart+WaveformOffset;
+              int BeamAcceptanceEnd = fBeamWindowEnd+WaveformOffset;
               int PeakMon = *std::max_element(MonPulse.begin()+BeamAcceptanceStart, MonPulse.begin()+BeamAcceptanceEnd);
               for(int j=0; j<int(MTCA_Thresholds.size()); j++)
                 {
