@@ -61,25 +61,27 @@ void shower(std::vector<event_t> allEvents_vec){
     }
 
     TCanvas *showerECanvas = new TCanvas("showerE_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* showerECurrent_dist = new TH1F("Shower Energy", "Energy of Shower", 60, 0, 6000);
+    TH1F* showerECurrent_dist = new TH1F("Shower Energy", "Energy of Shower", 80, 0, 4000);
+    //TH1F* showerECurrent_dist = new TH1F("Shower Energy", "Energy of Shower", 60, 0, 3000);
     showerECurrent_dist->SetTitle("Energy of the Recoil Electron Shower in an Event;Energy of Shower (MeV);# of Events");
     TH1F* showerEDLUboone_dist = (TH1F*) showerECurrent_dist->Clone("Shower Energy");
     TH1F* showerEDLDune_dist = (TH1F*) showerECurrent_dist->Clone("Shower Energy");
 
     TCanvas *showerThetaCanvas = new TCanvas("showerTheta_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* showerThetaCurrent_dist = new TH1F("Shower Theta", "Theta of Shower", 90, 0, 360);
+    TH1F* showerThetaCurrent_dist = new TH1F("Shower Theta", "Theta of Shower", 45, 0, 180);
     showerThetaCurrent_dist->SetTitle("Angle of the Recoil Electron Shower Relative to Beam Neutrino Direction in an Event;Theta of Shower (degrees);# of Events");
     TH1F* showerThetaDLUboone_dist = (TH1F*) showerThetaCurrent_dist->Clone("Shower Theta");
     TH1F* showerThetaDLDune_dist = (TH1F*) showerThetaCurrent_dist->Clone("Shower Theta");
 
     TCanvas *showerSmallThetaCanvas = new TCanvas("showerSmallTheta_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* showerSmallThetaCurrent_dist = new TH1F("Shower Small Theta", "Small Theta of Shower", 90, 0, 360);
+    TH1F* showerSmallThetaCurrent_dist = new TH1F("Shower Small Theta", "Small Theta of Shower", 45, 0, 180);
     showerSmallThetaCurrent_dist->SetTitle("Recoil Electron Shower with the Smallest Theta Relative to Beam Neutrino Direction in an Event;Smallest Shower Theta(degrees);# of Events");
     TH1F* showerSmallThetaDLUboone_dist = (TH1F*) showerSmallThetaCurrent_dist->Clone("Small Shower Theta");
     TH1F* showerSmallThetaDLDune_dist = (TH1F*) showerSmallThetaCurrent_dist->Clone("Small Shower Theta");
 
     TCanvas *showerETheta2Canvas = new TCanvas("showerETheta2_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* showerETheta2Current_dist = new TH1F("Shower ETheta2", "ETheta2 of Shower", 500, 0, 1000);
+    TH1F* showerETheta2Current_dist = new TH1F("Shower ETheta2", "ETheta2 of Shower", 200, 0, 204.4);
+    //TH1F* showerETheta2Current_dist = new TH1F("Shower ETheta2", "ETheta2 of Shower", 20, 0, 20.44);
     showerETheta2Current_dist->SetTitle("E#theta^{2} of the Recoil Electron Shower in an Event;E#theta^{2} of Shower (MeV);# of Events");
     TH1F* showerETheta2DLUboone_dist = (TH1F*) showerETheta2Current_dist->Clone("Shower ETheta2");
     TH1F* showerETheta2DLDune_dist = (TH1F*) showerETheta2Current_dist->Clone("Shower ETheta2");
@@ -116,8 +118,9 @@ void shower(std::vector<event_t> allEvents_vec){
     showerEDLDune_dist->Draw("histsame");
     showerEDLUboone_dist->Draw("histsame");
     showerECurrent_dist->SetStats(0);
-    
-    auto legend = new TLegend(1-0.86,0.86,1-0.54,0.70);
+    showerECurrent_dist->GetYaxis()->SetRangeUser(0, 200);
+
+    auto legend = new TLegend(0.56,0.86,0.88,0.70);
     legend->AddEntry(showerEDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
     legend->AddEntry(showerEDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
     legend->AddEntry(showerECurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
@@ -125,6 +128,7 @@ void shower(std::vector<event_t> allEvents_vec){
     legend->SetMargin(0.13);
     legend->Draw();
     showerECanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerE_dist.pdf");
+    //showerECanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerE_dist_zoomed.pdf");
 
     showerThetaCanvas->cd();
     showerThetaCurrent_dist->SetLineWidth(2);
@@ -137,8 +141,9 @@ void shower(std::vector<event_t> allEvents_vec){
     showerThetaDLDune_dist->Draw("histsame");
     showerThetaDLUboone_dist->Draw("histsame");
     showerThetaCurrent_dist->SetStats(0);
+    showerThetaCurrent_dist->GetYaxis()->SetRangeUser(0, 400);
 
-    auto legend1 = new TLegend(1-0.86,0.86,1-0.54,0.70);
+    auto legend1 = new TLegend(0.56,0.86,0.88,0.70);
     legend1->AddEntry(showerThetaDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
     legend1->AddEntry(showerThetaDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
     legend1->AddEntry(showerThetaCurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
@@ -158,8 +163,9 @@ void shower(std::vector<event_t> allEvents_vec){
     showerSmallThetaDLDune_dist->Draw("histsame");
     showerSmallThetaDLUboone_dist->Draw("histsame");
     showerSmallThetaCurrent_dist->SetStats(0);
+    showerSmallThetaCurrent_dist->GetYaxis()->SetRangeUser(0, 400);
 
-    auto legend2 = new TLegend(1-0.86,0.86,1-0.54,0.70);
+    auto legend2 = new TLegend(0.56,0.86,0.88,0.70);
     legend2->AddEntry(showerSmallThetaDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
     legend2->AddEntry(showerSmallThetaDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
     legend2->AddEntry(showerSmallThetaCurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
@@ -179,8 +185,9 @@ void shower(std::vector<event_t> allEvents_vec){
     showerETheta2DLDune_dist->Draw("histsame");
     showerETheta2DLUboone_dist->Draw("histsame");
     showerETheta2Current_dist->SetStats(0);
+    showerETheta2Current_dist->GetYaxis()->SetRangeUser(0, 300);
 
-    auto legend3 = new TLegend(1-0.86,0.86,1-0.54,0.70);
+    auto legend3 = new TLegend(0.56,0.86,0.88,0.70);
     legend3->AddEntry(showerETheta2DLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
     legend3->AddEntry(showerETheta2DLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
     legend3->AddEntry(showerETheta2Current_dist, "Current SBND Vertexing (without Refinement)", "f");
@@ -188,8 +195,39 @@ void shower(std::vector<event_t> allEvents_vec){
     legend3->SetMargin(0.13);
     legend3->Draw();
     showerETheta2Canvas->SaveAs("/nashome/c/coackley/nuEPlots/showerETheta2_dist.pdf");
-}
+    //showerETheta2Canvas->SaveAs("/nashome/c/coackley/nuEPlots/showerETheta2_dist_zoomed.pdf");
 
+    TCanvas *showerEPercCanvas = new TCanvas("showerEPerc_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* showerECurrent_dist_perc = new TH1F("Shower Energy Perc", "Energy of Shower Perc", 60, 0, 6000);
+    showerECurrent_dist_perc->SetTitle("Energy of the Recoil Electron Shower in an Event;Energy of Shower (MeV);Percentage of Events (%)");
+    TH1F* showerEDLUboone_dist_perc = (TH1F*) showerECurrent_dist_perc->Clone("Shower Energy Perc");
+    TH1F* showerEDLDune_dist_perc = (TH1F*) showerECurrent_dist_perc->Clone("Shower Energy Perc");
+
+    TCanvas *showerThetaPercCanvas = new TCanvas("showerThetaPerc_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* showerThetaCurrent_dist_perc = new TH1F("Shower Theta Perc", "Theta of Shower Perc", 90, 0, 360);
+    showerThetaCurrent_dist_perc->SetTitle("Angle of the Recoil Electron Shower Relative to Beam Neutrino Direction in an Event;Theta of Shower (degrees);Percentage of Events (%)");
+    TH1F* showerThetaDLUboone_dist_perc = (TH1F*) showerThetaCurrent_dist_perc->Clone("Shower Theta Perc");
+    TH1F* showerThetaDLDune_dist_perc = (TH1F*) showerThetaCurrent_dist_perc->Clone("Shower Theta Perc");
+
+    TCanvas *showerSmallThetaPercCanvas = new TCanvas("showerSmallThetaPerc_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* showerSmallThetaCurrent_dist_perc = new TH1F("Shower Small Theta Perc", "Small Theta of Shower Perc", 90, 0, 360);
+    showerSmallThetaCurrent_dist_perc->SetTitle("Recoil Electron Shower with the Smallest Theta Relative to Beam Neutrino Direction in an Event;Smallest Shower Theta(degrees);Percentage of Events (%)");
+    TH1F* showerSmallThetaDLUboone_dist_perc = (TH1F*) showerSmallThetaCurrent_dist_perc->Clone("Small Shower Theta Perc");
+    TH1F* showerSmallThetaDLDune_dist_perc = (TH1F*) showerSmallThetaCurrent_dist_perc->Clone("Small Shower Theta Perc");
+
+    TCanvas *showerETheta2PercCanvas = new TCanvas("showerETheta2Perc_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* showerETheta2Current_dist_perc = new TH1F("Shower ETheta2 Perc", "ETheta2 of Shower Perc", 500, 0, 1000);
+    showerETheta2Current_dist_perc->SetTitle("E#theta^{2} of the Recoil Electron Shower in an Event;E#theta^{2} of Shower (MeV);Percentage of Events (%)");
+    TH1F* showerETheta2DLUboone_dist_perc = (TH1F*) showerETheta2Current_dist_perc->Clone("Shower ETheta2 Perc");
+    TH1F* showerETheta2DLDune_dist_perc = (TH1F*) showerETheta2Current_dist_perc->Clone("Shower ETheta2 Perc");
+
+    double binFilling = // lowest value + bin width/2 (0 +)
+    for(int j = 1; j < 60; j++){
+        showerECurrent_dist_perc->Fill();
+        showerEDLUboone_dist_perc->Fill();
+        showerEDLDune_dist_perc->Fill();
+    }
+}
 
 void scores(std::vector<event_t> allEvents_vec){
     size_t numEvents = allEvents_vec.size();
@@ -734,8 +772,8 @@ void deltaVertices(std::vector<event_t> allEvents_vec){
 }
 
 void nuE_macro(){
-    TFile *f = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_04_03/NuEAnalyserOutput.root", "READ");
-    //TFile *f = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/merged.root", "READ");
+    //TFile *f = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_04_03/NuEAnalyserOutput.root", "READ");
+    TFile *f = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/merged.root", "READ");
     
     if(!f){
         std::cout << "Failed to read file" << std::endl;
