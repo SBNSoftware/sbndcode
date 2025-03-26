@@ -101,6 +101,8 @@ double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>>
 double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
 void ClearMaps(const art::Event &e);
 void SetupMaps(const art::Event &e);
+void ShowerEnergy(const art::Event &e, const std::vector<art::Ptr<recob::PFParticle>> &pfpVec, const double VX, const double VY, const double VZ);
+
 
 private:
 
@@ -134,8 +136,14 @@ private:
   size_t numRecoNeutrinos = 0;              // Counter for number of reco neutrinos
 
   double totalShowerEnergy;                 // Total energy of the shower in the event
+  double smallestDeltaR;
+  double chosenShowerTheta;
+  double smallestTheta;
 
   double chosenSliceCompleteness;           // The completeness of the chosen slice
+
+  double numEventsTotal = 0;
+  double numEventsSelected = 0;
 
   float highestSliceScore = -10000;
   int highestSliceScoreIndex;
@@ -174,6 +182,10 @@ private:
   std::vector<int> dl_current_tree = std::vector<int>(0);
   std::vector<double> sliceCompleteness_tree = std::vector<double>(0);
   std::vector<double> trackScore_tree = std::vector<double>(0);
+  std::vector<double> showerEnergy_tree = std::vector<double>(0);
+  std::vector<double> showerTheta_tree = std::vector<double>(0);
+  std::vector<double> showerSmallestTheta_tree = std::vector<double>(0);
+  std::vector<double> showerETheta2_tree = std::vector<double>(0);
 
   // Vectors for the NuEHit Tree
   std::vector<double> event_hitTree = std::vector<double>(0);
@@ -336,15 +348,15 @@ void sbnd::NuE::analyze(art::Event const& e){
     art::FindManyP<recob::Hit> showerHitAssns(showerVec, e, showerLabel);
     const std::vector<art::Ptr<recob::Hit>> showerHits(showerHitAssns.at(shower.key()));
     
-    const int showerID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
+    //const int showerID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
 
     // Calculating the completeness of the shower
-    double showerCompleteness = Completeness(e, showerHits, showerID_truth);
-    std::cout << "Shower Completeness: " << showerCompleteness << std::endl;
+    //double showerCompleteness = Completeness(e, showerHits, showerID_truth);
+    //std::cout << "Shower Completeness: " << showerCompleteness << std::endl;
 
     // Calculating the purity of the shower
-    double showerPurity = Purity(e, showerHits, showerID_truth);
-    std::cout << "Shower Purity: " << showerPurity << std::endl;
+    //double showerPurity = Purity(e, showerHits, showerID_truth);
+    //std::cout << "Shower Purity: " << showerPurity << std::endl;
   }
 
   std::cout << "num tracks: " << nTracks << " num showers: " << nShowers << std::endl;
@@ -370,7 +382,6 @@ void sbnd::NuE::analyze(art::Event const& e){
     if(PFParticleID == std::numeric_limits<int>::max()) return;
 
     const std::vector<art::Ptr<recob::Slice>> pfpSlices(pfpSliceAssns.at(pfp.key()));
-    const art::Ptr<recob::Shower> pfpShower(pfpShowerAssns.at(pfp.key()));  
     
     // Condition on the number of slices and showers associated with the pfparticle. pfp has > 1 slice or no slice then it is skipped
     if(pfpSlices.size() == 1){
@@ -380,17 +391,9 @@ void sbnd::NuE::analyze(art::Event const& e){
         const auto meta  = pfpMetadataAssns.at(pfp.key());
         const auto props = meta->GetPropertiesMap();
         const auto trackscoreobj = props.find("TrackScore");
-
+       
         if(!(PFParticleID == 12 || PFParticleID == 14)){
             trackscore = trackscoreobj->second;
-            std::cout << "PFP PDG: " << PFParticleID << ", Track Score: " << trackscore << std::endl; 
-        
-            //if(trackscore < 0.7){
-                std::cout << "counting this as a shower" << std::endl;
-                std::cout << "energy of this shower: " << pfpShower->Energy()[pfpShower->best_plane()] << ", best plane: " << pfpShower->best_plane() << std::endl;
-                totalShowerEnergy += pfpShower->Energy()[pfpShower->best_plane()];
-                std::cout << "theta: " << TMath::RadToDeg() * pfpShower->Direction().Theta() << std::endl;
-            //}
         }
 
         const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
@@ -492,7 +495,24 @@ void sbnd::NuE::analyze(art::Event const& e){
   std::cout << "completeness of chosen slice: " << chosenSliceCompleteness << std::endl;
   std::cout << "num slices: " << nSlices << ", num pfps: " << nPFParticles << std::endl;
 
-  if(recoNeutrinoVX != NAN){
+  if(!std::isnan(recoNeutrinoVX)){
+    numEventsTotal++;
+
+    ShowerEnergy(e, pfpVec, recoNeutrinoVX, recoNeutrinoVY, recoNeutrinoVZ);
+    std::cout << "total shower energy: " << totalShowerEnergy << ", theta: " << chosenShowerTheta << ", smallest theta: " << smallestTheta << std::endl;
+   
+    double largestThetaAllowed = std::sqrt(1.022/totalShowerEnergy); 
+    double ETheta2 = totalShowerEnergy * std::pow(chosenShowerTheta, 2);
+    std::cout << "largest theta value allowed: " << TMath::RadToDeg() * largestThetaAllowed << ", theta of shower: " << TMath::RadToDeg() * chosenShowerTheta << std::endl;
+    if(largestThetaAllowed > chosenShowerTheta){
+        std::cout << "This event would be selected!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+        numEventsSelected++;
+    }
+
+    if(largestThetaAllowed > smallestTheta){
+        std::cout << "event would be selected based on smallest theta!!!!!!!!!" << std::endl;
+    }
+
     event_tree.push_back(eventID);
     run_tree.push_back(runID);
     subrun_tree.push_back(subRunID);
@@ -513,6 +533,10 @@ void sbnd::NuE::analyze(art::Event const& e){
     dl_current_tree.push_back(1); // 0 = uboone dl, 1 = dune dl, 2 = current
     sliceCompleteness_tree.push_back(chosenSliceCompleteness);
     trackScore_tree.push_back(trackscore);
+    showerEnergy_tree.push_back(totalShowerEnergy);
+    showerTheta_tree.push_back(chosenShowerTheta);
+    showerSmallestTheta_tree.push_back(smallestTheta);
+    showerETheta2_tree.push_back(ETheta2);
   } else{
     std::cout << "There is no reco neutrino, skipping event" << std::endl;
   }
@@ -559,6 +583,48 @@ void sbnd::NuE::SetupMaps(const art::Event &e){
   }
 }
 
+void sbnd::NuE::ShowerEnergy(const art::Event &e, const std::vector<art::Ptr<recob::PFParticle>> &pfpVec, const double VX, const double VY, const double VZ){
+  // Get associations between pfparticles and showers
+  art::FindOneP<recob::Shower> pfpShowerAssns(pfpVec, e, showerLabel);
+  art::FindOneP<larpandoraobj::PFParticleMetadata> pfpMetadataAssns(pfpVec, e, PFParticleLabel);
+  art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
+
+  smallestDeltaR = 1000000;
+  smallestTheta = 1000000;
+  std::cout << "reco vertex: " << VX << ", " << VY << ", " << VZ << std::endl;
+
+  for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
+    if(pfp->PdgCode() == std::numeric_limits<int>::max()) return;
+  
+    const art::Ptr<recob::Shower> pfpShower(pfpShowerAssns.at(pfp.key()));
+    const auto meta  = pfpMetadataAssns.at(pfp.key());
+    const auto props = meta->GetPropertiesMap();
+    const auto trackscoreobj = props.find("TrackScore");
+    const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
+    const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
+    
+    if(!(pfp->PdgCode() == 12 || pfp->PdgCode() == 14)){
+        std::cout << "2nd iteration PFP PDG: " << pfp.key() << ", Track Score: " << trackscoreobj->second << std::endl;
+        if(trackscoreobj->second <= 1 && trackscoreobj->second >= 0){
+            std::cout << "counting this as a shower" << std::endl;
+            std::cout << "energy of this shower: " << pfpShower->Energy()[pfpShower->best_plane()] << ", best plane: " << pfpShower->best_plane() << std::endl;
+            totalShowerEnergy += pfpShower->Energy()[pfpShower->best_plane()];
+            std::cout << "theta: " << TMath::RadToDeg() * pfpShower->Direction().Theta() << std::endl;
+            std::cout << "shower vertex: " << pfpVertex->position().X() << ", " << pfpVertex->position().Y() << ", " << pfpVertex->position().Z() << std::endl;
+        
+            double score = (std::sqrt(std::pow(VX - pfpVertex->position().X(), 2) + std::pow(VY - pfpVertex->position().Y(), 2) + std::pow(VZ - pfpVertex->position().Z(), 2)) + (std::pow(trackscoreobj->second, 2) * 100)); // + (std::pow(pfpShower->Energy()[pfpShower->best_plane()], -1) * 10000));
+            std::cout << "score: " << score << std::endl;
+            if(score < smallestDeltaR){ 
+                chosenShowerTheta = pfpShower->Direction().Theta();
+                smallestDeltaR = score;
+            }
+
+            if(pfpShower->Direction().Theta() < smallestTheta) smallestTheta = pfpShower->Direction().Theta();
+        }
+    }
+  }
+}
+
 void sbnd::NuE::beginJob()
 {
   art::ServiceHandle<art::TFileService> tfs;
@@ -583,6 +649,10 @@ void sbnd::NuE::beginJob()
   NuETree->Branch("dl_current_tree", &dl_current_tree);  
   NuETree->Branch("sliceCompleteness_tree", &sliceCompleteness_tree);
   NuETree->Branch("trackScore_tree", &trackScore_tree);
+  NuETree->Branch("showerEnergy_tree", &showerEnergy_tree);
+  NuETree->Branch("showerTheta_tree", &showerTheta_tree);
+  NuETree->Branch("showerSmallestTheta_tree", &showerSmallestTheta_tree);
+  NuETree->Branch("showerETheta2_tree", &showerETheta2_tree);
 
   NuEHitTree->Branch("event_hitTree", &event_hitTree);
   NuEHitTree->Branch("run_hitTree", &run_hitTree);
@@ -596,6 +666,8 @@ void sbnd::NuE::endJob()
 {
   NuETree->Fill();
   NuEHitTree->Fill();
+
+  std::cout << "events selected: " << numEventsSelected << "/" << numEventsTotal << std::endl;
 }
 
 DEFINE_ART_MODULE(sbnd::NuE)
