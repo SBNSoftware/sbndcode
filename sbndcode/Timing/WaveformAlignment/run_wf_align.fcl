@@ -1,6 +1,5 @@
 #include "simulationservices_sbnd.fcl"
 #include "wfAlignConfig.fcl"
-#include "pmt_channel_map_service.fcl"
 
 process_name: WFALIGN  # The process name must NOT contain any underscores
 
@@ -13,7 +12,6 @@ source:
 services:
 {
     TFileService: { fileName: "wfAlignOutput.root" }
-    PMTChannelMapService: @local::pmt_channel_map_standard
     @table::sbnd_services
 }
 
@@ -24,6 +22,10 @@ outputs:
         fileName: "%ifb_wfalign.root"
         module_type: RootOutput
         dataTier: "reco"
+        outputCommands: [ 
+                            "keep *_*_*_*"
+                            , "drop *_pmtdecoder_*_*"
+                        ]
     }
 }
 
