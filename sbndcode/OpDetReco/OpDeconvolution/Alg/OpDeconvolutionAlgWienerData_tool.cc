@@ -90,6 +90,8 @@ private:
   short unsigned int fBaseSampleBins;
   double fBaseVarCut;
 
+  sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
+
   // Declare member functions
   void ApplyExpoAvSmoothing(std::vector<double>& wf);
   void ApplyUnAvSmoothing(std::vector<double>& wf);
