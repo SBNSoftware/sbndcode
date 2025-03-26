@@ -10,7 +10,6 @@ set (
                     ROOT::Tree
                     sbnobj::SBND_Timing
                     sbnobj::SBND_CRT
-                    #sbndcode::ChannelMaps_PMT_PMTChannelMapService_service
 )
 cet_build_plugin(WaveformAlignment art::module SOURCE WaveformAlignment_module.cc LIBRARIES ${MODULE_LIBRARIES})
 

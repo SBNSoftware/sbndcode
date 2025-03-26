@@ -38,10 +38,10 @@
 #include "TSystem.h"
 
 #include "lardataobj/RawData/OpDetWaveform.h"
-//#include "sbndcode/ChannelMaps/PMT/PMTChannelMapService.h"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
-
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
 
 namespace sbnd {
     class WaveformAlignment;
@@ -82,9 +82,9 @@ private:
     
     enum TimingStatus {
         kUndefined = -1,
-        kGood,
-        kFitFailure,
-        kOutOfBound
+        kGood, //0
+        kFitFailure, //1
+        kOutOfBound //2
     };
     
     // Plotting
@@ -96,9 +96,6 @@ private:
     std::map<uint16_t, double> boardMidY; 
 
     // Shifting
-    //std::map<uint16_t, std::vector<double>> boardJitter; 
-    //std::map<uint16_t, std::vector<int>> boardStatus; 
-
     std::vector<double> boardJitter[9];
     std::vector<double> boardStatus[9];
 
@@ -127,7 +124,7 @@ private:
     uint16_t _pmt_timing_ch;
 
     //---SERVICE
-    //art::ServiceHandle<SBND::PMTChannelMapService> fPMTChannelMapService;
+    sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
     
     //---FHICL CONFIG PARAMETERS
     
@@ -205,7 +202,7 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fFtrigBoardLabel = p.get<art::InputTag>("FtrigBoardLabel", "pmtdecoder:FTrigTiming");
 
     fWfLength = p.get<double>("WfLength", 5000);
-    fTdc3CaenOffset = p.get<std::vector<double>>("Tdc3CaenOffset", {});
+    fTdc3CaenOffset = p.get<std::vector<double>>("Tdc3CaenOffset", {101, 101, 101, 101, 101, 101, 101, 101, 101});
     
     fnPmtBoard = p.get<int>("nPmtBoard", 8);
     fnTimingBoard = p.get<int>("nTimingBoard", 1);
@@ -219,7 +216,7 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fTickUbTiming = p.get<int>("TickUbTiming", 1005);
 
     fPmtFitBound = p.get<int>("PmtFitBound", 35);
-    fTimingFitBound = p.get<int>("TimingFitBound", 35);
+    fTimingFitBound = p.get<int>("TimingFitBound", 85);
 
     fPmtJitterBound = p.get<int>("PmtJitterBound", 16);
     fTimingJitterBound = p.get<int>("TimingJitterBound", 68);
@@ -284,7 +281,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     std::unique_ptr< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform> > newTimingBoardAssn (new art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform >);
     std::unique_ptr< art::Assns<  raw::pmt::BoardAlignment, raw::OpDetWaveform> > newTimingAlignAssn (new art::Assns< raw::pmt::BoardAlignment, raw::OpDetWaveform >);
    
-    // Board Timing
+    // Board Alignment
     std::unique_ptr< std::vector< raw::pmt::BoardAlignment >> newBoardAlign (new std::vector< raw::pmt::BoardAlignment >);
     art::PtrMaker<raw::pmt::BoardAlignment> make_align_ptr{e}; 
     
@@ -493,6 +490,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
             }
         } //Done looping over OpDetWf
 
+        // Save board alignment product
         for (size_t i = 0; i < std::size(boardJitter); i++){
             raw::pmt::BoardAlignment board_align;
             board_align.boardId = i;
@@ -548,17 +546,15 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
                     art::Ptr<raw::pmt::BoardAlignment> wf_align = make_align_ptr(boardIdx);
 
-                    //TODO: turn this to database
-                    //SBND::PMTChannelMapService::PMTInfo_t pmtInfo = fPMTChannelMapService->GetPMTInfoFromChannelID(wf->ChannelNumber());
-                    //if(!pmtInfo.valid)
-                    //    throw cet::exception("WaveformAlignment") << "No PMTChannelMapService found for ch " << wf->ChannelNumber() << std::endl;
-                    //double total_transit = pmtInfo.TotalTransit;
+                    //TODO: Add check if database is valid
+                    fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
+                    double total_transit = fPMTCalibrationDatabaseService->getTotalTransitTime(wf->ChannelNumber());
 
-                    //TODO: Get cable length + PMT Response from Channel Map Service
-                    //double correction = boardJitter[boardIdx][flashIdx] - total_transit;// - pmt response
-                    double correction = boardJitter[boardIdx][flashIdx];// - total_transit;// - pmt response
-                    //double correction = total_transit;// - pmt response
-                 
+                    double correction = 0;
+                    correction -= total_transit; //total transit = propagation time of photon from PMT to digitiser
+                    //correction += boardJitter[boardIdx][flashIdx];
+                    std::cout << correction << std::endl;
+
                     double new_ts = wf->TimeStamp() + correction; //ns to us
                     std::vector<uint16_t> adc_vec(wf->Waveform().size(), 0);
                     
@@ -593,7 +589,6 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
         art::fill_ptr_vector(wf_timing_v, wfTimingHandle);
         art::FindManyP<raw::pmt::BoardTimingInfo> timingBoardAssn(wf_timing_v, e, fTimingBoardLabel);
 
-       
         //There is only 1 timing CAEN in the hardware and not every channel is saved
         int nChTiming = wf_timing_v.size()/nPmtFlash;
 
