@@ -8,6 +8,5 @@ add_subdirectory(workshops)
 add_subdirectory(deprecated)
 add_subdirectory(ana)
 add_subdirectory(scrubs)
-add_subdirectory(detvar_downstream)
 
 install_fhicl()

@@ -1146,8 +1146,6 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_sp_ets1.resize(nClusters);
   _cl_sp_complete.resize(nClusters);
 
-  art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
-
   for(unsigned i = 0; i < nClusters; ++i)
     {
       const auto cluster = CRTClusterVec[i];
@@ -1176,34 +1174,41 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_channel_set[i][ii] = striphit->Channel();
           _cl_adc_set[i][2*ii]   = striphit->ADC1();
           _cl_adc_set[i][2*ii+1] = striphit->ADC2();
-	  _cl_sh_ts0_set[i][ii]  = striphit->Ts0();
-	  _cl_sh_ts1_set[i][ii]  = striphit->Ts1();
-	  SBND::CRTChannelMapService::ModuleInfo_t module_info = ChannelMapService->GetModuleInfoFromOfflineID( striphit->Channel() / 32 );
-	  _cl_sh_feb_mac5_set[i][ii] = ( module_info.valid ) ? module_info.feb_mac5 : 0;
+          _cl_sh_ts0_set[i][ii]  = striphit->Ts0();
+          _cl_sh_ts1_set[i][ii]  = striphit->Ts1();
 
-	  /*
-	   * The below segment reimplements the CorrectTime() method 
-	   * from CRTReco/CRTClusterCharacterisationAlg.cc .
-	   * Because the Ts0(), Ts1() getters invoked in _cl_sp_ts*, _cl_sh_ts*_set are raw T0/1
-	   * counters, the time walk and propagation delay are saved as explicit branches here.
-	   */
-	  if(spacepoints.size() == 1) { // need unique position of spacepoint
-	    double pe0 = fCRTGeoAlg.GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
-	    double pe1 = fCRTGeoAlg.GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
-	    double pe  = pe0 + pe1;
+          if(fDataMode)
+            {
+              art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
+              SBND::CRTChannelMapService::ModuleInfo_t module_info = ChannelMapService->GetModuleInfoFromOfflineID( striphit->Channel() / 32 );
+              _cl_sh_feb_mac5_set[i][ii] = ( module_info.valid ) ? module_info.feb_mac5 : 0;
+            }
+          else
+            _cl_sh_feb_mac5_set[i][ii] = striphit->Channel() / 32;
 
-	    double dist = fCRTGeoAlg.DistanceDownStrip( spacepoints[0]->Pos(), striphit->Channel() );
+          /*
+           * The below segment reimplements the CorrectTime() method
+           * from CRTReco/CRTClusterCharacterisationAlg.cc .
+           * Because the Ts0(), Ts1() getters invoked in _cl_sp_ts*, _cl_sh_ts*_set are raw T0/1
+           * counters, the time walk and propagation delay are saved as explicit branches here.
+           */
+          if(spacepoints.size() == 1) { // need unique position of spacepoint
+            double pe0 = fCRTGeoAlg.GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
+            double pe1 = fCRTGeoAlg.GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
+            double pe  = pe0 + pe1;
 
-	    double corr = std::pow( dist - fPEAttenuation, 2.0 ) / std::pow( fPEAttenuation, 2.0 );
-	    double tw_pe = pe * corr;
+            double dist = fCRTGeoAlg.DistanceDownStrip( spacepoints[0]->Pos(), striphit->Channel() );
 
-	    _cl_sh_time_walk_set[i][ii]  = fTimeWalkNorm * std::exp( -fTimeWalkScale * tw_pe );
-	    _cl_sh_prop_delay_set[i][ii] = fPropDelay * dist;
+            double corr = std::pow( dist - fPEAttenuation, 2.0 ) / std::pow( fPEAttenuation, 2.0 );
+            double tw_pe = pe * corr;
 
-	  } else { // fill with nonsense
-	    _cl_sh_time_walk_set[i][ii]  = -999999.;
-	    _cl_sh_prop_delay_set[i][ii] = -999999.;
-	  }
+            _cl_sh_time_walk_set[i][ii]  = fTimeWalkNorm * std::exp( -fTimeWalkScale * tw_pe );
+            _cl_sh_prop_delay_set[i][ii] = fPropDelay * dist;
+
+          } else { // fill with nonsense
+            _cl_sh_time_walk_set[i][ii]  = -999999.;
+            _cl_sh_prop_delay_set[i][ii] = -999999.;
+          }
 
         }
 

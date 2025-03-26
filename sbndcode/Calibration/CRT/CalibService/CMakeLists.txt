@@ -12,4 +12,5 @@ art_make(SERVICE_LIBRARIES
                            art::Persistency_Provenance
                            messagefacility::MF_MessageLogger
                            ROOT::Core
+                           sbnobj::SBND_CRT
 )
