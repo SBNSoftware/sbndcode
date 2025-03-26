@@ -54,6 +54,10 @@ namespace lightana
         fhicl::Comment("Group velocity for VIS photons")
       };
 
+      fhicl::Atom<bool> fDataCalibration {
+        fhicl::Name("DataCalibration"),
+        fhicl::Comment("Running on data")
+      };
     };
 
     // Default constructor
@@ -78,6 +82,9 @@ namespace lightana
     double fVGroupVUV;
     double fVGroupVIS;
     double fVGroupVUV_I;
+
+    // Whether to use data calibration for drift distance estimation
+    bool fDataCalibration;
 
     //Geo properties
     double fDriftDistance;
@@ -168,20 +175,40 @@ namespace lightana
       }
     }
 
+    double pmtratio=-1.;
     // compute PMTRatio metric
-    double PECoated=0, PEUncoated=0;
-    for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
-      //we need the uncoated PMT in each window and at least one coated
-      if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
-        double CoWeight = 1./BoxMap_NCoatedCh[boxID];
-        PECoated+=CoWeight * BoxMap_PECoated[boxID];
-        PEUncoated+=BoxMap_PEUncoated[boxID];
+    if(fDataCalibration)
+    {
+      double TotalPE=0;
+      double RatioPerBoxWeight=0;
+      for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
+        double RatioPerBox;
+        double PECoated=0, PEUncoated=0;
+        //we need the uncoated PMT in each window and at least one coated
+        if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
+          PECoated+= BoxMap_PECoated[boxID];
+          PEUncoated+=BoxMap_PEUncoated[boxID];
+          TotalPE += PECoated + PEUncoated;
+          RatioPerBox = (PEUncoated/PECoated)*BoxMap_NCoatedCh[boxID];
+          RatioPerBoxWeight += RatioPerBox * (PECoated + PEUncoated);
+        }
       }
+      if(TotalPE!=0) pmtratio = RatioPerBoxWeight/TotalPE;
+    }
+    else{
+      double PECoated=0, PEUncoated=0;
+      for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
+        //we need the uncoated PMT in each window and at least one coated
+        if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
+          double CoWeight = 1./BoxMap_NCoatedCh[boxID];
+          PECoated+=CoWeight * BoxMap_PECoated[boxID];
+          PEUncoated+=BoxMap_PEUncoated[boxID];
+        }
+      }
+      if(PECoated!=0) pmtratio = PEUncoated/PECoated;
     }
 
-    if(PECoated!=0){
-      double pmtratio = PEUncoated/PECoated;
-
+    if(pmtratio!=-1){
       double drift_distance;
       if(pmtratio<=fPMTRatioCal[0])
         drift_distance=fDriftCal[0];
@@ -189,7 +216,6 @@ namespace lightana
         drift_distance=fDriftCal[fNCalBins-1];
       else
         drift_distance=Interpolate(pmtratio);
-
       return drift_distance;
     }
     else return fDriftCal[fNCalBins-1]; 
