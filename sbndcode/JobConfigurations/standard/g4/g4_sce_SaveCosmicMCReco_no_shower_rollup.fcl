@@ -1,3 +1,0 @@
-#include "g4_sce_SaveCosmicMCReco.fcl"
-
-services.ParticleListAction.keepEMShowerDaughters: true

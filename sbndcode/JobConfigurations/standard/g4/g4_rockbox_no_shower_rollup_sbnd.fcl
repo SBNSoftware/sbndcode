@@ -1,0 +1,3 @@
+#include "standard_g4_rockbox_sbnd.fcl"
+
+services.ParticleListAction.keepEMShowerDaughters: true
