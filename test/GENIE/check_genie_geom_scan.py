@@ -1,6 +1,6 @@
 import fhicl
 
-pset = fhicl.make_pset('prodoverlay_corsika_cosmics_proton_genie_rockbox_sbnd.fcl')
+pset = fhicl.make_pset('prodgenie_corsika_proton_rockbox_sbnd.fcl')
 
 #
 # Extract flux and GDML used to make the GeomScan file
