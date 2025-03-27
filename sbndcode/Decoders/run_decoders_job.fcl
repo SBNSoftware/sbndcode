@@ -20,6 +20,7 @@
 
 #include "services_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
+#include "decoder_drops.fcl"
 
 #include "pmtdecoder.fcl"
 
@@ -95,7 +96,7 @@ outputs:
         dataTier: "decoded-raw"
         fastCloning: true
         SelectEvents: [ dropchoppy ]
-        outputCommands: [ "keep *", "drop artdaq::Fragments_*_*TPC_*" ]
+        outputCommands: [ @sequence::decoder_drops ]
    }
 
    // choppy events
@@ -106,6 +107,6 @@ outputs:
         dataTier:    "decoded-raw"
         fastCloning: true
         SelectEvents: [ savechoppy ]
-        outputCommands: [ "keep *", "drop artdaq::Fragments_*_*TPC_*" ]
+        outputCommands: [ @sequence::decoder_drops ]
    }
 }
