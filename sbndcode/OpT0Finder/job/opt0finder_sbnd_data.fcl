@@ -13,8 +13,6 @@ sbnd_opt0_finder_data.FlashVetoTimeStart: -1
 sbnd_opt0_finder_data.FlashVetoTimeEnd:    5
 
 sbnd_opt0_finder_data.FlashMatchConfig.QLLMatch.ChiErrorWidth: 0.25 # increase the error width from 0.1
-sbnd_opt0_finder_data.FlashMatchConfig.PhotonLibHypothesis.GlobalQE:     0.25 # effectively a global scaling factor
-sbnd_opt0_finder_data.FlashMatchConfig.PhotonLibHypothesis.GlobalQERefl: 0.25 # effectively a global scaling factor
 
 # set to arbitrary high value to ignore non-linearity correction until we know it better
 sbnd_opt0_finder_data.FlashMatchConfig.QLLMatch.SaturatedThreshold: 1e9  
