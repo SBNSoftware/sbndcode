@@ -80,7 +80,7 @@ namespace sbnd::crt {
 
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-                int32_t t0DelayCorrection = 0, t1DelayCorrection = 0;
+                double t0DelayCorrection = 0, t1DelayCorrection = 0;
 
                 if(!fMC)
                   {

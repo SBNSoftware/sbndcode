@@ -159,8 +159,8 @@ private:
   //strip hit to select the strip which has ADC above threshold
   std::vector<uint32_t> _sh_channel;
   std::vector<int16_t>  _sh_tagger;
-  std::vector<int64_t>  _sh_ts0;
-  std::vector<int64_t>  _sh_ts1;
+  std::vector<double>   _sh_ts0;
+  std::vector<double>   _sh_ts1;
   std::vector<uint32_t> _sh_unixs;
   std::vector<double>   _sh_pos;
   std::vector<double>   _sh_err;
@@ -176,16 +176,16 @@ private:
   std::vector<double>   _sh_truth_time;
 
   //cluster from x-y coincidence for CRTSpacePoint , this is what we normally call a CRT hit
-  std::vector<int64_t>               _cl_ts0;
-  std::vector<int64_t>               _cl_ts1;
+  std::vector<double>                _cl_ts0;
+  std::vector<double>                _cl_ts1;
   std::vector<uint32_t>              _cl_unixs;
   std::vector<uint16_t>              _cl_nhits;
   std::vector<int16_t>               _cl_tagger;
   std::vector<uint8_t>               _cl_composition;
   std::vector<std::vector<uint32_t>> _cl_channel_set;
   std::vector<std::vector<uint16_t>> _cl_adc_set;
-  std::vector<std::vector<uint32_t>> _cl_sh_ts0_set; //! To store t0 from x-y coincidences
-  std::vector<std::vector<uint32_t>> _cl_sh_ts1_set; //! To store t1 from x-y coincidences
+  std::vector<std::vector<double>>   _cl_sh_ts0_set; //! To store t0 from x-y coincidences
+  std::vector<std::vector<double>>   _cl_sh_ts1_set; //! To store t1 from x-y coincidences
   std::vector<std::vector<uint16_t>> _cl_sh_feb_mac5_set; //! MAC5 addresses of StripHit FEBs
   std::vector<std::vector<double>>   _cl_sh_time_walk_set; //! Time walk correction
   std::vector<std::vector<double>>   _cl_sh_prop_delay_set; //! Light propagation correction
@@ -413,8 +413,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
   fTree->Branch("sh_channel", "std::vector<uint32_t>", &_sh_channel);
   fTree->Branch("sh_tagger", "std::vector<int16_t>", &_sh_tagger);
-  fTree->Branch("sh_ts0", "std::vector<int64_t>", &_sh_ts0);
-  fTree->Branch("sh_ts1", "std::vector<int64_t>", &_sh_ts1);
+  fTree->Branch("sh_ts0", "std::vector<double>", &_sh_ts0);
+  fTree->Branch("sh_ts1", "std::vector<double>", &_sh_ts1);
   fTree->Branch("sh_unixs", "std::vector<uint32_t>", &_sh_unixs);
   fTree->Branch("sh_pos", "std::vector<double>", &_sh_pos);
   fTree->Branch("sh_err", "std::vector<double>", &_sh_err);
@@ -432,16 +432,16 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("sh_truth_time", "std::vector<double>", &_sh_truth_time);
     }
 
-  fTree->Branch("cl_ts0", "std::vector<int64_t>", &_cl_ts0);
-  fTree->Branch("cl_ts1", "std::vector<int64_t>", &_cl_ts1);
+  fTree->Branch("cl_ts0", "std::vector<double>", &_cl_ts0);
+  fTree->Branch("cl_ts1", "std::vector<double>", &_cl_ts1);
   fTree->Branch("cl_unixs", "std::vector<uint32_t>", &_cl_unixs);
   fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
   fTree->Branch("cl_tagger", "std::vector<int16_t>", &_cl_tagger);
   fTree->Branch("cl_composition", "std::vector<uint8_t>", &_cl_composition);
   fTree->Branch("cl_channel_set", "std::vector<std::vector<uint32_t>>", &_cl_channel_set);
   fTree->Branch("cl_adc_set", "std::vector<std::vector<uint16_t>>", &_cl_adc_set);
-  fTree->Branch("cl_sh_ts0_set", "std::vector<std::vector<uint32_t>>", &_cl_sh_ts0_set);
-  fTree->Branch("cl_sh_ts1_set", "std::vector<std::vector<uint32_t>>", &_cl_sh_ts1_set);
+  fTree->Branch("cl_sh_ts0_set", "std::vector<std::vector<double>>", &_cl_sh_ts0_set);
+  fTree->Branch("cl_sh_ts1_set", "std::vector<std::vector<double>>", &_cl_sh_ts1_set);
   fTree->Branch("cl_sh_feb_mac5_set", "std::vector<std::vector<uint16_t>>", &_cl_sh_feb_mac5_set);
   fTree->Branch("cl_sh_time_walk_set", "std::vector<std::vector<double>>", &_cl_sh_time_walk_set);
   fTree->Branch("cl_sh_prop_delay_set", "std::vector<std::vector<double>>", &_cl_sh_prop_delay_set);

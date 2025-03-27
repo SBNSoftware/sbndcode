@@ -85,7 +85,8 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
     {
       std::stringstream linestream(line);
 
-      unsigned int mac5, offset;
+      unsigned int mac5;
+      double offset;
       linestream
         >> mac5
         >> offset;
@@ -101,7 +102,8 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
     {
       std::stringstream linestream(line);
 
-      unsigned int mac5, offset;
+      unsigned int mac5;
+      double offset;
       linestream
         >> mac5
         >> offset;
@@ -117,7 +119,8 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
     {
       std::stringstream linestream(line);
 
-      unsigned int mac5, offset;
+      unsigned int mac5;
+      double offset;
       linestream
         >> mac5
         >> offset;
@@ -133,7 +136,8 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
     {
       std::stringstream linestream(line);
 
-      unsigned int mac5, offset;
+      unsigned int mac5;
+      double offset;
       linestream
         >> mac5
         >> offset;
