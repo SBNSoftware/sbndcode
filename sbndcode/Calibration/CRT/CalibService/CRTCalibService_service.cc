@@ -17,19 +17,44 @@
   
 SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
 {
-  const std::string timingOffsetFile = pset.get<std::string>("TimingOffsetFileName");
-  const std::string pedestalFile     = pset.get<std::string>("PedestalFileName");
-  const std::string badChannelsFile  = pset.get<std::string>("BadChannelsFileName");
+  const std::string t0CableOffsetFile = pset.get<std::string>("T0CableOffsetFileName");
+  const std::string t1CableOffsetFile = pset.get<std::string>("T1CableOffsetFileName");
+  const std::string t0CalibOffsetFile = pset.get<std::string>("T0CalibOffsetFileName");
+  const std::string t1CalibOffsetFile = pset.get<std::string>("T1CalibOffsetFileName");
+  const std::string pedestalFile      = pset.get<std::string>("PedestalFileName");
+  const std::string badChannelsFile   = pset.get<std::string>("BadChannelsFileName");
 
-  std::string timingOffsetPath, pedestalPath, badChannelsPath;
+  std::string t0CableOffsetPath, t1CableOffsetPath, t0CalibOffsetPath, t1CalibOffsetPath,
+    pedestalPath, badChannelsPath;
   cet::search_path sp("FW_SEARCH_PATH");
-  sp.find_file(timingOffsetFile, timingOffsetPath);
+  sp.find_file(t0CableOffsetFile, t0CableOffsetPath);
+  sp.find_file(t1CableOffsetFile, t1CableOffsetPath);
+  sp.find_file(t0CalibOffsetFile, t0CalibOffsetPath);
+  sp.find_file(t1CalibOffsetFile, t1CalibOffsetPath);
   sp.find_file(pedestalFile, pedestalPath);
   sp.find_file(badChannelsFile, badChannelsPath);
 
-  if(timingOffsetPath.empty())
+  if(t0CableOffsetPath.empty())
     {
-      std::cout << "SBND::CRTCalibService Input file " << timingOffsetFile << " not found" << std::endl;
+      std::cout << "SBND::CRTCalibService Input file " << t0CableOffsetFile << " not found" << std::endl;
+      throw cet::exception("File not found");
+    }
+
+  if(t1CableOffsetPath.empty())
+    {
+      std::cout << "SBND::CRTCalibService Input file " << t1CableOffsetFile << " not found" << std::endl;
+      throw cet::exception("File not found");
+    }
+
+  if(t0CalibOffsetPath.empty())
+    {
+      std::cout << "SBND::CRTCalibService Input file " << t0CalibOffsetFile << " not found" << std::endl;
+      throw cet::exception("File not found");
+    }
+
+  if(t1CalibOffsetPath.empty())
+    {
+      std::cout << "SBND::CRTCalibService Input file " << t1CalibOffsetFile << " not found" << std::endl;
       throw cet::exception("File not found");
     }
 
@@ -46,26 +71,77 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
     }
 
   std::cout << "SBND CRT Channel Map: Building map from files...\n"
-            << "\t Timing Offsets: " << timingOffsetFile << '\n'
+            << "\t T0 Offsets Cable: " << t0CableOffsetFile << '\n'
+            << "\t T1 Offsets Cable: " << t1CableOffsetFile << '\n'
+            << "\t T0 Offsets Calib: " << t0CalibOffsetFile << '\n'
+            << "\t T1 Offsets Calib: " << t1CalibOffsetFile << '\n'
             << "\t Pedestals: " << pedestalFile << '\n'
             << "\t Bad Channels: " << badChannelsFile << std::endl;
 
-  std::ifstream timingOffsetStream(timingOffsetPath, std::ios::in);
+  std::ifstream t0CableOffsetStream(t0CableOffsetPath, std::ios::in);
   std::string line;
 
-  while(std::getline(timingOffsetStream, line))
+  while(std::getline(t0CableOffsetStream, line))
     {
       std::stringstream linestream(line);
-    
+
       unsigned int mac5, offset;
-      linestream 
+      linestream
         >> mac5
         >> offset;
 
-      fTimingOffsetFromFEBMAC5[mac5] = offset;
+      fT0CableOffsetFromFEBMAC5[mac5] = offset;
     }
-  
-  timingOffsetStream.close();
+
+  t0CableOffsetStream.close();
+
+  std::ifstream t1CableOffsetStream(t1CableOffsetPath, std::ios::in);
+
+  while(std::getline(t1CableOffsetStream, line))
+    {
+      std::stringstream linestream(line);
+
+      unsigned int mac5, offset;
+      linestream
+        >> mac5
+        >> offset;
+
+      fT1CableOffsetFromFEBMAC5[mac5] = offset;
+    }
+
+  t1CableOffsetStream.close();
+
+  std::ifstream t0CalibOffsetStream(t0CalibOffsetPath, std::ios::in);
+
+  while(std::getline(t0CalibOffsetStream, line))
+    {
+      std::stringstream linestream(line);
+
+      unsigned int mac5, offset;
+      linestream
+        >> mac5
+        >> offset;
+
+      fT0CalibOffsetFromFEBMAC5[mac5] = offset;
+    }
+
+  t0CalibOffsetStream.close();
+
+  std::ifstream t1CalibOffsetStream(t1CalibOffsetPath, std::ios::in);
+
+  while(std::getline(t1CalibOffsetStream, line))
+    {
+      std::stringstream linestream(line);
+
+      unsigned int mac5, offset;
+      linestream
+        >> mac5
+        >> offset;
+
+      fT1CalibOffsetFromFEBMAC5[mac5] = offset;
+    }
+
+  t1CalibOffsetStream.close();
 
   std::ifstream pedestalStream(pedestalPath, std::ios::in);
 
@@ -131,11 +207,59 @@ SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset, art::Act
 {
 }
 
-double SBND::CRTCalibService::GetTimingOffsetFromFEBMAC5(unsigned int feb_mac5) const
+double SBND::CRTCalibService::GetT0CableOffsetFromFEBMAC5(unsigned int feb_mac5) const
 {
-  auto iter = fTimingOffsetFromFEBMAC5.find(feb_mac5);
+  auto iter = fT0CableOffsetFromFEBMAC5.find(feb_mac5);
 
-  if(iter == fTimingOffsetFromFEBMAC5.end())
+  if(iter == fT0CableOffsetFromFEBMAC5.end())
+    {
+      mf::LogInfo("SBND CRT Calibration Service") << "Asked for FEB with MAC5: " << feb_mac5 << '\n'
+                                                  << "This FEB does not appear in the channel map."
+                                                  << std::endl;
+
+      return 0.;
+    }
+
+  return iter->second;
+}
+
+double SBND::CRTCalibService::GetT1CableOffsetFromFEBMAC5(unsigned int feb_mac5) const
+{
+  auto iter = fT1CableOffsetFromFEBMAC5.find(feb_mac5);
+
+  if(iter == fT1CableOffsetFromFEBMAC5.end())
+    {
+      mf::LogInfo("SBND CRT Calibration Service") << "Asked for FEB with MAC5: " << feb_mac5 << '\n'
+                                                  << "This FEB does not appear in the channel map."
+                                                  << std::endl;
+
+      return 0.;
+    }
+
+  return iter->second;
+}
+
+double SBND::CRTCalibService::GetT0CalibOffsetFromFEBMAC5(unsigned int feb_mac5) const
+{
+  auto iter = fT0CalibOffsetFromFEBMAC5.find(feb_mac5);
+
+  if(iter == fT0CalibOffsetFromFEBMAC5.end())
+    {
+      mf::LogInfo("SBND CRT Calibration Service") << "Asked for FEB with MAC5: " << feb_mac5 << '\n'
+                                                  << "This FEB does not appear in the channel map."
+                                                  << std::endl;
+
+      return 0.;
+    }
+
+  return iter->second;
+}
+
+double SBND::CRTCalibService::GetT1CalibOffsetFromFEBMAC5(unsigned int feb_mac5) const
+{
+  auto iter = fT1CalibOffsetFromFEBMAC5.find(feb_mac5);
+
+  if(iter == fT1CalibOffsetFromFEBMAC5.end())
     {
       mf::LogInfo("SBND CRT Calibration Service") << "Asked for FEB with MAC5: " << feb_mac5 << '\n'
                                                   << "This FEB does not appear in the channel map."
