@@ -291,6 +291,7 @@ sbnd_flux_numi_dirt: {
 
 sbnd_genie_simple: {
   @table::sbn_genie_BNB_base
+  @table::sbnd_flux_bnb_nu
   MaxFluxFileMB: 100
 }
 
