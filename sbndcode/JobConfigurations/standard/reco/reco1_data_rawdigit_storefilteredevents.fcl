@@ -1,3 +1,0 @@
-#include "reco1_data_storefilteredevents.fcl"
-
-outputs.out1.outputCommands: [@sequence::sbnd_reco1_drops_keep_rawdigits]

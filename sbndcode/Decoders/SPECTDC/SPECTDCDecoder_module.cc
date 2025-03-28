@@ -100,7 +100,7 @@ sbnd::timing::DAQTimestamp SPECTDCDecoder::FragToDAQTimestamp(const artdaq::Frag
   const sbndaq::TDCTimestampFragment tdcFrag = sbndaq::TDCTimestampFragment(frag);
   const sbndaq::TDCTimestamp         *tdcTS  = tdcFrag.getTDCTimestamp();
 
-  return sbnd::timing::DAQTimestamp(tdcTS->vals.channel, tdcTS->timestamp_ns(), 0, tdcTS->vals.name);
+  return sbnd::timing::DAQTimestamp(tdcTS->vals.channel, tdcTS->timestamp_ns(), 0, tdcTS->vals.name, tdcTS->picoseconds());
 }
 
 DEFINE_ART_MODULE(SPECTDCDecoder)

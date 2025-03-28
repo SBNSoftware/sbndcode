@@ -203,14 +203,15 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  if (ctbfrag.Trigger(iword)->IsHLT()) 
 	    {
 	      
-	      if (*(frag.metadata<int>()) == 2){ //If data is taken with 192b PTB words
+	      if ( frag.hasMetadata() == true ){ //If data is past version 2. Make sure to use the right sbndaq-artdaq-core versioning
 		tstruct.prev_timestamp = ctbfrag.PTBWord(iword)->prevTS;
 		tstruct.gate_counter = ctbfrag.Trigger(iword)->gate_counter;
               }
-              else if (*(frag.metadata<int>()) != 2){ //If data is taken with 128b PTB words
+              else if ( frag.hasMetadata() == false ){ //If data is taken with 128b PTB words
 		tstruct.prev_timestamp = 0;
 		tstruct.gate_counter = 0;
 	      }
+
 
 	      ix = sout.HLTrigs.size();
 	      sout.HLTrigs.push_back(tstruct);
