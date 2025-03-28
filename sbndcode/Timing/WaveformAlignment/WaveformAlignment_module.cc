@@ -157,6 +157,7 @@ private:
 
     double fPmtJitterBound;
     double fTimingJitterBound;
+    bool fCorrectCableOnly;
 
     // Debug
     bool fDebugTdc;
@@ -220,6 +221,7 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
 
     fPmtJitterBound = p.get<int>("PmtJitterBound", 16);
     fTimingJitterBound = p.get<int>("TimingJitterBound", 68);
+    fCorrectCableOnly = p.get<bool>("CorrectCableOnly", false);
 
     fDebugTdc = p.get<bool>("DebugTdc", false);
     fDebugTimeRef = p.get<bool>("DebugTimeRef", false);
@@ -310,46 +312,6 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
 
     if (fDebugTdc | fDebugTimeRef | fDebugFtrig | fDebugPmt | fDebugTiming)
         std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
-    
-    //---------------------------TDC-----------------------------//
-    art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-    e.getByLabel(fTdcDecodeLabel, tdcHandle);
-
-    if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-        throw cet::exception("WaveformAlignment") << "No sbnd::timing::DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!";
-    }
-    else{
-        
-        std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-        
-        for (size_t i=0; i<tdc_v.size(); i++){
-            auto tdc = tdc_v[i];
-            const std::string name  = tdc.Name();
-            const uint32_t  ch = tdc.Channel();
-            const uint64_t  ts = tdc.Timestamp();
-
-            if (fDebugTdc) std::cout << "Ch " << name
-                                << ", ts (ns) = " << ts%uint64_t(1e9)
-                                << ", sec (s) = " << ts/uint64_t(1e9)
-                                << std::endl;
-            if(ch == 0){
-                _tdc_ch0.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 1){
-                _tdc_ch1.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 2){
-                _tdc_ch2.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 3){
-                _tdc_ch3.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 4){
-                _tdc_ch4.push_back(ts%uint64_t(1e9));
-            }
-        }
-    }
-    tdcHandle.removeProduct();
 
     //------------------------PMT Timing--------------------------//
     art::Handle<raw::TimingReferenceInfo> timingRefHandle;
@@ -371,6 +333,47 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
         }
     }
     timingRefHandle.removeProduct();
+    
+    //---------------------------TDC-----------------------------//
+    art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+    e.getByLabel(fTdcDecodeLabel, tdcHandle);
+
+    if (!tdcHandle.isValid() || tdcHandle->size() == 0){
+        throw cet::exception("WaveformAlignment") << "No sbnd::timing::DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!";
+    }
+    else{
+        
+        std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+        
+        for (size_t i=0; i<tdc_v.size(); i++){
+            auto tdc = tdc_v[i];
+            const std::string name  = tdc.Name();
+            const uint32_t  ch = tdc.Channel();
+            const uint64_t  ts = tdc.Timestamp();
+
+            if (fDebugTdc) std::cout << "Ch " << name
+                                << ", ts (ns) = " << ts%uint64_t(1e9)
+                                << ", sec (s) = " << ts/uint64_t(1e9)
+                                << " picosecond = " << tdc.TimestampPs()
+                                << std::endl;
+            if(ch == 0){
+                _tdc_ch0.push_back(ts%uint64_t(1e9));
+            }
+            if(ch == 1){
+                _tdc_ch1.push_back(ts%uint64_t(1e9));
+            }
+            if(ch == 2){
+                _tdc_ch2.push_back(ts%uint64_t(1e9));
+            }
+            if(ch == 3){
+                _tdc_ch3.push_back(ts%uint64_t(1e9));
+            } 
+            if(ch == 4){
+                _tdc_ch4.push_back(ts%uint64_t(1e9));
+            }
+        }
+    }
+    tdcHandle.removeProduct();
 
     //---------------------------FTRIG-----------------------------//
     art::Handle<std::vector<raw::OpDetWaveform>> wfFtrigHandle;
@@ -431,16 +434,18 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                         
                         double tsFrame = FindNearestTdc(tsFtrig, _tdc_ch3); 
                         
-                        double tempShift = std::abs(tsFtrig - tsFrame) - fTdc3CaenOffset[wf->ChannelNumber()]; 
+                        double tempShift = fTdc3CaenOffset[wf->ChannelNumber()] - std::abs(tsFtrig - tsFrame); 
 
                         if (CheckShift(tempShift, wf->ChannelNumber())){
                             status = kGood;
-                            //if (fDebugFtrig)  std::cout << "    board id = " << wf->ChannelNumber() << " has rising tick value = " << tickFtrig << " and shift value = " << shift << " ns." << std::endl;
-                            shift = tempShift;
+                            
+                            shift = std::round(tempShift * 1000.0) / 1000.0; //round to 3 decimal place of ns
+
+                            //shift = tempShift;
+                            if (fDebugFtrig)  std::cout << "    board id = " << wf->ChannelNumber() << " has rising tick value = " << tickFtrig << " and shift value = " << shift << " ns." << std::endl;
                         }else{
                             status = kOutOfBound; //either jitter too much or no reference frame 
                         }
-
                     }
 
                     //TODO: Add reference for PTB and CAEN only
@@ -532,7 +537,6 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
             for (int flashIdx = 0; flashIdx < nPmtFlash; flashIdx++){
 
                 if (fDebugPmt) std::cout << "     flash " << flashIdx << " has shift value " << boardJitter[boardIdx][flashIdx] << std::endl;
-
                 for (int chIdx = 0; chIdx < fnChperBoard; chIdx++){
 
                     int wfIdx = boardIdx * nPmtFlash * fnChperBoard + flashIdx * fnChperBoard + chIdx;
@@ -546,18 +550,19 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
                     art::Ptr<raw::pmt::BoardAlignment> wf_align = make_align_ptr(boardIdx);
 
-                    //TODO: Add check if database is valid
                     fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
                     double total_transit = fPMTCalibrationDatabaseService->getTotalTransitTime(wf->ChannelNumber());
 
                     double correction = 0;
                     correction -= total_transit; //total transit = propagation time of photon from PMT to digitiser
-                    //correction += boardJitter[boardIdx][flashIdx];
-                    std::cout << correction << std::endl;
+                    if(fCorrectCableOnly == false) correction -= boardJitter[boardIdx][flashIdx];
+                    correction /= 1000; //ns to us conversion
 
-                    double new_ts = wf->TimeStamp() + correction; //ns to us
+                    double new_ts = wf->TimeStamp() + correction; //us
+                    //std::cout << std::setprecision(6) << correction << std::endl;
+                    //std::cout << std::setprecision(9)<< "old ts = " << wf->TimeStamp() << ", new ts = " << new_ts << std::endl;
+
                     std::vector<uint16_t> adc_vec(wf->Waveform().size(), 0);
-                    
                     for (size_t i = 0; i < wf->Waveform().size(); i++){
                         adc_vec[i] = wf->Waveform()[i];
                     }
@@ -618,6 +623,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
 
                 //Timing CAEN is not connected to PMT
                 double correction = boardJitter[boardIdx][flashIdx]; 
+                correction /= 1000; //ns to us
              
                 double new_ts = wf->TimeStamp() + correction; //ns to us
                 std::vector<uint16_t> adc_vec(wf->Waveform().size(), 0);
@@ -639,7 +645,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     wfTimingHandle.removeProduct();
     wf_timing_v.clear();
 
-    if (fDebugTdc | fDebugFtrig) 
+    if (fDebugTdc | fDebugTimeRef | fDebugFtrig | fDebugPmt | fDebugTiming)
       std::cout <<"#--------------------------------------------------------#" << std::endl;
     
     //Put product in event
@@ -956,7 +962,7 @@ void sbnd::WaveformAlignment::PlotFtrigCompare(const int flashId)
         double shift = boardJitter[k][flashId];
         std::vector<double> x2;
         for (size_t i = 0; i < x1.size(); i++){
-            x2.push_back(x1[i] + shift);
+            x2.push_back(x1[i] - shift);
         }
       
         //------Shift baseline
