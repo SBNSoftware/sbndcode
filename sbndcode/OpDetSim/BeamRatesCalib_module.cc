@@ -189,7 +189,7 @@ namespace opdet { //OpDet means optical detector
     fInputInstanceName = p.get< std::string >("InputInstance" );
     fTimingInstanceName = p.get<std::string>("TimingInstanceName");
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
-    fNominalGoodStart = p.get<int>("NominalGoodStartTime", 10); //ns timestamp for OpDetWaveform 
+    fNominalGoodStart = p.get<int>("NominalGoodStartTime", 2000); 
     fMonWidth        = p.get<int>("MonWidth");
     fMonStart        = p.get<int>("MonStart", 20);
     fMonStop        = p.get<int>("MonStop", 250);
@@ -278,9 +278,12 @@ namespace opdet { //OpDet means optical detector
     EventCounter=0;
     PMTReadouts=0;
     art::ServiceHandle<art::TFileService> tfs;
-    hist_PropTriggers = tfs->make<TH2D>("hist_PropTriggers", "Proportion of Beam Spill Making Light Trigger", int((MonEnd-MonStart)/MonStep), MonStart, MonEnd, int((MTCAEnd-MTCAStart)/MTCAStep), MTCAStart, MTCAEnd); //Give it a real address + bins
-    hist_PropTriggers_NoRestriction = tfs->make<TH2D>("hist_PropTriggers_LLT", "Proportion of Beam Spills with light LLT", int((MonEnd-MonStart)/MonStep), MonStart, MonEnd, int((MTCAEnd-MTCAStart)/MTCAStep), MTCAStart, MTCAEnd);
-    hist_PropTriggers_OffBeam = tfs->make<TH2D>("hist_PropTriggers_OffBeam", "Proportion of Shifted Beam Spill Making Light Trigger", int((MonEnd-MonStart)/MonStep), MonStart, MonEnd, int((MTCAEnd-MTCAStart)/MTCAStep), MTCAStart, MTCAEnd); //Give it a real address + bins
+    hist_PropTriggers = tfs->make<TH2D>("hist_PropTriggers", "Proportion of Beam Spill Making Light Trigger", 
+    int(double(MonEnd-MonStart)/MonStep)+1, MonStart-MonStep/2., MonEnd+MonStep/2., int(double(MTCAEnd-MTCAStart)/MTCAStep)+1, MTCAStart-MTCAStep/2.0, MTCAEnd+MTCAStep/2.0); //Give it a real address + bins
+    hist_PropTriggers_NoRestriction = tfs->make<TH2D>("hist_PropTriggers_LLT", "Proportion of Beam Spills with light LLT", 
+    int(double(MonEnd-MonStart)/MonStep)+1, MonStart-MonStep/2., MonEnd+MonStep/2., int(double(MTCAEnd-MTCAStart)/MTCAStep)+1, MTCAStart-MTCAStep/2.0, MTCAEnd+MTCAStep/2.0);
+    hist_PropTriggers_OffBeam = tfs->make<TH2D>("hist_PropTriggers_OffBeam", "Proportion of Shifted Beam Spill Making Light Trigger", 
+    int(double(MonEnd-MonStart)/MonStep)+1, MonStart-MonStep/2., MonEnd+MonStep/2., int(double(MTCAEnd-MTCAStart)/MTCAStep)+1, MTCAStart-MTCAStep/2.0, MTCAEnd+MTCAStep/2.0); //Give it a real address + bins
     for(int i=0; (MonStart+i*MonStep)<=MonEnd; i++ )
     {
       for(int j=0; MTCAStart+j*MTCAStep<=MTCAEnd; j++)
@@ -348,6 +351,7 @@ namespace opdet { //OpDet means optical detector
     tree_subrun = e.subRun();
     std::cout << " on run " << tree_run << " event " << fEvNumber << std::endl;
     unsigned long long int tsval = e.time().value();
+    ETrigTime=0;
     const unsigned long int mask32 = 0xFFFFFFFFUL;
     tree_timestamp = ( tsval >> 32 ) & mask32;
     art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
@@ -373,7 +377,9 @@ namespace opdet { //OpDet means optical detector
           if(hltrigs[HLT].trigger_word & (0x1 << Power))
           {
             GrabbedHLTs.push_back(Power);
-            if(Power==1 || Power==2 || Power==3 || Power==4) ETrigTime = hltrigs[HLT].timestamp*20-fEtrigOffset; //BNB Zero-Bias, BNB+Light, Off Beam Zero-Bias, OffBeam + Light
+            if( (Power==1 || Power==2 || Power==3 || Power==4) && (ETrigTime==0 || (hltrigs[HLT].timestamp*20+fEtrigOffset)<ETrigTime) ){ 
+              ETrigTime = hltrigs[HLT].timestamp*20+fEtrigOffset; //BNB Zero-Bias, BNB+Light, Off Beam Zero-Bias, OffBeam + Light
+            }
           }
           Power=Power+1;
         }
@@ -401,7 +407,7 @@ namespace opdet { //OpDet means optical detector
         if(lltrigs[LLT].trigger_word & (0x1 << Power))
         {
           GrabbedLLTs.push_back(Power);
-          if(Power==26 || Power==30) GateOpenTime=lltrigs[LLT].timestamp*20-fCAENOffset; //UNIX ns time of gate opening. Adjusted for PTB-TDC offset
+          if(Power==26 || Power==30) GateOpenTime=lltrigs[LLT].timestamp*20;//-fCAENOffset; //UNIX ns time of gate opening. Adjusted for PTB-TDC offset
         }
         Power=Power+1;
       }
@@ -610,11 +616,18 @@ namespace opdet { //OpDet means optical detector
           //Flash just before beam gate can offset waveform
           //int WaveformOffset = (*waveHandle)[WaveIndex].TimeStamp()*1000 - fNominalGoodStart; //Waveform timestamps are in us // Also delivers time of sample 0 //ns
           //Ideally this should be 0 for normal gate opening. For extended waveform we need it to be positive, and our waveform has ealier timestamp 
-          int WaveformOffset = GateOpenTime - ((*waveHandle)[WaveIndex].TimeStamp()*1000 + ETrigTime) ;
+          int GateOpenRelativeETrig = -1*int(ETrigTime - GateOpenTime);
+          int ModifiedWaveStart =  (*waveHandle)[WaveIndex].TimeStamp()*1000+fNominalGoodStart; //Adjust timestamp to be actual time of flash trigger
+          int WaveformOffset = GateOpenRelativeETrig-ModifiedWaveStart; //Measure gate opening time relative to flash trigger
           WaveformOffset = WaveformOffset/2; //sample/2 ns 
           int BeamAcceptanceStart = fBeamWindowStart+WaveformOffset;
           int BeamAcceptanceEnd = fBeamWindowEnd+WaveformOffset;
           int PeakMon = *std::max_element(MonPulse->begin()+BeamAcceptanceStart, MonPulse->begin()+BeamAcceptanceEnd);
+          if(MONThresholds[i]==50)
+          {
+            std::cout <<"Event " << EventCounter <<" Peak MON " << PeakMon << std::endl;
+            std::cout << " I check from " << BeamAcceptanceStart << " - " << BeamAcceptanceEnd << std::endl;
+          }
           int PeakMon_NoRange = *std::max_element(MonPulse->begin(), MonPulse->end());
           int PeakOffBeam = *std::max_element(MonPulse->end()-1-(BeamAcceptanceEnd-BeamAcceptanceStart), MonPulse->end()-1);
           //Loop over MTCA thresholds
@@ -640,20 +653,20 @@ namespace opdet { //OpDet means optical detector
               if(PeakMon>=PairVal && GoodFlash) //Right trigger type here
               {
                   //fill histogram
-                  double FillX = MONThresholds[i]+float((MONThresholds[1]-MONThresholds[0])/2.);
-                  double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
+                  double FillX = MONThresholds[i];
+                  double FillY = MTCA_Thresholds[j];
                   hist_PropTriggers->Fill(FillX, FillY); //Fill histogram if we trigger
               }
               if(PeakOffBeam>=PairVal && GoodFlash) //Right trigger type here
               {
-                double FillX = MONThresholds[i]+float((MONThresholds[1]-MONThresholds[0])/2.);
-                double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
+                double FillX = MONThresholds[i];
+                double FillY = MTCA_Thresholds[j];
                 hist_PropTriggers_OffBeam->Fill(FillX, FillY);
               }
               if(PeakMon_NoRange>=PairVal && GoodFlash) //Runs over all flashes
               {
-                double FillX = MONThresholds[i]+float((MONThresholds[1]-MONThresholds[0])/2.);
-                double FillY = MTCA_Thresholds[j]+float((MTCA_Thresholds[1]-MTCA_Thresholds[0])/2.);
+                double FillX = MONThresholds[i];
+                double FillY = MTCA_Thresholds[j];
                 hist_PropTriggers_NoRestriction->Fill(FillX, FillY); //Fill histogram if we trigger
               }
               //else // out of things to fill in break for time
@@ -753,11 +766,11 @@ namespace opdet { //OpDet means optical detector
               hist_MSUM_Energy->Fill(Energy); //Can convert to average power by dividing by readout time
               std::cout << Energy << std::endl;
               //Make th1d of trigger rate plot of column enabled in fcl
-              int WaveformOffset = GateOpenTime - (wvf.TimeStamp()*1000 + ETrigTime) ;
-              WaveformOffset = WaveformOffset/2; //sample/2 ns 
-              int BeamAcceptanceStart = fBeamWindowStart+WaveformOffset;
-              int BeamAcceptanceEnd = fBeamWindowEnd+WaveformOffset;
-              int PeakMon = *std::max_element(MonPulse.begin()+BeamAcceptanceStart, MonPulse.begin()+BeamAcceptanceEnd);
+              //int WaveformOffset = GateOpenTime - (wvf.TimeStamp()*1000 + ETrigTime)+ fNominalGoodStart ;
+              //WaveformOffset = WaveformOffset/2; //sample/2 ns 
+              int BeamAcceptanceStart = fBeamWindowStart; // + WaveformOffset;
+              int BeamAcceptanceEnd = fBeamWindowEnd; // + WaveformOffset;
+              int PeakMon = *std::max_element(MonPulse.begin()+BeamAcceptanceStart, MonPulse.begin()+BeamAcceptanceEnd); //Grabbing wrong indecies but I am not requiring it to be the trigger pulse. Can add that back later
               for(int j=0; j<int(MTCA_Thresholds.size()); j++)
                 {
                     int PairVal = MTCA_Thresholds[j];
