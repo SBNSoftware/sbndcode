@@ -135,9 +135,12 @@ private:
   double recoNeutrinoVZ;                    // Reco vertex z coord
   size_t numRecoNeutrinos = 0;              // Counter for number of reco neutrinos
 
+  double ETheta2;
   double totalShowerEnergy;                 // Total energy of the shower in the event
   double smallestDeltaR;
-  double chosenShowerTheta;
+  double largestEnergy;
+  double chosenShowerThetaScore;
+  double chosenShowerThetaEnergy;
   double smallestTheta;
 
   double chosenSliceCompleteness;           // The completeness of the chosen slice
@@ -162,6 +165,7 @@ private:
   double tpcID_num = 100;
 
   // Vectors for the NuE Tree
+  std::vector<double> fullyReco_tree = std::vector<double>(0);
   std::vector<double> event_tree = std::vector<double>(0);
   std::vector<double> run_tree = std::vector<double>(0);
   std::vector<double> subrun_tree = std::vector<double>(0);
@@ -184,6 +188,7 @@ private:
   std::vector<double> trackScore_tree = std::vector<double>(0);
   std::vector<double> showerEnergy_tree = std::vector<double>(0);
   std::vector<double> showerTheta_tree = std::vector<double>(0);
+  std::vector<double> showerThetaBigEnergy_tree = std::vector<double>(0);
   std::vector<double> showerSmallestTheta_tree = std::vector<double>(0);
   std::vector<double> showerETheta2_tree = std::vector<double>(0);
 
@@ -232,6 +237,7 @@ void sbnd::NuE::analyze(art::Event const& e){
 
   double trackscore;
   totalShowerEnergy = 0;
+  ETheta2 = 10000;
 
   eventID = e.id().event();
   runID = e.id().run();
@@ -307,7 +313,6 @@ void sbnd::NuE::analyze(art::Event const& e){
 
   if(sliceVec.empty()) return;
 
-
   int slice_ID(std::numeric_limits<int>::max());
 
   for(const art::Ptr<recob::Slice> &slice : sliceVec){
@@ -359,8 +364,6 @@ void sbnd::NuE::analyze(art::Event const& e){
     //std::cout << "Shower Purity: " << showerPurity << std::endl;
   }
 
-  std::cout << "num tracks: " << nTracks << " num showers: " << nShowers << std::endl;
-
   int PFParticleID(std::numeric_limits<int>::max());
 
   // Get associations between pfparticles and slices
@@ -376,7 +379,6 @@ void sbnd::NuE::analyze(art::Event const& e){
   std::vector<std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>, art::Ptr<sbn::CRUMBSResult>>> v;
 
   for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
-    nPFParticles++;
     PFParticleID = pfp->PdgCode();
   
     if(PFParticleID == std::numeric_limits<int>::max()) return;
@@ -394,6 +396,7 @@ void sbnd::NuE::analyze(art::Event const& e){
        
         if(!(PFParticleID == 12 || PFParticleID == 14)){
             trackscore = trackscoreobj->second;
+            nPFParticles++;
         }
 
         const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
@@ -401,10 +404,6 @@ void sbnd::NuE::analyze(art::Event const& e){
         if(pfpVertexs.size() == 1){
             const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
             bool pfpPrimary = pfp->IsPrimary();
-
-            // Print statements when looking at the cheated vertexing
-            //std::cout << "PFP Vertex: " << pfpVertex->position().X() << ", " << pfpVertex->position().Y() << ", " << pfpVertex->position().Z() << std::endl;
-            //std::cout << "Is Primary: " << pfpPrimary << " PFP ID: " << PFParticleID << std::endl;
 
             if(pfpPrimary && (PFParticleID == 12 || PFParticleID == 14)){
                 art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(pfpSlices, e, crumbsLabel);
@@ -455,7 +454,6 @@ void sbnd::NuE::analyze(art::Event const& e){
 
   std::cout << "True vertex: (" << trueNeutrinoVX << ", " << trueNeutrinoVY << ", " << trueNeutrinoVZ << ")   Reco vertex: (" << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << ")" << std::endl;
   std::cout << "dx: " << recoNeutrinoVX - trueNeutrinoVX << ", dy: " << recoNeutrinoVY - trueNeutrinoVY << ", dz: " << recoNeutrinoVZ - trueNeutrinoVZ << std::endl; 
-  std::cout << "Total shower energy: " << totalShowerEnergy << std::endl;
 
   for(auto &hit : hitVec){
     if(hit->View() == 0 || hit->View() == 1 || hit->View() == 2){
@@ -492,56 +490,49 @@ void sbnd::NuE::analyze(art::Event const& e){
     }
   }
  
-  std::cout << "completeness of chosen slice: " << chosenSliceCompleteness << std::endl;
-  std::cout << "num slices: " << nSlices << ", num pfps: " << nPFParticles << std::endl;
-
+  numEventsTotal++;
   if(!std::isnan(recoNeutrinoVX)){
-    numEventsTotal++;
+
+    // Event is fully reconstructed
+    fullyReco_tree.push_back(1);
 
     ShowerEnergy(e, pfpVec, recoNeutrinoVX, recoNeutrinoVY, recoNeutrinoVZ);
-    std::cout << "total shower energy: " << totalShowerEnergy << ", theta: " << chosenShowerTheta << ", smallest theta: " << smallestTheta << std::endl;
    
     double largestThetaAllowed = std::sqrt(1.022/totalShowerEnergy); 
-    double ETheta2 = totalShowerEnergy * std::pow(chosenShowerTheta, 2);
-    std::cout << "largest theta value allowed: " << TMath::RadToDeg() * largestThetaAllowed << ", theta of shower: " << TMath::RadToDeg() * chosenShowerTheta << std::endl;
-    if(largestThetaAllowed > chosenShowerTheta){
-        std::cout << "This event would be selected!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-        numEventsSelected++;
-    }
-
-    if(largestThetaAllowed > smallestTheta){
-        std::cout << "event would be selected based on smallest theta!!!!!!!!!" << std::endl;
-    }
-
-    event_tree.push_back(eventID);
-    run_tree.push_back(runID);
-    subrun_tree.push_back(subRunID);
-    trueNeutrinoVX_tree.push_back(trueNeutrinoVX);
-    trueNeutrinoVY_tree.push_back(trueNeutrinoVY);
-    trueNeutrinoVZ_tree.push_back(trueNeutrinoVZ);
-    recoNeutrinoVX_tree.push_back(recoNeutrinoVX);
-    recoNeutrinoVY_tree.push_back(recoNeutrinoVY);
-    recoNeutrinoVZ_tree.push_back(recoNeutrinoVZ);
-    trueCCNC_tree.push_back(trueCCNC);
-    trueNeutrinoType_tree.push_back(trueNeutrinoType);
-    trueLeptonType_tree.push_back(trueChargedLepton);
-    numSlices_tree.push_back(nSlices);
-    numPfps_tree.push_back(nPFParticles);
-    numTracks_tree.push_back(nTracks);
-    numShowers_tree.push_back(nShowers);
-    tpcID_tree.push_back(tpcID_num);
-    dl_current_tree.push_back(1); // 0 = uboone dl, 1 = dune dl, 2 = current
-    sliceCompleteness_tree.push_back(chosenSliceCompleteness);
-    trackScore_tree.push_back(trackscore);
-    showerEnergy_tree.push_back(totalShowerEnergy);
-    showerTheta_tree.push_back(chosenShowerTheta);
-    showerSmallestTheta_tree.push_back(smallestTheta);
-    showerETheta2_tree.push_back(ETheta2);
+    ETheta2 = totalShowerEnergy * std::pow(chosenShowerThetaScore, 2);
   } else{
-    std::cout << "There is no reco neutrino, skipping event" << std::endl;
+      std::cout << "There is no reco neutrino, skipping event" << std::endl;
+      // Event is not fully reconstructed
+      fullyReco_tree.push_back(0);
   }
 
- sliceInfo.clear(); 
+  event_tree.push_back(eventID);
+  run_tree.push_back(runID);
+  subrun_tree.push_back(subRunID);
+  trueNeutrinoVX_tree.push_back(trueNeutrinoVX);
+  trueNeutrinoVY_tree.push_back(trueNeutrinoVY);
+  trueNeutrinoVZ_tree.push_back(trueNeutrinoVZ);
+  recoNeutrinoVX_tree.push_back(recoNeutrinoVX);
+  recoNeutrinoVY_tree.push_back(recoNeutrinoVY);
+  recoNeutrinoVZ_tree.push_back(recoNeutrinoVZ);
+  trueCCNC_tree.push_back(trueCCNC);
+  trueNeutrinoType_tree.push_back(trueNeutrinoType);
+  trueLeptonType_tree.push_back(trueChargedLepton);
+  numSlices_tree.push_back(nSlices);
+  numPfps_tree.push_back(nPFParticles);
+  numTracks_tree.push_back(nTracks);
+  numShowers_tree.push_back(nShowers);
+  tpcID_tree.push_back(tpcID_num);
+  dl_current_tree.push_back(3); // 0 = uboone dl, 1 = dune dl, 2 = current, 3 = cheated
+  sliceCompleteness_tree.push_back(chosenSliceCompleteness);
+  trackScore_tree.push_back(trackscore);
+  showerEnergy_tree.push_back(totalShowerEnergy);
+  showerThetaBigEnergy_tree.push_back(chosenShowerThetaEnergy);
+  showerTheta_tree.push_back(chosenShowerThetaScore);
+  showerSmallestTheta_tree.push_back(smallestTheta);
+  showerETheta2_tree.push_back(ETheta2);
+ 
+  sliceInfo.clear(); 
 }
 
 double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
@@ -590,8 +581,8 @@ void sbnd::NuE::ShowerEnergy(const art::Event &e, const std::vector<art::Ptr<rec
   art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
 
   smallestDeltaR = 1000000;
+  largestEnergy = 0;
   smallestTheta = 1000000;
-  std::cout << "reco vertex: " << VX << ", " << VY << ", " << VZ << std::endl;
 
   for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
     if(pfp->PdgCode() == std::numeric_limits<int>::max()) return;
@@ -602,24 +593,24 @@ void sbnd::NuE::ShowerEnergy(const art::Event &e, const std::vector<art::Ptr<rec
     const auto trackscoreobj = props.find("TrackScore");
     const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
     const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
-    
-    if(!(pfp->PdgCode() == 12 || pfp->PdgCode() == 14)){
-        std::cout << "2nd iteration PFP PDG: " << pfp.key() << ", Track Score: " << trackscoreobj->second << std::endl;
-        if(trackscoreobj->second <= 1 && trackscoreobj->second >= 0){
-            std::cout << "counting this as a shower" << std::endl;
-            std::cout << "energy of this shower: " << pfpShower->Energy()[pfpShower->best_plane()] << ", best plane: " << pfpShower->best_plane() << std::endl;
-            totalShowerEnergy += pfpShower->Energy()[pfpShower->best_plane()];
-            std::cout << "theta: " << TMath::RadToDeg() * pfpShower->Direction().Theta() << std::endl;
-            std::cout << "shower vertex: " << pfpVertex->position().X() << ", " << pfpVertex->position().Y() << ", " << pfpVertex->position().Z() << std::endl;
+    if(pfpVertexs.size() > 0){
+        if(!(pfp->PdgCode() == 12 || pfp->PdgCode() == 14)){
+            if(trackscoreobj->second <= 1 && trackscoreobj->second >= 0){
+                totalShowerEnergy += pfpShower->Energy()[pfpShower->best_plane()];
         
-            double score = (std::sqrt(std::pow(VX - pfpVertex->position().X(), 2) + std::pow(VY - pfpVertex->position().Y(), 2) + std::pow(VZ - pfpVertex->position().Z(), 2)) + (std::pow(trackscoreobj->second, 2) * 100)); // + (std::pow(pfpShower->Energy()[pfpShower->best_plane()], -1) * 10000));
-            std::cout << "score: " << score << std::endl;
-            if(score < smallestDeltaR){ 
-                chosenShowerTheta = pfpShower->Direction().Theta();
-                smallestDeltaR = score;
-            }
+                double score = (std::sqrt(std::pow(VX - pfpVertex->position().X(), 2) + std::pow(VY - pfpVertex->position().Y(), 2) + std::pow(VZ - pfpVertex->position().Z(), 2)) + (std::pow(trackscoreobj->second, 2) * 100)); // + (std::pow(pfpShower->Energy()[pfpShower->best_plane()], -1) * 10000));
+                if(score < smallestDeltaR){ 
+                    chosenShowerThetaScore = pfpShower->Direction().Theta();
+                    smallestDeltaR = score;
+                }
+               
+                if(pfpShower->Energy()[pfpShower->best_plane()] > largestEnergy){
+                    chosenShowerThetaEnergy = pfpShower->Direction().Theta();
+                    largestEnergy = pfpShower->Energy()[pfpShower->best_plane()];
+                }
 
-            if(pfpShower->Direction().Theta() < smallestTheta) smallestTheta = pfpShower->Direction().Theta();
+                if(pfpShower->Direction().Theta() < smallestTheta) smallestTheta = pfpShower->Direction().Theta();
+            }
         }
     }
   }
@@ -629,6 +620,7 @@ void sbnd::NuE::beginJob()
 {
   art::ServiceHandle<art::TFileService> tfs;
 
+  NuETree->Branch("fullyReco_tree", &fullyReco_tree);
   NuETree->Branch("event_tree", &event_tree);
   NuETree->Branch("run_tree", &run_tree);
   NuETree->Branch("subrun_tree", &subrun_tree);
@@ -651,6 +643,7 @@ void sbnd::NuE::beginJob()
   NuETree->Branch("trackScore_tree", &trackScore_tree);
   NuETree->Branch("showerEnergy_tree", &showerEnergy_tree);
   NuETree->Branch("showerTheta_tree", &showerTheta_tree);
+  NuETree->Branch("showerThetaBigEnergy_tree", &showerThetaBigEnergy_tree);
   NuETree->Branch("showerSmallestTheta_tree", &showerSmallestTheta_tree);
   NuETree->Branch("showerETheta2_tree", &showerETheta2_tree);
 
@@ -667,7 +660,7 @@ void sbnd::NuE::endJob()
   NuETree->Fill();
   NuEHitTree->Fill();
 
-  std::cout << "events selected: " << numEventsSelected << "/" << numEventsTotal << std::endl;
+  //std::cout << "events selected: " << numEventsSelected << "/" << numEventsTotal << std::endl;
 }
 
 DEFINE_ART_MODULE(sbnd::NuE)
