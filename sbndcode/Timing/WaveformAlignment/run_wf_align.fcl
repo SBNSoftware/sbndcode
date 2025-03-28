@@ -1,4 +1,4 @@
-#include "simulationservices_sbnd.fcl"
+#include "services_sbnd.fcl"
 #include "wfAlignConfig.fcl"
 
 process_name: WFALIGN  # The process name must NOT contain any underscores
@@ -22,10 +22,10 @@ outputs:
         fileName: "%ifb_wfalign.root"
         module_type: RootOutput
         dataTier: "reco"
-        outputCommands: [ 
-                            "keep *_*_*_*"
-                            , "drop *_pmtdecoder_*_*"
-                        ]
+        #outputCommands: [ 
+        #                    "keep *_*_*_*"
+        #                    , "drop *_pmtdecoder_*_*"
+        #                ]
     }
 }
 
