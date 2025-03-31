@@ -104,6 +104,9 @@ public:
     void ShowerEnergy(const art::Event &e, const std::vector<art::Ptr<recob::PFParticle>> &pfpVec, const double VX, const double VY, const double VZ);
     void recoNeutrino(const art::Event &e);
     void trueNeutrino(const art::Event &e);
+    void slices(const art::Event &e);
+    void PFPs(const art::Event &e);
+    void hits(const art::Event &e);
 
 private:
 
@@ -238,40 +241,7 @@ void sbnd::NuE::analyze(art::Event const& e){
   std::cout << "________________________________________________________________________________________" << std::endl;
   std::cout << "Run: " << runID << ", Subrun: " << subRunID << ", Event: " << eventID << std::endl;
 
-  for(auto &hit : hitVec){
-    if(hit->View() == 0 || hit->View() == 1 || hit->View() == 2){
-        const geo::WireID& wireID(hit->WireID());
-        const double xpos = propD.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
-           
-        auto const& channelMapAlg =  art::ServiceHandle<geo::WireReadout const>()->Get();
-
-        auto const wire = channelMapAlg.Plane(geo::PlaneID(wireID.Cryostat, wireID.TPC, wireID.Plane)).Wire(wireID);
-            
-        geo::Point_t start = wire.GetStart();
-        geo::Point_t end = wire.GetEnd();
-
-        const double ay(start.Y());
-        const double az(start.Z());
-        const double by(end.Y());
-        const double bz(end.Z());
-
-        const double ny(by - ay);
-        const double nz(bz - az);
-        const double n2(ny * ny + nz * nz);
-
-        const double ry(ay - (ay * ny + az * nz) * ny / n2);
-        const double rz(az - (ay * ny + az * nz) * nz / n2);
-        const double sign((rz > 0.0) ? +1.0 : -1.0);
-        const double uvz = sign * std::sqrt(ry * ry + rz * rz); // this is the U/V/Z coordinate
- 
-        event_hitTree.push_back(eventID);
-        run_hitTree.push_back(runID);
-        subrun_hitTree.push_back(subRunID);
-        plane_hitTree.push_back(hit->View());
-        x_hitTree.push_back(xpos);
-        uvz_hitTree.push_back(uvz);
-    }
-  }
+  
 
   if(!std::isnan(recoNeutrinoVX)){
     // Event is fully reconstructed
@@ -599,6 +569,43 @@ void sbnd::NuE::PFPs(const art::Event &e){
     }
 
     std::cout << "Number of PFPs: " << numPFPs << std::endl;
+}
+
+void sbnd::NuE::hits(const art::Event &e){
+    for(auto &hit : hitVec){
+    if(hit->View() == 0 || hit->View() == 1 || hit->View() == 2){
+        const geo::WireID& wireID(hit->WireID());
+        const double xpos = propD.ConvertTicksToX(hit->PeakTime(), wireID.Plane, wireID.TPC, wireID.Cryostat);
+           
+        auto const& channelMapAlg =  art::ServiceHandle<geo::WireReadout const>()->Get();
+
+        auto const wire = channelMapAlg.Plane(geo::PlaneID(wireID.Cryostat, wireID.TPC, wireID.Plane)).Wire(wireID);
+            
+        geo::Point_t start = wire.GetStart();
+        geo::Point_t end = wire.GetEnd();
+
+        const double ay(start.Y());
+        const double az(start.Z());
+        const double by(end.Y());
+        const double bz(end.Z());
+
+        const double ny(by - ay);
+        const double nz(bz - az);
+        const double n2(ny * ny + nz * nz);
+
+        const double ry(ay - (ay * ny + az * nz) * ny / n2);
+        const double rz(az - (ay * ny + az * nz) * nz / n2);
+        const double sign((rz > 0.0) ? +1.0 : -1.0);
+        const double uvz = sign * std::sqrt(ry * ry + rz * rz); // this is the U/V/Z coordinate
+ 
+        event_hitTree.push_back(eventID);
+        run_hitTree.push_back(runID);
+        subrun_hitTree.push_back(subRunID);
+        plane_hitTree.push_back(hit->View());
+        x_hitTree.push_back(xpos);
+        uvz_hitTree.push_back(uvz);
+    }
+  }
 }
 
 void sbnd::NuE::beginJob()
