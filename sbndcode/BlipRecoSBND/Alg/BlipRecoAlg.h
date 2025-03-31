@@ -118,9 +118,9 @@ namespace blip {
 
    private:
     
-    calo::CalorimetryAlg* fCaloAlg;
-    geo::GeometryCore const&                fGeom;
-
+    calo::CalorimetryAlg*         fCaloAlg;
+    geo::GeometryCore const&      fGeom;
+    
     CTPMap_t  kXTicksOffsets;
 
     // --- FCL configs ---

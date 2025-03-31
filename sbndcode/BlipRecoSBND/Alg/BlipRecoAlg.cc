@@ -12,6 +12,7 @@ namespace blip {
     
     auto const& detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
     auto const& clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    art::ServiceHandle<geo::WireReadout> wireReadoutGeom;
     kLArDensity           = detProp.Density();
     kNominalEfield        = detProp.Efield();
     kDriftVelocity        = detProp.DriftVelocity(detProp.Efield(0),detProp.Temperature()); 
@@ -40,13 +41,13 @@ namespace blip {
         auto const& tpcid = geo::TPCID(cryoid,tpc);
 
         // Loop planes in TPC 'tpc'
-        for(size_t pl=0; pl<fGeom.Nplanes(tpcid); pl++){
+        for(size_t pl=0; pl<wireReadoutGeom->Get().Nplanes(tpcid); pl++){
           auto const& planeid = geo::PlaneID(cstat,tpc,pl);
-          
-          kNumChannels += fGeom.Nwires(planeid);
+          auto const& planegeo = wireReadoutGeom->Get().Plane(planeid);
+          kNumChannels += planegeo.Nwires();
             
           float offset = detProp.GetXTicksOffset(pl,tpc,cstat);
-          std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<fGeom.Nwires(planeid)<<" wires\n";
+          std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<planegeo.Nwires()<<" wires\n";
           std::cout<<"  XTicksOffset (from detProp): "<<offset<<"\n";
          
           kXTicksOffsets[cstat][tpc][pl] = 0;
@@ -61,8 +62,8 @@ namespace blip {
             // (as of lardataalg v9_15_01)
             auto const& cryostat  = fGeom.Cryostat(geo::CryostatID(cstat));
             auto const& tpcgeom   = cryostat.TPC(tpc);
-            auto const xyz        = tpcgeom.Plane(0).GetCenter();
-            const double dir((tpcgeom.DriftDirection() == geo::kNegX) ? +1.0 : -1.0);
+            auto const xyz        = planegeo.GetCenter();
+            const double dir((tpcgeom.DriftSign() == geo::DriftSign::Negative) ? +1.0 : -1.0);
             float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
             
             float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
@@ -347,7 +348,8 @@ namespace blip {
     
     // -- geometry
     art::ServiceHandle<geo::Geometry> geom;
-
+    art::ServiceHandle<geo::WireReadout> wireReadoutGeom;
+    
     // -- G4 particles
     art::Handle< std::vector<simb::MCParticle> > pHandle;
     std::vector<art::Ptr<simb::MCParticle> > plist;
@@ -456,7 +458,8 @@ namespace blip {
     //======================================================
     std::map<int,double> map_g4trkid_charge;
     for(auto const &chan : simchanlist ) {
-      if( fGeom.View(chan->Channel()) != geo::kW ) continue;
+      if( wireReadoutGeom->Get().View(chan->Channel()) != geo::kW) continue;
+      //if( fGeom.View(chan->Channel()) != geo::kW ) continue;
       //std::map<int,double> map_g4trkid_perWireEnergyDep;
       for(auto const& tdcide : chan->TDCIDEMap() ) {
         for(auto const& ide : tdcide.second) {
@@ -811,12 +814,12 @@ namespace blip {
             bool flag = false;
             // treat edges of wireplane as "dead"
             //if( w1 < 0 || w2 >= (int)fGeom.Nwires(hc.Plane) )
-            if( w1 < 0 || w2 >= (int)fGeom.Nwires(geo::PlaneID(0,hc.TPC,hc.Plane)))
+            if( w1 < 0 || w2 >= (int)wireReadoutGeom->Get().Plane(geo::PlaneID(0,hc.TPC,hc.Plane)).Nwires())
               flag=true;
             //otherwise, use channel filter service
             else {
-              int ch1 = fGeom.PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w1));
-              int ch2 = fGeom.PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w2));
+              int ch1 = wireReadoutGeom->Get().PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w1));
+              int ch2 = wireReadoutGeom->Get().PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w2));
               if( chanFilt.Status(ch1)<2 ) flag=true;
               if( chanFilt.Status(ch2)<2 ) flag=true;
             }
@@ -915,12 +918,15 @@ namespace blip {
               // Check that the two central wires intersect
               // *******************************************
               double y, z;
-              int& chanA = hcA.CenterChan;
-              int& chanB = hcB.CenterChan;
-              if( !art::ServiceHandle<geo::Geometry>()
-                ->ChannelsIntersect(chanA,chanB,y,z)) continue;
+	      geo::Point_t intsec_p;
+	      geo::WireID A_wireid{(unsigned int)hcA.Cryostat, (unsigned int)hcA.TPC, (unsigned int)hcA.Plane, (unsigned int)hcA.CenterChan};
+	      geo::WireID B_wireid{(unsigned int)hcB.Cryostat, (unsigned int)hcB.TPC, (unsigned int)hcB.Plane, (unsigned int)hcB.CenterChan};
+
+	      if( !wireReadoutGeom->Get().WireIDsIntersect(A_wireid,B_wireid,intsec_p)) continue;
               // Save intersect location, so we don't have to
               // make another call to the Geometry service later
+	      y = intsec_p.Y();
+	      z = intsec_p.Z();
               TVector3 xloc(0,y,z);
               hcA.IntersectLocations[hcB.ID] = xloc;
               hcB.IntersectLocations[hcA.ID] = xloc;
@@ -1113,7 +1119,7 @@ namespace blip {
       int clustid = hitinfo[i].clustid;
       if( clustid >= 0 ) {
         if( hitclust[clustid].NWires > 1 ) continue;
-        h_chan_nclusts->Fill(fGeom.PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
+        h_chan_nclusts->Fill(wireReadoutGeom->Get().PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
       }
       //if( hitinfo[i].ismatch    ) continue;
       //if( hitclust[clustid].NWires > 1 ) continue;
