@@ -28,6 +28,10 @@ local params = base {
     // Electron drift speed, assumes a certain applied E-field
     drift_speed: std.extVar('driftSpeed') * wc.mm / wc.us,
   },
+  sim: super.sim {
+    // front porch size [us]
+    tick0_time: std.extVar('tick0_time') * wc.us,
+  }
 };
 
 local tools = tools_maker(params);

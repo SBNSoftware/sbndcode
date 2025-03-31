@@ -8,8 +8,4 @@ services.BackTrackerService:       @erase
 services.CRTChannelMapService: @local::crt_channel_map_standard
 services.CRTCalibService:      @local::crt_calib_service
 
-physics.analyzers.crtana.FEBDataModuleLabel: "crtdecoder"
-physics.analyzers.crtana.DataMode:           true
-physics.analyzers.crtana.NoTPC:              true
-physics.analyzers.crtana.HasPTB:             true
-physics.analyzers.crtana.HasTDC:             true
+physics.analyzers.crtana: @local::crtana_data_sbnd
