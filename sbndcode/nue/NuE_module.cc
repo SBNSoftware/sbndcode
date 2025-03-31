@@ -80,138 +80,133 @@ namespace sbnd {
 
 class sbnd::NuE : public art::EDAnalyzer {
 public:
-  explicit NuE(fhicl::ParameterSet const& p);
-  // The compiler-generated destructor is fine for non-base
-  // classes without bare pointers or other resource use.
+    explicit NuE(fhicl::ParameterSet const& p);
+    // The compiler-generated destructor is fine for non-base
+    // classes without bare pointers or other resource use.
 
-  // Plugins should not be copied or assigned.
-  NuE(NuE const&) = delete;
-  NuE(NuE&&) = delete;
-  NuE& operator=(NuE const&) = delete;
-  NuE& operator=(NuE&&) = delete;
+    // Plugins should not be copied or assigned.
+    NuE(NuE const&) = delete;
+    NuE(NuE&&) = delete;
+    NuE& operator=(NuE const&) = delete;
+    NuE& operator=(NuE&&) = delete;
 
-  // Required functions.
-  void analyze(art::Event const& e) override;
+    // Required functions.
+    void analyze(art::Event const& e) override;
 
-  // Selected optional functions.
-  void beginJob() override;
-  void endJob() override;
+    // Selected optional functions.
+    void beginJob() override;
+    void endJob() override;
 
-double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
-double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
-void ClearMaps(const art::Event &e);
-void SetupMaps(const art::Event &e);
-void ShowerEnergy(const art::Event &e, const std::vector<art::Ptr<recob::PFParticle>> &pfpVec, const double VX, const double VY, const double VZ);
-
+    double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
+    double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
+    void ClearMaps(const art::Event &e);
+    void SetupMaps(const art::Event &e);
+    void ShowerEnergy(const art::Event &e, const std::vector<art::Ptr<recob::PFParticle>> &pfpVec, const double VX, const double VY, const double VZ);
+    void recoNeutrino(const art::Event &e);
+    void trueNeutrino(const art::Event &e);
 
 private:
 
-  art::ServiceHandle<cheat::BackTrackerService>       backTracker;
+    art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
-  TTree *NuETree = new TTree("NuETree", "NuE");
-  TTree *NuEHitTree = new TTree("NuEHitTree", "NuEHit");
+    TTree *NuETree = new TTree("NuETree", "NuE");
+    TTree *NuEHitTree = new TTree("NuEHitTree", "NuEHit");
 
-  unsigned int eventID;                    // Event num
-  unsigned int runID;                      // Run num  
-  unsigned int subRunID;                   // Subrun num
-  unsigned int nPFParticles;               // Number of PFParticles
-  unsigned int nSlices;                    // Number of Slices
-  unsigned int nNeutrinos;                 // Number of MCTruth Neutrinos
-  unsigned int nTracks;                    // Number of reconstructed Tracks
-  unsigned int nShowers;                   // Number of reconstructed Showers
+    unsigned int eventID;                    // Event num
+    unsigned int runID;                      // Run num  
+    unsigned int subRunID;                   // Subrun num
+    unsigned int nPFParticles;               // Number of PFParticles
+    unsigned int nSlices;                    // Number of Slices
+    unsigned int nNeutrinos;                 // Number of MCTruth Neutrinos
+    unsigned int nTracks;                    // Number of reconstructed Tracks
+    unsigned int nShowers;                   // Number of reconstructed Showers
 
-  // Truth variables
-  double trueNeutrinoVX;                    // MCTruth vertex x coord
-  double trueNeutrinoVY;                    // MCTruth vertex y coord
-  double trueNeutrinoVZ;                    // MCTruth vertex z coord
-  int trueCCNC;                             // MCTruth CC or NC, CC = 0, NC = 1 
-  int trueNeutrinoType;                     // MCTruth neutrino flavour (PDG code)
-  int trueChargedLepton;                    // MCTruth charged lepton flavour (PDG code)
-  int numTrueNeutrinos = 0;                 // Counter for number of truth neutrinos 
+    // Truth variables
+    double trueNeutrinoVX;                    // MCTruth vertex x coord
+    double trueNeutrinoVY;                    // MCTruth vertex y coord
+    double trueNeutrinoVZ;                    // MCTruth vertex z coord
+    int trueCCNC;                             // MCTruth CC or NC, CC = 0, NC = 1 
+    int trueNeutrinoType;                     // MCTruth neutrino flavour (PDG code)
+    int trueChargedLepton;                    // MCTruth charged lepton flavour (PDG code)
   
-  // Reco variables
-  double recoNeutrinoVX;                    // Reco vertex x coord
-  double recoNeutrinoVY;                    // Reco vertex y coord
-  double recoNeutrinoVZ;                    // Reco vertex z coord
-  size_t numRecoNeutrinos = 0;              // Counter for number of reco neutrinos
+    // Reco variables
+    double recoNeutrinoVX;                    // Reco vertex x coord
+    double recoNeutrinoVY;                    // Reco vertex y coord
+    double recoNeutrinoVZ;                    // Reco vertex z coord
 
-  double ETheta2;
-  double totalShowerEnergy;                 // Total energy of the shower in the event
-  double smallestDeltaR;
-  double largestEnergy;
-  double chosenShowerThetaScore;
-  double chosenShowerThetaEnergy;
-  double smallestTheta;
+    double ETheta2;
+    double totalShowerEnergy;                 // Total energy of the shower in the event
+    double smallestDeltaR;
+    double largestEnergy;
+    double chosenShowerTheta;
+    double smallestTheta;
 
-  double chosenSliceCompleteness;           // The completeness of the chosen slice
+    double chosenSliceCompleteness;           // The completeness of the chosen slice
 
-  double numEventsTotal = 0;
-  double numEventsSelected = 0;
+    double numEventsTotal = 0;
+    double numEventsSelected = 0;
 
-  float highestSliceScore = -10000;
-  int highestSliceScoreIndex;
+    float highestSliceScore = -10000;
+    int highestSliceScoreIndex;
 
-  std::map<int,int> fHitsMap;
-  std::vector<std::vector<double>> sliceInfo;
+    std::map<int,int> fHitsMap;
+    std::vector<std::vector<double>> sliceInfo;
 
-  geo::Point_t pos = {0, 0, 0};             // Geometry position (0, 0, 0), gets overwritten with actual coords
+    geo::Point_t pos = {0, 0, 0};             // Geometry position (0, 0, 0), gets overwritten with actual coords
 
-  // Geometry information
-  detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
-  detinfo::DetectorPropertiesData propData = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob();
-  art::ServiceHandle<geo::Geometry> theGeometry;
-  geo::GeometryCore const* geom = art::ServiceHandle<geo::Geometry>()->provider();
+    // Geometry information
+    detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataForJob();
+    detinfo::DetectorPropertiesData propData = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob();
+    art::ServiceHandle<geo::Geometry> theGeometry;
+    geo::GeometryCore const* geom = art::ServiceHandle<geo::Geometry>()->provider();
  
-  double tpcID_num = 100;
+    double tpcID_num = 100;
 
-  // Vectors for the NuE Tree
-  std::vector<double> fullyReco_tree = std::vector<double>(0);
-  std::vector<double> event_tree = std::vector<double>(0);
-  std::vector<double> run_tree = std::vector<double>(0);
-  std::vector<double> subrun_tree = std::vector<double>(0);
-  std::vector<double> trueNeutrinoVX_tree = std::vector<double>(0);
-  std::vector<double> trueNeutrinoVY_tree = std::vector<double>(0);
-  std::vector<double> trueNeutrinoVZ_tree = std::vector<double>(0);
-  std::vector<double> recoNeutrinoVX_tree = std::vector<double>(0);
-  std::vector<double> recoNeutrinoVY_tree = std::vector<double>(0);
-  std::vector<double> recoNeutrinoVZ_tree = std::vector<double>(0);
-  std::vector<int> trueCCNC_tree = std::vector<int>(0);
-  std::vector<int> trueNeutrinoType_tree = std::vector<int>(0);
-  std::vector<int> trueLeptonType_tree = std::vector<int>(0);
-  std::vector<int> numSlices_tree = std::vector<int>(0);
-  std::vector<int> numPfps_tree = std::vector<int>(0); 
-  std::vector<int> numTracks_tree = std::vector<int>(0);
-  std::vector<int> numShowers_tree = std::vector<int>(0);
-  std::vector<double> tpcID_tree = std::vector<double>(0);
-  std::vector<int> dl_current_tree = std::vector<int>(0);
-  std::vector<double> sliceCompleteness_tree = std::vector<double>(0);
-  std::vector<double> trackScore_tree = std::vector<double>(0);
-  std::vector<double> showerEnergy_tree = std::vector<double>(0);
-  std::vector<double> showerTheta_tree = std::vector<double>(0);
-  std::vector<double> showerThetaBigEnergy_tree = std::vector<double>(0);
-  std::vector<double> showerSmallestTheta_tree = std::vector<double>(0);
-  std::vector<double> showerETheta2_tree = std::vector<double>(0);
+    // Vectors for the NuE Tree
+    std::vector<double> fullyReco_tree = std::vector<double>(0);
+    std::vector<int> DLCurrent_tree = std::vector<int>(0);
+    std::vector<double> event_tree = std::vector<double>(0);
+    std::vector<double> run_tree = std::vector<double>(0);
+    std::vector<double> subrun_tree = std::vector<double>(0);
+    std::vector<double> trueNeutrinoVX_tree = std::vector<double>(0);
+    std::vector<double> trueNeutrinoVY_tree = std::vector<double>(0);
+    std::vector<double> trueNeutrinoVZ_tree = std::vector<double>(0);
+    std::vector<int> trueCCNC_tree = std::vector<int>(0);
+    std::vector<int> trueNeutrinoType_tree = std::vector<int>(0);
+    std::vector<int> trueLeptonType_tree = std::vector<int>(0);
+    std::vector<double> recoNeutrinoVX_tree = std::vector<double>(0);
+    std::vector<double> recoNeutrinoVY_tree = std::vector<double>(0);
+    std::vector<double> recoNeutrinoVZ_tree = std::vector<double>(0);
+    std::vector<int> numSlices_tree = std::vector<int>(0);
+    std::vector<double> sliceCompleteness_tree = std::vector<double>(0);
+    std::vector<double> sliceNumPFPs_tree = std::vector<double>(0);
+    std::vector<int> numPFPs_tree = std::vector<int>(0); 
+    std::vector<double> showerEnergy_tree = std::vector<double>(0);
+    std::vector<double> showerTheta_tree = std::vector<double>(0);
+    std::vector<double> showerTrackScore_tree = std::vector<double>(0);
+    std::vector<double> numShowers_tree = std::vector<double>(0);
+    std::vector<double> showerETheta2_tree = std::vector<double>(0);
 
-  // Vectors for the NuEHit Tree
-  std::vector<double> event_hitTree = std::vector<double>(0);
-  std::vector<double> run_hitTree = std::vector<double>(0);
-  std::vector<double> subrun_hitTree = std::vector<double>(0);
-  std::vector<int> plane_hitTree = std::vector<int>(0);
-  std::vector<double> x_hitTree = std::vector<double>(0);
-  std::vector<double> uvz_hitTree = std::vector<double>(0);
+    // Vectors for the NuEHit Tree
+    std::vector<double> event_hitTree = std::vector<double>(0);
+    std::vector<double> run_hitTree = std::vector<double>(0);
+    std::vector<double> subrun_hitTree = std::vector<double>(0);
+    std::vector<int> plane_hitTree = std::vector<int>(0);
+    std::vector<double> x_hitTree = std::vector<double>(0);
+    std::vector<double> uvz_hitTree = std::vector<double>(0);
 
-  // Label strings
-  const std::string PFParticleLabel;
-  const std::string sliceLabel;
-  const std::string vertexLabel;
-  const std::string nuGenModuleLabel;
-  const std::string hitLabel;
-  const std::string crumbsLabel;
-  const std::string trackLabel;
-  const std::string showerLabel;
+    // Label strings
+    const std::string PFParticleLabel;
+    const std::string sliceLabel;
+    const std::string vertexLabel;
+    const std::string nuGenModuleLabel;
+    const std::string hitLabel;
+    const std::string crumbsLabel;
+    const std::string trackLabel;
+    const std::string showerLabel;
 
-  // Output file
-  TFile *outputFile = TFile::Open("NuEAnalyserOutput.root","RECREATE");
+    // Output file
+    TFile *outputFile = TFile::Open("NuEAnalyserOutput.root","RECREATE");
 };
 
 
@@ -247,8 +242,6 @@ void sbnd::NuE::analyze(art::Event const& e){
   std::cout << "________________________________________________________________________________________" << std::endl;
   std::cout << "Run: " << runID << ", Subrun: " << subRunID << ", Event: " << eventID << std::endl;
 
-  numTrueNeutrinos = 0;
-  numRecoNeutrinos = 0;
   nSlices = 0;
   nPFParticles = 0;
 
@@ -267,34 +260,9 @@ void sbnd::NuE::analyze(art::Event const& e){
   detinfo::DetectorPropertiesData propD = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataFor(e);
   art::ServiceHandle<geo::Geometry const> theGeometry;
 
-  nNeutrinos = neutrinoHandle->size();
 
-  for(unsigned int nu_i = 0; nu_i < nNeutrinos; ++nu_i){
-    const art::Ptr<simb::MCTruth> trueNeutrino(neutrinoHandle, nu_i);
-    if(trueNeutrino.isNull()){
-        continue;
-    }
 
-    if(trueNeutrino->Origin() == 1){                                   // Neutrino must be a beam neutrino (1 = kBeamNeutrino)
-        const simb::MCNeutrino neutrino = trueNeutrino->GetNeutrino(); // Reference to the neutrino
-        const simb::MCParticle neutrinoParticle = neutrino.Nu();        // The incoming neutrino
-        const simb::MCParticle lepton = neutrino.Lepton();              // The outgoing lepton
-   
-        pos = {neutrinoParticle.Vx(), neutrinoParticle.Vy(), neutrinoParticle.Vz()};
-        geo::TPCID tpcID = theGeometry->FindTPCAtPosition(pos);
-        tpcID_num = tpcID.TPC;
 
-        if(tpcID.isValid){
-            trueNeutrinoVX = neutrinoParticle.Vx();
-            trueNeutrinoVY = neutrinoParticle.Vy();
-            trueNeutrinoVZ = neutrinoParticle.Vz();
-            trueCCNC = neutrino.CCNC();
-            trueNeutrinoType = neutrinoParticle.PdgCode();
-            trueChargedLepton = lepton.PdgCode();
-            numTrueNeutrinos++;
-        }
-    }
-  }
 
   art::Handle<std::vector<recob::Slice>>    sliceHandle;
   std::vector<art::Ptr<recob::Slice>>       sliceVec;
@@ -498,64 +466,37 @@ void sbnd::NuE::analyze(art::Event const& e){
 
     ShowerEnergy(e, pfpVec, recoNeutrinoVX, recoNeutrinoVY, recoNeutrinoVZ);
    
-    double largestThetaAllowed = std::sqrt(1.022/totalShowerEnergy); 
-    ETheta2 = totalShowerEnergy * std::pow(chosenShowerThetaScore, 2);
+    //double largestThetaAllowed = std::sqrt(1.022/totalShowerEnergy); 
+    ETheta2 = totalShowerEnergy * std::pow(chosenShowerTheta, 2);
   } else{
       std::cout << "There is no reco neutrino, skipping event" << std::endl;
       // Event is not fully reconstructed
       fullyReco_tree.push_back(0);
   }
 
-  event_tree.push_back(eventID);
-  run_tree.push_back(runID);
-  subrun_tree.push_back(subRunID);
-  trueNeutrinoVX_tree.push_back(trueNeutrinoVX);
-  trueNeutrinoVY_tree.push_back(trueNeutrinoVY);
-  trueNeutrinoVZ_tree.push_back(trueNeutrinoVZ);
-  recoNeutrinoVX_tree.push_back(recoNeutrinoVX);
-  recoNeutrinoVY_tree.push_back(recoNeutrinoVY);
-  recoNeutrinoVZ_tree.push_back(recoNeutrinoVZ);
-  trueCCNC_tree.push_back(trueCCNC);
-  trueNeutrinoType_tree.push_back(trueNeutrinoType);
-  trueLeptonType_tree.push_back(trueChargedLepton);
-  numSlices_tree.push_back(nSlices);
-  numPfps_tree.push_back(nPFParticles);
-  numTracks_tree.push_back(nTracks);
-  numShowers_tree.push_back(nShowers);
-  tpcID_tree.push_back(tpcID_num);
-  dl_current_tree.push_back(3); // 0 = uboone dl, 1 = dune dl, 2 = current, 3 = cheated
-  sliceCompleteness_tree.push_back(chosenSliceCompleteness);
-  trackScore_tree.push_back(trackscore);
-  showerEnergy_tree.push_back(totalShowerEnergy);
-  showerThetaBigEnergy_tree.push_back(chosenShowerThetaEnergy);
-  showerTheta_tree.push_back(chosenShowerThetaScore);
-  showerSmallestTheta_tree.push_back(smallestTheta);
-  showerETheta2_tree.push_back(ETheta2);
- 
-  sliceInfo.clear(); 
 }
 
 double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
-  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+    const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
-  std::map<int, int> objectHitsMap;
+    std::map<int, int> objectHitsMap;
 
-  for(unsigned int i = 0; i < objectHits.size(); ++i)
-    ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
+    for(unsigned int i = 0; i < objectHits.size(); ++i)
+        ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
 
-  //std::cout << "Number in object: " << objectHitsMap[ID] << " Number of hits in object in truth: " << fHitsMap[ID] << std::endl;
-  return (fHitsMap[ID] == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(fHitsMap[ID]);
+    //std::cout << "Number in object: " << objectHitsMap[ID] << " Number of hits in object in truth: " << fHitsMap[ID] << std::endl;
+    return (fHitsMap[ID] == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(fHitsMap[ID]);
 }
 
 double sbnd::NuE::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
-  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+    const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
-  std::map<int, int> objectHitsMap;
+    std::map<int, int> objectHitsMap;
 
-  for(unsigned int i = 0; i < objectHits.size(); ++i)
-    ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
+    for(unsigned int i = 0; i < objectHits.size(); ++i)
+        ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
 
-  return (objectHits.size() == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(objectHits.size());
+    return (objectHits.size() == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(objectHits.size());
 }
 
 void sbnd::NuE::ClearMaps(const art::Event &e){
@@ -563,104 +504,338 @@ void sbnd::NuE::ClearMaps(const art::Event &e){
 }
 
 void sbnd::NuE::SetupMaps(const art::Event &e){
-  const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+    const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
-  art::Handle<std::vector<recob::Hit> > hitsHandle;
-  e.getByLabel(hitLabel,hitsHandle);
+    art::Handle<std::vector<recob::Hit> > hitsHandle;
+    e.getByLabel(hitLabel,hitsHandle);
 
-  for(unsigned hit_i = 0; hit_i < hitsHandle->size(); ++hit_i) {
-    const art::Ptr<recob::Hit> hit(hitsHandle,hit_i);
-    fHitsMap[TruthMatchUtils::TrueParticleID(clockData,hit,true)]++;
-  }
+    for(unsigned hit_i = 0; hit_i < hitsHandle->size(); ++hit_i) {
+        const art::Ptr<recob::Hit> hit(hitsHandle,hit_i);
+        fHitsMap[TruthMatchUtils::TrueParticleID(clockData,hit,true)]++;
+    }
 }
 
-void sbnd::NuE::ShowerEnergy(const art::Event &e, const std::vector<art::Ptr<recob::PFParticle>> &pfpVec, const double VX, const double VY, const double VZ){
-  // Get associations between pfparticles and showers
-  art::FindOneP<recob::Shower> pfpShowerAssns(pfpVec, e, showerLabel);
-  art::FindOneP<larpandoraobj::PFParticleMetadata> pfpMetadataAssns(pfpVec, e, PFParticleLabel);
-  art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
+void sbnd::NuE::ShowerEnergy(const art::Event &e){
+    art::Handle<std::vector<recob::PFParticle>> pfpHandle;
+    std::vector<art::Ptr<recob::PFParticle>> pfpVec;
+    if(e.getByLabel(PFParticleLabel, pfpHandle))
+        art::fill_ptr_vector(pfpVec, pfpHandle);
+    if(pfpVec.empty()) return;
+    
+    // Get associations between pfparticles and showers
+    art::FindOneP<recob::Shower> pfpShowerAssns(pfpVec, e, showerLabel);
+    art::FindOneP<larpandoraobj::PFParticleMetadata> pfpMetadataAssns(pfpVec, e, PFParticleLabel);
+    art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
 
-  smallestDeltaR = 1000000;
-  largestEnergy = 0;
-  smallestTheta = 1000000;
+    double numShowers = 0;
+    double totalShowerEnergy;
+    double chosenShowerTheta;
+    double chosenShowerTrackScore;
+    double largestEnergy = 0;
 
-  for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
-    if(pfp->PdgCode() == std::numeric_limits<int>::max()) return;
+    for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
+        if(pfp->PdgCode() == std::numeric_limits<int>::max()) return;
   
-    const art::Ptr<recob::Shower> pfpShower(pfpShowerAssns.at(pfp.key()));
-    const auto meta  = pfpMetadataAssns.at(pfp.key());
-    const auto props = meta->GetPropertiesMap();
-    const auto trackscoreobj = props.find("TrackScore");
-    const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
-    const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
-    if(pfpVertexs.size() > 0){
-        if(!(pfp->PdgCode() == 12 || pfp->PdgCode() == 14)){
-            if(trackscoreobj->second <= 1 && trackscoreobj->second >= 0){
-                totalShowerEnergy += pfpShower->Energy()[pfpShower->best_plane()];
+        const art::Ptr<recob::Shower> pfpShower(pfpShowerAssns.at(pfp.key()));
+        const auto meta  = pfpMetadataAssns.at(pfp.key());
+        const auto props = meta->GetPropertiesMap();
+        const auto trackscoreobj = props.find("TrackScore");
+        const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
+        if(pfpVertexs.size() > 0){
+            if(!(pfp->PdgCode() == 12 || pfp->PdgCode() == 14)){
+                if(trackscoreobj->second <= 1 && trackscoreobj->second >= 0){
+                    numShowers++;
+                    totalShowerEnergy += pfpShower->Energy()[pfpShower->best_plane()];
         
-                double score = (std::sqrt(std::pow(VX - pfpVertex->position().X(), 2) + std::pow(VY - pfpVertex->position().Y(), 2) + std::pow(VZ - pfpVertex->position().Z(), 2)) + (std::pow(trackscoreobj->second, 2) * 100)); // + (std::pow(pfpShower->Energy()[pfpShower->best_plane()], -1) * 10000));
-                if(score < smallestDeltaR){ 
-                    chosenShowerThetaScore = pfpShower->Direction().Theta();
-                    smallestDeltaR = score;
+                    if(pfpShower->Energy()[pfpShower->best_plane()] > largestEnergy){
+                        chosenShowerTheta = pfpShower->Direction().Theta();
+                        chosenShowerTrackScore = trackscoreobj->second;
+                        largestEnergy = pfpShower->Energy()[pfpShower->best_plane()];
+                    }
                 }
-               
-                if(pfpShower->Energy()[pfpShower->best_plane()] > largestEnergy){
-                    chosenShowerThetaEnergy = pfpShower->Direction().Theta();
-                    largestEnergy = pfpShower->Energy()[pfpShower->best_plane()];
-                }
-
-                if(pfpShower->Direction().Theta() < smallestTheta) smallestTheta = pfpShower->Direction().Theta();
             }
         }
     }
-  }
+
+    double ETheta2 = (totalShowerEnergy * std::pow(chosenShowerTheta, 2));
+
+    std::cout << "Number of showers: " << numShowers << std::endl;
+    std::cout << "Chosen Shower: Energy = " << largestEnergy << ", Theta = " << chosenShowerTheta << ", Trackscore = " << chosenShowerTrackScore << std::endl;
+    std::cout << "Shower Energy = " << totalShowerEnergy << ", Shower Theta = " << chosenShowerTheta << ", ETheta^2 = " << ETheta2 << std::endl;
+    numShowers_tree.push_back(numShowers);
+    showerEnergy_tree.push_back(totalShowerEnergy);
+    showerTheta_tree.push_back(chosenShowerTheta);
+    showerTrackScore_tree.push_back(chosenShowerTrackScore);
+    showerETheta2_tree.push_back(ETheta2);
+}
+
+void sbnd::NuE::recoNeutrino(const art::Event &e){
+    // Function for dealing with the reconstructed primary neutrino
+    
+    double numRecoNeutrinos = 0;
+    std::vector<std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>, art::Ptr<sbn::CRUMBSResult>>> v;   // Initialise the vector that holds the primary reco neutrino info
+
+    // Gets all the PFPs in the event
+    art::Handle<std::vector<recob::PFParticle>>   pfpHandle;
+    std::vector<art::Ptr<recob::PFParticle>>      pfpVec;
+    if(e.getByLabel(PFParticleLabel, pfpHandle))
+        art::fill_ptr_vector(pfpVec, pfpHandle);
+
+    art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceLabel);      // Gets association between slices and PFPs
+    art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);   // Gets association between PFPs and vertices
+    art::FindOneP<larpandoraobj::PFParticleMetadata> pfpMetadataAssns(pfpHandle, e, PFParticleLabel);   // Gets association between PFPs and Metadata
+
+    if(pfpVec.empty()) return;      // Skips the event if there are no PFPs.
+    if(sliceVec.empty()) return;    // Skips the event if there are no slices.
+
+    for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
+        if(pfp->PdgCode() == std::numeric_limits<int>::max()) return;
+    
+        const std::vector<art::Ptr<recob::Slice>> pfpSlices(pfpSliceAssns.at(pfp.key()));
+
+        if(pfpSlices.size() == 1){
+             const art::Ptr<recob::Slice> &pfpSlice(pfpSlices.front());
+        
+             bool pfpPrimary = pfp->IsPrimary();
+
+             if(pfpPrimary && (PFParticleID == 12 || PFParticleID == 14)){
+                 // This is a primary neutrino
+                 numRecoNeutrinos++;
+
+                 const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
+                 if(pfpVertexs.size() == 1){
+                     const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
+
+                     art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(pfpSlices, e, crumbsLabel);
+                     std::tuple<art::Ptr<recob::PFParticle>, art::Ptr<recob::Vertex>, art::Ptr<recob::Slice>, art::Ptr<sbn::CRUMBSResult>> tuple;
+
+                     const std::vector<art::Ptr<sbn::CRUMBSResult>> sliceCrumbsResults = sliceCrumbsAssns.at(0);
+                     
+                     if(sliceCrumbsResults.size() != 1){
+                         std::cout << "Error: Slice has multiple CRUMBS results" << std::endl;
+                     }
+
+                     const art::Ptr<sbn::CRUMBSResult> sliceCrumbsResult(sliceCrumbsResults.front());
+
+                     tuple = std::make_tuple(pfp, pfpVertex, pfpSlice, sliceCrumbsResult); // Creates a tuple that contains the pfp, and the vertex coords
+                 
+                     v.push_back(tuple);
+                 }
+             }
+        }
+    }
+
+    if(v.size() != 0){
+        float highestSliceScore = -10000;
+        int highestSliceScoreIndex;
+
+        for(long unsigned int neutrinoCand = 0; neutrinoCand < v.size(); neutrinoCand++){
+            auto crumbsPtr = std::get<3>(v[neutrinoCand]);
+            if(crumbsPtr->score > highestSliceScore){
+                highestSliceScore = crumbsPtr->score;
+                highestSliceScoreIndex = neutrinoCand;
+            }
+        }
+
+        recoNeutrinoVX = std::get<1>(v[highestSliceScoreIndex])->position().X();
+        recoNeutrinoVY = std::get<1>(v[highestSliceScoreIndex])->position().Y();
+        recoNeutrinoVZ = std::get<1>(v[highestSliceScoreIndex])->position().Z();
+
+    } else{
+        // There is no reconstructed neutrino in the event
+        recoNeutrinoVX = NAN;
+        recoNeutrinoVY = NAN;
+        recoNeutrinoVZ = NAN;
+    }
+
+    std::cout << "Reconstructed Primary Neutrino Vertex: (" << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << ")" << std::endl;
+
+    recoNeutrinoVX_tree.push_back(recoNeutrinoVX);
+    recoNeutrinoVY_tree.push_back(recoNeutrinoVY);
+    recoNeutrinoVZ_tree.push_back(recoNeutrinoVZ);
+}
+
+void sbnd::NuE::trueNeutrino(const art::Event &e){
+    // Function for dealing with the true neutrino
+ 
+    art::Handle<std::vector<simb::MCTruth>> neutrinoHandle;
+    e.getByLabel(nuGenModuleLabel, neutrinoHandle);    
+
+    int numTrueNeutrinos = 0;
+ 
+    for(unsigned int nu_i = 0; nu_i < neutrinoHandle->size(); ++nu_i){
+        const art::Ptr<simb::MCTruth> trueNeutrino(neutrinoHandle, nu_i);
+        if(trueNeutrino.isNull()){
+            continue;
+        }
+
+        if(trueNeutrino->Origin() == 1){                                    // Neutrino must be a beam neutrino (1 = kBeamNeutrino)
+            numTrueNeutrinos++;
+
+            const simb::MCNeutrino neutrino = trueNeutrino->GetNeutrino();  // References to the neutrino
+            const simb::MCParticle neutrinoParticle = neutrino.Nu();        // The incoming neutrino
+            const simb::MCParticle lepton = neutrino.Lepton();              // The outgoing lepton
+        
+            geo::Point_t pos = {neutrinoParticle.Vx(), neutrinoParticle.Vy(), neutrinoParticle.Vz()}
+            geo::TPCID tpcID = theGeometry->FindTPCAtPosition(pos);
+
+            if(tpcID.isValid){
+                trueNeutrinoVX = neutrinoParticle.Vx();
+                trueNeutrinoVY = neutrinoParticle.Vy();
+                trueNeutrinoVZ = neutrinoParticle.Vz();
+                trueCCNC = neutrino.CCNC();
+                trueNeutrinoType = neutrinoParticle.PdgCode();
+                trueChargedLepton = lepton.PdgCode();
+                
+            }
+        }
+    }
+    
+    std::cout << "Number of True Neutrinos = " << numTrueNeutrinos << std::endl;
+    
+    if(numTrueNeutrinos == 1){
+        trueNeutrinoVX_tree.push_back(trueNeutrinoVX);
+        trueNeutrinoVY_tree.push_back(trueNeutrinoVY);
+        trueNeutrinoVZ_tree.push_back(trueNeutrinoVZ);
+        trueCCNC_tree.push_back(trueCCNC);
+        trueNeutrinoType_tree.push_back(trueNeutrinoType);
+        trueLeptonType_tree.push_back(trueChargedLepton);
+    } else{
+        std::cout << "Unsure which true neutrino to put in tree" << std::endl;
+    }
+}
+
+void sbnd::NuE::slices(const art::Event &e){
+    const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+   
+    std::vector<<std::tuple<art::Ptr<recob::Slice>, double, art::Ptr<sbn::CRUMBSResult>, double>> v; 
+
+    // Gets all the slices in the event
+    art::Handle<std::vector<recob::Slice>>  sliceHandle;
+    std::vector<art::Ptr<recob::Slice>>     sliceVec;
+    if(e.getByLabel(sliceLabel, sliceHandle))
+        art::fill_ptr_vector(sliceVec, sliceHandle);
+    if(sliceVec.empty()) return;
+
+    // Gets all the hits in the event
+    art::Handle<std::vector<recob::Hit>> hitHandle;
+    std::vector<art::Ptr<recob::Hit>> hitVec;
+    if(e.getByLabel(hitLabel, hitHandle))
+        art::fill_ptr_vector(hitVec, hitHandle);
+    if(hitVec.empty()) return;
+
+    int sliceID(std::numeric_limits<int>::max());
+    int numSlices = 0;
+
+    for(const art::Ptr<recob::Slice> &slice : sliceVec){
+        numSlices++;
+        sliceID = slice->ID();
+        if(sliceID == std::numeric_limits<int>::max()) return;
+
+        art::FindManyP<recob::Hit> sliceHitAssns(sliceVec, e, sliceLabel);
+        const std::vector<art::Ptr<recob::Hit>> sliceHits(sliceHitAssns.at(slice.key()));
+
+        art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(pfpSlices, e, crumbsLabel);
+        const std::vector<art::Ptr<sbn::CRUMBSResult>> sliceCrumbsResults = sliceCrumbsAssns.at(0);
+        if(sliceCrumbsResults.size() != 1) std::cout << "Error: slice has multiple CRUMBS results" << std::endl;
+
+        const art::Ptr<sbn::CRUMBSResult> sliceCrumbsResult(sliceCrumbsResults.front());
+
+        art::FindManyP<recob::PFParticle> slicePFPAssns(sliceVec, e, sliceLabel);
+        const std::vector<art::Ptr<recob::PFParticle>> slicePFPs(slicePFPAssns.at(slice.key()));
+        double numPFPs = slicePFPs.size();
+        std::cout << "Number of PFPs in slice: " << numPFPs << std::endl;
+
+        const int sliceID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, hitVec, true);
+        
+        double sliceCompleteness = Completeness(e, sliceHits, sliceID_truth);
+        std::cout << "Slice Completeness: " << sliceCompleteness << std::endl;
+
+        std::tuple<art::Ptr<recob::Slice>, double, art::Ptr<sbn::CRUMBSResult>, double> tuple = std::make_tuple(slice, sliceCompleteness, sliceCrumbsResult, numPFPs);
+        v.push_back(tuple);
+    }
+
+    float highestSliceScore = -10000;
+    int highestSliceScoreIndex;
+
+    std::cout << "Number of slices in event: " << numSlices << std::endl;
+    if(v.size() != 0){
+        for(long unsigned int sliceCand = 0; sliceCand < v.size(); sliceCand++){
+            auto crumbsPtr = std::get<2>(v[sliceCand]);
+            if(crumbsPtr->score > highestSliceScore){
+                highestSliceScore = crumbsPtr->score;
+                highestSliceScoreIndex = sliceCand;
+            }
+        }
+
+        double chosenSliceCompleteness = std::get<1>(v[highestSliceScoreIndex]);
+        double chosenSliceNumPFPs = std::get<3>(v[highestSliceScoreIndex]);
+
+
+        numSlices_tree.push_back(numSlices);
+        sliceCompleteness_tree.push_back(chosenSliceCompleteness);
+        sliceNumPFPs_tree.push_back(chosenSliceNumPFPs);
+    }
+}
+
+void sbnd::NuE::PFPs(const art::Event &e){
+    art::Handle<std::vector<recob::PFParticle>> pfpHandle;
+    std::vector<art::Ptr<recob::PFParticle>> pfpVec;
+    if(e.getByLabel(PFParticleLabel, pfpHandle))
+        art::fill_ptr_vector(pfpVec, pfpHandle);
+
+    double numPFPs = 0;
+    for(const art::Ptr<recob::PFParticle &pfp : pfpVec){
+        if(!(pfpPrimary && (PFParticleID == 12 || PFParticleID == 14))){
+            numPFPs++;
+        }
+    }
+
+    std::cout << "Number of PFPs: " << numPFPs << std::endl;
 }
 
 void sbnd::NuE::beginJob()
 {
-  art::ServiceHandle<art::TFileService> tfs;
+    art::ServiceHandle<art::TFileService> tfs;
 
-  NuETree->Branch("fullyReco_tree", &fullyReco_tree);
-  NuETree->Branch("event_tree", &event_tree);
-  NuETree->Branch("run_tree", &run_tree);
-  NuETree->Branch("subrun_tree", &subrun_tree);
-  NuETree->Branch("trueNeutrinoVX_tree", &trueNeutrinoVX_tree);
-  NuETree->Branch("trueNeutrinoVY_tree", &trueNeutrinoVY_tree);
-  NuETree->Branch("trueNeutrinoVZ_tree", &trueNeutrinoVZ_tree);
-  NuETree->Branch("recoNeutrinoVX_tree", &recoNeutrinoVX_tree);
-  NuETree->Branch("recoNeutrinoVY_tree", &recoNeutrinoVY_tree);
-  NuETree->Branch("recoNeutrinoVZ_tree", &recoNeutrinoVZ_tree);
-  NuETree->Branch("trueCCNC_tree", &trueCCNC_tree);
-  NuETree->Branch("trueNeutrinoType_tree", &trueNeutrinoType_tree);
-  NuETree->Branch("trueLeptonType_tree", &trueLeptonType_tree);
-  NuETree->Branch("numSlices_tree", &numSlices_tree);
-  NuETree->Branch("numPfps_tree", &numPfps_tree);
-  NuETree->Branch("numTracks_tree", &numTracks_tree);
-  NuETree->Branch("numShowers_tree", &numShowers_tree);
-  NuETree->Branch("tpcID_tree", &tpcID_tree);
-  NuETree->Branch("dl_current_tree", &dl_current_tree);  
-  NuETree->Branch("sliceCompleteness_tree", &sliceCompleteness_tree);
-  NuETree->Branch("trackScore_tree", &trackScore_tree);
-  NuETree->Branch("showerEnergy_tree", &showerEnergy_tree);
-  NuETree->Branch("showerTheta_tree", &showerTheta_tree);
-  NuETree->Branch("showerThetaBigEnergy_tree", &showerThetaBigEnergy_tree);
-  NuETree->Branch("showerSmallestTheta_tree", &showerSmallestTheta_tree);
-  NuETree->Branch("showerETheta2_tree", &showerETheta2_tree);
+    NuETree->Branch("fullyReco_tree", &fullyReco_tree);
+    NuETree->Branch("DLCurrent_tree", &DLCurrent_tree);
+    NuETree->Branch("event_tree", &event_tree);
+    NuETree->Branch("run_tree", &run_tree);
+    NuETree->Branch("subrun_tree", &subrun_tree);
+    NuETree->Branch("trueNeutrinoVX_tree", &trueNeutrinoVX_tree);
+    NuETree->Branch("trueNeutrinoVY_tree", &trueNeutrinoVY_tree);
+    NuETree->Branch("trueNeutrinoVZ_tree", &trueNeutrinoVZ_tree);
+    NuETree->Branch("trueCCNC_tree", &trueCCNC_tree);
+    NuETree->Branch("trueNeutrinoType_tree", &trueNeutrinoType_tree);
+    NuETree->Branch("trueLeptonType_tree", &trueLeptonType_tree);
+    NuETree->Branch("recoNeutrinoVX_tree", &recoNeutrinoVX_tree);
+    NuETree->Branch("recoNeutrinoVY_tree", &recoNeutrinoVY_tree);
+    NuETree->Branch("recoNeutrinoVZ_tree", &recoNeutrinoVZ_tree); 
+    NuETree->Branch("numSlices_tree", &numSlices_tree);
+    NuETree->Branch("sliceCompleteness_tree", &sliceCompleteness_tree);
+    NuETree->Branch("sliceNumPFPs_tree", &sliceNumPFPs_tree);
+    NuETree->Branch("numPFPs_tree", &numPFPs_tree);
+    NuETree->Branch("showerEnergy_tree", &showerEnergy_tree);
+    NuETree->Branch("showerTheta_tree", &showerTheta_tree);
+    NuETree->Branch("showerTrackScore_tree", &showerTrackScore_tree)
+    NuETree->Branch("numShowers_tree", &numShowers_tree);
+    NuETree->Branch("showerETheta2_tree", &showerETheta2_tree);
 
-  NuEHitTree->Branch("event_hitTree", &event_hitTree);
-  NuEHitTree->Branch("run_hitTree", &run_hitTree);
-  NuEHitTree->Branch("subrun_hitTree", &subrun_hitTree);
-  NuEHitTree->Branch("plane_hitTree", &plane_hitTree);
-  NuEHitTree->Branch("x_hitTree", &x_hitTree);
-  NuEHitTree->Branch("uvz_hitTree", &uvz_hitTree);
+    NuEHitTree->Branch("event_hitTree", &event_hitTree);
+    NuEHitTree->Branch("run_hitTree", &run_hitTree);
+    NuEHitTree->Branch("subrun_hitTree", &subrun_hitTree);
+    NuEHitTree->Branch("plane_hitTree", &plane_hitTree);
+    NuEHitTree->Branch("x_hitTree", &x_hitTree);
+    NuEHitTree->Branch("uvz_hitTree", &uvz_hitTree);
 }
 
 void sbnd::NuE::endJob()
 {
-  NuETree->Fill();
-  NuEHitTree->Fill();
+    NuETree->Fill();
+    NuEHitTree->Fill();
 
-  //std::cout << "events selected: " << numEventsSelected << "/" << numEventsTotal << std::endl;
+    //std::cout << "events selected: " << numEventsSelected << "/" << numEventsTotal << std::endl;
 }
 
 DEFINE_ART_MODULE(sbnd::NuE)
