@@ -24,7 +24,11 @@
 #include "larsim/MCCheater/BackTrackerService.h"
 #include "lardataobj/AnalysisBase/BackTrackerMatchingData.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
+#include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcore/Geometry/WireReadout.h"
+//#include "larcorealg/Geometry/GeometryCore.h"
+//#include "larcorealg/Geometry/WireReadoutGeom.h"
 
 // c++
 #include <vector>
@@ -56,7 +60,6 @@ namespace BlipUtils {
   bool      DoHitClustsOverlap(blip::HitClust const&,float,float);
   float     CalcHitClustsOverlap(blip::HitClust const&, blip::HitClust const&);
   float     CalcOverlap(float const&, float const&, float const&, float const&);
-  bool      DoChannelsIntersect(int,int);
   bool      DoHitClustsMatch(blip::HitClust const&, blip::HitClust const&,float);
   blip::HitClust  MakeHitClust(std::vector<blip::HitInfo> const&);
   //blip::Blip      MakeBlip(std::vector<blip::HitClust> const&);
