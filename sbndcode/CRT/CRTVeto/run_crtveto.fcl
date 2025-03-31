@@ -1,6 +1,6 @@
 #include "services_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-#include "crtrecoproducers_sbnd.fcl"
+#include "crtvetoproducer_sbnd.fcl"
 
 process_name: CRTVeto
 
@@ -8,6 +8,8 @@ services:
 {
   @table::sbnd_services
 }
+
+services.DetectorClocksService.InheritClockConfig: false
 
 source:
 {

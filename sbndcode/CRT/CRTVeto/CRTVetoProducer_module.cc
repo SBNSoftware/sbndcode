@@ -108,7 +108,21 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
     double x = CRTSpacePointVec[i]->X();
     double y = CRTSpacePointVec[i]->Y();
     double z = CRTSpacePointVec[i]->Z();
-    double t = CRTSpacePointVec[i]->Ts0();
+    double t = CRTSpacePointVec[i]->Ts0()/1000; // Convert to us
+    
+    // Debugging statement 
+    
+    /*
+    if ( (t <= 2) && (t >= 0.4) ) {
+      std::cout << std::endl;
+      std::cout << std::endl;
+      std::cout << "Found a CRT Hit within the South Wall Top Hat Window!" << std::endl;
+      std::cout << std::endl;
+      std::cout << std::endl;
+
+    } 
+    */
+
     // check if in the beam window --> Make configureable
     if ((t > fWindowEnd) || (t < fWindowStart)) {
       continue;
@@ -148,6 +162,7 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
   bool v1 = false;
   bool v2 = false;
   bool v3 = false;
+  bool v4 = false;
 
   // V0
   if ((Nwalls_all + Ntop) > 0) {
@@ -165,9 +180,12 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
   if ( (Nwalls_noNorth > 0) || ((TL > 0) && (TH > 0)) ) {
     v3 = true;
   }
+  if (S > 0)  {
+    v4 = true;
+  }
 
   //crtveto =  CRTVeto(v0, v1, v2, v3); 
-  auto crtveto            = std::make_unique<CRTVeto>(v0, v1, v2, v3);
+  auto crtveto            = std::make_unique<CRTVeto>(v0, v1, v2, v3, v4);
  
   e.put(std::move(crtveto));
   //e.put(std::move(vetoSpacePointAssn));

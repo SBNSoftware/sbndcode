@@ -83,17 +83,4 @@ crttrackproducer_data_sbnd.CRTGeoAlg:     @local::crtgeoalg_data_sbnd
 crttrackproducer_data_sbnd.UseTs0:        true
 crttrackproducer_data_sbnd.MaskedTaggers: [ ]
 
-crtvetoproducer_sbnd:
-{
-   CRTGeoAlg:                  @local::crtgeoalg_sbnd
-   CRTSpacePointModuleLabel:   "crtspacepoints"
-   WindowStart:                0.4
-   WindowEnd:                  2.0
-   module_type:                "CRTVetoProducer"
-}
-
-crtvetoproducer_data_sbnd: @local::crtvetoproducer_sbnd
-crtvetoproducer_data_sbnd.CRTGeoAlg:     @local::crtgeoalg_data_sbnd
-
-
 END_PROLOG
