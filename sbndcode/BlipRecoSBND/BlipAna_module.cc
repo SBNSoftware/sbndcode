@@ -248,6 +248,8 @@ class BlipAnaTreeDataStruct
   float blip_size[kMaxBlips];         // rough size estimation based on values above
   int   blip_charge[kMaxBlips];       // blip charge at anode [e-]
   float blip_energy[kMaxBlips];       // blip reco energy [MeV]
+  float blip_energy_estar[kMaxBlips]; // blip reco energy [MeV], based on ESTAR
+  float blip_energy_pstar[kMaxBlips]; // blip reco energy [MeV], based on PSTAR
   float blip_energyTrue[kMaxBlips];   // blip truth energy [MeV]
   float blip_yzcorr[kMaxBlips];       // YZ uniformity correction factor (already applied)
   bool  blip_isMC[kMaxBlips];         // blip is matched to MC particle
@@ -394,6 +396,8 @@ class BlipAnaTreeDataStruct
     FillWith(blip_size,       -9);
     FillWith(blip_charge,     -999);
     FillWith(blip_energy,     -999);
+    FillWith(blip_energy_estar, -999);
+    FillWith(blip_energy_pstar, -999);
     FillWith(blip_energyTrue, -999);
     FillWith(blip_yzcorr,     -9);
     FillWith(blip_proxtrkdist,-99);
@@ -506,6 +510,8 @@ class BlipAnaTreeDataStruct
     evtTree->Branch("blip_size",blip_size,"blip_size[nblips]/F");
     evtTree->Branch("blip_charge",blip_charge,"blip_charge[nblips]/I");
     evtTree->Branch("blip_energy",blip_energy,"blip_energy[nblips]/F");
+    evtTree->Branch("blip_energy_estar",blip_energy_estar,"blip_energy_estar[nblips]/F");
+    evtTree->Branch("blip_energy_pstar",blip_energy_pstar,"blip_energy_pstar[nblips]/F");
     //evtTree->Branch("blip_yzcorr",blip_yzcorr,"blip_yzcorr[nblips]/F");
     //evtTree->Branch("blip_energyTrue",blip_energyTrue,"blip_energyTrue[nblips]/F");
     evtTree->Branch("blip_incylinder",blip_incylinder,"blip_incylinder[nblips]/O");
@@ -1321,22 +1327,25 @@ void BlipAna::analyze(const art::Event& evt)
     nblips_total++;
     fNum3DBlips++;
     if( blp.NPlanes >= 3 ) fNum3DBlips3Plane++;
-    fData->blip_id[i]         = i;
-    fData->blip_cryo[i]       = blp.Cryostat;
-    fData->blip_tpc[i]        = blp.TPC;
-    fData->blip_nplanes[i]    = blp.NPlanes;
-    fData->blip_x[i]          = blp.Position.X();
-    fData->blip_y[i]          = blp.Position.Y();
-    fData->blip_z[i]          = blp.Position.Z();
-    fData->blip_sigmayz[i]    = blp.SigmaYZ;
-    fData->blip_dx[i]         = blp.dX;
-    fData->blip_dyz[i]        = blp.dYZ;
-    fData->blip_size[i]       = sqrt( pow(blp.dX,2) + pow(blp.dYZ,2) );
-    fData->blip_proxtrkdist[i]= blp.ProxTrkDist;
-    fData->blip_proxtrkid[i]  = blp.ProxTrkID;
-    fData->blip_incylinder[i] = blp.inCylinder;
-    fData->blip_charge[i]     = blp.Charge;
-    fData->blip_energy[i]     = blp.Energy;
+    fData->blip_id[i]          = i;
+    fData->blip_cryo[i]        = blp.Cryostat;
+    fData->blip_tpc[i]         = blp.TPC;
+    fData->blip_nplanes[i]     = blp.NPlanes;
+    fData->blip_x[i]           = blp.Position.X();
+    fData->blip_y[i]           = blp.Position.Y();
+    fData->blip_z[i]           = blp.Position.Z();
+    fData->blip_sigmayz[i]     = blp.SigmaYZ;
+    fData->blip_dx[i]          = blp.dX;
+    fData->blip_dyz[i]         = blp.dYZ;
+    fData->blip_size[i]        = sqrt( pow(blp.dX,2) + pow(blp.dYZ,2) );
+    fData->blip_proxtrkdist[i] = blp.ProxTrkDist;
+    fData->blip_proxtrkid[i]   = blp.ProxTrkID;
+    fData->blip_incylinder[i]  = blp.inCylinder;
+    fData->blip_charge[i]      = blp.Charge;
+    fData->blip_energy[i]      = blp.Energy;
+    fData->blip_energy_estar[i]= blp.EnergyESTAR;
+    fData->blip_energy_pstar[i]= blp.EnergyPSTAR;
+
     //fData->blip_yzcorr[i]     = tpcCalib.YZdqdxCorrection(fCaloPlane,blp.Position.Y(),blp.Position.Z());
     
     // Fill cluster charge 2D histograms

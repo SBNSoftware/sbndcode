@@ -23,6 +23,8 @@ sbnd_blipalg:
   CylinderRadius:       15.0            #// 3D cylinder cut radius [cm]
   CaloPlane:            2               #// plane used for calorimetry (2=collection)
   CalodEdx:             2.8             #// assumed dE/dx for MeV-scale recombination corrections
+  ESTAR_p0:             0.01730         #// p0 for electrons to energy conversion function using ESTAR table
+  ESTAR_p1:		0.00003479	#// p1 for electrons to	energy conversion function using ESTAR table
   LifetimeCorrection:   false           #// correct blips for lifetime (assumes T0 = 0)
   SCECorrection:        false           #// correct blips for space charge (requires known XYZ)
   CaloAlg:              @local::sbnd_calorimetryalgmc
