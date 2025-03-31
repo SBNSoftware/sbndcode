@@ -43,8 +43,8 @@ physics:
   {
     opdecopmt:     @local::SBNDOpDeconvolutionPMT_data
     ophitpmt:  @local::SBNDDecoOpHitFinderPMT_data
-    opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0
-    opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1
+    opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0_data
+    opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1_data
   }
 
   reco: [
