@@ -17162,6 +17162,7 @@
 	</structure>
 	<define>
 		<position name="posCryostat" unit="mm" x="0" y="0" z="-474.69999999999999" />
+		
                 <position name="posCRT_TopHigh" unit="mm" x="2.1000000000000001" y="7640.5" z="-532.5"/>
                 <position name="posCRT_TopLow" unit="mm" x="4.7000000000000002" y="6237" z="-661.89999999999998"/>
                 <position name="posCRT_South" unit="mm" x="-52.700000000000003" y="330.30000000000001" z="-5388.6999999999998"/>
@@ -17169,6 +17170,7 @@
                 <position name="posCRT_East" unit="mm" x="-4026" y="372.10000000000002" z="-495.19999999999999"/>
                 <position name="posCRT_West" unit="mm" x="4028" y="346.60000000000002" z="-483.5"/>
                 <position name="posCRT_Bottom" unit="mm" x="-14.300000000000001" y="-3813" z="-495.89999999999998"/>
+		
                 <position name="posCryoPlywood" unit="mm" x="0" y="-5" z="-474.69999999999999" />
                 <position name="posMassBuffer" unit="mm" x="0" y="4274" z="-474.69999999999999"/>
 	</define>

@@ -6718,13 +6718,15 @@
 		<constant name="whereMembrane_Y" value="coordMembrane_at_Enclosure_Y"/>
 		<constant name="whereMembrane_Z" value="coordMembrane_at_Enclosure_Z"/>
 		<position name="posCryostat" unit="mm" x="whereMembrane_X" y="whereMembrane_Y" z="whereMembrane_Z" />
-                <position name="posCRT_TopHigh" unit="mm" x="whereMembrane_X + 2.1" y="dimCryostat_Outer_Y_mm/2+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm+CRT_DY_TopHigh+10*(CRTmoduleX_t/2) - 37.0" z="CRT_DZ_TopHigh - 36.5"/>
-                <position name="posCRT_TopLow" unit="mm" x="whereMembrane_X + 4.7" y="dimCryostat_Outer_Y_mm/2+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm+CRT_DY_TopLow-10*(CRTmoduleX_t/2) - 83.5" z="CRT_DZ_TopLow - 25.9"/>
-                <position name="posCRT_South" unit="mm" x="whereMembrane_X - 52.7" y="whereMembrane_Y + 330.3" z="whereMembrane_Z-CRT_DZ_South - 164.0"/>
-                <position name="posCRT_North" unit="mm" x="whereMembrane_X - 3.1" y="whereMembrane_Y + 114.9" z="whereMembrane_Z+CRT_DZ_South+89-10*(CRTmoduleX_t/2) + 84"/>
-                <position name="posCRT_East" unit="mm" x="whereMembrane_X-CRT_DX_Side - 196.0" y="whereMembrane_Y + 372.1" z="whereMembrane_Z - 20.5"/>
-                <position name="posCRT_West" unit="mm" x="whereMembrane_X+CRT_DX_Side + 198.0" y="whereMembrane_Y + 346.6" z="whereMembrane_Z - 8.8"/>
-                <position name="posCRT_Bottom" unit="mm" x="whereMembrane_X - 14.3" y="whereMembrane_Y-CRT_DY_Bottom - 33" z="whereMembrane_Z - 21.2"/>
+		
+                <position name="posCRT_TopHigh" unit="mm" x="whereTPC_X + 2.1" y="dimCryostat_Outer_Y_mm/2+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm+CRT_DY_TopHigh+10*(CRTmoduleX_t/2) - 37.0" z="CRT_DZ_TopHigh - 36.5"/>
+                <position name="posCRT_TopLow" unit="mm" x="whereTPC_X + 4.7" y="dimCryostat_Outer_Y_mm/2+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm+CRT_DY_TopLow-10*(CRTmoduleX_t/2) - 83.5" z="CRT_DZ_TopLow - 25.9"/>
+                <position name="posCRT_South" unit="mm" x="whereTPC_X - 52.7" y="whereTPC_Y + 330.3" z="whereTPC_Z-CRT_DZ_South - 226.2"/>
+                <position name="posCRT_North" unit="mm" x="whereTPC_X - 3.1" y="whereTPC_Y + 114.9" z="whereTPC_Z+CRT_DZ_South+89-10*(CRTmoduleX_t/2) + 21.8"/>
+                <position name="posCRT_East" unit="mm" x="whereTPC_X-CRT_DX_Side - 196.0" y="whereTPC_Y + 372.1" z="whereTPC_Z - 82.7"/>
+                <position name="posCRT_West" unit="mm" x="whereTPC_X+CRT_DX_Side + 198.0" y="whereTPC_Y + 346.6" z="whereTPC_Z - 71"/>
+                <position name="posCRT_Bottom" unit="mm" x="whereTPC_X - 14.3" y="whereTPC_Y-CRT_DY_Bottom - 33" z="whereTPC_Z - 83.4"/>
+		
                 <position name="posCryoPlywood" unit="mm" x="whereMembrane_X" y="whereMembrane_Y-dimPlywood_Insulation_T_mm/2" z="whereMembrane_Z" />
                 <position name="posMassBuffer" unit="mm" x="whereMembrane_X" y="whereMembrane_Y+(dimCryostat_Outer_Y_mm+dimMassBuffer_Y_mm)/2.0+dimCryoExt_IBeam_H_mm+dimCryoExt_IBeam_T2_mm" z="whereMembrane_Z"/>
 	</define>
