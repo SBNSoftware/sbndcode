@@ -7,7 +7,7 @@ crt_calib_service:
   T0CalibOffsetFileName: "SBNDCRTT0CalibOffsets_v1.txt"
   T1CalibOffsetFileName: "SBNDCRTT1CalibOffsets_v1.txt"
   PedestalFileName:      "SBNDCRTPedestals_v2.txt"
-  GainFileName:         "SBNDCRTGains_v0.1.txt"
+  GainFileName:         "SBNDCRTGains_v0.0.txt"
   BadChannelsFileName:   "SBNDCRTBadChannels_v1.txt"
 }
 
