@@ -11,28 +11,34 @@ crteventdisplayalg_sbnd:
 
    MC: true
 
-   SimLabel:         "largeant"
-   SimDepositLabel:  "genericcrt"
-   StripHitLabel:    "crtstrips"
-   ClusterLabel:     "crtclustering"
-   SpacePointLabel:  "crtspacepoints"
-   TrackLabel:       "crttracks"
+   SimLabel:                "largeant"
+   SimDepositLabel:         "genericcrt"
+   StripHitLabel:           "crtstrips"
+   ClusterLabel:            "crtclustering"
+   SpacePointLabel:         "crtspacepoints"
+   TrackLabel:              "crttracks" 
+   TPCSpacePointMatchLabel: "crtspacepointmatching"
+   TPCTrackMatchLabel:      "crttrackmatching"
+   TPCTrackLabel:           "pandoraTrack"
 
    SaveRoot:         true
    SaveViews:        false
 
-   DrawTaggers:      true
-   DrawModules:      false
-   DrawFEBs:         false
-   DrawFEBEnds:      false
-   DrawStrips:       false
-   DrawTPC:          true
-   DrawTrueTracks:   true
-   DrawSimDeposits:  false
-   DrawStripHits:    true
-   DrawClusters:     true
-   DrawSpacePoints:  true
-   DrawTracks:       true
+   DrawTaggers:       true
+   DrawModules:       false
+   DrawFEBs:          false
+   DrawFEBEnds:       false
+   DrawStrips:        false
+   DrawTPC:           true
+   DrawTrueTracks:    true
+   DrawSimDeposits:   false
+   DrawStripHits:     true
+   DrawClusters:      true
+   DrawSpacePoints:   true
+   DrawTracks:        true
+   DrawTPCMatching:   false
+   OnlyDrawMatched:   false
+   DisplayMatchScore: false
 
    ## If chose taggers is set to true then the vector ChosenTaggers
    ## is used to determine which taggers are drawn. The integer values
@@ -63,6 +69,7 @@ crteventdisplayalg_sbnd:
    ClusterColourInterval:    20
    SpacePointColour:         6
    TrackColour:              9
+   TPCMatchColour:           8
 
    UseTs0:  false
    MinTime: -10000000000
@@ -105,11 +112,13 @@ crteventdisplayalg_sbnd_data.DrawStripHits:   false
 crteventdisplayalg_sbnd_data.DrawClusters:    false
 crteventdisplayalg_sbnd_data.DrawSpacePoints: true
 crteventdisplayalg_sbnd_data.DrawTracks:      true
+crteventdisplayalg_sbnd_data.DrawTPCMatching: true
+crteventdisplayalg_sbnd_data.OnlyDrawMatched: true
 crteventdisplayalg_sbnd_data.MC:              false
-crteventdisplayalg_sbnd_data.DrawModules:     true
 crteventdisplayalg_sbnd_data.DrawTrueTracks:  false
-crteventdisplayalg_sbnd_data.ChoseTaggers:    true
-crteventdisplayalg_sbnd_data.ChosenTaggers:   [ 0, 1, 2, 3, 4 ]
+crteventdisplayalg_sbnd_data.ChoseTaggers:    false
 crteventdisplayalg_sbnd_data.UseTs0:          true
+crteventdisplayalg_sbnd_data.MinTime:         -1.5e6
+crteventdisplayalg_sbnd_data.MaxTime:         1.5e6
 
 END_PROLOG
