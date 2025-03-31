@@ -184,8 +184,8 @@ private:
   std::vector<uint8_t>               _cl_composition;
   std::vector<std::vector<uint32_t>> _cl_channel_set;
   std::vector<std::vector<uint16_t>> _cl_adc_set;
-  std::vector<std::vector<uint32_t>> _cl_sh_ts0_set; //! To store t0 from x-y coincidences
-  std::vector<std::vector<uint32_t>> _cl_sh_ts1_set; //! To store t1 from x-y coincidences
+  std::vector<std::vector<int64_t>>  _cl_sh_ts0_set; //! To store t0 from x-y coincidences
+  std::vector<std::vector<int64_t>>  _cl_sh_ts1_set; //! To store t1 from x-y coincidences
   std::vector<std::vector<uint16_t>> _cl_sh_feb_mac5_set; //! MAC5 addresses of StripHit FEBs
   std::vector<std::vector<double>>   _cl_sh_time_walk_set; //! Time walk correction
   std::vector<std::vector<double>>   _cl_sh_prop_delay_set; //! Light propagation correction
@@ -440,8 +440,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("cl_composition", "std::vector<uint8_t>", &_cl_composition);
   fTree->Branch("cl_channel_set", "std::vector<std::vector<uint32_t>>", &_cl_channel_set);
   fTree->Branch("cl_adc_set", "std::vector<std::vector<uint16_t>>", &_cl_adc_set);
-  fTree->Branch("cl_sh_ts0_set", "std::vector<std::vector<uint32_t>>", &_cl_sh_ts0_set);
-  fTree->Branch("cl_sh_ts1_set", "std::vector<std::vector<uint32_t>>", &_cl_sh_ts1_set);
+  fTree->Branch("cl_sh_ts0_set", "std::vector<std::vector<int64_t>>", &_cl_sh_ts0_set);
+  fTree->Branch("cl_sh_ts1_set", "std::vector<std::vector<int64_t>>", &_cl_sh_ts1_set);
   fTree->Branch("cl_sh_feb_mac5_set", "std::vector<std::vector<uint16_t>>", &_cl_sh_feb_mac5_set);
   fTree->Branch("cl_sh_time_walk_set", "std::vector<std::vector<double>>", &_cl_sh_time_walk_set);
   fTree->Branch("cl_sh_prop_delay_set", "std::vector<std::vector<double>>", &_cl_sh_prop_delay_set);
