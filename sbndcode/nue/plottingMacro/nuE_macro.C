@@ -40,7 +40,6 @@ typedef struct{
     double trackScore;
     double showerEnergy;
     double showerTheta;
-    double showerSmallestTheta;
     double showerETheta2;
 } event_t;
 
@@ -79,13 +78,13 @@ void shower(std::vector<event_t> allEvents_vec){
     TH1F* showerThetaDLDune_dist = (TH1F*) showerThetaCurrent_dist->Clone("Shower Theta");
     TH1F* showerThetaCheated_dist = (TH1F*) showerThetaCurrent_dist->Clone("Shower Theta");
 
-    TCanvas *showerSmallThetaCanvas = new TCanvas("showerSmallTheta_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    //TCanvas *showerSmallThetaCanvas = new TCanvas("showerSmallTheta_canvas", "Graph Draw Options", 200, 10, 600, 400);
     //TH1F* showerSmallThetaCurrent_dist = new TH1F("Shower Small Theta", "Small Theta of Shower", 90, 0, 360);
-    TH1F* showerSmallThetaCurrent_dist = new TH1F("Shower Small Theta", "Small Theta of Shower", 45, 0, 180);
-    showerSmallThetaCurrent_dist->SetTitle("Recoil Electron Shower with the Smallest Theta Relative to Beam Neutrino Direction in an Event;Smallest Shower Theta(degrees);# of Events");
-    TH1F* showerSmallThetaDLUboone_dist = (TH1F*) showerSmallThetaCurrent_dist->Clone("Small Shower Theta");
-    TH1F* showerSmallThetaDLDune_dist = (TH1F*) showerSmallThetaCurrent_dist->Clone("Small Shower Theta");
-    TH1F* showerSmallThetaCheated_dist = (TH1F*) showerSmallThetaCurrent_dist->Clone("Small Shower Theta");
+    //TH1F* showerSmallThetaCurrent_dist = new TH1F("Shower Small Theta", "Small Theta of Shower", 45, 0, 180);
+    //showerSmallThetaCurrent_dist->SetTitle("Recoil Electron Shower with the Smallest Theta Relative to Beam Neutrino Direction in an Event;Smallest Shower Theta(degrees);# of Events");
+    //TH1F* showerSmallThetaDLUboone_dist = (TH1F*) showerSmallThetaCurrent_dist->Clone("Small Shower Theta");
+    //TH1F* showerSmallThetaDLDune_dist = (TH1F*) showerSmallThetaCurrent_dist->Clone("Small Shower Theta");
+    //TH1F* showerSmallThetaCheated_dist = (TH1F*) showerSmallThetaCurrent_dist->Clone("Small Shower Theta");
 
     TCanvas *showerETheta2Canvas = new TCanvas("showerETheta2_canvas", "Graph Draw Options", 200, 10, 600, 400);
     //TH1F* showerETheta2Current_dist = new TH1F("Shower ETheta2", "ETheta2 of Shower", 200, 0, 204.4);
@@ -109,7 +108,7 @@ void shower(std::vector<event_t> allEvents_vec){
     for(UInt_t j = 0; j < current.size(); j++){
         showerECurrent_dist->Fill(current.at(j).showerEnergy);
         showerThetaCurrent_dist->Fill(TMath::RadToDeg() * current.at(j).showerTheta);
-        showerSmallThetaCurrent_dist->Fill(TMath::RadToDeg() * current.at(j).showerSmallestTheta);
+        //showerSmallThetaCurrent_dist->Fill(TMath::RadToDeg() * current.at(j).showerSmallestTheta);
         showerETheta2Current_dist->Fill(current.at(j).showerETheta2);
     
         //if(current.at(j).showerEnergy != 0){
@@ -122,7 +121,7 @@ void shower(std::vector<event_t> allEvents_vec){
     for(UInt_t j = 0; j < dlUboone.size(); j++){
         showerEDLUboone_dist->Fill(dlUboone.at(j).showerEnergy);
         showerThetaDLUboone_dist->Fill(TMath::RadToDeg() * dlUboone.at(j).showerTheta);
-        showerSmallThetaDLUboone_dist->Fill(TMath::RadToDeg() * dlUboone.at(j).showerSmallestTheta);
+        //showerSmallThetaDLUboone_dist->Fill(TMath::RadToDeg() * dlUboone.at(j).showerSmallestTheta);
         showerETheta2DLUboone_dist->Fill(dlUboone.at(j).showerETheta2);
 
         //if(dlUboone.at(j).showerEnergy != 0){
@@ -135,7 +134,7 @@ void shower(std::vector<event_t> allEvents_vec){
     for(UInt_t j = 0; j < dlDune.size(); j++){
         showerEDLDune_dist->Fill(dlDune.at(j).showerEnergy);
         showerThetaDLDune_dist->Fill(TMath::RadToDeg() * dlDune.at(j).showerTheta);
-        showerSmallThetaDLDune_dist->Fill(TMath::RadToDeg() * dlDune.at(j).showerSmallestTheta);
+        //showerSmallThetaDLDune_dist->Fill(TMath::RadToDeg() * dlDune.at(j).showerSmallestTheta);
         showerETheta2DLDune_dist->Fill(dlDune.at(j).showerETheta2); 
         
         //if(dlDune.at(j).showerEnergy != 0){
@@ -149,7 +148,7 @@ void shower(std::vector<event_t> allEvents_vec){
     for(UInt_t j = 0; j < cheated.size(); j++){
         showerECheated_dist->Fill(cheated.at(j).showerEnergy);
         showerThetaCheated_dist->Fill(TMath::RadToDeg() * cheated.at(j).showerTheta);
-        showerSmallThetaCheated_dist->Fill(TMath::RadToDeg() * cheated.at(j).showerSmallestTheta);
+        //showerSmallThetaCheated_dist->Fill(TMath::RadToDeg() * cheated.at(j).showerSmallestTheta);
         showerETheta2Cheated_dist->Fill(cheated.at(j).showerETheta2); 
     }
 
@@ -207,32 +206,32 @@ void shower(std::vector<event_t> allEvents_vec){
     //showerThetaCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerTheta_dist.pdf");
     showerThetaCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerTheta_dist_zoomed.pdf");
 
-    showerSmallThetaCanvas->cd();
-    showerSmallThetaCurrent_dist->SetLineWidth(2);
-    showerSmallThetaCurrent_dist->SetLineColor(kRed);
-    showerSmallThetaDLDune_dist->SetLineWidth(2);
-    showerSmallThetaDLDune_dist->SetLineColor(kViolet-5);
-    showerSmallThetaDLUboone_dist->SetLineWidth(2);
-    showerSmallThetaDLUboone_dist->SetLineColor(kBlue);
-    showerSmallThetaCheated_dist->SetLineWidth(2);
-    showerSmallThetaCheated_dist->SetLineColor(kSpring-5);
-    showerSmallThetaCurrent_dist->Draw("hist");
-    showerSmallThetaDLDune_dist->Draw("histsame");
-    showerSmallThetaDLUboone_dist->Draw("histsame");
-    showerSmallThetaCheated_dist->Draw("histsame");
-    showerSmallThetaCurrent_dist->SetStats(0);
-    showerSmallThetaCurrent_dist->GetYaxis()->SetRangeUser(0, 400);
+    //showerSmallThetaCanvas->cd();
+    //showerSmallThetaCurrent_dist->SetLineWidth(2);
+    //showerSmallThetaCurrent_dist->SetLineColor(kRed);
+    //showerSmallThetaDLDune_dist->SetLineWidth(2);
+    //showerSmallThetaDLDune_dist->SetLineColor(kViolet-5);
+    //showerSmallThetaDLUboone_dist->SetLineWidth(2);
+    //showerSmallThetaDLUboone_dist->SetLineColor(kBlue);
+    //showerSmallThetaCheated_dist->SetLineWidth(2);
+    //showerSmallThetaCheated_dist->SetLineColor(kSpring-5);
+    //showerSmallThetaCurrent_dist->Draw("hist");
+    //showerSmallThetaDLDune_dist->Draw("histsame");
+    //showerSmallThetaDLUboone_dist->Draw("histsame");
+    //showerSmallThetaCheated_dist->Draw("histsame");
+    //showerSmallThetaCurrent_dist->SetStats(0);
+    //showerSmallThetaCurrent_dist->GetYaxis()->SetRangeUser(0, 400);
 
-    auto legend2 = new TLegend(0.56,0.86,0.88,0.70);
-    legend2->AddEntry(showerSmallThetaDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
-    legend2->AddEntry(showerSmallThetaDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
-    legend2->AddEntry(showerSmallThetaCurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
-    legend2->AddEntry(showerSmallThetaCheated_dist, "Cheated Vertexing", "f");
-    legend2->SetTextSize(0.0225);
-    legend2->SetMargin(0.13);
-    legend2->Draw();
+    //auto legend2 = new TLegend(0.56,0.86,0.88,0.70);
+    //legend2->AddEntry(showerSmallThetaDLDune_dist, "Deep Learning: DUNE/LBNF Tune", "f");
+    //legend2->AddEntry(showerSmallThetaDLUboone_dist, "Deep Learning: #muBooNE/BNB Tune", "f");
+    //legend2->AddEntry(showerSmallThetaCurrent_dist, "Current SBND Vertexing (without Refinement)", "f");
+    //legend2->AddEntry(showerSmallThetaCheated_dist, "Cheated Vertexing", "f");
+    //legend2->SetTextSize(0.0225);
+    //legend2->SetMargin(0.13);
+    //legend2->Draw();
     //showerSmallThetaCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerSmallTheta_dist.pdf");
-    showerSmallThetaCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerSmallTheta_dist_zoomed.pdf");
+    //showerSmallThetaCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerSmallTheta_dist_zoomed.pdf");
 
     showerETheta2Canvas->cd();
     showerETheta2Current_dist->SetLineWidth(2);
@@ -326,13 +325,13 @@ void shower(std::vector<event_t> allEvents_vec){
     TH1F* showerThetaDLDune_dist_perc = (TH1F*) showerThetaCurrent_dist_perc->Clone("Shower Theta Perc");
     TH1F* showerThetaCheated_dist_perc = (TH1F*) showerThetaCurrent_dist_perc->Clone("Shower Theta Perc");
 
-    TCanvas *showerSmallThetaPercCanvas = new TCanvas("showerSmallThetaPerc_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    //TCanvas *showerSmallThetaPercCanvas = new TCanvas("showerSmallThetaPerc_canvas", "Graph Draw Options", 200, 10, 600, 400);
     //TH1F* showerSmallThetaCurrent_dist_perc = new TH1F("Shower Small Theta Perc", "Small Theta of Shower Perc", 90, 0, 360);
-    TH1F* showerSmallThetaCurrent_dist_perc = new TH1F("Shower Small Theta Perc", "Small Theta of Shower Perc", 45, 0, 180);
-    showerSmallThetaCurrent_dist_perc->SetTitle("Recoil Electron Shower with the Smallest Theta Relative to Beam Neutrino Direction in an Event;Smallest Shower Theta(degrees);Percentage of Events (%)");
-    TH1F* showerSmallThetaDLUboone_dist_perc = (TH1F*) showerSmallThetaCurrent_dist_perc->Clone("Small Shower Theta Perc");
-    TH1F* showerSmallThetaDLDune_dist_perc = (TH1F*) showerSmallThetaCurrent_dist_perc->Clone("Small Shower Theta Perc");
-    TH1F* showerSmallThetaCheated_dist_perc = (TH1F*) showerSmallThetaCurrent_dist_perc->Clone("Small Shower Theta Perc");
+    //TH1F* showerSmallThetaCurrent_dist_perc = new TH1F("Shower Small Theta Perc", "Small Theta of Shower Perc", 45, 0, 180);
+    //showerSmallThetaCurrent_dist_perc->SetTitle("Recoil Electron Shower with the Smallest Theta Relative to Beam Neutrino Direction in an Event;Smallest Shower Theta(degrees);Percentage of Events (%)");
+    //TH1F* showerSmallThetaDLUboone_dist_perc = (TH1F*) showerSmallThetaCurrent_dist_perc->Clone("Small Shower Theta Perc");
+    //TH1F* showerSmallThetaDLDune_dist_perc = (TH1F*) showerSmallThetaCurrent_dist_perc->Clone("Small Shower Theta Perc");
+    //TH1F* showerSmallThetaCheated_dist_perc = (TH1F*) showerSmallThetaCurrent_dist_perc->Clone("Small Shower Theta Perc");
 
     TCanvas *showerETheta2PercCanvas = new TCanvas("showerETheta2Perc_canvas", "Graph Draw Options", 200, 10, 600, 400);
     //TH1F* showerETheta2Current_dist_perc = new TH1F("Shower ETheta2 Perc", "ETheta2 of Shower Perc", 200, 0, 204.4);
@@ -359,10 +358,10 @@ void shower(std::vector<event_t> allEvents_vec){
         showerThetaDLUboone_dist_perc->Fill(binFilling, (100.0f*showerThetaDLUboone_dist->GetBinContent(j)/dlUboone.size()));
         showerThetaDLDune_dist_perc->Fill(binFilling, (100.0f*showerThetaDLDune_dist->GetBinContent(j)/dlDune.size()));
         showerThetaCheated_dist_perc->Fill(binFilling, (100.0f*showerThetaCheated_dist->GetBinContent(j)/cheated.size()));
-        showerSmallThetaCurrent_dist_perc->Fill(binFilling, (100.0f*showerSmallThetaCurrent_dist->GetBinContent(j)/current.size()));
-        showerSmallThetaDLUboone_dist_perc->Fill(binFilling, (100.0f*showerThetaDLUboone_dist->GetBinContent(j)/dlUboone.size()));
-        showerSmallThetaDLDune_dist_perc->Fill(binFilling, (100.0f*showerSmallThetaDLDune_dist->GetBinContent(j)/dlDune.size()));
-        showerSmallThetaCheated_dist_perc->Fill(binFilling, (100.0f*showerSmallThetaCheated_dist->GetBinContent(j)/cheated.size()));
+        //showerSmallThetaCurrent_dist_perc->Fill(binFilling, (100.0f*showerSmallThetaCurrent_dist->GetBinContent(j)/current.size()));
+        //showerSmallThetaDLUboone_dist_perc->Fill(binFilling, (100.0f*showerThetaDLUboone_dist->GetBinContent(j)/dlUboone.size()));
+        //showerSmallThetaDLDune_dist_perc->Fill(binFilling, (100.0f*showerSmallThetaDLDune_dist->GetBinContent(j)/dlDune.size()));
+        //showerSmallThetaCheated_dist_perc->Fill(binFilling, (100.0f*showerSmallThetaCheated_dist->GetBinContent(j)/cheated.size()));
         binFilling += 4;
     }
 
@@ -431,32 +430,32 @@ void shower(std::vector<event_t> allEvents_vec){
     //showerThetaPercCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerTheta_dist_perc.pdf");
     showerThetaPercCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerTheta_dist_perc_zoomed.pdf");
 
-    showerSmallThetaPercCanvas->cd();
-    showerSmallThetaCurrent_dist_perc->SetLineWidth(2);
-    showerSmallThetaCurrent_dist_perc->SetLineColor(kRed);
-    showerSmallThetaDLDune_dist_perc->SetLineWidth(2);
-    showerSmallThetaDLDune_dist_perc->SetLineColor(kViolet-5);
-    showerSmallThetaDLUboone_dist_perc->SetLineWidth(2);
-    showerSmallThetaDLUboone_dist_perc->SetLineColor(kBlue);
-    showerSmallThetaCheated_dist_perc->SetLineWidth(2);
-    showerSmallThetaCheated_dist_perc->SetLineColor(kSpring-5);
-    showerSmallThetaCurrent_dist_perc->Draw("hist");
-    showerSmallThetaDLDune_dist_perc->Draw("histsame");
-    showerSmallThetaDLUboone_dist_perc->Draw("histsame");
-    showerSmallThetaCheated_dist_perc->Draw("histsame");
-    showerSmallThetaCurrent_dist_perc->SetStats(0);
-    showerSmallThetaCurrent_dist_perc->GetYaxis()->SetRangeUser(0, 45);
+    //showerSmallThetaPercCanvas->cd();
+    //showerSmallThetaCurrent_dist_perc->SetLineWidth(2);
+    //showerSmallThetaCurrent_dist_perc->SetLineColor(kRed);
+    //showerSmallThetaDLDune_dist_perc->SetLineWidth(2);
+    //showerSmallThetaDLDune_dist_perc->SetLineColor(kViolet-5);
+    //showerSmallThetaDLUboone_dist_perc->SetLineWidth(2);
+    //showerSmallThetaDLUboone_dist_perc->SetLineColor(kBlue);
+    //showerSmallThetaCheated_dist_perc->SetLineWidth(2);
+    //showerSmallThetaCheated_dist_perc->SetLineColor(kSpring-5);
+    //showerSmallThetaCurrent_dist_perc->Draw("hist");
+    //showerSmallThetaDLDune_dist_perc->Draw("histsame");
+    //showerSmallThetaDLUboone_dist_perc->Draw("histsame");
+    //showerSmallThetaCheated_dist_perc->Draw("histsame");
+    //showerSmallThetaCurrent_dist_perc->SetStats(0);
+    //showerSmallThetaCurrent_dist_perc->GetYaxis()->SetRangeUser(0, 45);
 
-    auto legend6 = new TLegend(0.56,0.86,0.88,0.70);
-    legend6->AddEntry(showerSmallThetaDLDune_dist_perc, "Deep Learning: DUNE/LBNF Tune", "f");
-    legend6->AddEntry(showerSmallThetaDLUboone_dist_perc, "Deep Learning: #muBooNE/BNB Tune", "f");
-    legend6->AddEntry(showerSmallThetaCurrent_dist_perc, "Current SBND Vertexing (without Refinement)", "f");
-    legend6->AddEntry(showerSmallThetaCheated_dist_perc, "Cheated Vertexing", "f");
-    legend6->SetTextSize(0.0225);
-    legend6->SetMargin(0.13);
-    legend6->Draw();
+    //auto legend6 = new TLegend(0.56,0.86,0.88,0.70);
+    //legend6->AddEntry(showerSmallThetaDLDune_dist_perc, "Deep Learning: DUNE/LBNF Tune", "f");
+    //legend6->AddEntry(showerSmallThetaDLUboone_dist_perc, "Deep Learning: #muBooNE/BNB Tune", "f");
+    //legend6->AddEntry(showerSmallThetaCurrent_dist_perc, "Current SBND Vertexing (without Refinement)", "f");
+    //legend6->AddEntry(showerSmallThetaCheated_dist_perc, "Cheated Vertexing", "f");
+    //legend6->SetTextSize(0.0225);
+    //legend6->SetMargin(0.13);
+    //legend6->Draw();
     //showerSmallThetaPercCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerSmallTheta_dist_perc.pdf");
-    showerSmallThetaPercCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerSmallTheta_dist_perc_zoomed.pdf");
+    //showerSmallThetaPercCanvas->SaveAs("/nashome/c/coackley/nuEPlots/showerSmallTheta_dist_perc_zoomed.pdf");
 
     showerETheta2PercCanvas->cd();
     showerETheta2Current_dist_perc->SetLineWidth(2);
@@ -538,10 +537,10 @@ void scores(std::vector<event_t> allEvents_vec){
 
     std::cout << "current size: " << current.size() << std::endl; 
     for(UInt_t j = 0; j < current.size(); j++){
-        //if(current.at(j).nSlices == 1){
+        if(current.at(j).nSlices == 1){
             sliceCompletenessCurrent_dist->Fill(current.at(j).sliceCompleteness);
             sizeCurrentSlice++;
-        //}
+        }
 
         if(current.at(j).nPFPs == 2){
             trackScoreCurrent_dist->Fill(current.at(j).trackScore);
@@ -551,12 +550,12 @@ void scores(std::vector<event_t> allEvents_vec){
 
     std::cout << "dl uboone: " << dlUboone.size() << std::endl;
     for(UInt_t j = 0; j < dlUboone.size(); j++){
-        //if(dlUboone.at(j).nSlices == 1){ 
+        if(dlUboone.at(j).nSlices == 1){ 
             sliceCompletenessDLUboone_dist->Fill(dlUboone.at(j).sliceCompleteness);
             sizeDLUbooneSlice++;
-        //}
+        }
 
-        if(dlUboone.at(j).nPFPs == 2){
+        if(dlUboone.at(j).nPFPs == 1){
             trackScoreDLUboone_dist->Fill(dlUboone.at(j).trackScore);
             sizeDLUbooneTrack++;
         }
@@ -564,10 +563,10 @@ void scores(std::vector<event_t> allEvents_vec){
 
     std::cout << "dl dune size: " << dlDune.size() << std::endl;
     for(UInt_t j = 0; j < dlDune.size(); j++){
-        //if(dlDune.at(j).nSlices == 1){
+        if(dlDune.at(j).nSlices == 1){
             sliceCompletenessDLDune_dist->Fill(dlDune.at(j).sliceCompleteness);
             sizeDLDuneSlice++;
-        //}
+        }
 
         if(dlDune.at(j).nPFPs == 2){
             trackScoreDLDune_dist->Fill(dlDune.at(j).trackScore);
@@ -1043,7 +1042,7 @@ void deltaVertices(std::vector<event_t> allEvents_vec){
 
 void nuE_macro(){
     //TFile *f = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_04_05/NuEAnalyserOutput.root", "READ");
-    TFile *f = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/merged_wCheated.root", "READ");
+    TFile *f = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/merged.root", "READ");
     
     if(!f){
         std::cout << "Failed to read file" << std::endl;
@@ -1105,7 +1104,6 @@ void nuE_macro(){
         std::vector<double> *pTrackScore = 0;
         std::vector<double> *pShowerEnergy = 0;
         std::vector<double> *pShowerTheta = 0;
-        std::vector<double> *pShowerSmallestTheta = 0;
         std::vector<double> *pShowerETheta2 = 0;
 
         TBranch *event_branch = 0;
@@ -1130,7 +1128,6 @@ void nuE_macro(){
         TBranch *trackScore_branch = 0;
         TBranch *showerEnergy_branch = 0;
         TBranch *showerTheta_branch = 0;
-        TBranch *showerSmallestTheta_branch = 0;
         TBranch *showerETheta2_branch = 0;
 
         t->SetBranchAddress("event_tree", &pEvent, &event_branch);
@@ -1155,7 +1152,6 @@ void nuE_macro(){
         t->SetBranchAddress("trackScore_tree", &pTrackScore, &trackScore_branch);
         t->SetBranchAddress("showerEnergy_tree", &pShowerEnergy, &showerEnergy_branch);
         t->SetBranchAddress("showerTheta_tree", &pShowerTheta, &showerTheta_branch);
-        t->SetBranchAddress("showerSmallestTheta_tree", &pShowerSmallestTheta, &showerSmallestTheta_branch);
         t->SetBranchAddress("showerETheta2_tree", &pShowerETheta2, &showerETheta2_branch);
 
         event_branch->GetEntry(i);
@@ -1180,7 +1176,6 @@ void nuE_macro(){
         trackScore_branch->GetEntry(i);
         showerEnergy_branch->GetEntry(i);
         showerTheta_branch->GetEntry(i);
-        showerSmallestTheta_branch->GetEntry(i);
         showerETheta2_branch->GetEntry(i);
 
         size_t vecSize = pEvent->size();
@@ -1207,7 +1202,6 @@ void nuE_macro(){
             allTrackScore.push_back(pTrackScore->at(j));
             allShowerEnergy.push_back(pShowerEnergy->at(j));
             allShowerTheta.push_back(pShowerTheta->at(j));
-            allShowerSmallestTheta.push_back(pShowerSmallestTheta->at(j));
             allShowerETheta2.push_back(pShowerETheta2->at(j));
         }
 
@@ -1242,13 +1236,12 @@ void nuE_macro(){
         event.trackScore = allTrackScore.at(k);
         event.showerEnergy = allShowerEnergy.at(k);
         event.showerTheta = allShowerTheta.at(k);
-        event.showerSmallestTheta = allShowerSmallestTheta.at(k);
         event.showerETheta2 = allShowerETheta2.at(k);
         allEvents.push_back(event);
     }
 
     //deltaVertices(allEvents);
     //numberPlots(allEvents);
-    //scores(allEvents);
-    shower(allEvents);
+    scores(allEvents);
+    //shower(allEvents);
 }
