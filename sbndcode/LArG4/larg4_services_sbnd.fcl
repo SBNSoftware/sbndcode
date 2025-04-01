@@ -46,7 +46,7 @@ sbnd_particle_list_action:
   keepEMShowerDaughters: false                      # If false, does not store electromagnetic shower daughter
                                                     # particles in the MCParticles data product.
   storeTrajectories: true
-  keepGenTrajectories: ["generator"]                # list of generator labels for which we want to store
+  keepGenTrajectories: ["generator", "corsika"]     # list of generator labels for which we want to store
                                                     # trajectory points.
   keepOnlyPrimaryFullTrajectories: false            # (defaults to false in larg4) If set to true, only
                                                     # the particles with MCTruth process == "primary" and
