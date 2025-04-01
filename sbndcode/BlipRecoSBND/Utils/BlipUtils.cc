@@ -120,8 +120,8 @@ namespace BlipUtils {
       // assumes particle T0 = 0 with the trigger). We need to correct for that.
       //float tick_offset = (tb.Time>0) ? tb.Time/clockData.TPCClock().TickPeriod() : 0;
       auto point = geo::Point_t{tb.Position.X(),tb.Position.Y(),tb.Position.Z()};
-      auto const& tpcID   = geom->FindTPCAtPosition(point);
-      auto const& planeID = art::ServiceHandle<geo::Geometry>()->GetBeginPlaneID(tpcID);
+      auto const& tpcID = geom->FindTPCAtPosition(point); 
+      auto const& planeID = geo::PlaneID{tpcID, 0};
       float tick_calc = (float)detProp.ConvertXToTicks(tb.Position.X(),planeID);
       tb.DriftTime = tick_calc*clockData.TPCClock().TickPeriod() + clockData.TriggerOffsetTPC();
       
@@ -342,7 +342,12 @@ namespace BlipUtils {
   blip::Blip MakeBlip( std::vector<blip::HitClust> const& hcs,
     detinfo::DetectorPropertiesData const& detProp,
     detinfo::DetectorClocksData const& clockData ){
+<<<<<<< HEAD
     
+=======
+
+    art::ServiceHandle<geo::WireReadout> wireReadoutGeom;
+>>>>>>> feature/sungbino_update_JJM_bliip_repo_for_v10
     blip::Blip  newblip;
     
     // ------------------------------------------------
@@ -378,21 +383,35 @@ namespace BlipUtils {
     std::vector<TVector3> wirex;
     for(size_t i=0; i<hcs.size(); i++) {
       int pli = hcs[i].Plane;
+<<<<<<< HEAD
       
       // use view with the maximal wire extent to calculate transverse (YZ) length
       if( hcs[i].NWires > newblip.MaxWireSpan ) {
         newblip.MaxWireSpan = hcs[i].NWires;
         newblip.dYZ         = hcs[i].NWires * art::ServiceHandle<geo::Geometry>()->WirePitch(kViews[pli]);
+=======
+      auto const& planegeo = wireReadoutGeom->Get().Plane(geo::PlaneID{(unsigned int)hcs[i].Cryostat, (unsigned int)hcs[i].TPC, (unsigned int)hcs[i].Plane}); 
+      double wirepitch = planegeo.WirePitch(); 
+      // use view with the maximal wire extent to calculate transverse (YZ) length
+      if( hcs[i].NWires > newblip.MaxWireSpan ) {
+        newblip.MaxWireSpan = hcs[i].NWires;
+	newblip.dYZ         = hcs[i].NWires * wirepitch;
+>>>>>>> feature/sungbino_update_JJM_bliip_repo_for_v10
       }
   
       for(size_t j=i+1; j<hcs.size(); j++){
         int plj = hcs[j].Plane;
           
+<<<<<<< HEAD
         double y,z;
+=======
+  	geo::Point_t intsec_p;
+>>>>>>> feature/sungbino_update_JJM_bliip_repo_for_v10
         bool match3d = false;
         // If this was already calculated, use that
         if( hcs[i].IntersectLocations.count(hcs[j].ID) ) {
           match3d = true;
+<<<<<<< HEAD
           y = hcs[i].IntersectLocations.find(hcs[j].ID)->second.Y();
           z = hcs[i].IntersectLocations.find(hcs[j].ID)->second.Z();
         } else {
@@ -402,6 +421,19 @@ namespace BlipUtils {
 
         if( match3d ) {
           TVector3 a(0., y, z);
+=======
+          intsec_p.SetY(hcs[i].IntersectLocations.find(hcs[j].ID)->second.Y());
+          intsec_p.SetZ(hcs[i].IntersectLocations.find(hcs[j].ID)->second.Z());
+        } else {
+	  geo::WireID i_wireid{(unsigned int)hcs[i].Cryostat, (unsigned int)hcs[i].TPC, (unsigned int)hcs[i].Plane, (unsigned int)hcs[i].CenterChan};
+	  geo::WireID j_wireid{(unsigned int)hcs[j].Cryostat, (unsigned int)hcs[j].TPC, (unsigned int)hcs[j].Plane, (unsigned int)hcs[j].CenterChan};
+
+          match3d = wireReadoutGeom->Get().WireIDsIntersect(i_wireid, j_wireid, intsec_p);
+        }
+
+        if( match3d ) {
+          TVector3 a(0., intsec_p.Y(), intsec_p.Z());
+>>>>>>> feature/sungbino_update_JJM_bliip_repo_for_v10
           wirex.push_back(a);
           newblip.clusters[pli] = hcs[i];
           newblip.clusters[plj] = hcs[j];
@@ -447,7 +479,13 @@ namespace BlipUtils {
     // convert ticks to X
       auto const& cryostat= art::ServiceHandle<geo::Geometry>()->Cryostat(geo::CryostatID(newblip.Cryostat));
       auto const& tpcgeom = cryostat.TPC(newblip.TPC);
+<<<<<<< HEAD
       auto const  xyz     = tpcgeom.Plane(0).GetCenter();
+=======
+      auto tpcID = tpcgeom.ID();
+      auto const& planegeo = wireReadoutGeom->Get().Plane(geo::PlaneID{tpcID, 0});
+      auto const  xyz     = planegeo.GetCenter();
+>>>>>>> feature/sungbino_update_JJM_bliip_repo_for_v10
       int         dirx    = DriftDirX(tpcgeom);
       
       newblip.Position.SetX( xyz.X() + dirx * tick_to_cm * newblip.Time );
@@ -493,7 +531,11 @@ namespace BlipUtils {
   
   //===================================================================
   int DriftDirX(geo::TPCGeo const& tpcgeom) { 
+<<<<<<< HEAD
     return ((tpcgeom.DriftDirection() == geo::kNegX) ? +1.0 : -1.0);
+=======
+    return ((tpcgeom.DriftSign() == geo::DriftSign::Negative) ? +1.0 : -1.0);
+>>>>>>> feature/sungbino_update_JJM_bliip_repo_for_v10
   }
 
   //====================================================================
@@ -540,12 +582,15 @@ namespace BlipUtils {
   }
 
   //====================================================================
+<<<<<<< HEAD
   bool DoChannelsIntersect(int ch1, int ch2 ){
     double y,z;
     return art::ServiceHandle<geo::Geometry>()->ChannelsIntersect(ch1,ch2,y,z);
   }
   
   //====================================================================
+=======
+>>>>>>> feature/sungbino_update_JJM_bliip_repo_for_v10
   bool DoHitClustsMatch(blip::HitClust const& hc1, blip::HitClust const& hc2, float minDiffTicks = 2){
     if( fabs(hc1.Time-hc2.Time) < minDiffTicks ) return true;
     else return false;

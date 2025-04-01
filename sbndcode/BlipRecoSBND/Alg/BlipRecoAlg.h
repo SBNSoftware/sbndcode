@@ -59,6 +59,8 @@
 #include "TH2D.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TSpline.h"
+#include "TGraph.h"
 
 // c++
 #include <vector>
@@ -118,9 +120,9 @@ namespace blip {
 
    private:
     
-    calo::CalorimetryAlg* fCaloAlg;
-    geo::GeometryCore const&                fGeom;
-
+    calo::CalorimetryAlg*         fCaloAlg;
+    geo::GeometryCore const&      fGeom;
+    
     CTPMap_t  kXTicksOffsets;
 
     // --- FCL configs ---
@@ -172,12 +174,19 @@ namespace blip {
     // --- Calorimetry configs ---
     int                 fCaloPlane;
     float               fCalodEdx;
+    float               fESTAR_p0;
+    float     	      	fESTAR_p1;
     bool                fLifetimeCorr;
     bool                fSCECorr;
     bool                fYZUniformityCorr;
     float               fModBoxA;
     float               fModBoxB;
- 
+
+    // --- Splines for calo
+    TSpline3* spline_PSTAR;
+    TSpline3* CreateSplinePSTAR();
+    float Q_to_E_ESTAR(float Q);
+    float Q_to_E_PSTAR(float Q);
 
     // --- Histograms ---
     //TH1D*   h_chanstatus;

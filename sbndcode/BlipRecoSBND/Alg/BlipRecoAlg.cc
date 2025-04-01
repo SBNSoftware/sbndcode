@@ -12,6 +12,7 @@ namespace blip {
     
     auto const& detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
     auto const& clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
+    art::ServiceHandle<geo::WireReadout> wireReadoutGeom;
     kLArDensity           = detProp.Density();
     kNominalEfield        = detProp.Efield();
     kDriftVelocity        = detProp.DriftVelocity(detProp.Efield(0),detProp.Temperature()); 
@@ -40,13 +41,13 @@ namespace blip {
         auto const& tpcid = geo::TPCID(cryoid,tpc);
 
         // Loop planes in TPC 'tpc'
-        for(size_t pl=0; pl<fGeom.Nplanes(tpcid); pl++){
+        for(size_t pl=0; pl<wireReadoutGeom->Get().Nplanes(tpcid); pl++){
           auto const& planeid = geo::PlaneID(cstat,tpc,pl);
-          
-          kNumChannels += fGeom.Nwires(planeid);
+          auto const& planegeo = wireReadoutGeom->Get().Plane(planeid);
+          kNumChannels += planegeo.Nwires();
             
           float offset = detProp.GetXTicksOffset(pl,tpc,cstat);
-          std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<fGeom.Nwires(planeid)<<" wires\n";
+          std::cout<<"CRYOSTAT "<<cstat<<" / TPC "<<tpc<<" / PLANE "<<pl<<":  "<<planegeo.Nwires()<<" wires\n";
           std::cout<<"  XTicksOffset (from detProp): "<<offset<<"\n";
          
           kXTicksOffsets[cstat][tpc][pl] = 0;
@@ -61,8 +62,8 @@ namespace blip {
             // (as of lardataalg v9_15_01)
             auto const& cryostat  = fGeom.Cryostat(geo::CryostatID(cstat));
             auto const& tpcgeom   = cryostat.TPC(tpc);
-            auto const xyz        = tpcgeom.Plane(0).GetCenter();
-            const double dir((tpcgeom.DriftDirection() == geo::kNegX) ? +1.0 : -1.0);
+            auto const xyz        = planegeo.GetCenter();
+            const double dir((tpcgeom.DriftSign() == geo::DriftSign::Negative) ? +1.0 : -1.0);
             float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
             
             float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
@@ -216,8 +217,7 @@ namespace blip {
     
     h_recoWireEffQ_denom = hdir.make<TH1D>("recoWireEffQ_trueCount","Collection plane;Charge deposited on wire [e-];Count",80,0,20000);
     h_recoWireEffQ_num   = hdir.make<TH1D>("recoWireEffQ","Collection plane;Charge deposited on wire [e-];Hit reco efficiency",80,0,20000);
-    
-
+    spline_PSTAR = CreateSplinePSTAR();
   }
   
   //--------------------------------------------------------------
@@ -279,6 +279,8 @@ namespace blip {
     fCaloAlg            = new calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") );
     fCaloPlane          = pset.get<int>           ("CaloPlane",           2);
     fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
+    fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);
+    fESTAR_p1           = pset.get<float>         ("ESTAR_p1",            0.00003479);
     fLifetimeCorr       = pset.get<bool>          ("LifetimeCorrection",  false);
     fSCECorr            = pset.get<bool>          ("SCECorrection",       false);
     fYZUniformityCorr   = pset.get<bool>          ("YZUniformityCorrection",true);
@@ -347,7 +349,7 @@ namespace blip {
     
     // -- geometry
     art::ServiceHandle<geo::Geometry> geom;
-
+    art::ServiceHandle<geo::WireReadout> wireReadoutGeom;
     // -- G4 particles
     art::Handle< std::vector<simb::MCParticle> > pHandle;
     std::vector<art::Ptr<simb::MCParticle> > plist;
@@ -456,7 +458,8 @@ namespace blip {
     //======================================================
     std::map<int,double> map_g4trkid_charge;
     for(auto const &chan : simchanlist ) {
-      if( fGeom.View(chan->Channel()) != geo::kW ) continue;
+      if( wireReadoutGeom->Get().View(chan->Channel()) != geo::kW) continue;
+      //if( fGeom.View(chan->Channel()) != geo::kW ) continue;
       //std::map<int,double> map_g4trkid_perWireEnergyDep;
       for(auto const& tdcide : chan->TDCIDEMap() ) {
         for(auto const& ide : tdcide.second) {
@@ -811,12 +814,12 @@ namespace blip {
             bool flag = false;
             // treat edges of wireplane as "dead"
             //if( w1 < 0 || w2 >= (int)fGeom.Nwires(hc.Plane) )
-            if( w1 < 0 || w2 >= (int)fGeom.Nwires(geo::PlaneID(0,hc.TPC,hc.Plane)))
+            if( w1 < 0 || w2 >= (int)wireReadoutGeom->Get().Plane(geo::PlaneID(0,hc.TPC,hc.Plane)).Nwires())
               flag=true;
             //otherwise, use channel filter service
             else {
-              int ch1 = fGeom.PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w1));
-              int ch2 = fGeom.PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w2));
+              int ch1 = wireReadoutGeom->Get().PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w1));
+              int ch2 = wireReadoutGeom->Get().PlaneWireToChannel(geo::WireID(0,hc.TPC,hc.Plane,w2));
               if( chanFilt.Status(ch1)<2 ) flag=true;
               if( chanFilt.Status(ch2)<2 ) flag=true;
             }
@@ -915,12 +918,15 @@ namespace blip {
               // Check that the two central wires intersect
               // *******************************************
               double y, z;
-              int& chanA = hcA.CenterChan;
-              int& chanB = hcB.CenterChan;
-              if( !art::ServiceHandle<geo::Geometry>()
-                ->ChannelsIntersect(chanA,chanB,y,z)) continue;
+	      geo::Point_t intsec_p;
+	      geo::WireID A_wireid{(unsigned int)hcA.Cryostat, (unsigned int)hcA.TPC, (unsigned int)hcA.Plane, (unsigned int)hcA.CenterChan};
+	      geo::WireID B_wireid{(unsigned int)hcB.Cryostat, (unsigned int)hcB.TPC, (unsigned int)hcB.Plane, (unsigned int)hcB.CenterChan};
+
+	      if( !wireReadoutGeom->Get().WireIDsIntersect(A_wireid,B_wireid,intsec_p)) continue;
               // Save intersect location, so we don't have to
               // make another call to the Geometry service later
+	      y = intsec_p.Y();
+	      z = intsec_p.Z();
               TVector3 xloc(0,y,z);
               hcA.IntersectLocations[hcB.ID] = xloc;
               hcB.IntersectLocations[hcA.ID] = xloc;
@@ -1113,7 +1119,7 @@ namespace blip {
       int clustid = hitinfo[i].clustid;
       if( clustid >= 0 ) {
         if( hitclust[clustid].NWires > 1 ) continue;
-        h_chan_nclusts->Fill(fGeom.PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
+        h_chan_nclusts->Fill(wireReadoutGeom->Get().PlaneWireToChannel(geo::WireID(0,hitinfo[i].tpc,hitinfo[i].plane,hitinfo[i].wire)));
       }
       //if( hitinfo[i].ismatch    ) continue;
       //if( hitclust[clustid].NWires > 1 ) continue;
@@ -1180,11 +1186,15 @@ namespace blip {
 
       }
       
-      // METHOD 1
+      // METHOD 1: recombination factor from Mod Box model with a fixed dE/dx (fCalodEdx)
       float recomb  = ModBoxRecomb(fCalodEdx,Efield);
       blip.Energy   = depEl * (1./recomb) * kWion;
       
-      // METHOD 2 (TODO)
+      // METHOD 2: recombination factor using dE/dx from NIST tables (dE/dx = kinetic energy / CSDA)
+      float energy_estar = Q_to_E_ESTAR(depEl);
+      float energy_pstar = Q_to_E_PSTAR(depEl);
+      blip.EnergyESTAR = energy_estar;
+      blip.EnergyPSTAR = energy_pstar;
       //std::cout<<"Calculating ESTAR energy dep...  "<<depEl<<", "<<Efield<<"\n";
       //blips[i].EnergyESTAR = ESTAR->Interpolate(depEl, Efield); 
       
@@ -1225,7 +1235,29 @@ namespace blip {
     else                            return kWion * (Q/kNominalRecombFactor);
   }
 
-  
+  float BlipRecoAlg::Q_to_E_ESTAR(float Q){
+    // == We assume |E| = 0.5 kV/cm. E-field uncertainty's impact is small
+    // == Q in [electrons]
+    // == this_ke in [MeV]
+    float this_ke = fESTAR_p0 + fESTAR_p1 * Q;
+    return this_ke;
+  }
+
+  TSpline3* BlipRecoAlg::CreateSplinePSTAR() {
+    const int n = 88;
+    double x[n] = {5.62012, 7.5217, 9.22644, 10.7891, 12.2458, 14.9232, 17.364, 19.6304, 21.7613, 23.7802, 25.7044, 27.5476, 31.8909, 35.949, 39.788, 43.4516, 46.9648, 50.3587, 53.6611, 56.8741, 63.0742, 69.0801, 74.8993, 80.575, 86.1498, 91.7055, 97.1671, 102.615, 108.013, 113.441, 118.862, 124.317, 129.767, 135.294, 163.462, 193.083, 224.394, 257.526, 292.434, 329.105, 367.443, 407.39, 491.813, 581.821, 677.162, 777.008, 881.301, 989.983, 1102.24, 1218.42, 1338.49, 1461.65, 1588.63, 1719.02, 1852.79, 1989.92, 2724.66, 3537.17, 4419.21, 5369.11, 6382.82, 7452.57, 8577.23, 9758.68, 11242.9, 12272.8, 13874.3, 14979.2, 16110.6, 16688.6, 17866, 19069.3, 19680.1, 20925.4, 24147.3, 27525.1, 31049.9, 34728.2, 38532.3, 42455.5, 46518.8, 50719.2, 55031.4, 59453.7, 83220.8, 109496, 137981, 168490};
+    double y[n] = {0.001, 0.0015, 0.002, 0.0025, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.0125, 0.015, 0.0175, 0.02, 0.0225, 0.025, 0.0275, 0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.3, 3.5, 3.8, 4, 4.2, 4.3, 4.5, 4.7, 4.8, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 12.5, 15, 17.5, 20};
+    TGraph* g = new TGraph(n, x, y);
+    return new TSpline3("splinePSTAR", g);
+  }
+
+  float BlipRecoAlg::Q_to_E_PSTAR(float Q){
+    // == We assume |E| = 0.5 kV/cm. E-field uncertainty's impact is small
+    // == Q in [electrons]
+    // == this_ke in [MeV]
+    float this_ke = spline_PSTAR -> Eval(Q);
+    return this_ke;
+  }
   //###########################################################
   void BlipRecoAlg::PrintConfig() {
   
