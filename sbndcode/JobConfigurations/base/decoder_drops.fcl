@@ -1,0 +1,25 @@
+#=============================================================================
+#
+# Name: decoder_drops.fcl
+#
+# Purpose: Sequence of RootOutput drop commands to drop data products after
+#          decoding DAQ data files.
+#
+# Created: 26-Mar-2025  L. Yates
+#
+# Notes.
+#
+# 1.  Drop DAQ fragments for TPC, PDS, CRTs
+#
+#=============================================================================
+
+BEGIN_PROLOG
+
+decoder_drops: [ "keep *_*_*_*",
+	       	 "drop artdaq::Fragments_*_*TPC_*",  # drop TPC DAQ fragments
+		 "drop artdaq::Fragments_*_*CAENV1730_*",  # drop PMT DAQ fragments (from CAEN 1730 digitizers)
+		 "drop artdaq::Fragments_*_*CAENV1740_*",  # drop X-ARAPUCA DAQ fragments (from CAEN 1740 digitizers)
+		 "drop artdaq::Fragments_*_*BERNCRTV2_*"  # drop CRT DAQ fragments
+		 ]
+
+END_PROLOG
