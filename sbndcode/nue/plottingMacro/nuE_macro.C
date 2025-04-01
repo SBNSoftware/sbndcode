@@ -182,17 +182,17 @@ void shower(std::vector<event_t> dlUboone, std::vector<event_t> dlDune, std::vec
         }
     }
 
-    styleDraw(showerECanvas, showerECurrent_dist, showerECheated_dist, showerEDLDune_dist, showerEDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/showerE_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(showerThetaCanvas, showerThetaCurrent_dist, showerThetaCheated_dist, showerThetaDLDune_dist, showerThetaDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/showerTheta_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(showerETheta2Canvas, showerETheta2Current_dist, showerETheta2Cheated_dist, showerETheta2DLDune_dist, showerETheta2DLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/showerETheta2_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(showerNumCanvas, showerNumCurrent_dist, showerNumCheated_dist, showerNumDLDune_dist, showerNumDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/showerNum_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(showerTrackScoreCanvas, showerTrackScoreCurrent_dist, showerTrackScoreCheated_dist, showerTrackScoreDLDune_dist, showerTrackScoreDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/showerTrackScore_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(showerECanvas, showerECurrent_dist, showerECheated_dist, showerEDLDune_dist, showerEDLUboone_dist, 0, 200, 999, 999, "/nashome/c/coackley/nuEPlots/showerE_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(showerThetaCanvas, showerThetaCurrent_dist, showerThetaCheated_dist, showerThetaDLDune_dist, showerThetaDLUboone_dist, 0, 400, 999, 999, "/nashome/c/coackley/nuEPlots/showerTheta_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(showerETheta2Canvas, showerETheta2Current_dist, showerETheta2Cheated_dist, showerETheta2DLDune_dist, showerETheta2DLUboone_dist, 0, 400, 999, 999, "/nashome/c/coackley/nuEPlots/showerETheta2_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(showerNumCanvas, showerNumCurrent_dist, showerNumCheated_dist, showerNumDLDune_dist, showerNumDLUboone_dist, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/showerNum_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(showerTrackScoreCanvas, showerTrackScoreCurrent_dist, showerTrackScoreCheated_dist, showerTrackScoreDLDune_dist, showerTrackScoreDLUboone_dist, 0, 150, 999, 999, "/nashome/c/coackley/nuEPlots/showerTrackScore_dist.pdf", 0.56, 0.88, 0.70, 0.86);
 
-    percentage(showerECurrent_dist, showerECheated_dist, showerEDLDune_dist, showerEDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/showerE_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    percentage(showerThetaCurrent_dist, showerThetaCheated_dist, showerThetaDLDune_dist, showerThetaDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/showerTheta_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    percentage(showerETheta2Current_dist, showerETheta2Cheated_dist, showerETheta2DLDune_dist, showerETheta2DLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/showerETheta2_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    percentage(showerNumCurrent_dist, showerNumCheated_dist, showerNumDLDune_dist, showerNumDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/showerNumShowers_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    percentage(showerTrackScoreCurrent_dist, showerTrackScoreCheated_dist, showerTrackScoreDLDune_dist, showerTrackScoreDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/showerTrackScore_perc.pdf", 0.56, 0.88, 0.70, 0.86);   
+    percentage(showerECurrent_dist, showerECheated_dist, showerEDLDune_dist, showerEDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 20, 999, 999, "/nashome/c/coackley/nuEPlots/showerE_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(showerThetaCurrent_dist, showerThetaCheated_dist, showerThetaDLDune_dist, showerThetaDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 40, 999, 999, "/nashome/c/coackley/nuEPlots/showerTheta_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(showerETheta2Current_dist, showerETheta2Cheated_dist, showerETheta2DLDune_dist, showerETheta2DLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 40, 999, 999, "/nashome/c/coackley/nuEPlots/showerETheta2_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(showerNumCurrent_dist, showerNumCheated_dist, showerNumDLDune_dist, showerNumDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 90, 999, 999, "/nashome/c/coackley/nuEPlots/showerNumShowers_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(showerTrackScoreCurrent_dist, showerTrackScoreCheated_dist, showerTrackScoreDLDune_dist, showerTrackScoreDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 15, 999, 999, "/nashome/c/coackley/nuEPlots/showerTrackScore_perc.pdf", 0.56, 0.88, 0.70, 0.86);   
 }
 
 void vertices(std::vector<event_t> dlUboone, std::vector<event_t> dlDune, std::vector<event_t> current, std::vector<event_t> cheated){
@@ -277,21 +277,100 @@ void vertices(std::vector<event_t> dlUboone, std::vector<event_t> dlDune, std::v
         }
     }
 
-    styleDraw(deltaXCanvas, deltaXCurrent_dist, deltaXCheated_dist, deltaXDLDune_dist, deltaXDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/deltaX_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(deltaYCanvas, deltaYCurrent_dist, deltaYCheated_dist, deltaYDLDune_dist, deltaYDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/deltaY_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(deltaZCanvas, deltaZCurrent_dist, deltaZCheated_dist, deltaZDLDune_dist, deltaZDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/deltaZ_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(deltaRCanvas, deltaRCurrent_dist, deltaRCheated_dist, deltaRDLDune_dist, deltaRDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/deltaR_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(deltaXCanvas, deltaXCurrent_dist, deltaXCheated_dist, deltaXDLDune_dist, deltaXDLUboone_dist, 0, 500, 999, 999, "/nashome/c/coackley/nuEPlots/deltaX_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(deltaYCanvas, deltaYCurrent_dist, deltaYCheated_dist, deltaYDLDune_dist, deltaYDLUboone_dist, 0, 500, 999, 999, "/nashome/c/coackley/nuEPlots/deltaY_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(deltaZCanvas, deltaZCurrent_dist, deltaZCheated_dist, deltaZDLDune_dist, deltaZDLUboone_dist, 0, 500, 999, 999, "/nashome/c/coackley/nuEPlots/deltaZ_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(deltaRCanvas, deltaRCurrent_dist, deltaRCheated_dist, deltaRDLDune_dist, deltaRDLUboone_dist, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/deltaR_dist.pdf", 0.56, 0.88, 0.70, 0.86);
 
-    percentage(deltaXCurrent_dist, deltaXCheated_dist, deltaXDLDune_dist, deltaXDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/deltaX_perc.pdf", 0.56, 0.88, 0.70, 0.86); 
-    percentage(deltaYCurrent_dist, deltaYCheated_dist, deltaYDLDune_dist, deltaYDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/deltaY_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    percentage(deltaZCurrent_dist, deltaZCheated_dist, deltaZDLDune_dist, deltaZDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/deltaZ_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    percentage(deltaRCurrent_dist, deltaRCheated_dist, deltaRDLDune_dist, deltaRDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/deltaR_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(deltaXCurrent_dist, deltaXCheated_dist, deltaXDLDune_dist, deltaXDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 50, 999, 999, "/nashome/c/coackley/nuEPlots/deltaX_perc.pdf", 0.56, 0.88, 0.70, 0.86); 
+    percentage(deltaYCurrent_dist, deltaYCheated_dist, deltaYDLDune_dist, deltaYDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 50, 999, 999, "/nashome/c/coackley/nuEPlots/deltaY_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(deltaZCurrent_dist, deltaZCheated_dist, deltaZDLDune_dist, deltaZDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 50, 999, 999, "/nashome/c/coackley/nuEPlots/deltaZ_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(deltaRCurrent_dist, deltaRCheated_dist, deltaRDLDune_dist, deltaRDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 90, 999, 999, "/nashome/c/coackley/nuEPlots/deltaR_perc.pdf", 0.56, 0.88, 0.70, 0.86);
 }
 
 void slices(std::vector<event_t> dlUboone, std::vector<event_t> dlDune, std::vector<event_t> current, std::vector<event_t> cheated){
+    
+    TCanvas *numSlicesCanvas = new TCanvas("numSlices_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* numSlicesCurrent_dist = new TH1F("Number of Slices", "Number of Slices", 5, 0, 5);
+    numSlicesCurrent_dist->SetTitle("Number of Slices in an Event;Number of Slices;# of Events");
+    TH1F* numSlicesDLUboone_dist = (TH1F*) numSlicesCurrent_dist->Clone("numSlices");
+    TH1F* numSlicesDLDune_dist = (TH1F*) numSlicesCurrent_dist->Clone("numSlices");
+    TH1F* numSlicesCheated_dist = (TH1F*) numSlicesCurrent_dist->Clone("numSlices"); 
+
+    TCanvas *sliceNumPFPsCanvas = new TCanvas("sliceNumPFPs_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* sliceNumPFPsCurrent_dist = new TH1F("Slice Num PFPs", "Slice Num PFPs", 10, 0, 10);
+    sliceNumPFPsCurrent_dist->SetTitle("Number of PFPs in the Chosen Slice in an Event;Number of PFPs;# of Events");
+    TH1F* sliceNumPFPsDLUboone_dist = (TH1F*) sliceNumPFPsCurrent_dist->Clone("sliceNumPFPs");
+    TH1F* sliceNumPFPsDLDune_dist = (TH1F*) sliceNumPFPsCurrent_dist->Clone("sliceNumPFPs");
+    TH1F* sliceNumPFPsCheated_dist = (TH1F*) sliceNumPFPsCurrent_dist->Clone("sliceNumPFPs"); 
+    
+    TCanvas *sliceCompletenessCanvas = new TCanvas("sliceCompleteness_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* sliceCompletenessCurrent_dist = new TH1F("Slice Completeness", "Slice Completeness", 52, -0.01, 1.03);
+    sliceCompletenessCurrent_dist->SetTitle("Completeness of the Chosen Slice in an Event;Slice Completeness;# of Events");
+    TH1F* sliceCompletenessDLUboone_dist = (TH1F*) sliceCompletenessCurrent_dist->Clone("sliceCompleteness");
+    TH1F* sliceCompletenessDLDune_dist = (TH1F*) sliceCompletenessCurrent_dist->Clone("sliceCompleteness");
+    TH1F* sliceCompletenessCheated_dist = (TH1F*) sliceCompletenessCurrent_dist->Clone("sliceCompleteness"); 
+        
+    for(UInt_t j = 0; j < current.size(); j++){
+        numSlicesCurrent_dist->Fill(current.at(j).nSlices);
+        if(!isnan(current.at(j).sliceNumPFPs)) sliceNumPFPsCurrent_dist->Fill(current.at(j).sliceNumPFPs);
+        if(current.at(j).sliceCompleteness) sliceCompletenessCurrent_dist->Fill(current.at(j).sliceCompleteness);
+    }
+ 
+    for(UInt_t j = 0; j < dlDune.size(); j++){ 
+        numSlicesDLDune_dist->Fill(dlDune.at(j).nSlices);
+        if(!isnan(dlDune.at(j).sliceNumPFPs)) sliceNumPFPsDLDune_dist->Fill(dlDune.at(j).sliceNumPFPs);
+        if(dlDune.at(j).sliceCompleteness) sliceCompletenessDLDune_dist->Fill(dlDune.at(j).sliceCompleteness);
+    }
+
+    for(UInt_t j = 0; j < dlUboone.size(); j++){
+        numSlicesDLUboone_dist->Fill(dlUboone.at(j).nSlices);
+        if(!isnan(dlUboone.at(j).sliceNumPFPs)) sliceNumPFPsDLUboone_dist->Fill(dlUboone.at(j).sliceNumPFPs);
+        if(dlUboone.at(j).sliceCompleteness) sliceCompletenessDLUboone_dist->Fill(dlUboone.at(j).sliceCompleteness);
+    }
+
+    for(UInt_t j = 0; j < cheated.size(); j++){
+        numSlicesCheated_dist->Fill(cheated.at(j).nSlices);
+        if(!isnan(cheated.at(j).sliceNumPFPs)) sliceNumPFPsCheated_dist->Fill(cheated.at(j).sliceNumPFPs);
+        if(cheated.at(j).sliceCompleteness) sliceCompletenessCheated_dist->Fill(cheated.at(j).sliceCompleteness);
+    }
+
+    styleDraw(numSlicesCanvas, numSlicesCurrent_dist, numSlicesCheated_dist, numSlicesDLDune_dist, numSlicesDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/numSlices_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(sliceNumPFPsCanvas, sliceNumPFPsCurrent_dist, sliceNumPFPsCheated_dist, sliceNumPFPsDLDune_dist, sliceNumPFPsDLUboone_dist, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/sliceNumPFPs_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(sliceCompletenessCanvas, sliceCompletenessCurrent_dist, sliceCompletenessCheated_dist, sliceCompletenessDLDune_dist, sliceCompletenessDLUboone_dist, 0, 900, 0.8, 1.01, "/nashome/c/coackley/nuEPlots/sliceCompleteness_dist.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+
+    percentage(numSlicesCurrent_dist, numSlicesCheated_dist, numSlicesDLDune_dist, numSlicesDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/numSlices_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(sliceNumPFPsCurrent_dist, sliceNumPFPsCheated_dist, sliceNumPFPsDLDune_dist, sliceNumPFPsDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 90, 999, 999, "/nashome/c/coackley/nuEPlots/sliceNumPFPs_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(sliceCompletenessCurrent_dist, sliceCompletenessCheated_dist, sliceCompletenessDLDune_dist, sliceCompletenessDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 90, 0.8, 1.01, "/nashome/c/coackley/nuEPlots/sliceCompleteness_perc.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
 }
 
 void pfps(std::vector<event_t> dlUboone, std::vector<event_t> dlDune, std::vector<event_t> current, std::vector<event_t> cheated){
+
+    TCanvas *numPFPsCanvas = new TCanvas("numPFPs_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* numPFPsCurrent_dist = new TH1F("Num PFPs", "Num PFPs", 10, 0, 10);
+    numPFPsCurrent_dist->SetTitle("Number of PFPs in an Event;Number of PFPs;# of Events");
+    TH1F* numPFPsDLUboone_dist = (TH1F*) numPFPsCurrent_dist->Clone("numPFPs");
+    TH1F* numPFPsDLDune_dist = (TH1F*) numPFPsCurrent_dist->Clone("numPFPs");
+    TH1F* numPFPsCheated_dist = (TH1F*) numPFPsCurrent_dist->Clone("numPFPs"); 
+
+    for(UInt_t j = 0; j < current.size(); j++){
+        numPFPsCurrent_dist->Fill(current.at(j).nPFPs);
+    }
+
+    for(UInt_t j = 0; j < dlDune.size(); j++){
+        numPFPsDLDune_dist->Fill(dlDune.at(j).nPFPs);
+    }
+
+    for(UInt_t j = 0; j < dlUboone.size(); j++){
+        numPFPsDLUboone_dist->Fill(dlUboone.at(j).nPFPs);
+    }
+
+    for(UInt_t j = 0; j < cheated.size(); j++){
+        numPFPsCheated_dist->Fill(cheated.at(j).nPFPs);
+    }
+
+    styleDraw(numPFPsCanvas, numPFPsCurrent_dist, numPFPsCheated_dist, numPFPsDLDune_dist, numPFPsDLUboone_dist, 0, 900, 0, 8, "/nashome/c/coackley/nuEPlots/numPFPs_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(numPFPsCurrent_dist, numPFPsCheated_dist, numPFPsDLDune_dist, numPFPsDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 90, 0, 8, "/nashome/c/coackley/nuEPlots/numPFPs_perc.pdf", 0.56, 0.88, 0.70, 0.86);
 }
 
 void nuE_macro(){
@@ -506,4 +585,6 @@ void nuE_macro(){
 
     shower(dlUbooneEvents, dlDuneEvents, currentEvents, cheatedEvents);
     vertices(dlUbooneEvents, dlDuneEvents, currentEvents, cheatedEvents);
+    slices(dlUbooneEvents, dlDuneEvents, currentEvents, cheatedEvents);
+    pfps(dlUbooneEvents, dlDuneEvents, currentEvents, cheatedEvents);
 }
