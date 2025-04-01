@@ -28,6 +28,7 @@
 #include "canvas/Persistency/Common/Assns.h"
 #include "larcore/Geometry/Geometry.h"
 #include "larcorealg/Geometry/GeometryCore.h"
+#include "larcore/Geometry/WireReadout.h"
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "lardataobj/RecoBase/Wire.h"
 
@@ -111,9 +112,9 @@ TrackWiggles::TrackWiggles(fhicl::ParameterSet const& p):
     geo::PlaneID TempPlane_1(Cryostat, TPC, Plane_1);
     geo::PlaneID TempPlane_2(Cryostat, TPC, Plane_2);
     geo::Point_t TempPoint(0.0, y, z);
-    std::cout << "Closest wire location in TPC 1 plane 0 "<< fGeom.NearestChannel(TempPoint, TempPlane_0) << std::endl;
-    std::cout << "Closest wire location in TPC 1 plane 1 "<< fGeom.NearestChannel(TempPoint, TempPlane_1) << std::endl;
-    std::cout << "Closest wire location in TPC 1 plane 2 "<< fGeom.NearestChannel(TempPoint, TempPlane_2) << std::endl;
+    std::cout << "Closest wire location in TPC 1 plane 0 "<< art::ServiceHandle<geo::WireReadout>()->Get().NearestChannel(TempPoint, TempPlane_0) << std::endl;
+    std::cout << "Closest wire location in TPC 1 plane 1 "<< art::ServiceHandle<geo::WireReadout>()->Get().NearestChannel(TempPoint, TempPlane_1) << std::endl;
+    std::cout << "Closest wire location in TPC 1 plane 2 "<< art::ServiceHandle<geo::WireReadout>()->Get().NearestChannel(TempPoint, TempPlane_2) << std::endl;
 
     TPC=0;
     y=195;
@@ -123,9 +124,9 @@ TrackWiggles::TrackWiggles(fhicl::ParameterSet const& p):
     geo::PlaneID TPC0_TempPlane_2(Cryostat, TPC, Plane_2);
     geo::Point_t TempPoint_2(0.0, y, z);
     std::cout << "What about the point in the opposite most corner" << std::endl;
-    std::cout << "Closest wire location in TPC 0 plane 0 "<< fGeom.NearestChannel(TempPoint_2, TPC0_TempPlane_0) << std::endl;
-    std::cout << "Closest wire location in TPC 0 plane 1 "<< fGeom.NearestChannel(TempPoint_2, TPC0_TempPlane_1) << std::endl;
-    std::cout << "Closest wire location in TPC 0 plane 2 "<< fGeom.NearestChannel(TempPoint_2, TPC0_TempPlane_2) << std::endl;
+    std::cout << "Closest wire location in TPC 0 plane 0 "<< art::ServiceHandle<geo::WireReadout>()->Get().NearestChannel(TempPoint_2, TPC0_TempPlane_0) << std::endl;
+    std::cout << "Closest wire location in TPC 0 plane 1 "<< art::ServiceHandle<geo::WireReadout>()->Get().NearestChannel(TempPoint_2, TPC0_TempPlane_1) << std::endl;
+    std::cout << "Closest wire location in TPC 0 plane 2 "<< art::ServiceHandle<geo::WireReadout>()->Get().NearestChannel(TempPoint_2, TPC0_TempPlane_2) << std::endl;
     sleep(20);
   }
 
@@ -133,20 +134,26 @@ TrackWiggles::TrackWiggles(fhicl::ParameterSet const& p):
 std::vector<int> TrackWiggles::GetIntersectingChannels(int ChID)
 {
   //Build vectors of intersecting channels
-    double y=0, z=0;
-    art::ServiceHandle<geo::Geometry> geometry;
+    art::ServiceHandle<geo::WireReadout> geometry;
     std::vector<int> TempIntersections;
     int Start=0;
     int TotalWires=11264; //Only check wires from the same TPC
-    if(ChID>=5632) Start=5632;
+    int TPCID=0;
+    if(ChID>=5632){
+      Start=5632;
+      TPCID=1; //Should make the geometry service do this for me
+    }
     else TotalWires=5632; 
+    geo::Point_t intsec_p;
     for(int j=Start; j<TotalWires; j++) 
     {
-      if( (geometry->View(j) == geometry->View(ChID)) ) 
+      if( (geometry->Get().View(j) == geometry->Get().View(ChID)) ) 
       {
         continue;
       }
-      if( geometry->ChannelsIntersect(ChID,j,y,z) )
+      geo::WireID WireA(0, TPCID, geometry->Get().View(j), j);
+      geo::WireID WireB(0, TPCID, geometry->Get().View(ChID), ChID);
+      if( geometry->Get().WireIDsIntersect( WireA,WireB,intsec_p) )
       {
         TempIntersections.push_back(j);
       } 

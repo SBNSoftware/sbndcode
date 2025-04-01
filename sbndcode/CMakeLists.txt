@@ -16,13 +16,14 @@ add_subdirectory(OpDetSim)
 add_subdirectory(OpDetReco)
 add_subdirectory(OpDetAnalyzer)
 add_subdirectory(OpT0Finder)
-add_subdirectory(OpPathTool)
 #add_subdirectory(PDS)
 #add_subdirectory(CosmicId)
 add_subdirectory(ShowerAna)
 add_subdirectory(Commissioning)
 add_subdirectory(Trigger)
 add_subdirectory(Timing)
+add_subdirectory(PTBAna)
+add_subdirectory(BlipRecoSBND)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
@@ -47,6 +48,3 @@ add_subdirectory(ChannelMaps)
 add_subdirectory(SBNDCVN)
 
 add_subdirectory(TPCPMTBarycenterMatching)
-
-add_subdirectory(BlipRecoSBND)
-add_subdirectory(LightPropagationCorrection)
