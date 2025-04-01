@@ -510,11 +510,8 @@ class BlipAnaTreeDataStruct
     evtTree->Branch("blip_size",blip_size,"blip_size[nblips]/F");
     evtTree->Branch("blip_charge",blip_charge,"blip_charge[nblips]/I");
     evtTree->Branch("blip_energy",blip_energy,"blip_energy[nblips]/F");
-<<<<<<< HEAD
-=======
     evtTree->Branch("blip_energy_estar",blip_energy_estar,"blip_energy_estar[nblips]/F");
     evtTree->Branch("blip_energy_pstar",blip_energy_pstar,"blip_energy_pstar[nblips]/F");
->>>>>>> feature/sungbino_update_JJM_bliip_repo_for_v10
     //evtTree->Branch("blip_yzcorr",blip_yzcorr,"blip_yzcorr[nblips]/F");
     //evtTree->Branch("blip_energyTrue",blip_energyTrue,"blip_energyTrue[nblips]/F");
     evtTree->Branch("blip_incylinder",blip_incylinder,"blip_incylinder[nblips]/O");
