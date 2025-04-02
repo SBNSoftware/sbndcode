@@ -1,0 +1,29 @@
+#include "g4_intime_no_shower_rollup_sbnd.fcl"
+
+# Add all these new modules to the simulate path                                                                                                                                 
+physics.simulate: [ rns
+                  ### Complete intime drift simulation and generic CRT                                                                                                           
+                  , simdriftintime
+                  , genericcrtintime
+                  ### Do full Geant4 simulation for the outtimes                                                                                                                 
+                  , loader
+                  , larg4outtime
+                  , ionandscintouttime
+                  , pdfastsimouttime
+                  , simdriftouttime
+                  , genericcrtouttime
+                  ### Simulate the light outside the AV                                                                                                                          
+                  # , ionandscintoutintime                                                                                                                                       
+                  # , pdfastsimoutintime                                                                                                                                         
+                  # , ionandscintoutouttime                                                                                                                                      
+                  # , pdfastsimoutouttime                                                                                                                                        
+                  ### Merge the intime and outtime paths                                                                                                                         
+                  , largeant
+                  , ionandscint
+                  , simdrift
+                  , pdfastsim
+                  # , pdfastsimout                                                                                                                                               
+                  , genericcrt
+                  ### Don't truth-level reconstruction                                                                                                                              
+                  #, mcreco
+                  ]

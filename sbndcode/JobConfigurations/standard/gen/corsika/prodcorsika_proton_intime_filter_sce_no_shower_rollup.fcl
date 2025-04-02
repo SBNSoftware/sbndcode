@@ -1,3 +1,0 @@
-#include "prodcorsika_proton_intime_filter_sce.fcl"
-
-services.ParticleListAction.keepEMShowerDaughters: true

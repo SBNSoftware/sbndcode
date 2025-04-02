@@ -30,9 +30,11 @@ BEGIN_PROLOG
 
 sbnd_spacecharge: @local::standard_spacecharge
 
-#have SpaceCharge off by default
-sbnd_spacecharge.EnableSimEfield : false
-sbnd_spacecharge.EnableSimEfield : false
+sbnd_spacecharge.EnableCalSpatialSCE: true
+sbnd_spacecharge.EnableSimSpatialSCE: true
+sbnd_spacecharge.EnableSimEfieldSCE: true
+sbnd_spacecharge.EnableCalEfieldSCE: true
+sbnd_spacecharge.is2DdriftSimHack: false
 sbnd_spacecharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_voxelTH3.root"
 sbnd_spacecharge.RepresentationType: "Voxelized_TH3"
 sbnd_spacecharge.service_provider: SpaceChargeServiceSBND

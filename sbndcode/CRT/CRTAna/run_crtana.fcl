@@ -7,9 +7,11 @@ services:
 {
   TFileService: { fileName: "crtana_sbnd.root" }
   @table::sbnd_basic_services
-  ParticleInventoryService: @local::sbnd_particleinventoryservice
-  BackTrackerService:       @local::sbnd_backtrackerservice
-  DetectorClocksService:    @local::sbnd_detectorclocks
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  BackTrackerService:        @local::sbnd_backtrackerservice
+  DetectorClocksService:     @local::sbnd_detectorclocks
+  LArPropertiesService:      @local::sbnd_properties
+  DetectorPropertiesService: @local::sbnd_detproperties
 }
 
 source:
