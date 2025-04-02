@@ -41,6 +41,8 @@ namespace blip {
         auto const& tpcid = geo::TPCID(cryoid,tpc);
 
         // Loop planes in TPC 'tpc'
+	auto const& plane0id = geo::PlaneID(cstat,tpc,0);
+	auto const& plane0geo = wireReadoutGeom->Get().Plane(plane0id);
         for(size_t pl=0; pl<wireReadoutGeom->Get().Nplanes(tpcid); pl++){
           auto const& planeid = geo::PlaneID(cstat,tpc,pl);
           auto const& planegeo = wireReadoutGeom->Get().Plane(planeid);
@@ -62,16 +64,15 @@ namespace blip {
             // (as of lardataalg v9_15_01)
             auto const& cryostat  = fGeom.Cryostat(geo::CryostatID(cstat));
             auto const& tpcgeom   = cryostat.TPC(tpc);
-            auto const xyz        = planegeo.GetCenter();
+            auto const xyz        = plane0geo.GetCenter();
             const double dir((tpcgeom.DriftSign() == geo::DriftSign::Negative) ? +1.0 : -1.0);
-            float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
-            
+	    float x_ticks_coefficient = kDriftVelocity*kTickPeriod;
             float goofy_offset = -xyz.X() / (dir * x_ticks_coefficient);
-            std::cout<<"  After geometric correction: "<<offset - goofy_offset<<"\n";
+	    std::cout<<"  After geometric correction: "<<offset - goofy_offset<<"\n";
 
             kXTicksOffsets[cstat][tpc][pl] = offset - goofy_offset;
-          
-          } else {
+
+	  } else {
           
             // for the case of 2D wirecell workflow, the plane-to-plane
             // offsets are corrected upstream at the waveform level, so we 
@@ -85,8 +86,6 @@ namespace blip {
           
           // additional ad-hoc corrections supplied by user
           kXTicksOffsets[cstat][tpc][pl] += fTimeOffset[pl];
-            
-
           
         }
       }
@@ -163,19 +162,19 @@ namespace blip {
    
       for(int i=0; i<kNplanes; i++) {
         if( i == fCaloPlane ) continue;
-        h_clust_overlap[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_overlap",iTPC,i),   Form("TPC %i, Plane %i clusters;Overlap fraction",iTPC,i),101,0,1.01);
-        h_clust_dt[iTPC][i]         = hdir.make<TH1D>(Form("t%i_p%i_clust_dt",iTPC,i),        Form("TPC %i, Plane %i clusters;dT [ticks]",iTPC,i),200,-10,10);
-        h_clust_dtfrac[iTPC][i]     = hdir.make<TH1D>(Form("t%i_p%i_clust_dtfrac",iTPC,i),    Form("TPC %i, Plane %i clusters;Charge-weighted mean dT/RMS",iTPC,i),150,-1.5,1.5);
+        h_clust_overlap[iTPC][i]           = hdir.make<TH1D>(Form("t%i_p%i_clust_overlap",iTPC,i),   Form("TPC %i, Plane %i clusters;Overlap fraction",iTPC,i),101,0,1.01);
+	h_clust_dt[iTPC][i]                = hdir.make<TH1D>(Form("t%i_p%i_clust_dt",iTPC,i),        Form("TPC %i, Plane %i clusters;dT [ticks]",iTPC,i),200,-10,10);
+        h_clust_dtfrac[iTPC][i]            = hdir.make<TH1D>(Form("t%i_p%i_clust_dtfrac",iTPC,i),    Form("TPC %i, Plane %i clusters;Charge-weighted mean dT/RMS",iTPC,i),150,-1.5,1.5);
         
         h_clust_q[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_charge",iTPC,i),  
-          Form("Pre-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3} e-]",iTPC,fCaloPlane,i),
-          qbins,0,qmax,qbins,0,qmax);
-          h_clust_q[iTPC][i]->SetOption("colz");
+						 Form("Pre-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3} e-]",iTPC,fCaloPlane,i),
+						 qbins,0,qmax,qbins,0,qmax);
+	h_clust_q[iTPC][i]->SetOption("colz");
         
         h_clust_q_cut[iTPC][i]     = hdir.make<TH2D>(Form("t%i_p%i_clust_charge_cut",iTPC,i),  
-          Form("Post-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3}]",iTPC,fCaloPlane,i),
-          qbins,0,qmax,qbins,0,qmax);
-          h_clust_q_cut[iTPC][i]->SetOption("colz");
+						     Form("Post-cut, TPC %i;Plane %i cluster charge [#times10^{3} e-];Plane %i cluster charge [#times10^{3}]",iTPC,fCaloPlane,i),
+						     qbins,0,qmax,qbins,0,qmax);
+	h_clust_q_cut[iTPC][i]->SetOption("colz");
       
         h_clust_score[iTPC][i]    = hdir.make<TH1D>(Form("t%i_p%i_clust_matchscore",iTPC,i),   Form("TPC %i, Plane %i clusters;Match score",iTPC,i),101,0,1.01);
        
@@ -241,7 +240,7 @@ namespace blip {
     fHitProducer        = pset.get<std::string>   ("HitProducer",       "gaushit");
     fTrkProducer        = pset.get<std::string>   ("TrkProducer",       "pandora");
     fGeantProducer      = pset.get<std::string>   ("GeantProducer",     "largeant");
-    fSimDepProducer     = pset.get<std::string>   ("SimEDepProducer",   "ionization");
+    fSimDepProducer     = pset.get<std::string>   ("SimEDepProducer",   "ionandscint");
     fSimChanProducer    = pset.get<std::string>   ("SimChanProducer",   "driftWC:simpleSC");
     fSimGainFactor      = pset.get<float>         ("SimGainFactor",     -9);
     fTrueBlipMergeDist  = pset.get<float>         ("TrueBlipMergeDist", 0.3);
@@ -321,7 +320,7 @@ namespace blip {
     std::cout<<"\n"
     <<"=========== BlipRecoAlg =========================\n"
     <<"Event "<<evt.id().event()<<" / run "<<evt.id().run()<<"\n";
-  
+
     //=======================================
     // Reset things
     //=======================================
@@ -361,9 +360,10 @@ namespace blip {
     // -- SimEnergyDeposits
     art::Handle<std::vector<sim::SimEnergyDeposit> > sedHandle;
     std::vector<art::Ptr<sim::SimEnergyDeposit> > sedlist;
-    if (evt.getByLabel(fSimDepProducer,sedHandle)) 
+    if (evt.getByLabel(fSimDepProducer,sedHandle)){
       art::fill_ptr_vector(sedlist, sedHandle);
-    
+    }
+
     // -- SimChannels (usually dropped in reco)
     art::Handle<std::vector<sim::SimChannel> > simchanHandle;
     std::vector<art::Ptr<sim::SimChannel> > simchanlist;
@@ -900,6 +900,7 @@ namespace blip {
           std::map<int, std::set<int>> cands;
          
           // map of cluster ID <--> match metrics
+
           std::map<int, float> map_clust_dtfrac;
           std::map<int, float> map_clust_dt;
           std::map<int, float> map_clust_overlap;
@@ -921,24 +922,23 @@ namespace blip {
               // *******************************************
               double y, z;
 	      geo::Point_t intsec_p;
-	      geo::WireID A_wireid{(unsigned int)hcA.Cryostat, (unsigned int)hcA.TPC, (unsigned int)hcA.Plane, (unsigned int)hcA.CenterChan};
-	      geo::WireID B_wireid{(unsigned int)hcB.Cryostat, (unsigned int)hcB.TPC, (unsigned int)hcB.Plane, (unsigned int)hcB.CenterChan};
+	      std::vector<geo::WireID> A_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcA.CenterChan);
+	      std::vector<geo::WireID> B_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcB.CenterChan);
 
-	      if( !wireReadoutGeom->Get().WireIDsIntersect(A_wireid,B_wireid,intsec_p)) continue;
-              // Save intersect location, so we don't have to
+	      if( !wireReadoutGeom->Get().WireIDsIntersect(A_wireids.at(0),B_wireids.at(0),intsec_p)) continue;
+	      // Save intersect location, so we don't have to
               // make another call to the Geometry service later
 	      y = intsec_p.Y();
 	      z = intsec_p.Z();
               TVector3 xloc(0,y,z);
               hcA.IntersectLocations[hcB.ID] = xloc;
               hcB.IntersectLocations[hcA.ID] = xloc;
-              
 
               // ***********************************
               // Calculate the cluster overlap
               // ***********************************
               float overlapFrac = BlipUtils::CalcHitClustsOverlap(hcA,hcB);
-              
+
               // *******************************************
               // Calculate time difference for start/end, and
               // check that Q-weighted means are comparable
@@ -990,7 +990,7 @@ namespace blip {
               // We made it through the cuts -- the match is good!
               // **************************************************
               map_clust_dt[j]       = dt;
-              map_clust_dtfrac[j]   = dtfrac;
+              map_clust_dtfrac[j]  = dtfrac;
               map_clust_overlap[j]  = overlapFrac;
               map_clust_score[j]    = score;
               cands[planeB]         .insert(j);
@@ -1158,7 +1158,7 @@ namespace blip {
       // apply this correction can do more harm than good! Note lifetime is in
       // units of 'ms', not microseconds, hence the 1E-3 conversion factor.
       if( fLifetimeCorr && blip.Time>0 ) depEl *= exp( 1e-3*blip.Time/detProp.ElectronLifetime());
-      
+
       // --- SCE corrections ---
       geo::Point_t point( blip.Position.X(),blip.Position.Y(),blip.Position.Z() );
       if( fSCECorr ) {
