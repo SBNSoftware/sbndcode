@@ -99,6 +99,7 @@ public:
     void trueNeutrino(const art::Event &e);
     void slices(const art::Event &e);
     void PFPs(const art::Event &e);
+    void MCParticles(const art::Event &e);
     void hits(const art::Event &e);
 
 private:
@@ -119,7 +120,11 @@ private:
     double trueCCNC;                             // MCTruth CC or NC, CC = 0, NC = 1 
     double trueNeutrinoType;                     // MCTruth neutrino flavour (PDG code)
     double trueChargedLepton;                    // MCTruth charged lepton flavour (PDG code)
-  
+    
+    double trueEnergy;
+    double trueAngle;
+    double trueETheta2;
+
     // Reco variables
     double recoNeutrinoVX;                    // Reco vertex x coord
     double recoNeutrinoVY;                    // Reco vertex y coord
@@ -165,6 +170,9 @@ private:
     std::vector<double> showerTrackScore_tree = std::vector<double>(0);
     std::vector<double> numShowers_tree = std::vector<double>(0);
     std::vector<double> showerETheta2_tree = std::vector<double>(0);
+    std::vector<double> recoilElectronTrueAngle_tree = std::vector<double>(0);
+    std::vector<double> recoilElectronTrueEnergy_tree = std::vector<double>(0);
+    std::vector<double> recoilElectronTrueETheta2_tree = std::vector<double>(0);
 
     // Vectors for the NuEHit Tree
     std::vector<double> event_hitTree = std::vector<double>(0);
@@ -183,6 +191,7 @@ private:
     const std::string crumbsLabel;
     const std::string trackLabel;
     const std::string showerLabel;
+    const std::string MCTruthLabel;
 
     // Output file
     TFile *outputFile = TFile::Open("NuEAnalyserOutput.root","RECREATE");
@@ -198,7 +207,8 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   hitLabel(p.get<std::string>("HitLabel")),
   crumbsLabel(p.get<std::string>("CRUMBSLabel")),
   trackLabel(p.get<std::string>("TrackLabel")),
-  showerLabel(p.get<std::string>("ShowerLabel"))
+  showerLabel(p.get<std::string>("ShowerLabel")),
+  MCTruthLabel(p.get<std::string>("MCTruthLabel"))
 {
 }
 
@@ -222,7 +232,8 @@ void sbnd::NuE::analyze(art::Event const& e){
   slices(e);
   PFPs(e);
   showerEnergy(e);
-  
+  MCParticles(e);
+
   if(!std::isnan(recoNeutrinoVX)){
     // Event is fully reconstructed
     fullyReco_tree.push_back(1);
@@ -235,7 +246,7 @@ void sbnd::NuE::analyze(art::Event const& e){
   event_tree.push_back(eventID);
   run_tree.push_back(runID);
   subrun_tree.push_back(subRunID);
-  DLCurrent_tree.push_back(3);   // 0 = uboone dl, 1 = dune dl, 2 = current, 3 = cheated
+  DLCurrent_tree.push_back(2);   // 0 = uboone dl, 1 = dune dl, 2 = current, 3 = cheated
 }
 
 double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
@@ -494,7 +505,7 @@ void sbnd::NuE::trueNeutrino(const art::Event &e){
         trueChargedLepton = std::get<2>(v[0]).PdgCode();
     
         for(long unsigned int trueNeut = 0; trueNeut < v.size(); trueNeut++){
-            std::cout << "True Neutrino " << trueNeut + 1 << ": (" << std::get<1>(v[trueNeut]).Vx() << ", " << std::get<1>(v[trueNeut]).Vy() << ", " << std::get<1>(v[trueNeut]).Vz() << "), CCNC: " << std::get<0>(v[trueNeut]).CCNC() << ", Neutrino Type: " << std::get<1>(v[trueNeut]).PdgCode() << ", Charged Lepton: " << std::get<2>(v[trueNeut]).PdgCode() << std::endl;
+            std::cout << "True Neutrino " << trueNeut + 1 << ": Vertex = (" << std::get<1>(v[trueNeut]).Vx() << ", " << std::get<1>(v[trueNeut]).Vy() << ", " << std::get<1>(v[trueNeut]).Vz() << "), CCNC = " << std::get<0>(v[trueNeut]).CCNC() << ", Neutrino Type = " << std::get<1>(v[trueNeut]).PdgCode() << ", Charged Lepton = " << std::get<2>(v[trueNeut]).PdgCode() << ", Track ID = " << std::get<1>(v[trueNeut]).TrackId() << ", Energy = " << std::get<1>(v[trueNeut]).E() << std::endl;
         }
     } else{
         trueNeutrinoVX = std::nan("");
@@ -625,6 +636,53 @@ void sbnd::NuE::PFPs(const art::Event &e){
     numPFPs_tree.push_back(numPFPs);
 }
 
+void sbnd::NuE::MCParticles(const art::Event &e){
+    art::Handle<std::vector<simb::MCParticle>> particleHandle;
+    std::vector<art::Ptr<simb::MCParticle>> particleVec;
+    if(e.getByLabel(MCTruthLabel, particleHandle))
+        art::fill_ptr_vector(particleVec, particleHandle);
+
+    std::vector<std::tuple<art::Ptr<simb::MCParticle>, double, double, double>> v;
+
+    double numTruthParticles = 0;
+
+    if(!particleVec.empty()){
+        for(auto &particle : particleVec){
+            if(particle->PdgCode() == 11 && particle->Mother() == 0){
+                std::cout << "This is the recoil electron" << std::endl;
+                std::cout << "Particle " << numTruthParticles << ": PDG = " << particle->PdgCode() << ", Track ID = " << particle->TrackId() << ", Mother Track ID = " << particle->Mother() << ", Vertex = (" << particle->Vx() << ", " << particle->Vy() << ", " << particle->Vz() << "), Momentum = (" << particle->Px() << ", " << particle->Py() << ", " << particle->Pz() << "), Energy: " << particle->E() << std::endl;  
+            
+                double P_mag = std::sqrt((particle->Px() * particle->Px()) + (particle->Py() * particle->Py()) + (particle->Pz() * particle->Pz()));
+                double energy = particle->E() * 1000; // Converts from GeV to MeV
+                double theta = std::acos(particle->Pz() / P_mag);
+                double true_ETheta2 = (energy * (theta * theta));
+                std::cout << "True Recoil Electron: Energy = " << energy << ", Theta: " << theta << " radians/" << theta * TMath::RadToDeg() << " degrees, ETheta^2 = " << true_ETheta2 << std::endl;  
+                std::tuple<art::Ptr<simb::MCParticle>, double, double, double> tuple = std::make_tuple(particle, energy, theta, ETheta2);
+                v.push_back(tuple);
+            }
+        }
+    }
+
+    trueEnergy = 0;
+    trueAngle = 0;
+    trueETheta2 = 0;
+
+    std::cout << "Number of true recoil electrons: " << v.size() << std::endl;
+    if(v.size() != 0){
+        trueEnergy = std::get<1>(v[0]);
+        trueAngle = std::get<2>(v[0]);
+        trueETheta2 = std::get<3>(v[0]);
+    } else{
+        trueEnergy = std::nan("");
+        trueAngle = std::nan("");
+        trueETheta2 = std::nan("");
+    }
+
+    recoilElectronTrueEnergy_tree.push_back(trueEnergy);
+    recoilElectronTrueAngle_tree.push_back(trueAngle);
+    recoilElectronTrueETheta2_tree.push_back(trueETheta2);
+}
+
 void sbnd::NuE::hits(const art::Event &e){
 
     detinfo::DetectorPropertiesData propD = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataFor(e);
@@ -708,6 +766,9 @@ void sbnd::NuE::beginJob()
     NuETree->Branch("showerTrackScore_tree", &showerTrackScore_tree);
     NuETree->Branch("numShowers_tree", &numShowers_tree);
     NuETree->Branch("showerETheta2_tree", &showerETheta2_tree);
+    NuETree->Branch("recoilElectronTrueAngle_tree", &recoilElectronTrueAngle_tree);
+    NuETree->Branch("recoilElectronTrueEnergy_tree", &recoilElectronTrueEnergy_tree);
+    NuETree->Branch("recoilElectronTrueETheta2_tree", &recoilElectronTrueETheta2_tree);
 
     NuEHitTree->Branch("event_hitTree", &event_hitTree);
     NuEHitTree->Branch("run_hitTree", &run_hitTree);
