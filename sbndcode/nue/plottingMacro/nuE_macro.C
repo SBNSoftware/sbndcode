@@ -41,6 +41,10 @@ typedef struct{
 	double showerTrackScore;
 	double nShowers;
     double showerETheta2;
+    double trueRecoilAngle;
+    double trueRecoilEnergy;
+    double trueRecoilETheta2;
+
 } event_t;
 
 void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax){
@@ -98,6 +102,91 @@ void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double s
     uboonePerc->GetYaxis()->SetTitle("Percentage of Events (%)");
 
     styleDraw(percentageCanvas, currentPerc, cheatedPerc, dunePerc, uboonePerc, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax);
+}
+
+void recoilElectron(std::vector<event_t> dlUboone, std::vector<event_t> dlDune, std::vector<event_t> current, std::vector<event_t> cheated){
+
+    TCanvas *deltaECanvas = new TCanvas("deltaE_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* deltaECurrent_dist = new TH1F("Shower Energy", "Energy of Shower", 50, -100, 300);
+    deltaECurrent_dist->SetTitle("Recoil Electron Shower True Energy - Reconstructed Energy in an Event;Energy_{true} - Energy_{reco} (MeV);# of Events");
+    TH1F* deltaEDLUboone_dist = (TH1F*) deltaECurrent_dist->Clone("Delta Energy");
+    TH1F* deltaEDLDune_dist = (TH1F*) deltaECurrent_dist->Clone("Delta Energy");
+    TH1F* deltaECheated_dist = (TH1F*) deltaECurrent_dist->Clone("Delta Energy");
+
+    TCanvas *deltaThetaCanvas = new TCanvas("deltaTheta_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* deltaThetaCurrent_dist = new TH1F("Shower Theta", "Theta of Shower", 40, -10, 10);
+    deltaThetaCurrent_dist->SetTitle("Recoil Electron Shower True - Reconstructed Recoil Angle in an Event;#theta_{true} - #theta_{reco} (degrees);# of Events");
+    TH1F* deltaThetaDLUboone_dist = (TH1F*) deltaThetaCurrent_dist->Clone("Delta Theta");
+    TH1F* deltaThetaDLDune_dist = (TH1F*) deltaThetaCurrent_dist->Clone("Delta Theta");
+    TH1F* deltaThetaCheated_dist = (TH1F*) deltaThetaCurrent_dist->Clone("Delta Theta");
+
+    TCanvas *EtrueThetarecoCanvas = new TCanvas("EtrueThetareco_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* EtrueThetarecoCurrent_dist = new TH1F("Shower EtrueThetareco", "EtrueThetareco of Shower", 40, 0, 20.44);
+    EtrueThetarecoCurrent_dist->SetTitle("Recoil Electron Shower E_{true}#theta^{2}_{reco} in an Event;E_{true}#theta^{2}_{reco} (MeV);# of Events");
+    TH1F* EtrueThetarecoDLUboone_dist = (TH1F*) EtrueThetarecoCurrent_dist->Clone("EtrueThetareco");
+    TH1F* EtrueThetarecoDLDune_dist = (TH1F*) EtrueThetarecoCurrent_dist->Clone("EtrueThetareco");
+    TH1F* EtrueThetarecoCheated_dist = (TH1F*) EtrueThetarecoCurrent_dist->Clone("EtrueThetareco");
+
+    TCanvas *ErecoThetatrueCanvas = new TCanvas("ErecoThetatrue_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* ErecoThetatrueCurrent_dist = new TH1F("Shower ErecoThetatrue", "ErecoThetatrue of Shower", 40, 0, 20.44);
+    ErecoThetatrueCurrent_dist->SetTitle("Recoil Electron Shower E_{reco}#theta^{2}_{true} in an Event;E_{reco}#theta^{2}_{true} (MeV);# of Events");
+    TH1F* ErecoThetatrueDLUboone_dist = (TH1F*) ErecoThetatrueCurrent_dist->Clone("ErecoThetatrue");
+    TH1F* ErecoThetatrueDLDune_dist = (TH1F*) ErecoThetatrueCurrent_dist->Clone("ErecoThetatrue");
+    TH1F* ErecoThetatrueCheated_dist = (TH1F*) ErecoThetatrueCurrent_dist->Clone("ErecoThetatrue");
+
+	for(UInt_t j = 0; j < current.size(); j++){
+        if(!isnan(current.at(j).showerTheta) && !isnan(current.at(j).trueRecoilAngle)) deltaThetaCurrent_dist->Fill((current.at(j).trueRecoilAngle - current.at(j).showerTheta) * TMath::RadToDeg());
+        if(!isnan(current.at(j).trueRecoilEnergy) && !isnan(current.at(j).showerEnergy)) deltaECurrent_dist->Fill(current.at(j).trueRecoilEnergy - current.at(j).showerEnergy);
+        if(!isnan(current.at(j).showerTheta) && !isnan(current.at(j).trueRecoilAngle) && !isnan(current.at(j).trueRecoilEnergy) && !isnan(current.at(j).showerEnergy)){
+            double EtrueThetareco2 = (current.at(j).trueRecoilEnergy * (current.at(j).showerTheta * current.at(j).showerTheta));
+            double ErecoThetatrue2 = (current.at(j).showerEnergy * (current.at(j).trueRecoilAngle * current.at(j).trueRecoilAngle));;
+            EtrueThetarecoCurrent_dist->Fill(EtrueThetareco2);
+            ErecoThetatrueCurrent_dist->Fill(ErecoThetatrue2);
+        }
+    }
+
+    for(UInt_t j = 0; j < dlDune.size(); j++){
+        if(!isnan(dlDune.at(j).showerTheta) && !isnan(dlDune.at(j).trueRecoilAngle)) deltaThetaDLDune_dist->Fill((dlDune.at(j).trueRecoilAngle - dlDune.at(j).showerTheta) * TMath::RadToDeg());
+        if(!isnan(dlDune.at(j).trueRecoilEnergy) && !isnan(dlDune.at(j).showerEnergy)) deltaEDLDune_dist->Fill(dlDune.at(j).trueRecoilEnergy - dlDune.at(j).showerEnergy);
+        if(!isnan(dlDune.at(j).showerTheta) && !isnan(dlDune.at(j).trueRecoilAngle) && !isnan(dlDune.at(j).trueRecoilEnergy) && !isnan(dlDune.at(j).showerEnergy)){
+            double EtrueThetareco2 = (dlDune.at(j).trueRecoilEnergy * (dlDune.at(j).showerTheta * dlDune.at(j).showerTheta));
+            double ErecoThetatrue2 = (dlDune.at(j).showerEnergy * (dlDune.at(j).trueRecoilAngle * dlDune.at(j).trueRecoilAngle));;
+            EtrueThetarecoDLDune_dist->Fill(EtrueThetareco2);
+            ErecoThetatrueDLDune_dist->Fill(ErecoThetatrue2);
+        }
+    }
+
+    for(UInt_t j = 0; j < dlUboone.size(); j++){
+        if(!isnan(dlUboone.at(j).showerTheta) && !isnan(dlUboone.at(j).trueRecoilAngle)) deltaThetaDLUboone_dist->Fill((dlUboone.at(j).trueRecoilAngle - dlUboone.at(j).showerTheta) * TMath::RadToDeg());
+        if(!isnan(dlUboone.at(j).trueRecoilEnergy) && !isnan(dlUboone.at(j).showerEnergy)) deltaEDLUboone_dist->Fill(dlUboone.at(j).trueRecoilEnergy - dlUboone.at(j).showerEnergy);
+        if(!isnan(dlUboone.at(j).showerTheta) && !isnan(dlUboone.at(j).trueRecoilAngle) && !isnan(dlUboone.at(j).trueRecoilEnergy) && !isnan(dlUboone.at(j).showerEnergy)){
+            double EtrueThetareco2 = (dlUboone.at(j).trueRecoilEnergy * (dlUboone.at(j).showerTheta * dlUboone.at(j).showerTheta));
+            double ErecoThetatrue2 = (dlUboone.at(j).showerEnergy * (dlUboone.at(j).trueRecoilAngle * dlUboone.at(j).trueRecoilAngle));;
+            EtrueThetarecoDLUboone_dist->Fill(EtrueThetareco2);
+            ErecoThetatrueDLUboone_dist->Fill(ErecoThetatrue2);
+        }
+    }
+
+    for(UInt_t j = 0; j < cheated.size(); j++){
+        if(!isnan(cheated.at(j).showerTheta) && !isnan(cheated.at(j).trueRecoilAngle)) deltaThetaCheated_dist->Fill((cheated.at(j).trueRecoilAngle - cheated.at(j).showerTheta) * TMath::RadToDeg());
+        if(!isnan(cheated.at(j).trueRecoilEnergy) && !isnan(cheated.at(j).showerEnergy)) deltaECheated_dist->Fill(cheated.at(j).trueRecoilEnergy - cheated.at(j).showerEnergy);
+        if(!isnan(cheated.at(j).showerTheta) && !isnan(cheated.at(j).trueRecoilAngle) && !isnan(cheated.at(j).trueRecoilEnergy) && !isnan(cheated.at(j).showerEnergy)){
+            double EtrueThetareco2 = (cheated.at(j).trueRecoilEnergy * (cheated.at(j).showerTheta * cheated.at(j).showerTheta));
+            double ErecoThetatrue2 = (cheated.at(j).showerEnergy * (cheated.at(j).trueRecoilAngle * cheated.at(j).trueRecoilAngle));;
+            EtrueThetarecoCheated_dist->Fill(EtrueThetareco2);
+            ErecoThetatrueCheated_dist->Fill(ErecoThetatrue2);
+        }
+    }
+
+    styleDraw(deltaThetaCanvas, deltaThetaCurrent_dist, deltaThetaCheated_dist, deltaThetaDLDune_dist, deltaThetaDLUboone_dist, 0, 90, 999, 999, "/nashome/c/coackley/nuEPlots/deltaTheta_dist.pdf", 0.56, 0.88, 0.70, 0.86); 
+    styleDraw(deltaECanvas, deltaECurrent_dist, deltaECheated_dist, deltaEDLDune_dist, deltaEDLUboone_dist, 0, 80, 999, 999, "/nashome/c/coackley/nuEPlots/deltaE_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(EtrueThetarecoCanvas, EtrueThetarecoCurrent_dist, EtrueThetarecoCheated_dist, EtrueThetarecoDLDune_dist, EtrueThetarecoDLUboone_dist, 0, 120, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaReco2_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(ErecoThetatrueCanvas, ErecoThetatrueCurrent_dist, ErecoThetatrueCheated_dist, ErecoThetatrueDLDune_dist, ErecoThetatrueDLUboone_dist, 0, 550, 0, 4, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+
+    percentage(deltaThetaCurrent_dist, deltaThetaCheated_dist, deltaThetaDLDune_dist, deltaThetaDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 9, 999, 999, "/nashome/c/coackley/nuEPlots/deltaTheta_perc.pdf", 0.56, 0.88, 0.70, 0.86); 
+    percentage(deltaECurrent_dist, deltaECheated_dist, deltaEDLDune_dist, deltaEDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 8, 999, 999, "/nashome/c/coackley/nuEPlots/deltaE_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(EtrueThetarecoCurrent_dist, EtrueThetarecoCheated_dist, EtrueThetarecoDLDune_dist, EtrueThetarecoDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 12, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaReco2_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(ErecoThetatrueCurrent_dist, ErecoThetatrueCheated_dist, ErecoThetatrueDLDune_dist, ErecoThetatrueDLUboone_dist, current.size(), cheated.size(), dlDune.size(), dlUboone.size(), 0, 55, 0, 4, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2_perc.pdf", 0.56, 0.88, 0.70, 0.86);
 }
 
 void shower(std::vector<event_t> dlUboone, std::vector<event_t> dlDune, std::vector<event_t> current, std::vector<event_t> cheated){
@@ -408,6 +497,9 @@ void nuE_macro(){
     std::vector<double> allShowerTrackScore = std::vector<double>(0);
     std::vector<double> allNumShowers = std::vector<double>(0);
     std::vector<double> allShowerETheta2 = std::vector<double>(0);
+    std::vector<double> allRecoilElectronTrueAngle = std::vector<double>(0);
+    std::vector<double> allRecoilElectronTrueEnergy = std::vector<double>(0);
+    std::vector<double> allRecoilElectronTrueETheta2 = std::vector<double>(0);
 
     Long64_t numEntries = t->GetEntries();
     int fileNumber = 1;
@@ -437,6 +529,9 @@ void nuE_macro(){
         std::vector<double> *pShowerTrackScore = 0;
         std::vector<double> *pNumShowers = 0;
         std::vector<double> *pShowerETheta2 = 0;
+        std::vector<double> *pRecoilElectronTrueAngle = 0;
+        std::vector<double> *pRecoilElectronTrueEnergy = 0;
+        std::vector<double> *pRecoilElectronTrueETheta2 = 0;
 
         TBranch *fullyReco_branch = 0;
         TBranch *DLCurrent_branch = 0;
@@ -461,6 +556,9 @@ void nuE_macro(){
         TBranch *showerTrackScore_branch = 0;
         TBranch *numShowers_branch = 0;
         TBranch *showerETheta2_branch = 0;
+        TBranch *recoilElectronTrueAngle_branch = 0;
+        TBranch *recoilElectronTrueEnergy_branch = 0;
+        TBranch *recoilElectronTrueETheta2_branch = 0;
 
         t->SetBranchAddress("fullyReco_tree", &pFullyReco, &fullyReco_branch);
         t->SetBranchAddress("DLCurrent_tree", &pDLCurrent, &DLCurrent_branch);
@@ -485,6 +583,9 @@ void nuE_macro(){
         t->SetBranchAddress("showerTrackScore_tree", &pShowerTrackScore, &showerTrackScore_branch);
         t->SetBranchAddress("numShowers_tree", &pNumShowers, &numShowers_branch);
         t->SetBranchAddress("showerETheta2_tree", &pShowerETheta2, &showerETheta2_branch);
+        t->SetBranchAddress("recoilElectronTrueAngle_tree", &pRecoilElectronTrueAngle, &recoilElectronTrueAngle_branch);
+        t->SetBranchAddress("recoilElectronTrueEnergy_tree", &pRecoilElectronTrueEnergy, &recoilElectronTrueEnergy_branch);
+        t->SetBranchAddress("recoilElectronTrueETheta2_tree", &pRecoilElectronTrueETheta2, &recoilElectronTrueETheta2_branch);
 
         fullyReco_branch->GetEntry(i);
         DLCurrent_branch->GetEntry(i);
@@ -509,6 +610,9 @@ void nuE_macro(){
         showerTrackScore_branch->GetEntry(i);
         numShowers_branch->GetEntry(i);
         showerETheta2_branch->GetEntry(i);
+        recoilElectronTrueAngle_branch->GetEntry(i);
+        recoilElectronTrueEnergy_branch->GetEntry(i);
+        recoilElectronTrueETheta2_branch->GetEntry(i);
 
         size_t vecSize = pEvent->size();
         for(UInt_t j = 0; j < vecSize; j++){
@@ -535,6 +639,9 @@ void nuE_macro(){
             allShowerTrackScore.push_back(pShowerTrackScore->at(j));
             allNumShowers.push_back(pNumShowers->at(j));
             allShowerETheta2.push_back(pShowerETheta2->at(j));
+            allRecoilElectronTrueAngle.push_back(pRecoilElectronTrueAngle->at(j));
+            allRecoilElectronTrueEnergy.push_back(pRecoilElectronTrueEnergy->at(j));
+            allRecoilElectronTrueETheta2.push_back(pRecoilElectronTrueETheta2->at(j));
         }
 
         fileNumber++;
@@ -573,6 +680,9 @@ void nuE_macro(){
         event.showerTrackScore = allShowerTrackScore.at(k);
         event.nShowers = allNumShowers.at(k);
         event.showerETheta2 = allShowerETheta2.at(k);
+        event.trueRecoilAngle = allRecoilElectronTrueAngle.at(k);
+        event.trueRecoilEnergy = allRecoilElectronTrueEnergy.at(k);
+        event.trueRecoilETheta2 = allRecoilElectronTrueETheta2.at(k);
         allEvents.push_back(event);
 
         if(event.DLCurrent == 0) dlUbooneEvents.push_back(event);
@@ -587,4 +697,6 @@ void nuE_macro(){
     vertices(dlUbooneEvents, dlDuneEvents, currentEvents, cheatedEvents);
     slices(dlUbooneEvents, dlDuneEvents, currentEvents, cheatedEvents);
     pfps(dlUbooneEvents, dlDuneEvents, currentEvents, cheatedEvents);
+    recoilElectron(dlUbooneEvents, dlDuneEvents, currentEvents, cheatedEvents);
+
 }

@@ -11,6 +11,7 @@ nuE:
     CRUMBSLabel:        "crumbs"
     TrackLabel:         "pandoraTrack"
     ShowerLabel:        "pandoraShower"
+    MCTruthLabel:       "largeant"
 }
 
 END_PROLOG

@@ -246,7 +246,7 @@ void sbnd::NuE::analyze(art::Event const& e){
   event_tree.push_back(eventID);
   run_tree.push_back(runID);
   subrun_tree.push_back(subRunID);
-  DLCurrent_tree.push_back(2);   // 0 = uboone dl, 1 = dune dl, 2 = current, 3 = cheated
+  DLCurrent_tree.push_back(0);   // 0 = uboone dl, 1 = dune dl, 2 = current, 3 = cheated
 }
 
 double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
