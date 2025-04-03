@@ -27,6 +27,7 @@
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
+#include "sbnobj/SBND/CRT/CRTBlob.hh"
 
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 
@@ -55,15 +56,16 @@ public:
   void ResetEventVars();
   void ResetRawVars();
   void ResetSpacePointVars();
+  void ResetBlobVars();
 
 private:
 
   CRTGeoAlg fCRTGeoAlg;
 
-  std::string fFEBDataModuleLabel, fCRTSpacePointModuleLabel, 
-    fDAQHeaderModuleLabel, fDAQHeaderInstanceLabel;
+  std::string fFEBDataModuleLabel, fCRTSpacePointModuleLabel,
+    fCRTBlobModuleLabel, fDAQHeaderModuleLabel, fDAQHeaderInstanceLabel;
 
-  TTree *fEventTree, *fRawTree, *fSpacePointTree;
+  TTree *fEventTree, *fRawTree, *fSpacePointTree, *fBlobTree;
 
   int32_t  _run, _subrun, _event;
   uint32_t _event_header_ts;
@@ -72,7 +74,10 @@ private:
   uint16_t _max_channel;
 
   int16_t _n_hits;
-  double _x, _y, _z;
+  double _x, _y, _z, _pe;
+
+  int16_t _n_total_sps, _n_bottom_sps, _n_south_sps, _n_north_sps, _n_west_sps,
+    _n_east_sps, _n_toplow_sps, _n_tophigh_sps;
 };
 
 
@@ -81,37 +86,54 @@ sbnd::crt::CRTRateAnalysis::CRTRateAnalysis(fhicl::ParameterSet const& p)
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fFEBDataModuleLabel(p.get<std::string>("FEBDataModuleLabel"))
   , fCRTSpacePointModuleLabel(p.get<std::string>("CRTSpacePointModuleLabel"))
+  , fCRTBlobModuleLabel(p.get<std::string>("CRTBlobModuleLabel"))
   , fDAQHeaderModuleLabel(p.get<std::string>("DAQHeaderModuleLabel"))
   , fDAQHeaderInstanceLabel(p.get<std::string>("DAQHeaderInstanceLabel"))
-  {
-    art::ServiceHandle<art::TFileService> fs;
+{
+  art::ServiceHandle<art::TFileService> fs;
 
-    fEventTree = fs->make<TTree>("events", "");
-    fEventTree->Branch("run", &_run);
-    fEventTree->Branch("subrun", &_subrun);
-    fEventTree->Branch("event", &_event);
-    fEventTree->Branch("event_header_ts", &_event_header_ts);
+  fEventTree = fs->make<TTree>("events", "");
+  fEventTree->Branch("run", &_run);
+  fEventTree->Branch("subrun", &_subrun);
+  fEventTree->Branch("event", &_event);
+  fEventTree->Branch("event_header_ts", &_event_header_ts);
 
-    fRawTree = fs->make<TTree>("readouts", "");
-    fRawTree->Branch("run", &_run);
-    fRawTree->Branch("subrun", &_subrun);
-    fRawTree->Branch("event", &_event);
-    fRawTree->Branch("event_header_ts", &_event_header_ts);
-    fRawTree->Branch("tagger", &_tagger);
-    fRawTree->Branch("module", &_module);
-    fRawTree->Branch("max_channel", &_max_channel);
+  fRawTree = fs->make<TTree>("readouts", "");
+  fRawTree->Branch("run", &_run);
+  fRawTree->Branch("subrun", &_subrun);
+  fRawTree->Branch("event", &_event);
+  fRawTree->Branch("event_header_ts", &_event_header_ts);
+  fRawTree->Branch("tagger", &_tagger);
+  fRawTree->Branch("module", &_module);
+  fRawTree->Branch("max_channel", &_max_channel);
 
-    fSpacePointTree = fs->make<TTree>("spacepoints", "");
-    fSpacePointTree->Branch("run", &_run);
-    fSpacePointTree->Branch("subrun", &_subrun);
-    fSpacePointTree->Branch("event", &_event);
-    fSpacePointTree->Branch("event_header_ts", &_event_header_ts);
-    fSpacePointTree->Branch("tagger", &_tagger);
-    fSpacePointTree->Branch("n_hits", &_n_hits);
-    fSpacePointTree->Branch("x", &_x);
-    fSpacePointTree->Branch("y", &_y);
-    fSpacePointTree->Branch("z", &_z);
-  }
+  fSpacePointTree = fs->make<TTree>("spacepoints", "");
+  fSpacePointTree->Branch("run", &_run);
+  fSpacePointTree->Branch("subrun", &_subrun);
+  fSpacePointTree->Branch("event", &_event);
+  fSpacePointTree->Branch("event_header_ts", &_event_header_ts);
+  fSpacePointTree->Branch("tagger", &_tagger);
+  fSpacePointTree->Branch("n_hits", &_n_hits);
+  fSpacePointTree->Branch("x", &_x);
+  fSpacePointTree->Branch("y", &_y);
+  fSpacePointTree->Branch("z", &_z);
+  fSpacePointTree->Branch("pe", &_pe);
+
+  fBlobTree = fs->make<TTree>("blobs", "");
+  fBlobTree->Branch("run", &_run);
+  fBlobTree->Branch("subrun", &_subrun);
+  fBlobTree->Branch("event", &_event);
+  fBlobTree->Branch("event_header_ts", &_event_header_ts);
+  fBlobTree->Branch("n_total_sps", &_n_total_sps);
+  fBlobTree->Branch("n_bottom_sps", &_n_bottom_sps);
+  fBlobTree->Branch("n_south_sps", &_n_south_sps);
+  fBlobTree->Branch("n_north_sps", &_n_north_sps);
+  fBlobTree->Branch("n_west_sps", &_n_west_sps);
+  fBlobTree->Branch("n_east_sps", &_n_east_sps);
+  fBlobTree->Branch("n_toplow_sps", &_n_toplow_sps);
+  fBlobTree->Branch("n_tophigh_sps", &_n_tophigh_sps);
+  fBlobTree->Branch("pe", &_pe);
+}
 
 void sbnd::crt::CRTRateAnalysis::analyze(art::Event const& e)
 {
@@ -173,6 +195,8 @@ void sbnd::crt::CRTRateAnalysis::analyze(art::Event const& e)
 
   for(auto const& spacePoint : CRTSpacePointVec)
     {
+      ResetSpacePointVars();
+
       const art::Ptr<CRTCluster> cluster = spacePointsToClusters.at(spacePoint.key());
 
       _tagger = cluster->Tagger();
@@ -180,8 +204,32 @@ void sbnd::crt::CRTRateAnalysis::analyze(art::Event const& e)
       _x      = spacePoint->X();
       _y      = spacePoint->Y();
       _z      = spacePoint->Z();
+      _pe     = spacePoint->PE();
 
       fSpacePointTree->Fill();
+    }
+
+  art::Handle<std::vector<CRTBlob>> CRTBlobHandle;
+  e.getByLabel(fCRTBlobModuleLabel, CRTBlobHandle);
+
+  std::vector<art::Ptr<CRTBlob>> CRTBlobVec;
+  art::fill_ptr_vector(CRTBlobVec, CRTBlobHandle);
+
+  for(auto const& blob : CRTBlobVec)
+    {
+      ResetBlobVars();
+
+      _n_total_sps   = blob->TotalSpacePoints();
+      _n_bottom_sps  = blob->SpacePointsInTagger(kBottomTagger);
+      _n_south_sps   = blob->SpacePointsInTagger(kSouthTagger);
+      _n_north_sps   = blob->SpacePointsInTagger(kNorthTagger);
+      _n_west_sps    = blob->SpacePointsInTagger(kWestTagger);
+      _n_east_sps    = blob->SpacePointsInTagger(kEastTagger);
+      _n_toplow_sps  = blob->SpacePointsInTagger(kTopLowTagger);
+      _n_tophigh_sps = blob->SpacePointsInTagger(kTopHighTagger);
+      _pe            = blob->PE();
+
+      fBlobTree->Fill();
     }
 }
 
@@ -203,9 +251,24 @@ void sbnd::crt::CRTRateAnalysis::ResetSpacePointVars()
 
   _n_hits = -1;
 
-  _x = std::numeric_limits<double>::lowest();
-  _y = std::numeric_limits<double>::lowest();
-  _x = std::numeric_limits<double>::lowest();
+  _x  = std::numeric_limits<double>::lowest();
+  _y  = std::numeric_limits<double>::lowest();
+  _z  = std::numeric_limits<double>::lowest();
+  _pe = std::numeric_limits<double>::lowest();
+}
+
+void sbnd::crt::CRTRateAnalysis::ResetBlobVars()
+{
+  _n_total_sps   = -1;
+  _n_bottom_sps  = -1;
+  _n_south_sps   = -1;
+  _n_north_sps   = -1;
+  _n_west_sps    = -1;
+  _n_east_sps    = -1;
+  _n_toplow_sps  = -1;
+  _n_tophigh_sps = -1;
+
+  _pe = std::numeric_limits<double>::lowest();
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTRateAnalysis)

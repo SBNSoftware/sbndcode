@@ -23,16 +23,7 @@ physics:
 {
   analyzers:
   {
-    crtrateana:
-    { 
-      module_type:       "CRTRateAnalysis"
-
-      CRTGeoAlg:                @local::crtgeoalg_sbnd
-      FEBDataModuleLabel:       "crtdecoder"
-      CRTSpacePointModuleLabel: "crtspacepoints"
-      DAQHeaderModuleLabel:     "daq"
-      DAQHeaderInstanceLabel:   "RawEventHeader"
-    }
+    crtrateana: @local::crtrateana_data_sbnd
   }
 
   ana:       [ crtrateana ]
