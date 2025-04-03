@@ -398,10 +398,10 @@ namespace BlipUtils {
           intsec_p.SetY(hcs[i].IntersectLocations.find(hcs[j].ID)->second.Y());
           intsec_p.SetZ(hcs[i].IntersectLocations.find(hcs[j].ID)->second.Z());
         } else {
-	  geo::WireID i_wireid{(unsigned int)hcs[i].Cryostat, (unsigned int)hcs[i].TPC, (unsigned int)hcs[i].Plane, (unsigned int)hcs[i].CenterChan};
-	  geo::WireID j_wireid{(unsigned int)hcs[j].Cryostat, (unsigned int)hcs[j].TPC, (unsigned int)hcs[j].Plane, (unsigned int)hcs[j].CenterChan};
+	  std::vector<geo::WireID> i_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[i].CenterChan);
+	  std::vector<geo::WireID> j_wireids = wireReadoutGeom->Get().ChannelToWire((unsigned int)hcs[j].CenterChan);
 
-          match3d = wireReadoutGeom->Get().WireIDsIntersect(i_wireid, j_wireid, intsec_p);
+          match3d = wireReadoutGeom->Get().WireIDsIntersect(i_wireids.at(0), j_wireids.at(0), intsec_p);
         }
 
         if( match3d ) {

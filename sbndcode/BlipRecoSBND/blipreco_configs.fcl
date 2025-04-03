@@ -10,6 +10,7 @@ sbnd_blipalg:
   SimChanProducer:      "simdrift"      #// label for sim::SimChannels (getting drifted charge; optional)
   MaxHitTrkLength:      5.0             #// hits in trks > this length will be vetoed [cm]
   DoHitFiltering:       false           #// filter hits based on amp, width, RMS
+  HitClustWireRange:    1               #// clustering wire width
   MaxWiresInCluster:    10              #// max allowable wires in a cluster
   MaxClusterSpan:       50              #// max allowable time-ticks of a cluster
   ClustMatchMinOverlap: 0.5             #// minimum fractional overlap to be eligible for matching
