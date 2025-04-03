@@ -17,8 +17,6 @@
   
 SBND::CRTCalibService::CRTCalibService(fhicl::ParameterSet const& pset)
 {
-  const std::string badChannelsFile  = pset.get<std::string>("BadChannelsFileName");
-
   const std::string t0CableOffsetFile = pset.get<std::string>("T0CableOffsetFileName");
   const std::string t1CableOffsetFile = pset.get<std::string>("T1CableOffsetFileName");
   const std::string t0CalibOffsetFile = pset.get<std::string>("T0CalibOffsetFileName");
