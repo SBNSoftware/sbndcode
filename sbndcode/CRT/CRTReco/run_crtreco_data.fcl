@@ -10,6 +10,7 @@ physics.producers.crtstrips:      @local::crtstriphitproducer_data_sbnd
 physics.producers.crtclustering:  @local::crtclusterproducer_data_sbnd
 physics.producers.crtspacepoints: @local::crtspacepointproducer_data_sbnd
 physics.producers.crttracks:      @local::crttrackproducer_data_sbnd
+physics.producers.crtblobs:       @local::crtblobproducer_data_sbnd
 
 outputs.out1.outputCommands: [ "keep *_*_*_*",
                                "drop *_daq_*_*",

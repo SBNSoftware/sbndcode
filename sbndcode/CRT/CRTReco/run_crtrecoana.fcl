@@ -3,6 +3,7 @@
 #include "rootoutput_sbnd.fcl"
 #include "crtrecoproducers_sbnd.fcl"
 #include "crtbacktrackeralg_sbnd.fcl"
+#include "crtana_sbnd.fcl"
 
 process_name: CRTRecoAna
 
@@ -35,18 +36,15 @@ physics:
     crtclustering:  @local::crtclusterproducer_sbnd
     crtspacepoints: @local::crtspacepointproducer_sbnd
     crttracks:      @local::crttrackproducer_sbnd
+    crtblobs:       @local::crtblobproducer_sbnd
   }
 
   analyzers:
   {
-    crtana:
-    {
-      module_type:       "CRTAnalysis"
-      CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
-    }
+    crtana: @local::crtana_sbnd
   }
 
-  reco:    [ crtstrips, crtclustering, crtspacepoints, crttracks ]
+  reco:    [ crtstrips, crtclustering, crtspacepoints, crttracks, crtblobs ]
   ana:     [ crtana ]
   stream1: [ out1 ]
 

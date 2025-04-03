@@ -34,6 +34,7 @@ physics:
     crtclustering:  @local::crtclusterproducer_data_sbnd
     crtspacepoints: @local::crtspacepointproducer_data_sbnd
     crttracks:      @local::crttrackproducer_data_sbnd
+    crtblobs:       @local::crtblobproducer_data_sbnd
   }
 
   analyzers:
@@ -60,7 +61,7 @@ physics:
     }
   }
 
-  decode_reco:   [ tdcdecoder, ptbdecoder, crtdecoder, crtstrips, crtclustering, crtspacepoints, crttracks ]
+  decode_reco:   [ tdcdecoder, ptbdecoder, crtdecoder, crtstrips, crtclustering, crtspacepoints, crttracks, crtblobs ]
   trigger_paths: [ decode_reco ]
 
   ana:       [ adrift ]

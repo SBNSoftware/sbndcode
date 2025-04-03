@@ -7,6 +7,7 @@
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
 #include "crtbacktrackeralg_sbnd.fcl"
+#include "crtana_sbnd.fcl"
 
 process_name: CRTDecodeRecoAna
 
@@ -34,25 +35,15 @@ physics:
     crtclustering:  @local::crtclusterproducer_data_sbnd
     crtspacepoints: @local::crtspacepointproducer_data_sbnd
     crttracks:      @local::crttrackproducer_data_sbnd
+    crtblobs:       @local::crtblobproducer_data_sbnd
   }
 
   analyzers:
   {
-    crtana:
-    {
-      module_type: "CRTAnalysis"
-      
-      CRTGeoAlg:          @local::crtgeoalg_data_sbnd
-      CRTBackTrackerAlg:  @local::crtbacktrackeralg_sbnd
-      FEBDataModuleLabel: "crtdecoder"
-      DataMode:           true
-      NoTPC:              true
-      HasPTB:             true
-      HasTDC:             true
-    }
+    crtana: @local::crtana_data_sbnd
   }
 
-  decode_reco:   [ tdcdecoder, ptbdecoder, crtdecoder, crtstrips, crtclustering, crtspacepoints, crttracks ]
+  decode_reco:   [ tdcdecoder, ptbdecoder, crtdecoder, crtstrips, crtclustering, crtspacepoints, crttracks, crtblobs ]
   trigger_paths: [ decode_reco ]
 
   ana:       [ crtana ]
