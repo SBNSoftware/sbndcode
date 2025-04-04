@@ -21,6 +21,7 @@
 #include "TTree.h"
 
 #include "canvas/Persistency/Common/FindOneP.h"
+#include "canvas/Persistency/Common/FindManyP.h"
 
 #include "artdaq-core/Data/RawEvent.hh"
 
@@ -76,8 +77,8 @@ private:
   int16_t _n_hits;
   double _x, _y, _z, _pe;
 
-  int16_t _n_total_sps, _n_bottom_sps, _n_south_sps, _n_north_sps, _n_west_sps,
-    _n_east_sps, _n_toplow_sps, _n_tophigh_sps;
+  int16_t _n_total_sps, _n_bottom_sps, _n_bottom_sps_twohits, _n_south_sps,
+    _n_north_sps, _n_west_sps, _n_east_sps, _n_toplow_sps, _n_tophigh_sps;
 };
 
 
@@ -126,6 +127,7 @@ sbnd::crt::CRTRateAnalysis::CRTRateAnalysis(fhicl::ParameterSet const& p)
   fBlobTree->Branch("event_header_ts", &_event_header_ts);
   fBlobTree->Branch("n_total_sps", &_n_total_sps);
   fBlobTree->Branch("n_bottom_sps", &_n_bottom_sps);
+  fBlobTree->Branch("n_bottom_sps_twohits", &_n_bottom_sps_twohits);
   fBlobTree->Branch("n_south_sps", &_n_south_sps);
   fBlobTree->Branch("n_north_sps", &_n_north_sps);
   fBlobTree->Branch("n_west_sps", &_n_west_sps);
@@ -215,6 +217,8 @@ void sbnd::crt::CRTRateAnalysis::analyze(art::Event const& e)
   std::vector<art::Ptr<CRTBlob>> CRTBlobVec;
   art::fill_ptr_vector(CRTBlobVec, CRTBlobHandle);
 
+  art::FindManyP<CRTSpacePoint> blobsToSpacePoints(CRTBlobHandle, e, fCRTBlobModuleLabel);
+
   for(auto const& blob : CRTBlobVec)
     {
       ResetBlobVars();
@@ -228,6 +232,18 @@ void sbnd::crt::CRTRateAnalysis::analyze(art::Event const& e)
       _n_toplow_sps  = blob->SpacePointsInTagger(kTopLowTagger);
       _n_tophigh_sps = blob->SpacePointsInTagger(kTopHighTagger);
       _pe            = blob->PE();
+
+      _n_bottom_sps_twohits = 0;
+
+      const std::vector<art::Ptr<CRTSpacePoint>> spacePoints = blobsToSpacePoints.at(blob.key());
+
+      for(auto const& spacePoint : spacePoints)
+        {
+          const art::Ptr<CRTCluster> cluster = spacePointsToClusters.at(spacePoint.key());
+
+          if(cluster->Tagger() == kBottomTagger && cluster->NHits() > 1)
+            ++_n_bottom_sps_twohits;
+        }
 
       fBlobTree->Fill();
     }
@@ -259,14 +275,15 @@ void sbnd::crt::CRTRateAnalysis::ResetSpacePointVars()
 
 void sbnd::crt::CRTRateAnalysis::ResetBlobVars()
 {
-  _n_total_sps   = -1;
-  _n_bottom_sps  = -1;
-  _n_south_sps   = -1;
-  _n_north_sps   = -1;
-  _n_west_sps    = -1;
-  _n_east_sps    = -1;
-  _n_toplow_sps  = -1;
-  _n_tophigh_sps = -1;
+  _n_total_sps          = -1;
+  _n_bottom_sps         = -1;
+  _n_bottom_sps_twohits = -1;
+  _n_south_sps          = -1;
+  _n_north_sps          = -1;
+  _n_west_sps           = -1;
+  _n_east_sps           = -1;
+  _n_toplow_sps         = -1;
+  _n_tophigh_sps        = -1;
 
   _pe = std::numeric_limits<double>::lowest();
 }
