@@ -242,7 +242,7 @@ namespace lightana
 
     size_t upix = std::upper_bound(fPMTRatioCal.begin(), fPMTRatioCal.end(), val)-fPMTRatioCal.begin();
 
-    double slope = ( fDriftCal[upix]-fDriftCal[upix] ) / ( fPMTRatioCal[upix]-fPMTRatioCal[upix-1] );
+    double slope = ( fDriftCal[upix]-fDriftCal[upix-1] ) / ( fPMTRatioCal[upix]-fPMTRatioCal[upix-1] );
 
     return fDriftCal[upix-1] + slope * ( val - fPMTRatioCal[upix-1] );
   }
