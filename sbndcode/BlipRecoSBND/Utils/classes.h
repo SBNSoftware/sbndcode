@@ -35,3 +35,5 @@ template class art::Assns<blip::Blip,recob::Hit,void>;
 template class art::Wrapper<art::Assns<blip::Blip,recob::Hit,void> >;
 template class art::Assns<blip::Blip,recob::SpacePoint,void>;
 template class art::Wrapper<art::Assns<blip::Blip,recob::SpacePoint,void> >;
+template class art::Assns<recob::Hit,blip::Blip,void>;
+template class art::Wrapper<art::Assns<recob::Hit,blip::Blip,void> >;
