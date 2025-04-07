@@ -23,7 +23,6 @@ add_subdirectory(Commissioning)
 add_subdirectory(Trigger)
 add_subdirectory(Timing)
 add_subdirectory(PTBAna)
-add_subdirectory(BlipRecoSBND)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
@@ -48,3 +47,5 @@ add_subdirectory(ChannelMaps)
 add_subdirectory(SBNDCVN)
 
 add_subdirectory(TPCPMTBarycenterMatching)
+
+add_subdirectory(BlipRecoSBND)

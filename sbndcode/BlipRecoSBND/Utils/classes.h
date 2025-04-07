@@ -14,7 +14,7 @@
 // lardataobj
 //#include "lardata/Utilities/AssociationUtil.h"
 #include "canvas/Persistency/Common/Assns.h"
-//#include "lardataobj/RecoBase/PFParticle.h" //Not supported as of LArSoft V10 I think
+#include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "sbndcode/BlipRecoSBND/Utils/DataTypes.h"

@@ -1,4 +1,4 @@
-art_make_library(LIBRARY_NAME  sbndcode_BlipUtils
+cet_make_library(LIBRARY_NAME  sbndcode_BlipUtils
                  SOURCE    BlipUtils.cc
                  LIBRARIES larcorealg::Geometry
                            larcore::Geometry_Geometry_service
