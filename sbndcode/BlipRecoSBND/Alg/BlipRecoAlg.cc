@@ -229,6 +229,7 @@ namespace blip {
   //Destructor
   BlipRecoAlg::~BlipRecoAlg()
   {
+    delete fCaloAlg;
   }
   
   
