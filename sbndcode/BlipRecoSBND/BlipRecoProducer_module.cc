@@ -155,14 +155,14 @@ void BlipRecoProducer::produce(art::Event & evt)
     
     recob::SpacePoint newpt(xyz,xyz_err,chiSquare);
     SpacePoint_v->emplace_back(newpt);
-    ulit::CreateAssn(*this, evt, *blip_v, &(SpacePoint_v->back()), *SpacePoint_v);
+    util::CreateAssn(*this, evt, *blip_v, &(SpacePoint_v->back()), *SpacePoint_v);
     
     // Hit associations 
     for(auto& hc : b.clusters ) {
       for(auto& ihit : hc.HitIDs ) {
         auto& hitptr = hitlist[ihit];
         util::CreateAssn(*this, evt, *SpacePoint_v, hitptr, *assn_hit_sps_v);
-        ulit::CreateAssn(*this, evt, *blip_v, hitptr, *assn_blip_hit_v);
+        util::CreateAssn(*this, evt, *blip_v, hitptr, *assn_blip_hit_v);
       }
     }
   
