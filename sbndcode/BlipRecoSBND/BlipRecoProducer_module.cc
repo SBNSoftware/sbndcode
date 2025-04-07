@@ -119,8 +119,8 @@ void BlipRecoProducer::produce(art::Event & evt)
   std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_hit_sps_v(std::make_unique<art::Assns<recob::Hit,recob::SpacePoint>>() );
   
 
-  art::PtrMaker<blip::Blip> makeBlipPtr(event, *this);
-  art::PtrMaker<recob::SpacePoint> makeSpacePointPtr(event, *this);
+  art::PtrMaker<blip::Blip> makeBlipPtr(evt, *this);
+  art::PtrMaker<recob::SpacePoint> makeSpacePointPtr(evt, *this);
   //============================================
   // Get hits from input module
   //============================================
