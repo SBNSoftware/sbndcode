@@ -88,8 +88,8 @@ BlipRecoProducer::BlipRecoProducer(fhicl::ParameterSet const & pset)
   produces< art::Assns <  recob::Hit, recob::SpacePoint> >();
   produces< std::vector< std::vector<blip::Blip> > >(); 
   
-  produces< art::Assns <  recob::SpacePoint,  blip::Blip> >();
-  produces< art::Assns <  recob::Hit,         blip::Blip> >();
+  produces< art::Assns <  blip::Blip, recob::SpacePoint > >();
+  produces< art::Assns <  blip::Blip,         recob::Hit> >();
 
   //produces< std::vector<  recob::Cluster    > >();
   //produces< art::Assns <  recob::Cluster,   recob::SpacePoint> >();
@@ -113,11 +113,14 @@ void BlipRecoProducer::produce(art::Event & evt)
   // and associations we will create
   //============================================
   std::unique_ptr< std::vector< blip::Blip> > blip_v(std::make_unique<std::vector<blip::Blip>>());
-  std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_blip_sps_v(std::make_unique<art::Assns<blip::Blip,recob::SpacePoint>>() );
-  std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_blip_hit_v(std::make_unique<art::Assns<blip::Blip,recob::SpacePoint>>() );
+  std::unique_ptr< art::Assns <recob::SpacePoint, blip::Blip> >  assn_blip_sps_v(std::make_unique<art::Assns<blip::Blip, recob::SpacePoint>>() );
+  std::unique_ptr< art::Assns <recob::Hit, blip::Blip> >  assn_blip_hit_v(std::make_unique<art::Assns<blip::Blip, recob::Hit> >() );
   std::unique_ptr< std::vector< recob::SpacePoint> > SpacePoint_v(std::make_unique<std::vector<recob::SpacePoint>>());
   std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_hit_sps_v(std::make_unique<art::Assns<recob::Hit,recob::SpacePoint>>() );
   
+
+  art::PtrMaker<blip::Blip> makeBlipPtr(event, *this);
+  art::PtrMaker<recob::SpacePoint> makeSpacePointPtr(event, *this);
   //============================================
   // Get hits from input module
   //============================================
@@ -138,7 +141,8 @@ void BlipRecoProducer::produce(art::Event & evt)
   //===========================================
   for(size_t i=0; i<fBlipAlg->blips.size(); i++){
     auto& b = fBlipAlg->blips[i];
-    blip_v->push_back(b);
+    blip_v->emplace_back(b);
+    art::Ptr<blip::Blip> blipPtr = makeBlipPtr(blip_v->size() - 1);
     Double32_t xyz[3];
     Double32_t xyz_err[6];
     Double32_t chiSquare = 0;
@@ -155,14 +159,16 @@ void BlipRecoProducer::produce(art::Event & evt)
     
     recob::SpacePoint newpt(xyz,xyz_err,chiSquare);
     SpacePoint_v->emplace_back(newpt);
-    util::CreateAssn(*this, evt, *blip_v, &(SpacePoint_v->back()), *SpacePoint_v);
-    
+    art::Ptr<recob::SpacePoint> spacePointPTR = makeSpacePointPtr(SpacePoint_v->size() - 1);
+    assn_blip_sps_v->addSingle(blipPtr, spacePointPTR);
+    //util::CreateAssn(*this, evt, *blip_v, &(SpacePoint_v->back()), *SpacePoint_v);
     // Hit associations 
     for(auto& hc : b.clusters ) {
       for(auto& ihit : hc.HitIDs ) {
         auto& hitptr = hitlist[ihit];
         util::CreateAssn(*this, evt, *SpacePoint_v, hitptr, *assn_hit_sps_v);
-        util::CreateAssn(*this, evt, *blip_v, hitptr, *assn_blip_hit_v);
+        //util::CreateAssn(*this, evt, *blip_v, hitptr, *assn_blip_hit_v);
+        assn_blip_hit_v->addSingle(blipPtr, hitptr);
       }
     }
   
@@ -174,6 +180,8 @@ void BlipRecoProducer::produce(art::Event & evt)
   evt.put(std::move(SpacePoint_v));
   evt.put(std::move(assn_hit_sps_v));
   evt.put(std::move(blip_v));
+  evt.put(std::move(assn_blip_sps_v));
+  evt.put(std::move(assn_blip_hit_v));
 }//END EVENT LOOP
 
 DEFINE_ART_MODULE(BlipRecoProducer)
