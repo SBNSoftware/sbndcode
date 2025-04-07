@@ -1,0 +1,21 @@
+BEGIN_PROLOG
+
+fluxanalyzer:
+{
+  module_type:   "FluxUncertaintiesAna"
+
+  MCTruthLabel: "generator"
+  FluxEventWeightLabel: "fluxweight"
+  SaveTree: false
+  SaveHisto: true
+  NUniverses: 1000
+  SystematicList: ["expskin_Flux", "horncurrent_Flux", "kminus_Flux", "kplus_Flux", "kzero_Flux", 
+    "nucleoninexsec_Flux", "nucleonqexsec_Flux", "nucleontotxsec_Flux", "piminus_Flux", 
+    "pioninexsec_Flux", "pionqexsec_Flux", "piontotxsec_Flux", "piplus_Flux"]
+  SaveTotalSystematic: true
+  HistoNBins: 20
+  HistoMin: 0
+  HistoMax: 4
+}
+
+END_PROLOG

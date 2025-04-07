@@ -56,7 +56,8 @@ public:
   void beginSubRun(art::SubRun const& sr) override;
   void respondToOpenInputFile(const art::FileBlock& fb) override;
   void calculateMeanStd(std::vector<double> vec, double &mean, double &std);
-  bool canFormSquare(std::vector<double> distances);
+  bool canFormRect(std::vector<double> distances);
+  double FormRectScore(std::vector<double> distances);
   void calculateLenWidthArea(std::vector<std::array<double, 2>> position_x_y, double &length, double &width, double &area);
   void StoreNeutrinoInfo(art::Event const & e, std::string _geant_producer, int geant_track_id, int &nu_pdg, int &ccnc, int &nu_mode, int &nu_interaction_type, double &nu_energy);
   double calculateScalingFactor(double energy, double mass, double boosted_decay_length, double unboosted_decay_length_old, double unboosted_decay_length_new);
@@ -78,6 +79,7 @@ private:
   bool _smear_timing; 
   bool _smear_position;
   bool _smear_deposited_energy;
+  bool _cosmic_mode;
 
   int  _interactionMode; // 0 -- signal: dark neutrino; 1 -- background dirt/cosmic/combined (dirt + cosmic)
 
@@ -93,21 +95,24 @@ private:
   int _n_chits_upstream, _n_chits_downstream;    ///< Number of CRT hits in the upstream/downstream CRTs
   
   // Variables related to geometry for CRT hits.
-  int _isSquare;                                 ///< Can CRT hits form a square?
-  double _biggest_distance_between_hits;            ///< Mean of the distance between diagonal hits. 
-  double _square_side_length;                       ///< Side length of the Square.
-  double _square_side_width;                        ///< Side width of the Square.
-  double _square_area;                              ///< Area of the Square.
+  int _isSquare;                                       ///< Can CRT hits form a rectangle?
+  double _RectScore;                                 ///< The Score to show how likely the CRT hits can form a rectangle.
+  double _biggest_distance_between_hits;             ///< Mean of the distance between diagonal hits. 
+  double _square_side_length;                          ///< Side length of the Rectangle.
+  double _square_side_width;                           ///< Side width of the Rectangle.
+  double _square_area;                                 ///< Area of the Rectangle.
 
   // Variables realted to deposited energy. 
   std::vector<double> _chit_depositedE;                 ///< CRT hit PEs
   double _chit_depositedE_mean;                         ///< Mean of the CRT hit PE for one event. 
   double _chit_depositedE_sample_std;                   ///< Sample standard deviation of the CRT hit PE for one event.
 
-  double _chit_depositedE_mean_between_hits_biggest_distance;     ///< Mean of the PE diff between any two hits for one event.
-  double _chit_depositedE_diff_between_hits_biggest_distance;     ///< Mean of the PE diff between any two hits for one event.
-  double _chit_depositedE_ratio_between_hits_biggest_distance;     ///< Mean of the PE ratio between any two hits for one event.
-  double _chit_depositedE_frac_diff_between_hits_biggest_distance;     ///< Mean of the PE fractional diff between any two hits for one event.
+  double _chit_depositedE_mean_between_hits_biggest_distance;       ///< Mean of the PE diff between any two hits for one event.
+  double _chit_depositedE_diff_between_hits_biggest_distance;       ///< Mean of the PE diff between any two hits for one event.
+  double _chit_depositedE_ratio_between_hits_biggest_distance;      ///< Mean of the PE ratio between any two hits for one event.
+  double _chit_depositedE_frac_diff_between_hits_biggest_distance;  ///< Mean of the PE fractional diff between any two hits for one event.
+  double _chit_depositedE_1st_hit;                                  ///< PE of the first hit.
+  double _chit_depositedE_2nd_hit;                                  ///< PE of the second hit.
 
   // Variables related to t1.
   std::vector<double> _chit_t1;                             ///< CRT hit t1
@@ -131,7 +136,7 @@ private:
 
   // for smearing to calculate the systematic uncertainty from reconstruction effect. 
   // smear the handles.
-  double sigma_pos = 1.88; // cm
+  double sigma_pos = 1.88; // sqrt(2)*1.88 cm
   double sigma_timing = 1.88; // ns
   double sigma_depositedE = 1.02; // MeV
 
@@ -151,6 +156,7 @@ private:
   // new unboosted decay length
   double _mct_darkNeutrino_new_unboosted_decay_length;
   double _mct_darkNeutrino_unboosted_decay_length=306.53;// cm,
+  ULong_t _seednumber;
 };
 
 
@@ -172,6 +178,8 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
   _save_input_file_name = p.get<bool>("SaveInputFileName", true);
   _data_mode            = p.get<bool>("DataMode", false);
   _mct_darkNeutrino_new_unboosted_decay_length = p.get<double>("DarkNeutrinoNewUnBoostedDecayLength", 306.53);
+  _seednumber           = p.get<ULong_t>("SeedNumber", 14527747);
+  _cosmic_mode          = p.get<bool>("CosmicMode", false);
 
   art::ServiceHandle<art::TFileService> fs;
 
@@ -179,9 +187,9 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
   _tree->Branch("run", &_run, "run/I");
   _tree->Branch("subrun", &_subrun, "subrun/I");
   _tree->Branch("event", &_event, "event/I");
-  _tree->Branch("InteractionMode", &_interactionMode, "InteractionMode/I");
   if (_save_input_file_name) _tree->Branch("file_name", &_file_name);
   if (!_data_mode) {
+    _tree->Branch("InteractionMode", &_interactionMode, "InteractionMode/I");
     _tree->Branch("weight", &_weight, "weight/D");
     _tree->Branch("mct_darkNeutrino_e", &_mct_darkNeutrino_e, "mct_darkNeutrino_e/D");
     _tree->Branch("mct_darkNeutrino_boosted_decay_length", &_mct_darkNeutrino_boosted_decay_length, "mct_darkNeutrino_boosted_decay_length/D");
@@ -191,6 +199,7 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
   _tree->Branch("n_chits_upstream", &_n_chits_upstream, "n_chits_upstream/I");
   _tree->Branch("n_chits_downstream", &_n_chits_downstream, "n_chits_downstream/I");
   _tree->Branch("isSquare", &_isSquare, "isSquare/I");
+  _tree->Branch("RectScore", &_RectScore, "RectScore/D");
   _tree->Branch("square_side_length", &_square_side_length, "square_side_length/D");
   _tree->Branch("square_side_width", &_square_side_width, "square_side_width/D");
   _tree->Branch("square_area", &_square_area, "square_area/D");
@@ -204,6 +213,9 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
   _tree->Branch("chit_depositedE_mean_between_hits_biggest_distance", &_chit_depositedE_mean_between_hits_biggest_distance, "chit_depositedE_mean_between_hits_biggest_distance/D");
   _tree->Branch("chit_depositedE_ratio_between_hits_biggest_distance", &_chit_depositedE_ratio_between_hits_biggest_distance, "chit_depositedE_ratio_between_hits_biggest_distance/D");
   _tree->Branch("chit_depositedE_frac_diff_between_hits_biggest_distance", &_chit_depositedE_frac_diff_between_hits_biggest_distance, "chit_depositedE_frac_diff_between_hits_biggest_distance/D");
+  // new variables for the deposited energy.
+  _tree->Branch("chit_depositedE_1st_hit", &_chit_depositedE_1st_hit, "chit_depositedE_1st_hit/D");
+  _tree->Branch("chit_depositedE_2nd_hit", &_chit_depositedE_2nd_hit, "chit_depositedE_2nd_hit/D");
 
   _tree->Branch("chit_t1", &_chit_t1);
   _tree->Branch("chit_t1_diff_biggest_distance", &_chit_t1_diff_biggest_distance);
@@ -234,7 +246,15 @@ SelectionAna::SelectionAna(fhicl::ParameterSet const& p)
 
 void SelectionAna::analyze(art::Event const& e)
 { 
-  fRandomGenerator = new TRandom3(0); // Initialize the random generator.
+  fRandomGenerator = new TRandom3();     // Initialize the random generator.
+  fRandomGenerator->SetSeed(_seednumber); // set seed for the random generator.
+
+  double smear_timing_offset = fRandomGenerator->Gaus(0, sigma_timing);
+  double smear_position_offset = fRandomGenerator->Gaus(0, sigma_pos);
+  double smear_deposited_energy_offset = fRandomGenerator->Gaus(0, sigma_depositedE);
+
+  if (_smear_timing || _smear_deposited_energy || _smear_position)
+    std::cout<<"Random seed: "<<fRandomGenerator->TRandom::GetSeed()<<", _seednumber: "<<_seednumber<<", smear timing: "<<smear_timing_offset<<", smear position: "<<smear_position_offset<<", smear deposited energy: "<<smear_deposited_energy_offset<<std::endl;
 
   // clear all declared vectors;
   _chit_depositedE.clear();  _chit_t1.clear(); _chit_t1_diff_biggest_distance.clear();
@@ -316,6 +336,7 @@ void SelectionAna::analyze(art::Event const& e)
 
   // select within the beam window.
   std::vector<double> beam_time_window = {1.7e6, 1600.}; // 1.7ms, 1600ns
+  if (_cosmic_mode) beam_time_window[0] = 1.7e6 - 3000.; // shift the time in the cosmic window. 
 
   // information to store for the CRT downstream hits.
   std::vector<double> chit_x_downstream, chit_y_downstream, chit_t1_downstream, chit_depoistedE_downstream, chit_corrADC_strip_diff_downstream, chit_t1_strip_diff_downstream;
@@ -332,18 +353,19 @@ void SelectionAna::analyze(art::Event const& e)
     double t1 = hit->ts1_ns; // get the time of the hit.
     
     // smear the timing.
-    double t1_smaer_offset = 0;
     if (_smear_timing)  {
-      t1_smaer_offset = fRandomGenerator->Gaus(0, sigma_timing);
-      t1 = t1 + t1_smaer_offset;
+      t1 = t1 + smear_timing_offset;
 
-      if (_debug) std::cout<<"Before hit ts1: "<<hit->ts1_ns<<", after hit ts1: "<<t1<<", frac diff: "<<(t1-hit->ts1_ns)/hit->ts1_ns<<std::endl;
+      if (_debug) std::cout<<"Before hit ts1: "<<hit->ts1_ns<<", smear_timing_offset: "<<smear_timing_offset<<", frac diff: "<<(smear_timing_offset)/hit->ts1_ns<<std::endl;
     }
     // shift t1 inside the beam gate from 1.7e6 for data.
     if (_data_mode) t1 = t1-4420.+1.7e6;
 
     // select within the beam window.
-    if (t1<beam_time_window[0] || t1>beam_time_window[0]+beam_time_window[1]) continue;
+    if (_interactionMode!=0 && !_data_mode){ 
+      if (t1<beam_time_window[0] || t1>beam_time_window[0]+beam_time_window[1]) continue; // if not signal, apply the beam window selection. 
+    }
+    if (_debug) std::cout<<"hit: "<<ihit<<", t1: "<<t1<<", beam_time_window: "<<beam_time_window[0]<<", "<<beam_time_window[1]<<std::endl;
     
     _chit_t1.push_back(t1); // store the t1.
 
@@ -352,26 +374,17 @@ void SelectionAna::analyze(art::Event const& e)
       _n_chits_downstream++; 
 
       if (_smear_deposited_energy) {
-        double chit_depositedE_smeared = hit->peshit*calibration_constant[1] + fRandomGenerator->Gaus(0, sigma_depositedE);
+        double chit_depositedE_smeared = hit->peshit*calibration_constant[1] + smear_deposited_energy_offset;
         _chit_depositedE.push_back(chit_depositedE_smeared);
         chit_depoistedE_downstream.push_back(chit_depositedE_smeared);
 
-        if(_debug) std::cout<<"Before hit depositedE: "<<hit->peshit*calibration_constant[1]<<", after hit depositedE: "<<chit_depositedE_smeared<<", frac diff: "<<(chit_depositedE_smeared-hit->peshit*calibration_constant[1])/hit->peshit*calibration_constant[1]<<", sigma_depositedE: "<<sigma_depositedE<<std::endl;
+        if(_debug) std::cout<<"Before hit depositedE: "<<hit->peshit*calibration_constant[1]<<", smear_deposited_energy_offset: "<<smear_deposited_energy_offset<<", frac diff: "<<(smear_deposited_energy_offset)/hit->peshit*calibration_constant[1]<<", sigma_depositedE: "<<sigma_depositedE<<std::endl;
       }else{
         _chit_depositedE.push_back(hit->peshit*calibration_constant[1]);
         chit_depoistedE_downstream.push_back(hit->peshit*calibration_constant[1]);
       }
 
-      if (_smear_position) {
-        double chit_x_smeared = hit->x_pos + fRandomGenerator->Gaus(0, sigma_pos);
-        double chit_y_smeared = hit->y_pos + fRandomGenerator->Gaus(0, sigma_pos);
-        chit_x_downstream.push_back(chit_x_smeared); chit_y_downstream.push_back(chit_y_smeared); 
-
-        if (_debug) std::cout<<"Before hit x: "<<hit->x_pos<<", after hit x: "<<chit_x_smeared<<", frac diff: "<<(chit_x_smeared-hit->x_pos)/hit->x_pos<<std::endl;
-      }else{
-        chit_x_downstream.push_back(hit->x_pos); chit_y_downstream.push_back(hit->y_pos); 
-      }
-      
+      chit_x_downstream.push_back(hit->x_pos); chit_y_downstream.push_back(hit->y_pos); 
       chit_t1_downstream.push_back(t1);
 
       double corrADC_strip_diff = std::abs((corr_adcs[0]+corr_adcs[1])/2. - (corr_adcs[2]+corr_adcs[3])/2.);
@@ -380,7 +393,7 @@ void SelectionAna::analyze(art::Event const& e)
 
     }else {  // upstream
       _n_chits_upstream++;
-      if (_smear_deposited_energy) _chit_depositedE.push_back(hit->peshit*calibration_constant[0] + fRandomGenerator->Gaus(0, sigma_depositedE));
+      if (_smear_deposited_energy) _chit_depositedE.push_back(hit->peshit*calibration_constant[0] + smear_deposited_energy_offset);
       else _chit_depositedE.push_back(hit->peshit*calibration_constant[0]);
     }
 
@@ -396,7 +409,7 @@ void SelectionAna::analyze(art::Event const& e)
       if (_debug) std::cout<<"backtrak pdg: "<<truthMatch.pdg<<", energy: "<<truthMatch.particle_energy<<", depEnergy_total: "<<truthMatch.depEnergy_total<<", purity: "<<truthMatch.purity<<", trackid: "<<truthMatch.trackid<<", origin: "<<FindNeutrinoSources(e, _g4_label, truthMatch.trackid, _interactionMode)<<std::endl;
 
       // store the neutrino info for the CRT hit.
-      int nu_pdg = -1, ccnc = -1, nu_mode = -1, nu_interaction_type = -1; double nu_energy = -1;
+      int nu_pdg = -1, ccnc = -1, nu_mode = -1, nu_interaction_type = -1; double nu_energy = -1.;
       StoreNeutrinoInfo(e, _g4_label, truthMatch.trackid, nu_pdg, ccnc, nu_mode, nu_interaction_type, nu_energy);
       _chit_backtrack_nu_pdg.push_back(nu_pdg);
       _chit_backtrack_nu_ccnc.push_back(ccnc);
@@ -413,9 +426,11 @@ void SelectionAna::analyze(art::Event const& e)
   std::map<double, std::vector<double>> distance_to_chit_depositedE_diff_map; distance_to_chit_depositedE_diff_map.clear();
   std::map<double, std::vector<double>> distance_to_chit_depositedE_ratio_map; distance_to_chit_depositedE_ratio_map.clear();
   std::map<double, std::vector<double>> distance_to_chit_depositedE_frac_diff_map; distance_to_chit_depositedE_frac_diff_map.clear();
+  std::map<double, std::vector<std::vector<double>>> distance_to_chit_depositedE_map; distance_to_chit_depositedE_map.clear();
   std::vector<std::array<double, 2>> position_x_y; position_x_y.clear();
   std::vector<double> distance_between_hits_downstream; distance_between_hits_downstream.clear();
-  
+  std::map<double, double>  distance_to_smeared_distance_map; distance_to_smeared_distance_map.clear();
+
   if (_debug){
     if (chit_x_downstream.size()!=chit_y_downstream.size() || chit_x_downstream.size()!=chit_t1_downstream.size() || chit_x_downstream.size()!=chit_depoistedE_downstream.size()|| chit_x_downstream.size()!=chit_corrADC_strip_diff_downstream.size()|| chit_x_downstream.size()!=chit_t1_strip_diff_downstream.size()){
       std::cout<<"The size of the downstream chits are not the same!"<<std::endl;
@@ -426,22 +441,35 @@ void SelectionAna::analyze(art::Event const& e)
       for (size_t j=i+1; j<chit_x_downstream.size(); j++){
 
         double distance = std::hypot(chit_x_downstream[i]-chit_x_downstream[j], chit_y_downstream[i]-chit_y_downstream[j]);
+        if (_smear_position) {
+          double distance_smeared = std::hypot(chit_x_downstream[i]-chit_x_downstream[j]+smear_position_offset*std::sqrt(2), chit_y_downstream[i]-chit_y_downstream[j]+smear_position_offset*std::sqrt(2));
+          distance_to_smeared_distance_map[distance] = distance_smeared;
+        }
+
         double t1_diff_between_hits = std::abs(chit_t1_downstream[i]-chit_t1_downstream[j]);
+        if (_smear_timing) {
+          t1_diff_between_hits = std::abs((chit_t1_downstream[i]-chit_t1_downstream[j]) + smear_timing_offset*std::sqrt(2));
+        }
         
         // deposited E mean. 
         double chit_depositedE_mean_between_hits = (chit_depoistedE_downstream[i]+chit_depoistedE_downstream[j])/2;
 
         // deposited E diff.
         double chit_depositedE_diff_between_hits = std::abs(chit_depoistedE_downstream[i]-chit_depoistedE_downstream[j]);
+        if (_smear_deposited_energy) {
+          chit_depositedE_diff_between_hits = std::abs((chit_depoistedE_downstream[i]-chit_depoistedE_downstream[j]) + smear_deposited_energy_offset*std::sqrt(2));
+        }
 
         // deposited E ratio.
-        double chit_depositedE_ratio_between_hits = -1; 
+        double chit_depositedE_ratio_between_hits = -1.; 
         if (chit_depoistedE_downstream[i]<chit_depoistedE_downstream[j]) chit_depositedE_ratio_between_hits = std::abs(chit_depoistedE_downstream[i]/chit_depoistedE_downstream[j]);
         else chit_depositedE_ratio_between_hits = std::abs(chit_depoistedE_downstream[j]/chit_depoistedE_downstream[i]);
 
         // deposited E fractional diff.
         double chit_depositedE_frac_diff_between_hits = std::abs((chit_depoistedE_downstream[i]-chit_depoistedE_downstream[j]))/((chit_depoistedE_downstream[i]+chit_depoistedE_downstream[j])/2);
-        
+        if (_smear_deposited_energy) {
+          chit_depositedE_frac_diff_between_hits = std::abs((chit_depoistedE_downstream[i]-chit_depoistedE_downstream[j]) + smear_deposited_energy_offset*std::sqrt(2))/((chit_depoistedE_downstream[i]+chit_depoistedE_downstream[j])/2);   
+        }     
         // t1 strip diff 
         double t1_strip_diff_mean = (chit_t1_strip_diff_downstream[i]+chit_t1_strip_diff_downstream[j])/2;
 
@@ -455,13 +483,15 @@ void SelectionAna::analyze(art::Event const& e)
         distance_to_chit_depositedE_diff_map[distance].push_back(chit_depositedE_diff_between_hits);
         distance_to_chit_depositedE_ratio_map[distance].push_back(chit_depositedE_ratio_between_hits);
         distance_to_chit_depositedE_frac_diff_map[distance].push_back(chit_depositedE_frac_diff_between_hits);
+        distance_to_chit_depositedE_map[distance].push_back({chit_depoistedE_downstream[i], chit_depoistedE_downstream[j]});
       }
       std::array<double, 2> position = {chit_x_downstream[i], chit_y_downstream[i]};
       position_x_y.push_back(position);
     }
   }
 
-  if (canFormSquare(distance_between_hits_downstream)) {
+  _RectScore = FormRectScore(distance_between_hits_downstream);
+  if (canFormRect(distance_between_hits_downstream)) {
     _isSquare = 1; // true
     calculateLenWidthArea(position_x_y, _square_side_length, _square_side_width, _square_area);
   }else {
@@ -477,10 +507,13 @@ void SelectionAna::analyze(art::Event const& e)
   _t1_diff_between_hits_biggest_distance = -1.; 
 
   _chit_depositedE_mean_between_hits_biggest_distance = -1.;
-  _chit_depositedE_diff_between_hits_biggest_distance = -1.;  
   _chit_depositedE_ratio_between_hits_biggest_distance = -1.;  
-  _chit_depositedE_frac_diff_between_hits_biggest_distance = -1.;  
 
+
+  _chit_depositedE_diff_between_hits_biggest_distance = -1.;  
+  _chit_depositedE_frac_diff_between_hits_biggest_distance = -1.;  
+  _chit_depositedE_1st_hit = -1.;
+  _chit_depositedE_2nd_hit = -1.;
   size_t counter=0; //counter_smallest_distance=0, counter_biggest_distance=0;
   for (auto & [distance, chit_depositedE_mean_vec] : distance_to_chit_depositedE_mean_map){
     if (counter==distance_to_chit_depositedE_mean_map.size()-1){ // the maximum distance should belongs to the diagonal hits.  
@@ -491,9 +524,22 @@ void SelectionAna::analyze(art::Event const& e)
       auto chit_depositedE_diff_vec = distance_to_chit_depositedE_diff_map[distance];
       auto chit_depositedE_ratio_vec = distance_to_chit_depositedE_ratio_map[distance];
       auto chit_depositedE_frac_diff_vec = distance_to_chit_depositedE_frac_diff_map[distance];
+      auto chit_depositedE_vec = distance_to_chit_depositedE_map[distance];
 
       if (chit_depositedE_mean_vec.size()==2){ // two diagonal pairs. 
+        
         _biggest_distance_between_hits = distance;
+
+        if (_smear_position) {
+          double distance_smeared = distance_to_smeared_distance_map[distance];
+          double scaling_factor = distance_smeared/distance;
+          _square_side_length = _square_side_length*scaling_factor;
+          _square_side_width = _square_side_width*scaling_factor;
+          _square_area = _square_area*scaling_factor*scaling_factor;
+        }
+
+        if (_debug) std::cout<<"Before distance: "<<distance<<", smear_position_offset: "<<smear_position_offset<<", frac diff: "<<smear_position_offset/distance<<std::endl;
+
         // select the pair based on the matrix: t1 strip diff + corrADC strip diff.
         int index = 0; 
         double t1_strip_diff_min = chit_depositedE_mean_vec[0][1];
@@ -506,6 +552,8 @@ void SelectionAna::analyze(art::Event const& e)
         _chit_depositedE_diff_between_hits_biggest_distance = chit_depositedE_diff_vec[index];
         _chit_depositedE_ratio_between_hits_biggest_distance = chit_depositedE_ratio_vec[index];
         _chit_depositedE_frac_diff_between_hits_biggest_distance = chit_depositedE_frac_diff_vec[index];
+        _chit_depositedE_1st_hit = chit_depositedE_vec[index][0];
+        _chit_depositedE_2nd_hit = chit_depositedE_vec[index][1];
       }
     }
     counter++;
@@ -558,7 +606,7 @@ void SelectionAna::calculateMeanStd(std::vector<double> vec, double &mean, doubl
 }
 
 
-bool SelectionAna::canFormSquare(std::vector<double> distances) {
+bool SelectionAna::canFormRect(std::vector<double> distances) {
   if (distances.size() != 6) {
     return false; // Need exactly 4 points to form a square
   }
@@ -572,6 +620,22 @@ bool SelectionAna::canFormSquare(std::vector<double> distances) {
     distances[2] == distances[3] &&
     distances[4] == distances[5] &&            // Diagonals equal
     std::abs(distances[4]-std::sqrt(distances[0]*distances[0] + distances[2]*distances[2]))<0.01;
+}
+
+double SelectionAna::FormRectScore(std::vector<double> distances) {
+  if (distances.size() != 6) {
+    return -1.; // Need exactly 4 points to form a square
+  }
+
+  // Sort the distances in non-decreasing order
+  std::sort(distances.begin(), distances.end());
+  
+  double side_diff = std::abs(distances[0]-distances[1]);
+  double side_diff_2 = std::abs(distances[2]-distances[3]);
+  double diagonal_diff = std::abs(distances[4]-distances[5]);
+  double Pythagorean_diff = std::abs(distances[4]-std::sqrt(distances[0]*distances[0] + distances[2]*distances[2]));
+
+  return side_diff + side_diff_2 + diagonal_diff + Pythagorean_diff;
 }
 
 void SelectionAna::calculateLenWidthArea(std::vector<std::array<double, 2>> position_x_y, double &length, double &width, double &area){
@@ -628,6 +692,7 @@ void SelectionAna::StoreNeutrinoInfo(art::Event const & e, std::string _geant_pr
     nu_energy = -1;
   }
 }
+
 int SelectionAna::FindNeutrinoSources(art::Event const & e, std::string _geant_producer, int geant_track_id, int _interactionMode) {
   if (_interactionMode==0) return 0; // signal
 

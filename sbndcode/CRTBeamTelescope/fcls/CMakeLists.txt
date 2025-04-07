@@ -1,4 +1,4 @@
-add_subdirectory(signals_different_decaly_length)
+add_subdirectory(SignalsDifferentDecalyLength)
 add_subdirectory(RecoSyst)
 
 install_fhicl()

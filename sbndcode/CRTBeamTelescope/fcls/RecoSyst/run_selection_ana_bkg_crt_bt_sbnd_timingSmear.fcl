@@ -1,3 +1,4 @@
 #include "run_selection_ana_bkg_crt_bt_sbnd.fcl"
 
 physics.analyzers.crtana.SmearTiming: true
+physics.analyzers.crtana.Debug: true
