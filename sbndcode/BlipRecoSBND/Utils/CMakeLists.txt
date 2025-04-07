@@ -14,7 +14,7 @@ cet_make_library(
                 lardata::Utilities
                 larevt::Filters
                 lardataobj::RawData
-                        larreco::Calorimetry
+                larreco::Calorimetry
                 lardataobj::RecoBase
                 lardata::RecoObjects
                 larpandora::LArPandoraInterface
@@ -41,7 +41,7 @@ cet_make_library(
                 #sbndcode_CosmicIdUtils
 )
 
-art_dictionary(DICTIONARY_LIBRARIES, sbndcode_BlipUtils)
+art_dictionary(DICTIONARY_LIBRARIES sbndcode_BlipUtils)
 install_headers()
 install_source()
 install_fhicl()
