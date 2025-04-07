@@ -34,5 +34,4 @@ simple_plugin(
               Eigen3::Eigen
 )
 
-
 install_fhicl()

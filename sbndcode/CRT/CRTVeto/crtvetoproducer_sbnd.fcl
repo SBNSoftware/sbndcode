@@ -7,14 +7,19 @@ BEGIN_PROLOG
 crtvetoproducer_sbnd:
 {
    CRTGeoAlg:                  @local::crtgeoalg_sbnd
+   CRTClusterModuleLabel:      "crtclustering"
    CRTSpacePointModuleLabel:   "crtspacepoints"
-   WindowStart:                0.4
-   WindowEnd:                  2.0
+   WindowStart:                0.265
+   WindowEnd:                  1.965
+   IsData:                     false
    module_type:                "CRTVetoProducer"
 }
 
 crtvetoproducer_data_sbnd: @local::crtvetoproducer_sbnd
 crtvetoproducer_data_sbnd.CRTGeoAlg:     @local::crtgeoalg_data_sbnd
+crtvetoproducer_data_sbnd.IsData:        true
+crtvetoproducer_data_sbnd.WindowStart:   0.365
+crtvetoproducer_data_sbnd.WindowEnd:     2.065
 
 
 END_PROLOG
