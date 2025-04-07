@@ -7,7 +7,6 @@ sbnd_opt0_finder_data: @local::sbnd_opt0_finder_one_to_many
 sbnd_opt0_finder_data.CaloProducer:     "pandoraCaloData"
 sbnd_opt0_finder_data.SelectNeutrino:   true 
 sbnd_opt0_finder_data.CalAreaConstants: [ 0.0204 , 0.0210, 0.0193 ]
-sbnd_opt0_finder_data.OpChannelsToSkip: [39, 66, 67, 69, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302]
 # since the flash time is w.r.t the TDC ETRIG, this may move with light arrival; need to extend the flash window
 sbnd_opt0_finder_data.FlashVetoTimeStart: -1
 sbnd_opt0_finder_data.FlashVetoTimeEnd:    5
