@@ -72,6 +72,7 @@ sbnd_reco2_producers:{
 
     ### CVN
     cvn:                 @local::standard_sbndcvnevaluatorslc
+    cvnSCE:              @local::standard_sbndcvnevaluatorslc
 }
 
 sbnd_reco2_producer_sequence: [  
@@ -130,6 +131,10 @@ sbnd_reco2_producers.pandoraCaloData.FieldDistortionEfield:             false
 sbnd_reco2_producers.pandoraCaloData.TrackIsFieldDistortionCorrected:   false
 sbnd_reco2_producers.pandoraPidData.TrackModuleLabel:                   "pandoraTrack"
 sbnd_reco2_producers.pandoraPidData.CalorimetryModuleLabel:             "pandoraCaloData"
+
+sbnd_reco2_producers.cvn.SliceLabel: "pandora"
+sbnd_reco2_producers.cvn.PFParticleModuleLabel: "pandora"
+sbnd_reco2_producers.cvn.T0Label: "pandora"
 
 physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
