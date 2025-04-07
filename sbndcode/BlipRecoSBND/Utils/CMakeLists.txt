@@ -36,7 +36,7 @@ cet_make_library(LIBRARY_NAME  sbndcode_BlipUtils
                            #sbndcode_CosmicIdUtils
 )
 
+art_dictionary(DICTIONARY_LIBRARIES, sbndcode_BlipUtils)
 install_headers()
 install_source()
 install_fhicl()
-art_dictionary()
