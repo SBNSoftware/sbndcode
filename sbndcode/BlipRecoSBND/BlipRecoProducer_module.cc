@@ -113,8 +113,8 @@ void BlipRecoProducer::produce(art::Event & evt)
   // and associations we will create
   //============================================
   std::unique_ptr< std::vector< blip::Blip> > blip_v(std::make_unique<std::vector<blip::Blip>>());
-  std::unique_ptr< art::Assns <recob::SpacePoint, blip::Blip> >  assn_blip_sps_v(std::make_unique<art::Assns<blip::Blip, recob::SpacePoint>>() );
-  std::unique_ptr< art::Assns <recob::Hit, blip::Blip> >  assn_blip_hit_v(std::make_unique<art::Assns<blip::Blip, recob::Hit> >() );
+  std::unique_ptr< art::Assns <blip::Blip, recob::SpacePoint> >  assn_blip_sps_v(std::make_unique<art::Assns<blip::Blip, recob::SpacePoint>>() );
+  std::unique_ptr< art::Assns <blip::Blip, recob::Hit> >  assn_blip_hit_v(std::make_unique<art::Assns<blip::Blip, recob::Hit> >() );
   std::unique_ptr< std::vector< recob::SpacePoint> > SpacePoint_v(std::make_unique<std::vector<recob::SpacePoint>>());
   std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_hit_sps_v(std::make_unique<art::Assns<recob::Hit,recob::SpacePoint>>() );
   
