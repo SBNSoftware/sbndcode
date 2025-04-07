@@ -840,7 +840,10 @@ BlipAna::BlipAna(fhicl::ParameterSet const& pset) :
   InitializeHistograms();
     
 }
-BlipAna::~BlipAna(){}
+BlipAna::~BlipAna()
+{
+  delete fBlipAlg;
+}
 
 
 
