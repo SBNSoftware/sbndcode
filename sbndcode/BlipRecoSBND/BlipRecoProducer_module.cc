@@ -88,7 +88,7 @@ BlipRecoProducer::BlipRecoProducer(fhicl::ParameterSet const & pset)
   produces< art::Assns <  recob::Hit, recob::SpacePoint> >();
   produces< std::vector< std::vector<blip::Blip> > >(); 
   
-  produces< art::Assns <  blip::Blip, recob::SpacePoint > >();
+  //produces< art::Assns <  blip::Blip, recob::SpacePoint > >();
   produces< art::Assns <  blip::Blip,         recob::Hit> >();
 
   //produces< std::vector<  recob::Cluster    > >();
@@ -113,7 +113,7 @@ void BlipRecoProducer::produce(art::Event & evt)
   // and associations we will create
   //============================================
   std::unique_ptr< std::vector< blip::Blip> > blip_v(std::make_unique<std::vector<blip::Blip>>());
-  std::unique_ptr< art::Assns <blip::Blip, recob::SpacePoint> >  assn_blip_sps_v(std::make_unique<art::Assns<blip::Blip, recob::SpacePoint>>() );
+  //std::unique_ptr< art::Assns <blip::Blip, recob::SpacePoint> >  assn_blip_sps_v(std::make_unique<art::Assns<blip::Blip, recob::SpacePoint>>() );
   std::unique_ptr< art::Assns <blip::Blip, recob::Hit> >  assn_blip_hit_v(std::make_unique<art::Assns<blip::Blip, recob::Hit> >() );
   std::unique_ptr< std::vector< recob::SpacePoint> > SpacePoint_v(std::make_unique<std::vector<recob::SpacePoint>>());
   std::unique_ptr< art::Assns <recob::Hit, recob::SpacePoint> >  assn_hit_sps_v(std::make_unique<art::Assns<recob::Hit,recob::SpacePoint>>() );
@@ -160,7 +160,7 @@ void BlipRecoProducer::produce(art::Event & evt)
     recob::SpacePoint newpt(xyz,xyz_err,chiSquare);
     SpacePoint_v->emplace_back(newpt);
     art::Ptr<recob::SpacePoint> spacePointPTR = makeSpacePointPtr(SpacePoint_v->size() - 1);
-    assn_blip_sps_v->addSingle(blipPtr, spacePointPTR);
+    //assn_blip_sps_v->addSingle(blipPtr, spacePointPTR);
     //util::CreateAssn(*this, evt, *blip_v, &(SpacePoint_v->back()), *SpacePoint_v);
     // Hit associations 
     for(auto& hc : b.clusters ) {
@@ -180,7 +180,7 @@ void BlipRecoProducer::produce(art::Event & evt)
   evt.put(std::move(SpacePoint_v));
   evt.put(std::move(assn_hit_sps_v));
   evt.put(std::move(blip_v));
-  evt.put(std::move(assn_blip_sps_v));
+  //evt.put(std::move(assn_blip_sps_v));
   evt.put(std::move(assn_blip_hit_v));
 }//END EVENT LOOP
 
