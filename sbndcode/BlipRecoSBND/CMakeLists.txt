@@ -37,11 +37,11 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            sbndcode_BlipRecoAlg
 )
 
-cet_build_plugin(BlipAna art::Module SOURCE BlipAna_module.cc LIBRARIES ${MODULE_LIBRARIES} )
-cet_build_plugin(BlipRecoProducer art::Module SOURCE BlipRecoProducer_module.cc LIBRARIES ${MODULE_LIBRARIES} )
-
 add_subdirectory(Utils)
 add_subdirectory(Alg)
+
+cet_build_plugin(BlipAna art::Module SOURCE BlipAna_module.cc LIBRARIES ${MODULE_LIBRARIES} )
+cet_build_plugin(BlipRecoProducer art::Module SOURCE BlipRecoProducer_module.cc LIBRARIES ${MODULE_LIBRARIES} )
 
 install_headers()
 install_fhicl()
