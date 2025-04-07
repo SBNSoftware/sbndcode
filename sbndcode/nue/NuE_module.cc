@@ -96,7 +96,7 @@ public:
     void SetupMaps(const art::Event &e);
     void showerEnergy(const art::Event &e);
     void recoNeutrino(const art::Event &e);
-    void trueNeutrino(const art::Event &e);
+    bool trueNeutrino(const art::Event &e);
     void slices(const art::Event &e);
     void PFPs(const art::Event &e);
     void MCParticles(const art::Event &e);
@@ -120,7 +120,9 @@ private:
     double trueCCNC;                             // MCTruth CC or NC, CC = 0, NC = 1 
     double trueNeutrinoType;                     // MCTruth neutrino flavour (PDG code)
     double trueChargedLepton;                    // MCTruth charged lepton flavour (PDG code)
-    
+    double trueNeutrinoTPCID;
+    bool  trueNeutrinoTPCValid;
+
     double trueEnergy;
     double trueAngle;
     double trueETheta2;
@@ -134,6 +136,7 @@ private:
     double totalShowerEnergy;                 // Total energy of the shower in the event
     double chosenShowerTheta;
     double chosenShowerTrackScore;
+    double chosenShowerEnergy;
 
     double chosenSliceCompleteness;           // The completeness of the chosen slice
     double chosenSliceNumPFPs;
@@ -147,17 +150,19 @@ private:
     geo::GeometryCore const* geom = art::ServiceHandle<geo::Geometry>()->provider();
  
     // Vectors for the NuE Tree
-    std::vector<double> fullyReco_tree = std::vector<double>(0);
     std::vector<int> DLCurrent_tree = std::vector<int>(0);
     std::vector<double> event_tree = std::vector<double>(0);
     std::vector<double> run_tree = std::vector<double>(0);
     std::vector<double> subrun_tree = std::vector<double>(0);
+    std::vector<double> numTrueNeutrinos_tree = std::vector<double>(0);
     std::vector<double> trueNeutrinoVX_tree = std::vector<double>(0);
     std::vector<double> trueNeutrinoVY_tree = std::vector<double>(0);
     std::vector<double> trueNeutrinoVZ_tree = std::vector<double>(0);
     std::vector<double> trueCCNC_tree = std::vector<double>(0);
     std::vector<double> trueNeutrinoType_tree = std::vector<double>(0);
     std::vector<double> trueLeptonType_tree = std::vector<double>(0);
+    std::vector<double> trueNeutrinoTPCID_tree = std::vector<double>(0);
+    std::vector<bool> trueNeutrinoTPCValid_tree = std::vector<bool>(0);
     std::vector<double> recoNeutrinoVX_tree = std::vector<double>(0);
     std::vector<double> recoNeutrinoVY_tree = std::vector<double>(0);
     std::vector<double> recoNeutrinoVZ_tree = std::vector<double>(0);
@@ -170,6 +175,7 @@ private:
     std::vector<double> showerTrackScore_tree = std::vector<double>(0);
     std::vector<double> numShowers_tree = std::vector<double>(0);
     std::vector<double> showerETheta2_tree = std::vector<double>(0);
+    std::vector<double> chosenShowerEnergy_tree = std::vector<double>(0);
     std::vector<double> recoilElectronTrueAngle_tree = std::vector<double>(0);
     std::vector<double> recoilElectronTrueEnergy_tree = std::vector<double>(0);
     std::vector<double> recoilElectronTrueETheta2_tree = std::vector<double>(0);
@@ -226,27 +232,18 @@ void sbnd::NuE::analyze(art::Event const& e){
   std::cout << "" << std::endl;
   std::cout << "________________________________________________________________________________________" << std::endl;
   std::cout << "Run: " << runID << ", Subrun: " << subRunID << ", Event: " << eventID << std::endl;
-
-  trueNeutrino(e);
+    
+  trueNeutrino(e)
   recoNeutrino(e);
   slices(e);
   PFPs(e);
   showerEnergy(e);
   MCParticles(e);
 
-  if(!std::isnan(recoNeutrinoVX)){
-    // Event is fully reconstructed
-    fullyReco_tree.push_back(1);
-  } else{
-      std::cout << "There is no reco neutrino" << std::endl;
-      // Event is not fully reconstructed
-      fullyReco_tree.push_back(0);
-  }
-
   event_tree.push_back(eventID);
   run_tree.push_back(runID);
   subrun_tree.push_back(subRunID);
-  DLCurrent_tree.push_back(0);   // 0 = uboone dl, 1 = dune dl, 2 = current, 3 = cheated
+  DLCurrent_tree.push_back(3);   // 0 = uboone dl, 1 = dune dl, 2 = current, 3 = cheated
 }
 
 double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
@@ -354,15 +351,18 @@ void sbnd::NuE::showerEnergy(const art::Event &e){
 
         chosenShowerTheta = std::get<3>(v[chosenShowerIndex]);
         chosenShowerTrackScore = std::get<4>(v[chosenShowerIndex]);
+        chosenShowerEnergy = std::get<2>(v[chosenShowerIndex]);
         ETheta2 = (totalShowerEnergy * std::pow(chosenShowerTheta, 2));
          
-        std::cout << "Chosen Shower: Number = " << chosenShowerIndex + 1 << ", Energy = " << largestEnergy << ", Theta = " << TMath::RadToDeg() * chosenShowerTheta << ", Trackscore = " << chosenShowerTrackScore << std::endl;
-        
+        std::cout << "Chosen Shower: Number = " << chosenShowerIndex + 1 << ", Energy = " << chosenShowerEnergy << ", Theta = " << TMath::RadToDeg() * chosenShowerTheta << ", Trackscore = " << chosenShowerTrackScore << std::endl;
+        std::cout << "Total Shower Energy = " << largestEnergy << std::endl; 
+    
     } else{
-        totalShowerEnergy = std::nan("");
-        chosenShowerTheta = std::nan("");
-        chosenShowerTrackScore = std::nan("");
-        ETheta2 = std::nan("");
+        totalShowerEnergy = -999999;
+        chosenShowerTheta = -999999;
+        chosenShowerTrackScore = -999999;
+        chosenShowerEnergy = -999999;
+        ETheta = -999999;
     }
     
     std::cout << "Final Numbers: Shower Energy = " << totalShowerEnergy << ", Shower Theta = " << TMath::RadToDeg() * chosenShowerTheta << ", ETheta^2 = " << ETheta2 << std::endl;
@@ -370,6 +370,7 @@ void sbnd::NuE::showerEnergy(const art::Event &e){
     showerTheta_tree.push_back(chosenShowerTheta);
     showerTrackScore_tree.push_back(chosenShowerTrackScore);
     showerETheta2_tree.push_back(ETheta2);
+    chosenShowerEnergy_tree.push_back(chosenShowerEnergy);
 }
 
 void sbnd::NuE::recoNeutrino(const art::Event &e){
@@ -445,9 +446,9 @@ void sbnd::NuE::recoNeutrino(const art::Event &e){
 
     } else{
         // There is no reconstructed neutrino in the event
-        recoNeutrinoVX = std::nan("");
-        recoNeutrinoVY = std::nan("");
-        recoNeutrinoVZ = std::nan("");
+        recoNeutrinoVX = -999999;
+        recoNeutrinoVY = -999999;
+        recoNeutrinoVZ = -999999;
     }
     std::cout << "Reconstructed Primary Neutrino Vertex: (" << recoNeutrinoVX << ", " << recoNeutrinoVY << ", " << recoNeutrinoVZ << ")" << std::endl;
     recoNeutrinoVX_tree.push_back(recoNeutrinoVX);
@@ -455,10 +456,10 @@ void sbnd::NuE::recoNeutrino(const art::Event &e){
     recoNeutrinoVZ_tree.push_back(recoNeutrinoVZ);
 }
 
-void sbnd::NuE::trueNeutrino(const art::Event &e){
+bool sbnd::NuE::trueNeutrino(const art::Event &e){
     // Function for dealing with the true neutrino
 
-    std::vector<std::tuple<simb::MCNeutrino, simb::MCParticle, simb::MCParticle>> v; 
+    std::vector<std::tuple<simb::MCNeutrino, simb::MCParticle, simb::MCParticle, double, double>> v; 
     art::Handle<std::vector<simb::MCTruth>> neutrinoHandle;
     e.getByLabel(nuGenModuleLabel, neutrinoHandle);    
 
@@ -469,7 +470,6 @@ void sbnd::NuE::trueNeutrino(const art::Event &e){
         if(trueNeutrino.isNull()) continue;
 
         if(trueNeutrino->Origin() == 1){                                    // Neutrino must be a beam neutrino (1 = kBeamNeutrino)
-            numTrueNeutrinos++;
 
             const simb::MCNeutrino neutrino = trueNeutrino->GetNeutrino();  // References to the neutrino
             const simb::MCParticle neutrinoParticle = neutrino.Nu();        // The incoming neutrino
@@ -478,58 +478,63 @@ void sbnd::NuE::trueNeutrino(const art::Event &e){
             geo::Point_t pos = {neutrinoParticle.Vx(), neutrinoParticle.Vy(), neutrinoParticle.Vz()};
             geo::TPCID tpcID = theGeometry->FindTPCAtPosition(pos);
 
-            if(tpcID.isValid){
-                std::tuple<simb::MCNeutrino, simb::MCParticle, simb::MCParticle> tuple;
-                tuple = std::make_tuple(neutrino, neutrinoParticle, lepton);
-                v.push_back(tuple);
+            numTrueNeutrinos++;
+            trueNeutrinoTPCID = tpcID.TPC;
+            std::tuple<simb::MCNeutrino, simb::MCParticle, simb::MCParticle, double, double> tuple;
+            tuple = std::make_tuple(neutrino, neutrinoParticle, lepton, trueNeutrinoTPCID, tpcID.IsValid());
+            v.push_back(tuple);
 
-                trueNeutrinoVX = neutrinoParticle.Vx();
-                trueNeutrinoVY = neutrinoParticle.Vy();
-                trueNeutrinoVZ = neutrinoParticle.Vz();
-                trueCCNC = neutrino.CCNC();
-                trueNeutrinoType = neutrinoParticle.PdgCode();
-                trueChargedLepton = lepton.PdgCode();
-                
-            }
+            trueNeutrinoVX = neutrinoParticle.Vx();
+            trueNeutrinoVY = neutrinoParticle.Vy();
+            trueNeutrinoVZ = neutrinoParticle.Vz();
+            trueCCNC = neutrino.CCNC();
+            trueNeutrinoType = neutrinoParticle.PdgCode();
+            trueChargedLepton = lepton.PdgCode();
+            
         }
     }
     
-    std::cout << "Number of True Neutrinos = " << numTrueNeutrinos << ", v.size() = " << v.size() << std::endl;
-    if(numTrueNeutrinos != v.size()) std::cout << "True neutrino is not within the TPC" << std::endl; 
-    if(v.size() != 0){
+    numTrueNeutrinos_tree.push_back(v.size()); 
+    if(v.size() > 0){
         trueNeutrinoVX = std::get<1>(v[0]).Vx();
         trueNeutrinoVY = std::get<1>(v[0]).Vy();
         trueNeutrinoVZ = std::get<1>(v[0]).Vz();
         trueCCNC = std::get<0>(v[0]).CCNC();
         trueNeutrinoType = std::get<1>(v[0]).PdgCode();
         trueChargedLepton = std::get<2>(v[0]).PdgCode();
-    
-        for(long unsigned int trueNeut = 0; trueNeut < v.size(); trueNeut++){
-            std::cout << "True Neutrino " << trueNeut + 1 << ": Vertex = (" << std::get<1>(v[trueNeut]).Vx() << ", " << std::get<1>(v[trueNeut]).Vy() << ", " << std::get<1>(v[trueNeut]).Vz() << "), CCNC = " << std::get<0>(v[trueNeut]).CCNC() << ", Neutrino Type = " << std::get<1>(v[trueNeut]).PdgCode() << ", Charged Lepton = " << std::get<2>(v[trueNeut]).PdgCode() << ", Track ID = " << std::get<1>(v[trueNeut]).TrackId() << ", Energy = " << std::get<1>(v[trueNeut]).E() << std::endl;
-        }
-    } else{
-        trueNeutrinoVX = std::nan("");
-        trueNeutrinoVY = std::nan("");
-        trueNeutrinoVZ = std::nan("");
-        trueCCNC = std::nan("");
-        trueNeutrinoType = std::nan("");
-        trueChargedLepton = std::nan("");
-    }
+        trueNeutrinoTPCID = std::get<3>(v[0]);
+        trueNeutrinoTPCValid = std::get<4>(v[0]);
 
+        for(long unsigned int trueNeut = 0; trueNeut < v.size(); trueNeut++){
+            std::cout << "True Neutrino " << trueNeut + 1 << ": Vertex = (" << std::get<1>(v[trueNeut]).Vx() << ", " << std::get<1>(v[trueNeut]).Vy() << ", " << std::get<1>(v[trueNeut]).Vz() << "), CCNC = " << std::get<0>(v[trueNeut]).CCNC() << ", Neutrino Type = " << std::get<1>(v[trueNeut]).PdgCode() << ", Charged Lepton = " << std::get<2>(v[trueNeut]).PdgCode() << ", Track ID = " << std::get<1>(v[trueNeut]).TrackId() << ", Energy = " << std::get<1>(v[trueNeut]).E() << ", TPC ID: " << std::get<3>(v[trueNeut]); << ", TPC Valid: " << std::get<4>(v[trueNeut]); << std::endl;
+        }                          
+    } else{
+        trueNeutrinoVX = -999999;
+        trueNeutrinoVY = -999999;
+        trueNeutrinoVZ = -999999;
+        trueCCNC = -999999;
+        trueNeutrinoType = -999999;
+        trueChargedLepton = -999999;
+        trueNeutrinoTPCID = -999999;
+        trueNeutrinoTPCValid = -999999;
+    }
+        
         trueNeutrinoVX_tree.push_back(trueNeutrinoVX);
         trueNeutrinoVY_tree.push_back(trueNeutrinoVY);
         trueNeutrinoVZ_tree.push_back(trueNeutrinoVZ);
         trueCCNC_tree.push_back(trueCCNC);
         trueNeutrinoType_tree.push_back(trueNeutrinoType);
         trueLeptonType_tree.push_back(trueChargedLepton);
-
-        std::cout << "Chosen True Neutrino: (" << trueNeutrinoVX << ", " << trueNeutrinoVY << ", " << trueNeutrinoVZ << "), CCNC: " << trueCCNC << ", Neutrino Type: " << trueNeutrinoType << ", Charged Lepton: " << trueChargedLepton << std::endl;
+        trueNeutrinoTPCID_tree.push_back(trueNeutrinoTPCID);
+        trueNeutrinoTPCValid_tree.push_back(trueNeutrinoTPCValid);
+        std::cout << "Chosen True Neutrino: (" << trueNeutrinoVX << ", " << trueNeutrinoVY << ", " << trueNeutrinoVZ << "), CCNC: " << trueCCNC << ", Neutrino Type: " << trueNeutrinoType << ", Charged Lepton: " << trueChargedLepton << ", TPC ID: " << trueNeutrinoTPCID << ", TPC Valid: " << trueNeutrinoTPCValid << std::endl;
+    }
 }
 
 void sbnd::NuE::slices(const art::Event &e){
     const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
    
-    std::vector<std::tuple<art::Ptr<recob::Slice>, double, art::Ptr<sbn::CRUMBSResult>, double>> v; 
+    std::vector<std::tuple<art::Ptr<recob::Slice>, double, double, double>> v; 
 
     // Gets all the slices in the event
     art::Handle<std::vector<recob::Slice>>  sliceHandle;
@@ -573,13 +578,18 @@ void sbnd::NuE::slices(const art::Event &e){
                 art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(sliceVec, e, crumbsLabel);
                 const std::vector<art::Ptr<sbn::CRUMBSResult>> sliceCrumbsResults = sliceCrumbsAssns.at(slice.key());
         
-                if(sliceCrumbsResults.size() != 1){
+                if((sliceVec.size() != 1) && (sliceCrumbsResults.size() != 1)){
                     std::cout << "Error: slice has 0 or multiple CRUMBS results: " << sliceCrumbsResults.size() << std::endl;
 
-                } else{ 
-                    const art::Ptr<sbn::CRUMBSResult> sliceCrumbsResult(sliceCrumbsResults.front());
-                    std::tuple<art::Ptr<recob::Slice>, double, art::Ptr<sbn::CRUMBSResult>, double> tuple = std::make_tuple(slice, sliceCompleteness, sliceCrumbsResult, numPFPs);
-                    v.push_back(tuple);
+                } else{
+                    if(sliceCrumbsResults.size() == 1){
+                        const art::Ptr<sbn::CRUMBSResult> sliceCrumbsResult(sliceCrumbsResults.front());
+                        std::tuple<art::Ptr<recob::Slice>, double, double, double> tuple = std::make_tuple(slice, sliceCompleteness, sliceCrumbsResult->score, numPFPs);
+                        v.push_back(tuple);
+                    } else if(sliceCrumbsResults.size() != 1){
+                        std::tuple<art::Ptr<recob::Slice>, double, double, double> tuple = std::make_tuple(slice, sliceCompleteness, 0, numPFPs);
+                        v.push_back(tuple);
+                    }
                 }    
             }
         }
@@ -593,23 +603,27 @@ void sbnd::NuE::slices(const art::Event &e){
 
     std::cout << "Number of slices in event: " << numSlices << ", v.size(): " << v.size() << std::endl;
     
-    if(v.size() != 0){
+    if(v.size() > 1){
         for(long unsigned int sliceCand = 0; sliceCand < v.size(); sliceCand++){
-            auto crumbsPtr = std::get<2>(v[sliceCand]);
-            if(crumbsPtr->score > highestSliceScore){
-                highestSliceScore = crumbsPtr->score;
+            if(std::get<2>(v[sliceCand]) > highestSliceScore){
+                highestSliceScore = std::get<2>(v[sliceCand]);
                 highestSliceScoreIndex = sliceCand;
             }
         
-            std::cout << "Slice " << sliceCand + 1 << ": Completeness = " << std::get<1>(v[sliceCand]) << ", Number of PFPs: " << std::get<3>(v[sliceCand]) << ", Crumbs Score: " << crumbsPtr->score << std::endl;
+            std::cout << "Slice " << sliceCand + 1 << ": Completeness = " << std::get<1>(v[sliceCand]) << ", Number of PFPs: " << std::get<3>(v[sliceCand]) << ", Crumbs Score: " << std::get<2>(v[sliceCand]) << std::endl;
         }
 
         chosenSliceCompleteness = std::get<1>(v[highestSliceScoreIndex]);
         chosenSliceNumPFPs = std::get<3>(v[highestSliceScoreIndex]);
 
+    } else if(v.size() == 1){
+        chosenSliceCompleteness = std::get<1>(v[0]);
+        chosenSliceNumPFPs = std::get<3>(v[0]);
+        std::cout << "Slice 1: Completeness = " << std::get<1>(v[0]) << ", Number of PFPs: " << std::get<3>(v[0]) << ", Crumbs Score: " << std::get<2>(v[0]) << std::endl;
+    
     } else{
-        chosenSliceCompleteness = std::nan("");
-        chosenSliceNumPFPs = std::nan("");
+        chosenSliceCompleteness = -999999;
+        chosenSliceNumPFPs = -999999;
     }
     
     std::cout << "Chosen Slice, Completeness: " << chosenSliceCompleteness << ", Number of PFPs: " << chosenSliceNumPFPs << std::endl;
@@ -673,9 +687,9 @@ void sbnd::NuE::MCParticles(const art::Event &e){
         trueAngle = std::get<2>(v[0]);
         trueETheta2 = std::get<3>(v[0]);
     } else{
-        trueEnergy = std::nan("");
-        trueAngle = std::nan("");
-        trueETheta2 = std::nan("");
+        trueEnergy = -999999;
+        trueAngle = -999999;
+        trueETheta2 = -999999;
     }
 
     recoilElectronTrueEnergy_tree.push_back(trueEnergy);
@@ -733,9 +747,9 @@ void sbnd::NuE::hits(const art::Event &e){
         event_hitTree.push_back(eventID);
         run_hitTree.push_back(runID);
         subrun_hitTree.push_back(subRunID);
-        plane_hitTree.push_back(std::nan(""));
-        x_hitTree.push_back(std::nan(""));
-        uvz_hitTree.push_back(std::nan(""));
+        plane_hitTree.push_back(-999999);
+        x_hitTree.push_back(-999999);
+        uvz_hitTree.push_back(-999999);
     }
 }
 
@@ -743,17 +757,19 @@ void sbnd::NuE::beginJob()
 {
     art::ServiceHandle<art::TFileService> tfs;
 
-    NuETree->Branch("fullyReco_tree", &fullyReco_tree);
     NuETree->Branch("DLCurrent_tree", &DLCurrent_tree);
     NuETree->Branch("event_tree", &event_tree);
     NuETree->Branch("run_tree", &run_tree);
     NuETree->Branch("subrun_tree", &subrun_tree);
+    NuETree->Branch("numTrueNeutrinos_tree", &numTrueNeutrinos_tree);
     NuETree->Branch("trueNeutrinoVX_tree", &trueNeutrinoVX_tree);
     NuETree->Branch("trueNeutrinoVY_tree", &trueNeutrinoVY_tree);
     NuETree->Branch("trueNeutrinoVZ_tree", &trueNeutrinoVZ_tree);
     NuETree->Branch("trueCCNC_tree", &trueCCNC_tree);
     NuETree->Branch("trueNeutrinoType_tree", &trueNeutrinoType_tree);
     NuETree->Branch("trueLeptonType_tree", &trueLeptonType_tree);
+    NuETree->Branch("trueNeutrinoTPCID_tree", &trueNeutrinoTPCID_tree);
+    NuETree->Branch("trueNeutrinoTPCValid_tree", &trueNeutrinoTPCValid_tree);
     NuETree->Branch("recoNeutrinoVX_tree", &recoNeutrinoVX_tree);
     NuETree->Branch("recoNeutrinoVY_tree", &recoNeutrinoVY_tree);
     NuETree->Branch("recoNeutrinoVZ_tree", &recoNeutrinoVZ_tree); 
@@ -766,6 +782,7 @@ void sbnd::NuE::beginJob()
     NuETree->Branch("showerTrackScore_tree", &showerTrackScore_tree);
     NuETree->Branch("numShowers_tree", &numShowers_tree);
     NuETree->Branch("showerETheta2_tree", &showerETheta2_tree);
+    NuETree->Branch("chosenShowerEnergy_tree", &chosenShowerEnergy_tree);
     NuETree->Branch("recoilElectronTrueAngle_tree", &recoilElectronTrueAngle_tree);
     NuETree->Branch("recoilElectronTrueEnergy_tree", &recoilElectronTrueEnergy_tree);
     NuETree->Branch("recoilElectronTrueETheta2_tree", &recoilElectronTrueETheta2_tree);
