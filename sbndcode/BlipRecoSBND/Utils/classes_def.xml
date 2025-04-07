@@ -2,4 +2,9 @@
 <class name="art::Wrapper<std::vector<blip::Blip> >"/>
 <class name="blip::Blip"/>
 <class name="std::vector<blip::Blip>"/>
+<class name="art::Wrapper<vector<vector<blip::Blip> > >"/>
+<class name="blip::HitClust"/>
+<class name="blip::TrueBlip"/>
+<class name="std::map<int,TVector3>"/>
+<class name="std::vector<vector<blip::Blip> >"/>
 </lcgdict>
