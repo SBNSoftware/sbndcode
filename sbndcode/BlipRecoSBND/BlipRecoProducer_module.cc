@@ -120,7 +120,7 @@ void BlipRecoProducer::produce(art::Event & evt)
   
 
   art::PtrMaker<blip::Blip> makeBlipPtr(evt);
-  art::PtrMaker<recob::SpacePoint> makeSpacePointPtr(evt);
+  //art::PtrMaker<recob::SpacePoint> makeSpacePointPtr(evt);
   //============================================
   // Get hits from input module
   //============================================
