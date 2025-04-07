@@ -18,6 +18,7 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 #include "sbndcode/BlipRecoSBND/Utils/DataTypes.h"
+#include "lardataobj/RecoBase/SpacePoint.h"
 
 //
 // Only include objects that we would like to be able to put into the event.
