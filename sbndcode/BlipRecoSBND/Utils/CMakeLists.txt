@@ -39,3 +39,4 @@ art_make_library(LIBRARY_NAME  sbndcode_BlipUtils
 install_headers()
 install_source()
 install_fhicl()
+art_dictionary()
