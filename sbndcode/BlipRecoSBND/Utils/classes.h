@@ -30,8 +30,6 @@ template class art::Wrapper<art::Assns<recob::Hit,blip::Blip,void> >;
 template class std::vector<blip::Blip>;
 template class art::Wrapper<std::vector<blip::Blip> >;
 template class std::map<int, TVector3>;
-template class std::vector<std::vector<blip::Blip>>;
-template class art::Wrapper<std::vector<std::vector<blip::Blip> > >;
 template class art::Assns<blip::Blip,recob::Hit,void>;
 template class art::Wrapper<art::Assns<blip::Blip,recob::Hit,void> >;
 template class art::Assns<blip::Blip,recob::SpacePoint,void>;

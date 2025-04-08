@@ -56,10 +56,10 @@ class BlipRecoProducer : public art::EDProducer
   public:
   explicit BlipRecoProducer(fhicl::ParameterSet const & p);
   virtual ~BlipRecoProducer();
-  //BlipRecoProducer(BlipRecoProducer const &) = delete;
-  //BlipRecoProducer(BlipRecoProducer &&) = delete;
-  //BlipRecoProducer & operator = (BlipRecoProducer const &) = delete;
-  //BlipRecoProducer & operator = (BlipRecoProducer &&) = delete;
+  BlipRecoProducer(BlipRecoProducer const &) = delete;
+  BlipRecoProducer(BlipRecoProducer &&) = delete;
+  BlipRecoProducer & operator = (BlipRecoProducer const &) = delete;
+  BlipRecoProducer & operator = (BlipRecoProducer &&) = delete;
 
   // Required functions.
   void produce(art::Event & e) override;
