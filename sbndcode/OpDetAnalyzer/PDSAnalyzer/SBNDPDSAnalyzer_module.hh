@@ -47,11 +47,14 @@
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/PFParticle.h"
+// CRT
+#include "sbnobj/SBND/CRT/CRTTrack.hh"
 
 // Cosmic rejection includes
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
 #include "sbnobj/Common/Reco/SimpleFlashMatchVars.h"
 #include "sbnobj/Common/Reco/CRUMBSResult.h"
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include "lardataobj/AnalysisBase/T0.h"
 
 // Geometry and mapping
@@ -123,9 +126,14 @@ private:
   bool fSaveRawWaveforms;
   bool fSaveDeconvolvedWaveforms;
   bool fSaveOpHits;
+  bool fSaveOnlyFlashHits;
   bool fSaveOpFlashes;
+  bool fSaveCRT;
+  bool fSaveSPECTDC;
+  bool fSaveOnlyCRTPDSMatch;
   bool fSaveCosmicId;
 
+  
   // Configuration parameters
   int fVerbosity;
   bool fMakePerTrackTree;
@@ -145,17 +153,26 @@ private:
   std::string fDeconvolvedWaveformsModuleLabel;
   std::vector<std::string> fOpHitsModuleLabel;
   std::vector<std::string> fOpFlashesModuleLabel;
+  std::string fCRTTrackModuleLabel;
+  std::string fSPECTDCLabel;
   std::string fHitsLabel;
   std::string fReco2Label;
   std::string fCosmicIdModuleLabel;
   std::string fOpT0FinderModuleLabel;
   std::string fSimpleFlashMatchModuleLabel;
 
+
   // Fiducial volume for MC Particles
   std::vector<int> fG4BufferBoxX;
   std::vector<int> fG4BufferBoxY;
   std::vector<int> fG4BufferBoxZ;
   std::vector<int> fG4BeamWindow;
+
+  //OpFlash save window
+  std::vector<double> fOpFlashBeamWindow={-1500000, 1500000};
+
+  // CRT save window
+  std::vector<double> fCRTSaveWindow={-1500000, 1500000};
 
   // PDS mapping and geometry
   opdet::sbndPDMapAlg fPDSMap;
@@ -258,6 +275,38 @@ private:
   std::vector<std::vector<double>> _flash_ophit_width;
   std::vector<std::vector<double>> _flash_ophit_pe;
   std::vector<std::vector<int>> _flash_ophit_ch;
+
+
+  // Saving CRT information
+  std::vector<double> _tr_start_x;
+  std::vector<double> _tr_start_y;
+  std::vector<double> _tr_start_z;
+  std::vector<double> _tr_end_x;
+  std::vector<double> _tr_end_y;
+  std::vector<double> _tr_end_z;
+  std::vector<double> _tr_dir_x;
+  std::vector<double> _tr_dir_y;
+  std::vector<double> _tr_dir_z;
+  std::vector<double> _tr_ts0;
+  std::vector<double> _tr_ets0;
+  std::vector<double> _tr_ts1;
+  std::vector<double> _tr_ets1;
+  std::vector<double> _tr_pe;
+  std::vector<double> _tr_length;
+  std::vector<double> _tr_tof;
+  std::vector<double> _tr_theta;
+  std::vector<double> _tr_phi;
+  std::vector<double> _tr_triple;
+
+
+  // Saving SPECTDC
+  uint64_t event_trigger_time;
+  uint64_t rwm_time;
+
+  // Vectors to store CRT/PDS matched
+  std::vector<bool> _crt_tracks_matched;
+  std::vector<bool> _opflash_matched;
+
 
   // Cosmic ID
   std::vector<double> _CRUMBSScore;

@@ -13,6 +13,9 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fSaveDeconvolvedWaveforms( p.get<bool>("SaveDeconvolvedWaveforms") ),
   fSaveOpHits( p.get<bool>("SaveOpHits") ),
   fSaveOpFlashes( p.get<bool>("SaveOpFlashes") ),
+  fSaveCRT( p.get<bool>("SaveCRT") ),
+  fSaveSPECTDC( p.get<bool>("SaveSPECTDC") ),
+  fSaveOnlyCRTPDSMatch( p.get<bool>("SaveOnlyCRTPDSMatch") ),
   fSaveCosmicId( p.get<bool>("SaveCosmicId") ),
   fVerbosity( p.get<int>("Verbosity") ),
   fMakePerTrackTree( p.get<bool>("MakePerTrackTree") ),
@@ -30,6 +33,8 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fDeconvolvedWaveformsModuleLabel( p.get< std::string >("DeconvolvedWaveformsModuleLabel") ),
   fOpHitsModuleLabel( p.get<std::vector<std::string>>("OpHitsModuleLabel") ),
   fOpFlashesModuleLabel( p.get<std::vector<std::string>>("OpFlashesModuleLabel") ),
+  fCRTTrackModuleLabel( p.get<std::string>("CRTTrackModuleLabel") ),
+  fSPECTDCLabel( p.get< std::string >("SPECTDCLabel") ),
   fHitsLabel( p.get<std::string>("HitsLabel") ),
   fReco2Label( p.get<std::string>("Reco2Label") ),
   fCosmicIdModuleLabel( p.get< std::string >("CosmicIdModuleLabel") ),
@@ -38,7 +43,9 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fG4BufferBoxX( p.get<std::vector<int>>("G4BufferBoxX") ),
   fG4BufferBoxY( p.get<std::vector<int>>("G4BufferBoxY") ),
   fG4BufferBoxZ( p.get<std::vector<int>>("G4BufferBoxZ") ),
-  fG4BeamWindow( p.get<std::vector<int>>("G4BeamWindow") )
+  fG4BeamWindow( p.get<std::vector<int>>("G4BeamWindow") ),
+  fOpFlashBeamWindow( p.get<std::vector<double>>("OpFlashBeamWindow") ),
+  fCRTSaveWindow( p.get<std::vector<double>>("CRTSaveWindow") )
 {
 
   // MakePerTrackTree mode requires UseSimPhotonsLite false and SaveMCParticles true
@@ -174,6 +181,34 @@ void opdet::SBNDPDSAnalyzer::beginJob()
     fTree->Branch("flash_ophit_width", "std::vector<std::vector<double>>", &_flash_ophit_width);
     fTree->Branch("flash_ophit_pe", "std::vector<std::vector<double>>", &_flash_ophit_pe);
     fTree->Branch("flash_ophit_ch", "std::vector<std::vector<int>>", &_flash_ophit_ch);
+  }
+
+  if(fSaveCRT)
+  {
+    fTree->Branch("tr_start_x", "std::vector<double>", &_tr_start_x);
+    fTree->Branch("tr_start_y", "std::vector<double>", &_tr_start_y);
+    fTree->Branch("tr_start_z", "std::vector<double>", &_tr_start_z);
+    fTree->Branch("tr_end_x", "std::vector<double>", &_tr_end_x);
+    fTree->Branch("tr_end_y", "std::vector<double>", &_tr_end_y);
+    fTree->Branch("tr_end_z", "std::vector<double>", &_tr_end_z);
+    fTree->Branch("tr_dir_x", "std::vector<double>", &_tr_dir_x);
+    fTree->Branch("tr_dir_y", "std::vector<double>", &_tr_dir_y);
+    fTree->Branch("tr_dir_z", "std::vector<double>", &_tr_dir_z);
+    fTree->Branch("tr_ts0", "std::vector<double>", &_tr_ts0);
+    fTree->Branch("tr_ets0", "std::vector<double>", &_tr_ets0);
+    fTree->Branch("tr_ets1", "std::vector<double>", &_tr_ets1);
+    fTree->Branch("tr_ets1", "std::vector<double>", &_tr_ets1);
+    fTree->Branch("tr_pe", "std::vector<double>", &_tr_pe);
+    fTree->Branch("tr_length", "std::vector<double>", &_tr_length);
+    fTree->Branch("tr_tof", "std::vector<double>", &_tr_tof);
+    fTree->Branch("tr_theta", "std::vector<double>", &_tr_theta);
+    fTree->Branch("tr_phi", "std::vector<double>", &_tr_phi);
+    fTree->Branch("tr_triple", "std::vector<double>", &_tr_triple);
+  }
+
+  if(fSaveSPECTDC){
+    fTree->Branch("event_trigger_time", &event_trigger_time);
+    fTree->Branch("rwm_time", &rwm_time);
   }
 
   // Cosmic ID
@@ -545,7 +580,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
   }
 
   // --- Saving all OpHits
-  if(fSaveOpHits){
+  if(fSaveOpHits && (!fSaveOnlyFlashHits)){
   
     _nophits = 0;
     _ophit_opch.clear();
@@ -588,6 +623,73 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
 
   }
 
+  // ---- Save only CRT-PDS Matched
+  if(fSaveOnlyCRTPDSMatch && fSaveCRT && fSaveOpFlashes)
+  {
+    std::vector<double> _flash_time_to_match;
+    std::vector<double> _crttrack_time_to_match;
+
+    art::Handle< std::vector<recob::OpFlash> > opflashListHandle;
+    // Read OpFlash Time
+    for (size_t s = 0; s < fOpFlashesModuleLabel.size(); s++) {
+      e.getByLabel(fOpFlashesModuleLabel[s], opflashListHandle);
+      if(!opflashListHandle.isValid()){
+        std::cout << "OpFlash with label " << fOpFlashesModuleLabel[s] << " not found..." << std::endl;
+        throw std::exception();
+      }
+      if(fVerbosity>0)
+        std::cout << "Saving OpFlashes from " << fOpFlashesModuleLabel[s] << std::endl;
+      for (unsigned int i = 0; i < opflashListHandle->size(); ++i) {
+        // Get OpFlash
+        art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
+        recob::OpFlash Flash = *FlashPtr;
+        if(Flash.AbsTime()*1000<fOpFlashBeamWindow[0] || Flash.AbsTime()*1000>fOpFlashBeamWindow[1]) continue;
+        _flash_time_to_match.push_back( Flash.AbsTime() );
+      }
+    }
+    unsigned nOpFlash = _flash_time_to_match.size();
+
+    // Read CRTTracks
+    art::Handle<std::vector<sbnd::crt::CRTTrack>> CRTTrackHandle;
+    e.getByLabel(fCRTTrackModuleLabel, CRTTrackHandle);
+    if(!CRTTrackHandle.isValid()){
+      std::cout << "CRTTrack product " << fCRTTrackModuleLabel << " not found..." << std::endl;
+      throw std::exception();
+    }
+    std::vector<art::Ptr<sbnd::crt::CRTTrack>> CRTTrackVec;
+    art::fill_ptr_vector(CRTTrackVec, CRTTrackHandle);
+    const unsigned nTracks = CRTTrackVec.size();
+
+    for(unsigned i = 0; i < nTracks; ++i)
+    {
+      const auto track = CRTTrackVec[i];
+      if(track->Ts0() < fCRTSaveWindow[0] || track->Ts0() > fCRTSaveWindow[1]) continue;
+      _crttrack_time_to_match.push_back(track->Ts0());
+    }
+
+    _opflash_matched.resize(nOpFlash, false);
+    _crt_tracks_matched.resize(nTracks, false);
+
+    for(size_t i=0; i<_flash_time_to_match.size();i++)
+    {
+      double _opflash_time = _flash_time_to_match[i];
+      for(size_t j=0; j<_crttrack_time_to_match.size(); j++)
+      {
+        double _crt_track_time = _crttrack_time_to_match[j]/1000;
+        double time_diff = abs(_crt_track_time-_opflash_time);
+        if(time_diff< 1)
+        {
+          std::cout <<" Matched flash at time " << _opflash_time << " with track at time " << _crt_track_time << std::endl;
+          _opflash_matched[i] = true;
+          _crt_tracks_matched[j] = true;
+          break;
+        }
+      }
+    }
+  }
+
+
+
   // --- Saving OpFlashes
   if(fSaveOpFlashes){
 
@@ -614,6 +716,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
 
     art::Handle< std::vector<recob::OpFlash> > opflashListHandle;
 
+    int flash_idx = -1 ;
     // Loop over all the OpFlash labels
     for (size_t s = 0; s < fOpFlashesModuleLabel.size(); s++) {
       
@@ -631,10 +734,13 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         // Get OpFlash
         art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
         recob::OpFlash Flash = *FlashPtr;
-
+        // Skip flash if it's outside the save window.
+        if(Flash.AbsTime()*1000<fOpFlashBeamWindow[0] || Flash.AbsTime()*1000>fOpFlashBeamWindow[1]) continue;
+        flash_idx+=1;
+        if(fSaveOnlyCRTPDSMatch && !_opflash_matched[flash_idx]) continue;
         if(fVerbosity>0)
           std::cout << "  *  " << _nopflash << " Time [ns]=" << 1000*Flash.AbsTime() << " PE=" << Flash.TotalPE() << std::endl;
-
+        
         _flash_id.push_back( _nopflash );
         _flash_time.push_back( Flash.AbsTime() );
         _flash_total_pe.push_back( Flash.TotalPE() );
@@ -678,6 +784,103 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     }
 
   }
+
+  if(fSaveCRT)
+  {
+    _tr_start_x.clear();
+    _tr_start_y.clear();
+    _tr_start_z.clear();
+    _tr_end_x.clear();
+    _tr_end_y.clear();
+    _tr_end_z.clear();
+    _tr_dir_x.clear();
+    _tr_dir_y.clear();
+    _tr_dir_z.clear();
+    _tr_ts0.clear();
+    _tr_ets0.clear();
+    _tr_ts1.clear();
+    _tr_ets1.clear();
+    _tr_pe.clear();
+    _tr_length.clear();
+    _tr_tof.clear();
+    _tr_theta.clear();
+    _tr_phi.clear();
+    _tr_triple.clear();
+
+    // Read CRTTracks
+    art::Handle<std::vector<sbnd::crt::CRTTrack>> CRTTrackHandle;
+    e.getByLabel(fCRTTrackModuleLabel, CRTTrackHandle);
+    if(!CRTTrackHandle.isValid()){
+      std::cout << "CRTTrack product " << fCRTTrackModuleLabel << " not found..." << std::endl;
+      throw std::exception();
+    }
+    std::vector<art::Ptr<sbnd::crt::CRTTrack>> CRTTrackVec;
+    art::fill_ptr_vector(CRTTrackVec, CRTTrackHandle);
+    const unsigned nTracks = CRTTrackVec.size();
+
+    for(unsigned i = 0; i < nTracks; ++i)
+    {
+
+      if(fSaveOnlyCRTPDSMatch && !_crt_tracks_matched[i]) continue;
+      const auto track = CRTTrackVec[i];
+      if(track->Ts0() < fCRTSaveWindow[0] || track->Ts0() > fCRTSaveWindow[1]) continue;
+
+      const geo::Point_t start = track->Start();
+      _tr_start_x.push_back(start.X());
+      _tr_start_y.push_back(start.Y());
+      _tr_start_z.push_back(start.Z());
+
+      const geo::Point_t end = track->End();
+      _tr_end_x.push_back(end.X());
+      _tr_end_y.push_back(end.Y());
+      _tr_end_z.push_back(end.Z());
+
+      const geo::Vector_t dir = track->Direction();
+      _tr_dir_x.push_back(dir.X());
+      _tr_dir_y.push_back(dir.Y());
+      _tr_dir_z.push_back(dir.Z());
+
+      _tr_ts0.push_back(track->Ts0());
+      _tr_ets0.push_back(track->Ts0Err());
+      _tr_ts1.push_back(track->Ts1());
+      _tr_ets1.push_back(track->Ts1Err());
+      _tr_pe.push_back(track->PE());
+      _tr_length.push_back(track->Length());
+      _tr_tof.push_back(track->ToF());
+      _tr_theta.push_back(TMath::RadToDeg() * track->Theta());
+      _tr_phi.push_back(TMath::RadToDeg() * track->Phi());
+      _tr_triple.push_back(track->Triple());
+    }
+  }
+
+  // --- Saving SPECTDC
+
+  if(fSaveSPECTDC)
+  {
+    art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+    e.getByLabel(fSPECTDCLabel, tdcHandle);
+    if (!tdcHandle.isValid() || tdcHandle->size() == 0){
+      std::cout << "No SPECTDC products found. Skip this event." << std::endl;
+      return;
+    }
+    else{
+      const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+      for (size_t i=0; i<tdc_v.size(); i++){
+        auto tdc = tdc_v[i];
+        const uint32_t  ch = tdc.Channel();
+        const uint64_t  ts = tdc.Timestamp();
+
+        if(ch == 2){
+          rwm_time = ts%uint64_t(1e9);
+        }
+        if(ch == 4){
+          event_trigger_time = ts%uint64_t(1e9);
+        }
+      } 
+    }
+  }
+
+
 
   // --- Saving CosmicID
   if(fSaveCosmicId){
