@@ -86,7 +86,7 @@ BlipRecoProducer::BlipRecoProducer(fhicl::ParameterSet const & pset)
   // declare what we're going to produce
   produces< std::vector<  recob::SpacePoint > >();
   produces< art::Assns <  recob::Hit, recob::SpacePoint> >();
-  produces< std::vector< <blip::Blip> >(); 
+  produces< std::vector< blip::Blip > >(); 
   
   //produces< art::Assns <  blip::Blip, recob::SpacePoint > >();
   produces< art::Assns <  blip::Blip,         recob::Hit> >();
