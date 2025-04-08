@@ -17,6 +17,8 @@ sbndPDSAna:
 	SaveCRT: "true"
 	SaveCosmicId: "false"
 	SaveOnlyCRTPDSMatch: "false"
+	SavePEFlavourPerFlash: "true"
+	SaveOnlyFlashHits: "true"
 
 	## Configuration parameters
 	Verbosity: 0

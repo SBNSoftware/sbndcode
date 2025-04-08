@@ -118,6 +118,9 @@ private:
 
   std::map<std::string, int> GetAllHitsTruthMatch(art::Event const& e, const std::vector<art::Ptr<recob::Hit> > &allHits);
 
+  double GetPMTRatioData(std::vector<double> );
+
+
   // TTree saving options
   bool fSaveMCTruth;
   bool fSaveMCParticles;
@@ -132,7 +135,7 @@ private:
   bool fSaveSPECTDC;
   bool fSaveOnlyCRTPDSMatch;
   bool fSaveCosmicId;
-
+  bool fSavePEFlavourPerFlash;
   
   // Configuration parameters
   int fVerbosity;
@@ -176,6 +179,8 @@ private:
 
   // PDS mapping and geometry
   opdet::sbndPDMapAlg fPDSMap;
+  std::set<int> fPDSBoxIDs;
+
   geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
 
   static constexpr double fDefaultSimIDE = -999.;
@@ -267,6 +272,9 @@ private:
   std::vector<double> _flash_x;
   std::vector<double> _flash_xerr;
   std::vector<int> _flash_tpc;
+  std::vector<double> _flash_pe_co;
+  std::vector<double> _flash_pe_unco;
+  std::vector<double> _flash_pmt_ratio;
   std::vector<std::vector<double>> _flash_ophit_time;
   std::vector<std::vector<double>> _flash_ophit_risetime;
   std::vector<std::vector<double>> _flash_ophit_starttime;
