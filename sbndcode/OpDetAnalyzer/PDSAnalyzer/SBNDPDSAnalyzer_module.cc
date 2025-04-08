@@ -12,11 +12,13 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fSaveRawWaveforms( p.get<bool>("SaveRawWaveforms") ),
   fSaveDeconvolvedWaveforms( p.get<bool>("SaveDeconvolvedWaveforms") ),
   fSaveOpHits( p.get<bool>("SaveOpHits") ),
+  fSaveOnlyFlashHits( p.get<bool>("SaveOnlyFlashHits") ),
   fSaveOpFlashes( p.get<bool>("SaveOpFlashes") ),
   fSaveCRT( p.get<bool>("SaveCRT") ),
   fSaveSPECTDC( p.get<bool>("SaveSPECTDC") ),
   fSaveOnlyCRTPDSMatch( p.get<bool>("SaveOnlyCRTPDSMatch") ),
   fSaveCosmicId( p.get<bool>("SaveCosmicId") ),
+  fSavePEFlavourPerFlash( p.get<bool>("SavePEFlavourPerFlash") ),
   fVerbosity( p.get<int>("Verbosity") ),
   fMakePerTrackTree( p.get<bool>("MakePerTrackTree") ),
   fMakePDSGeoTree( p.get<bool>("MakePDSGeoTree") ),
@@ -173,6 +175,10 @@ void opdet::SBNDPDSAnalyzer::beginJob()
     fTree->Branch("flash_zerr", "std::vector<double>", &_flash_zerr);
     fTree->Branch("flash_x","std::vector<double>", &_flash_x);
     fTree->Branch("flash_xerr", "std::vector<double>", &_flash_xerr);
+    fTree->Branch("flash_pe_co", "std::vector<double>", &_flash_pe_co);
+    fTree->Branch("flash_pe_co", "std::vector<double>", &_flash_pe_co);
+    fTree->Branch("flash_pe_unco", "std::vector<double>", &_flash_pe_unco);
+    fTree->Branch("flash_pmt_ratio", "std::vector<double>", &_flash_pmt_ratio);
     fTree->Branch("flash_ophit_time", "std::vector<std::vector<double>>", &_flash_ophit_time);
     fTree->Branch("flash_ophit_risetime", "std::vector<std::vector<double>>", &_flash_ophit_risetime);
     fTree->Branch("flash_ophit_starttime", "std::vector<std::vector<double>>", &_flash_ophit_starttime);
@@ -275,6 +281,10 @@ void opdet::SBNDPDSAnalyzer::beginJob()
 
     fPDSMapTree->Fill();
 
+  }
+
+  for(size_t oc=0; oc<fPDSMap.size(); oc++){
+    fPDSBoxIDs.insert( fPDSMap.pdBox(oc) );
   }
 
 }
@@ -705,6 +715,9 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     _flash_zerr.clear();
     _flash_x.clear();
     _flash_xerr.clear();
+    _flash_pe_co.clear();
+    _flash_pe_unco.clear();
+    _flash_pmt_ratio.clear();
     _flash_ophit_time.clear();
     _flash_ophit_risetime.clear();
     _flash_ophit_starttime.clear();
@@ -741,6 +754,21 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         if(fVerbosity>0)
           std::cout << "  *  " << _nopflash << " Time [ns]=" << 1000*Flash.AbsTime() << " PE=" << Flash.TotalPE() << std::endl;
         
+        if(fSavePEFlavourPerFlash)
+        {
+          double _current_pe_co = 0;
+          double _current_pe_unco = 0;
+          std::vector<art::Ptr<recob::OpHit>> ophit_v = flashToOpHitAssns.at(i);
+          for (auto ophit : ophit_v) {
+            int opch = ophit->OpChannel();
+            double channel_pe = ophit->PE();
+            if(fPDSMap.pdType(opch)=="pmt_coated") _current_pe_co+=channel_pe;
+            else if(fPDSMap.pdType(opch)=="pmt_uncoated") _current_pe_unco+=channel_pe;
+          }
+          _flash_pe_co.push_back(_current_pe_co);
+          _flash_pe_unco.push_back(_current_pe_unco);
+        }
+
         _flash_id.push_back( _nopflash );
         _flash_time.push_back( Flash.AbsTime() );
         _flash_total_pe.push_back( Flash.TotalPE() );
@@ -752,6 +780,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _flash_xerr.push_back( Flash.XWidth() );
         _flash_z.push_back( Flash.ZCenter() );
         _flash_zerr.push_back( Flash.ZWidth() );
+        _flash_pmt_ratio.push_back(GetPMTRatioData(Flash.PEs()));
         _nopflash++;
 
         if(fSaveOpHits){
@@ -1514,4 +1543,56 @@ std::map<std::string, int> opdet::SBNDPDSAnalyzer::GetAllHitsTruthMatch(art::Eve
     }
 
     return allHitsTruthMap;
+}
+
+double opdet::SBNDPDSAnalyzer::GetPMTRatioData(std::vector<double> PE_v){
+
+  std::map<int, double> BoxMap_PECoated;
+  std::map<int, double> BoxMap_PEUncoated;
+  std::map<int, int> BoxMap_NCoatedCh;
+  std::map<int, int> BoxMap_NUncoatedCh;
+
+  for(size_t oc=0; oc<PE_v.size(); oc++){
+    // skip 0 PE channels
+    if(PE_v[oc]==0) continue;
+
+    std::string pd_type=fPDSMap.pdType(oc);
+    // exclude xarapucas by now
+    if(pd_type=="xarapuca_vuv" || pd_type=="xarapuca_vis") continue;
+
+    // get PDS box
+    int box_id = fPDSMap.pdBox(oc);
+
+    // we store the pe in each box per PMT flavour
+    // and the number of "triggered" PMTs
+    if(pd_type=="pmt_coated") {
+      BoxMap_PECoated[box_id]+=PE_v[oc];
+      BoxMap_NCoatedCh[box_id]+=1;
+    }
+    else if(pd_type=="pmt_uncoated") {
+      BoxMap_PEUncoated[box_id]+=PE_v[oc];
+      BoxMap_NUncoatedCh[box_id]+=1;
+    }
+  }
+
+  double pmtratio=-1.;
+  // compute PMTRatio metric
+  double TotalPE=0;
+  double RatioPerBoxWeight=0;
+  for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
+    double RatioPerBox;
+    double PECoated=0, PEUncoated=0;
+    //we need the uncoated PMT in each window and at least one coated
+    if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
+      PECoated+= BoxMap_PECoated[boxID];
+      PEUncoated+=BoxMap_PEUncoated[boxID];
+      TotalPE += PECoated + PEUncoated;
+      RatioPerBox = (PEUncoated/PECoated)*BoxMap_NCoatedCh[boxID];
+      RatioPerBoxWeight += RatioPerBox * (PECoated + PEUncoated);
+    }
+  }
+  if(TotalPE!=0) pmtratio = RatioPerBoxWeight/TotalPE;
+
+
+  return pmtratio;
 }
