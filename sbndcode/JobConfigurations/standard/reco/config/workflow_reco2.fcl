@@ -108,6 +108,7 @@ sbnd_reco2_producer_sequence: [
     , fmatchoparaSCE
     , opt0finderSCE
     , cvn
+    , cvnSCE
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
