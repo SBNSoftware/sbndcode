@@ -141,7 +141,7 @@ void BlipRecoProducer::produce(art::Event & evt)
   //===========================================
   for(size_t i=0; i<fBlipAlg->blips.size(); i++){
     auto& b = fBlipAlg->blips[i];
-    blip_v->emplace_back(b);
+    blip_v->push_back(b);
     art::Ptr<blip::Blip> blipPtr = makeBlipPtr(blip_v->size() - 1);
     Double32_t xyz[3];
     Double32_t xyz_err[6];
