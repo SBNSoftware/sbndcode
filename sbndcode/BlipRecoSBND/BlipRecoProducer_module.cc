@@ -97,6 +97,12 @@ BlipRecoProducer::BlipRecoProducer(fhicl::ParameterSet const & pset)
   
 }
 
+BlipAna::~BlipAna()
+{
+  delete fBlipAlg;
+}
+
+
 
 
 //###################################################
