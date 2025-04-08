@@ -159,7 +159,7 @@ void BlipRecoProducer::produce(art::Event & evt)
     
     recob::SpacePoint newpt(xyz,xyz_err,chiSquare);
     SpacePoint_v->emplace_back(newpt);
-    art::Ptr<recob::SpacePoint> spacePointPTR = makeSpacePointPtr(SpacePoint_v->size() - 1);
+    //art::Ptr<recob::SpacePoint> spacePointPTR = makeSpacePointPtr(SpacePoint_v->size() - 1);
     //assn_blip_sps_v->addSingle(blipPtr, spacePointPTR);
     //util::CreateAssn(*this, evt, *blip_v, &(SpacePoint_v->back()), *SpacePoint_v);
     // Hit associations 
