@@ -39,7 +39,7 @@ sbndPDSAna:
 	DeconvolvedWaveformsModuleLabel: "opdecopmt"
 	OpHitsModuleLabel: ["ophitpmt"]
 	OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1"]
-	CRTTrackModuleLabel: "crttrack"
+	CRTTrackModuleLabel: "crttracks"
 	SPECTDCLabel: "tdcdecoder"
 	HitsLabel: "gaushit"
 	Reco2Label: "pandora"
