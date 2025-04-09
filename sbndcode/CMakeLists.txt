@@ -23,6 +23,8 @@ add_subdirectory(Commissioning)
 add_subdirectory(Trigger)
 add_subdirectory(EventGenerator)
 add_subdirectory(NuclearFragments)
+add_subdirectory(Timing)
+add_subdirectory(PTBAna)
 
 # subdirectory for gallery stuff
 add_subdirectory(gallery)
@@ -42,3 +44,6 @@ add_subdirectory(WireCell)
 
 add_subdirectory(Decoders)
 add_subdirectory(ChannelMaps)
+
+# for CVN
+add_subdirectory(SBNDCVN)

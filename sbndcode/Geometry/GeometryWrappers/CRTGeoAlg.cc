@@ -130,22 +130,26 @@ namespace sbnd::crt {
             const uint32_t actualChannel0 = invert ? 31 - (2 * ads_i) : 2 * ads_i;
             const uint32_t actualChannel1 = invert ? actualChannel0 - 1 : actualChannel0 + 1;
 
-            uint32_t pedestal0 = 0;
-            uint32_t pedestal1 = 0;
+            uint32_t pedestal0       = 0;
+            uint32_t pedestal1       = 0;
+            CRTChannelStatus status0 = CRTChannelStatus::kGoodChannel;
+            CRTChannelStatus status1 = CRTChannelStatus::kGoodChannel;
 
             if(!fMC)
               {
                 art::ServiceHandle<SBND::CRTCalibService> CalibService;
                 pedestal0 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel0);
                 pedestal1 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel1);
+                status0   = CalibService->GetChannelStatusFromFEBMAC5AndChannel(mac5, actualChannel0);
+                status1   = CalibService->GetChannelStatusFromFEBMAC5AndChannel(mac5, actualChannel1);
               }
 
             const double gain0 = fDefaultGain;
             const double gain1 = fDefaultGain;
 
             // Fill SiPM information
-            CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0);
-            CRTSiPMGeo sipm1 = CRTSiPMGeo(stripName, channel1, sipm1XYZWorld, pedestal1, gain1);
+            CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0, status0);
+            CRTSiPMGeo sipm1 = CRTSiPMGeo(stripName, channel1, sipm1XYZWorld, pedestal1, gain1, status1);
             fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel0, sipm0));
             fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel1, sipm1));
           }
@@ -277,7 +281,7 @@ namespace sbnd::crt {
       return fModules.at(fStrips.at(name).moduleName).taggerName;
     else if(fModules.find(name) != fModules.end())
       return fModules.at(name).taggerName;
-    
+
     return "";
   }
 
@@ -332,7 +336,7 @@ namespace sbnd::crt {
     return limits;
   }
 
-  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const CRTStripGeo &strip, const double x, 
+  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
                                                       const double y, const double z)
   {
     const uint16_t adsID = strip.adsID;

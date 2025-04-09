@@ -11,7 +11,10 @@
 #include "opt0finder_sbnd.fcl"
 
 #include "sbnd_trackcalo_skimmer.fcl"
+#include "crtana_sbnd.fcl"
 #include "pmtskim_sbnd.fcl"
+
+#include "SBNDCVNMapper.fcl"
 
 BEGIN_PROLOG
 
@@ -64,6 +67,9 @@ sbnd_reco2_producers:{
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
+
+    ### CVN
+    cvn:                 @local::standard_sbndcvnevaluatorslc
 }
 
 sbnd_reco2_producer_sequence: [  
@@ -98,6 +104,7 @@ sbnd_reco2_producer_sequence: [
     , fmatcharaSCE
     , fmatchoparaSCE
     , opt0finderSCE
+    , cvn
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
@@ -149,14 +156,14 @@ sbnd_reco2_producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandor
 
 sbnd_reco2_analyzers: {
     caloskim: @local::caloskim_nodigits_goldentracks
- #   crtskim: @local::crtskim_sbnd
-    pmtskim: @local::pmtskim_sbnd
+    crtana:   @local::crtana_sbnd
+    pmtskim:  @local::pmtskim_sbnd
 }
 
 sbnd_reco2_analyzer_sequence: [
     caloskim
     , pmtskim
- #   , crtskim
+    , crtana
 ]
 
 #FIXME override the analyzer labels.  This should really happen in the module's config fcl
