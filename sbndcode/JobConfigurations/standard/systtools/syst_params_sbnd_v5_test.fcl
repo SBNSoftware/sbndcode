@@ -1,0 +1,1078 @@
+BEGIN_PROLOG
+generated_systematic_provider_configuration: {
+   GENIEReWeight_SBND_v5_multisigma: {
+      CoulombCCQE: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "CoulombCCQE"
+         systParamId: 31
+      }
+      DecayAngMEC: {
+         centralParamValue: 1
+         isCorrection: true
+         prettyName: "DecayAngMEC"
+         systParamId: 34
+      }
+      NonRESBGvbarnCC1pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvbarnCC1pi"
+         systParamId: 47
+      }
+      NonRESBGvbarnCC2pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvbarnCC2pi"
+         systParamId: 48
+      }
+      NonRESBGvbarnNC1pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvbarnNC1pi"
+         systParamId: 49
+      }
+      NonRESBGvbarnNC2pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvbarnNC2pi"
+         systParamId: 50
+      }
+      NonRESBGvbarpCC1pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvbarpCC1pi"
+         systParamId: 43
+      }
+      NonRESBGvbarpCC2pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvbarpCC2pi"
+         systParamId: 44
+      }
+      NonRESBGvbarpNC1pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvbarpNC1pi"
+         systParamId: 45
+      }
+      NonRESBGvbarpNC2pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvbarpNC2pi"
+         systParamId: 46
+      }
+      NonRESBGvnCC1pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvnCC1pi"
+         systParamId: 39
+      }
+      NonRESBGvnCC2pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvnCC2pi"
+         systParamId: 40
+      }
+      NonRESBGvnNC1pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvnNC1pi"
+         systParamId: 41
+      }
+      NonRESBGvnNC2pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvnNC2pi"
+         systParamId: 42
+      }
+      NonRESBGvpCC1pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvpCC1pi"
+         systParamId: 35
+      }
+      NonRESBGvpCC2pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvpCC2pi"
+         systParamId: 36
+      }
+      NonRESBGvpNC1pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvpNC1pi"
+         systParamId: 37
+      }
+      NonRESBGvpNC2pi: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NonRESBGvpNC2pi"
+         systParamId: 38
+      }
+      NormCCCOH: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NormCCCOH"
+         systParamId: 55
+      }
+      NormCCMEC: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NormCCMEC"
+         systParamId: 32
+      }
+      NormNCCOH: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NormNCCOH"
+         systParamId: 56
+      }
+      NormNCMEC: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "NormNCMEC"
+         systParamId: 33
+      }
+      RDecBR1eta: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "RDecBR1eta"
+         systParamId: 52
+      }
+      RDecBR1gamma: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "RDecBR1gamma"
+         systParamId: 51
+      }
+      RPA_CCQE: {
+         centralParamValue: 0
+         paramVariations: [
+            -1,
+            1,
+            -2,
+            2,
+            -3,
+            3
+         ]
+         prettyName: "RPA_CCQE"
+         systParamId: 30
+      }
+      ThetaDelta2NRad: {
+         centralParamValue: 1
+         isCorrection: true
+         prettyName: "ThetaDelta2NRad"
+         systParamId: 54
+      }
+      Theta_Delta2Npi: {
+         centralParamValue: 1
+         isCorrection: true
+         prettyName: "Theta_Delta2Npi"
+         systParamId: 53
+      }
+      VecFFCCQEshape: {
+         centralParamValue: 1
+         isCorrection: true
+         prettyName: "VecFFCCQEshape"
+         systParamId: 29
+      }
+      instance_name: "SBND_v5_multisigma"
+      parameter_headers: [
+         "VecFFCCQEshape",
+         "RPA_CCQE",
+         "CoulombCCQE",
+         "NormCCMEC",
+         "NormNCMEC",
+         "DecayAngMEC",
+         "NonRESBGvpCC1pi",
+         "NonRESBGvpCC2pi",
+         "NonRESBGvpNC1pi",
+         "NonRESBGvpNC2pi",
+         "NonRESBGvnCC1pi",
+         "NonRESBGvnCC2pi",
+         "NonRESBGvnNC1pi",
+         "NonRESBGvnNC2pi",
+         "NonRESBGvbarpCC1pi",
+         "NonRESBGvbarpCC2pi",
+         "NonRESBGvbarpNC1pi",
+         "NonRESBGvbarpNC2pi",
+         "NonRESBGvbarnCC1pi",
+         "NonRESBGvbarnCC2pi",
+         "NonRESBGvbarnNC1pi",
+         "NonRESBGvbarnNC2pi",
+         "RDecBR1gamma",
+         "RDecBR1eta",
+         "Theta_Delta2Npi",
+         "ThetaDelta2NRad",
+         "NormCCCOH",
+         "NormNCCOH"
+      ]
+      tool_options: {
+         AxFFCCQEDipoleToZExp: false
+         CCRESIsShapeOnly: false
+         DISBYIsShapeOnly: false
+         MaCCQEIsShapeOnly: false
+         NCRESIsShapeOnly: false
+         UseFullHERG: true
+         evgen_list_name: ""
+         fill_valid_tree: false
+         genie_tune_name: "${GENIE_XSEC_TUNE}"
+         ignore_parameter_dependence: true
+      }
+      tool_type: "GENIEReWeight"
+   }
+   GENIEReWeight_SBND_v5_multisim: {
+      AhtBY: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -2.20107894489519922976e-1,
+            1.55000772052905855247e-1,
+            1.66444999712730878905,
+            -1.17737030139389593081e-2,
+            -3.66900922712720567453e-1,
+            3.00115573621091813461e-1,
+            -8.1972214778211627273e-1,
+            3.70561375873867226982e-1,
+            1.3407684960698854678e-3,
+            1.29784909010816940089
+         ]
+         prettyName: "AhtBY"
+         responseParamId: 14
+         systParamId: 15
+      }
+      BhtBY: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            9.41370908717877097338e-1,
+            -5.23366754701446668108e-1,
+            2.00070120197459622169e-1,
+            -7.98719949858344158145e-1,
+            9.91097208907203319761e-1,
+            -2.61225302086141586422e-1,
+            -5.94979218558810196704e-1,
+            -1.51454059590895018239,
+            2.09683060309624069717,
+            9.97159055204705158104e-1
+         ]
+         prettyName: "BhtBY"
+         responseParamId: 14
+         systParamId: 16
+      }
+      CCRESVariationResponse: {
+         paramVariations: [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+         ]
+         prettyName: "CCRESVariationResponse"
+         systParamId: 8
+      }
+      CV1uBY: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            1.03167351251536243417,
+            1.2196756913052544391,
+            1.51409474736401361561,
+            -6.87190884082977238023e-1,
+            8.89942056662733627093e-1,
+            -4.77187026966338356804e-1,
+            -2.13084599317884659797,
+            2.22284773160881105047e-1,
+            -1.07109220050573150651,
+            -3.39610982601188160501e-1
+         ]
+         prettyName: "CV1uBY"
+         responseParamId: 14
+         systParamId: 17
+      }
+      CV2uBY: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            1.31690678022089824317,
+            -5.81923256061104177128e-1,
+            -5.61164901871616161877e-1,
+            -1.1445411043163227216,
+            5.93934673133635279707e-2,
+            1.56936595456735639154,
+            -1.96972829183046177492e-1,
+            6.1144582890561474664e-2,
+            -1.04323630456788163379,
+            -1.26990336404764825318
+         ]
+         prettyName: "CV2uBY"
+         responseParamId: 14
+         systParamId: 18
+      }
+      DISBYVariationResponse: {
+         paramVariations: [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+         ]
+         prettyName: "DISBYVariationResponse"
+         systParamId: 14
+      }
+      EtaNCEL: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            8.72695166935474442305e-1,
+            -9.72562877651874546636e-1,
+            5.47309992648551513206e-1,
+            1.45517816059988458477,
+            -1.60983391553960442089,
+            -8.62248284788972529924e-1,
+            -5.17841388899054289041e-1,
+            8.77627876242135673834e-1,
+            -4.02922036080956724735e-1,
+            6.35521843875187730788e-1
+         ]
+         prettyName: "EtaNCEL"
+         responseParamId: 5
+         systParamId: 7
+      }
+      FSI_N_VariationResponse: {
+         paramVariations: [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+         ]
+         prettyName: "FSI_N_VariationResponse"
+         systParamId: 24
+      }
+      FSI_pi_VariationResponse: {
+         paramVariations: [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+         ]
+         prettyName: "FSI_pi_VariationResponse"
+         systParamId: 19
+      }
+      FrAbs_N: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -9.70143800380815046758e-1,
+            1.19983348994479244176,
+            1.51760002329936649623,
+            -1.9317341525282741288e-1,
+            2.99253931112485105359e-1,
+            1.04104318119237239382e-2,
+            -1.42644000456196184956,
+            8.06613214977501380432e-1,
+            -4.59085809809386236058e-1,
+            9.42523491270783608798e-1
+         ]
+         prettyName: "FrAbs_N"
+         responseParamId: 24
+         systParamId: 27
+      }
+      FrAbs_pi: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -1.09358197004236948335e-1,
+            1.15293759235488213477,
+            -5.22396446591842852913e-2,
+            -5.26637972655026209701e-1,
+            3.73830621261874829209e-1,
+            8.11328073656455983631e-1,
+            -1.27398690217201004948,
+            1.38966188454767602956,
+            -2.97687777388768656794e-2,
+            2.88825019431606135056e-2
+         ]
+         prettyName: "FrAbs_pi"
+         responseParamId: 19
+         systParamId: 22
+      }
+      FrInel_N: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -1.75438901746424402717e-1,
+            2.26004832318777415523,
+            3.57487082868552463744e-1,
+            -2.16352083796879846034,
+            1.44271887158135370122,
+            7.74527846743072956315e-1,
+            -7.76513443550148174666e-1,
+            -3.73380496194026190171e-1,
+            7.79881293239619716173e-2,
+            -1.8648165777488814876e-1
+         ]
+         prettyName: "FrInel_N"
+         responseParamId: 24
+         systParamId: 26
+      }
+      FrInel_pi: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            8.15942710410944793686e-1,
+            -1.47804786327780446342,
+            -1.93071575992220445528,
+            -1.67402621652419547615,
+            -2.36543546973823204382,
+            1.86588197598637717256,
+            5.79475456914369385641e-2,
+            -5.92583637014224340334e-1,
+            3.10271307368248719372e-2,
+            3.38058436552734764557e-1
+         ]
+         prettyName: "FrInel_pi"
+         responseParamId: 19
+         systParamId: 21
+      }
+      FrPiProd_N: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            9.22015654838447495933e-1,
+            -1.12357997568746692529,
+            -4.01992479336326757888e-1,
+            -1.94365763272141922613,
+            -1.02417470670644661368,
+            -4.74656994311013047394e-1,
+            1.03482147542780911209,
+            1.40461496772201432925,
+            1.15796107831832584267,
+            2.1168487138181701912e-1
+         ]
+         prettyName: "FrPiProd_N"
+         responseParamId: 24
+         systParamId: 28
+      }
+      FrPiProd_pi: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -2.54634708970914946935e-1,
+            -8.26349638564934152463e-1,
+            9.08416900260746396079e-1,
+            3.0554363845988946613e-1,
+            -4.79832806589833571476e-1,
+            -2.01977600443899285576e-1,
+            -1.00016784376277168001,
+            -2.47695424491484850194,
+            1.67866578533008725671,
+            1.62747970780301759453e-1
+         ]
+         prettyName: "FrPiProd_pi"
+         responseParamId: 19
+         systParamId: 23
+      }
+      MFP_N: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            1.65607817735209850163,
+            1.18849663505298783206e-1,
+            9.88595329203706074672e-1,
+            -1.36123930979460494584,
+            1.51818980203370679227,
+            -1.5911333121391779688,
+            3.69484999718583451145e-1,
+            -1.6923752349191494293,
+            -7.39601747493755790064e-2,
+            -1.47612789627073470733e-1
+         ]
+         prettyName: "MFP_N"
+         responseParamId: 24
+         systParamId: 25
+      }
+      MFP_pi: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            4.96557721663361151254e-1,
+            2.62016523526367894892e-1,
+            -6.03131927128407019367e-1,
+            6.19782078229063504438e-1,
+            -1.2026413495695893463,
+            -4.57844877706931718819e-1,
+            -5.19630364693533741693e-1,
+            -3.61636880672109528589e-1,
+            1.08537291681578051961e-1,
+            1.2441655178107069446
+         ]
+         prettyName: "MFP_pi"
+         responseParamId: 19
+         systParamId: 20
+      }
+      MaCCRES: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -7.70194632291002628799e-2,
+            3.6299296501592603903,
+            8.89360363934516423567e-2,
+            1.01574093745825683177e-1,
+            2.48240411033688102016e-1,
+            -1.89997726124545129878,
+            -1.17742492881718319175,
+            -6.11607389367762155352e-1,
+            -1.36976184052883320774,
+            -1.1019318338640189392
+         ]
+         prettyName: "MaCCRES"
+         responseParamId: 8
+         systParamId: 9
+      }
+      MaNCEL: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            3.21418874740737159357e-1,
+            1.47647041413234925145,
+            5.47296030111585785072e-1,
+            5.39497374006234875488e-1,
+            -1.29160802493288495718,
+            -8.73520535037480172491e-1,
+            2.4990086204609434084,
+            1.71472010746247804924,
+            1.9570727472929019819e-1,
+            -5.60340703527630767944e-1
+         ]
+         prettyName: "MaNCEL"
+         responseParamId: 5
+         systParamId: 6
+      }
+      MaNCRES: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            2.50587016221279212935e-1,
+            -1.32017533180841439844,
+            5.5823994959635603319e-1,
+            -1.01839628217000210952,
+            4.37857529717680160619e-1,
+            1.26982001691952350875,
+            -8.17188860373261771741e-1,
+            -5.19764466976590844283e-1,
+            -4.95813665178890472518e-1,
+            4.85414771498768937708e-1
+         ]
+         prettyName: "MaNCRES"
+         responseParamId: 11
+         systParamId: 12
+      }
+      MvCCRES: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            7.77905685895647458494e-1,
+            1.90446879546930736282e-1,
+            6.82601302478601068557e-1,
+            -1.4830524489036489566,
+            8.98693961231317062222e-1,
+            -9.04396010180267967415e-2,
+            -9.93782441984358055898e-1,
+            -1.48983175830837932807,
+            -8.78920652004123725831e-1,
+            -3.05920537480983634193e-1
+         ]
+         prettyName: "MvCCRES"
+         responseParamId: 8
+         systParamId: 10
+      }
+      MvNCRES: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -1.45544939738817724617,
+            1.67380267134357918479,
+            -3.00574137723090759056e-2,
+            -1.1263218743207219219e-1,
+            4.28022734081619504742e-1,
+            -1.79908924403593495356,
+            1.42423598909175708194,
+            1.1669245700611469152e-1,
+            1.38788439490976722723,
+            7.82908542746236779664e-1
+         ]
+         prettyName: "MvNCRES"
+         responseParamId: 11
+         systParamId: 13
+      }
+      NCELVariationResponse: {
+         paramVariations: [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+         ]
+         prettyName: "NCELVariationResponse"
+         systParamId: 5
+      }
+      NCRESVariationResponse: {
+         paramVariations: [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+         ]
+         prettyName: "NCRESVariationResponse"
+         systParamId: 11
+      }
+      ZExpA1CCQE: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -3.86831761621039937893e-1,
+            -3.93999567541553075145e-2,
+            6.86823639179325429183e-1,
+            -2.48947846335145051011e-1,
+            -7.95146243709492162033e-1,
+            -5.46468523213716403375e-2,
+            1.93794620447138221664,
+            1.00095243101590281043,
+            1.17519166635184427183e-1,
+            -8.58812103856205100172e-1
+         ]
+         prettyName: "ZExpA1CCQE"
+         responseParamId: 0
+         systParamId: 1
+      }
+      ZExpA2CCQE: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -5.91480120553393051708e-1,
+            -4.01392146616992684383e-1,
+            -2.78062603766191906995e-1,
+            -1.91320111125452163581e-1,
+            2.24145459780517336545e-1,
+            7.37357022023790442677e-2,
+            -3.39795746953544974822e-1,
+            2.80677131810891433705e-1,
+            -1.25616899322143948936,
+            -1.55114007309213697283
+         ]
+         prettyName: "ZExpA2CCQE"
+         responseParamId: 0
+         systParamId: 2
+      }
+      ZExpA3CCQE: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -1.35834826085198256962,
+            2.62377284268760224695e-1,
+            -1.75175063974192890548,
+            1.02895972669045909775,
+            -2.00943051911487957639,
+            8.66312235509936745537e-1,
+            -5.16796828094851057323e-1,
+            1.585241495042256199,
+            -8.42677947947720329402e-1,
+            5.16728412875808396088e-1
+         ]
+         prettyName: "ZExpA3CCQE"
+         responseParamId: 0
+         systParamId: 3
+      }
+      ZExpA4CCQE: {
+         centralParamValue: 0
+         isRandomlyThrown: true
+         isResponselessParam: true
+         oneSigmaShifts: [
+            -1,
+            1
+         ]
+         paramVariations: [
+            -2.36166678722191408779e-1,
+            1.4606155098297410877,
+            -6.49737292630855889364e-1,
+            1.39912107344644709439e-1,
+            -6.70886591812363985987e-1,
+            7.25645954874018506153e-2,
+            7.80321384946725538079e-1,
+            7.27950782061705825576e-1,
+            -5.75382725187251420351e-1,
+            1.92398768716850709914
+         ]
+         prettyName: "ZExpA4CCQE"
+         responseParamId: 0
+         systParamId: 4
+      }
+      ZExpAVariationResponse: {
+         paramVariations: [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+         ]
+         prettyName: "ZExpAVariationResponse"
+         systParamId: 0
+      }
+      instance_name: "SBND_v5_multisim"
+      parameter_headers: [
+         "ZExpAVariationResponse",
+         "ZExpA1CCQE",
+         "ZExpA2CCQE",
+         "ZExpA3CCQE",
+         "ZExpA4CCQE",
+         "NCELVariationResponse",
+         "MaNCEL",
+         "EtaNCEL",
+         "CCRESVariationResponse",
+         "MaCCRES",
+         "MvCCRES",
+         "NCRESVariationResponse",
+         "MaNCRES",
+         "MvNCRES",
+         "DISBYVariationResponse",
+         "AhtBY",
+         "BhtBY",
+         "CV1uBY",
+         "CV2uBY",
+         "FSI_pi_VariationResponse",
+         "MFP_pi",
+         "FrInel_pi",
+         "FrAbs_pi",
+         "FrPiProd_pi",
+         "FSI_N_VariationResponse",
+         "MFP_N",
+         "FrInel_N",
+         "FrAbs_N",
+         "FrPiProd_N"
+      ]
+      tool_options: {
+         AxFFCCQEDipoleToZExp: true
+         CCRESIsShapeOnly: false
+         DISBYIsShapeOnly: false
+         MaCCQEIsShapeOnly: false
+         NCRESIsShapeOnly: false
+         UseFullHERG: true
+         evgen_list_name: ""
+         fill_valid_tree: false
+         genie_tune_name: "${GENIE_XSEC_TUNE}"
+         ignore_parameter_dependence: false
+      }
+      tool_type: "GENIEReWeight"
+   }
+   syst_providers: [
+      "GENIEReWeight_SBND_v5_multisim",
+      "GENIEReWeight_SBND_v5_multisigma"
+   ]
+}
+
+END_PROLOG

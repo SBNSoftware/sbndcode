@@ -1,0 +1,18 @@
+#include "syst_params_sbnd_v5.fcl"
+#include "eventweight_genie_systtools.fcl"
+
+BEGIN_PROLOG
+
+sbnd_systtools: {
+
+  @table::sbn_systtools
+
+  GeneratorModuleLabel: "generator"
+  AllowMissingTruth: false
+  DebugMode: false
+
+  ## change configuration for SBND
+  generated_systematic_provider_configuration: @local::generated_systematic_provider_configuration_sbnd
+}
+
+END_PROLOG
