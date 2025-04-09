@@ -4,9 +4,10 @@ standard_hepmcfilegen:
 {
   module_type:   "HepMCFileGen"
 
-  FileSearchPaths: "/pnfs/sbnd/persistent/users/abeever/xsec/NuWro_v21_09_INCL_CCQE/HepMCout/"
+  FileSearchPaths: "/exp/sbnd/data/users/abeever/xsec/generatorGen/INCL_nuwro_CCQE_SBND/hepmc/"
   FilePatterns:    ["*.hepmc"]
   EventsPerPOT:    1 # Currently not implemented
+  FileIndex:       0
 
   FluxCopyMethod:  "DIRECT"
 }

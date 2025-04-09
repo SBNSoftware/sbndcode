@@ -119,8 +119,9 @@ private:
   std::string              fFileCopyMethod;  ///< "DIRECT" = old direct access method, got rid of ifdh approach schema ("" okay)
   
   double         fEventsPerPOT;     ///< Number of events per POT (to be set)
+  int            fFileIndex;
   int            fEventsPerSubRun;  ///< Keeps track of the number of processed events per subrun
-
+  int            fEventsPerFile;
 };
 
 //------------------------------------------------------------------------------
@@ -131,6 +132,7 @@ evgen::HepMCFileGen::HepMCFileGen(fhicl::ParameterSet const & p)
   , fFilePatterns{p.get<std::vector<std::string>>("FilePatterns")}
   , fFileCopyMethod{p.get<std::string>("FluxCopyMethod","DIRECT")}
   , fEventsPerPOT{p.get<double>("EventsPerPOT", -1.)}
+  , fFileIndex{p.get<int>("FileIndex", -1.)}
   , fEventsPerSubRun(0)
 
 {
@@ -145,7 +147,7 @@ evgen::HepMCFileGen::HepMCFileGen(fhicl::ParameterSet const & p)
 void evgen::HepMCFileGen::open_file()
 {
 
-  int random_file_index = rand() / double(RAND_MAX) * fSelectedFiles.size(); 
+  /*int random_file_index = rand() / double(RAND_MAX) * fSelectedFiles.size(); 
 
   mf::LogInfo("HepMCFileGen")
       << "Opening file " << fSelectedFiles.at(random_file_index) << std::endl;;
@@ -157,7 +159,22 @@ void evgen::HepMCFileGen::open_file()
   if( !fInputFile->good() )
     throw cet::exception("HepMCFileGen") << "input text file "
           << fSelectedFiles.at(random_file_index)
+          << " cannot be read.\n";*/
+
+  int ordered_file_index = fFileIndex; 
+
+  mf::LogInfo("HepMCFileGen")
+      << "Opening file " << fSelectedFiles.at(ordered_file_index) << std::endl;;
+
+  fInputFile = new std::ifstream(fSelectedFiles.at(ordered_file_index).c_str(), std::fstream::in);
+
+  std::cout << "Opening file " << fSelectedFiles.at(ordered_file_index) << std::endl;
+  // check that the file is a good one
+  if( !fInputFile->good() )
+    throw cet::exception("HepMCFileGen") << "input text file "
+          << fSelectedFiles.at(ordered_file_index)
           << " cannot be read.\n";
+
 }
 
 
@@ -197,119 +214,119 @@ void evgen::HepMCFileGen::endSubRun(art::SubRun& sr)
 
 //------------------------------------------------------------------------------
 void evgen::HepMCFileGen::produce(art::Event & e)
-{
+  {
 
-  // check that the file is still good
-  if( !fInputFile->good() || fInputFile->peek() == EOF) {
-    open_file();
-  }
+    // check that the file is still good
+    if( !fInputFile->good() || fInputFile->peek() == EOF) {
+      open_file();
+    }
 
-  if( !fInputFile->good() || fInputFile->peek() == EOF) {
-    throw cet::exception("HepMCFileGen") << "input text file "
-					<< " cannot be read in produce().\n";
-  }
+    if( !fInputFile->good() || fInputFile->peek() == EOF) {
+      throw cet::exception("HepMCFileGen") << "input text file "
+            << " cannot be read in produce().\n";
+    }
 
-  std::unique_ptr< std::vector<simb::MCTruth> > truthcol(new std::vector<simb::MCTruth>);
-  simb::MCTruth truth;
+    std::unique_ptr< std::vector<simb::MCTruth> > truthcol(new std::vector<simb::MCTruth>);
+    simb::MCTruth truth;
 
-  // declare the variables for reading in the event record
-  int            event          = 0;
-  unsigned short nParticles 	  = 0;
-  int            status         = 0;
-  int 	 	 pdg            = 0;
-  int 	 	 firstMother    = 0;
-  int 	 	 secondMother   = 0;
-  int 	 	 firstDaughter  = 0;
-  int 	 	 secondDaughter = 0;
-  double 	 xMomentum      = 0.;
-  double 	 yMomentum   	= 0.;
-  double 	 zMomentum   	= 0.;
-  double 	 energy      	= 0.;
-  double 	 mass        	= 0.;
-  double 	 xPosition   	= 0.;
-  double 	 yPosition   	= 0.;
-  double 	 zPosition   	= 0.;
-  double 	 time        	= 0.;
+    // declare the variables for reading in the event record
+    int            event          = 0;
+    unsigned short nParticles 	  = 0;
+    int            status         = 0;
+    int 	 	 pdg            = 0;
+    int 	 	 firstMother    = 0;
+    int 	 	 secondMother   = 0;
+    int 	 	 firstDaughter  = 0;
+    int 	 	 secondDaughter = 0;
+    double 	 xMomentum      = 0.;
+    double 	 yMomentum   	= 0.;
+    double 	 zMomentum   	= 0.;
+    double 	 energy      	= 0.;
+    double 	 mass        	= 0.;
+    double 	 xPosition   	= 0.;
+    double 	 yPosition   	= 0.;
+    double 	 zPosition   	= 0.;
+    double 	 time        	= 0.;
 
-  bool set_neutrino = true;
+    bool set_neutrino = true;
 
-  // neutrino
-  int ccnc = -1, mode = -1, itype = -1, target = -1, nucleon = -1, quark = -1;
-  double w = -1, x = -1, y = -1, qsqr = -1;
+    // neutrino
+    int ccnc = -1, mode = -1, itype = -1, target = -1, nucleon = -1, quark = -1;
+    double w = -1, x = -1, y = -1, qsqr = -1;
 
-  // read in line to get event number and number of particles
-  std::string oneLine;
-  std::getline(*fInputFile, oneLine);
-  std::istringstream inputLine;
-  inputLine.str(oneLine);
-
-  inputLine >> event >> nParticles;
-
-  std::cout << "Number of particles is: " << nParticles << std::endl;
-
-  // now read in all the lines for the particles
-  // in this interaction. only particles with
-  // status = 1 get tracked in Geant4. see GENIE GHepStatus
-  for(unsigned short i = 0; i < nParticles; ++i){
+    // read in line to get event number and number of particles
+    std::string oneLine;
     std::getline(*fInputFile, oneLine);
-    inputLine.clear();
+    std::istringstream inputLine;
     inputLine.str(oneLine);
 
-    inputLine >> status >> pdg
-	      >> firstMother >> secondMother >> firstDaughter >> secondDaughter
-	      >> xMomentum   >> yMomentum    >> zMomentum     >> energy >> mass
-	      >> xPosition   >> yPosition    >> zPosition     >> time;
+    inputLine >> event >> nParticles;
 
-    std::cout << "PDG of current particle: " << pdg << std::endl;
-    TLorentzVector pos(xPosition, yPosition, zPosition, time);
-    TLorentzVector mom(xMomentum, yMomentum, zMomentum, energy);
+    //std::cout << "Number of particles is: " << nParticles << std::endl;
 
-    simb::MCParticle part(i, pdg, "primary", firstMother, mass, status);
-    part.AddTrajectoryPoint(pos, mom);
+    // now read in all the lines for the particles
+    // in this interaction. only particles with
+    // status = 1 get tracked in Geant4. see GENIE GHepStatus
+    for(unsigned short i = 0; i < nParticles; ++i){
+      std::getline(*fInputFile, oneLine);
+      inputLine.clear();
+      inputLine.str(oneLine);
 
-    if (abs(pdg) == 14 || abs(pdg) == 12) {
-      std::cout << "This is a neutrino" << std::endl;
-      set_neutrino = true;
-      ccnc = firstDaughter; // for the neutrino we write ccnc in place of 1st daugther
-      mode = secondDaughter; // for the neutrino we write mode in place of 2nd daugther
-      itype = -1;
-      target = nucleon = quark = w = x = y = qsqr = -1;
-    } 
+      inputLine >> status >> pdg
+          >> firstMother >> secondMother >> firstDaughter >> secondDaughter
+          >> xMomentum   >> yMomentum    >> zMomentum     >> energy >> mass
+          >> xPosition   >> yPosition    >> zPosition     >> time;
 
-    truth.Add(part);
-    std::cout << i << "  Particle added with Pdg " << part.PdgCode() << ", Mother " << part.Mother() << ", track id " << part.TrackId() << ", ene " << part.E() << std::endl;
+      //std::cout << "PDG of current particle: " << pdg << std::endl;
+      TLorentzVector pos(xPosition, yPosition, zPosition, time);
+      TLorentzVector mom(xMomentum, yMomentum, zMomentum, energy);
+
+      simb::MCParticle part(i, pdg, "primary", firstMother, mass, status);
+      part.AddTrajectoryPoint(pos, mom);
+
+      if (abs(pdg) == 14 || abs(pdg) == 12) {
+        //std::cout << "This is a neutrino" << std::endl;
+        set_neutrino = true;
+        ccnc = firstDaughter; // for the neutrino we write ccnc in place of 1st daugther
+        mode = secondDaughter; // for the neutrino we write mode in place of 2nd daugther
+        itype = -1;
+        target = nucleon = quark = w = x = y = qsqr = -1;
+      } 
+
+      truth.Add(part);
+      //std::cout << i << "  Particle added with Pdg " << part.PdgCode() << ", Mother " << part.Mother() << ", track id " << part.TrackId() << ", ene " << part.E() << std::endl;
+    }
+  
+    if (set_neutrino) {
+      truth.SetNeutrino(ccnc,
+                        mode,
+                        itype,
+                        target,
+                        nucleon,
+                        quark,
+                        w,
+                        x,
+                        y,
+                        qsqr);
+
+      // set the neutrino information in MCTruth
+      truth.SetOrigin(simb::kBeamNeutrino);
+      // truth.SetGeneratorInfo(simb::Generator_t::kGENIE,
+      //                          __GENIE_RELEASE__,
+      //                          {{"tune", fTuneName}});
+    }
+
+    //std::cout << " neutrino " << truth.GetNeutrino() << std::endl;
+    //std::cout << " lepton pdg " << truth.GetNeutrino().Lepton().PdgCode() << " ene " << truth.GetNeutrino().Lepton().E() << std::endl;
+
+    truthcol->push_back(truth);
+
+    e.put(std::move(truthcol));
+
+    fEventsPerSubRun++;
+
+    return;
   }
- 
-  if (set_neutrino) {
-    truth.SetNeutrino(ccnc,
-                      mode,
-                      itype,
-                      target,
-                      nucleon,
-                      quark,
-                      w,
-                      x,
-                      y,
-                      qsqr);
-
-    // set the neutrino information in MCTruth
-    truth.SetOrigin(simb::kBeamNeutrino);
-    // truth.SetGeneratorInfo(simb::Generator_t::kGENIE,
-    //                          __GENIE_RELEASE__,
-    //                          {{"tune", fTuneName}});
-  }
-
-  std::cout << " neutrino " << truth.GetNeutrino() << std::endl;
-  std::cout << " lepton pdg " << truth.GetNeutrino().Lepton().PdgCode() << " ene " << truth.GetNeutrino().Lepton().E() << std::endl;
-
-  truthcol->push_back(truth);
-
-  e.put(std::move(truthcol));
-
-  fEventsPerSubRun++;
-
-  return;
-}
 
 
 void evgen::HepMCFileGen::ExpandInputFilePatternsDirect() {
