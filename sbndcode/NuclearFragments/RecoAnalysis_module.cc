@@ -1,10 +1,9 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       AnalyseClusterReco
+// Class:       RecoAnalysis
 // Plugin Type: analyzer (Unknown Unknown)
-// File:        AnalyseClusterReco_module.cc
+// File:        RecoAnalysis_module.cc
 //
-// Generated at Thu Jan 16 10:55:37 2025 by Anna Beever using cetskelgen
-// from cetlib version 3.18.02.
+// Generated on Wednesday 12th Feb 10:55:37 2025 by Anna Beever
 ////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDAnalyzer.h"
@@ -36,22 +35,22 @@
 
 constexpr double double_default = -999.0;
 
-namespace testReco {
-  class AnalyseClusterReco;
+namespace nuclearFragments {
+  class RecoAnalysis;
 }
 
 
-class testReco::AnalyseClusterReco : public art::EDAnalyzer {
+class nuclearFragments::RecoAnalysis : public art::EDAnalyzer {
 public:
-  explicit AnalyseClusterReco(fhicl::ParameterSet const& p);
+  explicit RecoAnalysis(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
   // Plugins should not be copied or assigned.
-  AnalyseClusterReco(AnalyseClusterReco const&) = delete;
-  AnalyseClusterReco(AnalyseClusterReco&&) = delete;
-  AnalyseClusterReco& operator=(AnalyseClusterReco const&) = delete;
-  AnalyseClusterReco& operator=(AnalyseClusterReco&&) = delete;
+  RecoAnalysis(RecoAnalysis const&) = delete;
+  RecoAnalysis(RecoAnalysis&&) = delete;
+  RecoAnalysis& operator=(RecoAnalysis const&) = delete;
+  RecoAnalysis& operator=(RecoAnalysis&&) = delete;
 
   // Required functions.
   void analyze(art::Event const& e) override;
@@ -67,19 +66,19 @@ private:
 
   // Tree variables
   unsigned int fEventID;
-  unsigned int fNPFParticles;
-  unsigned int fNPrimaryChildren;
-  int fNumTracks;
+  unsigned int fReco_nPFParticles;
+  unsigned int fReco_nPrimaryChildren;
 
-  std::vector<double> fChildTrackLengths;
-  std::vector<double> fChildTrackCompleteness;
-  std::vector<double> fChildTrackPurity;
-  std::vector<std::vector<double>> fChildTrackdEdx;
-  std::vector<std::vector<double>> fChildTrackResRange;
-  std::vector<bool> fChildTrackIsLongest;
-  std::vector<bool> fChildTrackIsMiddle;
-  std::vector<bool> fChildTrackIsShortest;
-  std::vector<int> fMCParticlePDG;
+  std::vector<double> fReco_childTrackLengths;
+  std::vector<double> fReco_childTrackCompleteness;
+  std::vector<double> fReco_childTrackPurity;
+  std::vector<std::vector<double>> fReco_childTrackdEdx;
+  std::vector<std::vector<double>> fReco_childTrackResRange;
+  std::vector<int> fReco_truthMatchedTrackID;
+  std::vector<int> fReco_truthMatchedPDG;
+  std::vector<int> fMC_particlePDG;
+  std::vector<bool> fMC_isReconstructed;
+  std::vector<int> fMC_trackID;
 
   // Define input labels
   std::string fSliceLabel;
@@ -92,6 +91,7 @@ private:
 
   // Maps
   std::map<int,int> fTrackHitsMap;
+  std::map<int,int> fTrackIDtoTruthPDGMap;
 
   // Functions 
   void ResetVariables();
@@ -102,7 +102,7 @@ private:
 };
 
 
-testReco::AnalyseClusterReco::AnalyseClusterReco(fhicl::ParameterSet const& p)
+nuclearFragments::RecoAnalysis::RecoAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
   // More initializers here.
   fSliceLabel(p.get<std::string>("SliceLabel")),
@@ -116,7 +116,7 @@ testReco::AnalyseClusterReco::AnalyseClusterReco(fhicl::ParameterSet const& p)
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
-void testReco::AnalyseClusterReco::analyze(art::Event const& e)
+void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
 {
   // Set the event ID
   fEventID = e.id().event();
@@ -172,8 +172,8 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
 
       nuSliceKey = slice.key();
       nuID = slicePFP->Self();
-      fNPFParticles = slicePFPs.size();
-      fNPrimaryChildren = slicePFP->NumDaughters();
+      fReco_nPFParticles = slicePFPs.size();
+      fReco_nPrimaryChildren = slicePFP->NumDaughters();
 
       // Finding nu slices to loop through
       art::ValidHandle<std::vector<recob::PFParticle>> pfpHandle = e.getValidHandle<std::vector<recob::PFParticle>>(fPFParticleLabel);
@@ -181,64 +181,7 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
 
       std::vector<art::Ptr<recob::PFParticle>> nuSlicePFPs(slicePFPAssoc.at(nuSliceKey));
 
-      // Identifying track length hierachy
-      int longestID = std::numeric_limits<int>::lowest();
-      int middleID = std::numeric_limits<int>::lowest();
-      int shortestID = std::numeric_limits<int>::lowest();
-      double longestLength = std::numeric_limits<double>::lowest();
-      double shortestLength = std::numeric_limits<double>::max();
       int trackCounter = 0;
-
-      for(const art::Ptr<recob::PFParticle> &nuSlicePFP : nuSlicePFPs)
-      {
-        if(nuSlicePFP->Parent() != static_cast<long unsigned int>(nuID))
-        {
-          continue;
-        }
-
-        // Get tracks associated with this PFParticle
-        std::vector<art::Ptr<recob::Track>> tracks = pfpTrackAssoc.at(nuSlicePFP.key());
-
-        if(tracks.size() != 1)
-        {
-          continue;
-        }
-
-        art::Ptr<recob::Track> track = tracks.at(0);
-
-        trackCounter++;
-
-        // Find the middle length (if any)
-        if(trackCounter == 3){
-          if(track->Length() > shortestLength && track->Length() < longestLength){
-            middleID = track->ID();
-            //middleLength = track->Length();
-          }
-          else if(track->Length() < shortestLength){
-            middleID = shortestID;
-            //middleLength = shortestLength;
-          }
-          else if(track->Length() > longestLength){
-            middleID = longestID;
-            //middleLength = longestLength;
-          }
-        }
-
-        // Check if this track is longer than the current longest
-        if(track->Length() > longestLength)
-        {
-          longestID = track->ID();
-          longestLength = track->Length();
-        }
-        if(track->Length() < shortestLength)
-        {
-          shortestID = track->ID();
-          shortestLength = track->Length();
-        }
-
-      }
-
-      fNumTracks = trackCounter;
       
       // Actual analysis loop
       for(const art::Ptr<recob::PFParticle> &nuSlicePFP : nuSlicePFPs)
@@ -258,24 +201,19 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
 
         art::Ptr<recob::Track> track = tracks.at(0);
 
+        trackCounter++;
+
         const art::ValidHandle<std::vector<recob::Track>> trackHandle = e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
         art::FindManyP<recob::Hit> trackHitAssoc(trackHandle,e,fTrackLabel);
 
         std::vector<art::Ptr<recob::Hit>> trackHits = trackHitAssoc.at(track.key());
         int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true);
-        fChildTrackCompleteness.push_back(Completeness(trackHits,trackID));
-        float comp = Completeness(trackHits, trackID);
-        std::cout << "completeness: " << comp << std::endl;
-        fChildTrackPurity.push_back(Purity(trackHits,trackID));
-        float pur = Purity(trackHits, trackID);
-        std::cout << "purity: " << pur << std::endl;
+        std::cout << "reco track ID: " << trackID << std::endl;
+        fReco_truthMatchedTrackID.push_back(trackID);
+        fReco_childTrackCompleteness.push_back(Completeness(trackHits,trackID));
+        fReco_childTrackPurity.push_back(Purity(trackHits,trackID));
+        fReco_childTrackLengths.push_back(track->Length());
 
-        fChildTrackLengths.push_back(track->Length());
-        fChildTrackIsLongest.push_back(track->ID() == longestID);
-        fChildTrackIsMiddle.push_back(track->ID() == middleID);
-        fChildTrackIsShortest.push_back(track->ID() == shortestID);
-
-        //art::ValidHandle<std::vector<recob::Track>> trackHandle = e.getValidHandle<std::vector<recob::Track>>(fTrackLabel);
         art::FindManyP<anab::Calorimetry> trackCaloAssoc(trackHandle, e, fCalorimetryLabel);
 
         // Get the calorimetry object
@@ -290,8 +228,8 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
           }
           std::vector<double> dEdx (calo->dEdx().begin(), calo->dEdx().end());
           std::vector<double> resRange (calo->ResidualRange().begin(), calo->ResidualRange().end());
-          fChildTrackdEdx.push_back(dEdx);
-          fChildTrackResRange.push_back(resRange);
+          fReco_childTrackdEdx.push_back(dEdx);
+          fReco_childTrackResRange.push_back(resRange);
         }
 
       }
@@ -330,9 +268,22 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
         continue;
       }
 
-      fMCParticlePDG.push_back(particle->PdgCode());
-      std::cout << particle->PdgCode() << std::endl;
+      fMC_trackID.push_back(particle->TrackId());
+      std::cout << "MC track ID: " << particle->TrackId() << std::endl;
+      fMC_particlePDG.push_back(particle->PdgCode());
+      fTrackIDtoTruthPDGMap.insert({particle->TrackId(), particle->PdgCode()});
+
+
+      int checkIfReconstructed = std::count(fReco_truthMatchedTrackID.begin(), fReco_truthMatchedTrackID.end(), particle->TrackId());
+      fMC_isReconstructed.push_back(checkIfReconstructed!=0);
     }
+  }
+
+  fReco_truthMatchedPDG = fReco_truthMatchedTrackID;
+  for(auto &i : fReco_truthMatchedPDG){
+    std::cout << i << std::endl;
+    i = fTrackIDtoTruthPDGMap[i];
+    std::cout << i << std::endl;
   }
 
   // Fill tree
@@ -340,7 +291,7 @@ void testReco::AnalyseClusterReco::analyze(art::Event const& e)
 
 }
 
-void testReco::AnalyseClusterReco::beginJob()
+void nuclearFragments::RecoAnalysis::beginJob()
 {
   // Get TFileService to create output TTree
   art::ServiceHandle<art::TFileService> tfs;
@@ -348,44 +299,45 @@ void testReco::AnalyseClusterReco::beginJob()
 
   // Add branches to TTRee
   fTree->Branch("eventID", &fEventID);
-  fTree->Branch("nPFParticles", &fNPFParticles);
-  fTree->Branch("nPrimaryChildren", &fNPrimaryChildren);
-  fTree->Branch("childTrackLengths", &fChildTrackLengths);
-  fTree->Branch("childTrackCompleteness", &fChildTrackCompleteness);
-  fTree->Branch("childTrackPurity", &fChildTrackPurity);
-  fTree->Branch("childTrackIsLongest", &fChildTrackIsLongest);
-  fTree->Branch("childTrackIsMiddle", &fChildTrackIsMiddle);
-  fTree->Branch("childTrackIsShortest", &fChildTrackIsShortest);
-  fTree->Branch("numTracks", &fNumTracks);
-  fTree->Branch("childTrackdEdx", &fChildTrackdEdx);
-  fTree->Branch("childTrackResRange", &fChildTrackResRange);
-  fTree->Branch("MCParticlePDG", &fMCParticlePDG);
+  fTree->Branch("reco_nPFParticles", &fReco_nPFParticles);
+  fTree->Branch("reco_nPrimaryChildren", &fReco_nPrimaryChildren);
+  fTree->Branch("reco_childTrackLengths", &fReco_childTrackLengths);
+  fTree->Branch("reco_childTrackCompleteness", &fReco_childTrackCompleteness);
+  fTree->Branch("reco_childTrackPurity", &fReco_childTrackPurity);
+  fTree->Branch("reco_childTrackdEdx", &fReco_childTrackdEdx);
+  fTree->Branch("reco_childTrackResRange", &fReco_childTrackResRange);
+  fTree->Branch("reco_truthMatchedTrackID", &fReco_truthMatchedTrackID);
+  fTree->Branch("reco_truthMatchedPDG", &fReco_truthMatchedPDG);
+  fTree->Branch("MC_particlePDG", &fMC_particlePDG);
+  fTree->Branch("MC_isReconstructed", &fMC_isReconstructed);
+  fTree->Branch("MC_trackID", &fMC_trackID);
 }
 
-void testReco::AnalyseClusterReco::endJob()
+void nuclearFragments::RecoAnalysis::endJob()
 {
   // Implementation of optional member function here.
 }
 
-void testReco::AnalyseClusterReco::ResetVariables()
+void nuclearFragments::RecoAnalysis::ResetVariables()
 {
   // Set all trackCounters to zero for the current event
-  fNPFParticles = 0;
-  fNPrimaryChildren = 0;
-  fNumTracks = 0;
-  fChildTrackLengths.clear();
-  fChildTrackCompleteness.clear();
-  fChildTrackPurity.clear();
-  fChildTrackIsLongest.clear();
-  fChildTrackIsMiddle.clear();
-  fChildTrackIsShortest.clear();
-  fChildTrackdEdx.clear();
-  fChildTrackResRange.clear();
   fTrackHitsMap.clear();
-  fMCParticlePDG.clear();
+  fTrackIDtoTruthPDGMap.clear();
+  fReco_nPFParticles = 0;
+  fReco_nPrimaryChildren = 0;
+  fReco_childTrackLengths.clear();
+  fReco_childTrackCompleteness.clear();
+  fReco_childTrackPurity.clear();
+  fReco_childTrackdEdx.clear();
+  fReco_childTrackResRange.clear();
+  fReco_truthMatchedTrackID.clear();
+  fReco_truthMatchedPDG.clear();
+  fMC_particlePDG.clear();
+  fMC_isReconstructed.clear();
+  fMC_trackID.clear();
 }
 
-float testReco::AnalyseClusterReco::Completeness(std::vector< art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
+float nuclearFragments::RecoAnalysis::Completeness(std::vector< art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
 {
   std::map<int,int> objectHitsMap;
   objectHitsMap.clear();
@@ -397,7 +349,7 @@ float testReco::AnalyseClusterReco::Completeness(std::vector< art::Ptr<recob::Hi
   return (fTrackHitsMap[trackID] == 0) ? double_default : objectHitsMap[trackID]/static_cast<double>(fTrackHitsMap[trackID]);
 }
 
-float testReco::AnalyseClusterReco::Purity(std::vector<art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
+float nuclearFragments::RecoAnalysis::Purity(std::vector<art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
 {
   std::map<int,int> objectHitsMap;
   objectHitsMap.clear();
@@ -409,4 +361,4 @@ float testReco::AnalyseClusterReco::Purity(std::vector<art::Ptr<recob::Hit>> con
   return (objectHits.size() == 0) ? double_default : objectHitsMap[trackID]/static_cast<double>(objectHits.size());
 }
 
-DEFINE_ART_MODULE(testReco::AnalyseClusterReco)
+DEFINE_ART_MODULE(nuclearFragments::RecoAnalysis)

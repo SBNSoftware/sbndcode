@@ -1,8 +1,8 @@
 BEGIN_PROLOG
 
-analyseClusterParams:
+recoAnalysisParams:
 {
-    module_type: "AnalyseClusterReco"
+    module_type: "RecoAnalysis"
 
     SliceLabel: "pandora"
     PFParticleLabel: "pandora"

@@ -6,7 +6,7 @@
 #include "TTree.h"
 #include "TFile.h"
 
-void inclAnna_to_hepmc_sbnd(std::string indir , std::string inclxx_file_name , std::string outdir, int eventsperfile=100) {
+void inclAnna_to_hepmc_sbnd_filtered(std::string indir , std::string inclxx_file_name , std::string outdir, int eventsperfile=100) {
 
    //assumes your file is inclxx_file_name.root
 
@@ -96,6 +96,21 @@ void inclAnna_to_hepmc_sbnd(std::string indir , std::string inclxx_file_name , s
       std::cout << *rx << std::endl;
 
       */
+
+      // Filter for nuclear clusters
+
+      bool containsCluster = 0;
+
+      for (size_t j = 0; j < *nParticles; j++) {
+
+         if(pdg[j] == 1002 || pdg[j] == 1003 || pdg[j] == 2003 || pdg[j] == 2004){
+            containsCluster = 1;
+         }
+
+      }
+
+      if(!containsCluster)
+      continue;
 
       // Neutrino time in the spill
       double nu_time = rand() / double(RAND_MAX) * RandomTimeOffset + GlobalTimeOffset;

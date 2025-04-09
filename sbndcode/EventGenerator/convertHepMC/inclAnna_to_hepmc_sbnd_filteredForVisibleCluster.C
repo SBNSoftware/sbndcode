@@ -6,11 +6,12 @@
 #include "TTree.h"
 #include "TFile.h"
 
-void inclAnna_to_hepmc_sbnd(std::string indir , std::string inclxx_file_name , std::string outdir, int eventsperfile=100) {
+void inclAnna_to_hepmc_sbnd_filteredForVisibleCluster(std::string indir , std::string inclxx_file_name , std::string outdir, int eventsperfile=100) {
 
    //assumes your file is inclxx_file_name.root
 
    map<int, int> PDGmap = {{1002,1000010020}, {1003,1000010030}, {2003,1000020030}, {2004, 1000020040}};
+   map<int, float> EnergyMap = {{1002,64.44}, {1003,76.86}, {2003,169.27}, {2004, 191.71}};
 
    std::string cmd = "mkdir -p " + outdir;
    gSystem->Exec(cmd.c_str());
@@ -96,6 +97,28 @@ void inclAnna_to_hepmc_sbnd(std::string indir , std::string inclxx_file_name , s
       std::cout << *rx << std::endl;
 
       */
+
+      // Filter for nuclear clusters
+
+      bool containsCluster = 0;
+      bool containsVisibleCluster = 0;
+
+      for (size_t j = 0; j < *nParticles; j++) {
+
+         if(pdg[j] == 1002 || pdg[j] == 1003 || pdg[j] == 2003 || pdg[j] == 2004){
+            containsCluster = 1;
+         }
+
+         if(pdg[j] == 1002 || pdg[j] == 1003 || pdg[j] == 2003 || pdg[j] == 2004){
+            if(Ekin[j] > EnergyMap[pdg[j]]){
+               containsVisibleCluster = 1;
+            }
+         }
+
+      }
+
+      if(!containsVisibleCluster)
+      continue;
 
       // Neutrino time in the spill
       double nu_time = rand() / double(RAND_MAX) * RandomTimeOffset + GlobalTimeOffset;
