@@ -6,20 +6,30 @@ BEGIN_PROLOG
 
 crtvetoproducer_sbnd:
 {
-   CRTGeoAlg:                  @local::crtgeoalg_sbnd
-   CRTClusterModuleLabel:      "crtclustering"
-   CRTSpacePointModuleLabel:   "crtspacepoints"
-   WindowStart:                0.265
-   WindowEnd:                  1.965
-   IsData:                     false
-   module_type:                "CRTVetoProducer"
+   CRTGeoAlg:                    @local::crtgeoalg_sbnd
+   CRTClusterModuleLabel:        "crtclustering"
+   CRTSpacePointModuleLabel:     "crtspacepoints"
+   CRTTimingReferenceInfoLabel:  "crtstrips"
+   WindowStart:                  0.265
+   WindowEnd:                    1.965
+   IsData:                       false
+   module_type:                  "CRTVetoProducer"
 }
 
-crtvetoproducer_data_sbnd: @local::crtvetoproducer_sbnd
-crtvetoproducer_data_sbnd.CRTGeoAlg:     @local::crtgeoalg_data_sbnd
-crtvetoproducer_data_sbnd.IsData:        true
-crtvetoproducer_data_sbnd.WindowStart:   0.365
-crtvetoproducer_data_sbnd.WindowEnd:     2.065
+crtvetoproducer_data_sbnd:                           @local::crtvetoproducer_sbnd
+crtvetoproducer_data_sbnd.CRTGeoAlg:                 @local::crtgeoalg_data_sbnd
+crtvetoproducer_data_sbnd.IsData:                    true
+#crtvetoproducer_data_sbnd.WindowStart:               0.365
+#crtvetoproducer_data_sbnd.WindowEnd:                 2.065
 
+# Values for testing
+crtvetoproducer_data_sbnd.WindowStart:               -2 
+crtvetoproducer_data_sbnd.WindowEnd:                 2
+crtvetoproducer_data_sbnd.SPECTDCModuleLabel:        "tdcdecoder"
+
+crtvetoproducer_data_sbnd.DAQHeaderModuleLabel:      "daq"
+crtvetoproducer_data_sbnd.DAQHeaderInstanceLabel:    "RawEventHeader"
+crtvetoproducer_data_sbnd.RawTSCorrection:           367000
+crtvetoproducer_data_sbnd.MaxAllowedRefTimeDiff:     3000000
 
 END_PROLOG

@@ -17,11 +17,15 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "artdaq-core/Data/RawEvent.hh"
+
 #include "Math/GenVector/PositionVector2D.h"
 #include "Math/GenVector/DisplacementVector2D.h"
 
 #include "lardata/Utilities/AssociationUtil.h"
+#include "sbndcode/Timing/SBNDRawTimingObj.h"
 
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include "sbnobj/SBND/CRT/CRTEnums.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
@@ -31,6 +35,9 @@
 #include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "lardata/Utilities/AssociationUtil.h"
+
+#include "art_root_io/TFileService.h"
+#include "TNtuple.h"
 
 #include "TMath.h"
 
@@ -52,6 +59,8 @@ public:
   CRTVetoProducer& operator=(CRTVetoProducer&&) = delete;
 
   void produce(art::Event& e) override;
+  //void beginJob() override;
+  bool SPECTDCReference(art::Event& e, const uint64_t &raw_ts, uint64_t &ref_time, const uint32_t channel);
 
   // Functions to check if a point is in a specific Tagger
   bool inSouth(const CRTTagger t);
@@ -68,10 +77,27 @@ private:
   double           fWindowEnd;
   std::string      fCRTClusterModuleLabel;
   std::string      fCRTSpacePointModuleLabel;
+  std::string      fCRTTimingReferenceInfoLabel;
+  std::string      fSPECTDCModuleLabel;
   bool		   fIsData;
+  
+  // raw timestamp correction variables
+  std::string      fDAQHeaderModuleLabel;
+  std::string      fDAQHeaderInstanceLabel;
+  uint32_t         fRawTSCorrection;  
+  uint32_t         fMaxAllowedRefTimeDiff;
 
   std::vector<int> fVetoSpacePointIndices;
   std::vector<art::Ptr<CRTSpacePoint>> fVetoSpacePoints;
+
+  std::vector<double> fVetoSouthTimes;
+
+  // store South Wall Top Hat for debugging
+  unsigned int fEventID;
+  unsigned int fRun;
+  unsigned int fSubRun;
+  //TNtuple *fSouth_tree;
+
 };
 
 
@@ -82,7 +108,13 @@ sbnd::crt::CRTVetoProducer::CRTVetoProducer(fhicl::ParameterSet const& p)
   , fWindowEnd(p.get<double>("WindowEnd"))
   , fCRTClusterModuleLabel(p.get<std::string>("CRTClusterModuleLabel"))
   , fCRTSpacePointModuleLabel(p.get<std::string>("CRTSpacePointModuleLabel"))
+  , fCRTTimingReferenceInfoLabel(p.get<std::string>("CRTTimingReferenceInfoLabel"))
+  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel"))
   , fIsData(p.get<bool>("IsData"))
+  , fDAQHeaderModuleLabel(p.get<std::string>("DAQHeaderModuleLabel", ""))
+  , fDAQHeaderInstanceLabel(p.get<std::string>("DAQHeaderInstanceLabel", ""))
+  , fRawTSCorrection(p.get<uint32_t>("RawTSCorrection", 0))
+  , fMaxAllowedRefTimeDiff(p.get<uint32_t>("MaxAllowedRefTimeDiff", 0))
 {
   produces<std::vector<CRTVeto>>();
   produces<art::Assns<CRTVeto, CRTSpacePoint>>();
@@ -94,10 +126,80 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
   fVetoSpacePoints.clear();
   fVetoSpacePointIndices.clear();
  
-  if (fIsData) {
-    std::cout << "Filling CRT Veto for Data" << std::endl;
+  fVetoSouthTimes.clear();
 
-  }
+  fEventID = e.id().event();
+  fRun = e.run();
+  fSubRun = e.subRun();
+
+  std::cout << std::endl;
+  std::cout << "Filling CRTVeto for Run " << fRun << " SubRun " << fSubRun << " Event " << fEventID << std::endl;
+  std::cout << std::endl;
+
+  // May only be needed for BNB+Light Data --> TODO
+  uint64_t raw_ts = 0, ref_time = 0;
+  uint32_t ref_time_ns = 0;
+
+  // Data needs to be handled differently than MC
+  
+  if (fIsData) {
+    
+    // First Need to calculate the raw_ts in the same way as the CRTStripProducer
+    art::Handle<artdaq::detail::RawEventHeader> DAQHeaderHandle;
+    e.getByLabel(fDAQHeaderModuleLabel, fDAQHeaderInstanceLabel, DAQHeaderHandle);
+
+    if(DAQHeaderHandle.isValid())
+    {
+      std::cout << "DAQHeader is valid --> Calculate raw ts" << std::endl;
+      artdaq::RawEvent rawHeaderEvent = artdaq::RawEvent(*DAQHeaderHandle);
+      raw_ts = rawHeaderEvent.timestamp() - fRawTSCorrection;
+    }
+
+    art::Handle<raw::TimingReferenceInfo> TimingReferenceHandle;
+    e.getByLabel(fCRTTimingReferenceInfoLabel, TimingReferenceHandle);
+    if(TimingReferenceHandle.isValid())
+    {
+      uint16_t TType = TimingReferenceHandle->timingType;
+      uint16_t TChannel = TimingReferenceHandle->timingChannel;
+
+      // the CRTStripProducer should reference the Event Trigger
+      // If we don't find this --> return false
+      if (TType != 0 || TChannel != 4) {
+        
+        std::cout << std::endl;
+        std::cout << "ETrig was not referenced for this event --> Don't Flag Event!" << std::endl;
+        std::cout << std::endl;    
+        auto crtveto            = std::make_unique<CRTVeto>(false, false, false, false, false, fVetoSouthTimes);
+        auto vetoVec            = std::make_unique<std::vector<CRTVeto>>();
+        vetoVec->push_back(*crtveto);
+        auto vetoSpacePointAssn = std::make_unique<art::Assns<CRTVeto, CRTSpacePoint>>();
+        e.put(std::move(vetoVec));
+        e.put(std::move(vetoSpacePointAssn));
+        return;
+
+      }
+
+    }
+
+    // The Strip Hits were referenced properly --> Change to RWM
+    uint64_t spec_tdc_ref_time_etrig = 0;
+    uint64_t spec_tdc_ref_time_rwm = 0;
+    if(SPECTDCReference(e, raw_ts, spec_tdc_ref_time_etrig, 4) && SPECTDCReference(e, raw_ts, spec_tdc_ref_time_rwm, 2)) {
+
+      ref_time += spec_tdc_ref_time_rwm;
+      ref_time -= spec_tdc_ref_time_etrig;
+
+    }
+    else {
+      std::cout << std::endl;
+      std::cout << std::endl;
+      std::cout << "Was NOT able to reference time to the RWM !!!" << std::endl;
+      std::cout << std::endl;
+      std::cout << std::endl;
+    }
+    ref_time_ns = ref_time % static_cast<uint64_t>(1e9);
+
+  } // end of check for Data
 
  
   // Get the Clusters for this event
@@ -110,31 +212,8 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
   std::vector<art::Ptr<CRTCluster>> CRTClusterVec;
   art::fill_ptr_vector(CRTClusterVec, CRTClusterHandle);
 
-  // Get the Space Points for this event
-  art::Handle<std::vector<CRTSpacePoint>> CRTSpacePointHandle;
-  e.getByLabel(fCRTSpacePointModuleLabel, CRTSpacePointHandle);
-  if(!CRTSpacePointHandle.isValid()){
-    std::cout << "CRTSpacePoint product " << fCRTSpacePointModuleLabel << " not found..." << std::endl;
-    throw std::exception();
-  } 
-  std::vector<art::Ptr<CRTSpacePoint>> CRTSpacePointVec;
-  art::fill_ptr_vector(CRTSpacePointVec, CRTSpacePointHandle);
-
   art::FindManyP<CRTSpacePoint> cluster_sps(CRTClusterVec, e, fCRTSpacePointModuleLabel);
   
-  // Get indices of Veto Space Points
-  /*
-  for (unsigned int i = 0; i < CRTSpacePointVec.size(); ++i) {
-
-    double t = CRTSpacePointVec.at(i)->Ts0()/1000; // Convert to us
-    if ((t > fWindowEnd) || (t < fWindowStart)) {
-      continue;
-    }
-    fVetoSpacePointIndices.push_back(i);
-
-  }
-  */
-
   // initialize counters for veto hits in different taggers
   int S = 0;
   int N = 0;
@@ -145,29 +224,38 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
 
   // loop over clusters in this event
   // Note: there are usually more clusters than space points
+  //
+  std::cout << std::endl;
+  std::cout << "Start Loop over Clusters ..." << std::endl;
+  std::cout << std::endl;
   for(auto const &cluster : CRTClusterVec) {
   
     std::vector<art::Ptr<CRTSpacePoint>> clusterSpacePoints = cluster_sps.at(cluster.key());
   
     // loop over the space points in this cluster --> should be one per cluster
     for (auto const &sp : clusterSpacePoints) {
-     
+
       // Get the time and tagger for this space point
-      double t = sp->Ts0()/1000; // Convert to us
+      double t = sp->Ts0(); // Starts in ns
+      t -= ref_time_ns;
+
+      t /= 1000; // convert to us
+
       CRTTagger tag = cluster->Tagger();  
 
       // check if in the beam window --> Make configureable
       if ((t > fWindowEnd) || (t < fWindowStart)) {
         continue;
       }
-      std::cout << std::endl;
-      std::cout << "Found Space Point in time with the beam !!!" << std::endl;
-      std::cout << std::endl;
-    
+   
+      // We Found a Space Point in our Veto Window !!!
+
       fVetoSpacePoints.push_back(sp);
       fVetoSpacePointIndices.push_back(sp.key());
 
       if (inSouth(tag)) {
+        //fSouth_tree->Fill(fRun, fSubRun, fEventID, t);
+        fVetoSouthTimes.push_back(t);
         S += 1;
       }
       else if (inNorth(tag)) {
@@ -221,11 +309,8 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
     v4 = true;
   }
 
-  //crtveto =  CRTVeto(v0, v1, v2, v3); 
-  //
-  //
   // Make Products for the Event
-  auto crtveto            = std::make_unique<CRTVeto>(v0, v1, v2, v3, v4);
+  auto crtveto            = std::make_unique<CRTVeto>(v0, v1, v2, v3, v4, fVetoSouthTimes);
   auto vetoVec            = std::make_unique<std::vector<CRTVeto>>();
   vetoVec->push_back(*crtveto);
 
@@ -243,21 +328,58 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
 
   util::CreateAssn(*this, e, *vetoVec, fVetoSpacePoints, *vetoSpacePointAssn);
   
-  /*
-  for (unsigned int i = 0; i < fVetoSpacePoints.size(); ++i) {
-    std::cout << "Veto SP index " << fVetoSpacePointIndices.at(i) << std::endl;
-    //auto const CRTSpacePointPtr = CRTSpacePointPtrMaker(fVetoSpacePointIndices.at(i));
-    //vetoSpacePointAssn->addSingle(vetoPtr, CRTSpacePointPtr);
-    //vetoSpacePointAssn->addSingle(crtveto, CRTSpacePointPtr);
-    util::CreateAssn(*this, e, *vetoVec, fVetoSpacePoints.at(i), *vetoSpacePointAssn);
-  }
-  */
-
-  //e.put(std::move(crtveto));
   e.put(std::move(vetoVec));
   e.put(std::move(vetoSpacePointAssn));
 
 } // end of produce
+/*
+void sbnd::crt::CRTVetoProducer::beginJob()
+{
+  art::ServiceHandle<art::TFileService> tfs;
+
+  fSouth_tree = tfs->make<TNtuple>("crtveto_south_tree", "crtveto_south_tree", "run:subrun:evt:t");
+
+}
+*/
+bool sbnd::crt::CRTVetoProducer::SPECTDCReference(art::Event& e, const uint64_t &raw_ts, uint64_t &ref_time, const uint32_t channel)
+{
+  bool found = false;
+
+  art::Handle<std::vector<sbnd::timing::DAQTimestamp>> TDCHandle;
+  e.getByLabel(fSPECTDCModuleLabel, TDCHandle);
+
+  if(!TDCHandle.isValid() || TDCHandle->size() == 0)
+    return found;
+
+  std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> TDCVec;
+  art::fill_ptr_vector(TDCVec, TDCHandle);
+
+  uint64_t min_diff    = std::numeric_limits<int64_t>::max();
+  uint64_t min_diff_ts = 0;
+
+  for(auto ts : TDCVec)
+    {
+      // For the CRT Veto, we want to use the RWM --> Channel 2
+      if(ts->Channel() == channel)
+        {
+          uint64_t diff = raw_ts > ts->Timestamp() ? raw_ts - ts->Timestamp() : ts->Timestamp() - raw_ts;
+
+          if(diff < min_diff)
+            {
+              min_diff    = diff;
+              min_diff_ts = ts->Timestamp();
+              found       = true;
+            }
+        }
+    }
+
+  if(min_diff > fMaxAllowedRefTimeDiff)
+    return false;
+  
+  ref_time = min_diff_ts;
+
+  return found;
+}
 
 bool sbnd::crt::CRTVetoProducer::inSouth(const CRTTagger t)
 {
@@ -266,6 +388,7 @@ bool sbnd::crt::CRTVetoProducer::inSouth(const CRTTagger t)
   }
   return false;
 }
+
 bool sbnd::crt::CRTVetoProducer::inNorth(const CRTTagger t)
 {
   if (t == kNorthTagger) {
@@ -307,7 +430,5 @@ bool sbnd::crt::CRTVetoProducer::inTopHigh(const CRTTagger t)
   }
   return false;
 }
-
-
 
 DEFINE_ART_MODULE(sbnd::crt::CRTVetoProducer)
