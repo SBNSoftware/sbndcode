@@ -1,4 +1,4 @@
-#include "cafmakerjob_sbnd_data.fcl"
+#include "cafmakerjob_sbnd_data_base.fcl"
 
 services.NuRandomService.policy: "perEvent"
 
