@@ -34,18 +34,23 @@ def loadSBNDgeometry(config = None, registry = None):
 # loadSBNDgeometry()
 
 
-def loadSBNDwireReadout(config = None, registry = None):
+def loadSBNDwireReadout(config = None, registry = None, geometry = None):
   """Loads and returns SBND wire readout with the standard SBND channel mapping.
   
   See `loadGeometry()` for the meaning of the arguments.
   """
+  # we use the common `loadWireReadout()`, but before that, we need to load
+  # and instantiate the sorter.
   assert registry, "Registry is required" # because we'll load Geometry from it
   SourceCode = LArSoftUtils.SourceCode # alias
   
   SourceCode.loadHeaderFromUPS('sbndcode/Geometry/WireReadoutSorterSBND.h')
   SourceCode.loadLibrary('sbndcode_Geometry') # should be already loaded by now
-  return LArSoftUtils.loadWireReadout \
-    (config=config, registry=registry, sorterClass=ROOT.geo.WireReadoutSorterSBND)
+  return LArSoftUtils.loadWireReadout(
+    config=config, registry=registry,
+    sorterClass=ROOT.geo.WireReadoutSorterSBND,
+    geometry=geometry,
+    )
 # loadSBNDwireReadout()
 
 
