@@ -80,6 +80,12 @@ public:
                                             , const double frameOffset
                                             , const bool isFrameEarly
                                             );
+    double ComputeShiftPs(const uint64_t decodeFrame, const double decodeTs,  const double tickFtrig
+                                            , const std::vector<uint64_t> frameVec
+                                            , const std::vector<uint64_t> frameVecPs
+                                            , const double frameOffset
+                                            , const bool isFrameEarly
+                                            );
     bool CheckShift(const double shift, const int boardId);
 
     void PlotFtrigCompare(const int flashId);
@@ -94,7 +100,9 @@ private:
         kGood, //0
         kFitFailure, //1
         kMissingTDC, //2
+        kOutOfBoundTDC, //3
         kMissingPTB, //3
+        kOutOfBoundPTB, //3
         kOutOfBound //4
     };
     
@@ -127,6 +135,7 @@ private:
 
     // TDC stuff
     std::vector<uint64_t> _tdc_ch3;
+    std::vector<uint64_t> _tdc_ch3_ps;
     std::vector<uint64_t> _tdc_ch4;
 
     //PTB stuff
@@ -382,8 +391,10 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
             const uint64_t  ts = tdc.Timestamp();
 
             if ((ch == 3) || (ch ==4)){
-                
-                if (ch == 3) _tdc_ch3.push_back(ts);
+                if (ch == 3) {
+                    _tdc_ch3.push_back(ts);
+                    _tdc_ch3_ps.push_back(tdc.TimestampPs());
+                }
                 if (ch == 4) _tdc_ch4.push_back(ts);
 
                 if (fDebugTimeRef) std::cout << "Ch " << name
@@ -522,21 +533,34 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                 }else{
                     //TDC as reference frame TODO: add picosecond correction
                     if (_pmt_timing_type == 0){
-                        if (_tdc_ch4.size() == 0){
+                        if (_tdc_ch4.size() == 0 || _tdc_ch3.size() == 0 || _tdc_ch3_ps.size() == 0){
                             status = kMissingTDC;
                         }else{
-                            double tempShift = ComputeShift( _tdc_ch4.front()
+                            double tempShift = 0;
+                            if (_tdc_ch3_ps.front() == 0){ //old decode version does not have picosecond
+                                tempShift = ComputeShift( _tdc_ch4.front()
+                                                          , wf->TimeStamp()
+                                                          , tickFtrig
+                                                          , _tdc_ch3
+                                                          , fTdc3CaenOffset[wf->ChannelNumber()]
+                                                          , false
+                                                          );
+                            }else{
+                                tempShift = ComputeShiftPs( _tdc_ch4.front()
                                                             , wf->TimeStamp()
                                                             , tickFtrig
                                                             , _tdc_ch3
+                                                            , _tdc_ch3_ps
                                                             , fTdc3CaenOffset[wf->ChannelNumber()]
                                                             , false
                                                             );
+                            }
+
                             if (CheckShift(tempShift, wf->ChannelNumber())){
                                 status = kGood;
                                 shift = std::round(tempShift * 1000.0) / 1000.0; //round to 3 decimal place of ns
                             }else{
-                                status = kMissingTDC;
+                                status = kOutOfBoundTDC;
                             }
                         }
                     }
@@ -544,7 +568,6 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     if((_pmt_timing_type == 1)){
                         //Find the HLT of ETRIG
                         uint64_t tsFrame = std::numeric_limits<uint64_t>::min();
-
                         for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++){
                             for (size_t j = 0; j < fPtbAllowedHlts.size(); j++){
                                 if (_ptb_hlt_trunmask[i] == fPtbAllowedHlts[j]){
@@ -554,7 +577,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                             }
                         }
 
-                        if(tsFrame == std::numeric_limits<uint64_t>::min()){
+                        if(tsFrame == std::numeric_limits<uint64_t>::min() || _ptb_hlt_unmask_timestamp.size() == 0){   
                             status = kMissingPTB;
                         }else{
                             double tempShift = ComputeShift( tsFrame
@@ -568,7 +591,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                                 status = kGood;
                                 shift = std::round(tempShift * 1000.0) / 1000.0; //round to 3 decimal place of ns
                             }else{
-                                status = kMissingPTB;
+                                status = kOutOfBoundPTB;
                             }
                         }
                     }
@@ -823,6 +846,7 @@ void sbnd::WaveformAlignment::beginJob()
     fTree->Branch("subrun", &_subrun);
     fTree->Branch("event", &_event);
     fTree->Branch("tdc_ch3", &_tdc_ch3);
+    fTree->Branch("tdc_ch3_ps", &_tdc_ch3_ps);
     fTree->Branch("tdc_ch4", &_tdc_ch4);
 
     fTree->Branch("pmt_timing_type", &_pmt_timing_type);
@@ -861,6 +885,7 @@ void sbnd::WaveformAlignment::ResetEventVars()
     _pmt_timing_ch = std::numeric_limits<uint16_t>::max();
    
     _tdc_ch3.clear();
+    _tdc_ch3_ps.clear();
     _tdc_ch4.clear();
     
     _ptb_hlt_trigger.clear();
@@ -998,7 +1023,6 @@ uint64_t  sbnd::WaveformAlignment::FindNearestFrame(const uint64_t tsFtrig, cons
             nearestFrame = frame;
        }
     }
-
     return nearestFrame;
 }
 
@@ -1010,6 +1034,51 @@ bool sbnd::WaveformAlignment::IsSecondRollover(const uint64_t tsFtrig, const uin
         return false;
     }
     return true;
+}
+
+double sbnd::WaveformAlignment::ComputeShiftPs(const uint64_t decodeFrame, const double decodeTs,  const double tickFtrig
+                                            , const std::vector<uint64_t> frameVec
+                                            , const std::vector<uint64_t> frameVecPs
+                                            , const double frameOffset
+                                            , const bool isFrameEarly
+                                            ){
+    //acquire UTC timestamp of the start of the wavef
+    uint64_t wfTimestamp = 0;
+    wfTimestamp += decodeFrame;
+    uint64_t decodeTs_ns = decodeTs * 1e3;  //convert us to ns
+    wfTimestamp += decodeTs_ns;
+
+    //acquired UTC timestamp of ftrig
+    uint64_t ftrigShift = tickFtrig*2.0;
+    uint64_t tsFtrig = wfTimestamp + ftrigShift; 
+    
+    //find nearest frame using UTC timestamp
+    uint64_t tsFrame = FindNearestFrame(tsFtrig, frameVec);
+
+    //find index of frame in frameVecPs
+    size_t frameIdx = std::numeric_limits<size_t>::min();
+    for(size_t i = 0; i < frameVec.size(); i++){
+        if (frameVec[i] == tsFrame){
+            frameIdx = i;
+            break;
+        }
+    }
+    double tsFrame_ns = frameVecPs[frameIdx]/1e3; //convert ps to ns
+
+    double tsFtrig_ns = wfTimestamp%uint64_t(1e9) + tickFtrig*2.0; //double to handle decimal place
+
+    //Check if second rollover happened
+    bool isRollover = IsSecondRollover(tsFtrig, tsFrame);
+    if(isRollover){
+        if (tsFtrig_ns < tsFrame_ns) tsFtrig_ns += 1e9; //add 1 second to tsFtrig
+        else tsFrame_ns += 1e9; //add 1 second to tsFrame
+    }
+
+    double shift = 0;
+    if (!isFrameEarly) shift =+ frameOffset - std::abs(tsFtrig_ns - tsFrame_ns); 
+    else shift =+ std::abs(tsFtrig_ns - tsFrame_ns) - frameOffset;
+
+    return shift;
 }
 
 double sbnd::WaveformAlignment::ComputeShift(const uint64_t decodeFrame, const double decodeTs,  const double tickFtrig
