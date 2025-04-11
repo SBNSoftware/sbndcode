@@ -1,0 +1,6 @@
+#include "cafmakerjob_sbnd_sce.fcl"
+
+physics.runprod: [rns, systtools, fluxweight, @sequence::physics.runprod]
+physics.producers.cafmaker.SystWeightLabels: [ "systtools", "fluxweight" ]
+
+physics.producers.cnnid.WireLabel: "simtpc2d:dnnsp"
