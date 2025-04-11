@@ -40,8 +40,11 @@
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
+#include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
 #include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
+
+#include <bitset>
 
 namespace sbnd {
     class WaveformAlignment;
@@ -70,7 +73,13 @@ public:
     void ResetEventVars();
 
     std::pair<double, double> FitFtrig(art::Ptr<raw::OpDetWaveform> wf, const int flashId, const int boardId);
-    double FindNearestTdc(const double tsFtrig, const std::vector<uint64_t> tdcVec);
+    uint64_t FindNearestFrame(const uint64_t tsFtrig, const std::vector<uint64_t> frameVec);
+    bool IsSecondRollover(const uint64_t tsFtrig, const uint64_t tsFrame);
+    double ComputeShift(const uint64_t decodeFrame, const double decodeTs,  const double tickFtrig
+                                            , const std::vector<uint64_t> frameVec
+                                            , const double frameOffset
+                                            , const bool isFrameEarly
+                                            );
     bool CheckShift(const double shift, const int boardId);
 
     void PlotFtrigCompare(const int flashId);
@@ -84,7 +93,9 @@ private:
         kUndefined = -1,
         kGood, //0
         kFitFailure, //1
-        kOutOfBound //2
+        kMissingTDC, //2
+        kMissingPTB, //3
+        kOutOfBound //4
     };
     
     // Plotting
@@ -98,6 +109,7 @@ private:
     // Shifting
     std::vector<double> boardJitter[9];
     std::vector<double> boardStatus[9];
+    std::vector<double> boardFrame;
 
     // Flash counter
     int nFtrigFlash;
@@ -106,22 +118,22 @@ private:
     //---TREE PARAMETERS
     TTree *fTree;
     art::ServiceHandle<art::TFileService> tfs;
-    
-    std::vector<std::string> pmtBoard{"0","1","2","3","4","5","6","7","8"};
-    std::vector<int> pmtCol{1, 2, 3, 4, 5, 6, 7, 28, 30};
 
     int _run, _subrun, _event;
-
-    // TDC stuff
-    std::vector<uint64_t> _tdc_ch0;
-    std::vector<uint64_t> _tdc_ch1;
-    std::vector<uint64_t> _tdc_ch2;
-    std::vector<uint64_t> _tdc_ch3;
-    std::vector<uint64_t> _tdc_ch4;
 
     // PMT Timing
     uint16_t _pmt_timing_type;
     uint16_t _pmt_timing_ch;
+
+    // TDC stuff
+    std::vector<uint64_t> _tdc_ch3;
+    std::vector<uint64_t> _tdc_ch4;
+
+    //PTB stuff
+    std::vector<uint64_t> _ptb_hlt_trigger;
+    std::vector<uint64_t> _ptb_hlt_timestamp;
+    std::vector<uint64_t> _ptb_hlt_unmask_timestamp;
+    std::vector<int> _ptb_hlt_trunmask;
 
     //---SERVICE
     sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
@@ -129,8 +141,9 @@ private:
     //---FHICL CONFIG PARAMETERS
     
     // Product label
-    art::InputTag fTdcDecodeLabel;
     art::InputTag fTimingRefLabel;
+    art::InputTag fTdcDecodeLabel;
+    art::InputTag fPtbDecodeLabel;
     art::InputTag fPmtDecodeLabel;
     art::InputTag fPmtBoardLabel;
     art::InputTag fTimingDecodeLabel;
@@ -138,29 +151,37 @@ private:
     art::InputTag fFtrigDecodeLabel;
     art::InputTag fFtrigBoardLabel;
 
+    //PTB
+    std::vector<int> fPtbAllowedHlts; 
+
     // DAQ
     double fWfLength;
-    std::vector<double> fTdc3CaenOffset;
     int fnPmtBoard;
     int fnTimingBoard;
     int fnChperBoard;
+    std::vector<int> fPmtBoard;
+    std::vector<int> fPmtCol;
 
     // Shift configuration
     int fTickLbPmt;
     int fTickUbPmt;
-
+    
     int fTickLbTiming;
     int fTickUbTiming;
-
+    
     int fPmtFitBound;
     int fTimingFitBound;
 
     double fPmtJitterBound;
     double fTimingJitterBound;
+    
+    //Cable length
+    std::vector<double> fTdc3CaenOffset;
+    std::vector<double> fPtbCaenOffset;
+    
     bool fCorrectCableOnly;
-
+    
     // Debug
-    bool fDebugTdc;
     bool fDebugTimeRef;
     bool fDebugFtrig;
     bool fDebugPmt;
@@ -190,8 +211,9 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     : EDProducer{p}  // 
     // More initializers here.
 {
-    fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel", "tdcdecoder");
     fTimingRefLabel = p.get<art::InputTag>("fTimingRefLabel", "pmtdecoder");
+    fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel", "tdcdecoder");
+    fPtbDecodeLabel = p.get<art::InputTag>("PtbDecodeLabel", "ptbdecoder");
 
     fPmtDecodeLabel = p.get<art::InputTag>("PmtDecodeLabel", "pmtdecoder:PMTChannels");
     fPmtBoardLabel = p.get<art::InputTag>("PmtBoardLabel", "pmtdecoder:PMTTiming");
@@ -201,14 +223,20 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
 
     fFtrigDecodeLabel = p.get<art::InputTag>("FtrigDecodeLabel", "pmtdecoder:FTrigChannels");
     fFtrigBoardLabel = p.get<art::InputTag>("FtrigBoardLabel", "pmtdecoder:FTrigTiming");
-
-    fWfLength = p.get<double>("WfLength", 5000);
-    fTdc3CaenOffset = p.get<std::vector<double>>("Tdc3CaenOffset", {101, 101, 101, 101, 101, 101, 101, 101, 101});
     
+    fPtbAllowedHlts = p.get<std::vector<int>>("PtbAllowedHlts", {1, 2, 3, 4, 5, 14, 15});
+
+    fTdc3CaenOffset = p.get<std::vector<double>>("Tdc3CaenOffset", {101, 101, 101, 101, 101, 101, 101, 101, 101});
+    fPtbCaenOffset = p.get<std::vector<double>>("PtbCaenOffset", {166, 166, 166, 166, 166, 166, 166, 166, 166});
+  
+    fWfLength = p.get<double>("WfLength", 5000);
     fnPmtBoard = p.get<int>("nPmtBoard", 8);
     fnTimingBoard = p.get<int>("nTimingBoard", 1);
-
     fnChperBoard = p.get<int>("nChperBoard", 15);
+    
+    //Pmt CAEN 0-7, Timing CAEN 8
+    fPmtBoard = p.get<std::vector<int>>("PmtBoard", {0,1,2,3,4,5,6,7,8});
+    fPmtCol = p.get<std::vector<int>>("PmtCol", {1, 2, 3, 4, 5, 6, 7, 28, 30});
 
     fTickLbPmt = p.get<int>("TickLbPmt", 1005);
     fTickUbPmt = p.get<int>("TickUbPmt", 1035);
@@ -221,9 +249,9 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
 
     fPmtJitterBound = p.get<int>("PmtJitterBound", 16);
     fTimingJitterBound = p.get<int>("TimingJitterBound", 68);
+
     fCorrectCableOnly = p.get<bool>("CorrectCableOnly", false);
 
-    fDebugTdc = p.get<bool>("DebugTdc", false);
     fDebugTimeRef = p.get<bool>("DebugTimeRef", false);
     fDebugFtrig = p.get<bool>("DebugFtrig", false);
     fDebugPmt = p.get<bool>("DebugPmt", false);
@@ -310,7 +338,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     _subrun = e.id().subRun();
     _event  =  e.id().event();
 
-    if (fDebugTdc | fDebugTimeRef | fDebugFtrig | fDebugPmt | fDebugTiming)
+    if (fDebugTimeRef | fDebugFtrig | fDebugPmt | fDebugTiming)
         std::cout <<"#----------RUN " << _run << " SUBRUN " << _subrun << " EVENT " << _event <<"----------#\n";
 
     //------------------------PMT Timing--------------------------//
@@ -339,41 +367,110 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     e.getByLabel(fTdcDecodeLabel, tdcHandle);
 
     if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-        throw cet::exception("WaveformAlignment") << "No sbnd::timing::DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!";
+        if (_pmt_timing_type == 0){
+            throw cet::exception("WaveformAlignment") << "No sbnd::timing::DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!";
+        }
     }
     else{
-        
+
         std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-        
+
         for (size_t i=0; i<tdc_v.size(); i++){
             auto tdc = tdc_v[i];
             const std::string name  = tdc.Name();
             const uint32_t  ch = tdc.Channel();
             const uint64_t  ts = tdc.Timestamp();
 
-            if (fDebugTdc) std::cout << "Ch " << name
-                                << ", ts (ns) = " << ts%uint64_t(1e9)
-                                << ", sec (s) = " << ts/uint64_t(1e9)
-                                << " picosecond = " << tdc.TimestampPs()
-                                << std::endl;
-            if(ch == 0){
-                _tdc_ch0.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 1){
-                _tdc_ch1.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 2){
-                _tdc_ch2.push_back(ts%uint64_t(1e9));
-            }
-            if(ch == 3){
-                _tdc_ch3.push_back(ts%uint64_t(1e9));
-            } 
-            if(ch == 4){
-                _tdc_ch4.push_back(ts%uint64_t(1e9));
+            if ((ch == 3) || (ch ==4)){
+                
+                if (ch == 3) _tdc_ch3.push_back(ts);
+                if (ch == 4) _tdc_ch4.push_back(ts);
+
+                if (fDebugTimeRef) std::cout << "Ch " << name
+                                    << " sec (s) = " << ts/uint64_t(1e9)
+                                    << ", ts (ns) = " << ts%uint64_t(1e9)
+                                    << " picosecond = " << tdc.TimestampPs()
+                                    << std::endl;
             }
         }
     }
     tdcHandle.removeProduct();
+    //---------------------------PTB-----------------------------//
+    art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
+    std::vector<art::Ptr<raw::ptb::sbndptb>> ptb_v;
+    e.getByLabel(fPtbDecodeLabel, ptbHandle);
+    
+    if ((!ptbHandle.isValid() || ptbHandle->size() == 0)){
+        if (_pmt_timing_type == 1)
+            throw cet::exception("WaveformAlignment") << "No raw::ptb::sbndptb found w/ tag " << fPtbDecodeLabel << ". Check data quality!";
+    }
+    else{
+        
+        art::fill_ptr_vector(ptb_v, ptbHandle);
+    
+        // HLT Words
+        unsigned nHLTs = 0;
+
+        for(auto const& ptb : ptb_v)
+            nHLTs += ptb->GetNHLTriggers();
+  
+        _ptb_hlt_timestamp.resize(nHLTs);
+        _ptb_hlt_trunmask.resize(nHLTs);
+        _ptb_hlt_unmask_timestamp.resize(nHLTs);
+  
+        unsigned hlt_i = 0; //For multiple upbits in trigger words for unmasking
+        unsigned h_i = 0; //For trigger with bitmask
+        
+        for(auto const& ptb : ptb_v){
+            for(unsigned i = 0; i < ptb->GetNHLTriggers(); ++i){
+	            _ptb_hlt_timestamp[h_i] = ptb->GetHLTrigger(i).timestamp * 20; //20 ns/tick 
+	            h_i++;
+
+	            int val = ptb->GetHLTrigger(i).trigger_word;
+	            int upBit[32];
+	  
+	            for (int u=0; u<32; u++){ //setting default values for maximum of 32 bits
+	                upBit[u]=-1;
+	            }
+
+	            int numOfTrig =0;
+	  
+                for(int b=0; b<32;b++){
+                   if ((val & 0x01) ==1){
+	                    upBit[numOfTrig] = b;
+	                    numOfTrig++;
+	                }
+	                val = val >> 1;
+	            }
+	  
+	            if (numOfTrig ==1){
+	                _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
+	                _ptb_hlt_trunmask[hlt_i] = upBit[0];
+	                hlt_i++;
+	            }//End of if statement for single upbit
+	            else if (numOfTrig > 1){
+	                nHLTs += (numOfTrig -1);
+	                _ptb_hlt_unmask_timestamp.resize(nHLTs);
+	                _ptb_hlt_trunmask.resize(nHLTs);
+
+	                for (int mult =0; mult < numOfTrig; mult++){ 
+	                    _ptb_hlt_trunmask[hlt_i] = upBit[mult];
+	                    _ptb_hlt_unmask_timestamp[hlt_i] = _ptb_hlt_timestamp[h_i-1];
+	                    hlt_i++;
+	                } //End of loop over multiple upbits
+	            } //End of else statement for multiple triggers
+            } //End of loop over nHLTriggers
+        } //End of loop over ptb in PTBVec
+
+        if (fDebugTimeRef){
+            for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++){
+                std::cout << "HLT " << _ptb_hlt_trunmask[i] 
+                                    << " sec (s) = " << _ptb_hlt_unmask_timestamp[i]/uint64_t(1e9)
+                                    << ", ts (ns) = " << _ptb_hlt_unmask_timestamp[i]%uint64_t(1e9)
+                                    <<std::endl;
+            }
+        }
+    }
 
     //---------------------------FTRIG-----------------------------//
     art::Handle<std::vector<raw::OpDetWaveform>> wfFtrigHandle;
@@ -399,12 +496,9 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
             std::cout << std::endl << "Found OpDetWaveform FTRIG size = " << wf_ftrig_v.size() << ", nFTRIG per board = " << nFtrigFlash << std::endl;
 
         for (int flashIdx = 0; flashIdx < nFtrigFlash; flashIdx++){
-
             if (fDebugFtrig) std::cout << "   Looping over OpDet id " << flashIdx << "..." << std::endl;
 
             for (int boardIdx = 0; boardIdx < nTotalBoard; boardIdx++){ //wf->ChannelNumber() and j are the same
-
-                int status = kUndefined;
 
                 int wfIdx = flashIdx + boardIdx * nFtrigFlash;
                 art::Ptr<raw::OpDetWaveform> wf(wf_ftrig_v.at(wfIdx));
@@ -412,12 +506,13 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                 std::vector<art::Ptr<raw::pmt::BoardTimingInfo>> wf_board_v(ftrigBoardAssn.at(wf.key()));
                 if(wf_board_v.size() != 1 )
                     throw cet::exception("WaveformAlignment") << "No raw::wf::BoardTimingInfo found w/ tag" << fFtrigBoardLabel <<". Check data quality!";
-
                 art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
         
                 //Fit FTRIG rising edge
                 std::pair<double, double> midPoint = FitFtrig(wf, flashIdx, wf->ChannelNumber());
                 double tickFtrig = midPoint.first; 
+
+                int status = kUndefined;
                 double shift = 0; //Default as 0
 
                 //Check if fit converged
@@ -425,34 +520,86 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     status = kFitFailure;
                     if (fDebugFtrig)  std::cout << "    board id = " << wf->ChannelNumber() << " has FTRIG fit failure." <<  std::endl;
                 }else{
-                    
-                    //convert tick to ts
-                    double tsFtrig = wf_board->triggerTimeTag[0] - (fWfLength - tickFtrig)*2.0; 
-
                     //TDC as reference frame TODO: add picosecond correction
-                    if ((_pmt_timing_type == 0) & (_pmt_timing_ch == 4)){
-                        
-                        double tsFrame = FindNearestTdc(tsFtrig, _tdc_ch3); 
-                        
-                        double tempShift = fTdc3CaenOffset[wf->ChannelNumber()] - std::abs(tsFtrig - tsFrame); 
-
-                        if (CheckShift(tempShift, wf->ChannelNumber())){
-                            status = kGood;
-                            
-                            shift = std::round(tempShift * 1000.0) / 1000.0; //round to 3 decimal place of ns
-
-                            //shift = tempShift;
-                            if (fDebugFtrig)  std::cout << "    board id = " << wf->ChannelNumber() << " has rising tick value = " << tickFtrig << " and shift value = " << shift << " ns." << std::endl;
+                    if (_pmt_timing_type == 0){
+                        if (_tdc_ch4.size() == 0){
+                            status = kMissingTDC;
                         }else{
-                            status = kOutOfBound; //either jitter too much or no reference frame 
+                            double tempShift = ComputeShift( _tdc_ch4.front()
+                                                            , wf->TimeStamp()
+                                                            , tickFtrig
+                                                            , _tdc_ch3
+                                                            , fTdc3CaenOffset[wf->ChannelNumber()]
+                                                            , false
+                                                            );
+                            if (CheckShift(tempShift, wf->ChannelNumber())){
+                                status = kGood;
+                                shift = std::round(tempShift * 1000.0) / 1000.0; //round to 3 decimal place of ns
+                            }else{
+                                status = kMissingTDC;
+                            }
                         }
                     }
+                    //PTB as reference frame
+                    if((_pmt_timing_type == 1)){
+                        //Find the HLT of ETRIG
+                        uint64_t tsFrame = std::numeric_limits<uint64_t>::min();
 
-                    //TODO: Add reference for PTB and CAEN only
-                    
+                        for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++){
+                            for (size_t j = 0; j < fPtbAllowedHlts.size(); j++){
+                                if (_ptb_hlt_trunmask[i] == fPtbAllowedHlts[j]){
+                                    tsFrame = _ptb_hlt_unmask_timestamp[i];
+                                    break;
+                                }
+                            }
+                        }
+
+                        if(tsFrame == std::numeric_limits<uint64_t>::min()){
+                            status = kMissingPTB;
+                        }else{
+                            double tempShift = ComputeShift( tsFrame
+                                                            , wf->TimeStamp()
+                                                            , tickFtrig
+                                                            , _ptb_hlt_unmask_timestamp
+                                                            , fPtbCaenOffset[wf->ChannelNumber()]
+                                                            , true
+                                                            );
+                            if (CheckShift(tempShift, wf->ChannelNumber())){
+                                status = kGood;
+                                shift = std::round(tempShift * 1000.0) / 1000.0; //round to 3 decimal place of ns
+                            }else{
+                                status = kMissingPTB;
+                            }
+                        }
+                    }
+                    // Align to the first PMT CAEN with valid FTRIG
+                    if (_pmt_timing_type == 2){
+
+                        //Found the first PMT CAEN with valid FTRIG -- this is frame for alignment
+                        if ((wf->ChannelNumber() != 8) && (boardFrame.size() == 0)){
+                            boardFrame.push_back(wf->TimeStamp()*1e3 + tickFtrig*2.0);
+                            status = kGood;
+                            shift = 0;
+                        }else{
+
+                            double tsFrame = boardFrame.front();
+                            double tsFtrig = wf->TimeStamp()*1e3 + tickFtrig*2.0;
+                            double tempShift = tsFtrig - tsFrame;
+
+                            if (CheckShift(tempShift, wf->ChannelNumber())){
+                                status = kGood;
+                                shift = std::round(tempShift * 1000.0) / 1000.0; //round to 3 decimal place of ns
+                            }else{
+                                status = kOutOfBound;
+                            }
+                        }
+                    }
+                    //TODO: add if one of FTRIG recorded by TDC or PTB are missing
+
+                    if (fDebugFtrig)  std::cout << "    board id = " << wf->ChannelNumber() << " has rising tick value = " << tickFtrig << " and shift value = " << shift << " ns." << std::endl;
                 }
                 
-                //Save to vector
+                //Save to vector 
                 boardJitter[wf->ChannelNumber()].push_back(shift);
                 boardStatus[wf->ChannelNumber()].push_back(status);
 
@@ -487,12 +634,14 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                         xVec[wf->ChannelNumber()].push_back(wf_board->triggerTimeTag[0] - (fWfLength - i)*2.0);
                     }
                 }
+
             } //Done looping over boards
 
             if (fSaveCompare){
                 PlotFtrigCompare(flashIdx);
                 ResetPlotVars();
             }
+            boardFrame.clear();//clear the frame for next flash
         } //Done looping over OpDetWf
 
         // Save board alignment product
@@ -599,8 +748,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
 
         if (fDebugTiming) std::cout << std::endl << "Found OpDetWaveform Timing size = " << wf_timing_v.size() << ", nFlash per board = " << nPmtFlash << std::endl;
 
-        //TODO: fix hardcoded
-        int boardIdx = 8;
+        int boardIdx = fPmtBoard[-1]; //last board is timing CAEN
 
         if (fDebugTiming) std::cout << "    Looping over board " << boardIdx << "..." << std::endl;
 
@@ -645,7 +793,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
     wfTimingHandle.removeProduct();
     wf_timing_v.clear();
 
-    if (fDebugTdc | fDebugTimeRef | fDebugFtrig | fDebugPmt | fDebugTiming)
+    if (fDebugTimeRef | fDebugFtrig | fDebugPmt | fDebugTiming)
       std::cout <<"#--------------------------------------------------------#" << std::endl;
     
     //Put product in event
@@ -674,9 +822,6 @@ void sbnd::WaveformAlignment::beginJob()
     fTree->Branch("run", &_run);
     fTree->Branch("subrun", &_subrun);
     fTree->Branch("event", &_event);
-    fTree->Branch("tdc_ch0", &_tdc_ch0);
-    fTree->Branch("tdc_ch1", &_tdc_ch1);
-    fTree->Branch("tdc_ch2", &_tdc_ch2);
     fTree->Branch("tdc_ch3", &_tdc_ch3);
     fTree->Branch("tdc_ch4", &_tdc_ch4);
 
@@ -711,15 +856,17 @@ void sbnd::WaveformAlignment::endJob()
 void sbnd::WaveformAlignment::ResetEventVars()
 {
     _run = -1; _subrun = -1; _event = -1;
+
+    _pmt_timing_type = std::numeric_limits<uint16_t>::max();
+    _pmt_timing_ch = std::numeric_limits<uint16_t>::max();
    
-    _tdc_ch0.clear();
-    _tdc_ch1.clear();
-    _tdc_ch2.clear();
     _tdc_ch3.clear();
     _tdc_ch4.clear();
-
-    _pmt_timing_type = -1;
-    _pmt_timing_ch = -1;
+    
+    _ptb_hlt_trigger.clear();
+    _ptb_hlt_timestamp.clear();
+    _ptb_hlt_unmask_timestamp.clear();
+    _ptb_hlt_trunmask.clear();
 
     nFtrigFlash = -1;
     nPmtFlash = -1;
@@ -830,22 +977,74 @@ std::pair<double, double> sbnd::WaveformAlignment::FitFtrig(art::Ptr<raw::OpDetW
     return midPoint; 
 }
 
-double  sbnd::WaveformAlignment::FindNearestTdc(const double tsFtrig, const std::vector<uint64_t> tdcVec)
+uint64_t  sbnd::WaveformAlignment::FindNearestFrame(const uint64_t tsFtrig, const std::vector<uint64_t> frameVec)
 {
-    double smallestDiff = std::numeric_limits<double>::max();
-    double nearestTdc = std::numeric_limits<double>::min();
+    uint64_t smallestDiff = std::numeric_limits<uint64_t>::max();
+    uint64_t nearestFrame = std::numeric_limits<uint64_t>::min();
 
-    for (size_t i = 0; i < tdcVec.size(); i++){
-       double tdc = (double)tdcVec[i];
-       double diff = std::abs(tsFtrig - tdc);
+    for (size_t i = 0; i < frameVec.size(); i++){
+       uint64_t frame = (uint64_t)frameVec[i];
+       uint64_t diff = std::numeric_limits<uint64_t>::min();
+      
+        if (frame > tsFtrig){
+            diff = frame - tsFtrig;
+        }
+        else if (frame < tsFtrig){
+            diff = tsFtrig - frame;
+        }
        
        if (diff < smallestDiff){
             smallestDiff = diff;
-            nearestTdc = tdc;
+            nearestFrame = frame;
        }
     }
 
-    return nearestTdc;
+    return nearestFrame;
+}
+
+bool sbnd::WaveformAlignment::IsSecondRollover(const uint64_t tsFtrig, const uint64_t tsFrame){
+    uint64_t tsFtrigSec = tsFtrig / uint64_t(1e9);
+    uint64_t tsFrameSec = tsFrame / uint64_t(1e9);
+
+    if(tsFtrigSec == tsFrameSec){
+        return false;
+    }
+    return true;
+}
+
+double sbnd::WaveformAlignment::ComputeShift(const uint64_t decodeFrame, const double decodeTs,  const double tickFtrig
+                                            , const std::vector<uint64_t> frameVec
+                                            , const double frameOffset
+                                            , const bool isFrameEarly
+                                            ){
+    //acquire UTC timestamp of the start of the wavef
+    uint64_t wfTimestamp = 0;
+    wfTimestamp += decodeFrame;
+    uint64_t decodeTs_ns = decodeTs * 1e3;  //convert us to ns
+    wfTimestamp += decodeTs_ns;
+
+    //acquired UTC timestamp of ftrig
+    uint64_t ftrigShift = tickFtrig*2.0;
+    uint64_t tsFtrig = wfTimestamp + ftrigShift; 
+    
+    //find nearest frame using UTC timestamp
+    uint64_t tsFrame = FindNearestFrame(tsFtrig, frameVec);
+
+    double tsFtrig_ns = wfTimestamp%uint64_t(1e9) + tickFtrig*2.0; //double to handle decimal place
+    double tsFrame_ns = tsFrame%uint64_t(1e9);
+
+    //Check if second rollover happened
+    bool isRollover = IsSecondRollover(tsFtrig, tsFrame);
+    if(isRollover){
+        if (tsFtrig_ns < tsFrame_ns) tsFtrig_ns += 1e9; //add 1 second to tsFtrig
+        else tsFrame_ns += 1e9; //add 1 second to tsFrame
+    }
+
+    double shift = 0;
+    if (!isFrameEarly) shift =+ frameOffset - std::abs(tsFtrig_ns - tsFrame_ns); 
+    else shift =+ std::abs(tsFtrig_ns - tsFrame_ns) - frameOffset;
+
+    return shift;
 }
 
 bool sbnd::WaveformAlignment::CheckShift(const double shift, const int boardId)
@@ -861,8 +1060,6 @@ bool sbnd::WaveformAlignment::CheckShift(const double shift, const int boardId)
             return false;
         }
     }
-
-    //TODO: add more check?
     
     return true;
 }
@@ -941,8 +1138,16 @@ void sbnd::WaveformAlignment::PlotFtrigCompare(const int flashId)
     auto *mg2 = new TMultiGraph();
     auto *lg1 = new TLegend(0.2,0.5,0.35,0.9); 
     auto *lg2 = new TLegend(0.2,0.5,0.35,0.9); 
-    int x_lb = std::abs(tickVec[0] - 2);
-    int x_ub = std::abs(tickVec[0] + 4);
+    
+    int x_lb = 0;
+    int x_ub = 0;
+
+    for (size_t i = 0; i < tickVec.size(); i++){
+        if (tickVec[i] == std::numeric_limits<double>::min()) continue;
+        x_lb = tickVec[i] - 2;
+        x_ub = tickVec[i] + 4;
+        break;
+    }
 
     //---------Find baseline value
     double baseline = 0.;
@@ -978,24 +1183,24 @@ void sbnd::WaveformAlignment::PlotFtrigCompare(const int flashId)
         }
         
         auto *g1 = new TGraph(fWfLength, &x1[0], &y[0]);
-        g1->SetTitle(Form("Board_%s", pmtBoard[k].c_str()));
+        g1->SetTitle(Form("Board_%s", std::to_string(fPmtBoard[k]).c_str()));
         g1->SetMarkerStyle(5);
         g1->SetMarkerSize(1);
-        g1->SetMarkerColor(pmtCol[k]);
-        g1->SetLineColor(pmtCol[k]);
+        g1->SetMarkerColor(fPmtCol[k]);
+        g1->SetLineColor(fPmtCol[k]);
 
         auto *g2 = new TGraph(fWfLength, &x2[0], &y[0]);
-        g2->SetTitle(Form("Board_%s", pmtBoard[k].c_str()));
+        g2->SetTitle(Form("Board_%s", std::to_string(fPmtBoard[k]).c_str()));
         g2->SetMarkerStyle(5);
         g2->SetMarkerSize(1);
-        g2->SetMarkerColor(pmtCol[k]);
-        g2->SetLineColor(pmtCol[k]);
+        g2->SetMarkerColor(fPmtCol[k]);
+        g2->SetLineColor(fPmtCol[k]);
 
         //auto *p = new TGraph();
         //p->SetPoint(0, boardMidX[k] + shift, boardMidY[k] + baseline_shift);
         //p->SetMarkerStyle(50);
         //p->SetMarkerSize(2);
-        //p->SetMarkerColor(pmtCol[k]);
+        //p->SetMarkerColor(fPmtCol[k]);
         //mg2->Add(p);
 
         mg1->Add(g1);
