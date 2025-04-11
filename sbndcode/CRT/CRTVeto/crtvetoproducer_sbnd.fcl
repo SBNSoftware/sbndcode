@@ -23,13 +23,27 @@ crtvetoproducer_data_sbnd.IsData:                    true
 #crtvetoproducer_data_sbnd.WindowEnd:                 2.065
 
 # Values for testing
-crtvetoproducer_data_sbnd.WindowStart:               -2 
-crtvetoproducer_data_sbnd.WindowEnd:                 2
+crtvetoproducer_data_sbnd.WindowStart:               -1.135 
+crtvetoproducer_data_sbnd.WindowEnd:                 0.565
 crtvetoproducer_data_sbnd.SPECTDCModuleLabel:        "tdcdecoder"
 
 crtvetoproducer_data_sbnd.DAQHeaderModuleLabel:      "daq"
 crtvetoproducer_data_sbnd.DAQHeaderInstanceLabel:    "RawEventHeader"
 crtvetoproducer_data_sbnd.RawTSCorrection:           367000
 crtvetoproducer_data_sbnd.MaxAllowedRefTimeDiff:     3000000
+
+# Top Hat Configuration for Debugging
+crtvetoproducer_data_sbnd_tophat:                    @local::crtvetoproducer_sbnd
+crtvetoproducer_data_sbnd_tophat.CRTGeoAlg:          @local::crtgeoalg_data_sbnd
+crtvetoproducer_data_sbnd_tophat.IsData:             true
+
+# Values for testing
+crtvetoproducer_data_sbnd_tophat.SPECTDCModuleLabel:        "tdcdecoder"
+crtvetoproducer_data_sbnd_tophat.DAQHeaderModuleLabel:      "daq"
+crtvetoproducer_data_sbnd_tophat.DAQHeaderInstanceLabel:    "RawEventHeader"
+crtvetoproducer_data_sbnd_tophat.RawTSCorrection:           367000
+crtvetoproducer_data_sbnd_tophat.MaxAllowedRefTimeDiff:     3000000
+crtvetoproducer_data_sbnd_tophat.WindowStart:               -2 
+crtvetoproducer_data_sbnd_tophat.WindowEnd:                 2
 
 END_PROLOG

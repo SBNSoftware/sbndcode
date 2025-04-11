@@ -109,7 +109,7 @@ sbnd::crt::CRTVetoProducer::CRTVetoProducer(fhicl::ParameterSet const& p)
   , fCRTClusterModuleLabel(p.get<std::string>("CRTClusterModuleLabel"))
   , fCRTSpacePointModuleLabel(p.get<std::string>("CRTSpacePointModuleLabel"))
   , fCRTTimingReferenceInfoLabel(p.get<std::string>("CRTTimingReferenceInfoLabel"))
-  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel"))
+  , fSPECTDCModuleLabel(p.get<std::string>("SPECTDCModuleLabel", ""))
   , fIsData(p.get<bool>("IsData"))
   , fDAQHeaderModuleLabel(p.get<std::string>("DAQHeaderModuleLabel", ""))
   , fDAQHeaderInstanceLabel(p.get<std::string>("DAQHeaderInstanceLabel", ""))
@@ -137,8 +137,9 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
   std::cout << std::endl;
 
   // May only be needed for BNB+Light Data --> TODO
-  uint64_t raw_ts = 0, ref_time = 0;
-  uint32_t ref_time_ns = 0;
+  uint64_t raw_ts = 0;
+  int64_t ref_time = 0; 
+  int64_t ref_time_ns = 0;
 
   // Data needs to be handled differently than MC
   
@@ -197,7 +198,7 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
       std::cout << std::endl;
       std::cout << std::endl;
     }
-    ref_time_ns = ref_time % static_cast<uint64_t>(1e9);
+    ref_time_ns = ref_time % static_cast<int64_t>(1e9);
 
   } // end of check for Data
 
@@ -278,7 +279,10 @@ void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
       }
     } // end loop over space points
   } // end of loop over clusters
- 
+  
+  std::cout << "Finished Loop over Clusters --> Produce CRTVeto products" << std::endl;  
+  std::cout << std::endl; 
+
   int Nwalls_all = S + N + E + W;
   int Nwalls_noNorth = S + E + W;
   int Ntop = TL + TH;
