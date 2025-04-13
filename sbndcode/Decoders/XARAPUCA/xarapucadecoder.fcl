@@ -14,12 +14,13 @@ xarapucadecoder:
     fragment_id_offset: 41216                                   # Offset to be applied to the fragment IDs (0xA100).
     board_id_list: [7, 13, 16, 19]                              # Slots where the boards are installed.
     # - Timing configuration.
-    timing_priority: 0                                          # 0 SPEC-TDC ETT, 1 CAEN-only.
+    timing_priority: 0                                          # 0 SPEC-TDC RWM, 1 SPEC-TDC ETT, 2 CAEN-only. 
     ns_per_sample: 16                                           # Nanoseconds per sample.
     # - SPEC-TDC access configuration
     spectdc_product_name:  "tdcdecoder"                         # Name for getting SPEC-TDC Decoder products.
+    spectdc_rwmtrig_ch: 2                                       # Channel assigned to RWM (Resistive Wall Monitor) triggers.
     spectdc_ftrig_ch: 3                                         # Channel assigned to flash triggers.
-    spectdc_etrig_ch: 4                                         # Channel assigned to event triggers.
+    spectdc_etrig_ch: 4                                         # Channel assigned to ETT (Event Trigger Timestamp) triggers.
 
     # OUTPUT configuration:
     # - Output data product instance name.
