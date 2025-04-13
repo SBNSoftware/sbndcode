@@ -11,6 +11,8 @@
 
 #include "opt0finder_sbnd.fcl"
 
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
+
 #include "sbnd_trackcalo_skimmer.fcl"
 #include "crtana_sbnd.fcl"
 #include "pmtskim_sbnd.fcl"
@@ -60,6 +62,7 @@ sbnd_reco2_producers:{
     fmatchoparaSCE:      @local::sbnd_simple_flashmatch_opara_sce
     opt0finder:          @local::sbnd_opt0_finder_one_to_many
     opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
+    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
@@ -85,6 +88,7 @@ sbnd_reco2_producer_sequence: [
     , fmatchopara
     , caloskimCalorimetry
     , opt0finder
+    , tpcpmtbarycentermatching
     , pandoraSCE
     , pandoraSCETrack
     , pandoraSCEShower

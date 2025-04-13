@@ -16,10 +16,11 @@ physics.producers:
 {
     @table::physics.producers
     opt0finder:     @local::sbnd_opt0_finder_data
+    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  cvn, opt0finder]
+  cvn, opt0finder, tpcpmtbarycentermatching]
 
 #The next 3 lines need to be commented out once data use pandoraSCE by default. 
 physics.producers.cvn.SliceLabel: "pandora"

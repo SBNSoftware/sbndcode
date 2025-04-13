@@ -147,6 +147,9 @@ physics.producers.cafmaker.SaveGENIEEventRecord: true
 physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 
+# Include 3D barycenter flahs matching 
+physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
+
 # Overwrite weight_functions label:
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
 
