@@ -528,8 +528,8 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
     double ini_wvfm_timestamp = 0;
     double end_wvfm_timestamp = 0;
 
-    // If a RWM TDC timestamp was found it restarts the time from it. Otherwise the Event Trigger timestamp is assigned.
-    if (factive_timing_frame == RWM_TDC_TIMING) {
+    // If a SPEC TDC (RWM or ETT) timestamp was found it restarts the time from it. Otherwise the CAEN time frame is assigned.
+    if (factive_timing_frame == RWM_TDC_TIMING || factive_timing_frame == SPEC_TDC_TIMING) {
       if (timestamp < full_TTT) {
         end_wvfm_timestamp = full_TTT - timestamp; // ns.
       } else {
@@ -538,10 +538,6 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
       ini_wvfm_timestamp = end_wvfm_timestamp - pulse_duration_ns; // ns.
       end_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
       ini_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
-    // If a SPEC-TDC Event Trigger timestamp was found it restarts the time from it. Otherwise the CAEN time frame is assigned.
-    } else if (factive_timing_frame == SPEC_TDC_TIMING) {
-      ini_wvfm_timestamp = (TTT_ini_ns - timestamp_ns) * NANOSEC_TO_MICROSEC; // us.
-      end_wvfm_timestamp = (TTT_end_ns - timestamp_ns) * NANOSEC_TO_MICROSEC; // us.
     } else {
       ini_wvfm_timestamp = TTT_ini_us;
       end_wvfm_timestamp = TTT_end_us;
@@ -563,18 +559,16 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
       std::cout << "\t\t TTT header.TriggerTime() [TTT_ticks] = " << TTT_ticks << " ticks. \t TTT_end_ns = " << TTT_end_ns << " ns." << std::endl;
       std::cout << "\t\t TTT header.extendedTriggerTime() [TTT_ticks] = " << header.extendedTriggerTime() << " ticks. \t TTT_end_ns = " << header.extendedTriggerTime() * NANOSEC_PER_TICK << " ns." << std::endl;
       std::cout << "\t\t TTT header.triggerTimeRollOver(): " << header.triggerTimeRollOver() << std::endl;
+      std::cout << "\t\t Full Fragment timestamp: " << fragment.timestamp() << " = " << frag_timestamp_s << " s " << frag_timestamp_ns << " ns." << std::endl;
+      std::cout << "\t\t TTT - fragment timestamp (ns) = "<< static_cast<int64_t>(TTT_end_ns) - static_cast<int64_t>(frag_timestamp_ns) << " ns." << std::endl;
       if (factive_timing_frame == RWM_TDC_TIMING) { 
         std::cout << "\t RWM SPEC-TDC timestamp of the fragment: " << std::endl;
         std::cout << "\t\t Full UTC RWM timestamp: " << timestamp << " = " << timestamp / NANOSEC_IN_SEC << " s " << timestamp_ns << " ns." << std::endl;
-        std::cout << "\t\t Full Fragment timestamp: " << fragment.timestamp() << " = " << frag_timestamp_s << " s " << frag_timestamp_ns << " ns." << std::endl;
-        std::cout << "\t\t TTT - fragment timestamp (ns) = "<< static_cast<int64_t>(TTT_end_ns) - static_cast<int64_t>(frag_timestamp_ns) << " ns." << std::endl;
         std::cout << "\t\t RWM SPEC-TDC difference applied to the CAEN frame (full timestamps): "  << full_TTT << " - " << timestamp <<  " ns = " << end_wvfm_timestamp << " us." << std::endl;
       } else if (factive_timing_frame == SPEC_TDC_TIMING) {
         std::cout << "\t ETT SPEC-TDC timestamp of the fragment: " << std::endl;
         std::cout << "\t\t Full UTC ETT timestamp: " << timestamp << " = " << timestamp / NANOSEC_IN_SEC << " s " << timestamp_ns << " ns." << std::endl;
-        std::cout << "\t\t Full Fragment timestamp: " << fragment.timestamp() << " = " << frag_timestamp_s << " s " << frag_timestamp_ns << " ns." << std::endl;
-        std::cout << "\t\t TTT - fragment timestamp (ns) = "<< static_cast<int64_t>(TTT_end_ns) - static_cast<int64_t>(frag_timestamp_ns) << " ns." << std::endl;
-        std::cout << "\t\tETT SPEC-TDC difference applied to the CAEN frame: " << TTT_ini_ns << " - " << "("<< timestamp / NANOSEC_IN_SEC << " s) " << timestamp % NANOSEC_IN_SEC << " ns." << std::endl;
+        std::cout << "\t\t ETT SPEC-TDC difference applied to the CAEN frame (full timestamps): " << full_TTT << " - " << timestamp <<  " ns = " << end_wvfm_timestamp << " us." << std::endl;
       } else if (factive_timing_frame == CAEN_ONLY_TIMING) {
         std::cout << "\t CAEN trigger timestamp (TTT) of the fragment: " << std::endl;
         std::cout << "\t\tTTT ini " << TTT_ini_ns << " ns = " << TTT_ini_us << " us." << std::endl;
