@@ -1,5 +1,3 @@
-
-
 art_make_library(
                  LIBRARIES
                         sbnobj::SBND_CRT

@@ -19,12 +19,10 @@ crtvetoproducer_sbnd:
 crtvetoproducer_data_sbnd:                           @local::crtvetoproducer_sbnd
 crtvetoproducer_data_sbnd.CRTGeoAlg:                 @local::crtgeoalg_data_sbnd
 crtvetoproducer_data_sbnd.IsData:                    true
-#crtvetoproducer_data_sbnd.WindowStart:               0.365
-#crtvetoproducer_data_sbnd.WindowEnd:                 2.065
 
 # Values for testing
-crtvetoproducer_data_sbnd.WindowStart:               -1.135 
-crtvetoproducer_data_sbnd.WindowEnd:                 0.565
+crtvetoproducer_data_sbnd.WindowStart:               -1.185 
+crtvetoproducer_data_sbnd.WindowEnd:                 0.515
 crtvetoproducer_data_sbnd.SPECTDCModuleLabel:        "tdcdecoder"
 
 crtvetoproducer_data_sbnd.DAQHeaderModuleLabel:      "daq"

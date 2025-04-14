@@ -4,6 +4,7 @@
 #include "calorimetry_sbnd.fcl"
 #include "sbnd_flashfinder_deco.fcl"
 #include "crtrecoproducers_sbnd.fcl"
+#include "crtvetoproducer_sbnd.fcl"
 #include "particleid_sbnd.fcl"
 #include "crttpcmatchingproducers_sbnd.fcl"
 
@@ -49,6 +50,9 @@ sbnd_reco2_producers:{
     crtspacepoints: @local::crtspacepointproducer_sbnd
     crttracks:      @local::crttrackproducer_sbnd
 
+    ### CRT Veto
+    crtveto:        @local::crtvetoproducer_sbnd
+
     ### CRT-TPC matching
     crtspacepointmatching:    @local::crtspacepointmatchproducer_sbnd
     crttrackmatching:         @local::crttrackmatchproducer_sbnd
@@ -85,6 +89,7 @@ sbnd_reco2_producer_sequence: [
     , crtclustering
     , crtspacepoints
     , crttracks
+    , crtveto
     , crtspacepointmatching
     , crttrackmatching
     , fmatch

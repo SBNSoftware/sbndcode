@@ -16,10 +16,11 @@ physics.producers:
     crtclustering:  @local::crtclusterproducer_data_sbnd
     crtspacepoints: @local::crtspacepointproducer_data_sbnd
     crttracks:      @local::crttrackproducer_data_sbnd
+    crtveto:        @local::crtvetoproducer_data_sbnd
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  crtclustering, crtspacepoints, crttracks, cvn ]
+  crtclustering, crtspacepoints, crttracks, crtveto, cvn ]
 
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
