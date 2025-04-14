@@ -8,7 +8,7 @@ MultiPartVertex : {
     TPCRange     : [[0,0],[0,1]]
     XRange       : [30,30]
     YRange       : [30,30]
-    ZRange       : [30,30]
+    ZRange       : [-30,30]
     MultiMax     : 7
     MultiMin     : 2
     GammaBetaRange : [0.0, 3.0]
