@@ -45,3 +45,5 @@ add_subdirectory(ChannelMaps)
 
 # for CVN
 add_subdirectory(SBNDCVN)
+
+add_subdirectory(TPCPMTBarycenterMatching)

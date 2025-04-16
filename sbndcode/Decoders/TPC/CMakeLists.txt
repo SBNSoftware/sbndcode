@@ -17,6 +17,7 @@ cet_build_plugin( SBNDTPCDecoder art::module
   ROOT::Core
   ROOT::Tree
   sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
+  sbnobj::Common_Analysis
 )
 
 cet_build_plugin( NTBDecoder art::module

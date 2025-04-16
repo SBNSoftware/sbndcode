@@ -11,6 +11,7 @@ simple_plugin(
               sbnobj::SBND_CRT
               sbndcode_GeoWrappers
               sbndcode_CRT_CRTTPCMatching
+              sbndcode_CRT_CRTEventDisplay
 )
 
 simple_plugin(
@@ -18,6 +19,7 @@ simple_plugin(
               sbnobj::SBND_CRT
               sbndcode_GeoWrappers
               sbndcode_CRT_CRTTPCMatching
+              sbndcode_CRT_CRTEventDisplay
 )
 
 install_fhicl()
