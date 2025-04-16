@@ -19,6 +19,15 @@
 #include <TMath.h>
 
 typedef struct{
+    TCanvas* canvas;
+    TH1F* baseHist;
+    TH1F* current;
+    TH1F* cheated;
+    TH1F* dune;
+    TH1F* uboone;
+} histGroup;
+
+typedef struct{
     double pdg;
     double isPrimary;
     double vx;
@@ -96,6 +105,27 @@ typedef struct{
     double totalPFPEnergy;
     double DLCurrent;
 } eventAfterCuts;
+
+typedef struct{
+    eventData eventBeforeCut;
+    eventAfterCuts eventAfterCut;
+} allEventData;
+
+histGroup createHistGroup(const std::string& baseName, const std::string& title, const std::string& xAxisTitle, int bins, float xlow, float xup){
+    TCanvas* canvas = new TCanvas((baseName + "_canvas").c_str(), "Graph Draw Options", 200, 10, 600, 400);
+    
+    TH1F* base = new TH1F(baseName.c_str(), title.c_str(), bins, xlow, xup);
+    base->SetTitle((title + ";" + xAxisTitle + ";# of Events").c_str());
+
+    return {
+        canvas,
+        base,
+        (TH1F*) base->Clone((baseName + "_current").c_str()),
+        (TH1F*) base->Clone((baseName + "_cheated").c_str()),
+        (TH1F*) base->Clone((baseName + "_dldune").c_str()),
+        (TH1F*) base->Clone((baseName + "_dluboone").c_str())
+    };    
+}
 
 void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, TPaveText* pt = nullptr, int* percentage = nullptr){
     canvas->cd();
@@ -209,35 +239,108 @@ recoParticle chooseRecoParticle(std::vector<recoParticle> recoParticleVec, doubl
     return recoParticleVec[chosenParticleIndex];
 }
 
-void numberPlots(std::vector<eventData> allEventData){
-    TCanvas *numSlicesCanvas = new TCanvas("numSlices_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* numSlicesCurrent_dist = new TH1F("Number of Slices", "Number of Slices", 5, 0, 5);
-    numSlicesCurrent_dist->SetTitle("Number of Slices in an Event;Number of Slices;# of Events");
-    TH1F* numSlicesDLUboone_dist = (TH1F*) numSlicesCurrent_dist->Clone("numSlices");
-    TH1F* numSlicesDLDune_dist = (TH1F*) numSlicesCurrent_dist->Clone("numSlices");
-    TH1F* numSlicesCheated_dist = (TH1F*) numSlicesCurrent_dist->Clone("numSlices");  
-
-    TCanvas *numPFPsCanvas = new TCanvas("numPFPs_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* numPFPsCurrent_dist = new TH1F("Num PFPs", "Num PFPs", 10, 0, 10);
-    numPFPsCurrent_dist->SetTitle("Number of PFPs in an Event;Number of PFPs;# of Events");
-    TH1F* numPFPsDLUboone_dist = (TH1F*) numPFPsCurrent_dist->Clone("numPFPs");
-    TH1F* numPFPsDLDune_dist = (TH1F*) numPFPsCurrent_dist->Clone("numPFPs");
-    TH1F* numPFPsCheated_dist = (TH1F*) numPFPsCurrent_dist->Clone("numPFPs"); 
-
-    TCanvas *numPFPs1SliceCanvas = new TCanvas("numPFPs1Slice_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* numPFPs1SliceCurrent_dist = new TH1F("Num PFPs 1 Slice", "Num PFPs 1 Slice", 10, 0, 10);
-    numPFPs1SliceCurrent_dist->SetTitle("Number of PFPs in an Event with 1 Slice;Number of PFPs;# of Events");
-    TH1F* numPFPs1SliceDLUboone_dist = (TH1F*) numPFPs1SliceCurrent_dist->Clone("numPFPs");
-    TH1F* numPFPs1SliceDLDune_dist = (TH1F*) numPFPs1SliceCurrent_dist->Clone("numPFPs");
-    TH1F* numPFPs1SliceCheated_dist = (TH1F*) numPFPs1SliceCurrent_dist->Clone("numPFPs"); 
+void numberPlots(std::vector<allEventData> allEventsData){
+ 
+    auto numSlices = createHistGroup("numSlices", "Number of Slices in an Event", "Number of Slices", 5, 0, 5);
+    auto numPFPs = createHistGroup("numPFPs", "Number of PFPs in an Event", "Number of PFPs", 10, 0, 10);
+    auto numPFPs1Slice = createHistGroup("numPFPs1Slice", "Number of PFPs in 1-Slice Events", "Number of PFPs", 10, 0, 10);
+    auto numPFPsSlices = createHistGroup("numPFPsSlices", "Number of PFPs in Multi-Slice Events", "Number of PFPs", 10, 0, 10);
+   
+    double sizeCurrent = 0;
+    double sizeCheated = 0;
+    double sizeDLDune = 0;
+    double sizeDLUboone = 0;
+    double sizeCurrent1Slice = 0;
+    double sizeCheated1Slice = 0;
+    double sizeDLDune1Slice = 0;
+    double sizeDLUboone1Slice = 0;
+    double sizeCurrentSlices = 0;
+    double sizeCheatedSlices = 0;
+    double sizeDLDuneSlices = 0;
+    double sizeDLUbooneSlices = 0;
     
-    TCanvas *numPFPsSlicesCanvas = new TCanvas("numPFPsSlices_canvas", "Graph Draw Options", 200, 10, 600, 400);
-    TH1F* numPFPsSlicesCurrent_dist = new TH1F("Num PFPs Slices", "Num PFPs Slices", 10, 0, 10);
-    numPFPsSlicesCurrent_dist->SetTitle("Number of PFPs in an Event with > 1 Slice;Number of PFPs;# of Events");
-    TH1F* numPFPsSlicesDLUboone_dist = (TH1F*) numPFPsSlicesCurrent_dist->Clone("numPFPs");
-    TH1F* numPFPsSlicesDLDune_dist = (TH1F*) numPFPsSlicesCurrent_dist->Clone("numPFPs");
-    TH1F* numPFPsSlicesCheated_dist = (TH1F*) numPFPsSlicesCurrent_dist->Clone("numPFPs"); 
+
+    for(const auto& event : allEventsData){
+        if(!(event.eventBeforeCut.trueNeutrinoVec[0].pdg == -999999 || event.eventBeforeCut.trueNeutrinoVec[0].tpcValid == 0)){
+            size_t recoParticleCount = event.eventBeforeCut.recoParticleVec.size();
+            size_t recoSliceCount = event.eventBeforeCut.sliceVec.size();
+
+            if(recoParticleCount == 1 && event.eventBeforeCut.recoParticleVec[0].pdg == -999999) {
+                recoParticleCount = 0;
+            } 
+        
+            if(recoSliceCount == 1 && event.eventBeforeCut.sliceVec[0].id == -999999){
+                recoSliceCount = 0;
+            }
+
+            if(event.eventBeforeCut.DLCurrent == 0){
+                sizeDLUboone++;
+                numPFPs.uboone->Fill(recoParticleCount);
+                numSlices.uboone->Fill(recoSliceCount);
+                if(recoSliceCount == 1){
+                    numPFPs1Slice.uboone->Fill(recoParticleCount);
+                    sizeDLUboone1Slice++;
+                } else if(recoSliceCount > 1){
+                    numPFPsSlices.uboone->Fill(recoParticleCount);
+                    sizeDLUbooneSlices++;
+                }
+            } else if(event.eventBeforeCut.DLCurrent == 1){
+                sizeDLDune++;
+                numPFPs.dune->Fill(recoParticleCount);
+                numSlices.dune->Fill(recoSliceCount);
+                if(recoSliceCount == 1){
+                    numPFPs1Slice.dune->Fill(recoParticleCount);
+                    sizeDLDune1Slice++;
+                } else if(recoSliceCount > 1){
+                    numPFPsSlices.dune->Fill(recoParticleCount);
+                    sizeDLDuneSlices++;
+                }
+            } else if(event.eventBeforeCut.DLCurrent == 2){
+                sizeCurrent++;
+                numPFPs.current->Fill(recoParticleCount);
+                numSlices.current->Fill(recoSliceCount);
+                if(recoSliceCount == 1){
+                    numPFPs1Slice.current->Fill(recoParticleCount);
+                    sizeCurrent1Slice++;
+                } else if(recoSliceCount > 1){
+                    numPFPsSlices.current->Fill(recoParticleCount); 
+                    sizeCurrentSlices++;
+                }
+            } else if(event.eventBeforeCut.DLCurrent == 3){
+                sizeCheated++;
+                numPFPs.cheated->Fill(recoParticleCount);
+                numSlices.cheated->Fill(recoSliceCount);
+                if(recoSliceCount == 1){
+                    numPFPs1Slice.cheated->Fill(recoParticleCount);
+                    sizeCheated1Slice++;
+                } else if(recoSliceCount > 1){
+                    numPFPsSlices.cheated->Fill(recoParticleCount);
+                    sizeCheatedSlices++;
+                }
+            }
+        }
+    }   
+
+
+    styleDraw(numSlices.canvas, numSlices.current, numSlices.cheated, numSlices.dune, numSlices.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/numSlices_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(numPFPs.canvas, numPFPs.current, numPFPs.cheated, numPFPs.dune, numPFPs.uboone, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(numPFPs1Slice.canvas, numPFPs1Slice.current, numPFPs1Slice.cheated, numPFPs1Slice.dune, numPFPs1Slice.uboone, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs1Slice_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(numPFPsSlices.canvas, numPFPsSlices.current, numPFPsSlices.cheated, numPFPsSlices.dune, numPFPsSlices.uboone, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPsSlices_dist.pdf", 0.56, 0.88, 0.70, 0.86);
     
+    percentage(numSlices.current, numSlices.cheated, numSlices.dune, numSlices.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/numSlices_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(numPFPs.current, numPFPs.cheated, numPFPs.dune, numPFPs.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 95, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(numPFPs1Slice.current, numPFPs1Slice.cheated, numPFPs1Slice.dune, numPFPs1Slice.uboone, sizeCurrent1Slice, sizeCheated1Slice, sizeDLDune1Slice, sizeDLUboone1Slice, 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs1Slice_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(numPFPsSlices.current, numPFPsSlices.cheated, numPFPsSlices.dune, numPFPsSlices.uboone, sizeCurrentSlices, sizeCheatedSlices, sizeDLDuneSlices, sizeDLUbooneSlices, 0, 95, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPsSlices_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    printf("Number of events: Current = %f, Cheated %f, DL Dune = %f, DL Uboone = %f\n", sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone);    
+
+}
+
+void chosenSlicePlots(std::vector<allEventData> allEvents){
+    auto sliceCompleteness = createHistGroup("sliceCompleteness", "Completeness of the Chosen Slice in an Event", "Slice Completeness", 44, 0.8, 1.02);
+    auto sliceCompleteness1Slice = createHistGroup("sliceCompleteness1Slice", "Completeness of Slice in an Event with 1 Slice", "Slice Completeness", 44, 0.8, 1.02);
+    auto sliceCompletenessSlices = createHistGroup("sliceCompletenessSlices", "Completeness of the Chosen Slice in an Event with > 1 Slice", "Slice Completeness", 51, 0, 1.02);
+    auto sliceScore = createHistGroup("sliceScore", "Score of the Chosen Slice in an Event", "Slice Score", 25, 0, 1);
+
     double sizeCurrent = 0;
     double sizeCheated = 0;
     double sizeDLDune = 0;
@@ -247,79 +350,66 @@ void numberPlots(std::vector<eventData> allEventData){
     double sizeDLDune1Slice = 0;
     double sizeDLUboone1Slice = 0;
 
-    for(const auto& event : allEventData){
-        if(!(event.trueNeutrinoVec[0].pdg == -999999 || event.trueNeutrinoVec[0].tpcValid == 0)){
-            size_t recoParticleCount = event.recoParticleVec.size();
-            size_t recoSliceCount = event.sliceVec.size();
-
-            if(recoParticleCount == 1 && event.recoParticleVec[0].pdg == -999999) {
-                recoParticleCount = 0;
-            } 
-        
-            if(recoSliceCount == 1 && event.sliceVec[0].id == -999999){
-                recoSliceCount = 0;
-            }
-
-            if(event.DLCurrent == 0){
+    for(const auto& event : allEvents){
+        if(!(event.eventBeforeCut.trueNeutrinoVec[0].pdg == -999999 || event.eventBeforeCut.trueNeutrinoVec[0].tpcValid == 0 || (event.eventBeforeCut.sliceVec.size() == 1 && event.eventBeforeCut.sliceVec[0].id == -999999))){
+            if(event.eventBeforeCut.DLCurrent == 0){
                 sizeDLUboone++;
-                numPFPsDLUboone_dist->Fill(recoParticleCount);
-                numSlicesDLUboone_dist->Fill(recoSliceCount);
-                if(recoSliceCount == 1){
-                    numPFPs1SliceDLUboone_dist->Fill(recoParticleCount);
+                sliceCompleteness.uboone->Fill(event.eventAfterCut.chosenSlice.completeness);
+                sliceScore.uboone->Fill(event.eventAfterCut.chosenSlice.score);
+                if(event.eventBeforeCut.sliceVec.size() == 1){
                     sizeDLUboone1Slice++;
-                } else if(recoSliceCount > 1) numPFPsSlicesDLUboone_dist->Fill(recoParticleCount);
-               
-            } else if(event.DLCurrent == 1){
+                    sliceCompleteness1Slice.uboone->Fill(event.eventAfterCut.chosenSlice.completeness);
+                } else if(event.eventBeforeCut.sliceVec.size() > 1){
+                    sliceCompletenessSlices.uboone->Fill(event.eventAfterCut.chosenSlice.completeness);
+                }
+            } else if(event.eventBeforeCut.DLCurrent == 1){
                 sizeDLDune++;
-                numPFPsDLDune_dist->Fill(recoParticleCount);
-                numSlicesDLDune_dist->Fill(recoSliceCount);
-                if(recoSliceCount == 1){
-                    numPFPs1SliceDLDune_dist->Fill(recoParticleCount);
+                sliceCompleteness.dune->Fill(event.eventAfterCut.chosenSlice.completeness);
+                sliceScore.dune->Fill(event.eventAfterCut.chosenSlice.score);
+                if(event.eventBeforeCut.sliceVec.size() == 1){
                     sizeDLDune1Slice++;
-                } else if(recoSliceCount > 1) numPFPsSlicesDLDune_dist->Fill(recoParticleCount);
-            
-            } else if(event.DLCurrent == 2){
+                    sliceCompleteness1Slice.dune->Fill(event.eventAfterCut.chosenSlice.completeness);
+                } else if(event.eventBeforeCut.sliceVec.size() > 1){
+                    sliceCompletenessSlices.dune->Fill(event.eventAfterCut.chosenSlice.completeness);
+                }
+            } else if(event.eventBeforeCut.DLCurrent == 2){
                 sizeCurrent++;
-                numPFPsCurrent_dist->Fill(recoParticleCount);
-                numSlicesCurrent_dist->Fill(recoSliceCount);
-                if(recoSliceCount == 1){
-                    numPFPs1SliceCurrent_dist->Fill(recoParticleCount);
+                sliceCompleteness.current->Fill(event.eventAfterCut.chosenSlice.completeness);
+                sliceScore.current->Fill(event.eventAfterCut.chosenSlice.score);
+                if(event.eventBeforeCut.sliceVec.size() == 1){
                     sizeCurrent1Slice++;
-                } else if(recoSliceCount > 1) numPFPsSlicesCurrent_dist->Fill(recoParticleCount); 
-            } else if(event.DLCurrent == 3){
+                    sliceCompleteness1Slice.current->Fill(event.eventAfterCut.chosenSlice.completeness);
+                } else if(event.eventBeforeCut.sliceVec.size() > 1){
+                    sliceCompletenessSlices.current->Fill(event.eventAfterCut.chosenSlice.completeness);
+                }
+            } else if(event.eventBeforeCut.DLCurrent == 3){
                 sizeCheated++;
-                numPFPsCheated_dist->Fill(recoParticleCount);
-                numSlicesCheated_dist->Fill(recoSliceCount);
-                if(recoSliceCount == 1){
-                    numPFPs1SliceCheated_dist->Fill(recoParticleCount);
+                sliceCompleteness.cheated->Fill(event.eventAfterCut.chosenSlice.completeness);
+                sliceScore.cheated->Fill(event.eventAfterCut.chosenSlice.score);
+                if(event.eventBeforeCut.sliceVec.size() == 1){
                     sizeCheated1Slice++;
-                } else if(recoSliceCount > 1) numPFPsSlicesCheated_dist->Fill(recoParticleCount);
+                    sliceCompleteness1Slice.cheated->Fill(event.eventAfterCut.chosenSlice.completeness);
+                } else if(event.eventBeforeCut.sliceVec.size() > 1){
+                    sliceCompletenessSlices.cheated->Fill(event.eventAfterCut.chosenSlice.completeness);
+                }
             }
         }
-    }   
+    }
 
-
-    styleDraw(numSlicesCanvas, numSlicesCurrent_dist, numSlicesCheated_dist, numSlicesDLDune_dist, numSlicesDLUboone_dist, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/numSlices_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(numPFPsCanvas, numPFPsCurrent_dist, numPFPsCheated_dist, numPFPsDLDune_dist, numPFPsDLUboone_dist, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(numPFPs1SliceCanvas, numPFPs1SliceCurrent_dist, numPFPs1SliceCheated_dist, numPFPs1SliceDLDune_dist, numPFPs1SliceDLUboone_dist, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs1Slice_dist.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(numPFPsSlicesCanvas, numPFPsSlicesCurrent_dist, numPFPsSlicesCheated_dist, numPFPsSlicesDLDune_dist, numPFPsSlicesDLUboone_dist, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPsSlices_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(sliceCompleteness.canvas, sliceCompleteness.current, sliceCompleteness.cheated, sliceCompleteness.dune, sliceCompleteness.uboone, 0, 1000, 0.8, 1.005, "/nashome/c/coackley/nuEPlots/chosenSliceCompleteness_dist_zoomed.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(sliceCompleteness1Slice.canvas, sliceCompleteness1Slice.current, sliceCompleteness1Slice.cheated, sliceCompleteness1Slice.dune, sliceCompleteness1Slice.uboone, 0, 1000, 0.8, 1.005, "/nashome/c/coackley/nuEPlots/chosenSliceCompleteness1Slice_dist_zoomed.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(sliceCompletenessSlices.canvas, sliceCompletenessSlices.current, sliceCompletenessSlices.cheated, sliceCompletenessSlices.dune, sliceCompletenessSlices.uboone, 0, 1000, 0, 1.05, "/nashome/c/coackley/nuEPlots/chosenSliceCompletenessSlices_dist.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(sliceScore.canvas, sliceScore.current, sliceScore.cheated, sliceScore.dune, sliceScore.uboone, 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/chosenSliceScore_dist_bigBins.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
     
-    percentage(numSlicesCurrent_dist, numSlicesCheated_dist, numSlicesDLDune_dist, numSlicesDLUboone_dist, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/numSlices_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    percentage(numPFPsCurrent_dist, numPFPsCheated_dist, numPFPsDLDune_dist, numPFPsDLUboone_dist, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 90, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    percentage(numPFPs1SliceCurrent_dist, numPFPs1SliceCheated_dist, numPFPs1SliceDLDune_dist, numPFPs1SliceDLUboone_dist, sizeCurrent1Slice, sizeCheated1Slice, sizeDLDune1Slice, sizeDLUboone1Slice, 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs1Slice_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    percentage(numPFPsSlicesCurrent_dist, numPFPsSlicesCheated_dist, numPFPsSlicesDLDune_dist, numPFPsSlicesDLUboone_dist, sizeCurrent - sizeCurrent1Slice, sizeCheated - sizeCheated1Slice, sizeDLDune - sizeDLDune1Slice, sizeDLUboone - sizeDLUboone1Slice, 0, 90, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPsSlices_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    printf("Number of events: Current = %f, Cheated %f, DL Dune = %f, DL Uboone = %f\n", sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone);    
-}
-
-void chosenSlicePlots(std::vector<eventAfterCuts> allEvents){
-
-
+    percentage(sliceCompleteness.current, sliceCompleteness.cheated, sliceCompleteness.dune, sliceCompleteness.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 100, 0.8, 1.005, "/nashome/c/coackley/nuEPlots/chosenSliceCompleteness_perc_zoomed.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(sliceCompleteness1Slice.current, sliceCompleteness1Slice.cheated, sliceCompleteness1Slice.dune, sliceCompleteness1Slice.uboone, sizeCurrent1Slice, sizeCheated1Slice, sizeDLDune1Slice, sizeDLUboone1Slice, 0, 100, 0.8, 1.005, "/nashome/c/coackley/nuEPlots/chosenSliceCompleteness1Slice_perc_zoomed.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(sliceCompletenessSlices.current, sliceCompletenessSlices.cheated, sliceCompletenessSlices.dune, sliceCompletenessSlices.uboone, sizeCurrent - sizeCurrent1Slice, sizeCheated - sizeCheated1Slice, sizeDLDune - sizeDLDune1Slice, sizeDLUboone - sizeDLUboone1Slice, 0, 100, 0, 1.05, "/nashome/c/coackley/nuEPlots/chosenSliceCompletenessSlices_perc.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(sliceScore.current, sliceScore.cheated, sliceScore.dune, sliceScore.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 20, 999, 999, "/nashome/c/coackley/nuEPlots/chosenSliceScore_perc_bigBins.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
 }
 
 void nuE_macroNew(){
 
-    std::vector<eventData> allEventData;
-    std::vector<eventAfterCuts> allCutEventData;
+    std::vector<allEventData> eventsBeforeAfterCuts;
 
     int counterTrueNeut = 0;
     int counterTruePart = 0;
@@ -608,12 +698,16 @@ void nuE_macroNew(){
         trueNeutrinos.clear();
         trueParticles.clear();
         slices.clear();
+        
+        allEventData eventAllDataWithin;
+        eventAllDataWithin.eventBeforeCut = eData;
+        eventAllDataWithin.eventAfterCut = eventCut;
 
-        allEventData.push_back(eData);
-        allCutEventData.push_back(eventCut);
+        eventsBeforeAfterCuts.push_back(eventAllDataWithin);
     }
 
-    numberPlots(allEventData);
+    numberPlots(eventsBeforeAfterCuts);
+    chosenSlicePlots(eventsBeforeAfterCuts);
     // allCutEventData
     file->Close();
     printf("\n __________ Number of events with > 1 True Neutrino = %d, True Particle = %d, Reco Neutrino = %d, Reco Particle = %d __________\n", counterTrueNeut, counterTruePart, counterRecoNeut, counterRecoPart);
