@@ -1,4 +1,4 @@
-# We follow the pattern of `icarusutil`:
+# We follow the pattern of `larbatch`:
 # we in principle distinguish executable and non-executable (module) python files.
 # The former are installed with execute permission.
 # The latter are installed without execute permission.

@@ -24,6 +24,7 @@
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
+#include "detsim_drops.fcl"
 
 #
 # modules
@@ -86,5 +87,8 @@ outputs:
     @table::sbnd_rootoutput # inherit shared settings
     dataTier: "simulated"
     compressionLevel: 1 # TODO better to use no compression here and Huffman encoding
+    outputCommands: [ "keep *_*_*_*",
+                      @sequence::detsim_drops
+                    ]
   }
 }

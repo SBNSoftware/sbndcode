@@ -13,6 +13,7 @@ physics.producers.cafmaker.SBNDCRTTrackMatchLabel: "crttrackmatchingSCE"
 physics.producers.cafmaker.CRTHitMatchLabel: "pandoraSCETrackCRTHit"
 physics.producers.cafmaker.CRTTrackMatchLabel: "pandoraSCETrackCRTTrack"
 physics.producers.cafmaker.OpT0Label: "opt0finderSCE"
+physics.producers.cafmaker.CVNLabel: "cvnSCE"
 
 physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
 physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"
@@ -71,7 +72,5 @@ physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
             pandoraShowerSelectionVars,pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs, cnnid,
             cafmaker ]
 
-# Enable the Space-Charge service
-#include "enable_spacecharge_services_sbnd.fcl"
 
 physics.producers.cafmaker.SimChannelLabel: "simtpc2d:simpleSC"
