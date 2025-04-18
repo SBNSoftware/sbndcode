@@ -33,6 +33,29 @@ set(      MODULE_LIBRARIES larcorealg::Geometry
                            sbndcode_RecoUtils
                            sbndcode_OpDetSim
         )
+
+cet_build_plugin ( TPCRecohitAna art::module
+  larcore::Geometry_Geometry_service
+  lardataobj::Simulation
+  lardataobj::RawData
+  lardataobj::RecoBase
+  ROOT::Core
+  ROOT::Tree
+  art::Framework_Core
+  art::Framework_Principal
+  art::Utilities
+  art_root_io::tfile_support
+  art_root_io::TFileService_service
+  canvas::canvas
+  fhiclcpp::fhiclcpp
+  cetlib::cetlib
+  cetlib_except::cetlib_except
+  messagefacility::MF_MessageLogger
+
+  BASENAME_ONLY
+              )
+
+
 cet_build_plugin(AnalysisTree art::Module SOURCE AnalysisTree_module.cc LIBRARIES ${MODULE_LIBRARIES} )
 # install_headers()
 install_fhicl()

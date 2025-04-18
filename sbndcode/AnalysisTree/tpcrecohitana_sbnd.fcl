@@ -1,0 +1,35 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+
+BEGIN_PROLOG
+analysis_config: {
+  recohit_producer: "gaushit"
+}
+END_PROLOG
+
+services:
+{
+  TFileService: { fileName: "tpcrecohitana_sbnd.root" }
+  @table::sbnd_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
+}
+
+physics:
+{
+  analyzers:
+  {
+    TPCRecohitAna: {
+      module_type: "TPCRecohitAna"
+      @table::analysis_config
+    }
+  }
+  tpcrecohitana: [TPCRecohitAna]
+  end_paths: [tpcrecohitana]
+}
+
+process_name: TPCRECOHITALYSIS
