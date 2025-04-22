@@ -407,6 +407,67 @@ void chosenSlicePlots(std::vector<allEventData> allEvents){
     percentage(sliceScore.current, sliceScore.cheated, sliceScore.dune, sliceScore.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 20, 999, 999, "/nashome/c/coackley/nuEPlots/chosenSliceScore_perc_bigBins.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
 }
 
+void deltaVertex(std::vector<allEventData> allEventsData){
+    auto deltaX = createHistGroup("deltaX", "#Deltax Distribution: Nu + E Elastic Scattering Events", "x_{Reco} - x_{True} (cm)", 40, -5, 5);
+    auto deltaY = createHistGroup("deltaY", "#Deltay Distribution: Nu + E Elastic Scattering Events", "y_{Reco} - y_{True} (cm)", 40, -5, 5);
+    auto deltaZ = createHistGroup("deltaZ", "#Deltaz Distribution: Nu + E Elastic Scattering Events", "z_{Reco} - z_{True} (cm)", 40, -5, 5);
+    auto deltaR = createHistGroup("deltaR", "#Delta#bar{r} Distribution: Nu + E Elastic Scattering Events", "|#bar{r}_{Reco} - #bar{r}_{True}| (cm)", 20, 0, 5);
+    
+    int sizeCurrent = 0;
+    int sizeCheated = 0;
+    int sizeDune = 0;
+    int sizeUboone = 0;
+
+    for(const auto& event : allEventsData){
+        if(!(event.eventBeforeCut.trueNeutrinoVec[0].pdg == -999999 || event.eventBeforeCut.trueNeutrinoVec[0].tpcValid == 0 || (event.eventBeforeCut.recoNeutrinoVec.size() == 1 &&  event.eventBeforeCut.recoNeutrinoVec[0].pdg == -999999))){
+             double deltaXValue = event.eventAfterCut.chosenRecoNeutrino.vx - event.eventAfterCut.chosenTrueNeutrino.vx;
+             double deltaYValue = event.eventAfterCut.chosenRecoNeutrino.vy - event.eventAfterCut.chosenTrueNeutrino.vy;
+             double deltaZValue = event.eventAfterCut.chosenRecoNeutrino.vz - event.eventAfterCut.chosenTrueNeutrino.vz;
+             double deltaRValue = std::sqrt((deltaXValue * deltaXValue) + (deltaYValue * deltaYValue) + (deltaZValue * deltaZValue));
+
+             if(event.eventBeforeCut.DLCurrent == 0){
+                 deltaX.uboone->Fill(deltaXValue);
+                 deltaY.uboone->Fill(deltaYValue);
+                 deltaZ.uboone->Fill(deltaZValue);
+                 deltaR.uboone->Fill(deltaRValue); 
+                 sizeUboone++;
+             } else if(event.eventBeforeCut.DLCurrent == 1){
+                 deltaX.dune->Fill(deltaXValue);
+                 deltaY.dune->Fill(deltaYValue);
+                 deltaZ.dune->Fill(deltaZValue);
+                 deltaR.dune->Fill(deltaRValue);
+                 sizeDune++;
+             } else if(event.eventBeforeCut.DLCurrent == 2){
+                 deltaX.current->Fill(deltaXValue);
+                 deltaY.current->Fill(deltaYValue);
+                 deltaZ.current->Fill(deltaZValue);
+                 deltaR.current->Fill(deltaRValue);
+                 sizeCurrent++;
+             } else if(event.eventBeforeCut.DLCurrent == 3){
+                 deltaX.cheated->Fill(deltaXValue);
+                 deltaY.cheated->Fill(deltaYValue);
+                 deltaZ.cheated->Fill(deltaZValue);
+                 deltaR.cheated->Fill(deltaRValue);
+                 sizeCheated++;
+             }
+
+        } else{
+            //std::cout << "true neutrino: pdg = " << event.eventBeforeCut.trueNeutrinoVec[0].pdg << ", valid in tpc = " << event.eventBeforeCut.trueNeutrinoVec[0].tpcValid << std::endl;
+            //std::cout << "reco neutrino: vec size = " << event.eventBeforeCut.recoNeutrinoVec.size() << ", pdg num = " << event.eventBeforeCut.recoNeutrinoVec[0].pdg << std::endl;
+        }
+    }
+
+    styleDraw(deltaX.canvas, deltaX.current, deltaX.cheated, deltaX.dune, deltaX.uboone, 0, 500, 999, 999, "/nashome/c/coackley/nuEPlots/deltaX_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(deltaY.canvas, deltaY.current, deltaY.cheated, deltaY.dune, deltaY.uboone, 0, 500, 999, 999, "/nashome/c/coackley/nuEPlots/deltaY_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(deltaZ.canvas, deltaZ.current, deltaZ.cheated, deltaZ.dune, deltaZ.uboone, 0, 500, 999, 999, "/nashome/c/coackley/nuEPlots/deltaZ_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+    styleDraw(deltaR.canvas, deltaR.current, deltaR.cheated, deltaR.dune, deltaR.uboone, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/deltaR_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+              
+    percentage(deltaX.current, deltaX.cheated, deltaX.dune, deltaX.uboone, sizeCurrent, sizeCheated, sizeDune, sizeUboone, 0, 50, 999, 999, "/nashome/c/coackley/nuEPlots/deltaX_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(deltaY.current, deltaY.cheated, deltaY.dune, deltaY.uboone, sizeCurrent, sizeCheated, sizeDune, sizeUboone, 0, 50, 999, 999, "/nashome/c/coackley/nuEPlots/deltaY_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(deltaZ.current, deltaZ.cheated, deltaZ.dune, deltaZ.uboone, sizeCurrent, sizeCheated, sizeDune, sizeUboone, 0, 50, 999, 999, "/nashome/c/coackley/nuEPlots/deltaZ_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+    percentage(deltaR.current, deltaR.cheated, deltaR.dune, deltaR.uboone, sizeCurrent, sizeCheated, sizeDune, sizeUboone, 0, 90, 999, 999, "/nashome/c/coackley/nuEPlots/deltaR_perc.pdf", 0.56, 0.88, 0.70, 0.86);
+}
+
 void nuE_macroNew(){
 
     std::vector<allEventData> eventsBeforeAfterCuts;
@@ -708,7 +769,7 @@ void nuE_macroNew(){
 
     numberPlots(eventsBeforeAfterCuts);
     chosenSlicePlots(eventsBeforeAfterCuts);
-    // allCutEventData
+    deltaVertex(eventsBeforeAfterCuts);
     file->Close();
     printf("\n __________ Number of events with > 1 True Neutrino = %d, True Particle = %d, Reco Neutrino = %d, Reco Particle = %d __________\n", counterTrueNeut, counterTruePart, counterRecoNeut, counterRecoPart);
 }
