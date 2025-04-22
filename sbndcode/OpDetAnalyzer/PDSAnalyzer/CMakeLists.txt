@@ -23,7 +23,14 @@ set(MODULE_LIBRARIES
     nusimdata::SimulationBase
     nug4::ParticleNavigation
 
+    sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_SBND
+    sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
+    sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
+    sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
+
     sbnobj::Common_Reco
+    sbnobj::SBND_CRT
+    sbnobj::SBND_Timing
     sbndcode_OpDetSim
 
 )
