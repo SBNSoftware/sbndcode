@@ -127,7 +127,7 @@ histGroup createHistGroup(const std::string& baseName, const std::string& title,
     };    
 }
 
-void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, TPaveText* pt = nullptr, int* percentage = nullptr){
+void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, TPaveText* pt = nullptr, int* percentage = nullptr, int* drawLine = nullptr){
     canvas->cd();
     canvas->SetTickx();
     canvas->SetTicky();
@@ -168,6 +168,14 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     legend->SetMargin(0.13);
     legend->Draw();
 
+    if(drawLine){
+        TLine* line = new TLine(1.022, 0, 1.022, current->GetMaximum());
+        line->SetLineColor(kGray+2);
+        line->SetLineStyle(2);
+        line->SetLineWidth(2);
+        line->Draw("same");
+    }
+
     if(pt){
         pt->SetTextSize(legend->GetTextSize());
         pt->SetTextFont(legend->GetTextFont());
@@ -177,7 +185,7 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     canvas->SaveAs(filename);
 } 
 
-void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double sizeCurrent, double sizeCheated, double sizeDune, double sizeUboone, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax){
+void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double sizeCurrent, double sizeCheated, double sizeDune, double sizeUboone, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, int* drawLine = nullptr){
     TCanvas *percentageCanvas = new TCanvas("percentage_canvas", "Graph Draw Options", 200, 10, 600, 400); 
     TH1F* currentPerc = (TH1F*) current->Clone("perc hist");
     currentPerc->Scale(100.0 * 1.0/sizeCurrent);
@@ -206,7 +214,7 @@ void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double s
    
     int funcValue = 1;
 
-    styleDraw(percentageCanvas, currentPerc, cheatedPerc, dunePerc, uboonePerc, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, pt, &funcValue);
+    styleDraw(percentageCanvas, currentPerc, cheatedPerc, dunePerc, uboonePerc, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, pt, &funcValue, drawLine);
 }
 
 recoSlice chooseRecoSlice(std::vector<recoSlice> recoSliceVec){
@@ -469,17 +477,18 @@ void deltaVertex(std::vector<allEventData> allEventsData){
 }
 
 void energyAngle(std::vector<allEventData> allEventsData){
-    auto deltaEAllEnergy = createHistGroup("deltaE All Energy", "#DeltaE Distribution for E_{reco} Being Sum of PFPs Energies", "E_{reco} - E_{true} (MeV)", 2000, -1000, 1000);
-    auto EDividedAllEnergy = createHistGroup("ERecoETrue All Energy", "E_{reco}/E_{true} for E_{reco} Being Sum of PFPs Energies", "E_{reco}/E_{true}", 2000, -1000, 1000);
-    auto deltaEChosenShower = createHistGroup("deltaE Chosen Shower", "#DeltaE Distribution for E_{reco} Being Chosen Shower Energy", "E_{reco} - E_{true} (MeV)", 2000, -1000, 1000);
-    auto EDividedChosenShower = createHistGroup("ERecoETrue Chosen Shoert", "E_{reco}/E_{true} for E_{reco} Being Chosen Shower Energy", "E_{reco}/E_{true}", 2000, -1000, 1000);
-    auto EChosenShowerEAllEnergyDivided = createHistGroup("ERecoEReco All Energy and Chosen Shower", "Ratio of the Energy of the Chosen Shower and the Summed PFP Energies", "E_{reco, chosen shower}/E_{reco, PFP energies}", 2000, -1000, 1000);
-    auto ETrueThetaTrue2 = createHistGroup("ETrueThetaTrue2", "E_{true}#Theta^2_{true}", "E_{true}#Theta^2_{true} (MeV)", 1000, 0, 1000);
-    auto ETrueThetaReco2 = createHistGroup("ETrueThetaReco2", "E_{true}#Theta^2_{reco}", "E_{true}#Theta^2_{reco} (MeV)", 1000, 0, 1000);
-    auto ERecoThetaTrue2AllEnergy = createHistGroup("ERecoThetaTrue All", "E_{reco}#Theta^2_{true} for E_{reco} Being Sum of PFPs Energies", "E_{reco}#Theta^2_{true} (MeV)", 1000, 0, 1000);
-    auto ERecoThetaTrue2ChosenShower = createHistGroup("ERecoThetaTrue Chosen Shower", "E_{reco}#Theta^2_{true} for E_{reco} Being Chosen Shower Energy", "E_{reco}#Theta^2_{true} (MeV)", 1000, 0, 1000);
-    auto ERecoThetaReco2AllEnergy = createHistGroup("ERecoThetaReco All", "E_{reco}#Theta^2_{reco} for E_{reco} Being Sum of PFPs Energies", "E_{reco}#Theta^2_{reco} (MeV)", 1000, 0, 1000);
-    auto ERecoThetaReco2ChosenShower = createHistGroup("ERecoThetaReco Chosen", "E_{reco}#Theta^2_{reco} for E_{reco} Being Chosen Shower Energy", "E_{reco}#Theta^2_{reco} (MeV)", 1000, 0, 1000);
+    auto deltaEAllEnergy = createHistGroup("deltaE All Energy", "#DeltaE Distribution for E_{reco} Being Sum of PFPs Energies", "E_{reco} - E_{true} (MeV)", 35, -600, 100);
+    auto EDividedAllEnergy = createHistGroup("ERecoETrue All Energy", "E_{reco}/E_{true} for E_{reco} Being Sum of PFPs Energies", "E_{reco}/E_{true}", 24, 0, 1.2);
+    auto deltaEChosenShower = createHistGroup("deltaE Chosen Shower", "#DeltaE Distribution for E_{reco} Being Chosen Shower Energy", "E_{reco} - E_{true} (MeV)", 31, -600, 20);
+    auto EDividedChosenShower = createHistGroup("ERecoETrue Chosen Shoert", "E_{reco}/E_{true} for E_{reco} Being Chosen Shower Energy", "E_{reco}/E_{true}", 24, 0, 1.2);
+    auto EChosenShowerEAllEnergyDivided = createHistGroup("ERecoEReco All Energy and Chosen Shower", "Ratio of the Energy of the Chosen Shower and the Summed PFP Energies", "E_{reco, chosen shower}/E_{reco, PFP energies}", 24, 0, 1.2);
+    auto ETrueThetaTrue2 = createHistGroup("ETrueThetaTrue2", "E_{true}#theta_{true}^{2}", "E_{true}#theta_{true}^{2} (MeV)", 32, 0, 4.088);
+    auto ETrueThetaReco2 = createHistGroup("ETrueThetaReco2", "E_{true}#theta_{reco}^{2}", "E_{true}#theta_{reco}^{2} (MeV)", 40, 0, 20.44);
+    auto ERecoThetaTrue2AllEnergy = createHistGroup("ERecoThetaTrue All", "E_{reco}#theta_{true}^{2} for E_{reco} Being Sum of PFPs Energies", "E_{reco}#theta_{true}^{2} (MeV)", 24, 0, 3.066);
+    auto ERecoThetaTrue2ChosenShower = createHistGroup("ERecoThetaTrue Chosen Shower", "E_{reco}#theta_{true}^{2} for E_{reco} Being Chosen Shower Energy", "E_{reco}#theta_{true}^{2} (MeV)", 24, 0, 3.066);
+    auto ERecoThetaReco2AllEnergy = createHistGroup("ERecoThetaReco All", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of PFPs Energies", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
+    auto ERecoThetaReco2ChosenShower = createHistGroup("ERecoThetaReco Chosen", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Chosen Shower Energy", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
+    auto angleBetweenDirections = createHistGroup("AngleDifference", "Angle Between the Direction of the Chosen PFP and Direction of the True Particle", "arccos#left(|#vec{A} #upoint #vec{B}|/|#vec{A}||#vec{B}|#right) (degrees)", 93, 0, 186);
 
     double sizeCurrent = 0;
     double sizeCheated = 0;
@@ -488,18 +497,26 @@ void energyAngle(std::vector<allEventData> allEventsData){
 
     for(const auto& event : allEventsData){
         // Cut: Must be a true neutrino within the TPC volume, must be at least one true particle, must be at least one PFP, must be at least one reconstructed neutrino, the summed PFP energies > 0
-        if(!(event.eventBeforeCut.trueNeutrinoVec[0].pdg == -999999 || event.eventBeforeCut.trueNeutrinoVec[0].tpcValid == 0 || event.eventBeforeCut.trueParticleVec[0].pdg == -999999 || (event.eventBeforeCut.recoParticleVec.size() == 1 && event.eventBeforeCut.recoParticleVec[0].pdg == -999999) || (event.eventBeforeCut.recoNeutrinoVec.size() == 1 && event.eventBeforeCut.recoNeutrinoVec[0].pdg == -999999) || event.eventAfterCuts.totalPFPEnergy == 0)){
-            double deltaEAllEnergyValue = event.eventAfterCuts.totalPFPEnergy - event.eventAfterCuts.chosenTrueParticle.energy;
-            double deltaEChosenShowerValue = event.eventAfterCuts.chosenRecoParticle.bestPlaneEnergy - event.eventAfterCuts.chosenTrueParticle.energy;
-            double EDividedAllEnergyValue = event.eventAfterCuts.totalPFPEnergy/event.eventAfterCuts.chosenTrueParticle.energy;
-            double EDividedChosenShowerValue = event.eventAfterCuts.chosenRecoParticle.bestPlaneEnergy/event.eventAfterCuts.chosenTrueParticle.energy;
-            double EChosenShowerEAllEnergyDividedValue = event.eventAfterCuts.chosenRecoParticle.bestPlaneEnergy/event.eventAfterCuts.totalPFPEnergy;
-            double ETrueThetaTrue2Value = event.eventAfterCuts.chosenTrueParticle.energy * event.eventAfterCut.chosenTrueParticle.angle * event.eventAfterCut.chosenTrueParticle.angle;
-            double ETrueThetaReco2Value = event.eventAfterCuts.chosenTrueParticle.energy * event.eventAfterCut.chosenRecoParticle.theta * event.eventAfterCut.chosenRecoParticle.theta;
-            double ERecoThetaTrue2AllEnergyValue = event.eventAfterCuts.totalPFPEnergy * event.eventAfterCut.chosenTrueParticle.angle * event.eventAfterCut.chosenTrueParticle.angle;
-            double ERecoThetaTrue2ChosenShowerValue = event.eventAfterCuts.chosenRecoParticle.bestPlaneEnergy * event.eventAfterCut.chosenTrueParticle.angle * event.eventAfterCut.chosenTrueParticle.angle;
-            double ERecoThetaReco2AllEnergyValue = event.eventAfterCuts.totalPFPEnergy * event.eventAfterCut.chosenRecoParticle.theta * event.eventAfterCut.chosenRecoParticle.theta;
-            double ERecoThetaReco2ChosenShowerValue = event.eventAfterCuts.chosenRecoParticle.bestPlaneEnergy * event.eventAfterCut.chosenRecoParticle.theta * event.eventAfterCut.chosenRecoParticle.theta;
+        if(!(event.eventBeforeCut.trueNeutrinoVec[0].pdg == -999999 || event.eventBeforeCut.trueNeutrinoVec[0].tpcValid == 0 || event.eventBeforeCut.trueParticleVec[0].pdg == -999999 || (event.eventBeforeCut.recoParticleVec.size() == 1 && event.eventBeforeCut.recoParticleVec[0].pdg == -999999) || (event.eventBeforeCut.recoNeutrinoVec.size() == 1 && event.eventBeforeCut.recoNeutrinoVec[0].pdg == -999999) || event.eventAfterCut.totalPFPEnergy == 0)){
+            double deltaEAllEnergyValue = event.eventAfterCut.totalPFPEnergy - event.eventAfterCut.chosenTrueParticle.energy;
+            double deltaEChosenShowerValue = event.eventAfterCut.chosenRecoParticle.bestPlaneEnergy - event.eventAfterCut.chosenTrueParticle.energy;
+            double EDividedAllEnergyValue = event.eventAfterCut.totalPFPEnergy/event.eventAfterCut.chosenTrueParticle.energy;
+            double EDividedChosenShowerValue = event.eventAfterCut.chosenRecoParticle.bestPlaneEnergy/event.eventAfterCut.chosenTrueParticle.energy;
+            double EChosenShowerEAllEnergyDividedValue = event.eventAfterCut.chosenRecoParticle.bestPlaneEnergy/event.eventAfterCut.totalPFPEnergy;
+            double ETrueThetaTrue2Value = event.eventAfterCut.chosenTrueParticle.energy * event.eventAfterCut.chosenTrueParticle.angle * event.eventAfterCut.chosenTrueParticle.angle;
+            double ETrueThetaReco2Value = event.eventAfterCut.chosenTrueParticle.energy * event.eventAfterCut.chosenRecoParticle.theta * event.eventAfterCut.chosenRecoParticle.theta;
+            double ERecoThetaTrue2AllEnergyValue = event.eventAfterCut.totalPFPEnergy * event.eventAfterCut.chosenTrueParticle.angle * event.eventAfterCut.chosenTrueParticle.angle;
+            double ERecoThetaTrue2ChosenShowerValue = event.eventAfterCut.chosenRecoParticle.bestPlaneEnergy * event.eventAfterCut.chosenTrueParticle.angle * event.eventAfterCut.chosenTrueParticle.angle;
+            double ERecoThetaReco2AllEnergyValue = event.eventAfterCut.totalPFPEnergy * event.eventAfterCut.chosenRecoParticle.theta * event.eventAfterCut.chosenRecoParticle.theta;
+            double ERecoThetaReco2ChosenShowerValue = event.eventAfterCut.chosenRecoParticle.bestPlaneEnergy * event.eventAfterCut.chosenRecoParticle.theta * event.eventAfterCut.chosenRecoParticle.theta;
+
+            double aDOTb = ((event.eventAfterCut.chosenRecoParticle.dx * event.eventAfterCut.chosenTrueParticle.dx) + (event.eventAfterCut.chosenRecoParticle.dy * event.eventAfterCut.chosenTrueParticle.dy) + (event.eventAfterCut.chosenRecoParticle.dz * event.eventAfterCut.chosenTrueParticle.dz));
+            double aMag = std::sqrt((event.eventAfterCut.chosenRecoParticle.dx * event.eventAfterCut.chosenRecoParticle.dx) + (event.eventAfterCut.chosenRecoParticle.dy * event.eventAfterCut.chosenRecoParticle.dy) + (event.eventAfterCut.chosenRecoParticle.dz * event.eventAfterCut.chosenRecoParticle.dz));
+            double bMag = std::sqrt((event.eventAfterCut.chosenTrueParticle.dx * event.eventAfterCut.chosenTrueParticle.dx) + (event.eventAfterCut.chosenTrueParticle.dy * event.eventAfterCut.chosenTrueParticle.dy) + (event.eventAfterCut.chosenTrueParticle.dz * event.eventAfterCut.chosenTrueParticle.dz));
+            double cosAngle = aDOTb/(aMag * bMag);
+            if(cosAngle > 1.0) cosAngle = 1.0;
+            if(cosAngle < -1.0) cosAngle = -1.0;
+            double angleDiff = TMath::ACos(cosAngle) * TMath::RadToDeg();
 
             if(event.eventBeforeCut.DLCurrent == 0){
                 sizeDLUboone++;
@@ -514,6 +531,7 @@ void energyAngle(std::vector<allEventData> allEventsData){
                 ERecoThetaTrue2ChosenShower.uboone->Fill(ERecoThetaTrue2ChosenShowerValue);
                 ERecoThetaReco2AllEnergy.uboone->Fill(ERecoThetaReco2AllEnergyValue);
                 ERecoThetaReco2ChosenShower.uboone->Fill(ERecoThetaReco2ChosenShowerValue);
+                angleBetweenDirections.uboone->Fill(angleDiff);
 
             } else if(event.eventBeforeCut.DLCurrent == 1){
                 sizeDLDune++;
@@ -528,6 +546,7 @@ void energyAngle(std::vector<allEventData> allEventsData){
                 ERecoThetaTrue2ChosenShower.dune->Fill(ERecoThetaTrue2ChosenShowerValue);
                 ERecoThetaReco2AllEnergy.dune->Fill(ERecoThetaReco2AllEnergyValue);
                 ERecoThetaReco2ChosenShower.dune->Fill(ERecoThetaReco2ChosenShowerValue);
+                angleBetweenDirections.dune->Fill(angleDiff);
 
             } else if(event.eventBeforeCut.DLCurrent == 2){
                 sizeCurrent++;
@@ -542,6 +561,7 @@ void energyAngle(std::vector<allEventData> allEventsData){
                 ERecoThetaTrue2ChosenShower.current->Fill(ERecoThetaTrue2ChosenShowerValue);
                 ERecoThetaReco2AllEnergy.current->Fill(ERecoThetaReco2AllEnergyValue);
                 ERecoThetaReco2ChosenShower.current->Fill(ERecoThetaReco2ChosenShowerValue);
+                angleBetweenDirections.current->Fill(angleDiff);
 
             } else if(event.eventBeforeCut.DLCurrent == 3){
                 sizeCheated++;
@@ -556,22 +576,38 @@ void energyAngle(std::vector<allEventData> allEventsData){
                 ERecoThetaTrue2ChosenShower.cheated->Fill(ERecoThetaTrue2ChosenShowerValue);
                 ERecoThetaReco2AllEnergy.cheated->Fill(ERecoThetaReco2AllEnergyValue);
                 ERecoThetaReco2ChosenShower.cheated->Fill(ERecoThetaReco2ChosenShowerValue);
+                angleBetweenDirections.cheated->Fill(angleDiff);
             }
         }
     }
 
-    styleDraw(deltaEAllEnergy.canvas, deltaEAllEnergy.current, deltaEAllEnergy.cheated, deltaEAllEnergy.dune, deltaEAllEnergy.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/deltaEAllEnergy.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(EDividedAllEnergy.canvas, EDividedAllEnergy.current, EDividedAllEnergy.cheated, EDividedAllEnergy.dune, EDividedAllEnergy.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/EDividedAllEnergy.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(deltaEChosenShower.canvas, deltaEChosenShower.current, deltaEChosenShower.cheated, deltaEChosenShower.dune, deltaEChosenShower.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/deltaEChosenShower.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(EDividedChosenShower.canvas, EDividedChosenShower.current, EDividedChosenShower.cheated, EDividedChosenShower.dune, EDividedChosenShower.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/EDividedChosenShower.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(EChosenShowerEAllEnergyDivided.canvas, EChosenShowerEAllEnergyDivided.current, EChosenShowerEAllEnergyDivided.cheated, EChosenShowerEAllEnergyDivided.dune, EChosenShowerEAllEnergyDivided.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/EChosenShowerEAllEnergyDivided.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(ETrueThetaTrue2.canvas, ETrueThetaTrue2.current, ETrueThetaTrue2.cheated, ETrueThetaTrue2.dune, ETrueThetaTrue2.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaTrue2.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(ETrueThetaReco2.canvas, ETrueThetaReco2.current, ETrueThetaReco2.cheated, ETrueThetaReco2.dune, ETrueThetaReco2.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaReco2.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(ERecoThetaTrue2AllEnergy.canvas, ERecoThetaTrue2AllEnergy.current, ERecoThetaTrue2AllEnergy.cheated, ERecoThetaTrue2AllEnergy.dune, ERecoThetaTrue2AllEnergy.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2AllEnergy.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(ERecoThetaTrue2ChosenShower.canvas, ERecoThetaTrue2ChosenShower.current, ERecoThetaTrue2ChosenShower.cheated, ERecoThetaTrue2ChosenShower.dune, ERecoThetaTrue2ChosenShower.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2ChosenShower.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(ERecoThetaReco2AllEnergy.canvas, ERecoThetaReco2AllEnergy.current, ERecoThetaReco2AllEnergy.cheated, ERecoThetaReco2AllEnergy.dune, ERecoThetaReco2AllEnergy.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaReco2AllEnergy.pdf", 0.56, 0.88, 0.70, 0.86);
-    styleDraw(ERecoThetaReco2ChosenShower.canvas, ERecoThetaReco2ChosenShower.current, ERecoThetaReco2ChosenShower.cheated, ERecoThetaReco2ChosenShower.dune, ERecoThetaReco2ChosenShower.uboone, 0, 1000, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaReco2ChosenShower.pdf", 0.56, 0.88, 0.70, 0.86);
+    int drawLine = 1;
 
+    styleDraw(deltaEAllEnergy.canvas, deltaEAllEnergy.current, deltaEAllEnergy.cheated, deltaEAllEnergy.dune, deltaEAllEnergy.uboone, 0, 200, 999, 999, "/nashome/c/coackley/nuEPlots/deltaEAllEnergy_dist.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(EDividedAllEnergy.canvas, EDividedAllEnergy.current, EDividedAllEnergy.cheated, EDividedAllEnergy.dune, EDividedAllEnergy.uboone, 0, 350, 999, 999, "/nashome/c/coackley/nuEPlots/EDividedAllEnergy_dist.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(deltaEChosenShower.canvas, deltaEChosenShower.current, deltaEChosenShower.cheated, deltaEChosenShower.dune, deltaEChosenShower.uboone, 0, 200, 999, 999, "/nashome/c/coackley/nuEPlots/deltaEChosenShower_dist.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(EDividedChosenShower.canvas, EDividedChosenShower.current, EDividedChosenShower.cheated, EDividedChosenShower.dune, EDividedChosenShower.uboone, 0, 350, 999, 999, "/nashome/c/coackley/nuEPlots/EDividedChosenShower_dist.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(EChosenShowerEAllEnergyDivided.canvas, EChosenShowerEAllEnergyDivided.current, EChosenShowerEAllEnergyDivided.cheated, EChosenShowerEAllEnergyDivided.dune, EChosenShowerEAllEnergyDivided.uboone, 0, 900, 999, 999, "/nashome/c/coackley/nuEPlots/EChosenShowerEAllEnergyDivided_dist.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(ETrueThetaTrue2.canvas, ETrueThetaTrue2.current, ETrueThetaTrue2.cheated, ETrueThetaTrue2.dune, ETrueThetaTrue2.uboone, 0, 150, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaTrue2_dist.pdf", 0.56, 0.88, 0.70, 0.86, nullptr, nullptr, &drawLine);
+    styleDraw(ETrueThetaReco2.canvas, ETrueThetaReco2.current, ETrueThetaReco2.cheated, ETrueThetaReco2.dune, ETrueThetaReco2.uboone, 0, 150, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaReco2_dist.pdf", 0.56, 0.88, 0.70, 0.86, nullptr, nullptr, &drawLine);
+    styleDraw(ERecoThetaTrue2AllEnergy.canvas, ERecoThetaTrue2AllEnergy.current, ERecoThetaTrue2AllEnergy.cheated, ERecoThetaTrue2AllEnergy.dune, ERecoThetaTrue2AllEnergy.uboone, 0, 200, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2AllEnergy_dist.pdf", 0.56, 0.88, 0.70, 0.86, nullptr, nullptr, &drawLine);
+    styleDraw(ERecoThetaTrue2ChosenShower.canvas, ERecoThetaTrue2ChosenShower.current, ERecoThetaTrue2ChosenShower.cheated, ERecoThetaTrue2ChosenShower.dune, ERecoThetaTrue2ChosenShower.uboone, 0, 200, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2ChosenShower_dist.pdf", 0.56, 0.88, 0.70, 0.86, nullptr, nullptr, &drawLine);
+    styleDraw(ERecoThetaReco2AllEnergy.canvas, ERecoThetaReco2AllEnergy.current, ERecoThetaReco2AllEnergy.cheated, ERecoThetaReco2AllEnergy.dune, ERecoThetaReco2AllEnergy.uboone, 0, 200, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaReco2AllEnergy_dist.pdf", 0.56, 0.88, 0.70, 0.86, nullptr, nullptr, &drawLine);
+    styleDraw(ERecoThetaReco2ChosenShower.canvas, ERecoThetaReco2ChosenShower.current, ERecoThetaReco2ChosenShower.cheated, ERecoThetaReco2ChosenShower.dune, ERecoThetaReco2ChosenShower.uboone, 0, 200, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaReco2ChosenShower_dist.pdf", 0.56, 0.88, 0.70, 0.86, nullptr, nullptr, &drawLine);
+    styleDraw(angleBetweenDirections.canvas, angleBetweenDirections.current, angleBetweenDirections.cheated, angleBetweenDirections.dune, angleBetweenDirections.uboone, 0, 250, 999, 999, "/nashome/c/coackley/nuEPlots/angleDiffDirections_dist.pdf", 0.56, 0.88, 0.70, 0.86);
+
+    percentage(deltaEAllEnergy.current, deltaEAllEnergy.cheated, deltaEAllEnergy.dune, deltaEAllEnergy.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 20, 999, 999, "/nashome/c/coackley/nuEPlots/deltaEAllEnergy_perc.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(EDividedAllEnergy.current, EDividedAllEnergy.cheated, EDividedAllEnergy.dune, EDividedAllEnergy.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 40, 999, 999, "/nashome/c/coackley/nuEPlots/EDividedAllEnergy_perc.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(deltaEChosenShower.current, deltaEChosenShower.cheated, deltaEChosenShower.dune, deltaEChosenShower.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 20, 999, 999, "/nashome/c/coackley/nuEPlots/deltaEChosenShower_perc.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(EDividedChosenShower.current, EDividedChosenShower.cheated, EDividedChosenShower.dune, EDividedChosenShower.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 40, 999, 999, "/nashome/c/coackley/nuEPlots/EDividedChosenShower_perc.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(EChosenShowerEAllEnergyDivided.current, EChosenShowerEAllEnergyDivided.cheated, EChosenShowerEAllEnergyDivided.dune, EChosenShowerEAllEnergyDivided.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/EChosenShowerEAllEnergyDivided_perc.pdf", 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(ETrueThetaTrue2.current, ETrueThetaTrue2.cheated, ETrueThetaTrue2.dune, ETrueThetaTrue2.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 15, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaTrue2_perc.pdf", 0.56, 0.88, 0.70, 0.86, &drawLine);
+    percentage(ETrueThetaReco2.current, ETrueThetaReco2.cheated, ETrueThetaReco2.dune, ETrueThetaReco2.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 15, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaReco2_perc.pdf", 0.56, 0.88, 0.70, 0.86, &drawLine);
+    percentage(ERecoThetaTrue2AllEnergy.current, ERecoThetaTrue2AllEnergy.cheated, ERecoThetaTrue2AllEnergy.dune, ERecoThetaTrue2AllEnergy.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 20, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2AllEnergy_perc.pdf", 0.56, 0.88, 0.70, 0.86, &drawLine);
+    percentage(ERecoThetaTrue2ChosenShower.current, ERecoThetaTrue2ChosenShower.cheated, ERecoThetaTrue2ChosenShower.dune, ERecoThetaTrue2ChosenShower.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 20, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2ChosenShower_perc.pdf", 0.56, 0.88, 0.70, 0.86, &drawLine);
+    percentage(ERecoThetaReco2AllEnergy.current, ERecoThetaReco2AllEnergy.cheated, ERecoThetaReco2AllEnergy.dune, ERecoThetaReco2AllEnergy.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 25, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaReco2AllEnergy_perc.pdf", 0.56, 0.88, 0.70, 0.86, &drawLine);
+    percentage(ERecoThetaReco2ChosenShower.current, ERecoThetaReco2ChosenShower.cheated, ERecoThetaReco2ChosenShower.dune, ERecoThetaReco2ChosenShower.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 25, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaReco2ChosenShower_perc.pdf", 0.56, 0.88, 0.70, 0.86, &drawLine);
+    percentage(angleBetweenDirections.current, angleBetweenDirections.cheated, angleBetweenDirections.dune, angleBetweenDirections.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 30, 999, 999, "/nashome/c/coackley/nuEPlots/angleDiffDirections_perc.pdf", 0.56, 0.88, 0.70, 0.86);
 }
 
 void nuE_macroNew(){
@@ -876,6 +912,7 @@ void nuE_macroNew(){
     numberPlots(eventsBeforeAfterCuts);
     chosenSlicePlots(eventsBeforeAfterCuts);
     deltaVertex(eventsBeforeAfterCuts);
+    energyAngle(eventsBeforeAfterCuts);
     file->Close();
     printf("\n __________ Number of events with > 1 True Neutrino = %d, True Particle = %d, Reco Neutrino = %d, Reco Particle = %d __________\n", counterTrueNeut, counterTruePart, counterRecoNeut, counterRecoPart);
 }
