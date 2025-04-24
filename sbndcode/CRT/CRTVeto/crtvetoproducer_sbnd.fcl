@@ -1,12 +1,7 @@
-#include "crtgeoalg_sbnd.fcl"
-#include "crtsimmodules_sbnd.fcl"
-
 BEGIN_PROLOG
-
 
 crtvetoproducer_sbnd:
 {
-   CRTGeoAlg:                    @local::crtgeoalg_sbnd
    CRTClusterModuleLabel:        "crtclustering"
    CRTSpacePointModuleLabel:     "crtspacepoints"
    CRTTimingReferenceInfoLabel:  "crtstrips"
@@ -17,7 +12,6 @@ crtvetoproducer_sbnd:
 }
 
 crtvetoproducer_data_sbnd:                           @local::crtvetoproducer_sbnd
-crtvetoproducer_data_sbnd.CRTGeoAlg:                 @local::crtgeoalg_data_sbnd
 crtvetoproducer_data_sbnd.IsData:                    true
 
 # Values for testing
@@ -32,7 +26,6 @@ crtvetoproducer_data_sbnd.MaxAllowedRefTimeDiff:     3000000
 
 # Top Hat Configuration for Debugging
 crtvetoproducer_data_sbnd_tophat:                    @local::crtvetoproducer_sbnd
-crtvetoproducer_data_sbnd_tophat.CRTGeoAlg:          @local::crtgeoalg_data_sbnd
 crtvetoproducer_data_sbnd_tophat.IsData:             true
 
 # Values for testing

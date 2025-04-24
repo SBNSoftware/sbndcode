@@ -72,7 +72,6 @@ public:
 
 private:
 
-  CRTGeoAlg        fCRTGeoAlg;
   double           fWindowStart;
   double           fWindowEnd;
   std::string      fCRTClusterModuleLabel;
@@ -88,8 +87,6 @@ private:
   uint32_t         fRawTSCorrection;  
   uint32_t         fMaxAllowedRefTimeDiff;
 
-  std::vector<art::Ptr<CRTSpacePoint>> fVetoSpacePoints;
-
   unsigned int fEventID;
   unsigned int fRun;
   unsigned int fSubRun;
@@ -99,7 +96,6 @@ private:
 
 sbnd::crt::CRTVetoProducer::CRTVetoProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fWindowStart(p.get<double>("WindowStart"))
   , fWindowEnd(p.get<double>("WindowEnd"))
   , fCRTClusterModuleLabel(p.get<std::string>("CRTClusterModuleLabel"))
@@ -119,9 +115,9 @@ sbnd::crt::CRTVetoProducer::CRTVetoProducer(fhicl::ParameterSet const& p)
 
 void sbnd::crt::CRTVetoProducer::produce(art::Event& e)
 {
+  // Declare Space Point Vector. Will fill this with Space Points that we veto on
+  std::vector<art::Ptr<CRTSpacePoint>> fVetoSpacePoints;
 
-  fVetoSpacePoints.clear();
- 
   fEventID = e.id().event();
   fRun = e.run();
   fSubRun = e.subRun();
