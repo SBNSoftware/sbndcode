@@ -127,7 +127,8 @@ void thp::XARAPUCATopHatPlot::analyze(art::Event const& e)
       double time_stamp = wvfm.TimeStamp();
 
       // Filters waveforms near to the zero.
-      if (time_stamp > MIN_WINDOW && time_stamp < MAX_WINDOW && board_slot == BOARD_SLOT) { // us.
+      //if (time_stamp > MIN_WINDOW && time_stamp < MAX_WINDOW && board_slot == BOARD_SLOT) { // us.
+      if (board_slot == BOARD_SLOT) {
         if (fdebug) std::cout << "[WVFM_ID: " << w << "]\tChannel number: " << channel_number << "\tTimeStamp: " << time_stamp << " us\tBoard slot: " << board_slot << std::endl;
         
         if (summed_wvfms_map.find(time_stamp) == summed_wvfms_map.end()) {

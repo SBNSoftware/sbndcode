@@ -507,8 +507,9 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
 
     // Gets the timing information of the CAEN fragment.
     int64_t pulse_duration_ns = num_samples_per_wvfm * fns_per_sample; // ns.
-    int64_t frag_timestamp_s = fragment.timestamp() / NANOSEC_IN_SEC; // s.
-    int64_t frag_timestamp_ns = fragment.timestamp() % NANOSEC_IN_SEC; // ns.
+    uint64_t frag_timestamp = fragment.timestamp(); // ns.
+    int64_t frag_timestamp_s = frag_timestamp / NANOSEC_IN_SEC; // s.
+    int64_t frag_timestamp_ns = frag_timestamp % NANOSEC_IN_SEC; // ns.
 
     uint32_t TTT_ticks = header.triggerTime();
     int64_t TTT_end_ns = TTT_ticks * NANOSEC_PER_TICK; // ns.
@@ -539,8 +540,18 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
       end_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
       ini_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
     } else {
-      ini_wvfm_timestamp = TTT_ini_us;
-      end_wvfm_timestamp = TTT_end_us;
+      if (frag_timestamp < full_TTT) {
+        end_wvfm_timestamp = full_TTT - frag_timestamp; // ns.
+      } else {
+        end_wvfm_timestamp = (frag_timestamp - full_TTT) * (-1.0); // ns.
+        std::cout << "Something went wrong." << std::endl;
+      }
+      ini_wvfm_timestamp = end_wvfm_timestamp - pulse_duration_ns; // ns.
+      end_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
+      ini_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
+      
+      //ini_wvfm_timestamp = TTT_ini_us;
+      //end_wvfm_timestamp = TTT_end_us;
     }
 
     if (fverbose | fdebug_timing | fdebug_all) {
@@ -551,6 +562,8 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
         std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: SPEC-TDC time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
       } else {
         std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN time window of " << TTT_end_us - TTT_ini_us << " us: [" << TTT_ini_us << ", " << TTT_end_us << "] us." << std::endl;
+        std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: Fragment timestamp time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
+      
       }
     }
 
@@ -571,6 +584,7 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
         std::cout << "\t\t ETT SPEC-TDC difference applied to the CAEN frame (full timestamps): " << full_TTT << " - " << timestamp <<  " ns = " << end_wvfm_timestamp << " us." << std::endl;
       } else if (factive_timing_frame == CAEN_ONLY_TIMING) {
         std::cout << "\t CAEN trigger timestamp (TTT) of the fragment: " << std::endl;
+        std::cout << "\t\t Fragment timestamp difference applied to the CAEN frame (full timestamps): " << full_TTT << " - " << frag_timestamp <<  " ns = " << end_wvfm_timestamp << " us." << std::endl;
         std::cout << "\t\tTTT ini " << TTT_ini_ns << " ns = " << TTT_ini_us << " us." << std::endl;
         std::cout << "\t\tTTT end " << TTT_ticks << " ticks = " << TTT_end_ns << " ns = " << TTT_end_us << " us." << std::endl;
       }
