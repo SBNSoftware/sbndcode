@@ -18,13 +18,14 @@ physics.producers:
     opt0finder:     @local::sbnd_opt0_finder_data
 }
 
-physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  cvn, opt0finder]
+physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, 
+                 pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData,
+                 caloskimCalorimetry, cvn, opt0finder]
 
 #The next 3 lines need to be commented out once data use pandoraSCE by default. 
-physics.producers.cvn.SliceLabel: "pandora"
-physics.producers.cvn.PFParticleModuleLabel: "pandora"
-physics.producers.cvn.T0Label: "pandora"
+#physics.producers.cvn.SliceLabel: "pandora"
+#physics.producers.cvn.PFParticleModuleLabel: "pandora"
+#physics.producers.cvn.T0Label: "pandora"
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
 physics.analyzers.crtana: @local::crtana_data_sbnd
