@@ -14,4 +14,4 @@ physics.stream1: []
 
 # To still produce artroot output with the calcluated
 # CRUMBS score remove the above line and uncomment this
-# physics.producers.crumbs.EvaluateResultInTrainingMode: true
+physics.producers.crumbs.EvaluateResultInTrainingMode: true
