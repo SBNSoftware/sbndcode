@@ -151,7 +151,7 @@ physics.producers.cafmaker.TrackCaloLabel: "pandoraCaloData"
 physics.producers.cafmaker.TrackChi2PidLabel: "pandoraPidData"
 
 # Include 3D barycenter flahs matching 
-physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatch"
+physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
 
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false
