@@ -50,8 +50,8 @@ public:
 
 private:
   constexpr static int BOARD_SLOT = 7; // Board slot.
-  constexpr static double MIN_WINDOW = -20; // us.
-  constexpr static double MAX_WINDOW = 30; // us.
+  constexpr static double MIN_WINDOW = -2.5; // us.
+  constexpr static double MAX_WINDOW = -2.4; // us.
   constexpr static double NS_PER_SAMPLE = 16.0; // ns.
   constexpr static double NS_TO_US = 1E-3; // Conversion factor.
   constexpr static double BASELINE_PERCETAGE = 0.1; // (10 %) 
@@ -127,8 +127,7 @@ void thp::XARAPUCATopHatPlot::analyze(art::Event const& e)
       double time_stamp = wvfm.TimeStamp();
 
       // Filters waveforms near to the zero.
-      //if (time_stamp > MIN_WINDOW && time_stamp < MAX_WINDOW && board_slot == BOARD_SLOT) { // us.
-      if (board_slot == BOARD_SLOT) {
+      if (time_stamp > MIN_WINDOW && time_stamp < MAX_WINDOW && board_slot == BOARD_SLOT) { // us.
         if (fdebug) std::cout << "[WVFM_ID: " << w << "]\tChannel number: " << channel_number << "\tTimeStamp: " << time_stamp << " us\tBoard slot: " << board_slot << std::endl;
         
         if (summed_wvfms_map.find(time_stamp) == summed_wvfms_map.end()) {
