@@ -18,10 +18,11 @@ physics.producers:
     crtspacepointmatching: @local::crtspacepointmatchproducer_data_sbnd
     crttrackmatching:      @local::crttrackmatchproducer_data_sbnd
     opt0finder:            @local::sbnd_opt0_finder_data
+    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  cvn, crtspacepointmatching, crttrackmatching, opt0finder]
+  cvn, crtspacepointmatching, crttrackmatching, opt0finder, tpcpmtbarycentermatching]
 
 #The next 3 lines need to be commented out once data use pandoraSCE by default. 
 physics.producers.cvn.SliceLabel: "pandora"
