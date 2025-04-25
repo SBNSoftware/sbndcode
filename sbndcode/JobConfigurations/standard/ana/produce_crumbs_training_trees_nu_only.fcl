@@ -4,10 +4,15 @@
 # neutrinos
 #
 
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
 #include "crumbs_sbnd.fcl"
+
+physics.producers.tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 
 physics.producers.crumbs.TrainingMode:   true
 physics.producers.crumbs.ProcessCosmics: false
+
+physics.runcrumbs: [ tpcpmtbarycentermatching, crumbs ]
 
 # This line removes the artroot output
 physics.stream1: []

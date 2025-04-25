@@ -4,10 +4,12 @@
 #
 
 #include "crttpcmatchingproducers_sbnd.fcl"
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
 #include "crumbs_sbnd.fcl"
 
-physics.producers.crtspacepointmatching: @local::crtspacepointmatchproducer_data_sbnd
-physics.producers.crttrackmatching:      @local::crttrackmatchproducer_data_sbnd
+physics.producers.crtspacepointmatching:    @local::crtspacepointmatchproducer_data_sbnd
+physics.producers.crttrackmatching:         @local::crttrackmatchproducer_data_sbnd
+physics.producers.tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 
 physics.producers.crumbs.Data:                    true
 physics.producers.crumbs.TrainingMode:            true
@@ -16,7 +18,7 @@ physics.producers.crumbs.ProcessCosmics:          false
 physics.producers.crumbs.CalorimetryModuleLabel:  "pandoraCaloData"
 physics.producers.crumbs.Chi2FitParams.CaloLabel: "pandoraCaloData"
 
-physics.runcrumbs: [ crtspacepointmatching, crttrackmatching, crumbs ]
+physics.runcrumbs: [ crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching, crumbs ]
 
 # This line removes the artroot output
 physics.stream1: []
