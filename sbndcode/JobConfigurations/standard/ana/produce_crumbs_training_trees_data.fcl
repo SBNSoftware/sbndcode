@@ -1,0 +1,29 @@
+#
+# fcl file to produce CRUMBS training trees
+# to be run on files containing data events
+#
+
+#include "crttpcmatchingproducers_sbnd.fcl"
+#include "crumbs_sbnd.fcl"
+
+physics.producers.crtspacepointmatching: @local::crtspacepointmatchproducer_data_sbnd
+physics.producers.crttrackmatching:      @local::crttrackmatchproducer_data_sbnd
+
+physics.producers.crumbs.Data:                    true
+physics.producers.crumbs.TrainingMode:            true
+physics.producers.crumbs.ProcessNeutrinos:        false
+physics.producers.crumbs.ProcessCosmics:          false
+physics.producers.crumbs.CalorimetryModuleLabel:  "pandoraCaloData"
+physics.producers.crumbs.Chi2FitParams.CaloLabel: "pandoraCaloData"
+
+physics.runcrumbs: [ crtspacepointmatching, crttrackmatching, crumbs ]
+
+# This line removes the artroot output
+physics.stream1: []
+
+services.BackTrackerService:       @erase
+services.ParticleInventoryService: @erase
+
+# To still produce artroot output with the calcluated
+# CRUMBS score remove the above line and uncomment this
+physics.producers.crumbs.EvaluateResultInTrainingMode: true
