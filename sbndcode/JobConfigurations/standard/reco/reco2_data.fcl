@@ -15,11 +15,13 @@ services:
 physics.producers:
 {
     @table::physics.producers
-    opt0finder:     @local::sbnd_opt0_finder_data
+    crtspacepointmatching: @local::crtspacepointmatchproducer_data_sbnd
+    crttrackmatching:      @local::crttrackmatchproducer_data_sbnd
+    opt0finder:            @local::sbnd_opt0_finder_data
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  cvn, opt0finder]
+  cvn, crtspacepointmatching, crttrackmatching, opt0finder]
 
 #The next 3 lines need to be commented out once data use pandoraSCE by default. 
 physics.producers.cvn.SliceLabel: "pandora"
@@ -31,4 +33,3 @@ physics.analyzers.crtana: @local::crtana_data_sbnd
 
 physics.caloskimana: [ caloskim, crtana ]
 physics.end_paths: [stream1, caloskimana ]
-
