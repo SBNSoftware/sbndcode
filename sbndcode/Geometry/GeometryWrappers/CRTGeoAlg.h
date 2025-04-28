@@ -40,12 +40,13 @@
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 #include "sbndcode/Calibration/CRT/CalibService/CRTCalibService.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTOrientationMaps.h"
 
 namespace sbnd::crt {
 
   struct CRTSiPMGeo{
     CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const geo::Point_t location,
-               const uint32_t _pedestal, const double _gain)
+               const uint32_t _pedestal, const double _gain, const CRTChannelStatus _status)
     {
       stripName = _stripName;
       channel   = _channel;
@@ -54,16 +55,18 @@ namespace sbnd::crt {
       z         = location.Z();
       pedestal  = _pedestal;
       gain      = _gain;
+      status    = _status;
       null      = false;
     }
-    std::string stripName;
-    uint16_t    channel;
-    double      x;
-    double      y;
-    double      z;
-    bool        null;
-    uint32_t    pedestal;
-    double      gain;
+    std::string      stripName;
+    uint16_t         channel;
+    double           x;
+    double           y;
+    double           z;
+    bool             null;
+    uint32_t         pedestal;
+    CRTChannelStatus status;
+    double           gain;
   };
 
   // CRT strip geometry struct contains dimensions and mother module
@@ -166,17 +169,9 @@ namespace sbnd::crt {
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
 
-      if(_minos || _adID == 70 || _adID == 139)
-        orientation = (modulePosMother[2] < 0);
-      else
-        orientation = (modulePosMother[2] > 0);
-
-      // Location of SiPMs
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger
-         || CRTCommonUtils::GetTaggerEnum(taggerName) == kWestTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kEastTagger)
-        top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
-      else
-        top = (orientation == 0) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
+      CRTOrientationMaps orientationMaps;
+      orientation = orientationMaps.orientation.at(_adID);
+      top         = orientationMaps.top.at(_adID);
 
       // Fill edges
       minX = std::min(limitsWorld.X(), limitsWorld2.X());

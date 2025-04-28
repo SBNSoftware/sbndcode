@@ -1,5 +1,7 @@
 #include "CRTSpacePointMatchAlg.h"
 
+#include "larcore/Geometry/Geometry.h"
+
 namespace sbnd::crt {
 
   CRTSpacePointMatchAlg::CRTSpacePointMatchAlg(const Config& config)
@@ -88,9 +90,9 @@ namespace sbnd::crt {
       std::pair<geo::Vector_t, geo::Vector_t> startEndDir;
 
       if(fDirMethod==2)
-        startEndDir = AverageTrackDirections(track, fTrackDirectionFrac);
+        startEndDir = CRTCommonUtils::AverageTrackDirections(track, fTrackDirectionFrac);
       else
-        startEndDir = TrackDirections(detProp, track, fTrackDirectionFrac, crtTime, driftDirection);
+        startEndDir = CRTCommonUtils::TrackDirections(track);
 
       const geo::Vector_t startDir = startEndDir.first;
       const geo::Vector_t endDir   = startEndDir.second;
@@ -178,59 +180,5 @@ namespace sbnd::crt {
       return CRTCommonUtils::DistToCRTSpacePoint(crtSP, trackStart, end, cluster->Tagger());
     else
       return CRTCommonUtils::SimpleDCA(crtSP, trackStart, trackDir);
-  }
-
-  std::pair<geo::Vector_t, geo::Vector_t> CRTSpacePointMatchAlg::AverageTrackDirections(const art::Ptr<recob::Track> &track, const double frac)
-  {
-    const unsigned N          = track->NumberTrajectoryPoints();
-    const unsigned NValid     = track->CountValidPoints();
-    const unsigned NValidFrac = std::floor(NValid * frac);
-
-    geo::Vector_t forwardDir(0, 0, 0), backwardDir(0, 0, 0);
-
-    unsigned iValidForward = 0, iValidBackward = 0;
-
-    for(unsigned i = 0; i < N; ++i)
-      {
-        if(track->HasValidPoint(i) && iValidForward < NValidFrac)
-          {
-            forwardDir += track->DirectionAtPoint(i);
-            ++iValidForward;
-          }
-
-        if(track->HasValidPoint(N - (i + 1)) && iValidBackward < NValidFrac)
-          {
-            backwardDir += track->DirectionAtPoint(N - (i + 1));
-            ++iValidBackward;
-          }
-      }
-
-    forwardDir  /= NValidFrac;
-    backwardDir /= NValidFrac;
-
-    return std::make_pair(forwardDir, backwardDir);
-
-  }
-
-  std::pair<geo::Vector_t, geo::Vector_t> CRTSpacePointMatchAlg::TrackDirections(detinfo::DetectorPropertiesData const &detProp, const art::Ptr<recob::Track> &track,
-                                                                                 const double frac, const double CRTtime, const int driftDirection)
-  {
-    const unsigned N    = track->NumberTrajectoryPoints();
-    const unsigned NMid = std::floor(N * frac);
-
-    geo::Point_t start = track->Start();
-    geo::Point_t end   = track->End();
-    geo::Point_t mid   = track->LocationAtPoint(NMid);
-
-    const double xshift = driftDirection * CRTtime * detProp.DriftVelocity();
-
-    start.SetX(start.X() + xshift);
-    end.SetX(end.X() + xshift);
-    mid.SetX(mid.X() + xshift);
-
-    const geo::Vector_t startDir = (mid - start).Unit();
-    const geo::Vector_t endDir   = (mid - end).Unit();
-
-    return std::make_pair(startDir, endDir);
   }
 }

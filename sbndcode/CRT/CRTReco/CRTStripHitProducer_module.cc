@@ -222,7 +222,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
       if(unix_diff < -1 || unix_diff > 1)
         {
-          throw std::runtime_error("Unix timestamps differ by more than 1" + unix_diff);
+          throw std::runtime_error(Form("Unix timestamps differ by more than 1 (%li)", unix_diff));
         }
 
       if(unix_diff == 1)
@@ -253,6 +253,9 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       const CRTStripGeo strip = fCRTGeoAlg.GetStrip(channel);
       const CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
       const CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
+
+      if(sipm1.status == CRTChannelStatus::kDeadChannel || sipm2.status == CRTChannelStatus::kDeadChannel)
+        continue;
 
       // Subtract channel pedestals
       const uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i] - sipm1.pedestal   : 0;

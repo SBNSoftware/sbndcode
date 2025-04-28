@@ -5,24 +5,40 @@
 ###  Usage:
 ###  1) edit the EXECUTABLE section adding executable names ("targets"),
 ###     the header paths they need, and the libraries they link to
-###  2) if installing anywhere, choose where setting `GALLERY_INSTALL`
-###     environment variable
-###  3) the minimal setup for this example must include `larsoftobj` and
+###  2) the minimal setup for this example must include `larsoftobj` and
 ###     `sbndcode` (the latter may become optional depending on your code)
-###  4) create a build directory and run `cmake` from there:
+###  3) create a build directory and run `cmake` from there:
 ###      
 ###      mkdir -p build
 ###      cd build
 ###      cmake ..
 ###      make
 ###      
+###     To build in debug mode add `-DCMAKE_BUILD_TYPE=Debug` to `cmake` command
+###     above (`Release` sets the optimised version).
+###
+###  The required development setup includes:
+###   * UPS databases (with canvas, sbndcode etc.)
+###   * cetmodules (required to find some UPS libraries; pulls in cmake)
+###   * the UPS products mentioned above (`sbndcode` etc.)
+###  
+###  Notable packages that are NOT required: art, sbndcode, mrb.
+###
 ###
 ################################################################################
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.24)
+
+# The presence of cetmodules appears to allow for some tricky UPS packages
+# (e.g. `range` library) canvas depends on, which are not distributed
+# with a package config script (neither pkgconfig or CMake flavor).
+# Many other UPS packages appear they could work without it
+# (hard to say since the dependency on `range` via `canvas` is quite hard)
+find_package(cetmodules 3.20.00 REQUIRED)
 
 #
 # making `cmake` aware of Clang may require some care;
-# we pick `gallery` qualifiers and if they contain `cN` then it's Clang
+# we pick `gallery` qualifiers and if they contain `cN` then it's Clang;
+# TODO check if this is still necessary with CMake 3.24
 # 
 if ( $ENV{SETUP_GALLERY} MATCHES "-q +([^ ]+)( |$)" )
   set ( GalleryQualifiers ${CMAKE_MATCH_1} )
@@ -46,52 +62,95 @@ endif(DEFINED $ENV{GALLERY_INSTALL})
 #
 # declare the name of our project
 #
-project(galleryAnalysis CXX)
+project(galleryAnalysis
+  LANGUAGES CXX
+  )
+
+# this does not seem to affect the quality of the compilation,
+# but it cuts a lot of the messages from CMake (and maybe it caches results?)
+include(CetCMakeEnv)
+cet_cmake_env()
+
+# standard CMake voodoo to push the installation directory in the right direction
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}
+    CACHE PATH "Install in source code dir" FORCE
+  )
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 
-# install in the same directory as the source
-set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR})
+# this list can be filled last, from the target_link_libraries lists below
+# most packages are looked for in CMAKE_PREFIX_PATH (UPS will populate it)
+find_package(gallery         REQUIRED)
+find_package(lardataalg      REQUIRED)
+find_package(lardataobj      REQUIRED)
+find_package(larcorealg      REQUIRED)
+find_package(larcoreobj      REQUIRED)
+find_package(sbnanaobj       REQUIRED)
+find_package(sbnobj          REQUIRED)
+find_package(sbncode         REQUIRED)
+find_package(sbndcode        REQUIRED)
+find_package(fhiclcpp        REQUIRED)
+find_package(messagefacility REQUIRED)
+find_package(ROOT
+  COMPONENTS Hist Tree RIO
+  REQUIRED
+  )
+
+
+################################################################################
+###  LIBRARY DIRECTIVES
+################################################################################
 
 #
-# include directories
+# For this specific project, a library is not really needed: we could just link
+# together all the source files and be gone with it.
+# But hey, this is an example.
+# 
+# The INTERFACE keyword will make the symbols found in the libraries here
+# implicitly visible to all targets depending on this one.
+# Whether it is a good practice to use this feature this extensively is to be
+# checked.
+# 
+# The list of linking targets was extracted from the headers included in the
+# source code (`grep -h '#include' MCAssociations.* TrackAnalysis.* | sort -u`),
+# although some of the correspondences are not straightforward (see comments).
 #
-include_directories($ENV{BOOST_INC})
-include_directories($ENV{ROOT_INC} $ENV{CLHEP_INC})
-include_directories($ENV{CETLIB_INC} $ENV{CETLIB_EXCEPT_INC} $ENV{CANVAS_INC} $ENV{CANVAS_ROOT_IO_INC})
-include_directories($ENV{FHICLCPP_INC} $ENV{MESSAGEFACILITY_INC})
-include_directories($ENV{HEP_CONCURRENCY_INC})
-include_directories($ENV{GALLERY_INC})
-include_directories($ENV{NUSIMDATA_INC} $ENV{LARCOREOBJ_INC} $ENV{LARDATAOBJ_INC})
-include_directories($ENV{LARCOREALG_INC} $ENV{LARDATAALG_INC})
+add_library(AnalysisLib SHARED
+  HitAnalysisAlg.cpp TrackAnalysis.cpp MCAssociations.cpp
+  )
+target_compile_features(AnalysisLib PUBLIC cxx_std_17)
+target_link_libraries(AnalysisLib
+  gallery::gallery
+  lardataalg::headers        # for lardataalg/DetectorInfo/DetectorProperties.h
+  larcorealg::Geometry       # for larcorealg/Geometry/GeometryCore.h
+  lardataobj::AnalysisBase   # for lardataobj/AnalysisBase/BackTrackerMatchingData.h
+  lardataobj::RecoBase       # for Track.h and Hit.h in lardataobj/RecoBase
+  messagefacility::MF_MessageLogger
+  fhiclcpp::fhiclcpp
+  canvas::canvas             # for canvas/Persistency/Common/FindMany.h
+  ROOT::Hist
+  ROOT::RIO
+  ROOT::Core
+  )
+install(TARGETS AnalysisLib)
 
-include_directories($ENV{SBNDCODE_INC})
-
-#
-# link directories and libraries
-#
-set(ROOT_LIBDIRS $ENV{ROOTSYS}/lib )
-set(GALLERY_LIBDIRS ${ROOT_LIBDIRS} $ENV{MESSAGEFACILITY_LIB} $ENV{FHICLCPP_LIB} $ENV{CANVAS_LIB} $ENV{CANVAS_ROOT_IO_LIB} $ENV{CETLIB_EXCEPT_LIB} $ENV{CETLIB_LIB} $ENV{GALLERY_LIB} $ENV{HEP_CONCURRENCY_LIB})
-set(LARSOFTOBJ_LIBDIRS $ENV{NUSIMDATA_LIB} $ENV{LARCOREOBJ_LIB} $ENV{LARDATAOBJ_LIB})
-set(LARSOFT_LIBDIRS $ENV{CLHEP_LIB_DIR} $ENV{LARCOREALG_LIB} $ENV{LARDATAALG_LIB})
-set(SBNDCODE_LIBDIRS $ENV{SBNDCODE_LIB})
-
-link_directories(${GALLERY_LIBDIRS} ${LARSOFTOBJ_LIBDIRS} ${LARSOFT_LIBDIRS} ${SBNDCODE_LIBDIRS})
-
-set(GALLERY_LIBS MF_MessageLogger fhiclcpp canvas cetlib_except cetlib gallery)
-set(ROOT_CORELIBS Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread)
-set(LARSOFTOBJ_LIBS nusimdata_SimulationBase larcoreobj_SummaryData lardataobj_RawData lardataobj_RecoBase lardataobj_AnalysisBase lardataobj_MCBase lardataobj_Simulation)
-
-set(SBNDGEOMETRY_LIBS larcorealg_Geometry sbndcode_Geometry)
-set(SBNDDETINFO_LIBS lardataalg_DetectorInfo)
 
 ################################################################################
 ###  EXECUTABLE DIRECTIVES
 ################################################################################
-add_executable(galleryAnalysis galleryAnalysis.cpp TrackAnalysis.cpp MCAssociations.cpp HitAnalysisAlg.cpp)
+add_executable(galleryAnalysis galleryAnalysis.cpp)
 target_compile_features(galleryAnalysis PUBLIC cxx_std_17)
 target_link_libraries(galleryAnalysis
-  ${ROOT_CORELIBS} ${GALLERY_LIBS} ${LARSOFTOBJ_LIBS}
-  ${SBNDGEOMETRY_LIBS} # if using geometry
-  ${SBNDDETINFO_LIBS}  # if using LAr properties, detector clocks or detector properties
+  AnalysisLib
+  gallery::gallery
+  sbndcode::Geometry
+  lardataalg::headers           # for headers in lardataalg/DetectorInfo
+  lardataalg::DetectorInfo      # for lardataalg/DetectorInfo/DetectorPropertiesStandard.h
+  larcorealg::Geometry          # for larcorealg/Geometry/GeometryCore.h
+  lardataobj::RecoBase          # for lardataobj/RecoBase/Track.h
+  fhiclcpp::fhiclcpp
+  messagefacility::MF_MessageLogger
+  ROOT::RIO
   )
-install(TARGETS galleryAnalysis DESTINATION "${GalleryInstallDir}" )
+install(TARGETS galleryAnalysis)
