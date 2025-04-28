@@ -21,19 +21,16 @@ sbnd_channelstatus: {
     @sequence::sbnd_badchannels_tpc1_plane2_missing_jumpered
   ]
   
-  # list of bad noisy channels:
-  #NoisyChannels: [ 31, 41, 108, 120, 121, 124, 392, 399 ]
-  NoisyChannels: [ ]
-  
+  NoisyChannels: [
+    @sequence::sbnd_data_badchannels_noisy
+  ]
+
 } # sbnd_channel_filter
 
 sbnd_data_channelstatus: {
 
   @table::sbnd_channelstatus
 
-  NoisyChannels: [
-    @sequence::sbnd_data_badchannels_noisy
-  ]
 } # sbnd_data_channelstatus
 
 END_PROLOG
