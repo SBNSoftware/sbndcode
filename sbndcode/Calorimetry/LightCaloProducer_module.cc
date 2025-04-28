@@ -46,6 +46,7 @@
 
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "larcore/Geometry/Geometry.h"
+#include "larcorealg/Geometry/GeometryCore.h"
 #include "larsim/PhotonPropagation/SemiAnalyticalModel.h"
 #include "larsim/Simulation/LArG4Parameters.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
@@ -151,6 +152,8 @@ private:
   opdet::sbndPDMapAlg _opdetmap; //map for photon detector types
   unsigned int _nchan = _opdetmap.size();
 
+  geo::GeometryCore const* geom;
+
   TTree* _tree;
   int _run, _subrun, _event;
   int _match_type;
@@ -218,6 +221,8 @@ sbnd::LightCaloProducer::LightCaloProducer(fhicl::ParameterSet const& p)
   _simenergy_producer = p.get<std::string>("SimEnergyProducer"); 
   _truth_neutrino     = p.get<bool>("TruthNeutrino");
 
+  geom = lar::providerFrom<geo::Geometry>();
+
   // Call appropriate produces<>() functions here.
   produces<std::vector<sbn::LightCalo>>();
   produces<art::Assns<recob::Slice, sbn::LightCalo>>();
@@ -236,7 +241,6 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
   auto const det_prop = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(e, clock_data);
   
   // std::cout<<  "trigger offset TPC: " << clock_data.TriggerOffsetTPC() * 1.6 / 10 << std::endl;
-  art::ServiceHandle<geo::Geometry> geom;
   art::ServiceHandle<sim::LArG4Parameters const> g4param;
   art::ServiceHandle<cheat::ParticleInventoryService> piserv;
 
@@ -519,8 +523,9 @@ void sbnd::LightCaloProducer::produce(art::Event& e)
             const auto &position(sp->XYZ());  
             geo::Point_t xyz(position[0],position[1],position[2]);
             // correct for e- attenuation 
-            double drift_time = ((2.0*geom->DetHalfWidth()) - abs(position[0]))/(det_prop.DriftVelocity()); // cm / (cm/us) 
-            double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
+            geo::TPCGeo const& tpcGeo = geom->TPC({0, 0});
+            double drift_time = (2.0*tpcGeo.HalfWidth() - abs(position[0]))/(det_prop.DriftVelocity()); // cm / (cm/us) 
+              double atten_correction = std::exp(drift_time/det_prop.ElectronLifetime()); // exp(us/us)
             double charge = (1/_cal_area_const.at(hit_plane))*atten_correction*hit->Integral();
 
             sp_xyz.at(hit_plane).push_back(xyz);
