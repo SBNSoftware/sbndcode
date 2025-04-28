@@ -58,6 +58,7 @@
 
 // SBND includes
 #include "sbnobj/Common/Reco/SimpleFlashMatchVars.h"
+#include "sbnobj/Common/Reco/OpT0FinderResult.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
 // ROOT includes
@@ -115,13 +116,20 @@ private:
   std::vector<std::string> _opflash_producer_v;
   std::vector<std::string> _opflash_ara_producer_v;
   std::string _slice_producer;
+  std::string _opt0_producer;
   std::string _flashmatch_producer;
   bool _use_arapucas;
   float _nuscore_cut; 
   float _fmscore_cut;
+  float _fopt0score_cut;
   bool _verbose;
 
   float _simple_op_offset;
+
+  float _fopt0_flash_min;
+  float _fopt0_flash_max;
+  float _fopt0_frac_diff_cut;
+
   float _pmt_ara_offset; 
   std::vector<float> _noise_thresh;
 
@@ -192,13 +200,20 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _opflash_producer_v = p.get<std::vector<std::string>>("OpFlashProducers");
   _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
   _slice_producer = p.get<std::string>("SliceProducer");
+  _opt0_producer  = p.get<std::string>("OpT0FinderProducer");
   _flashmatch_producer = p.get<std::string>("FlashMatchProducer");
   _use_arapucas = p.get<bool>("UseArapucas");
   _nuscore_cut = p.get<float>("nuScoreCut");
   _fmscore_cut = p.get<float>("fmScoreCut");
+  _fopt0score_cut = p.get<float>("opt0ScoreCut");
   _verbose = p.get<bool>("Verbose");
 
   _simple_op_offset= p.get<float>("SimpleOpFlashOffset");
+
+  _fopt0_flash_min = p.get<float>("OpT0FlashMin");
+  _fopt0_flash_max = p.get<float>("OpT0FlashMax");
+  _fopt0_frac_diff_cut = p.get<float>("OpT0FractionalCut");
+
   _pmt_ara_offset  = p.get<float>("PMTARAFlashOffset");
   _noise_thresh    = p.get<std::vector<float>>("FlashNoiseThreshold");
 
@@ -287,6 +302,15 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     return;
   }
 
+  ::art::Handle<std::vector<sbn::OpT0Finder>> opt0_h;
+  e.getByLabel(_opt0_producer, opt0_h);
+  if(!opt0_h.isValid() || opt0_h->empty()) {
+    std::cout << "don't have good OpT0Finder matches!" << std::endl;
+    return;
+  }
+  std::vector<art::Ptr<sbn::OpT0Finder>> opt0_v;
+  art::fill_ptr_vector(opt0_v, opt0_h);
+
   auto const & flash0_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[0]);
   auto const & flash1_h = e.getValidHandle<std::vector<recob::OpFlash>>(_opflash_producer_v[1]);
   if (!_use_arapucas && _verbose)
@@ -301,20 +325,72 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   // if ( (!energyDeps.isValid() || energyDeps->empty()) && _truth_validation){
   // }
 
+  std::vector<art::Ptr<recob::Slice>> match_slices_v; 
+  std::vector<art::Ptr<sbn::SimpleFlashMatch>> match_fm_v;
+
+  // tpc0
+  std::vector<art::Ptr<recob::OpFlash>> flash0_v;
+  art::fill_ptr_vector(flash0_v, flash0_h);
+  std::vector<art::Ptr<recob::OpFlash>> match_op0; 
+
+  // tpc1 
+  std::vector<art::Ptr<recob::OpFlash>> flash1_v;
+  art::fill_ptr_vector(flash1_v, flash1_h);
+  std::vector<art::Ptr<recob::OpFlash>> match_op1; 
+
+
+  // * START OPT0FINDER
+  std::map<art::Ptr<recob::Slice>, std::vector<art::Ptr<recob::OpFlash>>> match_slice_opflash_map;
+  art::FindManyP<recob::Slice> opt0_to_slice(opt0_h, e, _opt0_producer);
+  art::FindManyP<recob::OpFlash> opt0_to_flash(opt0_h, e, _opt0_producer);
+
+  for (size_t n_opt0=0; n_opt0 < opt0_v.size(); n_opt0++){
+    auto opt0 = opt0_v[n_opt0];
+    std::vector<art::Ptr<recob::Slice>> slice_v = opt0_to_slice.at(opt0.key());
+    std::vector<art::Ptr<recob::OpFlash>> flash_v = opt0_to_flash.at(opt0.key());
+    
+    assert(slice_v.size() == 1);
+    assert(flash_v.size() == 1);
+
+    auto slice = slice_v.front();
+    auto flash = flash_v.front();
+
+    auto opt0_score = opt0->score;
+    auto opt0_time = opt0->time; 
+    auto opt0_measPE = opt0->measPE;
+    auto opt0_hypoPE = opt0->hypoPE;
+
+    auto opt0_frac_diff = std::abs((opt0_hypoPE - opt0_measPE)/opt0_measPE);
+
+    if (opt0_time < _fopt0_flash_min || opt0_time > _fopt0_flash_max) continue;
+    if (opt0_score < _fopt0score_cut) continue;
+    if (opt0_frac_diff > _fopt0_frac_diff_cut) continue;
+
+    // check that slice is not already in the map 
+    auto it = match_slice_opflash_map.find(slice);
+    if (it == match_slice_opflash_map.end()){
+      std::vector<art::Ptr<recob::OpFlash>> flash_v;
+      flash_v.push_back(flash);
+      match_slice_opflash_map.insert(std::pair<art::Ptr<recob::Slice>, std::vector<art::Ptr<recob::OpFlash>>>(slice, flash_v));
+    }
+    else{
+      it->second.push_back(flash);
+    }
+  }
+
+  // * END OPT0FINDER
+
+  // * START SLICE & SimpleFlash
   // Construct the vector of Slices
   std::vector<art::Ptr<recob::Slice>> slice_v;
   art::fill_ptr_vector(slice_v, slice_h);
 
-  // Get associations 
   art::FindManyP<recob::PFParticle> slice_to_pfp (slice_h, e, _slice_producer);
   art::FindManyP<recob::Hit>        slice_to_hit (slice_h, e, _slice_producer);
   art::FindManyP<larpandoraobj::PFParticleMetadata> pfp_to_meta(pfp_h, e, _slice_producer);
   art::FindManyP<sbn::SimpleFlashMatch> pfp_to_sfm (pfp_h, e, _flashmatch_producer);
   art::FindManyP<recob::SpacePoint> pfp_to_spacepoint(pfp_h, e, _slice_producer);
   art::FindManyP<recob::Hit> spacepoint_to_hit(spacepoint_h, e, _slice_producer);
-
-  std::vector<art::Ptr<recob::Slice>> match_slices_v; 
-  std::vector<art::Ptr<sbn::SimpleFlashMatch>> match_fm_v;
 
   for (size_t n_slice=0; n_slice < slice_v.size(); n_slice++){
     float nu_score = -9999;
@@ -369,12 +445,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
   }
 
   // get relevant opflashes
-  // tpc0
-  std::vector<art::Ptr<recob::OpFlash>> flash0_v;
-  art::fill_ptr_vector(flash0_v, flash0_h);
-  std::vector<art::Ptr<recob::OpFlash>> match_op0; 
   bool found_opflash0 = MatchOpFlash(match_fm_v,flash0_v, match_op0);
-
   std::vector<art::Ptr<recob::OpFlash>> flash0_ara_v;
   // if using arapucas
   if (_use_arapucas){
@@ -388,12 +459,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     else
       art::fill_ptr_vector(flash0_ara_v, flash0_ara_h);
   }
-  // tpc1 
-  std::vector<art::Ptr<recob::OpFlash>> flash1_v;
-  art::fill_ptr_vector(flash1_v, flash1_h);
-  std::vector<art::Ptr<recob::OpFlash>> match_op1; 
   bool found_opflash1 = MatchOpFlash(match_fm_v,flash1_v, match_op1);
-
   std::vector<art::Ptr<recob::OpFlash>> flash1_ara_v;
   if (_use_arapucas){
     ::art::Handle<std::vector<recob::OpFlash>> flash1_ara_h;
@@ -412,6 +478,7 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     _tree->Fill();
     return;
   }
+  // * END SLICE & SimpleFlash
 
   int nsuccessful_matches=0;
   for (size_t n_slice=0; n_slice < match_slices_v.size(); n_slice++){
