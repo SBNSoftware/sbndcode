@@ -7,8 +7,8 @@ sbnd_filtergenintime: {
   KeepOnlyMuons: false
   MinKE: 1e-1 # some energy threshold to produce a PE
   # Filter to only allow muons starting within the Run 1 trigger acceptance window of [-873, 2467] ns
-  # With a 200 ns buffer on the leading side and a 300 ns buffer on the late side
-  MaxT:  2767 # [ns]
+  # With a 200 ns buffer on the leading side and a 100 ns buffer on the late side
+  MaxT:  2567 # [ns]
   MinT: -1073 # [ns]
   SortParticles: true
   module_type: "FilterGenInTime"
