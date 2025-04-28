@@ -1,0 +1,12 @@
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
+#include "cafmakerjob_sbnd_cosmics.fcl"
+
+physics.producers.tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
+
+physics.producers.crumbs.TrainingMode:                 true
+physics.producers.crumbs.ProcessNeutrinos:             false
+physics.producers.crumbs.EvaluateResultInTrainingMode: true
+
+physics.runprod: [ tpcpmtbarycentermatching, pandoraTrackMCS, pandoraTrackRange, vertexCharge,
+  vertexStub, pandoraTrackClosestApproach, pandoraTrackStoppingChi2, pandoraTrackDazzle, pandoraShowerSelectionVars,
+  pandoraShowerCosmicDist, pandoraShowerRazzle, pandoraRazzled, crumbs, cnnid, cafmaker ]
