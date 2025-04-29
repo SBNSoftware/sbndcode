@@ -1,0 +1,46 @@
+#include "particleinventoryservice.fcl"
+
+process_name: MCCaloAna
+
+services: {
+  TFileService : {fileName: "mcanacalo.root"}
+  ParticleInventoryService: @local::standard_particleinventoryservice
+
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
+}
+
+outputs:
+{
+  dataTier: 'simulated'
+}
+
+physics:
+{
+
+ producers:{
+ }
+
+ filters:{}
+
+ analyzers:{
+    mccaloana: {
+        module_type: MCCaloAna
+    }
+ }
+
+  # define the output stream, there could be more than one if using filters
+  stream1: [mccaloana]
+
+  # trigger_paths is a keyword and contains the paths that modify the art::event,
+  # ie filters and producers
+  trigger_paths: []
+
+  # end_paths is a keyword and contains the paths that do not modify the art::Event,
+  # ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
