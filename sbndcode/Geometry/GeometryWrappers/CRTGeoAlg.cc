@@ -80,12 +80,13 @@ namespace sbnd::crt {
 
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-                int32_t cableDelayCorrection = 0;
+                double t0DelayCorrection = 0, t1DelayCorrection = 0;
 
                 if(!fMC)
                   {
                     art::ServiceHandle<SBND::CRTCalibService> CalibService;
-                    cableDelayCorrection = CalibService->GetTimingOffsetFromFEBMAC5(mac5);
+                    t0DelayCorrection = CalibService->GetT0CableOffsetFromFEBMAC5(mac5) + CalibService->GetT0CalibOffsetFromFEBMAC5(mac5);
+                    t1DelayCorrection = CalibService->GetT1CableOffsetFromFEBMAC5(mac5) + CalibService->GetT1CalibOffsetFromFEBMAC5(mac5);
                   }
 
                 const std::string stripName = nodeStrip->GetVolume()->GetName();
@@ -93,7 +94,7 @@ namespace sbnd::crt {
 
                 usedModules.push_back(moduleName);
                 CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
-                                                    cableDelayCorrection, cableDelayCorrection,
+                                                    t0DelayCorrection, t1DelayCorrection,
                                                     invert, minos);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
