@@ -3,6 +3,7 @@
 #include "pandoramodules_sbnd.fcl"
 #include "calorimetry_sbnd.fcl"
 #include "sbnd_flashfinder_deco.fcl"
+#include "crtvetoproducer_sbnd.fcl"
 #include "particleid_sbnd.fcl"
 #include "crttpcmatchingproducers_sbnd.fcl"
 
@@ -44,6 +45,9 @@ sbnd_reco2_producers:{
     pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
+    
+    ### CRT Veto
+    crtveto:        @local::crtvetoproducer_sbnd
 
     ### CRT-TPC matching
     crtspacepointmatching:    @local::crtspacepointmatchproducer_sbnd
@@ -80,6 +84,7 @@ sbnd_reco2_producer_sequence: [
     , pandoraShowerSBN
     , pandoraCalo
     , pandoraPid
+    , crtveto
     , crtspacepointmatching
     , crttrackmatching
     , fmatch
