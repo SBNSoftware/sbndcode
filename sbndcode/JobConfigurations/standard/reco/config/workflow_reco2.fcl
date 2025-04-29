@@ -3,6 +3,7 @@
 #include "pandoramodules_sbnd.fcl"
 #include "calorimetry_sbnd.fcl"
 #include "sbnd_flashfinder_deco.fcl"
+#include "crtvetoproducer_sbnd.fcl"
 #include "particleid_sbnd.fcl"
 #include "crttpcmatchingproducers_sbnd.fcl"
 
@@ -10,6 +11,8 @@
 #include "flashmatch_sbnd.fcl"
 
 #include "opt0finder_sbnd.fcl"
+
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
 
 #include "sbnd_trackcalo_skimmer.fcl"
 #include "crtana_sbnd.fcl"
@@ -42,6 +45,9 @@ sbnd_reco2_producers:{
     pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
+    
+    ### CRT Veto
+    crtveto:        @local::crtvetoproducer_sbnd
 
     ### CRT-TPC matching
     crtspacepointmatching:    @local::crtspacepointmatchproducer_sbnd
@@ -60,6 +66,7 @@ sbnd_reco2_producers:{
     fmatchoparaSCE:      @local::sbnd_simple_flashmatch_opara_sce
     opt0finder:          @local::sbnd_opt0_finder_one_to_many
     opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
+    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
@@ -77,6 +84,7 @@ sbnd_reco2_producer_sequence: [
     , pandoraShowerSBN
     , pandoraCalo
     , pandoraPid
+    , crtveto
     , crtspacepointmatching
     , crttrackmatching
     , fmatch
@@ -85,6 +93,7 @@ sbnd_reco2_producer_sequence: [
     , fmatchopara
     , caloskimCalorimetry
     , opt0finder
+    , tpcpmtbarycentermatching
     , pandoraSCE
     , pandoraSCETrack
     , pandoraSCEShower
