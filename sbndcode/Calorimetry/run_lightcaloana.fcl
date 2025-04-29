@@ -1,0 +1,48 @@
+#include "lightcalo_ana.fcl"
+#include "particleinventoryservice.fcl"
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: LightCaloAna
+
+services: {
+  TFileService : {fileName: "lightcaloana.root"}
+  ParticleInventoryService: @local::standard_particleinventoryservice
+  @table::sbnd_services              # from services_sbnd.fcl
+  @table::sbnd_g4_services
+
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
+}
+
+outputs:
+{
+}
+
+physics:
+{
+
+ producers:{
+ }
+
+ filters:{}
+
+ analyzers:{
+    lightcaloana: @local::lightcaloana
+ }
+
+  # define the output stream, there could be more than one if using filters
+  stream1: [lightcaloana]
+
+  # trigger_paths is a keyword and contains the paths that modify the art::event,
+  # ie filters and producers
+  trigger_paths: []
+
+  # end_paths is a keyword and contains the paths that do not modify the art::Event,
+  # ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
