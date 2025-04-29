@@ -37,6 +37,7 @@ set (MODULE_LIBRARIES
 )
 cet_build_plugin(LightCaloAna art::module SOURCE LightCaloAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(LightCaloProducer art::module SOURCE LightCaloProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(MCCaloAna art::module SOURCE MCCaloAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
