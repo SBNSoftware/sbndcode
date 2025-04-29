@@ -4,7 +4,7 @@ analyzers.caloskim: @local::caloskim_nodigits_goldentracks
 
 physics.analyzers.caloskim.SelectionTools: []
 physics.analyzers.caloskim.RawDigitproducers: ["daq"]
-physics.analyzers.caloskim.RequireT0: false
+physics.analyzers.caloskim.RequireT0: true
 physics.analyzers.caloskim.HitRawDigitsTickCollectWidth: 200
 
 outputs.out1.outputCommands: [@sequence::sbnd_reco1_drops_keep_rawdigits]
