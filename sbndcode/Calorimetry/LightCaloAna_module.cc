@@ -38,7 +38,6 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/RecoBase/OpFlash.h"
-#include "lardataobj/AnalysisBase/T0.h"
 
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
@@ -98,12 +97,13 @@ private:
                     std::vector<art::Ptr<recob::OpFlash>> &match_v);
 
   // Returns visibility vector for all opdets given charge/position information 
-  std::vector<double> CalcVisibility(std::vector<geo::Point_t> xyz_v, 
-                                     std::vector<double> charge_v);
+  std::vector<std::vector<double>> CalcVisibility(std::vector<geo::Point_t> xyz_v, 
+                                                  std::vector<double> charge_v);
 
   // Fills reconstructed photon count vector (total_gamma_v) for all opdets given charge/position information 
   void CalcLight(std::vector<double>  flash_pe_v, 
-                 std::vector<double>  visibility, 
+                 std::vector<double>  dir_visibility,
+                 std::vector<double>  ref_visibility, 
                  std::vector<double> &total_gamma_v);
 
   // Returns the median of the light vector 
@@ -134,7 +134,9 @@ private:
   std::vector<float> _noise_thresh;
 
   std::vector<float> _cal_area_const; 
-  std::vector<float> _opdet_eff;
+  std::vector<float> _opdet_vuv_eff;
+  std::vector<float> _opdet_vis_eff;
+  std::vector<int> _opdet_mask;
   float _scint_prescale;
 
   bool _truth_validation; 
@@ -218,7 +220,9 @@ sbnd::LightCaloAna::LightCaloAna(fhicl::ParameterSet const& p)
   _noise_thresh    = p.get<std::vector<float>>("FlashNoiseThreshold");
 
   _cal_area_const  = p.get<std::vector<float>>("CalAreaConstants");
-  _opdet_eff       = p.get<std::vector<float>>("OpDetEfficiencies");
+  _opdet_vuv_eff   = p.get<std::vector<float>>("OpDetVUVEfficiencies");
+  _opdet_vis_eff   = p.get<std::vector<float>>("OpDetVISEfficiencies");
+  _opdet_mask      = p.get<std::vector<int>>("OpDetMask");
   _scint_prescale  = p.get<float>("ScintPreScale");
 
   _truth_validation   = p.get<bool>("TruthValidation");
@@ -588,7 +592,10 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
     } // end pfp loop
 
     // get total L count
-    std::vector<double> visibility_map = CalcVisibility(sp_xyz,sp_charge);
+    std::vector<std::vector<double>> visibility_maps = CalcVisibility(sp_xyz,sp_charge);
+    auto dir_visibility_map = visibility_maps[0];
+    auto ref_visibility_map = visibility_maps[1];
+
     std::vector<double> total_pe(_nchan,0.); 
     std::vector<double> total_gamma(_nchan, 0.);
 
@@ -617,8 +624,13 @@ void sbnd::LightCaloAna::analyze(art::Event const& e)
       }
     } // end of TPC loop 
 
+    // mask out specific channels in opdet mask
+    for (size_t imask=0; imask<_opdet_mask.size(); imask++){
+      total_pe.at(_opdet_mask.at(imask)) = 0;
+    }
+
     // calculate the photon estimates for every entry in total_pe
-    CalcLight(total_pe, visibility_map, total_gamma);
+    CalcLight(total_pe, dir_visibility_map, ref_visibility_map, total_gamma);
     
     // fill tree variables 
     _opflash_time = flash_time;
@@ -724,12 +736,13 @@ bool sbnd::LightCaloAna::MatchOpFlash(std::vector<art::Ptr<sbn::SimpleFlashMatch
 }
 
 
-std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t> xyz_v,
-                                                       std::vector<double> charge_v){
-  // returns of a vector (len is # of opdet) for the visibility for every opdet                                     
+std::vector<std::vector<double>> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t> xyz_v,
+                                                                    std::vector<double> charge_v){
+  // returns of two vectors (len is # of opdet) for the visibility for every opdet                                     
   if (xyz_v.size() != charge_v.size()) std::cout << "spacepoint coord and charge vector size mismatch" << std::endl;
 
-  std::vector<double> visibility(_nchan, 0);
+  std::vector<double> dir_visibility_map(_nchan, 0);
+  std::vector<double> ref_visibility_map(_nchan, 0);
   double sum_charge0 = 0;
   double sum_charge1 = 0;
 
@@ -744,43 +757,40 @@ std::vector<double> sbnd::LightCaloAna::CalcVisibility(std::vector<geo::Point_t>
     std::vector<double> reflect_visibility;
     _semi_model->detectedDirectVisibilities(direct_visibility, xyz);
     _semi_model->detectedReflectedVisibilities(reflect_visibility, xyz);
-    if (visibility.size() != direct_visibility.size()) std::cout << "mismatch of visibility vector size" << std::endl;
+    // if (dir_visibility_map.size() != direct_visibility.size()) std::cout << "mismatch of visibility vector size" << std::endl;
 
     // weight by charge
     for (size_t ch=0; ch<direct_visibility.size(); ch++){
-      if (_opdetmap.isPDType(ch, "pmt_uncoated") || _opdetmap.isPDType(ch, "xarapuca_vis"))
-        visibility[ch] += charge*reflect_visibility[ch];
-      else if (_opdetmap.isPDType(ch, "xarapuca_vuv"))
-        visibility[ch] += charge*direct_visibility[ch];
-      else if (_opdetmap.isPDType(ch, "pmt_coated"))
-        visibility[ch] += charge*(direct_visibility[ch] + reflect_visibility[ch]);
+      dir_visibility_map[ch] += charge*direct_visibility[ch];
+      ref_visibility_map[ch] += charge*reflect_visibility[ch];
     }    
   } // end spacepoint loop
   // normalize by the total charge in each TPC
-  for (size_t ch=0; ch < visibility.size(); ch++){
-    if (ch%2 == 0) visibility[ch] /= sum_charge0;
-    if (ch%2 == 1) visibility[ch] /= sum_charge1;
+  for (size_t ch=0; ch < dir_visibility_map.size(); ch++){
+    if (ch%2 == 0){
+      dir_visibility_map[ch] /= sum_charge0;
+      ref_visibility_map[ch] /= sum_charge0;
+    }
+    if (ch%2 == 1){
+      dir_visibility_map[ch] /= sum_charge1;
+      ref_visibility_map[ch] /= sum_charge1;
+    }
   }
-  return visibility;
+  return {dir_visibility_map, ref_visibility_map};
 }
 void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
-                                   std::vector<double> visibility,
+                                   std::vector<double> dir_visibility,
+                                   std::vector<double> ref_visibility,
                                    std::vector<double> &total_gamma_v){
   for (size_t ch = 0; ch < flash_pe_v.size(); ch++){
     auto pe = flash_pe_v[ch];
-    double efficiency = 0.03; 
-    if((pe == 0) || std::isinf(1/visibility[ch]))
+    auto vuv_eff = _opdet_vuv_eff.at(ch);
+    auto vis_eff = _opdet_vis_eff.at(ch);
+    auto visibility = 1/(vuv_eff*dir_visibility[ch] + vis_eff*ref_visibility[ch]);
+    if((pe == 0) || std::isinf(1/visibility))
       continue;
-    if (_opdetmap.isPDType(ch, "pmt_uncoated"))
-      efficiency = _opdet_eff[0]; 
-    else if (_opdetmap.isPDType(ch, "pmt_coated"))
-      efficiency = _opdet_eff[1];
-    else if (_opdetmap.isPDType(ch, "xarapuca_vis"))
-      efficiency = _opdet_eff[2];
-    else if (_opdetmap.isPDType(ch, "xarapuca_vuv"))
-      efficiency = _opdet_eff[3];
-    // deposited light is inverse of efficiency * inverse of visibility * PE count 
-    total_gamma_v[ch] += (1/efficiency)*(1/visibility[ch])*pe; 
+    // deposited light is inverse of visibility * PE count 
+    total_gamma_v[ch] += (1/visibility)*pe;
   }
 }
 
