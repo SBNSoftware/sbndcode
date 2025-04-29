@@ -13,6 +13,7 @@ lightcaloana:
     SliceProducer:       "pandora"
     FlashMatchProducer:  "fmatch"
     UseArapucas:         false 
+    UseOpT0Finder:       true
     nuScoreCut:          0.4 # default: accept nusScore > 0.4, to analyze all slices, set nuScoreCut = -1 
     fmScoreCut:          7   # default: accept 0 < fm score < fmScoreCut, to analyze all slices, set fmScoreCut = 1e3
     opt0ScoreCut:        200 # default: accept opt0 match > opt0ScoreCut
