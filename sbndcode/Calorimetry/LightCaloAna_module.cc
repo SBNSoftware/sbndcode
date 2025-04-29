@@ -805,11 +805,11 @@ void sbnd::LightCaloAna::CalcLight(std::vector<double> flash_pe_v,
     auto pe = flash_pe_v[ch];
     auto vuv_eff = _opdet_vuv_eff.at(ch);
     auto vis_eff = _opdet_vis_eff.at(ch);
-    auto visibility = 1/(vuv_eff*dir_visibility[ch] + vis_eff*ref_visibility[ch]);
-    if((pe == 0) || std::isinf(1/visibility))
+    auto tot_visibility = vuv_eff*dir_visibility[ch] + vis_eff*ref_visibility[ch];
+    if((pe == 0) || std::isinf(1/tot_visibility))
       continue;
     // deposited light is inverse of visibility * PE count 
-    total_gamma_v[ch] += (1/visibility)*pe;
+    total_gamma_v[ch] += (1/tot_visibility)*pe;
   }
 }
 
