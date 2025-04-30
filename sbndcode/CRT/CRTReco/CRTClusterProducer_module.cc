@@ -55,7 +55,7 @@ private:
 
   CRTGeoAlg   fCRTGeoAlg;
   std::string fCRTStripHitModuleLabel;
-  uint32_t    fCoincidenceTimeRequirement;
+  double      fCoincidenceTimeRequirement;
   double      fOverlapBuffer;
   bool        fUseTs0;
 };
@@ -65,7 +65,7 @@ sbnd::crt::CRTClusterProducer::CRTClusterProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fCRTStripHitModuleLabel(p.get<std::string>("CRTStripHitModuleLabel"))
-  , fCoincidenceTimeRequirement(p.get<uint32_t>("CoincidenceTimeRequirement"))
+  , fCoincidenceTimeRequirement(p.get<double>("CoincidenceTimeRequirement"))
   , fOverlapBuffer(p.get<double>("OverlapBuffer"))
   , fUseTs0(p.get<bool>("UseTs0"))
 {
@@ -146,7 +146,7 @@ std::vector<std::pair<sbnd::crt::CRTCluster, std::vector<art::Ptr<sbnd::crt::CRT
     
               if(!used[ii])
                 {
-                  const uint64_t timeDiff = fUseTs0 ? stripHit->Ts0() - initialStripHit->Ts0() :
+                  const double timeDiff = fUseTs0 ? stripHit->Ts0() - initialStripHit->Ts0() :
                     stripHit->Ts1() - initialStripHit->Ts1();
 
                   if(timeDiff < fCoincidenceTimeRequirement)
@@ -242,7 +242,7 @@ sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const s
   const CRTStripGeo strip0 = fCRTGeoAlg.GetStrip(clusteredHits.at(0)->Channel());
   const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(clusteredHits.at(0)->Channel());
 
-  int64_t ts0 = 0, ts1 = 0;
+  double ts0 = 0, ts1 = 0;
   uint64_t s = 0;
   CoordSet composition = kUndefinedSet;
 
