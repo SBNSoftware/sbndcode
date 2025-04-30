@@ -68,6 +68,8 @@ private:
   unsigned int fEventID;
   unsigned int fReco_nPFParticles;
   unsigned int fReco_nPrimaryChildren;
+  bool fIsCCQE = 0;
+  bool fHasCluster = 0;
 
   std::vector<double> fReco_childTrackLengths;
   std::vector<double> fReco_childTrackCompleteness;
@@ -76,7 +78,14 @@ private:
   std::vector<std::vector<double>> fReco_childTrackResRange;
   std::vector<int> fReco_truthMatchedTrackID;
   std::vector<int> fReco_truthMatchedPDG;
+  std::vector<double> fReco_truthMatchedKE;
+  std::vector<double> fReco_truthMatchedE;
+  std::vector<double> fReco_truthMatchedP;
   std::vector<int> fMC_particlePDG;
+  std::vector<double> fMC_particleMass;
+  std::vector<double> fMC_particleE;
+  std::vector<double> fMC_particleP;
+  std::vector<double> fMC_particleKE;
   std::vector<bool> fMC_isReconstructed;
   std::vector<int> fMC_trackID;
 
@@ -92,6 +101,9 @@ private:
   // Maps
   std::map<int,int> fTrackHitsMap;
   std::map<int,int> fTrackIDtoTruthPDGMap;
+  std::map<int,double> fTrackIDtoTruthKEMap;
+  std::map<int,double> fTrackIDtoTruthEMap;
+  std::map<int,double> fTrackIDtoTruthPMap;
 
   // Functions 
   void ResetVariables();
@@ -129,7 +141,6 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
 
   if(hitHandle.isValid())
   {
-    std::cout << "valid hit handle" << std::endl;
     art::fill_ptr_vector(hitVector,hitHandle);
   }
 
@@ -143,7 +154,6 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
 
   if(sliceHandle.isValid())
   {
-    std::cout << "valid slice handle" << std::endl;
     art::fill_ptr_vector(sliceVector,sliceHandle);
   }
 
@@ -156,7 +166,6 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
 
   for(const art::Ptr<recob::Slice> &slice : sliceVector)
   {
-    std::cout << "new slice" << std::endl;
     std::vector<art::Ptr<recob::PFParticle>> slicePFPs(slicePFPAssoc.at(slice.key()));
 
     for(const art::Ptr<recob::PFParticle> &slicePFP : slicePFPs)
@@ -168,7 +177,6 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
       {
         continue;
       }
-      std::cout << "found neutrino" << std::endl;
 
       nuSliceKey = slice.key();
       nuID = slicePFP->Self();
@@ -208,7 +216,6 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
 
         std::vector<art::Ptr<recob::Hit>> trackHits = trackHitAssoc.at(track.key());
         int trackID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData,trackHits,true);
-        std::cout << "reco track ID: " << trackID << std::endl;
         fReco_truthMatchedTrackID.push_back(trackID);
         fReco_childTrackCompleteness.push_back(Completeness(trackHits,trackID));
         fReco_childTrackPurity.push_back(Purity(trackHits,trackID));
@@ -250,7 +257,6 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
 
   if(truNuHandle.isValid())
   {
-    std::cout << "valid neutrino handle" << std::endl;
     art::fill_ptr_vector(truNuVector,truNuHandle);
   }
 
@@ -261,6 +267,12 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
       continue;
     }
 
+    const simb::MCNeutrino nu = truNu->GetNeutrino();
+    if(nu.InteractionType() == simb::kCCQE){
+      fIsCCQE = 1;
+      std::cout << "CCQE" << std::endl;
+    }
+
     std::vector<art::Ptr<simb::MCParticle>> particles = truNuParticleAssoc.at(truNu.key());
 
     for(const art::Ptr<simb::MCParticle> &particle : particles){
@@ -269,22 +281,75 @@ void nuclearFragments::RecoAnalysis::analyze(art::Event const& e)
       }
 
       fMC_trackID.push_back(particle->TrackId());
-      std::cout << "MC track ID: " << particle->TrackId() << std::endl;
       fMC_particlePDG.push_back(particle->PdgCode());
+      fMC_particleMass.push_back(particle->Mass());
+      fMC_particleE.push_back(particle->E());
+      fMC_particleP.push_back(particle->P());
+      double KE = particle->E() - particle->Mass();
+      fMC_particleKE.push_back(KE);
       fTrackIDtoTruthPDGMap.insert({particle->TrackId(), particle->PdgCode()});
+      fTrackIDtoTruthEMap.insert({particle->TrackId(), particle->E()});
+      fTrackIDtoTruthPMap.insert({particle->TrackId(), particle->P()});
+      fTrackIDtoTruthKEMap.insert({particle->TrackId(), KE});
 
 
       int checkIfReconstructed = std::count(fReco_truthMatchedTrackID.begin(), fReco_truthMatchedTrackID.end(), particle->TrackId());
       fMC_isReconstructed.push_back(checkIfReconstructed!=0);
+
+      //filter for clusters
+      if(particle->PdgCode() == 1000010020 || particle->PdgCode() == 1000010030 || particle->PdgCode() == 1000020030 || particle->PdgCode() == 1000020040){
+        fHasCluster = 1;
+      }
+
     }
   }
 
-  fReco_truthMatchedPDG = fReco_truthMatchedTrackID;
-  for(auto &i : fReco_truthMatchedPDG){
-    std::cout << i << std::endl;
-    i = fTrackIDtoTruthPDGMap[i];
-    std::cout << i << std::endl;
+  for(std::size_t i=0; i<fReco_truthMatchedTrackID.size(); i++){
+    fReco_truthMatchedPDG.push_back(fTrackIDtoTruthPDGMap[fReco_truthMatchedTrackID[i]]);
+    fReco_truthMatchedE.push_back(fTrackIDtoTruthEMap[fReco_truthMatchedTrackID[i]]);
+    fReco_truthMatchedP.push_back(fTrackIDtoTruthPMap[fReco_truthMatchedTrackID[i]]);
+    fReco_truthMatchedKE.push_back(fTrackIDtoTruthKEMap[fReco_truthMatchedTrackID[i]]);
   }
+
+  //True event type
+  /*
+  std::vector<art::Handle<std::vector<simb::MCTruth>>> MCTruthHandles = e.getMany<std::vector<simb::MCTruth>>();
+  for(auto const& MCTruthHandle : MCTruthHandles)
+    {
+      std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
+      art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
+
+      for(auto const& mct : MCTruthVec)
+        {
+          if(mct->Origin() != 1)
+            continue;
+
+          ++_n_nu;
+        }
+    }
+
+    ResizeVectors(nuVars, _n_nu);
+
+    int nuCounter = 0;
+
+    for(auto const& MCTruthHandle : MCTruthHandles)
+      {
+        std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
+        art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
+
+        for(auto const& mct : MCTruthVec)
+          {
+            if(mct->Origin() != 1)
+              continue;
+
+            AnalyseMCTruth(e, nuVars, mct, nuCounter, "nu");
+            AnalyseNuReco(nuCounter);
+
+            ++nuCounter;
+          }
+      }
+  }*/
+
 
   // Fill tree
   fTree->Fill();
@@ -299,6 +364,8 @@ void nuclearFragments::RecoAnalysis::beginJob()
 
   // Add branches to TTRee
   fTree->Branch("eventID", &fEventID);
+  fTree->Branch("isCCQE", &fIsCCQE);
+  fTree->Branch("hasCluster", &fHasCluster);
   fTree->Branch("reco_nPFParticles", &fReco_nPFParticles);
   fTree->Branch("reco_nPrimaryChildren", &fReco_nPrimaryChildren);
   fTree->Branch("reco_childTrackLengths", &fReco_childTrackLengths);
@@ -308,7 +375,14 @@ void nuclearFragments::RecoAnalysis::beginJob()
   fTree->Branch("reco_childTrackResRange", &fReco_childTrackResRange);
   fTree->Branch("reco_truthMatchedTrackID", &fReco_truthMatchedTrackID);
   fTree->Branch("reco_truthMatchedPDG", &fReco_truthMatchedPDG);
+  fTree->Branch("reco_truthMatchedE", &fReco_truthMatchedE);
+  fTree->Branch("reco_truthMatchedP", &fReco_truthMatchedP);
+  fTree->Branch("reco_truthMatchedKE", &fReco_truthMatchedKE);
   fTree->Branch("MC_particlePDG", &fMC_particlePDG);
+  fTree->Branch("MC_particleMass", &fMC_particleMass);
+  fTree->Branch("MC_particleE", &fMC_particleE);
+  fTree->Branch("MC_particleP", &fMC_particleP);
+  fTree->Branch("MC_particleKE", &fMC_particleKE);
   fTree->Branch("MC_isReconstructed", &fMC_isReconstructed);
   fTree->Branch("MC_trackID", &fMC_trackID);
 }
@@ -321,8 +395,11 @@ void nuclearFragments::RecoAnalysis::endJob()
 void nuclearFragments::RecoAnalysis::ResetVariables()
 {
   // Set all trackCounters to zero for the current event
+  fIsCCQE = 0;
+  fHasCluster = 0;
   fTrackHitsMap.clear();
   fTrackIDtoTruthPDGMap.clear();
+  fTrackIDtoTruthKEMap.clear();
   fReco_nPFParticles = 0;
   fReco_nPrimaryChildren = 0;
   fReco_childTrackLengths.clear();
@@ -332,7 +409,14 @@ void nuclearFragments::RecoAnalysis::ResetVariables()
   fReco_childTrackResRange.clear();
   fReco_truthMatchedTrackID.clear();
   fReco_truthMatchedPDG.clear();
+  fReco_truthMatchedE.clear();
+  fReco_truthMatchedP.clear();
+  fReco_truthMatchedKE.clear();
   fMC_particlePDG.clear();
+  fMC_particleMass.clear();
+  fMC_particleE.clear();
+  fMC_particleP.clear();
+  fMC_particleKE.clear();
   fMC_isReconstructed.clear();
   fMC_trackID.clear();
 }
