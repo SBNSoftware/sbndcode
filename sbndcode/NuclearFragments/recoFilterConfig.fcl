@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+recoFilterParams:
+{
+    module_type: "RecoFilter"
+    
+    SliceLabel: "pandora"
+    PFParticleLabel: "pandora"
+    TrackLabel: "pandoraTrack"
+    LArGeantLabel: "largeant"
+    NuGenLabel: "generator"
+}
+
+END_PROLOG

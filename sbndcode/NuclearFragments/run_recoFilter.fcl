@@ -1,0 +1,50 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "recoFilterConfig.fcl"
+
+process_name: RecoFilter
+
+services:
+{
+    @table::sbnd_services
+    TFileService: { fileName: "out_recoFiltered.root" }
+    
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+    module_type: RootInput
+    maxEvents: -1
+}
+
+outputs:
+{
+    out1:
+    {
+        module_type: RootOutput
+        fileName: "%ifb_%p-%tc.root"
+        dataTier: "reconstructed"
+        compressionLevel: 1
+    }
+}
+
+physics:
+{
+    producers: {}
+    filters:
+    {
+        RecoFilter: @local::recoFilterParams
+    }
+    analyzers: {}
+
+    reco: [RecoFilter]
+    stream1: [out1]
+    trigger_paths: [reco]
+    end_paths: [stream1]
+}
+
+outputs.out1.SelectEvents: [ "reco" ]

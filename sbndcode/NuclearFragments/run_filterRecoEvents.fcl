@@ -1,0 +1,33 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "filterRecoEventsConfig.fcl"
+
+process_name: FilterRecoEvents
+
+services:
+{
+    @table::sbnd_services
+    TFileService: { fileName: "out_filteredRecoEvents.root" }
+    
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+    module_type: RootInput
+    maxEvents: -1
+}
+
+physics:
+{
+    analyzers:
+    {
+        ana: @local::filterRecoEventsParams
+    }
+
+    path0: [ ana ]
+    end_paths: [ path0 ]
+}

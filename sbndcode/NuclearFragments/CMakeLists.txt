@@ -39,9 +39,9 @@ set(MODULE_LIBRARIES
     ROOT::Tree
 	)
 
-cet_build_plugin(AnalyseINCLevents art::module SOURCE AnalyseINCLevents_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(AnalyseClusterReco art::module SOURCE AnalyseClusterReco_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(RecoAnalysis art::module SOURCE RecoAnalysis_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(FilterRecoEvents art::module SOURCE FilterRecoEvents_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(RecoFilter art::module SOURCE RecoFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
