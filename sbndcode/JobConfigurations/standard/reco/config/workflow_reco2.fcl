@@ -138,6 +138,10 @@ sbnd_reco2_producers.cvn.SliceLabel: "pandora"
 sbnd_reco2_producers.cvn.PFParticleModuleLabel: "pandora"
 sbnd_reco2_producers.cvn.T0Label: "pandora"
 
+sbnd_reco2_producers.cvnSCE.SliceLabel: "pandoraSCE"
+sbnd_reco2_producers.cvnSCE.PFParticleModuleLabel: "pandoraSCE"
+sbnd_reco2_producers.cvnSCE.T0Label: "pandoraSCE"
+
 physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
 sbnd_reco2_producers.opt0finderSCE.SliceProducer:  "pandoraSCE"

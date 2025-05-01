@@ -19,13 +19,11 @@ physics.producers:
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, 
+                 cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching, 
                  pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData,
-                 caloskimCalorimetry, cvn, opt0finder]
+                 cvnSCE, opt0finderSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
+                 caloskimCalorimetry]
 
-#The next 3 lines need to be commented out once data use pandoraSCE by default. 
-#physics.producers.cvn.SliceLabel: "pandora"
-#physics.producers.cvn.PFParticleModuleLabel: "pandora"
-#physics.producers.cvn.T0Label: "pandora"
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
 physics.analyzers.crtana: @local::crtana_data_sbnd
