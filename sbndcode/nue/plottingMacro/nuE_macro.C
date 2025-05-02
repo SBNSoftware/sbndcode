@@ -135,17 +135,22 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     canvas->SetTickx();
     canvas->SetTicky();
 
+    gStyle->SetPalette(kAvocado);
+    gROOT->ForceStyle();
+    gPad->Update();
+
+    std::cout << "Palette size: " << gStyle->GetNumberOfColors() << std::endl;
     current->SetLineWidth(2);
-    current->SetLineColor(kRed);
+    current->SetLineColor(TColor::GetColorPalette(150));
 
     cheated->SetLineWidth(2);
-    cheated->SetLineColor(kSpring-5);
+    cheated->SetLineColor(TColor::GetColorPalette(200));
 
     dune->SetLineWidth(2);
-    dune->SetLineColor(kViolet-5);
+    dune->SetLineColor(TColor::GetColorPalette(50));
 
     uboone->SetLineWidth(2);
-    uboone->SetLineColor(kBlue);
+    uboone->SetLineColor(TColor::GetColorPalette(100));
 
     current->Draw("hist");
     cheated->Draw("histsame");
@@ -220,6 +225,61 @@ void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double s
     styleDraw(percentageCanvas, currentPerc, cheatedPerc, dunePerc, uboonePerc, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, pt, &funcValue, drawLine);
 }
 
+void efficiency(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, double sizeCurrent, double sizeCheated, double sizeDune, double sizeUboone, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, int* drawLine = nullptr){
+    TCanvas *efficiencyCanvas = new TCanvas("efficiency_canvas", "Graph Draw Options", 200, 10, 600, 400); 
+    TH1F* currentEff = (TH1F*) current->Clone("eff hist");
+    currentEff->Reset();
+    currentEff->GetYaxis()->SetTitle("Efficiency"); 
+
+    TH1F* cheatedEff = (TH1F*) cheated->Clone("eff hist");
+    cheatedEff->Reset();
+    cheatedEff->GetYaxis()->SetTitle("Efficiency");
+
+    TH1F* duneEff = (TH1F*) dune->Clone("eff hist");
+    duneEff->Reset();
+    duneEff->GetYaxis()->SetTitle("Efficiency");
+
+    TH1F* ubooneEff = (TH1F*) uboone->Clone("eff hist");
+    ubooneEff->Reset();
+    ubooneEff->GetYaxis()->SetTitle("Efficiency");
+
+    int numBins = current->GetNbinsX();
+    double currentSum = 0.0;
+    double cheatedSum = 0.0;
+    double duneSum = 0.0;
+    double ubooneSum = 0.0;
+
+    for(int i = 1; i <= numBins; ++i){
+        currentSum += current->GetBinContent(i);
+        cheatedSum += cheated->GetBinContent(i);
+        duneSum += dune->GetBinContent(i);
+        ubooneSum += uboone->GetBinContent(i);
+
+        double currentEffValue = currentSum/sizeCurrent;
+        double cheatedEffValue = cheatedSum/sizeCheated;
+        double duneEffValue = duneSum/sizeDune;
+        double ubooneEffValue = ubooneSum/sizeUboone;
+
+        currentEff->SetBinContent(i, currentEffValue);
+        cheatedEff->SetBinContent(i, cheatedEffValue);
+        duneEff->SetBinContent(i, duneEffValue);
+        ubooneEff->SetBinContent(i, ubooneEffValue);
+    }
+
+    TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.15, Lxmax, Lymin - 0.02, "NDC");
+    pt->AddText(Form("Number of DL Dune Entries: %d", (int)sizeDune));
+    pt->AddText(Form("Number of DL Uboone Entries: %d", (int)sizeUboone));
+    pt->AddText(Form("Number of Current Entries: %d", (int)sizeCurrent));
+    pt->AddText(Form("Number of Cheated Entries: %d", (int)sizeCheated));
+    pt->SetFillColor(kWhite);
+    pt->SetFillStyle(1001);
+    pt->SetBorderSize(0); 
+
+    int funcValue = 1;
+
+    styleDraw(efficiencyCanvas, currentEff, cheatedEff, duneEff, ubooneEff, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, pt = nullptr, &funcValue, drawLine);
+}
+
 recoSlice chooseRecoSlice(std::vector<recoSlice> recoSliceVec){
     int chosenSliceIndex;
     double highestCompleteness = -100;
@@ -285,16 +345,16 @@ void numberPlots(std::vector<allEventData> allEventsData){
             }
 
             //if(recoParticleCount > 1 && recoSliceCount == 1){
-            if(event.event == 44){
-                printf("Event: %f, Run %f, SubRun: %f\n", event.event, event.run, event.subrun);
-                printf("Number of PFPs: %zu\n", recoParticleCount);
-            }
+            //if(event.event == 44){
+                //printf("Event: %f, Run %f, SubRun: %f\n", event.event, event.run, event.subrun);
+                //printf("Number of PFPs: %zu\n", recoParticleCount);
+            //}
 
             //if(recoSliceCount > 1){
-            if(event.event == 44){
-                printf("Event: %f, Run %f, SubRun: %f\n", event.event, event.run, event.subrun);
-                printf("Number of Slices: %zu, Number of PFPs: %zu\n", recoSliceCount, recoParticleCount);
-            }
+            //if(event.event == 44){
+                //printf("Event: %f, Run %f, SubRun: %f\n", event.event, event.run, event.subrun);
+                //printf("Number of Slices: %zu, Number of PFPs: %zu\n", recoSliceCount, recoParticleCount);
+            //}
 
             if(event.eventBeforeCut.DLCurrent == 0){
                 sizeDLUboone++;
@@ -354,7 +414,7 @@ void numberPlots(std::vector<allEventData> allEventsData){
     percentage(numPFPs.current, numPFPs.cheated, numPFPs.dune, numPFPs.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 95, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs_perc.pdf", 0.56, 0.88, 0.70, 0.86);
     percentage(numPFPs1Slice.current, numPFPs1Slice.cheated, numPFPs1Slice.dune, numPFPs1Slice.uboone, sizeCurrent1Slice, sizeCheated1Slice, sizeDLDune1Slice, sizeDLUboone1Slice, 0, 100, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPs1Slice_perc.pdf", 0.56, 0.88, 0.70, 0.86);
     percentage(numPFPsSlices.current, numPFPsSlices.cheated, numPFPsSlices.dune, numPFPsSlices.uboone, sizeCurrentSlices, sizeCheatedSlices, sizeDLDuneSlices, sizeDLUbooneSlices, 0, 95, 999, 999, "/nashome/c/coackley/nuEPlots/numPFPsSlices_perc.pdf", 0.56, 0.88, 0.70, 0.86);
-    printf("Number of events: Current = %f, Cheated %f, DL Dune = %f, DL Uboone = %f\n", sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone);    
+    //printf("Number of events: Current = %f, Cheated %f, DL Dune = %f, DL Uboone = %f\n", sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone);    
 
 }
 
@@ -449,10 +509,10 @@ void deltaVertex(std::vector<allEventData> allEventsData){
              double deltaRValue = std::sqrt((deltaXValue * deltaXValue) + (deltaYValue * deltaYValue) + (deltaZValue * deltaZValue));
 
              //if(deltaZValue > 10){
-             if(event.event == 44){
-                 printf("Event: %f, Run %f, SubRun: %f\n", event.event, event.run, event.subrun);
-                 printf("True Vertex: (%f, %f, %f), Reco Vertex: (%f, %f, %f), Differences: (%f, %f, %f)\n", event.eventAfterCut.chosenTrueNeutrino.vx, event.eventAfterCut.chosenTrueNeutrino.vy, event.eventAfterCut.chosenTrueNeutrino.vz, event.eventAfterCut.chosenRecoNeutrino.vx, event.eventAfterCut.chosenRecoNeutrino.vy, event.eventAfterCut.chosenRecoNeutrino.vz, deltaXValue, deltaYValue, deltaZValue);
-             }
+             //if(event.event == 44){
+                 //printf("Event: %f, Run %f, SubRun: %f\n", event.event, event.run, event.subrun);
+                 //printf("True Vertex: (%f, %f, %f), Reco Vertex: (%f, %f, %f), Differences: (%f, %f, %f)\n", event.eventAfterCut.chosenTrueNeutrino.vx, event.eventAfterCut.chosenTrueNeutrino.vy, event.eventAfterCut.chosenTrueNeutrino.vz, event.eventAfterCut.chosenRecoNeutrino.vx, event.eventAfterCut.chosenRecoNeutrino.vy, event.eventAfterCut.chosenRecoNeutrino.vz, deltaXValue, deltaYValue, deltaZValue);
+             //}
 
              if(event.eventBeforeCut.DLCurrent == 0){
                  deltaX.uboone->Fill(deltaXValue);
@@ -563,11 +623,11 @@ void energyAngle(std::vector<allEventData> allEventsData){
             double angleDiff = TMath::ACos(cosAngle) * TMath::RadToDeg();
 
             //if(angleDiff > 150){
-            if(event.event == 44){
+            //if(event.event == 44){
                 //std::cout << "Look" << std::endl;
-                printf("Event: %f, Run %f, SubRun: %f\n", event.event, event.run, event.subrun);
-                printf("(%f, %f, %f), (%f, %f, %f) -> angle = %f degrees\n", event.eventAfterCut.chosenRecoParticle.dx, event.eventAfterCut.chosenRecoParticle.dy, event.eventAfterCut.chosenRecoParticle.dz, event.eventAfterCut.chosenTrueParticle.dx, event.eventAfterCut.chosenTrueParticle.dy, event.eventAfterCut.chosenTrueParticle.dz, angleDiff);
-            }
+                //printf("Event: %f, Run %f, SubRun: %f\n", event.event, event.run, event.subrun);
+                //printf("(%f, %f, %f), (%f, %f, %f) -> angle = %f degrees\n", event.eventAfterCut.chosenRecoParticle.dx, event.eventAfterCut.chosenRecoParticle.dy, event.eventAfterCut.chosenRecoParticle.dz, event.eventAfterCut.chosenTrueParticle.dx, event.eventAfterCut.chosenTrueParticle.dy, event.eventAfterCut.chosenTrueParticle.dz, angleDiff);
+            //}
 
             if(event.eventBeforeCut.DLCurrent == 0){
                 sizeDLUboone++;
@@ -661,9 +721,18 @@ void energyAngle(std::vector<allEventData> allEventsData){
     percentage(ERecoThetaReco2ChosenShower.current, ERecoThetaReco2ChosenShower.cheated, ERecoThetaReco2ChosenShower.dune, ERecoThetaReco2ChosenShower.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 25, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaReco2ChosenShower_perc.pdf", 0.56, 0.88, 0.70, 0.86, &drawLine);
     percentage(angleBetweenDirections.current, angleBetweenDirections.cheated, angleBetweenDirections.dune, angleBetweenDirections.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 30, 999, 999, "/nashome/c/coackley/nuEPlots/angleDiffDirections_perc.pdf", 0.56, 0.88, 0.70, 0.86);
     percentage(ETrueThetaTrue2BeforeCuts.current, ETrueThetaTrue2BeforeCuts.cheated, ETrueThetaTrue2BeforeCuts.dune, ETrueThetaTrue2BeforeCuts.uboone, sizeCurrentBefore, sizeCheatedBefore, sizeDLDuneBefore, sizeDLUbooneBefore, 0, 15, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaTrue2BeforeCuts_perc.pdf", 0.56, 0.88, 0.70, 0.86, &drawLine);
+
+    efficiency(ETrueThetaTrue2.current, ETrueThetaTrue2.cheated, ETrueThetaTrue2.dune, ETrueThetaTrue2.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 1, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaTrue2_eff.pdf", 0.56, 0.88, 0.14, 0.3, &drawLine);
+    efficiency(ETrueThetaReco2.current, ETrueThetaReco2.cheated, ETrueThetaReco2.dune, ETrueThetaReco2.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 1, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaReco2_eff.pdf", 0.56, 0.88, 0.14, 0.3, &drawLine);
+    efficiency(ERecoThetaTrue2AllEnergy.current, ERecoThetaTrue2AllEnergy.cheated, ERecoThetaTrue2AllEnergy.dune, ERecoThetaTrue2AllEnergy.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 1, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2AllEnergy_eff.pdf", 0.56, 0.88, 0.14, 0.3, &drawLine); 
+    efficiency(ERecoThetaTrue2ChosenShower.current, ERecoThetaTrue2ChosenShower.cheated, ERecoThetaTrue2ChosenShower.dune, ERecoThetaTrue2ChosenShower.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 1, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaTrue2ChosenShower_eff.pdf", 0.56, 0.88, 0.14, 0.3, &drawLine);
+    efficiency(ERecoThetaReco2AllEnergy.current, ERecoThetaReco2AllEnergy.cheated, ERecoThetaReco2AllEnergy.dune, ERecoThetaReco2AllEnergy.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 1, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaReco2AllEnergy_eff.pdf", 0.56, 0.88, 0.14, 0.3, &drawLine);
+    efficiency(ERecoThetaReco2ChosenShower.current, ERecoThetaReco2ChosenShower.cheated, ERecoThetaReco2ChosenShower.dune, ERecoThetaReco2ChosenShower.uboone, sizeCurrent, sizeCheated, sizeDLDune, sizeDLUboone, 0, 1, 999, 999, "/nashome/c/coackley/nuEPlots/ERecoThetaReco2ChosenShower_eff.pdf", 0.56, 0.88, 0.14, 0.3, &drawLine);
+    efficiency(ETrueThetaTrue2BeforeCuts.current, ETrueThetaTrue2BeforeCuts.cheated, ETrueThetaTrue2BeforeCuts.dune, ETrueThetaTrue2BeforeCuts.uboone, sizeCurrentBefore, sizeCheatedBefore, sizeDLDuneBefore, sizeDLUbooneBefore, 0, 1, 999, 999, "/nashome/c/coackley/nuEPlots/ETrueThetaTrue2BeforeCuts_eff.pdf", 0.56, 0.88, 0.14, 0.3, &drawLine);
+
 }
 
-void nuE_macroNew(){
+void nuE_macro(){
 
     std::vector<allEventData> eventsBeforeAfterCuts;
 
@@ -672,9 +741,9 @@ void nuE_macroNew(){
     int counterRecoNeut = 0;
     int counterRecoPart = 0;
 
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/merged.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/merged.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/analysed_DL_uboone/CRUMBS/1.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/analysed_Current/NoRefinement/CRUMBS/1.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/analysed_Current/NoRefinement/CRUMBS/1.root");
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
         return;
@@ -972,4 +1041,5 @@ void nuE_macroNew(){
     energyAngle(eventsBeforeAfterCuts);
     file->Close();
     //printf("\n __________ Number of events with > 1 True Neutrino = %d, True Particle = %d, Reco Neutrino = %d, Reco Particle = %d __________\n", counterTrueNeut, counterTruePart, counterRecoNeut, counterRecoPart);
+
 }
