@@ -15,13 +15,14 @@ services:
 physics.producers:
 {
     @table::physics.producers
-    crtveto:               @local::crtvetoproducer_data_sbnd
+    crtveto:                  @local::crtvetoproducer_data_sbnd
     crtspacepointmatching:    @local::crtspacepointmatchproducer_data_sbnd
     crttrackmatching:         @local::crttrackmatchproducer_data_sbnd
     crtspacepointmatchingSCE: @local::crtspacepointmatchproducer_data_sbnd
     crttrackmatchingSCE:      @local::crttrackmatchproducer_data_sbnd
 
     opt0finder:     @local::sbnd_opt0_finder_data
+    opt0finderSCE:  @local::sbnd_opt0_finder_data
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 }
 
@@ -42,6 +43,11 @@ physics.producers.crtspacepointmatchingSCE.MatchingAlg.TPCTrackLabel: "pandoraSC
 physics.producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSCETrack"
 physics.producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandoraSCE"
 physics.producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
+
+physics.producers.opt0finderSCE.SliceProducer:    "pandoraSCE"
+physics.producers.opt0finderSCE.TrackProducer:    "pandoraSCETrack"
+physics.producers.opt0finderSCE.ShowerProducer:   "pandoraSCEShowerSBN"
+physics.producers.opt0finderSCE.CaloProducer:     "pandoraSCECaloData"
 
 physics.caloskimana: [ caloskim, crtana ]
 physics.end_paths: [stream1, caloskimana ]
