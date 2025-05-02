@@ -15,7 +15,11 @@ services:
 physics.producers:
 {
     @table::physics.producers
+    crtveto:               @local::crtvetoproducer_data_sbnd
+    crtspacepointmatching: @local::crtspacepointmatchproducer_data_sbnd
+    crttrackmatching:      @local::crttrackmatchproducer_data_sbnd
     opt0finder:     @local::sbnd_opt0_finder_data
+    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, 
