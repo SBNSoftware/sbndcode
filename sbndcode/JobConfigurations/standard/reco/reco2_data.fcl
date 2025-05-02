@@ -34,4 +34,3 @@ physics.analyzers.crtana: @local::crtana_data_sbnd
 
 physics.caloskimana: [ caloskim, crtana ]
 physics.end_paths: [stream1, caloskimana ]
-
