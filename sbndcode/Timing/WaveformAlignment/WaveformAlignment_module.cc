@@ -43,6 +43,9 @@
 #include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
 #include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
 
+#include <iostream>
+#include <fstream>
+
 namespace sbnd {
     class WaveformAlignment;
 }
@@ -76,6 +79,10 @@ public:
     void PlotFtrigCompare(const int flashId);
     void PlotFtrigFit(TGraph *g, TF1 *fitf, const bool converged, const int boardId, const int flashId);
     void ResetPlotVars();
+
+    double getPMTResponseTime(int );
+
+
 private:
 
     //---GLOBAL PARAMETERS
@@ -158,6 +165,7 @@ private:
     double fPmtJitterBound;
     double fTimingJitterBound;
     bool fCorrectCableOnly;
+    bool fCorrectPMTResponseTime;
 
     // Debug
     bool fDebugTdc;
@@ -178,11 +186,18 @@ private:
     std::string fTimingBoardNewLabel;
     std::string fTimingAlignNewLabel;
 
+
+    std::string fPMTResponseFileName;
+    std::ifstream fPMTResponseFile;
+
+
     // Plotting
     bool fSaveGoodFit;
     bool fSaveBadFit;
     bool fSaveCompare;
     std::string fSavePath;
+
+
 };
 
 
@@ -222,6 +237,7 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fPmtJitterBound = p.get<int>("PmtJitterBound", 16);
     fTimingJitterBound = p.get<int>("TimingJitterBound", 68);
     fCorrectCableOnly = p.get<bool>("CorrectCableOnly", false);
+    fCorrectPMTResponseTime = p.get<bool>("CorrectPMTResponseTime", true);
 
     fDebugTdc = p.get<bool>("DebugTdc", false);
     fDebugTimeRef = p.get<bool>("DebugTimeRef", false);
@@ -244,6 +260,8 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fTimingNewLabel = p.get<std::string>("TimingNewLabel","TimingChannels");
     fTimingBoardNewLabel = p.get<std::string>("TimingBoardNewLabel","TimingTiming");
     fTimingAlignNewLabel = p.get<std::string>("TimingAlignNewLabel","TimingAlign");
+
+    fPMTResponseFileName = p.get<std::string>("PMTResponseFileName","");
 
     produces< std::vector< raw::OpDetWaveform > >(fFtrigNewLabel); 
     produces< art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform > >(fFtrigBoardNewLabel);
@@ -556,6 +574,8 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     double correction = 0;
                     correction -= total_transit; //total transit = propagation time of photon from PMT to digitiser
                     if(fCorrectCableOnly == false) correction -= boardJitter[boardIdx][flashIdx];
+                    if(fCorrectPMTResponseTime)
+                    correction-=getPMTResponseTime(wf->ChannelNumber());
                     correction /= 1000; //ns to us conversion
 
                     double new_ts = wf->TimeStamp() + correction; //us
@@ -865,6 +885,34 @@ bool sbnd::WaveformAlignment::CheckShift(const double shift, const int boardId)
     //TODO: add more check?
     
     return true;
+}
+
+double sbnd::WaveformAlignment::getPMTResponseTime(int channelNumber)
+{
+    
+    std::string fname;
+    cet::search_path sp("FW_SEARCH_PATH");
+    sp.find_file(fPMTResponseFileName, fname);
+    std::ifstream fPMTResponseFile(fname.c_str(), std::ios::in);
+    if (!fPMTResponseFile.is_open()) {
+        std::cerr << "Could not open the file.\n";
+        return 0;
+    }
+
+    std::string line;
+
+    while (std::getline(fPMTResponseFile, line)) {
+        std::stringstream linestream(line);
+        int channel_number;
+        double channel_delay;
+        linestream 
+          >> channel_number
+          >> channel_delay;
+        if (channel_number == channelNumber) {
+            return channel_delay;
+        }
+    }
+    return 0.;
 }
 
 void sbnd::WaveformAlignment::PlotFtrigFit(TGraph *g, TF1 *fitf, const bool converged, const int boardId, const int flashId)
