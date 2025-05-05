@@ -19,6 +19,7 @@ sbndPDSAna:
 	SaveOnlyCRTPDSMatch: "false"
 	SavePEFlavourPerFlash: "true"
 	SaveOnlyFlashHits: "true"
+	SaveOnlyAVTracks: "true"
 
 	## Configuration parameters
 	Verbosity: 0
