@@ -119,7 +119,8 @@ private:
   std::map<std::string, int> GetAllHitsTruthMatch(art::Event const& e, const std::vector<art::Ptr<recob::Hit> > &allHits);
 
   double GetPMTRatioData(std::vector<double> );
-
+  
+  bool CRTTrackCrossesAV(const int , const sbnd::crt::CRTTrack& , TVector3& , TVector3&);
 
   // TTree saving options
   bool fSaveMCTruth;
@@ -134,6 +135,7 @@ private:
   bool fSaveCRT;
   bool fSaveSPECTDC;
   bool fSaveOnlyCRTPDSMatch;
+  bool fSaveOnlyAVTracks;
   bool fSaveCosmicId;
   bool fSavePEFlavourPerFlash;
   
@@ -286,6 +288,12 @@ private:
 
 
   // Saving CRT information
+  std::vector<double> _tr_entry_x;
+  std::vector<double> _tr_entry_y;
+  std::vector<double> _tr_entry_z;
+  std::vector<double> _tr_exit_x;
+  std::vector<double> _tr_exit_y;
+  std::vector<double> _tr_exit_z;
   std::vector<double> _tr_start_x;
   std::vector<double> _tr_start_y;
   std::vector<double> _tr_start_z;
