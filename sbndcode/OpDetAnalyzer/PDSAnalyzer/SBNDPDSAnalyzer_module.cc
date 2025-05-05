@@ -17,6 +17,7 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fSaveCRT( p.get<bool>("SaveCRT") ),
   fSaveSPECTDC( p.get<bool>("SaveSPECTDC") ),
   fSaveOnlyCRTPDSMatch( p.get<bool>("SaveOnlyCRTPDSMatch") ),
+  fSaveOnlyAVTracks( p.get<bool>("SaveOnlyAVTracks") ),
   fSaveCosmicId( p.get<bool>("SaveCosmicId") ),
   fSavePEFlavourPerFlash( p.get<bool>("SavePEFlavourPerFlash") ),
   fVerbosity( p.get<int>("Verbosity") ),
@@ -191,6 +192,12 @@ void opdet::SBNDPDSAnalyzer::beginJob()
 
   if(fSaveCRT)
   {
+    fTree->Branch("tr_entry_x", "std::vector<double>", &_tr_entry_x);
+    fTree->Branch("tr_entry_y", "std::vector<double>", &_tr_entry_y);
+    fTree->Branch("tr_entry_z", "std::vector<double>", &_tr_entry_z);
+    fTree->Branch("tr_exit_x", "std::vector<double>", &_tr_exit_x);
+    fTree->Branch("tr_exit_y", "std::vector<double>", &_tr_exit_y);
+    fTree->Branch("tr_exit_z", "std::vector<double>", &_tr_exit_z);
     fTree->Branch("tr_start_x", "std::vector<double>", &_tr_start_x);
     fTree->Branch("tr_start_y", "std::vector<double>", &_tr_start_y);
     fTree->Branch("tr_start_z", "std::vector<double>", &_tr_start_z);
@@ -653,7 +660,6 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         // Get OpFlash
         art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
         recob::OpFlash Flash = *FlashPtr;
-        if(Flash.AbsTime()*1000<fOpFlashBeamWindow[0] || Flash.AbsTime()*1000>fOpFlashBeamWindow[1]) continue;
         _flash_time_to_match.push_back( Flash.AbsTime() );
       }
     }
@@ -673,10 +679,11 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     for(unsigned i = 0; i < nTracks; ++i)
     {
       const auto track = CRTTrackVec[i];
-      if(track->Ts0() < fCRTSaveWindow[0] || track->Ts0() > fCRTSaveWindow[1]) continue;
       _crttrack_time_to_match.push_back(track->Ts0());
     }
 
+    _opflash_matched.clear();
+    _crt_tracks_matched.clear();
     _opflash_matched.resize(nOpFlash, false);
     _crt_tracks_matched.resize(nTracks, false);
 
@@ -689,7 +696,6 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         double time_diff = abs(_crt_track_time-_opflash_time);
         if(time_diff< 1)
         {
-          std::cout <<" Matched flash at time " << _opflash_time << " with track at time " << _crt_track_time << std::endl;
           _opflash_matched[i] = true;
           _crt_tracks_matched[j] = true;
           break;
@@ -748,8 +754,8 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
         recob::OpFlash Flash = *FlashPtr;
         // Skip flash if it's outside the save window.
-        if(Flash.AbsTime()*1000<fOpFlashBeamWindow[0] || Flash.AbsTime()*1000>fOpFlashBeamWindow[1]) continue;
         flash_idx+=1;
+        if(Flash.AbsTime()*1000<fOpFlashBeamWindow[0] || Flash.AbsTime()*1000>fOpFlashBeamWindow[1]) continue;
         if(fSaveOnlyCRTPDSMatch && !_opflash_matched[flash_idx]) continue;
         if(fVerbosity>0)
           std::cout << "  *  " << _nopflash << " Time [ns]=" << 1000*Flash.AbsTime() << " PE=" << Flash.TotalPE() << std::endl;
@@ -816,6 +822,12 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
 
   if(fSaveCRT)
   {
+    _tr_entry_x.clear();
+    _tr_entry_y.clear();
+    _tr_entry_z.clear();
+    _tr_exit_x.clear();
+    _tr_exit_y.clear();
+    _tr_exit_z.clear();
     _tr_start_x.clear();
     _tr_start_y.clear();
     _tr_start_z.clear();
@@ -850,10 +862,36 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     for(unsigned i = 0; i < nTracks; ++i)
     {
 
-      if(fSaveOnlyCRTPDSMatch && !_crt_tracks_matched[i]) continue;
       const auto track = CRTTrackVec[i];
       if(track->Ts0() < fCRTSaveWindow[0] || track->Ts0() > fCRTSaveWindow[1]) continue;
+      if(fSaveOnlyCRTPDSMatch && !_crt_tracks_matched[i]) continue;
 
+      const int tpc_0=0;
+      const int tpc_1=1;
+      TVector3 EntryPoint_tpc0, ExitPoint_tpc0;
+      TVector3 EntryPoint_tpc1, ExitPoint_tpc1;
+      bool cross_tpc0 = CRTTrackCrossesAV(tpc_0, *track, EntryPoint_tpc0, ExitPoint_tpc0);
+      bool cross_tpc1 = CRTTrackCrossesAV(tpc_1, *track, EntryPoint_tpc1, ExitPoint_tpc1);
+      if(fSaveOnlyAVTracks)
+      {
+        if(!cross_tpc0 && !cross_tpc1) continue;
+        if(cross_tpc0){
+          _tr_entry_x.push_back(EntryPoint_tpc0.X());
+          _tr_entry_y.push_back(EntryPoint_tpc0.Y());
+          _tr_entry_z.push_back(EntryPoint_tpc0.Z());
+          _tr_exit_x.push_back(ExitPoint_tpc0.X());
+          _tr_exit_y.push_back(ExitPoint_tpc0.Y());
+          _tr_exit_z.push_back(ExitPoint_tpc0.Z());
+        }
+        else{
+          _tr_entry_x.push_back(EntryPoint_tpc1.X());
+          _tr_entry_y.push_back(EntryPoint_tpc1.Y());
+          _tr_entry_z.push_back(EntryPoint_tpc1.Z());
+          _tr_exit_x.push_back(ExitPoint_tpc1.X());
+          _tr_exit_y.push_back(ExitPoint_tpc1.Y());
+          _tr_exit_z.push_back(ExitPoint_tpc1.Z());
+        }
+      }
       const geo::Point_t start = track->Start();
       _tr_start_x.push_back(start.X());
       _tr_start_y.push_back(start.Y());
@@ -1595,4 +1633,60 @@ double opdet::SBNDPDSAnalyzer::GetPMTRatioData(std::vector<double> PE_v){
 
 
   return pmtratio;
+}
+
+// -------- Function to chekc if a CRTTrack crosses the AV of TPC(0/1) and return then entry/exit point --------
+bool opdet::SBNDPDSAnalyzer::CRTTrackCrossesAV(const int tpc, const sbnd::crt::CRTTrack &crttrack, TVector3& EntryPoint, TVector3& ExitPoint){
+
+  TVector3 AV_min, AV_max;
+  // Define the AV limits for TPC0 and TPC1
+  if(tpc==0){
+    AV_min = {-200, -200, 0};
+    AV_max = {0, 200, 500};
+  }
+  else if(tpc==1){
+    AV_min = {0, -200, 0};
+    AV_max = {200, 200, 500};
+  }
+  else std::runtime_error("Invalid TPC number. Only 0 and 1 are valid.");
+
+  const geo::Point_t start = crttrack.Start();
+  const geo::Point_t end = crttrack.End();
+
+  TVector3 p1 = {start.X(), start.Y(), start.Z()};
+  TVector3 p2 = {end.X(), end.Y(), end.Z()};
+
+  TVector3 d = p2 - p1;
+  for (int i = 0; i < 3; ++i) {
+      if (d[i] == 0.0)
+          d[i] = 1e-10;
+  }
+
+  std::array<double, 3> t_min, t_max, t1, t2;
+  for (int i = 0; i < 3; ++i) {
+      t_min[i] = (AV_min[i] - p1[i]) / d[i];
+      t_max[i] = (AV_max[i] - p1[i]) / d[i];
+      t1[i] = std::min(t_min[i], t_max[i]);
+      t2[i] = std::max(t_min[i], t_max[i]);
+  }
+
+  double t_entry = *std::max_element(t1.begin(), t1.end());
+  double t_exit  = *std::min_element(t2.begin(), t2.end());
+
+  if (t_entry <= t_exit && t_exit >= 0.0 && t_entry <= 1.0) {
+    TVector3 punto_entrada = p1 + d * t_entry;
+    TVector3 punto_salida  = p1 + d * t_exit;
+    //std::cout << " Entry point " << punto_entrada.X() << " " << punto_entrada.Y() << " " << punto_entrada.Z() << std::endl;
+    //std::cout << " Exit point " << punto_salida.X() << " " << punto_salida.Y() << " " << punto_salida.Z() << std::endl;
+    EntryPoint = punto_entrada;
+    ExitPoint = punto_salida;
+    return true;
+  }
+  else
+  {
+    EntryPoint={-9999., -9999., -9999.};
+    ExitPoint={-9999., -9999., -9999.};
+    return false;
+  }
+
 }
