@@ -38,20 +38,21 @@ namespace raw {
         std::vector<uint32_t> triggerTimeTag; // ns
     };
 
-    //TODO: remove board ID
     class BoardAlignment {
       // Associate one of these to every opdetwaveform in the board/digitizer, one per board
+      std::vector<double> fShift; //ns
+      std::vector<int> fStatus;
+
       public:
-        BoardAlignment() {}; // constructor
-        BoardAlignment(unsigned int boardId, std::vector<double> shift) :
-        boardId(boardId), shift(shift) {};
+        //BoardAlignment() : fShift({}) {}; // constructor
+        BoardAlignment() : fShift({}), fStatus({}) {}; // constructor
+        virtual ~BoardAlignment() {}; // destructror
+       
+        //BoardAlignment(std::vector<double> &_shift) : fShift(_shift) {};
+        BoardAlignment(std::vector<double> &_shift, std::vector<int> &_status) : fShift(_shift), fStatus(_status) {};
 
-        //TODO: remove boardId after validation check
-        unsigned int boardId; //board 0-7
-        std::vector<double> shift; //shift per waveform
-
-        //TODO: add a flag if jittering is applied
-        //or a flag indicating the level of PMT timing
+        std::vector<double> Shift() const {return fShift;}
+        std::vector<int> Status() const {return fStatus;}
     };
   }
 }
