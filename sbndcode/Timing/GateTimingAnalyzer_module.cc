@@ -42,11 +42,13 @@ public:
 
   // Required functions.
   void analyze(art::Event const& e) override;
-b
+
 private:
 
   std::string fspectdc_module_label;
   uint32_t    fspectdc_etrig_ch;
+  uint32_t    fspectdc_bes_ch;
+  uint32_t    fspectdc_rwm_ch;
 
   // Declare member data here.
   TTree* tree;
@@ -54,6 +56,7 @@ private:
   uint64_t    _tdc_etrig;
   uint64_t    _tdc_bes;
   uint64_t    _tdc_rwm;
+  int64_t     _correction;
 };
 
 
@@ -63,6 +66,8 @@ sbnd::GateTimingAnalyzer::GateTimingAnalyzer(fhicl::ParameterSet const& p)
 {
   fspectdc_module_label = p.get<std::string>("spectdc_module_name","tdcdecoder");
   fspectdc_etrig_ch = p.get<uint32_t>("spectdc_etrig_ch",4);
+  fspectdc_bes_ch = p.get<uint32_t>("spectdc_bes_ch",1);
+  fspectdc_rwm_ch = p.get<uint32_t>("spectdc_rwm_ch",2);
 
   art::ServiceHandle<art::TFileService> fs;
   tree = fs->make<TTree>("tree","timingtree");
@@ -72,6 +77,7 @@ sbnd::GateTimingAnalyzer::GateTimingAnalyzer(fhicl::ParameterSet const& p)
   tree->Branch("tdc_etrig",&_tdc_etrig,"tdc_etrig/l");
   tree->Branch("tdc_bes",&_tdc_bes,"tdc_bes/l");
   tree->Branch("tdc_rwm",&_tdc_rwm,"tdc_rwm/l");
+  tree->Branch("correction",&_correction,"correction/L"); // in units of ns
 }
 
 void sbnd::GateTimingAnalyzer::analyze(art::Event const& e)
@@ -83,6 +89,7 @@ void sbnd::GateTimingAnalyzer::analyze(art::Event const& e)
   _tdc_etrig = 0;
   _tdc_bes = 0;
   _tdc_rwm = 0;
+  _correction = 0;
 
   art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
   e.getByLabel(fspectdc_module_label,tdcHandle);
@@ -95,9 +102,15 @@ void sbnd::GateTimingAnalyzer::analyze(art::Event const& e)
           auto tdc = tdc_v[i];
           const uint32_t  ch = tdc.Channel();
           if (ch==fspectdc_etrig_ch) _tdc_etrig = tdc.Timestamp();
-          if (ch==1)                 _tdc_bes   = tdc.Timestamp();
-          if (ch==2)                 _tdc_rwm   = tdc.Timestamp();
+          if (ch==fspectdc_bes_ch)   _tdc_bes   = tdc.Timestamp();
+          if (ch==fspectdc_rwm_ch)   _tdc_rwm   = tdc.Timestamp();
       }
+  }
+
+  if (_tdc_rwm > _tdc_etrig) {
+      _correction = _tdc_rwm - _tdc_etrig;
+  } else {
+      _correction = -1*(_tdc_etrig - _tdc_rwm);
   }
   tree->Fill();
 }
