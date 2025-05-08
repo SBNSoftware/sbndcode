@@ -9,10 +9,10 @@ standard_crt_track_filter:
    ThetaXZMax:           10.   # maximum angle theta_XZ of CRT track, in degrees
    UseLengthMin:         true  # flag to use the fancy calculation of projected CRT track length the active volume, and to cut on that
    LengthMin:            300.  # if UseLengthMin, then this is minimum length in the active volume, in cm
-   Verbose:              true
-   TPCPos:               true
-   TPCNeg:               false
-   TPCNum:               1
+   Verbose:              false
+   TPCPos:               false
+   TPCNeg:               true
+   TPCNum:               0
    PlaneNum:             2
    NoiseyChannel:        0
    TimeWindow:           175

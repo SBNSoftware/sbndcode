@@ -1,0 +1,27 @@
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "crttrackfilter.fcl"
+#include "muontrackmodule.fcl"
+#include "reco1_comm.fcl"
+
+process_name: Reco1Commana
+
+services.CRTChannelMapService: @local::crt_channel_map_standard
+services.CRTCalibService:      @local::crt_calib_service
+
+physics.end_paths: [ana]
+
+physics.trigger_paths: []
+
+
+# override hitdumper defaults 
+physics.analyzers.hitdumper.readMuonHits:       false
+physics.analyzers.hitdumper.readMuonTracks:     false
+physics.analyzers.hitdumper.KeepCRTStripHits:   true
+physics.analyzers.hitdumper.KeepCRTTracks:      true
+physics.analyzers.hitdumper.KeepCRTSpacePoints: true
+physics.analyzers.hitdumper.readpmtTrigger:     false
+physics.analyzers.hitdumper.readpmtSoftTrigger: false
+physics.analyzers.hitdumper.readTruth: false
+physics.analyzers.hitdumper.readOpHits: false
+

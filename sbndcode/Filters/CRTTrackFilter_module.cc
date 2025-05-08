@@ -161,6 +161,7 @@ bool CRTTrackFilter::filter(art::Event& e) {
     double Delta_x = x_N-x_S;
     double Delta_y = y_N-y_S;
     double Delta_z = z_N-z_S;
+   
     double    CRT_theta_yz= atan2(Delta_y,Delta_z)*(180/PI);
     double theta_yz=CRT_theta_yz;
     if ( CRT_theta_yz < -90 ) {
@@ -169,7 +170,7 @@ bool CRTTrackFilter::filter(art::Event& e) {
     if ( CRT_theta_yz > 90 ) {
       theta_yz = CRT_theta_yz - 180.;
     }
-
+    
     // Check whether both CRT track points satisfy the x position requirements
     if( not(abs(x_S) > fXPosMin and abs(x_S) < fXPosMax) ) continue;
     if(fVerbose) std::cout << "    Found track that meets x position requirements on south point" << std::endl;
@@ -235,16 +236,16 @@ bool CRTTrackFilter::filter(art::Event& e) {
       if( trk_len_AV < fLengthMin ) continue;
       if(fVerbose) std::cout << "    Found track that meets track length in active volume requirement" << std::endl;
     }
-    //    if(crt_trk.Ts0()<-2500 || crt_trk.Ts0()>-500) continue;    
+    if(crt_trk.Ts0()<-2500 || crt_trk.Ts0()>-500) continue;    
     if(abs(crt_trk.ToF()-(crt_trk.Length()/29.9792))>15) continue;
-
+    
     if(_tpc_num==0 &&  _plane_num==0 && theta_yz>0)continue;
     if(_tpc_num==0 &&  _plane_num==1 && theta_yz<0)continue;
     if(_tpc_num==0 &&  _plane_num==2 && theta_yz<0)continue;
     if(_tpc_num==1 &&  _plane_num==0 && theta_yz<0)continue;
     if(_tpc_num==1 &&  _plane_num==1 && theta_yz>0)continue;
     if(_tpc_num==1 &&  _plane_num==2 && theta_yz<0)continue;
-
+    
     // If we've made it this far, then this track is good and this event passes the filter
     if(fVerbose) std::cout << "    Found a good track!" << std::endl;
     if(fVerbose) std::cout << "    ToF " << crt_trk.ToF() << "ns" << std::endl;

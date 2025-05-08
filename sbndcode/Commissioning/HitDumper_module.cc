@@ -114,16 +114,49 @@ std::pair<double, double> CalculateHalfWidthHeightAndAmplitudeCollection(const s
   double half_width = (t_left >= 0 && t_right >= 0) ? (t_right - t_left) : -1.0;
   return {half_width, max_adc};
 }
+
 bool HasDoublePeakFeature(const std::vector<double>& adc_vals, double threshold) {
   int peak_count = 0;
-  for (size_t i = 1; i < adc_vals.size() - 1; ++i) {
-    if (adc_vals[i] > threshold && adc_vals[i] > adc_vals[i - 1] && adc_vals[i] > adc_vals[i + 1]) {
-      peak_count++;
-      if (peak_count > 1) return true;
+  size_t i = 1;
+
+  while (i < adc_vals.size() - 1) {
+    // Check for a rising edge
+    if (adc_vals[i] >= threshold && adc_vals[i] > adc_vals[i - 1]) {
+      
+
+      // Move forward as long as the values are the same (flat top)
+      while (i < adc_vals.size() - 1 && adc_vals[i] == adc_vals[i + 1]) {
+        ++i;
+      }
+
+      // Now check if there's a falling edge after the plateau
+      if (i < adc_vals.size() - 1 && adc_vals[i] > adc_vals[i + 1]) {
+        // Found a peak (including flat-top)
+        peak_count++;
+        if (peak_count > 1) return true;
+      }
     }
+
+    ++i; // Move to the next point
   }
+
   return false;
 }
+
+double CalculateAreaUnderCurve(const std::vector<double>& adc_vals, const std::vector<double>& time_vals) {
+  if (adc_vals.size() < 2 || time_vals.size() < 2 || adc_vals.size() != time_vals.size()) return -1.0;
+
+  double area = 0.0;
+  for (size_t i = 1; i < adc_vals.size(); ++i) {
+    double delta_time = time_vals[i] - time_vals[i - 1];
+    double average_adc = (adc_vals[i] + adc_vals[i - 1]) / 2.0;
+    area += average_adc * delta_time;
+  }
+
+  return area;
+}
+
+
 
 const int DEFAULT_VALUE = -9999;
 
@@ -521,7 +554,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   _max_time = p.get<double>("MaxTime", 1100);
   _min_time = p.get<double>("MinTime", 400);
   _time_window = p.get<int>("TimeWindow", 150);
-  _max_tpc_hits=p.get<int>("MaxTPCHits",800);
+  _max_tpc_hits=p.get<int>("MaxTPCHits",0);
 
   _max_hits = p.get<int>("MaxHits", 50000);
   _max_ophits = p.get<int>("MaxOpHits", 50000);
@@ -1077,7 +1110,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	    }
 
 	    if (_hit_plane[ihit] == 0) {
-	      high_edge = bin + fWindow;
+	      high_edge = bin + 3*fWindow;
 	    } else {
 	      high_edge = bin + fWindow;
 	    }
@@ -1124,22 +1157,32 @@ void Hitdumper::analyze(const art::Event& evt)
       const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
       const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
       const std::vector<int> &hit_times = waveform_hit_time[wave_num];
-      
-      // If no data, skip this waveform
-      if (adc_vals.empty() || time_vals.empty()) {
-	continue;
-      }
-      
-      if (HasDoublePeakFeature(adc_vals, 10.0)){
-	continue;
-      }
-      
-      //       	double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
-      
-      //	if (max_adc > 2 * mean) {
-      //  continue;
-      //	}
 
+
+      if(_plane_num==2){
+	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
+	double area_under_curve = CalculateAreaUnderCurve(adc_vals, time_vals);
+	
+	// If no data, skip this waveform
+	if (adc_vals.empty() || time_vals.empty()) {
+	  continue;
+	}
+	
+	if (HasDoublePeakFeature(adc_vals, 10.0)){
+	  continue;
+	}
+	
+	double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
+	
+	if (max_adc > 130) {
+	  continue;
+	}
+	if (area_under_curve > 7.35 * amplitude + 250) {
+	  continue;
+	}
+	if (half_width < 4.5 || half_width > 10) {
+	  continue;
+	}
       
       _time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
       _adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
@@ -1147,7 +1190,7 @@ void Hitdumper::analyze(const art::Event& evt)
       _channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
       _waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
       _hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
-      
+      }      
     }
   }// end if fCheckTrasparency
 
