@@ -1,5 +1,5 @@
-#include "cafmakerjob_sbnd_data_base.fcl"
 #include "transfer_flashmatch_producer.fcl"
+#include "cafmakerjob_sbnd_data_base.fcl"
 #
 # change all the labels we need to
 physics.producers.cafmaker.PandoraTagSuffixes: []
