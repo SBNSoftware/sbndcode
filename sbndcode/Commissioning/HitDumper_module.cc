@@ -601,7 +601,7 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
   fKeepCRTSpacePoints = p.get<bool>("KeepCRTSpacePoints",true);
   fKeepCRTStripHits   = p.get<bool>("KeepCRTStripHits", true);
   fKeepCRTTracks      = p.get<bool>("KeepCRTTracks",true);
-  freadOpHits         = p.get<bool>("readOpHits",true);
+  freadOpHits         = p.get<bool>("readOpHits",false);
   freadpmtTrigger     = p.get<bool>("readpmtTrigger",true);
   freadpmtSoftTrigger = p.get<bool>("readpmtSoftTrigger",true);
   freadcrtSoftTrigger = p.get<bool>("readcrtSoftTrigger",false);
@@ -922,7 +922,7 @@ void Hitdumper::analyze(const art::Event& evt)
       for (size_t i = 0; i < ophitlist.size(); ++i) {
 	size_t index = previous_nophits + i;
 	_ophit_opch[index] = ophitlist.at(i)->OpChannel();
-	_ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
+	_ophit_opdet[index] = fWireReadoutGeom->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
 	_ophit_peakT[index] = ophitlist.at(i)->PeakTime();
 	_ophit_startT[index] = ophitlist.at(i)->StartTime();
 	_ophit_riseT[index] = ophitlist.at(i)->RiseTime();
@@ -930,7 +930,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	_ophit_area[index] = ophitlist.at(i)->Area();
 	_ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
 	_ophit_pe[index] = ophitlist.at(i)->PE();
-	auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
+	auto opdet_center = fWireReadoutGeom->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
 	_ophit_opdet_x[index] = opdet_center.X();
 	_ophit_opdet_y[index] = opdet_center.Y();
 	_ophit_opdet_z[index] = opdet_center.Z();
