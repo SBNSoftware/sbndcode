@@ -7,6 +7,7 @@
 #ifndef Hitdumper_Module
 #define Hitdumper_Module
 
+
 // Framework includes
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -79,6 +80,7 @@
 #include "TLorentzVector.h"
 #include "TVector3.h"
 #include "TGeoManager.h"
+#include "TF1.h"
 
 // C++ Includes
 #include <map>
@@ -87,6 +89,78 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+
+
+bool Cut_NS_Function(double x1, double z1,double x2, double z2){
+  bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
+   bool x=((x1>-205 && x1<-135) && (x2>-205 && x2<-135)) || ((x1>135 && x1<205) && (x2>135 && x2<205));
+  return x && z;
+}
+
+std::pair<double, double> CalculateHalfWidthHeightAndAmplitudeCollection(const std::vector<double>& adc_vals, const std::vector<double>& time_vals) {
+  if (adc_vals.empty() || time_vals.empty()) return {-1.0, -1.0};
+    
+  double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
+  double half_max = max_adc / 2.0;
+    
+  double t_left = -1, t_right = -1;
+  for (size_t i = 1; i < adc_vals.size(); ++i) {
+    if (adc_vals[i-1] < half_max && adc_vals[i] >= half_max) {
+      t_left = time_vals[i-1] + (time_vals[i] - time_vals[i-1]) * 
+	(half_max - adc_vals[i-1]) / (adc_vals[i] - adc_vals[i-1]);
+    }
+    if (adc_vals[i-1] >= half_max && adc_vals[i] < half_max) {
+      t_right = time_vals[i-1] + (time_vals[i] - time_vals[i-1]) * 
+	(half_max - adc_vals[i-1]) / (adc_vals[i] - adc_vals[i-1]);
+      break;
+    }
+  }
+  double half_width = (t_left >= 0 && t_right >= 0) ? (t_right - t_left) : -1.0;
+  return {half_width, max_adc};
+}
+
+bool HasDoublePeakFeature(const std::vector<double>& adc_vals, double threshold) {
+  int peak_count = 0;
+  size_t i = 1;
+
+  while (i < adc_vals.size() - 1) {
+    // Check for a rising edge
+    if (adc_vals[i] >= threshold && adc_vals[i] > adc_vals[i - 1]) {
+      
+
+      // Move forward as long as the values are the same (flat top)
+      while (i < adc_vals.size() - 1 && adc_vals[i] == adc_vals[i + 1]) {
+        ++i;
+      }
+
+      // Now check if there's a falling edge after the plateau
+      if (i < adc_vals.size() - 1 && adc_vals[i] > adc_vals[i + 1]) {
+        // Found a peak (including flat-top)
+        peak_count++;
+        if (peak_count > 1) return true;
+      }
+    }
+
+    ++i; // Move to the next point
+  }
+
+  return false;
+}
+
+double CalculateAreaUnderCurve(const std::vector<double>& adc_vals, const std::vector<double>& time_vals) {
+  if (adc_vals.size() < 2 || time_vals.size() < 2 || adc_vals.size() != time_vals.size()) return -1.0;
+
+  double area = 0.0;
+  for (size_t i = 1; i < adc_vals.size(); ++i) {
+    double delta_time = time_vals[i] - time_vals[i - 1];
+    double average_adc = (adc_vals[i] + adc_vals[i - 1]) / 2.0;
+    area += average_adc * delta_time;
+  }
+
+  return area;
+}
+
+
 
 const int DEFAULT_VALUE = -9999;
 
@@ -139,6 +213,7 @@ private:
   /// Resets wire hits tree variables
   void ResetWireHitsVars(int n);
   /// Resets crt strip hit tree variables
+  void ResetWaveforms();
   void ResetCRTStripHitVars();
   /// Resets crt tracks tree variables
   void ResetCRTTracksVars();
@@ -190,16 +265,20 @@ private:
   std::vector<int>    _hit_wire;                ///< Wire where the hit belongs to
   std::vector<int>    _hit_channel;             ///< Channel where the hit belongs to
   std::vector<double> _hit_peakT;               ///< Hit peak time
-  std::vector<double> _hit_charge;              ///< Hit charge
+  std::vector<double> _hit_charge;              ///< Hit charge (integral)
   std::vector<double> _hit_ph;                  ///< Hit pulse height
-  std::vector<double> _hit_width;               ///< Hit width
-  std::vector<double> _hit_full_integral;       ///< Hit charge integral
+  std::vector<double> _hit_width;               ///< Hit width (rms), RMS of the hit shape, in tick units
+  std::vector<double> _hit_full_integral;       ///< Hit charge integral ?????????????
+
   std::vector<int>    _waveform_number;         ///< Number for each waveform, to allow for searching
-  std::vector<double> _adc_on_wire;             ///< ADC on wire to draw waveform
+  std::vector<short>  _adc_on_wire;             ///< ADC on wire to draw waveform
   std::vector<int>    _time_for_waveform;       ///<Time for waveform to plot
   int                 _adc_count;               ///<Used for plotting waveforms
   std::vector<int>    _waveform_integral;       ///<Used to see progression of the waveform integral
   std::vector<int>    _adc_count_in_waveform;   ///<Used to view all waveforms on a hitplane together
+  std::vector<int>    _wire_number;             /// Wire number corresponding to waveform
+  std::vector<int>    _channel_number;
+  std::vector<double> _hit_time;
 
 
   // CRT strip variables
@@ -247,6 +326,10 @@ private:
   std::vector<double> _crt_track_theta;        ///< CRT track theta
   std::vector<double> _crt_track_phi;          ///< CRT track phi
   std::vector<double> _crt_track_length;       ///< CRT track length
+  std::vector<double> _theta_xz_CRT;
+  std::vector<double> _theta_yz_CRT;
+  std::vector<double> _crt_gradient;
+  std::vector<double> _crt_intercept;
 
   // Optical hit variables
   int _nophits;                               ///< Number of Optical Hits
@@ -393,7 +476,13 @@ private:
   double _sr_begintime, _sr_endtime;
   double _sr_pot; ///< POTs in each subrun
 
-
+  int _tpc_num;
+  int _plane_num;
+  int _noisy_channel;
+  double _max_time;
+  double _min_time;
+  int _time_window;
+  int _max_tpc_hits;
   int _max_hits;                    ///< maximum number of hits (to be set via fcl)
   int _max_ophits;                  ///< maximum number of hits (to be set via fcl)
   int _max_samples;                 ///< maximum number of samples (to be set via fcl)
@@ -476,8 +565,15 @@ Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
 void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
 {
 
-  fTDCModuleLabel                   = p.get<std::string>("TDCModuleLabel", "tdcdecoder");
-  fHasTDC                           = p.get<bool>("HasTDC", false);
+
+  _tpc_num = p.get<int>("TPCNum", 0);
+  _plane_num = p.get<int>("PlaneNum", 0);
+  _noisy_channel = p.get<int>("NoisyChannel",0);
+  _max_time = p.get<double>("MaxTime", 1100);
+  _min_time = p.get<double>("MinTime", 400);
+  _time_window = p.get<int>("TimeWindow", 150);
+  _max_tpc_hits=p.get<int>("MaxTPCHits",0);
+
 
   _max_hits = p.get<int>("MaxHits", 50000);
   _max_ophits = p.get<int>("MaxOpHits", 50000);
@@ -610,6 +706,7 @@ void Hitdumper::analyze(const art::Event& evt)
     _hit_charge[counter] = hitlist[i]->Integral();
     _hit_ph[counter] = hitlist[i]->PeakAmplitude();
     _hit_width[counter] = hitlist[i]->RMS();
+
     counter ++;
   }
 
@@ -700,6 +797,8 @@ void Hitdumper::analyze(const art::Event& evt)
   //
   // CRT tracks
   //
+  double time_cut_upper;
+  double time_cut_lower;
 
   _n_crt_tracks = 0;
   if (fKeepCRTTracks) {
@@ -716,31 +815,81 @@ void Hitdumper::analyze(const art::Event& evt)
 
       for (uint i = 0; i < _n_crt_tracks; ++i){
         const art::Ptr<sbnd::crt::CRTTrack> crttrack=ctrklist[i];
-        _crt_track_pes.push_back(crttrack->PE());
-        _crt_track_t0.push_back(crttrack->Ts0());
-        _crt_track_t1.push_back(crttrack->Ts1());
-
-	const geo::Point_t start = crttrack->Start();
+      	const geo::Point_t start = crttrack->Start();
 	const geo::Point_t end   = crttrack->End();
 
-        _crt_track_x1.push_back(start.X());
-        _crt_track_y1.push_back(start.Y());
-        _crt_track_z1.push_back(start.Z());
-        _crt_track_x2.push_back(end.X());
-        _crt_track_y2.push_back(end.Y());
-        _crt_track_z2.push_back(end.Z());
+	if(Cut_NS_Function(start.X(),start.Z(),end.X(),end.Z())){
+	  _crt_track_pes.push_back(crttrack->PE());
+	  _crt_track_t0.push_back(crttrack->Ts0());
+	  _crt_track_t1.push_back(crttrack->Ts1());
+	  _crt_track_x1.push_back(start.X());
+	  _crt_track_y1.push_back(start.Y());
+	  _crt_track_z1.push_back(start.Z());
+	  _crt_track_x2.push_back(end.X());
+	  _crt_track_y2.push_back(end.Y());
+	  _crt_track_z2.push_back(end.Z());
+	  
+	  _crt_track_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
+	  _crt_track_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
+	  
+	  _crt_track_theta.push_back(crttrack->Theta()*(180.0/M_PI));
+	  _crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
+	  _crt_track_length.push_back(crttrack->Length());
+	  
+	  _crt_gradient.push_back((end.z() - start.z()) / (end.y() - start.y()));
+          _crt_intercept.push_back( start.z() - (((end.z() - start.z()) / (end.y() - start.y())) * start.y()));
 
-  	_crt_track_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
-	_crt_track_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
-     
-	_crt_track_theta.push_back(crttrack->Theta()*(180.0/M_PI));
-	_crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
-	_crt_track_length.push_back(crttrack->Length());
-      }
-    } else {
-      std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<fCRTTrackModuleLabel<<")." << std::endl;
-    }
+	  double dx;
+	  double dy;
+	  double dz;
+	  double CRT_theta_xz;
+	  double CRT_theta_yz;
+	  double average_xvalue;
+	  double hit_time_ticks;
+	  double start_x=200- abs(start.X());	    
+	  double end_x=200- abs(end.X());
+
+	  average_xvalue = (start_x + end_x)/2 ;      
+	  std::cout<<"start x"<<start_x<<std::endl;
+	  std::cout<<"end x"<<end_x<<std::endl;
+	  std::cout<<"average x"<<average_xvalue<<std::endl;
+
+	  hit_time_ticks= (average_xvalue*2/0.16)+400 ;
+
+	  std::cout<<"hit time"<< hit_time_ticks<< std::endl;	  
+	  time_cut_upper=hit_time_ticks + _time_window;
+	  time_cut_lower=hit_time_ticks - _time_window;
+
+	  dx =end.X() - start.X();
+	  dy =end.Y() - start.Y();
+	  dz =end.Z() - start.Z();
+
+	  CRT_theta_xz= atan2(dx,dz)*(180/TMath::Pi());
+	  CRT_theta_yz= atan2(dy,dz)*(180/TMath::Pi());
+        
+	  double modified_theta_xz_CRT = CRT_theta_xz;
+	  if ( CRT_theta_xz < -90 ) {
+	    modified_theta_xz_CRT = CRT_theta_xz + 180.;
+	  }
+	  if ( CRT_theta_xz > 90 ) {
+	    modified_theta_xz_CRT = CRT_theta_xz - 180.;
+	  }
+	  double modified_theta_yz_CRT = CRT_theta_yz;
+	  if ( CRT_theta_yz < -90 ) {
+	    modified_theta_yz_CRT = CRT_theta_yz + 180.;
+	  }
+	  if ( CRT_theta_yz > 90 ) {
+	    modified_theta_yz_CRT = CRT_theta_yz - 180.;
+	  }
+	  _theta_xz_CRT.push_back(modified_theta_xz_CRT);
+	  _theta_yz_CRT.push_back(modified_theta_yz_CRT);
+	 
+	}
+      }  
+  } else {
+    std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<fCRTTrackModuleLabel<<")." << std::endl;
   }
+}
   
   //
   // Optical Hits
@@ -755,47 +904,47 @@ void Hitdumper::analyze(const art::Event& evt)
       art::Handle<std::vector<recob::OpHit>> ophitListHandle;
       std::vector<art::Ptr<recob::OpHit>> ophitlist;
       if (evt.getByLabel(ophit_label, ophitListHandle)) {
-        art::fill_ptr_vector(ophitlist, ophitListHandle);
-        _nophits += ophitlist.size();
+	art::fill_ptr_vector(ophitlist, ophitListHandle);
+	_nophits += ophitlist.size();
       }
       else {
-        std::cout << "Failed to get recob::OpHit data product: " << ophit_label << std::endl;
+	std::cout << "Failed to get recob::OpHit data product: " << ophit_label << std::endl;
       }
 
       if (_nophits > _max_ophits) {
-        std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
-        std::cout << "Will only store " << _max_ophits << " optical hits." << std::endl;
-        _nophits = _max_ophits;
+	std::cout << "Available optical hits are " << _nophits << ", which is above the maximum number allowed to store." << std::endl;
+	std::cout << "Will only store " << _max_ophits << " optical hits." << std::endl;
+	_nophits = _max_ophits;
       }
 
       ResetOpHitsVars(_nophits);
 
       for (size_t i = 0; i < ophitlist.size(); ++i) {
-        size_t index = previous_nophits + i;
-        _ophit_opch[index] = ophitlist.at(i)->OpChannel();
-        _ophit_opdet[index] = fWireReadoutGeom->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
-        _ophit_peakT[index] = ophitlist.at(i)->PeakTime();
-        _ophit_startT[index] = ophitlist.at(i)->StartTime();
-        _ophit_riseT[index] = ophitlist.at(i)->RiseTime();
-        _ophit_width[index] = ophitlist.at(i)->Width();
-        _ophit_area[index] = ophitlist.at(i)->Area();
-        _ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
-        _ophit_pe[index] = ophitlist.at(i)->PE();
-        auto opdet_center = fWireReadoutGeom->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
-        _ophit_opdet_x[index] = opdet_center.X();
-        _ophit_opdet_y[index] = opdet_center.Y();
-        _ophit_opdet_z[index] = opdet_center.Z();
-        auto pd_type = _pd_map.pdType(ophitlist.at(i)->OpChannel());
-        if (pd_type == "pmt_coated") {_ophit_opdet_type[index] = kPMTCoated;}
-        else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[index] = kPMTUnCoated;}
-        else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[index] = kXArapucaVis;}
-        else if (pd_type == "xarapuca_vuv") {
-          _ophit_opdet_type[index] = kXArapucaVuv;
-          //std::cout<<"XA VUV: "<< pd_type <<std::endl;
-        }
-        else {
-          _ophit_opdet_type[index] = kPDNotDefined;
-        }
+	size_t index = previous_nophits + i;
+	_ophit_opch[index] = ophitlist.at(i)->OpChannel();
+	_ophit_opdet[index] = fGeometryService->OpDetFromOpChannel(ophitlist.at(i)->OpChannel());
+	_ophit_peakT[index] = ophitlist.at(i)->PeakTime();
+	_ophit_startT[index] = ophitlist.at(i)->StartTime();
+	_ophit_riseT[index] = ophitlist.at(i)->RiseTime();
+	_ophit_width[index] = ophitlist.at(i)->Width();
+	_ophit_area[index] = ophitlist.at(i)->Area();
+	_ophit_amplitude[index] = ophitlist.at(i)->Amplitude();
+	_ophit_pe[index] = ophitlist.at(i)->PE();
+	auto opdet_center = fGeometryService->OpDetGeoFromOpChannel(ophitlist.at(i)->OpChannel()).GetCenter();
+	_ophit_opdet_x[index] = opdet_center.X();
+	_ophit_opdet_y[index] = opdet_center.Y();
+	_ophit_opdet_z[index] = opdet_center.Z();
+	auto pd_type = _pd_map.pdType(ophitlist.at(i)->OpChannel());
+	if (pd_type == "pmt_coated") {_ophit_opdet_type[index] = kPMTCoated;}
+	else if (pd_type == "pmt_uncoated") {_ophit_opdet_type[index] = kPMTUnCoated;}
+	else if (pd_type == "xarapuca_vis") {_ophit_opdet_type[index] = kXArapucaVis;}
+	else if (pd_type == "xarapuca_vuv") {
+	  _ophit_opdet_type[index] = kXArapucaVuv;
+	  //std::cout<<"XA VUV: "<< pd_type <<std::endl;
+	}
+	else {
+	  _ophit_opdet_type[index] = kPDNotDefined;
+	}
       }
       previous_nophits = _nophits;
     }
@@ -814,7 +963,7 @@ void Hitdumper::analyze(const art::Event& evt)
       ResetPmtTriggerVars( (int)pmttriggerlist[0]->numPassed.size());
 
       for (int i=0; i < (int)pmttriggerlist[0]->numPassed.size(); i++){
-        _pmtTrigger_npmtshigh[i] = pmttriggerlist[0]->numPassed[i];
+	_pmtTrigger_npmtshigh[i] = pmttriggerlist[0]->numPassed[i];
       }
       _pmtTrigger_maxpassed = pmttriggerlist[0]->maxPMTs;
 
@@ -860,7 +1009,9 @@ void Hitdumper::analyze(const art::Event& evt)
       auto crtSoftTriggerMetrics = crtsofttriggerlist[0];
 
       for (int i=0; i<7; i++){
-              _crtSoftTrigger_hitsperplane[i] = crtSoftTriggerMetrics->hitsperplane[i];
+
+	_crtSoftTrigger_hitsperplane[i] = crtSoftTriggerMetrics->hitsperplane[i];
+
       }
     }
     else{
@@ -882,56 +1033,50 @@ void Hitdumper::analyze(const art::Event& evt)
       _nmuontrks = muontrklist.size();
       ResetMuonTracksVars(_nmuontrks);
 
-      for (int i=0; i < _nmuontrks; i++){
 
-        _muontrk_t0[i] = muontrklist[i]->t0_us;
-        _muontrk_x1[i] = muontrklist[i]->x1_pos;
-        _muontrk_y1[i] = muontrklist[i]->y1_pos;
-        _muontrk_z1[i] = muontrklist[i]->z1_pos;
-        _muontrk_x2[i] = muontrklist[i]->x2_pos;
-        _muontrk_y2[i] = muontrklist[i]->y2_pos;
-        _muontrk_z2[i] = muontrklist[i]->z2_pos;
-        _muontrk_theta_xz[i] = muontrklist[i]->theta_xz;
-        _muontrk_theta_yz[i] = muontrklist[i]->theta_yz;
-        _muontrk_tpc[i] = muontrklist[i]->tpc;
-        _muontrk_type[i] = muontrklist[i]->type;
+      for (int i=0; i < _nmuontrks; i++){ 
+        
+	_muontrk_t0[i] = muontrklist[i]->t0_us; 
+	_muontrk_x1[i] = muontrklist[i]->x1_pos;
+	_muontrk_y1[i] = muontrklist[i]->y1_pos;
+	_muontrk_z1[i] = muontrklist[i]->z1_pos;
+	_muontrk_x2[i] = muontrklist[i]->x2_pos;
+	_muontrk_y2[i] = muontrklist[i]->y2_pos;
+	_muontrk_z2[i] = muontrklist[i]->z2_pos; 
+	_muontrk_theta_xz[i] = muontrklist[i]->theta_xz; 
+	_muontrk_theta_yz[i] = muontrklist[i]->theta_yz;
+	_muontrk_tpc[i] = muontrklist[i]->tpc; 
+	_muontrk_type[i] = muontrklist[i]->type;
       }
       if (freadMuonHits){
-        art::FindMany<recob::Hit> muontrkassn(muonTrackListHandle, evt, fMuonTrackModuleLabel);
-        ResetMuonHitVars(3000); //estimate of maximum collection hits
-        _nmhits = 0;
-        for (int i=0; i < _nmuontrks; i++){
-        std::vector< const recob::Hit*> muonhitsVec = muontrkassn.at(i);
-          _nmhits += (muonhitsVec.size());
-          for (size_t j=0; j<muonhitsVec.size(); j++){
-            auto muonhit = muonhitsVec.at(j);
-            geo::WireID wireid = muonhit->WireID();
-            _mhit_trk.push_back(i);
-            _mhit_tpc.push_back(wireid.TPC);
-            _mhit_plane.push_back(wireid.Plane);
-            _mhit_wire.push_back(wireid.Wire);
-            _mhit_channel.push_back(muonhit->Channel());
-            _mhit_peakT.push_back(muonhit->PeakTime());
-            _mhit_charge.push_back(muonhit->Integral());
-          }
-        }
+	art::FindMany<recob::Hit> muontrkassn(muonTrackListHandle, evt, fMuonTrackModuleLabel);
+	ResetMuonHitVars(3000); //estimate of maximum collection hits
+	_nmhits = 0;
+	for (int i=0; i < _nmuontrks; i++){ 
+	  std::vector< const recob::Hit*> muonhitsVec = muontrkassn.at(i);
+	  _nmhits += (muonhitsVec.size()); 
+	  for (size_t j=0; j<muonhitsVec.size(); j++){
+	    auto muonhit = muonhitsVec.at(j);
+	    geo::WireID wireid = muonhit->WireID();
+	    _mhit_trk.push_back(i);
+	    _mhit_tpc.push_back(wireid.TPC);
+	    _mhit_plane.push_back(wireid.Plane);
+	    _mhit_wire.push_back(wireid.Wire);
+	    _mhit_channel.push_back(muonhit->Channel());
+	    _mhit_peakT.push_back(muonhit->PeakTime());
+	    _mhit_charge.push_back(muonhit->Integral());
+	  }
+	}
+
       }
     }
     else{
       std::cout << "Failed to get sbnd::comm::MuonTrack data product" << std::endl;
     }
   }
-
+  ResetWaveforms();
   if (fcheckTransparency) {
-
-    _waveform_number.resize(_max_hits*_max_samples, -9999.);
-    _adc_on_wire.resize(_max_hits*_max_samples, -9999.);
-    _time_for_waveform.resize(_max_hits*_max_samples, -9999.);
-    _waveform_integral.resize(_max_hits*_max_samples, -9999.);
-    _adc_count_in_waveform.resize(_max_hits*_max_samples, -9999.);
-
     art::Handle<std::vector<raw::RawDigit>> digitVecHandle;
-
     bool retVal = evt.getByLabel(fDigitModuleLabel, digitVecHandle);
     if(retVal == true) {
       mf::LogInfo("HitDumper")    << "I got fDigitModuleLabel: "         << fDigitModuleLabel << std::endl;
@@ -943,9 +1088,36 @@ void Hitdumper::analyze(const art::Event& evt)
     int adc_counter = 1;
     _adc_count = _nhits * (fWindow * 2 + 1);
 
+    int hit_counter=0;
+    std::map<int, int> channelHitCounts;
+    for (int ihit = 0; ihit < _nhits; ++ihit) {
+      if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num &&
+	  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower &&
+	  !(_hit_wire[ihit] == _noisy_channel)) {
+	channelHitCounts[_hit_channel[ihit]]++;
+	++hit_counter;
+      }
+    }
+
+    std::cout << "Number of hits passing cuts: " << hit_counter << std::endl;
+
+    std::vector<double> temp_waveform_number;
+    std::vector<double> temp_adc_on_wire;
+    std::vector<double> temp_time_for_waveform;
+    std::vector<double> temp_wire_number;
+    std::vector<double> temp_channel_number;
+    std::vector<double> temp_hit_time;
+
+    std::map<int, std::vector<double>> waveform_adc_map;
+    std::map<int, std::vector<double>> waveform_time_map;
+    std::map<int, std::vector<int>> waveform_wire_map;
+    std::map<int, std::vector<int>> waveform_number_map;
+    std::map<int, std::vector<int>> waveform_channel_number;
+    std::map<int, std::vector<int>> waveform_hit_time;
+
     // loop over waveforms
     for(size_t rdIter = 0; rdIter < digitVecHandle->size(); ++rdIter) {
-
+      
       //GET THE REFERENCE TO THE CURRENT raw::RawDigit.
       art::Ptr<raw::RawDigit> digitVec(digitVecHandle, rdIter);
       int channel   = digitVec->Channel();
@@ -953,53 +1125,116 @@ void Hitdumper::analyze(const art::Event& evt)
       std::vector<short> rawadc;      //UNCOMPRESSED ADC VALUES.
       rawadc.resize(fDataSize);
 
+      
       // see if there is a hit on this channel
-      for (int ihit = 0; ihit < _nhits; ++ihit) {
-        if (_hit_channel[ihit] == channel) {
+      if (channelHitCounts[channel] == 1 && hit_counter > _max_tpc_hits) {
+	for (int ihit = 0; ihit < _nhits; ++ihit) {
+	  if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==_tpc_num && _hit_plane[ihit]==_plane_num  &&  _hit_peakT[ihit]<time_cut_upper && _hit_peakT[ihit]>time_cut_lower && !(_hit_wire[ihit] == _noisy_channel)) {
+	   
+	    int pedestal = (int)digitVec->GetPedestal();
+	    //UNCOMPRESS THE DATA.
+	    if (fUncompressWithPed) {
+	      raw::Uncompress(digitVec->ADCs(), rawadc, pedestal, digitVec->Compression());
+	    }
+	    else {
+	      raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
+	    }
 
-          int pedestal = (int)digitVec->GetPedestal();
-          //UNCOMPRESS THE DATA.
-          if (fUncompressWithPed) {
-            raw::Uncompress(digitVec->ADCs(), rawadc, pedestal, digitVec->Compression());
-          }
-          else {
-            raw::Uncompress(digitVec->ADCs(), rawadc, digitVec->Compression());
-          }
+	    unsigned int bin = _hit_peakT[ihit];
+	    unsigned int low_edge,high_edge;
+	    if((int)bin > fWindow and _hit_plane[ihit] == 0) {
+	      low_edge = bin - fWindow;
+	    }
+	    else if ((int)bin>fWindow) {
+	      low_edge = bin-fWindow;
+	    }
+	    else {
+	      low_edge = 0;
+	    }
 
-          unsigned int bin = _hit_peakT[ihit];
-          unsigned int low_edge,high_edge;
-          if((int)bin > fWindow and _hit_plane[ihit] == 0) {
-            low_edge = bin - (2*fWindow);
-          }
-          else if ((int)bin>fWindow) {
-            low_edge = bin-fWindow;
-          }
-          else {
-            low_edge = 0;
-          }
-          high_edge = bin + fWindow;
-          if (high_edge > (fDataSize-1)) {
-            high_edge = fDataSize - 1;
-          }
-          double integral = 0.0;
-          waveform_number_tracker++;
-          int counter_for_adc_in_waveform = 0;
-          for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
-            _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
-            counter_for_adc_in_waveform++;
-            _waveform_number[adc_counter] = waveform_number_tracker;
-            _adc_on_wire[adc_counter] = rawadc[ibin]-pedestal;
-            _time_for_waveform[adc_counter] = ibin;
-            //std::cout << "DUMP: " << _waveform_number[adc_counter] << " " << _adc_count << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<ibin << " " << (rawadc[ibin]-pedestal) << " " << _time_for_waveform[adc_counter] << " " << _adc_on_wire[adc_counter] << std::endl;
-            integral+=_adc_on_wire[adc_counter];
-            _waveform_integral[adc_counter] = integral;
-            adc_counter++;
-          }
-          std::cout << "DUMP SUM: " << _hit_tpc[ihit] << " " << _hit_plane[ihit] << " " << _hit_wire[ihit] << " " <<  integral << " " << waveform_number_tracker << std::endl;
-          _hit_full_integral[ihit] = integral;
-        } // if hit channel matches waveform channel
-      } //end loop over hits
+	    if (_hit_plane[ihit] == 0) {
+	      high_edge = bin + 3*fWindow;
+	    } else {
+	      high_edge = bin + fWindow;
+	    }
+
+	    if (high_edge > (fDataSize-1)) {
+	      high_edge = fDataSize - 1;
+	    }
+	    //	     double integral = 0.0;
+	    waveform_number_tracker++;
+	    // int counter_for_adc_in_waveform = 0;
+	    for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
+	      // _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
+	      // counter_for_adc_in_waveform++;
+	     temp_waveform_number.push_back(waveform_number_tracker);
+	     temp_adc_on_wire.push_back(rawadc[ibin]-pedestal);
+	     temp_time_for_waveform.push_back(ibin);
+	     temp_wire_number.push_back(_hit_wire[ihit]);
+	     temp_channel_number.push_back(_hit_channel[ihit]);
+	     temp_hit_time.push_back(_hit_peakT[ihit]);
+	     
+	     int wave_num =static_cast<int>(temp_waveform_number.back());
+	     waveform_adc_map[wave_num].push_back(temp_adc_on_wire.back());
+	     waveform_time_map[wave_num].push_back(temp_time_for_waveform.back());
+	     waveform_wire_map[wave_num].push_back(temp_wire_number.back());
+	     waveform_number_map[wave_num].push_back(temp_waveform_number.back());
+	     waveform_channel_number[wave_num].push_back(temp_channel_number.back());
+	     waveform_hit_time[wave_num].push_back(temp_hit_time.back());
+
+	     //	       integral+=_adc_on_wire[adc_counter];
+	     // _waveform_integral.push_back(integral);
+	      adc_counter++;
+	    }//bin loop
+	  } // if cuts
+	} //end loop over hits
+      }//if one hit per channel
     }// end loop over waveforms
+
+
+    for (const auto &entry : waveform_adc_map) {
+      int wave_num = entry.first; // The current waveform number
+      const std::vector<double> &adc_vals = entry.second;
+      const std::vector<double> &time_vals = waveform_time_map[wave_num];
+      const std::vector<int> &wire_nums = waveform_wire_map[wave_num];
+      const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
+      const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
+      const std::vector<int> &hit_times = waveform_hit_time[wave_num];
+
+
+      if(_plane_num==2){
+	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
+	double area_under_curve = CalculateAreaUnderCurve(adc_vals, time_vals);
+	
+	// If no data, skip this waveform
+	if (adc_vals.empty() || time_vals.empty()) {
+	  continue;
+	}
+	
+	if (HasDoublePeakFeature(adc_vals, 10.0)){
+	  continue;
+	}
+	
+	double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
+	
+	if (max_adc > 130) {
+	  continue;
+	}
+	if (area_under_curve > 7.35 * amplitude + 250) {
+	  continue;
+	}
+	if (half_width < 4.5 || half_width > 10) {
+	  continue;
+	}
+      
+      _time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
+      _adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
+      _wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
+      _channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
+      _waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
+      _hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
+      }      
+    }
   }// end if fCheckTrasparency
 
 
@@ -1012,32 +1247,32 @@ void Hitdumper::analyze(const art::Event& evt)
       mcpart_no_primaries = MCParticleList.size();
       ResizeMCParticle(MCParticleList.size()); //Set vectors
       for (size_t iMCPart = 0; iMCPart < MCParticleList.size(); iMCPart++){
-        art::Ptr<simb::MCParticle> pPart = MCParticleList[iMCPart]; //get particle pointer
-        //Geant info
-        mcpart_Mother[iMCPart] = pPart->Mother();
-        mcpart_TrackId[iMCPart] = pPart->TrackId();
-        mcpart_pdg[iMCPart] = pPart->PdgCode();
-        mcpart_status[iMCPart] =  pPart->StatusCode();
-        mcpart_process[iMCPart] =  pPart->Process();
-        mcpart_endprocess[iMCPart] =  pPart->EndProcess();
-        mcpart_Eng[iMCPart] = pPart->E();
-        mcpart_EndE[iMCPart] = pPart->EndE();
-        mcpart_Mass[iMCPart] = pPart->Mass();
-        mcpart_Px[iMCPart] = pPart->Px();
-        mcpart_Py[iMCPart] = pPart->Py();
-        mcpart_Pz[iMCPart] = pPart->Pz();
-        mcpart_P[iMCPart] = pPart->Momentum().Vect().Mag();
-        mcpart_StartPointx[iMCPart] = pPart->Vx();
-        mcpart_StartPointy[iMCPart] = pPart->Vy();
-        mcpart_StartPointz[iMCPart] = pPart->Vz();
-        mcpart_StartT[iMCPart] = pPart->T();
-        mcpart_EndPointx[iMCPart] = pPart->EndPosition()[0];
-        mcpart_EndPointy[iMCPart] = pPart->EndPosition()[1];
-        mcpart_EndPointz[iMCPart] = pPart->EndPosition()[2];
-        mcpart_EndT[iMCPart] = pPart->EndT();
-        mcpart_theta_xz[iMCPart] =  std::atan2(pPart->Px(), pPart->Pz());
-        mcpart_theta_yz[iMCPart] =  std::atan2(pPart->Py(), pPart->Pz());
-        mcpart_NumberDaughters[iMCPart] = pPart->NumberDaughters();
+	art::Ptr<simb::MCParticle> pPart = MCParticleList[iMCPart]; //get particle pointer
+	//Geant info
+	mcpart_Mother[iMCPart] = pPart->Mother();
+	mcpart_TrackId[iMCPart] = pPart->TrackId();
+	mcpart_pdg[iMCPart] = pPart->PdgCode();
+	mcpart_status[iMCPart] =  pPart->StatusCode();
+	mcpart_process[iMCPart] =  pPart->Process();
+	mcpart_endprocess[iMCPart] =  pPart->EndProcess();
+	mcpart_Eng[iMCPart] = pPart->E();
+	mcpart_EndE[iMCPart] = pPart->EndE();
+	mcpart_Mass[iMCPart] = pPart->Mass();
+	mcpart_Px[iMCPart] = pPart->Px();
+	mcpart_Py[iMCPart] = pPart->Py();
+	mcpart_Pz[iMCPart] = pPart->Pz();
+	mcpart_P[iMCPart] = pPart->Momentum().Vect().Mag();
+	mcpart_StartPointx[iMCPart] = pPart->Vx();
+	mcpart_StartPointy[iMCPart] = pPart->Vy();
+	mcpart_StartPointz[iMCPart] = pPart->Vz();
+	mcpart_StartT[iMCPart] = pPart->T();
+	mcpart_EndPointx[iMCPart] = pPart->EndPosition()[0];
+	mcpart_EndPointy[iMCPart] = pPart->EndPosition()[1];
+	mcpart_EndPointz[iMCPart] = pPart->EndPosition()[2];
+	mcpart_EndT[iMCPart] = pPart->EndT();
+	mcpart_theta_xz[iMCPart] =  std::atan2(pPart->Px(), pPart->Pz());
+	mcpart_theta_yz[iMCPart] =  std::atan2(pPart->Py(), pPart->Pz());
+	mcpart_NumberDaughters[iMCPart] = pPart->NumberDaughters();
       }
     }//endif get label
     else {
@@ -1051,9 +1286,9 @@ void Hitdumper::analyze(const art::Event& evt)
       mctrack_no_primaries = MCTrackList.size();
       ResizeMCTrack(MCTrackList.size());
       for (size_t iMCTrack = 0; iMCTrack < MCTrackList.size(); iMCTrack++){
-        art::Ptr<sim::MCTrack> pTrack = MCTrackList[iMCTrack]; //get particle pointer
-        mctrack_pdg[iMCTrack] = pTrack->PdgCode();
-        mctrack_TrackId[iMCTrack] = pTrack->TrackID();
+	art::Ptr<sim::MCTrack> pTrack = MCTrackList[iMCTrack]; //get particle pointer
+	mctrack_pdg[iMCTrack] = pTrack->PdgCode();
+	mctrack_TrackId[iMCTrack] = pTrack->TrackID();
       }
     }
     else{
@@ -1068,9 +1303,9 @@ void Hitdumper::analyze(const art::Event& evt)
       mcshower_no_primaries = MCShowerList.size();
       ResizeMCShower(MCShowerList.size());
       for (size_t iMCShower = 0; iMCShower < MCShowerList.size(); iMCShower++){
-        art::Ptr<sim::MCShower> pShower = MCShowerList[iMCShower]; //get particle pointer
-        mcshower_pdg[iMCShower] = pShower->PdgCode();
-        mcshower_TrackId[iMCShower] = pShower->TrackID();
+	art::Ptr<sim::MCShower> pShower = MCShowerList[iMCShower]; //get particle pointer
+	mcshower_pdg[iMCShower] = pShower->PdgCode();
+	mcshower_TrackId[iMCShower] = pShower->TrackID();
       }
     }
     else{
@@ -1091,14 +1326,14 @@ void Hitdumper::analyze(const art::Event& evt)
 
     art::Ptr<simb::MCTruth> mctruth;
 
-      if (!mclist.empty()) {//at least one mc record
+    if (!mclist.empty()) {//at least one mc record
 
-        mctruth = mclist[0];
+      mctruth = mclist[0];
 
-        if (mctruth->NeutrinoSet()) nGeniePrimaries = mctruth->NParticles();
+      if (mctruth->NeutrinoSet()) nGeniePrimaries = mctruth->NParticles();
 
     } // if have MC truth
-      MF_LOG_DEBUG("HitDumper") << "Expected " << nGeniePrimaries << " GENIE particles";
+    MF_LOG_DEBUG("HitDumper") << "Expected " << nGeniePrimaries << " GENIE particles";
 
     //Initially call the number of neutrinos to be stored the number of MCTruth objects.  This is not strictly true i.e. BNB + cosmic overlay but we will count the number of neutrinos later
     nMCNeutrinos = mclist.size();
@@ -1122,87 +1357,87 @@ void Hitdumper::analyze(const art::Event& evt)
       //Because MCTruth could be a neutrino OR something else (e.g. cosmics) we are going to have to count up how many neutrinos there are
       mcevts_truth = 0;
       for (unsigned int i_mctruth = 0; i_mctruth < mclist.size(); i_mctruth++){
-        //fetch an mctruth
-        art::Ptr<simb::MCTruth> curr_mctruth = mclist[i_mctruth];
-        //Check if it's a neutrino
-        if (!curr_mctruth->NeutrinoSet()) continue;
+	//fetch an mctruth
+	art::Ptr<simb::MCTruth> curr_mctruth = mclist[i_mctruth];
+	//Check if it's a neutrino
+	if (!curr_mctruth->NeutrinoSet()) continue;
 
-        // Genie Truth association only for the neutrino
-        if (fmgt.size()>i_mctruth) {
-          std::vector< art::Ptr<simb::GTruth> > mcgtAssn = fmgt.at(i_mctruth);
+	// Genie Truth association only for the neutrino
+	if (fmgt.size()>i_mctruth) {
+	  std::vector< art::Ptr<simb::GTruth> > mcgtAssn = fmgt.at(i_mctruth);
 
-          nuScatterCode_truth[i_mctruth] = mcgtAssn[0]->fGscatter;
-        } else {
-          nuScatterCode_truth[i_mctruth] = -1.;
-        }
+	  nuScatterCode_truth[i_mctruth] = mcgtAssn[0]->fGscatter;
+	} else {
+	  nuScatterCode_truth[i_mctruth] = -1.;
+	}
 
-        nuPDG_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().PdgCode();
-        ccnc_truth[i_mctruth] = curr_mctruth->GetNeutrino().CCNC();
-        mode_truth[i_mctruth] = curr_mctruth->GetNeutrino().Mode();
-        Q2_truth[i_mctruth] = curr_mctruth->GetNeutrino().QSqr();
-        W_truth[i_mctruth] = curr_mctruth->GetNeutrino().W();
-        hitnuc_truth[i_mctruth] = curr_mctruth->GetNeutrino().HitNuc();
-        enu_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().E();
-        nuvtxx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vx();
-        nuvtxy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vy();
-        nuvtxz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vz();
-        if (curr_mctruth->GetNeutrino().Nu().P()){
-          nu_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Px()/curr_mctruth->GetNeutrino().Nu().P();
-          nu_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Py()/curr_mctruth->GetNeutrino().Nu().P();
-          nu_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Pz()/curr_mctruth->GetNeutrino().Nu().P();
-        }
-        lep_mom_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().P();
-        if (curr_mctruth->GetNeutrino().Lepton().P()){
-          lep_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Px()/curr_mctruth->GetNeutrino().Lepton().P();
-          lep_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Py()/curr_mctruth->GetNeutrino().Lepton().P();
-          lep_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Pz()/curr_mctruth->GetNeutrino().Lepton().P();
-        }
-        //Brailsford
-        //2017/10/17
-        //Issue 12918
-        //Use the art::Ptr key as the neutrino's unique ID
-        nuID_truth[i_mctruth] = curr_mctruth.key();
-        //We need to also store N 'flux' neutrinos per event so now check that the FindOneP is valid and, if so, use it!
-        if (fmFluxNeutrino.isValid()){
-          if (fmFluxNeutrino.at(0).size()>i_mctruth){
-          art::Ptr<simb::MCFlux> curr_mcflux = fmFluxNeutrino.at(0).at(i_mctruth);
-          tpx_flux[i_mctruth] = curr_mcflux->ftpx;
-          tpy_flux[i_mctruth] = curr_mcflux->ftpy;
-          tpz_flux[i_mctruth] = curr_mcflux->ftpz;
-          tptype_flux[i_mctruth] = curr_mcflux->ftptype;
-          }
-        }
+	nuPDG_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().PdgCode();
+	ccnc_truth[i_mctruth] = curr_mctruth->GetNeutrino().CCNC();
+	mode_truth[i_mctruth] = curr_mctruth->GetNeutrino().Mode();
+	Q2_truth[i_mctruth] = curr_mctruth->GetNeutrino().QSqr();
+	W_truth[i_mctruth] = curr_mctruth->GetNeutrino().W();
+	hitnuc_truth[i_mctruth] = curr_mctruth->GetNeutrino().HitNuc();
+	enu_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().E();
+	nuvtxx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vx();
+	nuvtxy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vy();
+	nuvtxz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Vz();
+	if (curr_mctruth->GetNeutrino().Nu().P()){
+	  nu_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Px()/curr_mctruth->GetNeutrino().Nu().P();
+	  nu_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Py()/curr_mctruth->GetNeutrino().Nu().P();
+	  nu_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Nu().Pz()/curr_mctruth->GetNeutrino().Nu().P();
+	}
+	lep_mom_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().P();
+	if (curr_mctruth->GetNeutrino().Lepton().P()){
+	  lep_dcosx_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Px()/curr_mctruth->GetNeutrino().Lepton().P();
+	  lep_dcosy_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Py()/curr_mctruth->GetNeutrino().Lepton().P();
+	  lep_dcosz_truth[i_mctruth] = curr_mctruth->GetNeutrino().Lepton().Pz()/curr_mctruth->GetNeutrino().Lepton().P();
+	}
+	//Brailsford
+	//2017/10/17
+	//Issue 12918
+	//Use the art::Ptr key as the neutrino's unique ID
+	nuID_truth[i_mctruth] = curr_mctruth.key();
+	//We need to also store N 'flux' neutrinos per event so now check that the FindOneP is valid and, if so, use it!
+	if (fmFluxNeutrino.isValid()){
+	  if (fmFluxNeutrino.at(0).size()>i_mctruth){
+	    art::Ptr<simb::MCFlux> curr_mcflux = fmFluxNeutrino.at(0).at(i_mctruth);
+	    tpx_flux[i_mctruth] = curr_mcflux->ftpx;
+	    tpy_flux[i_mctruth] = curr_mcflux->ftpy;
+	    tpz_flux[i_mctruth] = curr_mcflux->ftpz;
+	    tptype_flux[i_mctruth] = curr_mcflux->ftptype;
+	  }
+	}
 
-        //Let's increase the neutrino count
-        mcevts_truth++;
+	//Let's increase the neutrino count
+	mcevts_truth++;
       }
 
       if (mctruth->NeutrinoSet()){
-        //genie particles information
-        genie_no_primaries = mctruth->NParticles();
+	//genie particles information
+	genie_no_primaries = mctruth->NParticles();
 
-        size_t StoreParticles = std::min((size_t) genie_no_primaries, MaxGeniePrimaries);
-        if (genie_no_primaries > (int) StoreParticles) {
-          // got this error? it might be a bug,
-          // since the structure should have enough room for everything
-          mf::LogError("HitDumper") << "event has "
-            << genie_no_primaries << " MC particles, only "
-            << StoreParticles << " stored in tree";
-        }
-        for(size_t iPart = 0; iPart < StoreParticles; ++iPart){
-          const simb::MCParticle& part(mctruth->GetParticle(iPart));
-          genie_primaries_pdg[iPart]=part.PdgCode();
-          genie_Eng[iPart]=part.E();
-          genie_Px[iPart]=part.Px();
-          genie_Py[iPart]=part.Py();
-          genie_Pz[iPart]=part.Pz();
-          genie_P[iPart]=part.P();
-          genie_status_code[iPart]=part.StatusCode();
-          genie_mass[iPart]=part.Mass();
-          genie_trackID[iPart]=part.TrackId();
-          genie_ND[iPart]=part.NumberDaughters();
-          genie_mother[iPart]=part.Mother();
-        } // for particle
+	size_t StoreParticles = std::min((size_t) genie_no_primaries, MaxGeniePrimaries);
+	if (genie_no_primaries > (int) StoreParticles) {
+	  // got this error? it might be a bug,
+	  // since the structure should have enough room for everything
+	  mf::LogError("HitDumper") << "event has "
+				    << genie_no_primaries << " MC particles, only "
+				    << StoreParticles << " stored in tree";
+	}
+	for(size_t iPart = 0; iPart < StoreParticles; ++iPart){
+	  const simb::MCParticle& part(mctruth->GetParticle(iPart));
+	  genie_primaries_pdg[iPart]=part.PdgCode();
+	  genie_Eng[iPart]=part.E();
+	  genie_Px[iPart]=part.Px();
+	  genie_Py[iPart]=part.Py();
+	  genie_Pz[iPart]=part.Pz();
+	  genie_P[iPart]=part.P();
+	  genie_status_code[iPart]=part.StatusCode();
+	  genie_mass[iPart]=part.Mass();
+	  genie_trackID[iPart]=part.TrackId();
+	  genie_ND[iPart]=part.NumberDaughters();
+	  genie_mother[iPart]=part.Mother();
+	} // for particle
       } //if neutrino set
     }//if (mcevts_truth)
 
@@ -1216,8 +1451,8 @@ void Hitdumper::analyze(const art::Event& evt)
 
 }
 
- void Hitdumper::beginJob()
- {
+void Hitdumper::beginJob()
+{
   // Implementation of optional member function here.
   art::ServiceHandle<art::TFileService> tfs;
   fTree = tfs->make<TTree>("hitdumpertree","analysis tree");
@@ -1248,6 +1483,7 @@ void Hitdumper::analyze(const art::Event& evt)
   fTree->Branch("hit_width", &_hit_width);
   fTree->Branch("hit_full_integral", &_hit_full_integral);
 
+
   if (fcheckTransparency) {
     fTree->Branch("adc_count", &_adc_count,"adc_count/I");
     fTree->Branch("waveform_number", &_waveform_number);
@@ -1255,6 +1491,10 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("adc_on_wire", &_adc_on_wire);
     fTree->Branch("waveform_integral", &_waveform_integral);
     fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
+    fTree->Branch("wire_number", &_wire_number);
+    fTree->Branch("channel_number", &_channel_number);
+    fTree->Branch("hit_time", &_hit_time); 
+
   }
 
   if (fKeepCRTStripHits) {
@@ -1303,7 +1543,11 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("crt_track_theta", &_crt_track_theta);
     fTree->Branch("crt_track_phi", &_crt_track_phi);
     fTree->Branch("crt_track_length", &_crt_track_length);
- }
+    fTree->Branch("theta_xz_CRT", &_theta_xz_CRT); 
+    fTree->Branch("theta_yz_CRT", &_theta_yz_CRT);
+    fTree->Branch("crt_gradient", &_crt_gradient);
+    fTree->Branch("crt_intercept", &_crt_intercept);
+  }
 
   if (freadOpHits) {
     fTree->Branch("nophits", &_nophits, "nophits/I");
@@ -1355,7 +1599,7 @@ void Hitdumper::analyze(const art::Event& evt)
     fTree->Branch("muontrk_type", &_muontrk_type);
   }
 
-    if (freadMuonHits) {
+  if (freadMuonHits) {
     fTree->Branch("nmhits", &_nmhits, "nmhits/I");
     fTree->Branch("mhit_trk", &_mhit_trk);
     fTree->Branch("mhit_tpc", &_mhit_tpc);
@@ -1480,6 +1724,7 @@ void Hitdumper::AnalyseTDCs(std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> &T
 
 
 void Hitdumper::ResetWireHitsVars(int n) {
+  assert(nhits <= _max_hits);
   _hit_cryostat.assign(n, DEFAULT_VALUE);
   _hit_tpc.assign(n, DEFAULT_VALUE);
   _hit_plane.assign(n, DEFAULT_VALUE);
@@ -1490,6 +1735,19 @@ void Hitdumper::ResetWireHitsVars(int n) {
   _hit_ph.assign(n, DEFAULT_VALUE);
   _hit_width.assign(n, DEFAULT_VALUE);
   _hit_full_integral.assign(n, DEFAULT_VALUE);
+
+}
+
+void Hitdumper::ResetWaveforms(){
+  _waveform_number.clear();
+  _adc_on_wire.clear();
+  _time_for_waveform.clear();
+  _waveform_integral.clear();
+  _adc_count_in_waveform.clear();
+  _wire_number.clear();
+  _channel_number.clear();
+  _hit_time.clear();
+
 }
 
 void Hitdumper::ResetCRTStripHitVars() {
@@ -1520,6 +1778,10 @@ void Hitdumper::ResetCRTTracksVars() {
   _crt_track_theta.clear();
   _crt_track_phi.clear();
   _crt_track_length.clear();
+  _theta_xz_CRT.clear();
+  _theta_yz_CRT.clear();
+  _crt_gradient.clear();
+  _crt_intercept.clear();
 }
 
 void Hitdumper::ResetCRTSpacePointVars() {

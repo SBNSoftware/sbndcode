@@ -24,10 +24,12 @@ physics.reco1comm: [ rns
   , crttracks
   , fasthit
   , crttrackfilter
-  , MuonTrackProducer
+#  , MuonTrackProducer
  ]
 
 physics.trigger_paths: [ reco1comm ]
+physics.end_paths: [stream1]
+outputs.out1.SelectEvents: [ "reco1comm" ]
 
 physics.producers.crtstrips.FEBDataModuleLabel: "crtdecoder"
 
@@ -43,15 +45,3 @@ physics.producers.fasthit.IncludeMoreTail: 3.0
 physics.producers.fasthit.ColMinWidth: 100.0
 physics.producers.fasthit.UncompressWithPed: false
 
-# override hitdumper defaults 
-physics.analyzers.hitdumper.readMuonHits:       false
-physics.analyzers.hitdumper.readMuonTracks:     false
-physics.analyzers.hitdumper.KeepCRTStripHits:   true
-physics.analyzers.hitdumper.KeepCRTTracks:      true
-physics.analyzers.hitdumper.KeepCRTSpacePoints: true
-physics.analyzers.hitdumper.readpmtTrigger:     false
-physics.analyzers.hitdumper.readpmtSoftTrigger: false
-physics.analyzers.hitdumper.readTruth: false
-physics.analyzers.hitdumper.readOpHits: false
-
-physics.analyzers.hitdumper.SelectEvents: [reco1comm ]
