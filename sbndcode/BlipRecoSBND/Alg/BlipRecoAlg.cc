@@ -85,7 +85,8 @@ namespace blip {
           }
           
           // additional ad-hoc corrections supplied by user
-          kXTicksOffsets[cstat][tpc][pl] += fTimeOffset[pl];
+          //kXTicksOffsets[cstat][tpc][pl] += fTimeOffset[pl];
+          std::cout << " offsetting plane " << pl << " by " << fTimeOffset[pl] << " ticks " << std::endl;
           
         }
       }
@@ -573,8 +574,8 @@ namespace blip {
       hitinfo[i].sumADC       = thisHit->ROISummedADC();
       hitinfo[i].charge       = fCaloAlg->ElectronsFromADCArea(thisHit->Integral(),plane);
       hitinfo[i].gof          = thisHit->GoodnessOfFit() / thisHit->DegreesOfFreedom();
-      hitinfo[i].peakTime     = thisHit->PeakTime();
-      hitinfo[i].driftTime    = thisHit->PeakTime()-kXTicksOffsets[cstat][tpc][plane]; //detProp.GetXTicksOffset(wireid);
+      hitinfo[i].peakTime     = thisHit->PeakTime()+fTimeOffset[plane]; // usually zero offset
+      hitinfo[i].driftTime    = hitinfo[i].peakTime-kXTicksOffsets[cstat][tpc][plane]; //detProp.GetXTicksOffset(wireid);
 
       //h_hit_times->Fill(thisHit->PeakTime());
       //h_hit_chanstatus->Fill( chanFilt.Status(chan) );
