@@ -44,11 +44,9 @@ namespace raw {
       std::vector<int> fStatus;
 
       public:
-        //BoardAlignment() : fShift({}) {}; // constructor
         BoardAlignment() : fShift({}), fStatus({}) {}; // constructor
         virtual ~BoardAlignment() {}; // destructror
        
-        //BoardAlignment(std::vector<double> &_shift) : fShift(_shift) {};
         BoardAlignment(std::vector<double> &_shift, std::vector<int> &_status) : fShift(_shift), fStatus(_status) {};
 
         std::vector<double> Shift() const {return fShift;}
