@@ -94,6 +94,9 @@ private:
   Config _config;
 
   void getMedianSigma(const std::vector<int16_t> &v_adc, float &median, float &sigma);
+  float getEvenFraction(const std::vector<int16_t> &v_adc) const;
+  float getxBADFraction(const std::vector<int16_t> &v_adc) const;
+
 
 };
 

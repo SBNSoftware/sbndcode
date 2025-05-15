@@ -1,6 +1,7 @@
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
 #include "opt0finder_sbnd_data.fcl"
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
 #include "standard_reco2_sbnd.fcl"
 
 services:
@@ -14,22 +15,39 @@ services:
 physics.producers:
 {
     @table::physics.producers
+    crtveto:                  @local::crtvetoproducer_data_sbnd
+    crtspacepointmatching:    @local::crtspacepointmatchproducer_data_sbnd
+    crttrackmatching:         @local::crttrackmatchproducer_data_sbnd
+    crtspacepointmatchingSCE: @local::crtspacepointmatchproducer_data_sbnd
+    crttrackmatchingSCE:      @local::crttrackmatchproducer_data_sbnd
+
     opt0finder:     @local::sbnd_opt0_finder_data
-    crtspacepointmatching: @local::crtspacepointmatchproducer_data_sbnd
-    crttrackmatching:      @local::crttrackmatchproducer_data_sbnd
-    opt0finder:            @local::sbnd_opt0_finder_data
+    opt0finderSCE:  @local::sbnd_opt0_finder_data
+    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 }
 
-physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, caloskimCalorimetry,
-  crtspacepointmatching, crttrackmatching, cvn, opt0finder]
+physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, 
+                 cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching, 
+                 pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData,
+                 cvnSCE, opt0finderSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
+                 caloskimCalorimetry]
 
-#The next 3 lines need to be commented out once data use pandoraSCE by default. 
-physics.producers.cvn.SliceLabel: "pandora"
-physics.producers.cvn.PFParticleModuleLabel: "pandora"
-physics.producers.cvn.T0Label: "pandora"
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
 physics.analyzers.crtana: @local::crtana_data_sbnd
+
+physics.producers.crtspacepointmatchingSCE.TPCTrackModuleLabel:       "pandoraSCETrack"
+physics.producers.crtspacepointmatchingSCE.PFPModuleLabel:            "pandoraSCE"
+physics.producers.crtspacepointmatchingSCE.MatchingAlg.TPCTrackLabel: "pandoraSCETrack"
+
+physics.producers.crttrackmatchingSCE.TPCTrackModuleLabel:            "pandoraSCETrack"
+physics.producers.crttrackmatchingSCE.PFPModuleLabel:                 "pandoraSCE"
+physics.producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandoraSCETrack"
+
+physics.producers.opt0finderSCE.SliceProducer:    "pandoraSCE"
+physics.producers.opt0finderSCE.TrackProducer:    "pandoraSCETrack"
+physics.producers.opt0finderSCE.ShowerProducer:   "pandoraSCEShowerSBN"
+physics.producers.opt0finderSCE.CaloProducer:     "pandoraSCECaloData"
 
 physics.caloskimana: [ caloskim, crtana ]
 physics.end_paths: [stream1, caloskimana ]

@@ -150,6 +150,9 @@ physics.producers.cafmaker.TrackHitFillRREndCut: 1000
 physics.producers.cafmaker.TrackCaloLabel: "pandoraCaloData"
 physics.producers.cafmaker.TrackChi2PidLabel: "pandoraPidData"
 
+# Include 3D barycenter flahs matching 
+physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
+
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false
 
@@ -157,6 +160,9 @@ physics.producers.cafmaker.CreateBlindedCAF: false
 # Turn this to false for data CAFMaker
 # More details can be found in here: https://sbn-docdb.fnal.gov/cgi-bin/sso/ShowDocument?docid=36869
 physics.producers.cafmaker.SaveGENIEEventRecord: false #comment to get CI to run on v09_90_00. This should be uncommented in v09_91_01 and later.
+
+# Iclude OpFlash information
+physics.producers.cafmaker.OpFlashLabel: "opflash"
 
 # Include Simple/OpFlashes for PMT/XARAPUCA
 physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
@@ -167,4 +173,3 @@ physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []
-
