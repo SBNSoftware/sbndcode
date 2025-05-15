@@ -31,9 +31,15 @@ namespace lightana{
     //Configuration parameters
      struct Config {
 
-       fhicl::Atom<float> Threshold {
-         fhicl::Name("Threshold"),
-         fhicl::Comment("Use channels abnove this thershold")
+       fhicl::Atom<float> ThresholdY {
+         fhicl::Name("ThresholdY"),
+         fhicl::Comment("Use channels abnove this threshold (Y coord)")
+       };
+
+
+       fhicl::Atom<float> ThresholdZ {
+         fhicl::Name("ThresholdZ"),
+         fhicl::Comment("Use channels abnove this threshold (Z coord)")
        };
 
        fhicl::Sequence<std::string> PDTypes {
@@ -65,11 +71,13 @@ namespace lightana{
   private:
 
     void ResetVars();
-    void GetCenter(std::map<int, double> PEAcc, double& center, double& width);
+    void GetCenter(std::map<int, double> PEAcc, double& center, double& width, double& threshold);
 
     // Fhicl configuration parameters
     std::vector<std::string> fPDTypes;
-    float fThreshold;
+    double fThresholdY;
+    double fThresholdZ;
+
     bool fNormalizeByPDType;
     unsigned int fWeightExp;
 
@@ -98,7 +106,8 @@ namespace lightana{
 
   FlashGeoThreshold::FlashGeoThreshold(art::ToolConfigTable<Config> const& config)
     : fPDTypes{ config().PDTypes() }
-    , fThreshold{ config().Threshold() }
+    , fThresholdY{ config().ThresholdY() }
+    , fThresholdZ{ config().ThresholdZ() }
     , fNormalizeByPDType{ config().NormalizeByPDType() }
     , fWeightExp{ config().WeightExp() }
   {
@@ -188,8 +197,8 @@ namespace lightana{
     }
 
     // Get YZ position of selected channels (above threshold)
-    GetCenter(fYPEAccumulator, Ycenter, Ywidth);
-    GetCenter(fZPEAccumulator, Zcenter, Zwidth);
+    GetCenter(fYPEAccumulator, Ycenter, Ywidth, fThresholdY);
+    GetCenter(fZPEAccumulator, Zcenter, Zwidth, fThresholdZ);
 
   }
 
@@ -204,7 +213,7 @@ namespace lightana{
     }
   }
 
-  void FlashGeoThreshold::GetCenter(std::map<int, double> PEAcc, double& center, double& width){
+  void FlashGeoThreshold::GetCenter(std::map<int, double> PEAcc, double& center, double& width, double& threshold){
 
     // set variables
     center = 0.;
@@ -227,7 +236,7 @@ namespace lightana{
       sum2+=weight*pe.first*pe.first;
 
       // For OpFlash center consider only channels above ceertain threshold
-      if(pe.second>fThreshold){  
+      if(pe.second>threshold){  
         center+=weight*pe.first;
         weightNormCenter+=weight;
       }
