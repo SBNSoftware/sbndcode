@@ -1,0 +1,7 @@
+BEGIN_PROLOG
+
+wfAlign:
+{
+    module_type:  "WaveformAlignment" 
+}
+END_PROLOG
