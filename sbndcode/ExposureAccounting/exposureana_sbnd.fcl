@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+exposureana_bnblight_sbnd:
+{
+  BNBSpillInfoModuleLabel: "sbndbnbinfo"
+  EXTCountInfoModuleLabel: ""
+  module_type:             "ExposureAna"
+}
+
+exposureana_offbeamlight_sbnd:
+{
+  BNBSpillInfoModuleLabel: ""
+  EXTCountInfoModuleLabel: "sbndbnbextinfo"
+  module_type:             "ExposureAna"
+}
+
+END_PROLOG
