@@ -228,7 +228,7 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     : EDProducer{p}  // 
     // More initializers here.
 {
-    fTimingRefLabel = p.get<art::InputTag>("fTimingRefLabel", "pmtdecoder");
+    fTimingRefLabel = p.get<art::InputTag>("TimingRefLabel", "pmtdecoder");
     fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel", "tdcdecoder");
     fPtbDecodeLabel = p.get<art::InputTag>("PtbDecodeLabel", "ptbdecoder");
 
@@ -263,10 +263,10 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fFitTries = p.get<int>("FitTries", 100);
     fGradientInitialGuess = p.get<std::vector<double>>("GradientInitialGuess", {0.3, 0.25, 0.25, 0.25, 0.3, 0.3, 0.3, 0.3, 0.08});
 
-    fPmtJitterLowerBound = p.get<int>("PmtJitterBound", -5);
-    fPmtJitterUpperBound = p.get<int>("PmtJitterBound", 3);
-    fTimingJitterLowerBound = p.get<int>("TimingJitterBound", -56);
-    fTimingJitterUpperBound = p.get<int>("TimingJitterBound", -48);
+    fPmtJitterLowerBound = p.get<int>("PmtJitterLowerBound", -5);
+    fPmtJitterUpperBound = p.get<int>("PmtJitterUpperBound", 3);
+    fTimingJitterLowerBound = p.get<int>("TimingJitterLowerBound", -56);
+    fTimingJitterUpperBound = p.get<int>("TimingJitterUpperBound", -48);
 
     fCorrectCableOnly = p.get<bool>("CorrectCableOnly", false);
 
@@ -278,7 +278,7 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fSaveGoodFit = p.get<bool>("SaveGoodFit", false);
     fSaveBadFit = p.get<bool>("SaveBadFit", false);
     fSaveCompare = p.get<bool>("SaveCompare", false);
-    fSavePath = p.get<std::string>("SavePath", "");
+    fSavePath = p.get<std::string>("SavePath", "./");
     
     fFtrigNewLabel = p.get<std::string>("FtrigNewLabel","FTrigChannels");
     fFtrigBoardNewLabel = p.get<std::string>("FtrigBoardNewLabel","FTrigTiming");
@@ -521,12 +521,13 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
         nTotalBoard = boardId_v.size();
         nFtrigFlash = wf_ftrig_v.size() / nTotalBoard;
 
-        if (fDebugFtrig) std::cout << std::endl << "Found OpDetWaveform FTRIG size = " << wf_ftrig_v.size() << ", nFTRIG per board = " << nFtrigFlash << std::endl;
+        if (fDebugFtrig)
+            std::cout << std::endl << "Found OpDetWaveform FTRIG size = " << wf_ftrig_v.size() << ", nFTRIG per board = " << nFtrigFlash << std::endl;
 
         for (int flashIdx = 0; flashIdx < nFtrigFlash; flashIdx++){
             if (fDebugFtrig) std::cout << "   Looping over OpDet id " << flashIdx << "..." << std::endl;
 
-            for (int boardIdx = 0; boardIdx < nTotalBoard; boardIdx++){ //boardIdx and wf ChannelNumber are the same
+            for (int boardIdx = 0; boardIdx < nTotalBoard; boardIdx++){
 
                 int wfIdx = flashIdx + boardIdx * nFtrigFlash;
                 art::Ptr<raw::OpDetWaveform> wf(wf_ftrig_v.at(wfIdx));
@@ -805,8 +806,8 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                 art::Ptr<raw::pmt::BoardTimingInfo> wf_board(wf_board_v.front());
                 art::Ptr<raw::pmt::BoardAlignment> wf_align = make_align_ptr(boardId_v.size()-1);
 
-                //Timing CAEN is not connected to PMT
-                double correction= 0;
+                //Timing CAEN is not connected to PMT so no cable correction
+                double correction = 0;
                 correction -= boardJitter[fPmtBoard.back()][flashIdx]; 
                 correction /= 1000; //ns to us
              
