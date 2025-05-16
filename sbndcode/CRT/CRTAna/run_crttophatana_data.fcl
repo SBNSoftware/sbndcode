@@ -1,11 +1,12 @@
 #include "crtgeoalg_sbnd.fcl"
 #include "services_sbnd.fcl"
+#include "crttophatana_sbnd.fcl"
 
-process_name: CRTAnalyzer
+process_name: CRTTopHatAna
 
 services:
 {
-  TFileService: { fileName: "crtana_sbnd.root" }
+  TFileService: { fileName: "crttophatana_sbnd.root" }
   @table::sbnd_basic_services
 }
 
@@ -18,14 +19,7 @@ physics:
 {
   analyzers:
   {
-    crttophatana: 
-    { 
-      module_type:       "CRTTopHatAnalysis"
-      CRTGeoAlg:         @local::crtgeoalg_sbnd
-      CutT0:             true
-      MinT0:             -50000
-      MaxT0:             50000
-    }
+    crttophatana: @local::crttophatana_sbnd
   }
 
   ana:       [ crttophatana ]

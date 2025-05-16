@@ -1,0 +1,14 @@
+#include "crtgeoalg_sbnd.fcl"
+
+BEGIN_PROLOG
+
+crttophatana_sbnd: 
+{ 
+  module_type:       "CRTTopHatAnalysis"
+  CRTGeoAlg:         @local::crtgeoalg_sbnd
+  CutT0:             true
+  MinT0:             -50000
+  MaxT0:             50000
+}
+
+END_PROLOG
