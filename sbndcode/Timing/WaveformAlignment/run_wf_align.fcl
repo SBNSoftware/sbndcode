@@ -1,5 +1,5 @@
 #include "services_sbnd.fcl"
-#include "wfAlignConfig.fcl"
+#include "wfalign_sbnd_data.fcl"
 
 process_name: WFALIGN  # The process name must NOT contain any underscores
 
@@ -33,7 +33,7 @@ physics:
 {
     producers:
     {
-        wfalign: @local::wfAlign
+        wfalign: @local::wfalign_data
     }
 
     prod: [ wfalign ]
