@@ -26,12 +26,18 @@ function(params, anode, field, n, rms_cuts=[])
     // one where the grouping is 32 channels wide and one where it is 128 channels wide.
     // The collection planes are grouped by 64. 
     
-    groups: [std.range(   0 + n * 5638 + g*32 ,    0 + n * 5638 + (g+1)*32  - 1) for g in std.range(0,26)] + # first section of u 
-            [std.range( 832 + n * 5638 + g*128,  832 + n * 5638 + (g+1)*128 - 1) for g in std.range(0,9)] +  # second section of u
-            [std.range(1984 + n * 5638 + g*128, 1984 + n * 5638 + (g+1)*128 - 1) for g in std.range(0,9)] +  # first section of v
-            [std.range(3136 + n * 5638 + g*32 , 3136 + n * 5638 + (g+1)*32  - 1) for g in std.range(0,26)] + # second section of v 
-            [std.range(3974 + n * 5638 + g*64 , 3974 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,13)] + # first half of w
-            [std.range(4806 + n * 5638 + g*64 , 4806 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,13)] , # second half of w
+    groups: [std.range(   0 + g*32 ,    0 + (g+1)*32  - 1) for g in std.range(0,25)] + # first section of u0 
+            [std.range( 832 + g*64 ,  832 + (g+1)*64  - 1) for g in std.range(0,17)] + # second section of u0
+            [std.range(1984 + g*64 , 1984 + (g+1)*64  - 1) for g in std.range(0,17)] + # first section of v0
+            [std.range(3136 + g*32 , 3136 + (g+1)*32  - 1) for g in std.range(0,25)] + # second section of v0 
+
+            [std.range(5638 + g*64 , 5638 + (g+1)*64  - 1) for g in std.range(0,17)] + # first section of u1
+            [std.range(6790 + g*32 , 6790 + (g+1)*32  - 1) for g in std.range(0,25)] + # second section of u1
+            [std.range(7622 + g*32 , 7622 + (g+1)*32  - 1) for g in std.range(0,25)] + # first section of v1
+            [std.range(8454 + g*64 , 8454 + (g+1)*64  - 1) for g in std.range(0,17)] + # second section of v1
+
+            [std.range(3968 + n * 5638 + g*64 , 3968 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,12)] + # first half of w
+            [std.range(4806 + n * 5638 + g*64 , 4806 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,12)] , # second half of w
 
     // Externally determined "bad" channels.
     //
