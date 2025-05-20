@@ -22,9 +22,14 @@ function(params, anode, field, n, rms_cuts=[])
     // coherent noise filtering.
     // 5638 is the number of channels in a single APA, (1984*2 + 1670), 
     // including the 6 channel gap.
-    // The induction planes have to types of ch grouping (due to FEMB), 
-    // one where the grouping is 32 channels wide and one where it is 128 channels wide.
-    // The collection planes are grouped by 64. 
+    // The induction planes have two types of ch grouping (due to FEMB installation)
+    // one where the grouping is 32 channels wide and one where it is 128 
+    // (but split into 2 groups of 64) channels wide.
+    // This grouping is flipped for the same plane in the second APA.
+    // The collection planes are grouped by 64.
+    // Due to a group of dead 32 channels in collection plane in APA0,
+    // we specify separate groups of 32 (dead) and 32 (alive) within that group of 64
+    // so that coherent noise filtering is applied properly to the alive channels.
     
     groups: [std.range(   0 + g*32 ,    0 + (g+1)*32  - 1) for g in std.range(0,25)] + # first section of u0 
             [std.range( 832 + g*64 ,  832 + (g+1)*64  - 1) for g in std.range(0,17)] + # second section of u0
@@ -34,9 +39,13 @@ function(params, anode, field, n, rms_cuts=[])
             [std.range(5638 + g*64 , 5638 + (g+1)*64  - 1) for g in std.range(0,17)] + # first section of u1
             [std.range(6790 + g*32 , 6790 + (g+1)*32  - 1) for g in std.range(0,25)] + # second section of u1
             [std.range(7622 + g*32 , 7622 + (g+1)*32  - 1) for g in std.range(0,25)] + # first section of v1
-            [std.range(8454 + g*64 , 8454 + (g+1)*64  - 1) for g in std.range(0,17)] + # second section of v1
+            [std.range(8454 + g*64 , 8454 + (g+1)*64  - 1) for g in std.range(0,17)] + # second section of v1 
 
-            [std.range(3968 + n * 5638 + g*64 , 3968 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,12)] + # first half of w
+            [std.range(3968 + n * 5638 + g*64 , 3968 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,2)] + # first three groups of w
+            [std.range(4160                   , 4192                        - 1)] + # w apa0 4th group, first 32 dead wire (for completeness)
+            [std.range(4192                   , 4224                        - 1)] + # w apa0 4th group, remaining 32 alive wire (next to dead wire)
+            [std.range(9798                   , 9862                        - 1)] + # w apa1 4th group of 64 (alive)
+            [std.range(4224 + n * 5638 + g*64 , 4224 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,8)] + # first half of w (excluding first 4 groups)
             [std.range(4806 + n * 5638 + g*64 , 4806 + n * 5638 + (g+1)*64  - 1) for g in std.range(0,12)] , # second half of w
 
     // Externally determined "bad" channels.
