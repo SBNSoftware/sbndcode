@@ -100,6 +100,8 @@ private:
   std::vector<double>   _sh_ts0_rwm_ref;
   std::vector<double>   _sh_ts0_ptb_hlt_beam_gate_ref;
   std::vector<int64_t>  _sh_ts1;
+  std::vector<double>   _sh_ts1_rwm_ref;
+  std::vector<double>   _sh_ts1_ptb_hlt_beam_gate_ref;
   std::vector<uint32_t> _sh_unixs;
   std::vector<double>   _sh_pos;
   std::vector<double>   _sh_err;
@@ -119,6 +121,8 @@ private:
   std::vector<double>   _cl_ts0_rwm_ref;
   std::vector<double>   _cl_ts0_ptb_hlt_beam_gate_ref;
   std::vector<int64_t>  _cl_ts1;
+  std::vector<double>   _cl_ts1_rwm_ref;
+  std::vector<double>   _cl_ts1_ptb_hlt_beam_gate_ref;
   std::vector<uint32_t> _cl_unixs;
   std::vector<uint16_t> _cl_nhits;
   std::vector<int16_t>  _cl_tagger;
@@ -136,6 +140,8 @@ private:
   std::vector<double>   _cl_sp_ts0_ptb_hlt_beam_gate_ref;
   std::vector<double>   _cl_sp_ets0;
   std::vector<double>   _cl_sp_ts1;
+  std::vector<double>   _cl_sp_ts1_rwm_ref;
+  std::vector<double>   _cl_sp_ts1_ptb_hlt_beam_gate_ref;
   std::vector<double>   _cl_sp_ets1;
   std::vector<bool>     _cl_sp_complete;
 
@@ -154,6 +160,8 @@ private:
   std::vector<double>  _tr_ts0_ptb_hlt_beam_gate_ref;
   std::vector<double>  _tr_ets0;
   std::vector<double>  _tr_ts1;
+  std::vector<double>  _tr_ts1_rwm_ref;
+  std::vector<double>  _tr_ts1_ptb_hlt_beam_gate_ref;
   std::vector<double>  _tr_ets1;
   std::vector<double>  _tr_pe;
   std::vector<double>  _tr_length;
@@ -176,8 +184,8 @@ private:
   std::vector<uint64_t>    _tdc_offset;
   std::vector<std::string> _tdc_name;
 
-  bool _etrig_good, _rwm_good, _ptb_hlt_beam_gate_good;
-  double _rwm_etrig_diff, _ptb_hlt_beam_gate_etrig_diff;
+  bool _etrig_good, _rwm_good, _ptb_hlt_beam_gate_good, _crt_t1_reset_good;
+  double _rwm_etrig_diff, _ptb_hlt_beam_gate_etrig_diff, _rwm_crt_t1_reset_diff, _ptb_hlt_beam_gate_crt_t1_reset_diff;
 };
 
 sbnd::crt::CRTTopHatAnalysis::CRTTopHatAnalysis(fhicl::ParameterSet const& p)
@@ -212,6 +220,8 @@ sbnd::crt::CRTTopHatAnalysis::CRTTopHatAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("sh_ts0_rwm_ref", "std::vector<double>", &_sh_ts0_rwm_ref);
   fTree->Branch("sh_ts0_ptb_hlt_beam_gate_ref", "std::vector<double>", &_sh_ts0_ptb_hlt_beam_gate_ref);
   fTree->Branch("sh_ts1", "std::vector<int64_t>", &_sh_ts1);
+  fTree->Branch("sh_ts1_rwm_ref", "std::vector<double>", &_sh_ts1_rwm_ref);
+  fTree->Branch("sh_ts1_ptb_hlt_beam_gate_ref", "std::vector<double>", &_sh_ts1_ptb_hlt_beam_gate_ref);
   fTree->Branch("sh_unixs", "std::vector<uint32_t>", &_sh_unixs);
   fTree->Branch("sh_pos", "std::vector<double>", &_sh_pos);
   fTree->Branch("sh_err", "std::vector<double>", &_sh_err);
@@ -224,6 +234,8 @@ sbnd::crt::CRTTopHatAnalysis::CRTTopHatAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("cl_ts0_rwm_ref", "std::vector<double>", &_cl_ts0_rwm_ref);
   fTree->Branch("cl_ts0_ptb_hlt_beam_gate_ref", "std::vector<double>", &_cl_ts0_ptb_hlt_beam_gate_ref);
   fTree->Branch("cl_ts1", "std::vector<int64_t>", &_cl_ts1);
+  fTree->Branch("cl_ts1_rwm_ref", "std::vector<double>", &_cl_ts1_rwm_ref);
+  fTree->Branch("cl_ts1_ptb_hlt_beam_gate_ref", "std::vector<double>", &_cl_ts1_ptb_hlt_beam_gate_ref);
   fTree->Branch("cl_unixs", "std::vector<uint32_t>", &_cl_unixs);
   fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
   fTree->Branch("cl_tagger", "std::vector<int16_t>", &_cl_tagger);
@@ -241,6 +253,8 @@ sbnd::crt::CRTTopHatAnalysis::CRTTopHatAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("cl_sp_ts0_ptb_hlt_beam_gate_ref", "std::vector<double>", &_cl_sp_ts0_ptb_hlt_beam_gate_ref);
   fTree->Branch("cl_sp_ets0", "std::vector<double>", &_cl_sp_ets0);
   fTree->Branch("cl_sp_ts1", "std::vector<double>", &_cl_sp_ts1);
+  fTree->Branch("cl_sp_ts1_rwm_ref", "std::vector<double>", &_cl_sp_ts1_rwm_ref);
+  fTree->Branch("cl_sp_ts1_ptb_hlt_beam_gate_ref", "std::vector<double>", &_cl_sp_ts1_ptb_hlt_beam_gate_ref);
   fTree->Branch("cl_sp_ets1", "std::vector<double>", &_cl_sp_ets1);
   fTree->Branch("cl_sp_complete", "std::vector<bool>", &_cl_sp_complete);
 
@@ -258,6 +272,8 @@ sbnd::crt::CRTTopHatAnalysis::CRTTopHatAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("tr_ts0_ptb_hlt_beam_gate_ref", "std::vector<double>", &_tr_ts0_ptb_hlt_beam_gate_ref);
   fTree->Branch("tr_ets0", "std::vector<double>", &_tr_ets0);
   fTree->Branch("tr_ts1", "std::vector<double>", &_tr_ts1);
+  fTree->Branch("tr_ts1_rwm_ref", "std::vector<double>", &_tr_ts1_rwm_ref);
+  fTree->Branch("tr_ts1_ptb_hlt_beam_gate_ref", "std::vector<double>", &_tr_ts1_ptb_hlt_beam_gate_ref);
   fTree->Branch("tr_ets1", "std::vector<double>", &_tr_ets1);
   fTree->Branch("tr_pe", "std::vector<double>", &_tr_pe);
   fTree->Branch("tr_length", "std::vector<double>", &_tr_length);
@@ -282,8 +298,11 @@ sbnd::crt::CRTTopHatAnalysis::CRTTopHatAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("etrig_good", &_etrig_good);
   fTree->Branch("rwm_good", &_rwm_good);
   fTree->Branch("ptb_hlt_beam_gate_good", &_ptb_hlt_beam_gate_good);
+  fTree->Branch("crt_t1_reset_good", &_crt_t1_reset_good);
   fTree->Branch("rwm_etrig_diff", &_rwm_etrig_diff);
   fTree->Branch("ptb_hlt_beam_gate_etrig_diff", &_ptb_hlt_beam_gate_etrig_diff);
+  fTree->Branch("rwm_crt_t1_reset_diff", &_rwm_crt_t1_reset_diff);
+  fTree->Branch("ptb_hlt_beam_gate_crt_t1_reset_diff", &_ptb_hlt_beam_gate_crt_t1_reset_diff);
 }
 
 void sbnd::crt::CRTTopHatAnalysis::analyze(art::Event const& e)
@@ -445,10 +464,11 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseTDCs(std::vector<art::Ptr<sbnd::timing
 
 void sbnd::crt::CRTTopHatAnalysis::SortReferencing()
 {
-  _etrig_good = false; _rwm_good = false; _ptb_hlt_beam_gate_good = false;
+  _etrig_good = false; _rwm_good = false; _ptb_hlt_beam_gate_good = false; _crt_t1_reset_good = false;
   _rwm_etrig_diff = std::numeric_limits<double>::max(); _ptb_hlt_beam_gate_etrig_diff = std::numeric_limits<double>::max();
+  _rwm_crt_t1_reset_diff = std::numeric_limits<double>::max(); _ptb_hlt_beam_gate_crt_t1_reset_diff = std::numeric_limits<double>::max();
 
-  int etrig_count = 0, etrig_id = -1, rwm_count = 0, rwm_id = -1;
+  int etrig_count = 0, etrig_id = -1, rwm_count = 0, rwm_id = -1, crt_t1_reset_count = 0, crt_t1_reset_id = -1;
 
   for(unsigned int tdc_i = 0; tdc_i < _tdc_channel.size(); ++tdc_i)
     {
@@ -462,43 +482,72 @@ void sbnd::crt::CRTTopHatAnalysis::SortReferencing()
           ++rwm_count;
           rwm_id = tdc_i;
         }
+      else if(_tdc_channel[tdc_i] == 0)
+        {
+          ++crt_t1_reset_count;
+          crt_t1_reset_id = tdc_i;
+        }
     }
 
-  if(etrig_count != 1)
-    return;
+  uint64_t etrig = std::numeric_limits<uint64_t>::max(), rwm = std::numeric_limits<uint64_t>::max(),
+    hlt = std::numeric_limits<uint64_t>::max(), crt_t1_reset = std::numeric_limits<uint64_t>::max();
 
-  _etrig_good  = true;
-  uint64_t etrig = _tdc_timestamp[etrig_id];
+  if(etrig_count == 1)
+    {
+      _etrig_good  = true;
+      etrig = _tdc_timestamp[etrig_id];
+    }
 
   if(rwm_count == 1)
     {
       _rwm_good  = true;
-      uint64_t rwm = _tdc_timestamp[rwm_id];
-      _rwm_etrig_diff = etrig > rwm ? etrig - rwm : -1. * (rwm - etrig);
+      rwm = _tdc_timestamp[rwm_id];
     }
 
-  double closest_diff = std::numeric_limits<double>::max();
-
-  for(unsigned int ptb_i = 0; ptb_i < _ptb_hlt_trigger.size(); ++ptb_i)
+  if(etrig_count == 1)
     {
-      std::bitset<32> hlt_bitmask = std::bitset<32>(_ptb_hlt_trigger[ptb_i]);
+      double closest_diff = std::numeric_limits<double>::max();
 
-      for(uint32_t allowed_hlt : fAllowedPTBHLTs)
+      for(unsigned int ptb_i = 0; ptb_i < _ptb_hlt_trigger.size(); ++ptb_i)
         {
-          if(hlt_bitmask[allowed_hlt])
-            {
-              _ptb_hlt_beam_gate_good = true;
+          std::bitset<32> hlt_bitmask = std::bitset<32>(_ptb_hlt_trigger[ptb_i]);
 
-              uint64_t hlt = _ptb_hlt_timestamp[ptb_i];
-              double diff  = etrig > hlt ? etrig - hlt : -1. * (hlt - etrig);
-              if(std::abs(diff) < closest_diff)
-                closest_diff = diff;
+          for(uint32_t allowed_hlt : fAllowedPTBHLTs)
+            {
+              if(hlt_bitmask[allowed_hlt])
+                {
+                  _ptb_hlt_beam_gate_good = true;
+
+                  uint64_t temp_hlt = _ptb_hlt_timestamp[ptb_i];
+                  double diff  = etrig > temp_hlt ? etrig - temp_hlt : -1. * (temp_hlt - etrig);
+
+                  if(std::abs(diff) < closest_diff)
+                    {
+                      closest_diff = diff;
+                      hlt          = temp_hlt;
+                    }
+                }
             }
         }
     }
 
-  if(_ptb_hlt_beam_gate_good)
-    _ptb_hlt_beam_gate_etrig_diff = closest_diff;
+  if(crt_t1_reset_count == 1)
+    {
+      _crt_t1_reset_good  = true;
+      crt_t1_reset = _tdc_timestamp[crt_t1_reset_id];
+    }
+
+  if(_etrig_good && _rwm_good)
+    _rwm_etrig_diff = etrig > rwm ? etrig - rwm : -1. * (rwm - etrig);
+
+  if(_etrig_good && _ptb_hlt_beam_gate_good)
+    _ptb_hlt_beam_gate_etrig_diff = etrig > hlt ? etrig - hlt : -1. * (hlt - etrig);
+
+  if(_crt_t1_reset_good && _rwm_good)
+    _rwm_crt_t1_reset_diff = crt_t1_reset > rwm ? crt_t1_reset - rwm : -1. * (rwm - crt_t1_reset);
+
+  if(_etrig_good && _crt_t1_reset_good && _ptb_hlt_beam_gate_good)
+    _ptb_hlt_beam_gate_crt_t1_reset_diff = crt_t1_reset > hlt ? crt_t1_reset - hlt : -1. * (hlt - crt_t1_reset);
 }
 
 void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTStripHits(const art::Event &e, const std::vector<art::Ptr<CRTStripHit>> &CRTStripHitVec)
@@ -509,6 +558,8 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTStripHits(const art::Event &e, cons
   _sh_ts0_rwm_ref.clear();
   _sh_ts0_ptb_hlt_beam_gate_ref.clear();
   _sh_ts1.clear();
+  _sh_ts1_rwm_ref.clear();
+  _sh_ts1_ptb_hlt_beam_gate_ref.clear();
   _sh_unixs.clear();
   _sh_pos.clear();
   _sh_err.clear();
@@ -528,6 +579,8 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTStripHits(const art::Event &e, cons
       _sh_ts0_rwm_ref.push_back(hit->Ts0() + _rwm_etrig_diff);
       _sh_ts0_ptb_hlt_beam_gate_ref.push_back(hit->Ts0() + _ptb_hlt_beam_gate_etrig_diff);
       _sh_ts1.push_back(hit->Ts1());
+      _sh_ts1_rwm_ref.push_back(hit->Ts1() + _rwm_crt_t1_reset_diff);
+      _sh_ts1_ptb_hlt_beam_gate_ref.push_back(hit->Ts1() + _ptb_hlt_beam_gate_crt_t1_reset_diff);
       _sh_unixs.push_back(hit->UnixS());
       _sh_pos.push_back(hit->Pos());
       _sh_err.push_back(hit->Error());
@@ -545,6 +598,8 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTClusters(const art::Event &e, const
   _cl_ts0_rwm_ref.clear();
   _cl_ts0_ptb_hlt_beam_gate_ref.clear();
   _cl_ts1.clear();
+  _cl_ts1_rwm_ref.clear();
+  _cl_ts1_ptb_hlt_beam_gate_ref.clear();
   _cl_unixs.clear();
   _cl_nhits.clear();
   _cl_tagger.clear();
@@ -562,6 +617,8 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTClusters(const art::Event &e, const
   _cl_sp_ts0_ptb_hlt_beam_gate_ref.clear();
   _cl_sp_ets0.clear();
   _cl_sp_ts1.clear();
+  _cl_sp_ts1_rwm_ref.clear();
+  _cl_sp_ts1_ptb_hlt_beam_gate_ref.clear();
   _cl_sp_ets1.clear();
   _cl_sp_complete.clear();
 
@@ -574,6 +631,8 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTClusters(const art::Event &e, const
       _cl_ts0_rwm_ref.push_back(cluster->Ts0() + _rwm_etrig_diff);
       _cl_ts0_ptb_hlt_beam_gate_ref.push_back(cluster->Ts0() + _ptb_hlt_beam_gate_etrig_diff);
       _cl_ts1.push_back(cluster->Ts1());
+      _cl_ts1_rwm_ref.push_back(cluster->Ts1() + _rwm_crt_t1_reset_diff);
+      _cl_ts1_ptb_hlt_beam_gate_ref.push_back(cluster->Ts1() + _ptb_hlt_beam_gate_crt_t1_reset_diff);
       _cl_unixs.push_back(cluster->UnixS());
       _cl_nhits.push_back(cluster->NHits());
       _cl_tagger.push_back(cluster->Tagger());
@@ -597,6 +656,8 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTClusters(const art::Event &e, const
           _cl_sp_ts0_ptb_hlt_beam_gate_ref.push_back(spacepoint->Ts0() + _ptb_hlt_beam_gate_etrig_diff);
           _cl_sp_ets0.push_back(spacepoint->Ts0Err());
           _cl_sp_ts1.push_back(spacepoint->Ts1());
+          _cl_sp_ts1_rwm_ref.push_back(spacepoint->Ts1() + _rwm_crt_t1_reset_diff);
+          _cl_sp_ts1_ptb_hlt_beam_gate_ref.push_back(spacepoint->Ts1() + _ptb_hlt_beam_gate_crt_t1_reset_diff);
           _cl_sp_ets1.push_back(spacepoint->Ts1Err());
           _cl_sp_complete.push_back(spacepoint->Complete());
         }
@@ -615,6 +676,8 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTClusters(const art::Event &e, const
           _cl_sp_ts0_ptb_hlt_beam_gate_ref.push_back(-999999.);
           _cl_sp_ets0.push_back(-999999.);
           _cl_sp_ts1.push_back(-999999.);
+          _cl_sp_ts1_rwm_ref.push_back(-999999.);
+          _cl_sp_ts1_ptb_hlt_beam_gate_ref.push_back(-999999.);
           _cl_sp_ets1.push_back(-999999.);
           _cl_sp_complete.push_back(false);
         }
@@ -636,6 +699,8 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTTracks(const art::Event &e, const s
   _tr_ts0_ptb_hlt_beam_gate_ref.clear();
   _tr_ets0.clear();
   _tr_ts1.clear();
+  _tr_ts1_rwm_ref.clear();
+  _tr_ts1_ptb_hlt_beam_gate_ref.clear();
   _tr_ets1.clear();
   _tr_pe.clear();
   _tr_length.clear();
@@ -672,6 +737,8 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTTracks(const art::Event &e, const s
       _tr_ts0_ptb_hlt_beam_gate_ref.push_back(track->Ts0() + _ptb_hlt_beam_gate_etrig_diff);
       _tr_ets0.push_back(track->Ts0Err());
       _tr_ts1.push_back(track->Ts1());
+      _tr_ts1_rwm_ref.push_back(track->Ts1() + _rwm_crt_t1_reset_diff);
+      _tr_ts1_ptb_hlt_beam_gate_ref.push_back(track->Ts1() + _ptb_hlt_beam_gate_crt_t1_reset_diff);
       _tr_ets1.push_back(track->Ts1Err());
       _tr_pe.push_back(track->PE());
       _tr_length.push_back(track->Length());
