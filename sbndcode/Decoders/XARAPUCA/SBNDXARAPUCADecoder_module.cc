@@ -549,10 +549,24 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
       ini_wvfm_timestamp = end_wvfm_timestamp - pulse_duration_ns; // ns.
       end_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
       ini_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
-      
-      //ini_wvfm_timestamp = TTT_ini_us;
-      //end_wvfm_timestamp = TTT_end_us;
     }
+
+    std::cout << "  > TESTING - THIS BEING CONVERTED: ini_wvfm_timestamp = " << ini_wvfm_timestamp << " us." << std::endl;
+    
+    if (ini_wvfm_timestamp < -3.0 || ini_wvfm_timestamp > -1.5) {
+      ini_wvfm_timestamp = 9999;
+    } else {
+      if (frag_timestamp < full_TTT) {
+        end_wvfm_timestamp = full_TTT - frag_timestamp; // ns.
+      } else {
+        end_wvfm_timestamp = (frag_timestamp - full_TTT) * (-1.0); // ns.
+        std::cout << "Something went wrong." << std::endl;
+      }
+      ini_wvfm_timestamp = end_wvfm_timestamp - pulse_duration_ns; // ns.
+      end_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
+      ini_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
+    }
+  
 
     if (fverbose | fdebug_timing | fdebug_all) {
       std::cout << std::fixed << std::setprecision(3);
