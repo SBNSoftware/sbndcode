@@ -7,6 +7,8 @@ recoFilterParams:
     SliceLabel: "pandora"
     PFParticleLabel: "pandora"
     TrackLabel: "pandoraTrack"
+    CalorimetryLabel: "pandoraCalo"
+    HitLabel: "gaushit"
     LArGeantLabel: "largeant"
     NuGenLabel: "generator"
 }

@@ -1,9 +1,9 @@
 BEGIN_PROLOG
 
-filterRecoEventsParams:
+alphaFilterParams:
 {
-    module_type: "FilterRecoEvents"
-
+    module_type: "AlphaFilter"
+    
     SliceLabel: "pandora"
     PFParticleLabel: "pandora"
     TrackLabel: "pandoraTrack"

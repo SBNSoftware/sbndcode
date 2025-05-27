@@ -1,12 +1,13 @@
 ////////////////////////////////////////////////////////////////////////
-// Class:       FilterRecoEvents
-// Plugin Type: analyzer (Unknown Unknown)
-// File:        FilterRecoEvents_module.cc
+// Class:       AlphaFilter
+// Plugin Type: filter (Unknown Unknown)
+// File:        AlphaFilter_module.cc
 //
-// Generated on Tuesday 29th April 2025 by Anna Beever
+// Generated at Tue Apr 29 19:39:15 2025 by Anna Beever using cetskelgen
+// from cetlib version 3.18.02.
 ////////////////////////////////////////////////////////////////////////
 
-#include "art/Framework/Core/EDAnalyzer.h"
+#include "art/Framework/Core/EDFilter.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Principal/Handle.h"
@@ -15,6 +16,8 @@
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+
+#include <memory>
 
 // Additional framework includes
 #include "art_root_io/TFileService.h"
@@ -36,28 +39,27 @@
 constexpr double double_default = -999.0;
 
 namespace nuclearFragments {
-  class FilterRecoEvents;
+  class AlphaFilter;
 }
 
 
-class nuclearFragments::FilterRecoEvents : public art::EDAnalyzer {
+class nuclearFragments::AlphaFilter : public art::EDFilter {
 public:
-  explicit FilterRecoEvents(fhicl::ParameterSet const& p);
+  explicit AlphaFilter(fhicl::ParameterSet const& p);
   // The compiler-generated destructor is fine for non-base
   // classes without bare pointers or other resource use.
 
   // Plugins should not be copied or assigned.
-  FilterRecoEvents(FilterRecoEvents const&) = delete;
-  FilterRecoEvents(FilterRecoEvents&&) = delete;
-  FilterRecoEvents& operator=(FilterRecoEvents const&) = delete;
-  FilterRecoEvents& operator=(FilterRecoEvents&&) = delete;
+  AlphaFilter(AlphaFilter const&) = delete;
+  AlphaFilter(AlphaFilter&&) = delete;
+  AlphaFilter& operator=(AlphaFilter const&) = delete;
+  AlphaFilter& operator=(AlphaFilter&&) = delete;
 
   // Required functions.
-  void analyze(art::Event const& e) override;
+  bool filter(art::Event& e) override;
 
   // Selected optional functions.
   void beginJob() override;
-  void endJob() override;
 
 private:
 
@@ -70,11 +72,11 @@ private:
   unsigned int fReco_nPrimaryChildren;
   bool fIsCCQE = 0;
   bool fHasCluster = 0;
-  bool fHasRecoDeuteronWithDesiredP;
-  int fCountRecoDeuteronWithDesiredP;
-  bool fHasNonRecoDeuteronWithDesiredP;
-  int fCountNonRecoDeuteronWithDesiredP;
-  bool fHasAlphaWithDesiredP;
+  bool fHasRecoDeuteronWithDesiredP = 0;
+  int fCountRecoDeuteronWithDesiredP = 0;
+  bool fHasNonRecoDeuteronWithDesiredP = 0;
+  int fCountNonRecoDeuteronWithDesiredP = 0;
+  bool fHasRecoAlpha = 0;
 
   std::vector<double> fReco_childTrackLengths;
   std::vector<double> fReco_childTrackCompleteness;
@@ -99,6 +101,12 @@ private:
   std::vector<double> fMC_particleEndZ;
   std::vector<bool> fMC_isReconstructed;
   std::vector<int> fMC_trackID;
+  std::vector<int> fHit_trueG4ID;
+  std::vector<int> fHit_truePDG;
+  //std::vector<std::map<int,double>> fHit_PDGtoEnergyDepositMap;
+  std::vector<int> fHit_recoTrackID;
+  std::vector<int> fHit_recoTrackPDG;
+  std::vector<float> fHit_peakTime;
 
   // Define input labels
   std::string fSliceLabel;
@@ -125,8 +133,8 @@ private:
 };
 
 
-nuclearFragments::FilterRecoEvents::FilterRecoEvents(fhicl::ParameterSet const& p)
-  : EDAnalyzer{p},
+nuclearFragments::AlphaFilter::AlphaFilter(fhicl::ParameterSet const& p)
+  : EDFilter{p},
   // More initializers here.
   fSliceLabel(p.get<std::string>("SliceLabel")),
   fPFParticleLabel(p.get<std::string>("PFParticleLabel")),
@@ -136,11 +144,12 @@ nuclearFragments::FilterRecoEvents::FilterRecoEvents(fhicl::ParameterSet const& 
   fNuGenLabel(p.get<std::string>("NuGenLabel")),
   fLArGeantLabel(p.get<std::string>("LArGeantLabel"))
 {
+  // Call appropriate produces<>() functions here.
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
-void nuclearFragments::FilterRecoEvents::analyze(art::Event const& e)
-{
+bool nuclearFragments::AlphaFilter::filter(art::Event& e)
+{ 
   // Set the event ID
   fEventID = e.id().event();
 
@@ -157,6 +166,11 @@ void nuclearFragments::FilterRecoEvents::analyze(art::Event const& e)
 
   for(const art::Ptr<recob::Hit> &hit : hitVector){
     fTrackHitsMap[TruthMatchUtils::TrueParticleID(clockData,hit,true)]++;
+    fHit_trueG4ID.push_back(TruthMatchUtils::TrueParticleID(clockData,hit,true));
+    fHit_truePDG.push_back(-999);
+    fHit_recoTrackID.push_back(-999);
+    fHit_recoTrackPDG.push_back(-999);
+    fHit_peakTime.push_back(hit->PeakTime());
   }
 
   // Get event slices
@@ -232,6 +246,17 @@ void nuclearFragments::FilterRecoEvents::analyze(art::Event const& e)
         fReco_childTrackPurity.push_back(Purity(trackHits,trackID));
         fReco_childTrackLengths.push_back(track->Length());
 
+        // Compare hits
+        for(std::size_t i = 0; i < hitVector.size(); i++){
+          int isInTrack = std::count(trackHits.begin(),trackHits.end(),hitVector[i]);
+          if(isInTrack!=0){
+            fHit_recoTrackID[i] = trackID;
+          }
+          if(isInTrack > 1){
+            std::cout << "!!!!!!!!!!!!!!!weird!!!!!!!!!!!!!!!!!!!1" << std::endl;
+          }
+        }
+
         art::FindManyP<anab::Calorimetry> trackCaloAssoc(trackHandle, e, fCalorimetryLabel);
 
         // Get the calorimetry object
@@ -273,7 +298,8 @@ void nuclearFragments::FilterRecoEvents::analyze(art::Event const& e)
 
   art::FindManyP<simb::MCParticle> truNuParticleAssoc(truNuHandle, e, fLArGeantLabel);
 
-  for(const art::Ptr<simb::MCTruth> &truNu : truNuVector){
+  for(const art::Ptr<simb::MCTruth> &truNu : truNuVector)
+  {
     if(truNu.isNull()){
       continue;
     }
@@ -309,32 +335,23 @@ void nuclearFragments::FilterRecoEvents::analyze(art::Event const& e)
       fTrackIDtoTruthPMap.insert({particle->TrackId(), particle->P()});
       fTrackIDtoTruthKEMap.insert({particle->TrackId(), KE});
 
-
       int checkIfReconstructed = std::count(fReco_truthMatchedTrackID.begin(), fReco_truthMatchedTrackID.end(), particle->TrackId());
       fMC_isReconstructed.push_back(checkIfReconstructed!=0);
 
       //filter for clusters
+      
       if(particle->PdgCode() == 1000010020 || particle->PdgCode() == 1000010030 || particle->PdgCode() == 1000020030 || particle->PdgCode() == 1000020040){
         fHasCluster = 1;
       }
 
-      if(particle->PdgCode() == 1000010020 && particle->P() > 0.8 && particle->P() < 0.9 && checkIfReconstructed!=0){
-        fHasRecoDeuteronWithDesiredP = 1;
-        fCountRecoDeuteronWithDesiredP++;
-      }
-
-      if(particle->PdgCode() == 1000010020 && particle->P() > 0.8 && particle->P() < 0.9 && checkIfReconstructed == 0){
-        fHasNonRecoDeuteronWithDesiredP = 1;
-        fCountNonRecoDeuteronWithDesiredP++;
-      }
-
-      if(particle->PdgCode() == 1000020040 && particle->P() > 1.0){
-        fHasAlphaWithDesiredP = 1;
+      if(particle->PdgCode() == 1000020040 && checkIfReconstructed!=0){
+        fHasRecoAlpha = 1;
       }
 
     }
   }
 
+  // Reco truth-matched stuff
   for(std::size_t i=0; i<fReco_truthMatchedTrackID.size(); i++){
     fReco_truthMatchedPDG.push_back(fTrackIDtoTruthPDGMap[fReco_truthMatchedTrackID[i]]);
     fReco_truthMatchedE.push_back(fTrackIDtoTruthEMap[fReco_truthMatchedTrackID[i]]);
@@ -342,18 +359,41 @@ void nuclearFragments::FilterRecoEvents::analyze(art::Event const& e)
     fReco_truthMatchedKE.push_back(fTrackIDtoTruthKEMap[fReco_truthMatchedTrackID[i]]);
   }
 
+  //Hit info
 
-  // Fill tree
-  // if has deuteron with momentum between 0.8 and 0.9 that is reconstructed as long as not more than 10, or if has deuteron with momentum between 0,8 and 0.9 that isn't reconstructed, as long as not more than 10, or if has alpha with momentum greater than 1
-  if((fHasNonRecoDeuteronWithDesiredP && fCountNonRecoDeuteronWithDesiredP < 10) || (fHasRecoDeuteronWithDesiredP && fCountRecoDeuteronWithDesiredP < 10) || (fHasAlphaWithDesiredP) )
+  for(std::size_t i=0; i < fHit_trueG4ID.size(); i++){
+    fHit_truePDG[i] = fTrackIDtoTruthPDGMap[fHit_trueG4ID[i]];
+    fHit_recoTrackPDG[i] = fTrackIDtoTruthPDGMap[fHit_recoTrackID[i]];
+  }
+  /*for(const art::Ptr<recob::Hit> &hit : hitVector){
+    fHit_truePDG.push_back(fTrackIDtoTruthPDGMap[TruthMatchUtils::TrueParticleID(clockData,hit,true)]);
+    TruthMatchUtils::IDToEDepositMap G4toEnergyMap;
+    TruthMatchUtils::FillG4IDToEnergyDepositMap(G4toEnergyMap,clockData,hit,true);
+    std::map<int,double> PDGtoEnergyMap;
+    for(const auto & [key,value] : G4toEnergyMap){
+      PDGtoEnergyMap.insert({fTrackIDtoTruthPDGMap[key],value});
+    }
+    fHit_PDGtoEnergyDepositMap.push_back(PDGtoEnergyMap);
+  }
+
+  for(std::size_t i=0; i < hitTrackID.size(); i++){
+    fHit_recoTrackID.push_back(hitTrackID[i]);
+    fHit_recoTrackPDG.push_back(fTrackIDtoTruthPMap[hitTrackID[i]]);
+  }*/
+
+  
+  if(fHasRecoAlpha )
   {
     std::cout << "event " << fEventID << " passed filters" << std::endl;
     fTree->Fill();
+    return true;
   }
+
+  return false;
 
 }
 
-void nuclearFragments::FilterRecoEvents::beginJob()
+void nuclearFragments::AlphaFilter::beginJob()
 {
   // Get TFileService to create output TTree
   art::ServiceHandle<art::TFileService> tfs;
@@ -388,21 +428,22 @@ void nuclearFragments::FilterRecoEvents::beginJob()
   fTree->Branch("MC_particleEndZ", &fMC_particleEndZ);
   fTree->Branch("MC_isReconstructed", &fMC_isReconstructed);
   fTree->Branch("MC_trackID", &fMC_trackID);
+  fTree->Branch("Hit_truePDG", &fHit_truePDG);
+  fTree->Branch("Hit_trueG4ID", &fHit_trueG4ID);
+  //fTree->Branch("Hit_PDGtoEnergyDepositMap", &fHit_PDGtoEnergyDepositMap);
+  fTree->Branch("Hit_recoTrackID", &fHit_recoTrackID);
+  fTree->Branch("Hit_recoTrackPDG", &fHit_recoTrackPDG);
+  fTree->Branch("Hit_peakTime", &fHit_peakTime);
 }
 
-void nuclearFragments::FilterRecoEvents::endJob()
-{
-  // Implementation of optional member function here.
-}
-
-void nuclearFragments::FilterRecoEvents::ResetVariables()
+void nuclearFragments::AlphaFilter::ResetVariables()
 {
   // Set all trackCounters to zero for the current event
   fIsCCQE = 0;
   fHasCluster = 0;
   fHasRecoDeuteronWithDesiredP = 0;
   fHasNonRecoDeuteronWithDesiredP = 0;
-  fHasAlphaWithDesiredP = 0;
+  fHasRecoAlpha = 0;
   fTrackHitsMap.clear();
   fTrackIDtoTruthPDGMap.clear();
   fTrackIDtoTruthKEMap.clear();
@@ -431,9 +472,15 @@ void nuclearFragments::FilterRecoEvents::ResetVariables()
   fMC_particleEndZ.clear();
   fMC_isReconstructed.clear();
   fMC_trackID.clear();
+  fHit_trueG4ID.clear();
+  fHit_truePDG.clear();
+  //fHit_PDGtoEnergyDepositMap.clear();
+  fHit_recoTrackID.clear();
+  fHit_recoTrackPDG.clear();
+  fHit_peakTime.clear();
 }
 
-float nuclearFragments::FilterRecoEvents::Completeness(std::vector< art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
+float nuclearFragments::AlphaFilter::Completeness(std::vector< art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
 {
   std::map<int,int> objectHitsMap;
   objectHitsMap.clear();
@@ -445,7 +492,7 @@ float nuclearFragments::FilterRecoEvents::Completeness(std::vector< art::Ptr<rec
   return (fTrackHitsMap[trackID] == 0) ? double_default : objectHitsMap[trackID]/static_cast<double>(fTrackHitsMap[trackID]);
 }
 
-float nuclearFragments::FilterRecoEvents::Purity(std::vector<art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
+float nuclearFragments::AlphaFilter::Purity(std::vector<art::Ptr<recob::Hit>> const &objectHits, int const &trackID)
 {
   std::map<int,int> objectHitsMap;
   objectHitsMap.clear();
@@ -457,4 +504,4 @@ float nuclearFragments::FilterRecoEvents::Purity(std::vector<art::Ptr<recob::Hit
   return (objectHits.size() == 0) ? double_default : objectHitsMap[trackID]/static_cast<double>(objectHits.size());
 }
 
-DEFINE_ART_MODULE(nuclearFragments::FilterRecoEvents)
+DEFINE_ART_MODULE(nuclearFragments::AlphaFilter)

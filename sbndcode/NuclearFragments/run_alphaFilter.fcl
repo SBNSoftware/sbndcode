@@ -1,0 +1,50 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "alphaFilterConfig.fcl"
+
+process_name: AlphaFilter
+
+services:
+{
+    @table::sbnd_services
+    TFileService: { fileName: "out_alphaFiltered.root" }
+    
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+    module_type: RootInput
+    maxEvents: -1
+}
+
+outputs:
+{
+    out1:
+    {
+        module_type: RootOutput
+        fileName: "%ifb_%p-%tc.root"
+        dataTier: "reconstructed"
+        compressionLevel: 1
+    }
+}
+
+physics:
+{
+    producers: {}
+    filters:
+    {
+        AlphaFilter: @local::alphaFilterParams
+    }
+    analyzers: {}
+
+    reco: [AlphaFilter]
+    stream1: [out1]
+    trigger_paths: [reco]
+    end_paths: [stream1]
+}
+
+outputs.out1.SelectEvents: [ "reco" ]
