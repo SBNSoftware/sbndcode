@@ -46,8 +46,7 @@ services:
   TimeTracker:  { printSummary: true }
   # #  @table::standard_services
 
-  AuxDetExptGeoHelperInterface: { service_provider: "sbndcode/CRT/CRTGeometryHelper" }
-  ExptGeoHelperInterface:    @local::sbnd_geometry_helper
+  WireReadout:               @local::sbnd_wire_readout
   GeometryConfigurationWriter: {}
   Geometry:                  @local::sbnd_geo
   AuxDetGeometry:            @local::sbnd_auxdetgeo
@@ -134,6 +133,7 @@ physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
 
 physics.producers.cafmaker: @local::standard_cafmaker
 physics.producers.cafmaker.CosmicGenLabel: "corsika"
+physics.producers.cafmaker.SimChannelLabel: "simtpc2d:simpleSC"
 
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false
@@ -143,9 +143,15 @@ physics.producers.cafmaker.CreateBlindedCAF: false
 # More details can be found in here: https://sbn-docdb.fnal.gov/cgi-bin/sso/ShowDocument?docid=36869
 physics.producers.cafmaker.SaveGENIEEventRecord: true
 
+# Include OpFlash information
+physics.producers.cafmaker.OpFlashLabel: "opflash"
+
 # Include Simple/OpFlashes for PMT/XARAPUCA
 physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
+
+# Include 3D barycenter flahs matching 
+physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
 
 # Overwrite weight_functions label:
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux

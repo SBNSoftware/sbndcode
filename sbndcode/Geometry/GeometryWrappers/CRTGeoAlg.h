@@ -12,13 +12,13 @@
 // framework
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/ModuleMacros.h"
-#include "fhiclcpp/ParameterSet.h" 
+#include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Atom.h"
-#include "art/Framework/Principal/Handle.h" 
-#include "canvas/Persistency/Common/Ptr.h" 
-#include "canvas/Persistency/Common/PtrVector.h" 
-#include "art/Framework/Services/Registry/ServiceHandle.h" 
-#include "messagefacility/MessageLogger/MessageLogger.h" 
+#include "art/Framework/Principal/Handle.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/PtrVector.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
+#include "messagefacility/MessageLogger/MessageLogger.h"
 
 // LArSoft
 #include "larcore/Geometry/Geometry.h"
@@ -40,12 +40,13 @@
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 #include "sbndcode/Calibration/CRT/CalibService/CRTCalibService.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTOrientationMaps.h"
 
 namespace sbnd::crt {
 
   struct CRTSiPMGeo{
     CRTSiPMGeo(const std::string &_stripName, const uint32_t _channel, const geo::Point_t location,
-               const uint32_t _pedestal, const double _gain)
+               const uint32_t _pedestal, const double _gain, const CRTChannelStatus _status)
     {
       stripName = _stripName;
       channel   = _channel;
@@ -54,21 +55,23 @@ namespace sbnd::crt {
       z         = location.Z();
       pedestal  = _pedestal;
       gain      = _gain;
+      status    = _status;
       null      = false;
     }
-    std::string stripName;
-    uint16_t    channel;
-    double      x;
-    double      y;
-    double      z;
-    bool        null;
-    uint32_t    pedestal;
-    double      gain;
+    std::string      stripName;
+    uint16_t         channel;
+    double           x;
+    double           y;
+    double           z;
+    bool             null;
+    uint32_t         pedestal;
+    CRTChannelStatus status;
+    double           gain;
   };
 
   // CRT strip geometry struct contains dimensions and mother module
   struct CRTStripGeo{
-    CRTStripGeo(const TGeoNode *stripNode, const geo::AuxDetSensitiveGeo &auxDetSensitive, 
+    CRTStripGeo(const TGeoNode *stripNode, const geo::AuxDetSensitiveGeo &auxDetSensitive,
                 const uint16_t _adsID, const std::string &_moduleName,
                 const uint16_t _channel0, const uint16_t _channel1)
     {
@@ -132,8 +135,8 @@ namespace sbnd::crt {
       , orientation(0)
       , top(false)
       , adID(std::numeric_limits<uint16_t>::max())
-      , t0CableDelayCorrection(0)
-      , t1CableDelayCorrection(0)
+      , t0DelayCorrection(0)
+      , t1DelayCorrection(0)
       , invertedOrdering(false)
       , minos(false)
       , null(false)
@@ -141,8 +144,8 @@ namespace sbnd::crt {
 
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet,
                  const uint16_t _adID, const std::string &_taggerName,
-                 const int32_t _t0CableDelayCorrection,
-                 const int32_t _t1CableDelayCorrection,
+                 const double _t0DelayCorrection,
+                 const double _t1DelayCorrection,
                  const bool _invertedOrdering,
                  const bool _minos)
     {
@@ -166,17 +169,9 @@ namespace sbnd::crt {
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
 
-      if(_minos)
-        orientation = (modulePosMother[2] < 0);
-      else
-        orientation = (modulePosMother[2] > 0);
-
-      // Location of SiPMs
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kBottomTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger
-         || CRTCommonUtils::GetTaggerEnum(taggerName) == kWestTagger || CRTCommonUtils::GetTaggerEnum(taggerName) == kEastTagger)
-        top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
-      else
-        top = (orientation == 0) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
+      CRTOrientationMaps orientationMaps;
+      orientation = orientationMaps.orientation.at(_adID);
+      top         = orientationMaps.top.at(_adID);
 
       // Fill edges
       minX = std::min(limitsWorld.X(), limitsWorld2.X());
@@ -186,8 +181,8 @@ namespace sbnd::crt {
       minZ = std::min(limitsWorld.Z(), limitsWorld2.Z());
       maxZ = std::max(limitsWorld.Z(), limitsWorld2.Z());
 
-      t0CableDelayCorrection = _t0CableDelayCorrection;
-      t1CableDelayCorrection = _t1CableDelayCorrection;
+      t0DelayCorrection = _t0DelayCorrection;
+      t1DelayCorrection = _t1DelayCorrection;
 
       invertedOrdering = _invertedOrdering;
       adID = _adID;
@@ -206,8 +201,8 @@ namespace sbnd::crt {
     uint16_t      orientation;
     bool          top;
     uint16_t      adID;
-    int32_t       t0CableDelayCorrection;
-    int32_t       t1CableDelayCorrection;
+    double        t0DelayCorrection;
+    double        t1DelayCorrection;
     bool          invertedOrdering;
     bool          minos;
     bool          null;
@@ -272,7 +267,7 @@ namespace sbnd::crt {
         fhicl::Name("MC")
       };
     };
-    
+
     CRTGeoAlg(const Config& config, geo::GeometryCore const *geometry,
               geo::AuxDetGeometryCore const *auxdet_geometry);
 

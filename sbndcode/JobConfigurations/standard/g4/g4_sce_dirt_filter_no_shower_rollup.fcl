@@ -1,3 +1,0 @@
-#include "g4_sce_dirt_filter.fcl"
-
-services.ParticleListAction.keepEMShowerDaughters: true

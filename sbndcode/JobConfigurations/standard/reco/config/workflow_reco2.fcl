@@ -3,7 +3,7 @@
 #include "pandoramodules_sbnd.fcl"
 #include "calorimetry_sbnd.fcl"
 #include "sbnd_flashfinder_deco.fcl"
-#include "crtrecoproducers_sbnd.fcl"
+#include "crtvetoproducer_sbnd.fcl"
 #include "particleid_sbnd.fcl"
 #include "crttpcmatchingproducers_sbnd.fcl"
 
@@ -12,9 +12,13 @@
 
 #include "opt0finder_sbnd.fcl"
 
+#include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
+
 #include "sbnd_trackcalo_skimmer.fcl"
-#include "crtskim_sbnd.fcl"
+#include "crtana_sbnd.fcl"
 #include "pmtskim_sbnd.fcl"
+
+#include "SBNDCVNMapper.fcl"
 
 BEGIN_PROLOG
 
@@ -36,16 +40,17 @@ sbnd_reco2_producers:{
     pandoraCaloData:     @local::sbnd_gnewcalodata
     pandoraPidData:      @local::sbnd_chi2pid
 
+    pandoraSCECaloData:     @local::sbnd_gnewcalodata
+    pandoraSCEPidData:      @local::sbnd_chi2pid
+
     ### SCE-aware pandora:
     pandoraSCE:          @local::scecorrection
     pandoraSCETrack:     @local::sbnd_pandoraTrackCreation
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
-
-    ### CRT reconstruction
-    crtclustering:  @local::crtclusterproducer_sbnd
-    crtspacepoints: @local::crtspacepointproducer_sbnd
-    crttracks:      @local::crttrackproducer_sbnd
+    
+    ### CRT Veto
+    crtveto:        @local::crtvetoproducer_sbnd
 
     ### CRT-TPC matching
     crtspacepointmatching:    @local::crtspacepointmatchproducer_sbnd
@@ -64,9 +69,14 @@ sbnd_reco2_producers:{
     fmatchoparaSCE:      @local::sbnd_simple_flashmatch_opara_sce
     opt0finder:          @local::sbnd_opt0_finder_one_to_many
     opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
+    tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
+
+    ### CVN
+    cvn:                 @local::standard_sbndcvnevaluatorslc
+    cvnSCE:              @local::standard_sbndcvnevaluatorslc
 }
 
 sbnd_reco2_producer_sequence: [  
@@ -77,9 +87,7 @@ sbnd_reco2_producer_sequence: [
     , pandoraShowerSBN
     , pandoraCalo
     , pandoraPid
-    , crtclustering
-    , crtspacepoints
-    , crttracks
+    , crtveto
     , crtspacepointmatching
     , crttrackmatching
     , fmatch
@@ -88,6 +96,7 @@ sbnd_reco2_producer_sequence: [
     , fmatchopara
     , caloskimCalorimetry
     , opt0finder
+    , tpcpmtbarycentermatching
     , pandoraSCE
     , pandoraSCETrack
     , pandoraSCEShower
@@ -101,6 +110,8 @@ sbnd_reco2_producer_sequence: [
     , fmatcharaSCE
     , fmatchoparaSCE
     , opt0finderSCE
+    , cvn
+    , cvnSCE
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
@@ -124,6 +135,21 @@ sbnd_reco2_producers.pandoraCaloData.FieldDistortionEfield:             false
 sbnd_reco2_producers.pandoraCaloData.TrackIsFieldDistortionCorrected:   false
 sbnd_reco2_producers.pandoraPidData.TrackModuleLabel:                   "pandoraTrack"
 sbnd_reco2_producers.pandoraPidData.CalorimetryModuleLabel:             "pandoraCaloData"
+
+sbnd_reco2_producers.pandoraSCECaloData.TrackModuleLabel:                  "pandoraSCETrack"
+sbnd_reco2_producers.pandoraSCECaloData.FieldDistortion:                   true
+sbnd_reco2_producers.pandoraSCECaloData.FieldDistortionEfield:             true
+sbnd_reco2_producers.pandoraSCECaloData.TrackIsFieldDistortionCorrected:   true
+sbnd_reco2_producers.pandoraSCEPidData.TrackModuleLabel:                   "pandoraSCETrack"
+sbnd_reco2_producers.pandoraSCEPidData.CalorimetryModuleLabel:             "pandoraSCECaloData"
+
+sbnd_reco2_producers.cvn.SliceLabel: "pandora"
+sbnd_reco2_producers.cvn.PFParticleModuleLabel: "pandora"
+sbnd_reco2_producers.cvn.T0Label: "pandora"
+
+sbnd_reco2_producers.cvnSCE.SliceLabel: "pandoraSCE"
+sbnd_reco2_producers.cvnSCE.PFParticleModuleLabel: "pandoraSCE"
+sbnd_reco2_producers.cvnSCE.T0Label: "pandoraSCE"
 
 physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
@@ -152,14 +178,14 @@ sbnd_reco2_producers.crttrackmatchingSCE.MatchingAlg.TPCTrackLabel:      "pandor
 
 sbnd_reco2_analyzers: {
     caloskim: @local::caloskim_nodigits_goldentracks
-    crtskim: @local::crtskim_sbnd
-    pmtskim: @local::pmtskim_sbnd
+    crtana:   @local::crtana_sbnd
+    pmtskim:  @local::pmtskim_sbnd
 }
 
 sbnd_reco2_analyzer_sequence: [
     caloskim
     , pmtskim
-    , crtskim
+    , crtana
 ]
 
 #FIXME override the analyzer labels.  This should really happen in the module's config fcl

@@ -6,10 +6,12 @@
 #          stage 1 reconstruction.
 #
 # Created: 28-Mar-2022  H. Greenlee
+# Modified: 26-Mar-2025  J. Zennamo & L. Yates
 #
 # Notes.
 #
 # 1.  Drop raw data (RawDigits and OpDetWaveforms).
+# 2.  Drop Wiener wires
 #
 #=============================================================================
 
@@ -20,9 +22,10 @@ BEGIN_PROLOG
 reco_drops: [ @sequence::detsim_drops,
               "drop raw::RawDigits_*_*_*",
               "drop raw::OpDetWaveforms_*_*_*",
-              "drop *_sedlite_*_*" #drop all mlreco output
-              #"drop *_cluster3d_*_*", #drop cluster3d output
-              #"drop *_simplemerge_*_*" #drop all mlreco output
+              "drop *_sedlite_*_*", #drop all mlreco output
+              "drop *_cluster3d_*_*", #drop cluster3d output
+              "drop *_simplemerge_*_*", #drop all mlreco output
+	      "drop recob::Wires_*_wiener_*"  #drop wiener wires
                ]
 
 END_PROLOG

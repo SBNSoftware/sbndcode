@@ -1,0 +1,3 @@
+#include "reco1_data.fcl"
+
+services.NuRandomService.policy: "perEvent"

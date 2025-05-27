@@ -1,0 +1,23 @@
+# Runs standard g4 fcl without largeant designed for use with gen stage fcls that run a largeant dirt filter
+
+#include "standard_g4_sbnd.fcl"
+
+
+# Set proper input tags for mcreco
+physics.producers.mcreco.MCParticleDroppedLabel: "largeantdropped"
+
+physics.simulate: [ rns
+                  , sedlite #SEDLite reduces info from SED
+                  , ionandscint
+                  , ionandscintout
+                  , pdfastsim
+                  , pdfastsimout
+                  # , simdrift ## 1D TPC simulation no longer run
+                  , mcreco
+                  , genericcrt
+                  ]
+
+# Remove unnecesary processes
+physics.producers.loader: @erase
+physics.producers.largeant: @erase
+
