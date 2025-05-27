@@ -12,8 +12,14 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fSaveRawWaveforms( p.get<bool>("SaveRawWaveforms") ),
   fSaveDeconvolvedWaveforms( p.get<bool>("SaveDeconvolvedWaveforms") ),
   fSaveOpHits( p.get<bool>("SaveOpHits") ),
+  fSaveOnlyFlashHits( p.get<bool>("SaveOnlyFlashHits") ),
   fSaveOpFlashes( p.get<bool>("SaveOpFlashes") ),
+  fSaveCRT( p.get<bool>("SaveCRT") ),
+  fSaveSPECTDC( p.get<bool>("SaveSPECTDC") ),
+  fSaveOnlyCRTPDSMatch( p.get<bool>("SaveOnlyCRTPDSMatch") ),
+  fSaveOnlyAVTracks( p.get<bool>("SaveOnlyAVTracks") ),
   fSaveCosmicId( p.get<bool>("SaveCosmicId") ),
+  fSavePEFlavourPerFlash( p.get<bool>("SavePEFlavourPerFlash") ),
   fVerbosity( p.get<int>("Verbosity") ),
   fMakePerTrackTree( p.get<bool>("MakePerTrackTree") ),
   fMakePDSGeoTree( p.get<bool>("MakePDSGeoTree") ),
@@ -30,6 +36,8 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fDeconvolvedWaveformsModuleLabel( p.get< std::string >("DeconvolvedWaveformsModuleLabel") ),
   fOpHitsModuleLabel( p.get<std::vector<std::string>>("OpHitsModuleLabel") ),
   fOpFlashesModuleLabel( p.get<std::vector<std::string>>("OpFlashesModuleLabel") ),
+  fCRTTrackModuleLabel( p.get<std::string>("CRTTrackModuleLabel") ),
+  fSPECTDCLabel( p.get< std::string >("SPECTDCLabel") ),
   fHitsLabel( p.get<std::string>("HitsLabel") ),
   fReco2Label( p.get<std::string>("Reco2Label") ),
   fCosmicIdModuleLabel( p.get< std::string >("CosmicIdModuleLabel") ),
@@ -38,7 +46,9 @@ opdet::SBNDPDSAnalyzer::SBNDPDSAnalyzer(fhicl::ParameterSet const& p)
   fG4BufferBoxX( p.get<std::vector<int>>("G4BufferBoxX") ),
   fG4BufferBoxY( p.get<std::vector<int>>("G4BufferBoxY") ),
   fG4BufferBoxZ( p.get<std::vector<int>>("G4BufferBoxZ") ),
-  fG4BeamWindow( p.get<std::vector<int>>("G4BeamWindow") )
+  fG4BeamWindow( p.get<std::vector<int>>("G4BeamWindow") ),
+  fOpFlashBeamWindow( p.get<std::vector<double>>("OpFlashBeamWindow") ),
+  fCRTSaveWindow( p.get<std::vector<double>>("CRTSaveWindow") )
 {
 
   // MakePerTrackTree mode requires UseSimPhotonsLite false and SaveMCParticles true
@@ -166,6 +176,10 @@ void opdet::SBNDPDSAnalyzer::beginJob()
     fTree->Branch("flash_zerr", "std::vector<double>", &_flash_zerr);
     fTree->Branch("flash_x","std::vector<double>", &_flash_x);
     fTree->Branch("flash_xerr", "std::vector<double>", &_flash_xerr);
+    fTree->Branch("flash_pe_co", "std::vector<double>", &_flash_pe_co);
+    fTree->Branch("flash_pe_co", "std::vector<double>", &_flash_pe_co);
+    fTree->Branch("flash_pe_unco", "std::vector<double>", &_flash_pe_unco);
+    fTree->Branch("flash_pmt_ratio", "std::vector<double>", &_flash_pmt_ratio);
     fTree->Branch("flash_ophit_time", "std::vector<std::vector<double>>", &_flash_ophit_time);
     fTree->Branch("flash_ophit_risetime", "std::vector<std::vector<double>>", &_flash_ophit_risetime);
     fTree->Branch("flash_ophit_starttime", "std::vector<std::vector<double>>", &_flash_ophit_starttime);
@@ -174,6 +188,40 @@ void opdet::SBNDPDSAnalyzer::beginJob()
     fTree->Branch("flash_ophit_width", "std::vector<std::vector<double>>", &_flash_ophit_width);
     fTree->Branch("flash_ophit_pe", "std::vector<std::vector<double>>", &_flash_ophit_pe);
     fTree->Branch("flash_ophit_ch", "std::vector<std::vector<int>>", &_flash_ophit_ch);
+  }
+
+  if(fSaveCRT)
+  {
+    fTree->Branch("tr_entry_x", "std::vector<double>", &_tr_entry_x);
+    fTree->Branch("tr_entry_y", "std::vector<double>", &_tr_entry_y);
+    fTree->Branch("tr_entry_z", "std::vector<double>", &_tr_entry_z);
+    fTree->Branch("tr_exit_x", "std::vector<double>", &_tr_exit_x);
+    fTree->Branch("tr_exit_y", "std::vector<double>", &_tr_exit_y);
+    fTree->Branch("tr_exit_z", "std::vector<double>", &_tr_exit_z);
+    fTree->Branch("tr_start_x", "std::vector<double>", &_tr_start_x);
+    fTree->Branch("tr_start_y", "std::vector<double>", &_tr_start_y);
+    fTree->Branch("tr_start_z", "std::vector<double>", &_tr_start_z);
+    fTree->Branch("tr_end_x", "std::vector<double>", &_tr_end_x);
+    fTree->Branch("tr_end_y", "std::vector<double>", &_tr_end_y);
+    fTree->Branch("tr_end_z", "std::vector<double>", &_tr_end_z);
+    fTree->Branch("tr_dir_x", "std::vector<double>", &_tr_dir_x);
+    fTree->Branch("tr_dir_y", "std::vector<double>", &_tr_dir_y);
+    fTree->Branch("tr_dir_z", "std::vector<double>", &_tr_dir_z);
+    fTree->Branch("tr_ts0", "std::vector<double>", &_tr_ts0);
+    fTree->Branch("tr_ets0", "std::vector<double>", &_tr_ets0);
+    fTree->Branch("tr_ets1", "std::vector<double>", &_tr_ets1);
+    fTree->Branch("tr_ets1", "std::vector<double>", &_tr_ets1);
+    fTree->Branch("tr_pe", "std::vector<double>", &_tr_pe);
+    fTree->Branch("tr_length", "std::vector<double>", &_tr_length);
+    fTree->Branch("tr_tof", "std::vector<double>", &_tr_tof);
+    fTree->Branch("tr_theta", "std::vector<double>", &_tr_theta);
+    fTree->Branch("tr_phi", "std::vector<double>", &_tr_phi);
+    fTree->Branch("tr_triple", "std::vector<double>", &_tr_triple);
+  }
+
+  if(fSaveSPECTDC){
+    fTree->Branch("event_trigger_time", &event_trigger_time);
+    fTree->Branch("rwm_time", &rwm_time);
   }
 
   // Cosmic ID
@@ -240,6 +288,10 @@ void opdet::SBNDPDSAnalyzer::beginJob()
 
     fPDSMapTree->Fill();
 
+  }
+
+  for(size_t oc=0; oc<fPDSMap.size(); oc++){
+    fPDSBoxIDs.insert( fPDSMap.pdBox(oc) );
   }
 
 }
@@ -545,7 +597,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
   }
 
   // --- Saving all OpHits
-  if(fSaveOpHits){
+  if(fSaveOpHits && (!fSaveOnlyFlashHits)){
   
     _nophits = 0;
     _ophit_opch.clear();
@@ -588,6 +640,72 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
 
   }
 
+  // ---- Save only CRT-PDS Matched
+  if(fSaveOnlyCRTPDSMatch && fSaveCRT && fSaveOpFlashes)
+  {
+    std::vector<double> _flash_time_to_match;
+    std::vector<double> _crttrack_time_to_match;
+
+    art::Handle< std::vector<recob::OpFlash> > opflashListHandle;
+    // Read OpFlash Time
+    for (size_t s = 0; s < fOpFlashesModuleLabel.size(); s++) {
+      e.getByLabel(fOpFlashesModuleLabel[s], opflashListHandle);
+      if(!opflashListHandle.isValid()){
+        std::cout << "OpFlash with label " << fOpFlashesModuleLabel[s] << " not found..." << std::endl;
+        throw std::exception();
+      }
+      if(fVerbosity>0)
+        std::cout << "Saving OpFlashes from " << fOpFlashesModuleLabel[s] << std::endl;
+      for (unsigned int i = 0; i < opflashListHandle->size(); ++i) {
+        // Get OpFlash
+        art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
+        recob::OpFlash Flash = *FlashPtr;
+        _flash_time_to_match.push_back( Flash.AbsTime() );
+      }
+    }
+    unsigned nOpFlash = _flash_time_to_match.size();
+
+    // Read CRTTracks
+    art::Handle<std::vector<sbnd::crt::CRTTrack>> CRTTrackHandle;
+    e.getByLabel(fCRTTrackModuleLabel, CRTTrackHandle);
+    if(!CRTTrackHandle.isValid()){
+      std::cout << "CRTTrack product " << fCRTTrackModuleLabel << " not found..." << std::endl;
+      throw std::exception();
+    }
+    std::vector<art::Ptr<sbnd::crt::CRTTrack>> CRTTrackVec;
+    art::fill_ptr_vector(CRTTrackVec, CRTTrackHandle);
+    const unsigned nTracks = CRTTrackVec.size();
+
+    for(unsigned i = 0; i < nTracks; ++i)
+    {
+      const auto track = CRTTrackVec[i];
+      _crttrack_time_to_match.push_back(track->Ts0());
+    }
+
+    _opflash_matched.clear();
+    _crt_tracks_matched.clear();
+    _opflash_matched.resize(nOpFlash, false);
+    _crt_tracks_matched.resize(nTracks, false);
+
+    for(size_t i=0; i<_flash_time_to_match.size();i++)
+    {
+      double _opflash_time = _flash_time_to_match[i];
+      for(size_t j=0; j<_crttrack_time_to_match.size(); j++)
+      {
+        double _crt_track_time = _crttrack_time_to_match[j]/1000;
+        double time_diff = abs(_crt_track_time-_opflash_time);
+        if(time_diff< 1)
+        {
+          _opflash_matched[i] = true;
+          _crt_tracks_matched[j] = true;
+          break;
+        }
+      }
+    }
+  }
+
+
+
   // --- Saving OpFlashes
   if(fSaveOpFlashes){
 
@@ -603,6 +721,9 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     _flash_zerr.clear();
     _flash_x.clear();
     _flash_xerr.clear();
+    _flash_pe_co.clear();
+    _flash_pe_unco.clear();
+    _flash_pmt_ratio.clear();
     _flash_ophit_time.clear();
     _flash_ophit_risetime.clear();
     _flash_ophit_starttime.clear();
@@ -614,6 +735,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
 
     art::Handle< std::vector<recob::OpFlash> > opflashListHandle;
 
+    int flash_idx = -1 ;
     // Loop over all the OpFlash labels
     for (size_t s = 0; s < fOpFlashesModuleLabel.size(); s++) {
       
@@ -631,9 +753,27 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         // Get OpFlash
         art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
         recob::OpFlash Flash = *FlashPtr;
-
+        // Skip flash if it's outside the save window.
+        flash_idx+=1;
+        if(Flash.AbsTime()*1000<fOpFlashBeamWindow[0] || Flash.AbsTime()*1000>fOpFlashBeamWindow[1]) continue;
+        if(fSaveOnlyCRTPDSMatch && !_opflash_matched[flash_idx]) continue;
         if(fVerbosity>0)
           std::cout << "  *  " << _nopflash << " Time [ns]=" << 1000*Flash.AbsTime() << " PE=" << Flash.TotalPE() << std::endl;
+        
+        if(fSavePEFlavourPerFlash)
+        {
+          double _current_pe_co = 0;
+          double _current_pe_unco = 0;
+          std::vector<art::Ptr<recob::OpHit>> ophit_v = flashToOpHitAssns.at(i);
+          for (auto ophit : ophit_v) {
+            int opch = ophit->OpChannel();
+            double channel_pe = ophit->PE();
+            if(fPDSMap.pdType(opch)=="pmt_coated") _current_pe_co+=channel_pe;
+            else if(fPDSMap.pdType(opch)=="pmt_uncoated") _current_pe_unco+=channel_pe;
+          }
+          _flash_pe_co.push_back(_current_pe_co);
+          _flash_pe_unco.push_back(_current_pe_unco);
+        }
 
         _flash_id.push_back( _nopflash );
         _flash_time.push_back( Flash.AbsTime() );
@@ -646,6 +786,7 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
         _flash_xerr.push_back( Flash.XWidth() );
         _flash_z.push_back( Flash.ZCenter() );
         _flash_zerr.push_back( Flash.ZWidth() );
+        _flash_pmt_ratio.push_back(GetPMTRatioData(Flash.PEs()));
         _nopflash++;
 
         if(fSaveOpHits){
@@ -678,6 +819,135 @@ void opdet::SBNDPDSAnalyzer::analyze(art::Event const& e)
     }
 
   }
+
+  if(fSaveCRT)
+  {
+    _tr_entry_x.clear();
+    _tr_entry_y.clear();
+    _tr_entry_z.clear();
+    _tr_exit_x.clear();
+    _tr_exit_y.clear();
+    _tr_exit_z.clear();
+    _tr_start_x.clear();
+    _tr_start_y.clear();
+    _tr_start_z.clear();
+    _tr_end_x.clear();
+    _tr_end_y.clear();
+    _tr_end_z.clear();
+    _tr_dir_x.clear();
+    _tr_dir_y.clear();
+    _tr_dir_z.clear();
+    _tr_ts0.clear();
+    _tr_ets0.clear();
+    _tr_ts1.clear();
+    _tr_ets1.clear();
+    _tr_pe.clear();
+    _tr_length.clear();
+    _tr_tof.clear();
+    _tr_theta.clear();
+    _tr_phi.clear();
+    _tr_triple.clear();
+
+    // Read CRTTracks
+    art::Handle<std::vector<sbnd::crt::CRTTrack>> CRTTrackHandle;
+    e.getByLabel(fCRTTrackModuleLabel, CRTTrackHandle);
+    if(!CRTTrackHandle.isValid()){
+      std::cout << "CRTTrack product " << fCRTTrackModuleLabel << " not found..." << std::endl;
+      throw std::exception();
+    }
+    std::vector<art::Ptr<sbnd::crt::CRTTrack>> CRTTrackVec;
+    art::fill_ptr_vector(CRTTrackVec, CRTTrackHandle);
+    const unsigned nTracks = CRTTrackVec.size();
+
+    for(unsigned i = 0; i < nTracks; ++i)
+    {
+
+      const auto track = CRTTrackVec[i];
+      if(track->Ts0() < fCRTSaveWindow[0] || track->Ts0() > fCRTSaveWindow[1]) continue;
+      if(fSaveOnlyCRTPDSMatch && !_crt_tracks_matched[i]) continue;
+
+      const int tpc_0=0;
+      const int tpc_1=1;
+      TVector3 EntryPoint_tpc0, ExitPoint_tpc0;
+      TVector3 EntryPoint_tpc1, ExitPoint_tpc1;
+      bool cross_tpc0 = CRTTrackCrossesAV(tpc_0, *track, EntryPoint_tpc0, ExitPoint_tpc0);
+      bool cross_tpc1 = CRTTrackCrossesAV(tpc_1, *track, EntryPoint_tpc1, ExitPoint_tpc1);
+      if(fSaveOnlyAVTracks)
+      {
+        if(!cross_tpc0 && !cross_tpc1) continue;
+        if(cross_tpc0){
+          _tr_entry_x.push_back(EntryPoint_tpc0.X());
+          _tr_entry_y.push_back(EntryPoint_tpc0.Y());
+          _tr_entry_z.push_back(EntryPoint_tpc0.Z());
+          _tr_exit_x.push_back(ExitPoint_tpc0.X());
+          _tr_exit_y.push_back(ExitPoint_tpc0.Y());
+          _tr_exit_z.push_back(ExitPoint_tpc0.Z());
+        }
+        else{
+          _tr_entry_x.push_back(EntryPoint_tpc1.X());
+          _tr_entry_y.push_back(EntryPoint_tpc1.Y());
+          _tr_entry_z.push_back(EntryPoint_tpc1.Z());
+          _tr_exit_x.push_back(ExitPoint_tpc1.X());
+          _tr_exit_y.push_back(ExitPoint_tpc1.Y());
+          _tr_exit_z.push_back(ExitPoint_tpc1.Z());
+        }
+      }
+      const geo::Point_t start = track->Start();
+      _tr_start_x.push_back(start.X());
+      _tr_start_y.push_back(start.Y());
+      _tr_start_z.push_back(start.Z());
+
+      const geo::Point_t end = track->End();
+      _tr_end_x.push_back(end.X());
+      _tr_end_y.push_back(end.Y());
+      _tr_end_z.push_back(end.Z());
+
+      const geo::Vector_t dir = track->Direction();
+      _tr_dir_x.push_back(dir.X());
+      _tr_dir_y.push_back(dir.Y());
+      _tr_dir_z.push_back(dir.Z());
+
+      _tr_ts0.push_back(track->Ts0());
+      _tr_ets0.push_back(track->Ts0Err());
+      _tr_ts1.push_back(track->Ts1());
+      _tr_ets1.push_back(track->Ts1Err());
+      _tr_pe.push_back(track->PE());
+      _tr_length.push_back(track->Length());
+      _tr_tof.push_back(track->ToF());
+      _tr_theta.push_back(TMath::RadToDeg() * track->Theta());
+      _tr_phi.push_back(TMath::RadToDeg() * track->Phi());
+      _tr_triple.push_back(track->Triple());
+    }
+  }
+
+  // --- Saving SPECTDC
+
+  if(fSaveSPECTDC)
+  {
+    art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+    e.getByLabel(fSPECTDCLabel, tdcHandle);
+    if (!tdcHandle.isValid() || tdcHandle->size() == 0){
+      std::cout << "No SPECTDC products found. Skip this event." << std::endl;
+      return;
+    }
+    else{
+      const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+      for (size_t i=0; i<tdc_v.size(); i++){
+        auto tdc = tdc_v[i];
+        const uint32_t  ch = tdc.Channel();
+        const uint64_t  ts = tdc.Timestamp();
+
+        if(ch == 2){
+          rwm_time = ts%uint64_t(1e9);
+        }
+        if(ch == 4){
+          event_trigger_time = ts%uint64_t(1e9);
+        }
+      } 
+    }
+  }
+
+
 
   // --- Saving CosmicID
   if(fSaveCosmicId){
@@ -1311,4 +1581,112 @@ std::map<std::string, int> opdet::SBNDPDSAnalyzer::GetAllHitsTruthMatch(art::Eve
     }
 
     return allHitsTruthMap;
+}
+
+double opdet::SBNDPDSAnalyzer::GetPMTRatioData(std::vector<double> PE_v){
+
+  std::map<int, double> BoxMap_PECoated;
+  std::map<int, double> BoxMap_PEUncoated;
+  std::map<int, int> BoxMap_NCoatedCh;
+  std::map<int, int> BoxMap_NUncoatedCh;
+
+  for(size_t oc=0; oc<PE_v.size(); oc++){
+    // skip 0 PE channels
+    if(PE_v[oc]==0) continue;
+
+    std::string pd_type=fPDSMap.pdType(oc);
+    // exclude xarapucas by now
+    if(pd_type=="xarapuca_vuv" || pd_type=="xarapuca_vis") continue;
+
+    // get PDS box
+    int box_id = fPDSMap.pdBox(oc);
+
+    // we store the pe in each box per PMT flavour
+    // and the number of "triggered" PMTs
+    if(pd_type=="pmt_coated") {
+      BoxMap_PECoated[box_id]+=PE_v[oc];
+      BoxMap_NCoatedCh[box_id]+=1;
+    }
+    else if(pd_type=="pmt_uncoated") {
+      BoxMap_PEUncoated[box_id]+=PE_v[oc];
+      BoxMap_NUncoatedCh[box_id]+=1;
+    }
+  }
+
+  double pmtratio=-1.;
+  // compute PMTRatio metric
+  double TotalPE=0;
+  double RatioPerBoxWeight=0;
+  for(size_t boxID=0; boxID<fPDSBoxIDs.size(); boxID++){
+    double RatioPerBox;
+    double PECoated=0, PEUncoated=0;
+    //we need the uncoated PMT in each window and at least one coated
+    if( BoxMap_NUncoatedCh[boxID]==1 && BoxMap_NCoatedCh[boxID]>=1){
+      PECoated+= BoxMap_PECoated[boxID];
+      PEUncoated+=BoxMap_PEUncoated[boxID];
+      TotalPE += PECoated + PEUncoated;
+      RatioPerBox = (PEUncoated/PECoated)*BoxMap_NCoatedCh[boxID];
+      RatioPerBoxWeight += RatioPerBox * (PECoated + PEUncoated);
+    }
+  }
+  if(TotalPE!=0) pmtratio = RatioPerBoxWeight/TotalPE;
+
+
+  return pmtratio;
+}
+
+// -------- Function to chekc if a CRTTrack crosses the AV of TPC(0/1) and return then entry/exit point --------
+bool opdet::SBNDPDSAnalyzer::CRTTrackCrossesAV(const int tpc, const sbnd::crt::CRTTrack &crttrack, TVector3& EntryPoint, TVector3& ExitPoint){
+
+  TVector3 AV_min, AV_max;
+  // Define the AV limits for TPC0 and TPC1
+  if(tpc==0){
+    AV_min = {-200, -200, 0};
+    AV_max = {0, 200, 500};
+  }
+  else if(tpc==1){
+    AV_min = {0, -200, 0};
+    AV_max = {200, 200, 500};
+  }
+  else std::runtime_error("Invalid TPC number. Only 0 and 1 are valid.");
+
+  const geo::Point_t start = crttrack.Start();
+  const geo::Point_t end = crttrack.End();
+
+  TVector3 p1 = {start.X(), start.Y(), start.Z()};
+  TVector3 p2 = {end.X(), end.Y(), end.Z()};
+
+  TVector3 d = p2 - p1;
+  for (int i = 0; i < 3; ++i) {
+      if (d[i] == 0.0)
+          d[i] = 1e-10;
+  }
+
+  std::array<double, 3> t_min, t_max, t1, t2;
+  for (int i = 0; i < 3; ++i) {
+      t_min[i] = (AV_min[i] - p1[i]) / d[i];
+      t_max[i] = (AV_max[i] - p1[i]) / d[i];
+      t1[i] = std::min(t_min[i], t_max[i]);
+      t2[i] = std::max(t_min[i], t_max[i]);
+  }
+
+  double t_entry = *std::max_element(t1.begin(), t1.end());
+  double t_exit  = *std::min_element(t2.begin(), t2.end());
+
+  if (t_entry <= t_exit && t_exit >= 0.0 && t_entry <= 1.0) {
+    TVector3 punto_entrada = p1 + d * t_entry;
+    TVector3 punto_salida  = p1 + d * t_exit;
+    //std::cout << " Entry point " << punto_entrada.X() << " " << punto_entrada.Y() << " " << punto_entrada.Z() << std::endl;
+    //std::cout << " Exit point " << punto_salida.X() << " " << punto_salida.Y() << " " << punto_salida.Z() << std::endl;
+    EntryPoint = punto_entrada;
+    ExitPoint = punto_salida;
+    return true;
+  }
+  else
+  {
+    EntryPoint={-9999., -9999., -9999.};
+    ExitPoint={-9999., -9999., -9999.};
+    return false;
+  }
+
 }

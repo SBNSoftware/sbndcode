@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+wfAlign:
+{
+    module_type:  "WaveformAlignment" 
+    PMTResponseFileName: "PMTResponseTime.txt"
+    CorrectPMTResponseTime: true
+}
+END_PROLOG
