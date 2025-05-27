@@ -2,9 +2,12 @@ BEGIN_PROLOG
 
 crt_calib_service:
 {
-  TimingOffsetFileName: "SBNDCRTTimingOffsets_v1.txt"
-  PedestalFileName:     "SBNDCRTPedestals_v2.txt"
-  BadChannelsFileName:  "SBNDCRTBadChannels_v1.txt"
+  T0CableOffsetFileName: "SBNDCRTT0CableOffsets_v1.txt"
+  T1CableOffsetFileName: "SBNDCRTT1CableOffsets_v1.txt"
+  T0CalibOffsetFileName: "SBNDCRTT0CalibOffsets_v1.txt"
+  T1CalibOffsetFileName: "SBNDCRTT1CalibOffsets_v1.txt"
+  PedestalFileName:      "SBNDCRTPedestals_v2.txt"
+  BadChannelsFileName:   "SBNDCRTBadChannels_v1.txt"
 }
 
 END_PROLOG

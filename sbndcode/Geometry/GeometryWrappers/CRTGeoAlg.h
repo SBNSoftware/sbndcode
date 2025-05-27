@@ -40,6 +40,7 @@
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 #include "sbndcode/Calibration/CRT/CalibService/CRTCalibService.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTOrientationMaps.h"
 
 namespace sbnd::crt {
 
@@ -134,8 +135,8 @@ namespace sbnd::crt {
       , orientation(0)
       , top(false)
       , adID(std::numeric_limits<uint16_t>::max())
-      , t0CableDelayCorrection(0)
-      , t1CableDelayCorrection(0)
+      , t0DelayCorrection(0)
+      , t1DelayCorrection(0)
       , invertedOrdering(false)
       , minos(false)
       , null(false)
@@ -143,8 +144,8 @@ namespace sbnd::crt {
 
     CRTModuleGeo(const TGeoNode *moduleNode, const geo::AuxDetGeo &auxDet,
                  const uint16_t _adID, const std::string &_taggerName,
-                 const int32_t _t0CableDelayCorrection,
-                 const int32_t _t1CableDelayCorrection,
+                 const double _t0DelayCorrection,
+                 const double _t1DelayCorrection,
                  const bool _invertedOrdering,
                  const bool _minos)
     {
@@ -168,18 +169,9 @@ namespace sbnd::crt {
       double modulePosMother[3];
       moduleNode->LocalToMaster(origin, modulePosMother);
 
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger)
-        orientation = _adID == 70 || (modulePosMother[2] < 8.9);
-      else if(_minos || _adID == 139)
-        orientation = (modulePosMother[2] < 0);
-      else
-        orientation = (modulePosMother[2] > 0);
-
-      // Location of SiPMs
-      if(CRTCommonUtils::GetTaggerEnum(taggerName) == kSouthTagger || (CRTCommonUtils::GetTaggerEnum(taggerName) == kNorthTagger && _adID != 82))
-        top = (orientation == 0) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
-      else
-        top = (orientation == 1) ? (modulePosMother[1] < 0) : (modulePosMother[0] > 0);
+      CRTOrientationMaps orientationMaps;
+      orientation = orientationMaps.orientation.at(_adID);
+      top         = orientationMaps.top.at(_adID);
 
       // Fill edges
       minX = std::min(limitsWorld.X(), limitsWorld2.X());
@@ -189,8 +181,8 @@ namespace sbnd::crt {
       minZ = std::min(limitsWorld.Z(), limitsWorld2.Z());
       maxZ = std::max(limitsWorld.Z(), limitsWorld2.Z());
 
-      t0CableDelayCorrection = _t0CableDelayCorrection;
-      t1CableDelayCorrection = _t1CableDelayCorrection;
+      t0DelayCorrection = _t0DelayCorrection;
+      t1DelayCorrection = _t1DelayCorrection;
 
       invertedOrdering = _invertedOrdering;
       adID = _adID;
@@ -209,8 +201,8 @@ namespace sbnd::crt {
     uint16_t      orientation;
     bool          top;
     uint16_t      adID;
-    int32_t       t0CableDelayCorrection;
-    int32_t       t1CableDelayCorrection;
+    double        t0DelayCorrection;
+    double        t1DelayCorrection;
     bool          invertedOrdering;
     bool          minos;
     bool          null;
