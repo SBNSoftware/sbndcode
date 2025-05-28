@@ -28,8 +28,6 @@ function(params, anode, chndbobj, n, name='', dft=default_dft)
         anode: wc.tn(anode),
         dft: wc.tn(dft),
         rms_threshold: 0.0,
-        correlation_threshold: 1.0,
-        default_scaling: 0.0,
       },
     },
     local sticky = {
