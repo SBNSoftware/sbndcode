@@ -77,14 +77,14 @@ void GaussHitFilter::produce(art::Event& e)
   //loop over entries in hitlist
   for(size_t i=0; i<hitlist.size(); i++){
     auto const& thisHit = hitlist[i];
-    int PlaneIndex = (hitinfo[i].plane)%3;
-    if(thisHit->thisHit->PeakAmplitude() > fMinHitHeight[PlaneIndex])
+    int PlaneIndex = (thisHit->plane)%3;
+    if(thisHit->PeakAmplitude() > fMinHitHeight[PlaneIndex])
     {
       hit_v.push_back(*thisHit);
     }
   }
   //Save filtered hits
-  evt.put(std::move(hit_v));
+  e.put(std::move(hit_v));
 }
 
 DEFINE_ART_MODULE(GaussHitFilter)
