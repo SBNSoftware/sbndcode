@@ -40,6 +40,8 @@ public:
 private:
 
   // Declare member data here.
+  std::string             fHitProducer;
+  double fMinHitHeight;
 
 };
 
@@ -48,13 +50,34 @@ GaussHitFilter::GaussHitFilter(fhicl::ParameterSet const& p)
   : EDProducer{p}  // ,
   // More initializers here.
 {
+  fHitProducer    = p.get<std::string>   ("HitProducer");
+  fMinHitHeight    = p.get<std::vector<double>>   ("minHitHeight");
   // Call appropriate produces<>() functions here.
+  produces<std::vector<recob::Hit>> ();
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
 void GaussHitFilter::produce(art::Event& e)
 {
   // Implementation of required member function here.
+  //Make vector of hits to save
+  std::unique_ptr< std::vector<recob::Hit> > hit_v(std::make_unique<std::vector<recob::Hit>>());
+  //Load in hit vector
+  art::Handle< std::vector<recob::Hit> > hitHandle;
+  std::vector<art::Ptr<recob::Hit> > hitlist;
+  if (evt.getByLabel(fHitProducer,hitHandle))
+    art::fill_ptr_vector(hitlist, hitHandle);
+  //loop over entries in hitlist
+  for(size_t i=0; i<hitlist.size(); i++){
+    auto const& thisHit = hitlist[i];
+    int PlaneIndex = (hitinfo[i].plane)%3;
+    if(thisHit->thisHit->PeakAmplitude() > fMinHitHeight[PlaneIndex])
+    {
+      hit_v.push_back(*thisHit);
+    }
+  }
+  //Save filtered hits
+  evt.put(std::move(hit_v));
 }
 
 DEFINE_ART_MODULE(GaussHitFilter)
