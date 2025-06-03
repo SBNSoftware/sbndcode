@@ -13,11 +13,18 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
+#include "art/Framework/Principal/Handle.h"
+#include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Common/PtrVector.h"
+#include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "canvas/Utilities/InputTag.h"
+#include "lardataobj/RecoBase/Hit.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include <memory>
+#include <vector>
+
 
 class GaussHitFilter;
 
@@ -41,7 +48,7 @@ private:
 
   // Declare member data here.
   std::string             fHitProducer;
-  double fMinHitHeight;
+  std::vector<double> fMinHitHeight;
 
 };
 
@@ -65,7 +72,7 @@ void GaussHitFilter::produce(art::Event& e)
   //Load in hit vector
   art::Handle< std::vector<recob::Hit> > hitHandle;
   std::vector<art::Ptr<recob::Hit> > hitlist;
-  if (evt.getByLabel(fHitProducer,hitHandle))
+  if (e.getByLabel(fHitProducer,hitHandle))
     art::fill_ptr_vector(hitlist, hitHandle);
   //loop over entries in hitlist
   for(size_t i=0; i<hitlist.size(); i++){
