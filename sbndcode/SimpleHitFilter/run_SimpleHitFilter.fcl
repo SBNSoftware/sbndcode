@@ -1,0 +1,43 @@
+process_name: NewGaussHit
+
+services: 
+{
+}
+
+
+# Source is an art-ROOT file
+source: {
+  module_type: RootInput
+}
+
+# Define and schedule filter/producer/analyzers
+physics:
+{
+
+  producers: {
+    NewGaussHit: {
+      module_type: "GaussHitFilter"
+    }
+  }
+  
+  
+  trigger_paths:  [ NewGaussHit ] 
+  stream1:        [ out1 ] 
+
+} # physics
+
+
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "%ifb_HitTweaks.root"
+    dataTier:    "reconstructed"
+    fastCloning: false
+    compressionLevel: 1
+    #SelectEvents: [reco]
+  }
+}
+
