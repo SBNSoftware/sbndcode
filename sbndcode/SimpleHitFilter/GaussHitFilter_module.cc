@@ -75,9 +75,12 @@ void GaussHitFilter::produce(art::Event& e)
   if (e.getByLabel(fHitProducer,hitHandle))
     art::fill_ptr_vector(hitlist, hitHandle);
   //loop over entries in hitlist
+  std::cout << " I found " << hitlist.size() << " hits " << std::endl;
   for(size_t i=0; i<hitlist.size(); i++){
     auto const& thisHit = hitlist[i];
     int PlaneIndex = (thisHit->WireID().Plane)%3;
+    std::cout << "This hit is from plane " << thisHit->WireID().Plane << std::endl;
+    std::cout << "It has amplitude " << thisHit->PeakAmplitude() << std::endl;
     if(thisHit->PeakAmplitude() > fMinHitHeight[PlaneIndex])
     {
       hit_v->push_back(*thisHit);
