@@ -106,7 +106,7 @@ void GaussHitFilter::produce(art::Event& e)
     //That could be tied to double peakAmp = 0.3989 * ROIsumADC / peakSigma; so its the gaussian height (probably...do math) instead of adc height
     //if(thisHit->PeakAmplitude() > fMinHitHeight[PlaneIndex])
     std::cout << " Comparing to fMinHitHeight[PlaneIndex] " << std::endl;
-    if(*MaxVal>fMinHitHeight[PlaneIndex])
+    if(MaxVal>fMinHitHeight[PlaneIndex])
     {
       hit_v->push_back(*thisHit);
     }
