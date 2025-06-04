@@ -129,6 +129,7 @@ void GaussHitFilter::produce(art::Event& e)
   std::cout << " on this event I eliminated " << hitlist.size()-hit_v->size() << " hits " 
   << double(hitlist.size()-hit_v->size())/hitlist.size() << " %" << std::endl;
   e.put(std::move(hit_v));
+  e.put(std::move(NewhitWireAssociation));
 }
 
 DEFINE_ART_MODULE(GaussHitFilter)
