@@ -80,7 +80,7 @@ void GaussHitFilter::produce(art::Event& e)
   // Implementation of required member function here.
   //Make vector of hits to save
   std::unique_ptr< std::vector<recob::Hit> > hit_v(std::make_unique<std::vector<recob::Hit>>());
-  auto NewhitWireAssociation    = std::make_unique<art::Assns<recob::Hit, recob::Wire>>();
+  auto NewhitWireAssociation    = std::make_unique<art::Assns<recob::Wire, recob::Hit>>();
   //Load in hit vector
   art::Handle< std::vector<recob::Hit> > hitHandle;
   std::vector<art::Ptr<recob::Hit> > hitlist;
@@ -117,6 +117,11 @@ void GaussHitFilter::produce(art::Event& e)
     if(MaxVal>fMinHitHeight[PlaneIndex])
     {
       hit_v->push_back(*thisHit);
+      //evt	reference to the current event
+      //a	vector of data products that are in, or will be put into, evt
+      //b	art::Ptr to the (new) object to be associated to the one in a
+      //assn	reference to association object where the new one will be put
+      //index	index of the element in a to be associated with b (default: the last element) 
       util::CreateAssn(*this, e, *hit_v, thisWire, *NewhitWireAssociation);
     }
   }
