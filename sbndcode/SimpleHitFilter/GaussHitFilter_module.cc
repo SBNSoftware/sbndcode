@@ -91,8 +91,10 @@ void GaussHitFilter::produce(art::Event& e)
     auto const& thisHit = hitlist[i];
     int PlaneIndex = (thisHit->WireID().Plane)%3;
     const art::Ptr<recob::Wire> thisWire = hitWireAssociation.at(thisHit.key());
+    std::cout << " got a wire " << thisWire->Channel() << " hit from " << thisHit->Channel() << std::endl;
     int startIndex = thisHit->StartTick();
     int endIndex = thisHit->EndTick() + 1;
+    std::cout << " start  " << startIndex << "  end  " << endIndex << std::endl;
     double MaxVal = *std::max_element(thisWire->Signal().begin() + startIndex, thisWire->Signal().begin() + endIndex);
     //We don't want to compare to peak amplitude but rather a certain index in the roi? better match to gausshitfinder
     //Could explain the small excess in my filtered values. Doesn't really explain the <1% of baseline events we cut away
