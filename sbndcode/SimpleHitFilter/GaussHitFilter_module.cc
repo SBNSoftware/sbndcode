@@ -100,7 +100,7 @@ void GaussHitFilter::produce(art::Event& e)
       if(thisWire->Signal()[j] > MaxVal) MaxVal = thisWire->Signal()[j];
     }
     std::cout << " got max val " << std::endl;
-    std::cout << *MaxVal << std::endl;
+    std::cout << MaxVal << std::endl;
     //We don't want to compare to peak amplitude but rather a certain index in the roi? better match to gausshitfinder
     //Could explain the small excess in my filtered values. Doesn't really explain the <1% of baseline events we cut away
     //That could be tied to double peakAmp = 0.3989 * ROIsumADC / peakSigma; so its the gaussian height (probably...do math) instead of adc height
