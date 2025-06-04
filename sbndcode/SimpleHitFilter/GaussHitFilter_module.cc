@@ -90,7 +90,7 @@ void GaussHitFilter::produce(art::Event& e)
   for(size_t i=0; i<hitlist.size(); i++){
     auto const& thisHit = hitlist[i];
     int PlaneIndex = (thisHit->WireID().Plane)%3;
-    const recob::Wire* thisWire = hitWireAssociation.at(thisHit.key());
+    const art::Ptr<recob::Wire> thisWire = hitWireAssociation.at(thisHit.key());
     int startIndex = thisHit->StartTick();
     int endIndex = thisHit->EndTick() + 1;
     double MaxVal = *std::max_element(thisWire->Signal().begin() + startIndex, thisWire->Signal().begin() + endIndex);
