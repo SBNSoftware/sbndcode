@@ -17,6 +17,7 @@
 #include "canvas/Persistency/Common/Ptr.h"
 #include "canvas/Persistency/Common/PtrVector.h"
 #include "canvas/Persistency/Common/FindOne.h"
+#include "canvas/Persistency/Common/FindOneP.h"
 #include "canvas/Persistency/Common/FindMany.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "canvas/Utilities/InputTag.h"
@@ -84,12 +85,12 @@ void GaussHitFilter::produce(art::Event& e)
   std::vector<art::Ptr<recob::Wire>> wirelist;
   if (e.getByLabel(fWireProducer,wireHandle))
     art::fill_ptr_vector(wirelist, wireHandle);
-  art::FindOne<recob::Wire> hitWireAssociation(hitHandle, e, fHitProducer);
+  art::FindOneP<recob::Wire> hitWireAssociation(hitHandle, e, fHitProducer);
   //loop over entries in hitlist
   for(size_t i=0; i<hitlist.size(); i++){
     auto const& thisHit = hitlist[i];
     int PlaneIndex = (thisHit->WireID().Plane)%3;
-    const recob::Wire* thisWire = hitWireAssociation.at(i);
+    const recob::Wire* thisWire = hitWireAssociation.at(thisHit.key());
     int startIndex = thisHit->StartTick();
     int endIndex = thisHit->EndTick() + 1;
     double MaxVal = *std::max_element(thisWire->Signal().begin() + startIndex, thisWire->Signal().begin() + endIndex);
