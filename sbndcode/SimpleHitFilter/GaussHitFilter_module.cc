@@ -71,7 +71,7 @@ GaussHitFilter::GaussHitFilter(fhicl::ParameterSet const& p)
   //Makes a subset of hits
   produces<std::vector<recob::Hit>> ();
   //maintains the art association object
-  produces<art::Assns<recob::Hit, recob::Wire>>();
+  produces<art::Assns<recob::Wire, recob::Hit>>();
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
