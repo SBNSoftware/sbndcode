@@ -93,7 +93,7 @@ void GaussHitFilter::produce(art::Event& e)
     auto const& thisHit = hitlist[i];
     int PlaneIndex = (thisHit->WireID().Plane)%3;
     const art::Ptr<recob::Wire> thisWire = hitWireAssociation.at(thisHit.key());
-    if(channelID!=thisHit->Channel())
+    if(channelID!=int(thisHit->Channel()))
     {
       channelID=thisHit->Channel();
       Signal = thisWire->Signal();
