@@ -80,7 +80,7 @@ void GaussHitFilter::produce(art::Event& e)
   // Implementation of required member function here.
   //Make vector of hits to save
   std::unique_ptr< std::vector<recob::Hit> > hit_v(std::make_unique<std::vector<recob::Hit>>());
-  auto hitWireAssociation    = std::make_unique<art::Assns<recob::Hit, recob::Wire>>();
+  auto NewhitWireAssociation    = std::make_unique<art::Assns<recob::Hit, recob::Wire>>();
   //Load in hit vector
   art::Handle< std::vector<recob::Hit> > hitHandle;
   std::vector<art::Ptr<recob::Hit> > hitlist;
@@ -117,7 +117,7 @@ void GaussHitFilter::produce(art::Event& e)
     if(MaxVal>fMinHitHeight[PlaneIndex])
     {
       hit_v->push_back(*thisHit);
-      util::CreateAssn(*this, e, *hit_v, thisWire, *hitWireAssociation);
+      util::CreateAssn(*this, e, *hit_v, thisWire, *NewhitWireAssociation);
     }
   }
   //Save filtered hits
