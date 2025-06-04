@@ -16,11 +16,15 @@
 #include "art/Framework/Principal/Handle.h"
 #include "canvas/Persistency/Common/Ptr.h"
 #include "canvas/Persistency/Common/PtrVector.h"
+#include "canvas/Persistency/Common/FindOne.h"
+#include "canvas/Persistency/Common/FindMany.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "canvas/Utilities/InputTag.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "lardataobj/RecoBase/Wire.h"
+
 
 #include <memory>
 #include <vector>
@@ -49,6 +53,7 @@ private:
   // Declare member data here.
   std::string             fHitProducer;
   std::vector<double> fMinHitHeight;
+  std::string fWireProducer;
 
 };
 
@@ -59,6 +64,7 @@ GaussHitFilter::GaussHitFilter(fhicl::ParameterSet const& p)
 {
   fHitProducer    = p.get<std::string>   ("HitProducer");
   fMinHitHeight    = p.get<std::vector<double>>   ("minHitHeight");
+  fWireProducer = p.get<std::string> ("WireProducer");
   // Call appropriate produces<>() functions here.
   produces<std::vector<recob::Hit>> ();
   // Call appropriate consumes<>() for any products to be retrieved by this module.
@@ -74,11 +80,24 @@ void GaussHitFilter::produce(art::Event& e)
   std::vector<art::Ptr<recob::Hit> > hitlist;
   if (e.getByLabel(fHitProducer,hitHandle))
     art::fill_ptr_vector(hitlist, hitHandle);
+  art::Handle< std::vector<recob::Wire> > wireHandle;
+  std::vector<recob::Wire> wirelist;
+  if (e.getByLabel(fWireProducer,wireHandle))
+    art::fill_ptr_vector(wirelist, wireHandle);
+  art::FindOne<recob::Wire> hitWireAssociation(hitHandle, e, fHitProducer);
   //loop over entries in hitlist
   for(size_t i=0; i<hitlist.size(); i++){
     auto const& thisHit = hitlist[i];
     int PlaneIndex = (thisHit->WireID().Plane)%3;
-    if(thisHit->PeakAmplitude() > fMinHitHeight[PlaneIndex])
+    recob::Wire thisWire = hitWireAssociation.at(i);
+    int startIndex = thisHit->StartTick();
+    int endIndex = thisHit->EndTick() + 1;
+    double MaxVal = *std::max_element(thisWire.Signal().begin() + startIndex, thisWire.Signal().begin() + endIndex);
+    //We don't want to compare to peak amplitude but rather a certain index in the roi? better match to gausshitfinder
+    //Could explain the small excess in my filtered values. Doesn't really explain the <1% of baseline events we cut away
+    //That could be tied to double peakAmp = 0.3989 * ROIsumADC / peakSigma; so its the gaussian height (probably...do math) instead of adc height
+    //if(thisHit->PeakAmplitude() > fMinHitHeight[PlaneIndex])
+    if(MaxVal>fMinHitHeight[PlaneIndex])
     {
       hit_v->push_back(*thisHit);
     }
