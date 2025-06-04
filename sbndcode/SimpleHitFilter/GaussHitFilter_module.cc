@@ -94,9 +94,11 @@ void GaussHitFilter::produce(art::Event& e)
     std::cout << " got a wire " << thisWire->Channel() << " hit from " << thisHit->Channel() << std::endl;
     int startIndex = thisHit->StartTick();
     int endIndex = thisHit->EndTick() + 1;
-    std::cout << " start  " << startIndex << "  end  " << endIndex << std::endl;
-    std::cout << *(thisWire->Signal().begin()+startIndex) << "  " << *(thisWire->Signal().begin() + endIndex) << std::endl;
-    auto MaxVal = std::max_element(thisWire->Signal().begin() + startIndex, thisWire->Signal().begin() + endIndex);
+    double MaxVal=0;
+    for(int j=startIndex; j<endIndex; j++)
+    {
+      if(thisWire->Signal()[j] > MaxVal) MaxVal = thisWire->Signal()[j];
+    }
     std::cout << " got max val " << std::endl;
     std::cout << *MaxVal << std::endl;
     //We don't want to compare to peak amplitude but rather a certain index in the roi? better match to gausshitfinder
