@@ -1,0 +1,16 @@
+BEGIN_PROLOG
+
+filterRecoEventsParams:
+{
+    module_type: "FilterRecoEvents"
+
+    SliceLabel: "pandora"
+    PFParticleLabel: "pandora"
+    TrackLabel: "pandoraTrack"
+    CalorimetryLabel: "pandoraCalo"
+    HitLabel: "gaushit"
+    LArGeantLabel: "largeant"
+    NuGenLabel: "generator"
+}
+
+END_PROLOG

@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+oldFilterParams:
+{
+    module_type: "OldFilter"
+    
+    SliceLabel: "pandora"
+    PFParticleLabel: "pandora"
+    TrackLabel: "pandoraTrack"
+    LArGeantLabel: "largeant"
+    NuGenLabel: "generator"
+}
+
+END_PROLOG
