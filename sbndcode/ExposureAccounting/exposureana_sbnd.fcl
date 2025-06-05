@@ -1,9 +1,26 @@
 BEGIN_PROLOG
 
+exposureana_mc_beam_sbnd:
+{
+  BNBSpillInfoModuleLabel: ""
+  EXTCountInfoModuleLabel: ""
+  MCPOTModuleLabel:        "generator"
+  module_type:             "ExposureAna"
+}
+
+exposureana_mc_nobeam_sbnd:
+{
+  BNBSpillInfoModuleLabel: ""
+  EXTCountInfoModuleLabel: ""
+  MCPOTModuleLabel:        ""
+  module_type:             "ExposureAna"
+}
+
 exposureana_bnblight_sbnd:
 {
   BNBSpillInfoModuleLabel: "sbndbnbinfo"
   EXTCountInfoModuleLabel: ""
+  MCPOTModuleLabel:        ""
   module_type:             "ExposureAna"
 }
 
@@ -11,7 +28,10 @@ exposureana_offbeamlight_sbnd:
 {
   BNBSpillInfoModuleLabel: ""
   EXTCountInfoModuleLabel: "sbndbnbextinfo"
+  MCPOTModuleLabel:        ""
   module_type:             "ExposureAna"
 }
+
+exposureana_offbeamzerobias_sbnd: @local::exposureana_offbeamlight_sbnd
 
 END_PROLOG

@@ -1,0 +1,59 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "spectdc_decoder_sbnd.fcl"
+#include "SBNDPTBDecoderDefaults.fcl"
+#include "crt_decoder_sbnd.fcl"
+#include "crtrecoproducers_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "crtbacktrackeralg_sbnd.fcl"
+#include "crtana_sbnd.fcl"
+#include "sbndbnbdefaults.fcl"
+#include "exposureana_sbnd.fcl"
+
+process_name: CRTDecodePOTRecoAna
+
+services:
+{
+  @table::sbnd_services
+  TFileService: { fileName: "crtana_sbnd.root" }
+  CRTChannelMapService: @local::crt_channel_map_standard
+  CRTCalibService:      @local::crt_calib_service
+  IFBeam:               {}
+  IPMTCalibrationDatabaseService: @erase
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  producers:
+  {
+    tdcdecoder:     @local::spec_tdc_decoder_sbnd
+    ptbdecoder:     @local::SBNDPTBDecoderDefaults
+    crtdecoder:     @local::crt_decoder
+    sbndbnbinfo:    @local::sbndbnbspillinfo
+    crtstrips:      @local::crtstriphitproducer_data_sbnd
+    crtclustering:  @local::crtclusterproducer_data_sbnd
+    crtspacepoints: @local::crtspacepointproducer_data_sbnd
+    crttracks:      @local::crttrackproducer_data_sbnd
+    crtblobs:       @local::crtblobproducer_data_sbnd
+  }
+
+  analyzers:
+  {
+    crtana:      @local::crtana_data_sbnd
+    exposureana: @local::exposureana_bnblight_sbnd
+  }
+
+  decode_reco:   [ tdcdecoder, ptbdecoder, crtdecoder, sbndbnbinfo, crtstrips, crtclustering, crtspacepoints, crttracks, crtblobs ]
+  trigger_paths: [ decode_reco ]
+
+  ana:       [ crtana, exposureana ]
+  end_paths: [ ana ]
+}
+
+physics.producers.sbndbnbinfo.module_type: "SBNDBNBRetriever"

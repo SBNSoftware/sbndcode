@@ -16,8 +16,12 @@
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "art_root_io/TFileService.h"
 #include "canvas/Persistency/Common/Ptr.h"
+#include "canvas/Persistency/Provenance/ProcessConfiguration.h"
+#include "canvas/Persistency/Provenance/ProcessHistory.h"
 
 #include "TTree.h"
+
+#include "larcoreobj/SummaryData/POTSummary.h"
 
 #include "sbnobj/Common/POTAccounting/BNBSpillInfo.h"
 #include "sbnobj/Common/POTAccounting/EXTCountInfo.h"
@@ -39,22 +43,23 @@ public:
   ExposureAna& operator=(ExposureAna&&) = delete;
 
   // Required functions.
-  void analyze(art::Event const& e) override {};
+  void analyze(art::Event const& e) override;
 
   void endSubRun(art::SubRun const& sr) override;
 
 private:
 
-  std::string fBNBSpillInfoModuleLabel, fEXTCountInfoModuleLabel;
+  std::string fBNBSpillInfoModuleLabel, fEXTCountInfoModuleLabel, fMCPOTModuleLabel;
   TTree* fTree;
 
   // Tree variables
 
-  int _run;
-  int _subrun;
+  int _run, _subrun;
 
   std::vector<double> _bnb_spill_pot;
   std::vector<float> _ext_count_gates_since_last_trigger;
+  double _mc_pot;
+  int _mc_spills, _mc_ngenevts;
 };
 
 sbnd::ExposureAna::ExposureAna(fhicl::ParameterSet const& p)
@@ -62,6 +67,7 @@ sbnd::ExposureAna::ExposureAna(fhicl::ParameterSet const& p)
 {
   fBNBSpillInfoModuleLabel = p.get<std::string>("BNBSpillInfoModuleLabel");
   fEXTCountInfoModuleLabel = p.get<std::string>("EXTCountInfoModuleLabel");
+  fMCPOTModuleLabel        = p.get<std::string>("MCPOTModuleLabel");
 
   art::ServiceHandle<art::TFileService> fs;
 
@@ -71,6 +77,30 @@ sbnd::ExposureAna::ExposureAna(fhicl::ParameterSet const& p)
 
   fTree->Branch("bnb_spill_pot", &_bnb_spill_pot);
   fTree->Branch("ext_count_gates_since_last_trigger", &_ext_count_gates_since_last_trigger);
+  fTree->Branch("mc_pot", &_mc_pot);
+  fTree->Branch("mc_spills", &_mc_spills);
+  fTree->Branch("mc_ngenevts", &_mc_ngenevts);
+}
+
+void sbnd::ExposureAna::analyze(art::Event const &e)
+{
+  _mc_ngenevts = 0;
+
+  for(const art::ProcessConfiguration &process: e.processHistory())
+    {
+      std::optional<fhicl::ParameterSet> genConfig = e.getProcessParameterSet(process.processName());
+      
+      if(genConfig && genConfig->has_key("source") && genConfig->has_key("source.maxEvents") && genConfig->has_key("source.module_type"))
+        {
+          int maxEvents = genConfig->get<int>("source.maxEvents");
+          std::string moduleType = genConfig->get<std::string>("source.module_type");
+
+          if(moduleType == "EmptyEvent")
+            {
+              _mc_ngenevts += maxEvents;
+            }
+        }
+    }
 }
 
 void sbnd::ExposureAna::endSubRun(art::SubRun const& sr)
@@ -81,6 +111,10 @@ void sbnd::ExposureAna::endSubRun(art::SubRun const& sr)
   _bnb_spill_pot.clear();
   _ext_count_gates_since_last_trigger.clear();
 
+  _mc_pot    = std::numeric_limits<double>::lowest();
+  _mc_spills = std::numeric_limits<int>::lowest();
+
+  // Get Data POT
   art::Handle<std::vector<sbn::BNBSpillInfo>> BNBSpillInfoHandle;
   sr.getByLabel(fBNBSpillInfoModuleLabel, BNBSpillInfoHandle);
 
@@ -98,6 +132,7 @@ void sbnd::ExposureAna::endSubRun(art::SubRun const& sr)
   art::Handle<std::vector<sbn::EXTCountInfo>> EXTCountInfoHandle;
   sr.getByLabel(fEXTCountInfoModuleLabel, EXTCountInfoHandle);
 
+  // Get Data Off-Beam Spills
   if(EXTCountInfoHandle.isValid())
     {
       std::vector<art::Ptr<sbn::EXTCountInfo>> EXTCountInfoVec;
@@ -109,6 +144,17 @@ void sbnd::ExposureAna::endSubRun(art::SubRun const& sr)
         _ext_count_gates_since_last_trigger[i] = EXTCountInfoVec[i]->gates_since_last_trigger;
     }
 
+  // Get MC POT
+  art::Handle<sumdata::POTSummary> MCPOTHandle;
+  sr.getByLabel(fMCPOTModuleLabel, MCPOTHandle);
+
+  if(MCPOTHandle.isValid())
+    {
+      _mc_pot    = MCPOTHandle->totpot;
+      _mc_spills = MCPOTHandle->totspills;
+    }
+
   fTree->Fill();
 }
+
 DEFINE_ART_MODULE(sbnd::ExposureAna)

@@ -1,0 +1,5 @@
+#include "run_crtdecodepotrecoana_data_bnblight.fcl"
+
+physics.analyzers.exposureana: @local::exposureana_offbeamzerobias_sbnd
+physics.producers.sbndbnbinfo.module_type: "SBNDBNBEXTRetriever"
+physics.producers.sbndbnbinfo.PTBHLT: 3
