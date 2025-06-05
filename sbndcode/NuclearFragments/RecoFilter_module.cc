@@ -27,8 +27,10 @@
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
 #include "canvas/Persistency/Common/FindManyP.h"
+#include "canvas/Persistency/Common/FindOneP.h"
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "larsim/MCCheater/ParticleInventoryService.h"
@@ -77,6 +79,9 @@ private:
   bool fHasNonRecoDeuteronWithDesiredP = 0;
   int fCountNonRecoDeuteronWithDesiredP = 0;
   bool fHasAlphaWithDesiredP = 0;
+  double fReco_nuVertexX = double_default;
+  double fReco_nuVertexY = double_default;
+  double fReco_nuVertexZ = double_default;
 
   std::vector<double> fReco_childTrackLengths;
   std::vector<double> fReco_childTrackCompleteness;
@@ -114,6 +119,7 @@ private:
   std::string fTrackLabel;
   std::string fCalorimetryLabel;
   std::string fHitLabel;
+  std::string fVertexLabel;
   std::string fNuGenLabel;
   std::string fLArGeantLabel;
 
@@ -141,6 +147,7 @@ nuclearFragments::RecoFilter::RecoFilter(fhicl::ParameterSet const& p)
   fTrackLabel(p.get<std::string>("TrackLabel")),
   fCalorimetryLabel(p.get<std::string>("CalorimetryLabel")),
   fHitLabel(p.get<std::string>("HitLabel")),
+  fVertexLabel(p.get<std::string>("VertexLabel")),
   fNuGenLabel(p.get<std::string>("NuGenLabel")),
   fLArGeantLabel(p.get<std::string>("LArGeantLabel"))
 {
@@ -182,8 +189,20 @@ bool nuclearFragments::RecoFilter::filter(art::Event& e)
     art::fill_ptr_vector(sliceVector,sliceHandle);
   }
 
+  // Get PFParticles
+
+  art::ValidHandle<std::vector<recob::PFParticle>> pfpHandle = e.getValidHandle<std::vector<recob::PFParticle>>(fPFParticleLabel);
+  std::vector<art::Ptr<recob::PFParticle>> pfpVector;
+
+  if(pfpHandle.isValid())
+  {
+    art::fill_ptr_vector(pfpVector,pfpHandle);
+  }
+  
   // Get associations between slices and PFParticles
   art::FindManyP<recob::PFParticle> slicePFPAssoc(sliceHandle, e, fSliceLabel);
+
+  art::FindOneP<recob::Vertex>pfpVertexAssoc(pfpHandle, e, fVertexLabel);
 
   //Filling neutrino hierachy variables
   int nuID = -1;
@@ -191,6 +210,7 @@ bool nuclearFragments::RecoFilter::filter(art::Event& e)
 
   for(const art::Ptr<recob::Slice> &slice : sliceVector)
   {
+
     std::vector<art::Ptr<recob::PFParticle>> slicePFPs(slicePFPAssoc.at(slice.key()));
 
     for(const art::Ptr<recob::PFParticle> &slicePFP : slicePFPs)
@@ -202,6 +222,12 @@ bool nuclearFragments::RecoFilter::filter(art::Event& e)
       {
         continue;
       }
+
+      const art::Ptr<recob::Vertex> vertex = pfpVertexAssoc.at(slicePFP.key());
+      geo::Point_t vertexPos = vertex.isNonnull() ? vertex->position() : geo::Point_t(double_default, double_default, double_default);
+      fReco_nuVertexX = vertexPos.X();
+      fReco_nuVertexY = vertexPos.Y();
+      fReco_nuVertexZ = vertexPos.Z();
 
       nuSliceKey = slice.key();
       nuID = slicePFP->Self();
@@ -426,6 +452,9 @@ void nuclearFragments::RecoFilter::beginJob()
   fTree->Branch("reco_truthMatchedE", &fReco_truthMatchedE);
   fTree->Branch("reco_truthMatchedP", &fReco_truthMatchedP);
   fTree->Branch("reco_truthMatchedKE", &fReco_truthMatchedKE);
+  fTree->Branch("reco_nuVertexX", &fReco_nuVertexX);
+  fTree->Branch("reco_nuVertexY", &fReco_nuVertexY);
+  fTree->Branch("reco_nuVertexZ", &fReco_nuVertexZ);
   fTree->Branch("MC_particlePDG", &fMC_particlePDG);
   fTree->Branch("MC_particleMass", &fMC_particleMass);
   fTree->Branch("MC_particleE", &fMC_particleE);
@@ -455,6 +484,9 @@ void nuclearFragments::RecoFilter::ResetVariables()
   fHasRecoDeuteronWithDesiredP = 0;
   fHasNonRecoDeuteronWithDesiredP = 0;
   fHasAlphaWithDesiredP = 0;
+  fReco_nuVertexX = double_default;
+  fReco_nuVertexY = double_default;
+  fReco_nuVertexZ = double_default;
   fTrackHitsMap.clear();
   fTrackIDtoTruthPDGMap.clear();
   fTrackIDtoTruthKEMap.clear();

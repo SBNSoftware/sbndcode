@@ -9,6 +9,7 @@ recoFilterParams:
     TrackLabel: "pandoraTrack"
     CalorimetryLabel: "pandoraCalo"
     HitLabel: "gaushit"
+    VertexLabel: "pandora"
     LArGeantLabel: "largeant"
     NuGenLabel: "generator"
 }
