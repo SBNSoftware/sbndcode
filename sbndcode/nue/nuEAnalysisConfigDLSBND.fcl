@@ -12,7 +12,7 @@ nuE:
     TrackLabel:         "pandoraTrack"
     ShowerLabel:        "pandoraShower"
     MCTruthLabel:       "largeant"
-    DLCurrent:          0
+    DLCurrent:          4
     SpacePointLabel:    "pandora"
     ClusterLabel:       "pandora"
 }
