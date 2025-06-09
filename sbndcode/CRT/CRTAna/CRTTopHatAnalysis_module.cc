@@ -27,6 +27,8 @@
 #include "larsim/Utils/TruthMatchUtils.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
+#include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
+
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
@@ -70,7 +72,11 @@ public:
 
   void AnalyseCRTClusters(const art::Event &e, const std::vector<art::Ptr<CRTCluster>> &CRTClusterVec,
                           const art::FindManyP<CRTSpacePoint> &clustersToSpacePoints);
+
   void AnalyseCRTTracks(const art::Event &e, const std::vector<art::Ptr<CRTTrack>> &CRTTrackVec);
+
+  void AnalysePMTSoftwareTriggers(const art::Event &e, const std::vector<art::Ptr<sbnd::trigger::pmtSoftwareTrigger>> &PMTSoftwareTriggerVec);
+
 
 private:
 
@@ -78,8 +84,9 @@ private:
   TPCGeoAlg fTPCGeoAlg;
 
   std::string fCRTStripHitModuleLabel, fCRTClusterModuleLabel, fCRTSpacePointModuleLabel,
-    fCRTTrackModuleLabel, fPTBModuleLabel, fTDCModuleLabel, fTimingReferenceModuleLabel;
-  bool fDebug, fCutT0;
+    fCRTTrackModuleLabel, fPTBModuleLabel, fTDCModuleLabel, fTimingReferenceModuleLabel,
+    fPMTSoftwareTriggerModuleLabel;
+  bool fDebug, fCutT0, fSavePMTSoftwareTrigger;
   double fMinT0, fMaxT0;
   std::vector<uint32_t> fAllowedPTBHLTs;
 
@@ -185,25 +192,31 @@ private:
   std::vector<std::string> _tdc_name;
 
   bool _etrig_good, _rwm_good, _ptb_hlt_beam_gate_good, _crt_t1_reset_good;
-  double _rwm_etrig_diff, _ptb_hlt_beam_gate_etrig_diff, _rwm_crt_t1_reset_diff, _ptb_hlt_beam_gate_crt_t1_reset_diff;
+  double _rwm_etrig_diff, _ptb_hlt_beam_gate_etrig_diff, _rwm_crt_t1_reset_diff, _ptb_hlt_beam_gate_crt_t1_reset_diff,
+    _rwm_ptb_hlt_beam_gate_diff;
+
+  bool _pmt_st_found_trigger;
+  double _pmt_st_corrected_peak_time, _pmt_st_corrected_peak_time_rwm_ref;
 };
 
 sbnd::crt::CRTTopHatAnalysis::CRTTopHatAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
 {
-  fCRTStripHitModuleLabel     = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
-  fCRTClusterModuleLabel      = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
-  fCRTSpacePointModuleLabel   = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
-  fCRTTrackModuleLabel        = p.get<std::string>("CRTTrackModuleLabel", "crttracks");
-  fPTBModuleLabel             = p.get<std::string>("PTBModuleLabel", "ptbdecoder");
-  fTDCModuleLabel             = p.get<std::string>("TDCModuleLabel", "tdcdecoder");
-  fTimingReferenceModuleLabel = p.get<std::string>("TimingReferenceModuleLabel", "crtstrips");
-  fDebug                      = p.get<bool>("Debug", false);
-  fCutT0                      = p.get<bool>("CutT0", false);
-  fMinT0                      = p.get<double>("MinT0", std::numeric_limits<double>::min());
-  fMaxT0                      = p.get<double>("MaxT0", std::numeric_limits<double>::max());
-  fAllowedPTBHLTs             = p.get<std::vector<uint32_t>>("AllowedPTBHLTs", { 26, 27 });
+  fCRTStripHitModuleLabel        = p.get<std::string>("CRTStripHitModuleLabel", "crtstrips");
+  fCRTClusterModuleLabel         = p.get<std::string>("CRTClusterModuleLabel", "crtclustering");
+  fCRTSpacePointModuleLabel      = p.get<std::string>("CRTSpacePointModuleLabel", "crtspacepoints");
+  fCRTTrackModuleLabel           = p.get<std::string>("CRTTrackModuleLabel", "crttracks");
+  fPTBModuleLabel                = p.get<std::string>("PTBModuleLabel", "ptbdecoder");
+  fTDCModuleLabel                = p.get<std::string>("TDCModuleLabel", "tdcdecoder");
+  fTimingReferenceModuleLabel    = p.get<std::string>("TimingReferenceModuleLabel", "crtstrips");
+  fPMTSoftwareTriggerModuleLabel = p.get<std::string>("PMTSoftwareTriggerModuleLabel", "pmtmetricbnblight");
+  fDebug                         = p.get<bool>("Debug", false);
+  fCutT0                         = p.get<bool>("CutT0", false);
+  fSavePMTSoftwareTrigger        = p.get<bool>("SavePMTSoftwareTrigger", false);
+  fMinT0                         = p.get<double>("MinT0", std::numeric_limits<double>::min());
+  fMaxT0                         = p.get<double>("MaxT0", std::numeric_limits<double>::max());
+  fAllowedPTBHLTs                = p.get<std::vector<uint32_t>>("AllowedPTBHLTs", { 26, 27 });
 
   art::ServiceHandle<art::TFileService> fs;
 
@@ -303,6 +316,15 @@ sbnd::crt::CRTTopHatAnalysis::CRTTopHatAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("ptb_hlt_beam_gate_etrig_diff", &_ptb_hlt_beam_gate_etrig_diff);
   fTree->Branch("rwm_crt_t1_reset_diff", &_rwm_crt_t1_reset_diff);
   fTree->Branch("ptb_hlt_beam_gate_crt_t1_reset_diff", &_ptb_hlt_beam_gate_crt_t1_reset_diff);
+  fTree->Branch("rwm_ptb_hlt_beam_gate_diff", &_rwm_ptb_hlt_beam_gate_diff);
+
+  if(fSavePMTSoftwareTrigger)
+    {
+      fTree->Branch("pmt_st_found_trigger", &_pmt_st_found_trigger);
+      fTree->Branch("pmt_st_corrected_peak_time", &_pmt_st_corrected_peak_time);
+      fTree->Branch("pmt_st_corrected_peak_time", &_pmt_st_corrected_peak_time);
+      fTree->Branch("pmt_st_corrected_peak_time_rwm_ref", &_pmt_st_corrected_peak_time_rwm_ref);
+    }
 }
 
 void sbnd::crt::CRTTopHatAnalysis::analyze(art::Event const& e)
@@ -392,6 +414,22 @@ void sbnd::crt::CRTTopHatAnalysis::analyze(art::Event const& e)
   // Fill CRTTrack variables
   AnalyseCRTTracks(e, CRTTrackVec);
 
+  if(fSavePMTSoftwareTrigger)
+    {
+      // Get PMTSoftwareTriggers
+      art::Handle<std::vector<sbnd::trigger::pmtSoftwareTrigger>> PMTSoftwareTriggerHandle;
+      e.getByLabel(fPMTSoftwareTriggerModuleLabel, PMTSoftwareTriggerHandle);
+      if(!PMTSoftwareTriggerHandle.isValid()){
+        std::cout << "PMTSoftwareTrigger product " << fPMTSoftwareTriggerModuleLabel << " not found..." << std::endl;
+        throw std::exception();
+      }
+      std::vector<art::Ptr<sbnd::trigger::pmtSoftwareTrigger>> PMTSoftwareTriggerVec;
+      art::fill_ptr_vector(PMTSoftwareTriggerVec, PMTSoftwareTriggerHandle);
+
+      // Fill PMTSoftwareTrigger variables
+      AnalysePMTSoftwareTriggers(e, PMTSoftwareTriggerVec);
+    }
+
   fTree->Fill();
 }
 
@@ -467,6 +505,7 @@ void sbnd::crt::CRTTopHatAnalysis::SortReferencing()
   _etrig_good = false; _rwm_good = false; _ptb_hlt_beam_gate_good = false; _crt_t1_reset_good = false;
   _rwm_etrig_diff = std::numeric_limits<double>::max(); _ptb_hlt_beam_gate_etrig_diff = std::numeric_limits<double>::max();
   _rwm_crt_t1_reset_diff = std::numeric_limits<double>::max(); _ptb_hlt_beam_gate_crt_t1_reset_diff = std::numeric_limits<double>::max();
+  _rwm_ptb_hlt_beam_gate_diff = std::numeric_limits<double>::max();
 
   int etrig_count = 0, etrig_id = -1, rwm_count = 0, rwm_id = -1, crt_t1_reset_count = 0, crt_t1_reset_id = -1;
 
@@ -548,6 +587,9 @@ void sbnd::crt::CRTTopHatAnalysis::SortReferencing()
 
   if(_etrig_good && _crt_t1_reset_good && _ptb_hlt_beam_gate_good)
     _ptb_hlt_beam_gate_crt_t1_reset_diff = crt_t1_reset > hlt ? crt_t1_reset - hlt : -1. * (hlt - crt_t1_reset);
+
+  if(_etrig_good && _rwm_good && _ptb_hlt_beam_gate_good)
+    _rwm_ptb_hlt_beam_gate_diff = hlt > rwm ? hlt - rwm : -1. * (rwm - hlt);
 }
 
 void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTStripHits(const art::Event &e, const std::vector<art::Ptr<CRTStripHit>> &CRTStripHitVec)
@@ -761,6 +803,20 @@ void sbnd::crt::CRTTopHatAnalysis::AnalyseCRTTracks(const art::Event &e, const s
           ++tag_i;
         }
     }
+}
+
+void sbnd::crt::CRTTopHatAnalysis::AnalysePMTSoftwareTriggers(const art::Event &e, const std::vector<art::Ptr<sbnd::trigger::pmtSoftwareTrigger>> &PMTSoftwareTriggerVec)
+{
+  _pmt_st_found_trigger               = false;
+  _pmt_st_corrected_peak_time         = std::numeric_limits<double>::lowest();
+  _pmt_st_corrected_peak_time_rwm_ref = std::numeric_limits<double>::lowest();
+
+  if(PMTSoftwareTriggerVec.size() != 1)
+    return;
+
+  _pmt_st_found_trigger               = PMTSoftwareTriggerVec[0]->foundBeamTrigger;
+  _pmt_st_corrected_peak_time         = PMTSoftwareTriggerVec[0]->peaktime*1e3 + PMTSoftwareTriggerVec[0]->trig_ts;
+  _pmt_st_corrected_peak_time_rwm_ref = _pmt_st_corrected_peak_time + _rwm_ptb_hlt_beam_gate_diff;
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTTopHatAnalysis)
