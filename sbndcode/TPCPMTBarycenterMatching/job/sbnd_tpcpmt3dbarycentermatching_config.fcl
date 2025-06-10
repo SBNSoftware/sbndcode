@@ -3,7 +3,7 @@ BEGIN_PROLOG
 TPCPMTBarycenterMatchProducer:
 {
     OpFlashesModuleLabel:     ["opflashtpc0", "opflashtpc1"]
-    PandoraLabel:     "pandora"
+    PandoraLabel:     "pandoraSCE"
     CollectionOnly:   true
     Verbose:          false
     FillMatchTree:    false

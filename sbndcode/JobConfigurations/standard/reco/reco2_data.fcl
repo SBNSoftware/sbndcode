@@ -27,9 +27,9 @@ physics.producers:
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, 
-                 cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching, 
+                 cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, 
                  pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData,
-                 cvnSCE, opt0finderSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
+                 cvnSCE, opt0finderSCE, tpcpmtbarycentermatching, crtspacepointmatchingSCE, crttrackmatchingSCE,
                  caloskimCalorimetry]
 
 physics.analyzers.caloskim.G4producer: ""
