@@ -1,0 +1,10 @@
+BEGIN_PROLOG
+
+pmtmetricproducer: {
+        module_type: "PMTMetricProducer" 
+        is_persistable: true 
+        IncludeExtensions: true 
+        Verbose: 1
+        StreamType: 1
+}
+END_PROLOG
