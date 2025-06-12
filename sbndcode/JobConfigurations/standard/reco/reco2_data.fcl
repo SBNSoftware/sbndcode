@@ -24,8 +24,7 @@ physics.producers:
     opt0finder:     @local::sbnd_opt0_finder_data
     opt0finderSCE:  @local::sbnd_opt0_finder_data
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
-    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducer
-
+    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCE
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, 
