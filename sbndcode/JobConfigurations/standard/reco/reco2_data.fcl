@@ -24,12 +24,14 @@ physics.producers:
     opt0finder:     @local::sbnd_opt0_finder_data
     opt0finderSCE:  @local::sbnd_opt0_finder_data
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
+    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducer
+
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, 
-                 cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, 
+                 cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching,
                  pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData,
-                 cvnSCE, opt0finderSCE, tpcpmtbarycentermatching, crtspacepointmatchingSCE, crttrackmatchingSCE,
+                 cvnSCE, opt0finderSCE, tpcpmtbarycentermatchingSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
                  caloskimCalorimetry]
 
 physics.analyzers.caloskim.G4producer: ""
