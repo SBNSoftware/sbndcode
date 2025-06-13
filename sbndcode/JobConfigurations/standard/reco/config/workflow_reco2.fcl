@@ -34,6 +34,7 @@ sbnd_reco2_producers:{
     pandoraCalo:         @local::sbnd_gnewcalomc
     pandoraPid:          @local::sbnd_chi2pid
 
+
     pandoraSCECalo:      @local::sbnd_gnewcalomc
     pandoraSCEPid:       @local::sbnd_chi2pid
 
@@ -49,6 +50,7 @@ sbnd_reco2_producers:{
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
     
+
     ### CRT Veto
     crtveto:        @local::crtvetoproducer_sbnd
 

@@ -133,6 +133,11 @@ sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[8].ShowerDirecti
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[9].FirstDirectionInputLabel: "TrajDirection"
 sbnd_incremental_pandoraModularShowerCreation.ShowerFinderTools[9].SecondDirectionInputLabel: "ShowerDirection"
 
+sbnd_incremental_pandoraModularShowerCreationData: @local::sbnd_incremental_pandoraModularShowerCreation
+sbnd_incremental_pandoraModularShowerCreationData.ShowerFinderTools[3].CalorimetryAlg: @local::sbnd_calorimetryalgdata
+sbnd_incremental_pandoraModularShowerCreationData.ShowerFinderTools[4].CalorimetryAlg: @local::sbnd_calorimetryalgdata
+sbnd_incremental_pandoraModularShowerCreationData.ShowerFinderTools[7].CalorimetryAlg: @local::sbnd_calorimetryalgdata
+
 sbnd_cheat_pandoraModularShowerCreation.ShowerFinderTools: [
   @local::sbnd_showerstartpositioncheater,
   @local::sbnd_showerdirectioncheater,
@@ -156,6 +161,11 @@ sbnd_sce_incremental_pandoraModularShowerCreation: @local::sbnd_incremental_pand
 sbnd_sce_3dTraj_pandoraModularShowerCreation.ShowerFinderTools[7]:      @local::sbnd_sce_showertrajpointdedx
 sbnd_sce_incremental_pandoraModularShowerCreation.ShowerFinderTools[7]: @local::sbnd_sce_showertrajpointdedx
 
+sbnd_sce_incremental_pandoraModularShowerCreationData: @local::sbnd_sce_incremental_pandoraModularShowerCreation
+sbnd_sce_incremental_pandoraModularShowerCreationData.ShowerFinderTools[3].CalorimetryAlg: @local::sbnd_calorimetryalgdata
+sbnd_sce_incremental_pandoraModularShowerCreationData.ShowerFinderTools[4].CalorimetryAlg: @local::sbnd_calorimetryalgdata
+sbnd_sce_incremental_pandoraModularShowerCreationData.ShowerFinderTools[7].CalorimetryAlg: @local::sbnd_calorimetryalgdata
+
 # SBND config of the sbn common tool set
 sbnd_sbn_showertrajpointdedx:     @local::sbnd_showertrajpointdedx
 sbnd_sce_sbn_showertrajpointdedx: @local::sbnd_sce_showertrajpointdedx
@@ -168,5 +178,16 @@ sbnd_sce_sbn_pandoraModularShowerCreation:  @local::sbnd_3dTraj_pandoraModularSh
 
 sbnd_sbn_pandoraModularShowerCreation.ShowerFinderTools[7]:      @local::sbnd_sbn_showertrajpointdedx
 sbnd_sce_sbn_pandoraModularShowerCreation.ShowerFinderTools[7]:  @local::sbnd_sce_sbn_showertrajpointdedx
+
+sbnd_sbn_pandoraModularShowerCreationData: @local::sbnd_sbn_pandoraModularShowerCreation
+sbnd_sbn_pandoraModularShowerCreationData.ShowerFinderTools[3].CalorimetryAlg:  @local::sbnd_calorimetryalgdata
+sbnd_sbn_pandoraModularShowerCreationData.ShowerFinderTools[5].CalorimetryAlg:  @local::sbnd_calorimetryalgdata
+sbnd_sbn_pandoraModularShowerCreationData.ShowerFinderTools[7].CalorimetryAlg:  @local::sbnd_calorimetryalgdata
+
+sbnd_sce_sbn_pandoraModularShowerCreationData:  @local::sbnd_sce_sbn_pandoraModularShowerCreation
+sbnd_sce_sbn_pandoraModularShowerCreationData.ShowerFinderTools[3].CalorimetryAlg:  @local::sbnd_calorimetryalgdata
+sbnd_sce_sbn_pandoraModularShowerCreationData.ShowerFinderTools[5].CalorimetryAlg:  @local::sbnd_calorimetryalgdata
+sbnd_sce_sbn_pandoraModularShowerCreationData.ShowerFinderTools[7].CalorimetryAlg:  @local::sbnd_calorimetryalgdata
+
 
 END_PROLOG
