@@ -15,6 +15,7 @@ nuE:
     DLCurrent:          3
     SpacePointLabel:    "pandora"
     ClusterLabel:       "pandora"
+    POTLabel:           "generator"
 }
 
 END_PROLOG

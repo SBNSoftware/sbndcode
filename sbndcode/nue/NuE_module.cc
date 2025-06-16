@@ -56,6 +56,10 @@
 
 #include "sbnobj/Common/Reco/CRUMBSResult.h"
 
+#include "larcoreobj/SummaryData/POTSummary.h"
+#include "canvas/Persistency/Provenance/ProcessConfiguration.h"
+#include "canvas/Persistency/Provenance/ProcessHistory.h"
+
 // C++
 #include <string>
 #include <vector>
@@ -88,8 +92,11 @@ public:
     NuE& operator=(NuE&&) = delete;
 
     void analyze(art::Event const& e) override;
+    virtual void beginSubRun(const art::SubRun& sr);
+    virtual void endSubRun(const art::SubRun& sr);
     void beginJob() override;
     void endJob() override;
+    int GetNumGenEvents(const art::Event &e);
     double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
     double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
     void ClearMaps(const art::Event &e);
@@ -108,6 +115,10 @@ private:
 
     art::ServiceHandle<cheat::BackTrackerService>       backTracker;
 
+    TTree* SubRunTree;
+    double pot;
+    int spills, numGenEvents;
+    
     TTree* NuETree;
 
     // Tree Variables
@@ -207,6 +218,7 @@ private:
     double DLCurrent;
     const std::string spacePointLabel;
     const std::string clusterLabel;
+    const std::string POTModuleLabel;
 
     // Output file
     TFile *outputFile = TFile::Open("NuEAnalyserOutput.root","RECREATE");
@@ -226,7 +238,8 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   MCTruthLabel(p.get<std::string>("MCTruthLabel")),
   DLCurrent(p.get<double>("DLCurrent")),
   spacePointLabel(p.get<std::string>("SpacePointLabel")),
-  clusterLabel(p.get<std::string>("ClusterLabel"))
+  clusterLabel(p.get<std::string>("ClusterLabel")),
+  POTModuleLabel(p.get<std::string>("POTLabel"))
 {
     art::ServiceHandle<art::TFileService> fs;
     NuETree = fs->make<TTree>("NuE","");
@@ -298,6 +311,32 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
     NuETree->Branch("reco_spacepointZ", "std::vector<double>", &reco_spacepointZ);
     NuETree->Branch("reco_spacepointPFP", "std::vector<double>", &reco_spacepointPFP);
     NuETree->Branch("reco_spacepointSlice", "std::vector<double>", &reco_spacepointSlice);
+
+    SubRunTree = fs->make<TTree>("SubRun","");   
+    SubRunTree->Branch("pot", &pot);
+    SubRunTree->Branch("spills", &spills);
+    SubRunTree->Branch("numGenEvents", &numGenEvents);
+    SubRunTree->Branch("DLCurrent", &DLCurrent);
+}
+
+void sbnd::NuE::beginSubRun(const art::SubRun &sr){
+    pot = 0.; spills = 0; numGenEvents = 0;
+
+    art::Handle<sumdata::POTSummary> potHandle;
+    sr.getByLabel(POTModuleLabel, potHandle);
+    if(!potHandle.isValid()){
+        std::cout << "POT product " << POTModuleLabel << " not found..." << std::endl;
+        return;
+    }
+
+    pot = potHandle->totpot;
+    spills = potHandle->totspills;
+    printf("POT = %f, Spills = %i\n", pot, spills);
+}
+
+void sbnd::NuE::endSubRun(const art::SubRun &sr){
+    printf("POT = %f, Spills = %i, Num Events Generated = %i\n", pot, spills, numGenEvents);
+    SubRunTree->Fill();
 }
 
 void sbnd::NuE::analyze(art::Event const& e){
@@ -318,6 +357,8 @@ void sbnd::NuE::analyze(art::Event const& e){
   subRunID = e.id().subRun();
   // DLCurrent: 0 = uboone dl, 1 = dune dl, 2 = current, 3 = cheated
 
+  numGenEvents = GetNumGenEvents(e);
+
   //std::cout << "" << std::endl;
   //std::cout << "________________________________________________________________________________________" << std::endl;
   //std::cout << "Run: " << runID << ", Subrun: " << subRunID << ", Event: " << eventID << ", DL/Current: " << DLCurrent << std::endl;
@@ -335,6 +376,22 @@ void sbnd::NuE::analyze(art::Event const& e){
   spacepoints(e);
 
   NuETree->Fill();
+}
+
+int sbnd::NuE::GetNumGenEvents(const art::Event &e){
+    int nGenEvents = 0;
+    for(const art::ProcessConfiguration &process: e.processHistory()){
+        std::optional<fhicl::ParameterSet> genConfig = e.getProcessParameterSet(process.processName());
+        if (genConfig && genConfig->has_key("source") && genConfig->has_key("source.maxEvents") && genConfig->has_key("source.module_type") ) {
+            int maxEvents = genConfig->get<int>("source.maxEvents");
+            std::string moduleType = genConfig->get<std::string>("source.module_type");
+            if (moduleType == "EmptyEvent") {
+                nGenEvents += maxEvents;
+            }
+        }
+    }
+    printf("Num Gen Events = %i\n", nGenEvents);
+    return nGenEvents;
 }
 
 double sbnd::NuE::Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
