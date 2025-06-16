@@ -1,0 +1,22 @@
+BEGIN_PROLOG
+
+nuE:
+{
+    module_type:        "NuE"
+    SliceLabel:         "pandora"
+    PFParticleLabel:    "pandora"
+    VertexLabel:        "pandora"
+    NuGenModuleLabel:   "generator"
+    HitLabel:           "gaushit"
+    CRUMBSLabel:        "crumbs"
+    TrackLabel:         "pandoraTrack"
+    ShowerLabel:        "pandoraShower"
+    MCTruthLabel:       "largeant"
+    DLCurrent:          0
+    SpacePointLabel:    "pandora"
+    ClusterLabel:       "pandora"
+    POTLabel:           "generator"
+    Signal:             0
+}
+
+END_PROLOG
