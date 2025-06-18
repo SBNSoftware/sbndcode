@@ -59,9 +59,9 @@ private:
   float  _flash_peaktime; // us
   float  _trigger_dt;     // us
   int    _timing_type;
-  int    _tdc_etrig;
-  int    _tdc_bes;
-  int    _tdc_rwm;
+  uint64_t    _tdc_etrig;
+  uint64_t    _tdc_bes;
+  uint64_t    _tdc_rwm;
 };
 
 
@@ -90,9 +90,9 @@ sbndaq::MetricAnalyzer::MetricAnalyzer(fhicl::ParameterSet const& p)
   tree->Branch("flash_peaktime",&_flash_peaktime,"flash_peaktime/F");
   tree->Branch("trigger_dt",&_trigger_dt,"trigger_dt/F");
   tree->Branch("timing_type",&_timing_type,"timing_type/I");
-  tree->Branch("tdc_etrig",&_tdc_etrig,"tdc_etrig/I");
-  tree->Branch("tdc_bes",&_tdc_bes,"tdc_bes/I");
-  tree->Branch("tdc_rwm",&_tdc_rwm,"tdc_rwm/I");
+  tree->Branch("tdc_etrig",&_tdc_etrig,"tdc_etrig/l");
+  tree->Branch("tdc_bes",&_tdc_bes,"tdc_bes/l");
+  tree->Branch("tdc_rwm",&_tdc_rwm,"tdc_rwm/l");
 }
 
 void sbndaq::MetricAnalyzer::analyze(art::Event const& e)
@@ -107,8 +107,9 @@ void sbndaq::MetricAnalyzer::analyze(art::Event const& e)
   _flash_peaktime = -999999999;
   _trigger_dt = -999999999;
   _timing_type = -1;
-  _tdc_etrig = -999999999;
-  _tdc_bes = -999999999;
+  _tdc_etrig = 0;
+  _tdc_bes = 0;
+  _tdc_rwm = 0;
 
   if (fstream_labels.size() != fmetric_module_labels.size()){
     std::cout << "Error: stream labels and metric module labels are not the same size" << std::endl;
