@@ -619,7 +619,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
 	 
 
 	  if (numOfTrig ==1){
-	    _ptb_llt_unmask_timestamp[llt_i] = _ptb_llt_timestamp[h_i-1];
+	    _ptb_llt_unmask_timestamp[llt_i] = _ptb_llt_timestamp[l_i-1];
 	    _ptb_llt_trunmask[llt_i] = upBit[0];
 	    llt_i++;
 	  } //End of if statement for single triggers
@@ -630,7 +630,7 @@ void sbnd::ptb::PTBAnalysis::AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>
 	    _ptb_llt_trunmask.resize(nLLTs);
 
 	    for (int mult =0; mult < numOfTrig; mult++){ 
-	      _ptb_llt_unmask_timestamp[llt_i] = _ptb_llt_timestamp[h_i-1];
+	      _ptb_llt_unmask_timestamp[llt_i] = _ptb_llt_timestamp[l_i-1];
 	      _ptb_llt_trunmask[llt_i] = upBit[mult];
 	      llt_i++;
 	    } //End of loop over multiple upBits

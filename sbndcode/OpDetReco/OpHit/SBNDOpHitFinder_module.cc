@@ -91,6 +91,8 @@ namespace opdet {
     std::vector<std::string> _pd_to_use; ///< PDS to use (ex: "pmt", "barepmt")
     std::string fElectronics; ///< PDS readouts to use (ex: "CAEN", "Daphne")
     std::vector<int> _opch_to_use; ///< List of of opch (will be infered from _pd_to_use)
+    std::vector<double> fADCThresholdVector; // Vector containing the ADCThreshold to use for each channel
+    bool fADCThresholdByChannel; // Use an individual ADCThreshold for each channel or not
 
     pmtana::PulseRecoManager  fPulseRecoMgr;
     pmtana::PMTPulseRecoBase* fThreshAlg;
@@ -130,7 +132,6 @@ namespace opdet {
     _pd_to_use   = pset.get< std::vector< std::string > >("PD", _pd_to_use);
     fElectronics = pset.get< std::string >("Electronics");
     _opch_to_use = this->PDNamesToList(_pd_to_use);
-
     fDaphne_Freq  = pset.get< float >("DaphneFreq");
     fHitThreshold = pset.get< float >("HitThreshold");
     bool useCalibrator = pset.get< bool > ("UseCalibrator", false);
@@ -163,8 +164,11 @@ namespace opdet {
     // Initialize the rise time calculator tool
     auto const rise_alg_pset = pset.get_if_present<fhicl::ParameterSet>("RiseTimeCalculator");
 
-    // Initialize the hit finder algorithm
-    auto const hit_alg_pset = pset.get<fhicl::ParameterSet>("HitAlgoPset");
+    // If we need to apply and individual threshold for each channel, set the algorithm threhsold to the lowest value
+    auto hit_alg_pset = pset.get<fhicl::ParameterSet>("HitAlgoPset");
+    fADCThresholdVector = hit_alg_pset.get< std::vector<double>>("ADCThresholdVector", {0});
+    fADCThresholdByChannel = hit_alg_pset.get< bool>("ADCThresholdByChannel", false);
+    if(fADCThresholdByChannel) hit_alg_pset.put_or_replace<double>("ADCThreshold", *min_element(fADCThresholdVector.begin(), fADCThresholdVector.end()));
     std::string threshAlgName = hit_alg_pset.get<std::string>("Name");
     if (threshAlgName == "Threshold")
       fThreshAlg = thresholdAlgorithm<pmtana::AlgoThreshold>(hit_alg_pset, rise_alg_pset);
@@ -318,6 +322,11 @@ namespace opdet {
     // Now correct the time. Unfortunately, there are no setter methods for OpHits,
     // so we have to make a new OpHit vector.
     for (auto h : *HitPtr) {
+      // Apply individual threshold 
+      int channelNumber = h.OpChannel();
+      int PeakAmplitude = h.Amplitude();
+      if(fADCThresholdByChannel && (PeakAmplitude < fADCThresholdVector[channelNumber]) ) continue;
+
       (*HitPtrFinal).emplace_back(h.OpChannel(),
                                   h.PeakTime() + clockData.TriggerTime(),
                                   h.PeakTimeAbs(),

@@ -1,0 +1,9 @@
+#include "cafmakerjob_sbnd_data_base.fcl"
+
+services.NuRandomService.policy: "perEvent"
+
+# Have to specify the fcl name to match what the CI expects,
+# currently no way of controlling this from the command line
+
+physics.producers.cafmaker.CAFFilename: "data_offBeamZeroBias_caf_test_sbndcode_Current.caf.root"
+

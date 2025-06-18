@@ -1,0 +1,73 @@
+#include "transfer_flashmatch_producer.fcl"
+#include "cafmakerjob_sbnd_data_base.fcl"
+#
+# change all the labels we need to
+physics.producers.cafmaker.PandoraTagSuffixes: []
+physics.producers.cafmaker.PFParticleLabel: "pandoraSCE"
+physics.producers.cafmaker.RecoShowerLabel: "pandoraSCEShowerSBN"
+physics.producers.cafmaker.RecoTrackLabel: "pandoraSCETrack"
+physics.producers.cafmaker.TrackCaloLabel: "pandoraSCECaloData"
+physics.producers.cafmaker.TrackChi2PidLabel:  "pandoraSCEPidData"
+physics.producers.cafmaker.CRTSpacePointMatchLabel: "crtspacepointmatchingSCE"
+physics.producers.cafmaker.SBNDCRTTrackMatchLabel: "crttrackmatchingSCE"
+physics.producers.cafmaker.OpT0Label: "opt0finderSCE"
+physics.producers.cafmaker.CVNLabel: "cvnSCE"
+
+physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
+physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"
+
+physics.producers.pandoraTrackMCS.TrackLabel: "pandoraSCETrack"
+physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
+
+physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
+physics.producers.cafmaker.FlashMatchSCECryoSuffixes: ["SCE"]
+
+physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
+physics.producers.pandoraShowerSelectionVars.ShowerLabel:  "pandoraSCEShowerSBN"
+physics.producers.pandoraShowerCosmicDist.PandoraLabel: "pandoraSCE"
+physics.producers.pandoraShowerCosmicDist.ShowerLabel:  "pandoraSCEShowerSBN"
+physics.producers.pandoraShowerRazzle.PFPLabel: "pandoraSCE"
+physics.producers.pandoraShowerRazzle.ShowerLabel: "pandoraSCEShowerSBN"
+
+physics.producers.pandoraRazzled: @local::razzled_sbnd_sce
+
+physics.producers.pandoraTrackClosestApproach.TrackLabel: "pandoraSCETrack"
+physics.producers.pandoraTrackStoppingChi2.TrackLabel: "pandoraSCETrack"
+physics.producers.pandoraTrackStoppingChi2.CaloLabel: "pandoraSCECaloData"
+
+# Just over-write the stub reco labels -- no need to change to "SCE"
+physics.producers.vertexCharge: @local::vertex_charge_sbnd_sce
+physics.producers.vertexStub: @local::vertex_stub_sbnd_sce
+# set the CaloAlg again
+physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
+physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
+
+physics.producers.pandoraTrackDazzle.PFPLabel: "pandoraSCE"
+physics.producers.pandoraTrackDazzle.TrackLabel: "pandoraSCETrack"
+physics.producers.pandoraTrackDazzle.CaloLabel: "pandoraSCECaloData"
+physics.producers.pandoraTrackDazzle.Chi2Label: "pandoraSCEPidData"
+
+physics.producers.fmatchSCE: @local::transfer_flashmatch_sce_sbnd
+physics.producers.fmatchopSCE: @local::transfer_flashmatch_sce_sbnd
+physics.producers.fmatcharaSCE: @local::transfer_flashmatch_sce_sbnd
+physics.producers.fmatchoparaSCE: @local::transfer_flashmatch_sce_sbnd
+
+physics.producers.crumbs.PFParticleModuleLabel:    "pandoraSCE"
+physics.producers.crumbs.TrackModuleLabel: 	   "pandoraSCETrack"
+physics.producers.crumbs.SliceModuleLabel:	   "pandoraSCE"
+physics.producers.crumbs.FlashMatchModuleLabel:    "fmatchSCE"
+physics.producers.crumbs.CalorimetryModuleLabel:   "pandoraSCECaloData"
+physics.producers.crumbs.CRTSPMatchModuleLabel:    "crtspacepointmatchingSCE"
+physics.producers.crumbs.CRTTrackMatchModuleLabel: "crttrackmatchingSCE"
+physics.producers.crumbs.OpT0ModuleLabel:          "opt0finderSCE"
+
+physics.producers.crumbs.Chi2FitParams.TrackLabel: "pandoraSCETrack"
+physics.producers.crumbs.Chi2FitParams.CaloLabel:  "pandoraSCECaloData"
+
+physics.runprod: [ pandoraTrackMCS, pandoraTrackRange,
+            vertexCharge, vertexStub,
+            pandoraTrackClosestApproach, pandoraTrackStoppingChi2, 
+            pandoraShowerSelectionVars,pandoraShowerCosmicDist, cnnid,
+            cafmaker ]
+
+
