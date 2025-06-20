@@ -165,6 +165,13 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* uboone, double ymin, double
     
     if((xmin != 999) && (xmax != 999)) current->GetXaxis()->SetRangeUser(xmin, xmax);
 
+    double maxYValue = std::max({current->GetMaximum(), uboone->GetMaximum()});
+    double minYValue = std::min({current->GetMinimum(), uboone->GetMinimum()});
+
+    if(ymax == 999 && ymin == 999) current->GetYaxis()->SetRangeUser(minYValue*0.95, maxYValue*1.05);
+    if(ymax == 999 && ymin != 999) current->GetYaxis()->SetRangeUser(ymin, maxYValue*1.05);
+    if(ymax != 999 && ymin == 999) current->GetYaxis()->SetRangeUser(minYValue*0.95, ymax);
+
     current->SetStats(0);
     current->GetXaxis()->SetTickLength(0.04);
     current->GetYaxis()->SetTickLength(0.03);
@@ -179,18 +186,28 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* uboone, double ymin, double
     legend->Draw();
 
     if(drawLine){
-        TLine* line = new TLine(1.022, 0, 1.022, current->GetMaximum());
-        line->SetLineColor(kGray+2);
-        line->SetLineStyle(2);
-        line->SetLineWidth(2);
-        line->Draw("same");
-
+        TLine* line = nullptr;
+        
+        if(ymax != 999 && ymin != 999) line = new TLine(1.022, ymin, 1.022, ymax);
+        if(ymax == 999 && ymin == 999) line = new TLine(1.022, minYValue*0.95, 1.022, maxYValue*1.05);
+        if(ymax == 999 && ymin != 999) line = new TLine(1.022, ymin, 1.022, maxYValue*1.05);
+        if(ymax != 999 && ymin == 999) line = new TLine(1.022, minYValue*0.95, 1.022, ymax);
+        
+        if(line){
+            line->SetLineColor(kGray+2);
+            line->SetLineStyle(2);
+            line->SetLineWidth(2);
+            line->Draw("same");
+        }
+        
         TLatex* latex = nullptr;    
         // Labels line on the left
         if(*linePos == 0){
-            latex = new TLatex(1.022 - 0.2, current->GetMaximum() * 0.93, "2m_{e}");
+            if(ymax != 999) latex = new TLatex(1.022 - 0.7, ymax * 0.98, "2m_{e}");
+            if(ymax == 999) latex = new TLatex(1.022 - 0.7, maxYValue * 0.98, "2m_{e}");
         } else{
-            latex = new TLatex(1.022 + 0.1, current->GetMaximum() * 0.93, "2m_{e}");
+            if(ymax != 999) latex = new TLatex(1.022 + 0.7, ymax * 0.98, "2m_{e}");
+            if(ymax == 999) latex = new TLatex(1.022 + 0.7, maxYValue * 0.98, "2m_{e}");
         }
 
         latex->SetTextSize(0.035); 
@@ -238,7 +255,7 @@ void efficiency(TH1F* current, TH1F* uboone, double sizeCurrent, double sizeUboo
 
     TH1F* ubooneEff = (TH1F*) uboone->Clone("eff hist");
     ubooneEff->Reset();
-    ubooneEff->GetYaxis()->SetTitle("Efficiency");
+    ubooneEff->GetYaxis()->SetTitle("Background Rejection");
     ubooneEff->GetXaxis()->SetTitle(xlabel.c_str());
     
     int numBins = current->GetNbinsX();
@@ -252,8 +269,8 @@ void efficiency(TH1F* current, TH1F* uboone, double sizeCurrent, double sizeUboo
         double currentEffValue = currentSum/sizeCurrent;
         double ubooneEffValue = ubooneSum/sizeUboone;
 
-        currentEff->SetBinContent(i, currentEffValue);
-        ubooneEff->SetBinContent(i, ubooneEffValue);
+        currentEff->SetBinContent(i, 1-currentEffValue);
+        ubooneEff->SetBinContent(i, 1-ubooneEffValue);
     }
 
     TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.15, Lxmax, Lymin - 0.02, "NDC");
@@ -863,35 +880,35 @@ void nuEBackgroundBNB_macro(){
     printf("Number of events with a reco neutrino:\nUboone:%i out of %i\nCurrent: %i out of %i\n", numEventsRecoNeutrino.uboone, numEventsTotal.uboone, numEventsRecoNeutrino.current, numEventsTotal.current);
     printf("Number of events where the number of slices with a CRUMBS score != number of reco neutrinos:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSliceNotEqualNeutrino.uboone, numEventsRecoNeutrino.uboone, numEventsSliceNotEqualNeutrino.current, numEventsRecoNeutrino.current);
 
-    styleDraw(numSlices.canvas, numSlices.current, numSlices.uboone, 0, 900, 999, 999, (base_path + "numSlices_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numSlices.current, numSlices.uboone, numEventsSlices.current, numEventsSlices.uboone, 0, 10, 999, 999, (base_path + "numSlices_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numSlices.canvas, numSlices.current, numSlices.uboone, 999, 999, 999, 999, (base_path + "numSlices_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    percentage(numSlices.current, numSlices.uboone, numEventsSlices.current, numEventsSlices.uboone, 999, 999, 999, 999, (base_path + "numSlices_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
  
-    styleDraw(numSlicesCRUMBS.canvas, numSlicesCRUMBS.current, numSlicesCRUMBS.uboone, 0, 900, 999, 999, (base_path + "numCRUMBSSlices_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numSlicesCRUMBS.current, numSlicesCRUMBS.uboone, numEventsSlices.current, numEventsSlices.uboone, 0, 36, 999, 999, (base_path + "numCRUMBSSlices_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numSlicesCRUMBS.canvas, numSlicesCRUMBS.current, numSlicesCRUMBS.uboone, 999, 999, 999, 999, (base_path + "numCRUMBSSlices_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    percentage(numSlicesCRUMBS.current, numSlicesCRUMBS.uboone, numEventsSlices.current, numEventsSlices.uboone, 999, 999, 999, 999, (base_path + "numCRUMBSSlices_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
     
-    styleDraw(numRecoNeutrinos.canvas, numRecoNeutrinos.current, numRecoNeutrinos.uboone, 0, 900, 999, 999, (base_path + "numRecoNeutrinos_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numRecoNeutrinos.current, numRecoNeutrinos.uboone, numEventsSlices.current, numEventsSlices.uboone, 0, 36, 999, 999, (base_path + "numRecoNeutrinos_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numRecoNeutrinos.canvas, numRecoNeutrinos.current, numRecoNeutrinos.uboone, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    percentage(numRecoNeutrinos.current, numRecoNeutrinos.uboone, numEventsSlices.current, numEventsSlices.uboone, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
     // CRUMBS Slice Score Plots
-    styleDraw(sliceScoreCRUMBS.canvas, sliceScoreCRUMBS.current, sliceScoreCRUMBS.uboone, 0, 160, 999, 999, (base_path + "sliceScoreCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(sliceScoreCRUMBS.current, sliceScoreCRUMBS.uboone, numEventsSlices.current, numEventsSlices.uboone, 0, 18, 999, 999, (base_path + "sliceScoreCRUMBS_perc.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(sliceScoreCRUMBS.canvas, sliceScoreCRUMBS.current, sliceScoreCRUMBS.uboone, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(sliceScoreCRUMBS.current, sliceScoreCRUMBS.uboone, numEventsSlices.current, numEventsSlices.uboone, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_perc.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
     
     // CRUMBS Slice Vertex Plots
-    styleDraw(deltaXCRUMBS.canvas, deltaXCRUMBS.current, deltaXCRUMBS.uboone, 0, 460, 999, 999, (base_path + "deltaXCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(deltaYCRUMBS.canvas, deltaYCRUMBS.current, deltaYCRUMBS.uboone, 0, 460, 999, 999, (base_path + "deltaYCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(deltaZCRUMBS.canvas, deltaZCRUMBS.current, deltaZCRUMBS.uboone, 0, 460, 999, 999, (base_path + "deltaZCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(deltaRCRUMBS.canvas, deltaRCRUMBS.current, deltaRCRUMBS.uboone, 0, 860, 999, 999, (base_path + "deltaRCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaXCRUMBS.current, deltaXCRUMBS.uboone, numEventsRecoNeutrino.current, numEventsRecoNeutrino.uboone, 0, 52, 999, 999, (base_path + "deltaXCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaYCRUMBS.current, deltaYCRUMBS.uboone, numEventsRecoNeutrino.current, numEventsRecoNeutrino.uboone, 0, 50, 999, 999, (base_path + "deltaYCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaZCRUMBS.current, deltaZCRUMBS.uboone, numEventsRecoNeutrino.current, numEventsRecoNeutrino.uboone, 0, 50, 999, 999, (base_path + "deltaZCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaRCRUMBS.current, deltaRCRUMBS.uboone, numEventsRecoNeutrino.current, numEventsRecoNeutrino.uboone, 0, 90, 999, 999, (base_path + "deltaRCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(deltaXCRUMBS.canvas, deltaXCRUMBS.current, deltaXCRUMBS.uboone, 999, 999, 999, 999, (base_path + "deltaXCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(deltaYCRUMBS.canvas, deltaYCRUMBS.current, deltaYCRUMBS.uboone, 999, 999, 999, 999, (base_path + "deltaYCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(deltaZCRUMBS.canvas, deltaZCRUMBS.current, deltaZCRUMBS.uboone, 999, 999, 999, 999, (base_path + "deltaZCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(deltaRCRUMBS.canvas, deltaRCRUMBS.current, deltaRCRUMBS.uboone, 999, 999, 999, 999, (base_path + "deltaRCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    percentage(deltaXCRUMBS.current, deltaXCRUMBS.uboone, numEventsRecoNeutrino.current, numEventsRecoNeutrino.uboone, 999, 999, 999, 999, (base_path + "deltaXCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    percentage(deltaYCRUMBS.current, deltaYCRUMBS.uboone, numEventsRecoNeutrino.current, numEventsRecoNeutrino.uboone, 999, 999, 999, 999, (base_path + "deltaYCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    percentage(deltaZCRUMBS.current, deltaZCRUMBS.uboone, numEventsRecoNeutrino.current, numEventsRecoNeutrino.uboone, 999, 999, 999, 999, (base_path + "deltaZCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    percentage(deltaRCRUMBS.current, deltaRCRUMBS.uboone, numEventsRecoNeutrino.current, numEventsRecoNeutrino.uboone, 999, 999, 999, 999, (base_path + "deltaRCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
     // CRUMBS PFP Plots
-    styleDraw(numPFPsCRUMBS.canvas, numPFPsCRUMBS.current, numPFPsCRUMBS.uboone, 0, 820, 999, 999, (base_path + "numPFPsCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numPFPsCRUMBS.current, numPFPsCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 0, 85, 999, 999, (base_path + "numPFPsCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numPFPsCRUMBS.canvas, numPFPsCRUMBS.current, numPFPsCRUMBS.uboone, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    percentage(numPFPsCRUMBS.current, numPFPsCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
-    styleDraw(ratioChosenSummedEnergyCRUMBS.canvas, ratioChosenSummedEnergyCRUMBS.current, ratioChosenSummedEnergyCRUMBS.uboone, 0, 820, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(ratioChosenSummedEnergyCRUMBS.current, ratioChosenSummedEnergyCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 0, 80, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_perc.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(ratioChosenSummedEnergyCRUMBS.canvas, ratioChosenSummedEnergyCRUMBS.current, ratioChosenSummedEnergyCRUMBS.uboone, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    percentage(ratioChosenSummedEnergyCRUMBS.current, ratioChosenSummedEnergyCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_perc.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
 
     int drawLine = 1;
     int left = 0;
@@ -900,13 +917,13 @@ void nuEBackgroundBNB_macro(){
     //styleDraw(angleDifferenceCRUMBS.canvas, angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, 0, 260, 999, 999, (base_path + "angleDifferenceCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
     //percentage(angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, 0, 25, 999, 999, (base_path + "angleDifferenceCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
-    styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, 0, 180, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 0, 20, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
+    efficiency(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
 
-    styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, 0, 180, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 0, 20, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
+    efficiency(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
 
     printf("Interactions in Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactions.Unknown, interactions.QE, interactions.Res, interactions.DIS, interactions.Coh, interactions.CohElastic, interactions.ElectronScattering, interactions.IMDAnnihilation, interactions.InverseBetaDecay, interactions.GlashowResonance, interactions.AMNuGamma, interactions.MEC, interactions.Diffractive, interactions.EM, interactions.WeakMix);
     printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n", interactions.NuanceOffset, interactions.CCQE, interactions.NCQE, interactions.NuanceRes, interactions.CCDis, interactions.NCDis, interactions.NuEElastic);
