@@ -155,13 +155,24 @@ histGroup createHistGroup(const std::string& baseName, const std::string& title,
 }
 
 
-void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, TPaveText* pt = nullptr, int* weighted = nullptr, int* drawLine = nullptr, int* linePos = nullptr){
+void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, TPaveText* pt = nullptr, int* weighted = nullptr, int* drawLine = nullptr, int* linePos = nullptr, int* log = nullptr){
     canvas->cd();
     canvas->SetTickx();
     canvas->SetTicky();
 
     gStyle->SetPalette(kAvocado);
     gROOT->ForceStyle();
+
+    if(log && *log){ 
+        gPad->SetLogy();
+        currentSignal->SetMinimum(0.001);
+        ubooneSignal->SetMinimum(0.001);
+        currentBNB->SetMinimum(0.001);
+        ubooneBNB->SetMinimum(0.001);
+        currentCosmics->SetMinimum(0.001);
+        ubooneCosmics->SetMinimum(0.001);
+    }
+
     gPad->Update();
 
     currentSignal->SetLineWidth(2);
@@ -184,7 +195,11 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
 
     double maxYValue = std::max({currentSignal->GetMaximum(), ubooneSignal->GetMaximum(), currentBNB->GetMaximum(), ubooneBNB->GetMaximum(), currentCosmics->GetMaximum(), ubooneCosmics->GetMaximum()});
 
-    if((ymin == 999) && (ymax == 999)) currentSignal->GetYaxis()->SetRangeUser(0, maxYValue*1.05);
+    if((ymin == 999) && (ymax == 999)){
+        double yminVal = (log && *log) ? 0.1 : 0;
+        double ymaxVal  = (log && *log) ? maxYValue*10 : maxYValue;
+        currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+    }
 
     currentSignal->Draw("hist");
     ubooneSignal->Draw("histsame");
@@ -199,7 +214,8 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
     currentSignal->GetXaxis()->SetTickSize(0.02);
     currentSignal->GetYaxis()->SetTickSize(0.02);
 
-    auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
+    //auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
+    auto legend = new TLegend(0.48, 0.39, 0.87, 0.167);
     legend->AddEntry(ubooneSignal, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
     legend->AddEntry(currentSignal, "Signal, Pandora BDT SBND (without Refinement)", "f");
     legend->AddEntry(ubooneBNB, "BNB, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
@@ -266,8 +282,9 @@ void weighted(TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* u
     ubooneCosmicsWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)");
     
     int funcValue = 1;
+    int log = 1;
 
-    styleDraw(weightedCanvas, currentSignalWeighted, ubooneSignalWeighted, currentBNBWeighted, ubooneBNBWeighted, currentCosmicsWeighted, ubooneCosmicsWeighted, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, nullptr, &funcValue, drawLine, linePos);
+    styleDraw(weightedCanvas, currentSignalWeighted, ubooneSignalWeighted, currentBNBWeighted, ubooneBNBWeighted, currentCosmicsWeighted, ubooneCosmicsWeighted, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, nullptr, &funcValue, drawLine, linePos, &log);
 }
 
 void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double sizeCurrentSignal, double sizeUbooneSignal, double sizeCurrentBNB, double sizeUbooneBNB, double sizeCurrentCosmics, double sizeUbooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = ""){
@@ -502,13 +519,17 @@ void nuEBackgroundSignalWeights_macro(){
         } 
     }
 
-    std::cout << "Total POT Signal: " << totalPOTSignal << std::endl;
-    std::cout << "Total POT BNB: " << totalPOTBNB << std::endl;
-    std::cout << "Total POT Cosmics: " << totalPOTCosmics << std::endl;
+    double numberFiles = 300;
+    double cosmicSpills = numberFiles * 500;
+    double cosmicsPOT = cosmicSpills * 5e12;
 
     double signalWeight = totalPOTSignal/totalPOTSignal;
     double BNBWeight = totalPOTSignal/totalPOTBNB;
-    double cosmicsWeight = totalPOTSignal/totalPOTBNB;
+    double cosmicsWeight = totalPOTSignal/cosmicsPOT;
+    
+    std::cout << "Total POT Signal: " << totalPOTSignal << std::endl;
+    std::cout << "Total POT BNB: " << totalPOTBNB << std::endl;
+    std::cout << "Total POT Cosmics: " << cosmicsPOT << std::endl;
 
     printf("Weights:\nSignal = %f, BNB = %f, Cosmics = %f\n", signalWeight, BNBWeight, cosmicsWeight);
 
@@ -1129,6 +1150,6 @@ void nuEBackgroundSignalWeights_macro(){
 
     std::cout << "Total POT Signal: " << totalPOTSignal << std::endl;
     std::cout << "Total POT BNB: " << totalPOTBNB << std::endl;
-    std::cout << "Total POT Cosmics: " << totalPOTCosmics << std::endl;
+    std::cout << "Total POT Cosmics: " << cosmicsPOT << std::endl;
     printf("Weights:\nSignal = %f, BNB = %f, Cosmics = %f\n", signalWeight, BNBWeight, cosmicsWeight);
 }

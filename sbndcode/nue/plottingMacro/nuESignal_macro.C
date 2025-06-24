@@ -144,16 +144,23 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     sbnd->SetLineWidth(2);
     sbnd->SetLineColor(TColor::GetColor("#9c9ca1"));
 
+    if((ymin != 999) && (ymax != 999)) current->GetYaxis()->SetRangeUser(ymin, ymax);
+    if((xmin != 999) && (xmax != 999)) current->GetXaxis()->SetRangeUser(xmin, xmax);
+
+    double maxYValue = std::max({current->GetMaximum(), cheated->GetMaximum(), dune->GetMaximum(), uboone->GetMaximum(), sbnd->GetMaximum()});
+
+    if((ymin == 999) && (ymax == 999)){
+        double yminVal = 0;
+        double ymaxVal  = maxYValue * 1.1;
+        current->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+    }
+
     current->Draw("hist");
     cheated->Draw("histsame");
     dune->Draw("histsame");
     uboone->Draw("histsame");
     sbnd->Draw("histsame");
-
-    if((ymin != 999) && (ymax != 999)) current->GetYaxis()->SetRangeUser(ymin, ymax);
     
-    if((xmin != 999) && (xmax != 999)) current->GetXaxis()->SetRangeUser(xmin, xmax);
-
     current->SetStats(0);
     current->GetXaxis()->SetTickLength(0.04);
     current->GetYaxis()->SetTickLength(0.03);
@@ -390,13 +397,14 @@ void nuESignal_macro(){
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_05_00NEW/NuEAnalyserOutput.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/merged.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/merged.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/merged.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/merged.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/analysed_Current/NoRefinement/CRUMBS/1.root");
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_05_00NEW/srcs/sbndcode/sbndcode/nue/NuEAnalyserOutput.root");
     //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_04_05/srcs/sbndcode/sbndcode/nue/NuEAnalyserOutput.root");
-
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/CRUMBS_DL_SBND_NoSCE/analysed/merged.root");
     //std::string base_path = "/nashome/c/coackley/nuEPlotsWithoutCosmics/";
-    std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmics/";
+    //std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmics/";
+    std::string base_path = "/nashome/c/coackley/nuEPlotsWithoutCosmicsNoSCE/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;

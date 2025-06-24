@@ -168,6 +168,7 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* uboone, double ymin, double
     double maxYValue = std::max({current->GetMaximum(), uboone->GetMaximum()});
     double minYValue = std::min({current->GetMinimum(), uboone->GetMinimum()});
 
+    std::cout << minYValue << std::endl;
     if(ymax == 999 && ymin == 999) current->GetYaxis()->SetRangeUser(minYValue*0.95, maxYValue*1.05);
     if(ymax == 999 && ymin != 999) current->GetYaxis()->SetRangeUser(ymin, maxYValue*1.05);
     if(ymax != 999 && ymin == 999) current->GetYaxis()->SetRangeUser(minYValue*0.95, ymax);
@@ -186,18 +187,28 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* uboone, double ymin, double
     legend->Draw();
 
     if(drawLine){
-        TLine* line = new TLine(1.022, 0, 1.022, maxYValue);
-        line->SetLineColor(kGray+2);
-        line->SetLineStyle(2);
-        line->SetLineWidth(2);
-        line->Draw("same");
+        TLine* line = nullptr;
+        
+        if(ymax != 999 && ymin != 999) line = new TLine(1.022, ymin, 1.022, ymax);
+        if(ymax == 999 && ymin == 999) line = new TLine(1.022, minYValue*0.95, 1.022, maxYValue*1.05);
+        if(ymax == 999 && ymin != 999) line = new TLine(1.022, ymin, 1.022, maxYValue*1.05);
+        if(ymax != 999 && ymin == 999) line = new TLine(1.022, minYValue*0.95, 1.022, ymax);
+        
+        if(line){
+            line->SetLineColor(kGray+2);
+            line->SetLineStyle(2);
+            line->SetLineWidth(2);
+            line->Draw("same");
+        }
 
         TLatex* latex = nullptr;    
         // Labels line on the left
         if(*linePos == 0){
-            latex = new TLatex(1.022 - 0.2, maxYValue * 0.93, "2m_{e}");
+            if(ymax != 999) latex = new TLatex(1.022 - 0.7, ymax * 0.98, "2m_{e}");
+            if(ymax == 999) latex = new TLatex(1.022 - 0.7, maxYValue * 0.98, "2m_{e}");
         } else{
-            latex = new TLatex(1.022 + 0.1, maxYValue * 0.93, "2m_{e}");
+            if(ymax != 999) latex = new TLatex(1.022 + 0.7, ymax * 0.98, "2m_{e}");
+            if(ymax == 999) latex = new TLatex(1.022 + 0.7, maxYValue * 0.98, "2m_{e}");
         }
 
         latex->SetTextSize(0.035); 
@@ -907,11 +918,11 @@ void nuEBackgroundCosmics_macro(){
 
     styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
     percentage(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    efficiency(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 0.9, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
 
     styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
     percentage(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 999, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    efficiency(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.uboone, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.uboone, 0.9, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
 
     printf("Interactions in Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactions.Unknown, interactions.QE, interactions.Res, interactions.DIS, interactions.Coh, interactions.CohElastic, interactions.ElectronScattering, interactions.IMDAnnihilation, interactions.InverseBetaDecay, interactions.GlashowResonance, interactions.AMNuGamma, interactions.MEC, interactions.Diffractive, interactions.EM, interactions.WeakMix);
     printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n", interactions.NuanceOffset, interactions.CCQE, interactions.NCQE, interactions.NuanceRes, interactions.CCDis, interactions.NCDis, interactions.NuEElastic);
