@@ -1,0 +1,59 @@
+#include "standard_g4_sbnd.fcl"
+
+outputs.out1.outputCommands: [
+         "keep *_*_*_*",
+         "drop sim::SimEnergyDeposits_largeant_*_*"]
+
+services.PhysicsList.enableOptical: true
+services.PhysicsList.enableScintillation: false
+services.PhysicsList.ScintillationStackPhotons: false
+services.PhysicsList.ScintillationTrackSecondariesFirst: false
+services.PhysicsList.ScintillationTrackInfo: false
+services.PhysicsList.enableCerenkov: true
+services.PhysicsList.CerenkovStackPhotons: true
+services.PhysicsList.CerenkovTrackSecondariesFirst: true
+services.PhysicsList.enableRayleigh: true
+services.PhysicsList.enableBoundary: true
+services.PhysicsList.enableAbsorption: true
+services.PhysicsList.enableWLS: true
+services.PhysicsList.Verbosity: 0
+services.PhysicsList.BoundaryInvokeSD: true
+
+services.PhysicsList.enableOptical: true
+
+
+services.LArG4Parameters.OpticalParamModels: ["TransparentPlaneAction"]
+
+services.Geometry.DisableWiresInG4: false
+
+services.LArG4Detector.gdmlFileName_: "sbnd_v02_00_full_simulation.gdml"
+
+
+physics.simulate: [
+      "rns",
+      "loader",
+      "largeant",
+      "ionandscint",
+      "ionandscintout",
+      "pdfastsim",
+      "pdfastsimout",
+      "simdrift",
+      "mcreco",
+      "genericcrt"
+   ]
+
+outputs.out1.outputCommands: [
+         "keep *_*_*_*",
+         "drop sim::SimEnergyDeposits_largeant_*_*"]
+
+services.LArG4Detector.stepLimits: [3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1, 3e-1]
+services.LArG4Detector.volumeNames: [
+     "volTPCActive", 
+     "volCryostat",
+     "volTPCPlaneVert",
+     "volXArapuca0", "volXArapuca1", "volXArapuca2", "volXArapuca3","volXArapuca4", "volXArapuca5", "volXArapuca18", "volXArapuca19", "volXArapuca20", "volXArapuca21", "volXArapuca22", "volXArapuca23", "volXArapuca24", "volXArapuca25", "volXArapuca26", "volXArapuca27", "volXArapuca28", "volXArapuca29", "volXArapuca30", "volXArapuca31", "volXArapuca32", "volXArapuca33", "volXArapuca34", "volXArapuca35", "volXArapuca42", "volXArapuca43", "volXArapuca44", "volXArapuca45", "volXArapuca46", "volXArapuca47", "volXArapuca48", "volXArapuca49", "volXArapuca50", "volXArapuca51", "volXArapuca52", "volXArapuca53", "volXArapuca54", "volXArapuca55", "volXArapuca56", "volXArapuca57", "volXArapuca58", "volXArapuca59", "volXArapuca72", "volXArapuca73", "volXArapuca74", "volXArapuca75", "volXArapuca76", "volXArapuca77", "volXArapuca78", "volXArapuca79", "volXArapuca80", "volXArapuca81", "volXArapuca82", "volXArapuca83","volXArapuca96", "volXArapuca97", "volXArapuca98", "volXArapuca99", "volXArapuca100", "volXArapuca101", "volXArapuca102", "volXArapuca103", "volXArapuca104", "volXArapuca105", "volXArapuca106", "volXArapuca107", "volXArapuca108", "volXArapuca109", "volXArapuca110", "volXArapuca111", "volXArapuca112", "volXArapuca113", "volXArapuca120", "volXArapuca121", "volXArapuca122", "volXArapuca123", "volXArapuca124", "volXArapuca125", "volXArapuca126", "volXArapuca127", "volXArapuca128", "volXArapuca129", "volXArapuca130", "volXArapuca131", "volXArapuca132", "volXArapuca133", "volXArapuca134", "volXArapuca135", "volXArapuca136", "volXArapuca137", "volXArapuca150", "volXArapuca151", "volXArapuca152", "volXArapuca153", "volXArapuca154", "volXArapuca155", "volXArapuca156", "volXArapuca157", "volXArapuca158", "volXArapuca159", "volXArapuca160", "volXArapuca161", "volXArapuca174", "volXArapuca175", "volXArapuca176", "volXArapuca177", "volXArapuca178", "volXArapuca179", "volXArapuca180", "volXArapuca181", "volXArapuca182", "volXArapuca183", "volXArapuca184", "volXArapuca185", "volXArapuca186", "volXArapuca187", "volXArapuca188", "volXArapuca189", "volXArapuca190", "volXArapuca191", "volXArapuca198", "volXArapuca199", "volXArapuca200", "volXArapuca201", "volXArapuca202", "volXArapuca203","volXArapuca204", "volXArapuca205", "volXArapuca206", "volXArapuca207", "volXArapuca208", "volXArapuca209", "volXArapuca210", "volXArapuca211", "volXArapuca212", "volXArapuca213", "volXArapuca214", "volXArapuca215", "volXArapuca228", "volXArapuca229", "volXArapuca230", "volXArapuca231", "volXArapuca232", "volXArapuca233", "volXArapuca234", "volXArapuca235", "volXArapuca236", "volXArapuca237", "volXArapuca238", "volXArapuca239", "volXArapuca252", "volXArapuca253", "volXArapuca254", "volXArapuca255", "volXArapuca256", "volXArapuca257", "volXArapuca258", "volXArapuca259", "volXArapuca260", "volXArapuca261", "volXArapuca262", "volXArapuca263", "volXArapuca264", "volXArapuca265", "volXArapuca266", "volXArapuca267", "volXArapuca268", "volXArapuca269", "volXArapuca276", "volXArapuca277",
+     "volXArapuca278", "volXArapuca279", "volXArapuca280", "volXArapuca281", "volXArapuca282", "volXArapuca283", "volXArapuca284", "volXArapuca285", "volXArapuca286", "volXArapuca287", "volXArapuca288", "volXArapuca289", "volXArapuca290", "volXArapuca291", "volXArapuca292", "volXArapuca293", "volXArapuca306", "volXArapuca307", "volXArapuca308", "volXArapuca309", "volXArapuca310", "volXArapuca311",
+     "volPMT6", "volPMT7", "volPMT8", "volPMT9", "volPMT10", "volPMT11", "volPMT12", "volPMT13", "volPMT14", "volPMT15", "volPMT16", "volPMT17", "volPMT36", "volPMT37", "volPMT38", "volPMT39", "volPMT40", "volPMT41", "volPMT60", "volPMT61", "volPMT62", "volPMT63", "volPMT64", "volPMT65", "volPMT66", "volPMT67", "volPMT68", "volPMT69", "volPMT70", "volPMT71", "volPMT84", "volPMT85", "volPMT86", "volPMT87", "volPMT88", "volPMT89", "volPMT90", "volPMT91", "volPMT92", "volPMT93", "volPMT94", "volPMT95", "volPMT114", "volPMT115", "volPMT116", "volPMT117", "volPMT118", "volPMT119", "volPMT138", "volPMT139", "volPMT140", "volPMT141", "volPMT142", "volPMT143", "volPMT144", "volPMT145", "volPMT146", "volPMT147", "volPMT148", "volPMT149", "volPMT162", "volPMT163", "volPMT164", "volPMT165", "volPMT166", "volPMT167", "volPMT168", "volPMT169", "volPMT170", "volPMT171", "volPMT172", "volPMT173", "volPMT192", "volPMT193", "volPMT194", "volPMT195", "volPMT196", "volPMT197", "volPMT216", "volPMT217", "volPMT218", "volPMT219", "volPMT220", "volPMT221", "volPMT222", "volPMT223", "volPMT224", "volPMT225", "volPMT226", "volPMT227", "volPMT240", "volPMT241", "volPMT242", "volPMT243", "volPMT244", "volPMT245", "volPMT246", "volPMT247", "volPMT248", "volPMT249", "volPMT250", "volPMT251", "volPMT270", "volPMT271", "volPMT272", "volPMT273", "volPMT274", "volPMT275", "volPMT294", "volPMT295", "volPMT296", "volPMT297", "volPMT298", "volPMT299", "volPMT300", "volPMT301", "volPMT302", "volPMT303", "volPMT304", "volPMT305", "volFieldCage",
+     "volPDSstructure0","volPDSstructure1","volPDSstructure2","volPDSstructure3","volPDSstructure4","volPDSstructure5","volPDSstructure6","volPDSstructure7","volPDSstructure8","volPDSstructure9","volPDSstructure10","volPDSstructure11","volPDSstructure12","volPDSstructure13","volPDSstructure14","volPDSstructure15","volPDSstructure16","volPDSstructure17","volPDSstructure18","volPDSstructure19","volPDSstructure20","volPDSstructure21","volPDSstructure22","volPDSstructure23"
+   ]
+
