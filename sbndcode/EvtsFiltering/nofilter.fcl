@@ -1,0 +1,50 @@
+#include "services_sbnd.fcl"
+
+process_name: NoFilter
+
+services:
+{
+  TFileService: { fileName: "reco_hist.root"}
+  MemoryTracker:     {}
+  TimeTracker:       {}
+  RandomNumberGenerator: {} 
+  message:              @local::sbnd_message_services_prod_debug
+  FileCatalogMetadata:  @local::art_file_catalog_mc
+  GeometryConfigurationWriter:    {}
+  @table::sbnd_basic_services
+  @table::sbnd_random_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1
+}
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "merged.root"
+   dataTier:    "filtered"
+   fastCloning: true
+   SelectEvents: [ filter ]
+ }
+}
+
+physics:
+{
+  filters:
+  {
+    nofilter: {
+      module_type: NoFilter
+    }
+  }
+
+  filter: [ nofilter ]
+  stream1:  [ out1 ]
+  trigger_paths: [ filter ]
+  end_paths:     [ stream1 ]
+}
+
