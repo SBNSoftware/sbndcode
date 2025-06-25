@@ -47,3 +47,6 @@ add_subdirectory(ChannelMaps)
 add_subdirectory(SBNDCVN)
 
 add_subdirectory(TPCPMTBarycenterMatching)
+
+# for blip
+add_subdirectory(BlipRecoSBND)

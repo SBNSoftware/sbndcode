@@ -35,7 +35,8 @@ sbnd_wcls_simsp.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-de
 sbnd_wcls_simsp.wcls_main.inputers: ["wclsSimDepoSetSource:"]
 sbnd_wcls_simsp.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
                                      # "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
-                                     "wclsFrameSaver:spsaver"
+                                     "wclsFrameSaver:spsaver",
+				     "wclsFrameSaver:dnnsaver",
                                     ]
 sbnd_wcls_simsp.wcls_main.params:   {
                                      ## This locates the input SimEnergyDeposits in the art::Event
@@ -75,7 +76,7 @@ sbnd_wcls_simsp.wcls_main.structs:  {
                                      ## simulated front porch size [us]
                                      tick0_time: @local::sbnd_detectorclocks.TriggerOffsetTPC
                                      nticks: 3427
-                                     use_dnnroi: false
+                                     use_dnnroi: true
                                      nchunks: 2
                                      tick_per_slice: 4
                                     }
@@ -90,7 +91,8 @@ sbnd_wcls_sp.wcls_main.inputers:  ["wclsRawFrameSource"
                                     # and you must have geo::Geometry service in your environment.
                                     # ,"wclsMultiChannelNoiseDB"
                                   ]
-sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver"
+sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver",
+				   "wclsFrameSaver:dnnsaver",
                                    # "wclsFrameSaver:dnnsaver"
                                   ]
 sbnd_wcls_sp.wcls_main.params :   {
@@ -115,7 +117,7 @@ sbnd_wcls_sp.wcls_main.params :   {
 
 sbnd_wcls_sp.wcls_main.structs:   {
                                    nticks: 3427
-                                   use_dnnroi: false
+                                   use_dnnroi: true
                                    nchunks: 2
                                    tick_per_slice: 4
                                   }

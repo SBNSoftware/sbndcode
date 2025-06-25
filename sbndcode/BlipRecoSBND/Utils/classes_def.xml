@@ -1,0 +1,14 @@
+<lcgdict>
+<class name="art::Wrapper<std::vector<blip::Blip> >"/>
+<class name="blip::Blip"/>
+<class name="std::vector<blip::Blip>"/>
+<class name="blip::HitClust"/>
+<class name="blip::TrueBlip"/>
+<class name="std::map<int,TVector3>"/>
+<class name="art::Assns<blip::Blip,recob::Hit,void>"/>
+<class name="art::Assns<recob::Hit, blip::Blip,void>"/>
+<class name="art::Assns<blip::Blip,recob::SpacePoint,void>"/>
+<class name="art::Wrapper<art::Assns<blip::Blip,recob::Hit,void> >"/>
+<class name="art::Wrapper<art::Assns<recob::Hit,blip::Blip,void> >"/>
+<class name="art::Wrapper<art::Assns<blip::Blip,recob::SpacePoint,void> >"/>
+</lcgdict>
