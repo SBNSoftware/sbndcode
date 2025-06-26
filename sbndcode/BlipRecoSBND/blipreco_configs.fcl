@@ -39,6 +39,9 @@ sbnd_blipalg:
   KeepAllClustersInd:   true
 }
 
+sbnd_blipalg_tradroi: @local::sbnd_blipalg
+sbnd_blipalg_tradroi.HitProducer: "gaushittradroi"
+
 # ===============================================
 # Main BlipAna settings (TTree + diagnostic hists)
 sbnd_blipana:
@@ -52,6 +55,16 @@ sbnd_blipana:
   #DebugMode:          true
 }
 
+sbnd_blipana_tradroi:
+{
+  module_type:        "BlipAna"
+  BlipAlg: 	      @local::sbnd_blipalg_tradroi
+  SaveTruthInfo:      true
+  SaveTrkInfo:        true
+  SaveHitInfo:        false
+  SaveClustInfo:      true
+  #DebugMode:          true
+}
 
 # ===============================================
 # TrackMasker settings

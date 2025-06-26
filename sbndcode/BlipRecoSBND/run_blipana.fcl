@@ -67,9 +67,10 @@ physics:
   
   analyzers:{
     blipana:          @local::sbnd_blipana
-  }
+    blipanatradroi:   @local::sbnd_blipana_tradroi
+}
   
-  ana:            [ blipana ]
+  ana:            [ blipana, blipanatradroi ]
   trigger_paths:  [ ] 
   end_paths:      [ ana ] 
 

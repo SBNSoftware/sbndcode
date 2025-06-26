@@ -70,13 +70,17 @@ physics:
       module_type: "BlipRecoProducer"
       BlipAlg:     @local::sbnd_blipalg
     }
+    bliptradroireco: {
+      module_type: "BlipRecoProducer"
+      BlipAlg:     @local::sbnd_blipalg_tradroi
+    }
   }
   
   analyzers:{
     blipana:          @local::sbnd_blipana
   }
   
-  reco:           [ blipreco ]
+  reco:           [ blipreco, bliptradroireco ]
   #ana:            [ blipana ]
   trigger_paths:  [ reco ] 
   stream1:        [ out1 ] 
