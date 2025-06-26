@@ -36,7 +36,7 @@ sbnd_wcls_simsp.wcls_main.inputers: ["wclsSimDepoSetSource:"]
 sbnd_wcls_simsp.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
                                      # "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
                                      "wclsFrameSaver:spsaver",
-				     "wclsFrameSaver:dnnsaver",
+				     "wclsFrameSaver:dnnsaver"
                                     ]
 sbnd_wcls_simsp.wcls_main.params:   {
                                      ## This locates the input SimEnergyDeposits in the art::Event
@@ -92,7 +92,7 @@ sbnd_wcls_sp.wcls_main.inputers:  ["wclsRawFrameSource"
                                     # ,"wclsMultiChannelNoiseDB"
                                   ]
 sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver",
-				   "wclsFrameSaver:dnnsaver",
+				   "wclsFrameSaver:dnnsaver"
                                    # "wclsFrameSaver:dnnsaver"
                                   ]
 sbnd_wcls_sp.wcls_main.params :   {
