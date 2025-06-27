@@ -11,4 +11,15 @@ TPCPMTBarycenterMatchProducer:
     module_type: "TPCPMTBarycenterMatchProducer"
 }
 
+TPCPMTBarycenterMatchProducerSCE:
+{
+    OpFlashesModuleLabel:     ["opflashtpc0", "opflashtpc1"]
+    PandoraLabel:     "pandoraSCE"
+    CollectionOnly:   true
+    Verbose:          false
+    FillMatchTree:    false
+    Do3DMatching:     true
+    module_type: "TPCPMTBarycenterMatchProducer"
+}
+
 END_PROLOG
