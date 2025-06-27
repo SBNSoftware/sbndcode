@@ -16,7 +16,7 @@ sbnd_wcls: {
         configs: []
 
         ## Libraries in which to look for WCT components
-        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb"]
+        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb", "WireCellPytorch"]
         inputers: []
         outputers: []
         
@@ -53,11 +53,17 @@ sbnd_wcls_sp_data.wcls_main.params :   {
                                         # whether or not to use calibrated, parametrized electronics response
                                         # MUST be a string!
                                         use_paramresp: "true"
-                                        }
+
+                                        dnnroi_model_p0: "DNN_ROI/plane0.ts"
+                                        dnnroi_model_p1: "DNN_ROI/plane1.ts"
+                                       }
 
 sbnd_wcls_sp_data.wcls_main.structs:   { 
                                         # Set the waveform sample length, eg, 6000, 15000, "auto"
                                         nticks: 3427
+                                        use_dnnroi: false
+                                        nchunks: 2
+                                        tick_per_slice: 4
                                        }
 
 END_PROLOG
