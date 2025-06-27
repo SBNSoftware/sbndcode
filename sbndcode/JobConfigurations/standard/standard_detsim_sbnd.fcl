@@ -92,3 +92,9 @@ outputs:
                     ]
   }
 }
+
+# uncomment below 4 lines to run DNN ROI finding SP
+# physics.producers.simtpc2d.wcls_main.outputers: ["wclsDepoFluxWriter:postdrift", "wclsFrameSaver:spsaver", "wclsFrameSaver:dnnsaver"] # "wclsFrameSaver:simdigits" <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+# physics.producers.simtpc2d.wcls_main.structs.use_dnnroi: true
+# physics.producers.simtpc2d.wcls_main.structs.nchunks: 2 # should match training config
+# physics.producers.simtpc2d.wcls_main.structs.tick_per_slice: 4 # should match training config
