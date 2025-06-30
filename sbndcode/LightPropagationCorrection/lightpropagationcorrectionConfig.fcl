@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+LightPropagationCorrection:
+{
+    module_type: "LightPropagationCorrection"
+    Reco2Label: "pandora"
+    OpT0FinderModuleLabel: "OpT0Finder"
+    TPCPMTBarycenterFMModuleLabel: ""
+    OpFlashLabel: "opflashtpc0"
+}
+END_PROLOG

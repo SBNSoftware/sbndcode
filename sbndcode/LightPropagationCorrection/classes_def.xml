@@ -1,0 +1,12 @@
+<!-- 
+  File: classes_def.xml
+  Brief: Data product definitions for pmt timing data products.
+  Author: Lynn Tung
+-->
+
+<lcgdict>
+  <class name= "art::Assns<recob::OpFlash,recob::Slice,void>"/>
+  <class name= "art::Assns<recob::Slice,recob::OpFlash,void>"/>
+  <class name= "art::Wrapper<art::Assns<recob::OpFlash,recob::Slice,void> >"/>
+  <class name= "art::Wrapper<art::Assns<recob::Slice,recob::OpFlash,void> >"/>
+</lcgdict>

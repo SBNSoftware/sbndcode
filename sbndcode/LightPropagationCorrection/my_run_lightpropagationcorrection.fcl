@@ -1,0 +1,15 @@
+#include "run_lightpropagationcorrection.fcl"
+services.DetectorClocksService.InheritClockConfig: false
+physics.producers.lightpropagationcorrection.OpT0FinderModuleLabel: "opt0finder"
+physics.producers.lightpropagationcorrection.SpacePointLabel: "pandora"
+physics.producers.lightpropagationcorrection.OpFlashLabel_tpc0: "opflashtpc0"
+physics.producers.lightpropagationcorrection.OpFlashLabel_tpc1: "opflashtpc1"
+physics.producers.lightpropagationcorrection.VGroupVIS: 23.99
+physics.producers.lightpropagationcorrection.VGroupVUV: 13.5
+physics.producers.lightpropagationcorrection.SpeedOfLight: 29.9
+physics.producers.lightpropagationcorrection.OpHitsModuleLabel: "ophitpmt"
+physics.producers.lightpropagationcorrection.PDFraction: 0.6
+physics.producers.lightpropagationcorrection.PreWindow: 0.02
+physics.producers.lightpropagationcorrection.PostWindow: 0.01
+physics.producers.lightpropagationcorrection.MinHitPE: 1
+physics.producers.lightpropagationcorrection.OpFlashNewLabel: "lightpropagationcorrection"
