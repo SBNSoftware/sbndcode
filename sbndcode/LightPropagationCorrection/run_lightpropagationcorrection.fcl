@@ -33,10 +33,10 @@ physics:
 {
     producers:
     {
-        lightpropagationcorrection: @local::LightPropagationCorrection
+        lightpropcorrection: @local::LightPropagationCorrection
     }
 
-    prod: [ lightpropagationcorrection ]
+    prod: [ lightpropcorrection ]
     stream1: [ out1 ]
 
     trigger_paths: [ prod ]

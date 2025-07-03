@@ -30,11 +30,12 @@ set (
     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
 
+    sbndcode_OpDetReco_OpFlash_FlashFinder
+
     sbnobj::Common_Reco
     sbnobj::SBND_CRT
     sbnobj::SBND_Timing
     sbndcode_OpDetSim
-
 )
 cet_build_plugin(LightPropagationCorrection art::module SOURCE LightPropagationCorrection_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
