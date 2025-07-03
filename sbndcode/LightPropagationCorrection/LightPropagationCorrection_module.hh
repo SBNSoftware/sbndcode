@@ -7,6 +7,7 @@
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Persistency/Common/PtrMaker.h"
+#include "art/Utilities/make_tool.h"
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -86,6 +87,14 @@
 #include <iostream>
 #include <fstream>
 
+// Flash finder utilities
+#include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderManager.h"
+#include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderFMWKInterface.h"
+#include "sbndcode/OpDetReco/OpFlash/FlashFinder/PECalib.h"
+#include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashGeoBase.hh"
+#include "sbndcode/OpDetReco/OpFlash/FlashTools/FlashT0Base.hh"
+#include "sbndcode/OpDetReco/OpFlash/FlashTools/DriftEstimatorBase.hh"
+
 #define fXFidCut1 1.5
 #define fXFidCut2 190
 #define fYFidCut 190
@@ -130,14 +139,27 @@ private:
     void ResetSliceInfo();
     size_t HighestOpT0ScoreIdx(const std::vector< art::Ptr<sbn::OpT0Finder> >);
     void GetPropagationTimeCorrectionPerChannel();
+    void CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> , std::vector<recob::OpHit> & );
+    void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );
     double GetPropagationTime(double );
     double GetFlashT0(double , std::vector<recob::OpHit> );
+    void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& , sbn::OpT0Finder const& );
+    ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
 
-    //---TREE PARAMETERS
-    TTree *fTree;
-    art::ServiceHandle<art::TFileService> tfs;
+
 
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
+
+    //Flash finder manager
+    ::lightana::FlashFinderManager _mgr;
+    ::lightana::FlashFinderManager _mgr_tpc0;
+    ::lightana::FlashFinderManager _mgr_tpc1;
+
+    // Tool for calculating the OpFlash Y and Z centers
+    std::unique_ptr<lightana::FlashGeoBase> _flashgeo;
+
+    // Tool for calculating the OpFlash t0
+    std::unique_ptr<lightana::FlashT0Base> _flasht0calculator;
 
     //Vector for PMT position
     std::vector<double> fOpDetID;
@@ -153,7 +175,12 @@ private:
     std::string fSpacePointLabel;
     std::string fOpHitsModuleLabel;
     std::string fOpFlashNewLabel;
+    std::string fSPECTDCLabel;
 
+    bool fSaveCorrectionTree;
+    bool fSaveDebugTree;
+    bool fSaveSPECTDC;
+    
     std::vector<double> fTimeCorrectionPerChannel;
     double fRecoVx = 0.0;
     double fRecoVy = 0.0;
@@ -187,8 +214,36 @@ private:
     double fPreWindow;
     double fPostWindow;
     double fMinHitPE;
+    double fReadoutDelay;
 
 
+    art::ServiceHandle<art::TFileService> tfs;
+    TTree *fTree;
+
+    int fEvent;
+    int fRun;
+    int fSubrun;
+    double _fNuScore;
+    double fEventTriggerTime=-999999.;
+    double fRWMTime=-999999.;
+    std::vector<double> fNuScore;
+    std::vector<double> fOpT0Score;
+    std::vector<double> fOpFlashTimeOld;
+    std::vector<double> fOpFlashTimeNew;
+    std::vector<double> fOpFlashXCenter;
+    std::vector<double> fOpFlashYCenter;
+    std::vector<double> fOpFlashZCenter;
+    std::vector<double> fOpFlashPE;
+    std::vector<double> fSliceVx;
+    std::vector<double> fSliceVy;
+    std::vector<double> fSliceVz;
+    std::vector<std::vector<double>> fSliceSPX;
+    std::vector<std::vector<double>> fSliceSPY;
+    std::vector<std::vector<double>> fSliceSPZ;
+    std::vector<std::vector<double>> fOpHitOldTime;
+    std::vector<std::vector<double>> fOpHitNewTime;
+    std::vector<std::vector<double>> fOpHitPE;
+    std::vector<std::vector<int>> fOpHitOpCh;
 };
 
 
