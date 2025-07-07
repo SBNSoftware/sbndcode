@@ -118,7 +118,9 @@ private:
     TTree* SubRunTree;
     double pot;
     int spills, numGenEvents;
-    
+    unsigned int subRunNumber;
+    unsigned int subRunRun;
+
     TTree* NuETree;
 
     // Tree Variables
@@ -129,7 +131,7 @@ private:
     double vertexX = 0;
     double vertexY = 0;
     double vertexZ = 0;
-    //int trueParticleID = 0;
+    double interactionType = 0;
 
     std::vector<double>     truth_neutrinoVX;
     std::vector<double>     truth_neutrinoVY;
@@ -139,7 +141,9 @@ private:
     std::vector<double>     truth_chargedLepton;        // MCTruth charged lepton flavour (PDG code)
     std::vector<double>     truth_neutrinoTPCID;        // MCTruth neutrino in TPC ID
     std::vector<double>     truth_neutrinoTPCValid;     // MCTruth neutrino in TPC?
-    
+    std::vector<double>     truth_genieMode;
+    std::vector<double>     truth_genieInteraction;
+
     std::vector<double>     truth_particlePDG;
     std::vector<double>     truth_particleVX;
     std::vector<double>     truth_particleVY;
@@ -250,6 +254,7 @@ sbnd::NuEBackground::NuEBackground(fhicl::ParameterSet const& p)
     NuETree->Branch("runID", &runID);
     NuETree->Branch("subRunID", &subRunID);
     NuETree->Branch("DLCurrent", &DLCurrent);
+    NuETree->Branch("signal", &signal);
 
     NuETree->Branch("truth_neutrinoVX", "std::vector<double>", &truth_neutrinoVX);
     NuETree->Branch("truth_neutrinoVY", "std::vector<double>", &truth_neutrinoVY);
@@ -259,6 +264,8 @@ sbnd::NuEBackground::NuEBackground(fhicl::ParameterSet const& p)
     NuETree->Branch("truth_chargedLepton", "std::vector<double>", &truth_chargedLepton);
     NuETree->Branch("truth_neutrinoTPCID", "std::vector<double>", &truth_neutrinoTPCID);
     NuETree->Branch("truth_neutrinoTPCValid", "std::vector<double>", &truth_neutrinoTPCValid);
+    NuETree->Branch("truth_genieMode", "std::vector<double>", &truth_genieMode);
+    NuETree->Branch("truth_genieInteraction", "std::vector<double>", &truth_genieInteraction);
 
     NuETree->Branch("truth_particlePDG", "std::vector<double>", &truth_particlePDG);
     NuETree->Branch("truth_particleVX", "std::vector<double>", &truth_particleVX);
@@ -319,6 +326,9 @@ sbnd::NuEBackground::NuEBackground(fhicl::ParameterSet const& p)
     SubRunTree->Branch("spills", &spills);
     SubRunTree->Branch("numGenEvents", &numGenEvents);
     SubRunTree->Branch("DLCurrent", &DLCurrent);
+    SubRunTree->Branch("signal", &signal);
+    SubRunTree->Branch("run", &subRunRun);
+    SubRunTree->Branch("subRun", &subRunNumber);
 }
 
 void sbnd::NuEBackground::beginSubRun(const art::SubRun &sr){
@@ -328,16 +338,19 @@ void sbnd::NuEBackground::beginSubRun(const art::SubRun &sr){
     sr.getByLabel(POTModuleLabel, potHandle);
     if(!potHandle.isValid()){
         std::cout << "POT product " << POTModuleLabel << " not found..." << std::endl;
-        return;
-    }
-
+            return;
+    } 
+    
     pot = potHandle->totpot;
     spills = potHandle->totspills;
-    printf("POT = %f, Spills = %i\n", pot, spills);
+    subRunNumber = sr.subRun();
+    subRunRun = sr.run();
+    printf("Run = %i, SubRun = %i, POT = %f, Spills = %i\n", subRunRun, subRunNumber, pot, spills);
+
 }
 
 void sbnd::NuEBackground::endSubRun(const art::SubRun &sr){
-    printf("POT = %f, Spills = %i, Num Events Generated = %i\n", pot, spills, numGenEvents);
+    //printf("POT = %f, Spills = %i, Num Events Generated = %i\n", pot, spills, numGenEvents);
     SubRunTree->Fill();
 }
 
@@ -352,7 +365,7 @@ void sbnd::NuEBackground::analyze(art::Event const& e){
   vertexX = 0;
   vertexY = 0;
   vertexZ = 0;
-  //trueParticleID = 0;
+  interactionType = 0;
 
   eventID = e.id().event();
   runID = e.id().run();
@@ -367,6 +380,7 @@ void sbnd::NuEBackground::analyze(art::Event const& e){
        
   trueNeutrino(e);
   printf("True Vertex = (%f, %f, %f)\n", vertexX, vertexY, vertexZ);
+  printf("Interaction Type = %f\n", interactionType);
 
   recoNeutrino(e);
   MCParticles(e);
@@ -392,7 +406,7 @@ int sbnd::NuEBackground::GetNumGenEvents(const art::Event &e){
             }
         }
     }
-    printf("Num Gen Events = %i\n", nGenEvents);
+    //printf("Num Gen Events = %i\n", nGenEvents);
     return nGenEvents;
 }
 
@@ -436,7 +450,7 @@ void sbnd::NuEBackground::SetupMaps(const art::Event &e){
 }
 
 void sbnd::NuEBackground::showerEnergy(const art::Event &e){
-    //printf("\n");
+    //std::cout << "" << std::endl;
 
     art::Handle<std::vector<recob::PFParticle>> pfpHandle;
     std::vector<art::Ptr<recob::PFParticle>> pfpVec;
@@ -488,9 +502,12 @@ void sbnd::NuEBackground::showerEnergy(const art::Event &e){
                             const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
                             counter++;
 
+                            double pfpCompleteness = -999999;
+                            double pfpPurity = -999999;
+
                             //const std::vector<art::Ptr<recob::Hit>> &hits = showerHitsByID[pfpShower->ID()];
 
-                            const int showerID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
+                            //const int showerID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
                             
                             reco_particlePDG.push_back(pfp->PdgCode());
                             reco_particleIsPrimary.push_back(pfp->IsPrimary());
@@ -504,10 +521,10 @@ void sbnd::NuEBackground::showerEnergy(const art::Event &e){
                             reco_particleBestPlaneEnergy.push_back(pfpShower->Energy()[pfpShower->best_plane()]);
                             reco_particleTheta.push_back(pfpShower->Direction().Theta());
                             reco_particleTrackScore.push_back(trackscoreobj->second);
-                            reco_particleCompleteness.push_back(Completeness(e, showerHits, showerID_truth));
-                            reco_particlePurity.push_back(Purity(e, showerHits, showerID_truth));
+                            reco_particleCompleteness.push_back(pfpCompleteness);
+                            reco_particlePurity.push_back(pfpPurity);
 
-                            printf("Reco Particle %d: ID = %li, Truth ID = %i, PDG Code = %d, Is Primary = %d, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Slice ID = %d, Best Plane Energy = %f, Theta = %f, Trackscore = %f, Completeness = %f, Purity = %f, Shower ID = %d, Number of Hits in Shower = %ld\n", counter, pfp->Self(), showerID_truth, pfp->PdgCode(), pfp->IsPrimary(), pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z(), pfpShower->Direction().X(), pfpShower->Direction().Y(), pfpShower->Direction().Z(), pfpSlice->ID(), pfpShower->Energy()[pfpShower->best_plane()], pfpShower->Direction().Theta(), trackscoreobj->second, Completeness(e, showerHits, showerID_truth), Purity(e, showerHits, showerID_truth), pfpShower->ID(), showerHits.size());
+                            //printf("Reco Particle %d: ID = %li, Truth ID = %i, PDG Code = %d, Is Primary = %d, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Slice ID = %d, Best Plane Energy = %f, Theta = %f, Trackscore = %f, Completeness = %f, Purity = %f, Shower ID = %d, Number of Hits in Shower = %ld\n", counter, pfp->Self(), showerID_truth, pfp->PdgCode(), pfp->IsPrimary(), pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z(), pfpShower->Direction().X(), pfpShower->Direction().Y(), pfpShower->Direction().Z(), pfpSlice->ID(), pfpShower->Energy()[pfpShower->best_plane()], pfpShower->Direction().Theta(), trackscoreobj->second, pfpCompleteness, pfpPurity, pfpShower->ID(), showerHits.size());
                         }
                     }
                 }
@@ -530,14 +547,14 @@ void sbnd::NuEBackground::showerEnergy(const art::Event &e){
         reco_particleTrackScore.push_back(-999999);
         reco_particleCompleteness.push_back(-999999);
         reco_particlePurity.push_back(-999999);
-        //printf("Reco Particle %d: PDG Code = %d, Is Primary = %d, Vertex = (%d, %d, %d), Direction = (%d, %d, %d), Slice ID = %d, Best Plane Energy = %d, Theta = %d, Trackscore = %d, Completeness = %d, Purity = %d\n", counter, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999);
+        printf("Reco Particle %d: PDG Code = %d, Is Primary = %d, Vertex = (%d, %d, %d), Direction = (%d, %d, %d), Slice ID = %d, Best Plane Energy = %d, Theta = %d, Trackscore = %d, Completeness = %d, Purity = %d\n", counter, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999);
     }
 }
 
 void sbnd::NuEBackground::recoNeutrino(const art::Event &e){
     // Function for dealing with the reconstructed primary neutrino
 
-    //printf("\n");
+    //std::cout << "" << std::endl;
     // Gets all the PFPs in the event
     art::Handle<std::vector<recob::PFParticle>>   pfpHandle;
     std::vector<art::Ptr<recob::PFParticle>>      pfpVec;
@@ -588,14 +605,14 @@ void sbnd::NuEBackground::recoNeutrino(const art::Event &e){
         reco_neutrinoVY.push_back(-999999);
         reco_neutrinoVZ.push_back(-999999);
         reco_neutrinoSliceID.push_back(-999999); 
-        //printf("Reco Neutrino %d: PDG Code = %d, Is Primary = %d, Vertex = (%d, %d, %d), Slice ID: %d\n", counter, -999999, -999999, -999999, -999999, -999999, -999999);
+        printf("Reco Neutrino %d: PDG Code = %d, Is Primary = %d, Vertex = (%d, %d, %d), Slice ID: %d\n", counter, -999999, -999999, -999999, -999999, -999999, -999999);
     }
 }
 
 void sbnd::NuEBackground::trueNeutrino(const art::Event &e){
     // Function for dealing with the true neutrino
 
-    //printf("\n");
+    //std::cout << "" << std::endl;
 
     art::Handle<std::vector<simb::MCTruth>> neutrinoHandle;
     e.getByLabel(nuGenModuleLabel, neutrinoHandle);    
@@ -616,19 +633,30 @@ void sbnd::NuEBackground::trueNeutrino(const art::Event &e){
             geo::TPCID tpcID = theGeometry->FindTPCAtPosition(pos);
 
             //std::cout << "TPC ID Num: " << tpcID.TPC << ", is Valid: " << tpcID.isValid << std::endl;
-            truth_neutrinoVX.push_back(neutrinoParticle.Vx());
-            truth_neutrinoVY.push_back(neutrinoParticle.Vy());
-            truth_neutrinoVZ.push_back(neutrinoParticle.Vz());
-            truth_CCNC.push_back(neutrino.CCNC());
-            truth_neutrinoType.push_back(neutrinoParticle.PdgCode());    
-            truth_chargedLepton.push_back(lepton.PdgCode());
-            truth_neutrinoTPCID.push_back(tpcID.TPC);
-            truth_neutrinoTPCValid.push_back(static_cast<double>(tpcID.isValid));
-            printf("True Neutrino %d: Vertex = (%f, %f, %f), CCNC = %d, Neutrino Type = %d, Charged Lepton = %d, TPC ID = %d, TPC Valid = %f\n", counter, neutrinoParticle.Vx(), neutrinoParticle.Vy(), neutrinoParticle.Vz(), neutrino.CCNC(), neutrinoParticle.PdgCode(), lepton.PdgCode(), tpcID.TPC, static_cast<double>(tpcID.isValid));
-        
-            vertexX = neutrinoParticle.Vx();
-            vertexY = neutrinoParticle.Vy();
-            vertexZ = neutrinoParticle.Vz();
+            if(tpcID.isValid == 1){
+                truth_neutrinoVX.push_back(neutrinoParticle.Vx());
+                truth_neutrinoVY.push_back(neutrinoParticle.Vy());
+                truth_neutrinoVZ.push_back(neutrinoParticle.Vz());
+                truth_CCNC.push_back(neutrino.CCNC());
+                truth_neutrinoType.push_back(neutrinoParticle.PdgCode());    
+                truth_chargedLepton.push_back(lepton.PdgCode());
+                truth_neutrinoTPCID.push_back(tpcID.TPC);
+                truth_neutrinoTPCValid.push_back(static_cast<double>(tpcID.isValid));
+                truth_genieMode.push_back(neutrino.Mode());
+                truth_genieInteraction.push_back(neutrino.InteractionType());
+                printf("True Neutrino %d: Vertex = (%f, %f, %f), CCNC = %d, Neutrino Type = %d, Charged Lepton = %d, TPC ID = %d, TPC Valid = %f\n", counter, neutrinoParticle.Vx(), neutrinoParticle.Vy(), neutrinoParticle.Vz(), neutrino.CCNC(), neutrinoParticle.PdgCode(), lepton.PdgCode(), tpcID.TPC, static_cast<double>(tpcID.isValid));
+                std::cout << "Genie Interaction Type = " << neutrino.InteractionType();
+                std::cout << "Genie Mode = " << neutrino.Mode() << std::endl; 
+
+                vertexX = neutrinoParticle.Vx();
+                vertexY = neutrinoParticle.Vy();
+                vertexZ = neutrinoParticle.Vz();
+                interactionType = neutrino.CCNC();
+            }
+            if(tpcID.isValid == 0){
+                std::cout << "TPC isn't valid" << std::endl;
+                printf("True Neutrino %d: Vertex = (%f, %f, %f), CCNC = %d, Neutrino Type = %d, Charged Lepton = %d, TPC ID = %d, TPC Valid = %f\n", counter, neutrinoParticle.Vx(), neutrinoParticle.Vy(), neutrinoParticle.Vz(), neutrino.CCNC(), neutrinoParticle.PdgCode(), lepton.PdgCode(), tpcID.TPC, static_cast<double>(tpcID.isValid));
+            }
         }
     }
 
@@ -641,13 +669,15 @@ void sbnd::NuEBackground::trueNeutrino(const art::Event &e){
         truth_chargedLepton.push_back(-999999);
         truth_neutrinoTPCID.push_back(-999999);
         truth_neutrinoTPCValid.push_back(-999999);
-        //printf("True Neutrino %d: Vertex = (%d, %d, %d), CCNC = %d, Neutrino Type = %d, Charged Lepton = %d, TPC ID = %d, TPC Valid = %d\n", counter, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999);
+        truth_genieMode.push_back(-999999);
+        truth_genieInteraction.push_back(-999999);
+        printf("True Neutrino %d: Vertex = (%d, %d, %d), CCNC = %d, Neutrino Type = %d, Charged Lepton = %d, TPC ID = %d, TPC Valid = %d\n", counter, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999);
     }
 }
 
 void sbnd::NuEBackground::slices(const art::Event &e){
-    //printf("\n");
-    
+    //std::cout << "" << std::endl;
+
     //const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
    
     // Gets all the slices in the event
@@ -681,15 +711,17 @@ void sbnd::NuEBackground::slices(const art::Event &e){
         
                 //const int sliceID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, hitVec, true);
                 //double sliceCompleteness = Completeness(e, sliceHits, trueParticleID);
+                //double slicePurity = Purity(e, sliceHits, trueParticleID);
 
                 art::FindManyP<sbn::CRUMBSResult> sliceCrumbsAssns(sliceVec, e, crumbsLabel);
                 const std::vector<art::Ptr<sbn::CRUMBSResult>> sliceCrumbsResults = sliceCrumbsAssns.at(slice.key());
-       
+      
+                double sliceCompleteness = -999999;
+                double slicePurity = -999999;
+
                 reco_sliceID.push_back(sliceID);
-                reco_sliceCompleteness.push_back(-999999);
-                reco_slicePurity.push_back(-999999);
-                //reco_sliceCompleteness.push_back(sliceCompleteness);
-                //reco_slicePurity.push_back(Purity(e, sliceHits, trueParticleID));
+                reco_sliceCompleteness.push_back(sliceCompleteness);
+                reco_slicePurity.push_back(slicePurity);
 
                 double sliceScoreVar = 0;
 
@@ -700,8 +732,7 @@ void sbnd::NuEBackground::slices(const art::Event &e){
                     sliceScoreVar = -999999;
                 }
                 reco_sliceScore.push_back(sliceScoreVar);
-                //printf("Slice %d: ID = %d, Completeness = %f, Purity = %f, Score = %f\n", counter, sliceID, sliceCompleteness, Purity(e, sliceHits, trueParticleID), sliceScoreVar);
-                printf("Slice %d: ID = %d, Completeness = %i, Purity = %i, Score = %f\n", counter, sliceID, -999999, -999999, sliceScoreVar);
+                printf("Slice %d: ID = %d, Completeness = %f, Purity = %f, Score = %f\n", counter, sliceID, sliceCompleteness, slicePurity, sliceScoreVar);
                 //std::cout << "id: " << trueParticleID << std::endl;
             }
         }
@@ -712,12 +743,12 @@ void sbnd::NuEBackground::slices(const art::Event &e){
         reco_sliceCompleteness.push_back(-999999);
         reco_slicePurity.push_back(-999999);
         reco_sliceScore.push_back(-999999);
-        //printf("Slice %d: ID = %d, Completeness = %d, Purity = %d, Score = %d\n", counter, -999999, -999999, -999999, -999999);
+        printf("Slice %d: ID = %d, Completeness = %d, Purity = %d, Score = %d\n", counter, -999999, -999999, -999999, -999999);
     }
 }
 
 void sbnd::NuEBackground::PFPs(const art::Event &e){
-    //printf("\n");
+    //std::cout << "" << std::endl;
     art::Handle<std::vector<recob::PFParticle>> pfpHandle;
     std::vector<art::Ptr<recob::PFParticle>> pfpVec;
     if(e.getByLabel(PFParticleLabel, pfpHandle))
@@ -730,21 +761,33 @@ void sbnd::NuEBackground::PFPs(const art::Event &e){
         }
     }
 
-    std::cout << "Number of PFPs: " << counter << std::endl;
+    //std::cout << "Number of PFPs: " << counter << std::endl;
 }
 
 void sbnd::NuEBackground::MCParticles(const art::Event &e){
-    //printf("\n");
+    //std::cout << "" << std::endl;
     art::Handle<std::vector<simb::MCParticle>> particleHandle;
     std::vector<art::Ptr<simb::MCParticle>> particleVec;
     if(e.getByLabel(MCTruthLabel, particleHandle))
         art::fill_ptr_vector(particleVec, particleHandle);
 
+    int trueNeutrinoTrackID = 0;
     int counter = 0;
 
     if(!particleVec.empty()){
         for(auto &particle : particleVec){
-            
+            if((particle->PdgCode() == 12 || particle->PdgCode() == 14 || particle->PdgCode() == 11 || particle->PdgCode() == 13) && (std::abs(particle->Vx() - vertexX) < 1e-3 && std::abs(particle->Vy() - vertexY) < 1e-3 && std::abs(particle->Vz() - vertexZ) < 1e-3)){
+                //std::cout << "passed with PDG code = " << particle->PdgCode() << std::endl;
+                trueNeutrinoTrackID = particle->Mother();
+            }
+        }
+    }
+
+    //std::cout << "trackID = " << trueNeutrinoTrackID << std::endl;
+
+    if(!particleVec.empty()){
+        for(auto &particle : particleVec){
+
             double P_mag = std::sqrt((particle->Px() * particle->Px()) + (particle->Py() * particle->Py()) + (particle->Pz() * particle->Pz()));
             double energy = particle->E() * 1000; // Converts from GeV to MeV
             double theta = std::acos(particle->Pz() / P_mag);
@@ -754,12 +797,12 @@ void sbnd::NuEBackground::MCParticles(const art::Event &e){
             double DZ = (particle->Pz() / P_mag);
 
             double neutrinoMother = 0;
-            if(particle->Mother() == 0) neutrinoMother = 1;
+            if(particle->Mother() == trueNeutrinoTrackID) neutrinoMother = 1;
 
-            //if(particle->PdgCode() == 11 && neutrinoMother == 1){
-            if(particle->PdgCode() < 10000){
-                // Particle doesn't have to be a direct child (could be grandchild etc) of the primary neutrino
-                // PDG Code < 10000 would be from the argon. 
+            if(particle->PdgCode() < 10000 && neutrinoMother == 1 && std::abs(vertexX - particle->Vx()) < 0.5 && std::abs(vertexY - particle->Vy()) < 0.5 && std::abs(vertexZ - particle->Vz()) < 0.5){
+                // PDG Code < 10000 would be from the argon.
+                // Particle has to be a direct child from the true primary neutrino 
+                // Particle has to have the same vertex as the true primary neutrino
                 //if(std::abs(vertexX - particle->Vx()) < 0.5 && std::abs(vertexY - particle->Vy()) < 0.5 && std::abs(vertexZ - particle->Vz()) < 0.5){
                     counter++;
                     truth_particlePDG.push_back(particle->PdgCode());
@@ -776,7 +819,7 @@ void sbnd::NuEBackground::MCParticles(const art::Event &e){
                     truth_particleDirectionY.push_back(DY);
                     truth_particleDirectionZ.push_back(DZ);
                     truth_particleNeutrinoParent.push_back(neutrinoMother);
-                    //printf("True Particle %d: ID = %i, PDG Code = %d, Vertex = (%f, %f, %f), Momentum = (%f, %f, %f), Energy = %f, Theta = %f, ETheta2 = %f, Direction = (%f, %f, %f)\n", counter, particle->TrackId(), particle->PdgCode(), particle->Vx(), particle->Vy(), particle->Vz(), particle->Px(), particle->Py(), particle->Pz(), energy, theta, true_ETheta2, DX, DY, DZ);
+                    printf("True Particle %d: Track ID = %d, Mother TrackID = %d, Is Primary = %f, ID = %i, PDG Code = %d, Vertex = (%f, %f, %f), Momentum = (%f, %f, %f), Energy = %f, Theta = %f, ETheta2 = %f, Direction = (%f, %f, %f)\n", counter, particle->TrackId(), particle->Mother(), neutrinoMother, particle->TrackId(), particle->PdgCode(), particle->Vx(), particle->Vy(), particle->Vz(), particle->Px(), particle->Py(), particle->Pz(), energy, theta, true_ETheta2, DX, DY, DZ);
                 
                     //if(neutrinoMother == 1){
                         // This is a particle whose parent is the primary neutrino
@@ -786,6 +829,8 @@ void sbnd::NuEBackground::MCParticles(const art::Event &e){
             }
         }
     }
+
+    //std::cout << "Number of true particles = " << counter << std::endl;
 
     if(counter == 0){
         truth_particlePDG.push_back(-999999);
@@ -802,7 +847,7 @@ void sbnd::NuEBackground::MCParticles(const art::Event &e){
         truth_particleDirectionY.push_back(-999999);
         truth_particleDirectionZ.push_back(-999999);
         truth_particleNeutrinoParent.push_back(-999999);
-        //printf("True Particle %d: PDG Code = %d, Vertex = (%d, %d, %d), Momentum = (%d, %d, %d), Energy = %d, Theta = %d, ETheta2 = %d, Direction = (%d, %d, %d)\n", counter, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999);
+        printf("True Particle %d: PDG Code = %d, Vertex = (%d, %d, %d), Momentum = (%d, %d, %d), Energy = %d, Theta = %d, ETheta2 = %d, Direction = (%d, %d, %d)\n", counter, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999);
     }
 }
 
@@ -1009,6 +1054,8 @@ void sbnd::NuEBackground::clearVectors(){
     truth_chargedLepton.clear();
     truth_neutrinoTPCID.clear();
     truth_neutrinoTPCValid.clear();
+    truth_genieMode.clear();
+    truth_genieInteraction.clear();
 
     // Truth particle info
     truth_particlePDG.clear();

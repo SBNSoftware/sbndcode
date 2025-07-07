@@ -1,22 +1,22 @@
 BEGIN_PROLOG
 
-nuE:
+nuEBackground:
 {
-    module_type:        "NuE"
-    SliceLabel:         "pandora"
-    PFParticleLabel:    "pandora"
-    VertexLabel:        "pandora"
+    module_type:        "NuEBackground"
+    SliceLabel:         "pandoraSCE"
+    PFParticleLabel:    "pandoraSCE"
+    VertexLabel:        "pandoraSCE"
     NuGenModuleLabel:   "generator"
     HitLabel:           "gaushit"
     CRUMBSLabel:        "crumbs"
-    TrackLabel:         "pandoraTrack"
-    ShowerLabel:        "pandoraShower"
+    TrackLabel:         "pandoraSCETrack"
+    ShowerLabel:        "pandoraSCEShower"
     MCTruthLabel:       "largeant"
     DLCurrent:          0
-    SpacePointLabel:    "pandora"
-    ClusterLabel:       "pandora"
+    SpacePointLabel:    "pandoraSCE"
+    ClusterLabel:       "pandoraSCE"
     POTLabel:           "generator"
-    Signal:             0
+    Signal:             1
 }
 
 END_PROLOG

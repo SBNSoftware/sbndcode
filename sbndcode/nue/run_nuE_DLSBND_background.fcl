@@ -1,4 +1,4 @@
-#include "nuEAnalysisConfigCurrent_background.fcl"
+#include "nuEAnalysisConfigDLSBND_background.fcl"
 #include "simulationservices_sbnd.fcl"
 
 process_name: NuEBackground
