@@ -3,6 +3,10 @@
 
 physics.filters.ccnuefilter: @local::sbnd_ccnuefilter
 
-physics.simulatetpc:  [ rns, generator, loader, largeantnu, tpcfilter, 
-                        ccnuefilter, # adding this filter to the path
-                        corsika, largeantcosmic, largeant, largeantdropped, simplemerge ]
+physics.simulatetpc:  [ rns, generator, loader, largeantnu, 
+                        ccnuefilter, 
+                        corsika, largeantcosmic, largeant, largeantdropped, simplemerge]
+
+physics.simulatedirt: [ rns, generator, loader, largeantnu, "!tpcfilter",
+                        dirtfilter, corsika, largeantcosmic, largeant, largeantdropped, simplemerge,
+                        ccnuefilter]
