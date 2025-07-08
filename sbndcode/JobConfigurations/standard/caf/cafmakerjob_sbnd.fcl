@@ -127,8 +127,6 @@ physics:
 physics.producers.pandoraShowerRazzle.SimChannelLabel: "simtpc2d:simpleSC"
 physics.producers.pandoraTrackDazzle.SimChannelLabel: "simtpc2d:simpleSC"
 physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
-# uncomment below line for to use DNN ROI SP for CNNID scores
-#physics.producers.cnnid.WireLabel: "simtpc2d:dnnsp"
 
 physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
