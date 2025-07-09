@@ -200,7 +200,7 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
 
     if((ymin == 999) && (ymax == 999)){
         double yminVal = (log && *log) ? 0.001 : 0;
-        double ymaxVal  = (log && *log) ? maxYValue*10 : maxYValue;
+        double ymaxVal  = (log && *log) ? maxYValue*10 : maxYValue*1.1;
         currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
     }
 
@@ -720,6 +720,8 @@ void nuEBackgroundSignalWeights_macro(){
     auto sliceCompletenessCRUMBS = createHistGroup("sliceCompletenessCRUMBS", "Completeness of the Slice with the Highest CRUMBS Score", "Completeness", 102, 0, 1.02); // Bin width = 0.005
     auto sliceScoreCRUMBS = createHistGroup("sliceScoreCRUMBS", "CRUMBS Score of the Slice with the Highest CRUMBS Score", "CRUMBS Score", 25, -1, 1); 
     auto slicePurityCRUMBS = createHistGroup("slicePurityCRUMBS", "Purity of the Slice with the Highest CRUMBS Score", "Purity", 50, 0, 1.02);
+    auto highestPFPCompletenessCRUMBS = createHistGroup("highestPFPCompletenessCRUMBS", "Completeness of the Highest Energy PFP in the Slice with the Highest CRUMBS Score", "Completeness", 50, 0, 1.02);
+    auto highestPFPPurityCRUMBS = createHistGroup("highestPFPPurityCRUMBS", "Purity of the Highest Energy PFP in the Slice with the Highest CRUMBS Score", "Purity", 50, 0, 1.02);
     auto deltaXCRUMBS = createHistGroup("deltaXCRUMBS", "#Deltax Distribution: Slice with Highest CRUMBS Score", "x_{Reco} - x_{True} (cm)", 40, -5, 5);
     auto deltaYCRUMBS = createHistGroup("deltaYCRUMBS", "#Deltay Distribution: Slice with Highest CRUMBS Score", "y_{Reco} - y_{True} (cm)", 40, -5, 5);
     auto deltaZCRUMBS = createHistGroup("deltaZCRUMBS", "#Deltaz Distribution: Slice with Highest CRUMBS Score", "z_{Reco} - z_{True} (cm)", 40, -5, 5);
@@ -1115,6 +1117,8 @@ void nuEBackgroundSignalWeights_macro(){
             ERecoHighestThetaRecoCRUMBS.ubooneSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             slicePurityCRUMBS.ubooneSignal->Fill(chosenSlicePurityCRUMBS);
             sliceCompletenessCRUMBS.ubooneSignal->Fill(chosenSliceCompletenessCRUMBS);
+            highestPFPCompletenessCRUMBS.ubooneSignal->Fill(chosenRecoParticleCRUMBS.completeness);
+            highestPFPPurityCRUMBS.ubooneSignal->Fill(chosenRecoParticleCRUMBS.purity);
         } else if(DLCurrent == 2 && signal == 1){
             numEventsCRUMBSRecoParticle.currentSignal++;
             numPFPsCRUMBS.currentSignal->Fill(numPFPsSliceCRUMBS);
@@ -1123,6 +1127,8 @@ void nuEBackgroundSignalWeights_macro(){
             ERecoHighestThetaRecoCRUMBS.currentSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             slicePurityCRUMBS.currentSignal->Fill(chosenSlicePurityCRUMBS);
             sliceCompletenessCRUMBS.currentSignal->Fill(chosenSliceCompletenessCRUMBS);
+            highestPFPCompletenessCRUMBS.currentSignal->Fill(chosenRecoParticleCRUMBS.completeness);
+            highestPFPPurityCRUMBS.currentSignal->Fill(chosenRecoParticleCRUMBS.purity);
         } else if(DLCurrent == 0 && signal == 2){
             numEventsCRUMBSRecoParticle.ubooneBNB++;
             numPFPsCRUMBS.ubooneBNB->Fill(numPFPsSliceCRUMBS);
@@ -1131,6 +1137,8 @@ void nuEBackgroundSignalWeights_macro(){
             ERecoHighestThetaRecoCRUMBS.ubooneBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             slicePurityCRUMBS.ubooneBNB->Fill(chosenSlicePurityCRUMBS);
             sliceCompletenessCRUMBS.ubooneBNB->Fill(chosenSliceCompletenessCRUMBS);
+            highestPFPCompletenessCRUMBS.ubooneBNB->Fill(chosenRecoParticleCRUMBS.completeness);
+            highestPFPPurityCRUMBS.ubooneBNB->Fill(chosenRecoParticleCRUMBS.purity);
         } else if(DLCurrent == 2 && signal == 2){
             numEventsCRUMBSRecoParticle.currentBNB++;
             numPFPsCRUMBS.currentBNB->Fill(numPFPsSliceCRUMBS);
@@ -1139,6 +1147,8 @@ void nuEBackgroundSignalWeights_macro(){
             ERecoHighestThetaRecoCRUMBS.currentBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             slicePurityCRUMBS.currentBNB->Fill(chosenSlicePurityCRUMBS);
             sliceCompletenessCRUMBS.currentBNB->Fill(chosenSliceCompletenessCRUMBS);
+            highestPFPCompletenessCRUMBS.currentBNB->Fill(chosenRecoParticleCRUMBS.completeness);
+            highestPFPPurityCRUMBS.currentBNB->Fill(chosenRecoParticleCRUMBS.purity);
         } else if(DLCurrent == 0 && signal == 3){
             numEventsCRUMBSRecoParticle.ubooneCosmics++;
             numPFPsCRUMBS.ubooneCosmics->Fill(numPFPsSliceCRUMBS);
@@ -1147,6 +1157,8 @@ void nuEBackgroundSignalWeights_macro(){
             ERecoHighestThetaRecoCRUMBS.ubooneCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             slicePurityCRUMBS.ubooneCosmics->Fill(chosenSlicePurityCRUMBS);
             sliceCompletenessCRUMBS.ubooneCosmics->Fill(chosenSliceCompletenessCRUMBS);
+            highestPFPCompletenessCRUMBS.ubooneCosmics->Fill(chosenRecoParticleCRUMBS.completeness);
+            highestPFPPurityCRUMBS.ubooneCosmics->Fill(chosenRecoParticleCRUMBS.purity);
         } else if(DLCurrent == 2 && signal == 3){
             numEventsCRUMBSRecoParticle.currentCosmics++;
             numPFPsCRUMBS.currentCosmics->Fill(numPFPsSliceCRUMBS);
@@ -1155,6 +1167,8 @@ void nuEBackgroundSignalWeights_macro(){
             ERecoHighestThetaRecoCRUMBS.currentCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             slicePurityCRUMBS.currentCosmics->Fill(chosenSlicePurityCRUMBS);
             sliceCompletenessCRUMBS.currentCosmics->Fill(chosenSliceCompletenessCRUMBS);
+            highestPFPCompletenessCRUMBS.currentCosmics->Fill(chosenRecoParticleCRUMBS.completeness);
+            highestPFPPurityCRUMBS.currentCosmics->Fill(chosenRecoParticleCRUMBS.purity);
         }
 
         printf("Number of Slices in event: %f\n", numSlicesInEvent);
@@ -1201,6 +1215,12 @@ void nuEBackgroundSignalWeights_macro(){
     styleDraw(sliceCompletenessCRUMBS.canvas, sliceCompletenessCRUMBS.currentSignal, sliceCompletenessCRUMBS.ubooneSignal, sliceCompletenessCRUMBS.currentBNB, sliceCompletenessCRUMBS.ubooneBNB, sliceCompletenessCRUMBS.currentCosmics, sliceCompletenessCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
     weighted(sliceCompletenessCRUMBS.currentSignal, sliceCompletenessCRUMBS.ubooneSignal, sliceCompletenessCRUMBS.currentBNB, sliceCompletenessCRUMBS.ubooneBNB, sliceCompletenessCRUMBS.currentCosmics, sliceCompletenessCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
+    styleDraw(highestPFPCompletenessCRUMBS.canvas, highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    weighted(highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+
+    styleDraw(highestPFPPurityCRUMBS.canvas, highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    weighted(highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    
     int drawLine = 1;
     int left = 0;
     int right = 1;
