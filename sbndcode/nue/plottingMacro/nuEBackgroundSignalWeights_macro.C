@@ -88,6 +88,9 @@ typedef struct{
     double trackscore;
     double completeness;
     double purity;
+    double numHits;
+    double numMatchedHits;
+    double numTrueHits;
 } recoParticle;
 
 typedef struct{
@@ -196,7 +199,7 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
     double maxYValue = std::max({currentSignal->GetMaximum(), ubooneSignal->GetMaximum(), currentBNB->GetMaximum(), ubooneBNB->GetMaximum(), currentCosmics->GetMaximum(), ubooneCosmics->GetMaximum()});
 
     if((ymin == 999) && (ymax == 999)){
-        double yminVal = (log && *log) ? 0.1 : 0;
+        double yminVal = (log && *log) ? 0.001 : 0;
         double ymaxVal  = (log && *log) ? maxYValue*10 : maxYValue;
         currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
     }
@@ -428,6 +431,52 @@ recoNeutrino chooseRecoNeutrino(std::vector<recoNeutrino> recoNeutrinos, double 
     return recoNeutrinos[chosenNeutrinoIndex];
 }
 
+double sliceCompletenessCalculator(std::vector<recoParticle> recoParticles, double sliceID){
+    int counter = 0;
+    double totalNumMatchedHits = 0;
+    double totalNumTrueHits = 0;
+
+    for(size_t j = 0; j < recoParticles.size(); ++j){
+        if(recoParticles[j].sliceID == sliceID){
+            counter++;
+            totalNumMatchedHits += recoParticles[j].numMatchedHits;
+            totalNumTrueHits += recoParticles[j].numTrueHits;
+        }
+    }
+
+    double sliceCompleteness;
+    if(counter < 1){
+        sliceCompleteness = -999999;
+    } else {
+        sliceCompleteness = (totalNumMatchedHits / totalNumTrueHits);
+    }
+    std::cout << "Chosen Slice Completeness = " << sliceCompleteness << std::endl;
+    return sliceCompleteness;
+}
+
+double slicePurityCalculator(std::vector<recoParticle> recoParticles, double sliceID){
+    int counter = 0;
+    double totalNumMatchedHits = 0;
+    double totalNumHits = 0;
+
+    for(size_t j = 0; j < recoParticles.size(); ++j){
+        if(recoParticles[j].sliceID == sliceID){
+            counter++;
+            totalNumMatchedHits += recoParticles[j].numMatchedHits;
+            totalNumHits += recoParticles[j].numHits;
+        }
+    }
+
+    double slicePurity;
+    if(counter < 1){
+        slicePurity = -999999;
+    } else {
+        slicePurity = (totalNumMatchedHits / totalNumHits);
+    }
+    std::cout << "Chosen Slice Purity = " << slicePurity << std::endl;
+    return slicePurity;
+}
+
 void obtainTrueParticles(std::vector<trueParticle> trueParticles){
     std::cout << "Number of true particles = " << trueParticles.size() << std::endl;
     trueInfo truth;
@@ -444,7 +493,7 @@ void obtainTrueParticles(std::vector<trueParticle> trueParticles){
 }
 
 void nuEBackgroundSignalWeights_macro(){
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_new.root");
 
 
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeights/";
@@ -589,6 +638,9 @@ void nuEBackgroundSignalWeights_macro(){
     std::vector<double> *reco_particleTrackScore = nullptr;
     std::vector<double> *reco_particleCompleteness = nullptr;
     std::vector<double> *reco_particlePurity = nullptr;
+    std::vector<double> *reco_particleNumHits = nullptr;
+    std::vector<double> *reco_particleNumMatchedHits = nullptr;
+    std::vector<double> *reco_particleNumTrueHits = nullptr;
 
     std::vector<double> *reco_sliceID = nullptr;
     std::vector<double> *reco_sliceCompleteness = nullptr;
@@ -642,6 +694,9 @@ void nuEBackgroundSignalWeights_macro(){
     tree->SetBranchAddress("reco_particleTrackScore", &reco_particleTrackScore);
     tree->SetBranchAddress("reco_particleCompleteness", &reco_particleCompleteness);
     tree->SetBranchAddress("reco_particlePurity", &reco_particlePurity);
+    tree->SetBranchAddress("reco_particleNumHits", &reco_particleNumHits);
+    tree->SetBranchAddress("reco_particleNumMatchedHits", &reco_particleNumMatchedHits);
+    tree->SetBranchAddress("reco_particleNumTrueHits", &reco_particleNumTrueHits);
 
     tree->SetBranchAddress("reco_sliceID", &reco_sliceID);
     tree->SetBranchAddress("reco_sliceCompleteness", &reco_sliceCompleteness);
@@ -662,7 +717,7 @@ void nuEBackgroundSignalWeights_macro(){
     auto numRecoNeutrinos = createHistGroup("numRecoNeutrinos", "Number of Reco Neutrinos in an Event", "Number of Reco Neutrinos", 10, 0, 10);
 
     // Highest CRUMBS Score Slice Plots
-    //auto sliceCompletenessCRUMBS = createHistGroup("sliceCompletenessCRUMBS", "Completeness of the Slice with the Highest CRUMBS Score", "Completeness", 102, 0, 1.02); // Bin width = 0.005
+    auto sliceCompletenessCRUMBS = createHistGroup("sliceCompletenessCRUMBS", "Completeness of the Slice with the Highest CRUMBS Score", "Completeness", 102, 0, 1.02); // Bin width = 0.005
     auto sliceScoreCRUMBS = createHistGroup("sliceScoreCRUMBS", "CRUMBS Score of the Slice with the Highest CRUMBS Score", "CRUMBS Score", 25, -1, 1); 
     auto slicePurityCRUMBS = createHistGroup("slicePurityCRUMBS", "Purity of the Slice with the Highest CRUMBS Score", "Purity", 50, 0, 1.02);
     auto deltaXCRUMBS = createHistGroup("deltaXCRUMBS", "#Deltax Distribution: Slice with Highest CRUMBS Score", "x_{Reco} - x_{True} (cm)", 40, -5, 5);
@@ -1020,10 +1075,11 @@ void nuEBackgroundSignalWeights_macro(){
                 recoParticle.bestPlaneEnergy = reco_particleBestPlaneEnergy->at(j);
                 recoParticle.theta = reco_particleTheta->at(j);
                 recoParticle.trackscore = reco_particleTrackScore->at(j);
-                //recoParticle.completeness = reco_particleCompleteness->at(j);
-                //recoParticle.purity = reco_particlePurity->at(j);
-                recoParticle.completeness = -999999;
-                recoParticle.purity = -999999;
+                recoParticle.completeness = reco_particleCompleteness->at(j);
+                recoParticle.purity = reco_particlePurity->at(j);
+                recoParticle.numHits = reco_particleNumHits->at(j);
+                recoParticle.numMatchedHits = reco_particleNumMatchedHits->at(j);
+                recoParticle.numTrueHits = reco_particleNumTrueHits->at(j);
                 recoParticlesInEvent.push_back(recoParticle);
             
                 if(recoParticle.sliceID == chosenRecoSliceCRUMBS.id) recoparticleCRUMBS = 1;
@@ -1040,6 +1096,8 @@ void nuEBackgroundSignalWeights_macro(){
         double totalSliceEnergyCRUMBS = 0;
         double numPFPsSliceCRUMBS = 0;
         chosenRecoParticleCRUMBS = choosePFP(recoParticlesInEvent, chosenRecoSliceCRUMBS.id, totalSliceEnergyCRUMBS, numPFPsSliceCRUMBS);
+        double chosenSlicePurityCRUMBS = slicePurityCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id);
+        double chosenSliceCompletenessCRUMBS = sliceCompletenessCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id);
 
         //double aDOTbCRUMBS = ((chosenRecoParticleCRUMBS.dx * chosenTrueParticle.dx) + (chosenRecoParticleCRUMBS.dy * chosenTrueParticle.dy) + (chosenRecoParticleCRUMBS.dz * chosenTrueParticle.dz));
         //double aMagCRUMBS = std::sqrt((chosenRecoParticleCRUMBS.dx * chosenRecoParticleCRUMBS.dx) + (chosenRecoParticleCRUMBS.dy * chosenRecoParticleCRUMBS.dy) + (chosenRecoParticleCRUMBS.dz * chosenRecoParticleCRUMBS.dz));
@@ -1055,39 +1113,48 @@ void nuEBackgroundSignalWeights_macro(){
             ratioChosenSummedEnergyCRUMBS.ubooneSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
             ERecoSumThetaRecoCRUMBS.ubooneSignal->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.ubooneSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
-
+            slicePurityCRUMBS.ubooneSignal->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.ubooneSignal->Fill(chosenSliceCompletenessCRUMBS);
         } else if(DLCurrent == 2 && signal == 1){
             numEventsCRUMBSRecoParticle.currentSignal++;
             numPFPsCRUMBS.currentSignal->Fill(numPFPsSliceCRUMBS);
             ratioChosenSummedEnergyCRUMBS.currentSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
             ERecoSumThetaRecoCRUMBS.currentSignal->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.currentSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+            slicePurityCRUMBS.currentSignal->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.currentSignal->Fill(chosenSliceCompletenessCRUMBS);
         } else if(DLCurrent == 0 && signal == 2){
             numEventsCRUMBSRecoParticle.ubooneBNB++;
             numPFPsCRUMBS.ubooneBNB->Fill(numPFPsSliceCRUMBS);
             ratioChosenSummedEnergyCRUMBS.ubooneBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
             ERecoSumThetaRecoCRUMBS.ubooneBNB->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.ubooneBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
-
+            slicePurityCRUMBS.ubooneBNB->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.ubooneBNB->Fill(chosenSliceCompletenessCRUMBS);
         } else if(DLCurrent == 2 && signal == 2){
             numEventsCRUMBSRecoParticle.currentBNB++;
             numPFPsCRUMBS.currentBNB->Fill(numPFPsSliceCRUMBS);
             ratioChosenSummedEnergyCRUMBS.currentBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
             ERecoSumThetaRecoCRUMBS.currentBNB->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.currentBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+            slicePurityCRUMBS.currentBNB->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.currentBNB->Fill(chosenSliceCompletenessCRUMBS);
         } else if(DLCurrent == 0 && signal == 3){
             numEventsCRUMBSRecoParticle.ubooneCosmics++;
             numPFPsCRUMBS.ubooneCosmics->Fill(numPFPsSliceCRUMBS);
             ratioChosenSummedEnergyCRUMBS.ubooneCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
             ERecoSumThetaRecoCRUMBS.ubooneCosmics->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.ubooneCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
-
+            slicePurityCRUMBS.ubooneCosmics->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.ubooneCosmics->Fill(chosenSliceCompletenessCRUMBS);
         } else if(DLCurrent == 2 && signal == 3){
             numEventsCRUMBSRecoParticle.currentCosmics++;
             numPFPsCRUMBS.currentCosmics->Fill(numPFPsSliceCRUMBS);
             ratioChosenSummedEnergyCRUMBS.currentCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
             ERecoSumThetaRecoCRUMBS.currentCosmics->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.currentCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+            slicePurityCRUMBS.currentCosmics->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.currentCosmics->Fill(chosenSliceCompletenessCRUMBS);
         }
 
         printf("Number of Slices in event: %f\n", numSlicesInEvent);
@@ -1127,6 +1194,12 @@ void nuEBackgroundSignalWeights_macro(){
 
     styleDraw(ratioChosenSummedEnergyCRUMBS.canvas, ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
     weighted(ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_weighted.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+
+    styleDraw(slicePurityCRUMBS.canvas, slicePurityCRUMBS.currentSignal, slicePurityCRUMBS.ubooneSignal, slicePurityCRUMBS.currentBNB, slicePurityCRUMBS.ubooneBNB, slicePurityCRUMBS.currentCosmics, slicePurityCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    weighted(slicePurityCRUMBS.currentSignal, slicePurityCRUMBS.ubooneSignal, slicePurityCRUMBS.currentBNB, slicePurityCRUMBS.ubooneBNB, slicePurityCRUMBS.currentCosmics, slicePurityCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    
+    styleDraw(sliceCompletenessCRUMBS.canvas, sliceCompletenessCRUMBS.currentSignal, sliceCompletenessCRUMBS.ubooneSignal, sliceCompletenessCRUMBS.currentBNB, sliceCompletenessCRUMBS.ubooneBNB, sliceCompletenessCRUMBS.currentCosmics, sliceCompletenessCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    weighted(sliceCompletenessCRUMBS.currentSignal, sliceCompletenessCRUMBS.ubooneSignal, sliceCompletenessCRUMBS.currentBNB, sliceCompletenessCRUMBS.ubooneBNB, sliceCompletenessCRUMBS.currentCosmics, sliceCompletenessCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
     int drawLine = 1;
     int left = 0;

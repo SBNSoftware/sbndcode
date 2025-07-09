@@ -98,6 +98,8 @@ public:
     void endJob() override;
     int GetNumGenEvents(const art::Event &e);
     double Completeness(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
+    double NumMatchedHits(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
+    double NumTotalHits(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
     double Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID);
     void ClearMaps(const art::Event &e);
     void SetupMaps(const art::Event &e);
@@ -180,6 +182,9 @@ private:
     std::vector<double>     reco_particleTrackScore;
     std::vector<double>     reco_particleCompleteness;
     std::vector<double>     reco_particlePurity;
+    std::vector<double>     reco_particleNumHits;
+    std::vector<double>     reco_particleNumMatchedHits;
+    std::vector<double>     reco_particleNumTrueHits;
 
     std::vector<double>     reco_sliceID;
     std::vector<double>     reco_sliceCompleteness;
@@ -303,6 +308,9 @@ sbnd::NuEBackground::NuEBackground(fhicl::ParameterSet const& p)
     NuETree->Branch("reco_particleTrackScore", "std::vector<double>", &reco_particleTrackScore);
     NuETree->Branch("reco_particleCompleteness", "std::vector<double>", &reco_particleCompleteness);
     NuETree->Branch("reco_particlePurity", "std::vector<double>", &reco_particlePurity);
+    NuETree->Branch("reco_particleNumHits", "std::vector<double>", &reco_particleNumHits);
+    NuETree->Branch("reco_particleNumMatchedHits", "std::vector<double>", &reco_particleNumMatchedHits);
+    NuETree->Branch("reco_particleNumTrueHits", "std::vector<double>", &reco_particleNumTrueHits);
 
     NuETree->Branch("reco_sliceID", "std::vector<double>", &reco_sliceID);
     NuETree->Branch("reco_sliceCompleteness", "std::vector<double>", &reco_sliceCompleteness);
@@ -422,6 +430,21 @@ double sbnd::NuEBackground::Completeness(const art::Event &e, const std::vector<
     return (fHitsMap[ID] == 0) ? def_double : objectHitsMap[ID]/static_cast<double>(fHitsMap[ID]);
 }
 
+double sbnd::NuEBackground::NumMatchedHits(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
+    const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+
+    std::map<int, int> objectHitsMap;
+
+    for(unsigned int i = 0; i < objectHits.size(); ++i)
+        ++objectHitsMap[TruthMatchUtils::TrueParticleID(clockData,objectHits[i],true)];
+
+    return objectHitsMap[ID];
+}
+
+double sbnd::NuEBackground::NumTotalHits(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
+    return fHitsMap[ID];
+}
+
 double sbnd::NuEBackground::Purity(const art::Event &e, const std::vector<art::Ptr<recob::Hit>> &objectHits, const int ID){
     const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
@@ -496,14 +519,20 @@ void sbnd::NuEBackground::showerEnergy(const art::Event &e){
                 if(pfpVertexs.size() > 0){
                     if(!(pfp->PdgCode() == 12 || pfp->PdgCode() == 14)){
                         if(trackscoreobj->second <= 1 && trackscoreobj->second >= 0){
+                            // Status Code == 1 means its propagated by g4
                                                                                
                             const std::vector<art::Ptr<recob::Hit>> showerHits(showerHitAssns.at(pfpShower.key()));
 
                             const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
                             counter++;
 
-                            double pfpCompleteness = -999999;
-                            double pfpPurity = -999999;
+                            const int showerID_truth = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, showerHits, true);
+                            double pfpCompleteness = Completeness(e, showerHits, showerID_truth);
+                            double pfpPurity = Purity(e, showerHits, showerID_truth);
+                            double pfpNumMatchedHits = NumMatchedHits(e, showerHits, showerID_truth);
+                            double pfpNumTotalHits = NumTotalHits(e, showerHits, showerID_truth);
+                            //double pfpCompleteness = -999999;
+                            //double pfpPurity = -999999;
 
                             //const std::vector<art::Ptr<recob::Hit>> &hits = showerHitsByID[pfpShower->ID()];
 
@@ -523,8 +552,11 @@ void sbnd::NuEBackground::showerEnergy(const art::Event &e){
                             reco_particleTrackScore.push_back(trackscoreobj->second);
                             reco_particleCompleteness.push_back(pfpCompleteness);
                             reco_particlePurity.push_back(pfpPurity);
+                            reco_particleNumHits.push_back(showerHits.size());
+                            reco_particleNumMatchedHits.push_back(pfpNumMatchedHits);
+                            reco_particleNumTrueHits.push_back(pfpNumTotalHits);
 
-                            //printf("Reco Particle %d: ID = %li, Truth ID = %i, PDG Code = %d, Is Primary = %d, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Slice ID = %d, Best Plane Energy = %f, Theta = %f, Trackscore = %f, Completeness = %f, Purity = %f, Shower ID = %d, Number of Hits in Shower = %ld\n", counter, pfp->Self(), showerID_truth, pfp->PdgCode(), pfp->IsPrimary(), pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z(), pfpShower->Direction().X(), pfpShower->Direction().Y(), pfpShower->Direction().Z(), pfpSlice->ID(), pfpShower->Energy()[pfpShower->best_plane()], pfpShower->Direction().Theta(), trackscoreobj->second, pfpCompleteness, pfpPurity, pfpShower->ID(), showerHits.size());
+                            printf("Reco Particle %d: ID = %li, Truth ID = %i, PDG Code = %d, Is Primary = %d, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Slice ID = %d, Best Plane Energy = %f, Theta = %f, Trackscore = %f, Completeness = %f, Purity = %f, Shower ID = %d, Number of Hits in Shower = %ld, Number of Matched Hits = %f, Number of True Hits = %f\n", counter, pfp->Self(), showerID_truth, pfp->PdgCode(), pfp->IsPrimary(), pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z(), pfpShower->Direction().X(), pfpShower->Direction().Y(), pfpShower->Direction().Z(), pfpSlice->ID(), pfpShower->Energy()[pfpShower->best_plane()], pfpShower->Direction().Theta(), trackscoreobj->second, pfpCompleteness, pfpPurity, pfpShower->ID(), showerHits.size(), pfpNumMatchedHits, pfpNumTotalHits);
                         }
                     }
                 }
@@ -547,6 +579,9 @@ void sbnd::NuEBackground::showerEnergy(const art::Event &e){
         reco_particleTrackScore.push_back(-999999);
         reco_particleCompleteness.push_back(-999999);
         reco_particlePurity.push_back(-999999);
+        reco_particleNumHits.push_back(-999999);
+        reco_particleNumMatchedHits.push_back(-999999);
+        reco_particleNumTrueHits.push_back(-999999);
         printf("Reco Particle %d: PDG Code = %d, Is Primary = %d, Vertex = (%d, %d, %d), Direction = (%d, %d, %d), Slice ID = %d, Best Plane Energy = %d, Theta = %d, Trackscore = %d, Completeness = %d, Purity = %d\n", counter, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999, -999999);
     }
 }
