@@ -195,8 +195,13 @@ private:
     //Cable length
     std::vector<double> fTdc3CaenOffset;
     std::vector<double> fPtbCaenOffset;
-    
-    bool fCorrectCableOnly;
+    double fPPSPath;
+
+    // Which Correction To Apply
+    bool fCorrectPPS;
+    bool fCorrectPMT2DigitiserCable;
+    bool fCorrectDigitiserJitter;
+    bool fCorrectPMTResponse;
     
     // Debug
     bool fDebugTimeRef;
@@ -245,6 +250,7 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
 
     fTdc3CaenOffset = p.get<std::vector<double>>("Tdc3CaenOffset", {101, 101, 101, 101, 101, 101, 101, 101, 101});
     fPtbCaenOffset = p.get<std::vector<double>>("PtbCaenOffset", {166, 166, 166, 166, 166, 166, 166, 166, 166});
+    fPPSPath = p.get<double>("PPSPath", 20.0); //ns
   
     fWfLength = p.get<double>("WfLength", 5000);
     fnChperBoard = p.get<int>("nChperBoard", 15);
@@ -268,7 +274,10 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fTimingJitterLowerBound = p.get<int>("TimingJitterLowerBound", -56);
     fTimingJitterUpperBound = p.get<int>("TimingJitterUpperBound", -48);
 
-    fCorrectCableOnly = p.get<bool>("CorrectCableOnly", false);
+    fCorrectPPS = p.get<bool>("CorrectPPS", true);
+    fCorrectPMT2DigitiserCable = p.get<bool>("CorrectPMT2DigitiserCable", true);
+    fCorrectDigitiserJitter = p.get<bool>("CorrectDigitiserJitter", true);
+    fCorrectPMTResponse = p.get<bool>("CorrectPMTResponse", true);
 
     fDebugTimeRef = p.get<bool>("DebugTimeRef", false);
     fDebugFtrig = p.get<bool>("DebugFtrig", false);
@@ -746,8 +755,11 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     double total_transit = fPMTCalibrationDatabaseService->getTotalTransitTime(wf->ChannelNumber());
 
                     double correction = 0;
-                    correction -= total_transit; //total transit = propagation time of photon from PMT to digitiser
-                    if(fCorrectCableOnly == false) correction -= boardJitter[boardId_v[boardIdx]][flashIdx];
+                    if (fCorrectPPS) correction -= fPPSPath;
+                    if (fCorrectPMT2DigitiserCable) correction -= total_transit;
+                    if (fCorrectDigitiserJitter) correction -= boardJitter[boardId_v[boardIdx]][flashIdx];
+                    //if (fCorrectPMTResponse) ???
+
                     correction /= 1000; //ns to us conversion
 
                     double new_ts = wf->TimeStamp() + correction; //us
@@ -808,7 +820,9 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
 
                 //Timing CAEN is not connected to PMT so no cable correction
                 double correction = 0;
-                correction -= boardJitter[fPmtBoard.back()][flashIdx]; 
+                if (fCorrectPPS) correction -= fPPSPath;
+                if (fCorrectDigitiserJitter) correction -= boardJitter[fPmtBoard.back()][flashIdx]; 
+
                 correction /= 1000; //ns to us
              
                 double new_ts = wf->TimeStamp() + correction; //ns to us

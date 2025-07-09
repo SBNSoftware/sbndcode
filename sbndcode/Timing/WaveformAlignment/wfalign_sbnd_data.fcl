@@ -25,6 +25,8 @@ wfalign_data:
     Tdc3CaenOffset: [101, 101, 101, 101, 101, 101, 101, 101, 101] #ns
     #Time interval between HLT issued in PTB and ch15 CAEN
     PtbCaenOffset: [166, 166, 166, 166, 166, 166, 166, 166, 166] #ns
+    #Cable path between PPS source to CAEN
+    PPSPath: 20.0 #ns
  
     #Number of ticks per PMT waveform
     WfLength: 5000 #2ns/tick
@@ -53,9 +55,11 @@ wfalign_data:
     TimingJitterLowerBound: -56
     TimingJitterUpperBound: -48
     
-    #Configure which correction to apply
-    # true = only apply cable transit, false = apply cable transit + digitiser jittering
-    CorrectCableOnly: false
+    #Configure which correction to apply -- default is all
+    CorrectPPS: true
+    CorrectPMT2DigitiserCable: true
+    CorrectDigitiserJitter: true
+    CorrectPMTResponse: true
     
     #For debugging
     DebugTimeRef: false #Debug pmt timing reference type
