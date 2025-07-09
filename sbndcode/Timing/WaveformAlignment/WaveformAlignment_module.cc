@@ -91,6 +91,8 @@ public:
     void PlotFtrigCompare(const int flashId);
     void PlotFtrigFit(TGraph *g, TF1 *fitf, const bool converged, const int boardId, const int flashId);
     void ResetPlotVars();
+    double getPMTResponseTime(int channelNumber);
+
 private:
 
     //---GLOBAL PARAMETERS
@@ -221,6 +223,8 @@ private:
     bool fSaveBadFit;
     bool fSaveCompare;
     std::string fSavePath;
+
+    std::string fPMTResponseFileName;
 };
 
 
@@ -290,6 +294,8 @@ sbnd::WaveformAlignment::WaveformAlignment(fhicl::ParameterSet const& p)
     fTimingNewLabel = p.get<std::string>("TimingNewLabel","TimingChannels");
     fTimingBoardNewLabel = p.get<std::string>("TimingBoardNewLabel","TimingTiming");
     fTimingAlignNewLabel = p.get<std::string>("TimingAlignNewLabel","TimingAlign");
+
+    fPMTResponseFileName = p.get<std::string>("PMTResponseFileName","PMTResponseTime_v4.txt");
 
     produces< std::vector< raw::OpDetWaveform > >(fFtrigNewLabel); 
     produces< art::Assns< raw::pmt::BoardTimingInfo, raw::OpDetWaveform > >(fFtrigBoardNewLabel);
@@ -748,6 +754,7 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
                     double correction = 0;
                     correction -= total_transit; //total transit = propagation time of photon from PMT to digitiser
                     if(fCorrectCableOnly == false) correction -= boardJitter[boardId_v[boardIdx]][flashIdx];
+                    correction-=getPMTResponseTime(wf->ChannelNumber());
                     correction /= 1000; //ns to us conversion
 
                     double new_ts = wf->TimeStamp() + correction; //us
@@ -1394,4 +1401,28 @@ void sbnd::WaveformAlignment::ResetPlotVars()
     boardMidX.clear();
     boardMidY.clear();
 }
+
+double sbnd::WaveformAlignment::getPMTResponseTime(int channelNumber)
+{
+    std::string fname;
+    cet::search_path sp("FW_SEARCH_PATH");
+    sp.find_file(fPMTResponseFileName, fname);
+    std::ifstream fPMTResponseFile(fname.c_str(), std::ios::in);
+
+    if (!fPMTResponseFile.is_open()) {
+        std::cerr << "Could not open the file.\n";
+        return 0;
+    }
+    std::string line;
+    while (std::getline(fPMTResponseFile, line)) {
+        std::stringstream linestream(line);
+        int channel_number;
+        double channel_delay;
+    
+        linestream >> channel_number >> channel_delay;
+        if (channel_number == channelNumber) return channel_delay;
+    }
+    return 0.;
+}
+
 DEFINE_ART_MODULE(sbnd::WaveformAlignment)

@@ -6,3 +6,4 @@ install_headers()
 # install_source()
 
 add_subdirectory(WaveformAlignment)
+add_subdirectory(FrameShift)
