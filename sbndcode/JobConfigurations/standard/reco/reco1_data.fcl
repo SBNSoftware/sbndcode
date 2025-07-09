@@ -37,3 +37,12 @@ outputs.out1.SelectEvents: [ "reco1" ]
 outputs.out1.outputCommands:[@sequence::sbnd_reco1_drops_data]
 
 physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
+
+# uncomment below 4 lines to run DNN ROI finding SP
+#physics.producers.sptpc2d.wcls_main.outputers: ["wclsFrameSaver:spsaver" , "wclsFrameSaver:dnnsaver"]
+#physics.producers.sptpc2d.wcls_main.structs.use_dnnroi: true
+#physics.producers.sptpc2d.wcls_main.structs.nchunks: 2 # should match training config
+#physics.producers.sptpc2d.wcls_main.structs.tick_per_slice: 4 # should match training config
+
+# uncomment below line to run DNN ROI finding SP for reco
+#physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"
