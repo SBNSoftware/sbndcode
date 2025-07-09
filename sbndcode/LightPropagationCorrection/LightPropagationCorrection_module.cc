@@ -416,7 +416,7 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + dy*dy + dz*dz); // Distance from cathode to OpDet in mm
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
-            float lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV); // Speed of light in mm/ns
+            float lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
             float partPropTime = std::sqrt((fSpacePointX[sp]-fRecoVx)*(fSpacePointX[sp]-fRecoVx) + (fSpacePointY[sp]-fRecoVy)*(fSpacePointY[sp]-fRecoVy) + (fSpacePointZ[sp]-fRecoVz)*(fSpacePointZ[sp]-fRecoVz))/fSpeedOfLight;
             float PropTime = lightPropTime + partPropTime;
             if(PropTime < minPropTime) minPropTime = PropTime;
