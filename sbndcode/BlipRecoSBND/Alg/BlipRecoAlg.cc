@@ -10,6 +10,8 @@ namespace blip {
   {
     this->reconfigure(pset);
     
+    this->PrintConfig();
+
     auto const& detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
     auto const& clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
     art::ServiceHandle<geo::WireReadout> wireReadoutGeom;
@@ -29,7 +31,6 @@ namespace blip {
     // for that here so that our calculated drift times for hits makes sense.
     
     int kNumChannels = 0;
-      
 
     // Loop over cryostats
     std::cout<<"NCryostats: "<<fGeom.Ncryostats()<<"\n";
@@ -218,6 +219,7 @@ namespace blip {
     h_recoWireEffQ_denom = hdir.make<TH1D>("recoWireEffQ_trueCount","Collection plane;Charge deposited on wire [e-];Count",80,0,20000);
     h_recoWireEffQ_num   = hdir.make<TH1D>("recoWireEffQ","Collection plane;Charge deposited on wire [e-];Hit reco efficiency",80,0,20000);
     spline_PSTAR = CreateSplinePSTAR();
+
   }
   
   //--------------------------------------------------------------
@@ -238,64 +240,65 @@ namespace blip {
   //###########################################################
   void BlipRecoAlg::reconfigure( fhicl::ParameterSet const& pset ){
     
-    fHitProducer        = pset.get<std::string>   ("HitProducer",       "gaushit");
-    fTrkProducer        = pset.get<std::string>   ("TrkProducer",       "pandora");
-    fGeantProducer      = pset.get<std::string>   ("GeantProducer",     "largeant");
-    fSimDepProducer     = pset.get<std::string>   ("SimEDepProducer",   "ionandscint");
-    fSimChanProducer    = pset.get<std::string>   ("SimChanProducer",   "driftWC:simpleSC");
-    fSimGainFactor      = pset.get<float>         ("SimGainFactor",     -9);
-    fTrueBlipMergeDist  = pset.get<float>         ("TrueBlipMergeDist", 0.3);
-    fMaxHitTrkLength    = pset.get<float>               ("MaxHitTrkLength", 5);
-    fDoHitFiltering     = pset.get<bool>                ("DoHitFiltering",  false);
-    fMaxHitMult         = pset.get<int>                 ("MaxHitMult",      10);
-    fMaxHitAmp          = pset.get<float>               ("MaxHitAmp",       200);  
-    fMinHitAmp          = pset.get<std::vector<float>>  ("MinHitAmp",       {-99e9,-99e9,-99e9});
-    fMaxHitRMS          = pset.get<std::vector<float>>  ("MaxHitRMS",       { 99e9, 99e9, 99e9});
-    fMinHitRMS          = pset.get<std::vector<float>>  ("MinHitRMS",       {-99e9,-99e9,-99e9});
-    fMaxHitRatio        = pset.get<std::vector<float>>  ("MaxHitRatio",     { 99e9, 99e9, 99e9});
-    fMinHitRatio        = pset.get<std::vector<float>>  ("MinHitRatio",     {-99e9,-99e9,-99e9});
-    fMaxHitGOF          = pset.get<std::vector<float>>  ("MaxHitGOF",       { 99e9, 99e9, 99e9});
-    fMinHitGOF          = pset.get<std::vector<float>>  ("MinHitGOF",       {-99e9,-99e9,-99e9});
+    fHitProducer           = pset.get<std::string>   ("HitProducer",       "gaushit");
+    fHitTruthMatchProducer = pset.get<std::string>  ("HitTruthMatchProducer",       "gaushitTruthMatch");
+    fTrkProducer           = pset.get<std::string>   ("TrkProducer",       "pandora");
+    fGeantProducer         = pset.get<std::string>   ("GeantProducer",     "largeant");
+    fSimDepProducer        = pset.get<std::string>   ("SimEDepProducer",   "ionandscint");
+    fSimChanProducer       = pset.get<std::string>   ("SimChanProducer",   "driftWC:simpleSC");
+    fSimGainFactor         = pset.get<float>         ("SimGainFactor",     -9);
+    fTrueBlipMergeDist     = pset.get<float>         ("TrueBlipMergeDist", 0.3);
+    fMaxHitTrkLength       = pset.get<float>               ("MaxHitTrkLength", 5);
+    fDoHitFiltering        = pset.get<bool>                ("DoHitFiltering",  false);
+    fMaxHitMult            = pset.get<int>                 ("MaxHitMult",      10);
+    fMaxHitAmp             = pset.get<float>               ("MaxHitAmp",       200);
+    fMinHitAmp             = pset.get<std::vector<float>>  ("MinHitAmp",       {-99e9,-99e9,-99e9});
+    fMaxHitRMS             = pset.get<std::vector<float>>  ("MaxHitRMS",       { 99e9, 99e9, 99e9});
+    fMinHitRMS             = pset.get<std::vector<float>>  ("MinHitRMS",       {-99e9,-99e9,-99e9});
+    fMaxHitRatio           = pset.get<std::vector<float>>  ("MaxHitRatio",     { 99e9, 99e9, 99e9});
+    fMinHitRatio           = pset.get<std::vector<float>>  ("MinHitRatio",     {-99e9,-99e9,-99e9});
+    fMaxHitGOF             = pset.get<std::vector<float>>  ("MaxHitGOF",       { 99e9, 99e9, 99e9});
+    fMinHitGOF             = pset.get<std::vector<float>>  ("MinHitGOF",       {-99e9,-99e9,-99e9});
     
-    fHitClustWidthFact  = pset.get<float>         ("HitClustWidthFact", 5.0);
-    fHitClustWireRange  = pset.get<int>           ("HitClustWireRange", 1);
-    fMaxWiresInCluster  = pset.get<int>           ("MaxWiresInCluster", 10);
-    fMaxClusterSpan     = pset.get<float>         ("MaxClusterSpan",    30);
-    fMinClusterCharge   = pset.get<float>         ("MinClusterCharge",  300);
-    fMaxClusterCharge   = pset.get<float>         ("MaxClusterCharge",  12e6);
+    fHitClustWidthFact     = pset.get<float>         ("HitClustWidthFact", 5.0);
+    fHitClustWireRange     = pset.get<int>           ("HitClustWireRange", 1);
+    fMaxWiresInCluster     = pset.get<int>           ("MaxWiresInCluster", 10);
+    fMaxClusterSpan        = pset.get<float>         ("MaxClusterSpan",    30);
+    fMinClusterCharge      = pset.get<float>         ("MinClusterCharge",  300);
+    fMaxClusterCharge      = pset.get<float>         ("MaxClusterCharge",  12e6);
     
-    fApplyXTicksOffset  = pset.get<bool>          ("ApplyXTicksOffset",     true);
-    fTimeOffset         = pset.get<std::vector<float>>("TimeOffset", {0.,0.,0.});
-    fMatchMinOverlap    = pset.get<float>         ("ClustMatchMinOverlap",  0.5 );
-    fMatchSigmaFact     = pset.get<float>         ("ClustMatchSigmaFact",   1.0);
-    fMatchMaxTicks      = pset.get<float>         ("ClustMatchMaxTicks",    5.0 );
-    fMatchQDiffLimit    = pset.get<float>         ("ClustMatchQDiffLimit",  15e3);
-    fMatchMaxQRatio     = pset.get<float>         ("ClustMatchMaxQRatio",   4);
+    fApplyXTicksOffset     = pset.get<bool>          ("ApplyXTicksOffset",     true);
+    fTimeOffset            = pset.get<std::vector<float>>("TimeOffset", {0.,0.,0.});
+    fMatchMinOverlap       = pset.get<float>         ("ClustMatchMinOverlap",  0.5 );
+    fMatchSigmaFact        = pset.get<float>         ("ClustMatchSigmaFact",   1.0);
+    fMatchMaxTicks         = pset.get<float>         ("ClustMatchMaxTicks",    5.0 );
+    fMatchQDiffLimit       = pset.get<float>         ("ClustMatchQDiffLimit",  15e3);
+    fMatchMaxQRatio        = pset.get<float>         ("ClustMatchMaxQRatio",   4);
     
-    fMinMatchedPlanes   = pset.get<int>           ("MinMatchedPlanes",    2);
-    fPickyBlips         = pset.get<bool>          ("PickyBlips",          false);
-    fApplyTrkCylinderCut= pset.get<bool>          ("ApplyTrkCylinderCut", false);
-    fCylinderRadius     = pset.get<float>         ("CylinderRadius",      15);
+    fMinMatchedPlanes      = pset.get<int>           ("MinMatchedPlanes",    2);
+    fPickyBlips            = pset.get<bool>          ("PickyBlips",          false);
+    fApplyTrkCylinderCut   = pset.get<bool>          ("ApplyTrkCylinderCut", false);
+    fCylinderRadius        = pset.get<float>         ("CylinderRadius",      15);
     
-    fCaloAlg            = new calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") );
-    fCaloPlane          = pset.get<int>           ("CaloPlane",           2);
-    fCalodEdx           = pset.get<float>         ("CalodEdx",            2.8);
-    fESTAR_p0           = pset.get<float>         ("ESTAR_p0",            0.01730);
-    fESTAR_p1           = pset.get<float>         ("ESTAR_p1",            0.00003479);
-    fLifetimeCorr       = pset.get<bool>          ("LifetimeCorrection",  false);
-    fSCECorr            = pset.get<bool>          ("SCECorrection",       false);
-    fYZUniformityCorr   = pset.get<bool>          ("YZUniformityCorrection",true);
-    fModBoxA            = pset.get<float>         ("ModBoxA",             0.93);
-    fModBoxB            = pset.get<float>         ("ModBoxB",             0.212);
+    fCaloAlg               = new calo::CalorimetryAlg( pset.get<fhicl::ParameterSet>("CaloAlg") );
+    fCaloPlane             = pset.get<int>           ("CaloPlane",           2);
+    fCalodEdx              = pset.get<float>         ("CalodEdx",            2.8);
+    fESTAR_p0              = pset.get<float>         ("ESTAR_p0",            0.01730);
+    fESTAR_p1              = pset.get<float>         ("ESTAR_p1",            0.00003479);
+    fLifetimeCorr          = pset.get<bool>          ("LifetimeCorrection",  false);
+    fSCECorr               = pset.get<bool>          ("SCECorrection",       false);
+    fYZUniformityCorr      = pset.get<bool>          ("YZUniformityCorrection",true);
+    fModBoxA               = pset.get<float>         ("ModBoxA",             0.93);
+    fModBoxB               = pset.get<float>         ("ModBoxB",             0.212);
     
-    fVetoBadChannels    = pset.get<bool>          ("VetoBadChannels",     true);
-    fBadChanProducer    = pset.get<std::string>   ("BadChanProducer",     "nfspl1:badchannels");
-    fBadChanFile        = pset.get<std::string>   ("BadChanFile",         "");
-    fMinDeadWireGap     = pset.get<int>           ("MinDeadWireGap",      1);
+    fVetoBadChannels       = pset.get<bool>          ("VetoBadChannels",     true);
+    fBadChanProducer       = pset.get<std::string>   ("BadChanProducer",     "nfspl1:badchannels");
+    fBadChanFile           = pset.get<std::string>   ("BadChanFile",         "");
+    fMinDeadWireGap        = pset.get<int>           ("MinDeadWireGap",      1);
     
-    fKeepAllClusts[0] = pset.get<bool>          ("KeepAllClustersInd", false);
-    fKeepAllClusts[1] = pset.get<bool>          ("KeepAllClustersInd", false);
-    fKeepAllClusts[2] = pset.get<bool>          ("KeepAllClustersCol", true);
+    fKeepAllClusts[0]      = pset.get<bool>          ("KeepAllClustersInd", false);
+    fKeepAllClusts[1]      = pset.get<bool>          ("KeepAllClustersInd", false);
+    fKeepAllClusts[2]      = pset.get<bool>          ("KeepAllClustersCol", true);
     
     keepAllClusts = true;
     for(auto& config : fKeepAllClusts ) {
@@ -332,8 +335,6 @@ namespace blip {
     trueblips.clear();
     EvtBadChanCount = 0;
     //map_plane_hitg4ids.clear();
-   
-
   
     //=======================================
     // Get data products for this event
@@ -380,6 +381,7 @@ namespace blip {
     art::Handle< std::vector<recob::Hit> > hitHandleGH;
     std::vector<art::Ptr<recob::Hit> > hitlistGH;
     if (evt.getByLabel("gaushit",hitHandleGH))
+      //if (evt.getByLabel(fHitProducer,hitHandleGH)) // by sungbin
       art::fill_ptr_vector(hitlistGH, hitHandleGH);
 
     // -- tracks
@@ -391,7 +393,10 @@ namespace blip {
     // -- associations
     art::FindManyP<recob::Track> fmtrk(hitHandle,evt,fTrkProducer);
     art::FindManyP<recob::Track> fmtrkGH(hitHandleGH,evt,fTrkProducer);
-    art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,"gaushitTruthMatch");
+    //art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> fmhh(hitHandleGH,evt,fHitTruthMatchProducer);
+    art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> fmhh(hitHandle,evt,fHitTruthMatchProducer);
+    std::cout << "fHitTruthMatchProducer: " << fHitTruthMatchProducer << std::endl; // by sungbin
+    std::cout << "fHitProducer: " << fHitProducer << std::endl; // by sungbin
     /*
     //====================================================
     // Update map of bad channels for this event
@@ -428,7 +433,7 @@ namespace blip {
     //===============================================================
     std::map< int, int > map_gh;
     // if input collection is already gaushit, this is trivial
-    if( fHitProducer == "gaushit" ) {
+    if( fHitProducer == "gaushit" || fHitProducer == "gaushittradroi") {
       for(auto& h : hitlist ) map_gh[h.key()] = h.key(); 
     // ... but if not, find the matching gaushit. There's no convenient
     // hit ID, so we must loop through and compare channel/time (ugh)
@@ -509,12 +514,15 @@ namespace blip {
     //==================================================
     // Use G4 information to determine the "true" blips in this event.
     //==================================================
+    //std::cout<<"plist.size(): " << plist.size() << std::endl;//-- by sungbin
     if( plist.size() ) {
       pinfo.resize(plist.size());
       for(size_t i = 0; i<plist.size(); i++){
         BlipUtils::FillParticleInfo( *plist[i], pinfo[i], sedlist, fCaloPlane);
         if( map_g4trkid_charge[pinfo[i].trackId] ) pinfo[i].numElectrons = (int)map_g4trkid_charge[pinfo[i].trackId];
         pinfo[i].index = i;
+
+	//std::cout<<i<<", pinfo[i].mass: " << pinfo[i].mass << ", pinfo[i].depEnergy: " << pinfo[i].depEnergy << ", pinfo[i].KE: " << pinfo[i].KE << std::endl; // by sungbin
       }
       BlipUtils::MakeTrueBlips(pinfo, trueblips);
       BlipUtils::MergeTrueBlips(trueblips, fTrueBlipMergeDist);
@@ -593,7 +601,8 @@ namespace blip {
         // data association.
         //--------------------------------------------------
         int igh = map_gh[i];
-        if( fmhh.at(igh).size() ) {
+	//std::cout << "fmhh.at(" << igh << ").size(): " << fmhh.at(igh).size() << std::endl; // by sungbin
+	if( fmhh.at(igh).size() ) {
           std::vector<simb::MCParticle const*> pvec;
           std::vector<anab::BackTrackerHitMatchingData const*> btvec;
           fmhh.get(igh,pvec,btvec);
@@ -633,7 +642,7 @@ namespace blip {
       
 
       // find associated track
-      if( fHitProducer == "gaushit" && fmtrk.isValid() ) {
+      if( (fHitProducer == "gaushit" || fHitProducer == "gaushittradroi") && fmtrk.isValid() ) {
         if(fmtrk.at(i).size()) hitinfo[i].trkid = fmtrk.at(i)[0]->ID();
       
       // if the hit collection didn't have associations made
@@ -842,10 +851,12 @@ namespace blip {
           tpc_planeclustsMap[hc.TPC][hc.Plane].push_back(idx);
           for(auto const& hitID : hc.HitIDs) hitinfo[hitID].clustid = hc.ID;
           // ... and find the associated truth-blip
+	  //std::cout << "hc.G4IDs.size(): " << hc.G4IDs.size() << ", trueblips.size(): " << trueblips.size() << std::endl;// by sungbin
           if( hc.G4IDs.size() ) {
             for(size_t j=0; j< trueblips.size(); j++){
-              //std::cout<<"Looking at true blip "<<j<<" which has LeadG4ID of "<<trueblips[j].LeadG4ID<<"\n";
+              //std::cout<<"Looking at true blip "<<j<<" which has LeadG4ID of "<<trueblips[j].LeadG4ID<<"\n"; // by sungbin
               if( hc.G4IDs.count(trueblips[j].LeadG4ID)) {
+		//std::cout<<"hc.G4IDs.count(trueblips[j].LeadG4ID)" << std::endl; // by sungbin
                 hc.isTruthMatched = true;
                 hc.EdepID         = trueblips[j].ID;
                 break;
@@ -1281,7 +1292,7 @@ namespace blip {
     for(auto val : fMatchSigmaFact) { printf("%3.1f   ",val); } printf("\n");
     printf("  Clust match max ticks     : ");
     for(auto val : fMatchMaxTicks) { printf("%3.1f   ",val); } printf("\n");
-    */
+
 
     for(int iTPC=0; iTPC<kNTPCs; iTPC++){
       for(int i=0; i<kNplanes; i++){
@@ -1289,6 +1300,7 @@ namespace blip {
           printf("  pl%i matches per cand      : %4.2f\n",       i,h_nmatches[iTPC][i]->GetMean());
         }
     }
+    */
     
     //printf("  Track-cylinder radius     : %.1f cm\n",       fCylinderRadius);
     //printf("  Applying cylinder cut?    : %i\n",          fApplyTrkCylinderCut);

@@ -742,13 +742,14 @@ class BlipAna : public art::EDAnalyzer
     h_nblips_tm    = dir_truth.make<TH1D>("nblips_tm","Truth-matched 3D blips per event",blipBins,0,blipMax);
     h_blip_qcomp   = dir_truth.make<TH1D>("blip_qcomp","Fraction of true charge (at anode) reconstructed into 3D blips",202,0,1.01);
     h_blip_reszy   = dir_truth.make<TH2D>("blip_res_zy","Blip position resolution;Z_{reco} - Z_{true} [cm];Y_{reco} - Y_{true} [cm]",150,-15,15,150,-15,15);
-      h_blip_reszy ->SetOption("colz");
+    //h_blip_reszy   = dir_truth.make<TH2D>("blip_res_zy","Blip position resolution;Z_{reco} - Z_{true} [cm];Y_{reco} - Y_{true} [cm]",200,-15,15,150,-15,15);
+    h_blip_reszy ->SetOption("colz");
     h_blip_resx    = dir_truth.make<TH1D>("blip_res_x","Blip position resolution;X_{reco} - X_{true} [cm]",200,-10,10);
     h_blip_resE   = dir_truth.make<TH1D>("blip_res_E","Blip energy resolution;(E_{reco} - E_{true})/E_{true} [cm]",200,-1.,1.);
     h_blip_E_vs_resE    = dir_truth.make<TH2D>("blip_res_energy","Energy resolution of 3D blips;Energy [MeV];#deltaE/E_{true}",100,0,5,200,-1.,1.);
-        h_blip_E_vs_resE ->SetOption("colz");
+    h_blip_E_vs_resE ->SetOption("colz");
     h_clust_qres_vs_q       = dir_truth.make<TH2D>("qres_vs_q","Clusters on collection plane;True charge deposited [ #times 10^{3} e- ];Reco resolution",160,0,80,200,-1,1);
-      h_clust_qres_vs_q     ->SetOption("colz");
+    h_clust_qres_vs_q     ->SetOption("colz");
     h_clust_qres_anode      = dir_truth.make<TH1D>("qres_anode","Reco charge vs true charge collected;( reco-true ) / true;Area-normalized entries",200,-1.,1.);
     h_clust_qres_dep        = dir_truth.make<TH1D>("qres_dep","Reco charge vs true charge deposited;( reco-true ) / true;Area-normalized entries",200,-1.,1.);
     h_qratio_vs_time_sim  = dir_truth.make<TH2D>("qratio_vs_time_sim",";Drift time [#mus]; Q_{anode} / Q_{dep}",44,100,2300, 1000,0.50,1.50);
@@ -1379,6 +1380,7 @@ void BlipAna::analyze(const art::Event& evt)
     // save the clustIDs and true energy deposits to the blip
     // (use the association between clust <--> edep)
     // -----------------------------------------------
+    //std::cout << "blp.truth.ID: " << blp.truth.ID << ", blp.truth.Energy: " << blp.truth.Energy << std::endl; // by sungbin
     if( blp.truth.ID >= 0 && blp.truth.Energy > 0 ) {
       fData->blip_isMC[i]             = true;
       fData->blip_edepid[i]           = blp.truth.ID;
@@ -1469,7 +1471,7 @@ void BlipAna::endJob(){
   //printf("                 picky frac   : %5.3f\n",     fNum3DBlipsPicky/float(fNum3DBlips));
   
   if(fIsMC){
-  printf("  MC-matched blips per evt    : %.3f\n",       fNum3DBlipsTrue/nEvents);
+  printf("  MC-matched blips per evt    : %.3f (%d / %f)\n ",       fNum3DBlipsTrue/nEvents, fNum3DBlipsTrue, nEvents);
   printf("  MC blip purity              : %.3f\n",       fNum3DBlipsTrue/float(fNum3DBlips));
   printf("  MC blip purity, 3 planes    : %.3f\n",      fNum3DBlipsTrue3P/float(fNum3DBlips3Plane));
   if( h_blip_qcomp->GetMean() > 0 ) 

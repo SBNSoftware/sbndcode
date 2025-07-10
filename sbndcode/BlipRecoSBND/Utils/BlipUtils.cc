@@ -33,7 +33,7 @@ namespace BlipUtils {
   // Provided a MCParticle, calculate everything we'll need for later calculations
   // and save into ParticleInfo object
   void FillParticleInfo( const simb::MCParticle& part, blip::ParticleInfo& pinfo, SEDVec_t& sedvec, int caloPlane){
-    
+    //std::cout<<"[FillParticleInfo] part.Mass(): " << part.Mass() << ", part.E(): " << part.E() << ", (part.E()-part.Mass()): " << (part.E()-part.Mass()) << ", part.TrackId(): " << part.TrackId() << std::endl;//by sungbin
     // Get important info and do conversions
     pinfo.particle    = part;
     pinfo.trackId     = part.TrackId();
@@ -62,7 +62,8 @@ namespace BlipUtils {
     pinfo.depElectrons  = 0;
     for(auto& sed : sedvec ) {
       if( sed->TrackID() == part.TrackId() ) {
-        pinfo.depEnergy     += sed->Energy();
+	//std::cout<<"[FillParticleInfo] sed->Energy(): " << sed->Energy() << ", sed->NumElectrons(): " << sed->NumElectrons() << std::endl;// by sungbin
+	pinfo.depEnergy     += sed->Energy();
         pinfo.depElectrons  += sed->NumElectrons();
       }
     }
@@ -75,7 +76,7 @@ namespace BlipUtils {
   // Provided a vector of all particle information for event, fill a
   // vector of true blips
   void MakeTrueBlips( std::vector<blip::ParticleInfo>& pinfo, std::vector<blip::TrueBlip>& trueblips ) {
-     
+    //std::cout<<"[MakeTrueBlips] Start"<<std::endl;//by sungbin
     art::ServiceHandle<geo::Geometry> geom;
     auto const& detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataForJob();
     auto const& clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
@@ -83,20 +84,21 @@ namespace BlipUtils {
     for(size_t i=0; i<pinfo.size(); i++){
       auto& part = pinfo[i].particle;
       
-      //std::cout<<"Making true blip for "<<part.TrackId()<<" (PDG "<<part.PdgCode()<<", which deposited "<<pinfo[i].depEnergy<<"\n";
+      //std::cout<<"Making true blip for "<<part.TrackId()<<" (PDG "<<part.PdgCode()<<", pinfo[i].depEnergy: "<<pinfo[i].depEnergy<<", pinfo[i].depElectrons: " << pinfo[i].depElectrons << "\n";
 
       // If this is a photon or neutron, don't even bother!
       if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) continue;
-
+      //std::cout<<"[MakeTrueBlips] for loop, "<< i << ", passing 2112 || 22 cut"<<std::endl;//by sungbin
       // If this is an electron that came from another electron, it would 
       // have already been grouped as part of the contiguous "blip" previously.
       std::string proc = part.Process();
       if( part.PdgCode() == 11 && ( proc == "eIoni" || proc == "muIoni" || proc == "hIoni") ) continue;
-
+      //std::cout<<"[MakeTrueBlips] for loop, "<< i << ", passing 11 & (eIoni, muIoni, hIoni) cut"<<std::endl;//by sungbin
       // Create the new blip
       blip::TrueBlip tb;
       GrowTrueBlip(pinfo[i],tb);
-      if( !tb.Energy ) continue;  
+      if( !tb.Energy ) continue;
+      //std::cout<<"[MakeTrueBlips] for loop, "<< i << ", tb.Energy cut cut"<<std::endl;//by sungbin
 
       // We want to loop through any contiguous electrons (produced
       // with process "eIoni") and add the energy they deposit into this blip.
@@ -124,10 +126,11 @@ namespace BlipUtils {
       auto const& planeID = geo::PlaneID{tpcID, 0};
       float tick_calc = (float)detProp.ConvertXToTicks(tb.Position.X(),planeID);
       tb.DriftTime = tick_calc*clockData.TPCClock().TickPeriod() + clockData.TriggerOffsetTPC();
-      
+
+      //std::cout<<"[MakeTrueBlips] trueblips.size(): " << trueblips.size() <<std::endl;//by sungbin
       tb.ID = trueblips.size();
       trueblips.push_back(tb);
-
+      //std::cout<<"pushed a trueblip"<<std::endl;//by sungbin
     }
     
   }
@@ -135,12 +138,12 @@ namespace BlipUtils {
   
   //====================================================================
   void GrowTrueBlip( blip::ParticleInfo& pinfo, blip::TrueBlip& tblip ) {
-    
+    //std::cout<<"[GrowTrueBlip] Start"<<std::endl;//by sungbin
     simb::MCParticle& part = pinfo.particle;
 
     // Skip neutrons, photons
     if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
-    
+    //std::cout<<"[GrowTrueBlip] Passing 2112 and 22 cut"<<std::endl;//by sungbin
     // Check that path length isn't zero
     if( !pinfo.pathLength ) return;
 
@@ -163,11 +166,17 @@ namespace BlipUtils {
     } else {
       return;
     }
+    //std::cout<<"[GrowTrueBlip] matching cut"<<std::endl;//by sungbin
 
     tblip.Energy      += pinfo.depEnergy;
     tblip.DepElectrons+= pinfo.depElectrons;
     tblip.NumElectrons+= std::max(0.,pinfo.numElectrons);
-    
+
+    //std::cout<<"[GrowTrueBlip] tblip.ID"<<tblip.ID<<std::endl;//by sungbin
+    //std::cout<<"[GrowTrueBlip] tblip.Energy"<<tblip.Energy<<std::endl;//by sungbin
+    //std::cout<<"[GrowTrueBlip] tblip.DepElectrons"<<tblip.DepElectrons<<std::endl;//by sungbin
+    //std::cout<<"[GrowTrueBlip] tblip.NumElectrons"<<tblip.NumElectrons<<std::endl;//by sungbin
+
     tblip.G4ChargeMap[part.TrackId()] += pinfo.depElectrons;
     tblip.G4PDGMap[part.TrackId()]    = part.PdgCode();
     if(pinfo.depElectrons > tblip.LeadCharge ) {

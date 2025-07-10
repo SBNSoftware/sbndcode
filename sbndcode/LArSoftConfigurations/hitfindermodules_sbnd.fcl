@@ -11,13 +11,13 @@ sbnd_candhitfinder_morphological.MinDeltaTicks: 2
 sbnd_candhitfinder_morphological.Plane: 999 # Set the defualt plane to fail and make sure we overridde the individual planes
 sbnd_candhitfinder_morphological_0: @local::sbnd_candhitfinder_morphological
 sbnd_candhitfinder_morphological_0.Plane: 0
-sbnd_candhitfinder_morphological_0.MinHitHeight: 12
+sbnd_candhitfinder_morphological_0.MinHitHeight: 8
 sbnd_candhitfinder_morphological_1: @local::sbnd_candhitfinder_morphological
 sbnd_candhitfinder_morphological_1.Plane: 1
-sbnd_candhitfinder_morphological_1.MinHitHeight: 15
+sbnd_candhitfinder_morphological_1.MinHitHeight: 9
 sbnd_candhitfinder_morphological_2: @local::sbnd_candhitfinder_morphological
 sbnd_candhitfinder_morphological_2.Plane: 2
-sbnd_candhitfinder_morphological_2.MinHitHeight: 8
+sbnd_candhitfinder_morphological_2.MinHitHeight: 5
 
 # generic (ArgoNeuT) GausHitFinder configuration from LArSoft 4.24.00:
 sbnd_gaushitfinder:                                                   @local::gaus_hitfinder
