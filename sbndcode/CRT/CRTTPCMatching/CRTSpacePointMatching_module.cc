@@ -23,10 +23,12 @@
 
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 
 #include "sbndcode/CRT/CRTTPCMatching/CRTSpacePointMatchAlg.h"
+#include "sbndcode/CRT/CRTEventDisplay/CRTEventDisplayAlg.h"
 
 #include <memory>
 
@@ -51,6 +53,10 @@ private:
   CRTSpacePointMatchAlg fMatchingAlg;
   art::InputTag         fTPCTrackModuleLabel;
   art::InputTag         fCRTSpacePointModuleLabel;
+
+  CRTEventDisplayAlg    fCRTEventDisplayAlg;
+
+  bool fMakeEventDisplays;
 };
 
 
@@ -59,9 +65,12 @@ sbnd::crt::CRTSpacePointMatching::CRTSpacePointMatching(fhicl::ParameterSet cons
   , fMatchingAlg(p.get<fhicl::ParameterSet>("MatchingAlg"))
   , fTPCTrackModuleLabel(p.get<art::InputTag>("TPCTrackModuleLabel"))
   , fCRTSpacePointModuleLabel(p.get<art::InputTag>("CRTSpacePointModuleLabel"))
-  {
+  , fCRTEventDisplayAlg(p.get<fhicl::ParameterSet>("CRTEventDisplayAlg"))
+  , fMakeEventDisplays(p.get<bool>("MakeEventDisplays"))
+{
+  if(!fMakeEventDisplays)
     produces<art::Assns<CRTSpacePoint, recob::Track, anab::T0>>();
-  }
+}
 
 void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
 {
@@ -104,6 +113,8 @@ void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
 
   std::set<int> used_crt_sps;
 
+  int nmatches = 0;
+
   for(auto const &candidate : candidates)
     {
       if(used_crt_sps.count(candidate.thisSP.key()) == 0)
@@ -111,11 +122,22 @@ void sbnd::crt::CRTSpacePointMatching::produce(art::Event& e)
           const anab::T0 t0(candidate.time * 1e3, 0, 0, 0, candidate.score);
           crtSPTPCTrackAssn->addSingle(candidate.thisSP, candidate.thisTrack, t0);
 
+          if(fMakeEventDisplays)
+            {
+              fCRTEventDisplayAlg.SetPrint(false);
+              fCRTEventDisplayAlg.SetMinTime(candidate.time * 1e3 - 1e3);
+              fCRTEventDisplayAlg.SetMaxTime(candidate.time * 1e3 + 1e3);
+              auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
+              fCRTEventDisplayAlg.Draw(clockData, e, Form("crtEventDisplayEvent%iSPMatch%i", e.event(), nmatches));
+            }
+
           used_crt_sps.insert(candidate.thisSP.key());
+          ++nmatches;
         }
     }
 
-  e.put(std::move(crtSPTPCTrackAssn));
+  if(!fMakeEventDisplays)
+    e.put(std::move(crtSPTPCTrackAssn));
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTSpacePointMatching)

@@ -106,7 +106,9 @@ namespace sbnd::crt {
   {
     std::vector<art::Ptr<CRTTrack>> candidates;
 
-    const int driftDirection = TPCGeoUtil::DriftDirectionFromHits(fGeometryService, hits);
+    const int driftDirection                 = TPCGeoUtil::DriftDirectionFromHits(fGeometryService, hits);
+    const std::pair<double, double> xLimits  = TPCGeoUtil::XLimitsFromHits(fGeometryService, hits);
+    const std::pair<double, double> t0MinMax = TrackT0Range(detProp, tpcTrack->Vertex().X(), tpcTrack->End().X(), driftDirection, xLimits);
 
     const geo::TPCID tpcID    = hits[0]->WireID().asTPCID();
     const geo::TPCGeo& tpcGeo = fGeometryService->GetElement(tpcID);
@@ -119,6 +121,10 @@ namespace sbnd::crt {
           continue;
 
         const double crtTime = fUseTs0 ? crtTrack->Ts0() * 1e-3 : crtTrack->Ts1() * 1e-3;
+
+        if(!(crtTime > t0MinMax.first - 10. && crtTime < t0MinMax.second + 10.))
+          continue;
+
         const double shift = driftDirection * crtTime * detProp.DriftVelocity();
 
         geo::Point_t start = tpcTrack->Vertex();
@@ -320,5 +326,27 @@ namespace sbnd::crt {
       }
 
     return aveDCA / usedPts;
+  }
+
+  std::pair<double, double> CRTTrackMatchAlg::TrackT0Range(detinfo::DetectorPropertiesData const &detProp, const double startX,
+                                                           const double endX, const int driftDirection, const std::pair<double, double> xLimits)
+  {
+    if(driftDirection == 0)
+      return std::make_pair(0, 0);
+
+    const double driftVel = driftDirection * detProp.DriftVelocity();
+
+    const double maxX     = std::max(startX, endX);
+    const double maxLimit = std::max(xLimits.first, xLimits.second);
+    const double maxShift = maxLimit - maxX;
+
+    const double minX     = std::min(startX, endX);
+    const double minLimit = std::min(xLimits.first, xLimits.second);
+    const double minShift = minLimit - minX;
+
+    const double t0max = maxShift / driftVel;
+    const double t0min = minShift / driftVel;
+
+    return std::make_pair(std::min(t0min, t0max), std::max(t0min, t0max));
   }
 }

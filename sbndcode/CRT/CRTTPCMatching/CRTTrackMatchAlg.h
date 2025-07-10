@@ -147,6 +147,9 @@ namespace sbnd::crt {
 
     double AveDCABetweenTracks(const art::Ptr<recob::Track> &tpcTrack, const art::Ptr<CRTTrack> &crtTrack, const double shift);
 
+    std::pair<double, double> TrackT0Range(detinfo::DetectorPropertiesData const &detProp, const double startX,
+                                           const double endX, const int driftDirection, const std::pair<double, double> xLimits);
+
   private:
 
     geo::GeometryCore const* fGeometryService;

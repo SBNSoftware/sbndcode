@@ -71,8 +71,8 @@ namespace sbnd {
           base_t::SetDefaultGeometryConfiguration(R"(
             SurfaceY: 130e2 # in cm, vertical distance to the surface
             Name:     "sbndv2"
-            GDML:     "sbnd_v02_00.gdml"
-            ROOT:     "sbnd_v02_00.gdml"
+            GDML:     "sbnd_v02_04.gdml"
+            ROOT:     "sbnd_v02_04.gdml"
             SortingParameters: { tool_type: "GeoObjectSorterSBND" }
             )");
         }

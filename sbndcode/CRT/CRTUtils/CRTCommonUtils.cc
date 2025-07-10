@@ -260,4 +260,50 @@ namespace sbnd::crt {
 
     return dP.R();
   }
+
+  std::pair<geo::Vector_t, geo::Vector_t> CRTCommonUtils::AverageTrackDirections(const art::Ptr<recob::Track> &track, const double frac)
+  {
+    const unsigned N          = track->NumberTrajectoryPoints();
+    const unsigned NValid     = track->CountValidPoints();
+    const unsigned NValidFrac = std::floor(NValid * frac);
+
+    geo::Vector_t forwardDir(0, 0, 0), backwardDir(0, 0, 0);
+
+    unsigned iValidForward = 0, iValidBackward = 0;
+
+    for(unsigned i = 0; i < N; ++i)
+      {
+        if(track->HasValidPoint(i) && iValidForward < NValidFrac)
+          {
+            forwardDir += track->DirectionAtPoint(i);
+            ++iValidForward;
+          }
+
+        if(track->HasValidPoint(N - (i + 1)) && iValidBackward < NValidFrac)
+          {
+            backwardDir += track->DirectionAtPoint(N - (i + 1));
+            ++iValidBackward;
+          }
+      }
+
+    forwardDir  /= NValidFrac;
+    backwardDir /= NValidFrac;
+
+    return std::make_pair(forwardDir, backwardDir);
+  }
+
+  std::pair<geo::Vector_t, geo::Vector_t> CRTCommonUtils::TrackDirections(const art::Ptr<recob::Track> &track)
+  {
+    const unsigned N    = track->NumberTrajectoryPoints();
+    const unsigned NMid = std::floor(N * 0.5);
+
+    geo::Point_t start = track->Start();
+    geo::Point_t end   = track->End();
+    geo::Point_t mid   = track->LocationAtPoint(NMid);
+
+    const geo::Vector_t startDir = (mid - start).Unit();
+    const geo::Vector_t endDir   = (mid - end).Unit();
+
+    return std::make_pair(startDir, endDir);
+  }
 }

@@ -29,6 +29,11 @@ largeant_crt_volumes: [ "LArG4DetectorServicevolAuxDetSensitiveCRTStripY"
                       , "LArG4DetectorServicevolAuxDetSensitiveCRTStripX"
                       , "LArG4DetectorServicevolAuxDetSensitiveCRTStripBERN"
                       , "LArG4DetectorServicevolAuxDetSensitiveCRTStripMINOS"
+                      , "LArG4DetectorServicevolAuxDetSensitiveCRTStripSquare"
+                      , "LArG4DetectorServicevolAuxDetSensitiveCRTStripSquareuB"
+                      , "LArG4DetectorServicevolAuxDetSensitiveCRTStripuB"
+                      , "LArG4DetectorServicevolAuxDetSensitiveCRTStripuBnl"
+                      , "LArG4DetectorServicevolAuxDetSensitiveCRTStripuBns"
                       ]
 
 # Merge seperate instances of largeant for GENIE and CORSIKA

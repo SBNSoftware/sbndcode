@@ -46,7 +46,7 @@ sbnd_particle_list_action:
   keepEMShowerDaughters: false                      # If false, does not store electromagnetic shower daughter
                                                     # particles in the MCParticles data product.
   storeTrajectories: true
-  keepGenTrajectories: ["generator"]                # list of generator labels for which we want to store
+  keepGenTrajectories: ["generator", "corsika"]     # list of generator labels for which we want to store
                                                     # trajectory points.
   keepOnlyPrimaryFullTrajectories: false            # (defaults to false in larg4) If set to true, only
                                                     # the particles with MCTruth process == "primary" and
@@ -71,15 +71,6 @@ sbnd_particle_list_action:
   KeepDroppedParticlesInVolumes: ["volTPCActive"]   # list of volumes for which we want to store particles that were dropped
                                                     # (i.e. particles that are not included in the standard list, mainly em shower
                                                     # daughters). Used for ml reco workflow.
-  
-  KeepParticlesInVolumes: ["volCryostat",           # Keep list of nominal mc particles that interact within the cryostat and CRTs
-     "volTaggerTopHigh", 
-     "volTaggerTopLow",
-     "volTaggerSideLeft", 
-     "volTaggerSideRight", 
-     "volTaggerFaceFront", 
-     "volTaggerFaceBack", 
-     "volTaggerBot"]
 }
 
 #

@@ -132,7 +132,7 @@ sbnd_simple_flashmatch_ara_sce.PandoraProducer: "pandoraSCE"
 sbnd_simple_flashmatch_ara_sce.TrackProducer: "pandoraSCETrack"
 sbnd_simple_flashmatch_ara_sce.CaloProducer: "pandoraSCECalo"
 sbnd_simple_flashmatch_ara_sce.SpacePointProducer: "pandoraSCE"
-sbnd_simple_flashmatch_ara_ace.OpHitProducer: "ophitxarapuca"
+sbnd_simple_flashmatch_ara_sce.OpHitProducer: "ophitxarapuca"
 sbnd_simple_flashmatch_ara_sce.OpFlashProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
 sbnd_simple_flashmatch_ara_sce.OpFlashHitProducer: ["opflashtpc0xarapuca", "opflashtpc1xarapuca"]
 sbnd_simple_flashmatch_ara_sce.BeamSpillTimeStart: 0.

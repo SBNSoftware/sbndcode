@@ -47,6 +47,9 @@ sbnd_reco1_producers:{
 
     ### CRT reconstruction
     crtstrips:      @local::crtstriphitproducer_sbnd
+    crtclustering:  @local::crtclusterproducer_sbnd
+    crtspacepoints: @local::crtspacepointproducer_sbnd
+    crttracks:      @local::crttrackproducer_sbnd
 
     ### ML reco inputs
     cluster3d: @local::sbnd_cluster3d
@@ -65,6 +68,9 @@ sbnd_reco1_producer_sequence: [
   , gaushit
   , gaushitTruthMatch
   , crtstrips
+  , crtclustering
+  , crtspacepoints
+  , crttracks
   , cluster3d
  ]
 

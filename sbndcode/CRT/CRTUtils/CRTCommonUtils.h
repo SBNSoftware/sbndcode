@@ -11,6 +11,8 @@
 
 #include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
+#include "lardataobj/RecoBase/Track.h"
+
 #include "sbnobj/SBND/CRT/CRTEnums.hh"
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 
@@ -56,6 +58,12 @@ namespace sbnd::crt {
 
     // Returns the distance between an infinite line and a segment
     double LineSegmentDistance(const geo::Point_t &start1, const geo::Point_t &end1, const geo::Point_t &start2, const geo::Point_t &end2);
+
+    // Returns the average direction for the first and last frac(tion) of trajectory points in a track
+    std::pair<geo::Vector_t, geo::Vector_t> AverageTrackDirections(const art::Ptr<recob::Track> &track, const double frac);
+
+    // Returns the directions based on the line from the middle to either end of the track
+    std::pair<geo::Vector_t, geo::Vector_t> TrackDirections(const art::Ptr<recob::Track> &track);
   }
 }
 

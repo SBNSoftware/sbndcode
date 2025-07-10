@@ -30,9 +30,9 @@ MultiPartRain : {
     G4Time       : 819.2 # [ns]
     G4TimeJitter : 1638.4 # [ns]
     TPCRange     : [[0,0],[0,1]]
-    XRange       : [20,20]
-    YRange       : [20,20]
-    ZRange       : [20,20]
+    XRange       : [-20,-20]
+    YRange       : [-20,-20]
+    ZRange       : [-20,-20]
     DirectInward : true
     CosmicDistribution : false
     MultiMax     : 5

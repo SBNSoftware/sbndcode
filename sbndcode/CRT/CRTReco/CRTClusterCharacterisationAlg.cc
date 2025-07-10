@@ -69,8 +69,8 @@ namespace sbnd::crt {
             const double pe  = ADCToPE(hit0->Channel(), hit0->ADC1(), hit0->ADC2()) + ADCToPE(hit1->Channel(), hit1->ADC1(), hit1->ADC2());
             const double t0  = (hit0->Ts0() + hit1->Ts0()) / 2.;
             const double t1  = (hit0->Ts1() + hit1->Ts1()) / 2.;
-            const double et0 = std::abs((double)hit0->Ts0() - (double)hit1->Ts0()) / 2.;
-            const double et1 = std::abs((double)hit0->Ts1() - (double)hit1->Ts1()) / 2.;
+            const double et0 = std::abs(hit0->Ts0() - hit1->Ts0()) / 2.;
+            const double et1 = std::abs(hit0->Ts1() - hit1->Ts1()) / 2.;
 
             spacepoint = CRTSpacePoint(pos, err, pe, t0 + fTimeOffset, et0, t1 + fTimeOffset, et1, false);
             return true;
@@ -208,11 +208,11 @@ namespace sbnd::crt {
     const double corr0 = TimingCorrectionOffset(dist0, pe0);
     const double corr1 = TimingCorrectionOffset(dist1, pe1);
 
-    t0  = ((double)hit0->Ts0() - corr0 + (double)hit1->Ts0() - corr1) / 2.;
-    et0 = std::abs(((double)hit0->Ts0() - corr0) - ((double)hit1->Ts0() - corr1)) / 2.;
+    t0  = (hit0->Ts0() - corr0 + hit1->Ts0() - corr1) / 2.;
+    et0 = std::abs((hit0->Ts0() - corr0) - (hit1->Ts0() - corr1)) / 2.;
 
-    t1  = ((double)hit0->Ts1() - corr0 + (double)hit1->Ts1() - corr1) / 2.;
-    et1 = std::abs(((double)hit0->Ts1() - corr0) - ((double)hit1->Ts1() - corr1)) / 2.;
+    t1  = (hit0->Ts1() - corr0 + hit1->Ts1() - corr1) / 2.;
+    et1 = std::abs((hit0->Ts1() - corr0) - (hit1->Ts1() - corr1)) / 2.;
   }
 
   double CRTClusterCharacterisationAlg::TimingCorrectionOffset(const double &dist, const double &pe)

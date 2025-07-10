@@ -631,6 +631,8 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
   art::FindManyP<recob::SpacePoint> shw_to_spacepoints(shw_h, e, _shw_producer);
   art::FindManyP<recob::Hit> spacepoint_to_hits (spacepoint_h, e, _slice_producer);
 
+  art::FindOneP<larpandoraobj::PFParticleMetadata> pfp_to_metadata(pfp_h, e, _slice_producer);
+
   // Loop over the Slices
   for (size_t n_slice = 0; n_slice < slice_h->size(); n_slice++) {
     flashmatch::QCluster_t light_cluster;
@@ -653,15 +655,17 @@ bool SBNDOpT0Finder::ConstructLightClusters(art::Event& e, unsigned int tpc) {
     std::vector<art::Ptr<recob::PFParticle>> pfp_v = slice_to_pfps.at(n_slice);
 
     if (_select_nus){
-      bool nu_pfp = false;
+      bool found_clear_cosmic = false;
       for (size_t n_pfp = 0; n_pfp < pfp_v.size(); n_pfp++) {
         auto pfp = pfp_v[n_pfp];
-        unsigned pfpPDGC = std::abs(pfp->PdgCode());
-        if ((pfpPDGC == 12) || (pfpPDGC == 14) || (pfpPDGC == 16))
-          nu_pfp = true;
+        const auto meta  = pfp_to_metadata.at(pfp.key());
+        const auto props = meta->GetPropertiesMap();
+        if (props.count("IsClearCosmic")){
+          found_clear_cosmic = true;
+          break;
+        }
       }
-      if (nu_pfp == false)
-        break;
+      if (found_clear_cosmic) continue;
     }
 
     for (size_t n_pfp = 0; n_pfp < pfp_v.size(); n_pfp++) {

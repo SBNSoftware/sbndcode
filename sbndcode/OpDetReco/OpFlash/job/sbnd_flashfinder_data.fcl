@@ -1,0 +1,36 @@
+#include "sbnd_flashalgo.fcl"
+#include "sbnd_flashcalib.fcl"
+#include "sbnd_flashgeoalgo.fcl"
+#include "sbnd_flasht0algo.fcl"
+#include "sbnd_driftestimatoralgo.fcl"
+
+BEGIN_PROLOG
+
+SBNDSimpleFlash:
+{
+  module_type     : "SBNDFlashFinder"
+  FlashFinderAlgo : "SimpleFlashAlgo"
+  AlgoConfig      : @local::SimpleFlashStandard
+  OpHitProducers  : ["ophitpmt","ophitarapuca"]
+  OpFlashProducer : "opflash"
+  PECalib         : @local::NoCalib
+  OpHitInputTime  : "PeakTime"
+  FlashGeoConfig  : @local::FlashGeoThreshold
+  UseT0Tool       : false
+  FlashT0Config   : @local::FlashT0SelectedChannels
+  ReadoutDelay    : 0. //in us
+  CorrectLightPropagation : false
+  DriftEstimatorConfig    : @local::DriftEstimatorPMTRatio
+}
+
+SBNDSimpleFlashTPC0_data: @local::SBNDSimpleFlash
+SBNDSimpleFlashTPC0_data.AlgoConfig: @local::SimpleFlashTPC0
+SBNDSimpleFlashTPC0_data.DriftEstimatorConfig.tool_type: "DriftEstimatorPMTRatio"
+SBNDSimpleFlashTPC0_data.DriftEstimatorConfig.DataCalibration: true
+
+SBNDSimpleFlashTPC1_data: @local::SBNDSimpleFlash
+SBNDSimpleFlashTPC1_data.AlgoConfig: @local::SimpleFlashTPC1
+SBNDSimpleFlashTPC1_data.DriftEstimatorConfig.tool_type: "DriftEstimatorPMTRatio"
+SBNDSimpleFlashTPC1_data.DriftEstimatorConfig.DataCalibration: true
+
+END_PROLOG

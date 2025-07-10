@@ -62,8 +62,8 @@ private:
   std::vector<double>   fErrorCoeff;
   bool                  fAllowFlag1;
   bool                  fApplyTs1Window;
-  int64_t               fTs1Min;
-  int64_t               fTs1Max;
+  double                fTs1Min;
+  double                fTs1Max;
   bool                  fCorrectForDifferentSecond;
   bool                  fReferenceTs0;
   int                   fTimingType;
@@ -86,8 +86,8 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
   , fApplyTs1Window(p.get<bool>("ApplyTs1Window"))
-  , fTs1Min(p.get<int64_t>("Ts1Min", 0))
-  , fTs1Max(p.get<int64_t>("Ts1Max", std::numeric_limits<int64_t>::max()))
+  , fTs1Min(p.get<double>("Ts1Min", 0))
+  , fTs1Max(p.get<double>("Ts1Max", std::numeric_limits<double>::max()))
   , fCorrectForDifferentSecond(p.get<bool>("CorrectForDifferentSecond"))
   , fReferenceTs0(p.get<bool>("ReferenceTs0"))
   , fTimingType(p.get<int>("TimingType", 0))
@@ -210,8 +210,8 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
   // Correct for FEB readout cable length
   // (time is FEB-by-FEB not channel-by-channel)
-  int64_t t0 = (int)data->Ts0() + (int)module.t0CableDelayCorrection;
-  int64_t t1 = (int)data->Ts1() + (int)module.t1CableDelayCorrection;
+  double t0 = (int)data->Ts0() + module.t0DelayCorrection;
+  double t1 = (int)data->Ts1() + module.t1DelayCorrection;
 
   if(fCorrectForDifferentSecond)
     {
@@ -222,17 +222,17 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
       if(unix_diff < -1 || unix_diff > 1)
         {
-          throw std::runtime_error("Unix timestamps differ by more than 1" + unix_diff);
+          throw std::runtime_error(Form("Unix timestamps differ by more than 1 (%li)", unix_diff));
         }
 
       if(unix_diff == 1)
         {
-          t0 -= static_cast<int>(1e9);
+          t0 -= 1e9;
           unixs += 1;
         }
       else if(unix_diff == -1)
         {
-          t0 += static_cast<int>(1e9);
+          t0 += 1e9;
           unixs -= 1;
         }
     }
@@ -253,6 +253,9 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       const CRTStripGeo strip = fCRTGeoAlg.GetStrip(channel);
       const CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
       const CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
+
+      if(sipm1.status == CRTChannelStatus::kDeadChannel || sipm2.status == CRTChannelStatus::kDeadChannel)
+        continue;
 
       // Subtract channel pedestals
       const uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i] - sipm1.pedestal   : 0;

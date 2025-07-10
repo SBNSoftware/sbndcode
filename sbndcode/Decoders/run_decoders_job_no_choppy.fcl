@@ -1,0 +1,7 @@
+#include "run_decoders_job.fcl"
+
+physics.end_paths: [ stream1 ]
+
+# Stops the output of the choppy decoded file, only outputs the filtered decoded file 
+outputs.out2: @erase
+physics.stream2: @erase

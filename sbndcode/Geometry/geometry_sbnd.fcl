@@ -53,8 +53,8 @@
 
 BEGIN_PROLOG
 
-sbnd_geometry_file: "sbnd_v02_03.gdml"
-sbnd_geometry_file_nowires: "sbnd_v02_03_nowires.gdml"
+sbnd_geometry_file: "sbnd_v02_04.gdml"
+sbnd_geometry_file_nowires: "sbnd_v02_04_nowires.gdml"
 
 
 #
@@ -99,7 +99,7 @@ sbnd_auxdetgeo:
   ThrowIfAbsent: false
   SortingParameters: {}                   # empty parameter set for default
   ReadoutInitializer: {
-    tool_type: CRTAuxDetInitializer
+    tool_type: CRTAuxDetInitializerSBND
 }
 }
 

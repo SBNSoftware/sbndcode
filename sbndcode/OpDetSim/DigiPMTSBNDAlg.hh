@@ -62,9 +62,12 @@ namespace opdet {
       double PMTBaselineRMS; //Pedestal RMS in ADC counts
       double PMTDarkNoiseRate; //in Hz
       double PMTADCDynamicRange; //ADC dynbamic range
-      double PMTCoatedVUVEff; //PMT (coated) efficiency for direct (VUV) light
-      double PMTCoatedVISEff; //PMT (coated) efficiency for reflected (VIS) light
-      double PMTUncoatedEff; //PMT (uncoated) efficiency
+      double PMTCoatedVUVEff_tpc0; //PMT (coated) efficiency for direct (VUV) light (TPC0)
+      double PMTCoatedVISEff_tpc0; //PMT (coated) efficiency for reflected (VIS) light (TPC0)
+      double PMTUncoatedEff_tpc0; //PMT (uncoated) efficiency (TPC0)
+      double PMTCoatedVUVEff_tpc1; //PMT (coated) efficiency for direct (VUV) light (TPC1)
+      double PMTCoatedVISEff_tpc1; //PMT (coated) efficiency for reflected (VIS) light (TPC1)
+      double PMTUncoatedEff_tpc1; //PMT (uncoated) efficiency (TPC1)
       std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
       bool PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
@@ -127,9 +130,12 @@ namespace opdet {
     // Declare member data here.
     double fSampling;       //wave sampling frequency (GHz)
     double fSamplingPeriod; //wave sampling period (ns)
-    double fPMTCoatedVUVEff;
-    double fPMTCoatedVISEff;
-    double fPMTUncoatedEff;
+    double fPMTCoatedVUVEff_tpc0;
+    double fPMTCoatedVISEff_tpc0;
+    double fPMTUncoatedEff_tpc0;
+    double fPMTCoatedVUVEff_tpc1;
+    double fPMTCoatedVISEff_tpc1;
+    double fPMTUncoatedEff_tpc1;
     bool fPositivePolarity;
     int fADCSaturation;
 
@@ -263,19 +269,34 @@ namespace opdet {
         Comment("Saturation in number of ADCs")
       };
 
-      fhicl::Atom<double> pmtcoatedVUVEff {
-        Name("PMTCoatedVUVEff"),
-        Comment("PMT (coated) detection efficiency for direct (VUV) light")
+      fhicl::Atom<double> pmtcoatedVUVEff_tpc0 {
+        Name("PMTCoatedVUVEff_tpc0"),
+        Comment("PMT (coated) detection efficiency for direct (VUV) light (TPC0)")
       };
 
-      fhicl::Atom<double> pmtcoatedVISEff {
-        Name("PMTCoatedVISEff"),
-        Comment("PMT (coated) detection efficiency for reflected (VIS) light")
+      fhicl::Atom<double> pmtcoatedVISEff_tpc0 {
+        Name("PMTCoatedVISEff_tpc0"),
+        Comment("PMT (coated) detection efficiency for reflected (VIS) light (TPC0)")
       };
 
-      fhicl::Atom<double> pmtuncoatedEff {
-        Name("PMTUncoatedEff"),
-        Comment("PMT (uncoated) detection efficiency")
+      fhicl::Atom<double> pmtuncoatedEff_tpc0 {
+        Name("PMTUncoatedEff_tpc0"),
+        Comment("PMT (uncoated) detection efficiency (TPC0)")
+      };
+
+      fhicl::Atom<double> pmtcoatedVUVEff_tpc1 {
+        Name("PMTCoatedVUVEff_tpc1"),
+        Comment("PMT (coated) detection efficiency for direct (VUV) light (TPC1)")
+      };
+
+      fhicl::Atom<double> pmtcoatedVISEff_tpc1 {
+        Name("PMTCoatedVISEff_tpc1"),
+        Comment("PMT (coated) detection efficiency for reflected (VIS) light (TPC1)")
+      };
+
+      fhicl::Atom<double> pmtuncoatedEff_tpc1 {
+        Name("PMTUncoatedEff_tpc1"),
+        Comment("PMT (uncoated) detection efficiency (TPC1)")
       };
 
       fhicl::Atom<bool> PMTsinglePEmodel {

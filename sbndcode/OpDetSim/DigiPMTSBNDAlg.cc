@@ -10,9 +10,12 @@ namespace opdet {
   DigiPMTSBNDAlg::DigiPMTSBNDAlg(ConfigurationParameters_t const& config)
     : fParams(config)
     , fSampling(fParams.frequency)
-    , fPMTCoatedVUVEff(fParams.PMTCoatedVUVEff / fParams.larProp->ScintPreScale())
-    , fPMTCoatedVISEff(fParams.PMTCoatedVISEff / fParams.larProp->ScintPreScale())
-    , fPMTUncoatedEff(fParams.PMTUncoatedEff/ fParams.larProp->ScintPreScale())
+    , fPMTCoatedVUVEff_tpc0(fParams.PMTCoatedVUVEff_tpc0 / fParams.larProp->ScintPreScale())
+    , fPMTCoatedVISEff_tpc0(fParams.PMTCoatedVISEff_tpc0 / fParams.larProp->ScintPreScale())
+    , fPMTUncoatedEff_tpc0(fParams.PMTUncoatedEff_tpc0/ fParams.larProp->ScintPreScale())
+    , fPMTCoatedVUVEff_tpc1(fParams.PMTCoatedVUVEff_tpc1 / fParams.larProp->ScintPreScale())
+    , fPMTCoatedVISEff_tpc1(fParams.PMTCoatedVISEff_tpc1 / fParams.larProp->ScintPreScale())
+    , fPMTUncoatedEff_tpc1(fParams.PMTUncoatedEff_tpc1/ fParams.larProp->ScintPreScale())
       //  , fSinglePEmodel(fParams.SinglePEmodel)
     , fEngine(fParams.engine)
     , fFlatGen(*fEngine)
@@ -21,15 +24,20 @@ namespace opdet {
     , fExponentialGen(*fEngine)
   {
 
-    mf::LogInfo("DigiPMTSBNDAlg") << "PMT corrected efficiencies = "
-                                  << fPMTCoatedVUVEff << " " << fPMTCoatedVISEff << " " << fPMTUncoatedEff <<"\n";
+    mf::LogInfo("DigiPMTSBNDAlg") << "PMT corrected efficiencies TPC0 = "
+                                  << fPMTCoatedVUVEff_tpc0 << " " << fPMTCoatedVISEff_tpc0 << " " << fPMTUncoatedEff_tpc0
+                                  << "PMT corrected efficiencies TPC1 = "
+                                  << fPMTCoatedVUVEff_tpc1 << " " << fPMTCoatedVISEff_tpc1 << " " << fPMTUncoatedEff_tpc1 <<"\n";
 
-    if(fPMTCoatedVUVEff > 1.0001 || fPMTCoatedVISEff > 1.0001 || fPMTUncoatedEff > 1.0001)
+    if(fPMTCoatedVUVEff_tpc0 > 1.0001 || fPMTCoatedVISEff_tpc0 > 1.0001 || fPMTUncoatedEff_tpc0 > 1.0001 || fPMTCoatedVUVEff_tpc1 > 1.0001 || fPMTCoatedVISEff_tpc1 > 1.0001 || fPMTUncoatedEff_tpc1 > 1.0001)
       mf::LogWarning("DigiPMTSBNDAlg")
         << "Detection efficiencies set in fhicl file seem to be too large!\n"
-        << "PMTCoatedVUVEff: " << fParams.PMTCoatedVUVEff << "\n"
-        << "PMTCoatedVISEff: " << fParams.PMTCoatedVISEff << "\n"
-        << "PMTUncoatedEff: " << fParams.PMTUncoatedEff << "\n"
+        << "PMTCoatedVUVEff TPC0: " << fParams.PMTCoatedVUVEff_tpc0 << "\n"
+        << "PMTCoatedVISEff TPC0: " << fParams.PMTCoatedVISEff_tpc0 << "\n"
+        << "PMTUncoatedEff TPC0: " << fParams.PMTUncoatedEff_tpc0 << "\n"
+        << "PMTCoatedVUVEff TPC1: " << fParams.PMTCoatedVUVEff_tpc1 << "\n"
+        << "PMTCoatedVISEff TPC1: " << fParams.PMTCoatedVISEff_tpc1 << "\n"
+        << "PMTUncoatedEff TPC1: " << fParams.PMTUncoatedEff_tpc1 << "\n"
         << "Final efficiency must be equal or smaller than the scintillation "
         << "pre scale applied at simulation time.\n"
         << "Please check this number (ScintPreScale): "
@@ -164,14 +172,14 @@ namespace opdet {
     double ttsTime = 0;
     double tphoton;
     double ttpb=0;
-
+    double _PMTUncoatedEff;
     // we want to keep the 1 ns SimPhotonLite resolution
     // digitizer sampling period is 2 ns
     // create a PE accumulator vector with size x2 the waveform size
     std::vector<unsigned int> nPE_v( (size_t) fSamplingPeriod*wave.size(), 0);
-
+    _PMTUncoatedEff = (ch % 2 == 0) ? fPMTUncoatedEff_tpc0 : fPMTUncoatedEff_tpc1;
     for(size_t i = 0; i < simphotons.size(); i++) { //simphotons is here reflected light. To be added for all PMTs
-      if(fFlatGen.fire(1.0) < fPMTUncoatedEff) {
+      if(fFlatGen.fire(1.0) < _PMTUncoatedEff) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS);
         ttpb = fTimeTPB->fire(); //for including TPB emission time
 
@@ -211,6 +219,8 @@ namespace opdet {
     double ttsTime = 0;
     double tphoton;
     double ttpb=0;
+    double _PMTCoatedVUVEff;
+    double _PMTCoatedVISEff;
     sim::SimPhotons auxphotons;
 
     // we want to keep the 1 ns SimPhotonLite resolution
@@ -219,10 +229,11 @@ namespace opdet {
     std::vector<unsigned int> nPE_v( (size_t) fSamplingPeriod*wave.size(), 0);
 
     //direct light
+    _PMTCoatedVUVEff = (ch % 2 == 0) ? fPMTCoatedVUVEff_tpc0 : fPMTCoatedVUVEff_tpc1;
     if(auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) )
     {auxphotons = it->second;}
     for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is direct light
-      if(fFlatGen.fire(1.0) < fPMTCoatedVUVEff) {
+      if(fFlatGen.fire(1.0) < _PMTCoatedVUVEff) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
         ttpb = fTimeTPB->fire(); //for including TPB emission time
 
@@ -235,10 +246,11 @@ namespace opdet {
     }
 
     // reflected light
+    _PMTCoatedVISEff = (ch % 2 == 0) ? fPMTCoatedVISEff_tpc0 : fPMTCoatedVISEff_tpc1;
     if(auto it{ ReflectedPhotonsMap.find(ch) }; it != std::end(ReflectedPhotonsMap) )
     {auxphotons = it->second;}
     for(size_t j = 0; j < auxphotons.size(); j++) { //auxphotons is now reflected light
-      if(fFlatGen.fire(1.0) < fPMTCoatedVISEff) {
+      if(fFlatGen.fire(1.0) < _PMTCoatedVISEff) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
         ttpb = fTimeTPB->fire(); //for including TPB emission time
 
@@ -280,18 +292,18 @@ namespace opdet {
     double ttsTime = 0;
     double tphoton;
     double ttpb=0;
-
+    double _PMTUncoatedEff;
     // we want to keep the 1 ns SimPhotonLite resolution
     // digitizer sampling period is 2 ns
     // create a PE accumulator vector with size x2 the waveform size
     std::vector<unsigned int> nPE_v( (size_t) fSamplingPeriod*wave.size(), 0);
-
     // here litesimphotons corresponds only to reflected light
+    _PMTUncoatedEff = (ch % 2 == 0) ? fPMTUncoatedEff_tpc0 : fPMTUncoatedEff_tpc1;
     std::map<int, int> const& photonMap = litesimphotons.DetectedPhotons;
     for (auto const& reflectedPhotons : photonMap) {
       // TODO: check that this new approach of not using the last
       // (1-accepted_photons) doesn't introduce some bias. ~icaza
-      mean_photons = reflectedPhotons.second*fPMTUncoatedEff;
+      mean_photons = reflectedPhotons.second*_PMTUncoatedEff;
       accepted_photons = fPoissonQGen.fire(mean_photons);
       for(size_t i = 0; i < accepted_photons; i++) {
         if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
@@ -335,18 +347,19 @@ namespace opdet {
     double ttsTime = 0;
     double tphoton;
     double ttpb;
-
+    double _PMTCoatedVUVEff;
+    double _PMTCoatedVISEff;
     // we want to keep the 1 ns SimPhotonLite resolution
     // digitizer sampling period is 2 ns
     // create a PE accumulator vector with size x2 the waveform size
     std::vector<unsigned int> nPE_v( (size_t) fSamplingPeriod*wave.size(), 0);
-
     // direct light
+    _PMTCoatedVUVEff = (ch % 2 == 0) ? fPMTCoatedVUVEff_tpc0 : fPMTCoatedVUVEff_tpc1;
     if ( auto it{ DirectPhotonsMap.find(ch) }; it != std::end(DirectPhotonsMap) ){
       for (auto& directPhotons : (it->second).DetectedPhotons) {
         // TODO: check that this new approach of not using the last
         // (1-accepted_photons) doesn't introduce some bias. ~icaza
-        mean_photons = directPhotons.second*fPMTCoatedVUVEff;
+        mean_photons = directPhotons.second*_PMTCoatedVUVEff;
         accepted_photons = fPoissonQGen.fire(mean_photons);
         for(size_t i = 0; i < accepted_photons; i++) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
@@ -362,11 +375,12 @@ namespace opdet {
     }
 
     // reflected light
+    _PMTCoatedVISEff = (ch % 2 == 0) ? fPMTCoatedVISEff_tpc0 : fPMTCoatedVISEff_tpc1;
     if ( auto it{ ReflectedPhotonsMap.find(ch) }; it != std::end(ReflectedPhotonsMap) ){
       for (auto& reflectedPhotons : (it->second).DetectedPhotons) {
         // TODO: check that this new approach of not using the last
         // (1-accepted_photons) doesn't introduce some bias. ~icaza
-        mean_photons = reflectedPhotons.second*fPMTCoatedVISEff;
+        mean_photons = reflectedPhotons.second*_PMTCoatedVISEff;
         accepted_photons = fPoissonQGen.fire(mean_photons);
         for(size_t i = 0; i < accepted_photons; i++) {
           if(fParams.TTS > 0.0) ttsTime = Transittimespread(fParams.TTS); //implementing transit time spread
@@ -575,9 +589,12 @@ namespace opdet {
     fBaseConfig.PMTChargeToADC           = config.pmtchargeToADC();
     fBaseConfig.PMTBaseline              = config.pmtbaseline();
     fBaseConfig.PMTADCDynamicRange       = config.pmtADCDynamicRange();
-    fBaseConfig.PMTCoatedVUVEff          = config.pmtcoatedVUVEff();
-    fBaseConfig.PMTCoatedVISEff          = config.pmtcoatedVISEff();
-    fBaseConfig.PMTUncoatedEff           = config.pmtuncoatedEff();
+    fBaseConfig.PMTCoatedVUVEff_tpc0     = config.pmtcoatedVUVEff_tpc0();
+    fBaseConfig.PMTCoatedVISEff_tpc0     = config.pmtcoatedVISEff_tpc0();
+    fBaseConfig.PMTUncoatedEff_tpc0      = config.pmtuncoatedEff_tpc0();
+    fBaseConfig.PMTCoatedVUVEff_tpc1     = config.pmtcoatedVUVEff_tpc1();
+    fBaseConfig.PMTCoatedVISEff_tpc1     = config.pmtcoatedVISEff_tpc1();
+    fBaseConfig.PMTUncoatedEff_tpc1      = config.pmtuncoatedEff_tpc1();
     fBaseConfig.PMTSinglePEmodel         = config.PMTsinglePEmodel();
     fBaseConfig.PMTRiseTime              = config.pmtriseTime();
     fBaseConfig.PMTFallTime              = config.pmtfallTime();

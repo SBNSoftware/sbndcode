@@ -1,0 +1,6 @@
+#include "run_crtana_data.fcl"
+
+physics.analyzers.crtana.NoTPC:                            false
+physics.analyzers.crtana.TPCTrackModuleLabel:              "pandoraTrack"
+physics.analyzers.crtana.CRTSpacePointMatchingModuleLabel: "crtspacepointmatching"
+physics.analyzers.crtana.CRTTrackMatchingModuleLabel:      "crttrackmatching"
