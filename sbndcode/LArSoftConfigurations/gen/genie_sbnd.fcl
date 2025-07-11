@@ -228,6 +228,7 @@ sbnd_flux_bnb_nu_Lv1_test1: {
   FluxFiles: [ "gsimple_april07_baseline_1930_redecay_wkaonwgh.root" ]
 }
 
+<<<<<<< HEAD
 
 #
 # Booster Neutrino Beam, FHC mode, g4bnb 1.1.0, A
@@ -261,6 +262,9 @@ sbnd_flux_g4bnb_1_1_1_fhc_dirt_test1: {
 
 #
 # Booster Neutrino Beam, RHC mode, g4bnb 1.0.0, B
+=======
+#
+# Booster Neutrino Beam, anti-neutrino mode, g4bnb 1.0.0
 #
 sbnd_flux_g4bnb_1_0_0_rhc: {
   FluxType:         "dk2nu"
@@ -296,7 +300,6 @@ sbnd_flux_g4bnb_1_1_1_beamdump: {
 
 
 
-
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Booster Neutrino Beam, neutrino mode, "default" configuration
@@ -319,6 +322,12 @@ sbnd_flux_bnb_nu_rhc: @local::sbnd_flux_g4bnb_1_0_0_rhc
 # Booster Neutrino Beam, beam-dump mode, "default" configuration
 #
 sbnd_flux_bnb_nu_beamdump: @local::sbnd_flux_g4bnb_1_1_1_beamdump
+
+
+#
+# Booster Neutrino Beam, beam-dump mode, "default" configuration
+#
+sbnd_flux_bnb_nu_beamdump: @local::sbnd_flux_g4bnb_1_0_0_beamdump
 
 
 #
