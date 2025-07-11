@@ -228,6 +228,31 @@ sbnd_flux_bnb_nu_Lv1_test1: {
   FluxFiles: [ "gsimple_april07_baseline_1930_redecay_wkaonwgh.root" ]
 }
 
+#
+# Booster Neutrino Beam, anti-neutrino mode, g4bnb 1.0.0
+#
+sbnd_flux_g4bnb_1_0_0_rhc: {
+  FluxType:         "dk2nu"
+  DetectorLocation: "SBND"
+  FluxCopyMethod:   "DIRECT"
+  FluxSearchPaths:  "/pnfs/sbnd/persistent/users/jpaton/G4BNB_100kPOT/"
+  FluxFiles: [ "NuBeam_production_BooNE_50m_I174000A_*.dk2nu.root" ]
+}
+
+
+#
+# Booster Neutrino Beam, beam-dump mode, G4BNB v1.0.0, A
+#
+sbnd_flux_g4bnb_1_0_0_beamdump: {
+  FluxType:         "dk2nu"
+  DetectorLocation: "SBND"
+  FluxCopyMethod:   "DIRECT"
+  FluxSearchPaths: "/cvmfs/sbnd.osgstorage.org/pnfs/fnal.gov/usr/sbnd/persistent/stash/fluxFiles/bnb/G4BNB/v1.0.0/beamdump/a/"
+  FluxFiles: [ "NuBeam_production_offTarg_BooNE_50m_offtarg_wires_al2O3_srbbs_I174000A_*.dk2nu.root" ]
+}
+
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
 # Booster Neutrino Beam, neutrino mode, "default" configuration
@@ -240,6 +265,12 @@ sbnd_flux_bnb_nu_test1: @local::sbnd_flux_bnb_nu_Kv1_test1
 #
 sbnd_flux_bnb_dirt: @local::sbnd_flux_bnb_nu_Lv1
 sbnd_flux_bnb_dirt_test1: @local::sbnd_flux_bnb_nu_Lv1_test1
+
+#
+# Booster Neutrino Beam, beam-dump mode, "default" configuration
+#
+sbnd_flux_bnb_nu_beamdump: @local::sbnd_flux_g4bnb_1_0_0_beamdump
+
 
 #
 # NuMI Beam (placeholder)
