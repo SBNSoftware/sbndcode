@@ -1,7 +1,7 @@
 #include "nuEAnalysisConfigDLSBND.fcl"
 #include "simulationservices_sbnd.fcl"
 
-process_name: NuE
+process_name: NuEBackground
 
 source:
 {
@@ -21,7 +21,7 @@ physics:
 { 
     analyzers:
     {
-        ana:@local::nuE
+        ana:@local::nuEBackground
     }
     path0:          [ ana ]
     end_paths:      [ path0 ]
