@@ -158,7 +158,7 @@ histGroup createHistGroup(const std::string& baseName, const std::string& title,
 }
 
 
-void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, TPaveText* pt = nullptr, int* weighted = nullptr, int* drawLine = nullptr, int* linePos = nullptr, int* log = nullptr){
+void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, TPaveText* pt = nullptr, int* weighted = nullptr, int* drawLine = nullptr, int* linePos = nullptr, int* log = nullptr){
     canvas->cd();
     canvas->SetTickx();
     canvas->SetTicky();
@@ -199,8 +199,8 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
     double maxYValue = std::max({currentSignal->GetMaximum(), ubooneSignal->GetMaximum(), currentBNB->GetMaximum(), ubooneBNB->GetMaximum(), currentCosmics->GetMaximum(), ubooneCosmics->GetMaximum()});
 
     if((ymin == 999) && (ymax == 999)){
-        double yminVal = (log && *log) ? 0.001 : 0;
-        double ymaxVal  = (log && *log) ? maxYValue*10 : maxYValue*1.1;
+        double yminVal = (log && *log) ? 0.1 : 0;
+        double ymaxVal  = (log && *log) ? maxYValue*10000 : maxYValue*1.1;
         currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
     }
 
@@ -217,8 +217,35 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
     currentSignal->GetXaxis()->SetTickSize(0.02);
     currentSignal->GetYaxis()->SetTickSize(0.02);
 
-    //auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
-    auto legend = new TLegend(0.48, 0.39, 0.87, 0.167);
+    double Lxmin = 0;
+    double Lymax = 0;
+    double Lxmax = 0;
+    double Lymin = 0;
+
+    if(legendLocation == "topRight"){
+        Lxmin = 0.48;
+        Lymax = 0.863;
+        Lxmax = 0.87;
+        Lymin = 0.640;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.863;
+        Lxmax = 0.52;
+        Lymin = 0.640;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.48;
+        Lymax = 0.36;
+        Lxmax = 0.87;
+        Lymin = 0.137;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.36;
+        Lxmax = 0.52;
+        Lymin = 0.137;
+    }
+
+    auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
+    //auto legend = new TLegend(0.48, 0.39, 0.87, 0.167);
     legend->AddEntry(ubooneSignal, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
     legend->AddEntry(currentSignal, "Signal, Pandora BDT SBND (without Refinement)", "f");
     legend->AddEntry(ubooneBNB, "BNB, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
@@ -258,7 +285,7 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
     canvas->SaveAs(filename);
 }
 
-void weighted(TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double signalWeight, double BNBWeight, double cosmicsWeight, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, int* drawLine = nullptr, int* linePos = nullptr){
+void weighted(TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double signalWeight, double BNBWeight, double cosmicsWeight, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
     TCanvas *weightedCanvas = new TCanvas("weighted_canvas", "Graph Draw Options", 200, 10, 600, 400); 
     TH1F* currentSignalWeighted = (TH1F*) currentSignal->Clone("weighted hist");
     currentSignalWeighted->Scale(signalWeight);
@@ -287,10 +314,10 @@ void weighted(TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* u
     int funcValue = 1;
     int log = 1;
 
-    styleDraw(weightedCanvas, currentSignalWeighted, ubooneSignalWeighted, currentBNBWeighted, ubooneBNBWeighted, currentCosmicsWeighted, ubooneCosmicsWeighted, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, nullptr, &funcValue, drawLine, linePos, &log);
+    styleDraw(weightedCanvas, currentSignalWeighted, ubooneSignalWeighted, currentBNBWeighted, ubooneBNBWeighted, currentCosmicsWeighted, ubooneCosmicsWeighted, ymin, ymax, xmin, xmax, filename, legendLocation, nullptr, &funcValue, drawLine, linePos, &log);
 }
 
-void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double sizeCurrentSignal, double sizeUbooneSignal, double sizeCurrentBNB, double sizeUbooneBNB, double sizeCurrentCosmics, double sizeUbooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = ""){
+void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double sizeCurrentSignal, double sizeUbooneSignal, double sizeCurrentBNB, double sizeUbooneBNB, double sizeCurrentCosmics, double sizeUbooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = ""){
     TCanvas *efficiencyCanvas = new TCanvas("efficiency_canvas", "Graph Draw Options", 200, 10, 600, 400); 
     TH1F* currentSignalEff = (TH1F*) currentSignal->Clone("eff hist");
     currentSignalEff->Reset();
@@ -353,6 +380,33 @@ void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* 
         ubooneCosmicsEff->SetBinContent(i, ubooneCosmicsEffValue);
     }
 
+    double Lxmin = 0;
+    double Lymax = 0;
+    double Lxmax = 0;
+    double Lymin = 0;
+
+    if(legendLocation == "topRight"){
+        Lxmin = 0.48;
+        Lymax = 0.97;
+        Lxmax = 0.87;
+        Lymin = 0.747;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.97;
+        Lxmax = 0.52;
+        Lymin = 0.747;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.48;
+        Lymax = 0.39;
+        Lxmax = 0.87;
+        Lymin = 0.167;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.39;
+        Lxmax = 0.52;
+        Lymin = 0.167;
+    }
+
     TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.15, Lxmax, Lymin - 0.02, "NDC");
     pt->AddText(Form("Number of Signal DL Uboone Entries: %d", (int)sizeUbooneSignal));
     pt->AddText(Form("Number of Signal Current Entries: %d", (int)sizeCurrentSignal));
@@ -366,7 +420,7 @@ void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* 
 
     int funcValue = 1;
 
-    styleDraw(efficiencyCanvas, currentSignalEff, ubooneSignalEff, currentBNBEff, ubooneBNBEff, currentCosmicsEff, ubooneCosmicsEff, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, pt = nullptr, &funcValue, drawLine, linePos);
+    styleDraw(efficiencyCanvas, currentSignalEff, ubooneSignalEff, currentBNBEff, ubooneBNBEff, currentCosmicsEff, ubooneCosmicsEff, ymin, ymax, xmin, xmax, filename, legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
 }
 
 recoSlice chooseSlice(std::vector<recoSlice> recoSlices, double method){
@@ -769,13 +823,14 @@ void nuEBackgroundSignalWeights_macro(){
 
     for(Long64_t i = 0; i < numEntries; ++i){
         tree->GetEntry(i);
-
+      
+        //if(signal != 1) continue; 
         printf("___________________________________________________________________\n");
         std::vector<recoParticle> recoParticlesInEvent;
         std::vector<recoNeutrino> recoNeutrinosInEvent;
         std::vector<recoSlice> recoSlicesInEvent;
         std::vector<trueParticle> trueParticlesInEvent;
-
+        
         recoParticle chosenRecoParticleCRUMBS;
         //recoParticle chosenRecoParticleCompleteness;
         recoNeutrino chosenRecoNeutrinoCRUMBS;
@@ -1179,18 +1234,18 @@ void nuEBackgroundSignalWeights_macro(){
     printf("Number of events with a reco neutrino:\nUboone:%i out of %i\nCurrent: %i out of %i\n", numEventsRecoNeutrino.ubooneSignal, numEventsTotal.ubooneSignal, numEventsRecoNeutrino.currentSignal, numEventsTotal.currentSignal);
     printf("Number of events where the number of slices with a CRUMBS score != number of reco neutrinos:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSliceNotEqualNeutrino.ubooneSignal, numEventsRecoNeutrino.ubooneSignal, numEventsSliceNotEqualNeutrino.currentSignal, numEventsRecoNeutrino.currentSignal);
 
-    styleDraw(numSlices.canvas, numSlices.currentSignal, numSlices.ubooneSignal, numSlices.currentBNB, numSlices.ubooneBNB, numSlices.currentCosmics, numSlices.ubooneCosmics, 0, 900, 999, 999, (base_path + "numSlices_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    weighted(numSlices.currentSignal, numSlices.ubooneSignal, numSlices.currentBNB, numSlices.ubooneBNB, numSlices.currentCosmics, numSlices.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numSlices_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numSlices.canvas, numSlices.currentSignal, numSlices.ubooneSignal, numSlices.currentBNB, numSlices.ubooneBNB, numSlices.currentCosmics, numSlices.ubooneCosmics, 999, 999, 999, 999, (base_path + "numSlices_dist.pdf").c_str(), "topRight");
+    weighted(numSlices.currentSignal, numSlices.ubooneSignal, numSlices.currentBNB, numSlices.ubooneBNB, numSlices.currentCosmics, numSlices.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numSlices_weighted.pdf").c_str(), "topRight");
  
-    styleDraw(numSlicesCRUMBS.canvas, numSlicesCRUMBS.currentSignal, numSlicesCRUMBS.ubooneSignal, numSlicesCRUMBS.currentBNB, numSlicesCRUMBS.ubooneBNB, numSlicesCRUMBS.currentCosmics, numSlicesCRUMBS.ubooneCosmics, 0, 900, 999, 999, (base_path + "numCRUMBSSlices_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    weighted(numSlicesCRUMBS.currentSignal, numSlicesCRUMBS.ubooneSignal, numSlicesCRUMBS.currentBNB, numSlicesCRUMBS.ubooneBNB, numSlicesCRUMBS.currentCosmics, numSlicesCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numCRUMBSSlices_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numSlicesCRUMBS.canvas, numSlicesCRUMBS.currentSignal, numSlicesCRUMBS.ubooneSignal, numSlicesCRUMBS.currentBNB, numSlicesCRUMBS.ubooneBNB, numSlicesCRUMBS.currentCosmics, numSlicesCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "numCRUMBSSlices_dist.pdf").c_str(), "topRight");
+    weighted(numSlicesCRUMBS.currentSignal, numSlicesCRUMBS.ubooneSignal, numSlicesCRUMBS.currentBNB, numSlicesCRUMBS.ubooneBNB, numSlicesCRUMBS.currentCosmics, numSlicesCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numCRUMBSSlices_weighted.pdf").c_str(), "topRight");
     
-    styleDraw(numRecoNeutrinos.canvas, numRecoNeutrinos.currentSignal, numRecoNeutrinos.ubooneSignal, numRecoNeutrinos.currentBNB, numRecoNeutrinos.ubooneBNB, numRecoNeutrinos.currentCosmics, numRecoNeutrinos.ubooneCosmics, 0, 900, 999, 999, (base_path + "numRecoNeutrinos_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    weighted(numRecoNeutrinos.currentSignal, numRecoNeutrinos.ubooneSignal, numRecoNeutrinos.currentBNB, numRecoNeutrinos.ubooneBNB, numRecoNeutrinos.currentCosmics, numRecoNeutrinos.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numRecoNeutrinos.canvas, numRecoNeutrinos.currentSignal, numRecoNeutrinos.ubooneSignal, numRecoNeutrinos.currentBNB, numRecoNeutrinos.ubooneBNB, numRecoNeutrinos.currentCosmics, numRecoNeutrinos.ubooneCosmics, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_dist.pdf").c_str(), "topRight");
+    weighted(numRecoNeutrinos.currentSignal, numRecoNeutrinos.ubooneSignal, numRecoNeutrinos.currentBNB, numRecoNeutrinos.ubooneBNB, numRecoNeutrinos.currentCosmics, numRecoNeutrinos.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_weighted.pdf").c_str(), "topRight");
 
     // CRUMBS Slice Score Plots
-    styleDraw(sliceScoreCRUMBS.canvas, sliceScoreCRUMBS.currentSignal, sliceScoreCRUMBS.ubooneSignal, sliceScoreCRUMBS.currentBNB, sliceScoreCRUMBS.ubooneBNB, sliceScoreCRUMBS.currentCosmics, sliceScoreCRUMBS.ubooneCosmics, 0, 160, 999, 999, (base_path + "sliceScoreCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    weighted(sliceScoreCRUMBS.currentSignal, sliceScoreCRUMBS.ubooneSignal, sliceScoreCRUMBS.currentBNB, sliceScoreCRUMBS.ubooneBNB, sliceScoreCRUMBS.currentCosmics, sliceScoreCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_weighted.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(sliceScoreCRUMBS.canvas, sliceScoreCRUMBS.currentSignal, sliceScoreCRUMBS.ubooneSignal, sliceScoreCRUMBS.currentBNB, sliceScoreCRUMBS.ubooneBNB, sliceScoreCRUMBS.currentCosmics, sliceScoreCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_dist.pdf").c_str(), "topLeft");
+    weighted(sliceScoreCRUMBS.currentSignal, sliceScoreCRUMBS.ubooneSignal, sliceScoreCRUMBS.currentBNB, sliceScoreCRUMBS.ubooneBNB, sliceScoreCRUMBS.currentCosmics, sliceScoreCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_weighted.pdf").c_str(), "topLeft");
     
     // CRUMBS Slice Vertex Plots
     //styleDraw(deltaXCRUMBS.canvas, deltaXCRUMBS.currentSignal, deltaXCRUMBS.ubooneSignal, deltaXCRUMBS.currentBNB, deltaXCRUMBS.ubooneBNB, deltaXCRUMBS.currentCosmics, deltaXCRUMBS.ubooneCosmics, 0, 460, 999, 999, (base_path + "deltaXCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
@@ -1203,23 +1258,23 @@ void nuEBackgroundSignalWeights_macro(){
     //weighted(deltaRCRUMBS.currentSignal, deltaRCRUMBS.ubooneSignal, deltaRCRUMBS.currentBNB, deltaRCRUMBS.ubooneBNB, deltaRCRUMBS.currentCosmics, deltaRCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 90, 999, 999, (base_path + "deltaRCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
     // CRUMBS PFP Plots
-    styleDraw(numPFPsCRUMBS.canvas, numPFPsCRUMBS.currentSignal, numPFPsCRUMBS.ubooneSignal, numPFPsCRUMBS.currentBNB, numPFPsCRUMBS.ubooneBNB, numPFPsCRUMBS.currentCosmics, numPFPsCRUMBS.ubooneCosmics, 0, 820, 999, 999, (base_path + "numPFPsCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    weighted(numPFPsCRUMBS.currentSignal, numPFPsCRUMBS.ubooneSignal, numPFPsCRUMBS.currentBNB, numPFPsCRUMBS.ubooneBNB, numPFPsCRUMBS.currentCosmics, numPFPsCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numPFPsCRUMBS.canvas, numPFPsCRUMBS.currentSignal, numPFPsCRUMBS.ubooneSignal, numPFPsCRUMBS.currentBNB, numPFPsCRUMBS.ubooneBNB, numPFPsCRUMBS.currentCosmics, numPFPsCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_dist.pdf").c_str(), "topRight");
+    weighted(numPFPsCRUMBS.currentSignal, numPFPsCRUMBS.ubooneSignal, numPFPsCRUMBS.currentBNB, numPFPsCRUMBS.ubooneBNB, numPFPsCRUMBS.currentCosmics, numPFPsCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_weighted.pdf").c_str(), "topRight");
 
-    styleDraw(ratioChosenSummedEnergyCRUMBS.canvas, ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    weighted(ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_weighted.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(ratioChosenSummedEnergyCRUMBS.canvas, ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_dist.pdf").c_str(), "topLeft");
+    weighted(ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_weighted.pdf").c_str(), "topLeft");
 
-    styleDraw(slicePurityCRUMBS.canvas, slicePurityCRUMBS.currentSignal, slicePurityCRUMBS.ubooneSignal, slicePurityCRUMBS.currentBNB, slicePurityCRUMBS.ubooneBNB, slicePurityCRUMBS.currentCosmics, slicePurityCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    weighted(slicePurityCRUMBS.currentSignal, slicePurityCRUMBS.ubooneSignal, slicePurityCRUMBS.currentBNB, slicePurityCRUMBS.ubooneBNB, slicePurityCRUMBS.currentCosmics, slicePurityCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(slicePurityCRUMBS.canvas, slicePurityCRUMBS.currentSignal, slicePurityCRUMBS.ubooneSignal, slicePurityCRUMBS.currentBNB, slicePurityCRUMBS.ubooneBNB, slicePurityCRUMBS.currentCosmics, slicePurityCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_dist.pdf").c_str(), "topLeft");
+    weighted(slicePurityCRUMBS.currentSignal, slicePurityCRUMBS.ubooneSignal, slicePurityCRUMBS.currentBNB, slicePurityCRUMBS.ubooneBNB, slicePurityCRUMBS.currentCosmics, slicePurityCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_weighted.pdf").c_str(), "topLeft");
     
-    styleDraw(sliceCompletenessCRUMBS.canvas, sliceCompletenessCRUMBS.currentSignal, sliceCompletenessCRUMBS.ubooneSignal, sliceCompletenessCRUMBS.currentBNB, sliceCompletenessCRUMBS.ubooneBNB, sliceCompletenessCRUMBS.currentCosmics, sliceCompletenessCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    weighted(sliceCompletenessCRUMBS.currentSignal, sliceCompletenessCRUMBS.ubooneSignal, sliceCompletenessCRUMBS.currentBNB, sliceCompletenessCRUMBS.ubooneBNB, sliceCompletenessCRUMBS.currentCosmics, sliceCompletenessCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(sliceCompletenessCRUMBS.canvas, sliceCompletenessCRUMBS.currentSignal, sliceCompletenessCRUMBS.ubooneSignal, sliceCompletenessCRUMBS.currentBNB, sliceCompletenessCRUMBS.ubooneBNB, sliceCompletenessCRUMBS.currentCosmics, sliceCompletenessCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_dist.pdf").c_str(), "topLeft");
+    weighted(sliceCompletenessCRUMBS.currentSignal, sliceCompletenessCRUMBS.ubooneSignal, sliceCompletenessCRUMBS.currentBNB, sliceCompletenessCRUMBS.ubooneBNB, sliceCompletenessCRUMBS.currentCosmics, sliceCompletenessCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_weighted.pdf").c_str(), "topLeft");
 
-    styleDraw(highestPFPCompletenessCRUMBS.canvas, highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    weighted(highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(highestPFPCompletenessCRUMBS.canvas, highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_dist.pdf").c_str(), "topLeft");
+    weighted(highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_weighted.pdf").c_str(), "topLeft");
 
-    styleDraw(highestPFPPurityCRUMBS.canvas, highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    weighted(highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(highestPFPPurityCRUMBS.canvas, highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_dist.pdf").c_str(), "topLeft");
+    weighted(highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_weighted.pdf").c_str(), "topLeft");
     
     int drawLine = 1;
     int left = 0;
@@ -1228,13 +1283,13 @@ void nuEBackgroundSignalWeights_macro(){
     //styleDraw(angleDifferenceCRUMBS.canvas, angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, 0, 260, 999, 999, (base_path + "angleDifferenceCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
     //weighted(angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, 0, 25, 999, 999, (base_path + "angleDifferenceCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
-    styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    weighted(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, 1/signalWeight, 1/signalWeight, 1/BNBWeight, 1/BNBWeight, 1/cosmicsWeight, 1/cosmicsWeight, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
+    weighted(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
+    efficiency(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, 1/signalWeight, 1/signalWeight, 1/BNBWeight, 1/BNBWeight, 1/cosmicsWeight, 1/cosmicsWeight, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), "bottomRight", &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
 
-    styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, 0, 180, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    weighted(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, 1/signalWeight, 1/signalWeight, 1/BNBWeight, 1/BNBWeight, 1/cosmicsWeight, 1/cosmicsWeight, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
+    weighted(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
+    efficiency(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, 1/signalWeight, 1/signalWeight, 1/BNBWeight, 1/BNBWeight, 1/cosmicsWeight, 1/cosmicsWeight, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), "bottomRight", &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
 
     printf("\nInteractions in Signal Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsSignal.Unknown, interactionsSignal.QE, interactionsSignal.Res, interactionsSignal.DIS, interactionsSignal.Coh, interactionsSignal.CohElastic, interactionsSignal.ElectronScattering, interactionsSignal.IMDAnnihilation, interactionsSignal.InverseBetaDecay, interactionsSignal.GlashowResonance, interactionsSignal.AMNuGamma, interactionsSignal.MEC, interactionsSignal.Diffractive, interactionsSignal.EM, interactionsSignal.WeakMix);
     printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n", interactionsSignal.NuanceOffset, interactionsSignal.CCQE, interactionsSignal.NCQE, interactionsSignal.NuanceRes, interactionsSignal.CCDis, interactionsSignal.NCDis, interactionsSignal.NuEElastic);
