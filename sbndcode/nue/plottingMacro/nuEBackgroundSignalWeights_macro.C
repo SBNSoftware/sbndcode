@@ -317,7 +317,7 @@ void weighted(TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* u
     styleDraw(weightedCanvas, currentSignalWeighted, ubooneSignalWeighted, currentBNBWeighted, ubooneBNBWeighted, currentCosmicsWeighted, ubooneCosmicsWeighted, ymin, ymax, xmin, xmax, filename, legendLocation, nullptr, &funcValue, drawLine, linePos, &log);
 }
 
-void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double sizeCurrentSignal, double sizeUbooneSignal, double sizeCurrentBNB, double sizeUbooneBNB, double sizeCurrentCosmics, double sizeUbooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename_eff, const char* filename_rej, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = ""){
+void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double sizeCurrentSignal, double sizeUbooneSignal, double sizeCurrentBNB, double sizeUbooneBNB, double sizeCurrentCosmics, double sizeUbooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename_eff, const char* filename_rej, const char* filename_effrej, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = ""){
     TCanvas *efficiencyCanvas = new TCanvas("efficiency_canvas", "Graph Draw Options", 200, 10, 600, 400); 
     TH1F* currentSignalEff = (TH1F*) currentSignal->Clone("eff hist");
     currentSignalEff->Reset();
@@ -349,6 +349,39 @@ void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* 
     ubooneCosmicsEff->GetYaxis()->SetTitle("Efficiency");
     ubooneCosmicsEff->GetXaxis()->SetTitle(xlabel.c_str());
     
+    TCanvas *rejectionCanvas = new TCanvas("rejection_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TH1F* currentSignalRej = (TH1F*) currentSignalEff->Clone("rej hist");
+    currentSignalRej->Reset();
+    currentSignalRej->GetYaxis()->SetTitle("Rejection");
+    currentSignalRej->GetXaxis()->SetTitle(xlabel.c_str());
+
+    TH1F* ubooneSignalRej = (TH1F*) ubooneSignalEff->Clone("rej hist");
+    ubooneSignalRej->Reset();
+    ubooneSignalRej->GetYaxis()->SetTitle("Rejection");
+    ubooneSignalRej->GetXaxis()->SetTitle(xlabel.c_str());
+
+    TH1F* currentBNBRej = (TH1F*) currentBNBEff->Clone("rej hist");
+    currentBNBRej->Reset();
+    currentBNBRej->GetYaxis()->SetTitle("Rejection");
+    currentBNBRej->GetXaxis()->SetTitle(xlabel.c_str());
+
+    TH1F* ubooneBNBRej = (TH1F*) ubooneBNBEff->Clone("rej hist");
+    ubooneBNBRej->Reset();
+    ubooneBNBRej->GetYaxis()->SetTitle("Rejection");
+    ubooneBNBRej->GetXaxis()->SetTitle(xlabel.c_str());
+
+    TH1F* currentCosmicsRej = (TH1F*) currentCosmicsEff->Clone("rej hist");
+    currentCosmicsRej->Reset();
+    currentCosmicsRej->GetYaxis()->SetTitle("Rejection");
+    currentCosmicsRej->GetXaxis()->SetTitle(xlabel.c_str());
+
+    TH1F* ubooneCosmicsRej = (TH1F*) ubooneCosmicsEff->Clone("rej hist");
+    ubooneCosmicsRej->Reset();
+    ubooneCosmicsRej->GetYaxis()->SetTitle("Rejection");
+    ubooneCosmicsRej->GetXaxis()->SetTitle(xlabel.c_str());
+    
+    TCanvas *EffRejCanvas = new TCanvas("efficiency_rejection_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    
     int numBins = currentSignal->GetNbinsX();
     double currentSignalSum = 0.0;
     double ubooneSignalSum = 0.0;
@@ -378,6 +411,13 @@ void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* 
         ubooneBNBEff->SetBinContent(i, ubooneBNBEffValue);
         currentCosmicsEff->SetBinContent(i, currentCosmicsEffValue);
         ubooneCosmicsEff->SetBinContent(i, ubooneCosmicsEffValue);
+        
+        currentSignalRej->SetBinContent(i, 1-currentSignalEffValue);
+        ubooneSignalRej->SetBinContent(i, 1-ubooneSignalEffValue);
+        currentBNBRej->SetBinContent(i, 1-currentBNBEffValue);
+        ubooneBNBRej->SetBinContent(i, 1-ubooneBNBEffValue);
+        currentCosmicsRej->SetBinContent(i, 1-currentCosmicsEffValue);
+        ubooneCosmicsRej->SetBinContent(i, 1-ubooneCosmicsEffValue);
     }
 
     double Lxmin = 0;
@@ -421,6 +461,9 @@ void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* 
     int funcValue = 1;
 
     styleDraw(efficiencyCanvas, currentSignalEff, ubooneSignalEff, currentBNBEff, ubooneBNBEff, currentCosmicsEff, ubooneCosmicsEff, ymin, ymax, xmin, xmax, filename_eff, legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
+    styleDraw(rejectionCanvas, currentSignalRej, ubooneSignalRej, currentBNBRej, ubooneBNBRej, currentCosmicsRej, ubooneCosmicsRej, ymin, ymax, xmin, xmax, filename_rej, legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
+    styleDraw(EffRejCanvas, currentSignalEff, ubooneSignalEff, currentBNBRej, ubooneBNBRej, currentCosmicsRej, ubooneCosmicsRej, ymin, ymax, xmin, xmax, filename_effrej, legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
+
 }
 
 recoSlice chooseSlice(std::vector<recoSlice> recoSlices, double method){
@@ -1285,11 +1328,12 @@ void nuEBackgroundSignalWeights_macro(){
 
     styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
     weighted(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
-    efficiency(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_rej.pdf").c_str(), "bottomRight", &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    efficiency(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effrej.pdf").c_str(), "bottomRight", &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})");
+
 
     styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
     weighted(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
-    efficiency(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, 1/signalWeight, 1/signalWeight, 1/BNBWeight, 1/BNBWeight, 1/cosmicsWeight, 1/cosmicsWeight, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), "bottomRight", &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    efficiency(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effrej.pdf").c_str(), "bottomRight", &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})");
 
     printf("\nInteractions in Signal Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsSignal.Unknown, interactionsSignal.QE, interactionsSignal.Res, interactionsSignal.DIS, interactionsSignal.Coh, interactionsSignal.CohElastic, interactionsSignal.ElectronScattering, interactionsSignal.IMDAnnihilation, interactionsSignal.InverseBetaDecay, interactionsSignal.GlashowResonance, interactionsSignal.AMNuGamma, interactionsSignal.MEC, interactionsSignal.Diffractive, interactionsSignal.EM, interactionsSignal.WeakMix);
     printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n", interactionsSignal.NuanceOffset, interactionsSignal.CCQE, interactionsSignal.NCQE, interactionsSignal.NuanceRes, interactionsSignal.CCDis, interactionsSignal.NCDis, interactionsSignal.NuEElastic);
