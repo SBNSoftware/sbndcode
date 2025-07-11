@@ -868,6 +868,9 @@ void sbnd::crt::ADRIFT::endJob()
 
 void sbnd::crt::ADRIFT::ProcessEntry(const int ch, const int window)
 {
+  _unix_start = fUnixWindows[window].first;
+  _unix_end   = fUnixWindows[window].second;
+
   if(fSaveSubset && (ch > 1471 && ch < 1728))
     {
       if(fFEBs)
