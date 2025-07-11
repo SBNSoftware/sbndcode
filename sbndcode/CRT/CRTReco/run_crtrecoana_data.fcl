@@ -1,0 +1,45 @@
+#include "services_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "crtrecoproducers_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "crtbacktrackeralg_sbnd.fcl"
+#include "crtana_sbnd.fcl"
+
+process_name: CRTRecoAna
+
+services:
+{
+  @table::sbnd_services
+  TFileService: { fileName: "crtana_sbnd.root" }
+  CRTChannelMapService: @local::crt_channel_map_standard
+  CRTCalibService:      @local::crt_calib_service
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+physics:
+{
+  producers:
+  {
+    crtstrips:      @local::crtstriphitproducer_data_sbnd
+    crtclustering:  @local::crtclusterproducer_data_sbnd
+    crtspacepoints: @local::crtspacepointproducer_data_sbnd
+    crttracks:      @local::crttrackproducer_data_sbnd
+    crtblobs:       @local::crtblobproducer_data_sbnd
+  }
+
+  analyzers:
+  {
+    crtana: @local::crtana_data_sbnd
+  }
+
+  reco:          [ crtstrips, crtclustering, crtspacepoints, crttracks, crtblobs ]
+  trigger_paths: [ reco ]
+
+  ana:       [ crtana ]
+  end_paths: [ ana ]
+}
