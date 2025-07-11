@@ -17,7 +17,7 @@ nuEBackground:
     SpacePointLabel:    "pandoraSCE"
     ClusterLabel:       "pandoraSCE"
     POTLabel:           "generator"
-    Signal:             1
+    Signal:             2
 }
 
 END_PROLOG

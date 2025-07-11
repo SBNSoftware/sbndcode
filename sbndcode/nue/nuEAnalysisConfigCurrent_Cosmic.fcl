@@ -7,17 +7,17 @@ nuEBackground:
     SliceSCELabel:      "pandoraSCE"
     PFParticleLabel:    "pandoraSCE"
     VertexLabel:        "pandoraSCE"
-    NuGenModuleLabel:   "generator"
+    NuGenModuleLabel:   "corsika"
     HitLabel:           "gaushit"
     CRUMBSLabel:        "crumbs"
     TrackLabel:         "pandoraSCETrack"
     ShowerLabel:        "pandoraSCEShower"
     MCTruthLabel:       "largeant"
-    DLCurrent:          0
+    DLCurrent:          2
     SpacePointLabel:    "pandoraSCE"
     ClusterLabel:       "pandoraSCE"
-    POTLabel:           "generator"
-    Signal:             1
+    POTLabel:           "corsika"
+    Signal:             3
 }
 
 END_PROLOG

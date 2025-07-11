@@ -217,6 +217,7 @@ private:
     // Label strings
     const std::string PFParticleLabel;
     const std::string sliceLabel;
+    const std::string sliceSCELabel;
     const std::string vertexLabel;
     const std::string nuGenModuleLabel;
     const std::string hitLabel;
@@ -239,6 +240,7 @@ sbnd::NuEBackground::NuEBackground(fhicl::ParameterSet const& p)
   : EDAnalyzer{p},
   PFParticleLabel(p.get<std::string>("PFParticleLabel")),
   sliceLabel(p.get<std::string>("SliceLabel")),
+  sliceSCELabel(p.get<std::string>("SliceSCELabel")),
   vertexLabel(p.get<std::string>("VertexLabel")),
   nuGenModuleLabel(p.get<std::string>("NuGenModuleLabel")),
   hitLabel(p.get<std::string>("HitLabel")),
@@ -502,7 +504,7 @@ void sbnd::NuEBackground::showerEnergy(const art::Event &e){
         art::FindOneP<recob::Shower> pfpShowerAssns(pfpVec, e, showerLabel);
         art::FindOneP<larpandoraobj::PFParticleMetadata> pfpMetadataAssns(pfpVec, e, PFParticleLabel);
         art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);
-        art::FindOneP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceLabel);    
+        art::FindOneP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceSCELabel);    
         art::FindManyP<recob::Hit> showerHitAssns(showerVec, e, showerLabel);
         
         for(const art::Ptr<recob::PFParticle> &pfp : pfpVec){
@@ -511,7 +513,7 @@ void sbnd::NuEBackground::showerEnergy(const art::Event &e){
                 const art::Ptr<recob::Shower> pfpShower(pfpShowerAssns.at(pfp.key()));
                 const art::Ptr<recob::Slice> pfpSlice(pfpSliceAssns.at(pfp.key()));
                 const std::vector<art::Ptr<recob::Vertex>> pfpVertexs(pfpVertexAssns.at(pfp.key()));
-      
+                
                 const auto meta  = pfpMetadataAssns.at(pfp.key());
                 const auto props = meta->GetPropertiesMap();
                 const auto trackscoreobj = props.find("TrackScore");
@@ -596,7 +598,7 @@ void sbnd::NuEBackground::recoNeutrino(const art::Event &e){
     if(e.getByLabel(PFParticleLabel, pfpHandle))
         art::fill_ptr_vector(pfpVec, pfpHandle);
 
-    art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceLabel);      // Gets association between slices and PFPs
+    art::FindManyP<recob::Slice> pfpSliceAssns(pfpVec, e, sliceSCELabel);      // Gets association between slices and PFPs
     art::FindManyP<recob::Vertex> pfpVertexAssns(pfpVec, e, vertexLabel);   // Gets association between PFPs and vertices
     art::FindOneP<larpandoraobj::PFParticleMetadata> pfpMetadataAssns(pfpHandle, e, PFParticleLabel);   // Gets association between PFPs and Metadata
 
@@ -765,6 +767,7 @@ void sbnd::NuEBackground::slices(const art::Event &e){
                     sliceScoreVar = sliceCrumbsResult->score;
                 } else{
                     sliceScoreVar = -999999;
+                    std::cout << "crumbs vec size: " << sliceCrumbsResults.size() << std::endl;
                 }
                 reco_sliceScore.push_back(sliceScoreVar);
                 printf("Slice %d: ID = %d, Completeness = %f, Purity = %f, Score = %f\n", counter, sliceID, sliceCompleteness, slicePurity, sliceScoreVar);
@@ -783,7 +786,7 @@ void sbnd::NuEBackground::slices(const art::Event &e){
 }
 
 void sbnd::NuEBackground::PFPs(const art::Event &e){
-    //std::cout << "" << std::endl;
+    std::cout << "" << std::endl;
     art::Handle<std::vector<recob::PFParticle>> pfpHandle;
     std::vector<art::Ptr<recob::PFParticle>> pfpVec;
     if(e.getByLabel(PFParticleLabel, pfpHandle))
@@ -796,7 +799,7 @@ void sbnd::NuEBackground::PFPs(const art::Event &e){
         }
     }
 
-    //std::cout << "Number of PFPs: " << counter << std::endl;
+    std::cout << "Number of PFPs: " << counter << std::endl;
 }
 
 void sbnd::NuEBackground::MCParticles(const art::Event &e){
@@ -903,7 +906,7 @@ void sbnd::NuEBackground::hits(const art::Event &e){
     int counter = 0;
 
     if(!hitVec.empty()){
-        art::FindOneP<recob::Slice> hitSliceAssns(hitVec, e, sliceLabel);
+        art::FindOneP<recob::Slice> hitSliceAssns(hitVec, e, sliceSCELabel);
         art::FindOneP<recob::Cluster> hitClusterAssns(hitVec, e, clusterLabel);
         if(!clusterVec.empty()){
             art::FindOneP<recob::PFParticle> clusterPFPAssns(clusterVec, e, PFParticleLabel);
@@ -1014,7 +1017,7 @@ void sbnd::NuEBackground::spacepoints(const art::Event &e){
         art::FindOneP<recob::PFParticle> spacePointPFPAssns(spacePointVec, e, spacePointLabel);
         art::FindOneP<recob::Hit> spacePointHitAssns(spacePointVec, e, spacePointLabel);
         if(!hitVec.empty()){
-            art::FindOneP<recob::Slice> hitSliceAssns(hitVec, e, sliceLabel);
+            art::FindOneP<recob::Slice> hitSliceAssns(hitVec, e, sliceSCELabel);
 
             for(auto &spacePoint : spacePointVec){
                 counter++;

@@ -7,7 +7,7 @@ nuEBackground:
     SliceSCELabel:      "pandoraSCE"
     PFParticleLabel:    "pandoraSCE"
     VertexLabel:        "pandoraSCE"
-    NuGenModuleLabel:   "generator"
+    NuGenModuleLabel:   "corsika"
     HitLabel:           "gaushit"
     CRUMBSLabel:        "crumbs"
     TrackLabel:         "pandoraSCETrack"
@@ -16,8 +16,8 @@ nuEBackground:
     DLCurrent:          0
     SpacePointLabel:    "pandoraSCE"
     ClusterLabel:       "pandoraSCE"
-    POTLabel:           "generator"
-    Signal:             1
+    POTLabel:           "corsika"
+    Signal:             3
 }
 
 END_PROLOG

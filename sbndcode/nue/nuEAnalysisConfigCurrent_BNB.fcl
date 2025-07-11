@@ -13,11 +13,11 @@ nuEBackground:
     TrackLabel:         "pandoraSCETrack"
     ShowerLabel:        "pandoraSCEShower"
     MCTruthLabel:       "largeant"
-    DLCurrent:          0
+    DLCurrent:          2
     SpacePointLabel:    "pandoraSCE"
     ClusterLabel:       "pandoraSCE"
     POTLabel:           "generator"
-    Signal:             1
+    Signal:             2
 }
 
 END_PROLOG
