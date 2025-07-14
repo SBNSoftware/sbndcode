@@ -106,13 +106,14 @@ namespace lightana{
 
     // Initialize YZ map
     for(size_t opch=0; opch<::lightana::NOpDets(); opch++){
-      ::lightana::OpDetCenterFromOpChannel(opch, fPDxyz);
+
       if( std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(opch)) == fPDTypes.end() ) continue;
+      
+      ::lightana::OpDetCenterFromOpChannel(opch, fPDxyz);
+
       fYPEAccumulator[ (int) fPDxyz[1] ] = 0;
       fZPEAccumulator[ (int) fPDxyz[2] ] = 0;
-
       if(fNormalizeByPDType){
-        if( std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(opch)) == fPDTypes.end() ) continue;
         fPDTypeByY[ (int) fPDxyz[1] ] = fPDSMap.pdType(opch);
         fPDTypeByZ[ (int) fPDxyz[2] ] = fPDSMap.pdType(opch);
       }
