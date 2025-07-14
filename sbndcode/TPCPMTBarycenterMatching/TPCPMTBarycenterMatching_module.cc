@@ -240,7 +240,6 @@ private:
   double                    fZError;
   double                    fAngleError;
   std::vector<double>       fFlashVetoWindow;
-  int fDebugEvent;
   // Event-level data members
   int                       fRun;                  ///< Number of the run being processed
   int                       fEvent;                ///< Number of the event being processed
@@ -270,7 +269,6 @@ private:
   double                    fDeltaY_Trigger;       ///< | Triggering flash Y center - charge Y center | (cm)
   double                    fDeltaZ_Trigger;       ///< | Triggering flash Z center - charge Z center | (cm)
   double                    fRadius_Trigger;       ///< Hypotenuse of DeltaY_Trigger and DeltaZ_Trigger (cm)
-  double                    fNuScore;              ///< NuScore of the slice, if available, otherwise -9999
   TTree*                    fMatchTree;            ///< Tree to store all match information
   // Geometry service
   geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
@@ -310,7 +308,6 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   fZError(p.get<double>("ZError")), // cm
   fAngleError(p.get<double>("AngleError")), // deg
   fFlashVetoWindow(p.get<std::vector<double>>("FlashVetoWindow")), // us
-  fDebugEvent(p.get<int>("DebugEvent", -1)) // Event to debug, -1 means no debug event
   {
   // Call appropriate produces<>() functions here.
 
@@ -343,7 +340,6 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
     fMatchTree->Branch("chargeWidthX",        &fChargeWidthX,        "chargeWidthX/d"       );
     fMatchTree->Branch("chargeWidthY",        &fChargeWidthY,        "chargeWidthY/d"       );
     fMatchTree->Branch("chargeWidthZ",        &fChargeWidthZ,        "chargeWidthZ/d"       );
-    fMatchTree->Branch("nuScore",             &fNuScore,             "nuScore/d"            );
 
     //Matched Flash Info
     fMatchTree->Branch("flashTime",           &fFlashTime,           "flashTime/d"          );
@@ -442,7 +438,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
   unsigned nSlices = (*sliceHandle).size();
   ::art::Handle<std::vector<recob::PFParticle>> pfpHandle;
   e.getByLabel(fPandoraLabel, pfpHandle);
-  //unsigned nPFPs = (*pfpHandle).size();
   art::FindManyP<larpandoraobj::PFParticleMetadata> pfp_to_metadata(pfpHandle, e, fPandoraLabel);
   art::FindManyP<recob::PFParticle> slice_pfp_assns (sliceHandle, e, fPandoraLabel);
 
@@ -465,26 +460,16 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
     const art::Ptr<recob::Slice> slicePtr { sliceHandle, j };
     // -----------------> This is to get the nuscore of the slice, only for debugging purposes <--------------------- //
     //Slice to PFParticles association
-    fNuScore = -9999.; //Default value
     //Vector for recob PFParticles
-
     std::vector<art::Ptr<recob::Hit>> tpcHitsVec;
     std::vector<art::Ptr<recob::PFParticle>> pfpVect = slice_pfp_assns.at(j);
 
-    // PFP Metadata
+    // Get the hits associated to the PFParticles in this slice
     for(const art::Ptr<recob::PFParticle> &pfp : pfpVect){
       std::vector<art::Ptr<recob::Cluster>> cluster_v = fmClusterPfp.at(pfp.key());        
       for(size_t i=0; i<cluster_v.size(); i++){
         std::vector<art::Ptr<recob::Hit>> hitVect = cluster_hit_assns.at(cluster_v[i].key());
         tpcHitsVec.insert(tpcHitsVec.end(), hitVect.begin(), hitVect.end());
-      }
-      if(pfp->IsPrimary() && ( std::abs(pfp->PdgCode())==12 || std::abs(pfp->PdgCode())==14 ) )
-      {
-          const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = pfp_to_metadata.at(pfp.key());
-          for (auto const pfpMeta : pfpMetaVec) {
-              larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
-              fNuScore = propertiesMap.at("NuScore");
-          }
       }
     }
 
@@ -591,16 +576,14 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       e.getByLabel(fOpFlashesModuleLabel[tpc], flashHandle);
       std::vector< art::Ptr<recob::OpFlash> > flashVect;
       art::fill_ptr_vector(flashVect, flashHandle);
+
       //OpHit OpFlash assns
       art::FindManyP<recob::OpHit> flash_ophit_assns(flashHandle, e, fOpFlashesModuleLabel[tpc]);
 
       //Vector to store the idxs of the candidate flashes
       std::vector<int> candidateFlashIdxs;
-
       int nFlashes = flashVect.size();
 
-      //Vector to store the distance between the barycenter of the charge and the barycenter of the light
-      std::vector<double> chargeLightDistance;
       //For flash...
       for ( int m = 0; m < nFlashes; m++ ) {
         auto & flash = flashVect[m];
@@ -612,7 +595,7 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
         if(fDo3DMatching)
           thisDistance = std::hypot( (thisFlashCenterX - fChargeCenterX), (thisFlashCenterY - fChargeCenterY), (thisFlashCenterZ - fChargeCenterZ) );
         else thisDistance = std::hypot( (thisFlashCenterY - fChargeCenterY), (thisFlashCenterZ - fChargeCenterZ) );
-        chargeLightDistance.push_back(thisDistance);
+
         if ( thisDistance < minDistance ) {
           minDistance = thisDistance;
           matchIndex = m;
@@ -620,10 +603,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
         // Fill the vector with the idxs of the flashes
         if(thisDistance<fDistanceCandidateFlashes){
           candidateFlashIdxs.push_back(m);
-        }
-        if(fEvent == fDebugEvent )
-        {
-          std::cout << " Flash " << m << " at time " << flash->Time() <<" has barycenter " << thisFlashCenterX << ", " << thisFlashCenterY << ", " << thisFlashCenterZ << " and distance " << thisDistance << " and PE " << flash->TotalPE() << std::endl;
         }
       } //End for flash
 
@@ -664,16 +643,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
         else
           chi2 = std::pow(fChargeCenterY-_currentFlashY, 2)/std::pow(fYError, 2) + std::pow(fChargeCenterZ-_currentFlashZ, 2)/std::pow(fZError, 2) + std::pow(angle, 2)/std::pow(fAngleError, 2);
 
-        if(fNuScore>0.55) 
-        {
-          std::cout << " flash " << i << " at time " << flash->Time() <<" has barycenter " << _currentFlashX << ", " << _currentFlashY << ", " << _currentFlashZ << " and distance " << chargeLightDistance[idx] << " with angle " << angle << " and charge light ratio " << lightChargeRatio << " and PE " << flash->TotalPE() <<std::endl;
-          std::cout << " chi2 " << chi2 << std::endl;
-        }
-
-        /*if(fNuScore>0.55)
-        {
-          std::cout << " --------> Candidate flash " << idx << " at time " << flash->Time() << " has LightChargeRatio " << lightChargeRatio  <<" distance " << chargeLightDistance[idx] << " angle " << angle << " and chi2 " << chi2 << std::endl;
-        }*/
         if(lightChargeRatio < fLightChargeRatioBounds[0] || lightChargeRatio > fLightChargeRatioBounds[1]) continue;
         if(chi2 < minChi2)
         {
@@ -681,9 +650,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
           matchIndex = idx;
         }
       }
-
-      //std::cout << " Chosen flash is " << matchIndex << std::endl;
-      //Now we have a pool of flashes so we can have a look at the PCAs and the calorimetry
 
       //Best match flash pointer
       unsigned unsignedMatchIndex = matchIndex;
@@ -717,7 +683,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       flashAssns->addSingle(infoPtrVector[maxFlashIdx], flashPtrVector[maxFlashIdx]);
       matchInfoVector->push_back(std::move(sliceMatchInfoVector[maxFlashIdx]));
     }
-    if(fNuScore>0.55) std::cout << " -----------------------> Selecting flash at time " << flashPtrVector[maxFlashIdx]->Time() << std::endl;
   } //End for slice
 
   //Store new products at the end of the event
@@ -816,15 +781,18 @@ void TPCPMTBarycenterMatchProducer::GetPCA(std::vector<double> const&x, std::vec
       points(i, 0) = x[i];
       points(i, 1) = y[i];
   }
+
   //Get the weighted centroid
   Eigen::Vector2d weighted_sum(0.0, 0.0);
   for (size_t i = 0; i < n; ++i) {
       weighted_sum(0) += weight[i] * x[i];
       weighted_sum(1) += weight[i] * y[i];
   }
-  Eigen::Vector2d centroid = weighted_sum / weight_sum;
+
   //Center the points wrt centroid
+  Eigen::Vector2d centroid = weighted_sum / weight_sum;
   Eigen::MatrixXd centered_points = points.rowwise() - centroid.transpose();
+
   //Get the weighted covariance matrix
   Eigen::Matrix2d cov = Eigen::Matrix2d::Zero();
   for (size_t i = 0; i < n; ++i) {
@@ -832,12 +800,13 @@ void TPCPMTBarycenterMatchProducer::GetPCA(std::vector<double> const&x, std::vec
       cov += std::abs(weight[i]) * (pt * pt.transpose());
   }
   cov /= weight_sum;
-  // Obtener autovalores y autovectores
+
+  // Get eigenvalues / eigenvectors 
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> solver(cov);
   Eigen::VectorXd eigvals = solver.eigenvalues();
   Eigen::Matrix2d eigvecs = solver.eigenvectors();
 
-  // Dirección principal (mayor autovalor)
+  // Get Principal component (largest eigenvalue)
   int maxIndex;
   eigvals.maxCoeff(&maxIndex);
   Eigen::Vector2d principal_direction = eigvecs.col(maxIndex);
