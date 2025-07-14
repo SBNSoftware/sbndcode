@@ -432,21 +432,22 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
 
   //Fetch slices, TPC hits, and PFPs; pointer vector needed for generating associations
   ::art::Handle<std::vector<recob::Slice>> sliceHandle;
-  e.getByLabel(fPandoraLabel, sliceHandle);  
-  art::FindManyP<recob::Hit> fmTPCHits(sliceHandle, e, fPandoraLabel);
-  art::FindManyP<recob::PFParticle> fmPFPs(sliceHandle, e, fPandoraLabel);
+  e.getByLabel(fPandoraLabel, sliceHandle);
+
+  // Slice to PFP assns
   unsigned nSlices = (*sliceHandle).size();
   ::art::Handle<std::vector<recob::PFParticle>> pfpHandle;
   e.getByLabel(fPandoraLabel, pfpHandle);
-  art::FindManyP<larpandoraobj::PFParticleMetadata> pfp_to_metadata(pfpHandle, e, fPandoraLabel);
-  art::FindManyP<recob::PFParticle> slice_pfp_assns (sliceHandle, e, fPandoraLabel);
 
+  // PFP to metadata assns
+  art::FindManyP<recob::PFParticle> slice_pfp_assns(sliceHandle, e, fPandoraLabel);
 
   // Hit to PFP assns
-  art::FindManyP<recob::Hit> fmHitsPFPs(pfpHandle, e, fPandoraLabel);
-  art::FindManyP<recob::Cluster> fmClusterPfp(pfpHandle, e, fPandoraLabel);
+  art::FindManyP<recob::Cluster> pfp_cluster_assns(pfpHandle, e, fPandoraLabel);
   ::art::Handle<std::vector<recob::Cluster>> clusterHandle;
   e.getByLabel(fPandoraLabel, clusterHandle);
+
+  // Cluster to Hit assns
   art::FindManyP<recob::Hit> cluster_hit_assns (clusterHandle, e, fPandoraLabel);
 
 
@@ -458,18 +459,25 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
     std::vector<art::Ptr<recob::OpFlash>> flashPtrVector;
     fSliceNum = j;
     const art::Ptr<recob::Slice> slicePtr { sliceHandle, j };
-    // -----------------> This is to get the nuscore of the slice, only for debugging purposes <--------------------- //
-    //Slice to PFParticles association
     //Vector for recob PFParticles
     std::vector<art::Ptr<recob::Hit>> tpcHitsVec;
     std::vector<art::Ptr<recob::PFParticle>> pfpVect = slice_pfp_assns.at(j);
 
     // Get the hits associated to the PFParticles in this slice
     for(const art::Ptr<recob::PFParticle> &pfp : pfpVect){
-      std::vector<art::Ptr<recob::Cluster>> cluster_v = fmClusterPfp.at(pfp.key());        
+      std::vector<art::Ptr<recob::Cluster>> cluster_v = pfp_cluster_assns.at(pfp.key());
       for(size_t i=0; i<cluster_v.size(); i++){
         std::vector<art::Ptr<recob::Hit>> hitVect = cluster_hit_assns.at(cluster_v[i].key());
         tpcHitsVec.insert(tpcHitsVec.end(), hitVect.begin(), hitVect.end());
+      }
+    }
+
+    int nPFPs = pfpVect.size();
+    //Retrieve Pandora's T0 for this slice if available, same for every PFP in slice so we only need one
+    if ( nPFPs != 0 ) {
+      art::FindOne<anab::T0> f1T0( {pfpVect.at(0)}, e, fPandoraLabel);
+      if ( f1T0.at(0).isValid() ) {
+        fChargeT0 = f1T0.at(0).ref().Time() / 1e3;
       }
     }
 
@@ -478,24 +486,13 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       InitializeSlice();
       sbn::TPCPMTBarycenterMatch sliceMatchInfo;
       updateMatchInfo(sliceMatchInfo);
-
-      const std::vector<art::Ptr<recob::PFParticle>> &pfpsVec = fmPFPs.at(j);
       art::FindOne<recob::SpacePoint> f1SpacePoint(tpcHitsVec, e, fPandoraLabel);
 
       std::vector<double> hit_z;
       std::vector<double> hit_y;
       std::vector<double> hit_weight;
-      
-      int nHits = tpcHitsVec.size();
-      int nPFPs = pfpsVec.size();
 
-      //Retrieve Pandora's T0 for this slice if available, same for every PFP in slice so we only need one
-      if ( nPFPs != 0 ) {
-        art::FindOne<anab::T0> f1T0( {pfpsVec.at(0)}, e, fPandoraLabel);
-        if ( f1T0.at(0).isValid() ) {
-          fChargeT0 = f1T0.at(0).ref().Time() / 1e3;
-        }
-      }
+      int nHits = tpcHitsVec.size();
 
       double thisCharge;
       double sumCharge = 0.;
@@ -503,8 +500,9 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       TVector3 sumPosSqr {0.,0.,0.};
 
       size_t maxChargePlaneIdx=99999;
-      if(!fCollectionOnly)
-      {
+
+      // If we are not using collection plane only, we need to find the plane with the most charge
+      if(!fCollectionOnly){
         std::vector<double> PlaneCharge(3, 0.); // Vector to store the charge for each plane
         //Loop to get the charge of each plane
         for ( int k = 0; k < nHits; k++ ) {
@@ -832,13 +830,8 @@ double TPCPMTBarycenterMatchProducer::GetSliceCharge(const std::vector<art::Ptr<
       plane_hits.at(hit_plane)++; 
     }
 
-    //uint bestPlane = std::max_element(plane_charge.begin(), plane_charge.end()) - plane_charge.begin(); 
     uint bestHits =  std::max_element(plane_hits.begin(), plane_hits.end()) - plane_hits.begin();
-
-    //double _mean_charge = (plane_charge[0] + plane_charge[1] + plane_charge[2])/3; 
-    //double _max_charge  = plane_charge.at(bestPlane);
     double _comp_charge  = plane_charge.at(bestHits);
-    //double _coll_charge  = plane_charge[2];
 
     return _comp_charge;
 }
@@ -871,8 +864,7 @@ double TPCPMTBarycenterMatchProducer::GetFlashLight(double flash_pe, std::vector
 
   double tot_visibility=0;
 
-  for(size_t ch=0; ch<dir_visibility.size(); ch++)
-  {
+  for(size_t ch=0; ch<dir_visibility.size(); ch++){
     if (std::find(fSkipChannelList.begin(), fSkipChannelList.end(), ch) != fSkipChannelList.end()) continue;
     if(fOpDetType[ch]==0) tot_visibility += fOpDetVUVEff*dir_visibility[ch] + fOpDetVISEff*ref_visibility[ch];
     else if(fOpDetType[ch]==1) tot_visibility += fOpDetVISEff*ref_visibility[ch];
