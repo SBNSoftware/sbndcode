@@ -1,0 +1,8 @@
+#include "wcsp_data_lowthreshold_sbnd.fcl"
+#include "standard_reco1_sbnd.fcl"
+#override the wirecell settings with the top include
+physics.producers.sptpc2d:   @local::sbnd_wcls_sp_data_low
+# override the min hit height params
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane0.MinHitHeight: 8
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane1.MinHitHeight: 9
+physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane2.MinHitHeight: 5
