@@ -1,0 +1,56 @@
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "sam_sbnd.fcl"
+
+process_name: SBNDPDSProd
+
+services:
+{
+  TFileService:              { fileName: "opana_tree.root" }
+  @table::sbnd_basic_services
+  @table::sbnd_simulation_services
+  ParticleInventoryService: @local::sbnd_particleinventoryservice
+  BackTrackerService:       @local::sbnd_backtrackerservice
+  ParticleInventoryService: @local::standard_particleinventoryservice  
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1  # Number of events to create
+}
+
+physics:
+{
+  producers:
+  {
+    opanatree: {
+      module_type: "SBNDPDSProducer"
+      Verbosity: 0
+      MCTruthModuleLabel: ["generator"]
+      MCTruthInstanceLabel: [""]
+      MCModuleLabel: "largeant"
+      OpHitsModuleLabel: ["ophitpmt","ophitxarapuca"]
+      OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1", "opflashtpc0xarapuca", "opflashtpc1xarapuca"]
+      G4BufferBoxX: [-300, 300] #cm
+      G4BufferBoxY: [-400, 400] #cm
+      G4BufferBoxZ: [-100, 600] #cm
+      G4BeamWindow: [-10000, 12000] #ns
+      # MCTruthPDG: [12, 14, -12, -14]
+      # PDTypes: ["pmt_coated", "pmt_uncoated", "xarapuca_vis", "xarapuca_vuv"]
+    }
+  }
+  prod: [opanatree]
+  end_paths: [prod]
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName: "pixelmap_variables.root"
+  }
+}
+end_paths: [prod, out1]
