@@ -225,7 +225,6 @@ private:
   std::vector<std::string>  fInputTags;            ///< Suffix added onto fOpFlashLabel and fPandoraLabel, used by ICARUS for separate cryostat labels but could be empty
   std::vector<std::string>  fOpFlashesModuleLabel;         ///< Label for PMT reconstruction products
   std::string               fPandoraLabel;         ///< Label for Pandora output products
-  std::string               fTPCClusterLabel;
   bool                      fCollectionOnly;       ///< Only use TPC spacepoints from the collection plane
   double                    fDistanceCandidateFlashes; ///< Maximum distance between candidate flashes to be considered for matching (cm)
   std::vector<double>       fCalAreaConst;         /// Calibration area constants for wire plane
@@ -235,8 +234,6 @@ private:
   bool                      fVerbose;              ///< Print extra info
   bool                      fFillMatchTree;        ///< Fill an output TTree in the supplemental file
   bool                      fDo3DMatching;         ///< Wether to perform the matching in 3D or 2D
-  double                    fDistanceWeight;
-  double                    fAngleWeight;
   std::vector<double>       fLightChargeRatioBounds; ///< Vector to store the distance between the barycenter of the charge and the barycenter of the light for each slice
   double                    fXError;
   double                    fYError;
@@ -266,7 +263,6 @@ private:
   double                    fFlashCenterZ;         ///< Weighted mean Z postion of hit PMTs (cm)
   double                    fFlashWidthY;          ///< Weighted standard deviation of Y postion of hit PMTs (cm)
   double                    fFlashWidthZ;          ///< Weighted standard deviation of Z postion of hit PMTs (cm)
-  double                    fFlashLight;
   double                    fDeltaT;               ///< | Matched flash time - charge T0 | when available (us)
   double                    fDeltaY;               ///< | Matched flash Y center - charge Y center | (cm)
   double                    fDeltaZ;               ///< | Matched flash Z center - charge Z center | (cm)
@@ -275,10 +271,7 @@ private:
   double                    fDeltaZ_Trigger;       ///< | Triggering flash Z center - charge Z center | (cm)
   double                    fRadius_Trigger;       ///< Hypotenuse of DeltaY_Trigger and DeltaZ_Trigger (cm)
   double                    fNuScore;              ///< NuScore of the slice, if available, otherwise -9999
-  double                    fNumElectrons;
-  double                    fLightChargeCosine;    ///< Cosine of the angle between the charge PCA and the light PCA
   TTree*                    fMatchTree;            ///< Tree to store all match information
-  TTree*                    fDebugTree;            ///< Tree to store debug information
   // Geometry service
   geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
   opdet::sbndPDMapAlg fPDSMap;
@@ -303,7 +296,6 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   // More initializers here.
   fOpFlashesModuleLabel(p.get<std::vector<std::string>>("OpFlashesModuleLabel")),
   fPandoraLabel(p.get<std::string>("PandoraLabel")),
-  fTPCClusterLabel(p.get<std::string>("TPCClusterLabel")),
   fCollectionOnly(p.get<bool>("CollectionOnly", true)),
   fDistanceCandidateFlashes(p.get<double>("DistanceCandidateFlashes")), // cm
   fCalAreaConst(p.get<std::vector<double>>("CalAreaConst")),
@@ -312,8 +304,6 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   fVerbose(p.get<bool>("Verbose", false)),
   fFillMatchTree(p.get<bool>("FillMatchTree", false)),
   fDo3DMatching(p.get<bool>("Do3DMatching",true)),
-  fDistanceWeight(p.get<double>("DistanceWeight")),
-  fAngleWeight(p.get<double>("AngleWeight")),
   fLightChargeRatioBounds(p.get<std::vector<double>>("LightChargeRatioBounds")),
   fXError(p.get<double>("XError")), // cm
   fYError(p.get<double>("YError")), // cm
@@ -333,27 +323,7 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
     << "Module has been missconfigured. Number of OpFlashesModuleLabel must be 2!";
   }
 
-    art::ServiceHandle<art::TFileService> tfs;
-    fDebugTree = tfs->make<TTree>("debugTree","TPC Slice - OpFlash Matching Debug");
-    //Event Info
-    fDebugTree->Branch("run",                 &fRun,                 "run/I"                );
-    fDebugTree->Branch("event",               &fEvent,               "event/I"              );
-    fDebugTree->Branch("cryo",                &fTPC,                "cryo/I"               );
-    fDebugTree->Branch("sliceNum",            &fSliceNum,            "sliceNum/I"           );
-
-    fDebugTree->Branch("sliceX",              &fChargeCenterX,       "sliceX/d");
-    fDebugTree->Branch("sliceY",              &fChargeCenterY,       "sliceY/d");
-    fDebugTree->Branch("sliceZ",              &fChargeCenterZ,       "sliceZ/d");
-    fDebugTree->Branch("sliceCharge",         &fChargeTotal,    "sliceCharge/d");
-    fDebugTree->Branch("sliceElectrons",        &fNumElectrons,        "fNumElectrons/d"       );
-    fDebugTree->Branch("sliceNuScore",       &fNuScore,        "sliceNuScore/d");
-
-    fDebugTree->Branch("flashTime",           &fFlashTimeDebug,           "flashTime/d"          );
-    fDebugTree->Branch("flashPEs",            &fFlashPEs,            "flashPEs/d"           );
-    fDebugTree->Branch("flashLight",        &fFlashLight,        "flashLight/d"       );
-    fDebugTree->Branch("LightChargeCosine",              &fLightChargeCosine,        "LightChargeCosine/d"       );
-
-
+  art::ServiceHandle<art::TFileService> tfs;
   if ( fFillMatchTree ) {
       art::ServiceHandle<art::TFileService> tfs;
       fMatchTree = tfs->make<TTree>("matchTree","TPC Slice - OpFlash Matching Analysis");
@@ -481,7 +451,7 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
   art::FindManyP<recob::Hit> fmHitsPFPs(pfpHandle, e, fPandoraLabel);
   art::FindManyP<recob::Cluster> fmClusterPfp(pfpHandle, e, fPandoraLabel);
   ::art::Handle<std::vector<recob::Cluster>> clusterHandle;
-  e.getByLabel(fTPCClusterLabel, clusterHandle);
+  e.getByLabel(fPandoraLabel, clusterHandle);
   art::FindManyP<recob::Hit> cluster_hit_assns (clusterHandle, e, fPandoraLabel);
 
 
@@ -605,11 +575,8 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
 
       //Get the charge of the slice 
       double sliceCharge = this->GetSliceCharge(tpcHitsVec, det_prop, tpc);
-      fNumElectrons = sliceCharge;
-      //if(fNuScore>0.55) std::cout << " Event is " << fEvent << " Slice " << j << " in TPC " << tpc << " has barycenter at (" << fChargeCenterX << ", " << fChargeCenterY << ", " << fChargeCenterZ << ")" << " having used plane " << maxChargePlaneIdx  << std::endl;
       //Get the visibility map of the charge barycenter
       geo::Point_t SliceXYZ = {fChargeCenterX, fChargeCenterY, fChargeCenterZ};
-      std::cout << " Event " << fEvent<< " slice number " << j << " at tpc " << tpc << " with barycenter at (" << fChargeCenterX << ", " << fChargeCenterY << ", " << fChargeCenterZ << ")" << " with nuscore " << fNuScore << std::endl;
       std::vector<double> direct_visibility;
       std::vector<double> reflect_visibility;
       _semi_model->detectedDirectVisibilities(direct_visibility, SliceXYZ);
@@ -673,7 +640,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       for(size_t i=0; i<candidateFlashIdxs.size(); i++)
       {
         fFlashTimeDebug=-99999;
-        fLightChargeCosine = -99999.;
         int idx = candidateFlashIdxs[i];
         auto & flash = flashVect[idx];
         double _currentFlashX = flash->XCenter();
@@ -686,19 +652,13 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
         std::vector<double> ophit_weight;
         CreateOpHitList(ophitlist, ophit_z, ophit_y, ophit_weight);
 
-        //std::cout << " Light PCA result for flash with idx " << idx << " with distance " << candidateFlashDistances[i] << std::endl;
         double FlashLight = this->GetFlashLight(flash->TotalPE(), direct_visibility, reflect_visibility);
-        fFlashLight = FlashLight;
-
         fFlashTimeDebug = flash->Time();
         double lightChargeRatio = (FlashLight/sliceCharge);
         std::vector<double> LightPCA = {0.,0.};
         GetPCA(ophit_z, ophit_y, ophit_weight, LightPCA);
-        fLightChargeCosine = abs( ChargePCA[0]*LightPCA[0] + ChargePCA[1]*LightPCA[1] ) / ( std::hypot(ChargePCA[0], ChargePCA[1]) * std::hypot(LightPCA[0], LightPCA[1]) );
-        double angle = std::acos(fLightChargeCosine)*(180/M_PI);
-        //double normalized_angle = angle/90.0;
-        //double normalized_distance = chargeLightDistance[idx]/fDistanceCandidateFlashes;
-        //double separation =  fDistanceWeight*normalized_distance + fAngleWeight*normalized_angle;
+        double LightChargeCosine = abs( ChargePCA[0]*LightPCA[0] + ChargePCA[1]*LightPCA[1] ) / ( std::hypot(ChargePCA[0], ChargePCA[1]) * std::hypot(LightPCA[0], LightPCA[1]) );
+        double angle = std::acos(LightChargeCosine)*(180/M_PI);
         double chi2;
         if(fDo3DMatching) chi2 = std::pow(fChargeCenterX-_currentFlashX, 2)/std::pow(fXError, 2) + std::pow(fChargeCenterY-_currentFlashY, 2)/std::pow(fYError, 2) + std::pow(fChargeCenterZ-_currentFlashZ, 2)/std::pow(fZError, 2) + std::pow(angle, 2)/std::pow(fAngleError, 2);
         else
@@ -720,8 +680,6 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
           minChi2 = chi2;
           matchIndex = idx;
         }
-        fDebugTree->Fill();
-        //double separation = fDistanceWeight*distance + fAngleWeight*angle;
       }
 
       //std::cout << " Chosen flash is " << matchIndex << std::endl;
@@ -785,7 +743,6 @@ void TPCPMTBarycenterMatchProducer::InitializeSlice() {
   fFlashCenterZ = -9999.;
   fFlashWidthY = -9999.;
   fFlashWidthZ = -9999.;
-  fFlashLight = -9999.;
   fDeltaT = -9999.;
   fDeltaY = -9999.;
   fDeltaZ = -9999.;
@@ -793,7 +750,6 @@ void TPCPMTBarycenterMatchProducer::InitializeSlice() {
   fDeltaZ_Trigger = -9999.;
   fDeltaY_Trigger = -9999.;
   fRadius_Trigger = -9999.;
-  fNumElectrons = -9999.;
 } //End InitializeSlice()
 
 
