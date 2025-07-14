@@ -77,13 +77,14 @@ namespace lightana{
     std::map<int, double> fYPEAccumulator;
     std::map<int, double> fZPEAccumulator;
 
-    // Store PD type ar each YZ position
+    // Store PD type at each YZ position
     std::map<int, std::string> fPDTypeByY;
     std::map<int, std::string> fPDTypeByZ;
 
     // Store normalization factor for each PD type
     std::map<std::string, double> fNormFactorsY;
     std::map<std::string, double> fNormFactorsZ;
+
 
     // PDS mapping
     opdet::sbndPDMapAlg fPDSMap;
@@ -105,22 +106,20 @@ namespace lightana{
 
     // Initialize YZ map
     for(size_t opch=0; opch<::lightana::NOpDets(); opch++){
-      
+
       if( std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(opch)) == fPDTypes.end() ) continue;
       
       ::lightana::OpDetCenterFromOpChannel(opch, fPDxyz);
-      
+
       fYPEAccumulator[ (int) fPDxyz[1] ] = 0;
       fZPEAccumulator[ (int) fPDxyz[2] ] = 0;
-      
       if(fNormalizeByPDType){
         fPDTypeByY[ (int) fPDxyz[1] ] = fPDSMap.pdType(opch);
         fPDTypeByZ[ (int) fPDxyz[2] ] = fPDSMap.pdType(opch);
       }
-
     }
 
-    // Initialize normalixation factors by PD type
+    // Initialize normalization factors by PD type
     if(fNormalizeByPDType){
       for(auto & pd:fPDTypes) {
         fNormFactorsY[pd]=0.;
@@ -135,12 +134,11 @@ namespace lightana{
                                             double& Ycenter, double& Zcenter,
                                             double& Ywidth, double& Zwidth)
   {
-
     // Reset variables
     ResetVars();
     Ycenter = Zcenter = fDefCenterValue;
     Ywidth  = Zwidth  = fDefCenterValue;
-    
+
     // Fill PE accumulators
     for (unsigned int opch = 0; opch < pePerOpChannel.size(); opch++) {
       if( std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(opch)) == fPDTypes.end() ) continue;
@@ -172,6 +170,7 @@ namespace lightana{
         fZPEAccumulator[z.first] = z.second/ fNormFactorsZ[ fPDTypeByZ[z.first] ]; 
 
     }
+
     else{
 
       double normY = std::max_element(fYPEAccumulator.begin(), fYPEAccumulator.end(), 
