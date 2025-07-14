@@ -8,7 +8,3 @@ physics.producers.sptpc2d:   @local::sbnd_wcls_sp_data_low
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane0.MinHitHeight: 8
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane1.MinHitHeight: 9
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane2.MinHitHeight: 5
-physics.producers.sptpc2d.wcls_main.outputers: ["wclsFrameSaver:spsaver" , "wclsFrameSaver:dnnsaver"]
-physics.producers.sptpc2d.wcls_main.structs.use_dnnroi: false
-physics.producers.sptpc2d.wcls_main.structs.nchunks: 2 # should match training config
-physics.producers.sptpc2d.wcls_main.structs.tick_per_slice: 4 # should match training config
