@@ -1,9 +1,7 @@
 #include "wcsp_data_lowthreshold_sbnd.fcl"
 #include "reco1_data.fcl"
-#override the wirecell settings
+#override the wirecell settings with the top include
 physics.producers.sptpc2d:   @local::sbnd_wcls_sp_data_low
-###sbnd_wcls_sp_data.wcls_main.configs:   ["pgrapher/experiment/sbnd/wcls-nf-sp-lowthreshold-data.jsonnet"]
-
 # override the min hit height params
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane0.MinHitHeight: 8
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane1.MinHitHeight: 9
@@ -12,3 +10,4 @@ physics.producers.sptpc2d.wcls_main.outputers: ["wclsFrameSaver:spsaver" , "wcls
 physics.producers.sptpc2d.wcls_main.structs.use_dnnroi: true
 physics.producers.sptpc2d.wcls_main.structs.nchunks: 2 # should match training config
 physics.producers.sptpc2d.wcls_main.structs.tick_per_slice: 4 # should match training config
+physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"
