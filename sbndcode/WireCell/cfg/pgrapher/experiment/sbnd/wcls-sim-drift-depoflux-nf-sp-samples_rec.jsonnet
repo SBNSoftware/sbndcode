@@ -156,7 +156,7 @@ local wcls_depoflux_writer = g.pnode({
   },
 }, nin=1, nout=1, uses=tools.anodes + [tools.field]);
 
-local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
+local sp_maker = import 'pgrapher/experiment/sbnd/sp-dnnsamples.jsonnet';
 local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
 local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
