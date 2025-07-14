@@ -1,13 +1,30 @@
+#include "opticalsimparameterisations_sbnd.fcl"
+
 BEGIN_PROLOG
 
 TPCPMTBarycenterMatchProducer:
 {
     OpFlashesModuleLabel:     ["opflashtpc0", "opflashtpc1"]
     PandoraLabel:     "pandora"
-    CollectionOnly:   true
+    TPCClusterLabel:   "pandora"
+    CollectionOnly:   false
     Verbose:          false
     FillMatchTree:    false
     Do3DMatching:     true
+    DistanceCandidateFlashes: 100
+    VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
+    VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
+    CalAreaConst: [ 0.0200906, 0.0200016, 0.0201293 ]
+    OpDetVUVEff: 0.032
+    OpDetVISEff:  0.037
+    DistanceWeight: 1
+    AngleWeight: 0.45
+    LightChargeRatioBounds: [0.25, 3]
+    XError: 12
+    YError: 23
+    ZError: 23
+    AngleError: 27
+    FlashVetoWindow: [-1500000,1500000]
     module_type: "TPCPMTBarycenterMatchProducer"
 }
 
@@ -15,11 +32,27 @@ TPCPMTBarycenterMatchProducerSCE:
 {
     OpFlashesModuleLabel:     ["opflashtpc0", "opflashtpc1"]
     PandoraLabel:     "pandoraSCE"
-    CollectionOnly:   true
+    TPCClusterLabel:  "pandoraSCE"
+    CollectionOnly:   false
     Verbose:          false
     FillMatchTree:    false
     Do3DMatching:     true
+    DistanceCandidateFlashes: 100
+    VUVHits: @local::sbnd_vuv_RS100cm_hits_parameterization
+    VIVHits: @local::sbnd_vis_RS100cm_hits_parameterization
+    CalAreaConst: [ 0.0200906, 0.0200016, 0.0201293 ]
+    OpDetVUVEff: 0.032
+    OpDetVISEff:  0.037
+    DistanceWeight: 1
+    AngleWeight: 0.45
+    LightChargeRatioBounds: [0.25, 3]
+    XError: 12
+    YError: 23
+    ZError: 23
+    AngleError: 27
+    FlashVetoWindow: [-1500000,1500000]
     module_type: "TPCPMTBarycenterMatchProducer"
 }
+
 
 END_PROLOG
