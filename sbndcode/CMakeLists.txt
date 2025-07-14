@@ -51,3 +51,4 @@ add_subdirectory(TPCPMTBarycenterMatching)
 
 add_subdirectory(BlipRecoSBND)
 add_subdirectory(LightPropagationCorrection)
+add_subdirectory(PosRecoCVN)
