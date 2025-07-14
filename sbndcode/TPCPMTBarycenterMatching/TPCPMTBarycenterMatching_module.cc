@@ -299,15 +299,15 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
   fCalAreaConst(p.get<std::vector<double>>("CalAreaConst")),
   fOpDetVUVEff (p.get<double>("OpDetVUVEff")),
   fOpDetVISEff (p.get<double>("OpDetVISEff")),
-  fVerbose(p.get<bool>("Verbose", false)),
-  fFillMatchTree(p.get<bool>("FillMatchTree", false)),
-  fDo3DMatching(p.get<bool>("Do3DMatching",true)),
+  fVerbose(p.get<bool>("Verbose")),
+  fFillMatchTree(p.get<bool>("FillMatchTree")),
+  fDo3DMatching(p.get<bool>("Do3DMatching")),
   fLightChargeRatioBounds(p.get<std::vector<double>>("LightChargeRatioBounds")),
   fXError(p.get<double>("XError")), // cm
   fYError(p.get<double>("YError")), // cm
   fZError(p.get<double>("ZError")), // cm
   fAngleError(p.get<double>("AngleError")), // deg
-  fFlashVetoWindow(p.get<std::vector<double>>("FlashVetoWindow")), // us
+  fFlashVetoWindow(p.get<std::vector<double>>("FlashVetoWindow")) // us
   {
   // Call appropriate produces<>() functions here.
 
@@ -328,7 +328,7 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
     //Event Info
     fMatchTree->Branch("run",                 &fRun,                 "run/I"                );
     fMatchTree->Branch("event",               &fEvent,               "event/I"              );
-    fMatchTree->Branch("cryo",                &fTPC,                "cryo/I"               );
+    fMatchTree->Branch("cryo",                &fTPC,                "cryo/I"                );
     fMatchTree->Branch("sliceNum",            &fSliceNum,            "sliceNum/I"           );
 
     //Charge Info
