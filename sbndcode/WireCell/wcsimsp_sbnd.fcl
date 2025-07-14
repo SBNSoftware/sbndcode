@@ -96,6 +96,7 @@ sbnd_wcls_sp.wcls_main.outputers: ["wclsFrameSaver:spsaver"
 sbnd_wcls_sp.wcls_main.params :   {
                                    # This locates the input raw::RawDigit collection in the art::Event 
                                    raw_input_label: "daq"   
+                                   wc_device: "cpu"
 
                                    # Set "data" vs. "sim".  The epoch below probably should follow suit.
                                    reality: "sim"   
