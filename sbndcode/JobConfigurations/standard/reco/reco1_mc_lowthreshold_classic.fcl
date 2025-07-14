@@ -1,4 +1,4 @@
-#include "wcsp_data_lowthreshold_sbnd.fcl"
+#include "wcsimsp_lowthreshold_sbnd.fcl"
 #include "standard_reco1_sbnd.fcl"
 #override the wirecell settings with the top include
 physics.producers.sptpc2d:   @local::sbnd_wcls_sp_data_low
