@@ -77,13 +77,19 @@ namespace lightana{
     std::map<int, double> fYPEAccumulator;
     std::map<int, double> fZPEAccumulator;
 
-    // Store PD type ar each YZ position
+    // Store PD type at each YZ position
     std::map<int, std::string> fPDTypeByY;
     std::map<int, std::string> fPDTypeByZ;
 
     // Store normalization factor for each PD type
     std::map<std::string, double> fNormFactorsY;
     std::map<std::string, double> fNormFactorsZ;
+
+    // Store the number of ON PMTs at each YZ position
+    std::map<int, unsigned int> fNumONPMTsY_tpc0;
+    std::map<int, unsigned int> fNumONPMTsZ_tpc0;
+    std::map<int, unsigned int> fNumONPMTsY_tpc1;
+    std::map<int, unsigned int> fNumONPMTsZ_tpc1;
 
     // PDS mapping
     opdet::sbndPDMapAlg fPDSMap;
@@ -105,22 +111,40 @@ namespace lightana{
 
     // Initialize YZ map
     for(size_t opch=0; opch<::lightana::NOpDets(); opch++){
-      
-      if( std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(opch)) == fPDTypes.end() ) continue;
-      
       ::lightana::OpDetCenterFromOpChannel(opch, fPDxyz);
-      
+      if( std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(opch)) == fPDTypes.end() ) continue;
       fYPEAccumulator[ (int) fPDxyz[1] ] = 0;
       fZPEAccumulator[ (int) fPDxyz[2] ] = 0;
-      
+
+      fNumONPMTsY_tpc0[(int) fPDxyz[1]] = 0;
+      fNumONPMTsY_tpc1[(int) fPDxyz[1]] = 0;
+      fNumONPMTsZ_tpc0[(int) fPDxyz[2]] = 0;
+      fNumONPMTsZ_tpc1[(int) fPDxyz[2]] = 0;
+
       if(fNormalizeByPDType){
+        if( std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(opch)) == fPDTypes.end() ) continue;
         fPDTypeByY[ (int) fPDxyz[1] ] = fPDSMap.pdType(opch);
         fPDTypeByZ[ (int) fPDxyz[2] ] = fPDSMap.pdType(opch);
       }
-
     }
 
-    // Initialize normalixation factors by PD type
+    // Initialize accumulators for ON PMTs
+    for(size_t opch=0; opch<::lightana::NOpDets(); opch++){
+      ::lightana::OpDetCenterFromOpChannel(opch, fPDxyz);
+      std::vector<int> SkipChannelList = {39, 66, 67, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302};
+      if(std::find(SkipChannelList.begin(), SkipChannelList.end(), (int) opch) != SkipChannelList.end()) continue; // Skip channels in the list
+      if(fPDxyz[0]<0 && (fPDSMap.pdType(opch)=="pmt_coated" || fPDSMap.pdType(opch)=="pmt_uncoated")) {
+        fNumONPMTsY_tpc0[(int) fPDxyz[1]]++;
+        fNumONPMTsZ_tpc0[(int) fPDxyz[2]]++;
+      }
+      else if(fPDxyz[0]>0 && (fPDSMap.pdType(opch)=="pmt_coated" || fPDSMap.pdType(opch)=="pmt_uncoated")) {
+        fNumONPMTsY_tpc1[(int) fPDxyz[1]]++;
+        fNumONPMTsZ_tpc1[(int) fPDxyz[2]]++;
+      }  
+    }
+
+
+    // Initialize normalization factors by PD type
     if(fNormalizeByPDType){
       for(auto & pd:fPDTypes) {
         fNormFactorsY[pd]=0.;
@@ -135,19 +159,24 @@ namespace lightana{
                                             double& Ycenter, double& Zcenter,
                                             double& Ywidth, double& Zwidth)
   {
-
     // Reset variables
     ResetVars();
     Ycenter = Zcenter = fDefCenterValue;
     Ywidth  = Zwidth  = fDefCenterValue;
-    
+
     // Fill PE accumulators
     for (unsigned int opch = 0; opch < pePerOpChannel.size(); opch++) {
       if( std::find(fPDTypes.begin(), fPDTypes.end(), fPDSMap.pdType(opch)) == fPDTypes.end() ) continue;
       // Get physical detector location for this opChannel
       ::lightana::OpDetCenterFromOpChannel(opch, fPDxyz);
-      fYPEAccumulator[(int) fPDxyz[1] ]+=pePerOpChannel[opch];
-      fZPEAccumulator[(int) fPDxyz[2] ]+=pePerOpChannel[opch];
+      if(opch%2==0){
+        fYPEAccumulator[(int) fPDxyz[1] ]+=pePerOpChannel[opch]/fNumONPMTsY_tpc0[(int) fPDxyz[1]];
+        fZPEAccumulator[(int) fPDxyz[2] ]+=pePerOpChannel[opch]/fNumONPMTsZ_tpc0[(int) fPDxyz[2]];
+      }
+      else{
+        fYPEAccumulator[(int) fPDxyz[1] ]+=pePerOpChannel[opch]/fNumONPMTsY_tpc1[(int) fPDxyz[1]];
+        fZPEAccumulator[(int) fPDxyz[2] ]+=pePerOpChannel[opch]/fNumONPMTsZ_tpc1[(int) fPDxyz[2]];
+      }
     }
 
     // Normalize PE accumulators
@@ -161,17 +190,19 @@ namespace lightana{
 
       // Get normalization values for each PD type (Y)
       for(auto & y: fYPEAccumulator){
-        if(y.second>fNormFactorsY[ fPDTypeByY[y.first] ]) 
+        if(y.second>fNormFactorsY[ fPDTypeByY[y.first] ]) {
           fNormFactorsY[ fPDTypeByY[y.first] ] = y.second;
+        }
       }
 
       for(auto & y: fYPEAccumulator)
-        fYPEAccumulator[y.first] = y.second/ fNormFactorsY[ fPDTypeByY[y.first] ]; 
-      
+        fYPEAccumulator[y.first] = y.second/ fNormFactorsY[ fPDTypeByY[y.first] ];
+
       for(auto & z: fZPEAccumulator)
-        fZPEAccumulator[z.first] = z.second/ fNormFactorsZ[ fPDTypeByZ[z.first] ]; 
+        fZPEAccumulator[z.first] = z.second/ fNormFactorsZ[ fPDTypeByZ[z.first] ];
 
     }
+
     else{
 
       double normY = std::max_element(fYPEAccumulator.begin(), fYPEAccumulator.end(), 
@@ -186,6 +217,29 @@ namespace lightana{
       for(auto & z: fZPEAccumulator) fZPEAccumulator[z.first] = z.second / normZ;
  
     }
+
+    double maxVal = 0.0;
+    for (const auto& pair : fYPEAccumulator) {
+        if (pair.second > maxVal)
+            maxVal = pair.second;
+    }
+    if (maxVal > 0.0) {
+      for (auto& pair : fYPEAccumulator) {
+            pair.second /= maxVal;
+      }
+    }
+
+    maxVal = 0.0;
+    for (const auto& pair : fZPEAccumulator) {
+        if (pair.second > maxVal)
+            maxVal = pair.second;
+    }
+    if (maxVal > 0.0) {
+      for (auto& pair : fZPEAccumulator) {
+            pair.second /= maxVal;
+      }
+    }
+
 
     // Get YZ position of selected channels (above threshold)
     GetCenter(fYPEAccumulator, Ycenter, Ywidth);
