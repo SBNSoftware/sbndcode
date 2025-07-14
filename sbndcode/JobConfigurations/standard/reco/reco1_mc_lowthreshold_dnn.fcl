@@ -1,12 +1,13 @@
 #include "wcsimsp_lowthreshold_sbnd.fcl"
 #include "standard_reco1_sbnd.fcl"
 #override the wirecell settings with the top include
+physics.producers.sptpc2d:   @local::sbnd_wcls_simsp
 # override the min hit height params
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane0.MinHitHeight: 8
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane1.MinHitHeight: 9
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane2.MinHitHeight: 5
-physics.producers.sbnd_wcls_simsp.wcls_main.outputers: ["wclsFrameSaver:spsaver" , "wclsFrameSaver:dnnsaver"]
-physics.producers.sbnd_wcls_simsp.wcls_main.structs.use_dnnroi: true
-physics.producers.sbnd_wcls_simsp.wcls_main.structs.nchunks: 2 # should match training config
-physics.producers.sbnd_wcls_simsp.wcls_main.structs.tick_per_slice: 4 # should match training config
-physics.producers.gaushit.CalDataModuleLabel: "sbnd_wcls_simsp:dnnsp"
+physics.producers.sptpc2d.wcls_main.outputers: ["wclsFrameSaver:spsaver" , "wclsFrameSaver:dnnsaver"]
+physics.producers.sptpc2d.wcls_main.structs.use_dnnroi: true
+physics.producers.sptpc2d.wcls_main.structs.nchunks: 2 # should match training config
+physics.producers.sptpc2d.wcls_main.structs.tick_per_slice: 4 # should match training config
+physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"
