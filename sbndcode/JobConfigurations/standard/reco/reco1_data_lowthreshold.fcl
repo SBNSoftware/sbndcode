@@ -1,8 +1,8 @@
-#include "wcsp_data_lowthreshold_sbnd.fcl" //override wirecell settings
+#include "wcsp_data_lowthreshold_sbnd.fcl"
 #include "reco1_data.fcl"
 #override the wirecell settings
 physics.producers.sptpc2d:   @local::sbnd_wcls_sp_data_low
-sbnd_wcls_sp_data.wcls_main.configs:   ["pgrapher/experiment/sbnd/wcls-nf-sp-lowthreshold-data.jsonnet"]
+###sbnd_wcls_sp_data.wcls_main.configs:   ["pgrapher/experiment/sbnd/wcls-nf-sp-lowthreshold-data.jsonnet"]
 
 # override the min hit height params
 sbnd_candhitfinder_morphological_0.Plane: 0

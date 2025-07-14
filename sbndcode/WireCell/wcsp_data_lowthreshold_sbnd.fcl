@@ -1,6 +1,6 @@
 BEGIN_PROLOG
 
-sbnd_wcls: { 
+sbnd_wcls_low: { 
     module_type : WireCellToolkit
     wcls_main: {
         tool_type: "WCLS"
@@ -30,7 +30,7 @@ sbnd_wcls: {
 # ------------------------------------------------------------------------------------ #
 
 ## Configuration for **Signal processing ONLY** for data
-sbnd_wcls_sp_data_low: @local::sbnd_wcls
+sbnd_wcls_sp_data_low: @local::sbnd_wcls_low
 sbnd_wcls_sp_data_low.wcls_main.configs:   ["pgrapher/experiment/sbnd/wcls-nf-sp-lowthreshold-data.jsonnet"]
 sbnd_wcls_sp_data_low.wcls_main.inputers:  ["wclsRawFrameSource"
                                          # To use wclsMultiChannelNoiseDB you must also put epoch:dynamic below
