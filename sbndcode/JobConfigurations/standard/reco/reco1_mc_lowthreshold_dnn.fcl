@@ -3,4 +3,4 @@
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane0.MinHitHeight: 8
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane1.MinHitHeight: 9
 physics.producers.gaushit.HitFinderToolVec.CandidateHitsPlane2.MinHitHeight: 5
-physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"
+physics.producers.gaushit.CalDataModuleLabel: "simtpc2d:dnnsp"
