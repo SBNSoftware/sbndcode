@@ -15,6 +15,7 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
+#include "art/Utilities/make_tool.h"
 #include "art_root_io/TFileService.h"
 #include "canvas/Utilities/InputTag.h"
 #include "canvas/Persistency/Common/Assns.h"
@@ -40,6 +41,7 @@
 #include "larcore/CoreUtils/ServiceUtil.h"
 
 #include "larsim/PhotonPropagation/SemiAnalyticalModel.h"
+#include "larsim/PhotonPropagation/OpticalPathTools/OpticalPath.h"
 #include "larsim/Simulation/LArG4Parameters.h"
 
 #include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
@@ -104,6 +106,7 @@ private:
   std::unique_ptr<phot::SemiAnalyticalModel> _semi_model;
   fhicl::ParameterSet _vuv_params;
   fhicl::ParameterSet _vis_params;
+  std::shared_ptr<phot::OpticalPath> _optical_path_tool;
 
   ::flashmatch::FlashMatchManager _mgr; ///< The flash matching manager
   std::vector<flashmatch::FlashMatch_t> _result_v; ///< Matching result will be stored here
@@ -176,7 +179,8 @@ SBNDOpT0Finder::SBNDOpT0Finder(fhicl::ParameterSet const& p)
 
   _vuv_params = p.get<fhicl::ParameterSet>("VUVHits");
   _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
-  _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
+  _optical_path_tool = std::shared_ptr<phot::OpticalPath>(std::move(art::make_tool<phot::OpticalPath>(p.get<fhicl::ParameterSet>("OpticalPathTool"))));
+  _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, _optical_path_tool, true, false);
 
   _opflash_producer_v =     p.get<std::vector<std::string>>("OpFlashProducers");
   _opflash_ara_producer_v = p.get<std::vector<std::string>>("OpFlashAraProducers");
