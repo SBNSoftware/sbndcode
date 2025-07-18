@@ -1,0 +1,43 @@
+# File: reco1_nosp_data.fcl
+# Authors: Mun Jung Jung (munjung@uchicago.edu)
+
+# runs everything downstream of sptpc2d in the reco1 chain for data
+# runs gaushitfinder on sptpc2d:guass 
+
+#include "wcsp_data_sbnd.fcl"
+#include "opdeconvolution_sbnd_data.fcl"
+#include "sbnd_ophitfinder_deco_data.fcl"
+#include "sbnd_flashfinder_deco_data.fcl"
+#include "crt_channel_map_service.fcl"
+#include "crt_calib_service.fcl"
+#include "standard_reco1_sbnd.fcl"
+
+services:
+{
+    @table::services
+    @table::sbnd_data_services
+    CRTChannelMapService: @local::crt_channel_map_standard
+    CRTCalibService:      @local::crt_calib_service
+}
+
+physics.producers:
+{
+    @table::physics.producers
+    sptpc2d:   @local::sbnd_wcls_sp_data
+    crtstrips: @local::crtstriphitproducer_data_sbnd
+    crtclustering:  @local::crtclusterproducer_data_sbnd
+    crtspacepoints: @local::crtspacepointproducer_data_sbnd
+    crttracks:      @local::crttrackproducer_data_sbnd
+    opdecopmt: @local::SBNDOpDeconvolutionPMT_data
+    ophitpmt:  @local::SBNDDecoOpHitFinderPMT_data
+    opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0_data
+    opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1_data
+}
+
+physics.reco1: [gaushit, numberofhitsfilter, cluster3d, crtstrips, 
+    crtclustering, crtspacepoints, crttracks, opdecopmt, ophitpmt, opflashtpc0, opflashtpc1]
+physics.ana: [superadata]
+
+outputs.out1.SelectEvents: [ "reco1" ]
+
+physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"

@@ -1,10 +1,13 @@
+# File: sp_data_bothrois.fcl
+# Authors: Mun Jung Jung (munjung@uchicago.edu)
+
+# runs WC 2D signal processing on data using both traditional and DNN-based ROI finding
+# create three Wire products: sptpc2d:gauss, sptpc2d:wiener (from traditional), sptc2d:dnnsp (from DNN)
+
 #include "services_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 #include "wcsp_data_sbnd.fcl"
-
-### fcl to run SP and save Wire products based on both the tradition ROI finding algorithm and the DNN-based ROI finding
-### munjung@uchicago.edu
 
 process_name: WCLS
 
