@@ -1,0 +1,6 @@
+#include "standard_detsim_sbnd.fcl"
+
+### fcl to run SP and save Wire products based on the DNN-based ROI finding
+### munjung@uchicago.edu
+
+physics.producers.simtpc2d: @local::sbnd_wcls_simsp_dnnroi
