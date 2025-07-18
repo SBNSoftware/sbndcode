@@ -15,5 +15,4 @@ physics.ana: [superadata]
 
 outputs.out1.SelectEvents: [ "reco1" ]
 
-# uncomment below line to run DNN ROI finding SP for reco
 physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"
