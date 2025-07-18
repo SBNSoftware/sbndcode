@@ -23,6 +23,7 @@ function (anode, ts_p0, ts_p1, prefix="dnnroi", output_scale=1.0, nticks=3428, t
         data: {
             anode: wc.tn(anode),
             plane: 0,
+	    mask_thresh: 0.5,
             intags: intags,
             decon_charge_tag: "decon_charge%d" %apaid,
             outtag: "dnnsp%du"%apaid,
@@ -40,6 +41,7 @@ function (anode, ts_p0, ts_p1, prefix="dnnroi", output_scale=1.0, nticks=3428, t
         data: {
             anode: wc.tn(anode),
             plane: 1,
+	    mask_thresh: 0.5,
             intags: intags,
             decon_charge_tag: "decon_charge%d" %apaid,
             outtag: "dnnsp%dv"%apaid,
