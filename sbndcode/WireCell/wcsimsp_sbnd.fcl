@@ -76,8 +76,8 @@ sbnd_wcls_simsp.wcls_main.structs:  {
                                      ## simulated front porch size [us]
                                      tick0_time: @local::sbnd_detectorclocks.TriggerOffsetTPC
                                      nticks: 3427
-                                     nchunks: 2
-                                     tick_per_slice: 4
+                                     nchunks: 2 # dummy for trad
+                                     tick_per_slice: 4 # dummy for trad
                                     }
 
 # ------------------------------------------------------------------------------------ #
