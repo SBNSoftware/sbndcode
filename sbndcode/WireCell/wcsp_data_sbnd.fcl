@@ -66,4 +66,14 @@ sbnd_wcls_sp_data.wcls_main.structs:   {
                                         tick_per_slice: 4
                                        }
 
+# ------------------------------------------------------------------------------------ #
+
+## Configuration for **Signal processing ONLY** for data -- run both traditional and DNN ROI finding
+
+sbnd_wcls_sp_data_bothrois: @local::sbnd_wcls_sp_data
+sbnd_wcls_sp_data_bothrois.wcls_main.outputers: ["wclsDepoFluxWriter:postdrift", "wclsFrameSaver:spsaver", "wclsFrameSaver:dnnsaver"] # "wclsFrameSaver:simdigits" <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+sbnd_wcls_sp_data_bothrois.wcls_main.structs.use_dnnroi: true
+sbnd_wcls_sp_data_bothrois.wcls_main.structs.nchunks: 2 # should match training config
+sbnd_wcls_sp_data_bothrois.wcls_main.structs.tick_per_slice: 4 # should match training config
+
 END_PROLOG
