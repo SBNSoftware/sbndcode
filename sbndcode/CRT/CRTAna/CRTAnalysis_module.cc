@@ -91,6 +91,8 @@ public:
                           const std::map<CRTBackTrackerAlg::Category, bool> &spacePointRecoStatusMap = {},
                           const std::map<int, std::pair<bool, bool>> &trackRecoStatusMap = {});
 
+  double SPTimeDelta(std::vector<std::pair<int, double>> &time_set);
+
 private:
 
   CRTGeoAlg fCRTGeoAlg;
@@ -163,8 +165,8 @@ private:
   //strip hit to select the strip which has ADC above threshold
   std::vector<uint32_t> _sh_channel;
   std::vector<int16_t>  _sh_tagger;
-  std::vector<int64_t>  _sh_ts0;
-  std::vector<int64_t>  _sh_ts1;
+  std::vector<double>   _sh_ts0;
+  std::vector<double>   _sh_ts1;
   std::vector<uint32_t> _sh_unixs;
   std::vector<double>   _sh_pos;
   std::vector<double>   _sh_err;
@@ -180,16 +182,16 @@ private:
   std::vector<double>   _sh_truth_time;
 
   //cluster from x-y coincidence for CRTSpacePoint , this is what we normally call a CRT hit
-  std::vector<int64_t>               _cl_ts0;
-  std::vector<int64_t>               _cl_ts1;
+  std::vector<double>                _cl_ts0;
+  std::vector<double>                _cl_ts1;
   std::vector<uint32_t>              _cl_unixs;
   std::vector<uint16_t>              _cl_nhits;
   std::vector<int16_t>               _cl_tagger;
   std::vector<uint8_t>               _cl_composition;
   std::vector<std::vector<uint32_t>> _cl_channel_set;
   std::vector<std::vector<uint16_t>> _cl_adc_set;
-  std::vector<std::vector<uint32_t>> _cl_sh_ts0_set; //! To store t0 from x-y coincidences
-  std::vector<std::vector<uint32_t>> _cl_sh_ts1_set; //! To store t1 from x-y coincidences
+  std::vector<std::vector<double>>   _cl_sh_ts0_set; //! To store t0 from x-y coincidences
+  std::vector<std::vector<double>>   _cl_sh_ts1_set; //! To store t1 from x-y coincidences
   std::vector<std::vector<uint16_t>> _cl_sh_feb_mac5_set; //! MAC5 addresses of StripHit FEBs
   std::vector<std::vector<double>>   _cl_sh_time_walk_set; //! Time walk correction
   std::vector<std::vector<double>>   _cl_sh_prop_delay_set; //! Light propagation correction
@@ -221,6 +223,8 @@ private:
   std::vector<double>                _cl_sp_ets0;
   std::vector<double>                _cl_sp_ts1;
   std::vector<double>                _cl_sp_ets1;
+  std::vector<double>                _cl_sp_dts0;
+  std::vector<double>                _cl_sp_dts1;
   std::vector<bool>                  _cl_sp_complete;
 
   //backtrack truth information from reco level
@@ -435,8 +439,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
   fTree->Branch("sh_channel", "std::vector<uint32_t>", &_sh_channel);
   fTree->Branch("sh_tagger", "std::vector<int16_t>", &_sh_tagger);
-  fTree->Branch("sh_ts0", "std::vector<int64_t>", &_sh_ts0);
-  fTree->Branch("sh_ts1", "std::vector<int64_t>", &_sh_ts1);
+  fTree->Branch("sh_ts0", "std::vector<double>", &_sh_ts0);
+  fTree->Branch("sh_ts1", "std::vector<double>", &_sh_ts1);
   fTree->Branch("sh_unixs", "std::vector<uint32_t>", &_sh_unixs);
   fTree->Branch("sh_pos", "std::vector<double>", &_sh_pos);
   fTree->Branch("sh_err", "std::vector<double>", &_sh_err);
@@ -454,16 +458,16 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("sh_truth_time", "std::vector<double>", &_sh_truth_time);
     }
 
-  fTree->Branch("cl_ts0", "std::vector<int64_t>", &_cl_ts0);
-  fTree->Branch("cl_ts1", "std::vector<int64_t>", &_cl_ts1);
+  fTree->Branch("cl_ts0", "std::vector<double>", &_cl_ts0);
+  fTree->Branch("cl_ts1", "std::vector<double>", &_cl_ts1);
   fTree->Branch("cl_unixs", "std::vector<uint32_t>", &_cl_unixs);
   fTree->Branch("cl_nhits", "std::vector<uint16_t>", &_cl_nhits);
   fTree->Branch("cl_tagger", "std::vector<int16_t>", &_cl_tagger);
   fTree->Branch("cl_composition", "std::vector<uint8_t>", &_cl_composition);
   fTree->Branch("cl_channel_set", "std::vector<std::vector<uint32_t>>", &_cl_channel_set);
   fTree->Branch("cl_adc_set", "std::vector<std::vector<uint16_t>>", &_cl_adc_set);
-  fTree->Branch("cl_sh_ts0_set", "std::vector<std::vector<uint32_t>>", &_cl_sh_ts0_set);
-  fTree->Branch("cl_sh_ts1_set", "std::vector<std::vector<uint32_t>>", &_cl_sh_ts1_set);
+  fTree->Branch("cl_sh_ts0_set", "std::vector<std::vector<double>>", &_cl_sh_ts0_set);
+  fTree->Branch("cl_sh_ts1_set", "std::vector<std::vector<double>>", &_cl_sh_ts1_set);
   fTree->Branch("cl_sh_feb_mac5_set", "std::vector<std::vector<uint16_t>>", &_cl_sh_feb_mac5_set);
   fTree->Branch("cl_sh_time_walk_set", "std::vector<std::vector<double>>", &_cl_sh_time_walk_set);
   fTree->Branch("cl_sh_prop_delay_set", "std::vector<std::vector<double>>", &_cl_sh_prop_delay_set);
@@ -498,6 +502,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("cl_sp_ets0", "std::vector<double>", &_cl_sp_ets0);
   fTree->Branch("cl_sp_ts1", "std::vector<double>", &_cl_sp_ts1);
   fTree->Branch("cl_sp_ets1", "std::vector<double>", &_cl_sp_ets1);
+  fTree->Branch("cl_sp_dts0", "std::vector<double>", &_cl_sp_dts0);
+  fTree->Branch("cl_sp_dts1", "std::vector<double>", &_cl_sp_dts1);
   fTree->Branch("cl_sp_complete", "std::vector<bool>", &_cl_sp_complete);
 
   if(!fDataMode && fTruthMatch)
@@ -1233,6 +1239,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_sp_ets0.resize(nClusters);
   _cl_sp_ts1.resize(nClusters);
   _cl_sp_ets1.resize(nClusters);
+  _cl_sp_dts0.resize(nClusters);
+  _cl_sp_dts1.resize(nClusters);
   _cl_sp_complete.resize(nClusters);
 
   for(unsigned i = 0; i < nClusters; ++i)
@@ -1251,11 +1259,13 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       const auto striphits = clustersToStripHits.at(cluster.key());
       _cl_channel_set[i].resize(_cl_nhits[i]);
       _cl_adc_set[i].resize(2 * _cl_nhits[i]);
-      _cl_sh_ts0_set[i].resize(_cl_nhits[i] );
-      _cl_sh_ts1_set[i].resize(_cl_nhits[i] );
+      _cl_sh_ts0_set[i].resize(_cl_nhits[i]);
+      _cl_sh_ts1_set[i].resize(_cl_nhits[i]);
       _cl_sh_feb_mac5_set[i].resize(_cl_nhits[i]);
       _cl_sh_time_walk_set[i].resize(_cl_nhits[i]);
       _cl_sh_prop_delay_set[i].resize(_cl_nhits[i]);
+
+      std::vector<std::pair<int, double>> ts0_set, ts1_set;
 
       for(unsigned ii = 0; ii < _cl_nhits[i]; ++ii)
         {
@@ -1281,24 +1291,28 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
            * Because the Ts0(), Ts1() getters invoked in _cl_sp_ts*, _cl_sh_ts*_set are raw T0/1
            * counters, the time walk and propagation delay are saved as explicit branches here.
            */
-          if(spacepoints.size() == 1) { // need unique position of spacepoint
-            double pe0 = fCRTGeoAlg.GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
-            double pe1 = fCRTGeoAlg.GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
-            double pe  = pe0 + pe1;
+          if(spacepoints.size() == 1)
+            {
+              double pe0 = fCRTGeoAlg.GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
+              double pe1 = fCRTGeoAlg.GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
+              double pe  = pe0 + pe1;
 
-            double dist = fCRTGeoAlg.DistanceDownStrip( spacepoints[0]->Pos(), striphit->Channel() );
+              double dist = fCRTGeoAlg.DistanceDownStrip( spacepoints[0]->Pos(), striphit->Channel() );
 
-            double corr = std::pow( dist - fPEAttenuation, 2.0 ) / std::pow( fPEAttenuation, 2.0 );
-            double tw_pe = pe * corr;
+              double corr = std::pow( dist - fPEAttenuation, 2.0 ) / std::pow( fPEAttenuation, 2.0 );
+              double tw_pe = pe * corr;
 
-            _cl_sh_time_walk_set[i][ii]  = fTimeWalkNorm * std::exp( -fTimeWalkScale * tw_pe );
-            _cl_sh_prop_delay_set[i][ii] = fPropDelay * dist;
+              _cl_sh_time_walk_set[i][ii]  = fTimeWalkNorm * std::exp( -fTimeWalkScale * tw_pe );
+              _cl_sh_prop_delay_set[i][ii] = fPropDelay * dist;
 
-          } else { // fill with nonsense
-            _cl_sh_time_walk_set[i][ii]  = -999999.;
-            _cl_sh_prop_delay_set[i][ii] = -999999.;
-          }
-
+              ts0_set.push_back({_cl_sh_feb_mac5_set[i][ii], _cl_sh_ts0_set[i][ii] - _cl_sh_time_walk_set[i][ii] - _cl_sh_prop_delay_set[i][ii]});
+              ts1_set.push_back({_cl_sh_feb_mac5_set[i][ii], _cl_sh_ts1_set[i][ii] - _cl_sh_time_walk_set[i][ii] - _cl_sh_prop_delay_set[i][ii]});
+            }
+          else
+            {
+              _cl_sh_time_walk_set[i][ii]  = -999999.;
+              _cl_sh_prop_delay_set[i][ii] = -999999.;
+            }
         }
 
       if(!fDataMode && fTruthMatch)
@@ -1338,6 +1352,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_sp_ets0[i]     = spacepoint->Ts0Err();
           _cl_sp_ts1[i]      = spacepoint->Ts1();
           _cl_sp_ets1[i]     = spacepoint->Ts1Err();
+          _cl_sp_dts0[i]     = SPTimeDelta(ts0_set);
+          _cl_sp_dts1[i]     = SPTimeDelta(ts1_set);
           _cl_sp_complete[i] = spacepoint->Complete();
         }
       else
@@ -1354,6 +1370,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           _cl_sp_ets0[i]     = -999999.;
           _cl_sp_ts1[i]      = -999999.;
           _cl_sp_ets1[i]     = -999999.;
+          _cl_sp_dts0[i]     = -999999.;
+          _cl_sp_dts1[i]     = -999999.;
           _cl_sp_complete[i] = false;
         }
     }
@@ -1856,6 +1874,24 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_tr_ts0.resize(nActualTracks);
   _tpc_tr_ts1.resize(nActualTracks);
   _tpc_tr_score.resize(nActualTracks);
+}
+
+double sbnd::crt::CRTAnalysis::SPTimeDelta(std::vector<std::pair<int, double>> &time_set)
+{
+  std::sort(time_set.begin(), time_set.end(), [](auto &a, auto &b)
+  { return a.first < b.first; });
+
+  double sum = 0;
+
+  for(unsigned int i = 0; i < time_set.size(); ++i)
+    {
+      for(unsigned int ii = i + 1; ii < time_set.size(); ++ii)
+        sum += (time_set[i].second - time_set[ii].second);
+    }
+
+  sum /= (time_set.size() - 1);
+
+  return sum;
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTAnalysis)
