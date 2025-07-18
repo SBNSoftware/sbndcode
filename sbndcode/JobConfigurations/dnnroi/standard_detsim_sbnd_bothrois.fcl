@@ -1,6 +1,9 @@
-#include "standard_detsim_sbnd.fcl"
+# File: standard_detsim_sbnd_bothrois.fcl
+# Authors: Mun Jung Jung (munjung@uchicago.edu)
 
-### fcl to run SP and save Wire products based on both the tradition ROI finding algorithm and the DNN-based ROI finding
-### munjung@uchicago.edu
+# runs WC 2D signal processing during detsim using both traditional and DNN-based ROI finding
+# create three Wire products: simtpc2d:gauss, simtpc2d:wiener (from traditional), simtpc2d:dnnsp (from DNN)
+
+#include "standard_detsim_sbnd.fcl"
 
 physics.producers.simtpc2d: @local::sbnd_wcls_simsp_bothrois

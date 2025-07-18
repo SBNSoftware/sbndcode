@@ -1,10 +1,13 @@
+# File: sp_data_dnnroi.fcl
+# Authors: Mun Jung Jung (munjung@uchicago.edu)
+
+# runs WC 2D signal processing using only DNN-based ROI finding
+# create one Wire product: sptc2d:dnnsp
+
 #include "services_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 #include "wcsp_data_sbnd.fcl"
-
-### fcl to run the DNN-based ROI finding
-### munjung@uchicago.edu
 
 process_name: WCLS
 
