@@ -381,7 +381,7 @@ if roi == "dnn" then
  g.intern(
   innodes=[wcls_input.adc_digits],
   outnodes=[],
-  centernodes=nfsp_pipes+[fanout_apa, retag_dnnroi, fanin_apa_dnnroi, wcls_output.dnnsp_signals, sink_dnnroi],
+  centernodes=nfsp_pipes+[fanout_apa, retag_dnnroi, retag_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output.dnnsp_signals, sink_dnnroi, sink_sp],
   edges=[
     g.edge(wcls_input.adc_digits, fanout_apa, 0, 0),
     g.edge(fanout_apa, nfsp_pipes[0], 0, 0),
@@ -391,6 +391,10 @@ if roi == "dnn" then
     g.edge(fanin_apa_dnnroi, retag_dnnroi, 0, 0),
     g.edge(retag_dnnroi, wcls_output.dnnsp_signals, 0, 0),
     g.edge(wcls_output.dnnsp_signals, sink_dnnroi, 0, 0),
+    g.edge(nfsp_pipes[0], fanin_apa_sp, 1, 0),
+    g.edge(nfsp_pipes[1], fanin_apa_sp, 1, 1),
+    g.edge(fanin_apa_sp, retag_sp, 0, 0),
+    g.edge(retag_sp, sink_sp, 0, 0),
   ]
 )
 else if roi == "both" then

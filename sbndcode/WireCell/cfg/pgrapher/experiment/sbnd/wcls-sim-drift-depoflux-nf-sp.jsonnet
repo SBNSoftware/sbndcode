@@ -525,7 +525,7 @@ local graph_sp_dnn =
 g.intern(
   innodes=[retagger_sim],
   outnodes=[],
-  centernodes=nfsp_pipes+[wcls_output_sim.sim_digits, fanout_apa, retagger_dnnroi, fanin_apa_dnnroi, wcls_output_sp.dnnsp_signals, sink_dnnroi],
+  centernodes=nfsp_pipes+[wcls_output_sim.sim_digits, fanout_apa, retagger_dnnroi, retagger_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output_sp.dnnsp_signals, sink_dnnroi, sink_sp],
   edges=[
     g.edge(retagger_sim, wcls_output_sim.sim_digits, 0, 0),
     g.edge(wcls_output_sim.sim_digits, fanout_apa, 0, 0),
@@ -536,6 +536,10 @@ g.intern(
     g.edge(fanin_apa_dnnroi, retagger_dnnroi, 0, 0),
     g.edge(retagger_dnnroi, wcls_output_sp.dnnsp_signals, 0, 0),
     g.edge(wcls_output_sp.dnnsp_signals, sink_dnnroi, 0, 0),
+    g.edge(nfsp_pipes[0], fanin_apa_sp, 1, 0),
+    g.edge(nfsp_pipes[1], fanin_apa_sp, 1, 1),
+    g.edge(fanin_apa_sp, retagger_sp, 0, 0),
+    g.edge(retagger_sp, sink_sp, 0, 0),
   ]
 );
 
