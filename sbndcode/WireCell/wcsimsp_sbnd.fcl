@@ -29,7 +29,7 @@ sbnd_wcls: {
 
 # ------------------------------------------------------------------------------------ #
 
-## Configuration for 2D Sim + Signal Processing 
+## Configuration for 2D Sim + Signal Processing -- default: run only traditional ROI finding
 sbnd_wcls_simsp: @local::sbnd_wcls
 sbnd_wcls_simsp.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp.jsonnet"]
 sbnd_wcls_simsp.wcls_main.inputers: ["wclsSimDepoSetSource:"]
@@ -61,6 +61,7 @@ sbnd_wcls_simsp.wcls_main.params:   {
 
                                      dnnroi_model_p0: "DNN_ROI/plane0.ts"
                                      dnnroi_model_p1: "DNN_ROI/plane1.ts"
+                                     roi: "trad"
                                     }
                                     
 sbnd_wcls_simsp.wcls_main.structs:  {
@@ -75,10 +76,28 @@ sbnd_wcls_simsp.wcls_main.structs:  {
                                      ## simulated front porch size [us]
                                      tick0_time: @local::sbnd_detectorclocks.TriggerOffsetTPC
                                      nticks: 3427
-                                     use_dnnroi: false
                                      nchunks: 2
                                      tick_per_slice: 4
                                     }
+
+# ------------------------------------------------------------------------------------ #
+
+## Configuration for 2D Sim + Signal Processing -- run both traditional and DNN ROI finding
+sbnd_wcls_simsp_bothrois: @local::sbnd_wcls_simsp
+sbnd_wcls_simsp_bothrois.wcls_main.outputers: ["wclsDepoFluxWriter:postdrift", "wclsFrameSaver:spsaver", "wclsFrameSaver:dnnsaver"] # "wclsFrameSaver:simdigits" <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+sbnd_wcls_simsp_bothrois.wcls_main.params.roi: "both"
+sbnd_wcls_simsp_bothrois.wcls_main.structs.nchunks: 2 # should match training config
+sbnd_wcls_simsp_bothrois.wcls_main.structs.tick_per_slice: 4 # should match training config
+
+# ------------------------------------------------------------------------------------ #
+## Configuration for 2D Sim + Signal Processing -- run DNN ROI finding only
+sbnd_wcls_simsp_dnnroi: @local::sbnd_wcls_simsp
+sbnd_wcls_simsp_dnnroi.wcls_main.outputers: ["wclsDepoFluxWriter:postdrift", "wclsFrameSaver:dnnsaver"] # "wclsFrameSaver:simdigits" <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
+sbnd_wcls_simsp_dnnroi.wcls_main.params.roi: "dnn"
+sbnd_wcls_simsp_dnnroi.wcls_main.structs.nchunks: 2 # should match training config
+sbnd_wcls_simsp_dnnroi.wcls_main.structs.tick_per_slice: 4 # should match training config
+
+
 
 # ------------------------------------------------------------------------------------ #
 

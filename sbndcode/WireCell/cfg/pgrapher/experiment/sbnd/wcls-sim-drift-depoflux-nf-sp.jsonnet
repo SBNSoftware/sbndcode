@@ -5,7 +5,7 @@
 local reality = std.extVar('reality');
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
 local savetid = std.extVar("save_track_id");
-local use_dnnroi = std.extVar('use_dnnroi');
+local roi = std.extVar('roi');
 local nchunks = std.extVar('nchunks');
 local tick_per_slice = std.extVar('tick_per_slice');
 local dnnroi_model_p0 = std.extVar('dnnroi_model_p0');
@@ -138,7 +138,9 @@ local wcls_depoflux_writer = g.pnode({
 }, nin=1, nout=1, uses=tools.anodes + [tools.field]);
 
 local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
-local sp_override = if use_dnnroi then {
+
+local sp_override = 
+if roi == "dnn" then {
     sparse: true,
     use_roi_debug_mode: true,
     save_negative_charge: false, // TODO: no negative charge in gauss, default is false
@@ -152,9 +154,31 @@ local sp_override = if use_dnnroi then {
     break_roi_loop2_tag: "",
     shrink_roi_tag: "",
     extend_roi_tag: "",
-} else {
+    // mp3_roi_tag: "",
+    // mp2_roi_tag: "",
+    decon_charge_tag: "",
+    gauss_tag: "",
+    wiener_tag: "",
+} 
+else if roi == "both" then {
+    sparse: true,
+    use_roi_debug_mode: true,
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
+    use_multi_plane_protection: true,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
+    tight_lf_tag: "",
+    // loose_lf_tag: "", // comment to use as input to dnnsp
+    cleanup_roi_tag: "",
+    break_roi_loop1_tag: "",
+    break_roi_loop2_tag: "",
+    shrink_roi_tag: "",
+    extend_roi_tag: "",
+} 
+else if roi == "trad" then {
     sparse: true,
 };
+
 local sp = sp_maker(params, tools, sp_override);
 local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
@@ -340,7 +364,8 @@ local chsel_pipes = [
 ];
 
 
-local nfsp_pipes = if use_dnnroi then
+local nfsp_pipes = 
+if roi == "dnn" then
 // oports: 0: dnnroi, 1: traditional sp
 [
   g.intern(
@@ -359,7 +384,26 @@ local nfsp_pipes = if use_dnnroi then
   )
   for n in std.range(0, std.length(tools.anodes) - 1)
 ]
-else
+else if roi == "both" then
+// oports: 0: dnnroi, 1: traditional sp
+[
+  g.intern(
+    innodes=[chsel_pipes[n]],
+    outnodes=[dnnroi_pipes[n],sp_fans[n]],
+    centernodes=[nf_pipes[n], sp_pipes[n], sp_fans[n]],
+    edges=[
+      g.edge(chsel_pipes[n], nf_pipes[n], 0, 0),
+      g.edge(nf_pipes[n], sp_pipes[n], 0, 0),
+      g.edge(sp_pipes[n], sp_fans[n], 0, 0),
+      g.edge(sp_fans[n], dnnroi_pipes[n], 0, 0),
+    ],
+    iports=chsel_pipes[n].iports,
+    oports=dnnroi_pipes[n].oports+[sp_fans[n].oports[1]],
+    name='nfsp_pipe_%d' % n,
+  )
+  for n in std.range(0, std.length(tools.anodes) - 1)
+]
+else if roi == "trad" then
 [
   g.pipeline([
                chsel_pipes[n],
@@ -474,15 +518,32 @@ wcls_output_sp.sp_signals,      //sp
 sink_sp                         //sp
 ]);
 
-local graph_sim_dnn = g.pipeline([
+local graph_sim = g.pipeline([
 wcls_input_sim.deposet,         //sim
 setdrifter,                     //sim
 wcls_depoflux_writer,           //sim
 bi_manifold1,                   //sim
 ]);
 
-
 local graph_sp_dnn = 
+g.intern(
+  innodes=[retagger_sim],
+  outnodes=[],
+  centernodes=nfsp_pipes+[wcls_output_sim.sim_digits, fanout_apa, retagger_dnnroi, fanin_apa_dnnroi, wcls_output_sp.dnnsp_signals, sink_dnnroi],
+  edges=[
+    g.edge(retagger_sim, wcls_output_sim.sim_digits, 0, 0),
+    g.edge(wcls_output_sim.sim_digits, fanout_apa, 0, 0),
+    g.edge(fanout_apa, nfsp_pipes[0], 0, 0),
+    g.edge(fanout_apa, nfsp_pipes[1], 1, 0),
+    g.edge(nfsp_pipes[0], fanin_apa_dnnroi, 0, 0),
+    g.edge(nfsp_pipes[1], fanin_apa_dnnroi, 0, 1),
+    g.edge(fanin_apa_dnnroi, retagger_dnnroi, 0, 0),
+    g.edge(retagger_dnnroi, wcls_output_sp.dnnsp_signals, 0, 0),
+    g.edge(wcls_output_sp.dnnsp_signals, sink_dnnroi, 0, 0),
+  ]
+);
+
+local graph_sp_both = 
 g.intern(
   innodes=[retagger_sim],
   outnodes=[],
@@ -506,13 +567,22 @@ g.intern(
 );
 
 local graph_dnn = g.pipeline([
-graph_sim_dnn,
+graph_sim,
 graph_sp_dnn,
+]);
+
+local graph_both = g.pipeline([
+graph_sim,
+graph_sp_both,
 ]);
 
 local save_simdigits = std.extVar('save_simdigits');
 
-local graph = if use_dnnroi then graph_dnn else if save_simdigits == "true" then graph1_trad else graph2_trad;
+local graph = 
+if roi == "dnn" then graph_dnn 
+else if roi == "both" then graph_both 
+else if save_simdigits == "true" then graph1_trad 
+else graph2_trad;
 
 local app = {
   type: 'TbbFlow',
