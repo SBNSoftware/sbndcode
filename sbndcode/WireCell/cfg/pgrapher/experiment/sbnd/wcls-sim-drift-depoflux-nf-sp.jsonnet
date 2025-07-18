@@ -148,14 +148,11 @@ if roi == "dnn" then {
     do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
     mp_tick_resolution:4,
     tight_lf_tag: "",
-    // loose_lf_tag: "", // comment to use as input to dnnsp
     cleanup_roi_tag: "",
     break_roi_loop1_tag: "",
     break_roi_loop2_tag: "",
     shrink_roi_tag: "",
     extend_roi_tag: "",
-    // mp3_roi_tag: "",
-    // mp2_roi_tag: "",
     decon_charge_tag: "",
     gauss_tag: "",
     wiener_tag: "",
@@ -168,7 +165,6 @@ else if roi == "both" then {
     do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
     mp_tick_resolution:4,
     tight_lf_tag: "",
-    // loose_lf_tag: "", // comment to use as input to dnnsp
     cleanup_roi_tag: "",
     break_roi_loop1_tag: "",
     break_roi_loop2_tag: "",
