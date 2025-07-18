@@ -127,14 +127,13 @@ sbnd_wcls_sp.wcls_main.params :   {
                                    # Save output signal waveforms (recob::Wire) in "sparse" or "dense" form
                                    signal_output_form: "sparse"
 
+                                   roi: "trad"
                                    dnnroi_model_p0: "DNN_ROI/plane0.ts"
                                    dnnroi_model_p1: "DNN_ROI/plane1.ts"
-
                                    }
 
 sbnd_wcls_sp.wcls_main.structs:   {
                                    nticks: 3427
-                                   use_dnnroi: false
                                    nchunks: 2
                                    tick_per_slice: 4
                                   }
