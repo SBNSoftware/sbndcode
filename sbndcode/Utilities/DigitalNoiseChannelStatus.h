@@ -18,7 +18,9 @@
 #include "lardataobj/RecoBase/Wire.h"
 
 #include <unordered_set>
-
+#include <vector> 
+#include <algorithm> 
+#include <iostream> 
 namespace sbnd {
   class DigitalNoiseChannelStatus;
 }
@@ -46,6 +48,7 @@ private:
   int fNBADCutRawDigit;
   std::string fRawDigitLabel;
   std::string fRecobWireLabel;
+  std::vector<unsigned int> fChannelsToInclude;
 
   int fNAwayFromPedestalRawDigit;
   int fDistFromPedestalRawDigit;

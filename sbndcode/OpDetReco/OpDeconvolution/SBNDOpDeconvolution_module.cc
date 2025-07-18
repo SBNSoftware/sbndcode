@@ -77,7 +77,8 @@ void opdet::SBNDOpDeconvolution::produce(art::Event& e)
 {
   //Load the waveforms
   art::Handle< std::vector< raw::OpDetWaveform > > wfHandle;
-  e.getByLabel(fInputLabel, wfHandle);
+  art::InputTag	tag(fInputLabel);
+  e.getByLabel(tag, wfHandle);
   if (!wfHandle.isValid()) {
    mf::LogError("SBNDOpDeconvolution")<<"Input waveforms with input label "<<fInputLabel<<" couldn't be loaded..."<<std::endl;
    throw cet::exception("SBNDOpDeconvolution") << "Input waveforms with input label " << fInputLabel << " not found\n";

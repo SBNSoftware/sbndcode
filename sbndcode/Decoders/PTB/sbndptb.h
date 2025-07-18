@@ -80,8 +80,8 @@ namespace raw {
       fMiscs(m),
       fIndexes(wordindexes) {};
 
-      const std::vector<raw::ptb::Trigger>&     GetHLTriggers() const;   
-      const std::vector<raw::ptb::Trigger>&     GetLLTriggers() const;   
+      const std::vector<raw::ptb::Trigger>&     GetHLTriggers() const;   //HLT menu 
+      const std::vector<raw::ptb::Trigger>&     GetLLTriggers() const;   //LLT menu 
       const std::vector<raw::ptb::ChStatus>&    GetChStatuses() const; 
       const std::vector<raw::ptb::Feedback>&    GetFeedbacks() const;  
       const std::vector<raw::ptb::Misc>&        GetMiscs() const;
