@@ -164,6 +164,10 @@ class BlipAnaTreeDataStruct
   // note: find better way to do this ...
   bool  part_madeClustCol[kMaxG4];
   bool  edep_madeClustCol[kMaxEDeps];  // did this deposition end up in a 2D cluster? (post track-mask)
+  bool  part_madeClustInd0[kMaxG4];
+  bool  edep_madeClustInd0[kMaxEDeps];  // did this deposition end up in a 2D cluster? (post track-mask)
+  bool  part_madeClustInd1[kMaxG4];
+  bool  edep_madeClustInd1[kMaxEDeps];  // did this deposition end up in a 2D cluster? (post track-mask)
 
   // --- Hit information ---
   int	  nhits;                    // number of hits
@@ -275,6 +279,8 @@ class BlipAnaTreeDataStruct
     FillWith(part_isPrimary,   false);
     //FillWith(part_madeHitCol,        false);
     FillWith(part_madeClustCol,      false);
+    FillWith(part_madeClustInd0,      false);
+    FillWith(part_madeClustInd1,      false);
     FillWith(part_trackID,     -999);
     FillWith(part_pdg,         -99999);
     FillWith(part_nDaughters,  -999);
@@ -320,6 +326,8 @@ class BlipAnaTreeDataStruct
     FillWith(edep_isPrimary, false);
     //FillWith(edep_madeHitCol,  false);
     FillWith(edep_madeClustCol,  false);
+    FillWith(edep_madeClustInd0,  false);
+    FillWith(edep_madeClustInd1,  false);
     FillWith(edep_blipid, -9);
     nhits                 = 0;    // --- TPC hits ---
     if( saveHitInfo ) {
@@ -526,7 +534,9 @@ class BlipAnaTreeDataStruct
       evtTree->Branch("nparticles",&nparticles,"nparticles/I");
       evtTree->Branch("part_isPrimary",part_isPrimary,"part_isPrimary[nparticles]/O");
       //evtTree->Branch("part_madeHitCol",part_madeHitCol,"part_madeHitCol[nparticles]/O");
-      //evtTree->Branch("part_madeClustCol",part_madeClustCol,"part_madeClustCol[nparticles]/O");
+      evtTree->Branch("part_madeClustInd0",part_madeClustInd0,"part_madeClustInd0[nparticles]/O");
+      evtTree->Branch("part_madeClustInd1",part_madeClustInd1,"part_madeClustInd1[nparticles]/O");
+      evtTree->Branch("part_madeClustCol",part_madeClustCol,"part_madeClustCol[nparticles]/O");
       evtTree->Branch("part_trackID",part_trackID,"part_trackID[nparticles]/I");
       evtTree->Branch("part_pdg",part_pdg,"part_pdg[nparticles]/I");
       evtTree->Branch("part_nDaughters",part_nDaughters,"part_nDaughters[nparticles]/I");
@@ -558,6 +568,8 @@ class BlipAnaTreeDataStruct
       evtTree->Branch("edep_g4qfrac",edep_g4qfrac,"edep_g4qfrac[nedeps]/F"); 
       evtTree->Branch("edep_isPrimary",edep_isPrimary,"edep_isPrimary[nedeps]/O"); 
       //evtTree->Branch("edep_madeHitCol",edep_madeHitCol,"edep_madeHitCol[nedeps]/O"); 
+      evtTree->Branch("edep_madeClustInd0",edep_madeClustInd0,"edep_madeClustInd0[nedeps]/O"); 
+      evtTree->Branch("edep_madeClustInd1",edep_madeClustInd1,"edep_madeClustInd1[nedeps]/O"); 
       evtTree->Branch("edep_madeClustCol",edep_madeClustCol,"edep_madeClustCol[nedeps]/O"); 
       evtTree->Branch("edep_pdg",edep_pdg,"edep_pdg[nedeps]/I"); 
       evtTree->Branch("edep_proc",edep_proc,"edep_proc[nedeps]/I"); 
@@ -1288,6 +1300,14 @@ void BlipAna::analyze(const art::Event& evt)
       if( clust.Plane==2 ){
         fData->part_madeClustCol[g4index]  = true;
         fData->edep_madeClustCol[tbi]      = true;
+      }
+      if( clust.Plane==1 ){
+        fData->part_madeClustInd1[g4index]  = true;
+        fData->edep_madeClustInd1[tbi]      = true;
+      }
+      if( clust.Plane==0 ){
+        fData->part_madeClustInd0[g4index]  = true;
+        fData->edep_madeClustInd0[tbi]      = true;
       }
 
       fData->clust_edepid[i]   = trueBlip.ID;
