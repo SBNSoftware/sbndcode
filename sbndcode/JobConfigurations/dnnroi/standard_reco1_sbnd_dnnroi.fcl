@@ -1,0 +1,8 @@
+# File: standard_reco1_sbnd_dnnroi.fcl
+# Authors: Mun Jung Jung (munjung@uchicago.edu)
+
+# run MC reco1 on simtpc2d:dnnsp
+
+#include "standard_reco1_sbnd.fcl"
+
+physics.producers.gaushit.CalDataModuleLabel: "simtpc2d:dnnsp"
