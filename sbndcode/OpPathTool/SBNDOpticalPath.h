@@ -17,7 +17,7 @@ namespace phot {
 
         const bool isOpDetVisible(geo::Point_t const& ScintPoint, geo::Point_t const& OpDetPoint) override {           
             // special case for SBND 
-            // check x coordinate has same sign or is close to zero
+            // check x coordinate has same sign
             if ((ScintPoint.X() < 0.) != (OpDetPoint.X() < 0.)) return false;            
             else return true; 
         }
