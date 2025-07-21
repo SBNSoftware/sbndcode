@@ -33,7 +33,7 @@ local dnnroi_model_p1 = std.extVar('dnnroi_model_p1');
 local g = import 'pgraph.jsonnet';
 local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local wc = import 'wirecell.jsonnet';
-local tools_maker = import 'pgrapher/common/tools.jsonnet';
+local tools_maker = import 'pgrapher/common/tools.jsonnet';'
 
 local simu_params = import 'simparams.jsonnet';
 local params = simu_params;
