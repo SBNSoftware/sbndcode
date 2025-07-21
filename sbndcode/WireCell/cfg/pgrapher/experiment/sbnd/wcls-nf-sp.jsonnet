@@ -33,14 +33,15 @@ local dnnroi_model_p1 = std.extVar('dnnroi_model_p1');
 local g = import 'pgraph.jsonnet';
 local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local wc = import 'wirecell.jsonnet';
-local default_tools = tools_maker(params);
-local tools = if wc_device == 'gpu' then std.mergePatch(default_tools,
-    {dft: {type: "TorchDFT", data: {device: wc_device}}}) else default_tools;
+local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
 local simu_params = import 'simparams.jsonnet';
 local params = simu_params;
 
-local tools = tools_maker(params);
+local default_tools = tools_maker(params);
+local tools = if wc_device == 'gpu' then std.mergePatch(default_tools,
+    {dft: {type: "TorchDFT", data: {device: wc_device}}}) else default_tools;
+
 
 local mega_anode = {
   type: 'MegaAnodePlane',
