@@ -41,6 +41,8 @@ sbnd_wcls_sp_data.wcls_main.outputers: ["wclsFrameSaver:spsaver"]
 sbnd_wcls_sp_data.wcls_main.params :   {
                                         # This locates the input raw::RawDigit collection in the art::Event 
                                         raw_input_label: "daq"   
+                                        # if dnnroi is used, this device will be used
+                                        wc_device: "cpu"   
 
                                         # if epoch is "dynamic" you MUST add
                                         # "wclsMultiChannelNoiseDB" to "inputers" and must NOT

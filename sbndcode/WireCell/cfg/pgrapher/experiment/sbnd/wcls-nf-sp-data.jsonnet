@@ -22,6 +22,7 @@
 
 //local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
+local wc_device = std.extVar('wc_device');
 local raw_input_label = std.extVar('raw_input_label');  // eg "daq"
 local use_paramresp = std.extVar('use_paramresp');  // eg "true" or "false"
 local roi = std.extVar('roi');
@@ -49,9 +50,9 @@ local params = data_params {
     },
 };
 
-
-local tools = tools_maker(params);
-
+local default_tools = tools_maker(params);
+local tools = if wc_device == 'gpu' then std.mergePatch(default_tools,
+    {dft: {type: "TorchDFT", data: {device: wc_device}}}) else default_tools;
 
 local mega_anode = {
   type: 'MegaAnodePlane',
@@ -217,7 +218,7 @@ local ts_p0 = {
     tick_per_slice: tick_per_slice, 
     data: {
         model: dnnroi_model_p0,
-        device: "cpu",
+        device: wc_device,
         concurrency: 1,
     },
 };
@@ -228,7 +229,7 @@ local ts_p1 = {
     tick_per_slice: tick_per_slice, 
     data: {
         model: dnnroi_model_p1,
-        device: "cpu",
+        device: wc_device,
         concurrency: 1,
     },
 };

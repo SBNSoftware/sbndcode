@@ -14,6 +14,7 @@ local dnnroi_model_p1 = std.extVar('dnnroi_model_p1');
 local g = import 'pgraph.jsonnet';
 local f = import 'pgrapher/common/funcs.jsonnet';
 local wc = import 'wirecell.jsonnet';
+local wc_device = std.extVar('wc_device');
 local io = import 'pgrapher/common/fileio.jsonnet';
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
@@ -39,7 +40,9 @@ local params = base {
   }
 };
 
-local tools = tools_maker(params);
+local default_tools = tools_maker(params);
+local tools = if wc_device == 'gpu' then std.mergePatch(default_tools,
+    {dft: {type: "TorchDFT", data: {device: wc_device}}}) else default_tools;
 local sim_maker = import 'pgrapher/experiment/sbnd/sim.jsonnet';
 local sim = sim_maker(params, tools);
 local nanodes = std.length(tools.anodes);
@@ -317,7 +320,7 @@ local ts_p0 = {
     tick_per_slice: tick_per_slice, 
     data: {
         model: dnnroi_model_p0,
-        device: "cpu",
+        device: wc_device,
         concurrency: 1,
     },
 };
@@ -328,7 +331,7 @@ local ts_p1 = {
     tick_per_slice: tick_per_slice, 
     data: {
         model: dnnroi_model_p1,
-        device: "cpu",
+        device: wc_device,
         concurrency: 1,
     },
 };
