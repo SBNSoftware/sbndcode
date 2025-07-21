@@ -21,6 +21,7 @@
 
 
 local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
+local wc_device = std.extVar('wc_device');
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
 local raw_input_label = std.extVar('raw_input_label');  // eg "daq"
 local use_dnnroi = std.extVar('use_dnnroi');
@@ -32,7 +33,9 @@ local dnnroi_model_p1 = std.extVar('dnnroi_model_p1');
 local g = import 'pgraph.jsonnet';
 local f = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local wc = import 'wirecell.jsonnet';
-local tools_maker = import 'pgrapher/common/tools.jsonnet';
+local default_tools = tools_maker(params);
+local tools = if wc_device == 'gpu' then std.mergePatch(default_tools,
+    {dft: {type: "TorchDFT", data: {device: wc_device}}}) else default_tools;
 
 local simu_params = import 'simparams.jsonnet';
 local params = simu_params;
@@ -180,7 +183,7 @@ local ts_p0 = {
     tick_per_slice: tick_per_slice, 
     data: {
         model: dnnroi_model_p0,
-        device: "cpu",
+        device: wc_device,
         concurrency: 1,
     },
 };
@@ -191,7 +194,7 @@ local ts_p1 = {
     tick_per_slice: tick_per_slice, 
     data: {
         model: dnnroi_model_p1,
-        device: "cpu",
+        device: wc_device,
         concurrency: 1,
     },
 };
