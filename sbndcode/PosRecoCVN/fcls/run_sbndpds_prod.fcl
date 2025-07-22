@@ -7,12 +7,12 @@ process_name: SBNDPDSProd
 
 services:
 {
-  TFileService:              { fileName: "opana_tree.root" }
+  TFileService:              { fileName: "service_histos.root" }
   @table::sbnd_basic_services
   @table::sbnd_simulation_services
   ParticleInventoryService: @local::sbnd_particleinventoryservice
   BackTrackerService:       @local::sbnd_backtrackerservice
-  ParticleInventoryService: @local::standard_particleinventoryservice  
+  ParticleInventoryService: @local::standard_particleinventoryservice
 }
 
 source:
@@ -30,6 +30,8 @@ physics:
       Verbosity: 0
       MCTruthModuleLabel: ["generator"]
       MCTruthInstanceLabel: [""]
+      MCTruthOrigin: [1, 4]  # BNB neutrinos and single particles
+      MCTruthPDG: [12, 14, -12, -14]  # neutrinos
       MCModuleLabel: "largeant"
       OpHitsModuleLabel: ["ophitpmt","ophitxarapuca"]
       OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1", "opflashtpc0xarapuca", "opflashtpc1xarapuca"]
@@ -37,12 +39,18 @@ physics:
       G4BufferBoxY: [-400, 400] #cm
       G4BufferBoxZ: [-100, 600] #cm
       G4BeamWindow: [-10000, 12000] #ns
-      # MCTruthPDG: [12, 14, -12, -14]
-      # PDTypes: ["pmt_coated", "pmt_uncoated", "xarapuca_vis", "xarapuca_vuv"]
+      KeepPDGCode: []  # empty = keep all particles
+      SaveOpHits: true
     }
   }
+
+  # Definir paths
   prod: [opanatree]
-  end_paths: [prod]
+  stream: [out1]
+  
+  # Configurar trigger_paths y end_paths
+  trigger_paths: [prod]
+  end_paths: [stream]
 }
 
 outputs:
@@ -53,4 +61,4 @@ outputs:
     fileName: "pixelmap_variables.root"
   }
 }
-end_paths: [prod, out1]
+

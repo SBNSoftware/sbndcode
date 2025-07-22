@@ -15,17 +15,8 @@
 #include <string.h>
 #include <vector>
 
-struct PixelMapVars {
-    std::vector<std::vector<float>> flash_ophit_pe;
-    std::vector<std::vector<int>>   flash_ophit_ch;
-    std::vector<std::vector<float>> flash_ophit_time;
-    std::vector<float> nuvT;
-    std::vector<float> dEpromx;
-    std::vector<float> dEpromy;
-    std::vector<float> dEpromz;
-    std::vector<float> dEtpc;
-    std::vector<float> nuvZ;
-};
+// Include the data structure definition
+#include "sbndcode/PosRecoCVN/module/PixelMapVars.h"
 
 // Services
 #include "larsim/MCCheater/BackTrackerService.h"
@@ -108,8 +99,11 @@ private:
   std::vector<double> &dEspreadx, std::vector<double> &dEspready, std::vector<double> &dEspreadz,
   std::vector<std::vector<double>> &dElowedges, std::vector<std::vector<double>> &dEmaxedges);
 
-  // Parámetros de configuración
-  int fVerbosity;
+  static constexpr double fDefaultSimIDE = -999.;
+
+  // Parámetros de configuración (ordenados para coincidir con el constructor)
+  std::vector <int> fMCTruthOrigin;
+  std::vector <int> fMCTruthPDG;
   std::vector<std::string> fMCTruthModuleLabel;
   std::vector<std::string> fMCTruthInstanceLabel;
   std::string fMCModuleLabel;
@@ -119,14 +113,63 @@ private:
   std::vector<int> fG4BufferBoxY;
   std::vector<int> fG4BufferBoxZ;
   std::vector<int> fG4BeamWindow;
+  std::vector<int> fKeepPDGCode;
+  bool fSaveOpHits;
+  int fVerbosity;
 
   // Variables internas necesarias
   std::vector<double> _nuvT;
   std::vector<double> _nuvZ;
   std::vector<double> _mc_dEpromx, _mc_dEpromy, _mc_dEpromz, _mc_dEtpc;
-  std::vector<std::vector<float>> _flash_ophit_pe;
+  std::vector<std::vector<double>> _flash_ophit_pe;
   std::vector<std::vector<int>> _flash_ophit_ch;
-  std::vector<std::vector<float>> _flash_ophit_time;
+  std::vector<std::vector<double>> _flash_ophit_time;
+
+  // --- Variables agregadas para corregir errores de compilación ---
+  // Identificadores de evento
+  int _eventID;
+  int _runID;
+  int _subrunID;
+
+  // Variables de neutrinos
+  std::vector<double> _nuvX, _nuvY, _nuvE;
+
+  // Variables de MCParticles
+  std::vector<std::vector<double>> _mc_stepX, _mc_stepY, _mc_stepZ, _mc_stepT;
+  std::vector<double> _mc_dE, _mc_E;
+  std::vector<int> _mc_trackID, _mc_motherID, _mc_PDGcode;
+  std::vector<std::string> _mc_process;
+  std::vector<double> _mc_StartPx, _mc_StartPy, _mc_StartPz;
+  std::vector<double> _mc_EndPx, _mc_EndPy, _mc_EndPz;
+  std::vector<std::vector<double>> _mc_energydep, _mc_energydepX, _mc_energydepY, _mc_energydepZ;
+  int _mc_InTimeCosmics;
+  std::vector<double> _mc_InTimeCosmicsTime;
+
+  // Variables para energía depositada
+  std::vector<double> _mc_dEspreadx, _mc_dEspready, _mc_dEspreadz;
+  std::vector<std::vector<double>> _mc_dElowedges, _mc_dEmaxedges;
+
+  // Variables para OpHits
+  int _nophits;
+  std::vector<int> _ophit_opch;
+  std::vector<double> _ophit_peakT, _ophit_startT, _ophit_riseT, _ophit_width, _ophit_area, _ophit_amplitude, _ophit_pe;
+
+  // Variables para OpFlashes
+  int _nopflash;
+  std::vector<int> _flash_id;
+  std::vector<double> _flash_time, _flash_total_pe;
+  std::vector<std::vector<double>> _flash_pe_v;
+  std::vector<int> _flash_tpc;
+  std::vector<double> _flash_y, _flash_yerr, _flash_z, _flash_zerr, _flash_x, _flash_xerr;
+
+  // Variables para OpHit en flashes
+  std::vector<std::vector<double>> _flash_ophit_risetime, _flash_ophit_starttime, _flash_ophit_amp, _flash_ophit_area, _flash_ophit_width;
+
+  // Variables auxiliares
+  double dE_neutrinowindow;
+
+  // Vectores auxiliares
+  std::vector<simb::MCParticle> mcpartVec;
 };
 
 

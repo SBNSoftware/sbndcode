@@ -1,0 +1,11 @@
+<lcgdict>
+  <!-- Define the dictionary for our custom data products -->
+  <class name="PixelMapVars"/>
+  <class name="art::Wrapper<PixelMapVars>"/>
+  
+  <!-- These are needed for ROOT dictionary generation -->
+  <class name="std::vector<std::vector<double> >"/>
+  <class name="std::vector<std::vector<int> >"/>
+  <class name="std::vector<double>"/>
+  <class name="std::vector<int>"/>
+</lcgdict>
