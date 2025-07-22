@@ -5,6 +5,8 @@
 // -------- Constructor --------
 opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
   : EDProducer{p},
+    fMCTruthOrigin( p.get<std::vector<int>>("MCTruthOrigin") ),
+    fMCTruthPDG( p.get<std::vector<int>>("MCTruthPDG") ),
     fMCTruthModuleLabel( p.get<std::vector<std::string>>("MCTruthModuleLabel") ),
     fMCTruthInstanceLabel( p.get<std::vector<std::string>>("MCTruthInstanceLabel") ),
     fMCModuleLabel( p.get<std::string>("MCModuleLabel") ),
@@ -14,7 +16,10 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     fG4BufferBoxY( p.get<std::vector<int>>("G4BufferBoxY") ),
     fG4BufferBoxZ( p.get<std::vector<int>>("G4BufferBoxZ") ),
     fG4BeamWindow( p.get<std::vector<int>>("G4BeamWindow") ),
-    fVerbosity( p.get<int>("Verbosity") )
+    fKeepPDGCode( p.get<std::vector<int>>("KeepPDGCode", {}) ),
+    fSaveOpHits( p.get<bool>("SaveOpHits", true) ),
+    fVerbosity( p.get<int>("Verbosity") ),
+    dE_neutrinowindow( 0.0 )
 {
     produces<PixelMapVars>();
 }
@@ -40,6 +45,19 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   _nuvT.clear(); _nuvX.clear(); _nuvY.clear(); _nuvZ.clear(); _nuvE.clear();
   FillMCTruth(e);
 
+  // --- Load MCParticles from event
+  mcpartVec.clear();
+  art::Handle< std::vector<simb::MCParticle> > mcParticleHandle;
+  e.getByLabel(fMCModuleLabel, mcParticleHandle);
+  if(mcParticleHandle.isValid()){
+    mcpartVec = *mcParticleHandle;
+    if(fVerbosity>0)
+      std::cout << "Loaded " << mcpartVec.size() << " MCParticles from " << fMCModuleLabel << std::endl;
+  } else {
+    if(fVerbosity>0)
+      std::cout << "MCParticles with label " << fMCModuleLabel << " not found. mcpartVec will be empty." << std::endl;
+  }
+
   // --- Saving MCParticles
   _mc_stepX.clear(); _mc_stepY.clear(); _mc_stepZ.clear(); _mc_stepT.clear();
   _mc_dE.clear(); _mc_E.clear();
@@ -48,6 +66,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   _mc_EndPx.clear(); _mc_EndPy.clear(); _mc_EndPz.clear();
   _mc_energydep.clear(); _mc_energydepX.clear(); _mc_energydepY.clear(); _mc_energydepZ.clear();
   _mc_InTimeCosmics=0; _mc_InTimeCosmicsTime.clear();
+  dE_neutrinowindow = 0.0;
 
   if(fVerbosity>0)
     std::cout << "Saving MCParticles from" << fMCModuleLabel << std::endl;
@@ -199,7 +218,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
     art::fill_ptr_vector(ophitlist, ophitListHandle);
     _nophits += ophitlist.size();
 
-    for (int i = 0; i < _nophits; ++i) {
+    for (size_t i = 0; i < ophitlist.size(); ++i) {
       _ophit_opch.push_back( ophitlist.at(i)->OpChannel() );
       _ophit_peakT.push_back( ophitlist.at(i)->PeakTimeAbs() );
       _ophit_startT.push_back( ophitlist.at(i)->StartTime() );
@@ -271,23 +290,14 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
 
       if(fSaveOpHits){
         
+        // Solo guardar PE, Channel y Time para mapas del detector
         _flash_ophit_time.push_back({});
-        _flash_ophit_risetime.push_back({});
-        _flash_ophit_starttime.push_back({});
-        _flash_ophit_amp.push_back({});
-        _flash_ophit_area.push_back({});
-        _flash_ophit_width.push_back({});
         _flash_ophit_pe.push_back({});
         _flash_ophit_ch.push_back({});
         
         std::vector<art::Ptr<recob::OpHit>> ophit_v = flashToOpHitAssns.at(i);
         for (auto ophit : ophit_v) {
           _flash_ophit_time[_nopflash-1].push_back(ophit->PeakTimeAbs());
-          _flash_ophit_risetime[_nopflash-1].push_back(ophit->RiseTime());
-          _flash_ophit_starttime[_nopflash-1].push_back(ophit->StartTime());
-          _flash_ophit_amp[_nopflash-1].push_back(ophit->Amplitude());
-          _flash_ophit_area[_nopflash-1].push_back(ophit->Area());
-          _flash_ophit_width[_nopflash-1].push_back(ophit->Width());
           _flash_ophit_pe[_nopflash-1].push_back(ophit->PE());
           _flash_ophit_ch[_nopflash-1].push_back(ophit->OpChannel());
         }
@@ -300,19 +310,16 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
 
   // Crear y llenar el producto PixelMapVars
   auto pixelVars = std::make_unique<PixelMapVars>();
-  // Copiar los datos de las variables internas
-  pixelVars->flash_ophit_pe.reserve(_flash_ophit_pe.size());
-  for(const auto& v : _flash_ophit_pe) pixelVars->flash_ophit_pe.push_back(std::vector<float>(v.begin(), v.end()));
-  pixelVars->flash_ophit_ch.reserve(_flash_ophit_ch.size());
-  for(const auto& v : _flash_ophit_ch) pixelVars->flash_ophit_ch.push_back(std::vector<int>(v.begin(), v.end()));
-  pixelVars->flash_ophit_time.reserve(_flash_ophit_time.size());
-  for(const auto& v : _flash_ophit_time) pixelVars->flash_ophit_time.push_back(std::vector<float>(v.begin(), v.end()));
-  pixelVars->nuvT.assign(_nuvT.begin(), _nuvT.end());
-  pixelVars->dEpromx.assign(_mc_dEpromx.begin(), _mc_dEpromx.end());
-  pixelVars->dEpromy.assign(_mc_dEpromy.begin(), _mc_dEpromy.end());
-  pixelVars->dEpromz.assign(_mc_dEpromz.begin(), _mc_dEpromz.end());
-  pixelVars->dEtpc.assign(_mc_dEtpc.begin(), _mc_dEtpc.end());
-  pixelVars->nuvZ.assign(_nuvZ.begin(), _nuvZ.end());
+  // Copiar solo los datos necesarios para crear mapas del detector
+  pixelVars->flash_ophit_pe = _flash_ophit_pe;
+  pixelVars->flash_ophit_ch = _flash_ophit_ch;
+  pixelVars->flash_ophit_time = _flash_ophit_time;
+  pixelVars->nuvT = _nuvT;
+  pixelVars->dEpromx = _mc_dEpromx;
+  pixelVars->dEpromy = _mc_dEpromy;
+  pixelVars->dEpromz = _mc_dEpromz;
+  pixelVars->dEtpc = _mc_dEtpc;
+  pixelVars->nuvZ = _nuvZ;
 
   // Poner el producto en el evento
   e.put(std::move(pixelVars));
