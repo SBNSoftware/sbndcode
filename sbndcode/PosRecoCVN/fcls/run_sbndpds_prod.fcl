@@ -27,7 +27,7 @@ physics:
   {
     opanatree: {
       module_type: "SBNDPDSProducer"
-      Verbosity: 0
+      Verbosity: 1
       MCTruthModuleLabel: ["generator"]
       MCTruthInstanceLabel: [""]
       MCTruthOrigin: [1, 4]  # BNB neutrinos and single particles

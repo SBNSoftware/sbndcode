@@ -8,4 +8,8 @@
   <class name="std::vector<std::vector<int> >"/>
   <class name="std::vector<double>"/>
   <class name="std::vector<int>"/>
+  <class name="std::vector<float>"/>
+  <class name="std::vector<std::vector<float> >"/>
+  <class name="std::vector<std::vector<std::vector<float> > >"/>
+  <class name="std::vector<std::vector<std::vector<std::vector<float> > > >"/>
 </lcgdict>
