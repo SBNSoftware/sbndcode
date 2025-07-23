@@ -1,4 +1,4 @@
-#include "sbndcode/PosRecoCVN/module/SBNDPDSProducer_module.hh"
+#include "SBNDPDSProducer_module.hh"
 
 #include "larcorealg/Geometry/OpDetGeo.h"
 
@@ -19,9 +19,20 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     fKeepPDGCode( p.get<std::vector<int>>("KeepPDGCode", {}) ),
     fSaveOpHits( p.get<bool>("SaveOpHits", true) ),
     fVerbosity( p.get<int>("Verbosity") ),
-    dE_neutrinowindow( 0.0 )
+    fCoatedPMTMapPath( p.get<std::string>("CoatedPMTMapPath", "/exp/sbnd/app/users/svidales/larsoft_v10_06_01_develop/srcs/sbndcode/sbndcode/PosRecoCVN/pmt_maps/coated_pmt_map_realistic_flipped.csv") ),
+    fUncoatedPMTMapPath( p.get<std::string>("UncoatedPMTMapPath", "/exp/sbnd/app/users/svidales/larsoft_v10_06_01_develop/srcs/sbndcode/sbndcode/PosRecoCVN/pmt_maps/uncoated_pmt_map_realistic_flipped.csv") ),
+    dE_neutrinowindow( 0.0 ) 
 {
     produces<PixelMapVars>();
+    
+    // Initialize channel dictionary
+    InitializeChannelDict();
+    
+    // Classify channels by type and parity
+    ClassifyChannels();
+    
+    // Load PMT maps
+    LoadPMTMaps();
 }
 
 
@@ -169,7 +180,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
     }
 
     // Print-out MCParticle information
-    if(fVerbosity>0){
+    if(fVerbosity>1){
       std::cout<<std::setw(4)<<i_p<<"-.-.-.Energy="<<std::setw(12)<<pPart.E()<<" PDGCODE="<<std::setw(10)<<pPart.PdgCode();
       std::cout<<" ID="<<std::setw(6)<<pPart.TrackId()<<" Mother="<<std::setw(6)<<pPart.Mother()<<" dE="<<std::setw(9)<<endep;
       std::cout<<" T="<<std::setw(10)<<pPart.T()<<" X="<<std::setw(7)<<pPart.Vx()<<" Y="<<std::setw(7)<<pPart.Vy()<<" Z="<<std::setw(7)<<pPart.Vz()<<" NPoints:"<<pPart.NumberTrajectoryPoints();
@@ -208,8 +219,9 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
 
     e.getByLabel(fOpHitsModuleLabel[s], ophitListHandle);
     if(!ophitListHandle.isValid()){
-      std::cout << "OpHit with label " << fOpHitsModuleLabel[s] << " not found..." << std::endl;
-      throw std::exception();
+      std::string msg = "OpHit with label " + fOpHitsModuleLabel[s] + " not found in event " + std::to_string(_eventID);
+      std::cout << msg << std::endl;
+      throw std::runtime_error(msg);
     }
     
     if(fVerbosity>0)
@@ -259,12 +271,13 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
     
     e.getByLabel(fOpFlashesModuleLabel[s], opflashListHandle);
     if(!opflashListHandle.isValid()){
-      std::cout << "OpFlash with label " << fOpFlashesModuleLabel[s] << " not found..." << std::endl;
-      throw std::exception();
+      std::string msg = "OpFlash with label " + fOpFlashesModuleLabel[s] + " not found in event " + std::to_string(_eventID);
+      std::cout << msg << std::endl;
+      throw std::runtime_error(msg);
     }
     art::FindManyP<recob::OpHit> flashToOpHitAssns(opflashListHandle, e, fOpFlashesModuleLabel[s]);
 
-    if(fVerbosity>0)
+    if(fVerbosity>1)
       std::cout << "Saving OpFlashes from " << fOpFlashesModuleLabel[s] << std::endl;
 
     for (unsigned int i = 0; i < opflashListHandle->size(); ++i) {
@@ -272,7 +285,10 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
       art::Ptr<recob::OpFlash> FlashPtr(opflashListHandle, i);
       recob::OpFlash Flash = *FlashPtr;
 
-      if(fVerbosity>0)
+      // Filter cosmic rays: only keep flashes in beam window (0.367 - 1.9 μs)
+      if(Flash.AbsTime() < 0.367 || Flash.AbsTime() > 1.9) continue;
+
+      if(fVerbosity>1)
         std::cout << "  *  " << _nopflash << " Time [ns]=" << 1000*Flash.AbsTime() << " PE=" << Flash.TotalPE() << std::endl;
 
       _flash_id.push_back( _nopflash );
@@ -308,22 +324,390 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   
   }
 
+  // Apply first filter: only keep events where nuvT has exactly one element
+  bool passFilter1 = (_nuvT.size() == 1);
+  
+  // Apply second filter: only keep events with at least one flash (flash_ophit_pe has at least one element)
+  bool passFilter2 = false;
+  if (!_flash_ophit_pe.empty()) {
+    // Check if there's at least one flash with optical hits
+    for (const auto& flash_pe : _flash_ophit_pe) {
+      if (!flash_pe.empty()) {
+        passFilter2 = true;
+        break;
+      }
+    }
+  }
+  
+  bool passFilter = passFilter1 && passFilter2;
+  
+  if(fVerbosity > 0) {
+    std::cout << "Filter check: nuvT size = " << _nuvT.size() << ", pass filter 1 = " << passFilter1 << std::endl;
+    std::cout << "Filter check: flash count = " << _flash_ophit_pe.size() << ", has ophits = " << passFilter2 << ", pass filter 2 = " << passFilter2 << std::endl;
+    std::cout << "Overall filter result = " << passFilter << std::endl;
+  }
+  
+  // Apply flash selection logic if event passes filters
+  if(passFilter) {
+    ApplyFlashSelection();
+    ApplyFinalEnergyFilter();
+    
+    // Only create PE matrix and images if we have final filtered data
+    if (!_flash_ophit_pe_final.empty()) {
+      CreatePEMatrix();
+      CreatePEImages();
+    }
+  }
+
   // Crear y llenar el producto PixelMapVars
   auto pixelVars = std::make_unique<PixelMapVars>();
-  // Copiar solo los datos necesarios para crear mapas del detector
-  pixelVars->flash_ophit_pe = _flash_ophit_pe;
-  pixelVars->flash_ophit_ch = _flash_ophit_ch;
-  pixelVars->flash_ophit_time = _flash_ophit_time;
-  pixelVars->nuvT = _nuvT;
-  pixelVars->dEpromx = _mc_dEpromx;
-  pixelVars->dEpromy = _mc_dEpromy;
-  pixelVars->dEpromz = _mc_dEpromz;
-  pixelVars->dEtpc = _mc_dEtpc;
-  pixelVars->nuvZ = _nuvZ;
+  
+  if(passFilter) {
+    // Apply mask to all variables - use final filtered data after all cuts
+    pixelVars->flash_ophit_pe = _flash_ophit_pe_final;
+    pixelVars->flash_ophit_ch = _flash_ophit_ch_final;
+    pixelVars->flash_ophit_time = _flash_ophit_time_final;
+    pixelVars->nuvT = _nuvT_final;
+    pixelVars->dEpromx = _mc_dEpromx_final;
+    pixelVars->dEpromy = _mc_dEpromy_final;
+    pixelVars->dEpromz = _mc_dEpromz_final;
+    pixelVars->dEtpc = _mc_dEtpc_final;
+    pixelVars->nuvZ = _nuvZ_final;
+    
+    if(fVerbosity > 0) {
+      std::cout << "Event passed filter - data stored in PixelMapVars" << std::endl;
+    }
+  } else {
+    // Initialize empty vectors for events that don't pass filter
+    pixelVars->flash_ophit_pe.clear();
+    pixelVars->flash_ophit_ch.clear();
+    pixelVars->flash_ophit_time.clear();
+    pixelVars->nuvT.clear();
+    pixelVars->dEpromx.clear();
+    pixelVars->dEpromy.clear();
+    pixelVars->dEpromz.clear();
+    pixelVars->dEtpc.clear();
+    pixelVars->nuvZ.clear();
+    
+    if(fVerbosity > 0) {
+      std::cout << "Event failed filter - empty data stored in PixelMapVars" << std::endl;
+    }
+  }
+  
+  // Always include the channel dictionary (independent of filter)
+  pixelVars->channel_dict = fChannelDict;
+  
+  // Only assign PE matrix and images if they were created (event passed all filters)
+  pixelVars->pe_matrix = _pe_matrix;
+  pixelVars->pe_images = _pe_images;
+  pixelVars->coated_pmt_map = _coated_pmt_map;
+  pixelVars->uncoated_pmt_map = _uncoated_pmt_map;
+
+  if(fVerbosity > 0) {
+    std::cout << "=== PixelMapVars Summary ===" << std::endl;
+    std::cout << "flash_ophit_pe size: " << pixelVars->flash_ophit_pe.size() << std::endl;
+    std::cout << "pe_matrix size: " << pixelVars->pe_matrix.size() << "x" 
+              << (pixelVars->pe_matrix.empty() ? 0 : pixelVars->pe_matrix[0].size()) << std::endl;
+    std::cout << "pe_images size: " << pixelVars->pe_images.size() << std::endl;
+    std::cout << "Only PixelMapVars should be in output ROOT file" << std::endl;
+  }
 
   // Poner el producto en el evento
   e.put(std::move(pixelVars));
 
+}
+
+
+// -------- Create PE Matrix --------
+void opdet::SBNDPDSProducer::CreatePEMatrix() {
+  _pe_matrix.clear();
+  
+  // Use final filtered data if available, otherwise use selected data, fallback to original data
+  const auto* pe_data = &_flash_ophit_pe;
+  const auto* ch_data = &_flash_ophit_ch;
+  
+  if (!_flash_ophit_pe_final.empty() && !_flash_ophit_ch_final.empty()) {
+    pe_data = &_flash_ophit_pe_final;
+    ch_data = &_flash_ophit_ch_final;
+    if(fVerbosity > 0) std::cout << "CreatePEMatrix: Using final filtered data" << std::endl;
+  } else if (!_flash_ophit_pe_sel.empty() && !_flash_ophit_ch_sel.empty()) {
+    pe_data = &_flash_ophit_pe_sel;
+    ch_data = &_flash_ophit_ch_sel;
+    if(fVerbosity > 0) std::cout << "CreatePEMatrix: Using selected data" << std::endl;
+  } else {
+    if(fVerbosity > 0) std::cout << "CreatePEMatrix: Using original data" << std::endl;
+  }
+  
+  if (pe_data->empty() || ch_data->empty()) {
+    if(fVerbosity > 0) {
+      std::cout << "CreatePEMatrix: No flash data available at all" << std::endl;
+    }
+    // Initialize empty matrix for consistency
+    _pe_matrix.resize(1, std::vector<float>(312, 0.0f));
+    return;
+  }
+  
+  // Initialize PE matrix with zeros [1 event x 312 channels]
+  _pe_matrix.resize(1, std::vector<float>(312, 0.0f));
+  
+  // Sum PE values from all flashes for each channel into single event
+  for (size_t flash = 0; flash < pe_data->size(); ++flash) {
+    // Bounds checking for channel data consistency
+    if (flash >= ch_data->size()) {
+      if(fVerbosity > 0) {
+        std::cout << "Warning: PE data has more flashes than channel data at flash " << flash << std::endl;
+      }
+      break;
+    }
+    
+    size_t min_size = std::min((*pe_data)[flash].size(), (*ch_data)[flash].size());
+    for (size_t j = 0; j < min_size; ++j) {
+      float pe = (*pe_data)[flash][j];
+      int channel = (*ch_data)[flash][j];
+      
+      // Ensure channel is within valid range [0, 311]
+      if (channel >= 0 && channel < 312) {
+        _pe_matrix[0][channel] += pe;  // Always add to event 0 (single event)
+      } else if (fVerbosity > 0) {
+        std::cout << "Warning: Invalid channel " << channel << " at flash " << flash << ", hit " << j << std::endl;
+      }
+    }
+  }
+  
+  if(fVerbosity > 0) {
+    std::cout << "CreatePEMatrix: Generated matrix with " << _pe_matrix.size() 
+              << " events and 312 channels" << std::endl;
+  }
+}
+
+
+// -------- Load PMT Maps --------
+void opdet::SBNDPDSProducer::LoadPMTMaps() {
+  // Load coated PMT map
+  std::ifstream coated_file(fCoatedPMTMapPath);
+  std::ifstream uncoated_file(fUncoatedPMTMapPath);
+  
+  if (!coated_file.is_open()) {
+    std::string msg = "Could not open coated PMT map file: " + fCoatedPMTMapPath;
+    std::cout << "Warning: " << msg << std::endl;
+    if(fVerbosity > 0) throw std::runtime_error(msg);
+    return;
+  }
+  
+  if (!uncoated_file.is_open()) {
+    std::string msg = "Could not open uncoated PMT map file: " + fUncoatedPMTMapPath;
+    std::cout << "Warning: " << msg << std::endl;
+    if(fVerbosity > 0) throw std::runtime_error(msg);
+    return;
+  }
+  
+  std::string line;
+  _coated_pmt_map.clear();
+  _uncoated_pmt_map.clear();
+  
+  // Load coated map
+  while (std::getline(coated_file, line)) {
+    std::vector<int> row;
+    std::stringstream ss(line);
+    std::string cell;
+    
+    while (std::getline(ss, cell, ',')) {
+      row.push_back(std::stoi(cell));
+    }
+    _coated_pmt_map.push_back(row);
+  }
+  coated_file.close();
+  
+  // Load uncoated map
+  while (std::getline(uncoated_file, line)) {
+    std::vector<int> row;
+    std::stringstream ss(line);
+    std::string cell;
+    
+    while (std::getline(ss, cell, ',')) {
+      row.push_back(std::stoi(cell));
+    }
+    _uncoated_pmt_map.push_back(row);
+  }
+  uncoated_file.close();
+  
+  if(fVerbosity > 0) {
+    std::cout << "Loaded PMT maps: coated(" << _coated_pmt_map.size() << "x" << (_coated_pmt_map.empty() ? 0 : _coated_pmt_map[0].size()) 
+              << "), uncoated(" << _uncoated_pmt_map.size() << "x" << (_uncoated_pmt_map.empty() ? 0 : _uncoated_pmt_map[0].size()) << ")" << std::endl;
+  }
+}
+
+
+// -------- Select Non-Empty Half --------
+std::vector<std::vector<float>> opdet::SBNDPDSProducer::SelectNonEmptyHalf(
+    const std::vector<std::vector<float>>& left_half, 
+    const std::vector<std::vector<float>>& right_half,
+    const std::string& method) {
+  
+  float left_score = 0.0f, right_score = 0.0f;
+  
+  if (method == "max") {
+    for (const auto& row : left_half) {
+      for (float val : row) {
+        left_score = std::max(left_score, val);
+      }
+    }
+    for (const auto& row : right_half) {
+      for (float val : row) {
+        right_score = std::max(right_score, val);
+      }
+    }
+  }
+  else if (method == "sum") {
+    for (const auto& row : left_half) {
+      for (float val : row) {
+        left_score += val;
+      }
+    }
+    for (const auto& row : right_half) {
+      for (float val : row) {
+        right_score += val;
+      }
+    }
+  }
+  else if (method == "nonzero") {
+    for (const auto& row : left_half) {
+      for (float val : row) {
+        if (val != 0.0f) left_score += 1.0f;
+      }
+    }
+    for (const auto& row : right_half) {
+      for (float val : row) {
+        if (val != 0.0f) right_score += 1.0f;
+      }
+    }
+  }
+  else if (method == "mean_top") {
+    std::vector<float> left_vals, right_vals;
+    for (const auto& row : left_half) {
+      for (float val : row) {
+        left_vals.push_back(val);
+      }
+    }
+    for (const auto& row : right_half) {
+      for (float val : row) {
+        right_vals.push_back(val);
+      }
+    }
+    
+    std::sort(left_vals.rbegin(), left_vals.rend());
+    std::sort(right_vals.rbegin(), right_vals.rend());
+    
+    int top_n = std::min(5, (int)left_vals.size());
+    for (int i = 0; i < top_n; ++i) {
+      left_score += left_vals[i];
+      right_score += right_vals[i];
+    }
+    left_score /= top_n;
+    right_score /= top_n;
+  }
+  
+  return left_score >= right_score ? left_half : right_half;
+}
+
+
+// -------- Create PE Images --------
+void opdet::SBNDPDSProducer::CreatePEImages() {
+  _pe_images.clear();
+  
+  if (_pe_matrix.empty() || _coated_pmt_map.empty() || _uncoated_pmt_map.empty()) {
+    if(fVerbosity > 0) {
+      std::cout << "CreatePEImages: Missing PE matrix or PMT maps" << std::endl;
+    }
+    return;
+  }
+  
+  int n_flashes = _pe_matrix.size();  // This is actually number of flashes, not events
+  int n_events = 1;  // For single event processing, we always have 1 event
+  int ch_y = _coated_pmt_map.size();
+  int ch_z = _coated_pmt_map[0].size();
+  int map_count = 2; // coated and uncoated
+  
+  // Initialize pe_matrices_map with shape (map_count, n_events, ch_y, ch_z)
+  std::vector<std::vector<std::vector<std::vector<float>>>> pe_matrices_map(
+    map_count, std::vector<std::vector<std::vector<float>>>(
+      n_events, std::vector<std::vector<float>>(
+        ch_y, std::vector<float>(ch_z, 0.0f))));
+  
+  // Map pe_matrix values to pe_matrices_map for each event
+  std::vector<std::vector<std::vector<int>>*> maps = {&_uncoated_pmt_map, &_coated_pmt_map};
+  
+  for (int idx = 0; idx < map_count; ++idx) {
+    auto& map_ = *maps[idx];
+    for (int y = 0; y < ch_y; ++y) {
+      for (int z = 0; z < ch_z; ++z) {
+        int channel = map_[y][z];
+        if (channel >= 0 && channel < 312) {
+          // Sum PE values from all flashes for this channel for the single event
+          float total_pe = 0.0f;
+          for (int flash = 0; flash < n_flashes; ++flash) {
+            total_pe += _pe_matrix[flash][channel];
+          }
+          pe_matrices_map[idx][0][y][z] = total_pe;  // Single event at index 0
+        }
+      }
+    }
+  }
+  
+  // Normalize each map group
+  float max_val_1 = 0.0f;
+  
+  // Find max values for normalization
+  for (int i = 0; i < n_events; ++i) {
+    for (int y = 0; y < ch_y; ++y) {
+      for (int z = 0; z < ch_z; ++z) {
+        max_val_1 = std::max(max_val_1, std::max(pe_matrices_map[0][i][y][z], pe_matrices_map[1][i][y][z]));
+      }
+    }
+  }
+  max_val_1 = (max_val_1 > 0) ? max_val_1 : 1.0f;
+  
+  // Apply normalization
+  for (int idx = 0; idx < map_count; ++idx) {
+    for (int i = 0; i < n_events; ++i) {
+      for (int y = 0; y < ch_y; ++y) {
+        for (int z = 0; z < ch_z; ++z) {
+          pe_matrices_map[idx][i][y][z] /= max_val_1;
+        }
+      }
+    }
+  }
+  
+  // Create image with half selection: shape (n_events, ch_y/2, ch_z, map_count)
+  _pe_images.resize(n_events, std::vector<std::vector<std::vector<float>>>(
+    ch_y/2, std::vector<std::vector<float>>(
+      ch_z, std::vector<float>(map_count, 0.0f))));
+  
+  for (int i = 0; i < n_events; ++i) {
+    for (int idx = 0; idx < map_count; ++idx) {
+      // Get the matrix for this event and map: shape (ch_y, ch_z)
+      const auto& event_matrix = pe_matrices_map[idx][i];
+      
+      // Split into top and bottom halves
+      std::vector<std::vector<float>> top_half(event_matrix.begin(), event_matrix.begin() + ch_y/2);
+      std::vector<std::vector<float>> bottom_half(event_matrix.begin() + ch_y/2, event_matrix.end());
+      
+      // Select the non-empty half
+      auto selected_half = SelectNonEmptyHalf(top_half, bottom_half, "max");
+      
+      // Store the selected half in the image
+      for (int y = 0; y < ch_y/2; ++y) {
+        for (int z = 0; z < ch_z; ++z) {
+          _pe_images[i][y][z][idx] = selected_half[y][z];
+        }
+      }
+    }
+  }
+  
+  if(fVerbosity > 0) {
+    std::cout << "CreatePEImages: Generated images with shape (" << n_events 
+              << ", " << ch_y/2 << ", " << ch_z << ", " << map_count << ")" << std::endl;
+  }
 }
 
 
@@ -332,8 +716,11 @@ void opdet::SBNDPDSProducer::FillMCTruth(art::Event const& e){
   
   
   if(fMCTruthModuleLabel.size()!=fMCTruthInstanceLabel.size()){
-    std::cout << "MCTruthModuleLabel and MCTruthInstanceLabel vectors must have the same size..." << std::endl;
-    throw std::exception();
+    std::string msg = "MCTruthModuleLabel (" + std::to_string(fMCTruthModuleLabel.size()) + 
+                     ") and MCTruthInstanceLabel (" + std::to_string(fMCTruthInstanceLabel.size()) + 
+                     ") vectors must have the same size";
+    std::cout << msg << std::endl;
+    throw std::invalid_argument(msg);
   }
 
   art::Handle< std::vector<simb::MCTruth> > MCTruthListHandle;
@@ -343,8 +730,10 @@ void opdet::SBNDPDSProducer::FillMCTruth(art::Event const& e){
     e.getByLabel(fMCTruthModuleLabel[s], fMCTruthInstanceLabel[s], MCTruthListHandle);
 
     if( !MCTruthListHandle.isValid() || MCTruthListHandle->empty() ) {   
-      std::cout << "MCTruth with label " << fMCTruthModuleLabel[s] << " and instance " << fMCTruthInstanceLabel[s] << " not found or empty..." << std::endl;
-      throw std::exception();
+      std::string msg = "MCTruth with label " + fMCTruthModuleLabel[s] + " and instance " + fMCTruthInstanceLabel[s] + 
+                       " not found or empty in event " + std::to_string(_eventID);
+      std::cout << msg << std::endl;
+      throw std::runtime_error(msg);
     }
 
     std::vector<art::Ptr<simb::MCTruth> > mctruth_v;
@@ -520,4 +909,290 @@ void opdet::SBNDPDSProducer::FillAverageDepositedEnergyVariables(std::vector<std
   dEmaxedges.at(1).push_back(maxx_tpc1);dEmaxedges.at(1).push_back(maxy_tpc1);dEmaxedges.at(1).push_back(maxz_tpc1);
 
   return;
+}
+
+
+// -------- Function to initialize the channel dictionary --------
+void opdet::SBNDPDSProducer::InitializeChannelDict(){
+  
+  // Create PDS mapping algorithm instance
+  opdet::sbndPDMapAlg pdsMap;
+  
+  // Clear the channel dictionary
+  fChannelDict.clear();
+  
+  // Create channel dictionary mapping OpDetID (channel) to OpDetType
+  for(size_t ch = 0; ch < pdsMap.size(); ++ch) {
+    std::string pdType = pdsMap.pdType(ch);
+    int typeInt = -1;
+    
+    // Convert string type to integer following SBND convention
+    if (pdType == "pmt_coated") {
+      typeInt = static_cast<int>(opdet::kPMTCoated);
+    } else if (pdType == "pmt_uncoated") {
+      typeInt = static_cast<int>(opdet::kPMTUncoated);
+    } else if (pdType == "xarapuca_vuv") {
+      typeInt = static_cast<int>(opdet::kXARAPUCAVUV);
+    } else if (pdType == "xarapuca_vis") {
+      typeInt = static_cast<int>(opdet::kXARAPUCAVIS);
+    } else {
+      typeInt = static_cast<int>(opdet::kPDUnknown);
+    }
+    
+    fChannelDict[static_cast<int>(ch)] = typeInt;
+    
+    // Debug individual channels only at highest verbosity
+    if(fVerbosity > 2) {
+      std::cout << "Channel " << ch << " -> Type: " << pdType << " (" << typeInt << ")" << std::endl;
+    }
+  }
+  
+  if(fVerbosity > 0) {
+    std::cout << "Initialized channel dictionary with " << fChannelDict.size() << " channels" << std::endl;
+  }
+}
+
+
+// -------- Function to classify channels by type and parity --------
+void opdet::SBNDPDSProducer::ClassifyChannels(){
+  
+  fPMTEven.clear(); fPMTOdd.clear();
+  fXASEven.clear(); fXASOdd.clear();
+  
+  for(const auto& pair : fChannelDict) {
+    int ch = pair.first;
+    int type = pair.second;
+    
+    bool isPMT = (type == static_cast<int>(opdet::kPMTCoated) || 
+                  type == static_cast<int>(opdet::kPMTUncoated));
+    bool isXAS = (type == static_cast<int>(opdet::kXARAPUCAVUV) || 
+                  type == static_cast<int>(opdet::kXARAPUCAVIS));
+    bool isEven = (ch % 2 == 0);
+    
+    if(isPMT) {
+      if(isEven) fPMTEven.insert(ch);
+      else fPMTOdd.insert(ch);
+    } else if(isXAS) {
+      if(isEven) fXASEven.insert(ch);
+      else fXASOdd.insert(ch);
+    }
+  }
+  
+  if(fVerbosity > 0) {
+    std::cout << "Channel classification - PMT even: " << fPMTEven.size() 
+              << ", PMT odd: " << fPMTOdd.size()
+              << ", XAS even: " << fXASEven.size() 
+              << ", XAS odd: " << fXASOdd.size() << std::endl;
+  }
+}
+
+
+// -------- Function to categorize first channel of a flash --------
+int opdet::SBNDPDSProducer::CategorizeFirstChannel(const std::vector<int>& channels){
+  
+  if(channels.empty()) return -1;
+  
+  int ch = channels[0];
+  if(fPMTEven.count(ch)) return 0;
+  if(fPMTOdd.count(ch))  return 1;
+  if(fXASEven.count(ch)) return 2;
+  if(fXASOdd.count(ch))  return 3;
+  
+  return -1; // Unclassified
+}
+
+
+// -------- Template function to filter arrays by mask --------
+template<typename T>
+std::vector<std::vector<T>> opdet::SBNDPDSProducer::FilterByMask(
+    const std::vector<std::vector<T>>& array, 
+    const std::vector<std::vector<bool>>& mask) {
+  
+  std::vector<std::vector<T>> result;
+  
+  for(size_t i = 0; i < array.size() && i < mask.size(); ++i) {
+    std::vector<T> filteredEvent;
+    for(size_t j = 0; j < array[i].size() && j < mask[i].size(); ++j) {
+      if(mask[i][j]) {
+        filteredEvent.push_back(array[i][j]);
+      }
+    }
+    result.push_back(filteredEvent);
+  }
+  
+  return result;
+}
+
+
+// -------- Main flash selection function --------
+void opdet::SBNDPDSProducer::ApplyFlashSelection(){
+  
+  // Clear output vectors
+  _flash_ophit_pe_sel.clear();
+  _flash_ophit_ch_sel.clear(); 
+  _flash_ophit_time_sel.clear();
+  _categorized_flashes.clear();
+  _mc_dEpromx_sel.clear();
+  _mc_dEpromy_sel.clear();
+  _mc_dEpromz_sel.clear();
+  _mc_dEtpc_sel.clear();
+  
+  if(_flash_ophit_ch.empty()) {
+    if(fVerbosity > 0) std::cout << "No flashes to process" << std::endl;
+    return;
+  }
+  
+  // 1. Categorize flashes based on first channel
+  std::vector<int> categorized;
+  for(const auto& flash_ch : _flash_ophit_ch) {
+    categorized.push_back(CategorizeFirstChannel(flash_ch));
+  }
+  
+  // 2. Calculate sum PE per flash
+  std::vector<float> sum_pe;
+  for(const auto& flash_pe : _flash_ophit_pe) {
+    float total = 0;
+    for(float pe : flash_pe) total += pe;
+    sum_pe.push_back(total);
+  }
+  
+  // 3. Create masks and calculate sums by group
+  float sum_even = 0, sum_odd = 0;
+  std::vector<bool> mask_even, mask_odd;
+  
+  for(size_t i = 0; i < categorized.size(); ++i) {
+    bool is_even = (categorized[i] == 0 || categorized[i] == 2);
+    bool is_odd  = (categorized[i] == 1 || categorized[i] == 3);
+    
+    mask_even.push_back(is_even);
+    mask_odd.push_back(is_odd);
+    
+    if(is_even) sum_even += sum_pe[i];
+    if(is_odd)  sum_odd += sum_pe[i];
+  }
+  
+  // 4. Decision logic
+  bool decision = (sum_even >= sum_odd);
+  size_t n_flashes = categorized.size();
+  
+  std::vector<bool> selected_mask;
+  if(n_flashes <= 2) {
+    // Keep all flashes for <= 2 flashes
+    selected_mask.assign(n_flashes, true);
+  } else {
+    // Select group based on decision
+    selected_mask = decision ? mask_even : mask_odd;
+  }
+  
+  // 5. Apply mask to flash data
+  std::vector<std::vector<std::vector<float>>> pe_2d = {_flash_ophit_pe};
+  std::vector<std::vector<std::vector<int>>> ch_2d = {_flash_ophit_ch};
+  std::vector<std::vector<std::vector<float>>> time_2d = {_flash_ophit_time};
+  std::vector<std::vector<bool>> mask_2d = {selected_mask};
+  
+  auto pe_filtered = FilterByMask(pe_2d, mask_2d);
+  auto ch_filtered = FilterByMask(ch_2d, mask_2d);  
+  auto time_filtered = FilterByMask(time_2d, mask_2d);
+  
+  if(!pe_filtered.empty()) _flash_ophit_pe_sel = pe_filtered[0];
+  if(!ch_filtered.empty()) _flash_ophit_ch_sel = ch_filtered[0];
+  if(!time_filtered.empty()) _flash_ophit_time_sel = time_filtered[0];
+  
+  // 6. TPC selection - select winning TPC based on decision
+  std::vector<std::vector<double>> selector = {{decision ? 1.0 : 0.0, decision ? 0.0 : 1.0}};
+  std::vector<std::vector<double>> dEpromx_2d = {_mc_dEpromx};
+  std::vector<std::vector<double>> dEpromy_2d = {_mc_dEpromy};
+  std::vector<std::vector<double>> dEpromz_2d = {_mc_dEpromz};
+  std::vector<std::vector<double>> dEtpc_2d = {_mc_dEtpc};
+  
+  // Select TPC values based on decision with bounds checking
+  size_t max_tpc = std::min({(size_t)2, _mc_dEpromx.size(), _mc_dEpromy.size(), _mc_dEpromz.size(), _mc_dEtpc.size()});
+  for(size_t i = 0; i < max_tpc; ++i) {
+    if(selector[0][i] > 0.5) {
+      _mc_dEpromx_sel.push_back(_mc_dEpromx[i]);
+      _mc_dEpromy_sel.push_back(_mc_dEpromy[i]);
+      _mc_dEpromz_sel.push_back(_mc_dEpromz[i]);
+      _mc_dEtpc_sel.push_back(_mc_dEtpc[i]);
+      break; // Only select one TPC
+    }
+  }
+  
+  if(fVerbosity > 0) {
+    std::cout << "Flash selection: " << n_flashes << " flashes, decision=" << decision 
+              << " (even=" << sum_even << ", odd=" << sum_odd << ")" << std::endl;
+    std::cout << "Selected " << _flash_ophit_pe_sel.size() << " flashes" << std::endl;
+  }
+}
+
+
+// -------- Final energy deposition filter --------
+void opdet::SBNDPDSProducer::ApplyFinalEnergyFilter(){
+  
+  // Clear final output vectors
+  _flash_ophit_pe_final.clear();
+  _flash_ophit_ch_final.clear();
+  _flash_ophit_time_final.clear();
+  _nuvT_final.clear();
+  _nuvZ_final.clear();
+  _mc_dEpromx_final.clear();
+  _mc_dEpromy_final.clear();
+  _mc_dEpromz_final.clear();
+  _mc_dEtpc_final.clear();
+  
+  // Check if we have valid selected data
+  if(_mc_dEpromx_sel.empty() || _mc_dEpromy_sel.empty() || 
+     _mc_dEpromz_sel.empty() || _mc_dEtpc_sel.empty()) {
+    if(fVerbosity > 0) {
+      std::cout << "Final energy filter: No selected energy data available" << std::endl;
+    }
+    return;
+  }
+  
+  // Apply energy deposition mask: 
+  // (dEpromx != -999) & (dEpromy != -999) & (dEpromz != -999) & (dEtpc > 50)
+  bool passEnergyFilter = false;
+  
+  // Check all selected TPC data (typically just one after flash selection)
+  for(size_t i = 0; i < _mc_dEpromx_sel.size(); ++i) {
+    bool validX = (_mc_dEpromx_sel[i] != fDefaultSimIDE);
+    bool validY = (_mc_dEpromy_sel[i] != fDefaultSimIDE);  
+    bool validZ = (_mc_dEpromz_sel[i] != fDefaultSimIDE);
+    bool energyCut = (_mc_dEtpc_sel[i] > 50.0);
+    
+    if(validX && validY && validZ && energyCut) {
+      passEnergyFilter = true;
+      // Store the passing values
+      _mc_dEpromx_final.push_back(_mc_dEpromx_sel[i]);
+      _mc_dEpromy_final.push_back(_mc_dEpromy_sel[i]);
+      _mc_dEpromz_final.push_back(_mc_dEpromz_sel[i]);
+      _mc_dEtpc_final.push_back(_mc_dEtpc_sel[i]);
+      
+      if(fVerbosity > 0) {
+        std::cout << "Energy filter passed: dE=" << _mc_dEtpc_sel[i] 
+                  << " MeV, pos=(" << _mc_dEpromx_sel[i] << "," 
+                  << _mc_dEpromy_sel[i] << "," << _mc_dEpromz_sel[i] << ")" << std::endl;
+      }
+      break; // Only need one passing entry
+    }
+  }
+  
+  if(passEnergyFilter) {
+    // Copy flash data if energy filter passes
+    _flash_ophit_pe_final = _flash_ophit_pe_sel;
+    _flash_ophit_ch_final = _flash_ophit_ch_sel;
+    _flash_ophit_time_final = _flash_ophit_time_sel;
+    
+    // Copy neutrino data
+    _nuvT_final = _nuvT;
+    _nuvZ_final = _nuvZ;
+    
+    if(fVerbosity > 0) {
+      std::cout << "Final energy filter: Event PASSED - " 
+                << _flash_ophit_pe_final.size() << " flashes retained" << std::endl;
+    }
+  } else {
+    if(fVerbosity > 0) {
+      std::cout << "Final energy filter: Event FAILED - no valid energy deposition (>50 MeV)" << std::endl;
+    }
+  }
 }
