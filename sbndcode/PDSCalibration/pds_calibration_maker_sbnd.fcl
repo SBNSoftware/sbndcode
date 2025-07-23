@@ -1,0 +1,38 @@
+# services
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+
+# analyser
+#include "pmtgain_sbnd.fcl"
+
+process_name: Ana
+
+services:
+{
+  TFileService: { fileName: "pmt_gain.root" }
+  @table::sbnd_detsim_services
+}
+
+
+source:
+{
+  module_type:     RootInput
+}
+
+physics:
+{
+
+  analyzers:
+  {
+    PMTGain: @local::PMTGain_sbnd
+  }
+
+  #define the output stream, there could be more than one if using filters
+  stream1:   [ PMTGain ]
+
+  #ie analyzers and output streams.  these all run simultaneously
+  end_paths: [stream1]
+}
+
+physics.analyzers.PMTGain.UseAllPMTs: true
+physics.analyzers.PMTGain.nstdev: 5

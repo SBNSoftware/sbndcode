@@ -1,0 +1,37 @@
+#include "trackfinderalgorithms.fcl"
+#include "detsimmodules.fcl"
+
+BEGIN_PROLOG
+
+PMTGain_sbnd:
+{
+  module_type: "PMTGain"
+  InputModule: "pmtdecoder:PMTChannels" #"opdaq"
+  ClusterModuleLabel: "linecluster"
+  OpDetsToPlot: ["pmt_coated", "pmt_uncoated",
+                 "xarapuca_vuv", "xarapuca_vis"]
+  DaphneFrequency: 62.5  #in MHz. Frequency of the Daphne Readouts
+  UseAllPMTs:  true
+  SelectedPMTs: [44,54]     # example. Does not get used if UseAllPMTs == true
+  lowbin: 200
+  hibin: 200
+  nstdev: 1 #number of noise stdevs to set the threshold to (I used nstdev=2, you might get better results with 3)
+  spe_region_start: 0 #number of bins after which SPE search starts
+  #i want to add an endpoint for SPE finding
+  nbmax_factor: 0.9 #set noise analysis range 1 (pre peaks): noisebinmax = highestbin*nbmax_factor
+  nbmin_factor: 0.1 #noisebinmin = nbmin_factor*highestbin
+  n2bmin_factor: 0.9 #set noise analysis range 2 (post peaks), upper bound is just wvf_nbins: noisebin2min = n2bmin_factor*wvf_nbins
+  
+  manual_bound_hi: 10
+  manual_bound_lo: 7 #bounds for manual-type integration
+
+  eventid: 1 #event id as integer
+  all_events: true #do all events or just the selected one specified by eventid
+  cut: false #make the 100ns cut (make false-we don't use this anymore- A. Bullock)
+  do_avgspe: false
+  do_amp: true
+  do_integ: false #which analysis do we want to do?  
+  do_hist: false
+}
+
+END_PROLOG
