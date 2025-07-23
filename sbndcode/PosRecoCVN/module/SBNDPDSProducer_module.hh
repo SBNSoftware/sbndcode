@@ -14,6 +14,11 @@
 // ROOT and C++ includes
 #include <string.h>
 #include <vector>
+#include <map>
+#include <set>
+#include <algorithm>
+#include <fstream>
+#include <sstream>
 
 // Include the data structure definition
 #include "sbndcode/PosRecoCVN/module/PixelMapVars.h"
@@ -92,6 +97,19 @@ private:
 
   // Functions
   void FillMCTruth(art::Event const& e);
+  void InitializeChannelDict();
+  void ClassifyChannels();
+  int CategorizeFirstChannel(const std::vector<int>& channels);
+  void ApplyFlashSelection();
+  void ApplyFinalEnergyFilter();
+  void CreatePEMatrix();
+  void LoadPMTMaps();
+  std::vector<std::vector<float>> SelectNonEmptyHalf(const std::vector<std::vector<float>>& left_half, 
+                                                     const std::vector<std::vector<float>>& right_half,
+                                                     const std::string& method = "max");
+  void CreatePEImages();
+  template<typename T>
+  std::vector<std::vector<T>> FilterByMask(const std::vector<std::vector<T>>& array, const std::vector<std::vector<bool>>& mask);
 
   void FillAverageDepositedEnergyVariables(std::vector<std::vector<double>> fenergydep, std::vector<std::vector<double>> fenergydepX,
   std::vector<std::vector<double>> fenergydepY, std::vector<std::vector<double>> fenergydepZ, std::vector<std::vector<double>> fstepT,
@@ -116,14 +134,16 @@ private:
   std::vector<int> fKeepPDGCode;
   bool fSaveOpHits;
   int fVerbosity;
+  std::string fCoatedPMTMapPath;
+  std::string fUncoatedPMTMapPath;
 
   // Variables internas necesarias
   std::vector<double> _nuvT;
   std::vector<double> _nuvZ;
   std::vector<double> _mc_dEpromx, _mc_dEpromy, _mc_dEpromz, _mc_dEtpc;
-  std::vector<std::vector<double>> _flash_ophit_pe;
+  std::vector<std::vector<float>> _flash_ophit_pe;
   std::vector<std::vector<int>> _flash_ophit_ch;
-  std::vector<std::vector<double>> _flash_ophit_time;
+  std::vector<std::vector<float>> _flash_ophit_time;
 
   // --- Variables agregadas para corregir errores de compilación ---
   // Identificadores de evento
@@ -163,13 +183,43 @@ private:
   std::vector<double> _flash_y, _flash_yerr, _flash_z, _flash_zerr, _flash_x, _flash_xerr;
 
   // Variables para OpHit en flashes
-  std::vector<std::vector<double>> _flash_ophit_risetime, _flash_ophit_starttime, _flash_ophit_amp, _flash_ophit_area, _flash_ophit_width;
+  std::vector<std::vector<float>> _flash_ophit_risetime, _flash_ophit_starttime, _flash_ophit_amp, _flash_ophit_area, _flash_ophit_width;
 
   // Variables auxiliares
   double dE_neutrinowindow;
 
   // Vectores auxiliares
   std::vector<simb::MCParticle> mcpartVec;
+  
+  // Channel dictionary mapping OpDetID to OpDetType
+  std::map<int, int> fChannelDict;
+  
+  // Channel classification sets
+  std::set<int> fPMTEven, fPMTOdd, fXASEven, fXASOdd;
+  
+  // Selected flash data after classification
+  std::vector<std::vector<float>> _flash_ophit_pe_sel;
+  std::vector<std::vector<int>> _flash_ophit_ch_sel;
+  std::vector<std::vector<float>> _flash_ophit_time_sel;
+  std::vector<int> _categorized_flashes;
+  std::vector<double> _mc_dEpromx_sel, _mc_dEpromy_sel, _mc_dEpromz_sel, _mc_dEtpc_sel;
+  
+  // Final filtered data after energy deposition cuts
+  std::vector<std::vector<float>> _flash_ophit_pe_final;
+  std::vector<std::vector<int>> _flash_ophit_ch_final;
+  std::vector<std::vector<float>> _flash_ophit_time_final;
+  std::vector<double> _nuvT_final, _nuvZ_final;
+  std::vector<double> _mc_dEpromx_final, _mc_dEpromy_final, _mc_dEpromz_final, _mc_dEtpc_final;
+  
+  // PE matrix
+  std::vector<std::vector<float>> _pe_matrix;
+  
+  // PMT maps
+  std::vector<std::vector<int>> _coated_pmt_map;
+  std::vector<std::vector<int>> _uncoated_pmt_map;
+  
+  // Generated images
+  std::vector<std::vector<std::vector<std::vector<float>>>> _pe_images;
 };
 
 
