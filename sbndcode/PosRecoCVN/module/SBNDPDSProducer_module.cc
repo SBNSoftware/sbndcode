@@ -39,6 +39,9 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
 // -------- Main function --------
 void opdet::SBNDPDSProducer::produce(art::Event& e)
 {
+  
+  // Clear all vectors at the beginning of each event to prevent data carryover
+  ClearEventData();
 
   // --- Event General Info
   _eventID = e.id().event();
@@ -1195,4 +1198,106 @@ void opdet::SBNDPDSProducer::ApplyFinalEnergyFilter(){
       std::cout << "Final energy filter: Event FAILED - no valid energy deposition (>50 MeV)" << std::endl;
     }
   }
+}
+
+// -------- Clear all event data at the beginning of each event --------
+void opdet::SBNDPDSProducer::ClearEventData(){
+  
+  // Clear MC truth variables
+  _nuvT.clear(); 
+  _nuvX.clear(); 
+  _nuvY.clear(); 
+  _nuvZ.clear(); 
+  _nuvE.clear();
+  
+  // Clear MC particles variables
+  _mc_stepX.clear(); 
+  _mc_stepY.clear(); 
+  _mc_stepZ.clear(); 
+  _mc_stepT.clear();
+  _mc_dE.clear(); 
+  _mc_E.clear();
+  _mc_trackID.clear(); 
+  _mc_motherID.clear(); 
+  _mc_PDGcode.clear(); 
+  _mc_process.clear();
+  _mc_StartPx.clear(); 
+  _mc_StartPy.clear(); 
+  _mc_StartPz.clear();
+  _mc_EndPx.clear(); 
+  _mc_EndPy.clear(); 
+  _mc_EndPz.clear();
+  _mc_energydep.clear(); 
+  _mc_energydepX.clear(); 
+  _mc_energydepY.clear(); 
+  _mc_energydepZ.clear();
+  _mc_InTimeCosmicsTime.clear();
+  
+  // Clear energy deposition variables
+  _mc_dEpromx.clear(); 
+  _mc_dEpromy.clear(); 
+  _mc_dEpromz.clear(); 
+  _mc_dEtpc.clear();
+  _mc_dEspreadx.clear(); 
+  _mc_dEspready.clear(); 
+  _mc_dEspreadz.clear();
+  _mc_dElowedges.clear(); 
+  _mc_dEmaxedges.clear();
+  
+  // Clear optical data variables
+  _flash_ophit_pe.clear();
+  _flash_ophit_ch.clear();
+  _flash_ophit_time.clear();
+  _flash_ophit_risetime.clear();
+  _flash_ophit_starttime.clear();
+  _flash_ophit_amp.clear();
+  _flash_ophit_area.clear();
+  _flash_ophit_width.clear();
+  
+  // Clear flash variables
+  _flash_id.clear();
+  _flash_time.clear(); 
+  _flash_total_pe.clear();
+  _flash_pe_v.clear();
+  _flash_tpc.clear();
+  _flash_y.clear(); 
+  _flash_yerr.clear(); 
+  _flash_z.clear(); 
+  _flash_zerr.clear(); 
+  _flash_x.clear(); 
+  _flash_xerr.clear();
+  
+  // Clear ophit variables
+  _ophit_opch.clear();
+  _ophit_peakT.clear(); 
+  _ophit_startT.clear(); 
+  _ophit_riseT.clear(); 
+  _ophit_width.clear(); 
+  _ophit_area.clear(); 
+  _ophit_amplitude.clear(); 
+  _ophit_pe.clear();
+  
+  // Clear final output variables (the key ones causing the bug!)
+  _flash_ophit_pe_final.clear();
+  _flash_ophit_ch_final.clear();
+  _flash_ophit_time_final.clear();
+  _nuvT_final.clear();
+  _nuvZ_final.clear();
+  _mc_dEpromx_final.clear();
+  _mc_dEpromy_final.clear();
+  _mc_dEpromz_final.clear();
+  _mc_dEtpc_final.clear();
+  
+  // Clear PE matrix and images
+  _pe_matrix.clear();
+  _pe_images.clear();
+  
+  // Reset scalar variables
+  _mc_InTimeCosmics = 0;
+  _nophits = 0;
+  _nopflash = 0;
+  dE_neutrinowindow = 0.0;
+  
+  // Clear intermediate vectors that might exist
+  mcpartVec.clear();
 }

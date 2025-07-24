@@ -59,6 +59,10 @@ outputs:
   {
     module_type: RootOutput
     fileName: "pixelmap_variables.root"
+    outputCommands: [
+      "drop *",
+      "keep PixelMapVars_opanatree__SBNDPDSProd"
+    ]
   }
 }
 
