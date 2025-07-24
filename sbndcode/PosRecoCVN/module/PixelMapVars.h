@@ -15,6 +15,16 @@ struct PixelMapVars {
     std::vector<double> dEtpc;
     std::vector<double> nuvZ;
     
+    // TensorFlow predictions for dEprom* (position reconstruction)
+    std::vector<double> dEpromx_pred;
+    std::vector<double> dEpromy_pred;
+    std::vector<double> dEpromz_pred;
+    
+    // Differences: prediction - ground truth
+    std::vector<double> dEpromx_diff;
+    std::vector<double> dEpromy_diff;
+    std::vector<double> dEpromz_diff;
+    
     // Channel dictionary mapping OpDetID to OpDetType
     std::map<int, int> channel_dict;
     
