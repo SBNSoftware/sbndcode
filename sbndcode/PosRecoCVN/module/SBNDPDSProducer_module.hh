@@ -104,6 +104,7 @@ private:
   void ApplyFinalEnergyFilter();
   void CreatePEMatrix();
   void LoadPMTMaps();
+  void ClearEventData();
   std::vector<std::vector<float>> SelectNonEmptyHalf(const std::vector<std::vector<float>>& left_half, 
                                                      const std::vector<std::vector<float>>& right_half,
                                                      const std::string& method = "max");
