@@ -146,7 +146,8 @@ sbnd_wcls_samples_rec: @local::sbnd_wcls
 sbnd_wcls_samples_rec.wcls_main.plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb", "WireCellPytorch", "WireCellHio"]
 sbnd_wcls_samples_rec.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp-samples_rec.jsonnet"]
 sbnd_wcls_samples_rec.wcls_main.inputers: ["wclsSimDepoSetSource:"]
-sbnd_wcls_samples_rec.wcls_main.outputers:[ "wclsDepoFluxWriter:postdrift", "wclsFrameSaver:simdigits"]
+sbnd_wcls_samples_rec.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
+                                           "wclsFrameSaver:spsaver"]
 sbnd_wcls_samples_rec.wcls_main.params:   {
                                      ## This locates the input SimEnergyDeposits in the art::Event
                                      inputTag: "ionandscint:"             
@@ -165,7 +166,7 @@ sbnd_wcls_samples_rec.wcls_main.params:   {
                                      ## If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
                                      ## If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
                                      ## this is whether or not to save raw digits!!! 
-                                     save_simdigits: "true"
+                                     save_simdigits: "false"
           
                                      save_track_id: "true"
                                     }
@@ -189,7 +190,7 @@ sbnd_wcls_samples_tru: @local::sbnd_wcls
 sbnd_wcls_samples_tru.wcls_main.plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb", "WireCellPytorch", "WireCellHio"]
 sbnd_wcls_samples_tru.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp-samples_tru.jsonnet"]
 sbnd_wcls_samples_tru.wcls_main.inputers: ["wclsSimDepoSource:"]
-sbnd_wcls_samples_tru.wcls_main.outputers:["wclsDepoFluxWriter:postdrift", "wclsFrameSaver:simdigits"] 
+sbnd_wcls_samples_tru.wcls_main.outputers:[] 
 sbnd_wcls_samples_tru.wcls_main.params:   {
                                      ## This locates the input SimEnergyDeposits in the art::Event
                                      inputTag: "ionandscint:"             
@@ -208,7 +209,7 @@ sbnd_wcls_samples_tru.wcls_main.params:   {
                                      ## If save_simdigits="false", comment line with "wclsFrameSaver:simdigits" in outputers
                                      ## If save_simdigits="true", uncomment line with "wclsFrameSaver:simdigits" in outputers
                                      ## this is whether or not to save raw digits!!! 
-                                     save_simdigits: "true"
+                                     save_simdigits: "false"
           
                                      save_track_id: "true"
                                     }
