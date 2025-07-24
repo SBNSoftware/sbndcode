@@ -44,7 +44,7 @@ physics:
       
       # TensorFlow Configuration
       RunInference: true  # Set to true to enable TensorFlow inference
-      ModelPath: "/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models/model_resnet18_50energy_pmts_v2406_part1_reentrenarconpart2.keras"       # Path to TensorFlow SavedModel directory
+      ModelPath: "/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models/test_larsoft_inference_savedmodel_resnet18"       # Path to TensorFlow SavedModel directory
       InputNames: []      # Leave empty to use default model inputs
       OutputNames: []     # Leave empty to use default model outputs
     }
