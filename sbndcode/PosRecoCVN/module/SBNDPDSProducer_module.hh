@@ -18,6 +18,10 @@
 #include <set>
 #include <algorithm>
 #include <fstream>
+#include <memory>
+
+// TensorFlow includes
+#include "sbndcode/PosRecoCVN/tf/tf_graph.h"
 #include <sstream>
 
 // Include the data structure definition
@@ -109,6 +113,7 @@ private:
                                                      const std::vector<std::vector<float>>& right_half,
                                                      const std::string& method = "max");
   void CreatePEImages();
+  void RunInference(PixelMapVars& pixelmapvars);
   template<typename T>
   std::vector<std::vector<T>> FilterByMask(const std::vector<std::vector<T>>& array, const std::vector<std::vector<bool>>& mask);
 
@@ -137,6 +142,12 @@ private:
   int fVerbosity;
   std::string fCoatedPMTMapPath;
   std::string fUncoatedPMTMapPath;
+  
+  // TensorFlow model parameters
+  std::string fModelPath;
+  bool fRunInference;
+  std::vector<std::string> fInputNames;
+  std::vector<std::string> fOutputNames;
 
   // Variables internas necesarias
   std::vector<double> _nuvT;
@@ -221,6 +232,9 @@ private:
   
   // Generated images
   std::vector<std::vector<std::vector<std::vector<float>>>> _pe_images;
+  
+  // TensorFlow inference variables
+  std::unique_ptr<tf::Graph> fTFGraph;
 };
 
 
