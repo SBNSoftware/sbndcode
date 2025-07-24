@@ -21,6 +21,10 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     fVerbosity( p.get<int>("Verbosity") ),
     fCoatedPMTMapPath( p.get<std::string>("CoatedPMTMapPath", "/exp/sbnd/app/users/svidales/larsoft_v10_06_01_develop/srcs/sbndcode/sbndcode/PosRecoCVN/pmt_maps/coated_pmt_map_realistic_flipped.csv") ),
     fUncoatedPMTMapPath( p.get<std::string>("UncoatedPMTMapPath", "/exp/sbnd/app/users/svidales/larsoft_v10_06_01_develop/srcs/sbndcode/sbndcode/PosRecoCVN/pmt_maps/uncoated_pmt_map_realistic_flipped.csv") ),
+    fModelPath( p.get<std::string>("ModelPath", "") ),
+    fRunInference( p.get<bool>("RunInference", false) ),
+    fInputNames( p.get<std::vector<std::string>>("InputNames", {}) ),
+    fOutputNames( p.get<std::vector<std::string>>("OutputNames", {}) ),
     dE_neutrinowindow( 0.0 ) 
 {
     produces<PixelMapVars>();
@@ -33,6 +37,17 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     
     // Load PMT maps
     LoadPMTMaps();
+    
+    // Initialize TensorFlow model if enabled
+    if (fRunInference && !fModelPath.empty()) {
+        fTFGraph = tf::Graph::create(fModelPath.c_str(), fInputNames, fOutputNames, true, 1, 3);
+        if (!fTFGraph) {
+            std::cerr << "ERROR: Failed to load TensorFlow model from " << fModelPath << std::endl;
+            fRunInference = false;
+        } else {
+            std::cout << "TensorFlow model loaded successfully from " << fModelPath << std::endl;
+        }
+    }
 }
 
 
@@ -364,6 +379,11 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
 
   // Crear y llenar el producto PixelMapVars
   auto pixelVars = std::make_unique<PixelMapVars>();
+  
+  // Run TensorFlow inference if enabled and images are available
+  if (passFilter && !_pe_images.empty()) {
+    RunInference(*pixelVars);
+  }
   
   if(passFilter) {
     // Apply mask to all variables - use final filtered data after all cuts
@@ -710,6 +730,56 @@ void opdet::SBNDPDSProducer::CreatePEImages() {
   if(fVerbosity > 0) {
     std::cout << "CreatePEImages: Generated images with shape (" << n_events 
               << ", " << ch_y/2 << ", " << ch_z << ", " << map_count << ")" << std::endl;
+  }
+}
+
+// -------- Function to run TensorFlow inference --------
+void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
+  
+  if (!fRunInference || !fTFGraph || _pe_images.empty()) {
+    if(fVerbosity > 0) {
+      std::cout << "RunInference: Skipping inference (RunInference=" << fRunInference 
+                << ", Graph loaded=" << (fTFGraph != nullptr) 
+                << ", Images available=" << !_pe_images.empty() << ")" << std::endl;
+    }
+    return;
+  }
+  
+  try {
+    // Run inference on PE images
+    auto predictions = fTFGraph->run(_pe_images, -1);
+    
+    if(fVerbosity > 0) {
+      std::cout << "RunInference: Got predictions with shape (" << predictions.size() 
+                << ", " << (predictions.empty() ? 0 : predictions[0].size()) 
+                << ", " << (predictions.empty() || predictions[0].empty() ? 0 : predictions[0][0].size()) 
+                << ")" << std::endl;
+    }
+    
+    // Extract predictions for each event
+    for (size_t i = 0; i < predictions.size() && i < _mc_dEpromx_final.size(); ++i) {
+      if (predictions[i].size() >= 3) {
+        // Predictions are typically [dEpromx, dEpromy, dEpromz]
+        pixelmapvars.dEpromx_pred.push_back(predictions[i][0][0]); // First output
+        pixelmapvars.dEpromy_pred.push_back(predictions[i][1][0]); // Second output  
+        pixelmapvars.dEpromz_pred.push_back(predictions[i][2][0]); // Third output
+        
+        // Calculate differences (prediction - ground truth)
+        pixelmapvars.dEpromx_diff.push_back(predictions[i][0][0] - _mc_dEpromx_final[i]);
+        pixelmapvars.dEpromy_diff.push_back(predictions[i][1][0] - _mc_dEpromy_final[i]);
+        pixelmapvars.dEpromz_diff.push_back(predictions[i][2][0] - _mc_dEpromz_final[i]);
+        
+        if(fVerbosity > 1) {
+          std::cout << "Event " << i << " - GT: (" << _mc_dEpromx_final[i] << ", " 
+                    << _mc_dEpromy_final[i] << ", " << _mc_dEpromz_final[i] 
+                    << ") Pred: (" << predictions[i][0][0] << ", " 
+                    << predictions[i][1][0] << ", " << predictions[i][2][0] << ")" << std::endl;
+        }
+      }
+    }
+    
+  } catch (const std::exception& e) {
+    std::cerr << "RunInference: Error during TensorFlow inference: " << e.what() << std::endl;
   }
 }
 
