@@ -7,3 +7,5 @@
 #include "standard_detsim_sbnd.fcl"
 
 physics.producers.simtpc2d: @local::sbnd_wcls_simsp_bothrois
+physics.producers.simtpc2d.wcls_main.params.wc_device: "gpu"
+physics.producers.simtpc2d.wcls_main.plugins: [@sequence::sbnd_wcls_simsp_dnnroi.wcls_main.plugins, "WireCellCuda"]

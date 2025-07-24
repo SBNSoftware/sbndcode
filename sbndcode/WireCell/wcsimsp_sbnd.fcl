@@ -43,7 +43,10 @@ sbnd_wcls_simsp.wcls_main.params:   {
              
                                      ## Set "data" vs. "sim".  The epoch below probably should follow suit.
                                      reality: "sim"
-             
+
+                                     ## if using dnnroi, use this device 
+                                     wc_device: "cpu" 
+
                                      ## if epoch is "dynamic" you MUST add
                                      ## "wclsMultiChannelNoiseDB" to "inputers" and must NOT
                                      ## add it if not "dynamic"
@@ -116,6 +119,9 @@ sbnd_wcls_sp.wcls_main.params :   {
                                    # This locates the input raw::RawDigit collection in the art::Event 
                                    raw_input_label: "daq"   
 
+                                   # if dnnroi is used, this device will be used
+                                   wc_device: "cpu"   
+
                                    # Set "data" vs. "sim".  The epoch below probably should follow suit.
                                    reality: "sim"   
 
@@ -154,7 +160,6 @@ sbnd_wcls_samples_rec.wcls_main.params:   {
              
                                      ## Set "data" vs. "sim".  The epoch below probably should follow suit.
                                      reality: "sim"
-             
                                      ## if epoch is "dynamic" you MUST add
                                      ## "wclsMultiChannelNoiseDB" to "inputers" and must NOT
                                      ## add it if not "dynamic"
@@ -197,7 +202,7 @@ sbnd_wcls_samples_tru.wcls_main.params:   {
              
                                      ## Set "data" vs. "sim".  The epoch below probably should follow suit.
                                      reality: "sim"
-             
+           
                                      ## if epoch is "dynamic" you MUST add
                                      ## "wclsMultiChannelNoiseDB" to "inputers" and must NOT
                                      ## add it if not "dynamic"
