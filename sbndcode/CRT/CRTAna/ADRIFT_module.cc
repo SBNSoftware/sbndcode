@@ -84,7 +84,7 @@ private:
   void PedestalFit(TH1D* hADC, double &fit, double &std, double &chi2, bool &converged,
                    bool badChannel, const int window);
   void PedestalPeak(TH1D* hADC, double &peak);
-  void Rate(TH1D* hADC, double &rate);
+  void Rate(TH1D* hADC, double &rate, int window);
   void PeakPeak(TH1D* hADC, const double &ped, double &peak);
   void PeakFit(TH1D* hADC, const double &peak, const double &ped, double &fit,
                double &chi2, bool &converged, bool badChannel, const int window);
@@ -110,12 +110,12 @@ private:
   std::vector<std::pair<uint64_t, uint64_t>> fUnixWindows;
 
   // Other Global Parameters
-  int fNEvents;
+  std::vector<int> fNEvents;
 
   TTree* fChannelTree;
 
   uint64_t _unix_start, _unix_end;
-  int _channel, _gdml_id, _mac5, _raw_channel, _tagger, _channel_status;
+  int _n_events, _channel, _gdml_id, _mac5, _raw_channel, _tagger, _channel_status;
   double _area, _y_average, _ped_calib, _gain_calib, _ped_fit, _ped_fit_std, _ped_fit_chi2, _ped_peak,
     _ped_reset_fit, _ped_reset_fit_std, _ped_reset_fit_chi2, _ped_reset_peak, _raw_max_chan_rate, _sh_rate, _sp_rate, _tr_rate,
     _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_peak, _sh_pe_peak_fit, _sh_pe_peak_fit_chi2, _sh_pe_peak_peak,
@@ -175,7 +175,7 @@ sbnd::crt::ADRIFT::ADRIFT(fhicl::ParameterSet const& p)
   fChannelTree = fs->make<TTree>("channel_tree", "");
   fChannelTree->Branch("unix_start", &_unix_start);
   fChannelTree->Branch("unix_end", &_unix_end);
-  fChannelTree->Branch("nevents", &fNEvents);
+  fChannelTree->Branch("n_events", &_n_events);
   fChannelTree->Branch("channel", &_channel);
   fChannelTree->Branch("gdml_id", &_gdml_id);
   fChannelTree->Branch("mac5", &_mac5);
@@ -428,7 +428,7 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
   if(!found)
     return;
 
-  if(fNEvents == 0)
+  if(std::accumulate(fNEvents.begin(), fNEvents.end(), 0) == 0)
     MakeSaveDirectories(e);
 
   if(fFEBs)
@@ -443,7 +443,7 @@ void sbnd::crt::ADRIFT::analyze(art::Event const& e)
   if(fTracks || fTrackLA)
     AnalyseTracks(e, window);
 
-  ++fNEvents;
+  ++fNEvents[window];
 }
 
 void sbnd::crt::ADRIFT::MakeSaveDirectories(art::Event const &e)
@@ -827,7 +827,7 @@ void sbnd::crt::ADRIFT::AnalyseTracks(art::Event const &e, const int window)
 
 void sbnd::crt::ADRIFT::beginJob()
 {
-  fNEvents = 0;
+  fNEvents = std::vector<int>(fUnixWindows.size(), 0);
 }
 
 void sbnd::crt::ADRIFT::endJob()
@@ -870,6 +870,7 @@ void sbnd::crt::ADRIFT::ProcessEntry(const int ch, const int window)
 {
   _unix_start = fUnixWindows[window].first;
   _unix_end   = fUnixWindows[window].second;
+  _n_events   = fNEvents[window];
 
   if(fSaveSubset && (ch > 1471 && ch < 1728))
     {
@@ -922,12 +923,12 @@ void sbnd::crt::ADRIFT::ProcessEntry(const int ch, const int window)
       PedestalFit(hADCPedReset[window][ch], _ped_reset_fit, _ped_reset_fit_std, _ped_reset_fit_chi2, _ped_reset_fit_converged, _channel_status, window);
       PedestalPeak(hADCPedReset[window][ch], _ped_reset_peak);
 
-      Rate(hADCMaxChan[window][ch], _raw_max_chan_rate);
+      Rate(hADCMaxChan[window][ch], _raw_max_chan_rate, window);
     }
 
   if(fStripHits)
     {
-      Rate(hADCSH[window][ch], _sh_rate);
+      Rate(hADCSH[window][ch], _sh_rate, window);
 
       PeakPeak(hADCSH[window][ch], _ped_calib, _sh_peak_peak);
       PeakFit(hADCSH[window][ch], _sh_peak_peak, _ped_calib, _sh_peak_fit, _sh_peak_fit_chi2, _sh_peak_fit_converged, _channel_status, window);
@@ -941,14 +942,14 @@ void sbnd::crt::ADRIFT::ProcessEntry(const int ch, const int window)
         }
 
       const double sh_sat = Saturation(hADCSH[window][ch]);
-      _sh_sat_rate        = sh_sat / (fNEvents * fPullWindow);
+      _sh_sat_rate        = sh_sat / (fNEvents[window] * fPullWindow);
       _sh_sat_ratio_total = sh_sat / hADCSH[window][ch]->GetEntries();
       _sh_sat_ratio_peak  = sh_sat / hADCSH[window][ch]->GetBinContent(hADCSH[window][ch]->FindBin(_sh_peak_peak));
     }
 
   if(fSpacePoints)
     {
-      Rate(hADCSP[window][ch], _sp_rate);
+      Rate(hADCSP[window][ch], _sp_rate, window);
 
       PeakPeak(hADCSP[window][ch], _ped_calib, _sp_peak_peak);
       PeakFit(hADCSP[window][ch], _sp_peak_peak, _ped_calib, _sp_peak_fit, _sp_peak_fit_chi2, _sp_peak_fit_converged, _channel_status, window);
@@ -960,14 +961,14 @@ void sbnd::crt::ADRIFT::ProcessEntry(const int ch, const int window)
         }
 
       const double sp_sat = Saturation(hADCSP[window][ch]);
-      _sp_sat_rate        = sp_sat / (fNEvents * fPullWindow);
+      _sp_sat_rate        = sp_sat / (fNEvents[window] * fPullWindow);
       _sp_sat_ratio_total = sp_sat / hADCSP[window][ch]->GetEntries();
       _sp_sat_ratio_peak  = sp_sat / hADCSP[window][ch]->GetBinContent(hADCSP[window][ch]->FindBin(_sp_peak_peak));
     }
 
   if(fTracks && _tagger != kBottomTagger)
     {
-      Rate(hADCTr[window][ch], _tr_rate);
+      Rate(hADCTr[window][ch], _tr_rate, window);
 
       PeakPeak(hADCTr[window][ch], _ped_calib, _tr_peak_peak);
       PeakFit(hADCTr[window][ch], _tr_peak_peak, _ped_calib, _tr_peak_fit, _tr_peak_fit_chi2, _tr_peak_fit_converged, _channel_status, window);
@@ -985,7 +986,7 @@ void sbnd::crt::ADRIFT::ProcessEntry(const int ch, const int window)
         }
 
       const double tr_sat = Saturation(hADCTr[window][ch]);
-      _tr_sat_rate        = tr_sat / (fNEvents * fPullWindow);
+      _tr_sat_rate        = tr_sat / (fNEvents[window] * fPullWindow);
       _tr_sat_ratio_total = tr_sat / hADCTr[window][ch]->GetEntries();
       _tr_sat_ratio_peak  = tr_sat / hADCTr[window][ch]->GetBinContent(hADCTr[window][ch]->FindBin(_tr_peak_peak));
     }
@@ -1002,7 +1003,7 @@ void sbnd::crt::ADRIFT::ProcessEntry(const int ch, const int window)
         }
 
       const double tr_lim_angle_sat = Saturation(hADCTrLA[window][ch]);
-      _tr_lim_angle_sat_rate        = tr_lim_angle_sat / (fNEvents * fPullWindow);
+      _tr_lim_angle_sat_rate        = tr_lim_angle_sat / (fNEvents[window] * fPullWindow);
       _tr_lim_angle_sat_ratio_total = tr_lim_angle_sat / hADCTrLA[window][ch]->GetEntries();
       _tr_lim_angle_sat_ratio_peak  = tr_lim_angle_sat / hADCTrLA[window][ch]->GetBinContent(hADCTrLA[window][ch]->FindBin(_tr_lim_angle_peak_peak));
     }
@@ -1098,9 +1099,9 @@ void sbnd::crt::ADRIFT::PedestalPeak(TH1D* hADC, double &peak)
   peak = hADC->GetBinCenter(bin);
 }
 
-void sbnd::crt::ADRIFT::Rate(TH1D* hADC, double &rate)
+void sbnd::crt::ADRIFT::Rate(TH1D* hADC, double &rate, int window)
 {
-  rate = hADC->GetEntries() / (fNEvents * fPullWindow);
+  rate = hADC->GetEntries() / (fNEvents[window] * fPullWindow);
 }
 
 void sbnd::crt::ADRIFT::PeakPeak(TH1D* hist, const double &ped, double &peak)
