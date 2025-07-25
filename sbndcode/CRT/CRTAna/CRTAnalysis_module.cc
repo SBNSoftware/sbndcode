@@ -306,6 +306,7 @@ private:
   std::vector<double>                _tpc_end_dir_z;
   std::vector<double>                _tpc_length;
   std::vector<double>                _tpc_track_score;
+  std::vector<int>                   _tpc_whichtpc;
   std::vector<int>                   _tpc_truth_trackid;
   std::vector<int>                   _tpc_truth_pdg;
   std::vector<double>                _tpc_truth_energy;
@@ -591,6 +592,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tpc_end_dir_z", "std::vector<double>", &_tpc_end_dir_z);
       fTree->Branch("tpc_length", "std::vector<double>", &_tpc_length);
       fTree->Branch("tpc_track_score", "std::vector<double>", &_tpc_track_score);
+      fTree->Branch("tpc_whichtpc", "std::vector<int>", &_tpc_whichtpc);
       fTree->Branch("tpc_sp_matched", "std::vector<bool>", &_tpc_sp_matched);
       fTree->Branch("tpc_sp_channel_set", "std::vector<std::vector<uint32_t>>", &_tpc_sp_channel_set);
       fTree->Branch("tpc_sp_xshift", "std::vector<double>", &_tpc_sp_xshift);
@@ -1613,6 +1615,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_end_dir_z.resize(nTracks);
   _tpc_length.resize(nTracks);
   _tpc_track_score.resize(nTracks);
+  _tpc_whichtpc.resize(nTracks);
   _tpc_truth_trackid.resize(nTracks);
   _tpc_truth_pdg.resize(nTracks);
   _tpc_truth_energy.resize(nTracks);
@@ -1702,6 +1705,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
       const art::Ptr<CRTTrack> crttrack = tracksToTrackMatches.at(track.key());
 
       const std::vector<art::Ptr<recob::Hit>> trackHits = tracksToHits.at(track.key());
+      _tpc_whichtpc[nActualTracks]                      = TPCGeoUtil::DetectedInTPC(trackHits);
 
       if(spacepoint.isNonnull())
         {
@@ -1846,6 +1850,7 @@ void sbnd::crt::CRTAnalysis::AnalyseTPCMatching(const art::Event &e, const art::
   _tpc_end_dir_z.resize(nActualTracks);
   _tpc_length.resize(nActualTracks);
   _tpc_track_score.resize(nActualTracks);
+  _tpc_whichtpc.resize(nActualTracks);
   _tpc_truth_trackid.resize(nActualTracks);
   _tpc_truth_pdg.resize(nActualTracks);
   _tpc_truth_energy.resize(nActualTracks);
