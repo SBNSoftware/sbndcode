@@ -73,6 +73,6 @@ sbnd_wcls_sp_data_low.wcls_main.outputers: ["wclsFrameSaver:spsaver", "wclsFrame
 sbnd_wcls_sp_data_low.wcls_main.params.roi: "both"
 sbnd_wcls_sp_data_low.wcls_main.structs.nchunks: 2 # should match training config
 sbnd_wcls_sp_data_low.wcls_main.structs.tick_per_slice: 4 # should match training config
-
+sbnd_wcls_sp_data_low.wcls_main.structs.use_dnnroi: true
 
 END_PROLOG
