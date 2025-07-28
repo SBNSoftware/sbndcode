@@ -114,6 +114,7 @@ private:
                                                      const std::string& method = "max");
   void CreatePEImages();
   void RunInference(PixelMapVars& pixelmapvars);
+  std::vector<double> ApplyInverseScaling(const std::vector<double>& scaled_predictions);
   template<typename T>
   std::vector<std::vector<T>> FilterByMask(const std::vector<std::vector<T>>& array, const std::vector<std::vector<bool>>& mask);
 
@@ -148,6 +149,8 @@ private:
   bool fRunInference;
   std::vector<std::string> fInputNames;
   std::vector<std::string> fOutputNames;
+  
+  // Simple scaling ranges: X[0,200], Y[-200,200], Z[0,500]
 
   // Variables internas necesarias
   std::vector<double> _nuvT;

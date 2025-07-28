@@ -40,7 +40,9 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     
     // Initialize TensorFlow model if enabled
     if (fRunInference && !fModelPath.empty()) {
-        fTFGraph = tf::Graph::create(fModelPath.c_str(), fInputNames, fOutputNames, true, 1, 3);
+        // Determine number of outputs dynamically or use parameter
+        int nOutputs = fOutputNames.empty() ? -1 : fOutputNames.size(); // -1 means auto-detect
+        fTFGraph = tf::Graph::create(fModelPath.c_str(), fInputNames, fOutputNames, true, 1, nOutputs > 0 ? nOutputs : 3);
         if (!fTFGraph) {
             std::cerr << "ERROR: Failed to load TensorFlow model from " << fModelPath << std::endl;
             fRunInference = false;
@@ -745,6 +747,42 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
     return;
   }
   
+  // Detailed input diagnostics
+  if(fVerbosity > 0) {
+    std::cout << "=== TensorFlow Inference Debug Info ===" << std::endl;
+    std::cout << "Input PE images shape: (" << _pe_images.size() 
+              << ", " << (_pe_images.empty() ? 0 : _pe_images[0].size())
+              << ", " << (_pe_images.empty() || _pe_images[0].empty() ? 0 : _pe_images[0][0].size()) 
+              << ", " << (_pe_images.empty() || _pe_images[0].empty() || _pe_images[0][0].empty() ? 0 : _pe_images[0][0][0].size()) 
+              << ")" << std::endl;
+    
+    // Check for NaN/Inf values in first few pixels
+    if (!_pe_images.empty() && !_pe_images[0].empty() && !_pe_images[0][0].empty()) {
+      float min_val = 1e6, max_val = -1e6, sum_val = 0;
+      int count = 0, nan_count = 0;
+      
+      for (size_t i = 0; i < std::min((size_t)5, _pe_images[0].size()); ++i) {
+        for (size_t j = 0; j < std::min((size_t)5, _pe_images[0][i].size()); ++j) {
+          for (size_t k = 0; k < _pe_images[0][i][j].size(); ++k) {
+            float val = _pe_images[0][i][j][k];
+            if (std::isnan(val) || std::isinf(val)) {
+              nan_count++;
+            } else {
+              min_val = std::min(min_val, val);
+              max_val = std::max(max_val, val);
+              sum_val += val;
+              count++;
+            }
+          }
+        }
+      }
+      
+      std::cout << "Sample pixel values - Min: " << min_val << ", Max: " << max_val 
+                << ", Mean (5x5): " << (count > 0 ? sum_val/count : 0) 
+                << ", NaN/Inf count: " << nan_count << std::endl;
+    }
+  }
+  
   try {
     // Run inference on PE images
     auto predictions = fTFGraph->run(_pe_images, -1);
@@ -754,33 +792,182 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
                 << ", " << (predictions.empty() ? 0 : predictions[0].size()) 
                 << ", " << (predictions.empty() || predictions[0].empty() ? 0 : predictions[0][0].size()) 
                 << ")" << std::endl;
+      
+      // Check if predictions are actually empty/zero
+      if (predictions.empty()) {
+        std::cout << "ERROR: Predictions vector is completely empty!" << std::endl;
+        return;
+      }
+      
+      if (predictions[0].empty()) {
+        std::cout << "ERROR: First prediction is empty!" << std::endl;
+        return;
+      }
+      
+      // Print actual prediction values for debugging
+      for (size_t i = 0; i < std::min((size_t)1, predictions.size()); ++i) {
+        std::cout << "Event " << i << " raw predictions: ";
+        for (size_t j = 0; j < predictions[i].size(); ++j) {
+          std::cout << "[";
+          for (size_t k = 0; k < std::min((size_t)5, predictions[i][j].size()); ++k) {
+            std::cout << predictions[i][j][k];
+            if (k < std::min((size_t)5, predictions[i][j].size()) - 1) std::cout << ", ";
+          }
+          if (predictions[i][j].size() > 5) std::cout << "...";
+          std::cout << "] ";
+        }
+        std::cout << std::endl;
+      }
     }
     
     // Extract predictions for each event
     for (size_t i = 0; i < predictions.size() && i < _mc_dEpromx_final.size(); ++i) {
-      if (predictions[i].size() >= 3) {
-        // Predictions are typically [dEpromx, dEpromy, dEpromz]
-        pixelmapvars.dEpromx_pred.push_back(predictions[i][0][0]); // First output
-        pixelmapvars.dEpromy_pred.push_back(predictions[i][1][0]); // Second output  
-        pixelmapvars.dEpromz_pred.push_back(predictions[i][2][0]); // Third output
+      if (!predictions[i].empty()) {
+        size_t nOutputs = predictions[i].size();
         
-        // Calculate differences (prediction - ground truth)
-        pixelmapvars.dEpromx_diff.push_back(predictions[i][0][0] - _mc_dEpromx_final[i]);
-        pixelmapvars.dEpromy_diff.push_back(predictions[i][1][0] - _mc_dEpromy_final[i]);
-        pixelmapvars.dEpromz_diff.push_back(predictions[i][2][0] - _mc_dEpromz_final[i]);
+        // Extract raw predictions
+        std::vector<double> raw_predictions;
         
-        if(fVerbosity > 1) {
-          std::cout << "Event " << i << " - GT: (" << _mc_dEpromx_final[i] << ", " 
-                    << _mc_dEpromy_final[i] << ", " << _mc_dEpromz_final[i] 
-                    << ") Pred: (" << predictions[i][0][0] << ", " 
-                    << predictions[i][1][0] << ", " << predictions[i][2][0] << ")" << std::endl;
+        // TensorFlow returns predictions[event][0][value0, value1, value2]
+        // Shape (1, 1, 3) means 1 event, 1 output group, 3 values
+        if (nOutputs >= 1 && !predictions[i][0].empty()) {
+          // Extract all values from the first (and only) output group
+          for (size_t k = 0; k < predictions[i][0].size() && k < 3; ++k) {
+            raw_predictions.push_back(predictions[i][0][k]);
+          }
+        }
+        
+        if(fVerbosity > 0) {
+          std::cout << "nOutputs = " << nOutputs << std::endl;
+          std::cout << "raw_predictions.size() = " << raw_predictions.size() << std::endl;
+          std::cout << "Extracted raw predictions: [";
+          for (size_t k = 0; k < raw_predictions.size(); ++k) {
+            std::cout << raw_predictions[k];
+            if (k < raw_predictions.size() - 1) std::cout << ", ";
+          }
+          std::cout << "]" << std::endl;
+          
+          // Debug the predictions structure
+          std::cout << "predictions[" << i << "] structure:" << std::endl;
+          for (size_t j = 0; j < predictions[i].size(); ++j) {
+            std::cout << "  output " << j << ": size=" << predictions[i][j].size();
+            if (!predictions[i][j].empty()) {
+              std::cout << ", first_value=" << predictions[i][j][0];
+            }
+            std::cout << std::endl;
+          }
+        }
+        
+        // Apply inverse scaling to get real coordinates
+        std::vector<double> unscaled_predictions = ApplyInverseScaling(raw_predictions);
+        
+        if(fVerbosity > 0) {
+          std::cout << "Applied inverse scaling: [" << raw_predictions[0] << ", " 
+                    << raw_predictions[1] << ", " << raw_predictions[2] << "] -> ["
+                    << unscaled_predictions[0] << ", " << unscaled_predictions[1] 
+                    << ", " << unscaled_predictions[2] << "]" << std::endl;
+        }
+        
+        // Store unscaled (real coordinate) predictions
+        if (unscaled_predictions.size() >= 1) {
+          // X coordinate should always be positive (take absolute value)
+          double pred_x = std::abs(unscaled_predictions[0]);
+          double true_x = std::abs(_mc_dEpromx_final[i]);
+          pixelmapvars.dEpromx_pred.push_back(pred_x);
+          pixelmapvars.dEpromx_diff.push_back(pred_x - true_x);
+        }
+        
+        if (unscaled_predictions.size() >= 2) {
+          pixelmapvars.dEpromy_pred.push_back(unscaled_predictions[1]);
+          pixelmapvars.dEpromy_diff.push_back(unscaled_predictions[1] - _mc_dEpromy_final[i]);
+        }
+        
+        if (unscaled_predictions.size() >= 3) {
+          pixelmapvars.dEpromz_pred.push_back(unscaled_predictions[2]);
+          pixelmapvars.dEpromz_diff.push_back(unscaled_predictions[2] - _mc_dEpromz_final[i]);
+        }
+        
+        if(fVerbosity > 0) {
+          std::cout << "=== Event " << i << " Reconstruction Results ===" << std::endl;
+          std::cout << "Ground Truth (|dEpromx|, dEpromy, dEpromz): (" 
+                    << std::abs(_mc_dEpromx_final[i]) << ", " << _mc_dEpromy_final[i] << ", " 
+                    << _mc_dEpromz_final[i] << ")" << std::endl;
+          
+          if (unscaled_predictions.size() >= 3) {
+            std::cout << "CNN Prediction (|dEpromx|, dEpromy, dEpromz): (" 
+                      << std::abs(unscaled_predictions[0]) << ", " << unscaled_predictions[1] << ", " 
+                      << unscaled_predictions[2] << ")" << std::endl;
+            
+            std::cout << "Differences (|Pred| - |True|):" << std::endl;
+            double pred_x_abs = std::abs(unscaled_predictions[0]);
+            double true_x_abs = std::abs(_mc_dEpromx_final[i]);
+            std::cout << "  dEpromx_diff = " << (pred_x_abs - true_x_abs) << std::endl;
+            std::cout << "  dEpromy_diff = " << (unscaled_predictions[1] - _mc_dEpromy_final[i]) << std::endl;
+            std::cout << "  dEpromz_diff = " << (unscaled_predictions[2] - _mc_dEpromz_final[i]) << std::endl;
+            
+            // Calculate absolute differences and total error
+            double abs_diff_x = std::abs(pred_x_abs - true_x_abs);
+            double abs_diff_y = std::abs(unscaled_predictions[1] - _mc_dEpromy_final[i]);
+            double abs_diff_z = std::abs(unscaled_predictions[2] - _mc_dEpromz_final[i]);
+            double total_error = std::sqrt(abs_diff_x*abs_diff_x + abs_diff_y*abs_diff_y + abs_diff_z*abs_diff_z);
+            
+            std::cout << "Absolute Differences:" << std::endl;
+            std::cout << "  |dEpromx_diff| = " << abs_diff_x << std::endl;
+            std::cout << "  |dEpromy_diff| = " << abs_diff_y << std::endl;
+            std::cout << "  |dEpromz_diff| = " << abs_diff_z << std::endl;
+            std::cout << "  3D Distance Error = " << total_error << std::endl;
+          }
+          std::cout << "============================================" << std::endl;
         }
       }
     }
     
   } catch (const std::exception& e) {
     std::cerr << "RunInference: Error during TensorFlow inference: " << e.what() << std::endl;
+    std::cerr << "Possible causes:" << std::endl;
+    std::cerr << "  1. Input tensor dimensions don't match model expectations" << std::endl;
+    std::cerr << "  2. Model file corrupted or incomplete" << std::endl;
+    std::cerr << "  3. TensorFlow version incompatibility" << std::endl;
+    std::cerr << "  4. Model was saved with different TF version" << std::endl;
+    
+    // Clear prediction vectors to prevent downstream issues
+    pixelmapvars.dEpromx_pred.clear();
+    pixelmapvars.dEpromy_pred.clear();
+    pixelmapvars.dEpromz_pred.clear();
+    pixelmapvars.dEpromx_diff.clear();
+    pixelmapvars.dEpromy_diff.clear();
+    pixelmapvars.dEpromz_diff.clear();
   }
+}
+
+
+// -------- Function to apply inverse scaling to predictions --------
+std::vector<double> opdet::SBNDPDSProducer::ApplyInverseScaling(const std::vector<double>& scaled_predictions) {
+  
+  if (scaled_predictions.size() != 3) {
+    std::cout << "WARNING: Expected 3 predictions (dEpromx, dEpromy, dEpromz), got " << scaled_predictions.size() << std::endl;
+    return scaled_predictions; // Return unchanged if size mismatch
+  }
+  
+  std::vector<double> unscaled_predictions(3);
+  
+  // X: [0,1] -> [0,200]
+  unscaled_predictions[0] = scaled_predictions[0] * 200.0;
+  
+  // Y: [-1,1] -> [-200,200]  
+  unscaled_predictions[1] = scaled_predictions[1] * 200.0;
+  
+  // Z: [0,1] -> [0,500]
+  unscaled_predictions[2] = scaled_predictions[2] * 500.0;
+  
+  if(fVerbosity > 1) {
+    std::cout << "Simple inverse scaling applied:" << std::endl;
+    std::cout << "  X: " << scaled_predictions[0] << " [0,1] -> " << unscaled_predictions[0] << " [0,200]" << std::endl;
+    std::cout << "  Y: " << scaled_predictions[1] << " [-1,1] -> " << unscaled_predictions[1] << " [-200,200]" << std::endl;
+    std::cout << "  Z: " << scaled_predictions[2] << " [0,1] -> " << unscaled_predictions[2] << " [0,500]" << std::endl;
+  }
+  
+  return unscaled_predictions;
 }
 
 
