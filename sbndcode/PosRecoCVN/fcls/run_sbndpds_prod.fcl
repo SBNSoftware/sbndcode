@@ -43,10 +43,11 @@ physics:
       SaveOpHits: true
       
       # TensorFlow Configuration
-      RunInference: true  # Set to true to enable TensorFlow inference
+      RunInference: true  # Set to true to enable TensorFlow inference  
       ModelPath: "/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models/test_larsoft_inference_savedmodel_resnet18"       # Path to TensorFlow SavedModel directory
-      InputNames: []      # Leave empty to use default model inputs
-      OutputNames: []     # Leave empty to use default model outputs
+      InputNames: []      # Leave empty to use default model inputs, or specify: ["input_1"]
+      OutputNames: []     # Leave empty to use default model outputs, or specify: ["dEpromx", "dEpromy", "dEpromz"]
+    
     }
   }
 
