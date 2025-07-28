@@ -86,6 +86,7 @@ function(params, anode, field, n, rms_cuts=[])
         roi_min_max_ratio: 0.8, // default 0.8
         min_rms_cut: 1.0,  // units???
         max_rms_cut: 30.0,  // units???
+        protection_factor: 2.0,
 
         // parameter used to make "rcrc" spectrum
         rcrc: 0.5 * wc.millisecond, // 1.1 for collection, 3.3 for induction
@@ -117,8 +118,9 @@ function(params, anode, field, n, rms_cuts=[])
         /// this uses hard-coded waveform.
         response: { waveform: handmade.u_resp, waveformid: wc.Ulayer },
         response_offset: 125.6, // offset of the negative peak
-        pad_window_front: 20,
-        decon_limit: 0.02,
+        pad_window_front: 120, // 20,
+        pad_window_back: 25, // 20
+        decon_limit: 0.0035, // 0.02,
         decon_limit1: 0.07,
         roi_min_max_ratio: 3.0,
       },
@@ -137,7 +139,9 @@ function(params, anode, field, n, rms_cuts=[])
         /// this uses hard-coded waveform.
         response: { waveform: handmade.v_resp, waveformid: wc.Vlayer },
         response_offset: 129.5,
-        decon_limit: 0.01,
+        pad_window_front: 40, // 20
+        pad_window_back: 30, // 20
+        decon_limit: 0.003, // 0.01,
         decon_limit1: 0.08,
         roi_min_max_ratio: 1.5,
       },
@@ -151,10 +155,14 @@ function(params, anode, field, n, rms_cuts=[])
 
       {
         //channels: { wpid: wc.WirePlaneId(wc.Wlayer) },
-//        channels: std.range(n * 2560 + 1600, n * 2560 + 2560- 1),
+      //  channels: std.range(n * 2560 + 1600, n * 2560 + 2560- 1),
         channels: std.range(n * 5638 + 3968, n * 5638 + 5638-1),
+        response: { waveform: handmade.w_resp, waveformid: wc.Wlayer },
+        response_offset: 129, 
         nominal_baseline: 650,
-        decon_limit: 0.05,
+        pad_window_front: 30, // 20
+        pad_window_back: 30, // 20
+        decon_limit: 0.0025,
         decon_limit1: 0.08,
         freqmasks: freqbinner.freqmasks(harmonic_freqs, 5.0*wc.kilohertz),
       },
