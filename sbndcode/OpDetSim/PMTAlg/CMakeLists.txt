@@ -5,6 +5,12 @@ cet_build_plugin(PMTGainFluctuations1Dynode art::tool
             nurandom::RandomUtils_NuRandomService_service
 )
 
+cet_build_plugin(PMTGaussianGainFluctuation art::tool 
+      SOURCE
+            PMTGaussianGainFluctuation_tool.cc 
+      LIBRARIES 
+            nurandom::RandomUtils_NuRandomService_service
+)
 
 cet_build_plugin(PMTNonLinearityTF1 art::tool 
       SOURCE

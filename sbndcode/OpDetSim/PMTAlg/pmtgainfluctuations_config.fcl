@@ -18,4 +18,10 @@ FirstDynodeGainFluctuations:
   Gain:                   1e7            # total typical PMT gain
 }
 
+GaussianGainFluctuations:
+{
+  tool_type: "PMTGaussianGainFluctuation"
+  GainFluctuation: 0.3
+}
+
 END_PROLOG
