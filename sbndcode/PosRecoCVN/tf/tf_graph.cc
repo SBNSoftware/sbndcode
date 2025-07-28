@@ -48,13 +48,21 @@ tf::Graph::Graph(const char* graph_file_name,
   if (fUseBundle) {
 
     fBundle = new tensorflow::SavedModelBundle();
+    std::cout << "tf_graph attempting to load SavedModel from: " << graph_file_name << std::endl;
+    
     status = tensorflow::LoadSavedModel(tensorflow::SessionOptions(),
                                         tensorflow::RunOptions(),
                                         graph_file_name,
                                         {tensorflow::kSavedModelTagServe},
                                         fBundle);
     std::cout << "tf_graph loaded SavedModelBundle with status: " << status.ToString() << std::endl;
-    if (!status.ok()) return;
+    if (!status.ok()) {
+      std::cout << "DETAILED ERROR: Failed to load SavedModel. Check if the path contains:" << std::endl;
+      std::cout << "  - saved_model.pb file" << std::endl;
+      std::cout << "  - variables/ directory with variables.index and variables.data-*" << std::endl;
+      std::cout << "  - assets/ directory (if applicable)" << std::endl;
+      return;
+    }
 
     auto sig_map = fBundle->meta_graph_def.signature_def();
     std::string sig_def = "serving_default";
@@ -67,12 +75,25 @@ tf::Graph::Graph(const char* graph_file_name,
     auto model_def = sig_map.at((has_default_key) ? sig_def : sig_map_keys.back());
 
     // ... Get the input names
+    std::cout << "tf_graph found signature: " << ((has_default_key) ? sig_def : sig_map_keys.back()) << std::endl;
+    std::cout << "tf_graph available signatures: ";
+    for (const auto& key : sig_map_keys) {
+      std::cout << key << " ";
+    }
+    std::cout << std::endl;
+    
     if (inputs.empty()){
       std::cout << "tf_graph using all inputs:" << std::endl;
       for (auto const& p : model_def.inputs()) {
         fInputNames.push_back(p.second.name());
         std::cout << "tf_graph InputName: " << fInputNames.back() << std::endl;
         std::cout << "  key: " << p.first << " value: " << p.second.name() << std::endl;
+        std::cout << "  dtype: " << p.second.dtype() << std::endl;
+        std::cout << "  shape: ";
+        for (int i = 0; i < p.second.tensor_shape().dim_size(); ++i) {
+          std::cout << p.second.tensor_shape().dim(i).size() << " ";
+        }
+        std::cout << std::endl;
       }
     }
     else{
@@ -94,6 +115,12 @@ tf::Graph::Graph(const char* graph_file_name,
       for (auto const& p : model_def.outputs()) {
         fOutputNames.push_back(p.second.name());
         std::cout << "  key: " << p.first << " value: " << p.second.name() << std::endl;
+        std::cout << "  dtype: " << p.second.dtype() << std::endl;
+        std::cout << "  shape: ";
+        for (int i = 0; i < p.second.tensor_shape().dim_size(); ++i) {
+          std::cout << p.second.tensor_shape().dim(i).size() << " ";
+        }
+        std::cout << std::endl;
       }
     }
     //  .. or use only the outputs whose keys are specified
