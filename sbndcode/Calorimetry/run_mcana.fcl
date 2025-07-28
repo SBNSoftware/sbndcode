@@ -1,11 +1,16 @@
 #include "particleinventoryservice.fcl"
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+#include "rootoutput_sbnd.fcl"
+#include "MCCaloAna_config.fcl"
 
 process_name: MCCaloAna
 
 services: {
   TFileService : {fileName: "mcanacalo.root"}
   ParticleInventoryService: @local::standard_particleinventoryservice
-
+  @table::sbnd_services              # from services_sbnd.fcl
+  @table::sbnd_g4_services
 }
 
 source:
@@ -16,7 +21,11 @@ source:
 
 outputs:
 {
-  dataTier: "simulated"
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "simulated"
+  }
 }
 
 physics:
@@ -28,9 +37,7 @@ physics:
  filters:{}
 
  analyzers:{
-    mccaloana: {
-        module_type: MCCaloAna
-    }
+    mccaloana: @local::mccaloana
  }
 
   # define the output stream, there could be more than one if using filters
