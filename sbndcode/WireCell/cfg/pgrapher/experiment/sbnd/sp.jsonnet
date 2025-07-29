@@ -55,10 +55,10 @@ function(params, tools, override = {}) {
       per_chan_resp: pc.name,
       fft_flag: 0,  // 1 is faster but higher memory, 0 is slightly slower but lower memory
       postgain: 1.0,  // default 1.2
-      ADC_mV: ADC_mV_ratio, // 4096 / (1400.0 * wc.mV), 
-      troi_col_th_factor: 3.0,  // default 5
-      troi_ind_th_factor: 1.8,  // default 3
-      troi_pad: 5, //default 5
+      ADC_mV: ADC_mV_ratio, // 4096 / (1400.0 * wc.mV),
+      local use_low_threshold = std.extVar('enableLowROIThresholds'), 
+      troi_col_th_factor: if use_low_threshold then 3.0 else 5.0,  // default 5
+      troi_ind_th_factor: if use_low_threshold then 1.8 else 3.0, //default 3
       lroi_rebin: 6, // default 6
       lroi_th_factor: 3.5, // default 3.5
       lroi_th_factor1: 0.7, // default 0.7
