@@ -156,8 +156,27 @@ local wcls_depoflux_writer = g.pnode({
   },
 }, nin=1, nout=1, uses=tools.anodes + [tools.field]);
 
-local sp_maker = import 'pgrapher/experiment/sbnd/sp-dnnsamples.jsonnet';
-local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
+local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
+
+local sp_override = {
+    sparse: true,
+    use_roi_debug_mode: true,
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
+    use_multi_plane_protection: true,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
+    tight_lf_tag: "",
+    cleanup_roi_tag: "",
+    break_roi_loop1_tag: "",
+    break_roi_loop2_tag: "",
+    shrink_roi_tag: "",
+    extend_roi_tag: "",
+    decon_charge_tag: "",
+    gauss_tag: "",
+    wiener_tag: "",
+}; 
+
+local sp = sp_maker(params, tools, sp_override);
 local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
 
 local magoutput = 'sbnd-data-check.root';
@@ -177,14 +196,6 @@ local chndb = [{
 
 local nf_maker = import 'pgrapher/experiment/sbnd/nf.jsonnet';
 local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in anode_iota];
-
-local multipass1 = [
-  g.pipeline([
-               sn_pipes[n],
-             ],
-             'multipass%d' % n)
-  for n in anode_iota
-];
 
 local multipass2 = [
   g.pipeline([
@@ -208,7 +219,6 @@ local multipass2 = [
 local f_sp = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 
 local outtags = ['orig%d' % n for n in anode_iota];
-local bi_manifold1 = f.fanpipe('DepoSetFanout', multipass1, 'FrameFanin', 'sn_mag_nf', outtags);
 local bi_manifold2 = f_sp.fanpipe('DepoSetFanout', multipass2, 'FrameFanin', 'sn_mag_nf_mod2', outtags, "true");
 
 local retagger_sim = g.pnode({
@@ -333,21 +343,7 @@ local retagger_sp = g.pnode({
 
 local sink_sp = g.pnode({ type: 'DumpFrames' }, nin=1, nout=0);
 
-local graph1 = g.pipeline([
-wcls_input_sim.deposet,         //sim
-setdrifter,                     //sim
-wcls_depoflux_writer,           //sim
-bi_manifold1,                   //sim
-retagger_sim,                   //sim
-wcls_output_sim.sim_digits,     //sim
-fanpipe,                        //sp
-retagger_sp,                    //sp
-wcls_output_sp.sp_signals,      //sp
-sink_sp                         //sp
-]);
-
-
-local graph2 = g.pipeline([
+local graph = g.pipeline([
 wcls_input_sim.deposet,         //sim
 setdrifter,                     //sim
 wcls_depoflux_writer,           //sim
@@ -358,8 +354,6 @@ sink_sp                         //sp
 ]);
 
 local save_simdigits = std.extVar('save_simdigits');
-
-local graph = if save_simdigits == "true" then graph1 else graph2;
 
 local app = {
   type: 'TbbFlow',

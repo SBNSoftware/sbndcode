@@ -22,9 +22,10 @@
 
 //local epoch = std.extVar('epoch');  // eg "dynamic", "after", "before", "perfect"
 local sigoutform = std.extVar('signal_output_form');  // eg "sparse" or "dense"
+local wc_device = std.extVar('wc_device');
 local raw_input_label = std.extVar('raw_input_label');  // eg "daq"
 local use_paramresp = std.extVar('use_paramresp');  // eg "true" or "false"
-local use_dnnroi = std.extVar('use_dnnroi');
+local roi = std.extVar('roi');
 local nchunks = std.extVar('nchunks');
 local tick_per_slice = std.extVar('tick_per_slice');
 local dnnroi_model_p0 = std.extVar('dnnroi_model_p0');
@@ -49,9 +50,9 @@ local params = data_params {
     },
 };
 
-
-local tools = tools_maker(params);
-
+local default_tools = tools_maker(params);
+local tools = if wc_device == 'gpu' then std.mergePatch(default_tools,
+    {dft: {type: "TorchDFT", data: {device: wc_device}}}) else default_tools;
 
 local mega_anode = {
   type: 'MegaAnodePlane',
@@ -172,21 +173,39 @@ local nf_maker = import 'pgrapher/experiment/sbnd/nf-data.jsonnet'; //added Ewer
 local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
 
 local sp_maker = import 'pgrapher/experiment/sbnd/sp.jsonnet';
-local sp_override = if use_dnnroi then {
+local sp_override = 
+if roi == "dnn" then {
     sparse: true,
     use_roi_debug_mode: true,
-    save_negtive_charge: true, // TODO: no negative charge in gauss, default is false
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
     use_multi_plane_protection: true,
-    mp_tick_resolution: 4,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
     tight_lf_tag: "",
-    // loose_lf_tag: "",
     cleanup_roi_tag: "",
     break_roi_loop1_tag: "",
     break_roi_loop2_tag: "",
     shrink_roi_tag: "",
     extend_roi_tag: "",
-    // m_decon_charge_tag: "",
-} else {
+    decon_charge_tag: "",
+    gauss_tag: "",
+    wiener_tag: "",
+} 
+else if roi == "both" then {
+    sparse: true,
+    use_roi_debug_mode: true,
+    save_negative_charge: false, // TODO: no negative charge in gauss, default is false
+    use_multi_plane_protection: true,
+    do_not_mp_protect_traditional: false, // TODO: do_not_mp_protect_traditional to make a clear ref, defualt is false 
+    mp_tick_resolution:4,
+    tight_lf_tag: "",
+    cleanup_roi_tag: "",
+    break_roi_loop1_tag: "",
+    break_roi_loop2_tag: "",
+    shrink_roi_tag: "",
+    extend_roi_tag: "",
+} 
+else {
     sparse: true,
 };
 //local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
@@ -199,7 +218,7 @@ local ts_p0 = {
     tick_per_slice: tick_per_slice, 
     data: {
         model: dnnroi_model_p0,
-        device: "cpu",
+        device: wc_device,
         concurrency: 1,
     },
 };
@@ -210,7 +229,7 @@ local ts_p1 = {
     tick_per_slice: tick_per_slice, 
     data: {
         model: dnnroi_model_p1,
-        device: "cpu",
+        device: wc_device,
         concurrency: 1,
     },
 };
@@ -230,7 +249,26 @@ local fanout = function (name, multiplicity=2)
 
 local sp_fans = [fanout("sp_fan_%d" % n) for n in std.range(0, std.length(tools.anodes) - 1)];
 local dnnroi_pipes = [ dnnroi(tools.anodes[n], ts_p0, ts_p1, output_scale=1, nchunks=nchunks) for n in std.range(0, std.length(tools.anodes) - 1) ];
-local nfsp_pipes = if use_dnnroi then 
+local nfsp_pipes = 
+if roi == "dnn" then 
+[
+  g.intern(
+    innodes=[chsel_pipes[n]],
+    outnodes=[dnnroi_pipes[n],sp_fans[n]],
+    centernodes=[nf_pipes[n], sp_pipes[n], sp_fans[n]],
+    edges=[
+      g.edge(chsel_pipes[n], nf_pipes[n], 0, 0),
+      g.edge(nf_pipes[n], sp_pipes[n], 0, 0),
+      g.edge(sp_pipes[n], sp_fans[n], 0, 0),
+      g.edge(sp_fans[n], dnnroi_pipes[n], 0, 0),
+    ],
+    iports=chsel_pipes[n].iports,
+    oports=dnnroi_pipes[n].oports+[sp_fans[n].oports[1]],
+    name='nfsp_pipe_%d' % n,
+  )
+  for n in std.range(0, std.length(tools.anodes) - 1)
+]
+else if roi == "both" then
 [
   g.intern(
     innodes=[chsel_pipes[n]],
@@ -249,7 +287,7 @@ local nfsp_pipes = if use_dnnroi then
   )
   for n in std.range(0, std.length(tools.anodes) - 1)
 ]
-else
+else if roi == "trad" then
 [
   g.pipeline([
                chsel_pipes[n],
@@ -339,7 +377,28 @@ local framefanin = function(name) g.pnode({
 local fanin_apa_dnnroi = framefanin('fanin_apa_dnnroi');
 local fanin_apa_sp = framefanin('fanin_apa_sp');
 
-local graph = if use_dnnroi then
+local graph = 
+if roi == "dnn" then
+ g.intern(
+  innodes=[wcls_input.adc_digits],
+  outnodes=[],
+  centernodes=nfsp_pipes+[fanout_apa, retag_dnnroi, retag_sp, fanin_apa_dnnroi, fanin_apa_sp, wcls_output.dnnsp_signals, sink_dnnroi, sink_sp],
+  edges=[
+    g.edge(wcls_input.adc_digits, fanout_apa, 0, 0),
+    g.edge(fanout_apa, nfsp_pipes[0], 0, 0),
+    g.edge(fanout_apa, nfsp_pipes[1], 1, 0),
+    g.edge(nfsp_pipes[0], fanin_apa_dnnroi, 0, 0),
+    g.edge(nfsp_pipes[1], fanin_apa_dnnroi, 0, 1),
+    g.edge(fanin_apa_dnnroi, retag_dnnroi, 0, 0),
+    g.edge(retag_dnnroi, wcls_output.dnnsp_signals, 0, 0),
+    g.edge(wcls_output.dnnsp_signals, sink_dnnroi, 0, 0),
+    g.edge(nfsp_pipes[0], fanin_apa_sp, 1, 0),
+    g.edge(nfsp_pipes[1], fanin_apa_sp, 1, 1),
+    g.edge(fanin_apa_sp, retag_sp, 0, 0),
+    g.edge(retag_sp, sink_sp, 0, 0),
+  ]
+)
+else if roi == "both" then
  g.intern(
   innodes=[wcls_input.adc_digits],
   outnodes=[],
@@ -360,7 +419,7 @@ local graph = if use_dnnroi then
     g.edge(wcls_output.sp_signals, sink_sp, 0, 0),
   ]
 )
-else
+else if roi == "trad" then
 g.pipeline([wcls_input.adc_digits, 
 fanpipe, 
 retag_sp, 
