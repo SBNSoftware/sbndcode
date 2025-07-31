@@ -1,0 +1,3 @@
+#include standard_detsim_sbnd.fcl
+physics.producers.simtpc2d:  @local::sbnd_wcls_simsp_low
+physics.producers.sptpc2d.enableLowROIThresholds: true
