@@ -64,8 +64,12 @@ namespace sbnd {
     void NormalizeYZ::reconfigure(const fhicl::ParameterSet& pset){
       fFileName = pset.get<std::string>("FileName");
       fVerbose = pset.get<bool>("Verbose", false);
-      
-      TFile* f = TFile::Open(fFileName.c_str(), "READ");
+
+      std::string fname;
+      cet::search_path sp("FW_SEARCH_PATH");
+      sp.find_file(fFileName, fname);  
+    
+      TFile* f = TFile::Open(fname.c_str(), "READ");
       if (!f || f->IsZombie()) {
         throw cet::exception("NormalizeYZ") << "Failed to open correction map file: " << fFileName;
       }

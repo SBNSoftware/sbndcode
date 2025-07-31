@@ -9,6 +9,7 @@ set(TOOL_LIBRARIES
   art::Framework_Services_Registry
   art::Utilities
   fhiclcpp::fhiclcpp
+  cetlib::cetlib
   cetlib_except::cetlib_except
   ROOT::Core
   ROOT::Hist

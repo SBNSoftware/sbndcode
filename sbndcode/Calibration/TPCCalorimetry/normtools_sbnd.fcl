@@ -2,17 +2,17 @@ BEGIN_PROLOG
 
 yznorm_hist_data: {
   tool_type: NormalizeYZ
-  FileName: "root://fndcadoor.fnal.gov:1094/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/yadav/yz_correction_map_data1e20.root"
+  FileName: "YZmaps/yz_correction_map_data1e20.root"
   Verbose: false
 }
 
 yznorm_hist_mc: {
   tool_type: NormalizeYZ
-  FileName: "root://fndcadoor.fnal.gov:1094/pnfs/fnal.gov/usr/sbnd/persistent/stash/users/yadav/yz_correction_map_mcp2025b5e18.root"
+  FileName: "YZmaps/yz_correction_map_mcp2025b5e18.root"
   Verbose: false
 }
 
-# list of normalization tools - by far only YZ
+# list of normalization tools - by far only YZ correction is implemented
 sbnd_calonormtoolsdata: [@local::yznorm_hist_data]
 sbnd_calonormtoolsmc: [@local::yznorm_hist_mc]
 
