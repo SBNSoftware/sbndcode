@@ -92,4 +92,4 @@ outputs:
                     ]
   }
 }
-physics.producers.sptpc2d.enableLowROIThresholds: false
+physics.producers.simtpc2d.enableLowROIThresholds: false
