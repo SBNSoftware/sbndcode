@@ -25,6 +25,7 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     fRunInference( p.get<bool>("RunInference", false) ),
     fInputNames( p.get<std::vector<std::string>>("InputNames", {}) ),
     fOutputNames( p.get<std::vector<std::string>>("OutputNames", {}) ),
+    fCustomNormFactor( p.get<double>("CustomNormFactor", -1.0) ),
     dE_neutrinowindow( 0.0 ) 
 {
     produces<PixelMapVars>();
@@ -690,7 +691,18 @@ void opdet::SBNDPDSProducer::CreatePEImages() {
       }
     }
   }
-  max_val_1 = (max_val_1 > 0) ? max_val_1 : 1.0f;
+  
+  if (fCustomNormFactor > 0) {
+    max_val_1 = fCustomNormFactor;
+    if(fVerbosity > 0) {
+      std::cout << "Using custom normalization factor: " << fCustomNormFactor << std::endl;
+    }
+  } else {
+    max_val_1 = (max_val_1 > 0) ? max_val_1 : 1.0f;
+    if(fVerbosity > 0) {
+      std::cout << "Using auto-detected normalization factor: " << max_val_1 << std::endl;
+    }
+  }
   
   // Apply normalization
   for (int idx = 0; idx < map_count; ++idx) {
