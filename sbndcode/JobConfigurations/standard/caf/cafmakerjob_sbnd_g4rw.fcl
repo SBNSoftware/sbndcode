@@ -2,7 +2,3 @@
 
 physics.runprod: [rns, geant4weight , @sequence::physics.runprod]
 physics.producers.cafmaker.SystWeightLabels: [ "geant4weight" ]
-
-physics.producers.geant4weight.weight_functions: @local::physics.producers.geant4weight.weight_functions_reint
-
-
