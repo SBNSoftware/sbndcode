@@ -47,6 +47,9 @@ physics:
       ModelPath: "/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models/test_larsoft_inference_savedmodel_resnet18"       # Path to TensorFlow SavedModel directory
       InputNames: []      # Leave empty to use default model inputs, or specify: ["input_1"]
       OutputNames: []     # Leave empty to use default model outputs, or specify: ["dEpromx", "dEpromy", "dEpromz"]
+      
+      # Image Normalization Configuration
+      CustomNormFactor: 10789.310  # Set to positive value to override auto-normalization, -1.0 for auto-detection
     
     }
   }
