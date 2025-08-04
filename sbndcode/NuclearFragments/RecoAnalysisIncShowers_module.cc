@@ -106,10 +106,10 @@ private:
   std::vector<int> fReco_truthMatchedShowerID;
   std::vector<int> fReco_truthMatchedTrackID;
   std::vector<int> fReco_truthMatchedPFPg4ID;
-  std::vector<int> fReco_truthMatchedPDG;
-  std::vector<double> fReco_truthMatchedKE;
-  std::vector<double> fReco_truthMatchedE;
-  std::vector<double> fReco_truthMatchedP;
+  std::vector<int> fReco_truthMatchedTrackPDG;
+  std::vector<double> fReco_truthMatchedTrackKE;
+  std::vector<double> fReco_truthMatchedTrackE;
+  std::vector<double> fReco_truthMatchedTrackP;
   std::vector<int> fMC_particlePDG;
   std::vector<double> fMC_particleMass;
   std::vector<double> fMC_particleE;
@@ -122,6 +122,7 @@ private:
   std::vector<double> fMC_particleEndY;
   std::vector<double> fMC_particleEndZ;
   std::vector<bool> fMC_isReconstructedAsTrack;
+  std::vector<bool> fMC_isReconstructedAsShower;
   std::vector<bool> fMC_isReconstructedAsPFP;
   //std::vector<bool> fMC_isShower;
   //std::vector<bool> fMC_isTrack;
@@ -330,10 +331,10 @@ void nuclearFragments::RecoAnalysisIncShowers::beginJob()
   fEventTree->Branch("reco_truthMatchedTrackID", &fReco_truthMatchedTrackID);
   fEventTree->Branch("reco_truthMatchedShowerID", &fReco_truthMatchedShowerID);
   fEventTree->Branch("reco_truthMatchedPFPg4ID", &fReco_truthMatchedPFPg4ID);
-  fEventTree->Branch("reco_truthMatchedPDG", &fReco_truthMatchedPDG);
-  fEventTree->Branch("reco_truthMatchedE", &fReco_truthMatchedE);
-  fEventTree->Branch("reco_truthMatchedP", &fReco_truthMatchedP);
-  fEventTree->Branch("reco_truthMatchedKE", &fReco_truthMatchedKE);
+  fEventTree->Branch("reco_truthMatchedTrackPDG", &fReco_truthMatchedTrackPDG);
+  fEventTree->Branch("reco_truthMatchedTrackE", &fReco_truthMatchedTrackE);
+  fEventTree->Branch("reco_truthMatchedTrackP", &fReco_truthMatchedTrackP);
+  fEventTree->Branch("reco_truthMatchedTrackKE", &fReco_truthMatchedTrackKE);
   fEventTree->Branch("reco_nuVertexX", &fReco_nuVertexX);
   fEventTree->Branch("reco_nuVertexY", &fReco_nuVertexY);
   fEventTree->Branch("reco_nuVertexZ", &fReco_nuVertexZ);
@@ -359,6 +360,7 @@ void nuclearFragments::RecoAnalysisIncShowers::beginJob()
   fEventTree->Branch("MC_particleEndY", &fMC_particleEndY);
   fEventTree->Branch("MC_particleEndZ", &fMC_particleEndZ);
   fEventTree->Branch("MC_isReconstructedAsTrack", &fMC_isReconstructedAsTrack);
+  fEventTree->Branch("MC_isReconstructedAsShower", &fMC_isReconstructedAsShower);
   fEventTree->Branch("MC_isReconstructedAsPFP", &fMC_isReconstructedAsPFP);
   //fEventTree->Branch("MC_isShower", &fMC_isShower);
   //fEventTree->Branch("MC_isTrack", &fMC_isTrack);
@@ -409,10 +411,10 @@ void nuclearFragments::RecoAnalysisIncShowers::ResetVariables()
   fReco_truthMatchedTrackID.clear();
   fReco_truthMatchedShowerID.clear();
   fReco_truthMatchedPFPg4ID.clear();
-  fReco_truthMatchedPDG.clear();
-  fReco_truthMatchedE.clear();
-  fReco_truthMatchedP.clear();
-  fReco_truthMatchedKE.clear();
+  fReco_truthMatchedTrackPDG.clear();
+  fReco_truthMatchedTrackE.clear();
+  fReco_truthMatchedTrackP.clear();
+  fReco_truthMatchedTrackKE.clear();
   fReco_hitNumber.clear();
   fReco_hitG4ID.clear();
   fReco_hitHasTrackObject.clear();
@@ -435,6 +437,7 @@ void nuclearFragments::RecoAnalysisIncShowers::ResetVariables()
   fMC_particleEndY.clear();
   fMC_particleEndZ.clear();
   fMC_isReconstructedAsTrack.clear();
+  fMC_isReconstructedAsShower.clear();
   fMC_isReconstructedAsPFP.clear();
   //fMC_isShower.clear();
   //fMC_isTrack.clear();
@@ -623,6 +626,9 @@ void nuclearFragments::RecoAnalysisIncShowers::AnalyseTruNu(const art::Ptr<simb:
     int checkIfReconstructedAsTrack = std::count(fReco_truthMatchedTrackID.begin(), fReco_truthMatchedTrackID.end(), particle->TrackId());
     fMC_isReconstructedAsTrack.push_back(checkIfReconstructedAsTrack!=0);
 
+    int checkIfReconstructedAsShower = std::count(fReco_truthMatchedShowerID.begin(), fReco_truthMatchedShowerID.end(), particle->TrackId());
+    fMC_isReconstructedAsShower.push_back(checkIfReconstructedAsShower!=0);
+
     int checkIfReconstructedAsPFP = std::count(fReco_truthMatchedPFPg4ID.begin(), fReco_truthMatchedPFPg4ID.end(), particle->TrackId());
     fMC_isReconstructedAsPFP.push_back(checkIfReconstructedAsPFP!=0);
 
@@ -660,10 +666,10 @@ void nuclearFragments::RecoAnalysisIncShowers::AnalyseMCTruth(art::ValidHandle<s
 void nuclearFragments::RecoAnalysisIncShowers::TruthMatch()
 {
   for(std::size_t i=0; i<fReco_truthMatchedTrackID.size(); i++){
-    fReco_truthMatchedPDG.push_back(fTrackIDtoTruthPDGMap[fReco_truthMatchedTrackID[i]]);
-    fReco_truthMatchedE.push_back(fTrackIDtoTruthEMap[fReco_truthMatchedTrackID[i]]);
-    fReco_truthMatchedP.push_back(fTrackIDtoTruthPMap[fReco_truthMatchedTrackID[i]]);
-    fReco_truthMatchedKE.push_back(fTrackIDtoTruthKEMap[fReco_truthMatchedTrackID[i]]);
+    fReco_truthMatchedTrackPDG.push_back(fTrackIDtoTruthPDGMap[fReco_truthMatchedTrackID[i]]);
+    fReco_truthMatchedTrackE.push_back(fTrackIDtoTruthEMap[fReco_truthMatchedTrackID[i]]);
+    fReco_truthMatchedTrackP.push_back(fTrackIDtoTruthPMap[fReco_truthMatchedTrackID[i]]);
+    fReco_truthMatchedTrackKE.push_back(fTrackIDtoTruthKEMap[fReco_truthMatchedTrackID[i]]);
   }
 }
 
