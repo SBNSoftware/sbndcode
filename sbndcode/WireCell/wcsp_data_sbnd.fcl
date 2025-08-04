@@ -66,16 +66,16 @@ sbnd_wcls_sp_data.wcls_main.structs:   {
                                         nticks: 3427
                                         nchunks: 2 # dummy for trad
                                         tick_per_slice: 4 # dummy for trad
+					enableLowROIThresholds: "false"
                                        }
 #----------------------------------------------------------------------------------#
 ## Low threshold configuration 
 sbnd_wcls_sp_data_low: @local::sbnd_wcls_sp_data
-sbnd_wcls_sp_data_low.wcls_main.configs:["pgrapher/experiment/sbnd/wcls-nf-sp-data.jsonnet"]
-sbnd_wcls_sp_data_low.wcls_main.outputers: ["wclsFrameSaver:spsaver", "wclsFrameSaver:dnnsaver"] 
-sbnd_wcls_sp_data_low.wcls_main.params.roi: "both"
+sbnd_wcls_sp_data_low.wcls_main.outputers: ["wclsFrameSaver:dnnsaver"] 
+sbnd_wcls_sp_data_low.wcls_main.params.roi: "dnn"
 sbnd_wcls_sp_data_low.wcls_main.structs.nchunks: 2 # should match training config
 sbnd_wcls_sp_data_low.wcls_main.structs.tick_per_slice: 4 # should match training config
-sbnd_wcls_sp_data_low.wcls_main.structs.use_dnnroi: true
+#sbnd_wcls_sp_data_low.wcls_main.structs.use_dnnroi: true
 
 # ------------------------------------------------------------------------------------ #
 
