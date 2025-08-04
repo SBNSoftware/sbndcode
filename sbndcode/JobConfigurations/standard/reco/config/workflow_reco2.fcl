@@ -34,11 +34,15 @@ sbnd_reco2_producers:{
     pandoraCalo:         @local::sbnd_gnewcalomc
     pandoraPid:          @local::sbnd_chi2pid
 
+
     pandoraSCECalo:      @local::sbnd_gnewcalomc
     pandoraSCEPid:       @local::sbnd_chi2pid
 
     pandoraCaloData:     @local::sbnd_gnewcalodata
     pandoraPidData:      @local::sbnd_chi2pid
+
+    pandoraSCECaloData:     @local::sbnd_gnewcalodata
+    pandoraSCEPidData:      @local::sbnd_chi2pid
 
     ### SCE-aware pandora:
     pandoraSCE:          @local::scecorrection
@@ -46,6 +50,7 @@ sbnd_reco2_producers:{
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreation
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreation
     
+
     ### CRT Veto
     crtveto:        @local::crtvetoproducer_sbnd
 
@@ -67,6 +72,7 @@ sbnd_reco2_producers:{
     opt0finder:          @local::sbnd_opt0_finder_one_to_many
     opt0finderSCE:       @local::sbnd_opt0_finder_one_to_many
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
+    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCE
 
     ### Uncalibrated calorimetry producer for calibration caloskimmer
     caloskimCalorimetry: @local::caloskim_calorimetry
@@ -107,6 +113,7 @@ sbnd_reco2_producer_sequence: [
     , fmatcharaSCE
     , fmatchoparaSCE
     , opt0finderSCE
+    , tpcpmtbarycentermatchingSCE
     , cvn
     , cvnSCE
 ]
@@ -133,9 +140,20 @@ sbnd_reco2_producers.pandoraCaloData.TrackIsFieldDistortionCorrected:   false
 sbnd_reco2_producers.pandoraPidData.TrackModuleLabel:                   "pandoraTrack"
 sbnd_reco2_producers.pandoraPidData.CalorimetryModuleLabel:             "pandoraCaloData"
 
+sbnd_reco2_producers.pandoraSCECaloData.TrackModuleLabel:                  "pandoraSCETrack"
+sbnd_reco2_producers.pandoraSCECaloData.FieldDistortion:                   true
+sbnd_reco2_producers.pandoraSCECaloData.FieldDistortionEfield:             true
+sbnd_reco2_producers.pandoraSCECaloData.TrackIsFieldDistortionCorrected:   true
+sbnd_reco2_producers.pandoraSCEPidData.TrackModuleLabel:                   "pandoraSCETrack"
+sbnd_reco2_producers.pandoraSCEPidData.CalorimetryModuleLabel:             "pandoraSCECaloData"
+
 sbnd_reco2_producers.cvn.SliceLabel: "pandora"
 sbnd_reco2_producers.cvn.PFParticleModuleLabel: "pandora"
 sbnd_reco2_producers.cvn.T0Label: "pandora"
+
+sbnd_reco2_producers.cvnSCE.SliceLabel: "pandoraSCE"
+sbnd_reco2_producers.cvnSCE.PFParticleModuleLabel: "pandoraSCE"
+sbnd_reco2_producers.cvnSCE.T0Label: "pandoraSCE"
 
 physics.analyzers.caloskim.SimChannelproducer: "simtpc2d:simpleSC"
 
