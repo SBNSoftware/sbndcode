@@ -149,6 +149,7 @@ private:
   bool fRunInference;
   std::vector<std::string> fInputNames;
   std::vector<std::string> fOutputNames;
+  double fCustomNormFactor;
   
   // Simple scaling ranges: X[0,200], Y[-200,200], Z[0,500]
 
