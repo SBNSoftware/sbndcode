@@ -25,7 +25,7 @@
 #include "TFile.h"
 #include "TTree.h"
 
-#include <unordered_set>
+#include <algorithm>
 
 namespace sbnd {
   class MCCaloAna;
@@ -83,7 +83,6 @@ sbnd::MCCaloAna::MCCaloAna(fhicl::ParameterSet const& p)
 
 void sbnd::MCCaloAna::analyze(art::Event const& e)
 {
-
   _run    = e.id().run();
   _subrun = e.id().subRun();
   _event  = e.id().event();
@@ -96,6 +95,13 @@ void sbnd::MCCaloAna::analyze(art::Event const& e)
 
   art::ServiceHandle<cheat::ParticleInventoryService> piserv;
 
+  art::Handle<std::vector<simb::MCTruth>> mctruth_handle;
+  e.getByLabel("generator", mctruth_handle);
+
+  std::vector<art::Ptr<simb::MCTruth>> mctruths;
+  if (mctruth_handle.isValid()) 
+    art::fill_ptr_vector(mctruths, mctruth_handle);
+
   ::art::Handle<std::vector<sim::SimEnergyDeposit>> energyDeps_h;
   e.getByLabel("ionandscint", energyDeps_h);
   std::vector<art::Ptr<sim::SimEnergyDeposit>> energyDeps; 
@@ -105,7 +111,11 @@ void sbnd::MCCaloAna::analyze(art::Event const& e)
   else 
     art::fill_ptr_vector(energyDeps, energyDeps_h);
     
-  std::unordered_set<art::Ptr<simb::MCTruth>> mctruth_set;
+  _nu_E.resize(mctruths.size(), 0);
+  _nu_CCNC.resize(mctruths.size(), 0);
+  _true_gamma.resize(mctruths.size(), 0);
+  _true_charge.resize(mctruths.size(), 0);
+  _true_energy.resize(mctruths.size(), 0);
 
   for (size_t n_dep=0; n_dep < energyDeps.size(); n_dep++){
     auto energyDep = energyDeps[n_dep];
@@ -113,19 +123,15 @@ void sbnd::MCCaloAna::analyze(art::Event const& e)
 
     art::Ptr<simb::MCTruth> mctruth = piserv->TrackIdToMCTruth_P(trackID);
     if (mctruth->Origin() != simb::kBeamNeutrino) continue;
-    if (auto it = mctruth_set.find(mctruth); it == mctruth_set.end()) {
-      mctruth_set.insert(mctruth);
-      
-      auto neutrino = mctruth->GetNeutrino();
-      _nu_E.push_back(neutrino.Nu().E());
-      _nu_CCNC.push_back(neutrino.CCNC());
 
-      _true_gamma.push_back(0);
-      _true_charge.push_back(0);
-      _true_energy.push_back(0);
+    auto it = std::find(mctruths.begin(), mctruths.end(), mctruth);
+    if (it == mctruths.end()) {
+      std::cout << "No matching MCTruth found for trackID: " << trackID << std::endl;
+      continue;
     }
+
     // get the index of the mctruth in the set 
-    auto mctruth_index = std::distance(mctruth_set.begin(), mctruth_set.find(mctruth));
+    auto mctruth_index = std::distance(mctruths.begin(), it);
 
     _true_gamma[mctruth_index]  += energyDep->NumPhotons();
     _true_charge[mctruth_index] += energyDep->NumElectrons();

@@ -16,7 +16,7 @@ source:
 
 outputs:
 {
-  dataTier: 'simulated'
+  dataTier: "simulated"
 }
 
 physics:
