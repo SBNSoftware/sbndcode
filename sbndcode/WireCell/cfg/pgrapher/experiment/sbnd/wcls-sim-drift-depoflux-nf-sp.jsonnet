@@ -156,9 +156,9 @@ if roi == "dnn" then {
     break_roi_loop2_tag: "",
     shrink_roi_tag: "",
     extend_roi_tag: "",
-    decon_charge_tag: "",
-    gauss_tag: "",
-    wiener_tag: "",
+    //decon_charge_tag: "",
+    //gauss_tag: "",
+    //wiener_tag: "",
 } 
 else if roi == "both" then {
     sparse: true,

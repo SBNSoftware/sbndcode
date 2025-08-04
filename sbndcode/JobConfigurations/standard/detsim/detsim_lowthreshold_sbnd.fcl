@@ -1,6 +1,3 @@
-#include "wcsimsp_sbnd.fcl"
 #include "standard_detsim_sbnd.fcl"
 # select low threshold tool for roi finding
 physics.producers.simtpc2d: @local::sbnd_wcls_simsp_low
-physics.producers.simtpc2d.wcls_main.params.use_paramresp: "false"
-physics.producers.simtpc2d.wcls_main.structs.enableLowROIThresholds: true
