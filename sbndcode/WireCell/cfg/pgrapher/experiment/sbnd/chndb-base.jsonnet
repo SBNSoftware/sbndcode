@@ -120,7 +120,7 @@ function(params, anode, field, n, rms_cuts=[])
         response_offset: 125.6, // offset of the negative peak
         pad_window_front: 120, // 20,
         pad_window_back: 25, // 20
-        decon_limit: 0.0035, // 0.02,
+        decon_limit: 0.002, // 0.02,
         decon_limit1: 0.07,
         roi_min_max_ratio: 3.0,
       },
@@ -141,7 +141,7 @@ function(params, anode, field, n, rms_cuts=[])
         response_offset: 129.5,
         pad_window_front: 40, // 20
         pad_window_back: 30, // 20
-        decon_limit: 0.003, // 0.01,
+        decon_limit: 0.002, // 0.01,
         decon_limit1: 0.08,
         roi_min_max_ratio: 1.5,
       },
