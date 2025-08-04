@@ -1,0 +1,34 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "recoAnalysisIncShowersConfig.fcl"
+
+process_name: RecoAnalysisIncShowers
+
+services:
+{
+    @table::sbnd_services
+    TFileService: { fileName: "out_recoAnalysisIncShowers.root" }
+    
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+    module_type: RootInput
+    maxEvents: -1
+}
+
+physics:
+{
+    analyzers:
+    {
+        ana: @local::recoAnalysisIncShowersParams
+    }
+
+    path0: [ ana ]
+    end_paths: [ path0 ]
+    trigger_paths: []
+}

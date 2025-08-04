@@ -1,0 +1,20 @@
+BEGIN_PROLOG
+
+recoAnalysisIncShowersParams:
+{
+    module_type: "RecoAnalysisIncShowers"
+
+    SliceLabel: "pandora"
+    PFParticleLabel: "pandora"
+    TrackLabel: "pandoraTrack"
+    ShowerLabel: "pandoraShower"
+    CalorimetryLabel: "pandoraCalo"
+    HitLabel: "gaushit"
+    VertexLabel: "pandora"
+    ClusterLabel: "pandora"
+    RecoHitLabel: "pandora"
+    LArGeantLabel: "largeant"
+    NuGenLabel: "generator"
+}
+
+END_PROLOG

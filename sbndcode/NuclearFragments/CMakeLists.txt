@@ -40,8 +40,10 @@ set(MODULE_LIBRARIES
 	)
 
 cet_build_plugin(RecoAnalysis art::module SOURCE RecoAnalysis_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(RecoAnalysisIncShowers art::module SOURCE RecoAnalysisIncShowers_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(RecoFilter art::module SOURCE RecoFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(AlphaFilter art::module SOURCE AlphaFilter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(POTprintout art::module SOURCE POTprintout_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()

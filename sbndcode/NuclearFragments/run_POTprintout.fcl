@@ -1,0 +1,34 @@
+#include "simulationservices_sbnd.fcl"
+#include "backtrackerservice.fcl"
+#include "particleinventoryservice.fcl"
+
+#include "POTprintoutConfig.fcl"
+
+process_name: POTprintout
+
+services:
+{
+    @table::sbnd_services
+    TFileService: { fileName: "out_POTprintout.root" }
+    
+    ParticleInventoryService: @local::sbnd_particleinventoryservice
+    BackTrackerService:       @local::sbnd_backtrackerservice
+}
+
+source:
+{
+    module_type: RootInput
+    maxEvents: -1
+}
+
+physics:
+{
+    analyzers:
+    {
+        ana: @local::POTprintoutParams
+    }
+
+    path0: [ ana ]
+    end_paths: [ path0 ]
+    trigger_paths: []
+}
