@@ -21,11 +21,11 @@
 #include <memory>
 
 // TensorFlow includes
-#include "sbndcode/PosRecoCVN/tf/tf_graph.h"
+#include "sbndcode/PosRecoCVN/inference/tf/tf_graph.h"
 #include <sstream>
 
 // Include the data structure definition
-#include "sbndcode/PosRecoCVN/module/PixelMapVars.h"
+#include "sbndcode/PosRecoCVN/inference/module/PixelMapVars.h"
 
 // Services
 #include "larsim/MCCheater/BackTrackerService.h"
