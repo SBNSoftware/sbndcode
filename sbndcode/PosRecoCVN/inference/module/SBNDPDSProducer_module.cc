@@ -704,15 +704,35 @@ void opdet::SBNDPDSProducer::CreatePEImages() {
     }
   }
   
-  // Apply normalization
+  // Apply normalization and check for values > 1.0
+  bool validNormalization = true;
   for (int idx = 0; idx < map_count; ++idx) {
     for (int i = 0; i < n_events; ++i) {
       for (int y = 0; y < ch_y; ++y) {
         for (int z = 0; z < ch_z; ++z) {
           pe_matrices_map[idx][i][y][z] /= max_val_1;
+          
+          // Check if any pixel exceeds normalized value of 1.0
+          if (pe_matrices_map[idx][i][y][z] > 1.0f) {
+            validNormalization = false;
+            if(fVerbosity > 0) {
+              std::cout << "WARNING: Pixel value " << pe_matrices_map[idx][i][y][z] 
+                        << " exceeds normalization limit at (" << idx << "," << i 
+                        << "," << y << "," << z << ")" << std::endl;
+            }
+          }
         }
       }
     }
+  }
+  
+  // If normalization is invalid, clear images and return
+  if (!validNormalization) {
+    if(fVerbosity > 0) {
+      std::cout << "CreatePEImages: Event rejected due to invalid normalization (pixel values > 1.0)" << std::endl;
+    }
+    _pe_images.clear();
+    return;
   }
   
   // Create image with half selection: shape (n_events, ch_y/2, ch_z, map_count)
@@ -1422,6 +1442,7 @@ void opdet::SBNDPDSProducer::ApplyFinalEnergyFilter(){
   
   // Apply energy deposition mask: 
   // (dEpromx != -999) & (dEpromy != -999) & (dEpromz != -999) & (dEtpc > 50)
+  // + position cuts: dEpromx in (-200,200), dEpromy in (-200,200), dEpromz in (0,500)
   bool passEnergyFilter = false;
   
   // Check all selected TPC data (typically just one after flash selection)
@@ -1431,7 +1452,12 @@ void opdet::SBNDPDSProducer::ApplyFinalEnergyFilter(){
     bool validZ = (_mc_dEpromz_sel[i] != fDefaultSimIDE);
     bool energyCut = (_mc_dEtpc_sel[i] > 50.0);
     
-    if(validX && validY && validZ && energyCut) {
+    // Position cuts - matching training data filters
+    bool positionCutX = (_mc_dEpromx_sel[i] >= -200.0 && _mc_dEpromx_sel[i] <= 200.0);
+    bool positionCutY = (_mc_dEpromy_sel[i] >= -200.0 && _mc_dEpromy_sel[i] <= 200.0);
+    bool positionCutZ = (_mc_dEpromz_sel[i] >= 0.0 && _mc_dEpromz_sel[i] <= 500.0);
+    
+    if(validX && validY && validZ && energyCut && positionCutX && positionCutY && positionCutZ) {
       passEnergyFilter = true;
       // Store the passing values
       _mc_dEpromx_final.push_back(_mc_dEpromx_sel[i]);
@@ -1440,9 +1466,12 @@ void opdet::SBNDPDSProducer::ApplyFinalEnergyFilter(){
       _mc_dEtpc_final.push_back(_mc_dEtpc_sel[i]);
       
       if(fVerbosity > 0) {
-        std::cout << "Energy filter passed: dE=" << _mc_dEtpc_sel[i] 
+        std::cout << "Energy and position filters passed: dE=" << _mc_dEtpc_sel[i] 
                   << " MeV, pos=(" << _mc_dEpromx_sel[i] << "," 
                   << _mc_dEpromy_sel[i] << "," << _mc_dEpromz_sel[i] << ")" << std::endl;
+        std::cout << "  Position cuts: X(" << _mc_dEpromx_sel[i] << " in [-200,200]), "
+                  << "Y(" << _mc_dEpromy_sel[i] << " in [-200,200]), "
+                  << "Z(" << _mc_dEpromz_sel[i] << " in [0,500])" << std::endl;
       }
       break; // Only need one passing entry
     }

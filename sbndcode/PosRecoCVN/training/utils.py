@@ -364,7 +364,8 @@ def create_pe_images(pe_matrix, *maps, method="max", normalization_factors=None)
         # Normalization
         if normalization_factors is not None:
             # Use provided normalization factor (for inference)
-            norm_factor = normalization_factors[map_idx]
+            # First factor is shared between maps 0 and 1
+            norm_factor = normalization_factors[0] if map_idx < 2 else normalization_factors[map_idx-1]
             print(f"[Norm] Using provided factor for map {map_idx}: {norm_factor:.3f}")
         else:
             # Calculate normalization factor (for training)
