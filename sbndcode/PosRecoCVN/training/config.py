@@ -13,7 +13,7 @@ PROJECT_ROOT = BASE_DIR.parent
 # Data paths configuration
 DATA_CONFIG = {
     # Root file paths - update these as needed
-    'training_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_8k_test.root',
+    'training_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_30k_training.root',
     'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_1_test.root',
     
     # Keys to load from ROOT files
@@ -73,19 +73,18 @@ COORD_CONFIG = {
 
 # Training configuration
 TRAINING_CONFIG = {
-    # Data splits
-    'train_fraction': 0.90,
-    'val_fraction': 0.05,
-    # test_fraction is automatically calculated as remaining
+    # Data splits (training uses only train/validation - test is separate)
+    'train_fraction': 0.85,  # Increased since no test split needed
+    'val_fraction': 0.15,    # Validation for training monitoring
     
     # Model training parameters
     'epochs': 80,
-    'batch_size': 16,
-    'patience': 2,          # Early stopping patience
-    'reduce_lr_patience': 2, # ReduceLROnPlateau patience
-    'reduce_lr_factor': 0.5,
+    'batch_size': 32,       # Increased for better gradient estimates
+    'patience': 8,          # Increased early stopping patience
+    'reduce_lr_patience': 5, # More patience before reducing LR
+    'reduce_lr_factor': 0.7, # Less aggressive LR reduction
     'min_lr': 1e-6,
-    'dropout_rate': 0.4,
+    'dropout_rate': 0.2,    # Reduced dropout to prevent overfitting
     
     # Optimizer
     'optimizer': 'adam',
@@ -96,7 +95,7 @@ TRAINING_CONFIG = {
 # Model saving configuration
 MODEL_CONFIG = {
     'weights_file': '/tmp/weights_nuvT.hdf5.keras',
-    'export_path': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models/',
+    'export_path': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models/v0508_trained_w_30k',
     'model_name_template': 'v{date}_trained_w_{n_events}'  # Will be formatted with date and event count
 }
 
@@ -191,7 +190,7 @@ def print_config_summary():
     print("Training Settings:")
     print(f"  Epochs: {TRAINING_CONFIG['epochs']}")
     print(f"  Batch size: {TRAINING_CONFIG['batch_size']}")
-    print(f"  Train/Val/Test split: {TRAINING_CONFIG['train_fraction']:.0%}/{TRAINING_CONFIG['val_fraction']:.0%}/{1-TRAINING_CONFIG['train_fraction']-TRAINING_CONFIG['val_fraction']:.0%}")
+    print(f"  Train/Val split: {TRAINING_CONFIG['train_fraction']:.0%}/{TRAINING_CONFIG['val_fraction']:.0%} (Test data handled separately in inference)")
 
 
 if __name__ == "__main__":
