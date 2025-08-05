@@ -29,7 +29,7 @@ set(MODULE_LIBRARIES
 
     sbnobj::Common_Reco
     sbndcode_OpDetSim
-    sbndcode_PosRecoCVN_tf
+    sbndcode_PosRecoCVN_inference_tf
 
 )
 

@@ -1,4 +1,4 @@
-#include "sbndcode/PosRecoCVN/module/PixelMapVars.h"
+#include "sbndcode/PosRecoCVN/inference/module/PixelMapVars.h"
 #include "canvas/Persistency/Common/Wrapper.h"
 
 // This file is needed to tell ROOT about our custom data structures
