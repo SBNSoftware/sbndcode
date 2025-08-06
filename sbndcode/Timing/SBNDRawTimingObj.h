@@ -25,6 +25,19 @@ namespace raw {
         uint16_t timingChannel; // e.g. TDC ETRIG = 4; PTB BNB Beam+Light = 2
     };
 
+    class FrameShiftInfo {
+      public:
+        FrameShiftInfo() {}; // constructor
+        FrameShiftInfo(double _frameTdcCrtt1, double _frameTdcBes, double _frameTdcRwm, double _frameHltCrtt1, double _frameHltBeamGate) :
+        frameTdcCrtt1(_frameTdcCrtt1), frameTdcBes(_frameTdcBes), frameTdcRwm(_frameTdcRwm), frameHltCrtt1(_frameHltCrtt1), frameHltBeamGate(_frameHltBeamGate) {};
+    
+        double frameTdcCrtt1;
+        double frameTdcBes;
+        double frameTdcRwm;
+        double frameHltCrtt1;
+        double frameHltBeamGate;
+    };
+
   namespace pmt {
     class BoardTimingInfo {
       // Associate one of these to every opdetwaveform in the board/digitizer, one per trigger
