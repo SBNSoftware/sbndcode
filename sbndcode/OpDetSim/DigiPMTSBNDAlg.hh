@@ -41,8 +41,14 @@
 #include "sbndcode/OpDetSim/PMTAlg/PMTGainFluctuations.hh"
 #include "sbndcode/OpDetSim/PMTAlg/PMTNonLinearity.hh"
 #include "sbndcode/OpDetSim/HDWvf/HDOpticalWaveforms.hh"
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
+
 
 #include "TFile.h"
+#include "TKey.h"
+#include "TH1.h"
+#include "TH1D.h"
 
 namespace opdet {
 
@@ -69,10 +75,13 @@ namespace opdet {
       double PMTCoatedVISEff_tpc1; //PMT (coated) efficiency for reflected (VIS) light (TPC1)
       double PMTUncoatedEff_tpc1; //PMT (uncoated) efficiency (TPC1)
       std::string PMTDataFile; //File containing timing emission structure for TPB, and single PE profile from data
-      bool PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
+      std::string OpDetNoiseFile;
+      std::string PMTSinglePEmodel; //Model for single pe response, false for ideal, true for test bench meas
       bool MakeGainFluctuations; //Fluctuate PMT gain
       fhicl::ParameterSet GainFluctuationsParams;
       bool SimulateNonLinearity; //Fluctuate PMT gain
+      bool PositivePolarity;
+      bool UseDataNoise;
       fhicl::ParameterSet NonLinearityParams;
       
       fhicl::ParameterSet HDOpticalWaveformParams;
@@ -138,9 +147,13 @@ namespace opdet {
     double fPMTUncoatedEff_tpc1;
     bool fPositivePolarity;
     int fADCSaturation;
+    bool fUseDataNoise;
+    std::string fOpDetNoiseFile;
 
     double sigma1;
     double sigma2;
+
+    TFile* noise_file;
 
     const double transitTimeSpread_frac = 2.0 * std::sqrt(2.0 * std::log(2.0));
 
@@ -151,6 +164,10 @@ namespace opdet {
     CLHEP::RandExponential fExponentialGen;
     std::unique_ptr<CLHEP::RandGeneral> fTimeTPB; // histogram for getting the TPB emission time for coated PMTs
 
+    //PMTCalibrationDatabase service
+    sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
+
+
     //PMTFluctuationsAlg
     std::unique_ptr<opdet::PMTGainFluctuations> fPMTGainFluctuationsPtr;
     //HDWaveforms
@@ -159,14 +176,17 @@ namespace opdet {
     //PMTNonLinearity
     std::unique_ptr<opdet::PMTNonLinearity> fPMTNonLinearityPtr;
 
-    void AddSPE(size_t time, std::vector<double>& wave, double npe = 1); // add single pulse to auxiliary waveform
+    void AddSPE(size_t time, std::vector<double>& wave, int ch ,double npe = 1); // add single pulse to auxiliary waveform
     void Pulse1PE(std::vector<double>& wave);
     double Transittimespread(double fwhm);
 
     std::vector<double> fSinglePEWave; // single photon pulse vector
-    std::vector<std::vector<double>> fSinglePEWave_HD; // single photon pulse vector
+    std::vector<std::vector<std::vector<double>>> fSinglePEWave_HD; // single photon pulse vector
     int pulsesize; //size of 1PE waveform
     std::unordered_map< raw::Channel_t, std::vector<double> > fFullWaveforms;
+    
+    std::vector<int> fSkipChannelList = {39, 66, 67, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302};
+
 
     void CreatePDWaveformUncoatedPMT(
       sim::SimPhotons const& SimPhotons,
@@ -193,8 +213,9 @@ namespace opdet {
       std::unordered_map<int, sim::SimPhotonsLite>& DirectPhotonsMap,
       std::unordered_map<int, sim::SimPhotonsLite>& ReflectedPhotonsMap);
     void CreateSaturation(std::vector<double>& wave);//Including saturation effects (dynamic range)
-    void AddLineNoise(std::vector<double>& wave); //add noise to baseline
-    void AddDarkNoise(std::vector<double>& wave); //add dark noise
+    void AddLineNoise(std::vector<double>& wave, int ch); //add noise to baseline
+    void AddDataNoise(std::vector<double>& wave, int ch); //add noise from data to baseline
+    void AddDarkNoise(std::vector<double>& wave, int ch); //add dark noise
     double FindMinimumTime(
       sim::SimPhotons const&,
       int ch,
@@ -299,7 +320,7 @@ namespace opdet {
         Comment("PMT (uncoated) detection efficiency (TPC1)")
       };
 
-      fhicl::Atom<bool> PMTsinglePEmodel {
+      fhicl::Atom<std::string> PMTsinglePEmodel {
         Name("PMTSinglePEmodel"),
         Comment("Model used for single PE response of PMT. =0 is ideal, =1 is testbench")
       };
@@ -309,6 +330,21 @@ namespace opdet {
         Comment("File containing timing emission distribution for TPB and single pe pulse from data")
       };
 
+      fhicl::Atom<bool> PositivePolarity {
+        Name("PositivePolarity"),
+        Comment("Polarity of the waveforms")
+      };
+
+      fhicl::Atom<bool> UseDataNoise {
+        Name("UseDataNoise"),
+        Comment("Use data noise from file")
+      };
+
+      fhicl::Atom<std::string> OpDetNoiseFile {
+        Name("OpDetNoiseFile"),
+        Comment("Use data noise from this file")
+      };
+      
       fhicl::OptionalDelegatedParameter gainFluctuationsParams {
         Name("GainFluctuationsParams"),
         Comment("Parameters used for SinglePE response fluctuations")
@@ -323,6 +359,7 @@ namespace opdet {
         Name("HDOpticalWaveformParamsPMT"),
         Comment("Parameters used for high definition waveform")
       };
+
 
     };    //struct Config
 

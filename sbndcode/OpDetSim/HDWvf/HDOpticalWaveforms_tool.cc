@@ -61,7 +61,6 @@ int opdet::HDOpticalWaveforms::produceSER_HD(std::vector<std::vector<double>> &S
 {
     int N=fResolution;
     SER_HD.resize(N);
-
     for(int i=1; i<N;i++)SER_HD[i%N].push_back(0);
 
     for(int i=0; i < (int)SER.size(); i++)
