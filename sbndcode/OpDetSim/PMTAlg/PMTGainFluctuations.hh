@@ -21,6 +21,10 @@ public:
 
   //Returns fluctuated factor for SPR
   virtual double GainFluctuation(unsigned int npe, CLHEP::HepRandomEngine* eng) = 0;
+  virtual double GainFluctuation(int ch, unsigned int npe, CLHEP::HepRandomEngine* eng) {
+    // Default implementation, can be overridden
+    return GainFluctuation(npe, eng);
+    }
 };
 
 #endif

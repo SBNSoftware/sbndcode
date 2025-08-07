@@ -10,6 +10,7 @@ cet_build_plugin(PMTGaussianGainFluctuation art::tool
             PMTGaussianGainFluctuation_tool.cc 
       LIBRARIES 
             nurandom::RandomUtils_NuRandomService_service
+            larcore::Geometry_Geometry_service
 )
 
 cet_build_plugin(PMTNonLinearityTF1 art::tool 

@@ -21,7 +21,7 @@ FirstDynodeGainFluctuations:
 GaussianGainFluctuations:
 {
   tool_type: "PMTGaussianGainFluctuation"
-  GainFluctuation: 0.3
+  GainFluctuation: 0.42
 }
 
 END_PROLOG
