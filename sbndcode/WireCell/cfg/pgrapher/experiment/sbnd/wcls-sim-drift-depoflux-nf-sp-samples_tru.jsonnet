@@ -288,14 +288,6 @@ local hio_truth = [g.pnode({
     ];
 
 
-local multipass1 = [
-  g.pipeline([
-               sn_pipes[n],
-             ],
-             'multipass%d' % n)
-  for n in anode_iota
-];
-
 local multipass2 = [
   g.pipeline([
                deposplats[n],
@@ -308,9 +300,6 @@ local multipass2 = [
 
 local f_sp = import 'pgrapher/experiment/sbnd/funcs.jsonnet';
 local outtags = ['orig%d' % n for n in anode_iota];
-local bi_manifold1 = f.fanpipe('DepoFanout', multipass1, 'FrameFanin', 'sn_mag_nf', outtags);
-// local bi_manifold2 = f_sp.fanpipe('DepoFanout', multipass2, 'FrameFanin', 'sn_mag_nf_mod2', outtags, "true");
-// local bi_manifold2 = f_sp.fanpipe('DepoFanout', multipass2, 'FrameFanin', 'sn_mag_nf_mod2', outtags, "true");
 local bi_manifold2 = f_sp.fanpipe('DepoFanout', multipass2, 'FrameFanin');
 
 local retagger_sim = g.pnode({
@@ -436,21 +425,7 @@ local retagger_sp = g.pnode({
 
 local sink_sp = g.pnode({ type: 'DumpFrames' }, nin=1, nout=0);
 
-local graph1 = g.pipeline([
-wcls_input_sim.deposet,         //sim
-setdrifter,                     //sim
-wcls_deposetsimchannel_sink,    //sim
-bi_manifold1,                   //sim // sn_pipes[n]
-retagger_sim,                   //sim
-wcls_output_sim.sim_digits,     //sim
-fanpipe,                        //sp <- nf_pipes[n], sp_pipes[n] (needs channel selector to do fanout correctly)
-retagger_sp,                    //sp
-wcls_output_sp.sp_signals,      //sp
-sink_sp                         //sp
-]);
-
-
-local graph2 = g.pipeline([
+local graph = g.pipeline([
 wcls_input_sim.depos,         //sim
 drifter,                     //sim
 wcls_deposetsimchannel_sink,    //sim
@@ -460,8 +435,6 @@ sink_sp                         //sp
 
 // local save_simdigits = std.extVar('save_simdigits');
 local save_simdigits = "false";
-
-local graph = if save_simdigits == "true" then graph1 else graph2;
 
 local app = {
   type: 'TbbFlow',
