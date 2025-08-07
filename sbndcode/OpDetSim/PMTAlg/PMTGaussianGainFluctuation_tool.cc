@@ -68,7 +68,7 @@ double opdet::PMTGaussianGainFluctuation::GainFluctuation(unsigned int npe, CLHE
 }
 
 double opdet::PMTGaussianGainFluctuation::GainFluctuation(int ch, unsigned int npe, CLHEP::HepRandomEngine* eng){
-  fPMTCalibrationDatabaseService->getSPEAmplitude(ch);
+  double spe_amp = fPMTCalibrationDatabaseService->getSPEAmplitude(ch);
   //double ChannelGainFluctuation = fPMTCalibrationDatabaseService->getSPEAmplitudeStd(ch);
 
   std::vector<double> ChannelList = {6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 36, 37, 40, 41, 60, 61, 63, 64, 69, 70, 84, 88, 89, 90, 91, 93, 94, 95, 114, 116, 117, 119, 139, 142, 144, 145, 146, 147, 148, 149, 162, 163, 164, 165, 166, 167, 168, 169, 172, 173, 192, 193, 194, 195, 216, 219, 224, 225, 227, 240, 241, 242, 243, 244, 246, 247, 250, 251, 270, 271, 272, 273, 274, 275, 294, 297, 299, 300, 301, 303, 304, 305};
@@ -84,7 +84,7 @@ double opdet::PMTGaussianGainFluctuation::GainFluctuation(int ch, unsigned int n
       ChannelGainFluctuation = 5.;
   }
 
-  return CLHEP::RandGaussQ::shoot(eng, npe, npe*ChannelGainFluctuation);
+  return CLHEP::RandGaussQ::shoot(eng, npe, npe*(ChannelGainFluctuation/spe_amp));
 }
 
 DEFINE_ART_CLASS_TOOL(opdet::PMTGaussianGainFluctuation)
