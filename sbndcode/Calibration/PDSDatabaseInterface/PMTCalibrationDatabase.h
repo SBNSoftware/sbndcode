@@ -27,6 +27,7 @@ namespace sbndDB {
     virtual int getCAENDigitizerChannel(unsigned int channelID) const = 0;
     virtual double getTotalTransitTime(unsigned int channelID) const = 0;
     virtual double getSPEAmplitude(unsigned int channelID) const = 0;
+    virtual double getSPEAmplitudeStd(unsigned int channelID) const = 0;
     virtual double getGaussFilterPower(unsigned int channelID) const = 0;
     virtual double getGaussFilterWC(unsigned int channelID) const = 0;
     virtual std::vector<double> getSER(unsigned int channelID) const = 0;

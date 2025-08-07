@@ -133,6 +133,15 @@ void sbndDB::PMTCalibrationDatabaseProvider::ReadPMTCalibration(uint32_t run)
         << ") while trying to access 'spe_amplitude' on table " << dbname << "\n";
     fPMTCalibrationData[channel].spe_amplitude = _spe_amplitude;
 
+    // Read spe std
+    double _spe_amplitude_std = 0.;
+    //error = db.GetNamedChannelData(channel, "spe_amp_std", _spe_amplitude_std);
+    if (error)
+      throw cet::exception("PMTTimingCorrectionsProvider")
+        << "Encountered error (code " << error
+        << ") while trying to access 'spe_amplitude_std' on table " << dbname << "\n";
+    fPMTCalibrationData[channel].spe_amplitude_std = _spe_amplitude_std;
+
     // Read gauss filter power
     double _gauss_w_wc_power = 0;
     error = db.GetNamedChannelData(channel, "gauss_w_wc_power", _gauss_w_wc_power);

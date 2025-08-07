@@ -56,6 +56,9 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
         double getSPEAmplitude( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).spe_amplitude;
         };
+        double getSPEAmplitudeStd( unsigned int channelID ) const override {
+            return getChannelCorrOrDefault(channelID).spe_amplitude_std;
+        };
         double getGaussFilterPower( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).gauss_wc_power;
         };
@@ -82,6 +85,7 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
             size_t caenDigitizerChannel=0;
             size_t totalTransitTime=0;
             double spe_amplitude=0.;
+            double spe_amplitude_std=0.;
             double gauss_wc_power=0.;
             double gauss_wc=0.;
             std::vector<double> ser={};
