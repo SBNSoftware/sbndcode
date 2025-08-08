@@ -1,2 +1,2 @@
-#include "standard_detsim_sbnd.fcl"
+#include "detsim_detvar.fcl"
 physics.producers.opdaq.PMTBaselineRMS: 3.5
