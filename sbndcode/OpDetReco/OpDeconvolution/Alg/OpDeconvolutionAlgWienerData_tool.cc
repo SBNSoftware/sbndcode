@@ -111,81 +111,47 @@ private:
 
 opdet::OpDeconvolutionAlgWienerData::OpDeconvolutionAlgWienerData(fhicl::ParameterSet const& p)
 {
-  std::cout << " DB 1 " << std::endl;
   //read fhicl paramters
   fDebug = p.get< bool >("Debug");
-    std::cout << " DB 1.1 " << std::endl;
-
   fMaxFFTSizePow = p.get< int >("MaxFFTSizePow");
   fPositivePolarity = p.get< bool >("PositivePolarity");
   fUseSaturated = p.get< bool >("UseSaturated");
-  std::cout << " DB 1.2 " << std::endl;
   fADCSaturationValue = p.get< int >("ADCSaturationValue");
   fApplyExpoAvSmooth   = p.get< bool >("ApplyExpoAvSmooth");
   fApplyUnAvSmooth   = p.get< bool >("ApplyUnAvSmooth");
-  std::cout << " DB 1.3 " << std::endl;
-
   fExpoAvSmoothPar = p.get< float >("ExpoAvSmoothPar");
   fUnAvNeighbours = p.get< short unsigned int >("UnAvNeighbours");
   fHypoSignalTimeWindow = p.get< double >("HypoSignalTimeWindow");
   fHypoSignalCustom = p.get< bool >("HypoSignalCustom");
-    std::cout << " DB 1.4 " << std::endl;
   fHypoSignalTimeConsts = p.get< std::vector<double> >("HypoSignalTimeConsts");
   fHypoSignalWeights = p.get< std::vector<double> >("HypoSignalWeights");
   fHypoSignalScale = p.get< double >("HypoSignalScale");
   fPMTChargeToADC = p.get< double >("PMTChargeToADC");
   fDecoWaveformPrecision = p.get< double >("DecoWaveformPrecision");
-  std::cout << " DB 1.5 " << std::endl;
-  fElectronics = p.get< std::string >("Electronics");
-  std::cout << " Electronics " << fElectronics << std::endl;
   fBaselineSample = p.get< short unsigned int >("BaselineSample");
-  std::cout << " DB 1.5.1" << std::endl;
-
   fSkipChannelList = p.get< std::vector<int>>("SkipChannelList");
-  std::cout << " DB 1.5.2" << std::endl;
-
+  fElectronics = p.get< std::string >("Electronics");
   fFilter = p.get< std::string >("Filter");
-  std::cout << " DB 1.5.3" << std::endl;
-
-  std::cout << " DB 1.5.4" << std::endl;
-
   fDaphne_Freq  = p.get< double >("DaphneFreq");
-  std::cout << " DB 1.5.5" << std::endl;
-
   fScaleHypoSignal = p.get< bool >("ScaleHypoSignal");
-  std::cout << " DB 1.5.6" << std::endl;
-
   fUseParamFilter = p.get< bool >("UseParamFilter");
-  std::cout << " DB 1.6 " << std::endl;
-
   fUseParamFilterInidividualChannel = p.get< bool >("UseParamFilterInidividualChannel");
   fCorrectBaselineOscillations = p.get< bool >("CorrectBaselineOscillations");
   fBaseSampleBins = p.get< short unsigned int >("BaseSampleBins");
   fBaseVarCut = p.get< double >("BaseVarCut");
-  std::cout << " DB 1.7 " << std::endl;
-
   fFilterParams = p.get< std::vector<double> >("FilterParams");
-
   fFilterTF1 = new TF1("FilterTemplate", fFilter.c_str());
-
   fNormUnAvSmooth=1./(2*fUnAvNeighbours+1);
-  std::cout << " DB 1.8 " << std::endl;
-
   NDecoWf=0;
   MaxBinsFFT=std::pow(2, fMaxFFTSizePow);
-
-  std::cout << " DB 2 " << std::endl;
-
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
   fSamplingFreq=clockData.OpticalClock().Frequency()/1000.;//in GHz
   if (fElectronics=="Daphne") fSamplingFreq=fDaphne_Freq/1000.;//in GHz
   auto const* lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
 
-  std::cout << " DB 3 " << std::endl;
   //Load PMT Calibration Database
   fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
 
-  std::cout << " DB 4 " << std::endl;
   if (!fUseParamFilter){
     //Create light signal hypothesis for "on-fly" Wiener filter
     fSignalHypothesis.resize(MaxBinsFFT, 0);
@@ -198,7 +164,6 @@ opdet::OpDeconvolutionAlgWienerData::OpDeconvolutionAlgWienerData(fhicl::Paramet
     mf::LogInfo("OpDeconvolutionAlg")<<"Built light signal hypothesis... L="<<fFilter<<" size"<<fSignalHypothesis.size()<<std::endl;
   }
 
-  std::cout << " DB 5 " << std::endl;
 }
 
 
@@ -206,7 +171,6 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWienerData::RunDeconvol
 {
   std::vector<raw::OpDetWaveform> wfDeco;
   wfDeco.reserve(wfVector.size());
-  std::cout << " DB 6 " << std::endl;
   for(auto const& wf : wfVector)
   {
     int channelNumber = wf.ChannelNumber();
@@ -231,7 +195,6 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWienerData::RunDeconvol
           mf::LogInfo("OpDeconvolutionAlg")<<"Creating parametrized filter... TF1:"<<fFilter << " for channel " << channelNumber <<std::endl;
       }
     }
-    std::cout << " DB 7 " << std::endl;
     //Read waveform
     size_t wfsize=wf.Waveform().size();
     if(wfsize>MaxBinsFFT){
