@@ -31,15 +31,15 @@
 #include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
 
 namespace opdet {
-  class OpDeconvolutionAlgWiener;
+  class OpDeconvolutionAlgWienerData;
 }
 
 
-class opdet::OpDeconvolutionAlgWiener : opdet::OpDeconvolutionAlg {
+class opdet::OpDeconvolutionAlgWienerData : opdet::OpDeconvolutionAlg {
 public:
-  explicit OpDeconvolutionAlgWiener(fhicl::ParameterSet const& p);
+  explicit OpDeconvolutionAlgWienerData(fhicl::ParameterSet const& p);
 
-  ~OpDeconvolutionAlgWiener() {delete fFilterTF1;}
+  ~OpDeconvolutionAlgWienerData() {delete fFilterTF1;}
 
   // Required functions.
   std::vector<raw::OpDetWaveform> RunDeconvolution(std::vector<raw::OpDetWaveform> const& wfHandle) override;
@@ -109,52 +109,83 @@ private:
 };
 
 
-opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet const& p)
+opdet::OpDeconvolutionAlgWienerData::OpDeconvolutionAlgWienerData(fhicl::ParameterSet const& p)
 {
+  std::cout << " DB 1 " << std::endl;
   //read fhicl paramters
   fDebug = p.get< bool >("Debug");
+    std::cout << " DB 1.1 " << std::endl;
+
   fMaxFFTSizePow = p.get< int >("MaxFFTSizePow");
   fPositivePolarity = p.get< bool >("PositivePolarity");
   fUseSaturated = p.get< bool >("UseSaturated");
+  std::cout << " DB 1.2 " << std::endl;
   fADCSaturationValue = p.get< int >("ADCSaturationValue");
   fApplyExpoAvSmooth   = p.get< bool >("ApplyExpoAvSmooth");
   fApplyUnAvSmooth   = p.get< bool >("ApplyUnAvSmooth");
+  std::cout << " DB 1.3 " << std::endl;
+
   fExpoAvSmoothPar = p.get< float >("ExpoAvSmoothPar");
   fUnAvNeighbours = p.get< short unsigned int >("UnAvNeighbours");
   fHypoSignalTimeWindow = p.get< double >("HypoSignalTimeWindow");
   fHypoSignalCustom = p.get< bool >("HypoSignalCustom");
+    std::cout << " DB 1.4 " << std::endl;
   fHypoSignalTimeConsts = p.get< std::vector<double> >("HypoSignalTimeConsts");
   fHypoSignalWeights = p.get< std::vector<double> >("HypoSignalWeights");
   fHypoSignalScale = p.get< double >("HypoSignalScale");
   fPMTChargeToADC = p.get< double >("PMTChargeToADC");
   fDecoWaveformPrecision = p.get< double >("DecoWaveformPrecision");
-  fBaselineSample = p.get< short unsigned int >("BaselineSample");
-  fSkipChannelList = p.get< std::vector<int>>("SkipChannelList");
-  fFilter = p.get< std::string >("Filter");
+  std::cout << " DB 1.5 " << std::endl;
   fElectronics = p.get< std::string >("Electronics");
+  std::cout << " Electronics " << fElectronics << std::endl;
+  fBaselineSample = p.get< short unsigned int >("BaselineSample");
+  std::cout << " DB 1.5.1" << std::endl;
+
+  fSkipChannelList = p.get< std::vector<int>>("SkipChannelList");
+  std::cout << " DB 1.5.2" << std::endl;
+
+  fFilter = p.get< std::string >("Filter");
+  std::cout << " DB 1.5.3" << std::endl;
+
+  std::cout << " DB 1.5.4" << std::endl;
+
   fDaphne_Freq  = p.get< double >("DaphneFreq");
+  std::cout << " DB 1.5.5" << std::endl;
+
   fScaleHypoSignal = p.get< bool >("ScaleHypoSignal");
+  std::cout << " DB 1.5.6" << std::endl;
+
   fUseParamFilter = p.get< bool >("UseParamFilter");
+  std::cout << " DB 1.6 " << std::endl;
+
   fUseParamFilterInidividualChannel = p.get< bool >("UseParamFilterInidividualChannel");
   fCorrectBaselineOscillations = p.get< bool >("CorrectBaselineOscillations");
   fBaseSampleBins = p.get< short unsigned int >("BaseSampleBins");
   fBaseVarCut = p.get< double >("BaseVarCut");
+  std::cout << " DB 1.7 " << std::endl;
+
   fFilterParams = p.get< std::vector<double> >("FilterParams");
 
   fFilterTF1 = new TF1("FilterTemplate", fFilter.c_str());
 
   fNormUnAvSmooth=1./(2*fUnAvNeighbours+1);
+  std::cout << " DB 1.8 " << std::endl;
+
   NDecoWf=0;
   MaxBinsFFT=std::pow(2, fMaxFFTSizePow);
+
+  std::cout << " DB 2 " << std::endl;
 
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
   fSamplingFreq=clockData.OpticalClock().Frequency()/1000.;//in GHz
   if (fElectronics=="Daphne") fSamplingFreq=fDaphne_Freq/1000.;//in GHz
   auto const* lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
 
+  std::cout << " DB 3 " << std::endl;
   //Load PMT Calibration Database
   fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
 
+  std::cout << " DB 4 " << std::endl;
   if (!fUseParamFilter){
     //Create light signal hypothesis for "on-fly" Wiener filter
     fSignalHypothesis.resize(MaxBinsFFT, 0);
@@ -166,13 +197,16 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
       throw std::runtime_error("Deconvolution not chosen correctly ");
     mf::LogInfo("OpDeconvolutionAlg")<<"Built light signal hypothesis... L="<<fFilter<<" size"<<fSignalHypothesis.size()<<std::endl;
   }
+
+  std::cout << " DB 5 " << std::endl;
 }
 
 
-std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolution(std::vector<raw::OpDetWaveform> const& wfVector)
+std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWienerData::RunDeconvolution(std::vector<raw::OpDetWaveform> const& wfVector)
 {
   std::vector<raw::OpDetWaveform> wfDeco;
   wfDeco.reserve(wfVector.size());
+  std::cout << " DB 6 " << std::endl;
   for(auto const& wf : wfVector)
   {
     int channelNumber = wf.ChannelNumber();
@@ -197,6 +231,7 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
           mf::LogInfo("OpDeconvolutionAlg")<<"Creating parametrized filter... TF1:"<<fFilter << " for channel " << channelNumber <<std::endl;
       }
     }
+    std::cout << " DB 7 " << std::endl;
     //Read waveform
     size_t wfsize=wf.Waveform().size();
     if(wfsize>MaxBinsFFT){
@@ -281,13 +316,13 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
 }
 
 
-void opdet::OpDeconvolutionAlgWiener::ApplyExpoAvSmoothing(std::vector<double>& wf){
+void opdet::OpDeconvolutionAlgWienerData::ApplyExpoAvSmoothing(std::vector<double>& wf){
   std::transform (std::next(wf.begin(), 1), wf.end(), wf.begin(), std::next(wf.begin(), 1),
     [&](double _x, double _y) { return  fExpoAvSmoothPar*_x+ (1. - fExpoAvSmoothPar)*_y; }  );
 }
 
 
-void opdet::OpDeconvolutionAlgWiener::ApplyUnAvSmoothing(std::vector<double>& wf){
+void opdet::OpDeconvolutionAlgWienerData::ApplyUnAvSmoothing(std::vector<double>& wf){
   std::vector<double> wf_aux(wf.begin(), wf.end());
   for(size_t bin=fUnAvNeighbours; bin<wf.size()-fUnAvNeighbours; bin++){
     double sum=0.;
@@ -298,7 +333,7 @@ void opdet::OpDeconvolutionAlgWiener::ApplyUnAvSmoothing(std::vector<double>& wf
 }
 
 
-size_t opdet::OpDeconvolutionAlgWiener::WfSizeFFT(size_t n){
+size_t opdet::OpDeconvolutionAlgWienerData::WfSizeFFT(size_t n){
   if (n && !(n & (n - 1)))
        return n;
   size_t cont=0;
@@ -310,7 +345,7 @@ size_t opdet::OpDeconvolutionAlgWiener::WfSizeFFT(size_t n){
 }
 
 
-std::vector<double> opdet::OpDeconvolutionAlgWiener::ScintArrivalTimesShape(size_t n, detinfo::LArProperties const& lar_prop){
+std::vector<double> opdet::OpDeconvolutionAlgWienerData::ScintArrivalTimesShape(size_t n, detinfo::LArProperties const& lar_prop){
   if(fHypoSignalCustom && fHypoSignalWeights.size()!=fHypoSignalTimeConsts.size()){
     mf::LogWarning("OpDeconvolutionAlg")<<"HypoSignalWeights and HypoSignalTimeConsts must have the same size"<<
       "...Switching to 2-exponential (default values in LArProperties)"<<std::endl;
@@ -345,13 +380,13 @@ std::vector<double> opdet::OpDeconvolutionAlgWiener::ScintArrivalTimesShape(size
 }
 
 
-void opdet::OpDeconvolutionAlgWiener::SubtractBaseline(std::vector<double> &wf, double baseline){
+void opdet::OpDeconvolutionAlgWienerData::SubtractBaseline(std::vector<double> &wf, double baseline){
   std::transform (wf.begin(), wf.end(), wf.begin(), [&](double _x) { return _x-baseline; }  );
   return;
 }
 
 
-void opdet::OpDeconvolutionAlgWiener::EstimateBaselineStdDev(std::vector<double> &wf, double &_mean, double &_stddev){
+void opdet::OpDeconvolutionAlgWienerData::EstimateBaselineStdDev(std::vector<double> &wf, double &_mean, double &_stddev){
   double minADC=*min_element(wf.begin(), wf.end());
   double maxADC=*max_element(wf.begin(), wf.end());
   unsigned nbins=25*ceil(maxADC-minADC);
@@ -393,7 +428,7 @@ void opdet::OpDeconvolutionAlgWiener::EstimateBaselineStdDev(std::vector<double>
 }
 
 
-void opdet::OpDeconvolutionAlgWiener::CorrectBaselineOscillations(std::vector<double>& wave) 
+void opdet::OpDeconvolutionAlgWienerData::CorrectBaselineOscillations(std::vector<double>& wave) 
 {
   // subtract baseline using linear interpolation between regions defined
   // by the datasize and baseSampleBins
@@ -459,7 +494,7 @@ void opdet::OpDeconvolutionAlgWiener::CorrectBaselineOscillations(std::vector<do
 }
 
 
-std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_t wfsize, double baseline_stddev, double snr_scaling){
+std::vector<TComplex> opdet::OpDeconvolutionAlgWienerData::DeconvolutionKernel(size_t wfsize, double baseline_stddev, double snr_scaling){
   //Initizalize kernel
   size_t size=WfSizeFFT(wfsize);
   TComplex kerinit(0,0,false);
@@ -512,4 +547,4 @@ std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_
   return kernel;
 }
 
-DEFINE_ART_CLASS_TOOL(opdet::OpDeconvolutionAlgWiener)
+DEFINE_ART_CLASS_TOOL(opdet::OpDeconvolutionAlgWienerData)

@@ -2,7 +2,7 @@
 
 BEGIN_PROLOG
 
-SBNDOpDeconvolution:
+SBNDOpDeconvolution_data:
 {
   module_type:	"SBNDOpDeconvolution"
   InputLabel: "pmtdecoder:PMTChannels"
@@ -11,7 +11,7 @@ SBNDOpDeconvolution:
   OpDecoAlg: @local::OpDeconvolutionAlgData
 }
 
-SBNDOpDeconvolutionPMT_data: @local::SBNDOpDeconvolution
+SBNDOpDeconvolutionPMT_data: @local::SBNDOpDeconvolution_data
 SBNDOpDeconvolutionPMT_data.PDTypes: ["pmt_coated", "pmt_uncoated"]
 SBNDOpDeconvolutionPMT_data.Electronics: [""]
 SBNDOpDeconvolutionPMT_data.OpDecoAlg.OpDetDataFile: "./OpDetSim/digi_pmt_sbnd_data_OV6.root"
