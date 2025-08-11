@@ -29,7 +29,7 @@ namespace calib {
     std::vector<int> *MonPulse, 
     bool Saving, 
     int FlashCounter
-  ) const 
+  ) 
   {
     MonPulse->resize(20);
     for(int i=0; i<20; i++) (*MonPulse)[i]=12;
