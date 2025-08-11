@@ -91,9 +91,9 @@ void SimpleBeamRateCalibAnalyzer::analyze(art::Event const& e)
   std::stringstream histname;
   histname << "event_" << fEvNumber <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter << "_TriggerPulse";
   TH1D *MonHist = tfs->make<TH1D>(histname.str().c_str(), histname.str().c_str(), 
-                                      MonPulse->size(), 0.0, MonPulse->size()-1); //so this just breaks
-  for(unsigned int i = 0; i < MonPulse->size(); i++) {
-      MonHist->SetBinContent(i + 1, (double)(*MonPulse)[i]); //Loop over waveform and set bin content
+                                      MonPulse.size(), 0.0, MonPulse->size()-1); //so this just breaks
+  for(unsigned int i = 0; i < MonPulse.size(); i++) {
+      MonHist->SetBinContent(i + 1, (double)(MonPulse)[i]); //Loop over waveform and set bin content
     }
 }
 
