@@ -102,7 +102,7 @@ set (
                     BeamRateCalibService
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
-                    art::Framework_Principal
+                    art::Framework_Principals
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
                     messagefacility::MF_MessageLogger
@@ -125,8 +125,6 @@ set (
                     lardata::RecoObjects
                     larpandora::LArPandoraInterface
                     nusimdata::SimulationBase
-                    art::Framework_Core
-                    art::Framework_Principal
                     art::Framework_Services_Registry
                     art::Persistency_Common
                     art::Persistency_Provenance
@@ -151,7 +149,7 @@ cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_S
 cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService_service.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${BeamRateCalibService})
+cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${OTHER_LIBRARIES})
 
 install_headers()
 install_fhicl()
