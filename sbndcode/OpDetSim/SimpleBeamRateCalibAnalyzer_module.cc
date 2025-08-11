@@ -82,11 +82,11 @@ void SimpleBeamRateCalibAnalyzer::analyze(art::Event const& e)
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
   e.getByLabel(fPMTName, waveHandle);
   int MonThreshold=50;
-  std::vector<int> *MonPulse;
+  std::vector<int> MonPulse;
   bool Saving=false;
   int FlashCounter=0;
   //Save MonPulse waveform for flash zero
-  fTriggerService->ConstructMonPulse(waveHandle, MonThreshold, MonPulse, Saving, FlashCounter);
+  fTriggerService->ConstructMonPulse(waveHandle, MonThreshold, &MonPulse, Saving, FlashCounter);
   //mark with event id and flash info
   std::stringstream histname;
   histname << "event_" << fEvNumber <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter << "_TriggerPulse";
