@@ -23,27 +23,6 @@ cet_build_plugin( sbndPDMapAlg art::tool
 )
 
 art_make_library( SOURCE
-                    BeamRateCalibService_service.cc
-                  LIBRARIES
-                    sbndcode_OpDetSim_sbndPDMapAlg_tool
-                    larcore::Geometry_Geometry_service
-                    lardataobj::Simulation
-                    lardata::Utilities
-                    lardataobj::RawData
-                    lardataobj::RecoBase
-                    lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
-                    larpandora::LArPandoraInterface
-                    nurandom::RandomUtils_NuRandomService_service
-                    art::Framework_Services_Optional_RandomNumberGenerator_service
-                    canvas::canvas
-                    messagefacility::MF_MessageLogger
-                    fhiclcpp::fhiclcpp
-                    cetlib::cetlib
-                    CLHEP::CLHEP
-                    ROOT::Core
-)
-
-art_make_library( SOURCE
                     DigiArapucaSBNDAlg.cc
                     DigiPMTSBNDAlg.cc
                     opDetDigitizerSBND_module.cc
@@ -169,7 +148,7 @@ cet_build_plugin(FlashWithNeutrino art::module SOURCE FlashWithNeutrinoInTPC.cc 
 cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_Summer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService_service.cc LIBRARIES ${MODULE_LIBRARIES})
+#cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService_service.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${OTHER_LIBRARIES})
 
 install_headers()
