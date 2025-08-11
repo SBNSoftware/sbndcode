@@ -82,7 +82,7 @@ void SimpleBeamRateCalibAnalyzer::analyze(art::Event const& e)
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
   e.getByLabel(fPMTName, waveHandle);
   int MonThreshold=50;
-  std::vector<int> MonPulse;
+  std::vector<int> MonPulse(4);
   bool Saving=false;
   int FlashCounter=0;
   //Save MonPulse waveform for flash zero
@@ -91,7 +91,7 @@ void SimpleBeamRateCalibAnalyzer::analyze(art::Event const& e)
   std::stringstream histname;
   histname << "event_" << fEvNumber <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter << "_TriggerPulse";
   TH1D *MonHist = tfs->make<TH1D>(histname.str().c_str(), histname.str().c_str(), 
-                                      MonPulse.size(), 0.0, MonPulse->size()-1); //so this just breaks
+                                      MonPulse.size(), 0.0, MonPulse.size()-1); //so this just breaks
   for(unsigned int i = 0; i < MonPulse.size(); i++) {
       MonHist->SetBinContent(i + 1, (double)(MonPulse)[i]); //Loop over waveform and set bin content
     }
