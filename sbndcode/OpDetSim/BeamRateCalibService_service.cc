@@ -37,7 +37,7 @@ namespace calib {
   } // ConstructMonPulse
 
 
-  std::vector<bool> BeamRateCalibService::ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold) const
+  std::vector<bool> BeamRateCalibService::ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold)
   {
     std::vector<bool> BinaryResponse(wvf.size());
 
