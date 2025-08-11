@@ -26,7 +26,7 @@ art_make_library( SOURCE
                     DigiArapucaSBNDAlg.cc
                     DigiPMTSBNDAlg.cc
                     opDetDigitizerSBND_module.cc
-                    #BeamRateCalibService.cxx
+                    BeamRateCalibService.cxx
                     opDetDigitizerWorker.cc
                     opDetSBNDTriggerAlg.cc
                   LIBRARIES
