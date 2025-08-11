@@ -61,6 +61,7 @@ public:
 
 private:
   calib::BeamRateCalibService *fTriggerService;
+  string fPMTName;
   // Declare member data here.
 
 };
@@ -71,6 +72,7 @@ SimpleBeamRateCalibAnalyzer::SimpleBeamRateCalibAnalyzer(fhicl::ParameterSet con
   // More initializers here.
 {
   fTriggerService = art::ServiceHandle<calib::BeamRateCalibService>(p)->ProviderFrom();
+  fPMTName = p.get< std::string >("PMTName" );
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
 
@@ -81,8 +83,8 @@ void SimpleBeamRateCalibAnalyzer::analyze(art::Event const& e)
   int fEvNumber = e.id().event();
   //grab waveforms to hand service
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
-  e.getByLabel(fTimingInstanceName, waveHandle);
-  int MonThreshold=14200;
+  e.getByLabel(fPMTName, waveHandle);
+  int MonThreshold=50;
   std::vector<int> *MonPulse;
   bool Saving=false;
   int FlashCounter=0;
