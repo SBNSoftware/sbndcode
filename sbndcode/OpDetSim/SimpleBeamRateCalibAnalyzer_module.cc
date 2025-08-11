@@ -26,7 +26,6 @@
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "lardata/DetectorInfoServices/LArPropertiesService.h"
 #include "lardataobj/RawData/OpDetWaveform.h"
-#include "sbndcode/Utilities/SignalShapingServiceSBND.h"
 #include "lardataobj/Simulation/sim.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/SimPhotons.h"
