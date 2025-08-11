@@ -150,6 +150,7 @@ cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_S
 cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService.cxx LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
