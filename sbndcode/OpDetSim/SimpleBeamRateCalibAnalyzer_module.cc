@@ -60,7 +60,6 @@ public:
   void analyze(art::Event const& e) override;
 
 private:
-  calib::BeamRateCalibService *fTriggerService;
   std::string fPMTName;
   // Declare member data here.
 
@@ -71,7 +70,6 @@ SimpleBeamRateCalibAnalyzer::SimpleBeamRateCalibAnalyzer(fhicl::ParameterSet con
   : EDAnalyzer{p}  // ,
   // More initializers here.
 {
-  fTriggerService = art::ServiceHandle<calib::BeamRateCalibService>(p)->ProviderFrom();
   fPMTName = p.get< std::string >("PMTName" );
   // Call appropriate consumes<>() for any products to be retrieved by this module.
 }
@@ -80,6 +78,7 @@ void SimpleBeamRateCalibAnalyzer::analyze(art::Event const& e)
 {
   // Implementation of required member function here.
   art::ServiceHandle<art::TFileService> tfs;
+  art::ServiceHandle<calib::BeamRateCalibService> fTriggerService;
   int fEvNumber = e.id().event();
   //grab waveforms to hand service
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
