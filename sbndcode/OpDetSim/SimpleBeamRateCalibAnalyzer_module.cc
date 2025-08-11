@@ -83,7 +83,7 @@ void SimpleBeamRateCalibAnalyzer::analyze(art::Event const& e)
   art::Handle< std::vector< raw::OpDetWaveform > > waveHandle; //User handle for vector of OpDetWaveforms
   e.getByLabel(fTimingInstanceName, waveHandle);
   int MonThreshold=14200;
-  std::vector<int> *MonPulse
+  std::vector<int> *MonPulse;
   bool Saving=false;
   int FlashCounter=0;
   //Save MonPulse waveform for flash zero
