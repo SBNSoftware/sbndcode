@@ -102,7 +102,7 @@ set (
                     BeamRateCalibService
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
-                    art::Framework_Principals
+                    art::Framework_Principal
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
                     messagefacility::MF_MessageLogger
