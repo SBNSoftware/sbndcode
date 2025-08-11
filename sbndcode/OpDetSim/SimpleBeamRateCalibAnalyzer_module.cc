@@ -30,7 +30,6 @@
 #include "lardataobj/Simulation/sim.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/SimPhotons.h"
-#include "sbnobj/SBND/Trigger/pmtTrigger.hh"
 #include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "TH1D.h"
