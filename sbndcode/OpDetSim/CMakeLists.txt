@@ -89,6 +89,31 @@ set (
 )
 
 set (
+  NOSIGNALSHAPE_LIBRARIES
+                    sbndcode_OpDetSim
+                    lardata::Utilities_LArFFT_service
+                    larcorealg::Geometry
+                    larcore::Geometry_Geometry_service
+                    lardata::Utilities
+                    lardataalg::DetectorInfo
+                    art::Framework_Core
+                    art::Framework_Principal
+                    art::Framework_Services_Registry
+                    art::Persistency_Common
+                    art::Persistency_Provenance
+                    art_root_io::tfile_support
+                    art_root_io::TFileService_service
+                    art::Framework_Services_System_TriggerNamesService_service
+                    art::Utilities
+                    canvas::canvas
+                    messagefacility::MF_MessageLogger
+                    cetlib::cetlib
+                    cetlib_except::cetlib_except
+                    ROOT::Geom
+                    ROOT::Core
+)
+
+set (
   OTHER_LIBRARIES
                     sbndcode_OpDetSim
                     larcore::Geometry_Geometry_service
@@ -98,7 +123,6 @@ set (
                     lardataobj::RecoBase
                     lardataobj::AnalysisBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
-                    sbndcode_Utilities_SignalShapingServiceSBND_service
                     sbndcode_OpDetSim_BeamRateCalibService_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
@@ -148,7 +172,7 @@ cet_build_plugin(FlashWithNeutrino art::module SOURCE FlashWithNeutrinoInTPC.cc 
 cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_Summer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService_service.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService_service.cc LIBRARIES ${NOSIGNALSHAPE_LIBRARIES})
 cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${OTHER_LIBRARIES})
 
 install_headers()
