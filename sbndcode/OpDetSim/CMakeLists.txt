@@ -99,7 +99,7 @@ set (
                     lardataobj::AnalysisBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
                     sbndcode_Utilities_SignalShapingServiceSBND_service
-                    BeamRateCalibService
+                    sbndcode_OpDetSim_BeamRateCalibService_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
