@@ -14,34 +14,34 @@
 namespace calib {
 
   BeamRateCalibService::BeamRateCalibService(fhicl::ParameterSet const& pset, art::ActivityRegistry& amp)
-    //: //fMonWidth(pset.get<int>("MonWidth", 3)),
-      //fTotalCAENBoards(pset.get<int>("TotalCAENBoards", 10)),
-      //PMTPerBoard(pset.get<int>("PMTPerBoard", 16)),
-      //Baseline(pset.get<int>("Baseline", 14250)),
-      //fMC(pset.get<bool>("MC", false))
+    : fMonWidth(pset.get<int>("MonWidth", 3)),
+      fTotalCAENBoards(pset.get<int>("TotalCAENBoards", 10)),
+      PMTPerBoard(pset.get<int>("PMTPerBoard", 16)),
+      Baseline(pset.get<int>("Baseline", 14250)),
+      fMC(pset.get<bool>("MC", false))
+  {}
+  BeamRateCalibService::~BeamRateCalibService()
   {}
 
-  //void lar::calib::BeamRateCalib::ConstructMonPulse(
-  void calib::BeamRateCalibService::ConstructMonPulse(
-    //art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, 
-    //int MonThreshold, 
-    //std::vector<int> *MonPulse, 
-    //bool Saving, 
-    //int FlashCounter
+  void BeamRateCalibService::ConstructMonPulse(
+    art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, 
+    int MonThreshold, 
+    std::vector<int> *MonPulse, 
+    bool Saving, 
+    int FlashCounter
   ) const 
   {
 
   } // ConstructMonPulse
 
 
-  //std::vector<bool> BeamRateCalibService::ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold) const
-  //{
-  //  std::vector<bool> BinaryResponse(wvf.size());
+  std::vector<bool> BeamRateCalibService::ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold) const
+  {
+    std::vector<bool> BinaryResponse(wvf.size());
 
-  //  return BinaryResponse; 
-  //} // ConstructBinaryResponse
+    return BinaryResponse; 
+  } // ConstructBinaryResponse
 
 } // namespace calib
 
-//} // namespace lar
 

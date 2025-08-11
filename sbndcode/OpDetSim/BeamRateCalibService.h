@@ -30,36 +30,30 @@
 
        class BeamRateCalibService { 
          public:
-           //BeamRateCalibService(fhicl::ParameterSet const&pset, art::ActivityRegistry&amp;);
            BeamRateCalibService(fhicl::ParameterSet const&pset, art::ActivityRegistry&amp);
-           //BeamRateCalibService(fhicl::ParameterSet const& pset);//, art::ActivityRegistry& amp);
-
+           ~BeamRateCalibService();
            void ConstructMonPulse(
-             /*art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, 
+             art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, 
              int MonThreshold, 
              std::vector<int> *MonPulse, 
              bool Saving, 
-             int FlashCounter*/
+             int FlashCounter
            ) const;
 
          //---------------------------------------------------------------------
-         /*private:
+         private:
            std::vector<bool> ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold) const;
 
          int fMonWidth;
          int fTotalCAENBoards;
          int PMTPerBoard;
          int Baseline;
-         bool fMC;*/
+         bool fMC;
        }; // BeamRateCalibService
 
    } // namespace calib
-//} // namespace lar
 
 DECLARE_ART_SERVICE(calib::BeamRateCalibService, LEGACY)
-//DECLARE_ART_SERVICE(lar::calib::BeamRateCalibService, LEGACY)
-//DECLARE_ART_SERVICE_NO_ARGS(calib::BeamRateCalibService, LEGACY)
-//DECLARE_ART_SERVICE_INTERFACE_IMPL(calib::BeamRateCalibService, LEGACY)
 
 #endif // BEAMRATECALIB_SERVICE_H
 
