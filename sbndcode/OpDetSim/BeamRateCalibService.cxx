@@ -32,7 +32,7 @@ namespace calib {
   ) const 
   {
     MonPulse->resize(20);
-    for(int i=0; i<20; i++) MonPulse[i]=12;
+    for(int i=0; i<20; i++) (*MonPulse)[i]=12;
 
   } // ConstructMonPulse
 
