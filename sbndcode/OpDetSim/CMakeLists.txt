@@ -26,6 +26,7 @@ art_make_library( SOURCE
                     DigiArapucaSBNDAlg.cc
                     DigiPMTSBNDAlg.cc
                     opDetDigitizerSBND_module.cc
+                    BeamRateCalibService.cc
                     opDetDigitizerWorker.cc
                     opDetSBNDTriggerAlg.cc
                   LIBRARIES
@@ -47,6 +48,7 @@ art_make_library( SOURCE
                     CLHEP::CLHEP
                     ROOT::Core
 )
+
 set (
   MODULE_LIBRARIES
                     sbndcode_OpDetSim
@@ -137,6 +139,7 @@ set (
                     ROOT::Core
                     sbndcode_RecoUtils
 )
+
 
 cet_build_plugin(opHitFinderSBND art::module SOURCE opHitFinderSBND_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(opDetDigitizerSBND art::module SOURCE opDetDigitizerSBND_module.cc LIBRARIES ${MODULE_LIBRARIES})
