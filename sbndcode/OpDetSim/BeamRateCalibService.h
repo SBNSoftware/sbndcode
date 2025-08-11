@@ -38,11 +38,11 @@
              std::vector<int> *MonPulse, 
              bool Saving, 
              int FlashCounter
-           ) const;
+           );
 
          //---------------------------------------------------------------------
          private:
-           std::vector<bool> ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold) const;
+           std::vector<bool> ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold);
 
          int fMonWidth;
          int fTotalCAENBoards;
