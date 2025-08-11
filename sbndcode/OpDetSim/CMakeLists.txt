@@ -23,6 +23,27 @@ cet_build_plugin( sbndPDMapAlg art::tool
 )
 
 art_make_library( SOURCE
+                    BeamRateCalibService_service.cc
+                  LIBRARIES
+                    sbndcode_OpDetSim_sbndPDMapAlg_tool
+                    larcore::Geometry_Geometry_service
+                    lardataobj::Simulation
+                    lardata::Utilities
+                    lardataobj::RawData
+                    lardataobj::RecoBase
+                    lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
+                    larpandora::LArPandoraInterface
+                    nurandom::RandomUtils_NuRandomService_service
+                    art::Framework_Services_Optional_RandomNumberGenerator_service
+                    canvas::canvas
+                    messagefacility::MF_MessageLogger
+                    fhiclcpp::fhiclcpp
+                    cetlib::cetlib
+                    CLHEP::CLHEP
+                    ROOT::Core
+)
+
+art_make_library( SOURCE
                     DigiArapucaSBNDAlg.cc
                     DigiPMTSBNDAlg.cc
                     opDetDigitizerSBND_module.cc
