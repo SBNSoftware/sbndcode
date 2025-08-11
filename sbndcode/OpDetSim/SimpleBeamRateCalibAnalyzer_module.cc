@@ -61,7 +61,7 @@ public:
 
 private:
   calib::BeamRateCalibService *fTriggerService;
-  string fPMTName;
+  std::string fPMTName;
   // Declare member data here.
 
 };
