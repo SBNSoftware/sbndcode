@@ -26,7 +26,7 @@ art_make_library( SOURCE
                     DigiArapucaSBNDAlg.cc
                     DigiPMTSBNDAlg.cc
                     opDetDigitizerSBND_module.cc
-                    BeamRateCalibService.cc
+                    #BeamRateCalibService.cxx
                     opDetDigitizerWorker.cc
                     opDetSBNDTriggerAlg.cc
                   LIBRARIES
@@ -48,7 +48,6 @@ art_make_library( SOURCE
                     CLHEP::CLHEP
                     ROOT::Core
 )
-
 set (
   MODULE_LIBRARIES
                     sbndcode_OpDetSim
@@ -150,7 +149,7 @@ cet_build_plugin(FlashWithNeutrino art::module SOURCE FlashWithNeutrinoInTPC.cc 
 cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_Summer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService.cxx LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService_service.cxx LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
