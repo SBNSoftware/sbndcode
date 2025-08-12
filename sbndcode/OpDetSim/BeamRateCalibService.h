@@ -54,7 +54,7 @@
    } // namespace calib
 
 DECLARE_ART_SERVICE(calib::BeamRateCalibService, LEGACY)
-DECLARE_ART_SERVICE(calib::BeamRateCalibService)
+DEFINE_ART_SERVICE(calib::BeamRateCalibService)
 #endif // BEAMRATECALIB_SERVICE_H
 
 
