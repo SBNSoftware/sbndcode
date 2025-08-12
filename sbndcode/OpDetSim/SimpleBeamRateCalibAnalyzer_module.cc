@@ -35,7 +35,6 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TGraph.h"
-#include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "BeamRateCalibService.h"
 
 class SimpleBeamRateCalibAnalyzer;
