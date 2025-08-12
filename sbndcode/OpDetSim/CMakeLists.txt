@@ -26,7 +26,7 @@ art_make_library( SOURCE
                     DigiArapucaSBNDAlg.cc
                     DigiPMTSBNDAlg.cc
                     opDetDigitizerSBND_module.cc
-                    #BeamRateCalibService_service.cc
+                    BeamRateCalibService_service.cc
                     opDetDigitizerWorker.cc
                     opDetSBNDTriggerAlg.cc
                   LIBRARIES
@@ -38,7 +38,7 @@ art_make_library( SOURCE
                     # lardataobj::RecoBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
                     larpandora::LArPandoraInterface
-                    sbndcode::Utilities_SignalShapingServiceSBND_service
+                    #sbndcode::Utilities_SignalShapingServiceSBND_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
@@ -61,7 +61,8 @@ set (
                     lardata::Utilities_LArFFT_service
                     lardataobj::AnalysisBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
-                    sbndcode_Utilities_SignalShapingServiceSBND_service
+                    sbndcode_OpDetSim_BeamRateCalibService_service
+                    #sbndcode_Utilities_SignalShapingServiceSBND_service
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
@@ -88,9 +89,7 @@ set (
                     ROOT::Tree
 )
 
-set (
-  NOSIGNALSHAPE_LIBRARIES
-                    lardata::Utilities_LArFFT_service
+set ( NOSIGNALSHAPE_LIBRARIES lardata::Utilities_LArFFT_service
                     larcorealg::Geometry
                     larcore::Geometry_Geometry_service
                     lardata::Utilities
@@ -171,8 +170,8 @@ cet_build_plugin(FlashWithNeutrino art::module SOURCE FlashWithNeutrinoInTPC.cc 
 cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_Summer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService_service.cc LIBRARIES ${NOSIGNALSHAPE_LIBRARIES})
-cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${OTHER_LIBRARIES})
+#cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService_service.cc LIBRARIES ${NOSIGNALSHAPE_LIBRARIES})
+cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 install_headers()
 install_fhicl()
