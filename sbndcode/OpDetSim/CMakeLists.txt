@@ -90,7 +90,6 @@ set (
 
 set (
   NOSIGNALSHAPE_LIBRARIES
-                    sbndcode_OpDetSim
                     lardata::Utilities_LArFFT_service
                     larcorealg::Geometry
                     larcore::Geometry_Geometry_service
@@ -115,7 +114,6 @@ set (
 
 set (
   OTHER_LIBRARIES
-                    sbndcode_OpDetSim
                     larcore::Geometry_Geometry_service
                     lardataobj::Simulation
                     lardata::Utilities
