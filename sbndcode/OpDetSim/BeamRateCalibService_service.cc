@@ -45,5 +45,6 @@ namespace calib {
   } // ConstructBinaryResponse
 
 } // namespace calib
+DEFINE_ART_SERVICE(calib::BeamRateCalibService)
 
 
