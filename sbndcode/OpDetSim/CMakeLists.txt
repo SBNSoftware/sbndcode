@@ -114,6 +114,7 @@ set (
 
 set (
   OTHER_LIBRARIES
+                    sbndcode_OpDetSim
                     larcore::Geometry_Geometry_service
                     lardataobj::Simulation
                     lardata::Utilities
