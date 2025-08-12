@@ -30,7 +30,6 @@
 #include "lardataobj/Simulation/sim.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/SimPhotons.h"
-#include "sbndcode/Decoders/PTB/sbndptb.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TFile.h"
