@@ -135,6 +135,10 @@ private:
   double _frame_hlt_crtt1;
   double _frame_hlt_gate;
 
+  //Value to shift Data to MC -- so that data agree with MC [ns]
+  //TODO: Get this value from database instead of fhicl parameter
+  double _frame_data2mc;
+
   //Debug
   bool fDebugDAQHeader;
   bool fDebugTimingRef;
@@ -182,12 +186,16 @@ sbnd::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   fDebugTdc = p.get<bool>("DebugTdc", false);
   fDebugFrame = p.get<bool>("DebugFrame", false);
   
+  //TODO: Get from database instead of fhicl parameters
+  _frame_data2mc = p.get<double>("ShiftData2MC", 1500);
+  
   produces< raw::FrameShiftInfo >();
 
 }
 
 void sbnd::FrameShift::produce(art::Event& e)
 {
+  std::unique_ptr< raw::TimingInfo > newTimingInfo(new raw::TimingInfo());
   std::unique_ptr< raw::FrameShiftInfo > newFrameShiftInfo(new raw::FrameShiftInfo());
 
   ResetEventVars();
@@ -572,7 +580,7 @@ void sbnd::FrameShift::produce(art::Event& e)
   if (diff > fMaxAllowedRefTimeDiff){
     throw cet::exception("FrameShift") << "Global timestamp is too far from the raw timestamp! "
                                        << "Raw TS = (s) " << _raw_ts/uint64_t(1e9) << " (ns) " << _raw_ts%uint64_t(1e9) << std::endl
-                                       << ", Gobale Frame TS = (s) " << _global_frame/uint64_t(1e9) << " (ns) " << _global_frame%uint64_t(1e9)
+                                       << ", Gobal Frame TS = (s) " << _global_frame/uint64_t(1e9) << " (ns) " << _global_frame%uint64_t(1e9)
                                        << ", Diff = " << diff
                                        << ". Check data quality!";
   }
@@ -593,7 +601,7 @@ void sbnd::FrameShift::produce(art::Event& e)
   }
 
   //-----------------------Compute Frame Shift-----------------------//
-  //TODO: account for shifting between MC vs DATA
+  //TODO: account for shifting between MC vs DATA -- apply at CAF instead
     
   //for beam stream
   if (_isBeam){
@@ -628,7 +636,17 @@ void sbnd::FrameShift::produce(art::Event& e)
   newFrameShiftInfo->frameTdcRwm = _frame_tdc_rwm;
   newFrameShiftInfo->frameHltCrtt1 = _frame_hlt_crtt1;
   newFrameShiftInfo->frameHltBeamGate = _frame_hlt_gate;
+  newFrameShiftInfo->frameDataToMC = _frame_data2mc;
 
+  newTimingInfo->tdcCrtt1 = _tdc_crtt1_ts;
+  newTimingInfo->tdcBes = _tdc_bes_ts;
+  newTimingInfo->tdcRwm = _tdc_rwm_ts;
+  newTimingInfo->tdcEtrig = _tdc_etrig_ts;
+  newTimingInfo->hltCrtt1 = _hlt_crtt1_ts;
+  newTimingInfo->hltEtrig = _hlt_etrig_ts;
+  newTimingInfo->hltBeamGate = _hlt_gate_ts;
+
+  e.put(std::move(newTimingInfo));
   e.put(std::move(newFrameShiftInfo));
 
   //Fill the tree
@@ -683,6 +701,7 @@ void sbnd::FrameShift::beginJob()
   fTree->Branch("frame_tdc_rwm", &_frame_tdc_rwm);
   fTree->Branch("frame_hlt_crtt1", &_frame_hlt_crtt1);
   fTree->Branch("frame_hlt_gate", &_frame_hlt_gate);
+  fTree->Branch("frame_data2mc", &_frame_data2mc);
 }
 
 void sbnd::FrameShift::ResetEventVars()

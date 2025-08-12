@@ -25,17 +25,37 @@ namespace raw {
         uint16_t timingChannel; // e.g. TDC ETRIG = 4; PTB BNB Beam+Light = 2
     };
 
+    //To save important timing info in unix timestamp format
+    //Products made by FrameShift module
+    class TimingInfo {
+      public:
+        TimingInfo() {}; // constructor
+        TimingInfo(uint64_t _tdcCrtt1, uint64_t _tdcBes, uint64_t _tdcRwm, uint64_t _tdcEtrig, uint64_t _hltCrtt1, uint64_t _hltEtrig, uint64_t _hltBeamGate) :
+        tdcCrtt1(_tdcCrtt1), tdcBes(_tdcBes), tdcRwm(_tdcRwm), tdcEtrig(_tdcEtrig), hltCrtt1(_hltCrtt1), hltEtrig(_hltEtrig), hltBeamGate(_hltBeamGate) {};
+    
+        uint64_t tdcCrtt1;
+        uint64_t tdcBes;
+        uint64_t tdcRwm;
+        uint64_t tdcEtrig;
+        uint64_t hltCrtt1;
+        uint64_t hltEtrig;
+        uint64_t hltBeamGate;
+    };
+
+    //Object to shift timing to a specific frame after being decoded (by defaul: TDC ETRIG ch4)
+    //Products made by FrameShift module
     class FrameShiftInfo {
       public:
         FrameShiftInfo() {}; // constructor
-        FrameShiftInfo(double _frameTdcCrtt1, double _frameTdcBes, double _frameTdcRwm, double _frameHltCrtt1, double _frameHltBeamGate) :
-        frameTdcCrtt1(_frameTdcCrtt1), frameTdcBes(_frameTdcBes), frameTdcRwm(_frameTdcRwm), frameHltCrtt1(_frameHltCrtt1), frameHltBeamGate(_frameHltBeamGate) {};
+        FrameShiftInfo(double _frameTdcCrtt1, double _frameTdcBes, double _frameTdcRwm, double _frameHltCrtt1, double _frameHltBeamGate, double _frameDataToMC) :
+        frameTdcCrtt1(_frameTdcCrtt1), frameTdcBes(_frameTdcBes), frameTdcRwm(_frameTdcRwm), frameHltCrtt1(_frameHltCrtt1), frameHltBeamGate(_frameHltBeamGate), frameDataToMC(_frameDataToMC) {};
     
         double frameTdcCrtt1;
         double frameTdcBes;
         double frameTdcRwm;
         double frameHltCrtt1;
         double frameHltBeamGate;
+        double frameDataToMC;
     };
 
   namespace pmt {
