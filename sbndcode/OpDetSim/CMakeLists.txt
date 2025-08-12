@@ -61,7 +61,7 @@ set (
                     lardata::Utilities_LArFFT_service
                     lardataobj::AnalysisBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
-                    sbndcode_OpDetSim_BeamRateCalibService_service
+                    #sbndcode_OpDetSim_BeamRateCalibService_service
                     #sbndcode_Utilities_SignalShapingServiceSBND_service
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
@@ -121,7 +121,7 @@ set (
                     lardataobj::RecoBase
                     lardataobj::AnalysisBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
-                    sbndcode_OpDetSim_BeamRateCalibService_service
+                    #sbndcode_OpDetSim_BeamRateCalibService_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
