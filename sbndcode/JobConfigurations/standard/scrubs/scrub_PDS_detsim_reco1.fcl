@@ -1,8 +1,8 @@
-# This fcl purely removes products made in theWCLS, DetSim & Reco1 processes.
+# This fcl purely removes products made in opdaq & Reco1 processes.
 # This allows for keeping the identical simulated event on the file and running
-# a variation of the downstream detector simulation / reconstruction.
+# a variation of PDS.
 #
-# Author Henry Lay (h.lay@lancaster.ac.uk)
+# Author Linyan Wan (lwan@fnal.gov)
 
 #include "rootoutput_sbnd.fcl"
 #include "sam_sbnd.fcl"
