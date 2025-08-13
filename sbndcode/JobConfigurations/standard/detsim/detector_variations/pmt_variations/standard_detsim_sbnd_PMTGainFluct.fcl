@@ -1,2 +1,2 @@
-#include "detsim_detvar.fcl"
+#include "detsim_detvar_PDSonly.fcl"
 physics.producers.opdaq.GainFluctuationsParams.DynodeK: 0.25
