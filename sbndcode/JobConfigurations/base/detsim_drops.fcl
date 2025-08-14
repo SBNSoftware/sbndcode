@@ -22,7 +22,7 @@ BEGIN_PROLOG
 detsim_drops: [ @sequence::g4_drops
                 , "drop sim::SimPhotons_*_*_*" 
                 , "drop sim::SimEnergyDeposits_ionandscintout__*"
-                , "drop sim::SimEnergyDeposits_ionandscint_*_*"
+                , "drop sim::SimEnergyDeposits_ionandscint__G4"
                 , "drop sim::SimEnergyDeposits_largeant_*_*"
 					 , "keep sim::SimEnergyDeposits_ionandscint_priorSCE_G4"]
 
