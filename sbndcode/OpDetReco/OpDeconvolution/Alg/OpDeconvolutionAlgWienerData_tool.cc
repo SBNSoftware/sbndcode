@@ -27,8 +27,6 @@
 
 #include "sbndcode/OpDetReco/OpDeconvolution/Alg/OpDeconvolutionAlg.hh"
 
-#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
-#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
 
 namespace opdet {
   class OpDeconvolutionAlgWiener;
@@ -39,7 +37,7 @@ class opdet::OpDeconvolutionAlgWiener : opdet::OpDeconvolutionAlg {
 public:
   explicit OpDeconvolutionAlgWiener(fhicl::ParameterSet const& p);
 
-  ~OpDeconvolutionAlgWiener() {delete fFilterTF1;}
+  ~OpDeconvolutionAlgWiener() {}
 
   // Required functions.
   std::vector<raw::OpDetWaveform> RunDeconvolution(std::vector<raw::OpDetWaveform> const& wfHandle) override;
@@ -67,6 +65,7 @@ private:
   double fPMTChargeToADC;
   double fDecoWaveformPrecision;
   short unsigned int fBaselineSample;
+  std::string fOpDetDataFile;
   std::string fFilter;
   std::string fElectronics;
   bool fScaleHypoSignal;
@@ -81,7 +80,6 @@ private:
   unsigned int NDecoWf;
 
   TF1 *fFilterTF1;
-
   std::vector<double> fSignalHypothesis;
   std::vector<double> fNoiseHypothesis;
 
@@ -89,8 +87,6 @@ private:
   bool fCorrectBaselineOscillations;
   short unsigned int fBaseSampleBins;
   double fBaseVarCut;
-
-  sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
 
   // Declare member functions
   void ApplyExpoAvSmoothing(std::vector<double>& wf);
@@ -129,6 +125,7 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fPMTChargeToADC = p.get< double >("PMTChargeToADC");
   fDecoWaveformPrecision = p.get< double >("DecoWaveformPrecision");
   fBaselineSample = p.get< short unsigned int >("BaselineSample");
+  fOpDetDataFile = p.get< std::string >("OpDetDataFile");
   fSkipChannelList = p.get< std::vector<int>>("SkipChannelList");
   fFilter = p.get< std::string >("Filter");
   fElectronics = p.get< std::string >("Electronics");
@@ -141,8 +138,6 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   fBaseVarCut = p.get< double >("BaseVarCut");
   fFilterParams = p.get< std::vector<double> >("FilterParams");
 
-  fFilterTF1 = new TF1("FilterTemplate", fFilter.c_str());
-
   fNormUnAvSmooth=1./(2*fUnAvNeighbours+1);
   NDecoWf=0;
   MaxBinsFFT=std::pow(2, fMaxFFTSizePow);
@@ -152,10 +147,38 @@ opdet::OpDeconvolutionAlgWiener::OpDeconvolutionAlgWiener(fhicl::ParameterSet co
   if (fElectronics=="Daphne") fSamplingFreq=fDaphne_Freq/1000.;//in GHz
   auto const* lar_prop = lar::providerFrom<detinfo::LArPropertiesService>();
 
-  //Load PMT Calibration Database
-  fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
+  //Load SER
+  std::string fname;
+  cet::search_path sp("FW_SEARCH_PATH");
+  sp.find_file(fOpDetDataFile, fname);
+  TFile* file = TFile::Open(fname.c_str(), "READ");
+  std::vector<std::vector<double>>* SinglePEVec_p;
+  std::vector<int>* fSinglePEChannels_p;
+  std::vector<double>* fPeakAmplitude_p;
+  std::vector<std::vector<double>> * fFilterParamVector_p;
 
-  if (!fUseParamFilter){
+  file->GetObject("SERChannels", fSinglePEChannels_p);
+  file->GetObject("SinglePEVec", SinglePEVec_p);
+  file->GetObject("PeakAmplitude",  fPeakAmplitude_p);
+  file->GetObject("FilterParams",  fFilterParamVector_p);
+
+  if (fElectronics=="Daphne") file->GetObject("SinglePEVec_40ftCable_Daphne", SinglePEVec_p);
+  fSinglePEWaveVector = *SinglePEVec_p;
+  fSinglePEChannels = *fSinglePEChannels_p;
+  fPeakAmplitude = *fPeakAmplitude_p;
+  fFilterParamVector = *fFilterParamVector_p;          
+  
+  mf::LogInfo("OpDeconvolutionAlg")<<"Loaded SER from "<<fOpDetDataFile<<"... size="<<fSinglePEWave.size()<<std::endl;
+  file->Close();
+
+  if(fUseParamFilter && !fUseParamFilterInidividualChannel){
+    //If use param filter but not one for each channel, build it here
+    fFilterTF1 = new TF1("FilterTemplate", fFilter.c_str());
+    for(size_t k=0; k<fFilterParams.size(); k++)
+      fFilterTF1->SetParameter(k, fFilterParams[k]);
+    mf::LogInfo("OpDeconvolutionAlg")<<"Creating parametrized filter... TF1:"<<fFilter<<std::endl;
+  }
+  else if (!fUseParamFilter){
     //Create light signal hypothesis for "on-fly" Wiener filter
     fSignalHypothesis.resize(MaxBinsFFT, 0);
     if(fFilter=="Wiener")
@@ -177,26 +200,38 @@ std::vector<raw::OpDetWaveform> opdet::OpDeconvolutionAlgWiener::RunDeconvolutio
   {
     int channelNumber = wf.ChannelNumber();
     auto it = std::find(fSkipChannelList.begin(), fSkipChannelList.end(), channelNumber);
+    bool AnalyseChannel = false;
     if (it == fSkipChannelList.end()) {
-      fSinglePEWave = fPMTCalibrationDatabaseService->getSER(channelNumber);
-      double SPEAmplitude =  fPMTCalibrationDatabaseService->getSPEAmplitude(channelNumber);
-      double SPEPeakValue = *std::max_element(fSinglePEWave.begin(), fSinglePEWave.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
-      double SinglePENormalization = std::abs(SPEAmplitude/SPEPeakValue);
-      std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(), [SinglePENormalization](double val) {return val * SinglePENormalization;});
-      fSinglePEWave.resize(MaxBinsFFT, 0);
-      // If use channel dependent param filter
-      if(fUseParamFilter)
+      //If it's not try to find its SER in the file 
+      for(size_t i=0; i<fSinglePEChannels.size(); i++)
       {
-        double GaussFilterPower = fPMTCalibrationDatabaseService->getGaussFilterPower(channelNumber);
-        double GaussFilterWC = fPMTCalibrationDatabaseService->getGaussFilterWC(channelNumber);
-        fFilterParamChannel = {GaussFilterWC, GaussFilterPower};
-        for(size_t k=0; k<fFilterParamChannel.size(); k++)
+        if(fSinglePEChannels[i]==channelNumber) 
         {
-          fFilterTF1->SetParameter(k, fFilterParamChannel[k]);
+          fSinglePEWave = fSinglePEWaveVector[i];
+          double SPEPeakValue = *std::max_element(fSinglePEWave.begin(), fSinglePEWave.end(), [](double a, double b) {return std::abs(a) < std::abs(b);});
+          double SinglePENormalization = std::abs(fPeakAmplitude[i]/SPEPeakValue);
+          std::transform(fSinglePEWave.begin(), fSinglePEWave.end(), fSinglePEWave.begin(), [SinglePENormalization](double val) {return val * SinglePENormalization;});
+          fSinglePEWave.resize(MaxBinsFFT, 0);
+          AnalyseChannel = true;
+          // If use channel dependent param filter
+          if(fUseParamFilterInidividualChannel)
+          {
+            fFilterParamChannel = fFilterParamVector[i];
+            fFilterTF1 = new TF1("FilterTemplate", fFilter.c_str());
+            for(size_t k=0; k<fFilterParamChannel.size(); k++)
+            {
+              fFilterTF1->SetParameter(k, fFilterParamChannel[k]);
+            }
+
+
+            mf::LogInfo("OpDeconvolutionAlg")<<"Creating parametrized filter... TF1:"<<fFilter << " for channel " << channelNumber <<std::endl;
+          }
+          break;
         }
-          mf::LogInfo("OpDeconvolutionAlg")<<"Creating parametrized filter... TF1:"<<fFilter << " for channel " << channelNumber <<std::endl;
       }
+      if(AnalyseChannel == false) mf::LogError("OpDeconvolutionAlg") << " SER for channel " << channelNumber <<" not found in the file \n";
     }
+    if(!AnalyseChannel) continue;
     //Read waveform
     size_t wfsize=wf.Waveform().size();
     if(wfsize>MaxBinsFFT){
@@ -502,6 +537,7 @@ std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_
     }
   }
 
+
   if(fDebug){
     std::string name="h_wienerfilter_"+std::to_string(NDecoWf);
     TH1F * hs_wiener = tfs->make< TH1F >
@@ -509,6 +545,7 @@ std::vector<TComplex> opdet::OpDeconvolutionAlgWiener::DeconvolutionKernel(size_
     for(size_t k=0; k<size/2; k++)
       hs_wiener->SetBinContent(k, TComplex::Abs( kernel[k]*serfft[k] ) );
   }
+  if(fUseParamFilter && fUseParamFilterInidividualChannel) delete fFilterTF1;
   return kernel;
 }
 

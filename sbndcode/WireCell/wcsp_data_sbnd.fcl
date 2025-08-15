@@ -16,7 +16,7 @@ sbnd_wcls: {
         configs: []
 
         ## Libraries in which to look for WCT components
-        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb", "WireCellPytorch"]
+        plugins: ["WireCellGen", "WireCellSigProc", "WireCellRoot", "WireCellPgraph", "WireCellLarsoft", "WireCellTbb"]
         inputers: []
         outputers: []
         
@@ -41,8 +41,6 @@ sbnd_wcls_sp_data.wcls_main.outputers: ["wclsFrameSaver:spsaver"]
 sbnd_wcls_sp_data.wcls_main.params :   {
                                         # This locates the input raw::RawDigit collection in the art::Event 
                                         raw_input_label: "daq"   
-                                        # if dnnroi is used, this device will be used
-                                        wc_device: "cpu"   
 
                                         # if epoch is "dynamic" you MUST add
                                         # "wclsMultiChannelNoiseDB" to "inputers" and must NOT
@@ -55,37 +53,11 @@ sbnd_wcls_sp_data.wcls_main.params :   {
                                         # whether or not to use calibrated, parametrized electronics response
                                         # MUST be a string!
                                         use_paramresp: "true"
-
-                                        dnnroi_model_p0: "DNN_ROI/plane0.ts"
-                                        dnnroi_model_p1: "DNN_ROI/plane1.ts"
-                                        roi: "trad"
-                                       }
+                                        }
 
 sbnd_wcls_sp_data.wcls_main.structs:   { 
                                         # Set the waveform sample length, eg, 6000, 15000, "auto"
                                         nticks: 3427
-                                        nchunks: 2 # dummy for trad
-                                        tick_per_slice: 4 # dummy for trad
                                        }
-
-# ------------------------------------------------------------------------------------ #
-
-## Configuration for **Signal processing ONLY** for data -- run both traditional and DNN ROI finding
-
-sbnd_wcls_sp_data_bothrois: @local::sbnd_wcls_sp_data
-sbnd_wcls_sp_data_bothrois.wcls_main.outputers: ["wclsFrameSaver:spsaver", "wclsFrameSaver:dnnsaver"] # "wclsFrameSaver:simdigits" <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
-sbnd_wcls_sp_data_bothrois.wcls_main.params.roi: "both"
-sbnd_wcls_sp_data_bothrois.wcls_main.structs.nchunks: 2 # should match training config
-sbnd_wcls_sp_data_bothrois.wcls_main.structs.tick_per_slice: 4 # should match training config
-
-# ------------------------------------------------------------------------------------ #
-
-## Configuration for **Signal processing ONLY** for data -- run DNN ROI finding only
-
-sbnd_wcls_sp_data_dnnroi: @local::sbnd_wcls_sp_data
-sbnd_wcls_sp_data_dnnroi.wcls_main.outputers: ["wclsFrameSaver:dnnsaver"] # "wclsFrameSaver:simdigits" <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
-sbnd_wcls_sp_data_dnnroi.wcls_main.params.roi: "dnn"
-sbnd_wcls_sp_data_dnnroi.wcls_main.structs.nchunks: 2 # should match training config
-sbnd_wcls_sp_data_dnnroi.wcls_main.structs.tick_per_slice: 4 # should match training config
 
 END_PROLOG
