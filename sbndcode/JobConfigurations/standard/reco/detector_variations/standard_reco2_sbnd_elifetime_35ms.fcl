@@ -1,9 +1,0 @@
-# File: standard_reco2_sbnd_elifetime_35ms.fcl
-# Author: Mun Jung Jung (munjung@uchicago.edu)
-# 
-# fcl to change the electron lifetime used in MC reco2
-# elifetime = 35ms
-
-#include "standard_reco2_sbnd.fcl"
-
-services.DetectorPropertiesService.Electronlifetime: 35000
