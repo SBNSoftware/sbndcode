@@ -190,7 +190,7 @@ sbnd::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   _frame_data2mc = p.get<double>("ShiftData2MC", 1500);
   
   produces< raw::FrameShiftInfo >();
-
+  produces< raw::TimingInfo >();
 }
 
 void sbnd::FrameShift::produce(art::Event& e)
