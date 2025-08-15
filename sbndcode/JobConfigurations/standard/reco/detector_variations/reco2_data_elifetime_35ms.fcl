@@ -1,9 +1,0 @@
-# File: reco2_data_elifetime_35ms.fcl
-# Author: Mun Jung Jung (munjung@uchicago.edu)
-# 
-# fcl to change the electron lifetime used in data reco2
-# elifetime = 35ms
-
-#include "reco2_data.fcl"
-
-services.DetectorPropertiesService.Electronlifetime: 35000
