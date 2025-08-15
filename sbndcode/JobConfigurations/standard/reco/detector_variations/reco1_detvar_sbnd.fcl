@@ -1,0 +1,3 @@
+#include "standard_reco1_sbnd.fcl"
+
+process_name: Reco1Var
