@@ -2,6 +2,7 @@ include (phot::OpticalPath)
 
 cet_build_plugin(SBNDOpticalPath phot::OpticalPath
   LIBRARIES PRIVATE
+  larsim::OpticalPath
   larcoreobj::geo_vectors
 )
 
