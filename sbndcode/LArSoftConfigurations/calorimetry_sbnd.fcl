@@ -1,4 +1,5 @@
 #include "calorimetry.fcl"
+#include "normtools_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -21,11 +22,13 @@ sbnd_gnewcalomc:              @local::standard_gnocchicalo
 sbnd_gnewcalomc.CaloAlg:      @local::sbnd_calorimetryalgmc
 sbnd_gnewcalomc.ChargeMethod: 3
 sbnd_gnewcalomc.SpacePointModuleLabel: @erase
+sbnd_gnewcalomc.NormTools: @local::sbnd_calonormtoolsmc   # YZ normalization for MC
 
 sbnd_gnewcalodata:              @local::standard_gnocchicalo
 sbnd_gnewcalodata.CaloAlg:      @local::sbnd_calorimetryalgdata
 sbnd_gnewcalodata.ChargeMethod: 3
 sbnd_gnewcalodata.SpacePointModuleLabel: @erase
+sbnd_gnewcalodata.NormTools: @local::sbnd_calonormtoolsdata  # YZ normalization for Data
 
 # gputnam 19Aug2024: Upate calibration to EMB
 # Values from: https://arxiv.org/abs/2407.12969
