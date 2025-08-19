@@ -3,8 +3,6 @@
 
 #include "FlashAlgoBase.h"
 #include "FlashAlgoFactory.h"
-#include "art/Framework/Principal/Handle.h"
-#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include <map>
 
 namespace lightana

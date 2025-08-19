@@ -195,8 +195,6 @@ namespace lightana{
         for(size_t idx=0; idx<nbins_pesum_v; ++idx) {
             if(_pesum_v[idx] < _min_pe_coinc   ) continue;
             if(mult_v[idx]  < _min_mult_coinc ) continue;
-            double rwm_time;
-            double event_trigger_time;
 
             double pe     = _pesum_v[idx];
             double tflash = min_time + idx * _time_res - _beam_time_shift;
