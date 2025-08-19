@@ -27,6 +27,8 @@ namespace lightana{
         _veto_time     = p.get<double>("VetoSize",8.);
         _time_res      = p.get<double>("TimeResolution",0.03);
         _tpc           = p.get<int>("TPC");
+        _beam_spill_window = p.get<std::vector<double>>("BeamSpillWindow", {-5,5});
+        _beam_time_shift = p.get<double>("BeamTimeShift", 0.0);
         //_pe_baseline_v.clear();
         //_pe_baseline_v = p.get<std::vector<double> >("PEBaseline",_pe_baseline_v);
 
@@ -186,14 +188,25 @@ namespace lightana{
             hitidx_v[index].push_back(hitidx);
         }
 
-        // Order by pe (above threshold)
-        std::map<double,size_t> pesum_idx_map;
+        // Order by pe (above threshold). Give preference to OpFlashes within the beamspill window.
+        
+        std::map<std::pair<int,double>, size_t> pesum_idx_map;
+
         for(size_t idx=0; idx<nbins_pesum_v; ++idx) {
-            // std::cout <<  "    _pesum_v at " << idx << " is " << _pesum_v[idx] << ", _min_pe_coinc is " << _min_pe_coinc << std::endl;
             if(_pesum_v[idx] < _min_pe_coinc   ) continue;
-            // std::cout <<  "    mult_v at " << idx << " is " << mult_v[idx] << ", _min_mult_coinc is " << _min_mult_coinc << std::endl;
             if(mult_v[idx]  < _min_mult_coinc ) continue;
-            pesum_idx_map[1./(_pesum_v[idx])] = idx;
+            double rwm_time;
+            double event_trigger_time;
+
+            double pe     = _pesum_v[idx];
+            double tflash = min_time + idx * _time_res - _beam_time_shift;
+
+            // binary flag: 0 if within the beamspill, 1 if outside the beamspill
+            int outside = (tflash < _beam_spill_window[0] || tflash > _beam_spill_window[1]) ? 1 : 0;
+
+            if(_debug) std::cout << " Flash at time " << tflash << "is outside the beamspill window " << outside << std::endl;
+
+            pesum_idx_map[ std::make_pair(outside, 1.0/pe) ] = idx;
         }
 
         // Get candidate flash times

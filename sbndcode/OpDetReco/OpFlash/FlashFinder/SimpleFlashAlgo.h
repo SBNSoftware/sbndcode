@@ -3,6 +3,8 @@
 
 #include "FlashAlgoBase.h"
 #include "FlashAlgoFactory.h"
+#include "art/Framework/Principal/Handle.h"
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include <map>
 
 namespace lightana
@@ -37,8 +39,11 @@ namespace lightana
     double _time_res;       // time resolution of pe sum
     double _pre_sample;     // time pre-sample
     int    _tpc;            // tpc
+    std::vector<double> _beam_spill_window; // beam spill window that has preference over the rest of the flash window
+    double _beam_time_shift; // time shift to apply to the beam spill window
+    std::string _spectdc_label;
 
-    std::vector<double> _pesum_v;        // pw aum array
+    std::vector<double> _pesum_v;        // pe sum array
     std::vector<double> _pe_baseline_v;  // calibration: PEs to be subtracted from each opdet
 
     std::map<double,double> _flash_veto_range_m;  // veto window start

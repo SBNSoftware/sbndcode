@@ -13,9 +13,11 @@ SimpleFlashStandard:
   HitVetoRangeEnd:   []
   OpChannelRange:    [0,311]
   TPC:               0
+  BeamSpillWindow:   [-5,5]
   #PD:                ["pmt_coated", "pmt_uncoated", "xarapuca", "xarapuca_vuv", "xarapuca_vis"]
   PD:                ["pmt_coated", "pmt_uncoated"]
   DebugMode:         false
+  BeamTimeShift: 1188
 }
 
 SimpleFlashTPC0: @local::SimpleFlashStandard
