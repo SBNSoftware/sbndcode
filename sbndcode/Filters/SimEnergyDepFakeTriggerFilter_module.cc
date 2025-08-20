@@ -15,6 +15,7 @@ class SimEnergyDepFakeTriggerFilter : public art::EDFilter {
   const double fBeamTimeMin;   // Minimum time of beam window [us]
   const double fBeamTimeMax;   // Maximum time of beam window [us]
   const double fEnergyDeposit; // Minimum energy deposit in TPC for trigger [MeV]
+  const double fMaxEnergyDeposit; // Maximum energy deposit in TPC for trigger [MeV]
 
   const std::string fSimEnergyDepModuleName;
 };
@@ -24,6 +25,7 @@ SimEnergyDepFakeTriggerFilter::SimEnergyDepFakeTriggerFilter(fhicl::ParameterSet
     , fBeamTimeMin(pset.get<double>("BeamTimeMin"))
     , fBeamTimeMax(pset.get<double>("BeamTimeMax"))
     , fEnergyDeposit(pset.get<double>("EnergyDeposit"))
+    , fMaxEnergyDeposit(pset.get<double>("MaxEnergyDeposit", std::numeric_limits<double>::max()))
     , fSimEnergyDepModuleName(pset.get<std::string>("SimEnergyDepModuleName"))
 {
 }
@@ -46,7 +48,7 @@ bool SimEnergyDepFakeTriggerFilter::filter(art::Event& e)
   }
 
   // If the energy deposit within the beam time is greater than some limit then trigger the event
-  return energy > fEnergyDeposit;
+  return (energy > fEnergyDeposit) & (energy < fMaxEnergyDeposit);
 }
 
 DEFINE_ART_MODULE(SimEnergyDepFakeTriggerFilter)
