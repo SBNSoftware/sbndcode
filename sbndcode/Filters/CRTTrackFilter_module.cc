@@ -44,6 +44,7 @@ private:
   int _noisy_channel;
   int _time_window;
   int _max_tpc_hits;
+  double _electron_vel;
   // useful constants
   const std::set<sbnd::crt::CRTTagger> fNSTaggers = { sbnd::crt::kSouthTagger, sbnd::crt::kNorthTagger };
   const double PI = 3.14159265358979323;
@@ -79,6 +80,7 @@ CRTTrackFilter::CRTTrackFilter(fhicl::ParameterSet const& p) : EDFilter{p} {
   _noisy_channel = p.get<int>("NoisyChannel",0);
   _time_window = p.get<int>("TimeWindow", 175);
   _max_tpc_hits=p.get<int>("MaxTPCHits",800);
+  _electron_vel = p.get<double>("ElectronVel", 0.16);
 }
 
 bool CRTTrackFilter::filter(art::Event& e) {
@@ -176,12 +178,14 @@ bool CRTTrackFilter::filter(art::Event& e) {
     if(fVerbose) std::cout << "    Found track that meets x position requirements on south point" << std::endl;
     if( not(abs(x_N) > fXPosMin and abs(x_N) < fXPosMax) ) continue;
     if(fVerbose) std::cout << "    Found track that meets x position requirements on both points" << std::endl;
+    /*
     if(fTPCPos){
       if(x_N < 0) continue;
     }
     if(fTPCNeg){
       if(x_N > 0) continue;
     } 
+    */
    // Check whether Delta x between the CRT track points satisfies the requirement: Delta x < tan(10deg) * Delta z
     if( not(abs(Delta_x) < tan(fThetaXZMax*PI/180)*abs(Delta_z)) ) continue;
     if(fVerbose) std::cout << "    Found track that meets Delta x requirement" << std::endl;
@@ -239,12 +243,12 @@ bool CRTTrackFilter::filter(art::Event& e) {
     if(crt_trk.Ts0()<-2500 || crt_trk.Ts0()>-500) continue;    
     if(abs(crt_trk.ToF()-(crt_trk.Length()/29.9792))>15) continue;
     
-    if(_tpc_num==0 &&  _plane_num==0 && theta_yz>0)continue;
-    if(_tpc_num==0 &&  _plane_num==1 && theta_yz<0)continue;
-    if(_tpc_num==0 &&  _plane_num==2 && theta_yz<0)continue;
-    if(_tpc_num==1 &&  _plane_num==0 && theta_yz<0)continue;
-    if(_tpc_num==1 &&  _plane_num==1 && theta_yz>0)continue;
-    if(_tpc_num==1 &&  _plane_num==2 && theta_yz<0)continue;
+    // if(_tpc_num==0 &&  _plane_num==0 && theta_yz>0)continue;
+    // if(_tpc_num==0 &&  _plane_num==1 && theta_yz<0)continue;
+    // if(_tpc_num==0 &&  _plane_num==2 && theta_yz<0)continue;
+    // if(_tpc_num==1 &&  _plane_num==0 && theta_yz<0)continue;
+    // if(_tpc_num==1 &&  _plane_num==1 && theta_yz>0)continue;
+    //    if(_tpc_num==1 &&  _plane_num==2 && theta_yz<0)continue;
     
     // If we've made it this far, then this track is good and this event passes the filter
     if(fVerbose) std::cout << "    Found a good track!" << std::endl;
@@ -256,19 +260,19 @@ bool CRTTrackFilter::filter(art::Event& e) {
     double start_x=200- abs(x_S);
     double end_x=200- abs(x_N);
     average_xvalue = (start_x + end_x)/2 ;
-    hit_time_ticks= (average_xvalue*2/0.16)+400 ;
+    hit_time_ticks= (average_xvalue*2/_electron_vel)+400 ;
     time_cut_upper=hit_time_ticks + _time_window;
     time_cut_lower=hit_time_ticks - _time_window;
-    std::cout<<"averag x  "<<average_xvalue<<std::endl;
-    std::cout<<"hit time  "<<hit_time_ticks<<std::endl;
-    std::cout<<"upper cut  "<<time_cut_upper<<std::endl;
-    std::cout<<"lower cut  "<<time_cut_lower<<std::endl;
+    if(fVerbose) std::cout<<"averag x  "<<average_xvalue<<std::endl;
+    if(fVerbose) std::cout<<"hit time  "<<hit_time_ticks<<std::endl;
+    if(fVerbose) std::cout<<"upper cut  "<<time_cut_upper<<std::endl;
+    if(fVerbose) std::cout<<"lower cut  "<<time_cut_lower<<std::endl;
   } // end loop over CRT tracks
 
   bool good_tpc=false;
   int hit_counter=0;
    for (int ihit = 0; ihit < _nhits; ++ihit) {
-    if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num &&  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower &&   !(_hit_wire[ihit] == _noisy_channel)) {
+     if (/*_hit_tpc[ihit] == _tpc_num &&*/ _hit_plane[ihit] == _plane_num &&  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower &&   !(_hit_wire[ihit] == _noisy_channel)) {
        ++hit_counter;
     }
   }

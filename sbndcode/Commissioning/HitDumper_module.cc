@@ -91,10 +91,24 @@
 #include <cmath>
 
 
-bool Cut_NS_Function(double x1, double z1,double x2, double z2){
+bool Cut_NS_Function_Transparency(double x1, double z1,double x2, double z2){
   bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
    bool x=((x1>-205 && x1<-135) && (x2>-205 && x2<-135)) || ((x1>135 && x1<205) && (x2>135 && x2<205));
   return x && z;
+}
+
+bool Cut_NS_Function_diffusion_tpc1(double x1, double z1,double x2, double z2){
+  bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
+  bool x=(x1>2 && x1<202) && (x2>2 && x2<202);
+  bool angle_cut = fabs(x1 - x2) < tan(6 * M_PI / 180.0) * fabs(z1 - z2);
+  return x && z && angle_cut;
+}
+
+bool Cut_NS_Function_diffusion_tpc0(double x1, double z1,double x2, double z2){
+  bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
+  bool x=(x1>-202 && x1<-2) && (x2>-202 && x2<-2);
+  bool angle_cut = fabs(x1 - x2) < tan(6 * M_PI / 180.0) * fabs(z1 - z2);
+  return x && z && angle_cut;
 }
 
 std::pair<double, double> CalculateHalfWidthHeightAndAmplitudeCollection(const std::vector<double>& adc_vals, const std::vector<double>& time_vals) {
@@ -117,6 +131,28 @@ std::pair<double, double> CalculateHalfWidthHeightAndAmplitudeCollection(const s
   }
   double half_width = (t_left >= 0 && t_right >= 0) ? (t_right - t_left) : -1.0;
   return {half_width, max_adc};
+}
+
+std::pair<double, double> CalculateHalfWidthHeightAndAmplitudeInduction(const std::vector<double>& adc_vals, const std::vector<double>& time_vals) {
+  if (adc_vals.empty() || time_vals.empty()) return {-1.0, -1.0};
+    
+  double min_adc = *std::min_element(adc_vals.begin(), adc_vals.end());
+  double half_min = min_adc / 2.0;
+    
+  double t_left = -1, t_right = -1;
+  for (size_t i = 1; i < adc_vals.size(); ++i) {
+    if (adc_vals[i-1] > half_min && adc_vals[i] <= half_min) {
+      t_left = time_vals[i-1] + (time_vals[i] - time_vals[i-1]) * 
+	(half_min - adc_vals[i-1]) / (adc_vals[i] - adc_vals[i-1]);
+    }
+    if (adc_vals[i-1] <= half_min && adc_vals[i] > half_min) {
+      t_right = time_vals[i-1] + (time_vals[i] - time_vals[i-1]) * 
+	(half_min - adc_vals[i-1]) / (adc_vals[i] - adc_vals[i-1]);
+      break;
+    }
+  }
+  double half_width = (t_left >= 0 && t_right >= 0) ? (t_right - t_left) : -1.0;
+  return {half_width, min_adc};
 }
 
 bool HasDoublePeakFeature(const std::vector<double>& adc_vals, double threshold) {
@@ -160,7 +196,44 @@ double CalculateAreaUnderCurve(const std::vector<double>& adc_vals, const std::v
   return area;
 }
 
+double CalculateDownPeakArea(const std::vector<double>& adc_vals, const std::vector<double>& time_vals, double peak_threshold = -10.0) {
+  if (adc_vals.size() < 2 || time_vals.size() < 2 || adc_vals.size() != time_vals.size()) return -1.0;
 
+  double area = 0.0;
+  bool found_zero_crossing = false;
+  bool in_down_peak = false;
+
+  for (size_t i = 1; i < adc_vals.size(); ++i) {
+    double prev_adc = adc_vals[i - 1];
+    double curr_adc = adc_vals[i];
+
+    // Look for zero-crossing from positive to negative
+    if (!found_zero_crossing && prev_adc > 0.0 && curr_adc <= 0.0) {
+      found_zero_crossing = true;
+      continue; // Continue to next point to confirm if it goes below threshold
+    }
+
+    // After zero-crossing, check if we hit a significant down-peak
+    if (found_zero_crossing && !in_down_peak && curr_adc <= peak_threshold) {
+      in_down_peak = true; // Start integrating
+    }
+
+    // If we're in the down-peak, integrate the area
+    if (in_down_peak) {
+      double delta_time = time_vals[i] - time_vals[i - 1];
+      double average_adc = (curr_adc + prev_adc) / 2.0;
+
+      area += average_adc * delta_time;
+
+      // Stop integrating when we cross back above zero
+      if (curr_adc >= 0.0) {
+        break;
+      }
+    }
+  }
+
+  return std::abs(area);
+}
 
 const int DEFAULT_VALUE = -9999;
 
@@ -244,7 +317,7 @@ private:
 
   std::string fTDCModuleLabel;
 
-  bool fHasTDC;
+  // bool fHasTDC;
 
 
   opdet::sbndPDMapAlg _pd_map;
@@ -638,7 +711,7 @@ void Hitdumper::analyze(const art::Event& evt)
   _t0 = 0.;
   // t0 = detprop->TriggerOffset();  // units of TPC ticks
 
-
+  /*
   if(fHasTDC)
     {
       // Get TDCs                                                                               
@@ -654,7 +727,7 @@ void Hitdumper::analyze(const art::Event& evt)
       // Fill TDC variables                                                                     
       AnalyseTDCs(TDCVec);
     }
-
+  */
 
   //
   // Hits
@@ -818,7 +891,7 @@ void Hitdumper::analyze(const art::Event& evt)
       	const geo::Point_t start = crttrack->Start();
 	const geo::Point_t end   = crttrack->End();
 
-	if(Cut_NS_Function(start.X(),start.Z(),end.X(),end.Z())){
+	if(Cut_NS_Function_diffusion_tpc1(start.X(),start.Z(),end.X(),end.Z())){
 	  _crt_track_pes.push_back(crttrack->PE());
 	  _crt_track_t0.push_back(crttrack->Ts0());
 	  _crt_track_t1.push_back(crttrack->Ts1());
@@ -1233,7 +1306,66 @@ void Hitdumper::analyze(const art::Event& evt)
       _channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
       _waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
       _hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
-      }      
+      }
+
+      else if(_plane_num==1){
+	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeInduction(adc_vals, time_vals);
+        double area_under_curve = CalculateDownPeakArea(adc_vals, time_vals);
+
+        // If no data, skip this waveform                                                                                                                                                                             
+        if (adc_vals.empty() || time_vals.empty()) {
+          continue;
+        }
+
+        double max_adc = *std::min_element(adc_vals.begin(), adc_vals.end());
+
+        if (max_adc < -90) {
+          continue;
+        }
+        if (area_under_curve > -5. * amplitude + 840) {
+          continue;
+        }
+        if (half_width < 4.5 || half_width > 8) {
+          continue;
+        }
+
+	_time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
+	_adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
+	_wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
+	_channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
+	_waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
+	_hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
+      }
+
+      else if(_plane_num==0){
+	  auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeInduction(adc_vals, time_vals);
+	  double area_under_curve = CalculateDownPeakArea(adc_vals, time_vals);
+
+
+	  if (adc_vals.empty() || time_vals.empty()) {
+	    continue;
+	  }
+
+	  double max_adc = *std::min_element(adc_vals.begin(), adc_vals.end());
+
+	  if (max_adc < -130) {
+	    continue;
+	  }
+	  if (area_under_curve > -7.85 * amplitude + 1800) {
+	    continue;
+	  }
+	  if (half_width < 4.5 || half_width > 10) {
+	    continue;
+	  }
+
+	  _time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
+	  _adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
+	  _wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
+	  _channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
+	  _waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
+	  _hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
+	}
+      
     }
   }// end if fCheckTrasparency
 
@@ -1461,7 +1593,7 @@ void Hitdumper::beginJob()
   fTree->Branch("event",&_event,"event/I");
   fTree->Branch("evttime",&_evttime,"evttime/D");
   fTree->Branch("t0",&_t0,"t0/I");
-
+  /*
   if(fHasTDC)
     {
       fTree->Branch("tdc_channel", "std::vector<uint32_t>", &_tdc_channel);
@@ -1469,7 +1601,7 @@ void Hitdumper::beginJob()
       fTree->Branch("tdc_offset", "std::vector<uint64_t>", &_tdc_offset);
       fTree->Branch("tdc_name", "std::vector<std::string>", &_tdc_name);
     }
-
+  */
 
   fTree->Branch("nhits", &_nhits, "nhits/I");
   fTree->Branch("hit_cryostat", &_hit_cryostat);

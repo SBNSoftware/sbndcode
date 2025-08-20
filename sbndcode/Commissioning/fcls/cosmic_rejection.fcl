@@ -2,7 +2,7 @@
 #include "crt_calib_service.fcl"
 #include "crttrackrejection.fcl"
 #include "muontrackmodule.fcl"
-#include "reco1_comm.fcl"
+#include "reco1_comm1.fcl"
 
 physics.producers.fasthit:           @local::standard_fasthitfinder
 physics.producers.MuonTrackProducer: @local::MuonTrackProducer
@@ -15,21 +15,21 @@ physics.producers.crtclustering:  @local::crtclusterproducer_data_sbnd
 physics.producers.crtspacepoints: @local::crtspacepointproducer_data_sbnd
 physics.producers.crttracks:      @local::crttrackproducer_data_sbnd
 
-physics.filters.crttrackfilter: @local::standard_crt_track_filter
+physics.filters.crttrackrejection: @local::standard_crt_track_rejection
 
-physics.reco1comm: [ rns
+physics.reco1comm1: [ rns
   , crtstrips
   , crtclustering
   , crtspacepoints
   , crttracks
   , fasthit
-  , crttrackfilter
-#  , MuonTrackProducer
+  , crttrackrejection
+
  ]
 
-physics.trigger_paths: [ reco1comm ]
+physics.trigger_paths: [ reco1comm1 ]
 physics.end_paths: [stream1]
-outputs.out1.SelectEvents: [ "reco1comm" ]
+outputs.out1.SelectEvents: [ "reco1comm1" ]
 
 physics.producers.crtstrips.FEBDataModuleLabel: "crtdecoder"
 
