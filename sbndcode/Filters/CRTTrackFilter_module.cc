@@ -163,7 +163,7 @@ bool CRTTrackFilter::filter(art::Event& e) {
     double Delta_x = x_N-x_S;
     double Delta_y = y_N-y_S;
     double Delta_z = z_N-z_S;
-   
+    /*
     double    CRT_theta_yz= atan2(Delta_y,Delta_z)*(180/PI);
     double theta_yz=CRT_theta_yz;
     if ( CRT_theta_yz < -90 ) {
@@ -172,7 +172,7 @@ bool CRTTrackFilter::filter(art::Event& e) {
     if ( CRT_theta_yz > 90 ) {
       theta_yz = CRT_theta_yz - 180.;
     }
-    
+    */
     // Check whether both CRT track points satisfy the x position requirements
     if( not(abs(x_S) > fXPosMin and abs(x_S) < fXPosMax) ) continue;
     if(fVerbose) std::cout << "    Found track that meets x position requirements on south point" << std::endl;
