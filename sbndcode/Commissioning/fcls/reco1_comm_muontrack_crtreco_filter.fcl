@@ -1,6 +1,6 @@
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
-#include "crttrackrejection.fcl"
+#include "crttrackfilter.fcl"
 #include "muontrackmodule.fcl"
 #include "reco1_comm.fcl"
 
