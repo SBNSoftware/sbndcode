@@ -41,6 +41,8 @@
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
 #include "sbndcode/Calibration/CRT/CalibService/CRTCalibService.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTOrientationMaps.h"
+#include "sbndcode/Calibration/CRTDatabaseInterface/CRTCalibrationDatabase.h"
+#include "sbndcode/Calibration/CRTDatabaseInterface/ICRTCalibrationDatabaseService.h"
 
 namespace sbnd::crt {
 
@@ -367,8 +369,9 @@ namespace sbnd::crt {
     std::map<std::string, CRTStripGeo>  fStrips;
     std::map<uint16_t, CRTSiPMGeo>      fSiPMs;
 
-    geo::GeometryCore const       *fGeometryService;
-    const geo::AuxDetGeometryCore *fAuxDetGeoCore;
+    geo::GeometryCore const              *fGeometryService;
+    const geo::AuxDetGeometryCore        *fAuxDetGeoCore;
+    sbndDB::CRTCalibrationDatabase const *fCRTCalibrationDatabaseService;
 
     double fDefaultGain;
     bool   fMC;

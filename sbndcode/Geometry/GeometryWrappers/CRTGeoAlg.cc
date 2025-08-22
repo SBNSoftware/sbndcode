@@ -12,8 +12,10 @@ namespace sbnd::crt {
     : fDefaultGain(config.DefaultGain())
     , fMC(config.MC())
   {
-    fGeometryService = geometry;
-    fAuxDetGeoCore   = auxdet_geometry;
+    fGeometryService               = geometry;
+    fAuxDetGeoCore                 = auxdet_geometry;
+    fCRTCalibrationDatabaseService = lar::providerFrom<sbndDB::ICRTCalibrationDatabaseService const>();
+
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
 
     // Record used objects
@@ -51,7 +53,7 @@ namespace sbnd::crt {
             mac5   = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
             invert = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
           }
-        
+
         // Loop through strips
         for(unsigned ads_i = 0; ads_i < auxDet.NSensitiveVolume(); ads_i++)
           {
@@ -87,6 +89,12 @@ namespace sbnd::crt {
                     art::ServiceHandle<SBND::CRTCalibService> CalibService;
                     t0DelayCorrection = CalibService->GetT0CableOffsetFromFEBMAC5(mac5) + CalibService->GetT0CalibOffsetFromFEBMAC5(mac5);
                     t1DelayCorrection = CalibService->GetT1CableOffsetFromFEBMAC5(mac5) + CalibService->GetT1CalibOffsetFromFEBMAC5(mac5);
+
+		    std::cout << "Type: " << fCRTCalibrationDatabaseService->getModuleType(mac5) << ' '
+			      << "T0 Cable: " << fCRTCalibrationDatabaseService->getT0CableLengthOffset(mac5) << ' '
+			      << "T0 Calib: " << fCRTCalibrationDatabaseService->getT0CalibratedOffset(mac5) << ' '
+			      << "T1 Cable: " << fCRTCalibrationDatabaseService->getT1CableLengthOffset(mac5) << ' '
+			      << "T1 Calib: " << fCRTCalibrationDatabaseService->getT1CalibratedOffset(mac5) << '\n' << std::endl;
                   }
 
                 const std::string stripName = nodeStrip->GetVolume()->GetName();

@@ -12,6 +12,10 @@ namespace sbndDB {
   public:
     virtual ~CRTCalibrationDatabase() noexcept = default;
     virtual int getModuleType(unsigned int febMAC5) const = 0;
+    virtual double getT0CableLengthOffset(unsigned int febMAC5) const = 0;
+    virtual double getT0CalibratedOffset(unsigned int febMAC5) const = 0;
+    virtual double getT1CableLengthOffset(unsigned int febMAC5) const = 0;
+    virtual double getT1CalibratedOffset(unsigned int febMAC5) const = 0;
   }; // end class
 
 } // end of namespace

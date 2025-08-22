@@ -11,6 +11,9 @@
 #include "cetlib_except/exception.h"
 #include "fhiclcpp/ParameterSet.h"
 
+#include "larevt/CalibrationDBI/IOVData/TimeStampDecoder.h"
+#include "larevt/CalibrationDBI/Providers/DBFolder.h"
+
 // Local
 #include "sbndcode/Calibration/CRTDatabaseInterface/CRTCalibrationDatabase.h"
 
@@ -36,9 +39,25 @@ public:
     return getCRTFEBCalibrationOrDefault(febMAC5).moduleType;
   };
 
+  double getT0CableLengthOffset(unsigned int febMAC5) const override {
+    return getCRTFEBCalibrationOrDefault(febMAC5).t0CableLengthOffset;
+  };
+
+  double getT0CalibratedOffset(unsigned int febMAC5) const override {
+    return getCRTFEBCalibrationOrDefault(febMAC5).t0CalibratedOffset;
+  };
+
+  double getT1CableLengthOffset(unsigned int febMAC5) const override {
+    return getCRTFEBCalibrationOrDefault(febMAC5).t1CableLengthOffset;
+  };
+
+  double getT1CalibratedOffset(unsigned int febMAC5) const override {
+    return getCRTFEBCalibrationOrDefault(febMAC5).t1CalibratedOffset;
+  };
+
 private:
         
-  bool fVerbose = false;
+  bool fVerbose;
 
   std::string fDatabaseTag;  
   long        fDatabaseTimeStamp;
@@ -46,10 +65,14 @@ private:
   std::string fChannelTableName;
 
   struct CRTFEBCalibrationDB { 
-    size_t moduleType=0;
+    size_t moduleType = 0;
+    double t0CableLengthOffset = 0.;
+    double t0CalibratedOffset  = 0.;
+    double t1CableLengthOffset = 0.;
+    double t1CalibratedOffset  = 0.;
   };
             
-  const CRTFEBCalibrationDB CRTFEBDefaults = {0};
+  const CRTFEBCalibrationDB CRTFEBDefaults = {0, 0., 0., 0., 0.};
 
   std::map<unsigned int, CRTFEBCalibrationDB> fCRTFEBCalibrationData;
         
@@ -62,6 +85,9 @@ private:
   uint64_t RunToDatabaseTimestamp(uint32_t run) const;
 
   void ReadCRTFEBCalibration(uint32_t run);
+
+  template <class T>
+  void ReadElement(lariov::DBFolder &table, const int channel, const std::string &name, T value);
 };
 
 #endif 
