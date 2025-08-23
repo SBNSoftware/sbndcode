@@ -1,0 +1,12 @@
+#include "standard_detsim_sbnd.fcl"
+
+
+# Save RawDigits
+
+physics.producers.simtpc2d.wcls_main.outputers: [
+      "wclsDepoFluxWriter:postdrift"
+    , "wclsFrameSaver:simdigits"
+    , "wclsFrameSaver:spsaver"
+]
+
+physics.producers.simtpc2d.wcls_main.params.save_simdigits: "true"

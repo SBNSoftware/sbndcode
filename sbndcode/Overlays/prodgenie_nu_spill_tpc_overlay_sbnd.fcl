@@ -1,0 +1,7 @@
+#include "prodgenie_nu_spill_tpc_sbnd.fcl"
+
+source: {
+  module_type: RootInput
+  maxEvents:  -1                   # Number of events to create
+  saveMemoryObjectThreshold: 0
+} # source
