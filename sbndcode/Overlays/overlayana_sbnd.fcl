@@ -4,7 +4,7 @@ overlayana:
 {
   module_type:   "OverlayAna"
 
-  RawDigits: ["daq", "simtpc2d::daq", "overlayTPC"]
+  RawDigits: ["daq", "simtpc2d:daq", "overlayTPC"]
 }
 
 END_PROLOG
