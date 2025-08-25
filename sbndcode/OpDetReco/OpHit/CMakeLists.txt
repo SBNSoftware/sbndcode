@@ -24,6 +24,7 @@ set(
          cetlib_except::cetlib_except
          CLHEP::CLHEP
          ROOT::Core
+         sbnobj::SBND_Timing
 )
 
 cet_build_plugin(SBNDOpHitFinder art::module SOURCE SBNDOpHitFinder_module.cc LIBRARIES ${MODULE_LIBRARIES})

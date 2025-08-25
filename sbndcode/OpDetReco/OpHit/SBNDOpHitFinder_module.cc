@@ -40,9 +40,10 @@
 #include "art/Framework/Principal/Handle.h"
 #include "canvas/Utilities/Exception.h"
 
+#include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 // #include "sbndcode/OpDetReco/OpFlash/FlashFinder/FlashFinderFMWKInterface.h"
-
 
 // ROOT includes
 
@@ -93,7 +94,7 @@ namespace opdet {
     std::vector<int> _opch_to_use; ///< List of of opch (will be infered from _pd_to_use)
     std::vector<double> fADCThresholdVector; // Vector containing the ADCThreshold to use for each channel
     bool fADCThresholdByChannel; // Use an individual ADCThreshold for each channel or not
-
+    std::string fSPECTDCLabel;
     pmtana::PulseRecoManager  fPulseRecoMgr;
     pmtana::PMTPulseRecoBase* fThreshAlg;
     pmtana::PMTPedestalBase*  fPedAlg;
@@ -135,7 +136,7 @@ namespace opdet {
     fDaphne_Freq  = pset.get< float >("DaphneFreq");
     fHitThreshold = pset.get< float >("HitThreshold");
     bool useCalibrator = pset.get< bool > ("UseCalibrator", false);
-
+    fSPECTDCLabel = pset.get<std::string>("SPECTDCLabel", "tdcdecoder");
     geo::WireReadoutGeom const& channelMapAlg = art::ServiceHandle<geo::WireReadout const>()->Get();
     fMaxOpChannel = channelMapAlg.MaxOpChannel();
 
@@ -319,6 +320,30 @@ namespace opdet {
       //             << ", pe " << h.PE() << std::endl;
     }
 
+    // Get the SPECTDC products to correct the OpHit times
+    double rwm_time = 0;
+    double event_trigger_time = 0;
+    art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+    evt.getByLabel(fSPECTDCLabel, tdcHandle);
+    if (!tdcHandle.isValid() || tdcHandle->size() == 0){
+      std::cout << "No SPECTDC products found. Skip this event." << std::endl;
+      return;
+    }
+    else{
+      const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+      for (size_t i=0; i<tdc_v.size(); i++){
+        auto tdc = tdc_v[i];
+        const uint32_t  ch = tdc.Channel();
+        const uint64_t  ts = tdc.Timestamp();
+
+        if(ch == 2){
+          rwm_time = ts%uint64_t(1e9);
+        }
+        if(ch == 4){
+          event_trigger_time = ts%uint64_t(1e9);
+        }
+      } 
+    }
     // Now correct the time. Unfortunately, there are no setter methods for OpHits,
     // so we have to make a new OpHit vector.
     for (auto h : *HitPtr) {
@@ -328,9 +353,9 @@ namespace opdet {
       if(fADCThresholdByChannel && (PeakAmplitude < fADCThresholdVector[channelNumber]) ) continue;
 
       (*HitPtrFinal).emplace_back(h.OpChannel(),
-                                  h.PeakTime() + clockData.TriggerTime(),
-                                  h.PeakTimeAbs(),
-                                  h.StartTime() + clockData.TriggerTime(),
+                                  h.PeakTime() + clockData.TriggerTime() - rwm_time/1000 + event_trigger_time/1000,
+                                  h.PeakTimeAbs()  - rwm_time/1000 + event_trigger_time/1000,
+                                  h.StartTime() + clockData.TriggerTime() - rwm_time/1000 + event_trigger_time/1000,
                                   h.RiseTime(),
                                   h.Frame(),
                                   h.Width(),
