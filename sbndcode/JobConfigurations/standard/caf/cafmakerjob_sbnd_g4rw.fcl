@@ -1,0 +1,4 @@
+#include "cafmakerjob_sbnd.fcl"
+
+physics.runprod: [rns, geant4weight , @sequence::physics.runprod]
+physics.producers.cafmaker.SystWeightLabels: [ "geant4weight" ]
