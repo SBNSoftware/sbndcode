@@ -129,15 +129,25 @@ private:
   uint16_t _global_timing_type; // e.g. SPECTDC = 0; PTB HLT = 1; 
   uint64_t _global_frame;
 
-  double _frame_tdc_crtt1;
-  double _frame_tdc_bes;
-  double _frame_tdc_rwm;
-  double _frame_hlt_crtt1;
-  double _frame_hlt_gate;
+  double _frame_tdc_crtt1; //ns
+  double _frame_tdc_bes; //ns
+  double _frame_tdc_rwm; //ns
+  double _frame_hlt_crtt1; //ns
+  double _frame_hlt_gate; //ns
+
+  //Value to apply at CAF depending on which stream
+  double _frame_apply_at_caf;
 
   //Value to shift Data to MC -- so that data agree with MC [ns]
+  //TODO: Derive this value and verify if it is consistent across pmt/crt
   //TODO: Get this value from database instead of fhicl parameter
-  double _frame_data2mc;
+  double _frame_data2mc; //ns
+
+  //Value to move RWM frame to agree with HLT Gate Frame
+  //This is derived by subtracting: TDC RWM - HLT Gate.
+  //Using the MC2025B dataset, this distribution has a mean of 1738 ns and std of 9 ns.
+  //TODO: Get this value from database instead of fhicl parameter
+  double fShiftRWM2Gate; //ns
 
   //Debug
   bool fDebugDAQHeader;
@@ -187,7 +197,10 @@ sbnd::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   fDebugFrame = p.get<bool>("DebugFrame", false);
   
   //TODO: Get from database instead of fhicl parameters
-  _frame_data2mc = p.get<double>("ShiftData2MC", 1500);
+  _frame_data2mc = p.get<double>("ShiftData2MC", 0);
+
+  //TODO: Get from database instead of fhicl parameters
+  fShiftRWM2Gate = p.get<double>("ShiftRWM2Gate", 1738); 
   
   produces< raw::FrameShiftInfo >();
   produces< raw::TimingInfo >();
@@ -377,15 +390,15 @@ void sbnd::FrameShift::produce(art::Event& e)
   }
   ptbHandle.removeProduct();
 
-  //if (fDebugPtb){
-  //  for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++){
-  //    std::cout << "----------------------------------------------------" << std::endl;
-  //    std::cout << "HLT " << _ptb_hlt_trunmask[i] 
-  //                        << " sec (s) = " << _ptb_hlt_unmask_timestamp[i]/uint64_t(1e9)
-  //                        << ", ts (ns) = " << _ptb_hlt_unmask_timestamp[i]%uint64_t(1e9)
-  //                        <<std::endl;
-  //  }
-  //}
+  if (fDebugPtb){
+    for (size_t i = 0; i < _ptb_hlt_unmask_timestamp.size(); i++){
+      std::cout << "----------------------------------------------------" << std::endl;
+      std::cout << "HLT " << _ptb_hlt_trunmask[i] 
+                          << " sec (s) = " << _ptb_hlt_unmask_timestamp[i]/uint64_t(1e9)
+                          << ", ts (ns) = " << _ptb_hlt_unmask_timestamp[i]%uint64_t(1e9)
+                          <<std::endl;
+    }
+  }
   //---------------------------TDC Frame-----------------------------//
   // ch0: CRT T1
   if (_tdc_ch0.size() == 1){
@@ -601,7 +614,6 @@ void sbnd::FrameShift::produce(art::Event& e)
   }
 
   //-----------------------Compute Frame Shift-----------------------//
-  //TODO: account for shifting between MC vs DATA -- apply at CAF instead
     
   //for beam stream
   if (_isBeam){
@@ -630,14 +642,43 @@ void sbnd::FrameShift::produce(art::Event& e)
     std::cout << "--------------------------------------" << std::endl;
   }
 
+  //-----------------------Pick which one to use in CAF-----------------------//
+  // The follow picks which frame to apply at the CAF stage and store it as frameApplyAtCaf, based on the stream
+  // This is so that no decision making is applied CAF.
+  //
+  // 1. Beam Stream: recontruct the beam spill + porch relative to RWM record in TDC since it has better resolution. 
+  // Then, apply a constant to shift the RWM fram 
+  // i.e. frame_tdc_rwm + shift rwm to beam gate HLT 26
+  //
+  // 2. Offbeam Stream: reconstruct the porch relative to the beam gate opening frame
+  // i.e. frame_hlt_gate equiv
+  //
+  // 3. Xmuon Stream: do nothing for now
+  //
+  // TODO: Align Data Beam and Offbeam with MC with frame_data2mc
+  //    + MC: t = 0 = first proton in spill
+  //    + Data: t = 0 = abitrary. All subsystem electronics time is reference to the last PPS
+  
+  if(_isBeam){
+    _frame_apply_at_caf = _frame_tdc_rwm + fShiftRWM2Gate; // +frame_data2mc
+  }
+  else if(_isOffbeam){
+    _frame_apply_at_caf = _frame_hlt_gate; //+frame_data2mc
+  }
+  else if(_isXmuon){
+    _frame_apply_at_caf = 0;
+  }
+
   //Put product in event
+  newFrameShiftInfo->timingType = _global_timing_type;
   newFrameShiftInfo->frameTdcCrtt1 = _frame_tdc_crtt1;
   newFrameShiftInfo->frameTdcBes = _frame_tdc_bes;
   newFrameShiftInfo->frameTdcRwm = _frame_tdc_rwm;
   newFrameShiftInfo->frameHltCrtt1 = _frame_hlt_crtt1;
   newFrameShiftInfo->frameHltBeamGate = _frame_hlt_gate;
-  newFrameShiftInfo->frameDataToMC = _frame_data2mc;
+  newFrameShiftInfo->frameApplyAtCaf = _frame_apply_at_caf;
 
+  newTimingInfo->rawDAQHeaderTimestamp = _raw_ts;
   newTimingInfo->tdcCrtt1 = _tdc_crtt1_ts;
   newTimingInfo->tdcBes = _tdc_bes_ts;
   newTimingInfo->tdcRwm = _tdc_rwm_ts;
@@ -702,6 +743,7 @@ void sbnd::FrameShift::beginJob()
   fTree->Branch("frame_hlt_crtt1", &_frame_hlt_crtt1);
   fTree->Branch("frame_hlt_gate", &_frame_hlt_gate);
   fTree->Branch("frame_data2mc", &_frame_data2mc);
+  fTree->Branch("frame_apply_at_caf", &_frame_apply_at_caf);
 }
 
 void sbnd::FrameShift::ResetEventVars()
@@ -753,6 +795,7 @@ void sbnd::FrameShift::ResetEventVars()
   _frame_tdc_rwm = 0;
   _frame_hlt_crtt1 = 0;
   _frame_hlt_gate = 0;
+  _frame_apply_at_caf = 0;
 }
 
 double sbnd::FrameShift::SubtractUTCTimestmap(const uint64_t& ts1, const uint64_t& ts2)
