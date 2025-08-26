@@ -1,0 +1,44 @@
+#include "services_sbnd.fcl"
+#include "wfalign_sbnd_data.fcl"
+
+process_name: WFALIGN  # The process name must NOT contain any underscores
+
+source:
+{
+    module_type: RootInput  # Telling art we want a ROOT input
+    maxEvents:   -1
+}
+
+services:
+{
+    TFileService: { fileName: "wfAlignOutput.root" }
+    @table::sbnd_services
+}
+
+outputs:
+{
+    out1:
+    {
+        fileName: "%ifb_wfalign.root"
+        module_type: RootOutput
+        dataTier: "reco"
+        #outputCommands: [ 
+        #                    "keep *_*_*_*"
+        #                    , "drop *_pmtdecoder_*_*"
+        #                ]
+    }
+}
+
+physics:
+{
+    producers:
+    {
+        wfalign: @local::wfalign_data
+    }
+
+    prod: [ wfalign ]
+    stream1: [ out1 ]
+
+    trigger_paths: [ prod ]
+    end_paths: [ stream1 ]
+}
