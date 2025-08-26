@@ -1,5 +1,4 @@
 BEGIN_PROLOG
-
 frameshift_data:
 {
     module_type:  "FrameShift" 
