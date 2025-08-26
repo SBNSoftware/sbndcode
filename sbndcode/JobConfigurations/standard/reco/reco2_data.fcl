@@ -39,7 +39,7 @@ physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandora
                  cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching,
                  pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData,
                  cvnSCE, opt0finderSCE, tpcpmtbarycentermatchingSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
-                 caloskimCalorimetry]
+                 caloskimCalorimetry, blipreco]
 
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
@@ -63,4 +63,5 @@ physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 
 
 physics.caloskimana: [ caloskim, crtana ]
-physics.end_paths: [stream1, caloskimana ]
+physics.ana:            @local::sbnd_reco2_analyzer_sequence
+physics.end_paths: [stream1, caloskimana, ana ]
