@@ -2,8 +2,8 @@
 #include "crt_calib_service.fcl"
 #include "opt0finder_sbnd_data.fcl"
 #include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
-#include "standard_reco2_sbnd.fcl"
 #include "frameshift_sbnd_data.fcl"
+#include "standard_reco2_sbnd.fcl"
 
 services:
 {
