@@ -7,5 +7,6 @@ add_subdirectory(recomb_variations)
 add_subdirectory(lifetime)
 add_subdirectory(crt_filter)
 add_subdirectory(optical_sim)
+add_subdirectory(sce_variations)
 
 add_subdirectory(legacy)
