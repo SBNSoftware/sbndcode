@@ -296,7 +296,8 @@ void sbnd::FrameShift::produce(art::Event& e)
   e.getByLabel(fTdcDecodeLabel, tdcHandle);
 
   if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-    throw cet::exception("FrameShift") << "No sbnd::timing::DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!";
+    mf::LogInfo("FrameShift") << "No sbnd::timing::DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!\n";
+    //throw cet::exception("FrameShift") << "No sbnd::timing::DAQTimestamp found w/ tag " << fTdcDecodeLabel << ". Check data quality!";
   }
   else{
     std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
