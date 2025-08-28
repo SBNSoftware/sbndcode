@@ -1,6 +1,0 @@
-#include "standard_g4_rockbox_sbnd.fcl"
-
-services.SpaceCharge.EnableSimSpatialSCE: true
-services.SpaceCharge.EnableSimEfieldSCE: true
-
-services.SpaceCharge.InputFilename: "SCEoffsets/SCEoffsets_SBND_E500_dualmap_0x_voxelTH3.root"
