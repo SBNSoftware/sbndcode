@@ -1,5 +1,5 @@
 #include "services_sbnd.fcl"
-#include "lightpropagationcorrectionConfig.fcl"
+#include "sbnd_lightpropagationcorrection_config.fcl"
 
 process_name: LIGHTPROPAGATIONCORR  # The process name must NOT contain any underscores
 

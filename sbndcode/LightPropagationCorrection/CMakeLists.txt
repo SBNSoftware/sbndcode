@@ -38,12 +38,14 @@ set (
     sbnobj::SBND_OpFlashTiming
     sbndcode_OpDetSim
 )
+
 cet_build_plugin(LightPropagationCorrection art::module SOURCE LightPropagationCorrection_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(LightPropagationCorrectionAna art::module SOURCE LightPropagationCorrectionAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
 
 build_dictionary(DICTIONARY_LIBRARIES
   lardataobj::RecoBase
   canvas::canvas
 )
-
+add_subdirectory(job)
 install_fhicl()
 install_source()
