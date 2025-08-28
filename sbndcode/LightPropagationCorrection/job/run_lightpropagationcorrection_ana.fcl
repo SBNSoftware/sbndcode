@@ -2,7 +2,7 @@
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
-#include "correctedopflash_ana.fcl"
+#include "sbnd_lightpropagationcorrectionana_config.fcl"
 
 process_name: CorrectedOpFlashAna
 
@@ -26,8 +26,8 @@ physics:
 {
   analyzers:
   {
-    correctedopflashanatree: @local::correctedopflash_ana
+    lightpropcorrectionanatree: @local::lightpropagationcorrection_ana
   }
-  ana: [correctedopflashanatree]
+  ana: [lightpropcorrectionanatree]
   end_paths: [ana]
 }
