@@ -211,6 +211,7 @@ private:
     double fVGroupVUV; // Speed of light in vacuum in mm/ns
 
     double fNuScoreThreshold;
+    double fOpT0ScoreThreshold;
 
     double fPDFraction;
     double fPreWindow;
