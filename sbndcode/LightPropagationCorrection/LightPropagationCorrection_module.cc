@@ -16,11 +16,11 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fOpFlashNewLabel( p.get<std::string>("OpFlashNewLabel") ),
     fSPECTDCLabel( p.get<std::string>("SPECTDCLabel") ),
     fSaveCorrectionTree( p.get<bool>("SaveCorrectionTree") ),
-    fSaveDebugTree( p.get<bool>("SaveDebugTree") ),
     fSaveSPECTDC( p.get<bool>("SaveSPECTDC") ),
     fSpeedOfLight( p.get<double>("SpeedOfLight") ),
     fVGroupVIS( p.get<double>("VGroupVIS") ),
     fVGroupVUV( p.get<double>("VGroupVUV") ),
+    fNuScoreThreshold( p.get<double>("NuScoreThreshold") ),
     fPDFraction( p.get<double>("PDFraction") ),
     fPreWindow( p.get<double>("PreWindow") ),
     fPostWindow( p.get<double>("PostWindow") ),
@@ -71,9 +71,11 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
 
 
     produces< std::vector<recob::OpFlash>>(fOpFlashNewLabel);
+    produces< std::vector<sbnd::OpFlashTiming::CorrectedOpFlashTiming> >(fOpFlashNewLabel);
     produces<art::Assns<recob::OpFlash, sbn::OpT0Finder>>();
     produces< art::Assns <recob::OpFlash, recob::Slice> >();
-
+    produces<art::Assns<recob::Slice, sbnd::OpFlashTiming::CorrectedOpFlashTiming>>();
+    produces<art::Assns<recob::OpFlash, sbnd::OpFlashTiming::CorrectedOpFlashTiming>>();
 }
 
 void sbnd::LightPropagationCorrection::produce(art::Event & e)
@@ -83,9 +85,15 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     fSubrun = e.id().subRun();
 
     std::unique_ptr< std::vector<recob::OpFlash> > opflashes(new std::vector<recob::OpFlash>);
+    std::unique_ptr< std::vector<sbnd::OpFlashTiming::CorrectedOpFlashTiming> > correctedOpFlashTimes (new std::vector<sbnd::OpFlashTiming::CorrectedOpFlashTiming>);
     std::unique_ptr< art::Assns<recob::OpFlash, recob::Slice>> newOpFlashSliceAssn (new art::Assns<recob::OpFlash, recob::Slice>);
     art::PtrMaker<recob::OpFlash> make_opflash_ptr{e, fOpFlashNewLabel};
+    art::PtrMaker<sbnd::OpFlashTiming::CorrectedOpFlashTiming> make_correctedopflashtime_ptr{e, fOpFlashNewLabel};
     std::unique_ptr< art::Assns<recob::OpFlash, sbn::OpT0Finder>> newOpFlashOpT0Assn (new art::Assns<recob::OpFlash, sbn::OpT0Finder>);
+    std::unique_ptr< art::Assns<recob::Slice, sbnd::OpFlashTiming::CorrectedOpFlashTiming>> newCorrectedOpFlashTimingSliceAssn (new art::Assns<recob::Slice, sbnd::OpFlashTiming::CorrectedOpFlashTiming>);
+    std::unique_ptr< art::Assns<recob::OpFlash, sbnd::OpFlashTiming::CorrectedOpFlashTiming>> newCorrectedOpFlashTimingOpFlashAssn (new art::Assns<recob::OpFlash, sbnd::OpFlashTiming::CorrectedOpFlashTiming>);
+
+
     // --- Read Recob Slice
     ::art::Handle<std::vector<recob::Slice>> sliceHandle;
     e.getByLabel(fReco2Label, sliceHandle);
@@ -132,30 +140,20 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         ResetSliceInfo();
         // --- Get the slice
         auto & slice = sliceVect[ix];
-        // --- Get the OpT0Finder score
-        // Get all the OpT0 objects associated to the slice
-        const std::vector< art::Ptr<sbn::OpT0Finder> > slcOpT0Finder = slice_opt0finder_assns.at( slice.key() );
-        if(slcOpT0Finder.size() == 0){
-            continue; // Skip to the next slice if no OpT0Finder objects are found
-        }
-        size_t OpT0Idx = HighestOpT0ScoreIdx(slcOpT0Finder);
-        // Get the flash OpT0 association
-        art::FindManyP<recob::OpFlash> opflash_opt0finder_assns(opt0Handle, e, fOpT0FinderModuleLabel);
-        auto & flashOpT0 = opflash_opt0finder_assns.at( slcOpT0Finder[OpT0Idx].key() );
-        if(flashOpT0.size() > 1){
-            throw art::Exception(art::errors::LogicError) << "There are multiple OpFlash objects associated to the same OpT0Finder object. This is not expected.";
-        }
+
+        // --- Get the slice nu score and check whether we want to correct for it
 
         // Now I need to get all the hits associated to this flash and get the timing for all of them
         // Get the slices PFPs
+        double _sliceMaxNuScore = -9999.;
         pfpVect = slice_pfp_assns.at(slice.key());
         for(const art::Ptr<recob::PFParticle> &pfp : pfpVect){
-            if(pfp->IsPrimary() &&( std::abs(pfp->PdgCode())==12 || std::abs(pfp->PdgCode())==14 ) )
-            {
+            if(pfp->IsPrimary() &&( std::abs(pfp->PdgCode())==12 || std::abs(pfp->PdgCode())==14 ) ){
                 const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = pfp_to_metadata.at(pfp->Self());
                 for (auto const pfpMeta : pfpMetaVec) {
                     larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
                     _fNuScore = propertiesMap.at("NuScore");
+                    if(_fNuScore>_sliceMaxNuScore) _sliceMaxNuScore = _fNuScore;
                 }
             }
 
@@ -166,6 +164,9 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                 fRecoVy= xyz_vertex.Y();
                 fRecoVz= xyz_vertex.Z();
             }
+            
+            // If correct light propagation time
+
 
             // Get the SP associated to the PFP and then get the hits associated to the SP. ---> Hits associated to the PFP
             //Get the spacepoints associated to the PFParticle
@@ -209,8 +210,59 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         fChargeBarycenterY[1] = fChargeWeightY[1]/fChargeTotalWeight[1];
         fChargeBarycenterZ[1] = fChargeWeightZ[1]/fChargeTotalWeight[1];
 
+        std::cout << "Max nu score in the slice is " << _sliceMaxNuScore << std::endl;
+        if(_sliceMaxNuScore<fNuScoreThreshold)
+        {   
+            std::cout << " Skipping " << std::endl;
+            ResetSliceInfo();
+            continue; // Skip to the next slice if the nu score is below threshold
+        }
         this->GetPropagationTimeCorrectionPerChannel();
         
+        // Get the SPECTDC product required to go to the RWM reference frame
+        if(fSaveSPECTDC)
+        {
+            art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+            e.getByLabel(fSPECTDCLabel, tdcHandle);
+            if (!tdcHandle.isValid() || tdcHandle->size() == 0){
+                std::cout << "No SPECTDC products found. Skip this event." << std::endl;
+                return;
+            }
+            else{
+                const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+                for (size_t i=0; i<tdc_v.size(); i++){
+                    auto tdc = tdc_v[i];
+                    const uint32_t  ch = tdc.Channel();
+                    const uint64_t  ts = tdc.Timestamp();
+
+                    if(ch == 2){
+                    fRWMTime = ts%uint64_t(1e9);
+                    }
+                    if(ch == 4){
+                    fEventTriggerTime = ts%uint64_t(1e9);
+                    }
+                }
+            }
+        }
+
+        // Get the matched flash using either OpT0 of BFM
+
+        // --- Get the OpT0Finder score
+        // Get all the OpT0 objects associated to the slice
+        const std::vector< art::Ptr<sbn::OpT0Finder> > slcOpT0Finder = slice_opt0finder_assns.at( slice.key() );
+        if(slcOpT0Finder.size() == 0){
+            continue; // Skip to the next slice if no OpT0Finder objects are found
+        }
+        size_t OpT0Idx = HighestOpT0ScoreIdx(slcOpT0Finder);
+        // Get the flash OpT0 association
+        art::FindManyP<recob::OpFlash> opflash_opt0finder_assns(opt0Handle, e, fOpT0FinderModuleLabel);
+        auto & flashOpT0 = opflash_opt0finder_assns.at( slcOpT0Finder[OpT0Idx].key() );
+        if(flashOpT0.size() > 1){
+            throw art::Exception(art::errors::LogicError) << "There are multiple OpFlash objects associated to the same OpT0Finder object. This is not expected.";
+        }
+
+        std::cout << " Original flash time is " << flashOpT0[0]->Time() + fEventTriggerTime/1000 - fRWMTime/1000 << std::endl;
+
         // Get the ophits associated to the flash
         std::vector<art::Ptr<recob::OpHit>> ophitlist;
         if(flashOpT0[0]->XCenter()<0)
@@ -235,6 +287,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         this->FillLiteOpHit(newOpHitList, ophits);
         // Create the flash manager
         auto const flash_v = _mgr.RecoFlash(ophits);
+        double originalFlashTime = flashOpT0[0]->Time();
         double newFlashTime = 0.0;
         for(const auto& lflash :  flash_v) {
             // Get Flash Barycenter
@@ -252,46 +305,39 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                                 100., -1., Ycenter, Ywidth, Zcenter, Zwidth);
             opflashes->emplace_back(std::move(flash));
             newFlashTime = flasht0;
+            sbnd::OpFlashTiming::CorrectedOpFlashTiming correctedOpFlashTiming;
+            correctedOpFlashTiming.OpFlashT0 = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
+            std::cout << " Old flash time " << originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 << std::endl;
+            correctedOpFlashTiming.UpstreamTime_lightonly = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (Zcenter/fSpeedOfLight)/1000;
+            std::cout << " Old flash time light corrected " << originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (Zcenter/fSpeedOfLight)/1000 << std::endl;
+            correctedOpFlashTiming.UpstreamTime_tpczcorr = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
+            std::cout << " Old flash time light corrected " << originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000 << std::endl;
+            correctedOpFlashTiming.UpstreamTime_propcorr_tpczcorr = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
+            std::cout << " New flash time light corrected " << newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000 << std::endl;
+            correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
         }
 
         art::Ptr<recob::OpFlash> newOpFlashPtr = make_opflash_ptr(opflashes->size()-1);
+        art::Ptr<sbnd::OpFlashTiming::CorrectedOpFlashTiming> newCorrectedOpFlashTimingPtr = make_correctedopflashtime_ptr(correctedOpFlashTimes->size()-1);
         newOpFlashOpT0Assn->addSingle(newOpFlashPtr, slcOpT0Finder[OpT0Idx]);
         newOpFlashSliceAssn->addSingle(newOpFlashPtr, slice);
+        newCorrectedOpFlashTimingSliceAssn->addSingle(slice, newCorrectedOpFlashTimingPtr);
+        newCorrectedOpFlashTimingOpFlashAssn->addSingle(newOpFlashPtr, newCorrectedOpFlashTimingPtr);
 
         if(fSaveCorrectionTree) 
         {
             this->FillCorrectionTree(newFlashTime, *flashOpT0[0], oldOpHitList, newOpHitList ,*slcOpT0Finder[OpT0Idx]);
         }
     }
-    if(fSaveSPECTDC)
-    {
-        art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-        e.getByLabel(fSPECTDCLabel, tdcHandle);
-        if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-            std::cout << "No SPECTDC products found. Skip this event." << std::endl;
-            return;
-        }
-        else{
-            const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-            for (size_t i=0; i<tdc_v.size(); i++){
-                auto tdc = tdc_v[i];
-                const uint32_t  ch = tdc.Channel();
-                const uint64_t  ts = tdc.Timestamp();
 
-                if(ch == 2){
-                fRWMTime = ts%uint64_t(1e9);
-                }
-                if(ch == 4){
-                fEventTriggerTime = ts%uint64_t(1e9);
-                }
-            }
-        }
-    }
     fTree->Fill();
     ResetEventVars();
 
     e.put(std::move(opflashes),fOpFlashNewLabel);
     e.put(std::move(newOpFlashOpT0Assn));
+    e.put(std::move(correctedOpFlashTimes),fOpFlashNewLabel);
+    e.put(std::move(newCorrectedOpFlashTimingSliceAssn));
+    e.put(std::move(newCorrectedOpFlashTimingOpFlashAssn));
     e.put(std::move(newOpFlashSliceAssn));
     return;
 }
@@ -307,7 +353,7 @@ void sbnd::LightPropagationCorrection::beginJob()
         fTree->Branch("RWMTime", &fRWMTime);
         fTree->Branch("EventTriggerTime", &fEventTriggerTime);
         fTree->Branch("NuScore", &fNuScore);
-        fTree->Branch("OpT0Score", &fOpT0Score);    
+        fTree->Branch("OpT0Score", &fOpT0Score);
         fTree->Branch("OpFlashTimeOld", &fOpFlashTimeOld);
         fTree->Branch("OpFlashTimeNew", &fOpFlashTimeNew);
         fTree->Branch("OpFlashXCenter", &fOpFlashXCenter);
@@ -412,8 +458,13 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
             double dy = fSpacePointY[sp] - _opDetY;
             double dz = fSpacePointZ[sp] - _opDetZ;
             double distanceToOpDet = std::sqrt(dx*dx + dy*dy + dz*dz);
-            double spToCathode = abs(fSpacePointX[sp]); // Distance from space point to cathode in mm
-            double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + dy*dy + dz*dz); // Distance from cathode to OpDet in mm
+            //double spToCathode = abs(fSpacePointX[sp]); // Distance from space point to cathode in mm
+            //double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + dy*dy + dz*dz); // Distance from cathode to OpDet in mm
+            //float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
+
+            double cathodeToOpDet = std::sqrt(_opDetX*_opDetX + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from cathode to OpDet in mm
+            double spToCathode = std::sqrt( fSpacePointX[sp]*fSpacePointX[sp] + (dy/2)*(dy/2) + (dz/2)*(dz/2)); // Distance from space point to cathode in mm
+
             float lightPropTimeVIS = spToCathode/fVGroupVUV + cathodeToOpDet/fVGroupVIS; // Speed
             float lightPropTimeVUV = distanceToOpDet / fVGroupVUV; // Speed of light in mm/ns for VUV
             float lightPropTime = std::min(lightPropTimeVIS, lightPropTimeVUV);
@@ -433,6 +484,7 @@ double sbnd::LightPropagationCorrection::GetPropagationTime(double drift){
     else
       return std::abs(drift) * fVGroupVUV_I + fVISLightPropTime;
 }
+
 
 double sbnd::LightPropagationCorrection::GetFlashT0(double flash_time, std::vector<recob::OpHit> ophitlist){
 
@@ -501,6 +553,7 @@ void sbnd::LightPropagationCorrection::FillLiteOpHit(std::vector<recob::OpHit> c
     }
 }
 
+
 void sbnd::LightPropagationCorrection::FillCorrectionTree(double & newFlashTime, recob::OpFlash const& flash, std::vector<recob::OpHit> const& oldOpHitList, std::vector<recob::OpHit> const& newOpHitList, sbn::OpT0Finder const& opt0finder){
 
     fSliceSPX.push_back({});
@@ -521,21 +574,8 @@ void sbnd::LightPropagationCorrection::FillCorrectionTree(double & newFlashTime,
     fSliceVx.push_back(fRecoVx);
     fSliceVy.push_back(fRecoVy);
     fSliceVz.push_back(fRecoVz);
-
-    if(fSaveDebugTree)
-    {
-        fSliceSPX[fSliceSPX.size()-1]=fSpacePointX;
-        fSliceSPY[fSliceSPY.size()-1]=fSpacePointY;
-        fSliceSPZ[fSliceSPZ.size()-1]=fSpacePointZ;
-
-        for (size_t i=0; i<oldOpHitList.size(); i++ ) {
-            fOpHitOldTime[fOpHitOldTime.size()-1].push_back(oldOpHitList[i].StartTime()+oldOpHitList[i].RiseTime());
-            fOpHitNewTime[fOpHitNewTime.size()-1].push_back(newOpHitList[i].StartTime()+newOpHitList[i].RiseTime());
-            fOpHitPE[fOpHitPE.size()-1].push_back(oldOpHitList[i].PE());
-            fOpHitOpCh[fOpHitOpCh.size()-1].push_back(oldOpHitList[i].OpChannel());
-        }
-    }
 }
+
 
 ::lightana::LiteOpHitArray_t sbnd::LightPropagationCorrection::GetAssociatedLiteHits(::lightana::LiteOpFlash_t lite_flash, ::lightana::LiteOpHitArray_t lite_hits_v)
   {
@@ -547,4 +587,3 @@ void sbnd::LightPropagationCorrection::FillCorrectionTree(double & newFlashTime,
 
     return flash_hits_v;
   }
-
