@@ -22,6 +22,10 @@
 #include "lardataobj/RecoBase/OpFlash.h"
 #include "sbnobj/SBND/OpFlashTiming/CorrectedOpFlashTiming.h"
 
+#include "art_root_io/TFileService.h"
+
+#include "TTree.h"
+
 #include <numeric>
 
 class LightPropagationCorrectionAna;
@@ -41,10 +45,21 @@ public:
 
   // Required functions.
   void analyze(art::Event const& e) override;
-
+  void beginJob() override;
 private:
 
   std::string fLightPropCorrectionLabel; ///< The light propagation correction label producer
+
+  TTree* fTree; ///< The TTree for storing event information
+
+  double fOpFlashT0;
+  double fUpstreamTime_lightonly;
+  double fUpstreamTime_tpczcorr;
+  double fUpstreamTime_propcorr_tpczcorr;
+
+  unsigned int _eventID;
+  unsigned int _runID;
+  unsigned int _subrunID;
 
 };
 
@@ -57,8 +72,20 @@ LightPropagationCorrectionAna::LightPropagationCorrectionAna(fhicl::ParameterSet
 
 void LightPropagationCorrectionAna::analyze(art::Event const& e)
 {
+  fOpFlashT0=-99999.;
+  fUpstreamTime_lightonly=-99999.;
+  fUpstreamTime_tpczcorr=-99999.;
+  fUpstreamTime_propcorr_tpczcorr=-99999.;
+
+  _eventID = -1;
+  _runID = -1;
+  _subrunID = -1;
 
   std::cout << "Run: " << e.id().run() << " Sub: " << e.id().subRun() << " Evt: " << e.id().event() << std::endl;
+
+  _eventID = e.id().event();
+  _runID = e.id().run();
+  _subrunID = e.id().subRun();
 
   // Get all the T0 objects
   ::art::Handle<std::vector<sbnd::OpFlashTiming::CorrectedOpFlashTiming>> correctedopflash_h;
@@ -94,7 +121,30 @@ void LightPropagationCorrectionAna::analyze(art::Event const& e)
     std::cout << "Corrected flash time light only  " << correctedopflash->UpstreamTime_lightonly << std::endl;
     std::cout << "Corrected flash time tpc z corr " << correctedopflash->UpstreamTime_tpczcorr << std::endl;
     std::cout << "Corrected flash time prop corr tpc z corr " << correctedopflash->UpstreamTime_propcorr_tpczcorr << std::endl;
+
+    fOpFlashT0 = correctedopflash->OpFlashT0;
+    fUpstreamTime_lightonly = correctedopflash->UpstreamTime_lightonly;
+    fUpstreamTime_tpczcorr = correctedopflash->UpstreamTime_tpczcorr;
+    fUpstreamTime_propcorr_tpczcorr = correctedopflash->UpstreamTime_propcorr_tpczcorr;
+    fTree->Fill();
   }
+}
+
+void LightPropagationCorrectionAna::beginJob()
+{
+  // Implementation of optional member function here.
+  art::ServiceHandle<art::TFileService> tfs;
+  fTree = tfs->make<TTree>("LightPropagationCorrection", "Light Propagation Correction Tree");
+
+  fTree->Branch("eventID", &_eventID, "eventID/i");
+  fTree->Branch("runID", &_runID, "runID/i");
+  fTree->Branch("subrunID", &_subrunID, "subrunID/i");
+
+  fTree->Branch("fOpFlashT0", &fOpFlashT0, "OpFlashT0/d");
+  fTree->Branch("fUpstreamTime_lightonly", &fUpstreamTime_lightonly, "UpstreamTime_lightonly/d");
+  fTree->Branch("fUpstreamTime_tpczcorr", &fUpstreamTime_tpczcorr, "UpstreamTime_tpczcorr/d");
+  fTree->Branch("fUpstreamTime_propcorr_tpczcorr", &fUpstreamTime_propcorr_tpczcorr, "UpstreamTime_propcorr_tpczcorr/d");
+
 }
 
 DEFINE_ART_MODULE(LightPropagationCorrectionAna)

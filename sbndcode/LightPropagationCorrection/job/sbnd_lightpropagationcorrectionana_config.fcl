@@ -1,7 +1,7 @@
 
 BEGIN_PROLOG
 
-correctedopflash_ana:
+lightpropagationcorrection_ana:
 {
   module_type: "LightPropagationCorrectionAna"
   LightPropCorrectionLabel: "lightpropcorrection"
