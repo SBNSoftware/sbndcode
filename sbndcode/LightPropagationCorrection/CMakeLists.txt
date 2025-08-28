@@ -35,6 +35,7 @@ set (
     sbnobj::Common_Reco
     sbnobj::SBND_CRT
     sbnobj::SBND_Timing
+    sbnobj::SBND_OpFlashTiming
     sbndcode_OpDetSim
 )
 cet_build_plugin(LightPropagationCorrection art::module SOURCE LightPropagationCorrection_module.cc LIBRARIES ${MODULE_LIBRARIES})

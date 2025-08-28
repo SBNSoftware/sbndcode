@@ -72,6 +72,7 @@
 
 // CRT
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
+#include "sbnobj/SBND/OpFlashTiming/CorrectedOpFlashTiming.h"
 
 // Cosmic rejection includes
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
@@ -147,7 +148,6 @@ private:
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
 
 
-
     geo::WireReadoutGeom const& fWireReadout = art::ServiceHandle<geo::WireReadout>()->Get();
 
     //Flash finder manager
@@ -181,6 +181,7 @@ private:
     bool fSaveDebugTree;
     bool fSaveSPECTDC;
     
+
     std::vector<double> fTimeCorrectionPerChannel;
     double fRecoVx = 0.0;
     double fRecoVy = 0.0;
@@ -209,6 +210,7 @@ private:
     double fVGroupVIS;
     double fVGroupVUV; // Speed of light in vacuum in mm/ns
 
+    double fNuScoreThreshold;
 
     double fPDFraction;
     double fPreWindow;
