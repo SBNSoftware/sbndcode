@@ -10,18 +10,6 @@
   <class name="std::vector<raw::TimingReferenceInfo>"/>
   <class name="art::Wrapper<raw::TimingReferenceInfo>"/>
   <class name="art::Wrapper<std::vector<raw::TimingReferenceInfo> >"/>
-  
-  <class name="raw::TimingInfo">
-  </class>
-  <class name="std::vector<raw::TimingInfo>"/>
-  <class name="art::Wrapper<raw::TimingInfo>"/>
-  <class name="art::Wrapper<std::vector<raw::TimingInfo> >"/>
-  
-  <class name="raw::FrameShiftInfo">
-  </class>
-  <class name="std::vector<raw::FrameShiftInfo>"/>
-  <class name="art::Wrapper<raw::FrameShiftInfo>"/>
-  <class name="art::Wrapper<std::vector<raw::FrameShiftInfo> >"/>
 
   <class name="raw::pmt::BoardTimingInfo">
   </class>
