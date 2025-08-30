@@ -672,25 +672,7 @@ void sbnd::FrameShift::produce(art::Event& e)
 
   //Put product in event
   std::unique_ptr< sbnd::timing::FrameShiftInfo > newFrameShiftInfo(new sbnd::timing::FrameShiftInfo(_global_timing_type, _frame_tdc_crtt1, _frame_tdc_bes, _frame_tdc_rwm, _frame_hlt_crtt1, _frame_hlt_gate, _frame_apply_at_caf));
-
-  //newFrameShiftInfo->timingType = _global_timing_type;
-  //newFrameShiftInfo->frameTdcCrtt1 = _frame_tdc_crtt1;
-  //newFrameShiftInfo->frameTdcBes = _frame_tdc_bes;
-  //newFrameShiftInfo->frameTdcRwm = _frame_tdc_rwm;
-  //newFrameShiftInfo->frameHltCrtt1 = _frame_hlt_crtt1;
-  //newFrameShiftInfo->frameHltBeamGate = _frame_hlt_gate;
-  //newFrameShiftInfo->frameApplyAtCaf = _frame_apply_at_caf;
-
   std::unique_ptr< sbnd::timing::TimingInfo > newTimingInfo(new sbnd::timing::TimingInfo(_raw_ts, _tdc_crtt1_ts, _tdc_bes_ts, _tdc_rwm_ts, _tdc_etrig_ts, _hlt_crtt1_ts, _hlt_etrig_ts, _hlt_gate_ts));
-
-  //newTimingInfo->rawDAQHeaderTimestamp = _raw_ts;
-  //newTimingInfo->tdcCrtt1 = _tdc_crtt1_ts;
-  //newTimingInfo->tdcBes = _tdc_bes_ts;
-  //newTimingInfo->tdcRwm = _tdc_rwm_ts;
-  //newTimingInfo->tdcEtrig = _tdc_etrig_ts;
-  //newTimingInfo->hltCrtt1 = _hlt_crtt1_ts;
-  //newTimingInfo->hltEtrig = _hlt_etrig_ts;
-  //newTimingInfo->hltBeamGate = _hlt_gate_ts;
 
   e.put(std::move(newTimingInfo));
   e.put(std::move(newFrameShiftInfo));
