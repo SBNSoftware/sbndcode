@@ -25,14 +25,22 @@ physics.producers:
     opt0finder:     @local::sbnd_opt0_finder_data
     opt0finderSCE:  @local::sbnd_opt0_finder_data
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
+    tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCE
+
+    ### shower reco for data
+    pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreationData
+    pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreationData
+    ### SCE-aware shower reco for data
+    pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreationData
+    pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreationData
     
     frameshift: @local::frameshift_data
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, 
-                 cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching, 
+                 cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching,
                  pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData,
-                 cvnSCE, opt0finderSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
+                 cvnSCE, opt0finderSCE, tpcpmtbarycentermatchingSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
                  caloskimCalorimetry, frameshift]
 
 physics.analyzers.caloskim.G4producer: ""
@@ -51,6 +59,10 @@ physics.producers.opt0finderSCE.SliceProducer:    "pandoraSCE"
 physics.producers.opt0finderSCE.TrackProducer:    "pandoraSCETrack"
 physics.producers.opt0finderSCE.ShowerProducer:   "pandoraSCEShowerSBN"
 physics.producers.opt0finderSCE.CaloProducer:     "pandoraSCECaloData"
+physics.producers.pandoraSCEShower.PFParticleLabel:              "pandoraSCE"
+physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
+
+
 
 physics.caloskimana: [ caloskim, crtana ]
 physics.end_paths: [stream1, caloskimana ]

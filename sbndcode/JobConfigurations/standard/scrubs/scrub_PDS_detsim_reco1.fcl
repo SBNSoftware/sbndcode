@@ -1,0 +1,33 @@
+# This fcl purely removes products made in opdaq & Reco1 processes.
+# This allows for keeping the identical simulated event on the file and running
+# a variation of PDS.
+#
+# Author Linyan Wan (lwan@fnal.gov)
+
+#include "rootoutput_sbnd.fcl"
+#include "sam_sbnd.fcl"
+
+process_name: Scrub
+
+source:
+{
+  module_type:   RootInput
+  inputCommands: [ "keep *_*_*_*",
+                   "drop *_opdaq_*_*",
+                   "drop *_*_*_Reco1" ]
+}
+
+outputs:
+{
+  out1:
+  {
+    @table::sbnd_rootoutput
+    dataTier: "simulated"
+  }
+}
+
+physics:
+{
+  stream1:   [ out1 ]
+  end_paths: [ stream1 ]
+}
