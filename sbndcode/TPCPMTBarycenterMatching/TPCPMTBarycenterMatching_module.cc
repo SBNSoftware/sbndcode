@@ -239,9 +239,11 @@ private:
   double                    fFlashWidthY;          ///< Weighted standard deviation of Y postion of hit PMTs (cm)
   double                    fFlashWidthZ;          ///< Weighted standard deviation of Z postion of hit PMTs (cm)
   double                    fDeltaT;               ///< | Matched flash time - charge T0 | when available (us)
+  double                    fDeltaX;               ///< | Matched flash X center - charge X center | (cm)
   double                    fDeltaY;               ///< | Matched flash Y center - charge Y center | (cm)
   double                    fDeltaZ;               ///< | Matched flash Z center - charge Z center | (cm)
   double                    fRadius;               ///< Hypotenuse of DeltaY and DeltaZ *parameter minimized by matching* (cm)
+  double                    fDeltaX_Trigger;       ///< | Triggering flash X center - charge X center | (cm)
   double                    fDeltaY_Trigger;       ///< | Triggering flash Y center - charge Y center | (cm)
   double                    fDeltaZ_Trigger;       ///< | Triggering flash Z center - charge Z center | (cm)
   double                    fRadius_Trigger;       ///< Hypotenuse of DeltaY_Trigger and DeltaZ_Trigger (cm)
@@ -303,9 +305,11 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
 
     //Match Quality Info
     fMatchTree->Branch("deltaT",              &fDeltaT,              "deltaT/d"             );
+    fMatchTree->Branch("deltaX",              &fDeltaX,              "deltaX/d"             );
     fMatchTree->Branch("deltaY",              &fDeltaY,              "deltaY/d"             );
     fMatchTree->Branch("deltaZ",              &fDeltaZ,              "deltaZ/d"             );
     fMatchTree->Branch("radius",              &fRadius,              "radius/d"             );
+    fMatchTree->Branch("deltaX_Trigger",      &fDeltaX_Trigger,      "deltaX_Trigger/d"     );
     fMatchTree->Branch("deltaZ_Trigger",      &fDeltaZ_Trigger,      "deltaZ_Trigger/d"     );
     fMatchTree->Branch("deltaY_Trigger",      &fDeltaY_Trigger,      "deltaY_Trigger/d"     );
     fMatchTree->Branch("radius_Trigger",      &fRadius_Trigger,      "dadius_Trigger/d"     );
@@ -514,9 +518,11 @@ void TPCPMTBarycenterMatchProducer::InitializeSlice() {
   fFlashWidthY = -9999.;
   fFlashWidthZ = -9999.;
   fDeltaT = -9999.;
+  fDeltaX = -9999.;
   fDeltaY = -9999.;
   fDeltaZ = -9999.;
   fRadius = -9999.;
+  fDeltaX_Trigger = -9999.;
   fDeltaZ_Trigger = -9999.;
   fDeltaY_Trigger = -9999.;
   fRadius_Trigger = -9999.;
@@ -532,8 +538,14 @@ void TPCPMTBarycenterMatchProducer::updateChargeVars(double sumCharge, TVector3 
   fChargeWidthZ = std::sqrt( sumPosSqr[2]/sumCharge - (sumPos[2]/sumCharge)*(sumPos[2]/sumCharge) );
   fChargeTotal = sumCharge;
   if ( triggerFlashCenter[1] != -9999. ) {
-    fDeltaY_Trigger = abs(triggerFlashCenter[0] - fChargeCenterY);
-    fDeltaZ_Trigger = abs(triggerFlashCenter[1] - fChargeCenterZ);
+    fDeltaX_Trigger = abs(triggerFlashCenter[0] - fChargeCenterX);
+    fDeltaY_Trigger = abs(triggerFlashCenter[1] - fChargeCenterY);
+    fDeltaZ_Trigger = abs(triggerFlashCenter[2] - fChargeCenterZ);
+    if(fDo3DMatching) 
+    {
+      fRadius_Trigger = std::hypot(fDeltaX_Trigger, fDeltaY_Trigger, fDeltaZ_Trigger);
+    }
+    else
     fRadius_Trigger = std::hypot(fDeltaY_Trigger, fDeltaZ_Trigger);
   }
 } //End updateChargeVars()
@@ -557,6 +569,12 @@ void TPCPMTBarycenterMatchProducer::updateFlashVars(art::Ptr<recob::OpFlash> fla
   if ( fChargeT0 != -9999 ) fDeltaT = abs(matchedTime - fChargeT0);
   fDeltaY = abs(matchedYCenter - fChargeCenterY);
   fDeltaZ = abs(matchedZCenter - fChargeCenterZ);
+  if( fDo3DMatching ) 
+  {
+    fDeltaX = abs(matchedXCenter - fChargeCenterX);
+    fRadius = std::hypot(fDeltaX, fDeltaY, fDeltaZ);
+  }
+  else
   fRadius = std::hypot(fDeltaY, fDeltaZ);
 } //End updateFlashVars()
 
