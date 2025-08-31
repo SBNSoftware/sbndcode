@@ -122,6 +122,7 @@ namespace opdet {
     fTriggerOnly = p.get<bool>("TriggerOnly", false);
     fPMTperCAEN = p.get<int>("PMTPerCAEN", 15);
     Timestamp_In_Name = p.get<bool>("TimestampInName", false);
+    std::cout << fChToPlot << " in wvfana init " << std::endl;
 
   }
 
@@ -241,6 +242,7 @@ namespace opdet {
               int WaveIndex = CAENChannel + FlashCounter*PMTPerCAEN + CurrentBoard*PMTPerCAEN*TotalFlash;
               auto const& wvf = (*waveHandle)[WaveIndex];
               fChNumber = wvf.ChannelNumber();
+	      std::cout << "on channel " << fChNumber << std::endl;
               if(fJustOne && fChToPlot!=int(fChNumber)) continue;
               if(fCheckTiming)
               {
@@ -296,6 +298,7 @@ namespace opdet {
               } //in us
 
               //Create a new histogram
+	      std::cout << "About to make new histogram " << std::endl;
               TH1D *wvfHist = tfs->make< TH1D >(histname.str().c_str(), TString::Format(";t - %f (#mus);", fStartTime), wvf.size(), fStartTime, fEndTime);
               for(unsigned int i = 0; i < wvf.size(); i++) {
                 wvfHist->SetBinContent(i + 1, (double)wvf[i]);

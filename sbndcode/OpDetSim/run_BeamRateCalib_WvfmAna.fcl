@@ -1,0 +1,38 @@
+#include "wvfana_sbnd.fcl"
+#include "detsimmodules.fcl"
+#include "BeamRatesCalib_Defaults.fcl"
+#include "services_sbnd.fcl"
+
+process_name: BeamRateCalibPlusWvfmAna
+
+services: {
+    TFileService: {fileName: "SomeTriggerWaveforms.root"}
+    @table::sbnd_services
+}
+
+source: {
+    module_type: RootInput
+}
+
+outputs:{
+}
+physics:{
+    analyzers: {
+        flashana: @local::wvf_ana_sbnd
+	BeamCalib: @local::BeamRatesCalib
+    }
+    ana: [flashana, BeamCalib]
+    stream1: []
+    trigger_paths: []
+    end_paths: [ana, stream1]
+}
+#physics.analyzers.flashana.InputModuel: "opdaq::DetSimPDS"
+physics.analyzers.flashana.InputModule: "pmtdecoder:PMTChannels:DECODE"
+physics.analyzers.flashana.OpDetsToPlot: ["pmt_coated", "pmt_uncoated"]
+physics.analyzers.flashana.JustOne: false
+physics.analyzers.flashana.CheckTiming: false
+physics.analyzers.flashana.PTBLabel: "ptbdecoder::DECODE"
+physics.analyzers.flashana.TotalCAENBoards: 8
+physics.analyzers.flashana.PMTPerCAEN: 15
+physics.analyzers.flashana.TriggerOnly: false
+physics.analyzers.flashana.TimestampInName: false
