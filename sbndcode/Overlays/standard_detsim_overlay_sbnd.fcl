@@ -2,3 +2,4 @@
 
 # get WireCell sim-only module instead
 physics.producers.simtpc2d: @local::sbnd_wcls_sim
+#physics.producers.simtpc2d: @local::sbnd_wcls

@@ -17,6 +17,7 @@ physics.producers: {
     PMTOverlayHits: false
     CRTOverlayHits: false
     TPCRawInputLabels: ["daq", "simtpc2d:daq"]
+    SubtractPedestal:  [false, true]
   }
 
   overlayOpWaveforms:
