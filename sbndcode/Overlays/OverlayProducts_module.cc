@@ -87,6 +87,7 @@ private:
   bool fTPCOverlayHits;  //< Set true if you should overlay at the recob::Hit stage
   bool fTPCHitsWireAssn; //< Set true if you want to make the hit<->wire association in HitCollectionCreator
   std::vector< art::InputTag > fTPCRawInputLabels;
+  std::vector<bool> fSubtractPedestal;
   art::InputTag                fTPCRawOutputLabel;
   std::vector< art::InputTag > fTPCROIInputLabels;
   std::vector< art::InputTag > fTPCHitInputLabels;
@@ -117,6 +118,7 @@ OverlayProducts::OverlayProducts(fhicl::ParameterSet const& p)
   fTPCOverlayHits     ( p.get< bool >("TPCOverlayHits", false) ),
   fTPCHitsWireAssn    ( p.get< bool >("TPCHitsWireAssn", true) ),
   fTPCRawInputLabels  ( p.get< std::vector<art::InputTag> >("TPCRawInputLabels", {}) ),
+  fSubtractPedestal   ( p.get< std::vector<bool> >("SubtractPedestal", {}) ),
   fTPCRawOutputLabel  ( p.get< art::InputTag >("TPCRawOutputLabel","") ),
   fTPCROIInputLabels  ( p.get< std::vector<art::InputTag> >("TPCROIInputLabels", {}) ),
   fTPCHitInputLabels  ( p.get< std::vector<art::InputTag> >("TPCHitInputLabels", {}) ),
@@ -186,7 +188,8 @@ void OverlayProducts::produce(art::Event& e)
     std::map< raw::ChannelID_t, float > sigmaMap;
     std::map< raw::ChannelID_t, raw::Compress_t > compressMap;
 
-    for ( auto const& iLabel : fTPCRawInputLabels ) {
+    for ( std::size_t i = 0; i < fTPCRawInputLabels.size(); ++i ) {
+      auto const& iLabel = fTPCRawInputLabels[i];
       art::Handle< std::vector<raw::RawDigit> > digitsHandle;
       std::vector< art::Ptr<raw::RawDigit> > digits;
       if ( e.getByLabel(iLabel,digitsHandle) ) {
@@ -207,11 +210,17 @@ void OverlayProducts::produce(art::Event& e)
 	  sigmaMap[ chID ] = iDigit->GetSigma();
 	  compressMap[ chID ] = iDigit->Compression();
 	  rawdigitMap[ chID ] = iDigit->ADCs();
+    if(i < fSubtractPedestal.size() && fSubtractPedestal[i]) {
+      for ( unsigned int idx = 0; idx < rawdigitMap[ chID ].size(); ++idx ) {
+        rawdigitMap[ chID ][ idx ] -= iDigit->GetPedestal(); 
+      }
+    }
 	}
 	else {
 	  auto const& thisADC = iDigit->ADCs();
 	  for ( unsigned int idx = 0; idx < rawdigitMap[ chID ].size(); ++idx ) {
 	    rawdigitMap[ chID ][ idx ] += thisADC[ idx ];
+      if(i < fSubtractPedestal.size() && fSubtractPedestal[i]) { rawdigitMap[ chID ][ idx ] -= iDigit->GetPedestal(); }
 	  }
 	}
       } // loop RawDigits

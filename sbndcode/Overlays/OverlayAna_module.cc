@@ -123,9 +123,24 @@ void OverlayAna::analyze(art::Event const& e)
     {
 
       unsigned int ch  = rawdigit->Channel();
-      // float        ped = rawdigit->GetPedestal();
+      float        ped = rawdigit->GetPedestal();
+
+      geo::WireID w_id = wr_geom.ChannelToWire(ch)[0];
+      unsigned int wire = w_id.Wire;
+      unsigned int plane = w_id.Plane;
+      unsigned int tpc = w_id.TPC;
+      unsigned int cryo = w_id.Cryostat;
+      std::cout << "RawDigit ch " << ch << ", wire " << wire << ", plane " << plane << ", tpc " << tpc << ", cryo " << cryo << std::endl;
 
       auto adcs = rawdigit->ADCs();
+      
+      // Add pedestal subtraction for MC data (i == 1)
+      if (i == 1) { 
+        for (auto &a : adcs) {
+          a -= ped;
+        }
+      }
+      
       if(i == 0) _tpc_waveforms_data[ch].assign(adcs.begin(), adcs.end());
       if(i == 1) _tpc_waveforms_mc[ch].assign(adcs.begin(), adcs.end());
       if(i == 2) _tpc_waveforms_overlay[ch].assign(adcs.begin(), adcs.end());
