@@ -17,7 +17,12 @@ xarapucadecoder:
     timing_priority: 3                                          # NOW: 0 SPEC-TDC RWM, 1 SPEC-TDC ETT, 3 PTB, 2 CAEN-only. 
                                                                 # SHOULD BE ---> 0 ETRIG 1 HLT TRIG 2 CAEN-only 
     ns_per_sample: 16                                           # Nanoseconds per sample.
+
+    # - RAW timestamp configuration:
+    raw_event_header_product_name: "daq"                        # Label identifying the module that created the artdaq::detail::RawEventHeader data product.
     raw_trig_max_diff: 300000                                   # Maximum difference (in ns) allowed between trigger timestamps and raw timestamp.
+    raw_timestamp_correction: 367000                            # Correction (in ns) to be applied to the raw timestamp.
+
     # - SPEC-TDC access configuration
     spectdc_product_name:  "tdcdecoder"                         # Name for getting SPEC-TDC Decoder products (if any).
     spectdc_rwmtrig_ch: 2                                       # Channel assigned to RWM (Resistive Wall Monitor) triggers.

@@ -27,6 +27,8 @@
 
 #include "artdaq-core/Data/Fragment.hh"
 #include "artdaq-core/Data/ContainerFragment.hh"
+#include "artdaq-core/Data/RawEvent.hh"
+
 #include "sbndaq-artdaq-core/Overlays/FragmentType.hh"
 #include "sbndaq-artdaq-core/Overlays/SBND/CAENV1740Fragment.hh"
 
@@ -105,7 +107,10 @@ private:
   uint16_t ftiming_priority; /**< Timing priority configured: 0 SPEC-TDC RWM, 1 SPEC-TDC ETT, 2 CAEN-only. */
   uint16_t factive_timing_frame; /**< Active timing frame while processing each event. */
   unsigned int fns_per_sample; /**< Number of nanoseconds per sample. */
-  unsigned int fraw_trig_max_diff; /**< Maximum difference (in ns) allowed between trigger timestamps and raw timestamp. */
+
+  std::string fraw_event_header_product_name; /**< Label identifying the module that created the artdaq::detail::RawEventHeader data product. */
+  uint16_t fraw_trig_max_diff; /**< Maximum difference (in ns) allowed between trigger timestamps and raw timestamp. */
+  uint32_t fraw_timestamp_correction; /**< Correction (in ns) to be applied to the raw timestamp. */
 
   std::string fspectdc_product_name; /**< Name assigned to the product instance containing the SPEC-TDC decoder products. */
   uint32_t fspectdc_ftrig_ch; /**< Channel assigned by the SPEC-TDC to the flash triggers. */
@@ -134,6 +139,8 @@ private:
   uint16_t get_sample(uint64_t buffer, uint32_t msb, uint32_t lsb);
   uint32_t read_word(const uint32_t* & data_ptr);
   unsigned int get_channel_id(unsigned int board, unsigned int board_channel);
+
+  bool get_ptb_hlt_timestamp(art::Event& e, uint64_t raw_timestamp, uint64_t & timestamp, uint16_t & hlt_code);
   
 };
 
@@ -168,7 +175,11 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   ftiming_priority = p.get<uint16_t> ("timing_priority", SPEC_TDC_TIMING); 
   factive_timing_frame = CAEN_ONLY_TIMING;
   fns_per_sample = p.get<unsigned int> ("ns_per_sample", 16);
+
+  // Gets the raw timestamp configuration.
+  fraw_event_header_product_name = p.get<std::string> ("raw_timestamp_product_name", "daq");
   fraw_trig_max_diff = p.get<unsigned int> ("raw_trig_max_diff", 300000);
+  fraw_timestamp_correction = p.get<unsigned int> ("raw_timestamp_correction", 367000);
 
   // SPEC-TDC access configuration.
   fspectdc_product_name = p.get<std::string>("spectdc_product_name", "tdcdecoder");
@@ -224,68 +235,35 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
 
   if (fverbose) std::cout << "\n > SBNDXARAPUCADecoder::produce: products initialized." << std::endl;
 
+  if (fverbose) std::cout << "SBNDXARAPUCADecoder::produce: acessing event header ..." << std::endl;
+
+  uint64_t raw_timestamp = 0;         // Event header timestamp
+  art::Handle <artdaq::detail::RawEventHeader> header_handle;
+  e.getByLabel(fraw_event_header_product_name, "RawEventHeader", header_handle);
+  if (header_handle.isValid()){
+      auto raw_header = artdaq::RawEvent(*header_handle); 
+      raw_timestamp = raw_header.timestamp() - fraw_timestamp_correction; // includes sec + ns portion
+      if (fverbose | fdebug_tdc_handle | fdebug_ptb_handle | fdebug_timing) {
+          //std::cout << "\t RAW timestamp (w/ correction) -> "  << "ts (ns): " << raw_timestamp % uint64_t(1e9) << ", sec (s): " << raw_timestamp / uint64_t(1e9) << std::endl;
+          //std::cout << "\t RAW timestamp (w/ correction) -> "  << "ts (ns): " << raw_timestamp % uint64_t(1e9) << ", sec (s): " << raw_timestamp / uint64_t(1e9) << std::endl;
+          std::cout << "\t RAW timestamp: BEFORE correction: " << raw_header.timestamp() << " ns - AFTER correction: " << raw_timestamp << " ns ." << std::endl;
+      }
+  }
+
   uint64_t timestamp = 0;             // [1] RWM trigger timestamp, [2] ETT trigger timestamp, [3] CAEN-only timestamp.
   uint64_t ett_timestamp = 0;         // ETT trigger timestamp.
   bool ett_timestamp_found = false;   // ETT trigger timestamp found.
   uint64_t rwm_timestamp = 0;         // RWM trigger timestamp.
   bool rwm_timestamp_found = false;   // RWM trigger timestamp found.
-  
+
   // Gets the PTB product (if any).
   if (ftiming_priority == PTB_TIMING) {
-    art::Handle<std::vector<raw::ptb::sbndptb>> ptb_handle;
-    e.getByLabel(fptb_product_name, ptb_handle);
-
-    if (fverbose | fdebug_ptb_handle | fdebug_all) std::cout << "\n > SBNDXARAPUCADecoder::produce: PTB timing frame selected. Searching for PTB products..." << std::endl;
-    
-    if (!ptb_handle.isValid()) {
-      if (fdebug_ptb_handle | fdebug_all) std::cout << "\n\tPTB handle not valid for " << fptb_product_name << "." << std::endl;
-    } else if (ptb_handle->empty()) {
-      if (fdebug_ptb_handle | fdebug_all) std::cout << "\n\tPTB handle is empty." << std::endl;
-    } else {
-      if (fdebug_ptb_handle | fdebug_all) std::cout << " \n\tDecoded PTB products found: " << ptb_handle->size() << " products.";
-      
-      for (size_t i = 0; i < ptb_handle->size(); i++) {
-        std::vector<raw::ptb::Trigger> hlt_triggers = ptb_handle->at(i).GetHLTriggers();
-        if (!hlt_triggers.empty()) {
-          if (fdebug_ptb_handle | fdebug_all) std::cout << "\n\t\t Number of HL triggers: " << hlt_triggers.size() << "." << std::endl;
-          
-          for (size_t j = 0; j < hlt_triggers.size(); j++) {
-            raw::ptb::Trigger hlt_trig = hlt_triggers.at(j);
-            uint64_t hlt_timestamp = hlt_trig.timestamp;
-            uint64_t hlt_timestamp_ns = hlt_timestamp * 20;
-            std::bitset<32> hlt_word_bitset = std::bitset<32>(hlt_trig.trigger_word);
-
-            if (fdebug_ptb_handle | fdebug_all) {
-              std::cout << "\t\t\t HLT " << j << ": ";
-              std::cout << "Timestamp: " << hlt_timestamp_ns << " ns ";
-              std::bitset<32> hlt_word_bitset = std::bitset<32>(hlt_trig.trigger_word);
-              std::cout << "(" << hlt_word_bitset << ")";
-            }
-
-            uint32_t allowed_hlt = 0;    // Random trigger code. In this case it is used as flag to check if an allowed HLT trigger is found.           
-            for (size_t k = 0; k < fallowed_hl_triggers.size(); k++) {
-              if (hlt_word_bitset[fallowed_hl_triggers[k]]) {
-                allowed_hlt = fallowed_hl_triggers[k];
-                if (fdebug_ptb_handle | fdebug_all) {
-                  std::cout << " - Allowed HLT: " << allowed_hlt << "." << std::endl;
-                }
-              }
-            }
-            
-            if ((fdebug_ptb_handle | fdebug_all) && !allowed_hlt) std::cout << std::endl;
-
-
-
-          }
-        
-        } else {
-          if (fdebug_ptb_handle | fdebug_all) std::cout << "\n\t\t No HL triggers found." << std::endl;
-        }
-      }
+    uint16_t hlt_code = 999; // Random value to indicate no HLT trigger found.
+    if (get_ptb_hlt_timestamp(e, raw_timestamp, timestamp, hlt_code)) {
+      prod_event_timing_ref_info->timingType = PTB_TIMING;
+      prod_event_timing_ref_info->timingChannel = hlt_code;
+      factive_timing_frame = PTB_TIMING;
     }
-
-    ptb_handle.removeProduct();
-
   } else {
     if (fverbose | fdebug_ptb_handle | fdebug_all) {
       std::cout << "\n > SBNDXARAPUCADecoder::produce: PTB timing frame not selected. Using CAEN-only timing frame as default." << std::endl;
@@ -487,6 +465,98 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
     }
     std::cout << "\n > SBNDXARAPUCADecoder::produce: end of the producer function.\n\n" << std::endl;
   } 
+}
+
+bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t raw_timestamp, uint64_t& timestamp, uint16_t& hlt_code) {
+  bool hlt_found = false;
+
+  art::Handle <std::vector<raw::ptb::sbndptb> > ptb_handle;
+  e.getByLabel(fptb_product_name, ptb_handle);
+
+  if (fverbose | fdebug_ptb_handle | fdebug_all) std::cout << "\n > SBNDXARAPUCADecoder::get_ptb_hlt_timestamp: PTB timing frame selected. Searching for PTB products..." << std::endl;
+  
+  if (!ptb_handle.isValid()) {
+    if (fdebug_ptb_handle | fdebug_all) std::cout << "\n\tPTB handle not valid for " << fptb_product_name << "." << std::endl;
+  } else if (ptb_handle->empty()) {
+    if (fdebug_ptb_handle | fdebug_all) std::cout << "\n\tPTB handle is empty." << std::endl;
+  } else {
+    if (fdebug_ptb_handle | fdebug_all) std::cout << " \n\tDecoded PTB products found: " << ptb_handle->size() << " products.";
+    
+    uint64_t min_diff = std::numeric_limits<uint64_t>::max();
+    uint64_t closest_hlt_timestamp_ns = 0;
+    uint16_t hlt_type = 999;                                    // Random value to indicate no HLT trigger found.
+
+    for (size_t i = 0; i < ptb_handle->size(); i++) {
+      std::vector<raw::ptb::Trigger> hlt_triggers = ptb_handle->at(i).GetHLTriggers();
+      if (!hlt_triggers.empty()) {
+        if (fdebug_ptb_handle | fdebug_all) std::cout << "\n\t\t Number of HL triggers: " << hlt_triggers.size() << "." << std::endl;
+        
+        for (size_t j = 0; j < hlt_triggers.size(); j++) {
+          raw::ptb::Trigger hlt_trig = hlt_triggers.at(j);
+          uint64_t hlt_timestamp = hlt_trig.timestamp;
+          uint64_t hlt_timestamp_ns = hlt_timestamp * 20;
+          std::bitset<32> hlt_word_bitset = std::bitset<32>(hlt_trig.trigger_word);
+
+          if (fdebug_ptb_handle | fdebug_all) {
+            std::cout << "\t\t\t HLT " << j << ": ";
+            std::cout << "Timestamp: " << hlt_timestamp_ns << " ns ";
+            std::bitset<32> hlt_word_bitset = std::bitset<32>(hlt_trig.trigger_word);
+            std::cout << "(" << hlt_word_bitset << ")";
+          }
+
+          uint32_t allowed_hlt = 0;    // Random trigger code. In this case it is used as flag to check if an allowed HLT trigger is found.           
+          for (size_t k = 0; k < fallowed_hl_triggers.size(); k++) {
+            if (hlt_word_bitset[fallowed_hl_triggers[k]]) {
+              allowed_hlt = fallowed_hl_triggers[k];
+              if (fdebug_ptb_handle | fdebug_all) {
+                uint64_t diff = (hlt_timestamp_ns < raw_timestamp) ? (raw_timestamp - hlt_timestamp_ns) : (hlt_timestamp_ns - raw_timestamp);
+                if (diff < min_diff) {
+                  min_diff = diff;
+                  closest_hlt_timestamp_ns = hlt_timestamp_ns;
+                  hlt_type = allowed_hlt;
+                }
+                std::cout << " - Allowed HLT: " << allowed_hlt << " - " << diff << " ns away from the raw timestamp." << std::endl;
+              }
+            }
+          }
+          if ((fdebug_ptb_handle | fdebug_all) && !allowed_hlt) std::cout << std::endl;
+        }
+      
+      } else {
+        if (fdebug_ptb_handle | fdebug_all) std::cout << "\n\t\t No allowed HL triggers found." << std::endl;
+      }
+    }
+
+    if (fdebug_ptb_handle | fdebug_all) {
+      if (closest_hlt_timestamp_ns) {
+        std::cout << "\n\t Closest HLT trigger to the raw timestamp: " << closest_hlt_timestamp_ns << " ns - HLT type: " << hlt_type << " with a difference of " << min_diff << " ns." << std::endl;
+      } else {
+        std::cout << "\n\t No allowed HL triggers found close to the raw timestamp." << std::endl;
+      }
+    }
+
+    if (min_diff > fraw_trig_max_diff) {
+      closest_hlt_timestamp_ns = 0;
+      hlt_code = 255;
+    } else {
+      hlt_found = true;
+      timestamp = closest_hlt_timestamp_ns;
+      hlt_code = hlt_type;
+    }
+
+    if (fverbose | fdebug_ptb_handle | fdebug_all) {
+      if (closest_hlt_timestamp_ns) {
+        std::cout << "\n > SBNDXARAPUCADecoder::get_ptb_hlt_timestamp: Allowed HL trigger found close to the raw timestamp. Using PTB timing frame as reference." << std::endl;
+        std::cout << "\t\t PTB timestamp: " << timestamp << " ns." << std::endl;
+      } else {
+        std::cout << "\n > SBNDXARAPUCADecoder::get_ptb_hlt_timestamp: No allowed HL triggers found close to the raw timestamp. Using CAEN-only timing frame as default." << std::endl;
+      }
+    }
+
+  }
+
+  ptb_handle.removeProduct();
+  return hlt_found;
 }
 
 /**
