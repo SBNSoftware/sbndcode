@@ -1,0 +1,9 @@
+#include "standard_detsim_sbnd.fcl"
+physics.producers.opdaq.GainFluctuationsParams.DynodeK: 0.25
+physics.producers.opdaq.PMTBaselineRMS: 3.5
+physics.producers.opdaq.PMTCoatedVUVEff_tpc0: 0.021
+physics.producers.opdaq.PMTCoatedVISEff_tpc0: 0.02329
+physics.producers.opdaq.PMTUncoatedEff_tpc0: 0.0225
+physics.producers.opdaq.PMTCoatedVUVEff_tpc1: 0.018
+physics.producers.opdaq.PMTCoatedVISEff_tpc1: 0.02329
+physics.producers.opdaq.PMTUncoatedEff_tpc1: 0.0225

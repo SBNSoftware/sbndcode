@@ -49,3 +49,6 @@ add_subdirectory(SBNDCVN)
 add_subdirectory(TPCPMTBarycenterMatching)
 
 add_subdirectory(PosRecoCVN)
+
+add_subdirectory(BlipRecoSBND)
+

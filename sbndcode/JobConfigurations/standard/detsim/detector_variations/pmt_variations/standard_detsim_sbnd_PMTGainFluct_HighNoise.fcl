@@ -1,0 +1,3 @@
+#include "standard_detsim_sbnd.fcl"
+physics.producers.opdaq.GainFluctuationsParams.DynodeK: 0.25
+physics.producers.opdaq.PMTBaselineRMS: 3.5
