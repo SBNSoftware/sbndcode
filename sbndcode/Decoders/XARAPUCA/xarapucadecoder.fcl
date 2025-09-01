@@ -17,6 +17,7 @@ xarapucadecoder:
     timing_priority: 3                                          # NOW: 0 SPEC-TDC RWM, 1 SPEC-TDC ETT, 3 PTB, 2 CAEN-only. 
                                                                 # SHOULD BE ---> 0 ETRIG 1 HLT TRIG 2 CAEN-only 
     ns_per_sample: 16                                           # Nanoseconds per sample.
+    raw_trig_max_diff: 300000                                   # Maximum difference (in ns) allowed between trigger timestamps and raw timestamp.
     # - SPEC-TDC access configuration
     spectdc_product_name:  "tdcdecoder"                         # Name for getting SPEC-TDC Decoder products (if any).
     spectdc_rwmtrig_ch: 2                                       # Channel assigned to RWM (Resistive Wall Monitor) triggers.
@@ -24,18 +25,19 @@ xarapucadecoder:
     spectdc_etrig_ch: 4                                         # Channel assigned to ETT (Event Trigger Timestamp) triggers.
     # - PTB access configuration
     ptb_product_name: "ptbdecoder"                              # Name for getting PTB Decoder products (if any).
+    allowed_hl_triggers: [1, 2, 3, 4, 5, 14, 15]                # List of allowed HLT trigger types (1-5, 14, 15).
 
     # OUTPUT configuration:
     # - Output data product instance name.
     waveforms_instance_name: "XARAPUCAChannels"                 # Name for the instance product containing the raw decoded waveforms.
-    timing_instance_name: ""                                    # Name for the instance product containing the timing reference information.
+    timing_instance_name: "TimingChannels"                      # Name for the instance product containing the timing reference information.
     store_debug_waveforms: 0                                    # Number of waveforms to store (0: none, -1: all, n: first n waveforms).
     # - Debug options.
     debug_all: false                                            # (De)activates all debug options.
     debug_tdc_handle: true                                      # (De)activates SPEC-TDC art::Handle information printing.
     debug_ptb_handle: true                                      # (De)activates PTB art::Handle information printing.
     debug_fragments_handle: false                               # (De)activates V1740B CAEN fragments art::Handle information printing.
-    debug_timing: true                                          # (De)activates timing data printing. 
+    debug_timing: false                                          # (De)activates timing data printing. 
     debug_buffer: false                                         # (De)activates buffer status printing.
     debug_waveforms: false                                      # (De)activates waveforms decoding printing.
     # - Verbose option.
