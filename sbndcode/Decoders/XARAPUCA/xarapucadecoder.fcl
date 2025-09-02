@@ -14,18 +14,14 @@ xarapucadecoder:
     fragment_id_offset: 41216                                   # Offset to be applied to the fragment IDs (0xA100).
     board_id_list: [7, 13, 16, 19]                              # Slots where the boards are installed.
     # - Timing configuration.
-    timing_priority: 3                                          # NOW: 0 SPEC-TDC RWM, 1 SPEC-TDC ETT, 3 PTB, 2 CAEN-only. 
-                                                                # SHOULD BE ---> 0 ETRIG 1 HLT TRIG 2 CAEN-only 
+    timing_priority: 0                                          # 0 SPEC-TDC ETRIG, 1 PTB HLT (1-5, 14,15), 2 CAEN-only. 
     ns_per_sample: 16                                           # Nanoseconds per sample.
-
     # - RAW timestamp configuration:
     raw_event_header_product_name: "daq"                        # Label identifying the module that created the artdaq::detail::RawEventHeader data product.
     raw_trig_max_diff: 300000                                   # Maximum difference (in ns) allowed between trigger timestamps and raw timestamp.
     raw_timestamp_correction: 367000                            # Correction (in ns) to be applied to the raw timestamp.
-
     # - SPEC-TDC access configuration
     spectdc_product_name:  "tdcdecoder"                         # Name for getting SPEC-TDC Decoder products (if any).
-    spectdc_rwmtrig_ch: 2                                       # Channel assigned to RWM (Resistive Wall Monitor) triggers.
     spectdc_ftrig_ch: 3                                         # Channel assigned to flash triggers.
     spectdc_etrig_ch: 4                                         # Channel assigned to ETT (Event Trigger Timestamp) triggers.
     # - PTB access configuration
@@ -42,7 +38,7 @@ xarapucadecoder:
     debug_tdc_handle: true                                      # (De)activates SPEC-TDC art::Handle information printing.
     debug_ptb_handle: true                                      # (De)activates PTB art::Handle information printing.
     debug_fragments_handle: false                               # (De)activates V1740B CAEN fragments art::Handle information printing.
-    debug_timing: false                                          # (De)activates timing data printing. 
+    debug_timing: true                                          # (De)activates timing data printing. 
     debug_buffer: false                                         # (De)activates buffer status printing.
     debug_waveforms: false                                      # (De)activates waveforms decoding printing.
     # - Verbose option.
