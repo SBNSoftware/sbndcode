@@ -6,7 +6,7 @@ Centralized configuration management.
 import os
 from pathlib import Path
 
-# Get the base directory (training folder)
+# Get the base directory
 BASE_DIR = Path(__file__).parent
 PROJECT_ROOT = BASE_DIR.parent
 
@@ -14,7 +14,7 @@ PROJECT_ROOT = BASE_DIR.parent
 DATA_CONFIG = {
     # Root file paths - update these as needed
     'training_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_30k_training.root',
-    'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_1_test.root',
+    'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_8k_test.root',
     
     # Keys to load from ROOT files
     'keys_to_load': [
@@ -161,22 +161,22 @@ def validate_paths():
     # Check model export directory
     export_dir = Path(MODEL_CONFIG['export_path'])
     if not export_dir.exists():
-        print(f"⚠️  Model export directory doesn't exist: {export_dir}")
+        print(f">> WARNING: Model export directory doesn't exist: {export_dir}")
         print("   Will be created when saving model.")
     
     if missing_paths:
-        print("❌ Missing required files:")
+        print("* ERROR: Missing required files:")
         for path in missing_paths:
             print(f"   {path}")
         return False
     else:
-        print("✅ All configuration paths validated successfully")
+        print(">> SUCCESS: All configuration paths validated successfully")
         return True
 
 
 def print_config_summary():
     """Print a summary of current configuration."""
-    print("📋 Configuration Summary")
+    print(">> Configuration Summary")
     print("=" * 50)
     print(f"PMT Maps Directory: {DATA_CONFIG['pmt_maps']['coated'].parent}")
     print(f"Model Export Path: {MODEL_CONFIG['export_path']}")
