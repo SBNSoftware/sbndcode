@@ -369,22 +369,20 @@ bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, ui
 
   if (fverbose | fdebug_tdc_handle) std::cout << "\n > SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp: searching for SPEC-TDC products..." << std::endl;
 
-  // The art::Handle object is not valid.
   if (!tdc_handle.isValid()) {
-    if (fdebug_tdc_handle) std::cout << "\nTDC-SPEC handle not valid for " << fspectdc_product_name << "." << std::endl;
-  
-  // The art::Handle object is empty.
+    if (fdebug_tdc_handle) std::cout << "\n\tTDC-SPEC handle not valid for " << fspectdc_product_name << "." << std::endl;
   } else if (tdc_handle->empty()) {
-    if (fdebug_tdc_handle) std::cout << "\nTDC-SPEC handle is empty." << std::endl;
-  
-  // The art::Handle object is valid and not empty
+    if (fdebug_tdc_handle) std::cout << "\n\tTDC-SPEC handle is empty." << std::endl;
   } else  {
-    if (fdebug_tdc_handle) std::cout << " \nDecoded TDC-SPEC products found: " << tdc_handle->size() << " products." << std::endl;
+    if (fdebug_tdc_handle) std::cout << " \n\tDecoded TDC-SPEC products found: " << tdc_handle->size() << " products." << std::endl;
     
     unsigned int num_event_triggers = 0;
     unsigned int num_flash_triggers = 0;
 
-    if (fdebug_tdc_handle) std::cout << "\tTDC Channel \t TDC Name \t\t TDC Timestamp [ns] \t\t TDC Offset [ns]" << std::endl;
+    uint64_t min_diff = std::numeric_limits<uint64_t>::max();
+    uint64_t closest_etrig_timestamp_ns = 0;
+
+    if (fdebug_tdc_handle) std::cout << "\t\tTDC Channel \t TDC Name \t\t TDC Timestamp [ns] \t\t TDC Offset [ns]";
     
     for (size_t t = 0; t < tdc_handle->size(); t++) {
       const uint64_t tdc_timestamp = tdc_handle->at(t).Timestamp();   // Timestamp of the signal [ns].
@@ -393,7 +391,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, ui
       if (fdebug_tdc_handle) {
         const std::string tdc_name = tdc_handle->at(t).Name();        // Name of channel input.
         const uint64_t tdc_offset = tdc_handle->at(t).Offset();       // Channel specific offset [ns].
-        std::cout << "\n\t\t " << tdc_channel << "   \t\t\t" << tdc_name.c_str() 
+        std::cout << "\n\t\t\t " << tdc_channel << "   \t\t\t" << tdc_name.c_str() 
                   << "\t\t(" << tdc_timestamp / NANOSEC_IN_SEC << ")" << tdc_timestamp % NANOSEC_IN_SEC << " ns."
                   << "\t\t  " << tdc_offset;
       }
@@ -404,19 +402,42 @@ bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, ui
       // Counts the number of event triggers and gets the last event trigger timestamp for the SPEC-TDC reference timing frame.
       } else if (tdc_channel == fspectdc_etrig_ch) {
         num_event_triggers++;
-        timestamp = tdc_timestamp;
-        ett_found = true;
 
-        if (fdebug_timing) {
-          std::cout << "\t\t - Found SPEC-TDC timestamp for Event Trigger: " << timestamp << " ns.";
+        uint64_t diff = (tdc_timestamp < raw_timestamp) ? (raw_timestamp - tdc_timestamp) : (tdc_timestamp - raw_timestamp);
+        if (diff < min_diff) {
+          min_diff = diff;
+          closest_etrig_timestamp_ns = tdc_timestamp;
         }
+
+        if (fdebug_tdc_handle) std::cout << "\t\t - " << diff << " ns away from the raw timestamp.";
       }
 
     } // End SPEC-TDC products extraction loop.
 
     if (fdebug_tdc_handle) {
-      std::cout << "\nNumber of event triggers (ETRIG): " << num_event_triggers << "." << std::endl;
-      std::cout << "Number of flash triggers (FTRIG): " << num_flash_triggers << "." << std::endl;
+      std::cout << "\n\tNumber of event triggers (ETRIG): " << num_event_triggers << "." << std::endl;
+      std::cout << "\tNumber of flash triggers (FTRIG): " << num_flash_triggers << "." << std::endl;
+      if (closest_etrig_timestamp_ns) {
+        std::cout << "\n\t Closest ETRIG timestamp to the raw timestamp: " << print_timestamp(closest_etrig_timestamp_ns) << " with a difference of " << min_diff << " ns." << std::endl;
+      } else {
+        std::cout << "\n\t No ETRIG timestamps found." << std::endl;
+      }
+    }
+    
+    if (min_diff > fraw_trig_max_diff) {
+      closest_etrig_timestamp_ns = 0;
+    } else {
+      ett_found = true;
+      timestamp = closest_etrig_timestamp_ns;
+    }
+
+    if (fverbose | fdebug_tdc_handle) {
+      if (closest_etrig_timestamp_ns) {
+        std::cout << "\n > SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp: ETRIG timestamp found close to the raw timestamp. Using SPEC-TDC timing frame as reference." << std::endl;
+        std::cout << "\t\t ETRIG timestamp: " << print_timestamp(timestamp) << "." << std::endl;
+      } else {
+        std::cout << "\n > SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp: No ETRIG timestamp found close to the raw timestamp. Using PTB timing frame." << std::endl;
+      }
     }
   }
 
