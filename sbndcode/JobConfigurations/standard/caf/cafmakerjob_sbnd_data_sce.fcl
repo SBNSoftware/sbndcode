@@ -13,8 +13,6 @@ physics.producers.cafmaker.SBNDCRTTrackMatchLabel: "crttrackmatchingSCE"
 physics.producers.cafmaker.OpT0Label: "opt0finderSCE"
 physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatchingSCE"
 physics.producers.cafmaker.CVNLabel: "cvnSCE"
-physics.producers.cafmaker.SBNDFrameShiftInfoLabel: "frameshift"
-physics.producers.cafmaker.SBNDTimingInfoLabel: "frameshift"
 
 physics.producers.cnnid.ClusterModuleLabel:        "pandoraSCE"
 physics.producers.cnnid.PFParticleModuleLabel:     "pandoraSCE"
