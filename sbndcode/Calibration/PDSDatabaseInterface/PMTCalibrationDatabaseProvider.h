@@ -50,11 +50,20 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
         int getCAENDigitizerChannel( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).caenDigitizerChannel;
         };
+        bool getReconstructChannel(unsigned int channelID) const override {
+            return getChannelCorrOrDefault(channelID).reconstructChannel;
+        };
         double getTotalTransitTime( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).totalTransitTime;
         };
+        double getCosmicTimeCorrection(unsigned int channelID) const override {
+            return getChannelCorrOrDefault(channelID).cosmicTimeCorrection;
+        };
         double getSPEAmplitude( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).spe_amplitude;
+        };
+        double getSPEAmplitudeStd( unsigned int channelID ) const override {
+            return getChannelCorrOrDefault(channelID).spe_amplitude_std;
         };
         double getGaussFilterPower( unsigned int channelID ) const override {
             return getChannelCorrOrDefault(channelID).gauss_wc_power;
@@ -80,8 +89,11 @@ class sbndDB::PMTCalibrationDatabaseProvider : public PMTCalibrationDatabase {
             size_t breakoutBox=0;
             size_t caenDigitizer=0;
             size_t caenDigitizerChannel=0;
-            size_t totalTransitTime=0;
+            bool reconstructChannel=false;
+            double totalTransitTime=0.;
+            double cosmicTimeCorrection=0.;
             double spe_amplitude=0.;
+            double spe_amplitude_std=0.;
             double gauss_wc_power=0.;
             double gauss_wc=0.;
             std::vector<double> ser={};
