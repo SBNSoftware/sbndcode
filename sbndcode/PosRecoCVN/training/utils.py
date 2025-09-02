@@ -139,7 +139,7 @@ def process_events(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
     """
     
     if verbose:
-        print("🚀 Starting optimized event processing...")
+        print(">> Starting optimized event processing...")
         start_time = time.time()
     
     initial_count = len(nuvT)
@@ -238,12 +238,12 @@ def process_events(nuvT, f_ophit_PE, f_ophit_ch, f_ophit_t,
     
     if verbose:
         processing_time = time.time() - start_time
-        print(f"✅ Processing completed in {processing_time:.2f} seconds")
+        print(f">> Processing completed in {processing_time:.2f} seconds")
         print()
         tracker.display()
         
         if len(final_arrays['nuvT']) > 0:
-            print("\n📊 Final dataset ranges:")
+            print("\n* Final dataset ranges:")
             for var in ['dEpromx', 'dEpromy', 'dEpromz', 'dEtpc']:
                 arr = final_arrays[var]
                 print(f"  {var}: [{ak.min(arr):.1f}, {ak.max(arr):.1f}]")
@@ -290,7 +290,7 @@ def create_pe_matrix(f_ophit_PE, f_ophit_ch, max_channels=312):
     
     processing_time = time.time() - start_time
     
-    print(f"✅ Completed in {processing_time:.2f} seconds")
+    print(f">> Completed in {processing_time:.2f} seconds")
     print(f"Matrix shape: {pe_matrix.shape}")
     print(f"Non-zero elements: {np.count_nonzero(pe_matrix):,}")
     print(f"Total PE: {np.sum(pe_matrix):.1f}")
@@ -329,17 +329,49 @@ def create_pe_images(pe_matrix, *maps, method="max", normalization_factors=None)
     """
     Create PE images from PE matrix and channel maps.
     
+    This function operates in two distinct modes based on the normalization_factors parameter:
+    
+    TRAINING MODE (normalization_factors=None):
+    - Computes normalization factors from the input data
+    - For maps 0 and 1 (uncoated/coated PMTs): uses shared normalization (max of both)
+    - For additional maps: uses individual normalization per map
+    - Processes all events without filtering
+    - Returns: (images, norm_factors)
+    
+    INFERENCE MODE (normalization_factors provided):
+    - Uses pre-computed normalization factors from training
+    - Applies strict filtering: discards events where any pixel > 1.0 after normalization
+    - This prevents the model from seeing out-of-distribution data (values > training range)
+    - Events exceeding the normalization range are marked as invalid
+    - Returns: (images, norm_factors, valid_event_mask)
+    
+    Image Processing Details:
+    - Converts PE matrix to spatial images using channel maps
+    - Applies half-detector selection based on specified method
+    - Maps are processed in order: uncoated PMTs, coated PMTs, additional detectors
+    - Final images have shape (n_valid_events, ch_y//2, ch_z, n_maps)
+    
     Parameters:
     -----------
     pe_matrix : array (n_events, n_channels)
-    *maps : arrays (ch_y, ch_z) - channel mapping arrays  
-    method : str - selection method: 'max', 'sum', 'nonzero', 'mean_top'
-    normalization_factors : list, optional - pre-computed normalization factors
+        PE values per event and channel
+    *maps : arrays (ch_y, ch_z) - channel mapping arrays
+           maps[0] = uncoated PMT map, maps[1] = coated PMT map  
+    method : str - selection method for half-detector: 'max', 'sum', 'nonzero', 'mean_top'
+    normalization_factors : list, optional 
+        Pre-computed normalization factors for inference mode
+        If None, calculates factors (training mode)
     
     Returns:
     --------
-    images : array (n_events, ch_y//2, ch_z, n_maps) - PE images
-    norm_factors : list - normalization factors used (for inference)
+    TRAINING MODE:
+        images : array (n_events, ch_y//2, ch_z, n_maps) - PE images
+        norm_factors : list - calculated normalization factors
+    
+    INFERENCE MODE:
+        images : array (n_valid_events, ch_y//2, ch_z, n_maps) - PE images for valid events only
+        norm_factors : list - normalization factors used
+        valid_event_mask : array (n_events,) - boolean mask indicating which events were kept
     """
     
     ch_y, ch_z = maps[0].shape
@@ -349,8 +381,10 @@ def create_pe_images(pe_matrix, *maps, method="max", normalization_factors=None)
     
     print(f"Creating {n_events:,} images ({half_y}×{ch_z}×{n_maps})")
     
+    # Initialize outputs
     images = np.zeros((n_events, half_y, ch_z, n_maps), dtype=np.float32)
     norm_factors = []
+    valid_event_mask = np.ones(n_events, dtype=bool)  # Track valid events
     
     for map_idx, channel_map in enumerate(maps):
         valid_mask = (channel_map >= 0) & (channel_map < pe_matrix.shape[1])
@@ -361,40 +395,83 @@ def create_pe_images(pe_matrix, *maps, method="max", normalization_factors=None)
             channels = channel_map[valid_mask]
             pe_spatial[:, y_pos, z_pos] = pe_matrix[:, channels]
         
-        # Normalization
+        # Better variable naming for clarity
+        map_name = 'uncoated' if map_idx == 0 else 'coated' if map_idx == 1 else f'map_{map_idx}'
+        
         if normalization_factors is not None:
             # Use provided normalization factor (for inference)
             # First factor is shared between maps 0 and 1
             norm_factor = normalization_factors[0] if map_idx < 2 else normalization_factors[map_idx-1]
-            print(f"[Norm] Using provided factor for map {map_idx}: {norm_factor:.3f}")
+            
+            # Apply normalization for inference path
+            if norm_factor > 0:
+                pe_spatial /= norm_factor
+                
+                # Check for events exceeding normalization range (strict >1.0)
+                event_max_values = np.max(pe_spatial.reshape(n_events, -1), axis=1)
+                events_exceeding = event_max_values > 1.0
+                
+                if np.any(events_exceeding):
+                    n_exceeding = np.sum(events_exceeding)
+                    max_exceeding = np.max(event_max_values[events_exceeding])
+                    print(f"[WARNING] {n_exceeding} events exceed normalization range in {map_name}")
+                    print(f"          Max value found: {max_exceeding:.6f} (should be ≤1.0)")
+                    print(f"          Marking these events for discard")
+                    
+                    # Mark events as invalid
+                    valid_event_mask[events_exceeding] = False
+            
+            # Process current map for inference path
+            _select_halves(pe_spatial, images, map_idx, method, half_y)
+            
         else:
             # Calculate normalization factor (for training)
             if map_idx < 2:
-                # First 2 maps together
+                # First 2 maps (uncoated + coated) share normalization
                 if map_idx == 0:
-                    first_map = pe_spatial.copy()
+                    uncoated_spatial = pe_spatial.copy()
                     continue
                 elif map_idx == 1:
-                    norm_factor = max(np.max(first_map), np.max(pe_spatial))
-                    print(f"[Norm] Shared max value for maps 0 & 1: {norm_factor:.3f}")
+                    coated_spatial = pe_spatial.copy()
+                    norm_factor = max(np.max(uncoated_spatial), np.max(coated_spatial))
                     norm_factors.append(norm_factor)
+                    
+                    # Apply normalization and process both maps
                     if norm_factor > 0:
-                        first_map /= norm_factor
-                        pe_spatial /= norm_factor
-                    _select_halves(first_map, images, 0, method, half_y)
+                        uncoated_spatial /= norm_factor
+                        coated_spatial /= norm_factor
+                    
+                    # Process uncoated map (map_idx=0)
+                    _select_halves(uncoated_spatial, images, 0, method, half_y)
+                    
+                    # Process coated map (map_idx=1)
+                    _select_halves(coated_spatial, images, 1, method, half_y)
+                    
+                    # Both maps processed, continue to next map if any
+                    continue
             else:
-                # Other maps separately
+                # Additional maps processed separately
                 norm_factor = np.max(pe_spatial)
-                print(f"[Norm] Max value for map {map_idx}: {norm_factor:.3f}")
                 norm_factors.append(norm_factor)
-        
-        # Apply normalization and process current map
-        if map_idx != 0:
-            if norm_factor > 0:
-                pe_spatial /= norm_factor
-            _select_halves(pe_spatial, images, map_idx, method, half_y)
+                
+                # Apply normalization and process current map
+                if norm_factor > 0:
+                    pe_spatial /= norm_factor
+                _select_halves(pe_spatial, images, map_idx, method, half_y)
     
-    return images, norm_factors
+    # Filter out invalid events from final images array
+    if normalization_factors is not None:
+        n_valid = np.sum(valid_event_mask)
+        if n_valid < n_events:
+            print(f">> Final filtering: {n_events-n_valid} events discarded, {n_valid} events kept")
+            images = images[valid_event_mask]
+        else:
+            print(f">> All {n_events} events passed normalization checks")
+        
+        return images, norm_factors, valid_event_mask
+    else:
+        # Training mode - return all events (no filtering applied)
+        return images, norm_factors
 
 
 def scale_coordinates(coordinates, coord_ranges):
@@ -576,7 +653,7 @@ def save_filtered_data(results, filename, config=None):
     
     ak.to_parquet(data, filename, compression="snappy")
     
-    print(f"✅ Successfully saved {len(data['nuvT']):,} events to:")
+    print(f">> Successfully saved {len(data['nuvT']):,} events to:")
     print(f"   {filename}")
     print(f"   Compressed with snappy for optimal file size")
     if config:
