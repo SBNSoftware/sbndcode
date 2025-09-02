@@ -140,6 +140,7 @@ private:
   bool get_ptb_hlt_timestamp(art::Event& e, uint64_t raw_timestamp, uint64_t & timestamp, uint16_t & hlt_code);
   bool get_spec_tdc_etrig_timestamp(art::Event& e, uint64_t raw_timestamp, uint64_t & timestamp);
   
+  std::string print_timestamp(uint64_t timestamp);
 };
 
 /**
@@ -382,7 +383,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, ui
     
     unsigned int num_event_triggers = 0;
     unsigned int num_flash_triggers = 0;
-    
+
     if (fdebug_tdc_handle) std::cout << "\tTDC Channel \t TDC Name \t\t TDC Timestamp [ns] \t\t TDC Offset [ns]" << std::endl;
     
     for (size_t t = 0; t < tdc_handle->size(); t++) {
@@ -456,8 +457,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
 
           if (fdebug_ptb_handle) {
             std::cout << "\t\t\t HLT " << j << ": ";
-            std::cout << "Timestamp: " << hlt_timestamp_ns << " ns ";
-            std::bitset<32> hlt_word_bitset = std::bitset<32>(hlt_trig.trigger_word);
+            std::cout << "Timestamp: " << print_timestamp(hlt_timestamp_ns);
             std::cout << "(" << hlt_word_bitset << ")";
           }
 
@@ -465,15 +465,13 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
           for (size_t k = 0; k < fallowed_hl_triggers.size(); k++) {
             if (hlt_word_bitset[fallowed_hl_triggers[k]]) {
               allowed_hlt = fallowed_hl_triggers[k];
-              if (fdebug_ptb_handle) {
-                uint64_t diff = (hlt_timestamp_ns < raw_timestamp) ? (raw_timestamp - hlt_timestamp_ns) : (hlt_timestamp_ns - raw_timestamp);
-                if (diff < min_diff) {
-                  min_diff = diff;
-                  closest_hlt_timestamp_ns = hlt_timestamp_ns;
-                  hlt_type = allowed_hlt;
-                }
-                std::cout << " - Allowed HLT: " << allowed_hlt << " - " << diff << " ns away from the raw timestamp." << std::endl;
+              uint64_t diff = (hlt_timestamp_ns < raw_timestamp) ? (raw_timestamp - hlt_timestamp_ns) : (hlt_timestamp_ns - raw_timestamp);
+              if (diff < min_diff) {
+                min_diff = diff;
+                closest_hlt_timestamp_ns = hlt_timestamp_ns;
+                hlt_type = allowed_hlt;
               }
+              if (fdebug_ptb_handle) std::cout << " - Allowed HLT: " << allowed_hlt << " - " << diff << " ns away from the raw timestamp." << std::endl;
             }
           }
           if ((fdebug_ptb_handle) && !allowed_hlt) std::cout << std::endl;
@@ -486,7 +484,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
 
     if (fdebug_ptb_handle) {
       if (closest_hlt_timestamp_ns) {
-        std::cout << "\n\t Closest HLT trigger to the raw timestamp: " << closest_hlt_timestamp_ns << " ns - HLT type: " << hlt_type << " with a difference of " << min_diff << " ns." << std::endl;
+        std::cout << "\n\t Closest HLT trigger to the raw timestamp: " << print_timestamp(closest_hlt_timestamp_ns) << " - HLT type: " << hlt_type << " with a difference of " << min_diff << " ns." << std::endl;
       } else {
         std::cout << "\n\t No allowed HL triggers found close to the raw timestamp." << std::endl;
       }
@@ -504,7 +502,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
     if (fverbose | fdebug_ptb_handle) {
       if (closest_hlt_timestamp_ns) {
         std::cout << "\n > SBNDXARAPUCADecoder::get_ptb_hlt_timestamp: Allowed HL trigger found close to the raw timestamp. Using PTB timing frame as reference." << std::endl;
-        std::cout << "\t\t PTB timestamp: " << timestamp << " ns." << std::endl;
+        std::cout << "\t\t PTB timestamp: " << print_timestamp(timestamp) << "." << std::endl;
       } else {
         std::cout << "\n > SBNDXARAPUCADecoder::get_ptb_hlt_timestamp: No allowed HL triggers found close to the raw timestamp. Using CAEN-only timing frame as default." << std::endl;
       }
@@ -897,6 +895,10 @@ uint32_t sbndaq::SBNDXARAPUCADecoder::read_word(const uint32_t* & data_ptr) {
 unsigned int sbndaq::SBNDXARAPUCADecoder::get_channel_id(unsigned int board, unsigned int board_channel) {
   unsigned int channel_id = fboard_id_list[board] * 100 + board_channel;
   return channel_id;
+}
+
+std::string sbndaq::SBNDXARAPUCADecoder::print_timestamp(uint64_t timestamp) {
+  return "(" + std::to_string(timestamp / NANOSEC_IN_SEC) + ")" + std::to_string(timestamp % NANOSEC_IN_SEC) + " ns";
 }
 
 DEFINE_ART_MODULE(sbndaq::SBNDXARAPUCADecoder)
