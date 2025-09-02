@@ -13,28 +13,6 @@ training/
 └── README.md                             # Este archivo
 ```
 
-## Mejoras implementadas
-
-### ✅ **Código refactorizado**
-- Funciones modulares en `utils.py`
-- Configuración centralizada en `config.py`
-- Eliminación de código duplicado
-- Imports limpiados (solo los necesarios)
-
-### ✅ **Rutas relativas**
-- Los mapas PMT ahora usan rutas relativas
-- Configuración flexible de paths
-- Fácil portabilidad entre sistemas
-
-### ✅ **Normalización corregida**
-- Factores de normalización guardados para inferencia
-- Pipeline de inferencia consistente con entrenamiento
-- Previene predicciones erróneas
-
-### ✅ **Configuración mejorada**
-- Parámetros centralizados y documentados
-- Fácil modificación sin tocar código
-- Validación automática de rutas
 
 ## Uso rápido
 

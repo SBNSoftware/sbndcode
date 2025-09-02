@@ -42,14 +42,18 @@ physics:
       KeepPDGCode: []  # empty = keep all particles
       SaveOpHits: true
       
+      # PMT Map Configuration
+      CoatedPMTMapPath: "/exp/sbnd/app/users/svidales/larsoft_develop/srcs/sbndcode/sbndcode/PosRecoCVN/pmt_maps/coated_pmt_map_realistic_flipped.csv"
+      UncoatedPMTMapPath: "/exp/sbnd/app/users/svidales/larsoft_develop/srcs/sbndcode/sbndcode/PosRecoCVN/pmt_maps/uncoated_pmt_map_realistic_flipped.csv"
+      
       # TensorFlow Configuration
       RunInference: true  # Set to true to enable TensorFlow inference  
-      ModelPath: "/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models/test_larsoft_inference_savedmodel_resnet18"       # Path to TensorFlow SavedModel directory
+      ModelPath: "/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models/v0508_trained_w_30k/v0901_trained_w_165k/saved_model"       # Path to TensorFlow SavedModel directory
       InputNames: []      # Leave empty to use default model inputs, or specify: ["input_1"]
       OutputNames: []     # Leave empty to use default model outputs, or specify: ["dEpromx", "dEpromy", "dEpromz"]
       
       # Image Normalization Configuration
-      CustomNormFactor: 10789.310  # Set to positive value to override auto-normalization, -1.0 for auto-detection
+      CustomNormFactor: 11311.191  # Set to positive value to override auto-normalization, -1.0 for auto-detection
     
     }
   }
