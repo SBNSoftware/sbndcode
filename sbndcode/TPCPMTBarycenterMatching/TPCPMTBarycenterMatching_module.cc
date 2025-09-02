@@ -225,6 +225,7 @@ private:
   std::vector<std::string>  fInputTags;            ///< Suffix added onto fOpFlashLabel and fPandoraLabel, used by ICARUS for separate cryostat labels but could be empty
   std::vector<std::string>  fOpFlashesModuleLabel;         ///< Label for PMT reconstruction products
   std::string               fPandoraLabel;         ///< Label for Pandora output products
+  std::string               fOpT0Label;
   bool                      fCollectionOnly;       ///< Only use TPC spacepoints from the collection plane
   double                    fDistanceCandidateFlashes; ///< Maximum distance between candidate flashes to be considered for matching (cm)
   std::vector<double>       fCalAreaConst;         /// Calibration area constants for wire plane
@@ -266,6 +267,9 @@ private:
   double                    fDeltaY;               ///< | Matched flash Y center - charge Y center | (cm)
   double                    fDeltaZ;               ///< | Matched flash Z center - charge Z center | (cm)
   double                    fRadius;               ///< Hypotenuse of DeltaY and DeltaZ *parameter minimized by matching* (cm)
+  double                    fChi2;                 ///< Chi2 to be minimized when matching flash to slice (dimensionless)
+  double                    fScore;                ///< Score to be maximized when matching flash to slice (dimensionless)
+  double                    fAngle;                ///< Angle between charge PCA and light PCA (degrees)
   double                    fDeltaY_Trigger;       ///< | Triggering flash Y center - charge Y center | (cm)
   double                    fDeltaZ_Trigger;       ///< | Triggering flash Z center - charge Z center | (cm)
   double                    fRadius_Trigger;       ///< Hypotenuse of DeltaY_Trigger and DeltaZ_Trigger (cm)
@@ -355,9 +359,12 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
     fMatchTree->Branch("deltaY",              &fDeltaY,              "deltaY/d"             );
     fMatchTree->Branch("deltaZ",              &fDeltaZ,              "deltaZ/d"             );
     fMatchTree->Branch("radius",              &fRadius,              "radius/d"             );
+    fMatchTree->Branch("angle",               &fAngle,               "angle/d"              );
+    fMatchTree->Branch("chi2",                &fChi2,                "chi2/d"               );
+    fMatchTree->Branch("score",               &fScore,               "score/d"              );
     fMatchTree->Branch("deltaZ_Trigger",      &fDeltaZ_Trigger,      "deltaZ_Trigger/d"     );
     fMatchTree->Branch("deltaY_Trigger",      &fDeltaY_Trigger,      "deltaY_Trigger/d"     );
-    fMatchTree->Branch("radius_Trigger",      &fRadius_Trigger,      "dadius_Trigger/d"     );
+    fMatchTree->Branch("radius_Trigger",      &fRadius_Trigger,      "radius_Trigger/d"     );
 
   } //End MatchTree
 
@@ -450,6 +457,7 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
   // Cluster to Hit assns
   art::FindManyP<recob::Hit> cluster_hit_assns (clusterHandle, e, fPandoraLabel);
 
+    
 
   //For slice...
   for ( unsigned j = 0; j < nSlices; j++ ) {
@@ -585,6 +593,11 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       //For flash...
       for ( int m = 0; m < nFlashes; m++ ) {
         auto & flash = flashVect[m];
+
+        double flashTime = flash->Time();
+
+        if(flashTime<fFlashVetoWindow[0] || flashTime>fFlashVetoWindow[1]) continue;
+
         //Find index of flash that minimizes barycenter distance in XYZ place
         thisFlashCenterX = flash->XCenter();
         thisFlashCenterY = flash->YCenter();
@@ -645,6 +658,7 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
         if(chi2 < minChi2)
         {
           minChi2 = chi2;
+          fAngle = angle;
           matchIndex = idx;
         }
       }
@@ -654,6 +668,8 @@ void TPCPMTBarycenterMatchProducer::produce(art::Event& e)
       const art::Ptr<recob::OpFlash> flashPtr { flashHandle, unsignedMatchIndex };
       //Update match info
       updateFlashVars(flashPtr);
+      fChi2 = minChi2;
+      fScore = 1./fChi2;
       updateMatchInfo(sliceMatchInfo);
       sliceMatchInfoVector.push_back(sliceMatchInfo);
       art::Ptr<sbn::TPCPMTBarycenterMatch> const infoPtr = makeInfoPtr(matchInfoVector->size());
@@ -710,6 +726,9 @@ void TPCPMTBarycenterMatchProducer::InitializeSlice() {
   fDeltaY = -9999.;
   fDeltaZ = -9999.;
   fRadius = -9999.;
+  fChi2 = -9999.;
+  fScore = -99999.;
+  fAngle = -9999.;
   fDeltaZ_Trigger = -9999.;
   fDeltaY_Trigger = -9999.;
   fRadius_Trigger = -9999.;
@@ -767,6 +786,9 @@ void TPCPMTBarycenterMatchProducer::updateMatchInfo(sbn::TPCPMTBarycenterMatch& 
   matchInfo.deltaZ = fDeltaZ;
   matchInfo.radius = fRadius;
   matchInfo.radius_Trigger = fRadius_Trigger;
+  matchInfo.chi2 = fChi2;
+  matchInfo.score = fScore;
+  matchInfo.angle = fAngle;
 } //End updateMatchInfo()
 
 void TPCPMTBarycenterMatchProducer::GetPCA(std::vector<double> const&x, std::vector<double> const&y, std::vector<double> const&weight, std::vector<double> & PCA ) {
