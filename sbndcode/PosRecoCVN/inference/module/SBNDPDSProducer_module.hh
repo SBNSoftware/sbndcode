@@ -19,6 +19,8 @@
 #include <algorithm>
 #include <fstream>
 #include <memory>
+#include "TTree.h"
+#include "art_root_io/TFileService.h"
 
 // TensorFlow includes
 #include "sbndcode/PosRecoCVN/inference/tf/tf_graph.h"
@@ -95,7 +97,7 @@ public:
   void produce(art::Event& e) override;
 
   // Selected optional functions.
-  // void beginJob() override;
+  void beginJob() override;
 
 private:
 
@@ -115,6 +117,7 @@ private:
   void CreatePEImages();
   void RunInference(PixelMapVars& pixelmapvars);
   std::vector<double> ApplyInverseScaling(const std::vector<double>& scaled_predictions);
+  void FillInferenceTree(bool passedFilters, const PixelMapVars& pixelVars);
   template<typename T>
   std::vector<std::vector<T>> FilterByMask(const std::vector<std::vector<T>>& array, const std::vector<std::vector<bool>>& mask);
 
@@ -239,6 +242,16 @@ private:
   
   // TensorFlow inference variables
   std::unique_ptr<tf::Graph> fTFGraph;
+  
+  // TTree variables for simple analysis
+  TTree* fInferenceTree;
+  int fTreeRun, fTreeSubrun, fTreeEvent;
+  bool fTreePassedFilters;
+  double fTreeTrueX, fTreeTrueY, fTreeTrueZ;
+  double fTreePredX, fTreePredY, fTreePredZ;
+  double fTreeDiffX, fTreeDiffY, fTreeDiffZ;
+  double fTreeError3D;
+  double fTreeNuvT, fTreeNuvZ, fTreedEtpc;
 };
 
 

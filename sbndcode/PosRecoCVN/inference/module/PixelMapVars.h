@@ -25,6 +25,13 @@ struct PixelMapVars {
     std::vector<double> dEpromy_diff;
     std::vector<double> dEpromz_diff;
     
+    // Event information and performance metrics
+    int run_id;
+    int subrun_id; 
+    int event_id;
+    bool passed_filters;
+    std::vector<double> error_3d; // 3D distance error for each reconstructed event
+    
     // Channel dictionary mapping OpDetID to OpDetType
     std::map<int, int> channel_dict;
     
