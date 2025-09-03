@@ -27,7 +27,19 @@ physics:
   {
     opanatree: {
       module_type: "SBNDPDSProducer"
-      Verbosity: 1
+      
+      Verbosity: 0
+
+      # VERBOSITY LEVELS:
+      #  0: Minimal output for large-scale processing (recommended for >1000 events)
+      #      - Events that pass filters: "Run=X Event=Y True(x,y,z) Pred(x,y,z) Error3D=Z"
+      #      - Events that fail filters: "Run=X Subrun=Y Event=Z FAILED FILTER"
+      #  1: Basic processing information
+      #      - All level 0 output plus basic filter status
+      #  2: Detailed processing information
+      #      - All level 1 output plus MCTruth details and energy depositions
+      # >2: Debug mode (development only) - full detailed output
+
       MCTruthModuleLabel: ["generator"]
       MCTruthInstanceLabel: [""]
       MCTruthOrigin: [1, 4]  # BNB neutrinos and single particles

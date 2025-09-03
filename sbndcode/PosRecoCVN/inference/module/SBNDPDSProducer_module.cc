@@ -53,6 +53,47 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     }
 }
 
+// -------- beginJob function - Initialize TTree --------
+void opdet::SBNDPDSProducer::beginJob()
+{
+  // Initialize TTree for simple analysis
+  art::ServiceHandle<art::TFileService> tfs;
+  fInferenceTree = tfs->make<TTree>("inference_tree", "CNN Position Reconstruction Results");
+  
+  // Event identification branches
+  fInferenceTree->Branch("run", &fTreeRun, "run/I");
+  fInferenceTree->Branch("subrun", &fTreeSubrun, "subrun/I"); 
+  fInferenceTree->Branch("event", &fTreeEvent, "event/I");
+  fInferenceTree->Branch("passed_filters", &fTreePassedFilters, "passed_filters/O");
+  
+  // Ground truth branches
+  fInferenceTree->Branch("true_x", &fTreeTrueX, "true_x/D");
+  fInferenceTree->Branch("true_y", &fTreeTrueY, "true_y/D");
+  fInferenceTree->Branch("true_z", &fTreeTrueZ, "true_z/D");
+  
+  // CNN prediction branches
+  fInferenceTree->Branch("pred_x", &fTreePredX, "pred_x/D");
+  fInferenceTree->Branch("pred_y", &fTreePredY, "pred_y/D");
+  fInferenceTree->Branch("pred_z", &fTreePredZ, "pred_z/D");
+  
+  // Difference branches (prediction - truth)
+  fInferenceTree->Branch("diff_x", &fTreeDiffX, "diff_x/D");
+  fInferenceTree->Branch("diff_y", &fTreeDiffY, "diff_y/D");
+  fInferenceTree->Branch("diff_z", &fTreeDiffZ, "diff_z/D");
+  
+  // Performance metrics branches
+  fInferenceTree->Branch("error_3d", &fTreeError3D, "error_3d/D");
+  
+  // Additional physics variables
+  fInferenceTree->Branch("nuv_t", &fTreeNuvT, "nuv_t/D");
+  fInferenceTree->Branch("nuv_z", &fTreeNuvZ, "nuv_z/D");
+  fInferenceTree->Branch("deposited_energy", &fTreedEtpc, "deposited_energy/D");
+  
+  if(fVerbosity > 1) {
+    std::cout << "Initialized TTree 'inference_tree' with " << fInferenceTree->GetNbranches() 
+              << " branches for CNN analysis" << std::endl;
+  }
+}
 
 // -------- Main function --------
 void opdet::SBNDPDSProducer::produce(art::Event& e)
@@ -65,7 +106,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   _eventID = e.id().event();
   _runID = e.id().run();
   _subrunID = e.id().subRun();
-  if(fVerbosity>0)
+  if(fVerbosity>1)
     std::cout << " -- Running SBNDPDSProducer -- \n Run=" << _runID << " Subrun=" << _subrunID << " Event=" << _eventID << std::endl;
 
   // --- Services
@@ -83,7 +124,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   e.getByLabel(fMCModuleLabel, mcParticleHandle);
   if(mcParticleHandle.isValid()){
     mcpartVec = *mcParticleHandle;
-    if(fVerbosity>0)
+    if(fVerbosity>2)
       std::cout << "Loaded " << mcpartVec.size() << " MCParticles from " << fMCModuleLabel << std::endl;
   } else {
     if(fVerbosity>0)
@@ -100,7 +141,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   _mc_InTimeCosmics=0; _mc_InTimeCosmicsTime.clear();
   dE_neutrinowindow = 0.0;
 
-  if(fVerbosity>0)
+  if(fVerbosity>2)
     std::cout << "Saving MCParticles from" << fMCModuleLabel << std::endl;
 
   // Loop over the handle
@@ -214,7 +255,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   FillAverageDepositedEnergyVariables(_mc_energydep,_mc_energydepX,_mc_energydepY,_mc_energydepZ,_mc_stepT,_mc_dEtpc,_mc_dEpromx,_mc_dEpromy,_mc_dEpromz,_mc_dEspreadx,_mc_dEspready,_mc_dEspreadz,_mc_dElowedges,_mc_dEmaxedges);
 
   // Print-out MCParticles summary
-  if(fVerbosity>0){
+  if(fVerbosity>2){
     std::cout<<" InTimeCosmic "<<_mc_InTimeCosmics<<std::endl;
     std::cout<<" Energy Deposition during Beam Window="<<dE_neutrinowindow<<std::endl;
     std::cout<<"----ENERGY DEPOSITIONS\n";
@@ -245,7 +286,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
       throw std::runtime_error(msg);
     }
     
-    if(fVerbosity>0)
+    if(fVerbosity>2)
       std::cout << "Saving OpHits from " << fOpHitsModuleLabel[s] << std::endl;
 
     art::fill_ptr_vector(ophitlist, ophitListHandle);
@@ -362,7 +403,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   
   bool passFilter = passFilter1 && passFilter2;
   
-  if(fVerbosity > 0) {
+  if(fVerbosity > 2) {
     std::cout << "Filter check: nuvT size = " << _nuvT.size() << ", pass filter 1 = " << passFilter1 << std::endl;
     std::cout << "Filter check: flash count = " << _flash_ophit_pe.size() << ", has ophits = " << passFilter2 << ", pass filter 2 = " << passFilter2 << std::endl;
     std::cout << "Overall filter result = " << passFilter << std::endl;
@@ -383,6 +424,12 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   // Crear y llenar el producto PixelMapVars
   auto pixelVars = std::make_unique<PixelMapVars>();
   
+  // Always fill basic event information
+  pixelVars->run_id = _runID;
+  pixelVars->subrun_id = _subrunID; 
+  pixelVars->event_id = _eventID;
+  pixelVars->passed_filters = passFilter;
+  
   // Run TensorFlow inference if enabled and images are available
   if (passFilter && !_pe_images.empty()) {
     RunInference(*pixelVars);
@@ -400,7 +447,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
     pixelVars->dEtpc = _mc_dEtpc_final;
     pixelVars->nuvZ = _nuvZ_final;
     
-    if(fVerbosity > 0) {
+    if(fVerbosity > 1) {
       std::cout << "Event passed filter - data stored in PixelMapVars" << std::endl;
     }
   } else {
@@ -416,7 +463,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
     pixelVars->nuvZ.clear();
     
     if(fVerbosity > 0) {
-      std::cout << "Event failed filter - empty data stored in PixelMapVars" << std::endl;
+      std::cout << "Run=" << _runID << " Subrun=" << _subrunID << " Event=" << _eventID << " FAILED FILTER" << std::endl;
     }
   }
   
@@ -429,7 +476,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   pixelVars->coated_pmt_map = _coated_pmt_map;
   pixelVars->uncoated_pmt_map = _uncoated_pmt_map;
 
-  if(fVerbosity > 0) {
+  if(fVerbosity > 2) {
     std::cout << "=== PixelMapVars Summary ===" << std::endl;
     std::cout << "flash_ophit_pe size: " << pixelVars->flash_ophit_pe.size() << std::endl;
     std::cout << "pe_matrix size: " << pixelVars->pe_matrix.size() << "x" 
@@ -438,6 +485,9 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
     std::cout << "Only PixelMapVars should be in output ROOT file" << std::endl;
   }
 
+  // Fill TTree with analysis-friendly data
+  FillInferenceTree(passFilter, *pixelVars);
+  
   // Poner el producto en el evento
   e.put(std::move(pixelVars));
 
@@ -780,7 +830,7 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
   }
   
   // Detailed input diagnostics
-  if(fVerbosity > 0) {
+  if(fVerbosity > 2) {
     std::cout << "=== TensorFlow Inference Debug Info ===" << std::endl;
     std::cout << "Input PE images shape: (" << _pe_images.size() 
               << ", " << (_pe_images.empty() ? 0 : _pe_images[0].size())
@@ -819,7 +869,7 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
     // Run inference on PE images
     auto predictions = fTFGraph->run(_pe_images, -1);
     
-    if(fVerbosity > 0) {
+    if(fVerbosity > 2) {
       std::cout << "RunInference: Got predictions with shape (" << predictions.size() 
                 << ", " << (predictions.empty() ? 0 : predictions[0].size()) 
                 << ", " << (predictions.empty() || predictions[0].empty() ? 0 : predictions[0][0].size()) 
@@ -869,7 +919,7 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
           }
         }
         
-        if(fVerbosity > 0) {
+        if(fVerbosity > 2) {
           std::cout << "nOutputs = " << nOutputs << std::endl;
           std::cout << "raw_predictions.size() = " << raw_predictions.size() << std::endl;
           std::cout << "Extracted raw predictions: [";
@@ -878,16 +928,6 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
             if (k < raw_predictions.size() - 1) std::cout << ", ";
           }
           std::cout << "]" << std::endl;
-          
-          // Debug the predictions structure
-          std::cout << "predictions[" << i << "] structure:" << std::endl;
-          for (size_t j = 0; j < predictions[i].size(); ++j) {
-            std::cout << "  output " << j << ": size=" << predictions[i][j].size();
-            if (!predictions[i][j].empty()) {
-              std::cout << ", first_value=" << predictions[i][j][0];
-            }
-            std::cout << std::endl;
-          }
         }
         
         // Apply inverse scaling to get real coordinates
@@ -917,39 +957,28 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
         if (unscaled_predictions.size() >= 3) {
           pixelmapvars.dEpromz_pred.push_back(unscaled_predictions[2]);
           pixelmapvars.dEpromz_diff.push_back(unscaled_predictions[2] - _mc_dEpromz_final[i]);
+          
+          // Calculate and store 3D error
+          double pred_x_abs = std::abs(unscaled_predictions[0]);
+          double true_x_abs = std::abs(_mc_dEpromx_final[i]);
+          double abs_diff_x = std::abs(pred_x_abs - true_x_abs);
+          double abs_diff_y = std::abs(unscaled_predictions[1] - _mc_dEpromy_final[i]);
+          double abs_diff_z = std::abs(unscaled_predictions[2] - _mc_dEpromz_final[i]);
+          double total_error = std::sqrt(abs_diff_x*abs_diff_x + abs_diff_y*abs_diff_y + abs_diff_z*abs_diff_z);
+          pixelmapvars.error_3d.push_back(total_error);
         }
         
         if(fVerbosity > 0) {
-          std::cout << "=== Event " << i << " Reconstruction Results ===" << std::endl;
-          std::cout << "Ground Truth (|dEpromx|, dEpromy, dEpromz): (" 
-                    << std::abs(_mc_dEpromx_final[i]) << ", " << _mc_dEpromy_final[i] << ", " 
-                    << _mc_dEpromz_final[i] << ")" << std::endl;
-          
-          if (unscaled_predictions.size() >= 3) {
-            std::cout << "CNN Prediction (|dEpromx|, dEpromy, dEpromz): (" 
-                      << std::abs(unscaled_predictions[0]) << ", " << unscaled_predictions[1] << ", " 
-                      << unscaled_predictions[2] << ")" << std::endl;
-            
-            std::cout << "Differences (|Pred| - |True|):" << std::endl;
+          if (unscaled_predictions.size() >= 3 && !pixelmapvars.error_3d.empty()) {
             double pred_x_abs = std::abs(unscaled_predictions[0]);
             double true_x_abs = std::abs(_mc_dEpromx_final[i]);
-            std::cout << "  dEpromx_diff = " << (pred_x_abs - true_x_abs) << std::endl;
-            std::cout << "  dEpromy_diff = " << (unscaled_predictions[1] - _mc_dEpromy_final[i]) << std::endl;
-            std::cout << "  dEpromz_diff = " << (unscaled_predictions[2] - _mc_dEpromz_final[i]) << std::endl;
+            double total_error = pixelmapvars.error_3d.back(); // Use the error we just calculated
             
-            // Calculate absolute differences and total error
-            double abs_diff_x = std::abs(pred_x_abs - true_x_abs);
-            double abs_diff_y = std::abs(unscaled_predictions[1] - _mc_dEpromy_final[i]);
-            double abs_diff_z = std::abs(unscaled_predictions[2] - _mc_dEpromz_final[i]);
-            double total_error = std::sqrt(abs_diff_x*abs_diff_x + abs_diff_y*abs_diff_y + abs_diff_z*abs_diff_z);
-            
-            std::cout << "Absolute Differences:" << std::endl;
-            std::cout << "  |dEpromx_diff| = " << abs_diff_x << std::endl;
-            std::cout << "  |dEpromy_diff| = " << abs_diff_y << std::endl;
-            std::cout << "  |dEpromz_diff| = " << abs_diff_z << std::endl;
-            std::cout << "  3D Distance Error = " << total_error << std::endl;
+            std::cout << "Run=" << _runID << " Event=" << _eventID 
+                      << " True(" << true_x_abs << "," << _mc_dEpromy_final[i] << "," << _mc_dEpromz_final[i] << ")"
+                      << " Pred(" << pred_x_abs << "," << unscaled_predictions[1] << "," << unscaled_predictions[2] << ")"
+                      << " Error3D=" << total_error << std::endl;
           }
-          std::cout << "============================================" << std::endl;
         }
       }
     }
@@ -1000,6 +1029,81 @@ std::vector<double> opdet::SBNDPDSProducer::ApplyInverseScaling(const std::vecto
   }
   
   return unscaled_predictions;
+}
+
+// -------- Function to fill TTree with analysis-friendly data --------
+void opdet::SBNDPDSProducer::FillInferenceTree(bool passedFilters, const PixelMapVars& pixelVars)
+{
+  // Fill basic event information for all events
+  fTreeRun = _runID;
+  fTreeSubrun = _subrunID;
+  fTreeEvent = _eventID;
+  fTreePassedFilters = passedFilters;
+  
+  // Initialize prediction variables with default values
+  fTreeTrueX = -999.0;
+  fTreeTrueY = -999.0;
+  fTreeTrueZ = -999.0;
+  fTreePredX = -999.0;
+  fTreePredY = -999.0;
+  fTreePredZ = -999.0;
+  fTreeDiffX = -999.0;
+  fTreeDiffY = -999.0;
+  fTreeDiffZ = -999.0;
+  fTreeError3D = -999.0;
+  fTreeNuvT = -999.0;
+  fTreeNuvZ = -999.0;
+  fTreedEtpc = -999.0;
+  
+  // Fill physics data if event passed filters
+  if (passedFilters) {
+    // Fill ground truth data (take first entry if available)
+    if (!pixelVars.dEpromx.empty()) {
+      fTreeTrueX = pixelVars.dEpromx[0];  // Note: already has abs() applied
+      fTreeTrueY = pixelVars.dEpromy[0];
+      fTreeTrueZ = pixelVars.dEpromz[0];
+    }
+    
+    if (!pixelVars.dEtpc.empty()) {
+      fTreedEtpc = pixelVars.dEtpc[0];
+    }
+    
+    if (!pixelVars.nuvT.empty()) {
+      fTreeNuvT = pixelVars.nuvT[0];
+    }
+    
+    if (!pixelVars.nuvZ.empty()) {
+      fTreeNuvZ = pixelVars.nuvZ[0];
+    }
+    
+    // Fill prediction data if inference ran successfully
+    if (!pixelVars.dEpromx_pred.empty()) {
+      fTreePredX = pixelVars.dEpromx_pred[0];
+      fTreeDiffX = pixelVars.dEpromx_diff[0];
+    }
+    
+    if (!pixelVars.dEpromy_pred.empty()) {
+      fTreePredY = pixelVars.dEpromy_pred[0];
+      fTreeDiffY = pixelVars.dEpromy_diff[0];
+    }
+    
+    if (!pixelVars.dEpromz_pred.empty()) {
+      fTreePredZ = pixelVars.dEpromz_pred[0];
+      fTreeDiffZ = pixelVars.dEpromz_diff[0];
+    }
+    
+    if (!pixelVars.error_3d.empty()) {
+      fTreeError3D = pixelVars.error_3d[0];
+    }
+  }
+  
+  // Fill the TTree entry
+  fInferenceTree->Fill();
+  
+  if(fVerbosity > 2) {
+    std::cout << "Filled TTree entry for Run=" << fTreeRun << " Event=" << fTreeEvent 
+              << " PassedFilters=" << fTreePassedFilters << std::endl;
+  }
 }
 
 
@@ -1173,7 +1277,7 @@ void opdet::SBNDPDSProducer::FillAverageDepositedEnergyVariables(std::vector<std
   }
 
   if(ndeps_tpc0!=0){
-    dEpromx_tpc0=dEpromx_tpc0/dE_tpc0;
+    dEpromx_tpc0=std::abs(dEpromx_tpc0/dE_tpc0);
     dEpromy_tpc0=dEpromy_tpc0/dE_tpc0;
     dEpromz_tpc0=dEpromz_tpc0/dE_tpc0;
     spreadx_tpc0=sqrt( spreadx_tpc0/dE_tpc0-dEpromx_tpc0*dEpromx_tpc0 );
@@ -1183,7 +1287,7 @@ void opdet::SBNDPDSProducer::FillAverageDepositedEnergyVariables(std::vector<std
     dEspreadx[0]=spreadx_tpc0;dEspready[0]=spready_tpc0;dEspreadz[0]=spreadz_tpc0;
   }
   if(ndeps_tpc1!=0){
-    dEpromx_tpc1=dEpromx_tpc1/dE_tpc1;
+    dEpromx_tpc1=std::abs(dEpromx_tpc1/dE_tpc1);
     dEpromy_tpc1=dEpromy_tpc1/dE_tpc1;
     dEpromz_tpc1=dEpromz_tpc1/dE_tpc1;
     spreadx_tpc1=std::sqrt(spreadx_tpc1/dE_tpc1-dEpromx_tpc1*dEpromx_tpc1);
