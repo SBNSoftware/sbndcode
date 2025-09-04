@@ -192,11 +192,11 @@ sbnd::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   fBeamGateHlt = p.get<int>("BeamGateHlt");
   fOffbeamGateHlt = p.get<int>("OffbeamGateHlt");
 
-  fDebugDAQHeader = p.get<bool>("DebugDAQHeader");
-  fDebugTimingRef = p.get<bool>("DebugTimingRef");
-  fDebugPtb = p.get<bool>("DebugPtb");
-  fDebugTdc = p.get<bool>("DebugTdc");
-  fDebugFrame = p.get<bool>("DebugFrame");
+  fDebugDAQHeader = p.get<bool>("DebugDAQHeader", false);
+  fDebugTimingRef = p.get<bool>("DebugTimingRef", false);
+  fDebugPtb = p.get<bool>("DebugPtb", false);
+  fDebugTdc = p.get<bool>("DebugTdc", false);
+  fDebugFrame = p.get<bool>("DebugFrame", false);
   
   //TODO: Get from database instead of fhicl parameters
   _frame_data2mc = p.get<double>("ShiftData2MC");
