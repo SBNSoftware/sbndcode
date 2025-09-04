@@ -169,40 +169,40 @@ sbnd::FrameShift::FrameShift(fhicl::ParameterSet const& p)
   : EDProducer{p}  // ,
   // More initializers here.
 {
-  fDAQHeaderInstanceLabel = p.get<std::string>("DAQHeaderInstanceLabel", "RawEventHeader");
-  fDAQHeaderModuleLabel = p.get<std::string>("DAQHeaderModuleLabel", "daq");
-  fRawTSCorrection = p.get<uint64_t>("RawTSCorrection", 367000);
-  fMaxAllowedRefTimeDiff = p.get<uint64_t>("MaxAllowedRefTimeDiff", 3000000); //3 ms
+  fDAQHeaderInstanceLabel = p.get<std::string>("DAQHeaderInstanceLabel");
+  fDAQHeaderModuleLabel = p.get<std::string>("DAQHeaderModuleLabel");
+  fRawTSCorrection = p.get<uint64_t>("RawTSCorrection");
+  fMaxAllowedRefTimeDiff = p.get<uint64_t>("MaxAllowedRefTimeDiff");
   
-  fTimingRefPmtLabel = p.get<art::InputTag>("TimingRefPmtLabel", "pmtdecoder");
-  fTimingRefCrtLabel = p.get<art::InputTag>("TimingRefCrtLabel", "crtstrips");
+  fTimingRefPmtLabel = p.get<art::InputTag>("TimingRefPmtLabel");
+  fTimingRefCrtLabel = p.get<art::InputTag>("TimingRefCrtLabel");
 
-  fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel", "tdcdecoder");
-  fPtbDecodeLabel = p.get<art::InputTag>("PtbDecodeLabel", "ptbdecoder");
+  fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel");
+  fPtbDecodeLabel = p.get<art::InputTag>("PtbDecodeLabel");
 
-  fPtbEtrigHlts = p.get<std::vector<int>>("PtbEtrigHlts", {1, 2, 3, 4, 5, 14, 15});
+  fPtbEtrigHlts = p.get<std::vector<int>>("PtbEtrigHlts");
   
-  fBeamEtrigHlt = p.get<std::vector<int>>("BeamEtrigHlt", {1,2});
-  fOffbeamEtrigHlt = p.get<std::vector<int>>("OffbeamEtrigHlt", {3,4});
-  fXmuonEtrigHlt = p.get<std::vector<int>>("XmuonEtrigHlt", {5, 14, 15});
+  fBeamEtrigHlt = p.get<std::vector<int>>("BeamEtrigHlt");
+  fOffbeamEtrigHlt = p.get<std::vector<int>>("OffbeamEtrigHlt");
+  fXmuonEtrigHlt = p.get<std::vector<int>>("XmuonEtrigHlt");
   
-  fBeamCrtT1Hlt = p.get<int>("BeamCrtT1Hlt", 20);
-  fOffbeamCrtT1Hlt = p.get<int>("OffbeamCrtT1Hlt", 21);
+  fBeamCrtT1Hlt = p.get<int>("BeamCrtT1Hlt");
+  fOffbeamCrtT1Hlt = p.get<int>("OffbeamCrtT1Hlt");
 
-  fBeamGateHlt = p.get<int>("BeamGateHlt", 26);
-  fOffbeamGateHlt = p.get<int>("OffbeamGateHlt", 27);
+  fBeamGateHlt = p.get<int>("BeamGateHlt");
+  fOffbeamGateHlt = p.get<int>("OffbeamGateHlt");
 
-  fDebugDAQHeader = p.get<bool>("DebugDAQHeader", false);
-  fDebugTimingRef = p.get<bool>("DebugTimingRef", false);
-  fDebugPtb = p.get<bool>("DebugPtb", false);
-  fDebugTdc = p.get<bool>("DebugTdc", false);
-  fDebugFrame = p.get<bool>("DebugFrame", false);
+  fDebugDAQHeader = p.get<bool>("DebugDAQHeader");
+  fDebugTimingRef = p.get<bool>("DebugTimingRef");
+  fDebugPtb = p.get<bool>("DebugPtb");
+  fDebugTdc = p.get<bool>("DebugTdc");
+  fDebugFrame = p.get<bool>("DebugFrame");
   
   //TODO: Get from database instead of fhicl parameters
-  _frame_data2mc = p.get<double>("ShiftData2MC", 0);
+  _frame_data2mc = p.get<double>("ShiftData2MC");
 
   //TODO: Get from database instead of fhicl parameters
-  fShiftRWM2Gate = p.get<double>("ShiftRWM2Gate", 1738); 
+  fShiftRWM2Gate = p.get<double>("ShiftRWM2Gate"); 
   
   produces< sbnd::timing::FrameShiftInfo >();
   produces< sbnd::timing::TimingInfo >();
@@ -661,7 +661,8 @@ void sbnd::FrameShift::produce(art::Event& e)
   //    + Data: t = 0 = abitrary. All subsystem electronics time is reference to the last PPS
   
   if(_isBeam){
-    _frame_apply_at_caf = _frame_tdc_rwm + fShiftRWM2Gate; // +frame_data2mc
+    _frame_tdc_rwm += fShiftRWM2Gate; //
+    _frame_apply_at_caf = _frame_tdc_rwm; // +frame_data2mc
   }
   else if(_isOffbeam){
     _frame_apply_at_caf = _frame_hlt_gate; //+frame_data2mc
