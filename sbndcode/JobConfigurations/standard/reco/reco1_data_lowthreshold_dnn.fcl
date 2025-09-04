@@ -1,4 +1,4 @@
-#include "reco1_data.fcl"
+#include "reco1_data_storefilteredevents.fcl"
 #override the wirecell settings with the top include
 physics.producers.sptpc2d:   @local::sbnd_wcls_sp_data_low
 physics.producers.sptpc2d.wcls_main.structs.enableLowROIThresholds: true
