@@ -111,18 +111,18 @@ private:
   uint16_t fraw_trig_max_diff; /**< Maximum difference (in ns) allowed between trigger timestamps and raw timestamp. */
   uint32_t fraw_timestamp_correction; /**< Correction (in ns) to be applied to the raw timestamp. */
 
-  std::string fspectdc_product_name; /**< Name assigned to the product instance containing the SPEC-TDC decoder products. */
+  std::string fspectdc_product_name; /**< Label identifying the module containing the SPEC-TDC decoder products. */
   uint32_t fspectdc_ftrig_ch; /**< Channel assigned by the SPEC-TDC to the flash triggers. */
   uint32_t fspectdc_etrig_ch; /**< Channel assigned by the SPEC-TDC to the event triggers. */
 
-  std::string fptb_product_name; /**< Name assigned to the product instance containing the PTB decoder products. */
+  std::string fptb_product_name; /**< Label identifying the module containing the PTB decoder products. */
   std::vector<uint32_t> fallowed_hl_triggers; /**< List of allowed high-level triggers from the PTB. */
 
   art::ServiceHandle<art::TFileService> tfs; /**<  ServiceHandle object to store the histograms in the decoder_hist.root output file. */
   int fstore_debug_waveforms; /**< Number of waveforms to store in the ServiceHandle object for debugging purposes (0: none, -1: all, n: first n waveforms each event). */
 
-  bool fdebug_tdc_handle; /**< If `true` SPEC-TDC art::Handle information is printed. */
-  bool fdebug_ptb_handle; /**< If `true` PTB art::Handle information is printed. */
+  bool fdebug_tdc_handle; /**< If `true` SPEC-TDC information is printed. */
+  bool fdebug_ptb_handle; /**< If `true` PTB information is printed. */
   bool fdebug_fragments_handle; /**< If `true` V1740B CAEN fragments art::Handle information is printed. */
   bool fdebug_timing; /**< If `true` timing data is printed. */
   bool fdebug_buffer; /**< If `true` the buffer status is printed. */
@@ -152,8 +152,8 @@ private:
  * art::EDProducer from the FHiCL file.
  * @param[in] p A set of parameters containing configuration values for the decoder from the FHiCL file.
  * @details This constructor accesses the parameters in the FHiCL configuration file and set the configuration to be run for 
- * this module. It sets settings for CAEN fragments, board information, timing, debug options, verbosity option and creates an 
- * instance of the product associated with this module.
+ * this module. It sets settings for CAEN fragments, board information, timing, debug and verbosity options, and creates
+ * instances of the products associated with this module: a vector of raw::OpDetWaveform objects and a raw::TimingReferenceInfo object.
  */
 sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
 : EDProducer{p}
@@ -181,7 +181,7 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
 
   // Gets the raw timestamp configuration.
   fraw_event_header_product_name = p.get<std::string> ("raw_timestamp_product_name", "daq");
-  fraw_trig_max_diff = p.get<unsigned int> ("raw_trig_max_diff", 300000);
+  fraw_trig_max_diff = p.get<unsigned int> ("raw_trig_max_diff", 3000000);
   fraw_timestamp_correction = p.get<unsigned int> ("raw_timestamp_correction", 367000);
 
   // SPEC-TDC access configuration.
@@ -210,15 +210,17 @@ sbndaq::SBNDXARAPUCADecoder::SBNDXARAPUCADecoder(fhicl::ParameterSet const& p)
   produces <raw::TimingReferenceInfo> (ftiming_instance_name);
 }
 
-/**
- * @brief Main function of the art::EDProducer: the produce function analyzes every event producing waveforms after the decoding.
- * @param[in] e The event to be processed.
- * @details It is the main function of the art::EDProducer module:
- * 1. Accesses the products from the SPEC TDC decoder if the priority indicates the temporal reference frame is SPEC-TDC. If 
- * the priority does not match, it defaults to the CAEN-only temporal reference frame.
- * 2. Accesses the products from V1740 CAEN fragments and processes each of them, extracting the header, timing data, and raw waveforms.
- * 3. Dumps the products.
- */
+ /** 
+  * @brief Main function of the art::EDProducer: the produce function analyzes every event producing waveforms after the decoding.
+  * @param[in] e The event to be processed.
+  * @details It is the main function of the art::EDProducer module: it processes each event, searches for CAEN V1740 fragments, decodes 
+  * them and creates the output products.
+  * 1. It gets the raw timestamp from the artdaq::RawEventHeader product.
+  * 2. It tries to get a valid timing reference from the selected time frame (SPEC-TDC ETRIG, PTB HLT or CAEN-only). If the selected 
+  * timing frame is not found, it tries to get the next one in the priority list.
+  * 3. It searches for CAEN V1740 fragments in the event, decodes them and creates the output products: a vector of raw::OpDetWaveform.
+  * 4. It dumps the products in the event.
+  */
 void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
 {
   if (fverbose) std::cout << "\n > SBNDXARAPUCADecoder::produce: entering the produce function." << std::endl;
@@ -248,7 +250,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
     }
   }
 
-  // [0] ETRIG timestamp, [1] HLT timestamp, [3] CAEN-only timestamp.
+  // [0] ETRIG timestamp, [1] HLT timestamp, [2] CAEN-only timestamp.
   uint64_t timestamp = 0;             
 
   // Gets the SPEC-TDC product (if any).
@@ -366,6 +368,16 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
   } 
 }
 
+/**
+* @brief Searches for the SPEC-TDC ETRIG timestamp closest to the raw timestamp if any SPEC-TDC ETRIG product is found in the event.
+* @param[in] e The event to be processed.
+* @param[in] corr_raw_timestamp The corrected raw timestamp from the artdaq::RawEventHeader product.
+* @param[in,out] timestamp The closest ETRIG timestamp to the raw timestamp (if found).
+* @return A boolean indicating if a valid ETRIG timestamp was found close enough to the raw timestamp.
+* @details It searches for the SPEC-TDC products in the event and looks for the ETRIG timestamps. If any ETRIG 
+* timestamp is found, it checks which one is the closest to the raw timestamp and if it is close enough (i.e. 
+* within fraw_trig_max_diff) it returns it as output.
+*/
 bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t& timestamp) {
   bool ett_found = false;
 
@@ -374,10 +386,15 @@ bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, ui
 
   if (fverbose | fdebug_tdc_handle) std::cout << "\n > SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp: searching for SPEC-TDC products..." << std::endl;
 
+  // The art::Handle object is not valid.
   if (!tdc_handle.isValid()) {
     if (fdebug_tdc_handle) std::cout << "\n\tTDC-SPEC handle not valid for " << fspectdc_product_name << "." << std::endl;
+
+  // The art::Handle object is empty.
   } else if (tdc_handle->empty()) {
     if (fdebug_tdc_handle) std::cout << "\n\tTDC-SPEC handle is empty." << std::endl;
+
+  // The art::Handle object is valid and not empty.
   } else  {
     if (fdebug_tdc_handle) std::cout << " \n\tDecoded TDC-SPEC products found: " << tdc_handle->size() << " products." << std::endl;
     
@@ -389,6 +406,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, ui
 
     if (fdebug_tdc_handle) std::cout << "\t\tTDC Channel \t TDC Name \t\t TDC Timestamp [ns] \t\t TDC Offset [ns]";
     
+    // Loops over the SPEC-TDC products in the event.
     for (size_t t = 0; t < tdc_handle->size(); t++) {
       const uint64_t tdc_timestamp = tdc_handle->at(t).Timestamp();   // Timestamp of the signal [ns].
       const uint32_t tdc_channel = tdc_handle->at(t).Channel();       // Hardware channel.
@@ -430,6 +448,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, ui
       }
     }
     
+    // Checks if the closest ETRIG timestamp is close enough to the raw timestamp.
     if (min_diff > fraw_trig_max_diff) {
       closest_tdc_timestamp = 0;
     } else {
@@ -442,6 +461,17 @@ bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, ui
   return ett_found;
 }
 
+/**
+ * @brief Searches for the PTB HLT timestamp closest to the raw timestamp if any PTB HLT product is found in the event.
+ * @param[in] e The event to be processed.
+ * @param[in] corr_raw_timestamp The corrected raw timestamp from the artdaq::RawEventHeader product.
+ * @param[in,out] timestamp The closest HLT timestamp to the raw timestamp (if found).
+ * @param[in,out] hlt_code The code of the closest HL trigger to the raw timestamp (if found).
+ * @return A boolean indicating if a valid HLT timestamp was found close enough to the raw timestamp.
+ * @details It searches for the PTB products in the event and looks for the HLT timestamps allowed in the fallowed_hl_triggers
+ * list. If any HLT timestamp is found, it checks which one is the closest to the raw timestamp and if it is close enough 
+ * (i.e. within fraw_trig_max_diff) it returns it as output along with its trigger code.
+ */
 bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t& timestamp, uint16_t& hlt_code) {
   bool hlt_found = false;
 
@@ -450,22 +480,30 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
 
   if (fverbose | fdebug_ptb_handle) std::cout << "\n > SBNDXARAPUCADecoder::get_ptb_hlt_timestamp: PTB timing frame selected. Searching for PTB products..." << std::endl;
   
+  // The art::Handle object is not valid.
   if (!ptb_handle.isValid()) {
     if (fdebug_ptb_handle) std::cout << "\n\tPTB handle not valid for " << fptb_product_name << "." << std::endl;
+
+  // The art::Handle object is empty.
   } else if (ptb_handle->empty()) {
     if (fdebug_ptb_handle) std::cout << "\n\tPTB handle is empty." << std::endl;
+
+  // The art::Handle object is valid and not empty.
   } else {
     if (fdebug_ptb_handle) std::cout << " \n\tDecoded PTB products found: " << ptb_handle->size() << " products.";
     
     uint64_t min_diff = std::numeric_limits<uint64_t>::max();
     uint64_t closest_ptb_timestamp = 0;
-    uint16_t hlt_type = 999;                                    // Random value to indicate no HLT trigger found.
+    uint16_t hlt_type = 999; // Random value to indicate no HLT trigger found.
 
+    // Loops over the PTB products in the event.
     for (size_t i = 0; i < ptb_handle->size(); i++) {
       std::vector<raw::ptb::Trigger> hlt_triggers = ptb_handle->at(i).GetHLTriggers();
+
       if (!hlt_triggers.empty()) {
         if (fdebug_ptb_handle) std::cout << "\n\t\t Number of HL triggers: " << hlt_triggers.size() << "." << std::endl;
         
+        // Loops over the HL triggers in the PTB product.
         for (size_t j = 0; j < hlt_triggers.size(); j++) {
           raw::ptb::Trigger hlt_trig = hlt_triggers.at(j);
           uint64_t raw_ptb_timestamp = hlt_trig.timestamp;
@@ -479,6 +517,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
           }
 
           uint32_t allowed_hlt = 0;    // Random trigger code. In this case it is used as flag to check if an allowed HLT trigger is found.           
+          // Loops over the allowed HL triggers.
           for (size_t k = 0; k < fallowed_hl_triggers.size(); k++) {
             if (hlt_word_bitset[fallowed_hl_triggers[k]]) {
               allowed_hlt = fallowed_hl_triggers[k];
@@ -497,7 +536,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
       } else {
         if (fdebug_ptb_handle) std::cout << "\n\t\t No allowed HL triggers found." << std::endl;
       }
-    }
+    } // End PTB products extraction loop.
 
     if (fdebug_ptb_handle) {
       if (closest_ptb_timestamp) {
@@ -507,6 +546,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
       }
     }
 
+    // Checks if the closest HLT timestamp is close enough to the raw timestamp.
     if (min_diff > fraw_trig_max_diff) {
       closest_ptb_timestamp = 0;
       hlt_code = 255;
@@ -536,7 +576,8 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
  * - 
  * - Decodes the fragment reading raw 32-bit words from the fragment, storing them in a buffer, 
  *    and extracting 12-bit samples. The decoding includes:
- *   - Accessing metadata for the number of channels, samples, and time information.
+ *   - Accessing metadata for the number of channels and samples.
+ *   - Getting the initial timestamp with respect to the selected timing frame.
  *   - Binary decoding of the raw waveform. To assign efficiently each sequential sample extracted. These indices formulas are 
  *    applied:
  *      - The board channel index:
@@ -773,7 +814,7 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
  * 2. Creates a `raw::OpDetWaveform` object with the initial timestamp, global channel ID, and waveform data.
  * 3. Appends the `raw::OpDetWaveform` object to the provided `prod_wvfms` collection.
  * 
- * @pre ini_wvfm_timestamp is asumed to be given in microseconds.
+ * @pre ini_wvfm_timestamp is assumed to be given in microseconds when the timing frame is not CAEN_ONLY_TIMING.
  *
  * @see raw::OpDetWaveform
  */
@@ -791,18 +832,18 @@ void sbndaq::SBNDXARAPUCADecoder::save_prod_wvfm(size_t board_idx, size_t ch, do
  * @param[in] board_idx The board index (position in the list of boards).
  * @param[in] fragment_idx The fragment index (order in decoding).
  * @param[in] ch The channel index (channel number from which the waveform is extracted).
- * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform in microseconds.
- * @param[in] end_wvfm_timestamp The final timestamp of the waveform in microseconds.
+ * @param[in] ini_wvfm_timestamp The initial timestamp of the waveform.
+ * @param[in] end_wvfm_timestamp The final timestamp of the waveform.
  * @param[in] wvfms A 2D vector containing the waveforms. Each inner vector corresponds to a channel,
  * and each element of the inner vector represents a sample (ADC count).
  *
  * @details
  * The function generates a histogram with:
- * - X-axis representing time in microseconds, scaled between `TTT_ini_us` and `TTT_end_us`.
+ * - X-axis representing time in microseconds if the timing frame is SPEC_TDC_TIMING or PTB_TIMING, otherwise in samples.
  * - Y-axis representing ADC counts.
  * The histogram is stored using ROOT's `TFileService`.
  * 
- * @pre ini_wvfm_timestamp and end_wvfm_timestamp are asumed to be given in microseconds.
+ * @pre ini_wvfm_timestamp and end_wvfm_timestamp are assumed to be given in microseconds when the timing frame is not CAEN_ONLY_TIMING.
  *
  * @see TH1I, TFileService
  */
