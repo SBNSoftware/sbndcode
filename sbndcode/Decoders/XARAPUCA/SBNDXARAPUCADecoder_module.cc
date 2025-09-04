@@ -131,16 +131,20 @@ private:
 
   // Class methods.
   void decode_fragment(uint64_t timestamp, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms);
+  
+  bool get_ptb_hlt_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp, uint16_t & hlt_code);
+  bool get_spec_tdc_etrig_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp);
+  
   void save_prod_wvfm(size_t board_idx, size_t ch, double ini_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms, std::vector <raw::OpDetWaveform> & prod_wvfms);
   void save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, double ini_wvfm_timestamp, double end_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms);
+  
   uint16_t get_sample(uint64_t buffer, uint32_t msb, uint32_t lsb);
   uint32_t read_word(const uint32_t* & data_ptr);
   unsigned int get_channel_id(unsigned int board, unsigned int board_channel);
 
-  bool get_ptb_hlt_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp, uint16_t & hlt_code);
-  bool get_spec_tdc_etrig_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp);
-  
   std::string print_timestamp(uint64_t timestamp);
+  int64_t signed_difference(uint64_t t1, uint64_t t2);
+  uint64_t abs_difference(uint64_t t1, uint64_t t2);
 };
 
 /**
@@ -401,7 +405,8 @@ bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, ui
       if (tdc_channel == fspectdc_etrig_ch) {
         num_event_triggers++;
 
-        uint64_t diff = (tdc_timestamp < corr_raw_timestamp) ? (corr_raw_timestamp - tdc_timestamp) : (tdc_timestamp - corr_raw_timestamp);
+        //uint64_t diff = (tdc_timestamp < corr_raw_timestamp) ? (corr_raw_timestamp - tdc_timestamp) : (tdc_timestamp - corr_raw_timestamp);
+        uint64_t diff = abs_difference(tdc_timestamp, corr_raw_timestamp);
         if (diff < min_diff) {
           min_diff = diff;
           closest_tdc_timestamp = tdc_timestamp;
@@ -477,7 +482,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
           for (size_t k = 0; k < fallowed_hl_triggers.size(); k++) {
             if (hlt_word_bitset[fallowed_hl_triggers[k]]) {
               allowed_hlt = fallowed_hl_triggers[k];
-              uint64_t diff = (ptb_timestamp < corr_raw_timestamp) ? (corr_raw_timestamp - ptb_timestamp) : (ptb_timestamp - corr_raw_timestamp);
+              uint64_t diff = abs_difference(ptb_timestamp, corr_raw_timestamp);
               if (diff < min_diff) {
                 min_diff = diff;
                 closest_ptb_timestamp = ptb_timestamp;
@@ -609,9 +614,6 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
 
     // ===============  Extracts timing information for this fragment =============== //
 
-    // SPEC-TDC timestamp associated to this CAEN fragment.
-    int64_t timestamp_ns = timestamp % NANOSEC_IN_SEC; // ns.
-
     // Gets the timing information of the CAEN fragment.
     int64_t pulse_duration_ns = num_samples_per_wvfm * fns_per_sample; // ns.
     uint64_t frag_timestamp = fragment.timestamp(); // ns.
@@ -620,91 +622,65 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
 
     uint32_t TTT_ticks = header.triggerTime();
     int64_t TTT_end_ns = TTT_ticks * NANOSEC_PER_TICK; // ns.
-    int64_t TTT_ini_ns = TTT_end_ns - pulse_duration_ns;  // ns.
-    double TTT_end_us = TTT_end_ns * NANOSEC_TO_MICROSEC; // us.
-    double TTT_ini_us = TTT_ini_ns * NANOSEC_TO_MICROSEC; // us.
 
     // Gets the full TTT timestamp.
     uint64_t full_TTT = 0;
     // If the fragment timestamp is greater than the TTT end timestamp, it means that rollover occurred.
     if (frag_timestamp_ns > TTT_end_ns) {
+      if (fverbose | fdebug_timing) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN TTT rollover occurred w.r.t. the fragment timestamp (FTS)." << std::endl;
       full_TTT = (frag_timestamp_s + 1) * NANOSEC_IN_SEC + TTT_end_ns;
     } else {
       full_TTT = frag_timestamp_s * NANOSEC_IN_SEC + TTT_end_ns;
     }
 
+    int64_t ref_timestamp = 0;
+
     double ini_wvfm_timestamp = 0;
     double end_wvfm_timestamp = 0;
 
     // If an ETRIG or HLT timestamp was found it restarts the time from it. Otherwise the CAEN time frame is assigned.
-    if (factive_timing_frame == SPEC_TDC_TIMING || factive_timing_frame == PTB_TIMING) {
-      if (timestamp < full_TTT) {
-        end_wvfm_timestamp = full_TTT - timestamp; // ns.
-      } else {
-        end_wvfm_timestamp = (timestamp - full_TTT) * (-1.0); // ns.
-      }
-    } else {
-      if (frag_timestamp < full_TTT) {
-        end_wvfm_timestamp = full_TTT - frag_timestamp; // ns.
-      } else {
-        end_wvfm_timestamp = (frag_timestamp - full_TTT) * (-1.0); // ns.
-      }
+    if (factive_timing_frame != CAEN_ONLY_TIMING) {
+      ref_timestamp = signed_difference(full_TTT, timestamp); // ns.
 
-    }
-    ini_wvfm_timestamp = end_wvfm_timestamp - pulse_duration_ns; // ns.
-    end_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
-    ini_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
-
-    /**
-    if (ini_wvfm_timestamp < -3.0 || ini_wvfm_timestamp > -1.5) {
-      ini_wvfm_timestamp = 9999;
+      ini_wvfm_timestamp = (ref_timestamp - pulse_duration_ns) * NANOSEC_TO_MICROSEC; // us.
+      end_wvfm_timestamp = ref_timestamp * NANOSEC_TO_MICROSEC; // us.
     } else {
-      if (frag_timestamp < full_TTT) {
-        end_wvfm_timestamp = full_TTT - frag_timestamp; // ns.
-      } else {
-        end_wvfm_timestamp = (frag_timestamp - full_TTT) * (-1.0); // ns.
-        std::cout << "Something went wrong." << std::endl;
-      }
-      ini_wvfm_timestamp = end_wvfm_timestamp - pulse_duration_ns; // ns.
-      end_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
-      ini_wvfm_timestamp *= NANOSEC_TO_MICROSEC; // us.
+      ref_timestamp = full_TTT; // ns.
+
+      ini_wvfm_timestamp = ((ref_timestamp - pulse_duration_ns) % NANOSEC_IN_SEC) * NANOSEC_TO_MICROSEC; // ns.
+      end_wvfm_timestamp = (ref_timestamp % NANOSEC_IN_SEC) * NANOSEC_TO_MICROSEC; // us.
     }
-      */
-    
+
+    if (fdebug_timing) {
+      std::cout << std::fixed << std::setprecision(0);
+      std::cout << "\t\t ns/tick = " << NANOSEC_PER_TICK << ", ns/sample = " << fns_per_sample << std::endl;
+      std::cout << "\t\t TTT header.TriggerTime() [TTT_ticks] = " << TTT_ticks << " ticks. \t TTT_end_ns = " << print_timestamp(TTT_end_ns) << "." << std::endl;
+      std::cout << "\t\t TTT header.extendedTriggerTime() [TTT_ticks] = " << header.extendedTriggerTime() << " ticks. \t TTT_end_ns = " << print_timestamp(header.extendedTriggerTime() * NANOSEC_PER_TICK) << "." << std::endl;
+      std::cout << "\t\t TTT header.triggerTimeRollOver(): " << header.triggerTimeRollOver() << std::endl;
+      std::cout << "\t\t Full Fragment timestamp: " << print_timestamp(frag_timestamp) << " = " << frag_timestamp_s << " s " << frag_timestamp_ns << " ns." << std::endl;
+      std::cout << "\t\t Full TTT - fragment timestamp = "<< abs_difference(full_TTT, frag_timestamp) << " ns." << " Post-percent: " << (double(abs_difference(full_TTT, frag_timestamp)) / double(pulse_duration_ns)) * 100 << "%." << std::endl;
+      if (factive_timing_frame == SPEC_TDC_TIMING) {
+        std::cout << "\t ETRIG (SPEC-TDC) timestamp of the fragment: " << std::endl;
+        std::cout << "\t\t Full UTC ETRIG timestamp: " << print_timestamp(timestamp) << "." << std::endl;
+        std::cout << "\t\t ETRIG SPEC-TDC difference applied to the CAEN frame (full timestamps): " << print_timestamp(full_TTT) << " - " << print_timestamp(timestamp) <<  " = " << ref_timestamp << " ns." << std::endl;
+      } else if (factive_timing_frame == PTB_TIMING) {
+        std::cout << "\t HLT ETRIG (PTB) timestamp of the fragment: " << std::endl;
+        std::cout << "\t\t Full UTC HLT ETRIG timestamp: " << print_timestamp(timestamp) << "." << std::endl;
+        std::cout << "\t\t HLT ETRIG (PTB) difference applied to the CAEN frame (full timestamps): " << print_timestamp(full_TTT) << " - " << print_timestamp(timestamp) <<  " = " << ref_timestamp << " ns." << std::endl;
+      } else if (factive_timing_frame == CAEN_ONLY_TIMING) {
+        std::cout << "\t CAEN trigger timestamp (TTT) of the fragment: " << std::endl;
+        std::cout << "\t\t Full UTC TTT timestamp: " << print_timestamp(full_TTT) << " = " << full_TTT / NANOSEC_IN_SEC << " s " << TTT_end_ns << " ns." << std::endl;
+      }
+    }
 
     if (fverbose | fdebug_timing) {
-      std::cout << std::fixed << std::setprecision(3);
+      std::cout << std::fixed << std::setprecision(3) << std::endl;
       if (factive_timing_frame == SPEC_TDC_TIMING) {
         std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: SPEC-TDC time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
       } else if (factive_timing_frame == PTB_TIMING) {
         std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: PTB time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
-      } else {
-        std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN time window of " << TTT_end_us - TTT_ini_us << " us: [" << TTT_ini_us << ", " << TTT_end_us << "] us." << std::endl;
-        std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: Fragment timestamp time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
-      
-      }
-    }
-
-    if (fdebug_timing) {
-      std::cout << "\t ns/tick = " << NANOSEC_PER_TICK << ", ns/sample = " << fns_per_sample << std::endl;
-      std::cout << "\t\t TTT header.TriggerTime() [TTT_ticks] = " << TTT_ticks << " ticks. \t TTT_end_ns = " << TTT_end_ns << " ns." << std::endl;
-      std::cout << "\t\t TTT header.extendedTriggerTime() [TTT_ticks] = " << header.extendedTriggerTime() << " ticks. \t TTT_end_ns = " << header.extendedTriggerTime() * NANOSEC_PER_TICK << " ns." << std::endl;
-      std::cout << "\t\t TTT header.triggerTimeRollOver(): " << header.triggerTimeRollOver() << std::endl;
-      std::cout << "\t\t Full Fragment timestamp: " << fragment.timestamp() << " = " << frag_timestamp_s << " s " << frag_timestamp_ns << " ns." << std::endl;
-      std::cout << "\t\t TTT - fragment timestamp (ns) = "<< static_cast<int64_t>(TTT_end_ns) - static_cast<int64_t>(frag_timestamp_ns) << " ns." << std::endl;
-      if (factive_timing_frame == SPEC_TDC_TIMING) {
-        std::cout << "\t ETT SPEC-TDC timestamp of the fragment: " << std::endl;
-        std::cout << "\t\t Full UTC ETT timestamp: " << timestamp << " = " << timestamp / NANOSEC_IN_SEC << " s " << timestamp_ns << " ns." << std::endl;
-        std::cout << "\t\t ETT SPEC-TDC difference applied to the CAEN frame (full timestamps): " << full_TTT << " - " << timestamp <<  " ns = " << end_wvfm_timestamp << " us." << std::endl;
-      } else if (factive_timing_frame == PTB_TIMING) {
-        std::cout << "\t HLT PTB timestamp of the fragment: " << std::endl;
-        std::cout << "\t\t Full UTC HLT timestamp: " << timestamp << " = " << timestamp / NANOSEC_IN_SEC << " s " << timestamp_ns << " ns." << std::endl;
-        std::cout << "\t\t HLT PTB difference applied to the CAEN frame (full timestamps): " << full_TTT << " - " << timestamp <<  " ns = " << end_wvfm_timestamp << " us." << std::endl;
-      } else if (factive_timing_frame == CAEN_ONLY_TIMING) {
-        std::cout << "\t CAEN trigger timestamp (TTT) of the fragment: " << std::endl;
-        std::cout << "\t\t Fragment timestamp difference applied to the CAEN frame (full timestamps): " << full_TTT << " - " << frag_timestamp <<  " ns = " << end_wvfm_timestamp << " us." << std::endl;
-        std::cout << "\t\tTTT ini " << TTT_ini_ns << " ns = " << TTT_ini_us << " us." << std::endl;
-        std::cout << "\t\tTTT end " << TTT_ticks << " ticks = " << TTT_end_ns << " ns = " << TTT_end_us << " us." << std::endl;
+      } else { // CAEN_ONLY_TIMING
+        std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
       }
     }
 
@@ -834,12 +810,27 @@ void sbndaq::SBNDXARAPUCADecoder::save_prod_wvfm(size_t board_idx, size_t ch, do
 void sbndaq::SBNDXARAPUCADecoder::save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, double ini_wvfm_timestamp, double end_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms) {
   std::stringstream hist_name("");
   hist_name << "Event " << fevent_counter << " CH " << ch << " [frag " << fragment_idx << ", board " << board_idx << " (slot " << fboard_id_list[board_idx] << ") ] waveform";
-  TH1I* hist = tfs->make<TH1I>(hist_name.str().c_str(), hist_name.str().c_str(), wvfms[ch].size(), ini_wvfm_timestamp, end_wvfm_timestamp);
-  hist->GetYaxis()->SetTitle("ADCs");
-  hist->GetXaxis()->SetTitle("Time [us]");
-  for (size_t i = 0; i < wvfms[ch].size(); i++) {
-    hist->SetBinContent(i+1, wvfms[ch][i]);
+
+  if (factive_timing_frame != CAEN_ONLY_TIMING) {
+    TH1I* hist = tfs->make<TH1I>(hist_name.str().c_str(), hist_name.str().c_str(), wvfms[ch].size(), ini_wvfm_timestamp, end_wvfm_timestamp);
+    hist->GetYaxis()->SetTitle("ADCs");
+    if (factive_timing_frame == SPEC_TDC_TIMING) {
+      hist->GetXaxis()->SetTitle("Time w.r.t. ETRIG (SPEC-TDC) [us]");
+    } else if (factive_timing_frame == PTB_TIMING) {
+      hist->GetXaxis()->SetTitle("Time w.r.t. HLT ETRIG (PTB) [us]");
+    } 
+    for (size_t i = 0; i < wvfms[ch].size(); i++) {
+      hist->SetBinContent(i+1, wvfms[ch][i]);
+    }
+  } else {
+    TH1I* hist = tfs->make<TH1I>(hist_name.str().c_str(), hist_name.str().c_str(), wvfms[ch].size(), 0,  wvfms[ch].size());
+    hist->GetYaxis()->SetTitle("ADCs");
+    hist->GetXaxis()->SetTitle("Samples");
+    for (size_t i = 0; i < wvfms[ch].size(); i++) {
+      hist->SetBinContent(i+1, wvfms[ch][i]);
+    }
   }
+
 }
 
 /**
@@ -900,6 +891,50 @@ unsigned int sbndaq::SBNDXARAPUCADecoder::get_channel_id(unsigned int board, uns
   return channel_id;
 }
 
+/**
+ * @brief Returns the signed difference between two timestamps (t1 - t2).
+ * @param[in] t1 The first timestamp in nanoseconds.
+ * @param[in] t2 The second timestamp in nanoseconds.
+ * @return The signed difference between the two timestamps (t1 - t2) in nanoseconds.
+ * @pre The timestamp is given in nanoseconds and the maximum value is less than 2^63 ns.
+ */
+int64_t sbndaq::SBNDXARAPUCADecoder::signed_difference(uint64_t t1, uint64_t t2) {
+  int64_t signed_diff = 0;
+  
+  if (t2 < t1) {
+    signed_diff = (t1 - t2);
+  } else {
+    signed_diff = (t2 - t1) * -1;
+  }
+  
+  return signed_diff;
+}
+
+/**
+ * @brief Returns the absolute difference between two timestamps.
+ * @param[in] t1 The first timestamp in nanoseconds.
+ * @param[in] t2 The second timestamp in nanoseconds.
+ * @return The absolute difference between the two timestamps in nanoseconds.
+ * @pre The timestamp is given in nanoseconds and the maximum value is less than 2^63 ns.
+ */
+uint64_t sbndaq::SBNDXARAPUCADecoder::abs_difference(uint64_t t1, uint64_t t2) {
+  uint64_t abs_diff = 0;
+  
+  if (t2 < t1) {
+    abs_diff = (t1 - t2);
+  } else {
+    abs_diff = (t2 - t1);
+  }
+  
+  return abs_diff;
+}
+
+/**
+* @brief Formats a timestamp in nanoseconds into a easily readable string format.
+* @param[in] timestamp The timestamp in nanoseconds to be formatted.
+* @return A string representation of the timestamp in the format "(seconds)nanoseconds ns".
+* @details The function divides the input timestamp by 1,000,000,000 to obtain the seconds component and uses the modulus operator to get the remaining nanoseconds.
+*/
 std::string sbndaq::SBNDXARAPUCADecoder::print_timestamp(uint64_t timestamp) {
   return "(" + std::to_string(timestamp / NANOSEC_IN_SEC) + ")" + std::to_string(timestamp % NANOSEC_IN_SEC) + " ns";
 }
