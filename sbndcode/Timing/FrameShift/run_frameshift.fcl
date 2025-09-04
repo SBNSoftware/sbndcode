@@ -1,0 +1,40 @@
+#include "services_sbnd.fcl"
+#include "frameshift_sbnd_data.fcl"
+
+process_name: FRAMESHIFT  # The process name must NOT contain any underscores
+
+source:
+{
+    module_type: RootInput  # Telling art we want a ROOT input
+    maxEvents:   -1
+}
+
+services:
+{
+    TFileService: { fileName: "frameshiftOutput.root" }
+    @table::sbnd_services
+}
+
+outputs:
+{
+    out1:
+    {
+        fileName: "%ifb_frameshift.root"
+        module_type: RootOutput
+        dataTier: "reco"
+    }
+}
+
+physics:
+{
+    producers:
+    {
+        frameshift: @local::frameshift_data
+    }
+
+    prod: [ frameshift ]
+    stream1: [ out1 ]
+
+    trigger_paths: [ prod ]
+    end_paths: [ stream1 ]
+}
