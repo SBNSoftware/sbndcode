@@ -2,5 +2,39 @@ BEGIN_PROLOG
 frameshift_data:
 {
     module_type:  "FrameShift" 
+    
+    DAQHeaderInstanceLabel: "RawEventHeader"
+    DAQHeaderModuleLabel: "daq"
+    RawTSCorrection: 367000 //367 us
+    MaxAllowedRefTimeDiff: 3000000 //3 ms
+  
+    TimingRefPmtLabel: "pmtdecoder"
+    TimingRefCrtLabel: "crtstrips"
+
+    TdcDecodeLabel: "tdcdecoder"
+    PtbDecodeLabel: "ptbdecoder"
+
+    PtbEtrigHlts: [1, 2, 3, 4, 5, 14, 15]
+    
+    BeamEtrigHlt: [1,2]
+    OffbeamEtrigHlt: [3,4]
+    XmuonEtrigHlt: [5, 14, 15]
+
+    BeamCrtT1Hlt: 20
+    OffbeamCrtT1Hlt: 21
+
+    BeamGateHlt: 26
+    OffbeamGateHlt: 27
+
+    DebugDAQHeader: false
+    DebugTimingRef: false
+    DebugPtb: false
+    DebugTdc: false
+    DebugFrame: false
+    
+    ShiftData2MC: 0
+    ShiftRWM2Gate: 1738
 }
+  
+  
 END_PROLOG
