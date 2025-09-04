@@ -19,8 +19,8 @@ LightPropagationCorrection:
     TPCPMTBarycenterFMModuleLabel: ""
     SPECTDCLabel: "tdcdecoder"
 
-    VGroupVIS: @local::sbnd_vuv_timing_parameterization.vuv_vgroup_mean
-    VGroupVUV: @local::sbnd_vis_timing_parameterization.vis_vmean
+    VGroupVUV: @local::sbnd_vuv_timing_parameterization.vuv_vgroup_mean
+    VGroupVIS: @local::sbnd_vis_timing_parameterization.vis_vmean
     SpeedOfLight: 29.9
 
     FlashT0Config: @local::FlashT0SelectedChannels
@@ -37,8 +37,10 @@ LightPropagationCorrection:
     SaveSPECTDC: true
     SaveCorrectionTree: true
 
-    NuScoreThreshold: 0.4
-    OpT0ScoreThreshold: 100
+    NuScoreThreshold: 0.5
+    OpT0ScoreThreshold: 200
+
+    FlashMatchingTool: "OpT0Finder"
 }
 
 LightPropagationCorrection.AlgoConfig_tpc0.TPC: 0
