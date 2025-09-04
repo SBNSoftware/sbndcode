@@ -1,0 +1,7 @@
+#include "prodgenie_corsika_proton_rockbox_sbnd.fcl"
+
+physics.filters.dirtfilter.EnergyDeposit: 1 # MeV
+physics.filters.dirtfilter.MaxEnergyDeposit: 100 # MeV
+
+# Only keep dirt events
+outputs.out1.SelectEvents: [ "simulatedirt" ]
