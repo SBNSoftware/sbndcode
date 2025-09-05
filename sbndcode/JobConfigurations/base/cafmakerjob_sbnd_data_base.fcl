@@ -173,3 +173,6 @@ physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []
+
+physics.producers.cafmaker.SBNDFrameShiftInfoLabel: "frameshift"
+physics.producers.cafmaker.SBNDTimingInfoLabel: "frameshift"
