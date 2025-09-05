@@ -1,0 +1,9 @@
+BEGIN_PROLOG 
+
+crtvetoanalysis: 
+{
+    module_type: "CRTVetoAnalysis"
+
+}
+
+END_PROLOG

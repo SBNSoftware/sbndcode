@@ -1,0 +1,38 @@
+#include "services_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "crtvetoanalysis_config.fcl"
+
+process_name: CRTVetoAnalysis
+
+
+services:
+{
+
+  TFileService: {fileName: "crtveto_output.root"}
+
+  TimeTracker: {}
+  message: @local::sbnd_message_services
+
+  @table::sbnd_services
+
+}
+
+source:
+{
+
+  module_type: RootInput
+  maxEvents: -1
+
+}
+
+
+physics:
+{
+
+  analyzers:
+  {
+    ana: @local::crtvetoanalysis
+  }
+  path0: [ana]
+  end_paths: [path0]
+}
