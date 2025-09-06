@@ -176,11 +176,11 @@ private:
     std::string fOpHitsModuleLabel;
     std::string fOpFlashNewLabel;
     std::string fSPECTDCLabel;
-
+    std::string fFlashMatchingTool;
+    
     bool fSaveCorrectionTree;
     bool fSaveDebugTree;
     bool fSaveSPECTDC;
-    
 
     std::vector<double> fTimeCorrectionPerChannel;
     double fRecoVx = 0.0;
@@ -219,6 +219,7 @@ private:
     double fMinHitPE;
     double fReadoutDelay;
 
+    bool fDebug;
 
     art::ServiceHandle<art::TFileService> tfs;
     TTree *fTree;
