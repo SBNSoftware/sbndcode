@@ -47,7 +47,5 @@ add_subdirectory(ChannelMaps)
 add_subdirectory(SBNDCVN)
 
 add_subdirectory(TPCPMTBarycenterMatching)
-add_subdirectory(PMTWaveformFilter)
 
-add_subdirectory(SuperAna)
 add_subdirectory(LightPropagationCorrection)
