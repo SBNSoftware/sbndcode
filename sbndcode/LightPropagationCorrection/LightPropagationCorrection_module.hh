@@ -144,7 +144,7 @@ private:
     void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );
     double GetPropagationTime(double );
     double GetFlashT0(double , std::vector<recob::OpHit> );
-    void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& , sbn::OpT0Finder const& );
+    void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& );
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
 
 
@@ -211,7 +211,7 @@ private:
     double fVGroupVUV; // Speed of light in vacuum in mm/ns
 
     double fNuScoreThreshold;
-    double fOpT0ScoreThreshold;
+    double fFMScoreThreshold;
 
     double fPDFraction;
     double fPreWindow;
@@ -228,10 +228,11 @@ private:
     int fRun;
     int fSubrun;
     double _fNuScore;
+    double _fFMScore;
     double fEventTriggerTime=-999999.;
     double fRWMTime=-999999.;
     std::vector<double> fNuScore;
-    std::vector<double> fOpT0Score;
+    std::vector<double> fFMScore;
     std::vector<double> fOpFlashTimeOld;
     std::vector<double> fOpFlashTimeNew;
     std::vector<double> fOpFlashXCenter;
