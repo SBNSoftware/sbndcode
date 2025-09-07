@@ -8,6 +8,9 @@
 # Now we are generating overlays we need to add CORSIKA to GENIE
 physics.producers.corsika: @local::sbnd_corsika_p
 
+# Change the ShowerAreaExtension from 10 to 20 meters 
+physics.producers.corsika.ShowerAreaExtension: 2000
+
 # Create a new instance of largeant to just look at GENIE
 physics.producers.largeantnu: @local::sbnd_larg4
 physics.producers.largeantnu.inputCollections: [ "generator" ]
