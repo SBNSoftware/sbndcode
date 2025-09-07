@@ -93,6 +93,10 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     //Get the handle for making the assns later on
     ::art::Handle<std::vector<sbn::OpT0Finder>> opt0Handle;
     e.getByLabel(fOpT0FinderModuleLabel, opt0Handle);
+    // Slice to TPCPMTBarycenterFM
+    ::art::Handle<std::vector<sbn::TPCPMTBarycenterMatch>> tpcpmtbarycenterfmHandle;
+    e.getByLabel(fTPCPMTBarycenterFMModuleLabel, tpcpmtbarycenterfmHandle);
+
     //Read PFPs
     ::art::Handle<std::vector<recob::PFParticle>> pfpHandle;
     e.getByLabel(fReco2Label, pfpHandle);
@@ -255,12 +259,13 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         {
             const std::vector< art::Ptr<sbn::TPCPMTBarycenterMatch> > slcTPCPMTBarycenter = slice_tpcpmtbarycentermatching_assns.at( slice.key() );
             if(slcTPCPMTBarycenter.size() == 0) continue;
-            art::FindManyP<recob::OpFlash> opflash_tpcpmtbarycenter_assns(opt0Handle, e, fTPCPMTBarycenterFMModuleLabel);
-            flashFM = opflash_tpcpmtbarycenter_assns.at( slcTPCPMTBarycenter[0].key() );
+            art::FindManyP<recob::OpFlash> opflash_tpcpmtbarycenter_assns(tpcpmtbarycenterfmHandle, e, fTPCPMTBarycenterFMModuleLabel);
+            size_t BFMIdx = HighestBFMScoreIdx(slcTPCPMTBarycenter);
+            flashFM = opflash_tpcpmtbarycenter_assns.at( slcTPCPMTBarycenter[BFMIdx].key() );
             if(flashFM.size() > 1){
                 throw art::Exception(art::errors::LogicError) << "There are multiple OpFlash objects associated to the same TPCPMTBarycenterFM object. This is not expected.";
             }
-            _fFMScore = slcTPCPMTBarycenter[0]->score;
+            _fFMScore = slcTPCPMTBarycenter[BFMIdx]->score;
             if(_fFMScore < fFMScoreThreshold){
                 ResetSliceInfo();
                 continue;
@@ -348,7 +353,7 @@ void sbnd::LightPropagationCorrection::beginJob()
         fTree->Branch("RWMTime", &fRWMTime);
         fTree->Branch("EventTriggerTime", &fEventTriggerTime);
         fTree->Branch("NuScore", &fNuScore);
-        fTree->Branch("fFMScore", &fFMScore);
+        fTree->Branch("FMScore", &fFMScore);
         fTree->Branch("OpFlashTimeOld", &fOpFlashTimeOld);
         fTree->Branch("OpFlashTimeNew", &fOpFlashTimeNew);
         fTree->Branch("OpFlashXCenter", &fOpFlashXCenter);
@@ -412,6 +417,20 @@ size_t sbnd::LightPropagationCorrection::HighestOpT0ScoreIdx(const std::vector< 
     for(size_t jx=0; jx<slcFM.size(); jx++){
         if(slcFM[jx]->score > highestOpT0Score){
             highestOpT0Score = slcFM[jx]->score;
+            highestIdx = jx;
+        }
+    }
+    return highestIdx;
+}
+
+size_t sbnd::LightPropagationCorrection::HighestBFMScoreIdx(const std::vector< art::Ptr<sbn::TPCPMTBarycenterMatch> > slcFM)
+{
+    // Gets the idx of the OpT0 object with the highest score 
+    double highesBFM0Score = -99999.0; // Initialize to a negative value
+    size_t highestIdx = 0;
+    for(size_t jx=0; jx<slcFM.size(); jx++){
+        if(slcFM[jx]->score > highesBFM0Score){
+            highesBFM0Score = slcFM[jx]->score;
             highestIdx = jx;
         }
     }
@@ -575,7 +594,7 @@ void sbnd::LightPropagationCorrection::FillCorrectionTree(double & newFlashTime,
     }
 
     fNuScore.push_back(_fNuScore);
-    fFMScore.push_back(_FMScore);
+    fFMScore.push_back(_fFMScore);
     fOpFlashTimeOld.push_back(flash.Time());
     fOpFlashTimeNew.push_back(newFlashTime);
     fOpFlashXCenter.push_back(flash.XCenter());
