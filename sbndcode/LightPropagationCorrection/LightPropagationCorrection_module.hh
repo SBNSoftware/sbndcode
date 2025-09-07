@@ -139,6 +139,8 @@ private:
     void ResetEventVars();
     void ResetSliceInfo();
     size_t HighestOpT0ScoreIdx(const std::vector< art::Ptr<sbn::OpT0Finder> >);
+    size_t HighestBFMScoreIdx(const std::vector< art::Ptr<sbn::TPCPMTBarycenterMatch> > );
+
     void GetPropagationTimeCorrectionPerChannel();
     void CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> , std::vector<recob::OpHit> & );
     void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );

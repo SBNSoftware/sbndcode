@@ -16,7 +16,7 @@ LightPropagationCorrection:
     OpHitsModuleLabel: "ophitpmt"
     SpacePointLabel: "pandora"
     OpT0FinderModuleLabel: "opt0finder"
-    TPCPMTBarycenterFMModuleLabel: ""
+    TPCPMTBarycenterFMModuleLabel: "tpcpmtbarycentermatching"
     SPECTDCLabel: "tdcdecoder"
 
     VGroupVUV: @local::sbnd_vuv_timing_parameterization.vuv_vgroup_mean
@@ -37,10 +37,10 @@ LightPropagationCorrection:
     SaveSPECTDC: true
     SaveCorrectionTree: true
 
-    NuScoreThreshold: 0.5
-    OpT0ScoreThreshold: 200
+    NuScoreThreshold: 0.0
+    FMScoreThreshold: 0.0
 
-    FlashMatchingTool: "OpT0Finder"
+    FlashMatchingTool: "BarycenterFM"
 }
 
 LightPropagationCorrection.AlgoConfig_tpc0.TPC: 0
