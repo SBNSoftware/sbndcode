@@ -5,5 +5,6 @@ cet_make_library(SOURCE
   TensorFlow::framework
 )
 
+add_subdirectory(v0901_trained_w_165k_resnet18)
 install_headers()
 install_source()
