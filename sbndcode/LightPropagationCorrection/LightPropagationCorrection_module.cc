@@ -70,9 +70,9 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     auto const flasht0_pset = p.get<lightana::Config_t>("FlashT0Config");
     _flasht0calculator = art::make_tool<lightana::FlashT0Base>(flasht0_pset);
     
-    produces< std::vector<sbnd::OpFlashTiming::CorrectedOpFlashTiming> >();
-    produces<art::Assns<recob::Slice, sbnd::OpFlashTiming::CorrectedOpFlashTiming>>();
-    produces<art::Assns<recob::OpFlash, sbnd::OpFlashTiming::CorrectedOpFlashTiming>>();
+    produces< std::vector<sbn::CorrectedOpFlashTiming> >();
+    produces<art::Assns<recob::Slice, sbn::CorrectedOpFlashTiming>>();
+    produces<art::Assns<recob::OpFlash, sbn::CorrectedOpFlashTiming>>();
 }
 
 void sbnd::LightPropagationCorrection::produce(art::Event & e)
@@ -81,10 +81,10 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     fRun = e.id().run();
     fSubrun = e.id().subRun();
 
-    std::unique_ptr< std::vector<sbnd::OpFlashTiming::CorrectedOpFlashTiming> > correctedOpFlashTimes (new std::vector<sbnd::OpFlashTiming::CorrectedOpFlashTiming>);
-    art::PtrMaker<sbnd::OpFlashTiming::CorrectedOpFlashTiming> make_correctedopflashtime_ptr{e};
-    std::unique_ptr< art::Assns<recob::Slice, sbnd::OpFlashTiming::CorrectedOpFlashTiming>> newCorrectedOpFlashTimingSliceAssn (new art::Assns<recob::Slice, sbnd::OpFlashTiming::CorrectedOpFlashTiming>);
-    std::unique_ptr< art::Assns<recob::OpFlash, sbnd::OpFlashTiming::CorrectedOpFlashTiming>> newCorrectedOpFlashTimingOpFlashAssn (new art::Assns<recob::OpFlash, sbnd::OpFlashTiming::CorrectedOpFlashTiming>);
+    std::unique_ptr< std::vector<sbn::CorrectedOpFlashTiming> > correctedOpFlashTimes (new std::vector<sbn::CorrectedOpFlashTiming>);
+    art::PtrMaker<sbn::CorrectedOpFlashTiming> make_correctedopflashtime_ptr{e};
+    std::unique_ptr< art::Assns<recob::Slice, sbn::CorrectedOpFlashTiming>> newCorrectedOpFlashTimingSliceAssn (new art::Assns<recob::Slice, sbn::CorrectedOpFlashTiming>);
+    std::unique_ptr< art::Assns<recob::OpFlash, sbn::CorrectedOpFlashTiming>> newCorrectedOpFlashTimingOpFlashAssn (new art::Assns<recob::OpFlash, sbn::CorrectedOpFlashTiming>);
 
     // --- Read Recob Slice
     ::art::Handle<std::vector<recob::Slice>> sliceHandle;
@@ -316,17 +316,17 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                                 0, 0, 1, // this are just default values
                                 100., -1., Ycenter, Ywidth, Zcenter, Zwidth);
             newFlashTime = flasht0;
-            sbnd::OpFlashTiming::CorrectedOpFlashTiming correctedOpFlashTiming;
+            sbn::CorrectedOpFlashTiming correctedOpFlashTiming;
             correctedOpFlashTiming.OpFlashT0 = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
             correctedOpFlashTiming.UpstreamTime_lightonly = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (Zcenter/fSpeedOfLight)/1000;
             correctedOpFlashTiming.UpstreamTime_tpczcorr = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
             correctedOpFlashTiming.UpstreamTime_propcorr_tpczcorr = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.OpT0Score = _fFMScore;
+            correctedOpFlashTiming.FMScore = _fFMScore;
             correctedOpFlashTiming.SliceNuScore = _sliceMaxNuScore;
             correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
         }
 
-        art::Ptr<sbnd::OpFlashTiming::CorrectedOpFlashTiming> newCorrectedOpFlashTimingPtr = make_correctedopflashtime_ptr(correctedOpFlashTimes->size()-1);
+        art::Ptr<sbn::CorrectedOpFlashTiming> newCorrectedOpFlashTimingPtr = make_correctedopflashtime_ptr(correctedOpFlashTimes->size()-1);
         newCorrectedOpFlashTimingSliceAssn->addSingle(slice, newCorrectedOpFlashTimingPtr);
         newCorrectedOpFlashTimingOpFlashAssn->addSingle(flashFM[0], newCorrectedOpFlashTimingPtr);
         if(fSaveCorrectionTree){

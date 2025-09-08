@@ -20,7 +20,7 @@
 
 #include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/RecoBase/OpFlash.h"
-#include "sbnobj/SBND/OpFlashTiming/CorrectedOpFlashTiming.h"
+#include "sbnobj/Common/Reco/CorrectedOpFlashTiming.h"
 
 #include "art_root_io/TFileService.h"
 
@@ -88,7 +88,7 @@ void LightPropagationCorrectionAna::analyze(art::Event const& e)
   _subrunID = e.id().subRun();
 
   // Get all the T0 objects
-  ::art::Handle<std::vector<sbnd::OpFlashTiming::CorrectedOpFlashTiming>> correctedopflash_h;
+  ::art::Handle<std::vector<sbn::CorrectedOpFlashTiming>> correctedopflash_h;
   e.getByLabel(fLightPropCorrectionLabel, correctedopflash_h);
   if(!correctedopflash_h.isValid() || correctedopflash_h->empty()) {
     mf::LogWarning("fLightPropCorrectionLabel") << "No LightPropCorrectionLabel objects with label " << fLightPropCorrectionLabel << std::endl;
@@ -96,7 +96,7 @@ void LightPropagationCorrectionAna::analyze(art::Event const& e)
   }
 
 
-  std::vector<art::Ptr<sbnd::OpFlashTiming::CorrectedOpFlashTiming>> correctedopflash_v;
+  std::vector<art::Ptr<sbn::CorrectedOpFlashTiming>> correctedopflash_v;
   art::fill_ptr_vector(correctedopflash_v, correctedopflash_h);
 
   // Get the T0->Slice association

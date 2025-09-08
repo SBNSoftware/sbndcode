@@ -20,9 +20,6 @@
 #include <string.h>
 
 // Services
-#include "larsim/MCCheater/BackTrackerService.h"
-#include "larsim/MCCheater/ParticleInventoryService.h"
-#include "larsim/Utils/TruthMatchUtils.h"
 #include "lardataalg/DetectorInfo/DetectorClocksData.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -32,7 +29,6 @@
 
 
 // G4 includes
-#include "nusimdata/SimulationBase/MCParticle.h"
 #include "lardataobj/Simulation/SimChannel.h"
 #include "lardataobj/Simulation/SimPhotons.h"
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
@@ -72,13 +68,13 @@
 
 // CRT
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
-#include "sbnobj/SBND/OpFlashTiming/CorrectedOpFlashTiming.h"
 
 // Cosmic rejection includes
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
 #include "sbnobj/Common/Reco/SimpleFlashMatchVars.h"
 #include "sbnobj/Common/Reco/CRUMBSResult.h"
 #include "sbnobj/Common/Reco/TPCPMTBarycenterMatch.h"
+#include "sbnobj/Common/Reco/CorrectedOpFlashTiming.h"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
 #include "lardataobj/AnalysisBase/T0.h"
 
