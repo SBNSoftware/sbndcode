@@ -80,11 +80,11 @@ TRAINING_CONFIG = {
     # Model training parameters
     'epochs': 80,
     'batch_size': 32,       # Increased for better gradient estimates
-    'patience': 8,          # Increased early stopping patience
-    'reduce_lr_patience': 5, # More patience before reducing LR
+    'patience': 4,          # Increased early stopping patience
+    'reduce_lr_patience': 3, # More patience before reducing LR
     'reduce_lr_factor': 0.7, # Less aggressive LR reduction
     'min_lr': 1e-6,
-    'dropout_rate': 0.2,    # Reduced dropout to prevent overfitting
+    'dropout_rate': 0.3,    # Reduced dropout to prevent overfitting
     
     # Optimizer
     'optimizer': 'adam',
@@ -95,7 +95,7 @@ TRAINING_CONFIG = {
 # Model saving configuration
 MODEL_CONFIG = {
     'weights_file': '/tmp/weights_nuvT.hdf5.keras',
-    'export_path': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models/v0508_trained_w_30k',
+    'export_path': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/cnn_models',
     'model_name_template': 'v{date}_trained_w_{n_events}'  # Will be formatted with date and event count
 }
 
