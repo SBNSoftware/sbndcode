@@ -1,0 +1,19 @@
+BEGIN_PROLOG
+
+yznorm_hist_data: {
+  tool_type: NormalizeYZ
+  FileName: "YZmaps/yz_correction_map_data1e20.root"
+  Verbose: false
+}
+
+yznorm_hist_mc: {
+  tool_type: NormalizeYZ
+  FileName: "YZmaps/yz_correction_map_mcp2025b5e18.root"
+  Verbose: false
+}
+
+# list of normalization tools - by far only YZ correction is implemented
+sbnd_calonormtoolsdata: [@local::yznorm_hist_data]
+sbnd_calonormtoolsmc: [@local::yznorm_hist_mc]
+
+END_PROLOG
