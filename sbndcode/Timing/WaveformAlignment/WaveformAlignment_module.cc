@@ -753,12 +753,13 @@ void sbnd::WaveformAlignment::produce(art::Event& e)
 
                     fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
                     double total_transit = fPMTCalibrationDatabaseService->getTotalTransitTime(wf->ChannelNumber());
+                    double pmt_response = fPMTCalibrationDatabaseService->getCosmicTimeCorrection(wf->ChannelNumber());
 
                     double correction = 0;
                     if (fCorrectPPS) correction -= fPPSPath;
                     if (fCorrectPMT2DigitiserCable) correction -= total_transit;
                     if (fCorrectDigitiserJitter) correction -= boardJitter[boardId_v[boardIdx]][flashIdx];
-                    //if (fCorrectPMTResponse) ???
+                    if (fCorrectPMTResponse) correction-= pmt_response; 
 
                     correction /= 1000; //ns to us conversion
 
