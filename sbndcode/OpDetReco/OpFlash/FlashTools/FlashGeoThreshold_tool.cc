@@ -17,6 +17,8 @@
 #include "FlashGeoBase.hh"
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+#include "sbndcode/Calibration/PDSDatabaseInterface/PMTCalibrationDatabase.h"
+#include "sbndcode/Calibration/PDSDatabaseInterface/IPMTCalibrationDatabaseService.h"
 
 #include <string>
 #include <map>
@@ -63,16 +65,17 @@ namespace lightana{
     // Default constructor
     explicit FlashGeoThreshold(art::ToolConfigTable<Config> const& config);
 
-    // Method to calculate the OpFlash t0
+    // Method to calculate the OpFlash geometry
     void GetFlashLocation(std::vector<double> pePerOpChannel,
                             double& Ycenter, double& Zcenter,
                             double& Ywidth, double& Zwidth) override;
+    void InitializeFlashGeoAlgo() override;
+
 
   private:
 
     void ResetVars();
     void GetCenter(std::map<int, double> PEAcc, double& center, double& width, double& threshold);
-
     // Fhicl configuration parameters
     std::vector<std::string> fPDTypes;
     double fThresholdY;
@@ -107,6 +110,9 @@ namespace lightana{
 
     static constexpr double fDefCenterValue = -999.;
 
+    // Calibration database service
+    sbndDB::PMTCalibrationDatabase const* fPMTCalibrationDatabaseService;
+
   };
 
 
@@ -117,7 +123,12 @@ namespace lightana{
     , fNormalizeByPDType{ config().NormalizeByPDType() }
     , fWeightExp{ config().WeightExp() }
   {
+    //Load PMT Calibration Database
+    fPMTCalibrationDatabaseService = lar::providerFrom<sbndDB::IPMTCalibrationDatabaseService const>();
+  }
 
+  void FlashGeoThreshold::InitializeFlashGeoAlgo()
+  {
     // Initialize YZ map
     for(size_t opch=0; opch<::lightana::NOpDets(); opch++){
       ::lightana::OpDetCenterFromOpChannel(opch, fPDxyz);
@@ -140,8 +151,7 @@ namespace lightana{
     // Initialize accumulators for ON PMTs
     for(size_t opch=0; opch<::lightana::NOpDets(); opch++){
       ::lightana::OpDetCenterFromOpChannel(opch, fPDxyz);
-      std::vector<int> SkipChannelList = {39, 66, 67, 71, 85, 86, 87, 92, 115, 138, 141, 170, 197, 217, 218, 221, 222, 223, 226, 245, 248, 249, 302};
-      if(std::find(SkipChannelList.begin(), SkipChannelList.end(), (int) opch) != SkipChannelList.end()) continue; // Skip channels in the list
+      if(!fPMTCalibrationDatabaseService->getReconstructChannel(opch)) continue;
       if(fPDxyz[0]<0 && (fPDSMap.pdType(opch)=="pmt_coated" || fPDSMap.pdType(opch)=="pmt_uncoated")) {
         fNumONPMTsY_tpc0[(int) fPDxyz[1]]++;
         fNumONPMTsZ_tpc0[(int) fPDxyz[2]]++;
@@ -149,9 +159,8 @@ namespace lightana{
       else if(fPDxyz[0]>0 && (fPDSMap.pdType(opch)=="pmt_coated" || fPDSMap.pdType(opch)=="pmt_uncoated")) {
         fNumONPMTsY_tpc1[(int) fPDxyz[1]]++;
         fNumONPMTsZ_tpc1[(int) fPDxyz[2]]++;
-      }  
+      }
     }
-
 
     // Initialize normalization factors by PD type
     if(fNormalizeByPDType){
@@ -162,7 +171,6 @@ namespace lightana{
     }
   
   }
-
 
   void FlashGeoThreshold::GetFlashLocation(std::vector<double> pePerOpChannel,
                                             double& Ycenter, double& Zcenter,
