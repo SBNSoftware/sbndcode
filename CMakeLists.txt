@@ -15,7 +15,7 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.06.01)
+set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 10.09.00)
 find_package(cetmodules REQUIRED)
 project(sbndcode LANGUAGES CXX)
 
