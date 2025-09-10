@@ -30,9 +30,9 @@ physics.producers: {
     PMTOverlayRaw: true
     PMTOverlayHits: false
     CRTOverlayHits: false
-    PMTWaveDataLabel: "daqPMT"
-    PMTWaveSimLabel: "shifted"
-    PMTWaveBaseLabel: "pmtbaselines"
+    PMTWaveDataLabel: "pmtdecoder:PMTChannels"
+    PMTWaveSimLabel: "opdaq"
+    PMTWaveBaseLabel: ""
   }
 
   overlayCRTHit:
@@ -51,7 +51,7 @@ physics.producers: {
 
 ## Use the following to run the full defined stage0 set of modules
 # physics.reco: [ overlayTPC, overlayOpWaveforms, overlayCRTHit]
-physics.reco: [ overlayTPC ]
+physics.reco: [ overlayTPC, overlayOpWaveforms ]
 
 ## boiler plate...
 physics.stream1:       [ out1 ]

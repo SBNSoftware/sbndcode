@@ -158,8 +158,10 @@ OverlayProducts::OverlayProducts(fhicl::ParameterSet const& p)
 
   if ( fPMTOverlayRaw ) {
     produces< std::vector<raw::OpDetWaveform> >();
-    produces< std::vector<icarus::WaveformBaseline> >();
-    produces< art::Assns<icarus::WaveformBaseline,raw::OpDetWaveform> >();
+    if (!fPMTWaveBaseLabel.empty()) {
+      produces< std::vector<icarus::WaveformBaseline> >();
+      produces< art::Assns<icarus::WaveformBaseline,raw::OpDetWaveform> >();
+    }
   }
   if ( fPMTOverlayHits ) produces< std::vector<recob::OpHit> >();
 
@@ -419,18 +421,25 @@ void OverlayProducts::produce(art::Event& e)
     // ... and the baselines
     art::Handle< std::vector<icarus::WaveformBaseline> > baselinesHandle;
     std::vector< art::Ptr<icarus::WaveformBaseline> > baselines;
-    if ( e.getByLabel(fPMTWaveBaseLabel,baselinesHandle) ) {
-      art::fill_ptr_vector(baselines,baselinesHandle);
+
+    if (!fPMTWaveBaseLabel.empty()) {
+      if ( e.getByLabel(fPMTWaveBaseLabel,baselinesHandle) ) {
+        art::fill_ptr_vector(baselines, baselinesHandle);
+      }
+      else{
+        mf::LogWarning("OverlayProducts") << "Event failed to find raw::OpDetWaveform with label " << fPMTWaveBaseLabel << ".";
+        return;
+      }
     }
-    else{
-      mf::LogWarning("OverlayProducts") << "Event failed to find raw::OpDetWaveform with label " << fPMTWaveBaseLabel << ".";
-      return;
+    std::optional<art::FindManyP<icarus::WaveformBaseline>> fmbase;
+    if (!fPMTWaveBaseLabel.empty()) {
+      fmbase.emplace(dataWavesHandle, e, fPMTWaveBaseLabel);
+      if( !fmbase->isValid() ) {
+        mf::LogError("OverlayProducts") << "Error in validity of fmbase. Returning.";
+        return;
+      }
     }
-    art::FindManyP<icarus::WaveformBaseline> fmbase( dataWavesHandle, e, fPMTWaveBaseLabel );
-    if( !fmbase.isValid() ) {
-      mf::LogError("OverlayProducts") << "Error in validity of fmbase. Returning.";
-      return;
-    }
+
     // TEST!!!! PRINT BASELINES ////////////////
     std::cout << "// ---- BASELINES ---- " << std::endl;
     for ( unsigned int idxBase=0; idxBase<baselines.size(); ++idxBase ) {
@@ -439,6 +448,7 @@ void OverlayProducts::produce(art::Event& e)
     std::cout << "---- BASELINES ---- //" << std::endl;
     std::cout << std::endl;
     ////////////////////////////////////////////
+
     // Now fill the map
     for ( auto const& dataWave : dataWaves ) {
       auto chID = dataWave->ChannelNumber();
@@ -450,8 +460,11 @@ void OverlayProducts::produce(art::Event& e)
       if ( opWaveformsMap.find( chID ) == opWaveformsMap.end() )
 	opWaveformsMap[ chID ] = std::vector< opWaveformOverlay >();
 
-      auto baselines = fmbase.at( dataWave.key() );
-      if ( baselines.size() > 1 ) std::cout << "SHOULD NOT BE MORE THAN ONE BASELINE..." << std::endl;
+      // std::vector<art::Ptr<icarus::WaveformBaseline>> baselines;
+      if (!fPMTWaveBaseLabel.empty()) {
+        baselines = fmbase->at( dataWave.key() );
+        if ( baselines.size() > 1 ) std::cout << "SHOULD NOT BE MORE THAN ONE BASELINE..." << std::endl;
+      }
 
       opWaveformOverlay dataOpWave;
       dataOpWave.timestamp = time;
@@ -635,8 +648,6 @@ void OverlayProducts::produce(art::Event& e)
     } // loop simulated waveforms
 
     // Now put all the waveforms into the collections
-    art::PtrMaker<raw::OpDetWaveform> opdetwvfmPtrMaker(e);
-    art::PtrMaker<icarus::WaveformBaseline> baselinePtrMaker(e);
     for ( auto const &[chID, wvfmStructVec] : opWaveformsMap ) {
       for ( auto const& wvfmStruct : wvfmStructVec ) {
 	const raw::TimeStamp_t time = wvfmStruct.timestamp;
@@ -670,15 +681,21 @@ void OverlayProducts::produce(art::Event& e)
 	icarus::WaveformBaseline  bLine( base );
 
 	opWaveformVec->push_back( odw );
-	baselineVec->push_back( bLine );
-	baselineToWaveforms.addSingle( baselinePtrMaker(baselineVec->size()-1), opdetwvfmPtrMaker(opWaveformVec->size()-1) );
+  if (!fPMTWaveBaseLabel.empty()) {
+    art::PtrMaker<raw::OpDetWaveform> opdetwvfmPtrMaker(e);
+    art::PtrMaker<icarus::WaveformBaseline> baselinePtrMaker(e);
+	  baselineVec->push_back( bLine );
+	  baselineToWaveforms.addSingle( baselinePtrMaker(baselineVec->size()-1), opdetwvfmPtrMaker(opWaveformVec->size()-1) );
+  }
       }
     }
 
     // ... and put collections into the event
     e.put( std::move( opWaveformVec ) );
-    e.put( std::move( baselineVec ) );
-    e.put( std::move( std::make_unique< art::Assns<icarus::WaveformBaseline, raw::OpDetWaveform> >(std::move(baselineToWaveforms)) ) );
+    if (!fPMTWaveBaseLabel.empty()) {
+      e.put( std::move( baselineVec ) );
+      e.put( std::move( std::make_unique< art::Assns<icarus::WaveformBaseline, raw::OpDetWaveform> >(std::move(baselineToWaveforms)) ) );
+    }
   }
 
   if ( fPMTOverlayHits ) {
