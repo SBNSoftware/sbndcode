@@ -11,6 +11,7 @@
 #
 # 1.  Keeping SimChannels by choice, for now.
 # 2.  Keeping SimPhotonsLites for PDS detvar
+# 3.  Keeping SimEnergyDeposits_ionandscint_priorSCE for other detvars
 #
 #
 #=============================================================================
@@ -23,7 +24,8 @@ detsim_drops: [ @sequence::g4_drops
                 , "drop sim::SimPhotons_*_*_*" 
                 , "drop sim::SimEnergyDeposits_ionandscintout__*"
                 , "drop sim::SimEnergyDeposits_ionandscint_*_*"
-                , "drop sim::SimEnergyDeposits_largeant_*_*"]
+                , "drop sim::SimEnergyDeposits_largeant_*_*"
+					 , "keep sim::SimEnergyDeposits_ionandscint_priorSCE_G4"]
 
 END_PROLOG
 
