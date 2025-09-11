@@ -32,12 +32,15 @@ tf::Graph::Graph(const char* graph_file_name,
   n_inputs = ninputs;
   n_outputs = noutputs;
 
-  // Force tf to only use a single core so it doesn't eat batch farms
+  // Optimized for single-core grid jobs - maintain 1 thread but with optimizations
   tensorflow::SessionOptions options;
   tensorflow::ConfigProto& config = options.config;
   config.set_inter_op_parallelism_threads(1);
   config.set_intra_op_parallelism_threads(1);
   config.set_use_per_session_threads(false);
+  
+  // CPU optimizations for single-core inference
+  config.set_allow_soft_placement(true);
 
   auto status = tensorflow::NewSession(options, &fSession);
   if (!status.ok()) {

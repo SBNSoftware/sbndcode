@@ -1,6 +1,10 @@
 #include "SBNDPDSProducer_module.hh"
 
 #include "larcorealg/Geometry/OpDetGeo.h"
+#include <chrono>      // For timing analysis
+#include <unordered_map> // For SimIDEs pre-indexing
+#include <iomanip>     // For std::setprecision
+#include <cstdlib>     // For getenv()
 
 // -------- Constructor --------
 opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
@@ -19,14 +23,20 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     fKeepPDGCode( p.get<std::vector<int>>("KeepPDGCode", {}) ),
     fSaveOpHits( p.get<bool>("SaveOpHits", true) ),
     fVerbosity( p.get<int>("Verbosity") ),
-    fCoatedPMTMapPath( p.get<std::string>("CoatedPMTMapPath", "/exp/sbnd/app/users/svidales/larsoft_v10_06_01_develop/srcs/sbndcode/sbndcode/PosRecoCVN/pmt_maps/coated_pmt_map_realistic_flipped.csv") ),
-    fUncoatedPMTMapPath( p.get<std::string>("UncoatedPMTMapPath", "/exp/sbnd/app/users/svidales/larsoft_v10_06_01_develop/srcs/sbndcode/sbndcode/PosRecoCVN/pmt_maps/uncoated_pmt_map_realistic_flipped.csv") ),
-    fModelPath( p.get<std::string>("ModelPath", "") ),
+    fCoatedPMTMapPath("coated_pmt_map_realistic_flipped.csv"),
+    fUncoatedPMTMapPath("uncoated_pmt_map_realistic_flipped.csv"),
+    fModelPath("saved_model"),
     fRunInference( p.get<bool>("RunInference", false) ),
     fInputNames( p.get<std::vector<std::string>>("InputNames", {}) ),
     fOutputNames( p.get<std::vector<std::string>>("OutputNames", {}) ),
     fCustomNormFactor( p.get<double>("CustomNormFactor", -1.0) ),
-    dE_neutrinowindow( 0.0 ) 
+    dE_neutrinowindow( 0.0 ),
+    // Initialize TTree variables
+    fTreeRun(0), fTreeSubrun(0), fTreeEvent(0), fTreePassedFilters(false),
+    fTreeTrueX(-999.0), fTreeTrueY(-999.0), fTreeTrueZ(-999.0),
+    fTreePredX(-999.0), fTreePredY(-999.0), fTreePredZ(-999.0),
+    fTreeDiffX(-999.0), fTreeDiffY(-999.0), fTreeDiffZ(-999.0),
+    fTreeError3D(-999.0), fTreeNuvT(-999.0), fTreeNuvZ(-999.0), fTreedEtpc(-999.0) 
 {
     produces<PixelMapVars>();
     
@@ -41,14 +51,47 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     
     // Initialize TensorFlow model if enabled
     if (fRunInference && !fModelPath.empty()) {
-        // Determine number of outputs dynamically or use parameter
-        int nOutputs = fOutputNames.empty() ? -1 : fOutputNames.size(); // -1 means auto-detect
-        fTFGraph = tf::Graph::create(fModelPath.c_str(), fInputNames, fOutputNames, true, 1, nOutputs > 0 ? nOutputs : 3);
-        if (!fTFGraph) {
-            std::cerr << "ERROR: Failed to load TensorFlow model from " << fModelPath << std::endl;
+        // Try to find model in multiple locations
+        std::string model_path = fModelPath;
+        std::vector<std::string> search_paths = {
+            model_path,  // original path
+            // Grid paths (tarball structure)
+            "../local/sbndcode/v10_09_00/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/" + model_path,
+            "../local/sbndcode/v10_09_00/scripts/PosRecoCVN/inference/module/" + model_path,
+            // Local development paths (MRB environment)
+            std::string(getenv("MRB_INSTALL") ? getenv("MRB_INSTALL") : "") + "/sbndcode/v10_09_00/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/" + model_path,
+            std::string(getenv("MRB_SOURCE") ? getenv("MRB_SOURCE") : "") + "/sbndcode/sbndcode/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/" + model_path,
+            // Relative paths
+            "sbndcode/v10_09_00/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/" + model_path,
+            "../" + model_path,
+            "./" + model_path
+        };
+        
+        bool model_found = false;
+        for (const auto& path : search_paths) {
+            // Check if directory exists (basic check for TensorFlow model directory)
+            std::ifstream test_file(path + "/saved_model.pb");
+            if (test_file.is_open()) {
+                model_path = path;
+                model_found = true;
+                test_file.close();
+                break;
+            }
+        }
+        
+        if (!model_found) {
+            std::cerr << "ERROR: Could not find TensorFlow model directory: " << fModelPath << std::endl;
             fRunInference = false;
         } else {
-            std::cout << "TensorFlow model loaded successfully from " << fModelPath << std::endl;
+            // Determine number of outputs dynamically or use parameter
+            int nOutputs = fOutputNames.empty() ? -1 : fOutputNames.size(); // -1 means auto-detect
+            fTFGraph = tf::Graph::create(model_path.c_str(), fInputNames, fOutputNames, true, 1, nOutputs > 0 ? nOutputs : 3);
+            if (!fTFGraph) {
+                std::cerr << "ERROR: Failed to load TensorFlow model from " << model_path << std::endl;
+                fRunInference = false;
+            } else {
+                std::cout << "TensorFlow model loaded successfully from " << model_path << std::endl;
+            }
         }
     }
 }
@@ -99,8 +142,19 @@ void opdet::SBNDPDSProducer::beginJob()
 void opdet::SBNDPDSProducer::produce(art::Event& e)
 {
   
+  // Timing variables for performance analysis
+  auto event_start = std::chrono::high_resolution_clock::now();
+  auto section_start = event_start;
+  
   // Clear all vectors at the beginning of each event to prevent data carryover
   ClearEventData();
+  
+  if(fVerbosity > 0) {
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - section_start).count();
+    std::cout << "[TIMING] ClearEventData: " << elapsed << "ms" << std::endl;
+    section_start = std::chrono::high_resolution_clock::now();
+  }
 
   // --- Event General Info
   _eventID = e.id().event();
@@ -116,9 +170,20 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
 
   // --- Saving MCTruths
   _nuvT.clear(); _nuvX.clear(); _nuvY.clear(); _nuvZ.clear(); _nuvE.clear();
+  if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
+  
   FillMCTruth(e);
+  
+  if(fVerbosity > 0) {
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - section_start).count();
+    std::cout << "[TIMING] FillMCTruth: " << elapsed << "ms" << std::endl;
+    section_start = std::chrono::high_resolution_clock::now();
+  }
 
   // --- Load MCParticles from event
+  if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
+  
   mcpartVec.clear();
   art::Handle< std::vector<simb::MCParticle> > mcParticleHandle;
   e.getByLabel(fMCModuleLabel, mcParticleHandle);
@@ -129,6 +194,13 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   } else {
     if(fVerbosity>0)
       std::cout << "MCParticles with label " << fMCModuleLabel << " not found. mcpartVec will be empty." << std::endl;
+  }
+
+  if(fVerbosity > 0) {
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - section_start).count();
+    std::cout << "[TIMING] LoadMCParticles: " << elapsed << "ms" << std::endl;
+    section_start = std::chrono::high_resolution_clock::now();
   }
 
   // --- Saving MCParticles
@@ -143,6 +215,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
 
   if(fVerbosity>2)
     std::cout << "Saving MCParticles from" << fMCModuleLabel << std::endl;
+
 
   // Loop over the handle
   for(size_t i_p=0; i_p < mcpartVec.size(); i_p++){
@@ -214,7 +287,10 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
     std::vector<double> truedE_vecZ; truedE_vecZ.clear();
 
     // Get the associated SimIDEs
-    std::vector< const sim::IDE * > ides_v = bt_serv->TrackIdToSimIDEs_Ps (pPart.TrackId());
+    std::vector<const sim::IDE*> ides_v;
+    int trackID = pPart.TrackId();
+    
+    ides_v = bt_serv->TrackIdToSimIDEs_Ps(trackID);
     for(auto *ide:ides_v){
       // need to divide by 3 to avoid triple counting (3 wire planes)
       endep+=ide->energy/3.;
@@ -242,7 +318,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
     }
 
     // Print-out MCParticle information
-    if(fVerbosity>1){
+    if(fVerbosity>2){
       std::cout<<std::setw(4)<<i_p<<"-.-.-.Energy="<<std::setw(12)<<pPart.E()<<" PDGCODE="<<std::setw(10)<<pPart.PdgCode();
       std::cout<<" ID="<<std::setw(6)<<pPart.TrackId()<<" Mother="<<std::setw(6)<<pPart.Mother()<<" dE="<<std::setw(9)<<endep;
       std::cout<<" T="<<std::setw(10)<<pPart.T()<<" X="<<std::setw(7)<<pPart.Vx()<<" Y="<<std::setw(7)<<pPart.Vy()<<" Z="<<std::setw(7)<<pPart.Vz()<<" NPoints:"<<pPart.NumberTrajectoryPoints();
@@ -255,12 +331,19 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   FillAverageDepositedEnergyVariables(_mc_energydep,_mc_energydepX,_mc_energydepY,_mc_energydepZ,_mc_stepT,_mc_dEtpc,_mc_dEpromx,_mc_dEpromy,_mc_dEpromz,_mc_dEspreadx,_mc_dEspready,_mc_dEspreadz,_mc_dElowedges,_mc_dEmaxedges);
 
   // Print-out MCParticles summary
-  if(fVerbosity>2){
+  if(fVerbosity>1){
     std::cout<<" InTimeCosmic "<<_mc_InTimeCosmics<<std::endl;
     std::cout<<" Energy Deposition during Beam Window="<<dE_neutrinowindow<<std::endl;
     std::cout<<"----ENERGY DEPOSITIONS\n";
     std::cout<<"*** TPC0   dE="<<_mc_dEtpc[0]<<"  <x>="<<_mc_dEpromx[0]<<"  <y>="<<_mc_dEpromy[0]<<"  <z>="<<_mc_dEpromz[0]<<" SpX="<<_mc_dEspreadx[0]<<" SpY="<<_mc_dEspready[0]<<" SpZ="<<_mc_dEspreadz[0]<<"\n";
     std::cout<<"*** TPC1   dE="<<_mc_dEtpc[1]<<"  <x>="<<_mc_dEpromx[1]<<"  <y>="<<_mc_dEpromy[1]<<"  <z>="<<_mc_dEpromz[1]<<" SpX="<<_mc_dEspreadx[1]<<" SpY="<<_mc_dEspready[1]<<" SpZ="<<_mc_dEspreadz[1]<<"\n\n";
+  }
+
+  if(fVerbosity > 0) {
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - section_start).count();
+    std::cout << "[TIMING] ProcessMCParticles: " << elapsed << "ms" << std::endl;
+    section_start = std::chrono::high_resolution_clock::now();
   }
 
   // --- Saving all OpHits
@@ -302,6 +385,13 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
       _ophit_amplitude.push_back(  ophitlist.at(i)->Amplitude() );
       _ophit_pe.push_back( ophitlist.at(i)->PE() );
     }
+  }
+
+  if(fVerbosity > 0) {
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - section_start).count();
+    std::cout << "[TIMING] ProcessOpHits: " << elapsed << "ms" << std::endl;
+    section_start = std::chrono::high_resolution_clock::now();
   }
 
   // --- Saving OpFlashes
@@ -386,6 +476,13 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   
   }
 
+  if(fVerbosity > 0) {
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - section_start).count();
+    std::cout << "[TIMING] ProcessOpFlashes: " << elapsed << "ms" << std::endl;
+    section_start = std::chrono::high_resolution_clock::now();
+  }
+
   // Apply first filter: only keep events where nuvT has exactly one element
   bool passFilter1 = (_nuvT.size() == 1);
   
@@ -409,15 +506,45 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
     std::cout << "Overall filter result = " << passFilter << std::endl;
   }
   
+  if(fVerbosity > 0) {
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - section_start).count();
+    std::cout << "[TIMING] ApplyFilters: " << elapsed << "ms" << std::endl;
+  }
+
   // Apply flash selection logic if event passes filters
   if(passFilter) {
+    if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
+    
     ApplyFlashSelection();
     ApplyFinalEnergyFilter();
+    
+    if(fVerbosity > 0) {
+      auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now() - section_start).count();
+      std::cout << "[TIMING] FlashSelection+FinalEnergyFilter: " << elapsed << "ms" << std::endl;
+      section_start = std::chrono::high_resolution_clock::now();
+    }
     
     // Only create PE matrix and images if we have final filtered data
     if (!_flash_ophit_pe_final.empty()) {
       CreatePEMatrix();
+      
+      if(fVerbosity > 0) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::high_resolution_clock::now() - section_start).count();
+        std::cout << "[TIMING] CreatePEMatrix: " << elapsed << "ms" << std::endl;
+        section_start = std::chrono::high_resolution_clock::now();
+      }
+      
       CreatePEImages();
+      
+      if(fVerbosity > 0) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::high_resolution_clock::now() - section_start).count();
+        std::cout << "[TIMING] CreatePEImages: " << elapsed << "ms" << std::endl;
+        section_start = std::chrono::high_resolution_clock::now();
+      }
     }
   }
 
@@ -432,7 +559,16 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   
   // Run TensorFlow inference if enabled and images are available
   if (passFilter && !_pe_images.empty()) {
+    if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
+    
     RunInference(*pixelVars);
+    
+    if(fVerbosity > 0) {
+      auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now() - section_start).count();
+      std::cout << "[TIMING] RunInference: " << elapsed << "ms" << std::endl;
+      section_start = std::chrono::high_resolution_clock::now();
+    }
   }
   
   if(passFilter) {
@@ -471,18 +607,27 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   pixelVars->channel_dict = fChannelDict;
   
   // Only assign PE matrix and images if they were created (event passed all filters)
-  pixelVars->pe_matrix = _pe_matrix;
+  // pixelVars->pe_matrix = _pe_matrix;  // COMMENTED: too large for art output
   pixelVars->pe_images = _pe_images;
-  pixelVars->coated_pmt_map = _coated_pmt_map;
-  pixelVars->uncoated_pmt_map = _uncoated_pmt_map;
+  // pixelVars->coated_pmt_map = _coated_pmt_map;  // COMMENTED: static data, not needed in art output
+  
+  // Final event timing summary
+  if(fVerbosity > 0) {
+    auto total_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - event_start).count();
+    std::cout << "[TIMING] TOTAL EVENT: " << total_elapsed << "ms (Run=" << _runID 
+              << ", Event=" << _eventID << ")" << std::endl;
+    std::cout << "========================================" << std::endl;
+  }
+  // pixelVars->uncoated_pmt_map = _uncoated_pmt_map;  // COMMENTED: static data, not needed in art output
 
   if(fVerbosity > 2) {
     std::cout << "=== PixelMapVars Summary ===" << std::endl;
     std::cout << "flash_ophit_pe size: " << pixelVars->flash_ophit_pe.size() << std::endl;
-    std::cout << "pe_matrix size: " << pixelVars->pe_matrix.size() << "x" 
-              << (pixelVars->pe_matrix.empty() ? 0 : pixelVars->pe_matrix[0].size()) << std::endl;
+    // std::cout << "pe_matrix size: " << pixelVars->pe_matrix.size() << "x"   // COMMENTED: field removed
+    //           << (pixelVars->pe_matrix.empty() ? 0 : pixelVars->pe_matrix[0].size()) << std::endl;
     std::cout << "pe_images size: " << pixelVars->pe_images.size() << std::endl;
-    std::cout << "Only PixelMapVars should be in output ROOT file" << std::endl;
+    std::cout << "Only PixelMapVars with pe_images + metadata should be in output ROOT file" << std::endl;
   }
 
   // Fill TTree with analysis-friendly data
@@ -559,19 +704,90 @@ void opdet::SBNDPDSProducer::CreatePEMatrix() {
 
 // -------- Load PMT Maps --------
 void opdet::SBNDPDSProducer::LoadPMTMaps() {
+  // Try to find PMT map files, first as given, then in current directory
+  std::string coated_path = fCoatedPMTMapPath;
+  std::string uncoated_path = fUncoatedPMTMapPath;
+  
+  // If file doesn't exist as given path, try multiple fallback locations
+  std::ifstream test_coated(coated_path);
+  if (!test_coated.is_open()) {
+    size_t pos = coated_path.find_last_of("/\\");
+    std::string filename = (pos != std::string::npos) ? coated_path.substr(pos + 1) : coated_path;
+    
+    // Try various possible locations
+    std::vector<std::string> search_paths = {
+      filename,  // current directory
+      // Grid paths (tarball structure)
+      "../local/sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/" + filename,
+      "../local/sbndcode/v10_09_00/scripts/PosRecoCVN/inference/module/" + filename,
+      // Local development paths (MRB environment)
+      (getenv("MRB_INSTALL") ? std::string(getenv("MRB_INSTALL")) + "/sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/" + filename : ""),
+      (getenv("MRB_SOURCE") ? std::string(getenv("MRB_SOURCE")) + "/sbndcode/sbndcode/PosRecoCVN/pmt_maps/" + filename : ""),
+      // Relative paths for local
+      "../../../PosRecoCVN/pmt_maps/" + filename,
+      "../../pmt_maps/" + filename,
+      // Fallback paths
+      "sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/" + filename,
+      "pmt_maps/" + filename
+    };
+    
+    for (const auto& path : search_paths) {
+      std::ifstream test_file(path);
+      if (test_file.is_open()) {
+        coated_path = path;
+        test_file.close();
+        break;
+      }
+    }
+  }
+  test_coated.close();
+  
+  std::ifstream test_uncoated(uncoated_path);
+  if (!test_uncoated.is_open()) {
+    size_t pos = uncoated_path.find_last_of("/\\");
+    std::string filename = (pos != std::string::npos) ? uncoated_path.substr(pos + 1) : uncoated_path;
+    
+    // Try various possible locations
+    std::vector<std::string> search_paths = {
+      filename,  // current directory
+      // Grid paths (tarball structure)
+      "../local/sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/" + filename,
+      "../local/sbndcode/v10_09_00/scripts/PosRecoCVN/inference/module/" + filename,
+      // Local development paths (MRB environment)
+      (getenv("MRB_INSTALL") ? std::string(getenv("MRB_INSTALL")) + "/sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/" + filename : ""),
+      (getenv("MRB_SOURCE") ? std::string(getenv("MRB_SOURCE")) + "/sbndcode/sbndcode/PosRecoCVN/pmt_maps/" + filename : ""),
+      // Relative paths for local
+      "../../../PosRecoCVN/pmt_maps/" + filename,
+      "../../pmt_maps/" + filename,
+      // Fallback paths
+      "sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/" + filename,
+      "pmt_maps/" + filename
+    };
+    
+    for (const auto& path : search_paths) {
+      std::ifstream test_file(path);
+      if (test_file.is_open()) {
+        uncoated_path = path;
+        test_file.close();
+        break;
+      }
+    }
+  }
+  test_uncoated.close();
+  
   // Load coated PMT map
-  std::ifstream coated_file(fCoatedPMTMapPath);
-  std::ifstream uncoated_file(fUncoatedPMTMapPath);
+  std::ifstream coated_file(coated_path);
+  std::ifstream uncoated_file(uncoated_path);
   
   if (!coated_file.is_open()) {
-    std::string msg = "Could not open coated PMT map file: " + fCoatedPMTMapPath;
+    std::string msg = "Could not open coated PMT map file: " + coated_path + " (original: " + fCoatedPMTMapPath + ")";
     std::cout << "Warning: " << msg << std::endl;
     if(fVerbosity > 0) throw std::runtime_error(msg);
     return;
   }
   
   if (!uncoated_file.is_open()) {
-    std::string msg = "Could not open uncoated PMT map file: " + fUncoatedPMTMapPath;
+    std::string msg = "Could not open uncoated PMT map file: " + uncoated_path + " (original: " + fUncoatedPMTMapPath + ")";
     std::cout << "Warning: " << msg << std::endl;
     if(fVerbosity > 0) throw std::runtime_error(msg);
     return;
@@ -940,23 +1156,35 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
                     << ", " << unscaled_predictions[2] << "]" << std::endl;
         }
         
-        // Store unscaled (real coordinate) predictions
+        // Fill TTree variables directly - no longer store in PixelMapVars to avoid duplication
         if (unscaled_predictions.size() >= 1) {
           // X coordinate should always be positive (take absolute value)
           double pred_x = std::abs(unscaled_predictions[0]);
           double true_x = std::abs(_mc_dEpromx_final[i]);
-          pixelmapvars.dEpromx_pred.push_back(pred_x);
-          pixelmapvars.dEpromx_diff.push_back(pred_x - true_x);
+          fTreePredX = pred_x;
+          fTreeDiffX = pred_x - true_x;
+          
+          if(fVerbosity > 1) {
+            std::cout << "DEBUG: Setting fTreePredX = " << fTreePredX << ", fTreeDiffX = " << fTreeDiffX << std::endl;
+          }
         }
         
         if (unscaled_predictions.size() >= 2) {
-          pixelmapvars.dEpromy_pred.push_back(unscaled_predictions[1]);
-          pixelmapvars.dEpromy_diff.push_back(unscaled_predictions[1] - _mc_dEpromy_final[i]);
+          fTreePredY = unscaled_predictions[1];
+          fTreeDiffY = unscaled_predictions[1] - _mc_dEpromy_final[i];
+          
+          if(fVerbosity > 1) {
+            std::cout << "DEBUG: Setting fTreePredY = " << fTreePredY << ", fTreeDiffY = " << fTreeDiffY << std::endl;
+          }
         }
         
         if (unscaled_predictions.size() >= 3) {
-          pixelmapvars.dEpromz_pred.push_back(unscaled_predictions[2]);
-          pixelmapvars.dEpromz_diff.push_back(unscaled_predictions[2] - _mc_dEpromz_final[i]);
+          fTreePredZ = unscaled_predictions[2];
+          fTreeDiffZ = unscaled_predictions[2] - _mc_dEpromz_final[i];
+          
+          if(fVerbosity > 1) {
+            std::cout << "DEBUG: Setting fTreePredZ = " << fTreePredZ << ", fTreeDiffZ = " << fTreeDiffZ << std::endl;
+          }
           
           // Calculate and store 3D error
           double pred_x_abs = std::abs(unscaled_predictions[0]);
@@ -991,13 +1219,13 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
     std::cerr << "  3. TensorFlow version incompatibility" << std::endl;
     std::cerr << "  4. Model was saved with different TF version" << std::endl;
     
-    // Clear prediction vectors to prevent downstream issues
-    pixelmapvars.dEpromx_pred.clear();
-    pixelmapvars.dEpromy_pred.clear();
-    pixelmapvars.dEpromz_pred.clear();
-    pixelmapvars.dEpromx_diff.clear();
-    pixelmapvars.dEpromy_diff.clear();
-    pixelmapvars.dEpromz_diff.clear();
+    // Clear prediction vectors to prevent downstream issues - COMMENTED: fields removed from PixelMapVars
+    // pixelmapvars.dEpromx_pred.clear();
+    // pixelmapvars.dEpromy_pred.clear();
+    // pixelmapvars.dEpromz_pred.clear();
+    // pixelmapvars.dEpromx_diff.clear();
+    // pixelmapvars.dEpromy_diff.clear();
+    // pixelmapvars.dEpromz_diff.clear();
   }
 }
 
@@ -1040,16 +1268,11 @@ void opdet::SBNDPDSProducer::FillInferenceTree(bool passedFilters, const PixelMa
   fTreeEvent = _eventID;
   fTreePassedFilters = passedFilters;
   
-  // Initialize prediction variables with default values
+  // Initialize truth variables with default values 
+  // NOTE: fTreePred* and fTreeDiff* variables are filled directly in RunInference() - do NOT reinitialize here
   fTreeTrueX = -999.0;
   fTreeTrueY = -999.0;
   fTreeTrueZ = -999.0;
-  fTreePredX = -999.0;
-  fTreePredY = -999.0;
-  fTreePredZ = -999.0;
-  fTreeDiffX = -999.0;
-  fTreeDiffY = -999.0;
-  fTreeDiffZ = -999.0;
   fTreeError3D = -999.0;
   fTreeNuvT = -999.0;
   fTreeNuvZ = -999.0;
@@ -1076,21 +1299,22 @@ void opdet::SBNDPDSProducer::FillInferenceTree(bool passedFilters, const PixelMa
       fTreeNuvZ = pixelVars.nuvZ[0];
     }
     
-    // Fill prediction data if inference ran successfully
-    if (!pixelVars.dEpromx_pred.empty()) {
-      fTreePredX = pixelVars.dEpromx_pred[0];
-      fTreeDiffX = pixelVars.dEpromx_diff[0];
-    }
+    // Fill prediction data if inference ran successfully - COMMENTED: data now filled directly from inference results
+    // NOTE: fTreePredX/Y/Z and fTreeDiffX/Y/Z are now filled directly in RunInference() function
+    // if (!pixelVars.dEpromx_pred.empty()) {
+    //   fTreePredX = pixelVars.dEpromx_pred[0];
+    //   fTreeDiffX = pixelVars.dEpromx_diff[0];
+    // }
     
-    if (!pixelVars.dEpromy_pred.empty()) {
-      fTreePredY = pixelVars.dEpromy_pred[0];
-      fTreeDiffY = pixelVars.dEpromy_diff[0];
-    }
+    // if (!pixelVars.dEpromy_pred.empty()) {
+    //   fTreePredY = pixelVars.dEpromy_pred[0];
+    //   fTreeDiffY = pixelVars.dEpromy_diff[0];
+    // }
     
-    if (!pixelVars.dEpromz_pred.empty()) {
-      fTreePredZ = pixelVars.dEpromz_pred[0];
-      fTreeDiffZ = pixelVars.dEpromz_diff[0];
-    }
+    // if (!pixelVars.dEpromz_pred.empty()) {
+    //   fTreePredZ = pixelVars.dEpromz_pred[0];
+    //   fTreeDiffZ = pixelVars.dEpromz_diff[0];
+    // }
     
     if (!pixelVars.error_3d.empty()) {
       fTreeError3D = pixelVars.error_3d[0];
@@ -1099,6 +1323,11 @@ void opdet::SBNDPDSProducer::FillInferenceTree(bool passedFilters, const PixelMa
   
   // Fill the TTree entry
   fInferenceTree->Fill();
+  
+  if(fVerbosity > 1) {
+    std::cout << "DEBUG: FillInferenceTree - PredX=" << fTreePredX << " PredY=" << fTreePredY << " PredZ=" << fTreePredZ << std::endl;
+    std::cout << "DEBUG: FillInferenceTree - DiffX=" << fTreeDiffX << " DiffY=" << fTreeDiffY << " DiffZ=" << fTreeDiffZ << std::endl;
+  }
   
   if(fVerbosity > 2) {
     std::cout << "Filled TTree entry for Run=" << fTreeRun << " Event=" << fTreeEvent 
@@ -1161,7 +1390,7 @@ void opdet::SBNDPDSProducer::FillMCTruth(art::Event const& e){
         // Only save MCTruth if the origins is specified in the fhicl list
         if( find (fMCTruthOrigin.begin(), fMCTruthOrigin.end(), evtTruth->Origin() ) != fMCTruthOrigin.end() ){
 
-          if(fVerbosity>0){
+          if(fVerbosity>1){
             std::cout << "    " << par.TrackId() << "  Particle PDG: " << par.PdgCode() << " E: " << par.E() << " t: " << par.T();
             std::cout << " Mother: "<<par.Mother() << " Process: "<<par.Process()<<" Status: "<<par.StatusCode()<<std::endl;
           }
@@ -1699,6 +1928,10 @@ void opdet::SBNDPDSProducer::ClearEventData(){
   _nophits = 0;
   _nopflash = 0;
   dE_neutrinowindow = 0.0;
+  
+  // NOTE: fTreePred* and fTreeDiff* variables are initialized in beginJob() and 
+  // filled in RunInference() - do NOT reinitialize here to preserve values between 
+  // RunInference() and FillInferenceTree() calls
   
   // Clear intermediate vectors that might exist
   mcpartVec.clear();

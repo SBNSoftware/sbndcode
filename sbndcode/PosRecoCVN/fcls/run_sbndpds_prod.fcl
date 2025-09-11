@@ -7,7 +7,7 @@ process_name: SBNDPDSProd
 
 services:
 {
-  TFileService:              { fileName: "ttree_analysis.root" }
+  TFileService:              { fileName: "ttree_analysis_%p-%tc.root" }
   @table::sbnd_basic_services
   @table::sbnd_simulation_services
   ParticleInventoryService: @local::sbnd_particleinventoryservice
@@ -27,7 +27,7 @@ physics:
   {
     opanatree: {
       module_type: "SBNDPDSProducer"
-      Verbosity: 0
+      Verbosity: 2  # 1: Enable timing verbosity
       MCTruthModuleLabel: ["generator"]
       MCTruthInstanceLabel: [""]
       MCTruthOrigin: [1, 4]  # BNB neutrinos and single particles
@@ -42,26 +42,18 @@ physics:
       KeepPDGCode: []  # empty = keep all particles
       SaveOpHits: true
       
-      # PMT Map Configuration (grid)
-
-      #CoatedPMTMapPath: "sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/coated_pmt_map_realistic_flipped.csv"
-      #UncoatedPMTMapPath: "sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/uncoated_pmt_map_realistic_flipped.csv"
-
-      # PMT Map Configuration (local)
-
-      CoatedPMTMapPath: "/exp/sbnd/app/users/svidales/larsoft_develop/localProducts_larsoft_v10_09_00_e26_prof/sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/coated_pmt_map_realistic_flipped.csv"
-      UncoatedPMTMapPath: "/exp/sbnd/app/users/svidales/larsoft_develop/localProducts_larsoft_v10_09_00_e26_prof/sbndcode/v10_09_00/scripts/PosRecoCVN/pmt_maps/uncoated_pmt_map_realistic_flipped.csv"
+      # PMT maps are auto-discovered by the module
 
       # TensorFlow Configuration
       RunInference: true
-      #ModelPath: "sbndcode/v10_09_00/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/saved_model/" #(grid)
-      ModelPath: "/exp/sbnd/app/users/svidales/larsoft_develop/localProducts_larsoft_v10_09_00_e26_prof/sbndcode/v10_09_00/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/saved_model" #(local)
+      # Model path is auto-discovered by the module
+     
       InputNames: []
       OutputNames: []
       
       # Image Normalization Configuration
       # Value from: sbndcode/v10_09_00/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/normalization_factors.json
-      CustomNormFactor: 11311.19140625
+      CustomNormFactor: 11311.191
     }
   }
 
@@ -79,7 +71,7 @@ outputs:
   out1:
   {
     module_type: RootOutput
-    fileName: "pixelmap_variables.root"
+    fileName: "pixelmap_variables_%p-%tc.root"
     dataTier: "reconstructed"
     streamName: "out"
     outputCommands: [
