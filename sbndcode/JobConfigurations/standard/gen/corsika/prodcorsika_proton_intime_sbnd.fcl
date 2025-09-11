@@ -26,9 +26,6 @@ services: {
 # Rename generator to corsika
 physics.producers.corsika: @local::physics.producers.generator
 
-# Change the ShowerAreaExtension from 10 to 20 meters 
-physics.producers.corsika.ShowerAreaExtension: 2000
-
 # Add a generation filter, that splits in intime and outtime cosmics
 physics.filters.GenInTimeSorter: @local::sbnd_filtergenintime
 
