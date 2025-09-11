@@ -234,8 +234,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             }
         }
 
-        // --- Get the 
-
         
         // Get all the OpT0 objects associated to the slice
         std::vector<art::Ptr<recob::OpFlash>> flashFM;
