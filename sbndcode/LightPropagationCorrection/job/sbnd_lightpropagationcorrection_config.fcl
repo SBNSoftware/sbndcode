@@ -24,15 +24,10 @@ LightPropagationCorrection:
     SpeedOfLight: 29.9
 
     FlashT0Config: @local::FlashT0SelectedChannels
-    MinHitPE: @local::FlashT0SelectedChannels.MinHitPE
-    PreWindow: @local::FlashT0SelectedChannels.PreWindow
-    PostWindow: @local::FlashT0SelectedChannels.PostWindow
-    PDFraction: @local::FlashT0SelectedChannels.PDFraction
     FlashGeoConfig: @local::FlashGeoThreshold
     AlgoConfig_tpc0: @local::SimpleFlashStandard
     AlgoConfig_tpc1: @local::SimpleFlashStandard
     FlashFinderAlgo: @local::SBNDSimpleFlash.FlashFinderAlgo
-    ReadoutDelay: 1.35e-1
 
     SaveSPECTDC: true
     SaveCorrectionTree: true

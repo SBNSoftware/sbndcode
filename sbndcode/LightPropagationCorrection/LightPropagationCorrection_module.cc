@@ -16,17 +16,11 @@ sbnd::LightPropagationCorrection::LightPropagationCorrection(fhicl::ParameterSet
     fSPECTDCLabel( p.get<std::string>("SPECTDCLabel") ),
     fFlashMatchingTool( p.get<std::string>("FlashMatchingTool") ),
     fSaveCorrectionTree( p.get<bool>("SaveCorrectionTree") ),
-    fSaveSPECTDC( p.get<bool>("SaveSPECTDC") ),
     fSpeedOfLight( p.get<double>("SpeedOfLight") ),
     fVGroupVIS( p.get<double>("VGroupVIS") ),
     fVGroupVUV( p.get<double>("VGroupVUV") ),
     fNuScoreThreshold( p.get<double>("NuScoreThreshold") ),
     fFMScoreThreshold( p.get<double>("FMScoreThreshold") ),
-    fPDFraction( p.get<double>("PDFraction") ),
-    fPreWindow( p.get<double>("PreWindow") ),
-    fPostWindow( p.get<double>("PostWindow") ),
-    fMinHitPE( p.get<double>("MinHitPE") ),
-    fReadoutDelay( p.get<double>("ReadoutDelay") ),
     fDebug( p.get<bool>("Debug", false) )
     // 
     // More initializers here.
@@ -214,26 +208,23 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         this->GetPropagationTimeCorrectionPerChannel();
         
         // Get the SPECTDC product required to go to the RWM reference frame
-        if(fSaveSPECTDC)
-        {
-            art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
-            e.getByLabel(fSPECTDCLabel, tdcHandle);
-            if (!tdcHandle.isValid() || tdcHandle->size() == 0){
-                std::cout << "No SPECTDC products found. Skip this event." << std::endl;
-                return;
-            }
-            else{
-                const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
-                for (size_t i=0; i<tdc_v.size(); i++){
-                    auto tdc = tdc_v[i];
-                    const uint32_t  ch = tdc.Channel();
-                    const uint64_t  ts = tdc.Timestamp();
-                    if(ch == 2) fRWMTime = ts%uint64_t(1e9);
-                    if(ch == 4) fEventTriggerTime = ts%uint64_t(1e9);
-                }
+
+        art::Handle<std::vector<sbnd::timing::DAQTimestamp>> tdcHandle;
+        e.getByLabel(fSPECTDCLabel, tdcHandle);
+        if (!tdcHandle.isValid() || tdcHandle->size() == 0){
+            std::cout << "No SPECTDC products found. Skip this event." << std::endl;
+            return;
+        }
+        else{
+            const std::vector<sbnd::timing::DAQTimestamp> tdc_v(*tdcHandle);
+            for (size_t i=0; i<tdc_v.size(); i++){
+                auto tdc = tdc_v[i];
+                const uint32_t  ch = tdc.Channel();
+                const uint64_t  ts = tdc.Timestamp();
+                if(ch == 2) fRWMTime = ts%uint64_t(1e9);
+                if(ch == 4) fEventTriggerTime = ts%uint64_t(1e9);
             }
         }
-
         
         // Get all the OpT0 objects associated to the slice
         std::vector<art::Ptr<recob::OpFlash>> flashFM;
@@ -307,8 +298,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             double flasht0 = lflash.time;
             // Refine t0 calculation
             flasht0 = _flasht0calculator->GetFlashT0(lflash.time, GetAssociatedLiteHits(lflash, ophits));
-            // Subtract readout ReadoutDelay
-            flasht0 = flasht0 -  fReadoutDelay;
             recob::OpFlash flash(flasht0, lflash.time_err, flasht0,
                                 ( flasht0) / 1600., lflash.channel_pe,
                                 0, 0, 1, // this are just default values
@@ -486,49 +475,6 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
         }
         fTimeCorrectionPerChannel[opdet] = -minPropTime;
     }
-}
-
-
-double sbnd::LightPropagationCorrection::GetPropagationTime(double drift){
-    // drift is here the X coordinate
-    if(std::abs(drift) > fKinkDistance)
-      return (fDriftDistance-std::abs(drift)) * fVGroupVUV_I ;
-    else
-      return std::abs(drift) * fVGroupVUV_I + fVISLightPropTime;
-}
-
-
-double sbnd::LightPropagationCorrection::GetFlashT0(double flash_time, std::vector<recob::OpHit> ophitlist){
-
-    std::vector< std::pair<double, double> > selected_hits;
-    double pe_sum = 0;
-
-    // fill vector with selected hits in the specified window
-    for(auto const& hit : ophitlist) {
-      if( hit.PeakTime()<flash_time+fPostWindow && hit.PeakTime()>flash_time-fPreWindow && hit.PE()>fMinHitPE){
-        selected_hits.push_back( std::make_pair(hit.PE(), hit.PeakTime()));
-        pe_sum += hit.PE();
-      }
-    }
-
-    if(pe_sum>0){
-      // sort vector by number of #PE (ascending order)
-      std::sort( selected_hits.begin(), selected_hits.end(), std::greater< std::pair<double, double> >() );
-
-      double flasht0_mean=0., pe_count=0.;
-      int nophits=0;
-
-      // loop over selected ophits
-      for (size_t ix=0; ix<selected_hits.size(); ix++) {
-        pe_count += selected_hits[ix].first;
-        flasht0_mean += selected_hits[ix].second;
-        nophits++;
-        if( pe_count/pe_sum>fPDFraction ) break;
-      }
-      return flasht0_mean/nophits;
-    }
-    else
-      return flash_time;
 }
 
 

@@ -140,8 +140,6 @@ private:
     void GetPropagationTimeCorrectionPerChannel();
     void CorrectOpHitTime(std::vector<art::Ptr<recob::OpHit>> , std::vector<recob::OpHit> & );
     void FillLiteOpHit(std::vector<recob::OpHit> const& , std::vector<::lightana::LiteOpHit_t>& );
-    double GetPropagationTime(double );
-    double GetFlashT0(double , std::vector<recob::OpHit> );
     void FillCorrectionTree(double & , recob::OpFlash const& , std::vector<recob::OpHit> const& , std::vector<recob::OpHit> const& );
     ::lightana::LiteOpHitArray_t GetAssociatedLiteHits(::lightana::LiteOpFlash_t , ::lightana::LiteOpHitArray_t );
 
@@ -177,8 +175,6 @@ private:
     std::string fFlashMatchingTool;
     
     bool fSaveCorrectionTree;
-    bool fSaveDebugTree;
-    bool fSaveSPECTDC;
 
     std::vector<double> fTimeCorrectionPerChannel;
     double fRecoVx = 0.0;
@@ -210,12 +206,6 @@ private:
 
     double fNuScoreThreshold;
     double fFMScoreThreshold;
-
-    double fPDFraction;
-    double fPreWindow;
-    double fPostWindow;
-    double fMinHitPE;
-    double fReadoutDelay;
 
     bool fDebug;
 
