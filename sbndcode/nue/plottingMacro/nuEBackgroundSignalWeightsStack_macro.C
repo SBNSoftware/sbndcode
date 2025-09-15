@@ -467,7 +467,7 @@ void weighted(TH1F* currentSignal, TH1F* ubooneSignal, TH1F* currentBNB, TH1F* u
     styleDraw(weightedCanvas, currentSignalWeighted, ubooneSignalWeighted, currentBNBWeighted, ubooneBNBWeighted, currentCosmicsWeighted, ubooneCosmicsWeighted, ymin, ymax, xmin, xmax, filename, legendLocation, nullptr, &funcValue, drawLine, linePos, &log);
 }
 
-void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double sizeCurrentSignal, double sizeUbooneSignal, double sizeCurrentBNB, double sizeUbooneBNB, double sizeCurrentCosmics, double sizeUbooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename_eff, const char* filename_rej, const char* filename_effrejpur, const char* filename_pur, const char* filename_effpur, const std::string& legendLocation, double signalWeight, double BNBWeight, double cosmicsWeight, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = ""){
+void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* ubooneBNB, TH1F* currentCosmics, TH1F* ubooneCosmics, double sizeCurrentSignal, double sizeUbooneSignal, double sizeCurrentBNB, double sizeUbooneBNB, double sizeCurrentCosmics, double sizeUbooneCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename_eff, const char* filename_rej, const char* filename_effrejpur, const char* filename_pur, const char* filename_effpur, const std::string& legendLocation, double signalWeight, double BNBWeight, double cosmicsWeight, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = "", double efficiencyWay = 0.0, double* currentMaxEffPurBin = nullptr, double* ubooneMaxEffPurBin = nullptr){
     TCanvas *efficiencyCanvas = new TCanvas("efficiency_canvas", "Graph Draw Options", 200, 10, 600, 400); 
     TH1F* currentSignalEff = (TH1F*) currentSignal->Clone("eff hist");
     currentSignalEff->Reset();
@@ -606,72 +606,164 @@ void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* 
     double ubooneBNBSum = 0.0;
     double currentCosmicsSum = 0.0;
     double ubooneCosmicsSum = 0.0;
+
+    double currentSignalTotal = 0.0;
+    double ubooneSignalTotal = 0.0;
+    double currentBNBTotal = 0.0;
+    double ubooneBNBTotal = 0.0;
+    double currentCosmicsTotal = 0.0;
+    double ubooneCosmicsTotal = 0.0;
+
+    // efficiencyWay == -1 includes everything to the right of the cut
+    if(efficiencyWay == -1){
+        for(int i = 1; i <= numBins; ++i){
+            currentSignalTotal += currentSignal->GetBinContent(i);
+            ubooneSignalTotal += ubooneSignal->GetBinContent(i);
+            currentBNBTotal += currentBNB->GetBinContent(i);
+            ubooneBNBTotal += ubooneBNB->GetBinContent(i);
+            currentCosmicsTotal += currentCosmics->GetBinContent(i);
+            ubooneCosmicsTotal += ubooneCosmics->GetBinContent(i);
+        }
+
+        std::cout << "TOTALS:" << std::endl;
+        std::cout << "Signal: Current = " << currentSignalTotal << ", Uboone = " << ubooneSignalTotal << std::endl;
+        std::cout << "BNB: Current = " << currentBNBTotal << ", Uboone = " << ubooneBNBTotal << std::endl;
+        std::cout << "Cosmics: Current = " << currentCosmicsTotal << ", Uboone = " << ubooneCosmicsTotal << std::endl;
     
+        for(int i = 1; i <= numBins; ++i){
+            currentSignalSum += currentSignal->GetBinContent(i);
+            ubooneSignalSum += ubooneSignal->GetBinContent(i);
+            currentBNBSum += currentBNB->GetBinContent(i);
+            ubooneBNBSum += ubooneBNB->GetBinContent(i);
+            currentCosmicsSum += currentCosmics->GetBinContent(i);
+            ubooneCosmicsSum += ubooneCosmics->GetBinContent(i);
 
-    for(int i = 1; i <= numBins; ++i){
-        currentSignalSum += currentSignal->GetBinContent(i);
-        ubooneSignalSum += ubooneSignal->GetBinContent(i);
-        currentBNBSum += currentBNB->GetBinContent(i);
-        ubooneBNBSum += ubooneBNB->GetBinContent(i);
-        currentCosmicsSum += currentCosmics->GetBinContent(i);
-        ubooneCosmicsSum += ubooneCosmics->GetBinContent(i);
+            numEventsCurrentSignal->SetBinContent(i, currentSignalTotal - currentSignalSum);
+            numEventsUbooneSignal->SetBinContent(i, ubooneSignalTotal - ubooneSignalSum);
+            numEventsCurrentBNB->SetBinContent(i, currentBNBTotal - currentBNBSum);
+            numEventsUbooneBNB->SetBinContent(i, ubooneBNBTotal - ubooneBNBSum);
+            numEventsCurrentCosmics->SetBinContent(i, currentCosmicsTotal - currentCosmicsSum);
+            numEventsUbooneCosmics->SetBinContent(i, ubooneCosmicsTotal - ubooneCosmicsSum);
 
-        numEventsCurrentSignal->SetBinContent(i, currentSignalSum);
-        numEventsUbooneSignal->SetBinContent(i, ubooneSignalSum);
-        numEventsCurrentBNB->SetBinContent(i, currentBNBSum);
-        numEventsUbooneBNB->SetBinContent(i, ubooneBNBSum);
-        numEventsCurrentCosmics->SetBinContent(i, currentCosmicsSum);
-        numEventsUbooneCosmics->SetBinContent(i, ubooneCosmicsSum);
+            double currentSignalEffValue = (currentSignalTotal - currentSignalSum)/sizeCurrentSignal;
+            double ubooneSignalEffValue = (ubooneSignalTotal - ubooneSignalSum)/sizeUbooneSignal;
+            double currentBNBEffValue = (currentBNBTotal - currentBNBSum)/sizeCurrentBNB;
+            double ubooneBNBEffValue = (ubooneBNBTotal - ubooneBNBSum)/sizeUbooneBNB;
+            double currentCosmicsEffValue = (currentCosmicsTotal - currentCosmicsSum)/sizeCurrentCosmics;
+            double ubooneCosmicsEffValue = (ubooneCosmicsTotal - ubooneCosmicsSum)/sizeUbooneCosmics;
 
-        double currentSignalEffValue = currentSignalSum/sizeCurrentSignal;
-        double ubooneSignalEffValue = ubooneSignalSum/sizeUbooneSignal;
-        double currentBNBEffValue = currentBNBSum/sizeCurrentBNB;
-        double ubooneBNBEffValue = ubooneBNBSum/sizeUbooneBNB;
-        double currentCosmicsEffValue = currentCosmicsSum/sizeCurrentCosmics;
-        double ubooneCosmicsEffValue = ubooneCosmicsSum/sizeUbooneCosmics;
-
-        currentSignalEff->SetBinContent(i, currentSignalEffValue);
-        ubooneSignalEff->SetBinContent(i, ubooneSignalEffValue);
-        currentBNBEff->SetBinContent(i, currentBNBEffValue);
-        ubooneBNBEff->SetBinContent(i, ubooneBNBEffValue);
-        currentCosmicsEff->SetBinContent(i, currentCosmicsEffValue);
-        ubooneCosmicsEff->SetBinContent(i, ubooneCosmicsEffValue);
+            currentSignalEff->SetBinContent(i, currentSignalEffValue);
+            ubooneSignalEff->SetBinContent(i, ubooneSignalEffValue);
+            currentBNBEff->SetBinContent(i, currentBNBEffValue);
+            ubooneBNBEff->SetBinContent(i, ubooneBNBEffValue);
+            currentCosmicsEff->SetBinContent(i, currentCosmicsEffValue);
+            ubooneCosmicsEff->SetBinContent(i, ubooneCosmicsEffValue);
         
-        currentSignalRej->SetBinContent(i, 1-currentSignalEffValue);
-        ubooneSignalRej->SetBinContent(i, 1-ubooneSignalEffValue);
-        currentBNBRej->SetBinContent(i, 1-currentBNBEffValue);
-        ubooneBNBRej->SetBinContent(i, 1-ubooneBNBEffValue);
-        currentCosmicsRej->SetBinContent(i, 1-currentCosmicsEffValue);
-        ubooneCosmicsRej->SetBinContent(i, 1-ubooneCosmicsEffValue);
+            currentSignalRej->SetBinContent(i, 1-currentSignalEffValue);
+            ubooneSignalRej->SetBinContent(i, 1-ubooneSignalEffValue);
+            currentBNBRej->SetBinContent(i, 1-currentBNBEffValue);
+            ubooneBNBRej->SetBinContent(i, 1-ubooneBNBEffValue);
+            currentCosmicsRej->SetBinContent(i, 1-currentCosmicsEffValue);
+            ubooneCosmicsRej->SetBinContent(i, 1-ubooneCosmicsEffValue);
    
-        double sumCurrentBackground = (currentBNBSum * BNBWeight) + (currentCosmicsSum * cosmicsWeight);
-        double sumUbooneBackground = (ubooneBNBSum * BNBWeight) + (ubooneCosmicsSum * cosmicsWeight);
-        double totalSumCurrent = (sumCurrentBackground + currentSignalSum);
-        double totalSumUboone = (sumUbooneBackground + currentSignalSum);
+            double sumCurrentBackground = ((currentBNBTotal - currentBNBSum) * BNBWeight) + ((currentCosmicsTotal - currentCosmicsSum) * cosmicsWeight);
+            double sumUbooneBackground = ((ubooneBNBTotal - ubooneBNBSum) * BNBWeight) + ((ubooneCosmicsTotal - ubooneCosmicsSum) * cosmicsWeight);
+            double totalSumCurrent = (sumCurrentBackground + (currentSignalTotal - currentSignalSum));
+            double totalSumUboone = (sumUbooneBackground + (ubooneSignalTotal - ubooneSignalSum));
 
-        double currentPurityValue;
-        double uboonePurityValue;
+            double currentPurityValue;
+            double uboonePurityValue;
         
-        if(currentSignalSum != 0 && sumCurrentBackground != 0){
-            currentPurityValue = (currentSignalSum * signalWeight)/ totalSumCurrent;
-        } else{
-            currentPurityValue = 0;
-        }
+            if(currentSignalSum != 0 && sumCurrentBackground != 0){
+                currentPurityValue = ((currentSignalTotal - currentSignalSum) * signalWeight)/ totalSumCurrent;
+            } else{
+                currentPurityValue = 0;
+            }
 
-        if(ubooneSignalSum != 0 && sumUbooneBackground != 0){
-            uboonePurityValue = (ubooneSignalSum * signalWeight) / totalSumUboone;
-        } else{
-            uboonePurityValue = 0;
-        }
+            if(ubooneSignalSum != 0 && sumUbooneBackground != 0){
+                uboonePurityValue = ((ubooneSignalTotal - ubooneSignalSum) * signalWeight) / totalSumUboone;
+            } else{
+                uboonePurityValue = 0;
+            }
             
-        double currentEffPurValue = (currentSignalEffValue * currentPurityValue);
-        double ubooneEffPurValue =  (ubooneSignalEffValue * uboonePurityValue);
+            double currentEffPurValue = (currentSignalEffValue * currentPurityValue);
+            double ubooneEffPurValue =  (ubooneSignalEffValue * uboonePurityValue);
         
-        currentPur->SetBinContent(i, currentPurityValue);
-        uboonePur->SetBinContent(i, uboonePurityValue);
+            currentPur->SetBinContent(i, currentPurityValue);
+            uboonePur->SetBinContent(i, uboonePurityValue);
 
-        currentEffPur->SetBinContent(i, currentEffPurValue);
-        ubooneEffPur->SetBinContent(i, ubooneEffPurValue);
+            currentEffPur->SetBinContent(i, currentEffPurValue);
+            ubooneEffPur->SetBinContent(i, ubooneEffPurValue);
+        }
+    }
+
+    // efficiencyWay == 1 includes everything to the left of the cut
+    if(efficiencyWay == 1){
+        for(int i = 1; i <= numBins; ++i){
+            currentSignalSum += currentSignal->GetBinContent(i);
+            ubooneSignalSum += ubooneSignal->GetBinContent(i);
+            currentBNBSum += currentBNB->GetBinContent(i);
+            ubooneBNBSum += ubooneBNB->GetBinContent(i);
+            currentCosmicsSum += currentCosmics->GetBinContent(i);
+            ubooneCosmicsSum += ubooneCosmics->GetBinContent(i);
+
+            numEventsCurrentSignal->SetBinContent(i, currentSignalSum);
+            numEventsUbooneSignal->SetBinContent(i, ubooneSignalSum);
+            numEventsCurrentBNB->SetBinContent(i, currentBNBSum);
+            numEventsUbooneBNB->SetBinContent(i, ubooneBNBSum);
+            numEventsCurrentCosmics->SetBinContent(i, currentCosmicsSum);
+            numEventsUbooneCosmics->SetBinContent(i, ubooneCosmicsSum);
+
+            double currentSignalEffValue = currentSignalSum/sizeCurrentSignal;
+            double ubooneSignalEffValue = ubooneSignalSum/sizeUbooneSignal;
+            double currentBNBEffValue = currentBNBSum/sizeCurrentBNB;
+            double ubooneBNBEffValue = ubooneBNBSum/sizeUbooneBNB;
+            double currentCosmicsEffValue = currentCosmicsSum/sizeCurrentCosmics;
+            double ubooneCosmicsEffValue = ubooneCosmicsSum/sizeUbooneCosmics;
+
+            currentSignalEff->SetBinContent(i, currentSignalEffValue);
+            ubooneSignalEff->SetBinContent(i, ubooneSignalEffValue);
+            currentBNBEff->SetBinContent(i, currentBNBEffValue);
+            ubooneBNBEff->SetBinContent(i, ubooneBNBEffValue);
+            currentCosmicsEff->SetBinContent(i, currentCosmicsEffValue);
+            ubooneCosmicsEff->SetBinContent(i, ubooneCosmicsEffValue);
+        
+            currentSignalRej->SetBinContent(i, 1-currentSignalEffValue);
+            ubooneSignalRej->SetBinContent(i, 1-ubooneSignalEffValue);
+            currentBNBRej->SetBinContent(i, 1-currentBNBEffValue);
+            ubooneBNBRej->SetBinContent(i, 1-ubooneBNBEffValue);
+            currentCosmicsRej->SetBinContent(i, 1-currentCosmicsEffValue);
+            ubooneCosmicsRej->SetBinContent(i, 1-ubooneCosmicsEffValue);
+   
+            double sumCurrentBackground = (currentBNBSum * BNBWeight) + (currentCosmicsSum * cosmicsWeight);
+            double sumUbooneBackground = (ubooneBNBSum * BNBWeight) + (ubooneCosmicsSum * cosmicsWeight);
+            double totalSumCurrent = (sumCurrentBackground + currentSignalSum);
+            double totalSumUboone = (sumUbooneBackground + currentSignalSum);
+
+            double currentPurityValue;
+            double uboonePurityValue;
+        
+            if(currentSignalSum != 0 && sumCurrentBackground != 0){
+                currentPurityValue = (currentSignalSum * signalWeight)/ totalSumCurrent;
+            } else{
+                currentPurityValue = 0;
+            }
+
+            if(ubooneSignalSum != 0 && sumUbooneBackground != 0){
+                uboonePurityValue = (ubooneSignalSum * signalWeight) / totalSumUboone;
+            } else{
+                uboonePurityValue = 0;
+            }
+            
+            double currentEffPurValue = (currentSignalEffValue * currentPurityValue);
+            double ubooneEffPurValue =  (ubooneSignalEffValue * uboonePurityValue);
+        
+            currentPur->SetBinContent(i, currentPurityValue);
+            uboonePur->SetBinContent(i, uboonePurityValue);
+
+            currentEffPur->SetBinContent(i, currentEffPurValue);
+            ubooneEffPur->SetBinContent(i, ubooneEffPurValue);
+        }
     }
 
     double Lxmin = 0;
@@ -757,6 +849,9 @@ void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* 
     styleDrawIndividual(rejCosmicCanvas, currentCosmicsRej, ubooneCosmicsRej, 999, 999, 999, 999, filename_rejCosmics, legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
     styleDrawIndividual(effSignalCanvas, currentSignalEff, ubooneSignalEff, 999, 999, 999, 999, filename_effSignal, legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
     styleDraw(numEventsCanvas, numEventsCurrentSignal, numEventsUbooneSignal, numEventsCurrentBNB, numEventsUbooneBNB, numEventsCurrentCosmics, numEventsUbooneCosmics, 999, 999, 999, 999, filename_numEvents, legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
+
+    if(currentMaxEffPurBin) *currentMaxEffPurBin = currentEffPur->GetBinCenter(currentEffPur->GetMaximumBin());
+    if(ubooneMaxEffPurBin) *ubooneMaxEffPurBin = ubooneEffPur->GetBinCenter(ubooneEffPur->GetMaximumBin());
 }
 
 recoSlice chooseSlice(std::vector<recoSlice> recoSlices, double method){
@@ -894,7 +989,6 @@ void nuEBackgroundSignalWeightsStack_macro(){
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_23July.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_new.root");
 
-
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeights/";
 
     if(!file){
@@ -961,6 +1055,8 @@ void nuEBackgroundSignalWeightsStack_macro(){
             if(subRunDLCurrent == 0 && seenSubRunsBNB.find(keyBNB) == seenSubRunsBNB.end()){
                 totalPOTBNB += subRunPOT;
                 seenSubRunsBNB.insert(keyBNB);
+            } else if(subRunDLCurrent == 0){
+                totalPOTBNB += subRunPOT;
             }
         } else if(subRunSignal == 3){
             std::pair<unsigned int, unsigned int> keyCosmics = std::make_pair(subRunRun, subRunNumber);
@@ -1143,6 +1239,18 @@ void nuEBackgroundSignalWeightsStack_macro(){
     auto ERecoSumThetaRecoCRUMBS = createHistGroup("ERecoSumThetaRecoCRUMBS", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice with the Highest CRUMBS Score", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
     auto ERecoHighestThetaRecoCRUMBS = createHistGroup("ERecoHighestThetaRecoCRUMBS", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice with the Highest CRUMBS Score", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
 
+    auto primaryVertexXCRUMBS = createHistGroup("primaryVertexXCRUMBS", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "X Coordinate (cm)", 82, -201.3, 201.3);
+    auto primaryVertexYCRUMBS = createHistGroup("primaryVertexYCRUMBS", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Y Coordinate (cm)", 83, -203.8, 203.8);
+    auto primaryVertexZCRUMBS = createHistGroup("primaryVertexZCRUMBS", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Z Coordinate (cm)", 104, 0, 509.4);
+
+    auto primaryVertexXCRUMBSNegative = createHistGroup("primaryVertexXCRUMBSNegative", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "X Coordinate (cm)", 805, -201.3, 201.3);
+    auto primaryVertexYCRUMBSNegative = createHistGroup("primaryVertexYCRUMBSNegative", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Y Coordinate (cm)", 815, -203.8, 203.8);
+    auto primaryVertexZCRUMBSNegative = createHistGroup("primaryVertexZCRUMBSNegative", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Z Coordinate (cm)", 1019, 0, 509.4);
+
+    auto primaryVertexXCRUMBSPositive = createHistGroup("primaryVertexXCRUMBSPositive", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "X Coordinate (cm)", 805, -201.3, 201.3);
+    auto primaryVertexYCRUMBSPositive = createHistGroup("primaryVertexYCRUMBSPositive", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Y Coordinate (cm)", 815, -203.8, 203.8);
+    auto primaryVertexZCRUMBSPositive = createHistGroup("primaryVertexZCRUMBSPositive", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Z Coordinate (cm)", 1019, 0, 509.4);
+    
     // Highest Completeness Score Slice Plots
     //auto sliceCompletenessCompleteness = createHistGroup("sliceCompletenessCompleteness", "Completeness of the Slice with the Highest Completeness", "Completeness Score", 102, 0, 1.02); // Bin width = 0.01
     //auto sliceScoreCompleteness = createHistGroup("sliceScoreCompleteness", "CRUMBS Score of the Slice with the Highest Completeness", "CRUMBS Score", 25, -1, 1); 
@@ -1469,6 +1577,79 @@ void nuEBackgroundSignalWeightsStack_macro(){
             }
         }
 
+        if(DLCurrent == 0 && signal == 1){
+            primaryVertexXCRUMBS.ubooneSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+            primaryVertexYCRUMBS.ubooneSignal->Fill(chosenRecoNeutrinoCRUMBS.vy);
+            primaryVertexZCRUMBS.ubooneSignal->Fill(chosenRecoNeutrinoCRUMBS.vz);
+
+                primaryVertexXCRUMBSNegative.ubooneSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSPositive.ubooneSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.ubooneSignal->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexYCRUMBSPositive.ubooneSignal->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexZCRUMBSNegative.ubooneSignal->Fill(chosenRecoNeutrinoCRUMBS.vz);
+                primaryVertexZCRUMBSPositive.ubooneSignal->Fill(chosenRecoNeutrinoCRUMBS.vz);
+
+        } else if(DLCurrent == 2 && signal == 1){
+            primaryVertexXCRUMBS.currentSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+            primaryVertexYCRUMBS.currentSignal->Fill(chosenRecoNeutrinoCRUMBS.vy);
+            primaryVertexZCRUMBS.currentSignal->Fill(chosenRecoNeutrinoCRUMBS.vz);
+            
+                primaryVertexXCRUMBSNegative.currentSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSPositive.currentSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.currentSignal->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexYCRUMBSPositive.currentSignal->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexZCRUMBSNegative.currentSignal->Fill(chosenRecoNeutrinoCRUMBS.vz);
+                primaryVertexZCRUMBSPositive.currentSignal->Fill(chosenRecoNeutrinoCRUMBS.vz);
+
+        } else if(DLCurrent == 0 && signal == 2){
+            primaryVertexXCRUMBS.ubooneBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+            primaryVertexYCRUMBS.ubooneBNB->Fill(chosenRecoNeutrinoCRUMBS.vy);
+            primaryVertexZCRUMBS.ubooneBNB->Fill(chosenRecoNeutrinoCRUMBS.vz);
+            
+                primaryVertexXCRUMBSNegative.ubooneBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSPositive.ubooneBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.ubooneBNB->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexYCRUMBSPositive.ubooneBNB->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexZCRUMBSNegative.ubooneBNB->Fill(chosenRecoNeutrinoCRUMBS.vz);
+                primaryVertexZCRUMBSPositive.ubooneBNB->Fill(chosenRecoNeutrinoCRUMBS.vz);
+
+        } else if(DLCurrent == 2 && signal == 2){
+            primaryVertexXCRUMBS.currentBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+            primaryVertexYCRUMBS.currentBNB->Fill(chosenRecoNeutrinoCRUMBS.vy);
+            primaryVertexZCRUMBS.currentBNB->Fill(chosenRecoNeutrinoCRUMBS.vz);
+            
+                primaryVertexXCRUMBSNegative.currentBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSPositive.currentBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.currentBNB->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexYCRUMBSPositive.currentBNB->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexZCRUMBSNegative.currentBNB->Fill(chosenRecoNeutrinoCRUMBS.vz);
+                primaryVertexZCRUMBSPositive.currentBNB->Fill(chosenRecoNeutrinoCRUMBS.vz);
+
+        } else if(DLCurrent == 0 && signal == 3){
+            primaryVertexXCRUMBS.ubooneCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+            primaryVertexYCRUMBS.ubooneCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy);
+            primaryVertexZCRUMBS.ubooneCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz);
+            
+                primaryVertexXCRUMBSNegative.ubooneCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSPositive.ubooneCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.ubooneCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexYCRUMBSPositive.ubooneCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexZCRUMBSNegative.ubooneCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz);
+                primaryVertexZCRUMBSPositive.ubooneCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz);
+
+        } else if(DLCurrent == 2 && signal == 3){
+            primaryVertexXCRUMBS.currentCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+            primaryVertexYCRUMBS.currentCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy);
+            primaryVertexZCRUMBS.currentCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz);
+            
+                primaryVertexXCRUMBSNegative.currentCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSPositive.currentCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.currentCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexYCRUMBSPositive.currentCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy);
+                primaryVertexZCRUMBSNegative.currentCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz);
+                primaryVertexZCRUMBSPositive.currentCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz);
+        }
+
         int recoparticle = 0;
         int recoparticleCRUMBS = 0;
 
@@ -1515,7 +1696,7 @@ void nuEBackgroundSignalWeightsStack_macro(){
         double chosenSliceCompletenessCRUMBS = sliceCompletenessCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id);
 
         //std::cout << "highest energy PFP PDG: " << chosenRecoParticleCRUMBS.truePDG << std::endl;
-        std::cout << chosenRecoParticleCRUMBS.truePDG << std::endl;
+        //std::cout << chosenRecoParticleCRUMBS.truePDG << std::endl;
 
         //double aDOTbCRUMBS = ((chosenRecoParticleCRUMBS.dx * chosenTrueParticle.dx) + (chosenRecoParticleCRUMBS.dy * chosenTrueParticle.dy) + (chosenRecoParticleCRUMBS.dz * chosenTrueParticle.dz));
         //double aMagCRUMBS = std::sqrt((chosenRecoParticleCRUMBS.dx * chosenRecoParticleCRUMBS.dx) + (chosenRecoParticleCRUMBS.dy * chosenRecoParticleCRUMBS.dy) + (chosenRecoParticleCRUMBS.dz * chosenRecoParticleCRUMBS.dz));
@@ -1609,24 +1790,84 @@ void nuEBackgroundSignalWeightsStack_macro(){
     int left = 0;
     int right = 1;
 
+    double currentMaxEffPur = -999999;
+    double ubooneMaxEffPur = -999999;
+
     //efficiency(.currentSignal, .ubooneSignal, .currentBNB, .ubooneBNB, .currentCosmics, .ubooneCosmics, counter.currentSignal, .ubooneSignal, .currentBNB, .ubooneBNB, .currentCosmics, .ubooneCosmics, 0, 1, 999, 999, (base_path + "_eff.pdf").c_str(), (base_path + "_rej.pdf").c_str(), (base_path + "_effrejpur.pdf").c_str(), (base_path + "_pur.pdf").c_str(), (base_path + "_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "x");
     
     styleDraw(numSlices.canvas, numSlices.currentSignal, numSlices.ubooneSignal, numSlices.currentBNB, numSlices.ubooneBNB, numSlices.currentCosmics, numSlices.ubooneCosmics, 999, 999, 999, 999, (base_path + "numSlices_dist.pdf").c_str(), "topRight");
     weighted(numSlices.currentSignal, numSlices.ubooneSignal, numSlices.currentBNB, numSlices.ubooneBNB, numSlices.currentCosmics, numSlices.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numSlices_weighted.pdf").c_str(), "topRight");
-    efficiency(numSlices.currentSignal, numSlices.ubooneSignal, numSlices.currentBNB, numSlices.ubooneBNB, numSlices.currentCosmics, numSlices.ubooneCosmics, numEventsSlices.currentSignal, numEventsSlices.ubooneSignal, numEventsSlices.currentBNB, numEventsSlices.ubooneBNB, numEventsSlices.currentCosmics, numEventsSlices.ubooneCosmics, 0, 1, 999, 999, (base_path + "numSlices_eff.pdf").c_str(), (base_path + "numSlices_rej.pdf").c_str(), (base_path + "numSlices_effrejpur.pdf").c_str(), (base_path + "numSlices_pur.pdf").c_str(), (base_path + "numSlices_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Slices");
+    efficiency(numSlices.currentSignal, numSlices.ubooneSignal, numSlices.currentBNB, numSlices.ubooneBNB, numSlices.currentCosmics, numSlices.ubooneCosmics, numEventsSlices.currentSignal, numEventsSlices.ubooneSignal, numEventsSlices.currentBNB, numEventsSlices.ubooneBNB, numEventsSlices.currentCosmics, numEventsSlices.ubooneCosmics, 0, 1, 999, 999, (base_path + "numSlices_eff.pdf").c_str(), (base_path + "numSlices_rej.pdf").c_str(), (base_path + "numSlices_effrejpur.pdf").c_str(), (base_path + "numSlices_pur.pdf").c_str(), (base_path + "numSlices_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Slices", 1, &currentMaxEffPur, &ubooneMaxEffPur);
  
     styleDraw(numSlicesCRUMBS.canvas, numSlicesCRUMBS.currentSignal, numSlicesCRUMBS.ubooneSignal, numSlicesCRUMBS.currentBNB, numSlicesCRUMBS.ubooneBNB, numSlicesCRUMBS.currentCosmics, numSlicesCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "numCRUMBSSlices_dist.pdf").c_str(), "topRight");
     weighted(numSlicesCRUMBS.currentSignal, numSlicesCRUMBS.ubooneSignal, numSlicesCRUMBS.currentBNB, numSlicesCRUMBS.ubooneBNB, numSlicesCRUMBS.currentCosmics, numSlicesCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numCRUMBSSlices_weighted.pdf").c_str(), "topRight");
-    efficiency(numSlicesCRUMBS.currentSignal, numSlicesCRUMBS.ubooneSignal, numSlicesCRUMBS.currentBNB, numSlicesCRUMBS.ubooneBNB, numSlicesCRUMBS.currentCosmics, numSlicesCRUMBS.ubooneCosmics, numEventsSlices.currentSignal, numEventsSlices.ubooneSignal, numEventsSlices.currentBNB, numEventsSlices.ubooneBNB, numEventsSlices.currentCosmics, numEventsSlices.ubooneCosmics, 0, 1, 999, 999, (base_path + "numCRUMBSSlices_eff.pdf").c_str(), (base_path + "numCRUMBSSlices_rej.pdf").c_str(), (base_path + "numCRUMBSSlices_effrejpur.pdf").c_str(), (base_path + "numCRUMBSSlices_pur.pdf").c_str(), (base_path + "numCRUMBSSlices_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Slices with a CRUMBS Score");
+    efficiency(numSlicesCRUMBS.currentSignal, numSlicesCRUMBS.ubooneSignal, numSlicesCRUMBS.currentBNB, numSlicesCRUMBS.ubooneBNB, numSlicesCRUMBS.currentCosmics, numSlicesCRUMBS.ubooneCosmics, numEventsSlices.currentSignal, numEventsSlices.ubooneSignal, numEventsSlices.currentBNB, numEventsSlices.ubooneBNB, numEventsSlices.currentCosmics, numEventsSlices.ubooneCosmics, 0, 1, 999, 999, (base_path + "numCRUMBSSlices_eff.pdf").c_str(), (base_path + "numCRUMBSSlices_rej.pdf").c_str(), (base_path + "numCRUMBSSlices_effrejpur.pdf").c_str(), (base_path + "numCRUMBSSlices_pur.pdf").c_str(), (base_path + "numCRUMBSSlices_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Slices with a CRUMBS Score", 1, &currentMaxEffPur, &ubooneMaxEffPur);
     
     styleDraw(numRecoNeutrinos.canvas, numRecoNeutrinos.currentSignal, numRecoNeutrinos.ubooneSignal, numRecoNeutrinos.currentBNB, numRecoNeutrinos.ubooneBNB, numRecoNeutrinos.currentCosmics, numRecoNeutrinos.ubooneCosmics, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_dist.pdf").c_str(), "topRight");
     weighted(numRecoNeutrinos.currentSignal, numRecoNeutrinos.ubooneSignal, numRecoNeutrinos.currentBNB, numRecoNeutrinos.ubooneBNB, numRecoNeutrinos.currentCosmics, numRecoNeutrinos.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_weighted.pdf").c_str(), "topRight");
-    efficiency(numRecoNeutrinos.currentSignal, numRecoNeutrinos.ubooneSignal, numRecoNeutrinos.currentBNB, numRecoNeutrinos.ubooneBNB, numRecoNeutrinos.currentCosmics, numRecoNeutrinos.ubooneCosmics, numEventsSlices.currentSignal, numEventsSlices.ubooneSignal, numEventsSlices.currentBNB, numEventsSlices.ubooneBNB, numEventsSlices.currentCosmics, numEventsSlices.ubooneCosmics, 0, 1, 999, 999, (base_path + "numRecoNeutrinos_eff.pdf").c_str(), (base_path + "numRecoNeutrinos_rej.pdf").c_str(), (base_path + "numRecoNeutrinos_effrejpur.pdf").c_str(), (base_path + "numRecoNeutrinos_pur.pdf").c_str(), (base_path + "numRecoNeutrinos_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Reco Neutrinos");
+    efficiency(numRecoNeutrinos.currentSignal, numRecoNeutrinos.ubooneSignal, numRecoNeutrinos.currentBNB, numRecoNeutrinos.ubooneBNB, numRecoNeutrinos.currentCosmics, numRecoNeutrinos.ubooneCosmics, numEventsSlices.currentSignal, numEventsSlices.ubooneSignal, numEventsSlices.currentBNB, numEventsSlices.ubooneBNB, numEventsSlices.currentCosmics, numEventsSlices.ubooneCosmics, 0, 1, 999, 999, (base_path + "numRecoNeutrinos_eff.pdf").c_str(), (base_path + "numRecoNeutrinos_rej.pdf").c_str(), (base_path + "numRecoNeutrinos_effrejpur.pdf").c_str(), (base_path + "numRecoNeutrinos_pur.pdf").c_str(), (base_path + "numRecoNeutrinos_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Reco Neutrinos", 1, &currentMaxEffPur, &ubooneMaxEffPur);
+
+    styleDraw(primaryVertexXCRUMBS.canvas, primaryVertexXCRUMBS.currentSignal, primaryVertexXCRUMBS.ubooneSignal, primaryVertexXCRUMBS.currentBNB, primaryVertexXCRUMBS.ubooneBNB, primaryVertexXCRUMBS.currentCosmics, primaryVertexXCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "primaryVertexX_dist.pdf").c_str(), "topRight");
+    weighted(primaryVertexXCRUMBS.currentSignal, primaryVertexXCRUMBS.ubooneSignal, primaryVertexXCRUMBS.currentBNB, primaryVertexXCRUMBS.ubooneBNB, primaryVertexXCRUMBS.currentCosmics, primaryVertexXCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexX_weighted.pdf").c_str(), "topRight");
+    efficiency(primaryVertexXCRUMBS.currentSignal, primaryVertexXCRUMBS.ubooneSignal, primaryVertexXCRUMBS.currentBNB, primaryVertexXCRUMBS.ubooneBNB, primaryVertexXCRUMBS.currentCosmics, primaryVertexXCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 1, 999, 999, (base_path + "primaryVertexX_eff.pdf").c_str(), (base_path + "primaryVertexX_rej.pdf").c_str(), (base_path + "primaryVertexX_effrejpur.pdf").c_str(), (base_path + "primaryVertexX_pur.pdf").c_str(), (base_path + "primaryVertexX_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex X Coord", -1, &currentMaxEffPur, &ubooneMaxEffPur);
+    styleDraw(primaryVertexYCRUMBS.canvas, primaryVertexYCRUMBS.currentSignal, primaryVertexYCRUMBS.ubooneSignal, primaryVertexYCRUMBS.currentBNB, primaryVertexYCRUMBS.ubooneBNB, primaryVertexYCRUMBS.currentCosmics, primaryVertexYCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "primaryVertexY_dist.pdf").c_str(), "topRight");
+    weighted(primaryVertexYCRUMBS.currentSignal, primaryVertexYCRUMBS.ubooneSignal, primaryVertexYCRUMBS.currentBNB, primaryVertexYCRUMBS.ubooneBNB, primaryVertexYCRUMBS.currentCosmics, primaryVertexYCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexY_weighted.pdf").c_str(), "topRight");
+    efficiency(primaryVertexYCRUMBS.currentSignal, primaryVertexYCRUMBS.ubooneSignal, primaryVertexYCRUMBS.currentBNB, primaryVertexYCRUMBS.ubooneBNB, primaryVertexYCRUMBS.currentCosmics, primaryVertexYCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 1, 999, 999, (base_path + "primaryVertexY_eff.pdf").c_str(), (base_path + "primaryVertexY_rej.pdf").c_str(), (base_path + "primaryVertexY_effrejpur.pdf").c_str(), (base_path + "primaryVertexY_pur.pdf").c_str(), (base_path + "primaryVertexY_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Y Coord", -1, &currentMaxEffPur, &ubooneMaxEffPur);
+    styleDraw(primaryVertexZCRUMBS.canvas, primaryVertexZCRUMBS.currentSignal, primaryVertexZCRUMBS.ubooneSignal, primaryVertexZCRUMBS.currentBNB, primaryVertexZCRUMBS.ubooneBNB, primaryVertexZCRUMBS.currentCosmics, primaryVertexZCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "primaryVertexZ_dist.pdf").c_str(), "topRight");
+    weighted(primaryVertexZCRUMBS.currentSignal, primaryVertexZCRUMBS.ubooneSignal, primaryVertexZCRUMBS.currentBNB, primaryVertexZCRUMBS.ubooneBNB, primaryVertexZCRUMBS.currentCosmics, primaryVertexZCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexZ_weighted.pdf").c_str(), "topRight");
+    efficiency(primaryVertexZCRUMBS.currentSignal, primaryVertexZCRUMBS.ubooneSignal, primaryVertexZCRUMBS.currentBNB, primaryVertexZCRUMBS.ubooneBNB, primaryVertexZCRUMBS.currentCosmics, primaryVertexZCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 1, 999, 999, (base_path + "primaryVertexZ_eff.pdf").c_str(), (base_path + "primaryVertexZ_rej.pdf").c_str(), (base_path + "primaryVertexZ_effrejpur.pdf").c_str(), (base_path + "primaryVertexZ_pur.pdf").c_str(), (base_path + "primaryVertexZ_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Z Coord", -1, &currentMaxEffPur, &ubooneMaxEffPur);
+    /*
+    styleDraw(primaryVertexXCRUMBS.canvas, primaryVertexXCRUMBS.currentSignal, primaryVertexXCRUMBS.ubooneSignal, primaryVertexXCRUMBS.currentBNB, primaryVertexXCRUMBS.ubooneBNB, primaryVertexXCRUMBS.currentCosmics, primaryVertexXCRUMBS.ubooneCosmics, 999, 999, 186.3, 201.3, (base_path + "primaryVertexXPOS_dist.pdf").c_str(), "topRight");
+    weighted(primaryVertexXCRUMBS.currentSignal, primaryVertexXCRUMBS.ubooneSignal, primaryVertexXCRUMBS.currentBNB, primaryVertexXCRUMBS.ubooneBNB, primaryVertexXCRUMBS.currentCosmics, primaryVertexXCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 186.3, 201.3, (base_path + "primaryVertexXPOS_weighted.pdf").c_str(), "topRight");
+    efficiency(primaryVertexXCRUMBS.currentSignal, primaryVertexXCRUMBS.ubooneSignal, primaryVertexXCRUMBS.currentBNB, primaryVertexXCRUMBS.ubooneBNB, primaryVertexXCRUMBS.currentCosmics, primaryVertexXCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 1, 186.3, 201.3, (base_path + "primaryVertexXPOS_eff.pdf").c_str(), (base_path + "primaryVertexXPOS_rej.pdf").c_str(), (base_path + "primaryVertexXPOS_effrejpur.pdf").c_str(), (base_path + "primaryVertexXPOS_pur.pdf").c_str(), (base_path + "primaryVertexXPOS_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex X Coord", 1);
+    styleDraw(primaryVertexYCRUMBS.canvas, primaryVertexYCRUMBS.currentSignal, primaryVertexYCRUMBS.ubooneSignal, primaryVertexYCRUMBS.currentBNB, primaryVertexYCRUMBS.ubooneBNB, primaryVertexYCRUMBS.currentCosmics, primaryVertexYCRUMBS.ubooneCosmics, 999, 999, 188.8, 203.8, (base_path + "primaryVertexYPOS_dist.pdf").c_str(), "topRight");
+    weighted(primaryVertexYCRUMBS.currentSignal, primaryVertexYCRUMBS.ubooneSignal, primaryVertexYCRUMBS.currentBNB, primaryVertexYCRUMBS.ubooneBNB, primaryVertexYCRUMBS.currentCosmics, primaryVertexYCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 188.8, 203.8, (base_path + "primaryVertexYPOS_weighted.pdf").c_str(), "topRight");
+    efficiency(primaryVertexYCRUMBS.currentSignal, primaryVertexYCRUMBS.ubooneSignal, primaryVertexYCRUMBS.currentBNB, primaryVertexYCRUMBS.ubooneBNB, primaryVertexYCRUMBS.currentCosmics, primaryVertexYCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 1, 188.8, 203.8, (base_path + "primaryVertexYPOS_eff.pdf").c_str(), (base_path + "primaryVertexYPOS_rej.pdf").c_str(), (base_path + "primaryVertexYPOS_effrejpur.pdf").c_str(), (base_path + "primaryVertexYPOS_pur.pdf").c_str(), (base_path + "primaryVertexYPOS_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Y Coord", 1);
+    styleDraw(primaryVertexZCRUMBS.canvas, primaryVertexZCRUMBS.currentSignal, primaryVertexZCRUMBS.ubooneSignal, primaryVertexZCRUMBS.currentBNB, primaryVertexZCRUMBS.ubooneBNB, primaryVertexZCRUMBS.currentCosmics, primaryVertexZCRUMBS.ubooneCosmics, 999, 999, 494.4, 509.4, (base_path + "primaryVertexZPOS_dist.pdf").c_str(), "topRight");
+    weighted(primaryVertexZCRUMBS.currentSignal, primaryVertexZCRUMBS.ubooneSignal, primaryVertexZCRUMBS.currentBNB, primaryVertexZCRUMBS.ubooneBNB, primaryVertexZCRUMBS.currentCosmics, primaryVertexZCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 494.4, 509.4, (base_path + "primaryVertexZPOS_weighted.pdf").c_str(), "topRight");
+    efficiency(primaryVertexZCRUMBS.currentSignal, primaryVertexZCRUMBS.ubooneSignal, primaryVertexZCRUMBS.currentBNB, primaryVertexZCRUMBS.ubooneBNB, primaryVertexZCRUMBS.currentCosmics, primaryVertexZCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 1, 494.4, 509.4, (base_path + "primaryVertexZPOS_eff.pdf").c_str(), (base_path + "primaryVertexZPOS_rej.pdf").c_str(), (base_path + "primaryVertexZPOS_effrejpur.pdf").c_str(), (base_path + "primaryVertexZPOS_pur.pdf").c_str(), (base_path + "primaryVertexZPOS_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Z Coord", 1);
+    
+    styleDraw(primaryVertexXCRUMBS.canvas, primaryVertexXCRUMBS.currentSignal, primaryVertexXCRUMBS.ubooneSignal, primaryVertexXCRUMBS.currentBNB, primaryVertexXCRUMBS.ubooneBNB, primaryVertexXCRUMBS.currentCosmics, primaryVertexXCRUMBS.ubooneCosmics, 999, 999, -201.3, -186.3, (base_path + "primaryVertexXNEGNEG_dist.pdf").c_str(), "topRight");
+    weighted(primaryVertexXCRUMBS.currentSignal, primaryVertexXCRUMBS.ubooneSignal, primaryVertexXCRUMBS.currentBNB, primaryVertexXCRUMBS.ubooneBNB, primaryVertexXCRUMBS.currentCosmics, primaryVertexXCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, -201.3, -186.3, (base_path + "primaryVertexX_weighted.pdf").c_str(), "topRight");
+    efficiency(primaryVertexXCRUMBS.currentSignal, primaryVertexXCRUMBS.ubooneSignal, primaryVertexXCRUMBS.currentBNB, primaryVertexXCRUMBS.ubooneBNB, primaryVertexXCRUMBS.currentCosmics, primaryVertexXCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 1, -201.3, -186.3, (base_path + "primaryVertexXNEG_eff.pdf").c_str(), (base_path + "primaryVertexXNEG_rej.pdf").c_str(), (base_path + "primaryVertexXNEG_effrejpur.pdf").c_str(), (base_path + "primaryVertexXNEG_pur.pdf").c_str(), (base_path + "primaryVertexXNEG_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex X Coord", -1);
+    styleDraw(primaryVertexYCRUMBS.canvas, primaryVertexYCRUMBS.currentSignal, primaryVertexYCRUMBS.ubooneSignal, primaryVertexYCRUMBS.currentBNB, primaryVertexYCRUMBS.ubooneBNB, primaryVertexYCRUMBS.currentCosmics, primaryVertexYCRUMBS.ubooneCosmics, 999, 999, -203.8, -188.8, (base_path + "primaryVertexYNEGNEG_dist.pdf").c_str(), "topRight");
+    weighted(primaryVertexYCRUMBS.currentSignal, primaryVertexYCRUMBS.ubooneSignal, primaryVertexYCRUMBS.currentBNB, primaryVertexYCRUMBS.ubooneBNB, primaryVertexYCRUMBS.currentCosmics, primaryVertexYCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, -203.8, -188.8, (base_path + "primaryVertexY_weighted.pdf").c_str(), "topRight");
+    efficiency(primaryVertexYCRUMBS.currentSignal, primaryVertexYCRUMBS.ubooneSignal, primaryVertexYCRUMBS.currentBNB, primaryVertexYCRUMBS.ubooneBNB, primaryVertexYCRUMBS.currentCosmics, primaryVertexYCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 1, -203.8, -188.8, (base_path + "primaryVertexYNEG_eff.pdf").c_str(), (base_path + "primaryVertexYNEG_rej.pdf").c_str(), (base_path + "primaryVertexYNEG_effrejpur.pdf").c_str(), (base_path + "primaryVertexYNEG_pur.pdf").c_str(), (base_path + "primaryVertexYNEG_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Y Coord", -1);
+    styleDraw(primaryVertexZCRUMBS.canvas, primaryVertexZCRUMBS.currentSignal, primaryVertexZCRUMBS.ubooneSignal, primaryVertexZCRUMBS.currentBNB, primaryVertexZCRUMBS.ubooneBNB, primaryVertexZCRUMBS.currentCosmics, primaryVertexZCRUMBS.ubooneCosmics, 999, 999, 0, 15, (base_path + "primaryVertexZNEGNEG_dist.pdf").c_str(), "topRight");
+    weighted(primaryVertexZCRUMBS.currentSignal, primaryVertexZCRUMBS.ubooneSignal, primaryVertexZCRUMBS.currentBNB, primaryVertexZCRUMBS.ubooneBNB, primaryVertexZCRUMBS.currentCosmics, primaryVertexZCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 0, 15, (base_path + "primaryVertexZ_weighted.pdf").c_str(), "topRight");
+    efficiency(primaryVertexZCRUMBS.currentSignal, primaryVertexZCRUMBS.ubooneSignal, primaryVertexZCRUMBS.currentBNB, primaryVertexZCRUMBS.ubooneBNB, primaryVertexZCRUMBS.currentCosmics, primaryVertexZCRUMBS.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0, 1, 0, 15, (base_path + "primaryVertexZNEG_eff.pdf").c_str(), (base_path + "primaryVertexZNEG_rej.pdf").c_str(), (base_path + "primaryVertexZNEG_effrejpur.pdf").c_str(), (base_path + "primaryVertexZNEG_pur.pdf").c_str(), (base_path + "primaryVertexZNEG_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Z Coord", -1);
+    */
+    
+    styleDraw(primaryVertexXCRUMBSPositive.canvas, primaryVertexXCRUMBSPositive.currentSignal, primaryVertexXCRUMBSPositive.ubooneSignal, primaryVertexXCRUMBSPositive.currentBNB, primaryVertexXCRUMBSPositive.ubooneBNB, primaryVertexXCRUMBSPositive.currentCosmics, primaryVertexXCRUMBSPositive.ubooneCosmics, 999, 999, 180, 201.3, (base_path + "primaryVertexX_dist_positive.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexXCRUMBSPositive.currentSignal, primaryVertexXCRUMBSPositive.ubooneSignal, primaryVertexXCRUMBSPositive.currentBNB, primaryVertexXCRUMBSPositive.ubooneBNB, primaryVertexXCRUMBSPositive.currentCosmics, primaryVertexXCRUMBSPositive.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 180, 201.3, (base_path + "primaryVertexX_weighted_positive.pdf").c_str(), "bottomLeft");
+    efficiency(primaryVertexXCRUMBSPositive.currentSignal, primaryVertexXCRUMBSPositive.ubooneSignal, primaryVertexXCRUMBSPositive.currentBNB, primaryVertexXCRUMBSPositive.ubooneBNB, primaryVertexXCRUMBSPositive.currentCosmics, primaryVertexXCRUMBSPositive.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0.00004, 0.00005, 180, 201.3, (base_path + "primaryVertexX_eff_positive.pdf").c_str(), (base_path + "primaryVertexX_rej_positive.pdf").c_str(), (base_path + "primaryVertexX_effrejpur_positive.pdf").c_str(), (base_path + "primaryVertexX_pur_positive.pdf").c_str(), (base_path + "primaryVertexX_effpur_positive.pdf").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex X Coord", 1, &currentMaxEffPur, &ubooneMaxEffPur);
+    std::cout << "Vertex X Positive: Current = " << currentMaxEffPur << ", Uboone = " << ubooneMaxEffPur << std::endl;
+    styleDraw(primaryVertexYCRUMBSPositive.canvas, primaryVertexYCRUMBSPositive.currentSignal, primaryVertexYCRUMBSPositive.ubooneSignal, primaryVertexYCRUMBSPositive.currentBNB, primaryVertexYCRUMBSPositive.ubooneBNB, primaryVertexYCRUMBSPositive.currentCosmics, primaryVertexYCRUMBSPositive.ubooneCosmics, 999, 999, 180, 203.8, (base_path + "primaryVertexY_dist_positive.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexYCRUMBSPositive.currentSignal, primaryVertexYCRUMBSPositive.ubooneSignal, primaryVertexYCRUMBSPositive.currentBNB, primaryVertexYCRUMBSPositive.ubooneBNB, primaryVertexYCRUMBSPositive.currentCosmics, primaryVertexYCRUMBSPositive.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 180, 203.8, (base_path + "primaryVertexY_weighted_positive.pdf").c_str(), "bottomLeft");
+    efficiency(primaryVertexYCRUMBSPositive.currentSignal, primaryVertexYCRUMBSPositive.ubooneSignal, primaryVertexYCRUMBSPositive.currentBNB, primaryVertexYCRUMBSPositive.ubooneBNB, primaryVertexYCRUMBSPositive.currentCosmics, primaryVertexYCRUMBSPositive.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0.000045, 0.000055, 180, 203.8, (base_path + "primaryVertexY_eff_positive.pdf").c_str(), (base_path + "primaryVertexY_rej_positive.pdf").c_str(), (base_path + "primaryVertexY_effrejpur_positive.pdf").c_str(), (base_path + "primaryVertexY_pur_positive.pdf").c_str(), (base_path + "primaryVertexY_effpur_positive.pdf").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Y Coord", 1, &currentMaxEffPur, &ubooneMaxEffPur);
+    std::cout << "Vertex Y Positive: Current = " << currentMaxEffPur << ", Uboone = " << ubooneMaxEffPur << std::endl;
+    styleDraw(primaryVertexZCRUMBSPositive.canvas, primaryVertexZCRUMBSPositive.currentSignal, primaryVertexZCRUMBSPositive.ubooneSignal, primaryVertexZCRUMBSPositive.currentBNB, primaryVertexZCRUMBSPositive.ubooneBNB, primaryVertexZCRUMBSPositive.currentCosmics, primaryVertexZCRUMBSPositive.ubooneCosmics, 999, 999, 490, 509.4, (base_path + "primaryVertexZ_dist_positive.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexZCRUMBSPositive.currentSignal, primaryVertexZCRUMBSPositive.ubooneSignal, primaryVertexZCRUMBSPositive.currentBNB, primaryVertexZCRUMBSPositive.ubooneBNB, primaryVertexZCRUMBSPositive.currentCosmics, primaryVertexZCRUMBSPositive.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 490, 509.4, (base_path + "primaryVertexZ_weighted_positive.pdf").c_str(), "bottomLeft");
+    efficiency(primaryVertexZCRUMBSPositive.currentSignal, primaryVertexZCRUMBSPositive.ubooneSignal, primaryVertexZCRUMBSPositive.currentBNB, primaryVertexZCRUMBSPositive.ubooneBNB, primaryVertexZCRUMBSPositive.currentCosmics, primaryVertexZCRUMBSPositive.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0.000045, 0.000055, 490, 509.4, (base_path + "primaryVertexZ_eff_positive.pdf").c_str(), (base_path + "primaryVertexZ_rej_positive.pdf").c_str(), (base_path + "primaryVertexZ_effrejpur_positive.pdf").c_str(), (base_path + "primaryVertexZ_pur_positive.pdf").c_str(), (base_path + "primaryVertexZ_effpur_positive.pdf").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Z Coord", 1, &currentMaxEffPur, &ubooneMaxEffPur);
+    std::cout << "Vertex Z Positive: Current = " << currentMaxEffPur << ", Uboone = " << ubooneMaxEffPur << std::endl;
+
+    styleDraw(primaryVertexXCRUMBSNegative.canvas, primaryVertexXCRUMBSNegative.currentSignal, primaryVertexXCRUMBSNegative.ubooneSignal, primaryVertexXCRUMBSNegative.currentBNB, primaryVertexXCRUMBSNegative.ubooneBNB, primaryVertexXCRUMBSNegative.currentCosmics, primaryVertexXCRUMBSNegative.ubooneCosmics, 999, 999, -201.3, -180, (base_path + "primaryVertexX_dist_negative.pdf").c_str(), "bottomRight");
+    weighted(primaryVertexXCRUMBSNegative.currentSignal, primaryVertexXCRUMBSNegative.ubooneSignal, primaryVertexXCRUMBSNegative.currentBNB, primaryVertexXCRUMBSNegative.ubooneBNB, primaryVertexXCRUMBSNegative.currentCosmics, primaryVertexXCRUMBSNegative.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, -201.3, -180, (base_path + "primaryVertexX_weighted_negative.pdf").c_str(), "bottomRight");
+    efficiency(primaryVertexXCRUMBSNegative.currentSignal, primaryVertexXCRUMBSNegative.ubooneSignal, primaryVertexXCRUMBSNegative.currentBNB, primaryVertexXCRUMBSNegative.ubooneBNB, primaryVertexXCRUMBSNegative.currentCosmics, primaryVertexXCRUMBSNegative.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0.000045, 0.000055, -201.3, -180, (base_path + "primaryVertexX_eff_negative.pdf").c_str(), (base_path + "primaryVertexX_rej_negative.pdf").c_str(), (base_path + "primaryVertexX_effrejpur_negative.pdf").c_str(), (base_path + "primaryVertexX_pur_negative.pdf").c_str(), (base_path + "primaryVertexX_effpur_negative.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex X Coord", -1, &currentMaxEffPur, &ubooneMaxEffPur);
+    std::cout << "Vertex X Negative: Current = " << currentMaxEffPur << ", Uboone = " << ubooneMaxEffPur << std::endl;
+    styleDraw(primaryVertexYCRUMBSNegative.canvas, primaryVertexYCRUMBSNegative.currentSignal, primaryVertexYCRUMBSNegative.ubooneSignal, primaryVertexYCRUMBSNegative.currentBNB, primaryVertexYCRUMBSNegative.ubooneBNB, primaryVertexYCRUMBSNegative.currentCosmics, primaryVertexYCRUMBSNegative.ubooneCosmics, 999, 999, -203.8, -180, (base_path + "primaryVertexY_dist_negative.pdf").c_str(), "bottomRight");
+    weighted(primaryVertexYCRUMBSNegative.currentSignal, primaryVertexYCRUMBSNegative.ubooneSignal, primaryVertexYCRUMBSNegative.currentBNB, primaryVertexYCRUMBSNegative.ubooneBNB, primaryVertexYCRUMBSNegative.currentCosmics, primaryVertexYCRUMBSNegative.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, -203.8, -180, (base_path + "primaryVertexY_weighted_negative.pdf").c_str(), "bottomRight");
+    efficiency(primaryVertexYCRUMBSNegative.currentSignal, primaryVertexYCRUMBSNegative.ubooneSignal, primaryVertexYCRUMBSNegative.currentBNB, primaryVertexYCRUMBSNegative.ubooneBNB, primaryVertexYCRUMBSNegative.currentCosmics, primaryVertexYCRUMBSNegative.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0.000045, 0.000055, -203.8, -180, (base_path + "primaryVertexY_eff_negative.pdf").c_str(), (base_path + "primaryVertexY_rej_negative.pdf").c_str(), (base_path + "primaryVertexY_effrejpur_negative.pdf").c_str(), (base_path + "primaryVertexY_pur_negative.pdf").c_str(), (base_path + "primaryVertexY_effpur_negative.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Y Coord", -1, &currentMaxEffPur, &ubooneMaxEffPur);
+    std::cout << "Vertex Y Negative: Current = " << currentMaxEffPur << ", Uboone = " << ubooneMaxEffPur << std::endl;
+    styleDraw(primaryVertexZCRUMBSNegative.canvas, primaryVertexZCRUMBSNegative.currentSignal, primaryVertexZCRUMBSNegative.ubooneSignal, primaryVertexZCRUMBSNegative.currentBNB, primaryVertexZCRUMBSNegative.ubooneBNB, primaryVertexZCRUMBSNegative.currentCosmics, primaryVertexZCRUMBSNegative.ubooneCosmics, 999, 999, 0, 20, (base_path + "primaryVertexZ_dist_negative.pdf").c_str(), "bottomRight");
+    weighted(primaryVertexZCRUMBSNegative.currentSignal, primaryVertexZCRUMBSNegative.ubooneSignal, primaryVertexZCRUMBSNegative.currentBNB, primaryVertexZCRUMBSNegative.ubooneBNB, primaryVertexZCRUMBSNegative.currentCosmics, primaryVertexZCRUMBSNegative.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 0, 20, (base_path + "primaryVertexZ_weighted_negative.pdf").c_str(), "bottomRight");
+    efficiency(primaryVertexZCRUMBSNegative.currentSignal, primaryVertexZCRUMBSNegative.ubooneSignal, primaryVertexZCRUMBSNegative.currentBNB, primaryVertexZCRUMBSNegative.ubooneBNB, primaryVertexZCRUMBSNegative.currentCosmics, primaryVertexZCRUMBSNegative.ubooneCosmics, numEventsRecoNeutrino.currentSignal, numEventsRecoNeutrino.ubooneSignal, numEventsRecoNeutrino.currentBNB, numEventsRecoNeutrino.ubooneBNB, numEventsRecoNeutrino.currentCosmics, numEventsRecoNeutrino.ubooneCosmics, 0.000045, 0.000055, 0, 20, (base_path + "primaryVertexZ_eff_negative.pdf").c_str(), (base_path + "primaryVertexZ_rej_negative.pdf").c_str(), (base_path + "primaryVertexZ_effrejpur_negative.pdf").c_str(), (base_path + "primaryVertexZ_pur_negative.pdf").c_str(), (base_path + "primaryVertexZ_effpur_negative.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Z Coord", -1, &currentMaxEffPur, &ubooneMaxEffPur);
+    std::cout << "Vertex Z Negative: Current = " << currentMaxEffPur << ", Uboone = " << ubooneMaxEffPur << std::endl;
 
     // CRUMBS Slice Score Plots
     styleDraw(sliceScoreCRUMBS.canvas, sliceScoreCRUMBS.currentSignal, sliceScoreCRUMBS.ubooneSignal, sliceScoreCRUMBS.currentBNB, sliceScoreCRUMBS.ubooneBNB, sliceScoreCRUMBS.currentCosmics, sliceScoreCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_dist.pdf").c_str(), "topLeft");
     weighted(sliceScoreCRUMBS.currentSignal, sliceScoreCRUMBS.ubooneSignal, sliceScoreCRUMBS.currentBNB, sliceScoreCRUMBS.ubooneBNB, sliceScoreCRUMBS.currentCosmics, sliceScoreCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_weighted.pdf").c_str(), "topLeft");
-    efficiency(sliceScoreCRUMBS.currentSignal, sliceScoreCRUMBS.ubooneSignal, sliceScoreCRUMBS.currentBNB, sliceScoreCRUMBS.ubooneBNB, sliceScoreCRUMBS.currentCosmics, sliceScoreCRUMBS.ubooneCosmics, numEventsSlices.currentSignal, numEventsSlices.ubooneSignal, numEventsSlices.currentBNB, numEventsSlices.ubooneBNB, numEventsSlices.currentCosmics, numEventsSlices.ubooneCosmics, 0, 1, 999, 999, (base_path + "sliceScoreCRUMBS_eff.pdf").c_str(), (base_path + "sliceScoreCRUMBS_rej.pdf").c_str(), (base_path + "sliceScoreCRUMBS_effrejpur.pdf").c_str(), (base_path + "sliceScoreCRUMBS_pur.pdf").c_str(), (base_path + "sliceScoreCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "CRUMBS Score");
+    efficiency(sliceScoreCRUMBS.currentSignal, sliceScoreCRUMBS.ubooneSignal, sliceScoreCRUMBS.currentBNB, sliceScoreCRUMBS.ubooneBNB, sliceScoreCRUMBS.currentCosmics, sliceScoreCRUMBS.ubooneCosmics, numEventsSlices.currentSignal, numEventsSlices.ubooneSignal, numEventsSlices.currentBNB, numEventsSlices.ubooneBNB, numEventsSlices.currentCosmics, numEventsSlices.ubooneCosmics, 0, 1, 999, 999, (base_path + "sliceScoreCRUMBS_eff.pdf").c_str(), (base_path + "sliceScoreCRUMBS_rej.pdf").c_str(), (base_path + "sliceScoreCRUMBS_effrejpur.pdf").c_str(), (base_path + "sliceScoreCRUMBS_pur.pdf").c_str(), (base_path + "sliceScoreCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "CRUMBS Score", -1, &currentMaxEffPur, &ubooneMaxEffPur);
     
     // CRUMBS Slice Vertex Plots
     //styleDraw(deltaXCRUMBS.canvas, deltaXCRUMBS.currentSignal, deltaXCRUMBS.ubooneSignal, deltaXCRUMBS.currentBNB, deltaXCRUMBS.ubooneBNB, deltaXCRUMBS.currentCosmics, deltaXCRUMBS.ubooneCosmics, 0, 460, 999, 999, (base_path + "deltaXCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
@@ -1641,11 +1882,11 @@ void nuEBackgroundSignalWeightsStack_macro(){
     // CRUMBS PFP Plots
     styleDraw(numPFPsCRUMBS.canvas, numPFPsCRUMBS.currentSignal, numPFPsCRUMBS.ubooneSignal, numPFPsCRUMBS.currentBNB, numPFPsCRUMBS.ubooneBNB, numPFPsCRUMBS.currentCosmics, numPFPsCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_dist.pdf").c_str(), "topRight");
     weighted(numPFPsCRUMBS.currentSignal, numPFPsCRUMBS.ubooneSignal, numPFPsCRUMBS.currentBNB, numPFPsCRUMBS.ubooneBNB, numPFPsCRUMBS.currentCosmics, numPFPsCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_weighted.pdf").c_str(), "topRight");
-    efficiency(numPFPsCRUMBS.currentSignal, numPFPsCRUMBS.ubooneSignal, numPFPsCRUMBS.currentBNB, numPFPsCRUMBS.ubooneBNB, numPFPsCRUMBS.currentCosmics, numPFPsCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "numPFPsCRUMBS_eff.pdf").c_str(), (base_path + "numPFPsCRUMBS_rej.pdf").c_str(), (base_path + "numPFPsCRUMBS_effrejpur.pdf").c_str(), (base_path + "numPFPsCRUMBS_pur.pdf").c_str(), (base_path + "numPFPsCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of PFPs");
+    efficiency(numPFPsCRUMBS.currentSignal, numPFPsCRUMBS.ubooneSignal, numPFPsCRUMBS.currentBNB, numPFPsCRUMBS.ubooneBNB, numPFPsCRUMBS.currentCosmics, numPFPsCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "numPFPsCRUMBS_eff.pdf").c_str(), (base_path + "numPFPsCRUMBS_rej.pdf").c_str(), (base_path + "numPFPsCRUMBS_effrejpur.pdf").c_str(), (base_path + "numPFPsCRUMBS_pur.pdf").c_str(), (base_path + "numPFPsCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of PFPs", 1, &currentMaxEffPur, &ubooneMaxEffPur);
 
     styleDraw(ratioChosenSummedEnergyCRUMBS.canvas, ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_dist.pdf").c_str(), "topLeft");
     weighted(ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_weighted.pdf").c_str(), "topLeft");
-    efficiency(ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_eff.pdf").c_str(), (base_path + "ratioChosenSummedEnergyCRUMBS_rej.pdf").c_str(), (base_path + "ratioChosenSummedEnergyCRUMBS_effrejpur.pdf").c_str(), (base_path + "ratioChosenSummedEnergyCRUMBS_pur.pdf").c_str(), (base_path + "ratioChosenSummedEnergyCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "E_{reco, highest energy PFP}/E_{reco, summed PFP energies}");
+    efficiency(ratioChosenSummedEnergyCRUMBS.currentSignal, ratioChosenSummedEnergyCRUMBS.ubooneSignal, ratioChosenSummedEnergyCRUMBS.currentBNB, ratioChosenSummedEnergyCRUMBS.ubooneBNB, ratioChosenSummedEnergyCRUMBS.currentCosmics, ratioChosenSummedEnergyCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_eff.pdf").c_str(), (base_path + "ratioChosenSummedEnergyCRUMBS_rej.pdf").c_str(), (base_path + "ratioChosenSummedEnergyCRUMBS_effrejpur.pdf").c_str(), (base_path + "ratioChosenSummedEnergyCRUMBS_pur.pdf").c_str(), (base_path + "ratioChosenSummedEnergyCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "E_{reco, highest energy PFP}/E_{reco, summed PFP energies}", -1, &currentMaxEffPur, &ubooneMaxEffPur);
 
     styleDraw(slicePurityCRUMBS.canvas, slicePurityCRUMBS.currentSignal, slicePurityCRUMBS.ubooneSignal, slicePurityCRUMBS.currentBNB, slicePurityCRUMBS.ubooneBNB, slicePurityCRUMBS.currentCosmics, slicePurityCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_dist.pdf").c_str(), "topLeft");
     weighted(slicePurityCRUMBS.currentSignal, slicePurityCRUMBS.ubooneSignal, slicePurityCRUMBS.currentBNB, slicePurityCRUMBS.ubooneBNB, slicePurityCRUMBS.currentCosmics, slicePurityCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_weighted.pdf").c_str(), "topLeft");
@@ -1655,11 +1896,11 @@ void nuEBackgroundSignalWeightsStack_macro(){
 
     styleDraw(highestPFPCompletenessCRUMBS.canvas, highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_dist.pdf").c_str(), "topLeft");
     weighted(highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_weighted.pdf").c_str(), "topLeft");
-    efficiency(highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_eff.pdf").c_str(), (base_path + "highestPFPCompletenessCRUMBS_rej.pdf").c_str(), (base_path + "highestPFPCompletenessCRUMBS_effrejpur.pdf").c_str(), (base_path + "highestPFPCompletenessCRUMBS_pur.pdf").c_str(), (base_path + "highestPFPCompletenessCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Completeness");
+    efficiency(highestPFPCompletenessCRUMBS.currentSignal, highestPFPCompletenessCRUMBS.ubooneSignal, highestPFPCompletenessCRUMBS.currentBNB, highestPFPCompletenessCRUMBS.ubooneBNB, highestPFPCompletenessCRUMBS.currentCosmics, highestPFPCompletenessCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_eff.pdf").c_str(), (base_path + "highestPFPCompletenessCRUMBS_rej.pdf").c_str(), (base_path + "highestPFPCompletenessCRUMBS_effrejpur.pdf").c_str(), (base_path + "highestPFPCompletenessCRUMBS_pur.pdf").c_str(), (base_path + "highestPFPCompletenessCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Completeness", -1, &currentMaxEffPur, &ubooneMaxEffPur);
 
     styleDraw(highestPFPPurityCRUMBS.canvas, highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_dist.pdf").c_str(), "topLeft");
     weighted(highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_weighted.pdf").c_str(), "topLeft");
-    efficiency(highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "highestPFPPurityCRUMBS_eff.pdf").c_str(), (base_path + "highestPFPPurityCRUMBS_rej.pdf").c_str(), (base_path + "highestPFPPurityCRUMBS_effrejpur.pdf").c_str(), (base_path + "highestPFPPurityCRUMBS_pur.pdf").c_str(), (base_path + "highestPFPPurityCRUMBS_effpur.pdf").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Purity");
+    efficiency(highestPFPPurityCRUMBS.currentSignal, highestPFPPurityCRUMBS.ubooneSignal, highestPFPPurityCRUMBS.currentBNB, highestPFPPurityCRUMBS.ubooneBNB, highestPFPPurityCRUMBS.currentCosmics, highestPFPPurityCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "highestPFPPurityCRUMBS_eff.pdf").c_str(), (base_path + "highestPFPPurityCRUMBS_rej.pdf").c_str(), (base_path + "highestPFPPurityCRUMBS_effrejpur.pdf").c_str(), (base_path + "highestPFPPurityCRUMBS_pur.pdf").c_str(), (base_path + "highestPFPPurityCRUMBS_effpur.pdf").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Purity", -1, &currentMaxEffPur, &ubooneMaxEffPur);
     
     //styleDraw(angleDifferenceCRUMBS.canvas, angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, 0, 260, 999, 999, (base_path + "angleDifferenceCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
     //weighted(angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, 0, 25, 999, 999, (base_path + "angleDifferenceCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
@@ -1667,17 +1908,17 @@ void nuEBackgroundSignalWeightsStack_macro(){
     //std::cout << "ERecoSumThetaReco ____________________________________________________________________" << std::endl;
     styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
     weighted(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
-    efficiency(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})");
+    efficiency(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 1, &currentMaxEffPur, &ubooneMaxEffPur);
 
     //std::cout << "ERecoHighestThetaReco ____________________________________________________________________" << std::endl;
     styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
     weighted(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
-    efficiency(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})");
+    efficiency(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 1, &currentMaxEffPur, &ubooneMaxEffPur);
 
-    //printf("\nInteractions in Signal Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsSignal.Unknown, interactionsSignal.QE, interactionsSignal.Res, interactionsSignal.DIS, interactionsSignal.Coh, interactionsSignal.CohElastic, interactionsSignal.ElectronScattering, interactionsSignal.IMDAnnihilation, interactionsSignal.InverseBetaDecay, interactionsSignal.GlashowResonance, interactionsSignal.AMNuGamma, interactionsSignal.MEC, interactionsSignal.Diffractive, interactionsSignal.EM, interactionsSignal.WeakMix);
-    //printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n", interactionsSignal.NuanceOffset, interactionsSignal.CCQE, interactionsSignal.NCQE, interactionsSignal.NuanceRes, interactionsSignal.CCDis, interactionsSignal.NCDis, interactionsSignal.NuEElastic);
-    //printf("\nInteractions in BNB Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsBNB.Unknown, interactionsBNB.QE, interactionsBNB.Res, interactionsBNB.DIS, interactionsBNB.Coh, interactionsBNB.CohElastic, interactionsBNB.ElectronScattering, interactionsBNB.IMDAnnihilation, interactionsBNB.InverseBetaDecay, interactionsBNB.GlashowResonance, interactionsBNB.AMNuGamma, interactionsBNB.MEC, interactionsBNB.Diffractive, interactionsBNB.EM, interactionsBNB.WeakMix);
-    //printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n\n", interactionsBNB.NuanceOffset, interactionsBNB.CCQE, interactionsBNB.NCQE, interactionsBNB.NuanceRes, interactionsBNB.CCDis, interactionsBNB.NCDis, interactionsBNB.NuEElastic);
+    printf("\nInteractions in Signal Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsSignal.Unknown, interactionsSignal.QE, interactionsSignal.Res, interactionsSignal.DIS, interactionsSignal.Coh, interactionsSignal.CohElastic, interactionsSignal.ElectronScattering, interactionsSignal.IMDAnnihilation, interactionsSignal.InverseBetaDecay, interactionsSignal.GlashowResonance, interactionsSignal.AMNuGamma, interactionsSignal.MEC, interactionsSignal.Diffractive, interactionsSignal.EM, interactionsSignal.WeakMix);
+    printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n", interactionsSignal.NuanceOffset, interactionsSignal.CCQE, interactionsSignal.NCQE, interactionsSignal.NuanceRes, interactionsSignal.CCDis, interactionsSignal.NCDis, interactionsSignal.NuEElastic);
+    printf("\nInteractions in BNB Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsBNB.Unknown, interactionsBNB.QE, interactionsBNB.Res, interactionsBNB.DIS, interactionsBNB.Coh, interactionsBNB.CohElastic, interactionsBNB.ElectronScattering, interactionsBNB.IMDAnnihilation, interactionsBNB.InverseBetaDecay, interactionsBNB.GlashowResonance, interactionsBNB.AMNuGamma, interactionsBNB.MEC, interactionsBNB.Diffractive, interactionsBNB.EM, interactionsBNB.WeakMix);
+    printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n\n", interactionsBNB.NuanceOffset, interactionsBNB.CCQE, interactionsBNB.NCQE, interactionsBNB.NuanceRes, interactionsBNB.CCDis, interactionsBNB.NCDis, interactionsBNB.NuEElastic);
 
     //std::cout << "cosmicSpillsSum = " << cosmicSpillsSum << std::endl;
 
