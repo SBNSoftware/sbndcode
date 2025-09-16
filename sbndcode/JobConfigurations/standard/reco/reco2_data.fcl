@@ -43,6 +43,8 @@ physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandora
                  cvnSCE, opt0finderSCE, tpcpmtbarycentermatchingSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
                  caloskimCalorimetry, frameshift]
 
+services.DetectorPropertiesService.Electronlifetime: 35.0e3 #microseconds
+
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
 physics.analyzers.crtana: @local::crtana_data_sbnd
