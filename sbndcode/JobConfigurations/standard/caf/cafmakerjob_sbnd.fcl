@@ -157,6 +157,7 @@ physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching
 
 # Overwrite weight_functions label:
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
+physics.producers.geant4weight.weight_functions: @local::physics.producers.geant4weight.weight_functions_reint
 
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []
