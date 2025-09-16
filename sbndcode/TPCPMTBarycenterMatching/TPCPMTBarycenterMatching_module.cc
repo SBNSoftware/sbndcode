@@ -20,6 +20,7 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
+#include "art/Utilities/make_tool.h"
 #include "canvas/Utilities/InputTag.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -40,6 +41,7 @@
 #include "larcore/Geometry/WireReadout.h"
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larsim/PhotonPropagation/SemiAnalyticalModel.h"
+#include "larsim/PhotonPropagation/OpticalPathTools/OpticalPath.h"
 #include "larcore/CoreUtils/ServiceUtil.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 
@@ -289,6 +291,7 @@ private:
   std::unique_ptr<phot::SemiAnalyticalModel> _semi_model;
   fhicl::ParameterSet _vuv_params;
   fhicl::ParameterSet _vis_params;
+  std::shared_ptr<phot::OpticalPath> _optical_path_tool;
 
 };
 
@@ -384,8 +387,8 @@ TPCPMTBarycenterMatchProducer::TPCPMTBarycenterMatchProducer(fhicl::ParameterSet
 
   _vuv_params = p.get<fhicl::ParameterSet>("VUVHits");
   _vis_params = p.get<fhicl::ParameterSet>("VIVHits");
-  _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, true, false);
-
+  _optical_path_tool = std::shared_ptr<phot::OpticalPath>(art::make_tool<phot::OpticalPath>(p.get<fhicl::ParameterSet>("OpticalPathTool")));
+  _semi_model = std::make_unique<phot::SemiAnalyticalModel>(_vuv_params, _vis_params, _optical_path_tool, true, false);
 }
 
 void TPCPMTBarycenterMatchProducer::produce(art::Event& e)

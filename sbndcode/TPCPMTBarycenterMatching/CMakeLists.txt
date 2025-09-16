@@ -10,6 +10,7 @@ set(	MODULE_LIBRARIES
 			larreco::Calorimetry
 			larsim::PhotonPropagation
             larsim::PhotonPropagation_PhotonVisibilityService_service
+			larsim::OpticalPath
 			lardata::Utilities
 			nusimdata::SimulationBase
 			nurandom::RandomUtils_NuRandomService_service

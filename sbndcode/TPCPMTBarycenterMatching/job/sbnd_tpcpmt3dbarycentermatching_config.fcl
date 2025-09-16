@@ -1,6 +1,7 @@
 #include "opticalsimparameterisations_sbnd.fcl"
 #include "digi_pmt_sbnd.fcl"
 #include "calorimetry_sbnd.fcl"
+#include "sbndopticalpath_tool.fcl"
 
 BEGIN_PROLOG
 
@@ -24,6 +25,7 @@ TPCPMTBarycenterMatchProducer:
     ZError: 23 // cm
     AngleError: 27 // deg
     FlashVetoWindow: [-1500000,1500000] // ns
+    OpticalPathTool:  @local::SBNDOpticalPath
     module_type: "TPCPMTBarycenterMatchProducer"
 }
 
