@@ -1,3 +1,6 @@
 #include "cafmakerjob_sbnd_data_sce.fcl"
 
 physics.producers.cafmaker.BNBPOTDataLabel: "bnbinfo"
+
+physics.producers.cafmaker.SBNDFrameShiftInfoLabel: "frameshift"
+physics.producers.cafmaker.SBNDTimingInfoLabel: "frameshift"
