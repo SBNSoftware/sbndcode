@@ -218,7 +218,7 @@ namespace lightana
         drift_distance=Interpolate(pmtratio);
       return drift_distance;
     }
-    else return fDriftCal[fNCalBins-1]; 
+    else return -999999.; 
   }
 
   double DriftEstimatorPMTRatio::GetPropagationTime(double drift){
