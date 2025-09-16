@@ -46,6 +46,7 @@ bool spacecharge::SpaceChargeSBND::Configure(fhicl::ParameterSet const& pset)
                 }
 
             if(fRepresentationType == "Voxelized_TH3"){
+			  std::cout << "Opening " << fname << std::endl;
       	      std::cout << "begin loading voxelized TH3s..." << std::endl;
 
       	      //Load in histograms
