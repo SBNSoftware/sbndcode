@@ -1,5 +1,6 @@
 #include "flashmatchalg.fcl"
 #include "opticalsimparameterisations_sbnd.fcl"
+#include "sbndopticalpath_tool.fcl"
 
 BEGIN_PROLOG
 
@@ -45,6 +46,8 @@ sbnd_opt0_finder:
   PDSMapTool: {
     tool_type: "sbndPDMapAlg"
   }
+
+  OpticalPathTool:  @local::SBNDOpticalPath
 }
 
 #

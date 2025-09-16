@@ -122,7 +122,7 @@ namespace sbnd::crt {
 
         const double crtTime = fUseTs0 ? crtTrack->Ts0() * 1e-3 : crtTrack->Ts1() * 1e-3;
 
-        if(!(crtTime > t0MinMax.first - 10. && crtTime < t0MinMax.second + 10.))
+        if(driftDirection != 0 && !(crtTime > t0MinMax.first - 10. && crtTime < t0MinMax.second + 10.))
           continue;
 
         const double shift = driftDirection * crtTime * detProp.DriftVelocity();
