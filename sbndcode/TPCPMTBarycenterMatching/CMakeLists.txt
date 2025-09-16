@@ -1,6 +1,5 @@
 set(	MODULE_LIBRARIES
  			sbnobj::Common_Trigger
-			sbndcode_OpDetSim
             larcorealg::Geometry
 			larcore::Geometry_Geometry_service
 			lardataobj::RecoBase
@@ -8,8 +7,6 @@ set(	MODULE_LIBRARIES
 			larcoreobj::SummaryData
 			larana::OpticalDetector_OpHitFinder
 			larreco::Calorimetry
-			larsim::PhotonPropagation
-            larsim::PhotonPropagation_PhotonVisibilityService_service
 			lardata::Utilities
 			nusimdata::SimulationBase
 			nurandom::RandomUtils_NuRandomService_service
@@ -34,7 +31,6 @@ set(	MODULE_LIBRARIES
 			ROOT::FFTW
 			ROOT::Core
             ROOT::Tree
-			Eigen3::Eigen
 )
 
 cet_build_plugin(TPCPMTBarycenterMatchProducer art::module SOURCE TPCPMTBarycenterMatching_module.cc LIBRARIES ${MODULE_LIBRARIES})
