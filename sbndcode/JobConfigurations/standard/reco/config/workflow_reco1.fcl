@@ -19,7 +19,6 @@ sbnd_reco1_producers:{
 
     ### optical deconvolution
     opdecopmt:          @local::SBNDOpDeconvolutionPMT
-    opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
 
     ### optical hit finders
     # ophit:               @local::sbnd_hit_finder
@@ -53,7 +52,6 @@ sbnd_reco1_producers:{
 sbnd_reco1_producer_sequence: [  
     rns
   , opdecopmt
-  , opdecoxarapuca
   , ophitpmt
   , opflashtpc0
   , opflashtpc1
