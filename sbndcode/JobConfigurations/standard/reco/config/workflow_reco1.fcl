@@ -19,12 +19,12 @@ sbnd_reco1_producers:{
 
     ### optical deconvolution
     opdecopmt:          @local::SBNDOpDeconvolutionPMT
-	 #opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
+	 opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
 
     ### optical hit finders
     # ophit:               @local::sbnd_hit_finder
     ophitpmt:            @local::SBNDDecoOpHitFinderPMT
-	 #ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
+	 ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
 
     ### flash finders
     # opflash:             @local::sbnd_opflash
@@ -32,8 +32,8 @@ sbnd_reco1_producers:{
     opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1
 
     ## opflash(arapucas):             @local::sbnd_opflash
-    #opflashtpc0xarapuca:         @local::SBNDDecoSimpleFlashTPC0Arapuca
-    #opflashtpc1xarapuca:         @local::SBNDDecoSimpleFlashTPC1Arapuca
+    opflashtpc0xarapuca:         @local::SBNDDecoSimpleFlashTPC0Arapuca
+    opflashtpc1xarapuca:         @local::SBNDDecoSimpleFlashTPC1Arapuca
 
     ### calwire producers
     caldata:             @local::sbnd_calwire

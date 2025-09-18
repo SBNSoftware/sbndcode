@@ -13,7 +13,7 @@ sbnd_opdetdigitizer:
   UseSimPhotonsLite:            true  # false for SimPhotons
 
   @table::sbnd_digipmt_alg
-#  @table::sbnd_digiarapuca_alg
+  @table::sbnd_digiarapuca_alg
   @table::sbnd_optrigger_alg
 
   ##This is the readout window size for each "trigger" on the electronics
