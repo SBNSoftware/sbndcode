@@ -5,10 +5,13 @@
 # Purpose: Sequence of RootOutput drop commands to drop data products after detsim.
 #
 # Created: 28-Mar-2022  H. Greenlee
+# Modified: 11-Aug-2025  L. Wan
 #
 # Notes.
 #
 # 1.  Keeping SimChannels by choice, for now.
+# 2.  Keeping SimPhotonsLites for PDS detvar
+# 3.  Keeping SimEnergyDeposits_ionandscint_priorSCE for other detvars
 #
 #
 #=============================================================================
@@ -18,11 +21,11 @@
 BEGIN_PROLOG
 
 detsim_drops: [ @sequence::g4_drops
-                , "drop sim::SimPhotonsLites_*_*_*"
                 , "drop sim::SimPhotons_*_*_*" 
                 , "drop sim::SimEnergyDeposits_ionandscintout__*"
                 , "drop sim::SimEnergyDeposits_ionandscint_*_*"
-                , "drop sim::SimEnergyDeposits_largeant_*_*"]
+                , "drop sim::SimEnergyDeposits_largeant_*_*"
+				, "keep sim::SimEnergyDeposits_ionandscint_priorSCE_*"]
 
 END_PROLOG
 

@@ -37,6 +37,21 @@ namespace raw {
         uint16_t              postPercent; // # 0-100, represents a percentage
         std::vector<uint32_t> triggerTimeTag; // ns
     };
+
+    class BoardAlignment {
+      // Associate one of these to every opdetwaveform in the board/digitizer, one per board
+      std::vector<double> fShift; //ns
+      std::vector<int> fStatus;
+
+      public:
+        BoardAlignment() : fShift({}), fStatus({}) {}; // constructor
+        virtual ~BoardAlignment() {}; // destructror
+       
+        BoardAlignment(std::vector<double> &_shift, std::vector<int> &_status) : fShift(_shift), fStatus(_status) {};
+
+        std::vector<double> Shift() const {return fShift;}
+        std::vector<int> Status() const {return fStatus;}
+    };
   }
 }
 
