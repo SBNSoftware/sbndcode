@@ -3,7 +3,7 @@
 #include "messages_sbnd.fcl"
 #include "sam_sbnd.fcl"
 
-process_name: SBNDPDSProd
+process_name: PosRecoCVNProd
 
 services:
 {
@@ -26,7 +26,7 @@ physics:
   producers:
   {
     opanatree: {
-      module_type: "SBNDPDSProducer"
+      module_type: "PosRecoCVNProducer"
       Verbosity: 2  # 1: Enable timing verbosity
       MCTruthModuleLabel: ["generator"]
       MCTruthInstanceLabel: [""]
@@ -76,7 +76,7 @@ outputs:
     streamName: "out"
     outputCommands: [
       "drop *",
-      "keep PixelMapVars_opanatree__SBNDPDSProd*",
+      "keep PixelMapVars_opanatree__PosRecoCVNProd*",
       "keep *_TFileService_*_*"
     ]
   }

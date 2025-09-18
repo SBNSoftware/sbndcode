@@ -1,12 +1,12 @@
-# PosRecoCNN Training Pipeline
+# PosRecoCVN Training Pipeline
 
-Esta carpeta contiene el pipeline de entrenamiento para PosRecoCNN con arquitectura modular y mejorada.
+Esta carpeta contiene el pipeline de entrenamiento para PosRecoCVN con arquitectura modular y mejorada.
 
 ## Estructura de archivos
 
 ```
 training/
-├── PosRecoCNN_Training.ipynb             # Notebook principal de entrenamiento
+├── PosRecoCVN_Training.ipynb             # Notebook principal de entrenamiento
 ├── config.py                             # Configuración centralizada
 ├── utils.py                              # Funciones utilitarias
 ├── inference_example.py                  # Ejemplo de inferencia
@@ -19,7 +19,7 @@ training/
 ### 1. Entrenamiento
 ```bash
 # Abrir el notebook principal
-jupyter notebook PosRecoCNN_Training.ipynb
+jupyter notebook PosRecoCVN_Training.ipynb
 
 # O verificar configuración desde línea de comandos
 python -c "from config import *; print_config_summary()"

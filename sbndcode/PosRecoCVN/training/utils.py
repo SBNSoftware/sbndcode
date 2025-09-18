@@ -1,5 +1,5 @@
 """
-Utility functions for PosRecoCNN training pipeline.
+Utility functions for PosRecoCVN training pipeline.
 Contains data processing, filtering, and visualization functions.
 """
 

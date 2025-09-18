@@ -12,12 +12,12 @@ The PosRecoCVN framework reconstructs the 3D position (x, y, z) of neutrino inte
 PosRecoCVN/
 ├── inference/
 │   ├── module/               # LArSoft modules for CNN inference
-│   │   ├── SBNDPDSProducer_module.cc/.hh    # Main inference module
+│   │   ├── PosRecoCVNProducer_module.cc/.hh    # Main inference module
 │   │   └── PixelMapVars.h    # Data structure definitions
 │   ├── tf/                   # TensorFlow interface
 │   └── ReadPixelMapVars.ipynb # Analysis notebook
 ├── fcls/                     # FHiCL configuration files
-│   └── run_sbndpds_prod.fcl  # Main production configuration
+│   └── run_pos_inference.fcl  # Main production configuration
 ├── pmt_maps/                 # PMT channel mapping files
 ├── training/                 # CNN training scripts (if applicable)
 └── README.md                # This file
@@ -25,7 +25,7 @@ PosRecoCVN/
 
 ## Key Components
 
-### SBNDPDSProducer Module
+### PosRecoCVNProducer Module
 
 The main LArSoft module that:
 1. **Filters events** based on neutrino truth and flash quality criteria
@@ -98,7 +98,7 @@ The CNN expects 2D images with shape `(batch, 59, 70, 2)`:
 
 ## Configuration
 
-### Verbosity Levels (`run_sbndpds_prod.fcl`)
+### Verbosity Levels (`run_pos_inference.fcl`)
 
 Configure output detail level for different use cases:
 
@@ -142,7 +142,7 @@ UncoatedPMTMapPath: "path/to/uncoated_pmt_map.csv"
 ### Basic Inference Job
 
 ```bash
-lar -c run_sbndpds_prod.fcl input_file.root
+lar -c run_pos_inference.fcl input_file.root
 ```
 
 ### Large-Scale Processing
@@ -150,7 +150,7 @@ lar -c run_sbndpds_prod.fcl input_file.root
 ```bash
 # Set verbosity to 0 for minimal output
 # Redirect output to log file
-lar -c run_sbndpds_prod.fcl input.root > inference_results.log 2>&1
+lar -c run_pos_inference.fcl input.root > inference_results.log 2>&1
 ```
 
 ### Analysis
