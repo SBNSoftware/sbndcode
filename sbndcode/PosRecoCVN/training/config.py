@@ -24,8 +24,8 @@ DATA_CONFIG = {
     
     # PMT map paths (relative to project root)
     'pmt_maps': {
-        'coated': PROJECT_ROOT / 'pmt_maps' / 'coated_pmt_map_realistic_flipped.csv',
-        'uncoated': PROJECT_ROOT / 'pmt_maps' / 'uncoated_pmt_map_realistic_flipped.csv'
+        'coated': PROJECT_ROOT / 'pmt_maps' / 'coatedPMT_map.csv',
+        'uncoated': PROJECT_ROOT / 'pmt_maps' / 'uncoatedPMT_map.csv'
     }
 }
 

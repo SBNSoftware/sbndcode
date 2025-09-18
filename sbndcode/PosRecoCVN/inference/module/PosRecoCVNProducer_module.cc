@@ -1,4 +1,4 @@
-#include "SBNDPDSProducer_module.hh"
+#include "PosRecoCVNProducer_module.hh"
 
 #include "larcorealg/Geometry/OpDetGeo.h"
 #include <chrono>      // For timing analysis
@@ -7,7 +7,7 @@
 #include <cstdlib>     // For getenv()
 
 // -------- Constructor --------
-opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
+opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
   : EDProducer{p},
     fMCTruthOrigin( p.get<std::vector<int>>("MCTruthOrigin") ),
     fMCTruthPDG( p.get<std::vector<int>>("MCTruthPDG") ),
@@ -23,8 +23,8 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
     fKeepPDGCode( p.get<std::vector<int>>("KeepPDGCode", {}) ),
     fSaveOpHits( p.get<bool>("SaveOpHits", true) ),
     fVerbosity( p.get<int>("Verbosity") ),
-    fCoatedPMTMapPath("coated_pmt_map_realistic_flipped.csv"),
-    fUncoatedPMTMapPath("uncoated_pmt_map_realistic_flipped.csv"),
+    fCoatedPMTMapPath("coatedPMT_map.csv"),
+    fUncoatedPMTMapPath("uncoatedPMT_map.csv"),
     fModelPath("saved_model"),
     fRunInference( p.get<bool>("RunInference", false) ),
     fInputNames( p.get<std::vector<std::string>>("InputNames", {}) ),
@@ -97,7 +97,7 @@ opdet::SBNDPDSProducer::SBNDPDSProducer(fhicl::ParameterSet const& p)
 }
 
 // -------- beginJob function - Initialize TTree --------
-void opdet::SBNDPDSProducer::beginJob()
+void opdet::PosRecoCVNProducer::beginJob()
 {
   // Initialize TTree for simple analysis
   art::ServiceHandle<art::TFileService> tfs;
@@ -139,7 +139,7 @@ void opdet::SBNDPDSProducer::beginJob()
 }
 
 // -------- Main function --------
-void opdet::SBNDPDSProducer::produce(art::Event& e)
+void opdet::PosRecoCVNProducer::produce(art::Event& e)
 {
   
   // Timing variables for performance analysis
@@ -161,7 +161,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
   _runID = e.id().run();
   _subrunID = e.id().subRun();
   if(fVerbosity>1)
-    std::cout << " -- Running SBNDPDSProducer -- \n Run=" << _runID << " Subrun=" << _subrunID << " Event=" << _eventID << std::endl;
+    std::cout << " -- Running PosRecoCVNProducer -- \n Run=" << _runID << " Subrun=" << _subrunID << " Event=" << _eventID << std::endl;
 
   // --- Services
   art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
@@ -640,7 +640,7 @@ void opdet::SBNDPDSProducer::produce(art::Event& e)
 
 
 // -------- Create PE Matrix --------
-void opdet::SBNDPDSProducer::CreatePEMatrix() {
+void opdet::PosRecoCVNProducer::CreatePEMatrix() {
   _pe_matrix.clear();
   
   // Use final filtered data if available, otherwise use selected data, fallback to original data
@@ -703,7 +703,7 @@ void opdet::SBNDPDSProducer::CreatePEMatrix() {
 
 
 // -------- Load PMT Maps --------
-void opdet::SBNDPDSProducer::LoadPMTMaps() {
+void opdet::PosRecoCVNProducer::LoadPMTMaps() {
   // Try to find PMT map files, first as given, then in current directory
   std::string coated_path = fCoatedPMTMapPath;
   std::string uncoated_path = fUncoatedPMTMapPath;
@@ -831,7 +831,7 @@ void opdet::SBNDPDSProducer::LoadPMTMaps() {
 
 
 // -------- Select Non-Empty Half --------
-std::vector<std::vector<float>> opdet::SBNDPDSProducer::SelectNonEmptyHalf(
+std::vector<std::vector<float>> opdet::PosRecoCVNProducer::SelectNonEmptyHalf(
     const std::vector<std::vector<float>>& left_half, 
     const std::vector<std::vector<float>>& right_half,
     const std::string& method) {
@@ -904,7 +904,7 @@ std::vector<std::vector<float>> opdet::SBNDPDSProducer::SelectNonEmptyHalf(
 
 
 // -------- Create PE Images --------
-void opdet::SBNDPDSProducer::CreatePEImages() {
+void opdet::PosRecoCVNProducer::CreatePEImages() {
   _pe_images.clear();
   
   if (_pe_matrix.empty() || _coated_pmt_map.empty() || _uncoated_pmt_map.empty()) {
@@ -1034,7 +1034,7 @@ void opdet::SBNDPDSProducer::CreatePEImages() {
 }
 
 // -------- Function to run TensorFlow inference --------
-void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
+void opdet::PosRecoCVNProducer::RunInference(PixelMapVars& pixelmapvars) {
   
   if (!fRunInference || !fTFGraph || _pe_images.empty()) {
     if(fVerbosity > 0) {
@@ -1231,7 +1231,7 @@ void opdet::SBNDPDSProducer::RunInference(PixelMapVars& pixelmapvars) {
 
 
 // -------- Function to apply inverse scaling to predictions --------
-std::vector<double> opdet::SBNDPDSProducer::ApplyInverseScaling(const std::vector<double>& scaled_predictions) {
+std::vector<double> opdet::PosRecoCVNProducer::ApplyInverseScaling(const std::vector<double>& scaled_predictions) {
   
   if (scaled_predictions.size() != 3) {
     std::cout << "WARNING: Expected 3 predictions (dEpromx, dEpromy, dEpromz), got " << scaled_predictions.size() << std::endl;
@@ -1260,7 +1260,7 @@ std::vector<double> opdet::SBNDPDSProducer::ApplyInverseScaling(const std::vecto
 }
 
 // -------- Function to fill TTree with analysis-friendly data --------
-void opdet::SBNDPDSProducer::FillInferenceTree(bool passedFilters, const PixelMapVars& pixelVars)
+void opdet::PosRecoCVNProducer::FillInferenceTree(bool passedFilters, const PixelMapVars& pixelVars)
 {
   // Fill basic event information for all events
   fTreeRun = _runID;
@@ -1337,7 +1337,7 @@ void opdet::SBNDPDSProducer::FillInferenceTree(bool passedFilters, const PixelMa
 
 
 // -------- Function to fill the MCTruth information --------
-void opdet::SBNDPDSProducer::FillMCTruth(art::Event const& e){
+void opdet::PosRecoCVNProducer::FillMCTruth(art::Event const& e){
   
   
   if(fMCTruthModuleLabel.size()!=fMCTruthInstanceLabel.size()){
@@ -1434,7 +1434,7 @@ void opdet::SBNDPDSProducer::FillMCTruth(art::Event const& e){
 
 
 // -------- Function to fill the average energy deposition --------
-void opdet::SBNDPDSProducer::FillAverageDepositedEnergyVariables(std::vector<std::vector<double>> fenergydep, std::vector<std::vector<double>> fenergydepX,
+void opdet::PosRecoCVNProducer::FillAverageDepositedEnergyVariables(std::vector<std::vector<double>> fenergydep, std::vector<std::vector<double>> fenergydepX,
   std::vector<std::vector<double>> fenergydepY, std::vector<std::vector<double>> fenergydepZ, std::vector<std::vector<double>> fstepT,
   std::vector<double> &dEtpc, std::vector<double> &dEpromx, std::vector<double> &dEpromy, std::vector<double> &dEpromz,
   std::vector<double> &dEspreadx, std::vector<double> &dEspready, std::vector<double> &dEspreadz,
@@ -1538,7 +1538,7 @@ void opdet::SBNDPDSProducer::FillAverageDepositedEnergyVariables(std::vector<std
 
 
 // -------- Function to initialize the channel dictionary --------
-void opdet::SBNDPDSProducer::InitializeChannelDict(){
+void opdet::PosRecoCVNProducer::InitializeChannelDict(){
   
   // Create PDS mapping algorithm instance
   opdet::sbndPDMapAlg pdsMap;
@@ -1579,7 +1579,7 @@ void opdet::SBNDPDSProducer::InitializeChannelDict(){
 
 
 // -------- Function to classify channels by type and parity --------
-void opdet::SBNDPDSProducer::ClassifyChannels(){
+void opdet::PosRecoCVNProducer::ClassifyChannels(){
   
   fPMTEven.clear(); fPMTOdd.clear();
   fXASEven.clear(); fXASOdd.clear();
@@ -1613,7 +1613,7 @@ void opdet::SBNDPDSProducer::ClassifyChannels(){
 
 
 // -------- Function to categorize first channel of a flash --------
-int opdet::SBNDPDSProducer::CategorizeFirstChannel(const std::vector<int>& channels){
+int opdet::PosRecoCVNProducer::CategorizeFirstChannel(const std::vector<int>& channels){
   
   if(channels.empty()) return -1;
   
@@ -1629,7 +1629,7 @@ int opdet::SBNDPDSProducer::CategorizeFirstChannel(const std::vector<int>& chann
 
 // -------- Template function to filter arrays by mask --------
 template<typename T>
-std::vector<std::vector<T>> opdet::SBNDPDSProducer::FilterByMask(
+std::vector<std::vector<T>> opdet::PosRecoCVNProducer::FilterByMask(
     const std::vector<std::vector<T>>& array, 
     const std::vector<std::vector<bool>>& mask) {
   
@@ -1650,7 +1650,7 @@ std::vector<std::vector<T>> opdet::SBNDPDSProducer::FilterByMask(
 
 
 // -------- Main flash selection function --------
-void opdet::SBNDPDSProducer::ApplyFlashSelection(){
+void opdet::PosRecoCVNProducer::ApplyFlashSelection(){
   
   // Clear output vectors
   _flash_ophit_pe_sel.clear();
@@ -1751,7 +1751,7 @@ void opdet::SBNDPDSProducer::ApplyFlashSelection(){
 
 
 // -------- Final energy deposition filter --------
-void opdet::SBNDPDSProducer::ApplyFinalEnergyFilter(){
+void opdet::PosRecoCVNProducer::ApplyFinalEnergyFilter(){
   
   // Clear final output vectors
   _flash_ophit_pe_final.clear();
@@ -1832,7 +1832,7 @@ void opdet::SBNDPDSProducer::ApplyFinalEnergyFilter(){
 }
 
 // -------- Clear all event data at the beginning of each event --------
-void opdet::SBNDPDSProducer::ClearEventData(){
+void opdet::PosRecoCVNProducer::ClearEventData(){
   
   // Clear MC truth variables
   _nuvT.clear(); 

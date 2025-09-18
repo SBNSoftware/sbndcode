@@ -70,7 +70,7 @@
 #define zmaxdet_size 1800
 
 namespace opdet {
-  class SBNDPDSProducer;
+  class PosRecoCVNProducer;
 
   enum SBNDPDSDetectorType {
     kPDUnknown = -1,   
@@ -83,15 +83,15 @@ namespace opdet {
 }
 
 
-class opdet::SBNDPDSProducer : public art::EDProducer {
+class opdet::PosRecoCVNProducer : public art::EDProducer {
 public:
-  explicit SBNDPDSProducer(fhicl::ParameterSet const& p);
+  explicit PosRecoCVNProducer(fhicl::ParameterSet const& p);
 
   // Plugins should not be copied or assigned.
-  SBNDPDSProducer(SBNDPDSProducer const&) = delete;
-  SBNDPDSProducer(SBNDPDSProducer&&) = delete;
-  SBNDPDSProducer& operator=(SBNDPDSProducer const&) = delete;
-  SBNDPDSProducer& operator=(SBNDPDSProducer&&) = delete;
+  PosRecoCVNProducer(PosRecoCVNProducer const&) = delete;
+  PosRecoCVNProducer(PosRecoCVNProducer&&) = delete;
+  PosRecoCVNProducer& operator=(PosRecoCVNProducer const&) = delete;
+  PosRecoCVNProducer& operator=(PosRecoCVNProducer&&) = delete;
 
   // Required functions.
   void produce(art::Event& e) override;
@@ -255,4 +255,4 @@ private:
 };
 
 
-DEFINE_ART_MODULE(opdet::SBNDPDSProducer)
+DEFINE_ART_MODULE(opdet::PosRecoCVNProducer)

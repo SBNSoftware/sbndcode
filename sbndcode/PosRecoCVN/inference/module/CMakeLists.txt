@@ -33,7 +33,7 @@ set(MODULE_LIBRARIES
 
 )
 
-cet_build_plugin(SBNDPDSProducer art::Module SOURCE SBNDPDSProducer_module.cc LIBRARIES ${MODULE_LIBRARIES} )
+cet_build_plugin(PosRecoCVNProducer art::Module SOURCE PosRecoCVNProducer_module.cc LIBRARIES ${MODULE_LIBRARIES} )
 
 # Build ROOT dictionary
 art_dictionary(DICTIONARY_LIBRARIES
