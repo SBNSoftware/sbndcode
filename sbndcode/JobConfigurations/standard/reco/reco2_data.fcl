@@ -44,7 +44,7 @@ physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandora
                  cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching,
                  pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData,
                  cvnSCE, opt0finderSCE, tpcpmtbarycentermatchingSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
-                 caloskimCalorimetry, blipreco, frameshift, lightpropagationcorrectionSCE]
+                 caloskimCalorimetry, blipreco, lightpropagationcorrectionSCE, frameshift]
 
 
 physics.analyzers.caloskim.G4producer: ""
