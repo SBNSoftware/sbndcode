@@ -29,6 +29,7 @@ art_make_library( SOURCE
                     #BeamRateCalibService_service.cc
                     opDetDigitizerWorker.cc
                     opDetSBNDTriggerAlg.cc
+                    TriggerEmulationService.cc
                   LIBRARIES
                     sbndcode_OpDetSim_sbndPDMapAlg_tool
                     larcore::Geometry_Geometry_service
@@ -121,7 +122,7 @@ set (
                     lardataobj::RecoBase
                     lardataobj::AnalysisBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
-                    sbndcode_OpDetSim_BeamRateCalibService_service
+                    #sbndcode_OpDetSim_BeamRateCalibService_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
@@ -161,17 +162,20 @@ set (
 )
 
 
+
+
 cet_build_plugin(opHitFinderSBND art::module SOURCE opHitFinderSBND_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(opDetDigitizerSBND art::module SOURCE opDetDigitizerSBND_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(opDetDigitizerSBND art::module SOURCE opDetDigitizerSBND_module.cc LIBRARIES ${MODULE_LIBRARIES} ${OTHER_LIBRARIES})
 cet_build_plugin(wvfAna art::module SOURCE wvfAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(BeamRatesCalib art::module SOURCE BeamRatesCalib_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(BeamRatesCalib art::module SOURCE BeamRatesCalib_module.cc LIBRARIES ${MODULE_LIBRARIES} ${OTHER_LIBRARIES})
 cet_build_plugin(PMTNoiseCounter art::module SOURCE PMTNoiseCounter_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(FlashWithNeutrino art::module SOURCE FlashWithNeutrinoInTPC.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_Summer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(BeamRateCalibService art::service SOURCE BeamRateCalibService_service.cc LIBRARIES ${NOSIGNALSHAPE_LIBRARIES})
-cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${OTHER_LIBRARIES})
+cet_build_plugin(TriggerEmulationService art::service SOURCE TriggerEmulationService_service.cc TriggerEmulationService.cc LIBRARIES ${NOSIGNALSHAPE_LIBRARIES})
+#cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${OTHER_LIBRARIES})
+
 
 install_headers()
 install_fhicl()

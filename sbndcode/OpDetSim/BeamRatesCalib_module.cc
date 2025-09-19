@@ -42,8 +42,6 @@
 #include "sbndaq-artdaq-core/Obj/SBND/pmtSoftwareTrigger.hh"
 #include "sbndcode/Decoders/PTB/sbndptb.h"
 
-
-
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TFile.h"
@@ -51,6 +49,8 @@
 #include "TGraph.h"
 
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
+
+#include "TriggerEmulationService.h"
 
 namespace opdet { //OpDet means optical detector 
 
@@ -79,11 +79,9 @@ namespace opdet { //OpDet means optical detector
     void ResetTree();
     void SaveChannelWaveforms(const raw::OpDetWaveform &wvf, int EventCounter, int FlashCounter);
     void SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter);
-    void ConstructMonPulse(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, std::vector<int> *MonPulse, bool Saving=false, int FlashCounter=0);
     void analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle);
     void Validate_MonSim_Outputs(art::Event const & e);
     double GetWaveformMedian(raw::OpDetWaveform wvf);
-    std::vector<bool> ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold);
     opdet::sbndPDMapAlg pdMap; //map for photon detector types
   private:
     //Data members for analysis/output
@@ -197,7 +195,8 @@ namespace opdet { //OpDet means optical detector
     fMTCAStart        = p.get<int>("MTCAStart", 3);
     fMTCAStop        = p.get<int>("MTCAStop", 64);
     fMTCAStep        = p.get<int>("MTCAStep", 1);
-    PMTPerBoard=15;
+    //PMTPerBoard=15;
+    PMTPerBoard=16;
     fBeamWindowStart = p.get<int>("BeamWindowStart", 828+680);
     fBeamWindowEnd = p.get<int>("BeamWindowEnd", 1688+680);
     fSaveAllMON = p.get<bool>("SaveAllMon", false);
@@ -206,7 +205,8 @@ namespace opdet { //OpDet means optical detector
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
     fCheckSoftTrig = p.get<bool>("CheckSoftTrig", false);
     fSoftTrigLabel = p.get<std::string>("SoftTrigLabel", "pmtmetricproducer:");
-    fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
+    //fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
+    fTotalCAENBoards = p.get<int>("TotalCAENBoards", 10);
     fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
     fTriggerProdCheck = p.get<bool>("TriggerProdCheck", false);
     fNominalWaveformSize = p.get<int>("NominalWaveformSize", 5000);
@@ -451,6 +451,11 @@ namespace opdet { //OpDet means optical detector
 
   void BeamRateCalib::SaveMonWaveforms(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, int EventCounter)
   {
+
+    // Implement service
+    art::ServiceHandle<art::TFileService> tfs;
+    art::ServiceHandle<calib::TriggerEmulationService> fTriggerService;
+
     int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
     int GoodFlashIndex=0;
     double SmallestTimestamp=0;
@@ -469,14 +474,13 @@ namespace opdet { //OpDet means optical detector
     {
       int WaveIndex = FlashCounter*PMTPerBoard;
       int WaveformSize = (*waveHandle)[WaveIndex].size();
-      std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); //Maybe works? Should really add a waveform size getter 
-      if(!fSaveAllMON) ConstructMonPulse(waveHandle, MonThreshold, MonPulse, true, FlashCounter);
-      else ConstructMonPulse(waveHandle, MonThreshold, MonPulse, false, FlashCounter); //Dont save individual channels for now
+      std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); // add a waveform size getter?
+      if(!fSaveAllMON) fTriggerService->ConstructMonPulse(*waveHandle, MonThreshold, MonPulse, true, FlashCounter);
+      else fTriggerService->ConstructMonPulse(*waveHandle, MonThreshold, MonPulse, false, FlashCounter); //Dont save individual channels for now
       std::stringstream histname;
       if(GoodFlashIndex==FlashCounter) histname << "event_" << EventCounter <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter << "_TriggerPulse";
       else histname << "event_" << EventCounter <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter;
       hist_id=hist_id+1;
-      art::ServiceHandle<art::TFileService> tfs;
       TH1D *MonHist = tfs->make<TH1D>(histname.str().c_str(), histname.str().c_str(), 
                                       MonPulse->size(), 0.0, MonPulse->size()-1); //so this just breaks
       for(unsigned int i = 0; i < MonPulse->size(); i++) {
@@ -505,81 +509,14 @@ namespace opdet { //OpDet means optical detector
         
   }
 
-  std::vector<bool> BeamRateCalib::ConstructBinaryResponse(const raw::OpDetWaveform &wvf, int MonThreshold)
-  {
-    int Baseline=14250;
-    std::vector<bool> BinaryResponse(wvf.size());
-    int WaveformIndex=1;
-    while(WaveformIndex<int(wvf.size()))
-    {
-      bool CrossedThreshold = (((wvf[WaveformIndex-1]-Baseline)>-MonThreshold) && ((wvf[WaveformIndex]-Baseline)<-MonThreshold));
-      if(CrossedThreshold)
-      {
-        int StartIndex = WaveformIndex;
-        int EndIndex = WaveformIndex+4*fMonWidth;
-        if(StartIndex>=int(wvf.size() )) StartIndex=wvf.size()-1; //should never happen
-        if(EndIndex>=int(wvf.size())) EndIndex=wvf.size()-1; //May happen
-        for(int k=StartIndex; k<EndIndex; k++)
-        {
-          BinaryResponse[k] = true;
-        }
-        WaveformIndex=EndIndex+1;
-      }
-      else WaveformIndex=WaveformIndex+1;
-    }
-    return BinaryResponse;
-  }
-
-  void BeamRateCalib::ConstructMonPulse(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle, int MonThreshold, std::vector<int> *MonPulse, bool Saving, int FlashCounter)
-  {
-    std::fill(MonPulse->begin(), MonPulse->end(), 0);
-    //Loop over the entries in our waveform vector
-    //We care about getting the pairing correct
-    //These aren't used? Why doesn't sbndcode stop me from compiling
-    std::vector<int> Pair2= { 6,   8,  10,  12,  14,  16,  36,  38,  40,  60,  62,  66,  68, 70,  84,  86,  88,  90,  92,  94, 114, 116, 118, 138, 140, 144, 146, 148, 162, 164, 168, 170, 172, 192, 194, 196, 216, 218, 220, 222, 224, 226, 240, 242, 246, 248, 250, 270, 272, 274, 294, 296, 298, 300, 302, 304};
-    std::vector<int> Pair1= { 7,   9,  11,  13,  15,  17,  37,  39,  41,  61,  63,  67,  69, 71,  85,  87,  89,  91,  93,  95, 115, 117, 119, 139, 141, 145, 147, 149, 163, 165, 169, 171, 173, 193, 195, 197, 217, 219, 221, 223, 225, 227, 241, 243, 247, 249, 251, 271, 273, 275, 295, 297, 299, 301, 303, 305};
-    std::vector<int> Unpaired= {65,  64, 143, 142, 167, 166, 245, 244};
-    int NumFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
-    int FirstReadoutIndex = 0 + FlashCounter*PMTPerBoard + 0*PMTPerBoard*NumFlash;
-    int ReadoutSize = (*waveHandle)[FirstReadoutIndex].size();
-    for(int CurrentBoard=0; CurrentBoard<fTotalCAENBoards; CurrentBoard++)
-      {
-          //Loop over each PMT in a board
-          int CAENChannel=0;
-          while(CAENChannel<PMTPerBoard)
-          {
-            
-            int ChannelStep = 1;
-            std::vector<bool> BinaryMonContrib(ReadoutSize);
-            if(CAENChannel!=14) //We are on a paired channel so we won't want to double count
-            { 
-              int WaveIndex_Pair1 = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
-              int WaveIndex_Pair2 = CAENChannel+1 + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
-              ChannelStep=2;
-              auto const& wvf_Pair1 = (*waveHandle)[WaveIndex_Pair1];
-              auto const& wvf_Pair2 = (*waveHandle)[WaveIndex_Pair2];
-              std::vector<bool> BinaryResponse_Pair1 = ConstructBinaryResponse(wvf_Pair1, MonThreshold);
-              std::vector<bool> BinaryResponse_Pair2 = ConstructBinaryResponse(wvf_Pair2, MonThreshold);
-              for(int i=0; i<ReadoutSize; i++) BinaryMonContrib[i] = (BinaryResponse_Pair1[i] || BinaryResponse_Pair2[i]);
-            }
-            else //Unpaired PMT so no OR
-            {
-              int WaveIndex = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
-              auto const& wvf_Unpaired = (*waveHandle)[WaveIndex];
-              std::vector<bool> BinaryResponse_Unpaired = ConstructBinaryResponse(wvf_Unpaired, MonThreshold);
-              for(int i=0; i<ReadoutSize; i++) BinaryMonContrib[i] = (BinaryResponse_Unpaired[i]);
-            }
-            for(int i=0; i<ReadoutSize; i++)
-            {
-              if(BinaryMonContrib[i]) (*MonPulse)[i] = (*MonPulse)[i]+1;
-            }
-            CAENChannel=CAENChannel+ChannelStep;
-          } //loop over channels
-      } //loop over boards
-  }
-
   void BeamRateCalib::analyzeTrigger(art::Handle< std::vector< raw::OpDetWaveform > > &waveHandle)
-  { //Use fill and not set entries for the th2d interface
+  { 
+
+    // Implement service
+    art::ServiceHandle<art::TFileService> tfs;
+    art::ServiceHandle<calib::TriggerEmulationService> fTriggerService;
+
+    //Use fill and not set entries for the th2d interface
     //Define some MON pulse to do trigger logics on
     //Loop over MON thresholds
     int TotalFlash = waveHandle->size()/(fTotalCAENBoards*PMTPerBoard);
@@ -611,7 +548,7 @@ namespace opdet { //OpDet means optical detector
           //Loop over the entries in our waveform vector
           //We care about getting the pairing correct
           std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); 
-          ConstructMonPulse(waveHandle, MONThresholds[i], MonPulse, false, FlashCounter);
+          fTriggerService->ConstructMonPulse(*waveHandle, MONThresholds[i], MonPulse, false, FlashCounter);
           //Constructed MON pulse now lets compare it to the MTCA requirement
           //Flash just before beam gate can offset waveform
           //int WaveformOffset = (*waveHandle)[WaveIndex].TimeStamp()*1000 - fNominalGoodStart; //Waveform timestamps are in us // Also delivers time of sample 0 //ns
@@ -764,7 +701,7 @@ namespace opdet { //OpDet means optical detector
               double DutyCycle = double(count)/double(wvf.size());
               hist_MSUM_DutyCycle->Fill(DutyCycle);
               hist_MSUM_Energy->Fill(Energy); //Can convert to average power by dividing by readout time
-              std::cout << Energy << std::endl;
+              //std::cout << Energy << std::endl;
               //Make th1d of trigger rate plot of column enabled in fcl
               //int WaveformOffset = GateOpenTime - (wvf.TimeStamp()*1000 + ETrigTime)+ fNominalGoodStart ;
               //WaveformOffset = WaveformOffset/2; //sample/2 ns 

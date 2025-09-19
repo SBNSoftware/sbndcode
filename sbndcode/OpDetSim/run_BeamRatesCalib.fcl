@@ -12,13 +12,13 @@ source: {
 services: 
 {
   TFileService:            { fileName: "BeamRateRes.root" }
-  BeamRateCalibService: {
-    service_type: BeamRateCalibService
-    #MonWidth: 3
-    #TotalCAENBoards: 10
-    #PMTPerBoard: 16
-    #Baseline: 14250
-    #MC: false
+  TriggerEmulationService: {
+    service_type: TriggerEmulationService
+    MonWidth: 12
+    TotalCAENBoards: 10
+    PMTPerBoard: 16
+    Baseline: 14250
+    MC: false
   }
 }
 

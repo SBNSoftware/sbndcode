@@ -33,7 +33,7 @@ BeamRatesCalib:
     CheckHardwareTriggers: true
     CheckSoftTrig: true
     # Number of CAEN boards on for this run
-    TotalCAENBoards: 8
+    TotalCAENBoards: 10
     # Assorted labels to get data products out of Art files
     SoftTrigLabel: "pmtmetricproducer"
     InputModule: "pmtdecoder"
