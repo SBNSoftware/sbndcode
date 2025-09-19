@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+AnalyzeEventsMin:
+{
+  module_type:                  "AnalyzeEventsMin"
+  slice_label:                  "pandora"
+  pfp_label:                    "pandora"
+  track_label:                  "pandoraTrack"
+
+  slice_to_pfp_label:           "pandora"
+  pfp_to_vertex_label:          "pandora"
+  pfp_to_track_label:           "pandoraTrack"
+  track_to_chi2_label:          "pandoraPid"
+  pfp_to_pfpmetadata_label:     "pandora"
+}
+
+END_PROLOG

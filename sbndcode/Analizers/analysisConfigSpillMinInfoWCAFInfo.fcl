@@ -1,0 +1,72 @@
+BEGIN_PROLOG
+
+AnalyzeEventsNeutrino:
+{
+  file_type:                  "spill"
+
+  module_type:                  "AnalyzeEventsNeutrino"
+  MCTruth_label:                "generator"
+  MCParticle_label:             "largeant"
+  POTModule_label:              "generator"
+  slice_label:                  "pandora"
+  pfp_label:                    "pandora"
+  track_label:                  "pandoraTrack"
+  shower_label:                 "pandoraShowerSBN"
+  hit_label:                    "gaushit"
+  space_point_label:            "pandora"
+
+  slice_to_hit_label:           "pandora"
+  slice_to_pfp_label:           "pandora"
+  slice_to_crumbs_label:        "crumbs"
+  slice_to_opt0_label:          "opt0finder"
+  pfp_to_pfpmetadata_label:     "pandora"
+  pfp_to_vertex_label:          "pandora"
+  pfp_to_razzled_label:         "pandoraRazzled"
+  pfp_to_track_label:           "pandoraTrack"
+  pfp_to_shower_label:          "pandoraShowerSBN"
+  pfp_to_space_point_label:     "pandora"
+  pfp_to_cnn_id_label:          "cnnid"
+  slice_to_calo_label:          "pandoraCalo"
+  slice_to_stub_label:          "vertexStub"
+
+  track_to_hits_label:          "pandoraTrack"
+  shower_to_hits_label:         "pandoraShowerSBN"
+  track_to_calo_label:          "pandoraCalo"
+  shower_to_calo_label:         "pandoraCalo"
+  track_to_chi2_label:          "pandoraPid"
+
+  space_point_to_hit_label:    "pandora"
+
+  fMCSLabel:                    "pandoraTrackMCS"
+  fRangeLabel:                  "pandoraTrackRange"
+  fClosestApproachLabel:        "pandoraTrackClosestApproach"
+  fStoppingChi2Label:           "pandoraTrackStoppingChi2"
+
+  slice_to_barycenter_matching_label: "tpcpmtbarycentermatching"
+  flash_to_barycenter_matching_label: "tpcpmtbarycentermatching"
+
+  Verbose_general:              false
+  Verbose_g4:                   false
+  Verbose_gen:                  false
+  Verbose_reco:                 false
+  Verbose_reco_hits:            false
+  Verbose_reco_pfps:            false
+  Verbose_reco_calo_deposition: false
+  Verbose_reco_space_points:    false
+
+  save_truth_gen_particles:     true
+  save_truth_g4:                false
+  save_reco:                    true
+  save_reco_hits:               false
+  save_reco_space_points:       false
+  save_track_calo_deposition:   true
+  save_reco_stubs:              true
+  save_crumbs:                  true
+  save_razzled:                 true
+
+  save_3d_barycenter_matching: true
+
+  do_precuts:                   false
+}
+
+END_PROLOG

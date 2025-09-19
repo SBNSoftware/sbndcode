@@ -1,0 +1,65 @@
+#include "analysisConfigMin.fcl"
+#include "simulationservices_sbnd.fcl"
+
+#include "services_sbnd.fcl"
+#include "geometry_sbnd.fcl"
+
+#include "larproperties.fcl"
+#include "backtrackerservice.fcl"
+#include "detectorproperties_sbnd.fcl"
+#include "particleinventoryservice.fcl"
+#include "photonbacktrackerservice.fcl"
+#include "mccheatermodules.fcl"
+
+#include "calorimetry_sbnd.fcl"
+
+#include "trackscatterclosestapproach.fcl"
+#include "trackstoppingchi2fitter.fcl"
+#include "showerselectionvarsproducer.fcl"
+#include "showercosmicdistanceproducer.fcl"
+#include "sbn_pid.fcl"
+#include "sbn_crumbs_producer.fcl"
+
+#include "crthitconverter_producer.fcl"
+#include "crtmatch_producer.fcl"
+#include "pmtflashtrigger_producer.fcl"
+
+#include "flashmatch_sbnd.fcl"
+#include "sbn_stub.fcl"
+
+#include "cafmaker_common_defs.fcl"
+
+
+process_name:AnalyzeEventsMin # The process name must NOT contain any underscores
+
+source:
+{
+  module_type: RootInput # Telling art we want a ROOT input
+  maxEvents:   -1
+}
+
+services:
+{
+
+  ParticleInventoryService:  @local::standard_particleinventoryservice
+  BackTrackerService:        @local::standard_backtrackerservice
+
+  TFileService: { fileName: "analysisOutput.root"}
+  @table::sbnd_services
+}
+
+physics:
+{
+  analyzers:
+  {
+    ana: @local::AnalyzeEventsMin  #inserts into workflow, matches name in config fcl
+  }
+  path0:        [ ana ]
+  end_paths:    [ path0 ]
+}
+
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "simtpc2d:simpleSC"
+
+
+
+

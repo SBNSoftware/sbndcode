@@ -39,6 +39,7 @@ add_subdirectory(ToFStudies)
 
 # for wirecell
 add_subdirectory(WireCell)
+add_subdirectory(Analizers)
 
 add_subdirectory(Decoders)
 add_subdirectory(ChannelMaps)
