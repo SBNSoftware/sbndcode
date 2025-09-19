@@ -50,3 +50,4 @@ add_subdirectory(SBNDCVN)
 add_subdirectory(TPCPMTBarycenterMatching)
 
 add_subdirectory(BlipRecoSBND)
+add_subdirectory(LightPropagationCorrection)
