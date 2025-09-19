@@ -22,11 +22,13 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
     fG4BeamWindow( p.get<std::vector<int>>("G4BeamWindow") ),
     fKeepPDGCode( p.get<std::vector<int>>("KeepPDGCode", {}) ),
     fSaveOpHits( p.get<bool>("SaveOpHits", true) ),
+    fSavePixelMapVars( p.get<bool>("SavePixelMapVars", true) ),
     fVerbosity( p.get<int>("Verbosity") ),
     fCoatedPMTMapPath("coatedPMT_map.csv"),
     fUncoatedPMTMapPath("uncoatedPMT_map.csv"),
     fModelPath("saved_model"),
     fRunInference( p.get<bool>("RunInference", false) ),
+    fProcessingMode( p.get<std::string>("ProcessingMode", "testing") ),
     fInputNames( p.get<std::vector<std::string>>("InputNames", {}) ),
     fOutputNames( p.get<std::vector<std::string>>("OutputNames", {}) ),
     fCustomNormFactor( p.get<double>("CustomNormFactor", -1.0) ),
@@ -38,7 +40,10 @@ opdet::PosRecoCVNProducer::PosRecoCVNProducer(fhicl::ParameterSet const& p)
     fTreeDiffX(-999.0), fTreeDiffY(-999.0), fTreeDiffZ(-999.0),
     fTreeError3D(-999.0), fTreeNuvT(-999.0), fTreeNuvZ(-999.0), fTreedEtpc(-999.0) 
 {
-    produces<PixelMapVars>();
+    // Conditionally declare PixelMapVars product
+    if(fSavePixelMapVars) {
+      produces<PixelMapVars>();
+    }
     
     // Initialize channel dictionary
     InitializeChannelDict();
@@ -102,39 +107,47 @@ void opdet::PosRecoCVNProducer::beginJob()
   // Initialize TTree for simple analysis
   art::ServiceHandle<art::TFileService> tfs;
   fInferenceTree = tfs->make<TTree>("inference_tree", "CNN Position Reconstruction Results");
-  
-  // Event identification branches
+
+  // Event identification branches (always present)
   fInferenceTree->Branch("run", &fTreeRun, "run/I");
-  fInferenceTree->Branch("subrun", &fTreeSubrun, "subrun/I"); 
+  fInferenceTree->Branch("subrun", &fTreeSubrun, "subrun/I");
   fInferenceTree->Branch("event", &fTreeEvent, "event/I");
   fInferenceTree->Branch("passed_filters", &fTreePassedFilters, "passed_filters/O");
-  
-  // Ground truth branches
-  fInferenceTree->Branch("true_x", &fTreeTrueX, "true_x/D");
-  fInferenceTree->Branch("true_y", &fTreeTrueY, "true_y/D");
-  fInferenceTree->Branch("true_z", &fTreeTrueZ, "true_z/D");
-  
-  // CNN prediction branches
+
+  // CNN prediction branches (always present)
   fInferenceTree->Branch("pred_x", &fTreePredX, "pred_x/D");
   fInferenceTree->Branch("pred_y", &fTreePredY, "pred_y/D");
   fInferenceTree->Branch("pred_z", &fTreePredZ, "pred_z/D");
-  
-  // Difference branches (prediction - truth)
-  fInferenceTree->Branch("diff_x", &fTreeDiffX, "diff_x/D");
-  fInferenceTree->Branch("diff_y", &fTreeDiffY, "diff_y/D");
-  fInferenceTree->Branch("diff_z", &fTreeDiffZ, "diff_z/D");
-  
-  // Performance metrics branches
-  fInferenceTree->Branch("error_3d", &fTreeError3D, "error_3d/D");
-  
-  // Additional physics variables
-  fInferenceTree->Branch("nuv_t", &fTreeNuvT, "nuv_t/D");
-  fInferenceTree->Branch("nuv_z", &fTreeNuvZ, "nuv_z/D");
-  fInferenceTree->Branch("deposited_energy", &fTreedEtpc, "deposited_energy/D");
-  
-  if(fVerbosity > 1) {
-    std::cout << "Initialized TTree 'inference_tree' with " << fInferenceTree->GetNbranches() 
-              << " branches for CNN analysis" << std::endl;
+
+  // Simulation-only branches (only in testing mode)
+  if(fProcessingMode == "testing") {
+    // Ground truth branches
+    fInferenceTree->Branch("true_x", &fTreeTrueX, "true_x/D");
+    fInferenceTree->Branch("true_y", &fTreeTrueY, "true_y/D");
+    fInferenceTree->Branch("true_z", &fTreeTrueZ, "true_z/D");
+
+    // Difference branches (prediction - truth)
+    fInferenceTree->Branch("diff_x", &fTreeDiffX, "diff_x/D");
+    fInferenceTree->Branch("diff_y", &fTreeDiffY, "diff_y/D");
+    fInferenceTree->Branch("diff_z", &fTreeDiffZ, "diff_z/D");
+
+    // Performance metrics branches
+    fInferenceTree->Branch("error_3d", &fTreeError3D, "error_3d/D");
+
+    // Additional physics variables
+    fInferenceTree->Branch("nuv_t", &fTreeNuvT, "nuv_t/D");
+    fInferenceTree->Branch("nuv_z", &fTreeNuvZ, "nuv_z/D");
+    fInferenceTree->Branch("deposited_energy", &fTreedEtpc, "deposited_energy/D");
+
+    if(fVerbosity > 1) {
+      std::cout << "Initialized TTree 'inference_tree' for TESTING mode with " << fInferenceTree->GetNbranches()
+                << " branches (includes ground truth)" << std::endl;
+    }
+  } else {
+    if(fVerbosity > 1) {
+      std::cout << "Initialized TTree 'inference_tree' for INFERENCE mode with " << fInferenceTree->GetNbranches()
+                << " branches (predictions only)" << std::endl;
+    }
   }
 }
 
@@ -168,50 +181,87 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
   art::ServiceHandle<cheat::BackTrackerService> bt_serv;
   art::ServiceHandle<detinfo::DetectorClocksService> timeservice;
 
-  // --- Saving MCTruths
-  _nuvT.clear(); _nuvX.clear(); _nuvY.clear(); _nuvZ.clear(); _nuvE.clear();
-  if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
-  
-  FillMCTruth(e);
-  
-  if(fVerbosity > 0) {
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::high_resolution_clock::now() - section_start).count();
-    std::cout << "[TIMING] FillMCTruth: " << elapsed << "ms" << std::endl;
-    section_start = std::chrono::high_resolution_clock::now();
-  }
+  // --- Saving MCTruths (conditional based on processing mode)
+  bool calculateGroundTruth = (fProcessingMode == "testing");
 
-  // --- Load MCParticles from event
-  if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
-  
-  mcpartVec.clear();
-  art::Handle< std::vector<simb::MCParticle> > mcParticleHandle;
-  e.getByLabel(fMCModuleLabel, mcParticleHandle);
-  if(mcParticleHandle.isValid()){
-    mcpartVec = *mcParticleHandle;
-    if(fVerbosity>2)
-      std::cout << "Loaded " << mcpartVec.size() << " MCParticles from " << fMCModuleLabel << std::endl;
+  if (calculateGroundTruth) {
+    _nuvT.clear(); _nuvX.clear(); _nuvY.clear(); _nuvZ.clear(); _nuvE.clear();
+    if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
+
+    FillMCTruth(e);
+
+    if(fVerbosity > 0) {
+      auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now() - section_start).count();
+      std::cout << "[TIMING] FillMCTruth: " << elapsed << "ms" << std::endl;
+      section_start = std::chrono::high_resolution_clock::now();
+    }
   } else {
-    if(fVerbosity>0)
-      std::cout << "MCParticles with label " << fMCModuleLabel << " not found. mcpartVec will be empty." << std::endl;
+    // Inference mode: Calculate only _nuvT for filtering (minimal ground truth)
+    _nuvT.clear();
+    if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
+
+    // Minimal MCTruth extraction - only neutrino count for filtering
+    art::Handle<std::vector<simb::MCTruth>> mcListHandle;
+    for (size_t s = 0; s < fMCTruthModuleLabel.size(); s++) {
+      e.getByLabel(fMCTruthModuleLabel[s], fMCTruthInstanceLabel[s], mcListHandle);
+      if(!mcListHandle.isValid()) continue;
+
+      for (unsigned int i = 0; i < mcListHandle->size(); ++i) {
+        art::Ptr<simb::MCTruth> mctruth(mcListHandle, i);
+        if (mctruth->Origin() == simb::kBeamNeutrino) {
+          simb::MCParticle nu = mctruth->GetNeutrino().Nu();
+          _nuvT.push_back(nu.T());
+        }
+      }
+    }
+
+    if(fVerbosity > 1) {
+      std::cout << "Inference mode: extracted " << _nuvT.size() << " neutrinos for filtering" << std::endl;
+    }
+
+    if(fVerbosity > 0) {
+      auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now() - section_start).count();
+      std::cout << "[TIMING] Minimal MCTruth (inference): " << elapsed << "ms" << std::endl;
+      section_start = std::chrono::high_resolution_clock::now();
+    }
   }
 
-  if(fVerbosity > 0) {
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::high_resolution_clock::now() - section_start).count();
-    std::cout << "[TIMING] LoadMCParticles: " << elapsed << "ms" << std::endl;
-    section_start = std::chrono::high_resolution_clock::now();
+  // --- Load MCParticles from event (conditional based on processing mode)
+  if (calculateGroundTruth) {
+    if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
+
+    mcpartVec.clear();
+    art::Handle< std::vector<simb::MCParticle> > mcParticleHandle;
+    e.getByLabel(fMCModuleLabel, mcParticleHandle);
+    if(mcParticleHandle.isValid()){
+      mcpartVec = *mcParticleHandle;
+      if(fVerbosity>2)
+        std::cout << "Loaded " << mcpartVec.size() << " MCParticles from " << fMCModuleLabel << std::endl;
+    } else {
+      if(fVerbosity>0)
+        std::cout << "MCParticles with label " << fMCModuleLabel << " not found. mcpartVec will be empty." << std::endl;
+    }
+
+    if(fVerbosity > 0) {
+      auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now() - section_start).count();
+      std::cout << "[TIMING] LoadMCParticles: " << elapsed << "ms" << std::endl;
+      section_start = std::chrono::high_resolution_clock::now();
+    }
   }
 
-  // --- Saving MCParticles
-  _mc_stepX.clear(); _mc_stepY.clear(); _mc_stepZ.clear(); _mc_stepT.clear();
-  _mc_dE.clear(); _mc_E.clear();
-  _mc_trackID.clear(); _mc_motherID.clear(); _mc_PDGcode.clear(); _mc_process.clear();
-  _mc_StartPx.clear(); _mc_StartPy.clear(); _mc_StartPz.clear();
-  _mc_EndPx.clear(); _mc_EndPy.clear(); _mc_EndPz.clear();
-  _mc_energydep.clear(); _mc_energydepX.clear(); _mc_energydepY.clear(); _mc_energydepZ.clear();
-  _mc_InTimeCosmics=0; _mc_InTimeCosmicsTime.clear();
-  dE_neutrinowindow = 0.0;
+  // --- Saving MCParticles (conditional based on processing mode)
+  if (calculateGroundTruth) {
+    _mc_stepX.clear(); _mc_stepY.clear(); _mc_stepZ.clear(); _mc_stepT.clear();
+    _mc_dE.clear(); _mc_E.clear();
+    _mc_trackID.clear(); _mc_motherID.clear(); _mc_PDGcode.clear(); _mc_process.clear();
+    _mc_StartPx.clear(); _mc_StartPy.clear(); _mc_StartPz.clear();
+    _mc_EndPx.clear(); _mc_EndPy.clear(); _mc_EndPz.clear();
+    _mc_energydep.clear(); _mc_energydepX.clear(); _mc_energydepY.clear(); _mc_energydepZ.clear();
+    _mc_InTimeCosmics=0; _mc_InTimeCosmicsTime.clear();
+    dE_neutrinowindow = 0.0;
 
   if(fVerbosity>2)
     std::cout << "Saving MCParticles from" << fMCModuleLabel << std::endl;
@@ -339,12 +389,13 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
     std::cout<<"*** TPC1   dE="<<_mc_dEtpc[1]<<"  <x>="<<_mc_dEpromx[1]<<"  <y>="<<_mc_dEpromy[1]<<"  <z>="<<_mc_dEpromz[1]<<" SpX="<<_mc_dEspreadx[1]<<" SpY="<<_mc_dEspready[1]<<" SpZ="<<_mc_dEspreadz[1]<<"\n\n";
   }
 
-  if(fVerbosity > 0) {
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::high_resolution_clock::now() - section_start).count();
-    std::cout << "[TIMING] ProcessMCParticles: " << elapsed << "ms" << std::endl;
-    section_start = std::chrono::high_resolution_clock::now();
-  }
+    if(fVerbosity > 0) {
+      auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now() - section_start).count();
+      std::cout << "[TIMING] ProcessMCParticles: " << elapsed << "ms" << std::endl;
+      section_start = std::chrono::high_resolution_clock::now();
+    }
+  } // End of calculateGroundTruth condition for MCParticles
 
   // --- Saving all OpHits
   _nophits = 0;
@@ -483,13 +534,15 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
     section_start = std::chrono::high_resolution_clock::now();
   }
 
-  // Apply first filter: only keep events where nuvT has exactly one element
-  bool passFilter1 = (_nuvT.size() == 1);
-  
-  // Apply second filter: only keep events with at least one flash (flash_ophit_pe has at least one element)
-  bool passFilter2 = false;
+  // Apply filters (same logic for both modes, but handle empty _nuvT in inference mode)
+  bool passFilter1, passFilter2, passFilter;
+
+  // Apply neutrino filter in both modes (exactly 1 neutrino)
+  passFilter1 = (_nuvT.size() == 1);
+
+  // Always apply optical data filter (same for both modes)
+  passFilter2 = false;
   if (!_flash_ophit_pe.empty()) {
-    // Check if there's at least one flash with optical hits
     for (const auto& flash_pe : _flash_ophit_pe) {
       if (!flash_pe.empty()) {
         passFilter2 = true;
@@ -497,8 +550,8 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
       }
     }
   }
-  
-  bool passFilter = passFilter1 && passFilter2;
+
+  passFilter = passFilter1 && passFilter2;
   
   if(fVerbosity > 2) {
     std::cout << "Filter check: nuvT size = " << _nuvT.size() << ", pass filter 1 = " << passFilter1 << std::endl;
@@ -512,22 +565,30 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
     std::cout << "[TIMING] ApplyFilters: " << elapsed << "ms" << std::endl;
   }
 
-  // Apply flash selection logic if event passes filters
+  // Apply flash selection logic if event passes basic filters
   if(passFilter) {
     if(fVerbosity > 0) section_start = std::chrono::high_resolution_clock::now();
-    
+
+    // Apply flash selection (channel classification) in both modes - essential for neural network input
     ApplyFlashSelection();
+
+    // Apply final filter (different criteria but same purpose for each mode)
     ApplyFinalEnergyFilter();
-    
+
+    // Update passFilter based on actual results of energy/PE filter
+    passFilter = !_flash_ophit_pe_final.empty();
+
     if(fVerbosity > 0) {
       auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::high_resolution_clock::now() - section_start).count();
       std::cout << "[TIMING] FlashSelection+FinalEnergyFilter: " << elapsed << "ms" << std::endl;
+      std::cout << "Final filter result: " << (_flash_ophit_pe_final.empty() ? "FAILED" : "PASSED")
+                << " (retained " << _flash_ophit_pe_final.size() << " flashes)" << std::endl;
       section_start = std::chrono::high_resolution_clock::now();
     }
-    
+
     // Only create PE matrix and images if we have final filtered data
-    if (!_flash_ophit_pe_final.empty()) {
+    if (passFilter) {
       CreatePEMatrix();
       
       if(fVerbosity > 0) {
@@ -576,12 +637,24 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
     pixelVars->flash_ophit_pe = _flash_ophit_pe_final;
     pixelVars->flash_ophit_ch = _flash_ophit_ch_final;
     pixelVars->flash_ophit_time = _flash_ophit_time_final;
-    pixelVars->nuvT = _nuvT_final;
-    pixelVars->dEpromx = _mc_dEpromx_final;
-    pixelVars->dEpromy = _mc_dEpromy_final;
-    pixelVars->dEpromz = _mc_dEpromz_final;
-    pixelVars->dEtpc = _mc_dEtpc_final;
-    pixelVars->nuvZ = _nuvZ_final;
+
+    if (calculateGroundTruth) {
+      // Include ground truth data in testing mode
+      pixelVars->nuvT = _nuvT_final;
+      pixelVars->dEpromx = _mc_dEpromx_final;
+      pixelVars->dEpromy = _mc_dEpromy_final;
+      pixelVars->dEpromz = _mc_dEpromz_final;
+      pixelVars->dEtpc = _mc_dEtpc_final;
+      pixelVars->nuvZ = _nuvZ_final;
+    } else {
+      // In inference mode, initialize ground truth vectors as empty
+      pixelVars->nuvT.clear();
+      pixelVars->dEpromx.clear();
+      pixelVars->dEpromy.clear();
+      pixelVars->dEpromz.clear();
+      pixelVars->dEtpc.clear();
+      pixelVars->nuvZ.clear();
+    }
     
     if(fVerbosity > 1) {
       std::cout << "Event passed filter - data stored in PixelMapVars" << std::endl;
@@ -632,9 +705,18 @@ void opdet::PosRecoCVNProducer::produce(art::Event& e)
 
   // Fill TTree with analysis-friendly data
   FillInferenceTree(passFilter, *pixelVars);
-  
-  // Poner el producto en el evento
-  e.put(std::move(pixelVars));
+
+  // Poner el producto en el evento (opcional)
+  if(fSavePixelMapVars) {
+    e.put(std::move(pixelVars));
+    if(fVerbosity > 1) {
+      std::cout << "PixelMapVars product saved to event" << std::endl;
+    }
+  } else {
+    if(fVerbosity > 1) {
+      std::cout << "PixelMapVars product NOT saved (SavePixelMapVars=false)" << std::endl;
+    }
+  }
 
 }
 
@@ -1119,7 +1201,9 @@ void opdet::PosRecoCVNProducer::RunInference(PixelMapVars& pixelmapvars) {
     }
     
     // Extract predictions for each event
-    for (size_t i = 0; i < predictions.size() && i < _mc_dEpromx_final.size(); ++i) {
+    // In inference mode, _mc_dEpromx_final may be empty, so just process all predictions
+    size_t max_events = predictions.size();
+    for (size_t i = 0; i < max_events; ++i) {
       if (!predictions[i].empty()) {
         size_t nOutputs = predictions[i].size();
         
@@ -1160,52 +1244,96 @@ void opdet::PosRecoCVNProducer::RunInference(PixelMapVars& pixelmapvars) {
         if (unscaled_predictions.size() >= 1) {
           // X coordinate should always be positive (take absolute value)
           double pred_x = std::abs(unscaled_predictions[0]);
-          double true_x = std::abs(_mc_dEpromx_final[i]);
           fTreePredX = pred_x;
-          fTreeDiffX = pred_x - true_x;
-          
+
+          // Calculate difference only in testing mode where ground truth is available
+          if (fProcessingMode == "testing" && i < _mc_dEpromx_final.size()) {
+            double true_x = std::abs(_mc_dEpromx_final[i]);
+            fTreeDiffX = pred_x - true_x;
+          } else {
+            fTreeDiffX = -999.0; // No ground truth available or inference mode
+          }
+
           if(fVerbosity > 1) {
-            std::cout << "DEBUG: Setting fTreePredX = " << fTreePredX << ", fTreeDiffX = " << fTreeDiffX << std::endl;
+            std::cout << "DEBUG: Setting fTreePredX = " << fTreePredX;
+            if(fProcessingMode == "testing") {
+              std::cout << ", fTreeDiffX = " << fTreeDiffX;
+            }
+            std::cout << std::endl;
           }
         }
-        
+
         if (unscaled_predictions.size() >= 2) {
           fTreePredY = unscaled_predictions[1];
-          fTreeDiffY = unscaled_predictions[1] - _mc_dEpromy_final[i];
-          
+
+          // Calculate difference only in testing mode where ground truth is available
+          if (fProcessingMode == "testing" && i < _mc_dEpromy_final.size()) {
+            fTreeDiffY = unscaled_predictions[1] - _mc_dEpromy_final[i];
+          } else {
+            fTreeDiffY = -999.0; // No ground truth available or inference mode
+          }
+
           if(fVerbosity > 1) {
-            std::cout << "DEBUG: Setting fTreePredY = " << fTreePredY << ", fTreeDiffY = " << fTreeDiffY << std::endl;
+            std::cout << "DEBUG: Setting fTreePredY = " << fTreePredY;
+            if(fProcessingMode == "testing") {
+              std::cout << ", fTreeDiffY = " << fTreeDiffY;
+            }
+            std::cout << std::endl;
           }
         }
-        
+
         if (unscaled_predictions.size() >= 3) {
           fTreePredZ = unscaled_predictions[2];
-          fTreeDiffZ = unscaled_predictions[2] - _mc_dEpromz_final[i];
-          
+
+          // Calculate difference only in testing mode where ground truth is available
+          if (fProcessingMode == "testing" && i < _mc_dEpromz_final.size()) {
+            fTreeDiffZ = unscaled_predictions[2] - _mc_dEpromz_final[i];
+          } else {
+            fTreeDiffZ = -999.0; // No ground truth available or inference mode
+          }
+
           if(fVerbosity > 1) {
-            std::cout << "DEBUG: Setting fTreePredZ = " << fTreePredZ << ", fTreeDiffZ = " << fTreeDiffZ << std::endl;
+            std::cout << "DEBUG: Setting fTreePredZ = " << fTreePredZ;
+            if(fProcessingMode == "testing") {
+              std::cout << ", fTreeDiffZ = " << fTreeDiffZ;
+            }
+            std::cout << std::endl;
           }
           
-          // Calculate and store 3D error
-          double pred_x_abs = std::abs(unscaled_predictions[0]);
-          double true_x_abs = std::abs(_mc_dEpromx_final[i]);
-          double abs_diff_x = std::abs(pred_x_abs - true_x_abs);
-          double abs_diff_y = std::abs(unscaled_predictions[1] - _mc_dEpromy_final[i]);
-          double abs_diff_z = std::abs(unscaled_predictions[2] - _mc_dEpromz_final[i]);
-          double total_error = std::sqrt(abs_diff_x*abs_diff_x + abs_diff_y*abs_diff_y + abs_diff_z*abs_diff_z);
-          pixelmapvars.error_3d.push_back(total_error);
-        }
-        
-        if(fVerbosity > 0) {
-          if (unscaled_predictions.size() >= 3 && !pixelmapvars.error_3d.empty()) {
+          // Calculate and store 3D error only in testing mode where ground truth is available
+          if (fProcessingMode == "testing" &&
+              i < _mc_dEpromx_final.size() && i < _mc_dEpromy_final.size() && i < _mc_dEpromz_final.size()) {
             double pred_x_abs = std::abs(unscaled_predictions[0]);
             double true_x_abs = std::abs(_mc_dEpromx_final[i]);
-            double total_error = pixelmapvars.error_3d.back(); // Use the error we just calculated
-            
-            std::cout << "Run=" << _runID << " Event=" << _eventID 
-                      << " True(" << true_x_abs << "," << _mc_dEpromy_final[i] << "," << _mc_dEpromz_final[i] << ")"
-                      << " Pred(" << pred_x_abs << "," << unscaled_predictions[1] << "," << unscaled_predictions[2] << ")"
-                      << " Error3D=" << total_error << std::endl;
+            double abs_diff_x = std::abs(pred_x_abs - true_x_abs);
+            double abs_diff_y = std::abs(unscaled_predictions[1] - _mc_dEpromy_final[i]);
+            double abs_diff_z = std::abs(unscaled_predictions[2] - _mc_dEpromz_final[i]);
+            double total_error = std::sqrt(abs_diff_x*abs_diff_x + abs_diff_y*abs_diff_y + abs_diff_z*abs_diff_z);
+            pixelmapvars.error_3d.push_back(total_error);
+            fTreeError3D = total_error;
+
+            if(fVerbosity > 0) {
+              std::cout << "Run=" << _runID << " Event=" << _eventID
+                        << " True(" << true_x_abs << "," << _mc_dEpromy_final[i] << "," << _mc_dEpromz_final[i] << ")"
+                        << " Pred(" << pred_x_abs << "," << unscaled_predictions[1] << "," << unscaled_predictions[2] << ")"
+                        << " Error3D=" << total_error << std::endl;
+            }
+          } else {
+            // Inference mode or no ground truth available - set default values
+            pixelmapvars.error_3d.push_back(-999.0);
+            fTreeError3D = -999.0;
+
+            if(fVerbosity > 0) {
+              double pred_x_abs = std::abs(unscaled_predictions[0]);
+              std::cout << "Run=" << _runID << " Event=" << _eventID
+                        << " Pred(" << pred_x_abs << "," << unscaled_predictions[1] << "," << unscaled_predictions[2] << ")";
+              if(fProcessingMode != "testing") {
+                std::cout << " [Inference mode - no ground truth]";
+              } else {
+                std::cout << " [No ground truth available]";
+              }
+              std::cout << std::endl;
+            }
           }
         }
       }
@@ -1267,71 +1395,75 @@ void opdet::PosRecoCVNProducer::FillInferenceTree(bool passedFilters, const Pixe
   fTreeSubrun = _subrunID;
   fTreeEvent = _eventID;
   fTreePassedFilters = passedFilters;
-  
-  // Initialize truth variables with default values 
-  // NOTE: fTreePred* and fTreeDiff* variables are filled directly in RunInference() - do NOT reinitialize here
-  fTreeTrueX = -999.0;
-  fTreeTrueY = -999.0;
-  fTreeTrueZ = -999.0;
+
+  // Initialize variables with default values
+  // NOTE: fTreePred* variables are filled directly in RunInference() - do NOT reinitialize here
   fTreeError3D = -999.0;
   fTreeNuvT = -999.0;
   fTreeNuvZ = -999.0;
   fTreedEtpc = -999.0;
-  
+
+  // Truth and difference variables only meaningful in testing mode
+  if(fProcessingMode == "testing") {
+    fTreeTrueX = -999.0;
+    fTreeTrueY = -999.0;
+    fTreeTrueZ = -999.0;
+    // fTreeDiffX/Y/Z are filled directly in RunInference(), don't reinitialize
+  } else {
+    // In inference mode, set truth and diff to -999 (not applicable)
+    fTreeTrueX = -999.0;
+    fTreeTrueY = -999.0;
+    fTreeTrueZ = -999.0;
+    fTreeDiffX = -999.0;
+    fTreeDiffY = -999.0;
+    fTreeDiffZ = -999.0;
+  }
+
   // Fill physics data if event passed filters
   if (passedFilters) {
-    // Fill ground truth data (take first entry if available)
-    if (!pixelVars.dEpromx.empty()) {
-      fTreeTrueX = pixelVars.dEpromx[0];  // Note: already has abs() applied
-      fTreeTrueY = pixelVars.dEpromy[0];
-      fTreeTrueZ = pixelVars.dEpromz[0];
+    // Fill ground truth data only in testing mode
+    if(fProcessingMode == "testing") {
+      if (!pixelVars.dEpromx.empty()) {
+        fTreeTrueX = pixelVars.dEpromx[0];  // Note: already has abs() applied
+        fTreeTrueY = pixelVars.dEpromy[0];
+        fTreeTrueZ = pixelVars.dEpromz[0];
+      }
+
+      if (!pixelVars.dEtpc.empty()) {
+        fTreedEtpc = pixelVars.dEtpc[0];
+      }
+
+      if (!pixelVars.nuvT.empty()) {
+        fTreeNuvT = pixelVars.nuvT[0];
+      }
+
+      if (!pixelVars.nuvZ.empty()) {
+        fTreeNuvZ = pixelVars.nuvZ[0];
+      }
+
+      if (!pixelVars.error_3d.empty()) {
+        fTreeError3D = pixelVars.error_3d[0];
+      }
     }
-    
-    if (!pixelVars.dEtpc.empty()) {
-      fTreedEtpc = pixelVars.dEtpc[0];
-    }
-    
-    if (!pixelVars.nuvT.empty()) {
-      fTreeNuvT = pixelVars.nuvT[0];
-    }
-    
-    if (!pixelVars.nuvZ.empty()) {
-      fTreeNuvZ = pixelVars.nuvZ[0];
-    }
-    
-    // Fill prediction data if inference ran successfully - COMMENTED: data now filled directly from inference results
-    // NOTE: fTreePredX/Y/Z and fTreeDiffX/Y/Z are now filled directly in RunInference() function
-    // if (!pixelVars.dEpromx_pred.empty()) {
-    //   fTreePredX = pixelVars.dEpromx_pred[0];
-    //   fTreeDiffX = pixelVars.dEpromx_diff[0];
-    // }
-    
-    // if (!pixelVars.dEpromy_pred.empty()) {
-    //   fTreePredY = pixelVars.dEpromy_pred[0];
-    //   fTreeDiffY = pixelVars.dEpromy_diff[0];
-    // }
-    
-    // if (!pixelVars.dEpromz_pred.empty()) {
-    //   fTreePredZ = pixelVars.dEpromz_pred[0];
-    //   fTreeDiffZ = pixelVars.dEpromz_diff[0];
-    // }
-    
-    if (!pixelVars.error_3d.empty()) {
-      fTreeError3D = pixelVars.error_3d[0];
-    }
+
+    // Prediction data (fTreePredX/Y/Z) is filled directly in RunInference() for both modes
   }
-  
+
   // Fill the TTree entry
   fInferenceTree->Fill();
-  
+
   if(fVerbosity > 1) {
-    std::cout << "DEBUG: FillInferenceTree - PredX=" << fTreePredX << " PredY=" << fTreePredY << " PredZ=" << fTreePredZ << std::endl;
-    std::cout << "DEBUG: FillInferenceTree - DiffX=" << fTreeDiffX << " DiffY=" << fTreeDiffY << " DiffZ=" << fTreeDiffZ << std::endl;
+    std::cout << "DEBUG: FillInferenceTree (" << fProcessingMode << " mode) - PredX=" << fTreePredX
+              << " PredY=" << fTreePredY << " PredZ=" << fTreePredZ << std::endl;
+    if(fProcessingMode == "testing") {
+      std::cout << "DEBUG: FillInferenceTree - TrueX=" << fTreeTrueX << " TrueY=" << fTreeTrueY << " TrueZ=" << fTreeTrueZ << std::endl;
+      std::cout << "DEBUG: FillInferenceTree - DiffX=" << fTreeDiffX << " DiffY=" << fTreeDiffY << " DiffZ=" << fTreeDiffZ << std::endl;
+    }
   }
-  
+
   if(fVerbosity > 2) {
-    std::cout << "Filled TTree entry for Run=" << fTreeRun << " Event=" << fTreeEvent 
-              << " PassedFilters=" << fTreePassedFilters << std::endl;
+    std::cout << "Filled TTree entry for Run=" << fTreeRun << " Event=" << fTreeEvent
+              << " PassedFilters=" << fTreePassedFilters << " Mode=" << fProcessingMode << std::endl;
   }
 }
 
@@ -1723,23 +1855,31 @@ void opdet::PosRecoCVNProducer::ApplyFlashSelection(){
   if(!ch_filtered.empty()) _flash_ophit_ch_sel = ch_filtered[0];
   if(!time_filtered.empty()) _flash_ophit_time_sel = time_filtered[0];
   
-  // 6. TPC selection - select winning TPC based on decision
-  std::vector<std::vector<double>> selector = {{decision ? 1.0 : 0.0, decision ? 0.0 : 1.0}};
-  std::vector<std::vector<double>> dEpromx_2d = {_mc_dEpromx};
-  std::vector<std::vector<double>> dEpromy_2d = {_mc_dEpromy};
-  std::vector<std::vector<double>> dEpromz_2d = {_mc_dEpromz};
-  std::vector<std::vector<double>> dEtpc_2d = {_mc_dEtpc};
-  
-  // Select TPC values based on decision with bounds checking
-  size_t max_tpc = std::min({(size_t)2, _mc_dEpromx.size(), _mc_dEpromy.size(), _mc_dEpromz.size(), _mc_dEtpc.size()});
-  for(size_t i = 0; i < max_tpc; ++i) {
-    if(selector[0][i] > 0.5) {
-      _mc_dEpromx_sel.push_back(_mc_dEpromx[i]);
-      _mc_dEpromy_sel.push_back(_mc_dEpromy[i]);
-      _mc_dEpromz_sel.push_back(_mc_dEpromz[i]);
-      _mc_dEtpc_sel.push_back(_mc_dEtpc[i]);
-      break; // Only select one TPC
+  // 6. TPC selection - only in testing mode where ground truth is available
+  if(fProcessingMode == "testing" && !_mc_dEpromx.empty()) {
+    std::vector<std::vector<double>> selector = {{decision ? 1.0 : 0.0, decision ? 0.0 : 1.0}};
+    std::vector<std::vector<double>> dEpromx_2d = {_mc_dEpromx};
+    std::vector<std::vector<double>> dEpromy_2d = {_mc_dEpromy};
+    std::vector<std::vector<double>> dEpromz_2d = {_mc_dEpromz};
+    std::vector<std::vector<double>> dEtpc_2d = {_mc_dEtpc};
+
+    // Select TPC values based on decision with bounds checking
+    size_t max_tpc = std::min({(size_t)2, _mc_dEpromx.size(), _mc_dEpromy.size(), _mc_dEpromz.size(), _mc_dEtpc.size()});
+    for(size_t i = 0; i < max_tpc; ++i) {
+      if(selector[0][i] > 0.5) {
+        _mc_dEpromx_sel.push_back(_mc_dEpromx[i]);
+        _mc_dEpromy_sel.push_back(_mc_dEpromy[i]);
+        _mc_dEpromz_sel.push_back(_mc_dEpromz[i]);
+        _mc_dEtpc_sel.push_back(_mc_dEtpc[i]);
+        break; // Only select one TPC
+      }
     }
+  } else if(fProcessingMode != "testing") {
+    // Inference mode: No ground truth data to select, clear the vectors
+    _mc_dEpromx_sel.clear();
+    _mc_dEpromy_sel.clear();
+    _mc_dEpromz_sel.clear();
+    _mc_dEtpc_sel.clear();
   }
   
   if(fVerbosity > 0) {
@@ -1752,7 +1892,7 @@ void opdet::PosRecoCVNProducer::ApplyFlashSelection(){
 
 // -------- Final energy deposition filter --------
 void opdet::PosRecoCVNProducer::ApplyFinalEnergyFilter(){
-  
+
   // Clear final output vectors
   _flash_ophit_pe_final.clear();
   _flash_ophit_ch_final.clear();
@@ -1763,70 +1903,127 @@ void opdet::PosRecoCVNProducer::ApplyFinalEnergyFilter(){
   _mc_dEpromy_final.clear();
   _mc_dEpromz_final.clear();
   _mc_dEtpc_final.clear();
-  
-  // Check if we have valid selected data
-  if(_mc_dEpromx_sel.empty() || _mc_dEpromy_sel.empty() || 
-     _mc_dEpromz_sel.empty() || _mc_dEtpc_sel.empty()) {
-    if(fVerbosity > 0) {
-      std::cout << "Final energy filter: No selected energy data available" << std::endl;
-    }
-    return;
-  }
-  
-  // Apply energy deposition mask: 
-  // (dEpromx != -999) & (dEpromy != -999) & (dEpromz != -999) & (dEtpc > 50)
-  // + position cuts: dEpromx in (-200,200), dEpromy in (-200,200), dEpromz in (0,500)
-  bool passEnergyFilter = false;
-  
-  // Check all selected TPC data (typically just one after flash selection)
-  for(size_t i = 0; i < _mc_dEpromx_sel.size(); ++i) {
-    bool validX = (_mc_dEpromx_sel[i] != fDefaultSimIDE);
-    bool validY = (_mc_dEpromy_sel[i] != fDefaultSimIDE);  
-    bool validZ = (_mc_dEpromz_sel[i] != fDefaultSimIDE);
-    bool energyCut = (_mc_dEtpc_sel[i] > 50.0);
-    
-    // Position cuts - matching training data filters
-    bool positionCutX = (_mc_dEpromx_sel[i] >= -200.0 && _mc_dEpromx_sel[i] <= 200.0);
-    bool positionCutY = (_mc_dEpromy_sel[i] >= -200.0 && _mc_dEpromy_sel[i] <= 200.0);
-    bool positionCutZ = (_mc_dEpromz_sel[i] >= 0.0 && _mc_dEpromz_sel[i] <= 500.0);
-    
-    if(validX && validY && validZ && energyCut && positionCutX && positionCutY && positionCutZ) {
-      passEnergyFilter = true;
-      // Store the passing values
-      _mc_dEpromx_final.push_back(_mc_dEpromx_sel[i]);
-      _mc_dEpromy_final.push_back(_mc_dEpromy_sel[i]);
-      _mc_dEpromz_final.push_back(_mc_dEpromz_sel[i]);
-      _mc_dEtpc_final.push_back(_mc_dEtpc_sel[i]);
-      
+
+  bool passFilter = false;
+
+  // Different filtering logic for testing vs inference mode
+  if(fProcessingMode == "testing") {
+    // Testing mode: Use ground truth energy filter (original logic)
+
+    // Check if we have valid selected data
+    if(_mc_dEpromx_sel.empty() || _mc_dEpromy_sel.empty() ||
+       _mc_dEpromz_sel.empty() || _mc_dEtpc_sel.empty()) {
       if(fVerbosity > 0) {
-        std::cout << "Energy and position filters passed: dE=" << _mc_dEtpc_sel[i] 
-                  << " MeV, pos=(" << _mc_dEpromx_sel[i] << "," 
-                  << _mc_dEpromy_sel[i] << "," << _mc_dEpromz_sel[i] << ")" << std::endl;
-        std::cout << "  Position cuts: X(" << _mc_dEpromx_sel[i] << " in [-200,200]), "
-                  << "Y(" << _mc_dEpromy_sel[i] << " in [-200,200]), "
-                  << "Z(" << _mc_dEpromz_sel[i] << " in [0,500])" << std::endl;
+        std::cout << "Final energy filter: No selected energy data available" << std::endl;
       }
-      break; // Only need one passing entry
+      return;
+    }
+
+    // Apply energy deposition mask:
+    // (dEpromx != -999) & (dEpromy != -999) & (dEpromz != -999) & (dEtpc > 50)
+    // + position cuts: dEpromx in (-200,200), dEpromy in (-200,200), dEpromz in (0,500)
+
+    // Check all selected TPC data (typically just one after flash selection)
+    for(size_t i = 0; i < _mc_dEpromx_sel.size(); ++i) {
+      bool validX = (_mc_dEpromx_sel[i] != fDefaultSimIDE);
+      bool validY = (_mc_dEpromy_sel[i] != fDefaultSimIDE);
+      bool validZ = (_mc_dEpromz_sel[i] != fDefaultSimIDE);
+      bool energyCut = (_mc_dEtpc_sel[i] > 50.0);
+
+      // Position cuts - matching training data filters
+      bool positionCutX = (_mc_dEpromx_sel[i] >= -200.0 && _mc_dEpromx_sel[i] <= 200.0);
+      bool positionCutY = (_mc_dEpromy_sel[i] >= -200.0 && _mc_dEpromy_sel[i] <= 200.0);
+      bool positionCutZ = (_mc_dEpromz_sel[i] >= 0.0 && _mc_dEpromz_sel[i] <= 500.0);
+
+      if(validX && validY && validZ && energyCut && positionCutX && positionCutY && positionCutZ) {
+        passFilter = true;
+        // Store the passing values
+        _mc_dEpromx_final.push_back(_mc_dEpromx_sel[i]);
+        _mc_dEpromy_final.push_back(_mc_dEpromy_sel[i]);
+        _mc_dEpromz_final.push_back(_mc_dEpromz_sel[i]);
+        _mc_dEtpc_final.push_back(_mc_dEtpc_sel[i]);
+
+        if(fVerbosity > 0) {
+          std::cout << "Energy and position filters passed: dE=" << _mc_dEtpc_sel[i]
+                    << " MeV, pos=(" << _mc_dEpromx_sel[i] << ","
+                    << _mc_dEpromy_sel[i] << "," << _mc_dEpromz_sel[i] << ")" << std::endl;
+          std::cout << "  Position cuts: X(" << _mc_dEpromx_sel[i] << " in [-200,200]), "
+                    << "Y(" << _mc_dEpromy_sel[i] << " in [-200,200]), "
+                    << "Z(" << _mc_dEpromz_sel[i] << " in [0,500])" << std::endl;
+        }
+        break; // Only need one passing entry
+      }
+    }
+  } else {
+    // Inference mode: Use PE-based quality filter
+
+    if(_flash_ophit_pe_sel.empty()) {
+      if(fVerbosity > 0) {
+        std::cout << "Final PE filter: No selected flash data available" << std::endl;
+      }
+      return;
+    }
+
+    // Calculate total PE from selected flashes
+    double total_pe = 0.0;
+    int num_channels = 0;
+
+    for(const auto& flash_pe : _flash_ophit_pe_sel) {
+      for(float pe : flash_pe) {
+        total_pe += pe;
+        num_channels++;
+      }
+    }
+
+    // Quality filter based on PE thresholds
+    // Minimum total PE threshold (tunable parameter - lowered for testing)
+    double min_pe_threshold = 100.0;  // Reduced from 1000 for testing
+    // Minimum number of channels with signal
+    int min_channels = 3;  // Reduced from 5 for testing
+
+    bool pe_cut = (total_pe > min_pe_threshold);
+    bool channel_cut = (num_channels >= min_channels);
+
+    if(fVerbosity > 0) {
+      std::cout << "PE filter evaluation: total_pe=" << total_pe << ", channels=" << num_channels << std::endl;
+      std::cout << "  Thresholds: min_pe=" << min_pe_threshold << ", min_channels=" << min_channels << std::endl;
+      std::cout << "  Results: pe_cut=" << pe_cut << ", channel_cut=" << channel_cut << std::endl;
+    }
+
+    if(pe_cut && channel_cut) {
+      passFilter = true;
+
+      if(fVerbosity > 0) {
+        std::cout << "PE filter PASSED: total_pe=" << total_pe
+                  << " (>" << min_pe_threshold << "), channels=" << num_channels
+                  << " (>=" << min_channels << ")" << std::endl;
+      }
+    } else {
+      if(fVerbosity > 0) {
+        std::cout << "PE filter FAILED: total_pe=" << total_pe
+                  << " (need >" << min_pe_threshold << "), channels=" << num_channels
+                  << " (need >=" << min_channels << ")" << std::endl;
+      }
     }
   }
-  
-  if(passEnergyFilter) {
-    // Copy flash data if energy filter passes
+
+  if(passFilter) {
+    // Copy flash data if filter passes
     _flash_ophit_pe_final = _flash_ophit_pe_sel;
     _flash_ophit_ch_final = _flash_ophit_ch_sel;
     _flash_ophit_time_final = _flash_ophit_time_sel;
-    
-    // Copy neutrino data
+
+    // Copy neutrino data (may be empty in inference mode)
     _nuvT_final = _nuvT;
     _nuvZ_final = _nuvZ;
-    
+
     if(fVerbosity > 0) {
-      std::cout << "Final energy filter: Event PASSED - " 
+      std::cout << "Final filter (" << fProcessingMode << " mode): Event PASSED - "
                 << _flash_ophit_pe_final.size() << " flashes retained" << std::endl;
     }
   } else {
     if(fVerbosity > 0) {
-      std::cout << "Final energy filter: Event FAILED - no valid energy deposition (>50 MeV)" << std::endl;
+      std::cout << "Final filter (" << fProcessingMode << " mode): Event FAILED" << std::endl;
     }
   }
 }

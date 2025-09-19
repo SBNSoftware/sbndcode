@@ -42,12 +42,21 @@ physics:
       KeepPDGCode: []  # empty = keep all particles
       SaveOpHits: true
       
+
       # PMT maps are auto-discovered by the module
 
       # TensorFlow Configuration
       RunInference: true
       # Model path is auto-discovered by the module
-     
+
+      # Processing Mode Configuration
+      # "testing" = calculate ground truth + prediction (default behavior)
+      # "inference" = only run inference, skip ground truth calculation
+      ProcessingMode: "inference"
+
+      # Save PixelMapVars product (images + metadata) to output file
+      SavePixelMapVars: false  
+
       InputNames: []
       OutputNames: []
       
@@ -76,8 +85,7 @@ outputs:
     streamName: "out"
     outputCommands: [
       "drop *",
-      "keep PixelMapVars_opanatree__PosRecoCVNProd*",
-      "keep *_TFileService_*_*"
+      "keep PixelMapVars_opanatree__PosRecoCVNProd*"
     ]
   }
 }
