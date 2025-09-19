@@ -143,6 +143,7 @@ private:
   std::vector<int> fG4BeamWindow;
   std::vector<int> fKeepPDGCode;
   bool fSaveOpHits;
+  bool fSavePixelMapVars;
   int fVerbosity;
   std::string fCoatedPMTMapPath;
   std::string fUncoatedPMTMapPath;
@@ -150,6 +151,7 @@ private:
   // TensorFlow model parameters
   std::string fModelPath;
   bool fRunInference;
+  std::string fProcessingMode;
   std::vector<std::string> fInputNames;
   std::vector<std::string> fOutputNames;
   double fCustomNormFactor;
