@@ -30,7 +30,7 @@ LightPropagationCorrection:
     FlashFinderAlgo: @local::SBNDSimpleFlash.FlashFinderAlgo
 
     SaveSPECTDC: true
-    SaveCorrectionTree: true
+    SaveCorrectionTree: false
 
     NuScoreThreshold: 0.1
     FMScoreThreshold: 0.001

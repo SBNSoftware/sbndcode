@@ -117,14 +117,12 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
     // PFP Metadata
     art::FindManyP<larpandoraobj::PFParticleMetadata> pfp_to_metadata(pfpHandle, e, fReco2Label);
 
-
     // --- Store candidate slices
     std::vector< art::Ptr<recob::Slice> > sliceVect;
     art::fill_ptr_vector(sliceVect, sliceHandle);
 
     //Vector for recob PFParticles
     std::vector<art::Ptr<recob::PFParticle>> pfpVect;
-
     // --- Get the candidate slices
     for(size_t ix=0; ix<sliceVect.size(); ix++){
         ResetSliceInfo();
@@ -142,19 +140,17 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                 const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = pfp_to_metadata.at(pfp->Self());
                 for (auto const pfpMeta : pfpMetaVec) {
                     larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
-                    _fNuScore = propertiesMap.at("NuScore");
+                    if (propertiesMap.count("NuScore")) _fNuScore = propertiesMap.at("NuScore");
                     if(_fNuScore>_sliceMaxNuScore) _sliceMaxNuScore = _fNuScore;
                 }
             }
-
             std::vector< art::Ptr<recob::Vertex> > vertexVec = pfp_vertex_assns.at(pfp.key());
             for(const art::Ptr<recob::Vertex> &ver : vertexVec){
                 geo::Point_t xyz_vertex = ver->position();
                 fRecoVx= xyz_vertex.X();
                 fRecoVy= xyz_vertex.Y();
                 fRecoVz= xyz_vertex.Z();
-            }
-            
+            }            
             // If correct light propagation time
 
 
@@ -204,7 +200,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             ResetSliceInfo();
             continue; // Skip to the next slice if the nu score is below threshold
         }
-        
         this->GetPropagationTimeCorrectionPerChannel();
         
         // Get the SPECTDC product required to go to the RWM reference frame
@@ -225,7 +220,6 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
                 if(ch == 4) fEventTriggerTime = ts%uint64_t(1e9);
             }
         }
-        
         // Get all the OpT0 objects associated to the slice
         std::vector<art::Ptr<recob::OpFlash>> flashFM;
         if(fFlashMatchingTool == "OpT0Finder" ){
@@ -320,8 +314,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             this->FillCorrectionTree(newFlashTime, *flashFM[0], oldOpHitList, newOpHitList);
         }
     }
-    
-    fTree->Fill();
+    if(fSaveCorrectionTree) fTree->Fill();
     ResetEventVars();
     e.put(std::move(correctedOpFlashTimes));
     e.put(std::move(newCorrectedOpFlashTimingSliceAssn));
@@ -362,7 +355,6 @@ void sbnd::LightPropagationCorrection::beginJob()
 
 void sbnd::LightPropagationCorrection::endJob()
 {
-
 }
 
 void sbnd::LightPropagationCorrection::ResetEventVars()
@@ -426,10 +418,10 @@ size_t sbnd::LightPropagationCorrection::HighestBFMScoreIdx(const std::vector< a
 
 void sbnd::LightPropagationCorrection::ResetSliceInfo()
 {
-    _fNuScore=0.0;
-    fRecoVx = 0.0;
-    fRecoVy = 0.0;
-    fRecoVz = 0.0;
+    _fNuScore=-99999.0;
+    fRecoVx = -99999.0;
+    fRecoVy = -99999.0;
+    fRecoVz = -99999.0;
     fSpacePointX.clear();
     fSpacePointY.clear();
     fSpacePointZ.clear();
@@ -452,7 +444,6 @@ void sbnd::LightPropagationCorrection::GetPropagationTimeCorrectionPerChannel()
         double _opDetY = fOpDetY[opdet];
         double _opDetZ = fOpDetZ[opdet];
         float minPropTime = 999999999.;
-        
         for(size_t sp=0; sp<fSpacePointX.size(); sp++)
         {
             double dx = fSpacePointX[sp] - _opDetX;
