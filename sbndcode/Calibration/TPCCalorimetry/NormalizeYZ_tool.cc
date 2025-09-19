@@ -133,7 +133,7 @@ namespace sbnd {
         return dQdx;
       }
       
-      return dQdx / scale;
+      return dQdx*scale;
     }
     
     DEFINE_ART_CLASS_TOOL(NormalizeYZ)
