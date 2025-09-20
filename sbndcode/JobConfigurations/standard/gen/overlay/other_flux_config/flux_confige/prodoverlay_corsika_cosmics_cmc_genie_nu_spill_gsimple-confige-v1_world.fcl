@@ -1,0 +1,9 @@
+#include "prodgenie_bnb_nu_cosmic_sbnd.fcl"
+
+physics.producers.generator: {
+     @table::physics.producers.generator
+     @table::sbnd_flux_bnb_nu_Ev1
+     EventsPerSpill: 0
+     TopVolume: "volWorld"
+     FluxUpstreamZ: -18 #Start the flux rays at 18m upstream of the TPC frontface.  Chosen as this is the distance a muon of 8 GeV (max flux sim. energy) can travel
+}

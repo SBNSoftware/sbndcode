@@ -1,0 +1,6 @@
+#include "wirecell_sim_sp_sbnd.fcl"
+
+process_name: WCLSVar
+
+physics.producers.simtpc2d.wcls_main.structs.DL: 3.6
+physics.producers.simtpc2d.wcls_main.structs.DT: 8.8

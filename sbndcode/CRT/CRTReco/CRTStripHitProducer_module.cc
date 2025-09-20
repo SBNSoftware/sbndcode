@@ -53,6 +53,7 @@ public:
   std::set<uint32_t> UnixSet(const std::vector<art::Ptr<FEBData>> &datas);
   bool SPECTDCReference(art::Event& e, const uint64_t &raw_ts, uint64_t &ref_time);
   bool PTBHLTReference(art::Event& e, const uint64_t &raw_ts, uint64_t &ref_time, uint32_t &hlt_code);
+  std::bitset<32> TriggerWordBitset(uint32_t trig_word);
 
 private:
 
@@ -61,12 +62,9 @@ private:
   uint16_t              fADCThreshold;
   std::vector<double>   fErrorCoeff;
   bool                  fAllowFlag1;
-  bool                  fApplyTs0Window;
-  double                fTs0Min;
-  double                fTs0Max;
   bool                  fApplyTs1Window;
-  double                fTs1Min;
-  double                fTs1Max;
+  int64_t               fTs1Min;
+  int64_t               fTs1Max;
   bool                  fCorrectForDifferentSecond;
   bool                  fReferenceTs0;
   int                   fTimingType;
@@ -88,12 +86,9 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
-  , fApplyTs0Window(p.get<bool>("ApplyTs0Window"))
-  , fTs0Min(p.get<double>("Ts0Min", 0))
-  , fTs0Max(p.get<double>("Ts0Max", std::numeric_limits<double>::max()))
   , fApplyTs1Window(p.get<bool>("ApplyTs1Window"))
-  , fTs1Min(p.get<double>("Ts1Min", 0))
-  , fTs1Max(p.get<double>("Ts1Max", std::numeric_limits<double>::max()))
+  , fTs1Min(p.get<int64_t>("Ts1Min", 0))
+  , fTs1Max(p.get<int64_t>("Ts1Max", std::numeric_limits<int64_t>::max()))
   , fCorrectForDifferentSecond(p.get<bool>("CorrectForDifferentSecond"))
   , fReferenceTs0(p.get<bool>("ReferenceTs0"))
   , fTimingType(p.get<int>("TimingType", 0))
@@ -216,8 +211,8 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
   // Correct for FEB readout cable length
   // (time is FEB-by-FEB not channel-by-channel)
-  double t0 = (int)data->Ts0() + module.t0DelayCorrection;
-  double t1 = (int)data->Ts1() + module.t1DelayCorrection;
+  int64_t t0 = (int)data->Ts0() + (int)module.t0CableDelayCorrection;
+  int64_t t1 = (int)data->Ts1() + (int)module.t1CableDelayCorrection;
 
   if(fCorrectForDifferentSecond)
     {
@@ -228,26 +223,23 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
       if(unix_diff < -1 || unix_diff > 1)
         {
-          throw std::runtime_error(Form("Unix timestamps differ by more than 1 (%li)", unix_diff));
+          throw std::runtime_error("Unix timestamps differ by more than 1" + unix_diff);
         }
 
       if(unix_diff == 1)
         {
-          t0 -= 1e9;
+          t0 -= static_cast<int>(1e9);
           unixs += 1;
         }
       else if(unix_diff == -1)
         {
-          t0 += 1e9;
+          t0 += static_cast<int>(1e9);
           unixs -= 1;
         }
     }
 
   if(fReferenceTs0)
     t0 -= ref_time_ns;
-
-  if(fApplyTs0Window && (t0 < fTs0Min || t0 > fTs0Max))
-    return stripHits;
 
   if(fApplyTs1Window && (t1 < fTs1Min || t1 > fTs1Max))
     return stripHits;
@@ -262,9 +254,6 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       const CRTStripGeo strip = fCRTGeoAlg.GetStrip(channel);
       const CRTSiPMGeo sipm1  = fCRTGeoAlg.GetSiPM(channel);
       const CRTSiPMGeo sipm2  = fCRTGeoAlg.GetSiPM(channel+1);
-
-      if(sipm1.status == CRTChannelStatus::kDeadChannel || sipm2.status == CRTChannelStatus::kDeadChannel)
-        continue;
 
       // Subtract channel pedestals
       const uint16_t adc1 = sipm1.pedestal < sipm_adcs[adc_i]   ? sipm_adcs[adc_i] - sipm1.pedestal   : 0;
@@ -319,14 +308,14 @@ bool sbnd::crt::CRTStripHitProducer::SPECTDCReference(art::Event& e, const uint6
   std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> TDCVec;
   art::fill_ptr_vector(TDCVec, TDCHandle);
 
-  uint64_t min_diff    = std::numeric_limits<int64_t>::max();
+  int64_t min_diff     = std::numeric_limits<int64_t>::max();
   uint64_t min_diff_ts = 0;
 
   for(auto ts : TDCVec)
     {
       if(ts->Channel() == fSPECTDCETrigChannel)
         {
-          uint64_t diff = raw_ts > ts->Timestamp() ? raw_ts - ts->Timestamp() : ts->Timestamp() - raw_ts;
+          int64_t diff = raw_ts > ts->Timestamp() ? raw_ts - ts->Timestamp() : ts->Timestamp() - raw_ts;
 
           if(diff < min_diff)
             {
@@ -358,7 +347,7 @@ bool sbnd::crt::CRTStripHitProducer::PTBHLTReference(art::Event& e, const uint64
   std::vector<art::Ptr<raw::ptb::sbndptb>> PTBVec;
   art::fill_ptr_vector(PTBVec, PTBHandle);
 
-  uint64_t min_diff    = std::numeric_limits<int64_t>::max();
+  int64_t min_diff     = std::numeric_limits<int64_t>::max();
   uint64_t min_diff_ts = 0;
 
   for(auto ptb : PTBVec)
@@ -366,13 +355,13 @@ bool sbnd::crt::CRTStripHitProducer::PTBHLTReference(art::Event& e, const uint64
       for(auto hlt : ptb->GetHLTriggers())
         {
           uint64_t hlt_timestamp          = (hlt.timestamp * 20);
-          std::bitset<32> hlt_word_bitset = std::bitset<32>(hlt.trigger_word);
+          std::bitset<32> hlt_word_bitset = TriggerWordBitset(hlt.trigger_word);
 
           for(uint32_t allowed_hlt : fAllowedPTBHLTs)
             {
               if(hlt_word_bitset[allowed_hlt])
                 {
-                  uint64_t diff = raw_ts > hlt_timestamp ? raw_ts - hlt_timestamp : hlt_timestamp - raw_ts;
+                  int64_t diff = raw_ts > hlt_timestamp ? raw_ts - hlt_timestamp : hlt_timestamp - raw_ts;
 
                   if(diff < min_diff)
                     {
@@ -392,6 +381,17 @@ bool sbnd::crt::CRTStripHitProducer::PTBHLTReference(art::Event& e, const uint64
   ref_time = min_diff_ts;
 
   return found;
+}
+
+std::bitset<32> sbnd::crt::CRTStripHitProducer::TriggerWordBitset(uint32_t trig_word)
+{
+  uint32_t trig_word_dec;
+  std::stringstream ss;
+
+  ss << std::hex << trig_word << std::dec;
+  ss >> trig_word_dec;
+
+  return std::bitset<32>(trig_word_dec);
 }
 
 DEFINE_ART_MODULE(sbnd::crt::CRTStripHitProducer)

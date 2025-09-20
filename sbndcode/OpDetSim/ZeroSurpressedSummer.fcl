@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+zeroSurpressedPMTSummer:
+{
+  module_type: "SummedWaveformProducer"
+  InputModule: "pmtdecoder"
+  InputProcess: "PMTDecoder"
+  InputInstance: "PMTChannels"
+  BaselineADCValue: 14255
+  ADCThreshold: 8
+  HalfWindowSize: 20
+  nominal_length: 5000
+  pmtRawSumInstanceName: RawSummedWaveform
+
+}
+
+END_PROLOG

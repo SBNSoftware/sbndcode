@@ -1,0 +1,42 @@
+process_name: LLTFilter
+
+
+# Source is an art-ROOT file containing CAEN waveforms for each beam spill
+source: {
+  module_type: RootInput
+}
+
+services: 
+{
+}
+
+# Define and schedule filter/producer/analyzers
+physics:{
+
+  filters:{
+    LLTGrab: {
+                      module_type: "LLTEventGrabber"
+                      eventHLT: 1
+                      TrigWindowNs: 3000
+                      LLT: [21]
+                      PTBLabel: "ptbdecoder::DECODE"
+                    }
+  }
+
+  pass: [LLTGrab]
+  fail: []  
+  ana:            [ LLTGrab]
+  //trigger_paths:  [ ana ] 
+  stream1: [GoodEvent]
+  end_paths: [stream1]
+} # physics
+
+outputs:
+{
+  GoodEvent:
+  {
+    module_type: RootOutput
+    fileName: "%ifb_SuccessfulTriggers.root"
+    SelectEvents: [pass]
+  }
+}

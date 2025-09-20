@@ -217,6 +217,7 @@ namespace blip {
     
     h_recoWireEffQ_denom = hdir.make<TH1D>("recoWireEffQ_trueCount","Collection plane;Charge deposited on wire [e-];Count",80,0,20000);
     h_recoWireEffQ_num   = hdir.make<TH1D>("recoWireEffQ","Collection plane;Charge deposited on wire [e-];Hit reco efficiency",80,0,20000);
+
     spline_PSTAR = CreateSplinePSTAR();
   }
   
@@ -351,6 +352,7 @@ namespace blip {
     // -- geometry
     art::ServiceHandle<geo::Geometry> geom;
     art::ServiceHandle<geo::WireReadout> wireReadoutGeom;
+    
     // -- G4 particles
     art::Handle< std::vector<simb::MCParticle> > pHandle;
     std::vector<art::Ptr<simb::MCParticle> > plist;

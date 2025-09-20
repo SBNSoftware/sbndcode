@@ -1,5 +1,3 @@
-#include "calorimetry_sbnd.fcl"
-
 BEGIN_PROLOG
 
 # Main BlipAlg settings

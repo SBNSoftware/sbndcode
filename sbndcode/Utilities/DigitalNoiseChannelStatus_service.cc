@@ -17,6 +17,7 @@ sbnd::DigitalNoiseChannelStatus::DigitalNoiseChannelStatus(fhicl::ParameterSet c
   fDistFromPedestalRawDigit = p.get<int>("DistFromPedestalRawDigit",100);
   fNAwayFromPedestalRecobWire = p.get<int>("NAwayFromPedestalRecobWire",100);
   fDistFromPedestalRecobWire = p.get<float>("DistFromPedestalRecobWire",100);
+  fChannelsToInclude = p.get< std::vector<unsigned int> >("Channels");
   
   areg.sPreProcessEvent.watch(this, &sbnd::DigitalNoiseChannelStatus::pub_PrepEvent);
 }
@@ -80,6 +81,11 @@ void sbnd::DigitalNoiseChannelStatus::pub_PrepEvent(const art::Event& evt, art::
       auto const& rbwires = evt.getProduct<std::vector<recob::Wire>>(fRecobWireLabel);
       for (const auto& rw : rbwires)
 	{
+	  if(fChannelsToInclude.size()>0)
+	  {
+		//Check if the current channel is included or not
+		if( !std::count(fChannelsToInclude.begin(), fChannelsToInclude.end(), (unsigned int) rw.Channel() ) ) continue;
+	  }
 	  bool chanbad = false;
 	  auto rms = TMath::RMS(rw.NSignal(),rw.Signal().data());
 	  chanbad |= (rms > fRMSCutWire);

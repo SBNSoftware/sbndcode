@@ -1,0 +1,17 @@
+BEGIN_PROLOG 
+
+MichelETagger: 
+{
+    module_type: "michelETagger"
+    GaussianConvlSize: 61 #samples
+    GaussianConvlWidth: 30 #samples
+    CoincidentWindow: 500 #ns 
+    TotalCAENBoards: 8 
+    PMTPerBoard: [10, 13, 12, 7, 9, 10, 11, 12]
+    CRTclusterLabel: "crtclustering"
+    PMTLabel: "opdecopmt"
+    MuonADCCutoff: 100
+    MichelADCCutoff: 10
+}
+
+END_PROLOG

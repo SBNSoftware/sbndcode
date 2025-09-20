@@ -1,0 +1,16 @@
+#include "gennufilter.fcl"
+#include "prodoverlay_corsika_cosmics_cmc_genie_nu_spill_gsimple-confige-v1_world.fcl"
+
+#Uncomment for running locally
+#physics.producers.generator.FluxCopyMethod: "DIRECT"
+
+physics.filters.filter: @local::sbnd_gennufilter
+physics.filters.filter.VtxInTPC: true
+physics.filters.filter.LepPDGs:  [0]
+physics.filters.filter.CC:       true
+physics.filters.filter.NC:       true
+
+physics.simulate: [ rns, generator, corsika, filter ]
+
+outputs.out1.SelectEvents: [ "simulate" ]
+
