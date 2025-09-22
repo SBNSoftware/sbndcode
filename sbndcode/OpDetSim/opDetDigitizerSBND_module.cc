@@ -201,7 +201,8 @@ namespace opdet {
     std::vector<std::vector<raw::OpDetWaveform>> fTriggeredWaveforms;
     std::vector<std::thread> fWorkerThreads;
     std::vector<std::vector<raw::OpDetWaveform>> fSlicedWaveformsAll;
-    //std::vector<std::vector<int>> fMonPulsesAll;
+    std::vector<int> fMonPulsesFlat;
+    std::vector<int> pulseSizes;
 
     // product containers
     std::vector<art::Handle<std::vector<sim::SimPhotonsLite>>> fPhotonLiteHandles;
@@ -315,7 +316,8 @@ namespace opdet {
     produces<bool>("triggerEmulation");
     produces<int>("pairsOverThreshold");
     produces< std::vector< raw::OpDetWaveform > >("slicedWaveforms");
-    //produces< std::vector< std::vector<int> > >("MonPulses");
+    produces< std::vector<int> >("MonPulses");
+    produces< std::vector<int> >("MonPulseSizes");
   }
 
   opDetDigitizerSBND::~opDetDigitizerSBND()
@@ -364,7 +366,8 @@ namespace opdet {
 
       // clear previous
       fSlicedWaveformsAll.clear();
-      //fMonPulsesAll.clear();
+      fMonPulsesFlat.clear();
+      pulseSizes.clear();
       // find the trigger locations for the waveforms using the LArService
       if (!fWaveforms.empty()) {
           // Implement service
@@ -396,7 +399,8 @@ namespace opdet {
               std::vector<std::vector<int>> fSlicedMonPulse = sliceMonPulse(MonPulse, MonPulseThresh, tickPeriod, ticksPerSlice, PercentTicksBeforeCross);
 
               fSlicedWaveformsAll.push_back(std::move(fSlicedWaveforms));
-              //fMonPulsesAll.push_back(*MonPulse);
+              fMonPulsesFlat.insert(fMonPulsesFlat.end(), (*MonPulse).begin(), (*MonPulse).end());
+              pulseSizes.push_back(MonPulse->size());
 
               if (SaveNewPlots) {
                   // Save histograms
@@ -503,15 +507,12 @@ namespace opdet {
 
 
           // put MonPulses in the event
-          /*auto MonPulsesPtr = std::make_unique<std::vector<int>>();
-          for (auto& pulses : fMonPulsesAll) { 
-              MonPulsesPtr->reserve(MonPulsesPtr->size() + pulses.size());
-              std::move(pulses.begin(), pulses.end(), std::back_inserter(*MonPulsesPtr));
-          }
-          // clean up the vector
-          for (auto& pulses : fMonPulsesAll) pulses.clear();
-          // put the waveforms in the event
-          e.put(std::move(MonPulsesPtr), "MonPulses");*/
+          auto flatPtr = std::make_unique<std::vector<int>>(std::move(fMonPulsesFlat));
+          e.put(std::move(flatPtr), "MonPulses");
+
+          // put pulseSizes in the event
+          auto sizesPtr = std::make_unique<std::vector<int>>(std::move(pulseSizes));
+          e.put(std::move(sizesPtr), "MonPulseSizes");
 
       } else std::cout << "Empty waveforms found on event " << e.id().event() << "  " << fWaveforms.empty() << std::endl; 
     }
