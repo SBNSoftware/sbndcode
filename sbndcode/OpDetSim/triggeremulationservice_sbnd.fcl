@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+
+sbnd_triggeremulation_service: {
+  TFileService:         { fileName: "opDetDigitizerRes.root" }
+  TriggerEmulationService: {
+    service_type: TriggerEmulationService
+    MonWidth: 12
+    TotalCAENBoards: 10
+    PMTPerBoard: 16
+    Baseline: 14250
+    MC: true
+  }
+}
+
+END_PROLOG
