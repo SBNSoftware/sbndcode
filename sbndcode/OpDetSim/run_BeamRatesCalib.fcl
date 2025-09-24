@@ -15,8 +15,8 @@ services:
   TriggerEmulationService: {
     service_type: TriggerEmulationService
     MonWidth: 12
-    TotalCAENBoards: 10
-    PMTPerBoard: 16
+    TotalCAENBoards: 8
+    PMTPerBoard: 15
     Baseline: 14250
     MC: false
   }

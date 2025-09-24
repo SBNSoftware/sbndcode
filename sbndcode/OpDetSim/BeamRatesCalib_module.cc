@@ -195,8 +195,7 @@ namespace opdet { //OpDet means optical detector
     fMTCAStart        = p.get<int>("MTCAStart", 3);
     fMTCAStop        = p.get<int>("MTCAStop", 64);
     fMTCAStep        = p.get<int>("MTCAStep", 1);
-    //PMTPerBoard=15;
-    PMTPerBoard=16;
+    PMTPerBoard=15;
     fBeamWindowStart = p.get<int>("BeamWindowStart", 828+680);
     fBeamWindowEnd = p.get<int>("BeamWindowEnd", 1688+680);
     fSaveAllMON = p.get<bool>("SaveAllMon", false);
@@ -205,8 +204,7 @@ namespace opdet { //OpDet means optical detector
     fOpDetsToPlot    = p.get<std::vector<std::string> >("OpDetsToPlot");
     fCheckSoftTrig = p.get<bool>("CheckSoftTrig", false);
     fSoftTrigLabel = p.get<std::string>("SoftTrigLabel", "pmtmetricproducer:");
-    //fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
-    fTotalCAENBoards = p.get<int>("TotalCAENBoards", 10);
+    fTotalCAENBoards = p.get<int>("TotalCAENBoards", 8);
     fPTBLabel = p.get< std::string >("PTBLabel",  "ptbdecoder::DECODE");
     fTriggerProdCheck = p.get<bool>("TriggerProdCheck", false);
     fNominalWaveformSize = p.get<int>("NominalWaveformSize", 5000);
@@ -475,8 +473,9 @@ namespace opdet { //OpDet means optical detector
       int WaveIndex = FlashCounter*PMTPerBoard;
       int WaveformSize = (*waveHandle)[WaveIndex].size();
       std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); // add a waveform size getter?
-      if(!fSaveAllMON) fTriggerService->ConstructMonPulse(*waveHandle, MonThreshold, MonPulse, true, FlashCounter);
-      else fTriggerService->ConstructMonPulse(*waveHandle, MonThreshold, MonPulse, false, FlashCounter); //Dont save individual channels for now
+      if(!fSaveAllMON) fTriggerService->ConstructMonPulse(*waveHandle, MonThreshold, MonPulse, FlashCounter);
+      else fTriggerService->ConstructMonPulse(*waveHandle, MonThreshold, MonPulse, FlashCounter);
+      // Save MonPulses
       std::stringstream histname;
       if(GoodFlashIndex==FlashCounter) histname << "event_" << EventCounter <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter << "_TriggerPulse";
       else histname << "event_" << EventCounter <<"_Mon"<<"_"<<MonThreshold << "_"<<FlashCounter;
@@ -548,7 +547,7 @@ namespace opdet { //OpDet means optical detector
           //Loop over the entries in our waveform vector
           //We care about getting the pairing correct
           std::vector<int> *MonPulse = new std::vector<int>(WaveformSize); 
-          fTriggerService->ConstructMonPulse(*waveHandle, MONThresholds[i], MonPulse, false, FlashCounter);
+          fTriggerService->ConstructMonPulse(*waveHandle, MONThresholds[i], MonPulse, FlashCounter);
           //Constructed MON pulse now lets compare it to the MTCA requirement
           //Flash just before beam gate can offset waveform
           //int WaveformOffset = (*waveHandle)[WaveIndex].TimeStamp()*1000 - fNominalGoodStart; //Waveform timestamps are in us // Also delivers time of sample 0 //ns

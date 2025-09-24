@@ -132,9 +132,9 @@ namespace opdet {
         Comment("Threshold")
       };
 
-      fhicl::Atom<int> MonPulseThresh{
-        Name("MonPulseThresh"),
-        Comment("Threshold for MonPulse (to determine interesting trigger)")
+      fhicl::Atom<int> PairMultiplicityThreshold{
+        Name("PairMultiplicityThreshold"),
+        Comment("Threshold for pair count threshold for event/flash triggers (to determine interesting trigger)")
       };
 
       fhicl::Atom<bool> SaveNewPlots{
@@ -171,14 +171,13 @@ namespace opdet {
     std::vector<raw::OpDetWaveform> sliceWaveforms(std::vector<raw::OpDetWaveform> fWaveforms,
                                                         int WaveIndex,
                                                         std::vector<int> *MonPulse,
-                                                        int MonPulseThresh,
+                                                        int PairMultiplicityThreshold,
                                                         double tickPeriod,
                                                         int ticksPerSlice,
                                                         float PercentTicksBeforeCross,
                                                         int PMTPerBoard); 
     std::vector<std::vector<int>> sliceMonPulse(std::vector<int> *MonPulse,
-                                                        int MonPulseThresh,
-                                                        double tickPeriod,
+                                                        int PairMultiplicityThreshold,
                                                         int ticksPerSlice,
                                                         float PercentTicksBeforeCross); 
     void PlotWaveforms(const std::vector<raw::OpDetWaveform>& waveforms,
@@ -200,8 +199,8 @@ namespace opdet {
     std::vector<opdet::opDetDigitizerWorker> fWorkers;
     std::vector<std::vector<raw::OpDetWaveform>> fTriggeredWaveforms;
     std::vector<std::thread> fWorkerThreads;
-    std::vector<std::vector<raw::OpDetWaveform>> fSlicedWaveformsAll;
-    std::vector<int> fMonPulsesFlat;
+    std::vector<std::vector<raw::OpDetWaveform>> SlicedWaveformsAll;
+    std::vector<int> MonPulsesFlat;
     std::vector<int> pulseSizes;
 
     // product containers
@@ -219,7 +218,7 @@ namespace opdet {
     int ticksPerSlice;
     float PercentTicksBeforeCross; 
     int MonThreshold;
-    int MonPulseThresh;
+    int PairMultiplicityThreshold;
     bool SaveNewPlots;
     bool SaveOldPlots;
   };
@@ -234,7 +233,7 @@ namespace opdet {
     , ticksPerSlice(config().ticksPerSlice())
     , PercentTicksBeforeCross(config().PercentTicksBeforeCross())
     , MonThreshold(config().MonThreshold())
-    , MonPulseThresh(config().MonPulseThresh())
+    , PairMultiplicityThreshold(config().PairMultiplicityThreshold())
     , SaveNewPlots(config().SaveNewPlots())
     , SaveOldPlots(config().SaveOldPlots())
   {
@@ -365,8 +364,8 @@ namespace opdet {
     if (fApplyTriggers) {
 
       // clear previous
-      fSlicedWaveformsAll.clear();
-      fMonPulsesFlat.clear();
+      SlicedWaveformsAll.clear();
+      MonPulsesFlat.clear();
       pulseSizes.clear();
       // find the trigger locations for the waveforms using the LArService
       if (!fWaveforms.empty()) {
@@ -390,25 +389,25 @@ namespace opdet {
     
               int pairThisFlash = 0;
               // Send 3ms waveforms to ConstructMonPulse
-              fTriggerService->ConstructMonPulse(fWaveforms, MonThreshold, MonPulse, false, FlashCounter, &pairThisFlash);
+              fTriggerService->ConstructMonPulse(fWaveforms, MonThreshold, MonPulse, FlashCounter, &pairThisFlash);
               numPairsOverThreshold = numPairsOverThreshold + pairThisFlash;
 
               double tickPeriod = sampling_rate(clockData);
 
-              std::vector<raw::OpDetWaveform> fSlicedWaveforms = sliceWaveforms(fWaveforms, WaveIndex, MonPulse, MonPulseThresh, tickPeriod, ticksPerSlice, PercentTicksBeforeCross, PMTPerBoard);
-              std::vector<std::vector<int>> fSlicedMonPulse = sliceMonPulse(MonPulse, MonPulseThresh, tickPeriod, ticksPerSlice, PercentTicksBeforeCross);
+              std::vector<raw::OpDetWaveform> SlicedWaveforms = sliceWaveforms(fWaveforms, WaveIndex, MonPulse, PairMultiplicityThreshold, tickPeriod, ticksPerSlice, PercentTicksBeforeCross, PMTPerBoard);
+              std::vector<std::vector<int>> SlicedMonPulse = sliceMonPulse(MonPulse, PairMultiplicityThreshold, ticksPerSlice, PercentTicksBeforeCross);
 
-              fSlicedWaveformsAll.push_back(std::move(fSlicedWaveforms));
-              fMonPulsesFlat.insert(fMonPulsesFlat.end(), (*MonPulse).begin(), (*MonPulse).end());
+              SlicedWaveformsAll.push_back(std::move(SlicedWaveforms));
+              MonPulsesFlat.insert(MonPulsesFlat.end(), (*MonPulse).begin(), (*MonPulse).end());
               pulseSizes.push_back(MonPulse->size());
 
               if (SaveNewPlots) {
                   // Save histograms
                   // Sliced waveforms
-                  for (size_t j; j < fSlicedWaveformsAll.size(); ++j) { 
+                  for (size_t j; j < SlicedWaveformsAll.size(); ++j) { 
                       std::stringstream plotname2; 
                       plotname2 << "Sliced_waveforms_" << e.id().event() << "_Mon_" << MonThreshold << "_" << FlashCounter << "_slice" << j;
-                      PlotWaveforms(fSlicedWaveformsAll[j], plotname2.str());
+                      PlotWaveforms(SlicedWaveformsAll[j], plotname2.str());
                   }
                   // Long MonPulse
                   std::stringstream histname;
@@ -419,8 +418,8 @@ namespace opdet {
                       MonHist->SetBinContent(i + 1, (*MonPulse)[i]);
                   }
                   // Sliced MonPulse
-                  for (size_t idx = 0; idx < fSlicedMonPulse.size(); ++idx) {
-                      auto const& vec = fSlicedMonPulse[idx];
+                  for (size_t idx = 0; idx < SlicedMonPulse.size(); ++idx) {
+                      auto const& vec = SlicedMonPulse[idx];
                       std::stringstream histname;
                       histname << "Sliced_event_" << e.id().event() << "_Mon_" << MonThreshold << "_" << FlashCounter << "_slice" << idx;
 
@@ -480,8 +479,8 @@ namespace opdet {
 
           // put boolean trigger result in the event
           bool passedTrigger = false;
-          // passes trigger if any of the fSlicedWaveforms have size > 0 
-          for (auto wav : fSlicedWaveformsAll) if (wav.size() > 0) passedTrigger = true;
+          // passes trigger if any of the SlicedWaveforms have size > 0 
+          for (auto wav : SlicedWaveformsAll) if (wav.size() > 0) passedTrigger = true;
           auto triggerFlag = std::make_unique<bool>(passedTrigger);
           e.put(std::move(triggerFlag), "triggerEmulation");
 
@@ -493,21 +492,21 @@ namespace opdet {
 
           // put sliced waveforms in the event
           std::unique_ptr< std::vector< raw::OpDetWaveform > > SlicedWaveformsPtr(std::make_unique< std::vector< raw::OpDetWaveform > > ());
-          for (std::vector<raw::OpDetWaveform> &waveforms : fSlicedWaveformsAll) {
+          for (std::vector<raw::OpDetWaveform> &waveforms : SlicedWaveformsAll) {
             // move sliced waveforms into the SlicedWaveformsPtr
             SlicedWaveformsPtr->reserve(SlicedWaveformsPtr->size() + waveforms.size());
             std::move(waveforms.begin(), waveforms.end(), std::back_inserter(*SlicedWaveformsPtr));
           }
           // clean up the vector
-          for (unsigned i = 0; i < fSlicedWaveformsAll.size(); i++) {
-            fSlicedWaveformsAll[i] = std::vector<raw::OpDetWaveform>();
+          for (unsigned i = 0; i < SlicedWaveformsAll.size(); i++) {
+            SlicedWaveformsAll[i] = std::vector<raw::OpDetWaveform>();
           }
           // put the waveforms in the event
           e.put(std::move(SlicedWaveformsPtr), "slicedWaveforms");
 
 
           // put MonPulses in the event
-          auto flatPtr = std::make_unique<std::vector<int>>(std::move(fMonPulsesFlat));
+          auto flatPtr = std::make_unique<std::vector<int>>(std::move(MonPulsesFlat));
           e.put(std::move(flatPtr), "MonPulses");
 
           // put pulseSizes in the event
@@ -534,146 +533,115 @@ namespace opdet {
   }//produce end
 
 
-  // sliced MonPulse function: same logic as sliceWaveforms function
-  std::vector<std::vector<int>> opDetDigitizerSBND::sliceMonPulse(std::vector<int> *MonPulse, 
-                                                        int MonPulseThresh, 
-                                                        double tickPeriod, 
-                                                        int ticksPerSlice, 
-                                                        float PercentTicksBeforeCross
-  )
-  { 
-              // Slice up each waveform into 10us chunks based on if "interesting" or not
-              // before and after crossing point (default is ~20% and ~80%)
-              int ticksBeforeCross = static_cast<int>(std::round(PercentTicksBeforeCross*ticksPerSlice));
-              int ticksAfterCross = ticksPerSlice-ticksBeforeCross;
-              // find interesting area
-              std::vector<std::pair<int,int>> interestIntervals;
-              std::vector<int> crossingPoints;
-              // clear
-              interestIntervals.clear();
-              crossingPoints.clear();
+  template <typename PulseContainer>
+  std::vector<std::pair<int,int>>
+  findInterestIntervals(const PulseContainer* pulse,
+                        int PairMultiplicityThreshold,
+                        int ticksBeforeCross,
+                        int ticksAfterCross)
+  {
+      // find interesting area
+      std::vector<std::pair<int,int>> interestIntervals;
+      std::vector<int> crossingPoints;
+      // clear initial variables
+      crossingPoints.clear();
+      interestIntervals.clear();
+      bool interest = false;
 
-              bool interest = false;
-              for (int i = 0; i < (int)MonPulse->size(); ++i) {
-                  // find crossing point
-                  if ((*MonPulse)[i] > MonPulseThresh && interest == false) {
-                      crossingPoints.push_back(i);
-                      interest = true;
-                  } else if ((*MonPulse)[i] <= MonPulseThresh) interest = false;
-              }    
+      for (int i = 0; i < static_cast<int>(pulse->size()); ++i) {
+          // find crossing point
+          if ((*pulse)[i] > PairMultiplicityThreshold && !interest) {
+              crossingPoints.push_back(i);
+              interest = true;
+          }
+          else if ((*pulse)[i] <= PairMultiplicityThreshold) {
+              interest = false;
+          }
+      }
 
-              // create 10us slices around crossingPoints
-              for (int j = 0; j < (int)crossingPoints.size(); ++j) {
-    
-                  // if near end of full waveform
-                  if (crossingPoints[j]+ticksAfterCross > static_cast<int>(MonPulse->size())) {
-                      interestIntervals.emplace_back(static_cast<int>(MonPulse->size())-ticksPerSlice, static_cast<int>(MonPulse->size()));
-                  } 
-                  // if near beginning of full waveform
-                  else if (crossingPoints[j]-ticksBeforeCross < 0) {
-                      interestIntervals.emplace_back(0, ticksPerSlice);
-                  }  
-                  else {
-                      // check if overlaps with previous interval
-                      if (!interestIntervals.empty()) {
-                          if (crossingPoints[j]-ticksBeforeCross < interestIntervals.back().second) {
-                              // if overlaps, extend interval
-                              interestIntervals.back() = {interestIntervals.back().first, crossingPoints[j]+ticksAfterCross};
-                          // if does not overlap, use typical interval length
-                          } else interestIntervals.emplace_back(crossingPoints[j]-ticksBeforeCross, crossingPoints[j]+ticksAfterCross);
-                      // if first, use typical interval length
-                      } else interestIntervals.emplace_back(crossingPoints[j]-ticksBeforeCross, crossingPoints[j]+ticksAfterCross);
-                  }
+      // create 10us (or given) slices around crossingPoints
+      for (int j = 0; j < static_cast<int>(crossingPoints.size()); ++j) {
+          // if near end of full waveform
+          if (crossingPoints[j] + ticksAfterCross > static_cast<int>(pulse->size())) {
+              interestIntervals.emplace_back(crossingPoints[j] - ticksBeforeCross, static_cast<int>(pulse->size()) - 1);
+          }
+          // if near beginning of full waveform
+          else if (crossingPoints[j] - ticksBeforeCross < 0) {
+              interestIntervals.emplace_back(0, crossingPoints[j] + ticksAfterCross);
+          }
+          else {
+              // check if overlaps with previous interval
+              if (!interestIntervals.empty() && crossingPoints[j] - ticksBeforeCross < interestIntervals.back().second) {
+                  // if overlaps, extend interval
+                  interestIntervals.back() = {interestIntervals.back().first, crossingPoints[j] + ticksAfterCross};
               }
-
-              std::vector<std::vector<int>> fSlicedMonPulses;
-              fSlicedMonPulses.clear();
-              // loop through intervals
-              for (auto [start, end] : interestIntervals) { 
-                  std::vector<int> sliceMonPulse((*MonPulse).begin() + start, (*MonPulse).begin() + end);
-                  if (!sliceMonPulse.empty()) {
-                      fSlicedMonPulses.push_back(std::move(sliceMonPulse));
-                  }
+              // if does not overlap or if first, use typical interval length
+              else {
+                  interestIntervals.emplace_back(crossingPoints[j] - ticksBeforeCross, crossingPoints[j] + ticksAfterCross);
               }
+          }
+      }
 
-      return fSlicedMonPulses;
+      return interestIntervals;
   }
 
 
+  // sliced MonPulses
+  std::vector<std::vector<int>> opDetDigitizerSBND::sliceMonPulse(
+                                    std::vector<int>* MonPulse,
+                                    int PairMultiplicityThreshold,
+                                    int ticksPerSlice,
+                                    float PercentTicksBeforeCross)
+  {
+      // before and after crossing point (default is ~20% and ~80%)
+      int ticksBeforeCross = static_cast<int>(std::round(PercentTicksBeforeCross*ticksPerSlice));
+      int ticksAfterCross  = ticksPerSlice - ticksBeforeCross;
+
+      // Slice up each waveform into 10us (or given) chunks based on if "interesting" or not
+      auto intervals = findInterestIntervals(MonPulse, PairMultiplicityThreshold, ticksBeforeCross, ticksAfterCross);
+
+      std::vector<std::vector<int>> SlicedMonPulses;
+      for (auto [start, end] : intervals) {
+          std::vector<int> slicedMonPulse(MonPulse->begin() + start, MonPulse->begin() + end);
+          if (!slicedMonPulse.empty()) SlicedMonPulses.push_back(std::move(slicedMonPulse));
+      }
+      return SlicedMonPulses;
+  }
+
   // sliceWaveforms function
-  std::vector<raw::OpDetWaveform> opDetDigitizerSBND::sliceWaveforms(std::vector<raw::OpDetWaveform> fWaveforms, 
-                                                        int WaveIndex, 
-                                                        std::vector<int> *MonPulse, 
-                                                        int MonPulseThresh, 
-                                                        double tickPeriod, 
-                                                        int ticksPerSlice, 
-                                                        float PercentTicksBeforeCross,
-                                                        int PMTPerBoard
-  )
-  { 
-              // Slice up each waveform into 10us chunks based on if "interesting" or not
-              // how many ticks correspond to 10us
-              // before and after crossing point (default is ~20% and ~80%)
-              int ticksBeforeCross = static_cast<int>(std::round(PercentTicksBeforeCross*ticksPerSlice));
-              int ticksAfterCross = ticksPerSlice-ticksBeforeCross;
-              // find interesting area
-              std::vector<std::pair<int,int>> interestIntervals;
-              std::vector<int> crossingPoints;
-              // clear initial variables
-              crossingPoints.clear();
-              interestIntervals.clear();
+  std::vector<raw::OpDetWaveform> opDetDigitizerSBND::sliceWaveforms(
+                                   std::vector<raw::OpDetWaveform> fWaveforms,
+                                   int WaveIndex,
+                                   std::vector<int>* MonPulse,
+                                   int PairMultiplicityThreshold,
+                                   double tickPeriod,
+                                   int ticksPerSlice,
+                                   float PercentTicksBeforeCross,
+                                   int PMTPerBoard)
+  {
+      // before and after crossing point (default is ~20% and ~80%)
+      int ticksBeforeCross = static_cast<int>(std::round(PercentTicksBeforeCross*ticksPerSlice));
+      int ticksAfterCross  = ticksPerSlice - ticksBeforeCross;
 
-              bool interest = false;
-              for (int i = 0; i < (int)MonPulse->size(); ++i) {
-                  // find crossing point
-                  if ((*MonPulse)[i] > MonPulseThresh && interest == false) {
-                      crossingPoints.push_back(i);
-                      interest = true;
-                  } else if ((*MonPulse)[i] <= MonPulseThresh) interest = false;
-              }    
+      // Slice up each waveform into 10us (or given) chunks based on if "interesting" or not
+      auto intervals = findInterestIntervals(MonPulse, PairMultiplicityThreshold, ticksBeforeCross, ticksAfterCross);
 
-              // create 10us slices around crossingPoints
-              for (int j = 0; j < (int)crossingPoints.size(); ++j) {
-    
-                  // if near end of full waveform
-                  if (crossingPoints[j]+ticksAfterCross > static_cast<int>(MonPulse->size())) {
-                      interestIntervals.emplace_back(static_cast<int>(MonPulse->size())-ticksPerSlice, static_cast<int>(MonPulse->size()));
-                  } 
-                  // if near beginning of full waveform
-                  else if (crossingPoints[j]-ticksBeforeCross < 0) {
-                      interestIntervals.emplace_back(0, ticksPerSlice);
-                  }  
-                  else {
-                      // check if overlaps with previous interval
-                      if (!interestIntervals.empty()) {
-                          if (crossingPoints[j]-ticksBeforeCross < interestIntervals.back().second) {
-                              // if overlaps, extend interval
-                              interestIntervals.back() = {interestIntervals.back().first, crossingPoints[j]+ticksAfterCross};
-                          // if does not overlap, use typical interval length
-                          } else interestIntervals.emplace_back(crossingPoints[j]-ticksBeforeCross, crossingPoints[j]+ticksAfterCross);
-                      // if first, use typical interval length
-                      } else interestIntervals.emplace_back(crossingPoints[j]-ticksBeforeCross, crossingPoints[j]+ticksAfterCross);
-                  }
+      std::vector<raw::OpDetWaveform> SlicedWaveforms;
+      // loop through channels
+      for (int chan = 0; chan < PMTPerBoard; ++chan) {
+          const raw::OpDetWaveform& wf = fWaveforms[WaveIndex + chan];
+
+          for (auto [start, end] : intervals) {
+              double sliceTime = wf.TimeStamp() + start * tickPeriod;
+              std::vector<uint16_t> sliceData(wf.begin() + start, wf.begin() + end);
+
+              if (!sliceData.empty()) {
+                  raw::OpDetWaveform slice(sliceTime, wf.ChannelNumber(), sliceData);
+                  SlicedWaveforms.push_back(std::move(slice));
               }
-
-              std::vector<raw::OpDetWaveform> fSlicedWaveforms;
-              fSlicedWaveforms.clear();
-              // loop through channels
-              for (int chan = 0; chan < PMTPerBoard; ++chan) {
-                  const raw::OpDetWaveform& wf = fWaveforms[WaveIndex + chan];
-
-                  for (auto [start, end] : interestIntervals) { 
-                      double sliceTime = wf.TimeStamp() + start * tickPeriod;
-                      std::vector<uint16_t> sliceData(wf.begin() + start, wf.begin() + end);
-
-                      if (!sliceData.empty()) {
-                          raw::OpDetWaveform slice(sliceTime, wf.ChannelNumber(), sliceData);
-                          fSlicedWaveforms.push_back(std::move(slice));
-                      }
-                  }
-              }
-              
-      return fSlicedWaveforms;
+          }
+      }
+      return SlicedWaveforms;
   }
 
   void opDetDigitizerSBND::PlotWaveforms(const std::vector<raw::OpDetWaveform>& waveforms,

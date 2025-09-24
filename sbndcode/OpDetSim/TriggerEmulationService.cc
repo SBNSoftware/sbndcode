@@ -14,9 +14,9 @@
 namespace calib {
 
   TriggerEmulationService::TriggerEmulationService(fhicl::ParameterSet const& pset, art::ActivityRegistry& amp)
-    : fMonWidth(pset.get<int>("MonWidth", 3)),
-      fTotalCAENBoards(pset.get<int>("TotalCAENBoards", 10)),
-      PMTPerBoard(pset.get<int>("PMTPerBoard", 16)),
+    : fMonWidth(pset.get<int>("MonWidth", 12)),
+      fTotalCAENBoards(pset.get<int>("TotalCAENBoards", 8)),
+      PMTPerBoard(pset.get<int>("PMTPerBoard", 15)),
       Baseline(pset.get<int>("Baseline", 14250)),
       fMC(pset.get<bool>("MC", false))
   {}
@@ -28,7 +28,6 @@ namespace calib {
       std::vector<raw::OpDetWaveform> fWaveforms,
       int MonThreshold,
       std::vector<int> *MonPulse,
-      bool Saving,
       int FlashCounter,
       int *numPairsOverThreshold
   )
@@ -57,8 +56,6 @@ namespace calib {
           int ReadoutSize = fWaveforms[0].size();
           MonPulse->assign(ReadoutSize, 0);
 
-          int countPairs = 0;
-
           for (size_t i = 0; i < Pair1.size(); ++i) {
               int ch1 = Pair1[i];
               int ch2 = Pair2[i];
@@ -74,16 +71,11 @@ namespace calib {
               auto bin1 = ConstructBinaryResponse(wvf1, MonThreshold);
               auto bin2 = ConstructBinaryResponse(wvf2, MonThreshold);
 
-              bool pairOverThreshold = false;
-
               for (int j = 0; j < ReadoutSize; ++j) {
                   if (bin1[j] || bin2[j]) {
                       (*MonPulse)[j]++;
-                      pairOverThreshold = true;
                   }
               }
-
-              if (pairOverThreshold) countPairs++;
 
               used_channels.insert(ch1);
               used_channels.insert(ch2);
@@ -96,20 +88,14 @@ namespace calib {
               const auto& wvf = *channel_to_waveform[ch];
               auto bin = ConstructBinaryResponse(wvf, MonThreshold);
 
-              bool pairOverThreshold = false;
-
               for (int j = 0; j < ReadoutSize; ++j) {
                   if (bin[j]) {
                       (*MonPulse)[j]++;
-                      pairOverThreshold = true;
                   }
               }
-
-              if (pairOverThreshold) countPairs++;
-
           }
 
-          if (numPairsOverThreshold) *numPairsOverThreshold = countPairs;
+          if (numPairsOverThreshold) *numPairsOverThreshold = *std::max_element(MonPulse->begin(), MonPulse->end());
 
       } else { // data
           if (fWaveforms.empty()) {
@@ -131,7 +117,7 @@ namespace calib {
 
                   if (CAENChannel != 14) {
                       int WaveIndex_Pair1 = CAENChannel + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
-                      int WaveIndex_Pair2 = CAENChannel + 1 + FlashCounter*PMTPerBoard + CurrentBoard*PMTPerBoard*NumFlash;
+                      int WaveIndex_Pair2 = WaveIndex_Pair1 + 1;
 
                       ChannelStep = 2;
   

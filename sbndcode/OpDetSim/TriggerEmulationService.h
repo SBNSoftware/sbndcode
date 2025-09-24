@@ -12,18 +12,18 @@
 #define TRIGGEREMULATION_SERVICE_H
 
 
-// potential support libraries 
+// support libraries 
 #include "fhiclcpp/ParameterSet.h"
 #include "art/Framework/Services/Registry/ServiceMacros.h"
 #include "art/Framework/Services/Registry/ActivityRegistry.h"
 #include "art/Framework/Principal/Handle.h"
-//#include "canvas/Persistency/Common/Handle.h"
 #include "lardataobj/RawData/OpDetWaveform.h"
 #include "larcore/CoreUtils/ServiceUtil.h"
 
 // C/C++ standard libraries
 #include <string>
 #include <vector>
+#include <algorithm>
 
 //namespace lar {
    namespace calib {
@@ -36,7 +36,6 @@
              std::vector<raw::OpDetWaveform> fWaveforms,
              int MonThreshold, 
              std::vector<int> *MonPulse, 
-             bool Saving, 
              int FlashCounter,
              int *numPairsOverThreshold = nullptr
            );
