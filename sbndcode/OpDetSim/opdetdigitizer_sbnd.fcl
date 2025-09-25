@@ -11,6 +11,13 @@ sbnd_opdetdigitizer:
   InputModule:        "PDFastSim"
   WaveformSize:      	    2000.0    #ns (dummy value, resized according to readout of each PD)
   UseSimPhotonsLite:            true  # false for SimPhotons
+  ApplyTriggers:             true  #optional
+  ticksPerSlice:             5000 # corresponds to 10us
+  PercentTicksBeforeCross:             0.2
+  MonThreshold:             15
+  PairMultiplicityThreshold:             15
+  SaveNewPlots:             true 
+  SaveOldPlots:             false
 
   @table::sbnd_digipmt_alg
   @table::sbnd_digiarapuca_alg

@@ -6,6 +6,14 @@ process_name: PMTDecoder
 
 services: {
   TFileService : {fileName: "decoder_hist.root"}
+  TriggerEmulationService: {
+    service_type: TriggerEmulationService
+    MonWidth: 12
+    TotalCAENBoards: 8
+    PMTPerBoard: 15
+    Baseline: 14250
+    MC: false
+  }
 }
 
 #source is a root file
