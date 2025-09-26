@@ -137,7 +137,7 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
         pfpVect = slice_pfp_assns.at(slice.key());
         for(const art::Ptr<recob::PFParticle> &pfp : pfpVect){
             if(pfp->IsPrimary() &&( std::abs(pfp->PdgCode())==12 || std::abs(pfp->PdgCode())==14 ) ){
-                const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = pfp_to_metadata.at(pfp->Self());
+                const std::vector<art::Ptr<larpandoraobj::PFParticleMetadata>> pfpMetaVec = pfp_to_metadata.at(pfp.key());
                 for (auto const pfpMeta : pfpMetaVec) {
                     larpandoraobj::PFParticleMetadata::PropertiesMap propertiesMap = pfpMeta->GetPropertiesMap();
                     if (propertiesMap.count("NuScore")) _fNuScore = propertiesMap.at("NuScore");
