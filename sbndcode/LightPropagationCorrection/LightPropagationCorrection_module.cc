@@ -299,11 +299,9 @@ void sbnd::LightPropagationCorrection::produce(art::Event & e)
             newFlashTime = flasht0;
             sbn::CorrectedOpFlashTiming correctedOpFlashTiming;
             correctedOpFlashTiming.OpFlashT0 = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
-            correctedOpFlashTiming.UpstreamTime_lightonly = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (Zcenter/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.UpstreamTime_tpczcorr = originalFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.UpstreamTime_propcorr_tpczcorr = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000 - (fRecoVz/fSpeedOfLight)/1000;
-            correctedOpFlashTiming.FMScore = _fFMScore;
-            correctedOpFlashTiming.SliceNuScore = _sliceMaxNuScore;
+            correctedOpFlashTiming.NuToFLight = (Zcenter/fSpeedOfLight)/1000;
+            correctedOpFlashTiming.NuToFCharge = (fRecoVz/fSpeedOfLight)/1000;
+            correctedOpFlashTiming.OpFlashT0Corrected = newFlashTime + fEventTriggerTime/1000 - fRWMTime/1000;
             correctedOpFlashTimes->emplace_back(std::move(correctedOpFlashTiming));
         }
 
