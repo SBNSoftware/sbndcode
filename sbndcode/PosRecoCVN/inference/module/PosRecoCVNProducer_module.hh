@@ -155,7 +155,10 @@ private:
   std::vector<std::string> fInputNames;
   std::vector<std::string> fOutputNames;
   double fCustomNormFactor;
-  
+  double fPredictionTolerance;  // Tolerance for out-of-range predictions (default 5%)
+  bool fSkipNeutrinoFilter;     // Skip neutrino filter for data files (no MCTruth)
+  std::string fSbndcodeVersion;  // Configurable SBND code version (e.g., "v10_09_00")
+
   // Simple scaling ranges: X[0,200], Y[-200,200], Z[0,500]
 
   // Variables internas necesarias

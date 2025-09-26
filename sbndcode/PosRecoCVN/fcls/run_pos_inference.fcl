@@ -1,3 +1,10 @@
+//==============================================================================
+// PosRecoCVN Position Reconstruction Configuration
+//
+// This FCL file configures CNN-based neutrino position reconstruction using
+// optical detector data (PMT hits and flashes) in SBND.
+//==============================================================================
+
 #include "services_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
@@ -5,88 +12,141 @@
 
 process_name: PosRecoCVNProd
 
+//==============================================================================
+// SERVICES CONFIGURATION
+//==============================================================================
 services:
 {
-  TFileService:              { fileName: "ttree_analysis_%p-%tc.root" }
+  # TTree output for inference results (only inference, no other dataproducts)
+  TFileService: { fileName: "ttree_analysis_%p-%tc.root" }
+
+  # Standard SBND services
   @table::sbnd_basic_services
   @table::sbnd_simulation_services
+
+  # MC truth services (needed for MC modes)
   ParticleInventoryService: @local::sbnd_particleinventoryservice
   BackTrackerService:       @local::sbnd_backtrackerservice
   ParticleInventoryService: @local::standard_particleinventoryservice
 }
 
+//==============================================================================
+// INPUT CONFIGURATION
+//==============================================================================
 source:
 {
   module_type: RootInput
-  maxEvents:  -1  # Number of events to create
+  maxEvents:  -1        # Process all events (-1) or limit number for testing
 }
 
+//==============================================================================
+// PHYSICS CONFIGURATION
+//==============================================================================
 physics:
 {
   producers:
   {
     opanatree: {
       module_type: "PosRecoCVNProducer"
-      Verbosity: 2  # 1: Enable timing verbosity
+
+      #------------------------------------------------------------------------
+      # PROCESSING MODE CONFIGURATION (REQUIRED)
+      #------------------------------------------------------------------------
+      # "MC_testing"    = Full MC analysis with ground truth comparison
+      # "MC_inference"  = MC inference only, skip ground truth calculation
+      # "DATA_inference" = Real data processing
+      ProcessingMode: "DATA_inference"
+
+      #------------------------------------------------------------------------
+      # VERBOSITY CONFIGURATION
+      #------------------------------------------------------------------------
+      # 0 = Minimal output (events pass/fail only)
+      # 1 = Basic processing info + flash timing details
+      # 2 = Detailed processing information
+      # >2 = Debug mode with TensorFlow details
+      Verbosity: 1
+
+      #------------------------------------------------------------------------
+      # VERSION CONTROL
+      #------------------------------------------------------------------------
+      SbndcodeVersion: "v10_10_02"
+
+      #------------------------------------------------------------------------
+      # DATA PRODUCT LABELS
+      #------------------------------------------------------------------------
+      # Monte Carlo truth (used in MC modes)
       MCTruthModuleLabel: ["generator"]
       MCTruthInstanceLabel: [""]
-      MCTruthOrigin: [1, 4]  # BNB neutrinos and single particles
-      MCTruthPDG: [12, 14, -12, -14]  # neutrinos
       MCModuleLabel: "largeant"
-      OpHitsModuleLabel: ["ophitpmt","ophitxarapuca"]
-      OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1", "opflashtpc0xarapuca", "opflashtpc1xarapuca"]
-      G4BufferBoxX: [-300, 300] #cm
-      G4BufferBoxY: [-400, 400] #cm
-      G4BufferBoxZ: [-100, 600] #cm
-      G4BeamWindow: [-10000, 12000] #ns
-      KeepPDGCode: []  # empty = keep all particles
-      SaveOpHits: true
-      
 
-      # PMT maps are auto-discovered by the module
+      # Optical detector data
+      OpHitsModuleLabel: ["ophitpmt"]
+      OpFlashesModuleLabel: ["opflashtpc0", "opflashtpc1"]
 
-      # TensorFlow Configuration
-      RunInference: true
-      # Model path is auto-discovered by the module
+      #------------------------------------------------------------------------
+      # EVENT SELECTION CRITERIA (MC modes only)
+      #------------------------------------------------------------------------
+      MCTruthOrigin: [1, 4]              # BNB neutrinos and single particles
+      MCTruthPDG: [12, 14, -12, -14]     # All neutrino types
+      KeepPDGCode: []                    # Empty = keep all particles
 
-      # Processing Mode Configuration
-      # "testing" = calculate ground truth + prediction (default behavior)
-      # "inference" = only run inference, skip ground truth calculation
-      ProcessingMode: "inference"
+      # Fiducial volume cuts (cm)
+      G4BufferBoxX: [-300, 300]
+      G4BufferBoxY: [-400, 400]
+      G4BufferBoxZ: [-100, 600]
 
-      # Save PixelMapVars product (images + metadata) to output file
-      SavePixelMapVars: false  
+      # Time window cuts (ns)
+      G4BeamWindow: [-10000, 12000]
 
-      InputNames: []
-      OutputNames: []
-      
-      # Image Normalization Configuration
-      # Value from: sbndcode/v10_09_00/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/normalization_factors.json
+      #------------------------------------------------------------------------
+      # CNN INFERENCE CONFIGURATION
+      #------------------------------------------------------------------------
+      # Image normalization factor (from training)
+      # Source: sbndcode/v10_10_02/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/normalization_factors.json
       CustomNormFactor: 11311.191
+
+      #------------------------------------------------------------------------
+      # OUTPUT CONFIGURATION
+      #------------------------------------------------------------------------
+      SavePixelMapVars: true           # Save detailed PixelMapVars object
+
+      #------------------------------------------------------------------------
+      # AUTO-CONFIGURED PATHS
+      #------------------------------------------------------------------------
+      # The following are automatically configured by the module:
+      # - CNN model path
+      # - PMT channel map files
+      # - If error not found on one on this try to set them manually
+
     }
   }
 
-  # Definir paths
-  prod: [opanatree]
-  stream: [out1]
-  
-  # Configurar trigger_paths y end_paths
-  trigger_paths: [prod]
-  end_paths: [stream]
+  #----------------------------------------------------------------------------
+  # EXECUTION PATHS
+  #----------------------------------------------------------------------------
+  prod: [opanatree]               # Producer modules to run
+  stream: [out1]                  # Output streams
+
+  trigger_paths: [prod]           
+  end_paths: [stream]             
 }
 
+//==============================================================================
+// OUTPUT CONFIGURATION
+//==============================================================================
 outputs:
 {
   out1:
   {
     module_type: RootOutput
-    fileName: "pixelmap_variables_%p-%tc.root"
+    fileName: "pixelmap_variables_%p-%tc.root"   # %p=process, %tc=timestamp
     dataTier: "reconstructed"
     streamName: "out"
+
+    # Output only the PixelMapVars data product (saves space)
     outputCommands: [
-      "drop *",
-      "keep PixelMapVars_opanatree__PosRecoCVNProd*"
+      "drop *",                                     # Drop everything first
+      "keep PixelMapVars_opanatree__PosRecoCVNProd*" # Keep only our analysis product
     ]
   }
 }
-
