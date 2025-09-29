@@ -10,8 +10,9 @@ namespace crt {
     : fParams(params())
     , fEngine(engine)
     , fG4RefTime(g4RefTime)
-    , fCRTGeoAlg(params().GeoAlgConfig())
     {
+      fCRTGeoService = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
+
         ConfigureWaveform();
         ConfigureTimeOffset();
 
@@ -372,8 +373,8 @@ namespace crt {
                     return ((a.entryT + a.exitT)/2) < ((b.entryT + b.exitT)/2);
                   });
 
-        const CRTStripGeo strip   = fCRTGeoAlg.GetStripByAuxDetIndices(adid, adsid);
-        const CRTModuleGeo module = fCRTGeoAlg.GetModule(strip.moduleName);
+        const CRTStripGeo strip   = fCRTGeoService.GetStripByAuxDetIndices(adid, adsid);
+        const CRTModuleGeo module = fCRTGeoService.GetModule(strip.moduleName);
 
         if(module.minos)
           return;
@@ -407,11 +408,11 @@ namespace crt {
                     << "TimeOffset: " << fTimeOffset << std::endl;
             }
 
-            const std::vector<double> localpos = fCRTGeoAlg.StripWorldToLocalPos(strip, x, y, z);
+            const std::vector<double> localpos = fCRTGeoService.StripWorldToLocalPos(strip, x, y, z);
 
             // Calculate distance to the readout
             const geo::Point_t worldpos(x, y, z);
-            const double distToReadout = fCRTGeoAlg.DistanceDownStrip(worldpos, strip.channel0);
+            const double distToReadout = fCRTGeoService.DistanceDownStrip(worldpos, strip.channel0);
 
             // Calculate distance to fibers
             const double d0 = std::abs(-strip.width - localpos[1]);

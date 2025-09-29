@@ -1,6 +1,6 @@
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
-#include "run_crtana.fcl"
+#include "run_crtana_calibntuples.fcl"
 
 services.ParticleInventoryService: @erase
 services.BackTrackerService:       @erase
@@ -8,5 +8,8 @@ services.BackTrackerService:       @erase
 services.CRTChannelMapService: @local::crt_channel_map_standard
 services.CRTCalibService:      @local::crt_calib_service
 services.CRTGeoService:        @local::crtgeoservice_data_sbnd
+
+physics.analyzers.caloskim.G4producer: ""
+physics.analyzers.caloskim.SimChannelproducer: ""
 
 physics.analyzers.crtana: @local::crtana_data_sbnd

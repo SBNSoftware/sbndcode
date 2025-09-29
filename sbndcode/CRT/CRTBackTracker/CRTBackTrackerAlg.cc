@@ -20,7 +20,6 @@ namespace sbnd::crt {
     fClusterModuleLabel = config.ClusterModuleLabel();
     fSpacePointModuleLabel = config.SpacePointModuleLabel();
     fTrackModuleLabel = config.TrackModuleLabel();
-    fCRTGeoAlgConfig = config.GeoAlgConfig();
 
     return;
   }
@@ -38,7 +37,7 @@ namespace sbnd::crt {
     fTrackIDMotherMap.clear();
     fStripHitMCPMap.clear();
 
-    CRTGeoAlg geoAlg = CRTGeoAlg(fCRTGeoAlgConfig);
+    fCRTGeoService = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
 
     art::Handle<std::vector<sim::ParticleAncestryMap>> droppedTrackIDMapVecHandle;
     event.getByLabel(fSimModuleLabel, droppedTrackIDMapVecHandle);
@@ -94,7 +93,7 @@ namespace sbnd::crt {
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const CRTTagger tagger = geoAlg.WhichTagger(x, y, z);
+        const CRTTagger tagger = fCRTGeoService.WhichTagger(x, y, z);
 
         const int rollUpID = RollUpID(ide->trackID);
 
@@ -247,7 +246,7 @@ namespace sbnd::crt {
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const CRTTagger tagger = geoAlg.WhichTagger(x, y, z);
+        const CRTTagger tagger = fCRTGeoService.WhichTagger(x, y, z);
 
         const int rollUpID = RollUpID(ide->trackID);
         Category category(rollUpID, tagger);
@@ -263,7 +262,7 @@ namespace sbnd::crt {
 
     for(auto const stripHit : stripHitVec)
       {
-        const CRTTagger tagger = geoAlg.ChannelToTaggerEnum(stripHit->Channel());
+        const CRTTagger tagger = fCRTGeoService.ChannelToTaggerEnum(stripHit->Channel());
         TruthMatchMetrics truthMatch = TruthMatching(event, stripHit);
 
         fStripHitMCPMap[stripHit.key()] = truthMatch.trackid;
@@ -340,8 +339,6 @@ namespace sbnd::crt {
 
   CRTBackTrackerAlg::TruthMatchMetrics CRTBackTrackerAlg::TruthMatching(const art::Event &event, const art::Ptr<CRTStripHit> &stripHit)
   {  
-    CRTGeoAlg geoAlg = CRTGeoAlg(fCRTGeoAlgConfig);
-
     art::Handle<std::vector<FEBData>> febDataHandle;
     event.getByLabel(fFEBDataModuleLabel, febDataHandle);
 
@@ -350,7 +347,7 @@ namespace sbnd::crt {
 
     art::FindManyP<sim::AuxDetIDE, FEBTruthInfo> febDataToIDEs(febDataHandle, event, fFEBDataModuleLabel);
     art::FindOneP<FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
-    const CRTTagger tagger = geoAlg.ChannelToTaggerEnum(stripHit->Channel());
+    const CRTTagger tagger = fCRTGeoService.ChannelToTaggerEnum(stripHit->Channel());
 
     auto const febData = stripHitToFEBData.at(stripHit.key());
     auto const assnIDEVec = febDataToIDEs.at(febData.key());
@@ -545,10 +542,8 @@ namespace sbnd::crt {
                                                                                  const geo::Vector_t &dir, 
                                                                                  const CRTTagger &tagger)
   {
-    CRTGeoAlg geoAlg = CRTGeoAlg(fCRTGeoAlgConfig);
-
     const CoordSet constrainedPlane = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
-    const CRTTaggerGeo taggerGeo    = geoAlg.GetTagger(CRTCommonUtils::GetTaggerName(tagger));
+    const CRTTaggerGeo taggerGeo    = fCRTGeoService.GetTagger(CRTCommonUtils::GetTaggerName(tagger));
     double k;
 
     switch(constrainedPlane)
@@ -577,7 +572,7 @@ namespace sbnd::crt {
         break;
       }
     
-    if(!geoAlg.IsPointInsideCRTLimits(start + k * dir))
+    if(!fCRTGeoService.IsPointInsideCRTLimits(start + k * dir))
       return {999999., {999999., 999999., 999999.}};
     
     return {k, start + k * dir};

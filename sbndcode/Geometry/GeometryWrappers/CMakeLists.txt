@@ -1,5 +1,5 @@
 art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
-                SOURCE CRTGeoAlg.cc  TPCGeoAlg.cc
+                SOURCE TPCGeoAlg.cc
              LIBRARIES     larcorealg::Geometry
                            larcore::Geometry_Geometry_service
                            larsim::Simulation
@@ -30,14 +30,13 @@ art_make_library(LIBRARY_NAME sbndcode_GeoWrappers
                            ROOT::Gdml
                            ${ROOT_BASIC_LIB_LIST}
 
-                           sbndcode_CRTUtils
+			   sbndcode_CRTUtils
                            sbnobj::SBND_CRT
                            ROOT::Core
                            sbndcode::ChannelMaps_CRT_CRTChannelMapService_service
                            sbndcode::Calibration_CRT_CalibService_CRTCalibService_service
-
-        )
+)
 
 install_headers()
-install_source()
 install_fhicl()
+install_source()

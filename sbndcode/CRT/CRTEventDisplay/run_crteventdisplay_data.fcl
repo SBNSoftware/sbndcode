@@ -8,6 +8,7 @@ process_name: CRTEventDisplay
 services:
 {
   @table::sbnd_services
+  CRTGeoService:        @local::crtgeoservice_data_sbnd
   CRTChannelMapService: @local::crt_channel_map_standard
   CRTCalibService:      @local::crt_calib_service
 }

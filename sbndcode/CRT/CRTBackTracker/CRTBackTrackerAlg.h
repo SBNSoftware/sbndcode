@@ -33,7 +33,7 @@
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 
 // sbndcode
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 
 // larsim
 #include "larsim/MCCheater/ParticleInventoryService.h"
@@ -53,10 +53,6 @@ namespace sbnd::crt {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
       
-      fhicl::Table<CRTGeoAlg::Config> GeoAlgConfig {
-        Name("CRTGeoAlg"),
-	  };
-
       fhicl::Atom<art::InputTag> SimModuleLabel {
         Name("SimModuleLabel"),
           };
@@ -232,8 +228,6 @@ namespace sbnd::crt {
 
   private:
     
-    CRTGeoAlg::Config fCRTGeoAlgConfig;
-
     art::InputTag fSimModuleLabel;
     art::InputTag fSimDepositModuleLabel;
     art::InputTag fFEBDataModuleLabel;

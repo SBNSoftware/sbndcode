@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
@@ -103,7 +103,7 @@ private:
 
   // Other variables shared between different methods.
   geo::GeometryCore const* fGeometryService;
-  sbnd::crt::CRTGeoAlg fCrtGeo;
+  sbnd::crt::CRTGeoService fCrtGeo;
 
   //limits for array sizes
   enum LIMITS{
@@ -134,7 +134,6 @@ sbnd::trigger::CRTArtdaqFragmentProducer::CRTArtdaqFragmentProducer(fhicl::Param
   fVerbose(p.get<bool>("Verbose", false)),
   fClockSpeedCRT(p.get<double>("ClockSpeedCRT")),
   fFirstFEBMac5(p.get<size_t>("FirstFEBMac5", 0))
-  , fCrtGeo(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   // More initializers here.
 {
   // Call appropriate produces<>() functions here.
@@ -142,7 +141,7 @@ sbnd::trigger::CRTArtdaqFragmentProducer::CRTArtdaqFragmentProducer(fhicl::Param
 
   // Get a pointer to the fGeometryServiceetry service provider
   fGeometryService = lar::providerFrom<geo::Geometry>();
-
+  fCrtGeo = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
 }
 
 

@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
@@ -128,7 +128,7 @@ private:
 
   // Other variables shared between different methods.
   geo::GeometryCore const* fGeometryService;
-  sbnd::crt::CRTGeoAlg fCrtGeo;
+  sbnd::crt::CRTGeoService fCrtGeo;
 
   //PMT
 
@@ -168,7 +168,6 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
   fVerbose(p.get<bool>("Verbose", false)),
   fClockSpeedCRT(p.get<double>("ClockSpeedCRT")),
   fFirstFEBMac5(p.get<size_t>("FirstFEBMac5", 0)),
-  fCrtGeo(p.get<fhicl::ParameterSet>("CRTGeoAlg")),
   fInputModuleNameWvfm(p.get<std::string>("InputModuleNameWvfm")),
   fInputModuleNameTrigger(p.get<std::string>("InputModuleNameTrigger")),
   fBaseline(p.get<int>("Baseline",8000)),
@@ -185,6 +184,7 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
 
   // Get a pointer to the fGeometryServiceetry service provider
   fGeometryService = lar::providerFrom<geo::Geometry>();
+  fCrtGeo = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
 
   // get clock
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();

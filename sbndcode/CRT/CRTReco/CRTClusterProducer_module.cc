@@ -22,7 +22,7 @@
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
 
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
 #include <memory>
@@ -53,7 +53,7 @@ public:
 
 private:
 
-  CRTGeoAlg   fCRTGeoAlg;
+  CRTGeoService   fCRTGeoService;
   std::string fCRTStripHitModuleLabel;
   double      fCoincidenceTimeRequirement;
   double      fOverlapBuffer;
@@ -63,12 +63,13 @@ private:
 
 sbnd::crt::CRTClusterProducer::CRTClusterProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fCRTStripHitModuleLabel(p.get<std::string>("CRTStripHitModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<double>("CoincidenceTimeRequirement"))
   , fOverlapBuffer(p.get<double>("OverlapBuffer"))
   , fUseTs0(p.get<bool>("UseTs0"))
 {
+  fCRTGeoService = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
+
   produces<std::vector<CRTCluster>>();
   produces<art::Assns<CRTCluster, CRTStripHit>>();
 }
@@ -110,7 +111,7 @@ std::map<sbnd::crt::CRTTagger, std::vector<art::Ptr<sbnd::crt::CRTStripHit>>> sb
 
   for(const art::Ptr<CRTStripHit> &stripHit : CRTStripHitVec)
     {
-      CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+      CRTTagger tagger = fCRTGeoService.ChannelToTaggerEnum(stripHit->Channel());
 
       if(taggerStripHitsMap.find(tagger) != taggerStripHitsMap.end())
         taggerStripHitsMap[tagger].push_back(stripHit);
@@ -183,7 +184,7 @@ sbnd::crt::CRTClusterProducer::SplitClusters(const std::vector<std::pair<CRTClus
           for(uint16_t jj = 0; jj < hits.size(); ++jj)
             {
               const art::Ptr<CRTStripHit> &hit2 = hits[jj];
-              if(fCRTGeoAlg.CheckOverlap(hit1->Channel(), hit2->Channel(), 10.))
+              if(fCRTGeoService.CheckOverlap(hit1->Channel(), hit2->Channel(), 10.))
                 overlaps[j].insert(jj);
             }
         }
@@ -239,8 +240,8 @@ sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const s
 {
   const uint16_t nHits = clusteredHits.size();
 
-  const CRTStripGeo strip0 = fCRTGeoAlg.GetStrip(clusteredHits.at(0)->Channel());
-  const CRTTagger tagger = fCRTGeoAlg.ChannelToTaggerEnum(clusteredHits.at(0)->Channel());
+  const CRTStripGeo strip0 = fCRTGeoService.GetStrip(clusteredHits.at(0)->Channel());
+  const CRTTagger tagger = fCRTGeoService.ChannelToTaggerEnum(clusteredHits.at(0)->Channel());
 
   double ts0 = 0, ts1 = 0;
   uint64_t s = 0;
@@ -254,13 +255,13 @@ sbnd::crt::CRTCluster sbnd::crt::CRTClusterProducer::CharacteriseCluster(const s
       ts1 += hit->Ts1();
       s   += hit->UnixS();
 
-      const CRTStripGeo strip = fCRTGeoAlg.GetStrip(hit->Channel());
-      if(fCRTGeoAlg.DifferentOrientations(strip0, strip))
+      const CRTStripGeo strip = fCRTGeoService.GetStrip(hit->Channel());
+      if(fCRTGeoService.DifferentOrientations(strip0, strip))
         composition = kXYZ;
     }
 
   if(composition == kUndefinedSet)
-    composition = fCRTGeoAlg.GlobalConstrainedCoordinates(strip0.channel0);
+    composition = fCRTGeoService.GlobalConstrainedCoordinates(strip0.channel0);
 
   s   /= nHits;
   ts0 /= nHits;

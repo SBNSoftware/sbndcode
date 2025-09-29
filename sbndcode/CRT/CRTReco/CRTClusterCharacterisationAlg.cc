@@ -3,7 +3,6 @@
 namespace sbnd::crt {
   
   CRTClusterCharacterisationAlg::CRTClusterCharacterisationAlg(const fhicl::ParameterSet& pset)
-    : fCRTGeoAlg(pset.get<fhicl::ParameterSet>("CRTGeoAlg"))
     , fTimeOffset(pset.get<double>("TimeOffset"))
     , fOverlapBuffer(pset.get<double>("OverlapBuffer"))
     , fPEAttenuation(pset.get<double>("PEAttenuation"))
@@ -11,13 +10,14 @@ namespace sbnd::crt {
     , fTimeWalkNorm(pset.get<double>("TimeWalkNorm"))
     , fTimeWalkScale(pset.get<double>("TimeWalkScale"))
   {
+    fCRTGeoService = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
   }
 
   CRTClusterCharacterisationAlg::~CRTClusterCharacterisationAlg(){}
 
   CRTSpacePoint CRTClusterCharacterisationAlg::CharacteriseSingleHitCluster(const art::Ptr<CRTCluster> &cluster, const art::Ptr<CRTStripHit> &stripHit)
   {
-    const std::array<double, 6> hitPos = fCRTGeoAlg.StripHit3DPos(stripHit->Channel(), stripHit->Pos(), stripHit->Error());
+    const std::array<double, 6> hitPos = fCRTGeoService.StripHit3DPos(stripHit->Channel(), stripHit->Pos(), stripHit->Error());
 
     const double pe = ADCToPE(stripHit->Channel(), stripHit->ADC1(), stripHit->ADC2());
     
@@ -37,11 +37,11 @@ namespace sbnd::crt {
 
   bool CRTClusterCharacterisationAlg::TwoHitSpacePoint(const art::Ptr<CRTStripHit> hit0, const art::Ptr<CRTStripHit> hit1, CRTSpacePoint &spacepoint)
   {
-    const bool threeD = fCRTGeoAlg.ChannelToOrientation(hit0->Channel()) != fCRTGeoAlg.ChannelToOrientation(hit1->Channel());
+    const bool threeD = fCRTGeoService.ChannelToOrientation(hit0->Channel()) != fCRTGeoService.ChannelToOrientation(hit1->Channel());
 
     if(threeD)
       {
-        if(fCRTGeoAlg.CheckOverlap(hit0->Channel(), hit1->Channel(), fOverlapBuffer))
+        if(fCRTGeoService.CheckOverlap(hit0->Channel(), hit1->Channel(), fOverlapBuffer))
           {
             std::array<double, 6> overlap = FindOverlap(hit0, hit1);
             
@@ -59,7 +59,7 @@ namespace sbnd::crt {
       }
     else
       {
-        if(fCRTGeoAlg.AdjacentStrips(hit0->Channel(), hit1->Channel(), fOverlapBuffer))
+        if(fCRTGeoService.AdjacentStrips(hit0->Channel(), hit1->Channel(), fOverlapBuffer))
           {
             std::array<double, 6> overlap = FindAdjacentPosition(hit0, hit1);
 
@@ -135,13 +135,13 @@ namespace sbnd::crt {
 
   double CRTClusterCharacterisationAlg::ADCToPE(const uint16_t channel, const uint16_t adc)
   {
-    return fCRTGeoAlg.GetSiPM(channel).gain * adc;
+    return fCRTGeoService.GetSiPM(channel).gain * adc;
   }
 
   std::array<double, 6> CRTClusterCharacterisationAlg::FindOverlap(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1)
   {
-    const std::array<double, 6> hit0pos = fCRTGeoAlg.StripHit3DPos(hit0->Channel(), hit0->Pos(), hit0->Error());
-    const std::array<double, 6> hit1pos = fCRTGeoAlg.StripHit3DPos(hit1->Channel(), hit1->Pos(), hit1->Error());
+    const std::array<double, 6> hit0pos = fCRTGeoService.StripHit3DPos(hit0->Channel(), hit0->Pos(), hit0->Error());
+    const std::array<double, 6> hit1pos = fCRTGeoService.StripHit3DPos(hit1->Channel(), hit1->Pos(), hit1->Error());
 
     std::array<double, 6> overlap({std::max(hit0pos[0], hit1pos[0]),
                                    std::min(hit0pos[1], hit1pos[1]),
@@ -155,8 +155,8 @@ namespace sbnd::crt {
 
   std::array<double, 6> CRTClusterCharacterisationAlg::FindAdjacentPosition(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1)
   {
-    const std::array<double, 6> hit0pos = fCRTGeoAlg.StripHit3DPos(hit0->Channel(), hit0->Pos(), hit0->Error());
-    const std::array<double, 6> hit1pos = fCRTGeoAlg.StripHit3DPos(hit1->Channel(), hit1->Pos(), hit1->Error());
+    const std::array<double, 6> hit0pos = fCRTGeoService.StripHit3DPos(hit0->Channel(), hit0->Pos(), hit0->Error());
+    const std::array<double, 6> hit1pos = fCRTGeoService.StripHit3DPos(hit1->Channel(), hit1->Pos(), hit1->Error());
 
     std::array<double, 6> overlap({std::min(hit0pos[0], hit1pos[0]),
                                    std::max(hit0pos[1], hit1pos[1]),
@@ -182,8 +182,8 @@ namespace sbnd::crt {
 
   double CRTClusterCharacterisationAlg::ReconstructPE(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const geo::Point_t &pos)
   {
-    const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0->Channel());
-    const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1->Channel());
+    const double dist0 = fCRTGeoService.DistanceDownStrip(pos, hit0->Channel());
+    const double dist1 = fCRTGeoService.DistanceDownStrip(pos, hit1->Channel());
 
     return ReconstructPE(hit0, dist0) + ReconstructPE(hit1, dist1);
   }
@@ -199,8 +199,8 @@ namespace sbnd::crt {
   void CRTClusterCharacterisationAlg::CorrectTime(const art::Ptr<CRTStripHit> &hit0, const art::Ptr<CRTStripHit> &hit1, const geo::Point_t &pos,
                                                   double &t0, double &et0, double &t1, double &et1)
   {
-    const double dist0 = fCRTGeoAlg.DistanceDownStrip(pos, hit0->Channel());
-    const double dist1 = fCRTGeoAlg.DistanceDownStrip(pos, hit1->Channel());
+    const double dist0 = fCRTGeoService.DistanceDownStrip(pos, hit0->Channel());
+    const double dist1 = fCRTGeoService.DistanceDownStrip(pos, hit1->Channel());
 
     const double pe0 = ReconstructPE(hit0, dist0);
     const double pe1 = ReconstructPE(hit1, dist1);

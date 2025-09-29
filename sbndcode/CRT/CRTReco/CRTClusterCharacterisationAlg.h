@@ -29,7 +29,7 @@
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 
 // sbndcode
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 
 namespace sbnd::crt {
   
@@ -73,7 +73,7 @@ namespace sbnd::crt {
 
   private:
 
-    CRTGeoAlg fCRTGeoAlg;
+    CRTGeoService fCRTGeoService;
 
     double fTimeOffset;
     double fOverlapBuffer;

@@ -36,7 +36,7 @@
 
 // sbndcode
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/CRT/CRTBackTracker/CRTBackTrackerAlg.h"
 #include "sbndcode/CRT/CRTUtils/TPCGeoUtil.h"
 
@@ -57,11 +57,6 @@ namespace sbnd::crt {
       using Name = fhicl::Name;
       using Comment = fhicl::Comment;
       
-      fhicl::Table<CRTGeoAlg::Config> GeoAlgConfig {
-        Name("CRTGeoAlg"),
-        Comment("Configuration parameters for the CRT geometry algorithm"),
-      };
-
       fhicl::Table<CRTBackTrackerAlg::Config> BackTrackerAlgConfig {
         Name("CRTBackTrackerAlg"),
         Comment("Configuration parameters for the CRT back tracking algorithm")
@@ -262,7 +257,7 @@ namespace sbnd::crt {
   private:
 
     TPCGeoAlg         fTPCGeoAlg;
-    CRTGeoAlg         fCRTGeoAlg;
+    CRTGeoService     fCRTGeoService;
     CRTBackTrackerAlg fCRTBackTrackerAlg;
 
     bool fMC;

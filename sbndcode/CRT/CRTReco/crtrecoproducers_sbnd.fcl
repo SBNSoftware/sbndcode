@@ -1,11 +1,9 @@
-#include "crtgeoalg_sbnd.fcl"
 #include "crtsimmodules_sbnd.fcl"
 
 BEGIN_PROLOG
 
 crtstriphitproducer_sbnd:
 {
-   CRTGeoAlg:                 @local::crtgeoalg_sbnd
    FEBDataModuleLabel:        "crtsim"
    ADCThreshold:              60
    ErrorCoeff:                [ 0.26, -0.27, 0.025 ]
@@ -17,7 +15,6 @@ crtstriphitproducer_sbnd:
 }
 
 crtstriphitproducer_data_sbnd: @local::crtstriphitproducer_sbnd
-crtstriphitproducer_data_sbnd.CRTGeoAlg:                 @local::crtgeoalg_data_sbnd
 crtstriphitproducer_data_sbnd.FEBDataModuleLabel:        "crtdecoder"
 crtstriphitproducer_data_sbnd.AllowFlag1:                true
 crtstriphitproducer_data_sbnd.CorrectForDifferentSecond: true
@@ -33,7 +30,6 @@ crtstriphitproducer_data_sbnd.AllowedPTBHLTs:            [ 1, 2, 3, 4, 5, 14, 15
 
 crtclusterproducer_sbnd:
 {
-   CRTGeoAlg:                  @local::crtgeoalg_sbnd
    CRTStripHitModuleLabel:     "crtstrips"
    CoincidenceTimeRequirement: 50
    OverlapBuffer:              1.
@@ -42,12 +38,10 @@ crtclusterproducer_sbnd:
 }
 
 crtclusterproducer_data_sbnd: @local::crtclusterproducer_sbnd
-crtclusterproducer_data_sbnd.CRTGeoAlg: @local::crtgeoalg_data_sbnd
-crtclusterproducer_data_sbnd.UseTs0:    true
+crtclusterproducer_data_sbnd.UseTs0: true
 
 crtclustercharacterisationalg_sbnd:
 {
-   CRTGeoAlg:      @local::crtgeoalg_sbnd
    TimeOffset:     -1.7e6 # Sim parameter
    OverlapBuffer:  1.
    PEAttenuation:  @local::sbnd_crtsim.DetSimParams.NpeScaleShift
@@ -64,12 +58,10 @@ crtspacepointproducer_sbnd:
 }
 
 crtspacepointproducer_data_sbnd: @local::crtspacepointproducer_sbnd
-crtspacepointproducer_data_sbnd.ClusterCharacterisationAlg.CRTGeoAlg:  @local::crtgeoalg_data_sbnd
 crtspacepointproducer_data_sbnd.ClusterCharacterisationAlg.TimeOffset: 0
 
 crttrackproducer_sbnd:
 {
-   CRTGeoAlg:                  @local::crtgeoalg_sbnd
    CRTSpacePointModuleLabel:   "crtspacepoints"
    CoincidenceTimeRequirement: 100.
    ThirdSpacePointMaximumDCA:  50.
@@ -79,7 +71,6 @@ crttrackproducer_sbnd:
 }
 
 crttrackproducer_data_sbnd: @local::crttrackproducer_sbnd
-crttrackproducer_data_sbnd.CRTGeoAlg:     @local::crtgeoalg_data_sbnd
 crttrackproducer_data_sbnd.UseTs0:        true
 crttrackproducer_data_sbnd.MaskedTaggers: [ ]
 

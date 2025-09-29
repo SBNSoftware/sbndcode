@@ -1,12 +1,14 @@
 #include "services_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 #include "crtrecoproducers_sbnd.fcl"
+#include "crtgeoservice_sbnd.fcl"
 
 process_name: CRTStripHitReco
 
 services:
 {
   @table::sbnd_services
+  CRTGeoService: @local::crtgeoservice_sbnd
 }
 
 source:
