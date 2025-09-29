@@ -986,8 +986,10 @@ void obtainTrueParticles(std::vector<trueParticle> trueParticles, trueNeutrino c
 }
 
 void nuEBackgroundSignalWeightsStack_macro(){
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_23July.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_23July.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_new.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_16Sep.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_22Sep.root");
 
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeights/";
 
