@@ -87,7 +87,7 @@ private:
   void ReadCRTFEBCalibration(uint32_t run);
 
   template <class T>
-  void ReadElement(lariov::DBFolder &table, const int channel, const std::string &name, T value);
+  void ReadElement(lariov::DBFolder &table, const int channel, const std::string &name, T &value);
 };
 
 #endif 

@@ -50,6 +50,7 @@ void sbndDB::CRTCalibrationDatabaseProvider::ReadCRTFEBCalibration(uint32_t run)
 
   febTable.UpdateData(fDatabaseTimeStamp);
   bool ret = febTable.UpdateData(fDatabaseTimeStamp);
+
   mf::LogDebug("CRTCalibrationDatabaseProvider") << fFEBTableName << (ret ? "" : " not")
                                                  << " updated for run " << run;
 
@@ -95,10 +96,10 @@ void sbndDB::CRTCalibrationDatabaseProvider::ReadCRTFEBCalibration(uint32_t run)
 }
 
 template <class T>
-void sbndDB::CRTCalibrationDatabaseProvider::ReadElement(lariov::DBFolder &table, const int channel, const std::string &name, T value)
+void sbndDB::CRTCalibrationDatabaseProvider::ReadElement(lariov::DBFolder &table, const int channel, const std::string &name, T &value)
 {
   int error = table.GetNamedChannelData(channel, name, value);
-  std::cout << "Error: " << error << std::endl;
+
   if(error)
     throw cet::exception("CRTCalibrationDatabaseProvider")
       << "Encountered error (code " << error
