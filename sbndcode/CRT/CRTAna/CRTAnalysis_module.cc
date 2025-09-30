@@ -95,7 +95,7 @@ public:
 
 private:
 
-  CRTGeoService fCRTGeoService;
+  art::ServiceHandle<CRTGeoService> fCRTGeoService;
   TPCGeoAlg fTPCGeoAlg;
   CRTBackTrackerAlg fCRTBackTrackerAlg;
 
@@ -353,8 +353,6 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   : EDAnalyzer{p}
   , fCRTBackTrackerAlg(p.get<fhicl::ParameterSet>("CRTBackTrackerAlg", fhicl::ParameterSet()))
 {
-  fCRTGeoService = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
-
   fMCParticleModuleLabel            = p.get<std::string>("MCParticleModuleLabel", "largeant");
   fSimDepositModuleLabel            = p.get<std::string>("SimDepositModuleLabel", "genericcrt");
   fFEBDataModuleLabel               = p.get<std::string>("FEBDataModuleLabel", "crtsim");
@@ -645,7 +643,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
   if(fDebug)
     {
-      for(auto const &[name, tagger] : fCRTGeoService.GetTaggers())
+      for(auto const &[name, tagger] : fCRTGeoService->GetTaggers())
         {
           std::cout << "Tagger:  " << tagger.name << '\n'
                     << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
@@ -655,7 +653,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
       std::cout << std::endl;
 
-      for(auto const &[name, module] : fCRTGeoService.GetModules())
+      for(auto const &[name, module] : fCRTGeoService->GetModules())
         {
           std::cout << "Module:  " << module.name << " (" << module.taggerName << ")" << '\n';
           if(module.minos)
@@ -668,7 +666,7 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
       std::cout << std::endl;
 
-      for(auto const &[name, sipm] : fCRTGeoService.GetSiPMs())
+      for(auto const &[name, sipm] : fCRTGeoService->GetSiPMs())
         {
           std::cout << "SiPM:  " << sipm.channel << " (" << sipm.channel/32 << " - " << sipm.channel%32 << ")" << '\n'
                     << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
@@ -1128,7 +1126,7 @@ void sbnd::crt::CRTAnalysis::AnalyseFEBDatas(std::vector<art::Ptr<FEBData>> &FEB
       const auto data = FEBDataVec[i];
       
       _feb_mac5[i]   = data->Mac5();
-      _feb_tagger[i] = fCRTGeoService.AuxDetIndexToTaggerEnum(data->Mac5());
+      _feb_tagger[i] = fCRTGeoService->AuxDetIndexToTaggerEnum(data->Mac5());
       _feb_flags[i]  = data->Flags();
       _feb_ts0[i]    = data->Ts0();
       _feb_ts1[i]    = data->Ts1();
@@ -1167,7 +1165,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
       const auto hit = CRTStripHitVec[i];
 
       _sh_channel[i]    = hit->Channel();
-      _sh_tagger[i]     = fCRTGeoService.ChannelToTaggerEnum(hit->Channel());
+      _sh_tagger[i]     = fCRTGeoService->ChannelToTaggerEnum(hit->Channel());
       _sh_ts0[i]        = hit->Ts0();
       _sh_ts1[i]        = hit->Ts1();
       _sh_unixs[i]      = hit->UnixS();
@@ -1181,8 +1179,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTStripHits(const art::Event &e, const std:
       if(!fDataMode && fTruthMatch)
         {
           const CRTBackTrackerAlg::TruthMatchMetrics truthMatch = fCRTBackTrackerAlg.TruthMatching(e, hit);
-          const std::vector<double> localpos = fCRTGeoService.StripWorldToLocalPos(hit->Channel(), truthMatch.deposit.x, truthMatch.deposit.y, truthMatch.deposit.z);
-          const double width = fCRTGeoService.GetStrip(hit->Channel()).width;
+          const std::vector<double> localpos = fCRTGeoService->StripWorldToLocalPos(hit->Channel(), truthMatch.deposit.x, truthMatch.deposit.y, truthMatch.deposit.z);
+          const double width = fCRTGeoService->GetStrip(hit->Channel()).width;
 
           _sh_truth_trackid[i]      = truthMatch.trackid;
           _sh_truth_completeness[i] = truthMatch.completeness;
@@ -1294,11 +1292,11 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
            */
           if(spacepoints.size() == 1)
             {
-              double pe0 = fCRTGeoService.GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
-              double pe1 = fCRTGeoService.GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
+              double pe0 = fCRTGeoService->GetSiPM( striphit->Channel() ).gain * striphit->ADC1();
+              double pe1 = fCRTGeoService->GetSiPM( striphit->Channel() + 1 ).gain * striphit->ADC2();
               double pe  = pe0 + pe1;
 
-              double dist = fCRTGeoService.DistanceDownStrip( spacepoints[0]->Pos(), striphit->Channel() );
+              double dist = fCRTGeoService->DistanceDownStrip( spacepoints[0]->Pos(), striphit->Channel() );
 
               double corr = std::pow( dist - fPEAttenuation, 2.0 ) / std::pow( fPEAttenuation, 2.0 );
               double tw_pe = pe * corr;

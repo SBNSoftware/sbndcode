@@ -10,8 +10,6 @@ namespace sbnd::crt {
   
   CRTEventDisplayAlg::CRTEventDisplayAlg(const Config& config)
   {
-    fCRTGeoService = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
-
     this->reconfigure(config);
 
     if(fMC)
@@ -182,15 +180,15 @@ namespace sbnd::crt {
     // Create a canvas 
     TCanvas *c1 = new TCanvas("c1","",700,700);
     
-    std::vector<double> crtLims = fCRTGeoService.CRTLimits();
-    std::vector<double> crtLims2 = fCRTGeoService.CRTLimits();
+    std::vector<double> crtLims = fCRTGeoService->CRTLimits();
+    std::vector<double> crtLims2 = fCRTGeoService->CRTLimits();
     crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
     crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
 
     // Draw the CRT taggers
     if(fDrawTaggers)
       {
-        for(auto const &[name, tagger] : fCRTGeoService.GetTaggers())
+        for(auto const &[name, tagger] : fCRTGeoService->GetTaggers())
           {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(name)) == fChosenTaggers.end())
               continue;
@@ -205,7 +203,7 @@ namespace sbnd::crt {
     // Draw individual CRT modules
     if(fDrawModules)
       {
-        for(auto const &[name, module] : fCRTGeoService.GetModules())
+        for(auto const &[name, module] : fCRTGeoService->GetModules())
           {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(module.taggerName)) == fChosenTaggers.end())
               continue;
@@ -225,7 +223,7 @@ namespace sbnd::crt {
 
             if(fDrawFEBs)
               {
-                const std::array<double, 6> febPos = fCRTGeoService.FEBWorldPos(module);
+                const std::array<double, 6> febPos = fCRTGeoService->FEBWorldPos(module);
                 
                 double rminFEB[3] = {febPos[0], febPos[2], febPos[4]};
                 double rmaxFEB[3] = {febPos[1], febPos[3], febPos[5]};
@@ -234,7 +232,7 @@ namespace sbnd::crt {
 
                 if(fDrawFEBEnds)
                   {
-                    const std::array<double, 6> febCh0Pos = fCRTGeoService.FEBChannel0WorldPos(module);
+                    const std::array<double, 6> febCh0Pos = fCRTGeoService->FEBChannel0WorldPos(module);
 
                     double rminCh0[3] = {febCh0Pos[0], febCh0Pos[2], febCh0Pos[4]};
                     double rmaxCh0[3] = {febCh0Pos[1], febCh0Pos[3], febCh0Pos[5]};
@@ -248,9 +246,9 @@ namespace sbnd::crt {
     // Draw individual CRT strips
     if(fDrawStrips)
       {
-        for(auto const &[name, strip] : fCRTGeoService.GetStrips())
+        for(auto const &[name, strip] : fCRTGeoService->GetStrips())
           {
-            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), fCRTGeoService.ChannelToTaggerEnum(strip.channel0)) == fChosenTaggers.end())
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), fCRTGeoService->ChannelToTaggerEnum(strip.channel0)) == fChosenTaggers.end())
               continue;
 
             double rmin[3] = {strip.minX, strip.minY, strip.minZ};
@@ -332,7 +330,7 @@ namespace sbnd::crt {
                 if(t < fMinTime || t > fMaxTime)
                   continue;
 
-                CRTTagger tagger = fCRTGeoService.WhichTagger(x, y, z, 1.);
+                CRTTagger tagger = fCRTGeoService->WhichTagger(x, y, z, 1.);
 
                 if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
                   continue;
@@ -371,8 +369,8 @@ namespace sbnd::crt {
             if(stripHitTime < fMinTime || stripHitTime > fMaxTime)
               continue;
 
-            CRTStripGeo strip = fCRTGeoService.GetStrip(stripHit->Channel());
-            CRTTagger tagger  = fCRTGeoService.ChannelToTaggerEnum(stripHit->Channel());
+            CRTStripGeo strip = fCRTGeoService->GetStrip(stripHit->Channel());
+            CRTTagger tagger  = fCRTGeoService->ChannelToTaggerEnum(stripHit->Channel());
 
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
               continue;
@@ -430,7 +428,7 @@ namespace sbnd::crt {
               {
                 for(auto stripHit : stripHitVec)
                   {
-                    CRTStripGeo strip = fCRTGeoService.GetStrip(stripHit->Channel());
+                    CRTStripGeo strip = fCRTGeoService->GetStrip(stripHit->Channel());
                     
                     double rmin[3] = {strip.minX, strip.minY, strip.minZ};
                     double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};

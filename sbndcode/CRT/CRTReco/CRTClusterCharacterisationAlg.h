@@ -73,7 +73,7 @@ namespace sbnd::crt {
 
   private:
 
-    CRTGeoService fCRTGeoService;
+    art::ServiceHandle<CRTGeoService> fCRTGeoService;
 
     double fTimeOffset;
     double fOverlapBuffer;

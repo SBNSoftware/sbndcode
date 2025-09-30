@@ -262,8 +262,8 @@ namespace sbnd::crt {
 
   private:
 
+    art::ServiceHandle<CRTGeoService> fCRTGeoService;
     TPCGeoAlg         fTPCGeoAlg;
-    CRTGeoService     fCRTGeoService;
     CRTBackTrackerAlg fCRTBackTrackerAlg;
 
     bool fMC;

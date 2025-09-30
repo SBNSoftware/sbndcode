@@ -97,7 +97,8 @@ public:
 
 private:
 
-  CRTGeoService        fCRTGeoService;
+  art::ServiceHandle<CRTGeoService> fCRTGeoService;
+
   std::string      fCRTSpacePointModuleLabel;
   double           fCoincidenceTimeRequirement;
   double           fThirdSpacePointMaximumDCA;
@@ -114,8 +115,6 @@ sbnd::crt::CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const& p)
   , fUseTs0(p.get<bool>("UseTs0"))
   , fMaskedTaggers(p.get<std::vector<int>>("MaskedTaggers"))
 {
-  fCRTGeoService = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
-
   produces<std::vector<CRTTrack>>();
   produces<art::Assns<CRTSpacePoint, CRTTrack>>();
 }
@@ -481,7 +480,7 @@ void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const geo::
 geo::Point_t sbnd::crt::CRTTrackProducer::LineTaggerIntersectionPoint(const geo::Point_t &start, const geo::Vector_t &dir, const CRTTagger &tagger)
 {
   const CoordSet constrainedPlane = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
-  const CRTTaggerGeo taggerGeo    = fCRTGeoService.GetTagger(CRTCommonUtils::GetTaggerName(tagger));
+  const CRTTaggerGeo taggerGeo    = fCRTGeoService->GetTagger(CRTCommonUtils::GetTaggerName(tagger));
   double k;
 
   switch(constrainedPlane)

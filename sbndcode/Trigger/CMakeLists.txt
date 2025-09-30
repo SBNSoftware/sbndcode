@@ -26,7 +26,7 @@ set(
                     sbnobj::SBND_CRT
                     sbnobj::SBND_Timing
                     sbndcode_CRTUtils
-                    sbndcode_GeoWrappers
+                    sbndcode::CRTGeoService
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
                     messagefacility::MF_MessageLogger
@@ -35,6 +35,7 @@ set(
                     CLHEP::CLHEP
                     ROOT::Core
                     ROOT::Tree
+                    larsim::MCCheater_BackTrackerService_service
 )
 
 add_subdirectory(CRT)

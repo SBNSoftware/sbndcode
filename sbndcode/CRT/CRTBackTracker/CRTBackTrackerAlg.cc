@@ -37,21 +37,19 @@ namespace sbnd::crt {
     fTrackIDMotherMap.clear();
     fStripHitMCPMap.clear();
 
-    fCRTGeoService = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
-
     art::Handle<std::vector<sim::ParticleAncestryMap>> droppedTrackIDMapVecHandle;
     event.getByLabel(fSimModuleLabel, droppedTrackIDMapVecHandle);
 
     if(droppedTrackIDMapVecHandle.isValid())
       {
-	for(auto const& droppedTrackIdMap : *droppedTrackIDMapVecHandle)
-	  {
-	    for(auto const& [mother, ids] : droppedTrackIdMap.GetMap())
-	      {
-		for(auto const& id : ids)
-		  fTrackIDMotherMap[id] = mother;
-	      }
-	  }
+        for(auto const& droppedTrackIdMap : *droppedTrackIDMapVecHandle)
+          {
+            for(auto const& [mother, ids] : droppedTrackIdMap.GetMap())
+              {
+                for(auto const& id : ids)
+                  fTrackIDMotherMap[id] = mother;
+              }
+          }
       }
 
     art::Handle<sim::ParticleAncestryMap> droppedTrackIDMapHandle;
@@ -59,13 +57,13 @@ namespace sbnd::crt {
 
     if(droppedTrackIDMapHandle.isValid())
       {
-	auto const& droppedTrackIdMap = droppedTrackIDMapHandle->GetMap();
+        auto const& droppedTrackIdMap = droppedTrackIDMapHandle->GetMap();
 
-	for(auto const& [mother, ids] : droppedTrackIdMap)
-	  {
-	    for(auto const& id : ids)
-	      fTrackIDMotherMap[id] = mother;
-	  }
+        for(auto const& [mother, ids] : droppedTrackIdMap)
+          {
+            for(auto const& id : ids)
+              fTrackIDMotherMap[id] = mother;
+          }
       }
 
     art::Handle<std::vector<sim::AuxDetIDE>> ideHandle;
@@ -93,7 +91,7 @@ namespace sbnd::crt {
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const CRTTagger tagger = fCRTGeoService.WhichTagger(x, y, z);
+        const CRTTagger tagger = fCRTGeoService->WhichTagger(x, y, z);
 
         const int rollUpID = RollUpID(ide->trackID);
 
@@ -246,7 +244,7 @@ namespace sbnd::crt {
         const double x = (ide->entryX + ide->exitX) / 2.;
         const double y = (ide->entryY + ide->exitY) / 2.;
         const double z = (ide->entryZ + ide->exitZ) / 2.;
-        const CRTTagger tagger = fCRTGeoService.WhichTagger(x, y, z);
+        const CRTTagger tagger = fCRTGeoService->WhichTagger(x, y, z);
 
         const int rollUpID = RollUpID(ide->trackID);
         Category category(rollUpID, tagger);
@@ -262,7 +260,7 @@ namespace sbnd::crt {
 
     for(auto const stripHit : stripHitVec)
       {
-        const CRTTagger tagger = fCRTGeoService.ChannelToTaggerEnum(stripHit->Channel());
+        const CRTTagger tagger = fCRTGeoService->ChannelToTaggerEnum(stripHit->Channel());
         TruthMatchMetrics truthMatch = TruthMatching(event, stripHit);
 
         fStripHitMCPMap[stripHit.key()] = truthMatch.trackid;
@@ -347,7 +345,7 @@ namespace sbnd::crt {
 
     art::FindManyP<sim::AuxDetIDE, FEBTruthInfo> febDataToIDEs(febDataHandle, event, fFEBDataModuleLabel);
     art::FindOneP<FEBData> stripHitToFEBData(stripHitHandle, event, fStripHitModuleLabel);
-    const CRTTagger tagger = fCRTGeoService.ChannelToTaggerEnum(stripHit->Channel());
+    const CRTTagger tagger = fCRTGeoService->ChannelToTaggerEnum(stripHit->Channel());
 
     auto const febData = stripHitToFEBData.at(stripHit.key());
     auto const assnIDEVec = febDataToIDEs.at(febData.key());
@@ -543,7 +541,7 @@ namespace sbnd::crt {
                                                                                  const CRTTagger &tagger)
   {
     const CoordSet constrainedPlane = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
-    const CRTTaggerGeo taggerGeo    = fCRTGeoService.GetTagger(CRTCommonUtils::GetTaggerName(tagger));
+    const CRTTaggerGeo taggerGeo    = fCRTGeoService->GetTagger(CRTCommonUtils::GetTaggerName(tagger));
     double k;
 
     switch(constrainedPlane)
@@ -572,7 +570,7 @@ namespace sbnd::crt {
         break;
       }
     
-    if(!fCRTGeoService.IsPointInsideCRTLimits(start + k * dir))
+    if(!fCRTGeoService->IsPointInsideCRTLimits(start + k * dir))
       return {999999., {999999., 999999., 999999.}};
     
     return {k, start + k * dir};

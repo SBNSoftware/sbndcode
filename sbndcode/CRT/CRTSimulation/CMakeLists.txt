@@ -6,13 +6,14 @@ art_make_library(
                         art::Persistency_Provenance
                         canvas::canvas
                         sbnobj::SBND_CRT
-                        sbndcode_GeoWrappers
+                        sbndcode::CRTGeoService
 )
 
 simple_plugin(
               CRTDetSim module
               nurandom::RandomUtils_NuRandomService_service
               larcorealg::Geometry
+              lardata::DetectorClocksService
               sbnobj::SBND_CRT
               sbndcode_CRT_CRTSimulation
 )

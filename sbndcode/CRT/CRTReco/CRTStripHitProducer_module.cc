@@ -56,7 +56,8 @@ public:
 
 private:
 
-  CRTGeoService             fCRTGeoService;
+  art::ServiceHandle<CRTGeoService> fCRTGeoService;
+
   std::string           fFEBDataModuleLabel;
   uint16_t              fADCThreshold;
   std::vector<double>   fErrorCoeff;
@@ -105,8 +106,6 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fPTBModuleLabel(p.get<std::string>("PTBModuleLabel", ""))
   , fAllowedPTBHLTs(p.get<std::vector<uint32_t>>("AllowedPTBHLTs", {}))
 {
-  fCRTGeoService = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
-
   produces<std::vector<CRTStripHit>>();
   produces<art::Assns<FEBData, CRTStripHit>>();
 
@@ -213,7 +212,7 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
   if(!(data->Flags() == 3 || (fAllowFlag1 && data->Flags() == 1)))
     return stripHits;
   
-  const CRTModuleGeo module = fCRTGeoService.GetModule(mac5 * 32);
+  const CRTModuleGeo module = fCRTGeoService->GetModule(mac5 * 32);
 
   // Correct for FEB readout cable length
   // (time is FEB-by-FEB not channel-by-channel)
@@ -260,9 +259,9 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
       // Calculate SiPM channel number
       const uint16_t channel = mac5 * 32 + adc_i;
 
-      const CRTStripGeo strip = fCRTGeoService.GetStrip(channel);
-      const CRTSiPMGeo sipm1  = fCRTGeoService.GetSiPM(channel);
-      const CRTSiPMGeo sipm2  = fCRTGeoService.GetSiPM(channel+1);
+      const CRTStripGeo strip = fCRTGeoService->GetStrip(channel);
+      const CRTSiPMGeo sipm1  = fCRTGeoService->GetSiPM(channel);
+      const CRTSiPMGeo sipm2  = fCRTGeoService->GetSiPM(channel+1);
 
       if(sipm1.status == CRTChannelStatus::kDeadChannel || sipm2.status == CRTChannelStatus::kDeadChannel)
         continue;

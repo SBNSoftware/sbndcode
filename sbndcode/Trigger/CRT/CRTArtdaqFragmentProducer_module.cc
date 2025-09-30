@@ -103,7 +103,7 @@ private:
 
   // Other variables shared between different methods.
   geo::GeometryCore const* fGeometryService;
-  sbnd::crt::CRTGeoService fCrtGeo;
+  art::ServiceHandle<sbnd::crt::CRTGeoService> fCRTGeoService;
 
   //limits for array sizes
   enum LIMITS{
@@ -141,7 +141,6 @@ sbnd::trigger::CRTArtdaqFragmentProducer::CRTArtdaqFragmentProducer(fhicl::Param
 
   // Get a pointer to the fGeometryServiceetry service provider
   fGeometryService = lar::providerFrom<geo::Geometry>();
-  fCrtGeo = art::ServiceHandle<sbnd::crt::CRTGeoService>()->GetProviderPtr();
 }
 
 
@@ -162,7 +161,7 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
 
     for(int i=0; i<num_febs; i++){empty_fragment[i]=true;}
 
-    int num_module = fCrtGeo.NumModules();
+    int num_module = fCRTGeoService->NumModules();
 
     //----------------------------------------------------------------------------------------------------------
     //                                          GETTING PRODUCTS
@@ -229,8 +228,8 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
         empty_fragment[feb_data->Mac5()] = false;
 
         int channel = feb_data->Mac5() * 32;
-        std::string stripName = fCrtGeo.ChannelToStripName(channel);
-        std::string tagger = fCrtGeo.GetTaggerName(stripName);
+        std::string stripName = fCRTGeoService->ChannelToStripName(channel);
+        std::string tagger = fCRTGeoService->GetTaggerName(stripName);
         taggers[feb_data->Mac5()] = tagger;
 
         T0s[feb_data->Mac5()][feb_hits_in_fragments[feb_data->Mac5()]] = feb_data->Ts0();
@@ -259,8 +258,8 @@ void sbnd::trigger::CRTArtdaqFragmentProducer::produce(art::Event& e)
           //if no hits for a module, make a simulated "T1 reset" event to avoid missing fragments
           feb_hits_in_fragments[feb_i] = 1;
           int channel = feb_i * 32;
-          std::string stripName = fCrtGeo.ChannelToStripName(channel);
-          std::string tagger = fCrtGeo.GetTaggerName(stripName);
+          std::string stripName = fCRTGeoService->ChannelToStripName(channel);
+          std::string tagger = fCRTGeoService->GetTaggerName(stripName);
           taggers[feb_i] = tagger;
 
           T0s[feb_i][0] = 0;
