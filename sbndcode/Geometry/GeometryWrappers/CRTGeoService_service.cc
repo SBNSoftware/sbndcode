@@ -7,7 +7,7 @@ namespace sbnd::crt {
     , fMC(pset.get<bool>("MC"))
   {
     fGeometryService = lar::providerFrom<geo::Geometry>();
-    fAuxDetGeoCore   = (const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr();
+    fAuxDetGeoCore   = ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr();
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
 
     // Record used objects
