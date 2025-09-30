@@ -251,7 +251,6 @@ void styleDraw(histGroup hist, double ymin, double ymax, double xmin, double xma
     legend->SetMargin(0.13);
     legend->Draw();
 
-
     if(drawLine){
         TLine* line = new TLine(1.022, 0, 1.022, hist.keptSignal->GetMaximum());
         line->SetLineColor(kGray+2);
@@ -365,9 +364,75 @@ void styleDrawCut(TCanvas* canvas, TH1F* signal, TH1F* BNB, TH1F* cosmics, doubl
     }
 
     canvas->SaveAs(filename);
-
 }
 
+void styleDrawCutIndividual(TCanvas* canvas, TH1F* hist, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, TPaveText* pt = nullptr, int* weighted = nullptr, int* drawLine = nullptr, int* linePos = nullptr, int* log = nullptr){
+    canvas->cd();
+    canvas->SetTickx();
+    canvas->SetTicky();
+
+    if(log && *log){
+        gPad->SetLogy();
+        hist->SetMinimum(0.0000001);
+    }
+
+    gPad->Update();
+    hist->SetLineWidth(2);
+    hist->SetLineColor(kBlue+1);
+
+    if((ymin != 999) && (ymax != 999)) hist->GetYaxis()->SetRangeUser(ymin, ymax);
+    if((xmin != 999) && (xmax != 999)) hist->GetXaxis()->SetRangeUser(xmin, xmax);
+
+    double maxYValue = std::max({hist->GetMaximum()});
+
+    if((ymin == 999) && (ymax == 999)){
+        double yminVal = (log && *log) ? 0.1 : 0;
+        double ymaxVal  = (log && *log) ? maxYValue*10000 : maxYValue*1.1;
+        
+        hist->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+    }
+
+    hist->Draw("hist");
+
+    hist->SetStats(0);
+    hist->GetXaxis()->SetTickLength(0.04);
+    hist->GetYaxis()->SetTickLength(0.03);
+    hist->GetXaxis()->SetTickSize(0.02);
+    hist->GetYaxis()->SetTickSize(0.02);
+
+    double Lxmin = 0;
+    double Lymax = 0;
+    double Lxmax = 0;
+    double Lymin = 0;
+
+    if(drawLine){
+        TLine* line = new TLine(1.022, 0, 1.022, hist->GetMaximum());
+        line->SetLineColor(kGray+2);
+        line->SetLineStyle(2);
+        line->SetLineWidth(2);
+        line->Draw("same");
+
+        TLatex* latex = nullptr;    
+        // Labels line on the left
+        if(*linePos == 0){
+            latex = new TLatex(1.022 - 0.2, hist->GetMaximum() * 0.93, "2m_{e}");
+        } else{
+            latex = new TLatex(1.022 + 0.1, hist->GetMaximum() * 0.93, "2m_{e}");
+        }
+
+        latex->SetTextSize(0.035); 
+        latex->SetTextAlign(11);
+        latex->Draw("same");
+    }
+
+    if(pt){
+        pt->SetTextSize(legend->GetTextSize());
+        pt->SetTextFont(legend->GetTextFont());
+        pt->Draw();
+    }
+
+    canvas->SaveAs(filename);
+}
 
 void efficiencyCut(cutHistGroup hists, double ymin, double ymax, double xmin, double xmax, const char* filenameBase, const std::string& legendLocation, double signalWeight, double BNBWeight, double cosmicsWeight, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = "", double efficiencyWay = 0.0, double* currentMaxEffPurBin = nullptr, double* ubooneMaxEffPurBin = nullptr){
 
@@ -550,16 +615,37 @@ void efficiencyCut(cutHistGroup hists, double ymin, double ymax, double xmin, do
     effPur->GetYaxis()->SetNoExponent(false);
     effPur->GetYaxis()->SetMaxDigits(2);
 
-
     TCanvas *rejBNBCanvas = new TCanvas("rejBNB_canvas", "Graph Draw Options", 200, 10, 600, 400);
     TCanvas *rejCosmicCanvas = new TCanvas("rejCosmic_canvas", "Graph Draw Options", 200, 10, 600, 400);
     TCanvas *effSignalCanvas = new TCanvas("effSignal_canvas", "Graph Draw Options", 200, 10, 600, 400);
 
-    styleDraw
-
-
+    styleDrawCut(efficiencyCanvas, signalEff, BNBEff, cosmicsEff, ymin, ymax, xmin, xmax, (std::string(filenameBase) + "_eff.pdf").c_str(), legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
+    styleDrawCut(rejectionCanvas, signalRej, BNBRej, cosmicsRej, ymin, ymax, xmin, xmax, (std::string(filenameBase) + "_rej.pdf").c_str(), legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
+    styleDrawCutIndividual(purityCanvas, pur, ymin, ymax, xmin, xmax, (std::string(filenameBase) + "_pur.pdf").c_str(), legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
+    styleDrawCutIndividual(effpurCanvas, effPur, ymin, ymax, xmin, xmax, (std::string(filenameBase) + "_effpur.pdf").c_str(), legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
 }
 
+void weighted(){}
+
+void weightedCut(cutHistGroup hists, double signalWeight, double BNBWeight, double cosmicsWeight, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
+    TCanvas *weightedCanvas = new TCanvas("weighted_canvas", "Graph Draw Options", 200, 10, 600, 400); 
+    TH1F* signalWeighted = (TH1F*) hists.Signal->Clone("weighted hist");
+    signalWeighted->Scale(signalWeight);
+    signalWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
+    
+    TH1F* BNBWeighted = (TH1F*) hists.BNB->Clone("weighted hist");
+    BNBWeighted->Scale(BNBWeight);
+    BNBWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
+
+    TH1F* cosmicsWeighted = (TH1F*) hists.cosmics->Clone("weighted hist");
+    cosmicsWeighted->Scale(cosmicsWeight);
+    cosmicsWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
+    
+    int funcValue = 1;
+    int log = 1;
+
+    styleDrawCut(weightedCanvas, signalWeighted, BNBWeighted, cosmicsWeighted, ymin, ymax, xmin, xmax, filename, legendLocation, nullptr, &funcValue, drawLine, linePos, &log);
+}
 
 recoSlice chooseSlice(std::vector<recoSlice> recoSlices, double method){
     int chosenSliceIndex = 0;
@@ -1174,17 +1260,24 @@ void nuECut_macro(){
             // Passes cuts
             if(DLCurrent == 2 && signal == 1){
                 numSlices.keptSignal->Fill(numSlicesInEvent);
-                numSlices.Signal->Fill(numSlicesInEvent);
+                numSlicesCut.Signal->Fill(numSlicesInEvent);
             } else if(DLCurrent == 2 && signal == 2){
                 numSlices.keptBNB->Fill(numSlicesInEvent);
-                numSlices.BNB->Fill(numSlicesInEvent);
+                numSlicesCut.BNB->Fill(numSlicesInEvent);
             } else if(DLCurrent == 2 && signal == 3){
                 numSlices.keptCosmics->Fill(numSlicesInEvent);
-                numSlices.Cosmics->Fill(numSlicesInEvent);
+                numSlicesCut.Cosmics->Fill(numSlicesInEvent);
             }
         }
 
     }
+   
+    int drawLine = 1;
+    int left = 0;
+    int right = 1;
 
+    styleDrawCut(numSlicesCut.canvas, numSlicesCut.Signal, numSlicesCut.BNB, numSlicesCut.Cosmics, 999, 999, 999, 999, (base_path + "numSlicesCut_dist.pdf").c_str(), legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
+    weightedCut();
+    efficiencyCut(numSlicesCut, 999, 999, 999, 999, (base_path + "numSlicesCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Slices", 1);
 
 }
