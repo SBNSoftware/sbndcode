@@ -55,6 +55,22 @@ public:
     return getCRTFEBCalibrationOrDefault(febMAC5).t1CalibratedOffset;
   };
 
+  int getRawChannelNumber(unsigned int channel) const override {
+    return getCRTChannelCalibrationOrDefault(channel).rawChannelNumber;
+  };
+
+  int getChannelStatus(unsigned int channel) const override {
+    return getCRTChannelCalibrationOrDefault(channel).status;
+  };
+
+  int getPedestal(unsigned int channel) const override {
+    return getCRTChannelCalibrationOrDefault(channel).pedestal;
+  };
+
+  double getGainFactor(unsigned int channel) const override {
+    return getCRTChannelCalibrationOrDefault(channel).gainFactor;
+  };
+
 private:
         
   bool fVerbose;
@@ -65,26 +81,42 @@ private:
   std::string fChannelTableName;
 
   struct CRTFEBCalibrationDB { 
-    size_t moduleType = 0;
+    size_t moduleType          = 0;
     double t0CableLengthOffset = 0.;
     double t0CalibratedOffset  = 0.;
     double t1CableLengthOffset = 0.;
     double t1CalibratedOffset  = 0.;
   };
+
+  struct CRTChannelCalibrationDB {
+    size_t rawChannelNumber = 0;
+    size_t status           = 0;
+    size_t pedestal         = 0;
+    double gainFactor       = 0.;
+  };
             
-  const CRTFEBCalibrationDB CRTFEBDefaults = {0, 0., 0., 0., 0.};
+  const CRTFEBCalibrationDB CRTFEBDefaults         = {0, 0., 0., 0., 0.};
+  const CRTChannelCalibrationDB CRTChannelDefaults = {0, 0, 0, 0.};
 
   std::map<unsigned int, CRTFEBCalibrationDB> fCRTFEBCalibrationData;
-        
-  CRTFEBCalibrationDB const& getCRTFEBCalibrationOrDefault (unsigned int febMAC5) const
+  std::map<unsigned int, CRTChannelCalibrationDB> fCRTChannelCalibrationData;
+
+  CRTFEBCalibrationDB const& getCRTFEBCalibrationOrDefault(unsigned int febMAC5) const
   {
     auto const it = fCRTFEBCalibrationData.find(febMAC5);
-    return (it == fCRTFEBCalibrationData.end()) ? CRTFEBDefaults: it->second;
+    return (it == fCRTFEBCalibrationData.end()) ? CRTFEBDefaults : it->second;
+  }
+
+  CRTChannelCalibrationDB const& getCRTChannelCalibrationOrDefault(unsigned int channel) const
+  {
+    auto const it = fCRTChannelCalibrationData.find(channel);
+    return (it == fCRTChannelCalibrationData.end()) ? CRTChannelDefaults : it->second;
   }
 
   uint64_t RunToDatabaseTimestamp(uint32_t run) const;
 
   void ReadCRTFEBCalibration(uint32_t run);
+  void ReadCRTChannelCalibration(uint32_t run);
 
   template <class T>
   void ReadElement(lariov::DBFolder &table, const int channel, const std::string &name, T &value);

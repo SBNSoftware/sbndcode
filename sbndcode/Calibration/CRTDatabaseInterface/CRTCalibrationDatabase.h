@@ -16,6 +16,10 @@ namespace sbndDB {
     virtual double getT0CalibratedOffset(unsigned int febMAC5) const = 0;
     virtual double getT1CableLengthOffset(unsigned int febMAC5) const = 0;
     virtual double getT1CalibratedOffset(unsigned int febMAC5) const = 0;
+    virtual int getRawChannelNumber(unsigned int channel) const = 0;
+    virtual int getChannelStatus(unsigned int channel) const = 0;
+    virtual int getPedestal(unsigned int channel) const = 0;
+    virtual double getGainFactor(unsigned int channel) const = 0;
   }; // end class
 
 } // end of namespace

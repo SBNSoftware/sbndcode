@@ -14,9 +14,8 @@
 
 //--------------------------------------------------------------------------------
 
-sbndDB::CRTCalibrationDatabaseProvider::CRTCalibrationDatabaseProvider(
-                                                                       const fhicl::ParameterSet& pset)
-  : fVerbose{pset.get<bool>("Verbose", false)}
+sbndDB::CRTCalibrationDatabaseProvider::CRTCalibrationDatabaseProvider(const fhicl::ParameterSet& pset)
+  : fVerbose(pset.get<bool>("Verbose", false))
 {
   fhicl::ParameterSet const databasepset{pset.get<fhicl::ParameterSet>("Database")};
   fDatabaseTag       = databasepset.get<std::string>("DatabaseTag");
@@ -95,6 +94,53 @@ void sbndDB::CRTCalibrationDatabaseProvider::ReadCRTFEBCalibration(uint32_t run)
     }
 }
 
+void sbndDB::CRTCalibrationDatabaseProvider::ReadCRTChannelCalibration(uint32_t run)
+{
+  lariov::DBFolder channelTable(fChannelTableName, "", "", fDatabaseTag, true, false);
+
+  channelTable.UpdateData(fDatabaseTimeStamp);
+  bool ret = channelTable.UpdateData(fDatabaseTimeStamp);
+
+  mf::LogDebug("CRTCalibrationDatabaseProvider") << fChannelTableName << (ret ? "" : " not")
+                                                 << " updated for run " << run;
+
+  mf::LogTrace("CRTCalibrationDatabaseProvider")
+    << "Fetched IoV [ " << channelTable.CachedStart().DBStamp() << " -> " << channelTable.CachedEnd().DBStamp()
+    << " ] to cover t=" << RunToDatabaseTimestamp(run)
+    << " [=" << lariov::TimeStampDecoder::DecodeTimeStamp(RunToDatabaseTimestamp(run)).DBStamp()
+    << "]";
+
+  std::vector<unsigned int> channelList;
+  if (int res = channelTable.GetChannelList(channelList); res != 0) {
+    throw cet::exception("CRTCalibrationDatabaseProvider")
+      << "GetChannelList() returned " << res << " on run " << run << " query in " << fChannelTableName << "\n";
+  }
+
+  if (channelList.empty()) {
+    throw cet::exception("CRTCalibrationDatabaseProvider")
+      << "Got an empty channel list for run " << run << " in " << fChannelTableName << "\n";
+  }
+
+  for(auto ch : channelList)
+    {
+      long rawChannelNumber = 0;
+      ReadElement(channelTable, ch, "raw_channel_number", rawChannelNumber);
+      fCRTChannelCalibrationData[ch].rawChannelNumber = static_cast<int>(rawChannelNumber);
+
+      long status = 0;
+      ReadElement(channelTable, ch, "status", status);
+      fCRTChannelCalibrationData[ch].status = static_cast<int>(status);
+
+      long pedestal = 0;
+      ReadElement(channelTable, ch, "pedestal", pedestal);
+      fCRTChannelCalibrationData[ch].pedestal = static_cast<int>(pedestal);
+
+      double gainFactor = 0;
+      ReadElement(channelTable, ch, "gainfactor", gainFactor);
+      fCRTChannelCalibrationData[ch].gainFactor = gainFactor;
+    }
+}
+
 template <class T>
 void sbndDB::CRTCalibrationDatabaseProvider::ReadElement(lariov::DBFolder &table, const int channel, const std::string &name, T &value)
 {
@@ -113,6 +159,7 @@ void sbndDB::CRTCalibrationDatabaseProvider::readCRTCalibrationDatabase(const ar
   fCRTFEBCalibrationData.clear();
 
   ReadCRTFEBCalibration(run.id().run());
+  ReadCRTChannelCalibration(run.id().run());
 
   if(fVerbose)
     {
@@ -126,5 +173,13 @@ void sbndDB::CRTCalibrationDatabaseProvider::readCRTCalibrationDatabase(const ar
         mf::LogVerbatim("CRTCalibrationDatabaseProvider") << key << " " << value.moduleType << "," << value.t0CableLengthOffset << ","
                                                           << value.t0CalibratedOffset << "," << value.t1CableLengthOffset << ","
                                                           << value.t1CableLengthOffset << std::endl;
+
+      mf::LogVerbatim("CRTCalibrationDatabaseProvider")
+        << "channel, raw_channel_number, channel_status, pedestal, gain_factor"
+        << std::endl;
+
+      for(auto const& [key, value] : fCRTChannelCalibrationData)
+        mf::LogVerbatim("CRTCalibrationDatabaseProvider") << key << " " << value.rawChannelNumber << "," << value.status << ","
+                                                          << value.pedestal << "," << value.gainFactor << std::endl;
     }
 }
