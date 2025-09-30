@@ -8,6 +8,7 @@ crtstriphitproducer_sbnd:
    ADCThreshold:              60
    ErrorCoeff:                [ 0.26, -0.27, 0.025 ]
    AllowFlag1:                false
+   ApplyTs0Window:            false
    ApplyTs1Window:            false
    CorrectForDifferentSecond: false
    ReferenceTs0:              false
@@ -27,6 +28,9 @@ crtstriphitproducer_data_sbnd.MaxAllowedRefTimeDiff:     3000000
 crtstriphitproducer_data_sbnd.SPECTDCModuleLabel:        "tdcdecoder"
 crtstriphitproducer_data_sbnd.PTBModuleLabel:            "ptbdecoder"
 crtstriphitproducer_data_sbnd.AllowedPTBHLTs:            [ 1, 2, 3, 4, 5, 14, 15 ]
+crtstriphitproducer_data_sbnd.ApplyTs0Window:            true
+crtstriphitproducer_data_sbnd.Ts0Min:                    -1.71e6
+crtstriphitproducer_data_sbnd.Ts0Max:                    1.51e6
 
 crtclusterproducer_sbnd:
 {

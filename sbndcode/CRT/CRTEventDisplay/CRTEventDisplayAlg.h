@@ -93,6 +93,9 @@ namespace sbnd::crt {
       fhicl::Atom<art::InputTag> TPCTrackLabel {
         Name("TPCTrackLabel")
       };
+      fhicl::Atom<art::InputTag> PFPLabel {
+        Name("PFPLabel")
+      };
 
       fhicl::Atom<bool> SaveRoot {
         Name("SaveRoot"),
@@ -145,6 +148,9 @@ namespace sbnd::crt {
       };
       fhicl::Atom<bool> DisplayMatchScore {
         Name("DisplayMatchScore")
+      };
+      fhicl::Atom<bool> DrawTPCTracks {
+        Name("DrawTPCTracks")
       };
 
       fhicl::Atom<bool> ChoseTaggers {
@@ -271,6 +277,7 @@ namespace sbnd::crt {
     art::InputTag fTPCSpacePointMatchLabel;
     art::InputTag fTPCTrackMatchLabel;
     art::InputTag fTPCTrackLabel;
+    art::InputTag fPFPLabel;
 
     bool fSaveRoot;
     bool fSaveViews;
@@ -290,6 +297,7 @@ namespace sbnd::crt {
     bool fDrawTPCMatching;
     bool fOnlyDrawMatched;
     bool fDisplayMatchScore;
+    bool fDrawTPCTracks;
 
     bool             fChoseTaggers;
     std::vector<int> fChosenTaggers;

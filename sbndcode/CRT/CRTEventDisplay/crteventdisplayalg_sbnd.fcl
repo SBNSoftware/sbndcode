@@ -18,6 +18,7 @@ crteventdisplayalg_sbnd:
    TPCSpacePointMatchLabel: "crtspacepointmatching"
    TPCTrackMatchLabel:      "crttrackmatching"
    TPCTrackLabel:           "pandoraTrack"
+   PFPLabel:                "pandora"
 
    SaveRoot:         true
    SaveViews:        false
@@ -37,6 +38,7 @@ crteventdisplayalg_sbnd:
    DrawTPCMatching:   false
    OnlyDrawMatched:   false
    DisplayMatchScore: false
+   DrawTPCTracks:     false
 
    ## If chose taggers is set to true then the vector ChosenTaggers
    ## is used to determine which taggers are drawn. The integer values

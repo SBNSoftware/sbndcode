@@ -1,0 +1,87 @@
+BEGIN_PROLOG
+
+wfalign_data:
+{
+    module_type:  "WaveformAlignment" 
+
+    #Input product labels
+    TimingRefLabel: "pmtdecoder"
+    TdcDecodeLabel: "tdcdecoder"
+    PtbDecodeLabel: "ptbdecoder"
+
+    PmtDecodeLabel: "pmtdecoder:PMTChannels"
+    PmtBoardLabel: "pmtdecoder:PMTTiming"
+    
+    TimingDecodeLabel: "pmtdecoder:TimingChannels"
+    TimingBoardLabel: "pmtdecoder:TimingTiming"
+    
+    FtrigDecodeLabel: "pmtdecoder:FTrigChannels"
+    FtrigBoardLabel: "pmtdecoder:FTrigTiming"
+   
+    #Configure input projects
+    #Types of High Level Trigger for data stream
+    PtbAllowedHlts: [1, 2, 3, 4, 5, 14, 15]
+    #Time interval between TDC ch3 (FTRIG) and ch15 CAEN
+    Tdc3CaenOffset: [101, 101, 101, 101, 101, 101, 101, 101, 101] #ns
+    #Time interval between HLT issued in PTB and ch15 CAEN
+    PtbCaenOffset: [166, 166, 166, 166, 166, 166, 166, 166, 166] #ns
+    #Cable path between PPS source to CAEN
+    PPSPath: 20.0 #ns
+ 
+    #Number of ticks per PMT waveform
+    WfLength: 5000 #2ns/tick
+    #Number of channels per digitiser for recording PMT
+    nChperBoard: 15
+    
+    #Pmt CAEN 0-7, Timing CAEN 8
+    PmtBoard: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    PmtCol: [1, 2, 3, 4, 5, 6, 7, 28, 30]
+
+    #Lower/Upper bound tick: (1) to save a shortened FTRIG 
+    #and (2) to locate the rising edge of FTRIG for fitting
+    TickLbPmt: 1005
+    TickUbPmt: 1035
+    TickLbTiming: 975
+    TickUbTiming: 1005
+
+    #Configure fit parameters
+    FitBound: 12 #Define the boundary range to perform the rising edge
+    FitTries: 100 #Number of tries if fit fails
+    GradientInitialGuess: [0.3, 0.25, 0.25, 0.25, 0.3, 0.3, 0.3, 0.3, 0.08] #Fit parameter to try per board
+
+    #Configure the allowed jittering for PMT/Timing CAEN 
+    PmtJitterLowerBound: -5
+    PmtJitterUpperBound: 3
+    TimingJitterLowerBound: -56
+    TimingJitterUpperBound: -48
+    
+    #Configure which correction to apply -- default is all
+    CorrectPPS: true
+    CorrectPMT2DigitiserCable: true
+    CorrectDigitiserJitter: true
+    CorrectPMTResponse: true
+    
+    #For debugging
+    DebugTimeRef: false #Debug pmt timing reference type
+    DebugFtrig: false #Debug the section fitting FTRIG waveform
+    DebugPmt: false #Debug the alignment of PMT waveforms
+    DebugTiming: false # Debug the alignment of Timing CAEN
+
+    SaveGoodFit: false #Save individual fit of FTRIG waveform per board if fit is good
+    SaveBadFit: false #Save individual fit of FTRIG waveform per board if fit is bad
+    SaveCompare: false #Save FTRIG before/after alignment per flash
+    SavePath: "./" #Save path
+
+    #Output product label
+    FtrigNewLabel: "FTrigChannels"
+    FtrigBoardNewLabel: "FTrigTiming"
+    
+    PmtNewLabel: "PMTChannels"
+    PmtBoardNewLabel: "PMTTiming"
+    PmtAlignNewLabel: "PMTAlign"
+    
+    TimingNewLabel: "TimingChannels"
+    TimingBoardNewLabel: "TimingTiming"
+    TimingAlignNewLabel: "TimingAlign"
+}
+END_PROLOG

@@ -61,6 +61,9 @@ private:
   uint16_t              fADCThreshold;
   std::vector<double>   fErrorCoeff;
   bool                  fAllowFlag1;
+  bool                  fApplyTs0Window;
+  double                fTs0Min;
+  double                fTs0Max;
   bool                  fApplyTs1Window;
   double                fTs1Min;
   double                fTs1Max;
@@ -84,6 +87,9 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
+  , fApplyTs0Window(p.get<bool>("ApplyTs0Window"))
+  , fTs0Min(p.get<double>("Ts0Min", 0))
+  , fTs0Max(p.get<double>("Ts0Max", std::numeric_limits<double>::max()))
   , fApplyTs1Window(p.get<bool>("ApplyTs1Window"))
   , fTs1Min(p.get<double>("Ts1Min", 0))
   , fTs1Max(p.get<double>("Ts1Max", std::numeric_limits<double>::max()))
@@ -240,6 +246,9 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
   if(fReferenceTs0)
     t0 -= ref_time_ns;
+
+  if(fApplyTs0Window && (t0 < fTs0Min || t0 > fTs0Max))
+    return stripHits;
 
   if(fApplyTs1Window && (t1 < fTs1Min || t1 > fTs1Max))
     return stripHits;
