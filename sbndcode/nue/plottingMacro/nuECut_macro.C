@@ -181,59 +181,59 @@ cutHistGroup createCutHistGroup(const std::string& baseName, const std::string& 
     };    
 }
 
-void styleDraw(histGroup hist, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, TPaveText* pt = nullptr, int* weighted = nullptr, int* drawLine = nullptr, int* linePos = nullptr, int* log = nullptr){
-    hist.canvas->cd();
-    hist.canvas->SetTickx();
-    hist.canvas->SetTicky();
+void styleDraw(TCanvas* canvas, TH1F* keptSignal, TH1F* cutSignal, TH1F* keptBNB, TH1F* cutBNB, TH1F* keptCosmics, TH1F* cutCosmics, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, TPaveText* pt = nullptr, int* weighted = nullptr, int* drawLine = nullptr, int* linePos = nullptr, int* log = nullptr){
+    canvas->cd();
+    canvas->SetTickx();
+    canvas->SetTicky();
 
     if(log && *log){
         gPad->SetLogy();
-        hist.keptSignal->SetMinimum(0.0000001);
-        hist.keptBNB->SetMinimum(0.0000001);
-        hist.keptCosmics->SetMinimum(0.0000001);
-        hist.cutSignal->SetMinimum(0.0000001);
-        hist.cutBNB->SetMinimum(0.0000001);
-        hist.cutCosmics->SetMinimum(0.0000001);
+        keptSignal->SetMinimum(0.0000001);
+        keptBNB->SetMinimum(0.0000001);
+        keptCosmics->SetMinimum(0.0000001);
+        cutSignal->SetMinimum(0.0000001);
+        cutBNB->SetMinimum(0.0000001);
+        cutCosmics->SetMinimum(0.0000001);
     }
 
     gPad->Update();
-    hist.keptSignal->SetLineWidth(2);
-    hist.keptSignal->SetLineColor(kBlue+1);
-    hist.keptBNB->SetLineWidth(2);
-    hist.keptBNB->SetLineColor(kOrange+7);
-    hist.keptCosmics->SetLineWidth(2);
-    hist.keptCosmics->SetLineColor(kPink+9);
-    hist.cutSignal->SetLineWidth(2);
-    hist.cutSignal->SetLineColor(kBlue-7);
-    hist.cutBNB->SetLineWidth(2);
-    hist.cutBNB->SetLineColor(kOrange+6);
-    hist.cutCosmics->SetLineWidth(2);
-    hist.cutCosmics->SetLineColor(kPink+1);
+    keptSignal->SetLineWidth(2);
+    keptSignal->SetLineColor(kBlue+1);
+    keptBNB->SetLineWidth(2);
+    keptBNB->SetLineColor(kOrange+7);
+    keptCosmics->SetLineWidth(2);
+    keptCosmics->SetLineColor(kPink+9);
+    cutSignal->SetLineWidth(2);
+    cutSignal->SetLineColor(kBlue-7);
+    cutBNB->SetLineWidth(2);
+    cutBNB->SetLineColor(kOrange+6);
+    cutCosmics->SetLineWidth(2);
+    cutCosmics->SetLineColor(kPink+1);
 
-    if((ymin != 999) && (ymax != 999)) hist.keptSignal->GetYaxis()->SetRangeUser(ymin, ymax);
-    if((xmin != 999) && (xmax != 999)) hist.keptSignal->GetXaxis()->SetRangeUser(xmin, xmax);
+    if((ymin != 999) && (ymax != 999)) keptSignal->GetYaxis()->SetRangeUser(ymin, ymax);
+    if((xmin != 999) && (xmax != 999)) keptSignal->GetXaxis()->SetRangeUser(xmin, xmax);
 
-    double maxYValue = std::max({hist.keptSignal->GetMaximum(), hist.cutSignal->GetMaximum(), hist.keptBNB->GetMaximum(), hist.cutBNB->GetMaximum(), hist.keptCosmics->GetMaximum(), hist.cutCosmics->GetMaximum()});
+    double maxYValue = std::max({keptSignal->GetMaximum(), hist.cutSignal->GetMaximum(), hist.keptBNB->GetMaximum(), hist.cutBNB->GetMaximum(), hist.keptCosmics->GetMaximum(), hist.cutCosmics->GetMaximum()});
 
     if((ymin == 999) && (ymax == 999)){
         double yminVal = (log && *log) ? 0.1 : 0;
         double ymaxVal  = (log && *log) ? maxYValue*10000 : maxYValue*1.1;
         
-        hist.keptSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+        keptSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
     }
 
-    hist.keptSignal->Draw("hist");
-    hist.keptBNB->Draw("histsame");
-    hist.keptCosmics->Draw("histsame");
-    hist.cutSignal->Draw("histsame");
-    hist.cutBNB->Draw("histsame");
-    hist.cutCosmics->Draw("histsame");
+    keptSignal->Draw("hist");
+    keptBNB->Draw("histsame");
+    keptCosmics->Draw("histsame");
+    cutSignal->Draw("histsame");
+    cutBNB->Draw("histsame");
+    cutCosmics->Draw("histsame");
 
-    hist.keptSignal->SetStats(0);
-    hist.keptSignal->GetXaxis()->SetTickLength(0.04);
-    hist.keptSignal->GetYaxis()->SetTickLength(0.03);
-    hist.keptSignal->GetXaxis()->SetTickSize(0.02);
-    hist.keptSignal->GetYaxis()->SetTickSize(0.02);
+    keptSignal->SetStats(0);
+    keptSignal->GetXaxis()->SetTickLength(0.04);
+    keptSignal->GetYaxis()->SetTickLength(0.03);
+    keptSignal->GetXaxis()->SetTickSize(0.02);
+    keptSignal->GetYaxis()->SetTickSize(0.02);
 
     double Lxmin = 0;
     double Lymax = 0;
@@ -241,18 +241,18 @@ void styleDraw(histGroup hist, double ymin, double ymax, double xmin, double xma
     double Lymin = 0;
 
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
-    legend->AddEntry(hist.keptSignal, "Kept Nu+E + Cosmics, Pandora BDT Vertexing", "f");
-    legend->AddEntry(hist.keptBNB, "Kept BNB + Cosmics, Pandora BDT Vertexing", "f");
-    legend->AddEntry(hist.keptCosmics, "Kept Intime Cosmics, Pandora BDT Vertexing", "f");
-    legend->AddEntry(hist.cutSignal, "Cut Nu+E + Cosmics, Pandora BDT Vertexing", "f");
-    legend->AddEntry(hist.cutBNB, "Cut BNB + Cosmics, Pandora BDT Vertexing", "f");
-    legend->AddEntry(hist.cutCosmics, "Cut Intime Cosmics, Pandora BDT Vertexing", "f");
+    legend->AddEntry(keptSignal, "Kept Nu+E + Cosmics, Pandora BDT Vertexing", "f");
+    legend->AddEntry(keptBNB, "Kept BNB + Cosmics, Pandora BDT Vertexing", "f");
+    legend->AddEntry(keptCosmics, "Kept Intime Cosmics, Pandora BDT Vertexing", "f");
+    legend->AddEntry(cutSignal, "Cut Nu+E + Cosmics, Pandora BDT Vertexing", "f");
+    legend->AddEntry(cutBNB, "Cut BNB + Cosmics, Pandora BDT Vertexing", "f");
+    legend->AddEntry(cutCosmics, "Cut Intime Cosmics, Pandora BDT Vertexing", "f");
     legend->SetTextSize(0.0225);
     legend->SetMargin(0.13);
     legend->Draw();
 
     if(drawLine){
-        TLine* line = new TLine(1.022, 0, 1.022, hist.keptSignal->GetMaximum());
+        TLine* line = new TLine(1.022, 0, 1.022, keptSignal->GetMaximum());
         line->SetLineColor(kGray+2);
         line->SetLineStyle(2);
         line->SetLineWidth(2);
@@ -261,9 +261,9 @@ void styleDraw(histGroup hist, double ymin, double ymax, double xmin, double xma
         TLatex* latex = nullptr;    
         // Labels line on the left
         if(*linePos == 0){
-            latex = new TLatex(1.022 - 0.2, hist.keptSignal->GetMaximum() * 0.93, "2m_{e}");
+            latex = new TLatex(1.022 - 0.2, keptSignal->GetMaximum() * 0.93, "2m_{e}");
         } else{
-            latex = new TLatex(1.022 + 0.1, hist.keptSignal->GetMaximum() * 0.93, "2m_{e}");
+            latex = new TLatex(1.022 + 0.1, keptSignal->GetMaximum() * 0.93, "2m_{e}");
         }
 
         latex->SetTextSize(0.035); 
@@ -625,7 +625,34 @@ void efficiencyCut(cutHistGroup hists, double ymin, double ymax, double xmin, do
     styleDrawCutIndividual(effpurCanvas, effPur, ymin, ymax, xmin, xmax, (std::string(filenameBase) + "_effpur.pdf").c_str(), legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
 }
 
-void weighted(){}
+void weighted(histGroup hists, double signalWeight, double BNBWeight, double cosmicsWeight, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
+    TCanvas *weightedCanvas = new TCanvas("weighted_canvas", "Graph Draw Options", 200, 10, 600, 400); 
+    TH1F* keptSignalWeighted = (TH1F*) hists.keptSignal->Clone("weighted hist");
+    keptSignalWeighted->Scale(signalWeight);
+    keptSignalWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
+    TH1F* cutSignalWeighted = (TH1F*) hists.cutSignal->Clone("weighted hist");
+    cutSignalWeighted->Scale(signalWeight);
+    cutSignalWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
+    
+    TH1F* keptBNBWeighted = (TH1F*) hists.keptBNB->Clone("weighted hist");
+    keptBNBWeighted->Scale(BNBWeight);
+    keptBNBWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
+    TH1F* cutBNBWeighted = (TH1F*) hists.cutBNB->Clone("weighted hist");
+    cutBNBWeighted->Scale(BNBWeight);
+    cutBNBWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
+
+    TH1F* keptCosmicsWeighted = (TH1F*) hists.keptCosmics->Clone("weighted hist");
+    keptCosmicsWeighted->Scale(cosmicsWeight);
+    keptCosmicsWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
+    TH1F* cutCosmicsWeighted = (TH1F*) hists.cutCosmics->Clone("weighted hist");
+    cutCosmicsWeighted->Scale(cosmicsWeight);
+    cutCosmicsWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
+    
+    int funcValue = 1;
+    int log = 1;
+
+    styleDraw(weightedCanvas, keptSignalWeighted, cutSignalWeighted, keptBNBWeighted, cutBNBWeighted, keptCosmicsWeighted, cutCosmicsWeighted, ymin, ymax, xmin, xmax, filename, legendLocation, nullptr, &funcValue, drawLine, linePos, &log);
+}
 
 void weightedCut(cutHistGroup hists, double signalWeight, double BNBWeight, double cosmicsWeight, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
     TCanvas *weightedCanvas = new TCanvas("weighted_canvas", "Graph Draw Options", 200, 10, 600, 400); 
@@ -781,7 +808,7 @@ void obtainTrueParticles(std::vector<trueParticle> trueParticles, trueNeutrino c
 
 void nuECut_macro(){
     TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_22Sep.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeights/";
+    std::string base_path = "/nashome/c/coackley/nuECutsPlots/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
