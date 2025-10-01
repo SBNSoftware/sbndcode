@@ -2,10 +2,12 @@
 
 namespace sbnd::crt {
 
-  CRTGeoService::CRTGeoService(fhicl::ParameterSet const& pset)
+  CRTGeoService::CRTGeoService(fhicl::ParameterSet const& pset, art::ActivityRegistry& reg)
     : fDefaultGain(pset.get<double>("DefaultGain"))
     , fMC(pset.get<bool>("MC"))
   {
+    reg.sPreBeginRun.watch(this, &CRTGeoService::preBeginRun);
+
     fGeometryService               = lar::providerFrom<geo::Geometry>();
     fAuxDetGeoCore                 = ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr();
     fCRTCalibrationDatabaseService = lar::providerFrom<sbndDB::ICRTCalibrationDatabaseService const>();
@@ -80,15 +82,8 @@ namespace sbnd::crt {
 
                 if(!fMC)
                   {
-                    art::ServiceHandle<SBND::CRTCalibService> CalibService;
-                    t0DelayCorrection = CalibService->GetT0CableOffsetFromFEBMAC5(mac5) + CalibService->GetT0CalibOffsetFromFEBMAC5(mac5);
-                    t1DelayCorrection = CalibService->GetT1CableOffsetFromFEBMAC5(mac5) + CalibService->GetT1CalibOffsetFromFEBMAC5(mac5);
-
-		    std::cout << "Type: " << fCRTCalibrationDatabaseService->getModuleType(mac5) << ' '
-			      << "T0 Cable: " << fCRTCalibrationDatabaseService->getT0CableLengthOffset(mac5) << ' '
-			      << "T0 Calib: " << fCRTCalibrationDatabaseService->getT0CalibratedOffset(mac5) << ' '
-			      << "T1 Cable: " << fCRTCalibrationDatabaseService->getT1CableLengthOffset(mac5) << ' '
-			      << "T1 Calib: " << fCRTCalibrationDatabaseService->getT1CalibratedOffset(mac5) << '\n' << std::endl;
+                    t0DelayCorrection = fCRTCalibrationDatabaseService->getT0CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT0CalibratedOffset(mac5);
+                    t1DelayCorrection = fCRTCalibrationDatabaseService->getT1CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT1CalibratedOffset(mac5);
                   }
 
                 const std::string stripName = nodeStrip->GetVolume()->GetName();
@@ -130,25 +125,28 @@ namespace sbnd::crt {
             geo::AuxDetSensitiveGeo::LocalPoint_t const sipm1XYZ{sipmX, sipm1Y, 0};
             auto const sipm1XYZWorld = auxDetSensitive.toWorldCoords(sipm1XYZ);
 
-            const uint32_t actualChannel0 = invert ? 31 - (2 * ads_i) : 2 * ads_i;
-            const uint32_t actualChannel1 = invert ? actualChannel0 - 1 : actualChannel0 + 1;
-
             uint32_t pedestal0       = 0;
             uint32_t pedestal1       = 0;
             CRTChannelStatus status0 = CRTChannelStatus::kGoodChannel;
             CRTChannelStatus status1 = CRTChannelStatus::kGoodChannel;
+            double gain0             = fDefaultGain;
+            double gain1             = fDefaultGain;
 
             if(!fMC)
               {
-                art::ServiceHandle<SBND::CRTCalibService> CalibService;
-                pedestal0 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel0);
-                pedestal1 = CalibService->GetPedestalFromFEBMAC5AndChannel(mac5, actualChannel1);
-                status0   = CalibService->GetChannelStatusFromFEBMAC5AndChannel(mac5, actualChannel0);
-                status1   = CalibService->GetChannelStatusFromFEBMAC5AndChannel(mac5, actualChannel1);
-              }
+                const uint32_t actualChannel0 = invert ? 31 - (2 * ads_i) : 2 * ads_i;
+                const uint32_t actualChannel1 = invert ? actualChannel0 - 1 : actualChannel0 + 1;
 
-            const double gain0 = fDefaultGain;
-            const double gain1 = fDefaultGain;
+                const int offlineChannel0 = mac5 * 100 + actualChannel0;
+                const int offlineChannel1 = mac5 * 100 + actualChannel1;
+
+                pedestal0 = fCRTCalibrationDatabaseService->getPedestal(offlineChannel0);
+                pedestal1 = fCRTCalibrationDatabaseService->getPedestal(offlineChannel1);
+                status0   = fCRTCalibrationDatabaseService->getChannelStatus(offlineChannel0);
+                status1   = fCRTCalibrationDatabaseService->getChannelStatus(offlineChannel1);
+                gain0     = fCRTCalibrationDatabaseService->getGainFactor(offlineChannel0);
+                gain1     = fCRTCalibrationDatabaseService->getGainFactor(offlineChannel1);
+              }
 
             // Fill SiPM information
             CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0, status0);
@@ -160,6 +158,40 @@ namespace sbnd::crt {
   }
 
   CRTGeoService::~CRTGeoService() {}
+
+  void CRTGeoService::preBeginRun(art::Run const& run)
+  {
+    if(fMC)
+      return;
+
+    art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
+
+    for(auto&& [ name, module ] : fModules)
+      {
+        SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(module.adID);
+        int mac5   = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
+
+        module.t0DelayCorrection = fCRTCalibrationDatabaseService->getT0CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT0CalibratedOffset(mac5);
+        module.t1DelayCorrection = fCRTCalibrationDatabaseService->getT1CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT1CalibratedOffset(mac5);
+      }
+
+    for(auto&& [ name, sipm ] : fSiPMs)
+      {
+        CRTModuleGeo module = GetModule(sipm.channel);
+        int channel         = sipm.channel % 32;
+
+        SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(module.adID);
+        int mac5    = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
+        bool invert = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
+
+        const uint32_t actualChannel = invert ? 31 - channel : channel;
+        const int offlineChannel     = mac5 * 100 + actualChannel;
+
+        sipm.pedestal = fCRTCalibrationDatabaseService->getPedestal(offlineChannel);
+        sipm.status   = fCRTCalibrationDatabaseService->getChannelStatus(offlineChannel);
+        sipm.gain     = fCRTCalibrationDatabaseService->getGainFactor(offlineChannel);
+      }
+  }
 
   std::vector<double> CRTGeoService::CRTLimits() const {
     std::vector<double> limits;
@@ -314,7 +346,7 @@ namespace sbnd::crt {
   }
 
   std::array<double, 6> CRTGeoService::StripHit3DPos(const uint16_t channel, const double x,
-                                                 const double ex)
+                                                     const double ex)
   {
     const CRTStripGeo &strip = GetStrip(channel);
 
@@ -340,7 +372,7 @@ namespace sbnd::crt {
   }
 
   std::vector<double> CRTGeoService::StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
-                                                      const double y, const double z)
+                                                          const double y, const double z)
   {
     const uint16_t adsID = strip.adsID;
     const uint16_t adID  = fModules.at(strip.moduleName).adID;
@@ -355,7 +387,7 @@ namespace sbnd::crt {
   }
 
   std::vector<double> CRTGeoService::StripWorldToLocalPos(const uint16_t channel, const double x,
-                                                      const double y, const double z)
+                                                          const double y, const double z)
   {
     const CRTStripGeo strip = GetStrip(channel);
     return StripWorldToLocalPos(strip, x, y, z);

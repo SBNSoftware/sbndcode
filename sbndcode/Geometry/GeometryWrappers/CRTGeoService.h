@@ -19,6 +19,7 @@
 #include "canvas/Persistency/Common/PtrVector.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
+#include "art/Framework/Services/Registry/ActivityRegistry.h"
 
 // LArSoft
 #include "larcore/Geometry/Geometry.h"
@@ -270,9 +271,11 @@ namespace sbnd::crt {
       };
     };
 
-    CRTGeoService(fhicl::ParameterSet const& pset);
+    CRTGeoService(fhicl::ParameterSet const& pset, art::ActivityRegistry& reg);
 
     ~CRTGeoService();
+
+    void preBeginRun(art::Run const& run);
 
     std::vector<double> CRTLimits() const;
 
