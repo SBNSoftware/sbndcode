@@ -213,7 +213,9 @@ void styleDraw(TCanvas* canvas, TH1F* keptSignal, TH1F* cutSignal, TH1F* keptBNB
     if((ymin != 999) && (ymax != 999)) keptSignal->GetYaxis()->SetRangeUser(ymin, ymax);
     if((xmin != 999) && (xmax != 999)) keptSignal->GetXaxis()->SetRangeUser(xmin, xmax);
 
-    double maxYValue = std::max({keptSignal->GetMaximum(), hist.cutSignal->GetMaximum(), hist.keptBNB->GetMaximum(), hist.cutBNB->GetMaximum(), hist.keptCosmics->GetMaximum(), hist.cutCosmics->GetMaximum()});
+    double maxYValue = std::max({keptSignal->GetBinContent(keptSignal->GetMaximumBin()), cutSignal->GetBinContent(cutSignal->GetMaximumBin()), keptBNB->GetBinContent(keptBNB->GetMaximumBin()), cutBNB->GetBinContent(cutBNB->GetMaximumBin()), keptCosmics->GetBinContent(keptCosmics->GetMaximumBin()), cutCosmics->GetBinContent(cutCosmics->GetMaximumBin())});
+    std::cout << "maxYValue = " << maxYValue << std::endl;
+    std::cout << "Signal Max = " << keptSignal->GetBinContent(keptSignal->GetMaximumBin()) << ", " << cutSignal->GetBinContent(cutSignal->GetMaximumBin()) << ", BNB Max = " << keptBNB->GetBinContent(keptBNB->GetMaximumBin()) << ", " << cutBNB->GetBinContent(cutBNB->GetMaximumBin()) << ", Cosmics Max = " << keptCosmics->GetBinContent(keptCosmics->GetMaximumBin()) << ", " << cutCosmics->GetBinContent(cutCosmics->GetMaximumBin()) << std::endl;
 
     if((ymin == 999) && (ymax == 999)){
         double yminVal = (log && *log) ? 0.1 : 0;
@@ -240,12 +242,35 @@ void styleDraw(TCanvas* canvas, TH1F* keptSignal, TH1F* cutSignal, TH1F* keptBNB
     double Lxmax = 0;
     double Lymin = 0;
 
+
+    if(legendLocation == "topRight"){
+        Lxmin = 0.48;
+        Lymax = 0.863;
+        Lxmax = 0.87;
+        Lymin = 0.640;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.863;
+        Lxmax = 0.52;
+        Lymin = 0.640;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.48;
+        Lymax = 0.36;
+        Lxmax = 0.87;
+        Lymin = 0.137;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.36;
+        Lxmax = 0.52;
+        Lymin = 0.137;
+    }
+
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
     legend->AddEntry(keptSignal, "Kept Nu+E + Cosmics, Pandora BDT Vertexing", "f");
-    legend->AddEntry(keptBNB, "Kept BNB + Cosmics, Pandora BDT Vertexing", "f");
-    legend->AddEntry(keptCosmics, "Kept Intime Cosmics, Pandora BDT Vertexing", "f");
     legend->AddEntry(cutSignal, "Cut Nu+E + Cosmics, Pandora BDT Vertexing", "f");
+    legend->AddEntry(keptBNB, "Kept BNB + Cosmics, Pandora BDT Vertexing", "f");
     legend->AddEntry(cutBNB, "Cut BNB + Cosmics, Pandora BDT Vertexing", "f");
+    legend->AddEntry(keptCosmics, "Kept Intime Cosmics, Pandora BDT Vertexing", "f");
     legend->AddEntry(cutCosmics, "Cut Intime Cosmics, Pandora BDT Vertexing", "f");
     legend->SetTextSize(0.0225);
     legend->SetMargin(0.13);
@@ -304,7 +329,9 @@ void styleDrawCut(TCanvas* canvas, TH1F* signal, TH1F* BNB, TH1F* cosmics, doubl
     if((ymin != 999) && (ymax != 999)) signal->GetYaxis()->SetRangeUser(ymin, ymax);
     if((xmin != 999) && (xmax != 999)) signal->GetXaxis()->SetRangeUser(xmin, xmax);
 
-    double maxYValue = std::max({signal->GetMaximum(), BNB->GetMaximum(), cosmics->GetMaximum()});
+    double maxYValue = std::max({signal->GetBinContent(signal->GetMaximumBin()), BNB->GetBinContent(BNB->GetMaximumBin()), cosmics->GetBinContent(cosmics->GetMaximumBin())});
+    std::cout << "maxYValue = " << maxYValue << std::endl;
+    std::cout << "Signal Max = " << signal->GetBinContent(signal->GetMaximumBin()) << ", BNB Max = " << BNB->GetBinContent(BNB->GetMaximumBin()) << ", Cosmics Max = " << cosmics->GetBinContent(cosmics->GetMaximumBin()) << std::endl;
 
     if((ymin == 999) && (ymax == 999)){
         double yminVal = (log && *log) ? 0.1 : 0;
@@ -327,6 +354,29 @@ void styleDrawCut(TCanvas* canvas, TH1F* signal, TH1F* BNB, TH1F* cosmics, doubl
     double Lymax = 0;
     double Lxmax = 0;
     double Lymin = 0;
+
+
+    if(legendLocation == "topRight"){
+        Lxmin = 0.548;
+        Lymax = 0.863;
+        Lxmax = 0.87;
+        Lymin = 0.7515;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.863;
+        Lxmax = 0.452;
+        Lymin = 0.7515;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.548;
+        Lymax = 0.2485;
+        Lxmax = 0.87;
+        Lymin = 0.137;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.2485;
+        Lxmax = 0.452;
+        Lymin = 0.137;
+    }
 
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
     legend->AddEntry(signal, "Nu+E + Cosmics, Pandora BDT Vertexing", "f");
@@ -383,7 +433,7 @@ void styleDrawCutIndividual(TCanvas* canvas, TH1F* hist, double ymin, double yma
     if((ymin != 999) && (ymax != 999)) hist->GetYaxis()->SetRangeUser(ymin, ymax);
     if((xmin != 999) && (xmax != 999)) hist->GetXaxis()->SetRangeUser(xmin, xmax);
 
-    double maxYValue = std::max({hist->GetMaximum()});
+    double maxYValue = std::max({hist->GetBinContent(hist->GetMaximumBin())});
 
     if((ymin == 999) && (ymax == 999)){
         double yminVal = (log && *log) ? 0.1 : 0;
@@ -425,11 +475,11 @@ void styleDrawCutIndividual(TCanvas* canvas, TH1F* hist, double ymin, double yma
         latex->Draw("same");
     }
 
-    if(pt){
-        pt->SetTextSize(legend->GetTextSize());
-        pt->SetTextFont(legend->GetTextFont());
-        pt->Draw();
-    }
+    //if(pt){
+        //pt->SetTextSize(legend->GetTextSize());
+        //pt->SetTextFont(legend->GetTextFont());
+        //pt->Draw();
+    //}
 
     canvas->SaveAs(filename);
 }
@@ -533,6 +583,7 @@ void efficiencyCut(cutHistGroup hists, double ymin, double ymax, double xmin, do
             
             pur->SetBinContent(i, purityValue);
             effPur->SetBinContent(i, effPurValue);
+            std::cout << "Purity = " << purityValue << ", Efficiency = " << signalEffValue << ", Purity x Efficiency = " << effPurValue << std::endl;
         }   
     }
 
@@ -544,11 +595,17 @@ void efficiencyCut(cutHistGroup hists, double ymin, double ymax, double xmin, do
             BNBSum += hists.BNB->GetBinContent(i);
             cosmicsSum += hists.Cosmics->GetBinContent(i);
 
+            double sizeSignal = hists.Signal->GetEntries();
+            double sizeBNB = hists.BNB->GetEntries();
+            double sizeCosmics = hists.Cosmics->GetEntries();
+
             double signalEffValue = signalSum/sizeSignal;
             double BNBEffValue = BNBSum/sizeBNB;
             double cosmicsEffValue = cosmicsSum/sizeCosmics;
-            BNBEff-SetBinContent(i, currentBNBEffValue);
-            cosmicsEff->SetBinContent(i, currentCosmicsEffValue);
+            
+            signalEff->SetBinContent(i, signalEffValue);
+            BNBEff->SetBinContent(i, BNBEffValue);
+            cosmicsEff->SetBinContent(i, cosmicsEffValue);
         
             signalRej->SetBinContent(i, 1-signalEffValue);
             BNBRej->SetBinContent(i, 1-BNBEffValue);
@@ -568,6 +625,8 @@ void efficiencyCut(cutHistGroup hists, double ymin, double ymax, double xmin, do
             double effPurValue = (signalEffValue * purityValue);
             pur->SetBinContent(i, purityValue);
             effPur->SetBinContent(i, effPurValue);
+
+            std::cout << "Purity = " << purityValue << ", Efficiency = " << signalEffValue << ", Purity x Efficiency = " << effPurValue << std::endl;
         }
     }
 
@@ -577,25 +636,25 @@ void efficiencyCut(cutHistGroup hists, double ymin, double ymax, double xmin, do
     double Lymin = 0;
 
     if(legendLocation == "topRight"){
-        Lxmin = 0.48;
-        Lymax = 0.97;
+        Lxmin = 0.548;
+        Lymax = 0.863;
         Lxmax = 0.87;
-        Lymin = 0.747;
+        Lymin = 0.7515;
     } else if(legendLocation == "topLeft"){
         Lxmin = 0.13;
-        Lymax = 0.97;
-        Lxmax = 0.52;
-        Lymin = 0.747;
+        Lymax = 0.863;
+        Lxmax = 0.452;
+        Lymin = 0.7515;
     } else if(legendLocation == "bottomRight"){
-        Lxmin = 0.48;
-        Lymax = 0.39;
+        Lxmin = 0.548;
+        Lymax = 0.2485;
         Lxmax = 0.87;
-        Lymin = 0.167;
+        Lymin = 0.137;
     } else if(legendLocation == "bottomLeft"){
         Lxmin = 0.13;
-        Lymax = 0.39;
-        Lxmax = 0.52;
-        Lymin = 0.167;
+        Lymax = 0.2485;
+        Lxmax = 0.452;
+        Lymin = 0.137;
     }
 
     TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.15, Lxmax, Lymin - 0.02, "NDC");
@@ -664,7 +723,7 @@ void weightedCut(cutHistGroup hists, double signalWeight, double BNBWeight, doub
     BNBWeighted->Scale(BNBWeight);
     BNBWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
 
-    TH1F* cosmicsWeighted = (TH1F*) hists.cosmics->Clone("weighted hist");
+    TH1F* cosmicsWeighted = (TH1F*) hists.Cosmics->Clone("weighted hist");
     cosmicsWeighted->Scale(cosmicsWeight);
     cosmicsWeighted->GetYaxis()->SetTitle("Number of Events (POT Weighted)"); 
     
@@ -1029,6 +1088,50 @@ void nuECut_macro(){
     auto numSlices = createHistGroup("numSlices", "Number of Slices in an Event", "Number of Slices", 45, 0, 45);
     auto numSlicesCut = createCutHistGroup("numSlicesCut", "Number of Slices in an Event (After Cuts)", "Number of Slices", 45, 0, 45);
 
+    auto numRecoNeutrinos = createHistGroup("numRecoNeutrinos", "Number of Reco Neutrinos in an Event", "Number of Reco Neutrinos", 10, 0, 10);
+    auto numRecoNeutrinosCut = createCutHistGroup("numRecoNeutrinosCut", "Number of Reco Neutrinos in an Event (After Cuts)", "Number of Reco Neutrinos", 10, 0, 10);
+
+    auto sliceCompletenessCRUMBS = createHistGroup("sliceCompletenessCRUMBS", "Completeness of the Slice with the Highest CRUMBS Score", "Completeness", 102, 0, 1.02); // Bin width = 0.005
+    auto sliceCompletenessCRUMBSCut = createCutHistGroup("sliceCompletenessCRUMBSCut", "Completeness of the Slice with the Highest CRUMBS Score (After Cuts)", "Completeness", 102, 0, 1.02); // Bin width = 0.005
+    auto sliceScoreCRUMBS = createHistGroup("sliceScoreCRUMBS", "CRUMBS Score of the Slice with the Highest CRUMBS Score", "CRUMBS Score", 25, -1, 1); 
+    auto sliceScoreCRUMBSCut = createCutHistGroup("sliceScoreCRUMBSCut", "CRUMBS Score of the Slice with the Highest CRUMBS Score (After Cuts)", "CRUMBS Score", 25, -1, 1); 
+    auto slicePurityCRUMBS = createHistGroup("slicePurityCRUMBS", "Purity of the Slice with the Highest CRUMBS Score", "Purity", 50, 0, 1.02);
+    auto slicePurityCRUMBSCut = createCutHistGroup("slicePurityCRUMBSCut", "Purity of the Slice with the Highest CRUMBS Score (After Cuts)", "Purity", 50, 0, 1.02);
+    auto highestPFPCompletenessCRUMBS = createHistGroup("highestPFPCompletenessCRUMBS", "Completeness of the Highest Energy PFP in the Slice with the Highest CRUMBS Score", "Completeness", 50, 0, 1.02);
+    auto highestPFPCompletenessCRUMBSCut = createCutHistGroup("highestPFPCompletenessCRUMBSCut", "Completeness of the Highest Energy PFP in the Slice with the Highest CRUMBS Score (After Cuts)", "Completeness", 50, 0, 1.02);
+    auto highestPFPPurityCRUMBS = createHistGroup("highestPFPPurityCRUMBS", "Purity of the Highest Energy PFP in the Slice with the Highest CRUMBS Score", "Purity", 50, 0, 1.02);
+    auto highestPFPPurityCRUMBSCut = createCutHistGroup("highestPFPPurityCRUMBSCut", "Purity of the Highest Energy PFP in the Slice with the Highest CRUMBS Score (After Cuts)", "Purity", 50, 0, 1.02);
+    auto numPFPsCRUMBS = createHistGroup("numPFPsCRUMBS", "Number of PFPs in the Slice with the Highest CRUMBS Score", "Number of PFPs", 10, 0, 10);
+    auto numPFPsCRUMBSCut = createCutHistGroup("numPFPsCRUMBSCut", "Number of PFPs in the Slice with the Highest CRUMBS Score (After Cuts)", "Number of PFPs", 10, 0, 10);
+    auto ratioChosenSummedEnergyCRUMBS = createHistGroup("ratioChosenSummedEnergyCRUMBS", "Ratio of the Energy of the Highest Energy PFP and the Summed Energy of the PFPs in the Slice with the Highest CRUMBS Score", "E_{reco, highest energy PFP}/E_{reco, summed PFP energies}", 21, 0, 1.05);
+    auto ratioChosenSummedEnergyCRUMBSCut = createCutHistGroup("ratioChosenSummedEnergyCRUMBSCut", "Ratio of the Energy of the Highest Energy PFP and the Summed Energy of the PFPs in the Slice with the Highest CRUMBS Score (After Cuts)", "E_{reco, highest energy PFP}/E_{reco, summed PFP energies}", 21, 0, 1.05);
+    auto ratioChosenTrueEnergyCRUMBS = createHistGroup("ratioChosenTrueEnergyCRUMBS", "Ratio of the Energy of the Highest Energy PFP in the Slice with the Highest CRUMBS Score and the True Shower Energy", "E_{reco, highest energy PFP}/E_{true}", 24, 0, 1.2);
+    auto ratioChosenTrueEnergyCRUMBSCut = createCutHistGroup("ratioChosenTrueEnergyCRUMBSCut", "Ratio of the Energy of the Highest Energy PFP in the Slice with the Highest CRUMBS Score and the True Shower Energy (After Cuts)", "E_{reco, highest energy PFP}/E_{true}", 24, 0, 1.2);
+    auto ratioSummedTrueEnergyCRUMBS = createHistGroup("ratioSummedTrueEnergyCRUMBS", "Ratio of the Summed Energy of the PFPs in the Slice with the Highest CRUMBS Score and the True Shower Energy", "E_{reco, summed PFP energies}/E_{true}", 24, 0, 1.2);
+    auto ratioSummedTrueEnergyCRUMBSCut = createCutHistGroup("ratioSummedTrueEnergyCRUMBSCut", "Ratio of the Summed Energy of the PFPs in the Slice with the Highest CRUMBS Score and the True Shower Energy (After Cuts)", "E_{reco, summed PFP energies}/E_{true}", 24, 0, 1.2);
+    auto EtrueThetaRecoCRUMBS = createHistGroup("EtrueThetaRecoCRUMBS", "E_{true}#theta_{reco}^{2}: Slice with Highest CRUMBS Score", "E_{true}#theta_{reco}^{2} (MeV)", 40, 0, 20.44);
+    auto EtrueThetaRecoCRUMBSCut = createCutHistGroup("EtrueThetaRecoCRUMBSCut", "E_{true}#theta_{reco}^{2}: Slice with Highest CRUMBS Score (After Cuts)", "E_{true}#theta_{reco}^{2} (MeV)", 40, 0, 20.44);
+    auto ERecoSumThetaTrueCRUMBS = createHistGroup("ERecoSumThetaTrueCRUMBS", "E_{reco}#theta_{true}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice with the Highest CRUMBS Score", "E_{reco}#theta_{true}^{2} (MeV)", 24, 0, 3.066);
+    auto ERecoSumThetaTrueCRUMBSCut = createCutHistGroup("ERecoSumThetaTrueCRUMBSCut", "E_{reco}#theta_{true}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice with the Highest CRUMBS Score (After Cuts)", "E_{reco}#theta_{true}^{2} (MeV)", 24, 0, 3.066);
+    auto ERecoHighestThetaTrueCRUMBS = createHistGroup("ERecoHighestThetaTrueCRUMBS", "E_{reco}#theta_{true}^{2} for E_{reco} Being the Energy of the Highest Energy PFP in the Slice with the Highest CRUMBS Score", "E_{reco}#theta_{true}^{2} (MeV)", 24, 0, 3.066);
+    auto ERecoHighestThetaTrueCRUMBSCut = createCutHistGroup("ERecoHighestThetaTrueCRUMBSCut", "E_{reco}#theta_{true}^{2} for E_{reco} Being the Energy of the Highest Energy PFP in the Slice with the Highest CRUMBS Score (After Cuts)", "E_{reco}#theta_{true}^{2} (MeV)", 24, 0, 3.066);
+    auto ERecoSumThetaRecoCRUMBS = createHistGroup("ERecoSumThetaRecoCRUMBS", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice with the Highest CRUMBS Score", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
+    auto ERecoSumThetaRecoCRUMBSCut = createCutHistGroup("ERecoSumThetaRecoCRUMBSCut", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice with the Highest CRUMBS Score (After Cuts)", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
+    auto ERecoHighestThetaRecoCRUMBS = createHistGroup("ERecoHighestThetaRecoCRUMBS", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice with the Highest CRUMBS Score", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
+    auto ERecoHighestThetaRecoCRUMBSCut = createCutHistGroup("ERecoHighestThetaRecoCRUMBSCut", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice with the Highest CRUMBS Score (After Cuts)", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
+
+    auto primaryVertexXCRUMBS = createHistGroup("primaryVertexXCRUMBS", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "X Coordinate (cm)", 82, -201.3, 201.3);
+    auto primaryVertexYCRUMBS = createHistGroup("primaryVertexYCRUMBS", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Y Coordinate (cm)", 83, -203.8, 203.8);
+    auto primaryVertexZCRUMBS = createHistGroup("primaryVertexZCRUMBS", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Z Coordinate (cm)", 104, 0, 509.4);
+
+    auto primaryVertexXCRUMBSNegative = createHistGroup("primaryVertexXCRUMBSNegative", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "X Coordinate (cm)", 805, -201.3, 201.3);
+    auto primaryVertexYCRUMBSNegative = createHistGroup("primaryVertexYCRUMBSNegative", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Y Coordinate (cm)", 815, -203.8, 203.8);
+    auto primaryVertexZCRUMBSNegative = createHistGroup("primaryVertexZCRUMBSNegative", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Z Coordinate (cm)", 1019, 0, 509.4);
+
+    auto primaryVertexXCRUMBSPositive = createHistGroup("primaryVertexXCRUMBSPositive", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "X Coordinate (cm)", 805, -201.3, 201.3);
+    auto primaryVertexYCRUMBSPositive = createHistGroup("primaryVertexYCRUMBSPositive", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Y Coordinate (cm)", 815, -203.8, 203.8);
+    auto primaryVertexZCRUMBSPositive = createHistGroup("primaryVertexZCRUMBSPositive", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Z Coordinate (cm)", 1019, 0, 509.4);
+ 
     counter numEventsTotal;
     counter numEventsTrueNeutrino;
     counter numEventsSlices;
@@ -1041,6 +1144,7 @@ void nuECut_macro(){
     interactionCounter interactionsBNB;
 
     for(Long64_t i = 0; i < numEntries; ++i){
+    //for(Long64_t i = 0; i < 100; ++i){
         tree->GetEntry(i);
 
         std::vector<recoParticle> recoParticlesInEvent;
@@ -1277,10 +1381,67 @@ void nuECut_macro(){
             // Fails cuts
             if(DLCurrent == 2 && signal == 1){
                 numSlices.cutSignal->Fill(numSlicesInEvent);
+                sliceScoreCRUMBS.cutSignal->Fill(chosenRecoSliceCRUMBS.score);
+                numRecoNeutrinos.cutSignal->Fill(numRecoNeutrinosInEvents);
+                primaryVertexXCRUMBS.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBS.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBS.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSNegative.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSNegative.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSPositive.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSPositive.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSPositive.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                numPFPsCRUMBS.cutSignal->Fill(numPFPsSliceCRUMBS);
+                ratioChosenSummedEnergyCRUMBS.cutSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
+                ERecoSumThetaRecoCRUMBS.cutSignal->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoHighestThetaRecoCRUMBS.cutSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                slicePurityCRUMBS.cutSignal->Fill(chosenSlicePurityCRUMBS);
+                sliceCompletenessCRUMBS.cutSignal->Fill(chosenSliceCompletenessCRUMBS);
+                highestPFPCompletenessCRUMBS.cutSignal->Fill(chosenRecoParticleCRUMBS.completeness);
+                highestPFPPurityCRUMBS.cutSignal->Fill(chosenRecoParticleCRUMBS.purity);
             } else if(DLCurrent == 2 && signal == 2){
                 numSlices.cutBNB->Fill(numSlicesInEvent);
+                sliceScoreCRUMBS.cutBNB->Fill(chosenRecoSliceCRUMBS.score);
+                numRecoNeutrinos.cutBNB->Fill(numRecoNeutrinosInEvents);
+                primaryVertexXCRUMBS.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBS.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBS.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSNegative.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSNegative.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSPositive.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSPositive.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSPositive.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                numPFPsCRUMBS.cutBNB->Fill(numPFPsSliceCRUMBS);
+                ratioChosenSummedEnergyCRUMBS.cutBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
+                ERecoSumThetaRecoCRUMBS.cutBNB->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoHighestThetaRecoCRUMBS.cutBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                slicePurityCRUMBS.cutBNB->Fill(chosenSlicePurityCRUMBS);
+                sliceCompletenessCRUMBS.cutBNB->Fill(chosenSliceCompletenessCRUMBS);
+                highestPFPCompletenessCRUMBS.cutBNB->Fill(chosenRecoParticleCRUMBS.completeness);
+                highestPFPPurityCRUMBS.cutBNB->Fill(chosenRecoParticleCRUMBS.purity);
             } else if(DLCurrent == 2 && signal == 3){
                 numSlices.cutCosmics->Fill(numSlicesInEvent);
+                sliceScoreCRUMBS.cutCosmics->Fill(chosenRecoSliceCRUMBS.score);
+                numRecoNeutrinos.cutCosmics->Fill(numRecoNeutrinosInEvents);
+                primaryVertexXCRUMBS.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBS.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBS.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSNegative.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSNegative.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSPositive.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSPositive.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSPositive.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                numPFPsCRUMBS.cutCosmics->Fill(numPFPsSliceCRUMBS);
+                ratioChosenSummedEnergyCRUMBS.cutCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
+                ERecoSumThetaRecoCRUMBS.cutCosmics->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoHighestThetaRecoCRUMBS.cutCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                slicePurityCRUMBS.cutCosmics->Fill(chosenSlicePurityCRUMBS);
+                sliceCompletenessCRUMBS.cutCosmics->Fill(chosenSliceCompletenessCRUMBS);
+                highestPFPCompletenessCRUMBS.cutCosmics->Fill(chosenRecoParticleCRUMBS.completeness);
+                highestPFPPurityCRUMBS.cutCosmics->Fill(chosenRecoParticleCRUMBS.purity);
             }
 
         } else if(cutOrKeep == 1){
@@ -1288,23 +1449,137 @@ void nuECut_macro(){
             if(DLCurrent == 2 && signal == 1){
                 numSlices.keptSignal->Fill(numSlicesInEvent);
                 numSlicesCut.Signal->Fill(numSlicesInEvent);
+                sliceScoreCRUMBS.keptSignal->Fill(chosenRecoSliceCRUMBS.score);
+                sliceScoreCRUMBSCut.Signal->Fill(chosenRecoSliceCRUMBS.score);
+                numRecoNeutrinos.keptSignal->Fill(numRecoNeutrinosInEvents);
+                numRecoNeutrinosCut.Signal->Fill(numRecoNeutrinosInEvents);
+                primaryVertexXCRUMBS.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBS.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexYCRUMBSCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBS.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexZCRUMBSCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSNegative.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSNegativeCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexYCRUMBSNegativeCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSNegative.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexZCRUMBSNegativeCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSPositive.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSPositiveCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSPositive.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexYCRUMBSPositiveCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSPositive.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexZCRUMBSPositiveCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                numPFPsCRUMBS.keptSignal->Fill(numPFPsSliceCRUMBS);
+                numPFPsCRUMBSCut.Signal->Fill(numPFPsSliceCRUMBS);
+                ratioChosenSummedEnergyCRUMBS.keptSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
+                ratioChosenSummedEnergyCRUMBSCut.Signal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
+                ERecoSumThetaRecoCRUMBS.keptSignal->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoSumThetaRecoCRUMBSCut.Signal->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoHighestThetaRecoCRUMBS.keptSignal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoHighestThetaRecoCRUMBSCut.Signal->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                slicePurityCRUMBS.keptSignal->Fill(chosenSlicePurityCRUMBS);
+                slicePurityCRUMBSCut.Signal->Fill(chosenSlicePurityCRUMBS);
+                sliceCompletenessCRUMBS.keptSignal->Fill(chosenSliceCompletenessCRUMBS);
+                sliceCompletenessCRUMBSCut.Signal->Fill(chosenSliceCompletenessCRUMBS);
+                highestPFPCompletenessCRUMBS.keptSignal->Fill(chosenRecoParticleCRUMBS.completeness);
+                highestPFPCompletenessCRUMBSCut.Signal->Fill(chosenRecoParticleCRUMBS.completeness);
+                highestPFPPurityCRUMBS.keptSignal->Fill(chosenRecoParticleCRUMBS.purity);
+                highestPFPPurityCRUMBSCut.Signal->Fill(chosenRecoParticleCRUMBS.purity);
             } else if(DLCurrent == 2 && signal == 2){
                 numSlices.keptBNB->Fill(numSlicesInEvent);
                 numSlicesCut.BNB->Fill(numSlicesInEvent);
+                sliceScoreCRUMBS.keptBNB->Fill(chosenRecoSliceCRUMBS.score);
+                sliceScoreCRUMBSCut.BNB->Fill(chosenRecoSliceCRUMBS.score);
+                numRecoNeutrinos.keptBNB->Fill(numRecoNeutrinosInEvents);
+                numRecoNeutrinosCut.BNB->Fill(numRecoNeutrinosInEvents);
+                primaryVertexXCRUMBS.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBS.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexYCRUMBSCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBS.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexZCRUMBSCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSNegative.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSNegativeCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexYCRUMBSNegativeCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSNegative.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexZCRUMBSNegativeCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSPositive.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSPositiveCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSPositive.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexYCRUMBSPositiveCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSPositive.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexZCRUMBSPositiveCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                numPFPsCRUMBS.keptBNB->Fill(numPFPsSliceCRUMBS);
+                numPFPsCRUMBSCut.BNB->Fill(numPFPsSliceCRUMBS);
+                ratioChosenSummedEnergyCRUMBS.keptBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
+                ratioChosenSummedEnergyCRUMBSCut.BNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
+                ERecoSumThetaRecoCRUMBS.keptBNB->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoSumThetaRecoCRUMBSCut.BNB->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoHighestThetaRecoCRUMBS.keptBNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoHighestThetaRecoCRUMBSCut.BNB->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                slicePurityCRUMBS.keptBNB->Fill(chosenSlicePurityCRUMBS);
+                slicePurityCRUMBSCut.BNB->Fill(chosenSlicePurityCRUMBS);
+                sliceCompletenessCRUMBS.keptBNB->Fill(chosenSliceCompletenessCRUMBS);
+                sliceCompletenessCRUMBSCut.BNB->Fill(chosenSliceCompletenessCRUMBS);
+                highestPFPCompletenessCRUMBS.keptBNB->Fill(chosenRecoParticleCRUMBS.completeness);
+                highestPFPCompletenessCRUMBSCut.BNB->Fill(chosenRecoParticleCRUMBS.completeness);
+                highestPFPPurityCRUMBS.keptBNB->Fill(chosenRecoParticleCRUMBS.purity);
+                highestPFPPurityCRUMBSCut.BNB->Fill(chosenRecoParticleCRUMBS.purity);
             } else if(DLCurrent == 2 && signal == 3){
                 numSlices.keptCosmics->Fill(numSlicesInEvent);
                 numSlicesCut.Cosmics->Fill(numSlicesInEvent);
+                sliceScoreCRUMBS.keptCosmics->Fill(chosenRecoSliceCRUMBS.score);
+                sliceScoreCRUMBSCut.Cosmics->Fill(chosenRecoSliceCRUMBS.score);
+                numRecoNeutrinos.keptCosmics->Fill(numRecoNeutrinosInEvents);
+                numRecoNeutrinosCut.Cosmics->Fill(numRecoNeutrinosInEvents);
+                primaryVertexXCRUMBS.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBS.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexYCRUMBSCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBS.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexZCRUMBSCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSNegative.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSNegativeCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSNegative.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexYCRUMBSNegativeCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSNegative.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexZCRUMBSNegativeCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexXCRUMBSPositive.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexXCRUMBSPositiveCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
+                primaryVertexYCRUMBSPositive.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexYCRUMBSPositiveCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
+                primaryVertexZCRUMBSPositive.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                primaryVertexZCRUMBSPositiveCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
+                numPFPsCRUMBS.keptCosmics->Fill(numPFPsSliceCRUMBS);
+                numPFPsCRUMBSCut.Cosmics->Fill(numPFPsSliceCRUMBS);
+                ratioChosenSummedEnergyCRUMBS.keptCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
+                ratioChosenSummedEnergyCRUMBSCut.Cosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy / totalSliceEnergyCRUMBS);
+                ERecoSumThetaRecoCRUMBS.keptCosmics->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoSumThetaRecoCRUMBSCut.Cosmics->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoHighestThetaRecoCRUMBS.keptCosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                ERecoHighestThetaRecoCRUMBSCut.Cosmics->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+                slicePurityCRUMBS.keptCosmics->Fill(chosenSlicePurityCRUMBS);
+                slicePurityCRUMBSCut.Cosmics->Fill(chosenSlicePurityCRUMBS);
+                sliceCompletenessCRUMBS.keptCosmics->Fill(chosenSliceCompletenessCRUMBS);
+                sliceCompletenessCRUMBSCut.Cosmics->Fill(chosenSliceCompletenessCRUMBS);
+                highestPFPCompletenessCRUMBS.keptCosmics->Fill(chosenRecoParticleCRUMBS.completeness);
+                highestPFPCompletenessCRUMBSCut.Cosmics->Fill(chosenRecoParticleCRUMBS.completeness);
+                highestPFPPurityCRUMBS.keptCosmics->Fill(chosenRecoParticleCRUMBS.purity);
+                highestPFPPurityCRUMBSCut.Cosmics->Fill(chosenRecoParticleCRUMBS.purity);
             }
         }
-
     }
    
     int drawLine = 1;
     int left = 0;
     int right = 1;
 
-    styleDrawCut(numSlicesCut.canvas, numSlicesCut.Signal, numSlicesCut.BNB, numSlicesCut.Cosmics, 999, 999, 999, 999, (base_path + "numSlicesCut_dist.pdf").c_str(), legendLocation, pt = nullptr, &funcValue, drawLine, linePos);
-    weightedCut();
+    styleDraw(numSlices.canvas, numSlices.keptSignal, numSlices.cutSignal, numSlices.keptBNB, numSlices.cutBNB, numSlices.keptCosmics, numSlices.cutCosmics, 999, 999, 999, 999, (base_path + "numSlices_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(numSlicesCut.canvas, numSlicesCut.Signal, numSlicesCut.BNB, numSlicesCut.Cosmics, 999, 999, 999, 999, (base_path + "numSlicesCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(numSlices, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numSlices_weighted.pdf").c_str(), "bottomLeft");
+    weightedCut(numSlicesCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numSlicesCut_weighted.pdf").c_str(), "bottomLeft");
     efficiencyCut(numSlicesCut, 999, 999, 999, 999, (base_path + "numSlicesCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Slices", 1);
-
 }
