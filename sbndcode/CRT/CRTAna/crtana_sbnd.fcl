@@ -15,7 +15,6 @@ crtana_sbnd:
 }
 
 crtana_data_sbnd: @local::crtana_sbnd
-crtana_data_sbnd.CRTGeoAlg:          @local::crtgeoalg_data_sbnd
 crtana_data_sbnd.FEBDataModuleLabel: "crtdecoder"
 crtana_data_sbnd.DataMode:           true
 crtana_data_sbnd.NoTPC:              true
