@@ -39,7 +39,7 @@ set(
         ROOT::Gdml
         sbndcode_RecoUtils
         sbndcode_OpDetSim
-        sbndcode::CRTGeoService
+        sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
         sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
         hep_hpc_hdf5
         ${HDF5_LIBRARIES}

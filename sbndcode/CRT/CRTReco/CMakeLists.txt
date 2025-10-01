@@ -2,7 +2,7 @@ art_make_library(
                  SOURCE       CRTClusterCharacterisationAlg.cc
                  LIBRARIES
                  sbnobj::SBND_CRT
-                 sbndcode::CRTGeoService
+                 sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
 )
 
 simple_plugin(
@@ -11,14 +11,14 @@ simple_plugin(
               lardata::Utilities
               sbnobj::SBND_CRT
               sbnobj::SBND_Timing
-              sbndcode::CRTGeoService
+              sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
 )
 
 simple_plugin(
               CRTClusterProducer module
               lardata::Utilities
               sbnobj::SBND_CRT
-              sbndcode::CRTGeoService
+              sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
 )
 
 simple_plugin(
@@ -33,7 +33,7 @@ simple_plugin(
               lardata::Utilities
               sbnobj::SBND_CRT
               sbndcode_CRTUtils
-              sbndcode::CRTGeoService
+              sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
               Eigen3::Eigen
 )
 

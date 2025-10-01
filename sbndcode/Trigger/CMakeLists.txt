@@ -26,7 +26,7 @@ set(
                     sbnobj::SBND_CRT
                     sbnobj::SBND_Timing
                     sbndcode_CRTUtils
-                    sbndcode::CRTGeoService
+                    sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
                     messagefacility::MF_MessageLogger

@@ -6,7 +6,7 @@ art_make_library(
                         art::Persistency_Provenance
                         canvas::canvas
                         sbnobj::SBND_CRT
-                        sbndcode::CRTGeoService
+                        sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
 )
 
 simple_plugin(

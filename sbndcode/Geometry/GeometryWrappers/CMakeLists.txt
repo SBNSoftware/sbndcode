@@ -12,8 +12,6 @@ art_make_library(LIBRARY_NAME TPCGeoAlg
 
 cet_build_plugin(CRTGeoService art::service
   SOURCE CRTGeoService_service.cc
-  LIBRARY_NAME
-  CRTGeoService
   LIBRARIES
   messagefacility::MF_MessageLogger
   larcore::Geometry_Geometry_service

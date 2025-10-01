@@ -3,7 +3,7 @@ art_make_library(
                  LIBRARIES
                         sbnobj::SBND_CRT
                         sbndcode::TPCGeoAlg
-                        sbndcode::CRTGeoService
+                        sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
                         larsim::MCCheater_ParticleInventoryService_service
 )
 

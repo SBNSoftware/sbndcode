@@ -3,7 +3,7 @@ art_make_library(
                               CRTSpacePointMatchAlg.cc
                  LIBRARIES
                         sbnobj::SBND_CRT
-                        sbndcode::CRTGeoService
+                        sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
                         lardata::DetectorPropertiesService
                         lardataobj::AnalysisBase
 )
