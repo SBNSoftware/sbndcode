@@ -12,8 +12,10 @@ services:
 {
     @table::services
     @table::sbnd_data_services
+
     CRTChannelMapService:   @local::crt_channel_map_standard
     CRTCalibService:        @local::crt_calib_service
+    CRTGeoService:          @local::crtgeoservice_data_sbnd
     CRTCalibrationDatabase: @local::sbnd_crtcalibrationdatabaseservice
 }
 

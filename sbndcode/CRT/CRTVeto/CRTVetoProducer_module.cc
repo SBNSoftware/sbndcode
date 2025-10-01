@@ -32,7 +32,6 @@
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 #include "sbnobj/SBND/CRT/CRTVeto.hh"
 
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "lardata/Utilities/AssociationUtil.h"
 
