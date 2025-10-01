@@ -59,7 +59,7 @@ public:
     return getCRTChannelCalibrationOrDefault(channel).rawChannelNumber;
   };
 
-  int getChannelStatus(unsigned int channel) const override {
+  sbnd::crt::CRTChannelStatus getChannelStatus(unsigned int channel) const override {
     return getCRTChannelCalibrationOrDefault(channel).status;
   };
 
@@ -89,14 +89,14 @@ private:
   };
 
   struct CRTChannelCalibrationDB {
-    size_t rawChannelNumber = 0;
-    size_t status           = 0;
-    size_t pedestal         = 0;
-    double gainFactor       = 0.;
+    size_t rawChannelNumber            = 0;
+    sbnd::crt::CRTChannelStatus status = sbnd::crt::CRTChannelStatus::kGoodChannel;
+    size_t pedestal                    = 0;
+    double gainFactor                  = 0.;
   };
             
   const CRTFEBCalibrationDB CRTFEBDefaults         = {0, 0., 0., 0., 0.};
-  const CRTChannelCalibrationDB CRTChannelDefaults = {0, 0, 0, 0.};
+  const CRTChannelCalibrationDB CRTChannelDefaults = {0, sbnd::crt::CRTChannelStatus::kGoodChannel, 0, 0.};
 
   std::map<unsigned int, CRTFEBCalibrationDB> fCRTFEBCalibrationData;
   std::map<unsigned int, CRTChannelCalibrationDB> fCRTChannelCalibrationData;

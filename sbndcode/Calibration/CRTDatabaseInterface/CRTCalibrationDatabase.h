@@ -6,6 +6,8 @@
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Services/Registry/ServiceDeclarationMacros.h"
 
+#include "sbnobj/SBND/CRT/CRTEnums.hh"
+
 namespace sbndDB {
 
   class CRTCalibrationDatabase : lar::UncopiableClass {
@@ -17,7 +19,7 @@ namespace sbndDB {
     virtual double getT1CableLengthOffset(unsigned int febMAC5) const = 0;
     virtual double getT1CalibratedOffset(unsigned int febMAC5) const = 0;
     virtual int getRawChannelNumber(unsigned int channel) const = 0;
-    virtual int getChannelStatus(unsigned int channel) const = 0;
+    virtual sbnd::crt::CRTChannelStatus getChannelStatus(unsigned int channel) const = 0;
     virtual int getPedestal(unsigned int channel) const = 0;
     virtual double getGainFactor(unsigned int channel) const = 0;
   }; // end class

@@ -129,7 +129,7 @@ void sbndDB::CRTCalibrationDatabaseProvider::ReadCRTChannelCalibration(uint32_t 
 
       long status = 0;
       ReadElement(channelTable, ch, "status", status);
-      fCRTChannelCalibrationData[ch].status = static_cast<int>(status);
+      fCRTChannelCalibrationData[ch].status = static_cast<sbnd::crt::CRTChannelStatus>(status);
 
       long pedestal = 0;
       ReadElement(channelTable, ch, "pedestal", pedestal);
