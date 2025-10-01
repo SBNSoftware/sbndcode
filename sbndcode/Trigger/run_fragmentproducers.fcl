@@ -10,7 +10,7 @@
 #include "pmttriggerproducer.fcl"
 #include "artdaqfragmentproducer.fcl"
 
-#include "crtgeoservice_sbnd"
+#include "crtgeoservice_sbnd.fcl"
 
 process_name:FragmentProducer
 

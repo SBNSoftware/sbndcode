@@ -2,6 +2,7 @@
 #include "crteventdisplay_sbnd.fcl"
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
+#include "crtgeoservice_sbnd.fcl"
 
 process_name: CRTEventDisplay
 

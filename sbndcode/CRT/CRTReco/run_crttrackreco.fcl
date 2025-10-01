@@ -8,7 +8,7 @@ process_name: CRTTrackReco
 services:
 {
   @table::sbnd_services
-  @local::crtgeoservice_sbnd
+  CRTGeoService: @local::crtgeoservice_sbnd
 }
 
 source:

@@ -1,4 +1,3 @@
-#include "crtgeoalg_sbnd.fcl"
 #include "pmtArtdaqFragmentProducer.fcl"
 #include "CRTArtdaqFragmentProducer.fcl"
 
