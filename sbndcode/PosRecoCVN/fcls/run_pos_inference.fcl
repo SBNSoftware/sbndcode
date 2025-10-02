@@ -55,7 +55,7 @@ physics:
       # "MC_testing"    = Full MC analysis with ground truth comparison
       # "MC_inference"  = MC inference only, skip ground truth calculation
       # "DATA_inference" = Real data processing
-      ProcessingMode: "DATA_inference"
+      ProcessingMode: "MC_testing"
 
       #------------------------------------------------------------------------
       # VERBOSITY CONFIGURATION
@@ -69,7 +69,7 @@ physics:
       #------------------------------------------------------------------------
       # VERSION CONTROL
       #------------------------------------------------------------------------
-      SbndcodeVersion: "v10_10_02"
+      SbndcodeVersion: "v10_10_03_02"
 
       #------------------------------------------------------------------------
       # DATA PRODUCT LABELS
@@ -102,13 +102,27 @@ physics:
       # CNN INFERENCE CONFIGURATION
       #------------------------------------------------------------------------
       # Image normalization factor (from training)
-      # Source: sbndcode/v10_10_02/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/normalization_factors.json
+      # Source: sbndcode/v10_10_03_02/scripts/PosRecoCVN/inference/tf/v0901_trained_w_165k_resnet18/normalization_factors.json
       CustomNormFactor: 11311.191
 
       #------------------------------------------------------------------------
       # OUTPUT CONFIGURATION
       #------------------------------------------------------------------------
-      SavePixelMapVars: true           # Save detailed PixelMapVars object
+      # SavePixelMapVars: Controls whether PixelMapVars object is created in memory
+      #   false = Optimal for inference-only
+      #   true  = Creates full data product with images, PE matrices, metadata
+      #
+      # MUST be coordinated with physics.stream setting below:
+      #
+      # | SavePixelMapVars | stream   | Result                                    |
+      # |------------------|----------|-------------------------------------------|
+      # | false            | []       | Optimal: No object, no file            |
+      # | false            | [out1]   | Waste: Empty 211K file created         |
+      # | true             | []       | Waste: Object in RAM but not saved     |
+      # | true             | [out1]   | Full output: Object created and saved  |
+      #
+
+      SavePixelMapVars: false
 
       #------------------------------------------------------------------------
       # AUTO-CONFIGURED PATHS
@@ -125,15 +139,19 @@ physics:
   # EXECUTION PATHS
   #----------------------------------------------------------------------------
   prod: [opanatree]               # Producer modules to run
-  stream: [out1]                  # Output streams
+  stream: []                      # Empty = no RootOutput (only TTree saved)
+                                  # Set to [out1] if SavePixelMapVars: true
 
-  trigger_paths: [prod]           
-  end_paths: [stream]             
+  trigger_paths: [prod]
+  end_paths: [stream]
 }
 
 //==============================================================================
 // OUTPUT CONFIGURATION
 //==============================================================================
+
+# see OUTPUT CONFIGURATION above for details on stream setting
+
 outputs:
 {
   out1:

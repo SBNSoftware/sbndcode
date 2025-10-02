@@ -14,8 +14,8 @@ PROJECT_ROOT = BASE_DIR.parent
 DATA_CONFIG = {
     # Root file paths - update these as needed
     'training_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_30k_training.root',
-    'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_8k_test.root',
-    
+    #'test_file': '/exp/sbnd/data/users/svidales/AI_nuvT_project_support/mcdata/v10_06_00_02/mc_MCP2025B_02_prodgenie_corsika_proton_rockbox_sbnd_CV_reco2_sbnd_8k_test.root',
+    'test_file': '/exp/sbnd/app/users/svidales/larsoft_develop/run_try/1000_new_optimization/opana_tree.root',
     # Keys to load from ROOT files
     'keys_to_load': [
         'flash_ophit_pe', 'flash_ophit_ch', 'flash_ophit_time', 
