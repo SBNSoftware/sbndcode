@@ -644,40 +644,6 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
       fTree->Branch("tdc_offset", "std::vector<uint64_t>", &_tdc_offset);
       fTree->Branch("tdc_name", "std::vector<std::string>", &_tdc_name);
     }
-
-  if(fDebug)
-    {
-      // for(auto const &[name, tagger] : fCRTGeoService->GetTaggers())
-      //   {
-      //     std::cout << "Tagger:  " << tagger.name << '\n'
-      //               << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
-      //               << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
-      //               << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
-      //   }
-
-      // std::cout << std::endl;
-
-      // for(auto const &[name, module] : fCRTGeoService->GetModules())
-      //   {
-      //     std::cout << "Module:  " << module.name << " (" << module.taggerName << ")" << '\n';
-      //     if(module.minos)
-      //       std::cout << "MINOS module" << std::endl;
-      //     std::cout << "X - Min: " << module.minX << " Max: " << module.maxX << " Diff: " << module.maxX - module.minX << '\n'
-      //               << "Y - Min: " << module.minY << " Max: " << module.maxY << " Diff: " << module.maxY - module.minY << '\n'
-      //               << "Z - Min: " << module.minZ << " Max: " << module.maxZ << " Diff: " << module.maxZ - module.minZ << '\n'
-      //               << "Orientation: " << module.orientation << '\n' << std::endl;
-      //   }
-
-      // std::cout << std::endl;
-
-      // for(auto const &[name, sipm] : fCRTGeoService->GetSiPMs())
-      //   {
-      //     std::cout << "SiPM:  " << sipm.channel << " ("
-      //               << fCRTChannelMapService->GetOfflineModuleIDFromOfflineChannelID(sipm.channel) << " - "
-      //               << fCRTChannelMapService->GetLocalOfflineChannelFromOfflineChannelID(sipm.channel) << ")" << '\n'
-      //               << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
-      //   }
-    }
 }
 
 void sbnd::crt::CRTAnalysis::beginRun(art::Run const& r)
