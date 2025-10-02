@@ -63,6 +63,8 @@ public:
   // Required functions.
   void analyze(art::Event const& e) override;
 
+  void beginRun(art::Run const& r) override;
+
   void AnalysePTBs(std::vector<art::Ptr<raw::ptb::sbndptb>> &PTBVec);
 
   void AnalyseTDCs(std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> &TDCVec);
@@ -645,36 +647,70 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
   if(fDebug)
     {
-      for(auto const &[name, tagger] : fCRTGeoService->GetTaggers())
-        {
-          std::cout << "Tagger:  " << tagger.name << '\n'
-                    << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
-                    << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
-                    << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
-        }
+      // for(auto const &[name, tagger] : fCRTGeoService->GetTaggers())
+      //   {
+      //     std::cout << "Tagger:  " << tagger.name << '\n'
+      //               << "X - Min: " << tagger.minX << " Max: " << tagger.maxX << '\n'
+      //               << "Y - Min: " << tagger.minY << " Max: " << tagger.maxY << '\n'
+      //               << "Z - Min: " << tagger.minZ << " Max: " << tagger.maxZ << '\n' << std::endl;
+      //   }
 
-      std::cout << std::endl;
+      // std::cout << std::endl;
 
-      for(auto const &[name, module] : fCRTGeoService->GetModules())
-        {
-          std::cout << "Module:  " << module.name << " (" << module.taggerName << ")" << '\n';
-          if(module.minos)
-            std::cout << "MINOS module" << std::endl;
-          std::cout << "X - Min: " << module.minX << " Max: " << module.maxX << " Diff: " << module.maxX - module.minX << '\n' 
-                    << "Y - Min: " << module.minY << " Max: " << module.maxY << " Diff: " << module.maxY - module.minY << '\n' 
-                    << "Z - Min: " << module.minZ << " Max: " << module.maxZ << " Diff: " << module.maxZ - module.minZ << '\n' 
-                    << "Orientation: " << module.orientation << '\n' << std::endl;
-        }
+      // for(auto const &[name, module] : fCRTGeoService->GetModules())
+      //   {
+      //     std::cout << "Module:  " << module.name << " (" << module.taggerName << ")" << '\n';
+      //     if(module.minos)
+      //       std::cout << "MINOS module" << std::endl;
+      //     std::cout << "X - Min: " << module.minX << " Max: " << module.maxX << " Diff: " << module.maxX - module.minX << '\n'
+      //               << "Y - Min: " << module.minY << " Max: " << module.maxY << " Diff: " << module.maxY - module.minY << '\n'
+      //               << "Z - Min: " << module.minZ << " Max: " << module.maxZ << " Diff: " << module.maxZ - module.minZ << '\n'
+      //               << "Orientation: " << module.orientation << '\n' << std::endl;
+      //   }
 
-      std::cout << std::endl;
+      // std::cout << std::endl;
 
-      for(auto const &[name, sipm] : fCRTGeoService->GetSiPMs())
-        {
-          std::cout << "SiPM:  " << sipm.channel << " ("
-                    << fCRTChannelMapService->GetOfflineModuleIDFromOfflineChannelID(sipm.channel) << " - "
-                    << fCRTChannelMapService->GetLocalOfflineChannelFromOfflineChannelID(sipm.channel) << ")" << '\n'
-                    << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
-        }
+      // for(auto const &[name, sipm] : fCRTGeoService->GetSiPMs())
+      //   {
+      //     std::cout << "SiPM:  " << sipm.channel << " ("
+      //               << fCRTChannelMapService->GetOfflineModuleIDFromOfflineChannelID(sipm.channel) << " - "
+      //               << fCRTChannelMapService->GetLocalOfflineChannelFromOfflineChannelID(sipm.channel) << ")" << '\n'
+      //               << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
+      //   }
+    }
+}
+
+void sbnd::crt::CRTAnalysis::beginRun(art::Run const& r)
+{
+  if(fDebug)
+    {
+      std::cout << "\n==================================="
+                << "\nTaggers!"
+                << "\n===================================";
+
+      for (auto const &[name, tagger] : fCRTGeoService->GetTaggers())
+        std::cout << std::endl << tagger;
+
+      std::cout << "\n==================================="
+                << "\nModules!"
+                << "\n===================================";
+
+      for (auto const &[name, module] : fCRTGeoService->GetModules())
+        std::cout << std::endl << module;
+
+      std::cout << "\n==================================="
+                << "\nStrips!"
+                << "\n===================================";
+
+      for (auto const &[name, strip] : fCRTGeoService->GetStrips())
+        std::cout << std::endl << strip;
+
+      std::cout << "\n==================================="
+                << "\nSiPMs!"
+                << "\n===================================";
+
+      for (auto const &[name, sipm] : fCRTGeoService->GetSiPMs())
+        std::cout << std::endl << sipm;
     }
 }
 

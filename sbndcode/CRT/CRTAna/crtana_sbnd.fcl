@@ -11,6 +11,7 @@ crtana_sbnd:
   TimeWalkNorm:      @local::sbnd_crtsim.DetSimParams.TDelayNorm
   TimeWalkScale:     @local::sbnd_crtsim.DetSimParams.TDelayScale
   TruthMatch:        false
+  Debug:             true
   module_type:       "CRTAnalysis"
 }
 
