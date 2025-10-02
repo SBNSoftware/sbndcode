@@ -1,10 +1,8 @@
-#include "crt_calib_service.fcl"
 #include "run_crtana.fcl"
 
 services.ParticleInventoryService: @erase
 services.BackTrackerService:       @erase
 
-services.CRTCalibService:      @local::crt_calib_service
 services.CRTGeoService:        @local::crtgeoservice_data_sbnd
 
 physics.analyzers.crtana: @local::crtana_data_sbnd

@@ -1,8 +1,6 @@
-#include "crt_calib_service.fcl"
 #include "run_crtreco.fcl"
 
 services.message:              @local::sbnd_message_services
-services.CRTCalibService:      @local::crt_calib_service
 services.CRTGeoService:        @local::crtgeoservice_data_sbnd
 
 physics.producers.crtstrips:      @local::crtstriphitproducer_data_sbnd

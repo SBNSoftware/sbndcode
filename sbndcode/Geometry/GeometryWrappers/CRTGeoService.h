@@ -40,7 +40,6 @@
 // sbndcode
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 #include "sbndcode/ChannelMaps/CRT/CRTChannelMapService.h"
-#include "sbndcode/Calibration/CRT/CalibService/CRTCalibService.h"
 #include "sbndcode/Geometry/GeometryWrappers/CRTOrientationMaps.h"
 #include "sbndcode/Calibration/CRTDatabaseInterface/CRTCalibrationDatabase.h"
 #include "sbndcode/Calibration/CRTDatabaseInterface/ICRTCalibrationDatabaseService.h"
