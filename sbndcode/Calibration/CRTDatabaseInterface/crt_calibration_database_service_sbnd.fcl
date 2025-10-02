@@ -1,6 +1,6 @@
 BEGIN_PROLOG
 
-sbnd_crtcalibrationdatabaseservice:
+crt_calibration_database_service_sbnd:
 {
   service_provider: "CRTCalibrationDatabaseService" 
 
@@ -12,7 +12,7 @@ sbnd_crtcalibrationdatabaseservice:
     ChannelTableName:  "crt_channel_calibration"
   }
 
-  Verbose: true
+  Verbose: false
 }
 
 END_PROLOG
