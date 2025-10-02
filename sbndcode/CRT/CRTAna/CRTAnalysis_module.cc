@@ -670,7 +670,9 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
 
       for(auto const &[name, sipm] : fCRTGeoService->GetSiPMs())
         {
-          std::cout << "SiPM:  " << sipm.channel << " (" << sipm.channel/32 << " - " << sipm.channel%32 << ")" << '\n'
+          std::cout << "SiPM:  " << sipm.channel << " ("
+                    << fCRTChannelMapService->GetOfflineModuleIDFromOfflineChannelID(sipm.channel) << " - "
+                    << fCRTChannelMapService->GetLocalOfflineChannelFromOfflineChannelID(sipm.channel) << ")" << '\n'
                     << "x: " << sipm.x << " y: " << sipm.y << " z: " << sipm.z << std::endl;
         }
     }
