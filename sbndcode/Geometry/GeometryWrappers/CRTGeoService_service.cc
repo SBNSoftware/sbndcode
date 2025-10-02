@@ -39,16 +39,8 @@ namespace sbnd::crt {
           }
         }
 
-        unsigned int mac5 = 0;
-        bool invert       = false;
-
-        if(!fMC)
-          {
-            art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
-            SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(ad_i);
-            mac5   = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
-            invert = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
-          }
+        art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
+        const bool invert = ChannelMapService->GetInversionFromOfflineModuleID(ad_i);
 
         // Loop through strips
         for(unsigned ads_i = 0; ads_i < auxDet.NSensitiveVolume(); ads_i++)
@@ -78,27 +70,17 @@ namespace sbnd::crt {
 
             if(std::find(usedModules.begin(), usedModules.end(), moduleName) == usedModules.end())
               {
-                double t0DelayCorrection = 0, t1DelayCorrection = 0;
-
-                if(!fMC)
-                  {
-                    t0DelayCorrection = fCRTCalibrationDatabaseService->getT0CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT0CalibratedOffset(mac5);
-                    t1DelayCorrection = fCRTCalibrationDatabaseService->getT1CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT1CalibratedOffset(mac5);
-                  }
-
                 const std::string stripName = nodeStrip->GetVolume()->GetName();
                 const bool minos = stripName.find("MINOS") != std::string::npos ? true : false;
 
                 usedModules.push_back(moduleName);
-                CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName,
-                                                    t0DelayCorrection, t1DelayCorrection,
-                                                    invert, minos);
+                CRTModuleGeo module  = CRTModuleGeo(nodeModule, auxDet, ad_i, taggerName, 0, 0, invert, minos);
                 fModules.insert(std::pair<std::string, CRTModuleGeo>(moduleName, module));
               }
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
-            const uint32_t channel0     = 32 * ad_i + 2 * ads_i;
+            const uint32_t channel0     = ChannelMapService->ConstructOfflineChannelIDFromOfflineModuleIDAndStripNumber(ad_i, ads_i);
             const uint32_t channel1     = channel0 + 1;
 
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
@@ -125,32 +107,9 @@ namespace sbnd::crt {
             geo::AuxDetSensitiveGeo::LocalPoint_t const sipm1XYZ{sipmX, sipm1Y, 0};
             auto const sipm1XYZWorld = auxDetSensitive.toWorldCoords(sipm1XYZ);
 
-            uint32_t pedestal0       = 0;
-            uint32_t pedestal1       = 0;
-            CRTChannelStatus status0 = CRTChannelStatus::kGoodChannel;
-            CRTChannelStatus status1 = CRTChannelStatus::kGoodChannel;
-            double gain0             = fDefaultGain;
-            double gain1             = fDefaultGain;
-
-            if(!fMC)
-              {
-                const uint32_t actualChannel0 = invert ? 31 - (2 * ads_i) : 2 * ads_i;
-                const uint32_t actualChannel1 = invert ? actualChannel0 - 1 : actualChannel0 + 1;
-
-                const int offlineChannel0 = mac5 * 100 + actualChannel0;
-                const int offlineChannel1 = mac5 * 100 + actualChannel1;
-
-                pedestal0 = fCRTCalibrationDatabaseService->getPedestal(offlineChannel0);
-                pedestal1 = fCRTCalibrationDatabaseService->getPedestal(offlineChannel1);
-                status0   = fCRTCalibrationDatabaseService->getChannelStatus(offlineChannel0);
-                status1   = fCRTCalibrationDatabaseService->getChannelStatus(offlineChannel1);
-                gain0     = fCRTCalibrationDatabaseService->getGainFactor(offlineChannel0);
-                gain1     = fCRTCalibrationDatabaseService->getGainFactor(offlineChannel1);
-              }
-
             // Fill SiPM information
-            CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, pedestal0, gain0, status0);
-            CRTSiPMGeo sipm1 = CRTSiPMGeo(stripName, channel1, sipm1XYZWorld, pedestal1, gain1, status1);
+            CRTSiPMGeo sipm0 = CRTSiPMGeo(stripName, channel0, sipm0XYZWorld, 0, fDefaultGain, CRTChannelStatus::kGoodChannel);
+            CRTSiPMGeo sipm1 = CRTSiPMGeo(stripName, channel1, sipm1XYZWorld, 0, fDefaultGain, CRTChannelStatus::kGoodChannel);
             fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel0, sipm0));
             fSiPMs.insert(std::pair<uint16_t, CRTSiPMGeo>(channel1, sipm1));
           }
@@ -168,48 +127,38 @@ namespace sbnd::crt {
 
     for(auto&& [ name, module ] : fModules)
       {
-        SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(module.adID);
-        int mac5   = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
+        const unsigned int mac5 = ChannelMapService->GetMAC5FromOfflineModuleID(module.adID);
 
         module.t0DelayCorrection = fCRTCalibrationDatabaseService->getT0CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT0CalibratedOffset(mac5);
         module.t1DelayCorrection = fCRTCalibrationDatabaseService->getT1CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT1CalibratedOffset(mac5);
       }
 
-    for(auto&& [ name, sipm ] : fSiPMs)
+    for(auto&& [ channel, sipm ] : fSiPMs)
       {
-        CRTModuleGeo module = GetModule(sipm.channel);
-        int channel         = sipm.channel % 32;
+        const unsigned int online_channel_id = ChannelMapService->GetOnlineChannelIDFromOfflineChannelID(sipm.channel);
 
-        SBND::CRTChannelMapService::ModuleInfo_t moduleInfo = ChannelMapService->GetModuleInfoFromOfflineID(module.adID);
-        int mac5    = moduleInfo.valid ? moduleInfo.feb_mac5 : 0;
-        bool invert = moduleInfo.valid ? moduleInfo.channel_order_swapped : false;
-
-        const uint32_t actualChannel = invert ? 31 - channel : channel;
-        const int offlineChannel     = mac5 * 100 + actualChannel;
-
-        sipm.pedestal = fCRTCalibrationDatabaseService->getPedestal(offlineChannel);
-        sipm.status   = fCRTCalibrationDatabaseService->getChannelStatus(offlineChannel);
-        sipm.gain     = fCRTCalibrationDatabaseService->getGainFactor(offlineChannel);
+        sipm.pedestal = fCRTCalibrationDatabaseService->getPedestal(online_channel_id);
+        sipm.status   = fCRTCalibrationDatabaseService->getChannelStatus(online_channel_id);
+        sipm.gain     = fCRTCalibrationDatabaseService->getGainFactor(online_channel_id);
       }
   }
 
-  std::vector<double> CRTGeoService::CRTLimits() const {
+  std::vector<double> CRTGeoService::CRTLimits() const
+  {
     std::vector<double> limits;
 
-    std::vector<double> minXs;
-    std::vector<double> minYs;
-    std::vector<double> minZs;
-    std::vector<double> maxXs;
-    std::vector<double> maxYs;
-    std::vector<double> maxZs;
-    for(auto const& tagger : fTaggers){
-      minXs.push_back(tagger.second.minX);
-      minYs.push_back(tagger.second.minY);
-      minZs.push_back(tagger.second.minZ);
-      maxXs.push_back(tagger.second.maxX);
-      maxYs.push_back(tagger.second.maxY);
-      maxZs.push_back(tagger.second.maxZ);
-    }
+    std::vector<double> minXs, minYs, minZs, maxXs, maxYs, maxZs;
+
+    for(auto const& tagger : fTaggers)
+      {
+        minXs.push_back(tagger.second.minX);
+        minYs.push_back(tagger.second.minY);
+        minZs.push_back(tagger.second.minZ);
+        maxXs.push_back(tagger.second.maxX);
+        maxYs.push_back(tagger.second.maxY);
+        maxZs.push_back(tagger.second.maxZ);
+      }
+
     limits.push_back(*std::min_element(minXs.begin(), minXs.end()));
     limits.push_back(*std::min_element(minYs.begin(), minYs.end()));
     limits.push_back(*std::min_element(minZs.begin(), minZs.end()));

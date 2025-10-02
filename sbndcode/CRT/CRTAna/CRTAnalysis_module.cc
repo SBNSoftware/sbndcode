@@ -1278,8 +1278,7 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
           if(fDataMode)
             {
               art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
-              SBND::CRTChannelMapService::ModuleInfo_t module_info = ChannelMapService->GetModuleInfoFromOfflineID( striphit->Channel() / 32 );
-              _cl_sh_feb_mac5_set[i][ii] = ( module_info.valid ) ? module_info.feb_mac5 : 0;
+              _cl_sh_feb_mac5_set[i][ii] = ChannelMapService->GetMAC5FromOfflineChannelID(striphit->Channel());
             }
           else
             _cl_sh_feb_mac5_set[i][ii] = striphit->Channel() / 32;
