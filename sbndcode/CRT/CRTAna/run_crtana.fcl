@@ -1,4 +1,5 @@
 #include "crtgeoservice_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
 #include "crtana_sbnd.fcl"
 #include "simulationservices_sbnd.fcl"
 
@@ -14,6 +15,7 @@ services:
   LArPropertiesService:      @local::sbnd_properties
   DetectorPropertiesService: @local::sbnd_detproperties
   CRTGeoService:             @local::crtgeoservice_sbnd
+  CRTChannelMapService:      @local::crt_channel_map_standard
 }
 
 source:

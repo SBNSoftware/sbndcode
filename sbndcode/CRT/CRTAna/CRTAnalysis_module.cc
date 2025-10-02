@@ -95,8 +95,10 @@ public:
 
 private:
 
-  art::ServiceHandle<CRTGeoService> fCRTGeoService;
-  TPCGeoAlg fTPCGeoAlg;
+  art::ServiceHandle<CRTGeoService>              fCRTGeoService;
+  art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
+
+  TPCGeoAlg         fTPCGeoAlg;
   CRTBackTrackerAlg fCRTBackTrackerAlg;
 
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
@@ -1269,19 +1271,12 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       for(unsigned ii = 0; ii < _cl_nhits[i]; ++ii)
         {
           const auto striphit = striphits[ii];
-          _cl_channel_set[i][ii] = striphit->Channel();
-          _cl_adc_set[i][2*ii]   = striphit->ADC1();
-          _cl_adc_set[i][2*ii+1] = striphit->ADC2();
-          _cl_sh_ts0_set[i][ii]  = striphit->Ts0();
-          _cl_sh_ts1_set[i][ii]  = striphit->Ts1();
-
-          if(fDataMode)
-            {
-              art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
-              _cl_sh_feb_mac5_set[i][ii] = ChannelMapService->GetMAC5FromOfflineChannelID(striphit->Channel());
-            }
-          else
-            _cl_sh_feb_mac5_set[i][ii] = striphit->Channel() / 32;
+          _cl_channel_set[i][ii]     = striphit->Channel();
+          _cl_adc_set[i][2*ii]       = striphit->ADC1();
+          _cl_adc_set[i][2*ii+1]     = striphit->ADC2();
+          _cl_sh_ts0_set[i][ii]      = striphit->Ts0();
+          _cl_sh_ts1_set[i][ii]      = striphit->Ts1();
+          _cl_sh_feb_mac5_set[i][ii] = fCRTChannelMapService->GetMAC5FromOfflineChannelID(striphit->Channel());
 
           /*
            * The below segment reimplements the CorrectTime() method

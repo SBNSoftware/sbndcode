@@ -7,6 +7,7 @@
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "crtgeoservice_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
 
 #
 # modules
@@ -25,6 +26,7 @@ services:
   AuxDetGeometry: @local::sbnd_auxdetgeo
   @table::sbnd_g4_services
   CRTGeoService: @local::crtgeoservice_sbnd
+  CRTChannelMapService: @local::crt_channel_map_standard
 }
 
 

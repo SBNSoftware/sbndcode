@@ -8,6 +8,7 @@
 #include "CRTArtdaqFragmentProducer.fcl"
 
 #include "crtgeoservice_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
 
 process_name: CRTFragmentProducer
 
@@ -17,6 +18,7 @@ services:
     TFileService: { fileName: "crtfragsim_hist.root" }
     RandomNumberGenerator: {} #ART native random number generator
     CRTGeoService: @local::crtgeoservice_sbnd
+    CRTChannelMapService: @local::crt_channel_map_standard
 }
 
 #source is now a root file

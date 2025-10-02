@@ -1,9 +1,7 @@
-#include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
 #include "run_crtreco.fcl"
 
 services.message:              @local::sbnd_message_services
-services.CRTChannelMapService: @local::crt_channel_map_standard
 services.CRTCalibService:      @local::crt_calib_service
 services.CRTGeoService:        @local::crtgeoservice_data_sbnd
 

@@ -1,6 +1,5 @@
 #include "services_sbnd.fcl"
 #include "crteventdisplay_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
 #include "crtgeoservice_sbnd.fcl"
 
@@ -10,7 +9,6 @@ services:
 {
   @table::sbnd_services
   CRTGeoService:        @local::crtgeoservice_data_sbnd
-  CRTChannelMapService: @local::crt_channel_map_standard
   CRTCalibService:      @local::crt_calib_service
 }
 

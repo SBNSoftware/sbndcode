@@ -12,7 +12,7 @@ sbnd_crtcalibrationdatabaseservice:
     ChannelTableName:  "crt_channel_calibration"
   }
 
-  Verbose: false
+  Verbose: true
 }
 
 END_PROLOG

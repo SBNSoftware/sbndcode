@@ -366,9 +366,10 @@ namespace sbnd::crt {
     std::map<std::string, CRTStripGeo>  fStrips;
     std::map<uint16_t, CRTSiPMGeo>      fSiPMs;
 
-    geo::GeometryCore const              *fGeometryService;
-    const geo::AuxDetGeometryCore        *fAuxDetGeoCore;
-    sbndDB::CRTCalibrationDatabase const *fCRTCalibrationDatabaseService;
+    geo::GeometryCore const                        *fGeometryService;
+    const geo::AuxDetGeometryCore                  *fAuxDetGeoCore;
+    sbndDB::CRTCalibrationDatabase const           *fCRTCalibrationDatabaseService;
+    art::ServiceHandle<SBND::CRTChannelMapService> fCRTChannelMapService;
 
     double fDefaultGain;
     bool   fMC;

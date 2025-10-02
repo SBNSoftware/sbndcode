@@ -4,6 +4,7 @@
 #include "crtrecoproducers_sbnd.fcl"
 #include "crtana_sbnd.fcl"
 #include "crtgeoservice_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
 
 process_name: CRTRecoAna
 
@@ -13,6 +14,7 @@ services:
   @table::sbnd_basic_services
   ParticleInventoryService: @local::standard_particleinventoryservice
   CRTGeoService:            @local::crtgeoservice_sbnd
+  CRTChannelMapService:     @local::crt_channel_map_standard
 }
 
 source:

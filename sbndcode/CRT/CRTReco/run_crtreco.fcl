@@ -2,13 +2,15 @@
 #include "rootoutput_sbnd.fcl"
 #include "crtrecoproducers_sbnd.fcl"
 #include "crtgeoservice_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
 
 process_name: CRTReco
 
 services:
 {
   @table::sbnd_services
-  CRTGeoService: @local::crtgeoservice_sbnd
+  CRTGeoService:        @local::crtgeoservice_sbnd
+  CRTChannelMapService: @local::crt_channel_map_standard
 }
 
 source:

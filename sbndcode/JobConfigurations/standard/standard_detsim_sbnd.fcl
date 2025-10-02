@@ -26,6 +26,7 @@
 #include "messages_sbnd.fcl"
 #include "detsim_drops.fcl"
 #include "crtgeoservice_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
 
 #
 # modules
@@ -45,6 +46,7 @@ services:
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   AuxDetGeometry: @local::sbnd_auxdetgeo
   CRTGeoService: @local::crtgeoservice_sbnd
+  CRTChannelMapService: @local::crt_channel_map_standard
 }
 
 

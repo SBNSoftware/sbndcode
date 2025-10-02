@@ -39,8 +39,7 @@ namespace sbnd::crt {
           }
         }
 
-        art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
-        const bool invert = ChannelMapService->GetInversionFromOfflineModuleID(ad_i);
+        const bool invert = fCRTChannelMapService->GetInversionFromOfflineModuleID(ad_i);
 
         // Loop through strips
         for(unsigned ads_i = 0; ads_i < auxDet.NSensitiveVolume(); ads_i++)
@@ -80,7 +79,7 @@ namespace sbnd::crt {
 
             // Fill the strip information
             const std::string stripName = nodeStrip->GetName();
-            const uint32_t channel0     = ChannelMapService->ConstructOfflineChannelIDFromOfflineModuleIDAndStripNumber(ad_i, ads_i);
+            const uint32_t channel0     = fCRTChannelMapService->ConstructOfflineChannelIDFromOfflineModuleIDAndStripNumber(ad_i, ads_i);
             const uint32_t channel1     = channel0 + 1;
 
             if(std::find(usedStrips.begin(), usedStrips.end(), stripName) == usedStrips.end())
@@ -123,11 +122,9 @@ namespace sbnd::crt {
     if(fMC)
       return;
 
-    art::ServiceHandle<SBND::CRTChannelMapService> ChannelMapService;
-
     for(auto&& [ name, module ] : fModules)
       {
-        const unsigned int mac5 = ChannelMapService->GetMAC5FromOfflineModuleID(module.adID);
+        const unsigned int mac5 = fCRTChannelMapService->GetMAC5FromOfflineModuleID(module.adID);
 
         module.t0DelayCorrection = fCRTCalibrationDatabaseService->getT0CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT0CalibratedOffset(mac5);
         module.t1DelayCorrection = fCRTCalibrationDatabaseService->getT1CableLengthOffset(mac5) + fCRTCalibrationDatabaseService->getT1CalibratedOffset(mac5);
@@ -135,7 +132,7 @@ namespace sbnd::crt {
 
     for(auto&& [ channel, sipm ] : fSiPMs)
       {
-        const unsigned int online_channel_id = ChannelMapService->GetOnlineChannelIDFromOfflineChannelID(sipm.channel);
+        const unsigned int online_channel_id = fCRTChannelMapService->GetOnlineChannelIDFromOfflineChannelID(sipm.channel);
 
         sipm.pedestal = fCRTCalibrationDatabaseService->getPedestal(online_channel_id);
         sipm.status   = fCRTCalibrationDatabaseService->getChannelStatus(online_channel_id);

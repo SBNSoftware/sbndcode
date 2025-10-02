@@ -4,6 +4,7 @@
 #include "drops_reco1.fcl"
 #include "simulationservices_sbnd.fcl"
 #include "crtgeoservice_sbnd.fcl"
+#include "crt_channel_map_service.fcl"
 #include "generic_job_sbnd.fcl"
 
 process_name: Reco1
@@ -20,6 +21,7 @@ services:
     BackTrackerService:        @local::sbnd_backtrackerservice
     ParticleInventoryService:  @local::sbnd_particleinventoryservice
     CRTGeoService:             @local::crtgeoservice_sbnd
+    CRTChannelMapService:      @local::crt_channel_map_standard
 }
 
 #physics table overrides
