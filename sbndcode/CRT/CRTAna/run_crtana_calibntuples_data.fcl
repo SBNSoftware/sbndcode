@@ -3,7 +3,11 @@
 services.ParticleInventoryService: @erase
 services.BackTrackerService:       @erase
 
-services.CRTGeoService:        @local::crtgeoservice_data_sbnd
+services:
+{
+  @table::services
+  @table::crt_services_data_sbnd
+}
 
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""

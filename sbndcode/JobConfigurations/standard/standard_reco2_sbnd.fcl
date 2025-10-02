@@ -3,8 +3,7 @@
 #include "workflow_reco2.fcl"
 #include "drops_reco2.fcl"
 #include "simulationservices_sbnd.fcl"
-#include "crtgeoservice_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
+#include "crt_services_sbnd.fcl"
 #include "generic_job_sbnd.fcl"
 
 process_name: Reco2
@@ -15,13 +14,12 @@ services:
     @table::services
     @table::sbnd_random_services
     @table::sbnd_g4_services
+    @table::crt_services_sbnd
     # FIXME The following services are temporarily included here to test tht the workflow is unchanged
     LArFFT:                    @local::sbnd_larfft
     SignalShapingServiceSBND:  @local::sbnd_signalshapingservice
     BackTrackerService:        @local::sbnd_backtrackerservice
     ParticleInventoryService:  @local::sbnd_particleinventoryservice
-    CRTGeoService:             @local::crtgeoservice_sbnd
-    CRTChannelMapService:      @local::crt_channel_map_standard
 }
 
 #physics table overrides

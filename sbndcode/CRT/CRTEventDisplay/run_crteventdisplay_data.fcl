@@ -1,13 +1,13 @@
 #include "services_sbnd.fcl"
+#include "crt_services_sbnd.fcl"
 #include "crteventdisplay_sbnd.fcl"
-#include "crtgeoservice_sbnd.fcl"
 
 process_name: CRTEventDisplay
 
 services:
 {
   @table::sbnd_services
-  CRTGeoService:        @local::crtgeoservice_data_sbnd
+  @table::crt_services_data_sbnd
 }
 
 source:
@@ -20,7 +20,7 @@ physics:
 {
   analyzers:
   {
-    crtevd:   @local::crteventdisplay_sbnd_data
+    crtevd: @local::crteventdisplay_sbnd_data
   }
 
   ana: [ crtevd ]

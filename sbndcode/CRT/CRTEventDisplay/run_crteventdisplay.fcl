@@ -1,6 +1,5 @@
 #include "simulationservices_sbnd.fcl"
-#include "crtgeoservice_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
+#include "crt_services_sbnd.fcl"
 #include "crteventdisplay_sbnd.fcl"
 
 process_name: CRTEventDisplay
@@ -8,9 +7,8 @@ process_name: CRTEventDisplay
 services:
 {
   @table::sbnd_services
+  @table::crt_services_sbnd
   ParticleInventoryService: @local::sbnd_particleinventoryservice
-  CRTGeoService:            @local::crtgeoservice_sbnd
-  CRTChannelMapService:     @local::crt_channel_map_standard
 }
 
 source:
@@ -24,7 +22,7 @@ physics:
 {
   analyzers:
   {
-    crtevd:   @local::crteventdisplay_sbnd
+    crtevd: @local::crteventdisplay_sbnd
   }
 
   ana: [ crtevd ]

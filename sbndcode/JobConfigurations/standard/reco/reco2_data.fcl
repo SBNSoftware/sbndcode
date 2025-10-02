@@ -8,7 +8,7 @@ services:
 {
     @table::services
     @table::sbnd_data_services
-    CRTGeoService:        @local::crtgeoservice_data_sbnd
+    @table::crt_services_data_sbnd
 }
 
 physics.producers:

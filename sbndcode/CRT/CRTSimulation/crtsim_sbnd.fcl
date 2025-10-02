@@ -6,8 +6,7 @@
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
-#include "crtgeoservice_sbnd.fcl"
-#include "crt_channel_map_service.fcl"
+#include "crt_services_sbnd.fcl"
 
 #
 # modules
@@ -25,8 +24,7 @@ services:
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   AuxDetGeometry: @local::sbnd_auxdetgeo
   @table::sbnd_g4_services
-  CRTGeoService: @local::crtgeoservice_sbnd
-  CRTChannelMapService: @local::crt_channel_map_standard
+  @table::crt_services_sbnd
 }
 
 

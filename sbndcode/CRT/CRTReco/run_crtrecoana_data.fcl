@@ -1,6 +1,10 @@
 #include "run_crtrecoana.fcl"
 
-services.CRTGeoService:        @local::crtgeoservice_data_sbnd
+services:
+{
+  @table::services
+  @table::crt_services_data_sbnd
+}
 
 physics.producers.crtstrips:      @local::crtstriphitproducer_data_sbnd
 physics.producers.crtclustering:  @local::crtclusterproducer_data_sbnd
