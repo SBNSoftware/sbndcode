@@ -1123,14 +1123,23 @@ void nuECut_macro(){
     auto primaryVertexXCRUMBS = createHistGroup("primaryVertexXCRUMBS", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "X Coordinate (cm)", 82, -201.3, 201.3);
     auto primaryVertexYCRUMBS = createHistGroup("primaryVertexYCRUMBS", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Y Coordinate (cm)", 83, -203.8, 203.8);
     auto primaryVertexZCRUMBS = createHistGroup("primaryVertexZCRUMBS", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Z Coordinate (cm)", 104, 0, 509.4);
+    auto primaryVertexXCRUMBSCut = createCutHistGroup("primaryVertexXCRUMBSCut", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score (After Cuts)", "X Coordinate (cm)", 82, -201.3, 201.3);
+    auto primaryVertexYCRUMBSCut = createCutHistGroup("primaryVertexYCRUMBSCut", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score (After Cuts)", "Y Coordinate (cm)", 83, -203.8, 203.8);
+    auto primaryVertexZCRUMBSCut = createCutHistGroup("primaryVertexZCRUMBSCut", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score (After Cuts)", "Z Coordinate (cm)", 104, 0, 509.4);
 
     auto primaryVertexXCRUMBSNegative = createHistGroup("primaryVertexXCRUMBSNegative", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "X Coordinate (cm)", 805, -201.3, 201.3);
     auto primaryVertexYCRUMBSNegative = createHistGroup("primaryVertexYCRUMBSNegative", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Y Coordinate (cm)", 815, -203.8, 203.8);
     auto primaryVertexZCRUMBSNegative = createHistGroup("primaryVertexZCRUMBSNegative", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Z Coordinate (cm)", 1019, 0, 509.4);
+    auto primaryVertexXCRUMBSNegativeCut = createCutHistGroup("primaryVertexXCRUMBSNegativeCut", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score (After Cuts)", "X Coordinate (cm)", 805, -201.3, 201.3);
+    auto primaryVertexYCRUMBSNegativeCut = createCutHistGroup("primaryVertexYCRUMBSNegativeCut", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score (After Cuts)", "Y Coordinate (cm)", 815, -203.8, 203.8);
+    auto primaryVertexZCRUMBSNegativeCut = createCutHistGroup("primaryVertexZCRUMBSNegativeCut", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score (After Cuts)", "Z Coordinate (cm)", 1019, 0, 509.4);
 
     auto primaryVertexXCRUMBSPositive = createHistGroup("primaryVertexXCRUMBSPositive", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "X Coordinate (cm)", 805, -201.3, 201.3);
     auto primaryVertexYCRUMBSPositive = createHistGroup("primaryVertexYCRUMBSPositive", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Y Coordinate (cm)", 815, -203.8, 203.8);
     auto primaryVertexZCRUMBSPositive = createHistGroup("primaryVertexZCRUMBSPositive", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score", "Z Coordinate (cm)", 1019, 0, 509.4);
+    auto primaryVertexXCRUMBSPositiveCut = createCutHistGroup("primaryVertexXCRUMBSPositiveCut", "X Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score (After Cuts)", "X Coordinate (cm)", 805, -201.3, 201.3);
+    auto primaryVertexYCRUMBSPositiveCut = createCutHistGroup("primaryVertexYCRUMBSPositiveCut", "Y Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score (After Cuts)", "Y Coordinate (cm)", 815, -203.8, 203.8);
+    auto primaryVertexZCRUMBSPositiveCut = createCutHistGroup("primaryVertexZCRUMBSPositiveCut", "Z Coordinate of the Primary Neutrino Vertex in the Slice with the Highest CRUMBS Score (After Cuts)", "Z Coordinate (cm)", 1019, 0, 509.4);
  
     counter numEventsTotal;
     counter numEventsTrueNeutrino;
@@ -1375,14 +1384,23 @@ void nuECut_macro(){
         double FV_zLow = 0.249951;
         double FV_zHigh = 490.154;
 
-        if((chosenRecoNeutrinoCRUMBS.vx > FV_xLow && chosenRecoNeutrinoCRUMBS.vx < FV_xHigh) && (chosenRecoNeutrinoCRUMBS.vy > FV_yLow && chosenRecoNeutrinoCRUMBS.vy < FV_yHigh) && (chosenRecoNeutrinoCRUMBS.vz > FV_zLow && chosenRecoNeutrinoCRUMBS.vz < FV_zHigh)) cutOrKeep = 1;
+        double sliceScoreCut = -0.3;
+        double numPFPsCut = 1;
+
+        if((chosenRecoNeutrinoCRUMBS.vx > FV_xLow && chosenRecoNeutrinoCRUMBS.vx < FV_xHigh) && (chosenRecoNeutrinoCRUMBS.vy > FV_yLow && chosenRecoNeutrinoCRUMBS.vy < FV_yHigh) && (chosenRecoNeutrinoCRUMBS.vz > FV_zLow && chosenRecoNeutrinoCRUMBS.vz < FV_zHigh)){
+            if(chosenRecoSliceCRUMBS.score > sliceScoreCut){
+                if(numPFPsCut >= numPFPsSliceCRUMBS){
+                    cutOrKeep = 1;
+                }
+            }
+        }
 
         if(cutOrKeep == 0){
             // Fails cuts
             if(DLCurrent == 2 && signal == 1){
                 numSlices.cutSignal->Fill(numSlicesInEvent);
                 sliceScoreCRUMBS.cutSignal->Fill(chosenRecoSliceCRUMBS.score);
-                numRecoNeutrinos.cutSignal->Fill(numRecoNeutrinosInEvents);
+                numRecoNeutrinos.cutSignal->Fill(numRecoNeutrinosInEvent);
                 primaryVertexXCRUMBS.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
                 primaryVertexYCRUMBS.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
                 primaryVertexZCRUMBS.cutSignal->Fill(chosenRecoNeutrinoCRUMBS.vz); 
@@ -1403,7 +1421,7 @@ void nuECut_macro(){
             } else if(DLCurrent == 2 && signal == 2){
                 numSlices.cutBNB->Fill(numSlicesInEvent);
                 sliceScoreCRUMBS.cutBNB->Fill(chosenRecoSliceCRUMBS.score);
-                numRecoNeutrinos.cutBNB->Fill(numRecoNeutrinosInEvents);
+                numRecoNeutrinos.cutBNB->Fill(numRecoNeutrinosInEvent);
                 primaryVertexXCRUMBS.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
                 primaryVertexYCRUMBS.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
                 primaryVertexZCRUMBS.cutBNB->Fill(chosenRecoNeutrinoCRUMBS.vz); 
@@ -1424,7 +1442,7 @@ void nuECut_macro(){
             } else if(DLCurrent == 2 && signal == 3){
                 numSlices.cutCosmics->Fill(numSlicesInEvent);
                 sliceScoreCRUMBS.cutCosmics->Fill(chosenRecoSliceCRUMBS.score);
-                numRecoNeutrinos.cutCosmics->Fill(numRecoNeutrinosInEvents);
+                numRecoNeutrinos.cutCosmics->Fill(numRecoNeutrinosInEvent);
                 primaryVertexXCRUMBS.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
                 primaryVertexYCRUMBS.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
                 primaryVertexZCRUMBS.cutCosmics->Fill(chosenRecoNeutrinoCRUMBS.vz); 
@@ -1451,8 +1469,8 @@ void nuECut_macro(){
                 numSlicesCut.Signal->Fill(numSlicesInEvent);
                 sliceScoreCRUMBS.keptSignal->Fill(chosenRecoSliceCRUMBS.score);
                 sliceScoreCRUMBSCut.Signal->Fill(chosenRecoSliceCRUMBS.score);
-                numRecoNeutrinos.keptSignal->Fill(numRecoNeutrinosInEvents);
-                numRecoNeutrinosCut.Signal->Fill(numRecoNeutrinosInEvents);
+                numRecoNeutrinos.keptSignal->Fill(numRecoNeutrinosInEvent);
+                numRecoNeutrinosCut.Signal->Fill(numRecoNeutrinosInEvent);
                 primaryVertexXCRUMBS.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vx);
                 primaryVertexXCRUMBSCut.Signal->Fill(chosenRecoNeutrinoCRUMBS.vx);
                 primaryVertexYCRUMBS.keptSignal->Fill(chosenRecoNeutrinoCRUMBS.vy); 
@@ -1492,8 +1510,8 @@ void nuECut_macro(){
                 numSlicesCut.BNB->Fill(numSlicesInEvent);
                 sliceScoreCRUMBS.keptBNB->Fill(chosenRecoSliceCRUMBS.score);
                 sliceScoreCRUMBSCut.BNB->Fill(chosenRecoSliceCRUMBS.score);
-                numRecoNeutrinos.keptBNB->Fill(numRecoNeutrinosInEvents);
-                numRecoNeutrinosCut.BNB->Fill(numRecoNeutrinosInEvents);
+                numRecoNeutrinos.keptBNB->Fill(numRecoNeutrinosInEvent);
+                numRecoNeutrinosCut.BNB->Fill(numRecoNeutrinosInEvent);
                 primaryVertexXCRUMBS.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
                 primaryVertexXCRUMBSCut.BNB->Fill(chosenRecoNeutrinoCRUMBS.vx);
                 primaryVertexYCRUMBS.keptBNB->Fill(chosenRecoNeutrinoCRUMBS.vy); 
@@ -1533,8 +1551,8 @@ void nuECut_macro(){
                 numSlicesCut.Cosmics->Fill(numSlicesInEvent);
                 sliceScoreCRUMBS.keptCosmics->Fill(chosenRecoSliceCRUMBS.score);
                 sliceScoreCRUMBSCut.Cosmics->Fill(chosenRecoSliceCRUMBS.score);
-                numRecoNeutrinos.keptCosmics->Fill(numRecoNeutrinosInEvents);
-                numRecoNeutrinosCut.Cosmics->Fill(numRecoNeutrinosInEvents);
+                numRecoNeutrinos.keptCosmics->Fill(numRecoNeutrinosInEvent);
+                numRecoNeutrinosCut.Cosmics->Fill(numRecoNeutrinosInEvent);
                 primaryVertexXCRUMBS.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
                 primaryVertexXCRUMBSCut.Cosmics->Fill(chosenRecoNeutrinoCRUMBS.vx);
                 primaryVertexYCRUMBS.keptCosmics->Fill(chosenRecoNeutrinoCRUMBS.vy); 
@@ -1577,9 +1595,124 @@ void nuECut_macro(){
     int left = 0;
     int right = 1;
 
-    styleDraw(numSlices.canvas, numSlices.keptSignal, numSlices.cutSignal, numSlices.keptBNB, numSlices.cutBNB, numSlices.keptCosmics, numSlices.cutCosmics, 999, 999, 999, 999, (base_path + "numSlices_dist.pdf").c_str(), "bottomLeft");
-    styleDrawCut(numSlicesCut.canvas, numSlicesCut.Signal, numSlicesCut.BNB, numSlicesCut.Cosmics, 999, 999, 999, 999, (base_path + "numSlicesCut_dist.pdf").c_str(), "bottomLeft");
-    weighted(numSlices, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numSlices_weighted.pdf").c_str(), "bottomLeft");
-    weightedCut(numSlicesCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numSlicesCut_weighted.pdf").c_str(), "bottomLeft");
+    styleDraw(numSlices.canvas, numSlices.keptSignal, numSlices.cutSignal, numSlices.keptBNB, numSlices.cutBNB, numSlices.keptCosmics, numSlices.cutCosmics, 999, 999, 999, 999, (base_path + "numSlices_dist.pdf").c_str(), "topRight");
+    styleDrawCut(numSlicesCut.canvas, numSlicesCut.Signal, numSlicesCut.BNB, numSlicesCut.Cosmics, 999, 999, 999, 999, (base_path + "numSlicesCut_dist.pdf").c_str(), "topRight");
+    weighted(numSlices, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numSlices_weighted.pdf").c_str(), "topRight");
+    weightedCut(numSlicesCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numSlicesCut_weighted.pdf").c_str(), "topRight");
     efficiencyCut(numSlicesCut, 999, 999, 999, 999, (base_path + "numSlicesCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Slices", 1);
+   
+    styleDraw(sliceScoreCRUMBS.canvas, sliceScoreCRUMBS.keptSignal, sliceScoreCRUMBS.cutSignal, sliceScoreCRUMBS.keptBNB, sliceScoreCRUMBS.cutBNB, sliceScoreCRUMBS.keptCosmics, sliceScoreCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_dist.pdf").c_str(), "topLeft");
+    styleDrawCut(sliceScoreCRUMBSCut.canvas, sliceScoreCRUMBSCut.Signal, sliceScoreCRUMBSCut.BNB, sliceScoreCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBSCut_dist.pdf").c_str(), "topLeft");
+    weighted(sliceScoreCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_weighted.pdf").c_str(), "topLeft");
+    weightedCut(sliceScoreCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBSCut_weighted.pdf").c_str(), "topLeft");
+    efficiencyCut(sliceScoreCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "CRUMBS Score", -1);
+
+    styleDraw(numRecoNeutrinos.canvas, numRecoNeutrinos.keptSignal, numRecoNeutrinos.cutSignal, numRecoNeutrinos.keptBNB, numRecoNeutrinos.cutBNB, numRecoNeutrinos.keptCosmics, numRecoNeutrinos.cutCosmics, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_dist.pdf").c_str(), "topRight");
+    styleDrawCut(numRecoNeutrinosCut.canvas, numRecoNeutrinosCut.Signal, numRecoNeutrinosCut.BNB, numRecoNeutrinosCut.Cosmics, 999, 999, 999, 999, (base_path + "numRecoNeutrinosCut_dist.pdf").c_str(), "topRight");
+    weighted(numRecoNeutrinos, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_weighted.pdf").c_str(), "topRight");
+    weightedCut(numRecoNeutrinosCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numRecoNeutrinosCut_weighted.pdf").c_str(), "topRight");
+    efficiencyCut(numRecoNeutrinosCut, 999, 999, 999, 999, (base_path + "numRecoNeutrinosCut").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of Reco Neutrinos", 1);
+    
+    styleDraw(primaryVertexXCRUMBS.canvas, primaryVertexXCRUMBS.keptSignal, primaryVertexXCRUMBS.cutSignal, primaryVertexXCRUMBS.keptBNB, primaryVertexXCRUMBS.cutBNB, primaryVertexXCRUMBS.keptCosmics, primaryVertexXCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBS_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(primaryVertexXCRUMBSCut.canvas, primaryVertexXCRUMBSCut.Signal, primaryVertexXCRUMBSCut.BNB, primaryVertexXCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexXCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBS_weighted.pdf").c_str(), "topLeft");
+    weightedCut(primaryVertexXCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSCut_weighted.pdf").c_str(), "bottomLeft");
+    efficiencyCut(primaryVertexXCRUMBSCut, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex X Coord", -1);
+
+    styleDraw(primaryVertexYCRUMBS.canvas, primaryVertexYCRUMBS.keptSignal, primaryVertexYCRUMBS.cutSignal, primaryVertexYCRUMBS.keptBNB, primaryVertexYCRUMBS.cutBNB, primaryVertexYCRUMBS.keptCosmics, primaryVertexYCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBS_dist.pdf").c_str(), "topLeft");
+    styleDrawCut(primaryVertexYCRUMBSCut.canvas, primaryVertexYCRUMBSCut.Signal, primaryVertexYCRUMBSCut.BNB, primaryVertexYCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSCut_dist.pdf").c_str(), "topLeft");
+    weighted(primaryVertexYCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBS_weighted.pdf").c_str(), "topLeft");
+    weightedCut(primaryVertexYCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSCut_weighted.pdf").c_str(), "topLeft");
+    efficiencyCut(primaryVertexYCRUMBSCut, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Y Coord", -1);
+    
+    styleDraw(primaryVertexZCRUMBS.canvas, primaryVertexZCRUMBS.keptSignal, primaryVertexZCRUMBS.cutSignal, primaryVertexZCRUMBS.keptBNB, primaryVertexZCRUMBS.cutBNB, primaryVertexZCRUMBS.keptCosmics, primaryVertexZCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBS_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(primaryVertexZCRUMBSCut.canvas, primaryVertexZCRUMBSCut.Signal, primaryVertexZCRUMBSCut.BNB, primaryVertexZCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexZCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBS_weighted.pdf").c_str(), "topLeft");
+    weightedCut(primaryVertexZCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSCut_weighted.pdf").c_str(), "bottomLeft");
+    efficiencyCut(primaryVertexZCRUMBSCut, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Z Coord", -1);
+   
+    styleDraw(primaryVertexXCRUMBSNegative.canvas, primaryVertexXCRUMBSNegative.keptSignal, primaryVertexXCRUMBSNegative.cutSignal, primaryVertexXCRUMBSNegative.keptBNB, primaryVertexXCRUMBSNegative.cutBNB, primaryVertexXCRUMBSNegative.keptCosmics, primaryVertexXCRUMBSNegative.cutCosmics, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSNegative_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(primaryVertexXCRUMBSNegativeCut.canvas, primaryVertexXCRUMBSNegativeCut.Signal, primaryVertexXCRUMBSNegativeCut.BNB, primaryVertexXCRUMBSNegativeCut.Cosmics, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSNegativeCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexXCRUMBSNegative, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSNegative_weighted.pdf").c_str(), "bottomLeft");
+    weightedCut(primaryVertexXCRUMBSNegativeCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSNegativeCut_weighted.pdf").c_str(), "bottomLeft");
+    efficiencyCut(primaryVertexXCRUMBSNegativeCut, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSNegativeCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex X Coord", -1);
+    
+    styleDraw(primaryVertexYCRUMBSNegative.canvas, primaryVertexYCRUMBSNegative.keptSignal, primaryVertexYCRUMBSNegative.cutSignal, primaryVertexYCRUMBSNegative.keptBNB, primaryVertexYCRUMBSNegative.cutBNB, primaryVertexYCRUMBSNegative.keptCosmics, primaryVertexYCRUMBSNegative.cutCosmics, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSNegative_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(primaryVertexYCRUMBSNegativeCut.canvas, primaryVertexYCRUMBSNegativeCut.Signal, primaryVertexYCRUMBSNegativeCut.BNB, primaryVertexYCRUMBSNegativeCut.Cosmics, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSNegativeCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexYCRUMBSNegative, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSNegative_weighted.pdf").c_str(), "bottomLeft");
+    weightedCut(primaryVertexYCRUMBSNegativeCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSNegativeCut_weighted.pdf").c_str(), "bottomLeft");
+    efficiencyCut(primaryVertexYCRUMBSNegativeCut, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSNegativeCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Y Coord", -1);
+
+    styleDraw(primaryVertexZCRUMBSNegative.canvas, primaryVertexZCRUMBSNegative.keptSignal, primaryVertexZCRUMBSNegative.cutSignal, primaryVertexZCRUMBSNegative.keptBNB, primaryVertexZCRUMBSNegative.cutBNB, primaryVertexZCRUMBSNegative.keptCosmics, primaryVertexZCRUMBSNegative.cutCosmics, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSNegative_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(primaryVertexZCRUMBSNegativeCut.canvas, primaryVertexZCRUMBSNegativeCut.Signal, primaryVertexZCRUMBSNegativeCut.BNB, primaryVertexZCRUMBSNegativeCut.Cosmics, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSNegativeCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexZCRUMBSNegative, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSNegative_weighted.pdf").c_str(), "bottomLeft");
+    weightedCut(primaryVertexZCRUMBSNegativeCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSNegativeCut_weighted.pdf").c_str(), "bottomLeft");
+    efficiencyCut(primaryVertexZCRUMBSNegativeCut, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSNegativeCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Z Coord", -1);
+    
+    styleDraw(primaryVertexXCRUMBSPositive.canvas, primaryVertexXCRUMBSPositive.keptSignal, primaryVertexXCRUMBSPositive.cutSignal, primaryVertexXCRUMBSPositive.keptBNB, primaryVertexXCRUMBSPositive.cutBNB, primaryVertexXCRUMBSPositive.keptCosmics, primaryVertexXCRUMBSPositive.cutCosmics, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSPositive_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(primaryVertexXCRUMBSPositiveCut.canvas, primaryVertexXCRUMBSPositiveCut.Signal, primaryVertexXCRUMBSPositiveCut.BNB, primaryVertexXCRUMBSPositiveCut.Cosmics, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSPositiveCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexXCRUMBSPositive, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSPositive_weighted.pdf").c_str(), "bottomLeft");
+    weightedCut(primaryVertexXCRUMBSPositiveCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSPositiveCut_weighted.pdf").c_str(), "bottomLeft");
+    efficiencyCut(primaryVertexXCRUMBSPositiveCut, 999, 999, 999, 999, (base_path + "primaryVertexXCRUMBSPositiveCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex X Coord", 1);
+    
+    styleDraw(primaryVertexYCRUMBSPositive.canvas, primaryVertexYCRUMBSPositive.keptSignal, primaryVertexYCRUMBSPositive.cutSignal, primaryVertexYCRUMBSPositive.keptBNB, primaryVertexYCRUMBSPositive.cutBNB, primaryVertexYCRUMBSPositive.keptCosmics, primaryVertexYCRUMBSPositive.cutCosmics, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSPositive_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(primaryVertexYCRUMBSPositiveCut.canvas, primaryVertexYCRUMBSPositiveCut.Signal, primaryVertexYCRUMBSPositiveCut.BNB, primaryVertexYCRUMBSPositiveCut.Cosmics, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSPositiveCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexYCRUMBSPositive, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSPositive_weighted.pdf").c_str(), "bottomLeft");
+    weightedCut(primaryVertexYCRUMBSPositiveCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSPositiveCut_weighted.pdf").c_str(), "bottomLeft");
+    efficiencyCut(primaryVertexYCRUMBSPositiveCut, 999, 999, 999, 999, (base_path + "primaryVertexYCRUMBSPositiveCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Y Coord", 1);
+    
+    styleDraw(primaryVertexZCRUMBSPositive.canvas, primaryVertexZCRUMBSPositive.keptSignal, primaryVertexZCRUMBSPositive.cutSignal, primaryVertexZCRUMBSPositive.keptBNB, primaryVertexZCRUMBSPositive.cutBNB, primaryVertexZCRUMBSPositive.keptCosmics, primaryVertexZCRUMBSPositive.cutCosmics, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSPositive_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(primaryVertexZCRUMBSPositiveCut.canvas, primaryVertexZCRUMBSPositiveCut.Signal, primaryVertexZCRUMBSPositiveCut.BNB, primaryVertexZCRUMBSPositiveCut.Cosmics, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSPositiveCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(primaryVertexZCRUMBSPositive, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSPositive_weighted.pdf").c_str(), "bottomLeft");
+    weightedCut(primaryVertexZCRUMBSPositiveCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSPositiveCut_weighted.pdf").c_str(), "bottomLeft");
+    efficiencyCut(primaryVertexZCRUMBSPositiveCut, 999, 999, 999, 999, (base_path + "primaryVertexZCRUMBSPositiveCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Primary Vertex Z Coord", 1);
+    
+    styleDraw(numPFPsCRUMBS.canvas, numPFPsCRUMBS.keptSignal, numPFPsCRUMBS.cutSignal, numPFPsCRUMBS.keptBNB, numPFPsCRUMBS.cutBNB, numPFPsCRUMBS.keptCosmics, numPFPsCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_dist.pdf").c_str(), "topRight");
+    styleDrawCut(numPFPsCRUMBSCut.canvas, numPFPsCRUMBSCut.Signal, numPFPsCRUMBSCut.BNB, numPFPsCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "numPFPsCRUMBSCut_dist.pdf").c_str(), "topRight");
+    weighted(numPFPsCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_weighted.pdf").c_str(), "topRight");
+    weightedCut(numPFPsCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "numPFPsCRUMBSCut_weighted.pdf").c_str(), "topRight");
+    efficiencyCut(numPFPsCRUMBSCut, 999, 999, 999, 999, (base_path + "numPFPsCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Number of PFPs", 1);
+    
+    styleDraw(ratioChosenSummedEnergyCRUMBS.canvas, ratioChosenSummedEnergyCRUMBS.keptSignal, ratioChosenSummedEnergyCRUMBS.cutSignal, ratioChosenSummedEnergyCRUMBS.keptBNB, ratioChosenSummedEnergyCRUMBS.cutBNB, ratioChosenSummedEnergyCRUMBS.keptCosmics, ratioChosenSummedEnergyCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_dist.pdf").c_str(), "topLeft");
+    styleDrawCut(ratioChosenSummedEnergyCRUMBSCut.canvas, ratioChosenSummedEnergyCRUMBSCut.Signal, ratioChosenSummedEnergyCRUMBSCut.BNB, ratioChosenSummedEnergyCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBSCut_dist.pdf").c_str(), "topLeft");
+    weighted(ratioChosenSummedEnergyCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_weighted.pdf").c_str(), "topLeft");
+    weightedCut(ratioChosenSummedEnergyCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBSCut_weighted.pdf").c_str(), "topLeft");
+    efficiencyCut(ratioChosenSummedEnergyCRUMBSCut, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "E_{reco, highest energy PFP}/E_{reco, summed PFP energies}", -1);
+    
+    styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.keptSignal, ERecoSumThetaRecoCRUMBS.cutSignal, ERecoSumThetaRecoCRUMBS.keptBNB, ERecoSumThetaRecoCRUMBS.cutBNB, ERecoSumThetaRecoCRUMBS.keptCosmics, ERecoSumThetaRecoCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), "topRight");
+    styleDrawCut(ERecoSumThetaRecoCRUMBSCut.canvas, ERecoSumThetaRecoCRUMBSCut.Signal, ERecoSumThetaRecoCRUMBSCut.BNB, ERecoSumThetaRecoCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBSCut_dist.pdf").c_str(), "topRight");
+    weighted(ERecoSumThetaRecoCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight");
+    weightedCut(ERecoSumThetaRecoCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBSCut_weighted.pdf").c_str(), "topRight");
+    efficiencyCut(ERecoSumThetaRecoCRUMBSCut, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 1);
+    
+    styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.keptSignal, ERecoHighestThetaRecoCRUMBS.cutSignal, ERecoHighestThetaRecoCRUMBS.keptBNB, ERecoHighestThetaRecoCRUMBS.cutBNB, ERecoHighestThetaRecoCRUMBS.keptCosmics, ERecoHighestThetaRecoCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), "topRight");
+    styleDrawCut(ERecoHighestThetaRecoCRUMBSCut.canvas, ERecoHighestThetaRecoCRUMBSCut.Signal, ERecoHighestThetaRecoCRUMBSCut.BNB, ERecoHighestThetaRecoCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBSCut_dist.pdf").c_str(), "topRight");
+    weighted(ERecoHighestThetaRecoCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight");
+    weightedCut(ERecoHighestThetaRecoCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBSCut_weighted.pdf").c_str(), "topRight");
+    efficiencyCut(ERecoHighestThetaRecoCRUMBSCut, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 1);
+    
+    styleDraw(slicePurityCRUMBS.canvas, slicePurityCRUMBS.keptSignal, slicePurityCRUMBS.cutSignal, slicePurityCRUMBS.keptBNB, slicePurityCRUMBS.cutBNB, slicePurityCRUMBS.keptCosmics, slicePurityCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_dist.pdf").c_str(), "bottomLeft");
+    styleDrawCut(slicePurityCRUMBSCut.canvas, slicePurityCRUMBSCut.Signal, slicePurityCRUMBSCut.BNB, slicePurityCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "slicePurityCRUMBSCut_dist.pdf").c_str(), "bottomLeft");
+    weighted(slicePurityCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_weighted.pdf").c_str(), "topLeft");
+    weightedCut(slicePurityCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "slicePurityCRUMBSCut_weighted.pdf").c_str(), "topLeft");
+    efficiencyCut(slicePurityCRUMBSCut, 999, 999, 999, 999, (base_path + "slicePurityCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Purity", -1);
+    
+    styleDraw(sliceCompletenessCRUMBS.canvas, sliceCompletenessCRUMBS.keptSignal, sliceCompletenessCRUMBS.cutSignal, sliceCompletenessCRUMBS.keptBNB, sliceCompletenessCRUMBS.cutBNB, sliceCompletenessCRUMBS.keptCosmics, sliceCompletenessCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_dist.pdf").c_str(), "topRight");
+    styleDrawCut(sliceCompletenessCRUMBSCut.canvas, sliceCompletenessCRUMBSCut.Signal, sliceCompletenessCRUMBSCut.BNB, sliceCompletenessCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBSCut_dist.pdf").c_str(), "topRight");
+    weighted(sliceCompletenessCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_weighted.pdf").c_str(), "topRight");
+    weightedCut(sliceCompletenessCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBSCut_weighted.pdf").c_str(), "topRight");
+    efficiencyCut(sliceCompletenessCRUMBSCut, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Completeness", -1);
+    
+    styleDraw(highestPFPCompletenessCRUMBS.canvas, highestPFPCompletenessCRUMBS.keptSignal, highestPFPCompletenessCRUMBS.cutSignal, highestPFPCompletenessCRUMBS.keptBNB, highestPFPCompletenessCRUMBS.cutBNB, highestPFPCompletenessCRUMBS.keptCosmics, highestPFPCompletenessCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_dist.pdf").c_str(), "topLeft");
+    styleDrawCut(highestPFPCompletenessCRUMBSCut.canvas, highestPFPCompletenessCRUMBSCut.Signal, highestPFPCompletenessCRUMBSCut.BNB, highestPFPCompletenessCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBSCut_dist.pdf").c_str(), "topLeft");
+    weighted(highestPFPCompletenessCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBS_weighted.pdf").c_str(), "topLeft");
+    weightedCut(highestPFPCompletenessCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBSCut_weighted.pdf").c_str(), "topLeft");
+    efficiencyCut(highestPFPCompletenessCRUMBSCut, 999, 999, 999, 999, (base_path + "highestPFPCompletenessCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Completeness", -1);
+    
+    styleDraw(highestPFPPurityCRUMBS.canvas, highestPFPPurityCRUMBS.keptSignal, highestPFPPurityCRUMBS.cutSignal, highestPFPPurityCRUMBS.keptBNB, highestPFPPurityCRUMBS.cutBNB, highestPFPPurityCRUMBS.keptCosmics, highestPFPPurityCRUMBS.cutCosmics, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_dist.pdf").c_str(), "topLeft");
+    styleDrawCut(highestPFPPurityCRUMBSCut.canvas, highestPFPPurityCRUMBSCut.Signal, highestPFPPurityCRUMBSCut.BNB, highestPFPPurityCRUMBSCut.Cosmics, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBSCut_dist.pdf").c_str(), "topLeft");
+    weighted(highestPFPPurityCRUMBS, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBS_weighted.pdf").c_str(), "topLeft");
+    weightedCut(highestPFPPurityCRUMBSCut, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBSCut_weighted.pdf").c_str(), "topLeft");
+    efficiencyCut(highestPFPPurityCRUMBSCut, 999, 999, 999, 999, (base_path + "highestPFPPurityCRUMBSCut").c_str(), "bottomLeft", signalWeight, BNBWeight, cosmicsWeight, nullptr, &left, "Purity", -1);
+ 
 }
