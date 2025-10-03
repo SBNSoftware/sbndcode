@@ -18,7 +18,7 @@ namespace calib {
       fTotalCAENBoards(pset.get<int>("TotalCAENBoards", 8)),
       PMTPerBoard(pset.get<int>("PMTPerBoard", 15)),
       Baseline(pset.get<int>("Baseline", 14250)),
-      fMC(pset.get<bool>("MC", false))
+      fMC(pset.get<bool>("MC", true))
   {}
 
   TriggerEmulationService::~TriggerEmulationService()

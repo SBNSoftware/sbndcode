@@ -1,15 +1,13 @@
 BEGIN_PROLOG
 
 sbnd_triggeremulation_service: {
-  TFileService:         { fileName: "opDetDigitizerRes.root" }
-  TriggerEmulationService: {
-    service_type: TriggerEmulationService
-    MonWidth: 12
-    TotalCAENBoards: 10
-    PMTPerBoard: 16
-    Baseline: 14250
-    MC: true
-  }
+  service_type: TriggerEmulationService
+  TFileService: { fileName: "opDetDigitizerRes.root" }
+  MonWidth: 12
+  TotalCAENBoards: 8
+  PMTPerBoard: 15
+  Baseline: 14250
+  MC: true
 }
 
 END_PROLOG
