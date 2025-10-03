@@ -91,7 +91,7 @@ typedef struct{
     double numHits;
     double numMatchedHits;
     double numTrueHits;
-    //double truePDG;
+    double truePDG;
 } recoParticle;
 
 typedef struct{
@@ -215,7 +215,6 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
             ymaxVal = 1;
         }
        
-        std::cout << "ymaxVal = " << ymaxVal << ", maxYValue = " << maxYValue << std::endl; 
         currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
         //currentSignal->GetYaxis()->SetRangeUser(0, 1000);
     }
@@ -226,9 +225,6 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
     ubooneBNB->Draw("histsame");
     currentCosmics->Draw("histsame");
     ubooneCosmics->Draw("histsame");
-    
-    std::cout << "-------------------------bin number 10 entries: " << currentSignal->GetBinContent(10) << std::endl;
-    std::cout << "integral of bin 10: " << currentSignal->Integral(1, 10) << std::endl;
 
     if(currentPurityHist){
         currentPurityHist->Draw("histsame");
@@ -348,9 +344,6 @@ void styleDrawIndividual(TCanvas* canvas, TH1F* current, TH1F* uboone, double ym
     if((ymin != 999) && (ymax != 999)) current->GetYaxis()->SetRangeUser(ymin, ymax);
     if((xmin != 999) && (xmax != 999)) current->GetXaxis()->SetRangeUser(xmin, xmax);
 
-    std::cout << "current max = " << current->GetMaximum() << ", uboone max = " << uboone->GetMaximum() << std::endl;
-    std::cout << "current bin num = " << current->GetMaximumBin() << ", uboone bin num = " << uboone->GetMaximumBin() << std::endl;
-
     double maxYValue = std::max({current->GetMaximum(), uboone->GetMaximum()});
 
     double biggestYVal = 0;
@@ -361,14 +354,10 @@ void styleDrawIndividual(TCanvas* canvas, TH1F* current, TH1F* uboone, double ym
 
     }
 
-    std::cout << "biggestYVal = " << biggestYVal << std::endl;
-
     if((ymin == 999) && (ymax == 999)){
         double yminVal = (log && *log) ? 0.000001 : smallestYVal*0.9;
         double ymaxVal  = (log && *log) ? biggestYVal*1 : biggestYVal*1.1;
         if(biggestYVal > 0.9) ymaxVal = 1;
-        std::cout << "maxYValue = " << maxYValue << ", ymaxVal = " << ymaxVal << std::endl; 
-        std::cout << "minYValue = " << smallestYVal << ", yminVal = " << yminVal << std::endl;
         current->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
     }
 
@@ -628,23 +617,11 @@ void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* 
         ubooneCosmicsSum += ubooneCosmics->GetBinContent(i);
 
         numEventsCurrentSignal->SetBinContent(i, currentSignalSum);
-        std::cout << "Filled bin " << i << " with " << currentSignalSum << " __________________" << std::endl;
-        std::cout << "Bin was actually filled with " << numEventsCurrentSignal->GetBinContent(i) << std::endl;
         numEventsUbooneSignal->SetBinContent(i, ubooneSignalSum);
-        std::cout << "Filled bin " << i << " with " << ubooneSignalSum << " __________________" << std::endl;
-        std::cout << "Bin was actually filled with " << numEventsUbooneSignal->GetBinContent(i) << std::endl;
         numEventsCurrentBNB->SetBinContent(i, currentBNBSum);
-        std::cout << "Filled bin " << i << " with " << currentBNBSum << " __________________" << std::endl;
-        std::cout << "Bin was actually filled with " << numEventsCurrentBNB->GetBinContent(i) << std::endl;
         numEventsUbooneBNB->SetBinContent(i, ubooneBNBSum);
-        std::cout << "Filled bin " << i << " with " << ubooneBNBSum << " __________________" << std::endl;
-        std::cout << "Bin was actually filled with " << numEventsUbooneBNB->GetBinContent(i) << std::endl;
         numEventsCurrentCosmics->SetBinContent(i, currentCosmicsSum);
-        std::cout << "Filled bin " << i << " with " << currentCosmicsSum << " __________________" << std::endl;
-        std::cout << "Bin was actually filled with " << numEventsCurrentCosmics->GetBinContent(i) << std::endl;
         numEventsUbooneCosmics->SetBinContent(i, ubooneCosmicsSum);
-        std::cout << "Filled bin " << i << " with " << ubooneCosmicsSum << " __________________" << std::endl;
-        std::cout << "Bin was actually filled with " << numEventsUbooneCosmics->GetBinContent(i) << std::endl;
 
         double currentSignalEffValue = currentSignalSum/sizeCurrentSignal;
         double ubooneSignalEffValue = ubooneSignalSum/sizeUbooneSignal;
@@ -689,29 +666,12 @@ void efficiency(TH1F* currentSignal, TH1F* ubooneSignal,TH1F* currentBNB, TH1F* 
             
         double currentEffPurValue = (currentSignalEffValue * currentPurityValue);
         double ubooneEffPurValue =  (ubooneSignalEffValue * uboonePurityValue);
-         
-
-        std::cout << "total signal: " << sizeCurrentSignal << ", " << sizeUbooneSignal << std::endl;
-        std::cout << "total BNB: " << sizeCurrentBNB << ", " << sizeUbooneBNB << std::endl;
-        std::cout << "total cosmics: " << sizeCurrentCosmics << ", " << sizeUbooneCosmics << std::endl;
-        std::cout << "" << std::endl;
-
-        std::cout << "current signal sum: " << currentSignalSum << std::endl;
-        std::cout << "current BNB sum: " << currentBNBSum << std::endl;
-        std::cout << "current cosmic sum: " << currentCosmicsSum << std::endl;
-
-        std::cout << "uboone signal sum: " << ubooneSignalSum << std::endl;
-        std::cout << "uboone BNB sum: " << ubooneBNBSum << std::endl;
-        std::cout << "uboone cosmic sum: " << ubooneCosmicsSum << std::endl;
         
         currentPur->SetBinContent(i, currentPurityValue);
         uboonePur->SetBinContent(i, uboonePurityValue);
-        std::cout << "purity: " << currentPurityValue << ", " << uboonePurityValue << std::endl;
-        std::cout << "signal efficiency: " << currentSignalEffValue << ", " << ubooneSignalEffValue << std::endl;
 
         currentEffPur->SetBinContent(i, currentEffPurValue);
         ubooneEffPur->SetBinContent(i, ubooneEffPurValue);
-        std::cout << "Current Efficiency x Purity = " << currentEffPurValue << ", Uboone Efficiency x Purity = " << ubooneEffPurValue << std::endl;
     }
 
     double Lxmin = 0;
@@ -880,7 +840,7 @@ double sliceCompletenessCalculator(std::vector<recoParticle> recoParticles, doub
     } else {
         sliceCompleteness = (totalNumMatchedHits / totalNumTrueHits);
     }
-    std::cout << "Chosen Slice Completeness = " << sliceCompleteness << std::endl;
+    //std::cout << "Chosen Slice Completeness = " << sliceCompleteness << std::endl;
     return sliceCompleteness;
 }
 
@@ -903,23 +863,31 @@ double slicePurityCalculator(std::vector<recoParticle> recoParticles, double sli
     } else {
         slicePurity = (totalNumMatchedHits / totalNumHits);
     }
-    std::cout << "Chosen Slice Purity = " << slicePurity << std::endl;
+    //std::cout << "Chosen Slice Purity = " << slicePurity << std::endl;
     return slicePurity;
 }
 
-void obtainTrueParticles(std::vector<trueParticle> trueParticles){
-    std::cout << "Number of true particles = " << trueParticles.size() << std::endl;
+void obtainTrueParticles(std::vector<trueParticle> trueParticles, trueNeutrino chosenTrueNeutrino){
+    //std::cout << "Number of true particles = " << trueParticles.size() << std::endl;
     trueInfo truth;
+    double vx = chosenTrueNeutrino.vx;
+    double vy = chosenTrueNeutrino.vy;
+    double vz = chosenTrueNeutrino.vz;
+    
     for(size_t j = 0; j < trueParticles.size(); ++j){
-        if(trueParticles[j].pdg == 11) truth.numElectrons++;
-        if(trueParticles[j].pdg == 22) truth.numPhotons++;
-        if(trueParticles[j].pdg == 13) truth.numMuons++;
-        if(trueParticles[j].pdg == 111) truth.numPiZero++;
-        if(trueParticles[j].pdg == 211 || trueParticles[j].pdg == -211) truth.numChargedPi++;
-        if(trueParticles[j].pdg == 2212) truth.numProtons++;
+        
+        double vertex = 0;
+        if((std::abs(vx - trueParticles[j].vx) < 1e-3) + (std::abs(vy - trueParticles[j].vy) < 1e-3) + (std::abs(vz - trueParticles[j].vz) < 1e-3)) vertex = 1;
+        
+        if(trueParticles[j].pdg == 11 && trueParticles[j].neutrinoParent == 1 && vertex == 1) truth.numElectrons++;
+        if(trueParticles[j].pdg == 22 && trueParticles[j].neutrinoParent == 1 && vertex == 1) truth.numPhotons++;
+        if(trueParticles[j].pdg == 13 && trueParticles[j].neutrinoParent == 1 && vertex == 1) truth.numMuons++;
+        if(trueParticles[j].pdg == 111 && trueParticles[j].neutrinoParent == 1 && vertex == 1) truth.numPiZero++;
+        if(trueParticles[j].pdg == 211 || trueParticles[j].pdg == -211 && trueParticles[j].neutrinoParent == 1 && vertex == 1) truth.numChargedPi++;
+        if(trueParticles[j].pdg == 2212&& trueParticles[j].neutrinoParent == 1 && vertex == 1) truth.numProtons++;
     }
 
-    printf("Number of Electrons = %i, Number of Photons = %i, Number of Muons = %i, Number of PiZero = %i, Number of Charged Pi = %i, Number of Protons = %i\n", truth.numElectrons, truth.numPhotons, truth.numMuons, truth.numPiZero, truth.numChargedPi, truth.numProtons); 
+    //printf("Number of Electrons = %i, Number of Photons = %i, Number of Muons = %i, Number of PiZero = %i, Number of Charged Pi = %i, Number of Protons = %i\n", truth.numElectrons, truth.numPhotons, truth.numMuons, truth.numPiZero, truth.numChargedPi, truth.numProtons); 
 }
 
 void nuEBackgroundSignalWeightsStack_macro(){
@@ -1005,18 +973,18 @@ void nuEBackgroundSignalWeightsStack_macro(){
 
     //double numberFiles = 600;
     //double cosmicSpills = numberFiles * 500;
-    std::cout << "cosmicSpillsSum = " << cosmicSpillsSum << std::endl;
+    //std::cout << "cosmicSpillsSum = " << cosmicSpillsSum << std::endl;
     double cosmicsPOT = cosmicSpillsSum * 5e12;
 
     double signalWeight = totalPOTSignal/totalPOTSignal;
     double BNBWeight = totalPOTSignal/totalPOTBNB;
     double cosmicsWeight = totalPOTSignal/cosmicsPOT;
     
-    std::cout << "Total POT Signal: " << totalPOTSignal << std::endl;
-    std::cout << "Total POT BNB: " << totalPOTBNB << std::endl;
-    std::cout << "Total POT Cosmics: " << cosmicsPOT << std::endl;
+    //std::cout << "Total POT Signal: " << totalPOTSignal << std::endl;
+    //std::cout << "Total POT BNB: " << totalPOTBNB << std::endl;
+    //std::cout << "Total POT Cosmics: " << cosmicsPOT << std::endl;
 
-    printf("Weights:\nSignal = %f, BNB = %f, Cosmics = %f\n", signalWeight, BNBWeight, cosmicsWeight);
+    //printf("Weights:\nSignal = %f, BNB = %f, Cosmics = %f\n", signalWeight, BNBWeight, cosmicsWeight);
 
     UInt_t eventID, runID, subRunID;
     double DLCurrent, signal;
@@ -1077,7 +1045,7 @@ void nuEBackgroundSignalWeightsStack_macro(){
     std::vector<double> *reco_particleNumHits = nullptr;
     std::vector<double> *reco_particleNumMatchedHits = nullptr;
     std::vector<double> *reco_particleNumTrueHits = nullptr;
-    //std::vector<double> *reco_particleTruePDG = nullptr;
+    std::vector<double> *reco_particleTruePDG = nullptr;
 
     std::vector<double> *reco_sliceID = nullptr;
     std::vector<double> *reco_sliceCompleteness = nullptr;
@@ -1134,7 +1102,7 @@ void nuEBackgroundSignalWeightsStack_macro(){
     tree->SetBranchAddress("reco_particleNumHits", &reco_particleNumHits);
     tree->SetBranchAddress("reco_particleNumMatchedHits", &reco_particleNumMatchedHits);
     tree->SetBranchAddress("reco_particleNumTrueHits", &reco_particleNumTrueHits);
-    //tree->SetBranchAddress("reco_particleTruePDG", reco_particleTruePDG);
+    tree->SetBranchAddress("reco_particleTruePDG", &reco_particleTruePDG);
 
     tree->SetBranchAddress("reco_sliceID", &reco_sliceID);
     tree->SetBranchAddress("reco_sliceCompleteness", &reco_sliceCompleteness);
@@ -1208,8 +1176,8 @@ void nuEBackgroundSignalWeightsStack_macro(){
     for(Long64_t i = 0; i < numEntries; ++i){
         tree->GetEntry(i);
         //if(signal != 3 || DLCurrent != 0) continue;
-        printf("___________________________________________________________________\n");
-        std::cout << "Signal = " << signal << ", DLCurrent = " << DLCurrent << std::endl;
+        //printf("___________________________________________________________________\n");
+        //std::cout << "Signal = " << signal << ", DLCurrent = " << DLCurrent << std::endl;
         std::vector<recoParticle> recoParticlesInEvent;
         std::vector<recoNeutrino> recoNeutrinosInEvent;
         std::vector<recoSlice> recoSlicesInEvent;
@@ -1256,7 +1224,8 @@ void nuEBackgroundSignalWeightsStack_macro(){
                 chosenTrueNeutrino.genieMode = truth_genieMode->at(j);
                 chosenTrueNeutrino.genieInteraction = truth_genieInteraction->at(j);
 
-                std::cout << "genieMode: " << chosenTrueNeutrino.genieMode << std::endl;
+                //std::cout << "genieMode: " << chosenTrueNeutrino.genieMode << std::endl;
+                //std::cout << "genieInteraction: " << chosenTrueNeutrino.genieInteraction << std::endl;
                 if(DLCurrent == 0){
                     if(chosenTrueNeutrino.genieMode == -1 && signal == 1) interactionsSignal.Unknown++;
                     if(chosenTrueNeutrino.genieMode == 0 && signal == 1) interactionsSignal.QE++;
@@ -1327,10 +1296,10 @@ void nuEBackgroundSignalWeightsStack_macro(){
         }
 
         if(signal != 3){
-            printf("True Neutrino Vertex = (%f, %f, %f)\n", chosenTrueNeutrino.vx, chosenTrueNeutrino.vy, chosenTrueNeutrino.vz);
+            //printf("True Neutrino Vertex = (%f, %f, %f)\n", chosenTrueNeutrino.vx, chosenTrueNeutrino.vy, chosenTrueNeutrino.vz);
         }
 
-        std::cout << "Number of truth particles = " << truth_particlePDG->size() << std::endl;             
+        //std::cout << "Number of truth particles = " << truth_particlePDG->size() << std::endl;             
     
         for(size_t k = 0; k < truth_particlePDG->size(); ++k){
             trueParticle truthParticle;
@@ -1351,7 +1320,7 @@ void nuEBackgroundSignalWeightsStack_macro(){
             trueParticlesInEvent.push_back(truthParticle);
         }
 
-        obtainTrueParticles(trueParticlesInEvent);
+        obtainTrueParticles(trueParticlesInEvent, chosenTrueNeutrino);
 
         int slice = 0;
         int crumbsSlice = 0;
@@ -1373,7 +1342,7 @@ void nuEBackgroundSignalWeightsStack_macro(){
         
                 if(recoSlice.score != -999999) crumbsSlice++;  
                 //if(recoSlice.completeness > 0) completenessSlice++;  
-                printf("Slice %zu: ID = %f, Completeness = %f, Purity = %f, CRUMBS Score = %f\n", j, recoSlice.id, recoSlice.completeness, recoSlice.purity, recoSlice.score);
+                //printf("Slice %zu: ID = %f, Completeness = %f, Purity = %f, CRUMBS Score = %f\n", j, recoSlice.id, recoSlice.completeness, recoSlice.purity, recoSlice.score);
             }
         }    
 
@@ -1386,7 +1355,7 @@ void nuEBackgroundSignalWeightsStack_macro(){
 
         // Pick the slice with the highest score
         chosenRecoSliceCRUMBS = chooseSlice(recoSlicesInEvent, 1);
-        printf("Slice with Highest CRUMBS Score: ID = %f, Completeness = %f, Purity = %f, CRUMBS Score = %f\n\n", chosenRecoSliceCRUMBS.id, chosenRecoSliceCRUMBS.completeness, chosenRecoSliceCRUMBS.purity, chosenRecoSliceCRUMBS.score);
+        //printf("Slice with Highest CRUMBS Score: ID = %f, Completeness = %f, Purity = %f, CRUMBS Score = %f\n\n", chosenRecoSliceCRUMBS.id, chosenRecoSliceCRUMBS.completeness, chosenRecoSliceCRUMBS.purity, chosenRecoSliceCRUMBS.score);
         
         if(DLCurrent == 0 && signal == 1){
             numEventsSlices.ubooneSignal++;
@@ -1422,7 +1391,7 @@ void nuEBackgroundSignalWeightsStack_macro(){
         
         int neutrino = 0;
         int numRecoNeutrinosInEvent = 0;
-        std::cout << "num reco neutrinos: " << reco_neutrinoPDG->size() << std::endl;
+        //std::cout << "num reco neutrinos: " << reco_neutrinoPDG->size() << std::endl;
         for(size_t j = 0; j < reco_neutrinoPDG->size(); ++j){
             if(reco_neutrinoPDG->at(j) != -999999){
                 neutrino = 1;
@@ -1437,7 +1406,7 @@ void nuEBackgroundSignalWeightsStack_macro(){
                 recoNeutrino.sliceID = reco_neutrinoSliceID->at(j);
                 recoNeutrinosInEvent.push_back(recoNeutrino);
 
-                printf("Reco Neutrino %zu: PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Slice ID = %f\n", j, recoNeutrino.pdg, recoNeutrino.isPrimary, recoNeutrino.vx, recoNeutrino.vy, recoNeutrino.vz, recoNeutrino.sliceID);
+                //printf("Reco Neutrino %zu: PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Slice ID = %f\n", j, recoNeutrino.pdg, recoNeutrino.isPrimary, recoNeutrino.vx, recoNeutrino.vy, recoNeutrino.vz, recoNeutrino.sliceID);
             }
         }
         
@@ -1525,7 +1494,7 @@ void nuEBackgroundSignalWeightsStack_macro(){
                 recoParticle.numHits = reco_particleNumHits->at(j);
                 recoParticle.numMatchedHits = reco_particleNumMatchedHits->at(j);
                 recoParticle.numTrueHits = reco_particleNumTrueHits->at(j);
-                //recoParticle.truePDG = reco_particleTruePDG->at(j);
+                recoParticle.truePDG = reco_particleTruePDG->at(j);
                 recoParticlesInEvent.push_back(recoParticle);
             
                 if(recoParticle.sliceID == chosenRecoSliceCRUMBS.id) recoparticleCRUMBS = 1;
@@ -1544,6 +1513,9 @@ void nuEBackgroundSignalWeightsStack_macro(){
         chosenRecoParticleCRUMBS = choosePFP(recoParticlesInEvent, chosenRecoSliceCRUMBS.id, totalSliceEnergyCRUMBS, numPFPsSliceCRUMBS);
         double chosenSlicePurityCRUMBS = slicePurityCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id);
         double chosenSliceCompletenessCRUMBS = sliceCompletenessCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id);
+
+        //std::cout << "highest energy PFP PDG: " << chosenRecoParticleCRUMBS.truePDG << std::endl;
+        std::cout << chosenRecoParticleCRUMBS.truePDG << std::endl;
 
         //double aDOTbCRUMBS = ((chosenRecoParticleCRUMBS.dx * chosenTrueParticle.dx) + (chosenRecoParticleCRUMBS.dy * chosenTrueParticle.dy) + (chosenRecoParticleCRUMBS.dz * chosenTrueParticle.dz));
         //double aMagCRUMBS = std::sqrt((chosenRecoParticleCRUMBS.dx * chosenRecoParticleCRUMBS.dx) + (chosenRecoParticleCRUMBS.dy * chosenRecoParticleCRUMBS.dy) + (chosenRecoParticleCRUMBS.dz * chosenRecoParticleCRUMBS.dz));
@@ -1615,23 +1587,23 @@ void nuEBackgroundSignalWeightsStack_macro(){
             highestPFPPurityCRUMBS.currentCosmics->Fill(chosenRecoParticleCRUMBS.purity);
         }
 
-        printf("Number of Slices in event: %f\n", numSlicesInEvent);
+        //printf("Number of Slices in event: %f\n", numSlicesInEvent);
     }
 
-    printf("Signal Events:\nNumber of events with a true neutrino within the TPC:\nUBoone: %i out of %i\nCurrent: %i out of %i\n", numEventsTrueNeutrino.ubooneSignal, numEventsTotal.ubooneSignal, numEventsTrueNeutrino.currentSignal, numEventsTotal.currentSignal);
-    printf("Number of events with a slice:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSlices.ubooneSignal, numEventsTotal.ubooneSignal, numEventsSlices.currentSignal, numEventsTotal.currentSignal);
-    printf("Number of events with a reco neutrino:\nUboone:%i out of %i\nCurrent: %i out of %i\n", numEventsRecoNeutrino.ubooneSignal, numEventsTotal.ubooneSignal, numEventsRecoNeutrino.currentSignal, numEventsTotal.currentSignal);
-    printf("Number of events where the number of slices with a CRUMBS score != number of reco neutrinos:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSliceNotEqualNeutrino.ubooneSignal, numEventsRecoNeutrino.ubooneSignal, numEventsSliceNotEqualNeutrino.currentSignal, numEventsRecoNeutrino.currentSignal);
+    //printf("Signal Events:\nNumber of events with a true neutrino within the TPC:\nUBoone: %i out of %i\nCurrent: %i out of %i\n", numEventsTrueNeutrino.ubooneSignal, numEventsTotal.ubooneSignal, numEventsTrueNeutrino.currentSignal, numEventsTotal.currentSignal);
+    //printf("Number of events with a slice:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSlices.ubooneSignal, numEventsTotal.ubooneSignal, numEventsSlices.currentSignal, numEventsTotal.currentSignal);
+    //printf("Number of events with a reco neutrino:\nUboone:%i out of %i\nCurrent: %i out of %i\n", numEventsRecoNeutrino.ubooneSignal, numEventsTotal.ubooneSignal, numEventsRecoNeutrino.currentSignal, numEventsTotal.currentSignal);
+    //printf("Number of events where the number of slices with a CRUMBS score != number of reco neutrinos:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSliceNotEqualNeutrino.ubooneSignal, numEventsRecoNeutrino.ubooneSignal, numEventsSliceNotEqualNeutrino.currentSignal, numEventsRecoNeutrino.currentSignal);
     
-    printf("BNB Events:\nNumber of events with a true neutrino within the TPC:\nUBoone: %i out of %i\nCurrent: %i out of %i\n", numEventsTrueNeutrino.ubooneBNB, numEventsTotal.ubooneBNB, numEventsTrueNeutrino.currentBNB, numEventsTotal.currentBNB);
-    printf("Number of events with a slice:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSlices.ubooneBNB, numEventsTotal.ubooneBNB, numEventsSlices.currentBNB, numEventsTotal.currentBNB);
-    printf("Number of events with a reco neutrino:\nUboone:%i out of %i\nCurrent: %i out of %i\n", numEventsRecoNeutrino.ubooneBNB, numEventsTotal.ubooneBNB, numEventsRecoNeutrino.currentBNB, numEventsTotal.currentBNB);
-    printf("Number of events where the number of slices with a CRUMBS score != number of reco neutrinos:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSliceNotEqualNeutrino.ubooneBNB, numEventsRecoNeutrino.ubooneBNB, numEventsSliceNotEqualNeutrino.currentBNB, numEventsRecoNeutrino.currentBNB);
+    //printf("BNB Events:\nNumber of events with a true neutrino within the TPC:\nUBoone: %i out of %i\nCurrent: %i out of %i\n", numEventsTrueNeutrino.ubooneBNB, numEventsTotal.ubooneBNB, numEventsTrueNeutrino.currentBNB, numEventsTotal.currentBNB);
+    //printf("Number of events with a slice:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSlices.ubooneBNB, numEventsTotal.ubooneBNB, numEventsSlices.currentBNB, numEventsTotal.currentBNB);
+    //printf("Number of events with a reco neutrino:\nUboone:%i out of %i\nCurrent: %i out of %i\n", numEventsRecoNeutrino.ubooneBNB, numEventsTotal.ubooneBNB, numEventsRecoNeutrino.currentBNB, numEventsTotal.currentBNB);
+    //printf("Number of events where the number of slices with a CRUMBS score != number of reco neutrinos:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSliceNotEqualNeutrino.ubooneBNB, numEventsRecoNeutrino.ubooneBNB, numEventsSliceNotEqualNeutrino.currentBNB, numEventsRecoNeutrino.currentBNB);
     
-    printf("Intime Cosmic Events:\nNumber of events with a true neutrino within the TPC:\nUBoone: %i out of %i\nCurrent: %i out of %i\n", numEventsTrueNeutrino.ubooneCosmics, numEventsTotal.ubooneCosmics, numEventsTrueNeutrino.currentCosmics, numEventsTotal.currentCosmics);
-    printf("Number of events with a slice:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSlices.ubooneCosmics, numEventsTotal.ubooneCosmics, numEventsSlices.currentCosmics, numEventsTotal.currentCosmics);
-    printf("Number of events with a reco neutrino:\nUboone:%i out of %i\nCurrent: %i out of %i\n", numEventsRecoNeutrino.ubooneCosmics, numEventsTotal.ubooneCosmics, numEventsRecoNeutrino.currentCosmics, numEventsTotal.currentCosmics);
-    printf("Number of events where the number of slices with a CRUMBS score != number of reco neutrinos:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSliceNotEqualNeutrino.ubooneCosmics, numEventsRecoNeutrino.ubooneCosmics, numEventsSliceNotEqualNeutrino.currentCosmics, numEventsRecoNeutrino.currentCosmics);
+    //printf("Intime Cosmic Events:\nNumber of events with a true neutrino within the TPC:\nUBoone: %i out of %i\nCurrent: %i out of %i\n", numEventsTrueNeutrino.ubooneCosmics, numEventsTotal.ubooneCosmics, numEventsTrueNeutrino.currentCosmics, numEventsTotal.currentCosmics);
+    //printf("Number of events with a slice:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSlices.ubooneCosmics, numEventsTotal.ubooneCosmics, numEventsSlices.currentCosmics, numEventsTotal.currentCosmics);
+    //printf("Number of events with a reco neutrino:\nUboone:%i out of %i\nCurrent: %i out of %i\n", numEventsRecoNeutrino.ubooneCosmics, numEventsTotal.ubooneCosmics, numEventsRecoNeutrino.currentCosmics, numEventsTotal.currentCosmics);
+    //printf("Number of events where the number of slices with a CRUMBS score != number of reco neutrinos:\nUboone: %i out of %i\nCurrent: %i out of %i\n", numEventsSliceNotEqualNeutrino.ubooneCosmics, numEventsRecoNeutrino.ubooneCosmics, numEventsSliceNotEqualNeutrino.currentCosmics, numEventsRecoNeutrino.currentCosmics);
     
     int drawLine = 1;
     int left = 0;
@@ -1692,38 +1664,38 @@ void nuEBackgroundSignalWeightsStack_macro(){
     //styleDraw(angleDifferenceCRUMBS.canvas, angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, 0, 260, 999, 999, (base_path + "angleDifferenceCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
     //weighted(angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, 0, 25, 999, 999, (base_path + "angleDifferenceCRUMBS_weighted.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
-    std::cout << "ERecoSumThetaReco ____________________________________________________________________" << std::endl;
+    //std::cout << "ERecoSumThetaReco ____________________________________________________________________" << std::endl;
     styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
     weighted(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
     efficiency(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})");
 
-    std::cout << "ERecoHighestThetaReco ____________________________________________________________________" << std::endl;
+    //std::cout << "ERecoHighestThetaReco ____________________________________________________________________" << std::endl;
     styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
     weighted(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
     efficiency(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})");
 
-    printf("\nInteractions in Signal Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsSignal.Unknown, interactionsSignal.QE, interactionsSignal.Res, interactionsSignal.DIS, interactionsSignal.Coh, interactionsSignal.CohElastic, interactionsSignal.ElectronScattering, interactionsSignal.IMDAnnihilation, interactionsSignal.InverseBetaDecay, interactionsSignal.GlashowResonance, interactionsSignal.AMNuGamma, interactionsSignal.MEC, interactionsSignal.Diffractive, interactionsSignal.EM, interactionsSignal.WeakMix);
-    printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n", interactionsSignal.NuanceOffset, interactionsSignal.CCQE, interactionsSignal.NCQE, interactionsSignal.NuanceRes, interactionsSignal.CCDis, interactionsSignal.NCDis, interactionsSignal.NuEElastic);
-    printf("\nInteractions in BNB Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsBNB.Unknown, interactionsBNB.QE, interactionsBNB.Res, interactionsBNB.DIS, interactionsBNB.Coh, interactionsBNB.CohElastic, interactionsBNB.ElectronScattering, interactionsBNB.IMDAnnihilation, interactionsBNB.InverseBetaDecay, interactionsBNB.GlashowResonance, interactionsBNB.AMNuGamma, interactionsBNB.MEC, interactionsBNB.Diffractive, interactionsBNB.EM, interactionsBNB.WeakMix);
-    printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n\n", interactionsBNB.NuanceOffset, interactionsBNB.CCQE, interactionsBNB.NCQE, interactionsBNB.NuanceRes, interactionsBNB.CCDis, interactionsBNB.NCDis, interactionsBNB.NuEElastic);
+    //printf("\nInteractions in Signal Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsSignal.Unknown, interactionsSignal.QE, interactionsSignal.Res, interactionsSignal.DIS, interactionsSignal.Coh, interactionsSignal.CohElastic, interactionsSignal.ElectronScattering, interactionsSignal.IMDAnnihilation, interactionsSignal.InverseBetaDecay, interactionsSignal.GlashowResonance, interactionsSignal.AMNuGamma, interactionsSignal.MEC, interactionsSignal.Diffractive, interactionsSignal.EM, interactionsSignal.WeakMix);
+    //printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n", interactionsSignal.NuanceOffset, interactionsSignal.CCQE, interactionsSignal.NCQE, interactionsSignal.NuanceRes, interactionsSignal.CCDis, interactionsSignal.NCDis, interactionsSignal.NuEElastic);
+    //printf("\nInteractions in BNB Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsBNB.Unknown, interactionsBNB.QE, interactionsBNB.Res, interactionsBNB.DIS, interactionsBNB.Coh, interactionsBNB.CohElastic, interactionsBNB.ElectronScattering, interactionsBNB.IMDAnnihilation, interactionsBNB.InverseBetaDecay, interactionsBNB.GlashowResonance, interactionsBNB.AMNuGamma, interactionsBNB.MEC, interactionsBNB.Diffractive, interactionsBNB.EM, interactionsBNB.WeakMix);
+    //printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n\n", interactionsBNB.NuanceOffset, interactionsBNB.CCQE, interactionsBNB.NCQE, interactionsBNB.NuanceRes, interactionsBNB.CCDis, interactionsBNB.NCDis, interactionsBNB.NuEElastic);
 
-    std::cout << "cosmicSpillsSum = " << cosmicSpillsSum << std::endl;
+    //std::cout << "cosmicSpillsSum = " << cosmicSpillsSum << std::endl;
 
-    std::cout << "Total POT Signal: " << totalPOTSignal << std::endl;
-    std::cout << "Total POT BNB: " << totalPOTBNB << std::endl;
-    std::cout << "Total POT Cosmics: " << cosmicsPOT << std::endl;
-    printf("\nWeights:\nSignal = %f, BNB = %f, Cosmics = %f\n\n", signalWeight, BNBWeight, cosmicsWeight);
+    //std::cout << "Total POT Signal: " << totalPOTSignal << std::endl;
+    //std::cout << "Total POT BNB: " << totalPOTBNB << std::endl;
+    //std::cout << "Total POT Cosmics: " << cosmicsPOT << std::endl;
+    //printf("\nWeights:\nSignal = %f, BNB = %f, Cosmics = %f\n\n", signalWeight, BNBWeight, cosmicsWeight);
    
-    std::cout << "Nu+E before weighting = " << numEventsTotal.ubooneSignal << std::endl;
-    std::cout << "BNB before weighting = " << numEventsTotal.ubooneBNB << std::endl;
-    std::cout << "Intime cosmics before weighting = " << numEventsTotal.ubooneCosmics << std::endl; 
-    std::cout << "Number of Nu+E Elastic Scattering events = " << numEventsTotal.ubooneSignal*signalWeight << std::endl;
-    std::cout << "Number of BNB events = " << numEventsTotal.ubooneBNB*BNBWeight << std::endl;
-    std::cout << "Number of Intime Cosmic events = " << numEventsTotal.ubooneCosmics*cosmicsWeight << std::endl;
-    std::cout << "" << std::endl;
+    //std::cout << "Nu+E before weighting = " << numEventsTotal.ubooneSignal << std::endl;
+    //std::cout << "BNB before weighting = " << numEventsTotal.ubooneBNB << std::endl;
+    //std::cout << "Intime cosmics before weighting = " << numEventsTotal.ubooneCosmics << std::endl; 
+    //std::cout << "Number of Nu+E Elastic Scattering events = " << numEventsTotal.ubooneSignal*signalWeight << std::endl;
+    //std::cout << "Number of BNB events = " << numEventsTotal.ubooneBNB*BNBWeight << std::endl;
+    //std::cout << "Number of Intime Cosmic events = " << numEventsTotal.ubooneCosmics*cosmicsWeight << std::endl;
+    //std::cout << "" << std::endl;
     double totalNumEvents = (numEventsTotal.ubooneCosmics*cosmicsWeight) + (numEventsTotal.ubooneBNB*BNBWeight) + (numEventsTotal.ubooneSignal*signalWeight);
-    std::cout << "Total number of events: " << totalNumEvents << std::endl;
-    std::cout << "Nu+E Elastic Scattering Events = " << 100*(numEventsTotal.ubooneSignal*signalWeight)/totalNumEvents << "%" << std::endl;
-    std::cout << "BNB Events = " << 100*(numEventsTotal.ubooneBNB*BNBWeight)/totalNumEvents << "%" << std::endl;
-    std::cout << "Intime Cosmics = " << 100*(numEventsTotal.ubooneCosmics*cosmicsWeight)/totalNumEvents << "%" << std::endl;
+    //std::cout << "Total number of events: " << totalNumEvents << std::endl;
+    //std::cout << "Nu+E Elastic Scattering Events = " << 100*(numEventsTotal.ubooneSignal*signalWeight)/totalNumEvents << "%" << std::endl;
+    //std::cout << "BNB Events = " << 100*(numEventsTotal.ubooneBNB*BNBWeight)/totalNumEvents << "%" << std::endl;
+    //std::cout << "Intime Cosmics = " << 100*(numEventsTotal.ubooneCosmics*cosmicsWeight)/totalNumEvents << "%" << std::endl;
 }
