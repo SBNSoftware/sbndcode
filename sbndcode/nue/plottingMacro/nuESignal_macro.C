@@ -40,6 +40,11 @@ typedef struct{
     TH1F* nue_100k;
 } histGroup;
 
+struct edgeSlice {
+    histGroup hg;
+    double low;
+    double high;
+};
 
 typedef struct{
     double pdg;
@@ -56,6 +61,10 @@ typedef struct{
     double trackscore;
     double completeness;
     double purity;
+    double numHits;
+    double numMatchedHits;
+    double numTrueHits;
+    double truePDG;
 } recoParticle;
 
 typedef struct{
@@ -121,15 +130,121 @@ histGroup createHistGroup(const std::string& baseName, const std::string& title,
     };    
 }
 
+void TwoDHistDraw(TH2D* hist, const char* filename, const char* title){
+    TCanvas* TwoDHistCanvas = new TCanvas("2dHist_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    TwoDHistCanvas->SetTickx();
+    TwoDHistCanvas->SetTicky();
+
+    hist->SetTitle(title);
+    hist->Draw("COLZ");
+    hist->SetStats(0);
+    hist->GetXaxis()->SetTickLength(0.04);
+    hist->GetYaxis()->SetTickLength(0.03);
+    hist->GetXaxis()->SetTickSize(0.02);
+    hist->GetYaxis()->SetTickSize(0.02);
+       
+    TwoDHistCanvas->SaveAs(filename);
+    TwoDHistCanvas->Clear();
+}
+
+void ProfileDraw(TProfile* profile, const char* filename, const char* title){
+    TCanvas* ProfileCanvas = new TCanvas("Profile_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    ProfileCanvas->SetTickx();
+    ProfileCanvas->SetTicky();
+
+    //TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.15, Lxmax, Lymin - 0.02, "NDC");
+    //pt->AddText(Form("Number of Entries: %f", (double)profile->GetEntries()));
+    //pt->AddText(Form("Angle Difference Mean: %f", (double)profile->GetMean(2)));
+    //pt->AddText(Form("Angle Difference Std Dev: %f", (double)profile->GetStdDev(2)));
+    //pt->SetFillColor(kWhite);
+    //pt->SetFillStyle(1001);
+    //pt->SetBorderSize(0); 
+	//pt->Draw();
+
+    profile->SetTitle(title);
+    profile->SetErrorOption("i");
+    profile->SetLineWidth(2);
+    profile->SetMarkerStyle(20);
+    profile->SetMarkerSize(0.8);
+    profile->SetMarkerColor(kBlack);
+    profile->SetLineColor(kBlack);
+    profile->Draw();
+    profile->GetXaxis()->SetTickLength(0.04);
+    profile->GetYaxis()->SetTickLength(0.03);
+    profile->GetXaxis()->SetTickSize(0.02);
+    profile->GetYaxis()->SetTickSize(0.02);
+       
+    ProfileCanvas->SaveAs(filename);
+    ProfileCanvas->Clear();
+}
+
+void makeEqualStatProfile(std::vector<double>& xVals, std::vector<double>& yVals, int nbins, double xMin, double xMax, const char* name, const char* title, const char* filename){
+    if (xVals.size() != yVals.size()) {
+        std::cerr << "xVals and yVals must be the same size!" << std::endl;
+        return;
+    }
+
+    // Step 1: Fill a temporary histogram with only values inside [xMin,xMax]
+    TH1F *hx = new TH1F("hx","x distribution", 1000, xMin, xMax);
+    for (size_t i = 0; i < xVals.size(); i++) {
+        if (xVals[i] >= xMin && xVals[i] <= xMax)
+            hx->Fill(xVals[i]);
+    }
+
+    // Step 2: Compute quantiles in this restricted range
+    std::vector<double> q(nbins+1);
+    std::vector<double> p(nbins+1);
+    for (int i = 0; i <= nbins; i++) {
+        p[i] = double(i)/nbins;  // cumulative probabilities: 0, 0.1, ..., 1
+    }
+    hx->GetQuantiles(nbins+1, &q[0], &p[0]);
+
+    // Step 3: Build profile with variable-width bins
+    TProfile *prof = new TProfile(name, title, nbins, &q[0], 0, 180);
+
+    // Step 4: Fill only entries in the range
+    for (size_t i = 0; i < xVals.size(); i++) {
+        if (xVals[i] >= xMin && xVals[i] <= xMax)
+            prof->Fill(xVals[i], yVals[i]);
+    }
+
+    // Step 5: Draw and save (your style)
+    TCanvas* c = new TCanvas("c","Profile",600,400);
+    c->SetTickx();
+    c->SetTicky();
+
+    prof->SetErrorOption("i");
+    prof->SetLineWidth(2);
+    prof->SetMarkerStyle(20);
+    prof->SetMarkerSize(0.8);
+    prof->SetMarkerColor(kBlack);
+    prof->SetLineColor(kBlack);
+    gStyle->SetOptStat(0);
+
+    prof->Draw();
+    prof->GetXaxis()->SetTickLength(0.04);
+    prof->GetYaxis()->SetTickLength(0.03);
+    prof->GetXaxis()->SetTickSize(0.02);
+    prof->GetYaxis()->SetTickSize(0.02);
+
+    c->SaveAs(filename);
+
+    // Debug: print bin edges
+    std::cout << "Bin edges for " << name << ":\n";
+    for (size_t i = 0; i < q.size(); i++) std::cout << q[i] << " ";
+    std::cout << std::endl;
+
+    delete hx;
+}
 
 void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sbnd, TH1F* nue, TH1F* nue_100k, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, TPaveText* pt = nullptr, int* percentage = nullptr, int* drawLine = nullptr, int* linePos = nullptr){
     canvas->cd();
     canvas->SetTickx();
     canvas->SetTicky();
 
-    gStyle->SetPalette(kAvocado);
-    gROOT->ForceStyle();
-    gPad->Update();
+    //gStyle->SetPalette(kAvocado);
+    //gROOT->ForceStyle();
+    //gPad->Update();
 
     current->SetLineWidth(2);
     //current->SetLineColor(TColor::GetColorPalette(150));
@@ -171,9 +286,9 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     //cheated->Draw("histsame");
     //dune->Draw("histsame");
     uboone->Draw("histsame");
-    sbnd->Draw("histsame");
-    nue->Draw("histsame");
-    nue_100k->Draw("histsame");
+    //sbnd->Draw("histsame");
+    //nue->Draw("histsame");
+    //nue_100k->Draw("histsame");
     
     current->SetStats(0);
     current->GetXaxis()->SetTickLength(0.04);
@@ -182,7 +297,7 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     current->GetYaxis()->SetTickSize(0.02);
 
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
-    //legend->AddEntry(dune, "Pandora Deep Learning: DUNE/LBNF Tune", "f");
+    legend->AddEntry(dune, "Pandora Deep Learning: DUNE/LBNF Tune", "f");
     legend->AddEntry(uboone, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
     legend->AddEntry(sbnd, "Pandora Deep Learning: SBND/BNB Tune", "f");
     legend->AddEntry(current, "Pandora BDT SBND (without Refinement)", "f");
@@ -191,7 +306,7 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     legend->AddEntry(nue_100k, "Pandora Deep Learning: SBND Nu+E Elastic (100k Events)", "f");
     legend->SetTextSize(0.0225);
     legend->SetMargin(0.13);
-    legend->Draw();
+    //legend->Draw();
 
     if(drawLine){
         TLine* line = new TLine(1.022, 0, 1.022, current->GetMaximum());
@@ -253,7 +368,7 @@ void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sb
     nue_100kPerc->GetYaxis()->SetTitle("Percentage of Events (%)");
     
     TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.17, Lxmax, Lymin - 0.02, "NDC");
-    //pt->AddText(Form("Number of DL Dune Entries: %d", (int)sizeDune));
+    pt->AddText(Form("Number of DL Dune Entries: %d", (int)sizeDune));
     pt->AddText(Form("Number of DL Uboone Entries: %d", (int)sizeUboone));
     pt->AddText(Form("Number of DL SBND Entries: %d", (int)sizeSBND));
     pt->AddText(Form("Number of Current Entries: %d", (int)sizeCurrent));
@@ -440,18 +555,77 @@ trueParticle chooseTrueParticle(std::vector<trueParticle> trueParticles, trueNeu
     return trueParticles[chosenParticleIndex];
 }
 
+double sliceCompletenessCalculator(std::vector<recoParticle> recoParticles, double sliceID){
+    int counter = 0;
+    double totalNumMatchedHits = 0;
+    double totalNumTrueHits = 0;
+
+    for(size_t j = 0; j < recoParticles.size(); ++j){
+        if(recoParticles[j].sliceID == sliceID){
+            counter++;
+            totalNumMatchedHits += recoParticles[j].numMatchedHits;
+            totalNumTrueHits += recoParticles[j].numTrueHits;
+        }
+    }
+
+    double sliceCompleteness;
+    if(counter < 1){
+        sliceCompleteness = -999999;
+    } else {
+        sliceCompleteness = (totalNumMatchedHits / totalNumTrueHits);
+    }
+    //std::cout << "Chosen Slice Completeness = " << sliceCompleteness << std::endl;
+    return sliceCompleteness;
+}
+
+double slicePurityCalculator(std::vector<recoParticle> recoParticles, double sliceID){
+    int counter = 0;
+    double totalNumMatchedHits = 0;
+    double totalNumHits = 0;
+
+    for(size_t j = 0; j < recoParticles.size(); ++j){
+        if(recoParticles[j].sliceID == sliceID){
+            counter++;
+            totalNumMatchedHits += recoParticles[j].numMatchedHits;
+            totalNumHits += recoParticles[j].numHits;
+        }
+    }
+
+    double slicePurity;
+    if(counter < 1){
+        slicePurity = -999999;
+    } else {
+        slicePurity = (totalNumMatchedHits / totalNumHits);
+    }
+    //std::cout << "Chosen Slice Purity = " << slicePurity << std::endl;
+    return slicePurity;
+}
+
 void nuESignal_macro(){
-    //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_05_00NEW/NuEAnalyserOutput.root");
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/merged.root");
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/merged.root");
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/merged.root");
-    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/analysed_Current/NoRefinement/CRUMBS/1.root");
-    //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_05_00NEW/srcs/sbndcode/sbndcode/nue/NuEAnalyserOutput.root");
-    //TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nuev10_04_05/srcs/sbndcode/sbndcode/nue/NuEAnalyserOutput.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/analysed_noSCE/merged_noSCE_8Sep.root");
-    //std::string base_path = "/nashome/c/coackley/nuEPlotsWithoutCosmics/";
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/merged_SCEON_24Sep.root");
+    //std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmicsSCEON_24Sep/";
+    
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/22Sep_SCEON/merged_22Sep.root");
     //std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmics/";
-    std::string base_path = "/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/";
+    
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/analysed_noSCE/merged_noSCE_8Sep.root");
+    //std::string base_path = "/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/";
+    
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/22Sep_SCEON/merged_22Sep.root");
+    std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmicsSCEON_40kEvents/";
+    
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics_v10_09_00/analysed/enuelastic_v10_09_00_gen_g4_detsim_reco1_reco2_analysed_80221889_50_Analysed_BDT_output-9c4b127e-5141-4f5b-82cf-3153df9693ae.root");
+    //std::string base_path = "/nashome/c/coackley/v10_09_00_through/";
+    
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/analysed_v10_09_00/BDT/merged.root");
+    //std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmicsSCEON_v10_09_00/";
+    
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/analysed_v10_06_00/BDT/merged.root");
+    //std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmicsSCEON_v10_06_00/";
+    
+    std::string base_path_perSlice = base_path + "perSlicePlots/"; 
+    bool makePerSlicePlots = false;   // set to false to skip making per-slice plots
+
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -523,6 +697,10 @@ void nuESignal_macro(){
     std::vector<double> *reco_particleTrackScore = nullptr;
     std::vector<double> *reco_particleCompleteness = nullptr;
     std::vector<double> *reco_particlePurity = nullptr;
+    std::vector<double> *reco_particleNumHits = nullptr;
+    std::vector<double> *reco_particleNumMatchedHits = nullptr;
+    std::vector<double> *reco_particleNumTrueHits = nullptr;
+    std::vector<double> *reco_particleTruePDG = nullptr;
 
     std::vector<double> *reco_sliceID = nullptr;
     std::vector<double> *reco_sliceCompleteness = nullptr;
@@ -574,6 +752,10 @@ void nuESignal_macro(){
     tree->SetBranchAddress("reco_particleTrackScore", &reco_particleTrackScore);
     tree->SetBranchAddress("reco_particleCompleteness", &reco_particleCompleteness);
     tree->SetBranchAddress("reco_particlePurity", &reco_particlePurity);
+    tree->SetBranchAddress("reco_particleNumHits", &reco_particleNumHits);
+    tree->SetBranchAddress("reco_particleNumMatchedHits", &reco_particleNumMatchedHits);
+    tree->SetBranchAddress("reco_particleNumTrueHits", &reco_particleNumTrueHits);
+    tree->SetBranchAddress("reco_particleTruePDG", &reco_particleTruePDG);
 
     tree->SetBranchAddress("reco_sliceID", &reco_sliceID);
     tree->SetBranchAddress("reco_sliceCompleteness", &reco_sliceCompleteness);
@@ -613,6 +795,9 @@ void nuESignal_macro(){
     auto ERecoSumThetaRecoCRUMBS = createHistGroup("ERecoSumThetaRecoCRUMBS", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice with the Highest CRUMBS Score", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
     auto ERecoHighestThetaRecoCRUMBS = createHistGroup("ERecoHighestThetaRecoCRUMBS", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice with the Highest CRUMBS Score", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
 
+    auto trueZCRUMBS = createHistGroup("trueZCRUMBS", "Truth z Distribution: Slice with Highest CRUMBS Score", "z_{True} (cm)", 40, 0, 500);
+    auto recoZCRUMBS = createHistGroup("recoZCRUMBS", "Reco z Distribution: Slice with Highest CRUMBS Score", "z_{Reco} (cm)", 40, 0, 500);
+    
     // Highest Completeness Score Slice Plots
     auto sliceCompletenessCompleteness = createHistGroup("sliceCompletenessCompleteness", "Completeness of the Slice with the Highest Completeness", "Completeness Score", 102, 0, 1.02); // Bin width = 0.01
     auto sliceScoreCompleteness = createHistGroup("sliceScoreCompleteness", "CRUMBS Score of the Slice with the Highest Completeness", "CRUMBS Score", 25, -1, 1); 
@@ -631,7 +816,70 @@ void nuESignal_macro(){
     auto ERecoHighestThetaTrueCompleteness = createHistGroup("ERecoHighestThetaTrueCompleteness", "E_{reco}#theta_{true}^{2} for E_{reco} Being the Energy of the Highest Energy PFP in the Slice with the Highest Completeness", "E_{reco}#theta_{true}^{2} (MeV)", 24, 0, 3.066);
     auto ERecoSumThetaRecoCompleteness = createHistGroup("ERecoSumThetaRecoCompleteness", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice with the Highest Completeness", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
     auto ERecoHighestThetaRecoCompleteness = createHistGroup("ERecoHighestThetaRecoCompleteness", "E_{reco}#theta_{reco}^{2} for E_{reco} Being Energy of the Highest Energy PFP in the Slice with the Highest Completeness", "E_{reco}#theta_{reco}^{2} (MeV)", 27, 0, 13.797);
+  
+    const double xMin = -201.3, xMax = 201.3;
+    const double yMin = -203.8, yMax = 203.8;
+    const double zMin = 0.0,    zMax = 509.4;
+    const double step = 10.0;  // slice width in cm
     
+    TH2D *xCoordAngleDifferenceBDTCRUMBS = new TH2D("xCoordAngleDifferenceBDTCRUMBS", "", 50, xMin, xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceBDTCRUMBS = new TH2D("yCoordAngleDifferenceBDTCRUMBS", "", 50, yMin, yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifferenceBDTCRUMBS = new TH2D("zCoordAngleDifferenceBDTCRUMBS", "", 50, zMin, zMax, 60, 0, 180);
+    TH2D *xCoordAngleDifferenceDLUbooneCRUMBS = new TH2D("xCoordAngleDifferenceDLUbooneCRUMBS", "", 50, xMin, xMax, 60, 0, 180);
+    TH2D *yCoordAngleDifferenceDLUbooneCRUMBS = new TH2D("yCoordAngleDifferenceDLUbooneCRUMBS", "", 50, yMin, yMax, 60, 0, 180);
+    TH2D *zCoordAngleDifferenceDLUbooneCRUMBS = new TH2D("zCoordAngleDifferencDLUbooneCRUMBS", "", 50, zMin, zMax, 60, 0, 180);
+
+    TH2D *xCoordAngleDifferenceBDTCRUMBS_low = new TH2D("xCoordAngleDifferenceBDTCRUMBS_low", "", 10, xMin, (xMin + 20), 40, 0, 180);
+    TH2D *yCoordAngleDifferenceBDTCRUMBS_low = new TH2D("yCoordAngleDifferenceBDTCRUMBS_low", "", 10, yMin, (yMin + 20), 40, 0, 180);
+    TH2D *zCoordAngleDifferenceBDTCRUMBS_low = new TH2D("zCoordAngleDifferenceBDTCRUMBS_low", "", 10, zMin, (zMin + 20), 40, 0, 180);
+    TH2D *xCoordAngleDifferenceBDTCRUMBS_high = new TH2D("xCoordAngleDifferenceBDTCRUMBS_high", "", 10, (xMax - 20), xMax, 40, 0, 180);
+    TH2D *yCoordAngleDifferenceBDTCRUMBS_high = new TH2D("yCoordAngleDifferenceBDTCRUMBS_high", "", 10, (yMax - 20), yMax, 40, 0, 180);
+    TH2D *zCoordAngleDifferenceBDTCRUMBS_high = new TH2D("zCoordAngleDifferenceBDTCRUMBS_high", "", 20, (zMax - 40), zMax, 60, 0, 180);
+
+    TProfile *xCoordAngleDifferenceBDTCRUMBSProfile = new TProfile("xCoordAngleDifferenceBDTCRUMBSProfile", "", 50, xMin, xMax, 0, 180);
+    TProfile *yCoordAngleDifferenceBDTCRUMBSProfile = new TProfile("yCoordAngleDifferenceBDTCRUMBSProfile", "", 50, yMin, yMax, 0, 180);
+    TProfile *zCoordAngleDifferenceBDTCRUMBSProfile = new TProfile("zCoordAngleDifferenceBDTCRUMBSProfile", "", 50, zMin, zMax, 0, 180);
+    TProfile *xCoordAngleDifferenceDLUbooneCRUMBSProfile = new TProfile("xCoordAngleDifferenceDLUbooneCRUMBSProfile", "", 50, xMin, xMax, 0, 180);
+    TProfile *yCoordAngleDifferenceDLUbooneCRUMBSProfile = new TProfile("yCoordAngleDifferenceDLUbooneCRUMBSProfile", "", 50, yMin, yMax, 0, 180);
+    TProfile *zCoordAngleDifferenceDLUbooneCRUMBSProfile = new TProfile("zCoordAngleDifferencDLUbooneCRUMBSProfile", "", 50, zMin, zMax, 0, 180);
+
+    TProfile *xCoordAngleDifferenceBDTCRUMBSProfile_low = new TProfile("xCoordAngleDifferenceBDTCRUMBSProfile_low", "", 10, xMin, (xMin + 20), 0, 180);
+    TProfile *yCoordAngleDifferenceBDTCRUMBSProfile_low = new TProfile("yCoordAngleDifferenceBDTCRUMBSProfile_low", "", 10, yMin, (yMin + 20), 0, 180);
+    TProfile *zCoordAngleDifferenceBDTCRUMBSProfile_low = new TProfile("zCoordAngleDifferenceBDTCRUMBSProfile_low", "", 10, zMin, (zMin + 20), 0, 180);
+    TProfile *xCoordAngleDifferenceBDTCRUMBSProfile_high = new TProfile("xCoordAngleDifferenceBDTCRUMBSProfile_high", "", 10, (xMax - 20), xMax, 0, 180);
+    TProfile *yCoordAngleDifferenceBDTCRUMBSProfile_high = new TProfile("yCoordAngleDifferenceBDTCRUMBSProfile_high", "", 10, (yMax - 20), yMax, 0, 180);
+    TProfile *zCoordAngleDifferenceBDTCRUMBSProfile_high = new TProfile("zCoordAngleDifferenceBDTCRUMBSProfile_high", "", 20, (zMax - 40), zMax, 0, 180);
+
+    std::vector<double> xVals_xCoord;
+    std::vector<double> xVals_yCoord;
+    std::vector<double> xVals_zCoord;
+    std::vector<double> yVals;
+
+    std::vector<edgeSlice> xEdgeSlices, yEdgeSlices, zEdgeSlices;
+
+    for(double low = xMin; low < xMax; low += step){
+        double high = std::min(low + step, xMax);
+        std::string name = "x_slice_" + std::to_string(xEdgeSlices.size());
+        std::string title = "Angle Difference CRUMBS (X in [" + std::to_string(low) + "," + std::to_string(high) + "])";
+        xEdgeSlices.push_back({ createHistGroup(name, title, "Angle Difference (deg)", 45, 0, 180), low, high });
+    }
+
+    for(double low = yMin; low < yMax; low += step){
+        double high = std::min(low + step, yMax);
+        std::string name = "y_slice_" + std::to_string(yEdgeSlices.size());
+        std::string title = "Angle Difference CRUMBS (Y in [" + std::to_string(low) + "," + std::to_string(high) + "])";
+        yEdgeSlices.push_back({ createHistGroup(name, title, "Angle Difference (deg)", 45, 0, 180), low, high });
+    }
+
+    for(double low = zMin; low < zMax; low += step){
+        double high = std::min(low + step, zMax);
+        std::string name = "z_slice_" + std::to_string(zEdgeSlices.size());
+        std::string title = "Angle Difference CRUMBS (Z in [" + std::to_string(low) + "," + std::to_string(high) + "])";
+        zEdgeSlices.push_back({ createHistGroup(name, title, "Angle Difference (deg)", 45, 0, 180), low, high });
+    }
+        
+    // TO HERE!
+
     counter numEventsTotal;
     counter numEventsTrueNeutrino;
     counter numEventsTrueElectron;
@@ -809,20 +1057,16 @@ void nuESignal_macro(){
         // Pick the slice with the highest score
         chosenRecoSliceCRUMBS = chooseSlice(recoSlicesInEvent, 1);
         printf("Slice with Highest CRUMBS Score: ID = %f, Completeness = %f, Purity = %f, CRUMBS Score = %f\n\n", chosenRecoSliceCRUMBS.id, chosenRecoSliceCRUMBS.completeness, chosenRecoSliceCRUMBS.purity, chosenRecoSliceCRUMBS.score);
-        
+       
+ 
         if(DLCurrent == 0){
             numEventsSlices.uboone++;
             numSlices.uboone->Fill(numSlicesInEvent);
             numSlicesCRUMBS.uboone->Fill(crumbsSlice);
             numSlicesCompleteness.uboone->Fill(completenessSlice);
             
-            sliceCompletenessCRUMBS.uboone->Fill(chosenRecoSliceCRUMBS.completeness);
             sliceScoreCRUMBS.uboone->Fill(chosenRecoSliceCRUMBS.score);
-            slicePurityCRUMBS.uboone->Fill(chosenRecoSliceCRUMBS.purity);
-            
-            sliceCompletenessCompleteness.uboone->Fill(chosenRecoSliceCompleteness.completeness);
             sliceScoreCompleteness.uboone->Fill(chosenRecoSliceCompleteness.score);
-            slicePurityCompleteness.uboone->Fill(chosenRecoSliceCompleteness.purity);
 
             if(chosenRecoSliceCRUMBS.completeness == 0) numSlicesCRUMBSCompletenessZero.uboone++;
             if(chosenRecoSliceCRUMBS.id == chosenRecoSliceCompleteness.id) sameSliceSelected.uboone++;
@@ -832,13 +1076,8 @@ void nuESignal_macro(){
             numSlicesCRUMBS.dune->Fill(crumbsSlice);
             numSlicesCompleteness.dune->Fill(completenessSlice);
 
-            sliceCompletenessCRUMBS.dune->Fill(chosenRecoSliceCRUMBS.completeness);
             sliceScoreCRUMBS.dune->Fill(chosenRecoSliceCRUMBS.score);
-            slicePurityCRUMBS.dune->Fill(chosenRecoSliceCRUMBS.purity);
-            
-            sliceCompletenessCompleteness.dune->Fill(chosenRecoSliceCompleteness.completeness);
             sliceScoreCompleteness.dune->Fill(chosenRecoSliceCompleteness.score);
-            slicePurityCompleteness.dune->Fill(chosenRecoSliceCompleteness.purity);
 
             if(chosenRecoSliceCRUMBS.completeness == 0) numSlicesCRUMBSCompletenessZero.dune++;
             if(chosenRecoSliceCRUMBS.id == chosenRecoSliceCompleteness.id) sameSliceSelected.dune++;
@@ -848,13 +1087,8 @@ void nuESignal_macro(){
             numSlicesCRUMBS.current->Fill(crumbsSlice);
             numSlicesCompleteness.current->Fill(completenessSlice);
             
-            sliceCompletenessCRUMBS.current->Fill(chosenRecoSliceCRUMBS.completeness);
             sliceScoreCRUMBS.current->Fill(chosenRecoSliceCRUMBS.score);
-            slicePurityCRUMBS.current->Fill(chosenRecoSliceCRUMBS.purity);
-            
-            sliceCompletenessCompleteness.current->Fill(chosenRecoSliceCompleteness.completeness);
             sliceScoreCompleteness.current->Fill(chosenRecoSliceCompleteness.score);
-            slicePurityCompleteness.current->Fill(chosenRecoSliceCompleteness.purity);
                 
             if(chosenRecoSliceCRUMBS.completeness == 0) numSlicesCRUMBSCompletenessZero.current++;
             if(chosenRecoSliceCRUMBS.id == chosenRecoSliceCompleteness.id) sameSliceSelected.current++;
@@ -864,13 +1098,8 @@ void nuESignal_macro(){
             numSlicesCRUMBS.cheated->Fill(crumbsSlice);
             numSlicesCompleteness.cheated->Fill(completenessSlice);
             
-            sliceCompletenessCRUMBS.cheated->Fill(chosenRecoSliceCRUMBS.completeness);
             sliceScoreCRUMBS.cheated->Fill(chosenRecoSliceCRUMBS.score);
-            slicePurityCRUMBS.cheated->Fill(chosenRecoSliceCRUMBS.purity);
-            
-            sliceCompletenessCompleteness.cheated->Fill(chosenRecoSliceCompleteness.completeness);
             sliceScoreCompleteness.cheated->Fill(chosenRecoSliceCompleteness.score);
-            slicePurityCompleteness.cheated->Fill(chosenRecoSliceCompleteness.purity);
             
             if(chosenRecoSliceCRUMBS.completeness == 0) numSlicesCRUMBSCompletenessZero.cheated++;
             if(chosenRecoSliceCRUMBS.id == chosenRecoSliceCompleteness.id) sameSliceSelected.cheated++;
@@ -880,13 +1109,8 @@ void nuESignal_macro(){
             numSlicesCRUMBS.sbnd->Fill(crumbsSlice);
             numSlicesCompleteness.sbnd->Fill(completenessSlice);
 
-            sliceCompletenessCRUMBS.sbnd->Fill(chosenRecoSliceCRUMBS.completeness);
             sliceScoreCRUMBS.sbnd->Fill(chosenRecoSliceCRUMBS.score);
-            slicePurityCRUMBS.sbnd->Fill(chosenRecoSliceCRUMBS.purity);
-            
-            sliceCompletenessCompleteness.sbnd->Fill(chosenRecoSliceCompleteness.completeness);
             sliceScoreCompleteness.sbnd->Fill(chosenRecoSliceCompleteness.score);
-            slicePurityCompleteness.sbnd->Fill(chosenRecoSliceCompleteness.purity);
 
             if(chosenRecoSliceCRUMBS.completeness == 0) numSlicesCRUMBSCompletenessZero.sbnd++;
             if(chosenRecoSliceCRUMBS.id == chosenRecoSliceCompleteness.id) sameSliceSelected.sbnd++;
@@ -896,13 +1120,8 @@ void nuESignal_macro(){
             numSlicesCRUMBS.nue->Fill(crumbsSlice);
             numSlicesCompleteness.nue->Fill(completenessSlice);
 
-            sliceCompletenessCRUMBS.nue->Fill(chosenRecoSliceCRUMBS.completeness);
             sliceScoreCRUMBS.nue->Fill(chosenRecoSliceCRUMBS.score);
-            slicePurityCRUMBS.nue->Fill(chosenRecoSliceCRUMBS.purity);
-            
-            sliceCompletenessCompleteness.nue->Fill(chosenRecoSliceCompleteness.completeness);
             sliceScoreCompleteness.nue->Fill(chosenRecoSliceCompleteness.score);
-            slicePurityCompleteness.nue->Fill(chosenRecoSliceCompleteness.purity);
 
             if(chosenRecoSliceCRUMBS.completeness == 0) numSlicesCRUMBSCompletenessZero.nue++;
             if(chosenRecoSliceCRUMBS.id == chosenRecoSliceCompleteness.id) sameSliceSelected.nue++;
@@ -912,13 +1131,8 @@ void nuESignal_macro(){
             numSlicesCRUMBS.nue_100k->Fill(crumbsSlice);
             numSlicesCompleteness.nue_100k->Fill(completenessSlice);
 
-            sliceCompletenessCRUMBS.nue_100k->Fill(chosenRecoSliceCRUMBS.completeness);
             sliceScoreCRUMBS.nue_100k->Fill(chosenRecoSliceCRUMBS.score);
-            slicePurityCRUMBS.nue_100k->Fill(chosenRecoSliceCRUMBS.purity);
-            
-            sliceCompletenessCompleteness.nue_100k->Fill(chosenRecoSliceCompleteness.completeness);
             sliceScoreCompleteness.nue_100k->Fill(chosenRecoSliceCompleteness.score);
-            slicePurityCompleteness.nue_100k->Fill(chosenRecoSliceCompleteness.purity);
 
             if(chosenRecoSliceCRUMBS.completeness == 0) numSlicesCRUMBSCompletenessZero.nue_100k++;
             if(chosenRecoSliceCRUMBS.id == chosenRecoSliceCompleteness.id) sameSliceSelected.nue_100k++;
@@ -989,6 +1203,9 @@ void nuESignal_macro(){
             deltaZCRUMBS.uboone->Fill(deltaZCRUMBSValue);
             deltaRCRUMBS.uboone->Fill(deltaRCRUMBSValue);
 
+            trueZCRUMBS.uboone->Fill(chosenTrueNeutrino.vz);
+            recoZCRUMBS.uboone->Fill(chosenRecoNeutrinoCRUMBS.vz);
+
             deltaXCompleteness.uboone->Fill(deltaXCompletenessValue);
             deltaYCompleteness.uboone->Fill(deltaYCompletenessValue);
             deltaZCompleteness.uboone->Fill(deltaZCompletenessValue);
@@ -1000,6 +1217,9 @@ void nuESignal_macro(){
             deltaZCRUMBS.dune->Fill(deltaZCRUMBSValue);
             deltaRCRUMBS.dune->Fill(deltaRCRUMBSValue);
         
+            trueZCRUMBS.dune->Fill(chosenTrueNeutrino.vz);
+            recoZCRUMBS.dune->Fill(chosenRecoNeutrinoCRUMBS.vz);
+            
             deltaXCompleteness.dune->Fill(deltaXCompletenessValue);
             deltaYCompleteness.dune->Fill(deltaYCompletenessValue);
             deltaZCompleteness.dune->Fill(deltaZCompletenessValue);
@@ -1010,6 +1230,9 @@ void nuESignal_macro(){
             deltaYCRUMBS.current->Fill(deltaYCRUMBSValue);
             deltaZCRUMBS.current->Fill(deltaZCRUMBSValue);
             deltaRCRUMBS.current->Fill(deltaRCRUMBSValue);
+            
+            trueZCRUMBS.current->Fill(chosenTrueNeutrino.vz);
+            recoZCRUMBS.current->Fill(chosenRecoNeutrinoCRUMBS.vz);
         
             deltaXCompleteness.current->Fill(deltaXCompletenessValue);
             deltaYCompleteness.current->Fill(deltaYCompletenessValue);
@@ -1021,6 +1244,9 @@ void nuESignal_macro(){
             deltaYCRUMBS.cheated->Fill(deltaYCRUMBSValue);
             deltaZCRUMBS.cheated->Fill(deltaZCRUMBSValue);
             deltaRCRUMBS.cheated->Fill(deltaRCRUMBSValue);
+            
+            trueZCRUMBS.cheated->Fill(chosenTrueNeutrino.vz);
+            recoZCRUMBS.cheated->Fill(chosenRecoNeutrinoCRUMBS.vz);
         
             deltaXCompleteness.cheated->Fill(deltaXCompletenessValue);
             deltaYCompleteness.cheated->Fill(deltaYCompletenessValue);
@@ -1032,6 +1258,9 @@ void nuESignal_macro(){
             deltaYCRUMBS.sbnd->Fill(deltaYCRUMBSValue);
             deltaZCRUMBS.sbnd->Fill(deltaZCRUMBSValue);
             deltaRCRUMBS.sbnd->Fill(deltaRCRUMBSValue);
+            
+            trueZCRUMBS.sbnd->Fill(chosenTrueNeutrino.vz);
+            recoZCRUMBS.sbnd->Fill(chosenRecoNeutrinoCRUMBS.vz);
         
             deltaXCompleteness.sbnd->Fill(deltaXCompletenessValue);
             deltaYCompleteness.sbnd->Fill(deltaYCompletenessValue);
@@ -1043,6 +1272,9 @@ void nuESignal_macro(){
             deltaYCRUMBS.nue->Fill(deltaYCRUMBSValue);
             deltaZCRUMBS.nue->Fill(deltaZCRUMBSValue);
             deltaRCRUMBS.nue->Fill(deltaRCRUMBSValue);
+            
+            trueZCRUMBS.nue->Fill(chosenTrueNeutrino.vz);
+            recoZCRUMBS.nue->Fill(chosenRecoNeutrinoCRUMBS.vz);
         
             deltaXCompleteness.nue->Fill(deltaXCompletenessValue);
             deltaYCompleteness.nue->Fill(deltaYCompletenessValue);
@@ -1054,6 +1286,9 @@ void nuESignal_macro(){
             deltaYCRUMBS.nue_100k->Fill(deltaYCRUMBSValue);
             deltaZCRUMBS.nue_100k->Fill(deltaZCRUMBSValue);
             deltaRCRUMBS.nue_100k->Fill(deltaRCRUMBSValue);
+            
+            trueZCRUMBS.nue_100k->Fill(chosenTrueNeutrino.vz);
+            recoZCRUMBS.nue_100k->Fill(chosenRecoNeutrinoCRUMBS.vz);
         
             deltaXCompleteness.nue_100k->Fill(deltaXCompletenessValue);
             deltaYCompleteness.nue_100k->Fill(deltaYCompletenessValue);
@@ -1084,6 +1319,10 @@ void nuESignal_macro(){
                 recoParticle.trackscore = reco_particleTrackScore->at(j);
                 recoParticle.completeness = reco_particleCompleteness->at(j);
                 recoParticle.purity = reco_particlePurity->at(j);
+                recoParticle.numHits = reco_particleNumHits->at(j);
+                recoParticle.numMatchedHits = reco_particleNumMatchedHits->at(j);
+                recoParticle.numTrueHits = reco_particleNumTrueHits->at(j);
+                recoParticle.truePDG = reco_particleTruePDG->at(j);
                 recoParticlesInEvent.push_back(recoParticle);
             
                 if(recoParticle.sliceID == chosenRecoSliceCRUMBS.id) recoparticleCRUMBS = 1;
@@ -1103,6 +1342,8 @@ void nuESignal_macro(){
         double totalSliceEnergyCRUMBS = 0;
         double numPFPsSliceCRUMBS = 0;
         chosenRecoParticleCRUMBS = choosePFP(recoParticlesInEvent, chosenRecoSliceCRUMBS.id, totalSliceEnergyCRUMBS, numPFPsSliceCRUMBS);
+        double chosenSlicePurityCRUMBS = slicePurityCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id);
+        double chosenSliceCompletenessCRUMBS = sliceCompletenessCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id);
 
         double aDOTbCRUMBS = ((chosenRecoParticleCRUMBS.dx * chosenTrueParticle.dx) + (chosenRecoParticleCRUMBS.dy * chosenTrueParticle.dy) + (chosenRecoParticleCRUMBS.dz * chosenTrueParticle.dz));
         double aMagCRUMBS = std::sqrt((chosenRecoParticleCRUMBS.dx * chosenRecoParticleCRUMBS.dx) + (chosenRecoParticleCRUMBS.dy * chosenRecoParticleCRUMBS.dy) + (chosenRecoParticleCRUMBS.dz * chosenRecoParticleCRUMBS.dz));
@@ -1115,6 +1356,8 @@ void nuESignal_macro(){
         double totalSliceEnergyCompleteness = 0;
         double numPFPsSliceCompleteness = 0;
         chosenRecoParticleCompleteness = choosePFP(recoParticlesInEvent, chosenRecoSliceCompleteness.id, totalSliceEnergyCompleteness, numPFPsSliceCompleteness);
+        double chosenSlicePurityCompleteness = slicePurityCalculator(recoParticlesInEvent, chosenRecoSliceCompleteness.id);
+        double chosenSliceCompletenessCompleteness = sliceCompletenessCalculator(recoParticlesInEvent, chosenRecoSliceCompleteness.id);
         
         double aDOTbCompleteness = ((chosenRecoParticleCompleteness.dx * chosenTrueParticle.dx) + (chosenRecoParticleCompleteness.dy * chosenTrueParticle.dy) + (chosenRecoParticleCompleteness.dz * chosenTrueParticle.dz));
         double aMagCompleteness = std::sqrt((chosenRecoParticleCompleteness.dx * chosenRecoParticleCompleteness.dx) + (chosenRecoParticleCompleteness.dy * chosenRecoParticleCompleteness.dy) + (chosenRecoParticleCompleteness.dz * chosenRecoParticleCompleteness.dz));
@@ -1136,6 +1379,14 @@ void nuESignal_macro(){
             ERecoHighestThetaTrueCRUMBS.uboone->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenTrueParticle.angle * chosenTrueParticle.angle);
             ERecoSumThetaRecoCRUMBS.uboone->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.uboone->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+            xCoordAngleDifferenceDLUbooneCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vx, angleDiffCRUMBS); 
+            yCoordAngleDifferenceDLUbooneCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vy, angleDiffCRUMBS); 
+            zCoordAngleDifferenceDLUbooneCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vz, angleDiffCRUMBS); 
+
+            slicePurityCRUMBS.uboone->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.uboone->Fill(chosenSliceCompletenessCRUMBS);
+            slicePurityCompleteness.uboone->Fill(chosenSlicePurityCompleteness);
+            sliceCompletenessCompleteness.uboone->Fill(chosenSliceCompletenessCompleteness);
 
             numPFPsCompleteness.uboone->Fill(numPFPsSliceCompleteness);
             ratioChosenSummedEnergyCompleteness.uboone->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy / totalSliceEnergyCompleteness);
@@ -1159,7 +1410,12 @@ void nuESignal_macro(){
             ERecoHighestThetaTrueCRUMBS.dune->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenTrueParticle.angle * chosenTrueParticle.angle);
             ERecoSumThetaRecoCRUMBS.dune->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.dune->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
-        
+
+            slicePurityCRUMBS.dune->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.dune->Fill(chosenSliceCompletenessCRUMBS);
+            slicePurityCompleteness.dune->Fill(chosenSlicePurityCompleteness);
+            sliceCompletenessCompleteness.dune->Fill(chosenSliceCompletenessCompleteness);
+
             numPFPsCompleteness.dune->Fill(numPFPsSliceCompleteness);
             ratioChosenSummedEnergyCompleteness.dune->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy / totalSliceEnergyCompleteness);
             ratioChosenTrueEnergyCompleteness.dune->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy / chosenTrueParticle.energy);
@@ -1183,6 +1439,36 @@ void nuESignal_macro(){
             ERecoSumThetaRecoCRUMBS.current->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.current->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             
+            xCoordAngleDifferenceBDTCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vx, angleDiffCRUMBS); 
+            yCoordAngleDifferenceBDTCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vy, angleDiffCRUMBS); 
+            zCoordAngleDifferenceBDTCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vz, angleDiffCRUMBS); 
+            xCoordAngleDifferenceBDTCRUMBS_low->Fill(chosenRecoNeutrinoCRUMBS.vx, angleDiffCRUMBS); 
+            yCoordAngleDifferenceBDTCRUMBS_low->Fill(chosenRecoNeutrinoCRUMBS.vy, angleDiffCRUMBS); 
+            zCoordAngleDifferenceBDTCRUMBS_low->Fill(chosenRecoNeutrinoCRUMBS.vz, angleDiffCRUMBS); 
+            xCoordAngleDifferenceBDTCRUMBS_high->Fill(chosenRecoNeutrinoCRUMBS.vx, angleDiffCRUMBS); 
+            yCoordAngleDifferenceBDTCRUMBS_high->Fill(chosenRecoNeutrinoCRUMBS.vy, angleDiffCRUMBS); 
+            zCoordAngleDifferenceBDTCRUMBS_high->Fill(chosenRecoNeutrinoCRUMBS.vz, angleDiffCRUMBS); 
+
+            xVals_xCoord.push_back(chosenRecoNeutrinoCRUMBS.vx);
+            xVals_yCoord.push_back(chosenRecoNeutrinoCRUMBS.vy);
+            xVals_zCoord.push_back(chosenRecoNeutrinoCRUMBS.vz);
+            yVals.push_back(angleDiffCRUMBS);
+
+            xCoordAngleDifferenceBDTCRUMBSProfile->Fill(chosenRecoNeutrinoCRUMBS.vx, angleDiffCRUMBS); 
+            yCoordAngleDifferenceBDTCRUMBSProfile->Fill(chosenRecoNeutrinoCRUMBS.vy, angleDiffCRUMBS); 
+            zCoordAngleDifferenceBDTCRUMBSProfile->Fill(chosenRecoNeutrinoCRUMBS.vz, angleDiffCRUMBS); 
+            xCoordAngleDifferenceBDTCRUMBSProfile_low->Fill(chosenRecoNeutrinoCRUMBS.vx, angleDiffCRUMBS); 
+            yCoordAngleDifferenceBDTCRUMBSProfile_low->Fill(chosenRecoNeutrinoCRUMBS.vy, angleDiffCRUMBS); 
+            zCoordAngleDifferenceBDTCRUMBSProfile_low->Fill(chosenRecoNeutrinoCRUMBS.vz, angleDiffCRUMBS); 
+            xCoordAngleDifferenceBDTCRUMBSProfile_high->Fill(chosenRecoNeutrinoCRUMBS.vx, angleDiffCRUMBS); 
+            yCoordAngleDifferenceBDTCRUMBSProfile_high->Fill(chosenRecoNeutrinoCRUMBS.vy, angleDiffCRUMBS); 
+            zCoordAngleDifferenceBDTCRUMBSProfile_high->Fill(chosenRecoNeutrinoCRUMBS.vz, angleDiffCRUMBS); 
+
+            slicePurityCRUMBS.current->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.current->Fill(chosenSliceCompletenessCRUMBS);
+            slicePurityCompleteness.current->Fill(chosenSlicePurityCompleteness);
+            sliceCompletenessCompleteness.current->Fill(chosenSliceCompletenessCompleteness);
+            
             numPFPsCompleteness.current->Fill(numPFPsSliceCompleteness);
             ratioChosenSummedEnergyCompleteness.current->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy / totalSliceEnergyCompleteness);
             ratioChosenTrueEnergyCompleteness.current->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy / chosenTrueParticle.energy);
@@ -1205,6 +1491,11 @@ void nuESignal_macro(){
             ERecoHighestThetaTrueCRUMBS.cheated->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenTrueParticle.angle * chosenTrueParticle.angle);
             ERecoSumThetaRecoCRUMBS.cheated->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.cheated->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+            
+            slicePurityCRUMBS.cheated->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.cheated->Fill(chosenSliceCompletenessCRUMBS);
+            slicePurityCompleteness.cheated->Fill(chosenSlicePurityCompleteness);
+            sliceCompletenessCompleteness.cheated->Fill(chosenSliceCompletenessCompleteness);
         
             numPFPsCompleteness.cheated->Fill(numPFPsSliceCompleteness);
             ratioChosenSummedEnergyCompleteness.cheated->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy / totalSliceEnergyCompleteness);
@@ -1228,6 +1519,11 @@ void nuESignal_macro(){
             ERecoHighestThetaTrueCRUMBS.sbnd->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenTrueParticle.angle * chosenTrueParticle.angle);
             ERecoSumThetaRecoCRUMBS.sbnd->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.sbnd->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+            
+            slicePurityCRUMBS.sbnd->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.sbnd->Fill(chosenSliceCompletenessCRUMBS);
+            slicePurityCompleteness.sbnd->Fill(chosenSlicePurityCompleteness);
+            sliceCompletenessCompleteness.sbnd->Fill(chosenSliceCompletenessCompleteness);
         
             numPFPsCompleteness.sbnd->Fill(numPFPsSliceCompleteness);
             ratioChosenSummedEnergyCompleteness.sbnd->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy / totalSliceEnergyCompleteness);
@@ -1251,6 +1547,11 @@ void nuESignal_macro(){
             ERecoHighestThetaTrueCRUMBS.nue->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenTrueParticle.angle * chosenTrueParticle.angle);
             ERecoSumThetaRecoCRUMBS.nue->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.nue->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+            
+            slicePurityCRUMBS.nue->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.nue->Fill(chosenSliceCompletenessCRUMBS);
+            slicePurityCompleteness.nue->Fill(chosenSlicePurityCompleteness);
+            sliceCompletenessCompleteness.nue->Fill(chosenSliceCompletenessCompleteness);
         
             numPFPsCompleteness.nue->Fill(numPFPsSliceCompleteness);
             ratioChosenSummedEnergyCompleteness.nue->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy / totalSliceEnergyCompleteness);
@@ -1274,6 +1575,11 @@ void nuESignal_macro(){
             ERecoHighestThetaTrueCRUMBS.nue_100k->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenTrueParticle.angle * chosenTrueParticle.angle);
             ERecoSumThetaRecoCRUMBS.nue_100k->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.nue_100k->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+            
+            slicePurityCRUMBS.nue_100k->Fill(chosenSlicePurityCRUMBS);
+            sliceCompletenessCRUMBS.nue_100k->Fill(chosenSliceCompletenessCRUMBS);
+            slicePurityCompleteness.nue_100k->Fill(chosenSlicePurityCompleteness);
+            sliceCompletenessCompleteness.nue_100k->Fill(chosenSliceCompletenessCompleteness);
         
             numPFPsCompleteness.nue_100k->Fill(numPFPsSliceCompleteness);
             ratioChosenSummedEnergyCompleteness.nue_100k->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy / totalSliceEnergyCompleteness);
@@ -1286,6 +1592,54 @@ void nuESignal_macro(){
             ERecoSumThetaRecoCompleteness.nue_100k->Fill(totalSliceEnergyCompleteness * chosenRecoParticleCompleteness.theta * chosenRecoParticleCompleteness.theta);
             ERecoHighestThetaRecoCompleteness.nue_100k->Fill(chosenRecoParticleCompleteness.bestPlaneEnergy * chosenRecoParticleCompleteness.theta * chosenRecoParticleCompleteness.theta);
         }
+
+        // HERE!!
+
+        if(makePerSlicePlots){
+            double vx = chosenRecoParticleCRUMBS.vx;
+            double vy = chosenRecoParticleCRUMBS.vy;
+            double vz = chosenRecoParticleCRUMBS.vz;
+
+            auto fillHistGroup = [&](histGroup& hg){
+                if(DLCurrent == 0){      
+                    hg.uboone->Fill(angleDiffCRUMBS);
+                    std::cout << "FILLED DLUBoone_________________________________________________" << std::endl;
+                }
+                else if(DLCurrent == 1) hg.dune->Fill(angleDiffCRUMBS);
+                else if(DLCurrent == 2){
+                    hg.current->Fill(angleDiffCRUMBS);
+                    std::cout << "FILLED Current_________________________________________________" << std::endl;
+                }
+                else if(DLCurrent == 3) hg.cheated->Fill(angleDiffCRUMBS);
+                else if(DLCurrent == 4) hg.sbnd->Fill(angleDiffCRUMBS);
+                else if(DLCurrent == 5) hg.nue->Fill(angleDiffCRUMBS);
+                else if(DLCurrent == 6) hg.nue_100k->Fill(angleDiffCRUMBS);
+            };
+
+            // Check X edges
+            for(auto& slice : xEdgeSlices){
+                if(vx >= slice.low && vx < slice.high){
+                    fillHistGroup(slice.hg);
+                    break;
+                }
+            }
+            // Check Y edges
+            for(auto& slice : yEdgeSlices){
+                if(vy >= slice.low && vy < slice.high){
+                    fillHistGroup(slice.hg);
+                    break;
+                }
+            }
+            // Check Z edges
+            for(auto& slice : zEdgeSlices){
+                if(vz >= slice.low && vz < slice.high){
+                    fillHistGroup(slice.hg);
+                    break;
+                }
+            }
+        }
+
+        // TO HERE!!!
 
         printf("Chosen True Neutrino: Vertex = (%f, %f, %f), CCNC = %f, PDG = %f, Lepton PDG = %f, TPC ID = %f, TPC Valid = %f\n", chosenTrueNeutrino.vx, chosenTrueNeutrino.vy, chosenTrueNeutrino.vz, chosenTrueNeutrino.CCNC, chosenTrueNeutrino.pdg, chosenTrueNeutrino.leptonpdg, chosenTrueNeutrino.tpcID, chosenTrueNeutrino.tpcValid);    
         printf("Chosen True Recoil Electron: Vertex = (%f, %f, %f), PDG = %f, Momentum = (%f, %f, %f), Energy = %f, Angle = %f, ETheta2 = %f, Direction = (%f, %f, %f)\n", chosenTrueParticle.vx, chosenTrueParticle.vy, chosenTrueParticle.vz, chosenTrueParticle.pdg, chosenTrueParticle.px, chosenTrueParticle.py, chosenTrueParticle.pz, chosenTrueParticle.energy, chosenTrueParticle.angle, chosenTrueParticle.ETheta2, chosenTrueParticle.dx, chosenTrueParticle.dy, chosenTrueParticle.dz);
@@ -1329,6 +1683,9 @@ void nuESignal_macro(){
     percentage(deltaYCRUMBS.current, deltaYCRUMBS.cheated, deltaYCRUMBS.dune, deltaYCRUMBS.uboone, deltaYCRUMBS.sbnd, deltaYCRUMBS.nue, deltaYCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaYCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
     percentage(deltaZCRUMBS.current, deltaZCRUMBS.cheated, deltaZCRUMBS.dune, deltaZCRUMBS.uboone, deltaZCRUMBS.sbnd, deltaZCRUMBS.nue, deltaZCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaZCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
     percentage(deltaRCRUMBS.current, deltaRCRUMBS.cheated, deltaRCRUMBS.dune, deltaRCRUMBS.uboone, deltaRCRUMBS.sbnd, deltaRCRUMBS.nue, deltaRCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaRCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+
+    styleDraw(trueZCRUMBS.canvas, trueZCRUMBS.current, trueZCRUMBS.cheated, trueZCRUMBS.dune, trueZCRUMBS.uboone, trueZCRUMBS.sbnd, trueZCRUMBS.nue, trueZCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "trueZCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(recoZCRUMBS.canvas, recoZCRUMBS.current, recoZCRUMBS.cheated, recoZCRUMBS.dune, recoZCRUMBS.uboone, recoZCRUMBS.sbnd, recoZCRUMBS.nue, recoZCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "recoZCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
 
     // CRUMBS PFP Plots
     styleDraw(numPFPsCRUMBS.canvas, numPFPsCRUMBS.current, numPFPsCRUMBS.cheated, numPFPsCRUMBS.dune, numPFPsCRUMBS.uboone, numPFPsCRUMBS.sbnd, numPFPsCRUMBS.nue, numPFPsCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
@@ -1423,4 +1780,265 @@ void nuESignal_macro(){
     styleDraw(trueETheta2.canvas, trueETheta2.current, trueETheta2.cheated, trueETheta2.dune, trueETheta2.uboone, trueETheta2.sbnd, trueETheta2.nue, trueETheta2.nue_100k, 999, 999, 999, 999, (base_path + "trueETheta2_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
     percentage(trueETheta2.current, trueETheta2.cheated, trueETheta2.dune, trueETheta2.uboone, trueETheta2.sbnd, trueETheta2.nue, trueETheta2.nue_100k, numEventsTrueElectron.current, numEventsTrueElectron.cheated, numEventsTrueElectron.dune, numEventsTrueElectron.uboone, numEventsTrueElectron.sbnd, numEventsTrueElectron.nue, numEventsTrueElectron.nue_100k, 999, 999, 999, 999, (base_path + "trueETheta2_perc.pdf").c_str(), 0.56, 0.88, 0.70, 0.86, &drawLine, &right);
     efficiency(trueETheta2.current, trueETheta2.cheated, trueETheta2.dune, trueETheta2.uboone, trueETheta2.sbnd, trueETheta2.nue, trueETheta2.nue_100k, numEventsTrueElectron.current, numEventsTrueElectron.cheated, numEventsTrueElectron.dune, numEventsTrueElectron.uboone, numEventsTrueElectron.sbnd, numEventsTrueElectron.nue, numEventsTrueElectron.nue_100k, 0, 1, 999, 999, (base_path + "trueETheta2_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{true}#theta_{true}^{2} (MeV rad^{2})");
+   
+    if(makePerSlicePlots){
+        for(auto& slice : xEdgeSlices){
+            styleDraw(slice.hg.canvas, slice.hg.current, slice.hg.cheated, slice.hg.dune, slice.hg.uboone, slice.hg.sbnd,
+                      slice.hg.nue, slice.hg.nue_100k, 999, 999, 0, 180,
+                      (base_path_perSlice + std::string(slice.hg.baseHist->GetName()) + ".pdf").c_str(),
+                       0.6, 0.9, 0.7, 0.9);
+            std::cout << "slice.hg.current entries: " << slice.hg.current->GetBinContent(3) << std::endl;
+            std::cout << "Integral (all bins): " << slice.hg.current->Integral(0, slice.hg.current->GetNbinsX()+1) << std::endl;
+        }
+        for(auto& slice : yEdgeSlices){
+            styleDraw(slice.hg.canvas, slice.hg.current, slice.hg.cheated, slice.hg.dune, slice.hg.uboone, slice.hg.sbnd,
+                      slice.hg.nue, slice.hg.nue_100k, 999, 999, 0, 180,
+                      (base_path_perSlice + std::string(slice.hg.baseHist->GetName()) + ".pdf").c_str(),
+                       0.6, 0.9, 0.7, 0.9);
+        }
+        for(auto& slice : zEdgeSlices){
+            styleDraw(slice.hg.canvas, slice.hg.current, slice.hg.cheated, slice.hg.dune, slice.hg.uboone, slice.hg.sbnd,
+                      slice.hg.nue, slice.hg.nue_100k, 999, 999, 0, 180,
+                      (base_path_perSlice + std::string(slice.hg.baseHist->GetName()) + ".pdf").c_str(),
+                       0.6, 0.9, 0.7, 0.9);
+        }
+    }
+
+    if(makePerSlicePlots){
+        
+        // Summary Plots for X Coordinate: BDT Vertexing
+        std::vector<double> xvals, yPeaks, yWidths;
+        for(const auto& slice : xEdgeSlices){
+            TH1F* hist = slice.hg.current;
+            double peakCenter = -1.0;
+            double width = -1.0;
+            std::cout << "slice.hg.current entries later: " << slice.hg.current->GetEntries() << std::endl;
+            if(slice.hg.current->GetEntries() > 0){
+                int peakBin = slice.hg.current->GetMaximumBin();
+                peakCenter = hist->GetBinCenter(peakBin);
+                width = hist->GetRMS();
+            }
+            double center = 0.5 * (slice.low + slice.high);
+            xvals.push_back(center);
+            yPeaks.push_back(peakCenter);
+            yWidths.push_back(width);
+        }
+
+        
+        TGraph* gXpeak = new TGraph(xvals.size(), xvals.data(), yPeaks.data());
+        gXpeak->SetTitle("X Peak Positions: BDT Vertexing;X Coordinate [cm];Angle Difference Peak [deg]");
+        gXpeak->SetMarkerStyle(20);
+        TCanvas* cXpeak = new TCanvas("cXpeak", "X slice peaks", 800, 600);
+        gXpeak->Draw("AP");
+        //cXpeak->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/X_BDT_peaks.pdf");
+        cXpeak->SaveAs((base_path + "X_BDT_peaks.pdf").c_str());
+        
+        TGraph* gXwidth = new TGraph(xvals.size(), xvals.data(), yWidths.data());
+        gXwidth->SetTitle("X Peak Widths: BDT Vertexing;X Coordinate [cm];Angle Difference RMS [deg]");
+        gXwidth->SetMarkerStyle(21);
+        TCanvas* cXwidth = new TCanvas("cXwidth", "X slice widths", 800, 600);
+        gXwidth->Draw("AP");
+        cXwidth->SaveAs((base_path + "X_BDT_widths.pdf").c_str());
+        //cXwidth->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/X_BDT_widths.pdf");
+
+        // Summary Plots for Y Coordinate: BDT Vertexing
+        xvals.clear(); yPeaks.clear(); yWidths.clear();
+        for(const auto& slice : yEdgeSlices){
+            TH1F* hist = slice.hg.current;
+            double peakCenter = -1.0;
+            double width = -1.0;
+            if(hist->GetEntries() > 0){
+                int peakBin = hist->GetMaximumBin();
+                peakCenter = hist->GetBinCenter(peakBin);
+                width = hist->GetRMS();
+            }
+            double center = 0.5 * (slice.low + slice.high);
+            xvals.push_back(center);
+            yPeaks.push_back(peakCenter);
+            yWidths.push_back(width);
+        }
+        
+        TGraph* gYpeak = new TGraph(xvals.size(), xvals.data(), yPeaks.data());
+        gYpeak->SetTitle("Y Peak Positions: BDT Vertexing;Y Coordinate [cm];Angle Difference Peak [deg]");
+        gYpeak->SetMarkerStyle(20);
+        TCanvas* cYpeak = new TCanvas("cYpeak", "Y slice peaks", 800, 600);
+        gYpeak->Draw("AP");
+        //cYpeak->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Y_BDT_peaks.pdf");
+        cYpeak->SaveAs((base_path + "Y_BDT_peaks.pdf").c_str());
+        
+        TGraph* gYwidth = new TGraph(xvals.size(), xvals.data(), yWidths.data());
+        gYwidth->SetTitle("Y Peak Widths: BDT Vertexing;Y Coordinate [cm];Angle Difference RMS [deg]");
+        gYwidth->SetMarkerStyle(21);
+        TCanvas* cYwidth = new TCanvas("cYwidth", "Y slice widths", 800, 600);
+        gYwidth->Draw("AP");
+        //cYwidth->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Y_BDT_widths.pdf");
+        cYwidth->SaveAs((base_path + "Y_BDT_width.pdf").c_str());
+
+        // Summary Plots for Z Coordinate
+        xvals.clear(); yPeaks.clear(); yWidths.clear();
+        for(const auto& slice : zEdgeSlices){
+            TH1F* hist = slice.hg.current;
+            double peakCenter = -1.0;
+            double width = -1.0;
+            if(hist->GetEntries() > 0){
+                int peakBin = hist->GetMaximumBin();
+                peakCenter = hist->GetBinCenter(peakBin);
+                width = hist->GetRMS();
+            }
+            double center = 0.5 * (slice.low + slice.high);
+            xvals.push_back(center);
+            yPeaks.push_back(peakCenter);
+            yWidths.push_back(width);
+        }
+        
+        TGraph* gZpeak = new TGraph(xvals.size(), xvals.data(), yPeaks.data());
+        gZpeak->SetTitle("Z Peak Positions: BDT Vertexing;Z coordinate [cm];Angle Difference Peak [deg]");
+        gZpeak->SetMarkerStyle(20);
+        TCanvas* cZpeak = new TCanvas("cZpeak", "Z slice peaks", 800, 600);
+        gZpeak->Draw("AP");
+        //cZpeak->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Z_BDT_peaks.pdf");
+        cZpeak->SaveAs((base_path + "Z_BDT_peaks.pdf").c_str());
+        
+        TGraph* gZwidth = new TGraph(xvals.size(), xvals.data(), yWidths.data());
+        gZwidth->SetTitle("Z Peak Widths (RMS): BDT Vertexing;Z coordinate [cm];Angle Difference RMS [deg]");
+        gZwidth->SetMarkerStyle(21);
+        TCanvas* cZwidth = new TCanvas("cZwidth", "Z slice widths", 800, 600);
+        gZwidth->Draw("AP");
+        //cZwidth->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Z_BDT_widths.pdf");
+        cZwidth->SaveAs((base_path + "Z_BDT_widths.pdf").c_str());
+    
+    
+        // Summary Plots for X Coordinate: DL Uboone Vertexing
+        std::vector<double> xvalsUboone, yPeaksUboone, yWidthsUboone;
+        for(const auto& slice : xEdgeSlices){
+            TH1F* histUboone = slice.hg.uboone;
+            double peakCenter = -1.0;
+            double width = -1.0;
+            if(slice.hg.uboone->GetEntries() > 0){
+                int peakBin = slice.hg.uboone->GetMaximumBin();
+                peakCenter = histUboone->GetBinCenter(peakBin);
+                width = histUboone->GetRMS();
+            }
+            double center = 0.5 * (slice.low + slice.high);
+            xvalsUboone.push_back(center);
+            yPeaksUboone.push_back(peakCenter);
+            yWidthsUboone.push_back(width);
+        }
+        
+        TGraph* gXpeakUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yPeaksUboone.data());
+        gXpeakUboone->SetTitle("X Peak Positions: DL Uboone Vertexing;X Coordinate [cm];Angle Difference Peak [deg]");
+        gXpeakUboone->SetMarkerStyle(20);
+        TCanvas* cXpeakUboone = new TCanvas("cXpeakUboone", "X slice peaks", 800, 600);
+        gXpeakUboone->Draw("AP");
+        //cXpeakUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/X_DLUboone_peaks.pdf");
+        cXpeakUboone->SaveAs((base_path + "X_DLUboone_peaks.pdf").c_str());
+        
+        TGraph* gXwidthUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yWidthsUboone.data());
+        gXwidthUboone->SetTitle("X Peak Widths: DL Uboone Vertexing;X Coordinate [cm];Angle Difference RMS [deg]");
+        gXwidthUboone->SetMarkerStyle(21);
+        TCanvas* cXwidthUboone = new TCanvas("cXwidthUboone", "X slice widths", 800, 600);
+        gXwidthUboone->Draw("AP");
+        //cXwidthUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/X_DLUboone_widths.pdf");
+        cXwidthUboone->SaveAs((base_path + "X_DLUboone_widths.pdf").c_str());
+
+        // Summary Plots for Y Coordinate: DL Uboone Vertexing
+        xvalsUboone.clear(); yPeaksUboone.clear(); yWidthsUboone.clear();
+        for(const auto& slice : yEdgeSlices){
+            TH1F* histUboone = slice.hg.uboone;
+            double peakCenter = -1.0;
+            double width = -1.0;
+            if(histUboone->GetEntries() > 0){
+                int peakBin = histUboone->GetMaximumBin();
+                peakCenter = histUboone->GetBinCenter(peakBin);
+                width = histUboone->GetRMS();
+            }
+            double center = 0.5 * (slice.low + slice.high);
+            xvalsUboone.push_back(center);
+            yPeaksUboone.push_back(peakCenter);
+            yWidthsUboone.push_back(width);
+        }
+        
+        TGraph* gYpeakUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yPeaksUboone.data());
+        gYpeakUboone->SetTitle("Y Peak Positions: DL Uboone Vertexing;Y Coordinate [cm];Angle Difference Peak [deg]");
+        gYpeakUboone->SetMarkerStyle(20);
+        TCanvas* cYpeakUboone = new TCanvas("cYpeakUboone", "Y slice peaks", 800, 600);
+        gYpeakUboone->Draw("AP");
+        //cYpeakUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Y_DLUboone_peaks.pdf");
+        cYpeakUboone->SaveAs((base_path + "Y_DLUboone_peaks.pdf").c_str());
+        
+        TGraph* gYwidthUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yWidthsUboone.data());
+        gYwidthUboone->SetTitle("Y Peak Widths: DL Uboone Vertexing;Y Coordinate [cm];Angle Difference RMS [deg]");
+        gYwidthUboone->SetMarkerStyle(21);
+        TCanvas* cYwidthUboone = new TCanvas("cYwidthUboone", "Y slice widths", 800, 600);
+        gYwidthUboone->Draw("AP");
+        //cYwidthUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Y_DLUboone_widths.pdf");
+        cYwidthUboone->SaveAs((base_path + "Y_DLUboone_widths.pdf").c_str());
+
+        // Summary Plots for Z Coordinate
+        xvalsUboone.clear(); yPeaksUboone.clear(); yWidthsUboone.clear();
+        for(const auto& slice : zEdgeSlices){
+            TH1F* histUboone = slice.hg.uboone;
+            double peakCenter = -1.0;
+            double width = -1.0;
+            if(histUboone->GetEntries() > 0){
+                int peakBin = histUboone->GetMaximumBin();
+                peakCenter = histUboone->GetBinCenter(peakBin);
+                width = histUboone->GetRMS();
+            }
+            double center = 0.5 * (slice.low + slice.high);
+            xvalsUboone.push_back(center);
+            yPeaksUboone.push_back(peakCenter);
+            yWidthsUboone.push_back(width);
+        }
+        
+        TGraph* gZpeakUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yPeaksUboone.data());
+        gZpeakUboone->SetTitle("Z Peak Positions: DL Uboone Vertexing;Z coordinate [cm];Angle Difference Peak [deg]");
+        gZpeakUboone->SetMarkerStyle(20);
+        TCanvas* cZpeakUboone = new TCanvas("cZpeakUboone", "Z slice peaks", 800, 600);
+        gZpeakUboone->Draw("AP");
+        //cZpeakUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Z_DLUboone_peaks.pdf");
+        cZpeakUboone->SaveAs((base_path + "Z_DLUboone_peaks.pdf").c_str());
+        
+        TGraph* gZwidthUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yWidthsUboone.data());
+        gZwidthUboone->SetTitle("Z Peak Widths (RMS): DL Uboone Vertexing;Z coordinate [cm];Angle Difference RMS [deg]");
+        gZwidthUboone->SetMarkerStyle(21);
+        TCanvas* cZwidthUboone = new TCanvas("cZwidthUboone", "Z slice widths", 800, 600);
+        gZwidthUboone->Draw("AP");
+        //cZwidthUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Z_DLUboone_widths.pdf");
+        cZwidthUboone->SaveAs((base_path + "Z_DLUboone_widths.pdf").c_str());
+    }
+
+    TwoDHistDraw(xCoordAngleDifferenceBDTCRUMBS, (base_path + "angleDiffPosition_x_BDT.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceBDTCRUMBS, (base_path + "angleDiffPosition_y_BDT.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceBDTCRUMBS, (base_path + "angleDiffPosition_z_BDT.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(xCoordAngleDifferenceBDTCRUMBS_low, (base_path + "angleDiffPosition_x_BDT_low.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceBDTCRUMBS_low, (base_path + "angleDiffPosition_y_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceBDTCRUMBS_low, (base_path + "angleDiffPosition_z_BDT_low.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(xCoordAngleDifferenceBDTCRUMBS_high, (base_path + "angleDiffPosition_x_BDT_high.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceBDTCRUMBS_high, (base_path + "angleDiffPosition_y_BDT_high.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceBDTCRUMBS_high, (base_path + "angleDiffPosition_z_BDT_high.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+
+    ProfileDraw(xCoordAngleDifferenceBDTCRUMBSProfile, (base_path + "angleDiffPositionProfile_x_BDT.pdf").c_str(), "Profile of Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    ProfileDraw(yCoordAngleDifferenceBDTCRUMBSProfile, (base_path + "angleDiffPositionProfile_y_BDT.pdf").c_str(), "Profile of Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    ProfileDraw(zCoordAngleDifferenceBDTCRUMBSProfile, (base_path + "angleDiffPositionProfile_z_BDT.pdf").c_str(), "Profile of Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    ProfileDraw(xCoordAngleDifferenceBDTCRUMBSProfile_low, (base_path + "angleDiffPositionProfile_x_BDT_low.pdf").c_str(), "Profile of Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    ProfileDraw(yCoordAngleDifferenceBDTCRUMBSProfile_low, (base_path + "angleDiffPositionProfile_y_BDT_low.pdf").c_str(), "Profile of Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    ProfileDraw(zCoordAngleDifferenceBDTCRUMBSProfile_low, (base_path + "angleDiffPositionProfile_z_BDT_low.pdf").c_str(), "Profile of Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+    ProfileDraw(xCoordAngleDifferenceBDTCRUMBSProfile_high, (base_path + "angleDiffPositionProfile_x_BDT_high.pdf").c_str(), "Profile of Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    ProfileDraw(yCoordAngleDifferenceBDTCRUMBSProfile_high, (base_path + "angleDiffPositionProfile_y_BDT_high.pdf").c_str(), "Profile of Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    ProfileDraw(zCoordAngleDifferenceBDTCRUMBSProfile_high, (base_path + "angleDiffPositionProfile_z_BDT_high.pdf").c_str(), "Profile of Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+
+    TwoDHistDraw(xCoordAngleDifferenceDLUbooneCRUMBS, (base_path + "angleDiffPosition_x_DLUboone.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(yCoordAngleDifferenceDLUbooneCRUMBS, (base_path + "angleDiffPosition_y_DLUboone.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
+    TwoDHistDraw(zCoordAngleDifferenceDLUbooneCRUMBS, (base_path + "angleDiffPosition_z_DLUboone.pdf").c_str(), "Reco Neutrino Vertex Z Coordinate vs Angle Between True and Reco Track: DL Uboone Vertexing;Reco Neutrino Vertex Z Coordinate (cm);Angle Difference (degrees)");
+
+    makeEqualStatProfile(xVals_xCoord, yVals, 25, -201.3, 201.3, "xCoordAngleDifferenceBDTCRUMBSProfile_equalStats", "Profile of Reco Neutrino Vertex X Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino X Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_x_BDT_equalStats.pdf").c_str());
+    makeEqualStatProfile(xVals_yCoord, yVals, 25, -203.8, 203.8, "yCoordAngleDifferenceBDTCRUMBSProfile_equalStats", "Profile of Reco Neutrino Vertex Y Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino Y Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_y_BDT_equalStats.pdf").c_str());
+    makeEqualStatProfile(xVals_zCoord, yVals, 25, 0, 509.5, "zCoordAngleDifferenceBDTCRUMBSProfile_equalStats", "Profile of Reco Neutrino Vertex Z Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino Z Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_z_BDT_equalStats.pdf").c_str());
+    makeEqualStatProfile(xVals_xCoord, yVals, 25, -201.3, -171.3, "xCoordAngleDifferenceBDTCRUMBSProfile_low_equalStats", "Profile of Reco Neutrino Vertex X Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino X Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_x_BDT_low_equalStats.pdf").c_str());
+    makeEqualStatProfile(xVals_yCoord, yVals, 25, -203.8, -173.8, "yCoordAngleDifferenceBDTCRUMBSProfile_low_equalStats", "Profile of Reco Neutrino Vertex Y Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino Y Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_y_BDT_low_equalStats.pdf").c_str());
+    makeEqualStatProfile(xVals_zCoord, yVals, 25, 0, 40, "zCoordAngleDifferenceBDTCRUMBSProfile_low_equalStats", "Profile of Reco Neutrino Vertex Z Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino Z Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_z_BDT_low_equalStats.pdf").c_str());
+    makeEqualStatProfile(xVals_xCoord, yVals, 27, 171.3, 201.3, "xCoordAngleDifferenceBDTCRUMBSProfile_high_equalStats", "Profile of Reco Neutrino Vertex X Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino X Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_x_BDT_high_equalStats.pdf").c_str());
+    makeEqualStatProfile(xVals_yCoord, yVals, 30, 173.8, 203.8, "yCoordAngleDifferenceBDTCRUMBSProfile_high_equalStats", "Profile of Reco Neutrino Vertex Y Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino Y Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_y_BDT_high_equalStats.pdf").c_str());
+    makeEqualStatProfile(xVals_zCoord, yVals, 30, 469.5, 509.5, "zCoordAngleDifferenceBDTCRUMBSProfile_high_equalStats", "Profile of Reco Neutrino Vertex Z Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino Z Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_z_BDT_high_equalStats.pdf").c_str());
 }
