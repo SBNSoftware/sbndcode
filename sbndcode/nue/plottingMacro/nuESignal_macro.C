@@ -850,6 +850,14 @@ void nuESignal_macro(){
     TProfile *yCoordAngleDifferenceBDTCRUMBSProfile_high = new TProfile("yCoordAngleDifferenceBDTCRUMBSProfile_high", "", 10, (yMax - 20), yMax, 0, 180);
     TProfile *zCoordAngleDifferenceBDTCRUMBSProfile_high = new TProfile("zCoordAngleDifferenceBDTCRUMBSProfile_high", "", 20, (zMax - 40), zMax, 0, 180);
 
+    TH2D *numPFPsAngleDifferenceBDTCRUMBS = new TH2D("numPFPsAngleDifferenceBDTCRUMBS", "", 7, 0, 7, 45, 0, 180);
+    TH2D *numPFPsERecoSumThetaRecoBDTCRUMBS = new TH2D("numPFPsERecoSumThetaRecoBDTCRUMBS", "", 7, 0, 7, 14, 0, 14);
+    TH2D *numPFPsERecoHighestThetaRecoBDTCRUMBS = new TH2D("numPFPsERecoHighestThetaRecoBDTCRUMBS", "", 7, 0, 7, 14, 0, 14);
+
+    TProfile *numPFPsAngleDifferenceBDTCRUMBSProfile = new TProfile("numPFPsAngleDifferenceBDTCRUMBSProfile", "", 7, 0, 7, 0, 180); 
+    TProfile *numPFPsERecoSumThetaRecoBDTCRUMBSProfile = new TProfile("numPFPsERecoSumThetaRecoBDTCRUMBSProfile", "", 7, 0, 7, 0, 14); 
+    TProfile *numPFPsERecoHighestThetaRecoBDTCRUMBSProfile = new TProfile("numPFPsERecoHighestThetaRecoBDTCRUMBSProfile", "", 7, 0, 7, 0, 14); 
+
     std::vector<double> xVals_xCoord;
     std::vector<double> xVals_yCoord;
     std::vector<double> xVals_zCoord;
@@ -1438,7 +1446,15 @@ void nuESignal_macro(){
             ERecoHighestThetaTrueCRUMBS.current->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenTrueParticle.angle * chosenTrueParticle.angle);
             ERecoSumThetaRecoCRUMBS.current->Fill(totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
             ERecoHighestThetaRecoCRUMBS.current->Fill(chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta);
+           
+            numPFPsAngleDifferenceBDTCRUMBS->Fill(numPFPsSliceCRUMBS, angleDiffCRUMBS);
+            numPFPsERecoSumThetaRecoBDTCRUMBS->Fill(numPFPsSliceCRUMBS, (totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta));
+            numPFPsERecoHighestThetaRecoBDTCRUMBS->Fill(numPFPsSliceCRUMBS, (chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta));
             
+            numPFPsAngleDifferenceBDTCRUMBSProfile->Fill(numPFPsSliceCRUMBS, angleDiffCRUMBS);
+            numPFPsERecoSumThetaRecoBDTCRUMBSProfile->Fill(numPFPsSliceCRUMBS, (totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta));
+            numPFPsERecoHighestThetaRecoBDTCRUMBSProfile->Fill(numPFPsSliceCRUMBS, (chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta));
+
             xCoordAngleDifferenceBDTCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vx, angleDiffCRUMBS); 
             yCoordAngleDifferenceBDTCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vy, angleDiffCRUMBS); 
             zCoordAngleDifferenceBDTCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vz, angleDiffCRUMBS); 
@@ -2041,4 +2057,12 @@ void nuESignal_macro(){
     makeEqualStatProfile(xVals_xCoord, yVals, 27, 171.3, 201.3, "xCoordAngleDifferenceBDTCRUMBSProfile_high_equalStats", "Profile of Reco Neutrino Vertex X Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino X Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_x_BDT_high_equalStats.pdf").c_str());
     makeEqualStatProfile(xVals_yCoord, yVals, 30, 173.8, 203.8, "yCoordAngleDifferenceBDTCRUMBSProfile_high_equalStats", "Profile of Reco Neutrino Vertex Y Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino Y Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_y_BDT_high_equalStats.pdf").c_str());
     makeEqualStatProfile(xVals_zCoord, yVals, 30, 469.5, 509.5, "zCoordAngleDifferenceBDTCRUMBSProfile_high_equalStats", "Profile of Reco Neutrino Vertex Z Coordinate vs Angle Betwee True and Reco Track: BDT Vertexing;Reco Neutrino Z Coordinate (cm);Angle Difference (degrees)", (base_path + "angleDiffPositionProfile_z_BDT_high_equalStats.pdf").c_str());
+    
+    TwoDHistDraw(numPFPsAngleDifferenceBDTCRUMBS, (base_path + "angleDiffPFPNum_BDT.pdf").c_str(), "Number of PFPs in Slice with Highest CRUMBS Score vs Angle Between True and Reco Track: BDT Vertexing;Number of PFPs;Angle Difference (degrees)");
+    TwoDHistDraw(numPFPsERecoSumThetaRecoBDTCRUMBS, (base_path + "ERecoSumThetaRecoPFPNum_BDT.pdf").c_str(), "Number of PFPs vs E_{reco}#theta_{true}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)");
+    TwoDHistDraw(numPFPsERecoHighestThetaRecoBDTCRUMBS, (base_path + "ERecoHighestThetaRecoPFPNum_BDT.pdf").c_str(), "Number of PFPs vs E_{reco}#theta_{true}^{2} for E_{reco} Being the Energy of the Highest Energy PFP in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)");
+    
+    ProfileDraw(numPFPsAngleDifferenceBDTCRUMBSProfile, (base_path + "angleDiffPFPNumProfile_BDT.pdf").c_str(), "Profile of Number of PFPs in Slice with Highest CRUMBS Score vs Angle Between True and Reco Track: BDT Vertexing;Number of PFPs;Angle Difference (degrees)");
+    ProfileDraw(numPFPsERecoSumThetaRecoBDTCRUMBSProfile, (base_path + "ERecoSumThetaRecoPFPNumProfile_BDT.pdf").c_str(), "Profile of Number of PFPs vs E_{reco}#theta_{true}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)");
+    ProfileDraw(numPFPsERecoHighestThetaRecoBDTCRUMBSProfile, (base_path + "ERecoHighestThetaRecoPFPNumProfile_BDT.pdf").c_str(), "Profile of Number of PFPs vs E_{reco}#theta_{true}^{2} for E_{reco} Being the Energy of the Highest Energy PFP in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)");
 }
