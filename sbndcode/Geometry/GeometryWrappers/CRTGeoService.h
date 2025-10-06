@@ -1,8 +1,8 @@
-#ifndef CRTGEOALG_H_SEEN
-#define CRTGEOALG_H_SEEN
+#ifndef SBNDCRTGEOSERVICE_H_SEEN
+#define SBNDCRTGEOSERVICE_H_SEEN
 
 ///////////////////////////////////////////////
-// CRTGeoAlg.h
+// CRTGeoService.h
 //
 // Wrapper for some awkward CRT geometry things
 // T Brooks (tbrooks@fnal.gov), November 2018
@@ -254,7 +254,7 @@ namespace sbnd::crt {
   };
 
 
-  class CRTGeoAlg {
+  class CRTGeoService {
   public:
 
     struct Config {
@@ -268,15 +268,9 @@ namespace sbnd::crt {
       };
     };
 
-    CRTGeoAlg(const Config& config, geo::GeometryCore const *geometry,
-              geo::AuxDetGeometryCore const *auxdet_geometry);
+    CRTGeoService(fhicl::ParameterSet const& pset);
 
-    CRTGeoAlg(const Config& config);
-
-    CRTGeoAlg(const fhicl::ParameterSet& pset) :
-      CRTGeoAlg(fhicl::Table<Config>(pset, {})()) {}
-
-    ~CRTGeoAlg();
+    ~CRTGeoService();
 
     std::vector<double> CRTLimits() const;
 
@@ -374,5 +368,7 @@ namespace sbnd::crt {
     bool   fMC;
   };
 }
+
+DECLARE_ART_SERVICE(sbnd::crt::CRTGeoService, LEGACY)
 
 #endif
