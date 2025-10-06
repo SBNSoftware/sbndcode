@@ -1,19 +1,13 @@
-#include "CRTGeoAlg.h"
+#include "CRTGeoService.h"
 
 namespace sbnd::crt {
 
-  CRTGeoAlg::CRTGeoAlg(const Config& config) :
-    CRTGeoAlg(config, lar::providerFrom<geo::Geometry>(),
-              ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr())
-  {}
-
-  CRTGeoAlg::CRTGeoAlg(const Config& config, geo::GeometryCore const *geometry,
-                       geo::AuxDetGeometryCore const *auxdet_geometry)
-    : fDefaultGain(config.DefaultGain())
-    , fMC(config.MC())
+  CRTGeoService::CRTGeoService(fhicl::ParameterSet const& pset)
+    : fDefaultGain(pset.get<double>("DefaultGain"))
+    , fMC(pset.get<bool>("MC"))
   {
-    fGeometryService = geometry;
-    fAuxDetGeoCore   = auxdet_geometry;
+    fGeometryService = lar::providerFrom<geo::Geometry>();
+    fAuxDetGeoCore   = ((const geo::AuxDetGeometry*)&(*art::ServiceHandle<geo::AuxDetGeometry>()))->GetProviderPtr();
     TGeoManager* manager = fGeometryService->ROOTGeoManager();
 
     // Record used objects
@@ -157,9 +151,9 @@ namespace sbnd::crt {
       }
   }
 
-  CRTGeoAlg::~CRTGeoAlg() {}
+  CRTGeoService::~CRTGeoService() {}
 
-  std::vector<double> CRTGeoAlg::CRTLimits() const {
+  std::vector<double> CRTGeoService::CRTLimits() const {
     std::vector<double> limits;
 
     std::vector<double> minXs;
@@ -186,62 +180,62 @@ namespace sbnd::crt {
     return limits;
   }
 
-  size_t CRTGeoAlg::NumTaggers() const
+  size_t CRTGeoService::NumTaggers() const
   {
     return fTaggers.size();
   }
 
-  size_t CRTGeoAlg::NumModules() const
+  size_t CRTGeoService::NumModules() const
   {
     return fModules.size();
   }
 
-  size_t CRTGeoAlg::NumStrips() const
+  size_t CRTGeoService::NumStrips() const
   {
     return fStrips.size();
   }
 
-  size_t CRTGeoAlg::NumSiPMs() const
+  size_t CRTGeoService::NumSiPMs() const
   {
     return fSiPMs.size();
   }
 
-  std::map<std::string, CRTTaggerGeo> CRTGeoAlg::GetTaggers() const
+  std::map<std::string, CRTTaggerGeo> CRTGeoService::GetTaggers() const
   {
     return fTaggers;
   }
 
-  std::map<std::string, CRTModuleGeo> CRTGeoAlg::GetModules() const
+  std::map<std::string, CRTModuleGeo> CRTGeoService::GetModules() const
   {
     return fModules;
   }
 
-  std::map<std::string, CRTStripGeo> CRTGeoAlg::GetStrips() const
+  std::map<std::string, CRTStripGeo> CRTGeoService::GetStrips() const
   {
     return fStrips;
   }
 
-  std::map<uint16_t, CRTSiPMGeo> CRTGeoAlg::GetSiPMs() const
+  std::map<uint16_t, CRTSiPMGeo> CRTGeoService::GetSiPMs() const
   {
     return fSiPMs;
   }
 
-  CRTTaggerGeo CRTGeoAlg::GetTagger(const std::string taggerName) const
+  CRTTaggerGeo CRTGeoService::GetTagger(const std::string taggerName) const
   {
     return fTaggers.at(taggerName);
   }
 
-  CRTModuleGeo CRTGeoAlg::GetModule(const std::string moduleName) const
+  CRTModuleGeo CRTGeoService::GetModule(const std::string moduleName) const
   {
     return fModules.at(moduleName);
   }
 
-  CRTModuleGeo CRTGeoAlg::GetModule(const uint16_t channel) const
+  CRTModuleGeo CRTGeoService::GetModule(const uint16_t channel) const
   {
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName);
   }
 
-  CRTModuleGeo CRTGeoAlg::GetModuleByAuxDetIndex(const unsigned ad_i) const
+  CRTModuleGeo CRTGeoService::GetModuleByAuxDetIndex(const unsigned ad_i) const
   {
     for(auto const &[name, module] : fModules)
       {
@@ -253,17 +247,17 @@ namespace sbnd::crt {
     return void_return;
   }
 
-  CRTStripGeo CRTGeoAlg::GetStrip(const std::string stripName) const
+  CRTStripGeo CRTGeoService::GetStrip(const std::string stripName) const
   {
     return fStrips.at(stripName);
   }
 
-  CRTStripGeo CRTGeoAlg::GetStrip(const uint16_t channel) const
+  CRTStripGeo CRTGeoService::GetStrip(const uint16_t channel) const
   {
     return fStrips.at(fSiPMs.at(channel).stripName);
   }
 
-  CRTStripGeo CRTGeoAlg::GetStripByAuxDetIndices(const unsigned ad_i, const unsigned ads_i) const
+  CRTStripGeo CRTGeoService::GetStripByAuxDetIndices(const unsigned ad_i, const unsigned ads_i) const
   {
     const CRTModuleGeo module = GetModule(ad_i);
     const uint16_t channel = 32 * ad_i + 2 * ads_i;
@@ -271,12 +265,12 @@ namespace sbnd::crt {
     return GetStrip(channel);
   }
 
-  CRTSiPMGeo CRTGeoAlg::GetSiPM(const uint16_t channel) const
+  CRTSiPMGeo CRTGeoService::GetSiPM(const uint16_t channel) const
   {
     return fSiPMs.at(channel);
   }
 
-  std::string CRTGeoAlg::GetTaggerName(const std::string name) const
+  std::string CRTGeoService::GetTaggerName(const std::string name) const
   {
     if(fStrips.find(name) != fStrips.end())
       return fModules.at(fStrips.at(name).moduleName).taggerName;
@@ -286,32 +280,32 @@ namespace sbnd::crt {
     return "";
   }
 
-  std::string CRTGeoAlg::ChannelToStripName(const uint16_t channel) const
+  std::string CRTGeoService::ChannelToStripName(const uint16_t channel) const
   {
     return fSiPMs.at(channel).stripName;
   }
 
-  std::string CRTGeoAlg::ChannelToTaggerName(const uint16_t channel) const
+  std::string CRTGeoService::ChannelToTaggerName(const uint16_t channel) const
   {
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).taggerName;
   }
 
-  enum CRTTagger CRTGeoAlg::ChannelToTaggerEnum(const uint16_t channel) const
+  enum CRTTagger CRTGeoService::ChannelToTaggerEnum(const uint16_t channel) const
   {
     return CRTCommonUtils::GetTaggerEnum(ChannelToTaggerName(channel));
   }
 
-  enum CRTTagger CRTGeoAlg::AuxDetIndexToTaggerEnum(const unsigned ad_i) const
+  enum CRTTagger CRTGeoService::AuxDetIndexToTaggerEnum(const unsigned ad_i) const
   {
     return CRTCommonUtils::GetTaggerEnum(GetModuleByAuxDetIndex(ad_i).taggerName);
   }
 
-  size_t CRTGeoAlg::ChannelToOrientation(const uint16_t channel) const
+  size_t CRTGeoService::ChannelToOrientation(const uint16_t channel) const
   {
     return fModules.at(fStrips.at(fSiPMs.at(channel).stripName).moduleName).orientation;
   }
 
-  std::array<double, 6> CRTGeoAlg::StripHit3DPos(const uint16_t channel, const double x,
+  std::array<double, 6> CRTGeoService::StripHit3DPos(const uint16_t channel, const double x,
                                                  const double ex)
   {
     const CRTStripGeo &strip = GetStrip(channel);
@@ -337,7 +331,7 @@ namespace sbnd::crt {
     return limits;
   }
 
-  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
+  std::vector<double> CRTGeoService::StripWorldToLocalPos(const CRTStripGeo &strip, const double x,
                                                       const double y, const double z)
   {
     const uint16_t adsID = strip.adsID;
@@ -352,14 +346,14 @@ namespace sbnd::crt {
     return localvec;
   }
 
-  std::vector<double> CRTGeoAlg::StripWorldToLocalPos(const uint16_t channel, const double x,
+  std::vector<double> CRTGeoService::StripWorldToLocalPos(const uint16_t channel, const double x,
                                                       const double y, const double z)
   {
     const CRTStripGeo strip = GetStrip(channel);
     return StripWorldToLocalPos(strip, x, y, z);
   }
 
-  std::array<double, 6> CRTGeoAlg::FEBWorldPos(const CRTModuleGeo &module)
+  std::array<double, 6> CRTGeoService::FEBWorldPos(const CRTModuleGeo &module)
   {
     const geo::AuxDetGeo &auxDet = fAuxDetGeoCore->AuxDetGeoVec()[module.adID];
 
@@ -388,7 +382,7 @@ namespace sbnd::crt {
     return {minX, maxX, minY, maxY, minZ, maxZ};
   }
 
-  std::array<double, 6> CRTGeoAlg::FEBChannel0WorldPos(const CRTModuleGeo &module)
+  std::array<double, 6> CRTGeoService::FEBChannel0WorldPos(const CRTModuleGeo &module)
   {
     const geo::AuxDetGeo &auxDet = fAuxDetGeoCore->AuxDetGeoVec()[module.adID];
 
@@ -423,19 +417,19 @@ namespace sbnd::crt {
     return {minX, maxX, minY, maxY, minZ, maxZ};
   }
 
-  geo::Point_t CRTGeoAlg::ChannelToSipmPosition(const uint16_t channel) const
+  geo::Point_t CRTGeoService::ChannelToSipmPosition(const uint16_t channel) const
   {
     const CRTSiPMGeo &sipm = fSiPMs.at(channel);
     return {sipm.x, sipm.y, sipm.z};
   }
 
-  std::pair<int, int> CRTGeoAlg::GetStripSipmChannels(const std::string stripName) const
+  std::pair<int, int> CRTGeoService::GetStripSipmChannels(const std::string stripName) const
   {
     const CRTStripGeo &strip = fStrips.at(stripName);
     return std::make_pair(strip.channel0, strip.channel1);
   }
 
-  double CRTGeoAlg::DistanceDownStrip(const geo::Point_t position, const std::string stripName) const
+  double CRTGeoService::DistanceDownStrip(const geo::Point_t position, const std::string stripName) const
   {
     // === TO-DO ===
     // This assumes that the CRT is arranged such that its three axes map onto the
@@ -458,14 +452,14 @@ namespace sbnd::crt {
     return std::abs(distance);
   }
 
-  double CRTGeoAlg::DistanceDownStrip(const geo::Point_t position, const uint16_t channel) const
+  double CRTGeoService::DistanceDownStrip(const geo::Point_t position, const uint16_t channel) const
   {
     const CRTSiPMGeo sipm = fSiPMs.at(channel);
 
     return DistanceDownStrip(position, sipm.stripName);
   }
 
-  bool CRTGeoAlg::CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer)
+  bool CRTGeoService::CheckOverlap(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer)
   {
     const CRTTagger tagger1 = CRTCommonUtils::GetTaggerEnum(ChannelToTaggerName(strip1.channel0));
     const CRTTagger tagger2 = CRTCommonUtils::GetTaggerEnum(ChannelToTaggerName(strip2.channel0));
@@ -495,7 +489,7 @@ namespace sbnd::crt {
       }
   }
 
-  bool CRTGeoAlg::CheckOverlap(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer)
+  bool CRTGeoService::CheckOverlap(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer)
   {
     CRTStripGeo strip1 = GetStrip(channel1);
     CRTStripGeo strip2 = GetStrip(channel2);
@@ -503,7 +497,7 @@ namespace sbnd::crt {
     return CheckOverlap(strip1, strip2, overlap_buffer);
   }
 
-  bool CRTGeoAlg::AdjacentStrips(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer)
+  bool CRTGeoService::AdjacentStrips(const CRTStripGeo &strip1, const CRTStripGeo &strip2, const double overlap_buffer)
   {
     CRTModuleGeo module1 = GetModule(strip1.channel0);
     CRTModuleGeo module2 = GetModule(strip2.channel0);
@@ -531,7 +525,7 @@ namespace sbnd::crt {
       return false;
   }
 
-  bool CRTGeoAlg::AdjacentStrips(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer)
+  bool CRTGeoService::AdjacentStrips(const uint16_t channel1, const uint16_t channel2, const double overlap_buffer)
   {
     CRTStripGeo strip1 = GetStrip(channel1);
     CRTStripGeo strip2 = GetStrip(channel2);
@@ -539,7 +533,7 @@ namespace sbnd::crt {
     return AdjacentStrips(strip1, strip2, overlap_buffer);
   }
 
-  bool CRTGeoAlg::DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2)
+  bool CRTGeoService::DifferentOrientations(const CRTStripGeo &strip1, const CRTStripGeo &strip2)
   {
     const CRTModuleGeo module1 = GetModule(strip1.moduleName);
     const CRTModuleGeo module2 = GetModule(strip2.moduleName);
@@ -547,7 +541,7 @@ namespace sbnd::crt {
     return module1.orientation != module2.orientation;
   }
 
-  enum CRTTagger CRTGeoAlg::WhichTagger(const double &x, const double &y, const double &z, const double &buffer)
+  enum CRTTagger CRTGeoService::WhichTagger(const double &x, const double &y, const double &z, const double &buffer)
   {
     for(auto const& [name, tagger] : fTaggers)
       {
@@ -562,7 +556,7 @@ namespace sbnd::crt {
     return kUndefinedTagger;
   }
 
-  enum CoordSet CRTGeoAlg::GlobalConstrainedCoordinates(const uint16_t channel)
+  enum CoordSet CRTGeoService::GlobalConstrainedCoordinates(const uint16_t channel)
   {
     const std::string taggerName = ChannelToTaggerName(channel);
     const CRTTagger tagger       = CRTCommonUtils::GetTaggerEnum(taggerName);
@@ -574,7 +568,7 @@ namespace sbnd::crt {
     return widthdir | taggercoord;
   }
 
-  bool CRTGeoAlg::IsPointInsideCRTLimits(const geo::Point_t &point)
+  bool CRTGeoService::IsPointInsideCRTLimits(const geo::Point_t &point)
   {
     const std::vector<double> lims = CRTLimits();
 
@@ -583,3 +577,5 @@ namespace sbnd::crt {
            (point.Z() > lims[2] && point.Z() < lims[5]);
   }
 }
+
+DEFINE_ART_SERVICE(sbnd::crt::CRTGeoService)

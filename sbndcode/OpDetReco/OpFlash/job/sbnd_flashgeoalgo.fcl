@@ -10,7 +10,8 @@ FlashGeoThreshold:
 {
   tool_type: "FlashGeoThreshold"
   PDTypes: ["pmt_coated", "pmt_uncoated"]
-  Threshold: 0.8
+  ThresholdY: 0.75
+  ThresholdZ: 0.45
   NormalizeByPDType: true
   WeightExp: 2
 }
