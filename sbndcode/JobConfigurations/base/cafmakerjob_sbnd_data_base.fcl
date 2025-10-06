@@ -156,6 +156,9 @@ physics.producers.cafmaker.TrackChi2PidLabel: "pandoraPidData"
 # Include 3D barycenter flahs matching 
 physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching"
 
+# Include Light Propagation Correction for OpFlash timing
+physics.producers.cafmaker.CorrectedOpFlashLabel: "lightpropagationcorrection"
+
 # Blinding not needed for MC
 physics.producers.cafmaker.CreateBlindedCAF: false
 
@@ -176,3 +179,6 @@ physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
 
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []
+
+physics.producers.cafmaker.SBNDFrameShiftInfoLabel: "frameshift"
+physics.producers.cafmaker.SBNDTimingInfoLabel: "frameshift"
