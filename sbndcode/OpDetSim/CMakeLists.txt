@@ -7,7 +7,6 @@ cet_build_plugin( sbndPDMapAlg art::tool
                     lardataobj::Simulation
                     lardata::Utilities
                     lardataobj::RawData
-                    # lardataobj::RecoBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
                     larpandora::LArPandoraInterface
                     sbncode::OpDet_PDMapAlgSimple_tool
@@ -26,7 +25,6 @@ art_make_library( SOURCE
                     DigiArapucaSBNDAlg.cc
                     DigiPMTSBNDAlg.cc
                     opDetDigitizerSBND_module.cc
-                    #BeamRateCalibService_service.cc
                     opDetDigitizerWorker.cc
                     opDetSBNDTriggerAlg.cc
                     TriggerEmulationService.cc
@@ -36,7 +34,6 @@ art_make_library( SOURCE
                     lardataobj::Simulation
                     lardata::Utilities
                     lardataobj::RawData
-                    # lardataobj::RecoBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
                     larpandora::LArPandoraInterface
                     sbndcode::Utilities_SignalShapingServiceSBND_service
@@ -57,7 +54,6 @@ set (
                     lardata::Utilities
                     lardataobj::RawData
                     lardataobj::RecoBase
-                    lardataobj::RecoBase
                     lardataobj::headers
                     lardata::Utilities_LArFFT_service
                     lardataobj::AnalysisBase
@@ -71,7 +67,6 @@ set (
                     #sbnobj::SBND_CRT
                     #sbndcode_CRTUtils
                     sbnobj::SBND_Timing
-                    sbndcode_GeoWrappers
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
@@ -122,7 +117,6 @@ set (
                     lardataobj::RecoBase
                     lardataobj::AnalysisBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
-                    #sbndcode_OpDetSim_BeamRateCalibService_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
