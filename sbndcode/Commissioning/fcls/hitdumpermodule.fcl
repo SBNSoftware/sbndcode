@@ -1,4 +1,4 @@
-#include "crtgeoalg_sbnd.fcl"
+#include "crtgeoservice_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -51,7 +51,7 @@ hitdumper:
     SkipInduction:            false
     SelectEvents: []
 
-    CRTGeoAlg: @local::crtgeoalg_sbnd
+    CRTGeoService: @local::crtgeoservice_sbnd
 }
 
 hitdumper_data: @local::hitdumper
