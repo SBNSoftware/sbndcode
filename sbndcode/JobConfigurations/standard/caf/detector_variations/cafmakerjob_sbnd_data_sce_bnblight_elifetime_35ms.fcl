@@ -1,0 +1,9 @@
+# File: cafmakerjob_sbnd_data_sce_bnblight_elifetime_35ms.fcl
+# Author: Mun Jung Jung (munjung@uchicago.edu)
+# 
+# fcl to change the electron lifetime used in CAF
+# elifetime = 35ms
+
+#include "cafmakerjob_sbnd_data_sce_bnblight.fcl"
+
+services.DetectorPropertiesService.Electronlifetime: 35000

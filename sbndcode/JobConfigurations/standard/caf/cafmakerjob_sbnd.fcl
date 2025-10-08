@@ -127,6 +127,8 @@ physics:
 physics.producers.pandoraShowerRazzle.SimChannelLabel: "simtpc2d:simpleSC"
 physics.producers.pandoraTrackDazzle.SimChannelLabel: "simtpc2d:simpleSC"
 physics.producers.cnnid.WireLabel: "simtpc2d:gauss"
+# uncomment below line for to use DNN ROI SP for CNNID scores
+#physics.producers.cnnid.WireLabel: "simtpc2d:dnnsp"
 
 physics.producers.vertexCharge.CaloAlg: @local::sbnd_calorimetryalgmc
 physics.producers.vertexStub.CaloAlg: @local::sbnd_calorimetryalgmc
@@ -143,6 +145,9 @@ physics.producers.cafmaker.CreateBlindedCAF: false
 # More details can be found in here: https://sbn-docdb.fnal.gov/cgi-bin/sso/ShowDocument?docid=36869
 physics.producers.cafmaker.SaveGENIEEventRecord: true
 
+# Include OpFlash information
+physics.producers.cafmaker.OpFlashLabel: "opflash"
+
 # Include Simple/OpFlashes for PMT/XARAPUCA
 physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: [""]
@@ -152,6 +157,7 @@ physics.producers.cafmaker.TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatching
 
 # Overwrite weight_functions label:
 physics.producers.fluxweight.weight_functions: @local::physics.producers.fluxweight.weight_functions_flux
+physics.producers.geant4weight.weight_functions: @local::physics.producers.geant4weight.weight_functions_reint
 
 # input art file.
 physics.producers.cafmaker.SystWeightLabels: []

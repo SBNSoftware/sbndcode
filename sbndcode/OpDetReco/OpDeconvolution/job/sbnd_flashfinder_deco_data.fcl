@@ -1,0 +1,27 @@
+#include "sbnd_flashfinder_data.fcl"
+
+BEGIN_PROLOG
+
+####OpFlash finder for PMT deconvolved waveforms#####
+###TPC0
+SBNDDecoSimpleFlashTPC0_data: @local::SBNDSimpleFlashTPC0_data
+SBNDDecoSimpleFlashTPC0_data.PECalib.SPEAreaGain: 200
+SBNDDecoSimpleFlashTPC0_data.OpHitProducers: ["ophitpmt"]
+SBNDDecoSimpleFlashTPC0_data.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC0_data.UseT0Tool: true
+SBNDDecoSimpleFlashTPC0_data.ReadoutDelay: 0 //cable time delay in us
+SBNDDecoSimpleFlashTPC0_data.CorrectLightPropagation: true
+SBNDDecoSimpleFlashTPC0_data.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_data.root"
+
+#TPC1
+SBNDDecoSimpleFlashTPC1_data: @local::SBNDSimpleFlashTPC1_data
+SBNDDecoSimpleFlashTPC1_data.PECalib.SPEAreaGain: 200
+SBNDDecoSimpleFlashTPC1_data.OpHitProducers: ["ophitpmt"]
+SBNDDecoSimpleFlashTPC1_data.OpHitInputTime: "RiseTime"
+SBNDDecoSimpleFlashTPC1_data.UseT0Tool: true
+SBNDDecoSimpleFlashTPC1_data.ReadoutDelay: 0 //cable time delay in us
+SBNDDecoSimpleFlashTPC1_data.CorrectLightPropagation: true
+SBNDDecoSimpleFlashTPC1_data.DriftEstimatorConfig.CalibrationFile: "OpDetReco/PMTRatioCalibration_data.root"
+
+
+END_PROLOG

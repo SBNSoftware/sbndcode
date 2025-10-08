@@ -61,9 +61,12 @@ private:
   uint16_t              fADCThreshold;
   std::vector<double>   fErrorCoeff;
   bool                  fAllowFlag1;
+  bool                  fApplyTs0Window;
+  double                fTs0Min;
+  double                fTs0Max;
   bool                  fApplyTs1Window;
-  int64_t               fTs1Min;
-  int64_t               fTs1Max;
+  double                fTs1Min;
+  double                fTs1Max;
   bool                  fCorrectForDifferentSecond;
   bool                  fReferenceTs0;
   int                   fTimingType;
@@ -85,9 +88,12 @@ sbnd::crt::CRTStripHitProducer::CRTStripHitProducer(fhicl::ParameterSet const& p
   , fADCThreshold(p.get<uint16_t>("ADCThreshold"))
   , fErrorCoeff(p.get<std::vector<double>>("ErrorCoeff"))
   , fAllowFlag1(p.get<bool>("AllowFlag1"))
+  , fApplyTs0Window(p.get<bool>("ApplyTs0Window"))
+  , fTs0Min(p.get<double>("Ts0Min", 0))
+  , fTs0Max(p.get<double>("Ts0Max", std::numeric_limits<double>::max()))
   , fApplyTs1Window(p.get<bool>("ApplyTs1Window"))
-  , fTs1Min(p.get<int64_t>("Ts1Min", 0))
-  , fTs1Max(p.get<int64_t>("Ts1Max", std::numeric_limits<int64_t>::max()))
+  , fTs1Min(p.get<double>("Ts1Min", 0))
+  , fTs1Max(p.get<double>("Ts1Max", std::numeric_limits<double>::max()))
   , fCorrectForDifferentSecond(p.get<bool>("CorrectForDifferentSecond"))
   , fReferenceTs0(p.get<bool>("ReferenceTs0"))
   , fTimingType(p.get<int>("TimingType", 0))
@@ -210,8 +216,8 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
   // Correct for FEB readout cable length
   // (time is FEB-by-FEB not channel-by-channel)
-  int64_t t0 = (int)data->Ts0() + (int)module.t0CableDelayCorrection;
-  int64_t t1 = (int)data->Ts1() + (int)module.t1CableDelayCorrection;
+  double t0 = (int)data->Ts0() + module.t0DelayCorrection;
+  double t1 = (int)data->Ts1() + module.t1DelayCorrection;
 
   if(fCorrectForDifferentSecond)
     {
@@ -227,18 +233,21 @@ std::vector<sbnd::crt::CRTStripHit> sbnd::crt::CRTStripHitProducer::CreateStripH
 
       if(unix_diff == 1)
         {
-          t0 -= static_cast<int>(1e9);
+          t0 -= 1e9;
           unixs += 1;
         }
       else if(unix_diff == -1)
         {
-          t0 += static_cast<int>(1e9);
+          t0 += 1e9;
           unixs -= 1;
         }
     }
 
   if(fReferenceTs0)
     t0 -= ref_time_ns;
+
+  if(fApplyTs0Window && (t0 < fTs0Min || t0 > fTs0Max))
+    return stripHits;
 
   if(fApplyTs1Window && (t1 < fTs1Min || t1 > fTs1Max))
     return stripHits;

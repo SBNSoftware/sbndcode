@@ -7,10 +7,13 @@ sbnd_finalstateparticlefilter:
   PDG:                   [13, 2212]
 }
 
-sbnd_nuefilter:
+sbnd_ccnuefilter:
 {
- module_type:    NueFilter
- PdgCode:  12  # 12=nue, 14=numu
+  module_type:    GenNuFilter
+  VtxInTPC:       true
+  CC:             true
+  NC:             false
+  LepPDGs:        [11,-11]
 }
 
 

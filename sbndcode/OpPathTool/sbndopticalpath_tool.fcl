@@ -1,0 +1,10 @@
+// sbnd optical path tools
+
+BEGIN_PROLOG
+
+SBNDOpticalPath:
+{
+    tool_type: SBNDOpticalPath
+}
+
+END_PROLOG

@@ -1,13 +1,14 @@
 #include "calorimetry.fcl"
+#include "normtools_sbnd.fcl"
 
 BEGIN_PROLOG
 
 sbnd_calorimetryalgdata:    @local::standard_calorimetryalgdata
-sbnd_calorimetryalgdata.CalAreaConstants: [ 0.0211 , 0.0209, 0.0204 ]
+sbnd_calorimetryalgdata.CalAreaConstants: [ 0.02172 , 0.02150, 0.02103 ]
 #values below aren't correct
 sbnd_calorimetryalgdata.CalAmpConstants:    [ 0.588726e-3, 0.588726e-3, 1.18998e-3 ]
 sbnd_calorimetryalgmc:      @local::standard_calorimetryalgmc
-sbnd_calorimetryalgmc.CalAreaConstants:  [ 0.0206, 0.0204, 0.0202 ]
+sbnd_calorimetryalgmc.CalAreaConstants:  [ 0.02052, 0.02044, 0.02019 ]
 # amplitude constants below are arbitrary and have not yet been tuned
 sbnd_calorimetryalgmc.CalAmpConstants:    [ 0.588726e-3, 0.588726e-3, 1.18998e-3 ]
 
@@ -21,11 +22,13 @@ sbnd_gnewcalomc:              @local::standard_gnocchicalo
 sbnd_gnewcalomc.CaloAlg:      @local::sbnd_calorimetryalgmc
 sbnd_gnewcalomc.ChargeMethod: 3
 sbnd_gnewcalomc.SpacePointModuleLabel: @erase
+sbnd_gnewcalomc.NormTools: @local::sbnd_calonormtoolsmc   # YZ normalization for MC
 
 sbnd_gnewcalodata:              @local::standard_gnocchicalo
 sbnd_gnewcalodata.CaloAlg:      @local::sbnd_calorimetryalgdata
 sbnd_gnewcalodata.ChargeMethod: 3
 sbnd_gnewcalodata.SpacePointModuleLabel: @erase
+sbnd_gnewcalodata.NormTools: @local::sbnd_calonormtoolsdata  # YZ normalization for Data
 
 # gputnam 19Aug2024: Upate calibration to EMB
 # Values from: https://arxiv.org/abs/2407.12969
