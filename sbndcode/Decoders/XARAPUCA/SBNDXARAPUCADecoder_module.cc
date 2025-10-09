@@ -372,15 +372,15 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
 }
 
 /**
-* @brief Searches for the SPEC-TDC ETRIG timestamp closest to the raw timestamp if any SPEC-TDC ETRIG product is found in the event.
-* @param[in] e The event to be processed.
-* @param[in] corr_raw_timestamp The corrected raw timestamp from the artdaq::RawEventHeader product.
-* @param[in,out] timestamp The closest ETRIG timestamp to the raw timestamp (if found).
-* @return A boolean indicating if a valid ETRIG timestamp was found close enough to the raw timestamp.
-* @details It searches for the SPEC-TDC products in the event and looks for the ETRIG timestamps. If any ETRIG 
-* timestamp is found, it checks which one is the closest to the raw timestamp and if it is close enough (i.e. 
-* within fraw_trig_max_diff) it returns it as output.
-*/
+ * @brief Searches for the SPEC-TDC ETRIG timestamp closest to the raw timestamp if any SPEC-TDC ETRIG product is found in the event.
+ * @param[in] e The event to be processed.
+ * @param[in] corr_raw_timestamp The corrected raw timestamp from the artdaq::RawEventHeader product.
+ * @param[in,out] timestamp The closest ETRIG timestamp to the raw timestamp (if found).
+ * @return A boolean indicating if a valid ETRIG timestamp was found close enough to the raw timestamp.
+ * @details It searches for the SPEC-TDC products in the event and looks for the ETRIG timestamps. If any ETRIG 
+ * timestamp is found, it checks which one is the closest to the raw timestamp and if it is close enough (i.e. 
+ * within fraw_trig_max_diff) it returns it as output.
+ */
 bool sbndaq::SBNDXARAPUCADecoder::get_spec_tdc_etrig_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t& timestamp) {
   bool ett_found = false;
 
@@ -718,7 +718,7 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
     }
 
     if (fverbose | fdebug_timing) {
-      std::cout << std::fixed << std::setprecision(3) << std::endl;
+      std::cout << std::fixed << std::setprecision(3);
       if (factive_timing_frame == SPEC_TDC_TIMING) {
         std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: SPEC-TDC time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
       } else if (factive_timing_frame == PTB_TIMING) {
@@ -726,6 +726,7 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
       } else { // CAEN_ONLY_TIMING
         std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
       }
+      std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: TTT_end_ticks = " << TTT_ticks << " ticks. \t TTT_end_ns = " << print_timestamp(TTT_end_ns) << "." << std::endl;
     }
 
     // ===============  Start decoding the waveforms =============== //
