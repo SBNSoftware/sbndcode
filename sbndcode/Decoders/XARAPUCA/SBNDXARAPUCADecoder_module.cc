@@ -138,6 +138,7 @@ private:
   bool get_ptb_hlt_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp, uint16_t & hlt_code);
   bool get_spec_tdc_etrig_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp);
   void shift_time(const artdaq::Fragment& fragment, uint64_t TTT_ticks, int64_t TTT_end_ns, uint64_t timestamp, uint32_t num_samples_per_wvfm, double& ini_wvfm_timestamp, double& end_wvfm_timestamp);
+  void decode_waveforms(const artdaq::Fragment& fragment, std::vector<std::vector<uint16_t>>& wvfms, size_t header_size, uint32_t num_channels, uint32_t num_samples_per_wvfm, uint32_t num_words_per_wvfms, uint32_t num_samples_per_group);
   
   void save_prod_wvfm(size_t board_idx, size_t ch, double ini_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms, std::vector <raw::OpDetWaveform> & prod_wvfms);
   void save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, double ini_wvfm_timestamp, double end_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms);
@@ -634,7 +635,8 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
     
     // Gets the number of words of the header and the waveforms.
     uint32_t num_words_per_event = header.eventSize;
-    uint32_t num_words_per_header = sizeof(CAENV1740EventHeader) / sizeof(uint32_t);
+    size_t header_size = sizeof(CAENV1740EventHeader);
+    uint32_t num_words_per_header = header_size / sizeof(uint32_t);
     uint32_t num_words_per_wvfms = (num_words_per_event - num_words_per_header);
 
     uint32_t num_bits_per_all_wvfms = num_words_per_wvfms * BITS_PER_WORD;
@@ -663,12 +665,6 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
 
     // ===============  Extracts timing information for this fragment =============== //
 
-    // Gets the timing information of the CAEN fragment.
-//    int64_t pulse_duration_ns = num_samples_per_wvfm * fns_per_sample; // ns.
-//    uint64_t frag_timestamp = fragment.timestamp(); // ns.
-//    int64_t frag_timestamp_s = frag_timestamp / NANOSEC_IN_SEC; // s.
-//    int64_t frag_timestamp_ns = frag_timestamp % NANOSEC_IN_SEC; // ns.
-
     uint32_t TTT_ticks = header.triggerTime();
     int64_t TTT_end_ns = TTT_ticks * NANOSEC_PER_TICK; // ns.
 
@@ -676,113 +672,53 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
       std::cout << "\t\t TTT header.extendedTriggerTime() [TTT_ticks] = " << header.extendedTriggerTime() << " ticks. \t TTT_end_ns = " << print_timestamp(header.extendedTriggerTime() * NANOSEC_PER_TICK) << "." << std::endl;
       std::cout << "\t\t TTT header.triggerTimeRollOver(): " << header.triggerTimeRollOver() << std::endl;
     }
-//
-//    // Gets the full TTT timestamp.
-//    uint64_t full_TTT = 0;
-//    // If the fragment timestamp is greater than the TTT end timestamp, it means that rollover occurred.
-//    if (frag_timestamp_ns > TTT_end_ns) {
-//      if (fverbose | fdebug_timing) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN TTT rollover occurred w.r.t. the fragment timestamp (FTS)." << std::endl;
-//      full_TTT = (frag_timestamp_s + 1) * NANOSEC_IN_SEC + TTT_end_ns;
-//    } else {
-//      full_TTT = frag_timestamp_s * NANOSEC_IN_SEC + TTT_end_ns;
-//    }
-//
-//    int64_t ref_timestamp = 0;
-//
-//    double ini_wvfm_timestamp = 0;
-//    double end_wvfm_timestamp = 0;
-//
-//    // If an ETRIG or HLT timestamp was found it restarts the time from it. Otherwise the CAEN time frame is assigned.
-//    if (factive_timing_frame != CAEN_ONLY_TIMING) {
-//      ref_timestamp = signed_difference(full_TTT, timestamp); // ns.
-//
-//      ini_wvfm_timestamp = (ref_timestamp - pulse_duration_ns) * NANOSEC_TO_MICROSEC; // us.
-//      end_wvfm_timestamp = ref_timestamp * NANOSEC_TO_MICROSEC; // us.
-//    } else {
-//      ref_timestamp = full_TTT; // ns.
-//
-//      ini_wvfm_timestamp = ((ref_timestamp - pulse_duration_ns) % NANOSEC_IN_SEC) * NANOSEC_TO_MICROSEC; // ns.
-//      end_wvfm_timestamp = (ref_timestamp % NANOSEC_IN_SEC) * NANOSEC_TO_MICROSEC; // us.
-//    }
-//
-//    if (fdebug_timing) {
-//      std::cout << std::fixed << std::setprecision(0);
-//      std::cout << "\t\t ns/tick = " << NANOSEC_PER_TICK << ", ns/sample = " << fns_per_sample << std::endl;
-//      std::cout << "\t\t TTT header.TriggerTime() [TTT_ticks] = " << TTT_ticks << " ticks. \t TTT_end_ns = " << print_timestamp(TTT_end_ns) << "." << std::endl;
-//      std::cout << "\t\t TTT header.extendedTriggerTime() [TTT_ticks] = " << header.extendedTriggerTime() << " ticks. \t TTT_end_ns = " << print_timestamp(header.extendedTriggerTime() * NANOSEC_PER_TICK) << "." << std::endl;
-//      std::cout << "\t\t TTT header.triggerTimeRollOver(): " << header.triggerTimeRollOver() << std::endl;
-//      std::cout << "\t\t Full Fragment timestamp: " << print_timestamp(frag_timestamp) << " = " << frag_timestamp_s << " s " << frag_timestamp_ns << " ns." << std::endl;
-//      std::cout << "\t\t Full TTT - fragment timestamp = "<< abs_difference(full_TTT, frag_timestamp) << " ns." << " Post-percent: " << (double(abs_difference(full_TTT, frag_timestamp)) / double(pulse_duration_ns)) * 100 << "%." << std::endl;
-//      if (factive_timing_frame == SPEC_TDC_TIMING) {
-//        std::cout << "\t ETRIG (SPEC-TDC) timestamp of the fragment: " << std::endl;
-//        std::cout << "\t\t Full UTC ETRIG timestamp: " << print_timestamp(timestamp) << "." << std::endl;
-//        std::cout << "\t\t ETRIG SPEC-TDC difference applied to the CAEN frame (full timestamps): " << print_timestamp(full_TTT) << " - " << print_timestamp(timestamp) <<  " = " << ref_timestamp << " ns." << std::endl;
-//      } else if (factive_timing_frame == PTB_TIMING) {
-//        std::cout << "\t HLT ETRIG (PTB) timestamp of the fragment: " << std::endl;
-//        std::cout << "\t\t Full UTC HLT ETRIG timestamp: " << print_timestamp(timestamp) << "." << std::endl;
-//        std::cout << "\t\t HLT ETRIG (PTB) difference applied to the CAEN frame (full timestamps): " << print_timestamp(full_TTT) << " - " << print_timestamp(timestamp) <<  " = " << ref_timestamp << " ns." << std::endl;
-//      } else if (factive_timing_frame == CAEN_ONLY_TIMING) {
-//        std::cout << "\t CAEN trigger timestamp (TTT) of the fragment: " << std::endl;
-//        std::cout << "\t\t Full UTC TTT timestamp: " << print_timestamp(full_TTT) << " = " << full_TTT / NANOSEC_IN_SEC << " s " << TTT_end_ns << " ns." << std::endl;
-//      }
-//    }
-//
-//    if (fverbose | fdebug_timing) {
-//      std::cout << std::fixed << std::setprecision(3);
-//      if (factive_timing_frame == SPEC_TDC_TIMING) {
-//        std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: SPEC-TDC time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
-//      } else if (factive_timing_frame == PTB_TIMING) {
-//        std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: PTB time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
-//      } else { // CAEN_ONLY_TIMING
-//        std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
-//      }
-//      std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: TTT_end_ticks = " << TTT_ticks << " ticks. \t TTT_end_ns = " << print_timestamp(TTT_end_ns) << "." << std::endl;
-//    }
-//
-    // ===============  Start decoding the waveforms =============== //
-    if (fverbose) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: binary decoding of the waveforms starting... " << std::endl;
-    
+
+//    // ===============  Start decoding the waveforms =============== //
     std::vector <std::vector <uint16_t> > wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
+    decode_waveforms(fragment, wvfms, header_size, num_channels, num_samples_per_wvfm, num_words_per_wvfms, num_samples_per_group);
+//    if (fverbose) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: binary decoding of the waveforms starting... " << std::endl;
+//    
+//    std::vector <std::vector <uint16_t> > wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
+//
+//    // Absolute sample number [0, TOTAL_NUM_SAMPLES] where TOTAL_NUM_SAMPLES is the total number of samples stored for an event.
+//    uint32_t S = 0;
+//    // Buffer variables.
+//    uint64_t buffer = 0;
+//    uint32_t bits_in_buffer = 0;
+//
+//    // Data pointer to the beggining of the waveforms stores in the event.
+//    const uint32_t* data_ptr = reinterpret_cast<const uint32_t*>(fragment.dataBeginBytes() + sizeof(CAENV1740EventHeader));
+//    // Accesses each word, stores it in the buffer and then the samples are extracted from the buffer.
+//    for (size_t j = 0; j < num_words_per_wvfms; j++) {
+//      uint64_t word = read_word(data_ptr);
+//
+//      // Adds the new word to the buffer and increments the number of bits stored in it.
+//      if (fdebug_buffer) std::cout << buffer << "[word: " << word << "]" << std::endl;
+//      buffer |= word << bits_in_buffer;
+//      bits_in_buffer += BITS_PER_WORD; // bytes * 8 bits/byte
+//      if (fdebug_buffer) std::cout << "  +" << buffer << " [bits in buffer: "<< bits_in_buffer << "]" << std::endl;
+//
+//      // Obtains 12-bit sequences from the buffer and assigns each sample to the channel and channel sample it belongs to. 
+//      while (bits_in_buffer >= BITS_PER_SAMPLE) {
+//        // Computes board channel, channel sample and group channel and assigns the sample to those indices.
+//        uint32_t g = (S / num_samples_per_group);                                                                                       // Group index.
+//        uint32_t c = ((S / NUM_CONSECUTIVE_SAMPLES) % NUM_CHANNELS_PER_GROUP) + g * NUM_GROUPS;                                         // Channel index.
+//        uint32_t s = (S % NUM_CONSECUTIVE_SAMPLES) + ((S / NUM_SAMPLES_PER_ROUND) * NUM_CONSECUTIVE_SAMPLES) % num_samples_per_wvfm;    // Sample/channel index.
+//        uint16_t sample = get_sample(buffer, BITS_PER_SAMPLE - 1, 0);
+//        wvfms[c][s] = sample;
+//        if (fdebug_waveforms) std::cout << "\tSample: " << sample << "\tg: " << g <<  "\tch: " << c << "\ts:" << s << "\tS: " << S << std::endl;
+//        
+//        // Updates the buffer status removing the read bits and decreasing the number of bits stored in it.
+//        buffer >>= BITS_PER_SAMPLE;
+//        bits_in_buffer -= BITS_PER_SAMPLE;
+//        if (fdebug_buffer) std::cout << "  -" << buffer << " [bits in buffer: "<< bits_in_buffer << "]" << std::endl;
+//        
+//        // Increments the absolute sample step.
+//        S++;
+//      }
+//    }
 
-    // Absolute sample number [0, TOTAL_NUM_SAMPLES] where TOTAL_NUM_SAMPLES is the total number of samples stored for an event.
-    uint32_t S = 0;
-    // Buffer variables.
-    uint64_t buffer = 0;
-    uint32_t bits_in_buffer = 0;
-
-    // Data pointer to the beggining of the waveforms stores in the event.
-    const uint32_t* data_ptr = reinterpret_cast<const uint32_t*>(fragment.dataBeginBytes() + sizeof(CAENV1740EventHeader));
-    // Accesses each word, stores it in the buffer and then the samples are extracted from the buffer.
-    for (size_t j = 0; j < num_words_per_wvfms; j++) {
-      uint64_t word = read_word(data_ptr);
-
-      // Adds the new word to the buffer and increments the number of bits stored in it.
-      if (fdebug_buffer) std::cout << buffer << "[word: " << word << "]" << std::endl;
-      buffer |= word << bits_in_buffer;
-      bits_in_buffer += BITS_PER_WORD; // bytes * 8 bits/byte
-      if (fdebug_buffer) std::cout << "  +" << buffer << " [bits in buffer: "<< bits_in_buffer << "]" << std::endl;
-
-      // Obtains 12-bit sequences from the buffer and assigns each sample to the channel and channel sample it belongs to. 
-      while (bits_in_buffer >= BITS_PER_SAMPLE) {
-        // Computes board channel, channel sample and group channel and assigns the sample to those indices.
-        uint32_t g = (S / num_samples_per_group);                                                                                       // Group index.
-        uint32_t c = ((S / NUM_CONSECUTIVE_SAMPLES) % NUM_CHANNELS_PER_GROUP) + g * NUM_GROUPS;                                         // Channel index.
-        uint32_t s = (S % NUM_CONSECUTIVE_SAMPLES) + ((S / NUM_SAMPLES_PER_ROUND) * NUM_CONSECUTIVE_SAMPLES) % num_samples_per_wvfm;    // Sample/channel index.
-        uint16_t sample = get_sample(buffer, BITS_PER_SAMPLE - 1, 0);
-        wvfms[c][s] = sample;
-        if (fdebug_waveforms) std::cout << "\tSample: " << sample << "\tg: " << g <<  "\tch: " << c << "\ts:" << s << "\tS: " << S << std::endl;
-        
-        // Updates the buffer status removing the read bits and decreasing the number of bits stored in it.
-        buffer >>= BITS_PER_SAMPLE;
-        bits_in_buffer -= BITS_PER_SAMPLE;
-        if (fdebug_buffer) std::cout << "  -" << buffer << " [bits in buffer: "<< bits_in_buffer << "]" << std::endl;
-        
-        // Increments the absolute sample step.
-        S++;
-      }
-    }
-
-
+    // ===============  Shifts timing to the selected timing reference frame =============== //
     double ini_wvfm_timestamp = 0;
     double end_wvfm_timestamp = 0;
     shift_time(fragment, TTT_ticks, TTT_end_ns, timestamp, num_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
@@ -955,6 +891,51 @@ void sbndaq::SBNDXARAPUCADecoder::shift_time(const artdaq::Fragment& fragment, u
       std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: CAEN time window of " << end_wvfm_timestamp - ini_wvfm_timestamp << " us: [" << ini_wvfm_timestamp << ", " << end_wvfm_timestamp << "] us." << std::endl;
     }
     std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: TTT_end_ticks = " << TTT_ticks << " ticks. \t TTT_end_ns = " << print_timestamp(TTT_end_ns) << "." << std::endl;
+  }
+}
+
+void sbndaq::SBNDXARAPUCADecoder::decode_waveforms(const artdaq::Fragment& fragment, std::vector<std::vector<uint16_t>>& wvfms, size_t header_size, uint32_t num_channels, uint32_t num_samples_per_wvfm, uint32_t num_words_per_wvfms, uint32_t num_samples_per_group) {
+  // ===============  Start decoding the waveforms =============== //
+  if (fverbose) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: binary decoding of the waveforms starting... " << std::endl;
+  
+  //std::vector <std::vector <uint16_t> > wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
+
+  // Absolute sample number [0, TOTAL_NUM_SAMPLES] where TOTAL_NUM_SAMPLES is the total number of samples stored for an event.
+  uint32_t S = 0;
+  // Buffer variables.
+  uint64_t buffer = 0;
+  uint32_t bits_in_buffer = 0;
+
+  // Data pointer to the beggining of the waveforms stores in the event.
+  const uint32_t* data_ptr = reinterpret_cast<const uint32_t*>(fragment.dataBeginBytes() + header_size);
+  // Accesses each word, stores it in the buffer and then the samples are extracted from the buffer.
+  for (size_t j = 0; j < num_words_per_wvfms; j++) {
+    uint64_t word = read_word(data_ptr);
+
+    // Adds the new word to the buffer and increments the number of bits stored in it.
+    if (fdebug_buffer) std::cout << buffer << "[word: " << word << "]" << std::endl;
+    buffer |= word << bits_in_buffer;
+    bits_in_buffer += BITS_PER_WORD; // bytes * 8 bits/byte
+    if (fdebug_buffer) std::cout << "  +" << buffer << " [bits in buffer: "<< bits_in_buffer << "]" << std::endl;
+
+    // Obtains 12-bit sequences from the buffer and assigns each sample to the channel and channel sample it belongs to. 
+    while (bits_in_buffer >= BITS_PER_SAMPLE) {
+      // Computes board channel, channel sample and group channel and assigns the sample to those indices.
+      uint32_t g = (S / num_samples_per_group);                                                                                       // Group index.
+      uint32_t c = ((S / NUM_CONSECUTIVE_SAMPLES) % NUM_CHANNELS_PER_GROUP) + g * NUM_GROUPS;                                         // Channel index.
+      uint32_t s = (S % NUM_CONSECUTIVE_SAMPLES) + ((S / NUM_SAMPLES_PER_ROUND) * NUM_CONSECUTIVE_SAMPLES) % num_samples_per_wvfm;    // Sample/channel index.
+      uint16_t sample = get_sample(buffer, BITS_PER_SAMPLE - 1, 0);
+      wvfms[c][s] = sample;
+      if (fdebug_waveforms) std::cout << "\tSample: " << sample << "\tg: " << g <<  "\tch: " << c << "\ts:" << s << "\tS: " << S << std::endl;
+      
+      // Updates the buffer status removing the read bits and decreasing the number of bits stored in it.
+      buffer >>= BITS_PER_SAMPLE;
+      bits_in_buffer -= BITS_PER_SAMPLE;
+      if (fdebug_buffer) std::cout << "  -" << buffer << " [bits in buffer: "<< bits_in_buffer << "]" << std::endl;
+      
+      // Increments the absolute sample step.
+      S++;
+    }
   }
 }
 
