@@ -133,17 +133,19 @@ private:
   bool fverbose; /**< If `true` it increases verbosity of console output for detailed processing steps. */
 
   // Class methods.
-  void decode_fragment(uint64_t timestamp, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms);
+  void decode_fragment(uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms);
   
   bool get_ptb_hlt_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp, uint16_t & hlt_code);
   bool get_spec_tdc_etrig_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp);
-  void shift_time(const artdaq::Fragment& fragment, uint64_t TTT_ticks, int64_t TTT_end_ns, uint64_t timestamp, uint32_t num_samples_per_wvfm, double& ini_wvfm_timestamp, double& end_wvfm_timestamp);
+  void shift_time(uint64_t TTT_ticks, int64_t TTT_end_ns, uint64_t frag_timestamp, uint64_t timestamp, uint32_t num_samples_per_wvfm, double& ini_wvfm_timestamp, double& end_wvfm_timestamp);
   void decode_waveforms(const artdaq::Fragment& fragment, std::vector<std::vector<uint16_t>>& wvfms, size_t header_size, uint32_t num_channels, uint32_t num_samples_per_wvfm, uint32_t num_words_per_wvfms, uint32_t num_samples_per_group);
   
-  void dump_waveforms(std::vector <raw::OpDetWaveform> & prod_wvfms, const std::vector<std::vector<uint16_t>>& wvfms, std::vector<size_t> & fragment_indices, size_t board_index, uint32_t num_channels, double ini_wvfm_timestamp, double end_wvfm_timestamp);
+  void dump_waveforms(std::vector <raw::OpDetWaveform> & prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms, std::vector<size_t> & fragment_indices, size_t board_index, uint32_t num_channels, double ini_wvfm_timestamp, double end_wvfm_timestamp);
   void save_prod_wvfm(size_t board_idx, size_t ch, double ini_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms, std::vector <raw::OpDetWaveform> & prod_wvfms);
   void save_debug_wvfm(size_t board_idx, size_t fragment_idx, int ch, double ini_wvfm_timestamp, double end_wvfm_timestamp, const std::vector <std::vector <uint16_t> > & wvfms);
   
+  void combine_waveforms(std::vector<std::vector<uint16_t>>& wvfms, const std::vector<std::vector<uint16_t>>& fragment_wvfms, uint32_t num_channels);
+
   uint16_t get_sample(uint64_t buffer, uint32_t msb, uint32_t lsb);
   uint32_t read_word(const uint32_t* & data_ptr);
   unsigned int get_channel_id(unsigned int board, unsigned int board_channel);
@@ -304,6 +306,10 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
   bool found_caen = false;
 
   std::vector<size_t> fragment_indices(fnum_caen_boards, 0);
+  std::vector<std::vector <uint16_t>> wvfms;
+  std::cout << "wvfms_size: " << wvfms.size() << std::endl;
+  int32_t nominal_TTT = TTT_DEFAULT;
+  uint64_t nominal_frag_timestamp = TTT_DEFAULT;
 
   if (fverbose | fdebug_fragments_handle) std::cout << "\n > SBNDXARAPUCADecoder::produce: searching for V1740 fragments..." << std::endl;
   
@@ -341,7 +347,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
             
             for (size_t f = 0; f < num_caen_fragments; f++) {
               const artdaq::Fragment fragment = *container_fragment[f].get();
-              decode_fragment(timestamp, fragment_indices, fragment, *prod_wvfms);
+              decode_fragment(timestamp, nominal_frag_timestamp, nominal_TTT, fragment_indices, fragment, *prod_wvfms, wvfms);
             } // End CAEN V1740 fragments loop.
           }
         } // End Container fragments loop.
@@ -353,7 +359,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
         // It searches for all CAEN V1740 fragments.
         for (size_t f = 0; f < frag_handle_size; f++) {
           const artdaq::Fragment fragment = fragment_handle->at(f);
-          decode_fragment(timestamp, fragment_indices, fragment, *prod_wvfms);
+          decode_fragment(timestamp, nominal_frag_timestamp, nominal_TTT, fragment_indices, fragment, *prod_wvfms, wvfms);
         } // End CAEN V1740 fragments loop.
       }
     } // End extracting CAEN V1740 fragments.
@@ -599,7 +605,10 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
  * - Populates the output vector (`prod_wvfms`) with decoded waveforms and optionally generates debug waveforms output.
  * 
  */
-void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms) {
+
+void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms,  std::vector<std::vector<uint16_t>>& wvfms) {
+  std::cout << "decode_wvfms_size: " << wvfms.size() << std::endl;
+  
   auto fragment_id = fragment.fragmentID() - ffragment_id_offset;
   auto it = std::find(fboard_id_list.begin(), fboard_id_list.end(), fragment_id);
   size_t board_idx;
@@ -619,10 +628,13 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
   if (valid_fragment) {
     if (fverbose) std::cout << "\n > SBNDXARAPUCADecoder::decode_fragment: decoding V1740 CAEN fragment " << fragment_indices[board_idx] << " from the board " << board_idx << " (slot " << fboard_id_list[board_idx] << "):" << std::endl;
 
-    //bool is_nominal_length = false;
+    bool is_nominal_length = false;
     //bool is_within_nominal_length = false;
-    //bool is_first = false;
-    //int32_t nominal_TTT = TTT_DEFAULT;
+    bool is_first = false;
+
+
+    double ini_wvfm_timestamp = 0;
+    double end_wvfm_timestamp = 0;
     
     // ===============  Accesses Event metadata and Event header for this fragment =============== //
 
@@ -646,14 +658,15 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
     uint32_t num_remaining_bits = num_bits_per_all_wvfms % BITS_PER_SAMPLE;
     uint32_t num_samples_per_wvfm = num_samples_per_all_wvfms / num_channels;
     uint32_t num_samples_per_group = num_samples_per_wvfm * NUM_CHANNELS_PER_GROUP;
+    uint32_t num_nominal_samples_per_wvfm = metadata->nSamples;
 
     if (fverbose | fdebug_waveforms) {
-      if (metadata->nSamples == num_samples_per_wvfm) {
+      if (num_nominal_samples_per_wvfm == num_samples_per_wvfm) {
         std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: [NOMINAL FRAGMENT] " << num_samples_per_wvfm << " samples/waveform." << " (" << num_samples_per_group << " samples per group - 8 channels per group -)." << std::endl;
       } else {
         std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: [EXTENDED FRAGMENT] " << num_samples_per_wvfm << " samples/waveform." << " (" << num_samples_per_group << " samples per group - 8 channels per group -)." << std::endl;
       }
-      std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: nominal number of samples per waveform: " << metadata->nSamples << "." << std::endl;
+      std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: nominal number of samples per waveform: " << num_nominal_samples_per_wvfm << "." << std::endl;
       std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: number of words for this fragment: " << num_words_per_event << " (Header: " << num_words_per_header << ", Waveform: " << num_words_per_wvfms << ") words." << std::endl;
     }
 
@@ -665,10 +678,11 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
       std::cout << "\t Number of samples per group (this fragment): " << num_samples_per_group << std::endl;
     }
 
-    std::vector <std::vector <uint16_t> > wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
+    //std::vector <std::vector <uint16_t> > wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
 
     // ===============  Extracts timing information for this fragment =============== //
 
+    uint64_t frag_timestamp = fragment.timestamp(); // ns.
     uint32_t TTT_ticks = header.triggerTime();
     int64_t TTT_end_ns = TTT_ticks * NANOSEC_PER_TICK; // ns.
 
@@ -677,41 +691,38 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, std::vecto
       std::cout << "\t\t TTT header.triggerTimeRollOver(): " << header.triggerTimeRollOver() << std::endl;
     }
 
-    // ===============  Start decoding the waveforms =============== //
-    //std::vector <std::vector <uint16_t> > fragment_wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
-    decode_waveforms(fragment, wvfms, header_size, num_channels, num_samples_per_wvfm, num_words_per_wvfms, num_samples_per_group);
+    //// ===============  Start decoding the waveforms =============== //
+    std::vector <std::vector <uint16_t> > fragment_wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
+    decode_waveforms(fragment, fragment_wvfms, header_size, num_channels, num_samples_per_wvfm, num_words_per_wvfms, num_samples_per_group);
+//
+    //// ===============  Shifts timing to the selected timing reference frame =============== //
+//
+    //shift_time(fragment, TTT_ticks, TTT_end_ns, timestamp, num_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
+    //dump_waveforms(prod_wvfms, wvfms, fragment_indices, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
+    //combine_waveforms(wvfms, fragment_wvfms, num_channels);
 
-    // ===============  Shifts timing to the selected timing reference frame =============== //
-    double ini_wvfm_timestamp = 0;
-    double end_wvfm_timestamp = 0;
-    shift_time(fragment, TTT_ticks, TTT_end_ns, timestamp, num_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
+    is_nominal_length = (num_nominal_samples_per_wvfm == num_samples_per_wvfm);
+    is_first = (fragment_indices[board_idx] == 0);
     
-    dump_waveforms(prod_wvfms, wvfms, fragment_indices, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
-  //  // The decoded waveforms are dumped into two products:
-  //  // - A xarapucadecoder-art.root file with the OpDetWaveforms as the product of this producer for further analysis.
-  //  // - A decoder_hist.root file gathering a waveform histograms.
-  //  if (fverbose) std::cout << "  > SBNDXARAPUCADecoder::decode_fragment: binary decoding complete, dumping products..." << std::endl;
-  //  
-  //  uint32_t num_debug_wvfms;
-//
-  //  if (fstore_debug_waveforms == -1) {
-  //    num_debug_wvfms = num_channels;
-  //  } else {
-  //    num_debug_wvfms = std::min<size_t>(num_channels, fstore_debug_waveforms);
-  //  }
-//
-  //  uint32_t ch;
-//
-  //  for (ch = 0; ch < num_debug_wvfms; ch++) {
-  //    save_prod_wvfm(board_idx, ch, ini_wvfm_timestamp, wvfms, prod_wvfms);
-  //    save_debug_wvfm(board_idx, fragment_indices[board_idx], ch, ini_wvfm_timestamp, end_wvfm_timestamp, wvfms);
-  //  }
-//
-  //  for (;ch < num_channels; ch++) {
-  //    save_prod_wvfm(board_idx, ch, ini_wvfm_timestamp, wvfms, prod_wvfms);
-  //  }
-//
-  //  fragment_indices[board_idx]++;
+    if (is_nominal_length) {
+      if (!is_first) {
+        std::cout << " NOT FIRST NOMINAL fragment " << std::endl;
+        std::cout << " nominal_TTT: " << nominal_TTT << " TTT_end_ns: " << TTT_end_ns << std::endl;
+        std::cout << " nominal_frag_timestamp: " << nominal_frag_timestamp << " frag_timestamp : " << frag_timestamp << std::endl;
+        shift_time(TTT_ticks, nominal_TTT, nominal_frag_timestamp, timestamp, num_nominal_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
+        dump_waveforms(prod_wvfms, wvfms, fragment_indices, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
+      } else {
+        std::cout << " FIRST NOMINAL fragment " << std::endl;
+      }
+      combine_waveforms(wvfms, fragment_wvfms, num_channels);
+      nominal_TTT = TTT_end_ns;
+      nominal_frag_timestamp = frag_timestamp;
+    } else {
+      std::cout << " EXTENDED fragment " << std::endl;
+      combine_waveforms(wvfms, fragment_wvfms, num_channels);
+    }
+
+    fragment_indices[board_idx]++;  
   }
 }
 
@@ -793,10 +804,9 @@ void sbndaq::SBNDXARAPUCADecoder::save_debug_wvfm(size_t board_idx, size_t fragm
 
 }
 
-void sbndaq::SBNDXARAPUCADecoder::shift_time(const artdaq::Fragment& fragment, uint64_t TTT_ticks, int64_t TTT_end_ns, uint64_t timestamp, uint32_t num_samples_per_wvfm, double& ini_wvfm_timestamp, double& end_wvfm_timestamp) {
+void sbndaq::SBNDXARAPUCADecoder::shift_time(uint64_t TTT_ticks, int64_t TTT_end_ns, uint64_t frag_timestamp, uint64_t timestamp, uint32_t num_samples_per_wvfm, double& ini_wvfm_timestamp, double& end_wvfm_timestamp) {
   
   int64_t pulse_duration_ns = num_samples_per_wvfm * fns_per_sample; // ns.
-  uint64_t frag_timestamp = fragment.timestamp(); // ns.
   int64_t frag_timestamp_s = frag_timestamp / NANOSEC_IN_SEC; // s.
   int64_t frag_timestamp_ns = frag_timestamp % NANOSEC_IN_SEC; // ns.
 
@@ -901,7 +911,7 @@ void sbndaq::SBNDXARAPUCADecoder::decode_waveforms(const artdaq::Fragment& fragm
   }
 }
 
-void sbndaq::SBNDXARAPUCADecoder::dump_waveforms(std::vector <raw::OpDetWaveform> & prod_wvfms, const std::vector<std::vector<uint16_t>>& wvfms, std::vector<size_t> & fragment_indices, size_t board_idx, uint32_t num_channels, double ini_wvfm_timestamp, double end_wvfm_timestamp) {
+void sbndaq::SBNDXARAPUCADecoder::dump_waveforms(std::vector <raw::OpDetWaveform> & prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms, std::vector<size_t> & fragment_indices, size_t board_idx, uint32_t num_channels, double ini_wvfm_timestamp, double end_wvfm_timestamp) {
     
   // The decoded waveforms are dumped into two products:
   // - A xarapucadecoder-art.root file with the OpDetWaveforms as the product of this producer for further analysis.
@@ -927,7 +937,19 @@ void sbndaq::SBNDXARAPUCADecoder::dump_waveforms(std::vector <raw::OpDetWaveform
     save_prod_wvfm(board_idx, ch, ini_wvfm_timestamp, wvfms, prod_wvfms);
   }
 
-  fragment_indices[board_idx]++;  
+  wvfms.clear();
+}
+
+void sbndaq::SBNDXARAPUCADecoder::combine_waveforms(std::vector<std::vector<uint16_t>>& wvfms, const std::vector<std::vector<uint16_t>>& fragment_wvfms, uint32_t num_channels) {
+  if (wvfms.empty()) {
+    std::cout << "Empty waveforms, resizing to " << num_channels << " channels." << std::endl;
+    wvfms.resize(num_channels);
+    std::cout << "BEF COMB - wvfms_size = " << wvfms.size() << " x " << wvfms[0].size() << std::endl;
+  }
+  for (uint32_t ch = 0; ch < num_channels; ch++) {
+    wvfms[ch].insert(wvfms[ch].end(), fragment_wvfms[ch].begin(), fragment_wvfms[ch].end());
+  }
+  std::cout << "AFT COMB - wvfms_size = " << wvfms.size() << " x " << wvfms[0].size() << std::endl;
 }
 
 /**
