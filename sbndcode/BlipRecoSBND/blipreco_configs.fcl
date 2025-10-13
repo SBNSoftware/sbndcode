@@ -5,7 +5,7 @@ BEGIN_PROLOG
 # Main BlipAlg settings
 sbnd_blipalg:
 {
-  HitProducer:          "gaushit"       #// input recob::Hits to use for blip reconstruction
+  HitProducer:          "specialblipgaushit"       #// input recob::Hits to use for blip reconstruction
   TrkProducer:          "pandoraTrack"       #// input recob::Tracks to use for blip reconstruction
   GeantProducer:        "largeant"      #// input sim::MCParticles (getting true particle info)
   SimEDepProducer:      "ionandscint"   #// input sim::SimEnergyDeposits (getting energy/electrons deposited)

@@ -263,6 +263,7 @@ namespace opdet {
               }
               if(fChNumber>=900)
               {
+		std::cout << " in this branch ------------ " << std::endl;
                 opdetType = "pmt_coated";
                 opdetElectronics = "";
               }

@@ -40,10 +40,12 @@ sbnd_reco1_producers:{
 
     ### hit-finder producers
     gaushit:             @local::sbnd_gaushitfinder
+    specialblipgaushit:  @local::sbnd_gaushitfinder
     fasthit:             @local::sbnd_fasthitfinder
 
     ### Truth-matich for hits
     gaushitTruthMatch:   @local::standard_mcparticlehitmatching
+    blipgaushitTruthMatch:   @local::standard_mcparticlehitmatching
 
     ### CRT reconstruction
     crtstrips:      @local::crtstriphitproducer_sbnd
@@ -67,6 +69,8 @@ sbnd_reco1_producer_sequence: [
   , opflashtpc1xarapuca
   , gaushit
   , gaushitTruthMatch
+  , specialblipgaushit
+  , blipgaushitTruthMatch
   , crtstrips
   , crtclustering
   , crtspacepoints
@@ -75,10 +79,12 @@ sbnd_reco1_producer_sequence: [
  ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
-sbnd_reco1_producers.gaushit.CalDataModuleLabel:                                           "simtpc2d:gauss"
+sbnd_reco1_producers.gaushit.CalDataModuleLabel:                                           "simtpc2d:dnnsp"
 sbnd_reco1_producers.fasthit.DigitModuleLabel:                                             "simtpc2d:daq"
 sbnd_reco1_producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:             "gaushit"
-
+sbnd_reco1_producers.specialblipgaushit.CalDataModuleLabel:
+            "simtpc2d:gauss"
+sbnd_reco1_producers.blipgaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "specialblipgaushit"
 sbnd_reco1_filters: {
     #filter events based on the number of reconstructed hits (avoids overly messy data events)
     numberofhitsfilter: @local::sbnd_numberofhitsfilter

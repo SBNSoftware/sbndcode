@@ -53,6 +53,7 @@
 
 #include "mlreco_sbnd.fcl"
 #include "cluster_sbnd.fcl"
+#include "blipreco_configs.fcl"
 
 
 process_name: Reco
@@ -260,9 +261,10 @@ physics:
   pmtskim: @local::pmtskim_sbnd
   supera: @local::sbnd_supera
   superampvmpr: @local::sbnd_supera_mpvmpr
+  blipana: @local::sbnd_blipana
  }
 
- caloskimana: [ caloskim, crtskim, pmtskim ]
+ caloskimana: [ caloskim, crtskim, pmtskim, blipana ]
  superaana: [ supera ] #outputs larcv.root for use in mlreco
 
  #define the output stream, there could be more than one if using filters

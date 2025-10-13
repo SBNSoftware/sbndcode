@@ -31,7 +31,7 @@ physics.producers:
     opflashtpc1:   @local::SBNDDecoSimpleFlashTPC1_data
 }
 
-physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d, crtstrips, 
+physics.reco1: [sptpc2d, gaushit, specialblipgaushit, numberofhitsfilter, cluster3d, crtstrips, 
     crtclustering, crtspacepoints, crttracks, wfalign, opdecopmt, ophitpmt, opflashtpc0, opflashtpc1]
 physics.ana: [superadata]
 
