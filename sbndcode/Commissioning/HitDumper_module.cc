@@ -51,7 +51,7 @@
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/OpDetSim/sbndPDMapAlg.hh"
 #include "sbnobj/SBND/Commissioning/MuonTrack.hh"
 #include "sbnobj/SBND/Trigger/pmtTrigger.hh"
@@ -439,7 +439,7 @@ private:
 
   std::vector<int> fKeepTaggerTypes = {0, 1, 2, 3, 4, 5, 6}; ///< Taggers to keep (to be set via fcl)
 
-  sbnd::crt::CRTGeoAlg fCRTGeoAlg;
+  art::ServiceHandle<sbnd::crt::CRTGeoService> fCRTGeoService;
 
   geo::GeometryCore const* fGeometryService;
   // detinfo::ElecClock fTrigClock;
@@ -459,7 +459,6 @@ private:
 
 Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
   : EDAnalyzer(pset)
-  , fCRTGeoAlg(pset.get<fhicl::ParameterSet>("CRTGeoAlg", fhicl::ParameterSet()))
 {
 
   fGeometryService = lar::providerFrom<geo::Geometry>();
@@ -468,7 +467,6 @@ Hitdumper::Hitdumper(fhicl::ParameterSet const& pset)
   // fDetectorProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
   // fTrigClock = fDetectorClocks->TriggerClock();
   fAuxDetGeoCore = art::ServiceHandle<geo::AuxDetGeometry>()->GetProviderPtr();
-
   // Read in the parameters from the .fcl file.
   this->reconfigure(pset);
 }
@@ -548,7 +546,7 @@ void Hitdumper::analyze(const art::Event& evt)
       art::Handle<std::vector<sbnd::timing::DAQTimestamp>> TDCHandle;
       evt.getByLabel(fTDCModuleLabel, TDCHandle);
       if(!TDCHandle.isValid()){
-	std::cout << "TDC product " << fTDCModuleLabel << " not found..." << std::endl;
+        std::cout << "TDC product " << fTDCModuleLabel << " not found..." << std::endl;
         throw std::exception();
       }
       std::vector<art::Ptr<sbnd::timing::DAQTimestamp>> TDCVec;
@@ -634,10 +632,10 @@ void Hitdumper::analyze(const art::Event& evt)
     {
       const art::Ptr<sbnd::crt::CRTStripHit> stripHit = crtStripHitVector[i];
 
-      _crt_strip_hit_tagger.push_back(fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel()));
-      _crt_strip_hit_module.push_back(fCRTGeoAlg.GetModule(stripHit->Channel()).adID);
+      _crt_strip_hit_tagger.push_back(fCRTGeoService->ChannelToTaggerEnum(stripHit->Channel()));
+      _crt_strip_hit_module.push_back(fCRTGeoService->GetModule(stripHit->Channel()).adID);
       _crt_strip_hit_channel.push_back(stripHit->Channel());
-      _crt_strip_hit_orient.push_back(fCRTGeoAlg.ChannelToOrientation(stripHit->Channel()));
+      _crt_strip_hit_orient.push_back(fCRTGeoService->ChannelToOrientation(stripHit->Channel()));
       _crt_strip_hit_t0.push_back(stripHit->Ts0());
       _crt_strip_hit_t1.push_back(stripHit->Ts1());
       _crt_strip_hit_adc1.push_back(stripHit->ADC1());
@@ -676,7 +674,7 @@ void Hitdumper::analyze(const art::Event& evt)
       const art::Ptr<sbnd::crt::CRTSpacePoint> spacePoint = crtSPVector[i];
 
       if(!spacePoint->Complete())
-	continue;
+        continue;
 
       const art::Ptr<sbnd::crt::CRTCluster> cluster = spToCluster.at(spacePoint.key());
 
@@ -719,8 +717,8 @@ void Hitdumper::analyze(const art::Event& evt)
         _crt_track_t0.push_back(crttrack->Ts0());
         _crt_track_t1.push_back(crttrack->Ts1());
 
-	const geo::Point_t start = crttrack->Start();
-	const geo::Point_t end   = crttrack->End();
+        const geo::Point_t start = crttrack->Start();
+        const geo::Point_t end   = crttrack->End();
 
         _crt_track_x1.push_back(start.X());
         _crt_track_y1.push_back(start.Y());
@@ -729,12 +727,12 @@ void Hitdumper::analyze(const art::Event& evt)
         _crt_track_y2.push_back(end.Y());
         _crt_track_z2.push_back(end.Z());
 
-  	_crt_track_tagger1.push_back(fCRTGeoAlg.WhichTagger(start.X(),start.Y(),start.Z()));
-	_crt_track_tagger2.push_back(fCRTGeoAlg.WhichTagger(end.X(),end.Y(),end.Z()));
+        _crt_track_tagger1.push_back(fCRTGeoService->WhichTagger(start.X(),start.Y(),start.Z()));
+        _crt_track_tagger2.push_back(fCRTGeoService->WhichTagger(end.X(),end.Y(),end.Z()));
      
-	_crt_track_theta.push_back(crttrack->Theta()*(180.0/M_PI));
-	_crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
-	_crt_track_length.push_back(crttrack->Length());
+        _crt_track_theta.push_back(crttrack->Theta()*(180.0/M_PI));
+        _crt_track_phi.push_back(crttrack->Phi()*(180.0/M_PI));
+        _crt_track_length.push_back(crttrack->Length());
       }
     } else {
       std::cout << "Failed to get sbnd::crt::CRTTrack data product ("<<fCRTTrackModuleLabel<<")." << std::endl;

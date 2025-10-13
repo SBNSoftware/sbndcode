@@ -2,7 +2,8 @@
 #include "particleinventoryservice.fcl"
 #include "rootoutput_sbnd.fcl"
 #include "crtrecoproducers_sbnd.fcl"
-#include "crtbacktrackeralg_sbnd.fcl"
+#include "crtana_sbnd.fcl"
+#include "crtgeoservice_sbnd.fcl"
 
 process_name: CRTRecoAna
 
@@ -11,6 +12,7 @@ services:
   TFileService: { fileName: "crtana_sbnd.root" }
   @table::sbnd_basic_services
   ParticleInventoryService: @local::standard_particleinventoryservice
+  CRTGeoService:            @local::crtgeoservice_sbnd
 }
 
 source:
@@ -39,11 +41,7 @@ physics:
 
   analyzers:
   {
-    crtana:
-    {
-      module_type:       "CRTAnalysis"
-      CRTBackTrackerAlg: @local::crtbacktrackeralg_sbnd
-    }
+    crtana: @local::crtana_sbnd
   }
 
   reco:    [ crtstrips, crtclustering, crtspacepoints, crttracks ]

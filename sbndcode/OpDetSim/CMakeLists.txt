@@ -7,7 +7,6 @@ cet_build_plugin( sbndPDMapAlg art::tool
                     lardataobj::Simulation
                     lardata::Utilities
                     lardataobj::RawData
-                    # lardataobj::RecoBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
                     larpandora::LArPandoraInterface
                     sbncode::OpDet_PDMapAlgSimple_tool
@@ -28,13 +27,13 @@ art_make_library( SOURCE
                     opDetDigitizerSBND_module.cc
                     opDetDigitizerWorker.cc
                     opDetSBNDTriggerAlg.cc
+                    TriggerEmulationService.cc
                   LIBRARIES
                     sbndcode_OpDetSim_sbndPDMapAlg_tool
                     larcore::Geometry_Geometry_service
                     lardataobj::Simulation
                     lardata::Utilities
                     lardataobj::RawData
-                    # lardataobj::RecoBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
                     larpandora::LArPandoraInterface
                     sbndcode::Utilities_SignalShapingServiceSBND_service
@@ -55,7 +54,6 @@ set (
                     lardata::Utilities
                     lardataobj::RawData
                     lardataobj::RecoBase
-                    lardataobj::RecoBase
                     lardataobj::headers
                     lardata::Utilities_LArFFT_service
                     lardataobj::AnalysisBase
@@ -69,7 +67,6 @@ set (
                     #sbnobj::SBND_CRT
                     #sbndcode_CRTUtils
                     sbnobj::SBND_Timing
-                    sbndcode_GeoWrappers
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
@@ -88,6 +85,29 @@ set (
 )
 
 set (
+  NOSIGNALSHAPE_LIBRARIES lardata::Utilities_LArFFT_service
+                    larcorealg::Geometry
+                    larcore::Geometry_Geometry_service
+                    lardata::Utilities
+                    lardataalg::DetectorInfo
+                    art::Framework_Core
+                    art::Framework_Principal
+                    art::Framework_Services_Registry
+                    art::Persistency_Common
+                    art::Persistency_Provenance
+                    art_root_io::tfile_support
+                    art_root_io::TFileService_service
+                    art::Framework_Services_System_TriggerNamesService_service
+                    art::Utilities
+                    canvas::canvas
+                    messagefacility::MF_MessageLogger
+                    cetlib::cetlib
+                    cetlib_except::cetlib_except
+                    ROOT::Geom
+                    ROOT::Core
+)
+
+set (
   OTHER_LIBRARIES
                     sbndcode_OpDetSim
                     larcore::Geometry_Geometry_service
@@ -97,7 +117,6 @@ set (
                     lardataobj::RecoBase
                     lardataobj::AnalysisBase
                     lardata::DetectorInfoServices_DetectorClocksServiceStandard_service
-                    sbndcode_Utilities_SignalShapingServiceSBND_service
                     nurandom::RandomUtils_NuRandomService_service
                     art::Framework_Core
                     art::Framework_Principal
@@ -123,8 +142,6 @@ set (
                     lardata::RecoObjects
                     larpandora::LArPandoraInterface
                     nusimdata::SimulationBase
-                    art::Framework_Core
-                    art::Framework_Principal
                     art::Framework_Services_Registry
                     art::Persistency_Common
                     art::Persistency_Provenance
@@ -139,15 +156,19 @@ set (
 )
 
 
+
+
 cet_build_plugin(opHitFinderSBND art::module SOURCE opHitFinderSBND_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(opDetDigitizerSBND art::module SOURCE opDetDigitizerSBND_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(opDetDigitizerSBND art::module SOURCE opDetDigitizerSBND_module.cc LIBRARIES ${MODULE_LIBRARIES} ${OTHER_LIBRARIES})
 cet_build_plugin(wvfAna art::module SOURCE wvfAna_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(BeamRatesCalib art::module SOURCE BeamRatesCalib_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(PMTNoiseCounter art::module SOURCE PMTNoiseCounter_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(FlashWithNeutrino art::module SOURCE FlashWithNeutrinoInTPC.cc LIBRARIES ${OTHER_LIBRARIES})
-cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_Summer_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
-cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(BeamRatesCalib art::module SOURCE BeamRatesCalib_module.cc LIBRARIES ${MODULE_LIBRARIES} ${OTHER_LIBRARIES})
+#cet_build_plugin(PMTNoiseCounter art::module SOURCE PMTNoiseCounter_module.cc LIBRARIES ${MODULE_LIBRARIES})
+#cet_build_plugin(FlashWithNeutrino art::module SOURCE FlashWithNeutrinoInTPC.cc LIBRARIES ${MODULE_LIBRARIES})
+#cet_build_plugin(SummedWaveformProducer art::module SOURCE Zero_Surpressed_PMT_Summer_module.cc LIBRARIES ${MODULE_LIBRARIES})
+#cet_build_plugin(TimeStampDumper art::module SOURCE TimeStampDumper_module.cc LIBRARIES ${MODULE_LIBRARIES})
+#cet_build_plugin(michelETagger art::module SOURCE michelETagger_module.cc LIBRARIES ${MODULE_LIBRARIES})
+cet_build_plugin(TriggerEmulationService art::service SOURCE TriggerEmulationService_service.cc TriggerEmulationService.cc LIBRARIES ${NOSIGNALSHAPE_LIBRARIES})
+#cet_build_plugin(SimpleBeamRateCalibAnalyzer art::module SOURCE SimpleBeamRateCalibAnalyzer_module.cc LIBRARIES ${OTHER_LIBRARIES})
 
 
 install_headers()

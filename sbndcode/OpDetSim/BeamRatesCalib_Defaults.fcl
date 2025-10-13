@@ -19,7 +19,7 @@ BeamRatesCalib:
     # Save some example trigger pulses for each flash (TH1D similar to wvfana)
     SaveAllMon: true
     # The MON threshold used in the saved TH1D examples
-    FCLthreshold: 50 
+    FCLthreshold: 25 
     # PMT index corresponding to the opening of the beam acceptance BeamWindowEnd
     # Note that BeamWindowStart should not account for MTC/A wire+processing delays
     # Those are handled by CAENOffset
@@ -31,7 +31,7 @@ BeamRatesCalib:
     NominalGoodStartTime: 10 #ns. extra offset from TDC 
     # Flags for additional outputs for MSUM digitization + software trigger 
     CheckHardwareTriggers: true
-    CheckSoftTrig: false
+    CheckSoftTrig: true
     # Number of CAEN boards on for this run
     TotalCAENBoards: 8
     # Assorted labels to get data products out of Art files

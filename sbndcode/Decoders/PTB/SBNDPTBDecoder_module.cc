@@ -200,6 +200,8 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 	  wt = tstruct.word_type;
 	  tstruct.trigger_word = ctbfrag.Trigger(iword)->trigger_word;
 	  tstruct.timestamp = ctbfrag.Trigger(iword)->timestamp;
+ 	  tstruct.prev_timestamp = 0;
+	  tstruct.gate_counter = 0;
 	  if (ctbfrag.Trigger(iword)->IsHLT()) 
 	    {
 	      
@@ -207,10 +209,6 @@ void SBNDPTBDecoder::_process_PTB_AUX(const artdaq::Fragment& frag, ptbsv_t &sou
 		tstruct.prev_timestamp = ctbfrag.PTBWord(iword)->prevTS;
 		tstruct.gate_counter = ctbfrag.Trigger(iword)->gate_counter;
               }
-              else if ( frag.hasMetadata() == false ){ //If data is taken with 128b PTB words
-		tstruct.prev_timestamp = 0;
-		tstruct.gate_counter = 0;
-	      }
 
 
 	      ix = sout.HLTrigs.size();

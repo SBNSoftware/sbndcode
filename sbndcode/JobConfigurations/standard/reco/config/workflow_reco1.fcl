@@ -19,19 +19,19 @@ sbnd_reco1_producers:{
 
     ### optical deconvolution
     opdecopmt:          @local::SBNDOpDeconvolutionPMT
-    opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
+	 opdecoxarapuca:     @local::SBNDOpDeconvolutionXARAPUCA
 
     ### optical hit finders
     # ophit:               @local::sbnd_hit_finder
     ophitpmt:            @local::SBNDDecoOpHitFinderPMT
-    ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
+	 ophitxarapuca:   @local::SBNDDecoOpHitFinderXArapuca
 
     ### flash finders
     # opflash:             @local::sbnd_opflash
     opflashtpc0:         @local::SBNDDecoSimpleFlashTPC0
     opflashtpc1:         @local::SBNDDecoSimpleFlashTPC1
 
-    # opflash(arapucas):             @local::sbnd_opflash
+    ## opflash(arapucas):             @local::sbnd_opflash
     opflashtpc0xarapuca:         @local::SBNDDecoSimpleFlashTPC0Arapuca
     opflashtpc1xarapuca:         @local::SBNDDecoSimpleFlashTPC1Arapuca
 
@@ -60,13 +60,13 @@ sbnd_reco1_producers:{
 sbnd_reco1_producer_sequence: [  
     rns
   , opdecopmt
-  , opdecoxarapuca
+  #, opdecoxarapuca
   , ophitpmt
-  , ophitxarapuca
+  #, ophitxarapuca
   , opflashtpc0
   , opflashtpc1
-  , opflashtpc0xarapuca
-  , opflashtpc1xarapuca
+  #, opflashtpc0xarapuca
+  #, opflashtpc1xarapuca
   , gaushit
   , gaushitTruthMatch
   , specialblipgaushit
