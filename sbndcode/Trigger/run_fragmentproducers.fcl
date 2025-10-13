@@ -10,13 +10,16 @@
 #include "pmttriggerproducer.fcl"
 #include "artdaqfragmentproducer.fcl"
 
+#include "crtgeoservice_sbnd.fcl"
+
 process_name:FragmentProducer
 
 services:
 {
     @table::sbnd_detsim_services
     TFileService: { fileName: "fragment_hist.root" }
-    RandomNumberGenerator: {} #ART native random number generator 
+    RandomNumberGenerator: {} #ART native random number generator
+    CRTGeoService: @local::crtgeoservice_sbnd
 } 
 
 #source is now a root file                                                                                         

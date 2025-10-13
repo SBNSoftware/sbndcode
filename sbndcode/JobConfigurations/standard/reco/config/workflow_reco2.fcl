@@ -102,8 +102,8 @@ sbnd_reco2_producer_sequence: [
     , crttrackmatching
     , fmatch
     , fmatchop
-    , fmatchara
-    , fmatchopara
+    #, fmatchara
+    #, fmatchopara
     , caloskimCalorimetry
     , opt0finder
     , tpcpmtbarycentermatching
@@ -117,8 +117,8 @@ sbnd_reco2_producer_sequence: [
     , crttrackmatchingSCE
     , fmatchSCE
     , fmatchopSCE
-    , fmatcharaSCE
-    , fmatchoparaSCE
+    #, fmatcharaSCE
+    #, fmatchoparaSCE
     , opt0finderSCE
     , tpcpmtbarycentermatchingSCE
     , cvn
