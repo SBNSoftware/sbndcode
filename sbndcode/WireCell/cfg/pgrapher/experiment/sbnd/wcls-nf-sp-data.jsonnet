@@ -96,12 +96,10 @@ local wcls_output = {
     type: 'wclsFrameSaver',
     name: 'nfsaver',
     data: {
-      // anode: wc.tn(tools.anode),
       anode: wc.tn(mega_anode),
       digitize: true,  // true means save as RawDigit, else recob::Wire
       frame_tags: ['raw'],
       // nticks: params.daq.nticks,
-      chanmaskmaps: ['bad'],
     },
   }, nin=1, nout=1, uses=[mega_anode]),
 
@@ -423,6 +421,7 @@ else if roi == "trad" then
 g.pipeline([wcls_input.adc_digits, 
 fanpipe, 
 retag_sp, 
+wcls_output.nf_digits,
 wcls_output.sp_signals, 
 sink_sp]);
 

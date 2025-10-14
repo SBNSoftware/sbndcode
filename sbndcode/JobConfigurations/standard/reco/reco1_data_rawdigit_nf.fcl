@@ -1,0 +1,2 @@
+#include "reco1_data_rawdigit.fcl"
+physics.producers.sptpc2d.wcls_main.outputers: ["wclsFrameSaver:nfsaver","wclsFrameSaver:spsaver"]
