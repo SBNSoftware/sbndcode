@@ -133,7 +133,7 @@ private:
   bool fverbose; /**< If `true` it increases verbosity of console output for detailed processing steps. */
 
   // Class methods.
-  void decode_fragment(uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms);
+  void decode_fragment(uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms, std::vector<std::vector<uint16_t>>& wvfms, bool last_one);
   
   bool get_ptb_hlt_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp, uint16_t & hlt_code);
   bool get_spec_tdc_etrig_timestamp(art::Event& e, uint64_t corr_raw_timestamp, uint64_t & timestamp);
@@ -310,6 +310,7 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
   std::cout << "wvfms_size: " << wvfms.size() << std::endl;
   int32_t nominal_TTT = TTT_DEFAULT;
   uint64_t nominal_frag_timestamp = TTT_DEFAULT;
+  bool last_one = false;
 
   if (fverbose | fdebug_fragments_handle) std::cout << "\n > SBNDXARAPUCADecoder::produce: searching for V1740 fragments..." << std::endl;
   
@@ -347,7 +348,8 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
             
             for (size_t f = 0; f < num_caen_fragments; f++) {
               const artdaq::Fragment fragment = *container_fragment[f].get();
-              decode_fragment(timestamp, nominal_frag_timestamp, nominal_TTT, fragment_indices, fragment, *prod_wvfms, wvfms);
+              last_one = f == (num_caen_fragments - 1);
+              decode_fragment(timestamp, nominal_frag_timestamp, nominal_TTT, fragment_indices, fragment, *prod_wvfms, wvfms, last_one);
             } // End CAEN V1740 fragments loop.
           }
         } // End Container fragments loop.
@@ -359,7 +361,8 @@ void sbndaq::SBNDXARAPUCADecoder::produce(art::Event& e)
         // It searches for all CAEN V1740 fragments.
         for (size_t f = 0; f < frag_handle_size; f++) {
           const artdaq::Fragment fragment = fragment_handle->at(f);
-          decode_fragment(timestamp, nominal_frag_timestamp, nominal_TTT, fragment_indices, fragment, *prod_wvfms, wvfms);
+          last_one = f == (frag_handle_size - 1);
+          decode_fragment(timestamp, nominal_frag_timestamp, nominal_TTT, fragment_indices, fragment, *prod_wvfms, wvfms, last_one);
         } // End CAEN V1740 fragments loop.
       }
     } // End extracting CAEN V1740 fragments.
@@ -606,9 +609,7 @@ bool sbndaq::SBNDXARAPUCADecoder::get_ptb_hlt_timestamp(art::Event& e, uint64_t 
  * 
  */
 
-void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms,  std::vector<std::vector<uint16_t>>& wvfms) {
-  std::cout << "decode_wvfms_size: " << wvfms.size() << std::endl;
-  
+void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& nominal_frag_timestamp, int32_t& nominal_TTT, std::vector<size_t> & fragment_indices, const artdaq::Fragment& fragment, std::vector <raw::OpDetWaveform>& prod_wvfms,  std::vector<std::vector<uint16_t>>& wvfms, bool last_one) {
   auto fragment_id = fragment.fragmentID() - ffragment_id_offset;
   auto it = std::find(fboard_id_list.begin(), fboard_id_list.end(), fragment_id);
   size_t board_idx;
@@ -678,8 +679,6 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& 
       std::cout << "\t Number of samples per group (this fragment): " << num_samples_per_group << std::endl;
     }
 
-    //std::vector <std::vector <uint16_t> > wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
-
     // ===============  Extracts timing information for this fragment =============== //
 
     uint64_t frag_timestamp = fragment.timestamp(); // ns.
@@ -694,13 +693,7 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& 
     //// ===============  Start decoding the waveforms =============== //
     std::vector <std::vector <uint16_t> > fragment_wvfms(num_channels, std::vector<uint16_t>(num_samples_per_wvfm, 0));
     decode_waveforms(fragment, fragment_wvfms, header_size, num_channels, num_samples_per_wvfm, num_words_per_wvfms, num_samples_per_group);
-//
-    //// ===============  Shifts timing to the selected timing reference frame =============== //
-//
-    //shift_time(fragment, TTT_ticks, TTT_end_ns, timestamp, num_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
-    //dump_waveforms(prod_wvfms, wvfms, fragment_indices, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
-    //combine_waveforms(wvfms, fragment_wvfms, num_channels);
-
+    
     is_nominal_length = (num_nominal_samples_per_wvfm == num_samples_per_wvfm);
     is_first = (fragment_indices[board_idx] == 0);
     
@@ -721,8 +714,15 @@ void sbndaq::SBNDXARAPUCADecoder::decode_fragment(uint64_t timestamp, uint64_t& 
       std::cout << " EXTENDED fragment " << std::endl;
       combine_waveforms(wvfms, fragment_wvfms, num_channels);
     }
-
+  
     fragment_indices[board_idx]++;  
+
+    if (last_one) {
+      std::cout << " LAST fragment " << std::endl;
+      shift_time(TTT_ticks, nominal_TTT, nominal_frag_timestamp, timestamp, num_nominal_samples_per_wvfm, ini_wvfm_timestamp, end_wvfm_timestamp);
+      dump_waveforms(prod_wvfms, wvfms, fragment_indices, board_idx, num_channels, ini_wvfm_timestamp, end_wvfm_timestamp);
+    }
+
   }
 }
 
