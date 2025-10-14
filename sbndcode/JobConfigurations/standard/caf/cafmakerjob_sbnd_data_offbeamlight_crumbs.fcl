@@ -1,4 +1,4 @@
-#include "cafmakerjob_sbnd_data_bnblight.fcl"
+#include "cafmakerjob_sbnd_data_offbeamlight.fcl"
 
 physics.producers.crumbs.Data:                         true
 physics.producers.crumbs.TrainingMode:                 true
