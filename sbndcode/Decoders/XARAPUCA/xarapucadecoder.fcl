@@ -36,12 +36,13 @@ xarapucadecoder:
     # - Debug options.
     debug_tdc_handle: false                                     # (De)activates SPEC-TDC art::Handle information printing.
     debug_ptb_handle: false                                     # (De)activates PTB art::Handle information printing.
-    debug_fragments_handle: true                               # (De)activates V1740B CAEN fragments art::Handle information printing.
-    debug_timing: true                                         # (De)activates timing data printing.
+    debug_fragments_handle: false                               # (De)activates V1740B CAEN fragments art::Handle information printing.
+    debug_timing: false                                         # (De)activates timing data printing.
     debug_buffer: false                                         # (De)activates buffer status printing.
     debug_waveforms: false                                      # (De)activates waveforms decoding printing.
+    debug_extended_fragments: false                             # (De)activates extended fragments information printing.
     # - Verbose option.
-    verbose: true                                              # (De)activates verbosity.
+    verbose: false                                              # (De)activates verbosity.
 }
 
 END_PROLOG
