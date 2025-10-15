@@ -83,6 +83,9 @@ sbnd_reco1_producers.gaushit.CalDataModuleLabel:                                
 sbnd_reco1_producers.fasthit.DigitModuleLabel:                                             "simtpc2d:daq"
 sbnd_reco1_producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:             "gaushit"
 sbnd_reco1_producers.specialblipgaushit.CalDataModuleLabel:  "simtpc2d:gauss"
+sbnd_reco1_producers.specialblipgaushit.MinHitHeightPlane0: 8
+sbnd_reco1_producers.specialblipgaushit.MinHitHeightPlane1: 15
+sbnd_reco1_producers.specialblipgaushit.MinHitHeightPlane2: 5
 sbnd_reco1_producers.blipgaushitTruthMatch.HitParticleAssociations.HitModuleLabel:         "specialblipgaushit"
 sbnd_reco1_filters: {
     #filter events based on the number of reconstructed hits (avoids overly messy data events)
