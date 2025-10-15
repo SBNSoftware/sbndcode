@@ -93,4 +93,4 @@ outputs:
                     ]
   }
 }
-physics.producers.simtpc2d.wcls_main.structs.enableLowROIThresholds: false
+physics.producers.simtpc2d.wcls_main.structs.enableLowROIThresholds: true

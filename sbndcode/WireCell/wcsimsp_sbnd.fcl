@@ -35,7 +35,8 @@ sbnd_wcls_simsp.wcls_main.configs:  ["pgrapher/experiment/sbnd/wcls-sim-drift-de
 sbnd_wcls_simsp.wcls_main.inputers: ["wclsSimDepoSetSource:"]
 sbnd_wcls_simsp.wcls_main.outputers:["wclsDepoFluxWriter:postdrift",
                                      # "wclsFrameSaver:simdigits" , # <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
-                                     "wclsFrameSaver:spsaver"
+                                     "wclsFrameSaver:spsaver",
+				     "wclsFrameSaver:dnnsaver"
                                     ]
 sbnd_wcls_simsp.wcls_main.params:   {
                                      ## This locates the input SimEnergyDeposits in the art::Event
@@ -64,7 +65,7 @@ sbnd_wcls_simsp.wcls_main.params:   {
 
                                      dnnroi_model_p0: "DNN_ROI/plane0.ts"
                                      dnnroi_model_p1: "DNN_ROI/plane1.ts"
-                                     roi: "trad"
+                                     roi: "both"
                                     }
                                     
 sbnd_wcls_simsp.wcls_main.structs:  {
@@ -81,7 +82,7 @@ sbnd_wcls_simsp.wcls_main.structs:  {
                                      nticks: 3427
                                      nchunks: 2 # dummy for trad
                                      tick_per_slice: 4 # dummy for trad
-				     enableLowROIThresholds: "false"
+				     enableLowROIThresholds: "true"
                                     }
 
 # ------------------------------------------------------------------------------------ #
