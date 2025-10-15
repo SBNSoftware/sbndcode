@@ -38,7 +38,7 @@
 #include "TH1D.h"
 
 
-typedef std::vector<art::Ptr<sim::SimEnergyDeposit>> SEDVec_t;
+typedef std::vector<art::Ptr<sim::IDE>> SEDVec_t;
 
 geo::View_t kViews[3]={geo::kU, geo::kV, geo::kW};
 

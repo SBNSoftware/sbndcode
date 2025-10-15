@@ -61,9 +61,9 @@ namespace BlipUtils {
     pinfo.depEnergy     = 0;
     pinfo.depElectrons  = 0;
     for(auto& sed : sedvec ) {
-      if( sed->TrackID() == part.TrackId() ) {
-        pinfo.depEnergy     += sed->Energy();
-        pinfo.depElectrons  += sed->NumElectrons();
+      if( sed->trackID == part.TrackId() ) {
+        pinfo.depEnergy     += sed->energy;
+        pinfo.depElectrons  += sed->numElectrons;
       }
     }
     
