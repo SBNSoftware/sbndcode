@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+analyseEvents:
+{
+  module_type:  "AnalyseEvents"
+
+  SliceLabel:       "pandora"
+  PFParticleLabel:  "pandora"
+  TrackLabel:       "pandoraTrack"
+  CalorimetryLabel: "pandoraCalo"
+  OpT0FinderLabel:  "opt0finder"
+}
+
+END_PROLOG
