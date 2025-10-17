@@ -65,6 +65,7 @@ typedef struct{
     double numMatchedHits;
     double numTrueHits;
     double truePDG;
+    int trueTrackID;
 } recoParticle;
 
 typedef struct{
@@ -102,6 +103,7 @@ typedef struct{
     double dy;
     double dz;
     double neutrinoParent;
+    int trackID;
 } trueParticle;
 
 typedef struct{
@@ -178,7 +180,7 @@ void ProfileDraw(TProfile* profile, const char* filename, const char* title){
     ProfileCanvas->Clear();
 }
 
-void ProfileDrawDouble(TProfile* profile1, TProfile* profile2, const char* filename, const char* title){
+void ProfileDrawDouble(TProfile* profile1, TProfile* profile2, const char* filename, const char* title, const std::string& legendLocation){
     TCanvas* ProfileCanvas = new TCanvas("Profile_canvas", "Graph Draw Options", 200, 10, 600, 400);
     ProfileCanvas->SetTickx();
     ProfileCanvas->SetTicky();
@@ -191,6 +193,14 @@ void ProfileDrawDouble(TProfile* profile1, TProfile* profile2, const char* filen
     //pt->SetFillStyle(1001);
     //pt->SetBorderSize(0); 
 	//pt->Draw();
+
+    double max1 = profile1->GetMaximum();
+    double max2 = profile2->GetMaximum();
+
+    double globalMax = std::max(max1, max2);
+    double padding = 0.3 * (globalMax);
+    profile1->SetMaximum(globalMax + padding);
+    //profile1->SetMaximum(50);
 
     profile1->SetTitle(title);
     profile1->SetErrorOption("i");
@@ -212,11 +222,38 @@ void ProfileDrawDouble(TProfile* profile1, TProfile* profile2, const char* filen
     profile2->SetLineWidth(2);
     profile2->Draw("same");
 
-    TLegend* legend = new TLegend(0.55, 0.7, 0.9, 0.9); // adjust position if needed
+    double Lxmin = 0;
+    double Lymax = 0;
+    double Lxmax = 0;
+    double Lymin = 0;
+
+    if(legendLocation == "topRight"){
+        Lxmin = 0.5;
+        Lymax = 0.863;
+        Lxmax = 0.87;
+        Lymin = 0.72;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.863;
+        Lxmax = 0.42;
+        Lymin = 0.72;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.5;
+        Lymax = 0.28;
+        Lxmax = 0.87;
+        Lymin = 0.137;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.28;
+        Lxmax = 0.42;
+        Lymin = 0.137;
+    }
+
+    auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
     legend->AddEntry(profile1, "Nu+E Elastic Scattering, With Cosmics", "lp");
     legend->AddEntry(profile2, "Nu+E Elastic Scattering, Without Cosmics", "lp");
-    legend->SetBorderSize(0);
-    legend->SetFillColor(0);
+    legend->SetTextSize(0.0225);
+    legend->SetMargin(0.13);
     legend->Draw();
 
     ProfileCanvas->SaveAs(filename);
@@ -282,7 +319,7 @@ void makeEqualStatProfile(std::vector<double>& xVals, std::vector<double>& yVals
     delete hx;
 }
 
-void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sbnd, TH1F* nue, TH1F* nue_100k, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, TPaveText* pt = nullptr, int* percentage = nullptr, int* drawLine = nullptr, int* linePos = nullptr){
+void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sbnd, TH1F* nue, TH1F* nue_100k, double ymin, double ymax, double xmin, double xmax, const std::string& legendLocation, const char* filename, TPaveText* pt = nullptr, int* percentage = nullptr, int* drawLine = nullptr, int* linePos = nullptr){
     canvas->cd();
     canvas->SetTickx();
     canvas->SetTicky();
@@ -341,6 +378,33 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     current->GetXaxis()->SetTickSize(0.02);
     current->GetYaxis()->SetTickSize(0.02);
 
+    double Lxmin = 0;
+    double Lymax = 0;
+    double Lxmax = 0;
+    double Lymin = 0;
+    
+    if(legendLocation == "topRight"){
+        Lxmin = 0.58;
+        Lymax = 0.863;
+        Lxmax = 0.87;
+        Lymin = 0.74;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.863;
+        Lxmax = 0.42;
+        Lymin = 0.74;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.58;
+        Lymax = 0.26;
+        Lxmax = 0.87;
+        Lymin = 0.137;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.26;
+        Lxmax = 0.42;
+        Lymin = 0.137;
+    }
+
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
     //legend->AddEntry(dune, "Pandora Deep Learning: DUNE/LBNF Tune", "f");
     //legend->AddEntry(uboone, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
@@ -384,13 +448,16 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     canvas->SaveAs(filename);
 }
 
-void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sbnd, TH1F* nue, TH1F* nue_100k, double sizeCurrent, double sizeCheated, double sizeDune, double sizeUboone, double sizeSBND, double sizeNuE, double sizeNuE_100k, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, int* drawLine = nullptr, int* linePos = nullptr){
-    TCanvas *percentageCanvas = new TCanvas("percentage_canvas", "Graph Draw Options", 200, 10, 600, 400); 
+void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sbnd, TH1F* nue, TH1F* nue_100k, double sizeCurrent, double sizeCheated, double sizeDune, double sizeUboone, double sizeSBND, double sizeNuE, double sizeNuE_100k, double ymin, double ymax, double xmin, double xmax, const std::string& legendLocation, const char* filename, int* drawLine = nullptr, int* linePos = nullptr){
+    TCanvas *percentageCanvas = new TCanvas("percentage_canvas", "Graph Draw Options", 200, 10, 600, 400);
+    std::cout << "7Oct________________________________________________" << std::endl; 
     TH1F* currentPerc = (TH1F*) current->Clone("perc hist");
     //currentPerc->Scale(100.0 * 1.0/sizeCurrent);
     //currentPerc->GetYaxis()->SetTitle("Percentage of Events (%)"); 
-    currentPerc->Scale(1.0 / currentPerc->Integral());
+    double currentInt = currentPerc->Integral(0, currentPerc->GetNbinsX()+1);
+    currentPerc->Scale(1.0 / currentInt);
     currentPerc->GetYaxis()->SetTitle("Events, Area Normalised"); 
+    std::cout << "Current: Percentage Count = " << sizeCurrent << ", Area Normalised Count = " << currentInt << std::endl;
 
     TH1F* cheatedPerc = (TH1F*) cheated->Clone("perc hist");
     //cheatedPerc->Scale(100.0 * 1.0/sizeCheated);
@@ -407,8 +474,11 @@ void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sb
     TH1F* uboonePerc = (TH1F*) uboone->Clone("perc hist");
     //uboonePerc->Scale(100.0 * 1.0/sizeUboone);
     //uboonePerc->GetYaxis()->SetTitle("Percentage of Events (%)");
-    uboonePerc->Scale(1.0 / uboonePerc->Integral());
+    double ubooneInt = uboonePerc->Integral(0, uboonePerc->GetNbinsX()+1);
+    uboonePerc->Scale(1.0 / ubooneInt);
     uboonePerc->GetYaxis()->SetTitle("Events, Area Normalised");
+    std::cout << "Uboone: Percentage Count = " << sizeUboone << ", Area Normalised Count = " << ubooneInt << std::endl;
+    std::cout << "________________________________________________" << std::endl; 
 
     TH1F* sbndPerc = (TH1F*) sbnd->Clone("perc hist");
     //sbndPerc->Scale(100.0 * 1.0/sizeSBND);
@@ -427,8 +497,36 @@ void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sb
     //nue_100kPerc->GetYaxis()->SetTitle("Percentage of Events (%)");
     //nue_100kPerc->Scale(1.0 / nue_100kPerc->Integral());
     nue_100kPerc->GetYaxis()->SetTitle("Events, Area Normalised");
-    
-    TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.17, Lxmax, Lymin - 0.02, "NDC");
+   
+    double Lxmin = 0;
+    double Lymax = 0;
+    double Lxmax = 0;
+    double Lymin = 0;
+
+    if(legendLocation == "topRight"){
+        Lxmin = 0.58;
+        Lymax = 0.863;
+        Lxmax = 0.87;
+        Lymin = 0.74;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.863;
+        Lxmax = 0.42;
+        Lymin = 0.74;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.58;
+        Lymax = 0.26;
+        Lxmax = 0.87;
+        Lymin = 0.137;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.26;
+        Lxmax = 0.42;
+        Lymin = 0.137;
+    }
+
+    TPaveText* pt = nullptr;
+    //TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.17, Lxmax, Lymin - 0.02, "NDC");
     //pt->AddText(Form("Number of DL Dune Entries: %d", (int)sizeDune));
     //pt->AddText(Form("Number of DL Uboone Entries: %d", (int)sizeUboone));
     //pt->AddText(Form("Number of DL SBND Entries: %d", (int)sizeSBND));
@@ -438,16 +536,24 @@ void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sb
     //pt->AddText(Form("Number of Cheated Entries: %d", (int)sizeCheated));
     //pt->AddText(Form("Number of Cosmic Entries: %d", (int)sizeCurrent));
     //pt->AddText(Form("Number of No Cosmic Entries: %d", (int)sizeUboone));
-    pt->SetFillColor(kWhite);
-    pt->SetFillStyle(1001);
-    pt->SetBorderSize(0); 
+    //pt->SetFillColor(kWhite);
+    //pt->SetFillStyle(1001);
+    //pt->SetBorderSize(0); 
    
     int funcValue = 1;
 
-    styleDraw(percentageCanvas, currentPerc, cheatedPerc, dunePerc, uboonePerc, sbndPerc, nuePerc, nue_100kPerc, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, pt, &funcValue, drawLine, linePos);
+    styleDraw(percentageCanvas, currentPerc, cheatedPerc, dunePerc, uboonePerc, sbndPerc, nuePerc, nue_100kPerc, ymin, ymax, xmin, xmax, legendLocation, filename, pt, &funcValue, drawLine, linePos);
 }
 
-void efficiency(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sbnd, TH1F* nue, TH1F* nue_100k, double sizeCurrent, double sizeCheated, double sizeDune, double sizeUboone, double sizeSBND, double sizeNuE, double sizeNuE_100k, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = ""){
+void efficiency(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sbnd, TH1F* nue, TH1F* nue_100k, double sizeCurrent, double sizeCheated, double sizeDune, double sizeUboone, double sizeSBND, double sizeNuE, double sizeNuE_100k, double ymin, double ymax, double xmin, double xmax, const std::string& legendLocation, const char* filename, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = ""){
+    double currentInt = current->Integral(0, current->GetNbinsX()+1);
+    double ubooneInt = uboone->Integral(0, uboone->GetNbinsX()+1);
+    double cheatedInt = cheated->Integral(0, cheated->GetNbinsX()+1);
+    double duneInt = dune->Integral(0, dune->GetNbinsX()+1);
+    double sbndInt = sbnd->Integral(0, sbnd->GetNbinsX()+1);
+    double nueInt = nue->Integral(0, nue->GetNbinsX()+1);
+    double nue_100kInt = nue_100k->Integral(0, nue_100k->GetNbinsX()+1);
+    
     TCanvas *efficiencyCanvas = new TCanvas("efficiency_canvas", "Graph Draw Options", 200, 10, 600, 400); 
     TH1F* currentEff = (TH1F*) current->Clone("eff hist");
     currentEff->Reset();
@@ -502,13 +608,13 @@ void efficiency(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sb
         nueSum += nue->GetBinContent(i);
         nue_100kSum += nue_100k->GetBinContent(i);
 
-        double currentEffValue = currentSum/sizeCurrent;
+        double currentEffValue = currentSum/currentInt;
         //double cheatedEffValue = cheatedSum/sizeCheated;
         //double duneEffValue = duneSum/sizeDune;
-        double ubooneEffValue = ubooneSum/sizeUboone;
-        double sbndEffValue = sbndSum/sizeSBND;
-        double nueEffValue = nueSum/sizeNuE;
-        double nue_100kEffValue = nue_100kSum/sizeNuE_100k;
+        double ubooneEffValue = ubooneSum/ubooneInt;
+        double sbndEffValue = sbndSum/sbndInt;
+        double nueEffValue = nueSum/nueInt;
+        double nue_100kEffValue = nue_100kSum/nue_100kInt;
 
         currentEff->SetBinContent(i, currentEffValue);
         //cheatedEff->SetBinContent(i, cheatedEffValue);
@@ -517,6 +623,33 @@ void efficiency(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sb
         sbndEff->SetBinContent(i, sbndEffValue);
         nueEff->SetBinContent(i, nueEffValue);
         nue_100kEff->SetBinContent(i, nue_100kEffValue);
+    }
+
+    double Lxmin = 0;
+    double Lymax = 0;
+    double Lxmax = 0;
+    double Lymin = 0;
+
+    if(legendLocation == "topRight"){
+        Lxmin = 0.52;
+        Lymax = 0.863;
+        Lxmax = 0.87;
+        Lymin = 0.72;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.863;
+        Lxmax = 0.4;
+        Lymin = 0.72;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.52;
+        Lymax = 0.28;
+        Lxmax = 0.87;
+        Lymin = 0.137;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.28;
+        Lxmax = 0.4;
+        Lymin = 0.137;
     }
 
     TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.15, Lxmax, Lymin - 0.02, "NDC");
@@ -534,7 +667,7 @@ void efficiency(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sb
 
     int funcValue = 1;
 
-    styleDraw(efficiencyCanvas, currentEff, cheatedEff, duneEff, ubooneEff, sbndEff, nueEff, nue_100kEff, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, pt = nullptr, &funcValue, drawLine, linePos);
+    styleDraw(efficiencyCanvas, currentEff, cheatedEff, duneEff, ubooneEff, sbndEff, nueEff, nue_100kEff, ymin, ymax, xmin, xmax, legendLocation, filename, pt = nullptr, &funcValue, drawLine, linePos);
 }
 
 recoSlice chooseSlice(std::vector<recoSlice> recoSlices, double method){
@@ -618,49 +751,74 @@ trueParticle chooseTrueParticle(std::vector<trueParticle> trueParticles, trueNeu
     return trueParticles[chosenParticleIndex];
 }
 
-double sliceCompletenessCalculator(std::vector<recoParticle> recoParticles, double sliceID){
+double sliceCompletenessCalculator(std::vector<recoParticle> recoParticles, double sliceID, int trueTrackID){
+    // Calculates the completeness of the slice bsed on the true recoil electron:
+    // Completeness = number of hits in the slice that have been truth-matched to the true recoil electron / total number of hits truth-matched to the true recoil electron
     int counter = 0;
     double totalNumMatchedHits = 0;
-    double totalNumTrueHits = 0;
+    double totalNumMatchedHitsSlice = 0;
 
+    std::cout << "true recoil electron track id = " << trueTrackID << std::endl;
+    std::cout << "chosen slice ID = " << sliceID << std::endl;
     for(size_t j = 0; j < recoParticles.size(); ++j){
-        if(recoParticles[j].sliceID == sliceID){
-            counter++;
+        if(recoParticles[j].trueTrackID == trueTrackID){
+            std::cout << "_________________" << std::endl;
+            std::cout << "track ID = " << recoParticles[j].trueTrackID << ", sliceID = " << recoParticles[j].sliceID << std::endl;
             totalNumMatchedHits += recoParticles[j].numMatchedHits;
-            totalNumTrueHits += recoParticles[j].numTrueHits;
+            std::cout << "num truth matched hits = " << recoParticles[j].numMatchedHits << std::endl;
+            if(recoParticles[j].sliceID == sliceID){
+                counter++;
+                totalNumMatchedHitsSlice += recoParticles[j].numMatchedHits;
+            }
         }
     }
 
+    std::cout << "Total number of matched hits to true recoil electron = " << totalNumMatchedHits << std::endl;
+    std::cout << "Number of matched hits to true recoil electron in the slice = " << totalNumMatchedHitsSlice << std::endl;
+   
     double sliceCompleteness;
     if(counter < 1){
-        sliceCompleteness = -999999;
+        sliceCompleteness = 0;
     } else {
-        sliceCompleteness = (totalNumMatchedHits / totalNumTrueHits);
+        sliceCompleteness = (totalNumMatchedHitsSlice / totalNumMatchedHits);
     }
-    //std::cout << "Chosen Slice Completeness = " << sliceCompleteness << std::endl;
+    std::cout << "Chosen Slice Completeness = " << sliceCompleteness << std::endl;
+    std::cout << "done" << std::endl;
     return sliceCompleteness;
 }
 
-double slicePurityCalculator(std::vector<recoParticle> recoParticles, double sliceID){
+double slicePurityCalculator(std::vector<recoParticle> recoParticles, double sliceID, int trueTrackID){
+    // Calculates the purity of the slice based on the true recoil electron:
+    // Purity = number of hits that have been truth-matched to the true recoil electron / number of hits in the slice 
     int counter = 0;
     double totalNumMatchedHits = 0;
     double totalNumHits = 0;
 
+    std::cout << "true recoil electron track id = " << trueTrackID << std::endl;
     for(size_t j = 0; j < recoParticles.size(); ++j){
         if(recoParticles[j].sliceID == sliceID){
             counter++;
-            totalNumMatchedHits += recoParticles[j].numMatchedHits;
+            std::cout << "___________________" << std::endl;
             totalNumHits += recoParticles[j].numHits;
+            std::cout << "reco PDG = " << recoParticles[j].pdg << ", true Track ID = " << recoParticles[j].trueTrackID << ", true particle PDG = " << recoParticles[j].truePDG << std::endl;
+            std::cout << "number of hits = " << recoParticles[j].numHits << std::endl;
+            if(recoParticles[j].trueTrackID == trueTrackID){
+                totalNumMatchedHits += recoParticles[j].numMatchedHits;
+                std::cout << "number of matched hits = " << recoParticles[j].numMatchedHits << std::endl;
+            }
         }
     }
 
+    std::cout << "total hits in slice = " << totalNumHits << ", total truth matched hits associated with true recoil electron = " << totalNumMatchedHits << std::endl;
+    std::cout << "done" << std::endl;
+
     double slicePurity;
     if(counter < 1){
-        slicePurity = -999999;
+        slicePurity = 0;
     } else {
         slicePurity = (totalNumMatchedHits / totalNumHits);
     }
-    //std::cout << "Chosen Slice Purity = " << slicePurity << std::endl;
+    std::cout << "Chosen Slice Purity = " << slicePurity << std::endl;
     return slicePurity;
 }
 
@@ -677,9 +835,11 @@ void nuESignalWithWithoutCosmics_macro(){
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/22Sep_SCEON/merged_22Sep.root");
     //std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmicsSCEON_40kEvents/";
     
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/3OctNu+ECosmicNoCosmic.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/analysed_BDT_DLCurrent2/1.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/8OctNu+ECosmicNoCosmic.root");
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+EWithWithoutCosmics/merged.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/analysed_v10_06_00/BDT/merged.root");
-    std::string base_path = "/nashome/c/coackley/nuEPlotsWithWithoutCosmics/";
+    std::string base_path = "/nashome/c/coackley/nuEPlotsWithWithoutCosmics_14Oct/";
     
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics_v10_09_00/analysed/enuelastic_v10_09_00_gen_g4_detsim_reco1_reco2_analysed_80221889_50_Analysed_BDT_output-9c4b127e-5141-4f5b-82cf-3153df9693ae.root");
     //std::string base_path = "/nashome/c/coackley/v10_09_00_through/";
@@ -742,6 +902,7 @@ void nuESignalWithWithoutCosmics_macro(){
     std::vector<double> *truth_particleDirectionY = nullptr;
     std::vector<double> *truth_particleDirectionZ = nullptr;
     std::vector<double> *truth_particleNeutrinoParent = nullptr;
+    std::vector<int> *truth_particleTrackID = nullptr;
 
     std::vector<double> *reco_neutrinoPDG = nullptr;
     std::vector<double> *reco_neutrinoIsPrimary = nullptr;
@@ -768,6 +929,7 @@ void nuESignalWithWithoutCosmics_macro(){
     std::vector<double> *reco_particleNumMatchedHits = nullptr;
     std::vector<double> *reco_particleNumTrueHits = nullptr;
     std::vector<double> *reco_particleTruePDG = nullptr;
+    std::vector<int> *reco_particleTrueID = nullptr;
 
     std::vector<double> *reco_sliceID = nullptr;
     std::vector<double> *reco_sliceCompleteness = nullptr;
@@ -797,6 +959,7 @@ void nuESignalWithWithoutCosmics_macro(){
     tree->SetBranchAddress("truth_particleDirectionY", &truth_particleDirectionY);
     tree->SetBranchAddress("truth_particleDirectionZ", &truth_particleDirectionZ);
     tree->SetBranchAddress("truth_particleNeutrinoParent", &truth_particleNeutrinoParent);
+    tree->SetBranchAddress("truth_particleTrackID", &truth_particleTrackID);
 
     tree->SetBranchAddress("reco_neutrinoPDG", &reco_neutrinoPDG);
     tree->SetBranchAddress("reco_neutrinoIsPrimary", &reco_neutrinoIsPrimary);
@@ -823,6 +986,7 @@ void nuESignalWithWithoutCosmics_macro(){
     tree->SetBranchAddress("reco_particleNumMatchedHits", &reco_particleNumMatchedHits);
     tree->SetBranchAddress("reco_particleNumTrueHits", &reco_particleNumTrueHits);
     tree->SetBranchAddress("reco_particleTruePDG", &reco_particleTruePDG);
+    tree->SetBranchAddress("reco_particleTrueID", &reco_particleTrueID);
 
     tree->SetBranchAddress("reco_sliceID", &reco_sliceID);
     tree->SetBranchAddress("reco_sliceCompleteness", &reco_sliceCompleteness);
@@ -1069,6 +1233,7 @@ void nuESignalWithWithoutCosmics_macro(){
                     chosenTrueParticle.dy = truth_particleDirectionY->at(j);
                     chosenTrueParticle.dz = truth_particleDirectionZ->at(j);
                     chosenTrueParticle.neutrinoParent = truth_particleNeutrinoParent->at(j);
+                    chosenTrueParticle.trackID = truth_particleTrackID->at(j);
                 } else{
                     printf("Doesn't Pass!!\n");
                 }      
@@ -1402,6 +1567,7 @@ void nuESignalWithWithoutCosmics_macro(){
                 recoParticle.numMatchedHits = reco_particleNumMatchedHits->at(j);
                 recoParticle.numTrueHits = reco_particleNumTrueHits->at(j);
                 recoParticle.truePDG = reco_particleTruePDG->at(j);
+                recoParticle.trueTrackID = reco_particleTrueID->at(j);
                 recoParticlesInEvent.push_back(recoParticle);
             
                 if(recoParticle.sliceID == chosenRecoSliceCRUMBS.id) recoparticleCRUMBS = 1;
@@ -1421,8 +1587,14 @@ void nuESignalWithWithoutCosmics_macro(){
         double totalSliceEnergyCRUMBS = 0;
         double numPFPsSliceCRUMBS = 0;
         chosenRecoParticleCRUMBS = choosePFP(recoParticlesInEvent, chosenRecoSliceCRUMBS.id, totalSliceEnergyCRUMBS, numPFPsSliceCRUMBS);
-        double chosenSlicePurityCRUMBS = slicePurityCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id);
-        double chosenSliceCompletenessCRUMBS = sliceCompletenessCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id);
+        std::cout << "calculating purity for dlcurrent = " << DLCurrent << std::endl;
+        double chosenSlicePurityCRUMBS = slicePurityCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id, chosenTrueParticle.trackID);
+        std::cout << "done with calculator" << std::endl;
+        std::cout << "calculating completeness for dlcurrent = " << DLCurrent << std::endl;
+        double chosenSliceCompletenessCRUMBS = sliceCompletenessCalculator(recoParticlesInEvent, chosenRecoSliceCRUMBS.id, chosenTrueParticle.trackID);
+
+        std::cout << "slicePurityCalculator = " << chosenSlicePurityCRUMBS << ", Purity from analyser = " << chosenRecoSliceCRUMBS.purity << std::endl;
+        std::cout << "sliceCompletenessCalculator = " << chosenSliceCompletenessCRUMBS << ", Completeness from analyser = " << chosenRecoSliceCRUMBS.completeness << std::endl;
 
         double aDOTbCRUMBS = ((chosenRecoParticleCRUMBS.dx * chosenTrueParticle.dx) + (chosenRecoParticleCRUMBS.dy * chosenTrueParticle.dy) + (chosenRecoParticleCRUMBS.dz * chosenTrueParticle.dz));
         double aMagCRUMBS = std::sqrt((chosenRecoParticleCRUMBS.dx * chosenRecoParticleCRUMBS.dx) + (chosenRecoParticleCRUMBS.dy * chosenRecoParticleCRUMBS.dy) + (chosenRecoParticleCRUMBS.dz * chosenRecoParticleCRUMBS.dz));
@@ -1435,8 +1607,8 @@ void nuESignalWithWithoutCosmics_macro(){
         double totalSliceEnergyCompleteness = 0;
         double numPFPsSliceCompleteness = 0;
         chosenRecoParticleCompleteness = choosePFP(recoParticlesInEvent, chosenRecoSliceCompleteness.id, totalSliceEnergyCompleteness, numPFPsSliceCompleteness);
-        double chosenSlicePurityCompleteness = slicePurityCalculator(recoParticlesInEvent, chosenRecoSliceCompleteness.id);
-        double chosenSliceCompletenessCompleteness = sliceCompletenessCalculator(recoParticlesInEvent, chosenRecoSliceCompleteness.id);
+        double chosenSlicePurityCompleteness = slicePurityCalculator(recoParticlesInEvent, chosenRecoSliceCompleteness.id, chosenTrueParticle.trackID);
+        double chosenSliceCompletenessCompleteness = sliceCompletenessCalculator(recoParticlesInEvent, chosenRecoSliceCompleteness.id, chosenTrueParticle.trackID);
         
         double aDOTbCompleteness = ((chosenRecoParticleCompleteness.dx * chosenTrueParticle.dx) + (chosenRecoParticleCompleteness.dy * chosenTrueParticle.dy) + (chosenRecoParticleCompleteness.dz * chosenTrueParticle.dz));
         double aMagCompleteness = std::sqrt((chosenRecoParticleCompleteness.dx * chosenRecoParticleCompleteness.dx) + (chosenRecoParticleCompleteness.dy * chosenRecoParticleCompleteness.dy) + (chosenRecoParticleCompleteness.dz * chosenRecoParticleCompleteness.dz));
@@ -1465,6 +1637,9 @@ void nuESignalWithWithoutCosmics_macro(){
             numPFPsAngleDifferenceWithoutCosmicsCRUMBSProfile->Fill(numPFPsSliceCRUMBS, angleDiffCRUMBS);
             numPFPsERecoSumThetaRecoWithoutCosmicsCRUMBSProfile->Fill(numPFPsSliceCRUMBS, (totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta));
             numPFPsERecoHighestThetaRecoWithoutCosmicsCRUMBSProfile->Fill(numPFPsSliceCRUMBS, (chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta));
+            if(numPFPsSliceCRUMBS == 6){
+                std::cout << "Without Cosmics: PFP num 6! ETheta2 Sum = " << (totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta) << ", highest = " << (chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta) << std::endl;
+            }
 
             slicePurityCRUMBS.uboone->Fill(chosenSlicePurityCRUMBS);
             sliceCompletenessCRUMBS.uboone->Fill(chosenSliceCompletenessCRUMBS);
@@ -1529,6 +1704,9 @@ void nuESignalWithWithoutCosmics_macro(){
             numPFPsAngleDifferenceWithCosmicsCRUMBSProfile->Fill(numPFPsSliceCRUMBS, angleDiffCRUMBS);
             numPFPsERecoSumThetaRecoWithCosmicsCRUMBSProfile->Fill(numPFPsSliceCRUMBS, (totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta));
             numPFPsERecoHighestThetaRecoWithCosmicsCRUMBSProfile->Fill(numPFPsSliceCRUMBS, (chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta));
+            if(numPFPsSliceCRUMBS == 5){
+                std::cout << "With Cosmics: PFP num 5! ETheta2 Sum = " << (totalSliceEnergyCRUMBS * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta) << ", highest = " << (chosenRecoParticleCRUMBS.bestPlaneEnergy * chosenRecoParticleCRUMBS.theta * chosenRecoParticleCRUMBS.theta) << std::endl;
+            }
 
             xCoordAngleDifferenceBDTCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vx, angleDiffCRUMBS); 
             yCoordAngleDifferenceBDTCRUMBS->Fill(chosenRecoNeutrinoCRUMBS.vy, angleDiffCRUMBS); 
@@ -1745,359 +1923,131 @@ void nuESignalWithWithoutCosmics_macro(){
     printf("Number of events where the chosen Slice has the highest CRUMBS score and completeness:\nUboone: %i out of %i\nDune: %i out of %i\nCurrent: %i out of %i\nCheated: %i out of %i\nDL SBND: %i out of %i\n", sameSliceSelected.uboone, numEventsSlices.uboone, sameSliceSelected.dune, numEventsSlices.dune, sameSliceSelected.current, numEventsSlices.current, sameSliceSelected.cheated, numEventsSlices.cheated, sameSliceSelected.sbnd, numEventsSlices.sbnd);
     printf("Number of events where the slice with the highest CRUMBS score has a completeness of 0:\nUboone: %i out of %i\nDune: %i out of %i\nCurrent: %i out of %i\nCheated: %i out of %i\nDL SBND: %i out of %i\n", numSlicesCRUMBSCompletenessZero.uboone, numEventsSlices.uboone, numSlicesCRUMBSCompletenessZero.dune, numEventsSlices.dune, numSlicesCRUMBSCompletenessZero.current, numEventsSlices.current, numSlicesCRUMBSCompletenessZero.cheated, numEventsSlices.cheated, numSlicesCRUMBSCompletenessZero.sbnd, numEventsSlices.sbnd);
 
-    styleDraw(numSlices.canvas, numSlices.current, numSlices.cheated, numSlices.dune, numSlices.uboone, numSlices.sbnd, numSlices.nue, numSlices.nue_100k, 999, 999, 999, 999, (base_path + "numSlices_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numSlices.current, numSlices.cheated, numSlices.dune, numSlices.uboone, numSlices.sbnd, numSlices.nue, numSlices.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "numSlices_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numSlices.canvas, numSlices.current, numSlices.cheated, numSlices.dune, numSlices.uboone, numSlices.sbnd, numSlices.nue, numSlices.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numSlices_dist.pdf").c_str());
+    percentage(numSlices.current, numSlices.cheated, numSlices.dune, numSlices.uboone, numSlices.sbnd, numSlices.nue, numSlices.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numSlices_areaNorm.pdf").c_str());
  
-    styleDraw(numSlicesCRUMBS.canvas, numSlicesCRUMBS.current, numSlicesCRUMBS.cheated, numSlicesCRUMBS.dune, numSlicesCRUMBS.uboone, numSlicesCRUMBS.sbnd, numSlicesCRUMBS.nue, numSlicesCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "numCRUMBSSlices_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numSlicesCRUMBS.current, numSlicesCRUMBS.cheated, numSlicesCRUMBS.dune, numSlicesCRUMBS.uboone, numSlicesCRUMBS.sbnd, numSlicesCRUMBS.nue, numSlicesCRUMBS.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "numCRUMBSSlices_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numSlicesCRUMBS.canvas, numSlicesCRUMBS.current, numSlicesCRUMBS.cheated, numSlicesCRUMBS.dune, numSlicesCRUMBS.uboone, numSlicesCRUMBS.sbnd, numSlicesCRUMBS.nue, numSlicesCRUMBS.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numCRUMBSSlices_dist.pdf").c_str());
+    percentage(numSlicesCRUMBS.current, numSlicesCRUMBS.cheated, numSlicesCRUMBS.dune, numSlicesCRUMBS.uboone, numSlicesCRUMBS.sbnd, numSlicesCRUMBS.nue, numSlicesCRUMBS.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numCRUMBSSlices_areaNorm.pdf").c_str());
 
-    styleDraw(numSlicesCompleteness.canvas, numSlicesCompleteness.current, numSlicesCompleteness.cheated, numSlicesCompleteness.dune, numSlicesCompleteness.uboone, numSlicesCompleteness.sbnd, numSlicesCompleteness.nue, numSlicesCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "numCompletenessSlices_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numSlicesCompleteness.current, numSlicesCompleteness.cheated, numSlicesCompleteness.dune, numSlicesCompleteness.uboone, numSlicesCompleteness.sbnd, numSlicesCompleteness.nue, numSlicesCompleteness.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "numCompletenessSlices_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numSlicesCompleteness.canvas, numSlicesCompleteness.current, numSlicesCompleteness.cheated, numSlicesCompleteness.dune, numSlicesCompleteness.uboone, numSlicesCompleteness.sbnd, numSlicesCompleteness.nue, numSlicesCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numCompletenessSlices_dist.pdf").c_str());
+    percentage(numSlicesCompleteness.current, numSlicesCompleteness.cheated, numSlicesCompleteness.dune, numSlicesCompleteness.uboone, numSlicesCompleteness.sbnd, numSlicesCompleteness.nue, numSlicesCompleteness.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numCompletenessSlices_areaNorm.pdf").c_str());
     
-    styleDraw(numRecoNeutrinos.canvas, numRecoNeutrinos.current, numRecoNeutrinos.cheated, numRecoNeutrinos.dune, numRecoNeutrinos.uboone, numRecoNeutrinos.sbnd, numRecoNeutrinos.nue, numRecoNeutrinos.nue_100k, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numRecoNeutrinos.current, numRecoNeutrinos.cheated, numRecoNeutrinos.dune, numRecoNeutrinos.uboone, numRecoNeutrinos.sbnd, numRecoNeutrinos.nue, numRecoNeutrinos.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "numRecoNeutrinos_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numRecoNeutrinos.canvas, numRecoNeutrinos.current, numRecoNeutrinos.cheated, numRecoNeutrinos.dune, numRecoNeutrinos.uboone, numRecoNeutrinos.sbnd, numRecoNeutrinos.nue, numRecoNeutrinos.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numRecoNeutrinos_dist.pdf").c_str());
+    percentage(numRecoNeutrinos.current, numRecoNeutrinos.cheated, numRecoNeutrinos.dune, numRecoNeutrinos.uboone, numRecoNeutrinos.sbnd, numRecoNeutrinos.nue, numRecoNeutrinos.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numRecoNeutrinos_areaNorm.pdf").c_str());
 
     // CRUMBS Slice Score Plots
-    styleDraw(sliceCompletenessCRUMBS.canvas, sliceCompletenessCRUMBS.current, sliceCompletenessCRUMBS.cheated, sliceCompletenessCRUMBS.dune, sliceCompletenessCRUMBS.uboone, sliceCompletenessCRUMBS.sbnd, sliceCompletenessCRUMBS.nue, sliceCompletenessCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(sliceCompletenessCRUMBS.current, sliceCompletenessCRUMBS.cheated, sliceCompletenessCRUMBS.dune, sliceCompletenessCRUMBS.uboone, sliceCompletenessCRUMBS.sbnd, sliceCompletenessCRUMBS.nue, sliceCompletenessCRUMBS.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "sliceCompletenessCRUMBS_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    styleDraw(sliceScoreCRUMBS.canvas, sliceScoreCRUMBS.current, sliceScoreCRUMBS.cheated, sliceScoreCRUMBS.dune, sliceScoreCRUMBS.uboone, sliceScoreCRUMBS.sbnd, sliceScoreCRUMBS.nue, sliceScoreCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(sliceScoreCRUMBS.current, sliceScoreCRUMBS.cheated, sliceScoreCRUMBS.dune, sliceScoreCRUMBS.uboone, sliceScoreCRUMBS.sbnd, sliceScoreCRUMBS.nue, sliceScoreCRUMBS.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "sliceScoreCRUMBS_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    styleDraw(slicePurityCRUMBS.canvas, slicePurityCRUMBS.current, slicePurityCRUMBS.cheated, slicePurityCRUMBS.dune, slicePurityCRUMBS.uboone, slicePurityCRUMBS.sbnd, slicePurityCRUMBS.nue, slicePurityCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(slicePurityCRUMBS.current, slicePurityCRUMBS.cheated, slicePurityCRUMBS.dune, slicePurityCRUMBS.uboone, slicePurityCRUMBS.sbnd, slicePurityCRUMBS.nue, slicePurityCRUMBS.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "slicePurityCRUMBS_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(sliceCompletenessCRUMBS.canvas, sliceCompletenessCRUMBS.current, sliceCompletenessCRUMBS.cheated, sliceCompletenessCRUMBS.dune, sliceCompletenessCRUMBS.uboone, sliceCompletenessCRUMBS.sbnd, sliceCompletenessCRUMBS.nue, sliceCompletenessCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "sliceCompletenessCRUMBS_dist.pdf").c_str());
+    percentage(sliceCompletenessCRUMBS.current, sliceCompletenessCRUMBS.cheated, sliceCompletenessCRUMBS.dune, sliceCompletenessCRUMBS.uboone, sliceCompletenessCRUMBS.sbnd, sliceCompletenessCRUMBS.nue, sliceCompletenessCRUMBS.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "sliceCompletenessCRUMBS_areaNorm.pdf").c_str());
+    styleDraw(sliceScoreCRUMBS.canvas, sliceScoreCRUMBS.current, sliceScoreCRUMBS.cheated, sliceScoreCRUMBS.dune, sliceScoreCRUMBS.uboone, sliceScoreCRUMBS.sbnd, sliceScoreCRUMBS.nue, sliceScoreCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "sliceScoreCRUMBS_dist.pdf").c_str());
+    percentage(sliceScoreCRUMBS.current, sliceScoreCRUMBS.cheated, sliceScoreCRUMBS.dune, sliceScoreCRUMBS.uboone, sliceScoreCRUMBS.sbnd, sliceScoreCRUMBS.nue, sliceScoreCRUMBS.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "sliceScoreCRUMBS_areaNorm.pdf").c_str());
+    styleDraw(slicePurityCRUMBS.canvas, slicePurityCRUMBS.current, slicePurityCRUMBS.cheated, slicePurityCRUMBS.dune, slicePurityCRUMBS.uboone, slicePurityCRUMBS.sbnd, slicePurityCRUMBS.nue, slicePurityCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "slicePurityCRUMBS_dist.pdf").c_str());
+    percentage(slicePurityCRUMBS.current, slicePurityCRUMBS.cheated, slicePurityCRUMBS.dune, slicePurityCRUMBS.uboone, slicePurityCRUMBS.sbnd, slicePurityCRUMBS.nue, slicePurityCRUMBS.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "slicePurityCRUMBS_areaNorm.pdf").c_str());
     
     // CRUMBS Slice Vertex Plots
-    styleDraw(deltaXCRUMBS.canvas, deltaXCRUMBS.current, deltaXCRUMBS.cheated, deltaXCRUMBS.dune, deltaXCRUMBS.uboone, deltaXCRUMBS.sbnd, deltaXCRUMBS.nue, deltaXCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "deltaXCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(deltaYCRUMBS.canvas, deltaYCRUMBS.current, deltaYCRUMBS.cheated, deltaYCRUMBS.dune, deltaYCRUMBS.uboone, deltaYCRUMBS.sbnd, deltaYCRUMBS.nue, deltaYCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "deltaYCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(deltaZCRUMBS.canvas, deltaZCRUMBS.current, deltaZCRUMBS.cheated, deltaZCRUMBS.dune, deltaZCRUMBS.uboone, deltaZCRUMBS.sbnd, deltaZCRUMBS.nue, deltaZCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "deltaZCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(deltaRCRUMBS.canvas, deltaRCRUMBS.current, deltaRCRUMBS.cheated, deltaRCRUMBS.dune, deltaRCRUMBS.uboone, deltaRCRUMBS.sbnd, deltaRCRUMBS.nue, deltaRCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "deltaRCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaXCRUMBS.current, deltaXCRUMBS.cheated, deltaXCRUMBS.dune, deltaXCRUMBS.uboone, deltaXCRUMBS.sbnd, deltaXCRUMBS.nue, deltaXCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaXCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaYCRUMBS.current, deltaYCRUMBS.cheated, deltaYCRUMBS.dune, deltaYCRUMBS.uboone, deltaYCRUMBS.sbnd, deltaYCRUMBS.nue, deltaYCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaYCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaZCRUMBS.current, deltaZCRUMBS.cheated, deltaZCRUMBS.dune, deltaZCRUMBS.uboone, deltaZCRUMBS.sbnd, deltaZCRUMBS.nue, deltaZCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaZCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaRCRUMBS.current, deltaRCRUMBS.cheated, deltaRCRUMBS.dune, deltaRCRUMBS.uboone, deltaRCRUMBS.sbnd, deltaRCRUMBS.nue, deltaRCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaRCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(deltaXCRUMBS.canvas, deltaXCRUMBS.current, deltaXCRUMBS.cheated, deltaXCRUMBS.dune, deltaXCRUMBS.uboone, deltaXCRUMBS.sbnd, deltaXCRUMBS.nue, deltaXCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "deltaXCRUMBS_dist.pdf").c_str());
+    styleDraw(deltaYCRUMBS.canvas, deltaYCRUMBS.current, deltaYCRUMBS.cheated, deltaYCRUMBS.dune, deltaYCRUMBS.uboone, deltaYCRUMBS.sbnd, deltaYCRUMBS.nue, deltaYCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "deltaYCRUMBS_dist.pdf").c_str());
+    styleDraw(deltaZCRUMBS.canvas, deltaZCRUMBS.current, deltaZCRUMBS.cheated, deltaZCRUMBS.dune, deltaZCRUMBS.uboone, deltaZCRUMBS.sbnd, deltaZCRUMBS.nue, deltaZCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "deltaZCRUMBS_dist.pdf").c_str());
+    styleDraw(deltaRCRUMBS.canvas, deltaRCRUMBS.current, deltaRCRUMBS.cheated, deltaRCRUMBS.dune, deltaRCRUMBS.uboone, deltaRCRUMBS.sbnd, deltaRCRUMBS.nue, deltaRCRUMBS.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaRCRUMBS_dist.pdf").c_str());
+    percentage(deltaXCRUMBS.current, deltaXCRUMBS.cheated, deltaXCRUMBS.dune, deltaXCRUMBS.uboone, deltaXCRUMBS.sbnd, deltaXCRUMBS.nue, deltaXCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "deltaXCRUMBS_areaNorm.pdf").c_str());
+    percentage(deltaYCRUMBS.current, deltaYCRUMBS.cheated, deltaYCRUMBS.dune, deltaYCRUMBS.uboone, deltaYCRUMBS.sbnd, deltaYCRUMBS.nue, deltaYCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "deltaYCRUMBS_areaNorm.pdf").c_str());
+    percentage(deltaZCRUMBS.current, deltaZCRUMBS.cheated, deltaZCRUMBS.dune, deltaZCRUMBS.uboone, deltaZCRUMBS.sbnd, deltaZCRUMBS.nue, deltaZCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "deltaZCRUMBS_areaNorm.pdf").c_str());
+    percentage(deltaRCRUMBS.current, deltaRCRUMBS.cheated, deltaRCRUMBS.dune, deltaRCRUMBS.uboone, deltaRCRUMBS.sbnd, deltaRCRUMBS.nue, deltaRCRUMBS.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaRCRUMBS_areaNorm.pdf").c_str());
 
-    styleDraw(trueZCRUMBS.canvas, trueZCRUMBS.current, trueZCRUMBS.cheated, trueZCRUMBS.dune, trueZCRUMBS.uboone, trueZCRUMBS.sbnd, trueZCRUMBS.nue, trueZCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "trueZCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(recoZCRUMBS.canvas, recoZCRUMBS.current, recoZCRUMBS.cheated, recoZCRUMBS.dune, recoZCRUMBS.uboone, recoZCRUMBS.sbnd, recoZCRUMBS.nue, recoZCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "recoZCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(trueZCRUMBS.canvas, trueZCRUMBS.current, trueZCRUMBS.cheated, trueZCRUMBS.dune, trueZCRUMBS.uboone, trueZCRUMBS.sbnd, trueZCRUMBS.nue, trueZCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "trueZCRUMBS_dist.pdf").c_str());
+    styleDraw(recoZCRUMBS.canvas, recoZCRUMBS.current, recoZCRUMBS.cheated, recoZCRUMBS.dune, recoZCRUMBS.uboone, recoZCRUMBS.sbnd, recoZCRUMBS.nue, recoZCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "recoZCRUMBS_dist.pdf").c_str());
 
     // CRUMBS PFP Plots
-    styleDraw(numPFPsCRUMBS.canvas, numPFPsCRUMBS.current, numPFPsCRUMBS.cheated, numPFPsCRUMBS.dune, numPFPsCRUMBS.uboone, numPFPsCRUMBS.sbnd, numPFPsCRUMBS.nue, numPFPsCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numPFPsCRUMBS.current, numPFPsCRUMBS.cheated, numPFPsCRUMBS.dune, numPFPsCRUMBS.uboone, numPFPsCRUMBS.sbnd, numPFPsCRUMBS.nue, numPFPsCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "numPFPsCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numPFPsCRUMBS.canvas, numPFPsCRUMBS.current, numPFPsCRUMBS.cheated, numPFPsCRUMBS.dune, numPFPsCRUMBS.uboone, numPFPsCRUMBS.sbnd, numPFPsCRUMBS.nue, numPFPsCRUMBS.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numPFPsCRUMBS_dist.pdf").c_str());
+    percentage(numPFPsCRUMBS.current, numPFPsCRUMBS.cheated, numPFPsCRUMBS.dune, numPFPsCRUMBS.uboone, numPFPsCRUMBS.sbnd, numPFPsCRUMBS.nue, numPFPsCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numPFPsCRUMBS_areaNorm.pdf").c_str());
 
-    styleDraw(ratioChosenSummedEnergyCRUMBS.canvas, ratioChosenSummedEnergyCRUMBS.current, ratioChosenSummedEnergyCRUMBS.cheated, ratioChosenSummedEnergyCRUMBS.dune, ratioChosenSummedEnergyCRUMBS.uboone, ratioChosenSummedEnergyCRUMBS.sbnd, ratioChosenSummedEnergyCRUMBS.nue, ratioChosenSummedEnergyCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(ratioChosenSummedEnergyCRUMBS.current, ratioChosenSummedEnergyCRUMBS.cheated, ratioChosenSummedEnergyCRUMBS.dune, ratioChosenSummedEnergyCRUMBS.uboone, ratioChosenSummedEnergyCRUMBS.sbnd, ratioChosenSummedEnergyCRUMBS.nue, ratioChosenSummedEnergyCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCRUMBS_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    styleDraw(ratioChosenTrueEnergyCRUMBS.canvas, ratioChosenTrueEnergyCRUMBS.current, ratioChosenTrueEnergyCRUMBS.cheated, ratioChosenTrueEnergyCRUMBS.dune, ratioChosenTrueEnergyCRUMBS.uboone, ratioChosenTrueEnergyCRUMBS.sbnd, ratioChosenTrueEnergyCRUMBS.nue, ratioChosenTrueEnergyCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "ratioChosenTrueEnergyCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(ratioChosenTrueEnergyCRUMBS.current, ratioChosenTrueEnergyCRUMBS.cheated, ratioChosenTrueEnergyCRUMBS.dune, ratioChosenTrueEnergyCRUMBS.uboone, ratioChosenTrueEnergyCRUMBS.sbnd, ratioChosenTrueEnergyCRUMBS.nue, ratioChosenTrueEnergyCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ratioChosenTrueEnergyCRUMBS_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    styleDraw(ratioSummedTrueEnergyCRUMBS.canvas, ratioSummedTrueEnergyCRUMBS.current, ratioSummedTrueEnergyCRUMBS.cheated, ratioSummedTrueEnergyCRUMBS.dune, ratioSummedTrueEnergyCRUMBS.uboone, ratioSummedTrueEnergyCRUMBS.sbnd, ratioSummedTrueEnergyCRUMBS.nue, ratioSummedTrueEnergyCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "ratioSummedTrueEnergyCRUMBS_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(ratioSummedTrueEnergyCRUMBS.current, ratioSummedTrueEnergyCRUMBS.cheated, ratioSummedTrueEnergyCRUMBS.dune, ratioSummedTrueEnergyCRUMBS.uboone, ratioSummedTrueEnergyCRUMBS.sbnd, ratioSummedTrueEnergyCRUMBS.nue, ratioSummedTrueEnergyCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ratioSummedTrueEnergyCRUMBS_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(ratioChosenSummedEnergyCRUMBS.canvas, ratioChosenSummedEnergyCRUMBS.current, ratioChosenSummedEnergyCRUMBS.cheated, ratioChosenSummedEnergyCRUMBS.dune, ratioChosenSummedEnergyCRUMBS.uboone, ratioChosenSummedEnergyCRUMBS.sbnd, ratioChosenSummedEnergyCRUMBS.nue, ratioChosenSummedEnergyCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioChosenSummedEnergyCRUMBS_dist.pdf").c_str());
+    percentage(ratioChosenSummedEnergyCRUMBS.current, ratioChosenSummedEnergyCRUMBS.cheated, ratioChosenSummedEnergyCRUMBS.dune, ratioChosenSummedEnergyCRUMBS.uboone, ratioChosenSummedEnergyCRUMBS.sbnd, ratioChosenSummedEnergyCRUMBS.nue, ratioChosenSummedEnergyCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioChosenSummedEnergyCRUMBS_areaNorm.pdf").c_str());
+    styleDraw(ratioChosenTrueEnergyCRUMBS.canvas, ratioChosenTrueEnergyCRUMBS.current, ratioChosenTrueEnergyCRUMBS.cheated, ratioChosenTrueEnergyCRUMBS.dune, ratioChosenTrueEnergyCRUMBS.uboone, ratioChosenTrueEnergyCRUMBS.sbnd, ratioChosenTrueEnergyCRUMBS.nue, ratioChosenTrueEnergyCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioChosenTrueEnergyCRUMBS_dist.pdf").c_str());
+    percentage(ratioChosenTrueEnergyCRUMBS.current, ratioChosenTrueEnergyCRUMBS.cheated, ratioChosenTrueEnergyCRUMBS.dune, ratioChosenTrueEnergyCRUMBS.uboone, ratioChosenTrueEnergyCRUMBS.sbnd, ratioChosenTrueEnergyCRUMBS.nue, ratioChosenTrueEnergyCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioChosenTrueEnergyCRUMBS_areaNorm.pdf").c_str());
+    styleDraw(ratioSummedTrueEnergyCRUMBS.canvas, ratioSummedTrueEnergyCRUMBS.current, ratioSummedTrueEnergyCRUMBS.cheated, ratioSummedTrueEnergyCRUMBS.dune, ratioSummedTrueEnergyCRUMBS.uboone, ratioSummedTrueEnergyCRUMBS.sbnd, ratioSummedTrueEnergyCRUMBS.nue, ratioSummedTrueEnergyCRUMBS.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioSummedTrueEnergyCRUMBS_dist.pdf").c_str());
+    percentage(ratioSummedTrueEnergyCRUMBS.current, ratioSummedTrueEnergyCRUMBS.cheated, ratioSummedTrueEnergyCRUMBS.dune, ratioSummedTrueEnergyCRUMBS.uboone, ratioSummedTrueEnergyCRUMBS.sbnd, ratioSummedTrueEnergyCRUMBS.nue, ratioSummedTrueEnergyCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioSummedTrueEnergyCRUMBS_areaNorm.pdf").c_str());
 
     int drawLine = 1;
     int left = 0;
     int right = 1;
     
-    styleDraw(angleDifferenceCRUMBS.canvas, angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, angleDifferenceCRUMBS.nue, angleDifferenceCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "angleDifferenceCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, angleDifferenceCRUMBS.nue, angleDifferenceCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "angleDifferenceCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(angleDifferenceCRUMBS.canvas, angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, angleDifferenceCRUMBS.nue, angleDifferenceCRUMBS.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "angleDifferenceCRUMBS_dist.pdf").c_str());
+    percentage(angleDifferenceCRUMBS.current, angleDifferenceCRUMBS.cheated, angleDifferenceCRUMBS.dune, angleDifferenceCRUMBS.uboone, angleDifferenceCRUMBS.sbnd, angleDifferenceCRUMBS.nue, angleDifferenceCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "angleDifferenceCRUMBS_areaNorm.pdf").c_str());
    
-    styleDraw(EtrueThetaRecoCRUMBS.canvas, EtrueThetaRecoCRUMBS.current, EtrueThetaRecoCRUMBS.cheated, EtrueThetaRecoCRUMBS.dune, EtrueThetaRecoCRUMBS.sbnd, EtrueThetaRecoCRUMBS.uboone, EtrueThetaRecoCRUMBS.nue, EtrueThetaRecoCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "EtrueThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(EtrueThetaRecoCRUMBS.current, EtrueThetaRecoCRUMBS.cheated, EtrueThetaRecoCRUMBS.dune, EtrueThetaRecoCRUMBS.uboone, EtrueThetaRecoCRUMBS.sbnd, EtrueThetaRecoCRUMBS.nue, EtrueThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "EtrueThetaRecoCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(EtrueThetaRecoCRUMBS.current, EtrueThetaRecoCRUMBS.cheated, EtrueThetaRecoCRUMBS.dune, EtrueThetaRecoCRUMBS.uboone, EtrueThetaRecoCRUMBS.sbnd, EtrueThetaRecoCRUMBS.nue, EtrueThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "EtrueThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{true}#theta_{reco}^{2} (MeV)");
+    styleDraw(EtrueThetaRecoCRUMBS.canvas, EtrueThetaRecoCRUMBS.current, EtrueThetaRecoCRUMBS.cheated, EtrueThetaRecoCRUMBS.dune, EtrueThetaRecoCRUMBS.sbnd, EtrueThetaRecoCRUMBS.uboone, EtrueThetaRecoCRUMBS.nue, EtrueThetaRecoCRUMBS.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "EtrueThetaRecoCRUMBS_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(EtrueThetaRecoCRUMBS.current, EtrueThetaRecoCRUMBS.cheated, EtrueThetaRecoCRUMBS.dune, EtrueThetaRecoCRUMBS.uboone, EtrueThetaRecoCRUMBS.sbnd, EtrueThetaRecoCRUMBS.nue, EtrueThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "EtrueThetaRecoCRUMBS_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(EtrueThetaRecoCRUMBS.current, EtrueThetaRecoCRUMBS.cheated, EtrueThetaRecoCRUMBS.dune, EtrueThetaRecoCRUMBS.uboone, EtrueThetaRecoCRUMBS.sbnd, EtrueThetaRecoCRUMBS.nue, EtrueThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "EtrueThetaRecoCRUMBS_eff.pdf").c_str(), &drawLine, &left, "E_{true}#theta_{reco}^{2} (MeV)");
 
-    styleDraw(ERecoSumThetaTrueCRUMBS.canvas, ERecoSumThetaTrueCRUMBS.current, ERecoSumThetaTrueCRUMBS.cheated, ERecoSumThetaTrueCRUMBS.dune, ERecoSumThetaTrueCRUMBS.uboone, ERecoSumThetaTrueCRUMBS.sbnd, ERecoSumThetaTrueCRUMBS.nue, ERecoSumThetaTrueCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrueCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoSumThetaTrueCRUMBS.current, ERecoSumThetaTrueCRUMBS.cheated, ERecoSumThetaTrueCRUMBS.dune, ERecoSumThetaTrueCRUMBS.uboone, ERecoSumThetaTrueCRUMBS.sbnd, ERecoSumThetaTrueCRUMBS.nue, ERecoSumThetaTrueCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrueCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoSumThetaTrueCRUMBS.current, ERecoSumThetaTrueCRUMBS.cheated, ERecoSumThetaTrueCRUMBS.dune, ERecoSumThetaTrueCRUMBS.uboone, ERecoSumThetaTrueCRUMBS.sbnd, ERecoSumThetaTrueCRUMBS.nue, ERecoSumThetaTrueCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoSumThetaTrueCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{true}^{2} (MeV)");
+    styleDraw(ERecoSumThetaTrueCRUMBS.canvas, ERecoSumThetaTrueCRUMBS.current, ERecoSumThetaTrueCRUMBS.cheated, ERecoSumThetaTrueCRUMBS.dune, ERecoSumThetaTrueCRUMBS.uboone, ERecoSumThetaTrueCRUMBS.sbnd, ERecoSumThetaTrueCRUMBS.nue, ERecoSumThetaTrueCRUMBS.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoSumThetaTrueCRUMBS_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoSumThetaTrueCRUMBS.current, ERecoSumThetaTrueCRUMBS.cheated, ERecoSumThetaTrueCRUMBS.dune, ERecoSumThetaTrueCRUMBS.uboone, ERecoSumThetaTrueCRUMBS.sbnd, ERecoSumThetaTrueCRUMBS.nue, ERecoSumThetaTrueCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoSumThetaTrueCRUMBS_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(ERecoSumThetaTrueCRUMBS.current, ERecoSumThetaTrueCRUMBS.cheated, ERecoSumThetaTrueCRUMBS.dune, ERecoSumThetaTrueCRUMBS.uboone, ERecoSumThetaTrueCRUMBS.sbnd, ERecoSumThetaTrueCRUMBS.nue, ERecoSumThetaTrueCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "ERecoSumThetaTrueCRUMBS_eff.pdf").c_str(), &drawLine, &left, "E_{reco}#theta_{true}^{2} (MeV)");
 
-    styleDraw(ERecoHighestThetaTrueCRUMBS.canvas, ERecoHighestThetaTrueCRUMBS.current, ERecoHighestThetaTrueCRUMBS.cheated, ERecoHighestThetaTrueCRUMBS.dune, ERecoHighestThetaTrueCRUMBS.uboone, ERecoHighestThetaTrueCRUMBS.sbnd, ERecoHighestThetaTrueCRUMBS.nue, ERecoHighestThetaTrueCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrueCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoHighestThetaTrueCRUMBS.current, ERecoHighestThetaTrueCRUMBS.cheated, ERecoHighestThetaTrueCRUMBS.dune, ERecoHighestThetaTrueCRUMBS.uboone, ERecoHighestThetaTrueCRUMBS.sbnd, ERecoHighestThetaTrueCRUMBS.nue, ERecoHighestThetaTrueCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrueCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoHighestThetaTrueCRUMBS.current, ERecoHighestThetaTrueCRUMBS.cheated, ERecoHighestThetaTrueCRUMBS.dune, ERecoHighestThetaTrueCRUMBS.uboone, ERecoHighestThetaTrueCRUMBS.sbnd, ERecoHighestThetaTrueCRUMBS.nue, ERecoHighestThetaTrueCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoHighestThetaTrueCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{true}^{2} (MeV)");
+    styleDraw(ERecoHighestThetaTrueCRUMBS.canvas, ERecoHighestThetaTrueCRUMBS.current, ERecoHighestThetaTrueCRUMBS.cheated, ERecoHighestThetaTrueCRUMBS.dune, ERecoHighestThetaTrueCRUMBS.uboone, ERecoHighestThetaTrueCRUMBS.sbnd, ERecoHighestThetaTrueCRUMBS.nue, ERecoHighestThetaTrueCRUMBS.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoHighestThetaTrueCRUMBS_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoHighestThetaTrueCRUMBS.current, ERecoHighestThetaTrueCRUMBS.cheated, ERecoHighestThetaTrueCRUMBS.dune, ERecoHighestThetaTrueCRUMBS.uboone, ERecoHighestThetaTrueCRUMBS.sbnd, ERecoHighestThetaTrueCRUMBS.nue, ERecoHighestThetaTrueCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoHighestThetaTrueCRUMBS_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(ERecoHighestThetaTrueCRUMBS.current, ERecoHighestThetaTrueCRUMBS.cheated, ERecoHighestThetaTrueCRUMBS.dune, ERecoHighestThetaTrueCRUMBS.uboone, ERecoHighestThetaTrueCRUMBS.sbnd, ERecoHighestThetaTrueCRUMBS.nue, ERecoHighestThetaTrueCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "ERecoHighestThetaTrueCRUMBS_eff.pdf").c_str(), &drawLine, &left, "E_{reco}#theta_{true}^{2} (MeV)");
 
-    styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoSumThetaRecoCRUMBS_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "bottomRight", (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), &drawLine, &right, "E_{reco}#theta_{reco}^{2} (MeV)");
 
-    styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoHighestThetaRecoCRUMBS_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
 
     // Completeness Slice Score Plots
-    styleDraw(sliceCompletenessCompleteness.canvas, sliceCompletenessCompleteness.current, sliceCompletenessCompleteness.cheated, sliceCompletenessCompleteness.dune, sliceCompletenessCompleteness.uboone, sliceCompletenessCompleteness.sbnd, sliceCompletenessCompleteness.nue, sliceCompletenessCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "sliceCompletenessCompleteness_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(sliceCompletenessCompleteness.current, sliceCompletenessCompleteness.cheated, sliceCompletenessCompleteness.dune, sliceCompletenessCompleteness.uboone, sliceCompletenessCompleteness.sbnd, sliceCompletenessCompleteness.nue, sliceCompletenessCompleteness.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "sliceCompletenessCompleteness_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    styleDraw(sliceScoreCompleteness.canvas, sliceScoreCompleteness.current, sliceScoreCompleteness.cheated, sliceScoreCompleteness.dune, sliceScoreCompleteness.uboone, sliceScoreCompleteness.sbnd, sliceScoreCompleteness.nue, sliceScoreCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "sliceScoreCompleteness_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(sliceScoreCompleteness.current, sliceScoreCompleteness.cheated, sliceScoreCompleteness.dune, sliceScoreCompleteness.uboone, sliceScoreCompleteness.sbnd, sliceScoreCompleteness.nue, sliceScoreCompleteness.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "sliceScoreCompleteness_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    styleDraw(slicePurityCompleteness.canvas, slicePurityCompleteness.current, slicePurityCompleteness.cheated, slicePurityCompleteness.dune, slicePurityCompleteness.uboone, slicePurityCompleteness.sbnd, slicePurityCompleteness.nue, slicePurityCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "slicePurityCompleteness_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(slicePurityCompleteness.current, slicePurityCompleteness.cheated, slicePurityCompleteness.dune, slicePurityCompleteness.uboone, slicePurityCompleteness.sbnd, slicePurityCompleteness.nue, slicePurityCompleteness.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, (base_path + "slicePurityCompleteness_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(sliceCompletenessCompleteness.canvas, sliceCompletenessCompleteness.current, sliceCompletenessCompleteness.cheated, sliceCompletenessCompleteness.dune, sliceCompletenessCompleteness.uboone, sliceCompletenessCompleteness.sbnd, sliceCompletenessCompleteness.nue, sliceCompletenessCompleteness.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "sliceCompletenessCompleteness_dist.pdf").c_str());
+    percentage(sliceCompletenessCompleteness.current, sliceCompletenessCompleteness.cheated, sliceCompletenessCompleteness.dune, sliceCompletenessCompleteness.uboone, sliceCompletenessCompleteness.sbnd, sliceCompletenessCompleteness.nue, sliceCompletenessCompleteness.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "sliceCompletenessCompleteness_areaNorm.pdf").c_str());
+    styleDraw(sliceScoreCompleteness.canvas, sliceScoreCompleteness.current, sliceScoreCompleteness.cheated, sliceScoreCompleteness.dune, sliceScoreCompleteness.uboone, sliceScoreCompleteness.sbnd, sliceScoreCompleteness.nue, sliceScoreCompleteness.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "sliceScoreCompleteness_dist.pdf").c_str());
+    percentage(sliceScoreCompleteness.current, sliceScoreCompleteness.cheated, sliceScoreCompleteness.dune, sliceScoreCompleteness.uboone, sliceScoreCompleteness.sbnd, sliceScoreCompleteness.nue, sliceScoreCompleteness.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "sliceScoreCompleteness_areaNorm.pdf").c_str());
+    styleDraw(slicePurityCompleteness.canvas, slicePurityCompleteness.current, slicePurityCompleteness.cheated, slicePurityCompleteness.dune, slicePurityCompleteness.uboone, slicePurityCompleteness.sbnd, slicePurityCompleteness.nue, slicePurityCompleteness.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "slicePurityCompleteness_dist.pdf").c_str());
+    percentage(slicePurityCompleteness.current, slicePurityCompleteness.cheated, slicePurityCompleteness.dune, slicePurityCompleteness.uboone, slicePurityCompleteness.sbnd, slicePurityCompleteness.nue, slicePurityCompleteness.nue_100k, numEventsSlices.current, numEventsSlices.cheated, numEventsSlices.dune, numEventsSlices.uboone, numEventsSlices.sbnd, numEventsSlices.nue, numEventsSlices.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "slicePurityCompleteness_areaNorm.pdf").c_str());
 
-    styleDraw(deltaXCompleteness.canvas, deltaXCompleteness.current, deltaXCompleteness.cheated, deltaXCompleteness.dune, deltaXCompleteness.uboone, deltaXCompleteness.sbnd, deltaXCompleteness.nue, deltaXCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "deltaXCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(deltaYCompleteness.canvas, deltaYCompleteness.current, deltaYCompleteness.cheated, deltaYCompleteness.dune, deltaYCompleteness.uboone, deltaYCompleteness.sbnd, deltaYCompleteness.nue, deltaYCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "deltaYCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(deltaZCompleteness.canvas, deltaZCompleteness.current, deltaZCompleteness.cheated, deltaZCompleteness.dune, deltaZCompleteness.uboone, deltaZCompleteness.sbnd, deltaZCompleteness.nue, deltaZCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "deltaZCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    styleDraw(deltaRCompleteness.canvas, deltaRCompleteness.current, deltaRCompleteness.cheated, deltaRCompleteness.dune, deltaRCompleteness.uboone, deltaRCompleteness.sbnd, deltaRCompleteness.nue, deltaRCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "deltaRCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaXCompleteness.current, deltaXCompleteness.cheated, deltaXCompleteness.dune, deltaXCompleteness.uboone, deltaXCompleteness.sbnd, deltaXCompleteness.nue, deltaXCompleteness.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaXCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaYCompleteness.current, deltaYCompleteness.cheated, deltaYCompleteness.dune, deltaYCompleteness.uboone, deltaYCompleteness.sbnd, deltaYCompleteness.nue, deltaYCompleteness.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaYCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaZCompleteness.current, deltaZCompleteness.cheated, deltaZCompleteness.dune, deltaZCompleteness.uboone, deltaZCompleteness.sbnd, deltaZCompleteness.nue, deltaZCompleteness.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaZCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(deltaRCompleteness.current, deltaRCompleteness.cheated, deltaRCompleteness.dune, deltaRCompleteness.uboone, deltaRCompleteness.sbnd, deltaRCompleteness.nue, deltaRCompleteness.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, (base_path + "deltaRCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(deltaXCompleteness.canvas, deltaXCompleteness.current, deltaXCompleteness.cheated, deltaXCompleteness.dune, deltaXCompleteness.uboone, deltaXCompleteness.sbnd, deltaXCompleteness.nue, deltaXCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaXCompleteness_dist.pdf").c_str());
+    styleDraw(deltaYCompleteness.canvas, deltaYCompleteness.current, deltaYCompleteness.cheated, deltaYCompleteness.dune, deltaYCompleteness.uboone, deltaYCompleteness.sbnd, deltaYCompleteness.nue, deltaYCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaYCompleteness_dist.pdf").c_str());
+    styleDraw(deltaZCompleteness.canvas, deltaZCompleteness.current, deltaZCompleteness.cheated, deltaZCompleteness.dune, deltaZCompleteness.uboone, deltaZCompleteness.sbnd, deltaZCompleteness.nue, deltaZCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaZCompleteness_dist.pdf").c_str());
+    styleDraw(deltaRCompleteness.canvas, deltaRCompleteness.current, deltaRCompleteness.cheated, deltaRCompleteness.dune, deltaRCompleteness.uboone, deltaRCompleteness.sbnd, deltaRCompleteness.nue, deltaRCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaRCompleteness_dist.pdf").c_str());
+    percentage(deltaXCompleteness.current, deltaXCompleteness.cheated, deltaXCompleteness.dune, deltaXCompleteness.uboone, deltaXCompleteness.sbnd, deltaXCompleteness.nue, deltaXCompleteness.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaXCompleteness_areaNorm.pdf").c_str());
+    percentage(deltaYCompleteness.current, deltaYCompleteness.cheated, deltaYCompleteness.dune, deltaYCompleteness.uboone, deltaYCompleteness.sbnd, deltaYCompleteness.nue, deltaYCompleteness.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaYCompleteness_areaNorm.pdf").c_str());
+    percentage(deltaZCompleteness.current, deltaZCompleteness.cheated, deltaZCompleteness.dune, deltaZCompleteness.uboone, deltaZCompleteness.sbnd, deltaZCompleteness.nue, deltaZCompleteness.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaZCompleteness_areaNorm.pdf").c_str());
+    percentage(deltaRCompleteness.current, deltaRCompleteness.cheated, deltaRCompleteness.dune, deltaRCompleteness.uboone, deltaRCompleteness.sbnd, deltaRCompleteness.nue, deltaRCompleteness.nue_100k, numEventsRecoNeutrino.current, numEventsRecoNeutrino.cheated, numEventsRecoNeutrino.dune, numEventsRecoNeutrino.uboone, numEventsRecoNeutrino.sbnd, numEventsRecoNeutrino.nue, numEventsRecoNeutrino.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "deltaRCompleteness_areaNorm.pdf").c_str());
 
     // Completeness PFP Plots
-    styleDraw(numPFPsCompleteness.canvas, numPFPsCompleteness.current, numPFPsCompleteness.cheated, numPFPsCompleteness.dune, numPFPsCompleteness.uboone, numPFPsCompleteness.sbnd, numPFPsCompleteness.nue, numPFPsCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "numPFPsCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(numPFPsCompleteness.current, numPFPsCompleteness.cheated, numPFPsCompleteness.dune, numPFPsCompleteness.uboone, numPFPsCompleteness.sbnd, numPFPsCompleteness.nue, numPFPsCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "numPFPsCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(numPFPsCompleteness.canvas, numPFPsCompleteness.current, numPFPsCompleteness.cheated, numPFPsCompleteness.dune, numPFPsCompleteness.uboone, numPFPsCompleteness.sbnd, numPFPsCompleteness.nue, numPFPsCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numPFPsCompleteness_dist.pdf").c_str());
+    percentage(numPFPsCompleteness.current, numPFPsCompleteness.cheated, numPFPsCompleteness.dune, numPFPsCompleteness.uboone, numPFPsCompleteness.sbnd, numPFPsCompleteness.nue, numPFPsCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "numPFPsCompleteness_areaNorm.pdf").c_str());
 
-    styleDraw(ratioChosenSummedEnergyCompleteness.canvas, ratioChosenSummedEnergyCompleteness.current, ratioChosenSummedEnergyCompleteness.cheated, ratioChosenSummedEnergyCompleteness.dune, ratioChosenSummedEnergyCompleteness.uboone, ratioChosenSummedEnergyCompleteness.sbnd, ratioChosenSummedEnergyCompleteness.nue, ratioChosenSummedEnergyCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCompleteness_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(ratioChosenSummedEnergyCompleteness.current, ratioChosenSummedEnergyCompleteness.cheated, ratioChosenSummedEnergyCompleteness.dune, ratioChosenSummedEnergyCompleteness.uboone, ratioChosenSummedEnergyCompleteness.sbnd, ratioChosenSummedEnergyCompleteness.nue, ratioChosenSummedEnergyCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ratioChosenSummedEnergyCompleteness_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    styleDraw(ratioChosenTrueEnergyCompleteness.canvas, ratioChosenTrueEnergyCompleteness.current, ratioChosenTrueEnergyCompleteness.cheated, ratioChosenTrueEnergyCompleteness.dune, ratioChosenTrueEnergyCompleteness.uboone, ratioChosenTrueEnergyCompleteness.sbnd, ratioChosenTrueEnergyCompleteness.nue, ratioChosenTrueEnergyCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "ratioChosenTrueEnergyCompleteness_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(ratioChosenTrueEnergyCompleteness.current, ratioChosenTrueEnergyCompleteness.cheated, ratioChosenTrueEnergyCompleteness.dune, ratioChosenTrueEnergyCompleteness.uboone, ratioChosenTrueEnergyCompleteness.sbnd, ratioChosenTrueEnergyCompleteness.nue, ratioChosenTrueEnergyCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ratioChosenTrueEnergyCompleteness_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    styleDraw(ratioSummedTrueEnergyCompleteness.canvas, ratioSummedTrueEnergyCompleteness.current, ratioSummedTrueEnergyCompleteness.cheated, ratioSummedTrueEnergyCompleteness.dune, ratioSummedTrueEnergyCompleteness.uboone, ratioSummedTrueEnergyCompleteness.sbnd, ratioSummedTrueEnergyCompleteness.nue, ratioSummedTrueEnergyCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "ratioSummedTrueEnergyCompleteness_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
-    percentage(ratioSummedTrueEnergyCompleteness.current, ratioSummedTrueEnergyCompleteness.cheated, ratioSummedTrueEnergyCompleteness.dune, ratioSummedTrueEnergyCompleteness.uboone, ratioSummedTrueEnergyCompleteness.sbnd, ratioSummedTrueEnergyCompleteness.nue, ratioSummedTrueEnergyCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ratioSummedTrueEnergyCompleteness_areaNorm.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
+    styleDraw(ratioChosenSummedEnergyCompleteness.canvas, ratioChosenSummedEnergyCompleteness.current, ratioChosenSummedEnergyCompleteness.cheated, ratioChosenSummedEnergyCompleteness.dune, ratioChosenSummedEnergyCompleteness.uboone, ratioChosenSummedEnergyCompleteness.sbnd, ratioChosenSummedEnergyCompleteness.nue, ratioChosenSummedEnergyCompleteness.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioChosenSummedEnergyCompleteness_dist.pdf").c_str());
+    percentage(ratioChosenSummedEnergyCompleteness.current, ratioChosenSummedEnergyCompleteness.cheated, ratioChosenSummedEnergyCompleteness.dune, ratioChosenSummedEnergyCompleteness.uboone, ratioChosenSummedEnergyCompleteness.sbnd, ratioChosenSummedEnergyCompleteness.nue, ratioChosenSummedEnergyCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioChosenSummedEnergyCompleteness_areaNorm.pdf").c_str());
+    styleDraw(ratioChosenTrueEnergyCompleteness.canvas, ratioChosenTrueEnergyCompleteness.current, ratioChosenTrueEnergyCompleteness.cheated, ratioChosenTrueEnergyCompleteness.dune, ratioChosenTrueEnergyCompleteness.uboone, ratioChosenTrueEnergyCompleteness.sbnd, ratioChosenTrueEnergyCompleteness.nue, ratioChosenTrueEnergyCompleteness.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioChosenTrueEnergyCompleteness_dist.pdf").c_str());
+    percentage(ratioChosenTrueEnergyCompleteness.current, ratioChosenTrueEnergyCompleteness.cheated, ratioChosenTrueEnergyCompleteness.dune, ratioChosenTrueEnergyCompleteness.uboone, ratioChosenTrueEnergyCompleteness.sbnd, ratioChosenTrueEnergyCompleteness.nue, ratioChosenTrueEnergyCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioChosenTrueEnergyCompleteness_areaNorm.pdf").c_str());
+    styleDraw(ratioSummedTrueEnergyCompleteness.canvas, ratioSummedTrueEnergyCompleteness.current, ratioSummedTrueEnergyCompleteness.cheated, ratioSummedTrueEnergyCompleteness.dune, ratioSummedTrueEnergyCompleteness.uboone, ratioSummedTrueEnergyCompleteness.sbnd, ratioSummedTrueEnergyCompleteness.nue, ratioSummedTrueEnergyCompleteness.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioSummedTrueEnergyCompleteness_dist.pdf").c_str());
+    percentage(ratioSummedTrueEnergyCompleteness.current, ratioSummedTrueEnergyCompleteness.cheated, ratioSummedTrueEnergyCompleteness.dune, ratioSummedTrueEnergyCompleteness.uboone, ratioSummedTrueEnergyCompleteness.sbnd, ratioSummedTrueEnergyCompleteness.nue, ratioSummedTrueEnergyCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topLeft", (base_path + "ratioSummedTrueEnergyCompleteness_areaNorm.pdf").c_str());
 
-    styleDraw(angleDifferenceCompleteness.canvas, angleDifferenceCompleteness.current, angleDifferenceCompleteness.cheated, angleDifferenceCompleteness.dune, angleDifferenceCompleteness.uboone, angleDifferenceCompleteness.sbnd, angleDifferenceCompleteness.nue, angleDifferenceCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "angleDifferenceCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
-    percentage(angleDifferenceCompleteness.current, angleDifferenceCompleteness.cheated, angleDifferenceCompleteness.dune, angleDifferenceCompleteness.uboone, angleDifferenceCompleteness.sbnd, angleDifferenceCompleteness.nue, angleDifferenceCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "angleDifferenceCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86);
+    styleDraw(angleDifferenceCompleteness.canvas, angleDifferenceCompleteness.current, angleDifferenceCompleteness.cheated, angleDifferenceCompleteness.dune, angleDifferenceCompleteness.uboone, angleDifferenceCompleteness.sbnd, angleDifferenceCompleteness.nue, angleDifferenceCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "angleDifferenceCompleteness_dist.pdf").c_str());
+    percentage(angleDifferenceCompleteness.current, angleDifferenceCompleteness.cheated, angleDifferenceCompleteness.dune, angleDifferenceCompleteness.uboone, angleDifferenceCompleteness.sbnd, angleDifferenceCompleteness.nue, angleDifferenceCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "angleDifferenceCompleteness_areaNorm.pdf").c_str());
    
-    styleDraw(EtrueThetaRecoCompleteness.canvas, EtrueThetaRecoCompleteness.current, EtrueThetaRecoCompleteness.cheated, EtrueThetaRecoCompleteness.dune, EtrueThetaRecoCompleteness.uboone, EtrueThetaRecoCompleteness.sbnd, EtrueThetaRecoCompleteness.nue, EtrueThetaRecoCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "EtrueThetaRecoCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(EtrueThetaRecoCompleteness.current, EtrueThetaRecoCompleteness.cheated, EtrueThetaRecoCompleteness.dune, EtrueThetaRecoCompleteness.uboone, EtrueThetaRecoCompleteness.sbnd, EtrueThetaRecoCompleteness.nue, EtrueThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "EtrueThetaRecoCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(EtrueThetaRecoCompleteness.current, EtrueThetaRecoCompleteness.cheated, EtrueThetaRecoCompleteness.dune, EtrueThetaRecoCompleteness.uboone, EtrueThetaRecoCompleteness.sbnd, EtrueThetaRecoCompleteness.nue, EtrueThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "EtrueThetaRecoCompleteness_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{true}#theta_{reco}^{2} (MeV)");
+    styleDraw(EtrueThetaRecoCompleteness.canvas, EtrueThetaRecoCompleteness.current, EtrueThetaRecoCompleteness.cheated, EtrueThetaRecoCompleteness.dune, EtrueThetaRecoCompleteness.uboone, EtrueThetaRecoCompleteness.sbnd, EtrueThetaRecoCompleteness.nue, EtrueThetaRecoCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "EtrueThetaRecoCompleteness_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(EtrueThetaRecoCompleteness.current, EtrueThetaRecoCompleteness.cheated, EtrueThetaRecoCompleteness.dune, EtrueThetaRecoCompleteness.uboone, EtrueThetaRecoCompleteness.sbnd, EtrueThetaRecoCompleteness.nue, EtrueThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "EtrueThetaRecoCompleteness_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(EtrueThetaRecoCompleteness.current, EtrueThetaRecoCompleteness.cheated, EtrueThetaRecoCompleteness.dune, EtrueThetaRecoCompleteness.uboone, EtrueThetaRecoCompleteness.sbnd, EtrueThetaRecoCompleteness.nue, EtrueThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "EtrueThetaRecoCompleteness_eff.pdf").c_str(), &drawLine, &left, "E_{true}#theta_{reco}^{2} (MeV)");
 
-    styleDraw(ERecoSumThetaTrueCompleteness.canvas, ERecoSumThetaTrueCompleteness.current, ERecoSumThetaTrueCompleteness.cheated, ERecoSumThetaTrueCompleteness.dune, ERecoSumThetaTrueCompleteness.uboone, ERecoSumThetaTrueCompleteness.sbnd, ERecoSumThetaTrueCompleteness.nue, ERecoSumThetaTrueCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrueCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoSumThetaTrueCompleteness.current, ERecoSumThetaTrueCompleteness.cheated, ERecoSumThetaTrueCompleteness.dune, ERecoSumThetaTrueCompleteness.uboone, ERecoSumThetaTrueCompleteness.sbnd, ERecoSumThetaTrueCompleteness.nue, ERecoSumThetaTrueCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrueCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoSumThetaTrueCompleteness.current, ERecoSumThetaTrueCompleteness.cheated, ERecoSumThetaTrueCompleteness.dune, ERecoSumThetaTrueCompleteness.uboone, ERecoSumThetaTrueCompleteness.sbnd, ERecoSumThetaTrueCompleteness.nue, ERecoSumThetaTrueCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoSumThetaTrueCompleteness_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{true}^{2} (MeV)");
+    styleDraw(ERecoSumThetaTrueCompleteness.canvas, ERecoSumThetaTrueCompleteness.current, ERecoSumThetaTrueCompleteness.cheated, ERecoSumThetaTrueCompleteness.dune, ERecoSumThetaTrueCompleteness.uboone, ERecoSumThetaTrueCompleteness.sbnd, ERecoSumThetaTrueCompleteness.nue, ERecoSumThetaTrueCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoSumThetaTrueCompleteness_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoSumThetaTrueCompleteness.current, ERecoSumThetaTrueCompleteness.cheated, ERecoSumThetaTrueCompleteness.dune, ERecoSumThetaTrueCompleteness.uboone, ERecoSumThetaTrueCompleteness.sbnd, ERecoSumThetaTrueCompleteness.nue, ERecoSumThetaTrueCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoSumThetaTrueCompleteness_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(ERecoSumThetaTrueCompleteness.current, ERecoSumThetaTrueCompleteness.cheated, ERecoSumThetaTrueCompleteness.dune, ERecoSumThetaTrueCompleteness.uboone, ERecoSumThetaTrueCompleteness.sbnd, ERecoSumThetaTrueCompleteness.nue, ERecoSumThetaTrueCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "ERecoSumThetaTrueCompleteness_eff.pdf").c_str(), &drawLine, &left, "E_{reco}#theta_{true}^{2} (MeV)");
 
-    styleDraw(ERecoHighestThetaTrueCompleteness.canvas, ERecoHighestThetaTrueCompleteness.current, ERecoHighestThetaTrueCompleteness.cheated, ERecoHighestThetaTrueCompleteness.dune, ERecoHighestThetaTrueCompleteness.uboone, ERecoHighestThetaTrueCompleteness.sbnd, ERecoHighestThetaTrueCompleteness.nue, ERecoHighestThetaTrueCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrueCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoHighestThetaTrueCompleteness.current, ERecoHighestThetaTrueCompleteness.cheated, ERecoHighestThetaTrueCompleteness.dune, ERecoHighestThetaTrueCompleteness.uboone, ERecoHighestThetaTrueCompleteness.sbnd, ERecoHighestThetaTrueCompleteness.nue, ERecoHighestThetaTrueCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrueCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoHighestThetaTrueCompleteness.current, ERecoHighestThetaTrueCompleteness.cheated, ERecoHighestThetaTrueCompleteness.dune, ERecoHighestThetaTrueCompleteness.uboone, ERecoHighestThetaTrueCompleteness.sbnd, ERecoHighestThetaTrueCompleteness.nue, ERecoHighestThetaTrueCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoHighestThetaTrueCompleteness_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{true}^{2} (MeV)");
+    styleDraw(ERecoHighestThetaTrueCompleteness.canvas, ERecoHighestThetaTrueCompleteness.current, ERecoHighestThetaTrueCompleteness.cheated, ERecoHighestThetaTrueCompleteness.dune, ERecoHighestThetaTrueCompleteness.uboone, ERecoHighestThetaTrueCompleteness.sbnd, ERecoHighestThetaTrueCompleteness.nue, ERecoHighestThetaTrueCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoHighestThetaTrueCompleteness_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoHighestThetaTrueCompleteness.current, ERecoHighestThetaTrueCompleteness.cheated, ERecoHighestThetaTrueCompleteness.dune, ERecoHighestThetaTrueCompleteness.uboone, ERecoHighestThetaTrueCompleteness.sbnd, ERecoHighestThetaTrueCompleteness.nue, ERecoHighestThetaTrueCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoHighestThetaTrueCompleteness_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(ERecoHighestThetaTrueCompleteness.current, ERecoHighestThetaTrueCompleteness.cheated, ERecoHighestThetaTrueCompleteness.dune, ERecoHighestThetaTrueCompleteness.uboone, ERecoHighestThetaTrueCompleteness.sbnd, ERecoHighestThetaTrueCompleteness.nue, ERecoHighestThetaTrueCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "ERecoHighestThetaTrueCompleteness_eff.pdf").c_str(), &drawLine, &left, "E_{reco}#theta_{true}^{2} (MeV)");
 
-    styleDraw(ERecoSumThetaRecoCompleteness.canvas, ERecoSumThetaRecoCompleteness.current, ERecoSumThetaRecoCompleteness.cheated, ERecoSumThetaRecoCompleteness.dune, ERecoSumThetaRecoCompleteness.uboone, ERecoSumThetaRecoCompleteness.sbnd, ERecoSumThetaRecoCompleteness.nue, ERecoSumThetaRecoCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoSumThetaRecoCompleteness.current, ERecoSumThetaRecoCompleteness.cheated, ERecoSumThetaRecoCompleteness.dune, ERecoSumThetaRecoCompleteness.uboone, ERecoSumThetaRecoCompleteness.sbnd, ERecoSumThetaRecoCompleteness.nue, ERecoSumThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoSumThetaRecoCompleteness.current, ERecoSumThetaRecoCompleteness.cheated, ERecoSumThetaRecoCompleteness.dune, ERecoSumThetaRecoCompleteness.uboone, ERecoSumThetaRecoCompleteness.sbnd, ERecoSumThetaRecoCompleteness.nue, ERecoSumThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCompleteness_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    styleDraw(ERecoSumThetaRecoCompleteness.canvas, ERecoSumThetaRecoCompleteness.current, ERecoSumThetaRecoCompleteness.cheated, ERecoSumThetaRecoCompleteness.dune, ERecoSumThetaRecoCompleteness.uboone, ERecoSumThetaRecoCompleteness.sbnd, ERecoSumThetaRecoCompleteness.nue, ERecoSumThetaRecoCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoSumThetaRecoCompleteness_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoSumThetaRecoCompleteness.current, ERecoSumThetaRecoCompleteness.cheated, ERecoSumThetaRecoCompleteness.dune, ERecoSumThetaRecoCompleteness.uboone, ERecoSumThetaRecoCompleteness.sbnd, ERecoSumThetaRecoCompleteness.nue, ERecoSumThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoSumThetaRecoCompleteness_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(ERecoSumThetaRecoCompleteness.current, ERecoSumThetaRecoCompleteness.cheated, ERecoSumThetaRecoCompleteness.dune, ERecoSumThetaRecoCompleteness.uboone, ERecoSumThetaRecoCompleteness.sbnd, ERecoSumThetaRecoCompleteness.nue, ERecoSumThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "ERecoSumThetaRecoCompleteness_eff.pdf").c_str(), &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
 
-    styleDraw(ERecoHighestThetaRecoCompleteness.canvas, ERecoHighestThetaRecoCompleteness.current, ERecoHighestThetaRecoCompleteness.cheated, ERecoHighestThetaRecoCompleteness.dune, ERecoHighestThetaRecoCompleteness.uboone, ERecoHighestThetaRecoCompleteness.sbnd, ERecoHighestThetaRecoCompleteness.nue, ERecoHighestThetaRecoCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCompleteness_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(ERecoHighestThetaRecoCompleteness.current, ERecoHighestThetaRecoCompleteness.cheated, ERecoHighestThetaRecoCompleteness.dune, ERecoHighestThetaRecoCompleteness.uboone, ERecoHighestThetaRecoCompleteness.sbnd, ERecoHighestThetaRecoCompleteness.nue, ERecoHighestThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCompleteness_areaNorm.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoHighestThetaRecoCompleteness.current, ERecoHighestThetaRecoCompleteness.cheated, ERecoHighestThetaRecoCompleteness.dune, ERecoHighestThetaRecoCompleteness.uboone, ERecoHighestThetaRecoCompleteness.sbnd, ERecoHighestThetaRecoCompleteness.nue, ERecoHighestThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCompleteness_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    styleDraw(ERecoHighestThetaRecoCompleteness.canvas, ERecoHighestThetaRecoCompleteness.current, ERecoHighestThetaRecoCompleteness.cheated, ERecoHighestThetaRecoCompleteness.dune, ERecoHighestThetaRecoCompleteness.uboone, ERecoHighestThetaRecoCompleteness.sbnd, ERecoHighestThetaRecoCompleteness.nue, ERecoHighestThetaRecoCompleteness.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoHighestThetaRecoCompleteness_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(ERecoHighestThetaRecoCompleteness.current, ERecoHighestThetaRecoCompleteness.cheated, ERecoHighestThetaRecoCompleteness.dune, ERecoHighestThetaRecoCompleteness.uboone, ERecoHighestThetaRecoCompleteness.sbnd, ERecoHighestThetaRecoCompleteness.nue, ERecoHighestThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "ERecoHighestThetaRecoCompleteness_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(ERecoHighestThetaRecoCompleteness.current, ERecoHighestThetaRecoCompleteness.cheated, ERecoHighestThetaRecoCompleteness.dune, ERecoHighestThetaRecoCompleteness.uboone, ERecoHighestThetaRecoCompleteness.sbnd, ERecoHighestThetaRecoCompleteness.nue, ERecoHighestThetaRecoCompleteness.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "ERecoHighestThetaRecoCompleteness_eff.pdf").c_str(), &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
 
-
-    styleDraw(trueETheta2.canvas, trueETheta2.current, trueETheta2.cheated, trueETheta2.dune, trueETheta2.uboone, trueETheta2.sbnd, trueETheta2.nue, trueETheta2.nue_100k, 999, 999, 999, 999, (base_path + "trueETheta2_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
-    percentage(trueETheta2.current, trueETheta2.cheated, trueETheta2.dune, trueETheta2.uboone, trueETheta2.sbnd, trueETheta2.nue, trueETheta2.nue_100k, numEventsTrueElectron.current, numEventsTrueElectron.cheated, numEventsTrueElectron.dune, numEventsTrueElectron.uboone, numEventsTrueElectron.sbnd, numEventsTrueElectron.nue, numEventsTrueElectron.nue_100k, 999, 999, 999, 999, (base_path + "trueETheta2_areaNorm.pdf").c_str(), 0.56, 0.88, 0.70, 0.86, &drawLine, &right);
-    efficiency(trueETheta2.current, trueETheta2.cheated, trueETheta2.dune, trueETheta2.uboone, trueETheta2.sbnd, trueETheta2.nue, trueETheta2.nue_100k, numEventsTrueElectron.current, numEventsTrueElectron.cheated, numEventsTrueElectron.dune, numEventsTrueElectron.uboone, numEventsTrueElectron.sbnd, numEventsTrueElectron.nue, numEventsTrueElectron.nue_100k, 0, 1, 999, 999, (base_path + "trueETheta2_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{true}#theta_{true}^{2} (MeV rad^{2})");
-   
-    if(makePerSlicePlots){
-        for(auto& slice : xEdgeSlices){
-            styleDraw(slice.hg.canvas, slice.hg.current, slice.hg.cheated, slice.hg.dune, slice.hg.uboone, slice.hg.sbnd,
-                      slice.hg.nue, slice.hg.nue_100k, 999, 999, 0, 180,
-                      (base_path_perSlice + std::string(slice.hg.baseHist->GetName()) + ".pdf").c_str(),
-                       0.6, 0.9, 0.7, 0.9);
-            std::cout << "slice.hg.current entries: " << slice.hg.current->GetBinContent(3) << std::endl;
-            std::cout << "Integral (all bins): " << slice.hg.current->Integral(0, slice.hg.current->GetNbinsX()+1) << std::endl;
-        }
-        for(auto& slice : yEdgeSlices){
-            styleDraw(slice.hg.canvas, slice.hg.current, slice.hg.cheated, slice.hg.dune, slice.hg.uboone, slice.hg.sbnd,
-                      slice.hg.nue, slice.hg.nue_100k, 999, 999, 0, 180,
-                      (base_path_perSlice + std::string(slice.hg.baseHist->GetName()) + ".pdf").c_str(),
-                       0.6, 0.9, 0.7, 0.9);
-        }
-        for(auto& slice : zEdgeSlices){
-            styleDraw(slice.hg.canvas, slice.hg.current, slice.hg.cheated, slice.hg.dune, slice.hg.uboone, slice.hg.sbnd,
-                      slice.hg.nue, slice.hg.nue_100k, 999, 999, 0, 180,
-                      (base_path_perSlice + std::string(slice.hg.baseHist->GetName()) + ".pdf").c_str(),
-                       0.6, 0.9, 0.7, 0.9);
-        }
-    }
-
-    if(makePerSlicePlots){
-        
-        // Summary Plots for X Coordinate: BDT Vertexing
-        std::vector<double> xvals, yPeaks, yWidths;
-        for(const auto& slice : xEdgeSlices){
-            TH1F* hist = slice.hg.current;
-            double peakCenter = -1.0;
-            double width = -1.0;
-            std::cout << "slice.hg.current entries later: " << slice.hg.current->GetEntries() << std::endl;
-            if(slice.hg.current->GetEntries() > 0){
-                int peakBin = slice.hg.current->GetMaximumBin();
-                peakCenter = hist->GetBinCenter(peakBin);
-                width = hist->GetRMS();
-            }
-            double center = 0.5 * (slice.low + slice.high);
-            xvals.push_back(center);
-            yPeaks.push_back(peakCenter);
-            yWidths.push_back(width);
-        }
-
-        
-        TGraph* gXpeak = new TGraph(xvals.size(), xvals.data(), yPeaks.data());
-        gXpeak->SetTitle("X Peak Positions: BDT Vertexing;X Coordinate [cm];Angle Difference Peak [deg]");
-        gXpeak->SetMarkerStyle(20);
-        TCanvas* cXpeak = new TCanvas("cXpeak", "X slice peaks", 800, 600);
-        gXpeak->Draw("AP");
-        //cXpeak->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/X_BDT_peaks.pdf");
-        cXpeak->SaveAs((base_path + "X_BDT_peaks.pdf").c_str());
-        
-        TGraph* gXwidth = new TGraph(xvals.size(), xvals.data(), yWidths.data());
-        gXwidth->SetTitle("X Peak Widths: BDT Vertexing;X Coordinate [cm];Angle Difference RMS [deg]");
-        gXwidth->SetMarkerStyle(21);
-        TCanvas* cXwidth = new TCanvas("cXwidth", "X slice widths", 800, 600);
-        gXwidth->Draw("AP");
-        cXwidth->SaveAs((base_path + "X_BDT_widths.pdf").c_str());
-        //cXwidth->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/X_BDT_widths.pdf");
-
-        // Summary Plots for Y Coordinate: BDT Vertexing
-        xvals.clear(); yPeaks.clear(); yWidths.clear();
-        for(const auto& slice : yEdgeSlices){
-            TH1F* hist = slice.hg.current;
-            double peakCenter = -1.0;
-            double width = -1.0;
-            if(hist->GetEntries() > 0){
-                int peakBin = hist->GetMaximumBin();
-                peakCenter = hist->GetBinCenter(peakBin);
-                width = hist->GetRMS();
-            }
-            double center = 0.5 * (slice.low + slice.high);
-            xvals.push_back(center);
-            yPeaks.push_back(peakCenter);
-            yWidths.push_back(width);
-        }
-        
-        TGraph* gYpeak = new TGraph(xvals.size(), xvals.data(), yPeaks.data());
-        gYpeak->SetTitle("Y Peak Positions: BDT Vertexing;Y Coordinate [cm];Angle Difference Peak [deg]");
-        gYpeak->SetMarkerStyle(20);
-        TCanvas* cYpeak = new TCanvas("cYpeak", "Y slice peaks", 800, 600);
-        gYpeak->Draw("AP");
-        //cYpeak->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Y_BDT_peaks.pdf");
-        cYpeak->SaveAs((base_path + "Y_BDT_peaks.pdf").c_str());
-        
-        TGraph* gYwidth = new TGraph(xvals.size(), xvals.data(), yWidths.data());
-        gYwidth->SetTitle("Y Peak Widths: BDT Vertexing;Y Coordinate [cm];Angle Difference RMS [deg]");
-        gYwidth->SetMarkerStyle(21);
-        TCanvas* cYwidth = new TCanvas("cYwidth", "Y slice widths", 800, 600);
-        gYwidth->Draw("AP");
-        //cYwidth->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Y_BDT_widths.pdf");
-        cYwidth->SaveAs((base_path + "Y_BDT_width.pdf").c_str());
-
-        // Summary Plots for Z Coordinate
-        xvals.clear(); yPeaks.clear(); yWidths.clear();
-        for(const auto& slice : zEdgeSlices){
-            TH1F* hist = slice.hg.current;
-            double peakCenter = -1.0;
-            double width = -1.0;
-            if(hist->GetEntries() > 0){
-                int peakBin = hist->GetMaximumBin();
-                peakCenter = hist->GetBinCenter(peakBin);
-                width = hist->GetRMS();
-            }
-            double center = 0.5 * (slice.low + slice.high);
-            xvals.push_back(center);
-            yPeaks.push_back(peakCenter);
-            yWidths.push_back(width);
-        }
-        
-        TGraph* gZpeak = new TGraph(xvals.size(), xvals.data(), yPeaks.data());
-        gZpeak->SetTitle("Z Peak Positions: BDT Vertexing;Z coordinate [cm];Angle Difference Peak [deg]");
-        gZpeak->SetMarkerStyle(20);
-        TCanvas* cZpeak = new TCanvas("cZpeak", "Z slice peaks", 800, 600);
-        gZpeak->Draw("AP");
-        //cZpeak->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Z_BDT_peaks.pdf");
-        cZpeak->SaveAs((base_path + "Z_BDT_peaks.pdf").c_str());
-        
-        TGraph* gZwidth = new TGraph(xvals.size(), xvals.data(), yWidths.data());
-        gZwidth->SetTitle("Z Peak Widths (RMS): BDT Vertexing;Z coordinate [cm];Angle Difference RMS [deg]");
-        gZwidth->SetMarkerStyle(21);
-        TCanvas* cZwidth = new TCanvas("cZwidth", "Z slice widths", 800, 600);
-        gZwidth->Draw("AP");
-        //cZwidth->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Z_BDT_widths.pdf");
-        cZwidth->SaveAs((base_path + "Z_BDT_widths.pdf").c_str());
-    
-    
-        // Summary Plots for X Coordinate: DL Uboone Vertexing
-        std::vector<double> xvalsUboone, yPeaksUboone, yWidthsUboone;
-        for(const auto& slice : xEdgeSlices){
-            TH1F* histUboone = slice.hg.uboone;
-            double peakCenter = -1.0;
-            double width = -1.0;
-            if(slice.hg.uboone->GetEntries() > 0){
-                int peakBin = slice.hg.uboone->GetMaximumBin();
-                peakCenter = histUboone->GetBinCenter(peakBin);
-                width = histUboone->GetRMS();
-            }
-            double center = 0.5 * (slice.low + slice.high);
-            xvalsUboone.push_back(center);
-            yPeaksUboone.push_back(peakCenter);
-            yWidthsUboone.push_back(width);
-        }
-        
-        TGraph* gXpeakUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yPeaksUboone.data());
-        gXpeakUboone->SetTitle("X Peak Positions: DL Uboone Vertexing;X Coordinate [cm];Angle Difference Peak [deg]");
-        gXpeakUboone->SetMarkerStyle(20);
-        TCanvas* cXpeakUboone = new TCanvas("cXpeakUboone", "X slice peaks", 800, 600);
-        gXpeakUboone->Draw("AP");
-        //cXpeakUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/X_DLUboone_peaks.pdf");
-        cXpeakUboone->SaveAs((base_path + "X_DLUboone_peaks.pdf").c_str());
-        
-        TGraph* gXwidthUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yWidthsUboone.data());
-        gXwidthUboone->SetTitle("X Peak Widths: DL Uboone Vertexing;X Coordinate [cm];Angle Difference RMS [deg]");
-        gXwidthUboone->SetMarkerStyle(21);
-        TCanvas* cXwidthUboone = new TCanvas("cXwidthUboone", "X slice widths", 800, 600);
-        gXwidthUboone->Draw("AP");
-        //cXwidthUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/X_DLUboone_widths.pdf");
-        cXwidthUboone->SaveAs((base_path + "X_DLUboone_widths.pdf").c_str());
-
-        // Summary Plots for Y Coordinate: DL Uboone Vertexing
-        xvalsUboone.clear(); yPeaksUboone.clear(); yWidthsUboone.clear();
-        for(const auto& slice : yEdgeSlices){
-            TH1F* histUboone = slice.hg.uboone;
-            double peakCenter = -1.0;
-            double width = -1.0;
-            if(histUboone->GetEntries() > 0){
-                int peakBin = histUboone->GetMaximumBin();
-                peakCenter = histUboone->GetBinCenter(peakBin);
-                width = histUboone->GetRMS();
-            }
-            double center = 0.5 * (slice.low + slice.high);
-            xvalsUboone.push_back(center);
-            yPeaksUboone.push_back(peakCenter);
-            yWidthsUboone.push_back(width);
-        }
-        
-        TGraph* gYpeakUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yPeaksUboone.data());
-        gYpeakUboone->SetTitle("Y Peak Positions: DL Uboone Vertexing;Y Coordinate [cm];Angle Difference Peak [deg]");
-        gYpeakUboone->SetMarkerStyle(20);
-        TCanvas* cYpeakUboone = new TCanvas("cYpeakUboone", "Y slice peaks", 800, 600);
-        gYpeakUboone->Draw("AP");
-        //cYpeakUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Y_DLUboone_peaks.pdf");
-        cYpeakUboone->SaveAs((base_path + "Y_DLUboone_peaks.pdf").c_str());
-        
-        TGraph* gYwidthUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yWidthsUboone.data());
-        gYwidthUboone->SetTitle("Y Peak Widths: DL Uboone Vertexing;Y Coordinate [cm];Angle Difference RMS [deg]");
-        gYwidthUboone->SetMarkerStyle(21);
-        TCanvas* cYwidthUboone = new TCanvas("cYwidthUboone", "Y slice widths", 800, 600);
-        gYwidthUboone->Draw("AP");
-        //cYwidthUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Y_DLUboone_widths.pdf");
-        cYwidthUboone->SaveAs((base_path + "Y_DLUboone_widths.pdf").c_str());
-
-        // Summary Plots for Z Coordinate
-        xvalsUboone.clear(); yPeaksUboone.clear(); yWidthsUboone.clear();
-        for(const auto& slice : zEdgeSlices){
-            TH1F* histUboone = slice.hg.uboone;
-            double peakCenter = -1.0;
-            double width = -1.0;
-            if(histUboone->GetEntries() > 0){
-                int peakBin = histUboone->GetMaximumBin();
-                peakCenter = histUboone->GetBinCenter(peakBin);
-                width = histUboone->GetRMS();
-            }
-            double center = 0.5 * (slice.low + slice.high);
-            xvalsUboone.push_back(center);
-            yPeaksUboone.push_back(peakCenter);
-            yWidthsUboone.push_back(width);
-        }
-        
-        TGraph* gZpeakUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yPeaksUboone.data());
-        gZpeakUboone->SetTitle("Z Peak Positions: DL Uboone Vertexing;Z coordinate [cm];Angle Difference Peak [deg]");
-        gZpeakUboone->SetMarkerStyle(20);
-        TCanvas* cZpeakUboone = new TCanvas("cZpeakUboone", "Z slice peaks", 800, 600);
-        gZpeakUboone->Draw("AP");
-        //cZpeakUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Z_DLUboone_peaks.pdf");
-        cZpeakUboone->SaveAs((base_path + "Z_DLUboone_peaks.pdf").c_str());
-        
-        TGraph* gZwidthUboone = new TGraph(xvalsUboone.size(), xvalsUboone.data(), yWidthsUboone.data());
-        gZwidthUboone->SetTitle("Z Peak Widths (RMS): DL Uboone Vertexing;Z coordinate [cm];Angle Difference RMS [deg]");
-        gZwidthUboone->SetMarkerStyle(21);
-        TCanvas* cZwidthUboone = new TCanvas("cZwidthUboone", "Z slice widths", 800, 600);
-        gZwidthUboone->Draw("AP");
-        //cZwidthUboone->SaveAs("/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/Z_DLUboone_widths.pdf");
-        cZwidthUboone->SaveAs((base_path + "Z_DLUboone_widths.pdf").c_str());
-    }
+    styleDraw(trueETheta2.canvas, trueETheta2.current, trueETheta2.cheated, trueETheta2.dune, trueETheta2.uboone, trueETheta2.sbnd, trueETheta2.nue, trueETheta2.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "trueETheta2_dist.pdf").c_str(), nullptr, nullptr, &drawLine, &right);
+    percentage(trueETheta2.current, trueETheta2.cheated, trueETheta2.dune, trueETheta2.uboone, trueETheta2.sbnd, trueETheta2.nue, trueETheta2.nue_100k, numEventsTrueElectron.current, numEventsTrueElectron.cheated, numEventsTrueElectron.dune, numEventsTrueElectron.uboone, numEventsTrueElectron.sbnd, numEventsTrueElectron.nue, numEventsTrueElectron.nue_100k, 999, 999, 999, 999, "topRight", (base_path + "trueETheta2_areaNorm.pdf").c_str(), &drawLine, &right);
+    efficiency(trueETheta2.current, trueETheta2.cheated, trueETheta2.dune, trueETheta2.uboone, trueETheta2.sbnd, trueETheta2.nue, trueETheta2.nue_100k, numEventsTrueElectron.current, numEventsTrueElectron.cheated, numEventsTrueElectron.dune, numEventsTrueElectron.uboone, numEventsTrueElectron.sbnd, numEventsTrueElectron.nue, numEventsTrueElectron.nue_100k, 0, 1, 999, 999, "topRight", (base_path + "trueETheta2_eff.pdf").c_str(), &drawLine, &left, "E_{true}#theta_{true}^{2} (MeV rad^{2})");
 
     TwoDHistDraw(xCoordAngleDifferenceBDTCRUMBS, (base_path + "angleDiffPosition_x_BDT.pdf").c_str(), "Reco Neutrino Vertex X Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex X Coordinate (cm);Angle Difference (degrees)");
     TwoDHistDraw(yCoordAngleDifferenceBDTCRUMBS, (base_path + "angleDiffPosition_y_BDT.pdf").c_str(), "Reco Neutrino Vertex Y Coordinate vs Angle Between True and Reco Track: BDT Vertexing;Reco Neutrino Vertex Y Coordinate (cm);Angle Difference (degrees)");
@@ -2137,7 +2087,7 @@ void nuESignalWithWithoutCosmics_macro(){
     TwoDHistDraw(numPFPsERecoSumThetaRecoBDTCRUMBS, (base_path + "ERecoSumThetaRecoPFPNum_BDT.pdf").c_str(), "Number of PFPs vs E_{reco}#theta_{true}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)");
     TwoDHistDraw(numPFPsERecoHighestThetaRecoBDTCRUMBS, (base_path + "ERecoHighestThetaRecoPFPNum_BDT.pdf").c_str(), "Number of PFPs vs E_{reco}#theta_{true}^{2} for E_{reco} Being the Energy of the Highest Energy PFP in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)");
     
-    ProfileDrawDouble(numPFPsAngleDifferenceWithCosmicsCRUMBSProfile, numPFPsAngleDifferenceWithoutCosmicsCRUMBSProfile, (base_path + "angleDiffPFPNumProfile_BDT.pdf").c_str(), "Profile of Number of PFPs in Slice with Highest CRUMBS Score vs Angle Between True and Reco Track: BDT Vertexing;Number of PFPs;Angle Difference (degrees)");
-    ProfileDrawDouble(numPFPsERecoSumThetaRecoWithCosmicsCRUMBSProfile, numPFPsERecoSumThetaRecoWithoutCosmicsCRUMBSProfile, (base_path + "ERecoSumThetaRecoPFPNumProfile_BDT.pdf").c_str(), "Profile of Number of PFPs vs E_{reco}#theta_{true}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)");
-    ProfileDrawDouble(numPFPsERecoHighestThetaRecoWithCosmicsCRUMBSProfile, numPFPsERecoHighestThetaRecoWithoutCosmicsCRUMBSProfile, (base_path + "ERecoHighestThetaRecoPFPNumProfile_BDT.pdf").c_str(), "Profile of Number of PFPs vs E_{reco}#theta_{true}^{2} for E_{reco} Being the Energy of the Highest Energy PFP in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)");
+    ProfileDrawDouble(numPFPsAngleDifferenceWithCosmicsCRUMBSProfile, numPFPsAngleDifferenceWithoutCosmicsCRUMBSProfile, (base_path + "angleDiffPFPNumProfile_BDT.pdf").c_str(), "Profile of Number of PFPs in Slice with Highest CRUMBS Score vs Angle Between True and Reco Track: BDT Vertexing;Number of PFPs;Angle Difference (degrees)", "topLeft");
+    ProfileDrawDouble(numPFPsERecoSumThetaRecoWithCosmicsCRUMBSProfile, numPFPsERecoSumThetaRecoWithoutCosmicsCRUMBSProfile, (base_path + "ERecoSumThetaRecoPFPNumProfile_BDT.pdf").c_str(), "Profile of Number of PFPs vs E_{reco}#theta_{reco}^{2} for E_{reco} Being Sum of Energies of PFPs in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)", "topLeft");
+    ProfileDrawDouble(numPFPsERecoHighestThetaRecoWithCosmicsCRUMBSProfile, numPFPsERecoHighestThetaRecoWithoutCosmicsCRUMBSProfile, (base_path + "ERecoHighestThetaRecoPFPNumProfile_BDT.pdf").c_str(), "Profile of Number of PFPs vs E_{reco}#theta_{reco}^{2} for E_{reco} Being the Energy of the Highest Energy PFP in the Slice: BDT Vertexing;Number of PFPs;E_{reco}#theta_{reco}^{2} (MeV)", "topLeft");
 }

@@ -206,8 +206,9 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
 
     double maxYValue = std::max({currentSignal->GetMaximum(), ubooneSignal->GetMaximum(), currentBNB->GetMaximum(), ubooneBNB->GetMaximum(), currentCosmics->GetMaximum(), ubooneCosmics->GetMaximum()});
 
+    double yminVal;
     if((ymin == 999) && (ymax == 999)){
-        double yminVal = (log && *log) ? 0.1 : 0;
+        yminVal = (log && *log) ? 0.1 : 0;
         double ymaxVal  = (log && *log) ? maxYValue*10000 : maxYValue*1.1;
         
         if(log && *log && currentPurityHist){
@@ -292,7 +293,7 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
     legend->Draw();
 
     if(drawLine){
-        TLine* line = new TLine(1.022, 0, 1.022, currentSignal->GetMaximum());
+        TLine* line = new TLine(1.022, yminVal, 1.022, currentSignal->GetMaximum());
         line->SetLineColor(kGray+2);
         line->SetLineStyle(2);
         line->SetLineWidth(2);
@@ -300,10 +301,11 @@ void styleDraw(TCanvas* canvas, TH1F* currentSignal, TH1F* ubooneSignal, TH1F* c
 
         TLatex* latex = nullptr;    
         // Labels line on the left
+        double ymaxValLine  = (log && *log) ? maxYValue*1000 : maxYValue*0.95;
         if(*linePos == 0){
-            latex = new TLatex(1.022 - 0.2, currentSignal->GetMaximum() * 0.93, "2m_{e}");
+            latex = new TLatex(1.022 - 0.2, ymaxValLine, "2m_{e}");
         } else{
-            latex = new TLatex(1.022 + 0.1, currentSignal->GetMaximum() * 0.93, "2m_{e}");
+            latex = new TLatex(1.022 + 0.2, ymaxValLine, "2m_{e}");
         }
 
         latex->SetTextSize(0.035); 
@@ -354,8 +356,9 @@ void styleDrawIndividual(TCanvas* canvas, TH1F* current, TH1F* uboone, double ym
 
     }
 
+    double yminVal;
     if((ymin == 999) && (ymax == 999)){
-        double yminVal = (log && *log) ? 0.000001 : smallestYVal*0.9;
+        yminVal = (log && *log) ? 0.000001 : smallestYVal*0.9;
         double ymaxVal  = (log && *log) ? biggestYVal*1 : biggestYVal*1.1;
         if(biggestYVal > 0.9) ymaxVal = 1;
         current->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
@@ -406,7 +409,7 @@ void styleDrawIndividual(TCanvas* canvas, TH1F* current, TH1F* uboone, double ym
     legend->Draw();
 
     if(drawLine){
-        TLine* line = new TLine(1.022, 0, 1.022, current->GetMaximum());
+        TLine* line = new TLine(1.022, yminVal, 1.022, current->GetMaximum());
         line->SetLineColor(kGray+2);
         line->SetLineStyle(2);
         line->SetLineWidth(2);
@@ -989,8 +992,11 @@ void nuEBackgroundSignalWeightsStack_macro(){
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_23July.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_new.root");
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_16Sep.root");
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_22Sep.root");
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_22Sep.root");
 
+    // v10_06_00 40k Nu+E elastic scattering with cosmics (SCE ON), BNB+Cosmic, Intime Cosmics
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_BNBIntimeNu+E+Cosmics_6Oct.root");
+    
     std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeights/";
 
     if(!file){
@@ -1910,12 +1916,12 @@ void nuEBackgroundSignalWeightsStack_macro(){
     //std::cout << "ERecoSumThetaReco ____________________________________________________________________" << std::endl;
     styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
     weighted(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
-    efficiency(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 1, &currentMaxEffPur, &ubooneMaxEffPur);
+    efficiency(ERecoSumThetaRecoCRUMBS.currentSignal, ERecoSumThetaRecoCRUMBS.ubooneSignal, ERecoSumThetaRecoCRUMBS.currentBNB, ERecoSumThetaRecoCRUMBS.ubooneBNB, ERecoSumThetaRecoCRUMBS.currentCosmics, ERecoSumThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoSumThetaRecoCRUMBS_effpur.pdf").c_str(), "topRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &right, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 1, &currentMaxEffPur, &ubooneMaxEffPur);
 
     //std::cout << "ERecoHighestThetaReco ____________________________________________________________________" << std::endl;
     styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), "topRight", nullptr, nullptr, &drawLine, &right);
     weighted(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, signalWeight, BNBWeight, cosmicsWeight, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_weighted.pdf").c_str(), "topRight", &drawLine, &right);
-    efficiency(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 1, &currentMaxEffPur, &ubooneMaxEffPur);
+    efficiency(ERecoHighestThetaRecoCRUMBS.currentSignal, ERecoHighestThetaRecoCRUMBS.ubooneSignal, ERecoHighestThetaRecoCRUMBS.currentBNB, ERecoHighestThetaRecoCRUMBS.ubooneBNB, ERecoHighestThetaRecoCRUMBS.currentCosmics, ERecoHighestThetaRecoCRUMBS.ubooneCosmics, numEventsCRUMBSRecoParticle.currentSignal, numEventsCRUMBSRecoParticle.ubooneSignal, numEventsCRUMBSRecoParticle.currentBNB, numEventsCRUMBSRecoParticle.ubooneBNB, numEventsCRUMBSRecoParticle.currentCosmics, numEventsCRUMBSRecoParticle.ubooneCosmics, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_rej.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effrejpur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_pur.pdf").c_str(), (base_path + "ERecoHighestThetaRecoCRUMBS_effpur.pdf").c_str(), "bottomRight", signalWeight, BNBWeight, cosmicsWeight, &drawLine, &right, "E_{reco}#theta_{reco}^{2} (MeV rad^{2})", 1, &currentMaxEffPur, &ubooneMaxEffPur);
 
     printf("\nInteractions in Signal Sample:\nUnknown = %i\nQE = %i\nRes = %i\nDIS = %i\nCoh = %i\nCoh Elastic = %i\nElastic Scattering = %i\nIMD Annihilation = %i\nInverse Beta Decay = %i\nGlashow Resonance = %i\nAM Nu Gamma = %i\nMEC = %i\nDiffractive = %i\nEM = %i\nWeak Mix = %i\n\n", interactionsSignal.Unknown, interactionsSignal.QE, interactionsSignal.Res, interactionsSignal.DIS, interactionsSignal.Coh, interactionsSignal.CohElastic, interactionsSignal.ElectronScattering, interactionsSignal.IMDAnnihilation, interactionsSignal.InverseBetaDecay, interactionsSignal.GlashowResonance, interactionsSignal.AMNuGamma, interactionsSignal.MEC, interactionsSignal.Diffractive, interactionsSignal.EM, interactionsSignal.WeakMix);
     printf("Nuance Offsets:\nNumber with just Offset = %i\nCCQE = %i\nNCQE = %i\nNuanceRes = %i\nCCDIS = %i\nNCDis = %i\nNuEElastic = %i\n", interactionsSignal.NuanceOffset, interactionsSignal.CCQE, interactionsSignal.NCQE, interactionsSignal.NuanceRes, interactionsSignal.CCDis, interactionsSignal.NCDis, interactionsSignal.NuEElastic);

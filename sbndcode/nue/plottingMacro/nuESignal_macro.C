@@ -173,7 +173,8 @@ void ProfileDraw(TProfile* profile, const char* filename, const char* title){
     profile->GetYaxis()->SetTickLength(0.03);
     profile->GetXaxis()->SetTickSize(0.02);
     profile->GetYaxis()->SetTickSize(0.02);
-       
+    profile->SetStats(0);
+
     ProfileCanvas->SaveAs(filename);
     ProfileCanvas->Clear();
 }
@@ -287,7 +288,7 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     //dune->Draw("histsame");
     uboone->Draw("histsame");
     //sbnd->Draw("histsame");
-    //nue->Draw("histsame");
+    nue->Draw("histsame");
     //nue_100k->Draw("histsame");
     
     current->SetStats(0);
@@ -297,16 +298,16 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
     current->GetYaxis()->SetTickSize(0.02);
 
     auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
-    legend->AddEntry(dune, "Pandora Deep Learning: DUNE/LBNF Tune", "f");
+    //legend->AddEntry(dune, "Pandora Deep Learning: DUNE/LBNF Tune", "f");
     legend->AddEntry(uboone, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
-    legend->AddEntry(sbnd, "Pandora Deep Learning: SBND/BNB Tune", "f");
+    //legend->AddEntry(sbnd, "Pandora Deep Learning: SBND/BNB Tune", "f");
     legend->AddEntry(current, "Pandora BDT SBND (without Refinement)", "f");
     //legend->AddEntry(cheated, "Pandora Cheated SBND Vertexing", "f");
-    legend->AddEntry(nue, "Pandora Deep Learning: SBND Nu+E Elastic (50k Events)", "f");
-    legend->AddEntry(nue_100k, "Pandora Deep Learning: SBND Nu+E Elastic (100k Events)", "f");
+    legend->AddEntry(nue, "Pandora Deep Learning: SBND Nu+E Elastic", "f");
+    //legend->AddEntry(nue_100k, "Pandora Deep Learning: SBND Nu+E Elastic (100k Events)", "f");
     legend->SetTextSize(0.0225);
     legend->SetMargin(0.13);
-    //legend->Draw();
+    legend->Draw();
 
     if(drawLine){
         TLine* line = new TLine(1.022, 0, 1.022, current->GetMaximum());
@@ -320,7 +321,7 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
         if(*linePos == 0){
             latex = new TLatex(1.022 - 0.2, current->GetMaximum() * 0.93, "2m_{e}");
         } else{
-            latex = new TLatex(1.022 + 0.1, current->GetMaximum() * 0.93, "2m_{e}");
+            latex = new TLatex(1.022 + 0.2, current->GetMaximum() * 0.93, "2m_{e}");
         }
 
         latex->SetTextSize(0.035); 
@@ -340,40 +341,54 @@ void styleDraw(TCanvas* canvas, TH1F* current, TH1F* cheated, TH1F* dune, TH1F* 
 void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sbnd, TH1F* nue, TH1F* nue_100k, double sizeCurrent, double sizeCheated, double sizeDune, double sizeUboone, double sizeSBND, double sizeNuE, double sizeNuE_100k, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, int* drawLine = nullptr, int* linePos = nullptr){
     TCanvas *percentageCanvas = new TCanvas("percentage_canvas", "Graph Draw Options", 200, 10, 600, 400); 
     TH1F* currentPerc = (TH1F*) current->Clone("perc hist");
-    currentPerc->Scale(100.0 * 1.0/sizeCurrent);
-    currentPerc->GetYaxis()->SetTitle("Percentage of Events (%)"); 
+    //currentPerc->Scale(100.0 * 1.0/sizeCurrent);
+    //currentPerc->GetYaxis()->SetTitle("Percentage of Events (%)"); 
+    currentPerc->Scale(1.0 / current->Integral());
+    currentPerc->GetYaxis()->SetTitle("Events, Area Normalised"); 
 
     TH1F* cheatedPerc = (TH1F*) cheated->Clone("perc hist");
     //cheatedPerc->Scale(100.0 * 1.0/sizeCheated);
-    cheatedPerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    //cheatedPerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    cheatedPerc->Scale(1.0 / cheated->Integral());
+    cheatedPerc->GetYaxis()->SetTitle("Events, Area Normalised");
 
     TH1F* dunePerc = (TH1F*) dune->Clone("perc hist");
     //dunePerc->Scale(100.0 * 1.0/sizeDune);
-    dunePerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    //dunePerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    dunePerc->Scale(1.0 / dune->Integral());
+    dunePerc->GetYaxis()->SetTitle("Events, Area Normalised");
 
     TH1F* uboonePerc = (TH1F*) uboone->Clone("perc hist");
-    uboonePerc->Scale(100.0 * 1.0/sizeUboone);
-    uboonePerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    //uboonePerc->Scale(100.0 * 1.0/sizeUboone);
+    //uboonePerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    uboonePerc->Scale(1.0 / uboone->Integral());
+    uboonePerc->GetYaxis()->SetTitle("Events, Area Normalised");
 
     TH1F* sbndPerc = (TH1F*) sbnd->Clone("perc hist");
-    sbndPerc->Scale(100.0 * 1.0/sizeSBND);
-    sbndPerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    //sbndPerc->Scale(100.0 * 1.0/sizeSBND);
+    //sbndPerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    sbndPerc->Scale(1.0 / sbnd->Integral());
+    sbndPerc->GetYaxis()->SetTitle("Events, Area Normalised");
 
     TH1F* nuePerc = (TH1F*) nue->Clone("perc hist");
-    nuePerc->Scale(100.0 * 1.0/sizeNuE);
-    nuePerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    //nuePerc->Scale(100.0 * 1.0/sizeNuE);
+    //nuePerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    nuePerc->Scale(1.0 / nue->Integral());
+    nuePerc->GetYaxis()->SetTitle("Events, Area Normalised");
     
     TH1F* nue_100kPerc = (TH1F*) nue_100k->Clone("perc hist");
     nue_100kPerc->Scale(100.0 * 1.0/sizeNuE_100k);
     nue_100kPerc->GetYaxis()->SetTitle("Percentage of Events (%)");
+    nue_100kPerc->Scale(1.0 / nue_100k->Integral());
+    nue_100kPerc->GetYaxis()->SetTitle("Events, Area Normalised");
     
     TPaveText* pt = new TPaveText(Lxmin, Lymin - 0.02 - 0.17, Lxmax, Lymin - 0.02, "NDC");
-    pt->AddText(Form("Number of DL Dune Entries: %d", (int)sizeDune));
+    //pt->AddText(Form("Number of DL Dune Entries: %d", (int)sizeDune));
     pt->AddText(Form("Number of DL Uboone Entries: %d", (int)sizeUboone));
-    pt->AddText(Form("Number of DL SBND Entries: %d", (int)sizeSBND));
+    //pt->AddText(Form("Number of DL SBND Entries: %d", (int)sizeSBND));
     pt->AddText(Form("Number of Current Entries: %d", (int)sizeCurrent));
     pt->AddText(Form("Number of DL Nu+E Entries (50k): %d", (int)sizeNuE));
-    pt->AddText(Form("Number of DL Nu+E Entries (100k): %d", (int)sizeNuE_100k));
+    //pt->AddText(Form("Number of DL Nu+E Entries (100k): %d", (int)sizeNuE_100k));
     //pt->AddText(Form("Number of Cheated Entries: %d", (int)sizeCheated));
     pt->SetFillColor(kWhite);
     pt->SetFillStyle(1001);
@@ -381,7 +396,7 @@ void percentage(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sb
    
     int funcValue = 1;
 
-    styleDraw(percentageCanvas, currentPerc, cheatedPerc, dunePerc, uboonePerc, sbndPerc, nuePerc, nue_100kPerc, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, pt, &funcValue, drawLine, linePos);
+    styleDraw(percentageCanvas, currentPerc, cheatedPerc, dunePerc, uboonePerc, sbndPerc, nuePerc, nue_100kPerc, ymin, ymax, xmin, xmax, filename, Lxmin, Lxmax, Lymin, Lymax, nullptr, &funcValue, drawLine, linePos);
 }
 
 void efficiency(TH1F* current, TH1F* cheated, TH1F* dune, TH1F* uboone, TH1F* sbnd, TH1F* nue, TH1F* nue_100k, double sizeCurrent, double sizeCheated, double sizeDune, double sizeUboone, double sizeSBND, double sizeNuE, double sizeNuE_100k, double ymin, double ymax, double xmin, double xmax, const char* filename, double Lxmin, double Lxmax, double Lymin, double Lymax, int* drawLine = nullptr, int* linePos = nullptr, std::string xlabel = ""){
@@ -610,9 +625,18 @@ void nuESignal_macro(){
     
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E/analysed_noSCE/merged_noSCE_8Sep.root");
     //std::string base_path = "/nashome/c/coackley/nuEPlotsWithoutCosmicsSCEOFF_50k+100k/";
+   
+    // v10_09_00 events (have a deltaZ offset) 
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/22Sep_SCEON/merged_22Sep.root");
+    //std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmicsSCEON_40kEvents/";
+   
+    // v10_06_00 events 
+    //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/analysed_v10_06_00/merged_6Oct.root");
+    //std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmicsSCEON_40kEvents/";
     
-    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics/22Sep_SCEON/merged_22Sep.root");
-    std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmicsSCEON_40kEvents/";
+    // Comparing Nu+E DL Vertexing train to Uboone Train and BDT Vertexing
+    TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/merged_13Oct.root");
+    std::string base_path = "/nashome/c/coackley/nuEPlotsWithCosmicsSCEON_DLNuE/";
     
     //TFile *file = TFile::Open("/exp/sbnd/data/users/coackley/Nu+E_Cosmics_v10_09_00/analysed/enuelastic_v10_09_00_gen_g4_detsim_reco1_reco2_analysed_80221889_50_Analysed_BDT_output-9c4b127e-5141-4f5b-82cf-3153df9693ae.root");
     //std::string base_path = "/nashome/c/coackley/v10_09_00_through/";
@@ -1735,11 +1759,11 @@ void nuESignal_macro(){
 
     styleDraw(ERecoSumThetaRecoCRUMBS.canvas, ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
     percentage(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    efficiency(ERecoSumThetaRecoCRUMBS.current, ERecoSumThetaRecoCRUMBS.cheated, ERecoSumThetaRecoCRUMBS.dune, ERecoSumThetaRecoCRUMBS.uboone, ERecoSumThetaRecoCRUMBS.sbnd, ERecoSumThetaRecoCRUMBS.nue, ERecoSumThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoSumThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &right, "E_{reco}#theta_{reco}^{2} (MeV)");
 
     styleDraw(ERecoHighestThetaRecoCRUMBS.canvas, ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_dist.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, nullptr, nullptr, &drawLine, &right);
     percentage(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 999, 999, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_perc.pdf").c_str(), 0.56, 0.88, 0.7, 0.86, &drawLine, &right);
-    efficiency(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &left, "E_{reco}#theta_{reco}^{2} (MeV)");
+    efficiency(ERecoHighestThetaRecoCRUMBS.current, ERecoHighestThetaRecoCRUMBS.cheated, ERecoHighestThetaRecoCRUMBS.dune, ERecoHighestThetaRecoCRUMBS.uboone, ERecoHighestThetaRecoCRUMBS.sbnd, ERecoHighestThetaRecoCRUMBS.nue, ERecoHighestThetaRecoCRUMBS.nue_100k, numEventsCRUMBSRecoParticle.current, numEventsCRUMBSRecoParticle.cheated, numEventsCRUMBSRecoParticle.dune, numEventsCRUMBSRecoParticle.uboone, numEventsCRUMBSRecoParticle.sbnd, numEventsCRUMBSRecoParticle.nue, numEventsCRUMBSRecoParticle.nue_100k, 0, 1, 999, 999, (base_path + "ERecoHighestThetaRecoCRUMBS_eff.pdf").c_str(), 0.56, 0.88, 0.14, 0.3, &drawLine, &right, "E_{reco}#theta_{reco}^{2} (MeV)");
 
     // Completeness Slice Score Plots
     styleDraw(sliceCompletenessCompleteness.canvas, sliceCompletenessCompleteness.current, sliceCompletenessCompleteness.cheated, sliceCompletenessCompleteness.dune, sliceCompletenessCompleteness.uboone, sliceCompletenessCompleteness.sbnd, sliceCompletenessCompleteness.nue, sliceCompletenessCompleteness.nue_100k, 999, 999, 999, 999, (base_path + "sliceCompletenessCompleteness_dist.pdf").c_str(), 1-0.86, 1-0.54, 0.70, 0.86);
