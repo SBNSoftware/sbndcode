@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 // sbndcode includes
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/Geometry/GeometryWrappers/TPCGeoAlg.h"
 #include "sbnobj/SBND/CRT/FEBData.hh"
 #include "sbnobj/SBND/CRT/CRTData.hh"
@@ -128,7 +128,7 @@ private:
 
   // Other variables shared between different methods.
   geo::GeometryCore const* fGeometryService;
-  sbnd::crt::CRTGeoAlg fCrtGeo;
+  art::ServiceHandle<sbnd::crt::CRTGeoService> fCRTGeoService;
 
   //PMT
 
@@ -168,7 +168,6 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
   fVerbose(p.get<bool>("Verbose", false)),
   fClockSpeedCRT(p.get<double>("ClockSpeedCRT")),
   fFirstFEBMac5(p.get<size_t>("FirstFEBMac5", 0)),
-  fCrtGeo(p.get<fhicl::ParameterSet>("CRTGeoAlg")),
   fInputModuleNameWvfm(p.get<std::string>("InputModuleNameWvfm")),
   fInputModuleNameTrigger(p.get<std::string>("InputModuleNameTrigger")),
   fBaseline(p.get<int>("Baseline",8000)),
@@ -185,6 +184,7 @@ sbnd::trigger::ArtdaqFragmentProducer::ArtdaqFragmentProducer(fhicl::ParameterSe
 
   // Get a pointer to the fGeometryServiceetry service provider
   fGeometryService = lar::providerFrom<geo::Geometry>();
+
 
   // get clock
   auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService const>()->DataForJob();
@@ -221,7 +221,7 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
 
     for(int i=0; i<num_febs; i++){empty_fragment[i]=true;}
 
-    int num_module = fCrtGeo.NumModules();
+    int num_module = fCRTGeoService->NumModules();
 
     //----------------------------------------------------------------------------------------------------------
     //                                          GETTING PRODUCTS
@@ -281,8 +281,8 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
         empty_fragment[feb_data->Mac5()] = false;
 
         int channel = feb_data->Mac5() * 32;
-        std::string stripName = fCrtGeo.ChannelToStripName(channel);
-        std::string tagger = fCrtGeo.GetTaggerName(stripName);
+        std::string stripName = fCRTGeoService->ChannelToStripName(channel);
+        std::string tagger = fCRTGeoService->GetTaggerName(stripName);
         taggers[feb_data->Mac5()] = tagger;
 
         T0s[feb_data->Mac5()][feb_hits_in_fragments[feb_data->Mac5()]] = feb_data->Ts0();
@@ -311,8 +311,8 @@ void sbnd::trigger::ArtdaqFragmentProducer::produce(art::Event& e)
           //if no hits for a module, make a simulated "T1 reset" event to avoid missing fragments
           feb_hits_in_fragments[feb_i] = 1;
           int channel = feb_i * 32;
-          std::string stripName = fCrtGeo.ChannelToStripName(channel);
-          std::string tagger = fCrtGeo.GetTaggerName(stripName);
+          std::string stripName = fCRTGeoService->ChannelToStripName(channel);
+          std::string tagger = fCRTGeoService->GetTaggerName(stripName);
           taggers[feb_i] = tagger;
 
           T0s[feb_i][0] = 0;

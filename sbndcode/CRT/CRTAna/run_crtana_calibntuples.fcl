@@ -1,0 +1,8 @@
+#include "sbnd_trackcalo_skimmer.fcl"
+#include "run_crtana.fcl"
+
+services.SpaceCharge: @local::sbnd_spacecharge
+
+physics.analyzers.caloskim: @local::caloskim_nodigits_goldentracks
+
+physics.ana: [ crtana, caloskim ]
