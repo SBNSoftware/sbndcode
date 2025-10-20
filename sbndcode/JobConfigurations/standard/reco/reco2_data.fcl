@@ -2,6 +2,8 @@
 #include "crt_calib_service.fcl"
 #include "opt0finder_sbnd_data.fcl"
 #include "sbnd_tpcpmt3dbarycentermatching_config.fcl"
+#include "sbnd_lightpropagationcorrection_config.fcl"
+#include "frameshift_sbnd_data.fcl"
 #include "standard_reco2_sbnd.fcl"
 
 services:
@@ -10,6 +12,7 @@ services:
     @table::sbnd_data_services
     CRTChannelMapService: @local::crt_channel_map_standard
     CRTCalibService:      @local::crt_calib_service
+    CRTGeoService:        @local::crtgeoservice_data_sbnd
 }
 
 physics.producers:
@@ -25,6 +28,8 @@ physics.producers:
     opt0finderSCE:  @local::sbnd_opt0_finder_data
     tpcpmtbarycentermatching: @local::TPCPMTBarycenterMatchProducer
     tpcpmtbarycentermatchingSCE: @local::TPCPMTBarycenterMatchProducerSCE
+    lightpropagationcorrection: @local::LightPropagationCorrection
+    lightpropagationcorrectionSCE: @local::LightPropagationCorrectionSCE
 
     ### shower reco for data
     pandoraShower:       @local::sbnd_incremental_pandoraModularShowerCreationData
@@ -32,14 +37,16 @@ physics.producers:
     ### SCE-aware shower reco for data
     pandoraSCEShower:    @local::sbnd_sce_incremental_pandoraModularShowerCreationData
     pandoraSCEShowerSBN: @local::sbnd_sce_sbn_pandoraModularShowerCreationData
- 
+
+    frameshift: @local::frameshift_data
 }
 
 physics.reco2: [ pandora, pandoraTrack, pandoraShower, pandoraShowerSBN, pandoraCaloData, pandoraPidData, 
                  cvn, opt0finder, crtveto, crtspacepointmatching, crttrackmatching, tpcpmtbarycentermatching,
                  pandoraSCE, pandoraSCETrack, pandoraSCEShower, pandoraSCEShowerSBN, pandoraSCECaloData, pandoraSCEPidData,
                  cvnSCE, opt0finderSCE, tpcpmtbarycentermatchingSCE, crtspacepointmatchingSCE, crttrackmatchingSCE,
-                 caloskimCalorimetry]
+                 caloskimCalorimetry, blipreco, lightpropagationcorrectionSCE, frameshift]
+
 
 physics.analyzers.caloskim.G4producer: ""
 physics.analyzers.caloskim.SimChannelproducer: ""
@@ -63,4 +70,5 @@ physics.producers.pandoraSCEShowerSBN.PFParticleLabel:           "pandoraSCE"
 
 
 physics.caloskimana: [ caloskim, crtana ]
-physics.end_paths: [stream1, caloskimana ]
+physics.ana:            @local::sbnd_reco2_analyzer_sequence
+physics.end_paths: [stream1, caloskimana, ana ]

@@ -19,6 +19,7 @@
 #include "pmtskim_sbnd.fcl"
 
 #include "SBNDCVNMapper.fcl"
+#include "blipreco_configs.fcl"
 
 BEGIN_PROLOG
 
@@ -80,6 +81,12 @@ sbnd_reco2_producers:{
     ### CVN
     cvn:                 @local::standard_sbndcvnevaluatorslc
     cvnSCE:              @local::standard_sbndcvnevaluatorslc
+
+    ### blip
+    blipreco: {
+      module_type: "BlipRecoProducer"
+      BlipAlg:     @local::sbnd_blipalg
+    }
 }
 
 sbnd_reco2_producer_sequence: [  
@@ -95,8 +102,8 @@ sbnd_reco2_producer_sequence: [
     , crttrackmatching
     , fmatch
     , fmatchop
-    , fmatchara
-    , fmatchopara
+    #, fmatchara
+    #, fmatchopara
     , caloskimCalorimetry
     , opt0finder
     , tpcpmtbarycentermatching
@@ -110,12 +117,13 @@ sbnd_reco2_producer_sequence: [
     , crttrackmatchingSCE
     , fmatchSCE
     , fmatchopSCE
-    , fmatcharaSCE
-    , fmatchoparaSCE
+    #, fmatcharaSCE
+    #, fmatchoparaSCE
     , opt0finderSCE
     , tpcpmtbarycentermatchingSCE
     , cvn
     , cvnSCE
+    , blipreco
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
@@ -184,12 +192,23 @@ sbnd_reco2_analyzers: {
     caloskim: @local::caloskim_nodigits_goldentracks
     crtana:   @local::crtana_sbnd
     pmtskim:  @local::pmtskim_sbnd
+    blipana:{
+  module_type:        "BlipAna"
+  BlipAlg:            @local::sbnd_blipalg
+  SaveTruthInfo:      true
+  SaveTrkInfo:        true
+  SaveHitInfo:        false
+  SaveClustInfo:      true
+  #DebugMode:          true
+  }
+
 }
 
 sbnd_reco2_analyzer_sequence: [
     caloskim
     , pmtskim
     , crtana
+    , blipana
 ]
 
 #FIXME override the analyzer labels.  This should really happen in the module's config fcl

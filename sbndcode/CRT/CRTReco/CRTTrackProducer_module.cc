@@ -26,7 +26,7 @@
 #include "sbnobj/SBND/CRT/CRTSpacePoint.hh"
 #include "sbnobj/SBND/CRT/CRTTrack.hh"
 
-#include "sbndcode/Geometry/GeometryWrappers/CRTGeoAlg.h"
+#include "sbndcode/Geometry/GeometryWrappers/CRTGeoService.h"
 #include "sbndcode/CRT/CRTUtils/CRTCommonUtils.h"
 
 #include "Eigen/Dense"
@@ -97,7 +97,8 @@ public:
 
 private:
 
-  CRTGeoAlg        fCRTGeoAlg;
+  art::ServiceHandle<CRTGeoService> fCRTGeoService;
+
   std::string      fCRTSpacePointModuleLabel;
   double           fCoincidenceTimeRequirement;
   double           fThirdSpacePointMaximumDCA;
@@ -108,7 +109,6 @@ private:
 
 sbnd::crt::CRTTrackProducer::CRTTrackProducer(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fCRTGeoAlg(p.get<fhicl::ParameterSet>("CRTGeoAlg"))
   , fCRTSpacePointModuleLabel(p.get<std::string>("CRTSpacePointModuleLabel"))
   , fCoincidenceTimeRequirement(p.get<double>("CoincidenceTimeRequirement"))
   , fThirdSpacePointMaximumDCA(p.get<double>("ThirdSpacePointMaximumDCA"))
@@ -480,7 +480,7 @@ void sbnd::crt::CRTTrackProducer::BestFitLine(const geo::Point_t &a, const geo::
 geo::Point_t sbnd::crt::CRTTrackProducer::LineTaggerIntersectionPoint(const geo::Point_t &start, const geo::Vector_t &dir, const CRTTagger &tagger)
 {
   const CoordSet constrainedPlane = CRTCommonUtils::GetTaggerDefinedCoordinate(tagger);
-  const CRTTaggerGeo taggerGeo    = fCRTGeoAlg.GetTagger(CRTCommonUtils::GetTaggerName(tagger));
+  const CRTTaggerGeo taggerGeo    = fCRTGeoService->GetTagger(CRTCommonUtils::GetTaggerName(tagger));
   double k;
 
   switch(constrainedPlane)

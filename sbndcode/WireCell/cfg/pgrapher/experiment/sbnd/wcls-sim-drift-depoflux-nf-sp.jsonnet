@@ -127,11 +127,11 @@ local wcls_depoflux_writer = g.pnode({
     anodes: [wc.tn(anode) for anode in tools.anodes],
     field_response: wc.tn(tools.field),
     tick: 0.5 * wc.us,
-    window_start: 0.0 * wc.ms,
+    window_start: params.sim.tick0_time, // -205 * wc.us,
     window_duration: self.tick * params.daq.nticks,
     nsigma: 3.0,
 
-    reference_time: -1700 * wc.us,
+    reference_time: - 1700  * wc.us - self.window_start, // target is tick 410 should be 3400
 
     //energy: 1, # equivalent to use_energy = true
     simchan_label: 'simpleSC',
@@ -156,7 +156,7 @@ if roi == "dnn" then {
     break_roi_loop2_tag: "",
     shrink_roi_tag: "",
     extend_roi_tag: "",
-    decon_charge_tag: "",
+    //decon_charge_tag: "",
     gauss_tag: "",
     wiener_tag: "",
 } 

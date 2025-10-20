@@ -47,10 +47,6 @@ public:
 
 private:
 
-  //CRTGeoAlg fCRTGeoAlg;
-  //TPCGeoAlg fTPCGeoAlg;
-  //CRTBackTrackerAlg fCRTBackTrackerAlg;
-
   std::string fMCParticleModuleLabel, fSimDepositModuleLabel, fFEBDataModuleLabel, fCRTStripHitModuleLabel,
     fCRTClusterModuleLabel, fCRTSpacePointModuleLabel, fCRTTrackModuleLabel, fTPCTrackModuleLabel,
     fCRTSpacePointMatchingModuleLabel, fCRTTrackMatchingModuleLabel, fPFPModuleLabel, fPTBModuleLabel,

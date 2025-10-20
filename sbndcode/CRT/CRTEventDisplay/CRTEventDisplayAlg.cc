@@ -2,13 +2,13 @@
 #include "lardataobj/AnalysisBase/T0.h"
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/PFParticle.h"
 #include "TH1D.h"
 #include "TPaveText.h"
 
 namespace sbnd::crt {
   
   CRTEventDisplayAlg::CRTEventDisplayAlg(const Config& config)
-    : fCRTGeoAlg(config.GeoAlgConfig())
   {
     this->reconfigure(config);
 
@@ -31,6 +31,7 @@ namespace sbnd::crt {
     fTPCSpacePointMatchLabel = config.TPCSpacePointMatchLabel();
     fTPCTrackMatchLabel = config.TPCTrackMatchLabel();
     fTPCTrackLabel = config.TPCTrackLabel();
+    fPFPLabel = config.PFPLabel();
 
     fSaveRoot = config.SaveRoot();
     fSaveViews = config.SaveViews();
@@ -50,6 +51,7 @@ namespace sbnd::crt {
     fDrawTPCMatching = config.DrawTPCMatching();
     fOnlyDrawMatched = config.OnlyDrawMatched();
     fDisplayMatchScore = config.DisplayMatchScore();
+    fDrawTPCTracks = config.DrawTPCTracks();
 
     fChoseTaggers = config.ChoseTaggers();
     fChosenTaggers = config.ChosenTaggers();
@@ -167,6 +169,8 @@ namespace sbnd::crt {
     auto geometryService = lar::providerFrom<geo::Geometry>();
     auto const detProp   = art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event);
 
+    if(fPrint) std::cout << "\n\nEvent: " << saveName << std::endl;
+
     if(fMC)
       fCRTBackTrackerAlg.SetupMaps(event);
 
@@ -176,15 +180,15 @@ namespace sbnd::crt {
     // Create a canvas 
     TCanvas *c1 = new TCanvas("c1","",700,700);
     
-    std::vector<double> crtLims = fCRTGeoAlg.CRTLimits();
-    std::vector<double> crtLims2 = fCRTGeoAlg.CRTLimits();
+    std::vector<double> crtLims = fCRTGeoService->CRTLimits();
+    std::vector<double> crtLims2 = fCRTGeoService->CRTLimits();
     crtLims[0] -= 100; crtLims[1] -= 100; crtLims[2] -= 100;
     crtLims[3] += 100; crtLims[4] += 100; crtLims[5] += 100;
 
     // Draw the CRT taggers
     if(fDrawTaggers)
       {
-        for(auto const &[name, tagger] : fCRTGeoAlg.GetTaggers())
+        for(auto const &[name, tagger] : fCRTGeoService->GetTaggers())
           {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(name)) == fChosenTaggers.end())
               continue;
@@ -199,7 +203,7 @@ namespace sbnd::crt {
     // Draw individual CRT modules
     if(fDrawModules)
       {
-        for(auto const &[name, module] : fCRTGeoAlg.GetModules())
+        for(auto const &[name, module] : fCRTGeoService->GetModules())
           {
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), CRTCommonUtils::GetTaggerEnum(module.taggerName)) == fChosenTaggers.end())
               continue;
@@ -219,7 +223,7 @@ namespace sbnd::crt {
 
             if(fDrawFEBs)
               {
-                const std::array<double, 6> febPos = fCRTGeoAlg.FEBWorldPos(module);
+                const std::array<double, 6> febPos = fCRTGeoService->FEBWorldPos(module);
                 
                 double rminFEB[3] = {febPos[0], febPos[2], febPos[4]};
                 double rmaxFEB[3] = {febPos[1], febPos[3], febPos[5]};
@@ -228,7 +232,7 @@ namespace sbnd::crt {
 
                 if(fDrawFEBEnds)
                   {
-                    const std::array<double, 6> febCh0Pos = fCRTGeoAlg.FEBChannel0WorldPos(module);
+                    const std::array<double, 6> febCh0Pos = fCRTGeoService->FEBChannel0WorldPos(module);
 
                     double rminCh0[3] = {febCh0Pos[0], febCh0Pos[2], febCh0Pos[4]};
                     double rmaxCh0[3] = {febCh0Pos[1], febCh0Pos[3], febCh0Pos[5]};
@@ -242,9 +246,9 @@ namespace sbnd::crt {
     // Draw individual CRT strips
     if(fDrawStrips)
       {
-        for(auto const &[name, strip] : fCRTGeoAlg.GetStrips())
+        for(auto const &[name, strip] : fCRTGeoService->GetStrips())
           {
-            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), fCRTGeoAlg.ChannelToTaggerEnum(strip.channel0)) == fChosenTaggers.end())
+            if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), fCRTGeoService->ChannelToTaggerEnum(strip.channel0)) == fChosenTaggers.end())
               continue;
 
             double rmin[3] = {strip.minX, strip.minY, strip.minZ};
@@ -326,7 +330,7 @@ namespace sbnd::crt {
                 if(t < fMinTime || t > fMaxTime)
                   continue;
 
-                CRTTagger tagger = fCRTGeoAlg.WhichTagger(x, y, z, 1.);
+                CRTTagger tagger = fCRTGeoService->WhichTagger(x, y, z, 1.);
 
                 if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
                   continue;
@@ -365,8 +369,8 @@ namespace sbnd::crt {
             if(stripHitTime < fMinTime || stripHitTime > fMaxTime)
               continue;
 
-            CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
-            CRTTagger tagger  = fCRTGeoAlg.ChannelToTaggerEnum(stripHit->Channel());
+            CRTStripGeo strip = fCRTGeoService->GetStrip(stripHit->Channel());
+            CRTTagger tagger  = fCRTGeoService->ChannelToTaggerEnum(stripHit->Channel());
 
             if(fChoseTaggers && std::find(fChosenTaggers.begin(), fChosenTaggers.end(), tagger) == fChosenTaggers.end())
               continue;
@@ -424,7 +428,7 @@ namespace sbnd::crt {
               {
                 for(auto stripHit : stripHitVec)
                   {
-                    CRTStripGeo strip = fCRTGeoAlg.GetStrip(stripHit->Channel());
+                    CRTStripGeo strip = fCRTGeoService->GetStrip(stripHit->Channel());
                     
                     double rmin[3] = {strip.minX, strip.minY, strip.minZ};
                     double rmax[3] = {strip.maxX, strip.maxY, strip.maxZ};
@@ -457,7 +461,7 @@ namespace sbnd::crt {
                 if(spacePointVec.size() == 1)
                   {
                     const art::Ptr<CRTSpacePoint> spacepoint = spacePointVec[0];
-                    const double spacepointTime = fUseTs0 ? spacepoint->Ts0() - G4RefTime : spacepoint->Ts1() - G4RefTime;
+                    const double spacepointTime = fUseTs0 ? spacepoint->Ts0() : spacepoint->Ts1();
 
                     double matchScore = -999.f;
                     bool foundMatch   = false;
@@ -564,8 +568,8 @@ namespace sbnd::crt {
                         std::cout << "Space Point: ("
                                   << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ") --> ("
                                   << rmax[0] << ", " << rmax[1] << ", " << rmax[2] << ") at t0 = "
-                                  << spacepoint->Ts0() << " (" << spacepoint->Ts0() - G4RefTime << ") or t1 = "
-                                  << spacepoint->Ts1() << " (" << spacepoint->Ts1() - G4RefTime << ")"
+                                  << spacepoint->Ts0() << " (" << spacepoint->Ts0() + G4RefTime << ") or t1 = "
+                                  << spacepoint->Ts1() << " (" << spacepoint->Ts1() + G4RefTime << ")"
                                   << " with PE " << spacepoint->PE();
 
                         if(foundMatch)
@@ -588,7 +592,7 @@ namespace sbnd::crt {
 
         for(auto track : tracksVec)
           {
-            const double trackTime = fUseTs0 ? track->Ts0() - G4RefTime : track->Ts1() - G4RefTime;
+            const double trackTime = fUseTs0 ? track->Ts0() : track->Ts1();
 
             if(trackTime < fMinTime || trackTime > fMaxTime)
               continue;
@@ -733,14 +737,99 @@ namespace sbnd::crt {
                           << "\twith direction (" << dir.X() << ", " << dir.Y() << ", " << dir.Z() << ")\n"
                           << "\tdrawn between (" << a.X() << ", " << a.Y() << ", " << a.Z() << ")\n"
                           << "\tand (" << b.X() << ", " << b.Y() << ", " << b.Z() << ")\n"
-                          << "\tat ts0 " << track->Ts0() << " (" << track->Ts0() - G4RefTime << ")\n"
-                          << "\tat ts1 " << track->Ts1() << " (" << track->Ts1() - G4RefTime << ")\n"
+                          << "\tat ts0 " << track->Ts0() << " (" << track->Ts0() + G4RefTime << ")\n"
+                          << "\tat ts1 " << track->Ts1() << " (" << track->Ts1() + G4RefTime << ")\n"
                           << "\tfrom three hits? " << track->Triple();
 
                 if(foundMatch)
                   std::cout << " and found TPC track match with score: " << matchScore << std::endl;
                 else
                   std::cout << std::endl;
+              }
+          }
+      }
+
+    if(fDrawTPCTracks)
+      {
+        auto pfpsHandle = event.getValidHandle<std::vector<recob::PFParticle>>(fPFPLabel);
+        std::vector<art::Ptr<recob::PFParticle>> pfpsVec;
+        art::fill_ptr_vector(pfpsVec, pfpsHandle);
+
+        for(auto pfp : pfpsVec)
+          {
+            if(pfp->PdgCode() == 11)
+              continue;
+
+            art::FindOneP<anab::T0> pfpsToT0s(pfpsHandle, event, fPFPLabel);
+            const art::Ptr<anab::T0> pfpT0 = pfpsToT0s.at(pfp.key());
+
+            if(!pfpT0)
+              continue;
+
+            const double pfpTime = pfpT0->Time();
+
+            if(pfpTime < fMinTime || pfpTime > fMaxTime)
+              continue;
+
+            art::FindOneP<recob::Track> pfpsToTracks(pfpsHandle, event, fTPCTrackLabel);
+            const art::Ptr<recob::Track> tpcTrack = pfpsToTracks.at(pfp.key());
+
+            geo::Point_t startTPC = tpcTrack->Start();
+            geo::Point_t endTPC   = tpcTrack->End();
+
+            const std::pair<geo::Vector_t, geo::Vector_t> directions = CRTCommonUtils::AverageTrackDirections(tpcTrack, 0.2);
+            const geo::Vector_t startDirTPC = directions.first;
+            const geo::Vector_t endDirTPC   = directions.second;
+
+            TPolyLine3D *lineTPC = new TPolyLine3D(2);
+            lineTPC->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+            lineTPC->SetPoint(1, endTPC.X(), endTPC.Y(), endTPC.Z());
+            lineTPC->SetLineColor(fTPCMatchColour);
+            lineTPC->SetLineWidth(fLineWidth);
+            lineTPC->Draw();
+
+            TPolyLine3D *lineTPCDashStart = new TPolyLine3D(2);
+            geo::Point_t intersectionStart {0,0,0};
+
+            int i = 0;
+            do
+              {
+                intersectionStart = startTPC + i * startDirTPC;
+                --i;
+              }
+            while(IsPointInsideBox(crtLims2, intersectionStart));
+
+            lineTPCDashStart->SetPoint(0, startTPC.X(), startTPC.Y(), startTPC.Z());
+            lineTPCDashStart->SetPoint(1, intersectionStart.X(), intersectionStart.Y(), intersectionStart.Z());
+            lineTPCDashStart->SetLineStyle(2);
+            lineTPCDashStart->SetLineColor(fTPCMatchColour);
+            lineTPCDashStart->SetLineWidth(fLineWidth - 1);
+            lineTPCDashStart->Draw();
+
+            TPolyLine3D *lineTPCDashEnd = new TPolyLine3D(2);
+            geo::Point_t intersectionEnd {0,0,0};
+
+            i = 0;
+            do
+              {
+                intersectionEnd = endTPC + i * endDirTPC;
+                ++i;
+              }
+            while(IsPointInsideBox(crtLims2, intersectionEnd));
+
+            lineTPCDashEnd->SetPoint(0, endTPC.X(), endTPC.Y(), endTPC.Z());
+            lineTPCDashEnd->SetPoint(1, intersectionEnd.X(), intersectionEnd.Y(), intersectionEnd.Z());
+            lineTPCDashEnd->SetLineStyle(2);
+            lineTPCDashEnd->SetLineColor(fTPCMatchColour);
+            lineTPCDashEnd->SetLineWidth(fLineWidth - 1);
+            lineTPCDashEnd->Draw();
+
+            if(fPrint)
+              {
+                std::cout << "TPC Track " << tpcTrack->ID() << " at (" << startTPC.X() << ", " << startTPC.Y() << ", " << startTPC.Z() << ")\n"
+                          << "\tto (" << endTPC.X() << ", " << endTPC.Y() << ", " << endTPC.Z() << ")\n"
+                          << "\tat time " << pfpTime << "\n"
+                          << std::endl;
               }
           }
       }
