@@ -7,5 +7,6 @@ services.BackTrackerService:       @erase
 
 services.CRTChannelMapService: @local::crt_channel_map_standard
 services.CRTCalibService:      @local::crt_calib_service
+services.CRTGeoService:        @local::crtgeoservice_data_sbnd
 
 physics.analyzers.crtana: @local::crtana_data_sbnd

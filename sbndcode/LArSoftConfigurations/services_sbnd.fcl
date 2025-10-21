@@ -46,6 +46,7 @@
 #include "sam_sbnd.fcl"
 #include "spacecharge_sbnd.fcl"
 #include "pmtcalibrationdatabase_sbnd.fcl"
+#include "triggeremulationservice_sbnd.fcl"
 
 BEGIN_PROLOG
 
@@ -90,6 +91,7 @@ sbnd_services:
   DetPedestalService:             @local::sbnd_detpedestalservice  # from database_sbnd.fcl
   SpaceCharge:                    @local::sbnd_spacecharge
   IPMTCalibrationDatabaseService:  @local::sbnd_pmtcalibrationdatabaseservice
+  TriggerEmulationService:        @local::sbnd_triggeremulation_service
 } # sbnd_services
 
 

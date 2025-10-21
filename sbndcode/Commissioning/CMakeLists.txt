@@ -20,7 +20,7 @@ set(
         sbndcode_CRTUtils
         sbnobj::Common_CRT
         sbnobj::SBND_CRT
-	sbnobj::SBND_Timing
+        sbnobj::SBND_Timing
         sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
         nusimdata::SimulationBase
         art::Framework_Core
@@ -39,7 +39,7 @@ set(
         ROOT::Gdml
         sbndcode_RecoUtils
         sbndcode_OpDetSim
-        sbndcode_GeoWrappers
+        sbndcode_Geometry_GeometryWrappers_CRTGeoService_service
         sbndcode_ChannelMaps_TPC_TPCChannelMapService_service
         hep_hpc_hdf5
         ${HDF5_LIBRARIES}
