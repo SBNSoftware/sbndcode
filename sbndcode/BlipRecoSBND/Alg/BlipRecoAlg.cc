@@ -357,18 +357,31 @@ namespace blip {
     if (evt.getByLabel(fGeantProducer,pHandle))
       art::fill_ptr_vector(plist, pHandle);
  
-    // -- SimEnergyDeposits
-    art::Handle<std::vector<sim::IDE> > sedHandle;
-    std::vector<art::Ptr<sim::IDE> > sedlist;
-    if (evt.getByLabel(fSimDepProducer,sedHandle)){
-      art::fill_ptr_vector(sedlist, sedHandle);
-    }
-
+    // -- SimEnergyDeposits (usually dropped in reco
+    //art::Handle<std::vector<sim::EnergyDeposit> > sedHandle;
+    std::vector<sim::IDE > sedlist;
+    //if (evt.getByLabel(fSimDepProducer,sedHandle)){
+    //  art::fill_ptr_vector(sedlist, sedHandle);
+    // }
+    std::cout << " \n\n\n\n\n\n\n\n\n Look here \n\n\n\n\n " << std::endl;
     // -- SimChannels (usually dropped in reco)
     art::Handle<std::vector<sim::SimChannel> > simchanHandle;
     std::vector<art::Ptr<sim::SimChannel> > simchanlist;
-    if (evt.getByLabel(fSimChanProducer,simchanHandle)) 
+    std::cout << fSimChanProducer << " Look at my sim channel handle here " <<std::endl;
+    if (evt.getByLabel(fSimChanProducer,simchanHandle))
+      { 
       art::fill_ptr_vector(simchanlist, simchanHandle);
+      //Loop over channels to get full sedlist
+      for(int chIndex=0; chIndex<int(simchanlist.size()); chIndex++)
+	{
+	  std::vector< sim::IDE > TempChIDE = (*simchanlist[chIndex]).TrackIDsAndEnergies(0, 999999999);
+	  for(int ideIndex=0; ideIndex<int(TempChIDE.size()); ideIndex++)
+	    {
+	      //art::fill_ptr_vector(sedlist, simchanHandle.TrackIDsAndEnergies(0, 99999999));
+	      sedlist.push_back( TempChIDE[ideIndex] ); //may need to add a &
+	    }
+	}
+      }
 
     // -- hits (from input module, usually track-masked subset of gaushit)
     art::Handle< std::vector<recob::Hit> > hitHandle;

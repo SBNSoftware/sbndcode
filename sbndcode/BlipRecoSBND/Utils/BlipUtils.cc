@@ -61,12 +61,12 @@ namespace BlipUtils {
     pinfo.depEnergy     = 0;
     pinfo.depElectrons  = 0;
     for(auto& sed : sedvec ) {
-      if( sed->trackID == part.TrackId() ) {
-        pinfo.depEnergy     += sed->energy;
-        pinfo.depElectrons  += sed->numElectrons;
+      if( -1*sed.trackID == part.TrackId() || sed.trackID == part.TrackId() ) {
+        pinfo.depEnergy     += sed.energy;
+        pinfo.depElectrons  += sed.numElectrons;
       }
     }
-    
+    std::cout << pinfo.depEnergy << "  " << pinfo.trackId << std::endl;
     return;
   
   }
@@ -86,7 +86,7 @@ namespace BlipUtils {
       //std::cout<<"Making true blip for "<<part.TrackId()<<" (PDG "<<part.PdgCode()<<", which deposited "<<pinfo[i].depEnergy<<"\n";
 
       // If this is a photon or neutron, don't even bother!
-      if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) continue;
+      //if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) continue;
 
       // If this is an electron that came from another electron, it would 
       // have already been grouped as part of the contiguous "blip" previously.
@@ -95,7 +95,9 @@ namespace BlipUtils {
 
       // Create the new blip
       blip::TrueBlip tb;
+      std::cout << " making a new blip " << std::endl;
       GrowTrueBlip(pinfo[i],tb);
+      std::cout << tb.Energy << std::endl;
       if( !tb.Energy ) continue;  
 
       // We want to loop through any contiguous electrons (produced
@@ -112,6 +114,7 @@ namespace BlipUtils {
       
       // Final check -- ensure there was non-negligible number 
       // of deposted ionization electrons
+      std::cout << tb.DepElectrons << " total electrons " << std::endl;
       if( tb.DepElectrons < 20 ) continue;
 
       // Calculate TPC-specific quantities
@@ -126,6 +129,7 @@ namespace BlipUtils {
       tb.DriftTime = tick_calc*clockData.TPCClock().TickPeriod() + clockData.TriggerOffsetTPC();
       
       tb.ID = trueblips.size();
+      std::cout << "going to push this into holder " << std::endl;
       trueblips.push_back(tb);
 
     }
@@ -139,7 +143,7 @@ namespace BlipUtils {
     simb::MCParticle& part = pinfo.particle;
 
     // Skip neutrons, photons
-    if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
+    // if( part.PdgCode() == 2112 || part.PdgCode() == 22 ) return;
     
     // Check that path length isn't zero
     if( !pinfo.pathLength ) return;
