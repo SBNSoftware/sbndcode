@@ -24,6 +24,8 @@ physics.producers.pandoraTrackRange.TrackLabel: "pandoraSCETrack"
 
 physics.producers.cafmaker.FlashMatchOpDetSuffixes: ["", "op", "ara", "opara"]
 physics.producers.cafmaker.FlashMatchSCECryoSuffixes: ["SCE"]
+physics.producers.cafmaker.TrackHitFillRRStartCut: 1000
+physics.producers.cafmaker.TrackHitFillRREndCut: 1000
 
 physics.producers.pandoraShowerSelectionVars.PandoraLabel: "pandoraSCE"
 physics.producers.pandoraShowerSelectionVars.ShowerLabel:  "pandoraSCEShowerSBN"

@@ -6,6 +6,7 @@
 
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
+#include "crtgeoservice_sbnd.fcl"
 
 #
 # modules
@@ -13,7 +14,6 @@
 
 #include "crtsimmodules_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
-
 
 
 process_name: CrtSim
@@ -24,6 +24,7 @@ services:
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   AuxDetGeometry: @local::sbnd_auxdetgeo
   @table::sbnd_g4_services
+  CRTGeoService: @local::crtgeoservice_sbnd
 }
 
 

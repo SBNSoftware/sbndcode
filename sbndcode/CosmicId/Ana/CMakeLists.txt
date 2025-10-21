@@ -34,7 +34,6 @@ set(
                            ROOT::RooFitCore
                            sbndcode_RecoUtils
                            sbndcode_CRTUtils
-                           sbndcode_GeoWrappers
                            sbndcode_CosmicIdAlgs
                            sbndcode_CosmicIdUtils
                            larreco::RecoAlg
