@@ -12,7 +12,7 @@ sbnd_reco1_ml_drops: [
 sbnd_reco1_drops: [ 
     @sequence::detsim_drops
   , "drop raw::RawDigits_*_*_*"
-  #, "drop raw::OpDetWaveforms_*_*_*" 
+  , "drop raw::OpDetWaveforms_*_*_*" 
   , "drop *_fasthit_*_*"
   , "drop recob::Wires_*_wiener_*"  #drop wiener wires
   , "drop recob::Wires_*_gauss_*"
@@ -33,13 +33,6 @@ sbnd_reco1_drops_selective: [  #Needed to maintain earlier workflows where some 
   , "drop sim::OpDetBacktrackerRecords_*_*_*"
   , "drop *_fasthit_*_*"
   , "drop *_cluster3d_*_*" #drop all mlreco output
-]
-
-sbnd_reco1_drops_data: [ #data specific drops to conserve space where needed
-  "keep *_*_*_*",
-  "drop *_cluster3d_*_*", #drop uneeded spine (mlreco) output
-  "drop recob::Wires_*_gauss_*",
-  "drop recob::Wires_*_wiener_*"
 ]
 
 sbnd_reco1_drops_keep_rawdigits: [

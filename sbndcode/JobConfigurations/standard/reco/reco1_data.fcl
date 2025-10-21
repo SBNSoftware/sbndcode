@@ -37,7 +37,7 @@ physics.reco1: [sptpc2d, gaushit, specialblipgaushit, numberofhitsfilter, cluste
 physics.ana: [superadata]
 
 outputs.out1.SelectEvents: [ "reco1" ]
-outputs.out1.outputCommands:[@sequence::sbnd_reco1_drops_data]
+outputs.out1.outputCommands:[@sequence::sbnd_reco1_drops]
 
 physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"
 physics.producers.specialblipgaushit.CalDataModuleLabel: "sptpc2d:gauss"
