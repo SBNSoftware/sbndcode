@@ -12,6 +12,7 @@ recoAnalysisIncShowersParams:
     HitLabel: "gaushit"
     VertexLabel: "pandora"
     ClusterLabel: "pandora"
+    SpacePointLabel: "pandora"
     RecoHitLabel: "pandora"
     LArGeantLabel: "largeant"
     NuGenLabel: "generator"
