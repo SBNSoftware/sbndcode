@@ -134,10 +134,9 @@ physics.analyzers.oprecoanatpc0.YMax: 200
 physics.analyzers.oprecoanatpc0.ZMin: 0
 physics.analyzers.oprecoanatpc0.ZMax: 500
 
-physics.analyzers.hitdumpertree.keepCRThits: false
-physics.analyzers.hitdumpertree.makeCRTtracks: false
-physics.analyzers.hitdumpertree.readCRTtracks: false
 physics.analyzers.hitdumpertree.KeepCRTStripHits: false
+physics.analyzers.hitdumpertree.KeepCRTSpacePoints: false
+physics.analyzers.hitdumpertree.KeepCRTTracks: false
 physics.analyzers.hitdumpertree.readMuonTracks: false
 physics.analyzers.hitdumpertree.readTruth: false
 physics.analyzers.hitdumpertree.savePOTinfo: false
