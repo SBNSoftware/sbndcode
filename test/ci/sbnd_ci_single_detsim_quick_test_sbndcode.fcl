@@ -7,6 +7,6 @@ services.NuRandomService.policy: "perEvent"
 # is not deterministic, but they would like to keep these 
 # in main production to further develop.
 outputs.out1.outputCommands: [ "keep *_*_*_*"
-                               ,"*_simtpc2d_badmasks_*"
-                               ,"*_simtpc2d_badchannels_*"
+                               ,"drop *_simtpc2d_badmasks_*"
+                               ,"drop *_simtpc2d_badchannels_*"
                            ]
