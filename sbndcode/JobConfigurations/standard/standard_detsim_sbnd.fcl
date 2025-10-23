@@ -63,7 +63,7 @@ physics:
   producers:
   {
     rns:       { module_type: "RandomNumberSaver" }
-    simtpc2d:  @local::sbnd_wcls_simsp
+    simtpc2d:  @local::sbnd_wcls_simsp_bothrois
     crtsim:    @local::sbnd_crtsim
     opdaq:     @local::sbnd_opdetdigitizer
   }
