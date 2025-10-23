@@ -1,0 +1,23 @@
+#include "simulationservices_sbnd.fcl"
+
+process_name: CTreeGeometry
+
+services:
+{
+  @table::sbnd_basic_services
+}
+
+physics:
+{
+
+  analyzers:
+  {
+    ctree:
+    {
+      module_type:      "CTreeGeometry"
+      saveChannelWireMap: true
+    }
+  }
+  analysis: [ ctree ]
+  end_paths: [ analysis ]
+}
