@@ -9,4 +9,12 @@ sbnd_chi2pid:
  Chi2PIDAlg:             @local::standard_chi2pidalg
 }
 
+sbnd_likepid:
+{
+ module_type:            "LikelihoodParticleID"
+ TrackModuleLabel:       "spacepts"
+ CalorimetryModuleLabel: "calo"
+ LikelihoodPIDAlg:       @local::standard_likelihoodpidalg
+}
+
 END_PROLOG
