@@ -6,22 +6,32 @@ using namespace ana;
 
 #include "HenryVars.h"
 #include "HenryCuts.h"
+#include "TStyle.h"
+#include "TROOT.h"
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TLegend.h"
 
+void SetupStyle()
+{
+  gStyle->SetLineWidth(4);
+  gStyle->SetHistLineWidth(3);
+  gStyle->SetMarkerStyle(8);
+  gStyle->SetMarkerSize(.5);
+  gStyle->SetTitleOffset(.8, "y");
+
+  gROOT->ForceStyle();
+}                                                                                                                                                                                             
 void Make_CAF_Plots()
 {
+  SetupStyle();
+
   // This is the input dataset we're going to use
-  // Have to use flat for dEdx/RR
   const std::string inputName = "/scratch/LAR25/caf/reco2_tutorial.flat.caf.root";
 
   // The directory we want to save plots in
   const TString saveDir = "./plots";
-
-  // The amount of POT to scale plots to
-  //  const double livetime = 10;
 
   // This object takes the dataset and fills all the 'spectra' you request from it
   SpectrumLoader loader(inputName);
@@ -32,26 +42,24 @@ void Make_CAF_Plots()
   Binning resRangeBins    = Binning::Simple(200, 0, 50);
   Binning opt0TimeBins    = Binning::Simple(50, 1.6, 1.61);
 
-
   // The 'spectra' we want to create from our dataset
   Spectrum *sChildTrackLength = new Spectrum("sChildTrackLength", trackLengthBins, loader, kChildTrackLengths,
-					     kNoSpillCut, kIsNeutrinoCandidateSlice);
+                                             kNoSpillCut, kIsNeutrinoCandidateSlice);
   Spectrum *sChildTrackdEdxResRange = new Spectrum("sChildTrackdEdxResRange", loader, resRangeBins, kChildTrackResRange,
-						   dEdxBins, kChildTrackdEdx, kNoSpillCut, kIsNeutrinoCandidateSlice);
+                                                   dEdxBins, kChildTrackdEdx, kNoSpillCut, kIsNeutrinoCandidateSlice);
 
   Spectrum *sChildTrackLengthLongestTrack = new Spectrum("sChildTrackLengthLongestTrack", trackLengthBins, loader,
-							 kChildTrackLengthLongestTrack, kNoSpillCut, kIsNeutrinoCandidateSlice);
+                                                         kChildTrackLengthLongestTrack, kNoSpillCut, kIsNeutrinoCandidateSlice);
   Spectrum *sChildTrackLengthOtherTracks = new Spectrum("sChildTrackLengthOtherTracks", trackLengthBins, loader,
-							kChildTrackLengthOtherTracks, kNoSpillCut, kIsNeutrinoCandidateSlice);
+                                                        kChildTrackLengthOtherTracks, kNoSpillCut, kIsNeutrinoCandidateSlice);
   Spectrum *sChildTrackdEdxResRangeLongestTrack = new Spectrum("sChildTrackdEdxResRangeLongestTrack", loader, resRangeBins,
-							       kChildTrackResRangeLongestTrack, dEdxBins, kChildTrackdEdxLongestTrack,
-							       kNoSpillCut, kIsNeutrinoCandidateSlice);
+                                                               kChildTrackResRangeLongestTrack, dEdxBins, kChildTrackdEdxLongestTrack,
+                                                               kNoSpillCut, kIsNeutrinoCandidateSlice);
   Spectrum *sChildTrackdEdxResRangeOtherTracks = new Spectrum("sChildTrackdEdxResRangeOtherTracks", loader, resRangeBins,
-							      kChildTrackResRangeOtherTracks, dEdxBins, kChildTrackdEdxOtherTracks,
-							      kNoSpillCut, kIsNeutrinoCandidateSlice);
+                                                              kChildTrackResRangeOtherTracks, dEdxBins, kChildTrackdEdxOtherTracks,
+                                                              kNoSpillCut, kIsNeutrinoCandidateSlice);
 
   Spectrum *sOpT0Time = new Spectrum("sOpT0Time", opt0TimeBins, loader, kOpT0Time, kNoSpillCut, kIsNeutrinoCandidateSlice);
-
 
   // Tell the loader we've declared all our spectra, time to fill them!
   loader.Go();
@@ -106,15 +114,11 @@ void Make_CAF_Plots()
   TH2D *hChildTrackdEdxResRangeLongestTrack = (TH2D*) sChildTrackdEdxResRangeLongestTrack->ToTH2(sChildTrackdEdxResRangeLongestTrack->Livetime(), kLivetime);
   hChildTrackdEdxResRangeLongestTrack->SetTitle(";Residual Range (cm);dE/dx (MeV/cm);Primary Children");
   hChildTrackdEdxResRangeLongestTrack->SetMarkerColor(kMagenta+2);
-  hChildTrackdEdxResRangeLongestTrack->SetMarkerSize(0.5);
-  hChildTrackdEdxResRangeLongestTrack->SetMarkerStyle(8);
   hChildTrackdEdxResRangeLongestTrack->Draw();
 
   TH2D *hChildTrackdEdxResRangeOtherTracks = (TH2D*) sChildTrackdEdxResRangeOtherTracks->ToTH2(sChildTrackdEdxResRangeOtherTracks->Livetime(), kLivetime);
   hChildTrackdEdxResRangeOtherTracks->SetTitle(";Residual Range (cm);dE/dx (MeV/cm);Primary Children");
   hChildTrackdEdxResRangeOtherTracks->SetMarkerColor(kOrange+2);
-  hChildTrackdEdxResRangeOtherTracks->SetMarkerSize(0.5);
-  hChildTrackdEdxResRangeOtherTracks->SetMarkerStyle(8);
   hChildTrackdEdxResRangeOtherTracks->Draw("same");
 
   TLegend *lChildTrackdEdxResRangeSeparated = new TLegend(.6, .65, .8, .8);

@@ -3,10 +3,10 @@ const MultiVar kChildTrackLengths([](const caf::SRSliceProxy *slc) -> std::vecto
 
     for(auto const& pfp : slc->reco.pfp)
       {
-	if(!pfp.parent_is_primary || pfp.parent == -1)
-	  continue;
+        if(!pfp.parent_is_primary || pfp.parent == -1)
+          continue;
 
-	trackLengths.push_back(pfp.trk.len);
+        trackLengths.push_back(pfp.trk.len);
       }
 
     return trackLengths;
@@ -17,12 +17,12 @@ const MultiVar kChildTrackdEdx([](const caf::SRSliceProxy *slc) -> std::vector<d
 
     for(auto const &pfp : slc->reco.pfp)
       {
-	if(!pfp.parent_is_primary || pfp.parent == -1)
-	  continue;
+        if(!pfp.parent_is_primary || pfp.parent == -1)
+          continue;
 
-	// Only interested in the collection plane (2)
-	for(auto const& point : pfp.trk.calo[2].points)
-	  dEdx.push_back(point.dedx);
+        // Only interested in the collection plane (2)
+        for(auto const& point : pfp.trk.calo[2].points)
+          dEdx.push_back(point.dedx);
       }
 
     return dEdx;
@@ -33,12 +33,12 @@ const MultiVar kChildTrackResRange([](const caf::SRSliceProxy *slc) -> std::vect
 
     for(auto const &pfp : slc->reco.pfp)
       {
-	if(!pfp.parent_is_primary || pfp.parent == -1)
-	  continue;
+        if(!pfp.parent_is_primary || pfp.parent == -1)
+          continue;
 
-	// Only interested in the collection plane (2)
-	for(auto const& point : pfp.trk.calo[2].points)
-	  rr.push_back(point.rr);
+        // Only interested in the collection plane (2)
+        for(auto const& point : pfp.trk.calo[2].points)
+          rr.push_back(point.rr);
       }
 
     return rr;
@@ -52,16 +52,16 @@ const Var kLongestTrack([](const caf::SRSliceProxy *slc) -> int {
 
     for(auto const& pfp : slc->reco.pfp)
       {
-	++i;
+        ++i;
 
-	if(!pfp.parent_is_primary || pfp.parent == -1)
-	  continue;
+        if(!pfp.parent_is_primary || pfp.parent == -1)
+          continue;
 
-	if(pfp.trk.len > maxLength)
-	  {
-	    maxLength   = pfp.trk.len;
-	    maxLengthID = i;
-	  }
+        if(pfp.trk.len > maxLength)
+          {
+            maxLength   = pfp.trk.len;
+            maxLengthID = i;
+          }
       }
 
     return maxLengthID;
@@ -85,15 +85,15 @@ const MultiVar kChildTrackLengthOtherTracks([](const caf::SRSliceProxy *slc) -> 
 
     for(auto const& pfp : slc->reco.pfp)
       {
-	++i;
+        ++i;
 
-	if(!pfp.parent_is_primary || pfp.parent == -1)
-	  continue;
+        if(!pfp.parent_is_primary || pfp.parent == -1)
+          continue;
 
-	if(maxLengthID == i)
-	  continue;
+        if(maxLengthID == i)
+          continue;
 
-	trackLengths.push_back(pfp.trk.len);
+        trackLengths.push_back(pfp.trk.len);
       }
 
     return trackLengths;
@@ -123,16 +123,16 @@ const MultiVar kChildTrackdEdxOtherTracks([](const caf::SRSliceProxy *slc) -> st
 
     for(auto const& pfp : slc->reco.pfp)
       {
-	++i;
+        ++i;
 
-	if(!pfp.parent_is_primary || pfp.parent == -1)
-	  continue;
+        if(!pfp.parent_is_primary || pfp.parent == -1)
+          continue;
 
-	if(maxLengthID == i)
-	  continue;
+        if(maxLengthID == i)
+          continue;
 
-	for(auto const& point : pfp.trk.calo[2].points)
-	  dEdx.push_back(point.dedx);
+        for(auto const& point : pfp.trk.calo[2].points)
+          dEdx.push_back(point.dedx);
       }
 
     return dEdx;
@@ -162,16 +162,16 @@ const MultiVar kChildTrackResRangeOtherTracks([](const caf::SRSliceProxy *slc) -
 
     for(auto const& pfp : slc->reco.pfp)
       {
-	++i;
+        ++i;
 
-	if(!pfp.parent_is_primary || pfp.parent == -1)
-	  continue;
+        if(!pfp.parent_is_primary || pfp.parent == -1)
+          continue;
 
-	if(maxLengthID == i)
-	  continue;
+        if(maxLengthID == i)
+          continue;
 
-	for(auto const& point : pfp.trk.calo[2].points)
-	  rr.push_back(point.rr);
+        for(auto const& point : pfp.trk.calo[2].points)
+          rr.push_back(point.rr);
       }
 
     return rr;
