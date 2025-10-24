@@ -49,6 +49,8 @@
 #include <bitset>
 #include <memory>
 
+#include "sbndcode/OpDetSim/TriggerEmulationService.h"
+
 namespace sbndaq {
     class SBNDPMTDecoder;
 }
@@ -123,6 +125,8 @@ private:
 
     std::vector<uint> fch_map;
 
+    int fmon_threshold;
+
     // histogram info  
     std::stringstream histname; //raw waveform hist name
     art::ServiceHandle<art::TFileService> tfs;
@@ -177,6 +181,8 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
 
     fch_map          = p.get<std::vector<uint>>("ch_map",{});
 
+    fmon_threshold   = p.get<int>("mon_threshold", 15);
+ 
     produces< std::vector< raw::OpDetWaveform > >(fpmt_instance_name); 
     produces< std::vector< raw::OpDetWaveform > >(fflt_instance_name);
     produces< std::vector< raw::OpDetWaveform > >(ftim_instance_name);
@@ -186,6 +192,9 @@ sbndaq::SBNDPMTDecoder::SBNDPMTDecoder(fhicl::ParameterSet const& p)
     produces< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform > >(fpmt_timing_instance_name);
     produces< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform > >(fflt_timing_instance_name);
     produces< art::Assns<  raw::pmt::BoardTimingInfo, raw::OpDetWaveform > >(ftim_timing_instance_name);
+
+    produces< std::vector<int> >("MonPulses");
+    produces< std::vector<int> >("MonPulseSizes"); 
 }
 
 void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
@@ -264,6 +273,11 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
         evt.put(std::move(pmtTimingAssns),fpmt_timing_instance_name);
         evt.put(std::move(fltTimingAssns),fflt_timing_instance_name);
         evt.put(std::move(timTimingAssns),ftim_timing_instance_name);
+ 
+        auto flatPtr = std::make_unique<std::vector<int>>();
+        auto sizesPtr = std::make_unique<std::vector<int>>();
+        evt.put(std::move(flatPtr), "MonPulses");
+        evt.put(std::move(sizesPtr), "MonPulseSizes");
         return;
     }
     
@@ -597,6 +611,43 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
             }
         }  
     } // end board loop
+
+    // loop through flashes
+    art::ServiceHandle<art::TFileService> tfs;
+    art::ServiceHandle<calib::TriggerEmulationService> fTriggerService;
+    int PMTPerBoard = fTriggerService->getPMTPerBoard();
+    // int fTotalCAENBoards = fTriggerService->getTotalCAENBoards();
+    //std::vector< std::vector<int> > MonPulsesAll;
+    //MonPulseAll.clear();
+    std::vector<int> MonPulsesFlat;
+    std::vector<int> pulseSizes;
+    MonPulsesFlat.clear();
+    pulseSizes.clear();
+    int TotalFlash = pmtwvfmVec->size()/((int)fn_caenboards*PMTPerBoard); // pmtwvfmVec = waveHandle ???
+    for (int FlashCounter=0; FlashCounter<TotalFlash; FlashCounter++)
+    {
+      int WaveIndex = FlashCounter*PMTPerBoard;
+      int WaveformSize = (*pmtwvfmVec)[WaveIndex].size();
+      std::vector<int> *MonPulse = new std::vector<int>(WaveformSize);
+      fTriggerService->ConstructMonPulse(*pmtwvfmVec, fmon_threshold, MonPulse, FlashCounter);
+      //MonPulsesAll.push_back(std::move(MonPulse));
+      MonPulsesFlat.insert(MonPulsesFlat.end(), (*MonPulse).begin(), (*MonPulse).end());
+      pulseSizes.push_back(MonPulse->size());
+      delete MonPulse;
+    }
+    // make ptrs
+    auto flatPtr = std::make_unique<std::vector<int>>(std::move(MonPulsesFlat));
+    auto sizesPtr = std::make_unique<std::vector<int>>(std::move(pulseSizes));
+
+    /*std::unique_ptr< std::vector< std::vector<int> > >  MonPulsesPtr(std::make_unique< std::vector< std::vector<int> > > ());
+    for (auto &pulse : MonPulsesAll) {
+      MonPulsesPtr->reserve(MonPulsesPtr->size() + pulse.size());
+      std::move(pulse.begin(), pulse.end(), std::back_inserter(*MonPulsesPtr));
+    }
+    // clean up the vector
+    for (unsigned i = 0; i < MonPulsesAll.size(); i++) MonPulsesAll[i] = std::vector<int>();
+    */ 
+
     board_frag_v.clear();
 
     evt.put(std::move(pmtwvfmVec),fpmt_instance_name);  
@@ -609,6 +660,9 @@ void sbndaq::SBNDPMTDecoder::produce(art::Event& evt)
     evt.put(std::move(pmtTimingAssns),fpmt_timing_instance_name);
     evt.put(std::move(fltTimingAssns),fflt_timing_instance_name);
     evt.put(std::move(timTimingAssns),ftim_timing_instance_name);
+
+    evt.put(std::move(flatPtr), "MonPulses");
+    evt.put(std::move(sizesPtr), "MonPulseSizes");
 }
 
 void sbndaq::SBNDPMTDecoder::get_fragments(artdaq::Fragment & frag, std::vector<std::vector<artdaq::Fragment>> & board_frag_v){

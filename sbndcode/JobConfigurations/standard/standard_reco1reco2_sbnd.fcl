@@ -8,6 +8,7 @@
 #include "workflow_reco2.fcl"
 #include "drops_reco2.fcl"
 #include "simulationservices_sbnd.fcl"
+#include "crtgeoservice_sbnd.fcl"
 #include "generic_job_sbnd.fcl"
 
 process_name: Reco1Reco2
@@ -23,6 +24,7 @@ services:
     SignalShapingServiceSBND:  @local::sbnd_signalshapingservice
     BackTrackerService:        @local::sbnd_backtrackerservice
     ParticleInventoryService:  @local::sbnd_particleinventoryservice
+    CRTGeoService:             @local::crtgeoservice_sbnd
 }
 
 #producers
