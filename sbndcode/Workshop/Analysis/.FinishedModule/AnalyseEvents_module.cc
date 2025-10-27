@@ -1,20 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                       //
-//   ██████╗░░█████╗░██████╗░██╗░░░██╗██╗░██████╗  ███████╗██╗██████╗░░██████╗████████╗  //
-//   ██╔══██╗██╔══██╗██╔══██╗╚██╗░██╔╝╚█║██╔════╝  ██╔════╝██║██╔══██╗██╔════╝╚══██╔══╝  //
-//   ██████╦╝███████║██████╦╝░╚████╔╝░░╚╝╚█████╗░  █████╗░░██║██████╔╝╚█████╗░░░░██║░░░  //
-//   ██╔══██╗██╔══██║██╔══██╗░░╚██╔╝░░░░░░╚═══██╗  ██╔══╝░░██║██╔══██╗░╚═══██╗░░░██║░░░  //
-//   ██████╦╝██║░░██║██████╦╝░░░██║░░░░░░██████╔╝  ██║░░░░░██║██║░░██║██████╔╝░░░██║░░░  //
-//   ╚═════╝░╚═╝░░╚═╝╚═════╝░░░░╚═╝░░░░░░╚═════╝░  ╚═╝░░░░░╚═╝╚═╝░░╚═╝╚═════╝░░░░╚═╝░░░  //
-//                                                                                       //
-//   ░█████╗░███╗░░██╗░█████╗░██╗░░░░░██╗░░░██╗███████╗███████╗██████╗░                  //
-//   ██╔══██╗████╗░██║██╔══██╗██║░░░░░╚██╗░██╔╝╚════██║██╔════╝██╔══██╗                  //
-//   ███████║██╔██╗██║███████║██║░░░░░░╚████╔╝░░░███╔═╝█████╗░░██████╔╝                  //
-//   ██╔══██║██║╚████║██╔══██║██║░░░░░░░╚██╔╝░░██╔══╝░░██╔══╝░░██╔══██╗                  //
-//   ██║░░██║██║░╚███║██║░░██║███████╗░░░██║░░░███████╗███████╗██║░░██║                  //
-//   ╚═╝░░╚═╝╚═╝░░╚══╝╚═╝░░╚═╝╚══════╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝                  //
-//                                                                                       //
-///////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -31,6 +15,9 @@
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/AnalysisBase/Calorimetry.h"
+#include "larsim/Utils/TruthMatchUtils.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
+#include "larsim/MCCheater/ParticleInventoryService.h"
 
 // SBN(D) includes
 #include "sbnobj/Common/Reco/OpT0FinderResult.h"
@@ -81,6 +68,9 @@ private:
   std::vector<std::vector<float>> fChildTrackdEdx;
   std::vector<std::vector<float>> fChildTrackResRange;
 
+  std::vector<int> fBacktrackedPDG;
+  std::vector<int> fBacktrackedTrackID;
+
   // Define input labels
   std::string fSliceLabel;
   std::string fPFParticleLabel;
@@ -113,6 +103,8 @@ void test::AnalyseEvents::analyze(art::Event const& e)
   fChildTrackIsLongest.clear();
   fChildTrackdEdx.clear();
   fChildTrackResRange.clear();
+  fBacktrackedPDG.clear();
+  fBacktrackedTrackID.clear();
 
   // Get event slices
   art::ValidHandle<std::vector<recob::Slice>> sliceHandle = e.getValidHandle<std::vector<recob::Slice>>(fSliceLabel);
@@ -177,6 +169,7 @@ void test::AnalyseEvents::analyze(art::Event const& e)
 
   art::FindManyP<recob::Track> pfpTrackAssoc(pfpHandle, e, fTrackLabel);
   art::FindManyP<anab::Calorimetry> trackCaloAssoc(trackHandle, e, fCalorimetryLabel);
+  art::FindManyP<recob::Hit> trackHitAssoc(trackHandle, e, fTrackLabel);
 
   std::vector<art::Ptr<recob::PFParticle>> nuSlicePFPs(slicePFPAssoc.at(nuSliceKey));
 
@@ -245,7 +238,35 @@ void test::AnalyseEvents::analyze(art::Event const& e)
           fChildTrackdEdx.push_back(calo->dEdx());
           fChildTrackResRange.push_back(calo->ResidualRange());
         }
+
+      // Now lets get the truth information for the track
+      // First setup the detector clocks service
+      auto const clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
+      // Get hits associated with the track
+      std::vector<art::Ptr<recob::Hit>> track_hits = trackHitAssoc.at(track.key());
+      // Get the g4id of the MCParticle that 'owns' the most hits in the track
+      int g4id = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, track_hits, 1);
+      std::cout << "g4id: " << g4id << std::endl;
+      // Now we need to obtain the MCParticle with the found g4id, for this we use the particle inventory service
+      if (TruthMatchUtils::Valid(g4id))
+       {
+	 art::ServiceHandle<cheat::ParticleInventoryService> pi_serv;
+	 const simb::MCParticle* matched_mcparticle = pi_serv->ParticleList().at(g4id);
+
+	 if (matched_mcparticle)
+	  {
+	    fBacktrackedPDG.push_back(matched_mcparticle->PdgCode());
+	    fBacktrackedTrackID.push_back(std::abs(g4id));
+	  }
+       }
+      else 
+       {
+	 // If we can't find a MCParticle match
+	 fBacktrackedPDG.push_back(-1);
+	 fBacktrackedTrackID.push_back(-1);
+       }
     }
+
 
   // Fill tree
   fTree->Fill();
@@ -266,6 +287,8 @@ void test::AnalyseEvents::beginJob()
   fTree->Branch("childTrackIsLongest", &fChildTrackIsLongest);
   fTree->Branch("childTrackdEdx", &fChildTrackdEdx);
   fTree->Branch("childTrackResRange", &fChildTrackResRange);
+  fTree->Branch("backtrackedPDG", &fBacktrackedPDG);
+  fTree->Branch("backtrackedTrackID", &fBacktrackedTrackID);
 }
 
 void test::AnalyseEvents::endJob()

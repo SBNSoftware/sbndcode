@@ -13,6 +13,10 @@ services:
 {
   TFileService: { fileName: "analysisOutput.root" }
   @table::sbnd_services
+
+  ParticleInventoryService:  @local::sbnd_particleinventoryservice
+  BackTrackerService:        @local::sbnd_backtrackerservice
+  DetectorClocksService:     @local::sbnd_detectorclocks
 }
 
 physics:
