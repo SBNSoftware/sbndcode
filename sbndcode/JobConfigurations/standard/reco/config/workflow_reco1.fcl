@@ -75,7 +75,7 @@ sbnd_reco1_producer_sequence: [
  ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
-sbnd_reco1_producers.gaushit.CalDataModuleLabel:                                           "simtpc2d:gauss"
+sbnd_reco1_producers.gaushit.CalDataModuleLabel:                                           "simtpc2d:dnnsp"
 sbnd_reco1_producers.fasthit.DigitModuleLabel:                                             "simtpc2d:daq"
 sbnd_reco1_producers.gaushitTruthMatch.HitParticleAssociations.HitModuleLabel:             "gaushit"
 

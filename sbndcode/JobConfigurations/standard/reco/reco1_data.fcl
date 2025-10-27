@@ -19,7 +19,7 @@ services:
 physics.producers:
 {
     @table::physics.producers
-    sptpc2d:   @local::sbnd_wcls_sp_data
+    sptpc2d:   @local::sbnd_wcls_sp_data_bothrois
     crtstrips: @local::crtstriphitproducer_data_sbnd
     crtclustering:  @local::crtclusterproducer_data_sbnd
     crtspacepoints: @local::crtspacepointproducer_data_sbnd
@@ -37,4 +37,4 @@ physics.ana: [superadata]
 
 outputs.out1.SelectEvents: [ "reco1" ]
 
-physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
+physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"
