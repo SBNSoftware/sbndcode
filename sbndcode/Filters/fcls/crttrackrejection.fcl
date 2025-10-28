@@ -1,11 +1,12 @@
-BEGIN_PROLOG
+xBEGIN_PROLOG
 
 standard_crt_track_rejection:
 {
    module_type:          "CRTTrackRejection"
    CRTTrackModuleLabel:  "crttracks"
-   XPosMax:              105.  # maximum absolute value of x position of CRT track endpoints, in cm
-   XPosMin:              95.
+   XPosMax:              165.  # maximum absolute value of x position of CRT track endpoints, in cm
+   XPosMin:              145.
+   TPC_Num:		 1
    Verbose:              false
 
 }

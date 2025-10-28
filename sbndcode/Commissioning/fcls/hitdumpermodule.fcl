@@ -13,6 +13,7 @@ hitdumper:
     MinTime: 400.0
     TimeWindow: 175	
     MaxTPCHits:800
+    ElectronVel:0.16	
 
     MaxHits: 21000
     MaxOpHits: 100000

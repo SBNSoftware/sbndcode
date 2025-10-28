@@ -97,19 +97,13 @@ bool Cut_NS_Function_Transparency(double x1, double z1,double x2, double z2){
   return x && z;
 }
 
-bool Cut_NS_Function_diffusion_tpc1(double x1, double z1,double x2, double z2){
+bool Cut_NS_Function_Diffusion(double x1, double z1,double x2, double z2){
   bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
-  bool x=(x1>2 && x1<202) && (x2>2 && x2<202);
-  bool angle_cut = fabs(x1 - x2) < tan(6 * M_PI / 180.0) * fabs(z1 - z2);
+  bool x=((x1>-202 && x1<-0.01) && (x2>-202 && x2<-0.01)) || ((x1>0.01 && x1<202) && (x2>0.01 && x2<202));
+  bool angle_cut = fabs(x1 - x2) < tan(5 * M_PI / 180.0) * fabs(z1 - z2);
   return x && z && angle_cut;
 }
 
-bool Cut_NS_Function_diffusion_tpc0(double x1, double z1,double x2, double z2){
-  bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
-  bool x=(x1>-202 && x1<-2) && (x2>-202 && x2<-2);
-  bool angle_cut = fabs(x1 - x2) < tan(6 * M_PI / 180.0) * fabs(z1 - z2);
-  return x && z && angle_cut;
-}
 
 std::pair<double, double> CalculateHalfWidthHeightAndAmplitudeCollection(const std::vector<double>& adc_vals, const std::vector<double>& time_vals) {
   if (adc_vals.empty() || time_vals.empty()) return {-1.0, -1.0};
@@ -551,9 +545,6 @@ private:
 
   int _tpc_num;
   int _plane_num;
-  int _noisy_channel;
-  double _max_time;
-  double _min_time;
   int _time_window;
   int _max_tpc_hits;
   int _max_hits;                    ///< maximum number of hits (to be set via fcl)
@@ -641,12 +632,9 @@ void Hitdumper::reconfigure(fhicl::ParameterSet const& p)
 
   _tpc_num = p.get<int>("TPCNum", 0);
   _plane_num = p.get<int>("PlaneNum", 0);
-  _noisy_channel = p.get<int>("NoisyChannel",0);
-  _max_time = p.get<double>("MaxTime", 1100);
-  _min_time = p.get<double>("MinTime", 400);
   _time_window = p.get<int>("TimeWindow", 150);
   _max_tpc_hits=p.get<int>("MaxTPCHits",0);
-
+  _electron_vel=p.get<double>("ElectronVel",0.16);
 
   _max_hits = p.get<int>("MaxHits", 50000);
   _max_ophits = p.get<int>("MaxOpHits", 50000);
@@ -891,7 +879,7 @@ void Hitdumper::analyze(const art::Event& evt)
       	const geo::Point_t start = crttrack->Start();
 	const geo::Point_t end   = crttrack->End();
 
-	if(Cut_NS_Function_diffusion_tpc1(start.X(),start.Z(),end.X(),end.Z())){
+	if(Cut_NS_Function_Diffusion(start.X(),start.Z(),end.X(),end.Z())){
 	  _crt_track_pes.push_back(crttrack->PE());
 	  _crt_track_t0.push_back(crttrack->Ts0());
 	  _crt_track_t1.push_back(crttrack->Ts1());
@@ -927,7 +915,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	  std::cout<<"end x"<<end_x<<std::endl;
 	  std::cout<<"average x"<<average_xvalue<<std::endl;
 
-	  hit_time_ticks= (average_xvalue*2/0.16)+400 ;
+	  hit_time_ticks= (average_xvalue*2/_electron_vel)+400 ;
 
 	  std::cout<<"hit time"<< hit_time_ticks<< std::endl;	  
 	  time_cut_upper=hit_time_ticks + _time_window;
@@ -1158,15 +1146,13 @@ void Hitdumper::analyze(const art::Event& evt)
     }
 
     int waveform_number_tracker = 0;
-    int adc_counter = 1;
-    _adc_count = _nhits * (fWindow * 2 + 1);
-
+   
+    _adc_count = _nhits * (fWindow * 2 + 1);  //number of adc values
     int hit_counter=0;
     std::map<int, int> channelHitCounts;
+
     for (int ihit = 0; ihit < _nhits; ++ihit) {
-      if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num &&
-	  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower &&
-	  !(_hit_wire[ihit] == _noisy_channel)) {
+      if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num && _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower) {
 	channelHitCounts[_hit_channel[ihit]]++;
 	++hit_counter;
       }
@@ -1202,7 +1188,7 @@ void Hitdumper::analyze(const art::Event& evt)
       // see if there is a hit on this channel
       if (channelHitCounts[channel] == 1 && hit_counter > _max_tpc_hits) {
 	for (int ihit = 0; ihit < _nhits; ++ihit) {
-	  if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==_tpc_num && _hit_plane[ihit]==_plane_num  &&  _hit_peakT[ihit]<time_cut_upper && _hit_peakT[ihit]>time_cut_lower && !(_hit_wire[ihit] == _noisy_channel)) {
+	  if (_hit_channel[ihit] == channel && _hit_tpc[ihit]==_tpc_num && _hit_plane[ihit]==_plane_num  &&  _hit_peakT[ihit]<time_cut_upper && _hit_peakT[ihit]>time_cut_lower) {
 	   
 	    int pedestal = (int)digitVec->GetPedestal();
 	    //UNCOMPRESS THE DATA.
@@ -1234,12 +1220,9 @@ void Hitdumper::analyze(const art::Event& evt)
 	    if (high_edge > (fDataSize-1)) {
 	      high_edge = fDataSize - 1;
 	    }
-	    //	     double integral = 0.0;
 	    waveform_number_tracker++;
-	    // int counter_for_adc_in_waveform = 0;
+
 	    for (size_t ibin = low_edge; ibin <= high_edge; ++ibin) {
-	      // _adc_count_in_waveform[adc_counter] = counter_for_adc_in_waveform;
-	      // counter_for_adc_in_waveform++;
 	     temp_waveform_number.push_back(waveform_number_tracker);
 	     temp_adc_on_wire.push_back(rawadc[ibin]-pedestal);
 	     temp_time_for_waveform.push_back(ibin);
@@ -1254,10 +1237,7 @@ void Hitdumper::analyze(const art::Event& evt)
 	     waveform_number_map[wave_num].push_back(temp_waveform_number.back());
 	     waveform_channel_number[wave_num].push_back(temp_channel_number.back());
 	     waveform_hit_time[wave_num].push_back(temp_hit_time.back());
-
-	     //	       integral+=_adc_on_wire[adc_counter];
-	     // _waveform_integral.push_back(integral);
-	      adc_counter++;
+	   	   
 	    }//bin loop
 	  } // if cuts
 	} //end loop over hits
@@ -1276,8 +1256,8 @@ void Hitdumper::analyze(const art::Event& evt)
 
 
       if(_plane_num==2){
-	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
-	double area_under_curve = CalculateAreaUnderCurve(adc_vals, time_vals);
+	//	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
+	//	double area_under_curve = CalculateAreaUnderCurve(adc_vals, time_vals);
 	
 	// If no data, skip this waveform
 	if (adc_vals.empty() || time_vals.empty()) {
@@ -1293,13 +1273,14 @@ void Hitdumper::analyze(const art::Event& evt)
 	if (max_adc > 130) {
 	  continue;
 	}
+	/*
 	if (area_under_curve > 7.35 * amplitude + 250) {
 	  continue;
 	}
 	if (half_width < 4.5 || half_width > 10) {
 	  continue;
 	}
-      
+	*/
       _time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
       _adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
       _wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());

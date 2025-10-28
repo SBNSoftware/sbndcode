@@ -37,11 +37,7 @@ private:
   double fLengthMin;   // if above is true, then this is minimum length in the active volume, in cm
   bool fVerbose;
   std::string fHitsModuleLabel;     ///< Label for Hit dataproduct (to be set via fcl)
-  bool fTPCPos;
-  bool fTPCNeg;
-  int _tpc_num;
   int _plane_num;
-  int _noisy_channel;
   int _time_window;
   int _max_tpc_hits;
   double _electron_vel;
@@ -73,11 +69,7 @@ CRTTrackFilter::CRTTrackFilter(fhicl::ParameterSet const& p) : EDFilter{p} {
   fLengthMin           = p.get<double>("LengthMin",300.);
   fVerbose             = p.get<bool>("Verbose",false);
   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
-  fTPCPos              = p.get<bool>("TPCPos",true);
-  fTPCNeg              = p.get<bool>("TPCNeg",false);
-  _tpc_num = p.get<int>("TPCNum", 0);
   _plane_num = p.get<int>("PlaneNum", 2);
-  _noisy_channel = p.get<int>("NoisyChannel",0);
   _time_window = p.get<int>("TimeWindow", 175);
   _max_tpc_hits=p.get<int>("MaxTPCHits",800);
   _electron_vel = p.get<double>("ElectronVel", 0.16);
@@ -163,29 +155,13 @@ bool CRTTrackFilter::filter(art::Event& e) {
     double Delta_x = x_N-x_S;
     double Delta_y = y_N-y_S;
     double Delta_z = z_N-z_S;
-   
-    double    CRT_theta_yz= atan2(Delta_y,Delta_z)*(180/PI);
-    double theta_yz=CRT_theta_yz;
-    if ( CRT_theta_yz < -90 ) {
-      theta_yz = CRT_theta_yz + 180.;
-    }
-    if ( CRT_theta_yz > 90 ) {
-      theta_yz = CRT_theta_yz - 180.;
-    }
-    
+          
     // Check whether both CRT track points satisfy the x position requirements
     if( not(abs(x_S) > fXPosMin and abs(x_S) < fXPosMax) ) continue;
     if(fVerbose) std::cout << "    Found track that meets x position requirements on south point" << std::endl;
     if( not(abs(x_N) > fXPosMin and abs(x_N) < fXPosMax) ) continue;
     if(fVerbose) std::cout << "    Found track that meets x position requirements on both points" << std::endl;
-    /*
-    if(fTPCPos){
-      if(x_N < 0) continue;
-    }
-    if(fTPCNeg){
-      if(x_N > 0) continue;
-    } 
-    */
+
    // Check whether Delta x between the CRT track points satisfies the requirement: Delta x < tan(10deg) * Delta z
     if( not(abs(Delta_x) < tan(fThetaXZMax*PI/180)*abs(Delta_z)) ) continue;
     if(fVerbose) std::cout << "    Found track that meets Delta x requirement" << std::endl;
@@ -243,12 +219,6 @@ bool CRTTrackFilter::filter(art::Event& e) {
     if(crt_trk.Ts0()<-2500 || crt_trk.Ts0()>-500) continue;    
     if(abs(crt_trk.ToF()-(crt_trk.Length()/29.9792))>15) continue;
     
-    // if(_tpc_num==0 &&  _plane_num==0 && theta_yz>0)continue;
-    // if(_tpc_num==0 &&  _plane_num==1 && theta_yz<0)continue;
-    // if(_tpc_num==0 &&  _plane_num==2 && theta_yz<0)continue;
-    // if(_tpc_num==1 &&  _plane_num==0 && theta_yz<0)continue;
-    // if(_tpc_num==1 &&  _plane_num==1 && theta_yz>0)continue;
-    //    if(_tpc_num==1 &&  _plane_num==2 && theta_yz<0)continue;
     
     // If we've made it this far, then this track is good and this event passes the filter
     if(fVerbose) std::cout << "    Found a good track!" << std::endl;
@@ -272,10 +242,10 @@ bool CRTTrackFilter::filter(art::Event& e) {
   bool good_tpc=false;
   int hit_counter=0;
    for (int ihit = 0; ihit < _nhits; ++ihit) {
-     if (/*_hit_tpc[ihit] == _tpc_num &&*/ _hit_plane[ihit] == _plane_num &&  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower &&   !(_hit_wire[ihit] == _noisy_channel)) {
+     if ( _hit_plane[ihit] == _plane_num &&  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower) {
        ++hit_counter;
     }
-  }
+   }
    std::cout << "Number of hits passing cuts: " << hit_counter << std::endl;
    if(hit_counter>800)good_tpc=true; 
 

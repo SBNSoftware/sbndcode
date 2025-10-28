@@ -33,6 +33,7 @@ private:
 
   double fXPosMax;     // maximum absolute value of x position of CRT track endpoints, in cm
   double fXPosMin;
+  int fTPC_Num;
   bool fVerbose;
 
 
@@ -47,6 +48,7 @@ CRTTrackRejection::CRTTrackRejection(fhicl::ParameterSet const& p) : EDFilter{p}
   fCRTTrackModuleLabel = p.get<std::string>("CRTTrackModuleLabel","crttracks");
   fXPosMax             = p.get<double>("XPosMax",300.);
   fXPosMin             = p.get<double>("XPosMin",300.);
+  fTPC_Num             =p.get<int>("TPC_Num",0);
   fVerbose             = p.get<bool>("Verbose",false);
 }
 
@@ -110,6 +112,9 @@ bool CRTTrackRejection::filter(art::Event& e) {
     if(fVerbose){
       std::cout <<" good track" <<std::endl;
       }
+
+    if ((x_S <= 0 || x_N <= 0) && fTPC_Num == 1) continue; 
+    if ((x_S >= 0 || x_N >= 0) && fTPC_Num == 0) continue; 
 
 
     good_crt=true;
