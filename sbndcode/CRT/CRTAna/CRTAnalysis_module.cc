@@ -195,6 +195,8 @@ private:
   std::vector<std::vector<uint16_t>> _cl_sh_feb_mac5_set; //! MAC5 addresses of StripHit FEBs
   std::vector<std::vector<double>>   _cl_sh_time_walk_set; //! Time walk correction
   std::vector<std::vector<double>>   _cl_sh_prop_delay_set; //! Light propagation correction
+  std::vector<std::vector<double>>   _cl_sh_readout_dist_set; //! SP distance from SiPM
+  std::vector<std::vector<double>>   _cl_sh_pe_set; //! SP PE
   std::vector<int>                   _cl_truth_trackid;
   std::vector<double>                _cl_truth_completeness;
   std::vector<double>                _cl_truth_purity;
@@ -470,6 +472,8 @@ sbnd::crt::CRTAnalysis::CRTAnalysis(fhicl::ParameterSet const& p)
   fTree->Branch("cl_sh_feb_mac5_set", "std::vector<std::vector<uint16_t>>", &_cl_sh_feb_mac5_set);
   fTree->Branch("cl_sh_time_walk_set", "std::vector<std::vector<double>>", &_cl_sh_time_walk_set);
   fTree->Branch("cl_sh_prop_delay_set", "std::vector<std::vector<double>>", &_cl_sh_prop_delay_set);
+  fTree->Branch("cl_sh_readout_dist_set", "std::vector<std::vector<double>>", &_cl_sh_readout_dist_set);
+  fTree->Branch("cl_sh_pe_set", "std::vector<std::vector<double>>", &_cl_sh_pe_set);
   if(!fDataMode && fTruthMatch)
     {
       fTree->Branch("cl_truth_trackid", "std::vector<int>", &_cl_truth_trackid);
@@ -1210,6 +1214,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
   _cl_sh_feb_mac5_set.resize(nClusters);
   _cl_sh_time_walk_set.resize(nClusters);
   _cl_sh_prop_delay_set.resize(nClusters);
+  _cl_sh_readout_dist_set.resize(nClusters);
+  _cl_sh_pe_set.resize(nClusters);
   _cl_truth_trackid.resize(nClusters);
   _cl_truth_completeness.resize(nClusters);
   _cl_truth_purity.resize(nClusters);
@@ -1263,6 +1269,8 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
       _cl_sh_feb_mac5_set[i].resize(_cl_nhits[i]);
       _cl_sh_time_walk_set[i].resize(_cl_nhits[i]);
       _cl_sh_prop_delay_set[i].resize(_cl_nhits[i]);
+      _cl_sh_readout_dist_set[i].resize(_cl_nhits[i]);
+      _cl_sh_pe_set[i].resize(_cl_nhits[i]);
 
       std::vector<std::pair<int, double>> ts0_set, ts1_set;
 
@@ -1301,8 +1309,10 @@ void sbnd::crt::CRTAnalysis::AnalyseCRTClusters(const art::Event &e, const std::
               double corr = std::pow( dist - fPEAttenuation, 2.0 ) / std::pow( fPEAttenuation, 2.0 );
               double tw_pe = pe * corr;
 
-              _cl_sh_time_walk_set[i][ii]  = fTimeWalkNorm * std::exp( -fTimeWalkScale * tw_pe );
-              _cl_sh_prop_delay_set[i][ii] = fPropDelay * dist;
+              _cl_sh_time_walk_set[i][ii]    = fTimeWalkNorm * std::exp( -fTimeWalkScale * tw_pe );
+              _cl_sh_prop_delay_set[i][ii]   = fPropDelay * dist;
+              _cl_sh_readout_dist_set[i][ii] = dist;
+              _cl_sh_pe_set[i][ii]           = pe;
 
               ts0_set.push_back({_cl_sh_feb_mac5_set[i][ii], _cl_sh_ts0_set[i][ii] - _cl_sh_time_walk_set[i][ii] - _cl_sh_prop_delay_set[i][ii]});
               ts1_set.push_back({_cl_sh_feb_mac5_set[i][ii], _cl_sh_ts1_set[i][ii] - _cl_sh_time_walk_set[i][ii] - _cl_sh_prop_delay_set[i][ii]});
