@@ -94,6 +94,7 @@ public:
   void endSubRun(const art::SubRun &sr); 
   void analyze(art::Event const& e) override;
 
+  void MCParticles(art::Event const& e);
   void Slices(art::Event const& e);
   // Selected optional functions.
   void beginJob() override;
@@ -125,6 +126,7 @@ private:
   const std::string trackLabel;
   const std::string showerLabel;
   const std::string MCTruthLabel;
+  const std::string TruthLabel;
   double DLCurrent;
   const std::string spacePointLabel;
   const std::string clusterLabel;
@@ -148,6 +150,7 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   trackLabel(p.get<std::string>("TrackLabel")),
   showerLabel(p.get<std::string>("ShowerLabel")),
   MCTruthLabel(p.get<std::string>("MCTruthLabel")),
+  TruthLabel(p.get<std::string>("TruthLabel")),
   DLCurrent(p.get<double>("DLCurrent")),
   spacePointLabel(p.get<std::string>("SpacePointLabel")),
   clusterLabel(p.get<std::string>("ClusterLabel")),
@@ -198,13 +201,67 @@ void sbnd::NuE::analyze(art::Event const& e)
     subRunID = e.id().subRun();
 
     std::cout << "" << std::endl;
-    std::cout << "________________________________________________________________________________________" << std::endl; 
+    std::cout << "========================================================================================================" << std::endl; 
     Slices(e);
+    MCParticles(e);
+}
+
+void sbnd::NuE::MCParticles(art::Event const& e){
+    art::Handle<std::vector<simb::MCTruth>> MCTruthHandle;
+    std::vector<art::Ptr<simb::MCTruth>> MCTruthVec;
+    if(e.getByLabel(TruthLabel, MCTruthHandle))
+        art::fill_ptr_vector(MCTruthVec, MCTruthHandle);
+
+    std::cout << "_________ MCTruth _________" << std::endl;
+    std::cout << "MCTruthVec.size = " << MCTruthVec.size() << std::endl;
+    if(!MCTruthVec.empty()){
+        int counter = 0;
+        for(auto &MCTruth : MCTruthVec){
+            counter++;
+            std::cout << "MCTruth " << counter << ": Origin = " << MCTruth->Origin() << ", Number of Particles = " << MCTruth->NParticles() << std::endl;
+            if(MCTruth->Origin() == simb::kBeamNeutrino){
+                simb::MCNeutrino neutrino = MCTruth->GetNeutrino();
+                simb::MCParticle neutrinoParticle = neutrino.Nu();
+                std::cout << "Neutrino: Track ID = " << neutrinoParticle.TrackId() << ", CCNC = " << neutrino.CCNC() << ", Interaction Type = " << neutrino.InteractionType() << "Vertex = (" << neutrinoParticle.Vx() << ", " << neutrinoParticle.Vy() << ", " << neutrinoParticle.Vz() << "), Number of Daughters = " << neutrinoParticle.NumberDaughters() << std::endl; 
+                int neutrinoTrackID = neutrinoParticle.TrackId();
+
+                if(neutrino.InteractionType() == 1098){
+                    // This is a Nu+E elastic scattering event
+                    for(int i = 0; i < MCTruth->NParticles(); i++){
+                        simb::MCParticle particle = MCTruth->GetParticle(i);
+                        if(particle.TrackId() != neutrinoTrackID){
+                            // This is not the neutrino
+                            if(particle.StatusCode() == 1 && (particle.PdgCode() == 11 || particle.PdgCode() == -11)){
+                                // StatusCode = 1: G4 is tracking this particle, it is outgoing
+                                // Particle has to be an electron or positron
+                                // This is the recoil electron!
+                                
+                                double P_mag = std::sqrt((particle.Px() * particle.Px()) + (particle.Py() * particle.Py()) + (particle.Pz() * particle.Pz()));
+                                double energy = particle.E() * 1000; // Converts from GeV to MeV
+                                double theta = std::acos(particle.Pz() / P_mag);
+                                double EThetaSquared = (energy * theta * theta); 
+                                
+                                std::cout << "MCParticle: Track ID = " << particle.TrackId() << ", Vertex = (" << particle.Vx() << ", " << particle.Vy() << ", " << particle.Vz() << "), PDG = " << particle.PdgCode() << ", Mother = " << particle.Mother() << ", Status Code = " <<  particle.StatusCode() << ", Energy = " << energy << ", Theta = " << theta << ", EThetaSquared = " << EThetaSquared << std::endl;
+
+                            }
+
+                        }
+                    }
+                } else{
+                    // This is a BNB or Cosmic event
+                }
+            }
+        }
+    }
+
+    std::cout << "_________________________" << std::endl;
+
 }
 
 void sbnd::NuE::Slices(art::Event const& e){
     const detinfo::DetectorClocksData clockData = art::ServiceHandle<detinfo::DetectorClocksService>()->DataFor(e);
 
+    std::cout << "_________ Slices _________" << std::endl;
     art::Handle<std::vector<recob::Slice>>  sliceHandle;
     std::vector<art::Ptr<recob::Slice>>     sliceVec;
     if(e.getByLabel(sliceLabel, sliceHandle))
@@ -222,7 +279,6 @@ void sbnd::NuE::Slices(art::Event const& e){
 
             for(const art::Ptr<recob::Slice> &slice : sliceVec){
                 sliceID = slice->ID();
-                std::cout << "_______________________________________________________" << std::endl;
                 std::cout << "Slice " << sliceID << std::endl;
                 if(sliceID == std::numeric_limits<int>::max()) continue;
 
@@ -232,7 +288,8 @@ void sbnd::NuE::Slices(art::Event const& e){
                 // Gets the true particle ID of the truth particle who owns the most hits in the slice. True is for rollup.
                 const int sliceTrueParticleID = TruthMatchUtils::TrueParticleIDFromTotalRecoHits(clockData, sliceHits, true);
                 std::cout << "The slice has most hits coming from true particle with ID = " << sliceTrueParticleID << std::endl;
-            
+                std::cout << "Number of hits in slice = " << sliceHits.size() << std::endl;
+
                 if(sliceTrueParticleID == std::numeric_limits<int>::min()) continue;
 
                 // Get the MCParticle associated with the majority of the hits in the slice
@@ -313,11 +370,22 @@ void sbnd::NuE::Slices(art::Event const& e){
 
                 std::cout << "\nSlice Completeness = " << sliceCompleteness << ", Slice Purity = " << slicePurity << std::endl;
 
+                int sliceCategory = -999999;
+                // Slice Categories: Cosmic = 0, Signal = 1, Fuzzy Signal = 2, BNB = 3, Fuzzy BNB = 4
+                if(sliceMCTruth->Origin() == simb::kCosmicRay) sliceCategory = 0;
+                else if(sliceMCTruth->Origin() == simb::kBeamNeutrino && sliceMCNeutrino.InteractionType() == 1098 && sliceCompleteness > 0.5 && slicePurity > 0.3) sliceCategory = 1; 
+                else if(sliceMCTruth->Origin() == simb::kBeamNeutrino && sliceMCNeutrino.InteractionType() == 1098 && sliceCompleteness < 0.5 && sliceCompleteness > 0.1) sliceCategory = 2;
+                else if(sliceMCTruth->Origin() == simb::kBeamNeutrino && sliceMCNeutrino.InteractionType() != 1098 && sliceCompleteness > 0.5 && slicePurity > 0.3) sliceCategory = 3;
+                else if(sliceMCTruth->Origin() == simb::kBeamNeutrino && sliceMCNeutrino.InteractionType() != 1098 && sliceCompleteness < 0.5 && sliceCompleteness > 0.1) sliceCategory = 4;
+
+                std::cout << "Slice Category = " << sliceCategory << std::endl;
+            
             }
 
         }
     }
 
+    std::cout << "_________________________" << std::endl;
 
 }
 

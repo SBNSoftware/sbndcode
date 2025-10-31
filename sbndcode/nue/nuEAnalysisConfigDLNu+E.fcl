@@ -13,6 +13,7 @@ nuE:
     TrackLabel:         "pandoraSCETrack"
     ShowerLabel:        "pandoraSCEShower"
     MCTruthLabel:       "largeant"
+    TruthLabel:         "generator"
     DLCurrent:          5
     SpacePointLabel:    "pandoraSCE"
     ClusterLabel:       "pandoraSCE"
