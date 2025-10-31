@@ -90,6 +90,8 @@ public:
   NuE& operator=(NuE&&) = delete;
 
   // Required functions.
+  void beginSubRun(const art::SubRun &sr);
+  void endSubRun(const art::SubRun &sr); 
   void analyze(art::Event const& e) override;
 
   void Slices(art::Event const& e);
@@ -99,7 +101,17 @@ public:
 
 private:
 
-  // Declare member data here.
+
+  TTree* SubRunTree;
+  double pot;
+  int spills, numGenEvents;
+  unsigned int subRunNumber;
+  unsigned int subRunRun;
+
+  unsigned int eventID; // Event num
+  unsigned int runID; // Run num  
+  unsigned int subRunID; // Subrun num
+
 
   art::ServiceHandle<cheat::ParticleInventoryService> particleInv;
 
@@ -118,6 +130,8 @@ private:
   const std::string clusterLabel;
   const std::string POTModuleLabel;
   double signal;
+
+  TFile *outputFile = TFile::Open("NuEAnalyserOutput.root","RECREATE");
 
 };
 
@@ -140,12 +154,51 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   POTModuleLabel(p.get<std::string>("POTLabel")),
   signal(p.get<double>("Signal"))
 {
-  // Call appropriate consumes<>() for any products to be retrieved by this module.
+
+  art::ServiceHandle<art::TFileService> fs;  
+
+  SubRunTree = fs->make<TTree>("SubRun","");   
+  SubRunTree->Branch("pot", &pot);
+  SubRunTree->Branch("spills", &spills);
+  SubRunTree->Branch("numGenEvents", &numGenEvents);
+  SubRunTree->Branch("DLCurrent", &DLCurrent);
+  SubRunTree->Branch("signal", &signal);
+  SubRunTree->Branch("run", &subRunRun);
+  SubRunTree->Branch("subRun", &subRunNumber);
+}
+
+
+void sbnd::NuE::beginSubRun(const art::SubRun &sr){
+    pot = 0.; spills = 0; numGenEvents = 0;
+
+    art::Handle<sumdata::POTSummary> potHandle;
+    sr.getByLabel(POTModuleLabel, potHandle);
+    if(!potHandle.isValid()){
+        //std::cout << "POT product " << POTModuleLabel << " not found..." << std::endl;
+            return;
+    } 
+  
+    pot = potHandle->totpot;
+    spills = potHandle->totspills;
+    subRunNumber = sr.subRun();
+    subRunRun = sr.run();
+    printf("Run = %i, SubRun = %i, POT = %f, Spills = %i\n", subRunRun, subRunNumber, pot, spills);
+
+}
+
+void sbnd::NuE::endSubRun(const art::SubRun &sr){
+    //printf("POT = %f, Spills = %i, Num Events Generated = %i\n", pot, spills, numGenEvents);
+    SubRunTree->Fill();
 }
 
 void sbnd::NuE::analyze(art::Event const& e)
 {
-  // Implementation of required member function here.
+    eventID = e.id().event();
+    runID = e.id().run();
+    subRunID = e.id().subRun();
+
+    std::cout << "" << std::endl;
+    std::cout << "________________________________________________________________________________________" << std::endl; 
     Slices(e);
 }
 
@@ -198,21 +251,67 @@ void sbnd::NuE::Slices(art::Event const& e){
                 if(sliceMCTruth->Origin() == simb::kBeamNeutrino){
                     // This is a beam neutrino
                     std::cout << "MCNeutrino: Interaction Type = " << sliceMCNeutrino.InteractionType() << ", CCNC = " << sliceMCNeutrino.CCNC() << ", PDG = " << sliceMCNeutrinoParticle.PdgCode() << ", Vertex = (" << sliceMCNeutrinoParticle.Vx() << ", " << sliceMCNeutrinoParticle.Vy() << ", " << sliceMCNeutrinoParticle.Vy() << ")" << std::endl;
+                    // Interaction Type = 1098 is Nu+E elastic scattering
                 } else if(sliceMCTruth->Origin() == simb::kCosmicRay){
                     // This is a cosmic ray
                 }
 
-                int numTruthMatchedHits = 0;
-                int numTruthMatchedHitsSlice = 0;
-                int numHitsSlice = ;
+                // Loop through all the MCParticles in the MCTruth of the slice
+                //for(int j = 0; j < sliceMCTruth->NParticles(); j++){
+                    //simb::MCParticle sliceMCParticles = sliceMCTruth->GetParticle(j);
+                    //std::cout << "MCParticle: PDG = " << sliceMCParticles.PdgCode() << ", Status Code = " << sliceMCParticles.StatusCode() << std::endl;
+                    // Status Code = 1 means it is outgoing, this is tracked by g4
+                //}
 
-                for(const art::Ptr<recob::Hit> &hit : hitVec){
-                    const int hitTrueParticleID = TruthMatchUtils::TrueParticleID(clockData, hit, true);
-                    std::cout << "The hit comes from true particle with ID = " << hitTrueParticleID << std::endl;
+                double numTruthMatchedHits = 0;
+                double numTruthMatchedHitsSlice = 0;
+                double numHitsSlice = sliceHits.size();
 
+                // Looping through the hits in the slice
+                for(const art::Ptr<recob::Hit> &sliceHit : sliceHits){
+                    // Gets the true particle ID of the truth particle which owns the hit. True is for rollup.
+                    const int sliceHitTrueParticleID = TruthMatchUtils::TrueParticleID(clockData, sliceHit, true);
+                    //std::cout << "The slice hit comes from true particle with ID = " << sliceHitTrueParticleID << std::endl;
+                    
+                    if(sliceHitTrueParticleID == std::numeric_limits<int>::min()) continue;
+                    
+                    // Gets the MCParticle that the hit comes from
+                    //const simb::MCParticle* sliceHitMCParticle = particleInv->TrackIdToParticle_P(sliceHitTrueParticleID);
+                    
+                    // Gets the MCTruth that the hit comes from   
+                    const art::Ptr<simb::MCTruth> sliceHitMCTruth = particleInv->TrackIdToMCTruth_P(sliceHitTrueParticleID);
+
+                    // If the MCTruth from the hit is the same as the MCTruth of the slice, add to the counter
+                    if(sliceMCTruth == sliceHitMCTruth) numTruthMatchedHitsSlice++;
                 }
 
-                
+                // Looping through all the hits in the event
+                for(const art::Ptr<recob::Hit> &hit : hitVec){
+                    // Gets the true particle ID of the truth particle which owns the hit. True is for rollup.
+                    const int hitTrueParticleID = TruthMatchUtils::TrueParticleID(clockData, hit, true);
+                    //std::cout << "The hit comes from true particle with ID = " << hitTrueParticleID << std::endl;
+                    
+                    if(hitTrueParticleID == std::numeric_limits<int>::min()) continue;
+                    
+                    // Gets the MCParticle that the hit comes from 
+                    //const simb::MCParticle* hitMCParticle = particleInv->TrackIdToParticle_P(hitTrueParticleID);
+                    
+                    // Gets the MCTruth that the hit comes from
+                    const art::Ptr<simb::MCTruth> hitMCTruth = particleInv->TrackIdToMCTruth_P(hitTrueParticleID);
+
+                    // If the MCTruth from the hit is the same as the MCTruth of the slice, add to the counter
+                    if(sliceMCTruth == hitMCTruth) numTruthMatchedHits++;
+                }
+               
+                std::cout << "Total number of hits = " << hitVec.size() << std::endl; 
+                std::cout << "Number of hits truth matched to MCTruth = " << numTruthMatchedHits << std::endl;
+                std::cout << "Number of hits truth matched to MCTruth in slice = " << numTruthMatchedHitsSlice << std::endl;
+                std::cout << "Number of hits in slice = " << numHitsSlice << std::endl;
+
+                double slicePurity = (numTruthMatchedHitsSlice/numHitsSlice);
+                double sliceCompleteness = (numTruthMatchedHitsSlice/numTruthMatchedHits);
+
+                std::cout << "\nSlice Completeness = " << sliceCompleteness << ", Slice Purity = " << slicePurity << std::endl;
 
             }
 
