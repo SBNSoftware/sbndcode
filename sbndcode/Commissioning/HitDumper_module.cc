@@ -81,6 +81,7 @@
 #include "TVector3.h"
 #include "TGeoManager.h"
 #include "TF1.h"
+#include "TObjString.h"
 
 // C++ Includes
 #include <map>
@@ -99,10 +100,79 @@ bool Cut_NS_Function_Transparency(double x1, double z1,double x2, double z2){
 
 bool Cut_NS_Function_Diffusion(double x1, double z1,double x2, double z2){
   bool z =((z1>-200 && z1<-150) && (z2>750 && z2<800)) || ((z1>750 && z1<800) && (z2>-200 && z2<-150));
-  bool x=((x1>-202 && x1<-0.01) && (x2>-202 && x2<-0.01)) || ((x1>0.01 && x1<202) && (x2>0.01 && x2<202));
+  bool x=((x1>-250 && x1<-0.01) && (x2>-250 && x2<-0.01)) || ((x1>0.01 && x1<250) && (x2>0.01 && x2<250));
   bool angle_cut = fabs(x1 - x2) < tan(5 * M_PI / 180.0) * fabs(z1 - z2);
   return x && z && angle_cut;
 }
+
+
+TH1D* CalculateAverageHistogram(const std::vector<std::vector<TH1D*>>& histograms, int nBins) {
+  auto averageHistogram = new TH1D("AverageHistogram", "Average Waveform;Time (ticks);ADC counts", nBins, 1, 41);
+
+  int totalHistograms = 0;
+  std::vector<double> sumBins(nBins, 0.0);
+
+  for (const auto& eventHistograms : histograms) {
+    for (const auto& histo : eventHistograms) {
+      if (!histo) continue;
+      for (int i = 1; i <= nBins; ++i)
+	sumBins[i-1] += histo->GetBinContent(i);
+      totalHistograms++;
+    }
+  }
+
+  if (totalHistograms == 0) return averageHistogram;
+
+  for (int i = 0; i < nBins; ++i)
+    averageHistogram->SetBinContent(i + 1, sumBins[i] / totalHistograms);
+
+  std::cout << "Total histograms contributing: " << totalHistograms << std::endl;
+  return averageHistogram;
+}
+
+std::pair<double, double> CalculateHalfWidthHeightAndAmplitude(TH1D* averageTemplate) {
+  if (!averageTemplate) {
+    std::cerr << "Error: null histogram passed!" << std::endl;
+    return {-1.0, -1.0};
+  }
+
+  int nBins = averageTemplate->GetNbinsX();
+  if (nBins <= 0) return {-1.0, -1.0};
+
+  // Extract bin contents (ADC values) and bin centers (time values)                                                                                                                                                                                                            
+  std::vector<double> adc_vals(nBins);
+  std::vector<double> time_vals(nBins);
+
+  for (int i = 1; i <= nBins; ++i) {
+    adc_vals[i-1] = averageTemplate->GetBinContent(i);
+    time_vals[i-1] = averageTemplate->GetBinCenter(i);
+  }
+
+  // Find maximum ADC and half-maximum                                                                                                                                                                                                                                          
+  double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
+  double half_max = max_adc / 2.0;
+
+  double t_left = -1, t_right = -1;
+
+  for (int i = 1; i < nBins; ++i) {
+    if (adc_vals[i-1] < half_max && adc_vals[i] >= half_max) {
+      // Interpolate crossing on rising edge                                                                                                                                                                                                                                    
+      t_left = time_vals[i-1] + (time_vals[i] - time_vals[i-1]) *
+        (half_max - adc_vals[i-1]) / (adc_vals[i] - adc_vals[i-1]);
+    }
+    if (adc_vals[i-1] >= half_max && adc_vals[i] < half_max) {
+      // Interpolate crossing on falling edge                                                                                                                                                                                                                                   
+      t_right = time_vals[i-1] + (time_vals[i] - time_vals[i-1]) *
+        (half_max - adc_vals[i-1]) / (adc_vals[i] - adc_vals[i-1]);
+      break;
+    }
+  }
+
+  double half_width = (t_left >= 0 && t_right >= 0) ? (t_right - t_left) : -1.0;
+
+  return {half_width, max_adc};
+}
+
 
 
 std::pair<double, double> CalculateHalfWidthHeightAndAmplitudeCollection(const std::vector<double>& adc_vals, const std::vector<double>& time_vals) {
@@ -267,7 +337,7 @@ public:
 
   // The analysis routine, called once per event.
   void analyze (const art::Event& evt) override;
-
+  void endJob() override;
   // Called at the beginning of every subrun
   virtual void beginSubRun(art::SubRun const& sr) override;
 
@@ -317,6 +387,7 @@ private:
   opdet::sbndPDMapAlg _pd_map;
 
   TTree* fTree;
+  TTree* fTree2;
   //run information
   int _run;        ///< The run number
   int _subrun;     ///< The subrun number
@@ -347,6 +418,15 @@ private:
   std::vector<int>    _channel_number;
   std::vector<double> _hit_time;
 
+
+  //****************diffusion*******************//
+
+  std::map<std::string, std::vector<std::vector<TH1D*>>> histogramsByWindow;
+  struct TimeWindow {
+    double low;
+    double high;
+    std::string label;
+  };
 
   // CRT strip variables
   uint _n_crt_strip_hits;                          ///< Number of CRT strip hits
@@ -542,6 +622,8 @@ private:
   int _sr_run, _sr_subrun;
   double _sr_begintime, _sr_endtime;
   double _sr_pot; ///< POTs in each subrun
+
+  double _electron_vel;
 
   int _tpc_num;
   int _plane_num;
@@ -879,6 +961,8 @@ void Hitdumper::analyze(const art::Event& evt)
       	const geo::Point_t start = crttrack->Start();
 	const geo::Point_t end   = crttrack->End();
 
+	if(crttrack->Ts0()<-2500 || crttrack->Ts0()>-500) continue;    
+	if(abs(crttrack->ToF()-(crttrack->Length()/29.9792))>15) continue;
 	if(Cut_NS_Function_Diffusion(start.X(),start.Z(),end.X(),end.Z())){
 	  _crt_track_pes.push_back(crttrack->PE());
 	  _crt_track_t0.push_back(crttrack->Ts0());
@@ -1244,110 +1328,63 @@ void Hitdumper::analyze(const art::Event& evt)
       }//if one hit per channel
     }// end loop over waveforms
 
+    
+    std::vector<TimeWindow> timeWindows = {{400, 530, "window1"},{530, 660, "window2"},{660, 790, "window3"},{790, 920, "window4"},{920, 1050, "window5"},{1050, 1180, "window6"},{1180, 1310, "window7"},{1310, 1440, "window8"},{1440, 1570, "window9"},{1570, 1700, "window10"},{1700, 1830, "window11"},{1830, 1960, "window12"},{1960, 2090, "window13"},{2090, 2220, "window14"},{2220, 2350, "window15"},{2350, 2480, "window16"},{2480, 2610, "window17"},{2610, 2740, "window18"},{2740, 2870, "window19"},{2870, 3000, "window20"}
+    };
+
+    for (const auto& window : timeWindows) {
+      std::vector<TH1D*> temp_histograms;
 
     for (const auto &entry : waveform_adc_map) {
       int wave_num = entry.first; // The current waveform number
       const std::vector<double> &adc_vals = entry.second;
       const std::vector<double> &time_vals = waveform_time_map[wave_num];
-      const std::vector<int> &wire_nums = waveform_wire_map[wave_num];
-      const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
-      const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
+      // const std::vector<int> &wire_nums = waveform_wire_map[wave_num];
+      // const std::vector<int> &channel_nums = waveform_channel_number[wave_num];
+      // const std::vector<int> &waveform_nums = waveform_number_map[wave_num];
       const std::vector<int> &hit_times = waveform_hit_time[wave_num];
-
-
-      if(_plane_num==2){
-	//	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
-	//	double area_under_curve = CalculateAreaUnderCurve(adc_vals, time_vals);
-	
-	// If no data, skip this waveform
-	if (adc_vals.empty() || time_vals.empty()) {
-	  continue;
-	}
-	
-	if (HasDoublePeakFeature(adc_vals, 10.0)){
-	  continue;
-	}
-	
-	double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
-	
-	if (max_adc > 130) {
-	  continue;
-	}
-	/*
+          
+      /*******************hit quality cuts****************************/
+      //	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeCollection(adc_vals, time_vals);      
+      //	double area_under_curve = CalculateAreaUnderCurve(adc_vals, time_vals);
+      
+      // If no data, skip this waveform
+      if (adc_vals.empty() || time_vals.empty())continue;
+      if (HasDoublePeakFeature(adc_vals, 10.0))  continue;
+      double max_adc = *std::max_element(adc_vals.begin(), adc_vals.end());
+      if (max_adc > 130)continue;
+      /*
 	if (area_under_curve > 7.35 * amplitude + 250) {
-	  continue;
+	continue;
 	}
 	if (half_width < 4.5 || half_width > 10) {
-	  continue;
+	continue;
 	}
-	*/
-      _time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
-      _adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
-      _wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
-      _channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
-      _waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
-      _hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
+      */
+      /********************hit quality cuts ************************/
+
+      if (hit_times[0] > window.low && hit_times[0] < window.high && _plane_num ==2) {
+
+	int nBins = adc_vals.size();
+	TH1D* hist = new TH1D(
+			      Form("waveform_%d_%s", wave_num, window.label.c_str()),
+			      Form("Waveform %d (%s);Time index;ADC (pedestal-subtracted)",
+				   wave_num, window.label.c_str()),
+			      nBins, 0, nBins
+			      );
+
+	// Fill the histogram
+	for (size_t k = 0; k < adc_vals.size(); k++)
+	  hist->SetBinContent(k + 1, adc_vals[k]);
+
+	temp_histograms.push_back(hist);
       }
-
-      else if(_plane_num==1){
-	auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeInduction(adc_vals, time_vals);
-        double area_under_curve = CalculateDownPeakArea(adc_vals, time_vals);
-
-        // If no data, skip this waveform                                                                                                                                                                             
-        if (adc_vals.empty() || time_vals.empty()) {
-          continue;
-        }
-
-        double max_adc = *std::min_element(adc_vals.begin(), adc_vals.end());
-
-        if (max_adc < -90) {
-          continue;
-        }
-        if (area_under_curve > -5. * amplitude + 840) {
-          continue;
-        }
-        if (half_width < 4.5 || half_width > 8) {
-          continue;
-        }
-
-	_time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
-	_adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
-	_wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
-	_channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
-	_waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
-	_hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
-      }
-
-      else if(_plane_num==0){
-	  auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitudeInduction(adc_vals, time_vals);
-	  double area_under_curve = CalculateDownPeakArea(adc_vals, time_vals);
-
-
-	  if (adc_vals.empty() || time_vals.empty()) {
-	    continue;
-	  }
-
-	  double max_adc = *std::min_element(adc_vals.begin(), adc_vals.end());
-
-	  if (max_adc < -130) {
-	    continue;
-	  }
-	  if (area_under_curve > -7.85 * amplitude + 1800) {
-	    continue;
-	  }
-	  if (half_width < 4.5 || half_width > 10) {
-	    continue;
-	  }
-
-	  _time_for_waveform.insert(_time_for_waveform.end(), time_vals.begin(), time_vals.end());
-	  _adc_on_wire.insert(_adc_on_wire.end(), adc_vals.begin(), adc_vals.end());
-	  _wire_number.insert(_wire_number.end(), wire_nums.begin(), wire_nums.end());
-	  _channel_number.insert(_channel_number.end(), channel_nums.begin(), channel_nums.end());
-	  _waveform_number.insert(_waveform_number.end(), waveform_nums.begin(), waveform_nums.end());
-	  _hit_time.insert(_hit_time.end(), hit_times.begin(), hit_times.end());
-	}
-      
     }
+
+    // Store the histograms for this event and time window
+    histogramsByWindow[window.label].push_back(temp_histograms);
+    }
+
   }// end if fCheckTrasparency
 
 
@@ -1564,6 +1601,95 @@ void Hitdumper::analyze(const art::Event& evt)
 
 }
 
+void Hitdumper::endJob() {
+  art::ServiceHandle<art::TFileService> tfs;
+  fTree2 = tfs->make<TTree>("diffusion", "Average waveforms by hit time");
+
+  int nBins = 41;
+  double avg_bin_contents[41];
+  double avg_half_width = -1.0;
+  double avg_amplitude = -1.0;
+  double window_lower = -1.0;
+  double window_upper = -1.0;
+  TObjString* window_label = nullptr;
+  int nWaveforms = 0;
+
+  fTree2->Branch("window_label", "TObjString", &window_label);
+  fTree2->Branch("window_lower", &window_lower, "window_lower/D");
+  fTree2->Branch("window_upper", &window_upper, "window_upper/D");
+  fTree2->Branch("nWaveforms", &nWaveforms, "nWaveforms/I");
+  fTree2->Branch("avg_bin_contents", avg_bin_contents, Form("avg_bin_contents[%d]/D", nBins));
+  fTree2->Branch("avg_half_width", &avg_half_width, "avg_half_width/D");
+  fTree2->Branch("avg_amplitude", &avg_amplitude, "avg_amplitude/D");
+
+  std::vector<TimeWindow> timeWindows = {
+    {400, 530, "window1"},
+    {530, 660, "window2"},
+    {660, 790, "window3"},
+    {790, 920, "window4"},
+    {920, 1050, "window5"},
+    {1050, 1180, "window6"},
+    {1180, 1310, "window7"},
+    {1310, 1440, "window8"},
+    {1440, 1570, "window9"},
+    {1570, 1700, "window10"},
+    {1700, 1830, "window11"},
+    {1830, 1960, "window12"},
+    {1960, 2090, "window13"},
+    {2090, 2220, "window14"},
+    {2220, 2350, "window15"},
+    {2350, 2480, "window16"},
+    {2480, 2610, "window17"},
+    {2610, 2740, "window18"},
+    {2740, 2870, "window19"},
+    {2870, 3000, "window20"}
+  };
+
+  std::map<std::string, TimeWindow> timeWindowsMap;
+  for (const auto& w : timeWindows) {
+    timeWindowsMap[w.label] = w;
+  }
+
+  for (const auto& win : timeWindows) {
+    const std::string& label = win.label;
+
+    // Check that this window exists in the map
+    auto it = histogramsByWindow.find(label);
+    if (it == histogramsByWindow.end()) continue;
+
+    const auto& histograms = it->second;
+
+
+    window_label = new TObjString(win.label.c_str());
+    window_lower = win.low;
+    window_upper = win.high;
+
+    nWaveforms = 0;
+    for (const auto& eventHistograms : histograms)
+      nWaveforms += eventHistograms.size();
+
+    std::cout << " Window " << label
+              << " (" << window_lower << "–" << window_upper << " ticks)"
+              << " has " << nWaveforms << " contributing waveforms." << std::endl;
+
+   TH1D* averageHistogram = CalculateAverageHistogram(histograms, nBins);
+
+    for (int i = 0; i < nBins; ++i)
+      avg_bin_contents[i] = averageHistogram->GetBinContent(i + 1);
+    auto [half_width, amplitude] = CalculateHalfWidthHeightAndAmplitude(averageHistogram);
+   
+ 
+    avg_half_width = half_width;
+    avg_amplitude  = amplitude;
+
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "   ↳ Amplitude: " << avg_amplitude
+              << ", Half-width: " << avg_half_width << std::endl;
+
+    fTree2->Fill();
+  }
+}
+
 void Hitdumper::beginJob()
 {
   // Implementation of optional member function here.
@@ -1598,15 +1724,15 @@ void Hitdumper::beginJob()
 
 
   if (fcheckTransparency) {
-    fTree->Branch("adc_count", &_adc_count,"adc_count/I");
-    fTree->Branch("waveform_number", &_waveform_number);
-    fTree->Branch("time_for_waveform",&_time_for_waveform);
-    fTree->Branch("adc_on_wire", &_adc_on_wire);
-    fTree->Branch("waveform_integral", &_waveform_integral);
-    fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
-    fTree->Branch("wire_number", &_wire_number);
-    fTree->Branch("channel_number", &_channel_number);
-    fTree->Branch("hit_time", &_hit_time); 
+    //    fTree->Branch("adc_count", &_adc_count,"adc_count/I");
+    // fTree->Branch("waveform_number", &_waveform_number);
+    // fTree->Branch("time_for_waveform",&_time_for_waveform);
+    // fTree->Branch("adc_on_wire", &_adc_on_wire);
+    // fTree->Branch("waveform_integral", &_waveform_integral);
+    // fTree->Branch("adc_count_in_waveform", &_adc_count_in_waveform);
+    //fTree->Branch("wire_number", &_wire_number);
+    // fTree->Branch("channel_number", &_channel_number);
+    //fTree->Branch("hit_time", &_hit_time); 
 
   }
 

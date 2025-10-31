@@ -37,6 +37,9 @@ private:
   double fLengthMin;   // if above is true, then this is minimum length in the active volume, in cm
   bool fVerbose;
   std::string fHitsModuleLabel;     ///< Label for Hit dataproduct (to be set via fcl)
+  bool fTPCPos;
+  bool fTPCNeg;
+  int _tpc_num;
   int _plane_num;
   int _time_window;
   int _max_tpc_hits;
@@ -69,6 +72,9 @@ CRTTrackFilter::CRTTrackFilter(fhicl::ParameterSet const& p) : EDFilter{p} {
   fLengthMin           = p.get<double>("LengthMin",300.);
   fVerbose             = p.get<bool>("Verbose",false);
   fHitsModuleLabel     = p.get<std::string>("HitsModuleLabel");
+  fTPCPos              = p.get<bool>("TPCPos",true);
+  fTPCNeg              = p.get<bool>("TPCNeg",false);
+  _tpc_num = p.get<int>("TPCNum", 0);
   _plane_num = p.get<int>("PlaneNum", 2);
   _time_window = p.get<int>("TimeWindow", 175);
   _max_tpc_hits=p.get<int>("MaxTPCHits",800);
@@ -151,6 +157,13 @@ bool CRTTrackFilter::filter(art::Event& e) {
       std::cout << "    North point: (" << x_N << ", " << y_N << ", " << z_N << ")" << std::endl;
     }
     
+    if(fTPCPos){
+      if(x_N < 0) continue;
+    }
+    if(fTPCNeg){
+      if(x_N > 0) continue;
+    } 
+
     // Calculate (signed) difference between north and south endpoints of the CRT track
     double Delta_x = x_N-x_S;
     double Delta_y = y_N-y_S;
@@ -242,7 +255,7 @@ bool CRTTrackFilter::filter(art::Event& e) {
   bool good_tpc=false;
   int hit_counter=0;
    for (int ihit = 0; ihit < _nhits; ++ihit) {
-     if ( _hit_plane[ihit] == _plane_num &&  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower) {
+     if (_hit_tpc[ihit] == _tpc_num && _hit_plane[ihit] == _plane_num &&  _hit_peakT[ihit] < time_cut_upper && _hit_peakT[ihit] > time_cut_lower) {
        ++hit_counter;
     }
    }
