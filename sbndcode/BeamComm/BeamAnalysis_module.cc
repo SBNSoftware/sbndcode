@@ -42,6 +42,8 @@
 
 #include "sbndcode/Timing/SBNDRawTimingObj.h"
 #include "sbnobj/SBND/Timing/DAQTimestamp.hh"
+#include "sbnobj/SBND/Timing/TimingInfo.hh"
+#include "sbnobj/SBND/Timing/FrameShiftInfo.hh"
 #include "sbnobj/SBND/CRT/CRTEnums.hh"
 #include "sbnobj/SBND/CRT/CRTStripHit.hh"
 #include "sbnobj/SBND/CRT/CRTCluster.hh"
@@ -120,11 +122,11 @@ private:
     std::vector<uint64_t> _tdc_ch4_utc;
 
     // Frame stuff
-    //double _frame_tdc_crtt1;
-    //double _frame_tdc_bes;
-    //double _frame_tdc_rwm;
-    //double _frame_hlt_crtt1;
-    //double _frame_hlt_gate;
+    double _frame_tdc_crtt1;
+    double _frame_tdc_bes;
+    double _frame_tdc_rwm;
+    double _frame_hlt_crtt1;
+    double _frame_hlt_gate;
 
     // Ptb stuff
     std::vector<uint64_t> _ptb_hlt_trigger;
@@ -293,11 +295,11 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
     // More initializers here.
 {
     fTdcDecodeLabel = p.get<art::InputTag>("TdcDecodeLabel", "tdcdecoder");
-    //fFrameLabel = p.get<art::InputTag>("FrameLabel", "frameshift");
+    fFrameLabel = p.get<art::InputTag>("FrameLabel", "frameshift");
     fPtbDecodeLabel = p.get<art::InputTag>("PtbDecodeLabel", "ptbdecoder");
     fCrtSpacePointLabel = p.get<art::InputTag>("CrtSpacePointLabel", "crtspacepoints");
     fCrtTrackLabel = p.get<art::InputTag>("CrtTrackLabel", "crttracks");
-    fTrackLabel = p.get<art::InputTag>("TrackLabel","pandoraSCE");
+    fTrackLabel = p.get<art::InputTag>("TrackLabel","pandoraTrack");
     fCRTSpacePointMatchingModuleLabel = p.get<art::InputTag>("CRTSpacePointMatchingModuleLabel", "crtspacepointmatchingSCE");
     fCRTTrackMatchingModuleLabel      = p.get<art::InputTag>("CRTTrackMatchingModuleLabel", "crttrackmatchingSCE");
     fPmtTimingLabel = p.get<art::InputTag>("fPmtTimingLabel", "pmtdecoder");
@@ -305,12 +307,12 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
     fOpFlashLabels = p.get<std::vector<art::InputTag>>("OpFlashLabel", {"opflashtpc0","opflashtpc1"});
     fPmtMetricLabels = p.get<std::vector<art::InputTag>>("PmtMetricLabels", {"pmtmetriccrossingmuon", "pmtmetricbnbzero", "pmtmetricbnblight", "pmtmetricoffbeamzero", "pmtmetricoffbeamlight"});
 
-
     fDebugTdc = p.get<bool>("DebugTdc", false);
     fDebugFrame = p.get<bool>("DebugFrame", false);
     fDebugPtb = p.get<bool>("DebugPtb", false);
     fDebugCrtSP = p.get<bool>("DebugCrtSP", false);
     fDebugCrtTrack = p.get<bool>("DebugCrtTrack", false);
+    fDebugCrtMatch = p.get<bool>("DebugCrtMatch", false);
     fDebugPmt = p.get<bool>("DebugPmt", false);
 
     fIncludePtb = p.get<bool>("IncludePtb", true);
@@ -382,29 +384,29 @@ void sbnd::BeamAnalysis::analyze(art::Event const& e)
         } 
     }
     //------------------------------------------------------------//
-    //art::Handle<raw::FrameShiftInfo> frameHandle;
-    //e.getByLabel(fFrameLabel, frameHandle);
+    art::Handle<sbnd::timing::FrameShiftInfo> frameHandle;
+    e.getByLabel(fFrameLabel, frameHandle);
 
-    //if (!frameHandle.isValid()){
-    //    if (fDebugFrame) std::cout << "No FrameShift products found." << std::endl;
-    //}
-    //else{
-    //    raw::FrameShiftInfo const& frame(*frameHandle);
-    //    _frame_tdc_crtt1 = frame.frameTdcCrtt1;
-    //    _frame_tdc_bes = frame.frameTdcBes;
-    //    _frame_tdc_rwm = frame.frameTdcRwm;
-    //    _frame_hlt_crtt1 = frame.frameHltCrtt1;
-    //    _frame_hlt_gate = frame.frameHltBeamGate;
+    if (!frameHandle.isValid()){
+        if (fDebugFrame) std::cout << "No FrameShift products found." << std::endl;
+    }
+    else{
+        sbnd::timing::FrameShiftInfo const& frame(*frameHandle);
+        _frame_tdc_crtt1 = frame.FrameTdcCrtt1();
+        _frame_tdc_bes = frame.FrameTdcBes();
+        _frame_tdc_rwm = frame.FrameTdcRwm();
+        _frame_hlt_crtt1 = frame.FrameHltCrtt1();
+        _frame_hlt_gate = frame.FrameHltBeamGate();
 
-    //    if (fDebugFrame){
-    //        std::cout << "Frame Shift:" << std::endl;
-    //        std::cout << std::setprecision(9) << "  Tdc Crt T1 = " << _frame_tdc_crtt1 << std::endl;
-    //        std::cout << std::setprecision(9) << "  Tdc Bes = " << _frame_tdc_bes << std::endl;
-    //        std::cout << std::setprecision(9) << "  Tdc Rwm = " << _frame_tdc_rwm << std::endl;
-    //        std::cout << std::setprecision(9) << "  Hlt Crt T1 = " << _frame_hlt_crtt1 << std::endl;
-    //        std::cout << std::setprecision(9) << "  Hlt Gate = " << _frame_hlt_gate << std::endl;
-    //    }
-    //}
+        if (fDebugFrame){
+            std::cout << "Frame Shift:" << std::endl;
+            std::cout << std::setprecision(9) << "  Tdc Crt T1 = " << _frame_tdc_crtt1 << std::endl;
+            std::cout << std::setprecision(9) << "  Tdc Bes = " << _frame_tdc_bes << std::endl;
+            std::cout << std::setprecision(9) << "  Tdc Rwm = " << _frame_tdc_rwm << std::endl;
+            std::cout << std::setprecision(9) << "  Hlt Crt T1 = " << _frame_hlt_crtt1 << std::endl;
+            std::cout << std::setprecision(9) << "  Hlt Gate = " << _frame_hlt_gate << std::endl;
+        }
+    }
     //------------------------------------------------------------//
     if (fIncludePtb){
         art::Handle<std::vector<raw::ptb::sbndptb>> ptbHandle;
@@ -918,11 +920,11 @@ void sbnd::BeamAnalysis::beginJob()
     fTree->Branch("tdc_ch3_utc", &_tdc_ch3_utc);
     fTree->Branch("tdc_ch4_utc", &_tdc_ch4_utc);
 
-    //fTree->Branch("frame_tdc_crtt1", &_frame_tdc_crtt1);
-    //fTree->Branch("frame_tdc_bes", &_frame_tdc_bes);
-    //fTree->Branch("frame_tdc_rwm", &_frame_tdc_rwm);
-    //fTree->Branch("frame_hlt_crtt1", &_frame_hlt_crtt1);
-    //fTree->Branch("frame_hlt_gate", &_frame_hlt_gate);
+    fTree->Branch("frame_tdc_crtt1", &_frame_tdc_crtt1);
+    fTree->Branch("frame_tdc_bes", &_frame_tdc_bes);
+    fTree->Branch("frame_tdc_rwm", &_frame_tdc_rwm);
+    fTree->Branch("frame_hlt_crtt1", &_frame_hlt_crtt1);
+    fTree->Branch("frame_hlt_gate", &_frame_hlt_gate);
 
     if (fIncludePtb){
         fTree->Branch("ptb_hlt_trigger", &_ptb_hlt_trigger);
@@ -1074,11 +1076,11 @@ void sbnd::BeamAnalysis::ResetEventVars()
     _tdc_ch3_utc.clear();
     _tdc_ch4_utc.clear();
 
-    //_frame_tdc_crtt1 = 0;
-    //_frame_tdc_bes = 0;
-    //_frame_tdc_rwm = 0;
-    //_frame_hlt_crtt1 = 0;
-    //_frame_tdc_rwm = 0;
+    _frame_tdc_crtt1 = 0;
+    _frame_tdc_bes = 0;
+    _frame_tdc_rwm = 0;
+    _frame_hlt_crtt1 = 0;
+    _frame_tdc_rwm = 0;
 
     if (fIncludePtb){
         _ptb_hlt_trigger.clear();
