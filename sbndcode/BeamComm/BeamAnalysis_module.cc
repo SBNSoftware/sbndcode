@@ -299,7 +299,7 @@ sbnd::BeamAnalysis::BeamAnalysis(fhicl::ParameterSet const& p)
     fPtbDecodeLabel = p.get<art::InputTag>("PtbDecodeLabel", "ptbdecoder");
     fCrtSpacePointLabel = p.get<art::InputTag>("CrtSpacePointLabel", "crtspacepoints");
     fCrtTrackLabel = p.get<art::InputTag>("CrtTrackLabel", "crttracks");
-    fTrackLabel = p.get<art::InputTag>("TrackLabel","pandoraTrack");
+    fTrackLabel = p.get<art::InputTag>("TrackLabel","pandoraSCETrack");
     fCRTSpacePointMatchingModuleLabel = p.get<art::InputTag>("CRTSpacePointMatchingModuleLabel", "crtspacepointmatchingSCE");
     fCRTTrackMatchingModuleLabel      = p.get<art::InputTag>("CRTTrackMatchingModuleLabel", "crttrackmatchingSCE");
     fPmtTimingLabel = p.get<art::InputTag>("fPmtTimingLabel", "pmtdecoder");
