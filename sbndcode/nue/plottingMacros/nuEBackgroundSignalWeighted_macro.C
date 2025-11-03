@@ -101,6 +101,100 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
     };    
 }
 
+void styleDrawSignal(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
+    hists.canvas->cd();
+    hists.canvas->SetTickx();
+    hists.canvas->SetTicky();
+
+    hists.currentSignal->SetLineWidth(2);
+    hists.currentSignal->SetLineColor(kBlue+1);
+    hists.ubooneSignal->SetLineWidth(2);
+    hists.ubooneSignal->SetLineColor(kBlue-7);
+    hists.nuESignal->SetLineWidth(2);
+    hists.nuESignal->SetLineColor(kAzure+5);
+
+    if((ymin != 999) && (ymax != 999)) hists.currentSignal->GetYaxis()->SetRangeUser(ymin, ymax);
+    if((xmin != 999) && (xmax != 999)) hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
+
+    double maxYValue = std::max({hists.currentSignal->GetMaximum(), hists.ubooneSignal->GetMaximum(), hists.nuESignal->GetMaximum()});
+    double yminVal;
+    if((ymin == 999) && (ymax == 999)){
+        yminVal = 0;
+        double ymaxVal = (maxYValue * 1.1);
+        hists.currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+    }
+
+    hists.currentSignal->Draw("hist");
+    hists.ubooneSignal->Draw("histsame");
+    hists.nuESignal->Draw("histsame");
+
+    hists.currentSignal->SetStats(0);
+    hists.currentSignal->SetXaxis()->SetTickLength(0.04);
+    hists.currentSignal->GetYaxis()->SetTickLength(0.03);
+    hists.currentSignal->GetXaxis()->SetTickSize(0.02);
+    hists.currentSignal->GetYaxis()->SetTickSize(0.02);
+
+    double Lxmin = 0;
+    double Lxmax = 0;
+    double Lymin = 0;
+    double Lymax = 0;
+
+    if(legendLocation == "topRight"){
+        Lxmin = 0.48;
+        Lymax = 0.863;
+        Lxmax = 0.87;
+        Lymin = 0.640;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.863;
+        Lxmax = 0.52;
+        Lymin = 0.640;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.48;
+        Lymax = 0.36;
+        Lxmax = 0.87;
+        Lymin = 0.137;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.36;
+        Lxmax = 0.52;
+        Lymin = 0.137;
+    }
+
+    auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
+
+    legend->AddEntry(hists.currentSignal, "Pandora BDT SBND (without Refinement)", "f");
+    legend->AddEntry(hists.ubooneSignal, "Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+    legend->AddEntry(hists.nuESignal, "Pandora Deep Learning: SBND Nu+E Tune", "f");
+    legend->SetTextSize(0.0225);
+    legend->SetMargin(0.12);
+    legend->Draw();
+    
+    if(drawLine){
+        TLine* line = new TLine(1.022, yminVal, 1.022, hists.currentSignal->GetMaximum());
+        line->SetLineColor(kGray+2);
+        line->SetLineStyle(2);
+        line->SetLineWidth(2);
+        line->Draw("same");
+
+        TLatex* latex = nullptr;    
+        // Labels line on the left
+        double ymaxValLine = maxYValue*0.95;
+        if(*linePos == 0){
+            latex = new TLatex(1.022 - 0.2, ymaxValLine, "2m_{e}");
+        } else{
+            latex = new TLatex(1.022 + 0.2, ymaxValLine, "2m_{e}");
+        }
+
+        latex->SetTextSize(0.035); 
+        latex->SetTextAlign(11);
+        latex->Draw("same");
+    }
+
+    canvas->SaveAs(filename);
+}
+
+
 void nuEBackgroundSignalWeighted_macro(){
 
     TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/NuEAnalyserOutput.root");
@@ -303,9 +397,12 @@ void nuEBackgroundSignalWeighted_macro(){
         true_recoilElectron_struct trueElectron;
         
         for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
+            if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
             if(truth_recoilElectronPDG->at(i) != -999999){
                 // There is a true recoil electron in the event
-                
+                if(DLCurrent == 2) trueETheta2.currentSignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalCurrent); 
+                if(DLCurrent == 0) trueETheta2.ubooneSignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalUboone); 
+                if(DLCurrent == 5) trueETheta2.nuESignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalNuE); 
             }
         }
 
