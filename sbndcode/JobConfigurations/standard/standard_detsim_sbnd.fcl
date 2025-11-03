@@ -25,6 +25,7 @@
 #include "simulationservices_sbnd.fcl"
 #include "messages_sbnd.fcl"
 #include "detsim_drops.fcl"
+#include "crtgeoservice_sbnd.fcl"
 
 #
 # modules
@@ -35,7 +36,6 @@
 #include "opdetdigitizer_sbnd.fcl"
 #include "rootoutput_sbnd.fcl"
 
-
 process_name: DetSim
 
 services:
@@ -44,6 +44,7 @@ services:
   @table::sbnd_detsim_services
   FileCatalogMetadata: @local::sbnd_file_catalog_mc
   AuxDetGeometry: @local::sbnd_auxdetgeo
+  CRTGeoService: @local::crtgeoservice_sbnd
 }
 
 
@@ -92,9 +93,4 @@ outputs:
                     ]
   }
 }
-
-# uncomment below 4 lines to run DNN ROI finding SP
-# physics.producers.simtpc2d.wcls_main.outputers: ["wclsDepoFluxWriter:postdrift", "wclsFrameSaver:spsaver", "wclsFrameSaver:dnnsaver"] # "wclsFrameSaver:simdigits" <- by default, do not save RawDigits. Uncomment this line to save RawDigits and set
-# physics.producers.simtpc2d.wcls_main.structs.use_dnnroi: true
-# physics.producers.simtpc2d.wcls_main.structs.nchunks: 2 # should match training config
-# physics.producers.simtpc2d.wcls_main.structs.tick_per_slice: 4 # should match training config
+physics.producers.simtpc2d.wcls_main.structs.enableLowROIThresholds: false

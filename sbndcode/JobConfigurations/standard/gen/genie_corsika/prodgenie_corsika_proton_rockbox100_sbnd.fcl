@@ -1,0 +1,3 @@
+#include "prodgenie_corsika_proton_rockbox_sbnd.fcl"
+
+physics.filters.dirtfilter.EnergyDeposit: 100 # MeV

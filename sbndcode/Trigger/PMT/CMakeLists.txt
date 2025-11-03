@@ -18,14 +18,10 @@ set(
                     art_root_io::TFileService_service
 		                artdaq_core::artdaq-core_Data
                     artdaq_core::artdaq-core_Utilities
+                    sbnobj::SBND_Trigger
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Overlays_Common
                     sbndaq_artdaq_core::sbndaq-artdaq-core_Obj_SBND
-		                sbndcode_CRTUtils
-                    sbnobj::Common_CRT
-		                sbnobj::SBND_CRT
-                    sbndcode_CRTUtils
-                    sbndcode_GeoWrappers
                     art::Framework_Services_Optional_RandomNumberGenerator_service
                     canvas::canvas
                     messagefacility::MF_MessageLogger
@@ -34,7 +30,7 @@ set(
                     CLHEP::CLHEP
                     ROOT::Core
                     ROOT::Tree
-)
+		  )
 
 cet_build_plugin(pmtArtdaqFragmentProducer art::module SOURCE pmtArtdaqFragmentProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})
 cet_build_plugin(pmtSoftwareTriggerProducer art::module SOURCE pmtSoftwareTriggerProducer_module.cc LIBRARIES ${MODULE_LIBRARIES})

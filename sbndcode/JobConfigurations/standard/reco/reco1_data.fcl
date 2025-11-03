@@ -4,6 +4,7 @@
 #include "sbnd_flashfinder_deco_data.fcl"
 #include "crt_channel_map_service.fcl"
 #include "crt_calib_service.fcl"
+#include "wfalign_sbnd_data.fcl"
 #include "standard_reco1_sbnd.fcl"
 
 services:
@@ -12,6 +13,7 @@ services:
     @table::sbnd_data_services
     CRTChannelMapService: @local::crt_channel_map_standard
     CRTCalibService:      @local::crt_calib_service
+    CRTGeoService:        @local::crtgeoservice_data_sbnd
 }
 
 physics.producers:
@@ -22,6 +24,7 @@ physics.producers:
     crtclustering:  @local::crtclusterproducer_data_sbnd
     crtspacepoints: @local::crtspacepointproducer_data_sbnd
     crttracks:      @local::crttrackproducer_data_sbnd
+    wfalign: @local::wfalign_data
     opdecopmt: @local::SBNDOpDeconvolutionPMT_data
     ophitpmt:  @local::SBNDDecoOpHitFinderPMT_data
     opflashtpc0:   @local::SBNDDecoSimpleFlashTPC0_data
@@ -29,18 +32,9 @@ physics.producers:
 }
 
 physics.reco1: [sptpc2d, gaushit, numberofhitsfilter, cluster3d, crtstrips, 
-    crtclustering, crtspacepoints, crttracks, opdecopmt, ophitpmt, opflashtpc0, opflashtpc1]
+    crtclustering, crtspacepoints, crttracks, wfalign, opdecopmt, ophitpmt, opflashtpc0, opflashtpc1]
 physics.ana: [superadata]
 
 outputs.out1.SelectEvents: [ "reco1" ]
 
 physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:gauss"
-
-# uncomment below 4 lines to run DNN ROI finding SP
-#physics.producers.sptpc2d.wcls_main.outputers: ["wclsFrameSaver:spsaver" , "wclsFrameSaver:dnnsaver"]
-#physics.producers.sptpc2d.wcls_main.structs.use_dnnroi: true
-#physics.producers.sptpc2d.wcls_main.structs.nchunks: 2 # should match training config
-#physics.producers.sptpc2d.wcls_main.structs.tick_per_slice: 4 # should match training config
-
-# uncomment below line to run DNN ROI finding SP for reco
-#physics.producers.gaushit.CalDataModuleLabel: "sptpc2d:dnnsp"

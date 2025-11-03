@@ -19,6 +19,7 @@
 #include "pmtskim_sbnd.fcl"
 
 #include "SBNDCVNMapper.fcl"
+#include "blipreco_configs.fcl"
 
 BEGIN_PROLOG
 
@@ -33,16 +34,19 @@ sbnd_reco2_producers:{
     pandoraShowerSBN:    @local::sbnd_sbn_pandoraModularShowerCreation
     pandoraCalo:         @local::sbnd_gnewcalomc
     pandoraPid:          @local::sbnd_chi2pid
-
+    pandoraLikePid:      @local::sbnd_likepid
 
     pandoraSCECalo:      @local::sbnd_gnewcalomc
     pandoraSCEPid:       @local::sbnd_chi2pid
+    pandoraSCELikePid:   @local::sbnd_likepid
 
     pandoraCaloData:     @local::sbnd_gnewcalodata
     pandoraPidData:      @local::sbnd_chi2pid
+    pandoraLikePidData:  @local::sbnd_likepid
 
     pandoraSCECaloData:     @local::sbnd_gnewcalodata
     pandoraSCEPidData:      @local::sbnd_chi2pid
+    pandoraSCELikePidData:  @local::sbnd_likepid
 
     ### SCE-aware pandora:
     pandoraSCE:          @local::scecorrection
@@ -80,6 +84,12 @@ sbnd_reco2_producers:{
     ### CVN
     cvn:                 @local::standard_sbndcvnevaluatorslc
     cvnSCE:              @local::standard_sbndcvnevaluatorslc
+
+    ### blip
+    blipreco: {
+      module_type: "BlipRecoProducer"
+      BlipAlg:     @local::sbnd_blipalg
+    }
 }
 
 sbnd_reco2_producer_sequence: [  
@@ -90,13 +100,14 @@ sbnd_reco2_producer_sequence: [
     , pandoraShowerSBN
     , pandoraCalo
     , pandoraPid
+    , pandoraLikePid
     , crtveto
     , crtspacepointmatching
     , crttrackmatching
     , fmatch
     , fmatchop
-    , fmatchara
-    , fmatchopara
+    #, fmatchara
+    #, fmatchopara
     , caloskimCalorimetry
     , opt0finder
     , tpcpmtbarycentermatching
@@ -106,16 +117,18 @@ sbnd_reco2_producer_sequence: [
     , pandoraSCEShowerSBN
     , pandoraSCECalo
     , pandoraSCEPid
+    , pandoraSCELikePid
     , crtspacepointmatchingSCE
     , crttrackmatchingSCE
     , fmatchSCE
     , fmatchopSCE
-    , fmatcharaSCE
-    , fmatchoparaSCE
+    #, fmatcharaSCE
+    #, fmatchoparaSCE
     , opt0finderSCE
     , tpcpmtbarycentermatchingSCE
     , cvn
     , cvnSCE
+    , blipreco
 ]
 
 #FIXME override the producer labels.  This should really happen in the module's config fcl
@@ -125,6 +138,8 @@ sbnd_reco2_producers.pandoraCalo.FieldDistortionEfield:          	 false
 sbnd_reco2_producers.pandoraCalo.TrackIsFieldDistortionCorrected:	 false
 sbnd_reco2_producers.pandoraPid.TrackModuleLabel:                   "pandoraTrack"
 sbnd_reco2_producers.pandoraPid.CalorimetryModuleLabel:             "pandoraCalo"
+sbnd_reco2_producers.pandoraLikePid.TrackModuleLabel:               "pandoraTrack"
+sbnd_reco2_producers.pandoraLikePid.CalorimetryModuleLabel:         "pandoraCalo"
 
 sbnd_reco2_producers.pandoraSCECalo.TrackModuleLabel:               "pandoraSCETrack"
 sbnd_reco2_producers.pandoraSCECalo.FieldDistortion:                true
@@ -132,6 +147,8 @@ sbnd_reco2_producers.pandoraSCECalo.FieldDistortionEfield:          true
 sbnd_reco2_producers.pandoraSCECalo.TrackIsFieldDistortionCorrected:true
 sbnd_reco2_producers.pandoraSCEPid.TrackModuleLabel:                   "pandoraSCETrack"
 sbnd_reco2_producers.pandoraSCEPid.CalorimetryModuleLabel:             "pandoraSCECalo"
+sbnd_reco2_producers.pandoraSCELikePid.TrackModuleLabel:               "pandoraSCETrack"
+sbnd_reco2_producers.pandoraSCELikePid.CalorimetryModuleLabel:         "pandoraSCECalo"
 
 sbnd_reco2_producers.pandoraCaloData.TrackModuleLabel:                  "pandoraTrack"
 sbnd_reco2_producers.pandoraCaloData.FieldDistortion:                   false
@@ -139,6 +156,8 @@ sbnd_reco2_producers.pandoraCaloData.FieldDistortionEfield:             false
 sbnd_reco2_producers.pandoraCaloData.TrackIsFieldDistortionCorrected:   false
 sbnd_reco2_producers.pandoraPidData.TrackModuleLabel:                   "pandoraTrack"
 sbnd_reco2_producers.pandoraPidData.CalorimetryModuleLabel:             "pandoraCaloData"
+sbnd_reco2_producers.pandoraLikePidData.TrackModuleLabel:               "pandoraTrack"
+sbnd_reco2_producers.pandoraLikePidData.CalorimetryModuleLabel:         "pandoraCaloData"
 
 sbnd_reco2_producers.pandoraSCECaloData.TrackModuleLabel:                  "pandoraSCETrack"
 sbnd_reco2_producers.pandoraSCECaloData.FieldDistortion:                   true
@@ -146,6 +165,8 @@ sbnd_reco2_producers.pandoraSCECaloData.FieldDistortionEfield:             true
 sbnd_reco2_producers.pandoraSCECaloData.TrackIsFieldDistortionCorrected:   true
 sbnd_reco2_producers.pandoraSCEPidData.TrackModuleLabel:                   "pandoraSCETrack"
 sbnd_reco2_producers.pandoraSCEPidData.CalorimetryModuleLabel:             "pandoraSCECaloData"
+sbnd_reco2_producers.pandoraSCELikePidData.TrackModuleLabel:               "pandoraSCETrack"
+sbnd_reco2_producers.pandoraSCELikePidData.CalorimetryModuleLabel:         "pandoraSCECaloData"
 
 sbnd_reco2_producers.cvn.SliceLabel: "pandora"
 sbnd_reco2_producers.cvn.PFParticleModuleLabel: "pandora"
@@ -184,12 +205,23 @@ sbnd_reco2_analyzers: {
     caloskim: @local::caloskim_nodigits_goldentracks
     crtana:   @local::crtana_sbnd
     pmtskim:  @local::pmtskim_sbnd
+    blipana:{
+  module_type:        "BlipAna"
+  BlipAlg:            @local::sbnd_blipalg
+  SaveTruthInfo:      true
+  SaveTrkInfo:        true
+  SaveHitInfo:        false
+  SaveClustInfo:      true
+  #DebugMode:          true
+  }
+
 }
 
 sbnd_reco2_analyzer_sequence: [
     caloskim
     , pmtskim
     , crtana
+    , blipana
 ]
 
 #FIXME override the analyzer labels.  This should really happen in the module's config fcl
