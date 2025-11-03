@@ -129,7 +129,7 @@ void styleDrawSignal(histGroup_struct hists, double ymin, double ymax, double xm
     hists.nuESignal->Draw("histsame");
 
     hists.currentSignal->SetStats(0);
-    hists.currentSignal->SetXaxis()->SetTickLength(0.04);
+    hists.currentSignal->GetXaxis()->SetTickLength(0.04);
     hists.currentSignal->GetYaxis()->SetTickLength(0.03);
     hists.currentSignal->GetXaxis()->SetTickSize(0.02);
     hists.currentSignal->GetYaxis()->SetTickSize(0.02);
@@ -191,7 +191,7 @@ void styleDrawSignal(histGroup_struct hists, double ymin, double ymax, double xm
         latex->Draw("same");
     }
 
-    canvas->SaveAs(filename);
+    hists.canvas->SaveAs(filename);
 }
 
 
@@ -410,4 +410,7 @@ void nuEBackgroundSignalWeighted_macro(){
 
  
     }
+
+    int drawLine = 1;
+    styleDrawSignal(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_dist.pdf").c_str(), "bottomRight", &drawLine);
 }
