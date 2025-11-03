@@ -194,11 +194,154 @@ void styleDrawSignal(histGroup_struct hists, double ymin, double ymax, double xm
     hists.canvas->SaveAs(filename);
 }
 
+void styleDrawSignalAll(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
+    hists.canvas->cd();
+    hists.canvas->SetTickx();
+    hists.canvas->SetTicky();
+
+    hists.currentCosmic->SetLineWidth(2);
+    hists.currentCosmic->SetLineColor(kPink+9);
+    hists.ubooneCosmic->SetLineWidth(2);
+    hists.ubooneCosmic->SetLineColor(kPink+1);
+    hists.nuECosmic->SetLineWidth(2);
+    hists.nuECosmic->SetLineColor(kPink-2);
+
+    hists.currentSignal->SetLineWidth(2);
+    hists.currentSignal->SetLineColor(kBlue+1);
+    hists.ubooneSignal->SetLineWidth(2);
+    hists.ubooneSignal->SetLineColor(kBlue-7);
+    hists.nuESignal->SetLineWidth(2);
+    hists.nuESignal->SetLineColor(kAzure+5);
+
+    hists.currentSignalFuzzy->SetLineWidth(2);
+    hists.currentSignalFuzzy->SetLineColor(kGreen+3);
+    hists.ubooneSignalFuzzy->SetLineWidth(2);
+    hists.ubooneSignalFuzzy->SetLineColor(kGreen+1);
+    hists.nuESignalFuzzy->SetLineWidth(2);
+    hists.nuESignalFuzzy->SetLineColor(kGreen-7);
+    
+    hists.currentBNB->SetLineWidth(2);
+    hists.currentBNB->SetLineColor(kOrange+7);
+    hists.ubooneBNB->SetLineWidth(2);
+    hists.ubooneBNB->SetLineColor(kOrange+6);
+    hists.nuEBNB->SetLineWidth(2);
+    hists.nuEBNB->SetLineColor(kOrange-5);
+    
+    hists.currentBNBFuzzy->SetLineWidth(2);
+    hists.currentBNBFuzzy->SetLineColor(kViolet+1);
+    hists.ubooneBNBFuzzy->SetLineWidth(2);
+    hists.ubooneBNBFuzzy->SetLineColor(kViolet-7);
+    hists.nuEBNBFuzzy->SetLineWidth(2);
+    hists.nuEBNBFuzzy->SetLineColor(kViolet+4);
+
+    if((ymin != 999) && (ymax != 999)) hists.currentSignal->GetYaxis()->SetRangeUser(ymin, ymax);
+    if((xmin != 999) && (xmax != 999)) hists.currentSignal->GetXaxis()->SetRangeUser(xmin, xmax);
+
+    double maxYValue = std::max({hists.currentSignal->GetMaximum(), hists.ubooneSignal->GetMaximum(), hists.nuESignal->GetMaximum(), hists.currentCosmic->GetMaximum(), hists.ubooneCosmic->GetMaximum(), hists.nuECosmic->GetMaximum(), hists.currentSignalFuzzy->GetMaximum(), hists.ubooneSignalFuzzy->GetMaximum(), hists.nuESignalFuzzy->GetMaximum(), hists.currentBNB->GetMaximum(), hists.ubooneBNB->GetMaximum(), hists.nuEBNB->GetMaximum(), hists.currentBNBFuzzy->GetMaximum(), hists.ubooneBNBFuzzy->GetMaximum(), hists.nuEBNBFuzzy->GetMaximum()});
+    double yminVal;
+    if((ymin == 999) && (ymax == 999)){
+        yminVal = 0;
+        double ymaxVal = (maxYValue * 1.1);
+        hists.currentSignal->GetYaxis()->SetRangeUser(yminVal, ymaxVal);
+    }
+
+    hists.currentSignal->Draw("hist");
+    hists.ubooneSignal->Draw("histsame");
+    hists.nuESignal->Draw("histsame");
+    hists.currentCosmic->Draw("histsame");
+    hists.ubooneCosmic->Draw("histsame");
+    hists.nuECosmic->Draw("histsame");
+    hists.currentSignalFuzzy->Draw("histsame");
+    hists.ubooneSignalFuzzy->Draw("histsame");
+    hists.nuESignalFuzzy->Draw("histsame");
+    hists.currentBNB->Draw("histsame");
+    hists.ubooneBNB->Draw("histsame");
+    hists.nuEBNB->Draw("histsame");
+    hists.currentBNBFuzzy->Draw("histsame");
+    hists.ubooneBNBFuzzy->Draw("histsame");
+    hists.nuEBNBFuzzy->Draw("histsame");
+
+    hists.currentSignal->SetStats(0);
+    hists.currentSignal->GetXaxis()->SetTickLength(0.04);
+    hists.currentSignal->GetYaxis()->SetTickLength(0.03);
+    hists.currentSignal->GetXaxis()->SetTickSize(0.02);
+    hists.currentSignal->GetYaxis()->SetTickSize(0.02);
+
+    double Lxmin = 0;
+    double Lxmax = 0;
+    double Lymin = 0;
+    double Lymax = 0;
+
+    if(legendLocation == "topRight"){
+        Lxmin = 0.67;
+        Lymax = 0.863;
+        Lxmax = 0.87;
+        Lymin = 0.640;
+    } else if(legendLocation == "topLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.863;
+        Lxmax = 0.33;
+        Lymin = 0.640;
+    } else if(legendLocation == "bottomRight"){
+        Lxmin = 0.67;
+        Lymax = 0.36;
+        Lxmax = 0.87;
+        Lymin = 0.137;
+    } else if(legendLocation == "bottomLeft"){
+        Lxmin = 0.13;
+        Lymax = 0.36;
+        Lxmax = 0.33;
+        Lymin = 0.137;
+    }
+
+    auto legend = new TLegend(Lxmin,Lymax,Lxmax,Lymin);
+    legend->AddEntry(hists.currentSignal, "Signal, Pandora BDT SBND (without Refinement)", "f");
+    legend->AddEntry(hists.ubooneSignal, "Signal, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+    legend->AddEntry(hists.nuESignal, "Signal, Pandora Deep Learning: SBND Nu+E Tune", "f");
+    legend->AddEntry(hists.currentSignalFuzzy, "Signal Fuzzy, Pandora BDT SBND (without Refinement)", "f");
+    legend->AddEntry(hists.ubooneSignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+    legend->AddEntry(hists.nuESignalFuzzy, "Signal Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "f");
+    legend->AddEntry(hists.currentBNB, "BNB, Pandora BDT SBND (without Refinement)", "f");
+    legend->AddEntry(hists.ubooneBNB, "BNB, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+    legend->AddEntry(hists.nuEBNB, "BNB, Pandora Deep Learning: SBND Nu+E Tune", "f");
+    legend->AddEntry(hists.currentBNBFuzzy, "BNB Fuzzy, Pandora BDT SBND (without Refinement)", "f");
+    legend->AddEntry(hists.ubooneBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+    legend->AddEntry(hists.nuEBNBFuzzy, "BNB Fuzzy, Pandora Deep Learning: SBND Nu+E Tune", "f");
+    legend->AddEntry(hists.currentCosmic, "Cosmic, Pandora BDT SBND (without Refinement)", "f");
+    legend->AddEntry(hists.ubooneCosmic, "Cosmic, Pandora Deep Learning: #muBooNE/BNB Tune", "f");
+    legend->AddEntry(hists.nuECosmic, "Cosmic, Pandora Deep Learning: SBND Nu+E Tune", "f");
+    legend->SetTextSize(0.01);
+    legend->SetMargin(0.12);
+    legend->Draw();
+    
+    if(drawLine){
+        TLine* line = new TLine(1.022, yminVal, 1.022, hists.currentSignal->GetMaximum());
+        line->SetLineColor(kGray+2);
+        line->SetLineStyle(2);
+        line->SetLineWidth(2);
+        line->Draw("same");
+
+        TLatex* latex = nullptr;    
+        // Labels line on the left
+        double ymaxValLine = maxYValue*0.95;
+        if(*linePos == 0){
+            latex = new TLatex(1.022 - 0.2, ymaxValLine, "2m_{e}");
+        } else{
+            latex = new TLatex(1.022 + 0.2, ymaxValLine, "2m_{e}");
+        }
+
+        latex->SetTextSize(0.035); 
+        latex->SetTextAlign(11);
+        latex->Draw("same");
+    }
+
+    hists.canvas->SaveAs(filename);
+}
 
 void nuEBackgroundSignalWeighted_macro(){
 
     TFile *file = TFile::Open("/exp/sbnd/app/users/coackley/nue/srcs/sbndcode/sbndcode/nue/NuEAnalyserOutput.root");
-    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsNuE/";
+    std::string base_path = "/nashome/c/coackley/nuEBackgroundSignalPlotsWeightsNew/";
 
     if(!file){
         std::cerr << "Error opening the file" << std::endl;
@@ -327,7 +470,6 @@ void nuEBackgroundSignalWeighted_macro(){
     weights.BNBNuE = totalPOTSignalNuE/totalPOTBNBNuE;
     weights.cosmicsNuE = totalPOTSignalNuE/cosmicsPOTNuE;
 
-
     std::cout << "BNB POT Current = " << totalPOTBNBCurrent << ", Uboone = " << totalPOTBNBUboone << ", Nu+E = " << totalPOTBNBNuE << std::endl;
     std::cout << "" << std::endl;
     std::cout << "Signal POT Current = " << totalPOTSignalCurrent << ", Uboone = " << totalPOTSignalUboone << ", Nu+E = " << totalPOTSignalNuE << std::endl;
@@ -391,11 +533,17 @@ void nuEBackgroundSignalWeighted_macro(){
 
     auto trueETheta2 = createHistGroup("trueETheta2", "E_{true}#theta_{true}^{2}", "E_{true}#theta_{true}^{2} (MeV rad^{2})", 32, 0, 4.088);
 
+    auto sliceCompleteness = createHistGroup("sliceCompleteness", "Slice Completeness", "Completeness", 102, 0, 1.02);
+    auto sliceCompletenessDist = createHistGroup("sliceCompletenessDist", "Slice Completeness (Not Weighted)", "Completeness", 102, 0, 1.02);
+    auto slicePurity = createHistGroup("slicePurity", "Slice Purity", "Purity", 102, 0, 1.02);
+    auto slicePurityDist = createHistGroup("slicePurityDist", "Slice Purity (Not Weighted)", "Purity", 102, 0, 1.02);
+    auto sliceCRUMBSScore = createHistGroup("sliceCRUMBSScore", "CRUMBS Score of the Slice", "CRUMBS Score", 25, -1, 1);
+    auto sliceCRUMBSScoreDist = createHistGroup("sliceCRUMBSScoreDist", "CRUMBS Score of the Slice (Not Weighted)", "CRUMBS Score", 25, -1, 1);
+
     for(Long64_t e = 0; e < numEntries; ++e){
         tree->GetEntry(e);
         
-        true_recoilElectron_struct trueElectron;
-        
+        // Looking at the true recoil electron
         for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
             if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
             if(truth_recoilElectronPDG->at(i) != -999999){
@@ -406,11 +554,162 @@ void nuEBackgroundSignalWeighted_macro(){
             }
         }
 
+        double weight = 0;
+        if(signal == 1 && DLCurrent == 2) weight = weights.signalCurrent;
+        if(signal == 2 && DLCurrent == 2) weight = weights.BNBCurrent;
+        if(signal == 3 && DLCurrent == 2) weight = weights.cosmicsCurrent;
+        if(signal == 1 && DLCurrent == 0) weight = weights.signalUboone;
+        if(signal == 2 && DLCurrent == 0) weight = weights.BNBUboone;
+        if(signal == 3 && DLCurrent == 0) weight = weights.cosmicsUboone;
+        if(signal == 1 && DLCurrent == 5) weight = weights.signalNuE;
+        if(signal == 2 && DLCurrent == 5) weight = weights.BNBNuE;
+        if(signal == 3 && DLCurrent == 5) weight = weights.cosmicsNuE;
+
+        // Looking at the reco slices
+        for(size_t j = 0; j < reco_sliceID->size(); ++j){
+            if(reco_sliceID->at(j) != -999999){
+                // There is a reco slice in the event
+                if(reco_sliceCategory->at(j) == 0){
+                    // This is a cosmic slice
+                    if(DLCurrent == 2){
+                        sliceCompleteness.currentCosmic->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.currentCosmic->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.currentCosmic->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.currentCosmic->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.currentCosmic->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.currentCosmic->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 0){
+                        sliceCompleteness.ubooneCosmic->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.ubooneCosmic->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.ubooneCosmic->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.ubooneCosmic->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.ubooneCosmic->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.ubooneCosmic->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 5){
+                        sliceCompleteness.nuECosmic->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.nuECosmic->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.nuECosmic->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.nuECosmic->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.nuECosmic->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.nuECosmic->Fill(reco_sliceScore->at(j));
+                    }
+                } else if(reco_sliceCategory->at(j) == 1){
+                    // This is a signal slice
+                    if(DLCurrent == 2){
+                        sliceCompleteness.currentSignal->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.currentSignal->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.currentSignal->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.currentSignal->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.currentSignal->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.currentSignal->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 0){
+                        sliceCompleteness.ubooneSignal->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.ubooneSignal->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.ubooneSignal->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.ubooneSignal->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.ubooneSignal->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.ubooneSignal->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 5){
+                        sliceCompleteness.nuESignal->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.nuESignal->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.nuESignal->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.nuESignal->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.nuESignal->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.nuESignal->Fill(reco_sliceScore->at(j));
+                    }
+                } else if(reco_sliceCategory->at(j) == 2){
+                    // This is a fuzzy signal slice
+                    if(DLCurrent == 2){
+                        sliceCompleteness.currentSignalFuzzy->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.currentSignalFuzzy->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.currentSignalFuzzy->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.currentSignalFuzzy->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.currentSignalFuzzy->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.currentSignalFuzzy->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 0){
+                        sliceCompleteness.ubooneSignalFuzzy->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.ubooneSignalFuzzy->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.ubooneSignalFuzzy->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.ubooneSignalFuzzy->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.ubooneSignalFuzzy->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.ubooneSignalFuzzy->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 5){
+                        sliceCompleteness.nuESignalFuzzy->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.nuESignalFuzzy->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.nuESignalFuzzy->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.nuESignalFuzzy->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.nuESignalFuzzy->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.nuESignalFuzzy->Fill(reco_sliceScore->at(j));
+                    }
+                } else if(reco_sliceCategory->at(j) == 3){
+                    // This is a BNB slice
+                    if(DLCurrent == 2){
+                        sliceCompleteness.currentBNB->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.currentBNB->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.currentBNB->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.currentBNB->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.currentBNB->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.currentBNB->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 0){
+                        sliceCompleteness.ubooneBNB->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.ubooneBNB->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.ubooneBNB->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.ubooneBNB->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.ubooneBNB->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.ubooneBNB->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 5){
+                        sliceCompleteness.nuEBNB->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.nuEBNB->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.nuEBNB->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.nuEBNB->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.nuEBNB->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.nuEBNB->Fill(reco_sliceScore->at(j));
+                    }
+                } else if(reco_sliceCategory->at(j) == 4){
+                    // This is a fuzzy BNB slice
+                    if(DLCurrent == 2){
+                        sliceCompleteness.currentBNBFuzzy->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.currentBNBFuzzy->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.currentBNBFuzzy->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.currentBNBFuzzy->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.currentBNBFuzzy->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.currentBNBFuzzy->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 0){
+                        sliceCompleteness.ubooneBNBFuzzy->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.ubooneBNBFuzzy->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.ubooneBNBFuzzy->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.ubooneBNBFuzzy->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.ubooneBNBFuzzy->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.ubooneBNBFuzzy->Fill(reco_sliceScore->at(j));
+                    } else if(DLCurrent == 5){
+                        sliceCompleteness.nuEBNBFuzzy->Fill(reco_sliceCompleteness->at(j), weight);
+                        slicePurity.nuEBNBFuzzy->Fill(reco_slicePurity->at(j), weight);
+                        sliceCRUMBSScore.nuEBNBFuzzy->Fill(reco_sliceScore->at(j), weight);
+                        sliceCompletenessDist.nuEBNBFuzzy->Fill(reco_sliceCompleteness->at(j));
+                        slicePurityDist.nuEBNBFuzzy->Fill(reco_slicePurity->at(j));
+                        sliceCRUMBSScoreDist.nuEBNBFuzzy->Fill(reco_sliceScore->at(j));
+                    }
+                }
+
+                // aaaaa
+            }
+        
+        }
+
         
 
  
     }
 
     int drawLine = 1;
-    styleDrawSignal(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_dist.pdf").c_str(), "bottomRight", &drawLine);
+    int left = 0;
+    int right = 1;
+
+    styleDrawSignal(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_weighted.pdf").c_str(), "bottomRight", &drawLine, &right);
+    styleDrawSignalAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(sliceCRUMBSScoreDist, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist.pdf").c_str(), "topRight", nullptr, &right);
 }
