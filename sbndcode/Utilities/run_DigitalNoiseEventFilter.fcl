@@ -1,0 +1,49 @@
+#include "DigitalNoiseEventFilter.fcl"
+#include "services_sbnd.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: DigitalNoiseEventFilter
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "digitalnoisefiltered.root"
+    dataTier:    "digitalnoisefiltered"
+  }
+}
+
+services:
+{
+  AuxDetGeometry:            @local::sbnd_auxdetgeo
+  WireReadout:               @local::sbnd_wire_readout
+  GeometryConfigurationWriter: {}
+  Geometry:                  @local::sbnd_geo
+  AuxDetGeometry:            @local::sbnd_auxdetgeo
+  ChannelStatusService: @local::sbnd_channelstatus
+}
+
+physics:
+{
+  producers: {}
+  filters:
+  {
+    digitalnoisefilter: @local::digital_noise_event_filter
+  }
+  analyzers:{}
+
+  reco: [digitalnoisefilter]
+  stream1: [out1]
+  trigger_paths: [reco]
+  end_paths: [stream1]
+}
+
+outputs.out1.SelectEvents: [ "reco" ]
+
