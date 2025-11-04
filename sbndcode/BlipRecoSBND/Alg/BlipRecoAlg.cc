@@ -363,11 +363,9 @@ namespace blip {
     //if (evt.getByLabel(fSimDepProducer,sedHandle)){
     //  art::fill_ptr_vector(sedlist, sedHandle);
     // }
-    std::cout << " \n\n\n\n\n\n\n\n\n Look here \n\n\n\n\n " << std::endl;
     // -- SimChannels (usually dropped in reco)
     art::Handle<std::vector<sim::SimChannel> > simchanHandle;
     std::vector<art::Ptr<sim::SimChannel> > simchanlist;
-    std::cout << fSimChanProducer << " Look at my sim channel handle here " <<std::endl;
     if (evt.getByLabel(fSimChanProducer,simchanHandle))
       { 
       art::fill_ptr_vector(simchanlist, simchanHandle);
