@@ -1,0 +1,3 @@
+#include "run_crtrecoana.fcl"
+
+physics.analyzers.crtana.NoTPC: true
