@@ -150,6 +150,9 @@ private:
   std::vector<double>   reco_sliceScore;
   std::vector<double>   reco_sliceCategory;
   std::vector<double>   reco_sliceInteraction;
+  std::vector<double>   reco_sliceTrueVX;
+  std::vector<double>   reco_sliceTrueVY;
+  std::vector<double>   reco_sliceTrueVZ;
 
   std::vector<double>   reco_particlePDG;
   std::vector<double>   reco_particleIsPrimary;
@@ -165,6 +168,14 @@ private:
   std::vector<double>   reco_particleTrackScore;
   std::vector<double>   reco_particleCompleteness;
   std::vector<double>   reco_particlePurity;
+  std::vector<double>   reco_particleID;
+  
+  std::vector<double>   reco_neutrinoID;
+  std::vector<double>   reco_neutrinoPDG;
+  std::vector<double>   reco_neutrinoVX;
+  std::vector<double>   reco_neutrinoVY;
+  std::vector<double>   reco_neutrinoVZ;
+  std::vector<double>   reco_neutrinoSliceID;
 
   std::map<int,int> fHitsMap;
 
@@ -260,7 +271,10 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("reco_sliceScore", &reco_sliceScore);
   NuETree->Branch("reco_sliceCategory", &reco_sliceCategory);
   NuETree->Branch("reco_sliceInteraction", &reco_sliceInteraction);
- 
+  NuETree->Branch("reco_sliceTrueVX", &reco_sliceTrueVX);
+  NuETree->Branch("reco_sliceTrueVY", &reco_sliceTrueVY);
+  NuETree->Branch("reco_sliceTrueVZ", &reco_sliceTrueVZ);
+
   NuETree->Branch("reco_particlePDG", &reco_particlePDG);
   NuETree->Branch("reco_particleIsPrimary", &reco_particleIsPrimary);
   NuETree->Branch("reco_particleVX", &reco_particleVX);
@@ -269,11 +283,20 @@ sbnd::NuE::NuE(fhicl::ParameterSet const& p)
   NuETree->Branch("reco_particleDX", &reco_particleDX);
   NuETree->Branch("reco_particleDY", &reco_particleDY);
   NuETree->Branch("reco_particleDZ", &reco_particleDZ);
+  NuETree->Branch("reco_particleSliceID", &reco_particleSliceID);
   NuETree->Branch("reco_particleBestPlaneEnergy", &reco_particleBestPlaneEnergy);
   NuETree->Branch("reco_particleTheta", &reco_particleTheta);
   NuETree->Branch("reco_particleTrackScore", &reco_particleTrackScore);
   NuETree->Branch("reco_particleCompleteness", &reco_particleCompleteness);
   NuETree->Branch("reco_particlePurity", &reco_particlePurity);
+  NuETree->Branch("reco_particleID", &reco_particleID);
+  
+  NuETree->Branch("reco_neutrinoID", &reco_neutrinoID);
+  NuETree->Branch("reco_neutrinoPDG", &reco_neutrinoPDG);
+  NuETree->Branch("reco_neutrinoVX", &reco_neutrinoVX);
+  NuETree->Branch("reco_neutrinoVY", &reco_neutrinoVY);
+  NuETree->Branch("reco_neutrinoVZ", &reco_neutrinoVZ);
+  NuETree->Branch("reco_neutrinoSliceID", &reco_neutrinoSliceID);
 
 }
 
@@ -315,6 +338,7 @@ void sbnd::NuE::analyze(art::Event const& e)
     std::cout << "Run: " << runID << ", Subrun: " << subRunID << ", Event: " << eventID << ", DL/Current: " << DLCurrent << std::endl;
     Slices(e);
     MCParticles(e);
+    PFPs(e);
 
     NuETree->Fill();
 }
@@ -371,6 +395,7 @@ void sbnd::NuE::PFPs(art::Event const& e){
         art::fill_ptr_vector(showerVec, showerHandle);
 
     int counter = 0;
+    int neutrinoCounter = 0;
 
     if(!pfpVec.empty()){
         art::FindOneP<recob::Shower> pfpShowerAssns(pfpVec, e, showerLabel);
@@ -421,9 +446,22 @@ void sbnd::NuE::PFPs(art::Event const& e){
                             reco_particleTrackScore.push_back(trackscoreobj->second);
                             reco_particleCompleteness.push_back(pfpCompleteness);
                             reco_particlePurity.push_back(pfpPurity);
+                            reco_particleID.push_back(pfp->Self());
                         
                             printf("Reco Particle %d: ID = %li, PDG Code = %d, Is Primary = %d, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Slice ID = %d, Best Plane Energy = %f, Theta = %f, Trackscore = %f, Completeness = %f, Purity = %f\n", counter, pfp->Self(), pfp->PdgCode(), pfp->IsPrimary(), pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z(), pfpShower->Direction().X(), pfpShower->Direction().Y(), pfpShower->Direction().Z(), pfpSlice->ID(), pfpShower->Energy()[pfpShower->best_plane()], pfpShower->Direction().Theta(), trackscoreobj->second, pfpCompleteness, pfpPurity);
                         }
+                    } else{
+                        // This is the reco neutrino
+                        neutrinoCounter++;
+                        const art::Ptr<recob::Vertex> &pfpVertex(pfpVertexs.front());
+                        printf("Reco Neutrino %d: ID = %li, PDG Code = %d, Is Primary = %d, Vertex = (%f, %f, %f), Slice ID = %d\n", counter, pfp->Self(), pfp->PdgCode(), pfp->IsPrimary(), pfpVertex->position().X(), pfpVertex->position().Y(), pfpVertex->position().Z(), pfpSlice->ID());
+                    
+                        reco_neutrinoID.push_back(pfp->Self());
+                        reco_neutrinoPDG.push_back(pfp->PdgCode());
+                        reco_neutrinoVX.push_back(pfpVertex->position().X());
+                        reco_neutrinoVY.push_back(pfpVertex->position().Y());
+                        reco_neutrinoVZ.push_back(pfpVertex->position().Z());
+                        reco_neutrinoSliceID.push_back(pfpSlice->ID());
                     }
                 }
             }
@@ -446,6 +484,16 @@ void sbnd::NuE::PFPs(art::Event const& e){
         reco_particleTrackScore.push_back(-999999);
         reco_particleCompleteness.push_back(-999999);
         reco_particlePurity.push_back(-999999);
+        reco_particleID.push_back(-999999);
+    }
+
+    if(neutrinoCounter == 0){
+        reco_neutrinoID.push_back(-999999);
+        reco_neutrinoPDG.push_back(-999999);
+        reco_neutrinoVX.push_back(-999999);
+        reco_neutrinoVY.push_back(-999999);
+        reco_neutrinoVZ.push_back(-999999);
+        reco_neutrinoSliceID.push_back(-999999);
     }
     std::cout << "_________________________" << std::endl;
 }
@@ -619,7 +667,7 @@ void sbnd::NuE::Slices(art::Event const& e){
                 
                 if(sliceMCTruth->Origin() == simb::kBeamNeutrino){
                     // This is a beam neutrino
-                    std::cout << "MCNeutrino: Interaction Type = " << sliceMCNeutrino.InteractionType() << ", CCNC = " << sliceMCNeutrino.CCNC() << ", PDG = " << sliceMCNeutrinoParticle.PdgCode() << ", Vertex = (" << sliceMCNeutrinoParticle.Vx() << ", " << sliceMCNeutrinoParticle.Vy() << ", " << sliceMCNeutrinoParticle.Vy() << ")" << std::endl;
+                    std::cout << "MCNeutrino: Interaction Type = " << sliceMCNeutrino.InteractionType() << ", CCNC = " << sliceMCNeutrino.CCNC() << ", PDG = " << sliceMCNeutrinoParticle.PdgCode() << ", Vertex = (" << sliceMCNeutrinoParticle.Vx() << ", " << sliceMCNeutrinoParticle.Vy() << ", " << sliceMCNeutrinoParticle.Vz() << ")" << std::endl;
                     // Interaction Type = 1098 is Nu+E elastic scattering
                 } else if(sliceMCTruth->Origin() == simb::kCosmicRay){
                     // This is a cosmic ray
@@ -691,15 +739,26 @@ void sbnd::NuE::Slices(art::Event const& e){
                 else if(sliceMCTruth->Origin() == simb::kBeamNeutrino && sliceMCNeutrino.InteractionType() != 1098 && sliceCompleteness < 0.5 && sliceCompleteness > 0.1) sliceCategory = 4;
 
                 std::cout << "Slice Category = " << sliceCategory << std::endl;
-                
+
                 counter++;
                 reco_sliceID.push_back(sliceID);        
                 reco_sliceCompleteness.push_back(sliceCompleteness);        
                 reco_slicePurity.push_back(slicePurity);        
                 reco_sliceScore.push_back(sliceScoreVar);        
                 reco_sliceCategory.push_back(sliceCategory);       
-                if(sliceMCTruth->Origin() == simb::kBeamNeutrino) reco_sliceInteraction.push_back(sliceMCNeutrino.InteractionType());
-                if(sliceMCTruth->Origin() == simb::kCosmicRay) reco_sliceInteraction.push_back(-100);        
+                if(sliceMCTruth->Origin() == simb::kBeamNeutrino){
+                    reco_sliceInteraction.push_back(sliceMCNeutrino.InteractionType());
+                    reco_sliceTrueVX.push_back(sliceMCNeutrinoParticle.Vx());        
+                    reco_sliceTrueVY.push_back(sliceMCNeutrinoParticle.Vy());        
+                    reco_sliceTrueVZ.push_back(sliceMCNeutrinoParticle.Vz());       
+                    std::cout << "True Neutrino Vertex = (" << sliceMCNeutrinoParticle.Vx() << ", " << sliceMCNeutrinoParticle.Vy() << ", " << sliceMCNeutrinoParticle.Vz() << ")" << std::endl; 
+                }
+                else if(sliceMCTruth->Origin() == simb::kCosmicRay){
+                    reco_sliceInteraction.push_back(-100);        
+                    reco_sliceTrueVX.push_back(-999999);
+                    reco_sliceTrueVY.push_back(-999999);
+                    reco_sliceTrueVZ.push_back(-999999);
+                }
             }
 
         }
@@ -711,7 +770,10 @@ void sbnd::NuE::Slices(art::Event const& e){
         reco_slicePurity.push_back(-999999);        
         reco_sliceScore.push_back(-999999);        
         reco_sliceCategory.push_back(-999999);        
-        reco_sliceInteraction.push_back(-999999);        
+        reco_sliceInteraction.push_back(-999999);       
+        reco_sliceTrueVX.push_back(-999999); 
+        reco_sliceTrueVY.push_back(-999999); 
+        reco_sliceTrueVZ.push_back(-999999); 
     }
     
     std::cout << "_________________________" << std::endl;
@@ -762,6 +824,14 @@ void sbnd::NuE::clearVectors(){
     reco_particleTrackScore.clear();
     reco_particleCompleteness.clear();
     reco_particlePurity.clear();
+    reco_particleID.clear();
+    
+    reco_neutrinoID.clear();
+    reco_neutrinoPDG.clear();
+    reco_neutrinoVX.clear();
+    reco_neutrinoVY.clear();
+    reco_neutrinoVZ.clear();
+    reco_neutrinoSliceID.clear();
 }
 
 void sbnd::NuE::beginJob()

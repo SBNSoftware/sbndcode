@@ -101,7 +101,10 @@ histGroup_struct createHistGroup(const std::string& baseName, const std::string&
     };    
 }
 
-void styleDrawSignal(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
+void styleDrawSignalBNBAll(){
+}
+
+void styleDrawSignalAll(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
     hists.canvas->cd();
     hists.canvas->SetTickx();
     hists.canvas->SetTicky();
@@ -194,7 +197,7 @@ void styleDrawSignal(histGroup_struct hists, double ymin, double ymax, double xm
     hists.canvas->SaveAs(filename);
 }
 
-void styleDrawSignalAll(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
+void styleDrawAll(histGroup_struct hists, double ymin, double ymax, double xmin, double xmax, const char* filename, const std::string& legendLocation, int* drawLine = nullptr, int* linePos = nullptr){
     hists.canvas->cd();
     hists.canvas->SetTickx();
     hists.canvas->SetTicky();
@@ -527,6 +530,13 @@ void nuEBackgroundSignalWeighted_macro(){
     std::vector<double> *reco_particlePurity = nullptr;
     std::vector<double> *reco_particleID = nullptr;
     
+    std::vector<double> *reco_neutrinoID = nullptr;
+    std::vector<double> *reco_neutrinoPDG = nullptr;
+    std::vector<double> *reco_neutrinoVX = nullptr;
+    std::vector<double> *reco_neutrinoVY = nullptr;
+    std::vector<double> *reco_neutrinoVZ = nullptr;
+    std::vector<double> *reco_neutrinoSliceID = nullptr;
+    
     tree->SetBranchAddress("truth_recoilElectronPDG", &truth_recoilElectronPDG);
     tree->SetBranchAddress("truth_recoilElectronVX", &truth_recoilElectronVX);
     tree->SetBranchAddress("truth_recoilElectronVY", &truth_recoilElectronVY);
@@ -566,6 +576,13 @@ void nuEBackgroundSignalWeighted_macro(){
     tree->SetBranchAddress("reco_particleCompleteness", &reco_particleCompleteness);
     tree->SetBranchAddress("reco_particlePurity", &reco_particlePurity);
     tree->SetBranchAddress("reco_particleID", &reco_particleID);
+    
+    tree->SetBranchAddress("reco_neutrinoID", &reco_neutrinoID);
+    tree->SetBranchAddress("reco_neutrinoPDG", &reco_neutrinoPDG);
+    tree->SetBranchAddress("reco_neutrinoVX", &reco_neutrinoVX);
+    tree->SetBranchAddress("reco_neutrinoVY", &reco_neutrinoVY);
+    tree->SetBranchAddress("reco_neutrinoVZ", &reco_neutrinoVZ);
+    tree->SetBranchAddress("reco_neutrinoSliceID", &reco_neutrinoSliceID);
 
     Long64_t numEntries = tree->GetEntries();
 
@@ -604,11 +621,16 @@ void nuEBackgroundSignalWeighted_macro(){
     for(Long64_t e = 0; e < numEntries; ++e){
         printf("=============================================================================\n");
         tree->GetEntry(e);
-        
+       
+        int recoilElectron_energy = -999999;
+        int recoilElectron_angle = -999999;
+
         // Looking at the true recoil electron
         for(size_t i = 0; i < truth_recoilElectronPDG->size(); ++i){
             if(truth_recoilElectronPDG->size() > 1) std::cout << "More than 1 true recoil electron in event!" << std::endl;
             if(truth_recoilElectronPDG->at(i) != -999999){
+                recoilElectron_energy = truth_recoilElectronEnergy->at(i);
+                recoilElectron_angle = truth_recoilElectronAngle->at(i);
                 // There is a true recoil electron in the event
                 if(DLCurrent == 2) trueETheta2.currentSignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalCurrent); 
                 if(DLCurrent == 0) trueETheta2.ubooneSignal->Fill(truth_recoilElectronETheta2->at(i), weights.signalUboone); 
@@ -642,6 +664,7 @@ void nuEBackgroundSignalWeighted_macro(){
                 double summedEnergy = 0;
                 double highestEnergy_PFPID = -999999;
                 double highestEnergy_energy = -999999;
+                double highestEnergy_theta = -999999;
 
                 for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
                     PFPcounter++;
@@ -653,14 +676,29 @@ void nuEBackgroundSignalWeighted_macro(){
                         summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
                         if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
                             highestEnergy_energy = reco_particleBestPlaneEnergy->at(pfp);
+                            highestEnergy_theta = reco_particleTheta->at(pfp);
                             highestEnergy_PFPID = reco_particleID->at(pfp);
                         }
                     }
                 } 
 
-                printf("PFP with highest energy (%f) has ID %f\n", highestEnergy_energy, highestEnergy_PFPID);
+                printf("PFP with highest energy (%f) has ID %f and Theta = %f\n", highestEnergy_energy, highestEnergy_PFPID, highestEnergy_theta);
                 printf("Summed energy of all PFPs in slice = %f\n", summedEnergy);
                 std::cout << "Number of PFPs in the slice = " << numPFPsSlice << std::endl;
+
+                double recoVX = -999999;
+                double recoVY = -999999;
+                double recoVZ = -999999;
+
+                for(size_t recoNeut = 0; recoNeut < reco_neutrinoID->size(); ++recoNeut){
+                    if(reco_neutrinoSliceID->at(recoNeut) == reco_sliceID->at(slice)){
+                        // Reco neutrino is in the slice
+                        recoVX = reco_neutrinoVX->at(recoNeut);
+                        recoVY = reco_neutrinoVX->at(recoNeut);
+                        recoVZ = reco_neutrinoVX->at(recoNeut);
+                        printf("Reco Neutrino in Slice: ID = %f, PDG = %f, Vertex = (%f, %f, %f)\n", reco_neutrinoID->at(recoNeut), reco_neutrinoPDG->at(recoNeut), reco_neutrinoVX->at(recoNeut), reco_neutrinoVY->at(recoNeut), reco_neutrinoVZ->at(recoNeut));
+                    }
+                }
                 
                 // Filling Histograms
                 if(reco_sliceCategory->at(slice) == 0){
@@ -673,8 +711,15 @@ void nuEBackgroundSignalWeighted_macro(){
                         slicePurityDist.currentCosmic->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.currentCosmic->Fill(reco_sliceScore->at(slice));
 
+                        sliceNumPFPs.currentCosmic->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.currentCosmic->Fill(numPFPsSlice);
+
                         if(highestEnergy_PFPID != -999999){
                             // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.currentCosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.currentCosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.currentCosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.currentCosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
                         }
 
                     } else if(DLCurrent == 0){
@@ -684,6 +729,18 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.ubooneCosmic->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.ubooneCosmic->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.ubooneCosmic->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.ubooneCosmic->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.ubooneCosmic->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.ubooneCosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.ubooneCosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.ubooneCosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.ubooneCosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                        }
+
                     } else if(DLCurrent == 5){
                         sliceCompleteness.nuECosmic->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.nuECosmic->Fill(reco_slicePurity->at(slice), weight);
@@ -691,7 +748,19 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.nuECosmic->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.nuECosmic->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.nuECosmic->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.nuECosmic->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.nuECosmic->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.nuECosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.nuECosmic->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.nuECosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.nuECosmic->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                        }
                     }
+
                 } else if(reco_sliceCategory->at(slice) == 1){
                     // This is a signal slice
                     if(DLCurrent == 2){
@@ -701,6 +770,36 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.currentSignal->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.currentSignal->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.currentSignal->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.currentSignal->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.currentSignal->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.currentSignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.currentSignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.currentSignal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.currentSignal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                      
+                            ETrueThetaReco.currentSignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ETrueThetaRecoDist.currentSignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoSumThetaTrue.currentSignal->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoSumThetaTrueDist.currentSignal->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle));
+                            ERecoHighestThetaTrue.currentSignal->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoHighestThetaTrueDist.currentSignal->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle));
+
+                            if(recoVX != -999999){ 
+                                deltaX.currentSignal->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.currentSignal->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.currentSignal->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.currentSignal->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.currentSignal->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.currentSignal->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.currentSignal->Fill(deltaRVal, weight);
+                                deltaRDist.currentSignal->Fill(deltaRVal);
+                            }
+                        }
                     } else if(DLCurrent == 0){
                         sliceCompleteness.ubooneSignal->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.ubooneSignal->Fill(reco_slicePurity->at(slice), weight);
@@ -708,6 +807,37 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.ubooneSignal->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.ubooneSignal->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.ubooneSignal->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.ubooneSignal->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.ubooneSignal->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.ubooneSignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.ubooneSignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.ubooneSignal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.ubooneSignal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                      
+                            ETrueThetaReco.ubooneSignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ETrueThetaRecoDist.ubooneSignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoSumThetaTrue.ubooneSignal->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoSumThetaTrueDist.ubooneSignal->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle));
+                            ERecoHighestThetaTrue.ubooneSignal->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoHighestThetaTrueDist.ubooneSignal->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle));
+
+                            if(recoVX != -999999){
+                                deltaX.ubooneSignal->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.ubooneSignal->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.ubooneSignal->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.ubooneSignal->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.ubooneSignal->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.ubooneSignal->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.ubooneSignal->Fill(deltaRVal, weight);
+                                deltaRDist.ubooneSignal->Fill(deltaRVal);
+                            }
+                        }
+
                     } else if(DLCurrent == 5){
                         sliceCompleteness.nuESignal->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.nuESignal->Fill(reco_slicePurity->at(slice), weight);
@@ -715,6 +845,36 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.nuESignal->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.nuESignal->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.nuESignal->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.nuESignal->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.nuESignal->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.nuESignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.nuESignal->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.nuESignal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.nuESignal->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                      
+                            ETrueThetaReco.nuESignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ETrueThetaRecoDist.nuESignal->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoSumThetaTrue.nuESignal->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoSumThetaTrueDist.nuESignal->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle));
+                            ERecoHighestThetaTrue.nuESignal->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoHighestThetaTrueDist.nuESignal->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle));
+
+                            if(recoVX != -999999){ 
+                                deltaX.nuESignal->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.nuESignal->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.nuESignal->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.nuESignal->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.nuESignal->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.nuESignal->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.nuESignal->Fill(deltaRVal, weight);
+                                deltaRDist.nuESignal->Fill(deltaRVal);
+                            }
+                        }
                     }
                 } else if(reco_sliceCategory->at(slice) == 2){
                     // This is a fuzzy signal slice
@@ -725,6 +885,36 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.currentSignalFuzzy->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.currentSignalFuzzy->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.currentSignalFuzzy->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.currentSignalFuzzy->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.currentSignalFuzzy->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.currentSignalFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.currentSignalFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.currentSignalFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.currentSignalFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                      
+                            ETrueThetaReco.currentSignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ETrueThetaRecoDist.currentSignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoSumThetaTrue.currentSignalFuzzy->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoSumThetaTrueDist.currentSignalFuzzy->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle));
+                            ERecoHighestThetaTrue.currentSignalFuzzy->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoHighestThetaTrueDist.currentSignalFuzzy->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle));
+
+                            if(recoVX != -999999){ 
+                                deltaX.currentSignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.currentSignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.currentSignalFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.currentSignalFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.currentSignalFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.currentSignalFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.currentSignalFuzzy->Fill(deltaRVal, weight);
+                                deltaRDist.currentSignalFuzzy->Fill(deltaRVal);
+                            }
+                        }
                     } else if(DLCurrent == 0){
                         sliceCompleteness.ubooneSignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.ubooneSignalFuzzy->Fill(reco_slicePurity->at(slice), weight);
@@ -732,6 +922,36 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.ubooneSignalFuzzy->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.ubooneSignalFuzzy->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.ubooneSignalFuzzy->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.ubooneSignalFuzzy->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.ubooneSignalFuzzy->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.ubooneSignalFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.ubooneSignalFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.ubooneSignalFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.ubooneSignalFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                      
+                            ETrueThetaReco.ubooneSignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ETrueThetaRecoDist.ubooneSignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoSumThetaTrue.ubooneSignalFuzzy->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoSumThetaTrueDist.ubooneSignalFuzzy->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle));
+                            ERecoHighestThetaTrue.ubooneSignalFuzzy->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoHighestThetaTrueDist.ubooneSignalFuzzy->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle));
+
+                            if(recoVX != -999999){ 
+                                deltaX.ubooneSignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.ubooneSignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.ubooneSignalFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.ubooneSignalFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.ubooneSignalFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.ubooneSignalFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.ubooneSignalFuzzy->Fill(deltaRVal, weight);
+                                deltaRDist.ubooneSignalFuzzy->Fill(deltaRVal);
+                            }
+                        }
                     } else if(DLCurrent == 5){
                         sliceCompleteness.nuESignalFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.nuESignalFuzzy->Fill(reco_slicePurity->at(slice), weight);
@@ -739,6 +959,36 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.nuESignalFuzzy->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.nuESignalFuzzy->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.nuESignalFuzzy->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.nuESignalFuzzy->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.nuESignalFuzzy->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.nuESignalFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.nuESignalFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.nuESignalFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.nuESignalFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                      
+                            ETrueThetaReco.nuESignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ETrueThetaRecoDist.nuESignalFuzzy->Fill((recoilElectron_energy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoSumThetaTrue.nuESignalFuzzy->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoSumThetaTrueDist.nuESignalFuzzy->Fill((summedEnergy * recoilElectron_angle * recoilElectron_angle));
+                            ERecoHighestThetaTrue.nuESignalFuzzy->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle), weight);
+                            ERecoHighestThetaTrueDist.nuESignalFuzzy->Fill((highestEnergy_energy * recoilElectron_angle * recoilElectron_angle));
+
+                            if(recoVX != -999999){ 
+                                deltaX.nuESignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.nuESignalFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.nuESignalFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.nuESignalFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.nuESignalFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.nuESignalFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.nuESignalFuzzy->Fill(deltaRVal, weight);
+                                deltaRDist.nuESignalFuzzy->Fill(deltaRVal);
+                            }
+                        }
                     }
                 } else if(reco_sliceCategory->at(slice) == 3){
                     // This is a BNB slice
@@ -749,6 +999,30 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.currentBNB->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.currentBNB->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.currentBNB->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.currentBNB->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.currentBNB->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.currentBNB->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.currentBNB->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.currentBNB->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.currentBNB->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                       
+                            if(recoVX != -999999){ 
+                                deltaX.currentBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.currentBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.currentBNB->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.currentBNB->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.currentBNB->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.currentBNB->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.currentBNB->Fill(deltaRVal, weight);
+                                deltaRDist.currentBNB->Fill(deltaRVal);
+                            }
+                        }
+
                     } else if(DLCurrent == 0){
                         sliceCompleteness.ubooneBNB->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.ubooneBNB->Fill(reco_slicePurity->at(slice), weight);
@@ -756,6 +1030,30 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.ubooneBNB->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.ubooneBNB->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.ubooneBNB->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.ubooneBNB->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.ubooneBNB->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.ubooneBNB->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.ubooneBNB->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.ubooneBNB->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.ubooneBNB->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                       
+                            if(recoVX != -999999){ 
+                                deltaX.ubooneBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.ubooneBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.ubooneBNB->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.ubooneBNB->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.ubooneBNB->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.ubooneBNB->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.ubooneBNB->Fill(deltaRVal, weight);
+                                deltaRDist.ubooneBNB->Fill(deltaRVal);
+                            }
+                        }
+
                     } else if(DLCurrent == 5){
                         sliceCompleteness.nuEBNB->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.nuEBNB->Fill(reco_slicePurity->at(slice), weight);
@@ -763,6 +1061,29 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.nuEBNB->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.nuEBNB->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.nuEBNB->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.nuEBNB->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.nuEBNB->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.nuEBNB->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.nuEBNB->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.nuEBNB->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.nuEBNB->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                       
+                            if(recoVX != -999999){ 
+                                deltaX.nuEBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.nuEBNB->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.nuEBNB->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.nuEBNB->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.nuEBNB->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.nuEBNB->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.nuEBNB->Fill(deltaRVal, weight);
+                                deltaRDist.nuEBNB->Fill(deltaRVal);
+                            }
+                        }
                     }
                 } else if(reco_sliceCategory->at(slice) == 4){
                     // This is a fuzzy BNB slice
@@ -773,6 +1094,29 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.currentBNBFuzzy->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.currentBNBFuzzy->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.currentBNBFuzzy->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.currentBNBFuzzy->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.currentBNBFuzzy->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.currentBNBFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.currentBNBFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.currentBNBFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.currentBNBFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                       
+                            if(recoVX != -999999){ 
+                                deltaX.currentBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.currentBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.currentBNBFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.currentBNBFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.currentBNBFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.currentBNBFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.currentBNBFuzzy->Fill(deltaRVal, weight);
+                                deltaRDist.currentBNBFuzzy->Fill(deltaRVal);
+                            }
+                        }
                     } else if(DLCurrent == 0){
                         sliceCompleteness.ubooneBNBFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.ubooneBNBFuzzy->Fill(reco_slicePurity->at(slice), weight);
@@ -780,6 +1124,29 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.ubooneBNBFuzzy->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.ubooneBNBFuzzy->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.ubooneBNBFuzzy->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.ubooneBNBFuzzy->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.ubooneBNBFuzzy->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.ubooneBNBFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.ubooneBNBFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.ubooneBNBFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.ubooneBNBFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                       
+                            if(recoVX != -999999){ 
+                                deltaX.ubooneBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.ubooneBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.ubooneBNBFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.ubooneBNBFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.ubooneBNBFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.ubooneBNBFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.ubooneBNBFuzzy->Fill(deltaRVal, weight);
+                                deltaRDist.ubooneBNBFuzzy->Fill(deltaRVal);
+                            }
+                        }
                     } else if(DLCurrent == 5){
                         sliceCompleteness.nuEBNBFuzzy->Fill(reco_sliceCompleteness->at(slice), weight);
                         slicePurity.nuEBNBFuzzy->Fill(reco_slicePurity->at(slice), weight);
@@ -787,39 +1154,32 @@ void nuEBackgroundSignalWeighted_macro(){
                         sliceCompletenessDist.nuEBNBFuzzy->Fill(reco_sliceCompleteness->at(slice));
                         slicePurityDist.nuEBNBFuzzy->Fill(reco_slicePurity->at(slice));
                         sliceCRUMBSScoreDist.nuEBNBFuzzy->Fill(reco_sliceScore->at(slice));
+                        
+                        sliceNumPFPs.nuEBNBFuzzy->Fill(numPFPsSlice, weight);
+                        sliceNumPFPsDist.nuEBNBFuzzy->Fill(numPFPsSlice);
+
+                        if(highestEnergy_PFPID != -999999){
+                            // There is a PFP in the slice, fill the histograms
+                            ERecoSumThetaReco.nuEBNBFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoSumThetaRecoDist.nuEBNBFuzzy->Fill((summedEnergy * highestEnergy_theta * highestEnergy_theta));
+                            ERecoHighestThetaReco.nuEBNBFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta), weight);
+                            ERecoHighestThetaRecoDist.nuEBNBFuzzy->Fill((highestEnergy_energy * highestEnergy_theta * highestEnergy_theta));
+                       
+                            if(recoVX != -999999){ 
+                                deltaX.nuEBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)), weight);
+                                deltaXDist.nuEBNBFuzzy->Fill((recoVX - reco_sliceTrueVX->at(slice)));
+                                deltaY.nuEBNBFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)), weight);
+                                deltaYDist.nuEBNBFuzzy->Fill((recoVY - reco_sliceTrueVY->at(slice)));
+                                deltaZ.nuEBNBFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)), weight);
+                                deltaZDist.nuEBNBFuzzy->Fill((recoVZ - reco_sliceTrueVZ->at(slice)));
+                                double deltaRVal = std::sqrt(((recoVX - reco_sliceTrueVX->at(slice)) * (recoVX - reco_sliceTrueVX->at(slice))) + ((recoVY - reco_sliceTrueVY->at(slice)) * (recoVY - reco_sliceTrueVY->at(slice))) + ((recoVZ - reco_sliceTrueVZ->at(slice))* (recoVZ - reco_sliceTrueVZ->at(slice)))); 
+                                deltaR.nuEBNBFuzzy->Fill(deltaRVal, weight);
+                                deltaRDist.nuEBNBFuzzy->Fill(deltaRVal);
+                            }
+                        }
                     }
                 }
 
-                printf("__________________________ NEW SLICE __________________________\n");
-                printf("Slice ID = %f, Category = %f, Interaction = %f, Completeness = %f, Purity = %f, CRUMBS Score = %f\n", reco_sliceID->at(slice), reco_sliceCategory->at(slice), reco_sliceInteraction->at(slice), reco_sliceCompleteness->at(slice), reco_slicePurity->at(slice), reco_sliceScore->at(slice));
-                if(reco_sliceCategory->at(slice) != 0) printf("True Neutrino Vertex = (%f, %f, %f)\n", reco_sliceTrueVX->at(slice), reco_sliceTrueVY->at(slice), reco_sliceTrueVZ->at(slice));
-        
-                // Loop through all the reco neutrinos in the event          
-                int PFPcounter = 0;
-                int numPFPsSlice = 0;
-
-                double summedEnergy = 0;
-                double highestEnergy_PFPID = 0;
-                double highestEnergy_energy = 0;
-
-                for(size_t pfp = 0; pfp < reco_particlePDG->size(); ++pfp){
-                    PFPcounter++;
-                    if(reco_particleSliceID->at(pfp) == reco_sliceID->at(slice)){
-                        // This PFP is in the slice
-                        numPFPsSlice++;
-                        printf("PFP %d: ID = %f, PDG = %f, Is Primary = %f, Vertex = (%f, %f, %f), Direction = (%f, %f, %f), Energy = %f, Theta = %f, Track Score = %f, Completeness = %f, Purity = %f\n", PFPcounter, reco_particleID->at(pfp), reco_particlePDG->at(pfp), reco_particleIsPrimary->at(pfp), reco_particleVX->at(pfp), reco_particleVY->at(pfp), reco_particleVZ->at(pfp), reco_particleDX->at(pfp), reco_particleDY->at(pfp), reco_particleDZ->at(pfp), reco_particleBestPlaneEnergy->at(pfp), reco_particleTheta->at(pfp), reco_particleTrackScore->at(pfp), reco_particleCompleteness->at(pfp), reco_particlePurity->at(pfp));
-                        
-                        summedEnergy += reco_particleBestPlaneEnergy->at(pfp);
-                        if(reco_particleBestPlaneEnergy->at(pfp) > highestEnergy_energy){
-                            highestEnergy_energy = reco_particleBestPlaneEnergy->at(pfp);
-                            highestEnergy_PFPID = reco_particleID->at(pfp);
-                        }
-                    }
-                } 
-
-                printf("PFP with highest energy (%f) has ID %f\n", highestEnergy_energy, highestEnergy_PFPID);
-                printf("Summed energy of all PFPs in slice = %f\n", summedEnergy);
-                std::cout << "Number of PFPs in the slice = " << numPFPsSlice << std::endl;
                 // aaaaa
                 printf("_______________________________________________________________\n");
             }
@@ -835,11 +1195,28 @@ void nuEBackgroundSignalWeighted_macro(){
     int left = 0;
     int right = 1;
 
-    styleDrawSignal(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_weighted.pdf").c_str(), "bottomRight", &drawLine, &right);
-    styleDrawSignalAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_all_dist.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
-    styleDrawSignalAll(sliceCRUMBSScoreDist, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(trueETheta2, 999, 999, 999, 999, (base_path + "trueETheta2_weighted.pdf").c_str(), "bottomRight", &drawLine, &right);
+    
+    styleDrawAll(sliceCompleteness, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(sliceCompletenessDist, 999, 999, 999, 999, (base_path + "sliceCompleteness_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(slicePurity, 999, 999, 999, 999, (base_path + "slicePurity_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(slicePurityDist, 999, 999, 999, 999, (base_path + "slicePurity_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(sliceCRUMBSScore, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(sliceCRUMBSScoreDist, 999, 999, 999, 999, (base_path + "sliceCRUMBSScore_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(sliceNumPFPs, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(sliceNumPFPsDist, 999, 999, 999, 999, (base_path + "sliceNumPFPs_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+
+    styleDrawAll(ERecoSumThetaReco, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(ERecoSumThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(ERecoHighestThetaReco, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawAll(ERecoHighestThetaRecoDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+
+    styleDrawSignalAll(ETrueThetaReco, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(ETrueThetaRecoDist, 999, 999, 999, 999, (base_path + "ETrueThetaReco_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(ERecoSumThetaTrue, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(ERecoSumThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoSumThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(ERecoHighestThetaTrue, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_weighted.pdf").c_str(), "topRight", nullptr, &right);
+    styleDrawSignalAll(ERecoHighestThetaTrueDist, 999, 999, 999, 999, (base_path + "ERecoHighestThetaTrue_all_dist.pdf").c_str(), "topRight", nullptr, &right);
+
+    
 }
