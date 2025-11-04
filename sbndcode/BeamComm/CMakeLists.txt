@@ -19,6 +19,24 @@ cet_build_plugin( BeamAnalysis art::module
         ROOT::Tree
 )
 
+cet_build_plugin( CRTFilter art::module
+    SOURCE CRTFilter_module.cc 
+    LIBRARIES 
+        sbnobj::SBND_Timing
+        sbnobj::SBND_CRT
+        sbndcode_GeoWrappers
+        lardata::Utilities
+        canvas::canvas
+        lardataobj::RecoBase
+        lardataobj::AnalysisBase
+        lardataobj::RawData
+        lardataobj::headers
+        art_root_io::TFileService_service
+        art_root_io::tfile_support
+        ROOT::Core
+        ROOT::Tree
+)
+
 install_fhicl()
 install_source()
 install_headers()

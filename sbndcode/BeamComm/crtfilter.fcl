@@ -1,0 +1,12 @@
+BEGIN_PROLOG
+
+crtfilter_sbnd:
+{
+ module_type:        "CRTFilter"
+ CrtSpacePointLabel: "crtspacepoints"
+ FrameLabel:         "frameshift"
+ time_min: -800 #ns
+ time_max: 2800 #ns
+}
+
+END_PROLOG

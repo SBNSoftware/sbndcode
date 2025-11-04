@@ -1,0 +1,36 @@
+#include "crtfilter.fcl"
+
+process_name: CRTFilter
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1        # Number of events to create
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "crtfiltered-art.root"
+    dataTier:    "crtfiltered"
+  }
+}
+
+physics:
+{
+  producers: {}
+  filters:
+  {
+    crtfilter: @local::crtfilter_sbnd
+  }
+  analyzers:{}
+
+  reco: [crtfilter]
+  stream1: [out1]
+  trigger_paths: [reco]
+  end_paths: [stream1]
+}
+
+outputs.out1.SelectEvents: [ "reco" ]
